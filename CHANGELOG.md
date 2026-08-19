@@ -96,6 +96,56 @@ may change in any release — see [Save compatibility](#save-compatibility).
 
 ### Fixed
 
+- **Animals beside a campfire no longer shine like reflectors, and the
+  commander portrait is lit again.** Two separate things. The rain sheen was
+  applied at full strength to fur and hide, so a wet sheep or horse next to a
+  fire glinted like a wet helmet; coats now take a fifth of it, and the
+  firelight term has a soft knee so pale wool warms up instead of blowing out.
+  Separately, the uniform-handle rework left one raw `glUniform3fv` for the
+  rigged role-colour array, so every single-draw rigged creature (the
+  commander's portrait bust, a lone horse or elephant, a sheep that missed the
+  instanced batch) rendered with garbage palette colours - usually black. It
+  now goes through `Shader`, a source test forbids raw `glUniform*` outside it,
+  and the new `wildlife_firelight` arena fixture (sheep, wolves, a horse and an
+  elephant around one fire in the rain at night) exists to review both.
+  Creatures also take only half the moon key after dark, so a white coat under
+  the night sky reads as moonlit rather than floodlit.
+- **Troops, horses and elephants no longer look like they hover.** Every
+  creature now carries a grounding blob - a soft occlusion ellipse centred
+  under its footprint, tilted to the slope and elongated along its facing -
+  whether it is marching, fighting or standing, at every preset; it used to
+  exist only for a few dozen idle soldiers, so anything moving had nothing
+  anchoring it to the ground and the noon sun hid the cast shadow under the
+  body. The blobs draw in a handful of instanced batches, so a thousand of
+  them cost a few draw calls. Where the cascaded shadow maps are off (Low) the
+  blob keeps a sun-offset lobe so there is still a shadow. On the soldiers
+  themselves the lowest span of the figure sits in its own occlusion, boots
+  and straps are leather again instead of team-coloured slippers, helmets,
+  mail and blades get a real metal highlight and sky reflection, leather a
+  soft sheen, skin a warm shadow side, and the shadow-side floor came down so
+  the figures have form under the new light.
+- **The world casts shadows again.** Trees, ruins, tents, boulders, statues and
+  ore never reached the shadow map: the scatter shaders take their
+  view-projection from the shared frame block, and the shadow pass left the
+  camera's matrix in it, so every prop landed at the wrong depth. The cascades
+  were also sliced against the camera far plane instead of the shadow distance
+  (2.5x too coarse on High), and the biases were expressed in depth units that
+  turned into metres on the far cascade. Cascades are now fitted to the ground
+  the camera can actually see, biases are authored in metres with a normal
+  offset that keeps shadows planted at the feet, sampling is hardware PCF with
+  a penumbra that sharpens on a clear day and widens under cloud, a tall caster
+  outside the camera-distance band still throws its evening shadow into it,
+  boulders and terrain cast, the skyline mountain ring does not, and the last
+  cascade fades out instead of ending on a line. Villages at four o'clock look
+  like villages at four o'clock.
+- **Firelight no longer dims inside a sun or moon shadow.** Every receiver shader
+  added its local lights before applying the directional shadow, so a campfire
+  beside a house lit the ground less on the shaded side of the wall. The local
+  term now joins after the shadow.
+- **Main builds again after the farms merge.** The humanoid clip table gained the
+  five construction clips at indices that collided with the taunts, and the clip
+  count stayed at 63; the constants now follow the manifest order (taunts 61-62,
+  construction 63-67, 68 clips).
 - **Formations turn like soldiers now, not like a lawnmower blade.** A unit
   changing direction used to spin every soldier rigidly around its anchor, so
   the outer files strafed sideways along arcs with their bodies locked to the
@@ -103,7 +153,6 @@ may change in any release — see [Save compatibility](#save-compatibility).
   foot speed, pivots on his own feet toward where he is going, and eases back
   square once he has re-dressed — cavalry wheels instead of sliding. Purely a
   render-side change; the simulation's positions and hit math are untouched.
-
 - **Twelve switches were silently ignoring enum values that had been added
   since they were written.** Each listed every case it knew about and had no
   `default`, so a newer enumerator quietly took the fallthrough: elephants were
@@ -379,6 +428,24 @@ attack.`, `That target is already gone.`, …) instead of silently doing
 
 ### Changed
 
+- **The graphics presets mean what they say, and are applied once.** High is
+  now the complete game — every shader feature, full creature detail
+  everywhere, four 4096 cascades, the whole post chain, 4x MSAA — and the
+  default for a fresh profile. Ultra keeps all of that and adds the expensive
+  extras: contact-hardening (PCSS) shadows, grass blades that receive shadows
+  and glow when back-lit, extra water and terrain detail octaves, 8x MSAA.
+  Medium keeps shadows and post-processing but small (two 1024 cascades, no
+  godrays), and Low is built to reach 30 fps on weak hardware: no cascades,
+  no bloom, godrays, ambient occlusion or FXAA, a third of the grass, wear and
+  micro-relief compiled out of the shaders, creature detail reduced past a few
+  metres. Each preset is one immutable profile in a table; a change ticks a
+  generation counter and the renderer applies the whole profile once at the
+  start of the next frame (recompiling every shader program in place for the
+  new tier), instead of every subsystem testing the quality level per frame.
+  Shader detail is a compile-time tier (`SOI_QUALITY_TIER`), not a uniform
+  tested per fragment. Creatures have exactly two rendered levels of detail,
+  Full and Reduced, plus a cull distance; the old third "billboard" level was
+  only ever a cull and is now named as one.
 - **A fresh install no longer opens at full volume.** Every mixer channel used
   to start at full scale, and because master, category and cue gains multiply,
   the first mission was painfully loud on a new profile. A profile with no saved

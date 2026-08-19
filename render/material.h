@@ -12,9 +12,8 @@ class Shader;
 class Texture;
 
 struct Material {
-  Shader* shader_full = nullptr;
-  Shader* shader_reduced = nullptr;
-  Shader* shader_minimal = nullptr;
+
+  Shader* shader = nullptr;
 
   QVector3D color{1.0F, 1.0F, 1.0F};
   float alpha = 1.0F;
@@ -22,47 +21,11 @@ struct Material {
   Texture* texture = nullptr;
   std::int32_t material_id = 0;
 
-  [[nodiscard]] auto resolve(Render::ShaderQuality q) const noexcept -> Shader* {
-    using Render::ShaderQuality;
-    if (q == ShaderQuality::None) {
-      return nullptr;
-    }
-
-    switch (q) {
-    case ShaderQuality::Full:
-      if (shader_full != nullptr) {
-        return shader_full;
-      }
-      if (shader_reduced != nullptr) {
-        return shader_reduced;
-      }
-      return shader_minimal;
-    case ShaderQuality::Reduced:
-      if (shader_reduced != nullptr) {
-        return shader_reduced;
-      }
-      if (shader_full != nullptr) {
-        return shader_full;
-      }
-      return shader_minimal;
-    case ShaderQuality::Minimal:
-      if (shader_minimal != nullptr) {
-        return shader_minimal;
-      }
-      if (shader_reduced != nullptr) {
-        return shader_reduced;
-      }
-      return shader_full;
-    case ShaderQuality::None:
-      break;
-    }
-    return nullptr;
+  [[nodiscard]] auto resolve(Render::ShaderQuality backend) const noexcept -> Shader* {
+    return backend == Render::ShaderQuality::None ? nullptr : shader;
   }
 
-  [[nodiscard]] auto is_flat_only() const noexcept -> bool {
-    return shader_full == nullptr && shader_reduced == nullptr &&
-           shader_minimal == nullptr;
-  }
+  [[nodiscard]] auto is_flat_only() const noexcept -> bool { return shader == nullptr; }
 };
 
 class MaterialRegistry {
@@ -73,17 +36,9 @@ public:
   }
 
   void init(Shader* basic, Shader* shadow) {
-    m_basic.shader_full = basic;
-    m_basic.shader_reduced = basic;
-    m_basic.shader_minimal = basic;
-
-    m_character.shader_full = basic;
-    m_character.shader_reduced = basic;
-    m_character.shader_minimal = basic;
-
-    m_shadow.shader_full = shadow;
-    m_shadow.shader_reduced = shadow;
-    m_shadow.shader_minimal = shadow;
+    m_basic.shader = basic;
+    m_character.shader = basic;
+    m_shadow.shader = shadow;
     m_initialised = (basic != nullptr);
   }
 

@@ -25,23 +25,18 @@ namespace Render::Creature::Pipeline {
 namespace {
 
 constexpr float k_humanoid_full_distance = 10.0F;
-constexpr float k_humanoid_minimal_distance = 40.0F;
-
 constexpr float k_horse_full_distance = 20.0F;
-constexpr float k_horse_minimal_distance = 60.0F;
-
 constexpr float k_elephant_full_distance = 20.0F;
-constexpr float k_elephant_minimal_distance = 60.0F;
+constexpr float k_authored_cull_distance = 200.0F;
 
-constexpr float k_ultra_troop_full_distance = std::numeric_limits<float>::max() / 4.0F;
-constexpr float k_ultra_troop_minimal_distance =
-    std::numeric_limits<float>::max() / 2.0F;
-
-[[nodiscard]] auto ultra_troop_lod_config() noexcept -> CreatureLodConfig {
+[[nodiscard]] auto
+lod_config_from_settings(float scaled_full_distance) noexcept -> CreatureLodConfig {
+  const auto& lod = Render::GraphicsSettings::instance().creature_lod();
   CreatureLodConfig config;
-  config.thresholds.full = k_ultra_troop_full_distance;
-  config.thresholds.minimal = k_ultra_troop_minimal_distance;
-  config.apply_visibility_budget = false;
+  config.thresholds.full =
+      lod.enabled ? scaled_full_distance : std::numeric_limits<float>::max() / 4.0F;
+  config.thresholds.cull = lod.cull_distance;
+  config.apply_visibility_budget = lod.enabled && lod.visibility_budget;
   return config;
 }
 
@@ -50,7 +45,7 @@ constexpr float k_ultra_troop_minimal_distance =
 auto humanoid_lod_config() noexcept -> CreatureLodConfig {
   CreatureLodConfig config;
   config.thresholds.full = k_humanoid_full_distance;
-  config.thresholds.minimal = k_humanoid_minimal_distance;
+  config.thresholds.cull = k_authored_cull_distance;
   config.apply_visibility_budget = false;
   return config;
 }
@@ -58,7 +53,7 @@ auto humanoid_lod_config() noexcept -> CreatureLodConfig {
 auto horse_lod_config() noexcept -> CreatureLodConfig {
   CreatureLodConfig config;
   config.thresholds.full = k_horse_full_distance;
-  config.thresholds.minimal = k_horse_minimal_distance;
+  config.thresholds.cull = k_authored_cull_distance;
   config.apply_visibility_budget = false;
   return config;
 }
@@ -66,48 +61,24 @@ auto horse_lod_config() noexcept -> CreatureLodConfig {
 auto elephant_lod_config() noexcept -> CreatureLodConfig {
   CreatureLodConfig config;
   config.thresholds.full = k_elephant_full_distance;
-  config.thresholds.minimal = k_elephant_minimal_distance;
+  config.thresholds.cull = k_authored_cull_distance;
   config.apply_visibility_budget = false;
   return config;
 }
 
 auto humanoid_lod_config_from_settings() noexcept -> CreatureLodConfig {
-  const auto& gs = Render::GraphicsSettings::instance();
-  if (!gs.creature_lod_enabled()) {
-    return ultra_troop_lod_config();
-  }
-
-  CreatureLodConfig config;
-  config.thresholds.full = gs.humanoid_full_detail_distance();
-  config.thresholds.minimal = gs.humanoid_minimal_detail_distance();
-  config.apply_visibility_budget = gs.visibility_budget().enabled;
-  return config;
+  return lod_config_from_settings(
+      Render::GraphicsSettings::instance().humanoid_full_detail_distance());
 }
 
 auto horse_lod_config_from_settings() noexcept -> CreatureLodConfig {
-  const auto& gs = Render::GraphicsSettings::instance();
-  if (!gs.creature_lod_enabled()) {
-    return ultra_troop_lod_config();
-  }
-
-  CreatureLodConfig config;
-  config.thresholds.full = gs.horse_full_detail_distance();
-  config.thresholds.minimal = gs.horse_minimal_detail_distance();
-  config.apply_visibility_budget = gs.visibility_budget().enabled;
-  return config;
+  return lod_config_from_settings(
+      Render::GraphicsSettings::instance().horse_full_detail_distance());
 }
 
 auto elephant_lod_config_from_settings() noexcept -> CreatureLodConfig {
-  const auto& gs = Render::GraphicsSettings::instance();
-  if (!gs.creature_lod_enabled()) {
-    return ultra_troop_lod_config();
-  }
-
-  CreatureLodConfig config;
-  config.thresholds.full = gs.elephant_full_detail_distance();
-  config.thresholds.minimal = gs.elephant_minimal_detail_distance();
-  config.apply_visibility_budget = gs.visibility_budget().enabled;
-  return config;
+  return lod_config_from_settings(
+      Render::GraphicsSettings::instance().elephant_full_detail_distance());
 }
 
 auto quadruped_lod_from_settings(CreatureKind kind, float distance) noexcept

@@ -12,6 +12,8 @@
         <file>assets/shaders/include/noise.glsl</file>
         <file>assets/shaders/include/terrain_noise.glsl</file>
         <file>assets/shaders/include/tonemap.glsl</file>
+        <file>assets/shaders/include/quality.glsl</file>
+        <file>assets/shaders/include/contact_shadow.glsl</file>
         <file>assets/shaders/include/rigged_gpu_skin.glsl</file>
         <file>assets/shaders/include/activity_indicator.glsl</file>
         <file>assets/shaders/directional_shadow_depth.vert</file>
@@ -86,6 +88,8 @@
         <file>assets/shaders/terrain_chunk.vert</file>
         <file>assets/shaders/troop_shadow.frag</file>
         <file>assets/shaders/troop_shadow.vert</file>
+        <file>assets/shaders/troop_shadow_instanced.frag</file>
+        <file>assets/shaders/troop_shadow_instanced.vert</file>
         <file>assets/shaders/combat_dust.frag</file>
         <file>assets/shaders/combat_dust.vert</file>
         <file>assets/shaders/blood_pool.vert</file>

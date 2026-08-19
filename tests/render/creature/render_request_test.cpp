@@ -501,7 +501,7 @@ TEST(SubmitRequests, BillboardLodCountsButDoesNotDraw) {
   CreatureRenderRequest req{};
   req.archetype = ArchetypeRegistry::k_humanoid_base;
   req.state = AnimationStateId::Idle;
-  req.lod = Render::Creature::CreatureLOD::Billboard;
+  req.lod = Render::Creature::CreatureLOD::Culled;
   req.world.setToIdentity();
 
   std::array<CreatureRenderRequest, 1> reqs{req};
@@ -544,7 +544,7 @@ TEST(SubmitRequests, BatchOfMixedRequestsCountsCorrectly) {
   reqs[2].lod = Render::Creature::CreatureLOD::Minimal;
   reqs[3].archetype = ArchetypeRegistry::k_humanoid_base;
   reqs[3].state = AnimationStateId::Hold;
-  reqs[3].lod = Render::Creature::CreatureLOD::Billboard;
+  reqs[3].lod = Render::Creature::CreatureLOD::Culled;
 
   const auto stats = pipeline.submit_requests(reqs, sink);
   EXPECT_EQ(stats.entities_submitted, 4U);

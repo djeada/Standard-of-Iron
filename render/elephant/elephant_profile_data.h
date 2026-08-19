@@ -96,9 +96,9 @@ constexpr uint32_t k_salt_move_bob = 0x213U;
 
 namespace ElephantVariantConstants {
 
-constexpr float k_skin_base_r = 0.415F;
-constexpr float k_skin_base_g = 0.400F;
-constexpr float k_skin_base_b = 0.392F;
+constexpr float k_skin_base_r = 0.262F;
+constexpr float k_skin_base_g = 0.252F;
+constexpr float k_skin_base_b = 0.246F;
 
 constexpr float k_skin_variation_min = 0.90F;
 constexpr float k_skin_variation_max = 1.10F;
@@ -106,17 +106,17 @@ constexpr float k_skin_variation_max = 1.10F;
 constexpr float k_highlight_blend = 0.15F;
 constexpr float k_shadow_blend = 0.20F;
 
-constexpr float k_ear_inner_r = 0.42F;
-constexpr float k_ear_inner_g = 0.33F;
-constexpr float k_ear_inner_b = 0.31F;
+constexpr float k_ear_inner_r = 0.30F;
+constexpr float k_ear_inner_g = 0.235F;
+constexpr float k_ear_inner_b = 0.22F;
 
-constexpr float k_tusk_r = 0.74F;
-constexpr float k_tusk_g = 0.69F;
-constexpr float k_tusk_b = 0.58F;
+constexpr float k_tusk_r = 0.56F;
+constexpr float k_tusk_g = 0.52F;
+constexpr float k_tusk_b = 0.43F;
 
-constexpr float k_toenail_r = 0.52F;
-constexpr float k_toenail_g = 0.49F;
-constexpr float k_toenail_b = 0.44F;
+constexpr float k_toenail_r = 0.40F;
+constexpr float k_toenail_g = 0.375F;
+constexpr float k_toenail_b = 0.335F;
 
 constexpr float k_wood_r = 0.45F;
 constexpr float k_wood_g = 0.32F;

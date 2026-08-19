@@ -173,6 +173,29 @@ is_harvestable_world_prop_type(WorldProp::Type type) -> bool {
          is_iron_ore_world_prop_type(type);
 }
 
+[[nodiscard]] constexpr auto is_solid_world_prop_type(WorldProp::Type type) -> bool {
+  switch (type) {
+
+  case WorldProp::Type::Plant:
+    return false;
+  case WorldProp::Type::FireCamp:
+  case WorldProp::Type::Tent:
+  case WorldProp::Type::SupplyCart:
+  case WorldProp::Type::WeaponRack:
+  case WorldProp::Type::Ruins:
+  case WorldProp::Type::DeadTree:
+  case WorldProp::Type::Boulder:
+  case WorldProp::Type::PineTree:
+  case WorldProp::Type::OliveTree:
+  case WorldProp::Type::IronOre:
+  case WorldProp::Type::MagicShrine:
+  case WorldProp::Type::AbandonedHome:
+  case WorldProp::Type::Statue:
+    return true;
+  }
+  return true;
+}
+
 [[nodiscard]] inline auto
 world_prop_type_to_string(WorldProp::Type type) -> QLatin1String {
   switch (type) {

@@ -29,6 +29,13 @@ auto ShaderUniformCache::initialize() -> bool {
   basic.instanced_variant = m_shader_cache->get(QStringLiteral("basic_instanced"));
   m_uniform_cache[m_basic_shader] = basic;
 
+  if (Shader* troop_shadow = m_shader_cache->get(QStringLiteral("troop_shadow"))) {
+    BasicUniforms shadow = build_uniform_set(troop_shadow);
+    shadow.instanced_variant =
+        m_shader_cache->get(QStringLiteral("troop_shadow_instanced"));
+    m_uniform_cache[troop_shadow] = shadow;
+  }
+
   return true;
 }
 

@@ -608,7 +608,7 @@ void submit_rigged_creature(const CreatureRenderAssetHandle& handle,
                             Render::GL::ISubmitter& out,
                             Render::GL::Renderer* renderer) {
   const CreatureAsset* asset = handle.asset;
-  if (lod == CreatureLOD::Billboard || asset == nullptr || asset->spec == nullptr ||
+  if (lod == CreatureLOD::Culled || asset == nullptr || asset->spec == nullptr ||
       handle.bind_palette.empty()) {
     return;
   }
@@ -836,7 +836,7 @@ auto submit_snapshot_creature(
     Render::GL::Renderer* renderer,
     bool allow_bake_fallback = true) -> bool {
   const CreatureAsset* asset = handle.asset;
-  if (lod == CreatureLOD::Billboard || asset == nullptr || asset->spec == nullptr ||
+  if (lod == CreatureLOD::Culled || asset == nullptr || asset->spec == nullptr ||
       handle.bind_palette.empty()) {
     return false;
   }
@@ -1013,7 +1013,7 @@ void bump_lod_counters(CreatureLOD lod, SubmitStats& stats) {
   case CreatureLOD::Minimal:
     ++stats.lod_minimal;
     break;
-  case CreatureLOD::Billboard:
+  case CreatureLOD::Culled:
     ++stats.lod_billboard;
     break;
   }
@@ -1052,7 +1052,7 @@ auto CreaturePipeline::submit_requests(
     if (handle == nullptr || !handle->valid()) {
       return;
     }
-    if (req.lod == CreatureLOD::Billboard) {
+    if (req.lod == CreatureLOD::Culled) {
       return;
     }
 

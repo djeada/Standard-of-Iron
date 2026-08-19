@@ -34,7 +34,7 @@ auto lod_slot_index(Render::Creature::CreatureLOD lod) -> std::size_t {
     return 0U;
   case Render::Creature::CreatureLOD::Minimal:
     return 1U;
-  case Render::Creature::CreatureLOD::Billboard:
+  case Render::Creature::CreatureLOD::Culled:
     break;
   }
   return 2U;

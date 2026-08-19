@@ -200,6 +200,8 @@ inline constexpr char k_lighting_shadow_quality_medium_id[] =
     "lighting_shadow_quality_medium";
 inline constexpr char k_lighting_shadow_quality_high_id[] =
     "lighting_shadow_quality_high";
+inline constexpr char k_lighting_shadow_quality_ultra_id[] =
+    "lighting_shadow_quality_ultra";
 
 inline constexpr char k_promo_last_stand_id[] = "promo_last_stand";
 inline constexpr char k_promo_night_of_the_dead_id[] = "promo_night_of_the_dead";
@@ -245,6 +247,7 @@ inline constexpr char k_wildlife_pack_takedown_id[] = "wildlife_pack_takedown";
 inline constexpr char k_wildlife_bird_scatter_id[] = "wildlife_bird_scatter";
 inline constexpr char k_wildlife_bird_flyover_id[] = "wildlife_bird_flyover";
 inline constexpr char k_wildlife_mixed_pasture_id[] = "wildlife_mixed_pasture";
+inline constexpr char k_wildlife_firelight_id[] = "wildlife_firelight";
 inline constexpr char k_wildlife_storm_pasture_id[] = "wildlife_storm_pasture";
 inline constexpr char k_wildlife_dense_population_id[] = "wildlife_dense_population";
 

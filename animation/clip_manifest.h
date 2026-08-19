@@ -200,6 +200,13 @@ inline constexpr std::uint16_t k_humanoid_carthage_shield_wall_front_clip = 58U;
 inline constexpr std::uint16_t k_humanoid_carthage_shield_wall_left_clip = 59U;
 inline constexpr std::uint16_t k_humanoid_carthage_shield_wall_right_clip = 60U;
 
+inline constexpr std::uint8_t k_humanoid_carthage_shield_wall_clip_count = 3U;
+
+inline constexpr std::uint16_t k_humanoid_taunt_first_clip = 61U;
+inline constexpr std::uint16_t k_humanoid_taunt_dismissive_clip = 61U;
+inline constexpr std::uint16_t k_humanoid_taunt_cynical_clip = 62U;
+inline constexpr std::uint8_t k_humanoid_taunt_clip_count = 2U;
+
 inline constexpr std::uint16_t k_humanoid_construct_first_clip = 63U;
 inline constexpr std::uint16_t k_humanoid_construct_hammer_clip = 63U;
 inline constexpr std::uint16_t k_humanoid_construct_saw_clip = 64U;
@@ -207,12 +214,6 @@ inline constexpr std::uint16_t k_humanoid_construct_chisel_clip = 65U;
 inline constexpr std::uint16_t k_humanoid_construct_kneel_chisel_clip = 66U;
 inline constexpr std::uint16_t k_humanoid_construct_reap_clip = 67U;
 inline constexpr std::uint8_t k_humanoid_construct_clip_count = 5U;
-inline constexpr std::uint8_t k_humanoid_carthage_shield_wall_clip_count = 3U;
-
-inline constexpr std::uint16_t k_humanoid_taunt_first_clip = 61U;
-inline constexpr std::uint16_t k_humanoid_taunt_dismissive_clip = 61U;
-inline constexpr std::uint16_t k_humanoid_taunt_cynical_clip = 62U;
-inline constexpr std::uint8_t k_humanoid_taunt_clip_count = 2U;
 
 inline constexpr std::uint16_t k_humanoid_clip_count = 68U;
 

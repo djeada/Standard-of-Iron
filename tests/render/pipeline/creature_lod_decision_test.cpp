@@ -30,8 +30,8 @@ TEST(CreatureLodDecision, SelectDistanceLodMatchesThresholds) {
   EXPECT_EQ(select_distance_lod(11.99F, k_defaults), CreatureLOD::Full);
   EXPECT_EQ(select_distance_lod(12.0F, k_defaults), CreatureLOD::Minimal);
   EXPECT_EQ(select_distance_lod(39.99F, k_defaults), CreatureLOD::Minimal);
-  EXPECT_EQ(select_distance_lod(40.0F, k_defaults), CreatureLOD::Billboard);
-  EXPECT_EQ(select_distance_lod(1000.0F, k_defaults), CreatureLOD::Billboard);
+  EXPECT_EQ(select_distance_lod(40.0F, k_defaults), CreatureLOD::Culled);
+  EXPECT_EQ(select_distance_lod(1000.0F, k_defaults), CreatureLOD::Culled);
 }
 
 TEST(CreatureLodDecision, ForcedLodBypassesEverything) {
@@ -55,8 +55,8 @@ TEST(CreatureLodDecision, NoCameraDefaultsToFull) {
 TEST(CreatureLodDecision, BillboardDistanceCullsWithBillboardReason) {
   const auto d = decide_creature_lod(make_inputs(50.0F));
   EXPECT_TRUE(d.culled);
-  EXPECT_EQ(d.reason, CullReason::Billboard);
-  EXPECT_EQ(d.lod, CreatureLOD::Billboard);
+  EXPECT_EQ(d.reason, CullReason::Distance);
+  EXPECT_EQ(d.lod, CreatureLOD::Culled);
 }
 
 TEST(CreatureLodDecision, BudgetDeniesFullDemotesToMinimal) {
@@ -87,8 +87,8 @@ TEST(CreatureLodDecision, BudgetIgnoredWhenNotEnabled) {
 TEST(CreatureLodDecision, ForcedLodWithBillboardIsNotCulled) {
 
   auto in = make_inputs(0.0F);
-  in.forced_lod = CreatureLOD::Billboard;
+  in.forced_lod = CreatureLOD::Culled;
   const auto d = decide_creature_lod(in);
   EXPECT_FALSE(d.culled);
-  EXPECT_EQ(d.lod, CreatureLOD::Billboard);
+  EXPECT_EQ(d.lod, CreatureLOD::Culled);
 }

@@ -29,6 +29,7 @@ public:
   void submit(Renderer& renderer, ResourceManager* resources) override;
 
   void refresh_grass();
+  [[nodiscard]] auto grass_matches_graphics_profile() const noexcept -> bool;
 
   void clear() override;
 
@@ -73,6 +74,8 @@ private:
   std::vector<Game::Map::TerrainType> m_terrain_types;
   Game::Map::BiomeSettings m_biome_settings;
   std::uint32_t m_noise_seed = 0U;
+
+  float m_generated_grass_density{-1.0F};
   float m_typical_blade_height = 0.0F;
   QVector3D m_light_direction{0.35F, 0.8F, 0.45F};
 

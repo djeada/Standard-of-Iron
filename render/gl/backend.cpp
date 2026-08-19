@@ -18,6 +18,7 @@
 #include <memory>
 #include <mutex>
 #include <optional>
+#include <span>
 #include <string>
 #include <unordered_set>
 #include <vector>
@@ -61,6 +62,7 @@
 #include "render_constants.h"
 #include "scene/camera.h"
 #include "shader.h"
+#include "shadow_cascade_fit.h"
 #include "state_scopes.h"
 #include "texture.h"
 #include "ubo_bindings.h"
@@ -151,6 +153,9 @@ auto Backend::initialize() -> bool {
                    " and that the application window has a valid Core Profile context.";
     return false;
   }
+
+  apply_graphics_profile(Render::GraphicsSettings::instance().profile(), true);
+
   glGenBuffers(1, &m_frame_ubo);
   glBindBuffer(GL_UNIFORM_BUFFER, m_frame_ubo);
   glBufferData(GL_UNIFORM_BUFFER, 64, nullptr, GL_DYNAMIC_DRAW);
@@ -288,6 +293,8 @@ auto Backend::initialize() -> bool {
   m_basic_shader = m_shader_cache->get(QStringLiteral("basic"));
   m_grid_shader = m_shader_cache->get(QStringLiteral("grid"));
   m_shadow_shader = m_shader_cache->get(QStringLiteral("troop_shadow"));
+  m_shadow_instanced_shader =
+      m_shader_cache->get(QStringLiteral("troop_shadow_instanced"));
   m_directional_shadow_depth_shader = m_shader_cache->get_or_load(
       QStringLiteral(":/assets/shaders/directional_shadow_depth.vert"),
       QStringLiteral(":/assets/shaders/directional_shadow_depth.frag"));
@@ -325,6 +332,8 @@ auto Backend::initialize() -> bool {
   }
 
   MaterialRegistry::instance().init(m_basic_shader, m_shadow_shader);
+
+  apply_graphics_profile(Render::GraphicsSettings::instance().profile(), false);
   qInfo() << "Backend::initialize() - Complete!";
   return true;
 }
@@ -343,7 +352,72 @@ auto Backend::banner_shader() const -> Shader* {
   return nullptr;
 }
 
+namespace {
+
+auto shader_tier_defines(Render::ShaderTier tier) -> QString {
+  return QStringLiteral("#define SOI_QUALITY_TIER %1\n").arg(static_cast<int>(tier));
+}
+
+} // namespace
+
+void Backend::sync_graphics_profile() {
+  const auto& settings = Render::GraphicsSettings::instance();
+  const std::uint32_t generation = settings.generation();
+  if (m_graphics_profile_applied && generation == m_graphics_generation) {
+    return;
+  }
+  m_graphics_generation = generation;
+  apply_graphics_profile(settings.profile(), !m_graphics_profile_applied);
+}
+
+void Backend::apply_graphics_profile(const Render::GraphicsProfile& profile,
+                                     bool initial) {
+  m_graphics_generation = Render::GraphicsSettings::instance().generation();
+  const bool tier_changed = initial || profile.shader_tier != m_shader_tier;
+  m_shader_tier = profile.shader_tier;
+  m_shadow_settings = profile.directional_shadows;
+  Shader::set_global_defines(shader_tier_defines(m_shader_tier));
+  if (tier_changed && !initial) {
+    const std::size_t reloaded = Shader::reload_all();
+    qInfo() << "Backend: shader tier" << static_cast<int>(m_shader_tier) << "-"
+            << reloaded << "programs recompiled";
+  }
+  if (m_post_process_pipeline != nullptr) {
+    m_post_process_pipeline->set_passes(
+        {.bloom = profile.post_process.bloom,
+         .godrays = profile.post_process.godrays,
+         .ambient_occlusion = profile.post_process.ambient_occlusion,
+         .fxaa = profile.post_process.fxaa});
+  }
+  m_graphics_profile_applied = true;
+}
+
+void Backend::update_contact_shadow_uniforms() {
+  const QVector3D sun = m_environment_lighting.primary_direction;
+  QVector2D ground(-sun.x(), -sun.z());
+  if (ground.lengthSquared() < 1e-6F) {
+    ground = QVector2D(0.0F, 1.0F);
+  }
+  ground.normalize();
+  const float cast_weight = m_shadow_settings.enabled ? 0.0F : 1.0F;
+  for (Shader* shader : {m_shadow_shader, m_shadow_instanced_shader}) {
+    if (shader == nullptr) {
+      continue;
+    }
+    const auto dir_handle = shader->optional_uniform_handle("u_ground_light_dir");
+    const auto cast_handle = shader->optional_uniform_handle("u_cast_weight");
+    if (dir_handle == Shader::InvalidUniform && cast_handle == Shader::InvalidUniform) {
+      continue;
+    }
+    shader->use();
+    shader->set_uniform(dir_handle, ground);
+    shader->set_uniform(cast_handle, cast_weight);
+  }
+  glUseProgram(0);
+}
+
 void Backend::begin_frame() {
+  sync_graphics_profile();
   if (m_viewport_width > 0 && m_viewport_height > 0) {
     glViewport(0, 0, m_viewport_width, m_viewport_height);
   }
@@ -407,6 +481,14 @@ void Backend::release_directional_shadow_resources() {
   if (m_directional_shadow_fbo != 0) {
     glDeleteFramebuffers(1, &m_directional_shadow_fbo);
     m_directional_shadow_fbo = 0;
+  }
+  if (m_directional_shadow_compare_sampler != 0) {
+    glDeleteSamplers(1, &m_directional_shadow_compare_sampler);
+    m_directional_shadow_compare_sampler = 0;
+  }
+  if (m_directional_shadow_depth_sampler != 0) {
+    glDeleteSamplers(1, &m_directional_shadow_depth_sampler);
+    m_directional_shadow_depth_sampler = 0;
   }
   m_directional_shadow_resolution = 0;
   m_directional_shadow_far_resolution = 0;
@@ -472,6 +554,47 @@ void Backend::ensure_directional_shadow_resources(int resolution, int cascades) 
         m_directional_shadow_far_texture, far_resolution, far_cascades);
   }
 
+  const GLfloat border[] = {1.0F, 1.0F, 1.0F, 1.0F};
+  if (m_directional_shadow_compare_sampler == 0) {
+    glGenSamplers(1, &m_directional_shadow_compare_sampler);
+    glSamplerParameteri(
+        m_directional_shadow_compare_sampler, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glSamplerParameteri(
+        m_directional_shadow_compare_sampler, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glSamplerParameteri(
+        m_directional_shadow_compare_sampler, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+    glSamplerParameteri(
+        m_directional_shadow_compare_sampler, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+    glSamplerParameterfv(
+        m_directional_shadow_compare_sampler, GL_TEXTURE_BORDER_COLOR, border);
+    glSamplerParameteri(m_directional_shadow_compare_sampler,
+                        GL_TEXTURE_COMPARE_MODE,
+                        GL_COMPARE_REF_TO_TEXTURE);
+    glSamplerParameteri(
+        m_directional_shadow_compare_sampler, GL_TEXTURE_COMPARE_FUNC, GL_LEQUAL);
+  }
+  if (m_directional_shadow_depth_sampler == 0) {
+    glGenSamplers(1, &m_directional_shadow_depth_sampler);
+    glSamplerParameteri(
+        m_directional_shadow_depth_sampler, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glSamplerParameteri(
+        m_directional_shadow_depth_sampler, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glSamplerParameteri(
+        m_directional_shadow_depth_sampler, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+    glSamplerParameteri(
+        m_directional_shadow_depth_sampler, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+    glSamplerParameterfv(
+        m_directional_shadow_depth_sampler, GL_TEXTURE_BORDER_COLOR, border);
+    glSamplerParameteri(
+        m_directional_shadow_depth_sampler, GL_TEXTURE_COMPARE_MODE, GL_NONE);
+  }
+  glBindSampler(static_cast<GLuint>(TextureUnit::directional_shadow_map),
+                m_directional_shadow_compare_sampler);
+  glBindSampler(static_cast<GLuint>(TextureUnit::directional_shadow_map_far),
+                m_directional_shadow_compare_sampler);
+  glBindSampler(static_cast<GLuint>(TextureUnit::directional_shadow_depth),
+                m_directional_shadow_depth_sampler);
+
   glGenFramebuffers(1, &m_directional_shadow_fbo);
   m_directional_shadow_resolution = resolution;
   m_directional_shadow_far_resolution = far_resolution;
@@ -484,10 +607,15 @@ namespace {
 constexpr float k_shadow_min_caster_texels = 0.75F;
 constexpr std::size_t k_shadow_min_instanced_run = 2;
 
+constexpr float k_shadow_caster_height_allowance = 10.0F;
+
+constexpr float k_shadow_default_slab_min = -2.0F;
+constexpr float k_shadow_default_slab_max = 6.0F;
+
 } // namespace
 
 void Backend::render_directional_shadows(const DrawQueue& queue, const Camera& cam) {
-  const auto& settings = Render::GraphicsSettings::instance().directional_shadows();
+  const Render::DirectionalShadowSettings& settings = m_shadow_settings;
   const bool enabled = settings.enabled &&
                        m_environment_lighting.shadow_strength > 0.0F &&
                        m_directional_shadow_depth_shader != nullptr &&
@@ -523,39 +651,76 @@ void Backend::render_directional_shadows(const DrawQueue& queue, const Camera& c
 
   upload_shadow_block(DirectionalShadowBlock{});
 
-  const float near_distance = std::max(cam.get_near(), 0.05F);
-  const float far_distance =
-      std::max(near_distance + 1.0F, std::min(settings.distance, cam.get_far()));
-  constexpr float split_lambda = 0.68F;
-  for (int cascade = 0; cascade < cascade_count; ++cascade) {
-    const float p = static_cast<float>(cascade + 1) / static_cast<float>(cascade_count);
-    const float logarithmic = near_distance * std::pow(far_distance / near_distance, p);
-    const float uniform = near_distance + (far_distance - near_distance) * p;
-    m_directional_shadow_splits[cascade] =
-        logarithmic * split_lambda + uniform * (1.0F - split_lambda);
-  }
-  for (int cascade = cascade_count; cascade < 4; ++cascade) {
-    m_directional_shadow_splits[cascade] = far_distance;
-  }
-
   bool invertible = false;
-  const QMatrix4x4 inverse_view_projection =
-      cam.get_view_projection_matrix().inverted(&invertible);
+  const QMatrix4x4 view_projection = cam.get_view_projection_matrix();
+  const QMatrix4x4 inverse_view_projection = view_projection.inverted(&invertible);
   if (!invertible) {
     return;
   }
-  std::array<QVector3D, 4> full_near{};
-  std::array<QVector3D, 4> full_far{};
-  int corner = 0;
-  for (int y : {-1, 1}) {
-    for (int x : {-1, 1}) {
-      const QVector4D near_h = inverse_view_projection * QVector4D(x, y, -1.0F, 1.0F);
-      const QVector4D far_h = inverse_view_projection * QVector4D(x, y, 1.0F, 1.0F);
-      full_near[corner] = near_h.toVector3DAffine();
-      full_far[corner] = far_h.toVector3DAffine();
-      ++corner;
+
+  std::array<QVector3D, 5> view_rays{};
+  {
+    int corner = 0;
+    for (int y : {-1, 1}) {
+      for (int x : {-1, 1}) {
+        const QVector4D near_h = inverse_view_projection * QVector4D(x, y, -1.0F, 1.0F);
+        const QVector4D far_h = inverse_view_projection * QVector4D(x, y, 1.0F, 1.0F);
+        view_rays[static_cast<std::size_t>(corner)] =
+            (far_h.toVector3DAffine() - near_h.toVector3DAffine()).normalized();
+        ++corner;
+      }
     }
+    view_rays[4] = cam.get_forward_vector().normalized();
   }
+
+  float slab_min = std::numeric_limits<float>::max();
+  float slab_max = std::numeric_limits<float>::lowest();
+  if (m_shadow_terrain_height_cache.size() > 4096U) {
+    m_shadow_terrain_height_cache.clear();
+  }
+  for (const auto& item : queue.items()) {
+    const auto* terrain = std::get_if<TerrainSurfaceCmd>(&item);
+    if (terrain == nullptr || terrain->mesh == nullptr || terrain->horizon_dressing) {
+      continue;
+    }
+    auto found = m_shadow_terrain_height_cache.find(terrain->mesh);
+    if (found == m_shadow_terrain_height_cache.end()) {
+      float local_min = std::numeric_limits<float>::max();
+      float local_max = std::numeric_limits<float>::lowest();
+      for (const auto& vertex : terrain->mesh->get_vertices()) {
+        local_min = std::min(local_min, vertex.position[1]);
+        local_max = std::max(local_max, vertex.position[1]);
+      }
+      if (local_min > local_max) {
+        local_min = local_max = 0.0F;
+      }
+      found = m_shadow_terrain_height_cache
+                  .emplace(terrain->mesh, std::pair<float, float>{local_min, local_max})
+                  .first;
+    }
+
+    const float y_a =
+        terrain->model.map(QVector3D(0.0F, found->second.first, 0.0F)).y();
+    const float y_b =
+        terrain->model.map(QVector3D(0.0F, found->second.second, 0.0F)).y();
+    slab_min = std::min({slab_min, y_a, y_b});
+    slab_max = std::max({slab_max, y_a, y_b});
+  }
+  if (slab_min > slab_max) {
+    slab_min = k_shadow_default_slab_min;
+    slab_max = k_shadow_default_slab_max;
+  }
+  slab_max += k_shadow_caster_height_allowance;
+
+  const float camera_near = std::max(cam.get_near(), 0.05F);
+  const float shadow_reach =
+      std::max(camera_near + 1.0F, std::min(settings.distance, cam.get_far()));
+  const ShadowRangeFit range = fit_shadow_distance_range(
+      cam.get_position(), view_rays, slab_min, slab_max, camera_near, shadow_reach);
+  const float near_distance = range.near_distance;
+  const float far_distance = range.far_distance;
+  m_directional_shadow_splits =
+      compute_shadow_cascade_splits(near_distance, far_distance, cascade_count);
 
   QVector3D light_direction = m_environment_lighting.primary_direction.normalized();
   const QVector3D light_up =
@@ -610,7 +775,9 @@ void Backend::render_directional_shadows(const DrawQueue& queue, const Camera& c
         add_static_caster(part->mesh, part->world);
       }
     } else if (const auto* terrain = std::get_if<TerrainSurfaceCmd>(&item)) {
-      add_static_caster(terrain->mesh, terrain->model);
+      if (!terrain->horizon_dressing) {
+        add_static_caster(terrain->mesh, terrain->model);
+      }
     }
   }
   std::sort(m_shadow_static_casters.begin(),
@@ -627,27 +794,40 @@ void Backend::render_directional_shadows(const DrawQueue& queue, const Camera& c
       m_mesh_instancing_pipeline->is_initialized() &&
       m_directional_shadow_depth_instanced_shader != nullptr;
 
+  const QMatrix4x4 camera_view_projection = view_projection;
+  const auto upload_frame_view_projection = [this](const QMatrix4x4& matrix) {
+    if (m_frame_ubo == 0) {
+      return;
+    }
+    glBindBuffer(GL_UNIFORM_BUFFER, m_frame_ubo);
+    glBufferSubData(GL_UNIFORM_BUFFER, 0, 64, matrix.constData());
+    glBindBuffer(GL_UNIFORM_BUFFER, 0);
+  };
+
+  glActiveTexture(GL_TEXTURE0 + TextureUnit::directional_shadow_map);
+  glBindTexture(GL_TEXTURE_2D_ARRAY, 0);
+  glActiveTexture(GL_TEXTURE0 + TextureUnit::directional_shadow_depth);
+  glBindTexture(GL_TEXTURE_2D_ARRAY, 0);
+  glActiveTexture(GL_TEXTURE0);
+
+  std::array<float, k_max_shadow_cascades> cascade_texel_world{};
+  std::array<float, k_max_shadow_cascades> cascade_depth_span{};
+
+  const float sun_stretch = std::hypot(light_direction.x(), light_direction.z()) /
+                            std::max(light_direction.y(), 0.15F);
+  const float rigged_shadow_slack = 6.0F + 4.0F * std::min(sun_stretch, 4.0F);
+
   float cascade_near = near_distance;
   for (int cascade = 0; cascade < cascade_count; ++cascade) {
     const float cascade_far = m_directional_shadow_splits[cascade];
-    const float near_ratio =
-        (cascade_near - near_distance) / (far_distance - near_distance);
-    const float far_ratio =
-        (cascade_far - near_distance) / (far_distance - near_distance);
-    std::array<QVector3D, 8> corners{};
-    QVector3D center;
-    for (int i = 0; i < 4; ++i) {
-      const QVector3D ray = full_far[i] - full_near[i];
-      corners[i] = full_near[i] + ray * near_ratio;
-      corners[i + 4] = full_near[i] + ray * far_ratio;
-      center += corners[i] + corners[i + 4];
-    }
-    center /= 8.0F;
-    float radius = 1.0F;
-    for (const QVector3D& value : corners) {
-      radius = std::max(radius, (value - center).length());
-    }
-    radius = std::ceil(radius * 16.0F) / 16.0F;
+    const ShadowCascadeSphere sphere =
+        fit_shadow_cascade_sphere(cam.get_position(),
+                                  std::span<const QVector3D, 4>(view_rays.data(), 4),
+                                  view_rays[4],
+                                  cascade_near,
+                                  cascade_far);
+    QVector3D center = sphere.center;
+    float radius = std::ceil(sphere.radius * 16.0F) / 16.0F;
     const bool far_cascade = cascade >= m_directional_shadow_near_cascades;
     const int cascade_resolution = far_cascade ? m_directional_shadow_far_resolution
                                                : m_directional_shadow_resolution;
@@ -656,6 +836,8 @@ void Backend::render_directional_shadows(const DrawQueue& queue, const Camera& c
               std::fmod(QVector3D::dotProduct(center, light_right), world_texel);
     center -=
         stable_up * std::fmod(QVector3D::dotProduct(center, stable_up), world_texel);
+    cascade_texel_world[static_cast<std::size_t>(cascade)] = world_texel;
+    cascade_depth_span[static_cast<std::size_t>(cascade)] = radius * 6.0F - 0.1F;
 
     QMatrix4x4 light_view;
     light_view.lookAt(center + light_direction * (radius * 2.5F), center, stable_up);
@@ -677,11 +859,6 @@ void Backend::render_directional_shadows(const DrawQueue& queue, const Camera& c
     m_shadow_cascade_casters.clear();
     for (const auto& caster : m_shadow_static_casters) {
       if (caster.world_radius < min_caster_radius) {
-        continue;
-      }
-      const float camera_distance = (caster.world_center - cam.get_position()).length();
-      if (camera_distance > cascade_far + caster.world_radius ||
-          camera_distance + caster.world_radius < cascade_near) {
         continue;
       }
       const QVector3D relative = caster.world_center - center;
@@ -765,8 +942,9 @@ void Backend::render_directional_shadows(const DrawQueue& queue, const Camera& c
         const float camera_distance =
             (rigged.world.column(3).toVector3D() - cam.get_position()).length();
         if (rigged.mesh == nullptr || rigged.bone_palette == nullptr ||
-            rigged.alpha < k_opaque_threshold || camera_distance > cascade_far + 8.0F ||
-            camera_distance + 8.0F < cascade_near) {
+            rigged.alpha < k_opaque_threshold ||
+            camera_distance > cascade_far + rigged_shadow_slack ||
+            camera_distance + rigged_shadow_slack < cascade_near) {
           continue;
         }
         visible_rigged.push_back(&rigged);
@@ -811,6 +989,8 @@ void Backend::render_directional_shadows(const DrawQueue& queue, const Camera& c
                                            light_vp,
                                            0.0F,
                                            shadow_polygon_offset_enabled};
+
+    upload_frame_view_projection(light_vp);
     m_last_bound_shader = nullptr;
     m_last_bound_texture = nullptr;
     for (const PreparedBatch& prepared : queue.prepared_batches()) {
@@ -819,16 +999,19 @@ void Backend::render_directional_shadows(const DrawQueue& queue, const Camera& c
       }
       const auto* scatter =
           std::get_if<TerrainScatterCmd>(&queue.get_sorted(prepared.start));
+
       if (scatter == nullptr ||
           scatter->species == TerrainScatterCmd::Species::FireCamp ||
-          scatter->species == TerrainScatterCmd::Species::Stone) {
+          scatter->species == TerrainScatterCmd::Species::Grass) {
         continue;
       }
       execute_scatter_commands(prepared, shadow_context);
     }
     cascade_near = cascade_far;
   }
-
+  upload_frame_view_projection(camera_view_projection);
+  m_last_bound_shader = nullptr;
+  m_last_bound_texture = nullptr;
   glDisable(GL_POLYGON_OFFSET_FILL);
   glCullFace(GL_BACK);
   if (previous_cull == 0U) {
@@ -858,13 +1041,14 @@ void Backend::render_directional_shadows(const DrawQueue& queue, const Camera& c
           ? 1.0F / static_cast<float>(m_directional_shadow_far_resolution)
           : block.shadow_map_texel_size;
   block.near_cascade_count = static_cast<float>(m_directional_shadow_near_cascades);
-  const int weather_softening = m_environment_lighting.shadow_softness > 0.65F ? 1 : 0;
-  block.pcf_radius =
-      static_cast<float>(std::clamp(settings.pcf_radius + weather_softening, 1, 3));
+
+  block.pcf_radius = 0.0F;
   block.camera_position = cam.get_position();
   block.depth_bias = settings.depth_bias;
   block.normal_bias = settings.normal_bias;
   block.cascade_blend = settings.cascade_blend;
+  block.cascade_texel_world = cascade_texel_world;
+  block.cascade_depth_span = cascade_depth_span;
 
   const auto complete = block.packed_std140();
   glBindBuffer(GL_UNIFORM_BUFFER, m_directional_shadow_ubo);
@@ -885,6 +1069,8 @@ void Backend::render_directional_shadows(const DrawQueue& queue, const Camera& c
   glBindTexture(GL_TEXTURE_2D_ARRAY,
                 m_directional_shadow_far_texture != 0 ? m_directional_shadow_far_texture
                                                       : m_directional_shadow_texture);
+  glActiveTexture(GL_TEXTURE0 + TextureUnit::directional_shadow_depth);
+  glBindTexture(GL_TEXTURE_2D_ARRAY, m_directional_shadow_texture);
   glActiveTexture(GL_TEXTURE0);
 }
 
@@ -1054,6 +1240,7 @@ void Backend::execute_scene(const DrawQueue& queue, const Camera& cam) {
   const QMatrix4x4 projection = cam.get_projection_matrix();
   const QMatrix4x4 view_proj = projection * view;
   upload_frame_uniform_buffers(view_proj, queue, cam);
+  update_contact_shadow_uniforms();
   {
     Render::Profiling::PhaseScope const shadow_scope(
         &Render::Profiling::global_profile(), Render::Profiling::Phase::Shadow);

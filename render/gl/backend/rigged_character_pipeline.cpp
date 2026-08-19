@@ -88,16 +88,12 @@ void set_role_palette_uniforms(GL::Shader* shader,
     return;
   }
 
-  auto* fn = gl_funcs();
-  if (fn == nullptr) {
-    return;
-  }
-
   std::array<float, RiggedCreatureCmd::k_max_role_colors * 3> flat{};
   flatten_role_colors(cmd, flat);
-  fn->glUniform3fv(colors_handle,
-                   static_cast<GLsizei>(RiggedCreatureCmd::k_max_role_colors),
-                   flat.data());
+  shader->set_uniform_vec3_array(
+      colors_handle,
+      flat.data(),
+      static_cast<int>(RiggedCreatureCmd::k_max_role_colors));
 }
 
 } // namespace

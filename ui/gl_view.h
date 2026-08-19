@@ -57,6 +57,8 @@ private:
     QPointer<GameEngine> m_engine;
     bool m_ready_reported = false;
     QSize m_size;
+    int m_fbo_msaa_samples = -1;
+    std::uint32_t m_fbo_graphics_generation = 0;
     std::chrono::steady_clock::time_point m_last_frame_time{};
     std::chrono::steady_clock::time_point m_last_render_end{};
     struct RuntimeContinuityProbe;

@@ -491,6 +491,8 @@ private:
 
   Camera* m_camera = nullptr;
   std::unique_ptr<IRenderBackend> m_backend;
+
+  Shader* m_contact_shadow_shader = nullptr;
   Backend* m_gl_backend = nullptr;
   ShaderQuality m_shader_quality{ShaderQuality::Full};
   DrawQueue m_queues[2];

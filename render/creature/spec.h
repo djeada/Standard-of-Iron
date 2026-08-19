@@ -34,7 +34,7 @@ part_graph_for(const CreatureSpec& spec, CreatureLOD lod) noexcept -> const Part
     return spec.lod_full;
   case CreatureLOD::Minimal:
     return spec.lod_minimal;
-  case CreatureLOD::Billboard:
+  case CreatureLOD::Culled:
     return spec.lod_billboard;
   }
   return spec.lod_full;

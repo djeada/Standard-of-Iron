@@ -121,7 +121,7 @@ TEST(ReleaseContract, FreshProfileDefaultAndPackagedCreatureLookupAreExplicit) {
   const auto creature_assets =
       read_text(root / "render" / "creature" / "compiled_creature_assets.cpp");
 
-  EXPECT_NE(graphics.find("k_default_graphics_quality = GraphicsQuality::Ultra"),
+  EXPECT_NE(graphics.find("k_default_graphics_quality = GraphicsQuality::High"),
             std::string::npos);
   EXPECT_NE(creature_assets.find("executable_directory"), std::string::npos);
 }

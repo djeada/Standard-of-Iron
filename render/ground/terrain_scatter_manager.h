@@ -2,6 +2,7 @@
 
 #include <QVector3D>
 
+#include <cstdint>
 #include <memory>
 #include <mutex>
 #include <vector>
@@ -104,6 +105,7 @@ private:
   std::unique_ptr<StatueRenderer> m_statue;
   std::vector<ScatterPassEntry> m_scatter_passes;
   std::vector<IRenderPass*> m_passes;
+  std::uint32_t m_applied_graphics_generation{0U};
   const Game::Map::TerrainHeightMap* m_height_map = nullptr;
   Game::Map::BiomeSettings m_biome_settings;
   std::vector<Game::Map::WorldProp> m_scatter_seed_world_props;

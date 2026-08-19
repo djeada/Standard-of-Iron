@@ -139,7 +139,7 @@ void Backend::execute_mesh_commands(const PreparedBatch& prepared,
     const bool can_execute_prepared_batch =
         prepared.kind == PreparedBatchKind::MeshInstanced &&
         m_mesh_instancing_pipeline && m_mesh_instancing_pipeline->is_initialized() &&
-        !is_transparent && !is_shadow_shader &&
+        !is_transparent &&
         (uniforms->instanced != Shader::InvalidUniform ||
          uniforms->instanced_variant != nullptr);
 
@@ -252,8 +252,7 @@ void Backend::execute_mesh_commands(const PreparedBatch& prepared,
       break;
     }
 
-    const Render::ShaderQuality shader_quality =
-        Render::GraphicsSettings::instance().features().shader_quality;
+    const Render::ShaderQuality shader_quality = m_shader_quality;
     Shader* active_shader =
         (part.material != nullptr) ? part.material->resolve(shader_quality) : nullptr;
     if (active_shader == nullptr) {

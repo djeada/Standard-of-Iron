@@ -164,48 +164,27 @@ TEST(DrawQueuePreparedBatches, DrawPartMinRunBecomesPreparedBatch) {
   EXPECT_EQ(batches[1].kind, Render::GL::PreparedBatchKind::Single);
 }
 
-TEST(MaterialResolve, PicksExactTierWhenAvailable) {
+TEST(MaterialResolve, OneProgramPerMaterialOnTheGlBackend) {
+
   Render::GL::Material mat{};
-  mat.shader_full = fake_shader(1);
-  mat.shader_reduced = fake_shader(2);
-  mat.shader_minimal = fake_shader(3);
+  mat.shader = fake_shader(1);
 
   EXPECT_EQ(mat.resolve(Render::ShaderQuality::Full), fake_shader(1));
-  EXPECT_EQ(mat.resolve(Render::ShaderQuality::Reduced), fake_shader(2));
-  EXPECT_EQ(mat.resolve(Render::ShaderQuality::Minimal), fake_shader(3));
+  EXPECT_EQ(mat.resolve(Render::ShaderQuality::Reduced), fake_shader(1));
+  EXPECT_EQ(mat.resolve(Render::ShaderQuality::Minimal), fake_shader(1));
+  EXPECT_FALSE(mat.is_flat_only());
 }
 
 TEST(MaterialResolve, NoneAlwaysReturnsNullptr) {
   Render::GL::Material mat{};
-  mat.shader_full = fake_shader(1);
-  mat.shader_reduced = fake_shader(2);
-  mat.shader_minimal = fake_shader(3);
+  mat.shader = fake_shader(1);
 
   EXPECT_EQ(mat.resolve(Render::ShaderQuality::None), nullptr);
 }
 
-TEST(MaterialResolve, FallsBackWhenRequestedTierMissing) {
-
-  Render::GL::Material full_only{};
-  full_only.shader_full = fake_shader(10);
-
-  EXPECT_EQ(full_only.resolve(Render::ShaderQuality::Full), fake_shader(10));
-  EXPECT_EQ(full_only.resolve(Render::ShaderQuality::Reduced), fake_shader(10));
-  EXPECT_EQ(full_only.resolve(Render::ShaderQuality::Minimal), fake_shader(10));
-
-  Render::GL::Material minimal_only{};
-  minimal_only.shader_minimal = fake_shader(20);
-
-  EXPECT_EQ(minimal_only.resolve(Render::ShaderQuality::Full), fake_shader(20));
-  EXPECT_EQ(minimal_only.resolve(Render::ShaderQuality::Reduced), fake_shader(20));
-  EXPECT_EQ(minimal_only.resolve(Render::ShaderQuality::Minimal), fake_shader(20));
-}
-
-TEST(MaterialResolve, AllTiersEmptyReturnsNullptr) {
+TEST(MaterialResolve, NoShaderIsFlatOnly) {
   Render::GL::Material mat{};
   EXPECT_EQ(mat.resolve(Render::ShaderQuality::Full), nullptr);
-  EXPECT_EQ(mat.resolve(Render::ShaderQuality::Reduced), nullptr);
-  EXPECT_EQ(mat.resolve(Render::ShaderQuality::Minimal), nullptr);
   EXPECT_EQ(mat.resolve(Render::ShaderQuality::None), nullptr);
   EXPECT_TRUE(mat.is_flat_only());
 }
@@ -215,7 +194,7 @@ TEST(QueueSubmitterPart, EmitsDrawPartCmdWithPerInstanceOverrides) {
   Render::GL::QueueSubmitter submitter(&queue);
 
   Render::GL::Material mat{};
-  mat.shader_full = fake_shader(0xAA);
+  mat.shader = fake_shader(0xAA);
 
   QMatrix4x4 model;
   model.translate(1.0F, 2.0F, 3.0F);

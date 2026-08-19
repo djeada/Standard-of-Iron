@@ -2363,20 +2363,20 @@ Puede tratarse de una escaramuza, o los objetivos no se han configurado.</transl
         <translation>Ultra</translation>
     </message>
     <message>
-        <source>Maximum performance. Aggressive LOD, reduced detail at distance.</source>
-        <translation>Máximo rendimiento. LOD agresivo, menos detalle a distancia.</translation>
+        <source>Playable on weak hardware: no cast shadows or post-processing, sparse grass, reduced detail beyond a few metres.</source>
+        <translation>Jugable en hardware débil: sin sombras proyectadas ni posprocesado, hierba escasa, menos detalle a partir de unos metros.</translation>
     </message>
     <message>
-        <source>Balanced performance and quality. Recommended for most systems.</source>
-        <translation>Rendimiento y calidad equilibrados. Recomendado para la mayoría de los equipos.</translation>
+        <source>Small cast shadows, lighter shaders, reduced detail at distance. For integrated graphics.</source>
+        <translation>Sombras pequeñas, sombreadores más ligeros, menos detalle a distancia. Para gráficos integrados.</translation>
     </message>
     <message>
-        <source>Higher quality. More detail visible at distance. Requires better hardware.</source>
-        <translation>Mayor calidad. Más detalle visible a distancia. Requiere mejor hardware.</translation>
+        <source>Everything as designed: full detail everywhere, full shadows and post-processing. Recommended.</source>
+        <translation>Todo como fue diseñado: detalle completo en todas partes, sombras y posprocesado completos. Recomendado.</translation>
     </message>
     <message>
-        <source>Maximum quality. Full detail always. Best hardware recommended.</source>
-        <translation>Máxima calidad. Detalle completo siempre. Se recomienda el mejor hardware.</translation>
+        <source>High plus contact-hardening shadows, foliage translucency, extra terrain detail and 8x anti-aliasing. Needs a strong GPU.</source>
+        <translation>Alto más sombras de contacto endurecido, follaje translúcido, detalle extra del terreno y suavizado 8x. Requiere una GPU potente.</translation>
     </message>
 </context>
 <context>
