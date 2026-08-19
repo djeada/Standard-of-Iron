@@ -125,6 +125,7 @@ TEST(RiggedMeshAssetTest, BakedBodiesMatchTheirPartGraphs) {
       Render::Creature::BakeInput input{};
       input.graph = &Render::Creature::part_graph_for(item.spec(), lod);
       input.bind_pose = item.bind();
+      input.lod = lod;
       auto const expected = Render::Creature::bake_rigged_mesh_cpu(input);
 
       EXPECT_EQ(blob.vertices_view().size(), expected.vertices.size()) << name;

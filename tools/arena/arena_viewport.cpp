@@ -3557,7 +3557,8 @@ void ArenaViewport::load_scenario(const QString& scenario_id) {
     m_renderer->set_clear_color(0.70F, 0.73F, 0.80F, 1.0F);
   }
   reset_arena();
-  Render::GraphicsSettings::instance().set_quality(definition->graphics_quality);
+  Render::GraphicsSettings::instance().set_quality(
+      m_graphics_quality_override.value_or(definition->graphics_quality));
   m_environment_definition = definition->environment;
   m_environment_hour = definition->environment.start_time;
   if (m_environment_hour_override.has_value()) {

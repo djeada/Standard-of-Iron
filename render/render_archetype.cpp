@@ -239,7 +239,7 @@ void RenderArchetypeBuilder::add_cone(const QVector3D& base,
                                       float alpha,
                                       int material_id,
                                       Material* material) {
-  add_mesh(get_unit_cone(8),
+  add_mesh(get_unit_cone(),
            cylinder_local_model(base, tip, radius),
            color,
            texture,

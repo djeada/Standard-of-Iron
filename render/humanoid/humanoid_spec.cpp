@@ -48,24 +48,6 @@ void fill_humanoid_role_colors_impl(
   out[ClothDark - 1] = v.palette.cloth * 0.92F;
 }
 
-constexpr auto make_minimal_capsule() noexcept -> Creature::PrimitiveInstance {
-  Creature::PrimitiveInstance p{};
-  p.debug_name = "humanoid_minimal_body";
-  p.shape = Creature::PrimitiveShape::Capsule;
-  p.params.anchor_bone = static_cast<Creature::BoneIndex>(HumanoidBone::Head);
-  p.params.head_offset = QVector3D(0.0F, HP::HEAD_RADIUS, 0.0F);
-  p.params.tail_bone = static_cast<Creature::BoneIndex>(HumanoidBone::FootL);
-  p.params.tail_offset = QVector3D(0.0F, 0.0F, 0.0F);
-  p.params.radius = HP::TORSO_TOP_R;
-  p.color_role = Cloth;
-  p.lod_mask = Creature::k_lod_minimal;
-  return p;
-}
-
-constexpr std::array<Creature::PrimitiveInstance, 1> k_minimal_parts = {
-    make_minimal_capsule(),
-};
-
 constexpr auto bone(HumanoidBone b) noexcept -> Creature::BoneIndex {
   return static_cast<Creature::BoneIndex>(b);
 }
@@ -438,6 +420,80 @@ constexpr auto make_full_foot(bool left) noexcept -> Creature::PrimitiveInstance
   p.lod_mask = Creature::k_lod_full;
   return p;
 }
+
+constexpr auto
+as_minimal(Creature::PrimitiveInstance p) noexcept -> Creature::PrimitiveInstance {
+  p.lod_mask = Creature::k_lod_minimal;
+  return p;
+}
+
+constexpr auto
+make_minimal_upper_arm(bool left) noexcept -> Creature::PrimitiveInstance {
+  return as_minimal(make_limb_end_segment(
+      left ? "humanoid_minimal_upper_arm_l" : "humanoid_minimal_upper_arm_r",
+      left ? HumanoidBone::UpperArmL : HumanoidBone::UpperArmR,
+      left ? HumanoidBone::ForearmL : HumanoidBone::ForearmR,
+      0.0F,
+      HP::UPPER_ARM_R * 1.18F,
+      HP::UPPER_ARM_R * 0.86F,
+      Cloth));
+}
+
+constexpr auto make_minimal_forearm(bool left) noexcept -> Creature::PrimitiveInstance {
+  return as_minimal(make_limb_end_segment(
+      left ? "humanoid_minimal_forearm_l" : "humanoid_minimal_forearm_r",
+      left ? HumanoidBone::ForearmL : HumanoidBone::ForearmR,
+      left ? HumanoidBone::HandL : HumanoidBone::HandR,
+      0.0F,
+      HP::FORE_ARM_R * 1.10F,
+      HP::FORE_ARM_R * 0.80F,
+      Skin));
+}
+
+constexpr auto make_minimal_thigh(bool left) noexcept -> Creature::PrimitiveInstance {
+  return as_minimal(make_limb_end_segment(
+      left ? "humanoid_minimal_thigh_l" : "humanoid_minimal_thigh_r",
+      left ? HumanoidBone::HipL : HumanoidBone::HipR,
+      left ? HumanoidBone::KneeL : HumanoidBone::KneeR,
+      0.0F,
+      HP::UPPER_LEG_R * 1.34F,
+      HP::UPPER_LEG_R * 0.96F,
+      ClothDark));
+}
+
+constexpr auto make_minimal_calf(bool left) noexcept -> Creature::PrimitiveInstance {
+  return as_minimal(make_limb_end_segment(
+      left ? "humanoid_minimal_calf_l" : "humanoid_minimal_calf_r",
+      left ? HumanoidBone::KneeL : HumanoidBone::KneeR,
+      left ? HumanoidBone::FootL : HumanoidBone::FootR,
+      0.0F,
+      HP::LOWER_LEG_R * 1.34F,
+      HP::LOWER_LEG_R * 0.78F,
+      Skin));
+}
+
+constexpr std::array<Creature::PrimitiveInstance, 17> k_minimal_parts = {
+    as_minimal(make_full_chest()),
+    as_minimal(make_full_abdomen()),
+    as_minimal(make_full_pelvis_block()),
+
+    as_minimal(make_full_neck()),
+    as_minimal(make_full_cranium()),
+
+    make_minimal_upper_arm(true),
+    make_minimal_upper_arm(false),
+    make_minimal_forearm(true),
+    make_minimal_forearm(false),
+    as_minimal(make_full_hand(true)),
+    as_minimal(make_full_hand(false)),
+
+    make_minimal_thigh(true),
+    make_minimal_thigh(false),
+    make_minimal_calf(true),
+    make_minimal_calf(false),
+    as_minimal(make_full_foot(true)),
+    as_minimal(make_full_foot(false)),
+};
 
 constexpr std::array<Creature::PrimitiveInstance, 41> k_full_parts = {
 

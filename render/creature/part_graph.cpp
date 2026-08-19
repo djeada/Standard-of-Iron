@@ -47,7 +47,7 @@ auto submit_part_graph(const SkeletonTopology& topology,
     QMatrix4x4 const& tail_m =
         (tail != k_invalid_bone && tail < palette.size()) ? palette[tail] : anchor_m;
 
-    Render::GL::Mesh* mesh_ptr = primitive_unit_mesh(prim);
+    Render::GL::Mesh* mesh_ptr = primitive_unit_mesh(prim, lod);
     QMatrix4x4 unit_model;
     if (mesh_ptr == nullptr ||
         !primitive_unit_model(prim, anchor_m, tail_m, unit_model)) {
