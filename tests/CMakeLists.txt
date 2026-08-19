@@ -174,6 +174,7 @@ add_executable(
     systems/commander_system_test.cpp
     systems/commander_duel_test.cpp
     systems/melee_engagement_test.cpp
+    systems/melee_exchange_test.cpp
     systems/archer_bonus_test.cpp
     systems/arrow_system_test.cpp
     systems/spent_projectile_test.cpp
@@ -396,6 +397,7 @@ add_executable(
     render/creature/quadruped_topology_test.cpp
     render/creature/quadruped_gait_test.cpp
     render/creature/combat_visual_state_test.cpp
+    render/creature/combat_root_motion_test.cpp
     render/creature/soldier_turn_smoothing_test.cpp
     render/creature/humanoid_prepare_test.cpp
     render/creature/death_collapse_test.cpp

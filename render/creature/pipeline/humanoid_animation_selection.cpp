@@ -8,6 +8,7 @@
 #include <mutex>
 #include <unordered_map>
 
+#include "animation/locomotion_manifest.h"
 #include "animation/selection_manifest.h"
 #include "creature_asset.h"
 #include "preparation_common.h"
@@ -67,6 +68,55 @@ void apply_authored_action_clip(
   selection.clip_id = anim.inputs.authored_action_clip;
   selection.phase = std::clamp(anim.inputs.authored_action_phase, 0.0F, 1.0F);
   selection.clip_variant = 0U;
+}
+
+void apply_melee_reaction_clip(
+    HumanoidAnimationSelection& selection,
+    const Render::GL::HumanoidAnimationContext& anim) noexcept {
+  if (!anim.inputs.is_hit_reacting || anim.inputs.is_mounted || anim.inputs.is_dying ||
+      anim.inputs.is_dead || anim.inputs.is_in_hold_mode ||
+      anim.inputs.is_exiting_hold || anim.inputs.is_defensive_layout_locked ||
+      anim.inputs.has_showcase_clip) {
+    return;
+  }
+  if (selection.state != Render::Creature::AnimationStateId::Idle) {
+    return;
+  }
+  auto const clip = Animation::humanoid_reaction_clip(
+      static_cast<std::uint8_t>(anim.inputs.hit_reaction_kind));
+  if (clip == Animation::k_unmapped_clip) {
+    return;
+  }
+  selection.clip_id = clip;
+  selection.clip_variant = 0U;
+  selection.phase = std::clamp(anim.inputs.hit_reaction_progress, 0.0F, 1.0F);
+}
+
+void apply_combat_ready_clip(HumanoidAnimationSelection& selection,
+                             const Render::GL::HumanoidAnimationContext& anim,
+                             std::uint32_t seed) noexcept {
+  if (selection.state != Render::Creature::AnimationStateId::Idle ||
+      anim.inputs.is_attacking || anim.inputs.is_hit_reacting ||
+      anim.inputs.is_mounted || anim.inputs.is_dying || anim.inputs.is_dead ||
+      anim.inputs.is_in_hold_mode || anim.inputs.is_exiting_hold ||
+      anim.inputs.is_guarding || anim.inputs.is_exiting_guard ||
+      anim.inputs.is_defensive_layout_locked || anim.inputs.is_constructing ||
+      anim.inputs.is_healing || anim.inputs.is_casting ||
+      anim.inputs.has_showcase_clip ||
+      anim.ambient_idle_type != Render::GL::AmbientIdleType::None) {
+    return;
+  }
+  if (!anim.inputs.is_in_melee_lock) {
+    return;
+  }
+  if (Render::Creature::is_moving_animation(anim.inputs.movement_state)) {
+    return;
+  }
+  selection.clip_id = Animation::k_humanoid_combat_ready_clip;
+  selection.clip_variant = 0U;
+  selection.phase = Animation::wrap_locomotion_phase(
+      anim.inputs.time / Animation::k_humanoid_combat_ready_cycle_time +
+      Animation::humanoid_idle_breath_offset(seed));
 }
 
 void apply_construction_clip(
@@ -302,6 +352,8 @@ auto build_selection_for_pose(const UnitVisualSpec& spec,
 
   apply_named_sword_attack_state(selection, anim);
   update_clip_id(selection);
+  apply_melee_reaction_clip(selection, anim);
+  apply_combat_ready_clip(selection, anim, seed);
   apply_construction_clip(selection, anim);
   apply_authored_action_clip(selection, anim);
   apply_role_specific_combat_clip(selection, spec, anim);

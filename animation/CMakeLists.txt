@@ -9,6 +9,8 @@ add_library(
     ambient_pose_manifest.cpp
     clip_manifest.cpp
     combat_manifest.cpp
+    combat_root_motion_manifest.cpp
+    reaction_pose_manifest.cpp
     action_manifest.cpp
     death_pose_manifest.cpp
     elephant_gait_manifest.cpp

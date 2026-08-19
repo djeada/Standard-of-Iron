@@ -1,5 +1,6 @@
 #include <algorithm>
 #include <array>
+#include <cmath>
 #include <gtest/gtest.h>
 #include <initializer_list>
 #include <numbers>
@@ -1945,8 +1946,13 @@ TEST_F(CombatModeTest, SingleBodyMeleeLockedUnitsTurnToFaceWhileStopped) {
   MovementSystem movement_system;
   movement_system.update(world.get(), 0.25F);
 
-  EXPECT_FLOAT_EQ(attacker_transform->rotation.y, 90.0F);
-  EXPECT_FLOAT_EQ(enemy_transform->rotation.y, -90.0F);
+  EXPECT_NEAR(attacker_transform->rotation.y, 90.0F, 3.0F);
+  EXPECT_NEAR(enemy_transform->rotation.y, -90.0F, 3.0F);
+  float const dx = enemy_transform->position.x - attacker_transform->position.x;
+  float const dz = enemy_transform->position.z - attacker_transform->position.z;
+  float const facing_yaw = std::atan2(dx, dz) * 180.0F / std::numbers::pi_v<float>;
+  EXPECT_NEAR(attacker_transform->rotation.y, facing_yaw, 1.5F)
+      << "a locked body faces the opponent it is circling";
   EXPECT_FALSE(attacker_transform->has_desired_yaw);
   EXPECT_FALSE(enemy_transform->has_desired_yaw);
 }

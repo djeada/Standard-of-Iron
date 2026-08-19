@@ -597,6 +597,9 @@ auto Serialization::serialize_entity(const Entity* entity) -> QJsonObject {
         static_cast<double>(hit_feedback->reaction_intensity);
     hit_feedback_obj["knockback_x"] = static_cast<double>(hit_feedback->knockback_x);
     hit_feedback_obj["knockback_z"] = static_cast<double>(hit_feedback->knockback_z);
+    hit_feedback_obj["reaction_duration"] =
+        static_cast<double>(hit_feedback->reaction_duration);
+    hit_feedback_obj["reaction_kind"] = static_cast<int>(hit_feedback->reaction_kind);
     entity_obj["hit_feedback"] = hit_feedback_obj;
   }
 
@@ -1496,6 +1499,11 @@ void Serialization::deserialize_entity(Entity* entity, const QJsonObject& json) 
         static_cast<float>(hit_feedback_obj["knockback_x"].toDouble(0.0));
     hit_feedback->knockback_z =
         static_cast<float>(hit_feedback_obj["knockback_z"].toDouble(0.0));
+    hit_feedback->reaction_duration =
+        static_cast<float>(hit_feedback_obj["reaction_duration"].toDouble(
+            static_cast<double>(HitFeedbackComponent::k_reaction_duration)));
+    hit_feedback->reaction_kind = static_cast<HitReactionKind>(
+        std::clamp(hit_feedback_obj["reaction_kind"].toInt(0), 0, 4));
   }
 
   if (json.contains("builder_production")) {

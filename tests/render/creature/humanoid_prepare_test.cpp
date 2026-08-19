@@ -5080,7 +5080,7 @@ TEST(HumanoidPrepare, HealingSelectionStillUsesIdleClipFamily) {
                                                     AnimationStateId::Idle));
 }
 
-TEST(HumanoidPrepare, HitReactionSelectionStillUsesIdleClipFamily) {
+TEST(HumanoidPrepare, HitReactionSelectionPlaysTheReactionClip) {
   using Render::Creature::AnimationStateId;
   using Render::Creature::ArchetypeRegistry;
   using Render::Creature::Pipeline::resolve_humanoid_animation_selection;
@@ -5097,16 +5097,34 @@ TEST(HumanoidPrepare, HitReactionSelectionStillUsesIdleClipFamily) {
   anim.gait.cycle_phase = 0.61F;
   anim.idle_breath_phase = 0.61F;
 
+  anim.inputs.hit_reaction_progress = 0.35F;
+  anim.inputs.hit_reaction_kind = Engine::Core::HitReactionKind::Flinch;
+
   auto const selection = resolve_humanoid_animation_selection(spec, anim, 19U);
 
   EXPECT_EQ(selection.pose.intent, Render::Creature::PoseIntent::HitReaction);
   EXPECT_EQ(selection.state, AnimationStateId::Idle);
-  EXPECT_FLOAT_EQ(selection.phase, 0.61F);
+  EXPECT_FLOAT_EQ(selection.phase, 0.35F)
+      << "a reaction clip plays on the reaction's own progress";
   EXPECT_EQ(selection.clip_variant, 0U);
   ASSERT_TRUE(selection.clip_id.has_value());
-  EXPECT_EQ(*selection.clip_id,
-            ArchetypeRegistry::instance().bpat_clip(ArchetypeRegistry::k_humanoid_base,
-                                                    AnimationStateId::Idle));
+  EXPECT_EQ(*selection.clip_id, Animation::k_humanoid_react_flinch_clip);
+
+  anim.inputs.hit_reaction_kind = Engine::Core::HitReactionKind::Block;
+  auto const block = resolve_humanoid_animation_selection(spec, anim, 19U);
+  ASSERT_TRUE(block.clip_id.has_value());
+  EXPECT_EQ(*block.clip_id, Animation::k_humanoid_react_block_clip);
+
+  anim.inputs.hit_reaction_kind = Engine::Core::HitReactionKind::Stagger;
+  auto const stagger = resolve_humanoid_animation_selection(spec, anim, 19U);
+  ASSERT_TRUE(stagger.clip_id.has_value());
+  EXPECT_EQ(*stagger.clip_id, Animation::k_humanoid_react_stagger_clip);
+
+  anim.inputs.is_mounted = true;
+  auto const mounted = resolve_humanoid_animation_selection(spec, anim, 19U);
+  ASSERT_TRUE(mounted.clip_id.has_value());
+  EXPECT_NE(*mounted.clip_id, Animation::k_humanoid_react_stagger_clip)
+      << "riders keep the saddle pose through a hit";
 }
 
 TEST(HumanoidPrepare, VariantTableOverrideRecomputesPhaseAndClipVariant) {
@@ -6533,9 +6551,9 @@ TEST(HumanoidPrepare, MeleeLockKeepsStaleForcedDisplacementOffTheRootLayer) {
   auto const& requests = prep.bodies.requests();
   ASSERT_FALSE(requests.empty());
   EXPECT_EQ(requests.front().state, Render::Creature::AnimationStateId::Idle);
-  EXPECT_TRUE(requests.front().upper_body_overlay.active());
-  EXPECT_EQ(requests.front().upper_body_overlay.state,
-            Render::Creature::AnimationStateId::AttackSpear);
+
+  EXPECT_EQ(requests.front().clip_id, Animation::k_humanoid_combat_ready_clip);
+  EXPECT_FALSE(requests.front().upper_body_overlay.active());
 }
 
 TEST(HumanoidPrepare, CommandedMovementWithoutVelocityStillBuildsStride) {

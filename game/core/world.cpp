@@ -168,7 +168,6 @@ void finalize_motion_presentation_frame(World& world, float delta_time) {
         float const displacement_z = transform->position.z - motion->previous_z;
         float const displacement_sq =
             displacement_x * displacement_x + displacement_z * displacement_z;
-        bool const displaced = displacement_sq > k_motion_displacement_epsilon_sq;
 
         float movement_speed_sq = 0.0F;
         if (movement != nullptr) {
@@ -181,6 +180,12 @@ void finalize_motion_presentation_frame(World& world, float delta_time) {
         bool const has_active_navigation_segment =
             movement != nullptr &&
             (movement->get_has_target() || movement->has_waypoints());
+
+        bool const melee_footwork = attack != nullptr && attack->in_melee_lock &&
+                                    !has_active_navigation_segment &&
+                                    !has_component_velocity;
+        bool const displaced =
+            displacement_sq > k_motion_displacement_epsilon_sq && !melee_footwork;
         bool const has_navigation_intent =
             has_active_navigation_segment || has_component_velocity;
 
@@ -224,6 +229,11 @@ void finalize_motion_presentation_frame(World& world, float delta_time) {
           motion->velocity_x = movement->get_vx();
           motion->velocity_z = movement->get_vz();
           motion->speed = std::sqrt(movement_speed_sq);
+
+          if (displaced) {
+            motion->speed =
+                std::min(motion->speed, std::sqrt(displacement_sq) / safe_dt);
+          }
         } else if (displaced) {
           motion->velocity_x = displacement_x / safe_dt;
           motion->velocity_z = displacement_z / safe_dt;
@@ -450,7 +460,9 @@ void publish_creature_presentation_entity(Entity* entity, World* world) {
     action_inputs.hit_reaction = {
         .active = true,
         .reaction_time = hit->reaction_time,
-        .reaction_duration = HitFeedbackComponent::k_reaction_duration,
+        .reaction_duration = hit->reaction_duration > 0.0F
+                                 ? hit->reaction_duration
+                                 : HitFeedbackComponent::k_reaction_duration,
         .intensity = hit->reaction_intensity,
         .knockback_x = hit->knockback_x,
         .knockback_z = hit->knockback_z,
@@ -490,6 +502,9 @@ void publish_creature_presentation_entity(Entity* entity, World* world) {
                   : CreatureCastPresentation::None;
   next.is_hit_reacting = action.is_hit_reacting;
   next.hit_reaction_intensity = action.hit_reaction_intensity;
+  next.hit_reaction_progress = action.hit_reaction_progress;
+  next.hit_reaction_kind =
+      hit != nullptr ? hit->reaction_kind : HitReactionKind::Flinch;
   next.hit_recoil_x = action.hit_recoil_x;
   next.hit_recoil_z = action.hit_recoil_z;
   next.is_constructing = action.is_constructing;
@@ -512,6 +527,7 @@ void publish_creature_presentation_entity(Entity* entity, World* world) {
   if (!next.allow_full_body_hit_reaction) {
     next.is_hit_reacting = false;
     next.hit_reaction_intensity = 0.0F;
+    next.hit_reaction_progress = 0.0F;
     next.hit_recoil_x = 0.0F;
     next.hit_recoil_z = 0.0F;
   }
@@ -577,6 +593,7 @@ void publish_creature_presentation_entity(Entity* entity, World* world) {
     next.authored_action_running = authored->action_running;
     next.authored_action_completed = authored->action_completed;
     next.authored_action_phase = authored->normalized_action_time;
+    next.authored_action_exchange_outcome = authored->exchange_outcome;
   }
   next.combat_active = next.is_attacking || next.is_hit_reacting || next.is_dying ||
                        next.is_dead || next.target_id != 0U;
@@ -591,6 +608,7 @@ void publish_creature_presentation_entity(Entity* entity, World* world) {
       presentation->is_melee != next.is_melee ||
       presentation->combat_phase != next.combat_phase ||
       presentation->is_hit_reacting != next.is_hit_reacting ||
+      presentation->hit_reaction_kind != next.hit_reaction_kind ||
       presentation->construction_job != next.construction_job ||
       presentation->is_dying != next.is_dying ||
       presentation->is_dead != next.is_dead ||

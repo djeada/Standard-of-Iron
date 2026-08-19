@@ -109,6 +109,7 @@ struct HumanoidActionSample {
 
   bool is_hit_reacting{false};
   float hit_reaction_intensity{0.0F};
+  float hit_reaction_progress{0.0F};
   float hit_recoil_x{0.0F};
   float hit_recoil_z{0.0F};
 

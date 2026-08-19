@@ -52,7 +52,7 @@ auto issue_civilian_delivery_command(
           : nullptr;
   if ((target_unit == nullptr) || (target_production == nullptr) ||
       (target_unit->owner_id != local_owner_id) ||
-      (target_unit->spawn_type != Game::Units::SpawnType::Barracks)) {
+      !Game::Units::is_recruitment_building(target_unit->spawn_type)) {
     return App::Core::rejected_order_on(
         OrderKind::Deliver,
         App::Core::no_target_under_cursor_reason(OrderKind::Deliver),
