@@ -5797,9 +5797,11 @@ TEST(HumanoidPrepare, BuiltInBuildersUseDifferentPoseWhileConstructing) {
   EXPECT_NE(carthage_idle, carthage_constructing);
 }
 
-auto render_builder_rigged_meshes(const char* renderer_id,
-                                  Game::Systems::NationID nation_id,
-                                  bool attacking)
+auto render_builder_rigged_meshes(
+    const char* renderer_id,
+    Game::Systems::NationID nation_id,
+    bool attacking,
+    Game::Units::SpawnType spawn_type = Game::Units::SpawnType::Builder)
     -> std::vector<const Render::GL::RiggedMesh*> {
   Render::GL::clear_humanoid_caches();
   Render::GL::EntityRendererRegistry registry;
@@ -5822,7 +5824,7 @@ auto render_builder_rigged_meshes(const char* renderer_id,
   if (unit == nullptr) {
     return {};
   }
-  unit->spawn_type = Game::Units::SpawnType::Builder;
+  unit->spawn_type = spawn_type;
   unit->nation_id = nation_id;
   Render::GL::AnimationInputs anim{};
   anim.time = ctx.animation_time;
@@ -5842,7 +5844,7 @@ auto render_builder_rigged_meshes(const char* renderer_id,
 }
 
 TEST(HumanoidPrepare, BuiltInBuildersFightWithTheMalletInHand) {
-  for (auto const [renderer_id, nation] :
+  for (auto const& [renderer_id, nation] :
        {std::pair{"troops/roman/builder", Game::Systems::NationID::RomanRepublic},
         std::pair{"troops/carthage/builder", Game::Systems::NationID::Carthage}}) {
     auto const idle = render_builder_rigged_meshes(renderer_id, nation, false);
@@ -5852,6 +5854,22 @@ TEST(HumanoidPrepare, BuiltInBuildersFightWithTheMalletInHand) {
     EXPECT_NE(idle.front(), fighting.front())
         << renderer_id
         << ": a builder in melee swings the mallet archetype, not the bare idle body";
+  }
+}
+
+TEST(HumanoidPrepare, BuiltInCiviliansFightWithTheCudgelInHand) {
+  for (auto const& [renderer_id, nation] :
+       {std::pair{"troops/roman/civilian", Game::Systems::NationID::RomanRepublic},
+        std::pair{"troops/carthage/civilian", Game::Systems::NationID::Carthage}}) {
+    auto const idle = render_builder_rigged_meshes(
+        renderer_id, nation, false, Game::Units::SpawnType::Civilian);
+    auto const fighting = render_builder_rigged_meshes(
+        renderer_id, nation, true, Game::Units::SpawnType::Civilian);
+    ASSERT_FALSE(idle.empty()) << renderer_id;
+    ASSERT_FALSE(fighting.empty()) << renderer_id;
+    EXPECT_NE(idle.front(), fighting.front())
+        << renderer_id
+        << ": a cornered civilian swings the cudgel archetype, not bare fists";
   }
 }
 

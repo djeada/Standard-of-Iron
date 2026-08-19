@@ -46,15 +46,16 @@ auto observe_tutorial_frame(const TutorialObservationInputs& inputs)
   const int owner = inputs.local_owner_id;
   o.enemy_troops_defeated = inputs.enemy_troops_defeated;
 
-  const auto& resources = Game::Systems::PlayerResourceRegistry::instance();
-  const auto harvested = resources.get_harvested_all(owner);
-  const auto stock = resources.get_all(owner);
-  o.harvested_wood = harvested.get(Game::Systems::ResourceType::Wood);
-  o.harvested_stone = harvested.get(Game::Systems::ResourceType::Stone);
-  o.harvested_iron = harvested.get(Game::Systems::ResourceType::Iron);
-  o.wood = stock.get(Game::Systems::ResourceType::Wood);
-  o.stone = stock.get(Game::Systems::ResourceType::Stone);
-  o.iron = stock.get(Game::Systems::ResourceType::Iron);
+  if (inputs.resources != nullptr) {
+    const auto harvested = inputs.resources->get_harvested_all(owner);
+    const auto stock = inputs.resources->get_all(owner);
+    o.harvested_wood = harvested.get(Game::Systems::ResourceType::Wood);
+    o.harvested_stone = harvested.get(Game::Systems::ResourceType::Stone);
+    o.harvested_iron = harvested.get(Game::Systems::ResourceType::Iron);
+    o.wood = stock.get(Game::Systems::ResourceType::Wood);
+    o.stone = stock.get(Game::Systems::ResourceType::Stone);
+    o.iron = stock.get(Game::Systems::ResourceType::Iron);
+  }
 
   if (auto* selection = inputs.world->get_system<Game::Systems::SelectionSystem>()) {
     for (const auto id : selection->get_selected_units()) {
@@ -85,7 +86,7 @@ auto observe_tutorial_frame(const TutorialObservationInputs& inputs)
     }
   }
 
-  const auto& owners = Game::Systems::OwnerRegistry::instance();
+  const auto* owner_registry = inputs.owners;
   inputs.world->for_each_entity([&](const Engine::Core::Entity& entity) {
     const auto* unit = entity.get_component<Engine::Core::UnitComponent>();
     if (unit == nullptr || unit->health <= 0) {
@@ -93,7 +94,8 @@ auto observe_tutorial_frame(const TutorialObservationInputs& inputs)
     }
     const auto* commander = entity.get_component<Engine::Core::CommanderComponent>();
     if (unit->owner_id != owner) {
-      if (commander != nullptr && owners.are_enemies(owner, unit->owner_id)) {
+      if (commander != nullptr && owner_registry != nullptr &&
+          owner_registry->are_enemies(owner, unit->owner_id)) {
         ++o.enemy_commanders_alive;
       }
       return;
@@ -168,11 +170,15 @@ void keep_nearest(std::vector<FocusCandidate>& candidates, std::size_t limit) {
   candidates.resize(limit);
 }
 
-auto nearest_props(const QVector3D& anchor,
+auto nearest_props(const Game::Map::TerrainService* terrain,
+                   const QVector3D& anchor,
                    bool (*matches)(Game::Map::WorldProp::Type),
                    int limit) -> std::vector<QVector3D> {
+  if (terrain == nullptr) {
+    return {};
+  }
   std::vector<FocusCandidate> candidates;
-  for (const auto& prop : Game::Map::TerrainService::instance().world_props()) {
+  for (const auto& prop : terrain->world_props()) {
     if (!matches(prop.type)) {
       continue;
     }
@@ -217,9 +223,10 @@ struct OwnedUnits {
   bool has_anchor = false;
 };
 
-auto collect_units(Engine::Core::World* world, int owner) -> OwnedUnits {
+auto collect_units(Engine::Core::World* world,
+                   int owner,
+                   const Game::Systems::OwnerRegistry* owners) -> OwnedUnits {
   OwnedUnits units;
-  const auto& owners = Game::Systems::OwnerRegistry::instance();
   world->for_each_entity([&](const Engine::Core::Entity& entity) {
     const auto* unit = entity.get_component<Engine::Core::UnitComponent>();
     const auto* transform = entity.get_component<Engine::Core::TransformComponent>();
@@ -232,7 +239,7 @@ auto collect_units(Engine::Core::World* world, int owner) -> OwnedUnits {
         entity.get_component<Engine::Core::CommanderComponent>() != nullptr;
 
     if (unit->owner_id != owner) {
-      if (!owners.are_enemies(owner, unit->owner_id)) {
+      if (owners == nullptr || !owners->are_enemies(owner, unit->owner_id)) {
         return;
       }
       if (commander || unit->spawn_type == Game::Units::SpawnType::Barracks) {
@@ -323,7 +330,8 @@ auto resolve_tutorial_focus_points(const TutorialFocusInputs& inputs) -> QVarian
   if (inputs.world == nullptr) {
     return {};
   }
-  const OwnedUnits units = collect_units(inputs.world, inputs.local_owner_id);
+  const OwnedUnits units =
+      collect_units(inputs.world, inputs.local_owner_id, inputs.owners);
 
   switch (inputs.target) {
   case TutorialFocusTarget::OwnTroops:
@@ -360,14 +368,16 @@ auto resolve_tutorial_focus_points(const TutorialFocusInputs& inputs) -> QVarian
     if (!units.has_anchor) {
       return {};
     }
-    return to_points(nearest_props(units.anchor, &is_tree, 3), 3);
+    return to_points(nearest_props(inputs.terrain, units.anchor, &is_tree, 3), 3);
 
   case TutorialFocusTarget::StoneAndIron: {
     if (!units.has_anchor) {
       return {};
     }
-    QVariantList points = to_points(nearest_props(units.anchor, &is_boulder, 2), 2);
-    points.append(to_points(nearest_props(units.anchor, &is_iron_ore, 2), 2));
+    QVariantList points =
+        to_points(nearest_props(inputs.terrain, units.anchor, &is_boulder, 2), 2);
+    points.append(
+        to_points(nearest_props(inputs.terrain, units.anchor, &is_iron_ore, 2), 2));
     return points;
   }
 

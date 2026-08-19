@@ -10,6 +10,7 @@
 #include "render/creature/combat_visual_state.h"
 #include "render/creature/pipeline/humanoid_animation_selection.h"
 #include "render/gl/humanoid/humanoid_types.h"
+#include "soldier_turn_smoothing.h"
 
 namespace Render::Humanoid {
 
@@ -35,6 +36,9 @@ struct HumanoidLayoutCacheComponent : public Engine::Core::Component {
   std::vector<std::uint32_t> visibility_frames;
   std::vector<SoldierGroundSample> ground_samples;
   std::vector<SoldierSelectionCache> selection_cache;
+  std::vector<SoldierTurnSmoothingState> turn_states;
+  float turn_time{0.0F};
+  bool turn_time_valid{false};
   Render::GL::FormationParams formation{};
   Game::Formation::UnitLayoutId unit_layout{Game::Formation::k_invalid_layout};
   int rows{0};
