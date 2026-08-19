@@ -752,13 +752,14 @@ auto collect_navigation_passages(
              .second) {
       continue;
     }
-    const bool spans_x = GateComponent::spans_x_axis(transform->rotation.y);
-    const float opening = GateComponent::k_passage_half_width * 2.0F;
+    const auto lane =
+        GateService::lane_center(transform->position.x, transform->position.z);
+    const auto extent = GateService::lane_extent(transform->rotation.y);
 
-    passages.push_back(NavigationPassage{.center_x = transform->position.x,
-                                         .center_z = transform->position.z,
-                                         .width = spans_x ? opening : crossing_depth,
-                                         .depth = spans_x ? crossing_depth : opening,
+    passages.push_back(NavigationPassage{.center_x = lane.x(),
+                                         .center_z = lane.z(),
+                                         .width = extent.half_x * 2.0F,
+                                         .depth = extent.half_z * 2.0F,
                                          .source_entity_id = entity->get_id()});
   }
 
