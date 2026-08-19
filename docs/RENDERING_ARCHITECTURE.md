@@ -65,10 +65,38 @@ Particles live in one fixed pool owned by `RainPipeline` and are recycled in the
 
 ## QSG render-thread stages
 
-`ui/gl_view.cpp` owns the frame callback through `GLView::GLRenderer::render()`. Qt runs that callback with the FBO OpenGL context current on the QSG render thread. The callback intentionally performs two engine stages in order:
+`ui/gl_view.cpp` owns the frame callback through `GLView::GLRenderer::render()`. Qt runs that callback with the FBO OpenGL context current on the QSG render thread. The simulation no longer runs inside that callback:
 
-1. `GameEngine::update(dt)` advances simulation systems before rendering. `World::update(dt)` runs here, so combat query rebuilds, target searches, attack state updates, hit feedback, target direction, and mode flags are simulation costs even when a profiler groups them under `QSGRenderThread`.
+1. `GameEngine::simulate(dt)` runs on its own `QThread` (`SoISimulation`), started by the first successful `GLRenderer::render()` through `GameEngine::start_simulation_thread()` and stopped by `~GLRenderer` / `~GameEngine`. The loop ticks at a fixed 60 Hz cadence independent of vsync and carries only authoritative work: mission waves, stages and commander messages, then `RuntimeFrameOrchestrator::advance_simulation` (`SessionContext::advance` with `World::update` and the environment clock). Its per-tick cost is accumulated in `GameEngine::take_simulation_tick_us()` and charged to the `sim` phase of the next rendered frame.
+   `GameEngine::update_presentation(dt)` runs on the QSG render thread at the top of every frame (the `frame` phase): camera follow, order markers, renderer animation time, rain, visibility, minimap, victory checks and the `sync_*` view-model pushes. `simulate`, `update_presentation`, and the live-state parts of `GameEngine::render` (selection-id sync, `render_effects`) serialise on `GameEngine::m_frame_mutex` (a `std::recursive_mutex`); `render_world` and backend playback run unlocked against the published snapshot and a per-frame copy of the camera (`GameEngine::m_render_camera`, taken under the lock; the renderer and `CameraVisibility` point at the copy), and overlap the tick. GUI-thread input entries take the same lock through `ClientHost::lock_frame()` after `ensure_initialized()`, so selection, picking and placement no longer race the tick. The commander camera is written by `CommanderControlController::update_camera_presentation` from `update_presentation`, never from the sim step. `WorldFreeze` gates both worker threads: a tick or frame is refused while a world rebuild is in progress, and the freeze waits for any in-flight one. A GUI handler that holds the frame lock must never wait on the render thread (no nested event loops, no synchronous grabs) - the render thread may be parked on that lock. `GameEngine::update(dt)` still exists as `simulate` + `update_presentation` for single-threaded callers.
 2. `GameEngine::render(width, height)` records and plays back rendering work from state that already exists. `Renderer::render_world(world)` requests and consumes the latest detached render-world snapshot. After the first handoff, culling, sorting, cache updates, and entity renderer callbacks no longer hold the mutable simulation world's mutex. Renderer-owned animation and layout state is transferred from the previous snapshot before submission. The renderer must not rebuild combat query state or search for targets. `Renderer::end_frame()` sorts the `DrawQueue`, then `Backend::execute(...)` performs OpenGL playback.
+
+### The renderer never reads the live world
+
+`Renderer::render_world` reads the published snapshot and nothing else. There is
+no fallback to the simulation world: `World` publishes an empty snapshot in its
+constructor, and `World::ensure_render_snapshot()` publishes the live contents
+synchronously the first time the renderer asks, so `acquire_render_snapshot()`
+never returns null for a non-snapshot world. If it somehow did, `render_world`
+returns without drawing rather than reaching for live entities.
+
+This used to be a conditional. `world` began as the live simulation world and
+was only reassigned when a snapshot existed, so the first frame after attaching
+to a world walked live entities — harmless while the simulation shared this
+thread, and a data race the moment it does not.
+
+`PersistentRenderRegistry` existed only to feed that fallback with classified
+id lists. It has been deleted. It observed the live world's component and
+entity-destroyed callbacks, and its `remove_from_lists` did three linear scans
+over world-sized vectors on every entity death, to maintain lists the snapshot
+path never read. Deleting it also empties `World::m_component_observers`, which
+`World::on_component_changed` copies on every component add and remove — an
+allocation per component change in the combat hot path, now gone with its only
+production registrant.
+
+The classified id lists the renderer walks (`render_unit_ids()`,
+`render_building_ids()`, `render_other_ids()`) are built by
+`publish_render_snapshot()` and only exist on a snapshot world.
 
 Rally and patrol markers are restricted to the local human player, and are
 hidden entirely while spectating.
@@ -1155,19 +1183,24 @@ at the top of `Main.qml` above every other layer; without it the
 `profiling_hud` context property registered in `main.cpp` has no reader and the
 overlay cannot be switched on at all.
 
-The phases tile the whole render-thread frame, and `total_us()` is therefore the
-wall-clock frame interval, not a fraction of it:
+The render-thread phases (`frame` through `present`) tile the whole
+render-thread frame. `sim` is the exception since the simulation moved to its
+own thread: it is the CPU the `SoISimulation` thread spent in ticks since the
+previous rendered frame, and it overlaps `present` rather than adding to the
+frame. `total_us()` is therefore the wall-clock frame interval plus the
+off-thread simulation cost:
 
-| Phase      | Scope                                                              |
-| ---------- | ------------------------------------------------------------------ |
-| `sim`      | `GameEngine::update(dt)`, scoped in `GLView::GLRenderer::render()` |
-| `snapshot` | `request_render_snapshots()` + `acquire_render_snapshot()`         |
-| `collect`  | `Renderer::begin_frame()`                                          |
-| `submit`   | `Renderer::render_world()` less the snapshot handoff               |
-| `sort`     | `DrawQueue::sort_for_batching()`                                   |
-| `shadow`   | `Backend::render_directional_shadows()` CPU time                   |
-| `play`     | `Backend::execute()` less the shadow pass                          |
-| `present`  | the gap between one `render()` returning and the next starting     |
+| Phase      | Scope                                                                    |
+| ---------- | ------------------------------------------------------------------------ |
+| `sim`      | `GameEngine::simulate(dt)` ticks on `SoISimulation` since the last frame |
+| `frame`    | `GameEngine::update_presentation(dt)` on the render thread               |
+| `snapshot` | `ensure_render_snapshot()` + `acquire_render_snapshot()`                 |
+| `collect`  | `Renderer::begin_frame()`                                                |
+| `submit`   | `Renderer::render_world()` less the snapshot handoff                     |
+| `sort`     | `DrawQueue::sort_for_batching()`                                         |
+| `shadow`   | `Backend::render_directional_shadows()` CPU time                         |
+| `play`     | `Backend::execute()` less the shadow pass                                |
+| `present`  | the gap between one `render()` returning and the next starting           |
 
 `PhaseScope` is self-exclusive: a nested scope subtracts its own elapsed time
 from its parent, so `shadow` inside `play` and `snapshot` inside `submit` are
@@ -1204,6 +1237,36 @@ when it ran.
 The Arena's `render_execute` bucket is sampled straight after `Renderer::end_frame()`, so
 it covers queue sort plus backend execution — it is not animation playback. It was called
 `playback` for a while, which sent at least one investigation in the wrong direction.
+
+### The selected-entity set is pushed on change, not per frame
+
+`GameEngine::render` filters the live selection through
+`CommanderViewModel::should_render_selected_entity` into a reused member vector
+and only calls `Renderer::set_selected_entities` when the resulting list
+differs from the one already pushed. That call clears and refills an
+`unordered_set`, so doing it unconditionally rebuilt the set every frame for
+data that changes when the player clicks.
+
+### The minimap's dirty hash is global, and that is the problem
+
+`MinimapManager::update_units` runs at 20 Hz (`k_minimap_unit_update_interval`)
+on the render thread and is charged to the `sim` phase, where it measured
+1.05 ms/frame at Zama scale -- 14% of that phase. It walks every unit in the
+world, builds a marker per unit, hashes them, and rasterises when the hash
+changed.
+
+Quantising that hash to the minimap pixel grid looks like the obvious fix and
+**does not work**: the hash covers every unit at once, so in a battle it is
+enough for any single one of ~6000 units to cross a pixel boundary in 50 ms for
+the whole overlay to redraw, which happens on essentially every tick. Tried and
+reverted on 19 Aug 2026; it also broke
+`RuntimeFrameOrchestratorTest.MovingUnitMarkersUpdateAtMinimapCadence`, where a
+one-tile move on a 12-tile map is under one minimap pixel and must still count.
+
+What would actually pay: hoisting the visibility cull out of
+`UnitLayer::update` and into the marker loop, so fogged units never become
+markers and never get rasterised; or moving the whole thing off the render
+thread, since it produces a `QImage` for QML rather than anything in the frame.
 
 ### Cascade resolutions are split
 

@@ -33,6 +33,7 @@ void OrdersViewModel::on_click_select(qreal sx, qreal sy, bool additive) {
     return;
   }
   m_host.ensure_initialized();
+  const auto frame_lock = m_host.lock_frame();
   if (m_context.input != nullptr) {
     m_context.input->on_click_select(
         sx, sy, additive, m_context.local_owner_id, *m_context.viewport);
@@ -45,6 +46,7 @@ void OrdersViewModel::on_area_selected(
     return;
   }
   m_host.ensure_initialized();
+  const auto frame_lock = m_host.lock_frame();
   if (m_context.input != nullptr) {
     m_context.input->on_area_selected(
         x1, y1, x2, y2, additive, m_context.local_owner_id, *m_context.viewport);
@@ -53,6 +55,7 @@ void OrdersViewModel::on_area_selected(
 
 void OrdersViewModel::select_all_troops() {
   m_host.ensure_initialized();
+  const auto frame_lock = m_host.lock_frame();
   if (m_context.input != nullptr) {
     m_context.input->select_all_troops(m_context.local_owner_id);
   }
@@ -60,6 +63,7 @@ void OrdersViewModel::select_all_troops() {
 
 void OrdersViewModel::select_unit_by_id(qulonglong unit_id) {
   m_host.ensure_initialized();
+  const auto frame_lock = m_host.lock_frame();
   if (m_context.input != nullptr) {
     m_context.input->select_unit_by_id(static_cast<Engine::Core::EntityID>(unit_id),
                                        m_context.local_owner_id);
@@ -68,6 +72,7 @@ void OrdersViewModel::select_unit_by_id(qulonglong unit_id) {
 
 void OrdersViewModel::select_by_type(const QString& unit_type) {
   m_host.ensure_initialized();
+  const auto frame_lock = m_host.lock_frame();
   if (m_context.input != nullptr) {
     m_context.input->select_selected_units_by_type(unit_type, m_context.local_owner_id);
   }
@@ -78,6 +83,7 @@ void OrdersViewModel::set_hover_at_screen(qreal sx, qreal sy) {
     return;
   }
   m_host.ensure_initialized();
+  const auto frame_lock = m_host.lock_frame();
   if (m_context.input != nullptr) {
     m_context.input->set_hover_at_screen(sx, sy, *m_context.viewport);
   }
@@ -90,6 +96,7 @@ void OrdersViewModel::on_map_clicked(qreal sx, qreal sy) {
     return;
   }
   m_host.ensure_initialized();
+  const auto frame_lock = m_host.lock_frame();
   if (m_context.input != nullptr) {
     m_context.input->on_map_clicked(
         sx, sy, m_context.local_owner_id, *m_context.viewport);
@@ -101,6 +108,7 @@ void OrdersViewModel::on_right_click(qreal sx, qreal sy) {
     return;
   }
   m_host.ensure_initialized();
+  const auto frame_lock = m_host.lock_frame();
   if (m_context.input != nullptr) {
     m_context.input->on_right_click(
         sx, sy, m_context.local_owner_id, *m_context.viewport);
@@ -112,6 +120,7 @@ void OrdersViewModel::on_right_double_click(qreal sx, qreal sy) {
     return;
   }
   m_host.ensure_initialized();
+  const auto frame_lock = m_host.lock_frame();
 
   if (m_right_mouse.placement_was_active_on_press) {
     m_right_mouse.double_click_handled = true;
@@ -141,6 +150,7 @@ auto OrdersViewModel::on_right_press(qreal sx, qreal sy) -> bool {
     return false;
   }
   m_host.ensure_initialized();
+  const auto frame_lock = m_host.lock_frame();
   m_right_mouse.reset();
   m_right_mouse.active = true;
   m_right_mouse.press_position = QPointF(sx, sy);
@@ -175,6 +185,7 @@ void OrdersViewModel::on_right_move(qreal sx, qreal sy) {
     return;
   }
   m_host.ensure_initialized();
+  const auto frame_lock = m_host.lock_frame();
 
   const QPointF delta = QPointF(sx, sy) - m_right_mouse.press_position;
   if ((delta.x() * delta.x() + delta.y() * delta.y()) > k_drag_threshold_squared) {
@@ -193,6 +204,7 @@ void OrdersViewModel::on_right_release(qreal sx, qreal sy) {
     return;
   }
   m_host.ensure_initialized();
+  const auto frame_lock = m_host.lock_frame();
 
   if (m_right_mouse.double_click_handled) {
     m_right_mouse.reset();
@@ -221,6 +233,7 @@ void OrdersViewModel::attack_at(qreal sx, qreal sy) {
     return;
   }
   m_host.ensure_initialized();
+  const auto frame_lock = m_host.lock_frame();
   if (m_context.input != nullptr) {
     m_context.input->on_attack_click(sx, sy, *m_context.viewport);
   }
@@ -231,6 +244,7 @@ void OrdersViewModel::guard_at(qreal sx, qreal sy) {
     return;
   }
   m_host.ensure_initialized();
+  const auto frame_lock = m_host.lock_frame();
   m_context.input->on_guard_click(sx, sy, *m_context.viewport);
 }
 
@@ -239,6 +253,7 @@ void OrdersViewModel::patrol_at(qreal sx, qreal sy) {
     return;
   }
   m_host.ensure_initialized();
+  const auto frame_lock = m_host.lock_frame();
   m_context.input->on_patrol_click(sx, sy, *m_context.viewport);
 }
 
@@ -247,6 +262,7 @@ void OrdersViewModel::deliver_civilians_at(qreal sx, qreal sy) {
     return;
   }
   m_host.ensure_initialized();
+  const auto frame_lock = m_host.lock_frame();
   m_context.input->on_civilian_delivery_click(
       sx, sy, m_context.local_owner_id, *m_context.viewport);
 }
@@ -256,6 +272,7 @@ void OrdersViewModel::stop() {
     return;
   }
   m_host.ensure_initialized();
+  const auto frame_lock = m_host.lock_frame();
   m_context.input->on_stop_command();
 }
 
@@ -264,6 +281,7 @@ void OrdersViewModel::hold() {
     return;
   }
   m_host.ensure_initialized();
+  const auto frame_lock = m_host.lock_frame();
   m_context.input->on_hold_command();
 }
 
@@ -272,6 +290,7 @@ void OrdersViewModel::gate() {
     return;
   }
   m_host.ensure_initialized();
+  const auto frame_lock = m_host.lock_frame();
   m_context.input->on_gate_command();
 }
 
@@ -280,6 +299,7 @@ void OrdersViewModel::guard() {
     return;
   }
   m_host.ensure_initialized();
+  const auto frame_lock = m_host.lock_frame();
   m_context.input->on_guard_command();
 }
 
@@ -288,11 +308,13 @@ void OrdersViewModel::run() {
     return;
   }
   m_host.ensure_initialized();
+  const auto frame_lock = m_host.lock_frame();
   m_context.input->on_run_command();
 }
 
 void OrdersViewModel::heal() {
   m_host.ensure_initialized();
+  const auto frame_lock = m_host.lock_frame();
   if (m_context.cursor != nullptr && action_enabled(QStringLiteral("heal"))) {
     m_host.set_cursor_mode(CursorMode::Heal);
   }
@@ -300,6 +322,7 @@ void OrdersViewModel::heal() {
 
 void OrdersViewModel::build() {
   m_host.ensure_initialized();
+  const auto frame_lock = m_host.lock_frame();
   if (m_context.cursor != nullptr && action_enabled(QStringLiteral("build"))) {
     m_host.set_cursor_mode(CursorMode::Build);
   }

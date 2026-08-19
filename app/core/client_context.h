@@ -3,6 +3,8 @@
 #include <QString>
 #include <QVariantList>
 
+#include <mutex>
+
 #include "app/input/cursor_mode.h"
 
 class CampaignManager;
@@ -94,6 +96,8 @@ public:
   virtual ~ClientHost() = default;
 
   virtual void ensure_initialized() = 0;
+
+  [[nodiscard]] virtual auto lock_frame() -> std::unique_lock<std::recursive_mutex> = 0;
 
   virtual void set_cursor_mode(CursorMode mode) = 0;
 };

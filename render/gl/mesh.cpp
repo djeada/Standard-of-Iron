@@ -97,13 +97,12 @@ auto Mesh::prepare_draw(const char* caller_name) -> bool {
   if (!m_vao) {
     setup_buffers();
   }
-#ifndef NDEBUG
-  if (!gl_objects_can_be_released()) {
-    qWarning() << caller_name << "called without current GL context; skipping draw"
-               << "indices" << m_indices.size();
+  if (!m_vao) {
+    qWarning() << caller_name << "has no vertex array; skipping draw" << "indices"
+               << m_indices.size() << "context"
+               << (gl_objects_can_be_released() ? "current" : "absent");
     return false;
   }
-#endif
   m_vao->bind();
 
 #ifndef NDEBUG

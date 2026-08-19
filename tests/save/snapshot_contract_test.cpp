@@ -5,6 +5,7 @@
 #include <set>
 #include <sstream>
 #include <string>
+#include <vector>
 
 #include "game/save/snapshot_contract.h"
 #include "game/systems/save_format.h"
@@ -168,3 +169,53 @@ TEST(SnapshotContractTest, EveryEntryExplainsItself) {
 }
 
 } // namespace
+
+namespace {
+
+auto snapshot_copy_list(const std::string& function_name) -> std::vector<std::string> {
+  const auto source = read_text(find_repo_root() / "game" / "core" / "world.cpp");
+  const auto start = source.find("void " + function_name + "(");
+  if (start == std::string::npos) {
+    return {};
+  }
+  const auto end = source.find("\n}\n", start);
+  const std::string body = source.substr(start, end - start);
+  const std::regex pattern(R"(copy_snapshot_component<([A-Za-z0-9_]+)>)");
+  std::vector<std::string> names;
+  for (auto it = std::sregex_iterator(body.begin(), body.end(), pattern);
+       it != std::sregex_iterator();
+       ++it) {
+    names.push_back((*it)[1].str());
+  }
+  return names;
+}
+
+} // namespace
+
+TEST(SnapshotContractTest, RenderSnapshotSplitMatchesTheContract) {
+  const auto authoritative =
+      snapshot_copy_list("copy_authoritative_snapshot_components");
+  const auto presentation = snapshot_copy_list("copy_presentation_snapshot_components");
+  ASSERT_FALSE(authoritative.empty()) << "world.cpp could not be scanned";
+  ASSERT_FALSE(presentation.empty()) << "world.cpp could not be scanned";
+
+  std::set<std::string> seen;
+  for (const auto& name : authoritative) {
+    EXPECT_TRUE(seen.insert(name).second) << name << " is copied twice";
+    const auto* spec = Game::Save::find(name.c_str());
+    ASSERT_NE(spec, nullptr) << name << " is not in the snapshot contract";
+    EXPECT_NE(spec->classification, FieldClass::PresentationOnly)
+        << name
+        << " is presentation-only in the contract but is copied as authoritative "
+           "state; move it to copy_presentation_snapshot_components";
+  }
+  for (const auto& name : presentation) {
+    EXPECT_TRUE(seen.insert(name).second) << name << " is copied twice";
+    const auto* spec = Game::Save::find(name.c_str());
+    ASSERT_NE(spec, nullptr) << name << " is not in the snapshot contract";
+    EXPECT_EQ(spec->classification, FieldClass::PresentationOnly)
+        << name
+        << " is authoritative in the contract but is copied as presentation "
+           "state; move it to copy_authoritative_snapshot_components";
+  }
+}

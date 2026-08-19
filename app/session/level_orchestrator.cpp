@@ -12,6 +12,8 @@
 #include "game/core/world.h"
 #include "game/game_config.h"
 #include "game/map/map_loader.h"
+#include "game/map/terrain_service.h"
+#include "game/session/session_context.h"
 #include "game/systems/ai_system.h"
 #include "game/systems/global_stats_registry.h"
 #include "game/systems/match_snapshot.h"
@@ -194,6 +196,12 @@ auto LevelOrchestrator::load_skirmish(const QString& map_path,
     }
   } else {
     qWarning() << "LevelOrchestrator: Failed to load map for minimap:" << map_error;
+  }
+  if (scene.session != nullptr) {
+    scene.session->terrain().seal();
+  } else {
+    qWarning()
+        << "LevelOrchestrator: no session in scene context; terrain left unsealed";
   }
 
   if (progress_tracker != nullptr) {

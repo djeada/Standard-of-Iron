@@ -32,6 +32,11 @@ class RuntimeFrameOrchestrator {
 public:
   using SimulationStep = std::function<void(float)>;
 
+  void advance_simulation(const AppSceneContext& scene,
+                          RuntimeFrameState& state,
+                          float dt,
+                          const SimulationStep& simulation_step) const;
+
   void update(const AppSceneContext& scene,
               RuntimeFrameState& state,
               EntityCache& entity_cache,

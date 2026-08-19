@@ -111,8 +111,21 @@ public:
                             int local_owner_id,
                             Render::GL::Camera& camera,
                             float dt);
+  [[nodiscard]] bool update_simulation(Engine::Core::World& world,
+                                       Engine::Core::EntityID commander_id,
+                                       int local_owner_id,
+                                       float dt);
+  void update_camera_presentation(Engine::Core::World& world,
+                                  Engine::Core::EntityID commander_id,
+                                  Render::GL::Camera& camera,
+                                  float dt);
 
 private:
+  [[nodiscard]] bool update_impl(Engine::Core::World& world,
+                                 Engine::Core::EntityID commander_id,
+                                 int local_owner_id,
+                                 Render::GL::Camera* camera,
+                                 float dt);
   [[nodiscard]] Engine::Core::EntityID
   resolve_ability_target(Engine::Core::World& world,
                          Engine::Core::Entity& commander,

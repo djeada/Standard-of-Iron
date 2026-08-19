@@ -103,6 +103,7 @@ public:
   should_render_selected_entity(Engine::Core::EntityID id) const -> bool;
 
   void update_control_mode(float dt);
+  void update_camera_presentation(float dt);
 
   void restore_direct_control_if_ready();
   void render_effects();
