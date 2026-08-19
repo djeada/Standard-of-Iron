@@ -141,8 +141,8 @@ void main() {
   color += trim_light * sun * thread_sheen;
   color += sky * grazing;
 
+  color = apply_directional_shadow(color, v_world_pos, v_normal);
   color +=
       albedo * pinned_ao * fold_ao * local_lighting(v_world_pos, normalize(v_normal));
-  color = apply_directional_shadow(color, v_world_pos, v_normal);
   frag_color = vec4(color * textile.rgb, textile.a * u_alpha);
 }

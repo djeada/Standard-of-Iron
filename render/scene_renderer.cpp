@@ -151,6 +151,8 @@ auto Renderer::initialize() -> bool {
                    " rendering is disabled.";
     return false;
   }
+  m_contact_shadow_shader =
+      m_gl_backend != nullptr ? m_gl_backend->troop_shadow_shader() : nullptr;
   m_entity_registry = std::make_unique<EntityRendererRegistry>();
   register_built_in_entity_renderers(*m_entity_registry);
   register_built_in_equipment();
@@ -357,6 +359,8 @@ void Renderer::mesh(Mesh* mesh,
   cmd.alpha = effective_alpha;
   cmd.material_id = material_id;
   cmd.shader = m_current_shader;
+  cmd.blend_batchable =
+      m_current_shader != nullptr && m_current_shader == m_contact_shadow_shader;
   if (m_active_queue != nullptr) {
     m_active_queue->submit(std::move(cmd));
   }

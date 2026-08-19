@@ -32,6 +32,8 @@ inline constexpr int directional_shadow_map = 8;
 inline constexpr int directional_shadow_map_far = 9;
 inline constexpr int terrain_fields = 10;
 inline constexpr int terrain_noise_atlas = 11;
+
+inline constexpr int directional_shadow_depth = 12;
 } // namespace Render::GL::TextureUnit
 
 namespace Render::GL::BufferCapacity {

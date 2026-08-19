@@ -767,7 +767,7 @@ void prepare_humanoid_instances(const HumanoidRendererBase& owner,
             soldier_render_anim,
             soldier_render_anim.combat_visual.attack_phase,
             Render::Creature::resolve_pose(soldier_render_anim).animation_state,
-            HumanoidLOD::Billboard,
+            HumanoidLOD::Culled,
             outside_frustum ? Render::Profiling::SoldierCullReason::Frustum
             : hidden_by_fog ? Render::Profiling::SoldierCullReason::Fog
                             : Render::Profiling::SoldierCullReason::LensGap,
@@ -1284,7 +1284,7 @@ void prepare_humanoid_instances(const HumanoidRendererBase& owner,
             anim_ctx.attack_phase,
             Render::Creature::resolve_pose(anim_ctx.inputs).animation_state,
             static_cast<HumanoidLOD>(lod_decision.lod),
-            Render::Profiling::SoldierCullReason::Billboard,
+            Render::Profiling::SoldierCullReason::Distance,
             false,
             soldier_world_pos,
             applied_yaw,
@@ -1383,14 +1383,9 @@ void prepare_humanoid_instances(const HumanoidRendererBase& owner,
     shadow_inputs.lod = soldier_lod;
     shadow_inputs.camera_distance = lod_state.camera_distance;
     shadow_inputs.mounted = is_mounted_spawn;
-    shadow_inputs.formation_id = ctx.entity != nullptr ? ctx.entity->get_id() : 0U;
-    shadow_inputs.standing_idle =
-        !is_mounted_spawn &&
-        soldier_render_anim.movement_state ==
-            Render::Creature::MovementAnimationState::Idle &&
-        !soldier_render_anim.is_attacking && !soldier_render_anim.is_hit_reacting &&
-        !soldier_render_anim.is_dying && !soldier_render_anim.is_dead &&
-        !commander_jump.active;
+    shadow_inputs.facing_yaw_degrees = applied_yaw;
+    shadow_inputs.intensity_scale =
+        (soldier_render_anim.is_dying || soldier_render_anim.is_dead) ? 0.45F : 1.0F;
     shadow_inputs.surface_world_y = shadow_surface_world_y;
     shadow_inputs.surface_height_valid = shadow_surface_height_valid;
     const auto shadow_state = RCP::prepare_humanoid_shadow_state(shadow_inputs);
@@ -1433,7 +1428,7 @@ void prepare_humanoid_instances(const HumanoidRendererBase& owner,
       break;
     }
 
-    case HumanoidLOD::Billboard:
+    case HumanoidLOD::Culled:
 
       break;
     }

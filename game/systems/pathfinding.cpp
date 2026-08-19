@@ -633,8 +633,25 @@ void Pathfinding::rebuild_world_prop_index() {
   float const tile_size =
       height_map != nullptr ? std::max(height_map->get_tile_size(), 0.0001F) : 1.0F;
   std::unordered_map<int, CellValue> next;
+  std::unordered_map<int, CellValue> footprints;
   next.reserve(terrain_service.world_props().size());
+  footprints.reserve(terrain_service.world_props().size() * 4U);
+
+  auto claim_footprint = [&footprints](int index, CellValue value) {
+    auto const existing = footprints.find(index);
+    if (existing == footprints.end()) {
+      footprints.emplace(index, value);
+      return;
+    }
+    if (existing->second == CellValue::Blocked) {
+      existing->second = value;
+    }
+  };
+
   for (auto const& prop : terrain_service.world_props()) {
+    if (!Game::Map::is_solid_world_prop_type(prop.type)) {
+      continue;
+    }
     CellValue value = CellValue::Blocked;
     if (Game::Map::is_tree_world_prop_type(prop.type)) {
       value = CellValue::Tree;
@@ -642,11 +659,8 @@ void Pathfinding::rebuild_world_prop_index() {
       value = CellValue::Boulder;
     } else if (Game::Map::is_iron_ore_world_prop_type(prop.type)) {
       value = CellValue::IronOre;
-    } else if (Game::Map::is_settlement_world_prop_type(prop.type)) {
-      value = CellValue::Blocked;
-    } else {
-      continue;
     }
+
     float grid_x_value = prop.x;
     float grid_z_value = prop.z;
     if (terrain_service.coord_system() == Game::Map::CoordSystem::World) {
@@ -658,6 +672,38 @@ void Pathfinding::rebuild_world_prop_index() {
     if (grid_x >= 0 && grid_x < m_width && grid_z >= 0 && grid_z < m_height) {
       next[to_index(grid_x, grid_z)] = value;
     }
+
+    float const radius_cells =
+        Game::Map::world_prop_ground_radius(prop.type, prop.scale) / tile_size;
+    int const min_x =
+        std::max(0, static_cast<int>(std::floor(grid_x_value - radius_cells)));
+    int const max_x =
+        std::min(m_width - 1, static_cast<int>(std::ceil(grid_x_value + radius_cells)));
+    int const min_z =
+        std::max(0, static_cast<int>(std::floor(grid_z_value - radius_cells)));
+    int const max_z = std::min(
+        m_height - 1, static_cast<int>(std::ceil(grid_z_value + radius_cells)));
+    float const radius_sq = radius_cells * radius_cells;
+
+    for (int cell_z = min_z; cell_z <= max_z; ++cell_z) {
+      for (int cell_x = min_x; cell_x <= max_x; ++cell_x) {
+        float const dx = static_cast<float>(cell_x) - grid_x_value;
+        float const dz = static_cast<float>(cell_z) - grid_z_value;
+        if (dx * dx + dz * dz > radius_sq) {
+          continue;
+        }
+
+        QVector3D const world = grid_to_world({cell_x, cell_z});
+        if (terrain_service.is_point_on_road(world.x(), world.z())) {
+          continue;
+        }
+        claim_footprint(to_index(cell_x, cell_z), value);
+      }
+    }
+  }
+
+  for (auto const& [index, value] : footprints) {
+    next.emplace(index, value);
   }
 
   {

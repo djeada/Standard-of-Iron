@@ -24,39 +24,68 @@ namespace Render::Creature::Pipeline {
 
 namespace {
 
-constexpr float k_shadow_size_infantry = 0.16F;
-constexpr float k_shadow_size_mounted = 0.35F;
-constexpr float k_shadow_size_horse = 0.38F;
-constexpr float k_shadow_size_elephant = 0.55F;
-constexpr float k_shadow_ground_offset = 0.02F;
-constexpr float k_shadow_base_alpha = 0.32F;
+constexpr QVector2D k_blob_half_extent_infantry{0.40F, 0.46F};
+constexpr QVector2D k_blob_half_extent_mounted{0.58F, 1.00F};
+constexpr QVector2D k_blob_half_extent_horse{0.58F, 1.00F};
+constexpr QVector2D k_blob_half_extent_elephant{1.05F, 1.55F};
+constexpr float k_shadow_ground_offset = 0.025F;
+constexpr float k_shadow_base_alpha = 0.62F;
 constexpr float k_shadow_min_visible_alpha = 0.004F;
 
-auto resolve_contact_shadow_placement(const Render::GL::DrawContext& ctx,
-                                      float camera_distance)
-    -> Render::ContactShadowPlacement {
+constexpr float k_shadow_tilt_probe = 0.35F;
+
+auto contact_shadow_opacity(const Render::GL::DrawContext& ctx,
+                            float camera_distance) -> float {
   const auto& graphics = Render::GraphicsSettings::instance();
-  const auto& directional = graphics.directional_shadows();
-  const Render::ContactShadowInputs inputs{
-      .camera_distance = camera_distance,
-      .fade_distance = graphics.shadow_max_distance(),
-      .directional_shadows_enabled = directional.enabled,
-      .directional_distance = directional.distance};
-  const auto& environment = ctx.backend->environment_lighting();
-  return Render::contact_shadow_placement(environment, inputs);
+  const Render::ContactShadowInputs inputs{.camera_distance = camera_distance,
+                                           .fade_distance =
+                                               graphics.shadow_max_distance()};
+  return Render::contact_shadow_placement(ctx.backend->environment_lighting(), inputs)
+      .opacity;
 }
 
 auto admits_contact_shadow(const Render::GL::DrawContext& ctx,
                            Render::Creature::CreatureLOD lod,
-                           float camera_distance,
-                           std::uint32_t formation_id,
-                           bool standing_idle) -> bool {
+                           float camera_distance) -> bool {
   const auto& graphics = Render::GraphicsSettings::instance();
-  return ctx.allow_template_cache && graphics.shadows_enabled() &&
-         lod != Render::Creature::CreatureLOD::Billboard &&
+  return ctx.allow_template_cache && lod != Render::Creature::CreatureLOD::Culled &&
          camera_distance < graphics.shadow_max_distance() &&
-         Render::VisibilityBudgetTracker::instance().request_contact_shadow(
-             formation_id, standing_idle);
+         Render::VisibilityBudgetTracker::instance().request_contact_shadow();
+}
+
+auto build_contact_shadow_model(const Game::Map::TerrainService& terrain,
+                                const QVector3D& world_pos,
+                                float ground_y,
+                                float facing_yaw_degrees,
+                                QVector2D half_extent) -> QMatrix4x4 {
+  const float probe = k_shadow_tilt_probe;
+  const float hx0 = terrain.resolve_surface_world_y(
+      world_pos.x() - probe, world_pos.z(), 0.0F, ground_y);
+  const float hx1 = terrain.resolve_surface_world_y(
+      world_pos.x() + probe, world_pos.z(), 0.0F, ground_y);
+  const float hz0 = terrain.resolve_surface_world_y(
+      world_pos.x(), world_pos.z() - probe, 0.0F, ground_y);
+  const float hz1 = terrain.resolve_surface_world_y(
+      world_pos.x(), world_pos.z() + probe, 0.0F, ground_y);
+  QVector3D normal(-(hx1 - hx0) / (2.0F * probe), 1.0F, -(hz1 - hz0) / (2.0F * probe));
+  normal.normalize();
+
+  const float yaw = qDegreesToRadians(facing_yaw_degrees);
+  QVector3D forward(std::sin(yaw), 0.0F, std::cos(yaw));
+  forward = (forward - normal * QVector3D::dotProduct(forward, normal)).normalized();
+  if (forward.lengthSquared() < 1e-6F) {
+    forward = QVector3D(0.0F, 0.0F, 1.0F);
+  }
+  const QVector3D right = QVector3D::crossProduct(forward, normal).normalized();
+
+  QMatrix4x4 model;
+  model.setColumn(0, QVector4D(right * half_extent.x(), 0.0F));
+  model.setColumn(1, QVector4D(forward * half_extent.y(), 0.0F));
+  model.setColumn(2, QVector4D(normal, 0.0F));
+  model.setColumn(
+      3,
+      QVector4D(world_pos.x(), ground_y + k_shadow_ground_offset, world_pos.z(), 1.0F));
+  return model;
 }
 
 } // namespace
@@ -136,48 +165,26 @@ auto prepare_humanoid_shadow_state(const HumanoidShadowStateInputs& inputs)
     return state;
   }
 
-  const auto placement = resolve_contact_shadow_placement(ctx, inputs.camera_distance);
-  const float shadow_alpha = k_shadow_base_alpha * placement.opacity;
-
+  const float shadow_alpha = k_shadow_base_alpha * inputs.intensity_scale *
+                             contact_shadow_opacity(ctx, inputs.camera_distance);
   const auto& terrain_service = ctx.world_view.terrain_or_empty();
   if (!terrain_service.is_initialized() || shadow_alpha < k_shadow_min_visible_alpha ||
-      !admits_contact_shadow(ctx,
-                             inputs.lod,
-                             inputs.camera_distance,
-                             inputs.formation_id,
-                             inputs.standing_idle)) {
+      !admits_contact_shadow(ctx, inputs.lod, inputs.camera_distance)) {
     return state;
   }
 
-  float const shadow_size =
-      inputs.mounted ? k_shadow_size_mounted : k_shadow_size_infantry;
-  float depth_boost = 1.0F;
-  float width_boost = 1.0F;
-  if (inputs.unit != nullptr) {
+  QVector2D half_extent =
+      inputs.mounted ? k_blob_half_extent_mounted : k_blob_half_extent_infantry;
+  if (inputs.unit != nullptr && !inputs.mounted) {
     using Game::Units::SpawnType;
     switch (inputs.unit->spawn_type) {
     case SpawnType::Spearman:
-      depth_boost = 1.8F;
-      width_boost = 0.95F;
-      break;
-    case SpawnType::HorseSpearman:
-      depth_boost = 2.1F;
-      width_boost = 1.05F;
-      break;
-    case SpawnType::Archer:
-    case SpawnType::HorseArcher:
-      depth_boost = 1.2F;
-      width_boost = 0.95F;
+      half_extent.setY(half_extent.y() * 1.10F);
       break;
     default:
       break;
     }
   }
-
-  float const shadow_width =
-      shadow_size * (inputs.mounted ? 1.05F : 1.0F) * width_boost;
-  float const shadow_depth =
-      shadow_size * (inputs.mounted ? 1.30F : 1.10F) * depth_boost;
 
   const float shadow_y =
       inputs.surface_height_valid
@@ -187,23 +194,12 @@ auto prepare_humanoid_shadow_state(const HumanoidShadowStateInputs& inputs)
                                                     0.0F,
                                                     inputs.soldier_world_pos.y());
 
-  QVector2D dir_for_use = placement.direction;
-  if (dir_for_use.lengthSquared() < 1e-6F) {
-    dir_for_use = QVector2D(0.0F, 1.0F);
-  }
-
-  float const shadow_offset = shadow_depth * 1.25F * placement.offset_scale;
-  QVector2D const offset_2d = dir_for_use * shadow_offset;
-  float const light_yaw_deg =
-      qRadiansToDegrees(std::atan2(double(dir_for_use.x()), double(dir_for_use.y())));
-
-  state.model.translate(inputs.soldier_world_pos.x() + offset_2d.x(),
-                        shadow_y + k_shadow_ground_offset,
-                        inputs.soldier_world_pos.z() + offset_2d.y());
-  state.model.rotate(light_yaw_deg, 0.0F, 1.0F, 0.0F);
-  state.model.rotate(-90.0F, 1.0F, 0.0F, 0.0F);
-  state.model.scale(shadow_width, shadow_depth, 1.0F);
-  state.light_dir = dir_for_use;
+  state.model = build_contact_shadow_model(terrain_service,
+                                           inputs.soldier_world_pos,
+                                           shadow_y,
+                                           inputs.facing_yaw_degrees,
+                                           half_extent);
+  state.light_dir = QVector2D(0.0F, 1.0F);
   state.alpha = shadow_alpha;
   state.pass = graph.pass_intent;
   state.enabled = true;
@@ -231,30 +227,17 @@ auto prepare_quadruped_shadow_state(const QuadrupedShadowStateInputs& inputs)
     return state;
   }
 
-  const auto placement = resolve_contact_shadow_placement(ctx, inputs.camera_distance);
-  const float shadow_alpha = k_shadow_base_alpha * placement.opacity;
-
+  const float shadow_alpha = k_shadow_base_alpha * inputs.intensity_scale *
+                             contact_shadow_opacity(ctx, inputs.camera_distance);
   const auto& terrain_service = ctx.world_view.terrain_or_empty();
   if (!terrain_service.is_initialized() || shadow_alpha < k_shadow_min_visible_alpha ||
-      !admits_contact_shadow(ctx,
-                             inputs.lod,
-                             inputs.camera_distance,
-                             inputs.formation_id,
-                             inputs.standing_idle)) {
+      !admits_contact_shadow(ctx, inputs.lod, inputs.camera_distance)) {
     return state;
   }
 
-  float shadow_size = k_shadow_size_horse;
-  float width_mult = 1.05F;
-  float depth_mult = 1.70F;
-  if (inputs.kind == CreatureKind::Elephant) {
-    shadow_size = k_shadow_size_elephant;
-    width_mult = 1.10F;
-    depth_mult = 2.20F;
-  }
-
-  float const shadow_width = shadow_size * width_mult;
-  float const shadow_depth = shadow_size * depth_mult;
+  const QVector2D half_extent = inputs.kind == CreatureKind::Elephant
+                                    ? k_blob_half_extent_elephant
+                                    : k_blob_half_extent_horse;
 
   const float shadow_y =
       inputs.surface_height_valid
@@ -262,23 +245,12 @@ auto prepare_quadruped_shadow_state(const QuadrupedShadowStateInputs& inputs)
           : terrain_service.resolve_surface_world_y(
                 inputs.world_pos.x(), inputs.world_pos.z(), 0.0F, inputs.world_pos.y());
 
-  QVector2D dir_for_use = placement.direction;
-  if (dir_for_use.lengthSquared() < 1e-6F) {
-    dir_for_use = QVector2D(0.0F, 1.0F);
-  }
-
-  float const shadow_offset = shadow_depth * 1.25F * placement.offset_scale;
-  QVector2D const offset_2d = dir_for_use * shadow_offset;
-  float const light_yaw_deg =
-      qRadiansToDegrees(std::atan2(double(dir_for_use.x()), double(dir_for_use.y())));
-
-  state.model.translate(inputs.world_pos.x() + offset_2d.x(),
-                        shadow_y + k_shadow_ground_offset,
-                        inputs.world_pos.z() + offset_2d.y());
-  state.model.rotate(light_yaw_deg, 0.0F, 1.0F, 0.0F);
-  state.model.rotate(-90.0F, 1.0F, 0.0F, 0.0F);
-  state.model.scale(shadow_width, shadow_depth, 1.0F);
-  state.light_dir = dir_for_use;
+  state.model = build_contact_shadow_model(terrain_service,
+                                           inputs.world_pos,
+                                           shadow_y,
+                                           inputs.facing_yaw_degrees,
+                                           half_extent);
+  state.light_dir = QVector2D(0.0F, 1.0F);
   state.alpha = shadow_alpha;
   state.pass = graph.pass_intent;
   state.enabled = true;

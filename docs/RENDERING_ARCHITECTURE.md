@@ -48,7 +48,7 @@ Shaders pull from it through `assets/shaders/include/environment_lighting.glsl` 
 
 Time of day is a continuous decimal hour with `locked`, `scripted` and `continuous` modes, not four fixed presets; the legacy `morning`/`day`/`afternoon`/`night` strings still load and alias onto hours. Weather feeds the same state, so rain and snow shift cloud cover, wetness, fog and sky tint coherently.
 
-Directional shadows are cascaded (up to four, quality-dependent) with texel snapping and cascade blending. Contact shadows remain as a cheap grounding effect and a low-quality fallback: `render/contact_shadow.h` derives their compass direction and length from the same `EnvironmentLightingState` sun rather than a baked constant, so a blob points and stretches the way the map's clock says it should. The same helper fades them out -- towards a subtle patch directly under the feet where a real cascade already covers the unit, and towards zero at the contact-shadow distance limit -- so nothing pops in or doubles up.
+Directional shadows are cascaded (up to four, quality-dependent) with texel snapping and cascade blending. The cascades are fitted to what the camera can see, not to its near/far planes: `render/gl/shadow_cascade_fit.h` intersects the frustum corner rays with a ground slab (the terrain height range in the queue plus a caster allowance) and slices only that distance range, so an RTS camera 40 m up does not spend its first cascades on empty air. Each cascade's world texel size and depth span are uploaded alongside its matrix, and `directional_shadows.glsl` authors everything in metres against them -- the constant bias, the normal-offset that keeps shadows planted at the feet, the penumbra width (crisp on a clear day, wide when `shadow_softness` says overcast) -- so tuning does not drift when the cascade radius changes. Sampling is hardware depth-compare PCF (`sampler2DArrayShadow`, `GL_COMPARE_REF_TO_TEXTURE`) on a 3x3 or 5x5 grid, and the last cascade fades out before the shadow distance instead of ending on a line. Casters are culled against the cascade's light-space footprint only, never by camera distance, because a low sun throws a tall caster's shadow well outside the band it stands in. Two things the shadow pass has to do that are easy to break: the scatter species (trees, ruins, tents, boulders, statues, ore) read their view-projection from the `FrameData` block, so the pass writes the light matrix there for each cascade and restores the camera's afterwards; and the boundary mountain ring is a `TerrainSurfaceCmd` flagged `horizon_dressing`, which keeps it out of both the caster list and the ground slab. Every creature also carries a grounding blob (`troop_shadow*.frag`, `include/contact_shadow.glsl`): a soft occlusion ellipse centred on the creature's ground position, scaled to its footprint, elongated along its facing and tilted to the terrain slope (`build_contact_shadow_model` in `creature_prepared_state.cpp` probes four heights around the feet). It is drawn for every creature within `ContactShadowBudget::max_distance`, moving or idle, at every preset -- it is what keeps a marching formation on the ground when the sun is overhead and the cast shadow sits under the body. `MeshCmd::blend_batchable` lets the queue coalesce those blended quads into a few instanced draws through `troop_shadow_instanced`. Where the cascades are off (Low) the blob adds a sun-offset cast lobe (`u_cast_weight`); `render/contact_shadow.h` still supplies the distance fade.
 
 Local lights are budgeted (`Render::k_max_local_lights`) and go through `Render::LocalLightFader`, which holds a slot until its light has ramped down. Entering and leaving the budget is a fade over `k_local_light_fade_seconds`, never a pop, and `Renderer::clear_entity_render_caches()` resets the fader so a new map never inherits the previous map's fires.
 
@@ -56,6 +56,18 @@ Two practical notes:
 
 - **Texture units are a shared, program-wide namespace.** Two samplers of different types resolving to the same unit make every draw using that program raise `GL_INVALID_OPERATION`. The units in play are listed in `Render::GL::TextureUnit` (`render/gl/render_constants.h`) -- add new long-lived samplers there rather than picking a number.
 - **Instanced emitters can't be recovered from draw commands.** Fire camps and shrines reach the GPU as instance buffers, so the backend cannot read their positions back to build local lights. They advertise themselves through `Renderer::local_light()` instead, and the backend budgets those alongside effect-driven lights.
+
+## Graphics presets
+
+There are four presets (`Render::GraphicsQuality` Low/Medium/High/Ultra) and each is one immutable `GraphicsProfile` in a constexpr table in `render/graphics_settings.h`. The table is the whole story: creature LOD, batching, contact and cascaded shadow settings, which post passes run, weather particle budget, MSAA, template-prewarm budget, grass density and the shader tier. `GraphicsSettings::set_quality()` swaps the active profile pointer and ticks a generation counter; nothing else happens on the caller's thread.
+
+The rule for consumers is that the choice is made once, on a generation change, not per frame. `Backend::begin_frame()` compares `GraphicsSettings::generation()` with the one it last applied and, when it differs, calls `apply_graphics_profile()` exactly once: it copies the shadow settings it will use, tells the post-process pipeline which passes to run, and -- if the shader tier changed -- sets `Shader::set_global_defines("#define SOI_QUALITY_TIER n")` and calls `Shader::reload_all()`. `TerrainScatterManager::submit()` does the same generation check to regenerate the grass at the profile's density, and `GLView` recreates its framebuffer when the MSAA count moved. Per-frame code reads plain fields off `profile()` (the LOD configs in `creature_render_graph.cpp`, the batching ratio in the scene walk); none of it switches on `quality()`.
+
+**Shader tiers are compiled, not branched.** Every GLSL stage gets `SOI_QUALITY_TIER` spliced in after its `#version` line (see `assets/shaders/include/quality.glsl` for the derived macros: `SOI_TERRAIN_NOISE_OCTAVES`, `SOI_SURFACE_DETAIL`, `SOI_ULTRA_EFFECTS`), so a tier is a different program, not a uniform tested per fragment. Low strips the layered noise, micro-relief, wear/grime, screen-space AO and the cascade lookup out entirely; Ultra compiles in PCSS contact-hardening shadows, shadowed and back-lit grass blades and the extra water and terrain octaves. `Shader::reload()` makes a live tier switch possible: uniform handles are stable indices into a per-shader table that is re-resolved against the new program, every value set through `set_uniform` and every uniform-block binding is replayed, so the pipelines' cached handles and one-time sampler bindings survive. `tests/render/shader_reload_test.cpp` exercises that on an offscreen context.
+
+**Creatures have two rendered LODs, Full and Minimal, plus a cull distance.** `CreatureLOD::Culled` is not a third level; it marks a creature past `CreatureLodSettings::cull_distance`, which is not drawn. High and Ultra disable the LOD cut (every creature in range is Full) and never cull; Medium uses the authored full-detail distances; Low pulls them in and culls at 120 m.
+
+What the presets mean: **High** is the game as designed (every shader feature, full LOD, four 4096 cascades, the whole post chain, MSAA 4x) and is the default; **Ultra** keeps all of that and adds the expensive extras (tier-3 shaders, MSAA 8x); **Medium** keeps shadows and post but small (two 1024 cascades, no godrays, 2x MSAA, tier-1 shaders, authored LOD); **Low** exists so weak hardware reaches 30 fps: no cascades, no bloom/godrays/AO/FXAA (the composite still runs for the tone grade and fog), 30% grass, tier-0 shaders, aggressive LOD.
 
 ## Precipitation
 
@@ -1278,15 +1290,21 @@ every frame by about 37% at Ultra (4x4096 squared is 67 M texels; 2x4096 plus
 than two cascades above 512, so Low and Medium are untouched.
 `SOI_SHADOW_CASCADE_SPLIT=0` turns it off to bisect against.
 
-The far cascades sample `u_directional_shadow_map_far`;
-`u_shadow_camera_position.w` carries the near-cascade count and `u_shadow_bias.w`
-the far texel size, both previously padding. **The depth bias has to scale with
-the texel size** -- `sample_shadow_cascade()` multiplies it by
-`texel / u_shadow_params.z`. Without that the halved far cascades quantise depth
-twice as coarsely across a slope, the fixed bias no longer clears it, and every
-distant surface shadows itself: mean frame brightness on the Zama terrain view
-fell from 62 to 25 and the whole map read as being in shade. With the scaling in
-place the arena frames are pixel-identical to a clean build of `ed7d5b71`.
+The far cascades sample `u_directional_shadow_map_far`, a second
+`sampler2DArrayShadow` bound to the same comparison sampler object as the near
+one; `u_shadow_camera_position.w` carries the near-cascade count and
+`u_shadow_bias.w` the far texel size, both previously padding.
+**The depth bias has to scale with the texel size.** It does so implicitly now
+that biases are authored in metres: `u_shadow_cascade_texel_world[cascade]` is
+computed in `render_directional_shadows()` against that cascade's own
+resolution, so the halved far cascades get a proportionally larger world bias
+without a second scaling term. Before biases moved into world units the fixed
+depth bias no longer cleared the coarser far quantisation and every distant
+surface shadowed itself: mean frame brightness on the Zama terrain view fell
+from 62 to 25 and the whole map read as being in shade. PCSS blocker search is
+near-atlas only -- the raw-depth sampler (`u_directional_shadow_depth`) is bound
+to the near array, and at far-cascade distances the contact-hardening term is
+below a texel anyway.
 
 `Backend::execute_scene` keeps at most two frames in flight: it fences the end of every
 frame and waits on the fence from two frames back before starting the next, so a CPU

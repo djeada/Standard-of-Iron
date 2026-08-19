@@ -308,21 +308,24 @@ void PostProcessPipeline::resolve_scene() {
 
   glActiveTexture(GL_TEXTURE0);
 
-  glBindFramebuffer(GL_FRAMEBUFFER, m_bloom[0].fbo);
-  glViewport(0, 0, m_bloom[0].width, m_bloom[0].height);
-  m_bright_shader->use();
-  m_bright_shader->set_uniform("u_scene", 0);
-  m_bright_shader->set_uniform("u_threshold", k_bloom_threshold);
-  m_bright_shader->set_uniform("u_knee", k_bloom_knee);
-  glBindTexture(GL_TEXTURE_2D, m_scene.color);
-  draw_fullscreen();
+  if (m_passes.bloom) {
+    glBindFramebuffer(GL_FRAMEBUFFER, m_bloom[0].fbo);
+    glViewport(0, 0, m_bloom[0].width, m_bloom[0].height);
+    m_bright_shader->use();
+    m_bright_shader->set_uniform("u_scene", 0);
+    m_bright_shader->set_uniform("u_threshold", k_bloom_threshold);
+    m_bright_shader->set_uniform("u_knee", k_bloom_knee);
+    glBindTexture(GL_TEXTURE_2D, m_scene.color);
+    draw_fullscreen();
 
-  m_blur_shader->use();
-  m_blur_shader->set_uniform("u_source", 0);
-  blur_bloom_once();
-  blur_bloom_once();
+    m_blur_shader->use();
+    m_blur_shader->set_uniform("u_source", 0);
+    blur_bloom_once();
+    blur_bloom_once();
+  }
 
-  const bool rays_enabled = m_godrays_shader != nullptr && m_rays.fbo != 0;
+  const bool rays_enabled =
+      m_passes.godrays && m_godrays_shader != nullptr && m_rays.fbo != 0;
   if (rays_enabled) {
     glBindFramebuffer(GL_FRAMEBUFFER, m_rays.fbo);
     glViewport(0, 0, m_rays.width, m_rays.height);
@@ -336,12 +339,21 @@ void PostProcessPipeline::resolve_scene() {
     draw_fullscreen();
   }
 
-  glBindFramebuffer(GL_FRAMEBUFFER, m_composite.fbo);
-  glViewport(0, 0, m_composite.width, m_composite.height);
+  if (m_passes.fxaa) {
+    glBindFramebuffer(GL_FRAMEBUFFER, m_composite.fbo);
+    glViewport(0, 0, m_composite.width, m_composite.height);
+  } else {
+    glBindFramebuffer(GL_FRAMEBUFFER, static_cast<GLuint>(m_output_fbo));
+    glViewport(m_output_viewport[0],
+               m_output_viewport[1],
+               m_output_viewport[2],
+               m_output_viewport[3]);
+  }
   m_composite_shader->use();
   m_composite_shader->set_uniform("u_scene", 0);
   m_composite_shader->set_uniform("u_bloom", 1);
-  m_composite_shader->set_uniform("u_bloom_intensity", k_bloom_intensity);
+  m_composite_shader->set_uniform("u_bloom_intensity",
+                                  m_passes.bloom ? k_bloom_intensity : 0.0F);
   m_composite_shader->set_uniform("u_vignette_strength", k_vignette_strength);
   m_composite_shader->set_uniform("u_depth", 2);
   m_composite_shader->set_uniform("u_rays", 3);
@@ -354,7 +366,8 @@ void PostProcessPipeline::resolve_scene() {
       QVector2D(1.0F / static_cast<float>(m_composite.width),
                 1.0F / static_cast<float>(m_composite.height)));
   m_composite_shader->set_uniform("u_ground_ao_radius", k_ground_ao_radius);
-  m_composite_shader->set_uniform("u_ground_ao_strength", k_ground_ao_strength);
+  m_composite_shader->set_uniform(
+      "u_ground_ao_strength", m_passes.ambient_occlusion ? k_ground_ao_strength : 0.0F);
   m_composite_shader->set_uniform("u_inverse_view_proj", m_inverse_view_proj);
   m_composite_shader->set_uniform("u_camera_position", m_camera_position);
   m_composite_shader->set_uniform("u_fog_range", QVector2D(m_fog_start, m_fog_end));
@@ -391,18 +404,21 @@ void PostProcessPipeline::resolve_scene() {
   glBindTexture(GL_TEXTURE_2D, m_scene.color);
   draw_fullscreen();
 
-  glBindFramebuffer(GL_FRAMEBUFFER, static_cast<GLuint>(m_output_fbo));
-  glViewport(m_output_viewport[0],
-             m_output_viewport[1],
-             m_output_viewport[2],
-             m_output_viewport[3]);
-  m_fxaa_shader->use();
-  m_fxaa_shader->set_uniform("u_source", 0);
-  m_fxaa_shader->set_uniform("u_inverse_resolution",
-                             QVector2D(1.0F / static_cast<float>(m_composite.width),
-                                       1.0F / static_cast<float>(m_composite.height)));
-  glBindTexture(GL_TEXTURE_2D, m_composite.color);
-  draw_fullscreen();
+  if (m_passes.fxaa) {
+    glBindFramebuffer(GL_FRAMEBUFFER, static_cast<GLuint>(m_output_fbo));
+    glViewport(m_output_viewport[0],
+               m_output_viewport[1],
+               m_output_viewport[2],
+               m_output_viewport[3]);
+    m_fxaa_shader->use();
+    m_fxaa_shader->set_uniform("u_source", 0);
+    m_fxaa_shader->set_uniform(
+        "u_inverse_resolution",
+        QVector2D(1.0F / static_cast<float>(m_composite.width),
+                  1.0F / static_cast<float>(m_composite.height)));
+    glBindTexture(GL_TEXTURE_2D, m_composite.color);
+    draw_fullscreen();
+  }
 
   glActiveTexture(GL_TEXTURE3);
   glBindTexture(GL_TEXTURE_2D, 0);

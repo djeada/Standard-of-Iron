@@ -2,8 +2,10 @@
 
 #include <QMatrix4x4>
 #include <QVector3D>
+#include <QtMath>
 
 #include <algorithm>
+#include <cmath>
 #include <cstdint>
 
 #include "elephant_motion.h"
@@ -76,7 +78,7 @@ void ElephantRendererBase::render(const DrawContext& ctx,
 
   ++s_elephantRenderStats.total;
 
-  if (effective_lod == HorseLOD::Billboard) {
+  if (effective_lod == HorseLOD::Culled) {
     ++s_elephantRenderStats.skipped_lod;
     return;
   }
@@ -90,7 +92,7 @@ void ElephantRendererBase::render(const DrawContext& ctx,
   case HorseLOD::Minimal:
     ++s_elephantRenderStats.lod_minimal;
     break;
-  case HorseLOD::Billboard:
+  case HorseLOD::Culled:
     break;
   }
 
@@ -127,7 +129,7 @@ void prepare_elephant_render(const Render::GL::ElephantRendererBase& owner,
                              const Render::GL::ElephantMotionSample* shared_motion,
                              Render::Creature::CreatureLOD lod,
                              ElephantPreparation& out) {
-  if (lod == Render::Creature::CreatureLOD::Billboard) {
+  if (lod == Render::Creature::CreatureLOD::Culled) {
     return;
   }
 
@@ -186,10 +188,13 @@ void prepare_elephant_render(const Render::GL::ElephantRendererBase& owner,
   shadow_inputs.kind = RCP::CreatureKind::Elephant;
   shadow_inputs.lod = lod;
   shadow_inputs.camera_distance = camera_distance;
-  shadow_inputs.formation_id = ctx.entity != nullptr ? ctx.entity->get_id() : 0U;
-  shadow_inputs.standing_idle = !motion.is_moving && !motion.is_fighting &&
-                                !anim.is_attacking && !anim.is_hit_reacting &&
-                                !anim.is_dying && !anim.is_dead;
+  {
+
+    const QVector3D forward = elephant_ctx.model.mapVector(QVector3D(0.0F, 0.0F, 1.0F));
+    shadow_inputs.facing_yaw_degrees =
+        qRadiansToDegrees(std::atan2(double(forward.x()), double(forward.z())));
+  }
+  shadow_inputs.intensity_scale = (anim.is_dying || anim.is_dead) ? 0.45F : 1.0F;
   shadow_inputs.surface_world_y = elephant_surface_world_y;
   shadow_inputs.surface_height_valid = true;
   const auto shadow_state = RCP::prepare_quadruped_shadow_state(shadow_inputs);

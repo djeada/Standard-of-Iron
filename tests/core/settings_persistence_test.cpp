@@ -21,13 +21,15 @@ protected:
     ASSERT_TRUE(temp_dir_.isValid());
     QSettings::setPath(QSettings::IniFormat, QSettings::UserScope, temp_dir_.path());
     App::Core::UserSettings::clear();
-    Render::GraphicsSettings::instance().set_quality(Render::GraphicsQuality::Ultra);
+    Render::GraphicsSettings::instance().set_quality(
+        Render::k_default_graphics_quality);
     AudioSystem::get_instance().load_persisted_volumes();
   }
 
   void TearDown() override {
     App::Core::UserSettings::clear();
-    Render::GraphicsSettings::instance().set_quality(Render::GraphicsQuality::Ultra);
+    Render::GraphicsSettings::instance().set_quality(
+        Render::k_default_graphics_quality);
     AudioSystem::get_instance().load_persisted_volumes();
   }
 
@@ -43,19 +45,20 @@ TEST_F(SettingsPersistenceTest, GraphicsQualitySelectionIsSavedAndRestored) {
   ASSERT_TRUE(saved_level.has_value());
   EXPECT_EQ(*saved_level, 1);
 
-  Render::GraphicsSettings::instance().set_quality(Render::GraphicsQuality::Ultra);
+  Render::GraphicsSettings::instance().set_quality(Render::k_default_graphics_quality);
   App::Core::UserSettings::apply_saved_graphics_quality();
   EXPECT_EQ(Render::GraphicsSettings::instance().quality(),
             Render::GraphicsQuality::Medium);
 }
 
-TEST_F(SettingsPersistenceTest, FreshProfileDefaultsToUltraGraphics) {
-  Render::GraphicsSettings::instance().set_quality(Render::GraphicsQuality::High);
+TEST_F(SettingsPersistenceTest, FreshProfileDefaultsToHighGraphics) {
+  Render::GraphicsSettings::instance().set_quality(Render::GraphicsQuality::Low);
 
   App::Core::UserSettings::apply_saved_graphics_quality();
 
   EXPECT_EQ(Render::GraphicsSettings::instance().quality(),
-            Render::GraphicsQuality::Ultra);
+            Render::GraphicsQuality::High);
+  EXPECT_EQ(Render::k_default_graphics_quality, Render::GraphicsQuality::High);
 }
 
 TEST_F(SettingsPersistenceTest, LanguageSelectionIsLoadedFromSavedPreferences) {

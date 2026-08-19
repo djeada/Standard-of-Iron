@@ -139,8 +139,8 @@ void main() {
   if (v_tex_coord.y < 0.028)
     discard;
 
-  color += base_color * ao * local_lighting(v_world_pos, n);
   color = apply_directional_shadow(color, v_world_pos, geometric_normal);
+  color += base_color * ao * local_lighting(v_world_pos, n);
   color = apply_visibility_memory(color, v_world_pos.xz);
   frag_color = vec4(color, 1.0);
 }

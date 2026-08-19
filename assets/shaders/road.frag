@@ -44,7 +44,7 @@ float noise_2d(vec2 p) {
 
 float fbm_2d(vec2 p) {
   float v = 0.0, a = 0.5;
-  for (int i = 0; i < 5; ++i) {
+  for (int i = 0; i < SOI_TERRAIN_NOISE_OCTAVES; ++i) {
     v += a * noise_2d(p);
     p *= 2.0;
     a *= 0.5;
@@ -214,7 +214,7 @@ void main() {
 
   lit_color = apply_visibility_memory(lit_color, v_world_pos.xz);
 
-  lit_color += base_color * ao * local_lighting(v_world_pos, normalize(v_normal));
   lit_color = apply_directional_shadow(lit_color, v_world_pos, v_normal);
+  lit_color += base_color * ao * local_lighting(v_world_pos, normalize(v_normal));
   frag_color = vec4(lit_color, u_alpha * edge_alpha);
 }

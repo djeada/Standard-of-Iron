@@ -80,6 +80,10 @@ float linear_depth(vec2 uv) {
 }
 
 float grounding_occlusion() {
+#if !SOI_SURFACE_DETAIL
+
+  return 0.0;
+#else
   float center = linear_depth(v_uv);
   if (center >= u_depth_range.y * 0.999) {
     return 0.0;
@@ -103,6 +107,7 @@ float grounding_occlusion() {
     weight_total += weight * float(k_ao_tap_count);
   }
   return clamp(occlusion / max(weight_total, 1e-4), 0.0, 1.0);
+#endif
 }
 
 vec3 world_position(vec2 uv) {
@@ -231,6 +236,9 @@ const vec2 k_far_blur_offsets[8] = vec2[8](vec2(1.0, 0.0),
 
 vec3 far_softened_scene(float fog) {
   vec3 center = texture(u_scene, v_uv).rgb;
+#if !SOI_SURFACE_DETAIL
+  return center;
+#else
   float amount = smoothstep(k_far_blur_start, 1.0, fog);
   if (amount <= 0.0) {
     return center;
@@ -243,6 +251,7 @@ vec3 far_softened_scene(float fog) {
             .rgb;
   }
   return mix(center, sum / float(k_far_blur_taps + 1), amount);
+#endif
 }
 
 void main() {

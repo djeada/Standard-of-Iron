@@ -47,6 +47,8 @@ struct MeshCmd {
   float alpha = 1.0F;
   int material_id = 0;
   class Shader* shader = nullptr;
+
+  bool blend_batchable = false;
   CommandPriority priority{CommandPriority::Normal};
 };
 
@@ -154,6 +156,8 @@ struct TerrainSurfaceCmd {
   std::uint16_t sort_key = 0x8000U;
   bool depth_write = true;
   bool wireframe = false;
+
+  bool horizon_dressing = false;
   float depth_bias = 0.0F;
   CommandPriority priority{CommandPriority::High};
 };

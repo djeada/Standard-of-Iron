@@ -430,6 +430,80 @@ auto build_wildlife_definitions() -> std::vector<ArenaScenarioDefinition> {
 
   {
     auto s = definition(
+        QString::fromLatin1(k_wildlife_firelight_id),
+        QStringLiteral("Wildlife: Firelight"),
+        QStringLiteral("A sheep herd and a wolf pack penned beside one campfire at "
+                       "night, close enough that the fire is the only light on their "
+                       "coats. Pale wool a metre from the flames must warm up, not "
+                       "blow out to a white reflector, and nothing in the dark may "
+                       "glow on its own."),
+        12.0F,
+        {8.0F, 14.0F, 12.0F});
+    s.environment.start_time = 22.5F;
+    s.environment.time_mode = Game::Map::TimeMode::Locked;
+
+    s.weather.rain = 0.55F;
+    s.weather.storm = 0.22F;
+    s.select_spawned_units = false;
+    s.suppress_spawn_anchor = true;
+    s.suppress_ui_overlays = true;
+    s.resource_patches = {
+        ArenaScenarioResourcePatch{
+            QStringLiteral("fire_camp"), 1, {0.0F, 0.0F, 0.0F}, {}, 1.25F, false},
+        ArenaScenarioResourcePatch{QStringLiteral("boulder"),
+                                   2,
+                                   {-4.5F, 0.0F, 3.0F},
+                                   {2.0F, 0.0F, 1.0F},
+                                   1.0F,
+                                   false},
+    };
+    Game::Wildlife::WildlifeSettings settings = Game::Wildlife::default_settings();
+    settings.enabled = true;
+    settings.seed = 7707U;
+    settings.sheep.enabled = true;
+    settings.sheep.group_count = 1;
+    settings.sheep.group_size_min = 5;
+    settings.sheep.group_size_max = 5;
+    settings.sheep.roam_radius = 1.8F;
+    settings.sheep.move_speed = 0.35F;
+    settings.sheep.respawn = false;
+    settings.sheep.alert_radius = 0.5F;
+    settings.sheep.spawn_areas = {{2.4F, 1.4F, 1.4F}};
+    settings.wolves.enabled = true;
+    settings.wolves.group_count = 1;
+    settings.wolves.group_size_min = 2;
+    settings.wolves.group_size_max = 2;
+    settings.wolves.aggression = 0.0F;
+    settings.wolves.roam_radius = 1.2F;
+    settings.wolves.alert_radius = 0.5F;
+    settings.wolves.spawn_areas = {{-3.0F, -3.0F, 1.0F}};
+    settings.birds.enabled = false;
+    settings.birds.group_count = 0;
+    s.wildlife = settings;
+    auto mount = [](const char* name, Troop troop, QVector3D origin, float facing) {
+      ArenaScenarioGroup group;
+      group.name = QString::fromLatin1(name);
+      group.troop_type = troop;
+      group.nation_id = Nation::RomanRepublic;
+      group.owner_id = 1;
+      group.count = 1;
+      group.individuals_per_unit = 1;
+      group.origin = origin;
+      group.spacing = {0.0F, 0.0F, 0.0F};
+      group.facing_degrees = facing;
+      return group;
+    };
+
+    s.groups = {
+        observer_group({0.0F, 0.0F, -30.0F}),
+        mount("firelight_horse", Troop::HorseArcher, {-3.8F, 0.0F, 4.0F}, 70.0F),
+        mount("firelight_elephant", Troop::Elephant, {5.2F, 0.0F, -3.6F}, 250.0F)};
+    s.expectations = {expectation(Expect::FrameBudget, {}, 9.99F)};
+    result.push_back(std::move(s));
+  }
+
+  {
+    auto s = definition(
         QString::fromLatin1(k_wildlife_dense_population_id),
         QStringLiteral("Wildlife: Dense Population"),
         QStringLiteral("Six herds, three packs and six flocks at once: the frame "

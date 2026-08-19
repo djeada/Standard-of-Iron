@@ -9,7 +9,7 @@ namespace Render::Creature::Pipeline {
 
 struct LodDistanceThresholds {
   float full{12.0F};
-  float minimal{40.0F};
+  float cull{200.0F};
 };
 
 struct CreatureLodDecisionInputs {
@@ -25,7 +25,7 @@ struct CreatureLodDecisionInputs {
 
 enum class CullReason : std::uint8_t {
   None = 0,
-  Billboard = 1,
+  Distance = 1,
 };
 
 struct CreatureLodDecision {

@@ -297,28 +297,9 @@ void Renderer::process_async_template_prewarm() {
     return;
   }
 
-  using Render::GraphicsQuality;
-  std::size_t max_items = 160;
-  std::chrono::microseconds time_budget(2000);
-  switch (Render::GraphicsSettings::instance().quality()) {
-  case GraphicsQuality::Low:
-    max_items = 96;
-    time_budget = std::chrono::microseconds(1200);
-    break;
-  case GraphicsQuality::Medium:
-    max_items = 160;
-    time_budget = std::chrono::microseconds(2000);
-    break;
-  case GraphicsQuality::High:
-    max_items = 240;
-    time_budget = std::chrono::microseconds(3000);
-    break;
-  case GraphicsQuality::Ultra:
-  default:
-    max_items = 320;
-    time_budget = std::chrono::microseconds(4000);
-    break;
-  }
+  const auto& prewarm_budget = Render::GraphicsSettings::instance().prewarm_budget();
+  std::size_t max_items = prewarm_budget.items_per_tick;
+  std::chrono::microseconds time_budget(prewarm_budget.tick_budget_us);
 
   const auto& battle_optimizer = Render::BattleRenderOptimizer::instance();
   const int visible_units = battle_optimizer.visible_unit_count();
@@ -452,18 +433,7 @@ void Renderer::prewarm_unit_templates(
   };
 
   auto choose_template_budget_by_quality = []() -> std::size_t {
-    using Render::GraphicsQuality;
-    switch (Render::GraphicsSettings::instance().quality()) {
-    case GraphicsQuality::Low:
-      return 256;
-    case GraphicsQuality::Medium:
-      return 512;
-    case GraphicsQuality::High:
-      return 1'024;
-    case GraphicsQuality::Ultra:
-    default:
-      return 2'048;
-    }
+    return Render::GraphicsSettings::instance().prewarm_budget().template_cache_budget;
   };
 
   std::vector<int> owner_ids;
