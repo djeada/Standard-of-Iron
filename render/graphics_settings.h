@@ -16,6 +16,21 @@ enum class GraphicsQuality : uint8_t {
 
 inline constexpr GraphicsQuality k_default_graphics_quality = GraphicsQuality::Ultra;
 
+[[nodiscard]] inline constexpr auto
+graphics_quality_key(GraphicsQuality q) noexcept -> const char* {
+  switch (q) {
+  case GraphicsQuality::Low:
+    return "low";
+  case GraphicsQuality::Medium:
+    return "medium";
+  case GraphicsQuality::High:
+    return "high";
+  case GraphicsQuality::Ultra:
+    return "ultra";
+  }
+  return "unknown";
+}
+
 struct LODMultipliers {
   float humanoid_full;
   float humanoid_minimal;

@@ -406,3 +406,58 @@ TEST(RuntimeFrameOrchestratorTest, SelectionRefreshNotifierFiresAtThreshold) {
 }
 
 } // namespace
+
+TEST(RuntimeFrameOrchestratorTest, MinimapReadsThePublishedSnapshotNotTheLiveWorld) {
+  Game::Session::SessionContext session;
+  Engine::Core::World world;
+  world.add_system(std::make_unique<Game::Systems::SelectionSystem>());
+
+  auto* moving_unit = add_unit(world, 1.0F, 1.0F, 1);
+  (void)add_unit(world, 6.0F, 6.0F, 2);
+
+  world.request_render_snapshots();
+  world.update(0.0F);
+  ASSERT_NE(world.acquire_render_snapshot(), nullptr);
+
+  MinimapManager minimap_manager;
+  minimap_manager.generate_for_map(make_test_map());
+  (void)minimap_manager.consume_dirty_flag();
+
+  Render::GL::Camera camera;
+  camera.set_perspective(60.0F, 4.0F / 3.0F, 0.1F, 100.0F);
+
+  RuntimeFrameOrchestrator orchestrator;
+  RuntimeFrameState state{
+      .local_owner_id = 1, .viewport_width = 800, .viewport_height = 600};
+  EntityCache entity_cache;
+  const auto run_frame = [&]() {
+    orchestrator.update(AppSceneContext{.session = &session,
+                                        .world = &world,
+                                        .active_camera = &camera,
+                                        .minimap_manager = &minimap_manager},
+                        state,
+                        entity_cache,
+                        nullptr,
+                        QString(),
+                        1.0F / 60.0F,
+                        {},
+                        [](float) {});
+  };
+
+  run_frame();
+  const QImage from_snapshot = minimap_manager.get_image().copy();
+  ASSERT_FALSE(from_snapshot.isNull());
+
+  moving_unit->get_component<Engine::Core::TransformComponent>()->position.x = 10.0F;
+  state.minimap_unit_update_accumulator = 1.0F;
+  run_frame();
+  EXPECT_EQ(minimap_manager.get_image(), from_snapshot)
+      << "a live-world write that has not been published must not reach the minimap";
+
+  world.update(0.0F);
+  ASSERT_NE(world.acquire_render_snapshot(), nullptr);
+  state.minimap_unit_update_accumulator = 1.0F;
+  run_frame();
+  EXPECT_NE(minimap_manager.get_image(), from_snapshot)
+      << "publishing the move must reach the minimap on the next frame";
+}

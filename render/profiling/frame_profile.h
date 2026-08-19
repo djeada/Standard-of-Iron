@@ -15,25 +15,31 @@
 namespace Render::Profiling {
 
 enum class Phase : std::uint8_t {
-  Collection = 0,
-  Culling = 1,
-  Sort = 2,
+  Simulation = 0,
+  Snapshot = 1,
+  Collection = 2,
   Submit = 3,
-  Playback = 4,
-  Present = 5,
+  Sort = 4,
+  Shadow = 5,
+  Playback = 6,
+  Present = 7,
   _Count
 };
 
 [[nodiscard]] inline auto phase_name(Phase p) noexcept -> const char* {
   switch (p) {
+  case Phase::Simulation:
+    return "sim";
+  case Phase::Snapshot:
+    return "snapshot";
   case Phase::Collection:
     return "collect";
-  case Phase::Culling:
-    return "cull";
-  case Phase::Sort:
-    return "sort";
   case Phase::Submit:
     return "submit";
+  case Phase::Sort:
+    return "sort";
+  case Phase::Shadow:
+    return "shadow";
   case Phase::Playback:
     return "play";
   case Phase::Present:
@@ -48,6 +54,12 @@ struct FrameProfile {
   std::array<std::uint64_t, static_cast<std::size_t>(Phase::_Count)> phase_us{};
 
   std::uint64_t combat_state_update_us{0};
+  std::atomic<std::uint64_t> world_update_us{0};
+  std::atomic<std::uint64_t> visibility_update_us{0};
+  std::atomic<std::uint64_t> minimap_update_us{0};
+  std::atomic<std::uint64_t> weather_lighting_us{0};
+  std::atomic<std::uint64_t> victory_update_us{0};
+  std::atomic<std::uint64_t> view_model_sync_us{0};
   std::atomic<std::uint64_t> animation_input_sampling_us{0};
   std::atomic<std::uint64_t> humanoid_preparation_us{0};
   std::atomic<std::uint64_t> bpat_playback_us{0};
@@ -73,6 +85,20 @@ struct FrameProfile {
   std::uint64_t frame_index{0};
 
   bool enabled{false};
+  bool frame_open{false};
+  std::uint64_t* child_us_sink{nullptr};
+
+  void begin_frame() {
+    reset();
+    frame_index += 1;
+    frame_open = true;
+    child_us_sink = nullptr;
+  }
+
+  void end_frame() {
+    frame_open = false;
+    child_us_sink = nullptr;
+  }
 
   void reset() {
     for (auto& v : phase_us) {
@@ -81,6 +107,12 @@ struct FrameProfile {
 
     combat_state_update_us = Engine::Core::Timing::combat_state_update().value();
     Engine::Core::Timing::combat_state_update().reset();
+    world_update_us = 0;
+    visibility_update_us = 0;
+    minimap_update_us = 0;
+    weather_lighting_us = 0;
+    victory_update_us = 0;
+    view_model_sync_us = 0;
     animation_input_sampling_us = 0;
     humanoid_preparation_us = 0;
     bpat_playback_us = 0;
@@ -158,7 +190,12 @@ public:
       , m_phase(phase)
       , m_start(profile != nullptr && profile->enabled
                     ? std::chrono::steady_clock::now()
-                    : std::chrono::steady_clock::time_point{}) {}
+                    : std::chrono::steady_clock::time_point{}) {
+    if (m_profile != nullptr && m_profile->enabled) {
+      m_parent_sink = m_profile->child_us_sink;
+      m_profile->child_us_sink = &m_child_us;
+    }
+  }
 
   PhaseScope(const PhaseScope&) = delete;
   auto operator=(const PhaseScope&) -> PhaseScope& = delete;
@@ -170,15 +207,21 @@ public:
       return;
     }
     auto const now = std::chrono::steady_clock::now();
-    auto const us =
-        std::chrono::duration_cast<std::chrono::microseconds>(now - m_start).count();
-    m_profile->add_phase_us(m_phase, static_cast<std::uint64_t>(us));
+    auto const elapsed = static_cast<std::uint64_t>(
+        std::chrono::duration_cast<std::chrono::microseconds>(now - m_start).count());
+    m_profile->child_us_sink = m_parent_sink;
+    m_profile->add_phase_us(m_phase, elapsed > m_child_us ? elapsed - m_child_us : 0U);
+    if (m_parent_sink != nullptr) {
+      *m_parent_sink += elapsed;
+    }
   }
 
 private:
   FrameProfile* m_profile;
   Phase m_phase;
   std::chrono::steady_clock::time_point m_start;
+  std::uint64_t m_child_us{0};
+  std::uint64_t* m_parent_sink{nullptr};
 };
 
 class AccumulatorScope {

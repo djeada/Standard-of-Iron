@@ -179,9 +179,16 @@ auto Shader::load_from_source(const QString& vertex_source,
                                       k_directional_shadow_binding_point);
     const UniformHandle shadow_sampler =
         optional_uniform_handle("u_directional_shadow_map");
-    if (shadow_sampler != InvalidUniform) {
+    const UniformHandle far_shadow_sampler =
+        optional_uniform_handle("u_directional_shadow_map_far");
+    if (shadow_sampler != InvalidUniform || far_shadow_sampler != InvalidUniform) {
       use();
-      set_uniform(shadow_sampler, TextureUnit::directional_shadow_map);
+      if (shadow_sampler != InvalidUniform) {
+        set_uniform(shadow_sampler, TextureUnit::directional_shadow_map);
+      }
+      if (far_shadow_sampler != InvalidUniform) {
+        set_uniform(far_shadow_sampler, TextureUnit::directional_shadow_map_far);
+      }
       release();
     }
   }

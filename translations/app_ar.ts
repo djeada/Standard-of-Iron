@@ -734,6 +734,13 @@ This may be a skirmish, or objectives have not been configured.</source>
     </message>
 </context>
 <context>
+    <name>CommanderMessagePanel</name>
+    <message>
+        <source>Click to dismiss</source>
+        <translation>انقر للإغلاق</translation>
+    </message>
+</context>
+<context>
     <name>CommanderSystem</name>
     <message>
         <source>Their commander is dead. The host breaks and its camps stand empty.</source>
@@ -3381,6 +3388,10 @@ Unseen: never scouted.</source>
         <translation>التحكم</translation>
     </message>
     <message>
+        <source>The tutorial is a guided first battle on a small meadow. Each step names one goal, tells you when it is done, and explains why an order is refused. It also points: the button a step is talking about lights up in the command bar, and what you are meant to act on is ringed on the field and pinned on the minimap - press Show me to swing the camera onto it. Steps can be paused, skipped and replayed at any time.</source>
+        <translation>الدليل التعليمي معركة أولى موجَّهة في مرج صغير. كل خطوة تسمّي هدفًا واحدًا، وتخبرك متى تحقق، وتوضّح سبب رفض أي أمر. وهو يشير أيضًا: الزر الذي تتحدث عنه الخطوة يضيء في شريط الأوامر، وما يُنتظر منك التعامل معه يُحاط بدائرة في الميدان ويُعلَّم على الخريطة المصغّرة — اضغط أرِني لتوجيه الكاميرا إليه. ويمكن إيقاف الخطوات مؤقتًا وتخطّيها وإعادتها في أي وقت.</translation>
+    </message>
+    <message>
         <source>Tutorial</source>
         <translation>الدليل التعليمي</translation>
     </message>
@@ -3495,10 +3506,6 @@ Unseen: never scouted.</source>
     <message>
         <source>unbound</source>
         <translation>غير مُعيَّن</translation>
-    </message>
-    <message>
-        <source>The tutorial is a guided first battle on a small meadow. Each step names one goal, tells you when it is done, and explains why an order is refused. Steps can be paused, skipped and replayed at any time.</source>
-        <translation>الدليل التعليمي معركة أولى موجَّهة في مرج صغير. تسمّي كل خطوة هدفًا واحدًا، وتخبرك متى أُنجز، وتشرح سبب رفض أي أمر. يمكن إيقاف الخطوات مؤقتًا وتخطيها وإعادتها في أي وقت.</translation>
     </message>
     <message>
         <source>%1. %2</source>
@@ -3641,8 +3648,16 @@ Unseen: never scouted.</source>
         <translation>تقرير المعركة</translation>
     </message>
     <message>
+        <source>March the Campaign</source>
+        <translation>امضِ إلى الحملة</translation>
+    </message>
+    <message>
         <source>The Campaign is Won</source>
         <translation>تم كسب الحملة</translation>
+    </message>
+    <message>
+        <source>Training Complete</source>
+        <translation>اكتمل التدريب</translation>
     </message>
     <message>
         <source>Victory Secured</source>
@@ -3659,6 +3674,10 @@ Unseen: never scouted.</source>
     <message>
         <source>Enemy command has fallen.</source>
         <translation>سقطت قيادة العدو.</translation>
+    </message>
+    <message>
+        <source>You can run an army now. The Barcid Road is waiting.</source>
+        <translation>صرتَ قادرًا على قيادة جيش. طريق البرقيين في انتظارك.</translation>
     </message>
     <message>
         <source>Your command has collapsed.</source>
@@ -4085,6 +4104,10 @@ This action cannot be undone.</source>
 <context>
     <name>Main</name>
     <message>
+        <source>A new standard in the valley, and nobody under it who has held a spear more than twice.</source>
+        <translation>رايةٌ جديدة في الوادي، وليس تحتها أحد حمل رمحًا أكثر من مرتين.</translation>
+    </message>
+    <message>
         <source>Standard of Iron - RTS Game</source>
         <translation>Standard of Iron - لعبة استراتيجية آنية</translation>
     </message>
@@ -4142,6 +4165,10 @@ This action cannot be undone.</source>
     <message>
         <source>March through the Second Punic War</source>
         <translation>زحف عبر الحرب البونيقية الثانية</translation>
+    </message>
+    <message>
+        <source>Start here</source>
+        <translation>ابدأ من هنا</translation>
     </message>
     <message>
         <source>War Map</source>
@@ -4995,12 +5022,24 @@ to see preview</source>
         <translation>عملية نهرية واسعة بمعديات والتفافات عبر الغابة ورؤوس جسور وأحياء إمداد محصّنة؛ ويحتل ضريح الحديد أطلالاً يمكن تجنّبها على الجناح الجنوبي.</translation>
     </message>
     <message>
+        <source>A camp, and nobody left standing in it. Get up. There is no shame in it. The shame would be in doing it a second time in the same valley.</source>
+        <translation>معسكرٌ لم يبقَ فيه أحدٌ واقفًا. انهض. لا عار في هذا. العار أن تكرّره في الوادي نفسه.</translation>
+    </message>
+    <message>
         <source>A commander alone cannot defend a city quarter.</source>
         <translation>لا يستطيع قائد وحده أن يدافع عن حي في مدينة.</translation>
     </message>
     <message>
         <source>A general alone on a dead field is just the last corpse standing.</source>
         <translation>قائد وحيد في ميدان ميت ليس إلا آخر جثة واقفة.</translation>
+    </message>
+    <message>
+        <source>A new standard in the valley, and nobody under it who has held a spear more than twice. My outpost has orders to go and look at you. Try to still be standing when they arrive; it makes the report worth writing.</source>
+        <translation>رايةٌ جديدة في الوادي، وليس تحتها أحد حمل رمحًا أكثر من مرتين. مخفري مأمورٌ بأن يذهب فينظر إليك. حاول أن تبقى واقفًا حين يصلون؛ فذلك يجعل التقرير جديرًا بالكتابة.</translation>
+    </message>
+    <message>
+        <source>Africa, then, and the two of us, and no river to stand behind. I have the measure of your elephants and I have your Numidians. Whatever you mean to do, do it where I can see it. I have waited sixteen years to stand in the same field as you.</source>
+        <translation>إفريقيةُ إذن، ونحن الاثنان، ولا نهر يُحتمى بظهره. عرفتُ مقدار فيلتك، وصار النوميديون عندي. مهما نويت أن تفعل، فافعله حيث أراك. انتظرتُ ستة عشر عامًا لأقف في الميدان نفسه معك.</translation>
     </message>
     <message>
         <source>After Cannae, Rome refuses the battle Hannibal wants. The Republic instead presses every road, ally, granary, and walled town. Beneath the orchards, Iron Sepulcher graves make even a successful defense feel temporary.</source>
@@ -5051,6 +5090,10 @@ to see preview</source>
         <translation>افتح الممر قبل أن يغلقه الجبل. كل ساعة تضيع تعني رجالاً أكثر يلتهمهم البرد.</translation>
     </message>
     <message>
+        <source>Cold water and an early start, and my colleague is very pleased with both. He has the men in the river before their porridge. I said what I thought and was overruled, so I shall stand here and watch your ambush do its arithmetic.</source>
+        <translation>ماءٌ بارد وانطلاقٌ مبكر، وزميلي مسرورٌ بهما جميعًا. أنزل الرجال في النهر قبل عصيدتهم. قلتُ رأيي فغُلبت عليه، فسأقف ها هنا أشاهد كمينك وهو يُجري حسابه.</translation>
+    </message>
+    <message>
         <source>Cross before the Roman runners reach their garrison. Every second spent waiting feeds the blade.</source>
         <translation>اعبر قبل أن يبلغ سُعاة روما حاميتهم. كل ثانية انتظار تُطعم النصل.</translation>
     </message>
@@ -5091,6 +5134,10 @@ to see preview</source>
         <translation>اطرد الموتى من المزار. وامْلأ بالملح الأرض التي وقفوا عليها.</translation>
     </message>
     <message>
+        <source>Eighty thousand. I would rather you heard the number than saw it, because seeing it takes most of a morning. Varro has the command today, and Varro believes in going forward. Stand wherever you like.</source>
+        <translation>ثمانون ألفًا. أُوثِر أن تسمع العدد على أن تراه، فرؤيته تستغرق أكثر الصباح. الأمر اليوم بيد وارّو، ووارّو يؤمن بالتقدّم. قِف حيث شئت.</translation>
+    </message>
+    <message>
         <source>Endure both waves from the depths. Do not flinch when the ground tears open.</source>
         <translation>اصمد أمام الموجتين الصاعدتين من الأعماق. لا تجفل حين تنشقّ الأرض.</translation>
     </message>
@@ -5103,8 +5150,16 @@ to see preview</source>
         <translation>نفّذ التطويق، ثم استولِ على المعسكرات الرومانية الثلاثة قبل أن يتمكن احتياطهم من ترميم الخط.</translation>
     </message>
     <message>
+        <source>Fifteen thousand in the shallows, and the augurs will say the sacred chickens warned us. Kill a consul and Rome elects another by market day. That is the trick of us: we are not a man.</source>
+        <translation>خمسة عشر ألفًا في المخاضة، وسيقول العرّافون إنّ الدجاج المقدّس قد أنذرنا. اقتُل قنصلًا تنتخب روما غيره قبل يوم السوق. تلك حيلتنا: لسنا رجلًا واحدًا.</translation>
+    </message>
+    <message>
         <source>Final battle in Africa: blunt Scipio&apos;s line, survive the Numidian cavalry, and seize all four Roman camps while breaking both risings of the dead.</source>
         <translation>المعركة الأخيرة في أفريقيا: حيّد خط سكيبيو، وانجُ من الفرسان النوميديين، واستولِ على المعسكرات الرومانية الأربعة مع كسر نهضتَي الموتى.</translation>
+    </message>
+    <message>
+        <source>Fine. Sempronius rides to Rome to explain his morning. Half a legion walked out of that water and kept walking, and they will meet you again in the spring with dry feet and long memories.</source>
+        <translation>حسنًا. يمضي سمبرونيوس إلى روما ليفسّر صباحه. نصفُ فيلقٍ خرج من ذلك الماء وواصل السير، وسيلقاك في الربيع بأقدامٍ جافّة وذاكرةٍ طويلة.</translation>
     </message>
     <message>
         <source>First battle on Italian soil. Win the cavalry duel, then seize the Roman reserve camp before fresh reinforcements regroup.</source>
@@ -5121,6 +5176,10 @@ to see preview</source>
     <message>
         <source>Hannibal&apos;s masterpiece becomes a prolonged operational battle, not a single frontal collision.</source>
         <translation>تتحول تحفة حنبعل إلى معركة عملياتية ممتدة، لا إلى صدام أمامي واحد.</translation>
+    </message>
+    <message>
+        <source>Hold the field, then. My horse is dead, my son is dragging me off it by the arm, and I find I can still count. You have won a ford. Italy is nine hundred miles long.</source>
+        <translation>احتفظ بالميدان إذن. فرسي نافق، وابني يجرّني عنه من ذراعي، وأجدني ما زلت أُحسن العدّ. لقد كسبتَ مخاضة. وإيطاليةُ تسعُمئةِ ميلٍ طولًا.</translation>
     </message>
     <message>
         <source>Hold the river line and break all three Roman crossings. Let the cold and the water do the work Sempronius will not.</source>
@@ -5147,6 +5206,14 @@ to see preview</source>
         <translation>حراسة ضريح الحديد</translation>
     </message>
     <message>
+        <source>It is finished. Carthage will have terms, and the terms will be her fleet burned in her own harbour where she can watch it. You were the better general. It has not turned out to matter.</source>
+        <translation>انتهى الأمر. ستنال قرطاجُ شروطًا، وشرطُها أن يُحرق أسطولها في مرفئها حيث تراه. كنتَ القائد الأفضل. وقد تبيّن أنّ ذلك لا يُغني شيئًا.</translation>
+    </message>
+    <message>
+        <source>Keep Capua, then. I shall come back after the harvest, and after the one following it. I have buried three consuls who were in a hurry. Patience is cheaper, and it does not require a triumph.</source>
+        <translation>احتفظ بكابوا إذن. سأعود بعد الحصاد، وبعد الذي يليه. دفنتُ ثلاثة قناصل كانوا في عجلة. الصبر أرخص، وهو لا يستدعي موكب نصر.</translation>
+    </message>
+    <message>
         <source>Lose the river camp and the cold takes what the Romans couldn&apos;t.</source>
         <translation>افقد معسكر النهر يأخذ البردُ ما عجز عنه الرومان.</translation>
     </message>
@@ -5157,6 +5224,10 @@ to see preview</source>
     <message>
         <source>Lose your camp and the tempo dies with it.</source>
         <translation>افقد معسكرك يمت الإيقاع معه.</translation>
+    </message>
+    <message>
+        <source>Mist on a lake road. Flaminius holds that a column moves faster than an ambush can close, and he is a consul, so he must be right. Do enjoy the next hour. I shall be the one writing the account of it.</source>
+        <translation>ضبابٌ على طريق البحيرة. يرى فلامينيوس أنّ الرتل يسير أسرع مما يُطبق الكمين، وهو قنصل، فلا بدّ أنه على حق. استمتع بالساعة القادمة. وسأكون أنا من يكتب خبرها.</translation>
     </message>
     <message>
         <source>No living formation remains to hold the gates.</source>
@@ -5191,6 +5262,26 @@ to see preview</source>
         <translation>استولِ على حصنَي النهر. لا تترك معبراً يرثه جيش سكيبيو.</translation>
     </message>
     <message>
+        <source>Sixty men and a shrine the local people will not walk past after dark. My orders say investigate. I would sooner burn it and write that we investigated, but the Senate reads.</source>
+        <translation>ستون رجلًا ومَزارٌ لا يمرّ به أهل المكان بعد المغيب. أوامري تقول: تحقَّق. وكنت أُوثر أن أحرقه وأكتب أننا تحقّقنا، لكنّ مجلس الشيوخ يقرأ.</translation>
+    </message>
+    <message>
+        <source>So the centre gave and the wings did not. That was well done, and I say so, and I was inside it. Rome has lost an army and a ring for every knight in it. Rome has not yet lost anything that matters.</source>
+        <translation>فانثنى القلب ولم ينثنِ الجناحان. كان ذلك إحكامًا، وأنا أقولها، وقد كنتُ داخله. خسرت روما جيشًا وخاتمًا عن كل فارسٍ فيه. ولم تخسر روما بعدُ شيئًا ذا بال.</translation>
+    </message>
+    <message>
+        <source>So you came down the far side. Fewer, and on foot, and I am told you left the baggage up in the snow along with the men who were carrying it. Italy is waiting. Italy is not empty.</source>
+        <translation>فنزلتَ من السفح الآخر. أقلَّ عددًا، وعلى الأقدام، ويقولون إنك تركتَ الأثقال في الثلج ومعها الرجال الذين كانوا يحملونها. إيطاليةُ تنتظر. وإيطاليةُ ليست خالية.</translation>
+    </message>
+    <message>
+        <source>So you have come down out of the rocks after all. Fewer than the count they gave me, and greyer. Well. The Ticinus is shallow, the ground beyond it is ours, and I have a great deal of time in which to be wrong about you.</source>
+        <translation>فنزلتَ من الصخور آخر الأمر. أقلَّ من العدد الذي أُبلغته، وأكثر شيبًا. حسنٌ. التيسينُ ضحل، والأرض وراءه لنا، ولديّ متّسعٌ من الوقت لأكون مخطئًا في شأنك.</translation>
+    </message>
+    <message>
+        <source>So. The Barcid crawls down to the Rhone. Cross where you like - the river is not particular about whose bones it keeps, and Rome has a great deal of patience and a very great many shovels. My surveyors are already pacing out your grave. They tell me the ground here drinks well.</source>
+        <translation>وهكذا. يزحف البرقيّ نازلًا إلى الرون. اعبُر حيث شئت — فالنهر لا يُدقّق في عظام مَن يحتفظ بها، ولروما صبرٌ كثير ومَجارفُ أكثر. مسّاحوني يذرعون قبرك بالخطى منذ الآن. ويقولون لي إنّ التربة هنا تشرب جيدًا.</translation>
+    </message>
+    <message>
         <source>Spring the ambush and capture both Roman field camps within twenty minutes, before the mist lifts and a cohort escapes the basin.</source>
         <translation>أطلق الكمين واستولِ على المعسكرين الرومانيين الميدانيين خلال عشرين دقيقة، قبل أن ينقشع الضباب وتفلت كتيبة من الحوض.</translation>
     </message>
@@ -5201,6 +5292,10 @@ to see preview</source>
     <message>
         <source>Take the bridge camp and the eastern reserve quarter before the Roman scouts vanish into the fog.</source>
         <translation>خذ معسكر الجسر وحيّ الاحتياط الشرقي قبل أن يذوب كشّافة روما في الضباب.</translation>
+    </message>
+    <message>
+        <source>Take the crossings, then. Take the whole cold length of the road north and every stone laid on it. Rome does not lose provinces - she lends them, at interest, and I am told the collectors on this road wear no faces at all.</source>
+        <translation>خُذ المعابر إذن. خُذ طول الطريق الشمالي البارد كلَّه وكلَّ حجرٍ رُصف فيه. روما لا تخسر الولايات — بل تُقرضها بفائدة، ويقولون لي إنّ جُباة هذا الطريق بلا وجوهٍ البتّة.</translation>
     </message>
     <message>
         <source>The Campanian Vigil</source>
@@ -5231,8 +5326,68 @@ to see preview</source>
         <translation>المواجهة الأخيرة هي قرطاج ضد ثلاث قيادات رومانية منسّقة، حتى يهاجم حشد من ضريح الحديد من جناح الميدان المهمَل.</translation>
     </message>
     <message>
+        <source>The lights are out and the ground is quiet. Count them twice and burn what will burn. Whatever was in there stood here before Rome and will stand here after it. Tonight it simply has other business.</source>
+        <translation>خمدت الأنوار وسكنت الأرض. عُدُّوهم مرتين وأحرقوا ما يحترق. أيًّا كان ما في الداخل فقد كان هنا قبل روما وسيبقى بعدها. أما الليلة فله شأنٌ آخر لا غير.</translation>
+    </message>
+    <message>
+        <source>The mist lifted a little early for you. It happens. The lake will keep what it has been given, and the thing beneath the altar on the shore is not particular about whose it is.</source>
+        <translation>انقشع الضباب مبكرًا قليلًا في غير صالحك. يحدث هذا. ستحتفظ البحيرة بما أُعطيته، وما تحت المذبح على الشاطئ لا يُدقّق لمن يكون.</translation>
+    </message>
+    <message>
+        <source>The pass keeps them, then. A word of advice to whoever reads this: do not follow the lights on the snowfield. Whatever carries a lantern at that height stopped being a shepherd a long time ago.</source>
+        <translation>فليحتفظ بهم الممرّ إذن. ونصيحةٌ لمن يقرأ هذا: لا تتبع الأضواء على حقل الثلج. فما يحمل قنديلًا على ذلك العلوّ قد كفّ عن كونه راعيًا منذ زمنٍ بعيد.</translation>
+    </message>
+    <message>
+        <source>The river keeps whatever it is given. Your elephants went in and not all of them came out, and the Trebia is not a large river. Rome has never needed a large one.</source>
+        <translation>يحتفظ النهر بكل ما يُعطاه. دخلت فيلتك ولم تخرج كلها، والتريبيا ليس نهرًا كبيرًا. وما احتاجت روما يومًا إلى نهرٍ كبير.</translation>
+    </message>
+    <message>
+        <source>The scouts are not coming back, then. Well - everyone begins somewhere, and you have begun by killing eleven men who were expecting their lunch. Rome will send someone who counts next time.</source>
+        <translation>فالطلائع لن تعود إذن. حسنٌ — كلٌّ يبدأ من مكانٍ ما، وقد بدأتَ بقتل أحد عشر رجلًا كانوا ينتظرون غداءهم. وستُرسل روما في المرة القادمة مَن له وزن.</translation>
+    </message>
+    <message>
+        <source>Then it holds a little longer. Go home to your Senate and tell them what a Roman looks like from close to. I shall be here in the spring, and the spring after that, and I am younger than you.</source>
+        <translation>إذن يصمد قليلًا بعد. عُد إلى مجلس شيوخك وأخبرهم كيف يبدو الرومانيّ من قُرب. سأكون هنا في الربيع، وفي الربيع الذي يليه، وأنا أصغر منك سنًّا.</translation>
+    </message>
+    <message>
+        <source>There. No battle, no glory, no monument: a town with nothing left in it and a road with my army standing on it. They will call me the Delayer. Let them. Your dead will not care what I am called.</source>
+        <translation>ها هو ذا. لا معركة ولا مجد ولا نُصب: مدينةٌ لم يبقَ فيها شيء، وطريقٌ يقف عليه جيشي. سيسمّونني المُماطل. فليفعلوا. لن يعبأ موتاك بما أُسمّى به.</translation>
+    </message>
+    <message>
+        <source>There. Sit down in the mud with the others. They tell me the men who die on this road do not stay where they are put - that they rise about the third watch and go on marching north without their officers. Do continue. You are expected.</source>
+        <translation>ها هو ذا. اجلس في الطين مع الآخرين. يقولون لي إنّ من يموت على هذا الطريق لا يبقى حيث يُوضع — بل ينهض عند الهزيع الثالث ويمضي شمالًا بلا ضبّاطه. تفضّل بالمتابعة. أنت منتظَر.</translation>
+    </message>
+    <message>
+        <source>There. That is what the river was for. Have your surgeons work quickly, and tell whatever is left of your baggage train that the road home goes back up the mountain.</source>
+        <translation>ها هو ذا. لهذا كان النهر. مُر جرّاحيك أن يعملوا سراعًا، وقل لما بقي من أثقالك إنّ طريق العودة يصعد الجبل من جديد.</translation>
+    </message>
+    <message>
+        <source>They are getting up again. Do not look at the faces; you will know some of them. Fall back to the road, keep walking, and do not stop to bury anything. It does not stay buried here.</source>
+        <translation>ها هم ينهضون من جديد. لا تنظر إلى الوجوه؛ ستعرف بعضها. انسحبوا إلى الطريق، وامضوا في السير، ولا تقفوا لتدفنوا شيئًا. فلا شيء يبقى مدفونًا هنا.</translation>
+    </message>
+    <message>
+        <source>They tell me you have taken an army into the Alps in October, with elephants. I have stopped chasing you. The mountain is a more thorough officer than I am and it does not require pay.</source>
+        <translation>يقولون لي إنك أدخلتَ جيشًا جبال الألب في تشرين الأول، ومعك فِيَلة. كففتُ عن مطاردتك. فالجبل ضابطٌ أدقُّ مني، وهو لا يطلب أجرًا.</translation>
+    </message>
+    <message>
         <source>Twenty minutes before the mist lifts. If a cohort clears the basin, Rome learns the shape of the trap.</source>
         <translation>عشرون دقيقة قبل أن ينقشع الضباب. إن خرجت كتيبة من الحوض، عرفت روما شكل الفخ.</translation>
+    </message>
+    <message>
+        <source>You bent us and we did not break, and that is the only sentence anyone will need. Gather your dead off the Aufidus. The river runs slow here; they will be a long time going by.</source>
+        <translation>ثنيتَنا ولم نُكسَر، وتلك هي الجملة الوحيدة التي سيحتاجها أحد. اجمع موتاك من على الأوفيدوس. النهر بطيءُ الجريان هنا؛ وسيطول مرورهم.</translation>
+    </message>
+    <message>
+        <source>You have a walled town, an orchard, and a very great many mouths. I have the roads. I am not going to fight you. I am going to stand between you and every granary in Campania until winter explains my position better than I can.</source>
+        <translation>لديك مدينةٌ مسوَّرة وبستان وأفواهٌ كثيرة جدًّا. ولديّ الطرق. لن أقاتلك. بل سأقف بينك وبين كل أهراء كامبانيا حتى يشرح الشتاءُ موقفي خيرًا مما أشرحه.</translation>
+    </message>
+    <message>
+        <source>You have the river town. My congratulations - you now own three hundred mouths, two wells, and a temple whose god has lately been asking after Carthage by name. Feed them. I shall come back in the spring and count what is left.</source>
+        <translation>لك مدينة النهر. تهانيّ — صرت تملك ثلاثمئة فم، وبئرين، ومعبدًا صار إلهُه يسأل عن قرطاجَ باسمها في الآونة الأخيرة. أطعِمهم. سأعود في الربيع وأُحصي ما بقي.</translation>
+    </message>
+    <message>
+        <source>You killed a consul. Good. Rome keeps forty more in cupboards in the city, and I promise you the ones still in the cupboards are worse. He will be missed - briefly, and only by his creditors.</source>
+        <translation>قتلتَ قنصلًا. جيّد. تحتفظ روما بأربعين غيره في خزائن المدينة، وأُؤكّد لك أنّ من بقي في الخزائن أسوأ. سيُفتقد — قليلًا، ومن دائنيه وحدهم.</translation>
     </message>
     <message>
         <source>Your camp falls — the field goes with it.</source>
@@ -7712,6 +7867,10 @@ Builders reap it for the food that recruits civilians</source>
 </context>
 <context>
     <name>TutorialOverlay</name>
+    <message>
+        <source>Show me</source>
+        <translation>أرِني</translation>
+    </message>
     <message>
         <source>Tutorial</source>
         <translation>الدليل التعليمي</translation>

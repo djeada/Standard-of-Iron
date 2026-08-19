@@ -818,6 +818,7 @@ if(QT_VERSION_MAJOR EQUAL 6)
             ui/qml/HUDVictory.qml
             ui/qml/BattleSummary.qml
             ui/qml/GameView.qml
+            ui/qml/ProfilingOverlay.qml
             ui/qml/CommanderInputLayer.qml
             ui/qml/RtsInputLayer.qml
             ui/qml/CursorManager.qml
@@ -829,6 +830,7 @@ if(QT_VERSION_MAJOR EQUAL 6)
         assets/shaders/include/directional_shadows.glsl
         assets/shaders/include/visibility_mask.glsl
         assets/shaders/include/noise.glsl
+        assets/shaders/include/terrain_noise.glsl
         assets/shaders/directional_shadow_depth.vert
         assets/shaders/directional_shadow_depth_instanced.vert
         assets/shaders/directional_shadow_rigged.vert
@@ -869,6 +871,7 @@ if(QT_VERSION_MAJOR EQUAL 6)
             assets/shaders/dead_tree_instanced.frag
             assets/shaders/dead_tree_instanced.vert
             assets/shaders/terrain_chunk.frag
+        assets/shaders/terrain_field_bake.frag
             assets/shaders/terrain_chunk.vert
             assets/maps/map_forest.json
             assets/maps/map_rivers.json

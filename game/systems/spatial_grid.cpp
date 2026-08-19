@@ -11,7 +11,9 @@ SpatialGrid::SpatialGrid(float cell_size)
 }
 
 void SpatialGrid::clear() {
-  m_cells.clear();
+  for (auto& cell : m_cells) {
+    cell.second.clear();
+  }
   m_entity_cells.clear();
 }
 

@@ -1,9 +1,14 @@
 #include "profiling_hud.h"
 
+#include <qglobal.h>
+
 namespace Render::Profiling {
 
 ProfilingHud::ProfilingHud(QObject* parent)
     : QObject(parent) {
+  if (qEnvironmentVariableIntValue("SOI_PROFILING_HUD") != 0) {
+    global_profile().enabled = true;
+  }
   m_timer.setInterval(250);
   m_timer.setSingleShot(false);
   QObject::connect(&m_timer, &QTimer::timeout, this, &ProfilingHud::refresh);
