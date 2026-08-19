@@ -809,12 +809,9 @@ auto Renderer::plan_unit_entry(UnitRenderEntry& entry,
     const auto tier = ctx.full_creature_detail ? Render::Pipeline::LodTier::Full
                                                : Render::Pipeline::select_lod(lod_in);
 
-    if (!entry.selected && !entry.hovered && !ctx.full_creature_detail) {
-      if (tier == Render::Pipeline::LodTier::Minimal) {
-        draw_ctx.max_rendered_individuals = 4;
-      } else if (tier == Render::Pipeline::LodTier::Simplified) {
-        draw_ctx.max_rendered_individuals = 8;
-      }
+    if (!entry.selected && !entry.hovered && !ctx.full_creature_detail &&
+        tier == Render::Pipeline::LodTier::Minimal) {
+      draw_ctx.max_rendered_individuals = 8;
     }
 
     if (ctx.full_creature_detail) {

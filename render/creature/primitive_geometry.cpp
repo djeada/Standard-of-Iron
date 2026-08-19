@@ -53,45 +53,50 @@ auto oriented_span_model(const PrimitiveInstance& prim,
 struct ShapeTraits {
   bool spans_two_bones;
   Render::GL::Mesh* (*unit_mesh)();
+  Render::GL::Mesh* (*minimal_unit_mesh)();
 };
 
 constexpr std::size_t k_shape_count =
     static_cast<std::size_t>(PrimitiveShape::TaperedCylinder) + 1U;
 
 auto shape_traits(PrimitiveShape shape) noexcept -> const ShapeTraits& {
+  static const auto sphere = +[]() {
+    return Render::GL::get_unit_sphere();
+  };
+  static const auto minimal_sphere = +[]() {
+    return Render::GL::get_unit_sphere(k_minimal_latitude_segments,
+                                       k_minimal_radial_segments);
+  };
+  static const auto cylinder = +[]() {
+    return Render::GL::get_unit_cylinder();
+  };
+  static const auto minimal_cylinder = +[]() {
+    return Render::GL::get_unit_cylinder(k_minimal_radial_segments);
+  };
   static const std::array<ShapeTraits, k_shape_count> k_traits{{
-      {false, nullptr},
-      {false,
+      {false, nullptr, nullptr},
+      {false, sphere, minimal_sphere},
+      {true, cylinder, minimal_cylinder},
+      {true,
+       +[]() { return Render::GL::get_unit_capsule(); },
        +[]() {
-         return Render::GL::get_unit_sphere();
+         return Render::GL::get_unit_capsule(k_minimal_radial_segments);
        }},
       {true,
+       +[]() { return Render::GL::get_unit_cone(); },
        +[]() {
-         return Render::GL::get_unit_cylinder();
-       }},
-      {true,
-       +[]() {
-         return Render::GL::get_unit_capsule();
-       }},
-      {true,
-       +[]() {
-         return Render::GL::get_unit_cone();
+         return Render::GL::get_unit_cone(k_minimal_radial_segments);
        }},
       {false,
+       +[]() { return Render::GL::get_unit_cube(); },
        +[]() {
          return Render::GL::get_unit_cube();
        }},
-      {false, nullptr},
-      {false, nullptr},
-      {true,
-       +[]() {
-         return Render::GL::get_unit_cylinder();
-       }},
-      {false,
-       +[]() {
-         return Render::GL::get_unit_sphere();
-       }},
-      {true, nullptr},
+      {false, nullptr, nullptr},
+      {false, nullptr, nullptr},
+      {true, cylinder, minimal_cylinder},
+      {false, sphere, minimal_sphere},
+      {true, nullptr, nullptr},
   }};
   auto const index = static_cast<std::size_t>(shape);
   return index < k_traits.size() ? k_traits[index] : k_traits[0];
@@ -115,19 +120,26 @@ auto bone_world_offset(const QMatrix4x4& bone,
   return origin + x * local_offset.x() + y * local_offset.y() + z * local_offset.z();
 }
 
-auto primitive_unit_mesh(const PrimitiveInstance& prim) noexcept -> Render::GL::Mesh* {
+auto primitive_unit_mesh(const PrimitiveInstance& prim,
+                         CreatureLOD lod) noexcept -> Render::GL::Mesh* {
   if (prim.custom_mesh != nullptr) {
     return prim.custom_mesh;
   }
+
+  const bool minimal = lod == CreatureLOD::Minimal;
 
   if (prim.shape == PrimitiveShape::TaperedCylinder) {
     float const anchor = std::max(prim.params.radius, 1.0e-4F);
     float const tail =
         prim.params.tail_radius > 0.0F ? prim.params.tail_radius : anchor;
-    return Render::GL::get_unit_tapered_cylinder(1.0F, tail / anchor);
+    return Render::GL::get_unit_tapered_cylinder(
+        1.0F,
+        tail / anchor,
+        minimal ? k_minimal_radial_segments : Render::GL::k_default_radial_segments);
   }
 
-  auto const getter = shape_traits(prim.shape).unit_mesh;
+  auto const& traits = shape_traits(prim.shape);
+  auto const getter = minimal ? traits.minimal_unit_mesh : traits.unit_mesh;
   return getter != nullptr ? getter() : nullptr;
 }
 
