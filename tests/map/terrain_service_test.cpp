@@ -804,6 +804,49 @@ TEST_F(TerrainServiceTest, CampaignHillHeightScalesWithPhysicalFootprint) {
   EXPECT_TRUE(height_map.is_walkable(80, 80));
 }
 
+TEST_F(TerrainServiceTest, SealBlocksSetupMutationsAndInitializeUnseals) {
+  Game::Map::MapDefinition map_def;
+  map_def.grid.width = 8;
+  map_def.grid.height = 8;
+  map_def.grid.tile_size = 1.0F;
+  map_def.world_props.push_back(
+      {.type = Game::Map::WorldProp::Type::PineTree, .x = 2.0F, .z = 3.0F});
+
+  auto& terrain = Game::Map::TerrainService::instance();
+  terrain.initialize(map_def);
+  EXPECT_FALSE(terrain.is_sealed());
+
+  Game::Map::WorldProp shrine;
+  shrine.type = Game::Map::WorldProp::Type::Tent;
+  std::uint64_t const unsealed_id = terrain.add_world_prop_at_world(shrine, 0.0F, 0.0F);
+  EXPECT_NE(unsealed_id, 0U);
+  ASSERT_EQ(terrain.world_props().size(), 2U);
+
+  terrain.seal();
+  EXPECT_TRUE(terrain.is_sealed());
+  std::uint64_t const world_revision = terrain.world_props_revision();
+  std::uint64_t const authored_revision = terrain.authored_world_props_revision();
+
+  EXPECT_EQ(terrain.add_world_prop_at_world(shrine, 1.0F, 1.0F), 0U);
+  terrain.remove_non_persistent_props();
+  EXPECT_EQ(terrain.world_props().size(), 2U);
+  EXPECT_EQ(terrain.world_props_revision(), world_revision);
+  EXPECT_EQ(terrain.authored_world_props_revision(), authored_revision);
+
+  auto const tree = terrain.find_tree_near_world(-1.4F, -0.4F);
+  ASSERT_TRUE(tree.has_value());
+  EXPECT_TRUE(terrain.reserve_world_prop(tree->id));
+  terrain.release_world_prop(tree->id);
+  EXPECT_FALSE(terrain.is_world_prop_reserved(tree->id));
+  EXPECT_TRUE(terrain.harvest_world_prop(tree->id));
+
+  terrain.initialize(map_def);
+  EXPECT_FALSE(terrain.is_sealed());
+  terrain.seal();
+  terrain.clear();
+  EXPECT_FALSE(terrain.is_sealed());
+}
+
 TEST_F(TerrainServiceTest, TreeHelpersReserveAndHarvestTrees) {
   Game::Map::MapDefinition map_def;
   map_def.grid.width = 8;

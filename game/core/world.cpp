@@ -631,25 +631,19 @@ void copy_snapshot_component(const Entity& source, Entity& destination) {
   destination.add_component<ComponentType>(*component);
 }
 
-void copy_render_components(const Entity& source, Entity& destination) {
+} // namespace
+
+void copy_authoritative_snapshot_components(const Entity& source, Entity& destination) {
   copy_snapshot_component<TransformComponent>(source, destination);
   copy_snapshot_component<UnitComponent>(source, destination);
   copy_snapshot_component<RenderableComponent>(source, destination);
   copy_snapshot_component<MovementComponent>(source, destination);
-  copy_snapshot_component<MotionPresentationComponent>(source, destination);
-  copy_snapshot_component<CreaturePresentationComponent>(source, destination);
   copy_snapshot_component<BuildingComponent>(source, destination);
   copy_snapshot_component<PendingRemovalComponent>(source, destination);
   copy_snapshot_component<AttackComponent>(source, destination);
   copy_snapshot_component<AttackTargetComponent>(source, destination);
   copy_snapshot_component<CombatStateComponent>(source, destination);
   copy_snapshot_component<FormationContactComponent>(source, destination);
-  copy_snapshot_component<FormationRosterPresentationComponent>(source, destination);
-  copy_snapshot_component<FormationPresentationComponent>(source, destination);
-  copy_snapshot_component<FormationHitPresentationComponent>(source, destination);
-  copy_snapshot_component<SoldierCasualtyAnimationComponent>(source, destination);
-  copy_snapshot_component<DeathAnimationComponent>(source, destination);
-
   copy_snapshot_component<WildlifeComponent>(source, destination);
   copy_snapshot_component<BuilderProductionComponent>(source, destination);
   copy_snapshot_component<ProductionComponent>(source, destination);
@@ -663,7 +657,6 @@ void copy_render_components(const Entity& source, Entity& destination) {
   copy_snapshot_component<GuardModeComponent>(source, destination);
   copy_snapshot_component<HoldModeComponent>(source, destination);
   copy_snapshot_component<FormationModeComponent>(source, destination);
-
   copy_snapshot_component<UnitLayoutStateComponent>(source, destination);
   copy_snapshot_component<SpearBraceComponent>(source, destination);
   copy_snapshot_component<StaminaComponent>(source, destination);
@@ -671,21 +664,38 @@ void copy_render_components(const Entity& source, Entity& destination) {
   copy_snapshot_component<BurningStatusComponent>(source, destination);
   copy_snapshot_component<StaggerComponent>(source, destination);
   copy_snapshot_component<HitFeedbackComponent>(source, destination);
-  copy_snapshot_component<ConstructionPreviewComponent>(source, destination);
   copy_snapshot_component<WallConstructionSiteComponent>(source, destination);
-  copy_snapshot_component<StructureDamagePresentationComponent>(source, destination);
-  copy_snapshot_component<RpgContactPresentationComponent>(source, destination);
-  copy_snapshot_component<BloodStainComponent>(source, destination);
   copy_snapshot_component<FirePatchComponent>(source, destination);
   copy_snapshot_component<StructureFireComponent>(source, destination);
   copy_snapshot_component<ElephantComponent>(source, destination);
   copy_snapshot_component<ElephantStompImpactComponent>(source, destination);
   copy_snapshot_component<CatapultLoadingComponent>(source, destination);
   copy_snapshot_component<GateComponent>(source, destination);
-  copy_snapshot_component<StockpileComponent>(source, destination);
   copy_snapshot_component<ResourceCarryComponent>(source, destination);
   copy_snapshot_component<FarmComponent>(source, destination);
 }
+
+void copy_presentation_snapshot_components(const Entity& source, Entity& destination) {
+  copy_snapshot_component<MotionPresentationComponent>(source, destination);
+  copy_snapshot_component<CreaturePresentationComponent>(source, destination);
+  copy_snapshot_component<FormationRosterPresentationComponent>(source, destination);
+  copy_snapshot_component<FormationPresentationComponent>(source, destination);
+  copy_snapshot_component<FormationHitPresentationComponent>(source, destination);
+  copy_snapshot_component<SoldierCasualtyAnimationComponent>(source, destination);
+  copy_snapshot_component<DeathAnimationComponent>(source, destination);
+  copy_snapshot_component<ConstructionPreviewComponent>(source, destination);
+  copy_snapshot_component<StructureDamagePresentationComponent>(source, destination);
+  copy_snapshot_component<RpgContactPresentationComponent>(source, destination);
+  copy_snapshot_component<BloodStainComponent>(source, destination);
+  copy_snapshot_component<StockpileComponent>(source, destination);
+}
+
+void copy_render_components(const Entity& source, Entity& destination) {
+  copy_authoritative_snapshot_components(source, destination);
+  copy_presentation_snapshot_components(source, destination);
+}
+
+namespace {
 
 void render_hash_combine(std::uint64_t& seed, std::uint64_t value) {
   seed ^= value + 0x9e3779b97f4a7c15ULL + (seed << 6U) + (seed >> 2U);
@@ -865,6 +875,11 @@ World::World(bool presentation_enabled, bool render_snapshot)
     : m_presentation_enabled(presentation_enabled)
     , m_is_render_snapshot(render_snapshot) {
   m_slots.emplace_back();
+  if (!m_is_render_snapshot) {
+    std::atomic_store_explicit(&m_render_snapshot,
+                               std::shared_ptr<World>(new World(false, true)),
+                               std::memory_order_release);
+  }
 }
 
 World::~World() = default;
@@ -1104,6 +1119,20 @@ void World::update(float delta_time) {
 
 auto World::acquire_render_snapshot() const -> std::shared_ptr<World> {
   return std::atomic_load_explicit(&m_render_snapshot, std::memory_order_acquire);
+}
+
+void World::ensure_render_snapshot() {
+  if (m_is_render_snapshot) {
+    return;
+  }
+  request_render_snapshots();
+  if (m_render_publish_revision != 0) {
+    return;
+  }
+  const std::lock_guard<std::recursive_mutex> lock(m_entity_mutex);
+  if (m_render_publish_revision == 0) {
+    publish_render_snapshot();
+  }
 }
 
 void World::publish_render_snapshot() {

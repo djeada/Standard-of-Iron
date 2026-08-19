@@ -1467,6 +1467,33 @@ auto CommanderControlController::update(Engine::Core::World& world,
                                         int local_owner_id,
                                         Render::GL::Camera& camera,
                                         float dt) -> bool {
+  return update_impl(world, commander_id, local_owner_id, &camera, dt);
+}
+
+auto CommanderControlController::update_simulation(Engine::Core::World& world,
+                                                   Engine::Core::EntityID commander_id,
+                                                   int local_owner_id,
+                                                   float dt) -> bool {
+  return update_impl(world, commander_id, local_owner_id, nullptr, dt);
+}
+
+void CommanderControlController::update_camera_presentation(
+    Engine::Core::World& world,
+    Engine::Core::EntityID commander_id,
+    Render::GL::Camera& camera,
+    float dt) {
+  auto* commander = world.get_entity(commander_id);
+  if (commander == nullptr) {
+    return;
+  }
+  update_camera(world, *commander, camera, dt);
+}
+
+auto CommanderControlController::update_impl(Engine::Core::World& world,
+                                             Engine::Core::EntityID commander_id,
+                                             int local_owner_id,
+                                             Render::GL::Camera* camera,
+                                             float dt) -> bool {
   auto* commander = controlled_commander(world, commander_id, local_owner_id);
   if (commander == nullptr) {
     return false;
@@ -1524,7 +1551,9 @@ auto CommanderControlController::update(Engine::Core::World& world,
       rpg->dodge_invincible = false;
     }
 
-    update_camera(world, *commander, camera, dt);
+    if (camera != nullptr) {
+      update_camera(world, *commander, *camera, dt);
+    }
     return true;
   }
 
@@ -1838,7 +1867,10 @@ auto CommanderControlController::update(Engine::Core::World& world,
   m_move_forward_axis = forward_axis;
   m_move_running = run_for_bob;
 
-  update_camera(world, *commander, camera, dt);
+  set_view_pitch(m_view_pitch);
+  if (camera != nullptr) {
+    update_camera(world, *commander, *camera, dt);
+  }
 
   auto* aim = Game::Systems::RpgCombat::sync_commander_aim(
       *commander,

@@ -10,6 +10,7 @@
 
 #include <algorithm>
 #include <array>
+#include <atomic>
 #include <chrono>
 #include <cmath>
 #include <cstddef>
@@ -72,12 +73,31 @@ using namespace Render::GL::ComponentCount;
 
 namespace {}
 
-Backend::Backend() = default;
+namespace {
+
+std::atomic<int> g_live_backend_count{0};
+
+auto retain_backend() -> int {
+  return g_live_backend_count.fetch_add(1, std::memory_order_acq_rel) + 1;
+}
+
+auto release_backend() -> int {
+  return g_live_backend_count.fetch_sub(1, std::memory_order_acq_rel) - 1;
+}
+
+} // namespace
+
+Backend::Backend() {
+  retain_backend();
+}
+
 Backend::Backend(ShaderQuality quality)
     : m_shader_quality(quality) {
+  retain_backend();
 }
 
 Backend::~Backend() {
+  const bool last_backend = release_backend() == 0;
   if (QOpenGLContext::currentContext() == nullptr) {
 
     for_each_pipeline_slot([](auto& slot) { (void)slot.release(); });
@@ -114,7 +134,9 @@ Backend::~Backend() {
     timing.pending = false;
   }
 
-  SharedGeometryCache::instance().release_all();
+  if (last_backend) {
+    SharedGeometryCache::instance().release_all();
+  }
   for_each_pipeline_slot([](auto& slot) { slot.reset(); });
 }
 
