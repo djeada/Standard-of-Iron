@@ -228,6 +228,7 @@ auto AudioSystem::load_sound(const std::string& sound_id,
                              const AudioResourceConfig& config) -> bool {
   std::lock_guard<std::mutex> const lock(resource_mutex);
   if (sounds.find(sound_id) != sounds.end()) {
+    cancel_pending_unload_locked(sound_id);
     return true;
   }
 
@@ -241,6 +242,7 @@ auto AudioSystem::load_sound(const std::string& sound_id,
 
   sounds[sound_id] = std::move(sound);
   resource_configs[sound_id] = config;
+  cancel_pending_unload_locked(sound_id);
   active_resources.insert(sound_id);
   return true;
 }
@@ -259,6 +261,7 @@ auto AudioSystem::load_music(const std::string& music_id,
   AudioResourceConfig music_config = config;
   music_config.category = AudioCategory::MUSIC;
   resource_configs[music_id] = music_config;
+  cancel_pending_unload_locked(music_id);
   active_resources.insert(music_id);
   return true;
 }
@@ -277,16 +280,40 @@ void AudioSystem::register_alias(const std::string& alias_id,
 auto AudioSystem::has_resource(const std::string& resource_id) const -> bool {
   std::lock_guard<std::mutex> const lock(resource_mutex);
   const std::string resolved_id = resolve_resource_id_locked(resource_id);
+  if (pending_unloads.find(resolved_id) != pending_unloads.end()) {
+    return false;
+  }
   return sounds.find(resolved_id) != sounds.end() ||
          resource_configs.find(resolved_id) != resource_configs.end();
 }
 
 void AudioSystem::unload_sound(const std::string& sound_id) {
-  enqueue(AudioEvent(AudioEventType::UNLOAD_RESOURCE, sound_id));
+  enqueue_unload(sound_id);
 }
 
 void AudioSystem::unload_music(const std::string& music_id) {
-  enqueue(AudioEvent(AudioEventType::UNLOAD_RESOURCE, music_id));
+  enqueue_unload(music_id);
+}
+
+void AudioSystem::enqueue_unload(const std::string& resource_id) {
+  AudioEvent event(AudioEventType::UNLOAD_RESOURCE, resource_id);
+  {
+    std::lock_guard<std::mutex> const lock(resource_mutex);
+    event.load_serial = current_load_serial_locked(resource_id);
+    pending_unloads.insert(resolve_resource_id_locked(resource_id));
+  }
+  enqueue(std::move(event));
+}
+
+void AudioSystem::cancel_pending_unload_locked(const std::string& resource_id) {
+  ++resource_load_serials[resource_id];
+  pending_unloads.erase(resource_id);
+}
+
+auto AudioSystem::current_load_serial_locked(const std::string& resource_id) const
+    -> std::uint64_t {
+  const auto it = resource_load_serials.find(resolve_resource_id_locked(resource_id));
+  return it == resource_load_serials.end() ? 0U : it->second;
 }
 
 void AudioSystem::unload_all_sounds() {
@@ -300,7 +327,7 @@ void AudioSystem::unload_all_sounds() {
   }
 
   for (const auto& sound_id : sound_resources) {
-    enqueue(AudioEvent(AudioEventType::UNLOAD_RESOURCE, sound_id));
+    enqueue_unload(sound_id);
   }
 }
 
@@ -316,7 +343,7 @@ void AudioSystem::unload_all_music() {
   }
 
   for (const auto& music_id : music_resources) {
-    enqueue(AudioEvent(AudioEventType::UNLOAD_RESOURCE, music_id));
+    enqueue_unload(music_id);
   }
 }
 
@@ -472,6 +499,9 @@ void AudioSystem::process_event(const AudioEvent& event) {
   case AudioEventType::UNLOAD_RESOURCE: {
     std::lock_guard<std::mutex> const lock(resource_mutex);
     const std::string resource_id = resolve_resource_id_locked(event.resource_id);
+    if (current_load_serial_locked(resource_id) != event.load_serial) {
+      break;
+    }
     const AudioResourceConfig config = get_resource_config_locked(resource_id);
     auto sound_it = sounds.find(resource_id);
     if (sound_it != sounds.end()) {
@@ -500,6 +530,8 @@ void AudioSystem::process_event(const AudioEvent& event) {
     }
 
     resource_configs.erase(resource_id);
+    resource_load_serials.erase(resource_id);
+    pending_unloads.erase(resource_id);
     resource_last_played_at.erase(resource_id);
     active_resources.erase(resource_id);
 
