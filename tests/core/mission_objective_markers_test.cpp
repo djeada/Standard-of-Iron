@@ -2,6 +2,7 @@
 #include <QVariantMap>
 
 #include <gtest/gtest.h>
+#include <mutex>
 
 #include "app/core/client_context.h"
 #include "app/viewmodels/camera_view_model.h"
@@ -12,7 +13,13 @@ namespace {
 class SilentHost : public App::Core::ClientHost {
 public:
   void ensure_initialized() override {}
+  [[nodiscard]] auto lock_frame() -> std::unique_lock<std::recursive_mutex> override {
+    return std::unique_lock<std::recursive_mutex>(m_mutex);
+  }
   void set_cursor_mode(CursorMode) override {}
+
+private:
+  std::recursive_mutex m_mutex;
 };
 
 auto settlement_stage(const QString& title,

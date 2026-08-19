@@ -389,11 +389,10 @@ auto CommanderModeCoordinator::update_commander_control_mode(
     return effects;
   }
 
-  if (!context.commander_control->update(*context.world,
-                                         context.controlled_commander_id,
-                                         context.local_owner_id,
-                                         *context.commander_camera,
-                                         context.dt)) {
+  if (!context.commander_control->update_simulation(*context.world,
+                                                    context.controlled_commander_id,
+                                                    context.local_owner_id,
+                                                    context.dt)) {
     effects.should_exit_commander_mode = true;
     return effects;
   }

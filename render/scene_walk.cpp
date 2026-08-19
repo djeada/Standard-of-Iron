@@ -1055,38 +1055,28 @@ void Renderer::render_world(Engine::Core::World* world) {
   {
     Render::Profiling::PhaseScope const snapshot_scope(
         &profile, Render::Profiling::Phase::Snapshot);
-    simulation_world->request_render_snapshots();
+    simulation_world->ensure_render_snapshot();
     render_snapshot = simulation_world->acquire_render_snapshot();
-    if (render_snapshot != nullptr) {
-      if (m_render_world_snapshot != nullptr &&
-          m_render_world_snapshot.get() != render_snapshot.get()) {
-        transfer_render_runtime_state(*m_render_world_snapshot, *render_snapshot);
-      }
-      m_render_world_snapshot = render_snapshot;
-      world = render_snapshot.get();
+    if (render_snapshot == nullptr) {
+      return;
     }
+    if (m_render_world_snapshot != nullptr &&
+        m_render_world_snapshot.get() != render_snapshot.get()) {
+      transfer_render_runtime_state(*m_render_world_snapshot, *render_snapshot);
+    }
+    m_render_world_snapshot = render_snapshot;
+    world = render_snapshot.get();
   }
 
   std::lock_guard<std::recursive_mutex> const guard(world->get_entity_mutex());
 
-  if (!m_render_registry.is_attached_to(simulation_world)) {
-    m_cached_world = simulation_world;
-    m_render_registry.attach(simulation_world);
-  }
+  m_cached_world = simulation_world;
 
   const bool visibility_enabled = world_view().has_visibility();
-  std::span<const Engine::Core::EntityID> const unit_ids =
-      render_snapshot != nullptr
-          ? world->render_unit_ids()
-          : std::span<const Engine::Core::EntityID>(m_render_registry.unit_ids());
+  std::span<const Engine::Core::EntityID> const unit_ids = world->render_unit_ids();
   std::span<const Engine::Core::EntityID> const building_ids =
-      render_snapshot != nullptr
-          ? world->render_building_ids()
-          : std::span<const Engine::Core::EntityID>(m_render_registry.building_ids());
-  std::span<const Engine::Core::EntityID> const other_ids =
-      render_snapshot != nullptr
-          ? world->render_other_ids()
-          : std::span<const Engine::Core::EntityID>(m_render_registry.other_ids());
+      world->render_building_ids();
+  std::span<const Engine::Core::EntityID> const other_ids = world->render_other_ids();
 
   const auto& gfx_settings = Render::GraphicsSettings::instance();
   const auto& batch_config = gfx_settings.batching_config();

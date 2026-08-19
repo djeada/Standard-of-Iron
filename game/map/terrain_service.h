@@ -49,6 +49,9 @@ public:
 
   void clear();
 
+  void seal();
+  [[nodiscard]] auto is_sealed() const -> bool { return m_sealed; }
+
   [[nodiscard]] auto get_terrain_height(float world_x, float world_z) const -> float;
 
   [[nodiscard]] auto
@@ -240,6 +243,7 @@ private:
   std::vector<std::uint32_t> m_road_index_segment_ids;
   std::unordered_set<std::uint64_t> m_reserved_world_prop_ids;
   std::uint64_t m_next_world_prop_id{1};
+  bool m_sealed{false};
   std::uint64_t m_authored_world_props_revision{0};
   std::uint64_t m_world_props_revision{0};
   std::uint64_t m_navigation_topology_revision{0};

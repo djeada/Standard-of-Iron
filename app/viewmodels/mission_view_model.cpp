@@ -124,6 +124,7 @@ auto MissionViewModel::completed_count() const -> int {
 
 void MissionViewModel::focus_active_stage() {
   m_host.ensure_initialized();
+  const auto frame_lock = m_host.lock_frame();
   const QVariantMap stage = active_stage();
   if (!stage.value("has_target").toBool()) {
     return;

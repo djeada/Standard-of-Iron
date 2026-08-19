@@ -22,6 +22,7 @@ void PlacementViewModel::on_formation_command() {
     return;
   }
   m_host.ensure_initialized();
+  const auto frame_lock = m_host.lock_frame();
   handler->on_formation_command();
 }
 
@@ -41,6 +42,7 @@ void PlacementViewModel::on_formation_mouse_move(qreal sx, qreal sy) {
     return;
   }
   m_host.ensure_initialized();
+  const auto frame_lock = m_host.lock_frame();
   handler->on_formation_mouse_move(sx, sy, *m_context.viewport);
 }
 
@@ -50,6 +52,7 @@ void PlacementViewModel::on_formation_scroll(float delta) {
     return;
   }
   m_host.ensure_initialized();
+  const auto frame_lock = m_host.lock_frame();
   handler->on_formation_scroll(delta);
 }
 
@@ -59,6 +62,7 @@ void PlacementViewModel::on_formation_confirm() {
     return;
   }
   m_host.ensure_initialized();
+  const auto frame_lock = m_host.lock_frame();
   handler->on_formation_confirm();
 }
 
@@ -68,6 +72,7 @@ void PlacementViewModel::on_formation_cancel() {
     return;
   }
   m_host.ensure_initialized();
+  const auto frame_lock = m_host.lock_frame();
   handler->on_formation_cancel();
 }
 
@@ -77,6 +82,7 @@ void PlacementViewModel::on_formation_drag_begin(qreal sx, qreal sy) {
     return;
   }
   m_host.ensure_initialized();
+  const auto frame_lock = m_host.lock_frame();
   handler->on_formation_drag_begin(sx, sy, *m_context.viewport);
   emit formation_options_changed();
 }
@@ -87,6 +93,7 @@ void PlacementViewModel::on_formation_drag_update(qreal sx, qreal sy) {
     return;
   }
   m_host.ensure_initialized();
+  const auto frame_lock = m_host.lock_frame();
   handler->on_formation_drag_update(sx, sy, *m_context.viewport);
   emit formation_options_changed();
 }
@@ -299,6 +306,7 @@ auto PlacementViewModel::construction_preview_total_cost() const -> int {
 
 void PlacementViewModel::on_construction_mouse_move(qreal sx, qreal sy) {
   m_host.ensure_initialized();
+  const auto frame_lock = m_host.lock_frame();
   auto* production = m_context.production;
   if (production != nullptr) {
     const QPointF viewport_point = m_context.viewport->map_input(sx, sy);
@@ -309,6 +317,7 @@ void PlacementViewModel::on_construction_mouse_move(qreal sx, qreal sy) {
 
 void PlacementViewModel::on_construction_pointer_pressed(qreal sx, qreal sy) {
   m_host.ensure_initialized();
+  const auto frame_lock = m_host.lock_frame();
   auto* production = m_context.production;
   if (production != nullptr) {
     const QPointF viewport_point = m_context.viewport->map_input(sx, sy);
@@ -319,6 +328,7 @@ void PlacementViewModel::on_construction_pointer_pressed(qreal sx, qreal sy) {
 
 void PlacementViewModel::on_construction_pointer_released(qreal sx, qreal sy) {
   m_host.ensure_initialized();
+  const auto frame_lock = m_host.lock_frame();
   auto* production = m_context.production;
   if (production != nullptr) {
     const QPointF viewport_point = m_context.viewport->map_input(sx, sy);
@@ -332,6 +342,7 @@ void PlacementViewModel::on_construction_pointer_released(qreal sx, qreal sy) {
 
 void PlacementViewModel::on_construction_scroll(float delta) {
   m_host.ensure_initialized();
+  const auto frame_lock = m_host.lock_frame();
   auto* production = m_context.production;
   if (production != nullptr) {
     production->on_construction_scroll(delta);
@@ -340,6 +351,7 @@ void PlacementViewModel::on_construction_scroll(float delta) {
 
 void PlacementViewModel::on_construction_confirm() {
   m_host.ensure_initialized();
+  const auto frame_lock = m_host.lock_frame();
   auto* production = m_context.production;
   if (production != nullptr) {
     production->on_construction_confirm();
@@ -378,6 +390,7 @@ auto PlacementViewModel::get_construction_info(const QString& item_type) const
 
 void PlacementViewModel::start_building_placement(const QString& building_type) {
   m_host.ensure_initialized();
+  const auto frame_lock = m_host.lock_frame();
   auto* production = m_context.production;
   if (production != nullptr) {
     production->start_building_placement(building_type, m_context.local_owner_id);
@@ -387,6 +400,7 @@ void PlacementViewModel::start_building_placement(const QString& building_type) 
 
 void PlacementViewModel::place_building_at_screen(qreal sx, qreal sy) {
   m_host.ensure_initialized();
+  const auto frame_lock = m_host.lock_frame();
   auto* production = m_context.production;
   if (production != nullptr) {
     production->place_building_at_screen(

@@ -8,6 +8,7 @@
 #include <QPoint>
 #include <QPointF>
 #include <QStringList>
+#include <QThread>
 #include <QTimer>
 #include <QVariant>
 #include <QVector3D>
@@ -16,6 +17,7 @@
 #include <atomic>
 #include <cstdint>
 #include <memory>
+#include <mutex>
 #include <optional>
 #include <vector>
 
@@ -75,6 +77,7 @@
 #include "game/systems/target_focus.h"
 #include "game/systems/unit_activity.h"
 #include "game/util/selection_utils.h"
+#include "scene/camera.h"
 
 class ProductionManager;
 class CampaignManager;
@@ -290,16 +293,32 @@ public:
   void submit_frame_image(const QImage& image);
 
   void ensure_initialized() override;
+  [[nodiscard]] auto lock_frame() -> std::unique_lock<std::recursive_mutex> override {
+    return std::unique_lock<std::recursive_mutex>(m_frame_mutex);
+  }
   [[nodiscard]] bool renderer_initialized() const { return m_runtime.initialized; }
   void set_release_self_test_mode(bool enabled) noexcept {
     m_release_self_test_mode = enabled;
   }
+  void simulate(float dt);
+  void update_presentation(float dt);
   void update(float dt);
   void render(int pixel_width, int pixel_height);
   void set_input_viewport_size(qreal width, qreal height);
 
   [[nodiscard]] auto try_begin_render_frame() -> bool;
   void end_render_frame();
+
+  void start_simulation_thread();
+  void stop_simulation_thread();
+  [[nodiscard]] auto simulation_thread_running() const -> bool {
+    return m_simulation_thread_running.load(std::memory_order_acquire);
+  }
+  [[nodiscard]] auto take_simulation_tick_us() -> std::uint64_t {
+    return m_simulation_tick_us.exchange(0, std::memory_order_acq_rel);
+  }
+  [[nodiscard]] auto try_begin_simulation_tick() -> bool;
+  void end_simulation_tick();
 
   class WorldFreeze {
   public:
@@ -316,6 +335,9 @@ public:
   };
 
 private:
+  void run_simulation_thread();
+  void sync_render_camera();
+
   struct RuntimeState {
     bool initialized = false;
     bool paused = false;
@@ -444,10 +466,13 @@ private:
   std::unique_ptr<Game::Session::SessionContext> m_session;
   std::unique_ptr<Game::Session::ScopedSession> m_session_scope;
   Engine::Core::World* m_world = nullptr;
+  std::vector<Engine::Core::EntityID> m_selected_render_ids;
+  std::vector<Engine::Core::EntityID> m_scratch_selected_ids;
   std::unique_ptr<Render::GL::Renderer> m_renderer;
   std::unique_ptr<Render::GL::Camera> m_rts_camera;
   std::unique_ptr<Render::GL::Camera> m_commander_camera;
   Render::GL::Camera* m_camera = nullptr;
+  Render::GL::Camera m_render_camera;
   std::unique_ptr<Render::GL::TerrainSceneProxy> m_terrain_scene;
   std::shared_ptr<Render::GL::ResourceManager> m_resources;
   std::unique_ptr<Render::GL::TerrainSurfaceManager> m_surface;
@@ -517,6 +542,12 @@ private:
 
   std::atomic<int> m_world_freeze_depth{0};
   std::atomic<bool> m_render_frame_active{false};
+  std::atomic<bool> m_simulation_tick_active{false};
+  std::atomic<bool> m_simulation_thread_running{false};
+  std::atomic<std::uint64_t> m_simulation_tick_us{0};
+  std::atomic<float> m_simulation_time_scale{0.0F};
+  std::unique_ptr<QThread> m_simulation_thread;
+  std::recursive_mutex m_frame_mutex;
   int m_loading_overlay_frames_remaining = 0;
   qint64 m_loading_overlay_last_frame_ms = 0;
   qint64 m_loading_overlay_min_duration_ms = 0;

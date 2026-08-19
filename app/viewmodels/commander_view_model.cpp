@@ -95,6 +95,7 @@ void CommanderViewModel::toggle_mode() {
 
 void CommanderViewModel::enter_mode() {
   m_host.ensure_initialized();
+  const auto frame_lock = m_host.lock_frame();
   auto* commander = find_local_commander();
   auto* commander_camera = m_context.commander_camera;
   if ((m_context.level != nullptr && m_context.level->is_spectator_mode) ||
@@ -461,6 +462,7 @@ void CommanderViewModel::cancel_flag_rally() {
 
 void CommanderViewModel::begin_barracks_rally() {
   m_host.ensure_initialized();
+  const auto frame_lock = m_host.lock_frame();
   const auto effects = m_mode->begin_barracks_rally_placement(
       {.world = m_context.world, .local_owner_id = m_context.local_owner_id});
   if (effects.clear_rally_preview) {
@@ -569,6 +571,15 @@ void CommanderViewModel::update_control_mode(float dt) {
     m_hit_stop_timer = *effects.hit_stop_duration;
     m_hit_stop_total = *effects.hit_stop_duration;
   }
+}
+
+void CommanderViewModel::update_camera_presentation(float dt) {
+  if (!active() || m_context.world == nullptr ||
+      m_context.commander_camera == nullptr) {
+    return;
+  }
+  m_control.update_camera_presentation(
+      *m_context.world, m_controlled_commander_id, *m_context.commander_camera, dt);
 }
 
 void CommanderViewModel::restore_direct_control_if_ready() {

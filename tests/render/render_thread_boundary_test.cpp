@@ -55,17 +55,19 @@ auto contains(const std::string& text, const std::string& needle) -> bool {
 
 } // namespace
 
-TEST(RenderThreadBoundaryTest, GlRendererRunsSimulationBeforeRenderSubmit) {
+TEST(RenderThreadBoundaryTest, GlRendererDoesNotRunTheSimulationOnTheRenderThread) {
   const auto root = find_repo_root();
   const auto source = read_text(root / "ui" / "gl_view.cpp");
   ASSERT_FALSE(source.empty());
 
-  const auto update_pos = source.find("m_engine->update(dt);");
+  EXPECT_FALSE(contains(source, "m_engine->update("))
+      << "GameEngine::update belongs to the simulation thread; the QSG render "
+         "thread only renders";
+  const auto start_pos = source.find("m_engine->start_simulation_thread();");
   const auto render_pos = source.find("m_engine->render(");
-
-  ASSERT_NE(update_pos, std::string::npos);
+  ASSERT_NE(start_pos, std::string::npos);
   ASSERT_NE(render_pos, std::string::npos);
-  EXPECT_LT(update_pos, render_pos);
+  EXPECT_LT(start_pos, render_pos);
 }
 
 TEST(RenderThreadBoundaryTest, RenderSubmitDoesNotCallCombatQuerySearches) {
