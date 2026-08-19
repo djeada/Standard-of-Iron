@@ -732,7 +732,7 @@ TEST(ArenaScenarioRunnerTest, RenderProbeRejectsVisibleSoldierBecomingCulled) {
   ASSERT_TRUE(runner.report().passed());
 
   sample.sample_time = 1.0F / 60.0F;
-  sample.cull_reason = Render::Profiling::SoldierCullReason::Billboard;
+  sample.cull_reason = Render::Profiling::SoldierCullReason::Distance;
   diagnostics.begin_frame(2);
   diagnostics.record_soldier_sample(entity_id, sample);
   runner.observe_rendered_frame(1.0);
@@ -742,7 +742,7 @@ TEST(ArenaScenarioRunnerTest, RenderProbeRejectsVisibleSoldierBecomingCulled) {
   EXPECT_EQ(runner.report().issues.front().code,
             QStringLiteral("soldier_submission_disappeared"));
   EXPECT_TRUE(runner.report().issues.front().message.contains(
-      QStringLiteral("billboard"), Qt::CaseInsensitive));
+      QStringLiteral("distance"), Qt::CaseInsensitive));
   diagnostics.set_enabled(false);
 }
 

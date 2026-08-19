@@ -23,6 +23,8 @@ constexpr std::string_view k_default_style_key = "default";
 constexpr float k_team_mix_weight = 0.6F;
 constexpr float k_style_mix_weight = 0.4F;
 
+constexpr float k_leather_team_mix_weight = 0.15F;
+
 using Render::GL::Humanoid::mix_palette_color;
 
 using StyleRegistry = std::unordered_map<std::string, SwordsmanStyleConfig>;
@@ -162,8 +164,11 @@ private:
       apply_color(style.skin_color, variant.palette.skin, 0.0F, 1.0F);
     }
     apply_color(style.cloth_color, variant.palette.cloth);
-    apply_color(style.leather_color, variant.palette.leather);
-    apply_color(style.leather_dark_color, variant.palette.leather_dark);
+    apply_color(
+        style.leather_color, variant.palette.leather, k_leather_team_mix_weight);
+    apply_color(style.leather_dark_color,
+                variant.palette.leather_dark,
+                k_leather_team_mix_weight);
     apply_color(style.metal_color, variant.palette.metal);
   }
 };

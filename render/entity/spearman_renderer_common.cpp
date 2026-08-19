@@ -34,6 +34,8 @@ namespace {
 constexpr std::string_view k_default_style_key = "default";
 constexpr float k_team_mix_weight = 0.6F;
 constexpr float k_style_mix_weight = 0.4F;
+
+constexpr float k_leather_team_mix_weight = 0.15F;
 constexpr std::uint8_t k_template_variant_bucket_count = 8U;
 
 using Render::GL::Humanoid::mix_palette_color;
@@ -435,14 +437,18 @@ private:
                                const QVector3D& team_tint,
                                HumanoidVariant& variant) const {
     auto apply_color = [&](const std::optional<QVector3D>& override_color,
-                           QVector3D& target) {
+                           QVector3D& target,
+                           float team_weight = k_team_mix_weight) {
       target = mix_palette_color(
-          target, override_color, team_tint, k_team_mix_weight, k_style_mix_weight);
+          target, override_color, team_tint, team_weight, k_style_mix_weight);
     };
 
     apply_color(style.cloth_color, variant.palette.cloth);
-    apply_color(style.leather_color, variant.palette.leather);
-    apply_color(style.leather_dark_color, variant.palette.leather_dark);
+    apply_color(
+        style.leather_color, variant.palette.leather, k_leather_team_mix_weight);
+    apply_color(style.leather_dark_color,
+                variant.palette.leather_dark,
+                k_leather_team_mix_weight);
     apply_color(style.metal_color, variant.palette.metal);
   }
 

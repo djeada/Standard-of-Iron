@@ -28,11 +28,21 @@ mat2 rotate2d(float angle) {
   return mat2(c, -s, s, c);
 }
 
+#if SOI_QUALITY_TIER >= SOI_TIER_ULTRA
+#define SOI_WATER_OCTAVES 5
+#elif SOI_QUALITY_TIER >= SOI_TIER_HIGH
+#define SOI_WATER_OCTAVES 4
+#elif SOI_QUALITY_TIER >= SOI_TIER_MEDIUM
+#define SOI_WATER_OCTAVES 3
+#else
+#define SOI_WATER_OCTAVES 2
+#endif
+
 float fbm(vec2 point) {
   float result = 0.0;
   float amplitude = 0.52;
   mat2 octave_rotation = mat2(0.80, -0.60, 0.60, 0.80);
-  for (int octave = 0; octave < 4; ++octave) {
+  for (int octave = 0; octave < SOI_WATER_OCTAVES; ++octave) {
     result += soi_value_noise_e2c097(point) * amplitude;
     point = octave_rotation * point * 2.03 + vec2(7.1, -3.8);
     amplitude *= 0.48;

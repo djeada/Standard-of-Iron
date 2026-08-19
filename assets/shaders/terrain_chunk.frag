@@ -62,7 +62,6 @@ uniform vec2 u_height_texel_size;
 uniform vec2 u_height_uv_scale, u_height_uv_offset;
 uniform float u_height_tex_to_world;
 
-uniform int u_noise_octaves;
 uniform float u_screen_toe_mul;
 uniform float u_screen_toe_clamp;
 uniform vec3 u_camera_pos;
@@ -81,7 +80,7 @@ float gradient_noise(vec2 p) {
 
 float gradient_fbm(vec2 p) {
   return soi_terrain_gradient_fbm_7c25da(
-      p, u_noise_octaves, max(length(fwidth(p)), 1e-6));
+      p, SOI_TERRAIN_NOISE_OCTAVES, max(length(fwidth(p)), 1e-6));
 }
 
 vec2 cellular_distances(vec2 p) {
@@ -333,12 +332,18 @@ void main() {
   float grain_fade = band_limit(coord_footprint, grain_frequency);
   float granular_fade = band_limit(coord_footprint, granular_frequency);
   float speck_fade = band_limit(coord_footprint, speck_frequency);
+#if SOI_SURFACE_DETAIL
   float surface_grain =
       gradient_noise(world_coord * grain_frequency + vec2(-17.0, 8.0)) * grain_fade;
   float granular = gradient_noise(world_coord * granular_frequency + vec2(42.0, 19.0)) *
                    granular_fade;
   float speckle =
       gradient_fbm(world_coord * speck_frequency + vec2(-63.0, 24.0)) * speck_fade;
+#else
+  float surface_grain = 0.0;
+  float granular = 0.0;
+  float speckle = 0.0;
+#endif
 
   surface_grain *= mix(1.0, 0.62, tactical);
   granular *= mix(1.0, 0.68, tactical);
@@ -382,7 +387,11 @@ void main() {
   const float k_rill_elongation = 0.13;
   vec2 rill_coord = vec2(dot(world_coord, flow_across),
                          dot(world_coord, flow_down) * k_rill_elongation);
+#if SOI_SURFACE_DETAIL
   float rill_field = gradient_fbm(rill_coord * k_rill_frequency + vec2(9.0, -31.0));
+#else
+  float rill_field = 0.0;
+#endif
   float rill_exposure = smoothstep(0.09, 0.36, slope) *
                         (1.0 - smoothstep(0.58, 0.84, slope)) *
                         band_limit(coord_footprint, k_rill_frequency);
@@ -394,6 +403,7 @@ void main() {
 
   const float k_mosaic_frequency = 0.24;
   const float k_fleck_frequency = 1.15;
+#if SOI_SURFACE_DETAIL
   vec2 mosaic_warp = vec2(gradient_noise(world_coord * 0.31 + vec2(3.0, 17.0)),
                           gradient_noise(world_coord * 0.31 - vec2(23.0, 5.0)));
   float mosaic_field =
@@ -407,6 +417,10 @@ void main() {
                                       1.25,
                             0.0,
                             1.0);
+#else
+  float mosaic_field = 0.5;
+  float fleck_field = 0.5;
+#endif
   float mosaic_fade = band_limit(coord_footprint, k_mosaic_frequency);
   float fleck_fade = band_limit(coord_footprint, k_fleck_frequency);
   float mosaic_dry = smoothstep(0.48, 0.78, mosaic_field) * mosaic_fade *
@@ -434,9 +448,14 @@ void main() {
   float lush_patch = smoothstep(0.58, 0.82, drainage_field + u_moisture_level * 0.08);
   lush_patch *= 1.0 - smoothstep(0.16, 0.46, slope);
   grass_color = mix(grass_color, u_grass_secondary * 0.94, lush_patch * 0.18);
+#if SOI_SURFACE_DETAIL
   float grass_weave = gradient_fbm(world_coord * 0.16 + domain_warp * 0.12 + 18.0);
+#else
+  float grass_weave = 0.0;
+#endif
   float grass_clumps = smoothstep(0.34, 0.76, thatch_field);
 
+#if SOI_SURFACE_DETAIL
   float sward_drift = gradient_fbm(world_coord * macro_scale * 8.5 +
                                    domain_warp * 0.55 + vec2(63.0, -14.0));
   float graze_drift = gradient_fbm(world_coord * macro_scale * 22.0 -
@@ -444,6 +463,11 @@ void main() {
   float tussock =
       gradient_fbm(world_coord * 0.90 + domain_warp * 0.20 + vec2(-8.0, 33.0)) *
       band_limit(coord_footprint, 0.90);
+#else
+  float sward_drift = 0.0;
+  float graze_drift = 0.0;
+  float tussock = 0.0;
+#endif
 
   grass_color *= 0.95 + regional_field * 0.045 + material_patch * 0.045 +
                  grass_clumps * 0.020 + surface_detail * 0.050 + grass_weave * 0.012 +
@@ -568,12 +592,18 @@ void main() {
 
   vec2 rock_cells = cellular_distances(rock_coord * 0.34 + vec2(8.0, -5.0));
   float fracture = 1.0 - smoothstep(0.025, 0.12, rock_cells.y - rock_cells.x);
+#if SOI_SURFACE_DETAIL
   vec2 rock_chips = cellular_distances(rock_coord * 1.9 + vec2(-27.0, 14.0));
   float chipping = (1.0 - smoothstep(0.03, 0.16, rock_chips.y - rock_chips.x)) *
                    band_limit(rock_footprint, 1.9);
   float rock_detail = gradient_fbm(rock_coord * 0.62 + vec2(3.3, -11.0));
   float rock_grain = gradient_noise(rock_coord * 2.4 + vec2(-17.0, 8.0)) *
                      band_limit(rock_footprint, 2.4);
+#else
+  float chipping = 0.0;
+  float rock_detail = gradient_fbm(rock_coord * 0.62 + vec2(3.3, -11.0));
+  float rock_grain = 0.0;
+#endif
   float rock_value = clamp(0.44 + rock_detail * 0.44 + rock_grain * 0.20, 0.0, 1.0);
   vec3 rock_color = mix(u_rock_low, u_rock_high, rock_value);
   vec3 mountain_rock =
@@ -581,10 +611,15 @@ void main() {
   float mountain_material =
       clamp(mountain_face * 0.86 + mountain_shoulders * 0.48, 0.0, 0.94);
   rock_color = mix(rock_color, mountain_rock, mountain_material);
+#if SOI_SURFACE_DETAIL
   float rock_strata =
       gradient_noise(vec2(rock_coord.x * 0.11 + v_world_pos.y * 0.32,
                           mix(world_coord.y, wall_coord.y, wall_blend) * 0.035));
   float bedding = gradient_noise(vec2(rock_coord.x * 0.06, v_world_pos.y * 0.85));
+#else
+  float rock_strata = 0.0;
+  float bedding = 0.0;
+#endif
   rock_color *= 1.0 + rock_strata * (0.145 + 0.075 * mountain_surface) +
                 bedding * (0.120 + 0.085 * mountain_surface) * wall_blend;
   rock_color *= 1.0 - fracture * (0.115 + 0.150 * u_rock_detail_strength);
@@ -592,7 +627,11 @@ void main() {
   rock_color *= 1.0 + rock_grain * 0.075;
 
   float ledge = 1.0 - smoothstep(0.30, 0.68, slope);
+#if SOI_SURFACE_DETAIL
   float scrub_field = gradient_fbm(rock_coord * 1.15 + vec2(-52.0, 17.0)) * 0.5 + 0.5;
+#else
+  float scrub_field = 0.5;
+#endif
   float scrub = smoothstep(0.52,
                            0.86,
                            scrub_field * 0.62 + fracture * 0.26 + ledge * 0.28 -
@@ -670,15 +709,23 @@ void main() {
     terrain_color = mix(terrain_color, snow_tinted, snow_mask);
   }
 
+#if SOI_SURFACE_DETAIL
   float hue_field =
       gradient_fbm(world_coord * k_soi_terrain_hue_scale + vec2(61.0, -37.0));
+#else
+  float hue_field = 0.5;
+#endif
   vec3 hue_shift = mix(k_soi_terrain_hue_cool,
                        k_soi_terrain_hue_warm,
                        smoothstep(0.35, 0.65, hue_field));
   terrain_color *= mix(vec3(1.0), hue_shift, k_soi_terrain_hue_amount);
 
+#if SOI_SURFACE_DETAIL
   float earth_field = gradient_fbm(world_coord * k_soi_terrain_earth_scale +
                                    domain_warp * 0.6 + vec2(-83.0, 29.0));
+#else
+  float earth_field = 0.0;
+#endif
   float worn_ground = smoothstep(0.02, 0.40, earth_field) * (1.0 - rock_mask) *
                       (1.0 - u_snow_coverage) * (1.0 - slope * 1.5);
   vec3 worn_color = mix(u_grass_dry, u_soil_color, 0.42) * 0.92;
@@ -717,10 +764,15 @@ void main() {
 
   vec3 coarse_relief =
       relief_octave(relief_coord + vec2(-17.0, 8.0), relief_footprint, 1.40, 0.10);
+#if SOI_SURFACE_DETAIL
   vec3 mid_relief =
       relief_octave(relief_coord + vec2(31.0, -19.0), relief_footprint, 4.30, 0.033);
   vec3 fine_relief =
       relief_octave(relief_coord + vec2(-9.0, 44.0), relief_footprint, 12.50, 0.011);
+#else
+  vec3 mid_relief = vec3(0.0);
+  vec3 fine_relief = vec3(0.0);
+#endif
 
   vec2 relief_gradient = coarse_relief.xy * (0.30 * coarse_relief.z) +
                          mid_relief.xy * (0.20 * mid_relief.z) +
@@ -730,8 +782,12 @@ void main() {
   float relief_lost = clamp(1.0 - relief_resolved / 0.61, 0.0, 1.0);
 
   const float k_rill_step = 0.05;
+#if SOI_SURFACE_DETAIL
   float rill_shifted = gradient_fbm(
       (rill_coord + vec2(k_rill_step, 0.0)) * k_rill_frequency + vec2(9.0, -31.0));
+#else
+  float rill_shifted = 0.0;
+#endif
   vec2 rill_gradient = flow_across * ((rill_shifted - rill_field) / k_rill_step);
   relief_gradient += rill_gradient * rill_strength * (1.0 - wall_blend) * 0.42;
 
@@ -784,8 +840,8 @@ void main() {
       terrain_color *
       (ambient_term + sun_light * (ndl * direct_occlusion * 0.76 + wet_glint) + sheen) *
       u_ambient_boost * environment_exposure();
-  lit_color += terrain_color * local_lighting(v_world_pos, detail_normal);
   lit_color = apply_directional_shadow(lit_color, v_world_pos, detail_normal);
+  lit_color += terrain_color * local_lighting(v_world_pos, detail_normal);
   lit_color = apply_visibility_memory(lit_color, v_world_pos.xz);
 
   frag_color = vec4(lit_color, 1.0);

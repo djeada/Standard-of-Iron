@@ -44,7 +44,7 @@ float fbm(vec2 point) {
 
   const mat2 octave_rotation = mat2(0.80, -0.60, 0.60, 0.80);
 
-  for (int octave = 0; octave < 5; ++octave) {
+  for (int octave = 0; octave < SOI_TERRAIN_NOISE_OCTAVES; ++octave) {
     result += soi_value_noise_e2c097(point) * amplitude;
 
     point = octave_rotation * point * 2.03 + vec2(7.1, -3.8);
@@ -340,7 +340,7 @@ void main() {
   float edge_fade = saturate(
       max(core_alpha, max(broken_transition, max(pebble_islands, grass_islands))));
 
-  color += color * local_lighting(world_pos, normalize(v_normal));
   color = apply_directional_shadow(color, world_pos, v_normal);
+  color += color * local_lighting(world_pos, normalize(v_normal));
   frag_color = vec4(color, segment_visibility * edge_fade);
 }

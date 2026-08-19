@@ -115,8 +115,8 @@ void main() {
   vec3 color = material_color * illumination * ao;
   color += vec3(specular) * sun_color * ao;
   color += soi_rim_light(normal, view_dir);
-  color += material_color * ao * local_lighting(v_world_pos, normalize(v_normal));
   color = apply_directional_shadow(color, v_world_pos, v_normal);
+  color += material_color * ao * local_lighting(v_world_pos, normalize(v_normal));
   color = apply_visibility_memory(color, v_world_pos.xz);
   frag_color = vec4(color, 1.0);
 }

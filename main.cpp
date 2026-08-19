@@ -656,12 +656,13 @@ auto main(int argc, char* argv[]) -> int {
 
   if (release_self_test) {
     if (Render::GraphicsSettings::instance().quality() !=
-        Render::GraphicsQuality::Ultra) {
+        Render::k_default_graphics_quality) {
       qCritical() << "SOI_GRAPHICS_DEFAULT_SELF_TEST: FAIL - fresh profile is not "
-                     "Ultra";
+                     "the default preset";
       return 14;
     }
-    qInfo() << "SOI_GRAPHICS_DEFAULT_SELF_TEST: PASS - fresh profile uses Ultra";
+    qInfo() << "SOI_GRAPHICS_DEFAULT_SELF_TEST: PASS - fresh profile uses the "
+               "default preset";
     if (!validate_release_campaign_map_resources()) {
       return 15;
     }
@@ -891,7 +892,7 @@ auto main(int argc, char* argv[]) -> int {
         break;
       }
 
-      gfx.set_shader_quality(*requested);
+      gfx.set_backend_kind(*requested);
     }
   }
 

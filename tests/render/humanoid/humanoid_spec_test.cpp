@@ -140,7 +140,7 @@ TEST(HumanoidSpecTest, BillboardLodProducesNoDraws) {
   QMatrix4x4 const identity;
   NullSubmitter sub;
   auto stats = Render::Creature::submit_creature(
-      s, palette_view, CreatureLOD::Billboard, identity, sub);
+      s, palette_view, CreatureLOD::Culled, identity, sub);
   EXPECT_EQ(stats.submitted, 0U);
   EXPECT_EQ(stats.skipped_lod, 0U);
   EXPECT_EQ(stats.skipped_invalid, 0U);
@@ -285,7 +285,7 @@ TEST(HumanoidSpecTest, MinimalLodOtherLodsEmitNothing) {
 
   RecordingSubmitter sub;
   auto stats = Render::Creature::submit_creature(
-      s, palette_view, CreatureLOD::Billboard, identity, sub);
+      s, palette_view, CreatureLOD::Culled, identity, sub);
   EXPECT_EQ(stats.submitted, 0U);
   EXPECT_TRUE(sub.parts.empty());
 }

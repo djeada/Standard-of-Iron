@@ -231,7 +231,7 @@ auto MountedHumanoidRendererBase::resolve_mount_lod(const DrawContext& ctx) cons
   }
 
   const auto decision = RCP::evaluate_creature_lod(inputs, lod_config);
-  return decision.culled ? HorseLOD::Billboard : static_cast<HorseLOD>(decision.lod);
+  return decision.culled ? HorseLOD::Culled : static_cast<HorseLOD>(decision.lod);
 }
 
 void MountedHumanoidRendererBase::append_companion_preparation(
@@ -244,7 +244,7 @@ void MountedHumanoidRendererBase::append_companion_preparation(
     Render::Creature::Pipeline::CreaturePreparationResult& out) const {
   (void)pose;
   if (!is_runtime_prewarm(ctx) && (lod == Render::Creature::CreatureLOD::Minimal ||
-                                   lod == Render::Creature::CreatureLOD::Billboard)) {
+                                   lod == Render::Creature::CreatureLOD::Culled)) {
     return;
   }
 

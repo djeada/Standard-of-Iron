@@ -16,6 +16,8 @@ namespace {
 constexpr float k_team_mix_weight = 0.6F;
 constexpr float k_style_mix_weight = 0.4F;
 
+constexpr float k_leather_team_mix_weight = 0.15F;
+
 auto carthage_style() -> KnightStyleConfig {
   KnightStyleConfig style;
   style.cloth_color = QVector3D(0.15F, 0.36F, 0.55F);
@@ -37,14 +39,16 @@ public:
     QVector3D const team_tint = resolve_team_tint(ctx);
 
     auto apply_color = [&](const std::optional<QVector3D>& override_color,
-                           QVector3D& target) {
+                           QVector3D& target,
+                           float team_weight = k_team_mix_weight) {
       target = Render::GL::Humanoid::mix_palette_color(
-          target, override_color, team_tint, k_team_mix_weight, k_style_mix_weight);
+          target, override_color, team_tint, team_weight, k_style_mix_weight);
     };
 
     apply_color(style.cloth_color, v.palette.cloth);
-    apply_color(style.leather_color, v.palette.leather);
-    apply_color(style.leather_dark_color, v.palette.leather_dark);
+    apply_color(style.leather_color, v.palette.leather, k_leather_team_mix_weight);
+    apply_color(
+        style.leather_dark_color, v.palette.leather_dark, k_leather_team_mix_weight);
     apply_color(style.metal_color, v.palette.metal);
   }
 };

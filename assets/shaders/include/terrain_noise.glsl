@@ -29,7 +29,7 @@ float soi_terrain_gradient_fbm_7c25da(vec2 p, int octaves, float footprint) {
   float value = 0.0;
   float amplitude = 0.54;
   mat2 octave_rotation = mat2(0.80, -0.60, 0.60, 0.80);
-  int count = clamp(octaves, 1, 5);
+  int count = clamp(octaves, 1, 6);
   for (int i = 0; i < count; ++i) {
     float fade = 1.0 - smoothstep(0.30, 0.85, footprint);
     if (fade <= 0.001) {

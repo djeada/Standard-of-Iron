@@ -175,6 +175,9 @@ public:
     const QString troop_shadow_frag =
         resolve(shader_base + QStringLiteral("troop_shadow.frag"));
     load(QStringLiteral("troop_shadow"), troop_shadow_vert, troop_shadow_frag);
+    load(QStringLiteral("troop_shadow_instanced"),
+         resolve(shader_base + QStringLiteral("troop_shadow_instanced.vert")),
+         resolve(shader_base + QStringLiteral("troop_shadow_instanced.frag")));
 
     const QString banner_vert = resolve(shader_base + QStringLiteral("banner.vert"));
     const QString banner_frag = resolve(shader_base + QStringLiteral("banner.frag"));
