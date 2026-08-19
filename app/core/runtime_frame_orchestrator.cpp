@@ -38,6 +38,41 @@ auto simulation_step_budget(double time_scale) -> int {
 }
 } // namespace
 
+void RuntimeFrameOrchestrator::advance_simulation(
+    const AppSceneContext& scene,
+    RuntimeFrameState& state,
+    float real_dt,
+    const SimulationStep& simulation_step) const {
+  const double time_scale =
+      std::max(0.0, static_cast<double>(state.simulation_time_scale));
+  const float frame_seconds = std::max(real_dt, 0.0F);
+  state.dropped_simulation_ticks = 0;
+  if (scene.world == nullptr) {
+    return;
+  }
+
+  Game::Session::SessionContext& session =
+      scene.session != nullptr ? *scene.session
+                               : Game::Session::SessionContext::active();
+
+  session.clock().set_time_scale(time_scale);
+  {
+    Render::Profiling::AccumulatorScope const world_scope(
+        &Render::Profiling::global_profile().world_update_us);
+    session.advance(static_cast<double>(frame_seconds),
+                    simulation_step_budget(time_scale),
+                    [&](float step) {
+                      if (simulation_step) {
+                        simulation_step(step);
+                      }
+                      if (scene.environment_clock != nullptr) {
+                        scene.environment_clock->update(step, false);
+                      }
+                    });
+  }
+  state.dropped_simulation_ticks = session.clock().consume_dropped_ticks();
+}
+
 void RuntimeFrameOrchestrator::update(const AppSceneContext& scene,
                                       RuntimeFrameState& state,
                                       EntityCache& entity_cache,
@@ -73,27 +108,11 @@ void RuntimeFrameOrchestrator::update(const AppSceneContext& scene,
     }
   }
 
+  if (simulation_step) {
+    advance_simulation(scene, state, real_dt, simulation_step);
+  }
+
   if (scene.world != nullptr) {
-
-    Game::Session::SessionContext& session =
-        scene.session != nullptr ? *scene.session
-                                 : Game::Session::SessionContext::active();
-
-    session.clock().set_time_scale(time_scale);
-    {
-      Render::Profiling::AccumulatorScope const world_scope(
-          &Render::Profiling::global_profile().world_update_us);
-      session.advance(static_cast<double>(frame_seconds),
-                      simulation_step_budget(time_scale),
-                      [&](float step) {
-                        simulation_step(step);
-                        if (scene.environment_clock != nullptr) {
-                          scene.environment_clock->update(step, false);
-                        }
-                      });
-    }
-    state.dropped_simulation_ticks = session.clock().consume_dropped_ticks();
-
     if (scene.visibility_coordinator != nullptr) {
       Render::Profiling::AccumulatorScope const visibility_scope(
           &Render::Profiling::global_profile().visibility_update_us);
@@ -114,6 +133,7 @@ void RuntimeFrameOrchestrator::update(const AppSceneContext& scene,
       const bool unit_update_due =
           state.minimap_unit_update_accumulator >= k_minimap_unit_update_interval;
       if (unit_update_due || scene.minimap_manager->unit_overlay_stale()) {
+        scene.world->ensure_render_snapshot();
         const std::shared_ptr<Engine::Core::World> minimap_snapshot =
             scene.world->acquire_render_snapshot();
         scene.minimap_manager->update_units(

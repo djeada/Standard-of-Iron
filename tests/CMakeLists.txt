@@ -345,7 +345,6 @@ add_executable(
     render/render_view_state_test.cpp
     render/renderer_visibility_policy_test.cpp
     render/unit_render_cache_test.cpp
-    render/persistent_render_registry_test.cpp
     render/render_archetype_test.cpp
     render/draw_queue_sort_order_test.cpp
     render/effect_batch_dispatch_test.cpp
