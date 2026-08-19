@@ -136,6 +136,71 @@ TEST(SoldierTurnSmoothing, SlotMicroWobbleNeverFlapsTheWalkState) {
   }
 }
 
+TEST(SoldierTurnSmoothing, TheCatchUpSpeedOutrunsTheUnitItFollows) {
+
+  constexpr float k_unit_speed = 2.0F;
+  constexpr float k_run_speed = k_unit_speed * 1.5F;
+
+  EXPECT_GT(Render::Humanoid::soldier_catch_up_speed(k_run_speed), k_run_speed);
+  EXPECT_FLOAT_EQ(Render::Humanoid::soldier_catch_up_speed(0.5F), 1.6F);
+}
+
+TEST(SoldierTurnSmoothing, ARunningFormationDoesNotDriftAwayFromItsSlots) {
+
+  constexpr float k_run_speed = 3.0F;
+  SoldierTurnSmoothingState state{};
+  auto inputs = default_inputs();
+  inputs.max_speed = Render::Humanoid::soldier_catch_up_speed(k_run_speed);
+  std::ignore = resolve_soldier_turn_smoothing(state, inputs);
+
+  float slot_x = 0.0F;
+  Render::Humanoid::SoldierTurnSmoothingResult result{};
+  for (int frame = 0; frame < 600; ++frame) {
+    slot_x += k_run_speed * inputs.dt;
+    inputs.target_x = slot_x;
+    result = resolve_soldier_turn_smoothing(state, inputs);
+  }
+
+  EXPECT_LT(std::abs(slot_x - result.x), 0.1F);
+}
+
+TEST(SoldierTurnSmoothing, ACappedFormationWouldFallBehindWhileRunning) {
+
+  constexpr float k_run_speed = 3.0F;
+  SoldierTurnSmoothingState state{};
+  auto inputs = default_inputs();
+  inputs.max_speed = 2.5F;
+  std::ignore = resolve_soldier_turn_smoothing(state, inputs);
+
+  float slot_x = 0.0F;
+  Render::Humanoid::SoldierTurnSmoothingResult result{};
+  for (int frame = 0; frame < 600; ++frame) {
+    slot_x += k_run_speed * inputs.dt;
+    inputs.target_x = slot_x;
+    result = resolve_soldier_turn_smoothing(state, inputs);
+  }
+
+  EXPECT_GT(slot_x - result.x, 1.0F);
+}
+
+TEST(SoldierTurnSmoothing, EveryResolveStampsTheFrameThatMovedTheSoldier) {
+  SoldierTurnSmoothingState state{};
+  auto inputs = default_inputs();
+  inputs.frame_index = 7U;
+  std::ignore = resolve_soldier_turn_smoothing(state, inputs);
+  EXPECT_EQ(state.updated_frame, 7U);
+
+  inputs.frame_index = 8U;
+  inputs.target_x = 0.5F;
+  std::ignore = resolve_soldier_turn_smoothing(state, inputs);
+  EXPECT_EQ(state.updated_frame, 8U);
+
+  inputs.frame_index = 9U;
+  inputs.dt = 0.0F;
+  std::ignore = resolve_soldier_turn_smoothing(state, inputs);
+  EXPECT_EQ(state.updated_frame, 9U);
+}
+
 TEST(SoldierTurnSmoothing, AHalfTurnWalksThroughInsteadOfSweepingTheArc) {
 
   SoldierTurnSmoothingState state{};

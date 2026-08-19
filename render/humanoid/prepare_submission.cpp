@@ -543,7 +543,20 @@ void prepare_humanoid_instances(const HumanoidRendererBase& owner,
     turn_cache.turn_time = anim.time;
     turn_cache.turn_time_valid = true;
     float const unit_speed = unit_comp != nullptr ? unit_comp->speed : 2.0F;
-    turn_smoothing_cap = std::max(1.6F, unit_speed * 1.25F);
+
+    float travel_speed = unit_speed;
+    if (Render::Creature::is_running_animation(anim.movement_state)) {
+      travel_speed =
+          std::max(travel_speed,
+                   unit_speed * Engine::Core::StaminaComponent::k_run_speed_multiplier);
+    }
+    if (ctx.entity != nullptr) {
+      if (const auto* motion =
+              ctx.entity->get_component<Engine::Core::MotionPresentationComponent>()) {
+        travel_speed = std::max(travel_speed, motion->speed);
+      }
+    }
+    turn_smoothing_cap = soldier_catch_up_speed(travel_speed);
     bool const combat_active =
         anim.is_attacking || formation_fight_active || anim.is_in_melee_lock;
     if (combat_active) {
@@ -666,6 +679,8 @@ void prepare_humanoid_instances(const HumanoidRendererBase& owner,
       smoothing_inputs.max_speed = turn_smoothing_cap * cap_jitter;
       smoothing_inputs.turn_rate_degrees = is_mounted_spawn ? 240.0F : 540.0F;
       smoothing_inputs.allow_travel_yaw = turn_smoothing_travel_yaw;
+
+      smoothing_inputs.frame_index = frame_index + 1U;
       turn_smoothing = resolve_soldier_turn_smoothing(
           layout_cache_comp->turn_states[static_cast<std::size_t>(idx)],
           smoothing_inputs);

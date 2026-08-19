@@ -30,6 +30,7 @@ auto resolve_soldier_turn_smoothing(SoldierTurnSmoothingState& state,
                                     const SoldierTurnSmoothingInputs& inputs)
     -> SoldierTurnSmoothingResult {
   SoldierTurnSmoothingResult result{};
+  state.updated_frame = inputs.frame_index;
 
   float const to_target_x = inputs.target_x - state.world_x;
   float const to_target_z = inputs.target_z - state.world_z;

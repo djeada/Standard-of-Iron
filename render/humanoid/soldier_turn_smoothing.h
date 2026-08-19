@@ -1,11 +1,23 @@
 #pragma once
 
+#include <algorithm>
+#include <cstdint>
+
 namespace Render::Humanoid {
+
+constexpr float k_soldier_catch_up_margin = 1.25F;
+constexpr float k_soldier_catch_up_floor = 1.6F;
+
+[[nodiscard]] constexpr auto soldier_catch_up_speed(float travel_speed) -> float {
+  return std::max(k_soldier_catch_up_floor, travel_speed * k_soldier_catch_up_margin);
+}
 
 struct SoldierTurnSmoothingState {
   float world_x{0.0F};
   float world_z{0.0F};
   float body_yaw_degrees{0.0F};
+
+  std::uint32_t updated_frame{0U};
   bool valid{false};
   bool relocating{false};
 };
@@ -30,6 +42,8 @@ struct SoldierTurnSmoothingInputs {
   float relocate_distance{0.30F};
 
   bool allow_travel_yaw{true};
+
+  std::uint32_t frame_index{0U};
 };
 
 struct SoldierTurnSmoothingResult {
