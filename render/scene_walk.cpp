@@ -374,12 +374,23 @@ void Renderer::enqueue_selection_ring(Engine::Core::Entity* entity,
         soldiers = formation_presentation->soldiers;
       }
 
+      auto const* layout_cache =
+          entity != nullptr
+              ? entity->get_component<Render::Humanoid::HumanoidLayoutCacheComponent>()
+              : nullptr;
+      std::span<const Render::Humanoid::SoldierTurnSmoothingState> soldier_anchors;
+      if (layout_cache != nullptr) {
+        soldier_anchors = layout_cache->turn_states;
+      }
+
       placements = build_selection_ring_layout(
           {.soldiers = soldiers,
            .ring_size = ring_size,
            .position = QVector3D(
                transform->position.x, transform->position.y, transform->position.z),
-           .yaw_degrees = transform->rotation.y});
+           .yaw_degrees = transform->rotation.y,
+           .soldier_anchors = soldier_anchors,
+           .anchor_frame = humanoid_current_frame() + 1U});
     } else {
 
       ring_size = config.get_selection_ring_size(unit_comp->spawn_type);
