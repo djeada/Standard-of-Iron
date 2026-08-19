@@ -4,12 +4,15 @@
 
 #include <algorithm>
 #include <cmath>
+#include <cstddef>
+#include <cstdint>
 #include <numbers>
 #include <span>
 #include <vector>
 
 #include "game/core/component.h"
 #include "game/units/spawn_type.h"
+#include "humanoid/soldier_turn_smoothing.h"
 #include "humanoid/unit_layout_spacing.h"
 
 namespace Render::GL {
@@ -20,6 +23,10 @@ struct SelectionRingLayoutInput {
   float ring_size{0.5F};
   QVector3D position{0.0F, 0.0F, 0.0F};
   float yaw_degrees{0.0F};
+
+  std::span<const Render::Humanoid::SoldierTurnSmoothingState> soldier_anchors{};
+
+  std::uint32_t anchor_frame{0U};
 };
 
 struct SelectionRingPlacement {
@@ -50,6 +57,20 @@ selection_ring_visual_size(const Game::Units::TroopConfig& config,
   return std::min(unit_ring_size * 0.25F, max_visual_size);
 }
 
+[[nodiscard]] inline auto anchor_for_soldier(const SelectionRingLayoutInput& input,
+                                             std::uint16_t slot_index)
+    -> const Render::Humanoid::SoldierTurnSmoothingState* {
+  if (input.anchor_frame == 0U || slot_index >= input.soldier_anchors.size()) {
+    return nullptr;
+  }
+
+  const auto& anchor = input.soldier_anchors[slot_index];
+  if (!anchor.valid || anchor.updated_frame != input.anchor_frame) {
+    return nullptr;
+  }
+  return &anchor;
+}
+
 } // namespace Detail
 
 [[nodiscard]] inline auto build_selection_ring_layout(
@@ -68,6 +89,13 @@ selection_ring_visual_size(const Game::Units::TroopConfig& config,
     if (!soldier.alive) {
       continue;
     }
+
+    const auto* anchor = Detail::anchor_for_soldier(input, soldier.slot_index);
+    if (anchor != nullptr) {
+      placements.push_back({anchor->world_x, anchor->world_z, input.ring_size});
+      continue;
+    }
+
     float const world_x =
         input.position.x() + cos_yaw * soldier.local_x + sin_yaw * soldier.local_z;
     float const world_z =
