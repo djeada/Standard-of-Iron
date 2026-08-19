@@ -96,7 +96,10 @@ void MusicPlayer::shutdown() {
     m_backend->deleteLater();
     m_backend = nullptr;
   }
-  m_tracks.clear();
+  {
+    std::lock_guard<std::mutex> const lock(m_tracks_mutex);
+    m_tracks.clear();
+  }
   m_channel_count = 0;
   m_current_music_channel = -1;
   m_initialized = false;
@@ -104,48 +107,36 @@ void MusicPlayer::shutdown() {
 
 void MusicPlayer::register_track(const std::string& track_id,
                                  const std::string& file_path) {
-
-  if ((QCoreApplication::instance() != nullptr) &&
-      QThread::currentThread() != QCoreApplication::instance()->thread()) {
-    QMetaObject::invokeMethod(
-        this,
-        [this, track_id, file_path]() { register_track(track_id, file_path); },
-        Qt::QueuedConnection);
-    return;
-  }
-  ensure_on_gui_thread("MusicPlayer::register_track");
-
   QFileInfo const fi(QString::fromStdString(file_path));
   if (!fi.exists()) {
     qWarning() << "MusicPlayer: Missing asset" << QString::fromStdString(track_id)
                << "->" << fi.absoluteFilePath();
     return;
   }
-  m_tracks[track_id] = fi.absoluteFilePath();
 
-  if (m_backend != nullptr &&
-      !m_backend->request_track(QString::fromStdString(track_id),
-                                fi.absoluteFilePath(),
-                                Game::Audio::Mastering::Material::Music)) {
+  MiniaudioBackend* const backend = m_backend.data();
+  if (backend != nullptr &&
+      !backend->request_track(QString::fromStdString(track_id),
+                              fi.absoluteFilePath(),
+                              Game::Audio::Mastering::Material::Music)) {
     qWarning() << "MusicPlayer: could not register" << fi.absoluteFilePath();
-    m_tracks.erase(track_id);
+    return;
   }
+
+  std::lock_guard<std::mutex> const lock(m_tracks_mutex);
+  m_tracks[track_id] = fi.absoluteFilePath();
 }
 
 void MusicPlayer::unregister_track(const std::string& track_id) {
-  if ((QCoreApplication::instance() != nullptr) &&
-      QThread::currentThread() != QCoreApplication::instance()->thread()) {
-    QMetaObject::invokeMethod(
-        this, [this, track_id]() { unregister_track(track_id); }, Qt::QueuedConnection);
-    return;
+  {
+    std::lock_guard<std::mutex> const lock(m_tracks_mutex);
+    if (m_tracks.erase(track_id) == 0) {
+      return;
+    }
   }
-  ensure_on_gui_thread("MusicPlayer::unregister_track");
-
-  if (m_tracks.erase(track_id) == 0) {
-    return;
-  }
-  if (m_backend != nullptr) {
-    m_backend->unload(QString::fromStdString(track_id));
+  MiniaudioBackend* const backend = m_backend.data();
+  if (backend != nullptr) {
+    backend->unload(QString::fromStdString(track_id));
   }
 }
 
@@ -379,10 +370,12 @@ void MusicPlayer::play_gui(
   if (m_backend == nullptr) {
     return;
   }
-  auto it = m_tracks.find(id);
-  if (it == m_tracks.end()) {
-    qWarning() << "Unknown track_id:" << QString::fromStdString(id);
-    return;
+  {
+    std::lock_guard<std::mutex> const lock(m_tracks_mutex);
+    if (m_tracks.find(id) == m_tracks.end()) {
+      qWarning() << "Unknown track_id:" << QString::fromStdString(id);
+      return;
+    }
   }
   m_backend->play(ch, QString::fromStdString(id), vol, loop, fade_ms);
 }

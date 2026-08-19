@@ -192,6 +192,7 @@ GLView::GLRenderer::GLRenderer(QPointer<GLView> view, QPointer<GameEngine> engin
 GLView::GLRenderer::~GLRenderer() {
   if (m_engine != nullptr) {
     m_engine->stop_simulation_thread();
+    m_engine->cleanup_opengl_resources();
   }
   if (m_continuity_probe != nullptr) {
     Render::Profiling::CombatAnimationDiagnostics::instance().set_enabled(false);

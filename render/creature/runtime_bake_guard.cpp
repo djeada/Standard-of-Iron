@@ -36,8 +36,6 @@ auto runtime_bake_operation_name(RuntimeBakeOperation operation) -> std::string_
     return "rigged_mesh_bake";
   case RuntimeBakeOperation::SnapshotMeshBake:
     return "snapshot_mesh_bake";
-  case RuntimeBakeOperation::SnapshotMeshLoad:
-    return "snapshot_mesh_load";
   case RuntimeBakeOperation::SkinUboUpload:
     return "skin_ubo_upload";
   case RuntimeBakeOperation::CreatureSubmitMiss:
