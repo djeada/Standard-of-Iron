@@ -2664,7 +2664,9 @@ void GameEngine::update_tutorial(float real_dt) {
            .enemy_troops_defeated = m_enemy_troops_defeated,
            .mission_running = m_runtime.initialized && !is_loading(),
            .placement = m_placement_view_model.get(),
-           .wave_status = wave_status}),
+           .wave_status = wave_status,
+           .resources = m_session != nullptr ? &m_session->economy() : nullptr,
+           .owners = m_session != nullptr ? &m_session->owners() : nullptr}),
       elapsed);
   m_tutorial_notes.reset();
   publish_tutorial_focus_points(wave_status);
@@ -2678,7 +2680,9 @@ void GameEngine::publish_tutorial_focus_points(const QVariantMap& wave_status) {
       {.world = m_world,
        .local_owner_id = m_runtime.local_owner_id,
        .target = m_tutorial_director->focus_target_id(),
-       .wave_alerts = wave_status.value(QStringLiteral("alerts")).toList()});
+       .wave_alerts = wave_status.value(QStringLiteral("alerts")).toList(),
+       .owners = m_session != nullptr ? &m_session->owners() : nullptr,
+       .terrain = m_session != nullptr ? &m_session->terrain() : nullptr});
 
   if (!points.isEmpty() && m_minimap_manager && m_minimap_manager->has_minimap()) {
     const float world_width = m_minimap_manager->get_world_width();

@@ -9764,7 +9764,8 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
         QString::fromLatin1(k_unarmed_support_brawl_id),
         QStringLiteral("Unarmed Support Brawl"),
         QStringLiteral("Roman and Carthaginian builders, civilians, and healers fight "
-                       "matching roles at close range. Validates the dedicated unarmed "
+                       "matching roles at close range. Builders swing the mallet and "
+                       "civilians the cudgel; healers validate the dedicated unarmed "
                        "BPAT guard, jab, cross, hook, contact, and recovery path."),
         10.0F,
         {5.5F, 10.0F, 0.0F});

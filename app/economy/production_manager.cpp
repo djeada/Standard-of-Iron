@@ -80,7 +80,8 @@ auto resolve_food_target_hit(Engine::Core::World* world,
                              int owner_id,
                              const Render::GL::Camera& camera,
                              const ViewportState& viewport,
-                             const QPointF& screen_point)
+                             const QPointF& screen_point,
+                             const Game::Map::TerrainService& terrain_service)
     -> std::optional<ConstructionPointerHit> {
   if (world == nullptr || viewport.width <= 0 || viewport.height <= 0) {
     return std::nullopt;
@@ -102,8 +103,7 @@ auto resolve_food_target_hit(Engine::Core::World* world,
   }
   return ConstructionPointerHit{
       .world_position =
-          Game::Map::TerrainService::instance().resolve_surface_world_position(
-              target->x, target->z),
+          terrain_service.resolve_surface_world_position(target->x, target->z),
       .harvest_target_id = 0,
       .food_target_id = picked};
 }
@@ -242,9 +242,10 @@ auto resolve_construction_pointer_hit(Engine::Core::World* world,
   }
 
   if (is_harvest_construction_item(item_type)) {
+    auto& terrain_service = Game::Map::TerrainService::instance();
     if (App::Economy::is_collect_item(item_type)) {
-      if (auto food_hit =
-              resolve_food_target_hit(world, owner_id, camera, viewport, screen_point);
+      if (auto food_hit = resolve_food_target_hit(
+              world, owner_id, camera, viewport, screen_point, terrain_service);
           food_hit.has_value()) {
         return food_hit;
       }
@@ -259,7 +260,6 @@ auto resolve_construction_pointer_hit(Engine::Core::World* world,
       return std::nullopt;
     }
 
-    auto& terrain_service = Game::Map::TerrainService::instance();
     return ConstructionPointerHit{
         .world_position = terrain_service.resolve_surface_world_position(
             resolved_target->target.x, resolved_target->target.z),

@@ -18,12 +18,6 @@ namespace Game::Systems::Combat {
 
 namespace {
 constexpr float k_combat_query_cell_size = 15.0F;
-
-auto get_entity_from_query_context(const CombatQueryContext& query_context,
-                                   Engine::Core::EntityID entity_id)
-    -> Engine::Core::Entity* {
-  return query_context.find_entity(entity_id);
-}
 } // namespace
 
 CombatQueryContext::CombatQueryContext()

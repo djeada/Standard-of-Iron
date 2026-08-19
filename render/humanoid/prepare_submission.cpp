@@ -520,6 +520,36 @@ void prepare_humanoid_instances(const HumanoidRendererBase& owner,
       Animation::resolve_humanoid_locomotion_action_override({
           .commander_jump_active = commander_jump.active,
       });
+
+  float turn_smoothing_dt = 0.0F;
+  bool turn_smoothing_active = false;
+  float turn_smoothing_cap = 2.5F;
+  bool turn_smoothing_travel_yaw = true;
+  if (layout_cache_comp != nullptr && allow_animation_persistence &&
+      transform_comp != nullptr && !ctx.force_single_soldier && !has_entity_death &&
+      total_layout_count > 1) {
+    turn_smoothing_active = true;
+    auto& turn_cache = *layout_cache_comp;
+    if (turn_cache.turn_states.size() != static_cast<std::size_t>(total_layout_count)) {
+      turn_cache.turn_states.assign(static_cast<std::size_t>(total_layout_count),
+                                    SoldierTurnSmoothingState{});
+    }
+    if (turn_cache.turn_time_valid) {
+      constexpr float k_turn_smoothing_max_dt = 0.1F;
+      turn_smoothing_dt =
+          std::clamp(anim.time - turn_cache.turn_time, 0.0F, k_turn_smoothing_max_dt);
+    }
+    turn_cache.turn_time = anim.time;
+    turn_cache.turn_time_valid = true;
+    float const unit_speed = unit_comp != nullptr ? unit_comp->speed : 2.0F;
+    turn_smoothing_cap = std::max(1.6F, unit_speed * 1.25F);
+    bool const combat_active =
+        anim.is_attacking || formation_fight_active || anim.is_in_melee_lock;
+    if (combat_active) {
+      turn_smoothing_cap *= 2.0F;
+      turn_smoothing_travel_yaw = false;
+    }
+  }
   bool const unit_is_archer =
       unit_comp != nullptr && unit_comp->spawn_type == Game::Units::SpawnType::Archer;
   const std::uint32_t ctx_entity_id =
@@ -596,6 +626,38 @@ void prepare_humanoid_instances(const HumanoidRendererBase& owner,
     uint32_t const inst_seed = layout.inst_seed;
     float const phase_offset = layout.phase_offset;
     float const applied_yaw_offset = layout.yaw_offset + casualty_yaw;
+
+    SoldierTurnSmoothingResult turn_smoothing{};
+    QVector3D turn_slot_world;
+    bool soldier_turn_smoothed = false;
+    bool const soldier_is_casualty_body =
+        soldier_render_anim.is_dying || soldier_render_anim.is_dead;
+    if (turn_smoothing_active && !soldier_is_casualty_body &&
+        static_cast<std::size_t>(idx) < layout_cache_comp->turn_states.size()) {
+      turn_slot_world = unit_base.map(QVector3D(offset_x, 0.0F, offset_z));
+
+      float const cap_jitter =
+          0.92F + 0.16F * static_cast<float>(inst_seed % 97U) / 96.0F;
+      SoldierTurnSmoothingInputs smoothing_inputs{};
+      smoothing_inputs.target_x = turn_slot_world.x();
+      smoothing_inputs.target_z = turn_slot_world.z();
+      smoothing_inputs.formation_yaw_degrees =
+          transform_comp->rotation.y + applied_yaw_offset;
+      smoothing_inputs.dt = turn_smoothing_dt;
+      smoothing_inputs.max_speed = turn_smoothing_cap * cap_jitter;
+      smoothing_inputs.turn_rate_degrees = is_mounted_spawn ? 240.0F : 540.0F;
+      smoothing_inputs.allow_travel_yaw = turn_smoothing_travel_yaw;
+      turn_smoothing = resolve_soldier_turn_smoothing(
+          layout_cache_comp->turn_states[static_cast<std::size_t>(idx)],
+          smoothing_inputs);
+      soldier_turn_smoothed = true;
+      if (turn_smoothing.relocating && !soldier_render_anim.is_attacking &&
+          !soldier_render_anim.is_constructing &&
+          !Render::Creature::is_moving_animation(soldier_render_anim.movement_state)) {
+        soldier_render_anim.movement_state = Animation::MovementState::Walk;
+      }
+    }
+
     bool const soldier_has_locomotion =
         Render::Creature::is_moving_animation(soldier_render_anim.movement_state);
     bool const soldier_is_running =
@@ -604,7 +666,15 @@ void prepare_humanoid_instances(const HumanoidRendererBase& owner,
     QMatrix4x4 inst_model;
     float applied_yaw = applied_yaw_offset;
 
-    if (transform_comp != nullptr) {
+    if (transform_comp != nullptr && soldier_turn_smoothed) {
+      applied_yaw = turn_smoothing.yaw_degrees;
+      QMatrix4x4 m;
+      m.translate(turn_smoothing.x, transform_comp->position.y, turn_smoothing.z);
+      m.rotate(turn_smoothing.yaw_degrees, 0.0F, 1.0F, 0.0F);
+      m.scale(
+          transform_comp->scale.x, transform_comp->scale.y, transform_comp->scale.z);
+      inst_model = m;
+    } else if (transform_comp != nullptr) {
       applied_yaw = transform_comp->rotation.y + applied_yaw_offset;
       QMatrix4x4 m = unit_base;
       m.translate(offset_x + casualty_offset_x,
@@ -911,6 +981,16 @@ void prepare_humanoid_instances(const HumanoidRendererBase& owner,
     locomotion_inputs.phase_offset = phase_offset;
     locomotion_inputs.persistent_state = locomotion_persistent_state;
     locomotion_inputs.allow_persistent_update = allow_animation_persistence;
+    if (soldier_turn_smoothed && turn_smoothing.relocating) {
+
+      locomotion_inputs.move_speed =
+          std::max(locomotion_inputs.move_speed, turn_smoothing.travel_speed);
+      float const travel_rad = qDegreesToRadians(turn_smoothing.travel_yaw_degrees);
+      locomotion_inputs.locomotion_direction =
+          QVector3D(std::sin(travel_rad), 0.0F, std::cos(travel_rad));
+      locomotion_inputs.movement_target = turn_slot_world;
+      locomotion_inputs.has_movement_target = true;
+    }
     HumanoidLocomotionState locomotion_state =
         build_humanoid_locomotion_state(locomotion_inputs);
     if (locomotion_override.active) {

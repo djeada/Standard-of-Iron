@@ -18,6 +18,7 @@ set(RENDER_CREATURE_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/humanoid/prepare_animation.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/humanoid/prepare_state.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/humanoid/prepare_submission.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/humanoid/soldier_turn_smoothing.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/humanoid/poser.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/humanoid/facial_hair_catalog.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/humanoid/unit_layout_spacing.cpp

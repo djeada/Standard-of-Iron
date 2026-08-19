@@ -101,6 +101,9 @@ constexpr std::uint8_t k_sickle_wood_slot = 0U;
 constexpr std::uint8_t k_sickle_metal_slot = 1U;
 constexpr std::uint32_t k_carthage_civilian_sash_role_count = 2U;
 constexpr std::uint32_t k_civilian_pack_role_count = 3U;
+constexpr std::uint32_t k_civilian_cudgel_role_count = 2U;
+constexpr std::uint8_t k_civilian_cudgel_wood_slot = 0U;
+constexpr std::uint8_t k_civilian_cudgel_band_slot = 1U;
 
 enum CivilianPackSlot : std::uint8_t {
   k_pack_clay_slot = 0U,
@@ -403,6 +406,29 @@ auto carthage_hammer_archetype() -> const RenderArchetype& {
   return arch;
 }
 
+auto civilian_cudgel_archetype() -> const RenderArchetype& {
+  static const RenderArchetype archetype = [] {
+    std::array<GeneratedEquipmentPrimitive, 4> const primitives{{
+        generated_cylinder(QVector3D(0.0F, -0.21F, 0.02F),
+                           QVector3D(0.0F, 0.14F, 0.02F),
+                           0.017F,
+                           k_civilian_cudgel_wood_slot),
+        generated_cylinder(QVector3D(0.0F, 0.10F, 0.02F),
+                           QVector3D(0.0F, 0.19F, 0.02F),
+                           0.024F,
+                           k_civilian_cudgel_wood_slot),
+        generated_sphere(
+            QVector3D(0.0F, 0.20F, 0.02F), 0.029F, k_civilian_cudgel_wood_slot),
+        generated_cylinder(QVector3D(0.0F, -0.10F, 0.02F),
+                           QVector3D(0.0F, -0.045F, 0.02F),
+                           0.019F,
+                           k_civilian_cudgel_band_slot),
+    }};
+    return build_generated_equipment_archetype("carthage_civilian_cudgel", primitives);
+  }();
+  return archetype;
+}
+
 auto carthage_saw_archetype() -> const RenderArchetype& {
   static const RenderArchetype arch = []() {
     std::array<GeneratedEquipmentPrimitive, 8> const prims{{
@@ -619,6 +645,17 @@ auto carthage_hammer_fill_role_colors(const HumanoidPalette& palette,
   out[0] = palette.wood;
   out[1] = palette.metal * 0.88F + QVector3D(0.08F, 0.05F, 0.01F);
   return k_carthage_hammer_role_count;
+}
+
+auto civilian_cudgel_fill_role_colors(const HumanoidPalette& palette,
+                                      QVector3D* out,
+                                      std::size_t max) -> std::uint32_t {
+  if (max < k_civilian_cudgel_role_count) {
+    return 0U;
+  }
+  out[0] = palette.wood;
+  out[1] = palette.leather * 0.85F;
+  return k_civilian_cudgel_role_count;
 }
 
 auto carthage_saw_fill_role_colors(const HumanoidPalette& palette,
@@ -925,6 +962,66 @@ auto carthage_builder_variant_table()
   return k_table;
 }
 
+auto carthage_civilian_idle_archetype() -> Render::Creature::ArchetypeId {
+  static const auto archetype = []() {
+    ensure_carthage_civilian_equipment_contributions_registered();
+    const auto loadout =
+        Render::GL::Nation::resolve_equipment_loadout("troops/carthage/civilian");
+    const std::array<EquipmentHandle, 4> handles{loadout.helmet_handle,
+                                                 loadout.armor_handle,
+                                                 loadout.cloak_handle,
+                                                 loadout.work_apron_handle};
+    return resolve_humanoid_equipment_archetype(
+        "troops/carthage/civilian",
+        Render::Creature::ArchetypeRegistry::k_humanoid_base,
+        handles);
+  }();
+  return archetype;
+}
+
+auto carthage_civilian_cudgel_unit_archetype() -> Render::Creature::ArchetypeId {
+  static constexpr std::array<std::uint8_t, 2> k_slots{k_civilian_cudgel_wood_slot,
+                                                       k_civilian_cudgel_band_slot};
+  static const auto k_tool_spec = carthage_tool_make_static_attachment(
+      civilian_cudgel_archetype(),
+      Render::Creature::ArchetypeRegistry::instance()
+          .get(carthage_civilian_idle_archetype())
+          ->role_count,
+      k_slots);
+  static const auto k_archetype = register_builder_tool_variant_archetype(
+      "troops/carthage/civilian/cudgel",
+      carthage_civilian_idle_archetype(),
+      k_tool_spec,
+      +[](const void* variant_void,
+          QVector3D* out,
+          std::uint32_t base_count,
+          std::size_t max_count) -> std::uint32_t {
+        if (variant_void == nullptr || max_count <= base_count) {
+          return base_count;
+        }
+        const auto& v = *static_cast<const HumanoidVariant*>(variant_void);
+        return base_count + civilian_cudgel_fill_role_colors(
+                                v.palette, out + base_count, max_count - base_count);
+      },
+      static_cast<std::uint8_t>(k_civilian_cudgel_role_count));
+  return k_archetype;
+}
+
+auto carthage_civilian_variant_table()
+    -> const Render::Creature::ArchetypeVariantTable& {
+  static const Render::Creature::ArchetypeVariantTable k_table = []() {
+    Render::Creature::ArchetypeVariantTable t{};
+    t.archetype_for_pose[static_cast<std::size_t>(
+        Render::Creature::PoseIntent::AttackMelee)] =
+        carthage_civilian_cudgel_unit_archetype();
+    t.state_for_pose[static_cast<std::size_t>(
+        Render::Creature::PoseIntent::AttackMelee)] =
+        Render::Creature::AnimationStateId::AttackSword;
+    return t;
+  }();
+  return k_table;
+}
+
 } // namespace
 
 void register_builder_style(const std::string& nation_id,
@@ -1070,20 +1167,11 @@ public:
     using namespace Render::Creature::Pipeline;
     static const UnitVisualSpec spec = []() {
       UnitVisualSpec s{};
-      ensure_carthage_civilian_equipment_contributions_registered();
-      const auto loadout =
-          Render::GL::Nation::resolve_equipment_loadout("troops/carthage/civilian");
-      const std::array<EquipmentHandle, 4> handles{loadout.helmet_handle,
-                                                   loadout.armor_handle,
-                                                   loadout.cloak_handle,
-                                                   loadout.work_apron_handle};
       s.kind = CreatureKind::Humanoid;
       s.debug_name = "troops/carthage/civilian";
       s.scaling = k_civilian_profile.as_pipeline_scaling();
-      s.archetype_id = resolve_humanoid_equipment_archetype(
-          "troops/carthage/civilian",
-          Render::Creature::ArchetypeRegistry::k_humanoid_base,
-          handles);
+      s.archetype_id = carthage_civilian_idle_archetype();
+      s.animation_manifest.variant_table = &carthage_civilian_variant_table();
       return s;
     }();
     return spec;
@@ -1125,6 +1213,10 @@ void register_civilian_renderer(Render::GL::EntityRendererRegistry& registry) {
   ensure_builder_styles_registered();
   register_humanoid_renderer(
       registry, "troops/carthage/civilian", std::make_shared<CivilianRenderer const>());
+
+  auto& ar = Render::GL::RenderArchetypeRegistry::instance();
+  ar.register_archetype("carthage_civilian_cudgel",
+                        [] { (void)civilian_cudgel_archetype(); });
 }
 
 } // namespace Render::GL::Carthage
