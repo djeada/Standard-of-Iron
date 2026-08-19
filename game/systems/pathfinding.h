@@ -59,6 +59,8 @@ public:
   auto get_grid_offset_x() const -> float { return m_grid_offset_x; }
   auto get_grid_offset_z() const -> float { return m_grid_offset_z; }
 
+  [[nodiscard]] auto grid_cell_size() const -> float { return m_grid_cell_size; }
+
   auto world_to_grid(float world_x, float world_z) const -> Point;
   auto grid_to_world(const Point& grid_pos) const -> QVector3D;
 
