@@ -83,6 +83,11 @@ float gradient_fbm(vec2 p) {
       p, SOI_TERRAIN_NOISE_OCTAVES, max(length(fwidth(p)), 1e-6));
 }
 
+float gradient_fbm_with_footprint(vec2 p, float footprint) {
+  return soi_terrain_gradient_fbm_7c25da(
+      p, SOI_TERRAIN_NOISE_OCTAVES, max(footprint, 1e-6));
+}
+
 vec2 cellular_distances(vec2 p) {
   return soi_terrain_cellular_distances_9e14b7(p);
 }
@@ -589,55 +594,69 @@ void main() {
   float wall_blend = smoothstep(0.28, 0.72, slope);
   vec2 rock_coord = mix(world_coord, wall_coord, wall_blend);
   float rock_footprint = max(length(fwidth(rock_coord)), 1e-5);
+  vec2 rock_detail_coord = rock_coord * 0.62 + vec2(3.3, -11.0);
+  float rock_detail_footprint = length(fwidth(rock_detail_coord));
+  vec2 scrub_coord = rock_coord * 1.15 + vec2(-52.0, 17.0);
+  float scrub_footprint = length(fwidth(scrub_coord));
+  vec3 rock_color = soil_blend;
+  // On level ground the finalized mask is exactly zero. Avoid synthesizing the
+  // cellular fractures, chips, strata, and scrub that cannot contribute to the
+  // resulting pixel; nonzero rock coverage retains the full material path.
+  if (rock_mask > 0.0) {
+    vec2 rock_cells = cellular_distances(rock_coord * 0.34 + vec2(8.0, -5.0));
+    float fracture = 1.0 - smoothstep(0.025, 0.12, rock_cells.y - rock_cells.x);
+#if SOI_SURFACE_DETAIL
+    vec2 rock_chips = cellular_distances(rock_coord * 1.9 + vec2(-27.0, 14.0));
+    float chipping = (1.0 - smoothstep(0.03, 0.16, rock_chips.y - rock_chips.x)) *
+                     band_limit(rock_footprint, 1.9);
+    float rock_detail =
+        gradient_fbm_with_footprint(rock_detail_coord, rock_detail_footprint);
+    float rock_grain = gradient_noise(rock_coord * 2.4 + vec2(-17.0, 8.0)) *
+                       band_limit(rock_footprint, 2.4);
+#else
+    float chipping = 0.0;
+    float rock_detail =
+        gradient_fbm_with_footprint(rock_detail_coord, rock_detail_footprint);
+    float rock_grain = 0.0;
+#endif
+    float rock_value =
+        clamp(0.44 + rock_detail * 0.44 + rock_grain * 0.20, 0.0, 1.0);
+    rock_color = mix(u_rock_low, u_rock_high, rock_value);
+    vec3 mountain_rock = mix(
+        u_rock_low * 0.62, u_rock_high * 0.76, smoothstep(0.20, 0.86, rock_value));
+    float mountain_material =
+        clamp(mountain_face * 0.86 + mountain_shoulders * 0.48, 0.0, 0.94);
+    rock_color = mix(rock_color, mountain_rock, mountain_material);
+#if SOI_SURFACE_DETAIL
+    float rock_strata =
+        gradient_noise(vec2(rock_coord.x * 0.11 + v_world_pos.y * 0.32,
+                            mix(world_coord.y, wall_coord.y, wall_blend) * 0.035));
+    float bedding = gradient_noise(vec2(rock_coord.x * 0.06, v_world_pos.y * 0.85));
+#else
+    float rock_strata = 0.0;
+    float bedding = 0.0;
+#endif
+    rock_color *= 1.0 + rock_strata * (0.145 + 0.075 * mountain_surface) +
+                  bedding * (0.120 + 0.085 * mountain_surface) * wall_blend;
+    rock_color *= 1.0 - fracture * (0.115 + 0.150 * u_rock_detail_strength);
+    rock_color *= 1.0 - chipping * (0.070 + 0.090 * u_rock_detail_strength);
+    rock_color *= 1.0 + rock_grain * 0.075;
 
-  vec2 rock_cells = cellular_distances(rock_coord * 0.34 + vec2(8.0, -5.0));
-  float fracture = 1.0 - smoothstep(0.025, 0.12, rock_cells.y - rock_cells.x);
+    float ledge = 1.0 - smoothstep(0.30, 0.68, slope);
 #if SOI_SURFACE_DETAIL
-  vec2 rock_chips = cellular_distances(rock_coord * 1.9 + vec2(-27.0, 14.0));
-  float chipping = (1.0 - smoothstep(0.03, 0.16, rock_chips.y - rock_chips.x)) *
-                   band_limit(rock_footprint, 1.9);
-  float rock_detail = gradient_fbm(rock_coord * 0.62 + vec2(3.3, -11.0));
-  float rock_grain = gradient_noise(rock_coord * 2.4 + vec2(-17.0, 8.0)) *
-                     band_limit(rock_footprint, 2.4);
+    float scrub_field =
+        gradient_fbm_with_footprint(scrub_coord, scrub_footprint) * 0.5 + 0.5;
 #else
-  float chipping = 0.0;
-  float rock_detail = gradient_fbm(rock_coord * 0.62 + vec2(3.3, -11.0));
-  float rock_grain = 0.0;
+    float scrub_field = 0.5;
 #endif
-  float rock_value = clamp(0.44 + rock_detail * 0.44 + rock_grain * 0.20, 0.0, 1.0);
-  vec3 rock_color = mix(u_rock_low, u_rock_high, rock_value);
-  vec3 mountain_rock =
-      mix(u_rock_low * 0.62, u_rock_high * 0.76, smoothstep(0.20, 0.86, rock_value));
-  float mountain_material =
-      clamp(mountain_face * 0.86 + mountain_shoulders * 0.48, 0.0, 0.94);
-  rock_color = mix(rock_color, mountain_rock, mountain_material);
-#if SOI_SURFACE_DETAIL
-  float rock_strata =
-      gradient_noise(vec2(rock_coord.x * 0.11 + v_world_pos.y * 0.32,
-                          mix(world_coord.y, wall_coord.y, wall_blend) * 0.035));
-  float bedding = gradient_noise(vec2(rock_coord.x * 0.06, v_world_pos.y * 0.85));
-#else
-  float rock_strata = 0.0;
-  float bedding = 0.0;
-#endif
-  rock_color *= 1.0 + rock_strata * (0.145 + 0.075 * mountain_surface) +
-                bedding * (0.120 + 0.085 * mountain_surface) * wall_blend;
-  rock_color *= 1.0 - fracture * (0.115 + 0.150 * u_rock_detail_strength);
-  rock_color *= 1.0 - chipping * (0.070 + 0.090 * u_rock_detail_strength);
-  rock_color *= 1.0 + rock_grain * 0.075;
-
-  float ledge = 1.0 - smoothstep(0.30, 0.68, slope);
-#if SOI_SURFACE_DETAIL
-  float scrub_field = gradient_fbm(rock_coord * 1.15 + vec2(-52.0, 17.0)) * 0.5 + 0.5;
-#else
-  float scrub_field = 0.5;
-#endif
-  float scrub = smoothstep(0.52,
-                           0.86,
-                           scrub_field * 0.62 + fracture * 0.26 + ledge * 0.28 -
-                               high_ground * 0.18);
-  vec3 lichen = mix(u_grass_dry, u_grass_secondary, 0.55) * 0.62;
-  rock_color = mix(rock_color, lichen, scrub * 0.34 * (1.0 - u_snow_coverage * 0.6));
+    float scrub = smoothstep(0.52,
+                             0.86,
+                             scrub_field * 0.62 + fracture * 0.26 + ledge * 0.28 -
+                                 high_ground * 0.18);
+    vec3 lichen = mix(u_grass_dry, u_grass_secondary, 0.55) * 0.62;
+    rock_color =
+        mix(rock_color, lichen, scrub * 0.34 * (1.0 - u_snow_coverage * 0.6));
+  }
 
   vec3 terrain_color = mix(soil_blend, rock_color, rock_mask);
 

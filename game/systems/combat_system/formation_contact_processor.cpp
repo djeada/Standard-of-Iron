@@ -340,11 +340,13 @@ void publish_contacts(Engine::Core::World& world, FrontMap fronts_by_entity) {
 
 auto find_live_slot(const FormationCombat::FormationLayout& layout,
                     std::uint16_t stable_index) -> const FormationCombat::SoldierSlot* {
-  auto const found = std::find_if(
+  auto const found = std::lower_bound(
       layout.live_slots.begin(),
       layout.live_slots.end(),
-      [stable_index](auto const& slot) { return slot.index == stable_index; });
-  return found != layout.live_slots.end() ? &*found : nullptr;
+      stable_index,
+      [](auto const& slot, std::uint16_t index) { return slot.index < index; });
+  return found != layout.live_slots.end() && found->index == stable_index ? &*found
+                                                                          : nullptr;
 }
 
 auto opponent_alive(Engine::Core::World& world,
@@ -424,12 +426,13 @@ auto assignment_for_slot(const Engine::Core::FormationContactComponent* contact,
     if (!front.in_contact) {
       continue;
     }
-    auto const pair = std::find_if(front.engagement_pairs.begin(),
-                                   front.engagement_pairs.end(),
-                                   [stable_slot](auto const& candidate) {
-                                     return candidate.attacker_slot == stable_slot;
-                                   });
-    if (pair == front.engagement_pairs.end()) {
+    auto const pair = std::lower_bound(front.engagement_pairs.begin(),
+                                       front.engagement_pairs.end(),
+                                       stable_slot,
+                                       [](auto const& candidate, std::uint16_t slot) {
+                                         return candidate.attacker_slot < slot;
+                                       });
+    if (pair == front.engagement_pairs.end() || pair->attacker_slot != stable_slot) {
       continue;
     }
     if (previous != nullptr && previous->opponent_id == front.opponent_id) {
@@ -516,13 +519,27 @@ void tick_formation_hit(Engine::Core::Entity& entity, float delta_time) {
 }
 
 void publish_formation_presentation(Engine::Core::World& world, float delta_time) {
-  for (auto* entity : world.get_entities_with<Engine::Core::UnitComponent>()) {
+  auto const entities = world.get_entities_with<Engine::Core::UnitComponent>();
+  std::unordered_map<Engine::Core::EntityID, FormationCombat::FormationLayout>
+      layout_cache;
+  layout_cache.reserve(entities.size());
+  auto layout_for =
+      [&layout_cache](
+          Engine::Core::Entity& entity) -> const FormationCombat::FormationLayout& {
+    auto const [entry, inserted] = layout_cache.try_emplace(entity.get_id());
+    if (inserted) {
+      entry->second = FormationCombat::resolve_layout(entity);
+    }
+    return entry->second;
+  };
+
+  for (auto* entity : entities) {
     if (entity == nullptr || !FormationCombat::has_formation_slots(*entity)) {
       continue;
     }
     tick_formation_hit(*entity, delta_time);
 
-    auto const layout = FormationCombat::resolve_layout(*entity);
+    auto const& layout = layout_for(*entity);
     auto* presentation = Engine::Core::get_or_add_component<
         Engine::Core::FormationPresentationComponent>(entity);
     if (presentation == nullptr) {
@@ -564,13 +581,37 @@ void publish_formation_presentation(Engine::Core::World& world, float delta_time
 
     auto const* actor_transform =
         entity->get_component<Engine::Core::TransformComponent>();
-    std::vector<Engine::Core::FormationSoldierPresentation> directives;
-    directives.reserve(layout.all_slots.size());
+    struct DamageCarrier {
+      const Engine::Core::FormationContactFront* front{nullptr};
+      std::optional<std::uint16_t> attacker_slot;
+    };
+    std::vector<DamageCarrier> damage_carriers;
+    if (contact != nullptr) {
+      damage_carriers.reserve(contact->fronts.size());
+      for (auto const& front : contact->fronts) {
+        if (!front.outgoing || !front.in_contact) {
+          continue;
+        }
+        auto const carrier = FormationCombat::select_damage_engagement_pair(
+            *entity, front.opponent_id, front.engagement_pairs);
+        damage_carriers.push_back(
+            {&front,
+             carrier.has_value() ? std::optional<std::uint16_t>{carrier->attacker_slot}
+                                 : std::nullopt});
+      }
+    }
+
+    auto& directives = presentation->soldiers;
+    std::size_t const previous_directive_count = directives.size();
+    bool soldiers_changed = previous_directive_count != layout.all_slots.size();
+    directives.resize(layout.all_slots.size());
     for (auto const& original_slot : layout.all_slots) {
       auto const* live_slot = find_live_slot(layout, original_slot.index);
-      auto const* previous = original_slot.index < presentation->soldiers.size()
-                                 ? &presentation->soldiers[original_slot.index]
-                                 : nullptr;
+      std::optional<Engine::Core::FormationSoldierPresentation> previous_value;
+      if (original_slot.index < previous_directive_count) {
+        previous_value = directives[original_slot.index];
+      }
+      auto const* previous = previous_value.has_value() ? &*previous_value : nullptr;
 
       Engine::Core::FormationSoldierPresentation directive;
       directive.slot_index = original_slot.index;
@@ -594,9 +635,9 @@ void publish_formation_presentation(Engine::Core::World& world, float delta_time
                           : SoldierAssignment{};
       if (assignment.front != nullptr && assignment.pair != nullptr) {
         auto* opponent = world.get_entity(assignment.front->opponent_id);
-        auto const opponent_layout = opponent != nullptr
-                                         ? FormationCombat::resolve_layout(*opponent)
-                                         : FormationCombat::FormationLayout{};
+        static const FormationCombat::FormationLayout k_empty_layout;
+        auto const& opponent_layout =
+            opponent != nullptr ? layout_for(*opponent) : k_empty_layout;
         auto const retained = retained_target_slot(
             opponent_layout, live_slot, previous, assignment, layout.spacing);
 
@@ -688,12 +729,15 @@ void publish_formation_presentation(Engine::Core::World& world, float delta_time
         }
 
         if (assignment.front->outgoing) {
-          auto const carrier = FormationCombat::select_damage_engagement_pair(
-              *entity,
-              assignment.front->opponent_id,
-              assignment.front->engagement_pairs);
-          directive.damage_carrier =
-              carrier.has_value() && carrier->attacker_slot == directive.slot_index;
+          auto const carrier =
+              std::find_if(damage_carriers.begin(),
+                           damage_carriers.end(),
+                           [&assignment](auto const& candidate) {
+                             return candidate.front == assignment.front;
+                           });
+          directive.damage_carrier = carrier != damage_carriers.end() &&
+                                     carrier->attacker_slot.has_value() &&
+                                     *carrier->attacker_slot == directive.slot_index;
         }
       } else if (directive.alive && melee_ordered) {
         directive.combat_role =
@@ -744,7 +788,9 @@ void publish_formation_presentation(Engine::Core::World& world, float delta_time
         directive.local_x = previous->local_x + step_x;
         directive.local_z = previous->local_z + step_z;
       }
-      directives.push_back(directive);
+      soldiers_changed =
+          soldiers_changed || previous == nullptr || *previous != directive;
+      directives[original_slot.index] = directive;
     }
 
     bool const changed = presentation->formation_seed != layout.seed ||
@@ -754,8 +800,7 @@ void publish_formation_presentation(Engine::Core::World& world, float delta_time
                          presentation->target_id != display_target ||
                          presentation->target_alive != target_alive ||
                          presentation->melee_ordered != melee_ordered ||
-                         presentation->allow_full_body_hit_reaction ||
-                         presentation->soldiers != directives;
+                         presentation->allow_full_body_hit_reaction || soldiers_changed;
     presentation->formation_seed = layout.seed;
     presentation->rows = static_cast<std::uint16_t>(layout.rows);
     presentation->cols = static_cast<std::uint16_t>(layout.cols);
@@ -765,7 +810,6 @@ void publish_formation_presentation(Engine::Core::World& world, float delta_time
     presentation->melee_ordered = melee_ordered;
     presentation->allow_full_body_hit_reaction = layout.live_slots.size() == 1U;
     presentation->combat_motion_time = combat_motion_time;
-    presentation->soldiers = std::move(directives);
     if (changed) {
       ++presentation->revision;
     }
