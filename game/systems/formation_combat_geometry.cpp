@@ -719,11 +719,10 @@ auto select_damage_engagement_pair(
       });
   float const spacing = resolve_layout(attacker).spacing;
   float const equivalent_contact_band = std::max(0.05F, spacing * 0.18F);
-  std::vector<const Engine::Core::FormationEngagementPair*> contact_candidates;
-  contact_candidates.reserve(pairs.size());
+  std::size_t contact_candidate_count = 0U;
   for (auto const& pair : pairs) {
     if (pair.surface_gap <= closest->surface_gap + equivalent_contact_band) {
-      contact_candidates.push_back(&pair);
+      ++contact_candidate_count;
     }
   }
 
@@ -741,7 +740,17 @@ auto select_damage_engagement_pair(
   seed ^= seed >> 16U;
   seed *= 0x7feb352dU;
   seed ^= seed >> 15U;
-  return *contact_candidates[seed % contact_candidates.size()];
+  std::size_t selected_index = seed % contact_candidate_count;
+  for (auto const& pair : pairs) {
+    if (pair.surface_gap > closest->surface_gap + equivalent_contact_band) {
+      continue;
+    }
+    if (selected_index == 0U) {
+      return pair;
+    }
+    --selected_index;
+  }
+  return std::nullopt;
 }
 
 } // namespace Game::Systems::FormationCombat
