@@ -422,19 +422,18 @@ Item {
                             anchors.left: parent.left
                             anchors.right: parent.right
                             anchors.verticalCenter: parent.verticalCenter
-                            anchors.verticalCenterOffset: 3
+                            anchors.verticalCenterOffset: 2
                             anchors.leftMargin: 2
                             text: qsTr("STANDARD OF IRON")
                             color: "#00060403"
-                            font.family: "serif"
+                            font.family: Design.Typography.titleFamily
+                            font.capitalization: Font.AllUppercase
                             font.pixelSize: Design.Typography.display(root.narrow ? 36 : 54)
-                            font.bold: true
-                            font.letterSpacing: root.narrow ? 1.2 : 2.4
+                            font.weight: Design.Typography.bold
+                            font.letterSpacing: root.narrow ? Design.Typography.trackingTitle : Design.Typography.trackingHero
                             elide: Text.ElideRight
                             maximumLineCount: 1
-                            style: Text.Raised
-                            styleColor: "#060403"
-                            opacity: 0.55
+                            opacity: 0.48
                         }
 
                         Text {
@@ -443,14 +442,13 @@ Item {
                             anchors.verticalCenter: parent.verticalCenter
                             text: qsTr("STANDARD OF IRON")
                             color: Theme.textMain
-                            font.family: "serif"
+                            font.family: Design.Typography.titleFamily
+                            font.capitalization: Font.AllUppercase
                             font.pixelSize: Design.Typography.display(root.narrow ? 36 : 54)
-                            font.bold: true
-                            font.letterSpacing: root.narrow ? 1.2 : 2.4
+                            font.weight: Design.Typography.bold
+                            font.letterSpacing: root.narrow ? Design.Typography.trackingTitle : Design.Typography.trackingHero
                             elide: Text.ElideRight
                             maximumLineCount: 1
-                            style: Text.Outline
-                            styleColor: "#120D09"
                         }
                     }
 

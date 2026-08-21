@@ -11,6 +11,39 @@ may change in any release — see [Save compatibility](#save-compatibility).
 
 ### Added
 
+- **The game has its own typeface.** Standard of Iron now ships **Standard Iron
+  Display**, an original Roman monumental face — wedge serifs, a low-slung `A`,
+  a broad `T`, a blade-legged `R`, a long-tailed `Q`, wedge serifs on every
+  terminal including the diagonals, and figures drawn so that
+  `0`/`O`, `1`/`7` and `3`/`8` never trade places in a unit count. It is
+  generated from geometry in [tools/font/](tools/font/), not drawn in an editor,
+  so letters get fixed in source and rebuilt (`python3
+tools/font/build_standard_iron.py`, then `tools/font/proof.py` to look at it).
+  It covers capitals, figures, punctuation and the Latin-1 accented capitals the
+  German, Spanish and Portuguese builds need; there is deliberately no
+  lowercase, so `Typography.titleFamily` is bound only to figures or alongside
+  `AllUppercase`. The main wordmark and loading title now share it with victory
+  and defeat headlines, the battle report headline and its tallies. Released
+  under the SIL Open Font License 1.1.
+
+- **Typography ships with the game instead of being borrowed from the host.**
+  Both bundled faces live in [assets/fonts/](assets/fonts/) — the display face
+  and EB Garamond, which backs it up for everything it has no glyph for. QML
+  loads them from qrc, the Qt Widgets tools register them through
+  `Ui::BrandFonts`, and `scripts/promo-edit.py` resolves them repo-relative.
+
+### Fixed
+
+- **Promotional reels no longer letter themselves differently on every
+  machine.** `scripts/promo-edit.py` used to walk an eight-deep list of
+  `/usr/share/fonts` paths and caption a video with whichever face it found
+  first, so the same promo spec cut on a build box, a laptop and CI could
+  publish three differently-lettered videos from identical inputs, with nothing
+  in the output saying which one it got. It now resolves the bundled face and
+  fails loudly rather than falling back. The arena's burned-in counters and
+  state stamps went the same way, through `Arena::Typography`, instead of
+  taking whatever `painter.font()` returned.
+
 - **Farms, and food that means something.** Both nations can raise a **Farm**
   (40 wood, 10 stone) that grows grain in sixty-second cycles — furrows, sprouts,
   green stalks, then a golden field — and a builder reaps it with **Collect** for

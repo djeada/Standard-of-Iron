@@ -143,10 +143,11 @@ Rectangle {
             anchors.horizontalCenter: parent.horizontalCenter
             text: qsTr("Loading...")
             color: Theme.textMain
-            font.family: "serif"
+            font.family: Design.Typography.titleFamily
+            font.capitalization: Font.AllUppercase
             font.pixelSize: Design.Typography.hero
-            font.bold: true
-            font.letterSpacing: 4
+            font.weight: Design.Typography.bold
+            font.letterSpacing: Design.Typography.trackingHero
             style: Text.Outline
             styleColor: "#120D09"
         }

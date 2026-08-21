@@ -3,6 +3,7 @@
 #include <QFont>
 #include <QFontMetrics>
 #include <QQmlEngine>
+#include <QRawFont>
 #include <QSettings>
 #include <QStandardPaths>
 #include <QTemporaryDir>
@@ -29,6 +30,10 @@ public:
   explicit GlyphProbe(QObject* parent = nullptr)
       : QObject(parent) {}
 
+  // Answers through the font engine, so a character supplied by a fallback
+  // counts as present. That is the right question for the interface glyphs:
+  // what matters there is that the player sees the mark, not which family
+  // drew it.
   Q_INVOKABLE static QStringList missing(const QString& family, const QString& text) {
     QFont const font(family);
     const QFontMetrics metrics(font);
@@ -42,6 +47,30 @@ public:
       absent.append(QStringLiteral("%1 (U+%2)")
                         .arg(QString::fromUcs4(&glyph, 1),
                              QString::number(code_point, 16).toUpper()));
+    }
+    return absent;
+  }
+
+  // Asks one physical face with nothing behind it. This is the right question
+  // for the brand face, where a fallback is the failure: it means half a word
+  // renders in another typeface.
+  Q_INVOKABLE static QStringList missingWithoutFallback(const QString& family,
+                                                        const QString& text) {
+    const QRawFont face = QRawFont::fromFont(QFont(family));
+    QStringList absent;
+    if (!face.isValid()) {
+      absent.append(QStringLiteral("family %1 did not resolve").arg(family));
+      return absent;
+    }
+    const QVector<uint> code_points = text.toUcs4();
+    for (const uint code_point : code_points) {
+      const auto glyph = static_cast<char32_t>(code_point);
+      const QString character = QString::fromUcs4(&glyph, 1);
+      if (face.supportsCharacter(code_point)) {
+        continue;
+      }
+      absent.append(QStringLiteral("%1 (U+%2)")
+                        .arg(character, QString::number(code_point, 16).toUpper()));
     }
     return absent;
   }

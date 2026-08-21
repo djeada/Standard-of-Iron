@@ -1204,6 +1204,18 @@ Dies ist vielleicht ein Scharmützel, oder es wurden keine Ziele festgelegt.</tr
         <source>Press Guard again, or order a move or attack.</source>
         <translation>Erneut Bewachen drücken oder einen Bewegungs- oder Angriffsbefehl geben.</translation>
     </message>
+    <message>
+        <source>Typefaces</source>
+        <translation>Schriften</translation>
+    </message>
+    <message>
+        <source>Display: the quick brown fox</source>
+        <translation>Anzeige: Zwölf Boxkämpfer jagen Viktor</translation>
+    </message>
+    <message>
+        <source>Body: the quick brown fox jumps over the lazy dog</source>
+        <translation>Fließtext: Falsches Üben von Xylophonmusik quält jeden Zwerg</translation>
+    </message>
 </context>
 <context>
     <name>ControlsBindingList</name>

@@ -59,6 +59,69 @@ ScrollView {
                 Design.IronPanel {
                     Layout.fillWidth: true
                     Layout.preferredHeight: implicitHeight
+                    implicitHeight: typefaces.implicitHeight + Design.Metrics.space24
+
+                    // The three families, side by side, because the only way to
+                    // catch a title face that has quietly stopped loading is to
+                    // look at it: the fallback is a perfectly readable serif, so
+                    // nothing appears broken until someone compares.
+                    Column {
+                        id: typefaces
+
+                        width: parent.width
+                        spacing: Design.Metrics.space8
+
+                        Text {
+                            text: qsTr("Typefaces")
+                            color: Design.Theme.textSecondary
+                            font.family: Design.Typography.family
+                            font.pixelSize: Design.Typography.caption
+                            font.weight: Design.Typography.bold
+                        }
+
+                        Text {
+                            width: parent.width
+                            text: "STANDARD OF IRON  240 VS 900"
+                            color: Design.Theme.textPrimary
+                            font.family: Design.Typography.titleFamily
+                            font.capitalization: Font.AllUppercase
+                            font.pixelSize: Design.Typography.heading
+                            font.weight: Design.Typography.bold
+                            font.letterSpacing: Design.Typography.trackingTitle
+                            elide: Text.ElideRight
+                        }
+
+                        Text {
+                            width: parent.width
+                            text: Design.Typography.titleFamily
+                            color: Design.Theme.textSecondary
+                            font.family: Design.Typography.family
+                            font.pixelSize: Design.Typography.caption
+                        }
+
+                        Text {
+                            width: parent.width
+                            text: qsTr("Display: the quick brown fox")
+                            color: Design.Theme.textPrimary
+                            font.family: Design.Typography.displayFamily
+                            font.pixelSize: Design.Typography.bodyLarge
+                            elide: Text.ElideRight
+                        }
+
+                        Text {
+                            width: parent.width
+                            text: qsTr("Body: the quick brown fox jumps over the lazy dog")
+                            color: Design.Theme.textPrimary
+                            font.family: Design.Typography.family
+                            font.pixelSize: Design.Typography.body
+                            elide: Text.ElideRight
+                        }
+                    }
+                }
+
+                Design.IronPanel {
+                    Layout.fillWidth: true
+                    Layout.preferredHeight: implicitHeight
                     implicitHeight: buttons.implicitHeight + Design.Metrics.space24
 
                     Column {

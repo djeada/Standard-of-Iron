@@ -58,9 +58,11 @@ Item {
                 width: parent.width
                 text: root.headline
                 color: root.tone
-                font.family: Design.Typography.displayFamily
+                font.family: Design.Typography.titleFamily
+                font.capitalization: Font.AllUppercase
                 font.pixelSize: Design.Typography.title
                 font.weight: Design.Typography.bold
+                font.letterSpacing: Design.Typography.trackingTitle
                 horizontalAlignment: Text.AlignHCenter
                 wrapMode: Text.WordWrap
             }
