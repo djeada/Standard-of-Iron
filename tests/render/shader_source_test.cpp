@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <cctype>
 #include <filesystem>
 #include <fstream>
@@ -44,6 +45,44 @@ auto read_text(const std::filesystem::path& path) -> std::string {
   std::ostringstream buffer;
   buffer << input.rdbuf();
   return buffer.str();
+}
+
+auto inline_shader_includes(const std::filesystem::path& shader_dir,
+                            const std::string& source,
+                            std::vector<std::string>& already_included) -> std::string {
+  std::istringstream input(source);
+  std::string line;
+  std::string resolved;
+  while (std::getline(input, line)) {
+    const auto include_at = line.find("#include \"");
+    if (include_at != std::string::npos) {
+      const auto start = line.find('"', include_at);
+      const auto end = line.find('"', start + 1);
+      if (start != std::string::npos && end != std::string::npos) {
+        const std::string included = line.substr(start + 1, end - start - 1);
+        if (std::find(already_included.begin(), already_included.end(), included) !=
+            already_included.end()) {
+          continue;
+        }
+        already_included.push_back(included);
+        resolved += inline_shader_includes(
+            shader_dir, read_text(shader_dir / "include" / included), already_included);
+        resolved += '\n';
+        continue;
+      }
+    }
+    resolved += line;
+    resolved += '\n';
+  }
+  return resolved;
+}
+
+auto read_shader_with_includes(const std::filesystem::path& repo_root,
+                               const std::string& name) -> std::string {
+  const auto shader_dir = repo_root / "assets" / "shaders";
+  std::vector<std::string> already_included;
+  return inline_shader_includes(
+      shader_dir, read_text(shader_dir / name), already_included);
 }
 
 auto collapse_whitespace(const std::string& text) -> std::string {
@@ -187,20 +226,21 @@ TEST(ShaderSource, HealerAuraKeepsTheUnitReadable) {
 
 TEST(ShaderSource, RiggedCharactersUseSceneLightingAndCameraAwareReadability) {
   const auto root = find_repo_root();
-  const auto single = read_text(root / "assets" / "shaders" / "character_skinned.frag");
+  const auto single = read_shader_with_includes(root, "character_skinned.frag");
   const auto instanced =
-      read_text(root / "assets" / "shaders" / "character_skinned_gpu_instanced.frag");
+      read_shader_with_includes(root, "character_skinned_gpu_instanced.frag");
   ASSERT_FALSE(single.empty());
   ASSERT_FALSE(instanced.empty());
 
   for (const auto* source : {&single, &instanced}) {
-    EXPECT_NE(source->find("#include \"environment_lighting.glsl\""),
+
+    EXPECT_NE(source->find("layout(std140) uniform EnvironmentLighting"),
               std::string::npos);
     EXPECT_NE(source->find("uniform vec3 u_camera_position;"), std::string::npos);
     EXPECT_NE(source->find("shade_readable_character"), std::string::npos);
     EXPECT_NE(source->find("environment_primary_direction()"), std::string::npos);
     EXPECT_NE(source->find("environment_ambient_intensity()"), std::string::npos);
-    EXPECT_NE(source->find("float readable_ambient = max(scene_ambient, 0.22);"),
+    EXPECT_NE(source->find("float readable_ambient = max(scene_ambient, 0.29);"),
               std::string::npos);
     EXPECT_NE(source->find("k_readable_shadow_floor"), std::string::npos);
     EXPECT_NE(source->find("float rim = pow("), std::string::npos);
@@ -530,7 +570,9 @@ TEST(ShaderSource, TerrainGroundUsesCoherentBiomeMaterialPatches) {
   EXPECT_NE(flat.find("float meadow_field = (u_has_noise_atlas == 1) ? baked_noise.a "
                       ": clamp("),
             std::string::npos);
-  EXPECT_NE(flat.find("float thatch_field = clamp("), std::string::npos);
+  EXPECT_NE(flat.find("float thatch_field = (u_has_noise_atlas == 1) ? "
+                      "baked_noise_detail.r : clamp("),
+            std::string::npos);
   EXPECT_NE(flat.find("float lush_patch = smoothstep("), std::string::npos);
   EXPECT_NE(flat.find("float drainage_field ="), std::string::npos);
   EXPECT_NE(flat.find("float exposure_field ="), std::string::npos);

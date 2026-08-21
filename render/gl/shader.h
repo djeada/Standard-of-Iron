@@ -26,7 +26,8 @@ public:
   ~Shader() override;
 
   auto load_from_files(const QString& vertex_path,
-                       const QString& fragment_path) -> bool;
+                       const QString& fragment_path,
+                       const QString& variant_defines = QString()) -> bool;
   auto load_from_source(const QString& vertex_source,
                         const QString& fragment_source) -> bool;
   auto load_compute_from_source(const QString& compute_source) -> bool;
@@ -105,6 +106,7 @@ private:
   QString m_vertex_source;
   QString m_fragment_source;
   QString m_compute_source;
+  QString m_variant_defines;
 
   std::unordered_map<std::string, UniformHandle> m_uniform_cache;
   std::vector<std::string> m_uniform_names;

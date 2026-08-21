@@ -244,6 +244,15 @@ auto Backend::initialize() -> bool {
     m_rigged_cull_pipeline.reset();
   }
 
+  const unsigned int wear_volume =
+      (m_resources != nullptr) ? m_resources->wear_volume() : 0U;
+  if (m_rigged_character_pipeline) {
+    m_rigged_character_pipeline->set_wear_volume(wear_volume);
+  }
+  if (m_rigged_cull_pipeline) {
+    m_rigged_cull_pipeline->set_wear_volume(wear_volume);
+  }
+
   if (!create_subsystem(m_water_pipeline, "WaterPipeline", m_shader_cache.get())) {
     return false;
   }
@@ -1122,6 +1131,8 @@ void Backend::upload_frame_uniform_buffers(const QMatrix4x4& view_proj,
     const auto selected =
         m_local_light_fader.update(candidates, cam.get_position(), m_animation_time);
     const auto packed = Render::pack_local_lights_std140(selected);
+
+    m_active_local_lights = Render::active_local_lights(selected);
     glBindBuffer(GL_UNIFORM_BUFFER, m_local_lighting_ubo);
     glBufferSubData(GL_UNIFORM_BUFFER,
                     0,
