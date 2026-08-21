@@ -1204,6 +1204,18 @@ Puede tratarse de una escaramuza, o los objetivos no se han configurado.</transl
         <source>Press Guard again, or order a move or attack.</source>
         <translation>Pulsa Guardia otra vez, u ordena moverse o atacar.</translation>
     </message>
+    <message>
+        <source>Typefaces</source>
+        <translation>Tipografías</translation>
+    </message>
+    <message>
+        <source>Display: the quick brown fox</source>
+        <translation>Titular: el veloz murciélago hindú</translation>
+    </message>
+    <message>
+        <source>Body: the quick brown fox jumps over the lazy dog</source>
+        <translation>Texto: el veloz murciélago hindú comía feliz cardillo y kiwi</translation>
+    </message>
 </context>
 <context>
     <name>ControlsBindingList</name>

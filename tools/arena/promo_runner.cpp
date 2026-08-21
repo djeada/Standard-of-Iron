@@ -24,6 +24,7 @@
 #include <vector>
 
 #include "arena_scenario.h"
+#include "arena_typography.h"
 #include "arena_viewport.h"
 #include "render/humanoid/render_stats.h"
 #include "video_encoder.h"
@@ -71,10 +72,7 @@ void paint_rpg_bow_hud(QImage& frame, const ArenaViewport::RpgBowHudState& state
   QPainter painter(&frame);
   painter.setRenderHint(QPainter::Antialiasing, true);
 
-  QFont label_font = painter.font();
-  label_font.setPixelSize(static_cast<int>(std::round(15.0 * ui)));
-  label_font.setBold(true);
-  painter.setFont(label_font);
+  painter.setFont(Arena::Typography::small_label(ui));
 
   const QPointF centre(width * 0.5, height * 0.5);
 
@@ -188,10 +186,7 @@ void paint_rpg_bow_hud(QImage& frame, const ArenaViewport::RpgBowHudState& state
         ready ? QStringLiteral("ARROW READY") : QStringLiteral("NOCKING"));
   }
 
-  QFont count_font = painter.font();
-  count_font.setPixelSize(static_cast<int>(std::round(21.0 * ui)));
-  count_font.setBold(true);
-  painter.setFont(count_font);
+  painter.setFont(Arena::Typography::number(ui));
   painter.setPen(QColor(0, 0, 0, 170));
   const QString takedowns =
       QStringLiteral("TAKEDOWNS  %1").arg(state.takedowns, 2, 10, QLatin1Char('0'));
