@@ -1,13 +1,13 @@
 const float k_soi_grade_exposure = 2.15;
 const float k_soi_grade_white_point = 3.70;
-const float k_soi_grade_contrast = 1.14;
-const float k_soi_grade_pivot = 0.42;
-const float k_soi_grade_saturation = 1.12;
-const vec3 k_soi_grade_shadow_lift = vec3(0.010, 0.014, 0.026);
+const float k_soi_grade_contrast = 1.18;
+const float k_soi_grade_pivot = 0.38;
+const float k_soi_grade_saturation = 1.20;
+const vec3 k_soi_grade_shadow_lift = vec3(0.017, 0.022, 0.040);
 const vec3 k_soi_grade_highlight_tint = vec3(1.035, 0.990, 0.915);
-const vec3 k_soi_grade_shadow_tone = vec3(0.90, 0.95, 1.10);
-const vec3 k_soi_grade_highlight_tone = vec3(1.06, 1.00, 0.90);
-const float k_soi_grade_split_strength = 0.55;
+const vec3 k_soi_grade_shadow_tone = vec3(0.86, 0.94, 1.14);
+const vec3 k_soi_grade_highlight_tone = vec3(1.08, 1.005, 0.88);
+const float k_soi_grade_split_strength = 0.64;
 const float k_soi_grade_split_balance = 0.36;
 const vec3 k_soi_grade_luma = vec3(0.2126, 0.7152, 0.0722);
 
@@ -62,7 +62,7 @@ vec3 soi_finalize(vec3 linear_color) {
 const vec3 k_soi_night_shadow_tone = vec3(0.78, 0.84, 1.10);
 const vec3 k_soi_night_highlight_tone = vec3(0.98, 1.00, 1.04);
 const float k_soi_night_desaturation = 0.18;
-const float k_soi_night_black_crush = 0.006;
+const float k_soi_night_black_crush = 0.0025;
 const vec3 k_soi_dusk_shadow_tone = vec3(0.94, 0.82, 0.86);
 const vec3 k_soi_dusk_highlight_tone = vec3(1.08, 0.94, 0.78);
 const float k_soi_dusk_saturation = 0.14;

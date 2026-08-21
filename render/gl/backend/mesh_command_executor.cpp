@@ -133,6 +133,7 @@ void Backend::execute_mesh_commands(const PreparedBatch& prepared,
       if (uniforms->ambient_strength != Shader::InvalidUniform) {
         active_shader->set_uniform(uniforms->ambient_strength, m_ambient_strength);
       }
+      bind_material_detail(*active_shader, *uniforms, m_resources.get());
       m_last_bound_shader = active_shader;
     }
 
@@ -155,6 +156,7 @@ void Backend::execute_mesh_commands(const PreparedBatch& prepared,
                 : nullptr;
         if (inst_uniforms != nullptr) {
           batch_shader->use();
+          bind_material_detail(*batch_shader, *inst_uniforms, m_resources.get());
           if (inst_uniforms->view_proj != Shader::InvalidUniform) {
             batch_shader->set_uniform(inst_uniforms->view_proj, view_proj);
           }
@@ -294,6 +296,7 @@ void Backend::execute_mesh_commands(const PreparedBatch& prepared,
       if (uniforms->view_proj != Shader::InvalidUniform) {
         active_shader->set_uniform(uniforms->view_proj, view_proj);
       }
+      bind_material_detail(*active_shader, *uniforms, m_resources.get());
       m_last_bound_shader = active_shader;
     }
 

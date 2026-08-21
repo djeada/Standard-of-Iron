@@ -131,6 +131,7 @@ private:
   auto update_height_texture() -> TerrainSurfaceCmd::HeightResources;
   void bake_terrain_fields();
   void bake_terrain_noise_atlas();
+  void bake_terrain_microdetail();
   [[nodiscard]] static auto section_for(Game::Map::TerrainType type) -> int;
 
   [[nodiscard]] auto get_terrain_color(Game::Map::TerrainType type,
@@ -179,7 +180,10 @@ private:
   std::vector<float> m_terrain_field_data;
   bool m_terrain_fields_dirty = true;
   std::unique_ptr<Shader> m_noise_bake_shader;
+  std::unique_ptr<Shader> m_microdetail_bake_shader;
+  unsigned int m_microdetail_texture = 0U;
   unsigned int m_noise_atlas_texture = 0U;
+  unsigned int m_noise_atlas_detail_texture = 0U;
   unsigned int m_noise_atlas_fbo = 0U;
   unsigned int m_noise_atlas_vao = 0U;
   int m_noise_atlas_size = 0;

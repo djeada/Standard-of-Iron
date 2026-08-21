@@ -85,9 +85,7 @@ void main() {
   float displacement = 0.0;
   vec3 wp = base_wp;
   vec3 displaced_normal = world_normal;
-  // Terrain meshes currently submit zero displacement. Keep the procedural path for
-  // callers that opt into it, but avoid three multi-octave evaluations when its
-  // amplitude is zero.
+
   if (u_height_noise_strength > 0.00001) {
     displacement = sample_terrain_displacement(base_wp,
                                                world_normal,

@@ -4,6 +4,7 @@
 #include <QtGui/qopengl.h>
 
 #include <algorithm>
+#include <array>
 #include <cmath>
 #include <cstddef>
 
@@ -31,13 +32,17 @@ constexpr float k_openness_dir_x[k_openness_directions] = {
     1.0F, 0.5F, -0.5F, -1.0F, -0.5F, 0.5F};
 constexpr float k_openness_dir_z[k_openness_directions] = {
     0.0F, 0.866F, 0.866F, 0.0F, -0.866F, -0.866F};
+constexpr std::size_t k_terrain_field_channels = 4U;
+
+constexpr int k_microdetail_size = 1024;
+constexpr float k_microdetail_cells = 32.0F;
 
 } // namespace
 
 void TerrainRenderer::bake_terrain_fields() {
   const std::size_t texel_count =
       static_cast<std::size_t>(m_width) * static_cast<std::size_t>(m_height);
-  m_terrain_field_data.assign(texel_count * 2U, 0.0F);
+  m_terrain_field_data.assign(texel_count * k_terrain_field_channels, 0.0F);
 
   const float world_per_texel = std::max(m_tile_size, 1e-6F);
 
@@ -96,13 +101,121 @@ void TerrainRenderer::bake_terrain_fields() {
       const float openness = std::clamp(
           1.0F - horizon_sum / static_cast<float>(k_openness_directions), 0.0F, 1.0F);
 
+      const float slope_dx = (right - left) / (2.0F * span);
+      const float slope_dz = (up - down) / (2.0F * span);
+
       const std::size_t slot =
           (static_cast<std::size_t>(z) * static_cast<std::size_t>(m_width)) +
           static_cast<std::size_t>(x);
-      m_terrain_field_data[slot * 2U] = openness;
-      m_terrain_field_data[(slot * 2U) + 1U] = curvature;
+      const std::size_t base = slot * k_terrain_field_channels;
+      m_terrain_field_data[base] = openness;
+      m_terrain_field_data[base + 1U] = curvature;
+      m_terrain_field_data[base + 2U] = -slope_dx;
+      m_terrain_field_data[base + 3U] = -slope_dz;
     }
   }
+}
+
+void TerrainRenderer::bake_terrain_microdetail() {
+  if (m_microdetail_texture != 0U) {
+    return;
+  }
+  auto* context = QOpenGLContext::currentContext();
+  auto* gl = context != nullptr ? context->functions() : nullptr;
+  if (gl == nullptr) {
+    return;
+  }
+
+  if (m_microdetail_bake_shader == nullptr) {
+    m_microdetail_bake_shader = std::make_unique<Shader>();
+    if (!m_microdetail_bake_shader->load_from_files(
+            QStringLiteral(":/assets/shaders/post_fullscreen.vert"),
+            QStringLiteral(":/assets/shaders/terrain_microdetail_bake.frag"))) {
+      qWarning() << "TerrainRenderer: microdetail bake shader failed to compile;"
+                    " falling back to procedural noise";
+      m_microdetail_bake_shader.reset();
+      return;
+    }
+    m_microdetail_bake_shader->set_debug_name(
+        QStringLiteral("terrain_microdetail_bake"));
+  }
+
+  GLuint texture = 0U;
+  gl->glGenTextures(1, &texture);
+  gl->glBindTexture(GL_TEXTURE_2D, texture);
+  gl->glTexImage2D(GL_TEXTURE_2D,
+                   0,
+                   GL_RGBA16F,
+                   k_microdetail_size,
+                   k_microdetail_size,
+                   0,
+                   GL_RGBA,
+                   GL_FLOAT,
+                   nullptr);
+  gl->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+  gl->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+  gl->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+  gl->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+  gl->glBindTexture(GL_TEXTURE_2D, 0);
+
+  GLuint fbo = 0U;
+  gl->glGenFramebuffers(1, &fbo);
+  if (m_noise_atlas_vao == 0U) {
+    context->extraFunctions()->glGenVertexArrays(1, &m_noise_atlas_vao);
+  }
+
+  GLint previous_fbo = 0;
+  GLint previous_viewport[4]{};
+  gl->glGetIntegerv(GL_FRAMEBUFFER_BINDING, &previous_fbo);
+  gl->glGetIntegerv(GL_VIEWPORT, previous_viewport);
+  const GLboolean previous_depth = gl->glIsEnabled(GL_DEPTH_TEST);
+  const GLboolean previous_blend = gl->glIsEnabled(GL_BLEND);
+  const GLboolean previous_cull = gl->glIsEnabled(GL_CULL_FACE);
+
+  gl->glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+  gl->glFramebufferTexture2D(
+      GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texture, 0);
+  if (gl->glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+    qWarning() << "TerrainRenderer: microdetail bake framebuffer incomplete";
+    gl->glBindFramebuffer(GL_FRAMEBUFFER, static_cast<GLuint>(previous_fbo));
+    gl->glDeleteFramebuffers(1, &fbo);
+    gl->glDeleteTextures(1, &texture);
+    return;
+  }
+
+  gl->glViewport(0, 0, k_microdetail_size, k_microdetail_size);
+  gl->glDisable(GL_DEPTH_TEST);
+  gl->glDisable(GL_BLEND);
+  gl->glDisable(GL_CULL_FACE);
+
+  m_microdetail_bake_shader->use();
+  m_microdetail_bake_shader->set_uniform("u_microdetail_cells", k_microdetail_cells);
+  context->extraFunctions()->glBindVertexArray(m_noise_atlas_vao);
+  gl->glDrawArrays(GL_TRIANGLES, 0, 3);
+  context->extraFunctions()->glBindVertexArray(0);
+  m_microdetail_bake_shader->release();
+
+  gl->glBindTexture(GL_TEXTURE_2D, texture);
+  gl->glGenerateMipmap(GL_TEXTURE_2D);
+  gl->glBindTexture(GL_TEXTURE_2D, 0);
+
+  gl->glBindFramebuffer(GL_FRAMEBUFFER, static_cast<GLuint>(previous_fbo));
+  gl->glDeleteFramebuffers(1, &fbo);
+  gl->glViewport(previous_viewport[0],
+                 previous_viewport[1],
+                 previous_viewport[2],
+                 previous_viewport[3]);
+  if (previous_depth != 0U) {
+    gl->glEnable(GL_DEPTH_TEST);
+  }
+  if (previous_blend != 0U) {
+    gl->glEnable(GL_BLEND);
+  }
+  if (previous_cull != 0U) {
+    gl->glEnable(GL_CULL_FACE);
+  }
+
+  m_microdetail_texture = texture;
 }
 
 void TerrainRenderer::bake_terrain_noise_atlas() {
@@ -131,27 +244,37 @@ void TerrainRenderer::bake_terrain_noise_atlas() {
     m_noise_bake_shader->set_debug_name(QStringLiteral("terrain_field_bake"));
   }
 
-  if (m_noise_atlas_texture == 0U || m_noise_atlas_size != atlas_size) {
+  if (m_noise_atlas_texture == 0U || m_noise_atlas_detail_texture == 0U ||
+      m_noise_atlas_size != atlas_size) {
     if (m_noise_atlas_texture != 0U) {
       gl->glDeleteTextures(1, &m_noise_atlas_texture);
       m_noise_atlas_texture = 0U;
     }
-    gl->glGenTextures(1, &m_noise_atlas_texture);
-    gl->glBindTexture(GL_TEXTURE_2D, m_noise_atlas_texture);
-    gl->glTexImage2D(GL_TEXTURE_2D,
-                     0,
-                     GL_RGBA16F,
-                     atlas_size,
-                     atlas_size,
-                     0,
-                     GL_RGBA,
-                     GL_FLOAT,
-                     nullptr);
-    gl->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-    gl->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    gl->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    gl->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    gl->glBindTexture(GL_TEXTURE_2D, 0);
+    if (m_noise_atlas_detail_texture != 0U) {
+      gl->glDeleteTextures(1, &m_noise_atlas_detail_texture);
+      m_noise_atlas_detail_texture = 0U;
+    }
+    const auto allocate_atlas = [&](unsigned int& target) {
+      gl->glGenTextures(1, &target);
+      gl->glBindTexture(GL_TEXTURE_2D, target);
+      gl->glTexImage2D(GL_TEXTURE_2D,
+                       0,
+                       GL_RGBA16F,
+                       atlas_size,
+                       atlas_size,
+                       0,
+                       GL_RGBA,
+                       GL_FLOAT,
+                       nullptr);
+      gl->glTexParameteri(
+          GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+      gl->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+      gl->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+      gl->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+      gl->glBindTexture(GL_TEXTURE_2D, 0);
+    };
+    allocate_atlas(m_noise_atlas_texture);
+    allocate_atlas(m_noise_atlas_detail_texture);
     m_noise_atlas_size = atlas_size;
   }
 
@@ -173,6 +296,14 @@ void TerrainRenderer::bake_terrain_noise_atlas() {
   gl->glBindFramebuffer(GL_FRAMEBUFFER, m_noise_atlas_fbo);
   gl->glFramebufferTexture2D(
       GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_noise_atlas_texture, 0);
+  gl->glFramebufferTexture2D(GL_FRAMEBUFFER,
+                             GL_COLOR_ATTACHMENT1,
+                             GL_TEXTURE_2D,
+                             m_noise_atlas_detail_texture,
+                             0);
+  const std::array<GLenum, 2> bake_targets{GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1};
+  context->extraFunctions()->glDrawBuffers(static_cast<GLsizei>(bake_targets.size()),
+                                           bake_targets.data());
   const GLenum status = gl->glCheckFramebufferStatus(GL_FRAMEBUFFER);
   if (status != GL_FRAMEBUFFER_COMPLETE) {
     qWarning() << "TerrainRenderer: terrain field bake framebuffer incomplete"
@@ -207,6 +338,8 @@ void TerrainRenderer::bake_terrain_noise_atlas() {
   m_noise_bake_shader->release();
 
   gl->glBindTexture(GL_TEXTURE_2D, m_noise_atlas_texture);
+  gl->glGenerateMipmap(GL_TEXTURE_2D);
+  gl->glBindTexture(GL_TEXTURE_2D, m_noise_atlas_detail_texture);
   gl->glGenerateMipmap(GL_TEXTURE_2D);
   gl->glBindTexture(GL_TEXTURE_2D, 0);
 
@@ -275,7 +408,7 @@ auto TerrainRenderer::update_height_texture() -> TerrainSurfaceCmd::HeightResour
   if (field_size_changed) {
     m_terrain_field_texture = std::make_unique<Texture>();
     if (!m_terrain_field_texture->create_empty(
-            m_width, m_height, Texture::Format::RG16F)) {
+            m_width, m_height, Texture::Format::RGBA16F)) {
       m_terrain_field_texture.reset();
     } else {
       m_terrain_field_texture->set_filter(Texture::Filter::Linear,
@@ -295,7 +428,7 @@ auto TerrainRenderer::update_height_texture() -> TerrainSurfaceCmd::HeightResour
                         0,
                         m_width,
                         m_height,
-                        GL_RG,
+                        GL_RGBA,
                         GL_FLOAT,
                         m_terrain_field_data.data());
     m_terrain_fields_dirty = false;
@@ -304,13 +437,18 @@ auto TerrainRenderer::update_height_texture() -> TerrainSurfaceCmd::HeightResour
   static const bool noise_bake_allowed =
       qEnvironmentVariableIntValue("SOI_TERRAIN_NOISE_BAKE") != 0 ||
       !qEnvironmentVariableIsSet("SOI_TERRAIN_NOISE_BAKE");
-  if (m_noise_atlas_dirty && noise_bake_allowed) {
-    bake_terrain_noise_atlas();
+  if (noise_bake_allowed) {
+    bake_terrain_microdetail();
+    if (m_noise_atlas_dirty) {
+      bake_terrain_noise_atlas();
+    }
   }
 
   resources.texture = m_height_texture.get();
   resources.field_texture = m_terrain_field_texture.get();
   resources.noise_atlas = m_noise_atlas_texture;
+  resources.noise_atlas_detail = m_noise_atlas_detail_texture;
+  resources.microdetail = m_microdetail_texture;
   resources.noise_atlas_world_size =
       QVector2D(static_cast<float>(m_width) * m_tile_size,
                 static_cast<float>(m_height) * m_tile_size);

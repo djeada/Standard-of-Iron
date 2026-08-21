@@ -34,8 +34,6 @@ protected:
     BuildingCollisionRegistry::instance().clear();
     Game::Map::TerrainService::instance().clear();
 
-    // Odd extents put the cell centres on integers, which is where wall
-    // placement snaps gates in a real map.
     NavGrid::initialize(33, 33);
 
     auto& owners = OwnerRegistry::instance();

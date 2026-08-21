@@ -1,6 +1,7 @@
 #include "template_cache.h"
 
 #include "gl/humanoid/animation/animation_inputs.h"
+#include "material_classification.h"
 
 namespace Render::GL {
 
@@ -42,7 +43,7 @@ void TemplateRecorder::mesh(Mesh* mesh,
   cmd.local_model = model;
   cmd.color = color;
   cmd.alpha = alpha;
-  cmd.material_id = material_id;
+  cmd.material_id = resolve_material_id(material_id, color);
 }
 
 void TemplateRecorder::banner(Mesh* mesh_obj,
@@ -75,7 +76,7 @@ void TemplateRecorder::part(Mesh* mesh,
   cmd.local_model = model;
   cmd.color = color;
   cmd.alpha = alpha;
-  cmd.material_id = material_id;
+  cmd.material_id = resolve_material_id(material_id, color);
 }
 
 auto make_animation_inputs(const AnimKey& key) -> AnimationInputs {

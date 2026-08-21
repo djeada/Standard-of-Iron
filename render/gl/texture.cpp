@@ -75,6 +75,9 @@ auto Texture::create_empty(int width, int height, Format format) -> bool {
   } else if (format == Format::RG16F) {
     internal_format = GL_RG16F;
     type = GL_FLOAT;
+  } else if (format == Format::RGBA16F) {
+    internal_format = GL_RGBA16F;
+    type = GL_FLOAT;
   }
 
   glTexImage2D(
@@ -126,6 +129,8 @@ auto Texture::get_gl_format(Format format) -> GLenum {
     return GL_RED;
   case Format::RG16F:
     return GL_RG;
+  case Format::RGBA16F:
+    return GL_RGBA;
   }
   return GL_RGBA;
 }
