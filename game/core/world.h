@@ -180,14 +180,7 @@ public:
   [[nodiscard]] auto entity_count() const -> std::size_t;
 
   template <typename Fn>
-  void for_each_entity(Fn&& fn) const {
-    const EntityLock lock(*this);
-    for (const auto& slot : m_slots) {
-      if (slot.entity != nullptr) {
-        fn(*slot.entity);
-      }
-    }
-  }
+  void for_each_entity(Fn&& fn) const;
 
   auto get_next_entity_id() const -> EntityID;
   void set_next_entity_id(EntityID next_id);
@@ -327,6 +320,16 @@ private:
   const World* m_world;
   bool m_acquired{false};
 };
+
+template <typename Fn>
+void World::for_each_entity(Fn&& fn) const {
+  const EntityLock lock(*this);
+  for (const auto& slot : m_slots) {
+    if (slot.entity != nullptr) {
+      fn(*slot.entity);
+    }
+  }
+}
 
 template <bool WithEntity, typename... Components>
 class World::BasicView {

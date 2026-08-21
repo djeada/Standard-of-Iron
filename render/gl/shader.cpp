@@ -122,11 +122,17 @@ auto global_defines_storage() -> QString& {
   return defines;
 }
 
-auto inject_global_defines(const QString& source) -> QString {
+auto inject_defines(const QString& source, const QString& extra) -> QString {
   QString defines;
   {
     std::lock_guard const lock(shader_registry_mutex());
     defines = global_defines_storage();
+  }
+  if (!extra.isEmpty()) {
+    if (!defines.isEmpty() && !defines.endsWith('\n')) {
+      defines += '\n';
+    }
+    defines += extra;
   }
   if (defines.isEmpty()) {
     return source;
@@ -249,7 +255,9 @@ auto Shader::reload() -> bool {
 }
 
 auto Shader::load_from_files(const QString& vertex_path,
-                             const QString& fragment_path) -> bool {
+                             const QString& fragment_path,
+                             const QString& variant_defines) -> bool {
+  m_variant_defines = variant_defines;
   const QString resolved_vert = Utils::Resources::resolve_resource_path(vertex_path);
   const QString resolved_frag = Utils::Resources::resolve_resource_path(fragment_path);
 
@@ -697,7 +705,7 @@ auto Shader::compile_shader(const QString& source, GLenum type) -> GLuint {
   initializeOpenGLFunctions();
   GLuint const shader = glCreateShader(type);
 
-  QByteArray const source_bytes = inject_global_defines(source).toUtf8();
+  QByteArray const source_bytes = inject_defines(source, m_variant_defines).toUtf8();
   const char* source_ptr = source_bytes.constData();
   glShaderSource(shader, 1, &source_ptr, nullptr);
   glCompileShader(shader);

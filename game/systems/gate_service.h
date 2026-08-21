@@ -42,8 +42,6 @@ public:
 
   [[nodiscard]] static auto passage_extent(float rotation_y) -> GateExtent;
 
-  // Units cross a gate one behind the other: only the middle navigation cell of
-  // the gatehouse is walkable, so the lane below is a single cell wide.
   [[nodiscard]] static auto lane_half_width() -> float;
 
   [[nodiscard]] static auto lane_center(float center_x, float center_z) -> QVector3D;

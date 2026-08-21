@@ -51,6 +51,9 @@ auto ShaderUniformCache::build_uniform_set(Shader* shader) const -> BasicUniform
   uniforms.color = shader->optional_uniform_handle("u_color");
   uniforms.alpha = shader->optional_uniform_handle("u_alpha");
   uniforms.material_id = shader->optional_uniform_handle("u_material_id");
+  uniforms.material_detail = shader->optional_uniform_handle("u_material_detail");
+  uniforms.has_material_detail =
+      shader->optional_uniform_handle("u_has_material_detail");
   uniforms.instanced = shader->optional_uniform_handle("u_instanced");
   uniforms.view_proj = shader->optional_uniform_handle("u_view_proj");
   uniforms.light_dir = shader->optional_uniform_handle("u_light_dir");
