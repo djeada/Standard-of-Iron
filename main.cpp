@@ -149,6 +149,7 @@ auto opengl_version_supported(int major, int minor) -> bool {
 #include "render/horse/horse_source_asset.h"
 #include "render/i_render_backend.h"
 #include "render/profiling/profiling_hud.h"
+#include "ui/brand_fonts.h"
 #include "ui/campaign_map_view.h"
 #include "ui/commander_portrait_view.h"
 #include "ui/edge_scroll.h"
@@ -547,7 +548,10 @@ auto main(int argc, char* argv[]) -> int {
             fprintf(out,
                     "[CRITICAL] Do not use QT_QUICK_BACKEND=software; the game "
                     "requires Qt Quick's OpenGL backend\n");
-          } else {
+          } else if (msg.contains("OpenGL", Qt::CaseInsensitive) ||
+                     msg.contains("scene graph", Qt::CaseInsensitive) ||
+                     msg.contains("RHI", Qt::CaseInsensitive) ||
+                     msg.contains("graphics", Qt::CaseInsensitive)) {
             fprintf(out,
                     "[CRITICAL] Try running with software OpenGL if this persists\n");
           }
@@ -624,6 +628,10 @@ auto main(int argc, char* argv[]) -> int {
 
   app.setApplicationVersion(QStringLiteral(SOI_VERSION));
   qInfo() << "Game version:" << app.applicationVersion();
+
+  // Register the bundled faces before any QML loads, so Typography resolves
+  // titleFamily to the shipped display face instead of a host font.
+  qInfo() << "Bundled fonts:" << Ui::BrandFonts::register_bundled();
   const bool renderer_self_test =
       QCoreApplication::arguments().contains(QStringLiteral("--renderer-self-test"));
   const bool release_self_test =
@@ -656,12 +664,13 @@ auto main(int argc, char* argv[]) -> int {
 
   if (release_self_test) {
     if (Render::GraphicsSettings::instance().quality() !=
-        Render::GraphicsQuality::Ultra) {
+        Render::k_default_graphics_quality) {
       qCritical() << "SOI_GRAPHICS_DEFAULT_SELF_TEST: FAIL - fresh profile is not "
-                     "Ultra";
+                     "the default preset";
       return 14;
     }
-    qInfo() << "SOI_GRAPHICS_DEFAULT_SELF_TEST: PASS - fresh profile uses Ultra";
+    qInfo() << "SOI_GRAPHICS_DEFAULT_SELF_TEST: PASS - fresh profile uses the "
+               "default preset";
     if (!validate_release_campaign_map_resources()) {
       return 15;
     }
@@ -891,7 +900,7 @@ auto main(int argc, char* argv[]) -> int {
         break;
       }
 
-      gfx.set_shader_quality(*requested);
+      gfx.set_backend_kind(*requested);
     }
   }
 

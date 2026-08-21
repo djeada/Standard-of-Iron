@@ -89,7 +89,7 @@ auto resolve_commander_contact_target(Engine::Core::World* world,
 
   Engine::Core::Entity* best = nullptr;
   float best_score = -1000000.0F;
-  for (auto* candidate : world->get_entities_with<Engine::Core::UnitComponent>()) {
+  for (auto* candidate : world->collect_entities_with<Engine::Core::UnitComponent>()) {
     if (candidate == nullptr || candidate == &commander ||
         !is_valid_enemy_unit(commander_unit, candidate, false) ||
         !target_in_swing_arc(commander, *candidate, reach)) {
@@ -258,7 +258,7 @@ void process_combat_state(Engine::Core::World* world, float delta_time) {
       Engine::Core::Timing::combat_state_update());
   process_spear_brace_state(world, delta_time);
   process_mounted_charge_intents(world, delta_time);
-  auto units = world->get_entities_with<Engine::Core::CombatStateComponent>();
+  auto units = world->collect_entities_with<Engine::Core::CombatStateComponent>();
 
   for (auto* unit : units) {
     if (unit->has_component<Engine::Core::PendingRemovalComponent>()) {
@@ -352,7 +352,7 @@ void process_combat_state(Engine::Core::World* world, float delta_time) {
   }
 
   for (auto* unit :
-       world->get_entities_with<Engine::Core::RpgCommanderActionComponent>()) {
+       world->collect_entities_with<Engine::Core::RpgCommanderActionComponent>()) {
     if (unit == nullptr ||
         unit->has_component<Engine::Core::PendingRemovalComponent>()) {
       continue;

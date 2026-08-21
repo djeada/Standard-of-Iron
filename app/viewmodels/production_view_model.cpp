@@ -77,6 +77,10 @@ auto ProductionViewModel::selected_home_state() const -> QVariantMap {
   return App::Economy::selected_home_state(m_context.world, m_context.local_owner_id);
 }
 
+auto ProductionViewModel::selected_temple_state() const -> QVariantMap {
+  return App::Economy::selected_temple_state(m_context.world, m_context.local_owner_id);
+}
+
 auto ProductionViewModel::selected_builder_state() const -> QVariantMap {
   return App::Economy::selected_builder_state(m_context.world);
 }

@@ -300,7 +300,7 @@ auto submit_carried_loads(Engine::Core::World* world,
       (camera != nullptr) ? camera->get_position() : QVector3D();
 
   for (auto* hauler :
-       world->get_entities_with<Engine::Core::ResourceCarryComponent>()) {
+       world->collect_entities_with<Engine::Core::ResourceCarryComponent>()) {
     if (hauler == nullptr) {
       continue;
     }

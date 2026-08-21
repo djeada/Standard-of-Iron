@@ -10,7 +10,6 @@ namespace Render::Creature {
 enum class RuntimeBakeOperation : std::uint8_t {
   RiggedMeshBake,
   SnapshotMeshBake,
-  SnapshotMeshLoad,
   SkinUboUpload,
   CreatureSubmitMiss,
   StaticArchetypeBuild

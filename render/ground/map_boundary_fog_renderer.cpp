@@ -520,6 +520,7 @@ void MapBoundaryFogRenderer::submit(Renderer& renderer, ResourceManager* resourc
           world().terrain_or_empty(), m_tile_size, m_width, m_height);
       cmd.sort_key = 0x0080U;
       cmd.depth_write = true;
+      cmd.horizon_dressing = true;
       renderer.terrain_surface(cmd);
     }
   }

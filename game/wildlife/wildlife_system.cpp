@@ -446,7 +446,7 @@ void WildlifeSystem::release_due_packs(Engine::Core::World& world, float delta_t
 void WildlifeSystem::rebuild_threats(Engine::Core::World& world) {
   m_threats.clear();
   m_quarry.clear();
-  for (auto* entity : world.get_entities_with<Engine::Core::UnitComponent>()) {
+  for (auto* entity : world.collect_entities_with<Engine::Core::UnitComponent>()) {
     if (entity == nullptr || is_wildlife_entity(*entity)) {
       continue;
     }
@@ -486,7 +486,7 @@ void WildlifeSystem::collect_animals(Engine::Core::World& world) {
   std::vector<float> sum_x(m_groups.size(), 0.0F);
   std::vector<float> sum_z(m_groups.size(), 0.0F);
 
-  for (auto* entity : world.get_entities_with<Engine::Core::WildlifeComponent>()) {
+  for (auto* entity : world.collect_entities_with<Engine::Core::WildlifeComponent>()) {
     if (entity == nullptr ||
         entity->has_component<Engine::Core::PendingRemovalComponent>()) {
       continue;

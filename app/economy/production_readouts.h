@@ -23,6 +23,9 @@ namespace App::Economy {
 [[nodiscard]] auto selected_home_state(Engine::Core::World* world,
                                        int local_owner_id) -> QVariantMap;
 
+[[nodiscard]] auto selected_temple_state(Engine::Core::World* world,
+                                         int local_owner_id) -> QVariantMap;
+
 [[nodiscard]] auto unit_production_info(const QString& unit_type,
                                         const QString& nation_id) -> QVariantMap;
 

@@ -5,6 +5,7 @@
 #include <QThread>
 #include <QVector>
 
+#include <mutex>
 #include <string>
 #include <unordered_map>
 
@@ -73,6 +74,7 @@ private:
   auto find_free_channel_excluding(int excluded_channel) const -> int;
 
   QPointer<MiniaudioBackend> m_backend;
+  mutable std::mutex m_tracks_mutex;
   std::unordered_map<std::string, QString> m_tracks;
   int m_channel_count{0};
   int m_default_channel{0};

@@ -47,6 +47,8 @@ struct MeshCmd {
   float alpha = 1.0F;
   int material_id = 0;
   class Shader* shader = nullptr;
+
+  bool blend_batchable = false;
   CommandPriority priority{CommandPriority::Normal};
 };
 
@@ -134,6 +136,8 @@ struct TerrainSurfaceCmd {
     Texture* texture = nullptr;
     Texture* field_texture = nullptr;
     unsigned int noise_atlas = 0U;
+    unsigned int noise_atlas_detail = 0U;
+    unsigned int microdetail = 0U;
     QVector2D noise_atlas_world_size{0.0F, 0.0F};
     QVector2D texel_size{0.0F, 0.0F};
     QVector2D uv_scale{0.0F, 0.0F};
@@ -154,6 +158,8 @@ struct TerrainSurfaceCmd {
   std::uint16_t sort_key = 0x8000U;
   bool depth_write = true;
   bool wireframe = false;
+
+  bool horizon_dressing = false;
   float depth_bias = 0.0F;
   CommandPriority priority{CommandPriority::High};
 };

@@ -21,6 +21,7 @@
 #include "game/systems/combat_system/combat_utils.h"
 #include "game/systems/combat_system/damage_application.h"
 #include "game/systems/default_content.h"
+#include "game/systems/movement_system.h"
 #include "game/systems/nation_registry.h"
 #include "game/systems/nav_grid.h"
 #include "game/systems/owner_registry.h"
@@ -89,7 +90,7 @@ auto beside(Entity* entity, float offset_x) -> QVector3D {
 
 auto count_species(World& world, Species species) -> int {
   int count = 0;
-  for (auto* entity : world.get_entities_with<Engine::Core::WildlifeComponent>()) {
+  for (auto* entity : world.collect_entities_with<Engine::Core::WildlifeComponent>()) {
     const auto* wildlife = entity->get_component<Engine::Core::WildlifeComponent>();
     const auto* unit = entity->get_component<Engine::Core::UnitComponent>();
     if (wildlife != nullptr && unit != nullptr && wildlife->species == species &&
@@ -102,7 +103,7 @@ auto count_species(World& world, Species species) -> int {
 
 auto collect_species(World& world, Species species) -> std::vector<Entity*> {
   std::vector<Entity*> result;
-  for (auto* entity : world.get_entities_with<Engine::Core::WildlifeComponent>()) {
+  for (auto* entity : world.collect_entities_with<Engine::Core::WildlifeComponent>()) {
     const auto* wildlife = entity->get_component<Engine::Core::WildlifeComponent>();
     if (wildlife != nullptr && wildlife->species == species) {
       result.push_back(entity);
@@ -637,6 +638,94 @@ TEST_F(WildlifeSystemTest, MoveTargetsStayOnWalkableGround) {
   }
 }
 
+TEST_F(WildlifeSystemTest, GrazingSheepTurnAtAnAnimalsPaceNotAWeatherVanes) {
+  World world;
+  WildlifeSystem system;
+  Game::Systems::MovementSystem movement;
+  system.configure(make_settings(), 1U);
+  system.update(&world, 0.05F);
+
+  auto sheep = collect_species(world, Species::Sheep);
+  ASSERT_FALSE(sheep.empty());
+
+  std::vector<std::pair<Engine::Core::TransformComponent*, float>> watched;
+  watched.reserve(sheep.size());
+  for (auto* animal : sheep) {
+    auto* transform = animal->get_component<Engine::Core::TransformComponent>();
+    ASSERT_NE(transform, nullptr);
+    watched.emplace_back(transform, transform->rotation.y);
+  }
+
+  constexpr float k_step = 1.0F / 60.0F;
+  constexpr float k_max_sheep_turn_degrees_per_second = 240.0F;
+  float fastest = 0.0F;
+  for (int tick = 0; tick < 60 * 60; ++tick) {
+    system.update(&world, k_step);
+    movement.update(&world, k_step);
+    for (auto& [transform, previous] : watched) {
+      float const turned = std::fabs(
+          std::fmod((transform->rotation.y - previous + 540.0F), 360.0F) - 180.0F);
+      fastest = std::max(fastest, turned / k_step);
+      previous = transform->rotation.y;
+    }
+  }
+
+  EXPECT_LT(fastest, k_max_sheep_turn_degrees_per_second)
+      << "a sheep that snaps round faster than this reads as a glitch, not an animal";
+}
+
+TEST_F(WildlifeSystemTest, AWanderingSheepKeepsTheDestinationItPicked) {
+  World world;
+  WildlifeSystem system;
+  Game::Systems::MovementSystem movement;
+  system.configure(make_settings(), 1U);
+  system.update(&world, 0.05F);
+
+  auto sheep = collect_species(world, Species::Sheep);
+  ASSERT_FALSE(sheep.empty());
+
+  struct Walk {
+    bool had_target{false};
+    float goal_x{0.0F};
+    float goal_z{0.0F};
+  };
+  std::vector<Walk> walks(sheep.size());
+
+  constexpr float k_step = 1.0F / 60.0F;
+  int departures = 0;
+  int goal_changes = 0;
+  for (int tick = 0; tick < 60 * 60; ++tick) {
+    system.update(&world, k_step);
+    movement.update(&world, k_step);
+    for (std::size_t index = 0; index < sheep.size(); ++index) {
+      auto* walk = sheep[index]->get_component<Engine::Core::MovementComponent>();
+      ASSERT_NE(walk, nullptr);
+      Walk& previous = walks[index];
+      if (!walk->get_has_target()) {
+        previous.had_target = false;
+        continue;
+      }
+      if (!previous.had_target) {
+        ++departures;
+      } else {
+        float const dx = walk->get_goal_x() - previous.goal_x;
+        float const dz = walk->get_goal_y() - previous.goal_z;
+        if ((dx * dx) + (dz * dz) > 0.25F) {
+          ++goal_changes;
+        }
+      }
+      previous.had_target = true;
+      previous.goal_x = walk->get_goal_x();
+      previous.goal_z = walk->get_goal_y();
+    }
+  }
+
+  ASSERT_GT(departures, 0);
+  EXPECT_LE(goal_changes, departures / 4)
+      << "a herd that re-rolls its destination mid-walk swings between headings: "
+      << goal_changes << " changes across " << departures << " walks";
+}
+
 TEST_F(WildlifeSystemTest, SerializedStateRestoresGroupsAndFlocks) {
   World world;
   WildlifeSystem system;
@@ -717,7 +806,7 @@ TEST_F(WildlifeSystemTest, AMapThatNeverAuthoredWildlifeStillGetsAPopulation) {
   EXPECT_GT(count_species(world, Species::Wolf), 0);
 
   const auto& terrain = Game::Map::TerrainService::instance();
-  for (auto* entity : world.get_entities_with<Engine::Core::WildlifeComponent>()) {
+  for (auto* entity : world.collect_entities_with<Engine::Core::WildlifeComponent>()) {
     const auto* transform = entity->get_component<Engine::Core::TransformComponent>();
     ASSERT_NE(transform, nullptr);
     EXPECT_FALSE(
@@ -753,7 +842,7 @@ TEST_F(WildlifeSystemTest, ShippedForestMapPopulatesEverySpeciesItEnables) {
   EXPECT_TRUE(birds_seen) << "no flyover crossed the map in two minutes";
 
   const auto& terrain = Game::Map::TerrainService::instance();
-  for (auto* entity : world.get_entities_with<Engine::Core::WildlifeComponent>()) {
+  for (auto* entity : world.collect_entities_with<Engine::Core::WildlifeComponent>()) {
     const auto* transform = entity->get_component<Engine::Core::TransformComponent>();
     ASSERT_NE(transform, nullptr);
     EXPECT_FALSE(

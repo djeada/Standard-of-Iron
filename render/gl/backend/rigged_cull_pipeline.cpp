@@ -13,6 +13,7 @@
 #include <cstring>
 #include <limits>
 
+#include "character_wear_binding.h"
 #include "render/draw_commands.h"
 #include "render/gl/buffer.h"
 #include "render/gl/gl_capabilities.h"
@@ -613,9 +614,10 @@ auto RiggedCullPipeline::draw_full_mesh_pass(const RiggedCreatureCmd* const* cmd
 
   draw_shader->use();
   draw_shader->set_uniform(draw_shader->uniform_handle("u_view_proj"), view_proj);
-  glUniform1ui(draw_shader->uniform_handle("u_bone_count"),
-               static_cast<GLuint>(bone_count));
-  glUniform1ui(draw_shader->uniform_handle("u_instance_base"), m_instance_base);
+  draw_shader->set_uniform(draw_shader->uniform_handle("u_bone_count"),
+                           static_cast<GLuint>(bone_count));
+  draw_shader->set_uniform(draw_shader->uniform_handle("u_instance_base"),
+                           static_cast<GLuint>(m_instance_base));
   const auto rigid_uniform = draw_shader->uniform_handle("u_rigid_skinning");
   if (!depth_only) {
     draw_shader->set_uniform(draw_shader->uniform_handle("u_camera_position"),
@@ -628,6 +630,11 @@ auto RiggedCullPipeline::draw_full_mesh_pass(const RiggedCreatureCmd* const* cmd
     if (role_base != Shader::InvalidUniform) {
       draw_shader->set_uniform(role_base, 0);
     }
+    bind_character_wear_volume(
+        *draw_shader,
+        draw_shader->optional_uniform_handle("u_wear_volume"),
+        draw_shader->optional_uniform_handle("u_has_wear_volume"),
+        m_wear_volume);
   }
 
   glBindVertexArray(m_vao);
@@ -756,15 +763,18 @@ auto RiggedCullPipeline::dispatch(const RiggedCreatureCmd* const* cmds,
   Shader* cull = m_cull_shader_storage.get();
   cull->use();
   cull->set_uniform(cull->uniform_handle("u_view_proj"), view_proj);
-  glUniform1ui(cull->uniform_handle("u_vertex_count"),
-               static_cast<GLuint>(mesh->vertex_count()));
-  glUniform1ui(cull->uniform_handle("u_bone_count"), static_cast<GLuint>(bone_count));
-  glUniform1ui(cull->uniform_handle("u_instance_base"), m_instance_base);
-  glUniform1ui(cull->uniform_handle("u_triangle_count"),
-               static_cast<GLuint>(triangle_count));
-  glUniform1ui(cull->uniform_handle("u_instance_count"), static_cast<GLuint>(count));
-  glUniform1ui(cull->uniform_handle("u_out_capacity_triangles"),
-               static_cast<GLuint>(m_out_capacity_triangles));
+  cull->set_uniform(cull->uniform_handle("u_vertex_count"),
+                    static_cast<GLuint>(mesh->vertex_count()));
+  cull->set_uniform(cull->uniform_handle("u_bone_count"),
+                    static_cast<GLuint>(bone_count));
+  cull->set_uniform(cull->uniform_handle("u_instance_base"),
+                    static_cast<GLuint>(m_instance_base));
+  cull->set_uniform(cull->uniform_handle("u_triangle_count"),
+                    static_cast<GLuint>(triangle_count));
+  cull->set_uniform(cull->uniform_handle("u_instance_count"),
+                    static_cast<GLuint>(count));
+  cull->set_uniform(cull->uniform_handle("u_out_capacity_triangles"),
+                    static_cast<GLuint>(m_out_capacity_triangles));
   cull->set_uniform(cull->uniform_handle("u_viewport"), viewport);
   bool const front_is_ccw = (front_face == GL_CCW) == (cull_mode == GL_BACK);
   cull->set_uniform(cull->uniform_handle("u_front_face_ccw"), front_is_ccw ? 1 : 0);
@@ -776,9 +786,9 @@ auto RiggedCullPipeline::dispatch(const RiggedCreatureCmd* const* cmds,
   glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
 
   finalize->use();
-  glUniform1ui(finalize->uniform_handle("u_out_capacity_triangles"),
-               static_cast<GLuint>(m_out_capacity_triangles));
-  glUniform1ui(finalize->uniform_handle("u_reset"), 0U);
+  finalize->set_uniform(finalize->uniform_handle("u_out_capacity_triangles"),
+                        static_cast<GLuint>(m_out_capacity_triangles));
+  finalize->set_uniform(finalize->uniform_handle("u_reset"), 0U);
   glDispatchCompute(1, 1, 1);
   glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT | GL_COMMAND_BARRIER_BIT |
                   GL_ELEMENT_ARRAY_BARRIER_BIT);
@@ -793,11 +803,12 @@ auto RiggedCullPipeline::dispatch(const RiggedCreatureCmd* const* cmds,
 
   draw_shader->use();
   draw_shader->set_uniform(draw_shader->uniform_handle("u_view_proj"), view_proj);
-  glUniform1ui(draw_shader->uniform_handle("u_vertex_count"),
-               static_cast<GLuint>(mesh->vertex_count()));
-  glUniform1ui(draw_shader->uniform_handle("u_bone_count"),
-               static_cast<GLuint>(bone_count));
-  glUniform1ui(draw_shader->uniform_handle("u_instance_base"), m_instance_base);
+  draw_shader->set_uniform(draw_shader->uniform_handle("u_vertex_count"),
+                           static_cast<GLuint>(mesh->vertex_count()));
+  draw_shader->set_uniform(draw_shader->uniform_handle("u_bone_count"),
+                           static_cast<GLuint>(bone_count));
+  draw_shader->set_uniform(draw_shader->uniform_handle("u_instance_base"),
+                           static_cast<GLuint>(m_instance_base));
   if (!depth_only) {
     draw_shader->set_uniform(draw_shader->uniform_handle("u_camera_position"),
                              camera_position);
@@ -809,6 +820,11 @@ auto RiggedCullPipeline::dispatch(const RiggedCreatureCmd* const* cmds,
     if (role_base != Shader::InvalidUniform) {
       draw_shader->set_uniform(role_base, 0);
     }
+    bind_character_wear_volume(
+        *draw_shader,
+        draw_shader->optional_uniform_handle("u_wear_volume"),
+        draw_shader->optional_uniform_handle("u_has_wear_volume"),
+        m_wear_volume);
   }
 
   glBindVertexArray(m_vao);

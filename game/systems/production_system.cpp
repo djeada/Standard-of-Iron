@@ -448,7 +448,7 @@ void ProductionSystem::update(Engine::Core::World* world, float delta_time) {
     return;
   }
 
-  auto entities = world->get_entities_with<Engine::Core::ProductionComponent>();
+  auto entities = world->collect_entities_with<Engine::Core::ProductionComponent>();
   for (auto* e : entities) {
     auto* prod = e->get_component<Engine::Core::ProductionComponent>();
     if (prod == nullptr) {
@@ -556,7 +556,7 @@ void ProductionSystem::update(Engine::Core::World* world, float delta_time) {
   constexpr float MAX_CONSTRUCTION_DISTANCE_SQ = 9.0F;
 
   auto builder_entities =
-      world->get_entities_with<Engine::Core::BuilderProductionComponent>();
+      world->collect_entities_with<Engine::Core::BuilderProductionComponent>();
   for (auto* e : builder_entities) {
     auto* builder_prod = e->get_component<Engine::Core::BuilderProductionComponent>();
     if (builder_prod == nullptr) {

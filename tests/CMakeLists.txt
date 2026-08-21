@@ -78,6 +78,9 @@ add_executable(
     command/command_pipeline_test.cpp
     command/command_codec_test.cpp
     core/entity_handle_test.cpp
+    core/world_view_test.cpp
+    core/world_spatial_index_test.cpp
+    core/system_schedule_test.cpp
     core/ground_type_test.cpp
     core/building_spawn_setup_test.cpp
     map/terrain_profiles_test.cpp
@@ -105,6 +108,7 @@ add_executable(
     systems/home_manpower_system_test.cpp
     systems/building_collision_test.cpp
     systems/pathfinding_test.cpp
+    systems/world_prop_navigation_test.cpp
     systems/production_system_test.cpp
     systems/construction_cost_catalog_test.cpp
     systems/resource_delivery_system_test.cpp
@@ -159,6 +163,7 @@ add_executable(
     formation/formation_data_loader_test.cpp
     formation/formation_movement_test.cpp
     formation/formation_terrain_navigation_test.cpp
+    systems/runtime_phase_order_test.cpp
     systems/formation_combat_geometry_test.cpp
     systems/defensive_unit_layout_test.cpp
     systems/structure_combat_test.cpp
@@ -175,6 +180,7 @@ add_executable(
     systems/commander_system_test.cpp
     systems/commander_duel_test.cpp
     systems/melee_engagement_test.cpp
+    systems/melee_exchange_test.cpp
     systems/archer_bonus_test.cpp
     systems/arrow_system_test.cpp
     systems/spent_projectile_test.cpp
@@ -348,6 +354,7 @@ add_executable(
     render/unit_render_cache_test.cpp
     render/render_archetype_test.cpp
     render/draw_queue_sort_order_test.cpp
+    render/draw_queue_sort_cost_test.cpp
     render/effect_batch_dispatch_test.cpp
     render/spark_direction_test.cpp
     render/linear_feature_geometry_test.cpp
@@ -357,6 +364,8 @@ add_executable(
     render/dead_tree_mesh_test.cpp
     render/local_lighting_test.cpp
     render/contact_shadow_test.cpp
+    render/shadow_cascade_fit_test.cpp
+    render/shader_reload_test.cpp
     render/weather_particle_budget_test.cpp
     render/graphics_lighting_settings_test.cpp
     render/scatter_composition_test.cpp
@@ -397,6 +406,7 @@ add_executable(
     render/creature/quadruped_topology_test.cpp
     render/creature/quadruped_gait_test.cpp
     render/creature/combat_visual_state_test.cpp
+    render/creature/combat_root_motion_test.cpp
     render/creature/soldier_turn_smoothing_test.cpp
     render/creature/humanoid_prepare_test.cpp
     render/creature/death_collapse_test.cpp
@@ -493,6 +503,7 @@ add_executable(
     ui/icon_art_test.cpp
     ui/icon_resources_test.cpp
     ui/widget_theme_test.cpp
+    ui/brand_fonts_test.cpp
     map/minimap_generator_test.cpp
     map/minimap_utils_test.cpp
     map/terrain_service_test.cpp

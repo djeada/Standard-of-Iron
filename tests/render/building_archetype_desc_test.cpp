@@ -106,7 +106,7 @@ TEST(BuildingArchetypeDesc, BuildsPointedConePartsForTimberSilhouettes) {
       build_building_archetype(desc, BuildingState::Normal);
 
   ASSERT_EQ(archetype.lods[0].draws.size(), 1U);
-  EXPECT_EQ(archetype.lods[0].draws[0].mesh, get_unit_cone(8));
+  EXPECT_EQ(archetype.lods[0].draws[0].mesh, get_unit_cone());
 }
 
 TEST(BuildingArchetypeDesc, ArchetypeSetSelectsStateVariant) {

@@ -1,5 +1,9 @@
 # The Iron and Ember Design System
 
+Type is documented separately in [TYPOGRAPHY.md](TYPOGRAPHY.md): which of the
+three family tokens to reach for, why `titleFamily` may only be bound to
+uppercased or numeric text, and how the bundled display face is generated.
+
 Standard of Iron ships four front ends — the main menu, the in-battle HUD, the campaign
 flow and the editor tools — and for a long time each one styled itself. This document
 describes the shared QML design system introduced for issue #1082, what it guarantees,

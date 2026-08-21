@@ -48,7 +48,8 @@ auto apply_burning_tick_damage(Engine::Core::World* world,
 auto process_cursed_statuses(Engine::Core::World* world,
                              float delta_time,
                              CombatStatusEffectUpdateResult& result) -> void {
-  for (auto* entity : world->get_entities_with<Engine::Core::CursedStatusComponent>()) {
+  for (auto* entity :
+       world->collect_entities_with<Engine::Core::CursedStatusComponent>()) {
     if (entity == nullptr ||
         entity->has_component<Engine::Core::PendingRemovalComponent>()) {
       continue;
@@ -72,7 +73,7 @@ auto process_burning_statuses(Engine::Core::World* world,
                               float delta_time,
                               CombatStatusEffectUpdateResult& result) -> void {
   for (auto* entity :
-       world->get_entities_with<Engine::Core::BurningStatusComponent>()) {
+       world->collect_entities_with<Engine::Core::BurningStatusComponent>()) {
     if (entity == nullptr ||
         entity->has_component<Engine::Core::PendingRemovalComponent>()) {
       continue;
@@ -128,8 +129,9 @@ auto process_burning_statuses(Engine::Core::World* world,
 auto process_fire_patches(Engine::Core::World* world,
                           float delta_time,
                           CombatStatusEffectUpdateResult& result) -> void {
-  auto units = world->get_entities_with<Engine::Core::UnitComponent>();
-  for (auto* entity : world->get_entities_with<Engine::Core::FirePatchComponent>()) {
+  auto units = world->collect_entities_with<Engine::Core::UnitComponent>();
+  for (auto* entity :
+       world->collect_entities_with<Engine::Core::FirePatchComponent>()) {
     if (entity == nullptr ||
         entity->has_component<Engine::Core::PendingRemovalComponent>()) {
       continue;
@@ -167,7 +169,8 @@ auto process_fire_patches(Engine::Core::World* world,
 } // namespace
 
 void process_stagger_recovery(Engine::Core::World* world, float delta_time) {
-  for (auto* staggered : world->get_entities_with<Engine::Core::StaggerComponent>()) {
+  for (auto* staggered :
+       world->collect_entities_with<Engine::Core::StaggerComponent>()) {
     if (staggered == nullptr ||
         Game::Systems::CombatRules::uses_rpg_combat_rules(staggered)) {
 
@@ -185,7 +188,7 @@ void process_stagger_recovery(Engine::Core::World* world, float delta_time) {
 }
 
 void process_signature_presentations(Engine::Core::World* world, float delta_time) {
-  for (auto* entity : world->get_entities_with<
+  for (auto* entity : world->collect_entities_with<
                       Engine::Core::CommanderSignaturePresentationComponent>()) {
     if (entity == nullptr) {
       continue;

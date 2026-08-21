@@ -24,6 +24,7 @@
 #include "damage_application.h"
 #include "damage_processor.h"
 #include "elephant_special_processor.h"
+#include "melee_exchange.h"
 #include "mounted_charge_processor.h"
 
 namespace Game::Systems::Combat {
@@ -133,7 +134,7 @@ void apply_commander_signature_effects(
   int const sweep_damage = std::max(1, damage / 2);
   int remaining = commander.signature_max_targets - 1;
 
-  for (auto* candidate : world.get_entities_with<Engine::Core::UnitComponent>()) {
+  for (auto* candidate : world.collect_entities_with<Engine::Core::UnitComponent>()) {
     if (remaining <= 0) {
       break;
     }
@@ -167,6 +168,57 @@ void apply_commander_signature_effects(
           Engine::Core::StaggerTier::LightFlinch);
     }
     --remaining;
+  }
+}
+
+void present_melee_exchange(Engine::Core::World& world,
+                            Engine::Core::Entity& attacker,
+                            Engine::Core::Entity& target,
+                            const Engine::Core::TransformComponent& attacker_transform,
+                            const Engine::Core::TransformComponent& target_transform,
+                            const MeleeExchangeBeat& beat,
+                            float reach) {
+  auto const* target_unit = target.get_component<Engine::Core::UnitComponent>();
+  if (target_unit == nullptr || target_unit->health <= 0) {
+    return;
+  }
+  if (beat.outcome == MeleeExchangeOutcome::Clean ||
+      beat.outcome == MeleeExchangeOutcome::Plain) {
+
+    return;
+  }
+  apply_melee_reaction_feedback(
+      &world, &target, attacker.get_id(), beat.target_reaction);
+
+  float const dx = target_transform.position.x - attacker_transform.position.x;
+  float const dz = target_transform.position.z - attacker_transform.position.z;
+  float const distance = std::max(0.001F, std::hypot(dx, dz));
+  float const contact_reach =
+      std::min(distance * 0.72F, std::max(0.35F, reach * 0.55F));
+  QVector3D const contact_point(
+      attacker_transform.position.x + dx / distance * contact_reach,
+      attacker_transform.position.y + 1.05F,
+      attacker_transform.position.z + dz / distance * contact_reach);
+  switch (beat.outcome) {
+  case MeleeExchangeOutcome::Blocked:
+    queue_melee_contact_burst(
+        target, contact_point, Engine::Core::RpgContactOutcome::Block, 0.9F);
+    break;
+  case MeleeExchangeOutcome::Evaded:
+    queue_melee_contact_burst(
+        target, contact_point, Engine::Core::RpgContactOutcome::Dodge, 0.6F);
+    break;
+  case MeleeExchangeOutcome::Heavy:
+    queue_melee_contact_burst(
+        target, contact_point, Engine::Core::RpgContactOutcome::Damage, 1.1F);
+    break;
+  case MeleeExchangeOutcome::Clean:
+  case MeleeExchangeOutcome::Plain:
+    break;
+  }
+  if (beat.attacker_recoils) {
+    apply_hit_feedback(
+        &attacker, target.get_id(), &world, Engine::Core::HitReactionKind::Recoil);
   }
 }
 
@@ -216,14 +268,25 @@ void deal_rts_melee_contact_damage(
     action.action_completed = true;
     return;
   }
-  int const damage = std::max(1, action.requested_damage);
-  deal_damage(&world, target, damage, attacker.get_id());
+  auto const beat =
+      signature_strike
+          ? MeleeExchangeBeat{}
+          : melee_exchange_beat_for_outcome(
+                static_cast<MeleeExchangeOutcome>(action.exchange_outcome));
+  int const base_damage = std::max(1, action.requested_damage);
+  int const damage =
+      signature_strike ? base_damage : melee_exchange_damage(base_damage, beat);
+  if (damage > 0) {
+    deal_damage(&world, target, damage, attacker.get_id());
+  }
   action.last_hit_target_id = target->get_id();
   action.last_damage = damage;
   action.hit_target_ids[0] = target->get_id();
   action.hit_target_count = 1U;
 
   if (!signature_strike) {
+    present_melee_exchange(
+        world, attacker, *target, *attacker_transform, *target_transform, beat, reach);
     return;
   }
   apply_commander_signature_effects(

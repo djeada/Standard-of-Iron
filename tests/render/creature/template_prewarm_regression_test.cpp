@@ -446,14 +446,14 @@ TEST(TemplatePrewarmRegression, PreparedHumanoidLodCarriesDistanceCull) {
 
   HumanoidLodStateInputs inputs{};
   inputs.ctx = &ctx;
-  inputs.soldier_world_pos = QVector3D(0.0F, 0.0F, 50.0F);
+  inputs.soldier_world_pos = QVector3D(0.0F, 0.0F, 250.0F);
   inputs.config = humanoid_lod_config();
 
   auto const state = resolve_humanoid_lod_state(inputs);
 
-  EXPECT_EQ(state.decision.lod, Render::Creature::CreatureLOD::Billboard);
+  EXPECT_EQ(state.decision.lod, Render::Creature::CreatureLOD::Culled);
   EXPECT_TRUE(state.decision.culled);
-  EXPECT_EQ(state.decision.reason, CullReason::Billboard);
+  EXPECT_EQ(state.decision.reason, CullReason::Distance);
 }
 
 TEST(TemplatePrewarmRegression, SelectedHumanoidLodStaysFullAtDistance) {
@@ -490,32 +490,19 @@ TEST(TemplatePrewarmRegression, PreparedHumanoidShadowRequiresResources) {
   EXPECT_FALSE(shadow.enabled);
 }
 
-TEST(TemplatePrewarmRegression, ContactShadowBudgetAdmitsOnlyIdleNearbyOrder) {
+TEST(TemplatePrewarmRegression, ContactShadowBudgetAdmitsEveryCreatureUpToTheCap) {
   auto& graphics = Render::GraphicsSettings::instance();
   const auto previous_quality = graphics.quality();
-  graphics.set_quality(Render::GraphicsQuality::Ultra);
+  graphics.set_quality(Render::GraphicsQuality::Low);
   auto& budget = Render::VisibilityBudgetTracker::instance();
   budget.reset_frame();
 
-  EXPECT_FALSE(budget.request_contact_shadow(1U, false));
-  for (int soldier = 0; soldier < 12; ++soldier) {
-    EXPECT_TRUE(budget.request_contact_shadow(1U, true));
+  const int cap = graphics.contact_shadow_budget().max_casters;
+  for (int soldier = 0; soldier < cap; ++soldier) {
+    EXPECT_TRUE(budget.request_contact_shadow());
   }
-  EXPECT_FALSE(budget.request_contact_shadow(1U, true));
-  for (std::uint32_t formation = 2U; formation <= 9U; ++formation) {
-    for (int soldier = 0; soldier < 11; ++soldier) {
-      EXPECT_TRUE(budget.request_contact_shadow(formation, true));
-    }
-  }
-  EXPECT_EQ(budget.contact_shadow_count(), 100);
-  EXPECT_FALSE(budget.request_contact_shadow(10U, true));
-
-  graphics.set_quality(Render::GraphicsQuality::High);
-  budget.reset_frame();
-  for (int soldier = 0; soldier < 8; ++soldier) {
-    EXPECT_TRUE(budget.request_contact_shadow(1U, true));
-  }
-  EXPECT_FALSE(budget.request_contact_shadow(1U, true));
+  EXPECT_FALSE(budget.request_contact_shadow());
+  EXPECT_EQ(budget.contact_shadow_count(), cap);
 
   graphics.set_quality(previous_quality);
   budget.reset_frame();

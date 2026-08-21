@@ -1,23 +1,4 @@
 #include "command_executor_common.h"
-#include "render/graphics_settings.h"
-
-namespace {
-
-[[nodiscard]] auto
-terrain_noise_octaves_for_quality(Render::ShaderQuality quality) -> int {
-  switch (quality) {
-  case Render::ShaderQuality::Full:
-    return 5;
-  case Render::ShaderQuality::Reduced:
-    return 4;
-  case Render::ShaderQuality::Minimal:
-  case Render::ShaderQuality::None:
-    return 3;
-  }
-  return 5;
-}
-
-} // namespace
 
 namespace Render::GL {
 
@@ -250,12 +231,6 @@ void Backend::set_terrain_chunk_uniforms(Shader& shader,
     shader.set_uniform(pipeline.m_terrain_uniforms.detail_noise_scale,
                        single.params.detail_noise_scale);
   }
-  if (pipeline.m_terrain_uniforms.noise_octaves != Shader::InvalidUniform) {
-    shader.set_uniform(
-        pipeline.m_terrain_uniforms.noise_octaves,
-        terrain_noise_octaves_for_quality(
-            Render::GraphicsSettings::instance().features().shader_quality));
-  }
   if (pipeline.m_terrain_uniforms.slope_rock_threshold != Shader::InvalidUniform) {
     shader.set_uniform(pipeline.m_terrain_uniforms.slope_rock_threshold,
                        single.params.slope_rock_threshold);
@@ -387,7 +362,7 @@ void Backend::set_terrain_chunk_uniforms(Shader& shader,
     }
   }
 
-  const bool atlas_ready = height.noise_atlas != 0U;
+  const bool atlas_ready = height.noise_atlas != 0U && height.noise_atlas_detail != 0U;
   if (pipeline.m_terrain_uniforms.has_noise_atlas != Shader::InvalidUniform) {
     shader.set_uniform(pipeline.m_terrain_uniforms.has_noise_atlas,
                        atlas_ready ? 1 : 0);
@@ -400,11 +375,48 @@ void Backend::set_terrain_chunk_uniforms(Shader& shader,
       shader.set_uniform(pipeline.m_terrain_uniforms.noise_atlas,
                          TextureUnit::terrain_noise_atlas);
     }
+    glActiveTexture(GL_TEXTURE0 + TextureUnit::terrain_noise_atlas_detail);
+    glBindTexture(GL_TEXTURE_2D, height.noise_atlas_detail);
+    glActiveTexture(GL_TEXTURE0);
+    if (pipeline.m_terrain_uniforms.noise_atlas_detail != Shader::InvalidUniform) {
+      shader.set_uniform(pipeline.m_terrain_uniforms.noise_atlas_detail,
+                         TextureUnit::terrain_noise_atlas_detail);
+    }
     if (pipeline.m_terrain_uniforms.noise_atlas_world_size != Shader::InvalidUniform) {
       shader.set_uniform(pipeline.m_terrain_uniforms.noise_atlas_world_size,
                          height.noise_atlas_world_size);
     }
   }
+  const bool microdetail_ready = height.microdetail != 0U;
+  if (pipeline.m_terrain_uniforms.has_microdetail != Shader::InvalidUniform) {
+    shader.set_uniform(pipeline.m_terrain_uniforms.has_microdetail,
+                       microdetail_ready ? 1 : 0);
+  }
+  if (microdetail_ready) {
+    glActiveTexture(GL_TEXTURE0 + TextureUnit::terrain_microdetail);
+    glBindTexture(GL_TEXTURE_2D, height.microdetail);
+    glActiveTexture(GL_TEXTURE0);
+    if (pipeline.m_terrain_uniforms.microdetail != Shader::InvalidUniform) {
+      shader.set_uniform(pipeline.m_terrain_uniforms.microdetail,
+                         TextureUnit::terrain_microdetail);
+    }
+  }
+
+  if (pipeline.m_terrain_uniforms.has_local_light_mask != Shader::InvalidUniform) {
+    const bool mask_ready = !m_active_local_lights.empty();
+    shader.set_uniform(pipeline.m_terrain_uniforms.has_local_light_mask,
+                       mask_ready ? 1 : 0);
+    if (mask_ready &&
+        pipeline.m_terrain_uniforms.local_light_mask != Shader::InvalidUniform) {
+      const QVector3D center = single.aabb.center();
+      const QVector3D extents = single.aabb.extents();
+      const auto mask = Render::local_light_mask_for_bounds(
+          m_active_local_lights, center, extents.length());
+      shader.set_uniform(pipeline.m_terrain_uniforms.local_light_mask,
+                         static_cast<int>(mask));
+    }
+  }
+
   set_camera_uniform(shader, pipeline.m_terrain_uniforms, camera_position);
 }
 

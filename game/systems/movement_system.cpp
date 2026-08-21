@@ -10,6 +10,7 @@
 
 #include "../formation/army_formation_registry.h"
 #include "../map/terrain_service.h"
+#include "../units/spawn_type.h"
 #include "../units/troop_config.h"
 #include "building_collision_registry.h"
 #include "combat_rules.h"
@@ -34,16 +35,52 @@ namespace {
 
 constexpr float hold_mode_turn_speed_degrees = 180.0F;
 
-constexpr float k_duel_footwork_degrees_per_second = 44.0F;
+constexpr float k_duel_footwork_degrees_per_second = 18.0F;
 constexpr float k_duel_footwork_period_seconds = 9.0F;
 constexpr float k_duel_footwork_turn_degrees_per_second = 360.0F;
 constexpr float k_duel_min_reach_sq = 0.04F;
+constexpr float k_duel_measure_step_speed = 1.6F;
+constexpr float k_duel_measure_gain_per_second = 4.5F;
+constexpr float k_duel_measure_advance = 0.17F;
+constexpr float k_duel_measure_retreat = -0.11F;
+constexpr float k_duel_measure_breath = 0.05F;
+constexpr float k_duel_measure_breath_period_seconds = 3.4F;
+constexpr float k_duel_min_separation = 0.55F;
+constexpr float k_duel_base_separation_fraction = 0.70F;
+constexpr float k_duel_base_separation_min = 0.85F;
+constexpr float k_duel_base_separation_max = 1.70F;
 constexpr float desired_yaw_turn_speed_degrees = 720.0F;
+
+constexpr float k_turn_speed_elephant_degrees = 110.0F;
+constexpr float k_turn_speed_siege_degrees = 100.0F;
+constexpr float k_turn_speed_cavalry_degrees = 300.0F;
+constexpr float k_turn_speed_sheep_degrees = 210.0F;
+constexpr float k_turn_speed_wolf_degrees = 340.0F;
 constexpr float k_formation_heading_min_speed = 0.4F;
 constexpr float k_formation_heading_speed_fraction = 0.25F;
 constexpr float k_formation_intent_min_distance = 1.0F;
 constexpr float full_translation_heading_error_degrees = 20.0F;
 constexpr float stopped_translation_heading_error_degrees = 100.0F;
+
+auto body_turn_speed_degrees(Game::Units::SpawnType type) -> float {
+  switch (type) {
+  case Game::Units::SpawnType::Elephant:
+    return k_turn_speed_elephant_degrees;
+  case Game::Units::SpawnType::Catapult:
+  case Game::Units::SpawnType::Ballista:
+    return k_turn_speed_siege_degrees;
+  case Game::Units::SpawnType::MountedKnight:
+  case Game::Units::SpawnType::HorseArcher:
+  case Game::Units::SpawnType::HorseSpearman:
+    return k_turn_speed_cavalry_degrees;
+  case Game::Units::SpawnType::Sheep:
+    return k_turn_speed_sheep_degrees;
+  case Game::Units::SpawnType::Wolf:
+    return k_turn_speed_wolf_degrees;
+  default:
+    return desired_yaw_turn_speed_degrees;
+  }
+}
 
 auto formation_turn_speed_degrees(const Engine::Core::Entity& entity,
                                   const Engine::Core::UnitComponent& unit,
@@ -238,10 +275,12 @@ void finalize_orientation(Engine::Core::Entity* entity,
   }
 
   auto const* unit = entity->get_component<Engine::Core::UnitComponent>();
+  float const body_turn_speed = unit != nullptr
+                                    ? body_turn_speed_degrees(unit->spawn_type)
+                                    : desired_yaw_turn_speed_degrees;
   float const turn_speed =
-      (unit != nullptr ? formation_turn_speed_degrees(
-                             *entity, *unit, desired_yaw_turn_speed_degrees)
-                       : desired_yaw_turn_speed_degrees) *
+      (unit != nullptr ? formation_turn_speed_degrees(*entity, *unit, body_turn_speed)
+                       : body_turn_speed) *
       DefensiveUnitLayoutService::turn_speed_multiplier(*entity);
 
   bool const shell_holds_its_face =
@@ -280,7 +319,7 @@ void MovementSystem::update(Engine::Core::World* world, float delta_time) {
       m_obstruction_revision = revision;
 
       pathfinder->update_navigation_grid();
-      auto entities = world->get_entities_with<Engine::Core::MovementComponent>();
+      auto entities = world->collect_entities_with<Engine::Core::MovementComponent>();
       repath_after_obstruction_release(*world, entities);
     }
   }
@@ -376,22 +415,59 @@ void MovementSystem::repath_after_obstruction_release(
   }
 }
 
+namespace {
+
+[[nodiscard]] auto duel_footwork_body(const Engine::Core::Entity& entity) -> bool {
+  if (entity.has_component<Engine::Core::BuildingComponent>() ||
+      entity.has_component<Engine::Core::ElephantComponent>()) {
+    return false;
+  }
+  auto const* unit = entity.get_component<Engine::Core::UnitComponent>();
+  if (unit == nullptr || Game::Units::is_cavalry(unit->spawn_type)) {
+    return false;
+  }
+  return !FormationCombat::has_formation_slots(entity);
+}
+
+[[nodiscard]] auto duel_measure_target(const Engine::Core::Entity& entity,
+                                       float clock,
+                                       float breath_phase) -> float {
+  auto const* action =
+      entity.get_component<Engine::Core::RpgCommanderActionComponent>();
+  if (action != nullptr && action->action_running && action->combat_action_id != 0U) {
+    float const t = std::clamp(action->normalized_action_time, 0.0F, 1.0F);
+    if (t < 0.12F) {
+      return k_duel_measure_retreat * 0.4F;
+    }
+    if (t < 0.62F) {
+      float const s = (t - 0.12F) / 0.50F;
+      float const eased = s * s * (3.0F - 2.0F * s);
+      return k_duel_measure_retreat * 0.4F +
+             (k_duel_measure_advance - k_duel_measure_retreat * 0.4F) * eased;
+    }
+    float const s = std::clamp((t - 0.62F) / 0.33F, 0.0F, 1.0F);
+    return k_duel_measure_advance +
+           (k_duel_measure_retreat - k_duel_measure_advance) * s;
+  }
+  float const breath = std::sin(clock * 2.0F * std::numbers::pi_v<float> /
+                                    k_duel_measure_breath_period_seconds +
+                                breath_phase);
+  return k_duel_measure_retreat * 0.5F + breath * k_duel_measure_breath;
+}
+
+} // namespace
+
 auto MovementSystem::apply_duel_footwork(Engine::Core::Entity* entity,
                                          Engine::Core::World* world,
                                          Engine::Core::TransformComponent& transform,
-                                         const Engine::Core::AttackComponent& attack,
+                                         Engine::Core::AttackComponent& attack,
                                          float delta_time) const -> bool {
-  if (world == nullptr ||
-      entity->get_component<Engine::Core::CommanderComponent>() == nullptr) {
+  if (world == nullptr || !duel_footwork_body(*entity)) {
     return false;
   }
 
   auto* opponent = world->get_entity(attack.melee_lock_target_id);
-  if (opponent == nullptr) {
-    return false;
-  }
-
-  if (opponent->get_component<Engine::Core::CommanderComponent>() == nullptr) {
+  if (opponent == nullptr || !duel_footwork_body(*opponent)) {
     return false;
   }
 
@@ -426,6 +502,35 @@ auto MovementSystem::apply_duel_footwork(Engine::Core::Entity* entity,
   float const sin_a = std::sin(angle);
   transform.position.x = opponent_transform->position.x + (rx * cos_a) - (rz * sin_a);
   transform.position.z = opponent_transform->position.z + (rx * sin_a) + (rz * cos_a);
+
+  {
+    float const breath_phase = static_cast<float>(entity->get_id() % 17U) / 17.0F *
+                               2.0F * std::numbers::pi_v<float>;
+    float const advance = duel_measure_target(*entity, m_duel_clock, breath_phase);
+
+    float const own_reach = attack.melee_range;
+    float const opponent_reach =
+        opponent_attack != nullptr ? opponent_attack->melee_range : own_reach;
+    float const base_separation = std::clamp(0.5F * (own_reach + opponent_reach) *
+                                                 k_duel_base_separation_fraction,
+                                             k_duel_base_separation_min,
+                                             k_duel_base_separation_max);
+    float const desired_separation =
+        std::max(k_duel_min_separation, base_separation - advance);
+    float const to_x = opponent_transform->position.x - transform.position.x;
+    float const to_z = opponent_transform->position.z - transform.position.z;
+    float const separation = std::hypot(to_x, to_z);
+    if (separation > 0.0001F) {
+      float const error = separation - desired_separation;
+      float const max_step = k_duel_measure_step_speed * delta_time;
+      float step = std::clamp(
+          error * k_duel_measure_gain_per_second * delta_time, -max_step, max_step);
+      step = std::min(step, std::max(0.0F, separation - k_duel_min_separation));
+      transform.position.x += to_x / separation * step;
+      transform.position.z += to_z / separation * step;
+      attack.melee_footwork_offset = step;
+    }
+  }
 
   float const face_x = opponent_transform->position.x - transform.position.x;
   float const face_z = opponent_transform->position.z - transform.position.z;
@@ -505,10 +610,13 @@ void MovementSystem::move_unit(Engine::Core::Entity* entity,
 
   if (in_hold_mode) {
     if (!entity->has_component<Engine::Core::BuildingComponent>()) {
-      apply_desired_yaw(
-          transform,
-          delta_time,
-          formation_turn_speed_degrees(*entity, *unit, hold_mode_turn_speed_degrees));
+      apply_desired_yaw(transform,
+                        delta_time,
+                        formation_turn_speed_degrees(
+                            *entity,
+                            *unit,
+                            std::min(hold_mode_turn_speed_degrees,
+                                     body_turn_speed_degrees(unit->spawn_type))));
     }
     return;
   }
@@ -598,7 +706,7 @@ void MovementSystem::move_unit(Engine::Core::Entity* entity,
           std::atan2(movement->vx, movement->vz) * 180.0F / std::numbers::pi_v<float>;
       float const current = transform->rotation.y;
       float const diff = std::fmod((target_yaw - current + 540.0F), 360.0F) - 180.0F;
-      float const turn_speed = 720.0F;
+      float const turn_speed = body_turn_speed_degrees(unit->spawn_type);
       float const step =
           std::clamp(diff, -turn_speed * delta_time, turn_speed * delta_time);
       transform->rotation.y = current + step;

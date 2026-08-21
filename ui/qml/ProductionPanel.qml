@@ -43,10 +43,6 @@ Rectangle {
             "fallback_name": qsTr("Horse Spearman"),
             "build_time": 9
         }, {
-            "unit_type": "healer",
-            "fallback_name": "Healer",
-            "build_time": 8
-        }, {
             "unit_type": "builder",
             "fallback_name": "Builder",
             "build_time": 6
@@ -55,6 +51,12 @@ Rectangle {
             "fallback_name": qsTr("War Elephant"),
             "build_time": 20,
             "carthage_only": true
+        }]
+
+    readonly property var temple_recruit_cards: [{
+            "unit_type": "healer",
+            "fallback_name": "Healer",
+            "build_time": 8
         }]
 
     signal unit_details_requested(string unit_type, string nation)
@@ -131,7 +133,8 @@ Rectangle {
             "build_time": 0,
             "time_remaining": 0,
             "nation_id": "",
-            "has_home": false
+            "has_home": false,
+            "has_temple": false
         };
     }
 
@@ -283,7 +286,7 @@ Rectangle {
 
     function recruit_card_state(prod, unitInfo, queueTotal) {
         var popCost = population_cost(unitInfo);
-        if (!(prod.has_barracks || prod.has_home))
+        if (!(prod.has_barracks || prod.has_home || prod.has_temple))
             return {
                 "enabled": false,
                 "reason": qsTr("Cannot recruit")
@@ -766,7 +769,7 @@ Rectangle {
             }
 
             Rectangle {
-                property bool has_barracks: (productionPanel.selection_tick, (productionPanel.production && productionPanel.production.has_selected_type && productionPanel.production.has_selected_type("barracks")))
+                property bool has_barracks: (productionPanel.selection_tick, (productionPanel.production && productionPanel.production.has_selected_type && (productionPanel.production.has_selected_type("barracks") || productionPanel.production.has_selected_type("temple"))))
 
                 width: parent.width
                 height: rallyContent.height + 12
@@ -780,6 +783,7 @@ Rectangle {
                     id: rallyContent
 
                     property var prod: (productionPanel.selection_tick, (productionPanel.production && productionPanel.production.selected_state) ? productionPanel.production.selected_state() : productionPanel.default_production_state())
+                    property var temple_prod: (productionPanel.selection_tick, (productionPanel.production && productionPanel.production.selected_temple_state) ? productionPanel.production.selected_temple_state() : productionPanel.default_production_state())
                     property bool placing_barracks_rally: typeof gameView !== 'undefined' && gameView.cursor_mode === "place_barracks_rally"
 
                     anchors.horizontalCenter: parent.horizontalCenter
@@ -790,7 +794,7 @@ Rectangle {
                     Button {
                         id: rallyButton
 
-                        readonly property bool allowed: rallyContent.prod.has_barracks
+                        readonly property bool allowed: rallyContent.prod.has_barracks || rallyContent.temple_prod.has_temple
 
                         anchors.horizontalCenter: parent.horizontalCenter
                         width: parent.parent.width - 20
@@ -806,7 +810,7 @@ Rectangle {
                             productionPanel.rally_mode_toggled();
                         }
                         ToolTip.visible: hovered
-                        ToolTip.text: allowed ? qsTr("Set where newly recruited units will gather.\nRight-click to cancel.") : qsTr("Build a barracks before setting a rally point.")
+                        ToolTip.text: allowed ? qsTr("Set where newly recruited units will gather.\nRight-click to cancel.") : qsTr("Select a barracks or temple before setting a rally point.")
                         ToolTip.delay: 500
 
                         background: Rectangle {
@@ -2444,6 +2448,8 @@ Rectangle {
                 Column {
                     id: templeContent
 
+                    property var prod: (productionPanel.selection_tick, (productionPanel.production && productionPanel.production.selected_temple_state) ? productionPanel.production.selected_temple_state() : productionPanel.default_production_state())
+
                     anchors.horizontalCenter: parent.horizontalCenter
                     anchors.top: parent.top
                     anchors.margins: 8
@@ -2488,6 +2494,100 @@ Rectangle {
                         anchors.horizontalCenter: parent.horizontalCenter
                         text: qsTr("Watches over a wide stretch of ground and holds a settlement together")
                         color: "#F4E7C8"
+                        font.pixelSize: Design.Typography.caption
+                        wrapMode: Text.WordWrap
+                        horizontalAlignment: Text.AlignHCenter
+                        width: parent.width
+                    }
+
+                    Rectangle {
+                        width: parent.width
+                        height: 1
+                        color: "#3B2F24"
+                    }
+
+                    Text {
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        text: qsTr("TAKE VOWS")
+                        color: hs.bronze
+                        font.pixelSize: Design.Typography.caption
+                        font.bold: true
+                    }
+
+                    Rectangle {
+                        width: parent.width - 20
+                        height: Math.max(Design.A11y.scaled(20), Design.Typography.label + 6)
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        radius: 10
+                        color: "#120D09"
+                        border.color: "#2F251D"
+                        border.width: 2
+                        visible: templeContent.prod.in_progress
+
+                        Rectangle {
+                            anchors.left: parent.left
+                            anchors.verticalCenter: parent.verticalCenter
+                            anchors.margins: 2
+                            height: parent.height - 4
+                            width: {
+                                if (!templeContent.prod.in_progress || templeContent.prod.build_time <= 0)
+                                    return 0;
+                                var progress = 1 - (Math.max(0, templeContent.prod.time_remaining) / templeContent.prod.build_time);
+                                return Math.max(0, (parent.width - 4) * progress);
+                            }
+                            color: "#7F9A5F"
+                            radius: 8
+                        }
+
+                        Text {
+                            anchors.centerIn: parent
+                            text: qsTr("%1s").arg(Math.max(0, templeContent.prod.time_remaining).toFixed(1))
+                            color: "#F4E7C8"
+                            font.pixelSize: Design.Typography.caption
+                            font.bold: true
+                            style: Text.Outline
+                            styleColor: "#120D09"
+                        }
+                    }
+
+                    Grid {
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        columns: 3
+                        columnSpacing: 8
+                        rowSpacing: 8
+
+                        Repeater {
+                            model: productionPanel.temple_recruit_cards
+
+                            delegate: RecruitCard {
+                                required property var modelData
+
+                                panel: productionPanel
+                                prod: templeContent.prod
+                                unit_type: modelData.unit_type
+                                fallback_build_time: modelData.build_time
+                                tooltip_text: panel ? panel.recruit_tooltip(unit_info, modelData.fallback_name, modelData.build_time, false) : ""
+                                onRecruit_requested: function (unitType) {
+                                    productionPanel.recruit_unit(unitType);
+                                }
+                                onDetails_requested: function (unitType, nation) {
+                                    productionPanel.unit_details_requested(unitType, nation);
+                                }
+                            }
+                        }
+                    }
+
+                    Text {
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        text: qsTr("Available Population: %1 / %2").arg(templeContent.prod.manpower_available || 0).arg(templeContent.prod.max_units || 0)
+                        color: (templeContent.prod.manpower_available <= 0) ? "#C0403B" : "#D4B57C"
+                        font.pixelSize: Design.Typography.caption
+                    }
+
+                    Text {
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        text: qsTr("Deliver civilians here to raise the temple's available population")
+                        color: "#8D7146"
                         font.pixelSize: Design.Typography.caption
                         wrapMode: Text.WordWrap
                         horizontalAlignment: Text.AlignHCenter

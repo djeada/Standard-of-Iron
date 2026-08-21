@@ -8,6 +8,7 @@
 
 #include <array>
 #include <memory>
+#include <unordered_map>
 #include <utility>
 #include <vector>
 
@@ -17,6 +18,7 @@
 #include "render/draw_queue.h"
 #include "render/frame_budget.h"
 #include "render/gl/frame_environment.h"
+#include "render/graphics_settings.h"
 #include "render/i_render_backend.h"
 #include "render/local_lighting.h"
 #include "render/mist_volume.h"
@@ -224,6 +226,11 @@ private:
                                 CommandExecutionContext& context);
   void execute_rigged_commands(const PreparedBatch& prepared,
                                CommandExecutionContext& context);
+
+  void sync_graphics_profile();
+  void update_contact_shadow_uniforms();
+  void apply_graphics_profile(const Render::GraphicsProfile& profile, bool initial);
+
   void render_directional_shadows(const DrawQueue& queue, const Camera& cam);
   void ensure_directional_shadow_resources(int resolution, int cascades);
   void release_directional_shadow_resources();
@@ -292,6 +299,7 @@ private:
   Shader* m_basic_shader = nullptr;
   Shader* m_grid_shader = nullptr;
   Shader* m_shadow_shader = nullptr;
+  Shader* m_shadow_instanced_shader = nullptr;
 
   Shader* m_last_bound_shader = nullptr;
   Texture* m_last_bound_texture = nullptr;
@@ -302,10 +310,17 @@ private:
   GLuint m_environment_lighting_ubo{0};
   GLuint m_local_lighting_ubo{0};
   Render::LocalLightFader m_local_light_fader{};
+  std::vector<Render::LocalLight> m_active_local_lights{};
   GLuint m_directional_shadow_ubo{0};
   GLuint m_directional_shadow_fbo{0};
+  std::uint32_t m_graphics_generation{0U};
+  bool m_graphics_profile_applied{false};
+  Render::ShaderTier m_shader_tier{Render::ShaderTier::High};
+  Render::DirectionalShadowSettings m_shadow_settings{};
   GLuint m_directional_shadow_texture{0};
   GLuint m_directional_shadow_far_texture{0};
+  GLuint m_directional_shadow_compare_sampler{0};
+  GLuint m_directional_shadow_depth_sampler{0};
   int m_directional_shadow_resolution{0};
   int m_directional_shadow_far_resolution{0};
   int m_directional_shadow_cascades{0};
@@ -319,6 +334,9 @@ private:
   };
   std::vector<ShadowStaticCaster> m_shadow_static_casters;
   std::vector<const ShadowStaticCaster*> m_shadow_cascade_casters;
+
+  std::unordered_map<const Mesh*, std::pair<float, float>>
+      m_shadow_terrain_height_cache;
 
   std::size_t m_rigged_drawn_this_frame = 0;
   PlaybackStats m_last_playback_stats{};

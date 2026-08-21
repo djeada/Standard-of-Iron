@@ -86,7 +86,7 @@ auto building_action(const InteractionTargetingRequest& request,
     return InteractionAction::None;
   }
 
-  if (request.has_civilians && unit.spawn_type == Game::Units::SpawnType::Barracks) {
+  if (request.has_civilians && Game::Units::is_recruitment_building(unit.spawn_type)) {
     const auto* production = entity.get_component<Engine::Core::ProductionComponent>();
     if (production != nullptr &&
         production->manpower_available < production->max_units) {
@@ -113,7 +113,7 @@ void collect_sheep(const InteractionTargetingRequest& request,
                    float max_distance_sq,
                    std::vector<Scored>& out) {
   for (auto* entity :
-       request.world->get_entities_with<Engine::Core::WildlifeComponent>()) {
+       request.world->collect_entities_with<Engine::Core::WildlifeComponent>()) {
     if (entity == nullptr || !sheep_is_slaughterable(*entity) ||
         food_target_claimed(*request.world, entity->get_id())) {
       continue;
@@ -148,7 +148,7 @@ void collect_buildings(const InteractionTargetingRequest& request,
                        float max_distance_sq,
                        std::vector<Scored>& out) {
   for (auto* entity :
-       request.world->get_entities_with<Engine::Core::BuildingComponent>()) {
+       request.world->collect_entities_with<Engine::Core::BuildingComponent>()) {
     if (entity == nullptr) {
       continue;
     }

@@ -46,7 +46,7 @@ enum class SoldierCullReason : std::uint8_t {
   None = 0,
   Frustum,
   Fog,
-  Billboard,
+  Distance,
   LensGap,
 };
 

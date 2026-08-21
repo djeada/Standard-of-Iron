@@ -82,35 +82,40 @@ void main() {
   float entry_mask = clamp(a_uv.y, 0.0, 1.0);
   float feature_foot = clamp(a_uv.x, 0.0, 1.0);
 
-  float displacement = sample_terrain_displacement(base_wp,
-                                                   world_normal,
-                                                   u_noise_offset,
-                                                   u_height_noise_strength,
-                                                   u_height_noise_frequency,
-                                                   entry_mask);
+  float displacement = 0.0;
   vec3 wp = base_wp;
-  wp.y += displacement;
+  vec3 displaced_normal = world_normal;
 
-  float sample_step = 0.35;
-  vec3 dx = vec3(sample_step, 0.0, 0.0);
-  vec3 dz = vec3(0.0, 0.0, sample_step);
-  vec3 px = base_wp + dx;
-  vec3 pz = base_wp + dz;
-  px.y += sample_terrain_displacement(px,
-                                      world_normal,
-                                      u_noise_offset,
-                                      u_height_noise_strength,
-                                      u_height_noise_frequency,
-                                      entry_mask);
-  pz.y += sample_terrain_displacement(pz,
-                                      world_normal,
-                                      u_noise_offset,
-                                      u_height_noise_strength,
-                                      u_height_noise_frequency,
-                                      entry_mask);
-  vec3 displaced_normal = normalize(cross(pz - wp, px - wp));
-  if (dot(displaced_normal, world_normal) < 0.0) {
-    displaced_normal = -displaced_normal;
+  if (u_height_noise_strength > 0.00001) {
+    displacement = sample_terrain_displacement(base_wp,
+                                               world_normal,
+                                               u_noise_offset,
+                                               u_height_noise_strength,
+                                               u_height_noise_frequency,
+                                               entry_mask);
+    wp.y += displacement;
+
+    float sample_step = 0.35;
+    vec3 dx = vec3(sample_step, 0.0, 0.0);
+    vec3 dz = vec3(0.0, 0.0, sample_step);
+    vec3 px = base_wp + dx;
+    vec3 pz = base_wp + dz;
+    px.y += sample_terrain_displacement(px,
+                                        world_normal,
+                                        u_noise_offset,
+                                        u_height_noise_strength,
+                                        u_height_noise_frequency,
+                                        entry_mask);
+    pz.y += sample_terrain_displacement(pz,
+                                        world_normal,
+                                        u_noise_offset,
+                                        u_height_noise_strength,
+                                        u_height_noise_frequency,
+                                        entry_mask);
+    displaced_normal = normalize(cross(pz - wp, px - wp));
+    if (dot(displaced_normal, world_normal) < 0.0) {
+      displaced_normal = -displaced_normal;
+    }
   }
 
   v_world_pos = wp;

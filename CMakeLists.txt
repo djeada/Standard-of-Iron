@@ -464,6 +464,19 @@ if(Python3_Interpreter_FOUND)
         COMMENT "Checking the ambient-lookup budget"
         VERBATIM
     )
+    # A radius question answered by a full entity scan costs O(units) per asker,
+    # so a system that asks one per unit costs O(units^2) per tick. Local queries
+    # go through `world.spatial_index()`; the number of full scans may only go
+    # down. See scripts/check-world-scans.py and scripts/world_scan_budget.json.
+    add_custom_target(
+        check_world_scans
+        ALL
+        COMMAND
+            ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/scripts/check-world-scans.py
+            ${CMAKE_SOURCE_DIR}
+        COMMENT "Checking the full-world-scan budget"
+        VERBATIM
+    )
 else()
     message(STATUS "Python3 not found; skipping the layering and module checks")
 endif()
@@ -872,6 +885,7 @@ if(QT_VERSION_MAJOR EQUAL 6)
             assets/shaders/dead_tree_instanced.vert
             assets/shaders/terrain_chunk.frag
         assets/shaders/terrain_field_bake.frag
+        assets/shaders/terrain_microdetail_bake.frag
             assets/shaders/terrain_chunk.vert
             assets/maps/map_forest.json
             assets/maps/map_rivers.json

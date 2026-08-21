@@ -65,7 +65,7 @@ auto find_zone(const Game::Map::MapDefinition& map_definition,
 auto living_guardians_of_owner(Engine::Core::World& world, int owner_id)
     -> std::vector<Engine::Core::UnitComponent*> {
   std::vector<Engine::Core::UnitComponent*> units;
-  for (auto* entity : world.get_entities_with<Engine::Core::UnitComponent>()) {
+  for (auto* entity : world.collect_entities_with<Engine::Core::UnitComponent>()) {
     auto* unit = entity != nullptr
                      ? entity->get_component<Engine::Core::UnitComponent>()
                      : nullptr;
@@ -78,7 +78,7 @@ auto living_guardians_of_owner(Engine::Core::World& world, int owner_id)
 }
 
 auto find_local_commander(Engine::Core::World& world) -> Engine::Core::Entity* {
-  for (auto* entity : world.get_entities_with<Engine::Core::UnitComponent>()) {
+  for (auto* entity : world.collect_entities_with<Engine::Core::UnitComponent>()) {
     if (entity == nullptr ||
         entity->get_component<Engine::Core::CommanderComponent>() == nullptr) {
       continue;

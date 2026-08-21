@@ -120,7 +120,7 @@ auto process_structure_fires(Engine::Core::World* world,
 
   float const step = std::max(0.0F, delta_time);
   for (auto* entity :
-       world->get_entities_with<Engine::Core::StructureFireComponent>()) {
+       world->collect_entities_with<Engine::Core::StructureFireComponent>()) {
     if (entity == nullptr) {
       continue;
     }

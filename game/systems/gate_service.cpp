@@ -43,35 +43,48 @@ auto GateService::passage_extent(float rotation_y) -> GateExtent {
                             : GateComponent::k_passage_half_width};
 }
 
+auto GateService::lane_half_width() -> float {
+  auto* pathfinder = NavGrid::get_pathfinder();
+  constexpr float k_fallback_cell_size = 1.0F;
+  const float cell_size =
+      pathfinder != nullptr ? pathfinder->grid_cell_size() : k_fallback_cell_size;
+  return cell_size * 0.5F;
+}
+
+auto GateService::lane_center(float center_x, float center_z) -> QVector3D {
+  auto* pathfinder = NavGrid::get_pathfinder();
+  if (pathfinder == nullptr) {
+    return {center_x, 0.0F, center_z};
+  }
+  return pathfinder->grid_to_world(pathfinder->world_to_grid(center_x, center_z));
+}
+
+auto GateService::lane_extent(float rotation_y) -> GateExtent {
+  const bool spans_x = GateComponent::spans_x_axis(rotation_y);
+  const float lane_half = lane_half_width();
+
+  const float crossing_half = GateComponent::k_cross_half_extent +
+                              BuildingCollisionRegistry::get_grid_padding();
+  return {.half_x = spans_x ? lane_half : crossing_half,
+          .half_z = spans_x ? crossing_half : lane_half};
+}
+
 auto GateService::passage_blocker_bounds(float center_x,
                                          float center_z,
                                          float rotation_y) -> WorldRect {
-  const auto extent = passage_extent(rotation_y);
-  WorldRect bounds{.min_x = center_x - extent.half_x,
-                   .max_x = center_x + extent.half_x,
-                   .min_z = center_z - extent.half_z,
-                   .max_z = center_z + extent.half_z};
+  const QVector3D lane = lane_center(center_x, center_z);
+  const float lane_half = lane_half_width();
+  const bool spans_x = GateComponent::spans_x_axis(rotation_y);
 
-  auto* pathfinder = NavGrid::get_pathfinder();
-  if (pathfinder == nullptr) {
-    return bounds;
-  }
+  const float half_x = spans_x ? lane_half : GateComponent::k_cross_half_extent;
+  const float half_z = spans_x ? GateComponent::k_cross_half_extent : lane_half;
+  const float axis_x = spans_x ? lane.x() : center_x;
+  const float axis_z = spans_x ? center_z : lane.z();
 
-  const auto snapped = pathfinder->cell_range_world_bounds(
-      pathfinder->cells_covering(center_x, center_z, extent.half_x, extent.half_z));
-  if (Engine::Core::GateComponent::spans_x_axis(rotation_y)) {
-    bounds.min_x = snapped.min_x;
-    bounds.max_x = snapped.max_x;
-  } else {
-    bounds.min_z = snapped.min_z;
-    bounds.max_z = snapped.max_z;
-  }
-  return bounds;
-}
-
-void GateService::mark_gate_footprint_navigable(Engine::Core::EntityID entity_id) {
-  BuildingCollisionRegistry::instance().set_building_navigation_blocking(entity_id,
-                                                                         false);
+  return {.min_x = axis_x - half_x,
+          .max_x = axis_x + half_x,
+          .min_z = axis_z - half_z,
+          .max_z = axis_z + half_z};
 }
 
 void GateService::sync_gate_footprint(Engine::Core::EntityID entity_id,
@@ -107,7 +120,7 @@ void GateService::refresh_blockers(Engine::Core::World& world) {
   auto& storage = blocker_storage();
   storage.clear();
 
-  for (auto* entity : world.get_entities_with<GateComponent>()) {
+  for (auto* entity : world.collect_entities_with<GateComponent>()) {
     if (entity == nullptr || entity->has_component<PendingRemovalComponent>()) {
       continue;
     }

@@ -2,6 +2,7 @@
 #include <cstddef>
 #include <cstdint>
 
+#include "animation/combat_root_motion_manifest.h"
 #include "prepare_internal.h"
 #include "render/submission_visibility.h"
 
@@ -542,7 +543,20 @@ void prepare_humanoid_instances(const HumanoidRendererBase& owner,
     turn_cache.turn_time = anim.time;
     turn_cache.turn_time_valid = true;
     float const unit_speed = unit_comp != nullptr ? unit_comp->speed : 2.0F;
-    turn_smoothing_cap = std::max(1.6F, unit_speed * 1.25F);
+
+    float travel_speed = unit_speed;
+    if (Render::Creature::is_running_animation(anim.movement_state)) {
+      travel_speed =
+          std::max(travel_speed,
+                   unit_speed * Engine::Core::StaminaComponent::k_run_speed_multiplier);
+    }
+    if (ctx.entity != nullptr) {
+      if (const auto* motion =
+              ctx.entity->get_component<Engine::Core::MotionPresentationComponent>()) {
+        travel_speed = std::max(travel_speed, motion->speed);
+      }
+    }
+    turn_smoothing_cap = soldier_catch_up_speed(travel_speed);
     bool const combat_active =
         anim.is_attacking || formation_fight_active || anim.is_in_melee_lock;
     if (combat_active) {
@@ -582,11 +596,27 @@ void prepare_humanoid_instances(const HumanoidRendererBase& owner,
       soldier_render_anim.hit_recoil_x = 0.0F;
       soldier_render_anim.hit_recoil_z = 0.0F;
     }
+    float hit_reaction_base_intensity =
+        soldier_render_anim.is_hit_reacting
+            ? soldier_render_anim.hit_reaction_intensity /
+                  std::max(0.05F, 1.0F - soldier_render_anim.hit_reaction_progress)
+            : 0.0F;
     if (formation_hit != nullptr && formation_hit->remaining > 0.0F &&
         formation_hit->soldier_slot == static_cast<std::uint16_t>(idx)) {
       soldier_render_anim.is_hit_reacting = true;
       soldier_render_anim.hit_reaction_intensity = formation_hit->intensity;
-      if (ctx.entity != nullptr) {
+      hit_reaction_base_intensity = formation_hit->intensity;
+      soldier_render_anim.hit_reaction_kind = formation_hit->reaction_kind;
+      float const hit_duration = formation_hit->duration > 0.0F
+                                     ? formation_hit->duration
+                                     : std::max(formation_hit->remaining, 0.28F);
+      soldier_render_anim.hit_reaction_progress =
+          std::clamp(1.0F - formation_hit->remaining / hit_duration, 0.0F, 1.0F);
+      soldier_render_anim.hit_recoil_x = formation_hit->hit_direction_x;
+      soldier_render_anim.hit_recoil_z = formation_hit->hit_direction_z;
+      if (std::abs(soldier_render_anim.hit_recoil_x) < 1.0e-4F &&
+          std::abs(soldier_render_anim.hit_recoil_z) < 1.0e-4F &&
+          ctx.entity != nullptr) {
         if (auto const* feedback =
                 ctx.entity->get_component<Engine::Core::HitFeedbackComponent>()) {
           soldier_render_anim.hit_recoil_x = feedback->hit_direction_x;
@@ -598,8 +628,10 @@ void prepare_humanoid_instances(const HumanoidRendererBase& owner,
     bool const authored_swing_owns_body =
         soldier_render_anim.has_authored_action_phase &&
         soldier_render_anim.is_attacking;
-    bool const swing_recoil_active =
-        authored_swing_owns_body && soldier_render_anim.is_hit_reacting;
+    bool swing_recoil_active =
+        (authored_swing_owns_body || soldier_render_anim.hit_reaction_kind ==
+                                         Engine::Core::HitReactionKind::Recoil) &&
+        soldier_render_anim.is_hit_reacting;
     if (swing_recoil_active) {
       soldier_render_anim.is_hit_reacting = false;
     }
@@ -647,6 +679,8 @@ void prepare_humanoid_instances(const HumanoidRendererBase& owner,
       smoothing_inputs.max_speed = turn_smoothing_cap * cap_jitter;
       smoothing_inputs.turn_rate_degrees = is_mounted_spawn ? 240.0F : 540.0F;
       smoothing_inputs.allow_travel_yaw = turn_smoothing_travel_yaw;
+
+      smoothing_inputs.frame_index = frame_index + 1U;
       turn_smoothing = resolve_soldier_turn_smoothing(
           layout_cache_comp->turn_states[static_cast<std::size_t>(idx)],
           smoothing_inputs);
@@ -748,7 +782,7 @@ void prepare_humanoid_instances(const HumanoidRendererBase& owner,
             soldier_render_anim,
             soldier_render_anim.combat_visual.attack_phase,
             Render::Creature::resolve_pose(soldier_render_anim).animation_state,
-            HumanoidLOD::Billboard,
+            HumanoidLOD::Culled,
             outside_frustum ? Render::Profiling::SoldierCullReason::Frustum
             : hidden_by_fog ? Render::Profiling::SoldierCullReason::Fog
                             : Render::Profiling::SoldierCullReason::LensGap,
@@ -909,6 +943,17 @@ void prepare_humanoid_instances(const HumanoidRendererBase& owner,
     if (locomotion_persistent_state != nullptr) {
       previous_combat_visual = locomotion_persistent_state->combat_visual;
     }
+
+    if (soldier_render_anim.is_hit_reacting &&
+        soldier_render_anim.hit_reaction_kind !=
+            Engine::Core::HitReactionKind::Stagger &&
+        previous_combat_visual.active &&
+        (previous_combat_visual.phase == Animation::CombatTransactionPhase::Strike ||
+         previous_combat_visual.phase ==
+             Animation::CombatTransactionPhase::FollowThrough)) {
+      swing_recoil_active = true;
+      soldier_render_anim.is_hit_reacting = false;
+    }
     Render::Creature::CombatVisualRawInputs raw_combat{};
     raw_combat.sample_time =
         soldier_render_anim.time *
@@ -918,6 +963,18 @@ void prepare_humanoid_instances(const HumanoidRendererBase& owner,
 
     bool visual_attack_requested =
         soldier_render_anim.is_attacking || soldier_in_formation_fight;
+    bool const lock_only_attack =
+        soldier_render_anim.attack_from_melee_lock &&
+        soldier_render_anim.combat_phase == CombatAnimPhase::Idle &&
+        !soldier_render_anim.has_authored_action_phase;
+    bool const single_body_unit = ctx.force_single_soldier || total_layout_count <= 1;
+    if (lock_only_attack && single_body_unit && soldier_directive == nullptr &&
+        !soldier_in_formation_fight) {
+
+      visual_attack_requested = false;
+      soldier_render_anim.movement_state =
+          Render::Creature::MovementAnimationState::Idle;
+    }
     if (soldier_in_formation_fight && !soldier_directive->damage_carrier) {
       using Role = Engine::Core::FormationSoldierCombatRole;
       visual_attack_requested = soldier_directive->combat_role == Role::LeadStrike ||
@@ -959,7 +1016,9 @@ void prepare_humanoid_instances(const HumanoidRendererBase& owner,
 
     auto combat_resolution = Render::Creature::resolve_combat_visual_state(
         previous_combat_visual, raw_combat, lane_resolution.profile);
-    if (formation_melee) {
+    if (formation_melee ||
+        (lock_only_attack && single_body_unit && soldier_directive == nullptr &&
+         !soldier_in_formation_fight)) {
       combat_resolution.resolved.authoritative = true;
     }
     if (allow_animation_persistence && locomotion_persistent_state != nullptr) {
@@ -1154,6 +1213,60 @@ void prepare_humanoid_instances(const HumanoidRendererBase& owner,
                              RCP::model_world_origin(inst_ctx.model).y() +
                                  casualty_offset_y);
     }
+    if (!soldier_is_casualty_body && !is_mounted_spawn &&
+        !soldier_render_anim.has_authored_action_phase &&
+        !soldier_render_anim.is_in_hold_mode && !soldier_render_anim.is_constructing) {
+      float recoil_dir_x = soldier_render_anim.hit_recoil_x;
+      float recoil_dir_z = soldier_render_anim.hit_recoil_z;
+      if (std::abs(recoil_dir_x) < 1.0e-5F && std::abs(recoil_dir_z) < 1.0e-5F) {
+        recoil_dir_x = -forward.x();
+        recoil_dir_z = -forward.z();
+      }
+      auto const root_motion = Animation::resolve_combat_root_motion({
+          .attacking = soldier_render_anim.combat_visual.active &&
+                       soldier_render_anim.is_attacking,
+          .melee = soldier_render_anim.combat_visual.is_melee,
+          .mounted = is_mounted_spawn,
+          .formation_member = soldier_directive != nullptr &&
+                              !ctx.force_single_soldier &&
+                              !soldier_directive->damage_carrier,
+          .phase = soldier_render_anim.combat_visual.phase,
+          .attack_phase = soldier_render_anim.combat_visual.attack_phase,
+          .attack_family = soldier_render_anim.combat_visual.attack_family,
+          .swing_outcome = static_cast<Animation::MeleeSwingOutcome>(
+              soldier_render_anim.attack_exchange_outcome),
+          .hit_reacting = soldier_render_anim.is_hit_reacting || swing_recoil_active,
+          .reaction = Animation::hit_reaction_form_from_kind(
+              static_cast<std::uint8_t>(soldier_render_anim.hit_reaction_kind)),
+          .reaction_progress = soldier_render_anim.hit_reaction_progress,
+          .reaction_intensity = hit_reaction_base_intensity,
+          .recoil_dir_x = recoil_dir_x,
+          .recoil_dir_z = recoil_dir_z,
+          .body_displaced_by_simulation =
+              soldier_directive == nullptr && !has_shared_formation_layout,
+          .seed = inst_seed,
+      });
+      if (root_motion.active) {
+        QVector3D const root_origin = inst_ctx.model.map(QVector3D(0.0F, 0.0F, 0.0F));
+        QMatrix4x4 root;
+        root.translate(
+            root_motion.world_offset_x + forward.x() * root_motion.forward_offset,
+            0.0F,
+            root_motion.world_offset_z + forward.z() * root_motion.forward_offset);
+        root.translate(root_origin);
+        if (std::abs(root_motion.pitch_degrees) > 0.01F) {
+          root.rotate(root_motion.pitch_degrees, right);
+        }
+        if (std::abs(root_motion.roll_degrees) > 0.01F) {
+          root.rotate(root_motion.roll_degrees, forward);
+        }
+        if (root_motion.squash > 0.001F) {
+          root.scale(1.0F, 1.0F - root_motion.squash, 1.0F);
+        }
+        root.translate(-root_origin);
+        inst_ctx.model = root * inst_ctx.model;
+      }
+    }
     anim_ctx.instance_position = inst_ctx.model.map(QVector3D(0.0F, 0.0F, 0.0F));
 
     QVector3D const soldier_world_pos = anim_ctx.instance_position;
@@ -1186,7 +1299,7 @@ void prepare_humanoid_instances(const HumanoidRendererBase& owner,
             anim_ctx.attack_phase,
             Render::Creature::resolve_pose(anim_ctx.inputs).animation_state,
             static_cast<HumanoidLOD>(lod_decision.lod),
-            Render::Profiling::SoldierCullReason::Billboard,
+            Render::Profiling::SoldierCullReason::Distance,
             false,
             soldier_world_pos,
             applied_yaw,
@@ -1285,14 +1398,9 @@ void prepare_humanoid_instances(const HumanoidRendererBase& owner,
     shadow_inputs.lod = soldier_lod;
     shadow_inputs.camera_distance = lod_state.camera_distance;
     shadow_inputs.mounted = is_mounted_spawn;
-    shadow_inputs.formation_id = ctx.entity != nullptr ? ctx.entity->get_id() : 0U;
-    shadow_inputs.standing_idle =
-        !is_mounted_spawn &&
-        soldier_render_anim.movement_state ==
-            Render::Creature::MovementAnimationState::Idle &&
-        !soldier_render_anim.is_attacking && !soldier_render_anim.is_hit_reacting &&
-        !soldier_render_anim.is_dying && !soldier_render_anim.is_dead &&
-        !commander_jump.active;
+    shadow_inputs.facing_yaw_degrees = applied_yaw;
+    shadow_inputs.intensity_scale =
+        (soldier_render_anim.is_dying || soldier_render_anim.is_dead) ? 0.45F : 1.0F;
     shadow_inputs.surface_world_y = shadow_surface_world_y;
     shadow_inputs.surface_height_valid = shadow_surface_height_valid;
     const auto shadow_state = RCP::prepare_humanoid_shadow_state(shadow_inputs);
@@ -1335,7 +1443,7 @@ void prepare_humanoid_instances(const HumanoidRendererBase& owner,
       break;
     }
 
-    case HumanoidLOD::Billboard:
+    case HumanoidLOD::Culled:
 
       break;
     }

@@ -11,6 +11,39 @@ may change in any release — see [Save compatibility](#save-compatibility).
 
 ### Added
 
+- **The game has its own typeface.** Standard of Iron now ships **Standard Iron
+  Display**, an original Roman monumental face — wedge serifs, a low-slung `A`,
+  a broad `T`, a blade-legged `R`, a long-tailed `Q`, wedge serifs on every
+  terminal including the diagonals, and figures drawn so that
+  `0`/`O`, `1`/`7` and `3`/`8` never trade places in a unit count. It is
+  generated from geometry in [tools/font/](tools/font/), not drawn in an editor,
+  so letters get fixed in source and rebuilt (`python3
+tools/font/build_standard_iron.py`, then `tools/font/proof.py` to look at it).
+  It covers capitals, figures, punctuation and the Latin-1 accented capitals the
+  German, Spanish and Portuguese builds need; there is deliberately no
+  lowercase, so `Typography.titleFamily` is bound only to figures or alongside
+  `AllUppercase`. The main wordmark and loading title now share it with victory
+  and defeat headlines, the battle report headline and its tallies. Released
+  under the SIL Open Font License 1.1.
+
+- **Typography ships with the game instead of being borrowed from the host.**
+  Both bundled faces live in [assets/fonts/](assets/fonts/) — the display face
+  and EB Garamond, which backs it up for everything it has no glyph for. QML
+  loads them from qrc, the Qt Widgets tools register them through
+  `Ui::BrandFonts`, and `scripts/promo-edit.py` resolves them repo-relative.
+
+### Fixed
+
+- **Promotional reels no longer letter themselves differently on every
+  machine.** `scripts/promo-edit.py` used to walk an eight-deep list of
+  `/usr/share/fonts` paths and caption a video with whichever face it found
+  first, so the same promo spec cut on a build box, a laptop and CI could
+  publish three differently-lettered videos from identical inputs, with nothing
+  in the output saying which one it got. It now resolves the bundled face and
+  fails loudly rather than falling back. The arena's burned-in counters and
+  state stamps went the same way, through `Arena::Typography`, instead of
+  taking whatever `painter.font()` returned.
+
 - **Farms, and food that means something.** Both nations can raise a **Farm**
   (40 wood, 10 stone) that grows grain in sixty-second cycles — furrows, sprouts,
   green stalks, then a golden field — and a builder reaps it with **Collect** for
@@ -94,8 +127,98 @@ may change in any release — see [Save compatibility](#save-compatibility).
   never showed. Footer keys spell out `↑ ↓`, `Enter` and `Esc`, and **Play**
   explains in a tooltip why it is refusing when the setup is not startable.
 
+### Changed
+
+- **Large battles cost a fraction of what they did, and the engine can now say
+  why.** A thousand-unit battle line spent about half a second of CPU on every
+  simulation tick. Nearly all of it came from one line: the combat mode
+  processor asked "is there an enemy in melee reach?" by walking every unit in
+  the world, once per attacking unit, computing formation contact geometry for
+  each — roughly 620 full-world scans and 620,000 entity handles resolved per
+  tick. It now asks the world's spatial index for the units actually inside the
+  attacker's reach. The same battle line ticks in about a fifth of the time,
+  with the world digest unchanged.
+
+    The scaffolding around that fix is the more durable part.
+    `Engine::Core::WorldSpatialIndex` belongs to the world it indexes, is
+    rebuilt once per tick, and now answers the patrol, healing and combat
+    proximity questions that used to scan everything.
+    `World::view<A, B>()` iterates matching entities without allocating, and the
+    materialising query it replaces was renamed `collect_entities_with` so that
+    its cost is visible at the call site. `scripts/check-world-scans.py` keeps
+    the number of full-world scans from growing back.
+
+    `Engine::Core::SystemProfiler` reports per-system tick times, the queries
+    each system opened and how many candidates they examined, and attributes
+    materialising scans to the source line that made them — which is how the
+    line above was found. `build/bin/sim_benchmark` is the repeatable 1k/5k/10k
+    workload behind those numbers.
+
+    Simulation phases are now named (`Engine::Core::SystemPhase`), structural
+    changes can be deferred to the barriers between them
+    (`Engine::Core::DeferredMutations`), and a system may declare what it reads
+    and writes so a future scheduler can check rather than assume. Nothing
+    reordered: a test asserts the phases only ever advance down the registry.
+
+    The renderer's battle optimiser stopped pretending to cull. Its
+    `should_render_unit` hook had been `return true` with a counter behind a
+    mutex; the real culling is frustum and fog, well before it. What remains —
+    animation throttling and the batching ratio — reads one immutable
+    per-frame snapshot instead of a lock and three atomics per unit, and the
+    object belongs to the renderer rather than to the process.
+
 ### Fixed
 
+- **Animals beside a campfire no longer shine like reflectors, and the
+  commander portrait is lit again.** Two separate things. The rain sheen was
+  applied at full strength to fur and hide, so a wet sheep or horse next to a
+  fire glinted like a wet helmet; coats now take a fifth of it, and the
+  firelight term has a soft knee so pale wool warms up instead of blowing out.
+  Separately, the uniform-handle rework left one raw `glUniform3fv` for the
+  rigged role-colour array, so every single-draw rigged creature (the
+  commander's portrait bust, a lone horse or elephant, a sheep that missed the
+  instanced batch) rendered with garbage palette colours - usually black. It
+  now goes through `Shader`, a source test forbids raw `glUniform*` outside it,
+  and the new `wildlife_firelight` arena fixture (sheep, wolves, a horse and an
+  elephant around one fire in the rain at night) exists to review both.
+  Creatures also take only half the moon key after dark, so a white coat under
+  the night sky reads as moonlit rather than floodlit.
+- **Troops, horses and elephants no longer look like they hover.** Every
+  creature now carries a grounding blob - a soft occlusion ellipse centred
+  under its footprint, tilted to the slope and elongated along its facing -
+  whether it is marching, fighting or standing, at every preset; it used to
+  exist only for a few dozen idle soldiers, so anything moving had nothing
+  anchoring it to the ground and the noon sun hid the cast shadow under the
+  body. The blobs draw in a handful of instanced batches, so a thousand of
+  them cost a few draw calls. Where the cascaded shadow maps are off (Low) the
+  blob keeps a sun-offset lobe so there is still a shadow. On the soldiers
+  themselves the lowest span of the figure sits in its own occlusion, boots
+  and straps are leather again instead of team-coloured slippers, helmets,
+  mail and blades get a real metal highlight and sky reflection, leather a
+  soft sheen, skin a warm shadow side, and the shadow-side floor came down so
+  the figures have form under the new light.
+- **The world casts shadows again.** Trees, ruins, tents, boulders, statues and
+  ore never reached the shadow map: the scatter shaders take their
+  view-projection from the shared frame block, and the shadow pass left the
+  camera's matrix in it, so every prop landed at the wrong depth. The cascades
+  were also sliced against the camera far plane instead of the shadow distance
+  (2.5x too coarse on High), and the biases were expressed in depth units that
+  turned into metres on the far cascade. Cascades are now fitted to the ground
+  the camera can actually see, biases are authored in metres with a normal
+  offset that keeps shadows planted at the feet, sampling is hardware PCF with
+  a penumbra that sharpens on a clear day and widens under cloud, a tall caster
+  outside the camera-distance band still throws its evening shadow into it,
+  boulders and terrain cast, the skyline mountain ring does not, and the last
+  cascade fades out instead of ending on a line. Villages at four o'clock look
+  like villages at four o'clock.
+- **Firelight no longer dims inside a sun or moon shadow.** Every receiver shader
+  added its local lights before applying the directional shadow, so a campfire
+  beside a house lit the ground less on the shaded side of the wall. The local
+  term now joins after the shadow.
+- **Main builds again after the farms merge.** The humanoid clip table gained the
+  five construction clips at indices that collided with the taunts, and the clip
+  count stayed at 63; the constants now follow the manifest order (taunts 61-62,
+  construction 63-67, 68 clips).
 - **Formations turn like soldiers now, not like a lawnmower blade.** A unit
   changing direction used to spin every soldier rigidly around its anchor, so
   the outer files strafed sideways along arcs with their bodies locked to the
@@ -103,7 +226,6 @@ may change in any release — see [Save compatibility](#save-compatibility).
   foot speed, pivots on his own feet toward where he is going, and eases back
   square once he has re-dressed — cavalry wheels instead of sliding. Purely a
   render-side change; the simulation's positions and hit math are untouched.
-
 - **Twelve switches were silently ignoring enum values that had been added
   since they were written.** Each listed every case it knew about and had no
   `default`, so a newer enumerator quietly took the fallthrough: elephants were
@@ -379,6 +501,24 @@ attack.`, `That target is already gone.`, …) instead of silently doing
 
 ### Changed
 
+- **The graphics presets mean what they say, and are applied once.** High is
+  now the complete game — every shader feature, full creature detail
+  everywhere, four 4096 cascades, the whole post chain, 4x MSAA — and the
+  default for a fresh profile. Ultra keeps all of that and adds the expensive
+  extras: contact-hardening (PCSS) shadows, grass blades that receive shadows
+  and glow when back-lit, extra water and terrain detail octaves, 8x MSAA.
+  Medium keeps shadows and post-processing but small (two 1024 cascades, no
+  godrays), and Low is built to reach 30 fps on weak hardware: no cascades,
+  no bloom, godrays, ambient occlusion or FXAA, a third of the grass, wear and
+  micro-relief compiled out of the shaders, creature detail reduced past a few
+  metres. Each preset is one immutable profile in a table; a change ticks a
+  generation counter and the renderer applies the whole profile once at the
+  start of the next frame (recompiling every shader program in place for the
+  new tier), instead of every subsystem testing the quality level per frame.
+  Shader detail is a compile-time tier (`SOI_QUALITY_TIER`), not a uniform
+  tested per fragment. Creatures have exactly two rendered levels of detail,
+  Full and Reduced, plus a cull distance; the old third "billboard" level was
+  only ever a cull and is now named as one.
 - **A fresh install no longer opens at full volume.** Every mixer channel used
   to start at full scale, and because master, category and cue gains multiply,
   the first mission was painfully loud on a new profile. A profile with no saved

@@ -42,10 +42,14 @@ public:
 
   [[nodiscard]] static auto passage_extent(float rotation_y) -> GateExtent;
 
+  [[nodiscard]] static auto lane_half_width() -> float;
+
+  [[nodiscard]] static auto lane_center(float center_x, float center_z) -> QVector3D;
+
+  [[nodiscard]] static auto lane_extent(float rotation_y) -> GateExtent;
+
   [[nodiscard]] static auto
   passage_blocker_bounds(float center_x, float center_z, float rotation_y) -> WorldRect;
-
-  static void mark_gate_footprint_navigable(Engine::Core::EntityID entity_id);
 
   static void sync_gate_footprint(Engine::Core::EntityID entity_id, float rotation_y);
 

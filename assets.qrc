@@ -1,5 +1,11 @@
 <RCC>
     <qresource prefix="/">
+        <!-- Bundled typography. QML reaches these through FontLoader on the
+             qrc path; the widget tools register the same files off disk via
+             Ui::BrandFonts. Both must resolve, so both listings matter. -->
+        <file>assets/fonts/StandardIronDisplay-Bold.ttf</file>
+        <file>assets/fonts/EBGaramond12-Bold.ttf</file>
+
         <!-- Generated internal creature packages -->
         <file>assets/creatures/horse/horse.cmesh</file>
         <file>assets/creatures/elephant/elephant.cmesh</file>
@@ -10,8 +16,13 @@
         <file>assets/shaders/include/directional_shadows.glsl</file>
         <file>assets/shaders/include/visibility_mask.glsl</file>
         <file>assets/shaders/include/noise.glsl</file>
+        <file>assets/shaders/include/material_detail.glsl</file>
+        <file>assets/shaders/include/character_wear.glsl</file>
+        <file>assets/shaders/include/character_shading.glsl</file>
         <file>assets/shaders/include/terrain_noise.glsl</file>
         <file>assets/shaders/include/tonemap.glsl</file>
+        <file>assets/shaders/include/quality.glsl</file>
+        <file>assets/shaders/include/contact_shadow.glsl</file>
         <file>assets/shaders/include/rigged_gpu_skin.glsl</file>
         <file>assets/shaders/include/activity_indicator.glsl</file>
         <file>assets/shaders/directional_shadow_depth.vert</file>
@@ -83,9 +94,12 @@
         <file>assets/shaders/stone_instanced.vert</file>
         <file>assets/shaders/terrain_chunk.frag</file>
         <file>assets/shaders/terrain_field_bake.frag</file>
+        <file>assets/shaders/terrain_microdetail_bake.frag</file>
         <file>assets/shaders/terrain_chunk.vert</file>
         <file>assets/shaders/troop_shadow.frag</file>
         <file>assets/shaders/troop_shadow.vert</file>
+        <file>assets/shaders/troop_shadow_instanced.frag</file>
+        <file>assets/shaders/troop_shadow_instanced.vert</file>
         <file>assets/shaders/combat_dust.frag</file>
         <file>assets/shaders/combat_dust.vert</file>
         <file>assets/shaders/blood_pool.vert</file>

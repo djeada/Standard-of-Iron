@@ -3,14 +3,18 @@
 #include <QMatrix4x4>
 #include <QVector3D>
 
+#include <array>
 #include <gtest/gtest.h>
 #include <memory>
+#include <sstream>
+#include <string>
 #include <vector>
 
 #include "render/bone_palette_arena.h"
 #include "render/creature/pipeline/creature_asset.h"
 #include "render/creature/render_request.h"
 #include "render/creature/runtime_bake_guard.h"
+#include "render/creature/snapshot_mesh_asset.h"
 #include "render/rigged_mesh.h"
 #include "render/rigged_mesh_cache.h"
 #include "render/snapshot_mesh_cache.h"
@@ -68,6 +72,34 @@ auto make_two_bone_quad_entry() -> std::unique_ptr<RiggedMeshEntry> {
   entry->skin_atlas->palettes = palettes;
 
   return entry;
+}
+
+auto make_prebaked_blob() -> Render::Creature::Snapshot::SnapshotMeshBlob {
+  const std::array<std::uint32_t, 3> indices{0U, 1U, 2U};
+  Render::Creature::Snapshot::SnapshotMeshWriter writer(
+      Render::Creature::Bpat::k_species_sheep,
+      Render::Creature::CreatureLOD::Minimal,
+      3U,
+      indices);
+  writer.add_clip(Render::Creature::Snapshot::ClipDescriptor{"idle", 2U});
+
+  std::vector<RiggedVertex> frame(3);
+  for (std::uint32_t frame_index = 0; frame_index < 2U; ++frame_index) {
+    for (std::size_t vertex = 0; vertex < frame.size(); ++vertex) {
+      frame[vertex].position_bone_local = {
+          static_cast<float>(vertex), static_cast<float>(frame_index), 0.0F};
+      frame[vertex].normal_bone_local = {0.0F, 1.0F, 0.0F};
+      frame[vertex].bone_indices = {0, 0, 0, 0};
+      frame[vertex].bone_weights = {1.0F, 0.0F, 0.0F, 0.0F};
+    }
+    writer.append_clip_vertices(frame);
+  }
+
+  std::stringstream stream(std::ios::out | std::ios::binary | std::ios::in);
+  EXPECT_TRUE(writer.write(stream));
+  const std::string bytes = stream.str();
+  return Render::Creature::Snapshot::SnapshotMeshBlob::from_bytes(
+      std::vector<std::uint8_t>(bytes.begin(), bytes.end()));
 }
 
 TEST(SnapshotMeshCache, IdentityPaletteIsAllIdentity) {
@@ -276,6 +308,29 @@ TEST(SnapshotMeshCache, RuntimeBakeGuardAllowsHitsButRejectsMisses) {
   missing.frame_in_clip = 1U;
   EXPECT_EQ(cache.get_or_bake(missing, *source, 1U), nullptr)
       << "warmed gameplay must not bake a missing snapshot mesh";
+  EXPECT_EQ(cache.size(), 1U);
+}
+
+TEST(SnapshotMeshCache, PrebakedFramesLoadWhileRuntimeBakesAreForbidden) {
+  RuntimeBakeGuardReset guard_reset;
+  auto blob = make_prebaked_blob();
+  ASSERT_TRUE(blob.loaded()) << blob.last_error();
+
+  SnapshotMeshCache cache;
+  Render::Creature::set_runtime_bake_forbidden(true);
+
+  SnapshotMeshCache::Key key{};
+  key.frame_in_clip = 1U;
+  const auto* snap = cache.get_or_load(key, blob, 1U);
+  ASSERT_NE(snap, nullptr)
+      << "a prebaked snapshot frame is uploaded, not baked, so gameplay must "
+         "still be able to draw it";
+  ASSERT_NE(snap->mesh, nullptr);
+  EXPECT_EQ(snap->mesh->index_count(), 3U);
+  EXPECT_EQ(cache.frame_stats().loads, 1U);
+
+  EXPECT_EQ(cache.get_or_load(key, blob, 1U), snap);
+  EXPECT_EQ(cache.frame_stats().hits, 1U);
   EXPECT_EQ(cache.size(), 1U);
 }
 

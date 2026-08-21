@@ -224,9 +224,11 @@ FocusScope {
                             width: parent.width
                             text: root.headline
                             color: root.tone
-                            font.family: Design.Typography.displayFamily
+                            font.family: Design.Typography.titleFamily
+                            font.capitalization: Font.AllUppercase
                             font.pixelSize: Design.Typography.title
                             font.weight: Design.Typography.bold
+                            font.letterSpacing: Design.Typography.trackingTitle
                             elide: Text.ElideRight
                         }
 
@@ -340,7 +342,11 @@ FocusScope {
                                             width: parent.width - parent.spacing - Design.Typography.subheading
                                             text: root.figure(root.localArmy, tile.modelData.key)
                                             color: Design.Theme.textPrimary
-                                            font.family: Design.Typography.displayFamily
+                                            // Tallies, so the brand face carries them. When the
+                                            // locale asks for Arabic-Indic digits the whole string
+                                            // falls back together, which is the one case where a
+                                            // fallback does not split a word across two faces.
+                                            font.family: Design.Typography.titleFamily
                                             font.pixelSize: Design.Typography.heading
                                             font.weight: Design.Typography.bold
                                             fontSizeMode: Text.HorizontalFit
@@ -616,7 +622,7 @@ FocusScope {
                                         width: root.scoreCellWidth
                                         text: root.figure(armyRow.modelData, "score")
                                         color: Design.Theme.accent
-                                        font.family: Design.Typography.displayFamily
+                                        font.family: Design.Typography.titleFamily
                                         font.pixelSize: Design.Typography.subheading
                                         font.weight: Design.Typography.bold
                                         horizontalAlignment: Text.AlignRight

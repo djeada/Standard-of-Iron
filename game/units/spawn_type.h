@@ -365,6 +365,10 @@ inline auto is_troop_spawn(SpawnType type) -> bool {
   return !is_building_spawn(type) && !is_wildlife_spawn(type);
 }
 
+[[nodiscard]] inline auto is_recruitment_building(SpawnType type) noexcept -> bool {
+  return type == SpawnType::Barracks || type == SpawnType::Temple;
+}
+
 inline auto is_wall_network_spawn(SpawnType type) -> bool {
   return type == SpawnType::WallSegment || type == SpawnType::WallGate;
 }

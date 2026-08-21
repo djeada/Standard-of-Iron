@@ -39,6 +39,10 @@ add_library(
     core/component.cpp
     core/system.cpp
     core/world.cpp
+    core/world_spatial_index.cpp
+    core/system_profiler.cpp
+    core/system_schedule.cpp
+    core/deferred_mutations.cpp
     core/ambient_session.cpp
     core/event_manager.cpp
     core/simulation_timing.cpp
@@ -263,6 +267,7 @@ add_library(
     systems/combat_system/combat_state_processor.cpp
     systems/combat_system/combat_animation_timing.cpp
     systems/combat_system/attack_processor.cpp
+    systems/combat_system/melee_exchange.cpp
     systems/combat_system/elephant_special_processor.cpp
     systems/combat_system/siege_special_processor.cpp
     systems/combat_actions/body_impact.cpp

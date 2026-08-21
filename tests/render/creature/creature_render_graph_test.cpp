@@ -75,19 +75,19 @@ public:
 TEST(CreatureRenderGraph, HumanoidLodConfigHasReasonableDefaults) {
   auto config = humanoid_lod_config();
   EXPECT_GT(config.thresholds.full, 0.0F);
-  EXPECT_GT(config.thresholds.minimal, config.thresholds.full);
+  EXPECT_GT(config.thresholds.cull, config.thresholds.full);
 }
 
 TEST(CreatureRenderGraph, HorseLodConfigHasReasonableDefaults) {
   auto config = horse_lod_config();
   EXPECT_GT(config.thresholds.full, 0.0F);
-  EXPECT_GT(config.thresholds.minimal, config.thresholds.full);
+  EXPECT_GT(config.thresholds.cull, config.thresholds.full);
 }
 
 TEST(CreatureRenderGraph, ElephantLodConfigHasReasonableDefaults) {
   auto config = elephant_lod_config();
   EXPECT_GT(config.thresholds.full, 0.0F);
-  EXPECT_GT(config.thresholds.minimal, config.thresholds.full);
+  EXPECT_GT(config.thresholds.cull, config.thresholds.full);
 }
 
 TEST(CreatureRenderGraph, HorseAndElephantHaveLargerLodDistances) {
@@ -100,31 +100,41 @@ TEST(CreatureRenderGraph, HorseAndElephantHaveLargerLodDistances) {
 }
 
 TEST(CreatureRenderGraph, HumanoidConfigFromSettingsReturnsValidConfig) {
+  auto& settings = Render::GraphicsSettings::instance();
+  settings.set_quality(Render::GraphicsQuality::Medium);
   auto config = humanoid_lod_config_from_settings();
   EXPECT_GT(config.thresholds.full, 0.0F);
-  EXPECT_GT(config.thresholds.minimal, config.thresholds.full);
+  EXPECT_GT(config.thresholds.cull, config.thresholds.full);
+  EXPECT_TRUE(config.apply_visibility_budget);
+
+  settings.set_quality(Render::GraphicsQuality::High);
+  config = humanoid_lod_config_from_settings();
+  EXPECT_GT(config.thresholds.full, 1.0e6F);
+  EXPECT_FALSE(config.apply_visibility_budget);
+  settings.set_quality(Render::k_default_graphics_quality);
 }
 
 TEST(CreatureRenderGraph, HorseConfigFromSettingsReturnsValidConfig) {
+  auto& settings = Render::GraphicsSettings::instance();
+  settings.set_quality(Render::GraphicsQuality::Medium);
   auto config = horse_lod_config_from_settings();
   EXPECT_GT(config.thresholds.full, 0.0F);
-  EXPECT_GT(config.thresholds.minimal, config.thresholds.full);
+  EXPECT_GT(config.thresholds.cull, config.thresholds.full);
+  settings.set_quality(Render::k_default_graphics_quality);
 }
 
 TEST(CreatureRenderGraph, ElephantConfigFromSettingsReturnsValidConfig) {
   auto& settings = Render::GraphicsSettings::instance();
-  settings.set_quality(Render::GraphicsQuality::High);
+  settings.set_quality(Render::GraphicsQuality::Medium);
 
   auto config = elephant_lod_config_from_settings();
   EXPECT_GT(config.thresholds.full, 0.0F);
-  EXPECT_GT(config.thresholds.minimal, config.thresholds.full);
+  EXPECT_GT(config.thresholds.cull, config.thresholds.full);
   EXPECT_FLOAT_EQ(config.thresholds.full, settings.elephant_full_detail_distance());
-  EXPECT_FLOAT_EQ(config.thresholds.minimal,
-                  settings.elephant_minimal_detail_distance());
+  EXPECT_FLOAT_EQ(config.thresholds.cull, settings.creature_cull_distance());
   EXPECT_GT(config.thresholds.full, settings.horse_full_detail_distance());
-  EXPECT_GT(config.thresholds.minimal, settings.horse_minimal_detail_distance());
 
-  settings.set_quality(Render::GraphicsQuality::Ultra);
+  settings.set_quality(Render::k_default_graphics_quality);
 }
 
 TEST(ArchetypeRegistry, BaselineAnimationManifestPreservesHumanoidMappings) {
@@ -148,7 +158,7 @@ TEST(ArchetypeRegistry, BaselineAnimationManifestPreservesHumanoidMappings) {
 
 TEST(CreatureRenderGraph, QuadrupedLodUsesElephantDistances) {
   auto& settings = Render::GraphicsSettings::instance();
-  settings.set_quality(Render::GraphicsQuality::High);
+  settings.set_quality(Render::GraphicsQuality::Medium);
 
   EXPECT_EQ(quadruped_lod_from_settings(CreatureKind::Elephant,
                                         settings.horse_full_detail_distance() + 1.0F),
@@ -158,12 +168,12 @@ TEST(CreatureRenderGraph, QuadrupedLodUsesElephantDistances) {
                                   settings.elephant_full_detail_distance() + 1.0F),
       CreatureLOD::Minimal);
 
-  settings.set_quality(Render::GraphicsQuality::Ultra);
+  settings.set_quality(Render::k_default_graphics_quality);
 }
 
-TEST(CreatureRenderGraph, UltraSettingsKeepTroopLodFullAtLongDistance) {
+TEST(CreatureRenderGraph, HighAndUltraKeepTroopLodFullAtLongDistance) {
   auto& settings = Render::GraphicsSettings::instance();
-  settings.set_quality(Render::GraphicsQuality::Ultra);
+  settings.set_quality(Render::GraphicsQuality::High);
   EXPECT_FALSE(settings.creature_lod_enabled());
 
   CreatureGraphInputs inputs;
@@ -186,9 +196,11 @@ TEST(CreatureRenderGraph, UltraSettingsKeepTroopLodFullAtLongDistance) {
   EXPECT_EQ(quadruped_lod_from_settings(CreatureKind::Elephant, 100000.0F),
             CreatureLOD::Full);
 
-  settings.set_quality(Render::GraphicsQuality::High);
-  EXPECT_TRUE(settings.creature_lod_enabled());
   settings.set_quality(Render::GraphicsQuality::Ultra);
+  EXPECT_FALSE(settings.creature_lod_enabled());
+  settings.set_quality(Render::GraphicsQuality::Medium);
+  EXPECT_TRUE(settings.creature_lod_enabled());
+  settings.set_quality(Render::k_default_graphics_quality);
 }
 
 TEST(CreatureRenderGraph, EvaluateLodReturnsFullAtCloseDistance) {
@@ -226,17 +238,17 @@ TEST(CreatureRenderGraph, EvaluateLodReturnsMinimalAtFarDistance) {
   EXPECT_EQ(decision.lod, CreatureLOD::Minimal);
 }
 
-TEST(CreatureRenderGraph, EvaluateLodReturnsBillboardBeyondMinimal) {
+TEST(CreatureRenderGraph, EvaluateLodCullsBeyondTheCullDistance) {
   CreatureGraphInputs inputs;
-  inputs.camera_distance = 100.0F;
+  inputs.camera_distance = 250.0F;
   inputs.has_camera = true;
 
   auto config = humanoid_lod_config();
   auto decision = evaluate_creature_lod(inputs, config);
 
-  EXPECT_EQ(decision.lod, CreatureLOD::Billboard);
+  EXPECT_EQ(decision.lod, CreatureLOD::Culled);
   EXPECT_TRUE(decision.culled);
-  EXPECT_EQ(decision.reason, CullReason::Billboard);
+  EXPECT_EQ(decision.reason, CullReason::Distance);
 }
 
 TEST(CreatureRenderGraph, ForcedLodOverridesDistanceCalculation) {
@@ -279,14 +291,14 @@ TEST(CreatureRenderGraph, BuildBaseOutputSetsLodFromDecision) {
 TEST(CreatureRenderGraph, BuildBaseOutputSetsCulledFromDecision) {
   CreatureGraphInputs const inputs;
   CreatureLodDecision decision;
-  decision.lod = CreatureLOD::Billboard;
+  decision.lod = CreatureLOD::Culled;
   decision.culled = true;
-  decision.reason = CullReason::Billboard;
+  decision.reason = CullReason::Distance;
 
   auto output = build_base_graph_output(inputs, decision);
 
   EXPECT_TRUE(output.culled);
-  EXPECT_EQ(output.cull_reason, CullReason::Billboard);
+  EXPECT_EQ(output.cull_reason, CullReason::Distance);
 }
 
 TEST(CreatureRenderGraph, BuildBaseOutputSetsPassIntentFromContext) {

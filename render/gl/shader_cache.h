@@ -6,6 +6,7 @@
 #include <QString>
 #include <QStringList>
 
+#include <array>
 #include <memory>
 #include <unordered_map>
 #include <utility>
@@ -17,9 +18,13 @@ namespace Render::GL {
 
 class ShaderCache {
 public:
+  static constexpr std::array<std::pair<const char*, int>, 4> k_character_variants{
+      {{"humanoid", 1}, {"horse", 2}, {"wildlife", 3}, {"elephant", 4}}};
+
   auto load(const QString& name,
             const QString& vert_path,
-            const QString& frag_path) -> Shader* {
+            const QString& frag_path,
+            const QString& variant_defines = QString()) -> Shader* {
     auto it = m_named.find(name);
     if (it != m_named.end()) {
       return it->second.get();
@@ -28,7 +33,7 @@ public:
     const QString resolved_frag = Utils::Resources::resolve_resource_path(frag_path);
     auto sh = std::make_unique<Shader>();
     sh->set_debug_name(name);
-    if (!sh->load_from_files(resolved_vert, resolved_frag)) {
+    if (!sh->load_from_files(resolved_vert, resolved_frag, variant_defines)) {
       qWarning() << "ShaderCache: Failed to load shader" << name;
       return nullptr;
     }
@@ -85,6 +90,13 @@ public:
     const QString skinned_frag =
         resolve(shader_base + QStringLiteral("character_skinned.frag"));
     load(QStringLiteral("character_skinned"), skinned_vert, skinned_frag);
+
+    for (const auto& [suffix, variant] : k_character_variants) {
+      load(QStringLiteral("character_skinned_") + QString::fromLatin1(suffix),
+           skinned_vert,
+           skinned_frag,
+           QStringLiteral("#define SOI_CHARACTER_VARIANT %1\n").arg(variant));
+    }
     const QString cyl_vert =
         resolve(shader_base + QStringLiteral("cylinder_instanced.vert"));
     const QString cyl_frag =
@@ -175,6 +187,9 @@ public:
     const QString troop_shadow_frag =
         resolve(shader_base + QStringLiteral("troop_shadow.frag"));
     load(QStringLiteral("troop_shadow"), troop_shadow_vert, troop_shadow_frag);
+    load(QStringLiteral("troop_shadow_instanced"),
+         resolve(shader_base + QStringLiteral("troop_shadow_instanced.vert")),
+         resolve(shader_base + QStringLiteral("troop_shadow_instanced.frag")));
 
     const QString banner_vert = resolve(shader_base + QStringLiteral("banner.vert"));
     const QString banner_frag = resolve(shader_base + QStringLiteral("banner.frag"));

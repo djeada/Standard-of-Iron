@@ -39,6 +39,17 @@ public:
   }
   void resolve_scene();
 
+  struct PassSelection {
+    bool bloom = true;
+    bool godrays = true;
+    bool ambient_occlusion = true;
+    bool fxaa = true;
+  };
+  void set_passes(const PassSelection& passes) noexcept { m_passes = passes; }
+  [[nodiscard]] auto passes() const noexcept -> const PassSelection& {
+    return m_passes;
+  }
+
   [[nodiscard]] auto is_capturing() const noexcept -> bool { return m_capturing; }
   [[nodiscard]] auto scene_is_high_dynamic_range() const noexcept -> bool {
     return m_scene_is_float;
@@ -78,6 +89,7 @@ private:
   GL::Shader* m_fxaa_shader{nullptr};
   GL::Shader* m_sky_shader{nullptr};
   GL::Shader* m_godrays_shader{nullptr};
+  PassSelection m_passes{};
 
   RenderTarget m_scene{};
   RenderTarget m_composite{};

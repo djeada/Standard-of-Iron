@@ -29,7 +29,7 @@ float soi_terrain_gradient_fbm_7c25da(vec2 p, int octaves, float footprint) {
   float value = 0.0;
   float amplitude = 0.54;
   mat2 octave_rotation = mat2(0.80, -0.60, 0.60, 0.80);
-  int count = clamp(octaves, 1, 5);
+  int count = clamp(octaves, 1, 6);
   for (int i = 0; i < count; ++i) {
     float fade = 1.0 - smoothstep(0.30, 0.85, footprint);
     if (fade <= 0.001) {
@@ -62,4 +62,32 @@ vec2 soi_terrain_cellular_distances_9e14b7(vec2 p) {
     }
   }
   return vec2(nearest, second);
+}
+
+float soi_terrain_gradient_noise_tiled_4c19af(vec2 p, vec2 period) {
+  vec2 i = floor(p);
+  vec2 f = fract(p);
+  vec2 u = f * f * f * (f * (f * 6.0 - 15.0) + 10.0);
+  float a = dot(soi_terrain_hash22_5a91c4(mod(i, period)), f);
+  float b = dot(soi_terrain_hash22_5a91c4(mod(i + vec2(1.0, 0.0), period)),
+                f - vec2(1.0, 0.0));
+  float c = dot(soi_terrain_hash22_5a91c4(mod(i + vec2(0.0, 1.0), period)),
+                f - vec2(0.0, 1.0));
+  float d = dot(soi_terrain_hash22_5a91c4(mod(i + vec2(1.0, 1.0), period)),
+                f - vec2(1.0, 1.0));
+  return mix(mix(a, b, u.x), mix(c, d, u.x), u.y) * 1.55;
+}
+
+float soi_terrain_gradient_fbm_tiled_9d22b1(vec2 p, vec2 period, int octaves) {
+  float value = 0.0;
+  float amplitude = 0.54;
+  vec2 octave_period = period;
+  int count = clamp(octaves, 1, 6);
+  for (int i = 0; i < count; ++i) {
+    value += soi_terrain_gradient_noise_tiled_4c19af(p, octave_period) * amplitude;
+    p = p * 2.0 + vec2(7.1, -3.8);
+    octave_period *= 2.0;
+    amplitude *= 0.49;
+  }
+  return value;
 }

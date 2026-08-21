@@ -1204,6 +1204,18 @@ This may be a skirmish, or objectives have not been configured.</source>
         <source>Press Guard again, or order a move or attack.</source>
         <translation>اضغط حراسة مرة أخرى، أو أصدر أمر تحرّك أو هجوم.</translation>
     </message>
+    <message>
+        <source>Typefaces</source>
+        <translation>المحارف</translation>
+    </message>
+    <message>
+        <source>Display: the quick brown fox</source>
+        <translation>العنوان: نص حكيم له سر قاطع</translation>
+    </message>
+    <message>
+        <source>Body: the quick brown fox jumps over the lazy dog</source>
+        <translation>النص: صف خلق خود كمثل الشمس إذ بزغت يحظى الضجيع بها نجلاء معطار</translation>
+    </message>
 </context>
 <context>
     <name>ControlsBindingList</name>
@@ -1410,10 +1422,6 @@ This may be a skirmish, or objectives have not been configured.</source>
         <translation>يشتري الموارد ويبيعها مقابل الذهب.</translation>
     </message>
     <message>
-        <source>Watches over a wide stretch of ground and holds a settlement together.</source>
-        <translation>يشرف على مساحة واسعة من الأرض ويحفظ تماسك المستوطنة.</translation>
-    </message>
-    <message>
         <source>Blocks enemy movement.</source>
         <translation>يمنع حركة العدو.</translation>
     </message>
@@ -1536,6 +1544,10 @@ This may be a skirmish, or objectives have not been configured.</source>
     <message>
         <source>Keep recruiting while your builders gather. Raise Homes and Farms when population or food runs out.</source>
         <translation>واصل التجنيد بينما يجمع بنّاؤوك. ابنِ المنازل والمزارع عندما ينفد السكان أو الطعام.</translation>
+    </message>
+    <message>
+        <source>Watches over a wide stretch of ground, holds a settlement together, and takes in healers.</source>
+        <translation>يشرف على مساحة واسعة من الأرض، ويحافظ على تماسك المستوطنة، ويستقبل المعالجين.</translation>
     </message>
 </context>
 <context>
@@ -2363,20 +2375,20 @@ This may be a skirmish, or objectives have not been configured.</source>
         <translation>فائق</translation>
     </message>
     <message>
-        <source>Maximum performance. Aggressive LOD, reduced detail at distance.</source>
-        <translation>أقصى أداء. تبسيط حادّ للتفاصيل، وتفاصيل أقل على البعد.</translation>
+        <source>Playable on weak hardware: no cast shadows or post-processing, sparse grass, reduced detail beyond a few metres.</source>
+        <translation>قابل للعب على عتاد ضعيف: بلا ظلال مسقطة أو معالجة لاحقة، عشب متناثر، تفاصيل مخفّضة بعد بضعة أمتار.</translation>
     </message>
     <message>
-        <source>Balanced performance and quality. Recommended for most systems.</source>
-        <translation>توازن بين الأداء والجودة. موصى به لمعظم الأجهزة.</translation>
+        <source>Small cast shadows, lighter shaders, reduced detail at distance. For integrated graphics.</source>
+        <translation>ظلال مسقطة صغيرة، مظلّلات أخف، تفاصيل مخفّضة عن بُعد. للرسوميات المدمجة.</translation>
     </message>
     <message>
-        <source>Higher quality. More detail visible at distance. Requires better hardware.</source>
-        <translation>جودة أعلى. تفاصيل أكثر ظهوراً على البعد. يتطلب عتاداً أفضل.</translation>
+        <source>Everything as designed: full detail everywhere, full shadows and post-processing. Recommended.</source>
+        <translation>كل شيء كما صُمّم: تفاصيل كاملة في كل مكان، ظلال ومعالجة لاحقة كاملة. موصى به.</translation>
     </message>
     <message>
-        <source>Maximum quality. Full detail always. Best hardware recommended.</source>
-        <translation>أقصى جودة. تفاصيل كاملة دائماً. يُنصح بأفضل عتاد.</translation>
+        <source>High plus contact-hardening shadows, foliage translucency, extra terrain detail and 8x anti-aliasing. Needs a strong GPU.</source>
+        <translation>عالٍ مع ظلال تتصلّب عند التماس، أوراق شبه شفافة، تفاصيل تضاريس إضافية وتنعيم حواف 8x. يتطلب بطاقة رسوميات قوية.</translation>
     </message>
 </context>
 <context>
@@ -3456,10 +3468,6 @@ Unseen: never scouted.</source>
         <translation>التجنيد</translation>
     </message>
     <message>
-        <source>Left-click a barracks and pick a soldier. Recruits queue up to five deep and march out to the rally flag. Each costs population from the barracks&apos; own pool as well as materials.</source>
-        <translation>انقر بالزر الأيسر على ثكنة واختر جنديًا. يصطف المجنّدون في طابور حتى خمسة ويخرجون إلى راية التجمّع. يكلف كل منهم سكانًا من رصيد الثكنة الخاص إضافة إلى المواد.</translation>
-    </message>
-    <message>
         <source>Population</source>
         <translation>السكان</translation>
     </message>
@@ -3588,12 +3596,16 @@ Unseen: never scouted.</source>
         <translation>كل بطاقة - مجنّد أو مبنى - تعرض سعرها. البطاقة الرمادية تعني نقص شيء ما؛ مرّر المؤشر فوقها لقراءة ما ينقص. تكلف المنازل 50 خشبًا و15 حجرًا، والمزرعة 40 خشبًا و10 أحجار، والثكنة 100 خشب و60 حجرًا، وبرج الدفاع 60 خشبًا و80 حجرًا؛ يكلف الجنود خشبًا وحديدًا بالإضافة إلى السكان، ويكلف المدنيون طعامًا.</translation>
     </message>
     <message>
-        <source>Barracks recruit soldiers and hold your stockpile yard. Homes raise families and civilians. Farms grow grain that builders reap for food. Defence towers shoot at anything in range. Marketplaces trade. Temples strengthen morale. Walls and gates shape the field; gates open for your own troops.</source>
-        <translation>تجنّد الثكنات الجنود وتضم ساحة مخزونك. تربّي المنازل العائلات والمدنيين. تزرع المزارع الحبوب التي يحصدها البنّاؤون طعامًا. ترمي أبراج الدفاع كل ما في مداها. تتاجر الأسواق. تقوّي المعابد المعنويات. تشكّل الأسوار والبوابات الميدان؛ وتُفتح البوابات لقواتك.</translation>
+        <source>Barracks recruit soldiers and hold your stockpile yard. Homes raise families and civilians. Farms grow grain that builders reap for food. Defence towers shoot at anything in range. Marketplaces trade. Temples strengthen morale and take in healers. Walls and gates shape the field; gates open for your own troops.</source>
+        <translation>الثكنات تجنّد الجنود وتضم مخزنك. المنازل تربّي العائلات والمدنيين. المزارع تنمّي الحبوب التي يحصدها البناؤون طعامًا. أبراج الدفاع تطلق النار على كل ما يدخل مداها. الأسواق تتاجر. المعابد تقوّي المعنويات وتستقبل المعالجين. الأسوار والبوابات تشكّل الميدان؛ والبوابات تُفتح لقواتك أنت.</translation>
     </message>
     <message>
-        <source>A barracks starts with a pool of population and spends it on every recruit. Homes refill it: each Home raises families over time, a civilian can be recruited there for food and sent to the barracks with Deliver, and the pool grows. The top bar shows your army against the map&apos;s overall cap.</source>
-        <translation>تبدأ الثكنة بمخزون من السكان وتنفقه على كل مجنّد. تعيد المنازل ملأه: كل منزل يربّي العائلات مع الوقت، ويمكن تجنيد مدني هناك مقابل طعام وإرساله إلى الثكنة بأمر تسليم، فينمو المخزون. يعرض الشريط العلوي جيشك مقابل الحد الأقصى للخريطة.</translation>
+        <source>Left-click a barracks and pick a soldier; healers take their vows at a temple instead. Recruits queue up to five deep and march out to the rally flag. Each costs population from the building&apos;s own pool as well as materials.</source>
+        <translation>انقر بالزر الأيسر على ثكنة واختر جنديًا؛ أما المعالجون فينذرون نذورهم في المعبد. ينتظم المجندون في طابور يصل إلى خمسة ويسيرون إلى راية التجمع. ويكلّف كل واحد منهم سكانًا من مخزون المبنى نفسه إضافةً إلى المواد.</translation>
+    </message>
+    <message>
+        <source>A barracks or temple starts with a pool of population and spends it on every recruit. Homes refill it: each Home raises families over time, a civilian can be recruited there for food and sent to either building with Deliver, and that building&apos;s pool grows. The top bar shows your army against the map&apos;s overall cap.</source>
+        <translation>تبدأ الثكنة أو المعبد بمخزون من السكان وتنفقه على كل مجنّد. والمنازل تعيد ملأه: فكل منزل يربّي عائلات مع الوقت، ويمكن تجنيد مدني هناك مقابل الطعام وإرساله إلى أي من المبنيين بأمر التسليم، فينمو مخزون ذلك المبنى. ويعرض الشريط العلوي جيشك مقابل الحد الأقصى للخريطة.</translation>
     </message>
 </context>
 <context>
@@ -6583,10 +6595,6 @@ Build time: %3s</source>
         <translation>فيل حرب</translation>
     </message>
     <message>
-        <source>Build a barracks before setting a rally point.</source>
-        <translation>ابنِ ثكنة قبل تحديد نقطة تجميع.</translation>
-    </message>
-    <message>
         <source>Temple</source>
         <translation>معبد</translation>
     </message>
@@ -6689,6 +6697,18 @@ Builders reap it for the food that recruits civilians</source>
     <message>
         <source>Harvested %1 times so far.</source>
         <translation>حُصدت %1 مرة حتى الآن.</translation>
+    </message>
+    <message>
+        <source>Select a barracks or temple before setting a rally point.</source>
+        <translation>اختر ثكنة أو معبدًا قبل تعيين نقطة تجمّع.</translation>
+    </message>
+    <message>
+        <source>TAKE VOWS</source>
+        <translation>نذر العهد</translation>
+    </message>
+    <message>
+        <source>Deliver civilians here to raise the temple&apos;s available population</source>
+        <translation>سلّم المدنيين هنا لزيادة السكان المتاحين للمعبد</translation>
     </message>
 </context>
 <context>

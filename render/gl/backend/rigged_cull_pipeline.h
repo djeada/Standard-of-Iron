@@ -23,6 +23,8 @@ namespace Render::GL::BackendPipelines {
 
 class RiggedCullPipeline : protected QOpenGLExtraFunctions {
 public:
+  void set_wear_volume(unsigned int texture) { m_wear_volume = texture; }
+
   struct Stats {
     std::uint32_t dispatched_instances{0};
     std::uint32_t submitted_triangles{0};
@@ -78,6 +80,8 @@ public:
   [[nodiscard]] auto full_mesh_shader() -> Shader* { return m_full_mesh_shader; }
 
 private:
+  unsigned int m_wear_volume = 0U;
+
   enum class Pass : std::uint8_t {
     Color,
     Depth

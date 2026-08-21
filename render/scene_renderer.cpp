@@ -63,6 +63,7 @@
 #include "humanoid/cache_control.h"
 #include "humanoid/humanoid_renderer_base.h"
 #include "humanoid/render_stats.h"
+#include "material_classification.h"
 #include "pass/construction_preview_pass.h"
 #include "pass/frame_context.h"
 #include "pass/frame_pass_runner.h"
@@ -151,6 +152,8 @@ auto Renderer::initialize() -> bool {
                    " rendering is disabled.";
     return false;
   }
+  m_contact_shadow_shader =
+      m_gl_backend != nullptr ? m_gl_backend->troop_shadow_shader() : nullptr;
   m_entity_registry = std::make_unique<EntityRendererRegistry>();
   register_built_in_entity_renderers(*m_entity_registry);
   register_built_in_equipment();
@@ -197,9 +200,8 @@ void Renderer::begin_frame() {
   reset_elephant_render_stats();
 
   Render::VisibilityBudgetTracker::instance().reset_frame();
-  auto& battle_optimizer = Render::BattleRenderOptimizer::instance();
-  battle_optimizer.begin_frame();
-  prune_animation_time_cache(battle_optimizer.frame_counter());
+  m_battle_optimizer.begin_frame();
+  prune_animation_time_cache(m_battle_optimizer.frame_counter());
 
   m_active_queue = &m_queues[m_fill_queue_index];
   m_active_queue->clear();
@@ -355,8 +357,10 @@ void Renderer::mesh(Mesh* mesh,
   cmd.model = model;
   cmd.color = color;
   cmd.alpha = effective_alpha;
-  cmd.material_id = material_id;
+  cmd.material_id = resolve_material_id(material_id, color);
   cmd.shader = m_current_shader;
+  cmd.blend_batchable =
+      m_current_shader != nullptr && m_current_shader == m_contact_shadow_shader;
   if (m_active_queue != nullptr) {
     m_active_queue->submit(std::move(cmd));
   }
@@ -381,7 +385,7 @@ void Renderer::banner(Mesh* mesh,
   cmd.trim_color = trim_color;
   cmd.has_trim_color = true;
   cmd.alpha = alpha * m_alpha_override;
-  cmd.material_id = material_id;
+  cmd.material_id = resolve_material_id(material_id, color);
   cmd.shader = m_current_shader;
   if (m_active_queue != nullptr) {
     m_active_queue->submit(std::move(cmd));
@@ -411,7 +415,7 @@ void Renderer::part(Mesh* mesh,
   cmd.color = color;
   cmd.alpha = effective_alpha;
   cmd.texture = texture;
-  cmd.material_id = material_id;
+  cmd.material_id = resolve_material_id(material_id, color);
   if (m_active_queue != nullptr) {
     m_active_queue->submit(std::move(cmd));
   }

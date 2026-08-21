@@ -1,5 +1,8 @@
 #pragma once
 
+#include <QOpenGLContext>
+#include <QOpenGLFunctions>
+
 #include <algorithm>
 #include <cmath>
 #include <cstddef>
@@ -62,6 +65,27 @@ bind_visibility_mask(Shader& shader,
   visibility.texture->bind(TextureUnit::terrain_visibility);
   shader.set_uniform(shader.optional_uniform_handle("u_visibility_tex"),
                      TextureUnit::terrain_visibility);
+}
+
+inline void bind_material_detail(Shader& shader,
+                                 const ShaderUniformCache::BasicUniforms& uniforms,
+                                 ResourceManager* resources) {
+  if (uniforms.has_material_detail == Shader::InvalidUniform) {
+    return;
+  }
+  Texture* detail = (resources != nullptr) ? resources->material_detail() : nullptr;
+  shader.set_uniform(uniforms.has_material_detail, detail != nullptr);
+  if (detail == nullptr) {
+    return;
+  }
+  detail->bind(TextureUnit::material_detail);
+
+  if (auto* context = QOpenGLContext::currentContext()) {
+    context->functions()->glActiveTexture(GL_TEXTURE0);
+  }
+  if (uniforms.material_detail != Shader::InvalidUniform) {
+    shader.set_uniform(uniforms.material_detail, TextureUnit::material_detail);
+  }
 }
 
 } // namespace Render::GL

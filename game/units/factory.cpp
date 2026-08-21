@@ -34,7 +34,7 @@ namespace Game::Units {
 namespace {
 
 auto owner_has_living_commander(Engine::Core::World& world, int owner_id) -> bool {
-  for (auto* entity : world.get_entities_with<Engine::Core::UnitComponent>()) {
+  for (auto* entity : world.collect_entities_with<Engine::Core::UnitComponent>()) {
     if (entity == nullptr) {
       continue;
     }

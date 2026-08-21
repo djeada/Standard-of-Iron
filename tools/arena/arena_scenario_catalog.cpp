@@ -8879,7 +8879,10 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
                                                    Render::GraphicsQuality::Medium},
                                         std::tuple{k_lighting_shadow_quality_high_id,
                                                    "Lighting: Shadow Quality High",
-                                                   Render::GraphicsQuality::High}}) {
+                                                   Render::GraphicsQuality::High},
+                                        std::tuple{k_lighting_shadow_quality_ultra_id,
+                                                   "Lighting: Shadow Quality Ultra",
+                                                   Render::GraphicsQuality::Ultra}}) {
     auto s = definition(
         QString::fromLatin1(std::get<0>(quality)),
         QString::fromLatin1(std::get<1>(quality)),

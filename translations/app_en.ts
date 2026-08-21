@@ -1204,6 +1204,18 @@ This may be a skirmish, or objectives have not been configured.</translation>
         <source>Press Guard again, or order a move or attack.</source>
         <translation>Press Guard again, or order a move or attack.</translation>
     </message>
+    <message>
+        <source>Typefaces</source>
+        <translation>Typefaces</translation>
+    </message>
+    <message>
+        <source>Display: the quick brown fox</source>
+        <translation>Display: the quick brown fox</translation>
+    </message>
+    <message>
+        <source>Body: the quick brown fox jumps over the lazy dog</source>
+        <translation>Body: the quick brown fox jumps over the lazy dog</translation>
+    </message>
 </context>
 <context>
     <name>ControlsBindingList</name>
@@ -1410,10 +1422,6 @@ This may be a skirmish, or objectives have not been configured.</translation>
         <translation>Buys and sells resources for gold.</translation>
     </message>
     <message>
-        <source>Watches over a wide stretch of ground and holds a settlement together.</source>
-        <translation>Watches over a wide stretch of ground and holds a settlement together.</translation>
-    </message>
-    <message>
         <source>Blocks enemy movement.</source>
         <translation>Blocks enemy movement.</translation>
     </message>
@@ -1536,6 +1544,10 @@ This may be a skirmish, or objectives have not been configured.</translation>
     <message>
         <source>Keep recruiting while your builders gather. Raise Homes and Farms when population or food runs out.</source>
         <translation>Keep recruiting while your builders gather. Raise Homes and Farms when population or food runs out.</translation>
+    </message>
+    <message>
+        <source>Watches over a wide stretch of ground, holds a settlement together, and takes in healers.</source>
+        <translation>Watches over a wide stretch of ground, holds a settlement together, and takes in healers.</translation>
     </message>
 </context>
 <context>
@@ -2363,20 +2375,20 @@ This may be a skirmish, or objectives have not been configured.</translation>
         <translation>Ultra</translation>
     </message>
     <message>
-        <source>Maximum performance. Aggressive LOD, reduced detail at distance.</source>
-        <translation>Maximum performance. Aggressive LOD, reduced detail at distance.</translation>
+        <source>Playable on weak hardware: no cast shadows or post-processing, sparse grass, reduced detail beyond a few metres.</source>
+        <translation>Playable on weak hardware: no cast shadows or post-processing, sparse grass, reduced detail beyond a few metres.</translation>
     </message>
     <message>
-        <source>Balanced performance and quality. Recommended for most systems.</source>
-        <translation>Balanced performance and quality. Recommended for most systems.</translation>
+        <source>Small cast shadows, lighter shaders, reduced detail at distance. For integrated graphics.</source>
+        <translation>Small cast shadows, lighter shaders, reduced detail at distance. For integrated graphics.</translation>
     </message>
     <message>
-        <source>Higher quality. More detail visible at distance. Requires better hardware.</source>
-        <translation>Higher quality. More detail visible at distance. Requires better hardware.</translation>
+        <source>Everything as designed: full detail everywhere, full shadows and post-processing. Recommended.</source>
+        <translation>Everything as designed: full detail everywhere, full shadows and post-processing. Recommended.</translation>
     </message>
     <message>
-        <source>Maximum quality. Full detail always. Best hardware recommended.</source>
-        <translation>Maximum quality. Full detail always. Best hardware recommended.</translation>
+        <source>High plus contact-hardening shadows, foliage translucency, extra terrain detail and 8x anti-aliasing. Needs a strong GPU.</source>
+        <translation>High plus contact-hardening shadows, foliage translucency, extra terrain detail and 8x anti-aliasing. Needs a strong GPU.</translation>
     </message>
 </context>
 <context>
@@ -3452,10 +3464,6 @@ Unseen: never scouted.</translation>
         <translation>Recruiting</translation>
     </message>
     <message>
-        <source>Left-click a barracks and pick a soldier. Recruits queue up to five deep and march out to the rally flag. Each costs population from the barracks&apos; own pool as well as materials.</source>
-        <translation>Left-click a barracks and pick a soldier. Recruits queue up to five deep and march out to the rally flag. Each costs population from the barracks&apos; own pool as well as materials.</translation>
-    </message>
-    <message>
         <source>Population</source>
         <translation>Population</translation>
     </message>
@@ -3584,12 +3592,16 @@ Unseen: never scouted.</translation>
         <translation>Every card - recruit or building - lists its price. A grey card means something is short; hover it to read what. Homes cost 50 wood and 15 stone, a farm 40 wood and 10 stone, a barracks 100 wood and 60 stone, a defence tower 60 wood and 80 stone; soldiers cost wood and iron plus population, and civilians cost food.</translation>
     </message>
     <message>
-        <source>Barracks recruit soldiers and hold your stockpile yard. Homes raise families and civilians. Farms grow grain that builders reap for food. Defence towers shoot at anything in range. Marketplaces trade. Temples strengthen morale. Walls and gates shape the field; gates open for your own troops.</source>
-        <translation>Barracks recruit soldiers and hold your stockpile yard. Homes raise families and civilians. Farms grow grain that builders reap for food. Defence towers shoot at anything in range. Marketplaces trade. Temples strengthen morale. Walls and gates shape the field; gates open for your own troops.</translation>
+        <source>Barracks recruit soldiers and hold your stockpile yard. Homes raise families and civilians. Farms grow grain that builders reap for food. Defence towers shoot at anything in range. Marketplaces trade. Temples strengthen morale and take in healers. Walls and gates shape the field; gates open for your own troops.</source>
+        <translation>Barracks recruit soldiers and hold your stockpile yard. Homes raise families and civilians. Farms grow grain that builders reap for food. Defence towers shoot at anything in range. Marketplaces trade. Temples strengthen morale and take in healers. Walls and gates shape the field; gates open for your own troops.</translation>
     </message>
     <message>
-        <source>A barracks starts with a pool of population and spends it on every recruit. Homes refill it: each Home raises families over time, a civilian can be recruited there for food and sent to the barracks with Deliver, and the pool grows. The top bar shows your army against the map&apos;s overall cap.</source>
-        <translation>A barracks starts with a pool of population and spends it on every recruit. Homes refill it: each Home raises families over time, a civilian can be recruited there for food and sent to the barracks with Deliver, and the pool grows. The top bar shows your army against the map&apos;s overall cap.</translation>
+        <source>Left-click a barracks and pick a soldier; healers take their vows at a temple instead. Recruits queue up to five deep and march out to the rally flag. Each costs population from the building&apos;s own pool as well as materials.</source>
+        <translation>Left-click a barracks and pick a soldier; healers take their vows at a temple instead. Recruits queue up to five deep and march out to the rally flag. Each costs population from the building&apos;s own pool as well as materials.</translation>
+    </message>
+    <message>
+        <source>A barracks or temple starts with a pool of population and spends it on every recruit. Homes refill it: each Home raises families over time, a civilian can be recruited there for food and sent to either building with Deliver, and that building&apos;s pool grows. The top bar shows your army against the map&apos;s overall cap.</source>
+        <translation>A barracks or temple starts with a pool of population and spends it on every recruit. Homes refill it: each Home raises families over time, a civilian can be recruited there for food and sent to either building with Deliver, and that building&apos;s pool grows. The top bar shows your army against the map&apos;s overall cap.</translation>
     </message>
 </context>
 <context>
@@ -6571,10 +6583,6 @@ Build time: %3s</translation>
         <translation>War Elephant</translation>
     </message>
     <message>
-        <source>Build a barracks before setting a rally point.</source>
-        <translation>Build a barracks before setting a rally point.</translation>
-    </message>
-    <message>
         <source>Temple</source>
         <translation>Temple</translation>
     </message>
@@ -6677,6 +6685,18 @@ Builders reap it for the food that recruits civilians</translation>
     <message>
         <source>Harvested %1 times so far.</source>
         <translation>Harvested %1 times so far.</translation>
+    </message>
+    <message>
+        <source>Select a barracks or temple before setting a rally point.</source>
+        <translation>Select a barracks or temple before setting a rally point.</translation>
+    </message>
+    <message>
+        <source>TAKE VOWS</source>
+        <translation>TAKE VOWS</translation>
+    </message>
+    <message>
+        <source>Deliver civilians here to raise the temple&apos;s available population</source>
+        <translation>Deliver civilians here to raise the temple&apos;s available population</translation>
     </message>
 </context>
 <context>

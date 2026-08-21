@@ -48,7 +48,8 @@ void CivilianDeliverySystem::update(Engine::Core::World* world, float) {
   }
 
   std::vector<Engine::Core::EntityID> to_remove;
-  auto civilians = world->get_entities_with<Engine::Core::CivilianDeliveryComponent>();
+  auto civilians =
+      world->collect_entities_with<Engine::Core::CivilianDeliveryComponent>();
 
   for (auto* civilian_entity : civilians) {
     if (civilian_entity == nullptr) {
@@ -84,7 +85,7 @@ void CivilianDeliverySystem::update(Engine::Core::World* world, float) {
 
     if ((barracks_entity == nullptr) || (barracks_unit == nullptr) ||
         (barracks_transform == nullptr) || (barracks_prod == nullptr) ||
-        (barracks_unit->spawn_type != Game::Units::SpawnType::Barracks) ||
+        !Game::Units::is_recruitment_building(barracks_unit->spawn_type) ||
         (barracks_unit->owner_id != civilian_unit->owner_id)) {
       civilian_entity->remove_component<Engine::Core::CivilianDeliveryComponent>();
       continue;

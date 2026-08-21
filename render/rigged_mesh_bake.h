@@ -22,6 +22,8 @@ struct BakeInput {
   std::span<const BoneWorldMatrix> bind_pose{};
 
   std::span<const StaticAttachmentSpec> attachments{};
+
+  CreatureLOD lod{CreatureLOD::Full};
 };
 
 struct BakedRiggedMeshCpu {

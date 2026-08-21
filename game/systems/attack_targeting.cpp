@@ -148,7 +148,8 @@ auto collect_attack_target_highlights(const AttackTargetingRequest& request)
   };
   std::vector<ScoredMarker> candidates;
 
-  for (auto* entity : request.world->get_entities_with<Engine::Core::UnitComponent>()) {
+  for (auto* entity :
+       request.world->collect_entities_with<Engine::Core::UnitComponent>()) {
     if (entity == nullptr) {
       continue;
     }

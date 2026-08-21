@@ -6,6 +6,7 @@
 
 #include "../../core/component.h"
 #include "../../core/world.h"
+#include "../../core/world_spatial_index.h"
 #include "../../units/spawn_type.h"
 #include "../building_collision_registry.h"
 #include "../combat_rules.h"
@@ -119,6 +120,21 @@ auto CombatQueryContext::hostile(int attacker_owner_id,
                                                               target_owner_id);
 }
 
+void collect_unit_ids_near(Engine::Core::World& world,
+                           float x,
+                           float z,
+                           float radius,
+                           std::vector<Engine::Core::EntityID>& out) {
+  out.clear();
+  auto& index = world.spatial_index();
+  index.refresh(world);
+  index.for_each_in_radius(
+      x, z, radius, [&out](const Engine::Core::WorldSpatialIndex::Entry& entry) {
+        out.push_back(entry.id);
+      });
+  std::sort(out.begin(), out.end());
+}
+
 auto build_combat_query_context(Engine::Core::World* world) -> CombatQueryContext {
   CombatQueryContext query_context;
   rebuild_combat_query_context(world, query_context);
@@ -132,30 +148,29 @@ void rebuild_combat_query_context(Engine::Core::World* world,
     return;
   }
 
-  auto const world_units = world->get_entities_with<Engine::Core::UnitComponent>();
-  query_context.units.reserve(world_units.size());
+  query_context.units.reserve(
+      world->entities_with<Engine::Core::UnitComponent>().size());
 
-  for (auto* entity : world_units) {
-    auto* unit = entity->get_component<Engine::Core::UnitComponent>();
-    if ((unit == nullptr) || (unit->health <= 0)) {
+  for (auto [entity, unit] : world->entity_view<Engine::Core::UnitComponent>()) {
+    if (unit.health <= 0) {
       continue;
     }
-    if (entity->has_component<Engine::Core::PendingRemovalComponent>()) {
+    if (entity.has_component<Engine::Core::PendingRemovalComponent>()) {
       continue;
     }
 
-    const bool building = is_building(entity);
-    query_context.units.push_back(entity);
-    query_context.record_candidate(entity, unit->owner_id, building);
+    const bool building = is_building(&entity);
+    query_context.units.push_back(&entity);
+    query_context.record_candidate(&entity, unit.owner_id, building);
 
     if (building) {
       continue;
     }
 
-    auto* transform = entity->get_component<Engine::Core::TransformComponent>();
+    auto* transform = entity.get_component<Engine::Core::TransformComponent>();
     if (transform != nullptr) {
       query_context.unit_grid.insert(
-          entity->get_id(), transform->position.x, transform->position.z);
+          entity.get_id(), transform->position.x, transform->position.z);
     }
   }
 

@@ -1204,6 +1204,18 @@ Isto pode ser uma escaramuça, ou os objetivos não foram configurados.</transla
         <source>Press Guard again, or order a move or attack.</source>
         <translation>Pressione Guarda novamente, ou ordene mover ou atacar.</translation>
     </message>
+    <message>
+        <source>Typefaces</source>
+        <translation>Tipografias</translation>
+    </message>
+    <message>
+        <source>Display: the quick brown fox</source>
+        <translation>Título: à noite, vovô Kowalsky vê</translation>
+    </message>
+    <message>
+        <source>Body: the quick brown fox jumps over the lazy dog</source>
+        <translation>Texto: à noite, vovô Kowalsky vê o ímã cair no pé do pinguim</translation>
+    </message>
 </context>
 <context>
     <name>ControlsBindingList</name>
@@ -1410,10 +1422,6 @@ Isto pode ser uma escaramuça, ou os objetivos não foram configurados.</transla
         <translation>Compra e vende recursos por ouro.</translation>
     </message>
     <message>
-        <source>Watches over a wide stretch of ground and holds a settlement together.</source>
-        <translation>Vigia uma ampla faixa de terreno e mantém um assentamento unido.</translation>
-    </message>
-    <message>
         <source>Blocks enemy movement.</source>
         <translation>Bloqueia o movimento inimigo.</translation>
     </message>
@@ -1536,6 +1544,10 @@ Isto pode ser uma escaramuça, ou os objetivos não foram configurados.</transla
     <message>
         <source>Keep recruiting while your builders gather. Raise Homes and Farms when population or food runs out.</source>
         <translation>Continue recrutando enquanto seus construtores coletam. Erga casas e fazendas quando a população ou a comida acabarem.</translation>
+    </message>
+    <message>
+        <source>Watches over a wide stretch of ground, holds a settlement together, and takes in healers.</source>
+        <translation>Vigia uma ampla extensão de terreno, mantém um assentamento unido e acolhe curandeiros.</translation>
     </message>
 </context>
 <context>
@@ -2363,20 +2375,20 @@ Isto pode ser uma escaramuça, ou os objetivos não foram configurados.</transla
         <translation>Ultra</translation>
     </message>
     <message>
-        <source>Maximum performance. Aggressive LOD, reduced detail at distance.</source>
-        <translation>Desempenho máximo. LOD agressivo, menos detalhes à distância.</translation>
+        <source>Playable on weak hardware: no cast shadows or post-processing, sparse grass, reduced detail beyond a few metres.</source>
+        <translation>Jogável em hardware fraco: sem sombras projetadas nem pós-processamento, grama esparsa, menos detalhe além de poucos metros.</translation>
     </message>
     <message>
-        <source>Balanced performance and quality. Recommended for most systems.</source>
-        <translation>Equilíbrio entre desempenho e qualidade. Recomendado para a maioria dos sistemas.</translation>
+        <source>Small cast shadows, lighter shaders, reduced detail at distance. For integrated graphics.</source>
+        <translation>Sombras pequenas, shaders mais leves, menos detalhe à distância. Para gráficos integrados.</translation>
     </message>
     <message>
-        <source>Higher quality. More detail visible at distance. Requires better hardware.</source>
-        <translation>Qualidade superior. Mais detalhes visíveis à distância. Exige hardware melhor.</translation>
+        <source>Everything as designed: full detail everywhere, full shadows and post-processing. Recommended.</source>
+        <translation>Tudo como projetado: detalhe completo em toda parte, sombras e pós-processamento completos. Recomendado.</translation>
     </message>
     <message>
-        <source>Maximum quality. Full detail always. Best hardware recommended.</source>
-        <translation>Qualidade máxima. Detalhes completos sempre. Recomenda-se o melhor hardware.</translation>
+        <source>High plus contact-hardening shadows, foliage translucency, extra terrain detail and 8x anti-aliasing. Needs a strong GPU.</source>
+        <translation>Alto mais sombras com endurecimento de contato, folhagem translúcida, detalhe extra do terreno e anti-aliasing 8x. Exige uma GPU forte.</translation>
     </message>
 </context>
 <context>
@@ -3452,10 +3464,6 @@ Não visto: nunca explorado.</translation>
         <translation>Recrutamento</translation>
     </message>
     <message>
-        <source>Left-click a barracks and pick a soldier. Recruits queue up to five deep and march out to the rally flag. Each costs population from the barracks&apos; own pool as well as materials.</source>
-        <translation>Clique com o botão esquerdo em um quartel e escolha um soldado. Os recrutas formam fila de até cinco e saem para a bandeira de reunião. Cada um custa população da reserva própria do quartel, além de materiais.</translation>
-    </message>
-    <message>
         <source>Population</source>
         <translation>População</translation>
     </message>
@@ -3584,12 +3592,16 @@ Não visto: nunca explorado.</translation>
         <translation>Cada carta, recruta ou edifício, mostra seu preço. Uma carta cinza significa que falta algo; passe o cursor para ler o quê. As casas custam 50 de madeira e 15 de pedra, uma fazenda 40 de madeira e 10 de pedra, um quartel 100 de madeira e 60 de pedra, uma torre de defesa 60 de madeira e 80 de pedra; os soldados custam madeira e ferro mais população, e os civis custam comida.</translation>
     </message>
     <message>
-        <source>Barracks recruit soldiers and hold your stockpile yard. Homes raise families and civilians. Farms grow grain that builders reap for food. Defence towers shoot at anything in range. Marketplaces trade. Temples strengthen morale. Walls and gates shape the field; gates open for your own troops.</source>
-        <translation>Os quartéis recrutam soldados e abrigam seu pátio de estoque. As casas criam famílias e civis. As fazendas cultivam grãos que os construtores ceifam em troca de comida. As torres de defesa atiram em tudo ao alcance. Os mercados comerciam. Os templos fortalecem o moral. Muralhas e portões moldam o campo; os portões se abrem para as suas próprias tropas.</translation>
+        <source>Barracks recruit soldiers and hold your stockpile yard. Homes raise families and civilians. Farms grow grain that builders reap for food. Defence towers shoot at anything in range. Marketplaces trade. Temples strengthen morale and take in healers. Walls and gates shape the field; gates open for your own troops.</source>
+        <translation>Quartéis recrutam soldados e abrigam seu depósito. Casas criam famílias e civis. Fazendas cultivam grãos que construtores colhem como comida. Torres de defesa atiram em tudo ao alcance. Mercados negociam. Templos fortalecem o moral e acolhem curandeiros. Muros e portões moldam o campo; os portões se abrem para suas próprias tropas.</translation>
     </message>
     <message>
-        <source>A barracks starts with a pool of population and spends it on every recruit. Homes refill it: each Home raises families over time, a civilian can be recruited there for food and sent to the barracks with Deliver, and the pool grows. The top bar shows your army against the map&apos;s overall cap.</source>
-        <translation>Um quartel começa com uma reserva de população e a gasta em cada recruta. As casas a reabastecem: cada casa cria famílias com o tempo, ali um civil pode ser recrutado por comida e enviado ao quartel com Entregar, e a reserva cresce. A barra superior mostra seu exército contra o limite geral do mapa.</translation>
+        <source>Left-click a barracks and pick a soldier; healers take their vows at a temple instead. Recruits queue up to five deep and march out to the rally flag. Each costs population from the building&apos;s own pool as well as materials.</source>
+        <translation>Clique com o botão esquerdo em um quartel e escolha um soldado; curandeiros fazem seus votos em um templo. Os recrutas entram numa fila de até cinco e marcham até a bandeira de reunião. Cada um custa população da reserva do próprio edifício, além de materiais.</translation>
+    </message>
+    <message>
+        <source>A barracks or temple starts with a pool of population and spends it on every recruit. Homes refill it: each Home raises families over time, a civilian can be recruited there for food and sent to either building with Deliver, and that building&apos;s pool grows. The top bar shows your army against the map&apos;s overall cap.</source>
+        <translation>Um quartel ou templo começa com uma reserva de população e a gasta em cada recruta. As casas a reabastecem: cada Casa cria famílias com o tempo, ali um civil pode ser recrutado por comida e enviado a qualquer um dos dois edifícios com Entregar, e a reserva desse edifício cresce. A barra superior mostra seu exército em relação ao limite total do mapa.</translation>
     </message>
 </context>
 <context>
@@ -6571,10 +6583,6 @@ Tempo de construção: %3s</translation>
         <translation>Elefante de guerra</translation>
     </message>
     <message>
-        <source>Build a barracks before setting a rally point.</source>
-        <translation>Construa um quartel antes de definir um ponto de reunião.</translation>
-    </message>
-    <message>
         <source>Temple</source>
         <translation>Templo</translation>
     </message>
@@ -6677,6 +6685,18 @@ Os construtores os ceifam pela comida que recruta civis</translation>
     <message>
         <source>Harvested %1 times so far.</source>
         <translation>Colhida %1 vezes até agora.</translation>
+    </message>
+    <message>
+        <source>Select a barracks or temple before setting a rally point.</source>
+        <translation>Selecione um quartel ou templo antes de definir um ponto de reunião.</translation>
+    </message>
+    <message>
+        <source>TAKE VOWS</source>
+        <translation>FAZER VOTOS</translation>
+    </message>
+    <message>
+        <source>Deliver civilians here to raise the temple&apos;s available population</source>
+        <translation>Entregue civis aqui para aumentar a população disponível do templo</translation>
     </message>
 </context>
 <context>

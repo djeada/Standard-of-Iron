@@ -190,7 +190,8 @@ public:
   [[nodiscard]] auto
   living_commanders_by_owner() -> std::map<int, std::vector<QString>> {
     std::map<int, std::vector<QString>> by_owner;
-    for (auto* entity : m_world.get_entities_with<Engine::Core::CommanderComponent>()) {
+    for (auto* entity :
+         m_world.collect_entities_with<Engine::Core::CommanderComponent>()) {
       if (entity == nullptr) {
         continue;
       }

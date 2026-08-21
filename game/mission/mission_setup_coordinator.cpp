@@ -147,7 +147,7 @@ auto MissionSetupCoordinator::apply_mission_setup(
 
   if (has_mission_spawns && !has_map_spawns) {
     std::vector<Engine::Core::EntityID> to_remove;
-    auto entities = ctx.world.get_entities_with<Engine::Core::UnitComponent>();
+    auto entities = ctx.world.collect_entities_with<Engine::Core::UnitComponent>();
     to_remove.reserve(entities.size());
     for (auto* entity : entities) {
       if (entity != nullptr) {
@@ -357,7 +357,7 @@ auto MissionSetupCoordinator::apply_mission_setup(
 
   auto verify_owner_commander = [&](int owner_id, const QString& force_label) {
     for (auto* entity :
-         ctx.world.get_entities_with<Engine::Core::CommanderComponent>()) {
+         ctx.world.collect_entities_with<Engine::Core::CommanderComponent>()) {
       if (entity == nullptr) {
         continue;
       }
@@ -578,7 +578,7 @@ auto MissionSetupCoordinator::apply_skirmish_commander_setup(
 
   auto existing_owner_spawn_anchors = [&](int owner_id) {
     std::vector<Game::Mission::ExistingOwnerSpawnAnchor> anchors;
-    auto entities = ctx.world.get_entities_with<Engine::Core::UnitComponent>();
+    auto entities = ctx.world.collect_entities_with<Engine::Core::UnitComponent>();
     anchors.reserve(entities.size());
     for (auto* entity : entities) {
       if (entity == nullptr) {
@@ -668,7 +668,7 @@ auto MissionSetupCoordinator::apply_skirmish_commander_setup(
     QVector3D existing_position{0.0F, 0.0F, 0.0F};
     bool has_existing_position = false;
     for (auto* entity :
-         ctx.world.get_entities_with<Engine::Core::CommanderComponent>()) {
+         ctx.world.collect_entities_with<Engine::Core::CommanderComponent>()) {
       if (entity == nullptr) {
         continue;
       }

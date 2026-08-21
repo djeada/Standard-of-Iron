@@ -447,7 +447,7 @@ auto bake_rigged_mesh_cpu(const BakeInput& in) -> BakedRiggedMeshCpu {
       if (prim.shape == PrimitiveShape::None) {
         continue;
       }
-      Mesh* unit_mesh = Render::Creature::primitive_unit_mesh(prim);
+      Mesh* unit_mesh = Render::Creature::primitive_unit_mesh(prim, in.lod);
       if (unit_mesh == nullptr) {
         continue;
       }

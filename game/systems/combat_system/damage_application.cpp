@@ -8,6 +8,7 @@
 #include <limits>
 #include <numbers>
 #include <optional>
+#include <vector>
 
 #include "../../core/component.h"
 #include "../../core/event_manager.h"
@@ -262,9 +263,12 @@ auto ensure_formation_roster(Engine::Core::Entity& target,
   return roster;
 }
 
-void publish_formation_hit(Engine::Core::Entity& target,
-                           Engine::Core::EntityID attacker_id,
-                           std::optional<std::uint16_t> slot) {
+void publish_formation_hit(
+    Engine::Core::Entity& target,
+    Engine::Core::EntityID attacker_id,
+    std::optional<std::uint16_t> slot,
+    Engine::Core::HitReactionKind kind = Engine::Core::HitReactionKind::Flinch,
+    Engine::Core::World* world = nullptr) {
   if (!slot.has_value()) {
     return;
   }
@@ -275,8 +279,30 @@ void publish_formation_hit(Engine::Core::Entity& target,
   }
   hit->attacker_id = attacker_id;
   hit->soldier_slot = *slot;
-  hit->remaining = 0.28F;
-  hit->intensity = 0.85F;
+  hit->duration = Engine::Core::hit_reaction_duration(kind);
+  hit->remaining = hit->duration;
+  hit->intensity = kind == Engine::Core::HitReactionKind::Stagger ? 1.2F : 0.85F;
+  hit->reaction_kind = kind;
+  hit->hit_direction_x = 0.0F;
+  hit->hit_direction_z = 0.0F;
+  if (world != nullptr && attacker_id != 0) {
+    auto const* attacker = world->get_entity(attacker_id);
+    auto const* attacker_transform =
+        attacker != nullptr
+            ? attacker->get_component<Engine::Core::TransformComponent>()
+            : nullptr;
+    auto const* target_transform =
+        target.get_component<Engine::Core::TransformComponent>();
+    if (attacker_transform != nullptr && target_transform != nullptr) {
+      float const dx = target_transform->position.x - attacker_transform->position.x;
+      float const dz = target_transform->position.z - attacker_transform->position.z;
+      float const dist = std::hypot(dx, dz);
+      if (dist > 0.001F) {
+        hit->hit_direction_x = dx / dist;
+        hit->hit_direction_z = dz / dist;
+      }
+    }
+  }
   ++hit->revision;
 }
 
@@ -424,7 +450,7 @@ void fill_formation_front_vacancy(Engine::Core::World* world,
   int best_rank = std::numeric_limits<int>::max();
   float best_distance_sq = std::numeric_limits<float>::max();
   for (auto* candidate :
-       world->get_entities_with<Engine::Core::FormationModeComponent>()) {
+       world->collect_entities_with<Engine::Core::FormationModeComponent>()) {
     auto* mode = candidate->get_component<Engine::Core::FormationModeComponent>();
     auto* unit = candidate->get_component<Engine::Core::UnitComponent>();
     auto* transform = candidate->get_component<Engine::Core::TransformComponent>();
@@ -490,7 +516,8 @@ void prune_oldest_blood_stain(Engine::Core::World* world) {
   }
 
   while (true) {
-    auto blood_stains = world->get_entities_with<Engine::Core::BloodStainComponent>();
+    auto blood_stains =
+        world->collect_entities_with<Engine::Core::BloodStainComponent>();
     if (blood_stains.size() <
         static_cast<std::size_t>(Engine::Core::Defaults::k_blood_stain_max_active)) {
       return;
@@ -651,10 +678,18 @@ void alert_nearby_allies(Engine::Core::World* world,
   float const radius_sq =
       Constants::k_squad_alert_radius * Constants::k_squad_alert_radius;
   int alerted = 0;
-  for (auto* ally : world->get_entities_with<Engine::Core::UnitComponent>()) {
+
+  static thread_local std::vector<Engine::Core::EntityID> nearby;
+  collect_unit_ids_near(*world,
+                        defender_transform->position.x,
+                        defender_transform->position.z,
+                        Constants::k_squad_alert_radius,
+                        nearby);
+  for (const Engine::Core::EntityID ally_id : nearby) {
     if (alerted >= Constants::k_max_squad_alert_allies) {
       break;
     }
+    auto* ally = world->get_entity(ally_id);
     if ((ally == defender) || (ally == nullptr) ||
         ally->has_component<Engine::Core::PendingRemovalComponent>()) {
       continue;
@@ -998,7 +1033,11 @@ apply_unit_damage(Engine::Core::World* world,
   auto const preferred_hit_slot = preferred_soldier_slot.has_value()
                                       ? preferred_soldier_slot
                                       : preferred_formation_hit_slot(target, attacker);
-  publish_formation_hit(*target, attacker_id, preferred_hit_slot);
+  publish_formation_hit(*target,
+                        attacker_id,
+                        preferred_hit_slot,
+                        Engine::Core::HitReactionKind::Flinch,
+                        world);
   result.queued_soldier_casualties = begin_soldier_casualties(target,
                                                               attacker,
                                                               result.previous_health,
@@ -1108,6 +1147,40 @@ apply_unit_damage(Engine::Core::World* world,
 void apply_hit_feedback(Engine::Core::Entity* target,
                         Engine::Core::EntityID attacker_id,
                         Engine::Core::World* world) {
+  apply_hit_feedback(target, attacker_id, world, Engine::Core::HitReactionKind::Flinch);
+}
+
+namespace {
+
+[[nodiscard]] auto
+reaction_knockback_scale(Engine::Core::HitReactionKind kind) noexcept -> float {
+  switch (kind) {
+  case Engine::Core::HitReactionKind::Flinch:
+    return 1.0F;
+  case Engine::Core::HitReactionKind::Block:
+    return 0.55F;
+  case Engine::Core::HitReactionKind::Evade:
+    return 1.7F;
+  case Engine::Core::HitReactionKind::Stagger:
+    return 2.4F;
+  case Engine::Core::HitReactionKind::Recoil:
+    return 0.7F;
+  }
+  return 1.0F;
+}
+
+[[nodiscard]] auto
+reaction_pauses_swing(Engine::Core::HitReactionKind kind) noexcept -> bool {
+  return kind == Engine::Core::HitReactionKind::Flinch ||
+         kind == Engine::Core::HitReactionKind::Stagger;
+}
+
+} // namespace
+
+void apply_hit_feedback(Engine::Core::Entity* target,
+                        Engine::Core::EntityID attacker_id,
+                        Engine::Core::World* world,
+                        Engine::Core::HitReactionKind kind) {
   if (target == nullptr) {
     return;
   }
@@ -1123,6 +1196,11 @@ void apply_hit_feedback(Engine::Core::Entity* target,
   feedback->is_reacting = true;
   feedback->source_attacker_id = attacker_id;
   feedback->reaction_time = 0.0F;
+  feedback->reaction_duration = Engine::Core::hit_reaction_duration(kind);
+  feedback->reaction_kind = kind;
+  feedback->knockback_applied = 0.0F;
+  feedback->knockback_x = 0.0F;
+  feedback->knockback_z = 0.0F;
   feedback->reaction_intensity = 0.85F;
 
   auto* target_transform = target->get_component<Engine::Core::TransformComponent>();
@@ -1149,6 +1227,12 @@ void apply_hit_feedback(Engine::Core::Entity* target,
             attacker_unit->spawn_type == Game::Units::SpawnType::Elephant) {
           knockback_scale = 2.2F;
           feedback->reaction_intensity = 1.35F;
+        }
+        knockback_scale *= reaction_knockback_scale(kind);
+        if (kind == Engine::Core::HitReactionKind::Stagger) {
+          feedback->reaction_intensity = std::max(feedback->reaction_intensity, 1.25F);
+        } else if (kind == Engine::Core::HitReactionKind::Recoil) {
+          feedback->reaction_intensity = 0.6F;
         }
 
         float const dx = target_transform->position.x - attacker_transform->position.x;
@@ -1186,11 +1270,32 @@ void apply_hit_feedback(Engine::Core::Entity* target,
   }
 
   auto* combat_state = target->get_component<Engine::Core::CombatStateComponent>();
-  if (combat_state != nullptr) {
+  if (combat_state != nullptr && reaction_pauses_swing(kind)) {
     combat_state->is_hit_paused = true;
     combat_state->hit_pause_remaining =
         Engine::Core::CombatStateComponent::k_combat_animation_hit_pause_duration;
   }
+}
+
+void apply_melee_reaction_feedback(Engine::Core::World* world,
+                                   Engine::Core::Entity* target,
+                                   Engine::Core::EntityID attacker_id,
+                                   Engine::Core::HitReactionKind kind) {
+  if (target == nullptr) {
+    return;
+  }
+  auto const* unit = target->get_component<Engine::Core::UnitComponent>();
+  if (unit == nullptr || unit->health <= 0) {
+    return;
+  }
+  apply_hit_feedback(target, attacker_id, world, kind);
+  Engine::Core::Entity* attacker =
+      (world != nullptr && attacker_id != 0) ? world->get_entity(attacker_id) : nullptr;
+  publish_formation_hit(*target,
+                        attacker_id,
+                        preferred_formation_hit_slot(target, attacker),
+                        kind,
+                        world);
 }
 
 } // namespace Game::Systems::Combat

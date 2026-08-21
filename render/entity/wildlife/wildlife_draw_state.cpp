@@ -20,6 +20,8 @@ struct GaitCursor {
   float elapsed{0.0F};
   float ambient{0.0F};
   float action{0.0F};
+  float graze_hold{0.0F};
+  std::uint8_t tier{0U};
   bool sampled{false};
 };
 
@@ -27,6 +29,10 @@ constexpr float k_action_restart_drop = 0.25F;
 
 constexpr float k_gait_speed_smoothing = 0.18F;
 constexpr float k_gait_max_step_seconds = 0.25F;
+
+constexpr float k_gait_exit_fraction = 0.55F;
+
+constexpr float k_graze_release_seconds = 1.2F;
 
 constexpr std::size_t k_cursor_prune_threshold = 512U;
 constexpr float k_cursor_max_age = 30.0F;
@@ -180,6 +186,68 @@ auto gait_speed(const DrawState& state) -> float {
   }
   cursor.sampled = true;
   return cursor.speed;
+}
+
+auto resolve_gait_tier(const DrawState& state,
+                       float ratio,
+                       float walk_threshold,
+                       float run_threshold) -> GaitTier {
+  auto const stateless = [&]() {
+    if (ratio > run_threshold) {
+      return GaitTier::Run;
+    }
+    return ratio > walk_threshold ? GaitTier::Walk : GaitTier::Stand;
+  };
+
+  auto& cursors = gait_cursors();
+  auto const entry = cursors.find(state.seed);
+  if (entry == cursors.end()) {
+    return stateless();
+  }
+  GaitCursor& cursor = entry->second;
+
+  GaitTier tier = static_cast<GaitTier>(cursor.tier);
+  switch (tier) {
+  case GaitTier::Run:
+    if (ratio <= run_threshold * k_gait_exit_fraction) {
+      tier = ratio > walk_threshold ? GaitTier::Walk : GaitTier::Stand;
+    }
+    break;
+  case GaitTier::Walk:
+    if (ratio > run_threshold) {
+      tier = GaitTier::Run;
+    } else if (ratio <= walk_threshold * k_gait_exit_fraction) {
+      tier = GaitTier::Stand;
+    }
+    break;
+  case GaitTier::Stand:
+    tier = stateless();
+    break;
+  }
+
+  cursor.tier = static_cast<std::uint8_t>(tier);
+  return tier;
+}
+
+auto grazing_latched(const DrawState& state, bool moving) -> bool {
+  auto& cursors = gait_cursors();
+  auto const entry = cursors.find(state.seed);
+  if (entry == cursors.end()) {
+    return state.grazing && !moving;
+  }
+  GaitCursor& cursor = entry->second;
+
+  if (moving || state.alert || state.dead || state.death_progress >= 0.0F ||
+      state.flinch_progress >= 0.0F) {
+    cursor.graze_hold = 0.0F;
+    return false;
+  }
+  if (state.grazing) {
+    cursor.graze_hold = k_graze_release_seconds;
+    return true;
+  }
+  cursor.graze_hold = std::max(0.0F, cursor.graze_hold - cursor.elapsed);
+  return cursor.graze_hold > 0.0F;
 }
 
 auto gait_phase(const DrawState& state, float advance) -> float {

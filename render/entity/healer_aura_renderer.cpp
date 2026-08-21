@@ -17,7 +17,7 @@ void render_healer_auras(Renderer* renderer,
 
   float const animation_time = renderer->get_animation_time();
 
-  auto healers = world->get_entities_with<Engine::Core::HealerComponent>();
+  auto healers = world->collect_entities_with<Engine::Core::HealerComponent>();
 
   for (auto* healer : healers) {
     if (healer->has_component<Engine::Core::PendingRemovalComponent>()) {

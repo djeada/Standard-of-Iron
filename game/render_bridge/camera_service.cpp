@@ -108,7 +108,7 @@ void CameraService::reset_camera(Render::GL::Camera& camera,
                                  Engine::Core::EntityID player_unit_id) {
   sync_map_bounds(camera);
   Engine::Core::Entity* focus_entity = nullptr;
-  for (auto* e : world.get_entities_with<Engine::Core::UnitComponent>()) {
+  for (auto* e : world.collect_entities_with<Engine::Core::UnitComponent>()) {
     if (e == nullptr) {
       continue;
     }

@@ -1,9 +1,11 @@
 #version 330 core
+#include "noise.glsl"
 #include "terrain_noise.glsl"
 
 in vec2 v_uv;
 
 layout(location = 0) out vec4 frag_fields;
+layout(location = 1) out vec4 frag_fields_detail;
 
 uniform vec2 u_bake_world_min;
 uniform vec2 u_bake_world_size;
@@ -47,5 +49,21 @@ void main() {
                              0.0,
                              1.0);
 
+  float thatch_field = clamp(0.5 + bake_fbm(world_coord * macro_scale * 2.60 -
+                                            domain_warp * 0.32 + vec2(21.0, -39.0)) *
+                                       0.66,
+                             0.0,
+                             1.0);
+  float material_patch = clamp(0.5 + bake_fbm(world_coord * macro_scale * 2.8 +
+                                              domain_warp * 0.58 + vec2(37.0, -61.0)) *
+                                         0.78,
+                               0.0,
+                               1.0);
+
+  float hue_field = bake_fbm(world_coord * 0.042 + vec2(61.0, -37.0));
+  float earth_field =
+      bake_fbm(world_coord * 0.016 + domain_warp * 0.6 + vec2(-83.0, 29.0));
+
   frag_fields = vec4(regional_field, soil_field, moisture_field, meadow_field);
+  frag_fields_detail = vec4(thatch_field, material_patch, hue_field, earth_field);
 }

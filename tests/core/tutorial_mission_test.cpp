@@ -92,7 +92,7 @@ protected:
 
   auto living_units_of(int owner) -> std::vector<Engine::Core::Entity*> {
     std::vector<Engine::Core::Entity*> units;
-    for (auto* entity : m_world.get_entities_with<UnitComponent>()) {
+    for (auto* entity : m_world.collect_entities_with<UnitComponent>()) {
       const auto* unit = entity->get_component<UnitComponent>();
       if (unit != nullptr && unit->health > 0 && unit->owner_id == owner) {
         units.push_back(entity);
@@ -122,7 +122,8 @@ protected:
 
 TEST_F(TutorialMissionTest, EveryForceFieldsExactlyOneCommander) {
   std::map<int, int> commanders;
-  for (auto* entity : m_world.get_entities_with<Engine::Core::CommanderComponent>()) {
+  for (auto* entity :
+       m_world.collect_entities_with<Engine::Core::CommanderComponent>()) {
     const auto* unit = entity->get_component<UnitComponent>();
     if (unit != nullptr && unit->health > 0) {
       ++commanders[unit->owner_id];

@@ -29,6 +29,13 @@ auto ShaderUniformCache::initialize() -> bool {
   basic.instanced_variant = m_shader_cache->get(QStringLiteral("basic_instanced"));
   m_uniform_cache[m_basic_shader] = basic;
 
+  if (Shader* troop_shadow = m_shader_cache->get(QStringLiteral("troop_shadow"))) {
+    BasicUniforms shadow = build_uniform_set(troop_shadow);
+    shadow.instanced_variant =
+        m_shader_cache->get(QStringLiteral("troop_shadow_instanced"));
+    m_uniform_cache[troop_shadow] = shadow;
+  }
+
   return true;
 }
 
@@ -44,6 +51,9 @@ auto ShaderUniformCache::build_uniform_set(Shader* shader) const -> BasicUniform
   uniforms.color = shader->optional_uniform_handle("u_color");
   uniforms.alpha = shader->optional_uniform_handle("u_alpha");
   uniforms.material_id = shader->optional_uniform_handle("u_material_id");
+  uniforms.material_detail = shader->optional_uniform_handle("u_material_detail");
+  uniforms.has_material_detail =
+      shader->optional_uniform_handle("u_has_material_detail");
   uniforms.instanced = shader->optional_uniform_handle("u_instanced");
   uniforms.view_proj = shader->optional_uniform_handle("u_view_proj");
   uniforms.light_dir = shader->optional_uniform_handle("u_light_dir");

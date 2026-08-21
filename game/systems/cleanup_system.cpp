@@ -14,7 +14,7 @@ void CleanupSystem::update(Engine::Core::World* world, float delta_time) {
     return;
   }
   auto blood_stain_entities =
-      world->get_entities_with<Engine::Core::BloodStainComponent>();
+      world->collect_entities_with<Engine::Core::BloodStainComponent>();
   for (auto* entity : blood_stain_entities) {
     if (entity == nullptr ||
         entity->has_component<Engine::Core::PendingRemovalComponent>()) {
@@ -34,7 +34,8 @@ void CleanupSystem::update(Engine::Core::World* world, float delta_time) {
   }
 
   auto structure_damage_entities =
-      world->get_entities_with<Engine::Core::StructureDamagePresentationComponent>();
+      world
+          ->collect_entities_with<Engine::Core::StructureDamagePresentationComponent>();
   for (auto* entity : structure_damage_entities) {
     if (entity == nullptr ||
         entity->has_component<Engine::Core::PendingRemovalComponent>()) {
@@ -56,7 +57,7 @@ void CleanupSystem::update(Engine::Core::World* world, float delta_time) {
   }
 
   auto rpg_contact_entities =
-      world->get_entities_with<Engine::Core::RpgContactPresentationComponent>();
+      world->collect_entities_with<Engine::Core::RpgContactPresentationComponent>();
   for (auto* entity : rpg_contact_entities) {
     if (entity == nullptr ||
         entity->has_component<Engine::Core::PendingRemovalComponent>()) {
@@ -78,7 +79,7 @@ void CleanupSystem::update(Engine::Core::World* world, float delta_time) {
   }
 
   auto casualty_entities =
-      world->get_entities_with<Engine::Core::SoldierCasualtyAnimationComponent>();
+      world->collect_entities_with<Engine::Core::SoldierCasualtyAnimationComponent>();
   for (auto* entity : casualty_entities) {
     if (entity == nullptr ||
         entity->has_component<Engine::Core::PendingRemovalComponent>()) {
@@ -116,7 +117,7 @@ void CleanupSystem::update(Engine::Core::World* world, float delta_time) {
   }
 
   auto dead_entities =
-      world->get_entities_with<Engine::Core::DeathAnimationComponent>();
+      world->collect_entities_with<Engine::Core::DeathAnimationComponent>();
   for (auto* entity : dead_entities) {
     if (entity == nullptr ||
         entity->has_component<Engine::Core::PendingRemovalComponent>()) {
@@ -152,7 +153,7 @@ void CleanupSystem::update(Engine::Core::World* world, float delta_time) {
 void CleanupSystem::remove_dead_entities(Engine::Core::World* world) {
   std::vector<Engine::Core::EntityID> entities_to_remove;
 
-  auto entities = world->get_entities_with<Engine::Core::PendingRemovalComponent>();
+  auto entities = world->collect_entities_with<Engine::Core::PendingRemovalComponent>();
 
   entities_to_remove.reserve(entities.size());
   for (auto* entity : entities) {

@@ -12,6 +12,7 @@
 #include "game/session/simulation_clock.h"
 #include "game/systems/building_collision_registry.h"
 #include "game/systems/command_service.h"
+#include "game/systems/gate_service.h"
 #include "game/systems/nav_grid.h"
 #include "game/systems/owner_registry.h"
 #include "game/systems/pathfinding.h"
@@ -102,15 +103,18 @@ auto add_wall_piece(SessionContext& session,
                                                  center.z(),
                                                  k_defender);
   if (is_gate) {
-    session.building_collision().set_building_navigation_blocking(entity->get_id(),
-                                                                  false);
+    Game::Systems::GateService::sync_gate_footprint(entity->get_id(),
+                                                    transform->rotation.y);
   }
   return entity->get_id();
 }
 
 auto build_gated_wall(SessionContext& session) -> EntityID {
+
+  constexpr float k_gatehouse_half_span =
+      static_cast<float>(Game::Systems::WallNetworkService::k_segment_spacing);
   for (float x = -30.0F; x <= 30.0F; x += 2.0F) {
-    if (std::fabs(x - k_gate_x) < 0.01F) {
+    if (std::fabs(x - k_gate_x) <= k_gatehouse_half_span + 0.01F) {
       continue;
     }
     add_wall_piece(session, Game::Units::SpawnType::WallSegment, x, k_gate_z);
@@ -119,6 +123,19 @@ auto build_gated_wall(SessionContext& session) -> EntityID {
       add_wall_piece(session, Game::Units::SpawnType::WallGate, k_gate_x, k_gate_z);
   Game::Systems::WallNetworkService::refresh_world(session.world());
   return gate;
+}
+
+auto walkable_wall_line_cells(const QVector3D& gate_position) -> std::vector<int> {
+  const Game::Systems::Point gate_cell =
+      Game::Systems::NavGrid::world_to_grid(gate_position.x(), gate_position.z());
+  std::vector<int> walkable;
+  for (int offset = -4; offset <= 4; ++offset) {
+    if (Game::Systems::NavGrid::is_grid_walkable(
+            Game::Systems::Point(gate_cell.x + offset, gate_cell.y))) {
+      walkable.push_back(offset);
+    }
+  }
+  return walkable;
 }
 
 auto spawn_troop(SessionContext& session, int owner_id, float x, float z) -> EntityID {
@@ -187,33 +204,46 @@ TEST_F(GateTraversalTest, OwnerTroopWalksThroughItsOwnGate) {
   EXPECT_FLOAT_EQ(gate_component->open_amount, 0.0F);
 }
 
+TEST_F(GateTraversalTest, OnlyTheMiddleTileOfTheGatehouseIsWalkable) {
+  auto session = make_match();
+  const ScopedSession scope(*session);
+  const EntityID gate = build_gated_wall(*session);
+  const QVector3D gate_position = entity_position(*session, gate);
+
+  EXPECT_EQ(walkable_wall_line_cells(gate_position), std::vector<int>{0});
+}
+
 TEST_F(GateTraversalTest, GroupMembersIndividuallyUseTheGateCenterline) {
   auto session = make_match();
   const ScopedSession scope(*session);
   const EntityID gate = build_gated_wall(*session);
   const QVector3D gate_position = entity_position(*session, gate);
 
+  constexpr int k_group_size = 24;
+  constexpr int k_rank_width = 8;
   std::vector<EntityID> troops;
   std::vector<QVector3D> targets;
-  for (int index = 0; index < 8; ++index) {
-    const float offset = (static_cast<float>(index) - 3.5F) * 0.6F;
-    troops.push_back(spawn_troop(*session,
-                                 k_defender,
-                                 gate_position.x() + offset,
-                                 gate_position.z() - 8.0F - float(index / 4)));
+  for (int index = 0; index < k_group_size; ++index) {
+    const float offset = (static_cast<float>(index % k_rank_width) - 3.5F) * 0.6F;
+    troops.push_back(
+        spawn_troop(*session,
+                    k_defender,
+                    gate_position.x() + offset,
+                    gate_position.z() - 8.0F - float(index / k_rank_width)));
     targets.emplace_back(gate_position.x(), 0.0F, gate_position.z() + 8.0F);
   }
   Game::Systems::CommandService::move_units(session->world(), troops, targets);
 
+  const float lane_half = Game::Systems::GateService::lane_half_width();
   std::vector<bool> used_centerline(troops.size(), false);
   const double step = session->clock().tick_seconds();
-  for (double elapsed = 0.0; elapsed < 20.0; elapsed += step) {
+  for (double elapsed = 0.0; elapsed < 45.0; elapsed += step) {
     run_for(*session, step);
     for (std::size_t index = 0; index < troops.size(); ++index) {
       const QVector3D position = entity_position(*session, troops[index]);
       if (std::abs(position.z() - gate_position.z()) <= 1.0F) {
         used_centerline[index] = true;
-        EXPECT_LE(std::abs(position.x() - gate_position.x()), 0.75F)
+        EXPECT_LE(std::abs(position.x() - gate_position.x()), lane_half)
             << "unit " << index << " crossed off the gate centerline";
       }
     }

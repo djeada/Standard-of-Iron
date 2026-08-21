@@ -155,16 +155,13 @@ auto RiggedMeshCache::get_or_bake_prehashed(
       Render::Creature::Rigged::RiggedMeshRegistry::instance().blob(skin_species_id,
                                                                     lod);
 
-  const bool split_full_mesh = lod == Render::Creature::CreatureLOD::Full;
   const BaseMeshKey base_key{&spec, lod, skin_species_id};
   const AttachmentMeshKey attachment_key{&spec, skin_species_id, attachments_hash};
   const bool base_is_cached = m_base_meshes.find(base_key) != m_base_meshes.end();
   const bool attachments_are_cached =
       attachments.empty() || m_attachment_meshes.contains(attachment_key);
   if (Render::Creature::runtime_bake_forbidden() &&
-      ((split_full_mesh &&
-        ((!base_is_cached && prebaked == nullptr) || !attachments_are_cached)) ||
-       (!split_full_mesh && (prebaked == nullptr || !attachments.empty())))) {
+      ((!base_is_cached && prebaked == nullptr) || !attachments_are_cached)) {
     ++m_frame_stats.misses;
     Render::Creature::report_runtime_bake_violation(
         Render::Creature::RuntimeBakeOperation::RiggedMeshBake,
@@ -177,7 +174,7 @@ auto RiggedMeshCache::get_or_bake_prehashed(
     return nullptr;
   }
 
-  if (split_full_mesh) {
+  {
     auto [base_it, inserted] = m_base_meshes.try_emplace(base_key);
     if (inserted || base_it->second == nullptr) {
       if (prebaked != nullptr) {
@@ -190,14 +187,16 @@ auto RiggedMeshCache::get_or_bake_prehashed(
         Render::Creature::BakeInput input{};
         input.graph = &Render::Creature::part_graph_for(spec, lod);
         input.bind_pose = rest_palette;
+        input.lod = lod;
         base_it->second = std::shared_ptr<RiggedMesh>(
             Render::Creature::bake_rigged_mesh(input).release());
       }
     }
     entry.mesh = base_it->second;
     if (!attachments.empty()) {
-      auto [attachment_it, inserted] = m_attachment_meshes.try_emplace(attachment_key);
-      if (inserted || attachment_it->second == nullptr) {
+      auto [attachment_it, attachment_inserted] =
+          m_attachment_meshes.try_emplace(attachment_key);
+      if (attachment_inserted || attachment_it->second == nullptr) {
         Render::Creature::BakeInput input{};
         input.bind_pose = rest_palette;
         input.attachments = attachments;
@@ -209,20 +208,6 @@ auto RiggedMeshCache::get_or_bake_prehashed(
         entry.attachment_meshes.push_back(attachment_it->second);
       }
     }
-  } else if (prebaked != nullptr && attachments.empty()) {
-    auto const vertices = prebaked->vertices_view();
-    auto const indices = prebaked->indices_view();
-    entry.mesh = std::make_shared<RiggedMesh>(
-        std::vector<RiggedVertex>(vertices.begin(), vertices.end()),
-        std::vector<std::uint32_t>(indices.begin(), indices.end()));
-  } else {
-    Render::Creature::BakeInput input{};
-    input.graph = &Render::Creature::part_graph_for(spec, lod);
-    input.bind_pose = rest_palette;
-    input.attachments = attachments;
-
-    entry.mesh = std::shared_ptr<RiggedMesh>(
-        Render::Creature::bake_rigged_mesh(input).release());
   }
 
   const SkinAtlasKey atlas_key{&spec, skin_species_id};

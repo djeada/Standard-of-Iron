@@ -13,7 +13,7 @@ void FarmSystem::update(Engine::Core::World* world, float delta_time) {
     return;
   }
 
-  for (auto* entity : world->get_entities_with<Engine::Core::FarmComponent>()) {
+  for (auto* entity : world->collect_entities_with<Engine::Core::FarmComponent>()) {
     auto* farm = entity->get_component<Engine::Core::FarmComponent>();
     if (farm == nullptr || farm->ripe()) {
       continue;

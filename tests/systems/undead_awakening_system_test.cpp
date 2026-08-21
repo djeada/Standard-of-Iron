@@ -135,7 +135,7 @@ auto add_intruder(Engine::Core::World& world,
 
 auto count_owner_units(Engine::Core::World& world, int owner_id) -> int {
   int count = 0;
-  for (auto* entity : world.get_entities_with<Engine::Core::UnitComponent>()) {
+  for (auto* entity : world.collect_entities_with<Engine::Core::UnitComponent>()) {
     auto* unit = entity->get_component<Engine::Core::UnitComponent>();
     if (unit != nullptr && unit->owner_id == owner_id && unit->health > 0 &&
         Game::Units::is_troop_spawn(unit->spawn_type)) {
@@ -199,7 +199,7 @@ TEST_F(UndeadAwakeningSystemTest, SpawnsOnlyAfterEnemyUnitEntersZone) {
   system.update(&world, 0.1F);
   EXPECT_EQ(count_owner_units(world, 99), 2);
 
-  for (auto* entity : world.get_entities_with<Engine::Core::UnitComponent>()) {
+  for (auto* entity : world.collect_entities_with<Engine::Core::UnitComponent>()) {
     auto* spawned = entity->get_component<Engine::Core::UnitComponent>();
     if (spawned == nullptr || spawned->owner_id != 99) {
       continue;
@@ -253,7 +253,7 @@ TEST_F(UndeadAwakeningSystemTest, ZoneWithoutAuthoredWavesRaisesTheDefaultGarris
   system.update(&world, 0.1F);
 
   std::map<Game::Units::SpawnType, int> roster;
-  for (auto* entity : world.get_entities_with<Engine::Core::UnitComponent>()) {
+  for (auto* entity : world.collect_entities_with<Engine::Core::UnitComponent>()) {
     auto* unit = entity->get_component<Engine::Core::UnitComponent>();
     if (unit != nullptr && unit->owner_id == 99 && unit->health > 0 &&
         Game::Units::is_troop_spawn(unit->spawn_type)) {
@@ -277,7 +277,7 @@ TEST_F(UndeadAwakeningSystemTest, MapAuthoredWavesOverrideTheDefaultGarrison) {
   add_intruder(world, {0.5F, 0.0F, 0.5F});
   system.update(&world, 0.1F);
 
-  for (auto* entity : world.get_entities_with<Engine::Core::UnitComponent>()) {
+  for (auto* entity : world.collect_entities_with<Engine::Core::UnitComponent>()) {
     auto* unit = entity->get_component<Engine::Core::UnitComponent>();
     if (unit != nullptr && unit->owner_id == 99 &&
         Game::Units::is_troop_spawn(unit->spawn_type)) {
@@ -301,7 +301,7 @@ TEST_F(UndeadAwakeningSystemTest, WaveRisesTogetherAtDistinctSpreadPositions) {
   system.update(&world, 0.1F);
 
   std::vector<QVector3D> positions;
-  for (auto* entity : world.get_entities_with<Engine::Core::UnitComponent>()) {
+  for (auto* entity : world.collect_entities_with<Engine::Core::UnitComponent>()) {
     auto* unit = entity->get_component<Engine::Core::UnitComponent>();
     auto* transform = entity->get_component<Engine::Core::TransformComponent>();
     if (unit != nullptr && transform != nullptr && unit->owner_id == 99 &&
@@ -671,7 +671,7 @@ TEST_F(UndeadAwakeningSystemTest, EveryWaveAnnouncesItsNumberOutOfTheTotal) {
   EXPECT_TRUE(announcements.front().contains(QStringLiteral("Wave 1/2")))
       << announcements.front().toStdString();
 
-  for (auto* entity : world.get_entities_with<Engine::Core::UnitComponent>()) {
+  for (auto* entity : world.collect_entities_with<Engine::Core::UnitComponent>()) {
     auto* unit = entity->get_component<Engine::Core::UnitComponent>();
     if (unit != nullptr && unit->owner_id == 99 &&
         Game::Units::is_troop_spawn(unit->spawn_type)) {
@@ -747,7 +747,7 @@ TEST_F(UndeadAwakeningSystemTest, ShrineCaptureIsLockedWhileAnyGuardianStands) {
   system.update(&world, 0.1F);
   EXPECT_TRUE(capture->capture_blocked);
 
-  for (auto* entity : world.get_entities_with<Engine::Core::UnitComponent>()) {
+  for (auto* entity : world.collect_entities_with<Engine::Core::UnitComponent>()) {
     auto* unit = entity->get_component<Engine::Core::UnitComponent>();
     if (unit != nullptr && unit->owner_id == 99 &&
         Game::Units::is_troop_spawn(unit->spawn_type)) {

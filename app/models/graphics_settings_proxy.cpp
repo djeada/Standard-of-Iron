@@ -62,14 +62,17 @@ void GraphicsSettingsProxy::set_quality_by_name(const QString& name) {
 QString GraphicsSettingsProxy::get_quality_description() const {
   switch (Render::GraphicsSettings::instance().quality()) {
   case Render::GraphicsQuality::Low:
-    return tr("Maximum performance. Aggressive LOD, reduced detail at distance.");
+    return tr("Playable on weak hardware: no cast shadows or post-processing, "
+              "sparse grass, reduced detail beyond a few metres.");
   case Render::GraphicsQuality::Medium:
-    return tr("Balanced performance and quality. Recommended for most systems.");
+    return tr("Small cast shadows, lighter shaders, reduced detail at distance. "
+              "For integrated graphics.");
   case Render::GraphicsQuality::High:
-    return tr("Higher quality. More detail visible at distance. Requires "
-              "better hardware.");
+    return tr("Everything as designed: full detail everywhere, full shadows and "
+              "post-processing. Recommended.");
   case Render::GraphicsQuality::Ultra:
-    return tr("Maximum quality. Full detail always. Best hardware recommended.");
+    return tr("High plus contact-hardening shadows, foliage translucency, extra "
+              "terrain detail and 8x anti-aliasing. Needs a strong GPU.");
   }
   return {};
 }

@@ -103,11 +103,11 @@ protected:
   }
 
   auto preview_entities() -> std::vector<Engine::Core::Entity*> {
-    return world.get_entities_with<Engine::Core::ConstructionPreviewComponent>();
+    return world.collect_entities_with<Engine::Core::ConstructionPreviewComponent>();
   }
 
   auto find_spawned_unit(Game::Units::SpawnType spawn_type) -> Engine::Core::Entity* {
-    for (auto* entity : world.get_entities_with<Engine::Core::UnitComponent>()) {
+    for (auto* entity : world.collect_entities_with<Engine::Core::UnitComponent>()) {
       auto* unit = entity->get_component<Engine::Core::UnitComponent>();
       if (unit != nullptr && unit->spawn_type == spawn_type) {
         return entity;
@@ -117,7 +117,8 @@ protected:
   }
 
   auto find_wall_construction_site() -> Engine::Core::Entity* {
-    auto sites = world.get_entities_with<Engine::Core::WallConstructionSiteComponent>();
+    auto sites =
+        world.collect_entities_with<Engine::Core::WallConstructionSiteComponent>();
     return sites.empty() ? nullptr : sites.front();
   }
 
@@ -747,6 +748,41 @@ TEST_F(ProductionManagerTest, SetRallyAtScreenTargetsOnlySelectedBarracks) {
   EXPECT_TRUE(home_production->rally_set);
   EXPECT_FLOAT_EQ(home_production->rally_x, -9.0F);
   EXPECT_FLOAT_EQ(home_production->rally_z, 7.5F);
+}
+
+TEST_F(ProductionManagerTest, SetRallyAtScreenAlsoMovesATempleRally) {
+  auto* temple =
+      add_selected_production_building(Game::Units::SpawnType::Temple, -4.0F, 0.0F);
+  ASSERT_NE(temple, nullptr);
+
+  ProductionManager manager(&world, &picking_service, &camera);
+  QPointF const screen = world_to_screen(QVector3D(6.0F, 0.0F, 4.0F));
+
+  EXPECT_TRUE(manager.set_rally_at_screen(screen.x(), screen.y(), 1, viewport));
+
+  auto* production = temple->get_component<Engine::Core::ProductionComponent>();
+  ASSERT_NE(production, nullptr);
+  EXPECT_TRUE(production->rally_set);
+  EXPECT_NEAR(production->rally_x, 6.0F, 0.05F);
+  EXPECT_NEAR(production->rally_z, 4.0F, 0.05F);
+}
+
+TEST_F(ProductionManagerTest, ASelectedTempleReportsItsRecruitmentState) {
+  auto* temple =
+      add_selected_production_building(Game::Units::SpawnType::Temple, -4.0F, 0.0F);
+  ASSERT_NE(temple, nullptr);
+  auto* production = temple->get_component<Engine::Core::ProductionComponent>();
+  ASSERT_NE(production, nullptr);
+  production->max_units = 100;
+  production->manpower_available = 80;
+
+  const QVariantMap state = App::Economy::selected_temple_state(&world, 1);
+  EXPECT_TRUE(state.value("has_temple").toBool());
+  EXPECT_EQ(state.value("manpower_available").toInt(), 80);
+  EXPECT_EQ(state.value("max_units").toInt(), 100);
+
+  EXPECT_FALSE(
+      App::Economy::selected_barracks_state(&world, 1).value("has_barracks").toBool());
 }
 
 } // namespace

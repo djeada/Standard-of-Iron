@@ -308,7 +308,8 @@ void add_overlays(CaptureResult& out, std::uint64_t tick, Engine::Core::World& w
                               "live centroid"});
     }
   }
-  for (auto* entity : world.get_entities_with<Engine::Core::FormationModeComponent>()) {
+  for (auto* entity :
+       world.collect_entities_with<Engine::Core::FormationModeComponent>()) {
     auto const* mode = entity->get_component<Engine::Core::FormationModeComponent>();
     if (mode == nullptr || !mode->active) {
       continue;
@@ -408,7 +409,7 @@ auto run(const RunnerConfig& config, const TickObserver& observer) -> CaptureRes
 
     std::vector<Engine::Core::Entity*> entities;
     for (auto* entity :
-         (*scenario->world).get_entities_with<Engine::Core::UnitComponent>()) {
+         (*scenario->world).collect_entities_with<Engine::Core::UnitComponent>()) {
       entities.push_back(entity);
     }
     std::sort(entities.begin(), entities.end(), [](auto* lhs, auto* rhs) {

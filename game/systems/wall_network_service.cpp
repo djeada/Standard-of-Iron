@@ -262,7 +262,7 @@ auto is_wall_key_occupied(Engine::Core::World& world,
                           int grid_z,
                           bool include_construction_sites,
                           Engine::Core::EntityID ignore_entity_id = 0) -> bool {
-  auto entities = world.get_entities_with<WallSegmentComponent>();
+  auto entities = world.collect_entities_with<WallSegmentComponent>();
   for (auto* entity : entities) {
     if (entity == nullptr || entity->get_id() == ignore_entity_id ||
         !is_live_wall_entity(entity, include_construction_sites)) {
@@ -460,7 +460,7 @@ auto WallNetworkService::encode_key(int grid_x, int grid_z) -> std::uint64_t {
 void WallNetworkService::add_world_occupancy(Engine::Core::World& world,
                                              OccupancySet& out,
                                              bool include_construction_sites) {
-  auto entities = world.get_entities_with<WallSegmentComponent>();
+  auto entities = world.collect_entities_with<WallSegmentComponent>();
   for (auto* entity : entities) {
     if (!is_live_wall_entity(entity, include_construction_sites)) {
       continue;
@@ -488,7 +488,7 @@ void WallNetworkService::build_connection_occupancy(Engine::Core::World& world,
                                                     bool include_towers) {
   out.clear();
 
-  auto wall_entities = world.get_entities_with<WallSegmentComponent>();
+  auto wall_entities = world.collect_entities_with<WallSegmentComponent>();
   for (auto* entity : wall_entities) {
     if (!is_live_wall_entity(entity, include_construction_sites)) {
       continue;
@@ -514,7 +514,7 @@ void WallNetworkService::build_connection_occupancy(Engine::Core::World& world,
     return;
   }
 
-  auto unit_entities = world.get_entities_with<UnitComponent>();
+  auto unit_entities = world.collect_entities_with<UnitComponent>();
   for (auto* entity : unit_entities) {
     if (!is_live_tower_socket_entity(entity)) {
       continue;
@@ -738,7 +738,7 @@ auto collect_navigation_passages(
                           .depth = spans_east_west ? crossing_depth : 2.0F});
   };
 
-  for (auto* entity : world.get_entities_with<GateComponent>()) {
+  for (auto* entity : world.collect_entities_with<GateComponent>()) {
     if (!is_live_wall_entity(entity, false)) {
       continue;
     }
@@ -752,13 +752,14 @@ auto collect_navigation_passages(
              .second) {
       continue;
     }
-    const bool spans_x = GateComponent::spans_x_axis(transform->rotation.y);
-    const float opening = GateComponent::k_passage_half_width * 2.0F;
+    const auto lane =
+        GateService::lane_center(transform->position.x, transform->position.z);
+    const auto extent = GateService::lane_extent(transform->rotation.y);
 
-    passages.push_back(NavigationPassage{.center_x = transform->position.x,
-                                         .center_z = transform->position.z,
-                                         .width = spans_x ? opening : crossing_depth,
-                                         .depth = spans_x ? crossing_depth : opening,
+    passages.push_back(NavigationPassage{.center_x = lane.x(),
+                                         .center_z = lane.z(),
+                                         .width = extent.half_x * 2.0F,
+                                         .depth = extent.half_z * 2.0F,
                                          .source_entity_id = entity->get_id()});
   }
 
@@ -810,7 +811,7 @@ void WallNetworkService::refresh_world(Engine::Core::World& world) {
   build_connection_occupancy(world, connection_occupancy, true, true);
   OccupancySet const empty_occupancy;
 
-  auto entities = world.get_entities_with<WallSegmentComponent>();
+  auto entities = world.collect_entities_with<WallSegmentComponent>();
   for (auto* entity : entities) {
     if (!is_live_wall_entity(entity, true)) {
       continue;

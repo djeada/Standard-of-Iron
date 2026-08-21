@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <cctype>
 #include <filesystem>
 #include <fstream>
@@ -44,6 +45,44 @@ auto read_text(const std::filesystem::path& path) -> std::string {
   std::ostringstream buffer;
   buffer << input.rdbuf();
   return buffer.str();
+}
+
+auto inline_shader_includes(const std::filesystem::path& shader_dir,
+                            const std::string& source,
+                            std::vector<std::string>& already_included) -> std::string {
+  std::istringstream input(source);
+  std::string line;
+  std::string resolved;
+  while (std::getline(input, line)) {
+    const auto include_at = line.find("#include \"");
+    if (include_at != std::string::npos) {
+      const auto start = line.find('"', include_at);
+      const auto end = line.find('"', start + 1);
+      if (start != std::string::npos && end != std::string::npos) {
+        const std::string included = line.substr(start + 1, end - start - 1);
+        if (std::find(already_included.begin(), already_included.end(), included) !=
+            already_included.end()) {
+          continue;
+        }
+        already_included.push_back(included);
+        resolved += inline_shader_includes(
+            shader_dir, read_text(shader_dir / "include" / included), already_included);
+        resolved += '\n';
+        continue;
+      }
+    }
+    resolved += line;
+    resolved += '\n';
+  }
+  return resolved;
+}
+
+auto read_shader_with_includes(const std::filesystem::path& repo_root,
+                               const std::string& name) -> std::string {
+  const auto shader_dir = repo_root / "assets" / "shaders";
+  std::vector<std::string> already_included;
+  return inline_shader_includes(
+      shader_dir, read_text(shader_dir / name), already_included);
 }
 
 auto collapse_whitespace(const std::string& text) -> std::string {
@@ -187,24 +226,28 @@ TEST(ShaderSource, HealerAuraKeepsTheUnitReadable) {
 
 TEST(ShaderSource, RiggedCharactersUseSceneLightingAndCameraAwareReadability) {
   const auto root = find_repo_root();
-  const auto single = read_text(root / "assets" / "shaders" / "character_skinned.frag");
+  const auto single = read_shader_with_includes(root, "character_skinned.frag");
   const auto instanced =
-      read_text(root / "assets" / "shaders" / "character_skinned_gpu_instanced.frag");
+      read_shader_with_includes(root, "character_skinned_gpu_instanced.frag");
   ASSERT_FALSE(single.empty());
   ASSERT_FALSE(instanced.empty());
 
   for (const auto* source : {&single, &instanced}) {
-    EXPECT_NE(source->find("#include \"environment_lighting.glsl\""),
+
+    EXPECT_NE(source->find("layout(std140) uniform EnvironmentLighting"),
               std::string::npos);
     EXPECT_NE(source->find("uniform vec3 u_camera_position;"), std::string::npos);
     EXPECT_NE(source->find("shade_readable_character"), std::string::npos);
     EXPECT_NE(source->find("environment_primary_direction()"), std::string::npos);
     EXPECT_NE(source->find("environment_ambient_intensity()"), std::string::npos);
-    EXPECT_NE(source->find("float readable_ambient = max(scene_ambient, 0.22);"),
+    EXPECT_NE(source->find("float readable_ambient = max(scene_ambient, 0.29);"),
               std::string::npos);
     EXPECT_NE(source->find("k_readable_shadow_floor"), std::string::npos);
     EXPECT_NE(source->find("float rim = pow("), std::string::npos);
-    EXPECT_NE(source->find("if (material_id == 2)"), std::string::npos);
+
+    EXPECT_NE(source->find("color_role == k_humanoid_role_metal"), std::string::npos);
+    EXPECT_NE(source->find("color_role == k_humanoid_role_leather"), std::string::npos);
+    EXPECT_NE(source->find("color_role == k_humanoid_role_skin"), std::string::npos);
     EXPECT_EQ(source->find("normalize(vec3(0.65, 0.50, 0.40))"), std::string::npos);
   }
 }
@@ -390,7 +433,103 @@ TEST(ShaderSource, MainWorldReceiversUseDirectionalAndLocalLighting) {
   EXPECT_NE(shadow.find("u_shadow_light_vp[SOI_MAX_SHADOW_CASCADES]"),
             std::string::npos);
   EXPECT_NE(shadow.find("texture(u_directional_shadow_map"), std::string::npos);
-  EXPECT_NE(shadow.find("for (int y = -3; y <= 3; ++y)"), std::string::npos);
+  EXPECT_NE(shadow.find("uniform sampler2DArrayShadow u_directional_shadow_map;"),
+            std::string::npos)
+      << "receivers rely on hardware depth-compare PCF; the backend sets "
+         "GL_TEXTURE_COMPARE_MODE on the cascade array to match";
+  EXPECT_NE(shadow.find("for (int y = -2; y <= 2; ++y)"), std::string::npos);
+  EXPECT_NE(shadow.find("u_shadow_cascade_texel_world[cascade]"), std::string::npos)
+      << "biases and the penumbra are authored in world metres per cascade";
+}
+
+TEST(ShaderSource, OnlyTheShaderClassTalksToGlUniform) {
+
+  const auto root = find_repo_root();
+  std::vector<std::string> offenders;
+  for (const auto* subdir : {"render", "ui", "app", "tools"}) {
+    for (const auto& entry :
+         std::filesystem::recursive_directory_iterator(root / subdir)) {
+      if (!entry.is_regular_file()) {
+        continue;
+      }
+      const auto ext = entry.path().extension().string();
+      if (ext != ".cpp" && ext != ".h") {
+        continue;
+      }
+      const auto relative =
+          std::filesystem::relative(entry.path(), root).generic_string();
+      if (relative == "render/gl/shader.cpp" || relative == "render/gl/shader.h") {
+        continue;
+      }
+      const auto source = read_text(entry.path());
+      if (source.find("glUniform") != std::string::npos) {
+        offenders.push_back(relative);
+      }
+    }
+  }
+  EXPECT_TRUE(offenders.empty()) << offenders.front();
+}
+
+TEST(ShaderSource, EveryShaderFileIsEmbeddedInTheResourceBundle) {
+
+  const auto root = find_repo_root();
+  const auto qrc = read_text(root / "assets.qrc");
+  ASSERT_FALSE(qrc.empty());
+  std::vector<std::string> missing;
+  for (const auto& entry :
+       std::filesystem::recursive_directory_iterator(root / "assets" / "shaders")) {
+    if (!entry.is_regular_file()) {
+      continue;
+    }
+    const auto ext = entry.path().extension().string();
+    if (ext != ".frag" && ext != ".vert" && ext != ".glsl" && ext != ".comp") {
+      continue;
+    }
+    const auto relative =
+        std::filesystem::relative(entry.path(), root).generic_string();
+    if (qrc.find("<file>" + relative + "</file>") == std::string::npos) {
+      missing.push_back(relative);
+    }
+  }
+  EXPECT_TRUE(missing.empty()) << "not in assets.qrc: " << missing.front();
+}
+
+TEST(ShaderSource, QualityTierIsCompiledNotBranched) {
+  const auto root = find_repo_root();
+  const auto quality =
+      read_text(root / "assets" / "shaders" / "include" / "quality.glsl");
+  ASSERT_FALSE(quality.empty());
+
+  EXPECT_NE(quality.find("#ifndef SOI_QUALITY_TIER"), std::string::npos);
+  EXPECT_NE(quality.find("#define SOI_TERRAIN_NOISE_OCTAVES"), std::string::npos);
+  EXPECT_NE(quality.find("#define SOI_SURFACE_DETAIL"), std::string::npos);
+  EXPECT_NE(quality.find("#define SOI_ULTRA_EFFECTS"), std::string::npos);
+
+  const auto environment =
+      read_text(root / "assets" / "shaders" / "include" / "environment_lighting.glsl");
+  EXPECT_NE(environment.find("#include \"quality.glsl\""), std::string::npos)
+      << "every lit shader reaches the tier macros through environment_lighting";
+
+  for (const auto& entry :
+       std::filesystem::directory_iterator(root / "assets" / "shaders")) {
+    const auto ext = entry.path().extension().string();
+    if (ext != ".frag" && ext != ".vert") {
+      continue;
+    }
+    const auto source = read_text(entry.path());
+    EXPECT_EQ(source.find("u_noise_octaves"), std::string::npos) << entry.path();
+    EXPECT_EQ(source.find("u_shader_quality"), std::string::npos) << entry.path();
+  }
+
+  const auto terrain = read_text(root / "assets" / "shaders" / "terrain_chunk.frag");
+  EXPECT_NE(terrain.find("SOI_TERRAIN_NOISE_OCTAVES"), std::string::npos);
+  EXPECT_NE(terrain.find("#if SOI_SURFACE_DETAIL"), std::string::npos);
+  const auto shadows =
+      read_text(root / "assets" / "shaders" / "include" / "directional_shadows.glsl");
+  EXPECT_NE(shadows.find("#if SOI_SHADOW_PCSS"), std::string::npos);
+  EXPECT_NE(shadows.find("SOI_SHADOW_PCF_RADIUS"), std::string::npos);
+  const auto grass = read_text(root / "assets" / "shaders" / "grass_instanced.frag");
+  EXPECT_NE(grass.find("#if SOI_ULTRA_EFFECTS"), std::string::npos);
 }
 
 TEST(ShaderSource, RiverbankCarriesBiomeMaterialsToTheWaterEdge) {
@@ -431,7 +570,9 @@ TEST(ShaderSource, TerrainGroundUsesCoherentBiomeMaterialPatches) {
   EXPECT_NE(flat.find("float meadow_field = (u_has_noise_atlas == 1) ? baked_noise.a "
                       ": clamp("),
             std::string::npos);
-  EXPECT_NE(flat.find("float thatch_field = clamp("), std::string::npos);
+  EXPECT_NE(flat.find("float thatch_field = (u_has_noise_atlas == 1) ? "
+                      "baked_noise_detail.r : clamp("),
+            std::string::npos);
   EXPECT_NE(flat.find("float lush_patch = smoothstep("), std::string::npos);
   EXPECT_NE(flat.find("float drainage_field ="), std::string::npos);
   EXPECT_NE(flat.find("float exposure_field ="), std::string::npos);
@@ -656,7 +797,9 @@ TEST(ShaderSource, DirectionalShadowBlockMatchesTheUploadedStruct) {
                                                 "u_shadow_split_distances",
                                                 "u_shadow_params",
                                                 "u_shadow_camera_position",
-                                                "u_shadow_bias"};
+                                                "u_shadow_bias",
+                                                "u_shadow_cascade_texel_world",
+                                                "u_shadow_cascade_depth_span"};
   EXPECT_EQ(block.member_names, expected_order)
       << "DirectionalShadowBlock::packed_std140 writes these in declaration order";
 }

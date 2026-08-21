@@ -178,7 +178,7 @@ auto CommanderPortraitView::PortraitRenderer::ensure_scene() -> bool {
 
   if (m_renderer == nullptr) {
     m_renderer = std::make_unique<Render::GL::Renderer>(
-        Render::GraphicsSettings::instance().features().shader_quality);
+        Render::GraphicsSettings::instance().backend_kind());
     if (!m_renderer->initialize()) {
       m_renderer.reset();
       m_renderer_failed = true;

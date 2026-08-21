@@ -34,6 +34,7 @@
 #include "combat_types.h"
 #include "combat_utils.h"
 #include "damage_processor.h"
+#include "melee_exchange.h"
 #include "structure_combat.h"
 
 namespace Game::Systems::Combat {
@@ -301,7 +302,7 @@ auto should_prioritize_healing(Engine::Core::Entity* healer,
     return false;
   }
 
-  for (auto* target : world->get_entities_with<Engine::Core::UnitComponent>()) {
+  for (auto* target : world->collect_entities_with<Engine::Core::UnitComponent>()) {
     if (target == nullptr ||
         target->has_component<Engine::Core::PendingRemovalComponent>()) {
       continue;
@@ -1023,6 +1024,7 @@ void initiate_melee_combat(Engine::Core::Entity* attacker,
 
   attack_comp->in_melee_lock = true;
   attack_comp->melee_lock_target_id = target->get_id();
+  attack_comp->melee_footwork_offset = 0.0F;
   begin_attack_animation(attacker);
 
   if (target_atk != nullptr && target_accepts_reciprocal_lock()) {
@@ -1059,7 +1061,7 @@ auto is_formation_reserve(Engine::Core::Entity* entity,
   }
   int front_rank = mode->stable_rank;
   for (auto* member :
-       world->get_entities_with<Engine::Core::FormationModeComponent>()) {
+       world->collect_entities_with<Engine::Core::FormationModeComponent>()) {
     auto const* member_mode =
         member->get_component<Engine::Core::FormationModeComponent>();
     auto const* member_unit = member->get_component<Engine::Core::UnitComponent>();
@@ -1145,7 +1147,51 @@ void begin_rts_melee_action(Engine::Core::Entity* attacker,
   action->action_duration = std::max(0.001F, duration);
   action->melee_attack_sequence =
       static_cast<std::uint8_t>((action->melee_attack_sequence + 1U) % 250U);
+
+  bool const exchange_applies =
+      !signature.has_value() &&
+      !attacker->has_component<Engine::Core::ElephantComponent>();
+  auto const beat =
+      exchange_applies
+          ? resolve_melee_exchange_beat(attacker->get_id(),
+                                        target->get_id(),
+                                        action->melee_attack_sequence,
+                                        melee_target_can_defend(attacker, target))
+          : MeleeExchangeBeat{};
+  action->exchange_outcome = static_cast<std::uint8_t>(beat.outcome);
   Game::Systems::CombatActions::reset_combat_action_event_runtime(*action);
+}
+
+struct MeleeSwingCadence {
+  float action_duration{0.0F};
+  float accumulator_reset{0.0F};
+};
+
+auto resolve_melee_swing_cadence(Engine::Core::Entity* attacker,
+                                 Engine::Core::Entity* target,
+                                 float cooldown) -> MeleeSwingCadence {
+  MeleeSwingCadence cadence;
+  cadence.action_duration = cooldown;
+  float const base_delay =
+      deterministic_attack_delay(attacker->get_id(), target->get_id(), cooldown);
+  cadence.accumulator_reset = -base_delay;
+  auto const* action =
+      attacker->get_component<Engine::Core::RpgCommanderActionComponent>();
+  if (action == nullptr || attacker->has_component<Engine::Core::ElephantComponent>() ||
+      !melee_target_can_defend(attacker, target)) {
+    return cadence;
+  }
+
+  auto const next_beat = resolve_melee_exchange_beat(
+      attacker->get_id(),
+      target->get_id(),
+      static_cast<std::uint8_t>((action->melee_attack_sequence + 1U) % 250U),
+      true);
+  float const interval = cooldown * next_beat.interval_weight;
+  float const delay = base_delay * next_beat.delay_weight;
+  cadence.accumulator_reset = cooldown - interval - delay;
+  cadence.action_duration = std::clamp(interval + delay, 0.05F, cooldown);
+  return cadence;
 }
 
 void begin_rts_bow_action(Engine::Core::Entity* attacker,
@@ -1667,8 +1713,19 @@ void process_attacks(Engine::Core::World* world,
           deal_damage(world, best_target, damage, attacker->get_id());
         }
       }
-      *t_accum = -deterministic_attack_delay(
-          attacker->get_id(), best_target->get_id(), cooldown);
+      if (defer_melee_strike) {
+        auto const cadence =
+            resolve_melee_swing_cadence(attacker, best_target, cooldown);
+        if (auto* action =
+                attacker->get_component<Engine::Core::RpgCommanderActionComponent>();
+            action != nullptr) {
+          action->action_duration = std::max(0.001F, cadence.action_duration);
+        }
+        *t_accum = cadence.accumulator_reset;
+      } else {
+        *t_accum = -deterministic_attack_delay(
+            attacker->get_id(), best_target->get_id(), cooldown);
+      }
 
       auto* guard_mode = attacker->get_component<Engine::Core::GuardModeComponent>();
       if ((guard_mode != nullptr) && guard_mode->active) {

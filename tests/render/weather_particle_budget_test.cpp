@@ -30,19 +30,19 @@ TEST(WeatherParticleBudgetTest, QualityPresetsScaleTheParticlePool) {
   const float low = graphics.weather_budget().particle_scale;
   graphics.set_quality(Render::GraphicsQuality::Medium);
   const float medium = graphics.weather_budget().particle_scale;
-  graphics.set_quality(Render::GraphicsQuality::High);
+  graphics.set_quality(Render::k_default_graphics_quality);
   const float high = graphics.weather_budget().particle_scale;
   graphics.set_quality(Render::GraphicsQuality::Ultra);
   const float ultra = graphics.weather_budget().particle_scale;
 
   EXPECT_LT(low, medium);
   EXPECT_LT(medium, high);
-  EXPECT_LT(high, ultra);
+  EXPECT_LE(high, ultra);
   EXPECT_FLOAT_EQ(ultra, 1.0F);
 
   EXPECT_LT(density_at(1.0F, low, 0.0F), density_at(1.0F, ultra, 0.0F));
 
-  graphics.set_quality(Render::GraphicsQuality::High);
+  graphics.set_quality(Render::k_default_graphics_quality);
 }
 
 TEST(WeatherParticleBudgetTest, DensityThinsOutAsTheCameraPullsBack) {

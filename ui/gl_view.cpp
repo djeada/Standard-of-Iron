@@ -116,9 +116,7 @@ auto GLView::createRenderer() const -> QQuickFramebufferObject::Renderer* {
                << "detected; at least 3.3 required. Falling back to "
                   "ShaderQuality::None (software backend). Launch with "
                   "--force-software to silence this warning.";
-    auto& gfx = Render::GraphicsSettings::instance();
-    const_cast<Render::GraphicsFeatures&>(gfx.features()).shader_quality =
-        Render::ShaderQuality::None;
+    Render::GraphicsSettings::instance().set_backend_kind(Render::ShaderQuality::None);
   } else {
     qInfo() << "GLView::createRenderer() - OpenGL" << version.first << "."
             << version.second << "context OK";
@@ -194,6 +192,7 @@ GLView::GLRenderer::GLRenderer(QPointer<GLView> view, QPointer<GameEngine> engin
 GLView::GLRenderer::~GLRenderer() {
   if (m_engine != nullptr) {
     m_engine->stop_simulation_thread();
+    m_engine->cleanup_opengl_resources();
   }
   if (m_continuity_probe != nullptr) {
     Render::Profiling::CombatAnimationDiagnostics::instance().set_enabled(false);
@@ -415,7 +414,7 @@ void GLView::GLRenderer::observe_runtime_continuity() {
         }
       }
 
-      if (soldier.cull_reason == Render::Profiling::SoldierCullReason::Billboard) {
+      if (soldier.cull_reason == Render::Profiling::SoldierCullReason::Distance) {
         ++probe.ultra_lod_culls;
       }
       state.reason = soldier.cull_reason;
@@ -631,8 +630,10 @@ auto GLView::GLRenderer::createFramebufferObject(const QSize& size)
 
   QOpenGLFramebufferObjectFormat fmt;
   fmt.setAttachment(QOpenGLFramebufferObject::Depth);
-  int const requested_samples =
-      Render::GraphicsSettings::instance().presentation().msaa_samples;
+  const auto& graphics = Render::GraphicsSettings::instance();
+  int const requested_samples = graphics.presentation().msaa_samples;
+  m_fbo_msaa_samples = requested_samples;
+  m_fbo_graphics_generation = graphics.generation();
   fmt.setSamples(requested_samples);
   auto* target = new QOpenGLFramebufferObject(size, fmt);
   if (requested_samples > 0 && !target->isValid()) {
@@ -648,5 +649,13 @@ void GLView::GLRenderer::synchronize(QQuickFramebufferObject* item) {
   m_engine = qobject_cast<GameEngine*>(view->engine());
   if (m_engine != nullptr) {
     m_engine->set_input_viewport_size(view->width(), view->height());
+  }
+
+  const auto& graphics = Render::GraphicsSettings::instance();
+  if (graphics.generation() != m_fbo_graphics_generation) {
+    m_fbo_graphics_generation = graphics.generation();
+    if (graphics.presentation().msaa_samples != m_fbo_msaa_samples) {
+      invalidateFramebufferObject();
+    }
   }
 }

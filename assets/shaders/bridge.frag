@@ -176,7 +176,7 @@ void main() {
   float gray = dot(lit_color, vec3(0.299, 0.587, 0.114));
   lit_color = mix(lit_color, vec3(gray * 0.9), grime);
 
-  lit_color += base_color * ao * local_lighting(v_world_pos, Ng);
   lit_color = apply_directional_shadow(lit_color, v_world_pos, v_normal);
+  lit_color += base_color * ao * local_lighting(v_world_pos, Ng);
   frag_color = vec4(lit_color, 1.0);
 }

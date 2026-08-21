@@ -405,7 +405,7 @@ TEST_F(ProductionSystemTest, BuilderCompletesMarketplaceConstruction) {
   system.update(&world, 0.1F);
 
   Engine::Core::Entity* marketplace = nullptr;
-  for (auto* entity : world.get_entities_with<Engine::Core::UnitComponent>()) {
+  for (auto* entity : world.collect_entities_with<Engine::Core::UnitComponent>()) {
     if (entity == builder) {
       continue;
     }
@@ -525,6 +525,59 @@ TEST_F(ProductionSystemTest, WalkingOffASiteIsRecordedAsAnInterruption) {
   EXPECT_FALSE(production->in_progress);
   EXPECT_TRUE(production->has_active_fault());
   EXPECT_EQ(production->fault, Engine::Core::BuilderTaskFault::Interrupted);
+}
+
+TEST_F(ProductionSystemTest, ABuiltTempleCanRecruitHealersAndFillsFromDelivery) {
+  auto const build_world = Game::Systems::NavGrid::grid_to_world({4, 4});
+
+  Engine::Core::World world;
+  auto* builder = world.create_entity();
+  ASSERT_NE(builder, nullptr);
+
+  auto* transform = builder->add_component<Engine::Core::TransformComponent>(
+      build_world.x(), 0.0F, build_world.z());
+  auto* movement = builder->add_component<Engine::Core::MovementComponent>();
+  auto* unit = builder->add_component<Engine::Core::UnitComponent>();
+  auto* production = builder->add_component<Engine::Core::BuilderProductionComponent>();
+  ASSERT_NE(transform, nullptr);
+  ASSERT_NE(movement, nullptr);
+  ASSERT_NE(unit, nullptr);
+  ASSERT_NE(production, nullptr);
+
+  unit->owner_id = 1;
+  unit->nation_id = Game::Systems::NationID::RomanRepublic;
+  production->in_progress = true;
+  production->time_remaining = 0.0F;
+  production->product_type = "temple";
+  production->has_construction_site = true;
+  production->construction_site_x = build_world.x();
+  production->construction_site_z = build_world.z();
+  production->at_construction_site = true;
+
+  Game::Systems::ProductionSystem system;
+  system.update(&world, 0.1F);
+
+  Engine::Core::Entity* temple = nullptr;
+  for (auto* entity : world.collect_entities_with<Engine::Core::UnitComponent>()) {
+    if (entity == builder) {
+      continue;
+    }
+    auto* spawned_unit = entity->get_component<Engine::Core::UnitComponent>();
+    if (spawned_unit != nullptr &&
+        spawned_unit->spawn_type == Game::Units::SpawnType::Temple) {
+      temple = entity;
+      break;
+    }
+  }
+  ASSERT_NE(temple, nullptr);
+
+  auto* temple_production = temple->get_component<Engine::Core::ProductionComponent>();
+  ASSERT_NE(temple_production, nullptr)
+      << "a temple must be able to take recruits, or the healer card has nowhere to go";
+  EXPECT_EQ(temple_production->product_type, Game::Units::TroopType::Healer);
+
+  EXPECT_EQ(temple_production->manpower_available, 0);
+  EXPECT_GT(temple_production->max_units, 0);
 }
 
 } // namespace

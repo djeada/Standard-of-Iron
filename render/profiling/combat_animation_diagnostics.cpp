@@ -162,8 +162,8 @@ auto soldier_cull_reason_name(SoldierCullReason reason) noexcept -> const char* 
     return "Frustum";
   case SoldierCullReason::Fog:
     return "Fog";
-  case SoldierCullReason::Billboard:
-    return "Billboard";
+  case SoldierCullReason::Distance:
+    return "Distance";
   case SoldierCullReason::LensGap:
     return "LensGap";
   }

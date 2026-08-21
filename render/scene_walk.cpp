@@ -293,7 +293,10 @@ struct UnitSubmitContext {
   Engine::Core::World* world{nullptr};
   ResourceManager* resources{nullptr};
   ISubmitter* batch_submitter{nullptr};
-  Render::BattleRenderOptimizer* optimizer{nullptr};
+
+  const Render::BattleRenderOptimizer::FrameSnapshot* optimizer{nullptr};
+
+  Render::BattleRenderOptimizer::FrameStats* optimizer_stats{nullptr};
   float batching_ratio{0.0F};
   float full_shader_max_distance_sq{0.0F};
   std::uint32_t optimizer_frame{0};
@@ -374,12 +377,23 @@ void Renderer::enqueue_selection_ring(Engine::Core::Entity* entity,
         soldiers = formation_presentation->soldiers;
       }
 
+      auto const* layout_cache =
+          entity != nullptr
+              ? entity->get_component<Render::Humanoid::HumanoidLayoutCacheComponent>()
+              : nullptr;
+      std::span<const Render::Humanoid::SoldierTurnSmoothingState> soldier_anchors;
+      if (layout_cache != nullptr) {
+        soldier_anchors = layout_cache->turn_states;
+      }
+
       placements = build_selection_ring_layout(
           {.soldiers = soldiers,
            .ring_size = ring_size,
            .position = QVector3D(
                transform->position.x, transform->position.y, transform->position.z),
-           .yaw_degrees = transform->rotation.y});
+           .yaw_degrees = transform->rotation.y,
+           .soldier_anchors = soldier_anchors,
+           .anchor_frame = humanoid_current_frame() + 1U});
     } else {
 
       ring_size = config.get_selection_ring_size(unit_comp->spawn_type);
@@ -720,14 +734,6 @@ auto Renderer::plan_unit_entry(UnitRenderEntry& entry,
     return plan;
   }
 
-  bool const should_update_temporal =
-      ctx.full_creature_detail || ctx.optimizer->should_render_unit(entry.entity_id,
-                                                                    entry.motion,
-                                                                    entry.selected,
-                                                                    entry.hovered,
-                                                                    entry.combat_active,
-                                                                    entry.distance_sq);
-
   UnitRenderCache::update_model_matrix(*entry.cache);
   const QMatrix4x4& model_matrix = entry.cache->model_matrix;
 
@@ -761,15 +767,14 @@ auto Renderer::plan_unit_entry(UnitRenderEntry& entry,
     draw_ctx.selected = entry.selected;
     draw_ctx.hovered = entry.hovered;
     bool should_update_animation = ctx.full_creature_detail;
-    if (!ctx.full_creature_detail && should_update_temporal) {
+    if (!ctx.full_creature_detail) {
       should_update_animation =
           ctx.optimizer->should_update_animation(entry.entity_id,
                                                  entry.distance_sq,
                                                  entry.selected,
                                                  entry.combat_active,
-                                                 entry.motion);
-    } else if (!ctx.full_creature_detail) {
-      should_update_animation = false;
+                                                 entry.motion,
+                                                 *ctx.optimizer_stats);
     }
 
     float const animation_time = resolve_animation_time(entry.entity_id,
@@ -809,12 +814,9 @@ auto Renderer::plan_unit_entry(UnitRenderEntry& entry,
     const auto tier = ctx.full_creature_detail ? Render::Pipeline::LodTier::Full
                                                : Render::Pipeline::select_lod(lod_in);
 
-    if (!entry.selected && !entry.hovered && !ctx.full_creature_detail) {
-      if (tier == Render::Pipeline::LodTier::Minimal) {
-        draw_ctx.max_rendered_individuals = 4;
-      } else if (tier == Render::Pipeline::LodTier::Simplified) {
-        draw_ctx.max_rendered_individuals = 8;
-      }
+    if (!entry.selected && !entry.hovered && !ctx.full_creature_detail &&
+        tier == Render::Pipeline::LodTier::Minimal) {
+      draw_ctx.max_rendered_individuals = 8;
     }
 
     if (ctx.full_creature_detail) {
@@ -1121,15 +1123,16 @@ void Renderer::render_world(Engine::Core::World* world) {
 
   m_unit_render_cache.prune(m_frame_counter);
   m_model_matrix_cache.prune(m_frame_counter);
-  auto& battle_optimizer = Render::BattleRenderOptimizer::instance();
-  battle_optimizer.set_visible_unit_count(visible_unit_count);
+  m_battle_optimizer.set_visible_unit_count(visible_unit_count);
+  const auto& optimizer_frame_snapshot = m_battle_optimizer.frame();
+  Render::BattleRenderOptimizer::FrameStats optimizer_stats;
   auto& frame_profile = Render::Profiling::global_profile();
-  uint32_t const optimizer_frame = battle_optimizer.frame_counter();
+  uint32_t const optimizer_frame = optimizer_frame_snapshot.frame;
 
   float batching_ratio =
       gfx_settings.calculate_batching_ratio(visible_unit_count, camera_height);
 
-  float const batching_boost = battle_optimizer.get_batching_boost();
+  float const batching_boost = optimizer_frame_snapshot.batching_boost();
   batching_ratio = std::min(1.0F, batching_ratio * batching_boost);
 
   static thread_local PrimitiveBatcher batcher;
@@ -1149,7 +1152,8 @@ void Renderer::render_world(Engine::Core::World* world) {
   const UnitSubmitContext submit_ctx{.world = world,
                                      .resources = res,
                                      .batch_submitter = &batch_submitter,
-                                     .optimizer = &battle_optimizer,
+                                     .optimizer = &optimizer_frame_snapshot,
+                                     .optimizer_stats = &optimizer_stats,
                                      .batching_ratio = batching_ratio,
                                      .full_shader_max_distance_sq =
                                          full_shader_max_distance_sq,
@@ -1177,6 +1181,8 @@ void Renderer::render_world(Engine::Core::World* world) {
                           ? &m_unit_preparations[i]
                           : nullptr);
   }
+
+  m_battle_optimizer.commit_frame_stats(optimizer_stats);
 
   frame_profile.visible_soldiers = get_humanoid_render_stats().soldiers_rendered;
 
@@ -1343,7 +1349,7 @@ void Renderer::render_construction_previews(Engine::Core::World* world,
   };
 
   auto preview_entities =
-      world->get_entities_with<Engine::Core::ConstructionPreviewComponent>();
+      world->collect_entities_with<Engine::Core::ConstructionPreviewComponent>();
   for (auto* entity : preview_entities) {
     auto* preview = entity->get_component<Engine::Core::ConstructionPreviewComponent>();
     if (preview == nullptr) {
@@ -1358,7 +1364,7 @@ void Renderer::render_construction_previews(Engine::Core::World* world,
   }
 
   auto site_entities =
-      world->get_entities_with<Engine::Core::WallConstructionSiteComponent>();
+      world->collect_entities_with<Engine::Core::WallConstructionSiteComponent>();
   for (auto* entity : site_entities) {
     auto* site = entity->get_component<Engine::Core::WallConstructionSiteComponent>();
     if (site == nullptr ||

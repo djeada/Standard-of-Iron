@@ -10,6 +10,7 @@
 #include "../core/component.h"
 #include "../formation/unit_layout_resolver.h"
 #include "../units/spawn_type.h"
+#include "../units/troop_catalog.h"
 #include "../units/troop_config.h"
 #include "troop_profile_service.h"
 
@@ -197,6 +198,25 @@ auto formation_seed(const Engine::Core::Entity& entity) noexcept -> std::uint32_
     seed ^= static_cast<std::uint32_t>(unit->owner_id) * 0x85EBCA6BU;
   }
   return seed;
+}
+
+constexpr float k_max_slot_body_radius = 3.0F;
+
+auto max_contact_extent() -> float {
+
+  static const float extent = [] {
+    float widest = 0.0F;
+    for (const auto& [_, troop_class] :
+         Game::Units::TroopCatalog::instance().get_all_classes()) {
+      const float row_width =
+          static_cast<float>(std::max(1, troop_class.max_units_per_row)) *
+          std::max(0.1F, troop_class.visuals.formation_spacing);
+      widest = std::max(widest, row_width);
+    }
+
+    return widest * 0.5F + k_max_slot_body_radius;
+  }();
+  return extent;
 }
 
 auto resolve_definition(const Engine::Core::UnitComponent& unit)
@@ -719,11 +739,10 @@ auto select_damage_engagement_pair(
       });
   float const spacing = resolve_layout(attacker).spacing;
   float const equivalent_contact_band = std::max(0.05F, spacing * 0.18F);
-  std::vector<const Engine::Core::FormationEngagementPair*> contact_candidates;
-  contact_candidates.reserve(pairs.size());
+  std::size_t contact_candidate_count = 0U;
   for (auto const& pair : pairs) {
     if (pair.surface_gap <= closest->surface_gap + equivalent_contact_band) {
-      contact_candidates.push_back(&pair);
+      ++contact_candidate_count;
     }
   }
 
@@ -741,7 +760,17 @@ auto select_damage_engagement_pair(
   seed ^= seed >> 16U;
   seed *= 0x7feb352dU;
   seed ^= seed >> 15U;
-  return *contact_candidates[seed % contact_candidates.size()];
+  std::size_t selected_index = seed % contact_candidate_count;
+  for (auto const& pair : pairs) {
+    if (pair.surface_gap > closest->surface_gap + equivalent_contact_band) {
+      continue;
+    }
+    if (selected_index == 0U) {
+      return pair;
+    }
+    --selected_index;
+  }
+  return std::nullopt;
 }
 
 } // namespace Game::Systems::FormationCombat

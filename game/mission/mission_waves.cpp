@@ -129,7 +129,7 @@ auto resolve_defense_reference(Engine::Core::World& world,
   int hall_count = 0;
   int troop_count = 0;
 
-  for (auto* entity : world.get_entities_with<Engine::Core::UnitComponent>()) {
+  for (auto* entity : world.collect_entities_with<Engine::Core::UnitComponent>()) {
     if (entity == nullptr) {
       continue;
     }

@@ -40,7 +40,7 @@ uniform vec3 u_camera_pos;
 
 float fbm(vec2 p) {
   float v = 0.0, a = 0.5;
-  for (int i = 0; i < 3; ++i) {
+  for (int i = 0; i < SOI_DETAIL_OCTAVES; ++i) {
     v += soi_noise21_cdf702(p) * a;
     p = p * 2.07 + 13.17;
     a *= 0.5;
@@ -211,10 +211,14 @@ void main() {
 
   vec3 dx = dFdx(v_world_pos);
   float m_scale = max(u_detail_noise_scale * (6.0 + u_micro_bump_freq * 2.5), 0.2);
+#if SOI_SURFACE_DETAIL
   float h0 = fbm(wuv * m_scale);
   float hx = fbm((wuv + dFdx(wuv)) * m_scale);
   float hy = fbm((wuv + dFdy(wuv)) * m_scale);
   vec2 g = vec2(hx - h0, hy - h0);
+#else
+  vec2 g = vec2(0.0);
+#endif
   vec3 t = normalize(dx - n * dot(n, dx));
   vec3 b = normalize(cross(n, t));
   float relief_mask = clamp(0.35 + gravel_mask * 0.55 + soil_mix * 0.35 +
@@ -229,8 +233,12 @@ void main() {
   float jitter_amp = max(0.01, u_albedo_jitter) * (0.65 + u_soil_roughness * 0.6);
   float jitter = (soi_hash21_8b0317(wuv * 0.27 + vec2(17.0, 9.0)) - 0.5) * jitter_amp;
   jitter *= mix(1.0, 0.62, tactical);
+#if SOI_SURFACE_DETAIL
   float speckle = step(0.74, soi_noise21_cdf702(wuv * 23.0 + vec2(2.0, 5.0)));
   speckle = mix(speckle, 0.35, tactical);
+#else
+  float speckle = 0.35;
+#endif
   float patch_brightness = (broad_breakup - 0.5) * 0.13 +
                            (broad_breakup2 - 0.5) * 0.10 + (patch_noise - 0.5) * 0.06 +
                            (landform - 0.5) * 0.08;
@@ -239,8 +247,13 @@ void main() {
   vec3 col = base_col * (1.0 + jitter + brightness_var);
   col *= 1.0 + (speckle - 0.35) * 0.035 * (1.0 - puddle_mask);
 
+#if SOI_SURFACE_DETAIL
   float turf_fine = soi_noise21_cdf702(wuv * 34.0 + vec2(11.0, 3.0));
   float turf_micro = soi_noise21_cdf702(wuv * 76.0 + vec2(-7.0, 23.0));
+#else
+  float turf_fine = 0.5;
+  float turf_micro = 0.5;
+#endif
   float turf_weight = (1.0 - soil_mix * 0.8) * (1.0 - gravel_mask) *
                       (1.0 - puddle_mask) * (1.0 - tactical);
   col *= 1.0 + ((turf_fine - 0.5) * 0.11 + (turf_micro - 0.5) * 0.06) * turf_weight;
@@ -263,8 +276,8 @@ void main() {
   vec3 light = environment_ambient_light(n_micro) + soi_key_light(n_micro) * 0.65 +
                vec3(spec_contrib);
   vec3 lit = col * light * (u_ambient_boost + height_tint) * environment_exposure();
-  lit += col * local_lighting(v_world_pos, n_micro);
   lit = apply_directional_shadow(lit, v_world_pos, n_micro);
+  lit += col * local_lighting(v_world_pos, n_micro);
 
   vec3 disp_tint = mix(
       vec3(0.72, 0.88, 1.02), vec3(1.06, 0.94, 0.82), smoothstep(-0.12, 0.12, v_disp));
