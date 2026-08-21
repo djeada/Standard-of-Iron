@@ -62,6 +62,12 @@ private:
   std::vector<int> m_present_owner_ids;
 };
 
+void collect_unit_ids_near(Engine::Core::World& world,
+                           float x,
+                           float z,
+                           float radius,
+                           std::vector<Engine::Core::EntityID>& out);
+
 auto build_combat_query_context(Engine::Core::World* world) -> CombatQueryContext;
 
 void rebuild_combat_query_context(Engine::Core::World* world,

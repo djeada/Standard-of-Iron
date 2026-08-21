@@ -56,10 +56,11 @@ TEST(SessionContextTest, WorldsAreSessionScoped) {
   ASSERT_NE(entity, nullptr);
   entity->add_component<Engine::Core::TransformComponent>();
 
-  EXPECT_EQ(first.world().get_entities_with<Engine::Core::TransformComponent>().size(),
-            1U);
+  EXPECT_EQ(
+      first.world().collect_entities_with<Engine::Core::TransformComponent>().size(),
+      1U);
   EXPECT_TRUE(
-      second.world().get_entities_with<Engine::Core::TransformComponent>().empty());
+      second.world().collect_entities_with<Engine::Core::TransformComponent>().empty());
 }
 
 TEST(SessionContextTest, WorldResolvesBackToItsOwningSession) {

@@ -78,6 +78,9 @@ add_executable(
     command/command_pipeline_test.cpp
     command/command_codec_test.cpp
     core/entity_handle_test.cpp
+    core/world_view_test.cpp
+    core/world_spatial_index_test.cpp
+    core/system_schedule_test.cpp
     core/ground_type_test.cpp
     core/building_spawn_setup_test.cpp
     map/terrain_profiles_test.cpp
@@ -159,6 +162,7 @@ add_executable(
     formation/formation_data_loader_test.cpp
     formation/formation_movement_test.cpp
     formation/formation_terrain_navigation_test.cpp
+    systems/runtime_phase_order_test.cpp
     systems/formation_combat_geometry_test.cpp
     systems/defensive_unit_layout_test.cpp
     systems/structure_combat_test.cpp
@@ -349,6 +353,7 @@ add_executable(
     render/unit_render_cache_test.cpp
     render/render_archetype_test.cpp
     render/draw_queue_sort_order_test.cpp
+    render/draw_queue_sort_cost_test.cpp
     render/effect_batch_dispatch_test.cpp
     render/spark_direction_test.cpp
     render/linear_feature_geometry_test.cpp

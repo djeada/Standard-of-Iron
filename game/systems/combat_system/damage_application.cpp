@@ -8,6 +8,7 @@
 #include <limits>
 #include <numbers>
 #include <optional>
+#include <vector>
 
 #include "../../core/component.h"
 #include "../../core/event_manager.h"
@@ -449,7 +450,7 @@ void fill_formation_front_vacancy(Engine::Core::World* world,
   int best_rank = std::numeric_limits<int>::max();
   float best_distance_sq = std::numeric_limits<float>::max();
   for (auto* candidate :
-       world->get_entities_with<Engine::Core::FormationModeComponent>()) {
+       world->collect_entities_with<Engine::Core::FormationModeComponent>()) {
     auto* mode = candidate->get_component<Engine::Core::FormationModeComponent>();
     auto* unit = candidate->get_component<Engine::Core::UnitComponent>();
     auto* transform = candidate->get_component<Engine::Core::TransformComponent>();
@@ -515,7 +516,8 @@ void prune_oldest_blood_stain(Engine::Core::World* world) {
   }
 
   while (true) {
-    auto blood_stains = world->get_entities_with<Engine::Core::BloodStainComponent>();
+    auto blood_stains =
+        world->collect_entities_with<Engine::Core::BloodStainComponent>();
     if (blood_stains.size() <
         static_cast<std::size_t>(Engine::Core::Defaults::k_blood_stain_max_active)) {
       return;
@@ -676,10 +678,18 @@ void alert_nearby_allies(Engine::Core::World* world,
   float const radius_sq =
       Constants::k_squad_alert_radius * Constants::k_squad_alert_radius;
   int alerted = 0;
-  for (auto* ally : world->get_entities_with<Engine::Core::UnitComponent>()) {
+
+  static thread_local std::vector<Engine::Core::EntityID> nearby;
+  collect_unit_ids_near(*world,
+                        defender_transform->position.x,
+                        defender_transform->position.z,
+                        Constants::k_squad_alert_radius,
+                        nearby);
+  for (const Engine::Core::EntityID ally_id : nearby) {
     if (alerted >= Constants::k_max_squad_alert_allies) {
       break;
     }
+    auto* ally = world->get_entity(ally_id);
     if ((ally == defender) || (ally == nullptr) ||
         ally->has_component<Engine::Core::PendingRemovalComponent>()) {
       continue;

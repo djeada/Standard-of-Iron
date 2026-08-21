@@ -48,7 +48,8 @@ void CivilianDeliverySystem::update(Engine::Core::World* world, float) {
   }
 
   std::vector<Engine::Core::EntityID> to_remove;
-  auto civilians = world->get_entities_with<Engine::Core::CivilianDeliveryComponent>();
+  auto civilians =
+      world->collect_entities_with<Engine::Core::CivilianDeliveryComponent>();
 
   for (auto* civilian_entity : civilians) {
     if (civilian_entity == nullptr) {

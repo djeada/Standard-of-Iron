@@ -49,6 +49,18 @@ if(BUILD_TESTING)
     )
 endif()
 
+# ---- sim_benchmark: the repeatable large-battle workload --------------------
+#
+# The fixed scenario optimisation work is measured against: 1k, 5k and 10k units
+# ticked a fixed number of times, reporting simulation ms, peak RSS, the
+# per-system timing table and the query counters. It links the same simulation
+# kernel the game does and nothing else, so a number it produces is a statement
+# about the simulation and not about the renderer.
+add_executable(sim_benchmark sim_benchmark/main.cpp)
+target_link_libraries(sim_benchmark PRIVATE Qt${QT_VERSION_MAJOR}::Core soi_runtime soi_ai game_sim)
+target_include_directories(sim_benchmark PRIVATE ${CMAKE_SOURCE_DIR})
+set_target_properties(sim_benchmark PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+
 # ---- soi_headless: the simulation with no window ---------------------------
 #
 # A session, the runtime system registry, the AI and a fixed-step loop, linked

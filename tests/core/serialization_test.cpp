@@ -345,15 +345,15 @@ TEST_F(SerializationTest, ReplacingEntityIdClearsOldComponentIndex) {
   ASSERT_NE(original, nullptr);
   original->add_component<UnitComponent>();
 
-  ASSERT_EQ(world->get_entities_with<UnitComponent>().size(), 1U);
+  ASSERT_EQ(world->collect_entities_with<UnitComponent>().size(), 1U);
 
   auto* replacement = world->create_entity_with_id(42);
   ASSERT_NE(replacement, nullptr);
   replacement->add_component<TransformComponent>();
 
-  EXPECT_TRUE(world->get_entities_with<UnitComponent>().empty());
+  EXPECT_TRUE(world->collect_entities_with<UnitComponent>().empty());
 
-  auto transforms = world->get_entities_with<TransformComponent>();
+  auto transforms = world->collect_entities_with<TransformComponent>();
   ASSERT_EQ(transforms.size(), 1U);
   EXPECT_EQ(transforms.front()->get_id(), 42U);
   EXPECT_NE(transforms.front()->get_component<TransformComponent>(), nullptr);

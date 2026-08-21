@@ -38,7 +38,7 @@ void CohortSystem::update(Engine::Core::World* world, float delta_time) {
     m_reform_timer = k_reform_interval;
   }
 
-  auto entities = world->get_entities_with<Engine::Core::UnitComponent>();
+  auto entities = world->collect_entities_with<Engine::Core::UnitComponent>();
 
   if (should_reform) {
 

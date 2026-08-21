@@ -331,7 +331,7 @@ void GatherLoopSystem::update(Engine::Core::World* world, float delta_time) {
   auto& terrain = Game::Map::TerrainService::instance();
 
   for (auto* entity :
-       world->get_entities_with<Engine::Core::BuilderProductionComponent>()) {
+       world->collect_entities_with<Engine::Core::BuilderProductionComponent>()) {
     auto* builder = entity->get_component<Engine::Core::BuilderProductionComponent>();
     if (builder == nullptr || (!builder->has_gather_order && !builder->auto_gather)) {
       continue;

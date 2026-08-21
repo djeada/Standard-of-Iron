@@ -42,7 +42,7 @@ void disband_troop(Engine::Core::Entity& entity, Engine::Core::UnitComponent& un
 } // namespace
 
 auto has_living_commander(Engine::Core::World& world, int owner_id) -> bool {
-  for (auto* entity : world.get_entities_with<Engine::Core::CommanderComponent>()) {
+  for (auto* entity : world.collect_entities_with<Engine::Core::CommanderComponent>()) {
     if (entity == nullptr ||
         entity->has_component<Engine::Core::PendingRemovalComponent>()) {
       continue;
@@ -61,7 +61,7 @@ auto collapse_owner(Engine::Core::World& world, int owner_id) -> bool {
   }
 
   std::vector<Engine::Core::Entity*> owned;
-  for (auto* entity : world.get_entities_with<Engine::Core::UnitComponent>()) {
+  for (auto* entity : world.collect_entities_with<Engine::Core::UnitComponent>()) {
     if (entity == nullptr ||
         entity->has_component<Engine::Core::PendingRemovalComponent>()) {
       continue;

@@ -92,7 +92,8 @@ auto count_units_attacking(Engine::Core::World* world,
     return 0;
   }
   int count = 0;
-  for (auto* entity : world->get_entities_with<Engine::Core::AttackTargetComponent>()) {
+  for (auto* entity :
+       world->collect_entities_with<Engine::Core::AttackTargetComponent>()) {
     const auto* attack = entity->get_component<Engine::Core::AttackTargetComponent>();
     const auto* unit = entity->get_component<Engine::Core::UnitComponent>();
     if (attack == nullptr || unit == nullptr || unit->health <= 0) {
@@ -124,7 +125,8 @@ auto count_enemies_attacking(Engine::Core::World* world,
     return 0;
   }
   int count = 0;
-  for (auto* entity : world->get_entities_with<Engine::Core::AttackTargetComponent>()) {
+  for (auto* entity :
+       world->collect_entities_with<Engine::Core::AttackTargetComponent>()) {
     const auto* attack = entity->get_component<Engine::Core::AttackTargetComponent>();
     const auto* unit = entity->get_component<Engine::Core::UnitComponent>();
     if (attack == nullptr || unit == nullptr || unit->health <= 0) {

@@ -124,4 +124,6 @@ engaged_soldiers(const Engine::Core::Entity& attacker,
 
 [[nodiscard]] auto has_formation_slots(const Engine::Core::Entity& entity) -> bool;
 
+[[nodiscard]] auto max_contact_extent() -> float;
+
 } // namespace Game::Systems::FormationCombat

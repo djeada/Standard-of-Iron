@@ -11,7 +11,8 @@ void RpgEngagementSystem::update(Engine::Core::World* world, float delta_time) {
     return;
   }
 
-  for (auto* entity : world->get_entities_with<Engine::Core::CommanderComponent>()) {
+  for (auto* entity :
+       world->collect_entities_with<Engine::Core::CommanderComponent>()) {
     auto const* commander =
         entity != nullptr ? entity->get_component<Engine::Core::CommanderComponent>()
                           : nullptr;

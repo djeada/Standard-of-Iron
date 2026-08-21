@@ -78,7 +78,7 @@ void apply_knockback_step(Engine::Core::Entity& unit,
 } // namespace
 
 void process_hit_feedback(Engine::Core::World* world, float delta_time) {
-  auto units = world->get_entities_with<Engine::Core::HitFeedbackComponent>();
+  auto units = world->collect_entities_with<Engine::Core::HitFeedbackComponent>();
 
   for (auto* unit : units) {
     if (unit->has_component<Engine::Core::PendingRemovalComponent>()) {
