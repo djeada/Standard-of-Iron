@@ -21,6 +21,8 @@ public:
     Shader::UniformHandle color{Shader::InvalidUniform};
     Shader::UniformHandle alpha{Shader::InvalidUniform};
     Shader::UniformHandle material_id{Shader::InvalidUniform};
+    Shader::UniformHandle material_detail{Shader::InvalidUniform};
+    Shader::UniformHandle has_material_detail{Shader::InvalidUniform};
     Shader::UniformHandle instanced{Shader::InvalidUniform};
     Shader::UniformHandle view_proj{Shader::InvalidUniform};
     Shader::UniformHandle light_dir{Shader::InvalidUniform};

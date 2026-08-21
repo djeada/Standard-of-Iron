@@ -34,6 +34,10 @@ inline constexpr int terrain_fields = 10;
 inline constexpr int terrain_noise_atlas = 11;
 
 inline constexpr int directional_shadow_depth = 12;
+inline constexpr int terrain_noise_atlas_detail = 13;
+inline constexpr int terrain_microdetail = 14;
+inline constexpr int material_detail = 15;
+inline constexpr int character_wear_volume = 16;
 } // namespace Render::GL::TextureUnit
 
 namespace Render::GL::BufferCapacity {

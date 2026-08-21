@@ -310,6 +310,7 @@ private:
   GLuint m_environment_lighting_ubo{0};
   GLuint m_local_lighting_ubo{0};
   Render::LocalLightFader m_local_light_fader{};
+  std::vector<Render::LocalLight> m_active_local_lights{};
   GLuint m_directional_shadow_ubo{0};
   GLuint m_directional_shadow_fbo{0};
   std::uint32_t m_graphics_generation{0U};

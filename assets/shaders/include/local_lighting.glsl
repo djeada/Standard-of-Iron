@@ -6,6 +6,16 @@ layout(std140) uniform LocalLighting {
   vec4 u_local_light_meta;
 };
 
+uniform int u_local_light_mask;
+uniform int u_has_local_light_mask;
+
+bool soi_local_light_active(int index) {
+  if (u_has_local_light_mask == 0) {
+    return true;
+  }
+  return (u_local_light_mask & (1 << index)) != 0;
+}
+
 const float k_soi_local_wrap = 0.18;
 const float k_soi_local_specular_power = 22.0;
 const float k_soi_local_specular_gain = 0.28;
@@ -23,6 +33,9 @@ vec3 local_lighting(vec3 world_position, vec3 normal) {
   for (int i = 0; i < SOI_MAX_LOCAL_LIGHTS; ++i) {
     if (i >= count) {
       break;
+    }
+    if (!soi_local_light_active(i)) {
+      continue;
     }
     vec3 delta = u_local_position_radius[i].xyz - world_position;
     float radius = max(u_local_position_radius[i].w, 0.001);
@@ -48,6 +61,9 @@ vec3 local_lighting_specular(vec3 world_position,
   for (int i = 0; i < SOI_MAX_LOCAL_LIGHTS; ++i) {
     if (i >= count) {
       break;
+    }
+    if (!soi_local_light_active(i)) {
+      continue;
     }
     vec3 delta = u_local_position_radius[i].xyz - world_position;
     float radius = max(u_local_position_radius[i].w, 0.001);
