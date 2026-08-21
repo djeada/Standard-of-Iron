@@ -308,4 +308,9 @@ using DrawCmd = std::variant<GridCmd,
                              DrawPartCmd,
                              RiggedCreatureCmd>;
 
+[[nodiscard]] inline constexpr auto
+scatter_species_is_blended(TerrainScatterCmd::Species species) noexcept -> bool {
+  return species == TerrainScatterCmd::Species::FireCamp;
+}
+
 } // namespace Render::GL

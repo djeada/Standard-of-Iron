@@ -428,10 +428,8 @@ struct BridgeSpanBudget {
 };
 
 auto bridge_span_budget(float bridge_width, float river_width) -> BridgeSpanBudget {
-  const float drawn_water_half =
-      river_width * 0.5F * Game::Map::k_river_drawn_edge_scale;
-  const float shortest =
-      drawn_water_half + Game::Map::bridge_bank_landing(bridge_width, river_width);
+  const float shortest = Game::Map::river_bank_standing_half_width(river_width) +
+                         Game::Map::bridge_bank_landing(bridge_width, river_width);
   return {shortest,
           shortest + Game::Map::bridge_bank_overhang(bridge_width, river_width)};
 }
@@ -554,6 +552,10 @@ TEST(MapLoaderTest, KeepsAuthoredBridgeAsymmetryInsideTheOverhangBudget) {
   QTemporaryFile temp_file;
   ASSERT_TRUE(temp_file.open());
 
+  const auto authored_budget = bridge_span_budget(Game::Map::k_min_bridge_width, 4.0F);
+  const double start_reach = authored_budget.shortest_half + 0.2F;
+  const double end_reach = authored_budget.longest_half - 0.2F;
+
   const QJsonObject root{
       {"name", "Asymmetric Bridge Test"},
       {"coord_system", "world"},
@@ -563,8 +565,8 @@ TEST(MapLoaderTest, KeepsAuthoredBridgeAsymmetryInsideTheOverhangBudget) {
                               {"end", QJsonArray{0.0, 20.0}},
                               {"width", 4.0}}}},
       {"bridges",
-       QJsonArray{QJsonObject{{"start", QJsonArray{-3.8, 0.0}},
-                              {"end", QJsonArray{4.4, 0.0}},
+       QJsonArray{QJsonObject{{"start", QJsonArray{-start_reach, 0.0}},
+                              {"end", QJsonArray{end_reach, 0.0}},
                               {"width", 4.0},
                               {"height", 0.5}}}}};
   temp_file.write(QJsonDocument(root).toJson(QJsonDocument::Compact));
@@ -580,11 +582,11 @@ TEST(MapLoaderTest, KeepsAuthoredBridgeAsymmetryInsideTheOverhangBudget) {
   const auto& bridge = map_def.bridges.front();
 
   const auto budget = bridge_span_budget(bridge.width, 4.0F);
-  ASSERT_GE(3.8F, budget.shortest_half);
-  ASSERT_LE(4.4F, budget.longest_half);
+  ASSERT_GE(start_reach, budget.shortest_half);
+  ASSERT_LE(end_reach, budget.longest_half);
 
-  EXPECT_NEAR(bridge.start.x(), -3.8F, 0.0001F);
-  EXPECT_NEAR(bridge.end.x(), 4.4F, 0.0001F);
+  EXPECT_NEAR(bridge.start.x(), -static_cast<float>(start_reach), 0.0001F);
+  EXPECT_NEAR(bridge.end.x(), static_cast<float>(end_reach), 0.0001F);
 }
 
 TEST(MapLoaderTest, LeavesBridgesThatCrossNoRiverUntouched) {

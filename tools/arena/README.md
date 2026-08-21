@@ -562,6 +562,166 @@ lasting long enough to be filmed: the clash and night chapters set explicit
 See [docs/PROMO_CAPTURE.md](../../docs/PROMO_CAPTURE.md) for the shot list, the
 score, and the staging rules these scenes were built from.
 
+## The imperial capital
+
+`promo_imperial_capital` is the arena's city-scale stage: one enormous fortified
+capital laid out in rings on a **768 m** map, built to be filmed rather than
+tested.
+
+```bash
+build/bin/arena_app --scenario promo_imperial_capital
+build/bin/arena_app --batch --scenario promo_imperial_capital --duration 20 \
+  --clean-capture --artifact-dir artifacts/capital
+build/bin/arena_app --promo-spec tools/arena/promos/imperial_capital.json \
+  --promo-out artifacts/promo
+python3 scripts/promo-edit.py --spec tools/arena/promos/imperial_capital.json \
+  --clips artifacts/promo/imperial_capital
+```
+
+Four things about this scene cost a render each to discover.
+
+**The arena world was 128 m square and nothing said so.** `k_terrain_width` was a
+file-local constant, so a scenario that authored content past ±63.5 m simply put
+it off the map: the first cut of this city rendered as a sliver against the
+boundary mountains and the rest fell into the void. `ArenaScenarioDefinition`
+now carries `terrain_grid_extent`; the viewport applies it, `reset_arena`
+restores 128, and `NothingIsAuthoredOutsideTheMap` in
+`tests/tools/settlement_layout_test.cpp` fails any reviewed scenario that
+authors a group, prop, road, bridge or elevation patch outside its own map.
+
+**Three services follow the grid and two of them were being left behind.**
+`VisibilityService` and the camera's map bounds are sized from the terrain, so a
+scenario that grew the grid rendered the new ground as unexplored fog and had
+its camera yanked back inside the old 128 m box. `regenerate_terrain` now
+re-initialises visibility and re-syncs the camera bounds alongside `NavGrid`.
+
+**The camera's far plane is 200 m by default.** Maps author their own
+(`camera.far` in the map JSON); arena scenarios had nobody to author one, which
+did not matter while the world was 128 m across and clipped the entire city to
+sky the moment it was not. `apply_scenario_camera_projection` derives the far
+plane from the scenario's own world span.
+
+**A hand-placed city cannot satisfy the layout contracts at this size.** The
+first attempt authored insulae as explicit rows and produced fifty overlap and
+road-clearance failures. The districts are generated instead: `CityPlanner`
+holds every footprint already placed — walls, gates, towers, monuments — and
+rejects a plot that hits a road, a river, a lake, the bridge approach or a
+neighbour, so `fill_district` can carpet a region with a jittered, rotated plot
+grid and let the streets carve themselves out. Author a district as a region
+with a character (pitch, rotation, density, accent building), not as
+coordinates.
+
+The rings, from the outside in:
+
+- countryside — farmland, orchards, two lakes, a quarry, a ruined old town, and
+  suburb districts strung along the highways;
+- the great wall — an eight-gated circuit with towers at ~44 m intervals, gate
+  towers filling the two cells either side of every gate, and bridgehead towers
+  on both crossings;
+- the new city — insulae, a circus and a theatre laid out as building rings, the
+  docks, and the barracks quarter with its garrison drawn up;
+- the old Republican wall — the forum, the basilica and curia, the ancient core;
+- the citadel — its own wall on the summit of a 96 m sacred mountain, temples,
+  the oracle, the treasury, the magic shrine, and the healers who keep them.
+
+Ten single-soldier patrols walk authored routes through the streets, and the
+legion crosses the bridge and marches the sacred way for the whole run.
+
+**Six things the first cut got wrong, all visible only in a render.**
+
+- *A lake takes its surface height from the terrain under its centre.* Put one on
+  an elevation patch and `add_lakes` carves the bed at that raised level while the
+  ground around it drops away - the lake comes out as a cylinder floating over the
+  countryside. Lakes belong on flat ground, clear of every patch.
+- *Buildings authored outside `arena_floor_half_extent` stand on procedural
+  terrain*, which at this scale is a hillside. Keep every authored thing inside
+  the flat floor unless you mean it to be on a slope.
+- *`ArenaScenarioResourcePatch` lays its members along one spacing vector*, so a
+  patch of 18 pine trees is a straight line of 18 pine trees. `grove()` emits one
+  single-count patch per tree at a hashed polar offset with size variation; use it
+  for anything natural.
+- *A hill built from concentric circular patches is a perfect cone.* The patch
+  profile now takes a `plateau` radius (constant height inside it, smoothstep
+  outside), and the sacred mountain is one plateau patch plus eight offset lobes -
+  irregular silhouette, a genuinely flat 150 m summit for the citadel, and the
+  south sector deliberately left lobe-free so the sacred way climbs a natural
+  shoulder. Nothing is authored on the slopes.
+- *The layout contracts measure axis-aligned footprints*, so a house turned 40
+  degrees passes them and still visibly clips its neighbour. `CityPlanner` expands
+  each footprint to its rotated AABB before testing.
+- *A city with no work in it reads as a model.* The scene runs harvest crews on
+  repeating cycles at authored groves, boulder fields and ore seams, carrier
+  parties on `DeliverToStructure`, AI builder gangs, repair crews on two
+  deliberately damaged buildings, and `SetFarmGrowth` on every farm so the fields
+  carry crops.
+
+**The river is drawn much wider than the navigation grid blocked it.** This is the
+real reason soldiers waded at the crossing, and it was a game-wide defect, not a
+scenario one. `add_river_segments` stamped `TerrainType::River` - the only thing
+`is_walkable` rejected - out to `width * 0.5`, while the ribbon in
+`render/ground/linear_feature_geometry.cpp` draws the water out to
+`width_scale * (1 + width_variation)` **plus** a meander of `0.145 * width`, i.e.
+`0.81 * width` against the reserved budget. On the capital's 26 m river the
+unwalkable band was +-12.5 m and the drawn water reached +-21 m, leaving an 8.5 m
+strip of walkable ground under open water on each bank; a 192x192 probe counted
+2,708 such cells. `fit_bridge_span_to_riverbanks` had the same hole - it reserved
+only the `k_river_drawn_edge_scale` half and capped the landing at 2.4 m, so the
+deck stopped 1.8 m short of the drawn waterline and the last step off the bridge
+landed in the river.
+
+The fix puts one number behind all of it. `river_drawn_half_width()` in
+`game/map/terrain.h` folds both the edge scale and the meander reach into the
+reserved budget the renderer already static-asserts against, and
+`river_bank_standing_half_width()` adds `k_water_bank_clearance` (0.6 m, a little
+under an infantry radius) so a unit standing at the boundary does not overhang the
+water. Two masks carry it: `m_water_blocked` marks that band unwalkable **without**
+touching terrain type or the carved bed, so no shipped map's silhouette or ground
+material moves; `m_bridge_walkable` marks the deck inset by the same clearance, so
+nobody stands on the parapet either. Both are rebuilt in `restore_from_data`, so
+saves agree with fresh loads. `tests/map/river_bank_walkability_test.cpp` pins all
+three properties.
+
+**A bridge also has to be wider than the column's drawn frontage, not its path.**
+Separately from the above, a group of `n` units at `spacing` metres draws soldiers
+across the whole frontage, so a 4-unit column at 9 m spacing puts ranks 13 m either
+side of the axis and they render outside a 14 m deck. Size the deck against
+`count * spacing` plus the per-unit block width, or narrow the column.
+
+**Gate towers have to stand clear of the gate, not in it.** `add_wall_side` used to drop
+a flanking tower at `gate +- 2 m`. Once gates went to 1.5x scale the passage became 5.7 m
+wide, so those towers stood inside the archway. Gates now claim `+- 4 m` of the wall
+lattice so segments clear the bigger model, and run towers keep `k_gate_tower_exclusion`
+(12 m) away from every gate.
+
+**A builder only plays the construction animation while something is actually being
+built.** `is_constructing` comes from `BuilderComponent::in_progress` or a labouring
+`SettlementResidentComponent`, nothing else - an `ai_controlled` builder crew standing on
+a plot just mills around. Give each crew a named structure, damage it with `SetHealth`,
+and re-issue `RepairStructure` on a cadence shorter than the repair takes; the capital
+runs seven sites on a 14 s loop for the whole 190 s.
+
+**Carriers do get a load, but it is a rigid prop.** `DeliverToStructure` leaves a
+civilian with cargo, so the `capital_carriers_*` groups do render one. Carrying never
+reaches the animation layer though - there is no `is_carrying` input - so the arms play a
+plain walk and nothing grips the load. Its offsets are also not in the rig's space: one
+body height is about 1.105 load units, so author against a measured close-up rather than
+against `bind_socket_transform`.
+
+**The camera moves are the difference between a reel and a turntable.** The first
+cut orbited every shot at a constant rate with `"ease": "linear"`, which reads as a
+game camera, not a lens. Give each shot **one** dominant axis - a push-in
+(distance), a crane (height plus a few degrees of pitch), a lateral track (a small
+yaw change at a large radius), or the one big pull-back for the reveal - keep yaw
+under about 20 degrees except on that reveal, use three keys so the move
+accelerates and settles, and set `"ease": "smooth"` on every key after the first.
+
+**It renders well below realtime and that is deliberate.** Roughly 2,200 building
+entities at full creature LOD on a 768 m terrain put frame work well past the
+30 ms mark, so the scenario
+declares no `FrameBudget` expectation - it is a filming stage, not a performance
+fixture. Record it in chunks of two or three shots rather than one long pass;
+see the crash note in the ambience section above.
+
 ## RPG commander scenarios
 
 The `rpg_*` scenarios run the production `CommanderControlController`, so the

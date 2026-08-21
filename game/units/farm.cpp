@@ -14,7 +14,7 @@ namespace Game::Units {
 
 namespace {
 
-constexpr float k_farm_scale_factor = 1.5F;
+constexpr float k_farm_scale_factor = 5.1F;
 constexpr float k_farm_scale_xz = 1.4F * k_farm_scale_factor;
 constexpr float k_farm_scale_y = 1.0F * k_farm_scale_factor;
 

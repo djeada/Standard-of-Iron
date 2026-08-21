@@ -29,8 +29,9 @@ constexpr float k_far_distance_sq = 120.0F * 120.0F;
 constexpr float k_detail_distance_sq = 46.0F * 46.0F;
 constexpr float k_cull_radius = 0.8F;
 
-constexpr float k_carry_height = 1.00F;
-constexpr float k_carry_forward = 0.30F;
+constexpr float k_carry_height = 0.50F;
+constexpr float k_carry_forward = 0.34F;
+constexpr float k_hand_span = 0.185F;
 constexpr int k_max_visible_carriers = 8;
 
 constexpr QVector3D k_timber{0.47F, 0.32F, 0.18F};
@@ -112,7 +113,7 @@ void draw_log(ISubmitter& out,
               std::uint32_t seed,
               bool detailed) {
   constexpr float k_radius = 0.062F;
-  constexpr float k_half_length = 0.40F;
+  constexpr float k_half_length = k_hand_span + 0.145F;
   constexpr std::array<std::array<float, 2>, 3> k_bundle{
       {{-0.066F, 0.0F}, {0.066F, 0.0F}, {0.0F, 0.112F}}};
 
@@ -154,7 +155,7 @@ void draw_block(ISubmitter& out,
       cube,
       frame,
       QVector3D(0.0F, k_carry_height - 0.02F, k_carry_forward + 0.02F),
-      QVector3D(0.170F, 0.110F, 0.130F),
+      QVector3D(0.150F, 0.098F, 0.118F),
       QVector3D(0.0F, jitter(seed, 7.0F), 0.0F),
       tint(k_stone_light, 0.84F + (rand01(seed * 3U) * 0.20F)));
 
@@ -220,7 +221,7 @@ void draw_sheaf(ISubmitter& out,
                 bool detailed) {
 
   Mesh* const cylinder = get_unit_cylinder(10);
-  constexpr float k_half_length = 0.36F;
+  constexpr float k_half_length = k_hand_span + 0.115F;
   QVector3D const left(-k_half_length, k_carry_height + 0.02F, k_carry_forward);
   QVector3D const right(k_half_length, k_carry_height + 0.06F, k_carry_forward);
   out.mesh(cylinder,

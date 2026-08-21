@@ -4,6 +4,7 @@ add_library(
     arena_scenario.cpp
     arena_scenario_catalog.cpp
     arena_ambience_scenarios.cpp
+    arena_city_scenarios.cpp
     arena_formation_scenarios.cpp
     arena_showcase_scenarios.cpp
     arena_trailer_scenarios.cpp

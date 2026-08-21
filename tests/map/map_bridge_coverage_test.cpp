@@ -73,9 +73,8 @@ TEST(MapBridgeCoverageTest, EveryShippedBridgeReachesBankToBank) {
         continue;
       }
 
-      const float drawn_water_half =
-          crossing->river->width * 0.5F * Game::Map::k_river_drawn_edge_scale;
-      const float required = drawn_water_half;
+      const float required =
+          Game::Map::river_bank_standing_half_width(crossing->river->width);
 
       const QVector3D start_reach = crossing->point - bridge.start;
       const QVector3D end_reach = bridge.end - crossing->point;

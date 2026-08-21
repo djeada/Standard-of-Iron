@@ -404,3 +404,35 @@ TEST(DrawQueuePreparedBatches, BatchTypeAlwaysMatchesItsHeadCommand) {
         << "batch starting at " << prepared.start;
   }
 }
+
+TEST(DrawQueueSortOrder, BlendedScatterDrawsAfterOpaqueMeshes) {
+  using Render::GL::TerrainScatterCmd;
+  using Render::GL::TerrainScatterCmdIndex;
+
+  DrawQueue queue;
+
+  TerrainScatterCmd fire;
+  fire.species = TerrainScatterCmd::Species::FireCamp;
+  fire.priority = CommandPriority::Low;
+  queue.submit(fire);
+
+  MeshCmd wall;
+  wall.priority = CommandPriority::Low;
+  queue.submit(wall);
+
+  TerrainScatterCmd stone;
+  stone.species = TerrainScatterCmd::Species::Stone;
+  stone.priority = CommandPriority::Low;
+  queue.submit(stone);
+
+  queue.sort_for_batching();
+
+  ASSERT_EQ(queue.size(), 3U);
+  EXPECT_EQ(queue.get_sorted(0).index(), TerrainScatterCmdIndex);
+  EXPECT_EQ(std::get<TerrainScatterCmdIndex>(queue.get_sorted(0)).species,
+            TerrainScatterCmd::Species::Stone);
+  EXPECT_EQ(queue.get_sorted(1).index(), MeshCmdIndex);
+  EXPECT_EQ(queue.get_sorted(2).index(), TerrainScatterCmdIndex);
+  EXPECT_EQ(std::get<TerrainScatterCmdIndex>(queue.get_sorted(2)).species,
+            TerrainScatterCmd::Species::FireCamp);
+}

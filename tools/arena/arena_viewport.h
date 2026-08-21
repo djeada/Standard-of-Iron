@@ -182,6 +182,7 @@ public slots:
 
   void pause_simulation(bool paused);
   void reset_camera();
+  void apply_scenario_camera_projection(float distance);
 
   [[nodiscard]] auto rpg_interactive_active() const -> bool {
     return m_rpg_interactive;
@@ -428,6 +429,7 @@ private:
   std::vector<Game::Map::RoadSegment> m_arena_roads;
   std::vector<Arena::ArenaScenarioElevationPatch> m_arena_elevation_patches;
   float m_arena_floor_half_extent = 18.0F;
+  int m_terrain_grid_extent = 128;
   bool m_suppress_boundary_mountains = false;
   std::vector<Game::Map::UndeadZone> m_arena_undead_zones;
   Game::Map::WorldProp::Type m_spawn_world_prop_type =

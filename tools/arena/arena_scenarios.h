@@ -209,6 +209,8 @@ inline constexpr char k_promo_wolf_attack_id[] = "promo_wolf_attack";
 
 inline constexpr char k_ambience_night_watch_id[] = "ambience_night_watch";
 
+inline constexpr char k_imperial_capital_id[] = "promo_imperial_capital";
+
 inline constexpr char k_trailer_dawn_id[] = "trailer_dawn";
 inline constexpr char k_trailer_muster_id[] = "trailer_muster";
 inline constexpr char k_trailer_clash_id[] = "trailer_clash";

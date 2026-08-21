@@ -1,0 +1,361 @@
+{
+  "id": "imperial_capital",
+  "title": "AURELIA MAGNA",
+  "subtitle": "STANDARD OF IRON",
+  "width": 1920,
+  "height": 1080,
+  "fps": 30,
+  "supersample": 1,
+  "transition": {
+    "type": "dissolve",
+    "duration": 0.45
+  },
+  "shots": [
+    {
+      "name": "gate",
+      "scenario": "promo_imperial_capital",
+      "seed": 8190,
+      "start": 30.0,
+      "duration": 6.0,
+      "focus": {
+        "mode": "point",
+        "point": [
+          0.0,
+          0.0,
+          120.0
+        ],
+        "smoothing": 0.7
+      },
+      "camera": [
+        {
+          "time": 0.0,
+          "distance": 84,
+          "pitch": 11,
+          "yaw": 354,
+          "fov": 40,
+          "height": 5.0
+        },
+        {
+          "time": 2.2,
+          "distance": 76,
+          "pitch": 12,
+          "yaw": 356,
+          "fov": 40,
+          "height": 5.4,
+          "ease": "smooth"
+        },
+        {
+          "time": 6.0,
+          "distance": 58,
+          "pitch": 14,
+          "yaw": 2,
+          "fov": 40,
+          "height": 6.2,
+          "ease": "smooth"
+        }
+      ],
+      "caption": "AURELIA MAGNA"
+    },
+    {
+      "name": "avenue",
+      "scenario": "promo_imperial_capital",
+      "seed": 8190,
+      "start": 56.0,
+      "duration": 5.5,
+      "focus": {
+        "mode": "group",
+        "group": "capital_column_swords",
+        "smoothing": 0.7
+      },
+      "camera": [
+        {
+          "time": 0.0,
+          "distance": 48,
+          "pitch": 11,
+          "yaw": 62,
+          "fov": 38,
+          "height": 3.0
+        },
+        {
+          "time": 5.5,
+          "distance": 46,
+          "pitch": 13,
+          "yaw": 88,
+          "fov": 38,
+          "height": 3.8,
+          "ease": "smooth"
+        }
+      ],
+      "caption": "THE LEGION COMES UP"
+    },
+    {
+      "name": "work",
+      "scenario": "promo_imperial_capital",
+      "seed": 8190,
+      "start": 34.0,
+      "duration": 6.0,
+      "focus": {
+        "mode": "group",
+        "group": "capital_masons_forum",
+        "smoothing": 0.7
+      },
+      "camera": [
+        {
+          "time": 0.0,
+          "distance": 40,
+          "pitch": 30,
+          "yaw": 148,
+          "fov": 38,
+          "height": 11.0
+        },
+        {
+          "time": 3.0,
+          "distance": 27,
+          "pitch": 21,
+          "yaw": 156,
+          "fov": 38,
+          "height": 5.5,
+          "ease": "smooth"
+        },
+        {
+          "time": 6.0,
+          "distance": 19,
+          "pitch": 16,
+          "yaw": 162,
+          "fov": 38,
+          "height": 3.2,
+          "ease": "smooth"
+        }
+      ],
+      "caption": "THE CITY BUILDS ITSELF"
+    },
+    {
+      "name": "sites",
+      "scenario": "promo_imperial_capital",
+      "seed": 8190,
+      "start": 52.0,
+      "duration": 5.0,
+      "focus": {
+        "mode": "group",
+        "group": "capital_masons_upper",
+        "smoothing": 0.7
+      },
+      "camera": [
+        {
+          "time": 0.0,
+          "distance": 34,
+          "pitch": 15,
+          "yaw": 300,
+          "fov": 40,
+          "height": 4.5
+        },
+        {
+          "time": 2.5,
+          "distance": 32,
+          "pitch": 15,
+          "yaw": 318,
+          "fov": 40,
+          "height": 4.6,
+          "ease": "smooth"
+        },
+        {
+          "time": 5.0,
+          "distance": 30,
+          "pitch": 16,
+          "yaw": 334,
+          "fov": 40,
+          "height": 4.8,
+          "ease": "smooth"
+        }
+      ],
+      "caption": "SCAFFOLD BY SCAFFOLD"
+    },
+    {
+      "name": "haul",
+      "scenario": "promo_imperial_capital",
+      "seed": 8190,
+      "start": 44.0,
+      "duration": 5.5,
+      "focus": {
+        "mode": "group",
+        "group": "capital_carriers_forum",
+        "smoothing": 0.7
+      },
+      "camera": [
+        {
+          "time": 0.0,
+          "distance": 19,
+          "pitch": 13,
+          "yaw": 84,
+          "fov": 34,
+          "height": 1.9
+        },
+        {
+          "time": 2.7,
+          "distance": 16,
+          "pitch": 12,
+          "yaw": 95,
+          "fov": 34,
+          "height": 1.7,
+          "ease": "smooth"
+        },
+        {
+          "time": 5.5,
+          "distance": 14,
+          "pitch": 11,
+          "yaw": 105,
+          "fov": 34,
+          "height": 1.6,
+          "ease": "smooth"
+        }
+      ],
+      "caption": "STONE, TIMBER AND IRON"
+    },
+    {
+      "name": "upper",
+      "scenario": "promo_imperial_capital",
+      "seed": 8190,
+      "start": 24.0,
+      "duration": 5.5,
+      "focus": {
+        "mode": "point",
+        "point": [
+          0.0,
+          0.0,
+          -100.0
+        ],
+        "smoothing": 0.7
+      },
+      "camera": [
+        {
+          "time": 0.0,
+          "distance": 94,
+          "pitch": 21,
+          "yaw": 350,
+          "fov": 40,
+          "height": 13.0
+        },
+        {
+          "time": 2.4,
+          "distance": 86,
+          "pitch": 20,
+          "yaw": 354,
+          "fov": 40,
+          "height": 11.0,
+          "ease": "smooth"
+        },
+        {
+          "time": 6.0,
+          "distance": 62,
+          "pitch": 17,
+          "yaw": 6,
+          "fov": 40,
+          "height": 7.0,
+          "ease": "smooth"
+        }
+      ],
+      "caption": "THE UPPER QUARTER"
+    },
+    {
+      "name": "citadel",
+      "scenario": "promo_imperial_capital",
+      "seed": 8190,
+      "start": 40.0,
+      "duration": 5.5,
+      "focus": {
+        "mode": "point",
+        "point": [
+          0.0,
+          0.0,
+          -306.0
+        ],
+        "smoothing": 0.7
+      },
+      "camera": [
+        {
+          "time": 0.0,
+          "distance": 96,
+          "pitch": 11,
+          "yaw": 344,
+          "fov": 40,
+          "height": 44.0
+        },
+        {
+          "time": 2.2,
+          "distance": 92,
+          "pitch": 13,
+          "yaw": 348,
+          "fov": 40,
+          "height": 50.0,
+          "ease": "smooth"
+        },
+        {
+          "time": 6.0,
+          "distance": 74,
+          "pitch": 19,
+          "yaw": 358,
+          "fov": 40,
+          "height": 60.0,
+          "ease": "smooth"
+        }
+      ],
+      "caption": "THE TEMPLE ON THE MOUNTAIN"
+    },
+    {
+      "name": "reveal",
+      "scenario": "promo_imperial_capital",
+      "seed": 8190,
+      "start": 66.0,
+      "duration": 7.0,
+      "focus": {
+        "mode": "point",
+        "point": [
+          0.0,
+          0.0,
+          -60.0
+        ],
+        "smoothing": 0.7
+      },
+      "camera": [
+        {
+          "time": 0.0,
+          "distance": 250,
+          "pitch": 24,
+          "yaw": 350,
+          "fov": 44,
+          "height": 18.0
+        },
+        {
+          "time": 2.5,
+          "distance": 300,
+          "pitch": 28,
+          "yaw": 356,
+          "fov": 44,
+          "height": 24.0,
+          "ease": "smooth"
+        },
+        {
+          "time": 7.0,
+          "distance": 470,
+          "pitch": 40,
+          "yaw": 8,
+          "fov": 44,
+          "height": 40.0,
+          "ease": "smooth"
+        }
+      ],
+      "caption": "ONE CITY, BUILT IN RINGS"
+    }
+  ],
+  "grade": {
+    "contrast": 1.14,
+    "saturation": 1.28,
+    "brightness": 0.01,
+    "gamma": 1.02,
+    "grain": 2,
+    "vignette": 0.12,
+    "sharpen": 0.7
+  },
+  "music": "assets/audio/music/base/base_army_camp_resting.ogg",
+  "music_start": 0.0
+}

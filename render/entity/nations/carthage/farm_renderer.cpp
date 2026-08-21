@@ -18,24 +18,24 @@ namespace Render::GL::Carthage {
 namespace {
 
 struct CarthageFarmPalette {
-  QVector3D sandstone{0.86F, 0.76F, 0.58F};
-  QVector3D sandstone_shade{0.70F, 0.60F, 0.44F};
-  QVector3D sandstone_dark{0.42F, 0.35F, 0.26F};
-  QVector3D mudbrick{0.72F, 0.50F, 0.32F};
-  QVector3D mudbrick_dark{0.50F, 0.32F, 0.20F};
-  QVector3D lime_wash{0.92F, 0.88F, 0.78F};
+  QVector3D sandstone{0.78F, 0.68F, 0.51F};
+  QVector3D sandstone_shade{0.63F, 0.53F, 0.39F};
+  QVector3D sandstone_dark{0.37F, 0.31F, 0.23F};
+  QVector3D mudbrick{0.63F, 0.43F, 0.28F};
+  QVector3D mudbrick_dark{0.44F, 0.28F, 0.18F};
+  QVector3D lime_wash{0.85F, 0.81F, 0.72F};
   QVector3D basalt{0.24F, 0.23F, 0.22F};
-  QVector3D palm_wood{0.48F, 0.34F, 0.19F};
-  QVector3D palm_dark{0.28F, 0.19F, 0.10F};
-  QVector3D thatch{0.78F, 0.64F, 0.36F};
-  QVector3D thatch_dark{0.58F, 0.46F, 0.24F};
-  QVector3D indigo{0.16F, 0.20F, 0.44F};
-  QVector3D oxblood{0.46F, 0.12F, 0.10F};
-  QVector3D clay{0.70F, 0.46F, 0.28F};
+  QVector3D palm_wood{0.42F, 0.29F, 0.17F};
+  QVector3D palm_dark{0.24F, 0.16F, 0.09F};
+  QVector3D thatch{0.70F, 0.56F, 0.30F};
+  QVector3D thatch_dark{0.50F, 0.39F, 0.21F};
+  QVector3D indigo{0.18F, 0.21F, 0.36F};
+  QVector3D oxblood{0.39F, 0.11F, 0.09F};
+  QVector3D clay{0.63F, 0.40F, 0.24F};
   QVector3D clay_band{0.32F, 0.15F, 0.10F};
-  QVector3D sack{0.80F, 0.70F, 0.50F};
-  QVector3D straw{0.88F, 0.74F, 0.40F};
-  QVector3D water{0.18F, 0.36F, 0.42F};
+  QVector3D sack{0.72F, 0.62F, 0.44F};
+  QVector3D straw{0.78F, 0.64F, 0.32F};
+  QVector3D water{0.14F, 0.29F, 0.32F};
 };
 
 void add_mudbrick_boundary(BuildingArchetypeDesc& desc, const CarthageFarmPalette& c) {
@@ -62,10 +62,12 @@ void add_mudbrick_boundary(BuildingArchetypeDesc& desc, const CarthageFarmPalett
           posts > 0 ? static_cast<float>(i) / static_cast<float>(posts) : 0.5F;
       QVector3D const post = start + span * t;
       float const rise = 0.11F + (decay_hash(seed + i) - 0.5F) * 0.02F;
-      desc.add_box(post + QVector3D(0.0F, rise * 0.5F, 0.0F),
-                   QVector3D(0.045F, rise * 0.5F, 0.045F),
-                   c.mudbrick_dark,
-                   BuildingStateMask::All);
+      desc.add_rotated_box(
+          post + QVector3D(0.0F, rise * 0.5F, 0.0F),
+          QVector3D(0.045F, rise * 0.5F, 0.045F),
+          QVector3D(0.0F, (decay_hash(seed + i * 5) - 0.5F) * 4.0F, 0.0F),
+          c.mudbrick_dark * (0.94F + decay_hash(seed + i * 7) * 0.10F),
+          BuildingStateMask::All);
     }
   };
 
@@ -250,11 +252,20 @@ void add_well(BuildingArchetypeDesc& desc, const CarthageFarmPalette& c) {
                     0.11F,
                     c.sandstone_shade,
                     BuildingStateMask::All);
-  desc.add_cylinder(centre + QVector3D(0.0F, 0.13F, 0.0F),
-                    centre + QVector3D(0.0F, 0.15F, 0.0F),
-                    0.115F,
-                    c.sandstone,
-                    k_building_state_mask_intact);
+  constexpr int k_coping_stones = 12;
+  for (int stone = 0; stone < k_coping_stones; ++stone) {
+    float const angle = static_cast<float>(stone) * 6.2831853F /
+                        static_cast<float>(k_coping_stones);
+    QVector3D const stone_center =
+        centre + QVector3D(std::cos(angle) * 0.095F,
+                           0.14F + (decay_hash(601 + stone) - 0.5F) * 0.006F,
+                           std::sin(angle) * 0.095F);
+    desc.add_rotated_box(stone_center,
+                         QVector3D(0.034F, 0.014F, 0.025F),
+                         QVector3D(0.0F, 90.0F - angle * 57.29578F, 0.0F),
+                         stone % 3 == 0 ? c.sandstone_shade : c.sandstone,
+                         k_building_state_mask_intact);
+  }
   desc.add_cylinder(centre + QVector3D(0.0F, 0.11F, 0.0F),
                     centre + QVector3D(0.0F, 0.135F, 0.0F),
                     0.075F,
@@ -318,8 +329,8 @@ auto build_farm_archetype(BuildingState state, int stage) -> RenderArchetype {
                                .half_x = 0.80F,
                                .half_z = 0.62F,
                                .ground_y = 0.0F,
-                               .rows = 10,
-                               .stalks_per_row = 20,
+                               .rows = 20,
+                               .stalks_per_row = 34,
                                .seed = 19,
                                .rows_along_x = false},
                  field_palette,

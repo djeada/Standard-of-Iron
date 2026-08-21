@@ -1271,9 +1271,9 @@ public:
     ForcedClosed
   };
 
-  static constexpr float k_structure_half_span = 3.0F;
-  static constexpr float k_passage_half_width = 1.9F;
-  static constexpr float k_cross_half_extent = 1.0F;
+  static constexpr float k_structure_half_span = 4.5F;
+  static constexpr float k_passage_half_width = 2.85F;
+  static constexpr float k_cross_half_extent = 1.5F;
 
   static constexpr float k_passable_open_amount = 0.94F;
   static constexpr float k_blocking_open_amount = 0.25F;

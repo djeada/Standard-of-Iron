@@ -106,7 +106,8 @@ river_as_road(const Game::Map::RiverSegment& river) -> Game::Map::RoadSegment {
 trailer_scenarios() -> std::vector<const Arena::ArenaScenarioDefinition*> {
   std::vector<const Arena::ArenaScenarioDefinition*> out;
   for (const auto& scenario : Arena::Scenarios::definitions()) {
-    if (scenario.id.startsWith(QStringLiteral("trailer_"))) {
+    if (scenario.id.startsWith(QStringLiteral("trailer_")) ||
+        scenario.id == QLatin1String(Arena::Scenarios::k_imperial_capital_id)) {
       out.push_back(&scenario);
     }
   }
@@ -179,12 +180,53 @@ TEST(SettlementLayoutTest, NoBuildingStandsInWater) {
       for (const auto& river : scenario->rivers) {
         const float clearance =
             point_segment_distance(print.x, print.z, river_as_road(river));
-        const float forbidden =
-            (river.width * 0.5F) + std::min(print.half_w, print.half_d);
+        const float forbidden = Game::Map::river_bank_standing_half_width(river.width) +
+                                std::min(print.half_w, print.half_d);
         EXPECT_GE(clearance, forbidden)
             << scenario->id.toStdString() << ": " << print.name.toStdString() << " at ("
             << print.x << "," << print.z << ") stands in the river";
       }
+    }
+  }
+}
+
+TEST(SettlementLayoutTest, NothingIsAuthoredOutsideTheMap) {
+
+  for (const auto* entry : trailer_scenarios()) {
+    const auto& scenario = *entry;
+    const int extent =
+        scenario.terrain_grid_extent > 0 ? scenario.terrain_grid_extent : 128;
+    const float limit = (static_cast<float>(extent) * 0.5F) - 2.0F;
+    auto const check = [&](const char* what, float x, float z) {
+      EXPECT_LE(std::max(std::abs(x), std::abs(z)), limit)
+          << scenario.id.toStdString() << ": " << what << " at (" << x << "," << z
+          << ") falls outside the " << extent << " m map";
+    };
+
+    for (const auto& group : scenario.groups) {
+      const float centre = (static_cast<float>(group.count) - 1.0F) * 0.5F;
+      for (int index = 0; index < group.count; ++index) {
+        const QVector3D at =
+            group.origin + (group.spacing * (static_cast<float>(index) - centre));
+        check(group.name.toLatin1().constData(), at.x(), at.z());
+      }
+    }
+    for (const auto& patch : scenario.resource_patches) {
+      for (int index = 0; index < patch.count; ++index) {
+        const QVector3D at = patch.origin + (patch.spacing * index);
+        check(patch.prop_type.toLatin1().constData(), at.x(), at.z());
+      }
+    }
+    for (const auto& road : scenario.roads) {
+      check("road", road.start.x(), road.start.z());
+      check("road", road.end.x(), road.end.z());
+    }
+    for (const auto& bridge : scenario.bridges) {
+      check("bridge", bridge.start.x(), bridge.start.z());
+      check("bridge", bridge.end.x(), bridge.end.z());
+    }
+    for (const auto& patch : scenario.elevation_patches) {
+      check("elevation patch", patch.center.x(), patch.center.z());
     }
   }
 }

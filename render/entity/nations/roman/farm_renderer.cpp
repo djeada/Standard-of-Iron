@@ -18,22 +18,22 @@ namespace Render::GL::Roman {
 namespace {
 
 struct RomanFarmPalette {
-  QVector3D limestone{0.80F, 0.76F, 0.66F};
-  QVector3D limestone_shade{0.62F, 0.58F, 0.50F};
-  QVector3D limestone_dark{0.44F, 0.41F, 0.35F};
-  QVector3D plaster{0.90F, 0.85F, 0.72F};
-  QVector3D plaster_shade{0.76F, 0.70F, 0.58F};
-  QVector3D terracotta{0.66F, 0.29F, 0.13F};
-  QVector3D terracotta_dark{0.46F, 0.18F, 0.09F};
-  QVector3D cedar{0.42F, 0.27F, 0.14F};
-  QVector3D cedar_light{0.58F, 0.39F, 0.21F};
-  QVector3D cedar_dark{0.27F, 0.17F, 0.09F};
+  QVector3D limestone{0.76F, 0.71F, 0.61F};
+  QVector3D limestone_shade{0.58F, 0.54F, 0.46F};
+  QVector3D limestone_dark{0.40F, 0.37F, 0.31F};
+  QVector3D plaster{0.84F, 0.80F, 0.69F};
+  QVector3D plaster_shade{0.70F, 0.65F, 0.54F};
+  QVector3D terracotta{0.58F, 0.25F, 0.12F};
+  QVector3D terracotta_dark{0.39F, 0.16F, 0.08F};
+  QVector3D cedar{0.38F, 0.24F, 0.13F};
+  QVector3D cedar_light{0.51F, 0.34F, 0.19F};
+  QVector3D cedar_dark{0.24F, 0.15F, 0.08F};
   QVector3D iron{0.16F, 0.16F, 0.16F};
-  QVector3D straw{0.86F, 0.72F, 0.38F};
-  QVector3D cloth{0.55F, 0.12F, 0.09F};
-  QVector3D clay{0.68F, 0.44F, 0.27F};
+  QVector3D straw{0.76F, 0.62F, 0.31F};
+  QVector3D cloth{0.46F, 0.11F, 0.08F};
+  QVector3D clay{0.62F, 0.39F, 0.23F};
   QVector3D clay_band{0.36F, 0.16F, 0.10F};
-  QVector3D grain{0.90F, 0.76F, 0.40F};
+  QVector3D grain{0.81F, 0.67F, 0.33F};
 };
 
 void add_stone_boundary(BuildingArchetypeDesc& desc, const RomanFarmPalette& c) {
@@ -48,13 +48,21 @@ void add_stone_boundary(BuildingArchetypeDesc& desc, const RomanFarmPalette& c) 
     for (int i = 0; i < blocks; ++i) {
       QVector3D const centre = start + step * (static_cast<float>(i) + 0.5F);
       float const jitter = (decay_hash(seed + i) - 0.5F) * 0.012F;
+      bool const horizontal = std::abs(step.x()) > std::abs(step.z());
       QVector3D const half(step.x() != 0.0F ? std::abs(step.x()) * 0.46F : k_wall_half,
                            k_wall_h * (0.85F + decay_hash(seed + i * 3) * 0.3F),
                            step.z() != 0.0F ? std::abs(step.z()) * 0.46F : k_wall_half);
-      desc.add_box(centre + QVector3D(jitter, half.y(), -jitter),
-                   half,
-                   (i % 3 == 0) ? c.limestone_shade : c.limestone,
-                   BuildingStateMask::All);
+      QVector3D const block_colour =
+          (i % 3 == 0 ? c.limestone_shade : c.limestone) *
+          (0.94F + decay_hash(seed + i * 7) * 0.10F);
+      desc.add_rotated_box(
+          centre + QVector3D(horizontal ? jitter * 0.35F : jitter,
+                             half.y(),
+                             horizontal ? jitter : jitter * 0.35F),
+          half,
+          QVector3D(0.0F, (decay_hash(seed + i * 13) - 0.5F) * 5.0F, 0.0F),
+          block_colour,
+          BuildingStateMask::All);
     }
   };
 
@@ -193,11 +201,31 @@ void add_ox_cart(BuildingArchetypeDesc& desc, const RomanFarmPalette& c) {
 
   for (float const sz : {-1.0F, 1.0F}) {
     QVector3D const hub = centre + QVector3D(0.0F, k_wheel_r, sz * 0.15F);
-    desc.add_cylinder(hub + QVector3D(0.0F, 0.0F, -0.012F),
-                      hub + QVector3D(0.0F, 0.0F, 0.012F),
-                      k_wheel_r,
-                      c.cedar_dark,
-                      k_building_state_mask_intact);
+    constexpr int k_spokes = 8;
+    for (int spoke = 0; spoke < k_spokes; ++spoke) {
+      float const angle = static_cast<float>(spoke) * 6.2831853F /
+                          static_cast<float>(k_spokes);
+      float const next_angle = static_cast<float>(spoke + 1) * 6.2831853F /
+                               static_cast<float>(k_spokes);
+      QVector3D const rim =
+          hub + QVector3D(std::cos(angle) * k_wheel_r,
+                          std::sin(angle) * k_wheel_r,
+                          0.0F);
+      QVector3D const next_rim =
+          hub + QVector3D(std::cos(next_angle) * k_wheel_r,
+                          std::sin(next_angle) * k_wheel_r,
+                          0.0F);
+      desc.add_cylinder(hub,
+                        rim,
+                        0.007F,
+                        c.cedar,
+                        k_building_state_mask_intact);
+      desc.add_cylinder(rim,
+                        next_rim,
+                        0.009F,
+                        c.cedar_dark,
+                        k_building_state_mask_intact);
+    }
     desc.add_cylinder(hub + QVector3D(0.0F, 0.0F, -0.016F),
                       hub + QVector3D(0.0F, 0.0F, 0.016F),
                       k_wheel_r * 0.35F,
@@ -269,8 +297,8 @@ auto build_farm_archetype(BuildingState state, int stage) -> RenderArchetype {
                                .half_x = 0.80F,
                                .half_z = 0.62F,
                                .ground_y = 0.0F,
-                               .rows = 9,
-                               .stalks_per_row = 22,
+                               .rows = 18,
+                               .stalks_per_row = 37,
                                .seed = 7,
                                .rows_along_x = true},
                  field_palette,
