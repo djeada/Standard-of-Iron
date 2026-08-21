@@ -14,6 +14,7 @@
 #include <unordered_set>
 #include <vector>
 
+#include "battle_render_optimizer.h"
 #include "bone_palette_arena.h"
 #include "draw_queue.h"
 #include "entity/registry.h"
@@ -544,6 +545,8 @@ private:
   RiggedMeshCache m_rigged_mesh_cache;
   SnapshotMeshCache m_snapshot_mesh_cache;
   std::uint32_t m_frame_counter{0};
+
+  Render::BattleRenderOptimizer m_battle_optimizer;
 
   Engine::Core::World* m_cached_world{nullptr};
 

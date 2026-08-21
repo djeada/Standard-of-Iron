@@ -2515,7 +2515,8 @@ void ArenaViewport::clear_wildlife() {
     wildlife->configure(disabled, 1U);
   }
   std::vector<Engine::Core::EntityID> doomed;
-  for (auto* entity : m_world->get_entities_with<Engine::Core::WildlifeComponent>()) {
+  for (auto* entity :
+       m_world->collect_entities_with<Engine::Core::WildlifeComponent>()) {
     if (entity != nullptr) {
       doomed.push_back(entity->get_id());
     }
@@ -2650,7 +2651,7 @@ void ArenaViewport::clear_undead_zones() {
   }
 
   std::vector<Engine::Core::EntityID> doomed;
-  for (auto* entity : m_world->get_entities_with<Engine::Core::UnitComponent>()) {
+  for (auto* entity : m_world->collect_entities_with<Engine::Core::UnitComponent>()) {
     auto* unit = entity != nullptr
                      ? entity->get_component<Engine::Core::UnitComponent>()
                      : nullptr;
@@ -4113,7 +4114,8 @@ void ArenaViewport::configure_rpg_scenario_commander(Engine::Core::EntityID enti
   }
 
   m_rpg_initial_enemy_units = 0;
-  for (auto* candidate : m_world->get_entities_with<Engine::Core::UnitComponent>()) {
+  for (auto* candidate :
+       m_world->collect_entities_with<Engine::Core::UnitComponent>()) {
     auto const* candidate_unit =
         candidate != nullptr ? candidate->get_component<Engine::Core::UnitComponent>()
                              : nullptr;
@@ -4174,7 +4176,8 @@ auto ArenaViewport::rpg_bow_hud_state() const -> ArenaViewport::RpgBowHudState {
   }
 
   int alive_enemies = 0;
-  for (auto* candidate : m_world->get_entities_with<Engine::Core::UnitComponent>()) {
+  for (auto* candidate :
+       m_world->collect_entities_with<Engine::Core::UnitComponent>()) {
     auto const* candidate_unit =
         candidate != nullptr ? candidate->get_component<Engine::Core::UnitComponent>()
                              : nullptr;
@@ -4251,7 +4254,7 @@ auto ArenaViewport::enter_rpg_interactive_control(Engine::Core::EntityID entity_
   }
   if (target_id == 0) {
     for (auto* candidate :
-         m_world->get_entities_with<Engine::Core::CommanderComponent>()) {
+         m_world->collect_entities_with<Engine::Core::CommanderComponent>()) {
       auto const* unit = candidate != nullptr
                              ? candidate->get_component<Engine::Core::UnitComponent>()
                              : nullptr;
@@ -4997,7 +5000,7 @@ void ArenaViewport::draw_stats_overlay(QPainter& painter) {
   int player_count = 0;
   int enemy_count = 0;
   if (m_world != nullptr) {
-    for (auto* entity : m_world->get_entities_with<Engine::Core::UnitComponent>()) {
+    for (auto* entity : m_world->collect_entities_with<Engine::Core::UnitComponent>()) {
       auto* uc = entity != nullptr
                      ? entity->get_component<Engine::Core::UnitComponent>()
                      : nullptr;

@@ -103,11 +103,11 @@ protected:
   }
 
   auto preview_entities() -> std::vector<Engine::Core::Entity*> {
-    return world.get_entities_with<Engine::Core::ConstructionPreviewComponent>();
+    return world.collect_entities_with<Engine::Core::ConstructionPreviewComponent>();
   }
 
   auto find_spawned_unit(Game::Units::SpawnType spawn_type) -> Engine::Core::Entity* {
-    for (auto* entity : world.get_entities_with<Engine::Core::UnitComponent>()) {
+    for (auto* entity : world.collect_entities_with<Engine::Core::UnitComponent>()) {
       auto* unit = entity->get_component<Engine::Core::UnitComponent>();
       if (unit != nullptr && unit->spawn_type == spawn_type) {
         return entity;
@@ -117,7 +117,8 @@ protected:
   }
 
   auto find_wall_construction_site() -> Engine::Core::Entity* {
-    auto sites = world.get_entities_with<Engine::Core::WallConstructionSiteComponent>();
+    auto sites =
+        world.collect_entities_with<Engine::Core::WallConstructionSiteComponent>();
     return sites.empty() ? nullptr : sites.front();
   }
 

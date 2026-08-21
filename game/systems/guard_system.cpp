@@ -15,7 +15,7 @@ void GuardSystem::update(Engine::Core::World* world, float) {
     return;
   }
 
-  auto entities = world->get_entities_with<Engine::Core::GuardModeComponent>();
+  auto entities = world->collect_entities_with<Engine::Core::GuardModeComponent>();
 
   for (auto* entity : entities) {
     auto* guard_mode = entity->get_component<Engine::Core::GuardModeComponent>();

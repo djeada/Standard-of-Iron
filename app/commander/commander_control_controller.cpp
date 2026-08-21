@@ -279,7 +279,7 @@ void separate_commander_from_bodies(Engine::Core::World& world,
   const QVector3D origin(transform.position.x, 0.0F, transform.position.z);
   QVector3D push(0.0F, 0.0F, 0.0F);
 
-  for (auto* candidate : world.get_entities_with<Engine::Core::UnitComponent>()) {
+  for (auto* candidate : world.collect_entities_with<Engine::Core::UnitComponent>()) {
     if (candidate == nullptr || candidate->get_id() == commander_id ||
         candidate->has_component<Engine::Core::BuildingComponent>() ||
         candidate->has_component<Engine::Core::PendingRemovalComponent>()) {
@@ -677,7 +677,7 @@ void CommanderControlController::cycle_lock_on_target(
   };
   std::vector<Candidate> candidates;
 
-  for (auto* candidate : world.get_entities_with<Engine::Core::UnitComponent>()) {
+  for (auto* candidate : world.collect_entities_with<Engine::Core::UnitComponent>()) {
     if (candidate == nullptr || candidate->get_id() == commander_id) {
       continue;
     }
@@ -1088,7 +1088,7 @@ auto CommanderControlController::find_primary_target(
 
   std::optional<Target> best;
   float best_score = -1000000.0F;
-  for (auto* candidate : world.get_entities_with<Engine::Core::UnitComponent>()) {
+  for (auto* candidate : world.collect_entities_with<Engine::Core::UnitComponent>()) {
     if (candidate == nullptr || candidate == commander) {
       continue;
     }
@@ -1261,7 +1261,7 @@ void CommanderControlController::try_activate_shield_bash(
   auto& owners = Game::Systems::OwnerRegistry::instance();
   const QVector3D cmd_pos(
       transform->position.x, transform->position.y, transform->position.z);
-  for (auto* entity : world.get_entities_with<Engine::Core::UnitComponent>()) {
+  for (auto* entity : world.collect_entities_with<Engine::Core::UnitComponent>()) {
     if (entity == nullptr || entity->get_id() == commander_id) {
       continue;
     }

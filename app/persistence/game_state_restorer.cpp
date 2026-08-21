@@ -43,7 +43,7 @@ void GameStateRestorer::rebuild_entity_cache(Engine::Core::World* world,
   entity_cache.reset();
 
   auto& owners = Game::Systems::OwnerRegistry::instance();
-  auto entities = world->get_entities_with<Engine::Core::UnitComponent>();
+  auto entities = world->collect_entities_with<Engine::Core::UnitComponent>();
   for (auto* e : entities) {
     auto* unit = e->get_component<Engine::Core::UnitComponent>();
     if ((unit == nullptr) || unit->health <= 0) {

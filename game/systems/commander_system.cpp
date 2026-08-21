@@ -186,7 +186,7 @@ auto try_trigger_rally(Engine::Core::World* world,
 
   const float rally_radius_sq = commander.rally_range * commander.rally_range;
   bool restored_any = false;
-  for (auto* candidate : world->get_entities_with<Engine::Core::UnitComponent>()) {
+  for (auto* candidate : world->collect_entities_with<Engine::Core::UnitComponent>()) {
     if (candidate == commander_entity) {
       continue;
     }
@@ -219,7 +219,7 @@ auto try_trigger_rally(Engine::Core::World* world,
 }
 
 void reset_commander_modified_stats(Engine::Core::World* world) {
-  for (auto* entity : world->get_entities_with<Engine::Core::UnitComponent>()) {
+  for (auto* entity : world->collect_entities_with<Engine::Core::UnitComponent>()) {
     auto* unit = entity->get_component<Engine::Core::UnitComponent>();
     if (!is_living_troop(unit)) {
       continue;
@@ -240,7 +240,7 @@ void reset_commander_modified_stats(Engine::Core::World* world) {
   }
 
   for (auto* entity :
-       world->get_entities_with<Engine::Core::CommanderAuraBuffComponent>()) {
+       world->collect_entities_with<Engine::Core::CommanderAuraBuffComponent>()) {
     auto* buff = entity->get_component<Engine::Core::CommanderAuraBuffComponent>();
     if (buff == nullptr) {
       continue;
@@ -279,7 +279,7 @@ void apply_commander_death_shock(Engine::Core::World* world,
                                  const Engine::Core::TransformComponent& origin) {
   const float shock_radius_sq =
       commander.death_shock_radius * commander.death_shock_radius;
-  for (auto* candidate : world->get_entities_with<Engine::Core::UnitComponent>()) {
+  for (auto* candidate : world->collect_entities_with<Engine::Core::UnitComponent>()) {
     if (candidate == commander_entity) {
       continue;
     }
@@ -310,7 +310,7 @@ void CommanderSystem::update(Engine::Core::World* world, float delta_time) {
 
   reset_commander_modified_stats(world);
 
-  for (auto* entity : world->get_entities_with<Engine::Core::MoraleComponent>()) {
+  for (auto* entity : world->collect_entities_with<Engine::Core::MoraleComponent>()) {
     auto* morale = entity->get_component<Engine::Core::MoraleComponent>();
     if (morale == nullptr) {
       continue;
@@ -320,7 +320,7 @@ void CommanderSystem::update(Engine::Core::World* world, float delta_time) {
   }
 
   for (auto* commander_entity :
-       world->get_entities_with<Engine::Core::CommanderComponent>()) {
+       world->collect_entities_with<Engine::Core::CommanderComponent>()) {
     auto* commander =
         commander_entity->get_component<Engine::Core::CommanderComponent>();
     auto* unit = commander_entity->get_component<Engine::Core::UnitComponent>();
@@ -421,7 +421,8 @@ void CommanderSystem::update(Engine::Core::World* world, float delta_time) {
           commander->flag_rally_flag_x, 0.0F, commander->flag_rally_flag_z);
       std::vector<Engine::Core::EntityID> rallied_units;
 
-      for (auto* candidate : world->get_entities_with<Engine::Core::UnitComponent>()) {
+      for (auto* candidate :
+           world->collect_entities_with<Engine::Core::UnitComponent>()) {
         if (candidate == commander_entity) {
           continue;
         }
@@ -452,7 +453,8 @@ void CommanderSystem::update(Engine::Core::World* world, float delta_time) {
     const float aura_radius_sq = commander->aura_radius * commander->aura_radius;
     const float rally_radius_sq = commander->rally_range * commander->rally_range;
     bool rallied_this_tick = false;
-    for (auto* candidate : world->get_entities_with<Engine::Core::UnitComponent>()) {
+    for (auto* candidate :
+         world->collect_entities_with<Engine::Core::UnitComponent>()) {
       if (candidate == commander_entity) {
         continue;
       }

@@ -122,7 +122,7 @@ void refresh_commander_engagement(Engine::Core::World* world,
   auto& owners = Game::Systems::OwnerRegistry::instance();
 
   bool has_formation_opponent = false;
-  for (auto* candidate : world->get_entities_with<Engine::Core::UnitComponent>()) {
+  for (auto* candidate : world->collect_entities_with<Engine::Core::UnitComponent>()) {
     if (candidate == nullptr || candidate->get_id() == commander_id) {
       continue;
     }
@@ -247,7 +247,8 @@ void tick_rpg_combat(Engine::Core::World* world,
 
   refresh_commander_engagement(world, commander_id);
 
-  for (auto* staggered : world->get_entities_with<Engine::Core::StaggerComponent>()) {
+  for (auto* staggered :
+       world->collect_entities_with<Engine::Core::StaggerComponent>()) {
     auto* stagger = staggered->get_component<Engine::Core::StaggerComponent>();
     if (stagger == nullptr) {
       continue;
@@ -303,7 +304,7 @@ void tick_rpg_combat(Engine::Core::World* world,
   }
 
   for (auto* telegraphed :
-       world->get_entities_with<Engine::Core::EnemyTelegraphComponent>()) {
+       world->collect_entities_with<Engine::Core::EnemyTelegraphComponent>()) {
     auto* telegraph =
         telegraphed->get_component<Engine::Core::EnemyTelegraphComponent>();
     if (telegraph == nullptr ||

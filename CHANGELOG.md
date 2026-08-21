@@ -94,6 +94,46 @@ may change in any release — see [Save compatibility](#save-compatibility).
   never showed. Footer keys spell out `↑ ↓`, `Enter` and `Esc`, and **Play**
   explains in a tooltip why it is refusing when the setup is not startable.
 
+### Changed
+
+- **Large battles cost a fraction of what they did, and the engine can now say
+  why.** A thousand-unit battle line spent about half a second of CPU on every
+  simulation tick. Nearly all of it came from one line: the combat mode
+  processor asked "is there an enemy in melee reach?" by walking every unit in
+  the world, once per attacking unit, computing formation contact geometry for
+  each — roughly 620 full-world scans and 620,000 entity handles resolved per
+  tick. It now asks the world's spatial index for the units actually inside the
+  attacker's reach. The same battle line ticks in about a fifth of the time,
+  with the world digest unchanged.
+
+    The scaffolding around that fix is the more durable part.
+    `Engine::Core::WorldSpatialIndex` belongs to the world it indexes, is
+    rebuilt once per tick, and now answers the patrol, healing and combat
+    proximity questions that used to scan everything.
+    `World::view<A, B>()` iterates matching entities without allocating, and the
+    materialising query it replaces was renamed `collect_entities_with` so that
+    its cost is visible at the call site. `scripts/check-world-scans.py` keeps
+    the number of full-world scans from growing back.
+
+    `Engine::Core::SystemProfiler` reports per-system tick times, the queries
+    each system opened and how many candidates they examined, and attributes
+    materialising scans to the source line that made them — which is how the
+    line above was found. `build/bin/sim_benchmark` is the repeatable 1k/5k/10k
+    workload behind those numbers.
+
+    Simulation phases are now named (`Engine::Core::SystemPhase`), structural
+    changes can be deferred to the barriers between them
+    (`Engine::Core::DeferredMutations`), and a system may declare what it reads
+    and writes so a future scheduler can check rather than assume. Nothing
+    reordered: a test asserts the phases only ever advance down the registry.
+
+    The renderer's battle optimiser stopped pretending to cull. Its
+    `should_render_unit` hook had been `return true` with a counter behind a
+    mutex; the real culling is frustum and fog, well before it. What remains —
+    animation throttling and the batching ratio — reads one immutable
+    per-frame snapshot instead of a lock and three atomics per unit, and the
+    object belongs to the renderer rather than to the process.
+
 ### Fixed
 
 - **Animals beside a campfire no longer shine like reflectors, and the

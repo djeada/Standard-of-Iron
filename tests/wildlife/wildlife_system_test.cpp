@@ -90,7 +90,7 @@ auto beside(Entity* entity, float offset_x) -> QVector3D {
 
 auto count_species(World& world, Species species) -> int {
   int count = 0;
-  for (auto* entity : world.get_entities_with<Engine::Core::WildlifeComponent>()) {
+  for (auto* entity : world.collect_entities_with<Engine::Core::WildlifeComponent>()) {
     const auto* wildlife = entity->get_component<Engine::Core::WildlifeComponent>();
     const auto* unit = entity->get_component<Engine::Core::UnitComponent>();
     if (wildlife != nullptr && unit != nullptr && wildlife->species == species &&
@@ -103,7 +103,7 @@ auto count_species(World& world, Species species) -> int {
 
 auto collect_species(World& world, Species species) -> std::vector<Entity*> {
   std::vector<Entity*> result;
-  for (auto* entity : world.get_entities_with<Engine::Core::WildlifeComponent>()) {
+  for (auto* entity : world.collect_entities_with<Engine::Core::WildlifeComponent>()) {
     const auto* wildlife = entity->get_component<Engine::Core::WildlifeComponent>();
     if (wildlife != nullptr && wildlife->species == species) {
       result.push_back(entity);
@@ -806,7 +806,7 @@ TEST_F(WildlifeSystemTest, AMapThatNeverAuthoredWildlifeStillGetsAPopulation) {
   EXPECT_GT(count_species(world, Species::Wolf), 0);
 
   const auto& terrain = Game::Map::TerrainService::instance();
-  for (auto* entity : world.get_entities_with<Engine::Core::WildlifeComponent>()) {
+  for (auto* entity : world.collect_entities_with<Engine::Core::WildlifeComponent>()) {
     const auto* transform = entity->get_component<Engine::Core::TransformComponent>();
     ASSERT_NE(transform, nullptr);
     EXPECT_FALSE(
@@ -842,7 +842,7 @@ TEST_F(WildlifeSystemTest, ShippedForestMapPopulatesEverySpeciesItEnables) {
   EXPECT_TRUE(birds_seen) << "no flyover crossed the map in two minutes";
 
   const auto& terrain = Game::Map::TerrainService::instance();
-  for (auto* entity : world.get_entities_with<Engine::Core::WildlifeComponent>()) {
+  for (auto* entity : world.collect_entities_with<Engine::Core::WildlifeComponent>()) {
     const auto* transform = entity->get_component<Engine::Core::TransformComponent>();
     ASSERT_NE(transform, nullptr);
     EXPECT_FALSE(

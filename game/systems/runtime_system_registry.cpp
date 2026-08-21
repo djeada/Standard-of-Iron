@@ -3,6 +3,7 @@
 #include <memory>
 
 #include "../command/command_system.h"
+#include "../core/system_schedule.h"
 #include "../core/world.h"
 #include "../formation/army_formation_registry.h"
 #include "../formation/unit_layout_state_system.h"
@@ -43,43 +44,71 @@ namespace Game::Systems {
 
 void register_runtime_systems(Engine::Core::World& world) {
 
-  world.add_system(std::make_unique<Game::Command::CommandSystem>());
-  world.add_system(std::make_unique<ArrowSystem>());
-  world.add_system(std::make_unique<CombatStatusEffectSystem>());
-  world.add_system(std::make_unique<ProjectileSystem>());
-  world.add_system(std::make_unique<StaminaSystem>());
+  world.add_system(std::make_unique<Game::Command::CommandSystem>(),
+                   Engine::Core::SystemPhase::Input);
+  world.add_system(std::make_unique<ArrowSystem>(), Engine::Core::SystemPhase::Input);
+  world.add_system(std::make_unique<CombatStatusEffectSystem>(),
+                   Engine::Core::SystemPhase::Input);
+  world.add_system(std::make_unique<ProjectileSystem>(),
+                   Engine::Core::SystemPhase::Input);
+  world.add_system(std::make_unique<StaminaSystem>(), Engine::Core::SystemPhase::Input);
 
-  world.add_system(std::make_unique<GateSystem>());
-  world.add_system(std::make_unique<LocalAvoidanceSystem>());
-  world.add_system(std::make_unique<MovementSystem>());
-  world.add_system(std::make_unique<PatrolSystem>());
-  world.add_system(std::make_unique<GuardSystem>());
-  world.add_system(std::make_unique<Game::Formation::ArmyFormationRuntime>());
-  world.add_system(std::make_unique<FormationMoveDispatchSystem>());
-  world.add_system(std::make_unique<Game::Formation::UnitLayoutStateSystem>());
+  world.add_system(std::make_unique<GateSystem>(), Engine::Core::SystemPhase::Movement);
+  world.add_system(std::make_unique<LocalAvoidanceSystem>(),
+                   Engine::Core::SystemPhase::Movement);
+  world.add_system(std::make_unique<MovementSystem>(),
+                   Engine::Core::SystemPhase::Movement);
+  world.add_system(std::make_unique<PatrolSystem>(),
+                   Engine::Core::SystemPhase::Movement);
+  world.add_system(std::make_unique<GuardSystem>(),
+                   Engine::Core::SystemPhase::Movement);
+  world.add_system(std::make_unique<Game::Formation::ArmyFormationRuntime>(),
+                   Engine::Core::SystemPhase::Movement);
+  world.add_system(std::make_unique<FormationMoveDispatchSystem>(),
+                   Engine::Core::SystemPhase::Movement);
+  world.add_system(std::make_unique<Game::Formation::UnitLayoutStateSystem>(),
+                   Engine::Core::SystemPhase::Movement);
 
-  world.add_system(std::make_unique<EngagementSlotSystem>());
-  world.add_system(std::make_unique<RpgEngagementSystem>());
-  world.add_system(std::make_unique<CombatSystem>());
-  world.add_system(std::make_unique<CommanderSystem>());
-  world.add_system(std::make_unique<HealingBeamSystem>());
-  world.add_system(std::make_unique<HealingSystem>());
-  world.add_system(std::make_unique<CaptureSystem>());
-  world.add_system(std::make_unique<AISystem>());
-  world.add_system(std::make_unique<UndeadAwakeningSystem>());
-  world.add_system(std::make_unique<ProductionSystem>());
-  world.add_system(std::make_unique<DismantleSystem>());
-  world.add_system(std::make_unique<HomeSystem>());
-  world.add_system(std::make_unique<FarmSystem>());
-  world.add_system(std::make_unique<CivilianDeliverySystem>());
-  world.add_system(std::make_unique<ResourceDeliverySystem>());
-  world.add_system(std::make_unique<GatherLoopSystem>());
-  world.add_system(std::make_unique<SettlementLifeSystem>());
-  world.add_system(std::make_unique<Game::Wildlife::WildlifeSystem>());
-  world.add_system(std::make_unique<ShowcaseRoutineSystem>());
-  world.add_system(std::make_unique<TerrainAlignmentSystem>());
-  world.add_system(std::make_unique<CleanupSystem>());
-  world.add_system(std::make_unique<SelectionSystem>());
+  world.add_system(std::make_unique<EngagementSlotSystem>(),
+                   Engine::Core::SystemPhase::Combat);
+  world.add_system(std::make_unique<RpgEngagementSystem>(),
+                   Engine::Core::SystemPhase::Combat);
+  world.add_system(std::make_unique<CombatSystem>(), Engine::Core::SystemPhase::Combat);
+  world.add_system(std::make_unique<CommanderSystem>(),
+                   Engine::Core::SystemPhase::Combat);
+  world.add_system(std::make_unique<HealingBeamSystem>(),
+                   Engine::Core::SystemPhase::Combat);
+  world.add_system(std::make_unique<HealingSystem>(),
+                   Engine::Core::SystemPhase::Combat);
+  world.add_system(std::make_unique<CaptureSystem>(),
+                   Engine::Core::SystemPhase::Combat);
+  world.add_system(std::make_unique<AISystem>(), Engine::Core::SystemPhase::Strategy);
+  world.add_system(std::make_unique<UndeadAwakeningSystem>(),
+                   Engine::Core::SystemPhase::Strategy);
+  world.add_system(std::make_unique<ProductionSystem>(),
+                   Engine::Core::SystemPhase::Economy);
+  world.add_system(std::make_unique<DismantleSystem>(),
+                   Engine::Core::SystemPhase::Economy);
+  world.add_system(std::make_unique<HomeSystem>(), Engine::Core::SystemPhase::Economy);
+  world.add_system(std::make_unique<FarmSystem>(), Engine::Core::SystemPhase::Economy);
+  world.add_system(std::make_unique<CivilianDeliverySystem>(),
+                   Engine::Core::SystemPhase::Economy);
+  world.add_system(std::make_unique<ResourceDeliverySystem>(),
+                   Engine::Core::SystemPhase::Economy);
+  world.add_system(std::make_unique<GatherLoopSystem>(),
+                   Engine::Core::SystemPhase::Economy);
+  world.add_system(std::make_unique<SettlementLifeSystem>(),
+                   Engine::Core::SystemPhase::Economy);
+  world.add_system(std::make_unique<Game::Wildlife::WildlifeSystem>(),
+                   Engine::Core::SystemPhase::Ambient);
+  world.add_system(std::make_unique<ShowcaseRoutineSystem>(),
+                   Engine::Core::SystemPhase::Ambient);
+  world.add_system(std::make_unique<TerrainAlignmentSystem>(),
+                   Engine::Core::SystemPhase::Presentation);
+  world.add_system(std::make_unique<CleanupSystem>(),
+                   Engine::Core::SystemPhase::Cleanup);
+  world.add_system(std::make_unique<SelectionSystem>(),
+                   Engine::Core::SystemPhase::Cleanup);
 }
 
 } // namespace Game::Systems
