@@ -10,8 +10,7 @@
 #define SOI_CHARACTER_WILDLIFE 3
 #define SOI_CHARACTER_ELEPHANT 4
 
-#define SOI_CHARACTER_WANTS(variant)                                                   \
-  (SOI_CHARACTER_VARIANT == SOI_CHARACTER_ANY || SOI_CHARACTER_VARIANT == (variant))
+#define SOI_CHARACTER_WANTS(v) SOI_CHARACTER_VARIANT == 0 || SOI_CHARACTER_VARIANT == v
 
 uniform sampler3D u_wear_volume;
 uniform bool u_has_wear_volume;
