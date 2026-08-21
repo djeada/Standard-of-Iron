@@ -7,6 +7,25 @@ QtObject {
     readonly property string family: "Noto Sans"
     readonly property string displayFamily: "Noto Serif"
 
+    // The brand face, for titles, headings, outcome screens and big numbers.
+    // Deliberately separate from displayFamily rather than replacing it:
+    // displayFamily still has to carry the symbol glyphs the interface draws as
+    // icons (faction marks, command glyphs), and a caps-and-digits display face
+    // has none of them. Anything asserted by tst_glyph_coverage stays on
+    // family/displayFamily; titleFamily is for words the player reads.
+    // Loaded from qrc rather than named, so the shipped file is what renders on
+    // every machine. If it ever fails to load, fall back to the serif rather
+    // than to nothing.
+    readonly property FontLoader brandFont: FontLoader {
+        source: "qrc:/assets/fonts/StandardIronDisplay-Bold.ttf"
+    }
+
+    // CAPS AND FIGURES ONLY. The face has no lowercase, and Qt falls back per
+    // glyph, so binding this to mixed-case text renders half the word in one
+    // typeface and half in another. Use it only where the text is digits, or
+    // where `font.capitalization: Font.AllUppercase` is set alongside it.
+    readonly property string titleFamily: (root.brandFont.status === FontLoader.Ready && root.brandFont.name.length > 0) ? root.brandFont.name : root.displayFamily
+
     readonly property int minimumSize: 12
 
     function scaled(px) {
@@ -35,5 +54,7 @@ QtObject {
     readonly property int bold: Font.Bold
 
     readonly property real trackingWide: 1.5
+    readonly property real trackingTitle: 0.7
+    readonly property real trackingHero: 1.2
     readonly property real trackingNormal: 0.0
 }

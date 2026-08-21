@@ -1204,6 +1204,18 @@ This may be a skirmish, or objectives have not been configured.</translation>
         <source>Press Guard again, or order a move or attack.</source>
         <translation>Press Guard again, or order a move or attack.</translation>
     </message>
+    <message>
+        <source>Typefaces</source>
+        <translation>Typefaces</translation>
+    </message>
+    <message>
+        <source>Display: the quick brown fox</source>
+        <translation>Display: the quick brown fox</translation>
+    </message>
+    <message>
+        <source>Body: the quick brown fox jumps over the lazy dog</source>
+        <translation>Body: the quick brown fox jumps over the lazy dog</translation>
+    </message>
 </context>
 <context>
     <name>ControlsBindingList</name>

@@ -619,11 +619,10 @@ void main() {
         gradient_fbm_with_footprint(rock_detail_coord, rock_detail_footprint);
     float rock_grain = 0.0;
 #endif
-    float rock_value =
-        clamp(0.44 + rock_detail * 0.44 + rock_grain * 0.20, 0.0, 1.0);
+    float rock_value = clamp(0.44 + rock_detail * 0.44 + rock_grain * 0.20, 0.0, 1.0);
     rock_color = mix(u_rock_low, u_rock_high, rock_value);
-    vec3 mountain_rock = mix(
-        u_rock_low * 0.62, u_rock_high * 0.76, smoothstep(0.20, 0.86, rock_value));
+    vec3 mountain_rock =
+        mix(u_rock_low * 0.62, u_rock_high * 0.76, smoothstep(0.20, 0.86, rock_value));
     float mountain_material =
         clamp(mountain_face * 0.86 + mountain_shoulders * 0.48, 0.0, 0.94);
     rock_color = mix(rock_color, mountain_rock, mountain_material);
@@ -654,8 +653,7 @@ void main() {
                              scrub_field * 0.62 + fracture * 0.26 + ledge * 0.28 -
                                  high_ground * 0.18);
     vec3 lichen = mix(u_grass_dry, u_grass_secondary, 0.55) * 0.62;
-    rock_color =
-        mix(rock_color, lichen, scrub * 0.34 * (1.0 - u_snow_coverage * 0.6));
+    rock_color = mix(rock_color, lichen, scrub * 0.34 * (1.0 - u_snow_coverage * 0.6));
   }
 
   vec3 terrain_color = mix(soil_blend, rock_color, rock_mask);

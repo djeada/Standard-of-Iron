@@ -1,0 +1,8 @@
+# Only needed to regenerate assets/fonts/StandardIronDisplay-Bold.ttf. The game
+# and its tests load the committed .ttf and need none of this.
+#
+#   python3 -m venv .venv && .venv/bin/pip install -r tools/font/requirements.txt
+#   .venv/bin/python tools/font/build_standard_iron.py
+fonttools==4.63.0
+skia-pathops==0.9.2
+pillow==12.3.0   # proof.py only

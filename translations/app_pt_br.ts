@@ -1204,6 +1204,18 @@ Isto pode ser uma escaramuça, ou os objetivos não foram configurados.</transla
         <source>Press Guard again, or order a move or attack.</source>
         <translation>Pressione Guarda novamente, ou ordene mover ou atacar.</translation>
     </message>
+    <message>
+        <source>Typefaces</source>
+        <translation>Tipografias</translation>
+    </message>
+    <message>
+        <source>Display: the quick brown fox</source>
+        <translation>Título: à noite, vovô Kowalsky vê</translation>
+    </message>
+    <message>
+        <source>Body: the quick brown fox jumps over the lazy dog</source>
+        <translation>Texto: à noite, vovô Kowalsky vê o ímã cair no pé do pinguim</translation>
+    </message>
 </context>
 <context>
     <name>ControlsBindingList</name>
