@@ -502,6 +502,7 @@ add_executable(
     ui/icon_art_test.cpp
     ui/icon_resources_test.cpp
     ui/widget_theme_test.cpp
+    ui/brand_fonts_test.cpp
     map/minimap_generator_test.cpp
     map/minimap_utils_test.cpp
     map/terrain_service_test.cpp

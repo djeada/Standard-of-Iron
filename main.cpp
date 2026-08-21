@@ -149,6 +149,7 @@ auto opengl_version_supported(int major, int minor) -> bool {
 #include "render/horse/horse_source_asset.h"
 #include "render/i_render_backend.h"
 #include "render/profiling/profiling_hud.h"
+#include "ui/brand_fonts.h"
 #include "ui/campaign_map_view.h"
 #include "ui/commander_portrait_view.h"
 #include "ui/edge_scroll.h"
@@ -627,6 +628,10 @@ auto main(int argc, char* argv[]) -> int {
 
   app.setApplicationVersion(QStringLiteral(SOI_VERSION));
   qInfo() << "Game version:" << app.applicationVersion();
+
+  // Register the bundled faces before any QML loads, so Typography resolves
+  // titleFamily to the shipped display face instead of a host font.
+  qInfo() << "Bundled fonts:" << Ui::BrandFonts::register_bundled();
   const bool renderer_self_test =
       QCoreApplication::arguments().contains(QStringLiteral("--renderer-self-test"));
   const bool release_self_test =

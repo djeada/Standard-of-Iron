@@ -408,3 +408,22 @@ full licence text sits at the bottom of each vendored header.
 Neither library is modified. Both are permissive enough to impose no
 restriction on commercial use — the only such restriction in this project comes
 from the music above.
+
+## Bundled Fonts
+
+Typography ships in `assets/fonts/` rather than being requested from the host,
+so that the game and its promotional captures letter identically on every
+machine. Files there are redistributed inside the game package.
+
+| Font                  | Licence | Copyright                                                       | Used for                                     |
+| --------------------- | ------- | --------------------------------------------------------------- | -------------------------------------------- |
+| EB Garamond 12 Bold   | OFL-1.1 | 2010–2012 Georg Duffner, http://www.georgduffner.at/ebgaramond/ | body serif, caption fallback, glyph coverage |
+| Standard Iron Display | OFL-1.1 | 2026 Standard of Iron contributors                              | titles, headings, big numbers, reel captions |
+
+The OFL-1.1 text for EB Garamond travels with the file as
+`assets/fonts/OFL-EBGaramond.txt`, as that licence requires. Standard Iron
+Display is original to this project and released under the same licence so it
+can be redistributed on the same terms as everything it sits beside; its text
+is at `assets/fonts/OFL-StandardIronDisplay.txt`.
+
+Neither font restricts commercial use.

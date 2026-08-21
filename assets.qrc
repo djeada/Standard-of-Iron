@@ -1,5 +1,11 @@
 <RCC>
     <qresource prefix="/">
+        <!-- Bundled typography. QML reaches these through FontLoader on the
+             qrc path; the widget tools register the same files off disk via
+             Ui::BrandFonts. Both must resolve, so both listings matter. -->
+        <file>assets/fonts/StandardIronDisplay-Bold.ttf</file>
+        <file>assets/fonts/EBGaramond12-Bold.ttf</file>
+
         <!-- Generated internal creature packages -->
         <file>assets/creatures/horse/horse.cmesh</file>
         <file>assets/creatures/elephant/elephant.cmesh</file>

@@ -21,6 +21,7 @@ add_library(
     edge_scroll.cpp
     game_speeds.cpp
     icon_art.cpp
+    brand_fonts.cpp
     widget_shell.cpp
 )
 

@@ -1204,6 +1204,18 @@ This may be a skirmish, or objectives have not been configured.</source>
         <source>Press Guard again, or order a move or attack.</source>
         <translation>اضغط حراسة مرة أخرى، أو أصدر أمر تحرّك أو هجوم.</translation>
     </message>
+    <message>
+        <source>Typefaces</source>
+        <translation>المحارف</translation>
+    </message>
+    <message>
+        <source>Display: the quick brown fox</source>
+        <translation>العنوان: نص حكيم له سر قاطع</translation>
+    </message>
+    <message>
+        <source>Body: the quick brown fox jumps over the lazy dog</source>
+        <translation>النص: صف خلق خود كمثل الشمس إذ بزغت يحظى الضجيع بها نجلاء معطار</translation>
+    </message>
 </context>
 <context>
     <name>ControlsBindingList</name>

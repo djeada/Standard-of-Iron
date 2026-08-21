@@ -338,7 +338,7 @@ documented in [CHANGELOG.md](CHANGELOG.md#save-compatibility).
 | Gameplay      | [Combat](docs/COMBAT_SYSTEM.md), [formations](docs/FORMATION_ARCHITECTURE.md), [AI](docs/AI_ARCHITECTURE.md), [economy guidance](docs/ECONOMY_GUIDANCE.md), [food and farms](docs/FOOD_AND_FARMS.md) |
 | Campaign/data | [Mission roster](docs/CAMPAIGN_MISSIONS.md), [mission framework](docs/MISSION_FRAMEWORK.md)                                                                                                          |
 | Persistence   | [Save/load system](docs/SAVE_LOAD_SYSTEM.md)                                                                                                                                                         |
-| Presentation  | [UI design system](docs/UI_DESIGN_SYSTEM.md), [accessibility](docs/ACCESSIBILITY.md), [audio](docs/AUDIO_MASTERING.md)                                                                               |
+| Presentation  | [UI design system](docs/UI_DESIGN_SYSTEM.md), [typography](docs/TYPOGRAPHY.md), [accessibility](docs/ACCESSIBILITY.md), [audio](docs/AUDIO_MASTERING.md)                                             |
 | Development   | [Contributing](CONTRIBUTING.md), [tests](tests/README.md), [arena](tools/arena/README.md)                                                                                                            |
 
 ## Contributing

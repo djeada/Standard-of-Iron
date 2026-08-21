@@ -38,3 +38,10 @@ ignore = ["E501"]
 [tool.ruff.lint.per-file-ignores]
 # Generator scripts intentionally keep large tabular literals inline.
 "scripts/generate-map-*.py" = ["E741"]
+# The font compiler has to disable bytecode caching and extend sys.path before
+# it can import the geometry modules that sit beside it, so its own imports
+# cannot come first. Ruff already tolerates the sys.path line; the
+# dont_write_bytecode assignment beside it is what trips E402. This lives here
+# rather than as a `# noqa` because scripts/remove-comments.sh strips comments
+# out of .py files, which would silently re-break the lint gate.
+"tools/font/build_standard_iron.py" = ["E402"]
