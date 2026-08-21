@@ -115,8 +115,7 @@ auto RiggedCharacterPipeline::initialize() -> bool {
   std::size_t slot = 1U;
   for (const auto& [suffix, variant] : ShaderCache::k_character_variants) {
     (void)variant;
-    // A permutation that failed to compile falls back to the general program,
-    // which renders the same thing with every material path present.
+
     GL::Shader* specialised = m_shader_cache->get(QStringLiteral("character_skinned_") +
                                                   QString::fromLatin1(suffix));
     m_variant_shaders[slot] = (specialised != nullptr) ? specialised : m_shader;
@@ -137,13 +136,13 @@ auto RiggedCharacterPipeline::initialize() -> bool {
 auto RiggedCharacterPipeline::variant_for_material(int material_id) -> std::size_t {
   switch (material_id) {
   case 6:
-    return 2U; // horse
+    return 2U;
   case 7:
-    return 3U; // wildlife
+    return 3U;
   case 8:
-    return 4U; // elephant
+    return 4U;
   default:
-    return 1U; // humanoid cloth/leather/metal
+    return 1U;
   }
 }
 
@@ -207,8 +206,6 @@ auto RiggedCharacterPipeline::draw(const RiggedCreatureCmd& cmd,
     return false;
   }
 
-  // One program per material family: same shading, minus the paths this
-  // material can never take.
   const std::size_t variant = variant_for_material(static_cast<int>(cmd.material_id));
   GL::Shader* shader =
       (m_variant_shaders[variant] != nullptr) ? m_variant_shaders[variant] : m_shader;

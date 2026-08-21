@@ -64,10 +64,6 @@ vec2 soi_terrain_cellular_distances_9e14b7(vec2 p) {
   return vec2(nearest, second);
 }
 
-// Tileable variants used to bake the reusable microdetail texture. The lattice
-// index is wrapped to an integer period so the baked image repeats seamlessly;
-// the octave step is exactly 2.0 (rather than 2.03) and carries a per-octave
-// offset instead of a rotation, both of which are required to keep the wrap.
 float soi_terrain_gradient_noise_tiled_4c19af(vec2 p, vec2 period) {
   vec2 i = floor(p);
   vec2 f = fract(p);

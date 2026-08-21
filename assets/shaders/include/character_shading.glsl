@@ -1,14 +1,6 @@
 #include "character_wear.glsl"
-// Pulled in here rather than relying on the including stage: the stage's
-// #include lines are kept alphabetically sorted, so this file can be expanded
-// before the lighting helpers it calls.
 #include "environment_lighting.glsl"
 #include "local_lighting.glsl"
-
-// Character shading shared by the single-draw and GPU-instanced programs. The
-// material-specific passes are guarded by SOI_CHARACTER_VARIANT so a program
-// built for one material family carries only that family's code; the shared
-// lighting, rim, wetness and readability work is identical either way.
 
 uniform vec3 u_camera_position;
 

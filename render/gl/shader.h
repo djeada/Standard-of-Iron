@@ -25,9 +25,6 @@ public:
   Shader();
   ~Shader() override;
 
-  // `variant_defines` are prepended to both stages after the #version line and
-  // survive reloads, so a program can compile out the material paths it will
-  // never take without duplicating the shader source.
   auto load_from_files(const QString& vertex_path,
                        const QString& fragment_path,
                        const QString& variant_defines = QString()) -> bool;

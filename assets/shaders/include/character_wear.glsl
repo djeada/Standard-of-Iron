@@ -1,9 +1,5 @@
 #include "noise.glsl"
 
-// Full-LOD material permutation. Every path stays at full quality; the variant
-// only decides which of them the program is compiled with. Zero keeps them all,
-// which is what the GPU-instanced path needs because it batches mixed materials
-// behind a per-instance material id.
 #ifndef SOI_CHARACTER_VARIANT
 #define SOI_CHARACTER_VARIANT 0
 #endif
@@ -16,16 +12,6 @@
 
 #define SOI_CHARACTER_WANTS(variant)                                                   \
   (SOI_CHARACTER_VARIANT == SOI_CHARACTER_ANY || SOI_CHARACTER_VARIANT == (variant))
-
-// Shared character material identities and the wear/coat patterning used by
-// both the single-draw and GPU-instanced character programs.
-//
-// The patterns used to be rebuilt from `soi_hash13_a1b3c9(floor(...))` for
-// every covered pixel - seven quantized hashes, each a sin, for the generic
-// path alone. They now come from one small tiling volume of blocky random
-// bytes: sampled with nearest filtering at `lattice / k_wear_volume_cells`, a
-// fetch returns exactly `hash(floor(lattice))` in each of four decorrelated
-// channels, so one fetch replaces up to four hashes.
 
 uniform sampler3D u_wear_volume;
 uniform bool u_has_wear_volume;
@@ -54,8 +40,6 @@ vec4 soi_wear_bands(vec3 lattice) {
   return texture(u_wear_volume, lattice / k_wear_volume_cells);
 }
 
-// Fallback for the (rare) case where the volume is unavailable: the original
-// quantized hash, so the shader still renders the same kind of pattern.
 float soi_wear_hash(vec3 lattice, float salt) {
   return soi_hash13_a1b3c9(floor(lattice) + salt);
 }
@@ -195,8 +179,7 @@ vec3 apply_wear(vec3 base, int material_id, int color_role, vec3 pos_local, vec4
 
   vec3 abs_pos = abs(pos_local);
   vec3 mask_p = abs_pos * (2.8 + float(material_id & 3)) + vec3(seed * 13.0);
-  // Three fetches carry the seven masks the generic wear path needs: one coarse
-  // band pair, one blotch group and one micro band.
+
   vec4 coarse_bands = soi_wear_fetch(mask_p * 2.0, vec4(3.0, 41.0, 17.0, 59.0));
   vec4 blotch_bands = soi_wear_fetch(mask_p * 4.5, vec4(0.0, 29.0, 23.0, 59.0));
   float macro = coarse_bands.x;

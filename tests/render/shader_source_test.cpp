@@ -47,10 +47,6 @@ auto read_text(const std::filesystem::path& path) -> std::string {
   return buffer.str();
 }
 
-// Several of these shaders now keep their shared shading in
-// assets/shaders/include/*.glsl, exactly as the engine resolves it before
-// compiling. Reading a stage with its includes inlined keeps the assertions
-// pointed at the code that actually runs.
 auto inline_shader_includes(const std::filesystem::path& shader_dir,
                             const std::string& source,
                             std::vector<std::string>& already_included) -> std::string {
@@ -237,8 +233,7 @@ TEST(ShaderSource, RiggedCharactersUseSceneLightingAndCameraAwareReadability) {
   ASSERT_FALSE(instanced.empty());
 
   for (const auto* source : {&single, &instanced}) {
-    // Resolved sources no longer carry the directive, so check that the shared
-    // environment block itself came through.
+
     EXPECT_NE(source->find("layout(std140) uniform EnvironmentLighting"),
               std::string::npos);
     EXPECT_NE(source->find("uniform vec3 u_camera_position;"), std::string::npos);

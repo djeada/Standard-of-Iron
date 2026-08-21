@@ -34,9 +34,6 @@ constexpr float k_openness_dir_z[k_openness_directions] = {
     0.0F, 0.866F, 0.866F, 0.0F, -0.866F, -0.866F};
 constexpr std::size_t k_terrain_field_channels = 4U;
 
-// The microdetail image is map-independent: one lattice cell equals one unit of
-// the coordinate the procedural noise used to be evaluated at, and the whole
-// image wraps after k_microdetail_cells of them.
 constexpr int k_microdetail_size = 1024;
 constexpr float k_microdetail_cells = 32.0F;
 
@@ -104,8 +101,6 @@ void TerrainRenderer::bake_terrain_fields() {
       const float openness = std::clamp(
           1.0F - horizon_sum / static_cast<float>(k_openness_directions), 0.0F, 1.0F);
 
-      // Same two-texel span the fragment shader used to reconstruct the
-      // heightmap normal from, resolved once here instead of per pixel.
       const float slope_dx = (right - left) / (2.0F * span);
       const float slope_dz = (up - down) / (2.0F * span);
 

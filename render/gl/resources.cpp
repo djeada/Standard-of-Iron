@@ -21,11 +21,9 @@ using namespace Render::GL::RGBA;
 namespace {
 
 constexpr int k_material_detail_size = 256;
-// Must match k_wear_volume_cells in assets/shaders/include/character_wear.glsl.
+
 constexpr int k_wear_volume_size = 32;
-// Lattice cells each packed band spans across the tile. A call site divides its
-// lattice coordinate by the matching count, so the band reproduces value noise
-// of period one in that coordinate and repeats only every `cells` of them.
+
 constexpr int k_material_detail_cells[4] = {4, 16, 64, 128};
 
 auto detail_hash(int x, int y, int band) -> float {
@@ -159,8 +157,7 @@ auto ResourceManager::initialize() -> bool {
                GL_RGBA,
                GL_UNSIGNED_BYTE,
                wear.data());
-  // Nearest keeps the blocky character of the hashes it replaces; repeat makes
-  // the volume tile the way the unbounded hash did.
+
   glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
   glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
   glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, GL_REPEAT);

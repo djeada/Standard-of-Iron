@@ -18,8 +18,6 @@ namespace Render::GL {
 
 class ShaderCache {
 public:
-  // Material families the character program is specialised for; the values
-  // mirror SOI_CHARACTER_* in assets/shaders/include/character_wear.glsl.
   static constexpr std::array<std::pair<const char*, int>, 4> k_character_variants{
       {{"humanoid", 1}, {"horse", 2}, {"wildlife", 3}, {"elephant", 4}}};
 
@@ -92,8 +90,7 @@ public:
     const QString skinned_frag =
         resolve(shader_base + QStringLiteral("character_skinned.frag"));
     load(QStringLiteral("character_skinned"), skinned_vert, skinned_frag);
-    // Full-LOD material permutations: same shading, but each program is
-    // compiled with only the material family it will ever be handed.
+
     for (const auto& [suffix, variant] : k_character_variants) {
       load(QStringLiteral("character_skinned_") + QString::fromLatin1(suffix),
            skinned_vert,

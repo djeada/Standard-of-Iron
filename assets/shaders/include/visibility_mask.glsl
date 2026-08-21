@@ -56,9 +56,6 @@ bool visibility_mask_active() {
          u_visibility_size.y > 0.0;
 }
 
-// Fetch the mask once so a shader can reject fragments before doing material
-// work and still blend the memory tint at the end from the same sample. When the
-// mask is inactive this reports "fully visible" so callers need no extra branch.
 VisibilityMask visibility_mask_fetch(vec2 world_xz) {
   if (!visibility_mask_active()) {
     VisibilityMask mask;

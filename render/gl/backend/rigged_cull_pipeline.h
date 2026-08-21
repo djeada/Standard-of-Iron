@@ -23,8 +23,6 @@ namespace Render::GL::BackendPipelines {
 
 class RiggedCullPipeline : protected QOpenGLExtraFunctions {
 public:
-  // The shared wear volume lives with the backend resources; the GPU-driven
-  // character program only needs the name so it can bind it before drawing.
   void set_wear_volume(unsigned int texture) { m_wear_volume = texture; }
 
   struct Stats {

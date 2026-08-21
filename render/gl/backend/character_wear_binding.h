@@ -8,11 +8,8 @@
 
 namespace Render::GL {
 
-inline constexpr unsigned int k_texture_3d_target = 0x806FU; // GL_TEXTURE_3D
+inline constexpr unsigned int k_texture_3d_target = 0x806FU;
 
-// The character programs read their wear, coat and hide patterns from one
-// shared tiling volume. Bind it to its reserved unit and tell the shader
-// whether it is there, so the procedural hash fallback only runs when it is not.
 inline void bind_character_wear_volume(Shader& shader,
                                        Shader::UniformHandle sampler_uniform,
                                        Shader::UniformHandle present_uniform,

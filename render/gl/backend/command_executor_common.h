@@ -67,9 +67,6 @@ bind_visibility_mask(Shader& shader,
                      TextureUnit::terrain_visibility);
 }
 
-// The generic material shaders read wood/cloth/leather/metal/soot detail from
-// one shared tileable texture. Bind it, and tell the shader whether it is there,
-// whenever a program that wants it is made current.
 inline void bind_material_detail(Shader& shader,
                                  const ShaderUniformCache::BasicUniforms& uniforms,
                                  ResourceManager* resources) {
@@ -82,8 +79,7 @@ inline void bind_material_detail(Shader& shader,
     return;
   }
   detail->bind(TextureUnit::material_detail);
-  // Texture::bind leaves its unit selected; restore unit 0 so the per-draw
-  // albedo binds below keep landing where the shaders expect them.
+
   if (auto* context = QOpenGLContext::currentContext()) {
     context->functions()->glActiveTexture(GL_TEXTURE0);
   }

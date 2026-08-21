@@ -41,15 +41,10 @@ public:
 
   [[nodiscard]] auto shader() const -> GL::Shader* { return m_shader; }
 
-  // The program the last draw actually made current. Callers that track the
-  // bound shader must read this rather than shader(), because a draw picks a
-  // material permutation rather than the general program.
   [[nodiscard]] auto last_bound_shader() const -> GL::Shader* {
     return m_last_bound_shader;
   }
 
-  // The shared wear volume lives with the backend resources; the pipeline only
-  // needs the name so it can bind it alongside the per-draw uniforms.
   void set_wear_volume(unsigned int texture) { m_wear_volume = texture; }
 
   struct Uniforms {
@@ -73,8 +68,6 @@ public:
 
   [[nodiscard]] auto uniforms() const -> const Uniforms& { return m_uniforms; }
 
-  // Material families that get a dedicated program; index 0 is the general one
-  // that keeps every path and backs any material without a specialisation.
   static constexpr std::size_t k_variant_count = 5;
 
 private:

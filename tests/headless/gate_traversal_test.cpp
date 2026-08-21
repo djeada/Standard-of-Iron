@@ -111,8 +111,6 @@ auto add_wall_piece(SessionContext& session,
 
 auto build_gated_wall(SessionContext& session) -> EntityID {
 
-  // A gatehouse claims its own wall cell plus the neighbour on either side, so
-  // the run has to leave that much room for it.
   constexpr float k_gatehouse_half_span =
       static_cast<float>(Game::Systems::WallNetworkService::k_segment_spacing);
   for (float x = -30.0F; x <= 30.0F; x += 2.0F) {

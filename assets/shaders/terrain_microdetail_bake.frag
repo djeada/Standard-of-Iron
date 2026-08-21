@@ -6,14 +6,10 @@ in vec2 v_uv;
 
 layout(location = 0) out vec4 frag_microdetail;
 
-// Lattice cells across the baked image. Callers sample it at
-// `coord / u_microdetail_cells`, so one lattice cell equals one unit of the
-// coordinate the procedural noise used to be evaluated at.
 uniform float u_microdetail_cells;
 
 const int k_microdetail_octaves = 5;
-// The relief octaves in terrain_chunk.frag all differenced the noise over
-// ~0.14 lattice units, so the stored gradient uses exactly that span.
+
 const float k_microdetail_gradient_step = 0.14;
 
 void main() {

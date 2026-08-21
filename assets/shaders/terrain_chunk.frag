@@ -1,25 +1,5 @@
 #version 330 core
-//
-// Terrain surface shading, ordered so that nothing expensive runs for a
-// fragment that will not survive, and so that immutable terrain data is read
-// rather than rebuilt every frame.
-//
-//   1. Rejection      - fog of war, then the camera vector every later stage
-//                       reuses.
-//   2. Precomputed    - geography and static biome variation, all baked when
-//                       the map loads: u_field_tex holds sky openness,
-//                       curvature and the heightmap slope (render/ground/
-//                       terrain_renderer_submission.cpp), the two noise
-//                       atlases hold the eight map-wide FBM fields
-//                       (terrain_field_bake.frag), and u_microdetail holds the
-//                       tiling grain, FBM and relief gradient bands
-//                       (terrain_microdetail_bake.frag). Every one of these has
-//                       a procedural fallback for when the bake is unavailable.
-//   3. Material       - the dynamic response: moisture, snow, crack intensity
-//                       and biome tuning applied over the precomputed fields.
-//   4. Shading        - relief normal, environment and local lighting,
-//                       directional shadow, and the visibility memory blend.
-//
+
 #include "directional_shadows.glsl"
 #include "environment_lighting.glsl"
 #include "local_lighting.glsl"
@@ -102,19 +82,12 @@ float gradient_noise(vec2 p) {
   return soi_terrain_gradient_noise_d3b016(p);
 }
 
-// One lattice cell of the baked microdetail image equals one unit of the
-// coordinate the procedural noise was evaluated at, so a call site swaps
-// `gradient_noise(c)` for `micro_noise(c)` without rescaling anything. R holds a
-// single octave, G the five-octave sum, and BA the analytic gradient of R that
-// the relief octaves used to rebuild from three extra noise evaluations.
 const float k_soi_microdetail_cells = 32.0;
 
 vec4 micro_sample(vec2 coord) {
   return texture(u_microdetail, coord / k_soi_microdetail_cells);
 }
 
-// Explicit-gradient form for the rock material, which runs under a mask-driven
-// branch where an implicit level of detail would be undefined.
 vec4 micro_sample_grad(vec2 coord, vec2 ddx, vec2 ddy) {
   return textureGrad(u_microdetail,
                      coord / k_soi_microdetail_cells,
@@ -183,8 +156,7 @@ float band_limit(float texels_per_pixel, float frequency) {
 
 vec3 relief_octave(vec2 coord, float footprint, float frequency, float step_size) {
   float fade = band_limit(footprint, frequency);
-  // The baked gradient is the same finite difference this used to rebuild from
-  // three noise evaluations, so the octave collapses to a single fetch.
+
   if (u_has_microdetail == 1) {
     return vec3(micro_sample(coord * frequency).ba * frequency, fade);
   }
@@ -255,16 +227,12 @@ const float k_soi_tactical_near = 58.0;
 const float k_soi_tactical_far = 115.0;
 
 void main() {
-  // -- 1. rejection ---------------------------------------------------------
-  // Fog-of-war first: a fragment the player cannot see is rejected before any
-  // material, relief, lighting or shadow work is synthesized for it.
+
   VisibilityMask visibility = visibility_mask_fetch(v_world_pos.xz);
   if (visibility_is_unknown(visibility)) {
     discard;
   }
 
-  // Camera vector once, up front: the tactical-zoom damping, the grazing sheen
-  // and any distance-driven decision all read the same values.
   vec3 to_camera = u_camera_pos - v_world_pos;
   float view_distance = max(length(to_camera), 1e-4);
   vec3 view_dir = to_camera / view_distance;
@@ -279,7 +247,6 @@ void main() {
   float entry_mask = clamp(v_entry_mask, 0.0, 1.0);
   float feature_foot = clamp(v_feature_foot, 0.0, 1.0);
 
-  // -- 2. precomputed terrain data -----------------------------------------
   vec3 smooth_normal = normalize(v_normal);
   vec3 facet_normal = geom_normal();
   float facet_break = 1.0 - clamp(dot(facet_normal, smooth_normal), 0.0, 1.0);
@@ -288,8 +255,6 @@ void main() {
 
   vec2 height_uv = v_world_pos.xz * u_height_uv_scale + u_height_uv_offset;
 
-  // One fetch carries sky openness, curvature and the heightmap slope that used
-  // to cost four height taps for the normal plus five more for the curvature.
   vec4 baked_fields =
       (u_has_field_tex == 1) ? texture(u_field_tex, height_uv) : vec4(0.0);
 
@@ -427,8 +392,7 @@ void main() {
     speckle =
         micro_sample(world_coord * speck_frequency + vec2(-63.0, 24.0)).g * speck_fade;
   } else {
-    // Each band is faded out once its frequency stops resolving. Skip
-    // synthesizing the noise there rather than multiplying it by a zero fade.
+
     if (grain_fade > k_soi_band_epsilon) {
       surface_grain =
           gradient_noise(world_coord * grain_frequency + vec2(-17.0, 8.0)) * grain_fade;
@@ -496,13 +460,11 @@ void main() {
   float rill_strength = rill_exposure * (1.0 - 0.70 * entry_mask) *
                         (1.0 - 0.35 * feature_foot) * (0.50 + 0.50 * exposure_field) *
                         mix(1.0, 0.80, tactical);
-  // Every consumer of the rill field scales by rill_strength, so flat, sheltered
-  // or band-limited ground never needs the field synthesized at all.
+
   bool rills_resolve = rill_strength > k_soi_band_epsilon;
   float rill_footprint = max(length(fwidth(rill_coord)) * k_rill_frequency, 1e-6);
   float rill_field = 0.0;
-  // The baked octave carries its own gradient, so the rill relief no longer
-  // needs a second, offset evaluation of the field to difference against.
+
   vec2 rill_gradient_raw = vec2(0.0);
 #if SOI_SURFACE_DETAIL
   if (u_has_microdetail == 1) {
@@ -572,7 +534,6 @@ void main() {
                                       exposure_field * 0.34 - drainage_field * 0.16) *
                        fleck_fade;
 
-  // -- 3. dynamic material response ----------------------------------------
   float grass_mix = 0.30 + regional_field * 0.36;
   vec3 grass_color = mix(u_grass_primary, u_grass_secondary, grass_mix);
   float green_excess = max(grass_color.g - max(grass_color.r, grass_color.b), 0.0);
@@ -749,8 +710,7 @@ void main() {
 
   float wall_blend = smoothstep(0.28, 0.72, slope);
   vec2 rock_coord = mix(world_coord, wall_coord, wall_blend);
-  // Derivatives are taken here, outside the rock branch, so both the band limits
-  // and the textureGrad fetches below stay in uniform control flow.
+
   vec2 rock_ddx = dFdx(rock_coord);
   vec2 rock_ddy = dFdy(rock_coord);
   float rock_footprint = max(length(abs(rock_ddx) + abs(rock_ddy)), 1e-5);
@@ -763,9 +723,7 @@ void main() {
   vec2 scrub_ddy = rock_ddy * 1.15;
   float scrub_footprint = length(abs(scrub_ddx) + abs(scrub_ddy));
   vec3 rock_color = soil_blend;
-  // On level ground the finalized mask is zero, and below one 8-bit step the
-  // blend cannot move the pixel. Skip synthesizing the cellular fractures,
-  // chips, strata and scrub there; visible rock keeps the full material path.
+
   if (rock_mask > k_soi_rock_epsilon) {
     vec2 rock_cells = cellular_distances(rock_coord * 0.34 + vec2(8.0, -5.0));
     float fracture = 1.0 - smoothstep(0.025, 0.12, rock_cells.y - rock_cells.x);
@@ -969,7 +927,6 @@ void main() {
   terrain_color *= 1.0 - wet_surface * 0.15;
   terrain_color *= u_tint;
 
-  // -- 4. dynamic shading ---------------------------------------------------
   vec3 L = environment_primary_direction();
 
   vec2 relief_coord = mix(world_coord, wall_coord, wall_blend);

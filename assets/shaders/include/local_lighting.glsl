@@ -6,10 +6,6 @@ layout(std140) uniform LocalLighting {
   vec4 u_local_light_meta;
 };
 
-// Optional per-draw restriction. The selected lights are global to the frame,
-// but a given chunk or batch is only reached by some of them; a draw that knows
-// which sets the mask so the rest are skipped before any falloff work. Shaders
-// that never set it leave u_has_local_light_mask at zero and light from all.
 uniform int u_local_light_mask;
 uniform int u_has_local_light_mask;
 

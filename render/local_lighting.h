@@ -118,8 +118,6 @@ pack_local_lights_std140(const std::array<LocalLight, k_max_local_lights>& light
   return packed;
 }
 
-// The lights the fragment shaders actually see, in the same slot order the
-// std140 block was packed in, so a per-draw mask can address them by bit index.
 [[nodiscard]] inline auto
 active_local_lights(const std::array<LocalLight, k_max_local_lights>& lights)
     -> std::vector<LocalLight> {
@@ -134,9 +132,6 @@ active_local_lights(const std::array<LocalLight, k_max_local_lights>& lights)
   return active;
 }
 
-// Which of those lights can reach a draw's bounds. Zero means "none reach it";
-// callers pair this with an explicit "mask is present" flag so a shader that
-// never computes one keeps lighting from every selected light.
 [[nodiscard]] inline auto
 local_light_mask_for_bounds(const std::vector<LocalLight>& active,
                             const QVector3D& center,

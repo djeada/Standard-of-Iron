@@ -402,9 +402,6 @@ void Backend::set_terrain_chunk_uniforms(Shader& shader,
     }
   }
 
-  // Only the lights whose radius actually reaches this chunk. The selected set
-  // is global to the frame, so without this every terrain fragment pays the
-  // falloff and wrapped-diffuse work for lights sitting across the map.
   if (pipeline.m_terrain_uniforms.has_local_light_mask != Shader::InvalidUniform) {
     const bool mask_ready = !m_active_local_lights.empty();
     shader.set_uniform(pipeline.m_terrain_uniforms.has_local_light_mask,

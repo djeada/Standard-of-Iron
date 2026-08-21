@@ -1,12 +1,4 @@
-// Shared generic-material shading for the basic and basic-instanced programs.
-//
-// Material identities are resolved when the draw is built (see
-// render/material_classification.h), so nothing here re-derives them from
-// base-colour relationships. The detail texture packs four tileable
-// value-noise bands; each spans a fixed number of lattice cells, so dividing a
-// lattice coordinate by that count reproduces noise of period one in the
-// coordinate - the same signal the procedural value noise produced, but
-// mip-filtered instead of aliased.
+
 
 uniform sampler2D u_material_detail;
 uniform bool u_has_material_detail;
