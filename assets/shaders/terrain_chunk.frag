@@ -49,15 +49,15 @@ uniform float u_ambient_boost, u_rock_detail_strength;
 
 const float k_soi_terrain_detail_damping = 0.45;
 const float k_soi_terrain_relief_damping = 0.55;
-const float k_soi_terrain_hue_scale = 0.022;
-const float k_soi_terrain_hue_amount = 0.14;
+const float k_soi_terrain_hue_scale = 0.042;
+const float k_soi_terrain_hue_amount = 0.26;
 const float k_soi_terrain_earth_scale = 0.016;
 const float k_soi_terrain_earth_amount = 0.55;
-const vec3 k_soi_terrain_shade_moss = vec3(0.80, 0.90, 0.86);
-const float k_soi_terrain_shade_amount = 0.55;
-const float k_soi_terrain_saturation = 0.80;
-const vec3 k_soi_terrain_hue_warm = vec3(1.075, 1.010, 0.905);
-const vec3 k_soi_terrain_hue_cool = vec3(0.935, 1.005, 1.070);
+const vec3 k_soi_terrain_shade_moss = vec3(0.74, 0.86, 0.92);
+const float k_soi_terrain_shade_amount = 0.64;
+const float k_soi_terrain_saturation = 0.84;
+const vec3 k_soi_terrain_hue_warm = vec3(1.105, 1.015, 0.855);
+const vec3 k_soi_terrain_hue_cool = vec3(0.895, 1.005, 1.090);
 
 uniform float u_snow_coverage;
 uniform float u_moisture_level;
@@ -583,7 +583,7 @@ void main() {
       0.50, 0.76, exposure_field + biome_dry * 0.08 - u_moisture_level * 0.08);
   dry_patch = clamp(dry_patch + exposed_ground * 0.20, 0.0, 1.0);
   dry_patch *= (1.0 - gully_mask * 0.40);
-  grass_color = mix(grass_color, u_grass_dry, dry_patch * 0.54);
+  grass_color = mix(grass_color, u_grass_dry, dry_patch * 0.64);
   grass_color = mix(grass_color, u_grass_dry, sparse_cover * (0.10 + biome_dry * 0.10));
   float lush_patch = smoothstep(0.58, 0.82, drainage_field + u_moisture_level * 0.08);
   lush_patch *= 1.0 - smoothstep(0.16, 0.46, slope);
@@ -645,9 +645,9 @@ void main() {
   grass_color = mix(grass_color, blade_shade, clamp(tussock, 0.0, 1.0) * 0.11);
   grass_color = mix(grass_color, deep_sward, rill_interfluve * 0.10);
 
-  grass_color = mix(grass_color, u_grass_dry, mosaic_dry * 0.44);
-  grass_color = mix(grass_color, deep_sward, mosaic_lush * 0.30);
-  grass_color *= 1.0 - mosaic_dry * 0.06 + mosaic_lush * 0.05;
+  grass_color = mix(grass_color, u_grass_dry, mosaic_dry * 0.58);
+  grass_color = mix(grass_color, deep_sward, mosaic_lush * 0.42);
+  grass_color *= 1.0 - mosaic_dry * 0.10 + mosaic_lush * 0.08;
 
   float damp_patch = smoothstep(0.68, 0.86, drainage_field + u_moisture_level * 0.10);
   damp_patch *= 1.0 - smoothstep(0.16, 0.48, slope);
@@ -957,7 +957,7 @@ void main() {
   float grounded_saturation =
       clamp(u_grass_saturation * k_soi_terrain_saturation, 0.0, 1.16);
   terrain_color = mix(gray_level, terrain_color, grounded_saturation);
-  terrain_color *= vec3(0.98, 0.94, 0.90);
+  terrain_color *= vec3(1.01, 0.972, 0.922);
 
   float terrain_luma = dot(terrain_color, vec3(0.299, 0.587, 0.114));
   terrain_color =

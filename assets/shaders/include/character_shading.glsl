@@ -15,8 +15,8 @@ uniform vec3 u_camera_position;
 const float k_readable_zoom_near = 18.0;
 const float k_readable_zoom_far = 70.0;
 const float k_readable_pivot = 0.42;
-const float k_readable_contrast_gain = 0.38;
-const float k_readable_saturation_gain = 0.30;
+const float k_readable_contrast_gain = 0.44;
+const float k_readable_saturation_gain = 0.40;
 const float k_readable_fill_near = 0.18;
 const float k_readable_fill_far = 0.22;
 const float k_readable_rim_near = 0.040;
@@ -24,7 +24,7 @@ const float k_readable_rim_far = 0.055;
 const float k_readable_wear_far = 0.30;
 const float k_readable_grime_far = 0.20;
 const float k_readable_blood_far = 0.75;
-const float k_readable_shadow_floor = 0.50;
+const float k_readable_shadow_floor = 0.62;
 const float k_sun_rim_power = 2.4;
 const float k_sun_rim_wrap = 0.35;
 const float k_sun_rim_gain = 0.10;
@@ -65,7 +65,7 @@ vec3 shade_readable_character(vec3 base,
   vec3 light_dir = environment_primary_direction();
   vec3 view_dir = normalize(u_camera_position - world_position);
   float scene_ambient = clamp(environment_ambient_intensity(), 0.08, 0.40);
-  float readable_ambient = max(scene_ambient, 0.22);
+  float readable_ambient = max(scene_ambient, 0.29);
   vec3 sun_color = environment_primary_color();
   vec3 sky_color = environment_sky_color();
 

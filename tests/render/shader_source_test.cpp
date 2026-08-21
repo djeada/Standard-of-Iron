@@ -245,7 +245,7 @@ TEST(ShaderSource, RiggedCharactersUseSceneLightingAndCameraAwareReadability) {
     EXPECT_NE(source->find("shade_readable_character"), std::string::npos);
     EXPECT_NE(source->find("environment_primary_direction()"), std::string::npos);
     EXPECT_NE(source->find("environment_ambient_intensity()"), std::string::npos);
-    EXPECT_NE(source->find("float readable_ambient = max(scene_ambient, 0.22);"),
+    EXPECT_NE(source->find("float readable_ambient = max(scene_ambient, 0.29);"),
               std::string::npos);
     EXPECT_NE(source->find("k_readable_shadow_floor"), std::string::npos);
     EXPECT_NE(source->find("float rim = pow("), std::string::npos);

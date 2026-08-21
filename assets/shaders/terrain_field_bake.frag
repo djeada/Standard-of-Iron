@@ -61,7 +61,7 @@ void main() {
                                1.0);
   // Hue and worn-earth drift are the two lowest-frequency fields in the terrain
   // shader; they are stored signed exactly as the fragment path consumed them.
-  float hue_field = bake_fbm(world_coord * 0.022 + vec2(61.0, -37.0));
+  float hue_field = bake_fbm(world_coord * 0.042 + vec2(61.0, -37.0));
   float earth_field =
       bake_fbm(world_coord * 0.016 + domain_warp * 0.6 + vec2(-83.0, 29.0));
 
