@@ -38,7 +38,7 @@ auto rebuild_registries_after_load(Engine::Core::World* world,
 
   rebuild_building_collisions(world);
 
-  auto units = world->get_entities_with<Engine::Core::UnitComponent>();
+  auto units = world->collect_entities_with<Engine::Core::UnitComponent>();
   for (auto* entity : units) {
     auto* unit = entity->get_component<Engine::Core::UnitComponent>();
     if (unit == nullptr) {
@@ -60,7 +60,7 @@ void rebuild_building_collisions(Engine::Core::World* world) {
     return;
   }
 
-  auto buildings = world->get_entities_with<Engine::Core::BuildingComponent>();
+  auto buildings = world->collect_entities_with<Engine::Core::BuildingComponent>();
   for (auto* entity : buildings) {
     auto* transform = entity->get_component<Engine::Core::TransformComponent>();
     auto* unit = entity->get_component<Engine::Core::UnitComponent>();

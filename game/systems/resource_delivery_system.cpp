@@ -49,7 +49,7 @@ auto find_nearest_depot(Engine::Core::World* world,
   Engine::Core::Entity* nearest = nullptr;
   float nearest_dist_sq = std::numeric_limits<float>::max();
 
-  for (auto* candidate : world->get_entities_with<Engine::Core::UnitComponent>()) {
+  for (auto* candidate : world->collect_entities_with<Engine::Core::UnitComponent>()) {
     if (!is_live_depot(candidate, owner_id)) {
       continue;
     }
@@ -91,7 +91,7 @@ void approach_fill(float& current, float target, float delta_time) {
 void sync_stockpile_displays(Engine::Core::World* world, float delta_time) {
   auto& resources = PlayerResourceRegistry::instance();
 
-  for (auto* entity : world->get_entities_with<Engine::Core::UnitComponent>()) {
+  for (auto* entity : world->collect_entities_with<Engine::Core::UnitComponent>()) {
     const auto* unit = entity->get_component<Engine::Core::UnitComponent>();
     if (unit == nullptr || unit->spawn_type != Game::Units::SpawnType::Barracks) {
       continue;
@@ -152,7 +152,7 @@ void ResourceDeliverySystem::update(Engine::Core::World* world, float delta_time
   sync_stockpile_displays(world, delta_time);
 
   std::vector<Engine::Core::EntityID> unloaded;
-  auto haulers = world->get_entities_with<Engine::Core::ResourceCarryComponent>();
+  auto haulers = world->collect_entities_with<Engine::Core::ResourceCarryComponent>();
 
   for (auto* hauler : haulers) {
     if (hauler == nullptr) {

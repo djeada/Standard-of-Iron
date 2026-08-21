@@ -77,20 +77,20 @@ void process_spear_brace_state(Engine::Core::World* world, float delta_time) {
     return;
   }
 
-  for (auto* entity : world->get_entities_with<Engine::Core::UnitComponent>()) {
-    if (entity == nullptr ||
-        entity->has_component<Engine::Core::PendingRemovalComponent>() ||
-        !is_spear_user(*entity)) {
+  for (auto [entity, unit] : world->entity_view<Engine::Core::UnitComponent>()) {
+    (void)unit;
+    if (entity.has_component<Engine::Core::PendingRemovalComponent>() ||
+        !is_spear_user(entity)) {
       continue;
     }
 
-    BraceIntent const intent = resolve_brace_intent(*entity);
-    auto* brace = entity->get_component<Engine::Core::SpearBraceComponent>();
+    BraceIntent const intent = resolve_brace_intent(entity);
+    auto* brace = entity.get_component<Engine::Core::SpearBraceComponent>();
     if (brace == nullptr && !intent.requested) {
       continue;
     }
     if (brace == nullptr) {
-      brace = entity->add_component<Engine::Core::SpearBraceComponent>();
+      brace = entity.add_component<Engine::Core::SpearBraceComponent>();
     }
     if (brace == nullptr) {
       continue;

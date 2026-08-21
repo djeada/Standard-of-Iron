@@ -246,7 +246,7 @@ TEST_F(MissionWaveAssaultTest, WaveUnitsAttackTheRampartInTheirWay) {
   int damage_dealt = 0;
   std::unordered_set<EntityID> barriers;
   for (auto* entity :
-       session.world().get_entities_with<Engine::Core::WallSegmentComponent>()) {
+       session.world().collect_entities_with<Engine::Core::WallSegmentComponent>()) {
     const auto* unit = entity->get_component<UnitComponent>();
     if (unit == nullptr) {
       continue;
@@ -374,7 +374,7 @@ TEST_F(MissionWaveAssaultTest, WaveCannotWalkThroughAnIntactRampart) {
 
   std::unordered_set<EntityID> rampart;
   for (auto* entity :
-       session.world().get_entities_with<Engine::Core::WallSegmentComponent>()) {
+       session.world().collect_entities_with<Engine::Core::WallSegmentComponent>()) {
     rampart.insert(entity->get_id());
   }
   ASSERT_FALSE(rampart.empty());

@@ -134,7 +134,7 @@ void apply_commander_signature_effects(
   int const sweep_damage = std::max(1, damage / 2);
   int remaining = commander.signature_max_targets - 1;
 
-  for (auto* candidate : world.get_entities_with<Engine::Core::UnitComponent>()) {
+  for (auto* candidate : world.collect_entities_with<Engine::Core::UnitComponent>()) {
     if (remaining <= 0) {
       break;
     }

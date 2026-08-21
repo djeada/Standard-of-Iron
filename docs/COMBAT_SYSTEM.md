@@ -68,7 +68,7 @@ The context contains:
 Combat processors should receive and reuse this context instead of repeatedly calling:
 
 ```cpp
-World::get_entities_with<UnitComponent>()
+World::collect_entities_with<UnitComponent>()
 ```
 
 Using the shared context:

@@ -39,6 +39,10 @@ add_library(
     core/component.cpp
     core/system.cpp
     core/world.cpp
+    core/world_spatial_index.cpp
+    core/system_profiler.cpp
+    core/system_schedule.cpp
+    core/deferred_mutations.cpp
     core/ambient_session.cpp
     core/event_manager.cpp
     core/simulation_timing.cpp

@@ -156,7 +156,7 @@ void collect_settlement_candidates(Engine::Core::World& world,
   out.clear();
 
   float const radius_sq = resident.roam_radius * resident.roam_radius;
-  for (auto* entity : world.get_entities_with<Engine::Core::BuildingComponent>()) {
+  for (auto* entity : world.collect_entities_with<Engine::Core::BuildingComponent>()) {
     auto* unit = entity->get_component<Engine::Core::UnitComponent>();
     auto* transform = entity->get_component<Engine::Core::TransformComponent>();
     if ((unit == nullptr) || (transform == nullptr) || unit->health <= 0) {
@@ -211,7 +211,7 @@ auto find_settlement_anchor(Engine::Core::World& world,
   std::optional<QVector3D> nearest;
   float nearest_distance_sq = search_radius * search_radius;
 
-  for (auto* entity : world.get_entities_with<Engine::Core::BuildingComponent>()) {
+  for (auto* entity : world.collect_entities_with<Engine::Core::BuildingComponent>()) {
     auto const* unit = entity->get_component<Engine::Core::UnitComponent>();
     auto const* transform = entity->get_component<Engine::Core::TransformComponent>();
     if ((unit == nullptr) || (transform == nullptr) || unit->health <= 0 ||
@@ -253,7 +253,7 @@ auto endangers_residents(Game::Units::SpawnType type) -> bool {
 void collect_armed_units(Engine::Core::World& world,
                          std::vector<SettlementLifeSystem::ArmedUnit>& out) {
   out.clear();
-  for (auto* entity : world.get_entities_with<Engine::Core::UnitComponent>()) {
+  for (auto* entity : world.collect_entities_with<Engine::Core::UnitComponent>()) {
     auto const* unit = entity->get_component<Engine::Core::UnitComponent>();
     if ((unit == nullptr) || unit->health <= 0 ||
         !endangers_residents(unit->spawn_type)) {
@@ -342,7 +342,7 @@ void run_from(Engine::Core::World& world,
 }
 
 void adopt_idle_civilians(Engine::Core::World& world) {
-  for (auto* entity : world.get_entities_with<Engine::Core::UnitComponent>()) {
+  for (auto* entity : world.collect_entities_with<Engine::Core::UnitComponent>()) {
     auto const* unit = entity->get_component<Engine::Core::UnitComponent>();
     if ((unit == nullptr) || unit->spawn_type != Game::Units::SpawnType::Civilian ||
         unit->health <= 0) {
@@ -389,7 +389,7 @@ void SettlementLifeSystem::update(Engine::Core::World* world, float delta_time) 
     adopt_idle_civilians(*world);
   }
 
-  auto residents = world->get_entities_with<SettlementResidentComponent>();
+  auto residents = world->collect_entities_with<SettlementResidentComponent>();
   if (residents.empty()) {
     return;
   }

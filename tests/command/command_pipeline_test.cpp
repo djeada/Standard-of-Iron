@@ -587,15 +587,16 @@ TEST(CommandPipelineTest, WallPlanRaisesSitesChargesWoodAndSeatsTheCrew) {
                                                      .target_x = 12,
                                                      .target_z = 4});
   EXPECT_TRUE(match.session.world()
-                  .get_entities_with<Engine::Core::WallConstructionSiteComponent>()
+                  .collect_entities_with<Engine::Core::WallConstructionSiteComponent>()
                   .empty());
   drain(match);
 
-  EXPECT_EQ(static_cast<int>(
-                match.session.world()
-                    .get_entities_with<Engine::Core::WallConstructionSiteComponent>()
-                    .size()),
-            plan.valid_count);
+  EXPECT_EQ(
+      static_cast<int>(
+          match.session.world()
+              .collect_entities_with<Engine::Core::WallConstructionSiteComponent>()
+              .size()),
+      plan.valid_count);
   EXPECT_TRUE(builder->has_construction_site);
   EXPECT_EQ(builder->product_type, "wall_segment");
   EXPECT_EQ(economy.get(1, Game::Systems::ResourceType::Wood), 500 - plan.wood_cost());
@@ -617,7 +618,7 @@ TEST(CommandPipelineTest, WallPlanFromSomeoneElsesBuilderIsIgnored) {
   drain(match);
 
   EXPECT_TRUE(match.session.world()
-                  .get_entities_with<Engine::Core::WallConstructionSiteComponent>()
+                  .collect_entities_with<Engine::Core::WallConstructionSiteComponent>()
                   .empty());
   EXPECT_FALSE(builder->has_construction_site);
   EXPECT_EQ(match.session.economy().get(1, Game::Systems::ResourceType::Wood), 500);
@@ -627,7 +628,7 @@ TEST(CommandPipelineTest, PlaceBuildingRefusesAUnitTypeThatIsNotAStructure) {
   Match match;
   match.session.economy().add(1, Game::Systems::ResourceType::Wood, 500);
   const auto before =
-      match.session.world().get_entities_with<Engine::Core::UnitComponent>().size();
+      match.session.world().collect_entities_with<Engine::Core::UnitComponent>().size();
 
   Game::Command::submit(
       match.session.world(),
@@ -638,7 +639,7 @@ TEST(CommandPipelineTest, PlaceBuildingRefusesAUnitTypeThatIsNotAStructure) {
   drain(match);
 
   EXPECT_EQ(
-      match.session.world().get_entities_with<Engine::Core::UnitComponent>().size(),
+      match.session.world().collect_entities_with<Engine::Core::UnitComponent>().size(),
       before);
   EXPECT_EQ(Game::Systems::StructurePlacementService::ruling(
                 match.session.world(), 1, "archer", QVector3D(3.0F, 0.0F, 3.0F)),

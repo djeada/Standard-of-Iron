@@ -301,10 +301,9 @@ void Renderer::process_async_template_prewarm() {
   std::size_t max_items = prewarm_budget.items_per_tick;
   std::chrono::microseconds time_budget(prewarm_budget.tick_budget_us);
 
-  const auto& battle_optimizer = Render::BattleRenderOptimizer::instance();
-  const int visible_units = battle_optimizer.visible_unit_count();
+  const int visible_units = m_battle_optimizer.visible_unit_count();
   if (visible_units >= 300) {
-    if ((battle_optimizer.frame_counter() & 1U) != 0U) {
+    if ((m_battle_optimizer.frame_counter() & 1U) != 0U) {
       return;
     }
     max_items = std::min<std::size_t>(max_items, 12);
@@ -496,7 +495,7 @@ void Renderer::prewarm_unit_templates(
   };
 
   if (world != nullptr) {
-    auto world_units = world->get_entities_with<Engine::Core::UnitComponent>();
+    auto world_units = world->collect_entities_with<Engine::Core::UnitComponent>();
     for (auto* entity : world_units) {
       if (entity == nullptr ||
           entity->has_component<Engine::Core::PendingRemovalComponent>()) {

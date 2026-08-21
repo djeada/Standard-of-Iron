@@ -718,7 +718,7 @@ auto resolve_projectile_area_impact_hit(Engine::Core::World* world,
           ? special_attack->bonus_damage_multiplier_vs_fire_vulnerable
           : 1.0F;
 
-  for (auto* candidate : world->get_entities_with<Engine::Core::UnitComponent>()) {
+  for (auto* candidate : world->collect_entities_with<Engine::Core::UnitComponent>()) {
     if (candidate == nullptr ||
         candidate->has_component<Engine::Core::PendingRemovalComponent>()) {
       continue;

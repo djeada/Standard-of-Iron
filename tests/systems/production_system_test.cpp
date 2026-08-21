@@ -405,7 +405,7 @@ TEST_F(ProductionSystemTest, BuilderCompletesMarketplaceConstruction) {
   system.update(&world, 0.1F);
 
   Engine::Core::Entity* marketplace = nullptr;
-  for (auto* entity : world.get_entities_with<Engine::Core::UnitComponent>()) {
+  for (auto* entity : world.collect_entities_with<Engine::Core::UnitComponent>()) {
     if (entity == builder) {
       continue;
     }
@@ -558,7 +558,7 @@ TEST_F(ProductionSystemTest, ABuiltTempleCanRecruitHealersAndFillsFromDelivery) 
   system.update(&world, 0.1F);
 
   Engine::Core::Entity* temple = nullptr;
-  for (auto* entity : world.get_entities_with<Engine::Core::UnitComponent>()) {
+  for (auto* entity : world.collect_entities_with<Engine::Core::UnitComponent>()) {
     if (entity == builder) {
       continue;
     }

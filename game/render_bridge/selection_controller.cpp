@@ -192,7 +192,7 @@ void SelectionController::select_all_player_troops(int local_owner_id) {
 
   m_selection_system->clear_selection();
 
-  auto entities = m_world->get_entities_with<Engine::Core::UnitComponent>();
+  auto entities = m_world->collect_entities_with<Engine::Core::UnitComponent>();
   for (auto* e : entities) {
     auto* unit = e->get_component<Engine::Core::UnitComponent>();
     if ((unit == nullptr) || unit->owner_id != local_owner_id) {

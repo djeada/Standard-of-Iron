@@ -378,6 +378,118 @@ with a wrapper that adds commander-mode input; `soi_headless` calls it with
 none. That is the dedicated-server shape: a session, `soi_runtime`'s system
 registry, `soi_ai`, and a loop — no Qt Quick, no renderer linked in.
 
+## Querying the world
+
+Three ways to ask the world a question, in order of what they cost:
+
+| Question                              | API                                          | Cost                                                   |
+| ------------------------------------- | -------------------------------------------- | ------------------------------------------------------ |
+| "every entity with these components"  | `world.view<A, B>()` / `entity_view<A, B>()` | walks the smallest component set; allocates nothing    |
+| "what is near this point?"            | `world.spatial_index()`                      | proportional to what is actually nearby                |
+| "give me a vector of them I can keep" | `world.collect_entities_with<T>()`           | walks the set _and_ allocates a `std::vector<Entity*>` |
+
+The names say which is which on purpose. `get_entities_with<T>()` looked free
+and was not: it allocated a vector and resolved every handle in it, and because
+it looked free it spread. At one point the combat pipeline ran about 620 of
+them per tick at a thousand units -- roughly 620,000 entity handles resolved per
+frame -- because a per-unit helper answered a radius question with a full scan.
+It is now `collect_entities_with`, which is a mouthful, which is the point.
+
+**The engine rule: a local, radius-bounded gameplay query goes through the
+spatial index, not through a full entity scan.** A full scan is for questions
+that genuinely concern every entity -- counting an owner's army, sweeping
+components whose timer expired. `scripts/check-world-scans.py` counts the scans
+per directory and fails the build if any directory grows more of them;
+`scripts/world_scan_budget.json` is the ceiling, and `--write` lowers it after a
+clean-up.
+
+`Engine::Core::WorldSpatialIndex` belongs to the world it indexes, not to a
+process-wide singleton, so two worlds in one process never see each other's
+entities. It is rebuilt at most once per tick — `refresh()` is a no-op if the
+index was already built for the tick that is running — and each entry carries
+the fields proximity queries filter on (owner, health, building/wildlife/undead
+flags) so a caller can reject a candidate without touching the entity at all.
+
+A view borrows the component set it iterates. Adding or removing a component of
+one of the viewed types while the loop runs invalidates it; record the change in
+`world.deferred()` instead and let the phase barrier apply it.
+
+Two details of the index are worth knowing before you use it:
+
+- `refresh()` compares against `World::tick_id()`. A world that has never ticked
+  — a test or a tool driving systems by hand — has no tick to compare against,
+  so `refresh()` rebuilds every call there rather than hand back a stale answer.
+- A bounded search has to be wide enough that it cannot miss what a full scan
+  would have found. Combat compares _surface_ distance, which sits inside the
+  centre distance by at most one formation half-width per side, so the combat
+  paths widen their radius by `2 * FormationCombat::max_contact_extent()` —
+  derived from the troop catalogue, not guessed, so widening a formation in data
+  cannot silently make a bounded search start missing enemies.
+
+## Simulation phases and structural change
+
+The systems a match owns run in one order, listed once, in
+`register_runtime_systems`. `Engine::Core::SystemPhase` groups that list into
+stages — input, movement, combat, strategy, economy, ambient, presentation,
+cleanup — and the phases are non-decreasing down the list, enforced by
+`tests/systems/runtime_phase_order_test.cpp`: naming the stages must not reorder
+a single system.
+
+The phase boundary is a barrier. `World::update` applies whatever structural
+change has accumulated in `world.deferred()` each time the phase advances, and
+once more at the end of the tick, so the instants at which the world's _shape_
+can change are these boundaries rather than "anywhere, at any time".
+
+`Engine::Core::SystemAccess` is the other half. A system may declare the
+component types it reads and writes; one that has not declared them is
+`exclusive`, meaning "assume it touches everything". `plan_phase_batches` groups
+the systems of a phase into batches that do not collide, preserving registration
+order. Nothing runs in parallel yet — that waits on the single-writer work
+below — but the question "may these two run together?" now has an answer that is
+checked rather than assumed.
+
+## Measuring the simulation
+
+`Engine::Core::SystemProfiler`, reached as `world.system_profiler()`, records
+per-system microseconds and the queries each system opened: views and their
+candidate counts, materialising scans and how many entities they built, spatial
+queries and how many candidates they examined. It is off by default. Materialising
+scans are additionally attributed to the source line that made them, which is
+the difference between knowing that combat is slow and knowing which line to
+change.
+
+Draw-queue sorting was measured the same way, in
+`tests/render/draw_queue_sort_cost_test.cpp`. `DrawQueue` already buckets by
+pass, pipeline and transparency as commands are submitted, sorts within those
+buckets, and skips the sort entirely for kinds that preserve append order, so a
+realistic frame never sorts the whole queue. The cost of what remains, on the
+development machine:
+
+| Draw commands |    Sort |
+| ------------: | ------: |
+|         2,080 | 0.06 ms |
+|        20,080 |  1.1 ms |
+|       100,080 |   18 ms |
+
+The game submits low thousands, where sorting is well under one percent of a
+frame, so the queue does not need restructuring. The growth is worth knowing
+about: it is superlinear, and at a hundred thousand commands sorting alone
+exceeds a 16.67 ms frame on its own.
+
+The test prints these numbers rather than asserting them. A wall-clock bound in
+the suite measures whatever else the machine is doing -- the 2,080-command
+figure above has been seen anywhere between 0.06 ms and 0.73 ms on the same
+build. What it does assert is machine-independent: that a realistically ordered
+frame comes out of `sort_for_batching` still partitioned by bucket, which is
+only true if the bucketed path ran, and that sorting still yields the long
+instanceable runs it exists to produce.
+
+`build/bin/sim_benchmark` is the repeatable workload: two armies deployed as
+battle lines at 1k, 5k and 10k units, a fixed number of ticks, reporting
+simulation ms per tick, peak RSS, the per-system table and a world digest. The
+digest is the guard — if it moves between runs, the workload changed and the
+numbers are not comparable.
+
 ## Simulation and presentation ownership
 
 Mutable entities belong to the simulation thread. In the Qt Quick client that
@@ -397,10 +509,26 @@ world mutex while culling, sorting, or invoking renderer callbacks. Unchanged
 idle entities are retained in the reusable snapshot buffer by a presentation
 signature; active entities are refreshed every tick.
 
+The simulation thread is the world's single writer. The renderer reads the
+published snapshot rather than live entities; the minimap still reads the live
+world under its lock, which is safe because it runs inside
+`update_presentation`, and that holds the same frame mutex the simulation tick
+does — the two never overlap.
+
+`World::update` takes the
+entity mutex once and holds it for the whole tick, so every lookup a system
+makes inside that tick is a recursive re-acquire by the thread that already owns
+it -- two atomic read-modify-writes per `get_entity`, per unit, per system, per
+tick. `World::EntityLock` records the owning thread, so those calls cost one
+relaxed load instead. Nothing about the guarantee changes; the lock really is
+held throughout. A reader on another thread still blocks exactly as before, and
+code that takes `get_entity_mutex()` directly still works -- it simply does not
+get the fast path, because it did not record itself as the owner.
+
 Headless callers disable creature and motion presentation with
 `World::set_presentation_enabled(false)`. Commands remain the write boundary for
 external producers. Sparse ECS membership is exposed as non-owning entity-ID
-spans, and hot systems either iterate components directly with `World::each()`
+spans, and hot systems either iterate components directly with `World::view()`
 or resolve IDs into retained scratch storage.
 
 ## Persistence

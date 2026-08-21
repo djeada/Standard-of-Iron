@@ -186,7 +186,7 @@ void process_mounted_charge_intents(Engine::Core::World* world, float delta_time
     return;
   }
 
-  for (auto* entity : world->get_entities_with<Engine::Core::MovementComponent>()) {
+  for (auto* entity : world->collect_entities_with<Engine::Core::MovementComponent>()) {
     if (entity == nullptr ||
         entity->has_component<Engine::Core::PendingRemovalComponent>()) {
       continue;

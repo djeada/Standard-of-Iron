@@ -200,9 +200,8 @@ void Renderer::begin_frame() {
   reset_elephant_render_stats();
 
   Render::VisibilityBudgetTracker::instance().reset_frame();
-  auto& battle_optimizer = Render::BattleRenderOptimizer::instance();
-  battle_optimizer.begin_frame();
-  prune_animation_time_cache(battle_optimizer.frame_counter());
+  m_battle_optimizer.begin_frame();
+  prune_animation_time_cache(m_battle_optimizer.frame_counter());
 
   m_active_queue = &m_queues[m_fill_queue_index];
   m_active_queue->clear();
