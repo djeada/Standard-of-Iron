@@ -122,6 +122,11 @@ public:
     GL::Shader::UniformHandle has_field_texture{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle has_noise_atlas{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle noise_atlas{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle noise_atlas_detail{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle local_light_mask{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle has_local_light_mask{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle has_microdetail{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle microdetail{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle noise_atlas_world_size{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle field_texture{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle height_texel_size{GL::Shader::InvalidUniform};

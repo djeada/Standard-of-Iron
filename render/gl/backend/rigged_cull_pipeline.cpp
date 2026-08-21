@@ -13,6 +13,7 @@
 #include <cstring>
 #include <limits>
 
+#include "character_wear_binding.h"
 #include "render/draw_commands.h"
 #include "render/gl/buffer.h"
 #include "render/gl/gl_capabilities.h"
@@ -629,6 +630,11 @@ auto RiggedCullPipeline::draw_full_mesh_pass(const RiggedCreatureCmd* const* cmd
     if (role_base != Shader::InvalidUniform) {
       draw_shader->set_uniform(role_base, 0);
     }
+    bind_character_wear_volume(
+        *draw_shader,
+        draw_shader->optional_uniform_handle("u_wear_volume"),
+        draw_shader->optional_uniform_handle("u_has_wear_volume"),
+        m_wear_volume);
   }
 
   glBindVertexArray(m_vao);
@@ -814,6 +820,11 @@ auto RiggedCullPipeline::dispatch(const RiggedCreatureCmd* const* cmds,
     if (role_base != Shader::InvalidUniform) {
       draw_shader->set_uniform(role_base, 0);
     }
+    bind_character_wear_volume(
+        *draw_shader,
+        draw_shader->optional_uniform_handle("u_wear_volume"),
+        draw_shader->optional_uniform_handle("u_has_wear_volume"),
+        m_wear_volume);
   }
 
   glBindVertexArray(m_vao);

@@ -1,4 +1,25 @@
 #version 330 core
+//
+// Terrain surface shading, ordered so that nothing expensive runs for a
+// fragment that will not survive, and so that immutable terrain data is read
+// rather than rebuilt every frame.
+//
+//   1. Rejection      - fog of war, then the camera vector every later stage
+//                       reuses.
+//   2. Precomputed    - geography and static biome variation, all baked when
+//                       the map loads: u_field_tex holds sky openness,
+//                       curvature and the heightmap slope (render/ground/
+//                       terrain_renderer_submission.cpp), the two noise
+//                       atlases hold the eight map-wide FBM fields
+//                       (terrain_field_bake.frag), and u_microdetail holds the
+//                       tiling grain, FBM and relief gradient bands
+//                       (terrain_microdetail_bake.frag). Every one of these has
+//                       a procedural fallback for when the bake is unavailable.
+//   3. Material       - the dynamic response: moisture, snow, crack intensity
+//                       and biome tuning applied over the precomputed fields.
+//   4. Shading        - relief normal, environment and local lighting,
+//                       directional shadow, and the visibility memory blend.
+//
 #include "directional_shadows.glsl"
 #include "environment_lighting.glsl"
 #include "local_lighting.glsl"
@@ -57,6 +78,9 @@ uniform int u_has_field_tex;
 uniform sampler2D u_field_tex;
 uniform int u_has_noise_atlas;
 uniform sampler2D u_noise_atlas;
+uniform sampler2D u_noise_atlas_detail;
+uniform int u_has_microdetail;
+uniform sampler2D u_microdetail;
 uniform vec2 u_noise_atlas_world_size;
 uniform vec2 u_height_texel_size;
 uniform vec2 u_height_uv_scale, u_height_uv_offset;
@@ -76,6 +100,26 @@ vec2 hash22(vec2 p) {
 
 float gradient_noise(vec2 p) {
   return soi_terrain_gradient_noise_d3b016(p);
+}
+
+// One lattice cell of the baked microdetail image equals one unit of the
+// coordinate the procedural noise was evaluated at, so a call site swaps
+// `gradient_noise(c)` for `micro_noise(c)` without rescaling anything. R holds a
+// single octave, G the five-octave sum, and BA the analytic gradient of R that
+// the relief octaves used to rebuild from three extra noise evaluations.
+const float k_soi_microdetail_cells = 32.0;
+
+vec4 micro_sample(vec2 coord) {
+  return texture(u_microdetail, coord / k_soi_microdetail_cells);
+}
+
+// Explicit-gradient form for the rock material, which runs under a mask-driven
+// branch where an implicit level of detail would be undefined.
+vec4 micro_sample_grad(vec2 coord, vec2 ddx, vec2 ddy) {
+  return textureGrad(u_microdetail,
+                     coord / k_soi_microdetail_cells,
+                     ddx / k_soi_microdetail_cells,
+                     ddy / k_soi_microdetail_cells);
 }
 
 float gradient_fbm(vec2 p) {
@@ -130,13 +174,21 @@ vec3 geom_normal() {
   return (dot(n, v_normal) < 0.0) ? -n : n;
 }
 
+const float k_soi_band_epsilon = 0.001;
+const float k_soi_rock_epsilon = 0.002;
+
 float band_limit(float texels_per_pixel, float frequency) {
   return 1.0 - smoothstep(0.30, 0.85, texels_per_pixel * frequency);
 }
 
 vec3 relief_octave(vec2 coord, float footprint, float frequency, float step_size) {
   float fade = band_limit(footprint, frequency);
-  if (fade <= 0.001) {
+  // The baked gradient is the same finite difference this used to rebuild from
+  // three noise evaluations, so the octave collapses to a single fetch.
+  if (u_has_microdetail == 1) {
+    return vec3(micro_sample(coord * frequency).ba * frequency, fade);
+  }
+  if (fade <= k_soi_band_epsilon) {
     return vec3(0.0);
   }
   float h0 = gradient_noise(coord * frequency);
@@ -199,12 +251,24 @@ float terrain_sky_openness(vec2 uv, float center_height) {
   return clamp(1.0 - horizon_sum / 6.0, 0.0, 1.0);
 }
 
-float tactical_zoom() {
-  return smoothstep(58.0, 115.0, length(u_camera_pos - v_world_pos));
-}
+const float k_soi_tactical_near = 58.0;
+const float k_soi_tactical_far = 115.0;
 
 void main() {
-  float tactical = tactical_zoom();
+  // -- 1. rejection ---------------------------------------------------------
+  // Fog-of-war first: a fragment the player cannot see is rejected before any
+  // material, relief, lighting or shadow work is synthesized for it.
+  VisibilityMask visibility = visibility_mask_fetch(v_world_pos.xz);
+  if (visibility_is_unknown(visibility)) {
+    discard;
+  }
+
+  // Camera vector once, up front: the tactical-zoom damping, the grazing sheen
+  // and any distance-driven decision all read the same values.
+  vec3 to_camera = u_camera_pos - v_world_pos;
+  float view_distance = max(length(to_camera), 1e-4);
+  vec3 view_dir = to_camera / view_distance;
+  float tactical = smoothstep(k_soi_tactical_near, k_soi_tactical_far, view_distance);
   float biome_forest = float(u_ground_type == 0);
   float biome_dry = float(u_ground_type == 1);
   float biome_rocky = float(u_ground_type == 2);
@@ -215,6 +279,7 @@ void main() {
   float entry_mask = clamp(v_entry_mask, 0.0, 1.0);
   float feature_foot = clamp(v_feature_foot, 0.0, 1.0);
 
+  // -- 2. precomputed terrain data -----------------------------------------
   vec3 smooth_normal = normalize(v_normal);
   vec3 facet_normal = geom_normal();
   float facet_break = 1.0 - clamp(dot(facet_normal, smooth_normal), 0.0, 1.0);
@@ -223,8 +288,15 @@ void main() {
 
   vec2 height_uv = v_world_pos.xz * u_height_uv_scale + u_height_uv_offset;
 
+  // One fetch carries sky openness, curvature and the heightmap slope that used
+  // to cost four height taps for the normal plus five more for the curvature.
+  vec4 baked_fields =
+      (u_has_field_tex == 1) ? texture(u_field_tex, height_uv) : vec4(0.0);
+
   if (u_has_height_tex == 1) {
-    vec3 hm_n = heightmap_normal(height_uv);
+    vec3 hm_n = (u_has_field_tex == 1)
+                    ? normalize(vec3(baked_fields.z, 1.0, baked_fields.w))
+                    : heightmap_normal(height_uv);
     float slope0 = 1.0 - clamp(normal.y, 0.0, 1.0);
 
     float w = 0.18 * (1.0 - 0.24 * smoothstep(0.78, 0.98, slope0));
@@ -243,8 +315,6 @@ void main() {
   float entry_face = entry_core * smoothstep(0.045, 0.16, slope) *
                      (1.0 - smoothstep(0.58, 0.82, slope));
   float entry_signal = entry_core * (0.30 + 0.70 * smoothstep(0.025, 0.14, slope));
-  vec2 baked_fields =
-      (u_has_field_tex == 1) ? texture(u_field_tex, height_uv).rg : vec2(0.0);
   float curvature =
       (u_has_field_tex == 1)
           ? baked_fields.y
@@ -283,13 +353,18 @@ void main() {
 
   float macro_scale = max(u_macro_noise_scale, 0.010);
   float detail_scale = max(u_detail_noise_scale, 0.045);
-  vec2 domain_warp = vec2(gradient_fbm(world_coord * macro_scale * 0.43 + 13.7),
-                          gradient_fbm(world_coord * macro_scale * 0.43 - 9.2));
+  vec2 domain_warp = (u_has_microdetail == 1)
+                         ? vec2(micro_sample(world_coord * macro_scale * 0.43 + 13.7).g,
+                                micro_sample(world_coord * macro_scale * 0.43 - 9.2).g)
+                         : vec2(gradient_fbm(world_coord * macro_scale * 0.43 + 13.7),
+                                gradient_fbm(world_coord * macro_scale * 0.43 - 9.2));
 
   vec4 baked_noise = vec4(0.0);
+  vec4 baked_noise_detail = vec4(0.0);
   if (u_has_noise_atlas == 1) {
     vec2 atlas_uv = v_world_pos.xz / max(u_noise_atlas_world_size, vec2(1e-4));
     baked_noise = texture(u_noise_atlas, atlas_uv);
+    baked_noise_detail = texture(u_noise_atlas_detail, atlas_uv);
   }
 
   float regional_field =
@@ -324,30 +399,51 @@ void main() {
                   0.0,
                   1.0);
   float thatch_field =
-      clamp(0.5 + gradient_fbm(world_coord * macro_scale * 2.60 - domain_warp * 0.32 +
-                               vec2(21.0, -39.0)) *
-                      0.66,
-            0.0,
-            1.0);
-  float surface_detail =
-      gradient_fbm(world_coord * detail_scale * 2.8 + vec2(5.7, -2.1));
+      (u_has_noise_atlas == 1)
+          ? baked_noise_detail.r
+          : clamp(0.5 + gradient_fbm(world_coord * macro_scale * 2.60 -
+                                     domain_warp * 0.32 + vec2(21.0, -39.0)) *
+                            0.66,
+                  0.0,
+                  1.0);
+  vec2 surface_detail_coord = world_coord * detail_scale * 2.8 + vec2(5.7, -2.1);
+  float surface_detail = (u_has_microdetail == 1) ? micro_sample(surface_detail_coord).g
+                                                  : gradient_fbm(surface_detail_coord);
   float grain_frequency = detail_scale * 11.0;
   float granular_frequency = detail_scale * 31.0;
   float speck_frequency = detail_scale * 92.0;
   float grain_fade = band_limit(coord_footprint, grain_frequency);
   float granular_fade = band_limit(coord_footprint, granular_frequency);
   float speck_fade = band_limit(coord_footprint, speck_frequency);
-#if SOI_SURFACE_DETAIL
-  float surface_grain =
-      gradient_noise(world_coord * grain_frequency + vec2(-17.0, 8.0)) * grain_fade;
-  float granular = gradient_noise(world_coord * granular_frequency + vec2(42.0, 19.0)) *
-                   granular_fade;
-  float speckle =
-      gradient_fbm(world_coord * speck_frequency + vec2(-63.0, 24.0)) * speck_fade;
-#else
   float surface_grain = 0.0;
   float granular = 0.0;
   float speckle = 0.0;
+#if SOI_SURFACE_DETAIL
+  if (u_has_microdetail == 1) {
+    surface_grain =
+        micro_sample(world_coord * grain_frequency + vec2(-17.0, 8.0)).r * grain_fade;
+    granular = micro_sample(world_coord * granular_frequency + vec2(42.0, 19.0)).r *
+               granular_fade;
+    speckle =
+        micro_sample(world_coord * speck_frequency + vec2(-63.0, 24.0)).g * speck_fade;
+  } else {
+    // Each band is faded out once its frequency stops resolving. Skip
+    // synthesizing the noise there rather than multiplying it by a zero fade.
+    if (grain_fade > k_soi_band_epsilon) {
+      surface_grain =
+          gradient_noise(world_coord * grain_frequency + vec2(-17.0, 8.0)) * grain_fade;
+    }
+    if (granular_fade > k_soi_band_epsilon) {
+      granular = gradient_noise(world_coord * granular_frequency + vec2(42.0, 19.0)) *
+                 granular_fade;
+    }
+    if (speck_fade > k_soi_band_epsilon) {
+      speckle =
+          gradient_fbm_with_footprint(world_coord * speck_frequency + vec2(-63.0, 24.0),
+                                      coord_footprint * speck_frequency) *
+          speck_fade;
+    }
+  }
 #endif
 
   surface_grain *= mix(1.0, 0.62, tactical);
@@ -372,11 +468,13 @@ void main() {
             0.0,
             1.0);
   float material_patch =
-      clamp(0.5 + gradient_fbm(world_coord * macro_scale * 2.8 + domain_warp * 0.58 +
-                               vec2(37.0, -61.0)) *
-                      0.78,
-            0.0,
-            1.0);
+      (u_has_noise_atlas == 1)
+          ? baked_noise_detail.g
+          : clamp(0.5 + gradient_fbm(world_coord * macro_scale * 2.8 +
+                                     domain_warp * 0.58 + vec2(37.0, -61.0)) *
+                            0.78,
+                  0.0,
+                  1.0);
   float grazed_patch = smoothstep(0.36,
                                   0.66,
                                   exposure_field * 0.54 + material_patch * 0.30 +
@@ -392,42 +490,78 @@ void main() {
   const float k_rill_elongation = 0.13;
   vec2 rill_coord = vec2(dot(world_coord, flow_across),
                          dot(world_coord, flow_down) * k_rill_elongation);
-#if SOI_SURFACE_DETAIL
-  float rill_field = gradient_fbm(rill_coord * k_rill_frequency + vec2(9.0, -31.0));
-#else
-  float rill_field = 0.0;
-#endif
   float rill_exposure = smoothstep(0.09, 0.36, slope) *
                         (1.0 - smoothstep(0.58, 0.84, slope)) *
                         band_limit(coord_footprint, k_rill_frequency);
   float rill_strength = rill_exposure * (1.0 - 0.70 * entry_mask) *
                         (1.0 - 0.35 * feature_foot) * (0.50 + 0.50 * exposure_field) *
                         mix(1.0, 0.80, tactical);
+  // Every consumer of the rill field scales by rill_strength, so flat, sheltered
+  // or band-limited ground never needs the field synthesized at all.
+  bool rills_resolve = rill_strength > k_soi_band_epsilon;
+  float rill_footprint = max(length(fwidth(rill_coord)) * k_rill_frequency, 1e-6);
+  float rill_field = 0.0;
+  // The baked octave carries its own gradient, so the rill relief no longer
+  // needs a second, offset evaluation of the field to difference against.
+  vec2 rill_gradient_raw = vec2(0.0);
+#if SOI_SURFACE_DETAIL
+  if (u_has_microdetail == 1) {
+    vec4 rill_sample = micro_sample(rill_coord * k_rill_frequency + vec2(9.0, -31.0));
+    rill_field = rill_sample.r;
+    rill_gradient_raw = rill_sample.ba * k_rill_frequency;
+  } else if (rills_resolve) {
+    rill_field = gradient_fbm_with_footprint(
+        rill_coord * k_rill_frequency + vec2(9.0, -31.0), rill_footprint);
+  }
+#endif
   float rill_incision = clamp(-rill_field * 1.75, 0.0, 1.0) * rill_strength;
   float rill_interfluve = clamp(rill_field * 1.75, 0.0, 1.0) * rill_strength;
 
   const float k_mosaic_frequency = 0.24;
   const float k_fleck_frequency = 1.15;
-#if SOI_SURFACE_DETAIL
-  vec2 mosaic_warp = vec2(gradient_noise(world_coord * 0.31 + vec2(3.0, 17.0)),
-                          gradient_noise(world_coord * 0.31 - vec2(23.0, 5.0)));
-  float mosaic_field =
-      clamp(0.5 + gradient_fbm(world_coord * k_mosaic_frequency + mosaic_warp * 0.90 +
-                               vec2(-71.0, 12.0)) *
-                      1.35,
-            0.0,
-            1.0);
-  float fleck_field = clamp(0.5 + gradient_fbm(world_coord * k_fleck_frequency +
-                                               mosaic_warp * 0.35 + vec2(58.0, -44.0)) *
-                                      1.25,
-                            0.0,
-                            1.0);
-#else
-  float mosaic_field = 0.5;
-  float fleck_field = 0.5;
-#endif
   float mosaic_fade = band_limit(coord_footprint, k_mosaic_frequency);
   float fleck_fade = band_limit(coord_footprint, k_fleck_frequency);
+  float mosaic_field = 0.5;
+  float fleck_field = 0.5;
+#if SOI_SURFACE_DETAIL
+  if (u_has_microdetail == 1) {
+    vec2 mosaic_warp = vec2(micro_sample(world_coord * 0.31 + vec2(3.0, 17.0)).r,
+                            micro_sample(world_coord * 0.31 - vec2(23.0, 5.0)).r);
+    mosaic_field = clamp(0.5 + micro_sample(world_coord * k_mosaic_frequency +
+                                            mosaic_warp * 0.90 + vec2(-71.0, 12.0))
+                                       .g *
+                                   1.35,
+                         0.0,
+                         1.0);
+    fleck_field = clamp(0.5 + micro_sample(world_coord * k_fleck_frequency +
+                                           mosaic_warp * 0.35 + vec2(58.0, -44.0))
+                                      .g *
+                                  1.25,
+                        0.0,
+                        1.0);
+  } else {
+    vec2 mosaic_warp = vec2(gradient_noise(world_coord * 0.31 + vec2(3.0, 17.0)),
+                            gradient_noise(world_coord * 0.31 - vec2(23.0, 5.0)));
+    vec2 mosaic_coord =
+        world_coord * k_mosaic_frequency + mosaic_warp * 0.90 + vec2(-71.0, 12.0);
+    vec2 fleck_coord =
+        world_coord * k_fleck_frequency + mosaic_warp * 0.35 + vec2(58.0, -44.0);
+    float mosaic_footprint = max(length(fwidth(mosaic_coord)), 1e-6);
+    float fleck_footprint = max(length(fwidth(fleck_coord)), 1e-6);
+    if (mosaic_fade > k_soi_band_epsilon) {
+      mosaic_field = clamp(
+          0.5 + gradient_fbm_with_footprint(mosaic_coord, mosaic_footprint) * 1.35,
+          0.0,
+          1.0);
+    }
+    if (fleck_fade > k_soi_band_epsilon) {
+      fleck_field =
+          clamp(0.5 + gradient_fbm_with_footprint(fleck_coord, fleck_footprint) * 1.25,
+                0.0,
+                1.0);
+    }
+  }
+#endif
   float mosaic_dry = smoothstep(0.48, 0.78, mosaic_field) * mosaic_fade *
                      (0.55 + 0.45 * exposure_field) * (1.0 - 0.35 * u_moisture_level);
   float mosaic_lush = smoothstep(0.46, 0.74, 1.0 - mosaic_field) * mosaic_fade *
@@ -438,6 +572,7 @@ void main() {
                                       exposure_field * 0.34 - drainage_field * 0.16) *
                        fleck_fade;
 
+  // -- 3. dynamic material response ----------------------------------------
   float grass_mix = 0.30 + regional_field * 0.36;
   vec3 grass_color = mix(u_grass_primary, u_grass_secondary, grass_mix);
   float green_excess = max(grass_color.g - max(grass_color.r, grass_color.b), 0.0);
@@ -454,20 +589,37 @@ void main() {
   lush_patch *= 1.0 - smoothstep(0.16, 0.46, slope);
   grass_color = mix(grass_color, u_grass_secondary * 0.94, lush_patch * 0.18);
 #if SOI_SURFACE_DETAIL
-  float grass_weave = gradient_fbm(world_coord * 0.16 + domain_warp * 0.12 + 18.0);
+  vec2 grass_weave_coord = world_coord * 0.16 + domain_warp * 0.12 + 18.0;
+  float grass_weave = (u_has_microdetail == 1) ? micro_sample(grass_weave_coord).g
+                                               : gradient_fbm(grass_weave_coord);
 #else
   float grass_weave = 0.0;
 #endif
   float grass_clumps = smoothstep(0.34, 0.76, thatch_field);
 
 #if SOI_SURFACE_DETAIL
-  float sward_drift = gradient_fbm(world_coord * macro_scale * 8.5 +
-                                   domain_warp * 0.55 + vec2(63.0, -14.0));
-  float graze_drift = gradient_fbm(world_coord * macro_scale * 22.0 -
-                                   domain_warp * 0.40 + vec2(-28.0, 51.0));
-  float tussock =
-      gradient_fbm(world_coord * 0.90 + domain_warp * 0.20 + vec2(-8.0, 33.0)) *
-      band_limit(coord_footprint, 0.90);
+  vec2 sward_coord =
+      world_coord * macro_scale * 8.5 + domain_warp * 0.55 + vec2(63.0, -14.0);
+  vec2 graze_coord =
+      world_coord * macro_scale * 22.0 - domain_warp * 0.40 + vec2(-28.0, 51.0);
+  float tussock_fade = band_limit(coord_footprint, 0.90);
+  vec2 tussock_coord = world_coord * 0.90 + domain_warp * 0.20 + vec2(-8.0, 33.0);
+  float sward_drift = 0.0;
+  float graze_drift = 0.0;
+  float tussock = 0.0;
+  if (u_has_microdetail == 1) {
+    sward_drift = micro_sample(sward_coord).g;
+    graze_drift = micro_sample(graze_coord).g;
+    tussock = micro_sample(tussock_coord).g * tussock_fade;
+  } else {
+    sward_drift = gradient_fbm(sward_coord);
+    graze_drift = gradient_fbm(graze_coord);
+    float tussock_footprint = max(length(fwidth(tussock_coord)), 1e-6);
+    if (tussock_fade > k_soi_band_epsilon) {
+      tussock =
+          gradient_fbm_with_footprint(tussock_coord, tussock_footprint) * tussock_fade;
+    }
+  }
 #else
   float sward_drift = 0.0;
   float graze_drift = 0.0;
@@ -564,7 +716,11 @@ void main() {
   float rock_threshold = clamp(u_slope_rock_threshold, 0.08, 0.88);
   float rock_width = mix(0.19, 0.07, clamp(u_slope_rock_sharpness / 8.0, 0.0, 1.0));
   float rock_mask = smoothstep(rock_threshold, rock_threshold + rock_width, slope);
-  float rock_breakup = gradient_fbm(world_coord * 0.19 + vec2(11.0, -23.0)) * 0.5 + 0.5;
+  vec2 rock_breakup_coord = world_coord * 0.19 + vec2(11.0, -23.0);
+  float rock_breakup = ((u_has_microdetail == 1) ? micro_sample(rock_breakup_coord).g
+                                                 : gradient_fbm(rock_breakup_coord)) *
+                           0.5 +
+                       0.5;
   rock_mask = clamp(
       rock_mask + (rock_breakup - 0.54) * u_rock_detail_strength * 0.38, 0.0, 1.0);
   rock_mask = clamp(rock_mask + (u_rock_exposure - 0.3) * 0.20 +
@@ -593,37 +749,61 @@ void main() {
 
   float wall_blend = smoothstep(0.28, 0.72, slope);
   vec2 rock_coord = mix(world_coord, wall_coord, wall_blend);
-  float rock_footprint = max(length(fwidth(rock_coord)), 1e-5);
+  // Derivatives are taken here, outside the rock branch, so both the band limits
+  // and the textureGrad fetches below stay in uniform control flow.
+  vec2 rock_ddx = dFdx(rock_coord);
+  vec2 rock_ddy = dFdy(rock_coord);
+  float rock_footprint = max(length(abs(rock_ddx) + abs(rock_ddy)), 1e-5);
   vec2 rock_detail_coord = rock_coord * 0.62 + vec2(3.3, -11.0);
-  float rock_detail_footprint = length(fwidth(rock_detail_coord));
+  vec2 rock_detail_ddx = rock_ddx * 0.62;
+  vec2 rock_detail_ddy = rock_ddy * 0.62;
+  float rock_detail_footprint = length(abs(rock_detail_ddx) + abs(rock_detail_ddy));
   vec2 scrub_coord = rock_coord * 1.15 + vec2(-52.0, 17.0);
-  float scrub_footprint = length(fwidth(scrub_coord));
+  vec2 scrub_ddx = rock_ddx * 1.15;
+  vec2 scrub_ddy = rock_ddy * 1.15;
+  float scrub_footprint = length(abs(scrub_ddx) + abs(scrub_ddy));
   vec3 rock_color = soil_blend;
-  // On level ground the finalized mask is exactly zero. Avoid synthesizing the
-  // cellular fractures, chips, strata, and scrub that cannot contribute to the
-  // resulting pixel; nonzero rock coverage retains the full material path.
-  if (rock_mask > 0.0) {
+  // On level ground the finalized mask is zero, and below one 8-bit step the
+  // blend cannot move the pixel. Skip synthesizing the cellular fractures,
+  // chips, strata and scrub there; visible rock keeps the full material path.
+  if (rock_mask > k_soi_rock_epsilon) {
     vec2 rock_cells = cellular_distances(rock_coord * 0.34 + vec2(8.0, -5.0));
     float fracture = 1.0 - smoothstep(0.025, 0.12, rock_cells.y - rock_cells.x);
 #if SOI_SURFACE_DETAIL
-    vec2 rock_chips = cellular_distances(rock_coord * 1.9 + vec2(-27.0, 14.0));
-    float chipping = (1.0 - smoothstep(0.03, 0.16, rock_chips.y - rock_chips.x)) *
-                     band_limit(rock_footprint, 1.9);
+    float chip_fade = band_limit(rock_footprint, 1.9);
+    float chipping = 0.0;
+    if (chip_fade > k_soi_band_epsilon) {
+      vec2 rock_chips = cellular_distances(rock_coord * 1.9 + vec2(-27.0, 14.0));
+      chipping =
+          (1.0 - smoothstep(0.03, 0.16, rock_chips.y - rock_chips.x)) * chip_fade;
+    }
     float rock_detail =
-        gradient_fbm_with_footprint(rock_detail_coord, rock_detail_footprint);
-    float rock_grain = gradient_noise(rock_coord * 2.4 + vec2(-17.0, 8.0)) *
-                       band_limit(rock_footprint, 2.4);
+        (u_has_microdetail == 1)
+            ? micro_sample_grad(rock_detail_coord, rock_detail_ddx, rock_detail_ddy).g
+            : gradient_fbm_with_footprint(rock_detail_coord, rock_detail_footprint);
+    float grain_band = band_limit(rock_footprint, 2.4);
+    float rock_grain = 0.0;
+    if (u_has_microdetail == 1) {
+      rock_grain = micro_sample_grad(rock_coord * 2.4 + vec2(-17.0, 8.0),
+                                     rock_ddx * 2.4,
+                                     rock_ddy * 2.4)
+                       .r *
+                   grain_band;
+    } else if (grain_band > k_soi_band_epsilon) {
+      rock_grain = gradient_noise(rock_coord * 2.4 + vec2(-17.0, 8.0)) * grain_band;
+    }
 #else
     float chipping = 0.0;
     float rock_detail =
-        gradient_fbm_with_footprint(rock_detail_coord, rock_detail_footprint);
+        (u_has_microdetail == 1)
+            ? micro_sample_grad(rock_detail_coord, rock_detail_ddx, rock_detail_ddy).g
+            : gradient_fbm_with_footprint(rock_detail_coord, rock_detail_footprint);
     float rock_grain = 0.0;
 #endif
-    float rock_value =
-        clamp(0.44 + rock_detail * 0.44 + rock_grain * 0.20, 0.0, 1.0);
+    float rock_value = clamp(0.44 + rock_detail * 0.44 + rock_grain * 0.20, 0.0, 1.0);
     rock_color = mix(u_rock_low, u_rock_high, rock_value);
-    vec3 mountain_rock = mix(
-        u_rock_low * 0.62, u_rock_high * 0.76, smoothstep(0.20, 0.86, rock_value));
+    vec3 mountain_rock =
+        mix(u_rock_low * 0.62, u_rock_high * 0.76, smoothstep(0.20, 0.86, rock_value));
     float mountain_material =
         clamp(mountain_face * 0.86 + mountain_shoulders * 0.48, 0.0, 0.94);
     rock_color = mix(rock_color, mountain_rock, mountain_material);
@@ -645,7 +825,11 @@ void main() {
     float ledge = 1.0 - smoothstep(0.30, 0.68, slope);
 #if SOI_SURFACE_DETAIL
     float scrub_field =
-        gradient_fbm_with_footprint(scrub_coord, scrub_footprint) * 0.5 + 0.5;
+        ((u_has_microdetail == 1)
+             ? micro_sample_grad(scrub_coord, scrub_ddx, scrub_ddy).g
+             : gradient_fbm_with_footprint(scrub_coord, scrub_footprint)) *
+            0.5 +
+        0.5;
 #else
     float scrub_field = 0.5;
 #endif
@@ -654,18 +838,18 @@ void main() {
                              scrub_field * 0.62 + fracture * 0.26 + ledge * 0.28 -
                                  high_ground * 0.18);
     vec3 lichen = mix(u_grass_dry, u_grass_secondary, 0.55) * 0.62;
-    rock_color =
-        mix(rock_color, lichen, scrub * 0.34 * (1.0 - u_snow_coverage * 0.6));
+    rock_color = mix(rock_color, lichen, scrub * 0.34 * (1.0 - u_snow_coverage * 0.6));
   }
 
   vec3 terrain_color = mix(soil_blend, rock_color, rock_mask);
 
-  if (u_crack_intensity > 0.01) {
+  float crack_fade = band_limit(coord_footprint, 2.6);
+  if (u_crack_intensity > 0.01 && crack_fade > k_soi_band_epsilon) {
     vec2 crack_warp = vec2(gradient_noise(world_coord * 0.9 + vec2(4.0, -13.0)),
                            gradient_noise(world_coord * 0.9 + vec2(-21.0, 6.0)));
     vec2 crack_cells = cellular_distances(world_coord * 2.6 + crack_warp * 0.55);
     float vein = 1.0 - smoothstep(0.010, 0.075, crack_cells.y - crack_cells.x);
-    float crack_pattern = vein * band_limit(coord_footprint, 2.6);
+    float crack_pattern = vein * crack_fade;
     crack_pattern *= (1.0 - slope * 0.8) * (0.35 + 0.65 * dry_patch);
     crack_pattern *= 1.0 - damp_patch * 0.75;
     float crack_darkening = 1.0 - crack_pattern * u_crack_intensity * 0.35;
@@ -673,15 +857,19 @@ void main() {
   }
 
   if (u_ground_type == 3 && u_snow_coverage > 0.01) {
+    vec2 alpine_large_coord =
+        world_coord * 0.10 + domain_warp * 0.35 + vec2(123.0, 456.0);
+    vec2 alpine_small_coord =
+        world_coord * 0.32 - domain_warp * 0.18 + vec2(-89.0, 201.0);
     float alpine_snow_large =
-        clamp(0.5 + gradient_fbm(world_coord * 0.10 + domain_warp * 0.35 +
-                                 vec2(123.0, 456.0)) *
+        clamp(0.5 + ((u_has_microdetail == 1) ? micro_sample(alpine_large_coord).g
+                                              : gradient_fbm(alpine_large_coord)) *
                         0.78,
               0.0,
               1.0);
     float alpine_snow_small =
-        clamp(0.5 + gradient_fbm(world_coord * 0.32 - domain_warp * 0.18 +
-                                 vec2(-89.0, 201.0)) *
+        clamp(0.5 + ((u_has_microdetail == 1) ? micro_sample(alpine_small_coord).g
+                                              : gradient_fbm(alpine_small_coord)) *
                         0.58,
               0.0,
               1.0);
@@ -703,8 +891,9 @@ void main() {
 
   if (u_snow_coverage > 0.01) {
     float snowline = 18.0 + (regional_field - 0.5) * 2.4 + surface_detail * 0.65;
-    float snow_edge_noise =
-        gradient_fbm(world_coord * macro_scale * 5.4 + vec2(-34.0, 57.0));
+    vec2 snow_edge_coord = world_coord * macro_scale * 5.4 + vec2(-34.0, 57.0);
+    float snow_edge_noise = (u_has_microdetail == 1) ? micro_sample(snow_edge_coord).g
+                                                     : gradient_fbm(snow_edge_coord);
     float altitude_snow =
         smoothstep(snowline, snowline + 3.6, v_world_pos.y) + snow_edge_noise * 0.10;
     altitude_snow = clamp(altitude_snow, 0.0, 1.0);
@@ -730,7 +919,9 @@ void main() {
 
 #if SOI_SURFACE_DETAIL
   float hue_field =
-      gradient_fbm(world_coord * k_soi_terrain_hue_scale + vec2(61.0, -37.0));
+      (u_has_noise_atlas == 1)
+          ? baked_noise_detail.b
+          : gradient_fbm(world_coord * k_soi_terrain_hue_scale + vec2(61.0, -37.0));
 #else
   float hue_field = 0.5;
 #endif
@@ -740,8 +931,10 @@ void main() {
   terrain_color *= mix(vec3(1.0), hue_shift, k_soi_terrain_hue_amount);
 
 #if SOI_SURFACE_DETAIL
-  float earth_field = gradient_fbm(world_coord * k_soi_terrain_earth_scale +
-                                   domain_warp * 0.6 + vec2(-83.0, 29.0));
+  float earth_field = (u_has_noise_atlas == 1)
+                          ? baked_noise_detail.a
+                          : gradient_fbm(world_coord * k_soi_terrain_earth_scale +
+                                         domain_warp * 0.6 + vec2(-83.0, 29.0));
 #else
   float earth_field = 0.0;
 #endif
@@ -776,6 +969,7 @@ void main() {
   terrain_color *= 1.0 - wet_surface * 0.15;
   terrain_color *= u_tint;
 
+  // -- 4. dynamic shading ---------------------------------------------------
   vec3 L = environment_primary_direction();
 
   vec2 relief_coord = mix(world_coord, wall_coord, wall_blend);
@@ -802,13 +996,17 @@ void main() {
 
   const float k_rill_step = 0.05;
 #if SOI_SURFACE_DETAIL
-  float rill_shifted = gradient_fbm(
-      (rill_coord + vec2(k_rill_step, 0.0)) * k_rill_frequency + vec2(9.0, -31.0));
-#else
-  float rill_shifted = 0.0;
+  if (u_has_microdetail == 1) {
+    relief_gradient +=
+        flow_across * rill_gradient_raw.x * rill_strength * (1.0 - wall_blend) * 0.42;
+  } else if (rills_resolve) {
+    float rill_shifted = gradient_fbm_with_footprint(
+        (rill_coord + vec2(k_rill_step, 0.0)) * k_rill_frequency + vec2(9.0, -31.0),
+        rill_footprint);
+    vec2 rill_gradient = flow_across * ((rill_shifted - rill_field) / k_rill_step);
+    relief_gradient += rill_gradient * rill_strength * (1.0 - wall_blend) * 0.42;
+  }
 #endif
-  vec2 rill_gradient = flow_across * ((rill_shifted - rill_field) / k_rill_step);
-  relief_gradient += rill_gradient * rill_strength * (1.0 - wall_blend) * 0.42;
 
   float material_roughness =
       clamp(0.30 + u_soil_roughness * 0.48 + rock_mask * 0.18 - wet_surface * 0.30,
@@ -847,10 +1045,6 @@ void main() {
 
   float wet_glint = wet_surface * pow(max(dot(detail_normal, L), 0.0), 10.0) * 0.07;
 
-  vec3 to_camera = u_camera_pos - v_world_pos;
-  float view_distance = max(length(to_camera), 1e-4);
-  vec3 view_dir = to_camera / view_distance;
-
   float grazing = pow(1.0 - clamp(dot(detail_normal, view_dir), 0.0, 1.0), 5.0);
   float sheen = grazing * (0.020 + 0.070 * u_moisture_level) *
                 (1.0 - material_roughness) * (1.0 - rock_mask * 0.55);
@@ -861,7 +1055,7 @@ void main() {
       u_ambient_boost * environment_exposure();
   lit_color = apply_directional_shadow(lit_color, v_world_pos, detail_normal);
   lit_color += terrain_color * local_lighting(v_world_pos, detail_normal);
-  lit_color = apply_visibility_memory(lit_color, v_world_pos.xz);
+  lit_color = apply_visibility_memory_mask(lit_color, visibility);
 
   frag_color = vec4(lit_color, 1.0);
 }

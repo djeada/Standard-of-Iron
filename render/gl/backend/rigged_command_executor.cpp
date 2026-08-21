@@ -87,7 +87,7 @@ void Backend::execute_rigged_commands(const PreparedBatch& prepared,
         m_rigged_character_pipeline->draw(single, view_proj, cam.get_position());
         ++m_rigged_drawn_this_frame;
         ++m_last_playback_stats.rigged_single_draws;
-        m_last_bound_shader = m_rigged_character_pipeline->shader();
+        m_last_bound_shader = m_rigged_character_pipeline->last_bound_shader();
         m_last_bound_texture = single.texture;
       }
     }

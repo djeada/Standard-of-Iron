@@ -1,5 +1,8 @@
 #pragma once
 
+#include <QOpenGLContext>
+#include <QOpenGLFunctions>
+
 #include <algorithm>
 #include <cmath>
 #include <cstddef>
@@ -62,6 +65,31 @@ bind_visibility_mask(Shader& shader,
   visibility.texture->bind(TextureUnit::terrain_visibility);
   shader.set_uniform(shader.optional_uniform_handle("u_visibility_tex"),
                      TextureUnit::terrain_visibility);
+}
+
+// The generic material shaders read wood/cloth/leather/metal/soot detail from
+// one shared tileable texture. Bind it, and tell the shader whether it is there,
+// whenever a program that wants it is made current.
+inline void bind_material_detail(Shader& shader,
+                                 const ShaderUniformCache::BasicUniforms& uniforms,
+                                 ResourceManager* resources) {
+  if (uniforms.has_material_detail == Shader::InvalidUniform) {
+    return;
+  }
+  Texture* detail = (resources != nullptr) ? resources->material_detail() : nullptr;
+  shader.set_uniform(uniforms.has_material_detail, detail != nullptr);
+  if (detail == nullptr) {
+    return;
+  }
+  detail->bind(TextureUnit::material_detail);
+  // Texture::bind leaves its unit selected; restore unit 0 so the per-draw
+  // albedo binds below keep landing where the shaders expect them.
+  if (auto* context = QOpenGLContext::currentContext()) {
+    context->functions()->glActiveTexture(GL_TEXTURE0);
+  }
+  if (uniforms.material_detail != Shader::InvalidUniform) {
+    shader.set_uniform(uniforms.material_detail, TextureUnit::material_detail);
+  }
 }
 
 } // namespace Render::GL

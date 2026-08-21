@@ -56,6 +56,29 @@ bool visibility_mask_active() {
          u_visibility_size.y > 0.0;
 }
 
+// Fetch the mask once so a shader can reject fragments before doing material
+// work and still blend the memory tint at the end from the same sample. When the
+// mask is inactive this reports "fully visible" so callers need no extra branch.
+VisibilityMask visibility_mask_fetch(vec2 world_xz) {
+  if (!visibility_mask_active()) {
+    VisibilityMask mask;
+    mask.seen_now = 1.0;
+    mask.known = 1.0;
+    return mask;
+  }
+  return sample_visibility_mask(
+      u_visibility_tex, world_xz, u_visibility_size, u_visibility_tile_size);
+}
+
+vec3 apply_visibility_memory_mask(vec3 lit_color, VisibilityMask mask) {
+  if (!visibility_mask_active()) {
+    return lit_color;
+  }
+  vec3 memory = remembered_surface_color(lit_color, u_explored_alpha) *
+                visibility_memory_falloff(mask);
+  return mix(memory, lit_color, visibility_live_weight(mask));
+}
+
 vec3 apply_visibility_memory(vec3 lit_color, vec2 world_xz) {
   if (!visibility_mask_active()) {
     return lit_color;

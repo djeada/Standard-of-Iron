@@ -118,6 +118,40 @@ pack_local_lights_std140(const std::array<LocalLight, k_max_local_lights>& light
   return packed;
 }
 
+// The lights the fragment shaders actually see, in the same slot order the
+// std140 block was packed in, so a per-draw mask can address them by bit index.
+[[nodiscard]] inline auto
+active_local_lights(const std::array<LocalLight, k_max_local_lights>& lights)
+    -> std::vector<LocalLight> {
+  std::vector<LocalLight> active;
+  active.reserve(k_max_local_lights);
+  for (const auto& light : lights) {
+    if (light.intensity <= 0.0F || light.radius <= 0.0F) {
+      continue;
+    }
+    active.push_back(light);
+  }
+  return active;
+}
+
+// Which of those lights can reach a draw's bounds. Zero means "none reach it";
+// callers pair this with an explicit "mask is present" flag so a shader that
+// never computes one keeps lighting from every selected light.
+[[nodiscard]] inline auto
+local_light_mask_for_bounds(const std::vector<LocalLight>& active,
+                            const QVector3D& center,
+                            float bounding_radius) -> unsigned int {
+  unsigned int mask = 0U;
+  const std::size_t count = std::min(active.size(), k_max_local_lights);
+  for (std::size_t i = 0; i < count; ++i) {
+    const float reach = active[i].radius + bounding_radius;
+    if ((active[i].position - center).lengthSquared() <= reach * reach) {
+      mask |= (1U << i);
+    }
+  }
+  return mask;
+}
+
 inline constexpr float k_local_light_fade_seconds = 0.35F;
 inline constexpr float k_local_light_match_distance = 0.75F;
 

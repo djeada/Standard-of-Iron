@@ -10,6 +10,9 @@
         <file>assets/shaders/include/directional_shadows.glsl</file>
         <file>assets/shaders/include/visibility_mask.glsl</file>
         <file>assets/shaders/include/noise.glsl</file>
+        <file>assets/shaders/include/material_detail.glsl</file>
+        <file>assets/shaders/include/character_wear.glsl</file>
+        <file>assets/shaders/include/character_shading.glsl</file>
         <file>assets/shaders/include/terrain_noise.glsl</file>
         <file>assets/shaders/include/tonemap.glsl</file>
         <file>assets/shaders/include/quality.glsl</file>
@@ -85,6 +88,7 @@
         <file>assets/shaders/stone_instanced.vert</file>
         <file>assets/shaders/terrain_chunk.frag</file>
         <file>assets/shaders/terrain_field_bake.frag</file>
+        <file>assets/shaders/terrain_microdetail_bake.frag</file>
         <file>assets/shaders/terrain_chunk.vert</file>
         <file>assets/shaders/troop_shadow.frag</file>
         <file>assets/shaders/troop_shadow.vert</file>

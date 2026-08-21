@@ -63,6 +63,7 @@
 #include "humanoid/cache_control.h"
 #include "humanoid/humanoid_renderer_base.h"
 #include "humanoid/render_stats.h"
+#include "material_classification.h"
 #include "pass/construction_preview_pass.h"
 #include "pass/frame_context.h"
 #include "pass/frame_pass_runner.h"
@@ -357,7 +358,7 @@ void Renderer::mesh(Mesh* mesh,
   cmd.model = model;
   cmd.color = color;
   cmd.alpha = effective_alpha;
-  cmd.material_id = material_id;
+  cmd.material_id = resolve_material_id(material_id, color);
   cmd.shader = m_current_shader;
   cmd.blend_batchable =
       m_current_shader != nullptr && m_current_shader == m_contact_shadow_shader;
@@ -385,7 +386,7 @@ void Renderer::banner(Mesh* mesh,
   cmd.trim_color = trim_color;
   cmd.has_trim_color = true;
   cmd.alpha = alpha * m_alpha_override;
-  cmd.material_id = material_id;
+  cmd.material_id = resolve_material_id(material_id, color);
   cmd.shader = m_current_shader;
   if (m_active_queue != nullptr) {
     m_active_queue->submit(std::move(cmd));
@@ -415,7 +416,7 @@ void Renderer::part(Mesh* mesh,
   cmd.color = color;
   cmd.alpha = effective_alpha;
   cmd.texture = texture;
-  cmd.material_id = material_id;
+  cmd.material_id = resolve_material_id(material_id, color);
   if (m_active_queue != nullptr) {
     m_active_queue->submit(std::move(cmd));
   }

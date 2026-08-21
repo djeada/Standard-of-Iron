@@ -362,7 +362,7 @@ void Backend::set_terrain_chunk_uniforms(Shader& shader,
     }
   }
 
-  const bool atlas_ready = height.noise_atlas != 0U;
+  const bool atlas_ready = height.noise_atlas != 0U && height.noise_atlas_detail != 0U;
   if (pipeline.m_terrain_uniforms.has_noise_atlas != Shader::InvalidUniform) {
     shader.set_uniform(pipeline.m_terrain_uniforms.has_noise_atlas,
                        atlas_ready ? 1 : 0);
@@ -375,11 +375,51 @@ void Backend::set_terrain_chunk_uniforms(Shader& shader,
       shader.set_uniform(pipeline.m_terrain_uniforms.noise_atlas,
                          TextureUnit::terrain_noise_atlas);
     }
+    glActiveTexture(GL_TEXTURE0 + TextureUnit::terrain_noise_atlas_detail);
+    glBindTexture(GL_TEXTURE_2D, height.noise_atlas_detail);
+    glActiveTexture(GL_TEXTURE0);
+    if (pipeline.m_terrain_uniforms.noise_atlas_detail != Shader::InvalidUniform) {
+      shader.set_uniform(pipeline.m_terrain_uniforms.noise_atlas_detail,
+                         TextureUnit::terrain_noise_atlas_detail);
+    }
     if (pipeline.m_terrain_uniforms.noise_atlas_world_size != Shader::InvalidUniform) {
       shader.set_uniform(pipeline.m_terrain_uniforms.noise_atlas_world_size,
                          height.noise_atlas_world_size);
     }
   }
+  const bool microdetail_ready = height.microdetail != 0U;
+  if (pipeline.m_terrain_uniforms.has_microdetail != Shader::InvalidUniform) {
+    shader.set_uniform(pipeline.m_terrain_uniforms.has_microdetail,
+                       microdetail_ready ? 1 : 0);
+  }
+  if (microdetail_ready) {
+    glActiveTexture(GL_TEXTURE0 + TextureUnit::terrain_microdetail);
+    glBindTexture(GL_TEXTURE_2D, height.microdetail);
+    glActiveTexture(GL_TEXTURE0);
+    if (pipeline.m_terrain_uniforms.microdetail != Shader::InvalidUniform) {
+      shader.set_uniform(pipeline.m_terrain_uniforms.microdetail,
+                         TextureUnit::terrain_microdetail);
+    }
+  }
+
+  // Only the lights whose radius actually reaches this chunk. The selected set
+  // is global to the frame, so without this every terrain fragment pays the
+  // falloff and wrapped-diffuse work for lights sitting across the map.
+  if (pipeline.m_terrain_uniforms.has_local_light_mask != Shader::InvalidUniform) {
+    const bool mask_ready = !m_active_local_lights.empty();
+    shader.set_uniform(pipeline.m_terrain_uniforms.has_local_light_mask,
+                       mask_ready ? 1 : 0);
+    if (mask_ready &&
+        pipeline.m_terrain_uniforms.local_light_mask != Shader::InvalidUniform) {
+      const QVector3D center = single.aabb.center();
+      const QVector3D extents = single.aabb.extents();
+      const auto mask = Render::local_light_mask_for_bounds(
+          m_active_local_lights, center, extents.length());
+      shader.set_uniform(pipeline.m_terrain_uniforms.local_light_mask,
+                         static_cast<int>(mask));
+    }
+  }
+
   set_camera_uniform(shader, pipeline.m_terrain_uniforms, camera_position);
 }
 

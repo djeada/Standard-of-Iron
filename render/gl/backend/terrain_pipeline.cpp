@@ -219,6 +219,16 @@ void TerrainPipeline::cache_terrain_uniforms() {
       m_terrain_shader->optional_uniform_handle("u_has_noise_atlas");
   m_terrain_uniforms.noise_atlas =
       m_terrain_shader->optional_uniform_handle("u_noise_atlas");
+  m_terrain_uniforms.noise_atlas_detail =
+      m_terrain_shader->optional_uniform_handle("u_noise_atlas_detail");
+  m_terrain_uniforms.local_light_mask =
+      m_terrain_shader->optional_uniform_handle("u_local_light_mask");
+  m_terrain_uniforms.has_local_light_mask =
+      m_terrain_shader->optional_uniform_handle("u_has_local_light_mask");
+  m_terrain_uniforms.has_microdetail =
+      m_terrain_shader->optional_uniform_handle("u_has_microdetail");
+  m_terrain_uniforms.microdetail =
+      m_terrain_shader->optional_uniform_handle("u_microdetail");
   m_terrain_uniforms.noise_atlas_world_size =
       m_terrain_shader->optional_uniform_handle("u_noise_atlas_world_size");
   m_terrain_uniforms.field_texture =

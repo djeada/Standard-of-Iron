@@ -136,6 +136,8 @@ struct TerrainSurfaceCmd {
     Texture* texture = nullptr;
     Texture* field_texture = nullptr;
     unsigned int noise_atlas = 0U;
+    unsigned int noise_atlas_detail = 0U;
+    unsigned int microdetail = 0U;
     QVector2D noise_atlas_world_size{0.0F, 0.0F};
     QVector2D texel_size{0.0F, 0.0F};
     QVector2D uv_scale{0.0F, 0.0F};

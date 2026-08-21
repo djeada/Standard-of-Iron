@@ -872,6 +872,7 @@ if(QT_VERSION_MAJOR EQUAL 6)
             assets/shaders/dead_tree_instanced.vert
             assets/shaders/terrain_chunk.frag
         assets/shaders/terrain_field_bake.frag
+        assets/shaders/terrain_microdetail_bake.frag
             assets/shaders/terrain_chunk.vert
             assets/maps/map_forest.json
             assets/maps/map_rivers.json
