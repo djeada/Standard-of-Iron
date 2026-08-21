@@ -1,6 +1,5 @@
 #pragma once
 
-#include <atomic>
 #include <cstdint>
 #include <mutex>
 
@@ -9,7 +8,8 @@
 namespace Render {
 
 struct BattleRenderConfig {
-  int temporal_culling_threshold = 15;
+
+  int battle_mode_unit_threshold = 15;
   int animation_throttle_threshold = 30;
   float animation_throttle_distance = 40.0F;
   float combat_render_priority_distance = 50.0F;
@@ -20,159 +20,135 @@ struct BattleRenderConfig {
 
 class BattleRenderOptimizer {
 public:
-  static auto instance() noexcept -> BattleRenderOptimizer& {
-    static BattleRenderOptimizer inst;
-    return inst;
-  }
+  struct FrameStats {
+    int animations_updated = 0;
+    int animations_throttled = 0;
+  };
 
-  void begin_frame() noexcept {
-    m_frame_counter.fetch_add(1, std::memory_order_relaxed);
-    m_units_rendered_this_frame.store(0, std::memory_order_relaxed);
-    m_units_skipped_temporal.store(0, std::memory_order_relaxed);
-    m_animations_throttled.store(0, std::memory_order_relaxed);
-  }
+  struct FrameSnapshot {
+    BattleRenderConfig config{};
+    std::uint32_t frame = 0;
+    int visible_unit_count = 0;
 
-  void set_visible_unit_count(int count) noexcept {
-    m_visible_unit_count.store(count, std::memory_order_relaxed);
-  }
+    [[nodiscard]] auto battle_mode() const noexcept -> bool {
+      return config.enabled && visible_unit_count >= config.battle_mode_unit_threshold;
+    }
 
-  void set_config(const BattleRenderConfig& config) noexcept {
-    std::lock_guard<std::mutex> lock(m_config_mutex);
+    [[nodiscard]] auto batching_boost() const noexcept -> float {
+      if (!config.enabled || visible_unit_count < config.battle_mode_unit_threshold) {
+        return 1.0F;
+      }
+      const float excess_ratio =
+          static_cast<float>(visible_unit_count - config.battle_mode_unit_threshold) /
+          static_cast<float>(config.battle_mode_unit_threshold);
+      return 1.0F + excess_ratio * 0.5F;
+    }
+
+    [[nodiscard]] auto
+    should_update_animation(std::uint32_t entity_id,
+                            float distance_sq,
+                            bool is_selected,
+                            bool is_combat_active,
+                            const Engine::Core::MotionPresentationComponent* motion,
+                            FrameStats& stats) const noexcept -> bool {
+      const bool update = evaluate_animation_update(
+          entity_id, distance_sq, is_selected, is_combat_active, motion);
+      if (update) {
+        ++stats.animations_updated;
+      } else {
+        ++stats.animations_throttled;
+      }
+      return update;
+    }
+
+  private:
+    [[nodiscard]] auto
+    evaluate_animation_update(std::uint32_t entity_id,
+                              float distance_sq,
+                              bool is_selected,
+                              bool is_combat_active,
+                              const Engine::Core::MotionPresentationComponent* motion)
+        const noexcept -> bool {
+      if (!config.enabled || is_selected) {
+        return true;
+      }
+      if (motion != nullptr && motion->has_locomotion()) {
+        return true;
+      }
+      if (visible_unit_count < config.animation_throttle_threshold) {
+        return true;
+      }
+      if (is_combat_active) {
+        return true;
+      }
+      const float priority_distance = config.animation_throttle_distance;
+      if (distance_sq < priority_distance * priority_distance) {
+        return true;
+      }
+      return ((entity_id + frame) %
+              static_cast<std::uint32_t>(config.animation_skip_frames + 1)) == 0;
+    }
+  };
+
+  void set_config(const BattleRenderConfig& config) {
+    const std::lock_guard<std::mutex> lock(m_config_mutex);
     m_config = config;
   }
 
-  [[nodiscard]] auto config() const noexcept -> BattleRenderConfig {
-    std::lock_guard<std::mutex> lock(m_config_mutex);
+  [[nodiscard]] auto config() const -> BattleRenderConfig {
+    const std::lock_guard<std::mutex> lock(m_config_mutex);
     return m_config;
   }
 
-  [[nodiscard]] auto is_battle_mode() const noexcept -> bool {
-    std::lock_guard<std::mutex> lock(m_config_mutex);
-    return m_config.enabled && m_visible_unit_count.load(std::memory_order_relaxed) >=
-                                   m_config.temporal_culling_threshold;
-  }
-
-  [[nodiscard]] auto
-  should_render_unit(uint32_t entity_id,
-                     const Engine::Core::MotionPresentationComponent* motion,
-                     bool is_selected,
-                     bool is_hovered,
-                     bool is_combat_active = false,
-                     float distance_sq = 0.0F) const noexcept -> bool {
-    (void)entity_id;
-    (void)motion;
-    (void)is_selected;
-    (void)is_hovered;
-    (void)is_combat_active;
-    (void)distance_sq;
-    m_units_rendered_this_frame.fetch_add(1, std::memory_order_relaxed);
-    return true;
-  }
-
-  [[nodiscard]] auto should_update_animation(
-      uint32_t entity_id,
-      float distance_sq,
-      bool is_selected,
-      bool is_combat_active,
-      const Engine::Core::MotionPresentationComponent* motion) const noexcept {
-    BattleRenderConfig cfg;
+  void begin_frame() {
+    BattleRenderConfig snapshot;
     {
-      std::lock_guard<std::mutex> lock(m_config_mutex);
-      cfg = m_config;
+      const std::lock_guard<std::mutex> lock(m_config_mutex);
+      snapshot = m_config;
     }
 
-    if (!cfg.enabled) {
-      return true;
-    }
-
-    if (is_selected) {
-      return true;
-    }
-
-    bool const is_moving = motion != nullptr && motion->has_locomotion();
-    if (is_moving) {
-      return true;
-    }
-
-    int visible_count = m_visible_unit_count.load(std::memory_order_relaxed);
-    if (visible_count < cfg.animation_throttle_threshold) {
-      return true;
-    }
-
-    if (is_combat_active) {
-      return true;
-    }
-
-    float priority_distance = cfg.animation_throttle_distance;
-
-    float const priority_distance_sq = priority_distance * priority_distance;
-    if (distance_sq < priority_distance_sq) {
-      return true;
-    }
-
-    uint32_t frame = m_frame_counter.load(std::memory_order_relaxed);
-    bool update = ((entity_id + frame) %
-                   static_cast<uint32_t>(cfg.animation_skip_frames + 1)) == 0;
-
-    if (!update) {
-      m_animations_throttled.fetch_add(1, std::memory_order_relaxed);
-    }
-
-    return update;
+    m_frame = FrameSnapshot{.config = snapshot,
+                            .frame = m_frame.frame + 1U,
+                            .visible_unit_count = m_frame.visible_unit_count};
+    m_stats = {};
   }
 
-  [[nodiscard]] auto get_batching_boost() const noexcept -> float {
-    BattleRenderConfig cfg;
-    {
-      std::lock_guard<std::mutex> lock(m_config_mutex);
-      cfg = m_config;
-    }
-
-    if (!cfg.enabled) {
-      return 1.0F;
-    }
-
-    int visible_count = m_visible_unit_count.load(std::memory_order_relaxed);
-    if (visible_count < cfg.temporal_culling_threshold) {
-      return 1.0F;
-    }
-
-    float excess_ratio =
-        static_cast<float>(visible_count - cfg.temporal_culling_threshold) /
-        static_cast<float>(cfg.temporal_culling_threshold);
-    return 1.0F + excess_ratio * 0.5F;
+  void set_visible_unit_count(int count) noexcept {
+    m_frame.visible_unit_count = count;
   }
 
-  [[nodiscard]] auto frame_counter() const noexcept -> uint32_t {
-    return m_frame_counter.load(std::memory_order_relaxed);
+  [[nodiscard]] auto frame() const noexcept -> const FrameSnapshot& { return m_frame; }
+
+  void commit_frame_stats(const FrameStats& stats) noexcept {
+    m_stats.animations_updated += stats.animations_updated;
+    m_stats.animations_throttled += stats.animations_throttled;
   }
 
-  [[nodiscard]] auto units_rendered_this_frame() const noexcept -> int {
-    return m_units_rendered_this_frame.load(std::memory_order_relaxed);
+  [[nodiscard]] auto frame_counter() const noexcept -> std::uint32_t {
+    return m_frame.frame;
   }
-
-  [[nodiscard]] auto units_skipped_temporal() const noexcept -> int {
-    return m_units_skipped_temporal.load(std::memory_order_relaxed);
-  }
-
-  [[nodiscard]] auto animations_throttled() const noexcept -> int {
-    return m_animations_throttled.load(std::memory_order_relaxed);
-  }
-
   [[nodiscard]] auto visible_unit_count() const noexcept -> int {
-    return m_visible_unit_count.load(std::memory_order_relaxed);
+    return m_frame.visible_unit_count;
+  }
+  [[nodiscard]] auto is_battle_mode() const noexcept -> bool {
+    return m_frame.battle_mode();
+  }
+  [[nodiscard]] auto get_batching_boost() const noexcept -> float {
+    return m_frame.batching_boost();
+  }
+  [[nodiscard]] auto animations_throttled() const noexcept -> int {
+    return m_stats.animations_throttled;
+  }
+  [[nodiscard]] auto animations_updated() const noexcept -> int {
+    return m_stats.animations_updated;
   }
 
 private:
-  BattleRenderOptimizer() = default;
-
   mutable std::mutex m_config_mutex;
   BattleRenderConfig m_config;
-  std::atomic<uint32_t> m_frame_counter{0};
-  std::atomic<int> m_visible_unit_count{0};
-  mutable std::atomic<int> m_units_rendered_this_frame{0};
-  mutable std::atomic<int> m_units_skipped_temporal{0};
-  mutable std::atomic<int> m_animations_throttled{0};
+
+  FrameSnapshot m_frame;
+  FrameStats m_stats;
 };
 
 } // namespace Render

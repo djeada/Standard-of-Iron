@@ -10,6 +10,7 @@
 #include "../core/component.h"
 #include "../formation/unit_layout_resolver.h"
 #include "../units/spawn_type.h"
+#include "../units/troop_catalog.h"
 #include "../units/troop_config.h"
 #include "troop_profile_service.h"
 
@@ -197,6 +198,25 @@ auto formation_seed(const Engine::Core::Entity& entity) noexcept -> std::uint32_
     seed ^= static_cast<std::uint32_t>(unit->owner_id) * 0x85EBCA6BU;
   }
   return seed;
+}
+
+constexpr float k_max_slot_body_radius = 3.0F;
+
+auto max_contact_extent() -> float {
+
+  static const float extent = [] {
+    float widest = 0.0F;
+    for (const auto& [_, troop_class] :
+         Game::Units::TroopCatalog::instance().get_all_classes()) {
+      const float row_width =
+          static_cast<float>(std::max(1, troop_class.max_units_per_row)) *
+          std::max(0.1F, troop_class.visuals.formation_spacing);
+      widest = std::max(widest, row_width);
+    }
+
+    return widest * 0.5F + k_max_slot_body_radius;
+  }();
+  return extent;
 }
 
 auto resolve_definition(const Engine::Core::UnitComponent& unit)

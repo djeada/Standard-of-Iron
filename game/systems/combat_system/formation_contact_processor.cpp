@@ -227,7 +227,7 @@ void sort_fronts(std::vector<Engine::Core::FormationContactFront>& fronts) {
 
 auto build_fronts(Engine::Core::World& world) -> FrontMap {
   FrontMap result;
-  auto attackers = world.get_entities_with<Engine::Core::AttackTargetComponent>();
+  auto attackers = world.collect_entities_with<Engine::Core::AttackTargetComponent>();
   std::sort(attackers.begin(), attackers.end(), [](auto const* lhs, auto const* rhs) {
     return lhs->get_id() < rhs->get_id();
   });
@@ -281,7 +281,7 @@ void clear_contact(Engine::Core::FormationContactComponent& contact) {
 
 void publish_contacts(Engine::Core::World& world, FrontMap fronts_by_entity) {
   for (auto* entity :
-       world.get_entities_with<Engine::Core::FormationContactComponent>()) {
+       world.collect_entities_with<Engine::Core::FormationContactComponent>()) {
     if (entity != nullptr && !fronts_by_entity.contains(entity->get_id())) {
       clear_contact(*entity->get_component<Engine::Core::FormationContactComponent>());
     }
@@ -519,7 +519,7 @@ void tick_formation_hit(Engine::Core::Entity& entity, float delta_time) {
 }
 
 void publish_formation_presentation(Engine::Core::World& world, float delta_time) {
-  auto const entities = world.get_entities_with<Engine::Core::UnitComponent>();
+  auto const entities = world.collect_entities_with<Engine::Core::UnitComponent>();
   std::unordered_map<Engine::Core::EntityID, FormationCombat::FormationLayout>
       layout_cache;
   layout_cache.reserve(entities.size());

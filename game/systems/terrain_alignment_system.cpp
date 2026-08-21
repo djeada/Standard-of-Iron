@@ -16,23 +16,18 @@ void TerrainAlignmentSystem::update(Engine::Core::World* world, float) {
     return;
   }
 
-  auto entities = world->get_entities_with<Engine::Core::TransformComponent>();
-  for (auto* entity : entities) {
-    align_entity_to_terrain(entity);
+  for (auto [entity_id, transform] : world->view<Engine::Core::TransformComponent>()) {
+    (void)entity_id;
+    align_transform_to_terrain(transform, terrain_service);
   }
 }
 
-void TerrainAlignmentSystem::align_entity_to_terrain(Engine::Core::Entity* entity) {
-  auto* transform = entity->get_component<Engine::Core::TransformComponent>();
-  if (transform == nullptr) {
-    return;
-  }
-
-  auto& terrain_service = Game::Map::TerrainService::instance();
-
+void TerrainAlignmentSystem::align_transform_to_terrain(
+    Engine::Core::TransformComponent& transform,
+    Game::Map::TerrainService& terrain_service) {
   QVector3D const aligned = terrain_service.resolve_surface_world_position(
-      transform->position.x, transform->position.z, 0.0F, transform->position.y);
-  transform->position.y = aligned.y();
+      transform.position.x, transform.position.z, 0.0F, transform.position.y);
+  transform.position.y = aligned.y();
 }
 
 } // namespace Game::Systems

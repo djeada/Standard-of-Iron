@@ -314,7 +314,7 @@ auto apply_elephant_stomp_impact(Engine::Core::World* world,
   if (elephant_comp == nullptr) {
     return false;
   }
-  auto units = world->get_entities_with<Engine::Core::UnitComponent>();
+  auto units = world->collect_entities_with<Engine::Core::UnitComponent>();
   bool const hit = apply_stomp_damage(
       *elephant, *world, units, std::max(1, elephant_comp->trample_damage), 4.5F);
   if (hit) {

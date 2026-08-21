@@ -2311,7 +2311,7 @@ TEST_F(CombatModeTest, LethalDamageStartsDeathSequenceBeforeCleanup) {
   EXPECT_FALSE(target->has_component<PendingRemovalComponent>());
   EXPECT_FALSE(movement->get_has_target());
 
-  auto blood_stains = world->get_entities_with<BloodStainComponent>();
+  auto blood_stains = world->collect_entities_with<BloodStainComponent>();
   ASSERT_EQ(blood_stains.size(), 1U);
   auto* blood_transform = blood_stains.front()->get_component<TransformComponent>();
   auto* blood_stain = blood_stains.front()->get_component<BloodStainComponent>();
@@ -2384,7 +2384,7 @@ TEST_F(CombatModeTest, NonLethalDamageQueuesPerSoldierCasualtyAnimations) {
   EXPECT_EQ(casualties->entries.front().state, DeathSequenceState::Dying);
   EXPECT_FALSE(target->has_component<DeathAnimationComponent>());
 
-  auto blood_stains = world->get_entities_with<BloodStainComponent>();
+  auto blood_stains = world->collect_entities_with<BloodStainComponent>();
   ASSERT_EQ(blood_stains.size(), 1U);
   auto* blood_transform = blood_stains.front()->get_component<TransformComponent>();
   ASSERT_NE(blood_transform, nullptr);
@@ -2859,7 +2859,7 @@ TEST_F(CombatModeTest,
   EXPECT_LT(primary_enemy_unit->health, 40);
   EXPECT_LT(splash_enemy_unit->health, 100);
   EXPECT_EQ(allied_undead_unit->health, 100);
-  EXPECT_EQ(world->get_entities_with<FirePatchComponent>().size(), 1U);
+  EXPECT_EQ(world->collect_entities_with<FirePatchComponent>().size(), 1U);
   EXPECT_NE(primary_enemy->get_component<BurningStatusComponent>(), nullptr);
   EXPECT_NE(splash_enemy->get_component<BurningStatusComponent>(), nullptr);
   EXPECT_EQ(allied_undead->get_component<BurningStatusComponent>(), nullptr);
@@ -3138,7 +3138,7 @@ TEST_F(CombatModeTest, BuildingDeathsDoNotCreateBloodStains) {
 
   Game::Systems::Combat::deal_damage(world.get(), building, 40, attacker->get_id());
 
-  EXPECT_TRUE(world->get_entities_with<BloodStainComponent>().empty());
+  EXPECT_TRUE(world->collect_entities_with<BloodStainComponent>().empty());
 }
 
 TEST_F(CombatModeTest, BloodStainsAreCappedAtTenActiveEntries) {
@@ -3158,13 +3158,13 @@ TEST_F(CombatModeTest, BloodStainsAreCappedAtTenActiveEntries) {
     Game::Systems::Combat::deal_damage(world.get(), target, 10, attacker->get_id());
 
     if (index == 0) {
-      auto blood_stains = world->get_entities_with<BloodStainComponent>();
+      auto blood_stains = world->collect_entities_with<BloodStainComponent>();
       ASSERT_EQ(blood_stains.size(), 1U);
       first_stain_id = blood_stains.front()->get_id();
     }
   }
 
-  auto blood_stains = world->get_entities_with<BloodStainComponent>();
+  auto blood_stains = world->collect_entities_with<BloodStainComponent>();
   ASSERT_EQ(blood_stains.size(), 10U);
   EXPECT_EQ(world->get_entity(first_stain_id), nullptr);
 }
@@ -5166,7 +5166,7 @@ TEST_F(CombatModeTest, CombatHitResolverFireballAreaImpactSpawnsFirePatch) {
   EXPECT_NE(splash->get_component<BurningStatusComponent>(), nullptr);
   EXPECT_EQ(ally->get_component<BurningStatusComponent>(), nullptr);
 
-  auto fire_patches = world->get_entities_with<FirePatchComponent>();
+  auto fire_patches = world->collect_entities_with<FirePatchComponent>();
   ASSERT_EQ(fire_patches.size(), 1U);
   auto* fire_patch = fire_patches.front()->get_component<FirePatchComponent>();
   auto* fire_patch_transform =

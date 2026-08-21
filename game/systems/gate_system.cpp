@@ -51,7 +51,7 @@ void GateSystem::update(Engine::Core::World* world, float delta_time) {
     return;
   }
 
-  auto gate_entities = world->get_entities_with<GateComponent>();
+  auto gate_entities = world->collect_entities_with<GateComponent>();
   if (gate_entities.empty()) {
     GateService::clear_blockers();
     return;
@@ -88,7 +88,7 @@ void GateSystem::update(Engine::Core::World* world, float delta_time) {
     return;
   }
 
-  for (auto* entity : world->get_entities_with<UnitComponent>()) {
+  for (auto* entity : world->collect_entities_with<UnitComponent>()) {
     if (entity == nullptr || entity->has_component<PendingRemovalComponent>()) {
       continue;
     }

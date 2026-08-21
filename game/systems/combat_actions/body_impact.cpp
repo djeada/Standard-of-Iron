@@ -136,7 +136,7 @@ auto find_body_impact_contact(
     }
   }
 
-  for (auto* candidate : world.get_entities_with<Engine::Core::UnitComponent>()) {
+  for (auto* candidate : world.collect_entities_with<Engine::Core::UnitComponent>()) {
     consider(candidate, best_score, contact);
   }
 

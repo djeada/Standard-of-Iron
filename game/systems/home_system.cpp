@@ -33,9 +33,9 @@ void HomeSystem::update(Engine::Core::World* world, float delta_time) {
     return;
   }
 
-  auto home_entities = world->get_entities_with<Engine::Core::HomeComponent>();
+  auto home_entities = world->collect_entities_with<Engine::Core::HomeComponent>();
   auto barracks_entities =
-      world->get_entities_with<Engine::Core::ProductionComponent>();
+      world->collect_entities_with<Engine::Core::ProductionComponent>();
 
   for (auto* home_entity : home_entities) {
     auto* home_comp = home_entity->get_component<Engine::Core::HomeComponent>();

@@ -38,7 +38,7 @@ void render_commander_auras(Renderer* renderer,
 
   float const animation_time = renderer->get_animation_time();
 
-  auto commanders = world->get_entities_with<Engine::Core::CommanderComponent>();
+  auto commanders = world->collect_entities_with<Engine::Core::CommanderComponent>();
 
   for (auto* entity : commanders) {
     if (entity->has_component<Engine::Core::PendingRemovalComponent>()) {
@@ -102,7 +102,7 @@ void render_commander_auras(Renderer* renderer,
   }
 
   for (auto* entity :
-       world->get_entities_with<Engine::Core::CommanderAuraBuffComponent>()) {
+       world->collect_entities_with<Engine::Core::CommanderAuraBuffComponent>()) {
     if (entity == nullptr ||
         entity->has_component<Engine::Core::PendingRemovalComponent>()) {
       continue;

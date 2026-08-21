@@ -1,0 +1,18 @@
+{
+  "app/commander": 4,
+  "app/economy": 1,
+  "app/persistence": 1,
+  "app/session": 3,
+  "app/viewmodels": 1,
+  "app/world": 3,
+  "game/map": 2,
+  "game/mission": 5,
+  "game/render_bridge": 4,
+  "game/systems": 95,
+  "game/units": 1,
+  "game/wildlife": 2,
+  "render": 3,
+  "render/entity": 17,
+  "render/geom": 2,
+  "tools/arena": 11
+}

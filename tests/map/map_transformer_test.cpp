@@ -82,7 +82,7 @@ TEST_F(MapTransformerStructureTest, SpawnsAuthoredBuildingsAndRegistersOwners) {
 
   int tower_count = 0;
   int home_count = 0;
-  for (auto* entity : world.get_entities_with<Engine::Core::UnitComponent>()) {
+  for (auto* entity : world.collect_entities_with<Engine::Core::UnitComponent>()) {
     ASSERT_NE(entity, nullptr);
     const auto* unit = entity->get_component<Engine::Core::UnitComponent>();
     const auto* transform = entity->get_component<Engine::Core::TransformComponent>();
@@ -155,7 +155,8 @@ TEST_F(MapTransformerStructureTest,
   };
 
   std::vector<WallSnapshot> walls;
-  for (auto* entity : world.get_entities_with<Engine::Core::WallSegmentComponent>()) {
+  for (auto* entity :
+       world.collect_entities_with<Engine::Core::WallSegmentComponent>()) {
     ASSERT_NE(entity, nullptr);
     const auto* unit = entity->get_component<Engine::Core::UnitComponent>();
     const auto* transform = entity->get_component<Engine::Core::TransformComponent>();
@@ -230,7 +231,7 @@ TEST_F(MapTransformerStructureTest, AuthoredGuardSpawnIsScenarioControlled) {
 
   Engine::Core::Entity* guard_entity = nullptr;
   Engine::Core::Entity* strategic_entity = nullptr;
-  for (auto* entity : world.get_entities_with<Engine::Core::UnitComponent>()) {
+  for (auto* entity : world.collect_entities_with<Engine::Core::UnitComponent>()) {
     ASSERT_NE(entity, nullptr);
     const auto* unit = entity->get_component<Engine::Core::UnitComponent>();
     ASSERT_NE(unit, nullptr);
@@ -268,7 +269,7 @@ TEST_F(MapTransformerStructureTest, DoesNotAcceptBuildingsThroughTroopSpawns) {
   });
 
   Game::Map::MapTransformer::apply_to_world(def, world);
-  EXPECT_TRUE(world.get_entities_with<Engine::Core::UnitComponent>().empty());
+  EXPECT_TRUE(world.collect_entities_with<Engine::Core::UnitComponent>().empty());
 }
 
 } // namespace

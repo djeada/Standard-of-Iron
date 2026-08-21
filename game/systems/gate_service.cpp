@@ -120,7 +120,7 @@ void GateService::refresh_blockers(Engine::Core::World& world) {
   auto& storage = blocker_storage();
   storage.clear();
 
-  for (auto* entity : world.get_entities_with<GateComponent>()) {
+  for (auto* entity : world.collect_entities_with<GateComponent>()) {
     if (entity == nullptr || entity->has_component<PendingRemovalComponent>()) {
       continue;
     }

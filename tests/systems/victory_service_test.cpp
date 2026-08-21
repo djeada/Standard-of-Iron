@@ -291,7 +291,7 @@ TEST_F(VictoryServiceTest, CommanderAloneWithoutBarracksTriggersDefeat) {
   advance_past_startup_delay(world);
   ASSERT_FALSE(m_service->is_game_over());
 
-  for (auto* entity : world.get_entities_with<Engine::Core::UnitComponent>()) {
+  for (auto* entity : world.collect_entities_with<Engine::Core::UnitComponent>()) {
     auto* unit = entity->get_component<Engine::Core::UnitComponent>();
     if (unit == nullptr ||
         entity->get_component<Engine::Core::CommanderComponent>() != nullptr) {

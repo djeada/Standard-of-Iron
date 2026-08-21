@@ -136,7 +136,7 @@ void VisibilityService::compute_immediate(Engine::Core::World& world, int player
 auto VisibilityService::gather_vision_sources(Engine::Core::World& world, int player_id)
     -> std::vector<VisibilityService::VisionSource> {
   std::vector<VisionSource> sources;
-  const auto entities = world.get_entities_with<Engine::Core::TransformComponent>();
+  const auto entities = world.collect_entities_with<Engine::Core::TransformComponent>();
   const float range_padding = m_tile_size * k_half_cell_offset;
 
   auto& owner_registry = Game::Systems::OwnerRegistry::instance();

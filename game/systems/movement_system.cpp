@@ -319,7 +319,7 @@ void MovementSystem::update(Engine::Core::World* world, float delta_time) {
       m_obstruction_revision = revision;
 
       pathfinder->update_navigation_grid();
-      auto entities = world->get_entities_with<Engine::Core::MovementComponent>();
+      auto entities = world->collect_entities_with<Engine::Core::MovementComponent>();
       repath_after_obstruction_release(*world, entities);
     }
   }

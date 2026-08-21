@@ -474,7 +474,7 @@ auto VictoryService::summarize_world(Engine::Core::World& world) const -> WorldS
       (local_nation != nullptr) ? local_nation->id
                                 : nation_registry.default_nation_id();
 
-  auto entities = world.get_entities_with<Engine::Core::UnitComponent>();
+  auto entities = world.collect_entities_with<Engine::Core::UnitComponent>();
   for (auto* entity : entities) {
     auto* unit = entity->get_component<Engine::Core::UnitComponent>();
     if ((unit == nullptr) || unit->health <= 0) {

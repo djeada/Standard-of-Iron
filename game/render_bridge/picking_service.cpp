@@ -178,7 +178,7 @@ auto PickingService::pick_single(float sx,
   float best_building_dist2 = std::numeric_limits<float>::max();
   Engine::Core::EntityID best_unit_id = 0;
   Engine::Core::EntityID best_building_id = 0;
-  auto ents = world.get_entities_with<Engine::Core::TransformComponent>();
+  auto ents = world.collect_entities_with<Engine::Core::TransformComponent>();
   for (auto* e : ents) {
     if (!e->has_component<Engine::Core::UnitComponent>()) {
       continue;
@@ -323,7 +323,7 @@ auto PickingService::pick_in_rect(float x1,
   float const min_y = std::min(y1, y2);
   float const max_y = std::max(y1, y2);
   std::vector<Engine::Core::EntityID> picked;
-  auto ents = world.get_entities_with<Engine::Core::TransformComponent>();
+  auto ents = world.collect_entities_with<Engine::Core::TransformComponent>();
   for (auto* e : ents) {
     if (!e->has_component<Engine::Core::UnitComponent>()) {
       continue;

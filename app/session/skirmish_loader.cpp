@@ -560,7 +560,7 @@ auto SkirmishLoader::start(const QString& map_path,
 
   Engine::Core::Entity* focus_entity = nullptr;
 
-  auto candidates = m_world.get_entities_with<Engine::Core::UnitComponent>();
+  auto candidates = m_world.collect_entities_with<Engine::Core::UnitComponent>();
   for (auto* entity : candidates) {
     if (entity == nullptr) {
       continue;

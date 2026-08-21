@@ -116,7 +116,7 @@ void CaptureSystem::process_barrack_capture(Engine::Core::World* world,
   constexpr float capture_radius = 8.0F;
   constexpr int troop_advantage_multiplier = 3;
 
-  auto barracks = world->get_entities_with<Engine::Core::BuildingComponent>();
+  auto barracks = world->collect_entities_with<Engine::Core::BuildingComponent>();
   if (barracks.empty()) {
     return;
   }
