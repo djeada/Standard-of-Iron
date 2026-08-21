@@ -61,7 +61,7 @@ void TroopCountRegistry::on_unit_died(const Engine::Core::UnitDiedEvent& event) 
 void TroopCountRegistry::rebuild_from_world(Engine::Core::World& world) {
   m_troop_counts.clear();
 
-  auto entities = world.get_entities_with<Engine::Core::UnitComponent>();
+  auto entities = world.collect_entities_with<Engine::Core::UnitComponent>();
   for (auto* e : entities) {
     auto* unit = e->get_component<Engine::Core::UnitComponent>();
     if ((unit == nullptr) || unit->health <= 0) {

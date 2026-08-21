@@ -71,7 +71,7 @@ auto scan_owner(Engine::Core::World* world, int owner_id) -> OwnerScan {
     return scan;
   }
 
-  for (auto* entity : world->get_entities_with<Engine::Core::UnitComponent>()) {
+  for (auto* entity : world->collect_entities_with<Engine::Core::UnitComponent>()) {
     if (entity == nullptr) {
       continue;
     }

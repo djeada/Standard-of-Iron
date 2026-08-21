@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <cmath>
 #include <limits>
+#include <vector>
 
 #include "../../core/component.h"
 #include "../../core/world.h"
@@ -59,13 +60,21 @@ void update_combat_mode(Engine::Core::Entity* attacker,
   }
 
   auto& owner_registry = Game::Systems::OwnerRegistry::instance();
-  auto units = world->get_entities_with<Engine::Core::UnitComponent>();
+
+  const float reach = std::max(attack_comp->range, attack_comp->melee_range);
+  static thread_local std::vector<Engine::Core::EntityID> nearby;
+  collect_unit_ids_near(*world,
+                        attacker_transform->position.x,
+                        attacker_transform->position.z,
+                        reach + 2.0F * FormationCombat::max_contact_extent(),
+                        nearby);
 
   float closest_enemy_dist_sq = std::numeric_limits<float>::max();
   float closest_height_diff = 0.0F;
 
-  for (auto* target : units) {
-    if (target == attacker) {
+  for (const Engine::Core::EntityID target_id : nearby) {
+    auto* target = world->get_entity(target_id);
+    if (target == nullptr || target == attacker) {
       continue;
     }
 

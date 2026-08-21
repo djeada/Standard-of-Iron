@@ -153,7 +153,7 @@ void render_blood_stains(Renderer* renderer,
            Game::Map::should_render_combat_effect(*fog_snapshot, world_x, world_z);
   };
 
-  auto blood_stains = world->get_entities_with<Engine::Core::BloodStainComponent>();
+  auto blood_stains = world->collect_entities_with<Engine::Core::BloodStainComponent>();
   for (auto* blood_entity : blood_stains) {
     if (blood_entity == nullptr ||
         blood_entity->has_component<Engine::Core::PendingRemovalComponent>()) {
@@ -213,7 +213,7 @@ void render_combat_dust(Renderer* renderer,
            Game::Map::should_render_combat_effect(*fog_snapshot, world_x, world_z);
   };
 
-  auto units = world->get_entities_with<Engine::Core::AttackComponent>();
+  auto units = world->collect_entities_with<Engine::Core::AttackComponent>();
 
   for (auto* unit : units) {
     if (unit->has_component<Engine::Core::PendingRemovalComponent>()) {
@@ -257,7 +257,8 @@ void render_combat_dust(Renderer* renderer,
                           animation_time);
   }
 
-  auto builders = world->get_entities_with<Engine::Core::BuilderProductionComponent>();
+  auto builders =
+      world->collect_entities_with<Engine::Core::BuilderProductionComponent>();
 
   for (auto* builder : builders) {
     if (builder->has_component<Engine::Core::PendingRemovalComponent>()) {
@@ -302,7 +303,7 @@ void render_combat_dust(Renderer* renderer,
   }
 
   auto burning_structures =
-      world->get_entities_with<Engine::Core::StructureFireComponent>();
+      world->collect_entities_with<Engine::Core::StructureFireComponent>();
 
   for (auto* building : burning_structures) {
     if (building == nullptr ||
@@ -342,7 +343,8 @@ void render_combat_dust(Renderer* renderer,
   }
 
   auto structure_impacts =
-      world->get_entities_with<Engine::Core::StructureDamagePresentationComponent>();
+      world
+          ->collect_entities_with<Engine::Core::StructureDamagePresentationComponent>();
   for (auto* building : structure_impacts) {
     if (building == nullptr ||
         building->has_component<Engine::Core::PendingRemovalComponent>()) {
@@ -403,7 +405,7 @@ void render_combat_dust(Renderer* renderer,
   }
 
   auto rpg_contacts =
-      world->get_entities_with<Engine::Core::RpgContactPresentationComponent>();
+      world->collect_entities_with<Engine::Core::RpgContactPresentationComponent>();
   for (auto* entity : rpg_contacts) {
     if (entity == nullptr ||
         entity->has_component<Engine::Core::PendingRemovalComponent>()) {
@@ -447,7 +449,7 @@ void render_combat_dust(Renderer* renderer,
   }
 
   auto casters =
-      world->get_entities_with<Engine::Core::CreaturePresentationComponent>();
+      world->collect_entities_with<Engine::Core::CreaturePresentationComponent>();
   for (auto* caster : casters) {
     if (caster == nullptr ||
         caster->has_component<Engine::Core::PendingRemovalComponent>()) {
@@ -510,7 +512,7 @@ void render_combat_dust(Renderer* renderer,
     renderer->local_light(charge_light);
   }
 
-  for (auto* commander : world->get_entities_with<
+  for (auto* commander : world->collect_entities_with<
                          Engine::Core::CommanderSignaturePresentationComponent>()) {
     if (commander == nullptr) {
       continue;
@@ -619,7 +621,8 @@ void render_combat_dust(Renderer* renderer,
     }
   }
 
-  auto burning_units = world->get_entities_with<Engine::Core::BurningStatusComponent>();
+  auto burning_units =
+      world->collect_entities_with<Engine::Core::BurningStatusComponent>();
   for (auto* burning_entity : burning_units) {
     if (burning_entity == nullptr ||
         burning_entity->has_component<Engine::Core::PendingRemovalComponent>()) {
@@ -725,7 +728,7 @@ void render_combat_dust(Renderer* renderer,
     }
   }
 
-  auto fire_patches = world->get_entities_with<Engine::Core::FirePatchComponent>();
+  auto fire_patches = world->collect_entities_with<Engine::Core::FirePatchComponent>();
   for (auto* fire_patch_entity : fire_patches) {
     if (fire_patch_entity == nullptr ||
         fire_patch_entity->has_component<Engine::Core::PendingRemovalComponent>()) {
@@ -797,7 +800,7 @@ void render_combat_dust(Renderer* renderer,
   auto& impact_tracker = StoneImpactTracker::instance();
 
   auto elephants =
-      world->get_entities_with<Engine::Core::ElephantStompImpactComponent>();
+      world->collect_entities_with<Engine::Core::ElephantStompImpactComponent>();
   for (auto* elephant : elephants) {
     auto* stomp_impact =
         elephant->get_component<Engine::Core::ElephantStompImpactComponent>();
@@ -1026,7 +1029,7 @@ void RpgTelegraphRenderer::render(Renderer* renderer,
   std::vector<Engine::Core::EntityID> seen;
   seen.reserve(16);
 
-  for (auto* entity : world->get_entities_with<CombatStateComponent>()) {
+  for (auto* entity : world->collect_entities_with<CombatStateComponent>()) {
     const auto id = entity->get_id();
     if (id == commander_id) {
       continue;
@@ -1150,7 +1153,7 @@ void RpgTelegraphRenderer::render(Renderer* renderer,
                     .color = ring_color});
   }
 
-  for (auto* entity : world->get_entities_with<StaggerComponent>()) {
+  for (auto* entity : world->collect_entities_with<StaggerComponent>()) {
     if (entity->get_id() == commander_id) {
       continue;
     }

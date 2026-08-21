@@ -11,6 +11,7 @@
 #include "../core/component.h"
 #include "../core/event_manager.h"
 #include "../core/world.h"
+#include "../core/world_spatial_index.h"
 #include "combat_rules.h"
 #include "healing_beam_system.h"
 #include "healing_colors.h"
@@ -45,8 +46,12 @@ void HealingSystem::update(Engine::Core::World* world, float delta_time) {
 }
 
 void HealingSystem::process_healing(Engine::Core::World* world, float delta_time) {
-  auto healers = world->get_entities_with<Engine::Core::HealerComponent>();
+  auto healers = world->collect_entities_with<Engine::Core::HealerComponent>();
   auto* healing_beam_system = world->get_system<HealingBeamSystem>();
+
+  auto& index = world->spatial_index();
+  index.refresh(*world);
+  std::vector<Engine::Core::EntityID> candidates;
 
   for (auto* healer : healers) {
     if (healer->has_component<Engine::Core::PendingRemovalComponent>()) {
@@ -80,9 +85,25 @@ void HealingSystem::process_healing(Engine::Core::World* world, float delta_time
     }
 
     bool healed_any = false;
-    auto units = world->get_entities_with<Engine::Core::UnitComponent>();
-    for (auto* target : units) {
-      if (target->has_component<Engine::Core::PendingRemovalComponent>()) {
+    candidates.clear();
+    index.for_each_in_radius(
+        healer_transform->position.x,
+        healer_transform->position.z,
+        healer_comp->healing_range,
+        [&](const Engine::Core::WorldSpatialIndex::Entry& entry) {
+          if (entry.owner_id != healer_unit->owner_id ||
+              entry.is(Engine::Core::WorldSpatialIndex::k_pending_removal)) {
+            return;
+          }
+          candidates.push_back(entry.id);
+        });
+
+    std::sort(candidates.begin(), candidates.end());
+
+    for (const Engine::Core::EntityID candidate_id : candidates) {
+      auto* target = world->get_entity(candidate_id);
+      if (target == nullptr ||
+          target->has_component<Engine::Core::PendingRemovalComponent>()) {
         continue;
       }
 

@@ -53,7 +53,7 @@ auto AmbientStateManager::is_player_in_combat(Engine::Core::World* world,
     return false;
   }
 
-  auto units = world->get_entities_with<Engine::Core::UnitComponent>();
+  auto units = world->collect_entities_with<Engine::Core::UnitComponent>();
   const float combat_check_radius = 15.0F;
 
   for (auto* entity : units) {

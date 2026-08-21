@@ -25,7 +25,7 @@ auto is_working_on(const Engine::Core::BuilderProductionComponent& builder,
 
 void release_crew(Engine::Core::World* world, Engine::Core::EntityID structure_id) {
   for (auto* worker :
-       world->get_entities_with<Engine::Core::BuilderProductionComponent>()) {
+       world->collect_entities_with<Engine::Core::BuilderProductionComponent>()) {
     auto* builder = worker->get_component<Engine::Core::BuilderProductionComponent>();
     if (builder == nullptr || builder->structure_task_entity_id != structure_id ||
         builder->product_type != k_builder_product_dismantle) {
@@ -47,14 +47,14 @@ void DismantleSystem::update(Engine::Core::World* world, float delta_time) {
     return;
   }
 
-  auto sites = world->get_entities_with<Engine::Core::DismantleSiteComponent>();
+  auto sites = world->collect_entities_with<Engine::Core::DismantleSiteComponent>();
   if (sites.empty()) {
     return;
   }
 
   std::unordered_map<Engine::Core::EntityID, int> crew_by_structure;
   for (auto* worker :
-       world->get_entities_with<Engine::Core::BuilderProductionComponent>()) {
+       world->collect_entities_with<Engine::Core::BuilderProductionComponent>()) {
     const auto* builder =
         worker->get_component<Engine::Core::BuilderProductionComponent>();
     const auto* worker_unit = worker->get_component<Engine::Core::UnitComponent>();

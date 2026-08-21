@@ -139,7 +139,8 @@ auto collect_target_focus_markers(const TargetFocusRequest& request)
   }
 
   std::size_t incoming_count = 0;
-  for (auto* entity : world->get_entities_with<Engine::Core::AttackTargetComponent>()) {
+  for (auto* entity :
+       world->collect_entities_with<Engine::Core::AttackTargetComponent>()) {
     if (incoming_count >= request.max_incoming_attackers) {
       break;
     }

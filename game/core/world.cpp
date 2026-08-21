@@ -2,11 +2,21 @@
 
 #include <algorithm>
 #include <bit>
+#include <chrono>
 #include <cmath>
+#include <cstdlib>
+#include <map>
 #include <memory>
 #include <mutex>
 #include <numbers>
+#include <string>
 #include <string_view>
+#include <typeinfo>
+
+#if defined(__GNUC__) && __has_include(<cxxabi.h>)
+#include <cxxabi.h>
+#define SOI_HAS_CXA_DEMANGLE 1
+#endif
 #include <type_traits>
 #include <utility>
 #include <vector>
@@ -925,7 +935,7 @@ void World::on_component_changed(EntityID entity_id,
                                  std::type_index component_type,
                                  bool added) {
 
-  const std::lock_guard<std::recursive_mutex> lock(m_entity_mutex);
+  const EntityLock lock(*this);
 
   if (m_component_sets.size() <= type_id) {
     m_component_sets.resize(static_cast<std::size_t>(type_id) + 1);
@@ -951,9 +961,13 @@ void World::setup_entity_callback(Entity* entity) {
   });
 }
 
-auto World::collect_entities_with(ComponentTypeId type_id) -> std::vector<Entity*> {
-  const std::lock_guard<std::recursive_mutex> lock(m_entity_mutex);
+auto World::collect_entities_with_type(ComponentTypeId type_id,
+                                       const std::source_location& where)
+    -> std::vector<Entity*> {
+  const EntityLock lock(*this);
+  ++m_query_counters.collects;
   if (type_id >= m_component_sets.size()) {
+    m_system_profiler.note_collect_call_site(where.file_name(), where.line(), 0);
     return {};
   }
 
@@ -965,11 +979,14 @@ auto World::collect_entities_with(ComponentTypeId type_id) -> std::vector<Entity
       result.push_back(entity);
     }
   }
+  m_query_counters.collected_entities += result.size();
+  m_system_profiler.note_collect_call_site(
+      where.file_name(), where.line(), result.size());
   return result;
 }
 
 auto World::entities_with(ComponentTypeId type_id) const -> std::span<const EntityID> {
-  const std::lock_guard<std::recursive_mutex> lock(m_entity_mutex);
+  const EntityLock lock(*this);
   if (type_id >= m_component_sets.size()) {
     return {};
   }
@@ -978,7 +995,7 @@ auto World::entities_with(ComponentTypeId type_id) const -> std::span<const Enti
 
 void World::resolve_entities_into(std::span<const EntityID> ids,
                                   std::vector<Entity*>& output) const {
-  const std::lock_guard<std::recursive_mutex> lock(m_entity_mutex);
+  const EntityLock lock(*this);
   output.clear();
   if (output.capacity() < ids.size()) {
     output.reserve(ids.size());
@@ -991,7 +1008,7 @@ void World::resolve_entities_into(std::span<const EntityID> ids,
 }
 
 auto World::create_entity() -> Entity* {
-  const std::lock_guard<std::recursive_mutex> lock(m_entity_mutex);
+  const EntityLock lock(*this);
 
   std::uint32_t index = 0;
   if (!m_free_slots.empty()) {
@@ -1011,7 +1028,7 @@ auto World::create_entity() -> Entity* {
 }
 
 auto World::create_entity_with_id(EntityID entity_id) -> Entity* {
-  const std::lock_guard<std::recursive_mutex> lock(m_entity_mutex);
+  const EntityLock lock(*this);
   if (entity_id == NULL_ENTITY) {
     return nullptr;
   }
@@ -1047,7 +1064,7 @@ auto World::create_entity_with_id(EntityID entity_id) -> Entity* {
 }
 
 void World::destroy_entity(EntityID entity_id) {
-  const std::lock_guard<std::recursive_mutex> lock(m_entity_mutex);
+  const EntityLock lock(*this);
 
   const std::uint32_t index = Handle::index_of(entity_id);
   if (index != 0 && index < m_slots.size()) {
@@ -1074,7 +1091,7 @@ void World::destroy_entity(EntityID entity_id) {
 }
 
 void World::clear() {
-  const std::lock_guard<std::recursive_mutex> lock(m_entity_mutex);
+  const EntityLock lock(*this);
 
   for (std::size_t i = 1; i < m_slots.size(); ++i) {
     if (m_slots[i].entity != nullptr) {
@@ -1087,6 +1104,8 @@ void World::clear() {
     m_free_slots.push_back(static_cast<std::uint32_t>(i));
   }
   m_live_count = 0;
+  m_deferred.clear();
+  m_spatial_index.clear();
 
   for (auto& set : m_component_sets) {
     set.clear();
@@ -1099,31 +1118,141 @@ void World::clear() {
 }
 
 auto World::get_entity(EntityID entity_id) -> Entity* {
-  const std::lock_guard<std::recursive_mutex> lock(m_entity_mutex);
+  const EntityLock lock(*this);
   return resolve(entity_id);
 }
 
 auto World::is_alive(EntityID entity_id) const -> bool {
-  const std::lock_guard<std::recursive_mutex> lock(m_entity_mutex);
+  const EntityLock lock(*this);
   return resolve(entity_id) != nullptr;
 }
 
 auto World::entity_count() const -> std::size_t {
-  const std::lock_guard<std::recursive_mutex> lock(m_entity_mutex);
+  const EntityLock lock(*this);
   return m_live_count;
 }
 
 void World::add_system(std::unique_ptr<System> system) {
+  const SystemPhase phase = system != nullptr ? system->phase() : SystemPhase::Combat;
+  add_system(std::move(system), phase);
+}
+
+void World::add_system(std::unique_ptr<System> system, SystemPhase phase) {
   m_systems.push_back(std::move(system));
+  m_system_phases.push_back(phase);
+}
+
+auto World::plan_phase_schedule(SystemPhase phase) const
+    -> std::vector<std::vector<std::size_t>> {
+  std::vector<SystemAccess> declared;
+  std::vector<std::size_t> phase_slots;
+  for (std::size_t slot = 0; slot < m_systems.size(); ++slot) {
+    if (m_system_phases[slot] != phase || m_systems[slot] == nullptr) {
+      continue;
+    }
+    declared.push_back(m_systems[slot]->access());
+    phase_slots.push_back(slot);
+  }
+
+  auto batches = plan_phase_batches(declared);
+  for (auto& batch : batches) {
+    for (std::size_t& index : batch) {
+      index = phase_slots[index];
+    }
+  }
+  return batches;
+}
+
+namespace {
+
+auto demangled_system_name(const std::type_info& type) -> const std::string& {
+  static std::map<std::string, std::string> cache;
+  const std::string key = type.name();
+  auto existing = cache.find(key);
+  if (existing != cache.end()) {
+    return existing->second;
+  }
+
+  std::string readable = key;
+#if defined(SOI_HAS_CXA_DEMANGLE)
+  int status = 0;
+  char* raw = abi::__cxa_demangle(key.c_str(), nullptr, nullptr, &status);
+  if (status == 0 && raw != nullptr) {
+    readable = raw;
+  }
+  std::free(raw);
+#endif
+
+  const std::size_t last_scope = readable.rfind("::");
+  if (last_scope != std::string::npos) {
+    readable = readable.substr(last_scope + 2);
+  }
+  return cache.emplace(key, std::move(readable)).first->second;
+}
+
+} // namespace
+
+auto World::system_display_name(const System& system) -> const char* {
+  return demangled_system_name(typeid(system)).c_str();
+}
+
+auto World::current_query_counters() const -> SystemProfiler::QueryCounters {
+  SystemProfiler::QueryCounters counters = m_query_counters;
+  const WorldSpatialIndex::Stats& spatial = m_spatial_index.stats();
+  counters.spatial_queries = spatial.queries;
+  counters.spatial_candidates = spatial.candidates_examined;
+  return counters;
 }
 
 void World::update(float delta_time) {
-  const std::lock_guard<std::recursive_mutex> lock(m_entity_mutex);
+  const EntityLock lock(*this);
+  ++m_tick_id;
   if (m_presentation_enabled) {
     begin_motion_presentation_frame(*this, delta_time);
   }
-  for (auto& system : m_systems) {
-    system->update(this, delta_time);
+
+  const bool profiling = m_system_profiler.enabled();
+  const auto tick_started = std::chrono::steady_clock::now();
+  if (profiling) {
+    m_system_profiler.begin_tick(m_tick_id, m_live_count);
+  }
+
+  SystemPhase current_phase =
+      m_system_phases.empty() ? SystemPhase::Input : m_system_phases.front();
+
+  for (std::size_t slot = 0; slot < m_systems.size(); ++slot) {
+    System& system = *m_systems[slot];
+
+    const SystemPhase slot_phase = m_system_phases[slot];
+    if (slot_phase != current_phase) {
+      m_deferred.apply(*this);
+      current_phase = slot_phase;
+    }
+
+    if (!profiling) {
+      system.update(this, delta_time);
+      continue;
+    }
+
+    const SystemProfiler::QueryCounters queries_before = current_query_counters();
+    const auto started = std::chrono::steady_clock::now();
+    system.update(this, delta_time);
+    const auto elapsed = std::chrono::steady_clock::now() - started;
+    m_system_profiler.record_system(
+        slot,
+        system_display_name(system),
+        static_cast<std::uint64_t>(
+            std::chrono::duration_cast<std::chrono::microseconds>(elapsed).count()),
+        current_query_counters() - queries_before);
+  }
+
+  m_deferred.apply(*this);
+
+  if (profiling) {
+    m_system_profiler.end_tick(static_cast<std::uint64_t>(
+        std::chrono::duration_cast<std::chrono::microseconds>(
+            std::chrono::steady_clock::now() - tick_started)
+            .count()));
   }
   if (m_presentation_enabled) {
     finalize_motion_presentation_frame(*this, delta_time);
@@ -1147,7 +1276,7 @@ void World::ensure_render_snapshot() {
   if (m_render_publish_revision != 0) {
     return;
   }
-  const std::lock_guard<std::recursive_mutex> lock(m_entity_mutex);
+  const EntityLock lock(*this);
   if (m_render_publish_revision == 0) {
     publish_render_snapshot();
   }
@@ -1260,12 +1389,12 @@ auto World::get_units_not_owned_by(int owner_id) const -> std::vector<Entity*> {
 }
 
 auto World::get_next_entity_id() const -> EntityID {
-  const std::lock_guard<std::recursive_mutex> lock(m_entity_mutex);
+  const EntityLock lock(*this);
   return Handle::make(static_cast<std::uint32_t>(m_slots.size()), 0);
 }
 
 void World::set_next_entity_id(EntityID next_id) {
-  const std::lock_guard<std::recursive_mutex> lock(m_entity_mutex);
+  const EntityLock lock(*this);
   const std::uint32_t index = Handle::index_of(next_id);
   if (m_slots.size() < index) {
     const auto previous_size = m_slots.size();
@@ -1278,7 +1407,7 @@ void World::set_next_entity_id(EntityID next_id) {
 
 auto World::add_component_observer(ComponentObserverCallback callback)
     -> ObserverHandle {
-  const std::lock_guard<std::recursive_mutex> lock(m_entity_mutex);
+  const EntityLock lock(*this);
   const ObserverHandle handle = m_next_observer_handle++;
   m_component_observers.push_back({handle, std::move(callback)});
   return handle;
@@ -1286,7 +1415,7 @@ auto World::add_component_observer(ComponentObserverCallback callback)
 
 auto World::add_entity_destroyed_observer(EntityDestroyedCallback callback)
     -> ObserverHandle {
-  const std::lock_guard<std::recursive_mutex> lock(m_entity_mutex);
+  const EntityLock lock(*this);
   const ObserverHandle handle = m_next_observer_handle++;
   m_entity_destroyed_observers.push_back({handle, std::move(callback)});
   return handle;
@@ -1294,26 +1423,26 @@ auto World::add_entity_destroyed_observer(EntityDestroyedCallback callback)
 
 auto World::add_world_cleared_observer(WorldClearedCallback callback)
     -> ObserverHandle {
-  const std::lock_guard<std::recursive_mutex> lock(m_entity_mutex);
+  const EntityLock lock(*this);
   const ObserverHandle handle = m_next_observer_handle++;
   m_world_cleared_observers.push_back({handle, std::move(callback)});
   return handle;
 }
 
 void World::remove_component_observer(ObserverHandle handle) {
-  const std::lock_guard<std::recursive_mutex> lock(m_entity_mutex);
+  const EntityLock lock(*this);
   std::erase_if(m_component_observers,
                 [handle](const auto& entry) { return entry.handle == handle; });
 }
 
 void World::remove_entity_destroyed_observer(ObserverHandle handle) {
-  const std::lock_guard<std::recursive_mutex> lock(m_entity_mutex);
+  const EntityLock lock(*this);
   std::erase_if(m_entity_destroyed_observers,
                 [handle](const auto& entry) { return entry.handle == handle; });
 }
 
 void World::remove_world_cleared_observer(ObserverHandle handle) {
-  const std::lock_guard<std::recursive_mutex> lock(m_entity_mutex);
+  const EntityLock lock(*this);
   std::erase_if(m_world_cleared_observers,
                 [handle](const auto& entry) { return entry.handle == handle; });
 }

@@ -198,7 +198,7 @@ TEST_F(WallMechanicsTest, BuilderConstructionSpawnsWallSegment) {
   system.update(&world, 0.1F);
 
   Entity* spawned_wall = nullptr;
-  for (auto* entity : world.get_entities_with<UnitComponent>()) {
+  for (auto* entity : world.collect_entities_with<UnitComponent>()) {
     if (entity == builder) {
       continue;
     }

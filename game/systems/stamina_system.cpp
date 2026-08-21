@@ -31,14 +31,13 @@ void StaminaSystem::update(Engine::Core::World* world, float delta_time) {
     return;
   }
 
-  for (auto* entity : world->get_entities_with<Engine::Core::StaminaComponent>()) {
-    auto* stamina = entity->get_component<Engine::Core::StaminaComponent>();
-    if (stamina == nullptr) {
-      continue;
-    }
+  for (auto [entity, stamina_ref, unit_ref] :
+       world->entity_view<Engine::Core::StaminaComponent,
+                          Engine::Core::UnitComponent>()) {
+    auto* stamina = &stamina_ref;
+    const auto* unit = &unit_ref;
 
-    const auto* unit = entity->get_component<Engine::Core::UnitComponent>();
-    if (unit == nullptr || unit->health <= 0) {
+    if (unit->health <= 0) {
       stamina->is_running = false;
       continue;
     }
@@ -50,8 +49,8 @@ void StaminaSystem::update(Engine::Core::World* world, float delta_time) {
     }
 
     const auto* motion =
-        entity->get_component<Engine::Core::MotionPresentationComponent>();
-    const auto* movement = entity->get_component<Engine::Core::MovementComponent>();
+        entity.get_component<Engine::Core::MotionPresentationComponent>();
+    const auto* movement = entity.get_component<Engine::Core::MovementComponent>();
     const bool is_moving = has_locomotion_intent(motion, movement);
 
     if (stamina->run_requested && is_moving) {

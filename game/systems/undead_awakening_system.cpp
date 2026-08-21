@@ -287,7 +287,7 @@ auto UndeadAwakeningSystem::should_awaken_zone(Engine::Core::World& world,
     }
 
     float const radius_sq = zone.definition.radius * zone.definition.radius;
-    for (auto* entity : world.get_entities_with<Engine::Core::UnitComponent>()) {
+    for (auto* entity : world.collect_entities_with<Engine::Core::UnitComponent>()) {
       if (entity == nullptr) {
         continue;
       }

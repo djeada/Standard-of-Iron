@@ -1511,7 +1511,8 @@ struct ArenaScenarioRunner::Impl {
   }
 
   void record_animals(TraceFrame& frame) {
-    for (auto* entity : world.get_entities_with<Engine::Core::WildlifeComponent>()) {
+    for (auto* entity :
+         world.collect_entities_with<Engine::Core::WildlifeComponent>()) {
       if (entity == nullptr) {
         continue;
       }
@@ -1526,7 +1527,8 @@ struct ArenaScenarioRunner::Impl {
 
   void observe_wildlife() {
     int population = 0;
-    for (auto* entity : world.get_entities_with<Engine::Core::WildlifeComponent>()) {
+    for (auto* entity :
+         world.collect_entities_with<Engine::Core::WildlifeComponent>()) {
       if (entity == nullptr) {
         continue;
       }
@@ -1574,7 +1576,7 @@ struct ArenaScenarioRunner::Impl {
     if (scenario.undead_zones.empty()) {
       return;
     }
-    auto const entities = world.get_entities_with<Engine::Core::UnitComponent>();
+    auto const entities = world.collect_entities_with<Engine::Core::UnitComponent>();
     for (auto const& zone : scenario.undead_zones) {
       auto& state = undead_zone_states[zone.id];
       auto& seen = undead_zone_entities[zone.id];
@@ -4050,7 +4052,7 @@ auto ArenaScenarioRunner::start() -> bool {
         rpg->rpg_hp;
   }
   for (auto* entity :
-       m_impl->world.get_entities_with<Engine::Core::BuildingComponent>()) {
+       m_impl->world.collect_entities_with<Engine::Core::BuildingComponent>()) {
     if (entity != nullptr) {
       m_impl->initial_building_ids.insert(entity->get_id());
     }
@@ -4116,7 +4118,7 @@ void ArenaScenarioRunner::observe_rendered_frame(
   frame.timings = timings;
   m_impl->record_animals(frame);
   for (auto* entity :
-       m_impl->world.get_entities_with<Engine::Core::BuildingComponent>()) {
+       m_impl->world.collect_entities_with<Engine::Core::BuildingComponent>()) {
     if (entity == nullptr || m_impl->initial_building_ids.contains(entity->get_id()) ||
         m_impl->observed_constructed_building_ids.contains(entity->get_id())) {
       continue;

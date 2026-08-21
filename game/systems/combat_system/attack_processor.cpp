@@ -302,7 +302,7 @@ auto should_prioritize_healing(Engine::Core::Entity* healer,
     return false;
   }
 
-  for (auto* target : world->get_entities_with<Engine::Core::UnitComponent>()) {
+  for (auto* target : world->collect_entities_with<Engine::Core::UnitComponent>()) {
     if (target == nullptr ||
         target->has_component<Engine::Core::PendingRemovalComponent>()) {
       continue;
@@ -1061,7 +1061,7 @@ auto is_formation_reserve(Engine::Core::Entity* entity,
   }
   int front_rank = mode->stable_rank;
   for (auto* member :
-       world->get_entities_with<Engine::Core::FormationModeComponent>()) {
+       world->collect_entities_with<Engine::Core::FormationModeComponent>()) {
     auto const* member_mode =
         member->get_component<Engine::Core::FormationModeComponent>();
     auto const* member_unit = member->get_component<Engine::Core::UnitComponent>();

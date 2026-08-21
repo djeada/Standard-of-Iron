@@ -106,11 +106,11 @@ TEST(ComponentIndexTest, TracksMembershipAcrossAddAndRemove) {
   b->add_component<TransformComponent>();
   c->add_component<UnitComponent>();
 
-  EXPECT_EQ(world.get_entities_with<TransformComponent>().size(), 2U);
-  EXPECT_EQ(world.get_entities_with<UnitComponent>().size(), 1U);
+  EXPECT_EQ(world.collect_entities_with<TransformComponent>().size(), 2U);
+  EXPECT_EQ(world.collect_entities_with<UnitComponent>().size(), 1U);
 
   b->remove_component<TransformComponent>();
-  auto transforms = world.get_entities_with<TransformComponent>();
+  auto transforms = world.collect_entities_with<TransformComponent>();
   ASSERT_EQ(transforms.size(), 1U);
   EXPECT_EQ(transforms.front(), a);
 }
@@ -331,8 +331,8 @@ TEST(ComponentIndexTest, DestroyingAnEntityDropsItFromEveryIndex) {
 
   world.destroy_entity(id);
 
-  EXPECT_TRUE(world.get_entities_with<TransformComponent>().empty());
-  EXPECT_TRUE(world.get_entities_with<UnitComponent>().empty());
+  EXPECT_TRUE(world.collect_entities_with<TransformComponent>().empty());
+  EXPECT_TRUE(world.collect_entities_with<UnitComponent>().empty());
   EXPECT_EQ(world.entity_count(), 0U);
 }
 
@@ -349,7 +349,7 @@ TEST(ComponentIndexTest, SwapRemoveKeepsEveryOtherMemberReachable) {
   entities[3]->remove_component<TransformComponent>();
   entities[0]->remove_component<TransformComponent>();
 
-  auto remaining = world.get_entities_with<TransformComponent>();
+  auto remaining = world.collect_entities_with<TransformComponent>();
   EXPECT_EQ(remaining.size(), 6U);
   for (std::size_t i = 0; i < entities.size(); ++i) {
     const bool expected = i != 0 && i != 3;
@@ -371,8 +371,8 @@ TEST(ComponentIndexTest, RecycledSlotsDoNotInheritTheOldEntitysComponents) {
   ASSERT_EQ(Handle::index_of(second->get_id()), Handle::index_of(stale));
   second->add_component<TransformComponent>();
 
-  EXPECT_TRUE(world.get_entities_with<UnitComponent>().empty());
-  auto transforms = world.get_entities_with<TransformComponent>();
+  EXPECT_TRUE(world.collect_entities_with<UnitComponent>().empty());
+  auto transforms = world.collect_entities_with<TransformComponent>();
   ASSERT_EQ(transforms.size(), 1U);
   EXPECT_EQ(transforms.front(), second);
 }
@@ -383,14 +383,14 @@ TEST(ComponentIndexTest, ReplacingAnIdClearsTheOldOccupantsIndexEntries) {
   auto* original = world.create_entity_with_id(7);
   ASSERT_NE(original, nullptr);
   original->add_component<UnitComponent>();
-  ASSERT_EQ(world.get_entities_with<UnitComponent>().size(), 1U);
+  ASSERT_EQ(world.collect_entities_with<UnitComponent>().size(), 1U);
 
   auto* replacement = world.create_entity_with_id(7);
   ASSERT_NE(replacement, nullptr);
   replacement->add_component<TransformComponent>();
 
-  EXPECT_TRUE(world.get_entities_with<UnitComponent>().empty());
-  EXPECT_EQ(world.get_entities_with<TransformComponent>().size(), 1U);
+  EXPECT_TRUE(world.collect_entities_with<UnitComponent>().empty());
+  EXPECT_EQ(world.collect_entities_with<TransformComponent>().size(), 1U);
   EXPECT_EQ(world.entity_count(), 1U);
 }
 

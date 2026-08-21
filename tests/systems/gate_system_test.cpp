@@ -183,8 +183,9 @@ TEST_F(GateSystemTest, OpensForOwnerTroopInRange) {
 
   tick(world, 2.0F);
 
-  const auto* gate =
-      world.get_entities_with<GateComponent>().front()->get_component<GateComponent>();
+  const auto* gate = world.collect_entities_with<GateComponent>()
+                         .front()
+                         ->get_component<GateComponent>();
   EXPECT_TRUE(gate->is_passable());
   EXPECT_EQ(gate->state, GateComponent::State::Open);
 }

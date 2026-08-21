@@ -49,7 +49,7 @@ void SkirmishRuntimeCoordinator::center_camera_on_local_forces(
   int troops_count = 0;
   int structures_count = 0;
 
-  for (auto* entity : ctx.world->get_entities_with<Engine::Core::UnitComponent>()) {
+  for (auto* entity : ctx.world->collect_entities_with<Engine::Core::UnitComponent>()) {
     if (entity == nullptr) {
       continue;
     }

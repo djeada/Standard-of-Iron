@@ -92,7 +92,7 @@ void render_patrol_flags(Renderer* renderer,
     rendered_positions.insert(pos_hash);
   }
 
-  auto patrol_entities = world.get_entities_with<Engine::Core::PatrolComponent>();
+  auto patrol_entities = world.collect_entities_with<Engine::Core::PatrolComponent>();
 
   for (auto* entity : patrol_entities) {
     auto* patrol = entity->get_component<Engine::Core::PatrolComponent>();
@@ -153,7 +153,8 @@ void render_commander_rally_flags(Renderer* renderer,
   if (world == nullptr) {
     return;
   }
-  for (auto* entity : world->get_entities_with<Engine::Core::CommanderComponent>()) {
+  for (auto* entity :
+       world->collect_entities_with<Engine::Core::CommanderComponent>()) {
     auto* commander = entity->get_component<Engine::Core::CommanderComponent>();
     auto* unit = entity->get_component<Engine::Core::UnitComponent>();
     if ((commander == nullptr) || (unit == nullptr) ||

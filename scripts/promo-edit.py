@@ -333,26 +333,32 @@ TRANSITIONS = {
 DEFAULT_TRANSITION = "dissolve"
 DEFAULT_TRANSITION_SECONDS = 0.35
 
-FONT_CANDIDATES = (
-    "/usr/share/fonts/truetype/ebgaramond/EBGaramond12-Bold.ttf",
-    "/usr/share/texmf/fonts/opentype/public/lm/lmromancaps10-regular.otf",
-    "/usr/share/fonts/opentype/ebgaramond/EBGaramondSC12-Regular.otf",
-    "/usr/share/fonts/opentype/linux-libertine/LinLibertine_RB.otf",
-    "/usr/share/fonts/truetype/adf/AccanthisADFStd-Bold.otf",
-    "/usr/share/fonts/truetype/noto/NotoSerifDisplay-Bold.ttf",
-    "/usr/share/fonts/truetype/dejavu/DejaVuSerif-Bold.ttf",
-    "/usr/share/fonts/truetype/liberation/LiberationSerif-Bold.ttf",
-)
-"""Preferred caption faces, most period-appropriate first.
+REPO_ROOT = Path(__file__).resolve().parent.parent
+BUNDLED_FONT_DIR = REPO_ROOT / "assets" / "fonts"
 
-The order is a compromise between two things the cards have to do at once. An
-ancient-looking card wants inscriptional Roman capitals -- high stroke
-contrast, fine bracketed serifs, the shapes cut on a Trajanic base -- and
-`lmromancaps10` is exactly that. But captions here are drawn over moving
-footage with a 4 px black border, and hairline serifs disappear under it. EB
-Garamond's bold is old-style enough to read as carved rather than typed while
-keeping stem weight the border cannot swallow, so it leads and the pure
-inscriptional face is the fallback."""
+FONT_CANDIDATES = (
+    BUNDLED_FONT_DIR / "StandardIronDisplay-Bold.ttf",
+    BUNDLED_FONT_DIR / "EBGaramond12-Bold.ttf",
+)
+"""Preferred caption faces, most brand-specific first.
+
+These are the faces the repository ships, not the ones the host happens to
+have installed, and that is the whole point. This used to be an eight-deep
+walk down /usr/share/fonts that started at EB Garamond and ended at Liberation
+Serif, which meant the same promo spec rendered in a different typeface
+depending on which machine cut it -- a build box, a laptop and CI could each
+publish a differently-lettered reel from identical inputs and nothing in the
+output said so. Reels are the game's most-seen surface; they cannot be a
+function of the packages installed.
+
+The order is also a compromise between two things the cards have to do at
+once. An ancient-looking card wants inscriptional Roman capitals -- high
+stroke contrast, fine bracketed serifs, the shapes cut on a Trajanic base.
+But captions here are drawn over moving footage with a 4 px black border, and
+hairline serifs disappear under it. So the display face leads, and EB
+Garamond's bold -- old-style enough to read as carved rather than typed, with
+stem weight the border cannot swallow -- backs it up and covers everything the
+display face has no glyph for."""
 
 
 def fail(message: str) -> None:
@@ -390,11 +396,19 @@ def reject(staged: Path, output: Path, message: str) -> None:
 
 
 def resolve_font(requested: str | None) -> str:
-    candidates = (requested, *FONT_CANDIDATES) if requested else FONT_CANDIDATES
-    for candidate in candidates:
-        if candidate and Path(candidate).is_file():
-            return candidate
-    fail("no usable bold font found; pass --font with a .ttf path")
+    if requested:
+        if Path(requested).is_file():
+            return requested
+        fail(f"--font {requested} is not a file")
+    for candidate in FONT_CANDIDATES:
+        if candidate.is_file():
+            return str(candidate)
+    fail(
+        "no bundled caption face found under "
+        f"{BUNDLED_FONT_DIR}; the repository ships one so that every machine "
+        "cuts the same lettering. Restore it, or pass --font explicitly and "
+        "accept that the reel will not match the others."
+    )
     raise AssertionError("unreachable")
 
 

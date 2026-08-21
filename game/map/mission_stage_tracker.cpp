@@ -172,7 +172,7 @@ auto MissionStageTracker::update(Game::Session::SessionContext& session,
   std::vector<StageTally> tallies(m_stages.size());
   int enemy_commanders = 0;
 
-  for (auto* entity : world.get_entities_with<Engine::Core::UnitComponent>()) {
+  for (auto* entity : world.collect_entities_with<Engine::Core::UnitComponent>()) {
     auto* unit = entity->get_component<Engine::Core::UnitComponent>();
     if (unit == nullptr || unit->health <= 0) {
       continue;

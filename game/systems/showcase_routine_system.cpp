@@ -82,7 +82,7 @@ void ShowcaseRoutineSystem::update(Engine::Core::World* world, float delta_time)
   }
 
   for (auto* entity :
-       world->get_entities_with<Engine::Core::ShowcaseRoutineComponent>()) {
+       world->collect_entities_with<Engine::Core::ShowcaseRoutineComponent>()) {
     auto* routine = entity->get_component<Engine::Core::ShowcaseRoutineComponent>();
     if (routine == nullptr || routine->steps.empty() || routine->finished) {
       if (routine != nullptr) {

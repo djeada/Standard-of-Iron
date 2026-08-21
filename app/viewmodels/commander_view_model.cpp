@@ -61,7 +61,8 @@ auto CommanderViewModel::find_local_commander() const -> Engine::Core::Entity* {
     return nullptr;
   }
   const int owner = m_context.local_owner_id;
-  for (auto* entity : world->get_entities_with<Engine::Core::CommanderComponent>()) {
+  for (auto* entity :
+       world->collect_entities_with<Engine::Core::CommanderComponent>()) {
     if (entity == nullptr) {
       continue;
     }
