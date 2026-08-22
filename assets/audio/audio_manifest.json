@@ -2934,6 +2934,83 @@
       "tags": {
         "source": "synth"
       }
+    },
+    {
+      "id": "ui.confirm.synth",
+      "path": "sfx/ui/confirm_seal.ogg",
+      "category": "sfx",
+      "priority": 5,
+      "cooldown_ms": 80,
+      "load_policy": "startup",
+      "tags": {
+        "source": "synth"
+      }
+    },
+    {
+      "id": "ui.confirm.synth_v2",
+      "path": "sfx/ui/confirm_seal_v2.ogg",
+      "category": "sfx",
+      "priority": 5,
+      "cooldown_ms": 80,
+      "load_policy": "startup",
+      "tags": {
+        "source": "synth"
+      }
+    },
+    {
+      "id": "sfx.command.accept",
+      "path": "sfx/ui/command_accept.ogg",
+      "category": "sfx",
+      "priority": 5,
+      "cooldown_ms": 70,
+      "load_policy": "startup",
+      "tags": {
+        "source": "synth"
+      }
+    },
+    {
+      "id": "sfx.command.accept_v2",
+      "path": "sfx/ui/command_accept_v2.ogg",
+      "category": "sfx",
+      "priority": 5,
+      "cooldown_ms": 70,
+      "load_policy": "startup",
+      "tags": {
+        "source": "synth"
+      }
+    },
+    {
+      "id": "sfx.command.accept_v3",
+      "path": "sfx/ui/command_accept_v3.ogg",
+      "category": "sfx",
+      "priority": 5,
+      "cooldown_ms": 70,
+      "load_policy": "startup",
+      "tags": {
+        "source": "synth"
+      }
+    },
+    {
+      "id": "sfx.command.refuse",
+      "path": "sfx/ui/command_refuse.ogg",
+      "category": "sfx",
+      "priority": 6,
+      "cooldown_ms": 300,
+      "load_policy": "startup",
+      "tags": {
+        "source": "synth"
+      }
+    },
+    {
+      "id": "sfx.command.refuse_v2",
+      "path": "sfx/ui/command_refuse_v2.ogg",
+      "category": "sfx",
+      "priority": 6,
+      "cooldown_ms": 300,
+      "load_policy": "startup",
+      "tags": {
+        "source": "synth"
+      }
     }
   ]
 }

@@ -1,9 +1,12 @@
 #include <gtest/gtest.h>
+#include <utility>
+#include <vector>
 
 #include "app/orders/order_feedback.h"
 #include "app/orders/order_markers.h"
 #include "app/orders/order_submission.h"
 #include "game/command/command.h"
+#include "game/command/command_validator.h"
 #include "game/core/component.h"
 #include "game/core/world.h"
 
@@ -106,7 +109,8 @@ TEST_F(OrderFeedbackTest, EmptySubjectListIsRejectedAsNoSubjects) {
 
   EXPECT_TRUE(outcome.rejected());
   EXPECT_EQ(outcome.rejection, Game::Command::Rejection::NoSubjects);
-  EXPECT_EQ(outcome.reason, App::Core::no_eligible_units_reason(OrderKind::Attack));
+  EXPECT_EQ(outcome.reason,
+            App::Core::no_eligible_units_reason(OrderKind::Attack).text);
 }
 
 TEST_F(OrderFeedbackTest, MoveKeepsTheDestinationOnTheOutcome) {
@@ -247,3 +251,82 @@ TEST_F(OrderFeedbackTest, MarkersExpireAndDropWhenTheTargetDisappears) {
 }
 
 } // namespace
+
+TEST(OrderFailureTest, EveryFailureHasAStableNameForTheUi) {
+  using App::Core::OrderFailure;
+  EXPECT_STREQ(App::Core::order_failure_name(OrderFailure::None), "none");
+  EXPECT_STREQ(App::Core::order_failure_name(OrderFailure::NoSelection),
+               "no_selection");
+  EXPECT_STREQ(App::Core::order_failure_name(OrderFailure::InvalidTarget),
+               "invalid_target");
+  EXPECT_STREQ(App::Core::order_failure_name(OrderFailure::Unreachable), "unreachable");
+  EXPECT_STREQ(App::Core::order_failure_name(OrderFailure::WrongOwner), "wrong_owner");
+  EXPECT_STREQ(App::Core::order_failure_name(OrderFailure::OutOfRange), "out_of_range");
+  EXPECT_STREQ(App::Core::order_failure_name(OrderFailure::InsufficientResources),
+               "insufficient_resources");
+  EXPECT_STREQ(App::Core::order_failure_name(OrderFailure::PopulationCap),
+               "population_cap");
+  EXPECT_STREQ(App::Core::order_failure_name(OrderFailure::UnitBusy), "unit_busy");
+  EXPECT_STREQ(App::Core::order_failure_name(OrderFailure::CommandUnavailable),
+               "command_unavailable");
+}
+
+TEST(OrderFailureTest, EveryRefusalHelperCarriesBothACodeAndText) {
+  using App::Core::OrderFailure;
+  using App::Core::OrderKind;
+
+  const std::vector<std::pair<App::Core::OrderRefusal, OrderFailure>> cases{
+      {App::Core::no_selection_reason(), OrderFailure::NoSelection},
+      {App::Core::no_target_under_cursor_reason(OrderKind::Attack),
+       OrderFailure::InvalidTarget},
+      {App::Core::no_ground_under_cursor_reason(), OrderFailure::InvalidTarget},
+      {App::Core::unreachable_reason(), OrderFailure::Unreachable},
+      {App::Core::out_of_range_reason(), OrderFailure::OutOfRange},
+      {App::Core::unit_busy_reason(), OrderFailure::UnitBusy},
+      {App::Core::insufficient_resources_reason(), OrderFailure::InsufficientResources},
+      {App::Core::barracks_full_reason(), OrderFailure::PopulationCap},
+      {App::Core::not_your_building_reason(), OrderFailure::WrongOwner},
+      {App::Core::building_is_protected_reason(), OrderFailure::CommandUnavailable},
+      {App::Core::no_repairs_needed_reason(), OrderFailure::CommandUnavailable},
+      {App::Core::no_eligible_units_reason(OrderKind::Attack),
+       OrderFailure::CommandUnavailable},
+  };
+
+  for (const auto& [refusal, expected] : cases) {
+    EXPECT_EQ(refusal.failure, expected)
+        << "refusal \"" << refusal.text.toStdString() << "\" has the wrong code";
+    EXPECT_FALSE(refusal.text.isEmpty())
+        << "failure " << App::Core::order_failure_name(expected) << " has no text";
+  }
+}
+
+TEST(OrderFailureTest, ARejectedOrderCarriesItsFailureCode) {
+  const auto outcome = App::Core::rejected_order(App::Core::OrderKind::Move,
+                                                 App::Core::unreachable_reason());
+  EXPECT_TRUE(outcome.rejected());
+  EXPECT_EQ(outcome.failure, App::Core::OrderFailure::Unreachable);
+  EXPECT_FALSE(outcome.reason.isEmpty());
+}
+
+TEST(OrderFailureTest, EveryValidatorRejectionMapsToAPlayerFacingFailure) {
+  using Game::Command::Rejection;
+  const std::vector<Rejection> all{Rejection::NoOwner,
+                                   Rejection::NoSubjects,
+                                   Rejection::DeadTarget,
+                                   Rejection::FriendlyTarget,
+                                   Rejection::MissingBuilding,
+                                   Rejection::NotOwnedBuilding,
+                                   Rejection::NotPermittedForSource,
+                                   Rejection::MalformedPayload};
+  for (const auto rejection : all) {
+    EXPECT_NE(App::Core::failure_for(rejection), App::Core::OrderFailure::None)
+        << Game::Command::rejection_name(rejection) << " has no player-facing failure";
+  }
+  EXPECT_EQ(App::Core::failure_for(Rejection::None), App::Core::OrderFailure::None);
+}
+
+TEST(OrderFailureTest, AnAcceptedOrderCarriesNoFailure) {
+  App::Core::OrderOutcome outcome;
+  outcome.status = App::Core::OrderStatus::Accepted;
+  EXPECT_EQ(outcome.failure, App::Core::OrderFailure::None);
+}

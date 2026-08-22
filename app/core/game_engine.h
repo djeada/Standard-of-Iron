@@ -25,6 +25,7 @@
 #include "app/core/client_context.h"
 #include "app/core/entity_cache.h"
 #include "app/core/match_presentation_sync.h"
+#include "app/core/player_feedback.h"
 #include "app/core/runtime_frame_orchestrator.h"
 #include "app/economy/economy_overview.h"
 #include "app/input/cursor_manager.h"
@@ -368,6 +369,13 @@ private:
   [[nodiscard]] auto
   attack_sync_context() const -> App::Core::PresentationSync::SelectionAttackContext;
   void handle_order_feedback(const App::Core::OrderOutcome& outcome);
+
+public:
+  [[nodiscard]] auto player_feedback() -> App::Core::PlayerFeedbackBus& {
+    return m_player_feedback;
+  }
+
+private:
   void sync_selected_player_state();
   void sync_economy_state();
   [[nodiscard]] auto
@@ -496,6 +504,7 @@ private:
   QVariantMap m_interaction_target_hint;
   std::vector<Game::Systems::AttackRangeRing> m_attack_range_rings;
   App::Core::OrderMarkerStore m_order_markers;
+  App::Core::PlayerFeedbackBus m_player_feedback;
   std::vector<Game::Systems::TargetFocusMarker> m_target_focus;
   QVariantMap m_inspect_target;
   QVariantMap m_selection_target;
@@ -602,6 +611,6 @@ signals:
   void game_mode_changed();
   void commander_control_available_changed();
   void mission_announcement(QString text);
-  void order_feedback(QString kind, bool accepted, QString message);
+  void order_feedback(QString kind, bool accepted, QString message, QString failure);
   void autosave_settings_changed();
 };

@@ -32,7 +32,7 @@ REPO = Path(__file__).resolve().parent.parent
 AUDIO_DIR = REPO / "assets" / "audio"
 MANIFEST = AUDIO_DIR / "audio_manifest.json"
 CUES = AUDIO_DIR / "audio_cues.json"
-CUE_HEADER = REPO / "game" / "audio" / "audio_cues.h"
+CUE_HEADER = REPO / "game" / "audio" / "cue_ids.h"
 REPORT = REPO / "docs" / "AUDIO_WISHLIST.md"
 
 
@@ -54,6 +54,9 @@ CONSTANT_RE = re.compile(
 )
 
 
+IMPORTANCE_LEVELS = ("required", "optional", "ambient")
+
+
 @dataclass
 class Findings:
     missing_files: list[str] = field(default_factory=list)
@@ -66,6 +69,9 @@ class Findings:
     unwired_cues: list[str] = field(default_factory=list)
     cue_call_sites: dict[str, list[str]] = field(default_factory=dict)
     orphan_resources: list[str] = field(default_factory=list)
+    silent_required_cues: list[str] = field(default_factory=list)
+    unwired_required_cues: list[str] = field(default_factory=list)
+    unknown_importance: list[str] = field(default_factory=list)
 
     def structural_problems(self) -> list[str]:
         problems = []
@@ -78,9 +84,20 @@ class Findings:
                 f"cue references a resource the manifest does not define: {ref}"
             )
         for cue in self.header_only_cues:
-            problems.append(f"cue constant in audio_cues.h has no catalog entry: {cue}")
+            problems.append(f"cue constant in cue_ids.h has no catalog entry: {cue}")
         for cue in self.catalog_only_cues:
-            problems.append(f"catalog cue has no constant in audio_cues.h: {cue}")
+            problems.append(f"catalog cue has no constant in cue_ids.h: {cue}")
+        for cue in self.silent_required_cues:
+            problems.append(
+                f"required cue has no playable binding, so the action is silent: {cue}"
+            )
+        for cue in self.unwired_required_cues:
+            problems.append(f"required cue is never fired from the game sources: {cue}")
+        for cue in self.unknown_importance:
+            problems.append(
+                f"cue declares an importance that is not required/optional/ambient: "
+                f"{cue}"
+            )
         return problems
 
 
@@ -91,7 +108,7 @@ def load_json(path: Path, key: str) -> list[dict]:
 
 
 def header_cue_ids() -> dict[str, str]:
-    """Cue id -> C++ constant name, read from audio_cues.h."""
+    """Cue id -> C++ constant name, read from cue_ids.h."""
     text = CUE_HEADER.read_text(encoding="utf-8")
     return {cue_id: name for name, cue_id in CONSTANT_RE.findall(text)}
 
@@ -166,8 +183,14 @@ def collect() -> tuple[Findings, list[dict], list[dict]]:
             referenced_resources.add(resource_id)
             playable.append(resource_id)
 
+        importance = cue.get("importance", "optional")
+        if importance not in IMPORTANCE_LEVELS:
+            found.unknown_importance.append(f"{cue_id} -> {importance}")
+
         if not playable:
             found.silent_cues.append(cue)
+            if importance == "required":
+                found.silent_required_cues.append(cue_id)
         elif cue.get("placeholder"):
             found.placeholder_cues.append(cue)
 
@@ -176,6 +199,8 @@ def collect() -> tuple[Findings, list[dict], list[dict]]:
         found.cue_call_sites[cue_id] = sites
         if not sites:
             found.unwired_cues.append(cue_id)
+            if importance == "required":
+                found.unwired_required_cues.append(cue_id)
 
     for entry in manifest:
         if entry["id"] in referenced_resources:

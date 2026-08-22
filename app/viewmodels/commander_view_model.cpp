@@ -3,6 +3,7 @@
 #include <QQuickWindow>
 
 #include <algorithm>
+#include <utility>
 
 #include "app/commander/commander_mode_coordinator.h"
 #include "app/commander/commander_status_builder.h"
@@ -27,6 +28,24 @@
 #include "scene/camera.h"
 
 namespace App::ViewModels {
+namespace {
+
+template <typename Callback>
+class ScopeExit {
+public:
+  explicit ScopeExit(Callback callback)
+      : m_callback(std::move(callback)) {}
+  ScopeExit(const ScopeExit&) = delete;
+  ScopeExit(ScopeExit&&) = delete;
+  auto operator=(const ScopeExit&) -> ScopeExit& = delete;
+  auto operator=(ScopeExit&&) -> ScopeExit& = delete;
+  ~ScopeExit() { m_callback(); }
+
+private:
+  Callback m_callback;
+};
+
+} // namespace
 
 CommanderViewModel::CommanderViewModel(const App::Core::ClientContext& context,
                                        App::Core::ClientHost& host,
@@ -49,6 +68,43 @@ auto CommanderViewModel::control_mode() const -> QString {
 
 auto CommanderViewModel::game_mode() const -> QString {
   return rpg_mode() ? QStringLiteral("rpg") : QStringLiteral("rts");
+}
+
+auto CommanderViewModel::mode_state() const -> QString {
+  return QString::fromLatin1(App::Core::to_string(m_mode->state()));
+}
+
+auto CommanderViewModel::capture_mode_signals() const -> ModeSignalBatch {
+  return {.control_mode = control_mode(),
+          .game_mode = game_mode(),
+          .mode_state = mode_state()};
+}
+
+void CommanderViewModel::emit_mode_signal_changes(const ModeSignalBatch& before) {
+  const auto after = capture_mode_signals();
+  if (after.game_mode != before.game_mode) {
+    emit game_mode_changed();
+  }
+  if (after.mode_state != before.mode_state) {
+    emit mode_state_changed();
+  }
+  if (after.control_mode != before.control_mode) {
+    emit control_mode_changed();
+  }
+}
+
+void CommanderViewModel::bookmark_rts_camera() {
+  if (m_context.rts_camera == nullptr) {
+    return;
+  }
+  m_rts_camera_bookmark = App::Core::RtsCameraBookmark::capture(*m_context.rts_camera);
+}
+
+void CommanderViewModel::restore_rts_camera() {
+  if (m_context.rts_camera == nullptr || !m_rts_camera_bookmark.valid) {
+    return;
+  }
+  m_rts_camera_bookmark.restore(*m_context.rts_camera);
 }
 
 auto CommanderViewModel::available() const -> bool {
@@ -103,10 +159,19 @@ void CommanderViewModel::enter_mode() {
       commander == nullptr || commander_camera == nullptr) {
     return;
   }
+  if (!m_mode->begin_enter()) {
+    return;
+  }
+  m_control.set_feedback_bus(m_context.feedback);
+
+  const auto signals_before = capture_mode_signals();
+  const ScopeExit emit_once(
+      [this, signals_before]() { emit_mode_signal_changes(signals_before); });
 
   cancel_active_placement();
   m_host.set_cursor_mode(CursorMode::Normal);
 
+  bookmark_rts_camera();
   store_rts_selection();
   const auto effects = m_mode->enter_commander_control_mode(
       {.world = m_context.world,
@@ -118,6 +183,7 @@ void CommanderViewModel::enter_mode() {
            (m_context.level != nullptr && m_context.level->is_spectator_mode),
        .follow_selection_enabled = m_camera.following_selection()});
   if (!effects.entered) {
+    m_mode->abort_transition();
     return;
   }
 
@@ -136,7 +202,6 @@ void CommanderViewModel::enter_mode() {
 
   enter_commander_runtime_mode();
 
-  emit game_mode_changed();
   if (auto* world = m_context.world; world != nullptr) {
     (void)m_control.update(*world,
                            m_controlled_commander_id,
@@ -145,12 +210,22 @@ void CommanderViewModel::enter_mode() {
                            0.0F);
   }
   select_controlled_commander();
+  m_mode->complete_transition();
+  if (m_context.feedback != nullptr) {
+    App::Core::PlayerFeedbackEvent event;
+    event.type = App::Core::PlayerFeedbackType::CommanderModeEntered;
+    event.entity = m_controlled_commander_id;
+    m_context.feedback->publish(std::move(event));
+  }
   Game::Audio::play_cue(Game::Audio::Cue::k_state_commander_enter);
-  emit control_mode_changed();
 }
 
 void CommanderViewModel::exit_mode() {
   const bool was_active = active();
+  const auto signals_before = capture_mode_signals();
+  const ScopeExit emit_once(
+      [this, signals_before]() { emit_mode_signal_changes(signals_before); });
+  static_cast<void>(m_mode->begin_exit());
   exit_commander_runtime_mode();
   reset_input();
   const auto effects = m_mode->exit_commander_control_mode(
@@ -163,30 +238,33 @@ void CommanderViewModel::exit_mode() {
   enter_rts_runtime_mode();
   m_controlled_commander_id = effects.controlled_commander_id;
 
+  restore_rts_camera();
   emit active_camera_requested(m_context.rts_camera);
   if (effects.restored_follow_selection_enabled.has_value()) {
     m_camera.set_following_selection(*effects.restored_follow_selection_enabled);
   }
   restore_rts_selection();
 
+  m_mode->force_inactive();
+
   if (was_active) {
+    if (m_context.feedback != nullptr) {
+      App::Core::PlayerFeedbackEvent event;
+      event.type = App::Core::PlayerFeedbackType::CommanderModeExited;
+      m_context.feedback->publish(std::move(event));
+    }
     Game::Audio::play_cue(Game::Audio::Cue::k_state_commander_exit);
   }
-
-  emit game_mode_changed();
-  emit control_mode_changed();
 }
 
 void CommanderViewModel::enter_rts_runtime_mode() {
   m_control_mode = PlayerControlMode::Rts;
   m_game_mode = GameMode::Rts;
-  emit game_mode_changed();
 }
 
 void CommanderViewModel::enter_commander_runtime_mode() {
   m_control_mode = PlayerControlMode::Commander;
   m_game_mode = GameMode::Rpg;
-  emit game_mode_changed();
 }
 
 void CommanderViewModel::cancel_active_placement() {
@@ -556,7 +634,6 @@ void CommanderViewModel::seed_flag_rally_preview_from_view_center() {
 }
 
 void CommanderViewModel::update_control_mode(float dt) {
-  m_control.poll_mouse_look(m_context.window);
   const auto effects = m_mode->update_commander_control_mode(
       {.world = m_context.world,
        .commander_camera = m_context.commander_camera,
@@ -572,6 +649,13 @@ void CommanderViewModel::update_control_mode(float dt) {
     m_hit_stop_timer = *effects.hit_stop_duration;
     m_hit_stop_total = *effects.hit_stop_duration;
   }
+}
+
+void CommanderViewModel::sample_frame_intent() {
+  if (!active()) {
+    return;
+  }
+  m_control.sample_frame_intent(m_context.window);
 }
 
 void CommanderViewModel::update_camera_presentation(float dt) {
@@ -640,6 +724,11 @@ void CommanderViewModel::render_effects() {
 }
 
 void CommanderViewModel::reset_for_new_match() {
+  const auto signals_before = capture_mode_signals();
+  const ScopeExit emit_once(
+      [this, signals_before]() { emit_mode_signal_changes(signals_before); });
+  m_mode->force_inactive();
+  enter_rts_runtime_mode();
   m_saved_rts_selection_ids.clear();
   m_rts_follow_selection_snapshot.reset();
   m_rally_preview.reset();

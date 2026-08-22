@@ -52,6 +52,7 @@ void OrderMarkerStore::push(const OrderOutcome& outcome, Engine::Core::World* wo
   OrderMarker marker;
   marker.kind = outcome.kind;
   marker.rejected = outcome.rejected();
+  marker.failure = outcome.failure;
   marker.lifetime = lifetime_for(outcome.kind, marker.rejected);
 
   if (outcome.target != 0 &&

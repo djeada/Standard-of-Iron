@@ -15,6 +15,7 @@
 #include "game/systems/nation_id.h"
 #include "game/visuals/building_asset_key.h"
 #include "math/math_utils.h"
+#include "render/entity/health_bar_visibility.h"
 #include "render/geom/transforms.h"
 #include "render/gl/primitives.h"
 #include "render/gl/resources.h"
@@ -109,7 +110,8 @@ auto building_under_attack(const DrawContext& ctx) -> bool {
   auto* feedback = (ctx.entity != nullptr)
                        ? ctx.entity->get_component<Engine::Core::HitFeedbackComponent>()
                        : nullptr;
-  return (feedback != nullptr) && feedback->is_reacting;
+  return (feedback != nullptr) &&
+         (feedback->is_reacting || feedback->recent_damage_remaining > 0.0F);
 }
 
 void submit_box(ISubmitter& out,
@@ -149,6 +151,19 @@ auto resolve_bar_colors(float ratio) -> std::pair<QVector3D, QVector3D> {
 }
 
 } // namespace
+
+auto building_health_bar_visible(const DrawContext& ctx) -> bool {
+  auto const* unit = building_unit(ctx);
+
+  HealthBarVisibilityInputs inputs;
+  inputs.alive = unit == nullptr || unit->health > 0;
+  inputs.selected = ctx.selected;
+  inputs.hovered = ctx.hovered;
+  inputs.recently_damaged = building_under_attack(ctx);
+  inputs.full_health = resolve_building_health_ratio(ctx) >= 0.999F;
+  inputs.camera_distance = std::sqrt(std::max(ctx.distance_sq, 0.0F));
+  return health_bar_visible(inputs);
+}
 
 auto resolve_building_health_ratio(const DrawContext& ctx) -> float {
   auto* unit = building_unit(ctx);
@@ -321,7 +336,7 @@ void draw_building_health_bar(ISubmitter& out,
     return;
   }
 
-  if (!building_under_attack(ctx)) {
+  if (!building_health_bar_visible(ctx)) {
     return;
   }
 

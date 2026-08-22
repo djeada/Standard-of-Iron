@@ -352,6 +352,8 @@ void separate_commander_from_bodies(Engine::Core::World& world,
 
 void CommanderControlController::reset() {
   m_input = {};
+  m_frame_intent = {};
+  m_intent_sample_valid = false;
   m_mouse_center_valid = false;
   m_last_mouse_valid = false;
   m_mouse_warp_supported = false;
@@ -412,6 +414,9 @@ auto CommanderControlController::input() const -> const InputState& {
 }
 
 void CommanderControlController::key_down(int key) {
+  if (m_latency_probe != nullptr) {
+    m_latency_probe->note_input();
+  }
   switch (key) {
   case Qt::Key_W:
     m_input.forward = true;
@@ -468,8 +473,11 @@ void CommanderControlController::key_up(int key) {
 }
 
 void CommanderControlController::primary_action_down() {
+  if (m_latency_probe != nullptr) {
+    m_latency_probe->note_input();
+  }
   m_input.primary_action = true;
-  m_input.primary_action_scan_cooldown = 0.08F;
+  m_input.primary_action_scan_cooldown = 0.0F;
 }
 
 void CommanderControlController::primary_action_up() {
@@ -477,6 +485,9 @@ void CommanderControlController::primary_action_up() {
 }
 
 void CommanderControlController::secondary_action_down() {
+  if (m_latency_probe != nullptr) {
+    m_latency_probe->note_input();
+  }
   m_input.secondary_action = true;
 }
 
@@ -498,6 +509,9 @@ auto CommanderControlController::look_sensitivity_scale() const -> float {
 }
 
 void CommanderControlController::mouse_move(qreal dx, qreal dy) {
+  if (m_latency_probe != nullptr && (std::abs(dx) > 0.0 || std::abs(dy) > 0.0)) {
+    m_latency_probe->note_input();
+  }
   constexpr float k_mouse_yaw_sensitivity = 0.18F;
   constexpr float k_mouse_pitch_sensitivity = 0.12F;
   const float sensitivity = look_sensitivity_scale();
@@ -554,6 +568,35 @@ void CommanderControlController::center_mouse(qreal center_sx,
   m_mouse_recentering = false;
 }
 
+auto CommanderControlController::sample_frame_intent(QQuickWindow* window)
+    -> CommanderFrameIntent {
+  poll_mouse_look(window);
+
+  if (!m_intent_sample_valid) {
+    m_intent_sample_yaw = m_view_yaw;
+    m_intent_sample_pitch = m_view_pitch;
+    m_intent_sample_valid = true;
+  }
+
+  m_frame_intent.look_delta =
+      QVector2D(signed_angle_delta(m_view_yaw, m_intent_sample_yaw),
+                m_view_pitch - m_intent_sample_pitch);
+  m_intent_sample_yaw = m_view_yaw;
+  m_intent_sample_pitch = m_view_pitch;
+  m_frame_intent.view_yaw = m_view_yaw;
+  m_frame_intent.view_pitch = m_view_pitch;
+  m_frame_intent.move = QVector2D(
+      static_cast<float>((m_input.right ? 1 : 0) - (m_input.left ? 1 : 0)),
+      static_cast<float>((m_input.forward ? 1 : 0) - (m_input.backward ? 1 : 0)));
+  m_frame_intent.guard = m_input.secondary_action;
+  m_frame_intent.attack_held = m_input.primary_action;
+  m_frame_intent.run = m_input.run;
+  m_frame_intent.dodge_pressed = m_input.dodge_requested;
+  m_frame_intent.jump_pressed = m_input.jump_requested;
+  ++m_frame_intent.frame_index;
+  return m_frame_intent;
+}
+
 void CommanderControlController::poll_mouse_look(QQuickWindow* window) {
   if (window == nullptr || !window->isActive()) {
     return;
@@ -584,6 +627,9 @@ void CommanderControlController::poll_mouse_look(QQuickWindow* window) {
 }
 
 void CommanderControlController::request_dodge() {
+  if (m_latency_probe != nullptr) {
+    m_latency_probe->note_input();
+  }
   m_has_requested_dodge_direction = false;
   m_input.dodge_requested = true;
 }
@@ -597,6 +643,9 @@ void CommanderControlController::request_dodge(const QVector3D& world_direction)
 }
 
 void CommanderControlController::request_jump() {
+  if (m_latency_probe != nullptr) {
+    m_latency_probe->note_input();
+  }
   m_input.jump_requested = true;
 }
 
@@ -1698,6 +1747,19 @@ auto CommanderControlController::update_impl(Engine::Core::World& world,
             ? requested_dodge_direction.normalized()
             : ((move.lengthSquared() > 0.0001F) ? move.normalized() : forward);
     m_dodge_state = DodgeState::Rolling;
+    if (m_feedback != nullptr) {
+      App::Core::PlayerFeedbackEvent event;
+      event.type = App::Core::PlayerFeedbackType::DodgeSuccess;
+      event.entity = commander_id;
+      event.has_world_position = true;
+      event.world_position = QVector3D(
+          transform->position.x, transform->position.y, transform->position.z);
+      m_feedback->publish(std::move(event));
+    }
+    if (m_latency_probe != nullptr) {
+      m_latency_probe->note_dodge_start();
+      m_latency_probe->note_pose_response();
+    }
     Game::Audio::play_cue(Game::Audio::Cue::k_combat_dodge);
     constexpr float k_dodge_roll_duration = 0.22F;
     m_dodge_timer = k_dodge_roll_duration;
@@ -1892,6 +1954,10 @@ auto CommanderControlController::update_impl(Engine::Core::World& world,
 
   if (movement != nullptr && actual_speed_for_bob > 0.05F) {
     movement->engage_manual_move(transform->position.x, transform->position.z);
+    if (m_latency_probe != nullptr) {
+      m_latency_probe->note_movement_response();
+      m_latency_probe->note_pose_response();
+    }
 
     if (auto* stamina = commander->get_component<Engine::Core::StaminaComponent>()) {
       stamina->run_requested = m_move_running;
@@ -1917,6 +1983,19 @@ auto CommanderControlController::update_impl(Engine::Core::World& world,
       if (!m_guard_was_active) {
         guard->perfect_guard_remaining = 0.16F;
         Game::Audio::play_cue(Game::Audio::Cue::k_combat_guard_raise);
+        if (m_feedback != nullptr) {
+          App::Core::PlayerFeedbackEvent event;
+          event.type = App::Core::PlayerFeedbackType::PerfectGuard;
+          event.entity = commander_id;
+          event.has_world_position = true;
+          event.world_position = QVector3D(
+              transform->position.x, transform->position.y, transform->position.z);
+          m_feedback->publish(std::move(event));
+        }
+        if (m_latency_probe != nullptr) {
+          m_latency_probe->note_guard_start();
+          m_latency_probe->note_pose_response();
+        }
       }
     } else if (guard != nullptr) {
       guard->active = false;
@@ -1974,6 +2053,19 @@ auto CommanderControlController::update_impl(Engine::Core::World& world,
       m_input.primary_action_scan_cooldown <= 0.0F) {
     if (!primary_action(world, commander_id, local_owner_id)) {
       return false;
+    }
+    if (m_feedback != nullptr) {
+      App::Core::PlayerFeedbackEvent event;
+      event.type = App::Core::PlayerFeedbackType::AttackCommitted;
+      event.entity = commander_id;
+      event.has_world_position = true;
+      event.world_position = QVector3D(
+          transform->position.x, transform->position.y, transform->position.z);
+      m_feedback->publish(std::move(event));
+    }
+    if (m_latency_probe != nullptr) {
+      m_latency_probe->note_attack_start();
+      m_latency_probe->note_pose_response();
     }
     m_input.primary_action_scan_cooldown = 0.08F;
   }
@@ -2062,6 +2154,9 @@ auto CommanderControlController::update_impl(Engine::Core::World& world,
       rpg_targets->recent_hit_soldier_slot =
           Engine::Core::RpgCommanderTargetComponent::k_no_soldier_slot;
     }
+  }
+  if (m_latency_probe != nullptr) {
+    m_latency_probe->note_simulation_response();
   }
   return true;
 }
@@ -2188,5 +2283,8 @@ void CommanderControlController::update_camera(Engine::Core::World& world,
   inputs.threat_side_bias = threat_side_bias;
 
   float const previous_bob_phase = m_camera_rig.update(camera, inputs);
+  if (m_latency_probe != nullptr) {
+    m_latency_probe->note_camera_response();
+  }
   play_footstep_if_stride_landed(commander, previous_bob_phase);
 }

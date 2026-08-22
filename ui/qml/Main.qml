@@ -51,9 +51,9 @@ ApplicationWindow {
         if (name === "rpg") {
             mainWindow.game_paused = false;
             gameViewItem.set_paused(false);
-            if (typeof game !== 'undefined' && game.commander.game_mode !== "rpg" && game.commander.toggle_mode)
+            if (typeof game !== 'undefined' && game.commander.mode_state !== "active" && game.commander.toggle_mode)
                 game.commander.toggle_mode();
-            mainWindow.capture_view_ready = typeof game !== 'undefined' && game.commander.game_mode === "rpg";
+            mainWindow.capture_view_ready = typeof game !== 'undefined' && game.commander.mode_state === "active";
         } else {
             mainWindow.capture_view_ready = true;
         }
@@ -186,7 +186,7 @@ ApplicationWindow {
 
         anchors.fill: parent
         z: 11
-        visible: game_started && !mainWindow.menu_visible && typeof game !== 'undefined' && game.commander.control_mode === "commander" && game.commander.game_mode === "rpg" && game.cursor_mode !== "place_commander_rally" && game.cursor_mode !== "place_barracks_rally" && !mapSelect.visible && !campaign_screen.visible && !save_game_panel.visible && !load_game_panel.visible && !settingsPanel.visible && !objectivesPanel.visible && !error_dialog.visible
+        visible: game_started && !mainWindow.menu_visible && typeof game !== 'undefined' && game.commander.mode_state === "active" && game.cursor_mode !== "place_commander_rally" && game.cursor_mode !== "place_barracks_rally" && !mapSelect.visible && !campaign_screen.visible && !save_game_panel.visible && !load_game_panel.visible && !settingsPanel.visible && !objectivesPanel.visible && !error_dialog.visible
         enabled: visible
         acceptedButtons: Qt.NoButton
         hoverEnabled: true

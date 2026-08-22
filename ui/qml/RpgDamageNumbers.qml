@@ -24,6 +24,18 @@ Item {
         return effectLayer.children.length < maxActiveBursts;
     }
 
+    function isImportant(ev) {
+        return !!ev.killingBlow || root.severityForEvent(ev) >= 0.66;
+    }
+
+    function shouldShow(ev) {
+        if (Design.A11y.damageNumberMode === "off")
+            return false;
+        if (Design.A11y.damageNumberMode === "important")
+            return root.isImportant(ev);
+        return true;
+    }
+
     Component {
         id: damageBurst
 
@@ -260,6 +272,8 @@ Item {
                 if (!root.canSpawnBurst())
                     break;
                 var ev = events[i];
+                if (!root.shouldShow(ev))
+                    continue;
                 damageBurst.createObject(effectLayer, {
                         "dmg": Number(ev.damage || 0),
                         "worldX": Number(ev.x || 0.0),

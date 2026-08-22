@@ -16,6 +16,7 @@ namespace App::Core {
 struct OrderMarker {
   OrderKind kind = OrderKind::None;
   bool rejected = false;
+  OrderFailure failure = OrderFailure::None;
 
   QVector3D position;
 

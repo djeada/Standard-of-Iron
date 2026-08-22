@@ -247,3 +247,81 @@ TEST(AudioProvenanceTest, EveryEffectDeclaresWhereItCameFrom) {
 }
 
 } // namespace
+
+namespace {
+
+auto load_catalog_cues() -> QJsonArray {
+  QFile file(QStringLiteral("assets/audio/audio_cues.json"));
+  EXPECT_TRUE(file.open(QIODevice::ReadOnly)) << "assets/audio/audio_cues.json";
+  return QJsonDocument::fromJson(file.readAll())
+      .object()
+      .value(QStringLiteral("cues"))
+      .toArray();
+}
+
+} // namespace
+
+TEST(AudioImportanceTest, EveryCueDeclaresAKnownImportance) {
+  const QJsonArray cues = load_catalog_cues();
+  ASSERT_FALSE(cues.isEmpty());
+
+  const QSet<QString> levels{QStringLiteral("required"),
+                             QStringLiteral("optional"),
+                             QStringLiteral("ambient")};
+
+  for (const QJsonValue value : cues) {
+    const QJsonObject cue = value.toObject();
+    const QString importance = cue.value(QStringLiteral("importance")).toString();
+    EXPECT_TRUE(levels.contains(importance))
+        << cue.value(QStringLiteral("id")).toString().toStdString()
+        << " declares importance \"" << importance.toStdString() << "\"";
+  }
+}
+
+TEST(AudioImportanceTest, EveryRequiredCueHasAPlayableBinding) {
+  const QJsonArray cues = load_catalog_cues();
+  ASSERT_FALSE(cues.isEmpty());
+
+  int required = 0;
+  for (const QJsonValue value : cues) {
+    const QJsonObject cue = value.toObject();
+    if (cue.value(QStringLiteral("importance")).toString() !=
+        QStringLiteral("required")) {
+      continue;
+    }
+    ++required;
+    const QJsonArray resources = cue.value(QStringLiteral("resources")).toArray();
+    EXPECT_FALSE(resources.isEmpty())
+        << "required cue is silent: "
+        << cue.value(QStringLiteral("id")).toString().toStdString();
+  }
+
+  EXPECT_GT(required, 0) << "no cue is classified as required any more";
+}
+
+TEST(AudioImportanceTest, TheCriticalPlayerFeedbackCuesAreRequired) {
+  const QJsonArray cues = load_catalog_cues();
+  ASSERT_FALSE(cues.isEmpty());
+
+  QSet<QString> required;
+  for (const QJsonValue value : cues) {
+    const QJsonObject cue = value.toObject();
+    if (cue.value(QStringLiteral("importance")).toString() ==
+        QStringLiteral("required")) {
+      required.insert(cue.value(QStringLiteral("id")).toString());
+    }
+  }
+
+  for (const char* cue_id : {"command.accept",
+                             "command.refuse",
+                             "combat.block",
+                             "combat.perfect_guard",
+                             "combat.dodge",
+                             "combat.death",
+                             "alert.base_under_attack",
+                             "state.commander_enter",
+                             "state.commander_exit"}) {
+    EXPECT_TRUE(required.contains(QString::fromLatin1(cue_id)))
+        << cue_id << " lost its required classification";
+  }
+}
