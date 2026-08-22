@@ -5,6 +5,7 @@
 #include <cstdint>
 
 #include "animation/ambient_pose_manifest.h"
+#include "animation/playback_manifest.h"
 #include "animation/rig/horse_attachment_frames.h"
 #include "animation/rig/horse_gait.h"
 #include "combat_visual_state.h"
@@ -40,6 +41,7 @@ struct HumanoidAnimationStateComponent {
   float guard_pose_progress{0.0F};
   float hold_pose_progress{0.0F};
   Animation::HumanoidAmbientRuntimeState ambient_idle{};
+  Animation::HumanoidConstructionTransitionState construction_transition{};
   CombatVisualPersistentState combat_visual{};
 };
 

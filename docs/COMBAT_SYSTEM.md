@@ -104,6 +104,18 @@ Avoid implementing direct owner checks in individual combat processors. Team and
 
 Anything that needs the reach a unit will actually fire with — the range indicator, a UI verdict, a future ability — should go through `Game::Systems::resolve_attack_range`, which applies `hold_mode_range_multiplier` exactly as `apply_hold_mode_bonuses` does inside the attack processor. Reading `attack->range` directly skips the Hold bonus and drifts from combat the moment a stance changes.
 
+## Walls between combatants
+
+A melee attacker cannot reach a target on the far side of a structure. `Combat::structure_separates_combatants` draws the centre-to-centre segment and asks the building collision registry whether it crosses a footprint that blocks navigation, and `GateService` whether a shut gate stands on it. `Combat::is_in_range` consults that rule before any formation or height check, so no melee damage crosses a wall; the same rule refuses to open a melee lock through one, drops a lock the moment a wall is raised between two units already fighting, and keeps `update_formation_contacts` from publishing a front, so soldiers do not swing at an enemy they cannot touch.
+
+Refusing the blow is only half the answer. A unit ordered onto a target behind a wall used to stand still: `is_in_range` said no, while the chase step measured plain distance, decided the engagement was already reached, and stopped it there. It walks around instead. When a structure separates the pair, the chase asks `Combat::melee_bypass_destination` for somewhere to stand beside the target: twelve bearings around the target at contact distance, tried outwards from the attacker's own approach, and the first one taken that has clear reach to the target, is walkable, and leaves the attacker's formation footprint clear of the structure. Pathfinding does the rest, and once the attacker rounds the wall the separation lifts and the ordinary approach takes over. The footprint margin matters more than it looks: a spot that merely clears the wall by a hair fails `formation_pose_allowed` in the movement system, which then refuses the destination and freezes the unit where it stands.
+
+If no bearing clears — a target pressed into a corner, or ringed by its own buildings — the bypass returns nothing and the attacker keeps whatever the ordinary chase decided, rather than grinding into the stonework. It answers only "where could someone stand and reach this target", never "can this attacker get there": reachability stays with pathfinding, and a unit with no route simply never arrives.
+
+Opportunistic combat does not go around walls. Auto-engagement, AI attack orders and retaliation all drop a walled-off enemy through `Combat::melee_walled_off_from`: marching a squad around a wall is a decision the player makes with an attack order, not something a unit does on its own because it heard fighting.
+
+Ranged attackers are untouched by all of this. They shoot over walls, and only the commander's own bow consults `has_clear_building_los`.
+
 ## Normal Attacks
 
 Normal attacks are processed by:

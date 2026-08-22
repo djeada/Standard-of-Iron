@@ -7,6 +7,7 @@
 #include "core/world.h"
 #include "game/map/terrain_service.h"
 #include "game/systems/building_collision_registry.h"
+#include "game/systems/combat_system/combat_utils.h"
 #include "game/systems/default_content.h"
 #include "game/systems/formation_combat_geometry.h"
 #include "game/systems/nation_registry.h"
@@ -42,6 +43,9 @@ protected:
     map_definition.grid.width = 48;
     map_definition.grid.height = 48;
     map_definition.grid.tile_size = 1.0F;
+    map_definition.biome.procedural_boulders_enabled = false;
+    map_definition.biome.procedural_iron_ore_enabled = false;
+    map_definition.biome.procedural_trees_enabled = false;
     Game::Map::TerrainService::instance().initialize(map_definition);
     Game::Systems::NavGrid::initialize(48, 48);
 
@@ -79,6 +83,24 @@ protected:
       }
     }
     return entity;
+  }
+
+  auto spawn_formation(Engine::Core::World& world,
+                       Game::Units::SpawnType type,
+                       int owner_id,
+                       const QVector3D& position,
+                       Game::Systems::NationID nation) -> Engine::Core::Entity* {
+    Game::Units::SpawnParams params;
+    params.position = position;
+    params.player_id = owner_id;
+    params.spawn_type = type;
+    params.nation_id = nation;
+    params.is_initial_spawn = true;
+    auto unit = registry->create(type, world, params);
+    if (!unit) {
+      return nullptr;
+    }
+    return world.get_entity(unit->id());
   }
 
   static void order_attack(Engine::Core::Entity& attacker,
@@ -435,4 +457,183 @@ TEST_F(MeleeEngagementTest, BesiegerShotOverTheWallKeepsBreachingInsteadOfChasin
   }
   EXPECT_TRUE(took_damage) << "the archer never shot the besieger, test is vacuous";
   EXPECT_LT(besieger->get_component<TransformComponent>()->position.x, 4.0F);
+}
+
+TEST_F(MeleeEngagementTest, MeleeAttackerWalksAroundTheWallBeforeFighting) {
+  Engine::Core::World world;
+  Game::Systems::register_runtime_systems(world);
+
+  for (float wall_z = -5.0F; wall_z <= 5.0F; wall_z += 2.0F) {
+    auto* wall = spawn(world,
+                       Game::Units::SpawnType::WallSegment,
+                       1,
+                       QVector3D(4.0F, 0.0F, wall_z),
+                       Game::Systems::NationID::RomanRepublic);
+    ASSERT_NE(wall, nullptr);
+    auto* wall_unit = wall->get_component<UnitComponent>();
+    ASSERT_NE(wall_unit, nullptr);
+    wall_unit->health = wall_unit->max_health = 1000000;
+  }
+
+  auto* attacker = spawn(world,
+                         Game::Units::SpawnType::Knight,
+                         2,
+                         QVector3D(0.0F, 0.0F, 0.0F),
+                         Game::Systems::NationID::Carthage);
+  auto* defender = spawn(world,
+                         Game::Units::SpawnType::Knight,
+                         1,
+                         QVector3D(8.0F, 0.0F, 0.0F),
+                         Game::Systems::NationID::RomanRepublic);
+  ASSERT_NE(attacker, nullptr);
+  ASSERT_NE(defender, nullptr);
+
+  auto* attacker_unit = attacker->get_component<UnitComponent>();
+  auto* defender_unit = defender->get_component<UnitComponent>();
+  ASSERT_NE(attacker_unit, nullptr);
+  ASSERT_NE(defender_unit, nullptr);
+  attacker_unit->health = attacker_unit->max_health = 1000000;
+  defender_unit->health = defender_unit->max_health = 1000000;
+
+  order_attack(*attacker, *defender);
+
+  const auto* attacker_transform = attacker->get_component<TransformComponent>();
+  ASSERT_NE(attacker_transform, nullptr);
+
+  bool crossed = false;
+  bool struck_through_wall = false;
+  float best_x = attacker_transform->position.x;
+  for (int tick = 0; tick < 1200; ++tick) {
+    world.update(0.05F);
+    best_x = std::max(best_x, attacker_transform->position.x);
+    crossed = crossed || attacker_transform->position.x > 5.5F;
+    if (!crossed && defender_unit->health < defender_unit->max_health) {
+      struck_through_wall = true;
+    }
+  }
+
+  EXPECT_FALSE(struck_through_wall) << "the defender was hit through the wall";
+  EXPECT_TRUE(crossed) << "the attacker never walked around the wall (reached x="
+                       << best_x << ")";
+  EXPECT_LT(defender_unit->health, defender_unit->max_health)
+      << "the attacker never landed a blow after reaching the defender's side";
+}
+
+TEST_F(MeleeEngagementTest, SquadOrderedThroughAWallMarchesAroundItBeforeFighting) {
+  Engine::Core::World world;
+  Game::Systems::register_runtime_systems(world);
+
+  for (float wall_z = -7.0F; wall_z <= 7.0F; wall_z += 2.0F) {
+    auto* wall = spawn(world,
+                       Game::Units::SpawnType::WallSegment,
+                       1,
+                       QVector3D(4.0F, 0.0F, wall_z),
+                       Game::Systems::NationID::RomanRepublic);
+    ASSERT_NE(wall, nullptr);
+    auto* wall_unit = wall->get_component<UnitComponent>();
+    ASSERT_NE(wall_unit, nullptr);
+    wall_unit->health = wall_unit->max_health = 1000000;
+  }
+
+  auto* attacker = spawn_formation(world,
+                                   Game::Units::SpawnType::Knight,
+                                   2,
+                                   QVector3D(0.0F, 0.0F, 0.0F),
+                                   Game::Systems::NationID::Carthage);
+  auto* defender = spawn_formation(world,
+                                   Game::Units::SpawnType::Knight,
+                                   1,
+                                   QVector3D(11.0F, 0.0F, 0.0F),
+                                   Game::Systems::NationID::RomanRepublic);
+  ASSERT_NE(attacker, nullptr);
+  ASSERT_NE(defender, nullptr);
+
+  auto* attacker_unit = attacker->get_component<UnitComponent>();
+  auto* defender_unit = defender->get_component<UnitComponent>();
+  ASSERT_NE(attacker_unit, nullptr);
+  ASSERT_NE(defender_unit, nullptr);
+  attacker_unit->health = attacker_unit->max_health = 1000000;
+  defender_unit->health = defender_unit->max_health = 1000000;
+
+  order_attack(*attacker, *defender);
+
+  const auto* attacker_transform = attacker->get_component<TransformComponent>();
+  ASSERT_NE(attacker_transform, nullptr);
+
+  bool reached_defender_side = false;
+  float furthest_x = attacker_transform->position.x;
+  for (int tick = 0; tick < 2400; ++tick) {
+    world.update(0.05F);
+    furthest_x = std::max(furthest_x, attacker_transform->position.x);
+
+    const bool separated =
+        Game::Systems::Combat::structure_separates_combatants(attacker, defender);
+    if (separated) {
+      ASSERT_EQ(defender_unit->health, defender_unit->max_health)
+          << "the defender was struck through the wall at tick " << tick;
+      const auto* contact =
+          attacker->get_component<Engine::Core::FormationContactComponent>();
+      ASSERT_FALSE(contact != nullptr && contact->in_contact &&
+                   contact->target_id == defender->get_id())
+          << "the attacker formed a melee front through the wall at tick " << tick;
+    }
+    reached_defender_side =
+        reached_defender_side || (!separated && attacker_transform->position.x > 5.0F);
+    if (reached_defender_side && defender_unit->health < defender_unit->max_health) {
+      break;
+    }
+  }
+
+  EXPECT_TRUE(reached_defender_side)
+      << "the attacker never marched around the wall (furthest x=" << furthest_x << ")";
+  EXPECT_LT(defender_unit->health, defender_unit->max_health)
+      << "the attacker reached the defender's side but never struck";
+}
+
+TEST_F(MeleeEngagementTest, BypassDestinationStandsOnTheTargetSideOfTheWall) {
+  Engine::Core::World world;
+  Game::Systems::register_runtime_systems(world);
+
+  for (float wall_z = -7.0F; wall_z <= 7.0F; wall_z += 2.0F) {
+    ASSERT_NE(spawn(world,
+                    Game::Units::SpawnType::WallSegment,
+                    1,
+                    QVector3D(4.0F, 0.0F, wall_z),
+                    Game::Systems::NationID::RomanRepublic),
+              nullptr);
+  }
+
+  const QVector3D attacker_position(0.0F, 0.0F, 0.0F);
+  const QVector3D target_position(11.0F, 0.0F, 0.0F);
+  const auto bypass = Game::Systems::Combat::melee_bypass_destination(
+      attacker_position, target_position, 4.0F, 1.0F);
+
+  ASSERT_TRUE(bypass.has_value());
+  EXPECT_GT(bypass->x(), 5.0F) << "the bypass stayed on the attacker's side";
+  EXPECT_FALSE(
+      Game::Systems::Combat::structure_separates_positions(*bypass, target_position))
+      << "the bypass cannot reach the target from where it stands";
+  EXPECT_TRUE(Game::Systems::Combat::structure_separates_positions(attacker_position,
+                                                                   target_position))
+      << "the wall did not separate the pair, the case is vacuous";
+}
+
+TEST_F(MeleeEngagementTest, BypassDestinationIsRefusedWhenNoStandingSpotClears) {
+  Engine::Core::World world;
+  Game::Systems::register_runtime_systems(world);
+
+  for (float wall_x = 8.0F; wall_x <= 12.0F; wall_x += 2.0F) {
+    for (float wall_z = -2.0F; wall_z <= 2.0F; wall_z += 2.0F) {
+      ASSERT_NE(spawn(world,
+                      Game::Units::SpawnType::WallSegment,
+                      1,
+                      QVector3D(wall_x, 0.0F, wall_z),
+                      Game::Systems::NationID::RomanRepublic),
+                nullptr);
+    }
+  }
+
+  const auto bypass = Game::Systems::Combat::melee_bypass_destination(
+      QVector3D(0.0F, 0.0F, 0.0F), QVector3D(10.0F, 0.0F, 0.0F), 4.0F, 1.75F);
+  EXPECT_FALSE(bypass.has_value());
 }

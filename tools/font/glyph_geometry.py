@@ -59,6 +59,9 @@ CUT_DEGREES = 35.0
 
 SIDEBEARING = 46
 
+
+CURVE_OVERSHOOT = 12
+
 Point = tuple[float, float]
 Contour = list[Point]
 
