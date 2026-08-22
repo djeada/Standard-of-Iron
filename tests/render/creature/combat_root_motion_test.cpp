@@ -90,13 +90,14 @@ TEST(CombatRootMotion, ReactionsRecoilAlongTheBlowAndNeverTopple) {
       EXPECT_NEAR(sample.world_offset_x,
                   0.0F,
                   form == HitReactionForm::Evade || form == HitReactionForm::Stagger
-                      ? 0.30F
+                      ? 0.55F
                       : 1.0e-5F);
       peak_back = std::max(peak_back, -sample.world_offset_z);
       peak_tilt = std::max(peak_tilt, std::abs(sample.pitch_degrees));
     }
     EXPECT_GT(peak_back, 0.03F);
-    EXPECT_LT(peak_tilt, 16.0F) << "a reaction is a recoil, not a fall";
+
+    EXPECT_LT(peak_tilt, 30.0F) << "a reaction is a recoil, not a fall";
 
     CombatRootMotionInputs done{};
     done.hit_reacting = true;

@@ -266,7 +266,6 @@ add_library(
     systems/combat_system/mounted_charge_processor.cpp
     systems/combat_system/combat_status_effect_processor.cpp
     systems/combat_system/combat_state_processor.cpp
-    systems/combat_system/combat_animation_timing.cpp
     systems/combat_system/attack_processor.cpp
     systems/combat_system/melee_exchange.cpp
     systems/combat_system/elephant_special_processor.cpp

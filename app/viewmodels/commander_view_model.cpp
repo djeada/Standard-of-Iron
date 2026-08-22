@@ -764,12 +764,8 @@ auto CommanderViewModel::record_rpg_hit(const Engine::Core::CombatHitEvent& even
   }
 
   float max_health = 0.0F;
-  if (const auto* rpg_health =
-          target->get_component<Engine::Core::RpgHealthComponent>();
-      rpg_health != nullptr && rpg_health->rpg_max_hp > 0) {
-    max_health = static_cast<float>(rpg_health->rpg_max_hp);
-  } else if (const auto* unit = target->get_component<Engine::Core::UnitComponent>();
-             unit != nullptr && unit->max_health > 0) {
+  if (const auto* unit = target->get_component<Engine::Core::UnitComponent>();
+      unit != nullptr && unit->max_health > 0) {
     max_health = static_cast<float>(unit->max_health);
   }
 

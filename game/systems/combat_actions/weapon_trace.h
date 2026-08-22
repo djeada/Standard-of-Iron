@@ -25,6 +25,8 @@ struct WeaponTraceContact {
   float distance{0.0F};
   float local_forward{0.0F};
   float local_right{0.0F};
+
+  float contact_speed{0.0F};
 };
 
 struct WeaponTraceTimeSpan {
@@ -63,14 +65,6 @@ struct WeaponTraceSegment {
     -> WeaponTraceContact;
 
 [[nodiscard]] auto find_weapon_trace_contact(
-    Engine::Core::World& world,
-    Engine::Core::Entity& attacker,
-    const CombatActionDefinition& definition,
-    Engine::Core::EntityID target_hint_id = 0,
-    std::span<const Engine::Core::EntityID> ignored_target_ids = {})
-    -> WeaponTraceContact;
-
-[[nodiscard]] auto find_sword_trace_contact(
     Engine::Core::World& world,
     Engine::Core::Entity& attacker,
     const CombatActionDefinition& definition,

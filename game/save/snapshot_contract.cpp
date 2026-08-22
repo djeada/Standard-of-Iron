@@ -211,7 +211,6 @@ constexpr std::array k_fields = std::to_array<FieldSpec>({
     {"CommanderSignaturePresentationComponent",
      PresentationOnly,
      "Short-lived burst marking where a commander's signature move landed."},
-    {"EnemyTelegraphComponent", PresentationOnly, "Attack telegraph overlay."},
     {"StockpileComponent",
      PresentationOnly,
      "Pile heights drawn on the barracks stone yard, resampled each tick from "
@@ -245,6 +244,11 @@ constexpr std::array k_fields = std::to_array<FieldSpec>({
     {"RpgCommanderActionComponent",
      DerivedRebuilt,
      "FPV action in flight, re-issued by input."},
+    {"CombatIntentQueueComponent",
+     DerivedRebuilt,
+     "The last couple of presses the player made and why the previous one was "
+     "refused. Input in flight: a restored match starts from whatever the "
+     "player presses next, not from an intention they had before saving."},
     {"RpgCommanderAimComponent",
      DerivedRebuilt,
      "Where the FPV commander is looking and how far the bow is drawn. Both are "

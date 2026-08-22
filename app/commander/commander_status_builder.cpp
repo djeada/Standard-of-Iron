@@ -54,6 +54,10 @@ auto build_controlled_commander_status(const CommanderStatusInput& input)
   result["guard_break_remaining"] = 0.0;
   result["guard_broken"] = false;
   result["guard_active"] = false;
+  result["incoming_tell"] = 0;
+  result["incoming_tell_intensity"] = 0.0;
+  result["last_input_outcome"] = 0;
+  result["last_input_outcome_age"] = 0.0;
   result["combat_phase"] = 0;
   result["attack_direction"] = 0;
   result["is_attacking"] = false;
@@ -121,23 +125,22 @@ auto build_controlled_commander_status(const CommanderStatusInput& input)
   result["alive"] = described.alive;
 
   auto* commander_entity = world->get_entity(input.controlled_commander_id);
-  auto* rpg = commander_entity != nullptr
-                  ? commander_entity->get_component<Engine::Core::RpgHealthComponent>()
-                  : nullptr;
-  if (rpg != nullptr && rpg->active) {
-    result["health"] = rpg->rpg_hp;
-    result["max_health"] = rpg->rpg_max_hp;
-    result["health_ratio"] =
-        rpg->rpg_max_hp > 0
-            ? static_cast<double>(rpg->rpg_hp) / static_cast<double>(rpg->rpg_max_hp)
-            : 0.0;
-  } else {
-    result["health"] = health;
-    result["max_health"] = max_health;
-    result["health_ratio"] =
-        max_health > 0 ? static_cast<double>(health) / static_cast<double>(max_health)
-                       : 0.0;
+
+  if (auto const* intents =
+          commander_entity != nullptr
+              ? commander_entity
+                    ->get_component<Engine::Core::CombatIntentQueueComponent>()
+              : nullptr;
+      intents != nullptr) {
+    result["last_input_outcome"] = static_cast<int>(intents->last_outcome);
+    result["last_input_outcome_age"] = static_cast<double>(intents->last_outcome_age);
   }
+
+  result["health"] = health;
+  result["max_health"] = max_health;
+  result["health_ratio"] =
+      max_health > 0 ? static_cast<double>(health) / static_cast<double>(max_health)
+                     : 0.0;
   result["stamina_ratio"] = stamina_ratio;
   result["is_running"] = is_running;
   result["can_run"] = can_run;
@@ -192,8 +195,38 @@ auto build_controlled_commander_status(const CommanderStatusInput& input)
     case Engine::Core::FightContext::None:
       break;
     }
-    result["threat_left"] = engagement->left_threat_id != 0;
-    result["threat_right"] = engagement->right_threat_id != 0;
+    bool threat_left = false;
+    bool threat_right = false;
+    for (auto const& slot : engagement->engagement_slots) {
+      if (!slot.pressing) {
+        continue;
+      }
+      if (slot.signed_angle_degrees < -20.0F) {
+        threat_left = true;
+      } else if (slot.signed_angle_degrees > 20.0F) {
+        threat_right = true;
+      }
+    }
+    result["threat_left"] = threat_left;
+    result["threat_right"] = threat_right;
+
+    float loudest_tell = 0.0F;
+    auto loudest_cue = Engine::Core::TelegraphCue::None;
+    for (auto const& slot : engagement->engagement_slots) {
+      auto const* attacker = world->get_entity(slot.entity_id);
+      auto const* attacker_state =
+          attacker != nullptr
+              ? attacker->get_component<Engine::Core::CombatStateComponent>()
+              : nullptr;
+      if (attacker_state == nullptr ||
+          attacker_state->telegraph_intensity <= loudest_tell) {
+        continue;
+      }
+      loudest_tell = attacker_state->telegraph_intensity;
+      loudest_cue = attacker_state->telegraph_cue;
+    }
+    result["incoming_tell"] = static_cast<int>(loudest_cue);
+    result["incoming_tell_intensity"] = static_cast<double>(loudest_tell);
   }
   result["camera_mode"] =
       commander->close_camera_mode ? QStringLiteral("Close") : QStringLiteral("Chase");

@@ -17,14 +17,23 @@ struct AttackRequest {
   int move_right_axis{0};
   int move_forward_axis{0};
   float primary_held_duration{0.0F};
+
+  bool has_swing{false};
+  Engine::Core::MeleeIntent swing{};
 };
 
 struct AttackRequestResult {
   bool accepted{false};
   bool buffered{false};
+
+  Engine::Core::CombatIntentOutcome outcome{
+      Engine::Core::CombatIntentOutcome::Accepted};
   CombatActionId action_id{CombatActionId::None};
   const CombatActionDefinition* definition{nullptr};
 };
+
+void expire_stale_intents(Engine::Core::CombatIntentQueueComponent& queue,
+                          float delta_time);
 
 class CombatActionService {
 public:

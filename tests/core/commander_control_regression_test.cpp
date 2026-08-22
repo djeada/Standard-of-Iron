@@ -519,7 +519,11 @@ TEST(CommanderControlRegressionTest, FpvAttackAlwaysTriggersAnimationEvenWithNoT
   EXPECT_TRUE(contains(action_service,
                        "combat_state->animation_state = "
                        "Engine::Core::CombatAnimationState::Advance;"));
-  EXPECT_TRUE(contains(source, "if (!attack_result.accepted) {"));
+  EXPECT_TRUE(contains(
+      source,
+      "if (attack_result.outcome == Engine::Core::CombatIntentOutcome::Accepted) {"))
+      << "a refused swing must not drop direct control; the reason belongs on "
+         "the intent queue";
 
   EXPECT_TRUE(
       contains(action_service, "combat_state->damage_dealt_this_swing = false;"));
