@@ -4,11 +4,14 @@
 
 #include <algorithm>
 #include <cmath>
+#include <cstddef>
 #include <initializer_list>
 #include <utility>
 #include <vector>
 
 #include "arena_scenarios.h"
+#include "game/systems/building_collision_registry.h"
+#include "game/units/spawn_type.h"
 #include "game/wildlife/wildlife_config.h"
 
 namespace Arena::Scenarios {
@@ -492,18 +495,9 @@ void add_walls(ArenaScenarioDefinition& scenario) {
                .east_gates = {}});
 }
 [[nodiscard]] auto footprint_half(Spawn type) -> QVector2D {
-  switch (type) {
-  case Spawn::Farm:
-    return {6.8F, 6.8F};
-  case Spawn::Barracks:
-    return {2.0F, 2.0F};
-  case Spawn::Home:
-  case Spawn::Marketplace:
-  case Spawn::Temple:
-    return {1.5F, 1.5F};
-  default:
-    return {1.0F, 1.0F};
-  }
+  const auto size = Game::Systems::BuildingCollisionRegistry::get_building_size(
+      Game::Units::spawn_typeToQString(type).toStdString());
+  return {size.width * 0.5F, size.depth * 0.5F};
 }
 
 [[nodiscard]] auto rotated_half(QVector2D half, float facing_degrees) -> QVector2D {
@@ -592,7 +586,8 @@ private:
   }
 
   [[nodiscard]] auto fits(QVector3D at, QVector2D half) const -> bool {
-    constexpr float k_gap = 0.4F;
+    constexpr float k_gap =
+        (2.0F * Game::Systems::k_default_building_grid_padding) + 0.9F;
     constexpr float k_road_margin = 0.8F;
     constexpr float k_water_margin = 2.0F;
     constexpr float k_bridge_lane = 4.0F;
@@ -677,21 +672,27 @@ void add_colonnade(CityPlanner& planner,
   }
 }
 
-void add_temple_star(CityPlanner& planner, QVector3D centre) {
-  constexpr float k_deg_to_rad = 0.01745329251994329577F;
-  constexpr int k_points = 5;
-  constexpr float k_radius = 5.6F;
+void add_temple_precinct(CityPlanner& planner, QVector3D centre) {
+  constexpr float k_column_pitch = 9.6F;
+  constexpr float k_row_pitch = 9.0F;
 
-  for (int index = 0; index < k_points; ++index) {
-    const float degrees =
-        (360.0F / static_cast<float>(k_points)) * static_cast<float>(index);
-    const float radians = degrees * k_deg_to_rad;
-    planner.place(QStringLiteral("capital_sanctum_%1").arg(index),
+  struct Cell {
+    const char* suffix;
+    float columns;
+    float rows;
+  };
+
+  for (auto const& cell : {Cell{"apex", 0.0F, -1.0F},
+                           Cell{"west", -1.0F, 0.0F},
+                           Cell{"east", 1.0F, 0.0F},
+                           Cell{"front_west", -0.5F, 1.0F},
+                           Cell{"front_east", 0.5F, 1.0F}}) {
+    planner.place(QStringLiteral("capital_sanctum_%1").arg(QLatin1String(cell.suffix)),
                   Spawn::Temple,
-                  {centre.x() + (std::cos(radians) * k_radius),
+                  {centre.x() + (cell.columns * k_column_pitch),
                    0.0F,
-                   centre.z() + (std::sin(radians) * k_radius)},
-                  degrees + 90.0F,
+                   centre.z() + (cell.rows * k_row_pitch)},
+                  180.0F,
                   false);
   }
 }
@@ -716,9 +717,9 @@ void fill_district(CityPlanner& planner, const District& district, int seed) {
         continue;
       }
       const float jitter_x =
-          (plot_unit(seed + 1, column, row) - 0.5F) * district.pitch_x * 0.34F;
+          (plot_unit(seed + 1, column, row) - 0.5F) * district.pitch_x * 0.16F;
       const float jitter_z =
-          (plot_unit(seed + 2, column, row) - 0.5F) * district.pitch_z * 0.34F;
+          (plot_unit(seed + 2, column, row) - 0.5F) * district.pitch_z * 0.16F;
       const float local_x = (static_cast<float>(column) * district.pitch_x) + jitter_x;
       const float local_z = (static_cast<float>(row) * district.pitch_z) + jitter_z;
       const float world_x = centre_x + (local_x * cos_a) - (local_z * sin_a);
@@ -854,43 +855,43 @@ void add_monuments(ArenaScenarioDefinition& scenario, CityPlanner& planner) {
                   true);
   }
 
-  add_temple_star(planner, {k_avenue_x, 0.0F, k_mountain_z});
+  add_temple_precinct(planner, {k_avenue_x, 0.0F, k_mountain_z});
 
   add_colonnade(planner,
                 QStringLiteral("capital_portico_west"),
                 {-20.0F, 0.0F, -104.0F},
                 {-20.0F, 0.0F, -142.0F},
-                6.5F,
+                10.4F,
                 90.0F);
   add_colonnade(planner,
                 QStringLiteral("capital_portico_east"),
                 {20.0F, 0.0F, -104.0F},
                 {20.0F, 0.0F, -142.0F},
-                6.5F,
+                10.4F,
                 270.0F);
   add_colonnade(planner,
                 QStringLiteral("capital_forum_portico_west"),
                 {-40.0F, 0.0F, k_forum_z - 26.0F},
                 {-40.0F, 0.0F, k_forum_z + 26.0F},
-                6.5F,
+                10.4F,
                 90.0F);
   add_colonnade(planner,
                 QStringLiteral("capital_forum_portico_east"),
                 {40.0F, 0.0F, k_forum_z - 26.0F},
                 {40.0F, 0.0F, k_forum_z + 26.0F},
-                6.5F,
+                10.4F,
                 270.0F);
   add_colonnade(planner,
                 QStringLiteral("capital_circus_portico_north"),
                 {k_circus_x - 34.0F, 0.0F, k_circus_z - 28.0F},
                 {k_circus_x + 34.0F, 0.0F, k_circus_z - 28.0F},
-                6.5F,
+                10.4F,
                 180.0F);
   add_colonnade(planner,
                 QStringLiteral("capital_circus_portico_south"),
                 {k_circus_x - 34.0F, 0.0F, k_circus_z + 28.0F},
                 {k_circus_x + 34.0F, 0.0F, k_circus_z + 28.0F},
-                6.5F,
+                10.4F,
                 0.0F);
 
   for (int index = 0; index < 5; ++index) {
@@ -995,8 +996,8 @@ void add_districts(CityPlanner& planner) {
                     -56.0F,
                     -8.0F,
                     0.0F,
-                    5.8F,
-                    6.4F,
+                    9.2F,
+                    8.8F,
                     -5.0F,
                     0.9F,
                     7,
@@ -1006,8 +1007,8 @@ void add_districts(CityPlanner& planner) {
                     -56.0F,
                     88.0F,
                     0.0F,
-                    5.8F,
-                    6.4F,
+                    9.2F,
+                    8.8F,
                     5.0F,
                     0.9F,
                     7,
@@ -1018,8 +1019,8 @@ void add_districts(CityPlanner& planner) {
                     -148.0F,
                     -100.0F,
                     -68.0F,
-                    6.8F,
-                    7.2F,
+                    9.4F,
+                    9.0F,
                     -11.0F,
                     0.84F,
                     7,
@@ -1029,8 +1030,8 @@ void add_districts(CityPlanner& planner) {
                     -60.0F,
                     -100.0F,
                     8.0F,
-                    6.8F,
-                    7.0F,
+                    9.4F,
+                    8.8F,
                     13.0F,
                     0.84F,
                     7,
@@ -1040,8 +1041,8 @@ void add_districts(CityPlanner& planner) {
                     16.0F,
                     -8.0F,
                     114.0F,
-                    6.8F,
-                    7.2F,
+                    9.4F,
+                    9.0F,
                     8.0F,
                     0.82F,
                     8,
@@ -1051,8 +1052,8 @@ void add_districts(CityPlanner& planner) {
                     24.0F,
                     100.0F,
                     114.0F,
-                    6.6F,
-                    7.0F,
+                    9.2F,
+                    8.8F,
                     -7.0F,
                     0.82F,
                     8,
@@ -1062,8 +1063,8 @@ void add_districts(CityPlanner& planner) {
                     -60.0F,
                     166.0F,
                     8.0F,
-                    6.8F,
-                    7.0F,
+                    9.4F,
+                    8.8F,
                     -13.0F,
                     0.84F,
                     7,
@@ -1073,8 +1074,8 @@ void add_districts(CityPlanner& planner) {
                     16.0F,
                     166.0F,
                     114.0F,
-                    6.8F,
-                    7.2F,
+                    9.4F,
+                    9.0F,
                     9.0F,
                     0.82F,
                     8,
@@ -1084,8 +1085,8 @@ void add_districts(CityPlanner& planner) {
                     -148.0F,
                     -8.0F,
                     -132.0F,
-                    7.0F,
-                    7.0F,
+                    9.4F,
+                    8.8F,
                     4.0F,
                     0.7F,
                     0,
@@ -1140,8 +1141,8 @@ void add_districts(CityPlanner& planner) {
                     132.0F,
                     170.0F,
                     156.0F,
-                    9.0F,
-                    9.0F,
+                    10.4F,
+                    10.0F,
                     3.0F,
                     0.55F,
                     6,
@@ -1284,6 +1285,11 @@ void add_relief(ArenaScenarioDefinition& scenario) {
 void add_dressing(ArenaScenarioDefinition& scenario) {
   scenario.resource_patches = {
       patch("magic_shrine", 1, {k_avenue_x, 0.0F, k_mountain_z - 56.0F}, {}, 1.8F),
+      patch("magic_shrine",
+            2,
+            {k_avenue_x - 17.5F, 0.0F, k_mountain_z + 4.5F},
+            {35.0F, 0.0F, 0.0F},
+            1.5F),
       patch("statue", 6, {-27.0F, 0.0F, -104.0F}, {0.0F, 0.0F, -8.0F}, 1.4F),
       patch("statue", 6, {27.0F, 0.0F, -104.0F}, {0.0F, 0.0F, -8.0F}, 1.4F),
       patch("statue", 6, {-47.0F, 0.0F, k_forum_z - 22.0F}, {0.0F, 0.0F, 9.0F}, 1.3F),
@@ -1826,13 +1832,12 @@ void add_people(ArenaScenarioDefinition& scenario) {
         Crew{"capital_carriers_docks", Troop::Civilian, 20.0F, 118.0F, 4, false, 10},
         Crew{"capital_carriers_barracks", Troop::Civilian, 104.0F, -70.0F, 4, false, 9},
         Crew{"capital_carriers_upper", Troop::Civilian, -30.0F, -90.0F, 4, false, 9},
-        Crew{"capital_carriers_farm", Troop::Civilian, -144.0F, 200.0F, 4, false, 9},
-        Crew{"capital_carriers_quarry", Troop::Civilian, 150.0F, -234.0F, 4, false, 9},
-        Crew{"capital_carriers_timber", Troop::Civilian, -172.0F, -86.0F, 4, false, 9},
-        Crew{"capital_carriers_stone", Troop::Civilian, 158.0F, -238.0F, 4, false, 9},
-        Crew{"capital_carriers_iron", Troop::Civilian, 186.0F, -262.0F, 4, false, 9},
-        Crew{
-            "capital_carriers_grain", Troop::Civilian, -110.0F, 176.0F, 4, false, 9}}) {
+        Crew{"capital_carriers_farm", Troop::Builder, -144.0F, 200.0F, 4, false, 9},
+        Crew{"capital_carriers_quarry", Troop::Builder, 150.0F, -234.0F, 4, false, 9},
+        Crew{"capital_carriers_timber", Troop::Builder, -172.0F, -86.0F, 4, false, 9},
+        Crew{"capital_carriers_stone", Troop::Builder, 158.0F, -238.0F, 4, false, 9},
+        Crew{"capital_carriers_iron", Troop::Builder, 186.0F, -262.0F, 4, false, 9},
+        Crew{"capital_carriers_grain", Troop::Builder, -110.0F, 176.0F, 4, false, 9}}) {
     scenario.groups.push_back(worker(QString::fromLatin1(carriers.name),
                                      carriers.troop,
                                      {carriers.x, 0.0F, carriers.z},
@@ -1847,12 +1852,15 @@ void add_people(ArenaScenarioDefinition& scenario) {
         Crew{"capital_upper_healers_court", Troop::Healer, 0.0F, -118.0F, 3, false, 5},
         Crew{"capital_upper_healers_walk", Troop::Healer, -22.0F, -76.0F, 2, false, 5},
         Crew{"capital_forum_healers", Troop::Healer, 34.0F, -70.0F, 2, false, 5}}) {
-    scenario.groups.push_back(worker(QString::fromLatin1(healers.name),
-                                     healers.troop,
-                                     {healers.x, 0.0F, healers.z},
-                                     healers.count,
-                                     false,
-                                     healers.crew));
+    auto ward = worker(QString::fromLatin1(healers.name),
+                       healers.troop,
+                       {healers.x, 0.0F, healers.z},
+                       healers.count,
+                       false,
+                       healers.crew);
+    ward.settlement_resident = true;
+    ward.settlement_roam_radius = 14.0F;
+    scenario.groups.push_back(std::move(ward));
   }
 }
 
@@ -1869,30 +1877,56 @@ void add_script(ArenaScenarioDefinition& scenario) {
       at(0.4F, Command::Hold, QStringLiteral("capital_north_watch")),
       at(0.4F, Command::Hold, QStringLiteral("capital_temple_guard")),
       at(0.4F, Command::Hold, QStringLiteral("capital_garrison_archers")),
-      at(0.4F, Command::Hold, QStringLiteral("capital_garrison_spears")),
       march_to(1.0F, QStringLiteral("capital_column_horse"), {0.0F, 0.0F, -20.0F}),
       march_to(2.0F, QStringLiteral("capital_column_swords"), {0.0F, 0.0F, 20.0F}),
-      march_to(4.0F, QStringLiteral("capital_column_spears"), {0.0F, 0.0F, 50.0F}),
-      march_to(6.0F, QStringLiteral("capital_column_archers"), {0.0F, 0.0F, 80.0F}),
+      march_to(14.0F, QStringLiteral("capital_column_spears"), {0.0F, 0.0F, 50.0F}),
+      march_to(28.0F, QStringLiteral("capital_column_archers"), {0.0F, 0.0F, 80.0F}),
       march_to(70.0F, QStringLiteral("capital_column_horse"), {0.0F, 0.0F, -150.0F}),
       march_to(84.0F, QStringLiteral("capital_column_swords"), {0.0F, 0.0F, -110.0F}),
       march_to(96.0F, QStringLiteral("capital_column_spears"), {0.0F, 0.0F, -70.0F}),
       march_to(110.0F, QStringLiteral("capital_column_archers"), {0.0F, 0.0F, -40.0F}),
-      march_to(30.0F, QStringLiteral("capital_garrison_horse"), {96.0F, 0.0F, -60.0F}),
-      march_to(70.0F, QStringLiteral("capital_garrison_horse"), {150.0F, 0.0F, -96.0F}),
       march_to(
           20.0F, QStringLiteral("capital_garrison_swords"), {112.0F, 0.0F, -100.0F}),
       march_to(
           90.0F, QStringLiteral("capital_garrison_swords"), {126.0F, 0.0F, -168.0F}),
   };
 
+  struct Drill {
+    const char* group;
+    QVector3D near_post;
+    QVector3D far_post;
+  };
+  for (auto const& drill :
+       {Drill{"capital_garrison_spears",
+              {112.0F, 0.0F, -114.0F},
+              {140.0F, 0.0F, -128.0F}},
+        Drill{
+            "capital_garrison_horse", {96.0F, 0.0F, -60.0F}, {150.0F, 0.0F, -96.0F}}}) {
+    if (!has_group(scenario, QString::fromLatin1(drill.group))) {
+      continue;
+    }
+    bool out = true;
+    for (float when = 6.0F; when < 180.0F; when += 14.0F) {
+      scenario.steps.push_back(march_to(when,
+                                        QString::fromLatin1(drill.group),
+                                        out ? drill.far_post : drill.near_post));
+      out = !out;
+    }
+  }
+
   const auto patrols = city_patrols();
   for (const auto& patrol : patrols) {
+    if (patrol.route.empty()) {
+      continue;
+    }
     float when = 1.5F;
-    for (const auto& waypoint : patrol.route) {
-      scenario.steps.push_back(
-          march_to(when, QString::fromLatin1(patrol.name), waypoint));
-      when += 38.0F;
+    std::size_t leg = 0;
+    while (when < 180.0F) {
+      scenario.steps.push_back(march_to(when,
+                                        QString::fromLatin1(patrol.name),
+                                        patrol.route[leg % patrol.route.size()]));
+      when += 16.0F;
+      ++leg;
     }
   }
 
@@ -1909,8 +1943,17 @@ void add_script(ArenaScenarioDefinition& scenario) {
                           Job{"capital_reapers_west", "grain"},
                           Job{"capital_reapers_east", "grain"},
                           Job{"capital_shepherds", "sheep"},
-                          Job{"capital_wardens", "grain"}}) {
-    for (float when : {2.5F, 34.0F, 66.0F, 98.0F, 130.0F, 162.0F}) {
+                          Job{"capital_wardens", "grain"},
+                          Job{"capital_carriers_timber", "tree"},
+                          Job{"capital_carriers_quarry", "boulder"},
+                          Job{"capital_carriers_stone", "boulder"},
+                          Job{"capital_carriers_iron", "iron_ore"},
+                          Job{"capital_carriers_grain", "grain"},
+                          Job{"capital_carriers_farm", "grain"}}) {
+    if (!has_group(scenario, QString::fromLatin1(job.crew))) {
+      continue;
+    }
+    for (float when = 2.5F; when < 180.0F; when += 12.0F) {
       scenario.steps.push_back(
           harvest_at(when, QString::fromLatin1(job.crew), job.kind));
     }
@@ -1920,18 +1963,15 @@ void add_script(ArenaScenarioDefinition& scenario) {
     const char* crew;
     const char* structure;
   };
-  for (auto const& haul :
-       {Haul{"capital_carriers_forum", "capital_basilica"},
-        Haul{"capital_carriers_docks", "capital_dock_hall_0"},
-        Haul{"capital_carriers_barracks", "capital_barracks_south_0"},
-        Haul{"capital_carriers_upper", "capital_curia"},
-        Haul{"capital_carriers_farm", "capital_granary"},
-        Haul{"capital_carriers_quarry", "capital_armoury_0"}}) {
+  for (auto const& haul : {Haul{"capital_carriers_forum", "capital_basilica"},
+                           Haul{"capital_carriers_docks", "capital_dock_hall_0"},
+                           Haul{"capital_carriers_barracks", "capital_armoury_0"},
+                           Haul{"capital_carriers_upper", "capital_curia"}}) {
     const QString structure = QString::fromLatin1(haul.structure);
     if (!has_group(scenario, structure)) {
       continue;
     }
-    for (float when : {4.0F, 40.0F, 76.0F, 112.0F, 148.0F}) {
+    for (float when = 4.0F; when < 180.0F; when += 13.0F) {
       scenario.steps.push_back(
           deliver_at(when, QString::fromLatin1(haul.crew), structure));
     }
@@ -1949,7 +1989,7 @@ void add_script(ArenaScenarioDefinition& scenario) {
         BuildSite{"capital_masons_wall", "capital_site_wall", 255},
         BuildSite{"capital_masons_circus", "capital_site_circus", 250},
         BuildSite{"capital_repair_crew", "capital_site_avenue", 240},
-        BuildSite{"capital_repair_crew_east", "capital_site_theatre", 248},
+        BuildSite{"capital_repair_crew_east", "capital_site_circus", 248},
         BuildSite{"capital_masons", "capital_mint", 240}}) {
     const QString crew = QString::fromLatin1(site.crew);
     const QString structure = QString::fromLatin1(site.structure);
@@ -2027,10 +2067,11 @@ auto imperial_capital() -> ArenaScenarioDefinition {
   s.wildlife.sheep.group_size_min = 8;
   s.wildlife.sheep.group_size_max = 11;
   s.wildlife.sheep.roam_radius = 9.0F;
-  s.wildlife.sheep.group_count = 22;
+  s.wildlife.sheep.group_count = 25;
   s.wildlife.sheep.group_size_min = 9;
   s.wildlife.sheep.group_size_max = 14;
   s.wildlife.sheep.spawn_areas = {
+      {-60.0F, 206.0F, 13.0F},  {6.0F, 212.0F, 13.0F},    {-108.0F, 214.0F, 12.0F},
       {-238.0F, 172.0F, 16.0F}, {-166.0F, 178.0F, 16.0F}, {-96.0F, 186.0F, 16.0F},
       {-24.0F, 180.0F, 16.0F},  {48.0F, 178.0F, 16.0F},   {124.0F, 174.0F, 16.0F},
       {196.0F, 180.0F, 16.0F},  {-282.0F, 214.0F, 16.0F}, {-140.0F, 250.0F, 16.0F},
@@ -2083,11 +2124,7 @@ auto imperial_capital() -> ArenaScenarioDefinition {
                            QStringLiteral("capital_core_folk"),
                            QStringLiteral("capital_circus_crowd"),
                            QStringLiteral("capital_theatre_crowd"),
-                           QStringLiteral("capital_dock_hands"),
                            QStringLiteral("capital_temple_pilgrims"),
-                           QStringLiteral("capital_farm_folk"),
-                           QStringLiteral("capital_farm_folk_east"),
-                           QStringLiteral("capital_column_swords"),
                            QStringLiteral("capital_patrol_avenue"),
                            QStringLiteral("capital_patrol_decumanus")}) {
     s.expectations.push_back(expectation(Expect::MovementAnimationObserved, name));

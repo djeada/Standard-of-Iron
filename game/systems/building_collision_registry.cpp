@@ -20,9 +20,9 @@ auto BuildingCollisionRegistry::instance() -> BuildingCollisionRegistry& {
 const std::map<std::string, BuildingCollisionRegistry::BuildingSize>
     BuildingCollisionRegistry::s_building_sizes = {
         {"barracks", {4.F, 4.F}},
-        {"home", {3.F, 3.F}},
-        {"marketplace", {3.F, 3.F}},
-        {"temple", {3.F, 3.F}},
+        {"home", {4.3F, 4.4F}},
+        {"marketplace", {5.5F, 5.5F}},
+        {"temple", {6.2F, 4.4F}},
         {"farm", {13.6F, 13.6F}},
         {"wall_segment", {2.0F, 2.0F}},
         {"wall_gate", {2.0F, 2.0F}},
@@ -134,7 +134,8 @@ void BuildingCollisionRegistry::register_building(Engine::Core::EntityID entity_
                                                   const std::string& building_type,
                                                   float center_x,
                                                   float center_z,
-                                                  int owner_id) {
+                                                  int owner_id,
+                                                  float facing_degrees) {
 
   if (m_entity_to_index.find(entity_id) != m_entity_to_index.end()) {
 
@@ -142,8 +143,20 @@ void BuildingCollisionRegistry::register_building(Engine::Core::EntityID entity_
     return;
   }
 
-  BuildingSize const size = get_building_size(building_type);
+  BuildingSize const size =
+      axis_aligned_size(get_building_size(building_type), facing_degrees);
   register_building(entity_id, building_type, center_x, center_z, owner_id, size);
+}
+
+auto BuildingCollisionRegistry::axis_aligned_size(BuildingSize size,
+                                                  float facing_degrees)
+    -> BuildingCollisionRegistry::BuildingSize {
+  constexpr float k_deg_to_rad = 3.14159265358979323846F / 180.0F;
+  float const radians = facing_degrees * k_deg_to_rad;
+  float const cosine = std::abs(std::cos(radians));
+  float const sine = std::abs(std::sin(radians));
+  return {(cosine * size.width) + (sine * size.depth),
+          (sine * size.width) + (cosine * size.depth)};
 }
 
 void BuildingCollisionRegistry::register_building(Engine::Core::EntityID entity_id,
