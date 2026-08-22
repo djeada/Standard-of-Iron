@@ -204,14 +204,33 @@ def build_kerning(builder, available: set) -> None:
     ignored silently by the writer, and the count is reported, so that renaming
     a glyph cannot quietly empty the table.
     """
+    source_pairs = kerning_pairs()
     table_pairs = {
         pair: value
-        for pair, value in kerning_pairs().items()
+        for pair, value in source_pairs.items()
         if pair[0] in available and pair[1] in available
     }
-    dropped = len(kerning_pairs()) - len(table_pairs)
+    dropped = len(source_pairs) - len(table_pairs)
     if dropped:
         print(f"warning: dropped {dropped} kern pair(s) naming unknown glyphs")
+
+    variants: dict[str, set[str]] = {}
+    for character, (base, _mark, _fraction, _dy) in ACCENTED.items():
+        variants.setdefault(glyph_name_for(base), set()).add(glyph_name_for(character))
+
+    inherited: dict[tuple[str, str], int] = {}
+    for (left, right), value in table_pairs.items():
+        left_names = {left, *variants.get(left, set())}
+        right_names = {right, *variants.get(right, set())}
+        inherited.update(
+            {
+                (left_name, right_name): value
+                for left_name in left_names
+                for right_name in right_names
+                if left_name in available and right_name in available
+            }
+        )
+    table_pairs.update(inherited)
 
     subtable = _k_e_r_n.KernTable_format_0()
     subtable.coverage = 1

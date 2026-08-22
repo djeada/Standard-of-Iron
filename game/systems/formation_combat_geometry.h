@@ -86,6 +86,9 @@ resolve_layout(const Engine::Core::Entity& entity) -> FormationLayout;
 [[nodiscard]] auto formation_turn_radius(const Engine::Core::Entity& entity) -> float;
 
 [[nodiscard]] auto
+formation_navigation_clearance(const Engine::Core::Entity& entity) -> float;
+
+[[nodiscard]] auto
 resolve_contact_context(const Engine::Core::Entity& attacker,
                         const Engine::Core::Entity& target) -> FormationContactContext;
 

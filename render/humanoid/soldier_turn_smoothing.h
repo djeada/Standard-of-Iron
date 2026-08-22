@@ -16,6 +16,8 @@ struct SoldierTurnSmoothingState {
   float world_x{0.0F};
   float world_z{0.0F};
   float body_yaw_degrees{0.0F};
+  float formation_yaw_degrees{0.0F};
+  float wheel_direction{0.0F};
 
   std::uint32_t updated_frame{0U};
   bool valid{false};

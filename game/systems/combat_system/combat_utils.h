@@ -1,7 +1,10 @@
 #pragma once
 
+#include <QVector3D>
+
 #include <cstddef>
 #include <cstdint>
+#include <optional>
 #include <vector>
 
 #include "../../core/entity.h"
@@ -103,8 +106,15 @@ auto is_in_range(Engine::Core::Entity* attacker,
                  Engine::Core::Entity* target,
                  float range) -> bool;
 
+auto structure_separates_positions(const QVector3D& from, const QVector3D& to) -> bool;
+
 auto structure_separates_combatants(Engine::Core::Entity* attacker,
                                     Engine::Core::Entity* target) -> bool;
+
+auto melee_bypass_destination(const QVector3D& attacker_position,
+                              const QVector3D& target_position,
+                              float standoff_distance,
+                              float clearance_radius) -> std::optional<QVector3D>;
 
 auto melee_walled_off_from(Engine::Core::Entity* attacker,
                            Engine::Core::Entity* target) -> bool;

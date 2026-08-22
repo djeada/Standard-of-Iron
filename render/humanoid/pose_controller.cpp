@@ -87,6 +87,8 @@ void apply_construction_body_deltas(
   pose.head_pos.setY(pose.head_pos.y() + sample.head_y_delta);
   pose.head_pos.setZ(pose.head_pos.z() + sample.head_z_delta);
   pose.pelvis_pos.setX(pose.pelvis_pos.x() + sample.pelvis_x_delta);
+  pose.pelvis_pos.setY(pose.pelvis_pos.y() + sample.pelvis_y_delta);
+  pose.pelvis_pos.setZ(pose.pelvis_pos.z() + sample.pelvis_z_delta);
   pose.foot_l.setZ(pose.foot_l.z() + sample.foot_l_z_delta);
   pose.foot_r.setZ(pose.foot_r.z() + sample.foot_r_z_delta);
   pose.knee_l.setZ(pose.knee_l.z() + sample.knee_l_z_delta);
