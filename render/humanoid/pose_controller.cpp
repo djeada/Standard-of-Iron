@@ -713,6 +713,17 @@ void HumanoidPoseController::carry_stave() {
   apply_held_pose_sample(*this, m_pose, sample);
 }
 
+void HumanoidPoseController::carry_resource_load() {
+  using HP = HumanProportions;
+
+  auto const sample = Animation::resolve_humanoid_held_pose({
+      .kind = Animation::HumanoidHeldPoseKind::ResourceCarry,
+      .shoulder_y = HP::SHOULDER_Y,
+      .sample_time = m_anim_ctx.inputs.time,
+  });
+  apply_held_pose_sample(*this, m_pose, sample);
+}
+
 void HumanoidPoseController::brace_spear_for_hold() {
   using HP = HumanProportions;
 

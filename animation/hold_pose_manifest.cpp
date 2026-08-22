@@ -97,6 +97,18 @@ auto resolve_humanoid_held_pose(const HumanoidHeldPoseInputs& inputs) noexcept
                         0.28F + moving_mix * 0.05F};
     break;
   }
+  case HumanoidHeldPoseKind::ResourceCarry: {
+    float const bob = 0.006F * hold_cycle;
+    float const hand_y = shoulder_y + k_resource_carry_hand_y_from_shoulder;
+    sample.right_hand = {
+        k_resource_carry_hand_half_span, hand_y + bob, k_resource_carry_hand_z};
+    sample.left_hand = {
+        -k_resource_carry_hand_half_span, hand_y - bob, k_resource_carry_hand_z};
+    sample.shoulder_r_z_delta = 0.035F;
+    sample.shoulder_l_z_delta = 0.035F;
+    sample.neck_z_delta = 0.012F;
+    break;
+  }
   }
 
   return sample;

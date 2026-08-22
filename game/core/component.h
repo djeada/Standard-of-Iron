@@ -322,6 +322,7 @@ public:
   bool state_changed{false};
   float state_time{0.0F};
   float seconds_since_motion{0.0F};
+  float stalled_seconds{0.0F};
   float tick_delta_time{0.0F};
 
   void set_state(MotionPresentationState next_state) noexcept {

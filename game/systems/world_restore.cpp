@@ -70,7 +70,8 @@ void rebuild_building_collisions(Engine::Core::World* world) {
                                Game::Units::spawn_typeToString(unit.spawn_type),
                                transform.position.x,
                                transform.position.z,
-                               unit.owner_id);
+                               unit.owner_id,
+                               transform.rotation.y);
   }
 
   Game::Systems::WallNetworkService::refresh_world(*world);

@@ -323,6 +323,26 @@ TEST(HumanoidAnimationInputs, IdleDurationTracksUninterruptedIdleTime) {
   EXPECT_FLOAT_EQ(anim.idle_duration, 3.0F);
 }
 
+TEST(HumanoidAnimationInputs, ResourceLoadRequestsCarryPose) {
+  Engine::Core::StandaloneEntity scratch(1);
+  Engine::Core::Entity& entity = scratch.entity();
+  entity.add_component<Engine::Core::MovementComponent>();
+  auto* motion = entity.add_component<Engine::Core::MotionPresentationComponent>();
+  auto* carry = entity.add_component<Engine::Core::ResourceCarryComponent>();
+  ASSERT_NE(motion, nullptr);
+  ASSERT_NE(carry, nullptr);
+  motion->set_state(Engine::Core::MotionPresentationState::Walk);
+  carry->amounts.set(Game::Systems::ResourceType::Wood, 20);
+
+  Render::GL::DrawContext ctx{};
+  ctx.world_view = Render::WorldView::of_active_session();
+  ctx.entity = &entity;
+
+  auto const anim = Render::GL::sample_anim_state(ctx);
+  EXPECT_TRUE(anim.is_carrying_load);
+  EXPECT_TRUE(Render::Creature::is_moving_animation(anim.movement_state));
+}
+
 TEST(HumanoidAnimationInputs, FpvCommanderGuardSetsGuardingWithoutHoldMode) {
   Engine::Core::StandaloneEntity scratch(1);
   Engine::Core::Entity& entity = scratch.entity();

@@ -8,6 +8,8 @@
 #include <cmath>
 #include <cstdint>
 
+#include "animation/hold_pose_manifest.h"
+#include "animation/rig/humanoid_proportions.h"
 #include "game/core/component.h"
 #include "game/core/entity.h"
 #include "game/core/world.h"
@@ -29,8 +31,9 @@ constexpr float k_far_distance_sq = 120.0F * 120.0F;
 constexpr float k_detail_distance_sq = 46.0F * 46.0F;
 constexpr float k_cull_radius = 0.8F;
 
-constexpr float k_grip_height = 0.89F;
-constexpr float k_grip_forward = 0.08F;
+constexpr float k_grip_height =
+    HumanProportions::SHOULDER_Y + Animation::k_resource_carry_load_y_from_shoulder;
+constexpr float k_grip_forward = Animation::k_resource_carry_load_z;
 constexpr float k_hand_span = 0.19F;
 constexpr int k_max_visible_carriers = 8;
 

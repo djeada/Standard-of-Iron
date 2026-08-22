@@ -68,6 +68,7 @@ enum class BakerHoldType : std::uint8_t {
   None,
   Spear,
   Bow,
+  ResourceCarry,
   TestudoFront,
   TestudoTop,
   TestudoLeft,
@@ -109,6 +110,7 @@ defensive_shield_pose(BakerHoldType type) noexcept -> Animation::ShieldFormation
   case BakerHoldType::None:
   case BakerHoldType::Spear:
   case BakerHoldType::Bow:
+  case BakerHoldType::ResourceCarry:
     break;
   }
   return Animation::ShieldFormationPose::RomanFront;
@@ -1197,6 +1199,19 @@ constexpr std::array<HumanoidClipSpec, k_humanoid_baker_clip_count> k_humanoid_c
      false,
      BakerWorkType::None,
      BakerCombatPoseType::ReactStagger},
+    {"resource_carry",
+     Render::GL::HumanoidMotionState::Idle,
+     BakerAttackType::None,
+     0,
+     Animation::HumanoidDeathCollapse::None,
+     BakerRidingType::None,
+     BakerHoldType::ResourceCarry,
+     BakerAmbientIdleType::None,
+     BakerShowcaseType::None,
+     32U,
+     24.0F,
+     1.8F,
+     true},
 }};
 
 struct HumanoidSocketSpec {
@@ -1696,6 +1711,10 @@ void bake_hold_pose(BakeProfile profile,
     kneel_depth = 1.125F;
   }
 
+  if (hold_type == BakerHoldType::ResourceCarry) {
+    ctrl.carry_resource_load();
+    return;
+  }
   if (kneels) {
     ctrl.kneel(kneel_depth);
   }
