@@ -230,3 +230,50 @@ TEST_F(UiPreferencesTest, ChangeSignalsFireOnlyOnRealChanges) {
 }
 
 } // namespace
+
+TEST_F(UiPreferencesTest, DamageNumbersDefaultToShowingEveryHit) {
+  auto* prefs = UiPreferences::instance();
+  EXPECT_EQ(prefs->damage_number_mode(), QStringLiteral("all"));
+  EXPECT_TRUE(prefs->damage_numbers());
+}
+
+TEST_F(UiPreferencesTest, DamageNumbersOfferOffImportantAndAll) {
+  const QStringList modes = UiPreferences::damage_number_modes();
+  EXPECT_EQ(modes,
+            (QStringList{QStringLiteral("off"),
+                         QStringLiteral("important"),
+                         QStringLiteral("all")}));
+}
+
+TEST_F(UiPreferencesTest, TheImportantOnlyModeStillCountsAsDamageNumbersOn) {
+  auto* prefs = UiPreferences::instance();
+  prefs->set_damage_number_mode(QStringLiteral("important"));
+
+  EXPECT_EQ(prefs->damage_number_mode(), QStringLiteral("important"));
+  EXPECT_TRUE(prefs->damage_numbers());
+}
+
+TEST_F(UiPreferencesTest, TurningDamageNumbersOffSelectsTheOffMode) {
+  auto* prefs = UiPreferences::instance();
+  prefs->set_damage_numbers(false);
+
+  EXPECT_EQ(prefs->damage_number_mode(), QStringLiteral("off"));
+  EXPECT_FALSE(prefs->damage_numbers());
+}
+
+TEST_F(UiPreferencesTest, AnUnknownDamageNumberModeIsIgnored) {
+  auto* prefs = UiPreferences::instance();
+  prefs->set_damage_number_mode(QStringLiteral("important"));
+  prefs->set_damage_number_mode(QStringLiteral("occasionally"));
+
+  EXPECT_EQ(prefs->damage_number_mode(), QStringLiteral("important"));
+}
+
+TEST_F(UiPreferencesTest, TheDamageNumberModeSurvivesAReload) {
+  UiPreferences::instance()->set_damage_number_mode(QStringLiteral("important"));
+  EXPECT_EQ(UserSettings::load_ui_damage_number_mode(), QStringLiteral("important"));
+
+  UiPreferences::instance()->set_damage_number_mode(QStringLiteral("off"));
+  EXPECT_EQ(UserSettings::load_ui_damage_number_mode(), QStringLiteral("off"));
+  EXPECT_FALSE(UserSettings::load_ui_damage_numbers());
+}

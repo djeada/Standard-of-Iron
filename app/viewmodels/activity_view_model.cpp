@@ -6,6 +6,7 @@
 #include <vector>
 
 #include "app/core/client_context.h"
+#include "app/core/player_feedback.h"
 #include "app/economy/unit_profile.h"
 #include "app/input/cursor_manager.h"
 #include "app/input/input_command_handler.h"
@@ -171,6 +172,17 @@ void ActivityViewModel::clear_inspect_target() {
   }
   selection_system->clear_inspected_entity();
   emit inspect_target_cleared();
+}
+
+auto ActivityViewModel::pop_player_feedback_events() -> QVariantList {
+  QVariantList out;
+  if (m_context.feedback == nullptr) {
+    return out;
+  }
+  for (const auto& event : m_context.feedback->drain()) {
+    out.append(App::Core::to_variant_map(event));
+  }
+  return out;
 }
 
 auto ActivityViewModel::pop_combat_damage_events() -> QVariantList {

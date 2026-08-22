@@ -406,6 +406,7 @@ audio-check:
 # Validate mission and campaign content
 .PHONY: validate-content
 validate-content: build
+	@$(MAKE) --no-print-directory audio-check
 	@echo "$(BOLD)$(BLUE)Validating mission and campaign content...$(RESET)"
 	@if [ -f "$(BUILD_DIR)/bin/content_validator" ]; then \
 		$(BUILD_DIR)/bin/content_validator assets; \

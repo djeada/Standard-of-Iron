@@ -475,7 +475,8 @@ TEST_F(CommanderControlControllerTest,
   EXPECT_EQ(targets, nullptr);
 }
 
-TEST_F(CommanderControlControllerTest, PrimaryActionAlternatesSwordSwaysAcrossClicks) {
+TEST_F(CommanderControlControllerTest,
+       PrimaryActionGrowsTheNextSwingOutOfWhereTheLastOneFinished) {
   Engine::Core::World world;
   auto* commander = create_commander(world, 0.0F, 0.0F);
   ASSERT_NE(commander, nullptr);
@@ -491,6 +492,7 @@ TEST_F(CommanderControlControllerTest, PrimaryActionAlternatesSwordSwaysAcrossCl
   attack->current_mode = Engine::Core::AttackComponent::CombatMode::Melee;
 
   CommanderControlController controller;
+  Render::GL::Camera camera;
   ASSERT_TRUE(controller.primary_action(world, commander->get_id(), 1));
 
   auto* combat_state = commander->get_component<Engine::Core::CombatStateComponent>();
@@ -505,15 +507,23 @@ TEST_F(CommanderControlControllerTest, PrimaryActionAlternatesSwordSwaysAcrossCl
                 Game::Systems::CombatActions::CombatActionId::RpgSwordSlashLeft));
   EXPECT_EQ(action->melee_attack_sequence, 1U);
 
+  auto const first_swing = combat_state->intent;
+  EXPECT_LT(first_swing.strike_dir_x, 0.0F);
+  EXPECT_LT(first_swing.strike_dir_y, 0.0F);
+
+  ASSERT_TRUE(controller.update(world, commander->get_id(), 1, camera, 0.016F));
   combat_state->animation_state = Engine::Core::CombatAnimationState::Idle;
   combat_state->state_time = 0.0F;
   combat_state->state_duration = 0.0F;
   action->action_running = false;
   action->action_completed = true;
+  ASSERT_TRUE(controller.update(world, commander->get_id(), 1, camera, 0.016F));
 
   ASSERT_TRUE(controller.primary_action(world, commander->get_id(), 1));
 
   EXPECT_EQ(combat_state->attack_variant, 0U);
+  EXPECT_GT(combat_state->intent.strike_dir_x, 0.0F);
+  EXPECT_GT(combat_state->intent.strike_dir_y, 0.0F);
   EXPECT_EQ(action->combat_action_id,
             static_cast<std::uint8_t>(
                 Game::Systems::CombatActions::CombatActionId::RpgSwordSlashRight));
@@ -650,7 +660,7 @@ TEST_F(CommanderControlControllerTest, PrimaryActionUsesSpearActionForSpearComma
   ASSERT_NE(action, nullptr);
 
   EXPECT_EQ(combat_state->attack_family, Engine::Core::CombatAttackFamily::Spear);
-  EXPECT_EQ(combat_state->attack_direction, Engine::Core::AttackDirection::Thrust);
+  EXPECT_EQ(combat_state->attack_direction(), Engine::Core::AttackDirection::Thrust);
   EXPECT_EQ(action->combat_action_id,
             static_cast<std::uint8_t>(
                 Game::Systems::CombatActions::CombatActionId::RpgSpearThrust));
@@ -685,7 +695,8 @@ TEST_F(CommanderControlControllerTest,
   ASSERT_NE(action, nullptr);
 
   EXPECT_EQ(combat_state->attack_family, Engine::Core::CombatAttackFamily::Sword);
-  EXPECT_EQ(combat_state->attack_direction, Engine::Core::AttackDirection::RightSlash);
+
+  EXPECT_EQ(combat_state->attack_direction(), Engine::Core::AttackDirection::LeftSlash);
   EXPECT_EQ(action->combat_action_id,
             static_cast<std::uint8_t>(
                 Game::Systems::CombatActions::CombatActionId::MountedSwordSlash));
@@ -720,7 +731,7 @@ TEST_F(CommanderControlControllerTest,
   ASSERT_NE(action, nullptr);
 
   EXPECT_EQ(combat_state->attack_family, Engine::Core::CombatAttackFamily::Spear);
-  EXPECT_EQ(combat_state->attack_direction, Engine::Core::AttackDirection::Thrust);
+  EXPECT_EQ(combat_state->attack_direction(), Engine::Core::AttackDirection::Thrust);
   EXPECT_EQ(action->combat_action_id,
             static_cast<std::uint8_t>(
                 Game::Systems::CombatActions::CombatActionId::MountedSpearThrust));
@@ -1188,3 +1199,64 @@ TEST_F(CommanderControlControllerTest, StrikeCarriesTheCommanderIntoATargetOutOf
 }
 
 } // namespace
+
+TEST_F(CommanderControlControllerTest, FrameIntentMirrorsHeldCommanderInput) {
+  CommanderControlController controller;
+  controller.set_view_yaw(40.0F);
+  controller.set_view_pitch(-5.0F);
+
+  const auto idle = controller.sample_frame_intent(nullptr);
+  EXPECT_FALSE(idle.has_move());
+  EXPECT_FALSE(idle.guard);
+  EXPECT_FALSE(idle.attack_held);
+  EXPECT_FLOAT_EQ(idle.view_yaw, 40.0F);
+  EXPECT_FLOAT_EQ(idle.view_pitch, -5.0F);
+
+  controller.key_down(Qt::Key_W);
+  controller.key_down(Qt::Key_D);
+  controller.key_down(Qt::Key_Shift);
+  controller.primary_action_down();
+  controller.secondary_action_down();
+  controller.request_dodge();
+  controller.request_jump();
+
+  const auto held = controller.sample_frame_intent(nullptr);
+  EXPECT_FLOAT_EQ(held.move.x(), 1.0F);
+  EXPECT_FLOAT_EQ(held.move.y(), 1.0F);
+  EXPECT_TRUE(held.run);
+  EXPECT_TRUE(held.attack_held);
+  EXPECT_TRUE(held.guard);
+  EXPECT_TRUE(held.dodge_pressed);
+  EXPECT_TRUE(held.jump_pressed);
+  EXPECT_EQ(held.frame_index, idle.frame_index + 1);
+}
+
+TEST_F(CommanderControlControllerTest, FrameIntentReportsMouseLookDeltaForTheFrame) {
+  CommanderControlController controller;
+  controller.set_view_yaw(0.0F);
+  controller.set_view_pitch(0.0F);
+
+  static_cast<void>(controller.sample_frame_intent(nullptr));
+  controller.mouse_move(20.0, -10.0);
+  const auto moved = controller.sample_frame_intent(nullptr);
+
+  EXPECT_TRUE(moved.has_look_delta());
+  EXPECT_GT(moved.look_delta.x(), 0.0F);
+  EXPECT_GT(moved.look_delta.y(), 0.0F);
+  EXPECT_FLOAT_EQ(moved.view_yaw, controller.view_yaw());
+  EXPECT_FLOAT_EQ(moved.view_pitch, controller.view_pitch());
+
+  const auto settled = controller.sample_frame_intent(nullptr);
+  EXPECT_FALSE(settled.has_look_delta());
+}
+
+TEST_F(CommanderControlControllerTest, FrameIntentWrapsAroundTheYawSeam) {
+  CommanderControlController controller;
+  controller.set_view_yaw(359.0F);
+  static_cast<void>(controller.sample_frame_intent(nullptr));
+
+  controller.mouse_move(20.0, 0.0);
+  const auto wrapped = controller.sample_frame_intent(nullptr);
+  EXPECT_GT(wrapped.look_delta.x(), 0.0F);
+  EXPECT_LT(wrapped.look_delta.x(), 90.0F);
+}

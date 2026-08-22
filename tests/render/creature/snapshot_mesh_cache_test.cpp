@@ -83,17 +83,22 @@ auto make_prebaked_blob() -> Render::Creature::Snapshot::SnapshotMeshBlob {
       indices);
   writer.add_clip(Render::Creature::Snapshot::ClipDescriptor{"idle", 2U});
 
-  std::vector<RiggedVertex> frame(3);
-  for (std::uint32_t frame_index = 0; frame_index < 2U; ++frame_index) {
-    for (std::size_t vertex = 0; vertex < frame.size(); ++vertex) {
-      frame[vertex].position_bone_local = {
+  constexpr std::uint32_t k_vertex_count = 3U;
+  constexpr std::uint32_t k_frame_count = 2U;
+  std::vector<RiggedVertex> clip(static_cast<std::size_t>(k_vertex_count) *
+                                 k_frame_count);
+  for (std::uint32_t frame_index = 0; frame_index < k_frame_count; ++frame_index) {
+    for (std::uint32_t vertex = 0; vertex < k_vertex_count; ++vertex) {
+      auto& out =
+          clip[(static_cast<std::size_t>(frame_index) * k_vertex_count) + vertex];
+      out.position_bone_local = {
           static_cast<float>(vertex), static_cast<float>(frame_index), 0.0F};
-      frame[vertex].normal_bone_local = {0.0F, 1.0F, 0.0F};
-      frame[vertex].bone_indices = {0, 0, 0, 0};
-      frame[vertex].bone_weights = {1.0F, 0.0F, 0.0F, 0.0F};
+      out.normal_bone_local = {0.0F, 1.0F, 0.0F};
+      out.bone_indices = {0, 0, 0, 0};
+      out.bone_weights = {1.0F, 0.0F, 0.0F, 0.0F};
     }
-    writer.append_clip_vertices(frame);
   }
+  writer.append_clip_vertices(clip);
 
   std::stringstream stream(std::ios::out | std::ios::binary | std::ios::in);
   EXPECT_TRUE(writer.write(stream));

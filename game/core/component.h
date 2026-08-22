@@ -10,6 +10,7 @@
 #include <utility>
 #include <vector>
 
+#include "../../animation/combat_manifest.h"
 #include "../systems/nation_id.h"
 #include "../systems/projectile_kind.h"
 #include "../systems/resource_types.h"
@@ -18,6 +19,7 @@
 #include "../units/troop_type.h"
 #include "../wildlife/wildlife_species.h"
 #include "entity.h"
+#include "melee_intent.h"
 
 namespace Game::Systems {
 class MovementSystem;
@@ -644,15 +646,7 @@ enum class CombatAttackFamily : std::uint8_t {
   }
 }
 
-enum class CombatAnimationState : std::uint8_t {
-  Idle,
-  Advance,
-  WindUp,
-  Strike,
-  Impact,
-  Recover,
-  Reposition
-};
+using CombatAnimationState = Animation::CombatPhase;
 
 enum class AttackDirection : std::uint8_t {
   LeftSlash = 0,
@@ -662,13 +656,65 @@ enum class AttackDirection : std::uint8_t {
   HeavyOverhead = 4
 };
 
+[[nodiscard]] inline auto
+classify_attack_direction(const MeleeIntent& raw,
+                          bool heavy = false) noexcept -> AttackDirection {
+  MeleeIntent const intent = normalized_melee_intent(raw);
+
+  if (intent.thrust_amount >= 0.55F) {
+    return AttackDirection::Thrust;
+  }
+
+  bool const descending = intent.strike_dir_y < -0.10F;
+  bool const vertical = std::abs(intent.strike_dir_y) > std::abs(intent.strike_dir_x);
+  if (descending && vertical) {
+    return (heavy || intent.charge >= 0.60F) ? AttackDirection::HeavyOverhead
+                                             : AttackDirection::Overhead;
+  }
+
+  return intent.strike_dir_x < 0.0F ? AttackDirection::LeftSlash
+                                    : AttackDirection::RightSlash;
+}
+
+[[nodiscard]] inline auto melee_intent_from_attack_direction(
+    AttackDirection direction,
+    float reach = k_melee_default_reach) noexcept -> MeleeIntent {
+  switch (direction) {
+  case AttackDirection::RightSlash:
+    return melee_intent_from_strike_angle(
+        Animation::k_melee_right_cut_angle, 0.0F, reach);
+  case AttackDirection::Overhead:
+    return melee_intent_from_strike_angle(
+        Animation::k_melee_overhead_angle, 0.0F, reach);
+  case AttackDirection::HeavyOverhead: {
+    MeleeIntent intent =
+        melee_intent_from_strike_angle(Animation::k_melee_overhead_angle, 0.0F, reach);
+    intent.charge = 1.0F;
+    intent.follow_through = 0.85F;
+    complete_melee_intent(intent, reach);
+    return intent;
+  }
+  case AttackDirection::Thrust:
+    return melee_intent_from_strike_angle(Animation::k_melee_thrust_angle, 1.0F, reach);
+  case AttackDirection::LeftSlash:
+    break;
+  }
+  return melee_intent_from_strike_angle(Animation::k_melee_left_cut_angle, 0.0F, reach);
+}
+
 class CombatStateComponent {
 public:
   CombatStateComponent() = default;
 
   CombatAnimationState animation_state{CombatAnimationState::Idle};
   CombatAttackFamily attack_family{CombatAttackFamily::None};
-  AttackDirection attack_direction{AttackDirection::LeftSlash};
+
+  MeleeIntent intent{};
+
+  [[nodiscard]] auto attack_direction() const noexcept -> AttackDirection {
+    return classify_attack_direction(intent, finisher_attack);
+  }
+
   float state_time{0.0F};
   float state_duration{0.0F};
   float attack_offset{0.0F};
@@ -773,6 +819,9 @@ public:
   float hit_direction_x{0.0F};
   float hit_direction_z{0.0F};
 
+  float recent_damage_remaining{0.0F};
+
+  static constexpr float k_recent_damage_window = 3.0F;
   static constexpr float k_reaction_duration = 0.25F;
   static constexpr float k_max_knockback = 0.15F;
   static constexpr float k_light_flinch_duration = 0.15F;
@@ -1023,6 +1072,31 @@ public:
   float flag_rally_flag_z{0.0F};
   bool flag_rally_flag_active{false};
   bool flag_rally_issue_commands{false};
+};
+
+class CommanderBodyControlComponent {
+public:
+  CommanderBodyControlComponent() = default;
+
+  static constexpr float k_windup_steer_authority = 1.0F;
+  static constexpr float k_strike_steer_authority = 0.35F;
+  static constexpr float k_recover_steer_authority = 0.0F;
+
+  static constexpr float k_max_steer_rate = 7.5F;
+
+  static constexpr float k_sweep_degrees = 45.0F;
+
+  MeleeIntent steered_intent{};
+
+  float steer_x{0.0F};
+  float steer_y{0.0F};
+  float steer_rate{0.0F};
+
+  bool swing_in_flight{false};
+
+  float rest_dir_x{0.80F};
+  float rest_dir_y{0.60F};
+  bool rest_valid{false};
 };
 
 class CommanderGuardComponent {
@@ -2096,6 +2170,13 @@ public:
   bool is_in_melee_lock{false};
   CombatAnimationState combat_phase{CombatAnimationState::Idle};
   float combat_phase_progress{0.0F};
+
+  MeleeIntent melee_intent{};
+  bool melee_intent_valid{false};
+  float melee_rest_x{0.80F};
+  float melee_rest_y{0.60F};
+  bool melee_rest_valid{false};
+
   CombatAttackFamily attack_family{CombatAttackFamily::None};
   std::uint8_t attack_variant{0};
   bool finisher_attack{false};

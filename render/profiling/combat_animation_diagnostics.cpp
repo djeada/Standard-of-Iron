@@ -50,9 +50,7 @@ auto attack_phase_window(Render::GL::CombatAnimPhase phase,
                          bool amplified_attack,
                          bool finisher_attack) noexcept -> CombatPhaseWindow {
   auto const window =
-      Animation::attack_phase_window(Render::Creature::animation_combat_phase(phase),
-                                     amplified_attack,
-                                     finisher_attack);
+      Animation::attack_phase_window(phase, amplified_attack, finisher_attack);
   return {window.start, window.end, window.offset_weight};
 }
 
@@ -62,7 +60,7 @@ auto scrubbed_combat_phase_from_attack_phase(float attack_phase,
     -> ScrubbedCombatPhase {
   auto const scrubbed = Animation::scrubbed_combat_phase_from_attack_phase(
       attack_phase, amplified_attack, finisher_attack);
-  return {Render::Creature::engine_combat_phase(scrubbed.phase), scrubbed.progress};
+  return {scrubbed.phase, scrubbed.progress};
 }
 
 auto combat_phase_name(Render::GL::CombatAnimPhase phase) noexcept -> const char* {
@@ -376,6 +374,36 @@ void CombatAnimationDiagnostics::record_submitted_body_pose(std::uint32_t entity
       qRadiansToDegrees(std::acos(sample->submitted_body_up_y));
   sample->submitted_max_arm_reach = std::max(0.0F, max_arm_reach);
   sample->submitted_body_pose_valid = true;
+}
+
+void CombatAnimationDiagnostics::record_submitted_body_pose(
+    std::uint32_t entity_id,
+    std::uint16_t soldier_index,
+    const SubmittedBodyPose& pose) {
+  record_submitted_body_pose(
+      entity_id, soldier_index, pose.body_up_y, pose.max_arm_reach);
+  if (!active() || !pose.joints_valid) {
+    return;
+  }
+  auto found = m_units.find(entity_id);
+  if (found == m_units.end()) {
+    return;
+  }
+  auto& soldiers = found->second.soldiers;
+  auto const sample = std::find_if(
+      soldiers.rbegin(), soldiers.rend(), [soldier_index](const auto& soldier) {
+        return soldier.soldier_index == static_cast<int>(soldier_index);
+      });
+  if (sample == soldiers.rend()) {
+    return;
+  }
+  sample->pelvis_world = pose.pelvis_world;
+  sample->hand_l_world = pose.hand_l_world;
+  sample->hand_r_world = pose.hand_r_world;
+  sample->foot_l_world = pose.foot_l_world;
+  sample->foot_r_world = pose.foot_r_world;
+  sample->pelvis_yaw_degrees = pose.pelvis_yaw_degrees;
+  sample->joint_sample_valid = true;
 }
 
 void CombatAnimationDiagnostics::record_mode_indicator(std::uint32_t entity_id) {

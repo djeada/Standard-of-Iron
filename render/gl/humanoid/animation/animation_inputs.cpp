@@ -60,27 +60,6 @@ void reset_humanoid_animation_state(
   return Render::Creature::MovementAnimationState::Idle;
 }
 
-[[nodiscard]] constexpr auto to_animation_combat_phase(
-    Engine::Core::CombatAnimationState phase) noexcept -> Animation::CombatPhase {
-  switch (phase) {
-  case Engine::Core::CombatAnimationState::Idle:
-    return Animation::CombatPhase::Idle;
-  case Engine::Core::CombatAnimationState::Advance:
-    return Animation::CombatPhase::Advance;
-  case Engine::Core::CombatAnimationState::WindUp:
-    return Animation::CombatPhase::WindUp;
-  case Engine::Core::CombatAnimationState::Strike:
-    return Animation::CombatPhase::Strike;
-  case Engine::Core::CombatAnimationState::Impact:
-    return Animation::CombatPhase::Impact;
-  case Engine::Core::CombatAnimationState::Recover:
-    return Animation::CombatPhase::Recover;
-  case Engine::Core::CombatAnimationState::Reposition:
-    return Animation::CombatPhase::Reposition;
-  }
-  return Animation::CombatPhase::Idle;
-}
-
 [[nodiscard]] auto synthesize_visual_movement_from_inputs(
     const DrawContext&, const AnimationInputs& anim) -> VisualMovementState {
   VisualMovementState state{};
@@ -212,6 +191,10 @@ void apply_presentation_sample(
   anim.is_in_melee_lock = presentation.is_in_melee_lock;
   anim.combat_phase = presentation.combat_phase;
   anim.combat_phase_progress = presentation.combat_phase_progress;
+  anim.melee_intent = presentation.melee_intent;
+  anim.melee_intent_valid = presentation.melee_intent_valid;
+  anim.melee_rest = {presentation.melee_rest_x, presentation.melee_rest_y};
+  anim.melee_rest_valid = presentation.melee_rest_valid;
   anim.attack_family = presentation.attack_family;
   anim.attack_variant = presentation.attack_variant;
   anim.finisher_attack = presentation.finisher_attack;
@@ -441,7 +424,7 @@ auto visual_movement_for_animation_inputs(
 auto approximate_attack_phase(const AnimationInputs& anim) noexcept -> float {
   return Animation::approximate_humanoid_attack_phase({
       .is_attacking = anim.is_attacking,
-      .combat_phase = to_animation_combat_phase(anim.combat_phase),
+      .combat_phase = anim.combat_phase,
       .combat_phase_progress = anim.combat_phase_progress,
       .finisher_attack = anim.finisher_attack,
       .sample_time = anim.time,

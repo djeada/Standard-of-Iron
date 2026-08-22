@@ -193,4 +193,16 @@ auto ArmyFormation::blocked_slot_count() const -> int {
       }));
 }
 
+auto ArmyFormation::slot_error(const QVector3D& position,
+                               EntityID entity) const -> float {
+  const auto* slot = find_slot_for(entity);
+  if (slot == nullptr) {
+    return -1.0F;
+  }
+  const QVector3D delta(slot->world_position.x() - position.x(),
+                        0.0F,
+                        slot->world_position.z() - position.z());
+  return delta.length();
+}
+
 } // namespace Game::Formation

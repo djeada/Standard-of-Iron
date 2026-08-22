@@ -8,7 +8,7 @@ RowLayout {
     id: bottomRoot
 
     readonly property var hs: StyleGuide.historical
-    readonly property bool fpv_mode: typeof game !== 'undefined' && game.commander.game_mode === "rpg"
+    readonly property bool fpv_mode: typeof game !== 'undefined' && game.commander.mode_state === "active"
 
     property var external_status: null
     property var commander_status: default_status()

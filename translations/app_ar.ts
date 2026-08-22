@@ -6085,6 +6085,22 @@ to see preview</source>
         <source>That building cannot be taken down.</source>
         <translation>هذا المبنى لا يمكن هدمه.</translation>
     </message>
+    <message>
+        <source>Cannot reach that spot.</source>
+        <translation>لا يمكن الوصول إلى هذا الموضع.</translation>
+    </message>
+    <message>
+        <source>That target is out of range.</source>
+        <translation>هذا الهدف خارج المدى.</translation>
+    </message>
+    <message>
+        <source>Those units are busy with another order.</source>
+        <translation>هذه الوحدات مشغولة بأمر آخر.</translation>
+    </message>
+    <message>
+        <source>Not enough resources.</source>
+        <translation>الموارد غير كافية.</translation>
+    </message>
 </context>
 <context>
     <name>OutcomeLayout</name>
@@ -7016,6 +7032,30 @@ Builders reap it for the food that recruits civilians</source>
         <source>Takes priority over anything else on its key while a rally can be placed</source>
         <translation>له الأولوية على أي شيء آخر على مفتاحه ما دام بالإمكان وضع راية تجميع</translation>
     </message>
+    <message>
+        <source>No ground under the cursor</source>
+        <translation>لا توجد أرض تحت المؤشر</translation>
+    </message>
+    <message>
+        <source>Cannot reach</source>
+        <translation>غير قابل للوصول</translation>
+    </message>
+    <message>
+        <source>No match is running</source>
+        <translation>لا توجد مباراة جارية</translation>
+    </message>
+    <message>
+        <source>Spectating</source>
+        <translation>مشاهدة</translation>
+    </message>
+    <message>
+        <source>Nothing selected</source>
+        <translation>لم يتم تحديد شيء</translation>
+    </message>
+    <message>
+        <source>No target under the cursor</source>
+        <translation>لا يوجد هدف تحت المؤشر</translation>
+    </message>
 </context>
 <context>
     <name>RpgFpvOverlay</name>
@@ -7540,14 +7580,6 @@ Builders reap it for the food that recruits civilians</source>
         <translation>يميّز كل طرف بشكل حلقة تحديد خاص به إضافة إلى لونه</translation>
     </message>
     <message>
-        <source>Damage numbers</source>
-        <translation>أرقام الضرر</translation>
-    </message>
-    <message>
-        <source>Shows the damage dealt above each hit while leading the commander</source>
-        <translation>يعرض الضرر المُوقَع فوق كل إصابة أثناء قيادة القائد</translation>
-    </message>
-    <message>
         <source>Screen effects:</source>
         <translation>مؤثرات الشاشة:</translation>
     </message>
@@ -7586,6 +7618,22 @@ Builders reap it for the food that recruits civilians</source>
     <message>
         <source>Sets both how far in from the edge the band reaches and how fast the camera moves inside it. At this setting the band is %1 px along the sides and %2 px along the top and bottom, measured at your interface scale.</source>
         <translation>يحدّد في آن واحد مدى امتداد الشريط من الحافة إلى الداخل وسرعة حركة الكاميرا داخله. عند هذا الإعداد يبلغ عرض الشريط %1 بكسل على الجانبين و%2 بكسل في الأعلى والأسفل، مقيسًا بمقياس واجهتك.</translation>
+    </message>
+    <message>
+        <source>Important only</source>
+        <translation>المهم فقط</translation>
+    </message>
+    <message>
+        <source>All hits</source>
+        <translation>كل الإصابات</translation>
+    </message>
+    <message>
+        <source>Damage numbers:</source>
+        <translation>أرقام الضرر:</translation>
+    </message>
+    <message>
+        <source>Numbers are a readout, not the feedback. Combat stays readable from motion, sound and hit reactions with them off.</source>
+        <translation>الأرقام قراءة وليست استجابة. يبقى القتال مفهوماً من الحركة والصوت وردود فعل الإصابة بدونها.</translation>
     </message>
 </context>
 <context>

@@ -70,4 +70,7 @@ inline constexpr std::size_t k_interaction_highlight_max_markers = 48;
 
 [[nodiscard]] auto interaction_action_key(InteractionAction action) -> std::string_view;
 
+[[nodiscard]] auto
+harvest_product_for_prop(Game::Map::WorldProp::Type type) -> std::string_view;
+
 } // namespace Game::Systems

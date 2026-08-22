@@ -37,3 +37,15 @@ function play_toggle(audio) {
 function play_error(audio) {
     play_cue(audio, "ui.error");
 }
+
+function play_confirm(audio) {
+    play_cue(audio, "ui.confirm");
+}
+
+function play_command_accept(audio) {
+    play_cue(audio, "command.accept");
+}
+
+function play_command_refuse(audio) {
+    play_cue(audio, "command.refuse");
+}

@@ -29,13 +29,13 @@ public:
         const QVector3D* destination = nullptr) -> App::Core::OrderOutcome;
 
   [[nodiscard]] auto reject(App::Core::OrderKind kind,
-                            const QString& reason) -> App::Core::OrderOutcome;
+                            App::Core::OrderRefusal refusal) -> App::Core::OrderOutcome;
   [[nodiscard]] auto reject_at(App::Core::OrderKind kind,
-                               const QString& reason,
+                               App::Core::OrderRefusal refusal,
                                const QVector3D& destination) -> App::Core::OrderOutcome;
   [[nodiscard]] auto
   reject_on(App::Core::OrderKind kind,
-            const QString& reason,
+            App::Core::OrderRefusal refusal,
             Engine::Core::EntityID target) -> App::Core::OrderOutcome;
 
   auto publish(App::Core::OrderOutcome outcome) -> App::Core::OrderOutcome;

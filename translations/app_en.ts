@@ -6073,6 +6073,22 @@ to see preview</translation>
         <source>That building cannot be taken down.</source>
         <translation>That building cannot be taken down.</translation>
     </message>
+    <message>
+        <source>Cannot reach that spot.</source>
+        <translation>Cannot reach that spot.</translation>
+    </message>
+    <message>
+        <source>That target is out of range.</source>
+        <translation>That target is out of range.</translation>
+    </message>
+    <message>
+        <source>Those units are busy with another order.</source>
+        <translation>Those units are busy with another order.</translation>
+    </message>
+    <message>
+        <source>Not enough resources.</source>
+        <translation>Not enough resources.</translation>
+    </message>
 </context>
 <context>
     <name>OutcomeLayout</name>
@@ -7004,6 +7020,30 @@ Builders reap it for the food that recruits civilians</translation>
         <source>Takes priority over anything else on its key while a rally can be placed</source>
         <translation>Takes priority over anything else on its key while a rally can be placed</translation>
     </message>
+    <message>
+        <source>No ground under the cursor</source>
+        <translation>No ground under the cursor</translation>
+    </message>
+    <message>
+        <source>Cannot reach</source>
+        <translation>Cannot reach</translation>
+    </message>
+    <message>
+        <source>No match is running</source>
+        <translation>No match is running</translation>
+    </message>
+    <message>
+        <source>Spectating</source>
+        <translation>Spectating</translation>
+    </message>
+    <message>
+        <source>Nothing selected</source>
+        <translation>Nothing selected</translation>
+    </message>
+    <message>
+        <source>No target under the cursor</source>
+        <translation>No target under the cursor</translation>
+    </message>
 </context>
 <context>
     <name>RpgFpvOverlay</name>
@@ -7528,14 +7568,6 @@ Builders reap it for the food that recruits civilians</translation>
         <translation>Marks each side with its own selection ring shape as well as its colour</translation>
     </message>
     <message>
-        <source>Damage numbers</source>
-        <translation>Damage numbers</translation>
-    </message>
-    <message>
-        <source>Shows the damage dealt above each hit while leading the commander</source>
-        <translation>Shows the damage dealt above each hit while leading the commander</translation>
-    </message>
-    <message>
         <source>Screen effects:</source>
         <translation>Screen effects:</translation>
     </message>
@@ -7574,6 +7606,22 @@ Builders reap it for the food that recruits civilians</translation>
     <message>
         <source>Sets both how far in from the edge the band reaches and how fast the camera moves inside it. At this setting the band is %1 px along the sides and %2 px along the top and bottom, measured at your interface scale.</source>
         <translation>Sets both how far in from the edge the band reaches and how fast the camera moves inside it. At this setting the band is %1 px along the sides and %2 px along the top and bottom, measured at your interface scale.</translation>
+    </message>
+    <message>
+        <source>Important only</source>
+        <translation>Important only</translation>
+    </message>
+    <message>
+        <source>All hits</source>
+        <translation>All hits</translation>
+    </message>
+    <message>
+        <source>Damage numbers:</source>
+        <translation>Damage numbers:</translation>
+    </message>
+    <message>
+        <source>Numbers are a readout, not the feedback. Combat stays readable from motion, sound and hit reactions with them off.</source>
+        <translation>Numbers are a readout, not the feedback. Combat stays readable from motion, sound and hit reactions with them off.</translation>
     </message>
 </context>
 <context>

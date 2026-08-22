@@ -3,11 +3,15 @@
 #include <QJsonArray>
 
 #include <algorithm>
+#include <cmath>
 #include <limits>
+#include <numbers>
 
 #include "../core/component.h"
 #include "../core/entity.h"
 #include "../core/world.h"
+#include "../systems/nav_grid.h"
+#include "../systems/pathfinding.h"
 #include "army_formation_planner.h"
 
 namespace Game::Formation {
@@ -18,6 +22,48 @@ constexpr float k_replan_interval_seconds = 0.5F;
 constexpr float k_advance_interval_seconds = 0.25F;
 constexpr float k_maintain_speed_multiplier = 0.55F;
 constexpr float k_stage_arrival_tolerance = 2.5F;
+
+constexpr float k_corridor_waypoint_tolerance = 1.25F;
+constexpr float k_corridor_max_anchor_lead = 6.0F;
+constexpr float k_corridor_min_leg_length = 1.5F;
+
+auto build_corridor(const QVector3D& start,
+                    const QVector3D& destination) -> std::vector<QVector3D> {
+  std::vector<QVector3D> corridor;
+  auto* pathfinder = Game::Systems::NavGrid::get_pathfinder();
+  if (pathfinder == nullptr) {
+    corridor.push_back(destination);
+    return corridor;
+  }
+
+  auto const start_cell = Game::Systems::NavGrid::world_to_grid(start.x(), start.z());
+  auto const end_cell =
+      Game::Systems::NavGrid::world_to_grid(destination.x(), destination.z());
+  auto const cells = pathfinder->find_path(start_cell, end_cell);
+  if (cells.empty()) {
+    corridor.push_back(destination);
+    return corridor;
+  }
+
+  QVector3D previous = start;
+  for (auto const& cell : cells) {
+    QVector3D const point = Game::Systems::NavGrid::grid_to_world(cell);
+    QVector3D const step(point.x() - previous.x(), 0.0F, point.z() - previous.z());
+    if (step.length() < k_corridor_min_leg_length) {
+      continue;
+    }
+    corridor.push_back(point);
+    previous = point;
+  }
+
+  QVector3D const tail = corridor.empty() ? start : corridor.back();
+  QVector3D const to_destination(
+      destination.x() - tail.x(), 0.0F, destination.z() - tail.z());
+  if (corridor.empty() || to_destination.length() > 0.1F) {
+    corridor.push_back(destination);
+  }
+  return corridor;
+}
 
 constexpr float k_cohesion_interval_seconds = 0.35F;
 
@@ -455,6 +501,7 @@ void ArmyFormationRuntime::begin_move(Engine::Core::World& world,
   formation->has_destination = true;
   formation->facing = facing;
   formation->advance_progress = 0.0F;
+  formation->move_plan.clear();
 
   if (!formation->maintains_formation()) {
     formation->anchor = destination;
@@ -481,7 +528,21 @@ void ArmyFormationRuntime::begin_move(Engine::Core::World& world,
   if (count > 0) {
     formation->anchor = centroid / static_cast<float>(count);
   }
+
+  formation->move_plan.corridor = build_corridor(formation->anchor, destination);
+  formation->move_plan.corridor_index = 0;
+  formation->move_plan.formation_center = formation->anchor;
+  formation->move_plan.active = !formation->move_plan.corridor.empty();
+  {
+    QVector3D heading = formation->move_plan.next_waypoint() - formation->anchor;
+    heading.setY(0.0F);
+    if (heading.lengthSquared() > 1.0e-4F) {
+      formation->move_plan.facing_direction = heading.normalized();
+    }
+  }
+
   formation->needs_replan = true;
+  static_cast<void>(replan(world, id));
 }
 
 void ArmyFormationRuntime::advance_maintained_groups(Engine::Core::World& world,
@@ -521,24 +582,62 @@ void ArmyFormationRuntime::advance_maintained_groups(Engine::Core::World& world,
       slowest = 1.0F;
     }
 
-    QVector3D const to_anchor = formation->anchor - centroid;
-    if (to_anchor.length() > k_stage_arrival_tolerance) {
+    auto& plan = formation->move_plan;
+    if (!plan.active) {
+      plan.corridor = build_corridor(formation->anchor, formation->destination);
+      plan.corridor_index = 0;
+      plan.active = !plan.corridor.empty();
+    }
+    plan.formation_center = centroid;
+
+    QVector3D const anchor_lead(formation->anchor.x() - centroid.x(),
+                                0.0F,
+                                formation->anchor.z() - centroid.z());
+    if (anchor_lead.length() > k_corridor_max_anchor_lead) {
       continue;
     }
 
-    QVector3D remaining = formation->destination - formation->anchor;
-    remaining.setY(0.0F);
-    float const distance = remaining.length();
-    if (distance <= k_stage_arrival_tolerance * 0.5F) {
-      formation->has_destination = false;
-      formation->phase = FormationPhase::Formed;
-      continue;
+    while (plan.has_corridor()) {
+      QVector3D const waypoint = plan.next_waypoint();
+      QVector3D const to_waypoint(waypoint.x() - formation->anchor.x(),
+                                  0.0F,
+                                  waypoint.z() - formation->anchor.z());
+      if (to_waypoint.length() > k_corridor_waypoint_tolerance) {
+        break;
+      }
+      ++plan.corridor_index;
     }
 
-    float const stage = std::min(
-        distance, std::max(2.0F, slowest * k_maintain_speed_multiplier * 4.0F));
-    formation->anchor += remaining.normalized() * stage;
-    formation->advance_progress += stage;
+    if (!plan.has_corridor()) {
+      QVector3D const to_destination(formation->destination.x() - formation->anchor.x(),
+                                     0.0F,
+                                     formation->destination.z() -
+                                         formation->anchor.z());
+      if (to_destination.length() <= k_stage_arrival_tolerance * 0.5F) {
+        formation->has_destination = false;
+        formation->phase = FormationPhase::Formed;
+        plan.clear();
+        continue;
+      }
+      plan.corridor.push_back(formation->destination);
+    }
+
+    QVector3D heading = plan.next_waypoint() - formation->anchor;
+    heading.setY(0.0F);
+    float const leg = heading.length();
+    if (leg <= 1.0e-4F) {
+      continue;
+    }
+    heading /= leg;
+    plan.facing_direction = heading;
+
+    float const step = std::min(
+        leg, std::max(0.05F, slowest * k_maintain_speed_multiplier * delta_time));
+    formation->anchor += heading * step;
+    formation->facing = static_cast<float>(
+        std::atan2(static_cast<double>(heading.x()), static_cast<double>(heading.z())) *
+        180.0 / std::numbers::pi);
+    formation->advance_progress += step;
     formation->needs_replan = true;
     formation->phase = FormationPhase::Forming;
   }
@@ -597,6 +696,11 @@ auto ArmyFormationRuntime::replan(Engine::Core::World& world,
   request.spacing = formation->spacing;
   request.group_id = id;
 
+  bool const advancing_along_corridor = formation->maintains_formation() &&
+                                        formation->has_destination &&
+                                        formation->move_plan.active;
+  QVector3D const advancing_anchor = formation->anchor;
+
   auto const plan = ArmyFormationPlanner::plan(world, request);
   if (!plan.valid) {
     formation->phase = FormationPhase::Disrupted;
@@ -605,6 +709,11 @@ auto ArmyFormationRuntime::replan(Engine::Core::World& world,
   }
 
   registry.apply_plan(id, plan);
+  if (advancing_along_corridor) {
+    if (auto* advanced = registry.find(id)) {
+      advanced->anchor = advancing_anchor;
+    }
+  }
   auto const* updated = registry.find(id);
   if (updated == nullptr) {
     return true;
@@ -650,8 +759,18 @@ void ArmyFormationRuntime::update(Engine::Core::World* world, float delta_time) 
 
   m_advance_accumulator += delta_time;
   if (m_advance_accumulator >= k_advance_interval_seconds) {
+    float const elapsed = m_advance_accumulator;
     m_advance_accumulator = 0.0F;
-    advance_maintained_groups(*world, delta_time);
+    advance_maintained_groups(*world, elapsed);
+
+    for (auto const id : registry.group_ids()) {
+      auto* formation = registry.find(id);
+      if (formation == nullptr || !formation->needs_replan ||
+          !formation->has_destination || !formation->maintains_formation()) {
+        continue;
+      }
+      static_cast<void>(replan(*world, id));
+    }
   }
 
   m_cohesion_accumulator += delta_time;

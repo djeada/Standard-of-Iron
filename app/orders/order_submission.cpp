@@ -46,6 +46,7 @@ auto submit_player_order(Engine::Core::World& world,
   outcome.unit_count = payload_unit_count(validation.command.payload);
   if (!validation.accepted()) {
     outcome.status = OrderStatus::Rejected;
+    outcome.failure = failure_for(validation.rejection);
     outcome.reason = rejection_reason_text(validation.rejection, request.kind);
     return outcome;
   }
@@ -58,27 +59,28 @@ auto submit_player_order(Engine::Core::World& world,
   return outcome;
 }
 
-auto rejected_order(OrderKind kind, QString reason) -> OrderOutcome {
+auto rejected_order(OrderKind kind, OrderRefusal refusal) -> OrderOutcome {
   OrderOutcome outcome;
   outcome.kind = kind;
   outcome.status = OrderStatus::Rejected;
-  outcome.reason = std::move(reason);
+  outcome.failure = refusal.failure;
+  outcome.reason = std::move(refusal.text);
   return outcome;
 }
 
 auto rejected_order_at(OrderKind kind,
-                       QString reason,
+                       OrderRefusal refusal,
                        const QVector3D& destination) -> OrderOutcome {
-  auto outcome = rejected_order(kind, std::move(reason));
+  auto outcome = rejected_order(kind, std::move(refusal));
   outcome.has_destination = true;
   outcome.destination = destination;
   return outcome;
 }
 
 auto rejected_order_on(OrderKind kind,
-                       QString reason,
+                       OrderRefusal refusal,
                        Engine::Core::EntityID target) -> OrderOutcome {
-  auto outcome = rejected_order(kind, std::move(reason));
+  auto outcome = rejected_order(kind, std::move(refusal));
   outcome.target = target;
   return outcome;
 }

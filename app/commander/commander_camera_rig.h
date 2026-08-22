@@ -22,6 +22,15 @@ enum class CommanderFramingState : std::uint8_t {
   BowAim
 };
 
+struct CommanderCameraState {
+  float yaw{0.0F};
+  float pitch{0.0F};
+  float yaw_velocity{0.0F};
+  float pitch_velocity{0.0F};
+  QVector3D visual_anchor{};
+  bool anchor_valid{false};
+};
+
 struct CommanderCameraInputs {
   float dt{0.0F};
   float view_yaw_degrees{0.0F};
@@ -63,6 +72,7 @@ public:
   [[nodiscard]] auto aim_blend() const -> float { return m_aim_blend; }
   [[nodiscard]] auto bob_phase() const -> float { return m_bob_phase; }
   [[nodiscard]] auto bob_amplitude() const -> float { return m_bob_amplitude; }
+  [[nodiscard]] auto state() const -> const CommanderCameraState& { return m_state; }
 
   static auto
   select_framing(bool aiming_bow,
@@ -83,6 +93,8 @@ private:
   static auto framing_for(CommanderFramingState state,
                           bool close_camera_mode) -> Framing;
 
+  CommanderCameraState m_state{};
+
   CommanderFramingState m_framing_state{CommanderFramingState::Explore};
   Framing m_framing_current{};
   bool m_framing_valid{false};
@@ -99,6 +111,12 @@ private:
   QVector3D m_eye_smooth{};
   QVector3D m_target_smooth{};
   bool m_smooth_valid{false};
+
+  QVector3D m_focus_point_smooth{};
+  bool m_focus_point_valid{false};
+  float m_focus_weight_smooth{0.0F};
+  float m_focus_side_nudge_smooth{0.0F};
+  float m_occlusion_fraction{1.0F};
 
   QVector3D m_forward{0.0F, 0.0F, 1.0F};
   bool m_forward_valid{false};

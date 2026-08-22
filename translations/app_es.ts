@@ -6073,6 +6073,22 @@ para ver la vista previa</translation>
         <source>That building cannot be taken down.</source>
         <translation>Ese edificio no se puede desmontar.</translation>
     </message>
+    <message>
+        <source>Cannot reach that spot.</source>
+        <translation>No se puede llegar a ese punto.</translation>
+    </message>
+    <message>
+        <source>That target is out of range.</source>
+        <translation>Ese objetivo está fuera de alcance.</translation>
+    </message>
+    <message>
+        <source>Those units are busy with another order.</source>
+        <translation>Esas unidades están ocupadas con otra orden.</translation>
+    </message>
+    <message>
+        <source>Not enough resources.</source>
+        <translation>Recursos insuficientes.</translation>
+    </message>
 </context>
 <context>
     <name>OutcomeLayout</name>
@@ -7004,6 +7020,30 @@ Los constructores lo siegan para la comida que recluta civiles</translation>
         <source>Takes priority over anything else on its key while a rally can be placed</source>
         <translation>Tiene prioridad sobre cualquier otra cosa en su tecla mientras se pueda colocar una bandera de reunión</translation>
     </message>
+    <message>
+        <source>No ground under the cursor</source>
+        <translation>No hay suelo bajo el cursor</translation>
+    </message>
+    <message>
+        <source>Cannot reach</source>
+        <translation>Inalcanzable</translation>
+    </message>
+    <message>
+        <source>No match is running</source>
+        <translation>No hay ninguna partida en curso</translation>
+    </message>
+    <message>
+        <source>Spectating</source>
+        <translation>Espectando</translation>
+    </message>
+    <message>
+        <source>Nothing selected</source>
+        <translation>Nada seleccionado</translation>
+    </message>
+    <message>
+        <source>No target under the cursor</source>
+        <translation>No hay objetivo bajo el cursor</translation>
+    </message>
 </context>
 <context>
     <name>RpgFpvOverlay</name>
@@ -7528,14 +7568,6 @@ Los constructores lo siegan para la comida que recluta civiles</translation>
         <translation>Marca cada bando con su propia forma de anillo de selección además de su color</translation>
     </message>
     <message>
-        <source>Damage numbers</source>
-        <translation>Números de daño</translation>
-    </message>
-    <message>
-        <source>Shows the damage dealt above each hit while leading the commander</source>
-        <translation>Muestra el daño infligido sobre cada impacto mientras diriges al comandante</translation>
-    </message>
-    <message>
         <source>Screen effects:</source>
         <translation>Efectos de pantalla:</translation>
     </message>
@@ -7574,6 +7606,22 @@ Los constructores lo siegan para la comida que recluta civiles</translation>
     <message>
         <source>Sets both how far in from the edge the band reaches and how fast the camera moves inside it. At this setting the band is %1 px along the sides and %2 px along the top and bottom, measured at your interface scale.</source>
         <translation>Define a la vez cuánto se adentra la banda desde el borde y a qué velocidad se mueve la cámara dentro de ella. Con este ajuste la banda mide %1 px en los laterales y %2 px arriba y abajo, medidos a tu escala de interfaz.</translation>
+    </message>
+    <message>
+        <source>Important only</source>
+        <translation>Solo importantes</translation>
+    </message>
+    <message>
+        <source>All hits</source>
+        <translation>Todos los impactos</translation>
+    </message>
+    <message>
+        <source>Damage numbers:</source>
+        <translation>Números de daño:</translation>
+    </message>
+    <message>
+        <source>Numbers are a readout, not the feedback. Combat stays readable from motion, sound and hit reactions with them off.</source>
+        <translation>Los números son una lectura, no la respuesta. El combate sigue siendo legible por el movimiento, el sonido y las reacciones a los impactos sin ellos.</translation>
     </message>
 </context>
 <context>
