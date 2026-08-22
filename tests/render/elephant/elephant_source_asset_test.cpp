@@ -8,8 +8,8 @@
 #include <variant>
 #include <vector>
 
+#include "render/creature/schema/creature_runtime_manifest.h"
 #include "render/creature/skeleton.h"
-#include "render/creature/species_manifest.h"
 #include "render/elephant/elephant_manifest.h"
 #include "render/elephant/elephant_motion.h"
 #include "render/elephant/elephant_profile_data.h"
@@ -82,8 +82,8 @@ TEST(ElephantSourceAssetTest, ProductionMeshCarriesBothEyes) {
 
 TEST(ElephantSourceAssetTest, ManifestRendersTheSourceMeshUnmodified) {
   auto const source = Render::Elephant::elephant_source_mesh_nodes();
-  for (auto const& lod : {Render::Elephant::elephant_manifest().lod_full,
-                          Render::Elephant::elephant_manifest().lod_minimal}) {
+  for (auto const& lod : {Render::Elephant::elephant_runtime_manifest().lod_full,
+                          Render::Elephant::elephant_runtime_manifest().lod_minimal}) {
     ASSERT_EQ(lod.mesh_nodes.size(), source.size());
     for (std::size_t index = 0U; index < source.size(); ++index) {
       EXPECT_EQ(lod.mesh_nodes[index].debug_name, source[index].debug_name);

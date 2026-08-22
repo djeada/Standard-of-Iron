@@ -62,6 +62,9 @@ struct WolfDrive {
 wolf_mesh_nodes() noexcept -> std::span<const Render::Creature::Quadruped::MeshNode>;
 [[nodiscard]] auto wolf_minimal_mesh_nodes() noexcept
     -> std::span<const Render::Creature::Quadruped::MeshNode>;
+
+void initialize_wolf_asset();
+
 [[nodiscard]] auto
 wolf_creature_spec() noexcept -> const Render::Creature::CreatureSpec&;
 

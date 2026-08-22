@@ -2,7 +2,7 @@
 #include <gtest/gtest.h>
 #include <tuple>
 
-#include "render/humanoid/soldier_turn_smoothing.h"
+#include "render/humanoid/runtime/soldier_turn_smoothing.h"
 
 namespace {
 

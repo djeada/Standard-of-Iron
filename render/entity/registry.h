@@ -27,6 +27,10 @@ namespace Render::Creature::Pipeline {
 struct CreaturePreparationResult;
 }
 
+namespace Render::Humanoid {
+struct HumanoidRuntimeContext;
+}
+
 namespace Render::GL {
 class ResourceManager;
 class Mesh;
@@ -39,7 +43,6 @@ struct AnimationInputs;
 namespace Render::GL {
 
 using HumanoidLOD = ::Render::Creature::CreatureLOD;
-using HorseLOD = ::Render::Creature::CreatureLOD;
 using RendererHandle = std::uint32_t;
 inline constexpr RendererHandle k_invalid_renderer_handle =
     std::numeric_limits<RendererHandle>::max();
@@ -68,8 +71,10 @@ struct DrawContext {
   bool allow_template_cache = true;
   bool force_humanoid_lod = false;
   HumanoidLOD forced_humanoid_lod = HumanoidLOD::Full;
-  bool force_horse_lod = false;
-  HorseLOD forced_horse_lod = HorseLOD::Full;
+
+  bool force_quadruped_lod = false;
+  Render::Creature::CreatureLOD forced_quadruped_lod{
+      Render::Creature::CreatureLOD::Full};
   bool has_seed_override = false;
   uint32_t seed_override = 0;
   bool template_prewarm = false;
@@ -88,6 +93,8 @@ struct DrawContext {
   bool has_facial_hair_override = false;
   FacialHairStyle facial_hair_override = FacialHairStyle::None;
   bool order_markers_visible = false;
+
+  Render::Humanoid::HumanoidRuntimeContext* humanoid_runtime = nullptr;
 };
 
 [[nodiscard]] inline auto

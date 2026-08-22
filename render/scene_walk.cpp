@@ -22,6 +22,7 @@
 #include "battle_render_optimizer.h"
 #include "creature/animation_state_components.h"
 #include "creature/archetype_registry.h"
+#include "creature/pipeline/prepared_submit.h"
 #include "creature/pose_intent.h"
 #include "creature/quadruped/render_stats.h"
 #include "creature/runtime_bake_guard.h"
@@ -59,10 +60,10 @@
 #include "graphics_settings.h"
 #include "horse/dimensions.h"
 #include "horse/horse_renderer_base.h"
-#include "humanoid/cache_control.h"
-#include "humanoid/humanoid_renderer_base.h"
-#include "humanoid/pose_cache_components.h"
-#include "humanoid/render_stats.h"
+#include "humanoid/runtime/frame_control.h"
+#include "humanoid/runtime/humanoid_renderer.h"
+#include "humanoid/runtime/instance_state.h"
+#include "humanoid/runtime/runtime_stats.h"
 #include "pass/construction_preview_pass.h"
 #include "pass/frame_context.h"
 #include "pass/primitive_flush_pass.h"
@@ -115,7 +116,7 @@ void transfer_render_runtime_state(Engine::Core::World& previous,
                                                                        *current_entity);
     transfer_render_component<Render::Creature::ElephantAnatomyComponent>(
         *previous_entity, *current_entity);
-    transfer_render_component<Render::Humanoid::HumanoidLayoutCacheComponent>(
+    transfer_render_component<Render::Humanoid::HumanoidInstanceStateComponent>(
         *previous_entity, *current_entity);
   }
 }
@@ -379,7 +380,8 @@ void Renderer::enqueue_selection_ring(Engine::Core::Entity* entity,
 
       auto const* layout_cache =
           entity != nullptr
-              ? entity->get_component<Render::Humanoid::HumanoidLayoutCacheComponent>()
+              ? entity
+                    ->get_component<Render::Humanoid::HumanoidInstanceStateComponent>()
               : nullptr;
       std::span<const Render::Humanoid::SoldierTurnSmoothingState> soldier_anchors;
       if (layout_cache != nullptr) {
@@ -764,6 +766,7 @@ auto Renderer::plan_unit_entry(UnitRenderEntry& entry,
     draw_ctx =
         DrawContext{ctx.resources, entry.entity, ctx.world, world_view(), model_matrix};
 
+    draw_ctx.humanoid_runtime = &m_humanoid_runtime;
     draw_ctx.selected = entry.selected;
     draw_ctx.hovered = entry.hovered;
     bool should_update_animation = ctx.full_creature_detail;
@@ -822,14 +825,14 @@ auto Renderer::plan_unit_entry(UnitRenderEntry& entry,
     if (ctx.full_creature_detail) {
       draw_ctx.force_humanoid_lod = true;
       draw_ctx.forced_humanoid_lod = HumanoidLOD::Full;
-      draw_ctx.force_horse_lod = true;
-      draw_ctx.forced_horse_lod = HorseLOD::Full;
+      draw_ctx.force_quadruped_lod = true;
+      draw_ctx.forced_quadruped_lod = Render::Creature::CreatureLOD::Full;
     } else if (entry.combat_active) {
       auto const stable_lod = stable_combat_creature_lod(entry.unit, entry.distance_sq);
       draw_ctx.force_humanoid_lod = true;
       draw_ctx.forced_humanoid_lod = stable_lod;
-      draw_ctx.force_horse_lod = true;
-      draw_ctx.forced_horse_lod = stable_lod;
+      draw_ctx.force_quadruped_lod = true;
+      draw_ctx.forced_quadruped_lod = stable_lod;
     }
 
     plan.use_batching =
@@ -1001,6 +1004,7 @@ void Renderer::submit_non_unit_entry(const RenderEntry& entry,
     auto const* fn = m_entity_registry->get(entry.renderer_handle);
     if (fn != nullptr) {
       DrawContext ctx{resources(), entry.entity, world, world_view(), model_matrix};
+      ctx.humanoid_runtime = &m_humanoid_runtime;
       ctx.selected = entry.selected;
       ctx.hovered = entry.hovered;
       ctx.animation_time = m_accumulated_time;
@@ -1307,6 +1311,7 @@ void Renderer::render_construction_previews(Engine::Core::World* world,
     }
 
     DrawContext ctx{resources(), entity, world, world_view(), model_matrix};
+    ctx.humanoid_runtime = &m_humanoid_runtime;
     ctx.selected = false;
     ctx.hovered = false;
     ctx.animation_time = m_accumulated_time;

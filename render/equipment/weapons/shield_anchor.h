@@ -4,8 +4,8 @@
 #include <QVector4D>
 
 #include "render/gl/humanoid/humanoid_types.h"
-#include "render/humanoid/humanoid_spec.h"
-#include "render/humanoid/skeleton.h"
+#include "render/humanoid/asset/humanoid_spec.h"
+#include "render/humanoid/runtime/skeleton_evaluator.h"
 
 namespace Render::GL {
 

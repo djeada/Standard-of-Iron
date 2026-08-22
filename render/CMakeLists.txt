@@ -58,6 +58,20 @@ target_link_libraries(
 # game/CMakeLists.txt.
 add_library(soi_render_gl ALIAS render_gl)
 
+# Bake recipes: how a species' animation assets are produced from its source
+# asset. Deliberately a separate library so the game executable never links the
+# source-clip samplers or the bake clip tables — drawing a creature must not
+# require knowing how it was built. Only the baker (and preview tools that
+# regenerate assets) may link this.
+add_library(
+    creature_bake
+    STATIC
+    ${CMAKE_CURRENT_SOURCE_DIR}/horse/horse_bake_recipe.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/elephant/elephant_bake_recipe.cpp
+)
+target_include_directories(creature_bake PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/..)
+target_link_libraries(creature_bake PUBLIC render_gl)
+
 # Optimization flags for render hot paths. Distribution builds must not use
 # -march=native: that would make the artifact depend on the CI runner's CPU.
 if(CMAKE_BUILD_TYPE STREQUAL "Release" OR CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")

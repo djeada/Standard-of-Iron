@@ -125,6 +125,8 @@ add_executable(
     systems/capture_system_test.cpp
     systems/undead_awakening_system_test.cpp
     architecture/layering_test.cpp
+    architecture/humanoid_layering_test.cpp
+    architecture/creature_procedural_pose_test.cpp
     architecture/module_boundary_test.cpp
     architecture/qml_surface_test.cpp
     architecture/release_contract_test.cpp
@@ -414,6 +416,11 @@ add_executable(
     render/creature/combat_root_motion_test.cpp
     render/creature/soldier_turn_smoothing_test.cpp
     render/creature/humanoid_prepare_test.cpp
+    render/creature/humanoid_golden_parity_test.cpp
+    render/creature/humanoid_asset_key_test.cpp
+    render/creature/humanoid_asset_prewarm_test.cpp
+    render/creature/quadruped_golden_parity_test.cpp
+    render/creature/quadruped_asset_key_test.cpp
     render/creature/death_collapse_test.cpp
     render/creature/horse_prepare_test.cpp
     render/creature/elephant_prepare_test.cpp
@@ -455,6 +462,7 @@ target_link_libraries(
         Qt${QT_VERSION_MAJOR}::Widgets
         engine_core
         render_gl
+        creature_bake
         game_sim
 )
 set_target_properties(render_tests PROPERTIES AUTORCC ON)

@@ -11,9 +11,9 @@
 #include "game/core/entity.h"
 #include "render/entity/registry.h"
 #include "render/gl/humanoid/animation/animation_inputs.h"
-#include "render/humanoid/humanoid_renderer_base.h"
-#include "render/humanoid/pose_controller.h"
-#include "render/humanoid/spear_pose_utils.h"
+#include "render/humanoid/runtime/humanoid_renderer.h"
+#include "render/humanoid/runtime/pose_controller.h"
+#include "render/humanoid/runtime/spear_pose_utils.h"
 #include "render/world_view.h"
 #include "tests/support/movement_test_access.h"
 

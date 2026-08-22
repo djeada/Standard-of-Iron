@@ -14,7 +14,7 @@
 #include "render/entity/mounted_knight_pose.h"
 #include "render/equipment/weapons/sword_renderer.h"
 #include "render/horse/horse_motion.h"
-#include "render/humanoid/skeleton.h"
+#include "render/humanoid/schema/skeleton_schema.h"
 #include "render/wildlife/wildlife_rig.h"
 #include "tests/render/test_asset_paths.h"
 

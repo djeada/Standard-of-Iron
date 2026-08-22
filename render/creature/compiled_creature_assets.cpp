@@ -28,16 +28,18 @@
 #endif
 
 #include "animation/rig/horse_attachment_frames.h"
-#include "render/elephant/attachment_frames.h"
+#include "render/creature/quadruped/attachment_resolver.h"
 #include "render/elephant/elephant_source_asset.h"
 #include "render/elephant/elephant_spec.h"
+#include "render/elephant/schema/attachment_schema.h"
 #include "render/horse/horse_source_asset.h"
 #include "render/horse/horse_spec.h"
-
-namespace Render::Horse {
+#include "render/horse/schema/mounted_sockets.h"
 
 namespace {
 
+using namespace Render::Horse;
+using namespace Render::Elephant;
 using Render::Creature::BoneDef;
 using Render::Creature::BoneIndex;
 using Render::Creature::Quadruped::CustomMeshNode;
@@ -251,7 +253,7 @@ struct SourceAsset {
   std::vector<QMatrix4x4> bind_palette;
   std::vector<BoneDef> bone_defs;
   std::vector<SourceClip> clips;
-  HorseSourceAssetStatus status;
+  Render::Creature::CompiledCreatureAssetStatus status;
 };
 
 auto executable_directory() -> QString {
@@ -965,6 +967,8 @@ auto sample_elephant_locomotion(SourceAsset const& asset,
 
 } // namespace
 
+namespace Render::Horse {
+
 auto horse_source_mesh_nodes() noexcept -> std::span<const MeshNode> {
   return source_asset().mesh_nodes;
 }
@@ -993,36 +997,32 @@ auto horse_source_pose_mount_frame(std::string_view source_clip,
     return false;
   }
 
-  static const std::array<QMatrix4x4, 2> inverse_bind = {
-      source_asset()
-          .bind_palette[static_cast<std::size_t>(HorseBone::SourceBack)]
-          .inverted(),
-      source_asset()
-          .bind_palette[static_cast<std::size_t>(HorseBone::SourceHead)]
-          .inverted()};
+  namespace RCQ = Render::Creature::Quadruped;
+  auto const bind = source_asset().bind_palette;
+  auto const sockets = Render::Horse::mounted_socket_set();
+  auto const back =
+      RCQ::bone_delta(pose, bind, static_cast<std::size_t>(sockets.saddle));
+  auto const head =
+      RCQ::bone_delta(pose, bind, static_cast<std::size_t>(sockets.bridle));
 
-  QMatrix4x4 const back_delta =
-      pose[static_cast<std::size_t>(HorseBone::SourceBack)] * inverse_bind[0];
-  QMatrix4x4 const head_delta =
-      pose[static_cast<std::size_t>(HorseBone::SourceHead)] * inverse_bind[1];
+  frame.saddle_center = back.point(frame.saddle_center);
+  frame.seat_position = back.point(frame.seat_position);
+  frame.stirrup_attach_left = back.point(frame.stirrup_attach_left);
+  frame.stirrup_attach_right = back.point(frame.stirrup_attach_right);
+  frame.stirrup_bottom_left = back.point(frame.stirrup_bottom_left);
+  frame.stirrup_bottom_right = back.point(frame.stirrup_bottom_right);
+  frame.seat_forward = back.axis(frame.seat_forward);
+  frame.seat_right = back.axis(frame.seat_right);
+  frame.seat_up = back.axis(frame.seat_up);
 
-  frame.saddle_center = back_delta.map(frame.saddle_center);
-  frame.seat_position = back_delta.map(frame.seat_position);
-  frame.stirrup_attach_left = back_delta.map(frame.stirrup_attach_left);
-  frame.stirrup_attach_right = back_delta.map(frame.stirrup_attach_right);
-  frame.stirrup_bottom_left = back_delta.map(frame.stirrup_bottom_left);
-  frame.stirrup_bottom_right = back_delta.map(frame.stirrup_bottom_right);
-  frame.seat_forward = back_delta.mapVector(frame.seat_forward).normalized();
-  frame.seat_right = back_delta.mapVector(frame.seat_right).normalized();
-  frame.seat_up = back_delta.mapVector(frame.seat_up).normalized();
-
-  frame.rein_bit_left = head_delta.map(frame.rein_bit_left);
-  frame.rein_bit_right = head_delta.map(frame.rein_bit_right);
-  frame.bridle_base = head_delta.map(frame.bridle_base);
+  frame.rein_bit_left = head.point(frame.rein_bit_left);
+  frame.rein_bit_right = head.point(frame.rein_bit_right);
+  frame.bridle_base = head.point(frame.bridle_base);
   return true;
 }
 
-auto horse_source_asset_status() noexcept -> const HorseSourceAssetStatus& {
+auto horse_source_asset_status() noexcept
+    -> const Render::Creature::CompiledCreatureAssetStatus& {
   return source_asset().status;
 }
 
@@ -1032,28 +1032,28 @@ namespace Render::Elephant {
 
 auto elephant_source_mesh_nodes() noexcept
     -> std::span<const Render::Creature::Quadruped::MeshNode> {
-  return Render::Horse::elephant_asset().mesh_nodes;
+  return elephant_asset().mesh_nodes;
 }
 
 auto elephant_source_bind_palette() noexcept -> std::span<const QMatrix4x4> {
-  return Render::Horse::elephant_asset().bind_palette;
+  return elephant_asset().bind_palette;
 }
 
 auto elephant_source_bone_defs() noexcept
     -> std::span<const Render::Creature::BoneDef> {
-  return Render::Horse::elephant_asset().bone_defs;
+  return elephant_asset().bone_defs;
 }
 
 auto elephant_source_sample_clip(std::string_view source_clip,
                                  float normalized_phase,
                                  std::span<QMatrix4x4> out) noexcept -> bool {
-  auto const& asset = Render::Horse::elephant_asset();
+  auto const& asset = elephant_asset();
   if (source_clip == "Walk" || source_clip == "Run") {
-    return Render::Horse::sample_elephant_locomotion(
+    return sample_elephant_locomotion(
         asset, normalized_phase, source_clip == "Run", out);
   }
-  return Render::Horse::sample_source_clip(
-      asset, Render::Horse::k_elephant_config, source_clip, normalized_phase, out);
+  return sample_source_clip(
+      asset, k_elephant_config, source_clip, normalized_phase, out);
 }
 
 auto elephant_source_pose_howdah(std::string_view source_clip,
@@ -1064,25 +1064,29 @@ auto elephant_source_pose_howdah(std::string_view source_clip,
   if (!elephant_source_sample_clip(source_clip, normalized_phase, pose)) {
     return false;
   }
-  auto const bind = elephant_source_bind_palette();
-  constexpr std::size_t k_back_bone = 1U;
-  QMatrix4x4 const delta = pose[k_back_bone] * bind[k_back_bone].inverted();
-  frame.howdah_center = delta.map(frame.howdah_center);
-  frame.seat_position = delta.map(frame.seat_position);
-  frame.seat_forward = delta.mapVector(frame.seat_forward).normalized();
-  frame.seat_right = delta.mapVector(frame.seat_right).normalized();
-  frame.seat_up = delta.mapVector(frame.seat_up).normalized();
+  namespace RCQ = Render::Creature::Quadruped;
+  auto const back = RCQ::bone_delta(pose,
+                                    elephant_source_bind_palette(),
+                                    static_cast<std::size_t>(ElephantBone::MountBack));
+  frame.howdah_center = back.point(frame.howdah_center);
+  frame.seat_position = back.point(frame.seat_position);
+  frame.seat_forward = back.axis(frame.seat_forward);
+  frame.seat_right = back.axis(frame.seat_right);
+  frame.seat_up = back.axis(frame.seat_up);
   return true;
 }
 
-auto elephant_source_asset_status() noexcept -> const ElephantSourceAssetStatus& {
-  static const ElephantSourceAssetStatus status = [] {
-    auto const& source = Render::Horse::elephant_asset().status;
-    return ElephantSourceAssetStatus{source.loaded,
-                                     source.vertex_count,
-                                     source.triangle_count,
-                                     source.clip_count,
-                                     source.error};
+auto elephant_source_asset_status() noexcept
+    -> const Render::Creature::CompiledCreatureAssetStatus& {
+  static const Render::Creature::CompiledCreatureAssetStatus status = [] {
+    auto const& source = elephant_asset().status;
+    return Render::Creature::CompiledCreatureAssetStatus{
+        .loaded = source.loaded,
+        .vertex_count = source.vertex_count,
+        .triangle_count = source.triangle_count,
+        .joint_count = source.joint_count,
+        .clip_count = source.clip_count,
+        .error = source.error};
   }();
   return status;
 }

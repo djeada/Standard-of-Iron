@@ -26,7 +26,7 @@
 #include "arena_scenario.h"
 #include "arena_typography.h"
 #include "arena_viewport.h"
-#include "render/humanoid/render_stats.h"
+#include "render/humanoid/runtime/runtime_stats.h"
 #include "video_encoder.h"
 
 namespace Arena::Promo {

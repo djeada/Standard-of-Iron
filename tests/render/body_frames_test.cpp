@@ -5,8 +5,8 @@
 #include <gtest/gtest.h>
 
 #include "animation/rig/humanoid_proportions.h"
-#include "render/humanoid/humanoid_full_builder.h"
-#include "render/humanoid/humanoid_renderer_base.h"
+#include "render/humanoid/runtime/body_frame_resolver.h"
+#include "render/humanoid/runtime/humanoid_renderer.h"
 
 using namespace Render::GL;
 

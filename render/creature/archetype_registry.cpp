@@ -6,7 +6,7 @@
 #include "animation/bpat/bpat_format.h"
 #include "animation/clip_manifest.h"
 #include "render/elephant/elephant_spec.h"
-#include "render/humanoid/humanoid_spec.h"
+#include "render/humanoid/asset/humanoid_spec.h"
 #include "render/wildlife/sheep_spec.h"
 #include "render/wildlife/wolf_spec.h"
 

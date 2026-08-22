@@ -40,13 +40,14 @@
 #include "render/gl/primitives.h"
 #include "render/gl/render_constants.h"
 #include "render/gl/shader.h"
-#include "render/humanoid/humanoid_math.h"
-#include "render/humanoid/humanoid_proportion_profiles.h"
-#include "render/humanoid/humanoid_renderer_base.h"
-#include "render/humanoid/humanoid_spec.h"
-#include "render/humanoid/pose_controller.h"
-#include "render/humanoid/skeleton.h"
-#include "render/humanoid/style_palette.h"
+#include "render/humanoid/asset/bind_skeleton.h"
+#include "render/humanoid/asset/humanoid_spec.h"
+#include "render/humanoid/runtime/humanoid_math.h"
+#include "render/humanoid/runtime/humanoid_renderer.h"
+#include "render/humanoid/runtime/pose_controller.h"
+#include "render/humanoid/runtime/skeleton_evaluator.h"
+#include "render/humanoid/runtime/style_palette.h"
+#include "render/humanoid/schema/humanoid_proportion_profiles.h"
 #include "render/palette.h"
 #include "render/scene_renderer.h"
 #include "render/submitter.h"
@@ -61,16 +62,10 @@ namespace {
 constexpr auto k_profile =
     Render::GL::Humanoid::k_support_proportion_profile.with_offset({.x = 0.01F});
 
-void apply_grave_priest_cast_pose_layer(
-    const Render::Creature::Pipeline::HumanoidPoseLayerContext& context,
-    HumanoidPose& io_pose) {
-  Render::Humanoid::apply_skeleton_proportion_pose_layer(context, io_pose);
+void apply_grave_priest_cast_pose(const Render::GL::HumanoidAnimationContext& anim,
+                                  HumanoidPose& io_pose) {
+  Render::Humanoid::apply_skeleton_proportion_pose(io_pose);
 
-  if (context.animation == nullptr) {
-    return;
-  }
-
-  auto const& anim = *context.animation;
   if (!anim.inputs.is_casting || anim.inputs.cast_kind != CastVisualKind::Fireball) {
     return;
   }
@@ -570,7 +565,8 @@ auto make_healer_spec(std::string_view renderer_key,
       renderer_key, Render::Creature::ArchetypeRegistry::k_humanoid_base, handles);
   out.creature_asset_id = creature_asset_id;
   if (renderer_key == "troops/iron_sepulcher/grave_priest") {
-    out.animation_manifest.pose_layer = &apply_grave_priest_cast_pose_layer;
+    out.animation_manifest.pose_policy =
+        Render::Humanoid::HumanoidPosePolicy::GravePriestCast;
   }
   return out;
 }

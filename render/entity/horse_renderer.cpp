@@ -3,17 +3,19 @@
 #include "render/creature/pipeline/unit_visual_spec.h"
 namespace Render::GL {
 
-HorseRenderer::HorseRenderer() = default;
+namespace {
 
-auto HorseRenderer::visual_spec() const
-    -> const Render::Creature::Pipeline::UnitVisualSpec& {
-  if (!m_visual_spec_baked) {
-    m_visual_spec_cache = Render::Creature::Pipeline::UnitVisualSpec{};
-    m_visual_spec_cache.kind = Render::Creature::Pipeline::CreatureKind::Horse;
-    m_visual_spec_cache.debug_name = "horse/with_attachments";
-    m_visual_spec_baked = true;
-  }
-  return m_visual_spec_cache;
+auto attached_horse_visual_spec() -> Render::Creature::Pipeline::UnitVisualSpec {
+  Render::Creature::Pipeline::UnitVisualSpec spec;
+  spec.kind = Render::Creature::Pipeline::CreatureKind::Horse;
+  spec.debug_name = "horse/with_attachments";
+  return spec;
+}
+
+} // namespace
+
+HorseRenderer::HorseRenderer()
+    : HorseRendererBase(attached_horse_visual_spec()) {
 }
 
 } // namespace Render::GL

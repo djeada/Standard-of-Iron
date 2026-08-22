@@ -18,6 +18,7 @@
 #include "animation/bpat/bpat_registry.h"
 #include "animation/clip_manifest.h"
 #include "creature_asset.h"
+#include "creature_asset_init.h"
 #include "creature_bone_probe.h"
 #include "game/map/terrain_service.h"
 #include "preparation_common.h"
@@ -25,13 +26,13 @@
 #include "render/creature/archetype_registry.h"
 #include "render/creature/runtime_bake_guard.h"
 #include "render/creature/skeleton.h"
+#include "render/creature/skeleton_blend_profile.h"
 #include "render/creature/snapshot_mesh_registry.h"
 #include "render/creature/spec.h"
 #include "render/elephant/elephant_spec.h"
 #include "render/entity/registry.h"
 #include "render/horse/horse_spec.h"
-#include "render/humanoid/cache_control.h"
-#include "render/humanoid/skeleton.h"
+#include "render/humanoid/runtime/frame_control.h"
 #include "render/profiling/combat_animation_diagnostics.h"
 #include "render/profiling/frame_profile.h"
 #include "render/rigged_mesh_cache.h"
@@ -76,35 +77,12 @@ void report_submit_cache_miss(std::string_view path,
   report_runtime_bake_violation(RuntimeBakeOperation::CreatureSubmitMiss, detail.str());
 }
 
-void ensure_skin_atlas_for_submit(Render::GL::RiggedMeshCache& cache,
-                                  const Render::GL::RiggedMeshEntry& entry,
-                                  const Render::Creature::Bpat::BpatBlob& blob) {
-  const auto* atlas = entry.skin_atlas.get();
-  const bool had_atlas = atlas != nullptr && atlas->frame_total == blob.frame_total() &&
-                         atlas->bone_count != 0U && !atlas->palettes.empty();
-  Render::GL::rigged_entry_ensure_skin_atlas_from_blob(entry, blob);
-  atlas = entry.skin_atlas.get();
-  if (!had_atlas && atlas != nullptr && atlas->frame_total == blob.frame_total() &&
-      atlas->bone_count != 0U && !atlas->palettes.empty()) {
-    cache.record_skin_atlas_build();
+auto rigged_cache_for(Render::GL::Renderer* renderer) -> Render::GL::RiggedMeshCache& {
+  if (renderer != nullptr) {
+    return renderer->rigged_mesh_cache();
   }
-}
-
-void ensure_skin_ubo_for_submit(Render::GL::RiggedMeshCache& cache,
-                                const Render::GL::RiggedMeshEntry& entry) {
-  const bool had_ubo =
-      entry.skin_atlas != nullptr && entry.skin_atlas->palette_ubo != 0U;
-  Render::GL::rigged_entry_ensure_skin_ubo(entry);
-  if (!had_ubo && entry.skin_atlas != nullptr && entry.skin_atlas->palette_ubo != 0U) {
-    const auto bytes = static_cast<std::uint64_t>(entry.skin_atlas->frame_total) *
-                       Render::GL::BonePaletteArena::k_palette_bytes;
-    cache.record_skin_ubo_upload(bytes);
-  } else if (entry.skin_atlas != nullptr && entry.skin_atlas->palette_ubo == 0U &&
-             !entry.skin_atlas->palettes.empty() &&
-             entry.skin_atlas->frame_total != 0U &&
-             entry.skin_atlas->bone_count != 0U) {
-    cache.mark_skin_ubo_upload_pending();
-  }
+  thread_local Render::GL::RiggedMeshCache fallback;
+  return fallback;
 }
 
 auto make_snapshot_key(const CreatureRenderAssetHandle& handle,
@@ -280,26 +258,6 @@ auto frame_palette_for_global_frame(const Render::GL::RiggedMeshEntry& entry,
          static_cast<std::size_t>(global_frame) * entry.skin_atlas->bone_count;
 }
 
-auto is_humanoid_upper_body_bone(std::size_t bone_index) noexcept -> bool {
-  using Bone = Render::Humanoid::HumanoidBone;
-  switch (static_cast<Bone>(bone_index)) {
-  case Bone::Chest:
-  case Bone::Neck:
-  case Bone::Head:
-  case Bone::ShoulderL:
-  case Bone::UpperArmL:
-  case Bone::ForearmL:
-  case Bone::HandL:
-  case Bone::ShoulderR:
-  case Bone::UpperArmR:
-  case Bone::ForearmR:
-  case Bone::HandR:
-    return true;
-  default:
-    return false;
-  }
-}
-
 using BonePaletteArray =
     std::array<QMatrix4x4, Render::GL::RiggedCreatureCmd::k_max_owned_bones>;
 
@@ -367,23 +325,23 @@ using OwnedPalette = std::shared_ptr<BonePaletteArray>;
 using LocalPose = std::array<Render::Creature::Bpat::LocalBonePose,
                              Render::GL::RiggedCreatureCmd::k_max_owned_bones>;
 
-auto blends_bone(CreatureKind species_kind,
+auto blends_bone(const Render::Creature::SkeletonBlendProfile* profile,
                  std::size_t bone,
                  bool upper_body_only) noexcept -> bool {
   if (!upper_body_only) {
     return true;
   }
-  return species_kind == CreatureKind::Humanoid && is_humanoid_upper_body_bone(bone);
+  return profile != nullptr && profile->upper_body.contains(bone);
 }
 
 void lerp_local_pose(LocalPose& io,
                      std::span<const Render::Creature::Bpat::LocalBonePose> layer,
                      std::uint32_t bone_count,
                      float weight,
-                     CreatureKind species_kind,
+                     const Render::Creature::SkeletonBlendProfile* blend_profile,
                      bool upper_body_only) noexcept {
   for (std::uint32_t bone = 0; bone < bone_count && bone < layer.size(); ++bone) {
-    if (!blends_bone(species_kind, bone, upper_body_only)) {
+    if (!blends_bone(blend_profile, bone, upper_body_only)) {
       continue;
     }
     io[bone].rotation =
@@ -396,7 +354,6 @@ void lerp_local_pose(LocalPose& io,
 auto sample_local_pose(const Render::Creature::Bpat::BpatBlob& blob,
                        const ResolvedRequestPlayback& playback,
                        std::uint32_t bone_count,
-                       CreatureKind species_kind,
                        LocalPose& out) noexcept -> bool {
   auto const current = blob.frame_local_pose_view(playback.global_frame);
   if (current.size() < bone_count) {
@@ -411,8 +368,7 @@ auto sample_local_pose(const Render::Creature::Bpat::BpatBlob& blob,
   if (next.size() < bone_count) {
     return true;
   }
-  lerp_local_pose(
-      out, next, bone_count, blend_bucket_weight(bucket), species_kind, false);
+  lerp_local_pose(out, next, bone_count, blend_bucket_weight(bucket), nullptr, false);
   return true;
 }
 
@@ -612,19 +568,11 @@ void submit_rigged_creature(const CreatureRenderAssetHandle& handle,
       handle.bind_palette.empty()) {
     return;
   }
-  auto& cache = (renderer != nullptr) ? renderer->rigged_mesh_cache()
-                                      : ([]() -> Render::GL::RiggedMeshCache& {
-                                          thread_local Render::GL::RiggedMeshCache c;
-                                          return c;
-                                        })();
-  const auto* entry = cache.get_or_bake_prehashed(*asset->spec,
-                                                  lod,
-                                                  handle.bind_palette,
-                                                  variant_bucket,
-                                                  handle.attachments,
-                                                  handle.attachments_hash,
-                                                  handle.attachment_set_id,
-                                                  blob.species_id());
+  auto& cache = rigged_cache_for(renderer);
+
+  const auto asset_key = rigged_asset_key(handle, lod, blob.species_id());
+  const auto* entry =
+      cache.require_rigged_asset(asset_key, describe_rigged_asset(handle, lod));
   if (entry == nullptr || entry->mesh == nullptr || entry->mesh->index_count() == 0U) {
     report_submit_cache_miss("rigged",
                              handle,
@@ -638,11 +586,6 @@ void submit_rigged_creature(const CreatureRenderAssetHandle& handle,
                              handle.attachment_set_id,
                              handle.attachments_hash);
     return;
-  }
-
-  ensure_skin_atlas_for_submit(cache, *entry, blob);
-  if (renderer != nullptr) {
-    ensure_skin_ubo_for_submit(cache, *entry);
   }
 
   const bool wants_layered_pose =
@@ -725,30 +668,29 @@ void submit_rigged_creature(const CreatureRenderAssetHandle& handle,
     }
     const std::uint32_t bone_count = std::min<std::uint32_t>(
         skin_atlas->bone_count, Render::GL::RiggedCreatureCmd::k_max_owned_bones);
-    const auto species_kind = handle.archetype->species;
+    const auto* blend_profile = asset->blend_profile;
     OwnedPalette owned = blend_cache().get_or_compute(key, [&]() -> OwnedPalette {
       LocalPose pose{};
-      if (!sample_local_pose(blob, primary_playback, bone_count, species_kind, pose)) {
+      if (!sample_local_pose(blob, primary_playback, bone_count, pose)) {
         return {};
       }
       LocalPose layer{};
       if (full_body_active &&
-          sample_local_pose(blob, *full_body_blend, bone_count, species_kind, layer)) {
+          sample_local_pose(blob, *full_body_blend, bone_count, layer)) {
         lerp_local_pose(pose,
                         layer,
                         bone_count,
                         blend_bucket_weight(key.buckets[2]),
-                        species_kind,
+                        blend_profile,
                         false);
       }
       if (overlay_active &&
-          sample_local_pose(
-              blob, *upper_body_overlay, bone_count, species_kind, layer)) {
+          sample_local_pose(blob, *upper_body_overlay, bone_count, layer)) {
         lerp_local_pose(pose,
                         layer,
                         bone_count,
                         blend_bucket_weight(key.buckets[4]),
-                        species_kind,
+                        blend_profile,
                         true);
       }
       return skin_palette_from_local_pose(blob, pose, bone_count);
@@ -761,69 +703,24 @@ void submit_rigged_creature(const CreatureRenderAssetHandle& handle,
       Render::Profiling::CombatAnimationDiagnostics::instance();
   const bool record_body_pose =
       animation_diagnostics.enabled() || animation_diagnostics.logging_enabled();
-  if (record_body_pose && handle.archetype->species == CreatureKind::Humanoid &&
-      cmd.bone_palette != nullptr &&
-      cmd.bone_count >
-          static_cast<std::uint32_t>(Render::Humanoid::HumanoidBone::HandR)) {
-    auto const pelvis_index =
-        static_cast<std::size_t>(Render::Humanoid::HumanoidBone::Pelvis);
-    auto const neck_index =
-        static_cast<std::size_t>(Render::Humanoid::HumanoidBone::Neck);
-    QMatrix4x4 const posed_pelvis =
-        cmd.bone_palette[pelvis_index] * handle.bind_palette[pelvis_index];
-    QMatrix4x4 const posed_neck =
-        cmd.bone_palette[neck_index] * handle.bind_palette[neck_index];
-    auto const shoulder_l_index =
-        static_cast<std::size_t>(Render::Humanoid::HumanoidBone::ShoulderL);
-    auto const hand_l_index =
-        static_cast<std::size_t>(Render::Humanoid::HumanoidBone::HandL);
-    auto const shoulder_r_index =
-        static_cast<std::size_t>(Render::Humanoid::HumanoidBone::ShoulderR);
-    auto const hand_r_index =
-        static_cast<std::size_t>(Render::Humanoid::HumanoidBone::HandR);
-    QMatrix4x4 const posed_shoulder_l =
-        cmd.bone_palette[shoulder_l_index] * handle.bind_palette[shoulder_l_index];
-    QMatrix4x4 const posed_hand_l =
-        cmd.bone_palette[hand_l_index] * handle.bind_palette[hand_l_index];
-    QMatrix4x4 const posed_shoulder_r =
-        cmd.bone_palette[shoulder_r_index] * handle.bind_palette[shoulder_r_index];
-    QMatrix4x4 const posed_hand_r =
-        cmd.bone_palette[hand_r_index] * handle.bind_palette[hand_r_index];
-    QVector3D const pelvis_world = draw_world.map(posed_pelvis.column(3).toVector3D());
-    QVector3D const neck_world = draw_world.map(posed_neck.column(3).toVector3D());
-    QVector3D const visible_torso = neck_world - pelvis_world;
-    float const body_up_y =
-        visible_torso.lengthSquared() > 1.0e-8F ? visible_torso.normalized().y() : 1.0F;
-    float const max_arm_reach = std::max(
-        (posed_hand_l.column(3).toVector3D() - posed_shoulder_l.column(3).toVector3D())
-            .length(),
-        (posed_hand_r.column(3).toVector3D() - posed_shoulder_r.column(3).toVector3D())
-            .length());
-    Render::Profiling::SubmittedBodyPose pose;
-    pose.body_up_y = body_up_y;
-    pose.max_arm_reach = max_arm_reach;
-    if (cmd.bone_count >
-        static_cast<std::uint32_t>(Render::Humanoid::HumanoidBone::FootR)) {
-      auto const posed_origin = [&](Render::Humanoid::HumanoidBone bone) {
-        auto const index = static_cast<std::size_t>(bone);
-        return draw_world.map((cmd.bone_palette[index] * handle.bind_palette[index])
-                                  .column(3)
-                                  .toVector3D());
-      };
-      pose.pelvis_world = pelvis_world;
-      pose.hand_l_world = posed_origin(Render::Humanoid::HumanoidBone::HandL);
-      pose.hand_r_world = posed_origin(Render::Humanoid::HumanoidBone::HandR);
-      pose.foot_l_world = posed_origin(Render::Humanoid::HumanoidBone::FootL);
-      pose.foot_r_world = posed_origin(Render::Humanoid::HumanoidBone::FootR);
-      QVector3D const hip_axis = posed_origin(Render::Humanoid::HumanoidBone::HipR) -
-                                 posed_origin(Render::Humanoid::HumanoidBone::HipL);
-      if (hip_axis.lengthSquared() > 1.0e-8F) {
-        pose.pelvis_yaw_degrees =
-            qRadiansToDegrees(std::atan2(hip_axis.x(), hip_axis.z()));
-        pose.joints_valid = true;
-      }
-    }
-    animation_diagnostics.record_submitted_body_pose(entity_id, instance_index, pose);
+  if (record_body_pose && asset->body_pose_probe != nullptr &&
+      cmd.bone_palette != nullptr) {
+
+    struct PalettePose {
+      const QMatrix4x4* palette;
+      std::span<const QMatrix4x4> bind;
+    };
+    const PalettePose pose_source{cmd.bone_palette, handle.bind_palette};
+    asset->body_pose_probe(
+        entity_id,
+        instance_index,
+        draw_world,
+        cmd.bone_count,
+        [](const void* user, std::uint32_t bone) -> QVector3D {
+          const auto* source = static_cast<const PalettePose*>(user);
+          return (source->palette[bone] * source->bind[bone]).column(3).toVector3D();
+        },
+        &pose_source);
   }
   for (const auto& attachment_mesh : entry->attachment_meshes) {
     if (attachment_mesh == nullptr || attachment_mesh->index_count() == 0U) {
@@ -868,59 +765,26 @@ auto submit_snapshot_creature(
       Render::Profiling::CombatAnimationDiagnostics::instance();
   const bool record_body_pose =
       animation_diagnostics.enabled() || animation_diagnostics.logging_enabled();
-  if (record_body_pose && handle.archetype->species == CreatureKind::Humanoid) {
+  if (record_body_pose && asset->body_pose_probe != nullptr) {
+
+    struct BlobPose {
+      const Render::Creature::Bpat::BpatBlob* blob;
+      std::uint32_t global_frame;
+    };
+    const BlobPose pose_source{&blob, global_frame};
     auto const palette = blob.frame_palette_view(global_frame);
-    auto const pelvis_index =
-        static_cast<std::size_t>(Render::Humanoid::HumanoidBone::Pelvis);
-    auto const neck_index =
-        static_cast<std::size_t>(Render::Humanoid::HumanoidBone::Neck);
-    auto const shoulder_l_index =
-        static_cast<std::size_t>(Render::Humanoid::HumanoidBone::ShoulderL);
-    auto const hand_l_index =
-        static_cast<std::size_t>(Render::Humanoid::HumanoidBone::HandL);
-    auto const shoulder_r_index =
-        static_cast<std::size_t>(Render::Humanoid::HumanoidBone::ShoulderR);
-    auto const hand_r_index =
-        static_cast<std::size_t>(Render::Humanoid::HumanoidBone::HandR);
-    if (palette.size() > hand_r_index) {
-      auto const bone_origin = [&](std::size_t bone) {
-        return blob.bone_global_matrix(global_frame, static_cast<std::uint32_t>(bone))
-            .column(3)
-            .toVector3D();
-      };
-      QVector3D const pelvis_world = world_from_unit.map(bone_origin(pelvis_index));
-      QVector3D const neck_world = world_from_unit.map(bone_origin(neck_index));
-      QVector3D const visible_torso = neck_world - pelvis_world;
-      float const body_up_y = visible_torso.lengthSquared() > 1.0e-8F
-                                  ? visible_torso.normalized().y()
-                                  : 1.0F;
-      float const max_arm_reach = std::max(
-          (bone_origin(hand_l_index) - bone_origin(shoulder_l_index)).length(),
-          (bone_origin(hand_r_index) - bone_origin(shoulder_r_index)).length());
-      Render::Profiling::SubmittedBodyPose pose;
-      pose.body_up_y = body_up_y;
-      pose.max_arm_reach = max_arm_reach;
-      auto const foot_r_index =
-          static_cast<std::size_t>(Render::Humanoid::HumanoidBone::FootR);
-      if (palette.size() > foot_r_index) {
-        auto const world_origin = [&](Render::Humanoid::HumanoidBone bone) {
-          return world_from_unit.map(bone_origin(static_cast<std::size_t>(bone)));
-        };
-        pose.pelvis_world = pelvis_world;
-        pose.hand_l_world = world_origin(Render::Humanoid::HumanoidBone::HandL);
-        pose.hand_r_world = world_origin(Render::Humanoid::HumanoidBone::HandR);
-        pose.foot_l_world = world_origin(Render::Humanoid::HumanoidBone::FootL);
-        pose.foot_r_world = world_origin(Render::Humanoid::HumanoidBone::FootR);
-        QVector3D const hip_axis = world_origin(Render::Humanoid::HumanoidBone::HipR) -
-                                   world_origin(Render::Humanoid::HumanoidBone::HipL);
-        if (hip_axis.lengthSquared() > 1.0e-8F) {
-          pose.pelvis_yaw_degrees =
-              qRadiansToDegrees(std::atan2(hip_axis.x(), hip_axis.z()));
-          pose.joints_valid = true;
-        }
-      }
-      animation_diagnostics.record_submitted_body_pose(entity_id, instance_index, pose);
-    }
+    asset->body_pose_probe(
+        entity_id,
+        instance_index,
+        world_from_unit,
+        static_cast<std::uint32_t>(palette.size()),
+        [](const void* user, std::uint32_t bone) -> QVector3D {
+          const auto* source = static_cast<const BlobPose*>(user);
+          return source->blob->bone_global_matrix(source->global_frame, bone)
+              .column(3)
+              .toVector3D();
+        },
+        &pose_source);
   }
 
   if (renderer == nullptr) {
@@ -976,14 +840,8 @@ auto submit_snapshot_creature(
   }
 
   auto& rigged_cache = renderer->rigged_mesh_cache();
-  const auto* source = rigged_cache.get_or_bake_prehashed(*asset->spec,
-                                                          lod,
-                                                          handle.bind_palette,
-                                                          variant_bucket,
-                                                          handle.attachments,
-                                                          handle.attachments_hash,
-                                                          handle.attachment_set_id,
-                                                          blob.species_id());
+  const auto* source = create_creature_render_asset(
+      rigged_cache, handle, lod, blob, variant_bucket, false);
   if (source == nullptr || source->mesh == nullptr ||
       source->mesh->index_count() == 0U) {
     report_submit_cache_miss("snapshot_source_rigged",
@@ -1000,7 +858,6 @@ auto submit_snapshot_creature(
     return false;
   }
 
-  ensure_skin_atlas_for_submit(rigged_cache, *source, blob);
   if (source->skin_atlas == nullptr || source->skin_atlas->palettes.empty() ||
       source->skin_atlas->bone_count == 0 ||
       global_frame >= source->skin_atlas->frame_total) {
@@ -1209,6 +1066,20 @@ auto CreaturePipeline::submit_requests(
                                handle->attachment_set_id,
                                handle->attachments_hash);
       return;
+    }
+
+    if (primary.blob != nullptr) {
+      auto& asset_cache = rigged_cache_for(renderer);
+      const auto asset_key =
+          rigged_asset_key(*handle, req.lod, primary.blob->species_id());
+      if (asset_cache.find_rigged_asset(asset_key) == nullptr) {
+        create_creature_render_asset(asset_cache,
+                                     *handle,
+                                     req.lod,
+                                     *primary.blob,
+                                     static_cast<std::uint16_t>(req.variant),
+                                     renderer != nullptr);
+      }
     }
 
     submit_rigged_creature(*handle,

@@ -7,6 +7,7 @@
 #include <string>
 #include <string_view>
 
+#include "render/creature/assets/compiled_creature_asset_status.h"
 #include "render/creature/quadruped/mesh_graph.h"
 #include "render/creature/skeleton.h"
 
@@ -27,14 +28,6 @@ struct HowdahAttachmentFrame;
 
 namespace Render::Elephant {
 
-struct ElephantSourceAssetStatus {
-  bool loaded{false};
-  std::size_t vertex_count{0U};
-  std::size_t triangle_count{0U};
-  std::size_t clip_count{0U};
-  std::string error{};
-};
-
 [[nodiscard]] auto elephant_source_mesh_nodes() noexcept
     -> std::span<const Render::Creature::Quadruped::MeshNode>;
 [[nodiscard]] auto
@@ -49,7 +42,7 @@ elephant_source_sample_clip(std::string_view source_clip,
 elephant_source_pose_howdah(std::string_view source_clip,
                             float normalized_phase,
                             Render::GL::HowdahAttachmentFrame& frame) noexcept -> bool;
-[[nodiscard]] auto
-elephant_source_asset_status() noexcept -> const ElephantSourceAssetStatus&;
+[[nodiscard]] auto elephant_source_asset_status() noexcept
+    -> const Render::Creature::CompiledCreatureAssetStatus&;
 
 } // namespace Render::Elephant

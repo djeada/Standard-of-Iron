@@ -184,7 +184,7 @@ TEST(HorsePrepare, TemplatePrewarmRenderWarmsSnapshotCache) {
       << snapshot_reg.last_error();
   recorder.snapshot_mesh_cache().clear();
 
-  renderer.render(ctx, anim, rider_ctx, profile, nullptr, nullptr, recorder);
+  renderer.render(ctx, anim, rider_ctx, profile, nullptr, recorder);
 
   EXPECT_GT(recorder.snapshot_mesh_cache().size(), 0U);
   EXPECT_TRUE(recorder.commands().empty());
@@ -265,9 +265,8 @@ TEST(HorsePrepare, MinimalRenderUsesPrebakedSnapshotAssetWithoutRiggedBake) {
                   rider_ctx,
                   profile,
                   nullptr,
-                  nullptr,
                   recorder,
-                  Render::GL::HorseLOD::Minimal);
+                  Render::Creature::CreatureLOD::Minimal);
 
   EXPECT_GT(recorder.snapshot_mesh_cache().size(), 0U);
   EXPECT_EQ(recorder.rigged_mesh_cache().size(), 0U);
@@ -317,9 +316,8 @@ TEST(HorsePrepare, MinimalRenderDoesNotFallbackToRiggedBakeWhenSnapshotMissing) 
                   rider_ctx,
                   profile,
                   nullptr,
-                  nullptr,
                   recorder,
-                  Render::GL::HorseLOD::Minimal);
+                  Render::Creature::CreatureLOD::Minimal);
 
   EXPECT_EQ(recorder.snapshot_mesh_cache().size(), 0U);
   EXPECT_EQ(recorder.rigged_mesh_cache().size(), 0U);
@@ -344,7 +342,6 @@ TEST(HorsePrepare, MinimalPreparationSnapsHorseHoofContactToTerrainHeight) {
                                       anim,
                                       rider_ctx,
                                       profile,
-                                      nullptr,
                                       nullptr,
                                       Render::Creature::CreatureLOD::Minimal,
                                       prep);
@@ -629,7 +626,6 @@ TEST(HorsePrepare, ShadowBatchEmptyWithoutResources) {
                                       anim,
                                       rider_ctx,
                                       profile,
-                                      nullptr,
                                       nullptr,
                                       Render::Creature::CreatureLOD::Full,
                                       prep);
