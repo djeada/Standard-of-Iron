@@ -12,6 +12,38 @@
   },
   "shots": [
     {
+      "name": "city_aerial",
+      "scenario": "promo_imperial_capital",
+      "seed": 8190,
+      "start": 24.0,
+      "duration": 6.0,
+      "focus": {
+        "mode": "point",
+        "point": [0.0, 0.0, 118.0],
+        "smoothing": 0.85
+      },
+      "camera": [
+        {
+          "time": 0.0,
+          "distance": 300,
+          "pitch": 42,
+          "yaw": 6,
+          "fov": 34,
+          "height": 58.0
+        },
+        {
+          "time": 6.0,
+          "distance": 34,
+          "pitch": 15,
+          "yaw": 0,
+          "fov": 30,
+          "height": 5.0,
+          "ease": "smooth"
+        }
+      ],
+      "caption": "AURELIA MAGNA"
+    },
+    {
       "name": "gate",
       "scenario": "promo_imperial_capital",
       "seed": 8190,
@@ -26,50 +58,50 @@
         {
           "time": 0.0,
           "distance": 30,
-          "pitch": 9,
+          "pitch": 15,
           "yaw": 180,
           "fov": 30,
-          "height": 2.6
+          "height": 5.0
         },
         {
           "time": 4.1,
-          "distance": 20,
-          "pitch": 9,
-          "yaw": 180,
+          "distance": 21,
+          "pitch": 13,
+          "yaw": 187,
           "fov": 30,
-          "height": 2.6,
+          "height": 4.2,
           "ease": "smooth"
         }
       ],
-      "caption": "AURELIA MAGNA"
+      "caption": "EIGHT GATES, ONE ROAD"
     },
     {
-      "name": "farm",
+      "name": "farmland",
       "scenario": "promo_imperial_capital",
       "seed": 8190,
-      "start": 26.0,
-      "duration": 4.1,
+      "start": 28.0,
+      "duration": 4.6,
       "focus": {
         "mode": "point",
-        "point": [-150.0, 0.0, 232.0],
+        "point": [-30.0, 0.0, 196.0],
         "smoothing": 0.85
       },
       "camera": [
         {
           "time": 0.0,
-          "distance": 26,
-          "pitch": 12,
-          "yaw": 58,
-          "fov": 30,
-          "height": 3.4
+          "distance": 120,
+          "pitch": 20,
+          "yaw": 0,
+          "fov": 32,
+          "height": 16
         },
         {
-          "time": 4.1,
-          "distance": 26,
-          "pitch": 12,
-          "yaw": 74,
-          "fov": 30,
-          "height": 3.4,
+          "time": 4.6,
+          "distance": 112,
+          "pitch": 22,
+          "yaw": 13,
+          "fov": 32,
+          "height": 18,
           "ease": "smooth"
         }
       ],
@@ -140,38 +172,6 @@
       "caption": "THE CITY BUILDS ITSELF"
     },
     {
-      "name": "sites",
-      "scenario": "promo_imperial_capital",
-      "seed": 8190,
-      "start": 52.0,
-      "duration": 4.1,
-      "focus": {
-        "mode": "group",
-        "group": "capital_masons_upper",
-        "smoothing": 0.85
-      },
-      "camera": [
-        {
-          "time": 0.0,
-          "distance": 18,
-          "pitch": 12,
-          "yaw": 306,
-          "fov": 30,
-          "height": 2.6
-        },
-        {
-          "time": 4.1,
-          "distance": 18,
-          "pitch": 12,
-          "yaw": 322,
-          "fov": 30,
-          "height": 2.6,
-          "ease": "smooth"
-        }
-      ],
-      "caption": "SCAFFOLD BY SCAFFOLD"
-    },
-    {
       "name": "haul",
       "scenario": "promo_imperial_capital",
       "seed": 8190,
@@ -204,32 +204,64 @@
       "caption": "STONE, TIMBER AND IRON"
     },
     {
-      "name": "sanctum",
+      "name": "sites",
       "scenario": "promo_imperial_capital",
       "seed": 8190,
-      "start": 70.0,
+      "start": 52.0,
       "duration": 4.1,
       "focus": {
-        "mode": "point",
-        "point": [0.0, 0.0, -306.0],
+        "mode": "group",
+        "group": "capital_masons_upper",
         "smoothing": 0.85
       },
       "camera": [
         {
           "time": 0.0,
-          "distance": 34,
-          "pitch": 16,
-          "yaw": 200,
+          "distance": 18,
+          "pitch": 12,
+          "yaw": 306,
           "fov": 30,
-          "height": 3.0
+          "height": 2.6
         },
         {
           "time": 4.1,
-          "distance": 40,
-          "pitch": 29,
-          "yaw": 200,
+          "distance": 18,
+          "pitch": 12,
+          "yaw": 322,
           "fov": 30,
-          "height": 15.0,
+          "height": 2.6,
+          "ease": "smooth"
+        }
+      ],
+      "caption": "SCAFFOLD BY SCAFFOLD"
+    },
+    {
+      "name": "temple_hill",
+      "scenario": "promo_imperial_capital",
+      "seed": 8190,
+      "start": 70.0,
+      "duration": 4.6,
+      "focus": {
+        "mode": "group",
+        "group": "capital_temple",
+        "smoothing": 0.85
+      },
+      "camera": [
+        {
+          "time": 0.0,
+          "distance": 68,
+          "pitch": 31,
+          "yaw": 0,
+          "fov": 32,
+          "height": 6.0
+        },
+        {
+          "time": 4.6,
+          "distance": 54,
+          "pitch": 27,
+          "yaw": 14,
+          "fov": 32,
+          "height": 5.0,
           "ease": "smooth"
         }
       ],

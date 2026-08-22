@@ -46,6 +46,9 @@ namespace {
 
 constexpr float k_motion_displacement_epsilon_sq = 1.0e-6F;
 constexpr float k_motion_velocity_epsilon_sq = 1.0e-4F;
+constexpr float k_motion_stall_speed = 0.15F;
+constexpr float k_motion_stall_grace_seconds = 0.4F;
+constexpr float k_motion_no_progress_seconds = 0.6F;
 [[nodiscard]] auto
 forward_xz_from_yaw(float yaw_degrees) noexcept -> std::pair<float, float> {
   float const yaw_rad = yaw_degrees * std::numbers::pi_v<float> / 180.0F;
@@ -106,6 +109,7 @@ attack_target_is_in_range(World& world,
 
 struct MotionPresentationSample {
   bool displaced{false};
+  bool stalled{false};
   bool has_component_velocity{false};
   bool has_navigation_intent{false};
   bool direct_control_moving{false};
@@ -120,7 +124,7 @@ struct MotionPresentationSample {
   bool const moving = sample.displaced || sample.direct_control_moving ||
                       sample.builder_bypass || sample.has_component_velocity ||
                       (sample.has_chase_intent && sample.has_active_navigation_segment);
-  if (!moving) {
+  if (!moving || sample.stalled) {
     return MotionPresentationState::Idle;
   }
   return sample.is_running ? MotionPresentationState::Run
@@ -214,8 +218,24 @@ void finalize_motion_presentation_frame(World& world, float delta_time) {
             attack_target != nullptr && attack_target->target_id > 0 &&
             attack_target->should_chase && !motion->attack_target_in_range;
 
+        bool const wants_locomotion =
+            has_component_velocity || direct_control_moving || builder_bypass ||
+            (motion->has_chase_intent && has_active_navigation_segment);
+        bool const making_progress =
+            displacement_sq >=
+            (k_motion_stall_speed * safe_dt) * (k_motion_stall_speed * safe_dt);
+        if (!wants_locomotion || making_progress) {
+          motion->stalled_seconds = 0.0F;
+        } else {
+          motion->stalled_seconds += std::max(0.0F, delta_time);
+        }
+        float const no_ground_gained =
+            movement != nullptr ? movement->get_stuck_time() : 0.0F;
+
         MotionPresentationSample sample{};
         sample.displaced = displaced;
+        sample.stalled = motion->stalled_seconds >= k_motion_stall_grace_seconds ||
+                         no_ground_gained >= k_motion_no_progress_seconds;
         sample.has_component_velocity = has_component_velocity;
         sample.has_navigation_intent = has_navigation_intent;
         sample.direct_control_moving = direct_control_moving;

@@ -223,7 +223,9 @@ inline constexpr std::uint16_t k_humanoid_react_evade_clip = 71U;
 inline constexpr std::uint16_t k_humanoid_react_stagger_clip = 72U;
 inline constexpr std::uint8_t k_humanoid_react_clip_count = 4U;
 
-inline constexpr std::uint16_t k_humanoid_clip_count = 73U;
+inline constexpr std::uint16_t k_humanoid_resource_carry_clip = 73U;
+
+inline constexpr std::uint16_t k_humanoid_clip_count = 74U;
 
 inline constexpr float k_humanoid_combat_ready_cycle_time = 2.2F;
 inline constexpr std::uint32_t k_humanoid_combat_ready_frames = 48U;

@@ -118,6 +118,7 @@ add_executable(
     systems/auto_gather_test.cpp
     systems/dismantle_test.cpp
     systems/interaction_targeting_test.cpp
+    systems/motion_presentation_test.cpp
     systems/settlement_life_system_test.cpp
     systems/unit_activity_test.cpp
     systems/victory_service_test.cpp

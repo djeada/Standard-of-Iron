@@ -186,7 +186,8 @@ auto render_building(EntityRendererRegistry& registry,
                      const QVector3D& light_dir,
                      float health_ratio,
                      int width,
-                     int height) -> QImage {
+                     int height,
+                     Bounds* out_bounds = nullptr) -> QImage {
   Render::GL::RenderFunc const func =
       registry.get("troops/" + nation + "/" + key_suffix);
   QImage img(width, height, QImage::Format_ARGB32);
@@ -228,6 +229,9 @@ auto render_building(EntityRendererRegistry& registry,
 
   Bounds bounds;
   std::vector<ColoredTriangle> const tris = replay_to_triangles(sub.captures, bounds);
+  if (out_bounds != nullptr) {
+    *out_bounds = bounds;
+  }
   if (!bounds.valid() || tris.empty()) {
     return img;
   }
@@ -270,12 +274,15 @@ auto main(int argc, char** argv) -> int {
   std::string out_dir = "build/building_preview";
   std::string filter;
   bool show_states = false;
+  bool report_bounds = false;
   for (int i = 1; i < argc; ++i) {
     std::string const arg = argv[i];
     if (arg == "--only" && i + 1 < argc) {
       filter = argv[++i];
     } else if (arg == "--states") {
       show_states = true;
+    } else if (arg == "--bounds") {
+      report_bounds = true;
     } else if (arg == "--growth" && i + 1 < argc) {
       g_farm_growth = QString::fromLatin1(argv[++i]).toFloat();
     } else {
@@ -342,6 +349,36 @@ auto main(int argc, char** argv) -> int {
     views = {{"intact", three_quarter, facade_sun, 1.0F},
              {"damaged", three_quarter, facade_sun, 0.45F},
              {"destroyed", three_quarter, facade_sun, 0.10F}};
+  }
+
+  if (report_bounds) {
+    std::cout << "nation,type,min_x,max_x,min_y,max_y,min_z,max_z,span_x,span_z\n";
+    for (const auto& nation : nations) {
+      for (std::size_t i = 0; i < types.size(); ++i) {
+        Bounds bounds;
+        (void)render_building(registry,
+                              &resources,
+                              nation,
+                              types[i],
+                              keys[i],
+                              k_preview_owner_id,
+                              QVector3D(0.0F, 1.0F, 0.0F),
+                              game_sun,
+                              1.0F,
+                              8,
+                              8,
+                              &bounds);
+        if (!bounds.valid()) {
+          continue;
+        }
+        std::cout << nation << "," << types[i] << "," << bounds.min.x() << ","
+                  << bounds.max.x() << "," << bounds.min.y() << "," << bounds.max.y()
+                  << "," << bounds.min.z() << "," << bounds.max.z() << ","
+                  << bounds.span().x() << "," << bounds.span().z() << "\n";
+      }
+    }
+    gl.doneCurrent();
+    return 0;
   }
 
   const int tile_w = 460;
