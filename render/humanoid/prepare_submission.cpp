@@ -656,7 +656,7 @@ void prepare_humanoid_instances(const HumanoidRendererBase& owner,
     float const offset_x = layout.offset_x;
     float const offset_z = layout.offset_z;
     uint32_t const inst_seed = layout.inst_seed;
-    float const phase_offset = layout.phase_offset;
+    auto const& individuality = layout.individuality;
     float const applied_yaw_offset = layout.yaw_offset + casualty_yaw;
 
     SoldierTurnSmoothingResult turn_smoothing{};
@@ -958,11 +958,15 @@ void prepare_humanoid_instances(const HumanoidRendererBase& owner,
       soldier_render_anim.is_hit_reacting = false;
     }
     Render::Creature::CombatVisualRawInputs raw_combat{};
+
     raw_combat.sample_time =
         soldier_render_anim.time *
-        (soldier_directive != nullptr ? soldier_directive->combat_speed_scale : 1.0F);
-    raw_combat.attack_offset = soldier_render_anim.attack_offset;
-    raw_combat.has_attack_offset = soldier_render_anim.has_attack_offset;
+        (soldier_directive != nullptr ? soldier_directive->combat_speed_scale : 1.0F) *
+        individuality.swing_tempo_scale;
+
+    raw_combat.attack_offset =
+        soldier_render_anim.attack_offset + individuality.swing_phase_offset;
+    raw_combat.has_attack_offset = true;
 
     bool visual_attack_requested =
         soldier_render_anim.is_attacking || soldier_in_formation_fight;
@@ -1028,6 +1032,9 @@ void prepare_humanoid_instances(const HumanoidRendererBase& owner,
       locomotion_persistent_state->combat_visual = combat_resolution.persistent;
     }
     sync_combat_visual_inputs(soldier_render_anim, combat_resolution.resolved);
+
+    soldier_render_anim.melee_intent = Animation::melee_intent_rotated(
+        soldier_render_anim.melee_intent, individuality.swing_plane_offset);
     bool const render_has_locomotion =
         Render::Creature::is_moving_animation(soldier_render_anim.movement_state);
 
@@ -1040,7 +1047,7 @@ void prepare_humanoid_instances(const HumanoidRendererBase& owner,
     locomotion_inputs.movement_target = visual_locomotion.movement_target;
     locomotion_inputs.has_movement_target = visual_locomotion.has_movement_target;
     locomotion_inputs.animation_time = anim.time;
-    locomotion_inputs.phase_offset = phase_offset;
+    locomotion_inputs.individuality = individuality;
     locomotion_inputs.persistent_state = locomotion_persistent_state;
     locomotion_inputs.allow_persistent_update = allow_animation_persistence;
     if (soldier_turn_smoothed && turn_smoothing.relocating) {
@@ -1089,7 +1096,8 @@ void prepare_humanoid_instances(const HumanoidRendererBase& owner,
     anim_ctx.inputs.is_mounted = is_mounted_spawn;
     anim_ctx.variation = variation;
     anim_ctx.formation = formation;
-    anim_ctx.jitter_seed = phase_offset;
+    anim_ctx.individuality = individuality;
+    anim_ctx.jitter_seed = individuality.idle_phase_offset;
 
     anim_ctx.entity_forward = forward;
     anim_ctx.entity_right = right;

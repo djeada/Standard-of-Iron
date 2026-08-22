@@ -8,6 +8,7 @@
 #include "animation/action_manifest.h"
 #include "animation/clip_manifest.h"
 #include "animation/guard_manifest.h"
+#include "animation/individuality_manifest.h"
 #include "animation/locomotion_manifest.h"
 #include "animation/playback_manifest.h"
 #include "animation/rig/side.h"
@@ -64,6 +65,11 @@ struct AnimationInputs {
   float hold_entry_progress;
   CombatAnimPhase combat_phase{CombatAnimPhase::Idle};
   float combat_phase_progress{0.0F};
+
+  Animation::MeleeIntent melee_intent{};
+  bool melee_intent_valid{false};
+  Animation::MeleeRestDirection melee_rest{};
+  bool melee_rest_valid{false};
   Engine::Core::CombatAttackFamily attack_family{
       Engine::Core::CombatAttackFamily::None};
   std::uint8_t attack_variant{0};
@@ -319,6 +325,8 @@ struct HumanoidAnimationContext {
   AnimationInputs inputs;
   VariationParams variation;
   FormationParams formation;
+
+  Animation::SoldierIndividuality individuality{};
   HumanoidGaitDescriptor gait{};
   float locomotion_cycle_time{0.0F};
   float locomotion_phase{0.0F};

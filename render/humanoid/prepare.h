@@ -7,6 +7,7 @@
 #include <functional>
 #include <vector>
 
+#include "animation/individuality_manifest.h"
 #include "game/formation/unit_layout.h"
 #include "render/creature/pipeline/creature_render_graph.h"
 #include "render/creature/pipeline/creature_render_state.h"
@@ -33,7 +34,8 @@ struct SoldierLayout {
   float offset_z{0.0F};
   float vertical_jitter{0.0F};
   float yaw_offset{0.0F};
-  float phase_offset{0.0F};
+
+  Animation::SoldierIndividuality individuality{};
   std::uint8_t rank_band{0U};
   std::uint8_t row_index{0U};
   std::uint8_t col_index{0U};
@@ -70,7 +72,7 @@ struct HumanoidLocomotionInputs {
   QVector3D movement_target{0.0F, 0.0F, 0.0F};
   bool has_movement_target{false};
   float animation_time{0.0F};
-  float phase_offset{0.0F};
+  Animation::SoldierIndividuality individuality{};
   Render::Creature::HumanoidAnimationStateComponent* persistent_state{nullptr};
   bool allow_persistent_update{false};
 };

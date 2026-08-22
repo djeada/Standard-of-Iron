@@ -6,59 +6,11 @@
 #include "../../core/world.h"
 #include "../../units/spawn_type.h"
 #include "combat_action_events.h"
+#include "melee_intent_solver.h"
 
 namespace Game::Systems::CombatActions {
 
 namespace {
-
-[[nodiscard]] auto
-select_rpg_sword_action_id(const Engine::Core::CommanderComponent* commander,
-                           std::uint8_t attack_sequence,
-                           int move_right_axis,
-                           int move_forward_axis,
-                           bool finisher_attack) -> CombatActionId {
-  if (finisher_attack) {
-    return CombatActionId::RpgSwordFinisher;
-  }
-
-  if (move_forward_axis > 0) {
-    return CombatActionId::RpgSwordThrust;
-  }
-
-  if (move_forward_axis < 0 || (move_right_axis == 0 && commander != nullptr &&
-                                commander->power_strike_active)) {
-    return CombatActionId::RpgSwordOverhead;
-  }
-
-  switch (attack_sequence % 5U) {
-  case 0:
-    return CombatActionId::RpgSwordSlashLeft;
-  case 1:
-    return CombatActionId::RpgSwordSlashRight;
-  case 2:
-    return (move_right_axis > 0) ? CombatActionId::RpgSwordSlashRight
-                                 : CombatActionId::RpgSwordSlashLeft;
-  case 3:
-    return (move_right_axis < 0) ? CombatActionId::RpgSwordSlashLeft
-                                 : CombatActionId::RpgSwordSlashRight;
-  case 4:
-    return CombatActionId::RpgSwordOverhead;
-  default:
-    return CombatActionId::RpgSwordSlashLeft;
-  }
-}
-
-[[nodiscard]] auto select_rpg_spear_action_id(int move_right_axis,
-                                              int move_forward_axis,
-                                              bool finisher_attack) -> CombatActionId {
-  if (finisher_attack) {
-    return CombatActionId::RpgSpearFinisher;
-  }
-  if (move_forward_axis < 0 || move_right_axis != 0) {
-    return CombatActionId::RpgSpearSweep;
-  }
-  return CombatActionId::RpgSpearThrust;
-}
 
 [[nodiscard]] auto should_request_ranged_action(
     const Engine::Core::AttackComponent* attack,
@@ -143,28 +95,29 @@ auto CombatActionService::request_attack(
 
   CombatActionId action_id = CombatActionId::None;
   const CombatActionDefinition* definition = nullptr;
-  if (commander != nullptr &&
-      attack_family == Engine::Core::CombatAttackFamily::Sword) {
-    if (is_mounted_unit(unit)) {
-      action_id = CombatActionId::MountedSwordSlash;
-    } else {
-      auto* action =
-          attacker->get_component<Engine::Core::RpgCommanderActionComponent>();
-      action_id = select_rpg_sword_action_id(
-          commander,
-          action != nullptr ? action->melee_attack_sequence : 0U,
-          request.move_right_axis,
-          request.move_forward_axis,
-          finisher_attack);
-    }
-    definition = find_combat_action_definition(action_id);
-  } else if (commander != nullptr &&
-             attack_family == Engine::Core::CombatAttackFamily::Spear) {
-    action_id = is_mounted_unit(unit)
-                    ? CombatActionId::MountedSpearThrust
-                    : select_rpg_spear_action_id(request.move_right_axis,
-                                                 request.move_forward_axis,
-                                                 finisher_attack);
+  Engine::Core::MeleeIntent swing{};
+  bool swing_resolved = false;
+
+  if (commander != nullptr && attack_family != Engine::Core::CombatAttackFamily::None &&
+      attack_family != Engine::Core::CombatAttackFamily::Bow) {
+
+    auto const* body =
+        attacker->get_component<Engine::Core::CommanderBodyControlComponent>();
+    swing = body != nullptr
+                ? body->steered_intent
+                : resolve_melee_intent({
+                      .move_right_axis = request.move_right_axis,
+                      .move_forward_axis = request.move_forward_axis,
+                      .held_duration = request.primary_held_duration,
+                      .reach = attack != nullptr ? attack->melee_range
+                                                 : Engine::Core::k_melee_default_reach,
+                      .prefer_thrust =
+                          attack_family == Engine::Core::CombatAttackFamily::Spear,
+                  });
+    swing_resolved = true;
+
+    action_id = select_melee_action(
+        swing, attack_family, is_mounted_unit(unit), finisher_attack);
     definition = find_combat_action_definition(action_id);
   } else if (commander != nullptr &&
              attack_family == Engine::Core::CombatAttackFamily::Bow) {
@@ -190,6 +143,9 @@ auto CombatActionService::request_attack(
                   (finisher_attack ? 1.70F : 1.35F);
     combat_state->attack_family = attack_family;
     combat_state->finisher_attack = finisher_attack;
+    if (swing_resolved) {
+      combat_state->intent = swing;
+    }
 
     static std::uint8_t s_fpv_attack_seed = 0;
     combat_state->attack_offset = static_cast<float>(s_fpv_attack_seed % 7) * 0.022F;
@@ -212,7 +168,6 @@ auto CombatActionService::request_attack(
 
       if (combat_state != nullptr && definition != nullptr) {
         combat_state->attack_variant = 0U;
-        combat_state->attack_direction = definition->attack_direction;
         action->melee_attack_sequence =
             static_cast<std::uint8_t>((action->melee_attack_sequence + 1U) % 5U);
       }

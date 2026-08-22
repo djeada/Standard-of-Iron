@@ -275,6 +275,7 @@ add_library(
     systems/combat_actions/combat_action_definition.cpp
     systems/combat_actions/combat_action_events.cpp
     systems/combat_actions/combat_action_service.cpp
+    systems/combat_actions/melee_intent_solver.cpp
     systems/combat_actions/projectile_release.cpp
     systems/combat_actions/weapon_trace.cpp
     systems/rpg_combat_system/rpg_bow_aim.cpp

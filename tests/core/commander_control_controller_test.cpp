@@ -475,7 +475,8 @@ TEST_F(CommanderControlControllerTest,
   EXPECT_EQ(targets, nullptr);
 }
 
-TEST_F(CommanderControlControllerTest, PrimaryActionAlternatesSwordSwaysAcrossClicks) {
+TEST_F(CommanderControlControllerTest,
+       PrimaryActionGrowsTheNextSwingOutOfWhereTheLastOneFinished) {
   Engine::Core::World world;
   auto* commander = create_commander(world, 0.0F, 0.0F);
   ASSERT_NE(commander, nullptr);
@@ -491,6 +492,7 @@ TEST_F(CommanderControlControllerTest, PrimaryActionAlternatesSwordSwaysAcrossCl
   attack->current_mode = Engine::Core::AttackComponent::CombatMode::Melee;
 
   CommanderControlController controller;
+  Render::GL::Camera camera;
   ASSERT_TRUE(controller.primary_action(world, commander->get_id(), 1));
 
   auto* combat_state = commander->get_component<Engine::Core::CombatStateComponent>();
@@ -505,15 +507,23 @@ TEST_F(CommanderControlControllerTest, PrimaryActionAlternatesSwordSwaysAcrossCl
                 Game::Systems::CombatActions::CombatActionId::RpgSwordSlashLeft));
   EXPECT_EQ(action->melee_attack_sequence, 1U);
 
+  auto const first_swing = combat_state->intent;
+  EXPECT_LT(first_swing.strike_dir_x, 0.0F);
+  EXPECT_LT(first_swing.strike_dir_y, 0.0F);
+
+  ASSERT_TRUE(controller.update(world, commander->get_id(), 1, camera, 0.016F));
   combat_state->animation_state = Engine::Core::CombatAnimationState::Idle;
   combat_state->state_time = 0.0F;
   combat_state->state_duration = 0.0F;
   action->action_running = false;
   action->action_completed = true;
+  ASSERT_TRUE(controller.update(world, commander->get_id(), 1, camera, 0.016F));
 
   ASSERT_TRUE(controller.primary_action(world, commander->get_id(), 1));
 
   EXPECT_EQ(combat_state->attack_variant, 0U);
+  EXPECT_GT(combat_state->intent.strike_dir_x, 0.0F);
+  EXPECT_GT(combat_state->intent.strike_dir_y, 0.0F);
   EXPECT_EQ(action->combat_action_id,
             static_cast<std::uint8_t>(
                 Game::Systems::CombatActions::CombatActionId::RpgSwordSlashRight));
@@ -650,7 +660,7 @@ TEST_F(CommanderControlControllerTest, PrimaryActionUsesSpearActionForSpearComma
   ASSERT_NE(action, nullptr);
 
   EXPECT_EQ(combat_state->attack_family, Engine::Core::CombatAttackFamily::Spear);
-  EXPECT_EQ(combat_state->attack_direction, Engine::Core::AttackDirection::Thrust);
+  EXPECT_EQ(combat_state->attack_direction(), Engine::Core::AttackDirection::Thrust);
   EXPECT_EQ(action->combat_action_id,
             static_cast<std::uint8_t>(
                 Game::Systems::CombatActions::CombatActionId::RpgSpearThrust));
@@ -685,7 +695,8 @@ TEST_F(CommanderControlControllerTest,
   ASSERT_NE(action, nullptr);
 
   EXPECT_EQ(combat_state->attack_family, Engine::Core::CombatAttackFamily::Sword);
-  EXPECT_EQ(combat_state->attack_direction, Engine::Core::AttackDirection::RightSlash);
+
+  EXPECT_EQ(combat_state->attack_direction(), Engine::Core::AttackDirection::LeftSlash);
   EXPECT_EQ(action->combat_action_id,
             static_cast<std::uint8_t>(
                 Game::Systems::CombatActions::CombatActionId::MountedSwordSlash));
@@ -720,7 +731,7 @@ TEST_F(CommanderControlControllerTest,
   ASSERT_NE(action, nullptr);
 
   EXPECT_EQ(combat_state->attack_family, Engine::Core::CombatAttackFamily::Spear);
-  EXPECT_EQ(combat_state->attack_direction, Engine::Core::AttackDirection::Thrust);
+  EXPECT_EQ(combat_state->attack_direction(), Engine::Core::AttackDirection::Thrust);
   EXPECT_EQ(action->combat_action_id,
             static_cast<std::uint8_t>(
                 Game::Systems::CombatActions::CombatActionId::MountedSpearThrust));

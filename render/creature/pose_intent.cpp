@@ -42,7 +42,7 @@ auto intent_inputs(const Render::GL::AnimationInputs& inputs) noexcept
       .is_melee = inputs.is_melee,
       .is_in_melee_lock = inputs.is_in_melee_lock,
       .is_casting = inputs.is_casting,
-      .combat_phase = animation_combat_phase(inputs.combat_phase),
+      .combat_phase = inputs.combat_phase,
       .attack_family = animation_attack_family(inputs.attack_family),
       .has_authoritative_combat = combat != nullptr,
       .combat_active = combat != nullptr ? combat->active : false,
@@ -60,7 +60,7 @@ auto intent_inputs(const Render::GL::AnimationInputs& inputs) noexcept
 
 auto is_stationary_melee_combat_phase(Render::GL::CombatAnimPhase phase) noexcept
     -> bool {
-  return Animation::is_stationary_melee_combat_phase(animation_combat_phase(phase));
+  return Animation::is_stationary_melee_combat_phase(phase);
 }
 
 auto should_prioritize_attack_pose_over_locomotion(

@@ -86,7 +86,14 @@ constexpr std::array k_fields = std::to_array<FieldSpec>({
     {"AttackTargetComponent",
      AuthoritativeSerialized,
      "Current target and chase flag."},
-    {"CombatStateComponent", AuthoritativeSerialized, "Combat phase and timers."},
+    {"CombatStateComponent",
+     AuthoritativeSerialized,
+     "Combat phase, timers and the swing being executed."},
+    {"CommanderBodyControlComponent",
+     DerivedRebuilt,
+     "Live melee steering: the aim travel going into the swing and where the "
+     "last one left the blade. Rebuilt from the first tick of direct control, "
+     "and a save cannot be taken mid-input anyway."},
     {"HitFeedbackComponent",
      AuthoritativeSerialized,
      "Trauma drives both camera shake and stagger, so it is simulation state."},
