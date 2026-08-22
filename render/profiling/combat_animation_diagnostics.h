@@ -84,6 +84,19 @@ struct UnitAnimationDebugSample {
   bool elephant_attack_override{false};
 };
 
+struct SubmittedBodyPose {
+  float body_up_y{1.0F};
+  float max_arm_reach{0.0F};
+
+  QVector3D pelvis_world{};
+  QVector3D hand_l_world{};
+  QVector3D hand_r_world{};
+  QVector3D foot_l_world{};
+  QVector3D foot_r_world{};
+  float pelvis_yaw_degrees{0.0F};
+  bool joints_valid{false};
+};
+
 struct SoldierAnimationDebugSample {
   int soldier_index{0};
   float sample_time{0.0F};
@@ -114,6 +127,14 @@ struct SoldierAnimationDebugSample {
   float submitted_body_tilt_degrees{0.0F};
   float submitted_max_arm_reach{0.0F};
   bool submitted_body_pose_valid{false};
+
+  QVector3D pelvis_world{};
+  QVector3D hand_l_world{};
+  QVector3D hand_r_world{};
+  QVector3D foot_l_world{};
+  QVector3D foot_r_world{};
+  float pelvis_yaw_degrees{0.0F};
+  bool joint_sample_valid{false};
   bool visual_state_changed{false};
   bool movement_state_changed{false};
   bool variant_changed{false};
@@ -151,6 +172,9 @@ public:
                                   std::uint16_t soldier_index,
                                   float body_up_y,
                                   float max_arm_reach);
+  void record_submitted_body_pose(std::uint32_t entity_id,
+                                  std::uint16_t soldier_index,
+                                  const SubmittedBodyPose& pose);
 
   void record_unit_cull(std::uint32_t entity_id, SoldierCullReason reason);
   [[nodiscard]] auto

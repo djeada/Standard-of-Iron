@@ -799,8 +799,31 @@ void submit_rigged_creature(const CreatureRenderAssetHandle& handle,
             .length(),
         (posed_hand_r.column(3).toVector3D() - posed_shoulder_r.column(3).toVector3D())
             .length());
-    animation_diagnostics.record_submitted_body_pose(
-        entity_id, instance_index, body_up_y, max_arm_reach);
+    Render::Profiling::SubmittedBodyPose pose;
+    pose.body_up_y = body_up_y;
+    pose.max_arm_reach = max_arm_reach;
+    if (cmd.bone_count >
+        static_cast<std::uint32_t>(Render::Humanoid::HumanoidBone::FootR)) {
+      auto const posed_origin = [&](Render::Humanoid::HumanoidBone bone) {
+        auto const index = static_cast<std::size_t>(bone);
+        return draw_world.map((cmd.bone_palette[index] * handle.bind_palette[index])
+                                  .column(3)
+                                  .toVector3D());
+      };
+      pose.pelvis_world = pelvis_world;
+      pose.hand_l_world = posed_origin(Render::Humanoid::HumanoidBone::HandL);
+      pose.hand_r_world = posed_origin(Render::Humanoid::HumanoidBone::HandR);
+      pose.foot_l_world = posed_origin(Render::Humanoid::HumanoidBone::FootL);
+      pose.foot_r_world = posed_origin(Render::Humanoid::HumanoidBone::FootR);
+      QVector3D const hip_axis = posed_origin(Render::Humanoid::HumanoidBone::HipR) -
+                                 posed_origin(Render::Humanoid::HumanoidBone::HipL);
+      if (hip_axis.lengthSquared() > 1.0e-8F) {
+        pose.pelvis_yaw_degrees =
+            qRadiansToDegrees(std::atan2(hip_axis.x(), hip_axis.z()));
+        pose.joints_valid = true;
+      }
+    }
+    animation_diagnostics.record_submitted_body_pose(entity_id, instance_index, pose);
   }
   for (const auto& attachment_mesh : entry->attachment_meshes) {
     if (attachment_mesh == nullptr || attachment_mesh->index_count() == 0U) {
@@ -874,8 +897,29 @@ auto submit_snapshot_creature(
       float const max_arm_reach = std::max(
           (bone_origin(hand_l_index) - bone_origin(shoulder_l_index)).length(),
           (bone_origin(hand_r_index) - bone_origin(shoulder_r_index)).length());
-      animation_diagnostics.record_submitted_body_pose(
-          entity_id, instance_index, body_up_y, max_arm_reach);
+      Render::Profiling::SubmittedBodyPose pose;
+      pose.body_up_y = body_up_y;
+      pose.max_arm_reach = max_arm_reach;
+      auto const foot_r_index =
+          static_cast<std::size_t>(Render::Humanoid::HumanoidBone::FootR);
+      if (palette.size() > foot_r_index) {
+        auto const world_origin = [&](Render::Humanoid::HumanoidBone bone) {
+          return world_from_unit.map(bone_origin(static_cast<std::size_t>(bone)));
+        };
+        pose.pelvis_world = pelvis_world;
+        pose.hand_l_world = world_origin(Render::Humanoid::HumanoidBone::HandL);
+        pose.hand_r_world = world_origin(Render::Humanoid::HumanoidBone::HandR);
+        pose.foot_l_world = world_origin(Render::Humanoid::HumanoidBone::FootL);
+        pose.foot_r_world = world_origin(Render::Humanoid::HumanoidBone::FootR);
+        QVector3D const hip_axis = world_origin(Render::Humanoid::HumanoidBone::HipR) -
+                                   world_origin(Render::Humanoid::HumanoidBone::HipL);
+        if (hip_axis.lengthSquared() > 1.0e-8F) {
+          pose.pelvis_yaw_degrees =
+              qRadiansToDegrees(std::atan2(hip_axis.x(), hip_axis.z()));
+          pose.joints_valid = true;
+        }
+      }
+      animation_diagnostics.record_submitted_body_pose(entity_id, instance_index, pose);
     }
   }
 

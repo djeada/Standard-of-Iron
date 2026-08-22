@@ -640,6 +640,7 @@ add_library(
     app/core/game_engine_composition.cpp
     app/core/language_manager.cpp
     app/core/match_presentation_sync.cpp
+    app/core/player_feedback.cpp
     app/core/runtime_frame_orchestrator.cpp
     # app/mission -- the client's half of running a mission. The mission logic
     # itself is game/mission (soi_mission_runtime); what is left here is reading
@@ -658,8 +659,10 @@ add_library(
     # app/commander -- the first-person control mode and its camera.
     app/commander/commander_camera_rig.cpp
     app/commander/commander_control_controller.cpp
+    app/commander/commander_latency_probe.cpp
     app/commander/commander_mode_coordinator.cpp
     app/commander/commander_status_builder.cpp
+    app/commander/rts_camera_bookmark.cpp
     # app/input -- pointer and key gestures, before they become orders.
     app/input/cursor_manager.cpp
     app/input/hover_tracker.cpp
@@ -670,6 +673,7 @@ add_library(
     app/orders/action_vfx.cpp
     app/orders/army_formation_controller.cpp
     app/orders/command_controller.cpp
+    app/orders/context_intent.cpp
     app/orders/movement_utils.cpp
     app/orders/order_feedback.cpp
     app/orders/order_issuer.cpp
@@ -848,6 +852,8 @@ if(QT_VERSION_MAJOR EQUAL 6)
             ui/qml/CommanderInputLayer.qml
             ui/qml/RtsInputLayer.qml
             ui/qml/CursorManager.qml
+            ui/qml/ContextIntentPreview.qml
+            ui/qml/PlayerFeedbackLayer.qml
             ui/qml/LoadScreen.qml
         RESOURCES
             ui/qml/ui_audio.js

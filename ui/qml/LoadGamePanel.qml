@@ -4,6 +4,7 @@ import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.3
 import StandardOfIron 1.0
 import StandardOfIron.Design 1.0 as Design
+import "ui_audio.js" as UiAudio
 
 Item {
     id: root
@@ -432,7 +433,9 @@ Item {
         title: qsTr("Confirm Delete")
         modal: true
         standardButtons: Dialog.Yes | Dialog.No
+        onRejected: UiAudio.play_back(typeof game !== 'undefined' ? game.audio_system : null)
         onAccepted: {
+            UiAudio.play_confirm(typeof game !== 'undefined' ? game.audio_system : null);
             if (typeof game !== 'undefined' && game.saves.delete_save_slot) {
                 if (game.saves.delete_save_slot(slot_name)) {
                     loadListModel.remove(slot_index);

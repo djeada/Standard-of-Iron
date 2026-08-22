@@ -28,14 +28,17 @@ constexpr float k_bob_run_mult = 1.35F;
 constexpr float k_bob_lat_amp = 0.013F;
 constexpr float k_bob_decay = 5.5F;
 
-constexpr float k_ground_follow_rate = 8.0F;
-constexpr float k_ground_follow_max_lag = 0.35F;
+constexpr float k_ground_follow_rate = 4.0F;
+constexpr float k_ground_follow_max_lag = 0.55F;
 
 constexpr float k_breath_freq = 0.2F;
 constexpr float k_breath_vert_amp = 0.008F;
 
-constexpr float k_cam_spring = 14.0F;
-constexpr float k_aim_cam_spring_boost = 22.0F;
+constexpr float k_anchor_follow_rate = 16.0F;
+constexpr float k_anchor_max_lag = 0.30F;
+constexpr float k_focus_point_follow = 12.0F;
+constexpr float k_focus_weight_follow = 6.0F;
+constexpr float k_occlusion_follow = 18.0F;
 
 constexpr float k_lean_max_deg = 2.2F;
 constexpr float k_lean_follow = 6.5F;
@@ -59,6 +62,17 @@ constexpr float k_camera_terrain_clearance = 0.55F;
 
 auto smooth_alpha(float rate, float dt) -> float {
   return 1.0F - std::exp(-rate * std::max(dt, 0.0F));
+}
+
+auto signed_degrees_between(float target, float current) -> float {
+  float diff = target - current;
+  while (diff > 180.0F) {
+    diff -= 360.0F;
+  }
+  while (diff < -180.0F) {
+    diff += 360.0F;
+  }
+  return diff;
 }
 
 } // namespace
@@ -112,6 +126,11 @@ void CommanderCameraRig::reset() {
   m_smooth_valid = false;
   m_forward_valid = false;
   m_ground_valid = false;
+  m_state = {};
+  m_focus_point_valid = false;
+  m_focus_weight_smooth = 0.0F;
+  m_focus_side_nudge_smooth = 0.0F;
+  m_occlusion_fraction = 1.0F;
 }
 
 void CommanderCameraRig::add_impact_kick(float strength) {
@@ -122,6 +141,13 @@ auto CommanderCameraRig::update(Render::GL::Camera& camera,
                                 const CommanderCameraInputs& inputs) -> float {
   float const dt = inputs.dt;
   float const motion_scale = Game::Accessibility::MotionSettings::camera_motion_scale();
+
+  float const yaw_step = signed_degrees_between(inputs.view_yaw_degrees, m_state.yaw);
+  float const pitch_step = inputs.view_pitch_degrees - m_state.pitch;
+  m_state.yaw_velocity = dt > 0.0F ? yaw_step / dt : 0.0F;
+  m_state.pitch_velocity = dt > 0.0F ? pitch_step / dt : 0.0F;
+  m_state.yaw = inputs.view_yaw_degrees;
+  m_state.pitch = inputs.view_pitch_degrees;
 
   m_framing_state = select_framing(
       inputs.aiming_bow, inputs.lock_target_active, inputs.fight_context);
@@ -199,20 +225,34 @@ auto CommanderCameraRig::update(Render::GL::Camera& camera,
   QVector3D const flat_forward(std::sin(yaw_rad), 0.0F, std::cos(yaw_rad));
   QVector3D const flat_right(-flat_forward.z(), 0.0F, flat_forward.x());
 
-  float const ground_y = inputs.commander_position.y();
-  if (!m_ground_valid) {
-    m_ground_y = ground_y;
-    m_ground_valid = true;
+  QVector3D const commander_position = inputs.commander_position;
+  if (!m_state.anchor_valid) {
+    m_state.visual_anchor = commander_position;
+    m_state.anchor_valid = true;
   } else {
-    m_ground_y += (ground_y - m_ground_y) * smooth_alpha(k_ground_follow_rate, dt);
-    m_ground_y = std::clamp(m_ground_y,
-                            ground_y - k_ground_follow_max_lag,
-                            ground_y + k_ground_follow_max_lag);
+    float const planar_alpha = smooth_alpha(k_anchor_follow_rate, dt);
+    float const vertical_alpha = smooth_alpha(k_ground_follow_rate, dt);
+    QVector3D anchor = m_state.visual_anchor;
+    anchor.setX(anchor.x() + (commander_position.x() - anchor.x()) * planar_alpha);
+    anchor.setY(anchor.y() + (commander_position.y() - anchor.y()) * vertical_alpha);
+    anchor.setZ(anchor.z() + (commander_position.z() - anchor.z()) * planar_alpha);
+    anchor.setX(std::clamp(anchor.x(),
+                           commander_position.x() - k_anchor_max_lag,
+                           commander_position.x() + k_anchor_max_lag));
+    anchor.setY(std::clamp(anchor.y(),
+                           commander_position.y() - k_ground_follow_max_lag,
+                           commander_position.y() + k_ground_follow_max_lag));
+    anchor.setZ(std::clamp(anchor.z(),
+                           commander_position.z() - k_anchor_max_lag,
+                           commander_position.z() + k_anchor_max_lag));
+    m_state.visual_anchor = anchor;
   }
+  m_ground_y = m_state.visual_anchor.y();
+  m_ground_valid = true;
 
-  QVector3D const pivot(inputs.commander_position.x(),
+  QVector3D const pivot(m_state.visual_anchor.x(),
                         m_ground_y + inputs.jump_height_offset + k_focus_height,
-                        inputs.commander_position.z());
+                        m_state.visual_anchor.z());
 
   float const side_offset =
       m_framing_current.side +
@@ -223,50 +263,71 @@ auto CommanderCameraRig::update(Render::GL::Camera& camera,
       flat_right * (side_offset + bob_l);
   eye_desired -= flat_forward * (k_hit_kick_dolly * hit_kick);
 
+  std::optional<QVector3D> focus_world;
+  float focus_weight_target = 0.0F;
+  float focus_side_nudge_target = 0.0F;
+  if (inputs.lock_target_position.has_value()) {
+    focus_world = *inputs.lock_target_position + QVector3D(0.0F, 1.1F, 0.0F);
+    focus_weight_target = 0.60F * (1.0F - aim_blend);
+    focus_side_nudge_target =
+        (inputs.close_camera_mode ? 0.24F : 0.38F) * (1.0F - aim_blend);
+  } else if (inputs.soft_focus_position.has_value()) {
+    focus_world = *inputs.soft_focus_position + QVector3D(0.0F, 1.1F, 0.0F);
+    focus_weight_target = 0.32F * (1.0F - aim_blend);
+  }
+
+  if (focus_world.has_value()) {
+    if (!m_focus_point_valid) {
+      m_focus_point_smooth = *focus_world;
+      m_focus_point_valid = true;
+    } else {
+      m_focus_point_smooth += (*focus_world - m_focus_point_smooth) *
+                              smooth_alpha(k_focus_point_follow, dt);
+    }
+  }
+  m_focus_weight_smooth += (focus_weight_target - m_focus_weight_smooth) *
+                           smooth_alpha(k_focus_weight_follow, dt);
+  m_focus_side_nudge_smooth += (focus_side_nudge_target - m_focus_side_nudge_smooth) *
+                               smooth_alpha(k_focus_weight_follow, dt);
+  float const focus_weight = std::clamp(m_focus_weight_smooth, 0.0F, 1.0F);
+  if (focus_weight <= 0.001F && !focus_world.has_value()) {
+    m_focus_point_valid = false;
+  }
+
+  eye_desired += flat_right * m_focus_side_nudge_smooth;
+
   QVector3D const free_look_target =
       eye_desired + forward_vec * m_framing_current.distance -
       QVector3D(0.0F, m_framing_current.look_drop * (1.0F - aim_blend), 0.0F);
   QVector3D target_desired = free_look_target;
 
-  if (inputs.lock_target_position.has_value()) {
-    QVector3D const enemy_focus =
-        *inputs.lock_target_position + QVector3D(0.0F, 1.1F, 0.0F);
-    QVector3D to_enemy = enemy_focus - pivot;
+  if (m_focus_point_valid && focus_weight > 0.001F) {
+    QVector3D to_enemy = m_focus_point_smooth - pivot;
     if (to_enemy.lengthSquared() > 0.0001F) {
       float const enemy_distance = std::sqrt(to_enemy.lengthSquared());
       to_enemy /= enemy_distance;
-
-      float const lock_weight = 0.60F * (1.0F - aim_blend);
       target_desired =
-          free_look_target * (1.0F - lock_weight) +
-          (enemy_focus + to_enemy * std::min(1.2F, enemy_distance * 0.15F)) *
-              lock_weight;
-      eye_desired += flat_right *
-                     ((inputs.close_camera_mode ? 0.24F : 0.38F) * (1.0F - aim_blend));
-    }
-  } else if (inputs.soft_focus_position.has_value()) {
-    QVector3D const enemy_focus =
-        *inputs.soft_focus_position + QVector3D(0.0F, 1.1F, 0.0F);
-    QVector3D to_enemy = enemy_focus - pivot;
-    if (to_enemy.lengthSquared() > 0.0001F) {
-      float const enemy_distance = std::sqrt(to_enemy.lengthSquared());
-      to_enemy /= enemy_distance;
-
-      float const soft_weight = 0.32F * (1.0F - aim_blend);
-      target_desired =
-          free_look_target * (1.0F - soft_weight) +
-          (enemy_focus + to_enemy * std::min(1.2F, enemy_distance * 0.15F)) *
-              soft_weight;
+          free_look_target * (1.0F - focus_weight) +
+          (m_focus_point_smooth + to_enemy * std::min(1.2F, enemy_distance * 0.15F)) *
+              focus_weight;
     }
   }
 
   float const blocked_fraction =
       Game::Systems::first_building_intersection_fraction(pivot, eye_desired);
-  bool const camera_blocked = blocked_fraction < 1.0F;
-  if (camera_blocked) {
-    float const safe_fraction = std::clamp(
-        blocked_fraction - 0.06F, inputs.close_camera_mode ? 0.12F : 0.22F, 1.0F);
-    eye_desired = pivot + (eye_desired - pivot) * safe_fraction;
+  float const occlusion_target =
+      blocked_fraction < 1.0F ? std::clamp(blocked_fraction - 0.06F,
+                                           inputs.close_camera_mode ? 0.12F : 0.22F,
+                                           1.0F)
+                              : 1.0F;
+  if (occlusion_target < m_occlusion_fraction) {
+    m_occlusion_fraction = occlusion_target;
+  } else {
+    m_occlusion_fraction += (occlusion_target - m_occlusion_fraction) *
+                            smooth_alpha(k_occlusion_follow, dt);
+  }
+  if (m_occlusion_fraction < 0.999F) {
+    eye_desired = pivot + (eye_desired - pivot) * m_occlusion_fraction;
   }
 
   auto const& terrain = Game::Map::TerrainService::instance();
@@ -277,20 +338,9 @@ auto CommanderCameraRig::update(Render::GL::Camera& camera,
         std::max(eye_desired.y(), eye_ground_y + k_camera_terrain_clearance));
   }
 
-  if (!m_smooth_valid) {
-    m_eye_smooth = eye_desired;
-    m_target_smooth = target_desired;
-    m_smooth_valid = true;
-  } else {
-    float const spring = k_cam_spring + (k_aim_cam_spring_boost * aim_blend);
-    float const alpha = smooth_alpha(spring, dt);
-    if (camera_blocked) {
-      m_eye_smooth = eye_desired;
-    } else {
-      m_eye_smooth += (eye_desired - m_eye_smooth) * alpha;
-    }
-    m_target_smooth += (target_desired - m_target_smooth) * alpha;
-  }
+  m_eye_smooth = eye_desired;
+  m_target_smooth = target_desired;
+  m_smooth_valid = true;
 
   float const lean_rad = m_strafe_lean * k_deg2rad;
   QVector3D const world_up(0.0F, 1.0F, 0.0F);

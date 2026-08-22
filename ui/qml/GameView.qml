@@ -103,7 +103,7 @@ Item {
     }
 
     function is_commander_mode() {
-        return typeof game !== 'undefined' && game.commander.control_mode === "commander";
+        return typeof game !== 'undefined' && game.commander.mode_state === "active";
     }
 
     function is_commander_rally_placement() {
@@ -418,7 +418,7 @@ Item {
             function onControl_mode_changed() {
                 if (typeof game === 'undefined')
                     return;
-                if (game.commander.control_mode === "commander") {
+                if (game.commander.mode_state === "active") {
                     mouseArea.is_selecting = false;
                     selectionBox.visible = false;
                     if (game_view.cursor_mode === "place_barracks_rally" && game.commander.cancel_barracks_rally)
@@ -463,12 +463,14 @@ Item {
             propagateComposedEvents: true
             preventStealing: true
             cursorShape: game_view.is_rally_placement() ? Qt.CrossCursor : (game_view.cursor_mode !== "normal" ? Qt.BlankCursor : Qt.ArrowCursor)
-            enabled: game_view.visible && typeof game !== 'undefined' && (game.commander.control_mode !== "commander" || game_view.is_rally_placement())
+            enabled: game_view.visible && typeof game !== 'undefined' && (game.commander.mode_state !== "active" || game_view.is_rally_placement())
             onEntered: {
+                contextIntentPreview.tracking = true;
                 if (typeof game !== 'undefined' && game.orders.set_hover_at_screen)
                     game.orders.set_hover_at_screen(0, 0);
             }
             onExited: {
+                contextIntentPreview.tracking = false;
                 if (typeof game !== 'undefined' && game.orders.set_hover_at_screen)
                     game.orders.set_hover_at_screen(-1, -1);
             }
@@ -481,6 +483,9 @@ Item {
                     selectionBox.width = Math.abs(endX - start_x);
                     selectionBox.height = Math.abs(endY - start_y);
                 } else {
+                    contextIntentPreview.cursorX = mouse.x;
+                    contextIntentPreview.cursorY = mouse.y;
+                    contextIntentPreview.tracking = true;
                     if (typeof game !== 'undefined' && game.orders.set_hover_at_screen)
                         game.orders.set_hover_at_screen(mouse.x, mouse.y);
                     if ((mouse.buttons & Qt.RightButton) && typeof game !== 'undefined' && game.orders.on_right_move) {
@@ -520,6 +525,9 @@ Item {
             }
             onPressed: function (mouse) {
                 game_view.forceActiveFocus();
+                contextIntentPreview.cursorX = mouse.x;
+                contextIntentPreview.cursorY = mouse.y;
+                contextIntentPreview.acknowledge();
                 if (mouse.button === Qt.LeftButton) {
                     if (game_view.cursor_mode === "attack") {
                         if (typeof game !== 'undefined' && game.orders.attack_at)
@@ -648,7 +656,7 @@ Item {
         id: commanderLayer
 
         anchors.fill: parent
-        active: game_view.visible && typeof game !== 'undefined' && game.commander.control_mode === "commander" && !game_view.is_rally_placement()
+        active: game_view.visible && typeof game !== 'undefined' && game.commander.mode_state === "active" && !game_view.is_rally_placement()
         commander: typeof game !== 'undefined' ? game.commander : null
         gameView: game_view
         mainWindowRef: mainWindow
@@ -656,6 +664,19 @@ Item {
             mouseArea.is_selecting = false;
             selectionBox.visible = false;
         }
+    }
+
+    ContextIntentPreview {
+        id: contextIntentPreview
+
+        anchors.fill: parent
+    }
+
+    PlayerFeedbackLayer {
+        id: playerFeedbackLayer
+
+        anchors.fill: parent
+        activity: typeof game !== 'undefined' ? game.activity : null
     }
 
     Rectangle {
@@ -670,7 +691,7 @@ Item {
     Item {
         id: commanderReticle
 
-        visible: typeof game !== 'undefined' && game.commander.control_mode === "commander" && game.commander.game_mode !== "rpg" && !game_view.is_rally_placement()
+        visible: typeof game !== 'undefined' && game.commander.mode_state === "active" && game.commander.game_mode !== "rpg" && !game_view.is_rally_placement()
         width: 22
         height: 22
         anchors.centerIn: parent
@@ -1200,8 +1221,9 @@ Item {
     }
 
     Connections {
-        function onOrder_feedback(kind, accepted, message) {
+        function onOrder_feedback(kind, accepted, message, failure) {
             orderFeedbackBanner.show(kind, accepted, message);
+            contextIntentPreview.report_outcome(accepted, message, failure);
         }
 
         target: typeof game !== 'undefined' ? game : null

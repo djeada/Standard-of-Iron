@@ -8,6 +8,9 @@
 #include <limits>
 
 #include "app/commander/commander_camera_rig.h"
+#include "app/commander/commander_frame_intent.h"
+#include "app/commander/commander_latency_probe.h"
+#include "app/core/player_feedback.h"
 
 class QQuickWindow;
 
@@ -70,6 +73,14 @@ public:
       qreal sx, qreal sy, qreal center_sx, qreal center_sy, QQuickWindow* window);
   void center_mouse(qreal center_sx, qreal center_sy, QQuickWindow* window);
   void poll_mouse_look(QQuickWindow* window);
+  void set_latency_probe(App::Core::CommanderLatencyProbe* probe) {
+    m_latency_probe = probe;
+  }
+  void set_feedback_bus(App::Core::PlayerFeedbackBus* bus) { m_feedback = bus; }
+  auto sample_frame_intent(QQuickWindow* window) -> CommanderFrameIntent;
+  [[nodiscard]] auto frame_intent() const -> const CommanderFrameIntent& {
+    return m_frame_intent;
+  }
   void request_dodge();
   void request_dodge(const QVector3D& world_direction);
   void request_jump();
@@ -155,7 +166,13 @@ private:
                           Engine::Core::Entity& commander,
                           Engine::Core::TransformComponent& transform,
                           float dt);
+  App::Core::CommanderLatencyProbe* m_latency_probe = nullptr;
+  App::Core::PlayerFeedbackBus* m_feedback = nullptr;
   InputState m_input;
+  CommanderFrameIntent m_frame_intent;
+  float m_intent_sample_yaw = 0.0F;
+  float m_intent_sample_pitch = 0.0F;
+  bool m_intent_sample_valid = false;
   float m_view_yaw = 0.0F;
   float m_view_pitch = 0.0F;
 

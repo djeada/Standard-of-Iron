@@ -35,6 +35,7 @@ inline constexpr char kUiEdgeScrollKey[] = "ui/edge_scroll_enabled";
 inline constexpr char kUiEdgeScrollSensitivityKey[] = "ui/edge_scroll_sensitivity";
 inline constexpr char kUiCameraMotionKey[] = "ui/camera_motion_scale";
 inline constexpr char kUiDamageNumbersKey[] = "ui/damage_numbers";
+inline constexpr char kUiDamageNumberModeKey[] = "ui/damage_number_mode";
 inline constexpr char kUiScreenEffectsKey[] = "ui/screen_effect_intensity";
 inline constexpr char kUiEconomyCoachKey[] = "ui/economy_coach";
 inline constexpr char kUiCameraLegendSeenKey[] = "ui/camera_legend_seen";
@@ -331,6 +332,17 @@ inline void save_bool(const char* key, bool value) {
   settings.sync();
 }
 
+inline auto load_string(const char* key, const QString& fallback) -> QString {
+  auto settings = open();
+  return settings.value(QString::fromLatin1(key), fallback).toString();
+}
+
+inline void save_string(const char* key, const QString& value) {
+  auto settings = open();
+  settings.setValue(QString::fromLatin1(key), value);
+  settings.sync();
+}
+
 } // namespace Detail
 
 inline auto load_ui_team_patterns() -> bool {
@@ -378,6 +390,28 @@ inline auto load_ui_damage_numbers() -> bool {
 
 inline void save_ui_damage_numbers(bool enabled) {
   Detail::save_bool(kUiDamageNumbersKey, enabled);
+}
+
+inline auto is_damage_number_mode(const QString& mode) -> bool {
+  return mode == QLatin1String("off") || mode == QLatin1String("important") ||
+         mode == QLatin1String("all");
+}
+
+inline auto load_ui_damage_number_mode() -> QString {
+  const QString stored =
+      Detail::load_string(kUiDamageNumberModeKey, QStringLiteral(""));
+  if (is_damage_number_mode(stored)) {
+    return stored;
+  }
+  return load_ui_damage_numbers() ? QStringLiteral("all") : QStringLiteral("off");
+}
+
+inline void save_ui_damage_number_mode(const QString& mode) {
+  if (!is_damage_number_mode(mode)) {
+    return;
+  }
+  Detail::save_string(kUiDamageNumberModeKey, mode);
+  Detail::save_bool(kUiDamageNumbersKey, mode != QLatin1String("off"));
 }
 
 inline auto load_ui_camera_legend_seen() -> bool {

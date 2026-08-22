@@ -15,6 +15,9 @@ inline constexpr const char* k_ui_panel_close = "ui.panel_close";
 inline constexpr const char* k_ui_toggle = "ui.toggle";
 inline constexpr const char* k_ui_error = "ui.error";
 inline constexpr const char* k_ui_notification = "ui.notification";
+inline constexpr const char* k_ui_confirm = "ui.confirm";
+inline constexpr const char* k_command_accept = "command.accept";
+inline constexpr const char* k_command_refuse = "command.refuse";
 inline constexpr const char* k_ui_select_unit = "ui.select_unit";
 inline constexpr const char* k_ui_select_group = "ui.select_group";
 inline constexpr const char* k_ui_deselect = "ui.deselect";
@@ -104,7 +107,7 @@ inline constexpr const char* k_state_load_complete = "state.load_complete";
 inline constexpr const char* k_state_commander_enter = "state.commander_enter";
 inline constexpr const char* k_state_commander_exit = "state.commander_exit";
 
-inline constexpr std::array<const char*, 87> k_all = {
+inline constexpr std::array<const char*, 90> k_all = {
     k_ui_hover,
     k_ui_click,
     k_ui_back,
@@ -114,6 +117,9 @@ inline constexpr std::array<const char*, 87> k_all = {
     k_ui_toggle,
     k_ui_error,
     k_ui_notification,
+    k_ui_confirm,
+    k_command_accept,
+    k_command_refuse,
     k_ui_select_unit,
     k_ui_select_group,
     k_ui_deselect,

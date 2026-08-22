@@ -1199,3 +1199,64 @@ TEST_F(CommanderControlControllerTest, StrikeCarriesTheCommanderIntoATargetOutOf
 }
 
 } // namespace
+
+TEST_F(CommanderControlControllerTest, FrameIntentMirrorsHeldCommanderInput) {
+  CommanderControlController controller;
+  controller.set_view_yaw(40.0F);
+  controller.set_view_pitch(-5.0F);
+
+  const auto idle = controller.sample_frame_intent(nullptr);
+  EXPECT_FALSE(idle.has_move());
+  EXPECT_FALSE(idle.guard);
+  EXPECT_FALSE(idle.attack_held);
+  EXPECT_FLOAT_EQ(idle.view_yaw, 40.0F);
+  EXPECT_FLOAT_EQ(idle.view_pitch, -5.0F);
+
+  controller.key_down(Qt::Key_W);
+  controller.key_down(Qt::Key_D);
+  controller.key_down(Qt::Key_Shift);
+  controller.primary_action_down();
+  controller.secondary_action_down();
+  controller.request_dodge();
+  controller.request_jump();
+
+  const auto held = controller.sample_frame_intent(nullptr);
+  EXPECT_FLOAT_EQ(held.move.x(), 1.0F);
+  EXPECT_FLOAT_EQ(held.move.y(), 1.0F);
+  EXPECT_TRUE(held.run);
+  EXPECT_TRUE(held.attack_held);
+  EXPECT_TRUE(held.guard);
+  EXPECT_TRUE(held.dodge_pressed);
+  EXPECT_TRUE(held.jump_pressed);
+  EXPECT_EQ(held.frame_index, idle.frame_index + 1);
+}
+
+TEST_F(CommanderControlControllerTest, FrameIntentReportsMouseLookDeltaForTheFrame) {
+  CommanderControlController controller;
+  controller.set_view_yaw(0.0F);
+  controller.set_view_pitch(0.0F);
+
+  static_cast<void>(controller.sample_frame_intent(nullptr));
+  controller.mouse_move(20.0, -10.0);
+  const auto moved = controller.sample_frame_intent(nullptr);
+
+  EXPECT_TRUE(moved.has_look_delta());
+  EXPECT_GT(moved.look_delta.x(), 0.0F);
+  EXPECT_GT(moved.look_delta.y(), 0.0F);
+  EXPECT_FLOAT_EQ(moved.view_yaw, controller.view_yaw());
+  EXPECT_FLOAT_EQ(moved.view_pitch, controller.view_pitch());
+
+  const auto settled = controller.sample_frame_intent(nullptr);
+  EXPECT_FALSE(settled.has_look_delta());
+}
+
+TEST_F(CommanderControlControllerTest, FrameIntentWrapsAroundTheYawSeam) {
+  CommanderControlController controller;
+  controller.set_view_yaw(359.0F);
+  static_cast<void>(controller.sample_frame_intent(nullptr));
+
+  controller.mouse_move(20.0, 0.0);
+  const auto wrapped = controller.sample_frame_intent(nullptr);
+  EXPECT_GT(wrapped.look_delta.x(), 0.0F);
+  EXPECT_LT(wrapped.look_delta.x(), 90.0F);
+}

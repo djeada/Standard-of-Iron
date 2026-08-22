@@ -75,6 +75,68 @@ auto seed_barracks_rally_preview_impl(Engine::Core::World* world,
 
 } // namespace
 
+auto to_string(CommanderModeState state) -> const char* {
+  switch (state) {
+  case CommanderModeState::Inactive:
+    return "inactive";
+  case CommanderModeState::Entering:
+    return "entering";
+  case CommanderModeState::Active:
+    return "active";
+  case CommanderModeState::Exiting:
+    return "exiting";
+  }
+  return "inactive";
+}
+
+auto CommanderModeCoordinator::begin_enter() -> bool {
+  if (m_state != CommanderModeState::Inactive) {
+    return false;
+  }
+  m_state = CommanderModeState::Entering;
+  return true;
+}
+
+auto CommanderModeCoordinator::begin_exit() -> bool {
+  if (m_state != CommanderModeState::Active) {
+    return false;
+  }
+  m_state = CommanderModeState::Exiting;
+  return true;
+}
+
+void CommanderModeCoordinator::complete_transition() {
+  switch (m_state) {
+  case CommanderModeState::Entering:
+    m_state = CommanderModeState::Active;
+    break;
+  case CommanderModeState::Exiting:
+    m_state = CommanderModeState::Inactive;
+    break;
+  case CommanderModeState::Inactive:
+  case CommanderModeState::Active:
+    break;
+  }
+}
+
+void CommanderModeCoordinator::abort_transition() {
+  switch (m_state) {
+  case CommanderModeState::Entering:
+    m_state = CommanderModeState::Inactive;
+    break;
+  case CommanderModeState::Exiting:
+    m_state = CommanderModeState::Active;
+    break;
+  case CommanderModeState::Inactive:
+  case CommanderModeState::Active:
+    break;
+  }
+}
+
+void CommanderModeCoordinator::force_inactive() {
+  m_state = CommanderModeState::Inactive;
+}
+
 auto CommanderModeCoordinator::store_rts_selection(
     const CommanderSelectionContext& context) const -> CommanderSelectionEffects {
   CommanderSelectionEffects effects;

@@ -455,7 +455,8 @@ void GameEngine::build_services_and_controllers() {
                 QStringLiteral("collect");
             auto outcome = App::Core::rejected_order(
                 gathering ? App::Core::OrderKind::Gather : App::Core::OrderKind::Build,
-                reason);
+                App::Core::OrderRefusal{App::Core::OrderFailure::CommandUnavailable,
+                                        reason});
             handle_order_feedback(outcome);
           });
   connect(m_production_manager.get(),

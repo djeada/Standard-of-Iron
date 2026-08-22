@@ -91,16 +91,22 @@ TEST(CommanderControlRegressionTest, CommanderStrafeUsesRightHandedBasis) {
       contains(source, "const QVector3D right(-forward.z(), 0.0F, forward.x());"));
 }
 
-TEST(CommanderControlRegressionTest, CommanderMouseLookIsPolledEveryFrame) {
+TEST(CommanderControlRegressionTest, CommanderMouseLookIsPolledEveryRenderedFrame) {
   const auto root = find_repo_root();
   const auto engine_source = app_source(root, "commander_view_model.cpp");
   const auto controller_source = app_source(root, "commander_control_controller.cpp");
+  const auto game_engine_source = app_source(root, "game_engine.cpp");
   ASSERT_FALSE(engine_source.empty());
   ASSERT_FALSE(controller_source.empty());
+  ASSERT_FALSE(game_engine_source.empty());
 
   EXPECT_TRUE(contains(engine_source,
                        "void CommanderViewModel::update_control_mode(float dt)"));
-  EXPECT_TRUE(contains(engine_source, "m_control.poll_mouse_look(m_context.window);"));
+  EXPECT_TRUE(
+      contains(engine_source, "m_control.sample_frame_intent(m_context.window);"));
+  EXPECT_FALSE(contains(engine_source, "m_control.poll_mouse_look(m_context.window);"));
+  EXPECT_TRUE(
+      contains(game_engine_source, "m_commander_view_model->sample_frame_intent();"));
   EXPECT_TRUE(
       contains(controller_source, "void CommanderControlController::poll_mouse_look"));
   EXPECT_TRUE(contains(controller_source, "mouse_move(delta.x(), delta.y());"));
@@ -352,8 +358,8 @@ TEST(CommanderControlRegressionTest,
   EXPECT_TRUE(contains(hud_source, "Loader {"));
   EXPECT_TRUE(contains(
       hud_source,
-      "sourceComponent: typeof game !== 'undefined' && game.commander.control_mode === "
-      "\"commander\" ? commanderBottomHudComponent : rtsBottomHudComponent"));
+      "sourceComponent: typeof game !== 'undefined' && game.commander.mode_state === "
+      "\"active\" ? commanderBottomHudComponent : rtsBottomHudComponent"));
   EXPECT_TRUE(contains(hud_source, "HUDBottomCommander {"));
   EXPECT_TRUE(contains(cmake_source, "ui/qml/HUDBottomCommander.qml"));
   EXPECT_TRUE(contains(commander_hud_source, "game.commander.status"));
@@ -378,7 +384,7 @@ TEST(CommanderControlRegressionTest, FpvCommanderHitOverlayUsesRichDamageBurstDa
   EXPECT_TRUE(
       contains(view_model_source, "entry[\"killingBlow\"] = event.killing_blow;"));
 
-  EXPECT_TRUE(contains(hud_source, "game.commander.control_mode === \"commander\""));
+  EXPECT_TRUE(contains(hud_source, "game.commander.mode_state === \"active\""));
 
   EXPECT_TRUE(contains(damage_numbers_source, "property real ringSize"));
   EXPECT_TRUE(contains(damage_numbers_source, "damageRatio"));
@@ -397,11 +403,9 @@ TEST(CommanderControlRegressionTest, CommanderRpgHudUsesSingleOverlayPresentatio
   ASSERT_FALSE(fpv_overlay_source.empty());
   ASSERT_FALSE(game_view_source.empty());
 
-  EXPECT_TRUE(
-      contains(hud_source,
-               "property bool commander_rpg_mode: typeof game !== "
-               "'undefined' && game.commander.control_mode === \"commander\" && "
-               "game.commander.game_mode === \"rpg\""));
+  EXPECT_TRUE(contains(hud_source,
+                       "property bool commander_rpg_mode: typeof game !== "
+                       "'undefined' && game.commander.mode_state === \"active\""));
   EXPECT_TRUE(
       contains(hud_source,
                "property bool commander_rally_overlay_blocked: commander_rpg_mode && "
@@ -413,15 +417,15 @@ TEST(CommanderControlRegressionTest, CommanderRpgHudUsesSingleOverlayPresentatio
                        "visible: hud.commander_rpg_mode && "
                        "!hud.commander_rally_overlay_blocked"));
 
-  EXPECT_TRUE(contains(
-      game_view_source,
-      "visible: typeof game !== 'undefined' && game.commander.control_mode === "
-      "\"commander\" && game.commander.game_mode !== \"rpg\" && "
-      "!game_view.is_rally_placement()"));
+  EXPECT_TRUE(
+      contains(game_view_source,
+               "visible: typeof game !== 'undefined' && game.commander.mode_state === "
+               "\"active\" && game.commander.game_mode !== \"rpg\" && "
+               "!game_view.is_rally_placement()"));
 
   EXPECT_TRUE(contains(commander_hud_source,
                        "readonly property bool fpv_mode: typeof game !== "
-                       "'undefined' && game.commander.game_mode === \"rpg\""));
+                       "'undefined' && game.commander.mode_state === \"active\""));
   EXPECT_TRUE(contains(commander_hud_source,
                        "text: bottomRoot.fpv_mode ? qsTr(\"ORDERS\") : "
                        "qsTr(\"ABILITIES\")"));
@@ -484,8 +488,7 @@ TEST(CommanderControlRegressionTest, MainWindowHidesCursorDuringFpvCommanderGame
   EXPECT_TRUE(contains(main_qml, "id: commanderCursorOverlay"));
   EXPECT_TRUE(contains(main_qml, "acceptedButtons: Qt.NoButton"));
   EXPECT_TRUE(contains(main_qml, "cursorShape: Qt.BlankCursor"));
-  EXPECT_TRUE(contains(main_qml, "game.commander.control_mode === \"commander\" &&"));
-  EXPECT_TRUE(contains(main_qml, "game.commander.game_mode === \"rpg\" &&"));
+  EXPECT_TRUE(contains(main_qml, "game.commander.mode_state === \"active\" &&"));
   EXPECT_TRUE(contains(main_qml, "!save_game_panel.visible &&"));
 }
 

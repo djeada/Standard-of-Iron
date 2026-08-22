@@ -12,6 +12,8 @@
 #include <vector>
 
 #include "app/commander/commander_control_controller.h"
+#include "app/commander/commander_mode_coordinator.h"
+#include "app/commander/rts_camera_bookmark.h"
 #include "render/entity/combat_dust_renderer.h"
 
 namespace Engine::Core {
@@ -36,6 +38,7 @@ class CommanderViewModel : public QObject {
   Q_PROPERTY(QString control_mode READ control_mode NOTIFY control_mode_changed)
   Q_PROPERTY(QString game_mode READ game_mode NOTIFY game_mode_changed)
   Q_PROPERTY(bool available READ available NOTIFY available_changed)
+  Q_PROPERTY(QString mode_state READ mode_state NOTIFY mode_state_changed)
 
 public:
   CommanderViewModel(const App::Core::ClientContext& context,
@@ -50,6 +53,7 @@ public:
   Q_INVOKABLE void exit_mode();
   [[nodiscard]] auto control_mode() const -> QString;
   [[nodiscard]] auto game_mode() const -> QString;
+  [[nodiscard]] auto mode_state() const -> QString;
   [[nodiscard]] auto available() const -> bool;
   [[nodiscard]] auto active() const -> bool {
     return m_control_mode == PlayerControlMode::Commander;
@@ -103,7 +107,11 @@ public:
   should_render_selected_entity(Engine::Core::EntityID id) const -> bool;
 
   void update_control_mode(float dt);
+  void sample_frame_intent();
   void update_camera_presentation(float dt);
+  [[nodiscard]] auto frame_intent() const -> const CommanderFrameIntent& {
+    return m_control.frame_intent();
+  }
 
   void restore_direct_control_if_ready();
   void render_effects();
@@ -117,6 +125,7 @@ signals:
   void control_mode_changed();
 
   void game_mode_changed();
+  void mode_state_changed();
   void available_changed();
 
   void active_camera_requested(Render::GL::Camera* camera);
@@ -132,6 +141,16 @@ private:
     Rts,
     Rpg
   };
+
+  struct ModeSignalBatch {
+    QString control_mode;
+    QString game_mode;
+    QString mode_state;
+  };
+  [[nodiscard]] auto capture_mode_signals() const -> ModeSignalBatch;
+  void bookmark_rts_camera();
+  void restore_rts_camera();
+  void emit_mode_signal_changes(const ModeSignalBatch& before);
 
   [[nodiscard]] auto controlled_commander_entity() const -> Engine::Core::Entity*;
   void store_rts_selection();
@@ -159,6 +178,7 @@ private:
   Engine::Core::EntityID m_controlled_commander_id = 0;
   std::vector<Engine::Core::EntityID> m_saved_rts_selection_ids;
   std::optional<bool> m_rts_follow_selection_snapshot;
+  App::Core::RtsCameraBookmark m_rts_camera_bookmark;
   std::optional<QVector3D> m_rally_preview;
 
   struct DamageEvent {

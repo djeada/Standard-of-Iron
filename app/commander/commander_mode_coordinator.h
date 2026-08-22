@@ -31,6 +31,15 @@ class Camera;
 
 namespace App::Core {
 
+enum class CommanderModeState : std::uint8_t {
+  Inactive,
+  Entering,
+  Active,
+  Exiting
+};
+
+[[nodiscard]] auto to_string(CommanderModeState state) -> const char*;
+
 struct CommanderSelectionContext {
   Engine::Core::World* world = nullptr;
   Game::Systems::SelectionController* selection_controller = nullptr;
@@ -134,6 +143,21 @@ struct CommanderDirectControlEffects {
 
 class CommanderModeCoordinator {
 public:
+  [[nodiscard]] auto state() const -> CommanderModeState { return m_state; }
+  [[nodiscard]] auto is_active() const -> bool {
+    return m_state == CommanderModeState::Active;
+  }
+  [[nodiscard]] auto is_transitioning() const -> bool {
+    return m_state == CommanderModeState::Entering ||
+           m_state == CommanderModeState::Exiting;
+  }
+
+  [[nodiscard]] auto begin_enter() -> bool;
+  [[nodiscard]] auto begin_exit() -> bool;
+  void complete_transition();
+  void abort_transition();
+  void force_inactive();
+
   [[nodiscard]] auto store_rts_selection(const CommanderSelectionContext& context) const
       -> CommanderSelectionEffects;
   void select_controlled_commander(const CommanderSelectionContext& context) const;
@@ -169,6 +193,8 @@ public:
       -> CommanderDirectControlEffects;
 
 private:
+  CommanderModeState m_state{CommanderModeState::Inactive};
+
   void clear_controlled_commander_state_impl(
       Engine::Core::World* world, Engine::Core::EntityID controlled_commander_id) const;
   [[nodiscard]] static auto
