@@ -12,6 +12,7 @@
 #include <utility>
 #include <vector>
 
+#include "backend/sky_box_transition.h"
 #include "directional_shadow_block.h"
 #include "persistent_buffer.h"
 #include "render/decoration_gpu.h"
@@ -23,6 +24,7 @@
 #include "render/local_lighting.h"
 #include "render/mist_volume.h"
 #include "render/world_chunk.h"
+#include "render/world_render_mode.h"
 #include "resources.h"
 #include "scene/camera.h"
 #include "scene/environment_lighting.h"
@@ -47,6 +49,7 @@ class ModeIndicatorPipeline;
 class GroundMarkerPipeline;
 class PostProcessPipeline;
 class MeshInstancingPipeline;
+class SkyBoxPipeline;
 } // namespace Render::GL::BackendPipelines
 
 namespace Render::GL {
@@ -92,6 +95,10 @@ public:
   void set_animation_time(float time) noexcept override { m_animation_time = time; }
   void execute(const DrawQueue& queue, const Camera& cam) override;
   void execute_scene(const DrawQueue& queue, const Camera& cam);
+
+  void set_world_render_mode(WorldRenderMode mode) noexcept {
+    m_sky_box_transition.set_target(mode == WorldRenderMode::Rpg);
+  }
 
   void set_environment_lighting(const EnvironmentLightingState& lighting) noexcept {
     m_environment_lighting = lighting.sanitized();
@@ -254,6 +261,7 @@ private:
     visit(m_ground_marker_pipeline);
     visit(m_mesh_instancing_pipeline);
     visit(m_post_process_pipeline);
+    visit(m_sky_box_pipeline);
   }
 
   template <typename Subsystem, typename... Args>
@@ -295,6 +303,7 @@ private:
   std::unique_ptr<BackendPipelines::GroundMarkerPipeline> m_ground_marker_pipeline;
   std::unique_ptr<BackendPipelines::MeshInstancingPipeline> m_mesh_instancing_pipeline;
   std::unique_ptr<BackendPipelines::PostProcessPipeline> m_post_process_pipeline;
+  std::unique_ptr<BackendPipelines::SkyBoxPipeline> m_sky_box_pipeline;
 
   Shader* m_basic_shader = nullptr;
   Shader* m_grid_shader = nullptr;
@@ -306,6 +315,8 @@ private:
   bool m_depth_testEnabled = true;
   bool m_blend_enabled = false;
   float m_animation_time = 0.0F;
+  float m_sky_box_blend_time = 0.0F;
+  BackendPipelines::SkyBoxTransition m_sky_box_transition;
   GLuint m_frame_ubo{0};
   GLuint m_environment_lighting_ubo{0};
   GLuint m_local_lighting_ubo{0};
