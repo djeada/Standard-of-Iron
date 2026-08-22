@@ -1,5 +1,7 @@
 #include "command.h"
 
+#include <type_traits>
+
 namespace Game::Command {
 
 auto source_name(Source source) -> const char* {

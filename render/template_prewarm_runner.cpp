@@ -242,8 +242,9 @@ void execute_template_prewarm_item(Renderer& renderer,
     return;
   }
 
-  Engine::Core::Entity entity(prewarm_entity_id_for_variant(
+  Engine::Core::StandaloneEntity scratch(prewarm_entity_id_for_variant(
       profile_index, owner_id, static_cast<std::uint8_t>(lod), variant));
+  Engine::Core::Entity& entity = scratch.entity();
   populate_template_prewarm_entity(
       entity, spawn_type, nation_id, owner_id, max_health, renderer_id);
 

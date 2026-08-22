@@ -8,6 +8,8 @@ class HomeSystem : public Engine::Core::System {
 public:
   void update(Engine::Core::World* world, float delta_time) override;
 
+  [[nodiscard]] auto access() const -> Engine::Core::SystemAccess override;
+
 private:
   static constexpr float k_update_interval = 2.0F;
   static constexpr float k_max_search_radius = 50.0F;

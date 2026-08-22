@@ -78,34 +78,29 @@ void apply_knockback_step(Engine::Core::Entity& unit,
 } // namespace
 
 void process_hit_feedback(Engine::Core::World* world, float delta_time) {
-  auto units = world->collect_entities_with<Engine::Core::HitFeedbackComponent>();
-
-  for (auto* unit : units) {
-    if (unit->has_component<Engine::Core::PendingRemovalComponent>()) {
+  for (auto [unit, feedback] :
+       world->entity_view<Engine::Core::HitFeedbackComponent>()) {
+    if (unit.has_component<Engine::Core::PendingRemovalComponent>() ||
+        !feedback.is_reacting) {
       continue;
     }
 
-    auto* feedback = unit->get_component<Engine::Core::HitFeedbackComponent>();
-    if (feedback == nullptr || !feedback->is_reacting) {
-      continue;
-    }
-
-    feedback->reaction_time += delta_time;
+    feedback.reaction_time += delta_time;
     float const duration =
-        feedback->reaction_duration > 0.0F
-            ? feedback->reaction_duration
+        feedback.reaction_duration > 0.0F
+            ? feedback.reaction_duration
             : Engine::Core::HitFeedbackComponent::k_reaction_duration;
-    float const progress = feedback->reaction_time / duration;
+    float const progress = feedback.reaction_time / duration;
 
-    apply_knockback_step(*unit, *feedback, progress);
+    apply_knockback_step(unit, feedback, progress);
 
     if (progress >= 1.0F) {
-      feedback->is_reacting = false;
-      feedback->reaction_time = 0.0F;
-      feedback->reaction_intensity = 0.0F;
-      feedback->knockback_x = 0.0F;
-      feedback->knockback_z = 0.0F;
-      feedback->knockback_applied = 0.0F;
+      feedback.is_reacting = false;
+      feedback.reaction_time = 0.0F;
+      feedback.reaction_intensity = 0.0F;
+      feedback.knockback_x = 0.0F;
+      feedback.knockback_z = 0.0F;
+      feedback.knockback_applied = 0.0F;
     }
   }
 }

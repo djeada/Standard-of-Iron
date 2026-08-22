@@ -49,18 +49,19 @@ auto find_nearest_depot(Engine::Core::World* world,
   Engine::Core::Entity* nearest = nullptr;
   float nearest_dist_sq = std::numeric_limits<float>::max();
 
-  for (auto* candidate : world->collect_entities_with<Engine::Core::UnitComponent>()) {
-    if (!is_live_depot(candidate, owner_id)) {
+  for (auto [candidate, unit, transform] :
+       world->entity_view<Engine::Core::UnitComponent,
+                          Engine::Core::TransformComponent>()) {
+    (void)unit;
+    if (!is_live_depot(&candidate, owner_id)) {
       continue;
     }
-    const auto* transform =
-        candidate->get_component<Engine::Core::TransformComponent>();
-    float const dx = transform->position.x - from_x;
-    float const dz = transform->position.z - from_z;
+    float const dx = transform.position.x - from_x;
+    float const dz = transform.position.z - from_z;
     float const dist_sq = (dx * dx) + (dz * dz);
     if (dist_sq < nearest_dist_sq) {
       nearest_dist_sq = dist_sq;
-      nearest = candidate;
+      nearest = &candidate;
     }
   }
 
@@ -91,15 +92,15 @@ void approach_fill(float& current, float target, float delta_time) {
 void sync_stockpile_displays(Engine::Core::World* world, float delta_time) {
   auto& resources = PlayerResourceRegistry::instance();
 
-  for (auto* entity : world->collect_entities_with<Engine::Core::UnitComponent>()) {
-    const auto* unit = entity->get_component<Engine::Core::UnitComponent>();
-    if (unit == nullptr || unit->spawn_type != Game::Units::SpawnType::Barracks) {
+  for (auto [entity_id, unit_ref] : world->view<Engine::Core::UnitComponent>()) {
+    const auto* unit = &unit_ref;
+    if (unit->spawn_type != Game::Units::SpawnType::Barracks) {
       continue;
     }
 
-    auto* stockpile = entity->get_component<Engine::Core::StockpileComponent>();
+    auto* stockpile = world->try_get<Engine::Core::StockpileComponent>(entity_id);
     if (stockpile == nullptr) {
-      stockpile = entity->add_component<Engine::Core::StockpileComponent>();
+      stockpile = world->emplace<Engine::Core::StockpileComponent>(entity_id);
       if (stockpile == nullptr) {
         continue;
       }
@@ -152,18 +153,16 @@ void ResourceDeliverySystem::update(Engine::Core::World* world, float delta_time
   sync_stockpile_displays(world, delta_time);
 
   std::vector<Engine::Core::EntityID> unloaded;
-  auto haulers = world->collect_entities_with<Engine::Core::ResourceCarryComponent>();
 
-  for (auto* hauler : haulers) {
-    if (hauler == nullptr) {
-      continue;
-    }
-
-    auto* carry = hauler->get_component<Engine::Core::ResourceCarryComponent>();
-    const auto* unit = hauler->get_component<Engine::Core::UnitComponent>();
-    const auto* transform = hauler->get_component<Engine::Core::TransformComponent>();
-    if (carry == nullptr || unit == nullptr || transform == nullptr || carry->empty()) {
-      unloaded.push_back(hauler->get_id());
+  for (auto [hauler_ref, carry_ref] :
+       world->entity_view<Engine::Core::ResourceCarryComponent>()) {
+    Engine::Core::Entity* hauler = &hauler_ref;
+    auto* carry = &carry_ref;
+    const Engine::Core::EntityID hauler_id = hauler->get_id();
+    const auto* unit = world->try_get<Engine::Core::UnitComponent>(hauler_id);
+    const auto* transform = world->try_get<Engine::Core::TransformComponent>(hauler_id);
+    if (unit == nullptr || transform == nullptr || carry->empty()) {
+      unloaded.push_back(hauler_id);
       continue;
     }
 
@@ -240,6 +239,18 @@ void ResourceDeliverySystem::update(Engine::Core::World* world, float delta_time
       entity->remove_component<Engine::Core::ResourceCarryComponent>();
     }
   }
+}
+
+auto ResourceDeliverySystem::access() const -> Engine::Core::SystemAccess {
+  using namespace Engine::Core;
+  return SystemAccess::declare(Reads<UnitComponent,
+                                     TransformComponent,
+                                     AttackTargetComponent,
+                                     PendingRemovalComponent>{},
+                               Writes<ResourceCarryComponent,
+                                      StockpileComponent,
+                                      BuilderProductionComponent,
+                                      MovementComponent>{});
 }
 
 } // namespace Game::Systems

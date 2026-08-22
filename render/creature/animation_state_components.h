@@ -17,7 +17,7 @@
 
 namespace Render::Creature {
 
-struct HumanoidAnimationStateComponent : public Engine::Core::Component {
+struct HumanoidAnimationStateComponent {
   float idle_duration{0.0F};
   float last_sample_time{0.0F};
   bool initialized{false};
@@ -43,7 +43,7 @@ struct HumanoidAnimationStateComponent : public Engine::Core::Component {
   CombatVisualPersistentState combat_visual{};
 };
 
-struct HorseAnimationStateComponent : public Engine::Core::Component {
+struct HorseAnimationStateComponent {
   Render::GL::GaitType current_gait{Render::GL::GaitType::IDLE};
   Render::GL::GaitType target_gait{Render::GL::GaitType::IDLE};
   float gait_transition_progress{1.0F};
@@ -54,14 +54,14 @@ struct HorseAnimationStateComponent : public Engine::Core::Component {
   bool locomotion_phase_valid{false};
 };
 
-struct ElephantAnimationStateComponent : public Engine::Core::Component {
+struct ElephantAnimationStateComponent {
   Render::GL::ElephantGaitState gait_state{};
   float locomotion_phase{0.0F};
   float locomotion_phase_time{0.0F};
   bool locomotion_phase_valid{false};
 };
 
-struct HorseAnatomyComponent : public Engine::Core::Component {
+struct HorseAnatomyComponent {
   Render::GL::HorseProfile profile{};
   Render::GL::MountedAttachmentFrame mount_frame{};
   std::uint32_t seed{0};
@@ -70,7 +70,7 @@ struct HorseAnatomyComponent : public Engine::Core::Component {
   bool baked{false};
 };
 
-struct ElephantAnatomyComponent : public Engine::Core::Component {
+struct ElephantAnatomyComponent {
   Render::GL::ElephantProfile profile{};
   Render::GL::HowdahAttachmentFrame howdah_frame{};
   std::uint32_t seed{0};

@@ -477,6 +477,19 @@ if(Python3_Interpreter_FOUND)
         COMMENT "Checking the full-world-scan budget"
         VERBATIM
     )
+    # Entity-object component access (`entity->get_component<T>()`) is the shape
+    # the ECS is migrating away from; the registry answers the same question
+    # from the component side. Their number may only go down. See
+    # scripts/check-entity-access.py and scripts/entity_access_budget.json.
+    add_custom_target(
+        check_entity_access
+        ALL
+        COMMAND
+            ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/scripts/check-entity-access.py
+            ${CMAKE_SOURCE_DIR}
+        COMMENT "Checking the entity-centric component access budget"
+        VERBATIM
+    )
 else()
     message(STATUS "Python3 not found; skipping the layering and module checks")
 endif()

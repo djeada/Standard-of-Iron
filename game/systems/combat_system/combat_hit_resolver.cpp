@@ -718,20 +718,21 @@ auto resolve_projectile_area_impact_hit(Engine::Core::World* world,
           ? special_attack->bonus_damage_multiplier_vs_fire_vulnerable
           : 1.0F;
 
-  for (auto* candidate : world->collect_entities_with<Engine::Core::UnitComponent>()) {
-    if (candidate == nullptr ||
-        candidate->has_component<Engine::Core::PendingRemovalComponent>()) {
+  for (auto [candidate_ref, candidate_unit_ref, candidate_transform_ref] :
+       world->entity_view<Engine::Core::UnitComponent,
+                          Engine::Core::TransformComponent>()) {
+    Engine::Core::Entity* candidate = &candidate_ref;
+    auto* candidate_unit = &candidate_unit_ref;
+    auto* candidate_transform = &candidate_transform_ref;
+    if (candidate->has_component<Engine::Core::PendingRemovalComponent>()) {
       continue;
     }
 
-    auto* candidate_unit = candidate->get_component<Engine::Core::UnitComponent>();
-    auto* candidate_transform =
-        candidate->get_component<Engine::Core::TransformComponent>();
-    if (candidate_transform == nullptr || !can_affect_with_fire(attacker_owner,
-                                                                request.friendly_fire,
-                                                                request.attacker_id,
-                                                                candidate,
-                                                                candidate_unit)) {
+    if (!can_affect_with_fire(attacker_owner,
+                              request.friendly_fire,
+                              request.attacker_id,
+                              candidate,
+                              candidate_unit)) {
       continue;
     }
 

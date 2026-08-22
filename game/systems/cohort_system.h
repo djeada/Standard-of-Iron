@@ -1,7 +1,12 @@
 #pragma once
 
+#include <cstdint>
+
 #include "../core/system.h"
-#include "../core/world.h"
+
+namespace Engine::Core {
+class SystemContext;
+} // namespace Engine::Core
 
 namespace Game::Systems {
 
@@ -13,7 +18,9 @@ struct CohortDiagnostics {
 
 class CohortSystem : public Engine::Core::System {
 public:
-  void update(Engine::Core::World* world, float delta_time) override;
+  void run(Engine::Core::SystemContext& context) override;
+
+  [[nodiscard]] auto access() const -> Engine::Core::SystemAccess override;
 
   [[nodiscard]] auto diagnostics() const -> const CohortDiagnostics& {
     return m_diagnostics;

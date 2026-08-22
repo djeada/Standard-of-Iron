@@ -8,25 +8,28 @@
 
 #include "../core/component.h"
 #include "../core/entity.h"
+#include "../core/system_context.h"
 #include "../core/world.h"
 
 namespace Game::Systems {
 
 namespace {
 
-auto is_idle_or_guarding(Engine::Core::Entity* entity) -> bool {
-  auto* movement = entity->get_component<Engine::Core::MovementComponent>();
+auto is_idle_or_guarding(Engine::Core::SystemContext& context,
+                         Engine::Core::EntityID entity_id) -> bool {
+  const auto* movement = context.try_get<Engine::Core::MovementComponent>(entity_id);
   if (movement != nullptr && movement->get_has_target()) {
     return false;
   }
-  auto* atk = entity->get_component<Engine::Core::AttackComponent>();
+  const auto* atk = context.try_get<Engine::Core::AttackComponent>(entity_id);
   return atk == nullptr || !atk->in_melee_lock;
 }
 
 } // namespace
 
-void CohortSystem::update(Engine::Core::World* world, float delta_time) {
-  if (world == nullptr || delta_time <= 0.0F) {
+void CohortSystem::run(Engine::Core::SystemContext& context) {
+  const float delta_time = context.delta_time();
+  if (delta_time <= 0.0F) {
     return;
   }
 
@@ -38,48 +41,38 @@ void CohortSystem::update(Engine::Core::World* world, float delta_time) {
     m_reform_timer = k_reform_interval;
   }
 
-  auto entities = world->collect_entities_with<Engine::Core::UnitComponent>();
-
   if (should_reform) {
 
-    for (auto* entity : entities) {
-      auto* membership =
-          entity->get_component<Engine::Core::CohortMembershipComponent>();
-      if (membership != nullptr) {
-        membership->cohort_id = 0;
-        membership->cohort_activated = false;
-      }
+    for (auto [entity_id, membership] :
+         context.view<Engine::Core::CohortMembershipComponent>()) {
+      (void)entity_id;
+      membership.cohort_id = 0;
+      membership.cohort_activated = false;
     }
 
     struct UnitInfo {
-      Engine::Core::Entity* entity;
+      Engine::Core::EntityID entity_id;
       float x;
       float z;
       int owner_id;
     };
     std::vector<UnitInfo> candidates;
-    for (auto* entity : entities) {
-      auto* unit = entity->get_component<Engine::Core::UnitComponent>();
-      if (unit == nullptr || unit->health <= 0) {
+    for (auto [entity_id, unit, transform] :
+         context
+             .view<Engine::Core::UnitComponent, Engine::Core::TransformComponent>()) {
+      if (unit.health <= 0) {
         continue;
       }
-      if (entity->has_component<Engine::Core::BuildingComponent>()) {
+      if (context.has<Engine::Core::BuildingComponent>(entity_id) ||
+          context.has<Engine::Core::PendingRemovalComponent>(entity_id)) {
         continue;
       }
-      if (entity->has_component<Engine::Core::PendingRemovalComponent>()) {
-        continue;
-      }
-      if (!is_idle_or_guarding(entity)) {
-        continue;
-      }
-
-      auto* transform = entity->get_component<Engine::Core::TransformComponent>();
-      if (transform == nullptr) {
+      if (!is_idle_or_guarding(context, entity_id)) {
         continue;
       }
 
       candidates.push_back(
-          {entity, transform->position.x, transform->position.z, unit->owner_id});
+          {entity_id, transform.position.x, transform.position.z, unit.owner_id});
     }
 
     std::unordered_set<std::size_t> assigned;
@@ -111,14 +104,8 @@ void CohortSystem::update(Engine::Core::World* world, float delta_time) {
       }
 
       for (std::size_t const idx : members) {
-        auto* membership =
-            candidates[idx]
-                .entity->get_component<Engine::Core::CohortMembershipComponent>();
-        if (membership == nullptr) {
-          membership =
-              candidates[idx]
-                  .entity->add_component<Engine::Core::CohortMembershipComponent>();
-        }
+        auto* membership = context.emplace<Engine::Core::CohortMembershipComponent>(
+            candidates[idx].entity_id);
         if (membership != nullptr) {
           membership->cohort_id = cohort_id;
           membership->cohort_activated = false;
@@ -131,28 +118,40 @@ void CohortSystem::update(Engine::Core::World* world, float delta_time) {
   }
 
   std::unordered_set<std::uint32_t> activated_cohorts;
-  for (auto* entity : entities) {
-    auto* membership = entity->get_component<Engine::Core::CohortMembershipComponent>();
-    if (membership == nullptr || membership->cohort_id == 0) {
+  for (auto [entity_id, membership] :
+       context.view<Engine::Core::CohortMembershipComponent>()) {
+    if (membership.cohort_id == 0) {
       continue;
     }
-    if (entity->has_component<Engine::Core::AttackTargetComponent>()) {
-      activated_cohorts.insert(membership->cohort_id);
+    if (context.has<Engine::Core::AttackTargetComponent>(entity_id)) {
+      activated_cohorts.insert(membership.cohort_id);
     }
   }
 
-  for (auto* entity : entities) {
-    auto* membership = entity->get_component<Engine::Core::CohortMembershipComponent>();
-    if (membership == nullptr || membership->cohort_id == 0) {
+  for (auto [entity_id, membership] :
+       context.view<Engine::Core::CohortMembershipComponent>()) {
+    (void)entity_id;
+    if (membership.cohort_id == 0 ||
+        !activated_cohorts.contains(membership.cohort_id)) {
       continue;
     }
-    if (activated_cohorts.contains(membership->cohort_id)) {
-      if (!membership->cohort_activated) {
-        membership->cohort_activated = true;
-        ++m_diagnostics.cohorts_activated;
-      }
+    if (!membership.cohort_activated) {
+      membership.cohort_activated = true;
+      ++m_diagnostics.cohorts_activated;
     }
   }
+}
+
+auto CohortSystem::access() const -> Engine::Core::SystemAccess {
+  using namespace Engine::Core;
+  return SystemAccess::declare(Reads<UnitComponent,
+                                     TransformComponent,
+                                     MovementComponent,
+                                     AttackComponent,
+                                     AttackTargetComponent,
+                                     BuildingComponent,
+                                     PendingRemovalComponent>{},
+                               Writes<CohortMembershipComponent>{});
 }
 
 } // namespace Game::Systems

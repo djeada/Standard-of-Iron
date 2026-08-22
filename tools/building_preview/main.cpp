@@ -195,7 +195,8 @@ auto render_building(EntityRendererRegistry& registry,
     return img;
   }
 
-  Engine::Core::Entity entity(1);
+  Engine::Core::StandaloneEntity entity_scratch(1);
+  Engine::Core::Entity& entity = entity_scratch.entity();
   entity.add_component<Engine::Core::RenderableComponent>();
   entity.add_component<Engine::Core::TransformComponent>();
   auto* unit = entity.add_component<Engine::Core::UnitComponent>();

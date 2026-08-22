@@ -34,6 +34,8 @@ class ArrowSystem : public Engine::Core::System {
 public:
   ArrowSystem();
   void update(Engine::Core::World* world, float delta_time) override;
+
+  [[nodiscard]] auto access() const -> Engine::Core::SystemAccess override;
   void spawn_arrow(const QVector3D& start,
                    const QVector3D& end,
                    const QVector3D& color,

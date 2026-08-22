@@ -1,11 +1,10 @@
 #pragma once
 
 #include "../core/system.h"
-#include "../core/world.h"
 
 namespace Engine::Core {
-class World;
-}
+class SystemContext;
+} // namespace Engine::Core
 
 namespace Game::Systems {
 
@@ -14,7 +13,9 @@ public:
   GuardSystem() = default;
   ~GuardSystem() override = default;
 
-  void update(Engine::Core::World* world, float delta_time) override;
+  void run(Engine::Core::SystemContext& context) override;
+
+  [[nodiscard]] auto access() const -> Engine::Core::SystemAccess override;
 };
 
 } // namespace Game::Systems

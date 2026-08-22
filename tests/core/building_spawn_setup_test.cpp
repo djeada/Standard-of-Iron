@@ -7,7 +7,8 @@
 namespace {
 
 TEST(BuildingSpawnSetup, AssignsCanonicalRendererKey) {
-  Engine::Core::Entity entity(1);
+  Engine::Core::StandaloneEntity scratch(1);
+  Engine::Core::Entity& entity = scratch.entity();
 
   auto* renderable = Game::Units::add_building_renderable(
       entity, Game::Systems::NationID::Carthage, "barracks");
@@ -18,7 +19,8 @@ TEST(BuildingSpawnSetup, AssignsCanonicalRendererKey) {
 }
 
 TEST(BuildingSpawnSetup, EnsuresBuildingComponentTracksOriginalNation) {
-  Engine::Core::Entity entity(2);
+  Engine::Core::StandaloneEntity scratch(2);
+  Engine::Core::Entity& entity = scratch.entity();
 
   auto* renderable = Game::Units::add_building_renderable(
       entity, Game::Systems::NationID::RomanRepublic, "home");

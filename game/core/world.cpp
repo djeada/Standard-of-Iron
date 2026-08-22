@@ -853,46 +853,23 @@ void publish_creature_presentation(Entity* entity, World* world) {
   publish_creature_presentation_entity(entity, world);
 }
 
-void World::ComponentSet::insert(EntityID id) {
-  const std::uint32_t index = Handle::index_of(id);
-  if (sparse.size() <= index) {
-    sparse.resize(static_cast<std::size_t>(index) + 1, k_absent);
+auto World::HandleTable::bind(EntityID entity_id, Registry* registry) -> Entity* {
+  const std::uint32_t index = Handle::index_of(entity_id);
+  const std::size_t page_index = index / k_page_size;
+  while (m_pages.size() <= page_index) {
+    m_pages.push_back(std::make_unique<Page>());
   }
-  if (sparse[index] != k_absent) {
-
-    dense[sparse[index]] = id;
-    return;
-  }
-  sparse[index] = static_cast<std::uint32_t>(dense.size());
-  dense.push_back(id);
+  Entity& handle = (*m_pages[page_index])[index % k_page_size];
+  handle = Entity(entity_id, registry);
+  return &handle;
 }
 
-void World::ComponentSet::erase(EntityID id) {
-  const std::uint32_t index = Handle::index_of(id);
-  if (index >= sparse.size()) {
-    return;
+auto World::HandleTable::find(std::uint32_t index) const -> Entity* {
+  const std::size_t page_index = index / k_page_size;
+  if (page_index >= m_pages.size()) {
+    return nullptr;
   }
-  const std::uint32_t position = sparse[index];
-  if (position == k_absent) {
-    return;
-  }
-
-  const EntityID moved = dense.back();
-  dense[position] = moved;
-  sparse[Handle::index_of(moved)] = position;
-  dense.pop_back();
-  sparse[index] = k_absent;
-}
-
-auto World::ComponentSet::contains(EntityID id) const -> bool {
-  const std::uint32_t index = Handle::index_of(id);
-  return index < sparse.size() && sparse[index] != k_absent &&
-         dense[sparse[index]] == id;
-}
-
-void World::ComponentSet::clear() {
-  dense.clear();
-  sparse.clear();
+  return &(*m_pages[page_index])[index % k_page_size];
 }
 
 World::World()
@@ -902,7 +879,12 @@ World::World()
 World::World(bool presentation_enabled, bool render_snapshot)
     : m_presentation_enabled(presentation_enabled)
     , m_is_render_snapshot(render_snapshot) {
-  m_slots.emplace_back();
+  m_registry.set_component_change_callback([this](EntityID entity_id,
+                                                  ComponentTypeId type_id,
+                                                  std::type_index component_type,
+                                                  bool added) {
+    this->on_component_changed(entity_id, type_id, component_type, added);
+  });
   if (!m_is_render_snapshot) {
     std::atomic_store_explicit(&m_render_snapshot,
                                std::shared_ptr<World>(new World(false, true)),
@@ -913,37 +895,23 @@ World::World(bool presentation_enabled, bool render_snapshot)
 World::~World() = default;
 
 auto World::resolve(EntityID entity_id) const -> Entity* {
-  const std::uint32_t index = Handle::index_of(entity_id);
-  if (index == 0 || index >= m_slots.size()) {
+  if (!m_registry.is_alive(entity_id)) {
     return nullptr;
   }
-  const auto& slot = m_slots[index];
-  if (slot.entity == nullptr || slot.generation != Handle::generation_of(entity_id)) {
+  Entity* handle = m_handles.find(Handle::index_of(entity_id));
+  if (handle == nullptr || handle->get_id() != entity_id) {
     return nullptr;
   }
-  return slot.entity.get();
-}
-
-void World::detach_from_all_component_sets(EntityID entity_id) {
-  for (auto& set : m_component_sets) {
-    set.erase(entity_id);
-  }
+  return handle;
 }
 
 void World::on_component_changed(EntityID entity_id,
                                  ComponentTypeId type_id,
                                  std::type_index component_type,
                                  bool added) {
-
-  const EntityLock lock(*this);
-
-  if (m_component_sets.size() <= type_id) {
-    m_component_sets.resize(static_cast<std::size_t>(type_id) + 1);
-  }
-  if (added) {
-    m_component_sets[type_id].insert(entity_id);
-  } else {
-    m_component_sets[type_id].erase(entity_id);
+  (void)type_id;
+  if (m_component_observers.empty()) {
+    return;
   }
 
   const auto observers = m_component_observers;
@@ -952,26 +920,17 @@ void World::on_component_changed(EntityID entity_id,
   }
 }
 
-void World::setup_entity_callback(Entity* entity) {
-  entity->set_component_change_callback([this](EntityID entity_id,
-                                               ComponentTypeId type_id,
-                                               std::type_index component_type,
-                                               bool added) {
-    this->on_component_changed(entity_id, type_id, component_type, added);
-  });
-}
-
 auto World::collect_entities_with_type(ComponentTypeId type_id,
                                        const std::source_location& where)
     -> std::vector<Entity*> {
   const EntityLock lock(*this);
   ++m_query_counters.collects;
-  if (type_id >= m_component_sets.size()) {
+  const std::span<const EntityID> dense = m_registry.entities_with(type_id);
+  if (dense.empty()) {
     m_system_profiler.note_collect_call_site(where.file_name(), where.line(), 0);
     return {};
   }
 
-  const auto& dense = m_component_sets[type_id].dense;
   std::vector<Entity*> result;
   result.reserve(dense.size());
   for (const EntityID id : dense) {
@@ -987,10 +946,7 @@ auto World::collect_entities_with_type(ComponentTypeId type_id,
 
 auto World::entities_with(ComponentTypeId type_id) const -> std::span<const EntityID> {
   const EntityLock lock(*this);
-  if (type_id >= m_component_sets.size()) {
-    return {};
-  }
-  return m_component_sets[type_id].dense;
+  return m_registry.entities_with(type_id);
 }
 
 void World::resolve_entities_into(std::span<const EntityID> ids,
@@ -1009,79 +965,27 @@ void World::resolve_entities_into(std::span<const EntityID> ids,
 
 auto World::create_entity() -> Entity* {
   const EntityLock lock(*this);
-
-  std::uint32_t index = 0;
-  if (!m_free_slots.empty()) {
-    index = m_free_slots.back();
-    m_free_slots.pop_back();
-  } else {
-    index = static_cast<std::uint32_t>(m_slots.size());
-    m_slots.emplace_back();
-  }
-
-  auto& slot = m_slots[index];
-  const EntityID id = Handle::make(index, slot.generation);
-  slot.entity = std::make_unique<Entity>(id);
-  setup_entity_callback(slot.entity.get());
-  ++m_live_count;
-  return slot.entity.get();
+  const EntityID id = m_registry.create_entity();
+  return m_handles.bind(id, &m_registry);
 }
 
 auto World::create_entity_with_id(EntityID entity_id) -> Entity* {
   const EntityLock lock(*this);
-  if (entity_id == NULL_ENTITY) {
+  const EntityID id = m_registry.create_entity_with_id(entity_id);
+  if (id == NULL_ENTITY) {
     return nullptr;
   }
-
-  const std::uint32_t index = Handle::index_of(entity_id);
-  if (index == 0) {
-    return nullptr;
-  }
-
-  if (m_slots.size() <= index) {
-    const auto previous_size = m_slots.size();
-    m_slots.resize(static_cast<std::size_t>(index) + 1);
-
-    for (std::size_t i = previous_size; i < index; ++i) {
-      m_free_slots.push_back(static_cast<std::uint32_t>(i));
-    }
-  } else {
-    std::erase(m_free_slots, index);
-  }
-
-  auto& slot = m_slots[index];
-  if (slot.entity != nullptr) {
-    detach_from_all_component_sets(slot.entity->get_id());
-    slot.entity.reset();
-    --m_live_count;
-  }
-
-  slot.generation = Handle::generation_of(entity_id);
-  slot.entity = std::make_unique<Entity>(entity_id);
-  setup_entity_callback(slot.entity.get());
-  ++m_live_count;
-  return slot.entity.get();
+  return m_handles.bind(id, &m_registry);
 }
 
 void World::destroy_entity(EntityID entity_id) {
   const EntityLock lock(*this);
 
-  const std::uint32_t index = Handle::index_of(entity_id);
-  if (index != 0 && index < m_slots.size()) {
-    auto& slot = m_slots[index];
-    if (slot.entity != nullptr && slot.generation == Handle::generation_of(entity_id)) {
-
-      if (!m_is_render_snapshot && g_entity_destroyed_hook != nullptr) {
-        g_entity_destroyed_hook(entity_id);
-      }
-
-      detach_from_all_component_sets(entity_id);
-      slot.entity.reset();
-
-      ++slot.generation;
-      m_free_slots.push_back(index);
-      --m_live_count;
+  if (m_registry.is_alive(entity_id)) {
+    if (!m_is_render_snapshot && g_entity_destroyed_hook != nullptr) {
+      g_entity_destroyed_hook(entity_id);
     }
+    m_registry.destroy_entity(entity_id);
   }
 
   const auto observers = m_entity_destroyed_observers;
@@ -1093,23 +997,9 @@ void World::destroy_entity(EntityID entity_id) {
 void World::clear() {
   const EntityLock lock(*this);
 
-  for (std::size_t i = 1; i < m_slots.size(); ++i) {
-    if (m_slots[i].entity != nullptr) {
-      m_slots[i].entity.reset();
-      ++m_slots[i].generation;
-    }
-  }
-  m_free_slots.clear();
-  for (std::size_t i = m_slots.size(); i-- > 1;) {
-    m_free_slots.push_back(static_cast<std::uint32_t>(i));
-  }
-  m_live_count = 0;
+  m_registry.clear();
   m_deferred.clear();
   m_spatial_index.clear();
-
-  for (auto& set : m_component_sets) {
-    set.clear();
-  }
 
   const auto observers = m_world_cleared_observers;
   for (const auto& observer : observers) {
@@ -1124,12 +1014,12 @@ auto World::get_entity(EntityID entity_id) -> Entity* {
 
 auto World::is_alive(EntityID entity_id) const -> bool {
   const EntityLock lock(*this);
-  return resolve(entity_id) != nullptr;
+  return m_registry.is_alive(entity_id);
 }
 
 auto World::entity_count() const -> std::size_t {
   const EntityLock lock(*this);
-  return m_live_count;
+  return m_registry.entity_count();
 }
 
 void World::add_system(std::unique_ptr<System> system) {
@@ -1214,7 +1104,7 @@ void World::update(float delta_time) {
   const bool profiling = m_system_profiler.enabled();
   const auto tick_started = std::chrono::steady_clock::now();
   if (profiling) {
-    m_system_profiler.begin_tick(m_tick_id, m_live_count);
+    m_system_profiler.begin_tick(m_tick_id, m_registry.entity_count());
   }
 
   SystemPhase current_phase =
@@ -1295,28 +1185,29 @@ void World::publish_render_snapshot() {
   snapshot->m_render_unit_ids.clear();
   snapshot->m_render_building_ids.clear();
   snapshot->m_render_other_ids.clear();
-  if (snapshot->m_render_entity_signatures.size() < m_slots.size()) {
-    snapshot->m_render_entity_signatures.resize(m_slots.size(), 0U);
+  std::size_t const slot_count = m_registry.slot_count();
+  if (snapshot->m_render_entity_signatures.size() < slot_count) {
+    snapshot->m_render_entity_signatures.resize(slot_count, 0U);
   }
   ++m_render_publish_revision;
   snapshot->m_render_unit_ids.reserve(entities_with<UnitComponent>().size());
   snapshot->m_render_building_ids.reserve(entities_with<BuildingComponent>().size());
   snapshot->m_render_other_ids.reserve(entities_with<RenderableComponent>().size());
 
-  for (std::size_t index = 1; index < m_slots.size(); ++index) {
-    auto const& slot = m_slots[index];
-    auto& snapshot_slot = index < snapshot->m_slots.size()
-                              ? snapshot->m_slots[index]
-                              : snapshot->m_slots.emplace_back();
-    if (slot.entity == nullptr) {
-      if (snapshot_slot.entity != nullptr) {
-        snapshot->destroy_entity(snapshot_slot.entity->get_id());
+  for (std::size_t index = 1; index < slot_count; ++index) {
+    EntityID const source_id =
+        m_registry.entity_at_index(static_cast<std::uint32_t>(index));
+    EntityID const snapshot_id =
+        snapshot->m_registry.entity_at_index(static_cast<std::uint32_t>(index));
+    if (source_id == NULL_ENTITY) {
+      if (snapshot_id != NULL_ENTITY) {
+        snapshot->destroy_entity(snapshot_id);
       }
       snapshot->m_render_entity_signatures[index] = 0U;
       continue;
     }
-    Entity const& source = *slot.entity;
-    Entity* destination = snapshot->resolve(source.get_id());
+    Entity const& source = *resolve(source_id);
+    Entity* destination = snapshot->resolve(source_id);
 
     bool const stable = render_entity_is_stable(source);
     std::uint64_t signature = k_render_signature_unstable;
@@ -1331,10 +1222,10 @@ void World::publish_render_snapshot() {
 
     if (!reusable) {
       if (destination == nullptr) {
-        if (snapshot_slot.entity != nullptr) {
-          snapshot->destroy_entity(snapshot_slot.entity->get_id());
+        if (snapshot_id != NULL_ENTITY) {
+          snapshot->destroy_entity(snapshot_id);
         }
-        destination = snapshot->create_entity_with_id(source.get_id());
+        destination = snapshot->create_entity_with_id(source_id);
         if (destination == nullptr) {
           continue;
         }
@@ -1348,61 +1239,51 @@ void World::publish_render_snapshot() {
       continue;
     }
     if (destination->has_component<UnitComponent>()) {
-      snapshot->m_render_unit_ids.push_back(source.get_id());
+      snapshot->m_render_unit_ids.push_back(source_id);
     } else if (destination->has_component<BuildingComponent>()) {
-      snapshot->m_render_building_ids.push_back(source.get_id());
+      snapshot->m_render_building_ids.push_back(source_id);
     } else {
-      snapshot->m_render_other_ids.push_back(source.get_id());
+      snapshot->m_render_other_ids.push_back(source_id);
     }
   }
   std::atomic_store_explicit(
       &m_render_snapshot, std::move(snapshot), std::memory_order_release);
 }
 
-namespace {
-
-template <typename Predicate>
-auto collect_units(const World& world, Predicate&& predicate) -> std::vector<Entity*> {
+auto World::collect_units_matching(int owner_id,
+                                   bool owned) const -> std::vector<Entity*> {
+  const EntityLock lock(*this);
+  const auto unit_ids = m_registry.entities_with<UnitComponent>();
   std::vector<Entity*> result;
-  result.reserve(world.entity_count());
-  world.for_each_entity([&](Entity& entity) {
-    auto* unit = entity.get_component<UnitComponent>();
-    if (unit != nullptr && predicate(*unit)) {
-      result.push_back(&entity);
+  result.reserve(unit_ids.size());
+  for (const EntityID id : unit_ids) {
+    const auto* unit = m_registry.try_get<UnitComponent>(id);
+    if (unit == nullptr || (unit->owner_id == owner_id) != owned) {
+      continue;
     }
-  });
+    if (Entity* entity = resolve(id)) {
+      result.push_back(entity);
+    }
+  }
   return result;
 }
 
-} // namespace
-
 auto World::get_units_owned_by(int owner_id) const -> std::vector<Entity*> {
-  return collect_units(*this, [owner_id](const UnitComponent& unit) {
-    return unit.owner_id == owner_id;
-  });
+  return collect_units_matching(owner_id, true);
 }
 
 auto World::get_units_not_owned_by(int owner_id) const -> std::vector<Entity*> {
-  return collect_units(*this, [owner_id](const UnitComponent& unit) {
-    return unit.owner_id != owner_id;
-  });
+  return collect_units_matching(owner_id, false);
 }
 
 auto World::get_next_entity_id() const -> EntityID {
   const EntityLock lock(*this);
-  return Handle::make(static_cast<std::uint32_t>(m_slots.size()), 0);
+  return Handle::make(static_cast<std::uint32_t>(m_registry.slot_count()), 0);
 }
 
 void World::set_next_entity_id(EntityID next_id) {
   const EntityLock lock(*this);
-  const std::uint32_t index = Handle::index_of(next_id);
-  if (m_slots.size() < index) {
-    const auto previous_size = m_slots.size();
-    m_slots.resize(index);
-    for (std::size_t i = previous_size; i < index; ++i) {
-      m_free_slots.push_back(static_cast<std::uint32_t>(i));
-    }
-  }
+  m_registry.reserve_indices_below(Handle::index_of(next_id));
 }
 
 auto World::add_component_observer(ComponentObserverCallback callback)

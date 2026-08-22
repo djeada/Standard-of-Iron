@@ -393,7 +393,8 @@ TEST(TemplatePrewarmRegression, PreparedAnimationStateHonorsOverride) {
 }
 
 TEST(TemplatePrewarmRegression, ElephantPreparedAnimationPromotesMeleeLock) {
-  Engine::Core::Entity entity(1);
+  Engine::Core::StandaloneEntity entity_scratch(1);
+  Engine::Core::Entity& entity = entity_scratch.entity();
   auto* attack = entity.add_component<Engine::Core::AttackComponent>();
   ASSERT_NE(attack, nullptr);
   attack->in_melee_lock = true;
@@ -410,7 +411,8 @@ TEST(TemplatePrewarmRegression, ElephantPreparedAnimationPromotesMeleeLock) {
 }
 
 TEST(TemplatePrewarmRegression, HumanoidAnimationPromotesIdleMeleeLock) {
-  Engine::Core::Entity entity(1);
+  Engine::Core::StandaloneEntity entity_scratch(1);
+  Engine::Core::Entity& entity = entity_scratch.entity();
   auto* unit = entity.add_component<Engine::Core::UnitComponent>();
   ASSERT_NE(unit, nullptr);
   unit->spawn_type = Game::Units::SpawnType::Spearman;
@@ -707,7 +709,8 @@ TEST(TemplatePrewarmRegression, WorldPrewarmSupplementsMissingBuilderProfiles) {
   const auto builder_renderer = registry.get("troops/roman/builder");
   ASSERT_TRUE(static_cast<bool>(builder_renderer));
 
-  Engine::Core::Entity builder(9001);
+  Engine::Core::StandaloneEntity builder_scratch(9001);
+  Engine::Core::Entity& builder = builder_scratch.entity();
   add_test_unit(
       builder, SpawnType::Builder, NationID::RomanRepublic, 1, "troops/roman/builder");
 
@@ -770,7 +773,8 @@ TEST(TemplatePrewarmRegression, WorldPrewarmsRomanCivilianTemplates) {
   const auto civilian_renderer = registry.get("troops/roman/civilian");
   ASSERT_TRUE(static_cast<bool>(civilian_renderer));
 
-  Engine::Core::Entity civilian_entity(9002);
+  Engine::Core::StandaloneEntity civilian_entity_scratch(9002);
+  Engine::Core::Entity& civilian_entity = civilian_entity_scratch.entity();
   add_test_unit(civilian_entity,
                 SpawnType::Civilian,
                 NationID::RomanRepublic,
@@ -839,7 +843,8 @@ TEST(TemplatePrewarmRegression, WorldPrewarmsCarthageCivilianTemplates) {
   const auto civilian_renderer = registry.get("troops/carthage/civilian");
   ASSERT_TRUE(static_cast<bool>(civilian_renderer));
 
-  Engine::Core::Entity civilian_entity(9003);
+  Engine::Core::StandaloneEntity civilian_entity_scratch(9003);
+  Engine::Core::Entity& civilian_entity = civilian_entity_scratch.entity();
   add_test_unit(civilian_entity,
                 SpawnType::Civilian,
                 NationID::Carthage,
@@ -909,7 +914,8 @@ TEST(TemplatePrewarmRegression, WorldPrewarmsCommanderTemplates) {
       registry.get("troops/carthage/commanders/hannibal_barca");
   ASSERT_TRUE(static_cast<bool>(commander_renderer));
 
-  Engine::Core::Entity runtime_entity(9004);
+  Engine::Core::StandaloneEntity runtime_entity_scratch(9004);
+  Engine::Core::Entity& runtime_entity = runtime_entity_scratch.entity();
   add_test_unit(runtime_entity,
                 SpawnType::CarthageSwordCommander,
                 NationID::Carthage,
@@ -978,7 +984,8 @@ TEST(TemplatePrewarmRegression, WorldPrewarmsRomanSwordsmanGuardTemplates) {
   const auto swordsman_renderer = registry.get("troops/roman/swordsman");
   ASSERT_TRUE(static_cast<bool>(swordsman_renderer));
 
-  Engine::Core::Entity runtime_entity(9005);
+  Engine::Core::StandaloneEntity runtime_entity_scratch(9005);
+  Engine::Core::Entity& runtime_entity = runtime_entity_scratch.entity();
   add_test_unit(runtime_entity,
                 SpawnType::Knight,
                 NationID::RomanRepublic,
@@ -1054,7 +1061,8 @@ TEST(TemplatePrewarmRegression, WorldPrewarmsCarthageSpearmanFacialHairVariants)
   const auto spearman_renderer = registry.get("troops/carthage/spearman");
   ASSERT_TRUE(static_cast<bool>(spearman_renderer));
 
-  Engine::Core::Entity runtime_entity(9003);
+  Engine::Core::StandaloneEntity runtime_entity_scratch(9003);
+  Engine::Core::Entity& runtime_entity = runtime_entity_scratch.entity();
   add_test_unit(runtime_entity,
                 SpawnType::Spearman,
                 NationID::Carthage,
@@ -1119,13 +1127,15 @@ TEST(TemplatePrewarmRegression,
   const auto spearman_renderer = registry.get("troops/carthage/spearman");
   ASSERT_TRUE(static_cast<bool>(spearman_renderer));
 
-  Engine::Core::Entity clean_entity(9101);
+  Engine::Core::StandaloneEntity clean_entity_scratch(9101);
+  Engine::Core::Entity& clean_entity = clean_entity_scratch.entity();
   add_test_unit(clean_entity,
                 SpawnType::Spearman,
                 NationID::Carthage,
                 1,
                 "troops/carthage/spearman");
-  Engine::Core::Entity bearded_entity(9102);
+  Engine::Core::StandaloneEntity bearded_entity_scratch(9102);
+  Engine::Core::Entity& bearded_entity = bearded_entity_scratch.entity();
   add_test_unit(bearded_entity,
                 SpawnType::Spearman,
                 NationID::Carthage,

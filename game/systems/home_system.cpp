@@ -33,20 +33,14 @@ void HomeSystem::update(Engine::Core::World* world, float delta_time) {
     return;
   }
 
-  auto home_entities = world->collect_entities_with<Engine::Core::HomeComponent>();
-  auto barracks_entities =
-      world->collect_entities_with<Engine::Core::ProductionComponent>();
-
-  for (auto* home_entity : home_entities) {
-    auto* home_comp = home_entity->get_component<Engine::Core::HomeComponent>();
-    auto* home_transform =
-        home_entity->get_component<Engine::Core::TransformComponent>();
-    auto* home_unit = home_entity->get_component<Engine::Core::UnitComponent>();
-    auto* home_prod = home_entity->get_component<Engine::Core::ProductionComponent>();
-
-    if (home_comp == nullptr || home_transform == nullptr || home_unit == nullptr) {
-      continue;
-    }
+  for (auto [home_id, home_comp_ref, home_transform_ref, home_unit_ref] :
+       world->view<Engine::Core::HomeComponent,
+                   Engine::Core::TransformComponent,
+                   Engine::Core::UnitComponent>()) {
+    auto* home_comp = &home_comp_ref;
+    const auto* home_transform = &home_transform_ref;
+    const auto* home_unit = &home_unit_ref;
+    auto* home_prod = world->try_get<Engine::Core::ProductionComponent>(home_id);
 
     home_comp->update_cooldown -= delta_time;
     home_comp->family_generation_cooldown -= delta_time;
@@ -59,31 +53,26 @@ void HomeSystem::update(Engine::Core::World* world, float delta_time) {
     float min_distance = std::numeric_limits<float>::max();
     Engine::Core::EntityID nearest_barracks = 0;
 
-    for (auto* barracks_entity : barracks_entities) {
-      auto* barracks_transform =
-          barracks_entity->get_component<Engine::Core::TransformComponent>();
-      auto* barracks_unit =
-          barracks_entity->get_component<Engine::Core::UnitComponent>();
-
-      if (barracks_transform == nullptr || barracks_unit == nullptr) {
+    for (auto [barracks_id, production, barracks_transform, barracks_unit] :
+         world->view<Engine::Core::ProductionComponent,
+                     Engine::Core::TransformComponent,
+                     Engine::Core::UnitComponent>()) {
+      (void)production;
+      if (barracks_unit.spawn_type != Game::Units::SpawnType::Barracks) {
         continue;
       }
 
-      if (barracks_unit->spawn_type != Game::Units::SpawnType::Barracks) {
+      if (barracks_unit.owner_id != home_unit->owner_id) {
         continue;
       }
 
-      if (barracks_unit->owner_id != home_unit->owner_id) {
-        continue;
-      }
-
-      float dx = barracks_transform->position.x - home_transform->position.x;
-      float dz = barracks_transform->position.z - home_transform->position.z;
+      float dx = barracks_transform.position.x - home_transform->position.x;
+      float dz = barracks_transform.position.z - home_transform->position.z;
       float distance = std::sqrt(dx * dx + dz * dz);
 
       if (distance < min_distance && distance <= k_max_search_radius) {
         min_distance = distance;
-        nearest_barracks = barracks_entity->get_id();
+        nearest_barracks = barracks_id;
       }
     }
 
@@ -98,6 +87,12 @@ void HomeSystem::update(Engine::Core::World* world, float delta_time) {
       home_comp->family_generation_cooldown = home_comp->family_generation_interval;
     }
   }
+}
+
+auto HomeSystem::access() const -> Engine::Core::SystemAccess {
+  using namespace Engine::Core;
+  return SystemAccess::declare(Reads<TransformComponent, UnitComponent>{},
+                               Writes<HomeComponent, ProductionComponent>{});
 }
 
 } // namespace Game::Systems

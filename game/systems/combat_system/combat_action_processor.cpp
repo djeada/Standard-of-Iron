@@ -134,22 +134,21 @@ void apply_commander_signature_effects(
   int const sweep_damage = std::max(1, damage / 2);
   int remaining = commander.signature_max_targets - 1;
 
-  for (auto* candidate : world.collect_entities_with<Engine::Core::UnitComponent>()) {
+  for (auto [candidate_ref, candidate_unit_ref, candidate_transform_ref] :
+       world.entity_view<Engine::Core::UnitComponent,
+                         Engine::Core::TransformComponent>()) {
     if (remaining <= 0) {
       break;
     }
-    if (candidate == nullptr || candidate == &attacker ||
-        candidate == &primary_target ||
+    Engine::Core::Entity* candidate = &candidate_ref;
+    auto const* candidate_unit = &candidate_unit_ref;
+    auto const* candidate_transform = &candidate_transform_ref;
+    if (candidate == &attacker || candidate == &primary_target ||
         candidate->has_component<Engine::Core::PendingRemovalComponent>() ||
         candidate->has_component<Engine::Core::BuildingComponent>()) {
       continue;
     }
-    auto const* candidate_unit =
-        candidate->get_component<Engine::Core::UnitComponent>();
-    auto const* candidate_transform =
-        candidate->get_component<Engine::Core::TransformComponent>();
-    if (candidate_unit == nullptr || candidate_transform == nullptr ||
-        candidate_unit->health <= 0 ||
+    if (candidate_unit->health <= 0 ||
         candidate_unit->owner_id == attacker_unit->owner_id) {
       continue;
     }

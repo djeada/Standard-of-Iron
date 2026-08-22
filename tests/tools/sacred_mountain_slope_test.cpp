@@ -1,4 +1,5 @@
 #include <cmath>
+#include <cstdio>
 #include <gtest/gtest.h>
 
 #include "game/units/spawn_type.h"

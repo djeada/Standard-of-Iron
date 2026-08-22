@@ -1,5 +1,6 @@
 #include "formation_move_dispatch_system.h"
 
+#include "../core/component.h"
 #include "../formation/army_formation_registry.h"
 #include "command_service.h"
 
@@ -23,6 +24,13 @@ void FormationMoveDispatchSystem::update(Engine::Core::World* world, float) {
       CommandService::move_unit(*world, slot.occupant, slot.world_position);
     }
   }
+}
+
+auto FormationMoveDispatchSystem::access() const -> Engine::Core::SystemAccess {
+  using namespace Engine::Core;
+  return SystemAccess::declare(
+      Reads<UnitComponent, BuildingComponent, PendingRemovalComponent>{},
+      Writes<MovementComponent, TransformComponent, AttackComponent>{});
 }
 
 } // namespace Game::Systems

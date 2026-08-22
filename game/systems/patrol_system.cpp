@@ -5,6 +5,7 @@
 #include <cmath>
 
 #include "../core/component.h"
+#include "../core/system_context.h"
 #include "../core/world.h"
 #include "../core/world_spatial_index.h"
 #include "command_service.h"
@@ -17,19 +18,15 @@ constexpr float k_patrol_engagement_radius = 5.0F;
 
 } // namespace
 
-void PatrolSystem::update(Engine::Core::World* world, float) {
-  if (world == nullptr) {
-    return;
-  }
-
-  auto& index = world->spatial_index();
-  index.refresh(*world);
+void PatrolSystem::run(Engine::Core::SystemContext& context) {
+  auto& index = context.spatial_index();
+  index.refresh(context.world());
 
   for (auto [entity, patrol_ref, movement_ref, transform_ref, unit_ref] :
-       world->entity_view<Engine::Core::PatrolComponent,
-                          Engine::Core::MovementComponent,
-                          Engine::Core::TransformComponent,
-                          Engine::Core::UnitComponent>()) {
+       context.entity_view<Engine::Core::PatrolComponent,
+                           Engine::Core::MovementComponent,
+                           Engine::Core::TransformComponent,
+                           Engine::Core::UnitComponent>()) {
     auto* patrol = &patrol_ref;
     const auto& transform = transform_ref;
     const auto& unit = unit_ref;
@@ -44,7 +41,8 @@ void PatrolSystem::update(Engine::Core::World* world, float) {
       continue;
     }
 
-    auto* attack_target = entity.get_component<Engine::Core::AttackTargetComponent>();
+    auto* attack_target =
+        context.try_get<Engine::Core::AttackTargetComponent>(entity.get_id());
     if ((attack_target != nullptr) && attack_target->target_id != 0) {
 
       continue;
@@ -75,7 +73,8 @@ void PatrolSystem::update(Engine::Core::World* world, float) {
 
     if (nearest_enemy != Engine::Core::NULL_ENTITY) {
       if (attack_target == nullptr) {
-        attack_target = entity.add_component<Engine::Core::AttackTargetComponent>();
+        attack_target =
+            context.emplace<Engine::Core::AttackTargetComponent>(entity.get_id());
       }
       if (attack_target != nullptr) {
         attack_target->target_id = nearest_enemy;
@@ -105,8 +104,20 @@ void PatrolSystem::update(Engine::Core::World* world, float) {
     Game::Systems::CommandService::MoveOptions options;
     options.kind = Game::Systems::MoveOrderKind::ScriptedMove;
     Game::Systems::CommandService::move_unit(
-        *world, entity.get_id(), QVector3D(target_x, 0.0F, target_z), options);
+        context.world(), entity.get_id(), QVector3D(target_x, 0.0F, target_z), options);
   }
+}
+
+auto PatrolSystem::access() const -> Engine::Core::SystemAccess {
+  using namespace Engine::Core;
+  return SystemAccess::declare(Reads<UnitComponent,
+                                     TransformComponent,
+                                     BuildingComponent,
+                                     PendingRemovalComponent>{},
+                               Writes<PatrolComponent,
+                                      AttackTargetComponent,
+                                      MovementComponent,
+                                      AttackComponent>{});
 }
 
 } // namespace Game::Systems

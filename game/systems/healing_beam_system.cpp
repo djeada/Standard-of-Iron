@@ -32,4 +32,9 @@ void HealingBeamSystem::spawn_beam(const QVector3D& healer_pos,
       std::make_unique<HealingBeam>(healer_pos, target_pos, color, duration));
 }
 
+auto HealingBeamSystem::access() const -> Engine::Core::SystemAccess {
+  using namespace Engine::Core;
+  return SystemAccess::declare(Reads<>{}, Writes<>{});
+}
+
 } // namespace Game::Systems

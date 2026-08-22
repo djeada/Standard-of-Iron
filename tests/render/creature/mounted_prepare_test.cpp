@@ -353,7 +353,8 @@ TEST(MountedPrepare, TemplatePrewarmRenderWarmsMountedSnapshotCache) {
   cfg.has_cavalry_shield = false;
 
   Render::GL::MountedKnightRendererBase const renderer(cfg);
-  Engine::Core::Entity entity(1);
+  Engine::Core::StandaloneEntity entity_scratch(1);
+  Engine::Core::Entity& entity = entity_scratch.entity();
   auto* unit = entity.add_component<Engine::Core::UnitComponent>();
   unit->spawn_type = Game::Units::SpawnType::MountedKnight;
   unit->owner_id = 1;
@@ -488,7 +489,8 @@ TEST(MountedPrepare, MountedSwordAttackRecoveryStaysOnOutgoingClipBeforeIdle) {
   ctx.force_single_soldier = true;
   ctx.allow_template_cache = false;
 
-  Engine::Core::Entity entity(1);
+  Engine::Core::StandaloneEntity entity_scratch(1);
+  Engine::Core::Entity& entity = entity_scratch.entity();
   auto* unit = entity.add_component<Engine::Core::UnitComponent>(100, 100, 0.0F, 0.0F);
   ASSERT_NE(unit, nullptr);
   unit->spawn_type = Game::Units::SpawnType::MountedKnight;
@@ -655,7 +657,8 @@ TEST(MountedPrepare, MountedUnitGroupsRiderAndHorseBySharedWorldKey) {
   ctx.world_view = Render::WorldView::of_active_session();
   ctx.allow_template_cache = false;
 
-  Engine::Core::Entity entity(1);
+  Engine::Core::StandaloneEntity entity_scratch(1);
+  Engine::Core::Entity& entity = entity_scratch.entity();
   auto* unit = entity.add_component<Engine::Core::UnitComponent>(100, 100, 0.0F, 0.0F);
   ASSERT_NE(unit, nullptr);
   unit->spawn_type = Game::Units::SpawnType::MountedKnight;
@@ -718,7 +721,8 @@ TEST(MountedPrepare, MountedRiderRootAttachesToHorseSeatFrame) {
   ctx.allow_template_cache = false;
   ctx.force_single_soldier = true;
 
-  Engine::Core::Entity entity(1);
+  Engine::Core::StandaloneEntity entity_scratch(1);
+  Engine::Core::Entity& entity = entity_scratch.entity();
   auto* unit = entity.add_component<Engine::Core::UnitComponent>(100, 100, 0.0F, 0.0F);
   ASSERT_NE(unit, nullptr);
   unit->spawn_type = Game::Units::SpawnType::MountedKnight;
@@ -808,7 +812,8 @@ TEST(MountedPrepare, AttackingMountedRiderRootAttachesToHorseSeatFrame) {
   ctx.allow_template_cache = false;
   ctx.force_single_soldier = true;
 
-  Engine::Core::Entity entity(1);
+  Engine::Core::StandaloneEntity entity_scratch(1);
+  Engine::Core::Entity& entity = entity_scratch.entity();
   auto* unit = entity.add_component<Engine::Core::UnitComponent>(100, 100, 0.0F, 0.0F);
   ASSERT_NE(unit, nullptr);
   unit->spawn_type = Game::Units::SpawnType::MountedKnight;
@@ -905,7 +910,8 @@ TEST(MountedPrepare, MovingMountedRiderRootAttachesToHorseSeatFrame) {
   ctx.allow_template_cache = false;
   ctx.force_single_soldier = true;
 
-  Engine::Core::Entity entity(1);
+  Engine::Core::StandaloneEntity entity_scratch(1);
+  Engine::Core::Entity& entity = entity_scratch.entity();
   auto* unit = entity.add_component<Engine::Core::UnitComponent>(100, 100, 0.0F, 0.0F);
   ASSERT_NE(unit, nullptr);
   unit->spawn_type = Game::Units::SpawnType::MountedKnight;
@@ -1044,7 +1050,8 @@ TEST(MountedPrepare, StaleLayoutCacheVersionForcesMountedFormationRefresh) {
   ctx.world_view = Render::WorldView::of_active_session();
   ctx.allow_template_cache = false;
 
-  Engine::Core::Entity entity(1);
+  Engine::Core::StandaloneEntity entity_scratch(1);
+  Engine::Core::Entity& entity = entity_scratch.entity();
   auto* unit = entity.add_component<Engine::Core::UnitComponent>(100, 100, 0.0F, 0.0F);
   ASSERT_NE(unit, nullptr);
   unit->spawn_type = Game::Units::SpawnType::MountedKnight;

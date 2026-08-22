@@ -119,16 +119,10 @@ auto process_structure_fires(Engine::Core::World* world,
   }
 
   float const step = std::max(0.0F, delta_time);
-  for (auto* entity :
-       world->collect_entities_with<Engine::Core::StructureFireComponent>()) {
-    if (entity == nullptr) {
-      continue;
-    }
-
-    auto* fire = entity->get_component<Engine::Core::StructureFireComponent>();
-    if (fire == nullptr) {
-      continue;
-    }
+  for (auto [entity_ref, fire_ref] :
+       world->entity_view<Engine::Core::StructureFireComponent>()) {
+    Engine::Core::Entity* entity = &entity_ref;
+    auto* fire = &fire_ref;
 
     if (entity->has_component<Engine::Core::PendingRemovalComponent>() ||
         live_structure_unit(*entity) == nullptr) {
