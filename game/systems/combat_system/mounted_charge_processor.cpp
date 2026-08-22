@@ -116,7 +116,9 @@ void clear_charge_action(Engine::Core::Entity& entity) {
 
   combat->animation_state = Engine::Core::CombatAnimationState::Strike;
   combat->attack_family = Engine::Core::CombatAttackFamily::None;
-  combat->attack_direction = Engine::Core::AttackDirection::Thrust;
+
+  combat->intent = Engine::Core::melee_intent_from_attack_direction(
+      Engine::Core::AttackDirection::Thrust);
   combat->state_time = 0.0F;
   combat->state_duration = Engine::Core::CombatStateComponent::k_strike_duration;
   combat->damage_dealt_this_swing = false;

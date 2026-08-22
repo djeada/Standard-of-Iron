@@ -2,6 +2,8 @@
 
 #include <cstdint>
 
+#include "individuality_manifest.h"
+
 namespace Animation {
 
 struct SoldierLayoutPolicyInputs {
@@ -28,7 +30,8 @@ struct SoldierLayoutPolicy {
   float offset_z_delta{0.0F};
   float vertical_jitter{0.0F};
   float yaw_delta{0.0F};
-  float phase_offset{0.0F};
+
+  SoldierIndividuality individuality{};
   std::uint8_t rank_band{0U};
   std::uint8_t row_index{0U};
   std::uint8_t col_index{0U};
@@ -36,9 +39,6 @@ struct SoldierLayoutPolicy {
 };
 
 [[nodiscard]] auto layout_random(std::uint32_t& state) noexcept -> float;
-
-[[nodiscard]] auto structured_layout_phase_offset(
-    int row, int col, int rows, int cols, std::uint32_t inst_seed) noexcept -> float;
 
 [[nodiscard]] auto resolve_soldier_layout_policy(
     const SoldierLayoutPolicyInputs& inputs) noexcept -> SoldierLayoutPolicy;

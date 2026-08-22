@@ -3,10 +3,12 @@
 #include <QVector3D>
 
 #include <algorithm>
+#include <cmath>
 
 #include "animation/ambient_pose_manifest.h"
 #include "animation/attack_pose_manifest.h"
 #include "animation/hold_pose_manifest.h"
+#include "animation/melee_swing_manifest.h"
 #include "animation/posture_pose_manifest.h"
 #include "animation/showcase_pose_manifest.h"
 #include "grip_axis.h"
@@ -668,6 +670,10 @@ void HumanoidPoseController::combat_sword_slash_variant(float attack_phase,
                                 variant,
                                 reach_scale));
   apply_weapon_attack_sample(*this, m_pose, sample);
+  steer_melee_swing(attack_phase,
+                    Animation::melee_intent_for_attack_variant(variant),
+                    0.0F,
+                    baked_sword_direction());
 }
 
 void HumanoidPoseController::mount_on_horse(float saddle_height) {
@@ -801,6 +807,121 @@ void HumanoidPoseController::sword_slash_variant(float attack_phase,
                                 variant,
                                 reach_scale));
   apply_weapon_attack_sample(*this, m_pose, sample);
+  steer_melee_swing(attack_phase,
+                    Animation::melee_intent_for_attack_variant(variant),
+                    0.0F,
+                    baked_sword_direction());
+}
+
+namespace {
+
+[[nodiscard]] auto rotate_about_spine(const QVector3D& point,
+                                      const QVector3D& spine,
+                                      float angle) -> QVector3D {
+  float const dx = point.x() - spine.x();
+  float const dz = point.z() - spine.z();
+  float const cos_a = std::cos(angle);
+  float const sin_a = std::sin(angle);
+  return {spine.x() + (dx * cos_a) - (dz * sin_a),
+          point.y(),
+          spine.z() + (dx * sin_a) + (dz * cos_a)};
+}
+
+void apply_melee_body_solve(HumanoidPoseController& controller,
+                            HumanoidPose& pose,
+                            const Animation::MeleeBodySolveSample& solved,
+                            float weight,
+                            const QVector3D& baked_weapon_axis) {
+  QVector3D const spine(pose.pelvis_pos.x(), 0.0F, pose.pelvis_pos.z());
+  float const chest_twist = solved.spine_twist * weight;
+  float const hip_twist = solved.pelvis_twist * weight;
+
+  for (QVector3D* joint :
+       {&pose.shoulder_l, &pose.shoulder_r, &pose.neck_base, &pose.head_pos}) {
+    *joint = rotate_about_spine(*joint, spine, chest_twist);
+  }
+  for (QVector3D* joint : {&pose.knee_l, &pose.knee_r, &pose.foot_l, &pose.foot_r}) {
+    *joint = rotate_about_spine(*joint, spine, hip_twist);
+  }
+
+  QVector3D const chest_travel(
+      solved.lateral_lean * weight, 0.0F, solved.forward_lean * weight);
+  pose.shoulder_l += chest_travel;
+  pose.shoulder_r += chest_travel;
+  pose.neck_base += chest_travel * 0.85F;
+  pose.head_pos += chest_travel * 0.70F;
+  pose.pelvis_pos += chest_travel * 0.35F;
+
+  QVector3D const grip(solved.grip.x, solved.grip.y, solved.grip.z);
+  QVector3D const towards_grip = (grip - pose.shoulder_r).normalized();
+  pose.shoulder_r += towards_grip * (solved.shoulder_drive * weight);
+
+  pose.foot_r.setZ(pose.foot_r.z() - (solved.back_foot_brace * weight));
+  pose.knee_r.setZ(pose.knee_r.z() - (solved.back_foot_brace * weight * 0.6F));
+  pose.foot_l.setZ(pose.foot_l.z() + (solved.front_foot_advance * weight));
+  pose.knee_l.setZ(pose.knee_l.z() + (solved.front_foot_advance * weight * 0.6F));
+
+  auto reach_limited = [](const QVector3D& shoulder, const QVector3D& target) {
+    return Render::Humanoid::PosePrimitives::clamp_to_reach(
+        shoulder,
+        target,
+        Render::Humanoid::PosePrimitives::humanoid_arm_reach_limit(
+            1.0F, Render::Humanoid::PosePrimitives::k_committed_arm_reach_fraction));
+  };
+
+  QVector3D const offhand(solved.offhand.x, solved.offhand.y, solved.offhand.z);
+  controller.place_hand_at(
+      Side::Right,
+      reach_limited(pose.shoulder_r, pose.hand_r + ((grip - pose.hand_r) * weight)));
+  controller.place_hand_at(
+      Side::Left,
+      reach_limited(pose.shoulder_l, pose.hand_l + ((offhand - pose.hand_l) * weight)));
+
+  QVector3D const blade(
+      solved.blade_direction.x, solved.blade_direction.y, solved.blade_direction.z);
+  aim_held_weapon(pose, blade, baked_weapon_axis);
+}
+
+} // namespace
+
+void HumanoidPoseController::steer_melee_swing(float attack_phase,
+                                               const Animation::MeleeIntent& anchor,
+                                               float offhand_along_weapon,
+                                               const QVector3D& baked_weapon_axis) {
+
+  if (!m_anim_ctx.inputs.melee_intent_valid) {
+    return;
+  }
+
+  using HP = HumanProportions;
+  float const arm_reach = Render::Humanoid::PosePrimitives::humanoid_arm_reach_limit(
+      1.0F, Render::Humanoid::PosePrimitives::k_committed_arm_reach_fraction);
+
+  auto const live =
+      Animation::melee_intent_about_anchor(m_anim_ctx.inputs.melee_intent, anchor);
+
+  constexpr float k_full_authority_radians = 0.785F;
+  float const weight = std::clamp(Animation::melee_intent_strike_delta(anchor, live) /
+                                      k_full_authority_radians,
+                                  0.0F,
+                                  1.0F);
+  if (weight <= 0.001F) {
+    return;
+  }
+
+  auto const solved = Animation::resolve_melee_body_solve({
+      .swing =
+          {
+              .intent = live,
+              .phase = attack_phase,
+              .shoulder_y = HP::SHOULDER_Y,
+              .arm_reach = arm_reach,
+              .rest = m_anim_ctx.inputs.melee_rest,
+              .has_rest = m_anim_ctx.inputs.melee_rest_valid,
+          },
+      .offhand_along_weapon = offhand_along_weapon,
+  });
+  apply_melee_body_solve(*this, m_pose, solved, weight, baked_weapon_axis);
 }
 
 void HumanoidPoseController::spear_thrust_variant(float attack_phase,
@@ -815,6 +936,13 @@ void HumanoidPoseController::spear_thrust_variant(float attack_phase,
   aim_held_weapon(m_pose,
                   spear_qvec_from_pose(sample.offhand_spear_direction),
                   baked_spear_direction());
+
+  constexpr float k_spear_leading_hand_reach = 0.34F;
+  steer_melee_swing(
+      attack_phase,
+      Animation::melee_intent_from_strike_angle(Animation::k_melee_thrust_angle, 1.0F),
+      k_spear_leading_hand_reach,
+      baked_spear_direction());
 }
 
 void HumanoidPoseController::crouch(float depth) {

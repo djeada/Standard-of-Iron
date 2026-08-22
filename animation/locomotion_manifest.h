@@ -56,6 +56,8 @@ struct HumanoidLocomotionInputs {
   float locomotion_direction_z{1.0F};
   float sample_time{0.0F};
   float phase_offset{0.0F};
+
+  float cadence_scale{1.0F};
   HumanoidLocomotionTuning tuning{};
   bool has_persistent_state{false};
   HumanoidLocomotionPersistentState previous{};

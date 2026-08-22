@@ -183,6 +183,7 @@ add_executable(
     systems/commander_duel_test.cpp
     systems/melee_engagement_test.cpp
     systems/melee_exchange_test.cpp
+    systems/melee_intent_test.cpp
     systems/archer_bonus_test.cpp
     systems/arrow_system_test.cpp
     systems/spent_projectile_test.cpp

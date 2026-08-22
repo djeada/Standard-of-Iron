@@ -171,6 +171,18 @@ void begin_attack_animation(Engine::Core::Entity* attacker,
           std::min(k_variant_slots - 1,
                    static_cast<int>(deterministic_unit_roll(seed, 2U) *
                                     static_cast<float>(k_variant_slots))));
+
+      constexpr float k_swing_arc_radians = 1.25F;
+      float const arc =
+          (deterministic_unit_roll(seed, 3U) - 0.5F) * k_swing_arc_radians;
+      bool const thrusting =
+          combat_state->attack_family == Engine::Core::CombatAttackFamily::Spear;
+      float const centre = thrusting ? Animation::k_melee_thrust_angle
+                                     : Animation::k_melee_left_cut_angle;
+      float const reach =
+          attack != nullptr ? attack->melee_range : Engine::Core::k_melee_default_reach;
+      combat_state->intent = Engine::Core::melee_intent_from_strike_angle(
+          centre + arc, thrusting ? 1.0F : 0.0F, reach);
     }
   }
 }

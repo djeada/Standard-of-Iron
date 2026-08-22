@@ -433,6 +433,11 @@ auto evaluate_horse_motion(const HorseProfile& profile,
   state.idle_bob_intensity = transition.idle_bob_intensity;
 
   HorseGait resolved = resolve_persistent_gait(state, profile);
+
+  auto const& individuality = rider_ctx.individuality;
+  resolved.phase_offset =
+      Quadruped::wrap_phase(resolved.phase_offset + individuality.gait_phase_offset);
+
   sample.is_moving =
       state.current_gait != GaitType::IDLE || state.target_gait != GaitType::IDLE;
   if (sample.is_moving) {
@@ -452,6 +457,9 @@ auto evaluate_horse_motion(const HorseProfile& profile,
     resolved.cycle_time = cadence.cycle_time;
     resolved.stride_swing = cadence.stride_swing;
   }
+
+  resolved.cycle_time /= std::clamp(individuality.cadence_scale, 0.80F, 1.25F);
+
   evaluate_phase_and_bob(state,
                          profile,
                          anim,

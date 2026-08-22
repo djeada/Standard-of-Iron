@@ -19,6 +19,7 @@
 #include "game/systems/building_line_of_sight.h"
 #include "game/systems/combat_actions/combat_action_definition.h"
 #include "game/systems/combat_actions/combat_action_service.h"
+#include "game/systems/combat_actions/melee_intent_solver.h"
 #include "game/systems/combat_system/damage_processor.h"
 #include "game/systems/combat_system/mounted_charge_processor.h"
 #include "game/systems/nav_grid.h"
@@ -1976,6 +1977,19 @@ auto CommanderControlController::update_impl(Engine::Core::World& world,
     }
     m_input.primary_action_scan_cooldown = 0.08F;
   }
+
+  Game::Systems::CombatActions::advance_melee_control(
+      *commander,
+      {.aim_delta_x = signed_angle_delta(m_view_yaw, m_previous_view_yaw),
+       .aim_delta_y = m_view_pitch - m_previous_view_pitch,
+       .view_pitch_degrees = m_view_pitch,
+       .move_right_axis = m_move_right_axis,
+       .move_forward_axis = m_move_forward_axis,
+       .held_duration = m_primary_held_duration,
+       .primary_held = m_input.primary_action,
+       .delta_time = dt});
+  m_previous_view_yaw = m_view_yaw;
+  m_previous_view_pitch = m_view_pitch;
 
   if (auto const* struck =
           commander->get_component<Engine::Core::RpgCommanderActionComponent>()) {

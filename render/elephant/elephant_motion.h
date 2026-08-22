@@ -2,6 +2,7 @@
 
 #include <QVector3D>
 
+#include "animation/individuality_manifest.h"
 #include "attachment_frames.h"
 
 namespace Render::Creature {
@@ -56,7 +57,9 @@ auto evaluate_elephant_motion(
     const ElephantProfile& profile,
     const AnimationInputs& anim,
     Render::Creature::ElephantAnimationStateComponent* io_state = nullptr,
-    float model_scale = 1.0F) -> ElephantMotionSample;
+    float model_scale = 1.0F,
+
+    const Animation::SoldierIndividuality& individuality = {}) -> ElephantMotionSample;
 
 auto build_elephant_pose_motion(const ElephantMotionSample& motion,
                                 const AnimationInputs& anim)

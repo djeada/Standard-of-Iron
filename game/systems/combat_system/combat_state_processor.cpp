@@ -185,21 +185,15 @@ auto commander_phase_scale(const Engine::Core::Entity& unit,
     return 1.0F;
   }
 
-  float direction_scale = 1.0F;
-  switch (combat_state.attack_direction) {
-  case Engine::Core::AttackDirection::Thrust:
-    direction_scale = 0.80F;
-    break;
-  case Engine::Core::AttackDirection::Overhead:
-    direction_scale = 1.15F;
-    break;
-  case Engine::Core::AttackDirection::HeavyOverhead:
-    direction_scale = 1.30F;
-    break;
-  default:
-    direction_scale = 1.0F;
-    break;
-  }
+  auto const& intent = combat_state.intent;
+  float const commitment =
+      1.0F + (0.20F * intent.charge) + (0.15F * (intent.follow_through - 0.50F));
+  float const thrust_relief = 1.0F - (0.22F * intent.thrust_amount);
+
+  float const arc_scale = std::clamp(
+      1.0F + (0.45F * (std::abs(intent.strike_dir_y) - 0.60F)), 0.80F, 1.35F);
+  float const direction_scale =
+      commitment * thrust_relief * arc_scale / intent.swing_speed;
 
   switch (state) {
   case CS::Advance:
@@ -227,7 +221,9 @@ auto phase_duration_for_state(const Engine::Core::Entity& unit,
   if (commander != nullptr && commander->fpv_controlled) {
 
     if (auto const* definition = running_authored_action(unit); definition != nullptr) {
-      return Game::Systems::CombatActions::authored_phase_duration(*definition, state);
+
+      return Game::Systems::CombatActions::authored_phase_duration(*definition, state) /
+             std::clamp(combat_state.intent.swing_speed, 0.55F, 1.85F);
     }
     return base_phase_duration(state) *
            commander_phase_scale(unit, combat_state, state);

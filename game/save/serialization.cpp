@@ -580,6 +580,20 @@ auto Serialization::serialize_entity(const Entity* entity) -> QJsonObject {
     combat_state_obj["attack_offset"] =
         static_cast<double>(combat_state->attack_offset);
     combat_state_obj["attack_variant"] = static_cast<int>(combat_state->attack_variant);
+
+    combat_state_obj["swing_strike_x"] =
+        static_cast<double>(combat_state->intent.strike_dir_x);
+    combat_state_obj["swing_strike_y"] =
+        static_cast<double>(combat_state->intent.strike_dir_y);
+    combat_state_obj["swing_thrust"] =
+        static_cast<double>(combat_state->intent.thrust_amount);
+    combat_state_obj["swing_elevation"] =
+        static_cast<double>(combat_state->intent.elevation);
+    combat_state_obj["swing_charge"] = static_cast<double>(combat_state->intent.charge);
+    combat_state_obj["swing_speed"] =
+        static_cast<double>(combat_state->intent.swing_speed);
+    combat_state_obj["swing_follow_through"] =
+        static_cast<double>(combat_state->intent.follow_through);
     combat_state_obj["finisher_attack"] = combat_state->finisher_attack;
     combat_state_obj["is_hit_paused"] = combat_state->is_hit_paused;
     combat_state_obj["hit_pause_remaining"] =
@@ -1482,6 +1496,24 @@ void Serialization::deserialize_entity(Entity* entity, const QJsonObject& json) 
         static_cast<float>(combat_state_obj["attack_offset"].toDouble(0.0));
     combat_state->attack_variant =
         static_cast<std::uint8_t>(combat_state_obj["attack_variant"].toInt(0));
+
+    auto& swing = combat_state->intent;
+    swing.strike_dir_x = static_cast<float>(
+        combat_state_obj["swing_strike_x"].toDouble(swing.strike_dir_x));
+    swing.strike_dir_y = static_cast<float>(
+        combat_state_obj["swing_strike_y"].toDouble(swing.strike_dir_y));
+    swing.windup_dir_x = -swing.strike_dir_x;
+    swing.windup_dir_y = -swing.strike_dir_y;
+    swing.thrust_amount =
+        static_cast<float>(combat_state_obj["swing_thrust"].toDouble(0.0));
+    swing.elevation =
+        static_cast<float>(combat_state_obj["swing_elevation"].toDouble(0.0));
+    swing.charge = static_cast<float>(combat_state_obj["swing_charge"].toDouble(0.0));
+    swing.swing_speed =
+        static_cast<float>(combat_state_obj["swing_speed"].toDouble(1.0));
+    swing.follow_through =
+        static_cast<float>(combat_state_obj["swing_follow_through"].toDouble(0.5));
+    Engine::Core::complete_melee_intent(swing);
     combat_state->finisher_attack = combat_state_obj["finisher_attack"].toBool(false);
     combat_state->is_hit_paused = combat_state_obj["is_hit_paused"].toBool(false);
     combat_state->hit_pause_remaining =

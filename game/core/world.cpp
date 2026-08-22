@@ -493,6 +493,15 @@ void publish_creature_presentation_entity(Entity* entity, World* world) {
   next.combat_phase =
       combat != nullptr ? combat->animation_state : CombatAnimationState::Idle;
   next.combat_phase_progress = action.combat_phase_progress;
+  if (combat != nullptr) {
+    next.melee_intent = combat->intent;
+    next.melee_intent_valid = true;
+  }
+  if (auto const* body = entity->get_component<CommanderBodyControlComponent>()) {
+    next.melee_rest_x = body->rest_dir_x;
+    next.melee_rest_y = body->rest_dir_y;
+    next.melee_rest_valid = body->rest_valid;
+  }
   next.attack_family =
       combat != nullptr ? combat->attack_family : CombatAttackFamily::None;
   if (action.attack_family != Animation::CombatAttackFamily::None &&

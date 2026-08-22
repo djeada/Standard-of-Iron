@@ -60,7 +60,7 @@ void sync_combat_visual_inputs(
 
   auto const scrubbed = Animation::scrubbed_combat_phase_from_attack_phase(
       visual.attack_phase, visual.amplified_attack, visual.finisher_attack);
-  inputs.combat_phase = Render::Creature::engine_combat_phase(scrubbed.phase);
+  inputs.combat_phase = scrubbed.phase;
   inputs.combat_phase_progress = scrubbed.progress;
 }
 
@@ -74,8 +74,7 @@ void apply_combat_micro_variation(const HumanoidAnimationContext& anim_ctx,
       .is_dying = anim_ctx.inputs.is_dying,
       .is_dead = anim_ctx.inputs.is_dead,
       .lane = anim_ctx.inputs.combat_visual.lane,
-      .combat_phase =
-          Render::Creature::animation_combat_phase(anim_ctx.inputs.combat_phase),
+      .combat_phase = anim_ctx.inputs.combat_phase,
       .is_attacking = anim_ctx.inputs.is_attacking,
       .attack_phase = anim_ctx.attack_phase,
       .sample_time = anim_ctx.inputs.time,
@@ -152,7 +151,7 @@ auto build_soldier_layout(const SoldierLayoutInputs& inputs) -> SoldierLayout {
   layout.rank_band = policy.rank_band;
   layout.inst_seed = policy.inst_seed;
   layout.vertical_jitter = policy.vertical_jitter;
-  layout.phase_offset = policy.phase_offset;
+  layout.individuality = policy.individuality;
 
   if (!inputs.force_single_soldier) {
     Game::Formation::UnitLayoutQuery query;
@@ -259,7 +258,8 @@ auto build_humanoid_locomotion_state(const HumanoidLocomotionInputs& inputs)
       .locomotion_direction_x = inputs.locomotion_direction.x(),
       .locomotion_direction_z = inputs.locomotion_direction.z(),
       .sample_time = inputs.animation_time,
-      .phase_offset = inputs.phase_offset,
+      .phase_offset = inputs.individuality.gait_phase_offset,
+      .cadence_scale = inputs.individuality.cadence_scale,
       .tuning = humanoid_locomotion_tuning(inputs.variation),
       .has_persistent_state = inputs.persistent_state != nullptr,
       .previous = persistent,
