@@ -9,8 +9,10 @@
 #include "app/orders/movement_utils.h"
 #include "game/core/component.h"
 #include "game/core/world.h"
+#include "game/map/visibility_service.h"
 #include "game/render_bridge/picking_service.h"
 #include "game/render_bridge/selection_controller.h"
+#include "game/systems/interaction_targeting.h"
 #include "game/systems/selection_system.h"
 #include "scene/camera.h"
 
@@ -76,10 +78,104 @@ void InputCommandHandler::on_right_click(qreal sx,
     return;
   }
 
+  Engine::Core::EntityID const enemy_id = App::Utils::pick_enemy_unit_at_screen(
+      m_world, m_camera, sx, sy, viewport.width, viewport.height, local_owner_id);
+
+  QString gather_product;
+  Engine::Core::EntityID interaction_target = 0;
+  if (enemy_id == 0 && resolve_context_interaction(
+                           sx, sy, viewport, gather_product, interaction_target)) {
+    if (!gather_product.isEmpty()) {
+      m_command_controller->disable_run_mode_for_selected();
+      (void)m_command_controller->set_auto_gather(true, gather_product);
+      return;
+    }
+    if (interaction_target != 0) {
+      on_builder_repair_click(sx, sy, local_owner_id, viewport);
+      return;
+    }
+  }
+
   m_command_controller->disable_run_mode_for_selected();
   (void)m_command_controller->on_move_or_attack_click(
       sx, sy, viewport.width, viewport.height, m_camera, local_owner_id);
   m_command_controller->disable_run_mode_for_selected();
+}
+
+auto InputCommandHandler::resolve_context_interaction(
+    qreal sx,
+    qreal sy,
+    const ViewportState& viewport,
+    QString& out_product_type,
+    Engine::Core::EntityID& out_target) const -> bool {
+  out_product_type.clear();
+  out_target = 0;
+  if (m_world == nullptr || m_camera == nullptr || m_picking_service == nullptr) {
+    return false;
+  }
+
+  auto* selection_system = m_world->get_system<Game::Systems::SelectionSystem>();
+  if (selection_system == nullptr) {
+    return false;
+  }
+
+  Game::Systems::InteractionTargetingRequest request;
+  request.world = m_world;
+  for (auto const id : selection_system->get_selected_units()) {
+    const auto* unit = m_world->try_get<Engine::Core::UnitComponent>(id);
+    if (unit == nullptr || unit->health <= 0) {
+      continue;
+    }
+    request.local_owner_id = unit->owner_id;
+    if (unit->spawn_type == Game::Units::SpawnType::Builder) {
+      request.has_builders = true;
+    } else if (unit->spawn_type == Game::Units::SpawnType::Civilian) {
+      request.has_civilians = true;
+    }
+  }
+  if (!request.has_builders && !request.has_civilians) {
+    return false;
+  }
+
+  request.hovered_entity_id =
+      m_hover_tracker != nullptr ? m_hover_tracker->get_last_hovered_entity() : 0;
+
+  QVector3D ground;
+  if (m_picking_service->screen_to_ground(
+          QPointF(sx, sy), *m_camera, viewport.width, viewport.height, ground)) {
+    request.has_hovered_ground = true;
+    request.hovered_ground_x = ground.x();
+    request.hovered_ground_z = ground.z();
+    request.anchor_x = ground.x();
+    request.anchor_z = ground.z();
+  }
+  request.max_distance = Game::Systems::k_interaction_highlight_max_distance;
+  request.max_markers = Game::Systems::k_interaction_highlight_max_markers;
+
+  auto const highlights = Game::Systems::collect_interaction_target_highlights(request);
+  switch (highlights.hovered_action) {
+  case Game::Systems::InteractionAction::Gather:
+  case Game::Systems::InteractionAction::Harvest: {
+    for (const auto& marker : highlights.markers) {
+      if (!marker.hovered) {
+        continue;
+      }
+      auto const product = Game::Systems::harvest_product_for_prop(marker.prop_type);
+      out_product_type =
+          QString::fromLatin1(product.data(), static_cast<qsizetype>(product.size()));
+      return !out_product_type.isEmpty();
+    }
+    return false;
+  }
+  case Game::Systems::InteractionAction::Repair:
+    out_target = highlights.hovered_entity_id;
+    return out_target != 0;
+  case Game::Systems::InteractionAction::Deliver:
+  case Game::Systems::InteractionAction::Slaughter:
+  case Game::Systems::InteractionAction::None:
+    break;
+  }
+  return false;
 }
 
 void InputCommandHandler::on_minimap_right_click(const QVector3D& world_target,

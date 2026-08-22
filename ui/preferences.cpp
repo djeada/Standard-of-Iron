@@ -42,6 +42,7 @@ UiPreferences::UiPreferences(QObject* parent)
     , m_edge_scroll_sensitivity(UserSettings::load_ui_edge_scroll_sensitivity())
     , m_camera_motion_scale(UserSettings::load_ui_camera_motion_scale())
     , m_damage_numbers(UserSettings::load_ui_damage_numbers())
+    , m_damage_number_mode(UserSettings::load_ui_damage_number_mode())
     , m_camera_legend_seen(UserSettings::load_ui_camera_legend_seen())
     , m_tutorial_completed(UserSettings::load_ui_tutorial_completed())
     , m_screen_effect_intensity(UserSettings::load_ui_screen_effect_intensity()) {
@@ -244,13 +245,23 @@ void UiPreferences::set_tutorial_completed(bool completed) {
 }
 
 void UiPreferences::set_damage_numbers(bool enabled) {
-  if (enabled == m_damage_numbers) {
+  set_damage_number_mode(enabled ? QStringLiteral("all") : QStringLiteral("off"));
+}
+
+void UiPreferences::set_damage_number_mode(const QString& mode) {
+  if (!UserSettings::is_damage_number_mode(mode) || mode == m_damage_number_mode) {
     return;
   }
 
-  m_damage_numbers = enabled;
-  UserSettings::save_ui_damage_numbers(enabled);
-  emit damage_numbers_changed();
+  m_damage_number_mode = mode;
+  const bool enabled = mode != QStringLiteral("off");
+  UserSettings::save_ui_damage_number_mode(mode);
+  emit damage_number_mode_changed();
+
+  if (enabled != m_damage_numbers) {
+    m_damage_numbers = enabled;
+    emit damage_numbers_changed();
+  }
 }
 
 void UiPreferences::set_screen_effect_intensity(qreal intensity) {
@@ -278,7 +289,7 @@ void UiPreferences::reset_to_defaults() {
   set_edge_scroll_enabled(true);
   set_edge_scroll_sensitivity(UserSettings::kDefaultEdgeScrollSensitivity);
   set_camera_motion_scale(UserSettings::kDefaultCameraMotionScale);
-  set_damage_numbers(true);
+  set_damage_number_mode(QStringLiteral("all"));
   set_camera_legend_seen(false);
   set_screen_effect_intensity(UserSettings::kDefaultScreenEffectIntensity);
 }

@@ -114,6 +114,30 @@ struct FormationSlot {
   }
 };
 
+struct FormationMovePlan {
+  std::vector<QVector3D> corridor;
+  std::size_t corridor_index{0};
+
+  QVector3D formation_center;
+  QVector3D facing_direction{0.0F, 0.0F, 1.0F};
+
+  bool active{false};
+
+  [[nodiscard]] auto has_corridor() const noexcept -> bool {
+    return active && corridor_index < corridor.size();
+  }
+
+  [[nodiscard]] auto next_waypoint() const noexcept -> QVector3D {
+    return has_corridor() ? corridor[corridor_index] : formation_center;
+  }
+
+  void clear() noexcept {
+    corridor.clear();
+    corridor_index = 0;
+    active = false;
+  }
+};
+
 struct ArmyFormationShape {
   float frontage{0.0F};
   float depth{0.0F};
@@ -159,6 +183,8 @@ struct ArmyFormation {
   bool has_destination{false};
   float advance_progress{0.0F};
 
+  FormationMovePlan move_plan;
+
   std::uint32_t plan_revision{0U};
   bool needs_replan{true};
 
@@ -176,6 +202,8 @@ struct ArmyFormation {
   [[nodiscard]] auto find_slot_for(EntityID entity) const -> const FormationSlot*;
   [[nodiscard]] auto has_member(EntityID entity) const -> bool;
   [[nodiscard]] auto blocked_slot_count() const -> int;
+  [[nodiscard]] auto slot_error(const QVector3D& position,
+                                EntityID entity) const -> float;
 };
 
 } // namespace Game::Formation

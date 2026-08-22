@@ -330,7 +330,7 @@ TEST_F(CommandControllerTest, AttackClickWithNonCombatSelectionExplainsWhy) {
   EXPECT_TRUE(result.order.rejected());
   EXPECT_EQ(result.order.target, enemy->get_id());
   EXPECT_EQ(result.order.reason,
-            App::Core::no_eligible_units_reason(App::Core::OrderKind::Attack));
+            App::Core::no_eligible_units_reason(App::Core::OrderKind::Attack).text);
   EXPECT_EQ(builder->get_component<Engine::Core::AttackTargetComponent>(), nullptr);
   ASSERT_EQ(seen.size(), 1U);
 }
@@ -347,7 +347,7 @@ TEST_F(CommandControllerTest, AttackClickWithEmptySelectionIsRejectedNotSilent) 
   EXPECT_FALSE(result.input_consumed);
   EXPECT_TRUE(result.reset_cursor_to_normal);
   EXPECT_TRUE(result.order.rejected());
-  EXPECT_EQ(result.order.reason, App::Core::no_selection_reason());
+  EXPECT_EQ(result.order.reason, App::Core::no_selection_reason().text);
   ASSERT_EQ(seen.size(), 1U);
 }
 
@@ -482,7 +482,7 @@ TEST_F(CommandControllerTest, StopWithEmptySelectionIsRejectedNotSilent) {
   EXPECT_FALSE(result.input_consumed);
   EXPECT_TRUE(result.order.rejected());
   EXPECT_EQ(result.order.kind, App::Core::OrderKind::Stop);
-  EXPECT_EQ(result.order.reason, App::Core::no_selection_reason());
+  EXPECT_EQ(result.order.reason, App::Core::no_selection_reason().text);
   ASSERT_EQ(seen.size(), 1U);
 }
 

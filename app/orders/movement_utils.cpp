@@ -231,13 +231,23 @@ auto submit_ground_move(Engine::Core::World& world,
         OrderKind::Move, App::Core::no_selection_reason(), destination);
   }
 
+  if (Game::Systems::NavGrid::get_pathfinder() != nullptr &&
+      !Game::Systems::NavGrid::is_world_position_walkable(destination)) {
+    const QVector3D snapped =
+        Game::Systems::NavGrid::snap_to_walkable_ground(destination);
+    if (!Game::Systems::NavGrid::is_world_position_walkable(snapped)) {
+      return App::Core::rejected_order_at(
+          OrderKind::Move, App::Core::unreachable_reason(), destination);
+    }
+  }
+
   const auto plan =
       Game::Systems::CommandService::plan_ground_move(world, units, destination);
   if (units.size() != plan.positions.size()) {
     return App::Core::rejected_order_at(
         OrderKind::Move,
-        App::Core::rejection_reason_text(Game::Command::Rejection::MalformedPayload,
-                                         OrderKind::Move),
+        App::Core::rejection_refusal(Game::Command::Rejection::MalformedPayload,
+                                     OrderKind::Move),
         destination);
   }
 

@@ -51,6 +51,7 @@ public:
 
   Q_INVOKABLE void clear_inspect_target();
   Q_INVOKABLE [[nodiscard]] QVariantList pop_combat_damage_events();
+  Q_INVOKABLE [[nodiscard]] QVariantList pop_player_feedback_events();
 
   [[nodiscard]] auto inspect_target() const -> QVariantMap { return m_inspect_target; }
   [[nodiscard]] auto selection_target() const -> QVariantMap {

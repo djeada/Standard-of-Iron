@@ -31,6 +31,8 @@ struct BuildingInstanceCacheStats {
 };
 
 auto resolve_building_health_ratio(const DrawContext& ctx) -> float;
+
+auto building_health_bar_visible(const DrawContext& ctx) -> bool;
 auto resolve_building_state(const DrawContext& ctx) -> BuildingState;
 auto building_renderer_key(std::string_view nation_slug,
                            std::string_view building_type) -> std::string;

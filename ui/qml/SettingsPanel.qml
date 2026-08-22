@@ -24,6 +24,17 @@ Item {
         }
     }
 
+    function damage_number_label(mode) {
+        switch (mode) {
+        case "off":
+            return qsTr("Off");
+        case "important":
+            return qsTr("Important only");
+        default:
+            return qsTr("All hits");
+        }
+    }
+
     function set_audio_slider_values() {
         master_volume_slider.value = game.audio_system.get_master_volume() * 100;
         music_volume_slider.value = game.audio_system.get_music_volume() * 100;
@@ -684,12 +695,34 @@ Item {
                                 onToggled: UiPreferences.teamPatterns = checked
                             }
 
-                            Design.IronCheckBox {
+                            Label {
+                                text: qsTr("Damage numbers:")
+                                color: Theme.textSub
+                                font.pixelSize: Design.Typography.bodyLarge
+                            }
+
+                            StyledComboBox {
+                                id: damage_number_combo_box
+
+                                Layout.fillWidth: true
+                                model: UiPreferences.damageNumberModes
+                                currentIndex: Math.max(0, UiPreferences.damageNumberModes.indexOf(UiPreferences.damageNumberMode))
+                                displayText: root.damage_number_label(currentText)
+                                onActivated: function (index) {
+                                    UiPreferences.damageNumberMode = UiPreferences.damageNumberModes[index];
+                                }
+                                delegate_text: function (data) {
+                                    return root.damage_number_label(data);
+                                }
+                            }
+
+                            Label {
                                 Layout.columnSpan: 2
-                                text: qsTr("Damage numbers")
-                                description: qsTr("Shows the damage dealt above each hit while leading the commander")
-                                checked: UiPreferences.damageNumbers
-                                onToggled: UiPreferences.damageNumbers = checked
+                                text: qsTr("Numbers are a readout, not the feedback. Combat stays readable from motion, sound and hit reactions with them off.")
+                                color: Theme.textSub
+                                font.pixelSize: Design.Typography.caption
+                                wrapMode: Text.WordWrap
+                                Layout.fillWidth: true
                             }
 
                             Label {

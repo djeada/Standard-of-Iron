@@ -156,6 +156,15 @@ void add_visual_stability(ArenaScenarioDefinition& scenario,
       expectation(Expect::FrameBudget, {}, {}, 33.34F, 0.25F));
 }
 
+void add_animation_quality(ArenaScenarioDefinition& scenario,
+                           std::initializer_list<QString> groups) {
+  for (auto const& name : groups) {
+    scenario.expectations.push_back(expectation(Expect::NoPlantedFootSliding, name));
+    scenario.expectations.push_back(expectation(Expect::NoWeaponTeleport, name));
+    scenario.expectations.push_back(expectation(Expect::NoPelvisSnap, name));
+  }
+}
+
 auto nation_group(QString name,
                   Troop troop,
                   Nation nation,
@@ -911,6 +920,10 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
     };
     add_visual_stability(
         s, {QStringLiteral("rpg_commander"), QStringLiteral("enemy_formation")});
+    add_animation_quality(
+        s, {QStringLiteral("rpg_commander"), QStringLiteral("enemy_formation")});
+    s.expectations.push_back(
+        expectation(Expect::AttackHasTorsoRotation, QStringLiteral("rpg_commander")));
     s.expectations.push_back(
         expectation(Expect::ExactRpgTargetObserved, QStringLiteral("rpg_commander")));
     s.expectations.push_back(
@@ -997,6 +1010,10 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
                          {QStringLiteral("rpg_commander"),
                           QStringLiteral("guard_attacker"),
                           QStringLiteral("dodge_attacker")});
+    s.expectations.push_back(
+        expectation(Expect::NoWeaponTeleport, QStringLiteral("rpg_commander")));
+    s.expectations.push_back(
+        expectation(Expect::NoPelvisSnap, QStringLiteral("rpg_commander")));
     s.expectations.push_back(
         expectation(Expect::ExactRpgTargetObserved, QStringLiteral("rpg_commander")));
     s.expectations.push_back(
@@ -1155,6 +1172,7 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
         move(8.00F, {0.0F, 0.0F, 0.0F}, false),
     };
     add_visual_stability(s, {QStringLiteral("rpg_commander")});
+    add_animation_quality(s, {QStringLiteral("rpg_commander")});
     s.expectations.push_back(
         expectation(Expect::RpgWalkObserved, QStringLiteral("rpg_commander")));
     s.expectations.push_back(

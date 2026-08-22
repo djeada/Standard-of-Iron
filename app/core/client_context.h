@@ -5,6 +5,7 @@
 
 #include <mutex>
 
+#include "app/core/player_feedback.h"
 #include "app/input/cursor_mode.h"
 
 class CampaignManager;
@@ -75,6 +76,8 @@ struct ClientContext {
 
   const ViewportState* viewport = nullptr;
   QQuickWindow* window = nullptr;
+
+  PlayerFeedbackBus* feedback = nullptr;
 };
 
 struct MatchLaunch {

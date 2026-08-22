@@ -6073,6 +6073,22 @@ para ver a prévia</translation>
         <source>That building cannot be taken down.</source>
         <translation>Esse edifício não pode ser desmontado.</translation>
     </message>
+    <message>
+        <source>Cannot reach that spot.</source>
+        <translation>Não é possível alcançar esse ponto.</translation>
+    </message>
+    <message>
+        <source>That target is out of range.</source>
+        <translation>Esse alvo está fora de alcance.</translation>
+    </message>
+    <message>
+        <source>Those units are busy with another order.</source>
+        <translation>Essas unidades estão ocupadas com outra ordem.</translation>
+    </message>
+    <message>
+        <source>Not enough resources.</source>
+        <translation>Recursos insuficientes.</translation>
+    </message>
 </context>
 <context>
     <name>OutcomeLayout</name>
@@ -7004,6 +7020,30 @@ Os construtores os ceifam pela comida que recruta civis</translation>
         <source>Takes priority over anything else on its key while a rally can be placed</source>
         <translation>Tem prioridade sobre qualquer outra coisa na sua tecla enquanto uma bandeira de reunião puder ser colocada</translation>
     </message>
+    <message>
+        <source>No ground under the cursor</source>
+        <translation>Não há solo sob o cursor</translation>
+    </message>
+    <message>
+        <source>Cannot reach</source>
+        <translation>Inalcançável</translation>
+    </message>
+    <message>
+        <source>No match is running</source>
+        <translation>Nenhuma partida em andamento</translation>
+    </message>
+    <message>
+        <source>Spectating</source>
+        <translation>Assistindo</translation>
+    </message>
+    <message>
+        <source>Nothing selected</source>
+        <translation>Nada selecionado</translation>
+    </message>
+    <message>
+        <source>No target under the cursor</source>
+        <translation>Nenhum alvo sob o cursor</translation>
+    </message>
 </context>
 <context>
     <name>RpgFpvOverlay</name>
@@ -7528,14 +7568,6 @@ Os construtores os ceifam pela comida que recruta civis</translation>
         <translation>Marca cada lado com um formato próprio de anel de seleção, além da cor</translation>
     </message>
     <message>
-        <source>Damage numbers</source>
-        <translation>Números de dano</translation>
-    </message>
-    <message>
-        <source>Shows the damage dealt above each hit while leading the commander</source>
-        <translation>Mostra o dano causado acima de cada golpe enquanto você lidera o comandante</translation>
-    </message>
-    <message>
         <source>Screen effects:</source>
         <translation>Efeitos de tela:</translation>
     </message>
@@ -7574,6 +7606,22 @@ Os construtores os ceifam pela comida que recruta civis</translation>
     <message>
         <source>Sets both how far in from the edge the band reaches and how fast the camera moves inside it. At this setting the band is %1 px along the sides and %2 px along the top and bottom, measured at your interface scale.</source>
         <translation>Define ao mesmo tempo o quanto a faixa avança a partir da borda e a velocidade da câmera dentro dela. Neste ajuste a faixa tem %1 px nas laterais e %2 px acima e abaixo, medidos na sua escala de interface.</translation>
+    </message>
+    <message>
+        <source>Important only</source>
+        <translation>Somente importantes</translation>
+    </message>
+    <message>
+        <source>All hits</source>
+        <translation>Todos os acertos</translation>
+    </message>
+    <message>
+        <source>Damage numbers:</source>
+        <translation>Números de dano:</translation>
+    </message>
+    <message>
+        <source>Numbers are a readout, not the feedback. Combat stays readable from motion, sound and hit reactions with them off.</source>
+        <translation>Os números são uma leitura, não o retorno. O combate continua legível pelo movimento, som e reações a acertos sem eles.</translation>
     </message>
 </context>
 <context>

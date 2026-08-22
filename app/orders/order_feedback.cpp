@@ -3,6 +3,64 @@
 #include <QCoreApplication>
 
 namespace App::Core {
+namespace {
+
+auto no_eligible_units_text(OrderKind kind) -> QString;
+auto no_target_under_cursor_text(OrderKind kind) -> QString;
+
+} // namespace
+
+auto order_failure_name(OrderFailure failure) -> const char* {
+  switch (failure) {
+  case OrderFailure::None:
+    return "none";
+  case OrderFailure::NoSelection:
+    return "no_selection";
+  case OrderFailure::InvalidTarget:
+    return "invalid_target";
+  case OrderFailure::Unreachable:
+    return "unreachable";
+  case OrderFailure::WrongOwner:
+    return "wrong_owner";
+  case OrderFailure::OutOfRange:
+    return "out_of_range";
+  case OrderFailure::InsufficientResources:
+    return "insufficient_resources";
+  case OrderFailure::PopulationCap:
+    return "population_cap";
+  case OrderFailure::UnitBusy:
+    return "unit_busy";
+  case OrderFailure::CommandUnavailable:
+    return "command_unavailable";
+  }
+  return "command_unavailable";
+}
+
+auto failure_for(Game::Command::Rejection rejection) -> OrderFailure {
+  switch (rejection) {
+  case Game::Command::Rejection::None:
+    return OrderFailure::None;
+  case Game::Command::Rejection::NoOwner:
+    return OrderFailure::WrongOwner;
+  case Game::Command::Rejection::NoSubjects:
+    return OrderFailure::NoSelection;
+  case Game::Command::Rejection::DeadTarget:
+  case Game::Command::Rejection::FriendlyTarget:
+  case Game::Command::Rejection::MissingBuilding:
+    return OrderFailure::InvalidTarget;
+  case Game::Command::Rejection::NotOwnedBuilding:
+    return OrderFailure::WrongOwner;
+  case Game::Command::Rejection::NotPermittedForSource:
+  case Game::Command::Rejection::MalformedPayload:
+    return OrderFailure::CommandUnavailable;
+  }
+  return OrderFailure::CommandUnavailable;
+}
+
+auto rejection_refusal(Game::Command::Rejection rejection,
+                       OrderKind kind) -> OrderRefusal {
+  return {failure_for(rejection), rejection_reason_text(rejection, kind)};
+}
 
 auto order_kind_name(OrderKind kind) -> const char* {
   switch (kind) {
@@ -77,7 +135,7 @@ auto rejection_reason_text(Game::Command::Rejection rejection,
     return QCoreApplication::translate("OrderFeedback",
                                        "You are not in command of these units.");
   case Game::Command::Rejection::NoSubjects:
-    return no_eligible_units_reason(kind);
+    return no_eligible_units_text(kind);
   case Game::Command::Rejection::DeadTarget:
     return QCoreApplication::translate("OrderFeedback", "That target is already gone.");
   case Game::Command::Rejection::FriendlyTarget:
@@ -112,11 +170,35 @@ auto accepted_order_message(const OrderOutcome& outcome) -> QString {
       .arg(static_cast<qulonglong>(outcome.unit_count));
 }
 
-auto no_selection_reason() -> QString {
-  return QCoreApplication::translate("OrderFeedback", "No units selected.");
+auto no_selection_reason() -> OrderRefusal {
+  return {OrderFailure::NoSelection,
+          QCoreApplication::translate("OrderFeedback", "No units selected.")};
 }
 
-auto no_eligible_units_reason(OrderKind kind) -> QString {
+auto unreachable_reason() -> OrderRefusal {
+  return {OrderFailure::Unreachable,
+          QCoreApplication::translate("OrderFeedback", "Cannot reach that spot.")};
+}
+
+auto out_of_range_reason() -> OrderRefusal {
+  return {OrderFailure::OutOfRange,
+          QCoreApplication::translate("OrderFeedback", "That target is out of range.")};
+}
+
+auto unit_busy_reason() -> OrderRefusal {
+  return {OrderFailure::UnitBusy,
+          QCoreApplication::translate("OrderFeedback",
+                                      "Those units are busy with another order.")};
+}
+
+auto insufficient_resources_reason() -> OrderRefusal {
+  return {OrderFailure::InsufficientResources,
+          QCoreApplication::translate("OrderFeedback", "Not enough resources.")};
+}
+
+namespace {
+
+auto no_eligible_units_text(OrderKind kind) -> QString {
   switch (kind) {
   case OrderKind::Attack:
     return QCoreApplication::translate("OrderFeedback",
@@ -153,7 +235,7 @@ auto no_eligible_units_reason(OrderKind kind) -> QString {
                                      "The selected units cannot take that order.");
 }
 
-auto no_target_under_cursor_reason(OrderKind kind) -> QString {
+auto no_target_under_cursor_text(OrderKind kind) -> QString {
   switch (kind) {
   case OrderKind::Attack:
     return QCoreApplication::translate("OrderFeedback", "No enemy under the cursor.");
@@ -169,28 +251,43 @@ auto no_target_under_cursor_reason(OrderKind kind) -> QString {
   return QCoreApplication::translate("OrderFeedback", "Nothing to target there.");
 }
 
-auto no_ground_under_cursor_reason() -> QString {
-  return QCoreApplication::translate("OrderFeedback", "Choose a spot on the map.");
+} // namespace
+
+auto no_eligible_units_reason(OrderKind kind) -> OrderRefusal {
+  return {OrderFailure::CommandUnavailable, no_eligible_units_text(kind)};
 }
 
-auto barracks_full_reason() -> QString {
-  return QCoreApplication::translate("OrderFeedback",
-                                     "That barracks has no room for more people.");
+auto no_target_under_cursor_reason(OrderKind kind) -> OrderRefusal {
+  return {OrderFailure::InvalidTarget, no_target_under_cursor_text(kind)};
 }
 
-auto no_repairs_needed_reason() -> QString {
-  return QCoreApplication::translate("OrderFeedback",
-                                     "That building does not need repairs.");
+auto no_ground_under_cursor_reason() -> OrderRefusal {
+  return {OrderFailure::InvalidTarget,
+          QCoreApplication::translate("OrderFeedback", "Choose a spot on the map.")};
 }
 
-auto not_your_building_reason() -> QString {
-  return QCoreApplication::translate(
-      "OrderFeedback", "Your builders only take down your own buildings.");
+auto barracks_full_reason() -> OrderRefusal {
+  return {OrderFailure::PopulationCap,
+          QCoreApplication::translate("OrderFeedback",
+                                      "That barracks has no room for more people.")};
 }
 
-auto building_is_protected_reason() -> QString {
-  return QCoreApplication::translate("OrderFeedback",
-                                     "That building cannot be taken down.");
+auto no_repairs_needed_reason() -> OrderRefusal {
+  return {OrderFailure::CommandUnavailable,
+          QCoreApplication::translate("OrderFeedback",
+                                      "That building does not need repairs.")};
+}
+
+auto not_your_building_reason() -> OrderRefusal {
+  return {OrderFailure::WrongOwner,
+          QCoreApplication::translate(
+              "OrderFeedback", "Your builders only take down your own buildings.")};
+}
+
+auto building_is_protected_reason() -> OrderRefusal {
+  return {OrderFailure::CommandUnavailable,
+          QCoreApplication::translate("OrderFeedback",
+                                      "That building cannot be taken down.")};
 }
 
 } // namespace App::Core

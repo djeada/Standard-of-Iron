@@ -347,6 +347,7 @@ add_executable(
     render/barracks_flag_renderer_test.cpp
     render/building_archetype_desc_test.cpp
     render/building_render_common_test.cpp
+    render/health_bar_visibility_test.cpp
     render/mode_indicator_test.cpp
     render/mode_indicator_placement_test.cpp
     render/shader_source_test.cpp
@@ -482,6 +483,10 @@ add_executable(
     core/commander_control_regression_test.cpp
     core/commander_camera_rig_test.cpp
     core/commander_control_controller_test.cpp
+    core/commander_direct_control_latency_test.cpp
+    core/commander_mode_transition_test.cpp
+    core/context_intent_test.cpp
+    core/player_feedback_test.cpp
     core/input_command_handler_test.cpp
     core/tutorial_mission_test.cpp
     core/campaign_wave_assault_test.cpp

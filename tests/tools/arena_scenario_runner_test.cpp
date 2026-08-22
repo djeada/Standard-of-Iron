@@ -1020,3 +1020,201 @@ TEST(CombatAnimationDiagnosticsTest, AuthoredHitInterruptsAreTracedButNotPoseChu
   EXPECT_FALSE(unit->soldiers.back().churn_flagged);
   diagnostics.set_enabled(false);
 }
+
+namespace {
+
+auto joint_pose(const QVector3D& foot_l,
+                const QVector3D& foot_r,
+                const QVector3D& hand_l,
+                const QVector3D& hand_r,
+                float pelvis_yaw) -> Render::Profiling::SubmittedBodyPose {
+  Render::Profiling::SubmittedBodyPose pose;
+  pose.body_up_y = 1.0F;
+  pose.max_arm_reach = 0.4F;
+  pose.foot_l_world = foot_l;
+  pose.foot_r_world = foot_r;
+  pose.hand_l_world = hand_l;
+  pose.hand_r_world = hand_r;
+  pose.pelvis_yaw_degrees = pelvis_yaw;
+  pose.joints_valid = true;
+  return pose;
+}
+
+void submit_joint_frame(Arena::ArenaScenarioRunner& runner,
+                        Engine::Core::EntityID entity_id,
+                        std::uint64_t frame,
+                        double at_seconds,
+                        const Render::Profiling::SubmittedBodyPose& pose,
+                        Render::Profiling::SoldierVisualState state) {
+  auto& diagnostics = Render::Profiling::CombatAnimationDiagnostics::instance();
+  diagnostics.begin_frame(frame);
+  Render::Profiling::SoldierAnimationDebugSample sample;
+  sample.soldier_index = 0;
+  sample.root_position = QVector3D(-2.0F, 0.0F, 0.0F);
+  sample.visual_state = state;
+  diagnostics.record_soldier_sample(entity_id, sample);
+  diagnostics.record_submitted_body_pose(entity_id, 0U, pose);
+  runner.observe_rendered_frame(at_seconds);
+}
+
+} // namespace
+
+TEST(ArenaScenarioRunnerTest, RenderProbeRejectsAPlantedFootThatSlides) {
+  Engine::Core::World world;
+  auto scenario = minimal_definition();
+  scenario.groups.resize(1);
+  scenario.steps.clear();
+  scenario.expectations = {
+      {Arena::ArenaExpectationKind::NoPlantedFootSliding, QStringLiteral("blue")}};
+  Arena::ArenaScenarioRunner runner(world, make_entity_host(world), scenario);
+  ASSERT_TRUE(runner.start());
+
+  auto const entity_id = runner.group_entities(QStringLiteral("blue")).front();
+  auto& diagnostics = Render::Profiling::CombatAnimationDiagnostics::instance();
+  diagnostics.set_enabled(true);
+
+  submit_joint_frame(runner,
+                     entity_id,
+                     1,
+                     4.0,
+                     joint_pose(QVector3D(-2.1F, 0.02F, 0.0F),
+                                QVector3D(-1.9F, 0.02F, 0.0F),
+                                QVector3D(-2.0F, 1.0F, 0.2F),
+                                QVector3D(-2.0F, 1.0F, -0.2F),
+                                0.0F),
+                     Render::Profiling::SoldierVisualState::Idle);
+  submit_joint_frame(runner,
+                     entity_id,
+                     2,
+                     4.02,
+                     joint_pose(QVector3D(-1.7F, 0.02F, 0.0F),
+                                QVector3D(-1.5F, 0.02F, 0.0F),
+                                QVector3D(-2.0F, 1.0F, 0.2F),
+                                QVector3D(-2.0F, 1.0F, -0.2F),
+                                0.0F),
+                     Render::Profiling::SoldierVisualState::Idle);
+
+  ASSERT_FALSE(runner.report().passed());
+  EXPECT_EQ(runner.report().issues.front().code, QStringLiteral("planted_foot_slide"));
+  diagnostics.set_enabled(false);
+}
+
+TEST(ArenaScenarioRunnerTest, RenderProbeAcceptsAFootLiftedOffTheGround) {
+  Engine::Core::World world;
+  auto scenario = minimal_definition();
+  scenario.groups.resize(1);
+  scenario.steps.clear();
+  scenario.expectations = {
+      {Arena::ArenaExpectationKind::NoPlantedFootSliding, QStringLiteral("blue")}};
+  Arena::ArenaScenarioRunner runner(world, make_entity_host(world), scenario);
+  ASSERT_TRUE(runner.start());
+
+  auto const entity_id = runner.group_entities(QStringLiteral("blue")).front();
+  auto& diagnostics = Render::Profiling::CombatAnimationDiagnostics::instance();
+  diagnostics.set_enabled(true);
+
+  submit_joint_frame(runner,
+                     entity_id,
+                     1,
+                     4.0,
+                     joint_pose(QVector3D(-2.1F, 0.55F, 0.0F),
+                                QVector3D(-1.9F, 0.55F, 0.0F),
+                                QVector3D(-2.0F, 1.0F, 0.2F),
+                                QVector3D(-2.0F, 1.0F, -0.2F),
+                                0.0F),
+                     Render::Profiling::SoldierVisualState::Idle);
+  submit_joint_frame(runner,
+                     entity_id,
+                     2,
+                     4.02,
+                     joint_pose(QVector3D(-1.5F, 0.55F, 0.0F),
+                                QVector3D(-1.3F, 0.55F, 0.0F),
+                                QVector3D(-2.0F, 1.0F, 0.2F),
+                                QVector3D(-2.0F, 1.0F, -0.2F),
+                                0.0F),
+                     Render::Profiling::SoldierVisualState::Idle);
+
+  EXPECT_TRUE(runner.report().passed());
+  diagnostics.set_enabled(false);
+}
+
+TEST(ArenaScenarioRunnerTest, RenderProbeRejectsAWeaponHandThatTeleports) {
+  Engine::Core::World world;
+  auto scenario = minimal_definition();
+  scenario.groups.resize(1);
+  scenario.steps.clear();
+  scenario.expectations = {
+      {Arena::ArenaExpectationKind::NoWeaponTeleport, QStringLiteral("blue")}};
+  Arena::ArenaScenarioRunner runner(world, make_entity_host(world), scenario);
+  ASSERT_TRUE(runner.start());
+
+  auto const entity_id = runner.group_entities(QStringLiteral("blue")).front();
+  auto& diagnostics = Render::Profiling::CombatAnimationDiagnostics::instance();
+  diagnostics.set_enabled(true);
+
+  submit_joint_frame(runner,
+                     entity_id,
+                     1,
+                     4.0,
+                     joint_pose(QVector3D(-2.1F, 0.02F, 0.0F),
+                                QVector3D(-1.9F, 0.02F, 0.0F),
+                                QVector3D(-2.0F, 1.0F, 0.2F),
+                                QVector3D(-2.0F, 1.0F, -0.2F),
+                                0.0F),
+                     Render::Profiling::SoldierVisualState::Attack);
+  submit_joint_frame(runner,
+                     entity_id,
+                     2,
+                     4.02,
+                     joint_pose(QVector3D(-2.1F, 0.02F, 0.0F),
+                                QVector3D(-1.9F, 0.02F, 0.0F),
+                                QVector3D(-2.0F, 1.0F, 2.6F),
+                                QVector3D(-2.0F, 1.0F, -0.2F),
+                                0.0F),
+                     Render::Profiling::SoldierVisualState::Attack);
+
+  ASSERT_FALSE(runner.report().passed());
+  EXPECT_EQ(runner.report().issues.front().code,
+            QStringLiteral("weapon_hand_teleport"));
+  diagnostics.set_enabled(false);
+}
+
+TEST(ArenaScenarioRunnerTest, RenderProbeRejectsAPelvisThatSnapsRound) {
+  Engine::Core::World world;
+  auto scenario = minimal_definition();
+  scenario.groups.resize(1);
+  scenario.steps.clear();
+  scenario.expectations = {
+      {Arena::ArenaExpectationKind::NoPelvisSnap, QStringLiteral("blue")}};
+  Arena::ArenaScenarioRunner runner(world, make_entity_host(world), scenario);
+  ASSERT_TRUE(runner.start());
+
+  auto const entity_id = runner.group_entities(QStringLiteral("blue")).front();
+  auto& diagnostics = Render::Profiling::CombatAnimationDiagnostics::instance();
+  diagnostics.set_enabled(true);
+
+  submit_joint_frame(runner,
+                     entity_id,
+                     1,
+                     4.0,
+                     joint_pose(QVector3D(-2.1F, 0.02F, 0.0F),
+                                QVector3D(-1.9F, 0.02F, 0.0F),
+                                QVector3D(-2.0F, 1.0F, 0.2F),
+                                QVector3D(-2.0F, 1.0F, -0.2F),
+                                0.0F),
+                     Render::Profiling::SoldierVisualState::Idle);
+  submit_joint_frame(runner,
+                     entity_id,
+                     2,
+                     4.02,
+                     joint_pose(QVector3D(-2.1F, 0.02F, 0.0F),
+                                QVector3D(-1.9F, 0.02F, 0.0F),
+                                QVector3D(-2.0F, 1.0F, 0.2F),
+                                QVector3D(-2.0F, 1.0F, -0.2F),
+                                140.0F),
+                     Render::Profiling::SoldierVisualState::Idle);
+
+  ASSERT_FALSE(runner.report().passed());
+  EXPECT_EQ(runner.report().issues.front().code, QStringLiteral("pelvis_snap"));
+  diagnostics.set_enabled(false);
+}

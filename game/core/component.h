@@ -818,6 +818,9 @@ public:
   float hit_direction_x{0.0F};
   float hit_direction_z{0.0F};
 
+  float recent_damage_remaining{0.0F};
+
+  static constexpr float k_recent_damage_window = 3.0F;
   static constexpr float k_reaction_duration = 0.25F;
   static constexpr float k_max_knockback = 0.15F;
   static constexpr float k_light_flinch_duration = 0.15F;

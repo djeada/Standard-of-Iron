@@ -55,6 +55,24 @@ constexpr float k_default_root_step = 0.8F;
 constexpr float k_default_frame_budget_ms = 33.34F;
 constexpr float k_default_fall_up_y = 0.72F;
 
+constexpr float k_default_foot_slide = 0.08F;
+constexpr float k_planted_root_step = 0.02F;
+constexpr float k_planted_foot_height = 0.12F;
+constexpr float k_default_hand_step = 0.90F;
+constexpr float k_default_pelvis_step = 70.0F;
+constexpr float k_default_attack_torso_sweep = 6.0F;
+
+auto shortest_degrees(float to_degrees, float from_degrees) -> float {
+  float diff = to_degrees - from_degrees;
+  while (diff > 180.0F) {
+    diff -= 360.0F;
+  }
+  while (diff < -180.0F) {
+    diff += 360.0F;
+  }
+  return diff;
+}
+
 auto vector_from_transform(const Engine::Core::TransformComponent& transform)
     -> QVector3D {
   return {transform.position.x, transform.position.y, transform.position.z};
@@ -372,6 +390,15 @@ struct ArenaScenarioRunner::Impl {
 
   struct SoldierState {
     QVector3D root_position;
+    QVector3D hand_l_world;
+    QVector3D hand_r_world;
+    QVector3D foot_l_world;
+    QVector3D foot_r_world;
+    float pelvis_yaw_degrees{0.0F};
+    bool joints_valid{false};
+    float attack_pelvis_yaw_min{0.0F};
+    float attack_pelvis_yaw_max{0.0F};
+    bool attack_yaw_tracked{false};
     float observed_at{0.0F};
     float fight_idle_since{-1.0F};
     float terminal_pose_since{-1.0F};
@@ -2850,6 +2877,128 @@ struct ArenaScenarioRunner::Impl {
                       soldier.soldier_index);
           }
         }
+        bool const joints_comparable = previous.initialized && previous.joints_valid &&
+                                       soldier.joint_sample_valid && !previous.culled &&
+                                       !culled &&
+                                       elapsed - previous.observed_at <= 0.05F;
+
+        if (expectation.kind == ArenaExpectationKind::NoPlantedFootSliding &&
+            joints_comparable) {
+          bool const locomoting =
+              soldier.visual_state == Render::Profiling::SoldierVisualState::Walk ||
+              soldier.visual_state == Render::Profiling::SoldierVisualState::Run ||
+              soldier.visual_state == Render::Profiling::SoldierVisualState::Dying ||
+              soldier.visual_state == Render::Profiling::SoldierVisualState::Dead;
+          bool const root_planted = step <= k_planted_root_step;
+          if (!locomoting && root_planted) {
+            float const allowed = expectation.threshold > 0.0F ? expectation.threshold
+                                                               : k_default_foot_slide;
+            float const ground_y = soldier.root_position.y();
+            float planted_slide = 0.0F;
+            auto const consider_foot = [&](const QVector3D& now,
+                                           const QVector3D& before) {
+              bool const planted_now = now.y() - ground_y <= k_planted_foot_height;
+              bool const planted_before =
+                  before.y() - ground_y <= k_planted_foot_height;
+              if (!planted_now || !planted_before) {
+                return;
+              }
+              planted_slide = std::max(planted_slide, horizontal_distance(now, before));
+            };
+            consider_foot(soldier.foot_l_world, previous.foot_l_world);
+            consider_foot(soldier.foot_r_world, previous.foot_r_world);
+            if (planted_slide > allowed) {
+              add_issue(QStringLiteral("planted_foot_slide"),
+                        QStringLiteral("%1 entity %2 soldier %3 planted foot slid %4 m "
+                                       "between frames while not walking")
+                            .arg(group)
+                            .arg(entity_id)
+                            .arg(soldier.soldier_index)
+                            .arg(planted_slide, 0, 'f', 3),
+                        entity_id,
+                        soldier.soldier_index);
+            }
+          }
+        }
+
+        if (expectation.kind == ArenaExpectationKind::NoWeaponTeleport &&
+            joints_comparable) {
+          float const allowed = expectation.threshold > 0.0F ? expectation.threshold
+                                                             : k_default_hand_step;
+          float const step_l = (soldier.hand_l_world - previous.hand_l_world).length();
+          float const step_r = (soldier.hand_r_world - previous.hand_r_world).length();
+          float const worst = std::max(step_l, step_r);
+          if (worst > allowed) {
+            add_issue(QStringLiteral("weapon_hand_teleport"),
+                      QStringLiteral("%1 entity %2 soldier %3 weapon hand jumped %4 m "
+                                     "between frames")
+                          .arg(group)
+                          .arg(entity_id)
+                          .arg(soldier.soldier_index)
+                          .arg(worst, 0, 'f', 3),
+                      entity_id,
+                      soldier.soldier_index);
+          }
+        }
+
+        if (expectation.kind == ArenaExpectationKind::NoPelvisSnap &&
+            joints_comparable) {
+          float const allowed = expectation.threshold > 0.0F ? expectation.threshold
+                                                             : k_default_pelvis_step;
+          float const turn = std::abs(shortest_degrees(soldier.pelvis_yaw_degrees,
+                                                       previous.pelvis_yaw_degrees));
+          if (turn > allowed) {
+            add_issue(
+                QStringLiteral("pelvis_snap"),
+                QStringLiteral("%1 entity %2 soldier %3 pelvis rotated %4 degrees "
+                               "between frames")
+                    .arg(group)
+                    .arg(entity_id)
+                    .arg(soldier.soldier_index)
+                    .arg(turn, 0, 'f', 1),
+                entity_id,
+                soldier.soldier_index);
+          }
+        }
+
+        if (expectation.kind == ArenaExpectationKind::AttackHasTorsoRotation &&
+            soldier.joint_sample_valid && !culled) {
+          if (observed_attack) {
+            if (!previous.attack_yaw_tracked) {
+              previous.attack_pelvis_yaw_min = soldier.pelvis_yaw_degrees;
+              previous.attack_pelvis_yaw_max = soldier.pelvis_yaw_degrees;
+              previous.attack_yaw_tracked = true;
+            } else {
+              float const relative = shortest_degrees(soldier.pelvis_yaw_degrees,
+                                                      previous.attack_pelvis_yaw_min);
+              previous.attack_pelvis_yaw_max =
+                  std::max(previous.attack_pelvis_yaw_max,
+                           previous.attack_pelvis_yaw_min + relative);
+              previous.attack_pelvis_yaw_min =
+                  std::min(previous.attack_pelvis_yaw_min,
+                           previous.attack_pelvis_yaw_min + relative);
+            }
+          } else if (previous.attack_yaw_tracked) {
+            float const swept =
+                previous.attack_pelvis_yaw_max - previous.attack_pelvis_yaw_min;
+            float const required = expectation.threshold > 0.0F
+                                       ? expectation.threshold
+                                       : k_default_attack_torso_sweep;
+            if (swept < required) {
+              add_issue(QStringLiteral("attack_without_torso_rotation"),
+                        QStringLiteral("%1 entity %2 soldier %3 swung with only %4 "
+                                       "degrees of torso rotation")
+                            .arg(group)
+                            .arg(entity_id)
+                            .arg(soldier.soldier_index)
+                            .arg(swept, 0, 'f', 1),
+                        entity_id,
+                        soldier.soldier_index);
+            }
+            previous.attack_yaw_tracked = false;
+          }
+        }
+
         if (expectation.kind == ArenaExpectationKind::AllLivingSoldiersFight &&
             living_formation_fighter) {
           if (observed_attack) {
@@ -2939,6 +3088,12 @@ struct ArenaScenarioRunner::Impl {
         }
       }
       previous.root_position = soldier.root_position;
+      previous.hand_l_world = soldier.hand_l_world;
+      previous.hand_r_world = soldier.hand_r_world;
+      previous.foot_l_world = soldier.foot_l_world;
+      previous.foot_r_world = soldier.foot_r_world;
+      previous.pelvis_yaw_degrees = soldier.pelvis_yaw_degrees;
+      previous.joints_valid = soldier.joint_sample_valid;
       previous.observed_at = elapsed;
       previous.initialized = true;
       previous.culled = culled;
