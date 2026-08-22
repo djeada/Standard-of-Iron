@@ -5,6 +5,7 @@
 #include <cstdint>
 
 #include "animation/death_pose_manifest.h"
+#include "animation/melee_swing_manifest.h"
 #include "animation/reaction_pose_manifest.h"
 #include "animation/rig/humanoid_proportions.h"
 #include "animation/showcase_pose_manifest.h"
@@ -56,6 +57,11 @@ public:
                            std::uint8_t variant,
                            float reach_scale = 1.0F);
   void spear_thrust_variant(float attack_phase, std::uint8_t variant);
+
+  void steer_melee_swing(float attack_phase,
+                         const Animation::MeleeIntent& anchor,
+                         float offhand_along_weapon,
+                         const QVector3D& baked_weapon_axis);
   void mount_on_horse(float saddle_height);
   void hold_spear_idle();
   void channel_spell_idle();

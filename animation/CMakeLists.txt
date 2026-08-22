@@ -18,9 +18,11 @@ add_library(
     guard_manifest.cpp
     hold_pose_manifest.cpp
     horse_gait_manifest.cpp
+    individuality_manifest.cpp
     intent_manifest.cpp
     layout_manifest.cpp
     locomotion_manifest.cpp
+    melee_swing_manifest.cpp
     micro_variation_manifest.cpp
     mounted_pose_manifest.cpp
     playback_manifest.cpp

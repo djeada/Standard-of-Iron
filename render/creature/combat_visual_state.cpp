@@ -42,7 +42,7 @@ auto animation_raw_inputs(const CombatVisualRawInputs& raw) noexcept
       .is_dying = raw.is_dying,
       .is_dead = raw.is_dead,
       .locomotion = raw.locomotion,
-      .combat_phase = animation_combat_phase(raw.combat_phase),
+      .combat_phase = raw.combat_phase,
       .combat_phase_progress = raw.combat_phase_progress,
       .attack_variant = raw.attack_variant,
       .attack_target_id = raw.attack_target_id,

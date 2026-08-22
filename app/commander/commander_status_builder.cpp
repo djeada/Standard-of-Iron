@@ -229,7 +229,7 @@ auto build_controlled_commander_status(const CommanderStatusInput& input)
               ? commander_entity->get_component<Engine::Core::CombatStateComponent>()
               : nullptr) {
     result["combat_phase"] = static_cast<int>(combat_state->animation_state);
-    result["attack_direction"] = static_cast<int>(combat_state->attack_direction);
+    result["attack_direction"] = static_cast<int>(combat_state->attack_direction());
     result["is_attacking"] =
         combat_state->animation_state != Engine::Core::CombatAnimationState::Idle;
   }

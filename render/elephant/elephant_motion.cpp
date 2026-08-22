@@ -155,7 +155,8 @@ auto evaluate_elephant_motion(
     const ElephantProfile& profile,
     const AnimationInputs& anim,
     Render::Creature::ElephantAnimationStateComponent* io_state,
-    float model_scale) -> ElephantMotionSample {
+    float model_scale,
+    const Animation::SoldierIndividuality& individuality) -> ElephantMotionSample {
   Render::Creature::ElephantAnimationStateComponent fallback_state{};
   Render::Creature::ElephantAnimationStateComponent& state =
       io_state != nullptr ? *io_state : fallback_state;
@@ -178,6 +179,8 @@ auto evaluate_elephant_motion(
     });
     g.cycle_time = cadence.cycle_time;
   }
+
+  g.cycle_time /= std::clamp(individuality.cadence_scale, 0.80F, 1.25F);
   sample.gait = g;
 
   Render::Creature::MovementAnimationState const movement_animation =
@@ -194,7 +197,8 @@ auto evaluate_elephant_motion(
       state.locomotion_phase =
           Quadruped::wrap_phase(state.locomotion_phase + elapsed / cycle_time);
     } else {
-      state.locomotion_phase = Quadruped::wrap_phase(anim.time / cycle_time);
+      state.locomotion_phase = Quadruped::wrap_phase((anim.time / cycle_time) +
+                                                     individuality.gait_phase_offset);
     }
     state.locomotion_phase_time = anim.time;
     state.locomotion_phase_valid = true;
