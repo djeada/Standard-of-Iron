@@ -209,11 +209,6 @@ struct PreparedMove {
   bool preserve_velocity{false};
 };
 
-auto navigation_clearance_for(const Engine::Core::Entity& entity) -> float {
-  auto const layout = FormationCombat::resolve_layout(entity);
-  return Pathfinding::traversal_clearance_for_body(layout.body_radius);
-}
-
 auto prepare_move(Engine::Core::World& world,
                   Engine::Core::EntityID unit_id,
                   const CommandService::MoveOptions& options) -> PreparedMove {
@@ -255,7 +250,8 @@ auto prepare_move(Engine::Core::World& world,
   if (movement == nullptr) {
     return {};
   }
-  movement->set_navigation_clearance(navigation_clearance_for(*entity));
+  movement->set_navigation_clearance(
+      FormationCombat::formation_navigation_clearance(*entity));
 
   PreparedMove result;
   result.entity = entity;

@@ -669,7 +669,7 @@ void prepare_humanoid_instances(const HumanoidRendererBase& owner,
       turn_slot_world = unit_base.map(QVector3D(offset_x, 0.0F, offset_z));
 
       float const cap_jitter =
-          0.92F + 0.16F * static_cast<float>(inst_seed % 97U) / 96.0F;
+          0.97F + 0.06F * static_cast<float>(inst_seed % 97U) / 96.0F;
       SoldierTurnSmoothingInputs smoothing_inputs{};
       smoothing_inputs.target_x = turn_slot_world.x();
       smoothing_inputs.target_z = turn_slot_world.z();
@@ -1090,6 +1090,28 @@ void prepare_humanoid_instances(const HumanoidRendererBase& owner,
                                     ctx.force_single_soldier,
                                     soldier_render_anim.construction_job);
     }
+    Animation::HumanoidConstructionTransitionSample construction_transition{};
+    if (locomotion_persistent_state != nullptr) {
+      construction_transition = Animation::resolve_humanoid_construction_transition({
+          .state = locomotion_persistent_state->construction_transition,
+          .constructing = soldier_render_anim.is_constructing,
+          .sample_time = anim.time,
+          .construction_phase = soldier_render_anim.construction_progress,
+          .role = construction_role,
+      });
+      if (allow_animation_persistence) {
+        locomotion_persistent_state->construction_transition =
+            construction_transition.state;
+      }
+    } else if (soldier_render_anim.is_constructing) {
+      construction_transition.pose_weight = 1.0F;
+      construction_transition.phase = soldier_render_anim.construction_progress;
+      construction_transition.role = construction_role;
+    }
+    if (construction_transition.active()) {
+      construction_role = construction_transition.role;
+      soldier_render_anim.construction_progress = construction_transition.phase;
+    }
 
     HumanoidAnimationContext anim_ctx{};
     anim_ctx.inputs = soldier_render_anim;
@@ -1113,6 +1135,7 @@ void prepare_humanoid_instances(const HumanoidRendererBase& owner,
     anim_ctx.locomotion_cycle_time = locomotion_state.gait.cycle_time;
     anim_ctx.locomotion_phase = locomotion_state.gait.cycle_phase;
     anim_ctx.construction_role = construction_role;
+    anim_ctx.construction_blend = construction_transition.pose_weight;
     anim_ctx.attack_phase = anim_ctx.inputs.combat_visual.attack_phase;
     anim_ctx.attack_emphasis = anim_ctx.inputs.combat_visual.attack_emphasis;
     anim_ctx.amplified_attack = false;

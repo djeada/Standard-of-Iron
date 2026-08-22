@@ -39,6 +39,9 @@
 namespace Game::Systems::Combat {
 
 namespace {
+
+constexpr float k_min_bypass_clearance = 0.6F;
+
 auto deterministic_attack_delay(Engine::Core::EntityID attacker_id,
                                 Engine::Core::EntityID target_id,
                                 float cooldown) -> float {
@@ -1513,6 +1516,21 @@ void process_attacks(Engine::Core::World* world,
               } else {
                 hold_position = true;
               }
+            }
+          }
+
+          if (!ranged_unit && structure_separates_combatants(attacker, target)) {
+            auto const bypass_geometry =
+                FormationCombat::contact_geometry(*attacker, *target);
+            auto const bypass = melee_bypass_destination(
+                attacker_pos,
+                target_pos,
+                bypass_geometry.contact_center_distance,
+                std::max(k_min_bypass_clearance,
+                         FormationCombat::formation_navigation_clearance(*attacker)));
+            if (bypass.has_value()) {
+              desired_pos = *bypass;
+              hold_position = false;
             }
           }
 

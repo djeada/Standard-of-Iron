@@ -17,6 +17,7 @@ void reset_humanoid_locomotion_state(
   state.run_presence = 0.0F;
   state.locomotion_state = Animation::HumanoidMotionState::Idle;
   state.locomotion_initialized = false;
+  state.construction_transition = {};
   state.combat_visual = {};
 }
 

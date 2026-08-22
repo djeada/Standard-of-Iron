@@ -493,6 +493,16 @@ auto formation_turn_radius(const Engine::Core::Entity& entity) -> float {
   return cached != g_layout_cache.end() ? cached->second.turn_radius : 0.0F;
 }
 
+auto formation_navigation_clearance(const Engine::Core::Entity& entity) -> float {
+  auto const layout = resolve_layout(entity);
+  float lateral_extent = layout.body_radius;
+  for (auto const& slot : layout.live_slots) {
+    lateral_extent =
+        std::max(lateral_extent, std::abs(slot.local_x) + layout.body_radius);
+  }
+  return std::max(0.1F, lateral_extent);
+}
+
 auto has_formation_slots(const Engine::Core::Entity& entity) -> bool {
   if (entity.has_component<Engine::Core::BuildingComponent>() ||
       entity.has_component<Engine::Core::ElephantComponent>()) {
