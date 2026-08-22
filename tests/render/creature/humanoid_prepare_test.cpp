@@ -3021,6 +3021,19 @@ TEST(AnimationCoreHoldPoseManifest, BowReadyAndSwordShieldCarryExposeStableTarge
   EXPECT_FLOAT_EQ(shield_moving.left_hand.z, 0.33F);
 }
 
+TEST(AnimationCoreHoldPoseManifest, ResourceCarryPlacesBothHandsAroundChestLoad) {
+  auto const carry = Animation::resolve_humanoid_held_pose({
+      .kind = Animation::HumanoidHeldPoseKind::ResourceCarry,
+      .shoulder_y = Render::GL::HumanProportions::SHOULDER_Y,
+  });
+
+  EXPECT_FLOAT_EQ(carry.right_hand.x, Animation::k_resource_carry_hand_half_span);
+  EXPECT_FLOAT_EQ(carry.left_hand.x, -Animation::k_resource_carry_hand_half_span);
+  EXPECT_FLOAT_EQ(carry.right_hand.z, Animation::k_resource_carry_hand_z);
+  EXPECT_GT(carry.right_hand.y, Render::GL::HumanProportions::WAIST_Y);
+  EXPECT_LT(carry.right_hand.y, Render::GL::HumanProportions::CHEST_Y);
+}
+
 TEST(AnimationCoreHoldPoseManifest, GuardStanceOwnsFormationTargetsAndDeltas) {
   auto const top = Animation::resolve_humanoid_guard_stance_pose({
       .pose = Animation::ShieldFormationPose::RomanTop,
@@ -5097,6 +5110,36 @@ TEST(HumanoidPrepare, HealingSelectionStillUsesIdleClipFamily) {
   EXPECT_EQ(*selection.clip_id,
             ArchetypeRegistry::instance().bpat_clip(ArchetypeRegistry::k_humanoid_base,
                                                     AnimationStateId::Idle));
+}
+
+TEST(HumanoidPrepare, WalkingCarrierKeepsWalkLegsAndOverlaysCarryArms) {
+  using Render::Creature::AnimationStateId;
+  using Render::Creature::ArchetypeRegistry;
+  using Render::Creature::Pipeline::resolve_humanoid_animation_selection;
+  using Render::Creature::Pipeline::UnitVisualSpec;
+
+  UnitVisualSpec spec{};
+  spec.kind = Render::Creature::Pipeline::CreatureKind::Humanoid;
+  spec.debug_name = "tests/resource_carry_selection";
+  spec.archetype_id = ArchetypeRegistry::k_humanoid_base;
+
+  Render::GL::HumanoidAnimationContext anim{};
+  anim.inputs.time = 0.9F;
+  anim.inputs.movement_state = Render::Creature::MovementAnimationState::Walk;
+  anim.inputs.is_carrying_load = true;
+  anim.gait.state = Render::GL::HumanoidMotionState::Walk;
+  anim.gait.cycle_phase = 0.4F;
+  anim.gait.locomotion_presence = 1.0F;
+
+  auto const selection = resolve_humanoid_animation_selection(spec, anim, 13U);
+
+  EXPECT_EQ(selection.state, AnimationStateId::Walk);
+  ASSERT_TRUE(selection.upper_body_overlay.active());
+  ASSERT_TRUE(selection.upper_body_overlay.clip_id.has_value());
+  EXPECT_EQ(*selection.upper_body_overlay.clip_id,
+            Animation::k_humanoid_resource_carry_clip);
+  EXPECT_EQ(selection.upper_body_overlay.mode,
+            Render::Creature::PlaybackLayerMode::UpperBodyOverlay);
 }
 
 TEST(HumanoidPrepare, HitReactionSelectionPlaysTheReactionClip) {

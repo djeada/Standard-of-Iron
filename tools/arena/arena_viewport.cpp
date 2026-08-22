@@ -3702,6 +3702,15 @@ void ArenaViewport::load_scenario(const QString& scenario_id) {
       transform->desired_yaw = group.facing_degrees;
       transform->has_desired_yaw = true;
     }
+    if (building_group && entity_id != 0U) {
+      auto& collision = Game::Systems::BuildingCollisionRegistry::instance();
+      collision.resize_building(
+          entity_id,
+          Game::Systems::BuildingCollisionRegistry::axis_aligned_size(
+              Game::Systems::BuildingCollisionRegistry::get_building_size(
+                  Game::Units::spawn_typeToQString(*group.spawn_type).toStdString()),
+              group.facing_degrees));
+    }
     if (unit != nullptr) {
       unit->render_individuals_per_unit_override = group.individuals_per_unit;
       unit->render_rider = group.render_rider;

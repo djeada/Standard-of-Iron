@@ -23,6 +23,8 @@ inline constexpr std::uint16_t k_humanoid_run_clip = Animation::k_humanoid_run_c
 inline constexpr std::uint16_t k_humanoid_hold_clip = Animation::k_humanoid_hold_clip;
 inline constexpr std::uint16_t k_humanoid_hold_bow_clip =
     Animation::k_humanoid_hold_bow_clip;
+inline constexpr std::uint16_t k_humanoid_resource_carry_clip =
+    Animation::k_humanoid_resource_carry_clip;
 inline constexpr std::uint16_t k_humanoid_attack_sword_a_clip =
     Animation::k_humanoid_attack_sword_a_clip;
 inline constexpr std::uint16_t k_humanoid_attack_sword_b_clip =

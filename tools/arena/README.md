@@ -715,6 +715,81 @@ yaw change at a large radius), or the one big pull-back for the reveal - keep ya
 under about 20 degrees except on that reveal, use three keys so the move
 accelerates and settles, and set `"ease": "smooth"` on every key after the first.
 
+**The city was full of people standing still, walking on the spot and standing
+inside walls.** All three had measurable causes, and only one of them was the
+scenario's fault. The instrument for all of it is a batch trace: run
+
+```bash
+build/bin/arena_app --batch --scenario promo_imperial_capital --duration 75 \
+  --fps 30 --capture-interval 0 --watchdog-multiplier 60 \
+  --artifact-dir artifacts/capital-diag
+```
+
+and read `trace.jsonl`, which carries every unit's `group`, `motion`, `position`
+and `movement_velocity` per frame. Sample every fifteenth frame and the three
+defects separate cleanly.
+
+- _The collision footprints were placeholders and the meshes had outgrown them._
+  `building_preview --bounds` prints each archetype's local bounds; multiply by the
+  spawn scale and a roman temple is 6.12 m x 4.29 m drawn while
+  `s_building_sizes` registered it as 3 x 3, a marketplace 5.46 m against 3, and a
+  home 4.25 m against 3. Navigation blocked less ground than the building covered,
+  so civilians walked into the podium and the steps. The table now carries the
+  measured sizes and `FootprintsCoverTheDrawnMesh` pins them. The barracks is the
+  one left alone: its archetype spans 15.6 m because a fenced supply yard is drawn
+  at local x 5.2, and blocking that would swallow the delivery drop point at
+  5.95 m and break hauling. That yard is still walk-through.
+- _Footprints ignored the building's facing._ Every district plot is placed at
+  `rotation + lean + quarter turn`, so an axis-aligned box left the corners of a
+  turned building unblocked. `register_building` now takes the yaw and stores the
+  rotated AABB.
+- _A gap that satisfies the layout contract can still seal the district._ The
+  navigation grid pads every footprint by `k_default_building_grid_padding` on each
+  side, so two plots need more than **twice** that padding between their edges or
+  the blocked boxes merge and the block becomes one solid mass with the residents
+  inside it. `CityPlanner::fits` had a 0.4 m gap; it now derives the gap from the
+  padding, plot jitter dropped from 0.34 to 0.16 of the pitch, and the core and
+  insula pitches went up to match.
+- _A unit that cannot advance still played a walk cycle._ Presentation asked only
+  whether the movement component had velocity, and a wedged unit keeps being handed
+  one - `capital_carriers_forum` stood at exactly (-88.0, -61.5) from t=22 s to the
+  end of a 75 s run, velocity oscillating +-1.0 m/s, feet cycling. This is game-wide,
+  not scenario-specific: `resolve_motion_presentation_state` now reports `Idle` once
+  a unit has wanted locomotion for 0.4 s without displacing, or once the movement
+  system's own stuck timer says it has gained no ground for 0.6 s. Covered by
+  `MotionPresentationTest`.
+- _`HarvestResource` is silently ignored by anything that is not a builder._ The
+  command needs `BuilderProductionComponent`, so the `Troop::Civilian` carrier
+  crews took the order and did nothing. Resource crews are `Troop::Builder`; only
+  the four crews that run `DeliverToStructure` to a real structure stay civilians.
+- _The scripted life fired in pulses and the shots were timed into the gaps._
+  Harvests repeated every 32 s, hauls every 36 s and patrol legs every 38 s, so a
+  shot starting at 26 s filmed the lull. Every cycle now repeats on a 12 to 16 s
+  beat for the whole scenario.
+- _`has_group` skips a job whose structure was never placed._ `planner.place`
+  returns false when a plot does not fit and says nothing, so hauls aimed at
+  `capital_barracks_south_0` and `capital_armoury_0` vanished and left their crews
+  standing for the entire run. Aim jobs at landmarks, and read the run report:
+  `MovementAnimationObserved` fails the scenario when a named group never moves.
+
+`MovementAnimationObserved` watches the **rendered** animation, so it can only
+speak for groups the batch camera can see, and this scenario is far larger than
+that view. Census the trace before believing it: every group it named walks
+between 56% and 91% of a 90 s run, but `capital_dock_hands`, `capital_farm_folk`,
+`capital_farm_folk_east` and `capital_column_swords` never have a single soldier
+submitted under the fixed batch camera, so their entries could only ever pass by
+luck. Those four are off the list. A group with `"motion": "walk"` samples and no
+entry in `soldiers` is a framing artefact, not a frozen crowd; a group that is
+idle in `units` for the whole run is the real thing.
+
+**The temple hill is a precinct, not a ring.** `add_temple_precinct` places five
+temples around the great temple in three rows - one at the back, three across the
+middle, two at the front - at a 9.6 m column pitch and a 9.0 m row pitch, which is
+what the corrected temple footprint needs to stand clear. The earlier
+`add_temple_star` put five temples on a 5.6 m radius, which passed the layout
+contract only because the contract was reading the placeholder 3 x 3 footprint;
+rendered, they interpenetrated. Two magic shrines flank the middle row.
+
 **It renders well below realtime and that is deliberate.** Roughly 2,200 building
 entities at full creature LOD on a 768 m terrain put frame work well past the
 30 ms mark, so the scenario

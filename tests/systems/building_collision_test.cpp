@@ -150,6 +150,47 @@ TEST_F(BuildingCollisionRegistryTest, UnitWithLargeRadiusCloseToBuilding) {
 TEST_F(BuildingCollisionRegistryTest, HomeUsesScaledFootprint) {
   const auto size = BuildingCollisionRegistry::get_building_size("home");
 
-  EXPECT_FLOAT_EQ(size.width, 3.0F);
-  EXPECT_FLOAT_EQ(size.depth, 3.0F);
+  EXPECT_FLOAT_EQ(size.width, 4.3F);
+  EXPECT_FLOAT_EQ(size.depth, 4.4F);
+}
+
+TEST_F(BuildingCollisionRegistryTest, FootprintsCoverTheDrawnMesh) {
+  struct Drawn {
+    const char* type;
+    float width;
+    float depth;
+  };
+
+  for (const auto& drawn : {Drawn{"home", 4.25F, 4.36F},
+                            Drawn{"marketplace", 5.46F, 5.46F},
+                            Drawn{"temple", 6.12F, 4.29F}}) {
+    const auto size = BuildingCollisionRegistry::get_building_size(drawn.type);
+    EXPECT_GE(size.width, drawn.width) << drawn.type;
+    EXPECT_GE(size.depth, drawn.depth) << drawn.type;
+  }
+}
+
+TEST_F(BuildingCollisionRegistryTest, AQuarterTurnSwapsFootprintAxes) {
+  const auto size = BuildingCollisionRegistry::get_building_size("temple");
+  const auto turned = BuildingCollisionRegistry::axis_aligned_size(size, 90.0F);
+
+  EXPECT_NEAR(turned.width, size.depth, 1.0e-4F);
+  EXPECT_NEAR(turned.depth, size.width, 1.0e-4F);
+}
+
+TEST_F(BuildingCollisionRegistryTest, ARotatedBuildingBlocksItsCorners) {
+  const auto size = BuildingCollisionRegistry::get_building_size("temple");
+  const auto leaning = BuildingCollisionRegistry::axis_aligned_size(size, 30.0F);
+
+  EXPECT_GT(leaning.width, size.width * 0.5F);
+  EXPECT_GT(leaning.depth, size.depth);
+}
+
+TEST_F(BuildingCollisionRegistryTest, ARotatedTempleBlocksWhereItIsDrawn) {
+  auto& registry = BuildingCollisionRegistry::instance();
+
+  registry.register_building(1, "temple", 0.0F, 0.0F, 0, 90.0F);
+
+  EXPECT_TRUE(registry.is_circle_overlapping_building(0.0F, 2.9F, 0.1F));
+  EXPECT_FALSE(registry.is_circle_overlapping_building(0.0F, 3.2F, 0.1F));
 }

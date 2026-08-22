@@ -53,8 +53,8 @@ auto humanoid_selection_is_steady(
   if (in.is_attacking || in.is_casting || in.is_mounted || in.has_showcase_clip ||
       in.has_authored_action_clip || in.is_in_hold_mode || in.is_exiting_hold ||
       in.is_guarding || in.is_exiting_guard || in.is_hit_reacting || in.is_healing ||
-      in.is_routing || in.is_constructing || in.is_dying || in.is_dead ||
-      in.is_defensive_layout_locked ||
+      in.is_routing || in.is_constructing || in.is_carrying_load || in.is_dying ||
+      in.is_dead || in.is_defensive_layout_locked ||
       in.shield_formation_pose != Render::GL::ShieldFormationPose::None ||
       in.combat_visual.authoritative ||
       anim_ctx.ambient_idle_type != Render::GL::AmbientIdleType::None) {

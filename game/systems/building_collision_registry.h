@@ -79,13 +79,17 @@ public:
 
   static auto get_building_size(const std::string& building_type) -> BuildingSize;
 
+  static auto axis_aligned_size(BuildingSize size,
+                                float facing_degrees) -> BuildingSize;
+
   static auto get_building_grid_padding(const std::string& building_type) -> float;
 
   void register_building(Engine::Core::EntityID entity_id,
                          const std::string& building_type,
                          float center_x,
                          float center_z,
-                         int owner_id);
+                         int owner_id,
+                         float facing_degrees = 0.0F);
 
   void register_building(Engine::Core::EntityID entity_id,
                          const std::string& building_type,

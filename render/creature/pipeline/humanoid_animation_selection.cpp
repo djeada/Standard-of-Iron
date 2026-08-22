@@ -3,6 +3,7 @@
 #include <QMatrix4x4>
 
 #include <algorithm>
+#include <cmath>
 #include <cstddef>
 #include <cstdint>
 #include <mutex>
@@ -607,14 +608,38 @@ auto resolve_humanoid_animation_selection(
     target.upper_body_overlay = playback_layer_from_selection(
         defensive, 1.0F, Render::Creature::PlaybackLayerMode::UpperBodyOverlay);
   };
+  auto const apply_resource_carry_overlay = [&](HumanoidAnimationSelection& target) {
+    if (!anim.inputs.is_carrying_load || anim.inputs.is_attacking ||
+        anim.inputs.is_casting || anim.inputs.is_mounted ||
+        anim.inputs.has_showcase_clip || anim.inputs.has_authored_action_clip ||
+        anim.inputs.is_in_hold_mode || anim.inputs.is_exiting_hold ||
+        anim.inputs.is_guarding || anim.inputs.is_exiting_guard ||
+        anim.inputs.is_hit_reacting || anim.inputs.is_healing ||
+        anim.inputs.is_constructing || anim.inputs.is_dying || anim.inputs.is_dead) {
+      return false;
+    }
+
+    HumanoidAnimationSelection carry = target;
+    carry.clip_id = Animation::k_humanoid_resource_carry_clip;
+    carry.clip_variant = 0U;
+    carry.phase = std::fmod(std::max(anim.inputs.time, 0.0F), 1.8F) / 1.8F;
+    target.upper_body_overlay = playback_layer_from_selection(
+        carry, 1.0F, Render::Creature::PlaybackLayerMode::UpperBodyOverlay);
+    return true;
+  };
 
   if (apply_locomotion_crossfade(selection, anim, spec, seed, variant)) {
+    apply_resource_carry_overlay(selection);
     apply_defensive_overlay(selection);
     return selection;
   }
 
   if (defensive_clip != Animation::k_unmapped_clip) {
     apply_defensive_overlay(selection);
+    return selection;
+  }
+
+  if (apply_resource_carry_overlay(selection)) {
     return selection;
   }
 

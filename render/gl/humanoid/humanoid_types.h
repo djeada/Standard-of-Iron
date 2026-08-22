@@ -98,6 +98,7 @@ struct AnimationInputs {
   float healing_target_dx{0.0F};
   float healing_target_dz{0.0F};
   bool is_constructing{false};
+  bool is_carrying_load{false};
   float construction_progress{0.0F};
   std::uint8_t construction_job{0};
   bool is_dying{false};

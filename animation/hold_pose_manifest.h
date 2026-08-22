@@ -14,7 +14,14 @@ enum class HumanoidHeldPoseKind : std::uint8_t {
   SwordShieldCarry,
   CasterChannel,
   StaveCarry,
+  ResourceCarry,
 };
+
+inline constexpr float k_resource_carry_hand_y_from_shoulder = -0.325F;
+inline constexpr float k_resource_carry_hand_z = 0.38F;
+inline constexpr float k_resource_carry_hand_half_span = 0.21F;
+inline constexpr float k_resource_carry_load_y_from_shoulder = -0.245F;
+inline constexpr float k_resource_carry_load_z = 0.40F;
 
 struct HumanoidHeldPoseInputs {
   HumanoidHeldPoseKind kind{HumanoidHeldPoseKind::BowReady};

@@ -60,6 +60,7 @@ public:
   void hold_spear_idle();
   void channel_spell_idle();
   void carry_stave();
+  void carry_resource_load();
   void brace_spear_for_hold();
   void hold_bow_ready();
   void guard_sword_and_shield_for_defense();

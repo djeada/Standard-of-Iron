@@ -523,6 +523,12 @@ auto sample_anim_state(const DrawContext& ctx) -> AnimationInputs {
     return finalize_sample(anim);
   }
 
+  if (const auto* carry =
+          ctx.entity->get_component<Engine::Core::ResourceCarryComponent>();
+      carry != nullptr && !carry->empty()) {
+    anim.is_carrying_load = true;
+  }
+
   if (auto const* unit = ctx.entity->get_component<Engine::Core::UnitComponent>();
       unit != nullptr) {
     anim.hold_attack_preserves_pose =
