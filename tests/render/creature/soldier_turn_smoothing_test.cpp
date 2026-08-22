@@ -201,7 +201,7 @@ TEST(SoldierTurnSmoothing, EveryResolveStampsTheFrameThatMovedTheSoldier) {
   EXPECT_EQ(state.updated_frame, 9U);
 }
 
-TEST(SoldierTurnSmoothing, AHalfTurnWalksThroughInsteadOfSweepingTheArc) {
+TEST(SoldierTurnSmoothing, AHalfTurnWheelsAroundInsteadOfCrossingTheRanks) {
 
   SoldierTurnSmoothingState state{};
   auto inputs = default_inputs();
@@ -223,12 +223,30 @@ TEST(SoldierTurnSmoothing, AHalfTurnWalksThroughInsteadOfSweepingTheArc) {
     travelled += std::sqrt(dx * dx + dz * dz);
     last_x = result.x;
     last_z = result.z;
+    EXPECT_GT(std::hypot(result.x, result.z), 2.5F);
     ++frames;
   } while (result.relocating && frames < 600);
 
   EXPECT_LT(frames, 600);
-  EXPECT_NEAR(travelled, 6.0F, 0.2F);
+  EXPECT_GT(travelled, 8.0F);
+  EXPECT_LT(travelled, 11.0F);
   EXPECT_NEAR(result.x, -3.0F, 0.1F);
+  EXPECT_NEAR(result.z, 0.0F, 0.1F);
+}
+
+TEST(SoldierTurnSmoothing, ASmallTurnStillTakesTheDirectCorrection) {
+  SoldierTurnSmoothingState state{};
+  auto inputs = default_inputs();
+  inputs.target_x = 3.0F;
+  std::ignore = resolve_soldier_turn_smoothing(state, inputs);
+
+  inputs.target_x = 2.30F;
+  inputs.target_z = 1.93F;
+  auto const result = resolve_soldier_turn_smoothing(state, inputs);
+
+  EXPECT_LT(result.x, 3.0F);
+  EXPECT_GT(result.z, 0.0F);
+  EXPECT_NEAR(result.travel_yaw_degrees, -20.0F, 1.0F);
 }
 
 } // namespace

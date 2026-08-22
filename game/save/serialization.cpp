@@ -167,6 +167,7 @@ auto Serialization::serialize_entity(const Entity* entity) -> QJsonObject {
     movement_obj["vz"] = movement->vz;
     movement_obj["path_index"] = static_cast<int>(movement->path_index);
     movement_obj["precise_arrival"] = movement->precise_arrival;
+    movement_obj["navigation_clearance"] = movement->navigation_clearance;
 
     QJsonArray path_array;
     for (const auto& waypoint : movement->path) {
@@ -912,6 +913,8 @@ void Serialization::deserialize_entity(Entity* entity, const QJsonObject& json) 
     movement->vx = static_cast<float>(movement_obj["vx"].toDouble());
     movement->vz = static_cast<float>(movement_obj["vz"].toDouble());
     movement->precise_arrival = movement_obj["precise_arrival"].toBool(false);
+    movement->navigation_clearance = std::max(
+        0.0F, static_cast<float>(movement_obj["navigation_clearance"].toDouble(0.5)));
     movement->clear_path();
     const auto path_array = movement_obj["path"].toArray();
     movement->path.reserve(path_array.size());

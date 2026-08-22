@@ -34,9 +34,6 @@ auto register_bundled() -> QStringList {
     return state.families;
   }
 
-  // QFontDatabase needs the GUI application up. Registering before that
-  // silently does nothing, and the failure only shows up as a wrong-looking
-  // capture hours later, so refuse loudly instead.
   if (QGuiApplication::instance() == nullptr) {
     qWarning("Ui::BrandFonts::register_bundled() called before QGuiApplication exists");
     return {};
@@ -72,11 +69,7 @@ auto register_bundled() -> QStringList {
 }
 
 auto title_family() -> QString {
-  // The display face first, then the serif that backs it up. The first one the
-  // application actually registered wins, so dropping a new
-  // StandardIronDisplay-Bold.ttf into assets/fonts/ switches the whole game
-  // over with no code change. Function-local so it is built on first use
-  // rather than during static initialisation.
+
   static const QStringList preference = {
       QStringLiteral("Standard Iron Display"),
       QStringLiteral("EB Garamond"),
@@ -88,8 +81,7 @@ auto title_family() -> QString {
       return candidate;
     }
   }
-  // Nothing bundled resolved. A serif request is a better last resort than a
-  // named family the host may not have.
+
   return QStringLiteral("serif");
 }
 

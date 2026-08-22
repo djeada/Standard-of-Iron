@@ -68,6 +68,10 @@ void TentRenderer::submit(Renderer& renderer, ResourceManager* resources) {
   }
 }
 
+namespace {
+constexpr float k_tent_footprint_radius = 1.15F;
+}
+
 void TentRenderer::generate_instances(
     const std::vector<Game::Map::WorldProp>& world_props,
     const Game::Map::TerrainHeightMap& height_map) {
@@ -85,8 +89,10 @@ void TentRenderer::generate_instances(
     }
     const float wx = (prop.x - half_w) * tile_size;
     const float wz = (prop.z - half_h) * tile_size;
-    const QVector3D resolved =
-        terrain_service.resolve_surface_world_position(wx, wz, 0.0F, 0.0F);
+    const float tent_scale = prop.scale * Game::Map::world_prop_render_scale(
+                                              Game::Map::WorldProp::Type::Tent);
+    const QVector3D resolved = terrain_service.resolve_footprint_world_position(
+        wx, wz, tent_scale * k_tent_footprint_radius, 0.0F, 0.0F);
 
     uint32_t state = hash_coords(static_cast<int>(prop.x),
                                  static_cast<int>(prop.z),
@@ -103,11 +109,7 @@ void TentRenderer::generate_instances(
     canvas_color *= remap(rand_01(state), 0.88F, 1.06F);
 
     PropInstanceGpu inst;
-    inst.pos_scale = QVector4D(resolved.x(),
-                               resolved.y(),
-                               resolved.z(),
-                               prop.scale * Game::Map::world_prop_render_scale(
-                                                Game::Map::WorldProp::Type::Tent));
+    inst.pos_scale = QVector4D(resolved.x(), resolved.y(), resolved.z(), tent_scale);
     inst.color_rot =
         QVector4D(canvas_color.x(), canvas_color.y(), canvas_color.z(), prop.rotation);
     m_state.instances.push_back(inst);

@@ -758,12 +758,12 @@ inline constexpr float k_max_oblique_bridge_span = 3.0F;
   return std::min(oblique_half, perpendicular_half * k_max_oblique_bridge_span);
 }
 
-[[nodiscard]] inline auto bridge_abutment_reach(float bridge_width) -> float {
+[[nodiscard]] inline constexpr auto bridge_abutment_reach(float bridge_width) -> float {
   return std::clamp(bridge_width * 0.14F, 0.7F, 1.3F);
 }
 
-[[nodiscard]] inline auto bridge_bank_overhang(float bridge_width,
-                                               float river_width) -> float {
+[[nodiscard]] inline constexpr auto bridge_bank_overhang(float bridge_width,
+                                                         float river_width) -> float {
   return std::clamp(river_width * 0.30F, 0.6F, bridge_abutment_reach(bridge_width));
 }
 
@@ -771,12 +771,26 @@ inline constexpr float k_river_drawn_edge_scale = 1.30F;
 
 inline constexpr float k_river_drawn_meander_reach = 0.16F;
 
-[[nodiscard]] inline auto bridge_bank_landing(float bridge_width,
-                                              float river_width) -> float {
-  return std::clamp(
-      std::max(bridge_width * 0.12F, river_width * k_river_drawn_meander_reach),
-      0.5F,
-      2.4F);
+inline constexpr float k_water_bank_clearance = 0.6F;
+
+[[nodiscard]] inline constexpr auto river_drawn_half_width(float river_width) -> float {
+  return river_width *
+         ((0.5F * k_river_drawn_edge_scale) + k_river_drawn_meander_reach);
+}
+
+[[nodiscard]] inline constexpr auto
+river_bank_standing_half_width(float river_width) -> float {
+  return river_drawn_half_width(river_width) + k_water_bank_clearance;
+}
+
+[[nodiscard]] inline constexpr auto
+bridge_walkable_half_width(float bridge_width) -> float {
+  return std::max((bridge_width * 0.5F) - k_water_bank_clearance, bridge_width * 0.25F);
+}
+
+[[nodiscard]] inline constexpr auto bridge_bank_landing(float bridge_width,
+                                                        float river_width) -> float {
+  return std::clamp(std::max(bridge_width * 0.12F, river_width * 0.05F), 0.9F, 3.0F);
 }
 
 [[nodiscard]] inline auto closest_point_on_segment(const QVector3D& point,
@@ -832,16 +846,14 @@ inline void fit_bridge_span_to_riverbanks(Bridge& bridge,
 
   auto apply = [&](const QVector3D& crossing,
                    const QVector3D& span_dir,
-                   float required_half,
                    float river_width) {
     float const authored_start_reach =
         QVector3D::dotProduct(crossing - bridge.start, span_dir);
     float const authored_end_reach =
         QVector3D::dotProduct(bridge.end - crossing, span_dir);
 
-    float const drawn_water_half = required_half * k_river_drawn_edge_scale;
-    float const shortest =
-        drawn_water_half + bridge_bank_landing(bridge.width, river_width);
+    float const shortest = river_bank_standing_half_width(river_width) +
+                           bridge_bank_landing(bridge.width, river_width);
     float const longest = shortest + bridge_bank_overhang(bridge.width, river_width);
 
     bridge.start =
@@ -863,7 +875,6 @@ inline void fit_bridge_span_to_riverbanks(Bridge& bridge,
 
     apply(bridge.start + dir * (t * bridge_len),
           span_direction_across(river_vec, river_len),
-          river.width * 0.5F,
           river.width);
     return;
   }
@@ -894,10 +905,7 @@ inline void fit_bridge_span_to_riverbanks(Bridge& bridge,
 
   QVector3D const river_vec = nearest->end - nearest->start;
   float const river_len = std::hypot(river_vec.x(), river_vec.z());
-  apply(nearest_point,
-        span_direction_across(river_vec, river_len),
-        nearest->width * 0.5F,
-        nearest->width);
+  apply(nearest_point, span_direction_across(river_vec, river_len), nearest->width);
 }
 
 inline void extend_bridge_to_span_riverbanks(Bridge& bridge,
@@ -1071,6 +1079,8 @@ private:
   std::vector<Bridge> m_bridges;
 
   std::vector<bool> m_on_bridge;
+  std::vector<bool> m_bridge_walkable;
+  std::vector<bool> m_water_blocked;
   std::vector<bool> m_bridge_centerline;
   std::vector<QVector3D> m_bridge_centers;
 
@@ -1078,6 +1088,8 @@ private:
   [[nodiscard]] auto in_bounds(int x, int z) const -> bool;
 
   void precompute_bridge_data();
+
+  void precompute_water_blocked();
 
   [[nodiscard]] static auto calculateFeatureHeight(const TerrainFeature& feature,
                                                    float world_x,

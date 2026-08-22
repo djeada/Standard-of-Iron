@@ -233,14 +233,37 @@ auto Pathfinding::is_terrain_walkable(int x, int y) const -> bool {
 }
 
 auto Pathfinding::is_world_position_walkable(const QVector3D& world_position,
-                                             Passability passability) const -> bool {
+                                             Passability passability,
+                                             float clearance_radius) const -> bool {
   Point const grid = world_to_grid(world_position.x(), world_position.z());
-  return is_walkable(grid.x, grid.y, passability);
+  if (!is_walkable(grid.x, grid.y, passability)) {
+    return false;
+  }
+
+  (void)clearance_radius;
+  return true;
 }
 
 auto Pathfinding::is_world_segment_walkable(const QVector3D& from,
                                             const QVector3D& to,
-                                            Passability passability) const -> bool {
+                                            Passability passability,
+                                            float clearance_radius) const -> bool {
+
+  if (clearance_radius > 0.0F) {
+    QVector3D const delta = to - from;
+    float const length = std::hypot(delta.x(), delta.z());
+    float const sample_spacing = std::max(0.2F, m_grid_cell_size * 0.35F);
+    int const samples =
+        std::max(1, static_cast<int>(std::ceil(length / sample_spacing)));
+    for (int sample = 0; sample <= samples; ++sample) {
+      float const t = static_cast<float>(sample) / static_cast<float>(samples);
+      if (!is_world_position_walkable(
+              from + delta * t, passability, clearance_radius)) {
+        return false;
+      }
+    }
+    return true;
+  }
 
   constexpr float k_boundary_epsilon = 1.0e-5F;
 
@@ -772,14 +795,18 @@ void Pathfinding::update_navigation_grid() {
 
 auto Pathfinding::find_path(const Point& start,
                             const Point& end,
-                            Passability passability) -> std::vector<Point> {
+                            Passability passability,
+                            float clearance_radius) -> std::vector<Point> {
 
   if (m_navigation_grid_dirty.load(std::memory_order_acquire)) {
     update_navigation_grid();
   }
 
   std::uint64_t const revision = navigation_revision();
-  PathCacheKey const key{start.x, start.y, end.x, end.y, passability};
+  int const clearance_quarters =
+      static_cast<int>(std::ceil(std::max(0.0F, clearance_radius) * 4.0F));
+  PathCacheKey const key{
+      start.x, start.y, end.x, end.y, passability, clearance_quarters};
   {
     std::lock_guard<std::mutex> const cache_lock(m_path_cache_mutex);
     if (m_path_cache_revision != revision) {
@@ -792,7 +819,8 @@ auto Pathfinding::find_path(const Point& start,
   }
 
   std::shared_lock<std::shared_mutex> const navigation_lock(m_navigation_mutex);
-  auto path = find_path_internal(start, end, passability);
+  auto path = find_path_internal(
+      start, end, passability, static_cast<float>(clearance_quarters) * 0.25F);
   std::lock_guard<std::mutex> const cache_lock(m_path_cache_mutex);
   if (m_path_cache_revision != revision || navigation_revision() != revision) {
     return path;
@@ -815,26 +843,37 @@ auto Pathfinding::PathCacheKeyHash::operator()(const PathCacheKey& key) const no
   combine(key.end_x);
   combine(key.end_y);
   combine(static_cast<int>(key.passability));
+  combine(key.clearance_quarters);
   return result;
 }
 
 auto Pathfinding::find_path_internal(const Point& start,
                                      const Point& end,
-                                     Passability passability) -> std::vector<Point> {
+                                     Passability passability,
+                                     float clearance_radius) -> std::vector<Point> {
   SearchBuffers& buffers = search_buffers_for(this);
   ensure_working_buffers(buffers);
 
   auto const is_walkableFunc = [this, passability](int x, int y) -> bool {
-    return is_walkable(x, y, passability);
+    return is_world_position_walkable(grid_to_world({x, y}), passability, 0.0F);
   };
+
+  int const clearance_weight =
+      clearance_radius > 0.0F
+          ? std::max(1,
+                     static_cast<int>(
+                         std::lround(clearance_radius * k_clearance_avoid_weight)))
+          : 1;
 
   if (!is_walkableFunc(start.x, start.y) || !is_walkableFunc(end.x, end.y)) {
     Point resolved_start = start;
     Point resolved_end = end;
     if ((!is_walkableFunc(start.x, start.y) &&
-         !resolve_walkable_endpoint(start, resolved_start, passability)) ||
+         !resolve_walkable_endpoint(
+             start, resolved_start, passability, clearance_radius)) ||
         (!is_walkableFunc(end.x, end.y) &&
-         !resolve_walkable_endpoint(end, resolved_end, passability))) {
+         !resolve_walkable_endpoint(
+             end, resolved_end, passability, clearance_radius))) {
       return {};
     }
 
@@ -842,7 +881,8 @@ auto Pathfinding::find_path_internal(const Point& start,
       return {};
     }
 
-    return find_path_internal(resolved_start, resolved_end, passability);
+    return find_path_internal(
+        resolved_start, resolved_end, passability, clearance_radius);
   }
 
   const int start_idx = to_index(start);
@@ -922,12 +962,18 @@ auto Pathfinding::find_path_internal(const Point& start,
 
       const int step_x = neighbor.x - current_point.x;
       const int step_z = neighbor.y - current_point.y;
+      if (step_x != 0 && step_z != 0 &&
+          (!is_walkableFunc(current_point.x + step_x, current_point.y) ||
+           !is_walkableFunc(current_point.x, current_point.y + step_z))) {
+        continue;
+      }
       const bool turns = (arrival_x != 0 || arrival_z != 0) &&
                          (step_x != arrival_x || step_z != arrival_z);
       const int tentative_gcost =
           current.g_cost +
           ((step_x != 0 && step_z != 0) ? k_diagonal_step_cost : k_straight_step_cost) +
-          clearance_penalty(neighbor.x, neighbor.y) + (turns ? k_turn_penalty : 0);
+          (clearance_penalty(neighbor.x, neighbor.y) * clearance_weight) +
+          (turns ? k_turn_penalty : 0);
       if (tentative_gcost >= get_g_cost(buffers, neighbor_idx, generation)) {
         continue;
       }
@@ -966,9 +1012,12 @@ auto Pathfinding::find_path_internal(const Point& start,
 
 auto Pathfinding::resolve_walkable_endpoint(const Point& requested,
                                             Point& resolved,
-                                            Passability passability) const -> bool {
-  auto const is_walkable_func = [this, passability](int x, int y) -> bool {
-    return is_walkable(x, y, passability);
+                                            Passability passability,
+                                            float clearance_radius) const -> bool {
+  auto const is_walkable_func = [this, passability, clearance_radius](int x,
+                                                                      int y) -> bool {
+    return is_world_position_walkable(
+        grid_to_world({x, y}), passability, clearance_radius);
   };
 
   if (is_walkable_func(requested.x, requested.y)) {
@@ -1069,24 +1118,80 @@ void Pathfinding::rebuild_clearance(int min_x, int max_x, int min_z, int max_z) 
     std::fill(row, row + (max_x - min_x + 1), std::uint8_t{0});
   }
 
-  auto const penalty = static_cast<std::uint8_t>(k_edge_step_penalty);
-  for (int z = min_z - 1; z <= max_z + 1; ++z) {
-    for (int x = min_x - 1; x <= max_x + 1; ++x) {
-      if (is_walkable(x, z)) {
-        continue;
+  int const pad_min_x = std::max(0, min_x - k_clearance_radius);
+  int const pad_max_x = std::min(m_width - 1, max_x + k_clearance_radius);
+  int const pad_min_z = std::max(0, min_z - k_clearance_radius);
+  int const pad_max_z = std::min(m_height - 1, max_z + k_clearance_radius);
+  int const span_x = pad_max_x - pad_min_x + 1;
+  int const span_z = pad_max_z - pad_min_z + 1;
+  auto const far = static_cast<std::uint8_t>(k_clearance_radius + 1);
+
+  std::vector<std::uint8_t> distance(
+      static_cast<std::size_t>(span_x) * static_cast<std::size_t>(span_z), far);
+  auto at = [&](int x, int z) -> std::uint8_t& {
+    return distance[(static_cast<std::size_t>(z - pad_min_z) *
+                     static_cast<std::size_t>(span_x)) +
+                    static_cast<std::size_t>(x - pad_min_x)];
+  };
+
+  for (int z = pad_min_z; z <= pad_max_z; ++z) {
+    for (int x = pad_min_x; x <= pad_max_x; ++x) {
+      if (!is_walkable(x, z)) {
+        at(x, z) = 0;
       }
-      int const from_z = std::max(z - 1, min_z);
-      int const to_z = std::min(z + 1, max_z);
-      int const from_x = std::max(x - 1, min_x);
-      int const to_x = std::min(x + 1, max_x);
-      for (int nz = from_z; nz <= to_z; ++nz) {
-        for (int nx = from_x; nx <= to_x; ++nx) {
-          if (nx == x && nz == z) {
-            continue;
-          }
-          m_clearance_penalty[static_cast<std::size_t>(to_index(nx, nz))] = penalty;
+    }
+  }
+
+  auto relax = [&](std::uint8_t& cell, std::uint8_t neighbour) {
+    if (neighbour < far && neighbour + 1 < cell) {
+      cell = static_cast<std::uint8_t>(neighbour + 1);
+    }
+  };
+  for (int z = pad_min_z; z <= pad_max_z; ++z) {
+    for (int x = pad_min_x; x <= pad_max_x; ++x) {
+      std::uint8_t& cell = at(x, z);
+      if (z > pad_min_z) {
+        relax(cell, at(x, z - 1));
+        if (x > pad_min_x) {
+          relax(cell, at(x - 1, z - 1));
+        }
+        if (x < pad_max_x) {
+          relax(cell, at(x + 1, z - 1));
         }
       }
+      if (x > pad_min_x) {
+        relax(cell, at(x - 1, z));
+      }
+    }
+  }
+  for (int z = pad_max_z; z >= pad_min_z; --z) {
+    for (int x = pad_max_x; x >= pad_min_x; --x) {
+      std::uint8_t& cell = at(x, z);
+      if (z < pad_max_z) {
+        relax(cell, at(x, z + 1));
+        if (x < pad_max_x) {
+          relax(cell, at(x + 1, z + 1));
+        }
+        if (x > pad_min_x) {
+          relax(cell, at(x - 1, z + 1));
+        }
+      }
+      if (x < pad_max_x) {
+        relax(cell, at(x + 1, z));
+      }
+    }
+  }
+
+  for (int z = min_z; z <= max_z; ++z) {
+    for (int x = min_x; x <= max_x; ++x) {
+      int const reach = at(x, z);
+      if (reach == 0 || reach > k_clearance_radius) {
+        continue;
+      }
+      int const graded = (k_clearance_ring_penalty * (k_clearance_radius + 1 - reach)) /
+                         k_clearance_radius;
+      m_clearance_penalty[static_cast<std::size_t>(to_index(x, z))] =
+          static_cast<std::uint8_t>(std::max(graded, k_edge_step_penalty));
     }
   }
 }

@@ -1582,13 +1582,13 @@ auto ArenaViewport::build_selection_summary() const -> QString {
 }
 
 void ArenaViewport::regenerate_terrain() {
-  std::vector<float> heights(static_cast<size_t>(k_terrain_width * k_terrain_height),
-                             0.0F);
+  std::vector<float> heights(
+      static_cast<size_t>(m_terrain_grid_extent * m_terrain_grid_extent), 0.0F);
   std::vector<Game::Map::TerrainType> terrain_types(heights.size(),
                                                     Game::Map::TerrainType::Flat);
 
-  float const half_width = static_cast<float>(k_terrain_width) * 0.5F - 0.5F;
-  float const half_height = static_cast<float>(k_terrain_height) * 0.5F - 0.5F;
+  float const half_width = static_cast<float>(m_terrain_grid_extent) * 0.5F - 0.5F;
+  float const half_height = static_cast<float>(m_terrain_grid_extent) * 0.5F - 0.5F;
   float const safe_scale = std::max(0.0F, m_terrain_settings.height_scale);
   Game::Map::MountainNoiseSettings const noise_settings{
       static_cast<std::uint32_t>(std::max(0, m_terrain_settings.seed)),
@@ -1596,19 +1596,19 @@ void ArenaViewport::regenerate_terrain() {
       m_terrain_settings.octaves};
   float max_height = 0.0F;
 
-  for (int z = 0; z < k_terrain_height; ++z) {
-    for (int x = 0; x < k_terrain_width; ++x) {
+  for (int z = 0; z < m_terrain_grid_extent; ++z) {
+    for (int x = 0; x < m_terrain_grid_extent; ++x) {
       float const world_x = (static_cast<float>(x) - half_width) * k_terrain_tile_size;
       float const world_z = (static_cast<float>(z) - half_height) * k_terrain_tile_size;
       float const radial =
           std::clamp(1.0F - QVector3D(world_x, 0.0F, world_z).length() /
-                                (static_cast<float>(k_terrain_width) * 0.72F),
+                                (static_cast<float>(m_terrain_grid_extent) * 0.72F),
                      0.35F,
                      1.0F);
       float const blended =
           Game::Map::sample_mountain_region(world_x, world_z, noise_settings);
       float const height = safe_scale * blended * radial;
-      auto const index = static_cast<size_t>(z * k_terrain_width + x);
+      auto const index = static_cast<size_t>(z * m_terrain_grid_extent + x);
       heights[index] = height;
       max_height = std::max(max_height, height);
     }
@@ -1625,8 +1625,8 @@ void ArenaViewport::regenerate_terrain() {
       std::clamp(m_arena_floor_half_extent, 4.0F, half_width - 2.0F);
 
   float const taper = std::min(12.0F, half_width - arena_half_extent);
-  for (int z = 0; z < k_terrain_height; ++z) {
-    for (int x = 0; x < k_terrain_width; ++x) {
+  for (int z = 0; z < m_terrain_grid_extent; ++z) {
+    for (int x = 0; x < m_terrain_grid_extent; ++x) {
       float const world_x = (static_cast<float>(x) - half_width) * k_terrain_tile_size;
       float const world_z = (static_cast<float>(z) - half_height) * k_terrain_tile_size;
       float const edge = std::max(std::abs(world_x), std::abs(world_z));
@@ -1639,7 +1639,7 @@ void ArenaViewport::regenerate_terrain() {
         blend = std::clamp((edge - arena_half_extent) / taper, 0.0F, 1.0F);
         blend = blend * blend * (3.0F - (2.0F * blend));
       }
-      auto const index = static_cast<size_t>(z * k_terrain_width + x);
+      auto const index = static_cast<size_t>(z * m_terrain_grid_extent + x);
       heights[index] = std::lerp(arena_floor_height, heights[index], blend);
       if (blend < 0.5F) {
         terrain_types[index] = Game::Map::TerrainType::Flat;
@@ -1649,8 +1649,8 @@ void ArenaViewport::regenerate_terrain() {
 
   for (auto const& patch : m_arena_elevation_patches) {
     float const radius = std::max(patch.radius, k_terrain_tile_size);
-    for (int z = 0; z < k_terrain_height; ++z) {
-      for (int x = 0; x < k_terrain_width; ++x) {
+    for (int z = 0; z < m_terrain_grid_extent; ++z) {
+      for (int x = 0; x < m_terrain_grid_extent; ++x) {
         float const world_x =
             (static_cast<float>(x) - half_width) * k_terrain_tile_size;
         float const world_z =
@@ -1660,9 +1660,13 @@ void ArenaViewport::regenerate_terrain() {
         if (distance > radius) {
           continue;
         }
-        float t = std::clamp(1.0F - distance / radius, 0.0F, 1.0F);
+        float const inner = std::clamp(patch.plateau, 0.0F, radius * 0.95F);
+        float t = distance <= inner
+                      ? 1.0F
+                      : std::clamp(
+                            1.0F - ((distance - inner) / (radius - inner)), 0.0F, 1.0F);
         t = t * t * (3.0F - 2.0F * t);
-        auto const index = static_cast<std::size_t>(z * k_terrain_width + x);
+        auto const index = static_cast<std::size_t>(z * m_terrain_grid_extent + x);
         heights[index] =
             std::max(heights[index], arena_floor_height + patch.height * t);
         terrain_types[index] = Game::Map::TerrainType::Flat;
@@ -1678,7 +1682,7 @@ void ArenaViewport::regenerate_terrain() {
       std::clamp(m_terrain_settings.height_scale * 0.05F, 0.05F, 1.25F);
 
   Game::Map::TerrainHeightMap water_mask(
-      k_terrain_width, k_terrain_height, k_terrain_tile_size);
+      m_terrain_grid_extent, m_terrain_grid_extent, k_terrain_tile_size);
   water_mask.restore_from_data(heights, terrain_types, {}, {});
   water_mask.add_lakes(m_arena_lakes);
   water_mask.add_river_segments(m_arena_rivers);
@@ -1689,8 +1693,10 @@ void ArenaViewport::regenerate_terrain() {
   const auto runtime_lakes = water_mask.get_lakes();
   const auto runtime_bridges = water_mask.get_bridges();
 
-  Game::Map::TerrainService::instance().restore_from_serialized(k_terrain_width,
-                                                                k_terrain_height,
+  Game::Map::VisibilityService::instance().initialize(
+      m_terrain_grid_extent, m_terrain_grid_extent, k_terrain_tile_size);
+  Game::Map::TerrainService::instance().restore_from_serialized(m_terrain_grid_extent,
+                                                                m_terrain_grid_extent,
                                                                 k_terrain_tile_size,
                                                                 heights,
                                                                 terrain_types,
@@ -1701,7 +1707,9 @@ void ArenaViewport::regenerate_terrain() {
                                                                 m_world_props,
                                                                 {},
                                                                 runtime_lakes);
-  Game::Systems::NavGrid::initialize(k_terrain_width, k_terrain_height);
+  Game::Systems::NavGrid::initialize(m_terrain_grid_extent, m_terrain_grid_extent);
+  apply_initial_visibility();
+  sync_camera_map_bounds(m_camera.get());
 
   align_units_to_terrain();
   if (m_gl_initialized) {
@@ -2569,8 +2577,8 @@ void ArenaViewport::configure_scenario_undead_zones(
 
   Game::Map::MapDefinition map_definition;
   map_definition.coordSystem = Game::Map::CoordSystem::World;
-  map_definition.grid.width = k_terrain_width;
-  map_definition.grid.height = k_terrain_height;
+  map_definition.grid.width = m_terrain_grid_extent;
+  map_definition.grid.height = m_terrain_grid_extent;
   map_definition.grid.tile_size = k_terrain_tile_size;
   map_definition.undead_zones = m_arena_undead_zones;
   undead_system->configure(map_definition);
@@ -2704,6 +2712,7 @@ void ArenaViewport::reset_arena() {
   const bool had_custom_terrain =
       !m_arena_rivers.empty() || !m_arena_lakes.empty() || !m_arena_bridges.empty() ||
       !m_arena_roads.empty() || !m_arena_elevation_patches.empty() ||
+      m_terrain_grid_extent != k_terrain_width ||
       m_arena_floor_half_extent != k_default_floor_extent ||
       m_terrain_settings.height_scale != k_default_terrain_height_scale ||
       m_ground_type != m_ground_type_baseline ||
@@ -2715,6 +2724,7 @@ void ArenaViewport::reset_arena() {
   m_arena_roads.clear();
   m_arena_elevation_patches.clear();
   m_arena_floor_half_extent = k_default_floor_extent;
+  m_terrain_grid_extent = k_terrain_width;
   m_terrain_settings.height_scale = k_default_terrain_height_scale;
   m_ground_type = m_ground_type_baseline;
   m_terrain_settings.seed = m_terrain_seed_baseline;
@@ -3589,6 +3599,9 @@ void ArenaViewport::load_scenario(const QString& scenario_id) {
   m_arena_roads = definition->roads;
   m_arena_elevation_patches = definition->elevation_patches;
   m_arena_floor_half_extent = definition->arena_floor_half_extent;
+  m_terrain_grid_extent = definition->terrain_grid_extent > 0
+                              ? definition->terrain_grid_extent
+                              : k_terrain_width;
   if (definition->terrain_height_scale_override > 0.0F) {
     m_terrain_settings.height_scale = definition->terrain_height_scale_override;
   }
@@ -3607,6 +3620,7 @@ void ArenaViewport::load_scenario(const QString& scenario_id) {
   m_suppress_boundary_mountains = definition->suppress_boundary_mountains;
   if (!m_arena_rivers.empty() || !m_arena_lakes.empty() || !m_arena_bridges.empty() ||
       !m_arena_roads.empty() || !m_arena_elevation_patches.empty() ||
+      m_terrain_grid_extent != k_terrain_width ||
       m_arena_floor_half_extent != k_default_floor_extent ||
       m_terrain_settings.height_scale != k_default_terrain_height_scale ||
       m_ground_type != m_ground_type_baseline ||
@@ -3767,6 +3781,7 @@ void ArenaViewport::load_scenario(const QString& scenario_id) {
       Arena::ArenaCameraView scaled = view;
       scaled.distance = view.distance * std::max(0.05F, m_scenario_distance_scale);
       m_camera->set_rts_view(center, scaled.distance, scaled.angle, scaled.yaw);
+      apply_scenario_camera_projection(scaled.distance);
       m_capture_orbit_center = center;
       m_capture_orbit_view = scaled;
       m_capture_orbit_yaw = 0.0F;
@@ -4674,7 +4689,23 @@ void ArenaViewport::reset_camera() {
     return;
   }
   m_camera->set_rts_view({0.0F, 0.0F, 0.0F}, 42.0F, 45.0F, 225.0F);
+  apply_scenario_camera_projection(42.0F);
   update();
+}
+
+void ArenaViewport::apply_scenario_camera_projection(float distance) {
+  if (m_camera == nullptr) {
+    return;
+  }
+  const float world_span =
+      static_cast<float>(m_terrain_grid_extent) * k_terrain_tile_size;
+  const float far_plane = std::max({Render::GL::CameraDefaults::k_default_far_plane,
+                                    (distance * 2.5F) + (world_span * 1.2F)});
+  const float aspect = height() > 0
+                           ? static_cast<float>(width()) / static_cast<float>(height())
+                           : 16.0F / 9.0F;
+  m_camera->set_perspective(
+      m_camera->get_fov(), aspect, m_camera->get_near(), far_plane);
 }
 
 void ArenaViewport::align_units_to_terrain() {

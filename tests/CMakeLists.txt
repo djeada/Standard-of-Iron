@@ -88,6 +88,7 @@ add_executable(
     map/explored_mask_codec_test.cpp
     map/visibility_restore_test.cpp
     map/map_bridge_coverage_test.cpp
+    map/river_bank_walkability_test.cpp
     map/map_hill_entrance_smoothness_test.cpp
     map/map_weather_coverage_test.cpp
     map/map_wildlife_config_test.cpp
@@ -550,6 +551,7 @@ add_executable(
     tools/arena_terrain_alignment_test.cpp
     tools/arena_promo_spec_test.cpp
     tools/settlement_layout_test.cpp
+    tools/sacred_mountain_slope_test.cpp
     test_main.cpp
 )
 target_link_libraries(

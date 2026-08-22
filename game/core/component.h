@@ -235,6 +235,13 @@ public:
   [[nodiscard]] auto get_can_enter_forest() const -> bool { return can_enter_forest; }
   void set_can_enter_forest(bool allowed) { can_enter_forest = allowed; }
 
+  [[nodiscard]] auto get_navigation_clearance() const -> float {
+    return navigation_clearance;
+  }
+  void set_navigation_clearance(float radius) {
+    navigation_clearance = std::max(0.0F, radius);
+  }
+
 private:
   friend class Game::Systems::MovementSystem;
   friend class Serialization;
@@ -252,6 +259,8 @@ private:
 
   bool has_requested_goal{false};
   float requested_goal_x{0.0F}, requested_goal_z{0.0F};
+
+  float navigation_clearance{0.5F};
 
   bool stuck_ref_valid{false};
   float stuck_ref_x{0.0F}, stuck_ref_z{0.0F};
@@ -1302,9 +1311,9 @@ public:
     ForcedClosed
   };
 
-  static constexpr float k_structure_half_span = 3.0F;
-  static constexpr float k_passage_half_width = 1.9F;
-  static constexpr float k_cross_half_extent = 1.0F;
+  static constexpr float k_structure_half_span = 4.5F;
+  static constexpr float k_passage_half_width = 2.85F;
+  static constexpr float k_cross_half_extent = 1.5F;
 
   static constexpr float k_passable_open_amount = 0.94F;
   static constexpr float k_blocking_open_amount = 0.25F;

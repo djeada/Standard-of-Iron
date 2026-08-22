@@ -8,6 +8,7 @@
 #include <utility>
 
 #include "arena_ambience_scenarios.h"
+#include "arena_city_scenarios.h"
 #include "arena_formation_scenarios.h"
 #include "arena_scenarios.h"
 #include "arena_showcase_scenarios.h"
@@ -9884,6 +9885,10 @@ auto definitions() -> const std::vector<ArenaScenarioDefinition>& {
     values.insert(values.end(),
                   std::make_move_iterator(ambience.begin()),
                   std::make_move_iterator(ambience.end()));
+    auto city = build_city_definitions();
+    values.insert(values.end(),
+                  std::make_move_iterator(city.begin()),
+                  std::make_move_iterator(city.end()));
     return values;
   }();
   return catalog;

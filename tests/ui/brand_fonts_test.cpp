@@ -19,12 +19,6 @@
 
 namespace {
 
-// The reels and the title screens are the game's most-seen surface, and until
-// these fonts were bundled both were a function of which packages the cutting
-// machine happened to have installed. These tests exist to keep that from
-// coming back: the families have to come out of assets/fonts/, not out of
-// fontconfig.
-
 TEST(BrandFontsTest, RegistersTheBundledFaces) {
   const QStringList families = Ui::BrandFonts::register_bundled();
   EXPECT_FALSE(families.isEmpty())
@@ -56,18 +50,12 @@ TEST(BrandFontsTest, TitleFamilyIsBundledRatherThanASystemFallback) {
 }
 
 TEST(BrandFontsTest, TitleFamilyActuallyResolvesToItself) {
-  // A family name Qt cannot honour silently substitutes another face, which
-  // looks like success everywhere except the rendered frame.
+
   const QString family = Ui::BrandFonts::title_family();
   const QFontInfo info{QFont(family)};
   EXPECT_EQ(info.family(), family);
 }
 
-// QFontMetrics::inFont() is the wrong instrument for these tests and quietly
-// passes them all: it answers through the font engine, fallbacks included, so
-// it reports every character as present no matter which family actually
-// supplied it -- which is exactly the substitution these tests exist to catch.
-// QRawFont is one physical face with no fallback behind it.
 auto missing_from(const QString& family, const QString& sample) -> QString {
   const QRawFont face = QRawFont::fromFont(QFont(family));
   EXPECT_TRUE(face.isValid()) << qUtf8Printable(family) << " did not resolve";
@@ -81,11 +69,7 @@ auto missing_from(const QString& family, const QString& sample) -> QString {
 }
 
 TEST(BrandFontsTest, TheBundledSerifCoversWhatTheDisplayFaceCannot) {
-  // Nothing in C++ names this face -- it is reached by file path from
-  // scripts/promo-edit.py, which captions reels with it wherever the display
-  // face has no glyph. So what is asserted here is the property that caption
-  // path depends on: the file registers, and it has the lowercase and the
-  // figures the display face deliberately lacks.
+
   ASSERT_TRUE(
       Ui::BrandFonts::register_bundled().contains(QStringLiteral("EB Garamond")));
   const QString missing = missing_from(
@@ -96,9 +80,7 @@ TEST(BrandFontsTest, TheBundledSerifCoversWhatTheDisplayFaceCannot) {
 }
 
 TEST(BrandFontsTest, TheDisplayFaceCoversCapsFiguresAndAccents) {
-  // The face is caps-and-figures only by design, but within that range a gap
-  // is invisible in review and obvious in a screenshot: Qt substitutes the
-  // missing glyph from another family and the word renders in two typefaces.
+
   const QString missing = missing_from(
       Ui::BrandFonts::title_family(),
       QStringLiteral("ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789.\u2026,:;!?-+/%&#()[]"
@@ -110,11 +92,7 @@ TEST(BrandFontsTest, TheDisplayFaceCoversCapsFiguresAndAccents) {
 }
 
 TEST(BrandFontsTest, QtAppliesTheDisplayFacesKerning) {
-  // The face carries a legacy `kern` table rather than GPOS. That is a
-  // deliberate choice, but it is also the kind of choice that can silently
-  // stop working -- a shaper that ignores `kern` costs nothing visible except
-  // that SURVIVE and VICTORY grow a hole in the middle. So assert the pair
-  // actually closes, through the same Qt text stack the game draws with.
+
   QFont font(Ui::BrandFonts::title_family());
   font.setPixelSize(100);
   const QFontMetricsF metrics(font);
@@ -127,21 +105,11 @@ TEST(BrandFontsTest, QtAppliesTheDisplayFacesKerning) {
 }
 
 TEST(BrandFontsTest, TheDisplayFaceHasNoLowercaseToFallBackFrom) {
-  // Not an accident to be fixed later: the caps-only range is the reason
-  // Typography.titleFamily may only be bound alongside AllUppercase. If
-  // lowercase is ever drawn, that constraint can be relaxed -- and this test
-  // is where anyone doing so will be told to go and relax it.
+
   EXPECT_EQ(missing_from(Ui::BrandFonts::title_family(), QStringLiteral("aeiou")),
             QStringLiteral("aeiou"));
 }
 
-// Guards the one rule that cannot be expressed in the type system and cannot
-// survive in a comment: the display face is capitals and figures only, so a
-// Text bound to titleFamily must either be uppercased or be showing numbers.
-// Get it wrong and Qt substitutes another family for the lowercase letters --
-// half a word in one typeface, half in another, and nothing anywhere reports
-// it. `make format` strips QML and C++ comments, so the note next to the
-// property is not durable; this test is.
 class TitleFamilyUsageTest : public ::testing::Test {
 protected:
   static auto qml_sources() -> QStringList {
@@ -169,9 +137,6 @@ TEST_F(TitleFamilyUsageTest, EveryBindingIsUppercasedOrNumeric) {
   const QStringList files = qml_sources();
   ASSERT_FALSE(files.isEmpty()) << "no QML found; run the suite from the repo root";
 
-  // The property is set on a Text, and the two things that make it safe --
-  // capitalization, or a numeric source -- are set on the same element. So the
-  // check is per element block: from the binding, scan the surrounding lines.
   static const QRegularExpression binding(
       QStringLiteral(R"(font\.family:\s*Design\.Typography\.titleFamily)"));
 
@@ -182,8 +147,7 @@ TEST_F(TitleFamilyUsageTest, EveryBindingIsUppercasedOrNumeric) {
       if (!binding.match(lines.at(index)).hasMatch()) {
         continue;
       }
-      // Look at the element the binding belongs to: a handful of lines either
-      // side covers the properties of a single Text.
+
       const qsizetype from = std::max<qsizetype>(0, index - 12);
       const qsizetype to = std::min<qsizetype>(lines.size() - 1, index + 12);
       const QString block = lines.mid(from, to - from + 1).join(QLatin1Char('\n'));
@@ -202,7 +166,7 @@ TEST_F(TitleFamilyUsageTest, EveryBindingIsUppercasedOrNumeric) {
 }
 
 TEST_F(TitleFamilyUsageTest, TheGuardActuallyFindsTheBindingsItGuards) {
-  // A scan that silently matches nothing passes forever. Anchor it.
+
   const QStringList files = qml_sources();
   ASSERT_FALSE(files.isEmpty())
       << "no QML found under " << qUtf8Printable(QDir::current().filePath("ui/qml"))

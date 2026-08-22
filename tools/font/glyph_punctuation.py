@@ -23,7 +23,7 @@ from glyph_geometry import (
 )
 from glyph_shapes import BOWL_THIN, Glyph, mask, ring_parts
 
-FIG = CAP  # lining figures: same height as the capitals, no exceptions
+FIG = CAP
 
 
 def digit_zero() -> Glyph:
@@ -191,9 +191,7 @@ def period() -> Glyph:
 
 
 def ellipsis() -> Glyph:
-    # Slightly smaller and closer than three full stops. At title sizes three
-    # period glyphs look like separate beats; the ellipsis should read as one
-    # quiet mark at the end of the loading label.
+
     size, gap = 132.0, 58.0
     return Glyph(
         contours=[

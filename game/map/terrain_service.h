@@ -70,6 +70,19 @@ public:
                                  float world_y_offset = 0.0F,
                                  float fallback_y = 0.0F) const -> QVector3D;
 
+  [[nodiscard]] auto resolve_footprint_world_y(float world_x,
+                                               float world_z,
+                                               float footprint_radius,
+                                               float world_y_offset = 0.0F,
+                                               float fallback_y = 0.0F) const -> float;
+
+  [[nodiscard]] auto
+  resolve_footprint_world_position(float world_x,
+                                   float world_z,
+                                   float footprint_radius,
+                                   float world_y_offset = 0.0F,
+                                   float fallback_y = 0.0F) const -> QVector3D;
+
   [[nodiscard]] auto get_terrain_height_grid(int grid_x, int grid_z) const -> float;
 
   [[nodiscard]] auto is_walkable(int grid_x, int grid_z) const -> bool;

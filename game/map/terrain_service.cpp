@@ -875,6 +875,47 @@ auto TerrainService::resolve_surface_world_position(float world_x,
           world_z};
 }
 
+auto TerrainService::resolve_footprint_world_y(float world_x,
+                                               float world_z,
+                                               float footprint_radius,
+                                               float world_y_offset,
+                                               float fallback_y) const -> float {
+  float lowest = resolve_surface_world_y(world_x, world_z, 0.0F, fallback_y);
+  if (footprint_radius <= 0.0F) {
+    return lowest + world_y_offset;
+  }
+
+  constexpr int k_rings = 2;
+  constexpr int k_spokes = 8;
+  constexpr float k_two_pi = 6.28318530717958647692F;
+  for (int ring = 1; ring <= k_rings; ++ring) {
+    const float reach =
+        footprint_radius * (static_cast<float>(ring) / static_cast<float>(k_rings));
+    for (int spoke = 0; spoke < k_spokes; ++spoke) {
+      const float angle =
+          k_two_pi * (static_cast<float>(spoke) / static_cast<float>(k_spokes));
+      const float sample = resolve_surface_world_y(world_x + (std::cos(angle) * reach),
+                                                   world_z + (std::sin(angle) * reach),
+                                                   0.0F,
+                                                   fallback_y);
+      lowest = std::min(lowest, sample);
+    }
+  }
+  return lowest + world_y_offset;
+}
+
+auto TerrainService::resolve_footprint_world_position(float world_x,
+                                                      float world_z,
+                                                      float footprint_radius,
+                                                      float world_y_offset,
+                                                      float fallback_y) const
+    -> QVector3D {
+  return {world_x,
+          resolve_footprint_world_y(
+              world_x, world_z, footprint_radius, world_y_offset, fallback_y),
+          world_z};
+}
+
 auto TerrainService::get_terrain_height_grid(int grid_x, int grid_z) const -> float {
   if (!m_height_map) {
     return 0.0F;

@@ -912,8 +912,12 @@ auto TerrainHeightMap::is_walkable(int grid_x, int grid_z) const -> bool {
   }
 
   int const idx = indexAt(grid_x, grid_z);
-  if (!m_on_bridge.empty() && m_on_bridge[idx]) {
+  if (!m_bridge_walkable.empty() && m_bridge_walkable[idx]) {
     return true;
+  }
+
+  if (!m_water_blocked.empty() && m_water_blocked[idx]) {
+    return false;
   }
 
   TerrainType const type = m_terrain_types[idx];
@@ -1307,6 +1311,8 @@ void TerrainHeightMap::add_river_segments(
       }
     }
   }
+
+  precompute_water_blocked();
 }
 
 void TerrainHeightMap::add_lakes(const std::vector<Lake>& lakes) {
@@ -1412,11 +1418,71 @@ void TerrainHeightMap::add_bridges(const std::vector<Bridge>& bridges) {
   precompute_bridge_data();
 }
 
+void TerrainHeightMap::precompute_water_blocked() {
+
+  const auto grid_size = static_cast<size_t>(m_width * m_height);
+  m_water_blocked.assign(grid_size, false);
+
+  const float grid_half_width = m_width * 0.5F - 0.5F;
+  const float grid_half_height = m_height * 0.5F - 0.5F;
+  const float tile = std::max(m_tile_size, 0.0001F);
+
+  for (const auto& river : m_river_segments) {
+    const float delta_x = river.end.x() - river.start.x();
+    const float delta_z = river.end.z() - river.start.z();
+    const float length_sq = (delta_x * delta_x) + (delta_z * delta_z);
+    if (length_sq < 1.0e-4F) {
+      continue;
+    }
+
+    const float blocked_half = river_bank_standing_half_width(river.width);
+    const float blocked_half_cells = blocked_half / tile;
+
+    const float start_x = (river.start.x() / tile) + grid_half_width;
+    const float start_z = (river.start.z() / tile) + grid_half_height;
+    const float end_x = (river.end.x() / tile) + grid_half_width;
+    const float end_z = (river.end.z() / tile) + grid_half_height;
+
+    int const min_x = std::max(
+        0, static_cast<int>(std::floor(std::min(start_x, end_x) - blocked_half_cells)));
+    int const max_x = std::min(
+        m_width - 1,
+        static_cast<int>(std::ceil(std::max(start_x, end_x) + blocked_half_cells)));
+    int const min_z = std::max(
+        0, static_cast<int>(std::floor(std::min(start_z, end_z) - blocked_half_cells)));
+    int const max_z = std::min(
+        m_height - 1,
+        static_cast<int>(std::ceil(std::max(start_z, end_z) + blocked_half_cells)));
+
+    const float span_x = end_x - start_x;
+    const float span_z = end_z - start_z;
+    const float span_length_sq = (span_x * span_x) + (span_z * span_z);
+    const float blocked_half_cells_sq = blocked_half_cells * blocked_half_cells;
+
+    for (int z = min_z; z <= max_z; ++z) {
+      for (int x = min_x; x <= max_x; ++x) {
+        const float dx = static_cast<float>(x) - start_x;
+        const float dz = static_cast<float>(z) - start_z;
+        const float t =
+            std::clamp(((dx * span_x) + (dz * span_z)) / span_length_sq, 0.0F, 1.0F);
+        const float offset_x = dx - (span_x * t);
+        const float offset_z = dz - (span_z * t);
+        if ((offset_x * offset_x) + (offset_z * offset_z) > blocked_half_cells_sq) {
+          continue;
+        }
+        m_water_blocked[static_cast<size_t>(indexAt(x, z))] = true;
+      }
+    }
+  }
+}
+
 void TerrainHeightMap::precompute_bridge_data() {
 
   const auto grid_size = static_cast<size_t>(m_width * m_height);
   m_on_bridge.clear();
   m_on_bridge.resize(grid_size, false);
+  m_bridge_walkable.clear();
+  m_bridge_walkable.resize(grid_size, false);
   m_bridge_centerline.clear();
   m_bridge_centerline.resize(grid_size, false);
   m_bridge_centers.clear();
@@ -1436,6 +1502,8 @@ void TerrainHeightMap::precompute_bridge_data() {
     QVector3D const perpendicular(-dir.z(), 0.0F, dir.x());
     float const bridge_half_width =
         bridge.width * 0.5F / std::max(m_tile_size, 0.0001F);
+    float const walkable_half_width =
+        bridge_walkable_half_width(bridge.width) / std::max(m_tile_size, 0.0001F);
 
     float const entry_margin = m_tile_size * k_bridge_entry_margin_tiles;
     float const extended_length = length + (entry_margin * 2.0F);
@@ -1493,6 +1561,9 @@ void TerrainHeightMap::precompute_bridge_data() {
 
           int const idx = indexAt(x, z);
           m_on_bridge[idx] = true;
+          if (dist_along_perp <= walkable_half_width) {
+            m_bridge_walkable[idx] = true;
+          }
 
           float const clamped_along = std::clamp(center_along, 0.0F, length);
           m_bridge_centers[idx] = bridge.start + dir * clamped_along;
@@ -1537,6 +1608,7 @@ void TerrainHeightMap::restore_from_data(const std::vector<float>& heights,
     bridge.width = std::max(bridge.width, k_min_bridge_width);
   }
 
+  precompute_water_blocked();
   precompute_bridge_data();
 }
 

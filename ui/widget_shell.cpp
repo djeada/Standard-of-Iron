@@ -16,9 +16,7 @@
 namespace UiShell {
 
 void apply(QApplication& app) {
-  // Before the stylesheet, which names the bundled families: the tools must
-  // draw with the fonts that ship in assets/fonts/ rather than whatever the
-  // host has installed, or the same promo spec renders differently per machine.
+
   Ui::BrandFonts::register_bundled();
 
   app.setStyleSheet(Theme::widgetStyleSheet());
