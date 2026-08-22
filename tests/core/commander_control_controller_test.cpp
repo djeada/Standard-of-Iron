@@ -159,7 +159,9 @@ TEST_F(CommanderControlControllerTest, ScriptedDodgeUsesRequestedWorldDirection)
   EXPECT_NEAR(transform->position.x, 0.0F, 0.0001F);
   EXPECT_LT(transform->position.z, -0.60F);
   EXPECT_TRUE(controller.is_dodge_rolling());
-  EXPECT_TRUE(rpg->dodge_invincible);
+
+  EXPECT_GT(rpg->dodge_grace_remaining, 0.0F);
+  EXPECT_LT(rpg->dodge_dir_z, -0.5F);
 }
 
 TEST_F(CommanderControlControllerTest,
@@ -1011,9 +1013,14 @@ TEST_F(CommanderControlControllerTest, CommanderRpgPoolStaysInPlayableBand) {
   auto* rpg = commander->get_component<Engine::Core::RpgHealthComponent>();
   ASSERT_NE(rpg, nullptr);
   EXPECT_TRUE(rpg->active);
-  EXPECT_EQ(rpg->rpg_hp, rpg->rpg_max_hp);
-  EXPECT_GE(rpg->rpg_max_hp, 130);
-  EXPECT_LE(rpg->rpg_max_hp, 220);
+
+  ASSERT_GT(rpg->incoming_damage_scale, 0.0F);
+  auto const* commander_unit = commander->get_component<Engine::Core::UnitComponent>();
+  ASSERT_NE(commander_unit, nullptr);
+  float const effective_pool =
+      static_cast<float>(commander_unit->max_health) / rpg->incoming_damage_scale;
+  EXPECT_GE(effective_pool, 130.0F);
+  EXPECT_LE(effective_pool, 220.0F);
 }
 
 TEST_F(CommanderControlControllerTest, ChaseLensStaysLevelWhileWalkingOverTerrain) {

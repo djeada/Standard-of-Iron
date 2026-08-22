@@ -65,6 +65,15 @@ namespace {
   return ((v >> 7U) & 1U) == 0U ? 1.0F : -1.0F;
 }
 
+[[nodiscard]] auto settle(float q, float peak) noexcept -> float {
+  if (q <= peak) {
+    return smooth01(q / std::max(peak, 1.0e-4F));
+  }
+
+  float const t = std::clamp((q - peak) / std::max(1.0F - peak, 1.0e-4F), 0.0F, 1.0F);
+  return 1.0F - smooth01(std::pow(t, 0.55F));
+}
+
 } // namespace
 
 auto hit_reaction_form_from_kind(std::uint8_t kind) noexcept -> HitReactionForm {
@@ -163,50 +172,57 @@ auto resolve_combat_root_motion(const CombatRootMotionInputs& inputs) noexcept
     float pitch = 0.0F;
     float roll = 0.0F;
     float squash = 0.0F;
+
+    float stumble = 0.0F;
     switch (inputs.reaction) {
     case HitReactionForm::Flinch: {
       float const env = out_and_back(q, 0.30F);
-      back = 0.12F * env;
-      pitch = -8.0F * env;
-      squash = 0.03F * env;
-      roll = 2.0F * sign * env;
+      back = 0.30F * env;
+      pitch = -19.0F * env;
+      squash = 0.06F * env;
+      roll = 5.0F * sign * env;
+      stumble = 0.06F * settle(q, 0.30F);
       break;
     }
     case HitReactionForm::Block: {
       float const env = out_and_back(q, 0.26F);
-      back = 0.06F * env;
-      pitch = 3.5F * env;
-      roll = -2.5F * env;
-      squash = 0.02F * env;
+      back = 0.17F * env;
+      pitch = 8.0F * env;
+      roll = -6.0F * env;
+      squash = 0.04F * env;
+      stumble = 0.05F * settle(q, 0.26F);
       break;
     }
     case HitReactionForm::Evade: {
       float const env = out_and_back(q, 0.36F);
-      back = 0.22F * env;
-      lateral = 0.16F * sign * env;
-      pitch = -5.0F * env;
-      roll = -3.0F * sign * env;
+      back = 0.34F * env;
+      lateral = 0.30F * sign * env;
+      pitch = -11.0F * env;
+      roll = -8.0F * sign * env;
       break;
     }
     case HitReactionForm::Stagger: {
       float const env = out_and_back(q, 0.42F);
       float const overshoot =
           std::sin(std::numbers::pi_v<float> * segment(q, 0.62F, 1.0F));
-      back = 0.24F * env;
-      lateral = 0.05F * sign * env;
-      pitch = -11.0F * env + 3.0F * overshoot;
-      roll = 5.0F * sign * env;
-      squash = 0.05F * env;
+      back = 0.58F * env;
+      lateral = 0.16F * sign * env;
+      pitch = -26.0F * env + 8.0F * overshoot;
+      roll = 12.0F * sign * env;
+      squash = 0.10F * env;
+      stumble = 0.22F * settle(q, 0.42F);
       break;
     }
     case HitReactionForm::Recoil: {
       float const env = out_and_back(q, 0.30F);
-      back = 0.09F * env;
-      pitch = -5.0F * env;
-      squash = 0.015F * env;
+      back = 0.22F * env;
+      pitch = -12.0F * env;
+      squash = 0.035F * env;
+      roll = -3.0F * sign * env;
       break;
     }
     }
+    back += stumble;
 
     float dir_x = inputs.recoil_dir_x;
     float dir_z = inputs.recoil_dir_z;

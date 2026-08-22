@@ -60,8 +60,15 @@ struct MeleeControlTick {
   float held_duration{0.0F};
   bool primary_held{false};
 
+  bool guard_held{false};
+
   float delta_time{0.0F};
 };
+
+inline constexpr float k_guard_slew_rate = 7.0F;
+
+[[nodiscard]] auto resolve_guard_direction(const MeleeControlTick& tick) noexcept
+    -> Engine::Core::MeleeRestDirection;
 
 void advance_melee_control(Engine::Core::Entity& fighter,
                            const MeleeControlTick& tick) noexcept;

@@ -112,4 +112,29 @@ action_event_normalized_time(const CombatActionDefinition& definition,
 authored_phase_duration(const CombatActionDefinition& definition,
                         Engine::Core::CombatAnimationState state) -> float;
 
+enum class MeleePhase : std::uint8_t {
+  Ready = 0,
+  Windup,
+  EarlyStrike,
+  CommittedStrike,
+  FollowThrough
+};
+
+struct MeleeInterruption {
+  MeleePhase phase{MeleePhase::Ready};
+
+  bool accepts_attack{true};
+
+  bool accepts_guard{true};
+  bool accepts_dodge{true};
+
+  float redirect_authority{1.0F};
+};
+
+inline constexpr float k_melee_recall_share = 0.35F;
+
+[[nodiscard]] auto
+melee_interruption_at(const CombatActionDefinition& definition,
+                      float normalized_time) noexcept -> MeleeInterruption;
+
 } // namespace Game::Systems::CombatActions

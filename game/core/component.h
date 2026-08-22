@@ -533,6 +533,8 @@ public:
   std::uint8_t hit_target_count{0};
   int last_damage{0};
   int requested_damage{0};
+
+  float last_contact_speed{0.0F};
   float action_elapsed_time{0.0F};
   float action_duration{0.0F};
   float previous_normalized_action_time{0.0F};
@@ -544,8 +546,76 @@ public:
   bool weapon_trace_active{false};
   bool action_running{false};
   bool action_completed{false};
-  bool cancel_window_active{false};
-  bool input_buffered{false};
+};
+
+enum class CombatIntentOutcome : std::uint8_t {
+  Accepted = 0,
+  Buffered,
+  InsufficientStamina,
+  Recovering,
+  Committed,
+  GuardBroken,
+  Staggered,
+  NoFighter
+};
+
+struct CombatActionIntent {
+
+  MeleeIntent swing{};
+
+  float pressed_at{0.0F};
+  float held_duration{0.0F};
+};
+
+class CombatIntentQueueComponent {
+public:
+  CombatIntentQueueComponent() = default;
+
+  static constexpr std::size_t k_capacity = 3U;
+
+  static constexpr float k_intent_lifetime = 0.45F;
+
+  std::array<CombatActionIntent, k_capacity> entries{};
+  std::uint8_t count{0};
+
+  float clock{0.0F};
+
+  CombatIntentOutcome last_outcome{CombatIntentOutcome::Accepted};
+  float last_outcome_age{0.0F};
+
+  [[nodiscard]] auto empty() const noexcept -> bool { return count == 0U; }
+
+  [[nodiscard]] auto front() noexcept -> CombatActionIntent* {
+    return count == 0U ? nullptr : &entries[0];
+  }
+
+  void push(const CombatActionIntent& intent) noexcept {
+    if (count == k_capacity) {
+
+      for (std::size_t i = 1; i < k_capacity; ++i) {
+        entries[i - 1] = entries[i];
+      }
+      --count;
+    }
+    entries[count++] = intent;
+  }
+
+  void pop_front() noexcept {
+    if (count == 0U) {
+      return;
+    }
+    for (std::size_t i = 1; i < count; ++i) {
+      entries[i - 1] = entries[i];
+    }
+    --count;
+  }
+
+  void clear() noexcept { count = 0U; }
+
+  void record(CombatIntentOutcome outcome) noexcept {
+    last_outcome = outcome;
+    last_outcome_age = 0.0F;
+  }
 };
 
 enum class RpgContactOutcome : std::uint8_t {
@@ -701,6 +771,18 @@ classify_attack_direction(const MeleeIntent& raw,
   return melee_intent_from_strike_angle(Animation::k_melee_left_cut_angle, 0.0F, reach);
 }
 
+enum class TelegraphCue : std::uint8_t {
+  None = 0,
+
+  Warning,
+
+  Flash,
+
+  Impact,
+
+  Settling
+};
+
 class CombatStateComponent {
 public:
   CombatStateComponent() = default;
@@ -722,9 +804,12 @@ public:
   bool is_hit_paused{false};
   float hit_pause_remaining{0.0F};
   bool damage_dealt_this_swing{false};
+
+  bool tired_swing{false};
   bool input_buffered{false};
 
-  float swing_duration_scale{1.0F};
+  float telegraph_intensity{0.0F};
+  TelegraphCue telegraph_cue{TelegraphCue::None};
 
   static constexpr float k_combat_animation_hit_pause_duration = 0.10F;
   static constexpr float k_advance_duration = 0.22F;
@@ -733,28 +818,6 @@ public:
   static constexpr float k_impact_duration = 0.18F;
   static constexpr float k_recover_duration = 0.40F;
   static constexpr float k_reposition_duration = 0.28F;
-
-  static constexpr float k_base_cycle_total =
-      k_advance_duration + k_wind_up_duration + k_strike_duration + k_impact_duration +
-      k_recover_duration + k_reposition_duration;
-
-  [[nodiscard]] static auto cooldown_fit_scale(float cooldown) -> float {
-    if (cooldown <= 0.0F) {
-      return 1.0F;
-    }
-    float scale = cooldown / k_base_cycle_total;
-    if (scale < 0.15F) {
-      scale = 0.15F;
-    } else if (scale > 3.0F) {
-      scale = 3.0F;
-    }
-    return scale;
-  }
-
-  static constexpr float k_melee_contact_fraction =
-      (k_advance_duration + k_wind_up_duration) /
-      (k_advance_duration + k_wind_up_duration + k_strike_duration + k_impact_duration +
-       k_recover_duration + k_reposition_duration);
 
   static constexpr std::uint8_t k_attack_variant_seed_slots = 8;
 
@@ -1077,10 +1140,6 @@ class CommanderBodyControlComponent {
 public:
   CommanderBodyControlComponent() = default;
 
-  static constexpr float k_windup_steer_authority = 1.0F;
-  static constexpr float k_strike_steer_authority = 0.35F;
-  static constexpr float k_recover_steer_authority = 0.0F;
-
   static constexpr float k_max_steer_rate = 7.5F;
 
   static constexpr float k_sweep_degrees = 45.0F;
@@ -1096,11 +1155,24 @@ public:
   float rest_dir_x{0.80F};
   float rest_dir_y{0.60F};
   bool rest_valid{false};
+
+  float last_strike_dir_x{0.0F};
+  float last_strike_dir_y{0.0F};
+  float chain_window_remaining{0.0F};
+
+  static constexpr float k_chain_window_seconds = 0.55F;
+
+  static constexpr float k_chain_new_line_dot = 0.82F;
 };
 
 class CommanderGuardComponent {
 public:
   CommanderGuardComponent() = default;
+
+  float guard_dir_x{0.0F};
+  float guard_dir_y{1.0F};
+
+  float guard_turn_rate{0.0F};
 
   bool active{false};
   float frontal_arc_dot{0.15F};
@@ -1176,13 +1248,16 @@ class RpgHealthComponent {
 public:
   RpgHealthComponent() = default;
 
-  int rpg_hp{150};
-  int rpg_max_hp{150};
+  float incoming_damage_scale{1.0F};
+
   float armor{0.0F};
   float crit_chance{0.05F};
   float crit_multiplier{1.8F};
   bool active{false};
-  bool dodge_invincible{false};
+
+  float dodge_grace_remaining{0.0F};
+  float dodge_dir_x{0.0F};
+  float dodge_dir_z{0.0F};
 };
 
 class StaggerComponent {
@@ -1191,34 +1266,6 @@ public:
       : remaining(duration) {}
   float remaining;
   StaggerTier tier{StaggerTier::LightFlinch};
-};
-
-enum class EnemyTelegraphPhase : std::uint8_t {
-  None,
-  WindUp,
-  Active,
-  Recovery
-};
-
-class EnemyTelegraphComponent {
-public:
-  EnemyTelegraphComponent() = default;
-
-  EnemyTelegraphPhase phase{EnemyTelegraphPhase::None};
-  float phase_time{0.0F};
-  float wind_up_duration{0.45F};
-  float active_duration{0.20F};
-  float recovery_duration{0.35F};
-  AttackDirection attack_direction{AttackDirection::LeftSlash};
-  bool is_unblockable{false};
-  bool visual_tell_active{false};
-};
-
-enum class RpgEngagementRole : std::uint8_t {
-  Support,
-  FrontAttacker,
-  LeftThreat,
-  RightThreat
 };
 
 enum class FightContext : std::uint8_t {
@@ -1231,18 +1278,36 @@ class RpgEngagementComponent {
 public:
   struct Slot {
     EntityID entity_id{0};
-    RpgEngagementRole role{RpgEngagementRole::Support};
     float distance{0.0F};
     float signed_angle_degrees{0.0F};
+
+    bool obstructed{false};
+
+    bool pressing{false};
   };
 
   std::vector<Slot> engagement_slots;
-  EntityID front_attacker_id{0};
-  EntityID left_threat_id{0};
-  EntityID right_threat_id{0};
-  int active_attackers{0};
   float ring_radius{5.0F};
+
+  float pressure_clock{0.0F};
   FightContext fight_context{FightContext::None};
+
+  [[nodiscard]] auto pressing_count() const noexcept -> int {
+    int pressing = 0;
+    for (auto const& slot : engagement_slots) {
+      pressing += slot.pressing ? 1 : 0;
+    }
+    return pressing;
+  }
+
+  [[nodiscard]] auto is_pressing(EntityID entity_id) const noexcept -> bool {
+    for (auto const& slot : engagement_slots) {
+      if (slot.entity_id == entity_id) {
+        return slot.pressing;
+      }
+    }
+    return false;
+  }
 };
 
 class AIControlledComponent {

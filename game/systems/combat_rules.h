@@ -5,6 +5,14 @@
 
 namespace Game::Systems::CombatRules {
 
+[[nodiscard]] inline auto is_player_driven(const Engine::Core::Entity* entity) -> bool {
+  if (entity == nullptr) {
+    return false;
+  }
+  auto const* commander = entity->get_component<Engine::Core::CommanderComponent>();
+  return commander != nullptr && commander->fpv_controlled;
+}
+
 [[nodiscard]] inline auto
 uses_rpg_combat_rules(const Engine::Core::Entity* entity) -> bool {
   if (entity == nullptr) {
