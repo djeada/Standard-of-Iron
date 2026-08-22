@@ -148,34 +148,27 @@ auto collect_attack_target_highlights(const AttackTargetingRequest& request)
   };
   std::vector<ScoredMarker> candidates;
 
-  for (auto* entity :
-       request.world->collect_entities_with<Engine::Core::UnitComponent>()) {
-    if (entity == nullptr) {
-      continue;
-    }
+  for (auto [entity, unit, transform] :
+       request.world->entity_view<Engine::Core::UnitComponent,
+                                  Engine::Core::TransformComponent>()) {
     if (!Combat::is_auto_acquirable_enemy_of_owner(
-            request.local_owner_id, entity, true)) {
+            request.local_owner_id, &entity, true)) {
       continue;
     }
 
-    const auto* transform = entity->get_component<Engine::Core::TransformComponent>();
-    if (transform == nullptr) {
-      continue;
-    }
     if (!target_is_visible(
-            request.visibility, transform->position.x, transform->position.z)) {
+            request.visibility, transform.position.x, transform.position.z)) {
       continue;
     }
 
-    float const dx = transform->position.x - request.anchor_x;
-    float const dz = transform->position.z - request.anchor_z;
+    float const dx = transform.position.x - request.anchor_x;
+    float const dz = transform.position.z - request.anchor_z;
     float const distance_sq = dx * dx + dz * dz;
     if (distance_sq > max_distance_sq) {
       continue;
     }
 
-    const auto* unit = entity->get_component<Engine::Core::UnitComponent>();
-    AttackTargetMarker marker = make_marker(*entity, *unit, *transform);
+    AttackTargetMarker marker = make_marker(entity, unit, transform);
     marker.hovered = marker.entity_id == request.hovered_entity_id;
     candidates.push_back({marker, distance_sq});
   }

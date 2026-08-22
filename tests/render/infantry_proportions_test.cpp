@@ -139,7 +139,8 @@ auto render_single_soldier_bounds(std::string_view renderer_key,
   ctx.has_seed_override = true;
   ctx.seed_override = seed;
 
-  Engine::Core::Entity entity(1);
+  Engine::Core::StandaloneEntity entity_scratch(1);
+  Engine::Core::Entity& entity = entity_scratch.entity();
   auto* unit = entity.add_component<Engine::Core::UnitComponent>(100, 100, 1.0F, 12.0F);
   EXPECT_NE(unit, nullptr);
   unit->spawn_type = spawn_type;

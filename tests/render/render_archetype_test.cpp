@@ -414,7 +414,8 @@ TEST(RenderArchetypeBuildings, RomanHomeRendersExpectedStaticMeshCount) {
   const auto renderer = registry.get("troops/roman/home");
   ASSERT_TRUE(static_cast<bool>(renderer));
 
-  Engine::Core::Entity entity(1);
+  Engine::Core::StandaloneEntity entity_scratch(1);
+  Engine::Core::Entity& entity = entity_scratch.entity();
   auto* renderable = entity.add_component<Engine::Core::RenderableComponent>();
   ASSERT_NE(renderable, nullptr);
   auto* unit = entity.add_component<Engine::Core::UnitComponent>(
@@ -466,7 +467,8 @@ TEST(RenderArchetypeBuildings, RendererHandleResolvesRomanHome) {
   const auto* renderer = registry.get(renderer_handle);
   ASSERT_NE(renderer, nullptr);
 
-  Engine::Core::Entity entity(2);
+  Engine::Core::StandaloneEntity entity_scratch(2);
+  Engine::Core::Entity& entity = entity_scratch.entity();
   auto* renderable = entity.add_component<Engine::Core::RenderableComponent>();
   ASSERT_NE(renderable, nullptr);
   auto* unit = entity.add_component<Engine::Core::UnitComponent>(
@@ -495,7 +497,8 @@ TEST(RenderArchetypeBuildings, RomanHomeAppliesTeamPaletteSlot) {
   const auto renderer = registry.get("troops/roman/home");
   ASSERT_TRUE(static_cast<bool>(renderer));
 
-  Engine::Core::Entity entity(3);
+  Engine::Core::StandaloneEntity entity_scratch(3);
+  Engine::Core::Entity& entity = entity_scratch.entity();
   auto* renderable = entity.add_component<Engine::Core::RenderableComponent>();
   ASSERT_NE(renderable, nullptr);
   auto* unit = entity.add_component<Engine::Core::UnitComponent>(
@@ -536,7 +539,8 @@ TEST(RenderArchetypeBuildings, RomanAndCarthageHomesRemainDistinctSilhouettes) {
   ASSERT_TRUE(static_cast<bool>(carthage_renderer));
 
   auto render_bounds = [&](std::uint32_t entity_id, const RenderFunc& renderer) {
-    Engine::Core::Entity entity(entity_id);
+    Engine::Core::StandaloneEntity entity_scratch(entity_id);
+    Engine::Core::Entity& entity = entity_scratch.entity();
     auto* renderable = entity.add_component<Engine::Core::RenderableComponent>();
     auto* unit = entity.add_component<Engine::Core::UnitComponent>(
         k_default_unit_max_health, k_default_unit_health, 0.0F, 0.0F);
@@ -572,7 +576,8 @@ TEST(RenderArchetypeBuildings, RomanTowerAppliesTeamPaletteSlot) {
   const auto renderer = registry.get("troops/roman/defense_tower");
   ASSERT_TRUE(static_cast<bool>(renderer));
 
-  Engine::Core::Entity entity(2);
+  Engine::Core::StandaloneEntity entity_scratch(2);
+  Engine::Core::Entity& entity = entity_scratch.entity();
   auto* renderable = entity.add_component<Engine::Core::RenderableComponent>();
   ASSERT_NE(renderable, nullptr);
 
@@ -610,7 +615,8 @@ TEST(RenderArchetypeBuildings, CarthageTowerAppliesTeamPaletteSlot) {
   const auto renderer = registry.get("troops/carthage/defense_tower");
   ASSERT_TRUE(static_cast<bool>(renderer));
 
-  Engine::Core::Entity entity(3);
+  Engine::Core::StandaloneEntity entity_scratch(3);
+  Engine::Core::Entity& entity = entity_scratch.entity();
   auto* renderable = entity.add_component<Engine::Core::RenderableComponent>();
   ASSERT_NE(renderable, nullptr);
 
@@ -655,7 +661,8 @@ TEST(RenderArchetypeBuildings, TowerBannersRiseAboveRooflines) {
       return {};
     }
 
-    Engine::Core::Entity entity(entity_id);
+    Engine::Core::StandaloneEntity entity_scratch(entity_id);
+    Engine::Core::Entity& entity = entity_scratch.entity();
     auto* renderable = entity.add_component<Engine::Core::RenderableComponent>();
     auto* unit = entity.add_component<Engine::Core::UnitComponent>(
         k_default_unit_max_health, k_default_unit_health, 0.0F, 0.0F);
@@ -695,7 +702,8 @@ TEST(RenderArchetypeBuildings, RomanTowerHealthBarOnlyShowsWhileUnderAttack) {
   ASSERT_TRUE(static_cast<bool>(renderer));
 
   auto render_mesh_count = [&](bool under_attack) {
-    Engine::Core::Entity entity(30 + (under_attack ? 1U : 0U));
+    Engine::Core::StandaloneEntity entity_scratch(30 + (under_attack ? 1U : 0U));
+    Engine::Core::Entity& entity = entity_scratch.entity();
     auto* renderable = entity.add_component<Engine::Core::RenderableComponent>();
     auto* unit = entity.add_component<Engine::Core::UnitComponent>(
         k_default_unit_max_health, k_default_unit_health, 0.0F, 0.0F);
@@ -742,7 +750,8 @@ TEST(RenderArchetypeBuildings, RomanHomeHealthBarOnlyShowsWhileUnderAttack) {
   ASSERT_TRUE(static_cast<bool>(renderer));
 
   auto render_mesh_count = [&](bool under_attack) {
-    Engine::Core::Entity entity(34 + (under_attack ? 1U : 0U));
+    Engine::Core::StandaloneEntity entity_scratch(34 + (under_attack ? 1U : 0U));
+    Engine::Core::Entity& entity = entity_scratch.entity();
     auto* renderable = entity.add_component<Engine::Core::RenderableComponent>();
     auto* unit = entity.add_component<Engine::Core::UnitComponent>(
         k_default_unit_max_health, k_default_unit_health, 0.0F, 0.0F);
@@ -789,7 +798,8 @@ TEST(RenderArchetypeBuildings, RomanHomeHealthBarShowsOnRecentCombatHit) {
   ASSERT_TRUE(static_cast<bool>(renderer));
 
   auto render_mesh_count = [&](bool recent_hit) {
-    Engine::Core::Entity entity(36 + (recent_hit ? 1U : 0U));
+    Engine::Core::StandaloneEntity entity_scratch(36 + (recent_hit ? 1U : 0U));
+    Engine::Core::Entity& entity = entity_scratch.entity();
     auto* renderable = entity.add_component<Engine::Core::RenderableComponent>();
     auto* unit = entity.add_component<Engine::Core::UnitComponent>(
         k_default_unit_max_health, k_default_unit_health, 0.0F, 0.0F);
@@ -835,7 +845,8 @@ TEST(RenderArchetypeBuildings, DestroyedRomanTowerRemovesBannerTint) {
   ASSERT_TRUE(static_cast<bool>(renderer));
 
   auto render_team_tint_count = [&](std::uint32_t entity_id, int health) {
-    Engine::Core::Entity entity(entity_id);
+    Engine::Core::StandaloneEntity entity_scratch(entity_id);
+    Engine::Core::Entity& entity = entity_scratch.entity();
     auto* renderable = entity.add_component<Engine::Core::RenderableComponent>();
     auto* unit = entity.add_component<Engine::Core::UnitComponent>(
         k_default_unit_max_health, k_default_unit_health, 0.0F, 0.0F);
@@ -874,7 +885,8 @@ TEST(RenderArchetypeBuildings, RomanTowerDamageStatesReduceSilhouette) {
   ASSERT_TRUE(static_cast<bool>(renderer));
 
   auto render_bounds = [&](std::uint32_t entity_id, int health) {
-    Engine::Core::Entity entity(entity_id);
+    Engine::Core::StandaloneEntity entity_scratch(entity_id);
+    Engine::Core::Entity& entity = entity_scratch.entity();
     auto* renderable = entity.add_component<Engine::Core::RenderableComponent>();
     auto* unit = entity.add_component<Engine::Core::UnitComponent>(
         k_default_unit_max_health, k_default_unit_health, 0.0F, 0.0F);
@@ -918,7 +930,8 @@ TEST(RenderArchetypeBuildings, CarthageTowerDamageStatesReduceSilhouette) {
   ASSERT_TRUE(static_cast<bool>(renderer));
 
   auto render_bounds = [&](std::uint32_t entity_id, int health) {
-    Engine::Core::Entity entity(entity_id);
+    Engine::Core::StandaloneEntity entity_scratch(entity_id);
+    Engine::Core::Entity& entity = entity_scratch.entity();
     auto* renderable = entity.add_component<Engine::Core::RenderableComponent>();
     auto* unit = entity.add_component<Engine::Core::UnitComponent>(
         k_default_unit_max_health, k_default_unit_health, 0.0F, 0.0F);
@@ -960,7 +973,8 @@ TEST(RenderArchetypeBuildings, RomanStraightWallFormsTallContinuousPalisade) {
   const auto renderer = registry.get("troops/roman/wall_segment_straight");
   ASSERT_TRUE(static_cast<bool>(renderer));
 
-  Engine::Core::Entity entity(4);
+  Engine::Core::StandaloneEntity entity_scratch(4);
+  Engine::Core::Entity& entity = entity_scratch.entity();
   auto* renderable = entity.add_component<Engine::Core::RenderableComponent>();
   ASSERT_NE(renderable, nullptr);
   auto* unit = entity.add_component<Engine::Core::UnitComponent>(
@@ -998,7 +1012,8 @@ TEST(RenderArchetypeBuildings, CarthageStraightWallFormsContinuousCrenellatedMas
   const auto renderer = registry.get("troops/carthage/wall_segment_straight");
   ASSERT_TRUE(static_cast<bool>(renderer));
 
-  Engine::Core::Entity entity(44);
+  Engine::Core::StandaloneEntity entity_scratch(44);
+  Engine::Core::Entity& entity = entity_scratch.entity();
   auto* renderable = entity.add_component<Engine::Core::RenderableComponent>();
   ASSERT_NE(renderable, nullptr);
   auto* unit = entity.add_component<Engine::Core::UnitComponent>(
@@ -1037,7 +1052,8 @@ TEST(RenderArchetypeBuildings, RomanBarracksDamageStatesReduceSilhouette) {
   ASSERT_TRUE(static_cast<bool>(renderer));
 
   auto render_bounds = [&](std::uint32_t entity_id, int health) {
-    Engine::Core::Entity entity(entity_id);
+    Engine::Core::StandaloneEntity entity_scratch(entity_id);
+    Engine::Core::Entity& entity = entity_scratch.entity();
     auto* renderable = entity.add_component<Engine::Core::RenderableComponent>();
     auto* transform = entity.add_component<Engine::Core::TransformComponent>();
     auto* unit = entity.add_component<Engine::Core::UnitComponent>(
@@ -1083,7 +1099,8 @@ TEST(RenderArchetypeBuildings, CarthageBarracksDamageStatesReduceSilhouette) {
   ASSERT_TRUE(static_cast<bool>(renderer));
 
   auto render_bounds = [&](std::uint32_t entity_id, int health) {
-    Engine::Core::Entity entity(entity_id);
+    Engine::Core::StandaloneEntity entity_scratch(entity_id);
+    Engine::Core::Entity& entity = entity_scratch.entity();
     auto* renderable = entity.add_component<Engine::Core::RenderableComponent>();
     auto* transform = entity.add_component<Engine::Core::TransformComponent>();
     auto* unit = entity.add_component<Engine::Core::UnitComponent>(
@@ -1128,7 +1145,8 @@ TEST(RenderArchetypeBuildings, RomanWallEndKeepsFullSegmentFootprint) {
   const auto renderer = registry.get("troops/roman/wall_segment_end");
   ASSERT_TRUE(static_cast<bool>(renderer));
 
-  Engine::Core::Entity entity(5);
+  Engine::Core::StandaloneEntity entity_scratch(5);
+  Engine::Core::Entity& entity = entity_scratch.entity();
   auto* renderable = entity.add_component<Engine::Core::RenderableComponent>();
   ASSERT_NE(renderable, nullptr);
   auto* unit = entity.add_component<Engine::Core::UnitComponent>(
@@ -1158,7 +1176,8 @@ TEST(RenderArchetypeBuildings, RomanFacingWallEndsPlaceTallBoardsAtEastWestSeam)
   const auto renderer = registry.get("troops/roman/wall_segment_end");
   ASSERT_TRUE(static_cast<bool>(renderer));
 
-  Engine::Core::Entity entity(71);
+  Engine::Core::StandaloneEntity entity_scratch(71);
+  Engine::Core::Entity& entity = entity_scratch.entity();
   auto* renderable = entity.add_component<Engine::Core::RenderableComponent>();
   auto* unit = entity.add_component<Engine::Core::UnitComponent>(
       k_default_unit_max_health, k_default_unit_health, 0.0F, 0.0F);
@@ -1202,7 +1221,8 @@ TEST(RenderArchetypeBuildings, CarthageFacingWallEndsCloseEastWestMasonrySeam) {
   const auto renderer = registry.get("troops/carthage/wall_segment_end");
   ASSERT_TRUE(static_cast<bool>(renderer));
 
-  Engine::Core::Entity entity(72);
+  Engine::Core::StandaloneEntity entity_scratch(72);
+  Engine::Core::Entity& entity = entity_scratch.entity();
   auto* renderable = entity.add_component<Engine::Core::RenderableComponent>();
   auto* unit = entity.add_component<Engine::Core::UnitComponent>(
       k_default_unit_max_health, k_default_unit_health, 0.0F, 0.0F);
@@ -1261,7 +1281,8 @@ auto record_wall_meshes(const Render::GL::EntityRendererRegistry& registry,
     return {};
   }
 
-  Engine::Core::Entity entity(entity_id);
+  Engine::Core::StandaloneEntity entity_scratch(entity_id);
+  Engine::Core::Entity& entity = entity_scratch.entity();
   entity.add_component<Engine::Core::RenderableComponent>();
   entity.add_component<Engine::Core::UnitComponent>(
       k_default_unit_max_health, k_default_unit_health, 0.0F, 0.0F);

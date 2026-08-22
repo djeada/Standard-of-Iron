@@ -422,4 +422,11 @@ void GatherLoopSystem::update(Engine::Core::World* world, float delta_time) {
   }
 }
 
+auto GatherLoopSystem::access() const -> Engine::Core::SystemAccess {
+  using namespace Engine::Core;
+  return SystemAccess::declare(
+      Reads<UnitComponent, TransformComponent, AttackTargetComponent>{},
+      Writes<BuilderProductionComponent, MovementComponent, ResourceCarryComponent>{});
+}
+
 } // namespace Game::Systems

@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <cmath>
 #include <numbers>
+#include <type_traits>
 
 namespace Render::Creature::Quadruped {
 

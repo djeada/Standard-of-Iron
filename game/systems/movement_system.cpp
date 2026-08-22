@@ -994,4 +994,22 @@ void MovementSystem::move_unit(Engine::Core::Entity* entity,
   finalize_orientation(entity, transform, movement, delta_time);
 }
 
+auto MovementSystem::access() const -> Engine::Core::SystemAccess {
+  using namespace Engine::Core;
+  return SystemAccess::declare(Reads<UnitComponent,
+                                     BuildingComponent,
+                                     CommanderComponent,
+                                     GuardModeComponent,
+                                     HoldModeComponent,
+                                     ElephantComponent,
+                                     RpgCommanderActionComponent,
+                                     BuilderProductionComponent,
+                                     PendingRemovalComponent>{},
+                               Writes<MovementComponent,
+                                      TransformComponent,
+                                      AttackComponent,
+                                      StaminaComponent,
+                                      TerrainContextComponent>{});
+}
+
 } // namespace Game::Systems

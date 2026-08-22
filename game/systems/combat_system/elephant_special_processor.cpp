@@ -18,6 +18,19 @@
 
 namespace Game::Systems::Combat {
 
+void expire_knockback_cooldowns(
+    Engine::Core::ElephantKnockbackCooldownComponent& cooldowns, float delta_time) {
+  auto& entries = cooldowns.cooldowns;
+  for (auto it = entries.begin(); it != entries.end();) {
+    it->remaining -= delta_time;
+    if (it->remaining <= 0.0F) {
+      it = entries.erase(it);
+    } else {
+      ++it;
+    }
+  }
+}
+
 namespace {
 
 struct FootOffset {

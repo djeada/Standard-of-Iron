@@ -6,6 +6,7 @@
 #include <cmath>
 #include <limits>
 #include <numbers>
+#include <vector>
 
 #include "../../core/component.h"
 #include "../../core/world.h"
@@ -122,14 +123,17 @@ void refresh_commander_engagement(Engine::Core::World* world,
   auto& owners = Game::Systems::OwnerRegistry::instance();
 
   bool has_formation_opponent = false;
-  for (auto* candidate : world->collect_entities_with<Engine::Core::UnitComponent>()) {
-    if (candidate == nullptr || candidate->get_id() == commander_id) {
+  for (auto [candidate_ref, unit_ref, transform_ref] :
+       world->entity_view<Engine::Core::UnitComponent,
+                          Engine::Core::TransformComponent>()) {
+    Engine::Core::Entity* candidate = &candidate_ref;
+    auto* unit = &unit_ref;
+    auto* transform = &transform_ref;
+    if (candidate->get_id() == commander_id) {
       continue;
     }
 
-    auto* unit = candidate->get_component<Engine::Core::UnitComponent>();
-    auto* transform = candidate->get_component<Engine::Core::TransformComponent>();
-    if (unit == nullptr || transform == nullptr || unit->health <= 0 ||
+    if (unit->health <= 0 ||
         !owners.are_enemies(commander_unit->owner_id, unit->owner_id)) {
       continue;
     }
@@ -247,15 +251,14 @@ void tick_rpg_combat(Engine::Core::World* world,
 
   refresh_commander_engagement(world, commander_id);
 
-  for (auto* staggered :
-       world->collect_entities_with<Engine::Core::StaggerComponent>()) {
-    auto* stagger = staggered->get_component<Engine::Core::StaggerComponent>();
-    if (stagger == nullptr) {
-      continue;
-    }
+  std::vector<Engine::Core::EntityID> recovered;
+  for (auto [staggered_ref, stagger_ref] :
+       world->entity_view<Engine::Core::StaggerComponent>()) {
+    Engine::Core::Entity* staggered = &staggered_ref;
+    auto* stagger = &stagger_ref;
     stagger->remaining -= dt;
     if (stagger->remaining <= 0.0F) {
-      staggered->remove_component<Engine::Core::StaggerComponent>();
+      recovered.push_back(staggered->get_id());
     } else {
       auto* fb = staggered->get_component<Engine::Core::HitFeedbackComponent>();
       if (fb == nullptr) {
@@ -303,12 +306,15 @@ void tick_rpg_combat(Engine::Core::World* world,
     unit->health = 1;
   }
 
-  for (auto* telegraphed :
-       world->collect_entities_with<Engine::Core::EnemyTelegraphComponent>()) {
-    auto* telegraph =
-        telegraphed->get_component<Engine::Core::EnemyTelegraphComponent>();
-    if (telegraph == nullptr ||
-        telegraph->phase == Engine::Core::EnemyTelegraphPhase::None) {
+  for (const Engine::Core::EntityID entity_id : recovered) {
+    world->remove<Engine::Core::StaggerComponent>(entity_id);
+  }
+
+  for (auto [telegraph_id, telegraph_ref] :
+       world->view<Engine::Core::EnemyTelegraphComponent>()) {
+    (void)telegraph_id;
+    auto* telegraph = &telegraph_ref;
+    if (telegraph->phase == Engine::Core::EnemyTelegraphPhase::None) {
       continue;
     }
     telegraph->phase_time += dt;

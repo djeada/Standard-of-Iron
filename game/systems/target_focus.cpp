@@ -139,29 +139,28 @@ auto collect_target_focus_markers(const TargetFocusRequest& request)
   }
 
   std::size_t incoming_count = 0;
-  for (auto* entity :
-       world->collect_entities_with<Engine::Core::AttackTargetComponent>()) {
+  for (auto [entity, attack, unit] :
+       world->entity_view<Engine::Core::AttackTargetComponent,
+                          Engine::Core::UnitComponent>()) {
     if (incoming_count >= request.max_incoming_attackers) {
       break;
     }
-    const auto* attack = entity->get_component<Engine::Core::AttackTargetComponent>();
-    const auto* unit = entity->get_component<Engine::Core::UnitComponent>();
-    if (attack == nullptr || unit == nullptr || unit->health <= 0) {
+    if (unit.health <= 0) {
       continue;
     }
-    if (!hostile_to(owners, request.local_owner_id, unit->owner_id)) {
+    if (!hostile_to(owners, request.local_owner_id, unit.owner_id)) {
       continue;
     }
-    if (selected.count(attack->target_id) == 0) {
+    if (selected.count(attack.target_id) == 0) {
       continue;
     }
-    if (entity->get_id() == request.inspected || locked.count(entity->get_id()) != 0) {
+    if (entity.get_id() == request.inspected || locked.count(entity.get_id()) != 0) {
       continue;
     }
-    if (alive_unit(entity->get_id()) == nullptr) {
+    if (alive_unit(entity.get_id()) == nullptr) {
       continue;
     }
-    markers.push_back(make_marker(*entity, TargetFocusRole::IncomingAttacker, true));
+    markers.push_back(make_marker(entity, TargetFocusRole::IncomingAttacker, true));
     ++incoming_count;
   }
 

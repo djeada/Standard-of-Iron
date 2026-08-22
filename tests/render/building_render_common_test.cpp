@@ -84,7 +84,8 @@ TEST(BuildingRenderCommon, SelectsNationVariantRendererKey) {
 TEST(BuildingRenderCommon, ResolvesBuildingStateFromUnitHealth) {
   using namespace Render::GL;
 
-  Engine::Core::Entity entity(1);
+  Engine::Core::StandaloneEntity entity_scratch(1);
+  Engine::Core::Entity& entity = entity_scratch.entity();
   auto* unit = entity.add_component<Engine::Core::UnitComponent>(100, 100, 0.0F, 0.0F);
   ASSERT_NE(unit, nullptr);
 
@@ -159,7 +160,8 @@ TEST(BuildingRenderCommon, RegisteredVariantDispatcherRoutesByNation) {
   const auto dispatcher = registry.get("test_building");
   ASSERT_TRUE(static_cast<bool>(dispatcher));
 
-  Engine::Core::Entity entity(2);
+  Engine::Core::StandaloneEntity entity_scratch(2);
+  Engine::Core::Entity& entity = entity_scratch.entity();
   auto* unit = entity.add_component<Engine::Core::UnitComponent>(100, 100, 0.0F, 0.0F);
   ASSERT_NE(unit, nullptr);
 
@@ -240,7 +242,8 @@ TEST(BuildingRenderCommon, BuildingInstanceCacheReusesUnchangedEntityData) {
   builder.add_mesh(fake_mesh(2), QMatrix4x4{}, QVector3D(0.0F, 1.0F, 0.0F));
   RenderArchetype archetype = std::move(builder).build();
 
-  Engine::Core::Entity entity(77);
+  Engine::Core::StandaloneEntity entity_scratch(77);
+  Engine::Core::Entity& entity = entity_scratch.entity();
   DrawContext ctx;
   ctx.entity = &entity;
   ctx.distance_sq = 20.0F * 20.0F;
@@ -268,7 +271,8 @@ TEST(BuildingRenderCommon, BuildingInstanceCacheRebuildsOnLodChange) {
   builder.add_mesh(fake_mesh(2), QMatrix4x4{}, QVector3D(0.0F, 1.0F, 0.0F));
   RenderArchetype archetype = std::move(builder).build();
 
-  Engine::Core::Entity entity(78);
+  Engine::Core::StandaloneEntity entity_scratch(78);
+  Engine::Core::Entity& entity = entity_scratch.entity();
   DrawContext ctx;
   ctx.entity = &entity;
   RecordingSubmitter submitter;

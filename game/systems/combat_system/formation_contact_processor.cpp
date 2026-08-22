@@ -227,12 +227,13 @@ void sort_fronts(std::vector<Engine::Core::FormationContactFront>& fronts) {
 
 auto build_fronts(Engine::Core::World& world) -> FrontMap {
   FrontMap result;
-  auto attackers = world.collect_entities_with<Engine::Core::AttackTargetComponent>();
-  std::sort(attackers.begin(), attackers.end(), [](auto const* lhs, auto const* rhs) {
-    return lhs->get_id() < rhs->get_id();
-  });
+  const auto attacker_span = world.entities_with<Engine::Core::AttackTargetComponent>();
+  std::vector<Engine::Core::EntityID> attackers(attacker_span.begin(),
+                                                attacker_span.end());
+  std::sort(attackers.begin(), attackers.end());
 
-  for (auto* attacker : attackers) {
+  for (const Engine::Core::EntityID attacker_id : attackers) {
+    Engine::Core::Entity* attacker = world.get_entity(attacker_id);
     if (attacker == nullptr) {
       continue;
     }
@@ -280,10 +281,10 @@ void clear_contact(Engine::Core::FormationContactComponent& contact) {
 }
 
 void publish_contacts(Engine::Core::World& world, FrontMap fronts_by_entity) {
-  for (auto* entity :
-       world.collect_entities_with<Engine::Core::FormationContactComponent>()) {
-    if (entity != nullptr && !fronts_by_entity.contains(entity->get_id())) {
-      clear_contact(*entity->get_component<Engine::Core::FormationContactComponent>());
+  for (auto [entity_id, contact] :
+       world.view<Engine::Core::FormationContactComponent>()) {
+    if (!fronts_by_entity.contains(entity_id)) {
+      clear_contact(contact);
     }
   }
 
@@ -519,10 +520,9 @@ void tick_formation_hit(Engine::Core::Entity& entity, float delta_time) {
 }
 
 void publish_formation_presentation(Engine::Core::World& world, float delta_time) {
-  auto const entities = world.collect_entities_with<Engine::Core::UnitComponent>();
   std::unordered_map<Engine::Core::EntityID, FormationCombat::FormationLayout>
       layout_cache;
-  layout_cache.reserve(entities.size());
+  layout_cache.reserve(world.entities_with<Engine::Core::UnitComponent>().size());
   auto layout_for =
       [&layout_cache](
           Engine::Core::Entity& entity) -> const FormationCombat::FormationLayout& {
@@ -533,8 +533,11 @@ void publish_formation_presentation(Engine::Core::World& world, float delta_time
     return entry->second;
   };
 
-  for (auto* entity : entities) {
-    if (entity == nullptr || !FormationCombat::has_formation_slots(*entity)) {
+  for (auto [entity_ref, entity_unit] :
+       world.entity_view<Engine::Core::UnitComponent>()) {
+    (void)entity_unit;
+    Engine::Core::Entity* entity = &entity_ref;
+    if (!FormationCombat::has_formation_slots(*entity)) {
       continue;
     }
     tick_formation_hit(*entity, delta_time);

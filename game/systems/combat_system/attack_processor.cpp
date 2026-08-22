@@ -302,16 +302,17 @@ auto should_prioritize_healing(Engine::Core::Entity* healer,
     return false;
   }
 
-  for (auto* target : world->collect_entities_with<Engine::Core::UnitComponent>()) {
-    if (target == nullptr ||
-        target->has_component<Engine::Core::PendingRemovalComponent>()) {
+  for (auto [target_ref, target_unit_ref, target_transform_ref] :
+       world->entity_view<Engine::Core::UnitComponent,
+                          Engine::Core::TransformComponent>()) {
+    Engine::Core::Entity* target = &target_ref;
+    const auto* target_unit = &target_unit_ref;
+    const auto* target_transform = &target_transform_ref;
+    if (world->has<Engine::Core::PendingRemovalComponent>(target->get_id())) {
       continue;
     }
 
-    auto* target_unit = target->get_component<Engine::Core::UnitComponent>();
-    auto* target_transform = target->get_component<Engine::Core::TransformComponent>();
-    if (target_unit == nullptr || target_transform == nullptr ||
-        target_unit->owner_id != healer_unit->owner_id ||
+    if (target_unit->owner_id != healer_unit->owner_id ||
         !HealingRules::can_receive_healing(*target) ||
         !matches_heal_affinity(target, healer_component->target_affinity)) {
       continue;
@@ -1060,15 +1061,14 @@ auto is_formation_reserve(Engine::Core::Entity* entity,
     return false;
   }
   int front_rank = mode->stable_rank;
-  for (auto* member :
-       world->collect_entities_with<Engine::Core::FormationModeComponent>()) {
-    auto const* member_mode =
-        member->get_component<Engine::Core::FormationModeComponent>();
-    auto const* member_unit = member->get_component<Engine::Core::UnitComponent>();
-    if (member_mode != nullptr && member_unit != nullptr && member_unit->health > 0 &&
-        member_mode->active && member_mode->formation_id == mode->formation_id &&
-        member_mode->stable_rank >= 0) {
-      front_rank = std::min(front_rank, member_mode->stable_rank);
+  for (auto [member_id, member_mode, member_unit] :
+       world->view<Engine::Core::FormationModeComponent,
+                   Engine::Core::UnitComponent>()) {
+    (void)member_id;
+    if (member_unit.health > 0 && member_mode.active &&
+        member_mode.formation_id == mode->formation_id &&
+        member_mode.stable_rank >= 0) {
+      front_rank = std::min(front_rank, member_mode.stable_rank);
     }
   }
   return mode->stable_rank > front_rank;

@@ -12,7 +12,7 @@ accessibility_runtime       team identity and motion settings, shared by both en
 soi_software_raster         the CPU triangle rasteriser, used by render_gl and three tools
 soi_audio_mastering         the limiter/loudness chain, used by audio_system and the preview tool
      |
-engine_core                 ECS: entities, components, world, the ambient session binding
+engine_core                 ECS: the registry, component storage, world, the ambient session binding
      |
 soi_world                   unit catalogues, registries, terrain and maps
      |
@@ -378,15 +378,67 @@ with a wrapper that adds commander-mode input; `soi_headless` calls it with
 none. That is the dedicated-server shape: a session, `soi_runtime`'s system
 registry, `soi_ai`, and a loop — no Qt Quick, no renderer linked in.
 
+## How the ECS stores things
+
+An entity is a 64-bit handle, `{index, generation}`, and nothing else. There is
+no entity object holding a component table: `Engine::Core::Registry` owns the
+entity slots and one `ComponentStorage<T>` per component type, and every lookup
+starts from the id.
+
+A storage is a sparse set with its data in pages:
+
+```text
+ComponentStorage<TransformComponent>
+  dense    [id7, id3, id9, ...]        packed entity ids -- what a view walks
+  sparse   entity index -> dense position
+  slots    dense position -> data slot
+  pages    [ 128 x TransformComponent ][ 128 x TransformComponent ] ...
+```
+
+`try_get(id)` is three contiguous-array reads: sparse, slot, page. Adding a
+component never moves an existing one -- pages are allocated, never reallocated
+-- and removing one frees its slot for the next insert rather than compacting
+the page, so **a component reference stays valid until that component is
+removed or its entity is destroyed**. Treat one as scope-local anyway: that is
+the contract the API promises, and a future compaction pass would keep only
+that much.
+
+`Engine::Core::Entity` still exists, as a two-word handle (`{id, registry}`)
+that `world.get_entity(id)` hands back from a paged table, so the older
+`entity->get_component<T>()` call sites keep working while they are migrated.
+It stores nothing itself. `scripts/check-entity-access.py` counts those call
+sites per directory and fails the build if any directory grows more of them
+(`scripts/entity_access_budget.json` is the ceiling; `--write` lowers it after
+a clean-up).
+
+Components are plain structs. No base class, no virtual destructor, no per-tick
+method on a component -- stepping state over time is a system's job, and
+`tests/architecture/component_data_test.cpp` fails the build if a component
+grows one.
+
 ## Querying the world
 
 Three ways to ask the world a question, in order of what they cost:
 
-| Question                              | API                                          | Cost                                                   |
-| ------------------------------------- | -------------------------------------------- | ------------------------------------------------------ |
-| "every entity with these components"  | `world.view<A, B>()` / `entity_view<A, B>()` | walks the smallest component set; allocates nothing    |
-| "what is near this point?"            | `world.spatial_index()`                      | proportional to what is actually nearby                |
-| "give me a vector of them I can keep" | `world.collect_entities_with<T>()`           | walks the set _and_ allocates a `std::vector<Entity*>` |
+| Question                              | API                                          | Cost                                                    |
+| ------------------------------------- | -------------------------------------------- | ------------------------------------------------------- |
+| "every entity with these components"  | `world.view<A, B>()` / `entity_view<A, B>()` | walks the smallest component pool; allocates nothing    |
+| "this one entity's component"         | `world.try_get<T>(id)` / `world.has<T>(id)`  | three array reads, no entity object                     |
+| "what is near this point?"            | `world.spatial_index()`                      | proportional to what is actually nearby                 |
+| "give me a vector of them I can keep" | `world.collect_entities_with<T>()`           | walks the pool _and_ allocates a `std::vector<Entity*>` |
+
+A view is the compiled form of the query: it resolves one storage pointer per
+component type at construction, picks the smallest pool as the one to walk, and
+matches the rest by sparse-set lookup. Constructing it costs one array index
+per component type, so a system builds its views where it needs them rather
+than caching them across ticks -- there is nothing else to compile in a
+sparse-set ECS, and a cached view would outlive the storages it points at.
+
+A view walks live storage, not a snapshot. It captures the pool's length when
+it opens, so adding components of the viewed type during the loop is safe (the
+new entries are not visited); removing one of the viewed type from another
+entity can make the loop skip an entry, so collect the ids and remove them
+after the loop, or record the change in `world.deferred()`.
 
 The names say which is which on purpose. `get_entities_with<T>()` looked free
 and was not: it allocated a vector and resolved every handle in it, and because
@@ -441,12 +493,32 @@ once more at the end of the tick, so the instants at which the world's _shape_
 can change are these boundaries rather than "anywhere, at any time".
 
 `Engine::Core::SystemAccess` is the other half. A system may declare the
-component types it reads and writes; one that has not declared them is
-`exclusive`, meaning "assume it touches everything". `plan_phase_batches` groups
-the systems of a phase into batches that do not collide, preserving registration
-order. Nothing runs in parallel yet — that waits on the single-writer work
-below — but the question "may these two run together?" now has an answer that is
-checked rather than assumed.
+component types it reads and writes —
+`SystemAccess::declare(Reads<UnitComponent>{}, Writes<StaminaComponent>{})` —
+and one that has not declared them is `exclusive`, meaning "assume it touches
+everything". `plan_phase_batches` groups the systems of a phase into batches
+that do not collide, preserving registration order. Nothing runs in parallel
+yet — that waits on the single-writer work below — but the question "may these
+two run together?" now has an answer that is checked rather than assumed.
+
+Twenty-four of the thirty-seven systems declare one. The rule for the rest is
+structural: **a system that creates or destroys entities is `exclusive`**,
+because a spawn or a death writes to whatever pools the factory and the damage
+pipeline touch, which is all of them. That covers production, the combat
+pipeline, projectiles, cleanup, settlement life and the undead awakening. A
+declaration that is narrower than what the system actually touches would be
+worse than no declaration at all, so those keep `SystemAccess::everything()`
+until the services they call have their own footprints pinned down. Where a
+declared system calls a bounded service (`CommandService::move_unit`,
+`get_unit_radius`), the service's components are folded into the declaration.
+
+Eleven systems also take the narrower entry point: `System::run(SystemContext&)`
+instead of `update(World*, float)`. `SystemContext` exposes queries, per-entity
+component access, the spatial index and `deferred()` — what a system
+legitimately needs — and `context.world()` as an explicit escape hatch, so a
+system that needs more than the ECS says so in its own code. The base
+`System::update` builds a context and calls `run`, so both entry points work
+while the rest migrate.
 
 ## Measuring the simulation
 
@@ -659,9 +731,12 @@ These are real and deliberate, not oversights:
   `scripts/check-ambient-instances.py` keeps it from going backwards: the
   count per directory may only fall (`scripts/ambient_instance_budget.json`
   is the ceiling; `--write` lowers it after a clean-up).
-- Components are pooled per type, so instances of one type are contiguous, but
-  they still derive from a small polymorphic base with a virtual destructor.
-  Access is by dense type-id array index, not by RTTI.
+- Component storage is a per-type sparse set: a packed array of the entity ids
+  that carry the component, and the component data itself in page-allocated
+  blocks the registry owns. Lookup is `EntityID -> dense position -> slot`, all
+  three contiguous arrays, and no RTTI. Data slots are stable for the life of
+  the component, so a page holds one type's instances in insertion order until
+  removals start recycling slots into the holes they leave.
 - `GameEngine` is still ~3,000 lines: the match lifecycle (bringing a world up,
   saving and restoring it), the frame loop and the per-frame UI sync. Those are
   the root's own work rather than a QML surface, but the file is bigger than one

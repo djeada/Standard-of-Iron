@@ -36,6 +36,7 @@ add_library(
     engine_core
     STATIC
     core/entity.cpp
+    core/registry.cpp
     core/component.cpp
     core/system.cpp
     core/world.cpp

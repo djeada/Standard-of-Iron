@@ -243,4 +243,16 @@ void UnitLayoutStateSystem::update(Engine::Core::World* world, float delta_time)
   });
 }
 
+auto UnitLayoutStateSystem::access() const -> Engine::Core::SystemAccess {
+  using namespace Engine::Core;
+  return SystemAccess::declare(Reads<UnitComponent,
+                                     TransformComponent,
+                                     MovementComponent,
+                                     AttackComponent,
+                                     GuardModeComponent,
+                                     HoldModeComponent,
+                                     MoraleComponent>{},
+                               Writes<UnitLayoutStateComponent>{});
+}
+
 } // namespace Game::Formation

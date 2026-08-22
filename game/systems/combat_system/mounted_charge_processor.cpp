@@ -186,15 +186,16 @@ void process_mounted_charge_intents(Engine::Core::World* world, float delta_time
     return;
   }
 
-  for (auto* entity : world->collect_entities_with<Engine::Core::MovementComponent>()) {
-    if (entity == nullptr ||
-        entity->has_component<Engine::Core::PendingRemovalComponent>()) {
+  for (auto [entity_ref, movement_ref, unit_ref] :
+       world->entity_view<Engine::Core::MovementComponent,
+                          Engine::Core::UnitComponent>()) {
+    Engine::Core::Entity* entity = &entity_ref;
+    auto* movement = &movement_ref;
+    auto const* unit = &unit_ref;
+    if (entity->has_component<Engine::Core::PendingRemovalComponent>()) {
       continue;
     }
-    auto const* unit = entity->get_component<Engine::Core::UnitComponent>();
-    auto* movement = entity->get_component<Engine::Core::MovementComponent>();
-    if (unit == nullptr || movement == nullptr ||
-        !Game::Units::is_cavalry(unit->spawn_type) ||
+    if (!Game::Units::is_cavalry(unit->spawn_type) ||
         unit->spawn_type == Game::Units::SpawnType::HorseArcher) {
       continue;
     }

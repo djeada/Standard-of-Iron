@@ -38,14 +38,9 @@ auto rebuild_registries_after_load(Engine::Core::World* world,
 
   rebuild_building_collisions(world);
 
-  auto units = world->collect_entities_with<Engine::Core::UnitComponent>();
-  for (auto* entity : units) {
-    auto* unit = entity->get_component<Engine::Core::UnitComponent>();
-    if (unit == nullptr) {
-      continue;
-    }
-    if (unit->owner_id == local_owner_id) {
-      result.player_unit_id = entity->get_id();
+  for (auto [entity_id, unit] : world->view<Engine::Core::UnitComponent>()) {
+    if (unit.owner_id == local_owner_id) {
+      result.player_unit_id = entity_id;
       break;
     }
   }
@@ -60,25 +55,22 @@ void rebuild_building_collisions(Engine::Core::World* world) {
     return;
   }
 
-  auto buildings = world->collect_entities_with<Engine::Core::BuildingComponent>();
-  for (auto* entity : buildings) {
-    auto* transform = entity->get_component<Engine::Core::TransformComponent>();
-    auto* unit = entity->get_component<Engine::Core::UnitComponent>();
-    if ((transform == nullptr) || (unit == nullptr)) {
-      continue;
-    }
-
-    if (unit->health <= 0 ||
-        entity->has_component<Engine::Core::PendingRemovalComponent>()) {
+  for (auto [entity_id, building, unit, transform] :
+       world->view<Engine::Core::BuildingComponent,
+                   Engine::Core::UnitComponent,
+                   Engine::Core::TransformComponent>()) {
+    (void)building;
+    if (unit.health <= 0 ||
+        world->has<Engine::Core::PendingRemovalComponent>(entity_id)) {
 
       continue;
     }
 
-    registry.register_building(entity->get_id(),
-                               Game::Units::spawn_typeToString(unit->spawn_type),
-                               transform->position.x,
-                               transform->position.z,
-                               unit->owner_id);
+    registry.register_building(entity_id,
+                               Game::Units::spawn_typeToString(unit.spawn_type),
+                               transform.position.x,
+                               transform.position.z,
+                               unit.owner_id);
   }
 
   Game::Systems::WallNetworkService::refresh_world(*world);

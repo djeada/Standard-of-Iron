@@ -112,14 +112,13 @@ constexpr float k_sheep_marker_radius = 0.7F;
 void collect_sheep(const InteractionTargetingRequest& request,
                    float max_distance_sq,
                    std::vector<Scored>& out) {
-  for (auto* entity :
-       request.world->collect_entities_with<Engine::Core::WildlifeComponent>()) {
-    if (entity == nullptr || !sheep_is_slaughterable(*entity) ||
-        food_target_claimed(*request.world, entity->get_id())) {
-      continue;
-    }
-    const auto* transform = entity->get_component<Engine::Core::TransformComponent>();
-    if (transform == nullptr) {
+  for (auto [entity, wildlife, transform_ref] :
+       request.world->entity_view<Engine::Core::WildlifeComponent,
+                                  Engine::Core::TransformComponent>()) {
+    (void)wildlife;
+    const auto* transform = &transform_ref;
+    if (!sheep_is_slaughterable(entity) ||
+        food_target_claimed(*request.world, entity.get_id())) {
       continue;
     }
     const float dx = transform->position.x - request.anchor_x;
@@ -134,7 +133,7 @@ void collect_sheep(const InteractionTargetingRequest& request,
     }
 
     InteractionTargetMarker marker;
-    marker.entity_id = entity->get_id();
+    marker.entity_id = entity.get_id();
     marker.action = InteractionAction::Slaughter;
     marker.world_x = transform->position.x;
     marker.world_y = transform->position.y;
@@ -147,18 +146,15 @@ void collect_sheep(const InteractionTargetingRequest& request,
 void collect_buildings(const InteractionTargetingRequest& request,
                        float max_distance_sq,
                        std::vector<Scored>& out) {
-  for (auto* entity :
-       request.world->collect_entities_with<Engine::Core::BuildingComponent>()) {
-    if (entity == nullptr) {
-      continue;
-    }
-    const auto* unit = entity->get_component<Engine::Core::UnitComponent>();
-    const auto* transform = entity->get_component<Engine::Core::TransformComponent>();
-    if (unit == nullptr || transform == nullptr) {
-      continue;
-    }
+  for (auto [entity, building, unit_ref, transform_ref] :
+       request.world->entity_view<Engine::Core::BuildingComponent,
+                                  Engine::Core::UnitComponent,
+                                  Engine::Core::TransformComponent>()) {
+    (void)building;
+    const auto* unit = &unit_ref;
+    const auto* transform = &transform_ref;
 
-    const auto action = building_action(request, *entity, *unit);
+    const auto action = building_action(request, entity, *unit);
     if (action == InteractionAction::None) {
       continue;
     }
@@ -171,7 +167,7 @@ void collect_buildings(const InteractionTargetingRequest& request,
     }
 
     InteractionTargetMarker marker;
-    marker.entity_id = entity->get_id();
+    marker.entity_id = entity.get_id();
     marker.action = action;
     marker.world_x = transform->position.x;
     marker.world_y = transform->position.y;

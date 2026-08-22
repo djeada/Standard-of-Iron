@@ -51,25 +51,23 @@ void GateSystem::update(Engine::Core::World* world, float delta_time) {
     return;
   }
 
-  auto gate_entities = world->collect_entities_with<GateComponent>();
-  if (gate_entities.empty()) {
+  auto gate_view =
+      world->entity_view<GateComponent, TransformComponent, UnitComponent>();
+  if (gate_view.empty()) {
     GateService::clear_blockers();
     return;
   }
 
   std::vector<GateRecord> gates;
-  gates.reserve(gate_entities.size());
+  gates.reserve(gate_view.candidate_count());
 
-  for (auto* entity : gate_entities) {
-    if (entity == nullptr || entity->has_component<PendingRemovalComponent>()) {
-      continue;
-    }
-
-    auto* gate = entity->get_component<GateComponent>();
-    const auto* transform = entity->get_component<TransformComponent>();
-    const auto* unit = entity->get_component<UnitComponent>();
-    if (gate == nullptr || transform == nullptr || unit == nullptr ||
-        unit->health <= 0) {
+  for (auto [gate_entity, gate_component, transform_component, unit_component] :
+       gate_view) {
+    Engine::Core::Entity* entity = &gate_entity;
+    auto* gate = &gate_component;
+    const auto* transform = &transform_component;
+    const auto* unit = &unit_component;
+    if (entity->has_component<PendingRemovalComponent>() || unit->health <= 0) {
       continue;
     }
 
@@ -88,15 +86,15 @@ void GateSystem::update(Engine::Core::World* world, float delta_time) {
     return;
   }
 
-  for (auto* entity : world->collect_entities_with<UnitComponent>()) {
-    if (entity == nullptr || entity->has_component<PendingRemovalComponent>()) {
+  for (auto [entity_id, unit_component, transform_component] :
+       world->view<UnitComponent, TransformComponent>()) {
+    if (world->has<PendingRemovalComponent>(entity_id)) {
       continue;
     }
 
-    const auto* unit = entity->get_component<UnitComponent>();
-    const auto* transform = entity->get_component<TransformComponent>();
-    if (unit == nullptr || transform == nullptr || unit->health <= 0 ||
-        !Game::Units::is_troop_spawn(unit->spawn_type)) {
+    const auto* unit = &unit_component;
+    const auto* transform = &transform_component;
+    if (unit->health <= 0 || !Game::Units::is_troop_spawn(unit->spawn_type)) {
       continue;
     }
 
@@ -166,6 +164,13 @@ void GateSystem::update(Engine::Core::World* world, float delta_time) {
   }
 
   GateService::refresh_blockers(*world);
+}
+
+auto GateSystem::access() const -> Engine::Core::SystemAccess {
+  using namespace Engine::Core;
+  return SystemAccess::declare(
+      Reads<TransformComponent, UnitComponent, PendingRemovalComponent>{},
+      Writes<GateComponent>{});
 }
 
 } // namespace Game::Systems
