@@ -24,25 +24,26 @@
 #include "render/entity/registry.h"
 #include "render/geom/transforms.h"
 #include "render/gl/primitives.h"
-#include "render/humanoid/humanoid_renderer_base.h"
+#include "render/humanoid/runtime/humanoid_renderer.h"
 #include "render/submitter.h"
 
 namespace Render::GL {
 
-auto ElephantRendererBase::visual_spec() const
-    -> const Render::Creature::Pipeline::UnitVisualSpec& {
-  if (!m_visual_spec_baked) {
-    m_visual_spec_cache = Render::Creature::Pipeline::UnitVisualSpec{};
-    m_visual_spec_cache.kind = Render::Creature::Pipeline::CreatureKind::Elephant;
-    m_visual_spec_cache.debug_name = "elephant/default";
-    m_visual_spec_cache.creature_definition =
-        &Render::Creature::Pipeline::elephant_creature_visual_definition();
-    const QVector3D ps = get_proportion_scaling();
-    m_visual_spec_cache.scaling =
-        Render::Creature::Pipeline::ProportionScaling{ps.x(), ps.y(), ps.z()};
-    m_visual_spec_baked = true;
-  }
-  return m_visual_spec_cache;
+namespace {
+
+auto default_elephant_visual_spec() -> Render::Creature::Pipeline::UnitVisualSpec {
+  Render::Creature::Pipeline::UnitVisualSpec spec;
+  spec.kind = Render::Creature::Pipeline::CreatureKind::Elephant;
+  spec.debug_name = "elephant/default";
+  spec.creature_definition =
+      &Render::Creature::Pipeline::elephant_creature_visual_definition();
+  return spec;
+}
+
+} // namespace
+
+ElephantRendererBase::ElephantRendererBase()
+    : m_visual_spec(default_elephant_visual_spec()) {
 }
 
 namespace {

@@ -8,6 +8,7 @@
 #include <functional>
 #include <memory>
 #include <span>
+#include <string_view>
 #include <unordered_map>
 #include <vector>
 
@@ -124,6 +125,18 @@ public:
       std::uint32_t attachment_set_id,
       std::uint32_t skin_species_id) -> const RiggedMeshEntry*;
 
+  auto create_rigged_asset(
+      const Key& key,
+      std::span<const QMatrix4x4> rest_palette,
+      std::span<const Render::Creature::StaticAttachmentSpec> attachments,
+      std::uint16_t variant_bucket) -> const RiggedMeshEntry*;
+
+  [[nodiscard]] auto
+  find_rigged_asset(const Key& key) const noexcept -> const RiggedMeshEntry*;
+
+  [[nodiscard]] auto require_rigged_asset(const Key& key, std::string_view detail) const
+      -> const RiggedMeshEntry*;
+
   void clear() {
     release_skin_atlases();
     m_entries.clear();
@@ -204,7 +217,8 @@ private:
                      std::shared_ptr<RiggedMesh>,
                      AttachmentMeshKeyHash>
       m_attachment_meshes;
-  FrameStats m_frame_stats;
+
+  mutable FrameStats m_frame_stats;
   bool m_has_pending_skin_ubo_uploads{false};
 };
 

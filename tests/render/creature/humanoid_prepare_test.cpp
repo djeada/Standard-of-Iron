@@ -47,6 +47,7 @@
 #include "render/creature/pose_intent.h"
 #include "render/creature/render_request.h"
 #include "render/creature/runtime_bake_guard.h"
+#include "render/entity/humanoid_pose_policies.h"
 #include "render/entity/registry.h"
 #include "render/equipment/armor/arm_guards_renderer.h"
 #include "render/equipment/armor/armor_heavy_carthage.h"
@@ -70,17 +71,18 @@
 #include "render/equipment/weapons/sword_renderer.h"
 #include "render/gl/humanoid/animation/animation_inputs.h"
 #include "render/gl/humanoid/humanoid_types.h"
-#include "render/humanoid/cache_control.h"
-#include "render/humanoid/humanoid_manifest.h"
-#include "render/humanoid/humanoid_renderer_base.h"
-#include "render/humanoid/humanoid_spec.h"
-#include "render/humanoid/pose_cache_components.h"
-#include "render/humanoid/pose_controller.h"
-#include "render/humanoid/pose_primitives.h"
-#include "render/humanoid/prepare.h"
-#include "render/humanoid/render_stats.h"
-#include "render/humanoid/skeleton.h"
-#include "render/humanoid/unit_layout_spacing.h"
+#include "render/humanoid/asset/humanoid_manifest.h"
+#include "render/humanoid/asset/humanoid_spec.h"
+#include "render/humanoid/runtime/frame_control.h"
+#include "render/humanoid/runtime/humanoid_renderer.h"
+#include "render/humanoid/runtime/instance_state.h"
+#include "render/humanoid/runtime/pose_controller.h"
+#include "render/humanoid/runtime/pose_primitives.h"
+#include "render/humanoid/runtime/prepare.h"
+#include "render/humanoid/runtime/runtime_context.h"
+#include "render/humanoid/runtime/runtime_stats.h"
+#include "render/humanoid/runtime/skeleton_evaluator.h"
+#include "render/humanoid/runtime/unit_layout_spacing.h"
 #include "render/rigged_mesh.h"
 #include "render/submitter.h"
 #include "render/template_cache.h"
@@ -98,14 +100,11 @@ constexpr std::uint32_t k_carthage_builder_headwrap_role_count = 1;
 constexpr std::uint32_t k_carthage_builder_robes_role_count = 2;
 constexpr std::uint32_t k_carthage_civilian_sash_role_count = 2;
 
-int g_pose_layer_invocations = 0;
-float g_pose_layer_last_head_x = 0.0F;
-
-void counting_pose_layer(const Render::Creature::Pipeline::HumanoidPoseLayerContext&,
-                         Render::GL::HumanoidPose& io_pose) {
-  ++g_pose_layer_invocations;
-  io_pose.head_pos.setX(io_pose.head_pos.x() + 0.25F);
-  g_pose_layer_last_head_x = io_pose.head_pos.x();
+auto test_runtime(std::uint32_t frame_index)
+    -> Render::Humanoid::HumanoidRuntimeContext& {
+  thread_local Render::Humanoid::HumanoidRuntimeContext runtime;
+  runtime.frame_index = frame_index;
+  return runtime;
 }
 
 class CountingSubmitter : public Render::GL::ISubmitter {
@@ -569,7 +568,7 @@ auto moving_palette_changes_over_time(const char* renderer_id,
     return false;
   }
 
-  Render::GL::advance_pose_cache_frame();
+  Render::GL::begin_humanoid_frame();
   ctx.animation_time = 0.70F;
   CountingSubmitter second_sink;
   renderer(ctx, second_sink);
@@ -638,7 +637,7 @@ auto render_builder_submission_count(const char* renderer_id,
 
 auto render_builder_unique_tool_mesh_count(
     const char* renderer_id, Game::Systems::NationID nation_id) -> std::size_t {
-  Render::GL::clear_humanoid_caches();
+  Render::GL::reset_humanoid_runtime_context();
 
   Render::GL::EntityRendererRegistry registry;
   Render::GL::register_built_in_entity_renderers(registry);
@@ -893,15 +892,14 @@ auto render_builder_min_world_y(const char* renderer_id,
 
 class BeardRenderer : public Render::GL::HumanoidRendererBase {
 public:
-  auto
-  visual_spec() const -> const Render::Creature::Pipeline::UnitVisualSpec& override {
-    static const auto spec = [] {
-      Render::Creature::Pipeline::UnitVisualSpec s{};
-      s.kind = Render::Creature::Pipeline::CreatureKind::Humanoid;
-      s.debug_name = "tests/beard_renderer";
-      return s;
-    }();
-    return spec;
+  BeardRenderer()
+      : Render::GL::HumanoidRendererBase(make_visual_spec()) {}
+
+  static auto make_visual_spec() -> Render::Creature::Pipeline::UnitVisualSpec {
+    Render::Creature::Pipeline::UnitVisualSpec s{};
+    s.kind = Render::Creature::Pipeline::CreatureKind::Humanoid;
+    s.debug_name = "tests/beard_renderer";
+    return s;
   }
 
   void get_variant(const Render::GL::DrawContext&,
@@ -915,51 +913,47 @@ public:
 
 class BowReadyRegressionRenderer : public Render::GL::HumanoidRendererBase {
 public:
-  auto
-  visual_spec() const -> const Render::Creature::Pipeline::UnitVisualSpec& override {
-    static const auto spec = [] {
-      using Render::Creature::AnimationStateId;
-      using Render::Creature::ArchetypeDescriptor;
-      using Render::Creature::ArchetypeRegistry;
+  BowReadyRegressionRenderer()
+      : Render::GL::HumanoidRendererBase(make_visual_spec()) {}
 
-      auto& registry = ArchetypeRegistry::instance();
-      auto const* base_desc = registry.get(ArchetypeRegistry::k_humanoid_base);
-      EXPECT_NE(base_desc, nullptr);
+  static auto make_visual_spec() -> Render::Creature::Pipeline::UnitVisualSpec {
+    using Render::Creature::AnimationStateId;
+    using Render::Creature::ArchetypeDescriptor;
+    using Render::Creature::ArchetypeRegistry;
 
-      Render::Creature::Pipeline::UnitVisualSpec s{};
-      s.kind = Render::Creature::Pipeline::CreatureKind::Humanoid;
-      s.debug_name = "tests/bow_ready_regression_renderer";
-      if (base_desc == nullptr) {
-        return s;
-      }
+    auto& registry = ArchetypeRegistry::instance();
+    auto const* base_desc = registry.get(ArchetypeRegistry::k_humanoid_base);
+    EXPECT_NE(base_desc, nullptr);
 
-      ArchetypeDescriptor desc = *base_desc;
-      desc.debug_name = "tests/bow_ready_regression_archetype";
-      auto const attack_bow_clip =
-          desc.bpat_clip[static_cast<std::size_t>(AnimationStateId::AttackBow)];
-      desc.bpat_clip[static_cast<std::size_t>(AnimationStateId::Idle)] =
-          attack_bow_clip;
-      desc.bpat_clip[static_cast<std::size_t>(AnimationStateId::Hold)] =
-          attack_bow_clip;
-      s.archetype_id = registry.register_archetype(desc);
+    Render::Creature::Pipeline::UnitVisualSpec s{};
+    s.kind = Render::Creature::Pipeline::CreatureKind::Humanoid;
+    s.debug_name = "tests/bow_ready_regression_renderer";
+    if (base_desc == nullptr) {
       return s;
-    }();
-    return spec;
+    }
+
+    ArchetypeDescriptor desc = *base_desc;
+    desc.debug_name = "tests/bow_ready_regression_archetype";
+    auto const attack_bow_clip =
+        desc.bpat_clip[static_cast<std::size_t>(AnimationStateId::AttackBow)];
+    desc.bpat_clip[static_cast<std::size_t>(AnimationStateId::Idle)] = attack_bow_clip;
+    desc.bpat_clip[static_cast<std::size_t>(AnimationStateId::Hold)] = attack_bow_clip;
+    s.archetype_id = registry.register_archetype(desc);
+    return s;
   }
 };
 
 class SnapshotPrewarmRenderer : public Render::GL::HumanoidRendererBase {
 public:
-  auto
-  visual_spec() const -> const Render::Creature::Pipeline::UnitVisualSpec& override {
-    static const auto spec = [] {
-      Render::Creature::Pipeline::UnitVisualSpec s{};
-      s.kind = Render::Creature::Pipeline::CreatureKind::Humanoid;
-      s.debug_name = "tests/snapshot_prewarm_renderer";
-      s.archetype_id = Render::Creature::ArchetypeRegistry::k_humanoid_base;
-      return s;
-    }();
-    return spec;
+  SnapshotPrewarmRenderer()
+      : Render::GL::HumanoidRendererBase(make_visual_spec()) {}
+
+  static auto make_visual_spec() -> Render::Creature::Pipeline::UnitVisualSpec {
+    Render::Creature::Pipeline::UnitVisualSpec s{};
+    s.kind = Render::Creature::Pipeline::CreatureKind::Humanoid;
+    s.debug_name = "tests/snapshot_prewarm_renderer";
+    s.archetype_id = Render::Creature::ArchetypeRegistry::k_humanoid_base;
+    return s;
   }
 };
 
@@ -1049,17 +1043,18 @@ TEST(HumanoidPrepare, TemplatePrewarmRenderWarmsSnapshotCache) {
 TEST(HumanoidPrepare, PoseLayerNeverRunsDuringRuntimePreparation) {
   class PoseLayerRenderer final : public Render::GL::HumanoidRendererBase {
   public:
-    auto
-    visual_spec() const -> const Render::Creature::Pipeline::UnitVisualSpec& override {
-      static const auto spec = [] {
-        Render::Creature::Pipeline::UnitVisualSpec s{};
-        s.kind = Render::Creature::Pipeline::CreatureKind::Humanoid;
-        s.debug_name = "tests/pose_layer_renderer";
-        s.archetype_id = Render::Creature::ArchetypeRegistry::k_humanoid_base;
-        s.animation_manifest.pose_layer = &counting_pose_layer;
-        return s;
-      }();
-      return spec;
+    PoseLayerRenderer()
+        : Render::GL::HumanoidRendererBase(make_visual_spec()) {}
+
+    static auto make_visual_spec() -> Render::Creature::Pipeline::UnitVisualSpec {
+      Render::Creature::Pipeline::UnitVisualSpec s{};
+      s.kind = Render::Creature::Pipeline::CreatureKind::Humanoid;
+      s.debug_name = "tests/pose_layer_renderer";
+      s.archetype_id = Render::Creature::ArchetypeRegistry::k_humanoid_base;
+
+      s.animation_manifest.pose_policy =
+          Render::Humanoid::HumanoidPosePolicy::SkeletonProportions;
+      return s;
     }
   };
 
@@ -1070,18 +1065,24 @@ TEST(HumanoidPrepare, PoseLayerNeverRunsDuringRuntimePreparation) {
   ctx.force_single_soldier = true;
   ctx.allow_template_cache = false;
 
-  g_pose_layer_invocations = 0;
-  g_pose_layer_last_head_x = 0.0F;
+  Render::GL::HumanoidPose pose{};
+  pose.neck_base = QVector3D(0.0F, 1.4F, 0.0F);
+  pose.head_pos = QVector3D(0.0F, 1.6F, 0.0F);
+  const Render::GL::HumanoidPose untouched = pose;
 
   Render::Humanoid::HumanoidPreparation prep;
-  Render::Humanoid::prepare_humanoid_instances(renderer, ctx, anim, 0U, prep);
-  EXPECT_EQ(g_pose_layer_invocations, 0);
+  Render::Humanoid::prepare_humanoid_instances(
+      renderer, ctx, anim, test_runtime(0U), prep);
 
   ctx.template_prewarm = true;
   prep.clear();
-  Render::Humanoid::prepare_humanoid_instances(renderer, ctx, anim, 0U, prep);
-  EXPECT_EQ(g_pose_layer_invocations, 0);
-  EXPECT_FLOAT_EQ(g_pose_layer_last_head_x, 0.0F);
+  Render::Humanoid::prepare_humanoid_instances(
+      renderer, ctx, anim, test_runtime(0U), prep);
+
+  EXPECT_FLOAT_EQ(pose.head_pos.y(), untouched.head_pos.y());
+  Render::Entity::apply_humanoid_pose_policy(
+      Render::Humanoid::HumanoidPosePolicy::SkeletonProportions, {}, pose);
+  EXPECT_LT(pose.head_pos.y(), untouched.head_pos.y());
 }
 
 TEST(HumanoidPrepare, FacialHairUsesBakedArchetypeWithoutPostBodyDraw) {
@@ -1093,7 +1094,8 @@ TEST(HumanoidPrepare, FacialHairUsesBakedArchetypeWithoutPostBodyDraw) {
   Render::GL::AnimationInputs const anim{};
 
   Render::Humanoid::HumanoidPreparation prep;
-  Render::Humanoid::prepare_humanoid_instances(renderer, ctx, anim, 0, prep);
+  Render::Humanoid::prepare_humanoid_instances(
+      renderer, ctx, anim, test_runtime(0U), prep);
 
   ASSERT_EQ(prep.bodies.requests().size(), 1U);
   EXPECT_TRUE(prep.post_body_draws.empty());
@@ -1189,15 +1191,7 @@ TEST(HumanoidPrepare, PersistentEntitySwordsmanWalkRequestAdvancesPhaseOverTime)
   class FixedSpecRenderer final : public Render::GL::HumanoidRendererBase {
   public:
     explicit FixedSpecRenderer(Render::Creature::Pipeline::UnitVisualSpec spec)
-        : spec_(spec) {}
-
-    auto
-    visual_spec() const -> const Render::Creature::Pipeline::UnitVisualSpec& override {
-      return spec_;
-    }
-
-  private:
-    Render::Creature::Pipeline::UnitVisualSpec spec_{};
+        : Render::GL::HumanoidRendererBase(std::move(spec)) {}
   };
 
   Render::GL::EntityRendererRegistry registry;
@@ -1268,13 +1262,14 @@ TEST(HumanoidPrepare, PersistentEntitySwordsmanWalkRequestAdvancesPhaseOverTime)
     ctx.entity = &entity;
     auto const anim = Render::GL::sample_anim_state(ctx);
     Render::Humanoid::HumanoidPreparation prep;
-    Render::Humanoid::prepare_humanoid_instances(owner, ctx, anim, 0U, prep);
+    Render::Humanoid::prepare_humanoid_instances(
+        owner, ctx, anim, test_runtime(0U), prep);
     EXPECT_FALSE(prep.bodies.requests().empty());
     return prep.bodies.requests().front();
   };
 
   auto const first = request_for_time(0.10F);
-  Render::GL::advance_pose_cache_frame();
+  Render::GL::begin_humanoid_frame();
   auto const second = request_for_time(0.70F);
 
   EXPECT_EQ(first.state, Render::Creature::AnimationStateId::Walk);
@@ -1286,15 +1281,7 @@ TEST(HumanoidPrepare, StoppingAUnitBlendsTheStrideOutInsteadOfCutting) {
   class FixedSpecRenderer final : public Render::GL::HumanoidRendererBase {
   public:
     explicit FixedSpecRenderer(Render::Creature::Pipeline::UnitVisualSpec spec)
-        : spec_(spec) {}
-
-    auto
-    visual_spec() const -> const Render::Creature::Pipeline::UnitVisualSpec& override {
-      return spec_;
-    }
-
-  private:
-    Render::Creature::Pipeline::UnitVisualSpec spec_{};
+        : Render::GL::HumanoidRendererBase(std::move(spec)) {}
   };
 
   Render::GL::EntityRendererRegistry registry;
@@ -1377,9 +1364,10 @@ TEST(HumanoidPrepare, StoppingAUnitBlendsTheStrideOutInsteadOfCutting) {
     ctx.entity = &entity;
     auto const anim = Render::GL::sample_anim_state(ctx);
     Render::Humanoid::HumanoidPreparation prep;
-    Render::Humanoid::prepare_humanoid_instances(owner, ctx, anim, 0U, prep);
+    Render::Humanoid::prepare_humanoid_instances(
+        owner, ctx, anim, test_runtime(0U), prep);
     EXPECT_FALSE(prep.bodies.requests().empty());
-    Render::GL::advance_pose_cache_frame();
+    Render::GL::begin_humanoid_frame();
     return prep.bodies.requests().front();
   };
 
@@ -1424,15 +1412,7 @@ TEST(HumanoidPrepare, MultiSoldierCombatFallbackOffsetsAttackPhasePerSoldier) {
   class FixedSpecRenderer final : public Render::GL::HumanoidRendererBase {
   public:
     explicit FixedSpecRenderer(Render::Creature::Pipeline::UnitVisualSpec spec)
-        : spec_(spec) {}
-
-    auto
-    visual_spec() const -> const Render::Creature::Pipeline::UnitVisualSpec& override {
-      return spec_;
-    }
-
-  private:
-    Render::Creature::Pipeline::UnitVisualSpec spec_{};
+        : Render::GL::HumanoidRendererBase(std::move(spec)) {}
   };
 
   Render::GL::EntityRendererRegistry registry;
@@ -1490,7 +1470,8 @@ TEST(HumanoidPrepare, MultiSoldierCombatFallbackOffsetsAttackPhasePerSoldier) {
   anim.has_attack_offset = true;
 
   Render::Humanoid::HumanoidPreparation prep;
-  Render::Humanoid::prepare_humanoid_instances(owner, ctx, anim, 0U, prep);
+  Render::Humanoid::prepare_humanoid_instances(
+      owner, ctx, anim, test_runtime(0U), prep);
 
   ASSERT_GE(prep.bodies.requests().size(), 15U);
 
@@ -1705,16 +1686,17 @@ TEST(HumanoidPrepare, ActiveBuilderWorkOverridesSharedTravellingRowsWithCircle) 
   anim.is_constructing = true;
   anim.construction_progress = 0.5F;
   Render::Humanoid::HumanoidPreparation prep;
-  Render::Humanoid::prepare_humanoid_instances(owner, ctx, anim, 0U, prep);
+  Render::Humanoid::prepare_humanoid_instances(
+      owner, ctx, anim, test_runtime(0U), prep);
 
   auto const* cache =
-      entity.get_component<Render::Humanoid::HumanoidLayoutCacheComponent>();
+      entity.get_component<Render::Humanoid::HumanoidInstanceStateComponent>();
   ASSERT_NE(cache, nullptr);
-  ASSERT_EQ(cache->soldiers.size(), 4U);
+  ASSERT_EQ(cache->layout.instances.size(), 4U);
   EXPECT_EQ(
-      cache->unit_layout,
+      cache->layout.unit_layout,
       Game::Formation::UnitLayoutLibrary::instance().resolve("rome", "work_party"));
-  for (auto const& soldier : cache->soldiers) {
+  for (auto const& soldier : cache->layout.instances) {
     EXPECT_LT(std::abs(soldier.offset_x), 10.0F);
     EXPECT_LT(std::abs(soldier.offset_z), 10.0F);
     EXPECT_GT(std::hypot(soldier.offset_x, soldier.offset_z), 1.0F);
@@ -4345,7 +4327,7 @@ struct SwingSample {
 
 auto bake_sword_swing(std::string_view clip_name) -> std::vector<SwingSample> {
   auto const& manifest =
-      Render::Humanoid::humanoid_manifest(Render::Humanoid::BakeProfile::SwordReady);
+      Render::Humanoid::humanoid_bake_recipe(Render::Humanoid::BakeProfile::SwordReady);
   std::size_t clip_index = manifest.clips.size();
   for (std::size_t i = 0; i < manifest.clips.size(); ++i) {
     if (manifest.clips[i].name == clip_name) {
@@ -5803,15 +5785,7 @@ TEST(HumanoidPrepare, ConstructionVariantTableMapsFourRolesToExpectedRequests) {
   class FixedSpecRenderer final : public Render::GL::HumanoidRendererBase {
   public:
     explicit FixedSpecRenderer(Render::Creature::Pipeline::UnitVisualSpec spec)
-        : spec_(spec) {}
-
-    auto
-    visual_spec() const -> const Render::Creature::Pipeline::UnitVisualSpec& override {
-      return spec_;
-    }
-
-  private:
-    Render::Creature::Pipeline::UnitVisualSpec spec_{};
+        : Render::GL::HumanoidRendererBase(std::move(spec)) {}
   };
 
   using Render::Creature::AnimationStateId;
@@ -5878,7 +5852,8 @@ TEST(HumanoidPrepare, ConstructionVariantTableMapsFourRolesToExpectedRequests) {
   anim.construction_progress = 0.40F;
 
   Render::Humanoid::HumanoidPreparation prep;
-  Render::Humanoid::prepare_humanoid_instances(owner, ctx, anim, 0U, prep);
+  Render::Humanoid::prepare_humanoid_instances(
+      owner, ctx, anim, test_runtime(0U), prep);
 
   ASSERT_EQ(prep.bodies.requests().size(), 16U);
 
@@ -5961,7 +5936,7 @@ auto render_builder_rigged_meshes(
     bool attacking,
     Game::Units::SpawnType spawn_type = Game::Units::SpawnType::Builder)
     -> std::vector<const Render::GL::RiggedMesh*> {
-  Render::GL::clear_humanoid_caches();
+  Render::GL::reset_humanoid_runtime_context();
   Render::GL::EntityRendererRegistry registry;
   Render::GL::register_built_in_entity_renderers(registry);
   const auto renderer = registry.get(renderer_id);
@@ -6438,7 +6413,8 @@ TEST(HumanoidPrepare, AttackRequestsUsePerSoldierVisualPhaseOffsets) {
   anim.combat_phase_progress = 0.5F;
 
   Render::Humanoid::HumanoidPreparation prep;
-  Render::Humanoid::prepare_humanoid_instances(owner, ctx, anim, 0U, prep);
+  Render::Humanoid::prepare_humanoid_instances(
+      owner, ctx, anim, test_runtime(0U), prep);
 
   auto const& requests = prep.bodies.requests();
   ASSERT_GE(requests.size(), 15U);
@@ -6517,7 +6493,8 @@ TEST(HumanoidPrepare, MovingCombatRecoveryUsesAttackClipInsteadOfWalkClip) {
   EXPECT_EQ(anim.combat_phase, Render::GL::CombatAnimPhase::Recover);
 
   Render::Humanoid::HumanoidPreparation prep;
-  Render::Humanoid::prepare_humanoid_instances(owner, ctx, anim, 0U, prep);
+  Render::Humanoid::prepare_humanoid_instances(
+      owner, ctx, anim, test_runtime(0U), prep);
 
   auto const& requests = prep.bodies.requests();
   ASSERT_FALSE(requests.empty());
@@ -6558,7 +6535,8 @@ TEST(HumanoidPrepare, CombatAdvancePreservesWalkClipWhileClosingDistance) {
             Render::Creature::PoseIntent::Walk);
 
   Render::Humanoid::HumanoidPreparation prep;
-  Render::Humanoid::prepare_humanoid_instances(owner, ctx, anim, 0U, prep);
+  Render::Humanoid::prepare_humanoid_instances(
+      owner, ctx, anim, test_runtime(0U), prep);
 
   auto const& requests = prep.bodies.requests();
   ASSERT_FALSE(requests.empty());
@@ -6695,7 +6673,8 @@ TEST(HumanoidPrepare, MeleeLockKeepsStaleForcedDisplacementOffTheRootLayer) {
             Render::Creature::PoseIntent::AttackSpear);
 
   Render::Humanoid::HumanoidPreparation prep;
-  Render::Humanoid::prepare_humanoid_instances(owner, ctx, anim, 0U, prep);
+  Render::Humanoid::prepare_humanoid_instances(
+      owner, ctx, anim, test_runtime(0U), prep);
 
   auto const& requests = prep.bodies.requests();
   ASSERT_FALSE(requests.empty());
@@ -6745,7 +6724,8 @@ TEST(HumanoidPrepare, CommandedMovementWithoutVelocityStillBuildsStride) {
   EXPECT_FALSE(anim.is_attacking);
 
   Render::Humanoid::HumanoidPreparation prep;
-  Render::Humanoid::prepare_humanoid_instances(owner, ctx, anim, 0U, prep);
+  Render::Humanoid::prepare_humanoid_instances(
+      owner, ctx, anim, test_runtime(0U), prep);
 
   auto* humanoid_state =
       entity.get_component<Render::Creature::HumanoidAnimationStateComponent>();
@@ -6753,9 +6733,9 @@ TEST(HumanoidPrepare, CommandedMovementWithoutVelocityStillBuildsStride) {
   ASSERT_FALSE(prep.bodies.requests().empty());
   EXPECT_EQ(prep.bodies.requests().front().state,
             Render::Creature::AnimationStateId::Walk);
-  EXPECT_EQ(humanoid_state->locomotion_state, Render::GL::HumanoidMotionState::Walk);
-  EXPECT_GT(humanoid_state->filtered_speed, 0.0F);
-  EXPECT_GT(humanoid_state->locomotion_blend, 0.0F);
+  EXPECT_EQ(humanoid_state->locomotion.state, Render::GL::HumanoidMotionState::Walk);
+  EXPECT_GT(humanoid_state->locomotion.filtered_speed, 0.0F);
+  EXPECT_GT(humanoid_state->locomotion.locomotion_blend, 0.0F);
 }
 
 TEST(HumanoidPrepare, ActiveTargetMovementStillTriggersWalkAnimation) {
@@ -6795,7 +6775,8 @@ TEST(HumanoidPrepare, ActiveTargetMovementStillTriggersWalkAnimation) {
   EXPECT_TRUE(Render::Creature::is_moving_animation(anim.movement_state));
 
   Render::Humanoid::HumanoidPreparation prep;
-  Render::Humanoid::prepare_humanoid_instances(owner, ctx, anim, 0U, prep);
+  Render::Humanoid::prepare_humanoid_instances(
+      owner, ctx, anim, test_runtime(0U), prep);
   ASSERT_FALSE(prep.bodies.requests().empty());
   EXPECT_EQ(prep.bodies.requests().front().state,
             Render::Creature::AnimationStateId::Walk);
@@ -6837,7 +6818,8 @@ TEST(HumanoidPrepare, WaypointMovementStillTriggersWalkAnimation) {
   EXPECT_TRUE(Render::Creature::is_moving_animation(anim.movement_state));
 
   Render::Humanoid::HumanoidPreparation prep;
-  Render::Humanoid::prepare_humanoid_instances(owner, ctx, anim, 0U, prep);
+  Render::Humanoid::prepare_humanoid_instances(
+      owner, ctx, anim, test_runtime(0U), prep);
   ASSERT_FALSE(prep.bodies.requests().empty());
   EXPECT_EQ(prep.bodies.requests().front().state,
             Render::Creature::AnimationStateId::Walk);
@@ -6877,7 +6859,8 @@ TEST(HumanoidPrepare, VelocityOnlyMovementStillTriggersWalkAnimation) {
   EXPECT_TRUE(Render::Creature::is_moving_animation(anim.movement_state));
 
   Render::Humanoid::HumanoidPreparation prep;
-  Render::Humanoid::prepare_humanoid_instances(owner, ctx, anim, 0U, prep);
+  Render::Humanoid::prepare_humanoid_instances(
+      owner, ctx, anim, test_runtime(0U), prep);
   ASSERT_FALSE(prep.bodies.requests().empty());
   EXPECT_EQ(prep.bodies.requests().front().state,
             Render::Creature::AnimationStateId::Walk);
@@ -6929,7 +6912,8 @@ TEST(HumanoidPrepare, ChaseIntentOutOfRangeTriggersWalkAnimation) {
   EXPECT_FALSE(anim.is_attacking);
 
   Render::Humanoid::HumanoidPreparation prep;
-  Render::Humanoid::prepare_humanoid_instances(owner, ctx, anim, 0U, prep);
+  Render::Humanoid::prepare_humanoid_instances(
+      owner, ctx, anim, test_runtime(0U), prep);
   ASSERT_FALSE(prep.bodies.requests().empty());
   EXPECT_EQ(prep.bodies.requests().front().state,
             Render::Creature::AnimationStateId::Walk);
@@ -6981,7 +6965,8 @@ TEST(HumanoidPrepare, ChaseIntentInRangePreservesAttackInsteadOfWalk) {
   EXPECT_FALSE(anim.is_attacking);
 
   Render::Humanoid::HumanoidPreparation prep;
-  Render::Humanoid::prepare_humanoid_instances(owner, ctx, anim, 0U, prep);
+  Render::Humanoid::prepare_humanoid_instances(
+      owner, ctx, anim, test_runtime(0U), prep);
   ASSERT_FALSE(prep.bodies.requests().empty());
   EXPECT_EQ(prep.bodies.requests().front().state,
             Render::Creature::AnimationStateId::Idle);
@@ -7042,7 +7027,8 @@ TEST(HumanoidPrepare, ActiveMoveSegmentInRangeStillTriggersWalkAnimation) {
   EXPECT_FALSE(anim.is_attacking);
 
   Render::Humanoid::HumanoidPreparation prep;
-  Render::Humanoid::prepare_humanoid_instances(owner, ctx, anim, 0U, prep);
+  Render::Humanoid::prepare_humanoid_instances(
+      owner, ctx, anim, test_runtime(0U), prep);
   ASSERT_FALSE(prep.bodies.requests().empty());
   EXPECT_EQ(prep.bodies.requests().front().state,
             Render::Creature::AnimationStateId::Walk);
@@ -7084,7 +7070,8 @@ TEST(HumanoidPrepare, MotionSnapshotDrivesWalkWithoutMovementComponentIntent) {
   EXPECT_TRUE(anim.visual_movement.is_authoritative);
 
   Render::Humanoid::HumanoidPreparation prep;
-  Render::Humanoid::prepare_humanoid_instances(owner, ctx, anim, 0U, prep);
+  Render::Humanoid::prepare_humanoid_instances(
+      owner, ctx, anim, test_runtime(0U), prep);
   ASSERT_FALSE(prep.bodies.requests().empty());
   EXPECT_EQ(prep.bodies.requests().front().state,
             Render::Creature::AnimationStateId::Walk);
@@ -7126,7 +7113,8 @@ TEST(HumanoidPrepare, SampledMovementSnapshotDrivesPreparationAfterIntentClears)
   MovementTestAccess::set_goal_y(*movement, 0.0F);
 
   Render::Humanoid::HumanoidPreparation prep;
-  Render::Humanoid::prepare_humanoid_instances(owner, ctx, anim, 0U, prep);
+  Render::Humanoid::prepare_humanoid_instances(
+      owner, ctx, anim, test_runtime(0U), prep);
 
   auto* humanoid_state =
       entity.get_component<Render::Creature::HumanoidAnimationStateComponent>();
@@ -7134,8 +7122,8 @@ TEST(HumanoidPrepare, SampledMovementSnapshotDrivesPreparationAfterIntentClears)
   ASSERT_FALSE(prep.bodies.requests().empty());
   EXPECT_EQ(prep.bodies.requests().front().state,
             Render::Creature::AnimationStateId::Walk);
-  EXPECT_EQ(humanoid_state->locomotion_state, Render::GL::HumanoidMotionState::Walk);
-  EXPECT_GT(humanoid_state->filtered_speed, 0.0F);
+  EXPECT_EQ(humanoid_state->locomotion.state, Render::GL::HumanoidMotionState::Walk);
+  EXPECT_GT(humanoid_state->locomotion.filtered_speed, 0.0F);
 }
 
 TEST(HumanoidPrepare, IdleAnimationOverrideSuppressesLiveMovementIntent) {
@@ -7171,7 +7159,8 @@ TEST(HumanoidPrepare, IdleAnimationOverrideSuppressesLiveMovementIntent) {
   EXPECT_FALSE(Render::Creature::is_moving_animation(anim.movement_state));
 
   Render::Humanoid::HumanoidPreparation prep;
-  Render::Humanoid::prepare_humanoid_instances(owner, ctx, anim, 0U, prep);
+  Render::Humanoid::prepare_humanoid_instances(
+      owner, ctx, anim, test_runtime(0U), prep);
   ASSERT_FALSE(prep.bodies.requests().empty());
   EXPECT_EQ(prep.bodies.requests().front().state,
             Render::Creature::AnimationStateId::Idle);
@@ -7207,7 +7196,8 @@ TEST(HumanoidPrepare, MovingAnimationOverrideBuildsStrideWithoutLiveIntent) {
   EXPECT_GT(anim.visual_movement.speed_hint, 0.0F);
 
   Render::Humanoid::HumanoidPreparation prep;
-  Render::Humanoid::prepare_humanoid_instances(owner, ctx, anim, 0U, prep);
+  Render::Humanoid::prepare_humanoid_instances(
+      owner, ctx, anim, test_runtime(0U), prep);
 
   ASSERT_FALSE(prep.bodies.requests().empty());
   EXPECT_EQ(prep.bodies.requests().front().state,
@@ -7233,7 +7223,8 @@ TEST(HumanoidPrepare, MovingAnimationOverrideWithoutEntityBuildsAuthoritativeStr
   EXPECT_GT(anim.visual_movement.speed_hint, 0.0F);
 
   Render::Humanoid::HumanoidPreparation prep;
-  Render::Humanoid::prepare_humanoid_instances(owner, ctx, anim, 0U, prep);
+  Render::Humanoid::prepare_humanoid_instances(
+      owner, ctx, anim, test_runtime(0U), prep);
   ASSERT_FALSE(prep.bodies.requests().empty());
   EXPECT_EQ(prep.bodies.requests().front().state,
             Render::Creature::AnimationStateId::Run);
@@ -7263,7 +7254,8 @@ TEST(HumanoidPrepare, CommanderFpvAttacksKeepAuthoredClipPhaseMapping) {
   anim.combat_phase_progress = 0.5F;
 
   Render::Humanoid::HumanoidPreparation base_prep;
-  Render::Humanoid::prepare_humanoid_instances(owner, ctx, anim, 0U, base_prep);
+  Render::Humanoid::prepare_humanoid_instances(
+      owner, ctx, anim, test_runtime(0U), base_prep);
   auto const& base_requests = base_prep.bodies.requests();
   ASSERT_FALSE(base_requests.empty());
 
@@ -7275,7 +7267,8 @@ TEST(HumanoidPrepare, CommanderFpvAttacksKeepAuthoredClipPhaseMapping) {
   anim.finisher_attack = true;
 
   Render::Humanoid::HumanoidPreparation commander_prep;
-  Render::Humanoid::prepare_humanoid_instances(owner, ctx, anim, 0U, commander_prep);
+  Render::Humanoid::prepare_humanoid_instances(
+      owner, ctx, anim, test_runtime(0U), commander_prep);
   auto const& commander_requests = commander_prep.bodies.requests();
   ASSERT_FALSE(commander_requests.empty());
 
@@ -7341,15 +7334,7 @@ TEST(HumanoidPrepare, GuardStanceForSwordAssetKeepsSwordCreatureAsset) {
   class FixedSpecRenderer : public Render::GL::HumanoidRendererBase {
   public:
     explicit FixedSpecRenderer(Render::Creature::Pipeline::UnitVisualSpec spec)
-        : spec_(spec) {}
-
-    auto
-    visual_spec() const -> const Render::Creature::Pipeline::UnitVisualSpec& override {
-      return spec_;
-    }
-
-  private:
-    Render::Creature::Pipeline::UnitVisualSpec spec_{};
+        : Render::GL::HumanoidRendererBase(std::move(spec)) {}
   };
 
   auto const archetype_id = find_archetype_id("troops/roman/swordsman");
@@ -7373,7 +7358,8 @@ TEST(HumanoidPrepare, GuardStanceForSwordAssetKeepsSwordCreatureAsset) {
   anim.shield_formation_pose = Render::GL::ShieldFormationPose::RomanFront;
 
   Render::Humanoid::HumanoidPreparation prep;
-  Render::Humanoid::prepare_humanoid_instances(owner, ctx, anim, 0U, prep);
+  Render::Humanoid::prepare_humanoid_instances(
+      owner, ctx, anim, test_runtime(0U), prep);
   ASSERT_EQ(prep.bodies.requests().size(), 1U);
   EXPECT_EQ(prep.bodies.requests().front().state,
             Render::Creature::AnimationStateId::Hold);
@@ -7395,20 +7381,18 @@ TEST(HumanoidPrepare, StationaryGuardUsesTemporaryShieldArchetypeOnlyWhileGuardi
 
   class FixedSpecRenderer : public Render::GL::HumanoidRendererBase {
   public:
-    explicit FixedSpecRenderer(Render::Creature::ArchetypeId archetype) {
-      spec_.debug_name = "tests/guard_shield_renderer";
-      spec_.kind = Render::Creature::Pipeline::CreatureKind::Humanoid;
-      spec_.archetype_id = archetype;
-      spec_.skip_default_facial_hair_archetype = true;
-    }
+    explicit FixedSpecRenderer(Render::Creature::ArchetypeId archetype)
+        : Render::GL::HumanoidRendererBase(make_spec(archetype)) {}
 
-    auto
-    visual_spec() const -> const Render::Creature::Pipeline::UnitVisualSpec& override {
-      return spec_;
+    static auto make_spec(Render::Creature::ArchetypeId archetype)
+        -> Render::Creature::Pipeline::UnitVisualSpec {
+      Render::Creature::Pipeline::UnitVisualSpec spec{};
+      spec.debug_name = "tests/guard_shield_renderer";
+      spec.kind = Render::Creature::Pipeline::CreatureKind::Humanoid;
+      spec.archetype_id = archetype;
+      spec.skip_default_facial_hair_archetype = true;
+      return spec;
     }
-
-  private:
-    Render::Creature::Pipeline::UnitVisualSpec spec_{};
   };
 
   FixedSpecRenderer const owner(base_archetype);
@@ -7419,7 +7403,8 @@ TEST(HumanoidPrepare, StationaryGuardUsesTemporaryShieldArchetypeOnlyWhileGuardi
 
   Render::GL::AnimationInputs const base_anim{};
   Render::Humanoid::HumanoidPreparation base_prep;
-  Render::Humanoid::prepare_humanoid_instances(owner, ctx, base_anim, 0U, base_prep);
+  Render::Humanoid::prepare_humanoid_instances(
+      owner, ctx, base_anim, test_runtime(0U), base_prep);
   ASSERT_EQ(base_prep.bodies.requests().size(), 1U);
   EXPECT_EQ(base_prep.bodies.requests().front().archetype, base_archetype);
 
@@ -7427,7 +7412,8 @@ TEST(HumanoidPrepare, StationaryGuardUsesTemporaryShieldArchetypeOnlyWhileGuardi
   guard_anim.is_guarding = true;
   guard_anim.guard_pose_progress = 1.0F;
   Render::Humanoid::HumanoidPreparation guard_prep;
-  Render::Humanoid::prepare_humanoid_instances(owner, ctx, guard_anim, 0U, guard_prep);
+  Render::Humanoid::prepare_humanoid_instances(
+      owner, ctx, guard_anim, test_runtime(0U), guard_prep);
   ASSERT_EQ(guard_prep.bodies.requests().size(), 1U);
   auto const guard_archetype = guard_prep.bodies.requests().front().archetype;
   EXPECT_NE(guard_archetype, base_archetype);
@@ -7445,7 +7431,7 @@ TEST(HumanoidPrepare, StationaryGuardUsesTemporaryShieldArchetypeOnlyWhileGuardi
   moving_guard_anim.movement_state = Render::Creature::MovementAnimationState::Walk;
   Render::Humanoid::HumanoidPreparation moving_guard_prep;
   Render::Humanoid::prepare_humanoid_instances(
-      owner, ctx, moving_guard_anim, 0U, moving_guard_prep);
+      owner, ctx, moving_guard_anim, test_runtime(0U), moving_guard_prep);
   ASSERT_EQ(moving_guard_prep.bodies.requests().size(), 1U);
   EXPECT_EQ(moving_guard_prep.bodies.requests().front().archetype, base_archetype);
 }
@@ -7453,20 +7439,18 @@ TEST(HumanoidPrepare, StationaryGuardUsesTemporaryShieldArchetypeOnlyWhileGuardi
 TEST(HumanoidPrepare, GuardShieldFormationFacesRomanAndCarthageShieldsOutward) {
   class FixedSpecRenderer : public Render::GL::HumanoidRendererBase {
   public:
-    explicit FixedSpecRenderer(Render::Creature::ArchetypeId archetype) {
-      spec_.debug_name = "tests/guard_shield_facing_renderer";
-      spec_.kind = Render::Creature::Pipeline::CreatureKind::Humanoid;
-      spec_.archetype_id = archetype;
-      spec_.skip_default_facial_hair_archetype = true;
-    }
+    explicit FixedSpecRenderer(Render::Creature::ArchetypeId archetype)
+        : Render::GL::HumanoidRendererBase(make_spec(archetype)) {}
 
-    auto
-    visual_spec() const -> const Render::Creature::Pipeline::UnitVisualSpec& override {
-      return spec_;
+    static auto make_spec(Render::Creature::ArchetypeId archetype)
+        -> Render::Creature::Pipeline::UnitVisualSpec {
+      Render::Creature::Pipeline::UnitVisualSpec spec{};
+      spec.debug_name = "tests/guard_shield_facing_renderer";
+      spec.kind = Render::Creature::Pipeline::CreatureKind::Humanoid;
+      spec.archetype_id = archetype;
+      spec.skip_default_facial_hair_archetype = true;
+      return spec;
     }
-
-  private:
-    Render::Creature::Pipeline::UnitVisualSpec spec_{};
   };
 
   auto& registry = Render::Creature::ArchetypeRegistry::instance();
@@ -7497,7 +7481,8 @@ TEST(HumanoidPrepare, GuardShieldFormationFacesRomanAndCarthageShieldsOutward) {
         anim.shield_formation_pose = pose;
 
         Render::Humanoid::HumanoidPreparation prep;
-        Render::Humanoid::prepare_humanoid_instances(owner, ctx, anim, 0U, prep);
+        Render::Humanoid::prepare_humanoid_instances(
+            owner, ctx, anim, test_runtime(0U), prep);
         EXPECT_EQ(prep.bodies.requests().size(), 1U);
         if (prep.bodies.requests().size() != 1U) {
           return QVector3D{};
@@ -7536,20 +7521,18 @@ TEST(HumanoidPrepare, GuardShieldFormationFacesRomanAndCarthageShieldsOutward) {
 TEST(HumanoidPrepare, CommanderGuardReusesNationShieldFormationArchetype) {
   class FixedSpecRenderer : public Render::GL::HumanoidRendererBase {
   public:
-    explicit FixedSpecRenderer(Render::Creature::ArchetypeId archetype) {
-      spec_.debug_name = "tests/commander_guard_shared_pose_renderer";
-      spec_.kind = Render::Creature::Pipeline::CreatureKind::Humanoid;
-      spec_.archetype_id = archetype;
-      spec_.skip_default_facial_hair_archetype = true;
-    }
+    explicit FixedSpecRenderer(Render::Creature::ArchetypeId archetype)
+        : Render::GL::HumanoidRendererBase(make_spec(archetype)) {}
 
-    auto
-    visual_spec() const -> const Render::Creature::Pipeline::UnitVisualSpec& override {
-      return spec_;
+    static auto make_spec(Render::Creature::ArchetypeId archetype)
+        -> Render::Creature::Pipeline::UnitVisualSpec {
+      Render::Creature::Pipeline::UnitVisualSpec spec{};
+      spec.debug_name = "tests/commander_guard_shared_pose_renderer";
+      spec.kind = Render::Creature::Pipeline::CreatureKind::Humanoid;
+      spec.archetype_id = archetype;
+      spec.skip_default_facial_hair_archetype = true;
+      return spec;
     }
-
-  private:
-    Render::Creature::Pipeline::UnitVisualSpec spec_{};
   };
 
   auto& registry = Render::Creature::ArchetypeRegistry::instance();
@@ -7589,7 +7572,7 @@ TEST(HumanoidPrepare, CommanderGuardReusesNationShieldFormationArchetype) {
 
         Render::Humanoid::HumanoidPreparation commander_prep;
         Render::Humanoid::prepare_humanoid_instances(
-            owner, commander_ctx, commander_anim, 0U, commander_prep);
+            owner, commander_ctx, commander_anim, test_runtime(0U), commander_prep);
         ASSERT_EQ(commander_prep.bodies.requests().size(), 1U);
 
         Render::GL::DrawContext explicit_ctx{};
@@ -7601,7 +7584,7 @@ TEST(HumanoidPrepare, CommanderGuardReusesNationShieldFormationArchetype) {
 
         Render::Humanoid::HumanoidPreparation explicit_prep;
         Render::Humanoid::prepare_humanoid_instances(
-            owner, explicit_ctx, explicit_anim, 0U, explicit_prep);
+            owner, explicit_ctx, explicit_anim, test_runtime(0U), explicit_prep);
         ASSERT_EQ(explicit_prep.bodies.requests().size(), 1U);
 
         EXPECT_EQ(commander_prep.bodies.requests().front().archetype,
@@ -7622,20 +7605,18 @@ TEST(HumanoidPrepare, CommanderGuardReusesNationShieldFormationArchetype) {
 TEST(HumanoidPrepare, ShieldBearingGuardFallsBackToNationFrontFormationPose) {
   class FixedSpecRenderer : public Render::GL::HumanoidRendererBase {
   public:
-    explicit FixedSpecRenderer(Render::Creature::ArchetypeId archetype) {
-      spec_.debug_name = "tests/shield_guard_fallback_renderer";
-      spec_.kind = Render::Creature::Pipeline::CreatureKind::Humanoid;
-      spec_.archetype_id = archetype;
-      spec_.skip_default_facial_hair_archetype = true;
-    }
+    explicit FixedSpecRenderer(Render::Creature::ArchetypeId archetype)
+        : Render::GL::HumanoidRendererBase(make_spec(archetype)) {}
 
-    auto
-    visual_spec() const -> const Render::Creature::Pipeline::UnitVisualSpec& override {
-      return spec_;
+    static auto make_spec(Render::Creature::ArchetypeId archetype)
+        -> Render::Creature::Pipeline::UnitVisualSpec {
+      Render::Creature::Pipeline::UnitVisualSpec spec{};
+      spec.debug_name = "tests/shield_guard_fallback_renderer";
+      spec.kind = Render::Creature::Pipeline::CreatureKind::Humanoid;
+      spec.archetype_id = archetype;
+      spec.skip_default_facial_hair_archetype = true;
+      return spec;
     }
-
-  private:
-    Render::Creature::Pipeline::UnitVisualSpec spec_{};
   };
 
   auto& registry = Render::Creature::ArchetypeRegistry::instance();
@@ -7673,7 +7654,7 @@ TEST(HumanoidPrepare, ShieldBearingGuardFallsBackToNationFrontFormationPose) {
 
         Render::Humanoid::HumanoidPreparation guard_prep;
         Render::Humanoid::prepare_humanoid_instances(
-            owner, guard_ctx, guard_anim, 0U, guard_prep);
+            owner, guard_ctx, guard_anim, test_runtime(0U), guard_prep);
         ASSERT_EQ(guard_prep.bodies.requests().size(), 1U);
 
         Render::GL::DrawContext explicit_ctx{};
@@ -7685,7 +7666,7 @@ TEST(HumanoidPrepare, ShieldBearingGuardFallsBackToNationFrontFormationPose) {
 
         Render::Humanoid::HumanoidPreparation explicit_prep;
         Render::Humanoid::prepare_humanoid_instances(
-            owner, explicit_ctx, explicit_anim, 0U, explicit_prep);
+            owner, explicit_ctx, explicit_anim, test_runtime(0U), explicit_prep);
         ASSERT_EQ(explicit_prep.bodies.requests().size(), 1U);
 
         EXPECT_EQ(guard_prep.bodies.requests().front().archetype,
@@ -7977,20 +7958,18 @@ TEST(HumanoidPrepare, FormationUsesRomanTopInteriorAndDistinctCarthageFrontShiel
 
   class FixedSpecRenderer : public Render::GL::HumanoidRendererBase {
   public:
-    explicit FixedSpecRenderer(Render::Creature::ArchetypeId archetype) {
-      spec_.debug_name = "tests/formation_guard_shield_renderer";
-      spec_.kind = Render::Creature::Pipeline::CreatureKind::Humanoid;
-      spec_.archetype_id = archetype;
-      spec_.skip_default_facial_hair_archetype = true;
-    }
+    explicit FixedSpecRenderer(Render::Creature::ArchetypeId archetype)
+        : Render::GL::HumanoidRendererBase(make_spec(archetype)) {}
 
-    auto
-    visual_spec() const -> const Render::Creature::Pipeline::UnitVisualSpec& override {
-      return spec_;
+    static auto make_spec(Render::Creature::ArchetypeId archetype)
+        -> Render::Creature::Pipeline::UnitVisualSpec {
+      Render::Creature::Pipeline::UnitVisualSpec spec{};
+      spec.debug_name = "tests/formation_guard_shield_renderer";
+      spec.kind = Render::Creature::Pipeline::CreatureKind::Humanoid;
+      spec.archetype_id = archetype;
+      spec.skip_default_facial_hair_archetype = true;
+      return spec;
     }
-
-  private:
-    Render::Creature::Pipeline::UnitVisualSpec spec_{};
   };
 
   auto collect_archetypes = [&](Game::Systems::NationID nation_id) {
@@ -8034,7 +8013,8 @@ TEST(HumanoidPrepare, FormationUsesRomanTopInteriorAndDistinctCarthageFrontShiel
     guard_anim.is_guarding = true;
     guard_anim.guard_pose_progress = 1.0F;
     Render::Humanoid::HumanoidPreparation prep;
-    Render::Humanoid::prepare_humanoid_instances(owner, ctx, guard_anim, 0U, prep);
+    Render::Humanoid::prepare_humanoid_instances(
+        owner, ctx, guard_anim, test_runtime(0U), prep);
 
     std::unordered_set<Render::Creature::ArchetypeId> archetypes;
     for (const auto& req : prep.bodies.requests()) {
@@ -8168,20 +8148,18 @@ TEST(HumanoidPrepare, RomanFormationFrontShieldMatchesDefaultRomanGuardFallback)
 
   class FixedSpecRenderer : public Render::GL::HumanoidRendererBase {
   public:
-    explicit FixedSpecRenderer(Render::Creature::ArchetypeId archetype) {
-      spec_.debug_name = "tests/roman_formation_guard_face_renderer";
-      spec_.kind = Render::Creature::Pipeline::CreatureKind::Humanoid;
-      spec_.archetype_id = archetype;
-      spec_.skip_default_facial_hair_archetype = true;
-    }
+    explicit FixedSpecRenderer(Render::Creature::ArchetypeId archetype)
+        : Render::GL::HumanoidRendererBase(make_spec(archetype)) {}
 
-    auto
-    visual_spec() const -> const Render::Creature::Pipeline::UnitVisualSpec& override {
-      return spec_;
+    static auto make_spec(Render::Creature::ArchetypeId archetype)
+        -> Render::Creature::Pipeline::UnitVisualSpec {
+      Render::Creature::Pipeline::UnitVisualSpec spec{};
+      spec.debug_name = "tests/roman_formation_guard_face_renderer";
+      spec.kind = Render::Creature::Pipeline::CreatureKind::Humanoid;
+      spec.archetype_id = archetype;
+      spec.skip_default_facial_hair_archetype = true;
+      return spec;
     }
-
-  private:
-    Render::Creature::Pipeline::UnitVisualSpec spec_{};
   };
 
   auto build_guard_attachment =
@@ -8218,7 +8196,8 @@ TEST(HumanoidPrepare, RomanFormationFrontShieldMatchesDefaultRomanGuardFallback)
     anim.guard_pose_progress = 1.0F;
 
     Render::Humanoid::HumanoidPreparation prep;
-    Render::Humanoid::prepare_humanoid_instances(owner, ctx, anim, 0U, prep);
+    Render::Humanoid::prepare_humanoid_instances(
+        owner, ctx, anim, test_runtime(0U), prep);
     if (prep.bodies.requests().empty()) {
       return nullptr;
     }
@@ -8258,20 +8237,18 @@ TEST(HumanoidPrepare, CarthageFormationFrontShieldTiltsOverBody) {
 
   class FixedSpecRenderer : public Render::GL::HumanoidRendererBase {
   public:
-    explicit FixedSpecRenderer(Render::Creature::ArchetypeId archetype) {
-      spec_.debug_name = "tests/carthage_formation_guard_tilt_renderer";
-      spec_.kind = Render::Creature::Pipeline::CreatureKind::Humanoid;
-      spec_.archetype_id = archetype;
-      spec_.skip_default_facial_hair_archetype = true;
-    }
+    explicit FixedSpecRenderer(Render::Creature::ArchetypeId archetype)
+        : Render::GL::HumanoidRendererBase(make_spec(archetype)) {}
 
-    auto
-    visual_spec() const -> const Render::Creature::Pipeline::UnitVisualSpec& override {
-      return spec_;
+    static auto make_spec(Render::Creature::ArchetypeId archetype)
+        -> Render::Creature::Pipeline::UnitVisualSpec {
+      Render::Creature::Pipeline::UnitVisualSpec spec{};
+      spec.debug_name = "tests/carthage_formation_guard_tilt_renderer";
+      spec.kind = Render::Creature::Pipeline::CreatureKind::Humanoid;
+      spec.archetype_id = archetype;
+      spec.skip_default_facial_hair_archetype = true;
+      return spec;
     }
-
-  private:
-    Render::Creature::Pipeline::UnitVisualSpec spec_{};
   };
 
   auto build_front_attachment =
@@ -8308,7 +8285,8 @@ TEST(HumanoidPrepare, CarthageFormationFrontShieldTiltsOverBody) {
     anim.guard_pose_progress = 1.0F;
 
     Render::Humanoid::HumanoidPreparation prep;
-    Render::Humanoid::prepare_humanoid_instances(owner, ctx, anim, 0U, prep);
+    Render::Humanoid::prepare_humanoid_instances(
+        owner, ctx, anim, test_runtime(0U), prep);
     if (prep.bodies.requests().empty()) {
       return nullptr;
     }
@@ -8416,7 +8394,7 @@ TEST(HumanoidPrepare, RomanSwordsmanUsesRomanScutumRoleLayout) {
 }
 
 TEST(HumanoidPrepare, BuiltInRomanSwordsmanRemainsVisibleAfterGuardTransition) {
-  Render::GL::clear_humanoid_caches();
+  Render::GL::reset_humanoid_runtime_context();
 
   Render::GL::EntityRendererRegistry registry;
   Render::GL::register_built_in_entity_renderers(registry);
@@ -8851,7 +8829,8 @@ TEST(HumanoidPrepare, BowReadyRootRequestUsesSurfaceGroundingContract) {
 
   Render::GL::AnimationInputs const anim{};
   Render::Humanoid::HumanoidPreparation prep;
-  Render::Humanoid::prepare_humanoid_instances(renderer, ctx, anim, 0U, prep);
+  Render::Humanoid::prepare_humanoid_instances(
+      renderer, ctx, anim, test_runtime(0U), prep);
 
   ASSERT_EQ(prep.bodies.requests().size(), 1U);
   EXPECT_FALSE(prep.bodies.requests().front().world_already_grounded);
@@ -8924,7 +8903,8 @@ TEST(HumanoidPrepare, CommanderJumpLiftSurvivesSurfaceGrounding) {
 
   Render::GL::AnimationInputs const anim{};
   Render::Humanoid::HumanoidPreparation prep;
-  Render::Humanoid::prepare_humanoid_instances(owner, ctx, anim, 1U, prep);
+  Render::Humanoid::prepare_humanoid_instances(
+      owner, ctx, anim, test_runtime(1U), prep);
 
   CountingSubmitter sink;
   Render::Creature::Pipeline::submit_preparation(prep, sink);
@@ -8965,7 +8945,8 @@ TEST(HumanoidPrepare, RenderIndividualsOverrideLimitsPreparedSoldiers) {
 
   Render::GL::AnimationInputs const anim{};
   Render::Humanoid::HumanoidPreparation prep;
-  Render::Humanoid::prepare_humanoid_instances(owner, ctx, anim, 0U, prep);
+  Render::Humanoid::prepare_humanoid_instances(
+      owner, ctx, anim, test_runtime(0U), prep);
 
   EXPECT_EQ(prep.bodies.requests().size(), 3U);
 }
@@ -9012,7 +8993,8 @@ TEST(HumanoidPrepare, ActiveSoldierCasualtiesRenderDeathRequests) {
 
   Render::GL::AnimationInputs const anim{};
   Render::Humanoid::HumanoidPreparation prep;
-  Render::Humanoid::prepare_humanoid_instances(owner, ctx, anim, 0U, prep);
+  Render::Humanoid::prepare_humanoid_instances(
+      owner, ctx, anim, test_runtime(0U), prep);
 
   ASSERT_EQ(prep.bodies.requests().size(), 3U);
   EXPECT_EQ(std::count_if(prep.bodies.requests().begin(),
@@ -9063,7 +9045,7 @@ TEST(HumanoidPrepare, LaunchedChargeCasualtyTravelsAndTumblesInSubmittedWorld) {
 
     Render::Humanoid::HumanoidPreparation prep;
     Render::Humanoid::prepare_humanoid_instances(
-        owner, ctx, Render::GL::AnimationInputs{}, 0U, prep);
+        owner, ctx, Render::GL::AnimationInputs{}, test_runtime(0U), prep);
 
     auto const casualty =
         std::find_if(prep.bodies.requests().begin(),
@@ -9246,7 +9228,7 @@ TEST(HumanoidPrepare, DeriveUnitSeedDeterministicWithoutOverride) {
 }
 
 TEST(HumanoidPrepare, BuildSoldierLayoutIsDeterministic) {
-  Render::Humanoid::SoldierLayoutInputs inputs{};
+  Render::Entity::FormationInstanceRequest inputs{};
   inputs.unit_layout = Game::Formation::UnitLayoutLibrary::instance().resolve(
       "rome", "close_order_infantry");
   inputs.idx = 3;
@@ -9262,8 +9244,8 @@ TEST(HumanoidPrepare, BuildSoldierLayoutIsDeterministic) {
 
   inputs.soldier_offsets = &Game::Formation::UnitLayoutSystem::instance();
 
-  auto const first = Render::Humanoid::build_soldier_layout(inputs);
-  auto const second = Render::Humanoid::build_soldier_layout(inputs);
+  auto const first = Render::Entity::build_formation_instance(inputs);
+  auto const second = Render::Entity::build_formation_instance(inputs);
 
   EXPECT_FLOAT_EQ(first.offset_x, second.offset_x);
   EXPECT_FLOAT_EQ(first.offset_z, second.offset_z);
@@ -9275,7 +9257,7 @@ TEST(HumanoidPrepare, BuildSoldierLayoutIsDeterministic) {
 }
 
 TEST(HumanoidPrepare, BuildSoldierLayoutLeavesSingleSoldierUnjittered) {
-  Render::Humanoid::SoldierLayoutInputs inputs{};
+  Render::Entity::FormationInstanceRequest inputs{};
   inputs.unit_layout = Game::Formation::UnitLayoutLibrary::instance().resolve(
       "rome", "close_order_infantry");
   inputs.idx = 0;
@@ -9289,7 +9271,7 @@ TEST(HumanoidPrepare, BuildSoldierLayoutLeavesSingleSoldierUnjittered) {
   inputs.melee_attack = false;
   inputs.animation_time = 0.0F;
 
-  auto const layout = Render::Humanoid::build_soldier_layout(inputs);
+  auto const layout = Render::Entity::build_formation_instance(inputs);
 
   EXPECT_FLOAT_EQ(layout.offset_x, 0.0F);
   EXPECT_FLOAT_EQ(layout.offset_z, 0.0F);
@@ -9505,11 +9487,12 @@ TEST(HumanoidPrepare, BuildLocomotionStateSkipsPersistentWritesWhenUpdatesDisabl
   inputs.move_speed = 5.10F;
   auto const preview = Render::Humanoid::build_humanoid_locomotion_state(inputs);
 
-  EXPECT_FLOAT_EQ(persistent.locomotion_phase, snapshot.locomotion_phase);
-  EXPECT_FLOAT_EQ(persistent.filtered_speed, snapshot.filtered_speed);
-  EXPECT_FLOAT_EQ(persistent.run_blend, snapshot.run_blend);
-  EXPECT_EQ(persistent.locomotion_state, snapshot.locomotion_state);
-  EXPECT_GT(preview.gait.run_blend, snapshot.run_blend);
+  EXPECT_FLOAT_EQ(persistent.locomotion.phase, snapshot.locomotion.phase);
+  EXPECT_FLOAT_EQ(persistent.locomotion.filtered_speed,
+                  snapshot.locomotion.filtered_speed);
+  EXPECT_FLOAT_EQ(persistent.locomotion.run_blend, snapshot.locomotion.run_blend);
+  EXPECT_EQ(persistent.locomotion.state, snapshot.locomotion.state);
+  EXPECT_GT(preview.gait.run_blend, snapshot.locomotion.run_blend);
 }
 
 TEST(HumanoidPrepare, TemplatePrewarmSamplingLeavesPersistentAnimationStateUntouched) {
@@ -9521,8 +9504,8 @@ TEST(HumanoidPrepare, TemplatePrewarmSamplingLeavesPersistentAnimationStateUntou
   humanoid_state->initialized = true;
   humanoid_state->idle_duration = 2.0F;
   humanoid_state->last_sample_time = 4.0F;
-  humanoid_state->locomotion_initialized = true;
-  humanoid_state->locomotion_phase = 0.35F;
+  humanoid_state->locomotion.initialized = true;
+  humanoid_state->locomotion.phase = 0.35F;
 
   Render::GL::DrawContext ctx{};
   ctx.world_view = Render::WorldView::of_active_session();
@@ -9535,7 +9518,7 @@ TEST(HumanoidPrepare, TemplatePrewarmSamplingLeavesPersistentAnimationStateUntou
   EXPECT_FLOAT_EQ(anim.idle_duration, 4.0F);
   EXPECT_FLOAT_EQ(humanoid_state->idle_duration, 2.0F);
   EXPECT_FLOAT_EQ(humanoid_state->last_sample_time, 4.0F);
-  EXPECT_FLOAT_EQ(humanoid_state->locomotion_phase, 0.35F);
+  EXPECT_FLOAT_EQ(humanoid_state->locomotion.phase, 0.35F);
 }
 
 TEST(HumanoidPrepare, LocomotionBlendSoftensEarlyStrideAmplitude) {
@@ -9744,12 +9727,12 @@ TEST(HumanoidPrepare, TemplatePrewarmRenderLeavesHumanoidAnimationStateUntouched
   humanoid_state->initialized = true;
   humanoid_state->idle_duration = 1.5F;
   humanoid_state->last_sample_time = 5.0F;
-  humanoid_state->locomotion_initialized = true;
-  humanoid_state->locomotion_phase = 0.42F;
-  humanoid_state->locomotion_phase_bias = 0.11F;
-  humanoid_state->filtered_speed = 0.65F;
-  humanoid_state->filtered_acceleration = -0.25F;
-  humanoid_state->filtered_turn = 0.30F;
+  humanoid_state->locomotion.initialized = true;
+  humanoid_state->locomotion.phase = 0.42F;
+  humanoid_state->locomotion.phase_bias = 0.11F;
+  humanoid_state->locomotion.filtered_speed = 0.65F;
+  humanoid_state->locomotion.filtered_acceleration = -0.25F;
+  humanoid_state->locomotion.filtered_turn = 0.30F;
 
   Render::GL::DrawContext ctx{};
   ctx.world_view = Render::WorldView::of_active_session();
@@ -9763,11 +9746,11 @@ TEST(HumanoidPrepare, TemplatePrewarmRenderLeavesHumanoidAnimationStateUntouched
 
   EXPECT_FLOAT_EQ(humanoid_state->idle_duration, 1.5F);
   EXPECT_FLOAT_EQ(humanoid_state->last_sample_time, 5.0F);
-  EXPECT_FLOAT_EQ(humanoid_state->locomotion_phase, 0.42F);
-  EXPECT_FLOAT_EQ(humanoid_state->locomotion_phase_bias, 0.11F);
-  EXPECT_FLOAT_EQ(humanoid_state->filtered_speed, 0.65F);
-  EXPECT_FLOAT_EQ(humanoid_state->filtered_acceleration, -0.25F);
-  EXPECT_FLOAT_EQ(humanoid_state->filtered_turn, 0.30F);
+  EXPECT_FLOAT_EQ(humanoid_state->locomotion.phase, 0.42F);
+  EXPECT_FLOAT_EQ(humanoid_state->locomotion.phase_bias, 0.11F);
+  EXPECT_FLOAT_EQ(humanoid_state->locomotion.filtered_speed, 0.65F);
+  EXPECT_FLOAT_EQ(humanoid_state->locomotion.filtered_acceleration, -0.25F);
+  EXPECT_FLOAT_EQ(humanoid_state->locomotion.filtered_turn, 0.30F);
 }
 
 TEST(HumanoidPrepare, WalkRunTransitionKeepsPlaybackGroundingCoherent) {
@@ -9839,7 +9822,8 @@ TEST(HumanoidPrepare, IdleArchersKeepNeutralBowReadyPhase) {
   anim.time = 3.0F;
 
   Render::Humanoid::HumanoidPreparation prep;
-  Render::Humanoid::prepare_humanoid_instances(owner, ctx, anim, 0U, prep);
+  Render::Humanoid::prepare_humanoid_instances(
+      owner, ctx, anim, test_runtime(0U), prep);
 
   auto const& requests = prep.bodies.requests();
   ASSERT_EQ(requests.size(), 1U);
@@ -9877,7 +9861,8 @@ TEST(HumanoidPrepare, FormationAmbientIdlesStaggerAndRotatePerSoldier) {
     ctx.animation_time = anim.time;
 
     Render::Humanoid::HumanoidPreparation prep;
-    Render::Humanoid::prepare_humanoid_instances(owner, ctx, anim, frame, prep);
+    Render::Humanoid::prepare_humanoid_instances(
+        owner, ctx, anim, test_runtime(frame), prep);
 
     std::size_t active_count = 0U;
     concurrently_active_variants.clear();
@@ -9927,7 +9912,8 @@ TEST(HumanoidPrepare, PopulationLodKeepsRepresentativesAcrossFormationFootprint)
 
   Render::GL::AnimationInputs const anim{};
   Render::Humanoid::HumanoidPreparation prep;
-  Render::Humanoid::prepare_humanoid_instances(owner, ctx, anim, 0U, prep);
+  Render::Humanoid::prepare_humanoid_instances(
+      owner, ctx, anim, test_runtime(0U), prep);
 
   ASSERT_EQ(prep.bodies.requests().size(), 4U);
   EXPECT_EQ(prep.bodies.requests().front().instance_index, 0U);
@@ -9960,7 +9946,8 @@ TEST(HumanoidPrepare, SwordAttackRecoveryStaysOnOutgoingClipBeforeIdle) {
   attack_anim.combat_phase_progress = 0.35F;
 
   Render::Humanoid::HumanoidPreparation prep;
-  Render::Humanoid::prepare_humanoid_instances(owner, ctx, attack_anim, 0U, prep);
+  Render::Humanoid::prepare_humanoid_instances(
+      owner, ctx, attack_anim, test_runtime(0U), prep);
 
   auto const& attack_requests = prep.bodies.requests();
   ASSERT_EQ(attack_requests.size(), 1U);
@@ -9975,7 +9962,8 @@ TEST(HumanoidPrepare, SwordAttackRecoveryStaysOnOutgoingClipBeforeIdle) {
   recover_anim.combat_phase_progress = 0.0F;
 
   prep.clear();
-  Render::Humanoid::prepare_humanoid_instances(owner, ctx, recover_anim, 1U, prep);
+  Render::Humanoid::prepare_humanoid_instances(
+      owner, ctx, recover_anim, test_runtime(1U), prep);
 
   auto const& recover_requests = prep.bodies.requests();
   ASSERT_EQ(recover_requests.size(), 1U);
@@ -9987,7 +9975,8 @@ TEST(HumanoidPrepare, SwordAttackRecoveryStaysOnOutgoingClipBeforeIdle) {
   idle_anim.time += 0.28F;
 
   prep.clear();
-  Render::Humanoid::prepare_humanoid_instances(owner, ctx, idle_anim, 2U, prep);
+  Render::Humanoid::prepare_humanoid_instances(
+      owner, ctx, idle_anim, test_runtime(2U), prep);
 
   auto const& idle_requests = prep.bodies.requests();
   ASSERT_EQ(idle_requests.size(), 1U);
@@ -9999,7 +9988,8 @@ TEST(HumanoidPrepare, SwordAttackRecoveryStaysOnOutgoingClipBeforeIdle) {
   settled_anim.time += 0.20F;
 
   prep.clear();
-  Render::Humanoid::prepare_humanoid_instances(owner, ctx, settled_anim, 3U, prep);
+  Render::Humanoid::prepare_humanoid_instances(
+      owner, ctx, settled_anim, test_runtime(3U), prep);
 
   auto const& settled_requests = prep.bodies.requests();
   ASSERT_EQ(settled_requests.size(), 1U);
@@ -10036,7 +10026,8 @@ TEST(HumanoidPrepare,
   anim.construction_progress = 0.0F;
 
   Render::Humanoid::HumanoidPreparation prep;
-  Render::Humanoid::prepare_humanoid_instances(owner, ctx, anim, 1U, prep);
+  Render::Humanoid::prepare_humanoid_instances(
+      owner, ctx, anim, test_runtime(1U), prep);
 
   auto const requests = prep.bodies.requests();
   ASSERT_EQ(requests.size(), 1U);
@@ -10059,7 +10050,8 @@ TEST(HumanoidPrepare,
   anim.movement_state = Render::Creature::MovementAnimationState::Walk;
 
   Render::Humanoid::HumanoidPreparation prep;
-  Render::Humanoid::prepare_humanoid_instances(owner, ctx, anim, 1U, prep);
+  Render::Humanoid::prepare_humanoid_instances(
+      owner, ctx, anim, test_runtime(1U), prep);
 
   CountingSubmitter sink;
   Render::Creature::Pipeline::submit_preparation(prep, sink);
@@ -10090,7 +10082,8 @@ TEST(HumanoidPrepare,
   anim.movement_state = Render::Creature::MovementAnimationState::Walk;
 
   Render::Humanoid::HumanoidPreparation prep;
-  Render::Humanoid::prepare_humanoid_instances(owner, ctx, anim, 1U, prep);
+  Render::Humanoid::prepare_humanoid_instances(
+      owner, ctx, anim, test_runtime(1U), prep);
 
   auto const requests = prep.bodies.requests();
   ASSERT_FALSE(requests.empty());
@@ -10132,7 +10125,8 @@ TEST(HumanoidPrepare,
   EXPECT_TRUE(anim.visual_movement.is_authoritative);
 
   Render::Humanoid::HumanoidPreparation prep;
-  Render::Humanoid::prepare_humanoid_instances(owner, ctx, anim, 0U, prep);
+  Render::Humanoid::prepare_humanoid_instances(
+      owner, ctx, anim, test_runtime(0U), prep);
   ASSERT_FALSE(prep.bodies.requests().empty());
   EXPECT_EQ(prep.bodies.requests().front().state,
             Render::Creature::AnimationStateId::Walk)
@@ -10171,7 +10165,8 @@ TEST(HumanoidPrepare, RaceWindowSnapshotRunFlagDrivesRunningEvenWithoutLiveStami
       << "is_running must be sourced from initialized snapshot, not live stamina";
 
   Render::Humanoid::HumanoidPreparation prep;
-  Render::Humanoid::prepare_humanoid_instances(owner, ctx, anim, 0U, prep);
+  Render::Humanoid::prepare_humanoid_instances(
+      owner, ctx, anim, test_runtime(0U), prep);
   ASSERT_FALSE(prep.bodies.requests().empty());
   EXPECT_EQ(prep.bodies.requests().front().state,
             Render::Creature::AnimationStateId::Run);
@@ -10198,7 +10193,8 @@ TEST(HumanoidPrepare, HitReactionDoesNotMoveOrSquashFormationRoot) {
   anim.movement_state = Render::Creature::MovementAnimationState::Idle;
 
   Render::Humanoid::HumanoidPreparation baseline_prep;
-  Render::Humanoid::prepare_humanoid_instances(owner, ctx, anim, 1U, baseline_prep);
+  Render::Humanoid::prepare_humanoid_instances(
+      owner, ctx, anim, test_runtime(1U), baseline_prep);
   auto const baseline_requests = baseline_prep.bodies.requests();
   ASSERT_EQ(baseline_requests.size(), 1U);
   QVector3D const baseline_origin =
@@ -10212,7 +10208,8 @@ TEST(HumanoidPrepare, HitReactionDoesNotMoveOrSquashFormationRoot) {
   anim.hit_recoil_z = 0.0F;
 
   Render::Humanoid::HumanoidPreparation hit_prep;
-  Render::Humanoid::prepare_humanoid_instances(owner, ctx, anim, 1U, hit_prep);
+  Render::Humanoid::prepare_humanoid_instances(
+      owner, ctx, anim, test_runtime(1U), hit_prep);
   auto const hit_requests = hit_prep.bodies.requests();
   ASSERT_EQ(hit_requests.size(), 1U);
   QVector3D const hit_origin =
@@ -10259,13 +10256,14 @@ TEST(HumanoidPrepare, FogHiddenMemberIsRejectedBeforeBodyPreparation) {
   ctx.submission_visibility = &visibility_policy;
   ctx.submission_fog_mode = Render::GL::SubmissionFogMode::VisibleOnly;
 
-  Render::GL::reset_humanoid_render_stats();
+  auto& runtime = test_runtime(0U);
+  runtime.reset_stats();
   Render::Humanoid::HumanoidPreparation prep;
   Render::Humanoid::prepare_humanoid_instances(
-      owner, ctx, Render::GL::AnimationInputs{}, 0U, prep);
+      owner, ctx, Render::GL::AnimationInputs{}, runtime, prep);
 
   EXPECT_TRUE(prep.bodies.requests().empty());
-  EXPECT_EQ(Render::GL::get_humanoid_render_stats().soldiers_skipped_fog, 1U);
+  EXPECT_EQ(runtime.stats.soldiers_skipped_fog, 1U);
 }
 
 TEST(HumanoidPrepare, SoldierUsesCentralFrustumGuardBandAtScreenEdge) {
@@ -10302,7 +10300,7 @@ TEST(HumanoidPrepare, SoldierUsesCentralFrustumGuardBandAtScreenEdge) {
   Render::GL::reset_humanoid_render_stats();
   Render::Humanoid::HumanoidPreparation prep;
   Render::Humanoid::prepare_humanoid_instances(
-      owner, ctx, Render::GL::AnimationInputs{}, 0U, prep);
+      owner, ctx, Render::GL::AnimationInputs{}, test_runtime(0U), prep);
 
   EXPECT_EQ(prep.bodies.requests().size(), 1U);
   EXPECT_EQ(Render::GL::get_humanoid_render_stats().soldiers_skipped_frustum, 0U);

@@ -18,12 +18,13 @@
 #include "render/creature/pipeline/humanoid_animation_selection.h"
 #include "render/creature/pipeline/lod_decision.h"
 #include "render/creature/pipeline/preparation_common.h"
+#include "render/creature/quadruped/mount_scale.h"
 #include "render/graphics_settings.h"
 #include "render/horse/horse_motion.h"
 #include "render/horse/prepare.h"
-#include "render/humanoid/cache_control.h"
-#include "render/humanoid/humanoid_full_builder.h"
-#include "render/humanoid/skeleton.h"
+#include "render/humanoid/runtime/body_frame_resolver.h"
+#include "render/humanoid/runtime/frame_control.h"
+#include "render/humanoid/schema/skeleton_schema.h"
 #include "render/math/creature_math_utils.h"
 #include "render/palette.h"
 #include "render/visibility_budget.h"
@@ -99,26 +100,19 @@ auto rider_local_world_from_mount(
 
 MountedHumanoidRendererBase::MountedHumanoidRendererBase() = default;
 
-auto MountedHumanoidRendererBase::mounted_visual_spec() const
-    -> const Render::Creature::Pipeline::MountedSpec& {
-  if (!m_mounted_visual_spec_baked) {
-    m_mounted_visual_spec_cache.rider = visual_spec();
-    m_mounted_visual_spec_cache.rider.kind =
-        Render::Creature::Pipeline::CreatureKind::Humanoid;
-    if (m_mounted_visual_spec_cache.rider.archetype_id ==
-        Render::Creature::k_invalid_archetype) {
-      m_mounted_visual_spec_cache.rider.archetype_id =
-          Render::Creature::ArchetypeRegistry::k_rider_base;
-    }
-    m_mounted_visual_spec_cache.mount = m_horse_renderer.visual_spec();
-    m_mounted_visual_spec_cache.mount.kind =
-        Render::Creature::Pipeline::CreatureKind::Horse;
-    m_mounted_visual_spec_cache.mount.archetype_id = m_mount_archetype_id;
-    m_mounted_visual_spec_cache.mount.debug_name = m_mount_debug_name;
-    m_mounted_visual_spec_cache.mount_socket = Render::Creature::k_invalid_socket;
-    m_mounted_visual_spec_baked = true;
+void MountedHumanoidRendererBase::rebuild_mounted_visual_spec() {
+  m_mounted_visual_spec.rider = visual_spec();
+  m_mounted_visual_spec.rider.kind = Render::Creature::Pipeline::CreatureKind::Humanoid;
+  if (m_mounted_visual_spec.rider.archetype_id ==
+      Render::Creature::k_invalid_archetype) {
+    m_mounted_visual_spec.rider.archetype_id =
+        Render::Creature::ArchetypeRegistry::k_rider_base;
   }
-  return m_mounted_visual_spec_cache;
+  m_mounted_visual_spec.mount = m_horse_renderer.visual_spec();
+  m_mounted_visual_spec.mount.kind = Render::Creature::Pipeline::CreatureKind::Horse;
+  m_mounted_visual_spec.mount.archetype_id = m_mount_archetype_id;
+  m_mounted_visual_spec.mount.debug_name = m_mount_debug_name;
+  m_mounted_visual_spec.mount_socket = Render::Creature::k_invalid_socket;
 }
 
 auto MountedHumanoidRendererBase::get_scaled_horse_dimensions(uint32_t seed) const
@@ -185,7 +179,7 @@ void MountedHumanoidRendererBase::resolve_mount_render_state(
       anim_ctx,
       Engine::Core::get_or_add_component<
           Render::Creature::HorseAnimationStateComponent>(ctx.entity),
-      mount_model_scale(ctx.entity));
+      Render::Creature::Quadruped::mount_model_scale(ctx.entity));
   (void)apply_authored_horse_mount_pose(motion, mount);
 }
 
@@ -198,11 +192,11 @@ void MountedHumanoidRendererBase::ensure_prepare_components(
 }
 
 auto MountedHumanoidRendererBase::resolve_mount_lod(const DrawContext& ctx) const
-    -> HorseLOD {
+    -> Render::Creature::CreatureLOD {
   namespace RCP = Render::Creature::Pipeline;
 
-  if (is_runtime_prewarm(ctx) && !ctx.force_horse_lod) {
-    return HorseLOD::Minimal;
+  if (is_runtime_prewarm(ctx) && !ctx.force_quadruped_lod) {
+    return Render::Creature::CreatureLOD::Minimal;
   }
 
   const auto lod_config = RCP::horse_lod_config_from_settings();
@@ -210,28 +204,30 @@ auto MountedHumanoidRendererBase::resolve_mount_lod(const DrawContext& ctx) cons
   inputs.ctx = &ctx;
   inputs.entity = ctx.entity;
   inputs.has_camera = (ctx.camera != nullptr);
-  if (ctx.force_horse_lod) {
+  if (ctx.force_quadruped_lod) {
     inputs.forced_lod =
-        static_cast<Render::Creature::CreatureLOD>(ctx.forced_horse_lod);
+        static_cast<Render::Creature::CreatureLOD>(ctx.forced_quadruped_lod);
   }
   if (ctx.camera != nullptr) {
     const QVector3D horse_world_pos = ctx.model.map(QVector3D(0.0F, 0.0F, 0.0F));
     inputs.camera_distance = (horse_world_pos - ctx.camera->get_position()).length();
   }
 
-  if (lod_config.apply_visibility_budget && !ctx.force_horse_lod &&
+  if (lod_config.apply_visibility_budget && !ctx.force_quadruped_lod &&
       ctx.camera != nullptr) {
     const auto distance_lod =
         RCP::select_distance_lod(inputs.camera_distance, lod_config.thresholds);
     if (distance_lod == Render::Creature::CreatureLOD::Full) {
       const auto granted =
-          Render::VisibilityBudgetTracker::instance().request_horse_lod(HorseLOD::Full);
-      inputs.budget_grant_full = (granted == HorseLOD::Full);
+          Render::VisibilityBudgetTracker::instance().request_quadruped_lod(
+              Render::Creature::CreatureLOD::Full);
+      inputs.budget_grant_full = (granted == Render::Creature::CreatureLOD::Full);
     }
   }
 
   const auto decision = RCP::evaluate_creature_lod(inputs, lod_config);
-  return decision.culled ? HorseLOD::Culled : static_cast<HorseLOD>(decision.lod);
+  return decision.culled ? Render::Creature::CreatureLOD::Culled
+                         : static_cast<Render::Creature::CreatureLOD>(decision.lod);
 }
 
 void MountedHumanoidRendererBase::append_companion_preparation(
@@ -262,7 +258,6 @@ void MountedHumanoidRendererBase::append_companion_preparation(
                                       anim_ctx.inputs,
                                       anim_ctx,
                                       profile,
-                                      &mount,
                                       &motion,
                                       resolve_mount_lod(ctx),
                                       out,

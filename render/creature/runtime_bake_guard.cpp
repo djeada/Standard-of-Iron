@@ -59,4 +59,22 @@ void report_runtime_bake_violation(RuntimeBakeOperation operation,
   }
 }
 
+void report_missing_preloaded_asset(std::string_view detail) {
+  static std::mutex mutex;
+  static std::unordered_set<std::string> reported;
+  const std::string key(detail);
+  {
+    std::lock_guard<std::mutex> const lock(mutex);
+    if (!reported.emplace(key).second) {
+      return;
+    }
+  }
+  const auto message = QString::fromStdString(key);
+  if (runtime_bake_forbidden()) {
+    qCritical().noquote() << "Missing preloaded creature asset:" << message;
+  } else {
+    qWarning().noquote() << "Missing preloaded creature asset:" << message;
+  }
+}
+
 } // namespace Render::Creature

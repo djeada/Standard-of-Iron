@@ -145,6 +145,39 @@ auto RiggedMeshCache::get_or_bake_prehashed(
     std::uint32_t attachment_set_id,
     std::uint32_t skin_species_id) -> const RiggedMeshEntry* {
   Key const key{&spec, lod, skin_species_id, attachment_set_id, attachments_hash};
+  return create_rigged_asset(key, rest_palette, attachments, variant_bucket);
+}
+
+auto RiggedMeshCache::find_rigged_asset(const Key& key) const noexcept
+    -> const RiggedMeshEntry* {
+  auto it = m_entries.find(key);
+  if (it == m_entries.end()) {
+    return nullptr;
+  }
+  ++m_frame_stats.hits;
+  return &it->second;
+}
+
+auto RiggedMeshCache::require_rigged_asset(
+    const Key& key, std::string_view detail) const -> const RiggedMeshEntry* {
+  const auto* entry = find_rigged_asset(key);
+  if (entry == nullptr) {
+    ++m_frame_stats.misses;
+    Render::Creature::report_missing_preloaded_asset(detail);
+  }
+  return entry;
+}
+
+auto RiggedMeshCache::create_rigged_asset(
+    const Key& key,
+    std::span<const QMatrix4x4> rest_palette,
+    std::span<const Render::Creature::StaticAttachmentSpec> attachments,
+    std::uint16_t variant_bucket) -> const RiggedMeshEntry* {
+  const Render::Creature::CreatureSpec& spec = *key.spec;
+  const Render::Creature::CreatureLOD lod = key.lod;
+  const std::uint32_t skin_species_id = key.skin_species_id;
+  const std::uint32_t attachment_set_id = key.attachment_set_id;
+  const std::uint64_t attachments_hash = key.attachments_hash;
   if (auto it = m_entries.find(key); it != m_entries.end()) {
     ++m_frame_stats.hits;
     return &it->second;

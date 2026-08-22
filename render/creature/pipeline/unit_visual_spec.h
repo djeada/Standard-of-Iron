@@ -13,6 +13,8 @@
 #include "render/creature/part_graph.h"
 #include "render/creature/render_request.h"
 #include "render/creature/skeleton.h"
+#include "render/humanoid/schema/pose_policy.h"
+#include "render/humanoid/schema/visual_capabilities.h"
 
 namespace Render::GL {
 struct DrawContext;
@@ -28,7 +30,6 @@ struct HorseProfile;
 struct MountedAttachmentFrame;
 struct ReinState;
 struct HorseMotionSample;
-using HorseLOD = ::Render::Creature::CreatureLOD;
 struct VariationParams;
 struct EquipmentBatch;
 class ISubmitter;
@@ -59,23 +60,11 @@ using CreatureAssetId = std::uint16_t;
 inline constexpr CreatureAssetId k_invalid_creature_asset =
     static_cast<CreatureAssetId>(0xFFFFu);
 
-struct HumanoidPoseLayerContext {
-  const Render::GL::DrawContext* draw_ctx{nullptr};
-  const Render::GL::HumanoidAnimationContext* animation{nullptr};
-  const Render::GL::HumanoidVariant* variant{nullptr};
-  std::uint32_t seed{0U};
-};
-
-using PoseLayerFn = void (*)(const HumanoidPoseLayerContext& context,
-                             Render::GL::HumanoidPose& io_pose);
-
-using VariantHookFn = void (*)(const Render::GL::DrawContext& ctx,
-                               std::uint32_t seed,
-                               Render::GL::VariationParams& io_variation);
-
 struct HumanoidAnimationManifest {
   const Render::Creature::ArchetypeVariantTable* variant_table{nullptr};
-  PoseLayerFn pose_layer{nullptr};
+
+  Render::Humanoid::HumanoidPosePolicy pose_policy{
+      Render::Humanoid::HumanoidPosePolicy::None};
 
   std::uint16_t melee_clip_override{0xFFFFU};
 };
@@ -96,13 +85,14 @@ struct UnitVisualSpec {
   CreatureAssetId creature_asset_id{k_invalid_creature_asset};
   PaletteId palette_id{k_default_palette};
   HumanoidAnimationManifest animation_manifest{};
-  VariantHookFn variant_hook{nullptr};
   ProportionScaling scaling{};
   const CreatureVisualDefinition* creature_definition{nullptr};
 
   bool skip_default_facial_hair_archetype{false};
 
   Render::Creature::ArchetypeId archetype_id{Render::Creature::k_invalid_archetype};
+
+  Render::Humanoid::HumanoidCapabilities capabilities{};
 
   const MountedSpec* mounted{nullptr};
 };

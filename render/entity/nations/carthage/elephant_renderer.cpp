@@ -42,20 +42,16 @@ struct CarthageElephantPalette {
 
 class CarthageElephantRenderer : public ElephantRendererBase {
 public:
-  CarthageElephantRenderer() = default;
+  CarthageElephantRenderer()
+      : ElephantRendererBase(make_visual_spec()) {}
 
-  auto
-  visual_spec() const -> const Render::Creature::Pipeline::UnitVisualSpec& override {
-    if (!m_visual_spec_baked) {
-      m_visual_spec_cache = Render::Creature::Pipeline::UnitVisualSpec{};
-      m_visual_spec_cache.kind = Render::Creature::Pipeline::CreatureKind::Elephant;
-      m_visual_spec_cache.debug_name = "troops/carthage/elephant";
-      m_visual_spec_baked = true;
-    }
-    return m_visual_spec_cache;
+private:
+  static auto make_visual_spec() -> Render::Creature::Pipeline::UnitVisualSpec {
+    Render::Creature::Pipeline::UnitVisualSpec spec;
+    spec.kind = Render::Creature::Pipeline::CreatureKind::Elephant;
+    spec.debug_name = "troops/carthage/elephant";
+    return spec;
   }
-
-protected:
 };
 
 } // namespace

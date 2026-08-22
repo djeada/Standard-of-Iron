@@ -20,17 +20,18 @@
 #include "animation/bpat/bpat_writer.h"
 #include "animation/clip_manifest.h"
 #include "game/session/session_context.h"
+#include "render/creature/bake/creature_bake_recipe.h"
 #include "render/creature/humanoid_clip_ids.h"
 #include "render/creature/part_graph.h"
 #include "render/creature/pipeline/preparation_common.h"
 #include "render/creature/render_request.h"
 #include "render/creature/rigged_mesh_asset.h"
+#include "render/creature/schema/creature_runtime_manifest.h"
 #include "render/creature/skeleton.h"
 #include "render/creature/snapshot_mesh_asset.h"
-#include "render/creature/species_manifest.h"
-#include "render/elephant/elephant_manifest.h"
-#include "render/horse/horse_manifest.h"
-#include "render/humanoid/humanoid_manifest.h"
+#include "render/elephant/elephant_bake_recipe.h"
+#include "render/horse/horse_bake_recipe.h"
+#include "render/humanoid/asset/humanoid_manifest.h"
 #include "render/rigged_mesh_bake.h"
 #include "render/snapshot_mesh_bake.h"
 #include "render/wildlife/sheep_manifest.h"
@@ -99,13 +100,12 @@ auto build_clip_variant_table(std::uint32_t species_id,
 }
 
 bool bake_species_manifest(const std::filesystem::path& out_dir,
-                           const Render::Creature::SpeciesManifest& manifest) {
-  if (manifest.bind_palette == nullptr || manifest.creature_spec == nullptr ||
-      manifest.bake_clip_frame == nullptr) {
-    std::cerr << "[bpat_baker] manifest for " << manifest.species_name
-              << " is incomplete\n";
+                           const Render::Creature::CreatureBakeRecipe& recipe) {
+  if (!recipe.complete()) {
+    std::cerr << "[bpat_baker] bake recipe is incomplete\n";
     return false;
   }
+  const Render::Creature::CreatureRuntimeManifest& manifest = *recipe.runtime;
 
   auto const bind_palette = manifest.bind_palette();
   std::vector<QMatrix4x4> inverse_bind;
@@ -127,7 +127,7 @@ bool bake_species_manifest(const std::filesystem::path& out_dir,
     writer.set_bone_parents(parents);
   }
 
-  for (auto const& socket : manifest.sockets) {
+  for (auto const& socket : recipe.sockets) {
     bpat::SocketDescriptor s{};
     s.name = socket.name;
     s.anchor_bone = socket.anchor_bone;
@@ -136,9 +136,9 @@ bool bake_species_manifest(const std::filesystem::path& out_dir,
   }
 
   auto const variant_table =
-      build_clip_variant_table(manifest.species_id, manifest.clips.size());
-  for (std::size_t i = 0; i < manifest.clips.size(); ++i) {
-    auto const& clip = manifest.clips[i];
+      build_clip_variant_table(manifest.species_id, recipe.clips.size());
+  for (std::size_t i = 0; i < recipe.clips.size(); ++i) {
+    auto const& clip = recipe.clips[i];
     bpat::ClipDescriptor desc{};
     desc.name = clip.name;
     desc.frame_count = clip.frame_count;
@@ -146,9 +146,9 @@ bool bake_species_manifest(const std::filesystem::path& out_dir,
     desc.loops = clip.loops;
     desc.variant_family = variant_table[i].family;
     desc.variant_ordinal = variant_table[i].ordinal;
-    if (manifest.clip_markers != nullptr) {
+    if (recipe.clip_markers != nullptr) {
       Animation::ClipMarkers markers{};
-      manifest.clip_markers(i, clip.name, markers);
+      recipe.clip_markers(i, clip.name, markers);
       apply_markers(markers, desc);
     } else {
       apply_generic_markers(desc);
@@ -158,19 +158,19 @@ bool bake_species_manifest(const std::filesystem::path& out_dir,
     std::vector<QMatrix4x4> palettes;
     palettes.reserve(static_cast<std::size_t>(clip.frame_count) * bind_palette.size());
     std::vector<QMatrix4x4> sockets;
-    if (!manifest.sockets.empty()) {
+    if (!recipe.sockets.empty()) {
       sockets.reserve(static_cast<std::size_t>(clip.frame_count) *
-                      manifest.sockets.size());
+                      recipe.sockets.size());
     }
     for (std::uint32_t f = 0; f < clip.frame_count; ++f) {
-      manifest.bake_clip_frame(
-          i, f, palettes, manifest.sockets.empty() ? nullptr : &sockets);
+      recipe.bake_clip_frame(
+          i, f, palettes, recipe.sockets.empty() ? nullptr : &sockets);
     }
     for (std::size_t p = 0; p < palettes.size(); ++p) {
       palettes[p] = palettes[p] * inverse_bind[p % inverse_bind.size()];
     }
     writer.append_clip_palettes(palettes);
-    if (!manifest.sockets.empty()) {
+    if (!recipe.sockets.empty()) {
       writer.append_clip_socket_transforms(sockets);
     }
 
@@ -201,8 +201,8 @@ bool bake_species_manifest(const std::filesystem::path& out_dir,
   }
   out.flush();
   std::cout << "[bpat_baker] wrote " << out_path << " (" << writer.frame_total()
-            << " frames, " << manifest.clips.size() << " clips, " << bind_palette.size()
-            << " bones, " << manifest.sockets.size() << " sockets)\n";
+            << " frames, " << recipe.clips.size() << " clips, " << bind_palette.size()
+            << " bones, " << recipe.sockets.size() << " sockets)\n";
 
   auto const body_name = manifest.creature_spec().species_name;
   for (auto const lod :
@@ -247,8 +247,8 @@ bool bake_species_manifest(const std::filesystem::path& out_dir,
       Render::Creature::CreatureLOD::Minimal,
       static_cast<std::uint32_t>(source.vertices.size()),
       source.indices);
-  for (std::size_t i = 0; i < manifest.clips.size(); ++i) {
-    auto const& clip = manifest.clips[i];
+  for (std::size_t i = 0; i < recipe.clips.size(); ++i) {
+    auto const& clip = recipe.clips[i];
     snapshot::ClipDescriptor desc{};
     desc.name = clip.name;
     desc.frame_count = clip.frame_count;
@@ -260,7 +260,7 @@ bool bake_species_manifest(const std::filesystem::path& out_dir,
     for (std::uint32_t f = 0; f < clip.frame_count; ++f) {
       std::vector<QMatrix4x4> frame_palette;
       frame_palette.reserve(bind_palette.size());
-      manifest.bake_clip_frame(i, f, frame_palette, nullptr);
+      recipe.bake_clip_frame(i, f, frame_palette, nullptr);
       std::size_t const n = std::min(frame_palette.size(), inverse_bind.size());
       for (std::size_t b = 0; b < n; ++b) {
         frame_palette[b] = frame_palette[b] * inverse_bind[b];
@@ -344,12 +344,13 @@ int main(int argc, char** argv) {
 
   bool ok = true;
   for (auto const profile : Render::Humanoid::humanoid_bake_profiles()) {
-    ok = bake_species_manifest(out_dir, Render::Humanoid::humanoid_manifest(profile)) &&
+    ok = bake_species_manifest(out_dir,
+                               Render::Humanoid::humanoid_bake_recipe(profile)) &&
          ok;
   }
-  ok = bake_species_manifest(out_dir, Render::Horse::horse_manifest()) && ok;
-  ok = bake_species_manifest(out_dir, Render::Elephant::elephant_manifest()) && ok;
-  ok = bake_species_manifest(out_dir, Render::Wildlife::sheep_manifest()) && ok;
-  ok = bake_species_manifest(out_dir, Render::Wildlife::wolf_manifest()) && ok;
+  ok = bake_species_manifest(out_dir, Render::Horse::horse_bake_recipe()) && ok;
+  ok = bake_species_manifest(out_dir, Render::Elephant::elephant_bake_recipe()) && ok;
+  ok = bake_species_manifest(out_dir, Render::Wildlife::sheep_bake_recipe()) && ok;
+  ok = bake_species_manifest(out_dir, Render::Wildlife::wolf_bake_recipe()) && ok;
   return ok ? EXIT_SUCCESS : EXIT_FAILURE;
 }

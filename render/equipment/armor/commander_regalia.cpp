@@ -5,8 +5,8 @@
 
 #include "render/equipment/attachment_builder.h"
 #include "render/equipment/generated_equipment.h"
-#include "render/humanoid/humanoid_renderer_base.h"
-#include "render/humanoid/humanoid_spec.h"
+#include "render/humanoid/asset/humanoid_spec.h"
+#include "render/humanoid/runtime/humanoid_renderer.h"
 #include "torso_local_archetype_utils.h"
 
 namespace Render::GL {

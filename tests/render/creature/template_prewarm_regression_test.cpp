@@ -24,7 +24,7 @@
 #include "render/entity/registry.h"
 #include "render/gl/humanoid/humanoid_types.h"
 #include "render/horse/horse_spec.h"
-#include "render/humanoid/humanoid_spec.h"
+#include "render/humanoid/asset/humanoid_spec.h"
 #include "render/scene_renderer.h"
 #include "render/submitter.h"
 #include "render/template_prewarm_catalog.h"

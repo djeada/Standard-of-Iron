@@ -16,8 +16,8 @@
 #include "render/creature/archetype_registry.h"
 #include "render/creature/runtime_bake_guard.h"
 #include "render/gl/humanoid/humanoid_types.h"
-#include "render/humanoid/facial_hair_catalog.h"
-#include "render/humanoid/skeleton.h"
+#include "render/humanoid/asset/facial_hair_catalog.h"
+#include "render/humanoid/schema/skeleton_schema.h"
 
 namespace Render::Creature::Pipeline {
 

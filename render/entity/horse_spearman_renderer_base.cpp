@@ -13,8 +13,8 @@
 #include "render/equipment/equipment_registry.h"
 #include "render/equipment/horse_equipment_archetype.h"
 #include "render/equipment/humanoid_equipment_archetype.h"
-#include "render/humanoid/humanoid_math.h"
-#include "render/humanoid/humanoid_proportion_profiles.h"
+#include "render/humanoid/runtime/humanoid_math.h"
+#include "render/humanoid/schema/humanoid_proportion_profiles.h"
 #include "render/palette.h"
 #include "renderer_constants.h"
 
@@ -82,15 +82,6 @@ HorseSpearmanRendererBase::HorseSpearmanRendererBase(HorseSpearmanRendererConfig
   build_visual_spec();
 }
 
-auto HorseSpearmanRendererBase::get_proportion_scaling() const -> QVector3D {
-  return k_profile.as_vector();
-}
-
-auto HorseSpearmanRendererBase::visual_spec() const
-    -> const Render::Creature::Pipeline::UnitVisualSpec& {
-  return m_spec;
-}
-
 auto HorseSpearmanRendererBase::get_mount_scale() const -> float {
   return m_config.mount_scale;
 }
@@ -128,12 +119,14 @@ void HorseSpearmanRendererBase::build_visual_spec() {
       m_armor_handle,
   };
 
-  m_spec = UnitVisualSpec{};
-  m_spec.kind = CreatureKind::Humanoid;
-  m_spec.debug_name = m_config.rider_debug_name;
-  m_spec.scaling = k_profile.as_pipeline_scaling();
-  m_spec.archetype_id = resolve_humanoid_equipment_archetype(
+  UnitVisualSpec spec{};
+  spec.kind = CreatureKind::Humanoid;
+  spec.debug_name = m_config.rider_debug_name;
+  spec.scaling = k_profile.as_pipeline_scaling();
+  spec.archetype_id = resolve_humanoid_equipment_archetype(
       m_config.rider_debug_name, base_rider_id, handles);
+
+  set_visual_spec(spec);
 
   const Render::Creature::ArchetypeId base_mount_id =
       (m_config.mount_archetype_id != Render::Creature::k_invalid_archetype)

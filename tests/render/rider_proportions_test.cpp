@@ -5,7 +5,7 @@
 #include "render/entity/horse_archer_renderer_base.h"
 #include "render/entity/horse_spearman_renderer_base.h"
 #include "render/entity/mounted_knight_renderer_base.h"
-#include "render/humanoid/humanoid_proportion_profiles.h"
+#include "render/humanoid/schema/humanoid_proportion_profiles.h"
 
 using namespace Render::GL;
 

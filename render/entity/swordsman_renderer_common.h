@@ -13,7 +13,8 @@
 #include "registry.h"
 #include "render/creature/pipeline/creature_asset.h"
 #include "render/creature/pipeline/unit_visual_spec.h"
-#include "render/humanoid/humanoid_proportion_profiles.h"
+#include "render/humanoid/schema/humanoid_proportion_profiles.h"
+#include "render/humanoid/schema/pose_policy.h"
 
 namespace Render::GL {
 
@@ -70,7 +71,8 @@ struct SwordsmanRendererRegistration {
   std::string_view renderer_key;
   Render::Creature::Pipeline::CreatureAssetId creature_asset_id{
       Render::Creature::Pipeline::k_humanoid_sword_asset};
-  Render::Creature::Pipeline::PoseLayerFn pose_layer{nullptr};
+  Render::Humanoid::HumanoidPosePolicy pose_policy{
+      Render::Humanoid::HumanoidPosePolicy::None};
 };
 
 void register_swordsman_renderer_profile(

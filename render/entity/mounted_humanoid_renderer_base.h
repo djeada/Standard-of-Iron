@@ -5,7 +5,7 @@
 
 #include "horse_renderer.h"
 #include "render/creature/pipeline/unit_visual_spec.h"
-#include "render/humanoid/humanoid_renderer_base.h"
+#include "render/humanoid/runtime/humanoid_renderer.h"
 
 namespace Render::GL {
 
@@ -14,8 +14,10 @@ public:
   MountedHumanoidRendererBase();
   ~MountedHumanoidRendererBase() override = default;
 
-  virtual auto
-  mounted_visual_spec() const -> const Render::Creature::Pipeline::MountedSpec&;
+  [[nodiscard]] auto mounted_visual_spec() const noexcept
+      -> const Render::Creature::Pipeline::MountedSpec& {
+    return m_mounted_visual_spec;
+  }
 
   auto uses_mounted_pipeline() const noexcept -> bool override { return true; }
 
@@ -26,7 +28,7 @@ public:
   void set_mount_visual(Render::Creature::ArchetypeId id, std::string_view debug_name) {
     m_mount_archetype_id = id;
     m_mount_debug_name = debug_name;
-    m_mounted_visual_spec_baked = false;
+    rebuild_mounted_visual_spec();
   }
   [[nodiscard]] auto
   mount_archetype_id() const noexcept -> Render::Creature::ArchetypeId {
@@ -34,8 +36,7 @@ public:
   }
 
 protected:
-  mutable Render::Creature::Pipeline::MountedSpec m_mounted_visual_spec_cache{};
-  mutable bool m_mounted_visual_spec_baked{false};
+  Render::Creature::Pipeline::MountedSpec m_mounted_visual_spec{};
   Render::Creature::ArchetypeId m_mount_archetype_id{
       Render::Creature::k_invalid_archetype};
   std::string m_mount_debug_name{"troops/mounted/horse"};
@@ -69,7 +70,10 @@ protected:
                                   HorseMotionSample& motion) const;
 
 private:
-  [[nodiscard]] auto resolve_mount_lod(const DrawContext& ctx) const -> HorseLOD;
+  void rebuild_mounted_visual_spec();
+
+  [[nodiscard]] auto
+  resolve_mount_lod(const DrawContext& ctx) const -> Render::Creature::CreatureLOD;
 };
 
 } // namespace Render::GL

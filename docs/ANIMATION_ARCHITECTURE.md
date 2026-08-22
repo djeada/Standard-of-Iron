@@ -529,7 +529,7 @@ transform alone. That left a melee fight looking like two men tapping each
 other with spoons — the arms moved and nothing else did. Two pieces now move the
 root, both resolved by `Animation::resolve_combat_root_motion`
 (`animation/combat_root_motion_manifest.cpp`) and applied in
-`prepare_submission.cpp` after the model has been grounded:
+`render/humanoid/runtime/instance_prepare.cpp` after the model has been grounded:
 
 - **The lunge.** A melee swing carries the body: `melee_lunge_offset` loads the
   weight back a few centimetres through the wind-up, drives forward 0.24 m
@@ -621,8 +621,8 @@ feel. Mount/howdah attachment frames remain per-species (their anchor geometry d
 | Clip selection          | `render/creature/archetype_registry.cpp`, `pipeline/humanoid_animation_selection.cpp` |
 | BPAT playback           | `animation/bpat/bpat_playback.cpp`                                                    |
 | BPAT blob/registry      | `animation/bpat/bpat_reader.cpp`, `bpat_registry.cpp`                                 |
-| Humanoid locomotion     | `render/humanoid/poser.cpp`, `prepare_animation.cpp`                                  |
-| Humanoid combat poses   | `render/humanoid/pose_controller.cpp`                                                 |
+| Humanoid locomotion     | `render/humanoid/runtime/poser.cpp`, `runtime/animation_runtime.cpp`                  |
+| Humanoid combat poses   | `render/humanoid/runtime/pose_controller.cpp`                                         |
 | Quadruped shared gait   | `render/creature/quadruped/gait.{h,cpp}`                                              |
 | Horse / elephant motion | `render/horse/horse_motion.cpp`, `render/elephant/elephant_motion.cpp`                |
 | Melee damage sync       | `game/systems/combat_system/attack_processor.cpp`                                     |

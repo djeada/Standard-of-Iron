@@ -11,6 +11,7 @@
 #include <vector>
 
 #include "animation/bpat/bpat_format.h"
+#include "render/creature/bake/creature_bake_recipe.h"
 #include "sheep_spec.h"
 #include "wildlife_rig.h"
 
@@ -217,9 +218,10 @@ auto sheep_graze_amount(float phase) noexcept -> float {
   return 1.0F - smoother_step((wrapped - k_raise_start) / (1.0F - k_raise_start));
 }
 
-auto sheep_manifest() noexcept -> const Render::Creature::SpeciesManifest& {
-  static const Render::Creature::SpeciesManifest manifest = [] {
-    Render::Creature::SpeciesManifest m;
+auto sheep_runtime_manifest() noexcept
+    -> const Render::Creature::CreatureRuntimeManifest& {
+  static const Render::Creature::CreatureRuntimeManifest manifest = [] {
+    Render::Creature::CreatureRuntimeManifest m;
     m.species_name = "sheep";
     m.species_id = Render::Creature::Bpat::k_species_sheep;
     m.bpat_file_name = "sheep.bpat";
@@ -239,13 +241,22 @@ auto sheep_manifest() noexcept -> const Render::Creature::SpeciesManifest& {
     m.lod_minimal.material_id = k_wildlife_material_id;
     m.lod_minimal.lod_mask = Render::Creature::k_lod_minimal;
     m.lod_minimal.mesh_nodes = sheep_minimal_mesh_nodes();
-    m.clips = std::span<const Render::Creature::BakeClipDescriptor>(k_sheep_clip_descs);
     m.bind_palette = &sheep_bind_palette;
     m.creature_spec = &sheep_creature_spec;
-    m.bake_clip_frame = &bake_sheep_clip_frame;
     return m;
   }();
   return manifest;
+}
+
+auto sheep_bake_recipe() noexcept -> const Render::Creature::CreatureBakeRecipe& {
+  static const Render::Creature::CreatureBakeRecipe recipe = [] {
+    Render::Creature::CreatureBakeRecipe r;
+    r.runtime = &sheep_runtime_manifest();
+    r.clips = std::span<const Render::Creature::BakeClipDescriptor>(k_sheep_clip_descs);
+    r.bake_clip_frame = &bake_sheep_clip_frame;
+    return r;
+  }();
+  return recipe;
 }
 
 } // namespace Render::Wildlife

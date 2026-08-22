@@ -23,25 +23,26 @@
 #include "render/entity/registry.h"
 #include "render/geom/transforms.h"
 #include "render/gl/primitives.h"
-#include "render/humanoid/humanoid_renderer_base.h"
+#include "render/humanoid/runtime/humanoid_renderer.h"
 #include "render/submitter.h"
 
 namespace Render::GL {
 
-auto HorseRendererBase::visual_spec() const
-    -> const Render::Creature::Pipeline::UnitVisualSpec& {
-  if (!m_visual_spec_baked) {
-    m_visual_spec_cache = Render::Creature::Pipeline::UnitVisualSpec{};
-    m_visual_spec_cache.kind = Render::Creature::Pipeline::CreatureKind::Horse;
-    m_visual_spec_cache.debug_name = "horse/default";
-    m_visual_spec_cache.creature_definition =
-        &Render::Creature::Pipeline::horse_creature_visual_definition();
-    const QVector3D ps = get_proportion_scaling();
-    m_visual_spec_cache.scaling =
-        Render::Creature::Pipeline::ProportionScaling{ps.x(), ps.y(), ps.z()};
-    m_visual_spec_baked = true;
-  }
-  return m_visual_spec_cache;
+namespace {
+
+auto default_horse_visual_spec() -> Render::Creature::Pipeline::UnitVisualSpec {
+  Render::Creature::Pipeline::UnitVisualSpec spec;
+  spec.kind = Render::Creature::Pipeline::CreatureKind::Horse;
+  spec.debug_name = "horse/default";
+  spec.creature_definition =
+      &Render::Creature::Pipeline::horse_creature_visual_definition();
+  return spec;
+}
+
+} // namespace
+
+HorseRendererBase::HorseRendererBase()
+    : m_visual_spec(default_horse_visual_spec()) {
 }
 
 using Render::Geom::lerp;

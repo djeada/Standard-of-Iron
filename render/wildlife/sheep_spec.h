@@ -56,6 +56,9 @@ struct SheepDrive {
 sheep_mesh_nodes() noexcept -> std::span<const Render::Creature::Quadruped::MeshNode>;
 [[nodiscard]] auto sheep_minimal_mesh_nodes() noexcept
     -> std::span<const Render::Creature::Quadruped::MeshNode>;
+
+void initialize_sheep_asset();
+
 [[nodiscard]] auto
 sheep_creature_spec() noexcept -> const Render::Creature::CreatureSpec&;
 

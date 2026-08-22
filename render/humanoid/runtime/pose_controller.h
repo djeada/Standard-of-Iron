@@ -1,0 +1,125 @@
+#pragma once
+
+#include <QVector3D>
+
+#include <cstdint>
+
+#include "animation/death_pose_manifest.h"
+#include "animation/melee_swing_manifest.h"
+#include "animation/reaction_pose_manifest.h"
+#include "animation/rig/humanoid_proportions.h"
+#include "animation/showcase_pose_manifest.h"
+#include "render/humanoid/runtime/humanoid_renderer.h"
+
+namespace Render::GL {
+
+[[nodiscard]] auto baked_sword_direction() -> QVector3D;
+
+class HumanoidPoseController {
+public:
+  HumanoidPoseController(HumanoidPose& pose, const HumanoidAnimationContext& anim_ctx);
+
+  void stand_idle();
+
+  void apply_micro_idle(float time, std::uint32_t seed);
+
+  void apply_idle_breath(float phase, bool mounted);
+
+  void apply_ambient_idle_explicit(AmbientIdleType idle_type, float phase);
+
+  void apply_showcase_move(Animation::HumanoidShowcaseMove move, float phase);
+
+  void apply_death_collapse(Animation::HumanoidDeathCollapse collapse, float phase);
+
+  void kneel(float depth);
+  void kneel_transition(float progress, bool standing_up);
+
+  void lean(const QVector3D& direction, float amount);
+
+  void place_hand_at(Side side, const QVector3D& requested_position);
+
+  void aim_bow(float draw_phase);
+  void bow_melee_strike(float attack_phase);
+  void melee_strike(float strike_phase);
+  void unarmed_strike(float strike_phase, std::uint8_t variant);
+  void grasp_two_handed(const QVector3D& grip_center, float hand_separation);
+  void spear_thrust(float attack_phase);
+  void spear_thrust_from_hold(float attack_phase, float hold_depth);
+  void construction_saw(float work_phase);
+  void construction_chisel(float work_phase, bool kneeling);
+  void construction_hammer(float work_phase);
+  void construction_reap(float work_phase);
+  void sword_slash(float attack_phase);
+  void combat_sword_slash_variant(float attack_phase,
+                                  std::uint8_t variant,
+                                  float reach_scale = 1.0F);
+  void sword_slash_variant(float attack_phase,
+                           std::uint8_t variant,
+                           float reach_scale = 1.0F);
+  void spear_thrust_variant(float attack_phase, std::uint8_t variant);
+
+  void steer_melee_swing(float attack_phase,
+                         const Animation::MeleeIntent& anchor,
+                         float offhand_along_weapon,
+                         const QVector3D& baked_weapon_axis);
+  void mount_on_horse(float saddle_height);
+  void hold_spear_idle();
+  void channel_spell_idle();
+  void carry_stave();
+  void carry_resource_load();
+  void brace_spear_for_hold();
+  void hold_bow_ready();
+  void guard_sword_and_shield_for_defense();
+  void carry_sword_and_shield();
+  void guard_sword_and_shield_formation(ShieldFormationPose pose, float amount);
+  void look_at(const QVector3D& target);
+  void hit_flinch(float intensity);
+  void tilt_torso(float side_tilt, float forward_tilt);
+
+  void crouch(float depth);
+
+  void raise_shield_guard(float amount);
+
+  void combat_ready_stance(float phase,
+                           Animation::HumanoidReadyWeapon weapon,
+                           float reach_scale = 1.0F);
+
+  void melee_reaction(Animation::HumanoidReactionKind kind,
+                      float phase,
+                      Animation::HumanoidReadyWeapon weapon,
+                      float reach_scale = 1.0F);
+
+  auto solve_elbow_ik(Side side,
+                      const QVector3D& shoulder,
+                      const QVector3D& hand,
+                      const QVector3D& outward_dir,
+                      float along_frac,
+                      float lateral_offset,
+                      float y_bias,
+                      float outward_sign) const -> QVector3D;
+
+  auto solve_knee_ik(Side side,
+                     const QVector3D& hip,
+                     const QVector3D& foot,
+                     float height_scale) const -> QVector3D;
+
+  auto get_shoulder_y(Side side) const -> float;
+  auto get_pelvis_y() const -> float;
+
+private:
+  HumanoidPose& m_pose;
+  const HumanoidAnimationContext& m_anim_ctx;
+
+  auto get_shoulder(Side side) const -> const QVector3D&;
+
+  auto get_hand(Side side) -> QVector3D&;
+  auto get_hand(Side side) const -> const QVector3D&;
+
+  auto get_elbow(Side side) -> QVector3D&;
+
+  auto compute_right_axis() const -> QVector3D;
+
+  auto compute_outward_dir(Side side) const -> QVector3D;
+};
+
+} // namespace Render::GL

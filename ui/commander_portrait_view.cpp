@@ -24,7 +24,7 @@
 #include "game/units/unit.h"
 #include "render/creature/pipeline/creature_bone_probe.h"
 #include "render/graphics_settings.h"
-#include "render/humanoid/skeleton.h"
+#include "render/humanoid/schema/skeleton_schema.h"
 #include "render/scene_renderer.h"
 #include "scene/camera.h"
 #include "scene/environment_lighting.h"

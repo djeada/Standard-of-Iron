@@ -12,24 +12,33 @@ set(RENDER_CREATURE_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/elephant/prepare.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/elephant/elephant_spec.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/elephant/elephant_manifest.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/humanoid/humanoid_math.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/humanoid/rig.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/humanoid/prepare.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/humanoid/prepare_animation.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/humanoid/prepare_state.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/humanoid/prepare_submission.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/humanoid/soldier_turn_smoothing.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/humanoid/poser.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/humanoid/facial_hair_catalog.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/humanoid/unit_layout_spacing.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/humanoid/style_palette.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/humanoid/pose_controller.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/humanoid/mounted_pose_controller.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/humanoid/pose_primitives.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/humanoid/skeleton.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/humanoid/humanoid_full_builder.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/humanoid/humanoid_spec.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/humanoid/humanoid_manifest.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/humanoid/asset/humanoid_asset_key.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/humanoid/asset/humanoid_capabilities.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/humanoid/asset/humanoid_derived_meshes.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/humanoid/asset/humanoid_asset_prewarmer.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/creature/pipeline/creature_asset_init.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/humanoid/runtime/humanoid_math.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/humanoid/runtime/humanoid_renderer_frames.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/humanoid/runtime/humanoid_renderer.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/humanoid/runtime/animation_runtime.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/humanoid/runtime/runtime_stats_access.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/humanoid/runtime/instance_prepare.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/humanoid/runtime/soldier_turn_smoothing.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/humanoid/runtime/poser.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/humanoid/asset/facial_hair_catalog.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/humanoid/runtime/unit_layout_spacing.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/humanoid/runtime/style_palette.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/humanoid/runtime/pose_controller.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/humanoid/runtime/mounted_pose_controller.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/humanoid/runtime/pose_primitives.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/humanoid/schema/skeleton_schema.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/humanoid/runtime/runtime_context.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/humanoid/runtime/skeleton_evaluator.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/humanoid/runtime/humanoid_pose_diagnostics.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/humanoid/asset/bind_skeleton.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/humanoid/runtime/body_frame_resolver.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/humanoid/asset/humanoid_spec.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/humanoid/asset/humanoid_manifest.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/creature/rigged_mesh_asset.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/creature/rigged_mesh_registry.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/creature/snapshot_mesh_asset.cpp
@@ -39,7 +48,15 @@ set(RENDER_CREATURE_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/creature/primitive_geometry.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/creature/spec.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/creature/combat_visual_state.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/creature/species_manifest.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/creature/schema/creature_runtime_manifest.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/creature/schema/skeleton_schema_hash.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/creature/quadruped/runtime_context.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/creature/assets/creature_asset_prewarmer.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/creature/assets/creature_lod_geometry.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/creature/quadruped/quadruped_asset_key.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/creature/quadruped/quadruped_prepare.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/creature/quadruped/attachment_resolver.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/creature/quadruped/mount_scale.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/creature/runtime_bake_guard.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/creature/quadruped/skeleton_factory.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/creature/quadruped/mesh_graph.cpp

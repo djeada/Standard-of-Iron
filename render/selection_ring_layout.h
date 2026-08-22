@@ -12,8 +12,8 @@
 
 #include "game/core/component.h"
 #include "game/units/spawn_type.h"
-#include "humanoid/soldier_turn_smoothing.h"
-#include "humanoid/unit_layout_spacing.h"
+#include "humanoid/runtime/soldier_turn_smoothing.h"
+#include "humanoid/runtime/unit_layout_spacing.h"
 
 namespace Render::GL {
 

@@ -22,17 +22,7 @@ namespace {
 
 void reset_humanoid_locomotion_state(
     Render::Creature::HumanoidAnimationStateComponent& state) {
-  state.locomotion_last_sample_time = 0.0F;
-  state.locomotion_phase_bias = 0.0F;
-  state.locomotion_cycle_time = 0.0F;
-  state.locomotion_phase = 0.0F;
-  state.filtered_speed = 0.0F;
-  state.filtered_acceleration = 0.0F;
-  state.filtered_turn = 0.0F;
-  state.locomotion_blend = 0.0F;
-  state.run_blend = 0.0F;
-  state.locomotion_state = HumanoidMotionState::Idle;
-  state.locomotion_initialized = false;
+  state.locomotion = {};
 }
 
 void reset_humanoid_animation_state(

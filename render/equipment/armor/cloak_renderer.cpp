@@ -19,7 +19,7 @@
 #include "render/equipment/equipment_submit.h"
 #include "render/gl/primitives.h"
 #include "render/gl/shared_geometry_cache.h"
-#include "render/humanoid/humanoid_spec.h"
+#include "render/humanoid/asset/humanoid_spec.h"
 #include "render/static_attachment_spec.h"
 #include "torso_local_archetype_utils.h"
 
