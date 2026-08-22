@@ -24,18 +24,11 @@ void apply_event_side_effect(Engine::Core::RpgCommanderActionComponent& action,
     action.weapon_trace_active = false;
     break;
   case CombatActionEventType::RecoveryStart:
-    action.action_active = false;
-    action.weapon_trace_active = false;
-    action.cancel_window_active = true;
-    break;
   case CombatActionEventType::CancelWindowStart:
-    action.cancel_window_active = true;
-    break;
   case CombatActionEventType::CancelWindowEnd:
   case CombatActionEventType::ExitSafe:
     action.action_active = false;
     action.weapon_trace_active = false;
-    action.cancel_window_active = false;
     break;
   default:
     break;
@@ -136,8 +129,6 @@ void reset_combat_action_event_runtime(
   action.weapon_trace_active = false;
   action.action_running = true;
   action.action_completed = false;
-  action.cancel_window_active = false;
-  action.input_buffered = false;
   action.hit_target_ids.fill(0U);
   action.hit_target_count = 0U;
   action.last_hit_target_id = 0U;

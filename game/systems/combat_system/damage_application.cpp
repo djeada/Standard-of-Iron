@@ -966,7 +966,8 @@ apply_unit_damage(Engine::Core::World* world,
                   int damage,
                   Engine::Core::EntityID attacker_id,
                   std::optional<QVector3D> contact_point,
-                  std::optional<std::uint16_t> preferred_soldier_slot) {
+                  std::optional<std::uint16_t> preferred_soldier_slot,
+                  float impact_speed) {
   DamageApplicationResult result;
   if (target == nullptr || damage <= 0) {
     return result;
@@ -1052,7 +1053,11 @@ apply_unit_damage(Engine::Core::World* world,
   }
 
   if (unit->health > 0) {
-    apply_hit_feedback(target, attacker_id, world);
+    apply_hit_feedback(target,
+                       attacker_id,
+                       world,
+                       Engine::Core::HitReactionKind::Flinch,
+                       {.contact_point = contact_point, .weapon_speed = impact_speed});
     assign_retaliation_target_if_needed(world, target, attacker);
   }
 
@@ -1173,10 +1178,16 @@ reaction_pauses_swing(Engine::Core::HitReactionKind kind) noexcept -> bool {
 void apply_hit_feedback(Engine::Core::Entity* target,
                         Engine::Core::EntityID attacker_id,
                         Engine::Core::World* world,
-                        Engine::Core::HitReactionKind kind) {
+                        Engine::Core::HitReactionKind kind,
+                        const HitImpulse& impulse) {
   if (target == nullptr) {
     return;
   }
+
+  float const weapon_weight =
+      impulse.weapon_speed > 0.0F
+          ? std::clamp(impulse.weapon_speed / k_reference_weapon_speed, 0.55F, 2.1F)
+          : 1.0F;
 
   auto* feedback = target->get_component<Engine::Core::HitFeedbackComponent>();
   if (feedback == nullptr) {
@@ -1223,15 +1234,22 @@ void apply_hit_feedback(Engine::Core::Entity* target,
           knockback_scale = 2.2F;
           feedback->reaction_intensity = 1.35F;
         }
-        knockback_scale *= reaction_knockback_scale(kind);
+        knockback_scale *= reaction_knockback_scale(kind) * weapon_weight;
+        feedback->reaction_intensity *= weapon_weight;
         if (kind == Engine::Core::HitReactionKind::Stagger) {
           feedback->reaction_intensity = std::max(feedback->reaction_intensity, 1.25F);
         } else if (kind == Engine::Core::HitReactionKind::Recoil) {
           feedback->reaction_intensity = 0.6F;
         }
 
-        float const dx = target_transform->position.x - attacker_transform->position.x;
-        float const dz = target_transform->position.z - attacker_transform->position.z;
+        bool const from_weapon_contact =
+            impulse.contact_point.has_value() && impulse.weapon_speed > 0.0F;
+        float const from_x = from_weapon_contact ? impulse.contact_point->x()
+                                                 : attacker_transform->position.x;
+        float const from_z = from_weapon_contact ? impulse.contact_point->z()
+                                                 : attacker_transform->position.z;
+        float const dx = target_transform->position.x - from_x;
+        float const dz = target_transform->position.z - from_z;
         float const dist = std::sqrt(dx * dx + dz * dz);
         if (dist > 0.001F) {
           feedback->hit_direction_x = dx / dist;

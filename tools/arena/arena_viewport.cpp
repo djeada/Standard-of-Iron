@@ -4111,9 +4111,8 @@ void ArenaViewport::configure_rpg_scenario_commander(Engine::Core::EntityID enti
       Engine::Core::get_or_add_component<Engine::Core::RpgHealthComponent>(entity);
   if (rpg != nullptr) {
     rpg->active = true;
-    rpg->rpg_hp = rpg->rpg_max_hp;
     rpg->crit_chance = 0.0F;
-    rpg->dodge_invincible = false;
+    rpg->dodge_grace_remaining = 0.0F;
   }
   if (auto* guard =
           Engine::Core::get_or_add_component<Engine::Core::CommanderGuardComponent>(
@@ -4189,10 +4188,10 @@ auto ArenaViewport::rpg_bow_hud_state() const -> ArenaViewport::RpgBowHudState {
         targets->aim_candidate_in_range && targets->aim_candidate_id != 0;
     state.hit_confirm = std::clamp(targets->recent_hit_timer / 0.28F, 0.0F, 1.0F);
   }
-  if (auto const* rpg = commander->get_component<Engine::Core::RpgHealthComponent>();
-      rpg != nullptr && rpg->rpg_max_hp > 0) {
+  if (auto const* unit = commander->get_component<Engine::Core::UnitComponent>();
+      unit != nullptr && unit->max_health > 0) {
     state.health_ratio =
-        static_cast<float>(rpg->rpg_hp) / static_cast<float>(rpg->rpg_max_hp);
+        static_cast<float>(unit->health) / static_cast<float>(unit->max_health);
   }
   if (auto const* stamina =
           commander->get_component<Engine::Core::StaminaComponent>()) {
@@ -4238,7 +4237,7 @@ void ArenaViewport::clear_rpg_scenario_state() {
       }
       if (auto* rpg = entity->get_component<Engine::Core::RpgHealthComponent>()) {
         rpg->active = false;
-        rpg->dodge_invincible = false;
+        rpg->dodge_grace_remaining = 0.0F;
       }
       if (auto* guard =
               entity->get_component<Engine::Core::CommanderGuardComponent>()) {
@@ -5149,12 +5148,15 @@ void ArenaViewport::draw_rpg_hud(QPainter& painter) {
   hud_font.setBold(true);
   painter.setFont(hud_font);
 
-  if (rpg != nullptr && rpg->rpg_max_hp > 0) {
-    float const ratio =
-        static_cast<float>(rpg->rpg_hp) / static_cast<float>(rpg->rpg_max_hp);
+  auto const* commander_unit = commander->get_component<Engine::Core::UnitComponent>();
+  if (commander_unit != nullptr && commander_unit->max_health > 0) {
+    float const ratio = static_cast<float>(commander_unit->health) /
+                        static_cast<float>(commander_unit->max_health);
     draw_bar(ratio,
              QColor(196, 62, 54, 225),
-             QStringLiteral("HP  %1 / %2").arg(rpg->rpg_hp).arg(rpg->rpg_max_hp));
+             QStringLiteral("HP  %1 / %2")
+                 .arg(commander_unit->health)
+                 .arg(commander_unit->max_health));
   }
   if (stamina != nullptr && stamina->max_stamina > 0.0F) {
     draw_bar(stamina->get_stamina_ratio(),
@@ -5187,8 +5189,8 @@ void ArenaViewport::draw_rpg_hud(QPainter& painter) {
   if (guard != nullptr && guard->guard_break_remaining > 0.0F) {
     state_parts << QStringLiteral("GUARD-BREAK");
   }
-  if (rpg != nullptr && rpg->dodge_invincible) {
-    state_parts << QStringLiteral("I-FRAMES");
+  if (rpg != nullptr && rpg->dodge_grace_remaining > 0.0F) {
+    state_parts << QStringLiteral("ROLLING");
   }
   if (combat != nullptr &&
       combat->animation_state != Engine::Core::CombatAnimationState::Idle) {

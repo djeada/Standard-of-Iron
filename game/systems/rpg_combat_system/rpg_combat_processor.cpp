@@ -3,13 +3,14 @@
 #include <QVector3D>
 
 #include <algorithm>
+#include <array>
 #include <cmath>
-#include <limits>
 #include <numbers>
 #include <vector>
 
 #include "../../core/component.h"
 #include "../../core/world.h"
+#include "../combat_system/combat_random.h"
 #include "../combat_system/combat_utils.h"
 #include "../command_service.h"
 #include "../formation_combat_geometry.h"
@@ -21,6 +22,21 @@ namespace {
 
 constexpr float k_pi = std::numbers::pi_v<float>;
 constexpr float k_radians_to_degrees = 180.0F / k_pi;
+constexpr float k_degrees_to_radians = k_pi / 180.0F;
+
+constexpr float k_engaged_turn_rate_degrees = 260.0F;
+
+constexpr float k_obstruction_cone_dot = 0.93F;
+constexpr float k_obstruction_distance = 2.4F;
+
+constexpr float k_press_sector_degrees = 46.0F;
+
+constexpr float k_pressure_epoch_seconds = 1.35F;
+
+constexpr float k_waiting_band_near = 2.3F;
+constexpr float k_waiting_band_far = 4.1F;
+
+constexpr float k_goal_hysteresis = 0.65F;
 
 auto signed_angle_degrees(float forward_x,
                           float forward_z,
@@ -37,27 +53,27 @@ auto signed_angle_degrees(float forward_x,
   return std::atan2(cross, dot) * k_radians_to_degrees;
 }
 
-auto slot_is_active(const Engine::Core::RpgEngagementComponent::Slot& slot) -> bool {
-  return slot.role == Engine::Core::RpgEngagementRole::FrontAttacker ||
-         slot.role == Engine::Core::RpgEngagementRole::LeftThreat ||
-         slot.role == Engine::Core::RpgEngagementRole::RightThreat;
-}
-
-void issue_scripted_position_goal(Engine::Core::World& world,
-                                  Engine::Core::EntityID entity_id,
-                                  const QVector3D& target) {
-  auto* entity = world.get_entity(entity_id);
-  auto* transform = entity != nullptr
-                        ? entity->get_component<Engine::Core::TransformComponent>()
-                        : nullptr;
-  if (transform == nullptr) {
+void issue_local_move(Engine::Core::World& world,
+                      Engine::Core::EntityID entity_id,
+                      const Engine::Core::TransformComponent& transform,
+                      const QVector3D& target) {
+  float const dx = target.x() - transform.position.x;
+  float const dz = target.z() - transform.position.z;
+  if ((dx * dx) + (dz * dz) <= 0.04F) {
     return;
   }
 
-  float const dx = target.x() - transform->position.x;
-  float const dz = target.z() - transform->position.z;
-  if (dx * dx + dz * dz <= 0.04F) {
-    return;
+  auto* entity = world.get_entity(entity_id);
+  auto const* movement = entity != nullptr
+                             ? entity->get_component<Engine::Core::MovementComponent>()
+                             : nullptr;
+  if (movement != nullptr && movement->get_has_target()) {
+    float const goal_dx = movement->get_goal_x() - target.x();
+    float const goal_dz = movement->get_goal_y() - target.z();
+    if ((goal_dx * goal_dx) + (goal_dz * goal_dz) <
+        k_goal_hysteresis * k_goal_hysteresis) {
+      return;
+    }
   }
 
   CommandService::MoveOptions options;
@@ -65,8 +81,23 @@ void issue_scripted_position_goal(Engine::Core::World& world,
   CommandService::move_unit(world, entity_id, target, options);
 }
 
-constexpr float k_engage_edge_margin = 0.15F;
-constexpr float k_min_engage_distance = 1.2F;
+void turn_body_toward(Engine::Core::TransformComponent& transform,
+                      float target_yaw_degrees,
+                      float delta_time) {
+  float const current =
+      transform.has_desired_yaw ? transform.desired_yaw : transform.rotation.y;
+  float gap = std::fmod((target_yaw_degrees - current + 540.0F), 360.0F) - 180.0F;
+  float const step = std::clamp(gap,
+                                -k_engaged_turn_rate_degrees * delta_time,
+                                k_engaged_turn_rate_degrees * delta_time);
+  transform.desired_yaw = current + step;
+  transform.has_desired_yaw = true;
+}
+
+struct EngagedFighter {
+  float x{0.0F};
+  float z{0.0F};
+};
 
 } // namespace
 
@@ -75,8 +106,9 @@ auto ideal_engage_distance(const Engine::Core::Entity& attacker,
   auto const* attack = attacker.get_component<Engine::Core::AttackComponent>();
   float const reach = attack != nullptr ? attack->melee_range
                                         : Engine::Core::Defaults::k_attack_melee_range;
-  float const strike_range = reach + Game::Systems::Combat::combat_radius(&commander);
-  return std::max(strike_range - k_engage_edge_margin, k_min_engage_distance);
+
+  return std::max(reach + Game::Systems::Combat::combat_radius(&commander) - 0.15F,
+                  1.2F);
 }
 
 void refresh_commander_engagement(Engine::Core::World* world,
@@ -105,23 +137,24 @@ void refresh_commander_engagement(Engine::Core::World* world,
     return;
   }
 
-  Engine::Core::EntityID const previous_front = engagement->front_attacker_id;
-  Engine::Core::EntityID const previous_left = engagement->left_threat_id;
-  Engine::Core::EntityID const previous_right = engagement->right_threat_id;
+  std::vector<Engine::Core::EntityID> previously_pressing;
+  previously_pressing.reserve(engagement->engagement_slots.size());
+  for (auto const& slot : engagement->engagement_slots) {
+    if (slot.pressing) {
+      previously_pressing.push_back(slot.entity_id);
+    }
+  }
 
   engagement->engagement_slots.clear();
-  engagement->front_attacker_id = 0;
-  engagement->left_threat_id = 0;
-  engagement->right_threat_id = 0;
-  engagement->active_attackers = 0;
   engagement->fight_context = Engine::Core::FightContext::None;
 
-  float const yaw_radians = commander_transform->rotation.y * (k_pi / 180.0F);
+  float const yaw_radians = commander_transform->rotation.y * k_degrees_to_radians;
   float const forward_x = std::sin(yaw_radians);
   float const forward_z = std::cos(yaw_radians);
   float const radius_sq = engagement->ring_radius * engagement->ring_radius;
   auto& owners = Game::Systems::OwnerRegistry::instance();
 
+  std::vector<EngagedFighter> fighters;
   bool has_formation_opponent = false;
   for (auto [candidate_ref, unit_ref, transform_ref] :
        world->entity_view<Engine::Core::UnitComponent,
@@ -140,7 +173,7 @@ void refresh_commander_engagement(Engine::Core::World* world,
 
     float const dx = transform->position.x - commander_transform->position.x;
     float const dz = transform->position.z - commander_transform->position.z;
-    float const dist_sq = dx * dx + dz * dz;
+    float const dist_sq = (dx * dx) + (dz * dz);
     if (dist_sq <= 0.0001F || dist_sq > radius_sq) {
       continue;
     }
@@ -150,96 +183,107 @@ void refresh_commander_engagement(Engine::Core::World* world,
     slot.distance = std::sqrt(dist_sq);
     slot.signed_angle_degrees = signed_angle_degrees(forward_x, forward_z, dx, dz);
     engagement->engagement_slots.push_back(slot);
+    fighters.push_back({.x = transform->position.x, .z = transform->position.z});
 
     if (!has_formation_opponent && FormationCombat::has_formation_slots(*candidate)) {
       has_formation_opponent = true;
     }
   }
 
-  if (!engagement->engagement_slots.empty()) {
-    engagement->fight_context = has_formation_opponent
-                                    ? Engine::Core::FightContext::Skirmish
-                                    : Engine::Core::FightContext::Duel;
+  if (engagement->engagement_slots.empty()) {
+    return;
+  }
+
+  engagement->fight_context = has_formation_opponent
+                                  ? Engine::Core::FightContext::Skirmish
+                                  : Engine::Core::FightContext::Duel;
+
+  float const commander_x = commander_transform->position.x;
+  float const commander_z = commander_transform->position.z;
+  for (std::size_t i = 0; i < engagement->engagement_slots.size(); ++i) {
+    auto& slot = engagement->engagement_slots[i];
+    float const to_commander_x = commander_x - fighters[i].x;
+    float const to_commander_z = commander_z - fighters[i].z;
+    float const to_commander_len =
+        std::max(0.0001F, std::hypot(to_commander_x, to_commander_z));
+    float const dir_x = to_commander_x / to_commander_len;
+    float const dir_z = to_commander_z / to_commander_len;
+
+    for (std::size_t other = 0; other < fighters.size(); ++other) {
+      if (other == i) {
+        continue;
+      }
+      float const other_x = fighters[other].x - fighters[i].x;
+      float const other_z = fighters[other].z - fighters[i].z;
+      float const other_len = std::hypot(other_x, other_z);
+      if (other_len <= 0.0001F || other_len > k_obstruction_distance ||
+          other_len > to_commander_len) {
+        continue;
+      }
+      float const alignment =
+          ((dir_x * other_x) + (dir_z * other_z)) / std::max(other_len, 0.0001F);
+      if (alignment >= k_obstruction_cone_dot) {
+        slot.obstructed = true;
+        break;
+      }
+    }
+  }
+
+  auto const epoch =
+      static_cast<std::uint32_t>(engagement->pressure_clock / k_pressure_epoch_seconds);
+  std::vector<std::size_t> order;
+  order.reserve(engagement->engagement_slots.size());
+  std::vector<float> scores(engagement->engagement_slots.size(), 0.0F);
+  for (std::size_t i = 0; i < engagement->engagement_slots.size(); ++i) {
+    auto const& slot = engagement->engagement_slots[i];
+    if (slot.obstructed) {
+      continue;
+    }
+    float score = slot.distance + (std::abs(slot.signed_angle_degrees) * 0.008F);
+    score += Game::Systems::Combat::deterministic_unit_roll(
+                 static_cast<std::uint32_t>(slot.entity_id), epoch) *
+             1.1F;
+    if (std::find(previously_pressing.begin(),
+                  previously_pressing.end(),
+                  slot.entity_id) != previously_pressing.end()) {
+      score -= 0.55F;
+    }
+    scores[i] = score;
+    order.push_back(i);
+  }
+  std::sort(order.begin(), order.end(), [&scores](std::size_t lhs, std::size_t rhs) {
+    return scores[lhs] < scores[rhs];
+  });
+
+  int const crowd = static_cast<int>(engagement->engagement_slots.size());
+  int const capacity = std::clamp(1 + (crowd / 3), 1, 4);
+  std::vector<float> taken_bearings;
+  taken_bearings.reserve(static_cast<std::size_t>(capacity));
+  for (std::size_t const index : order) {
+    if (static_cast<int>(taken_bearings.size()) >= capacity) {
+      break;
+    }
+    auto& slot = engagement->engagement_slots[index];
+    bool sector_taken = false;
+    for (float const bearing : taken_bearings) {
+      float gap = std::fmod(slot.signed_angle_degrees - bearing + 540.0F, 360.0F);
+      gap -= 180.0F;
+      if (std::abs(gap) < k_press_sector_degrees) {
+        sector_taken = true;
+        break;
+      }
+    }
+    if (sector_taken) {
+      continue;
+    }
+    slot.pressing = true;
+    taken_bearings.push_back(slot.signed_angle_degrees);
   }
 
   std::sort(
       engagement->engagement_slots.begin(),
       engagement->engagement_slots.end(),
       [](const auto& lhs, const auto& rhs) { return lhs.distance < rhs.distance; });
-
-  auto choose_best = [&](auto predicate) -> Engine::Core::EntityID {
-    float best_score = std::numeric_limits<float>::infinity();
-    Engine::Core::EntityID best_id = 0;
-    for (auto const& slot : engagement->engagement_slots) {
-      if (slot_is_active(slot) || !predicate(slot)) {
-        continue;
-      }
-      float const score = slot.distance + std::abs(slot.signed_angle_degrees) * 0.025F;
-      if (score < best_score) {
-        best_score = score;
-        best_id = slot.entity_id;
-      }
-    }
-    return best_id;
-  };
-
-  auto keep_incumbent = [&](Engine::Core::EntityID incumbent,
-                            auto still_in_sector) -> Engine::Core::EntityID {
-    if (incumbent == 0) {
-      return 0;
-    }
-    for (auto const& slot : engagement->engagement_slots) {
-      if (slot.entity_id == incumbent) {
-        return !slot_is_active(slot) && still_in_sector(slot) ? incumbent : 0;
-      }
-    }
-    return 0;
-  };
-
-  auto assign_role = [&](Engine::Core::EntityID id,
-                         Engine::Core::RpgEngagementRole role) {
-    if (id == 0) {
-      return;
-    }
-    for (auto& slot : engagement->engagement_slots) {
-      if (slot.entity_id == id) {
-        slot.role = role;
-        ++engagement->active_attackers;
-        return;
-      }
-    }
-  };
-
-  engagement->front_attacker_id = keep_incumbent(previous_front, [](const auto& slot) {
-    return std::abs(slot.signed_angle_degrees) <= 80.0F;
-  });
-  if (engagement->front_attacker_id == 0) {
-    engagement->front_attacker_id = choose_best(
-        [](const auto& slot) { return std::abs(slot.signed_angle_degrees) <= 65.0F; });
-  }
-  assign_role(engagement->front_attacker_id,
-              Engine::Core::RpgEngagementRole::FrontAttacker);
-
-  engagement->left_threat_id = keep_incumbent(previous_left, [](const auto& slot) {
-    return slot.signed_angle_degrees < -20.0F && slot.signed_angle_degrees >= -145.0F;
-  });
-  if (engagement->left_threat_id == 0) {
-    engagement->left_threat_id = choose_best([](const auto& slot) {
-      return slot.signed_angle_degrees < -30.0F && slot.signed_angle_degrees >= -135.0F;
-    });
-  }
-  assign_role(engagement->left_threat_id, Engine::Core::RpgEngagementRole::LeftThreat);
-
-  engagement->right_threat_id = keep_incumbent(previous_right, [](const auto& slot) {
-    return slot.signed_angle_degrees > 20.0F && slot.signed_angle_degrees <= 145.0F;
-  });
-  if (engagement->right_threat_id == 0) {
-    engagement->right_threat_id = choose_best([](const auto& slot) {
-      return slot.signed_angle_degrees > 30.0F && slot.signed_angle_degrees <= 135.0F;
-    });
-  }
-  assign_role(engagement->right_threat_id,
-              Engine::Core::RpgEngagementRole::RightThreat);
 }
 
 void tick_rpg_combat(Engine::Core::World* world,
@@ -247,6 +291,13 @@ void tick_rpg_combat(Engine::Core::World* world,
                      float dt) {
   if (world == nullptr || commander_id == 0) {
     return;
+  }
+
+  if (auto* commander = world->get_entity(commander_id); commander != nullptr) {
+    if (auto* engagement =
+            commander->get_component<Engine::Core::RpgEngagementComponent>()) {
+      engagement->pressure_clock += dt;
+    }
   }
 
   refresh_commander_engagement(world, commander_id);
@@ -299,49 +350,8 @@ void tick_rpg_combat(Engine::Core::World* world,
     return;
   }
 
-  auto* rpg = entity->get_component<Engine::Core::RpgHealthComponent>();
-  auto* unit = entity->get_component<Engine::Core::UnitComponent>();
-  if (rpg != nullptr && rpg->active && rpg->rpg_hp > 0 && unit != nullptr &&
-      unit->health <= 0) {
-    unit->health = 1;
-  }
-
   for (const Engine::Core::EntityID entity_id : recovered) {
     world->remove<Engine::Core::StaggerComponent>(entity_id);
-  }
-
-  for (auto [telegraph_id, telegraph_ref] :
-       world->view<Engine::Core::EnemyTelegraphComponent>()) {
-    (void)telegraph_id;
-    auto* telegraph = &telegraph_ref;
-    if (telegraph->phase == Engine::Core::EnemyTelegraphPhase::None) {
-      continue;
-    }
-    telegraph->phase_time += dt;
-    switch (telegraph->phase) {
-    case Engine::Core::EnemyTelegraphPhase::WindUp:
-      telegraph->visual_tell_active = true;
-      if (telegraph->phase_time >= telegraph->wind_up_duration) {
-        telegraph->phase = Engine::Core::EnemyTelegraphPhase::Active;
-        telegraph->phase_time = 0.0F;
-      }
-      break;
-    case Engine::Core::EnemyTelegraphPhase::Active:
-      telegraph->visual_tell_active = false;
-      if (telegraph->phase_time >= telegraph->active_duration) {
-        telegraph->phase = Engine::Core::EnemyTelegraphPhase::Recovery;
-        telegraph->phase_time = 0.0F;
-      }
-      break;
-    case Engine::Core::EnemyTelegraphPhase::Recovery:
-      if (telegraph->phase_time >= telegraph->recovery_duration) {
-        telegraph->phase = Engine::Core::EnemyTelegraphPhase::None;
-        telegraph->phase_time = 0.0F;
-      }
-      break;
-    case Engine::Core::EnemyTelegraphPhase::None:
-      break;
-    }
   }
 
   auto* engagement = entity->get_component<Engine::Core::RpgEngagementComponent>();
@@ -353,9 +363,27 @@ void tick_rpg_combat(Engine::Core::World* world,
   const float cmd_x = cmd_transform->position.x;
   const float cmd_z = cmd_transform->position.z;
 
-  constexpr float k_circle_speed = 1.4F;
+  std::vector<QVector3D> fighter_positions;
+  fighter_positions.reserve(engagement->engagement_slots.size());
+  for (auto const& slot : engagement->engagement_slots) {
+    auto const* fighter = world->get_entity(slot.entity_id);
+    auto const* fighter_tf =
+        fighter != nullptr ? fighter->get_component<Engine::Core::TransformComponent>()
+                           : nullptr;
+    fighter_positions.emplace_back(
+        fighter_tf != nullptr ? fighter_tf->position.x : cmd_x,
+        0.0F,
+        fighter_tf != nullptr ? fighter_tf->position.z : cmd_z);
+  }
 
+  float const commander_forward_x =
+      std::sin(cmd_transform->rotation.y * k_degrees_to_radians);
+  float const commander_forward_z =
+      std::cos(cmd_transform->rotation.y * k_degrees_to_radians);
+
+  std::size_t slot_index = 0;
   for (auto& slot : engagement->engagement_slots) {
+    std::size_t const own_index = slot_index++;
     auto* enemy = world->get_entity(slot.entity_id);
     if (enemy == nullptr) {
       continue;
@@ -377,7 +405,7 @@ void tick_rpg_combat(Engine::Core::World* world,
 
     float dx = enemy_tf->position.x - cmd_x;
     float const dz = enemy_tf->position.z - cmd_z;
-    float dist = std::sqrt(dx * dx + dz * dz);
+    float dist = std::sqrt((dx * dx) + (dz * dz));
     if (dist < 0.001F) {
       dist = 0.001F;
       dx = 0.001F;
@@ -385,31 +413,55 @@ void tick_rpg_combat(Engine::Core::World* world,
 
     float const nx = dx / dist;
     float const nz = dz / dist;
-    bool const is_active_attacker = slot_is_active(slot);
-    float const face_angle = std::atan2(-dx, -dz) * k_radians_to_degrees;
 
-    if (is_active_attacker) {
+    if (slot.pressing) {
+
       float const engage_distance = ideal_engage_distance(*enemy, *entity);
-      if (dist > engage_distance + 0.5F || dist < engage_distance - 0.3F) {
-        issue_scripted_position_goal(*world,
-                                     enemy->get_id(),
-                                     QVector3D(cmd_x + nx * engage_distance,
-                                               0.0F,
-                                               cmd_z + nz * engage_distance));
+      if (dist > engage_distance + 0.35F) {
+        issue_local_move(*world,
+                         enemy->get_id(),
+                         *enemy_tf,
+                         QVector3D(cmd_x + (nx * engage_distance * 0.55F),
+                                   0.0F,
+                                   cmd_z + (nz * engage_distance * 0.55F)));
       }
     } else {
-      constexpr float k_support_ring = 4.5F;
-      float const circle_dir = (slot.signed_angle_degrees >= 0.0F) ? 1.0F : -1.0F;
-      float const angle = std::atan2(dz, dx) + circle_dir * k_circle_speed * dt;
-      issue_scripted_position_goal(*world,
-                                   enemy->get_id(),
-                                   QVector3D(cmd_x + std::cos(angle) * k_support_ring,
-                                             0.0F,
-                                             cmd_z + std::sin(angle) * k_support_ring));
+
+      constexpr std::array<float, 5> k_probe_degrees = {
+          0.0F, 27.0F, -27.0F, 58.0F, -58.0F};
+      float const own_bearing = std::atan2(dx, dz);
+      float best_score = -1.0e9F;
+      QVector3D best_goal(enemy_tf->position.x, 0.0F, enemy_tf->position.z);
+      float const band_target =
+          std::clamp(dist, k_waiting_band_near, k_waiting_band_far);
+      for (float const probe : k_probe_degrees) {
+        float const bearing = own_bearing + (probe * k_degrees_to_radians);
+        float const goal_x = cmd_x + (std::sin(bearing) * band_target);
+        float const goal_z = cmd_z + (std::cos(bearing) * band_target);
+
+        float clearance = 0.0F;
+        for (std::size_t other = 0; other < fighter_positions.size(); ++other) {
+          if (other == own_index) {
+            continue;
+          }
+          float const gap = std::hypot(fighter_positions[other].x() - goal_x,
+                                       fighter_positions[other].z() - goal_z);
+          clearance += std::min(gap, 3.0F);
+        }
+
+        float const commander_facing = std::abs(signed_angle_degrees(
+            commander_forward_x, commander_forward_z, goal_x - cmd_x, goal_z - cmd_z));
+        float const score =
+            clearance + (commander_facing * 0.012F) - (std::abs(probe) * 0.006F);
+        if (score > best_score) {
+          best_score = score;
+          best_goal = QVector3D(goal_x, 0.0F, goal_z);
+        }
+      }
+      issue_local_move(*world, enemy->get_id(), *enemy_tf, best_goal);
     }
 
-    enemy_tf->desired_yaw = face_angle;
-    enemy_tf->has_desired_yaw = true;
+    turn_body_toward(*enemy_tf, std::atan2(-dx, -dz) * k_radians_to_degrees, dt);
   }
 }
 

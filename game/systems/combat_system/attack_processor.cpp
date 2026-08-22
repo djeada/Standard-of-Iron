@@ -28,7 +28,6 @@
 #include "../rpg_combat_system/rpg_commander_damage.h"
 #include "../rpg_combat_system/rpg_targeting.h"
 #include "../troop_profile_service.h"
-#include "combat_animation_timing.h"
 #include "combat_mode_processor.h"
 #include "combat_random.h"
 #include "combat_types.h"
@@ -87,8 +86,8 @@ auto commander_attack_advance_scale(const Engine::Core::Entity* attacker) noexce
   return commander->combo_step >= 3 ? 1.55F : 1.22F;
 }
 
-auto melee_strike_blocked_by_commander_ring(Engine::Core::Entity* attacker,
-                                            Engine::Core::Entity* target) -> bool {
+auto melee_strike_has_no_room(Engine::Core::Entity* attacker,
+                              Engine::Core::Entity* target) -> bool {
   if (attacker == nullptr || target == nullptr) {
     return false;
   }
@@ -98,13 +97,10 @@ auto melee_strike_blocked_by_commander_ring(Engine::Core::Entity* attacker,
   }
   auto const* engagement =
       target->get_component<Engine::Core::RpgEngagementComponent>();
-  if (engagement == nullptr || engagement->active_attackers <= 0) {
+  if (engagement == nullptr || engagement->engagement_slots.empty()) {
     return false;
   }
-  auto const attacker_id = attacker->get_id();
-  return attacker_id != engagement->front_attacker_id &&
-         attacker_id != engagement->left_threat_id &&
-         attacker_id != engagement->right_threat_id;
+  return !engagement->is_pressing(attacker->get_id());
 }
 
 void begin_attack_animation(Engine::Core::Entity* attacker,
@@ -124,29 +120,10 @@ void begin_attack_animation(Engine::Core::Entity* attacker,
       combat_state->animation_state == Engine::Core::CombatAnimationState::Idle) {
     combat_state->animation_state = Engine::Core::CombatAnimationState::Advance;
     combat_state->state_time = 0.0F;
-    {
-      auto const* commander =
-          attacker->get_component<Engine::Core::CommanderComponent>();
-      bool const is_fpv = (commander != nullptr && commander->fpv_controlled);
-      if (is_fpv) {
 
-        combat_state->swing_duration_scale = 1.0F;
-        combat_state->state_duration =
-            Engine::Core::CombatStateComponent::k_advance_duration *
-            commander_attack_advance_scale(attacker);
-      } else {
-
-        float scale = 1.0F;
-        if (attack != nullptr &&
-            attack->current_mode == Engine::Core::AttackComponent::CombatMode::Melee) {
-          scale = Engine::Core::CombatStateComponent::cooldown_fit_scale(
-              attack->get_current_cooldown());
-        }
-        combat_state->swing_duration_scale = scale;
-        combat_state->state_duration =
-            Engine::Core::CombatStateComponent::k_advance_duration * scale;
-      }
-    }
+    combat_state->state_duration =
+        Engine::Core::CombatStateComponent::k_advance_duration *
+        commander_attack_advance_scale(attacker);
     if (unit != nullptr && attack != nullptr) {
       combat_state->attack_family = Engine::Core::resolve_combat_attack_family(
           unit->spawn_type, attack->current_mode);
@@ -1128,8 +1105,7 @@ auto claim_commander_signature(Engine::Core::Entity* attacker, int& damage)
 
 void begin_rts_melee_action(Engine::Core::Entity* attacker,
                             Engine::Core::Entity* target,
-                            int damage,
-                            float duration) {
+                            int damage) {
   auto* unit = attacker->get_component<Engine::Core::UnitComponent>();
   auto* action =
       Engine::Core::get_or_add_component<Engine::Core::RpgCommanderActionComponent>(
@@ -1156,7 +1132,10 @@ void begin_rts_melee_action(Engine::Core::Entity* attacker,
   action->active_target_soldier_slot =
       Engine::Core::RpgCommanderTargetComponent::k_no_soldier_slot;
   action->requested_damage = damage;
-  action->action_duration = std::max(0.001F, duration);
+  auto const* definition =
+      Game::Systems::CombatActions::find_combat_action_definition(id);
+  action->action_duration =
+      definition != nullptr ? std::max(0.001F, definition->duration_seconds) : 1.0F;
   action->melee_attack_sequence =
       static_cast<std::uint8_t>((action->melee_attack_sequence + 1U) % 250U);
 
@@ -1174,24 +1153,16 @@ void begin_rts_melee_action(Engine::Core::Entity* attacker,
   Game::Systems::CombatActions::reset_combat_action_event_runtime(*action);
 }
 
-struct MeleeSwingCadence {
-  float action_duration{0.0F};
-  float accumulator_reset{0.0F};
-};
-
 auto resolve_melee_swing_cadence(Engine::Core::Entity* attacker,
                                  Engine::Core::Entity* target,
-                                 float cooldown) -> MeleeSwingCadence {
-  MeleeSwingCadence cadence;
-  cadence.action_duration = cooldown;
+                                 float cooldown) -> float {
   float const base_delay =
       deterministic_attack_delay(attacker->get_id(), target->get_id(), cooldown);
-  cadence.accumulator_reset = -base_delay;
   auto const* action =
       attacker->get_component<Engine::Core::RpgCommanderActionComponent>();
   if (action == nullptr || attacker->has_component<Engine::Core::ElephantComponent>() ||
       !melee_target_can_defend(attacker, target)) {
-    return cadence;
+    return -base_delay;
   }
 
   auto const next_beat = resolve_melee_exchange_beat(
@@ -1201,9 +1172,7 @@ auto resolve_melee_swing_cadence(Engine::Core::Entity* attacker,
       true);
   float const interval = cooldown * next_beat.interval_weight;
   float const delay = base_delay * next_beat.delay_weight;
-  cadence.accumulator_reset = cooldown - interval - delay;
-  cadence.action_duration = std::clamp(interval + delay, 0.05F, cooldown);
-  return cadence;
+  return cooldown - interval - delay;
 }
 
 void begin_rts_bow_action(Engine::Core::Entity* attacker,
@@ -1676,7 +1645,7 @@ void process_attacks(Engine::Core::World* world,
           attacker_atk->current_mode ==
               Engine::Core::AttackComponent::CombatMode::Melee) {
 
-        if (melee_strike_blocked_by_commander_ring(attacker, best_target)) {
+        if (melee_strike_has_no_room(attacker, best_target)) {
           continue;
         }
 
@@ -1716,7 +1685,7 @@ void process_attacks(Engine::Core::World* world,
       } else if (should_show_arrow_vfx && ranged_unit && projectile_sys != nullptr) {
         spawn_rts_arrow_volley(attacker, best_target, projectile_sys, damage);
       } else if (defer_melee_strike) {
-        begin_rts_melee_action(attacker, best_target, damage, cooldown);
+        begin_rts_melee_action(attacker, best_target, damage);
       } else {
         if (Game::Systems::CombatRules::uses_rpg_combat_rules(best_target)) {
           Game::Systems::RpgCombat::deal_damage_to_rpg_commander(
@@ -1726,14 +1695,7 @@ void process_attacks(Engine::Core::World* world,
         }
       }
       if (defer_melee_strike) {
-        auto const cadence =
-            resolve_melee_swing_cadence(attacker, best_target, cooldown);
-        if (auto* action =
-                attacker->get_component<Engine::Core::RpgCommanderActionComponent>();
-            action != nullptr) {
-          action->action_duration = std::max(0.001F, cadence.action_duration);
-        }
-        *t_accum = cadence.accumulator_reset;
+        *t_accum = resolve_melee_swing_cadence(attacker, best_target, cooldown);
       } else {
         *t_accum = -deterministic_attack_delay(
             attacker->get_id(), best_target->get_id(), cooldown);

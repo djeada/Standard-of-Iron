@@ -442,7 +442,7 @@ struct ArenaScenarioRunner::Impl {
     bool commander_aura_buffed{false};
     int rpg_health{-1};
     bool rpg_guard_active{false};
-    bool rpg_dodge_invincible{false};
+    bool rpg_dodge_grace{false};
     Engine::Core::EntityID rpg_aim_target_id{0};
     int rpg_aim_soldier_slot{-1};
     int rpg_action_phase{0};
@@ -1882,15 +1882,17 @@ struct ArenaScenarioRunner::Impl {
     }
     if (auto const* rpg = entity->get_component<Engine::Core::RpgHealthComponent>();
         rpg != nullptr && rpg->active) {
+      auto const* rpg_unit = entity->get_component<Engine::Core::UnitComponent>();
+      int const health = rpg_unit != nullptr ? rpg_unit->health : 0;
       if (!initial_rpg_health_by_group.contains(group)) {
-        initial_rpg_health_by_group[group] = rpg->rpg_hp;
-        minimum_rpg_health_by_group[group] = rpg->rpg_hp;
+        initial_rpg_health_by_group[group] = health;
+        minimum_rpg_health_by_group[group] = health;
       } else if (rpg_health_protection_active(group)) {
 
         minimum_rpg_health_by_group[group] =
-            std::min(minimum_rpg_health_by_group.value(group), rpg->rpg_hp);
+            std::min(minimum_rpg_health_by_group.value(group), health);
       }
-      if (rpg->dodge_invincible) {
+      if (rpg->dodge_grace_remaining > 0.0F) {
         rpg_dodge_window_seen[group] = true;
       }
     }
@@ -2084,7 +2086,10 @@ struct ArenaScenarioRunner::Impl {
          }(),
          [&]() {
            auto const* rpg = entity->get_component<Engine::Core::RpgHealthComponent>();
-           return rpg != nullptr && rpg->active ? rpg->rpg_hp : -1;
+           auto const* rpg_unit = entity->get_component<Engine::Core::UnitComponent>();
+           return rpg != nullptr && rpg->active && rpg_unit != nullptr
+                      ? rpg_unit->health
+                      : -1;
          }(),
          [&]() {
            auto const* guard =
@@ -2093,7 +2098,7 @@ struct ArenaScenarioRunner::Impl {
          }(),
          [&]() {
            auto const* rpg = entity->get_component<Engine::Core::RpgHealthComponent>();
-           return rpg != nullptr && rpg->active && rpg->dodge_invincible;
+           return rpg != nullptr && rpg->active && rpg->dodge_grace_remaining > 0.0F;
          }(),
          [&]() {
            auto const* targets =
@@ -4201,10 +4206,13 @@ auto ArenaScenarioRunner::start() -> bool {
                         commander_id);
       return false;
     }
+    auto const* commander_unit =
+        commander->get_component<Engine::Core::UnitComponent>();
+    int const commander_health = commander_unit != nullptr ? commander_unit->health : 0;
     m_impl->initial_rpg_health_by_group[m_impl->scenario.rpg_commander_group] =
-        rpg->rpg_hp;
+        commander_health;
     m_impl->minimum_rpg_health_by_group[m_impl->scenario.rpg_commander_group] =
-        rpg->rpg_hp;
+        commander_health;
   }
   for (auto* entity :
        m_impl->world.collect_entities_with<Engine::Core::BuildingComponent>()) {
@@ -4525,7 +4533,7 @@ auto ArenaScenarioRunner::write_artifacts(const QString& directory,
           {QStringLiteral("commander_aura_buffed"), unit.commander_aura_buffed},
           {QStringLiteral("rpg_health"), unit.rpg_health},
           {QStringLiteral("rpg_guard_active"), unit.rpg_guard_active},
-          {QStringLiteral("rpg_dodge_invincible"), unit.rpg_dodge_invincible},
+          {QStringLiteral("rpg_dodge_grace"), unit.rpg_dodge_grace},
           {QStringLiteral("rpg_aim_target_id"),
            static_cast<qint64>(unit.rpg_aim_target_id)},
           {QStringLiteral("rpg_aim_soldier_slot"), unit.rpg_aim_soldier_slot},

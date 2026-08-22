@@ -449,4 +449,59 @@ auto authored_phase_duration(const CombatActionDefinition& definition,
   return std::max(span, k_min_phase_span) * definition.duration_seconds;
 }
 
+auto melee_interruption_at(const CombatActionDefinition& definition,
+                           float normalized_time) noexcept -> MeleeInterruption {
+  float const windup = action_event_normalized_time(
+      definition, CombatActionEventType::WindupStart, 0.08F);
+  float const active = action_event_normalized_time(
+      definition, CombatActionEventType::ActiveStart, 0.35F);
+  float const strike = action_event_normalized_time(
+      definition, CombatActionEventType::WeaponTraceStart, active);
+  float const strike_end = action_event_normalized_time(
+      definition, CombatActionEventType::WeaponTraceEnd, strike);
+  float const recovery = action_event_normalized_time(
+      definition, CombatActionEventType::RecoveryStart, 0.75F);
+  float const exit_safe =
+      action_event_normalized_time(definition, CombatActionEventType::ExitSafe, 0.92F);
+
+  float const t = std::clamp(normalized_time, 0.0F, 1.0F);
+  if (t >= exit_safe) {
+    return {.phase = MeleePhase::Ready};
+  }
+
+  if (t < strike) {
+
+    return {.phase = t < windup ? MeleePhase::Ready : MeleePhase::Windup,
+            .accepts_attack = true,
+            .accepts_guard = true,
+            .accepts_dodge = true,
+            .redirect_authority = 1.0F};
+  }
+
+  float const recall_end = strike + ((strike_end - strike) * k_melee_recall_share);
+  if (t < recall_end) {
+
+    return {.phase = MeleePhase::EarlyStrike,
+            .accepts_attack = false,
+            .accepts_guard = false,
+            .accepts_dodge = true,
+            .redirect_authority = 0.35F};
+  }
+
+  if (t < strike_end) {
+    return {.phase = MeleePhase::CommittedStrike,
+            .accepts_attack = false,
+            .accepts_guard = false,
+            .accepts_dodge = false,
+            .redirect_authority = 0.0F};
+  }
+
+  bool const settled = t >= recovery;
+  return {.phase = MeleePhase::FollowThrough,
+          .accepts_attack = settled,
+          .accepts_guard = settled,
+          .accepts_dodge = true,
+          .redirect_authority = 0.0F};
+}
+
 } // namespace Game::Systems::CombatActions
