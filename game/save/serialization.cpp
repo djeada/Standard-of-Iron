@@ -268,8 +268,7 @@ auto Serialization::serialize_entity(const Entity* entity) -> QJsonObject {
 
   if (const auto* rpg = entity->get_component<RpgHealthComponent>()) {
     QJsonObject rpg_obj;
-    rpg_obj["rpg_hp"] = rpg->rpg_hp;
-    rpg_obj["rpg_max_hp"] = rpg->rpg_max_hp;
+    rpg_obj["incoming_damage_scale"] = static_cast<double>(rpg->incoming_damage_scale);
     rpg_obj["armor"] = static_cast<double>(rpg->armor);
     rpg_obj["crit_chance"] = static_cast<double>(rpg->crit_chance);
     rpg_obj["crit_multiplier"] = static_cast<double>(rpg->crit_multiplier);
@@ -575,8 +574,6 @@ auto Serialization::serialize_entity(const Entity* entity) -> QJsonObject {
     combat_state_obj["state_time"] = static_cast<double>(combat_state->state_time);
     combat_state_obj["state_duration"] =
         static_cast<double>(combat_state->state_duration);
-    combat_state_obj["swing_duration_scale"] =
-        static_cast<double>(combat_state->swing_duration_scale);
     combat_state_obj["attack_offset"] =
         static_cast<double>(combat_state->attack_offset);
     combat_state_obj["attack_variant"] = static_cast<int>(combat_state->attack_variant);
@@ -1083,8 +1080,8 @@ void Serialization::deserialize_entity(Entity* entity, const QJsonObject& json) 
   if (json.contains("rpg_health")) {
     const auto rpg_obj = json["rpg_health"].toObject();
     auto* rpg = entity->add_component<RpgHealthComponent>();
-    rpg->rpg_hp = rpg_obj["rpg_hp"].toInt(rpg->rpg_hp);
-    rpg->rpg_max_hp = rpg_obj["rpg_max_hp"].toInt(rpg->rpg_max_hp);
+    rpg->incoming_damage_scale = static_cast<float>(
+        rpg_obj["incoming_damage_scale"].toDouble(rpg->incoming_damage_scale));
     rpg->armor = static_cast<float>(rpg_obj["armor"].toDouble(rpg->armor));
     rpg->crit_chance =
         static_cast<float>(rpg_obj["crit_chance"].toDouble(rpg->crit_chance));
@@ -1490,8 +1487,6 @@ void Serialization::deserialize_entity(Entity* entity, const QJsonObject& json) 
         static_cast<float>(combat_state_obj["state_time"].toDouble(0.0));
     combat_state->state_duration =
         static_cast<float>(combat_state_obj["state_duration"].toDouble(0.0));
-    combat_state->swing_duration_scale =
-        static_cast<float>(combat_state_obj["swing_duration_scale"].toDouble(1.0));
     combat_state->attack_offset =
         static_cast<float>(combat_state_obj["attack_offset"].toDouble(0.0));
     combat_state->attack_variant =

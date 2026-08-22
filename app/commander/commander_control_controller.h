@@ -63,6 +63,9 @@ public:
   [[nodiscard]] const InputState& input() const;
 
   void key_down(int key);
+  [[nodiscard]] auto queued_intent_count(Engine::Core::World& world,
+                                         Engine::Core::EntityID commander_id,
+                                         int local_owner_id) const -> int;
   void key_up(int key);
   void primary_action_down();
   void primary_action_up();
@@ -209,6 +212,7 @@ private:
 
   float m_combo_miss_timer = 0.0F;
   float m_primary_held_duration = 0.0F;
+  bool m_primary_press_pending = false;
   float m_shield_bash_cooldown = 0.0F;
   float m_vanguard_rush_cooldown = 0.0F;
   float m_second_wind_cooldown = 0.0F;

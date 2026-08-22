@@ -20,6 +20,7 @@
 #include "game/systems/combat_actions/combat_action_definition.h"
 #include "game/systems/combat_actions/combat_action_service.h"
 #include "game/systems/combat_actions/melee_intent_solver.h"
+#include "game/systems/combat_system/damage_application.h"
 #include "game/systems/combat_system/damage_processor.h"
 #include "game/systems/combat_system/mounted_charge_processor.h"
 #include "game/systems/nav_grid.h"
@@ -477,6 +478,7 @@ void CommanderControlController::primary_action_down() {
     m_latency_probe->note_input();
   }
   m_input.primary_action = true;
+  m_primary_press_pending = true;
   m_input.primary_action_scan_cooldown = 0.0F;
 }
 
@@ -830,6 +832,27 @@ void CommanderControlController::cycle_lock_on_target(
   }
 }
 
+namespace {
+
+auto body_allows_now(const Engine::Core::Entity& commander)
+    -> Game::Systems::CombatActions::MeleeInterruption {
+  auto const* action =
+      commander.get_component<Engine::Core::RpgCommanderActionComponent>();
+  if (action == nullptr || !action->action_running || action->combat_action_id == 0U) {
+    return {};
+  }
+  auto const* definition = Game::Systems::CombatActions::find_combat_action_definition(
+      static_cast<Game::Systems::CombatActions::CombatActionId>(
+          action->combat_action_id));
+  if (definition == nullptr) {
+    return {};
+  }
+  return Game::Systems::CombatActions::melee_interruption_at(
+      *definition, action->normalized_action_time);
+}
+
+} // namespace
+
 void CommanderControlController::apply_strike_lunge(
     Engine::Core::World& world,
     Engine::Core::Entity& commander,
@@ -841,7 +864,7 @@ void CommanderControlController::apply_strike_lunge(
 
   auto const* action =
       commander.get_component<Engine::Core::RpgCommanderActionComponent>();
-  if (action == nullptr || !action->action_running || action->cancel_window_active) {
+  if (action == nullptr || !action->action_running) {
     return;
   }
 
@@ -849,6 +872,12 @@ void CommanderControlController::apply_strike_lunge(
       static_cast<Game::Systems::CombatActions::CombatActionId>(
           action->combat_action_id));
   if (definition == nullptr || definition->requires_projectile_release) {
+    return;
+  }
+
+  if (Game::Systems::CombatActions::melee_interruption_at(
+          *definition, action->normalized_action_time)
+          .phase == Game::Systems::CombatActions::MeleePhase::FollowThrough) {
     return;
   }
 
@@ -1124,12 +1153,11 @@ auto CommanderControlController::find_primary_target(
 
   if (auto* engagement =
           commander->get_component<Engine::Core::RpgEngagementComponent>()) {
-    std::array<Engine::Core::EntityID, 3> const ring_targets = {
-        engagement->front_attacker_id,
-        engagement->left_threat_id,
-        engagement->right_threat_id};
-    for (auto const ring_target_id : ring_targets) {
-      if (auto target = choose_sample(ring_target_id, k_no_slot, 0.05F);
+    for (auto const& slot : engagement->engagement_slots) {
+      if (!slot.pressing) {
+        continue;
+      }
+      if (auto target = choose_sample(slot.entity_id, k_no_slot, 0.05F);
           target.has_value()) {
         return accept(*target);
       }
@@ -1186,6 +1214,10 @@ auto CommanderControlController::primary_action(Engine::Core::World& world,
     target_id = find_primary_target(
         world, commander_id, local_owner_id, k_strike_acquisition_bonus);
   }
+  auto const* queued =
+      commander->get_component<Engine::Core::CombatIntentQueueComponent>();
+  auto const* pending =
+      queued != nullptr && queued->count > 0U ? &queued->entries[0] : nullptr;
   auto const attack_result =
       Game::Systems::CombatActions::CombatActionService::request_attack(
           world,
@@ -1194,16 +1226,27 @@ auto CommanderControlController::primary_action(Engine::Core::World& world,
            .target_soldier_slot = m_primary_target_slot,
            .move_right_axis = m_move_right_axis,
            .move_forward_axis = m_move_forward_axis,
-           .primary_held_duration = m_primary_held_duration});
-  if (!attack_result.accepted) {
-    return false;
-  }
+           .primary_held_duration =
+               pending != nullptr ? pending->held_duration : m_primary_held_duration,
+           .has_swing = pending != nullptr,
+           .swing = pending != nullptr ? pending->swing : Engine::Core::MeleeIntent{}});
 
-  if (auto* cmd_comp = commander->get_component<Engine::Core::CommanderComponent>();
-      cmd_comp != nullptr && !attack_result.buffered) {
+  if (attack_result.outcome == Engine::Core::CombatIntentOutcome::Accepted) {
     m_combo_miss_timer = 0.0F;
   }
   return true;
+}
+
+auto CommanderControlController::queued_intent_count(
+    Engine::Core::World& world,
+    Engine::Core::EntityID commander_id,
+    int local_owner_id) const -> int {
+  auto const* commander = controlled_commander(world, commander_id, local_owner_id);
+  auto const* intents =
+      commander != nullptr
+          ? commander->get_component<Engine::Core::CombatIntentQueueComponent>()
+          : nullptr;
+  return intents != nullptr ? static_cast<int>(intents->count) : 0;
 }
 
 void CommanderControlController::release_guard(Engine::Core::World& world,
@@ -1598,7 +1641,7 @@ auto CommanderControlController::update_impl(Engine::Core::World& world,
       guard->rearm_requires_release = false;
     }
     if (auto* rpg = commander->get_component<Engine::Core::RpgHealthComponent>()) {
-      rpg->dodge_invincible = false;
+      rpg->dodge_grace_remaining = 0.0F;
     }
 
     if (camera != nullptr) {
@@ -1730,7 +1773,8 @@ auto CommanderControlController::update_impl(Engine::Core::World& world,
   }
 
   const bool should_dodge = m_input.dodge_requested &&
-                            m_dodge_state == DodgeState::None && m_jump_timer <= 0.0F;
+                            m_dodge_state == DodgeState::None && m_jump_timer <= 0.0F &&
+                            body_allows_now(*commander).accepts_dodge;
   const bool dodge_refused = m_input.dodge_requested && !should_dodge;
   QVector3D const requested_dodge_direction = m_requested_dodge_direction;
   bool const has_requested_dodge_direction = m_has_requested_dodge_direction;
@@ -1765,7 +1809,11 @@ auto CommanderControlController::update_impl(Engine::Core::World& world,
     m_dodge_timer = k_dodge_roll_duration;
     m_dodge_fov_kick = 14.0F;
     if (auto* rpg = commander->get_component<Engine::Core::RpgHealthComponent>()) {
-      rpg->dodge_invincible = true;
+
+      constexpr float k_dodge_grace_seconds = 0.12F;
+      rpg->dodge_grace_remaining = k_dodge_grace_seconds;
+      rpg->dodge_dir_x = m_dodge_direction.x();
+      rpg->dodge_dir_z = m_dodge_direction.z();
     }
 
     if (auto* stamina = commander->get_component<Engine::Core::StaminaComponent>()) {
@@ -1809,7 +1857,7 @@ auto CommanderControlController::update_impl(Engine::Core::World& world,
       constexpr float k_dodge_recover_duration = 0.18F;
       m_dodge_timer = k_dodge_recover_duration;
       if (auto* rpg = commander->get_component<Engine::Core::RpgHealthComponent>()) {
-        rpg->dodge_invincible = false;
+        rpg->dodge_grace_remaining = 0.0F;
       }
     }
   } else if (m_dodge_state == DodgeState::Recovering) {
@@ -1978,7 +2026,7 @@ auto CommanderControlController::update_impl(Engine::Core::World& world,
     }
     if (guard != nullptr && guard->guard_break_remaining <= 0.0F &&
         !guard->rearm_requires_release && m_dodge_state == DodgeState::None &&
-        !jump_active) {
+        !jump_active && body_allows_now(*commander).accepts_guard) {
       guard->active = true;
       if (!m_guard_was_active) {
         guard->perfect_guard_remaining = 0.16F;
@@ -2047,27 +2095,69 @@ auto CommanderControlController::update_impl(Engine::Core::World& world,
         std::max(0.0F, m_input.primary_action_scan_cooldown - dt);
   }
 
+  auto* intents =
+      Engine::Core::get_or_add_component<Engine::Core::CombatIntentQueueComponent>(
+          commander);
+  if (intents != nullptr) {
+    Game::Systems::CombatActions::expire_stale_intents(*intents, dt);
+  }
+
+  if (auto* rpg = commander->get_component<Engine::Core::RpgHealthComponent>()) {
+    rpg->dodge_grace_remaining = std::max(0.0F, rpg->dodge_grace_remaining - dt);
+  }
+
   bool const waiting_for_release = aim != nullptr && aim->relaxed_from_overhold;
-  if (m_dodge_state != DodgeState::Rolling && m_jump_timer <= 0.0F &&
-      !waiting_for_release && m_input.primary_action &&
-      m_input.primary_action_scan_cooldown <= 0.0F) {
+  bool const body_can_take_input = m_dodge_state != DodgeState::Rolling &&
+                                   m_jump_timer <= 0.0F && !waiting_for_release;
+
+  if (intents != nullptr && body_can_take_input) {
+    bool const auto_repeat = m_input.primary_action && intents->empty() &&
+                             !attack_animation_active &&
+                             m_input.primary_action_scan_cooldown <= 0.0F;
+    if (m_primary_press_pending || auto_repeat) {
+      auto const* body =
+          commander->get_component<Engine::Core::CommanderBodyControlComponent>();
+      Engine::Core::CombatActionIntent intent;
+      intent.swing =
+          body != nullptr ? body->steered_intent : Engine::Core::MeleeIntent{};
+      intent.pressed_at = intents->clock;
+      intents->push(intent);
+      m_primary_press_pending = false;
+      m_input.primary_action_scan_cooldown = 0.08F;
+    }
+  }
+  if (!m_input.primary_action) {
+    m_primary_press_pending = false;
+  }
+
+  if (intents != nullptr && !intents->empty() && body_can_take_input) {
+    auto* pending = intents->front();
+    if (pending != nullptr) {
+      pending->held_duration = m_primary_held_duration;
+    }
     if (!primary_action(world, commander_id, local_owner_id)) {
       return false;
     }
-    if (m_feedback != nullptr) {
-      App::Core::PlayerFeedbackEvent event;
-      event.type = App::Core::PlayerFeedbackType::AttackCommitted;
-      event.entity = commander_id;
-      event.has_world_position = true;
-      event.world_position = QVector3D(
-          transform->position.x, transform->position.y, transform->position.z);
-      m_feedback->publish(std::move(event));
+    if (auto const* queue =
+            commander->get_component<Engine::Core::CombatIntentQueueComponent>();
+        queue != nullptr &&
+        queue->last_outcome == Engine::Core::CombatIntentOutcome::Accepted) {
+      intents->pop_front();
+      if (m_feedback != nullptr) {
+        App::Core::PlayerFeedbackEvent event;
+        event.type = App::Core::PlayerFeedbackType::AttackCommitted;
+        event.entity = commander_id;
+        event.has_world_position = true;
+        event.world_position = QVector3D(
+            transform->position.x, transform->position.y, transform->position.z);
+        m_feedback->publish(std::move(event));
+      }
+      if (m_latency_probe != nullptr) {
+        m_latency_probe->note_attack_start();
+        m_latency_probe->note_pose_response();
+      }
+      m_input.primary_action_scan_cooldown = 0.08F;
     }
-    if (m_latency_probe != nullptr) {
-      m_latency_probe->note_attack_start();
-      m_latency_probe->note_pose_response();
-    }
-    m_input.primary_action_scan_cooldown = 0.08F;
   }
 
   Game::Systems::CombatActions::advance_melee_control(
@@ -2079,6 +2169,7 @@ auto CommanderControlController::update_impl(Engine::Core::World& world,
        .move_forward_axis = m_move_forward_axis,
        .held_duration = m_primary_held_duration,
        .primary_held = m_input.primary_action,
+       .guard_held = m_input.secondary_action,
        .delta_time = dt});
   m_previous_view_yaw = m_view_yaw;
   m_previous_view_pitch = m_view_pitch;
@@ -2089,7 +2180,11 @@ auto CommanderControlController::update_impl(Engine::Core::World& world,
       m_observed_action_hit_count = 0;
     } else if (struck->hit_target_count > m_observed_action_hit_count) {
       m_observed_action_hit_count = struck->hit_target_count;
-      m_camera_rig.add_impact_kick(1.0F);
+
+      m_camera_rig.add_impact_kick(std::clamp(
+          struck->last_contact_speed / Game::Systems::Combat::k_reference_weapon_speed,
+          0.35F,
+          1.8F));
     } else if (struck->hit_target_count < m_observed_action_hit_count) {
       m_observed_action_hit_count = struck->hit_target_count;
     }
@@ -2218,17 +2313,23 @@ void CommanderControlController::update_camera(Engine::Core::World& world,
 
   auto fight_context = Engine::Core::FightContext::None;
   float threat_side_bias = 0.0F;
-  Engine::Core::EntityID front_attacker_id = 0;
+  Engine::Core::EntityID nearest_pressing_id = 0;
   if (auto const* engagement =
           commander.get_component<Engine::Core::RpgEngagementComponent>()) {
     fight_context = engagement->fight_context;
-    front_attacker_id = engagement->front_attacker_id;
-    if (fight_context == Engine::Core::FightContext::Skirmish) {
-      bool const left = engagement->left_threat_id != 0;
-      bool const right = engagement->right_threat_id != 0;
-      if (left != right) {
-        threat_side_bias = left ? 1.0F : -1.0F;
+
+    float pressure_bias = 0.0F;
+    for (auto const& slot : engagement->engagement_slots) {
+      if (!slot.pressing) {
+        continue;
       }
+      if (nearest_pressing_id == 0) {
+        nearest_pressing_id = slot.entity_id;
+      }
+      pressure_bias += slot.signed_angle_degrees < 0.0F ? 1.0F : -1.0F;
+    }
+    if (fight_context == Engine::Core::FightContext::Skirmish) {
+      threat_side_bias = std::clamp(pressure_bias, -1.0F, 1.0F);
     }
   }
 
@@ -2250,8 +2351,8 @@ void CommanderControlController::update_camera(Engine::Core::World& world,
   }
 
   std::optional<QVector3D> soft_focus_position;
-  if (!lock_target_position.has_value() && front_attacker_id != 0) {
-    if (auto* front = world.get_entity(front_attacker_id)) {
+  if (!lock_target_position.has_value() && nearest_pressing_id != 0) {
+    if (auto* front = world.get_entity(nearest_pressing_id)) {
       if (auto const sample = Game::Systems::RpgCombat::resolve_soldier_target(
               *front, Engine::Core::RpgCommanderTargetComponent::k_no_soldier_slot);
           sample.has_value()) {

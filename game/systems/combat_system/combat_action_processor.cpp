@@ -33,6 +33,7 @@ namespace {
 
 auto is_rts_melee_action(Game::Systems::CombatActions::CombatActionId id) -> bool {
   return id == Game::Systems::CombatActions::CombatActionId::RtsSwordStrike ||
+         id == Game::Systems::CombatActions::CombatActionId::RtsHeavyOverhead ||
          id == Game::Systems::CombatActions::CombatActionId::RtsSpearThrust ||
          id == Game::Systems::CombatActions::CombatActionId::RtsElephantStomp ||
          id == Game::Systems::CombatActions::CombatActionId::RtsCommanderThrust ||
@@ -49,6 +50,53 @@ auto target_uses_rpg_combat(Engine::Core::World& world,
                             Engine::Core::EntityID target_id) -> bool {
   auto* target = world.get_entity(target_id);
   return target != nullptr && Game::Systems::CombatRules::uses_rpg_combat_rules(target);
+}
+
+auto action_swings_a_traced_weapon(
+    const Game::Systems::CombatActions::CombatActionDefinition& definition) -> bool {
+  return definition.weapon_family ==
+             Game::Systems::CombatActions::WeaponFamily::Sword ||
+         definition.weapon_family == Game::Systems::CombatActions::WeaponFamily::Spear;
+}
+
+auto target_is_a_structure(Engine::Core::World& world,
+                           Engine::Core::EntityID target_id) -> bool {
+  auto const* target = world.get_entity(target_id);
+  return target != nullptr && target->has_component<Engine::Core::BuildingComponent>();
+}
+
+auto rts_melee_target_still_stands(
+    Engine::Core::World& world,
+    const Engine::Core::Entity& attacker,
+    const Engine::Core::RpgCommanderActionComponent& action) -> bool {
+  auto const* attacker_unit = attacker.get_component<Engine::Core::UnitComponent>();
+  auto* target = world.get_entity(action.active_target_id);
+  auto const* target_unit = target != nullptr
+                                ? target->get_component<Engine::Core::UnitComponent>()
+                                : nullptr;
+  return attacker_unit != nullptr && attacker_unit->health > 0 && target != nullptr &&
+         target_unit != nullptr && target_unit->health > 0 &&
+         target_unit->owner_id != attacker_unit->owner_id &&
+         target->get_component<Engine::Core::TransformComponent>() != nullptr &&
+         !target->has_component<Engine::Core::PendingRemovalComponent>();
+}
+
+auto melee_contact_comes_from_the_sweep(
+    Engine::Core::World& world,
+    const Engine::Core::Entity& attacker,
+    const Game::Systems::CombatActions::CombatActionDefinition& definition,
+    const Engine::Core::RpgCommanderActionComponent& action) -> bool {
+  if (!action_swings_a_traced_weapon(definition)) {
+    return false;
+  }
+
+  auto* target = Game::Systems::CombatRules::is_player_driven(&attacker)
+                     ? nullptr
+                     : world.get_entity(action.active_target_id);
+  if (target != nullptr && !Game::Systems::CombatRules::is_player_driven(target)) {
+    return false;
+  }
+  return !target_is_a_structure(world, action.active_target_id);
 }
 
 void record_signature_contact(
@@ -221,6 +269,52 @@ void present_melee_exchange(Engine::Core::World& world,
   }
 }
 
+void resolve_rts_melee_contact(
+    Engine::Core::World& world,
+    Engine::Core::Entity& attacker,
+    Engine::Core::RpgCommanderActionComponent& action,
+    const Game::Systems::CombatActions::CombatActionDefinition& definition,
+    Engine::Core::Entity& target) {
+  auto* attacker_transform = attacker.get_component<Engine::Core::TransformComponent>();
+  auto* target_transform = target.get_component<Engine::Core::TransformComponent>();
+  if (attacker_transform == nullptr || target_transform == nullptr) {
+    return;
+  }
+  auto const* attack = attacker.get_component<Engine::Core::AttackComponent>();
+  auto* commander = attacker.get_component<Engine::Core::CommanderComponent>();
+  bool const signature_strike =
+      commander != nullptr && commander->signature_strike_active;
+  float const reach =
+      (attack != nullptr ? attack->melee_range : definition.hit_shape.reach) +
+      (signature_strike ? std::max(0.0F, commander->signature_bonus_reach) : 0.0F);
+
+  auto const beat =
+      signature_strike
+          ? MeleeExchangeBeat{}
+          : melee_exchange_beat_for_outcome(
+                static_cast<MeleeExchangeOutcome>(action.exchange_outcome));
+  int const base_damage = std::max(1, action.requested_damage);
+  int const damage =
+      signature_strike ? base_damage : melee_exchange_damage(base_damage, beat);
+  if (damage > 0) {
+    deal_damage(&world, &target, damage, attacker.get_id());
+  }
+  action.last_hit_target_id = target.get_id();
+  action.last_damage = damage;
+  if (action.hit_target_count < action.hit_target_ids.size()) {
+    action.hit_target_ids[action.hit_target_count++] = target.get_id();
+  }
+
+  if (!signature_strike) {
+    present_melee_exchange(
+        world, attacker, target, *attacker_transform, *target_transform, beat, reach);
+    return;
+  }
+  apply_commander_signature_effects(
+      world, attacker, *commander, target, *attacker_transform, reach, damage);
+  commander->signature_strike_active = false;
+}
+
 void deal_rts_melee_contact_damage(
     Engine::Core::World& world,
     Engine::Core::Entity& attacker,
@@ -248,7 +342,7 @@ void deal_rts_melee_contact_damage(
   float const dz = target_transform->position.z - attacker_transform->position.z;
   float const distance = std::hypot(dx, dz);
   auto const* attack = attacker.get_component<Engine::Core::AttackComponent>();
-  auto* commander = attacker.get_component<Engine::Core::CommanderComponent>();
+  auto const* commander = attacker.get_component<Engine::Core::CommanderComponent>();
   bool const signature_strike =
       commander != nullptr && commander->signature_strike_active;
   float const reach =
@@ -267,30 +361,7 @@ void deal_rts_melee_contact_damage(
     action.action_completed = true;
     return;
   }
-  auto const beat =
-      signature_strike
-          ? MeleeExchangeBeat{}
-          : melee_exchange_beat_for_outcome(
-                static_cast<MeleeExchangeOutcome>(action.exchange_outcome));
-  int const base_damage = std::max(1, action.requested_damage);
-  int const damage =
-      signature_strike ? base_damage : melee_exchange_damage(base_damage, beat);
-  if (damage > 0) {
-    deal_damage(&world, target, damage, attacker.get_id());
-  }
-  action.last_hit_target_id = target->get_id();
-  action.last_damage = damage;
-  action.hit_target_ids[0] = target->get_id();
-  action.hit_target_count = 1U;
-
-  if (!signature_strike) {
-    present_melee_exchange(
-        world, attacker, *target, *attacker_transform, *target_transform, beat, reach);
-    return;
-  }
-  apply_commander_signature_effects(
-      world, attacker, *commander, *target, *attacker_transform, reach, damage);
-  commander->signature_strike_active = false;
+  resolve_rts_melee_contact(world, attacker, action, definition, *target);
 }
 
 void deal_weapon_trace_damage(
@@ -299,7 +370,26 @@ void deal_weapon_trace_damage(
     Engine::Core::CombatStateComponent* presentation_state,
     Engine::Core::RpgCommanderActionComponent& action,
     const Game::Systems::CombatActions::CombatActionDefinition& definition) {
-  if (!action.weapon_trace_active) {
+  bool const sweep_decides =
+      melee_contact_comes_from_the_sweep(world, attacker, definition, action);
+
+  using Game::Systems::CombatActions::CombatActionEventType;
+  float const window_start = Game::Systems::CombatActions::action_event_normalized_time(
+      definition, CombatActionEventType::WeaponTraceStart, 1.0F);
+  float const window_end = Game::Systems::CombatActions::action_event_normalized_time(
+      definition, CombatActionEventType::WeaponTraceEnd, window_start);
+  float swept_from = action.previous_normalized_action_time;
+  float swept_to = action.normalized_action_time;
+  if (sweep_decides) {
+    if (window_end <= window_start) {
+      return;
+    }
+    swept_from = std::max(swept_from, window_start);
+    swept_to = std::min(swept_to, window_end);
+    if (swept_to <= swept_from) {
+      return;
+    }
+  } else if (!action.weapon_trace_active) {
     return;
   }
   auto const target_capacity = std::min<std::uint8_t>(
@@ -317,11 +407,22 @@ void deal_weapon_trace_damage(
       world,
       attacker,
       definition,
-      {.previous_normalized_time = action.previous_normalized_action_time,
-       .current_normalized_time = action.normalized_action_time},
+      {.previous_normalized_time = swept_from, .current_normalized_time = swept_to},
       action.active_target_id,
       ignored_targets);
   if (contact.target_id == 0) {
+    return;
+  }
+
+  if (is_rts_melee_action(definition.id) &&
+      !target_uses_rpg_combat(world, contact.target_id)) {
+    if (auto* struck = world.get_entity(contact.target_id); struck != nullptr) {
+      resolve_rts_melee_contact(world, attacker, action, definition, *struck);
+      if (presentation_state != nullptr) {
+        presentation_state->damage_dealt_this_swing = true;
+      }
+      action.last_hit_soldier_slot = contact.target_soldier_slot;
+    }
     return;
   }
 
@@ -337,7 +438,8 @@ void deal_weapon_trace_damage(
                    .contact_point = contact.contact_point,
                    .distance = contact.distance,
                    .local_forward = contact.local_forward,
-                   .local_right = contact.local_right},
+                   .local_right = contact.local_right,
+                   .relative_speed = contact.contact_speed},
        .damage_profile = definition.damage,
 
        .explicit_raw_damage = is_rts_melee_action(definition.id)
@@ -349,10 +451,20 @@ void deal_weapon_trace_damage(
 
   if (presentation_state != nullptr) {
     presentation_state->damage_dealt_this_swing = true;
+
+    presentation_state->is_hit_paused = true;
+    presentation_state->hit_pause_remaining =
+        Engine::Core::CombatStateComponent::k_combat_animation_hit_pause_duration *
+        std::clamp(contact.contact_speed /
+                       Game::Systems::Combat::k_reference_weapon_speed,
+                   0.5F,
+                   1.6F);
+    presentation_state->telegraph_cue = Engine::Core::TelegraphCue::Impact;
   }
   action.last_hit_target_id = contact.target_id;
   action.last_hit_soldier_slot = contact.target_soldier_slot;
   action.last_damage = result.damage.effective_damage;
+  action.last_contact_speed = contact.contact_speed;
   action.hit_target_ids[action.hit_target_count++] = contact.target_id;
 }
 
@@ -418,13 +530,11 @@ void cancel_authored_action(Engine::Core::RpgCommanderActionComponent& action,
   action.action_completed = true;
   action.action_active = false;
   action.weapon_trace_active = false;
-  action.cancel_window_active = false;
   action.phase = Engine::Core::RpgCommanderActionPhase::None;
   if (presentation_state != nullptr) {
     presentation_state->animation_state = Engine::Core::CombatAnimationState::Idle;
     presentation_state->state_time = 0.0F;
     presentation_state->state_duration = 0.0F;
-    presentation_state->input_buffered = false;
   }
 }
 
@@ -490,11 +600,13 @@ void handle_action_events(
     if (event.type ==
             Game::Systems::CombatActions::CombatActionEventType::ActiveStart &&
         is_rts_melee_action(action_id) && action.hit_target_count == 0U) {
-      bool const requires_visible_weapon_contact =
-          target_uses_rpg_combat(world, action.active_target_id) &&
-          action_id != Game::Systems::CombatActions::CombatActionId::RtsElephantStomp;
-      if (!requires_visible_weapon_contact) {
+      if (!melee_contact_comes_from_the_sweep(world, entity, definition, action)) {
         deal_rts_melee_contact_damage(world, entity, action, definition);
+      } else if (!rts_melee_target_still_stands(world, entity, action)) {
+        action.action_running = false;
+        action.action_completed = true;
+        action.action_active = false;
+        action.weapon_trace_active = false;
       }
       if (action_id == Game::Systems::CombatActions::CombatActionId::RtsElephantStomp &&
           action.hit_target_count > 0U) {
@@ -606,13 +718,11 @@ void process_authored_combat_action(
       action->action_completed = true;
       action->action_active = false;
       action->weapon_trace_active = false;
-      action->cancel_window_active = false;
       action->phase = Engine::Core::RpgCommanderActionPhase::None;
       if (presentation_state != nullptr) {
         presentation_state->animation_state = Engine::Core::CombatAnimationState::Idle;
         presentation_state->state_time = 0.0F;
         presentation_state->state_duration = 0.0F;
-        presentation_state->input_buffered = false;
       }
       return;
     }

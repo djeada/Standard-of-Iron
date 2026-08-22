@@ -2,23 +2,15 @@
 
 #include <algorithm>
 #include <cmath>
-#include <numbers>
 #include <span>
 #include <vector>
 
 #include "../../core/component.h"
 #include "../../core/simulation_timing.h"
 #include "../../core/world.h"
-#include "../../units/spawn_type.h"
-#include "../combat_actions/body_impact.h"
 #include "../combat_actions/combat_action_definition.h"
 #include "../combat_actions/combat_action_events.h"
-#include "../combat_actions/projectile_release.h"
-#include "../combat_actions/weapon_trace.h"
-#include "../rpg_combat_system/rpg_commander_damage.h"
 #include "combat_action_processor.h"
-#include "combat_hit_resolver.h"
-#include "combat_utils.h"
 #include "mounted_charge_processor.h"
 #include "spear_brace_processor.h"
 
@@ -28,123 +20,6 @@ namespace {
 
 using CS = Engine::Core::CombatAnimationState;
 using CSC = Engine::Core::CombatStateComponent;
-
-constexpr float k_commander_contact_cone_dot = 0.25F;
-
-auto commander_melee_reach(const Engine::Core::Entity& commander) -> float {
-  auto const* attack = commander.get_component<Engine::Core::AttackComponent>();
-  float const base_reach = attack != nullptr
-                               ? attack->melee_range
-                               : Engine::Core::Defaults::k_attack_melee_range;
-  return base_reach + Engine::Core::AttackComponent::k_melee_contact_range_grace;
-}
-
-auto target_in_swing_arc(Engine::Core::Entity& commander,
-                         Engine::Core::Entity& target,
-                         float reach) -> bool {
-  if (!is_in_range(&commander, &target, reach)) {
-    return false;
-  }
-
-  auto const* commander_transform =
-      commander.get_component<Engine::Core::TransformComponent>();
-  auto const* target_transform =
-      target.get_component<Engine::Core::TransformComponent>();
-  if (commander_transform == nullptr || target_transform == nullptr) {
-    return false;
-  }
-
-  float const yaw =
-      commander_transform->rotation.y * (std::numbers::pi_v<float> / 180.0F);
-  float const forward_x = std::sin(yaw);
-  float const forward_z = std::cos(yaw);
-  float const dx = target_transform->position.x - commander_transform->position.x;
-  float const dz = target_transform->position.z - commander_transform->position.z;
-  float const dist = std::sqrt(dx * dx + dz * dz);
-  if (dist <= 0.0001F) {
-    return true;
-  }
-  float const facing = (forward_x * dx + forward_z * dz) / dist;
-  return facing >= k_commander_contact_cone_dot;
-}
-
-auto resolve_commander_contact_target(Engine::Core::World* world,
-                                      Engine::Core::Entity& commander,
-                                      Engine::Core::EntityID locked_target_id)
-    -> Engine::Core::Entity* {
-  auto const* commander_unit = commander.get_component<Engine::Core::UnitComponent>();
-  if (commander_unit == nullptr) {
-    return nullptr;
-  }
-
-  float const reach = commander_melee_reach(commander);
-
-  if (locked_target_id != 0) {
-    auto* locked = world->get_entity(locked_target_id);
-    if (locked != nullptr && is_valid_enemy_unit(commander_unit, locked, true) &&
-        target_in_swing_arc(commander, *locked, reach)) {
-      return locked;
-    }
-  }
-
-  Engine::Core::Entity* best = nullptr;
-  float best_score = -1000000.0F;
-  for (auto [candidate_ref, candidate_unit, candidate_transform_ref] :
-       world->entity_view<Engine::Core::UnitComponent,
-                          Engine::Core::TransformComponent>()) {
-    (void)candidate_unit;
-    Engine::Core::Entity* candidate = &candidate_ref;
-    auto const* candidate_transform = &candidate_transform_ref;
-    if (candidate == &commander ||
-        !is_valid_enemy_unit(commander_unit, candidate, false) ||
-        !target_in_swing_arc(commander, *candidate, reach)) {
-      continue;
-    }
-    auto const* commander_transform =
-        commander.get_component<Engine::Core::TransformComponent>();
-    if (commander_transform == nullptr) {
-      continue;
-    }
-    float const dx = candidate_transform->position.x - commander_transform->position.x;
-    float const dz = candidate_transform->position.z - commander_transform->position.z;
-    float const score = -std::sqrt(dx * dx + dz * dz);
-    if (score > best_score) {
-      best_score = score;
-      best = candidate;
-    }
-  }
-  return best;
-}
-
-void deal_commander_contact_damage(Engine::Core::World* world,
-                                   Engine::Core::Entity& commander,
-                                   Engine::Core::CombatStateComponent& combat_state) {
-  auto const* action =
-      commander.get_component<Engine::Core::RpgCommanderActionComponent>();
-  Engine::Core::EntityID const locked_target_id =
-      action != nullptr ? action->active_target_id : 0;
-
-  auto* target = resolve_commander_contact_target(world, commander, locked_target_id);
-  if (target == nullptr) {
-    return;
-  }
-
-  int damage = 10;
-  if (auto const* attack = commander.get_component<Engine::Core::AttackComponent>()) {
-    damage = std::max(1, attack->get_current_damage());
-  }
-
-  auto const* stamina = commander.get_component<Engine::Core::StaminaComponent>();
-  if (stamina != nullptr && stamina->stamina < CSC::k_low_stamina_threshold) {
-    damage = static_cast<int>(static_cast<float>(damage) *
-                              CSC::k_low_stamina_damage_penalty);
-    damage = std::max(1, damage);
-  }
-
-  Game::Systems::RpgCombat::deal_commander_attack_damage(
-      world, target, damage, commander.get_id());
-  combat_state.damage_dealt_this_swing = true;
-}
 
 auto base_phase_duration(CS state) noexcept -> float {
   switch (state) {
@@ -229,7 +104,7 @@ auto phase_duration_for_state(const Engine::Core::Entity& unit,
            commander_phase_scale(unit, combat_state, state);
   }
 
-  return base_phase_duration(state) * combat_state.swing_duration_scale;
+  return base_phase_duration(state);
 }
 
 auto bow_draw_is_held(const Engine::Core::Entity& unit) noexcept -> bool {
@@ -240,6 +115,94 @@ auto bow_draw_is_held(const Engine::Core::Entity& unit) noexcept -> bool {
          static_cast<Game::Systems::CombatActions::CombatActionId>(
              action->combat_action_id) ==
              Game::Systems::CombatActions::CombatActionId::RpgBowShot;
+}
+
+auto apply_action_timeline_phase(
+    Engine::Core::CombatStateComponent& combat_state,
+    const Engine::Core::RpgCommanderActionComponent& action,
+    const Game::Systems::CombatActions::CombatActionDefinition& definition) {
+  using Game::Systems::CombatActions::CombatActionEventType;
+  auto const at = [&](CombatActionEventType type, float fallback) {
+    return Game::Systems::CombatActions::action_event_normalized_time(
+        definition, type, fallback);
+  };
+  float const windup = at(CombatActionEventType::WindupStart, 0.08F);
+  float const active = at(CombatActionEventType::ActiveStart, 0.35F);
+  float const strike = at(CombatActionEventType::WeaponTraceStart, active);
+  float const strike_end = at(CombatActionEventType::WeaponTraceEnd, strike);
+  float const recovery = at(CombatActionEventType::RecoveryStart, 0.75F);
+  float const exit_safe = at(CombatActionEventType::ExitSafe, 0.92F);
+
+  if (strike_end <= strike) {
+
+    return false;
+  }
+
+  float const t = std::clamp(action.normalized_action_time, 0.0F, 1.0F);
+  CS state = CS::Reposition;
+  float span_start = exit_safe;
+  float span_end = 1.0F;
+  if (t < windup) {
+    state = CS::Advance;
+    span_start = 0.0F;
+    span_end = windup;
+  } else if (t < strike) {
+    state = CS::WindUp;
+    span_start = windup;
+    span_end = strike;
+  } else if (t < strike_end) {
+    state = CS::Strike;
+    span_start = strike;
+    span_end = strike_end;
+  } else if (t < recovery) {
+    state = CS::Impact;
+    span_start = strike_end;
+    span_end = recovery;
+  } else if (t < exit_safe) {
+    state = CS::Recover;
+    span_start = recovery;
+    span_end = exit_safe;
+  }
+
+  float const clock = std::max(0.001F, action.action_duration);
+  combat_state.animation_state = state;
+  combat_state.state_duration = std::max(0.001F, span_end - span_start) * clock;
+  combat_state.state_time = std::max(0.0F, t - span_start) * clock;
+
+  float const weight =
+      definition.damage.unblockable
+          ? 1.0F
+          : std::clamp(0.45F + (0.55F * (definition.damage.base_multiplier - 1.0F)),
+                       0.25F,
+                       1.0F);
+  auto const ramp = [](float value) {
+    float const clamped = std::clamp(value, 0.0F, 1.0F);
+    return clamped * clamped * (3.0F - (2.0F * clamped));
+  };
+  if (t < windup) {
+    combat_state.telegraph_cue = Engine::Core::TelegraphCue::None;
+    combat_state.telegraph_intensity = 0.0F;
+  } else if (t < strike) {
+    combat_state.telegraph_cue = Engine::Core::TelegraphCue::Warning;
+    combat_state.telegraph_intensity =
+        weight * ramp((t - windup) / std::max(0.001F, strike - windup));
+  } else if (t < strike_end) {
+    combat_state.telegraph_cue = Engine::Core::TelegraphCue::Flash;
+    combat_state.telegraph_intensity = weight;
+  } else if (t < recovery) {
+    combat_state.telegraph_cue = Engine::Core::TelegraphCue::Impact;
+    combat_state.telegraph_intensity =
+        weight *
+        std::lerp(1.0F,
+                  0.6F,
+                  ramp((t - strike_end) / std::max(0.001F, recovery - strike_end)));
+  } else {
+    combat_state.telegraph_cue = Engine::Core::TelegraphCue::Settling;
+    combat_state.telegraph_intensity =
+        weight * 0.6F *
+        (1.0F - ramp((t - recovery) / std::max(0.001F, 1.0F - recovery)));
+  }
+  return true;
 }
 
 void reset_action_events_if_present(Engine::Core::Entity& unit) {
@@ -257,24 +220,63 @@ void process_combat_state(Engine::Core::World* world, float delta_time) {
       Engine::Core::Timing::combat_state_update());
   process_spear_brace_state(world, delta_time);
   process_mounted_charge_intents(world, delta_time);
+
   for (auto [unit, combat_state] :
        world->entity_view<Engine::Core::CombatStateComponent>()) {
+    if (unit.has_component<Engine::Core::PendingRemovalComponent>() ||
+        !combat_state.is_hit_paused) {
+      continue;
+    }
+    combat_state.hit_pause_remaining -= delta_time;
+    if (combat_state.hit_pause_remaining <= 0.0F) {
+      combat_state.is_hit_paused = false;
+      combat_state.hit_pause_remaining = 0.0F;
+    }
+  }
+
+  for (auto [unit, action] :
+       world->entity_view<Engine::Core::RpgCommanderActionComponent>()) {
+    (void)action;
     if (unit.has_component<Engine::Core::PendingRemovalComponent>()) {
       continue;
     }
+    auto* presentation_state = unit.get_component<Engine::Core::CombatStateComponent>();
+    if (presentation_state != nullptr && presentation_state->is_hit_paused) {
+      continue;
+    }
+    process_authored_combat_action(world, unit, presentation_state, delta_time);
+  }
 
-    if (combat_state.is_hit_paused) {
-      combat_state.hit_pause_remaining -= delta_time;
-      if (combat_state.hit_pause_remaining <= 0.0F) {
-        combat_state.is_hit_paused = false;
-        combat_state.hit_pause_remaining = 0.0F;
-      }
+  for (auto [unit, combat_state] :
+       world->entity_view<Engine::Core::CombatStateComponent>()) {
+    if (unit.has_component<Engine::Core::PendingRemovalComponent>() ||
+        combat_state.is_hit_paused) {
       continue;
     }
 
     if (bow_draw_is_held(unit)) {
 
       continue;
+    }
+
+    if (auto const* definition = running_authored_action(unit); definition != nullptr) {
+      auto const* action =
+          unit.get_component<Engine::Core::RpgCommanderActionComponent>();
+      if (action != nullptr && action->action_running &&
+          apply_action_timeline_phase(combat_state, *action, *definition)) {
+        continue;
+      }
+      if (action != nullptr && action->action_completed &&
+          apply_action_timeline_phase(combat_state, *action, *definition)) {
+
+        combat_state.animation_state = CS::Idle;
+        combat_state.state_time = 0.0F;
+        combat_state.state_duration = 0.0F;
+        combat_state.input_buffered = false;
+        combat_state.telegraph_cue = Engine::Core::TelegraphCue::None;
+        combat_state.telegraph_intensity = 0.0F;
+        continue;
+      }
     }
 
     combat_state.state_time += delta_time;
@@ -300,16 +302,6 @@ void process_combat_state(Engine::Core::World* world, float delta_time) {
         combat_state.state_duration =
             phase_duration_for_state(unit, combat_state, combat_state.animation_state);
 
-        if (!combat_state.damage_dealt_this_swing) {
-          auto const* commander =
-              unit.get_component<Engine::Core::CommanderComponent>();
-          auto const* action =
-              unit.get_component<Engine::Core::RpgCommanderActionComponent>();
-          if (commander != nullptr && commander->fpv_controlled &&
-              (action == nullptr || action->combat_action_id == 0U)) {
-            deal_commander_contact_damage(world, unit, combat_state);
-          }
-        }
         break;
       case CS::Impact:
         combat_state.animation_state = CS::Recover;
@@ -341,19 +333,6 @@ void process_combat_state(Engine::Core::World* world, float delta_time) {
       }
       combat_state.state_time = carry;
     }
-  }
-
-  for (auto [unit, action] :
-       world->entity_view<Engine::Core::RpgCommanderActionComponent>()) {
-    (void)action;
-    if (unit.has_component<Engine::Core::PendingRemovalComponent>()) {
-      continue;
-    }
-    auto* presentation_state = unit.get_component<Engine::Core::CombatStateComponent>();
-    if (presentation_state != nullptr && presentation_state->is_hit_paused) {
-      continue;
-    }
-    process_authored_combat_action(world, unit, presentation_state, delta_time);
   }
 }
 

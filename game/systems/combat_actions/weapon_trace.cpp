@@ -16,6 +16,7 @@
 #include "../../../animation/melee_swing_manifest.h"
 #include "../../core/component.h"
 #include "../../core/world.h"
+#include "../combat_rules.h"
 #include "../combat_system/combat_utils.h"
 #include "../rpg_combat_system/rpg_targeting.h"
 #include "animation/bpat/bpat_format.h"
@@ -733,6 +734,15 @@ namespace {
 
 inline constexpr float k_steered_trace_threshold = 0.15F;
 
+inline constexpr float k_directed_hint_score_bias = 0.25F;
+inline constexpr float k_aimed_hint_score_bias = 0.04F;
+
+[[nodiscard]] auto hint_score_bias(const Engine::Core::Entity& attacker) -> float {
+  return Game::Systems::CombatRules::is_player_driven(&attacker)
+             ? k_aimed_hint_score_bias
+             : k_directed_hint_score_bias;
+}
+
 [[nodiscard]] auto steer_amount(const CombatActionDefinition& definition,
                                 const Engine::Core::MeleeIntent& intent) -> float {
   return Engine::Core::melee_intent_strike_delta(anchor_intent_for(definition), intent);
@@ -963,6 +973,18 @@ auto find_weapon_trace_contact(
     return contact;
   }
 
+  auto const* running_action =
+      attacker.get_component<Engine::Core::RpgCommanderActionComponent>();
+  float const action_seconds = running_action != nullptr
+                                   ? std::max(0.001F, running_action->action_duration)
+                                   : 1.0F;
+  float const slice_seconds = std::max(
+      0.001F,
+      (time_span.current_normalized_time - time_span.previous_normalized_time) *
+          action_seconds);
+  QVector3D const tip_travel = segment.current_tip - segment.previous_tip;
+  float const tip_speed = tip_travel.length() / slice_seconds;
+
   auto consider = [&](Engine::Core::Entity* candidate,
                       float& best_score,
                       WeaponTraceContact& best_contact) {
@@ -975,6 +997,9 @@ auto find_weapon_trace_contact(
                   candidate->get_id()) != ignored_target_ids.end()) {
       return;
     }
+
+    float const hint_bias =
+        candidate->get_id() == target_hint_id ? hint_score_bias(attacker) : 0.0F;
 
     for (auto const& soldier :
          Game::Systems::RpgCombat::live_soldier_targets(*candidate)) {
@@ -991,7 +1016,7 @@ auto find_weapon_trace_contact(
         continue;
       }
 
-      float const score = distance.distance + sample.distance * 0.03F;
+      float const score = distance.distance + sample.distance * 0.03F - hint_bias;
       if (score >= best_score) {
         continue;
       }
@@ -1003,17 +1028,11 @@ auto find_weapon_trace_contact(
       best_contact.local_forward = sample.forward;
       best_contact.local_right = sample.right;
       best_contact.contact_point = distance.point;
+      best_contact.contact_speed = tip_speed;
     }
   };
 
   float best_score = std::numeric_limits<float>::infinity();
-  if (target_hint_id != 0) {
-    consider(world.get_entity(target_hint_id), best_score, contact);
-    if (contact.target_id != 0) {
-      return contact;
-    }
-  }
-
   for (auto [candidate, candidate_unit] :
        world.entity_view<Engine::Core::UnitComponent>()) {
     (void)candidate_unit;
@@ -1054,6 +1073,9 @@ auto find_weapon_trace_contact(
       return;
     }
 
+    float const hint_bias =
+        candidate->get_id() == target_hint_id ? hint_score_bias(attacker) : 0.0F;
+
     for (auto const& soldier :
          Game::Systems::RpgCombat::live_soldier_targets(*candidate)) {
       auto sample = make_local_sample(presented_attacker.frame, soldier);
@@ -1062,7 +1084,7 @@ auto find_weapon_trace_contact(
           sample.forward <= 0.0F) {
         continue;
       }
-      float const score = weapon_contact_score(sample, definition, intent);
+      float const score = weapon_contact_score(sample, definition, intent) - hint_bias;
       if (!std::isfinite(score) || score >= best_score) {
         continue;
       }
@@ -1078,13 +1100,6 @@ auto find_weapon_trace_contact(
   };
 
   float best_score = std::numeric_limits<float>::infinity();
-  if (target_hint_id != 0) {
-    consider(world.get_entity(target_hint_id), best_score, contact);
-    if (contact.target_id != 0) {
-      return contact;
-    }
-  }
-
   for (auto [candidate, candidate_unit] :
        world.entity_view<Engine::Core::UnitComponent>()) {
     (void)candidate_unit;
@@ -1092,16 +1107,6 @@ auto find_weapon_trace_contact(
   }
 
   return contact;
-}
-
-auto find_sword_trace_contact(
-    Engine::Core::World& world,
-    Engine::Core::Entity& attacker,
-    const CombatActionDefinition& definition,
-    Engine::Core::EntityID target_hint_id,
-    std::span<const Engine::Core::EntityID> ignored_target_ids) -> WeaponTraceContact {
-  return find_weapon_trace_contact(
-      world, attacker, definition, target_hint_id, ignored_target_ids);
 }
 
 } // namespace Game::Systems::CombatActions

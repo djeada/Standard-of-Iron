@@ -4,6 +4,7 @@
 #include <cmath>
 #include <limits>
 #include <numbers>
+#include <optional>
 
 #include "../../core/component.h"
 #include "../../core/world.h"
@@ -198,6 +199,14 @@ void queue_rpg_contact_presentation(
       .intensity = intensity,
       .outcome = *outcome,
   });
+}
+
+[[nodiscard]] auto
+reported_contact_point(const CombatHitContact& contact) -> std::optional<QVector3D> {
+  if (contact.contact_point.isNull()) {
+    return std::nullopt;
+  }
+  return contact.contact_point;
 }
 
 [[nodiscard]] auto commander_damage_profile(
@@ -622,7 +631,8 @@ auto resolve_commander_action_hit(Engine::Core::World* world,
               Engine::Core::RpgCommanderTargetComponent::k_no_soldier_slot
           ? std::nullopt
           : std::optional<std::uint16_t>(request.contact.target_soldier_slot),
-      request.contact.contact_point);
+      reported_contact_point(request.contact),
+      result.contact.relative_speed);
   result.applied = result.damage.effective_damage > 0;
   queue_rpg_contact_presentation(
       *target, result.contact.contact_point, result.damage, result.applied);
@@ -661,7 +671,8 @@ auto resolve_projectile_impact_hit(Engine::Core::World* world,
         target,
         result.raw_damage,
         request.contact.attacker_id,
-        commander_damage_profile(request.damage_profile));
+        commander_damage_profile(request.damage_profile),
+        reported_contact_point(request.contact));
     result.applied = result.damage.effective_damage > 0;
     queue_rpg_contact_presentation(
         *target, result.contact.contact_point, result.damage, result.applied);

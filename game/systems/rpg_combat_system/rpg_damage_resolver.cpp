@@ -7,6 +7,7 @@
 #include "../../core/ambient_session.h"
 #include "../../core/component.h"
 #include "../../session/deterministic_rng.h"
+#include "../combat_system/damage_application.h"
 
 namespace Game::Systems::RpgCombat {
 
@@ -24,25 +25,28 @@ auto random_float_01() -> float {
 
 } // namespace
 
-RpgDamageResult resolve_rpg_damage(Engine::Core::World*,
+RpgDamageResult resolve_rpg_damage(Engine::Core::World* world,
                                    Engine::Core::Entity* target,
                                    int raw_damage,
-                                   Engine::Core::EntityID) {
+                                   Engine::Core::EntityID attacker_id,
+                                   std::optional<QVector3D> contact_point,
+                                   float impact_speed) {
   RpgDamageResult result;
   if (target == nullptr || raw_damage <= 0) {
     return result;
   }
 
   auto* rpg = target->get_component<Engine::Core::RpgHealthComponent>();
-  if (rpg == nullptr || !rpg->active || rpg->rpg_hp <= 0) {
+  auto const* unit = target->get_component<Engine::Core::UnitComponent>();
+  if (rpg == nullptr || !rpg->active || unit == nullptr || unit->health <= 0) {
     return result;
   }
 
-  if (rpg->dodge_invincible) {
-    return result;
-  }
-
-  int effective = std::max(1, raw_damage - static_cast<int>(std::roundf(rpg->armor)));
+  float const scaled = static_cast<float>(raw_damage) *
+                       std::clamp(rpg->incoming_damage_scale, 0.05F, 4.0F);
+  int effective = std::max(1,
+                           static_cast<int>(std::lround(scaled)) -
+                               static_cast<int>(std::lround(rpg->armor)));
 
   result.is_crit = (random_float_01() < rpg->crit_chance);
   if (result.is_crit) {
@@ -50,10 +54,10 @@ RpgDamageResult resolve_rpg_damage(Engine::Core::World*,
         std::roundf(static_cast<float>(effective) * rpg->crit_multiplier));
   }
 
-  result.effective_damage = effective;
-  rpg->rpg_hp = std::max(0, rpg->rpg_hp - effective);
-  result.killed = (rpg->rpg_hp <= 0);
-
+  auto const application = Game::Systems::Combat::apply_unit_damage(
+      world, target, effective, attacker_id, contact_point, std::nullopt, impact_speed);
+  result.effective_damage = application.applied_damage;
+  result.killed = application.killed;
   return result;
 }
 

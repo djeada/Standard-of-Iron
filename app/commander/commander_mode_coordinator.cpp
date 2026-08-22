@@ -230,8 +230,11 @@ auto CommanderModeCoordinator::enter_commander_control_mode(
           context.commander)) {
     auto* unit = context.commander->get_component<Engine::Core::UnitComponent>();
     if (!rpg->active) {
-      rpg->rpg_max_hp = rpg_pool_for_commander(unit);
-      rpg->rpg_hp = rpg->rpg_max_hp;
+
+      int const pool = std::max(1, rpg_pool_for_commander(unit));
+      int const own_health = unit != nullptr ? std::max(1, unit->max_health) : pool;
+      rpg->incoming_damage_scale =
+          static_cast<float>(own_health) / static_cast<float>(pool);
     }
     rpg->active = true;
   }
@@ -541,7 +544,7 @@ void CommanderModeCoordinator::clear_controlled_commander_state_impl(
   }
   if (auto* rpg = commander->get_component<Engine::Core::RpgHealthComponent>()) {
     rpg->active = false;
-    rpg->dodge_invincible = false;
+    rpg->dodge_grace_remaining = 0.0F;
   }
   if (auto* rpg_targets =
           commander->get_component<Engine::Core::RpgCommanderTargetComponent>()) {
