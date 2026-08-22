@@ -211,12 +211,7 @@ struct PreparedMove {
 
 auto navigation_clearance_for(const Engine::Core::Entity& entity) -> float {
   auto const layout = FormationCombat::resolve_layout(entity);
-  float lateral_extent = layout.body_radius;
-  for (auto const& slot : layout.live_slots) {
-    lateral_extent =
-        std::max(lateral_extent, std::abs(slot.local_x) + layout.body_radius);
-  }
-  return std::max(0.1F, lateral_extent);
+  return Pathfinding::traversal_clearance_for_body(layout.body_radius);
 }
 
 auto prepare_move(Engine::Core::World& world,

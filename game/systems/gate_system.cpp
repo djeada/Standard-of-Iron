@@ -72,12 +72,15 @@ void GateSystem::update(Engine::Core::World* world, float delta_time) {
     }
 
     const auto passage = GateService::passage_extent(transform->rotation.y);
+    const bool spans_x = GateComponent::spans_x_axis(transform->rotation.y);
+    const float along_margin = spans_x ? k_occupancy_margin : 0.0F;
+    const float across_margin = spans_x ? 0.0F : k_occupancy_margin;
     gates.push_back(GateRecord{.entity = entity,
                                .gate = gate,
                                .center_x = transform->position.x,
                                .center_z = transform->position.z,
-                               .occupancy_half_x = passage.half_x + k_occupancy_margin,
-                               .occupancy_half_z = passage.half_z + k_occupancy_margin,
+                               .occupancy_half_x = passage.half_x + along_margin,
+                               .occupancy_half_z = passage.half_z + across_margin,
                                .owner_id = unit->owner_id});
   }
 
