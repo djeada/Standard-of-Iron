@@ -39,6 +39,7 @@
 #include "backend/rigged_character_pipeline.h"
 #include "backend/rigged_cull_pipeline.h"
 #include "backend/shader_uniform_cache.h"
+#include "backend/sky_box_pipeline.h"
 #include "backend/terrain_pipeline.h"
 #include "backend/vegetation_pipeline.h"
 #include "backend/water_pipeline.h"
@@ -296,6 +297,13 @@ auto Backend::initialize() -> bool {
   if (!create_subsystem(
           m_post_process_pipeline, "PostProcessPipeline", m_shader_cache.get())) {
     return false;
+  }
+  m_sky_box_pipeline =
+      std::make_unique<BackendPipelines::SkyBoxPipeline>(m_shader_cache.get());
+  if (!m_sky_box_pipeline->initialize()) {
+    qWarning() << "Backend: SkyBoxPipeline unavailable, commander view keeps the flat"
+                  " sky";
+    m_sky_box_pipeline.reset();
   }
 
   qInfo() << "Backend: Loading basic shaders...";
@@ -1250,6 +1258,8 @@ void Backend::execute_scene(const DrawQueue& queue, const Camera& cam) {
   const QMatrix4x4 view = cam.get_view_matrix();
   const QMatrix4x4 projection = cam.get_projection_matrix();
   const QMatrix4x4 view_proj = projection * view;
+  m_sky_box_transition.advance(m_animation_time - m_sky_box_blend_time);
+  m_sky_box_blend_time = m_animation_time;
   upload_frame_uniform_buffers(view_proj, queue, cam);
   update_contact_shadow_uniforms();
   {
@@ -1301,6 +1311,10 @@ void Backend::execute_scene(const DrawQueue& queue, const Camera& cam) {
       m_post_process_pipeline->set_sun_screen(sun_screen, sun_visibility);
     }
     m_post_process_pipeline->draw_sky(view_proj, cam.get_position());
+    if (m_sky_box_pipeline != nullptr && m_sky_box_transition.is_visible()) {
+      m_sky_box_pipeline->draw(
+          view, projection, m_animation_time, m_sky_box_transition.blend());
+    }
   }
   const float banner_wind_strength = 0.8F + 0.2F * std::sin(m_animation_time * 0.5F);
 

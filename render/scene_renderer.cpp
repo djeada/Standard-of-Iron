@@ -105,6 +105,9 @@ void Renderer::set_world_render_mode(WorldRenderMode mode) {
     return;
   }
   m_view.set_world_render_mode(mode);
+  if (m_gl_backend != nullptr) {
+    m_gl_backend->set_world_render_mode(mode);
+  }
 }
 
 auto Renderer::visibility_mode_config() const -> VisibilityModeConfig {
@@ -154,6 +157,9 @@ auto Renderer::initialize() -> bool {
   }
   m_contact_shadow_shader =
       m_gl_backend != nullptr ? m_gl_backend->troop_shadow_shader() : nullptr;
+  if (m_gl_backend != nullptr) {
+    m_gl_backend->set_world_render_mode(m_view.world_render_mode());
+  }
   m_entity_registry = std::make_unique<EntityRendererRegistry>();
   register_built_in_entity_renderers(*m_entity_registry);
   register_built_in_equipment();

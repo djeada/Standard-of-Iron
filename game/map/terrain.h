@@ -955,6 +955,7 @@ inline constexpr float k_bridge_landing_thickness = 0.06F;
 }
 
 inline constexpr float k_bridge_entry_margin_tiles = 1.0F;
+inline constexpr float k_bridge_cell_half_span_tiles = 0.5F;
 
 [[nodiscard]] inline auto bridge_crossing_entry_margin(float bridge_width,
                                                        float tile_size) -> float {

@@ -827,3 +827,48 @@ TEST(ShaderSource, LocalLightingBlockMatchesTheUploadedStruct) {
   EXPECT_EQ(block.member_names, expected_order)
       << "pack_local_lights_std140 writes these in declaration order";
 }
+
+TEST(ShaderSource, BothSkiesShareOneGradientSoTheRpgCrossFadeStaysClean) {
+  const auto root = find_repo_root();
+  const auto shader_dir = root / "assets" / "shaders";
+
+  for (const auto* name : {"sky.frag", "sky_box.frag"}) {
+    const auto source = read_text(shader_dir / name);
+    ASSERT_FALSE(source.empty()) << name;
+    EXPECT_NE(source.find("#include \"sky_common.glsl\""), std::string::npos) << name;
+    EXPECT_NE(source.find("sky_gradient(ray)"), std::string::npos) << name;
+    EXPECT_NE(source.find("sky_celestial(ray"), std::string::npos) << name;
+
+    EXPECT_EQ(source.find("const float k_sky_horizon_lift"), std::string::npos)
+        << name << " must take the shared gradient constants from sky_common.glsl";
+  }
+
+  const auto common = read_text(shader_dir / "include" / "sky_common.glsl");
+  ASSERT_FALSE(common.empty());
+  EXPECT_NE(common.find("#include \"environment_lighting.glsl\""), std::string::npos);
+  for (const auto* helper : {"vec3 sky_gradient(vec3 ray)",
+                             "vec3 sky_cloud_tint(vec3 ray)",
+                             "vec3 sky_celestial(vec3 ray, float cloud_occlusion)"}) {
+    EXPECT_NE(common.find(helper), std::string::npos) << helper;
+  }
+}
+
+TEST(ShaderSource, SkyBoxCloudMarchIsBoundedAndQualityScaled) {
+  const auto root = find_repo_root();
+  const auto source = read_text(root / "assets" / "shaders" / "sky_box.frag");
+  ASSERT_FALSE(source.empty());
+
+  EXPECT_NE(source.find("uniform float u_sky_box_blend"), std::string::npos)
+      << "the RPG sky needs an alpha to cross-fade over the RTS sky";
+  EXPECT_NE(source.find("SOI_QUALITY_TIER"), std::string::npos)
+      << "the cloud march must shrink on lower shader tiers";
+  EXPECT_NE(source.find("k_box_transmittance_cutoff"), std::string::npos)
+      << "the march must bail out once the clouds are opaque";
+  EXPECT_NE(source.find("if (ray.y <= k_box_min_upward)"), std::string::npos)
+      << "rays below the horizon must skip the march entirely";
+
+  for (const auto* steps : {"SOI_SKY_BOX_STEPS", "SOI_SKY_BOX_LIGHT_STEPS"}) {
+    const auto defined_at = source.find(std::string("#define ") + steps);
+    EXPECT_NE(defined_at, std::string::npos) << steps;
+  }
+}

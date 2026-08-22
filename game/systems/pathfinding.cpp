@@ -240,7 +240,37 @@ auto Pathfinding::is_world_position_walkable(const QVector3D& world_position,
     return false;
   }
 
-  (void)clearance_radius;
+  if (clearance_radius <= 0.0F) {
+    return true;
+  }
+
+  float const radius = std::min(clearance_radius, k_max_body_clearance);
+  float const half_cell = m_grid_cell_size * 0.5F;
+  float const center_u = world_position.x() - m_grid_offset_x;
+  float const center_v = world_position.z() - m_grid_offset_z;
+  int const min_x = static_cast<int>(std::floor(center_u - radius - half_cell));
+  int const max_x = static_cast<int>(std::ceil(center_u + radius + half_cell));
+  int const min_z = static_cast<int>(std::floor(center_v - radius - half_cell));
+  int const max_z = static_cast<int>(std::ceil(center_v + radius + half_cell));
+
+  for (int cell_z = min_z; cell_z <= max_z; ++cell_z) {
+    for (int cell_x = min_x; cell_x <= max_x; ++cell_x) {
+      if (cell_x == grid.x && cell_z == grid.y) {
+        continue;
+      }
+      if (is_walkable(cell_x, cell_z, passability)) {
+        continue;
+      }
+
+      float const gap_x =
+          std::max(0.0F, std::abs(center_u - static_cast<float>(cell_x)) - half_cell);
+      float const gap_z =
+          std::max(0.0F, std::abs(center_v - static_cast<float>(cell_z)) - half_cell);
+      if ((gap_x * gap_x) + (gap_z * gap_z) < radius * radius) {
+        return false;
+      }
+    }
+  }
   return true;
 }
 

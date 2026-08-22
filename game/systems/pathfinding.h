@@ -2,6 +2,7 @@
 
 #include <QVector3D>
 
+#include <algorithm>
 #include <array>
 #include <atomic>
 #include <cstdint>
@@ -83,6 +84,14 @@ public:
   auto is_world_position_walkable(const QVector3D& world_position,
                                   Passability passability = Passability::Light,
                                   float clearance_radius = 0.0F) const -> bool;
+
+  static constexpr float k_min_traversal_clearance = 0.1F;
+  static constexpr float k_max_traversal_clearance = 0.45F;
+
+  [[nodiscard]] static auto traversal_clearance_for_body(float body_radius) -> float {
+    return std::clamp(
+        body_radius, k_min_traversal_clearance, k_max_traversal_clearance);
+  }
   auto is_world_segment_walkable(const QVector3D& from,
                                  const QVector3D& to,
                                  Passability passability = Passability::Light,
@@ -142,6 +151,7 @@ private:
   static constexpr int k_edge_step_penalty = 1;
 
   static constexpr int k_clearance_radius = 3;
+  static constexpr float k_max_body_clearance = 1.5F;
   static constexpr int k_clearance_ring_penalty = 4;
   static constexpr int k_clearance_avoid_weight = 6;
   static constexpr int k_turn_penalty = 1;
