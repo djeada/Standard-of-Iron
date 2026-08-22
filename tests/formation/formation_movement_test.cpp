@@ -264,3 +264,124 @@ TEST_F(FormationMovementTest, NarrowGroundCompressesRatherThanStackingUnits) {
     placed.push_back(result.positions[i]);
   }
 }
+
+TEST_F(FormationMovementTest,
+       MaintainFormationFollowsACorridorRatherThanAStraightLine) {
+  Engine::Core::World world;
+  auto const units = make_squad(world);
+  QVector3D const target(0.0F, 0.0F, 24.0F);
+
+  auto const result = commit(world, units, target, MovementPolicy::MaintainFormation);
+  ASSERT_TRUE(result.valid);
+
+  auto& registry = ArmyFormationRegistry::instance();
+  const auto* formation = registry.find(result.group_id);
+  ASSERT_NE(formation, nullptr);
+  EXPECT_TRUE(formation->move_plan.active)
+      << "a maintained move never built a corridor";
+  EXPECT_FALSE(formation->move_plan.corridor.empty());
+  EXPECT_NEAR(formation->move_plan.corridor.back().z(), target.z(), 2.0F);
+}
+
+TEST_F(FormationMovementTest, TheAnchorAdvancesSmoothlyInsteadOfJumpingBetweenStages) {
+  Engine::Core::World world;
+  auto const units = make_squad(world);
+
+  auto const result = commit(
+      world, units, QVector3D(0.0F, 0.0F, 24.0F), MovementPolicy::MaintainFormation);
+  ASSERT_TRUE(result.valid);
+
+  auto& registry = ArmyFormationRegistry::instance();
+  ArmyFormationRuntime runtime;
+
+  float largest_step = 0.0F;
+  float travelled = 0.0F;
+  QVector3D previous_anchor = registry.find(result.group_id)->anchor;
+
+  for (int tick = 0; tick < 40; ++tick) {
+    const auto* formation = registry.find(result.group_id);
+    if (formation == nullptr || !formation->has_destination) {
+      break;
+    }
+    for (auto const member : formation->members) {
+      auto* entity = world.get_entity(member);
+      const auto* slot = formation->find_slot_for(member);
+      if (entity == nullptr || slot == nullptr) {
+        continue;
+      }
+      auto* transform = entity->get_component<Engine::Core::TransformComponent>();
+      transform->position.x = slot->world_position.x();
+      transform->position.z = slot->world_position.z();
+    }
+    runtime.update(&world, 0.3F);
+
+    const auto* advanced = registry.find(result.group_id);
+    ASSERT_NE(advanced, nullptr);
+    const QVector3D step(advanced->anchor.x() - previous_anchor.x(),
+                         0.0F,
+                         advanced->anchor.z() - previous_anchor.z());
+    largest_step = std::max(largest_step, step.length());
+    travelled += step.length();
+    previous_anchor = advanced->anchor;
+  }
+
+  EXPECT_GT(travelled, 4.0F) << "the formation never advanced";
+  EXPECT_LT(largest_step, 1.5F)
+      << "the anchor teleported " << largest_step << " m in one advance";
+}
+
+TEST_F(FormationMovementTest, SlotErrorStaysBoundedWhileTheFormationMarches) {
+  Engine::Core::World world;
+  auto const units = make_squad(world);
+
+  auto const result = commit(
+      world, units, QVector3D(0.0F, 0.0F, 20.0F), MovementPolicy::MaintainFormation);
+  ASSERT_TRUE(result.valid);
+
+  auto& registry = ArmyFormationRegistry::instance();
+  ArmyFormationRuntime runtime;
+  float worst_slot_error = 0.0F;
+
+  for (int tick = 0; tick < 40; ++tick) {
+    const auto* formation = registry.find(result.group_id);
+    if (formation == nullptr || !formation->has_destination) {
+      break;
+    }
+    for (auto const member : formation->members) {
+      auto* entity = world.get_entity(member);
+      const auto* slot = formation->find_slot_for(member);
+      if (entity == nullptr || slot == nullptr) {
+        continue;
+      }
+      auto* transform = entity->get_component<Engine::Core::TransformComponent>();
+      const QVector3D position(
+          transform->position.x, transform->position.y, transform->position.z);
+      const float error = formation->slot_error(position, member);
+      if (error >= 0.0F && tick >= 10) {
+        worst_slot_error = std::max(worst_slot_error, error);
+      }
+      transform->position.x +=
+          (slot->world_position.x() - transform->position.x) * 0.5F;
+      transform->position.z +=
+          (slot->world_position.z() - transform->position.z) * 0.5F;
+    }
+    runtime.update(&world, 0.3F);
+  }
+
+  EXPECT_LT(worst_slot_error, 2.5F)
+      << "once formed up, members drifted " << worst_slot_error
+      << " m from their slots while marching";
+}
+
+TEST_F(FormationMovementTest, SlotErrorIsUnknownForANonMember) {
+  Engine::Core::World world;
+  auto const units = make_squad(world);
+
+  auto const result = commit(
+      world, units, QVector3D(0.0F, 0.0F, 8.0F), MovementPolicy::MaintainFormation);
+  ASSERT_TRUE(result.valid);
+
+  const auto* formation = ArmyFormationRegistry::instance().find(result.group_id);
+  ASSERT_NE(formation, nullptr);
+  EXPECT_LT(formation->slot_error(QVector3D(0.0F, 0.0F, 0.0F), 999999U), 0.0F);
+}

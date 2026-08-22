@@ -753,6 +753,7 @@ void GameEngine::update_presentation(float dt) {
   m_runtime.minimap_unit_update_accumulator =
       frame_state.minimap_unit_update_accumulator;
   if (m_commander_view_model->active()) {
+    m_commander_view_model->sample_frame_intent();
     m_commander_view_model->update_camera_presentation(dt);
   } else {
     m_camera_view_model->update_follow();
@@ -1057,6 +1058,24 @@ void GameEngine::handle_order_feedback(const App::Core::OrderOutcome& outcome) {
 
   m_order_markers.push(outcome, m_world);
 
+  {
+    App::Core::PlayerFeedbackEvent event;
+    event.type = outcome.accepted() ? App::Core::PlayerFeedbackType::OrderIssued
+                                    : App::Core::PlayerFeedbackType::OrderRejected;
+    if (!outcome.accepted() &&
+        outcome.failure == App::Core::OrderFailure::InsufficientResources) {
+      event.type = App::Core::PlayerFeedbackType::ResourceInsufficient;
+    }
+    event.entity = outcome.target;
+    event.has_world_position = outcome.has_destination;
+    event.world_position = outcome.destination;
+    event.reason =
+        outcome.accepted()
+            ? QString::fromLatin1(App::Core::order_kind_name(outcome.kind))
+            : QString::fromLatin1(App::Core::order_failure_name(outcome.failure));
+    m_player_feedback.publish(std::move(event));
+  }
+
   if (outcome.accepted()) {
     switch (outcome.kind) {
     case App::Core::OrderKind::Move:
@@ -1092,19 +1111,23 @@ void GameEngine::handle_order_feedback(const App::Core::OrderOutcome& outcome) {
   if (outcome.accepted()) {
     if (const char* cue = accepted_order_cue(outcome.kind)) {
       Game::Audio::play_cue(cue);
+    } else {
+      Game::Audio::play_cue(Game::Audio::Cue::k_command_accept);
     }
     if (outcome.kind == App::Core::OrderKind::Attack && outcome.target != 0) {
       App::Controllers::ActionVFX::spawn_attack_arrow(m_world, outcome.target);
     }
     message = App::Core::accepted_order_message(outcome);
   } else {
-    Game::Audio::play_cue(Game::Audio::Cue::k_ui_error);
+    Game::Audio::play_cue(Game::Audio::Cue::k_command_refuse);
     message = outcome.reason;
   }
 
-  emit order_feedback(QString::fromLatin1(App::Core::order_kind_name(outcome.kind)),
-                      outcome.accepted(),
-                      message);
+  emit order_feedback(
+      QString::fromLatin1(App::Core::order_kind_name(outcome.kind)),
+      outcome.accepted(),
+      message,
+      QString::fromLatin1(App::Core::order_failure_name(outcome.failure)));
 }
 
 void GameEngine::sync_attack_targeting() {
@@ -2852,6 +2875,7 @@ void GameEngine::publish_client_context() {
   m_client.active_camera = m_camera;
   m_client.rts_camera = m_rts_camera.get();
   m_client.commander_camera = m_commander_camera.get();
+  m_client.feedback = &m_player_feedback;
 
   m_client.picking = m_picking_service.get();
   m_client.selection = m_selection_controller.get();

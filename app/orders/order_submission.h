@@ -28,14 +28,14 @@ struct OrderRequest {
                                        int owner_id,
                                        OrderRequest request) -> OrderOutcome;
 
-[[nodiscard]] auto rejected_order(OrderKind kind, QString reason) -> OrderOutcome;
+[[nodiscard]] auto rejected_order(OrderKind kind, OrderRefusal refusal) -> OrderOutcome;
 
 [[nodiscard]] auto rejected_order_at(OrderKind kind,
-                                     QString reason,
+                                     OrderRefusal refusal,
                                      const QVector3D& destination) -> OrderOutcome;
 
 [[nodiscard]] auto rejected_order_on(OrderKind kind,
-                                     QString reason,
+                                     OrderRefusal refusal,
                                      Engine::Core::EntityID target) -> OrderOutcome;
 
 [[nodiscard]] auto

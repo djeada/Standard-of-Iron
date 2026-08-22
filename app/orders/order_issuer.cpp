@@ -35,8 +35,8 @@ auto OrderIssuer::issue(App::Core::OrderKind kind,
   if (m_world == nullptr) {
     return publish(App::Core::rejected_order(
         kind,
-        App::Core::rejection_reason_text(Game::Command::Rejection::MalformedPayload,
-                                         kind)));
+        App::Core::rejection_refusal(Game::Command::Rejection::MalformedPayload,
+                                     kind)));
   }
 
   App::Core::OrderRequest request;
@@ -52,20 +52,20 @@ auto OrderIssuer::issue(App::Core::OrderKind kind,
 }
 
 auto OrderIssuer::reject(App::Core::OrderKind kind,
-                         const QString& reason) -> App::Core::OrderOutcome {
-  return publish(App::Core::rejected_order(kind, reason));
+                         App::Core::OrderRefusal refusal) -> App::Core::OrderOutcome {
+  return publish(App::Core::rejected_order(kind, std::move(refusal)));
 }
 
 auto OrderIssuer::reject_at(App::Core::OrderKind kind,
-                            const QString& reason,
+                            App::Core::OrderRefusal refusal,
                             const QVector3D& destination) -> App::Core::OrderOutcome {
-  return publish(App::Core::rejected_order_at(kind, reason, destination));
+  return publish(App::Core::rejected_order_at(kind, std::move(refusal), destination));
 }
 
 auto OrderIssuer::reject_on(App::Core::OrderKind kind,
-                            const QString& reason,
+                            App::Core::OrderRefusal refusal,
                             Engine::Core::EntityID target) -> App::Core::OrderOutcome {
-  return publish(App::Core::rejected_order_on(kind, reason, target));
+  return publish(App::Core::rejected_order_on(kind, std::move(refusal), target));
 }
 
 } // namespace App::Orders

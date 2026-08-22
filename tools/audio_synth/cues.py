@@ -100,6 +100,28 @@ def ui_error():
     return lowpass(out, 900.0)
 
 
+def ui_confirm():
+    body = inst.bronze(720.0, 0.09, 930)
+    lift = gain_of(inst.bronze(1080.0, 0.07, 931), 0.45)
+    seat = gain_of(inst.wood(300.0, 0.05, 932), 0.35)
+    return lowpass(place(_pad(mix(body, seat), 0.18), lift, 0.035), 8200.0)
+
+
+def command_accept():
+    knock = inst.shield(300.0, 0.07, 933)
+    strap = gain_of(inst.cloth(0.045, 934, centre=2100.0, curve=3.0), 0.32)
+    ring = gain_of(inst.bronze(940.0, 0.06, 935), 0.28)
+    return lowpass(place(_pad(mix(knock, strap), 0.2), ring, 0.03), 7000.0)
+
+
+def command_refuse():
+    first = inst.thud(126.0, 0.1, 936, drop=0.75)
+    second = gain_of(inst.thud(104.0, 0.12, 937, drop=0.8), 0.8)
+    scrape = gain_of(inst.cloth(0.07, 938, centre=430.0, curve=2.0), 0.35)
+    out = place(_pad(mix(first, scrape), 0.26), second, 0.075)
+    return lowpass(out, 760.0)
+
+
 def ui_notification():
     flourish = inst.paper(0.26, 116, density=110)
     quill = gain_of(inst.wood(880.0, 0.05, 117), 0.3)
@@ -426,6 +448,13 @@ RECIPES: dict[str, Recipe] = {
     "ui.toggle": Recipe("sfx/ui/toggle_latch.ogg", -16.0, ui_toggle, 1, takes=2),
     "ui.error": Recipe("sfx/ui/error_thud.ogg", -13.0, ui_error, 1, takes=2),
     "ui.notification": Recipe("sfx/ui/notification.ogg", -18.0, ui_notification, 2),
+    "ui.confirm": Recipe("sfx/ui/confirm_seal.ogg", -15.0, ui_confirm, 1, takes=2),
+    "command.accept": Recipe(
+        "sfx/ui/command_accept.ogg", -16.0, command_accept, 1, takes=3
+    ),
+    "command.refuse": Recipe(
+        "sfx/ui/command_refuse.ogg", -14.0, command_refuse, 1, takes=2
+    ),
     "ui.select_unit": Recipe(
         "sfx/ui/select_unit.ogg", -15.0, ui_select_unit, 1, takes=3
     ),

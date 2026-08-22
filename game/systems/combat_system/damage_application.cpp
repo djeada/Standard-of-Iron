@@ -1187,6 +1187,8 @@ void apply_hit_feedback(Engine::Core::Entity* target,
   }
 
   feedback->is_reacting = true;
+  feedback->recent_damage_remaining =
+      Engine::Core::HitFeedbackComponent::k_recent_damage_window;
   feedback->source_attacker_id = attacker_id;
   feedback->reaction_time = 0.0F;
   feedback->reaction_duration = Engine::Core::hit_reaction_duration(kind);

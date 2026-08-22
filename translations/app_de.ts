@@ -6073,6 +6073,22 @@ um die Vorschau zu sehen</translation>
         <source>That building cannot be taken down.</source>
         <translation>Dieses Gebäude lässt sich nicht abreißen.</translation>
     </message>
+    <message>
+        <source>Cannot reach that spot.</source>
+        <translation>Dieser Ort ist nicht erreichbar.</translation>
+    </message>
+    <message>
+        <source>That target is out of range.</source>
+        <translation>Dieses Ziel ist außer Reichweite.</translation>
+    </message>
+    <message>
+        <source>Those units are busy with another order.</source>
+        <translation>Diese Einheiten sind mit einem anderen Befehl beschäftigt.</translation>
+    </message>
+    <message>
+        <source>Not enough resources.</source>
+        <translation>Nicht genug Rohstoffe.</translation>
+    </message>
 </context>
 <context>
     <name>OutcomeLayout</name>
@@ -7004,6 +7020,30 @@ Baumeister ernten es als Nahrung, die Zivilisten rekrutiert</translation>
         <source>Takes priority over anything else on its key while a rally can be placed</source>
         <translation>Hat auf ihrer Taste Vorrang vor allem anderen, solange eine Sammelfahne gesetzt werden kann</translation>
     </message>
+    <message>
+        <source>No ground under the cursor</source>
+        <translation>Kein Boden unter dem Zeiger</translation>
+    </message>
+    <message>
+        <source>Cannot reach</source>
+        <translation>Nicht erreichbar</translation>
+    </message>
+    <message>
+        <source>No match is running</source>
+        <translation>Es läuft kein Gefecht</translation>
+    </message>
+    <message>
+        <source>Spectating</source>
+        <translation>Zuschauen</translation>
+    </message>
+    <message>
+        <source>Nothing selected</source>
+        <translation>Nichts ausgewählt</translation>
+    </message>
+    <message>
+        <source>No target under the cursor</source>
+        <translation>Kein Ziel unter dem Zeiger</translation>
+    </message>
 </context>
 <context>
     <name>RpgFpvOverlay</name>
@@ -7528,14 +7568,6 @@ Baumeister ernten es als Nahrung, die Zivilisten rekrutiert</translation>
         <translation>Kennzeichnet jede Seite zusätzlich zur Farbe durch eine eigene Form des Auswahlrings</translation>
     </message>
     <message>
-        <source>Damage numbers</source>
-        <translation>Schadenszahlen</translation>
-    </message>
-    <message>
-        <source>Shows the damage dealt above each hit while leading the commander</source>
-        <translation>Zeigt den ausgeteilten Schaden über jedem Treffer, während Ihr den Kommandanten führt</translation>
-    </message>
-    <message>
         <source>Screen effects:</source>
         <translation>Bildschirmeffekte:</translation>
     </message>
@@ -7574,6 +7606,22 @@ Baumeister ernten es als Nahrung, die Zivilisten rekrutiert</translation>
     <message>
         <source>Sets both how far in from the edge the band reaches and how fast the camera moves inside it. At this setting the band is %1 px along the sides and %2 px along the top and bottom, measured at your interface scale.</source>
         <translation>Legt zugleich fest, wie weit der Streifen vom Rand nach innen reicht und wie schnell sich die Kamera darin bewegt. Bei dieser Einstellung ist der Streifen an den Seiten %1 px und oben und unten %2 px breit, gemessen bei deiner Oberflächenskalierung.</translation>
+    </message>
+    <message>
+        <source>Important only</source>
+        <translation>Nur wichtige</translation>
+    </message>
+    <message>
+        <source>All hits</source>
+        <translation>Alle Treffer</translation>
+    </message>
+    <message>
+        <source>Damage numbers:</source>
+        <translation>Schadenszahlen:</translation>
+    </message>
+    <message>
+        <source>Numbers are a readout, not the feedback. Combat stays readable from motion, sound and hit reactions with them off.</source>
+        <translation>Zahlen sind eine Anzeige, kein Feedback. Der Kampf bleibt auch ohne sie an Bewegung, Klang und Trefferreaktionen lesbar.</translation>
     </message>
 </context>
 <context>

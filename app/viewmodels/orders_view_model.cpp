@@ -5,9 +5,17 @@
 #include "app/input/cursor_manager.h"
 #include "app/input/input_command_handler.h"
 #include "app/orders/command_controller.h"
+#include "app/orders/context_intent.h"
+#include "app/orders/movement_utils.h"
 #include "app/orders/rts_action_model.h"
 #include "app/viewmodels/commander_view_model.h"
 #include "app/viewmodels/placement_view_model.h"
+#include "game/core/world.h"
+#include "game/render_bridge/picking_service.h"
+#include "game/systems/match_snapshot.h"
+#include "game/systems/nav_grid.h"
+#include "game/systems/selection_system.h"
+#include "scene/camera.h"
 
 namespace App::ViewModels {
 namespace {
@@ -89,6 +97,94 @@ void OrdersViewModel::set_hover_at_screen(qreal sx, qreal sy) {
   }
 
   m_commander.update_rally_preview_at(sx, sy);
+  refresh_context_intent(sx, sy);
+}
+
+void OrdersViewModel::clear_context_intent() {
+  const auto empty = App::Core::to_variant_map(App::Core::ContextIntentResolution{});
+  if (m_context_intent == empty) {
+    return;
+  }
+  m_context_intent = empty;
+  emit context_intent_changed();
+}
+
+void OrdersViewModel::refresh_context_intent(qreal sx, qreal sy) {
+  auto* world = m_context.world;
+  auto* camera = m_context.active_camera;
+  const auto* viewport = m_context.viewport;
+  if (world == nullptr || camera == nullptr || viewport == nullptr) {
+    clear_context_intent();
+    return;
+  }
+
+  const QPointF mapped = viewport->map_input(sx, sy);
+
+  App::Core::ContextIntentRequest request;
+  request.world = world;
+  request.local_owner_id = m_context.local_owner_id;
+  request.cursor_mode =
+      m_context.cursor != nullptr ? m_context.cursor->mode() : CursorMode::Normal;
+  request.spectator_mode =
+      m_context.level != nullptr && m_context.level->is_spectator_mode;
+  request.placing_construction = m_placement.is_placing_construction();
+  request.placing_formation = m_placement.is_placing_formation();
+
+  std::vector<Engine::Core::EntityID> selection;
+  if (auto* selection_system = world->get_system<Game::Systems::SelectionSystem>()) {
+    selection = selection_system->get_selected_units();
+  }
+  request.selection = &selection;
+
+  const auto enemy_id = App::Utils::pick_enemy_unit_at_screen(world,
+                                                              camera,
+                                                              mapped.x(),
+                                                              mapped.y(),
+                                                              viewport->width,
+                                                              viewport->height,
+                                                              m_context.local_owner_id);
+  if (enemy_id != 0U) {
+    request.hovered_entity_id = enemy_id;
+    request.hovered_is_enemy_unit = true;
+  } else {
+    request.hovered_entity_id =
+        Game::Systems::PickingService::pick_unit_first(static_cast<float>(mapped.x()),
+                                                       static_cast<float>(mapped.y()),
+                                                       *world,
+                                                       *camera,
+                                                       viewport->width,
+                                                       viewport->height,
+                                                       0);
+  }
+
+  if (m_context.input != nullptr) {
+    QString product_type;
+    Engine::Core::EntityID interaction_target = 0;
+    request.interaction_available = m_context.input->resolve_context_interaction(
+        mapped.x(), mapped.y(), *viewport, product_type, interaction_target);
+    request.interaction_product_type = product_type;
+    if (request.interaction_available && interaction_target != 0) {
+      request.hovered_entity_id = interaction_target;
+    }
+  }
+
+  QVector3D ground;
+  if (m_context.picking != nullptr &&
+      m_context.picking->screen_to_ground(
+          mapped, *camera, viewport->width, viewport->height, ground)) {
+    request.has_ground = true;
+    request.ground = ground;
+    request.ground_is_walkable =
+        Game::Systems::NavGrid::is_world_position_walkable(ground);
+  }
+
+  const auto resolution = App::Core::resolve_context_intent(request);
+  auto map = App::Core::to_variant_map(resolution);
+  if (map == m_context_intent) {
+    return;
+  }
+  m_context_intent = std::move(map);
+  emit context_intent_changed();
 }
 
 void OrdersViewModel::on_map_clicked(qreal sx, qreal sy) {

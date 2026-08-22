@@ -7,6 +7,7 @@
 #include "../core/world.h"
 #include "../map/terrain_service.h"
 #include "../units/spawn_type.h"
+#include "builder_product_types.h"
 #include "food_targets.h"
 #include "nav_grid.h"
 
@@ -250,6 +251,16 @@ auto collect_interaction_target_highlights(const InteractionTargetingRequest& re
     highlights.markers.push_back(candidate.marker);
   }
   return highlights;
+}
+
+auto harvest_product_for_prop(Game::Map::WorldProp::Type type) -> std::string_view {
+  if (Game::Map::is_tree_world_prop_type(type)) {
+    return k_builder_product_cut_tree;
+  }
+  if (Game::Map::is_boulder_world_prop_type(type)) {
+    return k_builder_product_collect_stone;
+  }
+  return k_builder_product_collect_iron_ore;
 }
 
 auto interaction_action_key(InteractionAction action) -> std::string_view {

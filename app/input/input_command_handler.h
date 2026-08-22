@@ -88,6 +88,13 @@ public:
                                   qreal sy,
                                   int local_owner_id,
                                   const ViewportState& viewport);
+  [[nodiscard]] bool
+  resolve_context_interaction(qreal sx,
+                              qreal sy,
+                              const ViewportState& viewport,
+                              QString& out_product_type,
+                              Engine::Core::EntityID& out_target) const;
+
   [[nodiscard]] bool any_selected_in_hold_mode() const;
   [[nodiscard]] bool any_selected_in_guard_mode() const;
   [[nodiscard]] bool any_selected_in_formation_mode() const;

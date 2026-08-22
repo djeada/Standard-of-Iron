@@ -18,6 +18,9 @@ class PlacementViewModel;
 class OrdersViewModel : public QObject {
   Q_OBJECT
 
+  Q_PROPERTY(
+      QVariantMap context_intent READ context_intent NOTIFY context_intent_changed)
+
 public:
   OrdersViewModel(const App::Core::ClientContext& context,
                   App::Core::ClientHost& host,
@@ -58,6 +61,14 @@ public:
   Q_INVOKABLE [[nodiscard]] QString toggle_state(const QString& mode) const;
   Q_INVOKABLE [[nodiscard]] QVariantMap mode_availability() const;
 
+  [[nodiscard]] auto context_intent() const -> QVariantMap { return m_context_intent; }
+  void refresh_context_intent(qreal sx, qreal sy);
+  void clear_context_intent();
+
+signals:
+  void context_intent_changed();
+
+public:
   void reset_gesture() { m_right_mouse.reset(); }
 
 private:
@@ -80,6 +91,7 @@ private:
   PlacementViewModel& m_placement;
   CommanderViewModel& m_commander;
   RightMouseGesture m_right_mouse;
+  QVariantMap m_context_intent;
 };
 
 } // namespace App::ViewModels

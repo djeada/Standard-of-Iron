@@ -16,7 +16,7 @@ Item {
     readonly property int left_stack_bottom: waveTracker.visible ? waveTracker.y + waveTracker.height : topPanel.height
     property int selection_tick: 0
     property bool has_movable_units: false
-    property bool commander_rpg_mode: typeof game !== 'undefined' && game.commander.control_mode === "commander" && game.commander.game_mode === "rpg"
+    property bool commander_rpg_mode: typeof game !== 'undefined' && game.commander.mode_state === "active"
     property var commander_status: ({})
     readonly property var economy: typeof game !== 'undefined' && game && game.economy ? game.economy : null
     property bool commander_rally_overlay_blocked: commander_rpg_mode && typeof game !== 'undefined' && (game.cursor_mode === "place_commander_rally" || game.cursor_mode === "place_barracks_rally")
@@ -97,7 +97,7 @@ Item {
 
         interval: 33
         repeat: true
-        running: typeof game !== 'undefined' && game.commander.control_mode === "commander" && !!game.commander.status
+        running: typeof game !== 'undefined' && game.commander.mode_state === "active" && !!game.commander.status
         triggeredOnStart: true
         onTriggered: hud.commander_status = game.commander.status()
     }
@@ -143,7 +143,7 @@ Item {
         Loader {
             id: bottomPanelLoader
             anchors.fill: parent
-            sourceComponent: typeof game !== 'undefined' && game.commander.control_mode === "commander" ? commanderBottomHudComponent : rtsBottomHudComponent
+            sourceComponent: typeof game !== 'undefined' && game.commander.mode_state === "active" ? commanderBottomHudComponent : rtsBottomHudComponent
         }
 
         Component {

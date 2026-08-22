@@ -80,8 +80,14 @@ void apply_knockback_step(Engine::Core::Entity& unit,
 void process_hit_feedback(Engine::Core::World* world, float delta_time) {
   for (auto [unit, feedback] :
        world->entity_view<Engine::Core::HitFeedbackComponent>()) {
-    if (unit.has_component<Engine::Core::PendingRemovalComponent>() ||
-        !feedback.is_reacting) {
+    if (unit.has_component<Engine::Core::PendingRemovalComponent>()) {
+      continue;
+    }
+
+    feedback.recent_damage_remaining =
+        std::max(0.0F, feedback.recent_damage_remaining - delta_time);
+
+    if (!feedback.is_reacting) {
       continue;
     }
 

@@ -12,6 +12,18 @@ Item {
     property bool reducedMotion: Design.A11y.reducedMotion
     readonly property int maxActiveBursts: reducedMotion ? 12 : 24
 
+    function isImportant(ev) {
+        return !!ev.killingBlow || !!ev.focused || Number(ev.damageRatio || 0.0) >= 0.25;
+    }
+
+    function shouldShow(ev) {
+        if (Design.A11y.damageNumberMode === "off")
+            return false;
+        if (Design.A11y.damageNumberMode === "important")
+            return root.isImportant(ev);
+        return true;
+    }
+
     function canSpawnBurst() {
         return effectLayer.children.length < maxActiveBursts;
     }
@@ -170,6 +182,8 @@ Item {
                 if (!root.canSpawnBurst())
                     break;
                 var ev = events[i];
+                if (!root.shouldShow(ev))
+                    continue;
                 damageTick.createObject(effectLayer, {
                         "dmg": Number(ev.damage || 0),
                         "hits": Number(ev.hits || 1),

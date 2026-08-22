@@ -1,6 +1,7 @@
 #include <gtest/gtest.h>
 
 #include "app/commander/commander_camera_rig.h"
+#include "app/commander/rts_camera_bookmark.h"
 #include "core/component.h"
 #include "scene/camera.h"
 
@@ -126,4 +127,124 @@ TEST(CommanderCameraRig, ResetClearsSmoothedState) {
   EXPECT_EQ(rig.aim_blend(), 0.0F);
   EXPECT_EQ(rig.bob_amplitude(), 0.0F);
   EXPECT_EQ(rig.framing_state(), CommanderFramingState::Explore);
+}
+
+namespace {
+
+auto rig_inputs_at(float yaw,
+                   const QVector3D& position,
+                   float dt) -> App::Core::CommanderCameraInputs {
+  App::Core::CommanderCameraInputs inputs;
+  inputs.dt = dt;
+  inputs.view_yaw_degrees = yaw;
+  inputs.view_pitch_degrees = 0.0F;
+  inputs.commander_position = position;
+  return inputs;
+}
+
+} // namespace
+
+TEST(CommanderCameraRigFeelTest, MouseRotationIsAppliedWithoutSmoothingLag) {
+  App::Core::CommanderCameraRig rig;
+  Render::GL::Camera camera;
+  const QVector3D anchor(0.0F, 0.0F, 0.0F);
+
+  for (int settle = 0; settle < 240; ++settle) {
+    static_cast<void>(rig.update(camera, rig_inputs_at(0.0F, anchor, 1.0F / 60.0F)));
+  }
+  const QVector3D settled_eye = camera.get_position();
+
+  static_cast<void>(rig.update(camera, rig_inputs_at(90.0F, anchor, 1.0F / 60.0F)));
+  const QVector3D turned_eye = camera.get_position();
+
+  EXPECT_GT((turned_eye - settled_eye).length(), 2.0F)
+      << "a 90 degree turn barely moved the eye, so rotation is still being smoothed";
+
+  static_cast<void>(rig.update(camera, rig_inputs_at(90.0F, anchor, 1.0F / 60.0F)));
+  EXPECT_LT((camera.get_position() - turned_eye).length(), 0.05F)
+      << "the eye kept drifting after the turn finished";
+}
+
+TEST(CommanderCameraRigFeelTest, TheVisualAnchorLagsTheSimulationPositionButIsBounded) {
+  App::Core::CommanderCameraRig rig;
+  Render::GL::Camera camera;
+
+  static_cast<void>(rig.update(
+      camera, rig_inputs_at(0.0F, QVector3D(0.0F, 0.0F, 0.0F), 1.0F / 60.0F)));
+  EXPECT_TRUE(rig.state().anchor_valid);
+  EXPECT_FLOAT_EQ(rig.state().visual_anchor.x(), 0.0F);
+
+  static_cast<void>(rig.update(
+      camera, rig_inputs_at(0.0F, QVector3D(4.0F, 0.0F, 0.0F), 1.0F / 60.0F)));
+  const float lagged_x = rig.state().visual_anchor.x();
+  EXPECT_GT(lagged_x, 0.0F) << "the anchor never followed the commander";
+  EXPECT_LT(lagged_x, 4.0F) << "the anchor snapped instead of easing";
+  EXPECT_GE(lagged_x, 4.0F - 0.31F) << "the anchor lagged further than the cap allows";
+
+  for (int frame = 0; frame < 120; ++frame) {
+    static_cast<void>(rig.update(
+        camera, rig_inputs_at(0.0F, QVector3D(4.0F, 0.0F, 0.0F), 1.0F / 60.0F)));
+  }
+  EXPECT_NEAR(rig.state().visual_anchor.x(), 4.0F, 0.01F);
+}
+
+TEST(CommanderCameraRigFeelTest, LookVelocityIsReportedForTheFrame) {
+  App::Core::CommanderCameraRig rig;
+  Render::GL::Camera camera;
+  const QVector3D anchor(0.0F, 0.0F, 0.0F);
+
+  static_cast<void>(rig.update(camera, rig_inputs_at(0.0F, anchor, 1.0F / 60.0F)));
+  static_cast<void>(rig.update(camera, rig_inputs_at(6.0F, anchor, 1.0F / 60.0F)));
+  EXPECT_NEAR(rig.state().yaw_velocity, 360.0F, 1.0F);
+  EXPECT_FLOAT_EQ(rig.state().yaw, 6.0F);
+
+  static_cast<void>(rig.update(camera, rig_inputs_at(6.0F, anchor, 1.0F / 60.0F)));
+  EXPECT_FLOAT_EQ(rig.state().yaw_velocity, 0.0F);
+}
+
+TEST(CommanderCameraRigFeelTest, YawVelocityCrossesTheSeamWithoutASpike) {
+  App::Core::CommanderCameraRig rig;
+  Render::GL::Camera camera;
+  const QVector3D anchor(0.0F, 0.0F, 0.0F);
+
+  static_cast<void>(rig.update(camera, rig_inputs_at(358.0F, anchor, 1.0F / 60.0F)));
+  static_cast<void>(rig.update(camera, rig_inputs_at(2.0F, anchor, 1.0F / 60.0F)));
+  EXPECT_NEAR(rig.state().yaw_velocity, 240.0F, 1.0F);
+}
+
+TEST(RtsCameraBookmarkTest, EnteringAndLeavingCommanderModeKeepsTheStrategicView) {
+  Render::GL::Camera rts;
+  rts.set_perspective(52.0F, 16.0F / 9.0F, 0.2F, 240.0F);
+  rts.look_at(QVector3D(12.0F, 20.0F, -8.0F),
+              QVector3D(12.0F, 0.0F, 4.0F),
+              QVector3D(0.0F, 1.0F, 0.0F));
+
+  const auto bookmark = App::Core::RtsCameraBookmark::capture(rts);
+  ASSERT_TRUE(bookmark.valid);
+
+  rts.look_at(QVector3D(0.0F, 2.0F, 0.0F),
+              QVector3D(0.0F, 2.0F, 1.0F),
+              QVector3D(0.0F, 1.0F, 0.0F));
+  rts.set_perspective(68.0F, 16.0F / 9.0F, 0.05F, 200.0F);
+
+  bookmark.restore(rts);
+  EXPECT_NEAR(rts.get_position().x(), 12.0F, 1.0e-4F);
+  EXPECT_NEAR(rts.get_position().y(), 20.0F, 1.0e-4F);
+  EXPECT_NEAR(rts.get_position().z(), -8.0F, 1.0e-4F);
+  EXPECT_NEAR(rts.get_target().z(), 4.0F, 1.0e-4F);
+  EXPECT_NEAR(rts.get_fov(), 52.0F, 1.0e-4F);
+  EXPECT_NEAR(rts.get_far(), 240.0F, 1.0e-4F);
+}
+
+TEST(RtsCameraBookmarkTest, AnEmptyBookmarkLeavesTheCameraAlone) {
+  Render::GL::Camera camera;
+  camera.look_at(QVector3D(3.0F, 4.0F, 5.0F),
+                 QVector3D(0.0F, 0.0F, 0.0F),
+                 QVector3D(0.0F, 1.0F, 0.0F));
+
+  const App::Core::RtsCameraBookmark empty;
+  empty.restore(camera);
+
+  EXPECT_NEAR(camera.get_position().x(), 3.0F, 1.0e-4F);
+  EXPECT_NEAR(camera.get_position().z(), 5.0F, 1.0e-4F);
 }
