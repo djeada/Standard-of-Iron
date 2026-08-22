@@ -4,8 +4,8 @@
 
 #include <cstdint>
 
-#include "attachment_frames.h"
 #include "elephant_gait.h"
+#include "render/elephant/schema/attachment_schema.h"
 
 namespace Render::GL {
 

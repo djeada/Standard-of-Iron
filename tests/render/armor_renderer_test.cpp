@@ -19,7 +19,7 @@
 #include "render/equipment/armor/work_apron_renderer.h"
 #include "render/equipment/equipment_registry.h"
 #include "render/equipment/equipment_submit.h"
-#include "render/humanoid/humanoid_renderer_base.h"
+#include "render/humanoid/runtime/humanoid_renderer.h"
 
 using namespace Render::GL;
 

@@ -11,6 +11,7 @@
 #include <span>
 
 #include "elephant_manifest.h"
+#include "render/creature/assets/creature_lod_geometry.h"
 #include "render/creature/part_graph.h"
 #include "render/creature/skeleton.h"
 #include "render/submitter.h"
@@ -462,27 +463,25 @@ namespace Render::Elephant {
 
 namespace {
 
-auto static_minimal_parts() noexcept -> const Render::Creature::CompiledWholeMeshLod& {
-  static const auto compiled =
-      Render::Creature::compile_whole_mesh_lod(elephant_manifest().lod_minimal);
-  return compiled;
-}
-
-auto static_full_parts() noexcept -> const Render::Creature::CompiledWholeMeshLod& {
-  static const auto compiled =
-      Render::Creature::compile_whole_mesh_lod(elephant_manifest().lod_full);
-  return compiled;
+auto lod_geometry_slot() noexcept -> Render::Creature::CreatureLodGeometrySlot& {
+  static Render::Creature::CreatureLodGeometrySlot slot(&elephant_runtime_manifest,
+                                                        "elephant");
+  return slot;
 }
 
 } // namespace
+
+void initialize_elephant_asset() {
+  lod_geometry_slot().initialize();
+}
 
 auto elephant_creature_spec() noexcept -> const Render::Creature::CreatureSpec& {
   static const Render::Creature::CreatureSpec spec = [] {
     Render::Creature::CreatureSpec s;
     s.species_name = "elephant";
     s.topology = elephant_topology();
-    s.lod_minimal = static_minimal_parts().part_graph();
-    s.lod_full = static_full_parts().part_graph();
+    s.lod_minimal = lod_geometry_slot().get().minimal.part_graph();
+    s.lod_full = lod_geometry_slot().get().full.part_graph();
     return s;
   }();
   return spec;

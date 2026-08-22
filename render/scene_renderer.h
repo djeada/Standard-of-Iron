@@ -28,6 +28,8 @@
 #include "prepare_worker_pool.h"
 #include "render/async_template_prewarm.h"
 #include "render/creature/pipeline/creature_render_graph.h"
+#include "render/creature/quadruped/runtime_context.h"
+#include "render/humanoid/runtime/runtime_context.h"
 #include "render/render_view_state.h"
 #include "render/world_render_mode.h"
 #include "render/world_view.h"
@@ -502,6 +504,12 @@ private:
   int m_render_queue_index = 1;
 
   std::unique_ptr<EntityRendererRegistry> m_entity_registry;
+
+  Render::Humanoid::HumanoidRuntimeContext m_humanoid_runtime;
+
+  Render::Creature::Quadruped::QuadrupedRuntimeContext m_quadruped_runtime;
+  std::optional<Render::Creature::Quadruped::ScopedQuadrupedRuntimeContext>
+      m_quadruped_runtime_scope;
   std::unique_ptr<EffectsSubmitter> m_effects_submitter;
   TerrainSurfaceCmd::HeightResources m_terrain_height_resources{};
   std::unordered_set<Engine::Core::EntityID> m_selected_ids;

@@ -713,7 +713,7 @@ TEST(CommanderControlRegressionTest, CommanderJumpAddsVisualLiftToRenderAndCamer
   const auto controller_source = app_source(root, "commander_control_controller.cpp");
   const auto commander_mode_source = app_source(root, "commander_mode_coordinator.cpp");
   const auto prepare_submission_source =
-      read_text(root / "render" / "humanoid" / "prepare_submission.cpp");
+      read_text(root / "render" / "humanoid" / "runtime" / "instance_prepare.cpp");
   const auto locomotion_manifest_source =
       read_text(root / "animation" / "locomotion_manifest.cpp");
   const auto ambient_manifest_source =

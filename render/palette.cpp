@@ -6,7 +6,7 @@
 #include <cmath>
 #include <cstdint>
 
-#include "humanoid/humanoid_math.h"
+#include "humanoid/runtime/humanoid_math.h"
 #include "math/math_utils.h"
 
 namespace Render::GL {

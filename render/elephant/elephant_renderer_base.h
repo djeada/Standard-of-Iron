@@ -2,9 +2,11 @@
 
 #include <QVector3D>
 
-#include "attachment_frames.h"
+#include <utility>
+
 #include "dimensions.h"
 #include "render/creature/pipeline/unit_visual_spec.h"
+#include "render/elephant/runtime/motion_sample.h"
 #include "render/entity/registry.h"
 
 namespace Render::GL {
@@ -14,12 +16,20 @@ class ISubmitter;
 
 class ElephantRendererBase {
 public:
+  ElephantRendererBase();
+
+  explicit ElephantRendererBase(Render::Creature::Pipeline::UnitVisualSpec spec)
+      : m_visual_spec(std::move(spec)) {}
+
   virtual ~ElephantRendererBase() = default;
 
-  virtual auto visual_spec() const -> const Render::Creature::Pipeline::UnitVisualSpec&;
+  [[nodiscard]] auto
+  visual_spec() const noexcept -> const Render::Creature::Pipeline::UnitVisualSpec& {
+    return m_visual_spec;
+  }
 
-  virtual auto get_proportion_scaling() const -> QVector3D {
-    return {1.0F, 1.0F, 1.0F};
+  [[nodiscard]] auto get_proportion_scaling() const noexcept -> QVector3D {
+    return m_visual_spec.scaling.as_vector();
   }
 
   void render(const DrawContext& ctx,
@@ -28,7 +38,7 @@ public:
               const HowdahAttachmentFrame* shared_howdah,
               const ElephantMotionSample* shared_motion,
               ISubmitter& out,
-              HorseLOD lod) const;
+              Render::Creature::CreatureLOD lod) const;
 
   void render(const DrawContext& ctx,
               const AnimationInputs& anim,
@@ -38,8 +48,12 @@ public:
               ISubmitter& out) const;
 
 protected:
-  mutable Render::Creature::Pipeline::UnitVisualSpec m_visual_spec_cache{};
-  mutable bool m_visual_spec_baked{false};
+  void set_visual_spec(Render::Creature::Pipeline::UnitVisualSpec spec) {
+    m_visual_spec = std::move(spec);
+  }
+
+private:
+  Render::Creature::Pipeline::UnitVisualSpec m_visual_spec{};
 };
 
 } // namespace Render::GL

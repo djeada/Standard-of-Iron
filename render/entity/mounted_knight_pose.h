@@ -3,8 +3,8 @@
 #include <algorithm>
 
 #include "render/horse/horse_renderer_base.h"
-#include "render/humanoid/humanoid_math.h"
-#include "render/humanoid/humanoid_renderer_base.h"
+#include "render/humanoid/runtime/humanoid_math.h"
+#include "render/humanoid/runtime/humanoid_renderer.h"
 
 namespace Render::GL {
 

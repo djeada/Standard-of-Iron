@@ -12,8 +12,8 @@
 #include "registry.h"
 #include "render/creature/pipeline/creature_asset.h"
 #include "render/creature/pipeline/unit_visual_spec.h"
-#include "render/humanoid/humanoid_proportion_profiles.h"
-#include "render/humanoid/humanoid_renderer_base.h"
+#include "render/humanoid/runtime/humanoid_renderer.h"
+#include "render/humanoid/schema/humanoid_proportion_profiles.h"
 
 namespace Render::GL {
 
@@ -39,12 +39,10 @@ struct HealerStyleRegistration {
   HealerStyleConfig style;
 };
 
-void apply_healer_channel_pose_layer(
-    const Render::Creature::Pipeline::HumanoidPoseLayerContext& context,
-    HumanoidPose& io_pose);
-void apply_healer_staff_pose_layer(
-    const Render::Creature::Pipeline::HumanoidPoseLayerContext& context,
-    HumanoidPose& io_pose);
+void apply_healer_channel_pose(const Render::GL::HumanoidAnimationContext& anim,
+                               HumanoidPose& io_pose);
+void apply_healer_staff_pose(const Render::GL::HumanoidAnimationContext& anim,
+                             HumanoidPose& io_pose);
 
 void register_healer_style(std::string_view style_key, const HealerStyleConfig& style);
 void register_healer_styles(std::span<const HealerStyleRegistration> styles);

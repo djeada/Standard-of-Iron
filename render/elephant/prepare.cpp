@@ -17,9 +17,11 @@
 #include "render/creature/pipeline/preparation_common.h"
 #include "render/creature/pipeline/prepared_submit.h"
 #include "render/creature/pipeline/unit_visual_spec.h"
+#include "render/creature/quadruped/mount_scale.h"
+#include "render/creature/quadruped/quadruped_prepare.h"
 #include "render/creature/quadruped/render_stats.h"
+#include "render/creature/quadruped/runtime_context.h"
 #include "render/gl/humanoid/animation/animation_inputs.h"
-#include "render/horse/horse_motion.h"
 #include "render/math/creature_math_utils.h"
 #include "render/submitter.h"
 #include "scene/camera.h"
@@ -51,14 +53,20 @@ namespace {}
 
 namespace Render::GL {
 
-static ElephantRenderStats s_elephantRenderStats;
+namespace {
+
+auto elephant_stats() noexcept -> ElephantRenderStats& {
+  return Render::Creature::Quadruped::current_quadruped_runtime_context().elephant;
+}
+
+} // namespace
 
 auto get_elephant_render_stats() -> const ElephantRenderStats& {
-  return s_elephantRenderStats;
+  return elephant_stats();
 }
 
 void reset_elephant_render_stats() {
-  s_elephantRenderStats.reset();
+  elephant_stats().reset();
 }
 
 void ElephantRendererBase::render(const DrawContext& ctx,
@@ -67,33 +75,34 @@ void ElephantRendererBase::render(const DrawContext& ctx,
                                   const HowdahAttachmentFrame* shared_howdah,
                                   const ElephantMotionSample* shared_motion,
                                   ISubmitter& out,
-                                  HorseLOD lod) const {
+                                  Render::Creature::CreatureLOD lod) const {
+
   DrawContext const render_ctx =
       ctx.template_prewarm ? Render::Creature::Pipeline::make_runtime_prewarm_ctx(ctx)
                            : ctx;
 
-  HorseLOD effective_lod = lod;
-  if (render_ctx.force_horse_lod) {
-    effective_lod = render_ctx.forced_horse_lod;
+  Render::Creature::CreatureLOD effective_lod = lod;
+  if (render_ctx.force_quadruped_lod) {
+    effective_lod = render_ctx.forced_quadruped_lod;
   }
 
-  ++s_elephantRenderStats.total;
+  ++elephant_stats().total;
 
-  if (effective_lod == HorseLOD::Culled) {
-    ++s_elephantRenderStats.skipped_lod;
+  if (effective_lod == Render::Creature::CreatureLOD::Culled) {
+    ++elephant_stats().skipped_lod;
     return;
   }
 
-  ++s_elephantRenderStats.rendered;
+  ++elephant_stats().rendered;
 
   switch (effective_lod) {
-  case HorseLOD::Full:
-    ++s_elephantRenderStats.lod_full;
+  case Render::Creature::CreatureLOD::Full:
+    ++elephant_stats().lod_full;
     break;
-  case HorseLOD::Minimal:
-    ++s_elephantRenderStats.lod_minimal;
+  case Render::Creature::CreatureLOD::Minimal:
+    ++elephant_stats().lod_minimal;
     break;
-  case HorseLOD::Culled:
+  case Render::Creature::CreatureLOD::Culled:
     break;
   }
 
@@ -115,7 +124,13 @@ void ElephantRendererBase::render(const DrawContext& ctx,
                                   const HowdahAttachmentFrame* shared_howdah,
                                   const ElephantMotionSample* shared_motion,
                                   ISubmitter& out) const {
-  render(ctx, anim, profile, shared_howdah, shared_motion, out, HorseLOD::Full);
+  render(ctx,
+         anim,
+         profile,
+         shared_howdah,
+         shared_motion,
+         out,
+         Render::Creature::CreatureLOD::Full);
 }
 
 } // namespace Render::GL
@@ -147,7 +162,7 @@ void prepare_elephant_render(const Render::GL::ElephantRendererBase& owner,
                 anim,
                 Engine::Core::get_or_add_component<
                     Render::Creature::ElephantAnimationStateComponent>(ctx.entity),
-                Render::GL::mount_model_scale(ctx.entity),
+                Render::Creature::Quadruped::mount_model_scale(ctx.entity),
                 Animation::resolve_soldier_individuality({
                     .soldier_seed =
                         ctx.entity != nullptr
@@ -165,53 +180,32 @@ void prepare_elephant_render(const Render::GL::ElephantRendererBase& owner,
           ctx.world_view.terrain_or_empty(), elephant_ctx.model);
 
   namespace RCP = Render::Creature::Pipeline;
-  RCP::CreatureGraphInputs graph_inputs{};
-  graph_inputs.ctx = &elephant_ctx;
-  graph_inputs.anim = &anim;
-  graph_inputs.entity = ctx.entity;
-  RCP::CreatureLodDecision lod_decision{};
-  lod_decision.lod = lod;
-  auto graph_output = RCP::build_base_graph_output(graph_inputs, lod_decision);
-  graph_output.spec = owner.visual_spec();
-  graph_output.seed = 0U;
+  namespace RCQ = Render::Creature::Quadruped;
+
+  RCQ::QuadrupedRuntimeInput input{};
+  input.ctx = &elephant_ctx;
+  input.anim = &anim;
+  input.spec = &owner.visual_spec();
+  input.kind = RCP::CreatureKind::Elephant;
+  input.lod = lod;
+  input.animation = elephant_state_for_motion(motion, anim);
+  input.phase = (anim.is_dying || anim.is_dead) ? anim.death_progress : motion.phase;
+  input.world = elephant_ctx.model;
+  input.seed = 0U;
+  input.surface_world_y = elephant_surface_world_y;
+  input.surface_height_valid = true;
+  input.shadow_intensity_scale = (anim.is_dying || anim.is_dead) ? 0.45F : 1.0F;
+
+  auto const body = RCQ::build_quadruped_body(input);
+
   RCP::PreparedElephantBodyState body_state;
-  body_state.graph = graph_output;
+  body_state.graph = body.graph;
   body_state.variant = v;
-  body_state.animation_state = elephant_state_for_motion(motion, anim);
-  body_state.phase =
-      (anim.is_dying || anim.is_dead) ? anim.death_progress : motion.phase;
+  body_state.animation_state = input.animation;
+  body_state.phase = input.phase;
   out.bodies.add_quadruped(body_state);
 
-  QVector3D const elephant_world_pos = RCP::model_world_origin(elephant_ctx.model);
-  float camera_distance = 0.0F;
-  if (elephant_ctx.camera != nullptr) {
-    camera_distance =
-        (elephant_world_pos - elephant_ctx.camera->get_position()).length();
-  }
-  RCP::QuadrupedShadowStateInputs shadow_inputs{};
-  shadow_inputs.ctx = &elephant_ctx;
-  shadow_inputs.graph = &graph_output;
-  shadow_inputs.world_pos = elephant_world_pos;
-  shadow_inputs.kind = RCP::CreatureKind::Elephant;
-  shadow_inputs.lod = lod;
-  shadow_inputs.camera_distance = camera_distance;
-  {
-
-    const QVector3D forward = elephant_ctx.model.mapVector(QVector3D(0.0F, 0.0F, 1.0F));
-    shadow_inputs.facing_yaw_degrees =
-        qRadiansToDegrees(std::atan2(double(forward.x()), double(forward.z())));
-  }
-  shadow_inputs.intensity_scale = (anim.is_dying || anim.is_dead) ? 0.45F : 1.0F;
-  shadow_inputs.surface_world_y = elephant_surface_world_y;
-  shadow_inputs.surface_height_valid = true;
-  const auto shadow_state = RCP::prepare_quadruped_shadow_state(shadow_inputs);
-  if (shadow_state.enabled) {
-    if (out.shadow_batch.empty()) {
-      out.shadow_batch.init(
-          shadow_state.shader, shadow_state.mesh, shadow_state.light_dir);
-    }
-    out.shadow_batch.add(shadow_state.model, shadow_state.alpha, shadow_state.pass);
-  }
+  RCQ::add_quadruped_shadow(input, body, out);
 }
 
 } // namespace Render::Elephant

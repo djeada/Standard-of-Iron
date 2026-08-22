@@ -14,8 +14,8 @@
 #include "render/creature/pipeline/unit_visual_spec.h"
 #include "render/creature/primitive_geometry.h"
 #include "render/creature/spec.h"
-#include "render/humanoid/humanoid_spec.h"
-#include "render/humanoid/skeleton.h"
+#include "render/humanoid/asset/humanoid_spec.h"
+#include "render/humanoid/runtime/skeleton_evaluator.h"
 #include "render/submitter.h"
 
 namespace {
@@ -165,7 +165,7 @@ TEST(HumanoidSpecTest, SpecReferenceIsStable) {
 #include "render/geom/transforms.h"
 #include "render/gl/mesh.h"
 #include "render/gl/primitives.h"
-#include "render/humanoid/humanoid_math.h"
+#include "render/humanoid/runtime/humanoid_math.h"
 
 namespace {
 
@@ -522,9 +522,7 @@ TEST(HumanoidSpecTest, SkeletonSpecReusesHumanoidTopologyWithBoneGraph) {
 TEST(HumanoidSpecTest, SkeletonProportionLayerSeatsSkullCloserToRibCage) {
   HumanoidPose pose = make_upright_pose();
   float const before = (pose.head_pos - pose.neck_base).length();
-  Render::Creature::Pipeline::HumanoidPoseLayerContext context{};
-
-  Render::Humanoid::apply_skeleton_proportion_pose_layer(context, pose);
+  Render::Humanoid::apply_skeleton_proportion_pose(pose);
 
   float const after = (pose.head_pos - pose.neck_base).length();
   EXPECT_NEAR(after, before * 0.70F, 0.0001F);

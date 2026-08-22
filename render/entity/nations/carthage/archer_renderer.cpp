@@ -4,8 +4,8 @@
 
 #include "archer_style.h"
 #include "render/creature/pipeline/creature_asset.h"
-#include "render/humanoid/humanoid_proportion_profiles.h"
-#include "render/humanoid/humanoid_spec.h"
+#include "render/humanoid/asset/humanoid_spec.h"
+#include "render/humanoid/schema/humanoid_proportion_profiles.h"
 
 namespace Render::GL::Carthage {
 namespace {
@@ -54,7 +54,7 @@ const std::array<ArcherRendererRegistration, 1> k_skeleton_archer_renderers{{
     {.renderer_key = "troops/iron_sepulcher/skeleton_archer",
      .style_key = "iron_sepulcher",
      .creature_asset_id = Render::Creature::Pipeline::k_skeleton_humanoid_asset,
-     .pose_layer = &Render::Humanoid::apply_skeleton_proportion_pose_layer},
+     .pose_policy = Render::Humanoid::HumanoidPosePolicy::SkeletonProportions},
 }};
 
 } // namespace

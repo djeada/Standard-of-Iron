@@ -9,9 +9,6 @@ public:
   using HorseRendererBase::render;
 
   HorseRenderer();
-
-  auto
-  visual_spec() const -> const Render::Creature::Pipeline::UnitVisualSpec& override;
 };
 
 } // namespace Render::GL

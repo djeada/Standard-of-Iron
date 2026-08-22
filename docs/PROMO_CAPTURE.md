@@ -544,7 +544,7 @@ fixed in the renderer rather than worked around in the shot list.
 had no hysteresis, so a body sitting within centimetres of a plane flipped as
 the camera moved -- measured on the commander's chase camera, sixty-six
 soldiers flipped eighty-seven times in sixteen seconds, some twice inside two
-frames. `prepare_submission.cpp` now remembers which soldiers it drew recently
+frames. `render/humanoid/runtime/instance_prepare.cpp` now remembers which soldiers it drew recently
 and requires a wider margin to drop one than to pick it up, which took the same
 run to twenty flips with nothing oscillating. It costs nothing measurable: the
 `performance_30v30` contract still runs at a p95 of 1.4 ms.

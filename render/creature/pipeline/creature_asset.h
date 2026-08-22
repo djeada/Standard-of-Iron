@@ -15,6 +15,7 @@
 #include <vector>
 
 #include "render/creature/render_request.h"
+#include "render/creature/skeleton_blend_profile.h"
 #include "render/creature/spec.h"
 #include "render/static_attachment_spec.h"
 #include "unit_visual_spec.h"
@@ -37,6 +38,15 @@ using AttachmentSetId = std::uint32_t;
 inline constexpr AttachmentSetId k_invalid_attachment_set_id = 0U;
 
 using BindPaletteFn = std::span<const QMatrix4x4> (*)() noexcept;
+
+using BoneOriginFn = QVector3D (*)(const void* user, std::uint32_t bone);
+
+using BodyPoseProbeFn = void (*)(std::uint32_t entity_id,
+                                 std::uint16_t instance_index,
+                                 const QMatrix4x4& world,
+                                 std::uint32_t bone_count,
+                                 BoneOriginFn origin,
+                                 const void* user);
 using FillRoleColorsFn = std::uint32_t (*)(const void* variant,
                                            QVector3D* out,
                                            std::size_t max_roles);
@@ -61,6 +71,9 @@ struct CreatureAsset {
   std::uint32_t bpat_species_id{0};
   const Render::Creature::CreatureSpec* spec{nullptr};
   const Render::Creature::SkeletonTopology* topology{nullptr};
+
+  const Render::Creature::SkeletonBlendProfile* blend_profile{nullptr};
+  BodyPoseProbeFn body_pose_probe{nullptr};
   std::uint8_t role_count{0};
   std::uint8_t max_bones{0};
   BindPaletteFn bind_palette{nullptr};

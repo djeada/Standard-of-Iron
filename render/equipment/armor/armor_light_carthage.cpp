@@ -17,11 +17,12 @@
 #include "render/geom/parts.h"
 #include "render/geom/transforms.h"
 #include "render/gl/primitives.h"
-#include "render/humanoid/humanoid_math.h"
-#include "render/humanoid/humanoid_renderer_base.h"
-#include "render/humanoid/humanoid_spec.h"
-#include "render/humanoid/mesh_helpers.h"
-#include "render/humanoid/style_palette.h"
+#include "render/humanoid/asset/humanoid_derived_meshes.h"
+#include "render/humanoid/asset/humanoid_spec.h"
+#include "render/humanoid/asset/mesh_helpers.h"
+#include "render/humanoid/runtime/humanoid_math.h"
+#include "render/humanoid/runtime/humanoid_renderer.h"
+#include "render/humanoid/runtime/style_palette.h"
 #include "torso_local_archetype_utils.h"
 
 namespace Render::GL {
@@ -63,7 +64,8 @@ auto armor_light_carthage_archetype(const QMatrix4x4& cuirass,
     }
   }
 
-  Mesh* torso_mesh = torso_mesh_without_bottom_cap();
+  Mesh* torso_mesh = Render::Humanoid::humanoid_mesh_part(
+      Render::Humanoid::HumanoidMeshPart::TorsoNoBottomCap);
   if (torso_mesh == nullptr) {
     torso_mesh = get_unit_torso();
   }

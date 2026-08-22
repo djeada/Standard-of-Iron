@@ -121,6 +121,8 @@ const std::set<std::string>& render_files_using_game_systems() {
       "render/entity/healer_renderer_common.cpp",
       "render/entity/healing_beam_renderer.cpp",
       "render/entity/healing_waves_renderer.cpp",
+
+      "render/entity/formation_instance_layout.cpp",
       "render/entity/nations/carthage/builder_renderer.cpp",
       "render/entity/nations/carthage/catapult_renderer.cpp",
       "render/entity/nations/carthage/healer_renderer.cpp",
@@ -134,7 +136,8 @@ const std::set<std::string>& render_files_using_game_systems() {
       "render/geom/projectile_renderer.cpp",
       "render/geom/range_rings.h",
       "render/gl/humanoid/animation/animation_inputs.cpp",
-      "render/humanoid/prepare_internal.h",
+      "render/humanoid/runtime/humanoid_renderer.cpp",
+      "render/humanoid/runtime/instance_prepare.cpp",
       "render/scene_renderer.cpp",
       "render/scene_renderer.h",
       "render/scene_walk.cpp",

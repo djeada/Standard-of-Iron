@@ -23,10 +23,11 @@
 #include "render/equipment/primitive_archetype_utils.h"
 #include "render/geom/transforms.h"
 #include "render/gl/primitives.h"
-#include "render/humanoid/humanoid_math.h"
-#include "render/humanoid/humanoid_renderer_base.h"
-#include "render/humanoid/humanoid_spec.h"
-#include "render/humanoid/skeleton.h"
+#include "render/humanoid/asset/bind_skeleton.h"
+#include "render/humanoid/asset/humanoid_spec.h"
+#include "render/humanoid/runtime/humanoid_math.h"
+#include "render/humanoid/runtime/humanoid_renderer.h"
+#include "render/humanoid/runtime/skeleton_evaluator.h"
 #include "render/static_attachment_spec.h"
 
 namespace Render::GL {

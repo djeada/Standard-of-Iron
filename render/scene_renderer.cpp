@@ -60,9 +60,9 @@
 #include "ground/visibility_texture_helper.h"
 #include "horse/dimensions.h"
 #include "horse/horse_renderer_base.h"
-#include "humanoid/cache_control.h"
-#include "humanoid/humanoid_renderer_base.h"
-#include "humanoid/render_stats.h"
+#include "humanoid/runtime/frame_control.h"
+#include "humanoid/runtime/humanoid_renderer.h"
+#include "humanoid/runtime/runtime_stats.h"
 #include "material_classification.h"
 #include "pass/construction_preview_pass.h"
 #include "pass/frame_context.h"
@@ -161,6 +161,7 @@ auto Renderer::initialize() -> bool {
     m_gl_backend->set_world_render_mode(m_view.world_render_mode());
   }
   m_entity_registry = std::make_unique<EntityRendererRegistry>();
+  m_quadruped_runtime_scope.emplace(m_quadruped_runtime);
   register_built_in_entity_renderers(*m_entity_registry);
   register_built_in_equipment();
   (void)RenderArchetypeRegistry::instance().warm_all();
@@ -199,11 +200,9 @@ void Renderer::begin_frame() {
   Render::Profiling::PhaseScope const collect_scope(
       &profile, Render::Profiling::Phase::Collection);
 
-  advance_pose_cache_frame();
-
-  reset_humanoid_render_stats();
-  reset_horse_render_stats();
-  reset_elephant_render_stats();
+  m_humanoid_runtime.begin_frame();
+  m_humanoid_runtime.reset_stats();
+  m_quadruped_runtime.reset();
 
   Render::VisibilityBudgetTracker::instance().reset_frame();
   m_battle_optimizer.begin_frame();

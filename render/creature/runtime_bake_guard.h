@@ -32,6 +32,8 @@ private:
 void report_runtime_bake_violation(RuntimeBakeOperation operation,
                                    std::string_view detail);
 
+void report_missing_preloaded_asset(std::string_view detail);
+
 [[nodiscard]] auto
 runtime_bake_operation_name(RuntimeBakeOperation operation) -> std::string_view;
 

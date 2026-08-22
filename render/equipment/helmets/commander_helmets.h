@@ -6,7 +6,7 @@
 #include <cstddef>
 #include <cstdint>
 
-#include "render/humanoid/humanoid_renderer_base.h"
+#include "render/humanoid/runtime/humanoid_renderer.h"
 #include "render/render_archetype.h"
 #include "render/static_attachment_spec.h"
 

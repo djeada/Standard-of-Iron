@@ -661,7 +661,7 @@ Roman legionaries wear red cloaks and carry rectangular shields. Carthaginian in
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
 
-The base class HumanoidRendererBase in [humanoid/rig.h](https://github.com/djeada/Standard-of-Iron/blob/main/render/humanoid/rig.h) handles everything that's common to all humanoids: computing the pose from animation state, drawing the basic body parts, coordinating the rendering sequence. But it has virtual methods for the nation-specific bits.
+The base class HumanoidRendererBase in [humanoid/runtime/humanoid_renderer.h](https://github.com/djeada/Standard-of-Iron/blob/main/render/humanoid/runtime/humanoid_renderer.h) handles everything that's common to all humanoids: computing the pose from animation state, drawing the basic body parts, coordinating the rendering sequence. But it has virtual methods for the nation-specific bits.
 
 Each nation has derived classes that override these methods. Looking at the Carthaginian spearman in [spearman_renderer.cpp](https://github.com/djeada/Standard-of-Iron/blob/main/render/entity/nations/carthage/spearman_renderer.cpp), you'll see it sets up purple tunics, bronze helmets, and the distinctive Carthaginian visual style.
 
@@ -1097,7 +1097,7 @@ When performance tanks, it's usually one of three things:
 
 - State thrashing means commands aren't sorted properly. Fire up RenderDoc or Nsight and look at the call sequence. If you see shader/texture binds alternating rapidly, the sort isn't working.
 
-- Vertex bloat means meshes are too detailed for how small they appear on screen. This points to the LOD system in [rig.h](https://github.com/djeada/Standard-of-Iron/blob/main/render/humanoid/rig.h)—check the distance thresholds.
+- Vertex bloat means meshes are too detailed for how small they appear on screen. This points to the LOD system in [humanoid_renderer.h](https://github.com/djeada/Standard-of-Iron/blob/main/render/humanoid/runtime/humanoid_renderer.h)—check the distance thresholds.
 
 When specific units don't render but debug shapes do, the renderer probably isn't registered. Check [entity/registry.cpp](https://github.com/djeada/Standard-of-Iron/blob/main/render/entity/registry.cpp) and make sure there's a registration call for that unit type. Missing registrations are the most common cause of invisible units.
 

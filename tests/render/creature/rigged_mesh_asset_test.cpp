@@ -11,7 +11,7 @@
 #include "render/creature/spec.h"
 #include "render/elephant/elephant_spec.h"
 #include "render/horse/horse_spec.h"
-#include "render/humanoid/humanoid_spec.h"
+#include "render/humanoid/asset/humanoid_spec.h"
 #include "render/rigged_mesh_bake.h"
 #include "render/rigged_mesh_cache.h"
 

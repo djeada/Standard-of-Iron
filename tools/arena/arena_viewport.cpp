@@ -94,7 +94,7 @@
 #include "render/ground/terrain_feature_manager.h"
 #include "render/ground/terrain_scatter_manager.h"
 #include "render/ground/terrain_surface_manager.h"
-#include "render/humanoid/render_stats.h"
+#include "render/humanoid/runtime/runtime_stats.h"
 #include "render/profiling/combat_animation_diagnostics.h"
 #include "render/profiling/frame_continuity_analyzer.h"
 #include "render/profiling/frame_profile.h"

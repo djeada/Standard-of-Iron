@@ -42,10 +42,11 @@
 #include "render/gl/humanoid/humanoid_constants.h"
 #include "render/gl/humanoid/humanoid_types.h"
 #include "render/horse/horse_spec.h"
-#include "render/humanoid/cache_control.h"
-#include "render/humanoid/pose_cache_components.h"
-#include "render/humanoid/prepare.h"
-#include "render/humanoid/skeleton.h"
+#include "render/humanoid/runtime/frame_control.h"
+#include "render/humanoid/runtime/instance_state.h"
+#include "render/humanoid/runtime/prepare.h"
+#include "render/humanoid/runtime/runtime_context.h"
+#include "render/humanoid/schema/skeleton_schema.h"
 #include "render/submitter.h"
 #include "render/template_cache.h"
 #include "render/world_view.h"
@@ -147,6 +148,17 @@ auto rider_root_matrix(Render::Creature::ArchetypeId archetype_id,
       clip.frame_offset + static_cast<std::uint32_t>(frame_idx), root_index);
 }
 
+namespace {
+
+auto test_runtime(std::uint32_t frame_index)
+    -> Render::Humanoid::HumanoidRuntimeContext& {
+  thread_local Render::Humanoid::HumanoidRuntimeContext runtime;
+  runtime.frame_index = frame_index;
+  return runtime;
+}
+
+} // namespace
+
 TEST(MountedPrepare, ProducesHorseMountAndHumanoidRiderRows) {
   using namespace Render::Creature::Pipeline;
 
@@ -197,7 +209,8 @@ TEST(MountedPrepare, ShadowPairProducesNoDrawCalls) {
   Render::GL::AnimationInputs const anim{};
 
   Render::Humanoid::HumanoidPreparation prep;
-  Render::Humanoid::prepare_humanoid_instances(renderer, ctx, anim, 0, prep);
+  Render::Humanoid::prepare_humanoid_instances(
+      renderer, ctx, anim, test_runtime(0U), prep);
 
   NullSubmitter sink;
   const auto stats = Render::Creature::Pipeline::submit_preparation(prep, sink);
@@ -219,7 +232,8 @@ TEST(MountedPrepare, MainPairProducesTwoEntitySubmissions) {
   Render::GL::AnimationInputs const anim{};
 
   Render::Humanoid::HumanoidPreparation prep;
-  Render::Humanoid::prepare_humanoid_instances(renderer, ctx, anim, 0, prep);
+  Render::Humanoid::prepare_humanoid_instances(
+      renderer, ctx, anim, test_runtime(0U), prep);
 
   NullSubmitter sink;
   const auto stats = Render::Creature::Pipeline::submit_preparation(prep, sink);
@@ -347,7 +361,7 @@ TEST(MountedPrepare, TemplatePrewarmRenderWarmsMountedSnapshotCache) {
                                      Render::Creature::CreatureLOD::Minimal,
                                      root + "/horse_minimal.bpsm"))
       << snapshots.last_error();
-  Render::GL::clear_humanoid_caches();
+  Render::GL::reset_humanoid_runtime_context();
   Render::GL::MountedKnightRendererConfig cfg;
   cfg.has_sword = false;
   cfg.has_cavalry_shield = false;
@@ -396,7 +410,8 @@ TEST(MountedPrepare, MountedHumanoidPreparationQueuesRiderAndHorseBodies) {
   Render::GL::AnimationInputs const anim{};
 
   Render::Humanoid::HumanoidPreparation prep;
-  Render::Humanoid::prepare_humanoid_instances(renderer, ctx, anim, 0, prep);
+  Render::Humanoid::prepare_humanoid_instances(
+      renderer, ctx, anim, test_runtime(0U), prep);
 
   ASSERT_EQ(prep.bodies.size(), 2U);
   int rider_requests = 0;
@@ -435,7 +450,8 @@ TEST(MountedPrepare, MountedRiderUsesMountedChargeStateForMeleeAttack) {
   anim.attack_family = Engine::Core::CombatAttackFamily::Spear;
 
   Render::Humanoid::HumanoidPreparation prep;
-  Render::Humanoid::prepare_humanoid_instances(renderer, ctx, anim, 0, prep);
+  Render::Humanoid::prepare_humanoid_instances(
+      renderer, ctx, anim, test_runtime(0U), prep);
 
   auto const& requests = prep.bodies.requests();
   auto const rider_req =
@@ -465,7 +481,8 @@ TEST(MountedPrepare, MountedSwordAttackUsesMountedSwordStateWhileMoving) {
   anim.attack_family = Engine::Core::CombatAttackFamily::Sword;
 
   Render::Humanoid::HumanoidPreparation prep;
-  Render::Humanoid::prepare_humanoid_instances(renderer, ctx, anim, 0, prep);
+  Render::Humanoid::prepare_humanoid_instances(
+      renderer, ctx, anim, test_runtime(0U), prep);
 
   auto const& requests = prep.bodies.requests();
   auto const rider_req =
@@ -516,7 +533,8 @@ TEST(MountedPrepare, MountedSwordAttackRecoveryStaysOnOutgoingClipBeforeIdle) {
   attack_anim.combat_phase_progress = 0.30F;
 
   Render::Humanoid::HumanoidPreparation prep;
-  Render::Humanoid::prepare_humanoid_instances(renderer, ctx, attack_anim, 0, prep);
+  Render::Humanoid::prepare_humanoid_instances(
+      renderer, ctx, attack_anim, test_runtime(0U), prep);
 
   auto const attack_req = find_rider_request(prep.bodies.requests());
   ASSERT_NE(attack_req, prep.bodies.requests().end());
@@ -530,7 +548,8 @@ TEST(MountedPrepare, MountedSwordAttackRecoveryStaysOnOutgoingClipBeforeIdle) {
   recover_anim.combat_phase_progress = 0.0F;
 
   prep.clear();
-  Render::Humanoid::prepare_humanoid_instances(renderer, ctx, recover_anim, 1, prep);
+  Render::Humanoid::prepare_humanoid_instances(
+      renderer, ctx, recover_anim, test_runtime(1U), prep);
 
   auto const recover_req = find_rider_request(prep.bodies.requests());
   ASSERT_NE(recover_req, prep.bodies.requests().end());
@@ -542,7 +561,8 @@ TEST(MountedPrepare, MountedSwordAttackRecoveryStaysOnOutgoingClipBeforeIdle) {
   idle_anim.movement_state = Render::Creature::MovementAnimationState::Idle;
 
   prep.clear();
-  Render::Humanoid::prepare_humanoid_instances(renderer, ctx, idle_anim, 2, prep);
+  Render::Humanoid::prepare_humanoid_instances(
+      renderer, ctx, idle_anim, test_runtime(2U), prep);
 
   auto const idle_req = find_rider_request(prep.bodies.requests());
   ASSERT_NE(idle_req, prep.bodies.requests().end());
@@ -553,7 +573,8 @@ TEST(MountedPrepare, MountedSwordAttackRecoveryStaysOnOutgoingClipBeforeIdle) {
   settled_anim.time += 0.20F;
 
   prep.clear();
-  Render::Humanoid::prepare_humanoid_instances(renderer, ctx, settled_anim, 3, prep);
+  Render::Humanoid::prepare_humanoid_instances(
+      renderer, ctx, settled_anim, test_runtime(3U), prep);
 
   auto const settled_req = find_rider_request(prep.bodies.requests());
   ASSERT_NE(settled_req, prep.bodies.requests().end());
@@ -601,7 +622,8 @@ TEST(MountedPrepare, SubmitPreparationDrawsRiderFromPreparedPose) {
   Render::GL::AnimationInputs const anim{};
 
   Render::Humanoid::HumanoidPreparation prep;
-  Render::Humanoid::prepare_humanoid_instances(renderer, ctx, anim, 0, prep);
+  Render::Humanoid::prepare_humanoid_instances(
+      renderer, ctx, anim, test_runtime(0U), prep);
 
   NullSubmitter sink;
   Render::Creature::Pipeline::submit_preparation(prep, sink);
@@ -621,7 +643,8 @@ TEST(MountedPrepare, MountedRiderRequestUsesAbsoluteSeatWorld) {
   Render::GL::AnimationInputs const anim{};
 
   Render::Humanoid::HumanoidPreparation prep;
-  Render::Humanoid::prepare_humanoid_instances(renderer, ctx, anim, 0, prep);
+  Render::Humanoid::prepare_humanoid_instances(
+      renderer, ctx, anim, test_runtime(0U), prep);
 
   auto const& requests = prep.bodies.requests();
   ASSERT_EQ(requests.size(), 2U);
@@ -666,7 +689,8 @@ TEST(MountedPrepare, MountedUnitGroupsRiderAndHorseBySharedWorldKey) {
 
   Render::GL::AnimationInputs const anim{};
   Render::Humanoid::HumanoidPreparation prep;
-  Render::Humanoid::prepare_humanoid_instances(renderer, ctx, anim, 0, prep);
+  Render::Humanoid::prepare_humanoid_instances(
+      renderer, ctx, anim, test_runtime(0U), prep);
 
   auto const& requests = prep.bodies.requests();
   auto& registry = Render::Creature::ArchetypeRegistry::instance();
@@ -730,7 +754,8 @@ TEST(MountedPrepare, MountedRiderRootAttachesToHorseSeatFrame) {
 
   Render::GL::AnimationInputs const anim{};
   Render::Humanoid::HumanoidPreparation prep;
-  Render::Humanoid::prepare_humanoid_instances(renderer, ctx, anim, 0, prep);
+  Render::Humanoid::prepare_humanoid_instances(
+      renderer, ctx, anim, test_runtime(0U), prep);
 
   auto const& requests = prep.bodies.requests();
   auto const horse_req =
@@ -829,7 +854,8 @@ TEST(MountedPrepare, AttackingMountedRiderRootAttachesToHorseSeatFrame) {
   anim.attack_offset = 0.0F;
 
   Render::Humanoid::HumanoidPreparation prep;
-  Render::Humanoid::prepare_humanoid_instances(renderer, ctx, anim, 0, prep);
+  Render::Humanoid::prepare_humanoid_instances(
+      renderer, ctx, anim, test_runtime(0U), prep);
 
   auto const& requests = prep.bodies.requests();
   auto const horse_req =
@@ -921,7 +947,8 @@ TEST(MountedPrepare, MovingMountedRiderRootAttachesToHorseSeatFrame) {
   anim.movement_state = Render::Creature::MovementAnimationState::Run;
 
   Render::Humanoid::HumanoidPreparation prep;
-  Render::Humanoid::prepare_humanoid_instances(renderer, ctx, anim, 0, prep);
+  Render::Humanoid::prepare_humanoid_instances(
+      renderer, ctx, anim, test_runtime(0U), prep);
 
   auto const& requests = prep.bodies.requests();
   auto const horse_req =
@@ -1005,7 +1032,8 @@ TEST(MountedPrepare, ShieldedMountedKnightMovementUsesRiggedSubmissionsOnly) {
   anim.movement_state = Render::Creature::MovementAnimationState::Run;
 
   Render::Humanoid::HumanoidPreparation prep;
-  Render::Humanoid::prepare_humanoid_instances(renderer, ctx, anim, 0, prep);
+  Render::Humanoid::prepare_humanoid_instances(
+      renderer, ctx, anim, test_runtime(0U), prep);
 
   NullSubmitter sink;
   auto const stats = Render::Creature::Pipeline::submit_preparation(prep, sink);
@@ -1059,27 +1087,29 @@ TEST(MountedPrepare, StaleLayoutCacheVersionForcesMountedFormationRefresh) {
 
   Render::GL::AnimationInputs const anim{};
   Render::Humanoid::HumanoidPreparation prep;
-  Render::Humanoid::prepare_humanoid_instances(renderer, ctx, anim, 0, prep);
+  Render::Humanoid::prepare_humanoid_instances(
+      renderer, ctx, anim, test_runtime(0U), prep);
 
   auto* layout_cache =
-      entity.get_component<Render::Humanoid::HumanoidLayoutCacheComponent>();
+      entity.get_component<Render::Humanoid::HumanoidInstanceStateComponent>();
   ASSERT_NE(layout_cache, nullptr);
-  ASSERT_GT(layout_cache->soldiers.size(), 1U);
+  ASSERT_GT(layout_cache->layout.instances.size(), 1U);
 
-  for (auto& soldier : layout_cache->soldiers) {
+  for (auto& soldier : layout_cache->layout.instances) {
     soldier.offset_x = 0.0F;
     soldier.offset_z = 0.0F;
     soldier.yaw_offset = 0.0F;
   }
-  layout_cache->layout_version = 0U;
-  layout_cache->valid = true;
+  layout_cache->layout.layout_version = 0U;
+  layout_cache->layout.valid = true;
 
   prep.clear();
-  Render::Humanoid::prepare_humanoid_instances(renderer, ctx, anim, 1, prep);
+  Render::Humanoid::prepare_humanoid_instances(
+      renderer, ctx, anim, test_runtime(1U), prep);
 
-  ASSERT_NE(layout_cache->layout_version, 0U);
+  ASSERT_NE(layout_cache->layout.layout_version, 0U);
   bool found_non_grid_offset = false;
-  for (auto const& soldier : layout_cache->soldiers) {
+  for (auto const& soldier : layout_cache->layout.instances) {
     if (std::abs(soldier.offset_x) > 0.001F || std::abs(soldier.offset_z) > 0.001F ||
         std::abs(soldier.yaw_offset) > 0.001F) {
       found_non_grid_offset = true;

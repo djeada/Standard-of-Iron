@@ -2,6 +2,8 @@
 
 #include <QVector3D>
 
+#include <utility>
+
 #include "animation/rig/horse_attachment_frames.h"
 #include "dimensions.h"
 #include "render/creature/pipeline/unit_visual_spec.h"
@@ -21,33 +23,44 @@ namespace Render::GL {
 
 class HorseRendererBase {
 public:
+  HorseRendererBase();
+
+  explicit HorseRendererBase(Render::Creature::Pipeline::UnitVisualSpec spec)
+      : m_visual_spec(std::move(spec)) {}
+
   virtual ~HorseRendererBase() = default;
 
-  virtual auto visual_spec() const -> const Render::Creature::Pipeline::UnitVisualSpec&;
+  [[nodiscard]] auto
+  visual_spec() const noexcept -> const Render::Creature::Pipeline::UnitVisualSpec& {
+    return m_visual_spec;
+  }
 
-  virtual auto get_proportion_scaling() const -> QVector3D {
-    return {1.0F, 1.0F, 1.0F};
+  [[nodiscard]] auto get_proportion_scaling() const noexcept -> QVector3D {
+    return m_visual_spec.scaling.as_vector();
   }
 
   void render(const DrawContext& ctx,
               const AnimationInputs& anim,
               const HumanoidAnimationContext& rider_ctx,
               HorseProfile& profile,
-              const MountedAttachmentFrame* shared_mount,
               const HorseMotionSample* shared_motion,
               ISubmitter& out,
-              HorseLOD lod) const;
+              Render::Creature::CreatureLOD lod) const;
 
   void render(const DrawContext& ctx,
               const AnimationInputs& anim,
               const HumanoidAnimationContext& rider_ctx,
               HorseProfile& profile,
-              const MountedAttachmentFrame* shared_mount,
               const HorseMotionSample* shared_motion,
               ISubmitter& out) const;
 
-  mutable Render::Creature::Pipeline::UnitVisualSpec m_visual_spec_cache{};
-  mutable bool m_visual_spec_baked{false};
+protected:
+  void set_visual_spec(Render::Creature::Pipeline::UnitVisualSpec spec) {
+    m_visual_spec = std::move(spec);
+  }
+
+private:
+  Render::Creature::Pipeline::UnitVisualSpec m_visual_spec{};
 };
 
 } // namespace Render::GL

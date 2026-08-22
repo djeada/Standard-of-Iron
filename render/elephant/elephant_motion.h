@@ -3,7 +3,8 @@
 #include <QVector3D>
 
 #include "animation/individuality_manifest.h"
-#include "attachment_frames.h"
+#include "render/elephant/runtime/gait_state.h"
+#include "render/elephant/runtime/motion_sample.h"
 
 namespace Render::Creature {
 struct ElephantAnimationStateComponent;

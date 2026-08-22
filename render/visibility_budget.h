@@ -43,20 +43,21 @@ public:
   }
 
   [[nodiscard]] auto
-  request_horse_lod(GL::HorseLOD distance_lod) noexcept -> GL::HorseLOD {
+  request_quadruped_lod(Render::Creature::CreatureLOD distance_lod) noexcept
+      -> Render::Creature::CreatureLOD {
     const auto& budget = GraphicsSettings::instance().creature_lod();
     if (!budget.visibility_budget) {
       return distance_lod;
     }
 
-    if (distance_lod != GL::HorseLOD::Full) {
+    if (distance_lod != Render::Creature::CreatureLOD::Full) {
       return distance_lod;
     }
 
     if (try_consume_budget(budget.max_full_detail_units)) {
-      return GL::HorseLOD::Full;
+      return Render::Creature::CreatureLOD::Full;
     }
-    return GL::HorseLOD::Minimal;
+    return Render::Creature::CreatureLOD::Minimal;
   }
 
   [[nodiscard]] auto full_detail_count() const noexcept -> int {
