@@ -448,12 +448,10 @@ void ProductionSystem::update(Engine::Core::World* world, float delta_time) {
     return;
   }
 
-  auto entities = world->collect_entities_with<Engine::Core::ProductionComponent>();
-  for (auto* e : entities) {
-    auto* prod = e->get_component<Engine::Core::ProductionComponent>();
-    if (prod == nullptr) {
-      continue;
-    }
+  for (auto [entity_ref, prod_ref] :
+       world->entity_view<Engine::Core::ProductionComponent>()) {
+    Engine::Core::Entity* e = &entity_ref;
+    auto* prod = &prod_ref;
 
     if (e->has_component<Engine::Core::DismantleSiteComponent>()) {
       continue;
@@ -555,13 +553,10 @@ void ProductionSystem::update(Engine::Core::World* world, float delta_time) {
   constexpr float CONSTRUCTION_ARRIVAL_DISTANCE_SQ = 0.0225F;
   constexpr float MAX_CONSTRUCTION_DISTANCE_SQ = 9.0F;
 
-  auto builder_entities =
-      world->collect_entities_with<Engine::Core::BuilderProductionComponent>();
-  for (auto* e : builder_entities) {
-    auto* builder_prod = e->get_component<Engine::Core::BuilderProductionComponent>();
-    if (builder_prod == nullptr) {
-      continue;
-    }
+  for (auto [entity_ref, builder_prod_ref] :
+       world->entity_view<Engine::Core::BuilderProductionComponent>()) {
+    Engine::Core::Entity* e = &entity_ref;
+    auto* builder_prod = &builder_prod_ref;
 
     if (builder_prod->fault_display_remaining > 0.0F) {
       builder_prod->fault_display_remaining -= delta_time;

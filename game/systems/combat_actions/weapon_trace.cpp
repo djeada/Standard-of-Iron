@@ -942,8 +942,10 @@ auto find_weapon_trace_contact(
     }
   }
 
-  for (auto* candidate : world.collect_entities_with<Engine::Core::UnitComponent>()) {
-    consider(candidate, best_score, contact);
+  for (auto [candidate, candidate_unit] :
+       world.entity_view<Engine::Core::UnitComponent>()) {
+    (void)candidate_unit;
+    consider(&candidate, best_score, contact);
   }
 
   return contact;
@@ -1016,8 +1018,10 @@ auto find_weapon_trace_contact(
     }
   }
 
-  for (auto* candidate : world.collect_entities_with<Engine::Core::UnitComponent>()) {
-    consider(candidate, best_score, contact);
+  for (auto [candidate, candidate_unit] :
+       world.entity_view<Engine::Core::UnitComponent>()) {
+    (void)candidate_unit;
+    consider(&candidate, best_score, contact);
   }
 
   return contact;

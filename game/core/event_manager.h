@@ -6,6 +6,7 @@
 #include <functional>
 #include <memory>
 #include <mutex>
+#include <type_traits>
 #include <typeindex>
 #include <unordered_map>
 #include <utility>

@@ -59,15 +59,13 @@ auto food_target_claimed(Engine::Core::World& world,
   if (target_id == 0) {
     return false;
   }
-  for (auto* worker :
-       world.collect_entities_with<Engine::Core::BuilderProductionComponent>()) {
-    if (worker == nullptr || worker->get_id() == except_worker) {
+  for (auto [worker_id, builder] :
+       world.view<Engine::Core::BuilderProductionComponent>()) {
+    if (worker_id == except_worker) {
       continue;
     }
-    const auto* builder =
-        worker->get_component<Engine::Core::BuilderProductionComponent>();
-    if (builder != nullptr && builder->structure_task_entity_id == target_id &&
-        is_food_builder_product(builder->product_type)) {
+    if (builder.structure_task_entity_id == target_id &&
+        is_food_builder_product(builder.product_type)) {
       return true;
     }
   }
@@ -138,17 +136,19 @@ auto find_food_target_near(Engine::Core::World& world,
   };
 
   if (want_grain) {
-    for (auto* entity : world.collect_entities_with<Engine::Core::FarmComponent>()) {
-      if (entity != nullptr && farm_is_harvestable(*entity, owner_id)) {
-        consider(*entity, k_builder_product_harvest_grain);
+    for (auto [entity, farm] : world.entity_view<Engine::Core::FarmComponent>()) {
+      (void)farm;
+      if (farm_is_harvestable(entity, owner_id)) {
+        consider(entity, k_builder_product_harvest_grain);
       }
     }
   }
   if (want_sheep) {
-    for (auto* entity :
-         world.collect_entities_with<Engine::Core::WildlifeComponent>()) {
-      if (entity != nullptr && sheep_is_slaughterable(*entity)) {
-        consider(*entity, k_builder_product_slaughter_sheep);
+    for (auto [entity, wildlife] :
+         world.entity_view<Engine::Core::WildlifeComponent>()) {
+      (void)wildlife;
+      if (sheep_is_slaughterable(entity)) {
+        consider(entity, k_builder_product_slaughter_sheep);
       }
     }
   }
@@ -158,17 +158,15 @@ auto find_food_target_near(Engine::Core::World& world,
 auto owner_has_farm_near(
     Engine::Core::World& world, int owner_id, float x, float z, float radius) -> bool {
   float const radius_sq = radius * radius;
-  for (auto* entity : world.collect_entities_with<Engine::Core::FarmComponent>()) {
-    if (entity == nullptr) {
+  for (auto [entity, farm, unit, transform] :
+       world.entity_view<Engine::Core::FarmComponent,
+                         Engine::Core::UnitComponent,
+                         Engine::Core::TransformComponent>()) {
+    (void)farm;
+    if (unit.owner_id != owner_id || !entity_alive(entity, unit)) {
       continue;
     }
-    const auto* unit = entity->get_component<Engine::Core::UnitComponent>();
-    const auto* transform = entity->get_component<Engine::Core::TransformComponent>();
-    if (unit == nullptr || transform == nullptr || unit->owner_id != owner_id ||
-        !entity_alive(*entity, *unit)) {
-      continue;
-    }
-    if (distance_sq(transform->position.x, transform->position.z, x, z) <= radius_sq) {
+    if (distance_sq(transform.position.x, transform.position.z, x, z) <= radius_sq) {
       return true;
     }
   }

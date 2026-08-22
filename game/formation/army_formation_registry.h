@@ -57,6 +57,8 @@ class ArmyFormationRuntime : public Engine::Core::System {
 public:
   void update(Engine::Core::World* world, float delta_time) override;
 
+  [[nodiscard]] auto access() const -> Engine::Core::SystemAccess override;
+
   static void sync_membership_components(Engine::Core::World& world,
                                          const ArmyFormation& formation);
 

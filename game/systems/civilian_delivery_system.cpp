@@ -48,46 +48,36 @@ void CivilianDeliverySystem::update(Engine::Core::World* world, float) {
   }
 
   std::vector<Engine::Core::EntityID> to_remove;
-  auto civilians =
-      world->collect_entities_with<Engine::Core::CivilianDeliveryComponent>();
+  std::vector<Engine::Core::EntityID> to_release;
 
-  for (auto* civilian_entity : civilians) {
-    if (civilian_entity == nullptr) {
-      continue;
-    }
+  for (auto [civilian_id, delivery_ref] :
+       world->view<Engine::Core::CivilianDeliveryComponent>()) {
+    auto* delivery = &delivery_ref;
+    const auto* civilian_unit =
+        world->try_get<Engine::Core::UnitComponent>(civilian_id);
+    const auto* civilian_transform =
+        world->try_get<Engine::Core::TransformComponent>(civilian_id);
 
-    auto* delivery =
-        civilian_entity->get_component<Engine::Core::CivilianDeliveryComponent>();
-    auto* civilian_unit = civilian_entity->get_component<Engine::Core::UnitComponent>();
-    auto* civilian_transform =
-        civilian_entity->get_component<Engine::Core::TransformComponent>();
-
-    if ((delivery == nullptr) || (civilian_unit == nullptr) ||
-        (civilian_transform == nullptr) ||
+    if ((civilian_unit == nullptr) || (civilian_transform == nullptr) ||
         (civilian_unit->spawn_type != Game::Units::SpawnType::Civilian) ||
         (delivery->target_barracks_id == 0)) {
-      civilian_entity->remove_component<Engine::Core::CivilianDeliveryComponent>();
+      to_release.push_back(civilian_id);
       continue;
     }
 
-    auto* barracks_entity = world->get_entity(delivery->target_barracks_id);
-    auto* barracks_unit =
-        barracks_entity ? barracks_entity->get_component<Engine::Core::UnitComponent>()
-                        : nullptr;
-    auto* barracks_transform =
-        barracks_entity
-            ? barracks_entity->get_component<Engine::Core::TransformComponent>()
-            : nullptr;
+    const Engine::Core::EntityID barracks_id = delivery->target_barracks_id;
+    const auto* barracks_unit =
+        world->try_get<Engine::Core::UnitComponent>(barracks_id);
+    const auto* barracks_transform =
+        world->try_get<Engine::Core::TransformComponent>(barracks_id);
     auto* barracks_prod =
-        barracks_entity
-            ? barracks_entity->get_component<Engine::Core::ProductionComponent>()
-            : nullptr;
+        world->try_get<Engine::Core::ProductionComponent>(barracks_id);
 
-    if ((barracks_entity == nullptr) || (barracks_unit == nullptr) ||
-        (barracks_transform == nullptr) || (barracks_prod == nullptr) ||
+    if ((barracks_unit == nullptr) || (barracks_transform == nullptr) ||
+        (barracks_prod == nullptr) ||
         !Game::Units::is_recruitment_building(barracks_unit->spawn_type) ||
         (barracks_unit->owner_id != civilian_unit->owner_id)) {
-      civilian_entity->remove_component<Engine::Core::CivilianDeliveryComponent>();
+      to_release.push_back(civilian_id);
       continue;
     }
 
@@ -97,12 +87,16 @@ void CivilianDeliverySystem::update(Engine::Core::World* world, float) {
 
     if (barracks_prod->manpower_available + k_civilian_delivery_population_grant >
         barracks_prod->max_units) {
-      civilian_entity->remove_component<Engine::Core::CivilianDeliveryComponent>();
+      to_release.push_back(civilian_id);
       continue;
     }
 
     barracks_prod->manpower_available += k_civilian_delivery_population_grant;
-    to_remove.push_back(civilian_entity->get_id());
+    to_remove.push_back(civilian_id);
+  }
+
+  for (auto const id : to_release) {
+    world->remove<Engine::Core::CivilianDeliveryComponent>(id);
   }
 
   for (auto const id : to_remove) {

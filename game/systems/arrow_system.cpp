@@ -71,4 +71,9 @@ void ArrowSystem::update(Engine::Core::World*, float delta_time) {
                  m_arrows.end());
 }
 
+auto ArrowSystem::access() const -> Engine::Core::SystemAccess {
+  using namespace Engine::Core;
+  return SystemAccess::declare(Reads<>{}, Writes<>{});
+}
+
 } // namespace Game::Systems

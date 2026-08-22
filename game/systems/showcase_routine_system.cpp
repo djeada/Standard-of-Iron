@@ -5,6 +5,7 @@
 #include <numbers>
 
 #include "../core/component.h"
+#include "../core/system_context.h"
 #include "../core/world.h"
 #include "animation/showcase_pose_manifest.h"
 
@@ -76,22 +77,21 @@ void set_idle(Engine::Core::ShowcaseRoutineComponent& routine) {
 
 } // namespace
 
-void ShowcaseRoutineSystem::update(Engine::Core::World* world, float delta_time) {
-  if (world == nullptr || delta_time <= 0.0F) {
+void ShowcaseRoutineSystem::run(Engine::Core::SystemContext& context) {
+  const float delta_time = context.delta_time();
+  if (delta_time <= 0.0F) {
     return;
   }
 
-  for (auto* entity :
-       world->collect_entities_with<Engine::Core::ShowcaseRoutineComponent>()) {
-    auto* routine = entity->get_component<Engine::Core::ShowcaseRoutineComponent>();
-    if (routine == nullptr || routine->steps.empty() || routine->finished) {
-      if (routine != nullptr) {
-        set_idle(*routine);
-      }
+  for (auto [entity_id, routine_ref] :
+       context.view<Engine::Core::ShowcaseRoutineComponent>()) {
+    auto* routine = &routine_ref;
+    if (routine->steps.empty() || routine->finished) {
+      set_idle(*routine);
       continue;
     }
 
-    auto* transform = entity->get_component<Engine::Core::TransformComponent>();
+    auto* transform = context.try_get<Engine::Core::TransformComponent>(entity_id);
     if (!routine->active && routine->index == 0 && routine->elapsed <= 0.0F &&
         transform != nullptr) {
       float const yaw = transform->rotation.y * (std::numbers::pi_v<float> / 180.0F);
@@ -146,7 +146,7 @@ void ShowcaseRoutineSystem::update(Engine::Core::World* world, float delta_time)
     float const release = Animation::humanoid_showcase_release_phase(move);
     if (move == Animation::HumanoidShowcaseMove::SpearThrow &&
         routine->has_throw_target && transform != nullptr && release > 0.0F) {
-      auto* renderable = entity->get_component<Engine::Core::RenderableComponent>();
+      auto* renderable = context.try_get<Engine::Core::RenderableComponent>(entity_id);
       if (phase < release * 0.5F) {
         routine->throw_armed = true;
         if (renderable != nullptr && !routine->armed_renderer_id.empty()) {
@@ -154,7 +154,7 @@ void ShowcaseRoutineSystem::update(Engine::Core::World* world, float delta_time)
         }
       } else if (routine->throw_armed && phase >= release) {
         routine->throw_armed = false;
-        release_throw(*world, *routine, *transform);
+        release_throw(context.world(), *routine, *transform);
         if (renderable != nullptr && !routine->released_renderer_id.empty()) {
           renderable->renderer_id = routine->released_renderer_id;
         }
@@ -165,6 +165,12 @@ void ShowcaseRoutineSystem::update(Engine::Core::World* world, float delta_time)
     routine->current_move = step.move;
     routine->phase = phase;
   }
+}
+
+auto ShowcaseRoutineSystem::access() const -> Engine::Core::SystemAccess {
+  using namespace Engine::Core;
+  return SystemAccess::declare(
+      Writes<ShowcaseRoutineComponent, TransformComponent, RenderableComponent>{});
 }
 
 } // namespace Game::Systems

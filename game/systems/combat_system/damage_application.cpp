@@ -449,13 +449,15 @@ void fill_formation_front_vacancy(Engine::Core::World* world,
   Engine::Core::Entity* replacement = nullptr;
   int best_rank = std::numeric_limits<int>::max();
   float best_distance_sq = std::numeric_limits<float>::max();
-  for (auto* candidate :
-       world->collect_entities_with<Engine::Core::FormationModeComponent>()) {
-    auto* mode = candidate->get_component<Engine::Core::FormationModeComponent>();
-    auto* unit = candidate->get_component<Engine::Core::UnitComponent>();
-    auto* transform = candidate->get_component<Engine::Core::TransformComponent>();
-    if (candidate == casualty || mode == nullptr || unit == nullptr ||
-        transform == nullptr || unit->health <= 0 ||
+  for (auto [candidate_ref, mode_ref, unit_ref, transform_ref] :
+       world->entity_view<Engine::Core::FormationModeComponent,
+                          Engine::Core::UnitComponent,
+                          Engine::Core::TransformComponent>()) {
+    Engine::Core::Entity* candidate = &candidate_ref;
+    const auto* mode = &mode_ref;
+    const auto* unit = &unit_ref;
+    const auto* transform = &transform_ref;
+    if (candidate == casualty || unit->health <= 0 ||
         mode->formation_id != vacant->formation_id ||
         mode->stable_file != vacant->stable_file ||
         mode->stable_rank <= vacant->stable_rank) {
@@ -516,27 +518,18 @@ void prune_oldest_blood_stain(Engine::Core::World* world) {
   }
 
   while (true) {
-    auto blood_stains =
-        world->collect_entities_with<Engine::Core::BloodStainComponent>();
+    const auto blood_stains = world->entities_with<Engine::Core::BloodStainComponent>();
     if (blood_stains.size() <
         static_cast<std::size_t>(Engine::Core::Defaults::k_blood_stain_max_active)) {
       return;
     }
 
-    auto const oldest = std::min_element(
-        blood_stains.begin(),
-        blood_stains.end(),
-        [](const Engine::Core::Entity* lhs, const Engine::Core::Entity* rhs) {
-          if (lhs == nullptr || rhs == nullptr) {
-            return rhs != nullptr;
-          }
-          return lhs->get_id() < rhs->get_id();
-        });
-    if (oldest == blood_stains.end() || *oldest == nullptr) {
+    auto const oldest = std::min_element(blood_stains.begin(), blood_stains.end());
+    if (oldest == blood_stains.end()) {
       return;
     }
 
-    world->destroy_entity((*oldest)->get_id());
+    world->destroy_entity(*oldest);
   }
 }
 

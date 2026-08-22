@@ -41,10 +41,11 @@ constexpr float k_off_school_aura_scale = 0.5F;
   return dx * dx + dz * dz;
 }
 
-auto morale_for(Engine::Core::Entity* entity) -> Engine::Core::MoraleComponent* {
-  auto* morale = entity->get_component<Engine::Core::MoraleComponent>();
+auto morale_for(Engine::Core::World* world,
+                Engine::Core::EntityID entity_id) -> Engine::Core::MoraleComponent* {
+  auto* morale = world->try_get<Engine::Core::MoraleComponent>(entity_id);
   if (morale == nullptr) {
-    morale = entity->add_component<Engine::Core::MoraleComponent>();
+    morale = world->emplace<Engine::Core::MoraleComponent>(entity_id);
   }
   return morale;
 }
@@ -186,21 +187,20 @@ auto try_trigger_rally(Engine::Core::World* world,
 
   const float rally_radius_sq = commander.rally_range * commander.rally_range;
   bool restored_any = false;
-  for (auto* candidate : world->collect_entities_with<Engine::Core::UnitComponent>()) {
-    if (candidate == commander_entity) {
+  const Engine::Core::EntityID commander_id = commander_entity->get_id();
+  for (auto [candidate_id, candidate_unit_ref, candidate_transform] :
+       world->view<Engine::Core::UnitComponent, Engine::Core::TransformComponent>()) {
+    if (candidate_id == commander_id) {
       continue;
     }
 
-    auto* candidate_unit = candidate->get_component<Engine::Core::UnitComponent>();
-    auto* candidate_transform =
-        candidate->get_component<Engine::Core::TransformComponent>();
-    if (!is_living_troop(candidate_unit) || candidate_transform == nullptr ||
-        candidate_unit->owner_id != unit.owner_id ||
-        distance_sq(origin, *candidate_transform) > rally_radius_sq) {
+    const auto* candidate_unit = &candidate_unit_ref;
+    if (!is_living_troop(candidate_unit) || candidate_unit->owner_id != unit.owner_id ||
+        distance_sq(origin, candidate_transform) > rally_radius_sq) {
       continue;
     }
 
-    auto* morale = candidate->get_component<Engine::Core::MoraleComponent>();
+    auto* morale = world->try_get<Engine::Core::MoraleComponent>(candidate_id);
     if (morale == nullptr || (!morale->wavering && !morale->routing)) {
       continue;
     }
@@ -219,8 +219,8 @@ auto try_trigger_rally(Engine::Core::World* world,
 }
 
 void reset_commander_modified_stats(Engine::Core::World* world) {
-  for (auto* entity : world->collect_entities_with<Engine::Core::UnitComponent>()) {
-    auto* unit = entity->get_component<Engine::Core::UnitComponent>();
+  for (auto [entity_id, unit_ref] : world->view<Engine::Core::UnitComponent>()) {
+    auto* unit = &unit_ref;
     if (!is_living_troop(unit)) {
       continue;
     }
@@ -233,21 +233,18 @@ void reset_commander_modified_stats(Engine::Core::World* world) {
         TroopProfileService::instance().get_profile(unit->nation_id, *troop_type);
     unit->speed = profile.combat.speed;
 
-    if (auto* attack = entity->get_component<Engine::Core::AttackComponent>()) {
+    if (auto* attack = world->try_get<Engine::Core::AttackComponent>(entity_id)) {
       attack->damage = profile.combat.ranged_damage;
       attack->melee_damage = profile.combat.melee_damage;
     }
   }
 
-  for (auto* entity :
-       world->collect_entities_with<Engine::Core::CommanderAuraBuffComponent>()) {
-    auto* buff = entity->get_component<Engine::Core::CommanderAuraBuffComponent>();
-    if (buff == nullptr) {
-      continue;
-    }
-    buff->active = false;
-    buff->source_commander_id = 0;
-    buff->strength = 0.0F;
+  for (auto [entity_id, buff] :
+       world->view<Engine::Core::CommanderAuraBuffComponent>()) {
+    (void)entity_id;
+    buff.active = false;
+    buff.source_commander_id = 0;
+    buff.strength = 0.0F;
   }
 }
 
@@ -279,21 +276,20 @@ void apply_commander_death_shock(Engine::Core::World* world,
                                  const Engine::Core::TransformComponent& origin) {
   const float shock_radius_sq =
       commander.death_shock_radius * commander.death_shock_radius;
-  for (auto* candidate : world->collect_entities_with<Engine::Core::UnitComponent>()) {
-    if (candidate == commander_entity) {
+  const Engine::Core::EntityID commander_id = commander_entity->get_id();
+  for (auto [candidate_id, candidate_unit_ref, candidate_transform] :
+       world->view<Engine::Core::UnitComponent, Engine::Core::TransformComponent>()) {
+    if (candidate_id == commander_id) {
       continue;
     }
-    auto* candidate_unit = candidate->get_component<Engine::Core::UnitComponent>();
-    auto* candidate_transform =
-        candidate->get_component<Engine::Core::TransformComponent>();
-    if (!is_living_troop(candidate_unit) || (candidate_transform == nullptr) ||
-        candidate_unit->owner_id != unit.owner_id) {
+    const auto* candidate_unit = &candidate_unit_ref;
+    if (!is_living_troop(candidate_unit) || candidate_unit->owner_id != unit.owner_id) {
       continue;
     }
-    if (distance_sq(origin, *candidate_transform) > shock_radius_sq) {
+    if (distance_sq(origin, candidate_transform) > shock_radius_sq) {
       continue;
     }
-    if (auto* morale = morale_for(candidate)) {
+    if (auto* morale = morale_for(world, candidate_id)) {
       morale->morale -= commander.death_morale_shock;
       morale->shock_timer = std::max(morale->shock_timer, 4.0F);
       refresh_morale_state(*morale);
@@ -310,25 +306,20 @@ void CommanderSystem::update(Engine::Core::World* world, float delta_time) {
 
   reset_commander_modified_stats(world);
 
-  for (auto* entity : world->collect_entities_with<Engine::Core::MoraleComponent>()) {
-    auto* morale = entity->get_component<Engine::Core::MoraleComponent>();
-    if (morale == nullptr) {
-      continue;
-    }
-    morale->commander_aura_bonus = 0.0F;
-    morale->shock_timer = std::max(0.0F, morale->shock_timer - delta_time);
+  for (auto [entity_id, morale] : world->view<Engine::Core::MoraleComponent>()) {
+    (void)entity_id;
+    morale.commander_aura_bonus = 0.0F;
+    morale.shock_timer = std::max(0.0F, morale.shock_timer - delta_time);
   }
 
-  for (auto* commander_entity :
-       world->collect_entities_with<Engine::Core::CommanderComponent>()) {
-    auto* commander =
-        commander_entity->get_component<Engine::Core::CommanderComponent>();
-    auto* unit = commander_entity->get_component<Engine::Core::UnitComponent>();
-    auto* transform =
-        commander_entity->get_component<Engine::Core::TransformComponent>();
-    if ((commander == nullptr) || (unit == nullptr) || (transform == nullptr)) {
-      continue;
-    }
+  for (auto [commander_ref, commander_component, unit_ref, transform_ref] :
+       world->entity_view<Engine::Core::CommanderComponent,
+                          Engine::Core::UnitComponent,
+                          Engine::Core::TransformComponent>()) {
+    Engine::Core::Entity* commander_entity = &commander_ref;
+    auto* commander = &commander_component;
+    auto* unit = &unit_ref;
+    auto* transform = &transform_ref;
 
     commander->rally_cooldown_remaining =
         std::max(0.0F, commander->rally_cooldown_remaining - delta_time);
@@ -421,27 +412,24 @@ void CommanderSystem::update(Engine::Core::World* world, float delta_time) {
           commander->flag_rally_flag_x, 0.0F, commander->flag_rally_flag_z);
       std::vector<Engine::Core::EntityID> rallied_units;
 
-      for (auto* candidate :
-           world->collect_entities_with<Engine::Core::UnitComponent>()) {
-        if (candidate == commander_entity) {
+      for (auto [candidate_id, candidate_unit_ref] :
+           world->view<Engine::Core::UnitComponent>()) {
+        if (candidate_id == commander_entity->get_id()) {
           continue;
         }
-        auto* candidate_unit = candidate->get_component<Engine::Core::UnitComponent>();
-        if (candidate_unit == nullptr || candidate_unit->owner_id != unit->owner_id ||
+        const auto* candidate_unit = &candidate_unit_ref;
+        if (candidate_unit->owner_id != unit->owner_id ||
             !is_living_troop(candidate_unit)) {
           continue;
         }
-        rallied_units.push_back(candidate->get_id());
+        rallied_units.push_back(candidate_id);
       }
 
       if (!rallied_units.empty()) {
         for (auto const unit_id : rallied_units) {
-          if (auto* rallied_entity = world->get_entity(unit_id)) {
-            if (auto* stamina =
-                    rallied_entity->get_component<Engine::Core::StaminaComponent>()) {
-              stamina->run_requested = false;
-              stamina->is_running = false;
-            }
+          if (auto* stamina = world->try_get<Engine::Core::StaminaComponent>(unit_id)) {
+            stamina->run_requested = false;
+            stamina->is_running = false;
           }
         }
         auto const move_plan =
@@ -453,15 +441,13 @@ void CommanderSystem::update(Engine::Core::World* world, float delta_time) {
     const float aura_radius_sq = commander->aura_radius * commander->aura_radius;
     const float rally_radius_sq = commander->rally_range * commander->rally_range;
     bool rallied_this_tick = false;
-    for (auto* candidate :
-         world->collect_entities_with<Engine::Core::UnitComponent>()) {
-      if (candidate == commander_entity) {
-        continue;
-      }
-      auto* candidate_unit = candidate->get_component<Engine::Core::UnitComponent>();
-      auto* candidate_transform =
-          candidate->get_component<Engine::Core::TransformComponent>();
-      if ((candidate_unit == nullptr) || (candidate_transform == nullptr) ||
+    for (auto [candidate_ref, candidate_unit_ref, candidate_transform_ref] :
+         world->entity_view<Engine::Core::UnitComponent,
+                            Engine::Core::TransformComponent>()) {
+      Engine::Core::Entity* candidate = &candidate_ref;
+      auto* candidate_unit = &candidate_unit_ref;
+      const auto* candidate_transform = &candidate_transform_ref;
+      if (candidate->get_id() == commander_entity->get_id() ||
           candidate_unit->owner_id != unit->owner_id) {
         continue;
       }
@@ -470,7 +456,7 @@ void CommanderSystem::update(Engine::Core::World* world, float delta_time) {
       const bool candidate_is_troop = is_living_troop(candidate_unit);
       if (dist_sq <= aura_radius_sq && commander->aura_ability_active) {
         if (candidate_is_troop) {
-          auto* morale = morale_for(candidate);
+          auto* morale = morale_for(world, candidate->get_id());
           if (morale != nullptr) {
             morale->commander_aura_bonus =
                 std::max(morale->commander_aura_bonus, commander->aura_morale_bonus);
@@ -548,6 +534,24 @@ void CommanderSystem::update(Engine::Core::World* world, float delta_time) {
       }
     }
   }
+}
+
+auto CommanderSystem::access() const -> Engine::Core::SystemAccess {
+  using namespace Engine::Core;
+  return SystemAccess::declare(Reads<UnitComponent,
+                                     TransformComponent,
+                                     ProductionComponent,
+                                     CombatStateComponent,
+                                     RpgCommanderActionComponent,
+                                     BuildingComponent,
+                                     PendingRemovalComponent>{},
+                               Writes<CommanderComponent,
+                                      CommanderAuraBuffComponent,
+                                      MoraleComponent,
+                                      MovementComponent,
+                                      AttackComponent,
+                                      AttackTargetComponent,
+                                      StaminaComponent>{});
 }
 
 } // namespace Game::Systems

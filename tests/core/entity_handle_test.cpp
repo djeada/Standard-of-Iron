@@ -394,7 +394,7 @@ TEST(ComponentIndexTest, ReplacingAnIdClearsTheOldOccupantsIndexEntries) {
   EXPECT_EQ(world.entity_count(), 1U);
 }
 
-struct PoolProbeComponent : Engine::Core::Component {
+struct PoolProbeComponent {
   float value = 0.0F;
 };
 

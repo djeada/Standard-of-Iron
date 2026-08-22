@@ -46,7 +46,7 @@ TEST(RuntimeSystemPhaseOrderTest, TheMatchUsesEveryPhase) {
   }
 }
 
-TEST(RuntimeSystemPhaseOrderTest, NoSystemHasDeclaredWhatItTouchesYet) {
+TEST(RuntimeSystemPhaseOrderTest, EveryRegisteredSystemIsPlannedExactlyOnce) {
   SessionContext session;
   const ScopedSession scope(session);
   Game::Systems::register_runtime_systems(session.world());
@@ -64,7 +64,45 @@ TEST(RuntimeSystemPhaseOrderTest, NoSystemHasDeclaredWhatItTouchesYet) {
   }
 
   EXPECT_EQ(systems_in_phases, session.world().systems().size());
-  EXPECT_EQ(batches, systems_in_phases);
+  EXPECT_LE(batches, systems_in_phases);
+}
+
+TEST(RuntimeSystemPhaseOrderTest, SystemsInOneBatchDoNotCollide) {
+  SessionContext session;
+  const ScopedSession scope(session);
+  Game::Systems::register_runtime_systems(session.world());
+
+  auto& systems = session.world().systems();
+  std::vector<Engine::Core::SystemAccess> access;
+  access.reserve(systems.size());
+  for (const auto& system : systems) {
+    access.push_back(system->access());
+  }
+
+  std::size_t shared_batches = 0;
+  for (std::uint8_t raw = 0; raw < static_cast<std::uint8_t>(SystemPhase::_Count);
+       ++raw) {
+    const auto phase = static_cast<SystemPhase>(raw);
+    for (const auto& batch : session.world().plan_phase_schedule(phase)) {
+      if (batch.size() > 1) {
+        ++shared_batches;
+      }
+      for (std::size_t i = 0; i < batch.size(); ++i) {
+        for (std::size_t j = i + 1; j < batch.size(); ++j) {
+          const std::size_t lhs = batch[i];
+          const std::size_t rhs = batch[j];
+          ASSERT_LT(lhs, access.size());
+          ASSERT_LT(rhs, access.size());
+          EXPECT_FALSE(access[lhs].conflicts_with(access[rhs]))
+              << "systems " << lhs << " and " << rhs << " share a batch in phase "
+              << Engine::Core::phase_name(phase) << " but touch the same components";
+        }
+      }
+    }
+  }
+
+  EXPECT_GT(shared_batches, 0U)
+      << "no two systems can share a batch; the access declarations bought nothing";
 }
 
 TEST(RuntimeSystemPhaseOrderTest, AnEmptyWorldTicksWithoutSystems) {

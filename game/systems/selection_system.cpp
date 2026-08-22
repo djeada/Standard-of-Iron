@@ -52,4 +52,9 @@ auto SelectionSystem::is_unit_in_area(
          z <= std::max(y1, y2);
 }
 
+auto SelectionSystem::access() const -> Engine::Core::SystemAccess {
+  using namespace Engine::Core;
+  return SystemAccess::declare(Reads<>{}, Writes<>{});
+}
+
 } // namespace Game::Systems

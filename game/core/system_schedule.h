@@ -32,6 +32,12 @@ enum class SystemPhase : std::uint8_t {
 
 [[nodiscard]] auto phase_name(SystemPhase phase) noexcept -> const char*;
 
+template <typename... Components>
+struct Reads {};
+
+template <typename... Components>
+struct Writes {};
+
 struct SystemAccess {
   std::vector<ComponentTypeId> reads;
   std::vector<ComponentTypeId> writes;
@@ -39,10 +45,28 @@ struct SystemAccess {
 
   [[nodiscard]] static auto everything() -> SystemAccess { return SystemAccess{}; }
 
-  template <typename... Reads>
+  template <typename... ReadTypes>
   [[nodiscard]] static auto reads_only() -> SystemAccess {
     return SystemAccess{
-        .reads = {component_type_id<Reads>()...}, .writes = {}, .exclusive = false};
+        .reads = {component_type_id<ReadTypes>()...}, .writes = {}, .exclusive = false};
+  }
+
+  template <typename... ReadTypes, typename... WriteTypes>
+  [[nodiscard]] static auto declare(Reads<ReadTypes...>,
+                                    Writes<WriteTypes...>) -> SystemAccess {
+    return SystemAccess{.reads = {component_type_id<ReadTypes>()...},
+                        .writes = {component_type_id<WriteTypes>()...},
+                        .exclusive = false};
+  }
+
+  template <typename... WriteTypes>
+  [[nodiscard]] static auto declare(Writes<WriteTypes...> writes) -> SystemAccess {
+    return declare(Reads<>{}, writes);
+  }
+
+  template <typename... ReadTypes>
+  [[nodiscard]] static auto declare(Reads<ReadTypes...> reads) -> SystemAccess {
+    return declare(reads, Writes<>{});
   }
 
   [[nodiscard]] auto conflicts_with(const SystemAccess& other) const -> bool;

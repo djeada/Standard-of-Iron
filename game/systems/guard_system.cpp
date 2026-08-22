@@ -3,30 +3,25 @@
 #include <QVector3D>
 
 #include <cmath>
+#include <vector>
 
 #include "../core/component.h"
+#include "../core/system_context.h"
 #include "../core/world.h"
 #include "command_service.h"
 
 namespace Game::Systems {
 
-void GuardSystem::update(Engine::Core::World* world, float) {
-  if (world == nullptr) {
-    return;
-  }
-
-  auto entities = world->collect_entities_with<Engine::Core::GuardModeComponent>();
-
-  for (auto* entity : entities) {
-    auto* guard_mode = entity->get_component<Engine::Core::GuardModeComponent>();
-    auto* movement = entity->get_component<Engine::Core::MovementComponent>();
-    auto* transform = entity->get_component<Engine::Core::TransformComponent>();
-    auto* unit = entity->get_component<Engine::Core::UnitComponent>();
-
-    if ((guard_mode == nullptr) || (movement == nullptr) || (transform == nullptr) ||
-        (unit == nullptr)) {
-      continue;
-    }
+void GuardSystem::run(Engine::Core::SystemContext& context) {
+  for (auto [entity_id, guard_mode_ref, movement_ref, transform_ref, unit_ref] :
+       context.view<Engine::Core::GuardModeComponent,
+                    Engine::Core::MovementComponent,
+                    Engine::Core::TransformComponent,
+                    Engine::Core::UnitComponent>()) {
+    auto* guard_mode = &guard_mode_ref;
+    const auto* movement = &movement_ref;
+    const auto* transform = &transform_ref;
+    const auto* unit = &unit_ref;
 
     if (!guard_mode->active || !guard_mode->has_guard_target) {
       continue;
@@ -36,16 +31,17 @@ void GuardSystem::update(Engine::Core::World* world, float) {
       continue;
     }
 
-    auto* attack_target = entity->get_component<Engine::Core::AttackTargetComponent>();
+    const auto* attack_target =
+        context.try_get<Engine::Core::AttackTargetComponent>(entity_id);
     if ((attack_target != nullptr) && attack_target->target_id != 0) {
       continue;
     }
 
     if (guard_mode->guarded_entity_id != 0) {
-      auto* guarded_entity = world->get_entity(guard_mode->guarded_entity_id);
-      if (guarded_entity != nullptr) {
-        auto* guarded_transform =
-            guarded_entity->get_component<Engine::Core::TransformComponent>();
+      {
+        const auto* guarded_transform =
+            context.try_get<Engine::Core::TransformComponent>(
+                guard_mode->guarded_entity_id);
         if (guarded_transform != nullptr) {
 
           float const new_guard_x = guarded_transform->position.x;
@@ -72,10 +68,10 @@ void GuardSystem::update(Engine::Core::World* world, float) {
 
               CommandService::MoveOptions opts;
               opts.kind = MoveOrderKind::GuardReturn;
-              std::vector<Engine::Core::EntityID> const ids = {entity->get_id()};
+              std::vector<Engine::Core::EntityID> const ids = {entity_id};
               std::vector<QVector3D> const targets = {
                   QVector3D(new_guard_x, 0.0F, new_guard_z)};
-              CommandService::move_units(*world, ids, targets, opts);
+              CommandService::move_units(context.world(), ids, targets, opts);
             }
           }
         }
@@ -96,14 +92,25 @@ void GuardSystem::update(Engine::Core::World* world, float) {
 
           CommandService::MoveOptions opts;
           opts.kind = MoveOrderKind::GuardReturn;
-          std::vector<Engine::Core::EntityID> const ids = {entity->get_id()};
+          std::vector<Engine::Core::EntityID> const ids = {entity_id};
           std::vector<QVector3D> const targets = {QVector3D(
               guard_mode->guard_position_x, 0.0F, guard_mode->guard_position_z)};
-          CommandService::move_units(*world, ids, targets, opts);
+          CommandService::move_units(context.world(), ids, targets, opts);
         }
       }
     }
   }
+}
+
+auto GuardSystem::access() const -> Engine::Core::SystemAccess {
+  using namespace Engine::Core;
+  return SystemAccess::declare(
+      Reads<UnitComponent,
+            TransformComponent,
+            AttackTargetComponent,
+            BuildingComponent,
+            PendingRemovalComponent>{},
+      Writes<GuardModeComponent, MovementComponent, AttackComponent>{});
 }
 
 } // namespace Game::Systems

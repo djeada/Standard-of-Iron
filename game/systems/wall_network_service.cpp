@@ -262,16 +262,12 @@ auto is_wall_key_occupied(Engine::Core::World& world,
                           int grid_z,
                           bool include_construction_sites,
                           Engine::Core::EntityID ignore_entity_id = 0) -> bool {
-  auto entities = world.collect_entities_with<WallSegmentComponent>();
-  for (auto* entity : entities) {
-    if (entity == nullptr || entity->get_id() == ignore_entity_id ||
-        !is_live_wall_entity(entity, include_construction_sites)) {
-      continue;
-    }
-
-    auto* transform = entity->get_component<TransformComponent>();
-    auto* wall = entity->get_component<WallSegmentComponent>();
-    if (transform == nullptr || wall == nullptr) {
+  for (auto [entity, wall_ref, transform_ref] :
+       world.entity_view<WallSegmentComponent, TransformComponent>()) {
+    auto* wall = &wall_ref;
+    const auto* transform = &transform_ref;
+    if (entity.get_id() == ignore_entity_id ||
+        !is_live_wall_entity(&entity, include_construction_sites)) {
       continue;
     }
 
@@ -460,15 +456,11 @@ auto WallNetworkService::encode_key(int grid_x, int grid_z) -> std::uint64_t {
 void WallNetworkService::add_world_occupancy(Engine::Core::World& world,
                                              OccupancySet& out,
                                              bool include_construction_sites) {
-  auto entities = world.collect_entities_with<WallSegmentComponent>();
-  for (auto* entity : entities) {
-    if (!is_live_wall_entity(entity, include_construction_sites)) {
-      continue;
-    }
-
-    auto* transform = entity->get_component<TransformComponent>();
-    auto* wall = entity->get_component<WallSegmentComponent>();
-    if (transform == nullptr || wall == nullptr) {
+  for (auto [entity, wall_ref, transform_ref] :
+       world.entity_view<WallSegmentComponent, TransformComponent>()) {
+    auto* wall = &wall_ref;
+    const auto* transform = &transform_ref;
+    if (!is_live_wall_entity(&entity, include_construction_sites)) {
       continue;
     }
 
@@ -476,7 +468,7 @@ void WallNetworkService::add_world_occupancy(Engine::Core::World& world,
         snap_world_position(transform->position.x, transform->position.z);
     wall->grid_x = snapped.x;
     wall->grid_z = snapped.z;
-    for (const auto& cell : wall_network_cells(entity, snapped)) {
+    for (const auto& cell : wall_network_cells(&entity, snapped)) {
       out.insert(encode_key(cell.x, cell.z));
     }
   }
@@ -488,16 +480,16 @@ void WallNetworkService::build_connection_occupancy(Engine::Core::World& world,
                                                     bool include_towers) {
   out.clear();
 
-  auto wall_entities = world.collect_entities_with<WallSegmentComponent>();
-  for (auto* entity : wall_entities) {
-    if (!is_live_wall_entity(entity, include_construction_sites)) {
+  for (auto [entity, wall_ref, transform_ref] :
+       world.entity_view<WallSegmentComponent, TransformComponent>()) {
+    auto* wall = &wall_ref;
+    const auto* transform = &transform_ref;
+    if (!is_live_wall_entity(&entity, include_construction_sites)) {
       continue;
     }
 
-    auto owner_id = resolve_wall_network_owner_id(entity);
-    auto* transform = entity->get_component<TransformComponent>();
-    auto* wall = entity->get_component<WallSegmentComponent>();
-    if (!owner_id.has_value() || transform == nullptr || wall == nullptr) {
+    auto owner_id = resolve_wall_network_owner_id(&entity);
+    if (!owner_id.has_value()) {
       continue;
     }
 
@@ -505,7 +497,7 @@ void WallNetworkService::build_connection_occupancy(Engine::Core::World& world,
         snap_world_position(transform->position.x, transform->position.z);
     wall->grid_x = snapped.x;
     wall->grid_z = snapped.z;
-    for (const auto& cell : wall_network_cells(entity, snapped)) {
+    for (const auto& cell : wall_network_cells(&entity, snapped)) {
       add_owner_occupancy(out, *owner_id, cell.x, cell.z);
     }
   }
@@ -514,21 +506,15 @@ void WallNetworkService::build_connection_occupancy(Engine::Core::World& world,
     return;
   }
 
-  auto unit_entities = world.collect_entities_with<UnitComponent>();
-  for (auto* entity : unit_entities) {
-    if (!is_live_tower_socket_entity(entity)) {
-      continue;
-    }
-
-    const auto* unit = entity->get_component<UnitComponent>();
-    const auto* transform = entity->get_component<TransformComponent>();
-    if (unit == nullptr || transform == nullptr) {
+  for (auto [entity, unit, transform] :
+       world.entity_view<UnitComponent, TransformComponent>()) {
+    if (!is_live_tower_socket_entity(&entity)) {
       continue;
     }
 
     const auto snapped =
-        snap_world_position(transform->position.x, transform->position.z);
-    add_owner_occupancy(out, unit->owner_id, snapped.x, snapped.z);
+        snap_world_position(transform.position.x, transform.position.z);
+    add_owner_occupancy(out, unit.owner_id, snapped.x, snapped.z);
   }
 }
 
@@ -738,13 +724,12 @@ auto collect_navigation_passages(
                           .depth = spans_east_west ? crossing_depth : 2.0F});
   };
 
-  for (auto* entity : world.collect_entities_with<GateComponent>()) {
-    if (!is_live_wall_entity(entity, false)) {
-      continue;
-    }
-    const auto* wall = entity->get_component<WallSegmentComponent>();
-    const auto* transform = entity->get_component<TransformComponent>();
-    if (wall == nullptr || transform == nullptr) {
+  for (auto [entity, gate, wall_ref, transform_ref] :
+       world.entity_view<GateComponent, WallSegmentComponent, TransformComponent>()) {
+    (void)gate;
+    const auto* wall = &wall_ref;
+    const auto* transform = &transform_ref;
+    if (!is_live_wall_entity(&entity, false)) {
       continue;
     }
 
@@ -760,7 +745,7 @@ auto collect_navigation_passages(
                                          .center_z = lane.z(),
                                          .width = extent.half_x * 2.0F,
                                          .depth = extent.half_z * 2.0F,
-                                         .source_entity_id = entity->get_id()});
+                                         .source_entity_id = entity.get_id()});
   }
 
   constexpr int k_spacing = WallNetworkService::k_segment_spacing;
@@ -811,17 +796,13 @@ void WallNetworkService::refresh_world(Engine::Core::World& world) {
   build_connection_occupancy(world, connection_occupancy, true, true);
   OccupancySet const empty_occupancy;
 
-  auto entities = world.collect_entities_with<WallSegmentComponent>();
-  for (auto* entity : entities) {
-    if (!is_live_wall_entity(entity, true)) {
+  for (auto [entity, wall_ref] : world.entity_view<WallSegmentComponent>()) {
+    auto* wall = &wall_ref;
+    if (!is_live_wall_entity(&entity, true)) {
       continue;
     }
 
-    auto owner_id = resolve_wall_network_owner_id(entity);
-    auto* wall = entity->get_component<WallSegmentComponent>();
-    if (wall == nullptr) {
-      continue;
-    }
+    auto owner_id = resolve_wall_network_owner_id(&entity);
 
     const auto occupancy_it = owner_id.has_value()
                                   ? connection_occupancy.find(*owner_id)
@@ -831,12 +812,12 @@ void WallNetworkService::refresh_world(Engine::Core::World& world) {
                                 : empty_occupancy;
     OccupancySet self_cells;
     for (const auto& cell :
-         wall_network_cells(entity, {.x = wall->grid_x, .z = wall->grid_z})) {
+         wall_network_cells(&entity, {.x = wall->grid_x, .z = wall->grid_z})) {
       self_cells.insert(encode_key(cell.x, cell.z));
     }
     const auto mask =
         compute_connection_mask(occupancy, wall->grid_x, wall->grid_z, self_cells);
-    update_wall_entity_visuals(entity, wall, mask);
+    update_wall_entity_visuals(&entity, wall, mask);
   }
 
   BuildingCollisionRegistry::instance().set_navigation_passages(

@@ -6,8 +6,12 @@
 #include <vector>
 
 #include "../core/component.h"
+#include "../core/entity_id.h"
 #include "../core/system.h"
-#include "../core/world.h"
+
+namespace Engine::Core {
+class SystemContext;
+} // namespace Engine::Core
 
 namespace Game::Systems {
 
@@ -20,7 +24,9 @@ struct LocalAvoidanceDiagnostics {
 
 class LocalAvoidanceSystem : public Engine::Core::System {
 public:
-  void update(Engine::Core::World* world, float delta_time) override;
+  void run(Engine::Core::SystemContext& context) override;
+
+  [[nodiscard]] auto access() const -> Engine::Core::SystemAccess override;
 
   [[nodiscard]] auto diagnostics() const -> const LocalAvoidanceDiagnostics& {
     return m_diagnostics;
@@ -50,7 +56,6 @@ private:
   std::unordered_map<std::int64_t, std::vector<std::size_t>> m_grid;
   std::vector<std::int64_t> m_active_cell_keys;
   std::vector<UnitCircle> m_circles;
-  std::vector<Engine::Core::Entity*> m_query_scratch;
   std::size_t m_previous_cell_count{0};
 };
 

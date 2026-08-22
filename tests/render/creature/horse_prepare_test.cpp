@@ -151,7 +151,8 @@ TEST(HorsePrepare, TemplatePrewarmRenderWarmsSnapshotCache) {
       bpat.load_species(Render::Creature::Bpat::k_species_horse, root + "/horse.bpat"));
 
   Render::GL::HorseRendererBase const renderer;
-  Engine::Core::Entity entity(1);
+  Engine::Core::StandaloneEntity entity_scratch(1);
+  Engine::Core::Entity& entity = entity_scratch.entity();
   auto* unit = entity.add_component<Engine::Core::UnitComponent>();
   unit->spawn_type = Game::Units::SpawnType::MountedKnight;
   unit->owner_id = 1;
@@ -233,7 +234,8 @@ TEST(HorsePrepare, MinimalRenderUsesPrebakedSnapshotAssetWithoutRiggedBake) {
       << snapshot_reg.last_error();
 
   Render::GL::HorseRendererBase const renderer;
-  Engine::Core::Entity entity(1);
+  Engine::Core::StandaloneEntity entity_scratch(1);
+  Engine::Core::Entity& entity = entity_scratch.entity();
   auto* unit = entity.add_component<Engine::Core::UnitComponent>();
   unit->spawn_type = Game::Units::SpawnType::MountedKnight;
   unit->owner_id = 1;
@@ -284,7 +286,8 @@ TEST(HorsePrepare, MinimalRenderDoesNotFallbackToRiggedBakeWhenSnapshotMissing) 
   snapshot_reg.clear();
 
   Render::GL::HorseRendererBase const renderer;
-  Engine::Core::Entity entity(1);
+  Engine::Core::StandaloneEntity entity_scratch(1);
+  Engine::Core::Entity& entity = entity_scratch.entity();
   auto* unit = entity.add_component<Engine::Core::UnitComponent>();
   unit->spawn_type = Game::Units::SpawnType::MountedKnight;
   unit->owner_id = 1;

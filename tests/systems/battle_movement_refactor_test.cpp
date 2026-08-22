@@ -8,6 +8,7 @@
 #include "core/entity.h"
 #include "core/world.h"
 #include "systems/cohort_system.h"
+#include "systems/combat_system/elephant_special_processor.h"
 #include "systems/engagement_slot_system.h"
 #include "systems/local_avoidance_system.h"
 #include "systems/nav_grid.h"
@@ -400,7 +401,8 @@ TEST(ElephantKnockbackCooldownTest, CooldownPreventsRepeatedKnockback) {
   comp.add_cooldown(42);
   EXPECT_TRUE(comp.is_on_cooldown(42));
 
-  comp.tick(ElephantKnockbackCooldownComponent::k_knockback_cooldown + 0.1F);
+  Game::Systems::Combat::expire_knockback_cooldowns(
+      comp, ElephantKnockbackCooldownComponent::k_knockback_cooldown + 0.1F);
   EXPECT_FALSE(comp.is_on_cooldown(42));
 }
 

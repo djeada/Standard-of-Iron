@@ -173,16 +173,15 @@ void GlobalStatsRegistry::rebuild_from_world(Engine::Core::World& world) {
     m_player_stats[owner_id].losses = losses_values[owner_id];
   }
 
-  auto entities = world.collect_entities_with<Engine::Core::UnitComponent>();
-  for (auto* e : entities) {
-    auto* unit = e->get_component<Engine::Core::UnitComponent>();
-    if ((unit == nullptr) || unit->health <= 0) {
+  for (auto [entity_id, unit] : world.view<Engine::Core::UnitComponent>()) {
+    (void)entity_id;
+    if (unit.health <= 0) {
       continue;
     }
 
-    auto& stats = m_player_stats[unit->owner_id];
+    auto& stats = m_player_stats[unit.owner_id];
 
-    if (unit->spawn_type == Game::Units::SpawnType::Barracks) {
+    if (unit.spawn_type == Game::Units::SpawnType::Barracks) {
       stats.barracks_owned++;
     }
   }

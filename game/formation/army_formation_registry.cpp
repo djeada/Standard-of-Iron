@@ -681,4 +681,11 @@ void ArmyFormationRuntime::update(Engine::Core::World* world, float delta_time) 
   }
 }
 
+auto ArmyFormationRuntime::access() const -> Engine::Core::SystemAccess {
+  using namespace Engine::Core;
+  return SystemAccess::declare(
+      Reads<UnitComponent, TransformComponent>{},
+      Writes<ArmyFormationMembershipComponent, MovementComponent, AttackComponent>{});
+}
+
 } // namespace Game::Formation

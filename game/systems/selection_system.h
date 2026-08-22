@@ -19,6 +19,8 @@ class SelectionSystem : public Engine::Core::System {
 public:
   void update(Engine::Core::World* world, float delta_time) override;
 
+  [[nodiscard]] auto access() const -> Engine::Core::SystemAccess override;
+
   void select_unit(Engine::Core::EntityID unit_id);
   void deselect_unit(Engine::Core::EntityID unit_id);
   void clear_selection();

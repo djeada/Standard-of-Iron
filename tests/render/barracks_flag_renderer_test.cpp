@@ -61,7 +61,8 @@ auto fake_texture(int id) -> Render::GL::Texture* {
 TEST(BarracksFlagRenderer, DrawsHangingBannerPieces) {
   using namespace Render::GL;
 
-  Engine::Core::Entity entity(1);
+  Engine::Core::StandaloneEntity entity_scratch(1);
+  Engine::Core::Entity& entity = entity_scratch.entity();
   DrawContext ctx;
   ctx.entity = &entity;
 
@@ -99,7 +100,8 @@ TEST(BarracksFlagRenderer, DrawsHangingBannerPieces) {
 TEST(BarracksFlagRenderer, UsesClothMeshWhenAvailable) {
   using namespace Render::GL;
 
-  Engine::Core::Entity entity(2);
+  Engine::Core::StandaloneEntity entity_scratch(2);
+  Engine::Core::Entity& entity = entity_scratch.entity();
   DrawContext ctx;
   ctx.entity = &entity;
 
@@ -184,7 +186,8 @@ private:
 TEST(BarracksFlagRenderer, ClothBannerKeepsItsShaderThroughSubmitterWrappers) {
   using namespace Render::GL;
 
-  Engine::Core::Entity entity(3);
+  Engine::Core::StandaloneEntity entity_scratch(3);
+  Engine::Core::Entity& entity = entity_scratch.entity();
   DrawContext ctx;
   ctx.entity = &entity;
 

@@ -1,9 +1,19 @@
 #include "system.h"
 
+#include "system_context.h"
+#include "world.h"
+
 namespace Engine::Core {
-namespace {
-[[maybe_unused]] void systemTypeAnchor() {
-  (void)sizeof(System*);
+
+void System::update(World* world, float delta_time) {
+  if (world == nullptr) {
+    return;
+  }
+  SystemContext context(*world, delta_time);
+  run(context);
 }
-} // namespace
+
+void System::run(SystemContext&) {
+}
+
 } // namespace Engine::Core

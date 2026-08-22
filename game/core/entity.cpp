@@ -1,8 +1,8 @@
 #include "entity.h"
 
 #include <mutex>
+#include <typeindex>
 #include <unordered_map>
-#include <utility>
 
 namespace Engine::Core {
 
@@ -11,18 +11,6 @@ std::mutex g_component_type_ids_mutex;
 std::unordered_map<std::type_index, ComponentTypeId> g_component_type_ids;
 ComponentTypeId g_next_component_type_id = 0;
 } // namespace
-
-Entity::Entity(EntityID id)
-    : m_id(id) {
-}
-
-auto Entity::get_id() const -> EntityID {
-  return m_id;
-}
-
-void Entity::set_component_change_callback(ComponentChangeCallback callback) {
-  m_component_change_callback = std::move(callback);
-}
 
 auto resolve_component_type_id(std::type_index type) -> ComponentTypeId {
   const std::lock_guard<std::mutex> lock(g_component_type_ids_mutex);

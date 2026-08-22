@@ -9,90 +9,78 @@
 
 namespace Game::Systems {
 
+namespace {
+
+using Engine::Core::EntityID;
+using Engine::Core::World;
+
+template <typename T>
+void drop_components(World& world, const std::vector<EntityID>& entity_ids) {
+  for (const EntityID entity_id : entity_ids) {
+    world.remove<T>(entity_id);
+  }
+}
+
+} // namespace
+
 void CleanupSystem::update(Engine::Core::World* world, float delta_time) {
   if (world == nullptr) {
     return;
   }
-  auto blood_stain_entities =
-      world->collect_entities_with<Engine::Core::BloodStainComponent>();
-  for (auto* entity : blood_stain_entities) {
-    if (entity == nullptr ||
-        entity->has_component<Engine::Core::PendingRemovalComponent>()) {
+
+  for (auto [entity_id, blood_stain] :
+       world->view<Engine::Core::BloodStainComponent>()) {
+    if (world->has<Engine::Core::PendingRemovalComponent>(entity_id)) {
       continue;
     }
-
-    auto* blood_stain = entity->get_component<Engine::Core::BloodStainComponent>();
-    if (blood_stain == nullptr) {
-      entity->add_component<Engine::Core::PendingRemovalComponent>();
-      continue;
-    }
-
-    blood_stain->elapsed_time += delta_time;
-    if (blood_stain->elapsed_time >= blood_stain->lifetime) {
-      entity->add_component<Engine::Core::PendingRemovalComponent>();
+    blood_stain.elapsed_time += delta_time;
+    if (blood_stain.elapsed_time >= blood_stain.lifetime) {
+      world->emplace<Engine::Core::PendingRemovalComponent>(entity_id);
     }
   }
 
-  auto structure_damage_entities =
-      world
-          ->collect_entities_with<Engine::Core::StructureDamagePresentationComponent>();
-  for (auto* entity : structure_damage_entities) {
-    if (entity == nullptr ||
-        entity->has_component<Engine::Core::PendingRemovalComponent>()) {
+  std::vector<EntityID> expired;
+  for (auto [entity_id, presentation] :
+       world->view<Engine::Core::StructureDamagePresentationComponent>()) {
+    if (world->has<Engine::Core::PendingRemovalComponent>(entity_id)) {
       continue;
     }
-    auto* presentation =
-        entity->get_component<Engine::Core::StructureDamagePresentationComponent>();
-    if (presentation == nullptr) {
-      continue;
-    }
-    for (auto& impact : presentation->impacts) {
+    for (auto& impact : presentation.impacts) {
       impact.age += std::max(0.0F, delta_time);
     }
-    std::erase_if(presentation->impacts,
+    std::erase_if(presentation.impacts,
                   [](auto const& impact) { return impact.age >= impact.lifetime; });
-    if (presentation->impacts.empty()) {
-      entity->remove_component<Engine::Core::StructureDamagePresentationComponent>();
+    if (presentation.impacts.empty()) {
+      expired.push_back(entity_id);
     }
   }
+  drop_components<Engine::Core::StructureDamagePresentationComponent>(*world, expired);
+  expired.clear();
 
-  auto rpg_contact_entities =
-      world->collect_entities_with<Engine::Core::RpgContactPresentationComponent>();
-  for (auto* entity : rpg_contact_entities) {
-    if (entity == nullptr ||
-        entity->has_component<Engine::Core::PendingRemovalComponent>()) {
+  for (auto [entity_id, presentation] :
+       world->view<Engine::Core::RpgContactPresentationComponent>()) {
+    if (world->has<Engine::Core::PendingRemovalComponent>(entity_id)) {
       continue;
     }
-    auto* presentation =
-        entity->get_component<Engine::Core::RpgContactPresentationComponent>();
-    if (presentation == nullptr) {
-      continue;
-    }
-    for (auto& contact : presentation->entries) {
+    for (auto& contact : presentation.entries) {
       contact.age += std::max(0.0F, delta_time);
     }
-    std::erase_if(presentation->entries,
+    std::erase_if(presentation.entries,
                   [](auto const& contact) { return contact.age >= contact.lifetime; });
-    if (presentation->entries.empty()) {
-      entity->remove_component<Engine::Core::RpgContactPresentationComponent>();
+    if (presentation.entries.empty()) {
+      expired.push_back(entity_id);
     }
   }
+  drop_components<Engine::Core::RpgContactPresentationComponent>(*world, expired);
+  expired.clear();
 
-  auto casualty_entities =
-      world->collect_entities_with<Engine::Core::SoldierCasualtyAnimationComponent>();
-  for (auto* entity : casualty_entities) {
-    if (entity == nullptr ||
-        entity->has_component<Engine::Core::PendingRemovalComponent>()) {
+  for (auto [entity_id, casualties] :
+       world->view<Engine::Core::SoldierCasualtyAnimationComponent>()) {
+    if (world->has<Engine::Core::PendingRemovalComponent>(entity_id)) {
       continue;
     }
 
-    auto* casualties =
-        entity->get_component<Engine::Core::SoldierCasualtyAnimationComponent>();
-    if (casualties == nullptr) {
-      continue;
-    }
-
-    auto& entries = casualties->entries;
+    auto& entries = casualties.entries;
     for (auto& entry : entries) {
       entry.state_time += delta_time;
       if (entry.state == Engine::Core::DeathSequenceState::Dying &&
@@ -102,48 +90,35 @@ void CleanupSystem::update(Engine::Core::World* world, float delta_time) {
       }
     }
 
-    entries.erase(
-        std::remove_if(entries.begin(),
-                       entries.end(),
-                       [](const auto& entry) {
-                         return entry.state ==
-                                    Engine::Core::DeathSequenceState::DeadHold &&
-                                entry.state_time >= entry.dead_hold_duration;
-                       }),
-        entries.end());
+    std::erase_if(entries, [](const auto& entry) {
+      return entry.state == Engine::Core::DeathSequenceState::DeadHold &&
+             entry.state_time >= entry.dead_hold_duration;
+    });
     if (entries.empty()) {
-      entity->remove_component<Engine::Core::SoldierCasualtyAnimationComponent>();
+      expired.push_back(entity_id);
     }
   }
+  drop_components<Engine::Core::SoldierCasualtyAnimationComponent>(*world, expired);
 
-  auto dead_entities =
-      world->collect_entities_with<Engine::Core::DeathAnimationComponent>();
-  for (auto* entity : dead_entities) {
-    if (entity == nullptr ||
-        entity->has_component<Engine::Core::PendingRemovalComponent>()) {
+  for (auto [entity_id, death] : world->view<Engine::Core::DeathAnimationComponent>()) {
+    if (world->has<Engine::Core::PendingRemovalComponent>(entity_id)) {
       continue;
     }
 
-    auto* death = entity->get_component<Engine::Core::DeathAnimationComponent>();
-    auto* renderable = entity->get_component<Engine::Core::RenderableComponent>();
-    if (death == nullptr) {
-      entity->add_component<Engine::Core::PendingRemovalComponent>();
-      continue;
+    death.state_time += delta_time;
+    if (death.state == Engine::Core::DeathSequenceState::Dying &&
+        death.state_time >= death.state_duration) {
+      death.state = Engine::Core::DeathSequenceState::DeadHold;
+      death.state_time = 0.0F;
     }
 
-    death->state_time += delta_time;
-    if (death->state == Engine::Core::DeathSequenceState::Dying &&
-        death->state_time >= death->state_duration) {
-      death->state = Engine::Core::DeathSequenceState::DeadHold;
-      death->state_time = 0.0F;
-    }
-
-    if (death->state == Engine::Core::DeathSequenceState::DeadHold &&
-        death->state_time >= death->dead_hold_duration) {
-      if (renderable != nullptr) {
+    if (death.state == Engine::Core::DeathSequenceState::DeadHold &&
+        death.state_time >= death.dead_hold_duration) {
+      if (auto* renderable =
+              world->try_get<Engine::Core::RenderableComponent>(entity_id)) {
         renderable->visible = false;
       }
-      entity->add_component<Engine::Core::PendingRemovalComponent>();
+      world->emplace<Engine::Core::PendingRemovalComponent>(entity_id);
     }
   }
 
@@ -153,12 +128,8 @@ void CleanupSystem::update(Engine::Core::World* world, float delta_time) {
 void CleanupSystem::remove_dead_entities(Engine::Core::World* world) {
   std::vector<Engine::Core::EntityID> entities_to_remove;
 
-  auto entities = world->collect_entities_with<Engine::Core::PendingRemovalComponent>();
-
-  entities_to_remove.reserve(entities.size());
-  for (auto* entity : entities) {
-    entities_to_remove.push_back(entity->get_id());
-  }
+  const auto pending = world->entities_with<Engine::Core::PendingRemovalComponent>();
+  entities_to_remove.assign(pending.begin(), pending.end());
 
   for (auto entity_id : entities_to_remove) {
     world->destroy_entity(entity_id);

@@ -23,7 +23,7 @@ void CaptureSystem::update(Engine::Core::World* world, float delta_time) {
   process_barrack_capture(world, delta_time);
 }
 
-void CaptureSystem::tally_nearby_troops(const std::vector<Engine::Core::Entity*>& units,
+void CaptureSystem::tally_nearby_troops(Engine::Core::World& world,
                                         float barrack_x,
                                         float barrack_z,
                                         float radius,
@@ -31,11 +31,13 @@ void CaptureSystem::tally_nearby_troops(const std::vector<Engine::Core::Entity*>
   out.clear();
   float const radius_sq = radius * radius;
 
-  for (auto* entity : units) {
-    auto* unit = entity->get_component<Engine::Core::UnitComponent>();
-    auto* transform = entity->get_component<Engine::Core::TransformComponent>();
+  for (auto [entity_id, unit_ref, transform_ref] :
+       world.view<Engine::Core::UnitComponent, Engine::Core::TransformComponent>()) {
+    (void)entity_id;
+    const auto* unit = &unit_ref;
+    const auto* transform = &transform_ref;
 
-    if ((unit == nullptr) || (transform == nullptr) || unit->health <= 0) {
+    if (unit->health <= 0) {
       continue;
     }
     if (unit->spawn_type == Game::Units::SpawnType::Barracks) {
@@ -116,31 +118,29 @@ void CaptureSystem::process_barrack_capture(Engine::Core::World* world,
   constexpr float capture_radius = 8.0F;
   constexpr int troop_advantage_multiplier = 3;
 
-  auto barracks = world->collect_entities_with<Engine::Core::BuildingComponent>();
-  if (barracks.empty()) {
+  if (world->entities_with<Engine::Core::BuildingComponent>().empty()) {
     return;
   }
 
-  std::vector<Engine::Core::Entity*> units;
-  world->resolve_entities_into(world->entities_with<Engine::Core::UnitComponent>(),
-                               units);
   std::vector<OwnerTroopTally> tallies;
 
-  for (auto* barrack : barracks) {
-    auto* unit = barrack->get_component<Engine::Core::UnitComponent>();
-    auto* transform = barrack->get_component<Engine::Core::TransformComponent>();
-
-    if ((unit == nullptr) || (transform == nullptr)) {
-      continue;
-    }
+  for (auto [barrack_ref, building, unit_ref, transform_ref] :
+       world->entity_view<Engine::Core::BuildingComponent,
+                          Engine::Core::UnitComponent,
+                          Engine::Core::TransformComponent>()) {
+    (void)building;
+    Engine::Core::Entity* barrack = &barrack_ref;
+    const auto* unit = &unit_ref;
+    const auto* transform = &transform_ref;
 
     if (unit->spawn_type != Game::Units::SpawnType::Barracks) {
       continue;
     }
 
-    auto* capture = barrack->get_component<Engine::Core::CaptureComponent>();
+    auto* capture =
+        Engine::Core::get_or_add_component<Engine::Core::CaptureComponent>(*barrack);
     if (capture == nullptr) {
-      capture = barrack->add_component<Engine::Core::CaptureComponent>();
+      continue;
     }
 
     float const barrack_x = transform->position.x;
@@ -150,7 +150,7 @@ void CaptureSystem::process_barrack_capture(Engine::Core::World* world,
     int max_enemy_troops = 0;
     int capturing_player_id = -1;
 
-    tally_nearby_troops(units, barrack_x, barrack_z, capture_radius, tallies);
+    tally_nearby_troops(*world, barrack_x, barrack_z, capture_radius, tallies);
 
     int defender_troops = 0;
     for (const auto& tally : tallies) {
@@ -199,6 +199,15 @@ void CaptureSystem::process_barrack_capture(Engine::Core::World* world,
       }
     }
   }
+}
+
+auto CaptureSystem::access() const -> Engine::Core::SystemAccess {
+  using namespace Engine::Core;
+  return SystemAccess::declare(Reads<TransformComponent, BuildingComponent>{},
+                               Writes<CaptureComponent,
+                                      ProductionComponent,
+                                      RenderableComponent,
+                                      UnitComponent>{});
 }
 
 } // namespace Game::Systems

@@ -53,7 +53,7 @@ inline constexpr float k_blood_stain_default_lifetime = 8.0F;
 inline constexpr int k_blood_stain_max_active = 10;
 } // namespace Defaults
 
-class TransformComponent : public Component {
+class TransformComponent {
 public:
   TransformComponent(float x = 0.0F,
                      float y = 0.0F,
@@ -79,13 +79,13 @@ public:
   bool has_desired_yaw = false;
 };
 
-class RenderableComponent : public Component {
+class RenderableComponent {
 public:
   std::string renderer_id;
   bool visible{true};
 };
 
-class UnitComponent : public Component {
+class UnitComponent {
 public:
   UnitComponent(int health = Defaults::k_unit_default_health,
                 int max_health = Defaults::k_unit_default_health,
@@ -129,7 +129,7 @@ enum class MovementState : std::uint8_t {
   FollowingDirect = 3
 };
 
-class MovementComponent : public Component {
+class MovementComponent {
 public:
   MovementComponent() = default;
 
@@ -276,7 +276,7 @@ enum class PlayerOrderIntentKind : std::uint8_t {
   ManualMove
 };
 
-class PlayerOrderIntentComponent : public Component {
+class PlayerOrderIntentComponent {
 public:
   PlayerOrderIntentKind kind{PlayerOrderIntentKind::None};
   bool suppress_opportunistic_combat{false};
@@ -297,7 +297,7 @@ enum class MotionPresentationState : std::uint8_t {
   Run
 };
 
-class MotionPresentationComponent : public Component {
+class MotionPresentationComponent {
 public:
   MotionPresentationComponent() = default;
 
@@ -342,7 +342,7 @@ public:
   }
 };
 
-class AttackComponent : public Component {
+class AttackComponent {
 public:
   enum class CombatMode {
     Ranged,
@@ -412,7 +412,7 @@ public:
   }
 };
 
-class AttackTargetComponent : public Component {
+class AttackTargetComponent {
 public:
   AttackTargetComponent() = default;
 
@@ -421,7 +421,7 @@ public:
   bool is_player_command{false};
 };
 
-class RpgCommanderTargetComponent : public Component {
+class RpgCommanderTargetComponent {
 public:
   RpgCommanderTargetComponent() = default;
 
@@ -457,7 +457,7 @@ enum class BowDrawStage : std::uint8_t {
   Loosing,
 };
 
-class RpgCommanderAimComponent : public Component {
+class RpgCommanderAimComponent {
 public:
   RpgCommanderAimComponent() = default;
 
@@ -513,7 +513,7 @@ enum class RpgCommanderActionPhase : std::uint8_t {
   Ability
 };
 
-class RpgCommanderActionComponent : public Component {
+class RpgCommanderActionComponent {
 public:
   RpgCommanderActionComponent() = default;
 
@@ -553,7 +553,7 @@ enum class RpgContactOutcome : std::uint8_t {
   Dodge = 3,
 };
 
-class RpgContactPresentationComponent : public Component {
+class RpgContactPresentationComponent {
 public:
   struct Entry {
     float x{0.0F};
@@ -575,7 +575,7 @@ enum class CommanderSignatureForm : std::uint8_t {
   Shot,
 };
 
-class CommanderSignaturePresentationComponent : public Component {
+class CommanderSignaturePresentationComponent {
 public:
   struct Entry {
     float x{0.0F};
@@ -661,7 +661,7 @@ enum class AttackDirection : std::uint8_t {
   HeavyOverhead = 4
 };
 
-class CombatStateComponent : public Component {
+class CombatStateComponent {
 public:
   CombatStateComponent() = default;
 
@@ -755,7 +755,7 @@ hit_reaction_duration(HitReactionKind kind) noexcept -> float {
   return 0.30F;
 }
 
-class HitFeedbackComponent : public Component {
+class HitFeedbackComponent {
 public:
   HitFeedbackComponent() = default;
 
@@ -797,7 +797,7 @@ public:
   }
 };
 
-class PatrolComponent : public Component {
+class PatrolComponent {
 public:
   PatrolComponent() = default;
 
@@ -810,14 +810,14 @@ public:
 
 namespace Engine::Core {
 
-class BuildingComponent : public Component {
+class BuildingComponent {
 public:
   BuildingComponent() = default;
 
   Game::Systems::NationID original_nation_id{Game::Systems::NationID::RomanRepublic};
 };
 
-class ProductionComponent : public Component {
+class ProductionComponent {
 public:
   ProductionComponent()
       : build_time(Defaults::k_production_default_build_time)
@@ -838,7 +838,7 @@ public:
   std::vector<Game::Units::TroopType> production_queue;
 };
 
-class MoraleComponent : public Component {
+class MoraleComponent {
 public:
   MoraleComponent() = default;
 
@@ -849,7 +849,7 @@ public:
   bool routing{false};
 };
 
-class CommanderAuraBuffComponent : public Component {
+class CommanderAuraBuffComponent {
 public:
   CommanderAuraBuffComponent() = default;
 
@@ -865,7 +865,7 @@ inline void refresh_morale_state(MoraleComponent& morale) noexcept {
   morale.wavering = !morale.routing && morale.morale < 40.0F;
 }
 
-class UndeadComponent : public Component {
+class UndeadComponent {
 public:
   UndeadComponent() = default;
 
@@ -876,7 +876,7 @@ public:
   bool counts_for_economy{false};
 };
 
-class CursedStatusComponent : public Component {
+class CursedStatusComponent {
 public:
   CursedStatusComponent() = default;
 
@@ -886,7 +886,7 @@ public:
   int stacks{1};
 };
 
-class BurningStatusComponent : public Component {
+class BurningStatusComponent {
 public:
   BurningStatusComponent() = default;
 
@@ -900,7 +900,7 @@ public:
   float fire_bonus_multiplier{1.0F};
 };
 
-class CommanderComponent : public Component {
+class CommanderComponent {
 public:
   CommanderComponent() = default;
 
@@ -1024,7 +1024,7 @@ public:
   bool flag_rally_issue_commands{false};
 };
 
-class CommanderGuardComponent : public Component {
+class CommanderGuardComponent {
 public:
   CommanderGuardComponent() = default;
 
@@ -1043,7 +1043,7 @@ enum class SpearBraceSource : std::uint8_t {
   CommanderGuard = 3
 };
 
-class SpearBraceComponent : public Component {
+class SpearBraceComponent {
 public:
   SpearBraceComponent() = default;
 
@@ -1078,7 +1078,7 @@ enum class MountedChargeCancelReason : std::uint8_t {
   Explicit = 4
 };
 
-class MountedChargeComponent : public Component {
+class MountedChargeComponent {
 public:
   MountedChargeComponent() = default;
 
@@ -1098,7 +1098,7 @@ public:
   EntityID last_impact_target_id{0};
 };
 
-class RpgHealthComponent : public Component {
+class RpgHealthComponent {
 public:
   RpgHealthComponent() = default;
 
@@ -1111,7 +1111,7 @@ public:
   bool dodge_invincible{false};
 };
 
-class StaggerComponent : public Component {
+class StaggerComponent {
 public:
   explicit StaggerComponent(float duration = 0.5F)
       : remaining(duration) {}
@@ -1126,7 +1126,7 @@ enum class EnemyTelegraphPhase : std::uint8_t {
   Recovery
 };
 
-class EnemyTelegraphComponent : public Component {
+class EnemyTelegraphComponent {
 public:
   EnemyTelegraphComponent() = default;
 
@@ -1153,7 +1153,7 @@ enum class FightContext : std::uint8_t {
   Skirmish
 };
 
-class RpgEngagementComponent : public Component {
+class RpgEngagementComponent {
 public:
   struct Slot {
     EntityID entity_id{0};
@@ -1171,12 +1171,12 @@ public:
   FightContext fight_context{FightContext::None};
 };
 
-class AIControlledComponent : public Component {
+class AIControlledComponent {
 public:
   AIControlledComponent() = default;
 };
 
-class CaptureComponent : public Component {
+class CaptureComponent {
 public:
   CaptureComponent()
       : required_time(Defaults::k_capture_required_time) {}
@@ -1199,7 +1199,7 @@ enum class BuilderTaskFault : std::uint8_t {
   Unreachable = 3,
 };
 
-class BuilderProductionComponent : public Component {
+class BuilderProductionComponent {
 public:
   BuilderProductionComponent() = default;
 
@@ -1266,7 +1266,7 @@ public:
   }
 };
 
-class WallSegmentComponent : public Component {
+class WallSegmentComponent {
 public:
   WallSegmentComponent() = default;
 
@@ -1275,7 +1275,7 @@ public:
   std::uint8_t connection_mask{0};
 };
 
-class WallConstructionSiteComponent : public Component {
+class WallConstructionSiteComponent {
 public:
   WallConstructionSiteComponent() = default;
 
@@ -1287,7 +1287,7 @@ public:
   Game::Units::SpawnType product_type{Game::Units::SpawnType::WallSegment};
 };
 
-class DismantleSiteComponent : public Component {
+class DismantleSiteComponent {
 public:
   DismantleSiteComponent() = default;
 
@@ -1296,7 +1296,7 @@ public:
   int active_workers{0};
 };
 
-class GateComponent : public Component {
+class GateComponent {
 public:
   enum class State : std::uint8_t {
     Closed = 0,
@@ -1347,7 +1347,7 @@ public:
   }
 };
 
-class ConstructionPreviewComponent : public Component {
+class ConstructionPreviewComponent {
 public:
   ConstructionPreviewComponent() = default;
 
@@ -1358,12 +1358,12 @@ public:
   bool valid{false};
 };
 
-class PendingRemovalComponent : public Component {
+class PendingRemovalComponent {
 public:
   PendingRemovalComponent() = default;
 };
 
-class BloodStainComponent : public Component {
+class BloodStainComponent {
 public:
   BloodStainComponent(float radius = Defaults::k_blood_stain_default_radius,
                       float lifetime = Defaults::k_blood_stain_default_lifetime,
@@ -1384,7 +1384,7 @@ public:
   float seed{0.0F};
 };
 
-class FirePatchComponent : public Component {
+class FirePatchComponent {
 public:
   FirePatchComponent() = default;
 
@@ -1400,7 +1400,7 @@ public:
   float fire_bonus_multiplier{1.0F};
 };
 
-class StructureFireComponent : public Component {
+class StructureFireComponent {
 public:
   StructureFireComponent() = default;
 
@@ -1429,7 +1429,7 @@ enum class DeathSequenceState : std::uint8_t {
   DeadHold = 1
 };
 
-class DeathAnimationComponent : public Component {
+class DeathAnimationComponent {
 public:
   DeathAnimationComponent() = default;
 
@@ -1441,7 +1441,7 @@ public:
   std::uint8_t sequence_variant{0};
 };
 
-class SoldierCasualtyAnimationComponent : public Component {
+class SoldierCasualtyAnimationComponent {
 public:
   struct Entry {
     std::uint16_t slot_index{0};
@@ -1467,7 +1467,7 @@ public:
   std::vector<Entry> entries;
 };
 
-class AssaultWaveComponent : public Component {
+class AssaultWaveComponent {
 public:
   AssaultWaveComponent() = default;
 
@@ -1479,7 +1479,7 @@ public:
   float march_target_z{0.0F};
 };
 
-class HoldModeComponent : public Component {
+class HoldModeComponent {
 public:
   HoldModeComponent()
       : stand_up_duration(Defaults::k_hold_stand_up_duration)
@@ -1497,7 +1497,7 @@ public:
   float kneel_duration;
 };
 
-class GuardModeComponent : public Component {
+class GuardModeComponent {
 public:
   GuardModeComponent()
       : guard_radius(Defaults::k_guard_default_radius) {}
@@ -1511,7 +1511,7 @@ public:
   bool has_guard_target{false};
 };
 
-class HealerComponent : public Component {
+class HealerComponent {
 public:
   enum class TargetAffinity : std::uint8_t {
     LivingAllies = 0,
@@ -1531,7 +1531,7 @@ public:
   bool suppress_attack_while_healing{true};
 };
 
-class SpecialAttackComponent : public Component {
+class SpecialAttackComponent {
 public:
   SpecialAttackComponent() = default;
 
@@ -1551,7 +1551,7 @@ public:
   int burn_damage_per_tick{0};
 };
 
-class CatapultLoadingComponent : public Component {
+class CatapultLoadingComponent {
 public:
   enum class LoadingState {
     Idle,
@@ -1602,7 +1602,7 @@ public:
   [[nodiscard]] auto is_firing() const -> bool { return state == LoadingState::Firing; }
 };
 
-class FormationModeComponent : public Component {
+class FormationModeComponent {
 public:
   FormationModeComponent() = default;
 
@@ -1617,7 +1617,7 @@ public:
   float stable_slot_z{0.0F};
 };
 
-class ArmyFormationMembershipComponent : public Component {
+class ArmyFormationMembershipComponent {
 public:
   ArmyFormationMembershipComponent() = default;
 
@@ -1627,7 +1627,7 @@ public:
   [[nodiscard]] auto is_valid() const noexcept -> bool { return group_id != 0U; }
 };
 
-class UnitLayoutStateComponent : public Component {
+class UnitLayoutStateComponent {
 public:
   UnitLayoutStateComponent() = default;
 
@@ -1641,7 +1641,7 @@ public:
   [[nodiscard]] auto is_formed() const noexcept -> bool { return phase == 1U; }
 };
 
-class StaminaComponent : public Component {
+class StaminaComponent {
 public:
   static constexpr float k_run_speed_multiplier = 1.5F;
   static constexpr float k_min_stamina_to_start_run = 10.0F;
@@ -1668,14 +1668,6 @@ public:
 
   [[nodiscard]] auto has_stamina() const noexcept -> bool { return stamina > 0.0F; }
 
-  void deplete(float delta_time) noexcept {
-    stamina = std::max(0.0F, stamina - depletion_rate * delta_time);
-  }
-
-  void regenerate(float delta_time) noexcept {
-    stamina = std::min(max_stamina, stamina + regen_rate * delta_time);
-  }
-
   void initialize_from_stats(float new_max_stamina,
                              float new_regen_rate,
                              float new_depletion_rate) noexcept {
@@ -1686,7 +1678,7 @@ public:
   }
 };
 
-class TerrainContextComponent : public Component {
+class TerrainContextComponent {
 public:
   TerrainContextComponent() = default;
 
@@ -1697,7 +1689,7 @@ public:
   static constexpr float k_audio_cooldown_time = 5.0F;
 };
 
-class ElephantComponent : public Component {
+class ElephantComponent {
 public:
   enum class ChargeState {
     Idle,
@@ -1720,14 +1712,14 @@ public:
   float foot_forward{0.280F};
 };
 
-class ElephantPanicComponent : public Component {
+class ElephantPanicComponent {
 public:
   ElephantPanicComponent() = default;
 
   float duration{0.0F};
 };
 
-class ElephantStompImpactComponent : public Component {
+class ElephantStompImpactComponent {
 public:
   struct ImpactRecord {
     float x;
@@ -1740,7 +1732,7 @@ public:
   std::vector<ImpactRecord> impacts;
 };
 
-class StructureDamagePresentationComponent : public Component {
+class StructureDamagePresentationComponent {
 public:
   struct ImpactRecord {
     float x{0.0F};
@@ -1760,7 +1752,7 @@ public:
   std::vector<ImpactRecord> impacts;
 };
 
-class HomeComponent : public Component {
+class HomeComponent {
 public:
   HomeComponent() = default;
 
@@ -1772,14 +1764,14 @@ public:
   int family_manpower_value{8};
 };
 
-class CivilianDeliveryComponent : public Component {
+class CivilianDeliveryComponent {
 public:
   CivilianDeliveryComponent() = default;
 
   EntityID target_barracks_id{0};
 };
 
-class ResourceCarryComponent : public Component {
+class ResourceCarryComponent {
 public:
   ResourceCarryComponent() = default;
 
@@ -1804,7 +1796,7 @@ public:
   float haul_seconds{0.0F};
 };
 
-class StockpileComponent : public Component {
+class StockpileComponent {
 public:
   StockpileComponent() = default;
 
@@ -1817,7 +1809,7 @@ public:
 
 inline constexpr int k_farm_growth_stage_count = 5;
 
-class FarmComponent : public Component {
+class FarmComponent {
 public:
   FarmComponent() = default;
 
@@ -1860,7 +1852,7 @@ enum class SettlementErrandRole : std::uint8_t {
 
 inline constexpr float k_settlement_labour_cycles_per_second = 1.15F;
 
-class SettlementResidentComponent : public Component {
+class SettlementResidentComponent {
 public:
   SettlementResidentComponent() = default;
 
@@ -1889,7 +1881,7 @@ public:
   }
 };
 
-class WildlifeComponent : public Component {
+class WildlifeComponent {
 public:
   WildlifeComponent() = default;
 
@@ -1934,7 +1926,7 @@ public:
   }
 };
 
-class MovementIntentComponent : public Component {
+class MovementIntentComponent {
 public:
   MovementIntentComponent() = default;
 
@@ -1949,7 +1941,7 @@ public:
   std::uint8_t priority{0};
 };
 
-class EngagementSlotComponent : public Component {
+class EngagementSlotComponent {
 public:
   EngagementSlotComponent() = default;
 
@@ -1985,7 +1977,7 @@ struct FormationContactFront {
   auto operator==(const FormationContactFront&) const -> bool = default;
 };
 
-class FormationContactComponent : public Component {
+class FormationContactComponent {
 public:
   FormationContactComponent() = default;
 
@@ -2039,7 +2031,7 @@ struct FormationSoldierPresentation {
   auto operator==(const FormationSoldierPresentation&) const -> bool = default;
 };
 
-class FormationRosterPresentationComponent : public Component {
+class FormationRosterPresentationComponent {
 public:
   FormationRosterPresentationComponent() = default;
 
@@ -2049,7 +2041,7 @@ public:
   std::vector<std::uint8_t> alive;
 };
 
-class FormationHitPresentationComponent : public Component {
+class FormationHitPresentationComponent {
 public:
   FormationHitPresentationComponent() = default;
 
@@ -2064,7 +2056,7 @@ public:
   std::uint32_t revision{0};
 };
 
-class FormationPresentationComponent : public Component {
+class FormationPresentationComponent {
 public:
   FormationPresentationComponent() = default;
 
@@ -2086,7 +2078,7 @@ enum class CreatureCastPresentation : std::uint8_t {
   Fireball,
 };
 
-class CreaturePresentationComponent : public Component {
+class CreaturePresentationComponent {
 public:
   CreaturePresentationComponent() = default;
 
@@ -2160,7 +2152,7 @@ public:
   float showcase_phase{0.0F};
 };
 
-class ShowcaseRoutineComponent : public Component {
+class ShowcaseRoutineComponent {
 public:
   ShowcaseRoutineComponent() = default;
 
@@ -2193,7 +2185,7 @@ public:
   bool throw_armed{true};
 };
 
-class TargetCommitmentComponent : public Component {
+class TargetCommitmentComponent {
 public:
   TargetCommitmentComponent() = default;
 
@@ -2205,7 +2197,7 @@ public:
   static constexpr float k_switch_cooldown = 0.8F;
 };
 
-class CohortMembershipComponent : public Component {
+class CohortMembershipComponent {
 public:
   CohortMembershipComponent() = default;
 
@@ -2213,7 +2205,7 @@ public:
   bool cohort_activated{false};
 };
 
-class ElephantKnockbackCooldownComponent : public Component {
+class ElephantKnockbackCooldownComponent {
 public:
   ElephantKnockbackCooldownComponent() = default;
 
@@ -2224,17 +2216,6 @@ public:
 
   std::vector<VictimCooldown> cooldowns;
   static constexpr float k_knockback_cooldown = 1.0F;
-
-  void tick(float dt) {
-    for (auto it = cooldowns.begin(); it != cooldowns.end();) {
-      it->remaining -= dt;
-      if (it->remaining <= 0.0F) {
-        it = cooldowns.erase(it);
-      } else {
-        ++it;
-      }
-    }
-  }
 
   [[nodiscard]] auto is_on_cooldown(EntityID victim) const -> bool {
     for (const auto& cd : cooldowns) {

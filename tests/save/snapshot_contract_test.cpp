@@ -34,7 +34,7 @@ auto read_text(const std::filesystem::path& path) -> std::string {
 
 auto declared_components() -> std::set<std::string> {
   const auto source = read_text(find_repo_root() / "game" / "core" / "component.h");
-  const std::regex pattern(R"(^class ([A-Za-z0-9_]+) : public Component)",
+  const std::regex pattern(R"(^(?:class|struct) ([A-Za-z0-9_]+Component) \{)",
                            std::regex::multiline);
 
   std::set<std::string> names;

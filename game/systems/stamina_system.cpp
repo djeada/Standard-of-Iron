@@ -1,6 +1,9 @@
 #include "stamina_system.h"
 
+#include <algorithm>
+
 #include "../core/component.h"
+#include "../core/system_context.h"
 #include "../core/world.h"
 #include "../units/spawn_type.h"
 #include "../units/troop_type.h"
@@ -24,16 +27,26 @@ namespace {
            movement->get_vz() * movement->get_vz()) > 1.0e-5F ||
           movement->get_has_target() || movement->has_waypoints());
 }
+void deplete_stamina(Engine::Core::StaminaComponent& stamina,
+                     float delta_time) noexcept {
+  stamina.stamina =
+      std::max(0.0F, stamina.stamina - stamina.depletion_rate * delta_time);
+}
+
+void regenerate_stamina(Engine::Core::StaminaComponent& stamina,
+                        float delta_time) noexcept {
+  stamina.stamina =
+      std::min(stamina.max_stamina, stamina.stamina + stamina.regen_rate * delta_time);
+}
+
 } // namespace
 
-void StaminaSystem::update(Engine::Core::World* world, float delta_time) {
-  if (world == nullptr) {
-    return;
-  }
+void StaminaSystem::run(Engine::Core::SystemContext& context) {
+  const float delta_time = context.delta_time();
 
   for (auto [entity, stamina_ref, unit_ref] :
-       world->entity_view<Engine::Core::StaminaComponent,
-                          Engine::Core::UnitComponent>()) {
+       context.entity_view<Engine::Core::StaminaComponent,
+                           Engine::Core::UnitComponent>()) {
     auto* stamina = &stamina_ref;
     const auto* unit = &unit_ref;
 
@@ -58,19 +71,26 @@ void StaminaSystem::update(Engine::Core::World* world, float delta_time) {
         stamina->is_running = true;
       }
       if (stamina->is_running) {
-        stamina->deplete(delta_time);
+        deplete_stamina(*stamina, delta_time);
         if (!stamina->has_stamina()) {
           stamina->is_running = false;
         }
       } else {
 
-        stamina->regenerate(delta_time);
+        regenerate_stamina(*stamina, delta_time);
       }
     } else {
       stamina->is_running = false;
-      stamina->regenerate(delta_time);
+      regenerate_stamina(*stamina, delta_time);
     }
   }
+}
+
+auto StaminaSystem::access() const -> Engine::Core::SystemAccess {
+  using namespace Engine::Core;
+  return SystemAccess::declare(
+      Reads<UnitComponent, MotionPresentationComponent, MovementComponent>{},
+      Writes<StaminaComponent>{});
 }
 
 } // namespace Game::Systems
