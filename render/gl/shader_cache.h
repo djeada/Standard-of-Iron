@@ -236,6 +236,10 @@ public:
          post_vert,
          resolve(shader_base + QStringLiteral("sky.frag")));
 
+    load(QStringLiteral("sky_box"),
+         resolve(shader_base + QStringLiteral("sky_box.vert")),
+         resolve(shader_base + QStringLiteral("sky_box.frag")));
+
     load(QStringLiteral("mode_indicator"),
          resolve(shader_base + QStringLiteral("mode_indicator.vert")),
          resolve(shader_base + QStringLiteral("mode_indicator.frag")));

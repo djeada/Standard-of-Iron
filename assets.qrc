@@ -21,6 +21,7 @@
         <file>assets/shaders/include/character_shading.glsl</file>
         <file>assets/shaders/include/terrain_noise.glsl</file>
         <file>assets/shaders/include/tonemap.glsl</file>
+        <file>assets/shaders/include/sky_common.glsl</file>
         <file>assets/shaders/include/quality.glsl</file>
         <file>assets/shaders/include/contact_shadow.glsl</file>
         <file>assets/shaders/include/rigged_gpu_skin.glsl</file>
@@ -116,6 +117,8 @@
         <file>assets/shaders/post_fxaa.frag</file>
         <file>assets/shaders/post_godrays.frag</file>
         <file>assets/shaders/sky.frag</file>
+        <file>assets/shaders/sky_box.vert</file>
+        <file>assets/shaders/sky_box.frag</file>
         <file>assets/shaders/ground_marker.vert</file>
         <file>assets/shaders/mode_indicator.frag</file>
         <file>assets/shaders/mode_indicator.vert</file>

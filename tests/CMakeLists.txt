@@ -357,6 +357,7 @@ add_executable(
     render/visibility_mask_encoder_test.cpp
     render/fog_renderer_test.cpp
     render/render_view_state_test.cpp
+    render/sky_box_transition_test.cpp
     render/renderer_visibility_policy_test.cpp
     render/unit_render_cache_test.cpp
     render/render_archetype_test.cpp
