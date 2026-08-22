@@ -9,7 +9,9 @@
 #include "render/creature/archetype_registry.h"
 #include "render/elephant/elephant_spec.h"
 #include "render/horse/horse_spec.h"
-#include "render/humanoid/humanoid_spec.h"
+#include "render/humanoid/asset/humanoid_spec.h"
+#include "render/humanoid/runtime/humanoid_pose_diagnostics.h"
+#include "render/humanoid/schema/blend_profile.h"
 #include "render/static_attachment_spec.h"
 #include "render/wildlife/sheep_spec.h"
 #include "render/wildlife/wildlife_variant.h"
@@ -103,6 +105,8 @@ CreatureAssetRegistry::CreatureAssetRegistry() {
   m_humanoid.bpat_species_id = Render::Creature::Bpat::k_species_humanoid;
   m_humanoid.spec = &Render::Humanoid::humanoid_creature_spec();
   m_humanoid.topology = &m_humanoid.spec->topology;
+  m_humanoid.blend_profile = &Render::Humanoid::k_humanoid_blend_profile;
+  m_humanoid.body_pose_probe = &Render::Humanoid::record_humanoid_body_pose;
   m_humanoid.role_count =
       static_cast<std::uint8_t>(Render::Humanoid::k_humanoid_role_count);
   m_humanoid.max_bones = static_cast<std::uint8_t>(Render::Humanoid::k_bone_count);
@@ -177,6 +181,8 @@ CreatureAssetRegistry::CreatureAssetRegistry() {
   m_humanoid_sword.bpat_species_id = Render::Creature::Bpat::k_species_humanoid_sword;
   m_humanoid_sword.spec = &Render::Humanoid::humanoid_creature_spec();
   m_humanoid_sword.topology = &m_humanoid_sword.spec->topology;
+  m_humanoid_sword.blend_profile = &Render::Humanoid::k_humanoid_blend_profile;
+  m_humanoid_sword.body_pose_probe = &Render::Humanoid::record_humanoid_body_pose;
   m_humanoid_sword.role_count =
       static_cast<std::uint8_t>(Render::Humanoid::k_humanoid_role_count);
   m_humanoid_sword.max_bones =
@@ -190,6 +196,8 @@ CreatureAssetRegistry::CreatureAssetRegistry() {
   m_humanoid_spear.bpat_species_id = Render::Creature::Bpat::k_species_humanoid_spear;
   m_humanoid_spear.spec = &Render::Humanoid::humanoid_creature_spec();
   m_humanoid_spear.topology = &m_humanoid_spear.spec->topology;
+  m_humanoid_spear.blend_profile = &Render::Humanoid::k_humanoid_blend_profile;
+  m_humanoid_spear.body_pose_probe = &Render::Humanoid::record_humanoid_body_pose;
   m_humanoid_spear.role_count =
       static_cast<std::uint8_t>(Render::Humanoid::k_humanoid_role_count);
   m_humanoid_spear.max_bones =
@@ -204,6 +212,8 @@ CreatureAssetRegistry::CreatureAssetRegistry() {
       Render::Creature::Bpat::k_species_humanoid_skeleton;
   m_skeleton_humanoid.spec = &Render::Humanoid::skeleton_humanoid_creature_spec();
   m_skeleton_humanoid.topology = &m_skeleton_humanoid.spec->topology;
+  m_skeleton_humanoid.blend_profile = &Render::Humanoid::k_humanoid_blend_profile;
+  m_skeleton_humanoid.body_pose_probe = &Render::Humanoid::record_humanoid_body_pose;
   m_skeleton_humanoid.role_count =
       static_cast<std::uint8_t>(Render::Humanoid::k_humanoid_role_count);
   m_skeleton_humanoid.max_bones =

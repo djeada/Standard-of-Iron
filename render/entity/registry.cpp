@@ -32,7 +32,11 @@
 #include "nations/roman/horse_swordsman_renderer.h"
 #include "nations/roman/spearman_renderer.h"
 #include "nations/roman/swordsman_renderer.h"
+#include "render/elephant/elephant_spec.h"
+#include "render/horse/horse_spec.h"
 #include "render/scene_renderer.h"
+#include "render/wildlife/sheep_spec.h"
+#include "render/wildlife/wolf_spec.h"
 #include "temple_renderer.h"
 #include "wall_renderer.h"
 #include "wildlife/sheep_renderer.h"
@@ -85,6 +89,12 @@ auto EntityRendererRegistry::get_handle(std::string_view type) const -> Renderer
 }
 
 void register_built_in_entity_renderers(EntityRendererRegistry& registry) {
+
+  Render::Horse::initialize_horse_asset();
+  Render::Elephant::initialize_elephant_asset();
+  Render::Wildlife::initialize_sheep_asset();
+  Render::Wildlife::initialize_wolf_asset();
+
   Roman::register_archer_renderer(registry);
   Carthage::register_archer_renderer(registry);
 

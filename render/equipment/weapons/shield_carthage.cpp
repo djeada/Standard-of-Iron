@@ -14,9 +14,9 @@
 #include "render/gl/mesh.h"
 #include "render/gl/primitives.h"
 #include "render/gl/shared_geometry_cache.h"
-#include "render/humanoid/humanoid_renderer_base.h"
-#include "render/humanoid/humanoid_spec.h"
-#include "render/humanoid/skeleton.h"
+#include "render/humanoid/asset/bind_skeleton.h"
+#include "render/humanoid/asset/humanoid_spec.h"
+#include "render/humanoid/runtime/humanoid_renderer.h"
 #include "render/render_archetype.h"
 #include "shield_anchor.h"
 

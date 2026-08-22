@@ -72,9 +72,6 @@ auto compute_rein_handle(const MountedAttachmentFrame& mount,
 auto movement_animation_for_horse_gait(GaitType gait) noexcept
     -> Render::Creature::MovementAnimationState;
 
-[[nodiscard]] auto
-mount_model_scale(const Engine::Core::Entity* entity) noexcept -> float;
-
 auto evaluate_horse_motion(
     const HorseProfile& profile,
     const AnimationInputs& anim,

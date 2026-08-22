@@ -3,8 +3,8 @@
 #include <array>
 
 #include "render/creature/pipeline/creature_asset.h"
-#include "render/humanoid/humanoid_proportion_profiles.h"
-#include "render/humanoid/humanoid_spec.h"
+#include "render/humanoid/asset/humanoid_spec.h"
+#include "render/humanoid/schema/humanoid_proportion_profiles.h"
 #include "swordsman_style.h"
 
 namespace Render::GL::Carthage {
@@ -44,7 +44,7 @@ const std::array<SwordsmanRendererRegistration, 2> k_swordsman_renderers{{
 const std::array<SwordsmanRendererRegistration, 1> k_skeleton_swordsman_renderers{{
     {.renderer_key = "troops/iron_sepulcher/skeleton_swordsman",
      .creature_asset_id = Render::Creature::Pipeline::k_skeleton_humanoid_asset,
-     .pose_layer = &Render::Humanoid::apply_skeleton_proportion_pose_layer},
+     .pose_policy = Render::Humanoid::HumanoidPosePolicy::SkeletonProportions},
 }};
 
 } // namespace

@@ -12,6 +12,7 @@
 #include <vector>
 
 #include "render/creature/spec.h"
+#include "render/elephant/elephant_bake_recipe.h"
 #include "render/elephant/elephant_manifest.h"
 #include "render/elephant/elephant_renderer_base.h"
 #include "render/elephant/elephant_spec.h"
@@ -492,7 +493,7 @@ TEST(ElephantSpecTest, AuthoredStompImpactLowersFootAndDrivesTrunkForward) {
 }
 
 TEST(ElephantSpecTest, BakedFightUsesAuthoredTrunkAndLegAttack) {
-  auto const& manifest = Render::Elephant::elephant_manifest();
+  auto const& manifest = Render::Elephant::elephant_bake_recipe();
   auto const idle_it =
       std::find_if(manifest.clips.begin(), manifest.clips.end(), [](auto const& clip) {
         return clip.name == "idle";

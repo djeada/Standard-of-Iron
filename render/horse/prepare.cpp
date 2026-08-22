@@ -19,7 +19,10 @@
 #include "render/creature/pipeline/prepared_submit.h"
 #include "render/creature/pipeline/unit_visual_spec.h"
 #include "render/creature/quadruped/clip_set.h"
+#include "render/creature/quadruped/mount_scale.h"
+#include "render/creature/quadruped/quadruped_prepare.h"
 #include "render/creature/quadruped/render_stats.h"
+#include "render/creature/quadruped/runtime_context.h"
 #include "render/gl/humanoid/animation/animation_inputs.h"
 #include "render/math/creature_math_utils.h"
 #include "render/submitter.h"
@@ -93,64 +96,63 @@ auto grounded_horse_world(const Render::GL::DrawContext& ctx,
 
 namespace Render::GL {
 
-static HorseRenderStats s_horseRenderStats;
+namespace {
+
+auto horse_stats() noexcept -> HorseRenderStats& {
+  return Render::Creature::Quadruped::current_quadruped_runtime_context().horse;
+}
+
+} // namespace
 
 auto get_horse_render_stats() -> const HorseRenderStats& {
-  return s_horseRenderStats;
+  return horse_stats();
 }
 
 void reset_horse_render_stats() {
-  s_horseRenderStats.reset();
+  horse_stats().reset();
 }
 
 void HorseRendererBase::render(const DrawContext& ctx,
                                const AnimationInputs& anim,
                                const HumanoidAnimationContext& rider_ctx,
                                HorseProfile& profile,
-                               const MountedAttachmentFrame* shared_mount,
                                const HorseMotionSample* shared_motion,
                                ISubmitter& out,
-                               HorseLOD lod) const {
-  DrawContext const render_ctx =
-      ctx.template_prewarm ? Render::Creature::Pipeline::make_runtime_prewarm_ctx(ctx)
-                           : ctx;
+                               Render::Creature::CreatureLOD lod) const {
 
-  HorseLOD effective_lod = lod;
-  if (ctx.template_prewarm && !render_ctx.force_horse_lod) {
-    effective_lod = HorseLOD::Minimal;
-  } else if (render_ctx.force_horse_lod) {
-    effective_lod = render_ctx.forced_horse_lod;
+  const bool prewarming = ctx.template_prewarm;
+  DrawContext const render_ctx =
+      prewarming ? Render::Creature::Pipeline::make_runtime_prewarm_ctx(ctx) : ctx;
+
+  Render::Creature::CreatureLOD effective_lod = lod;
+  if (render_ctx.force_quadruped_lod) {
+    effective_lod = render_ctx.forced_quadruped_lod;
+  } else if (prewarming) {
+    effective_lod = Render::Creature::CreatureLOD::Minimal;
   }
 
-  ++s_horseRenderStats.total;
+  ++horse_stats().total;
 
-  if (effective_lod == HorseLOD::Culled) {
-    ++s_horseRenderStats.skipped_lod;
+  if (effective_lod == Render::Creature::CreatureLOD::Culled) {
+    ++horse_stats().skipped_lod;
     return;
   }
 
-  ++s_horseRenderStats.rendered;
+  ++horse_stats().rendered;
   switch (effective_lod) {
-  case HorseLOD::Full:
-    ++s_horseRenderStats.lod_full;
+  case Render::Creature::CreatureLOD::Full:
+    ++horse_stats().lod_full;
     break;
-  case HorseLOD::Minimal:
-    ++s_horseRenderStats.lod_minimal;
+  case Render::Creature::CreatureLOD::Minimal:
+    ++horse_stats().lod_minimal;
     break;
-  case HorseLOD::Culled:
+  case Render::Creature::CreatureLOD::Culled:
     break;
   }
 
   Render::Horse::HorsePreparation prep;
-  Render::Horse::prepare_horse_render(*this,
-                                      render_ctx,
-                                      anim,
-                                      rider_ctx,
-                                      profile,
-                                      shared_mount,
-                                      shared_motion,
-                                      effective_lod,
-                                      prep);
+  Render::Horse::prepare_horse_render(
+      *this, render_ctx, anim, rider_ctx, profile, shared_motion, effective_lod, prep);
   Render::Creature::Pipeline::submit_preparation(prep, out);
 }
 
@@ -158,11 +160,15 @@ void HorseRendererBase::render(const DrawContext& ctx,
                                const AnimationInputs& anim,
                                const HumanoidAnimationContext& rider_ctx,
                                HorseProfile& profile,
-                               const MountedAttachmentFrame* shared_mount,
                                const HorseMotionSample* shared_motion,
                                ISubmitter& out) const {
-  render(
-      ctx, anim, rider_ctx, profile, shared_mount, shared_motion, out, HorseLOD::Full);
+  render(ctx,
+         anim,
+         rider_ctx,
+         profile,
+         shared_motion,
+         out,
+         Render::Creature::CreatureLOD::Full);
 }
 
 } // namespace Render::GL
@@ -174,7 +180,6 @@ void prepare_horse_impl(const Render::GL::HorseRendererBase& owner,
                         const Render::GL::AnimationInputs& anim,
                         const Render::GL::HumanoidAnimationContext& rider_ctx,
                         Render::GL::HorseProfile& profile,
-                        const Render::GL::MountedAttachmentFrame* shared_mount,
                         const Render::GL::HorseMotionSample* shared_motion,
                         HorsePreparation& out,
                         Render::Creature::CreatureLOD lod,
@@ -193,30 +198,14 @@ void prepare_horse_impl(const Render::GL::HorseRendererBase& owner,
                 rider_ctx,
                 Engine::Core::get_or_add_component<
                     Render::Creature::HorseAnimationStateComponent>(ctx.entity),
-                Render::GL::mount_model_scale(ctx.entity));
-  (void)shared_mount;
+                Render::Creature::Quadruped::mount_model_scale(ctx.entity));
   Render::GL::DrawContext horse_ctx = ctx;
   horse_ctx.model = (shared_grounded_world != nullptr)
                         ? *shared_grounded_world
                         : grounded_horse_world(ctx, motion);
 
   namespace RCP = Render::Creature::Pipeline;
-  RCP::CreatureGraphInputs graph_inputs{};
-  graph_inputs.ctx = &horse_ctx;
-  graph_inputs.anim = &anim;
-  graph_inputs.entity = ctx.entity;
-  RCP::CreatureLodDecision lod_decision{};
-  lod_decision.lod = lod;
-  auto graph_output = RCP::build_base_graph_output(graph_inputs, lod_decision);
-  graph_output.spec = owner.visual_spec();
-  graph_output.seed = request_seed;
-  RCP::PreparedHorseBodyState body_state;
-  body_state.graph = graph_output;
-  body_state.variant = v;
-  body_state.animation_state = horse_state_for_motion(motion, anim);
-  body_state.phase =
-      (anim.is_dying || anim.is_dead) ? anim.death_progress : motion.phase;
-  out.bodies.add_quadruped(body_state);
+  namespace RCQ = Render::Creature::Quadruped;
 
   QVector3D const horse_world_pos = RCP::model_world_origin(horse_ctx.model);
   const float horse_y_scale =
@@ -224,36 +213,32 @@ void prepare_horse_impl(const Render::GL::HorseRendererBase& owner,
   const float horse_contact_y =
       RCP::horse_clip_contact_y(horse_clip_for_motion(motion), motion.phase)
           .value_or(0.0F);
-  const float horse_surface_world_y = horse_world_pos.y() - k_ground_clearance_epsilon +
-                                      horse_contact_y * horse_y_scale;
-  float camera_distance = 0.0F;
-  if (horse_ctx.camera != nullptr) {
-    camera_distance = (horse_world_pos - horse_ctx.camera->get_position()).length();
-  }
-  RCP::QuadrupedShadowStateInputs shadow_inputs{};
-  shadow_inputs.ctx = &horse_ctx;
-  shadow_inputs.graph = &graph_output;
-  shadow_inputs.world_pos = horse_world_pos;
-  shadow_inputs.kind = RCP::CreatureKind::Horse;
-  shadow_inputs.lod = lod;
-  shadow_inputs.camera_distance = camera_distance;
-  {
 
-    const QVector3D forward = horse_ctx.model.mapVector(QVector3D(0.0F, 0.0F, 1.0F));
-    shadow_inputs.facing_yaw_degrees =
-        qRadiansToDegrees(std::atan2(double(forward.x()), double(forward.z())));
-  }
-  shadow_inputs.intensity_scale = (anim.is_dying || anim.is_dead) ? 0.45F : 1.0F;
-  shadow_inputs.surface_world_y = horse_surface_world_y;
-  shadow_inputs.surface_height_valid = true;
-  const auto shadow_state = RCP::prepare_quadruped_shadow_state(shadow_inputs);
-  if (shadow_state.enabled) {
-    if (out.shadow_batch.empty()) {
-      out.shadow_batch.init(
-          shadow_state.shader, shadow_state.mesh, shadow_state.light_dir);
-    }
-    out.shadow_batch.add(shadow_state.model, shadow_state.alpha, shadow_state.pass);
-  }
+  RCQ::QuadrupedRuntimeInput input{};
+  input.ctx = &horse_ctx;
+  input.anim = &anim;
+  input.spec = &owner.visual_spec();
+  input.kind = RCP::CreatureKind::Horse;
+  input.lod = lod;
+  input.animation = horse_state_for_motion(motion, anim);
+  input.phase = (anim.is_dying || anim.is_dead) ? anim.death_progress : motion.phase;
+  input.world = horse_ctx.model;
+  input.seed = request_seed;
+  input.surface_world_y = horse_world_pos.y() - k_ground_clearance_epsilon +
+                          horse_contact_y * horse_y_scale;
+  input.surface_height_valid = true;
+  input.shadow_intensity_scale = (anim.is_dying || anim.is_dead) ? 0.45F : 1.0F;
+
+  auto const body = RCQ::build_quadruped_body(input);
+
+  RCP::PreparedHorseBodyState body_state;
+  body_state.graph = body.graph;
+  body_state.variant = v;
+  body_state.animation_state = input.animation;
+  body_state.phase = input.phase;
+  out.bodies.add_quadruped(body_state);
+
+  RCQ::add_quadruped_shadow(input, body, out);
 }
 
 void prepare_horse_render(const Render::GL::HorseRendererBase& owner,
@@ -261,7 +246,6 @@ void prepare_horse_render(const Render::GL::HorseRendererBase& owner,
                           const Render::GL::AnimationInputs& anim,
                           const Render::GL::HumanoidAnimationContext& rider_ctx,
                           Render::GL::HorseProfile& profile,
-                          const Render::GL::MountedAttachmentFrame* shared_mount,
                           const Render::GL::HorseMotionSample* shared_motion,
                           Render::Creature::CreatureLOD lod,
                           HorsePreparation& out,
@@ -275,7 +259,6 @@ void prepare_horse_render(const Render::GL::HorseRendererBase& owner,
                      anim,
                      rider_ctx,
                      profile,
-                     shared_mount,
                      shared_motion,
                      out,
                      lod,

@@ -18,7 +18,7 @@
 #include "render/gl/humanoid/humanoid_types.h"
 #include "render/graphics_settings.h"
 #include "render/horse/horse_spec.h"
-#include "render/humanoid/humanoid_spec.h"
+#include "render/humanoid/asset/humanoid_spec.h"
 #include "render/submitter.h"
 #include "render/world_view.h"
 

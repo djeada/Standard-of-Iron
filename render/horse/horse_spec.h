@@ -163,6 +163,8 @@ void make_horse_spec_pose_animated(const Render::GL::HorseDimensions& dims,
 void fill_horse_role_colors(const Render::GL::HorseVariant& variant,
                             std::array<QVector3D, 8>& out_roles) noexcept;
 
+void initialize_horse_asset();
+
 [[nodiscard]] auto
 horse_creature_spec() noexcept -> const Render::Creature::CreatureSpec&;
 

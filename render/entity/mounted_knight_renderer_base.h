@@ -66,10 +66,6 @@ public:
   MountedKnightRendererBase& operator=(MountedKnightRendererBase&&) = delete;
   ~MountedKnightRendererBase() override = default;
 
-  auto
-  visual_spec() const -> const Render::Creature::Pipeline::UnitVisualSpec& override;
-
-  auto get_proportion_scaling() const -> QVector3D override;
   auto get_mount_scale() const -> float override;
   void adjust_variation(const DrawContext&,
                         uint32_t,

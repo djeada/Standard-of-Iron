@@ -7,8 +7,8 @@
 #include "render/elephant/elephant_spec.h"
 #include "render/gl/humanoid/humanoid_types.h"
 #include "render/horse/horse_spec.h"
-#include "render/humanoid/humanoid_spec.h"
-#include "render/humanoid/skeleton.h"
+#include "render/humanoid/asset/humanoid_spec.h"
+#include "render/humanoid/schema/skeleton_schema.h"
 #include "tests/render/test_asset_paths.h"
 
 namespace {

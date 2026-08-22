@@ -3,8 +3,8 @@
 #include <array>
 #include <gtest/gtest.h>
 
-#include "render/humanoid/grip_axis.h"
-#include "render/humanoid/skeleton.h"
+#include "render/humanoid/runtime/grip_axis.h"
+#include "render/humanoid/schema/skeleton_schema.h"
 
 namespace {
 

@@ -44,12 +44,13 @@
 #include "render/gl/primitives.h"
 #include "render/gl/render_constants.h"
 #include "render/gl/shader.h"
-#include "render/humanoid/humanoid_math.h"
-#include "render/humanoid/humanoid_proportion_profiles.h"
-#include "render/humanoid/humanoid_renderer_base.h"
-#include "render/humanoid/humanoid_spec.h"
-#include "render/humanoid/skeleton.h"
-#include "render/humanoid/style_palette.h"
+#include "render/humanoid/asset/bind_skeleton.h"
+#include "render/humanoid/asset/humanoid_spec.h"
+#include "render/humanoid/runtime/humanoid_math.h"
+#include "render/humanoid/runtime/humanoid_renderer.h"
+#include "render/humanoid/runtime/skeleton_evaluator.h"
+#include "render/humanoid/runtime/style_palette.h"
+#include "render/humanoid/schema/humanoid_proportion_profiles.h"
 #include "render/palette.h"
 #include "render/scene_renderer.h"
 #include "render/submitter.h"
@@ -1039,25 +1040,20 @@ void apply_roman_civilian_palette(const QVector3D& team_tint,
 
 class BuilderRenderer : public HumanoidRendererBase {
 public:
+  BuilderRenderer()
+      : HumanoidRendererBase(make_visual_spec()) {}
+
   friend void register_builder_renderer(Render::GL::EntityRendererRegistry& registry);
 
-  auto get_proportion_scaling() const -> QVector3D override {
-    return k_builder_profile.as_vector();
-  }
-
-  auto
-  visual_spec() const -> const Render::Creature::Pipeline::UnitVisualSpec& override {
+  static auto make_visual_spec() -> Render::Creature::Pipeline::UnitVisualSpec {
     using namespace Render::Creature::Pipeline;
-    static const UnitVisualSpec spec = []() {
-      UnitVisualSpec s{};
-      s.kind = CreatureKind::Humanoid;
-      s.debug_name = "troops/roman/builder";
-      s.scaling = k_builder_profile.as_pipeline_scaling();
-      s.archetype_id = roman_builder_idle_archetype();
-      s.animation_manifest.variant_table = &roman_builder_variant_table();
-      return s;
-    }();
-    return spec;
+    UnitVisualSpec s{};
+    s.kind = CreatureKind::Humanoid;
+    s.debug_name = "troops/roman/builder";
+    s.scaling = k_builder_profile.as_pipeline_scaling();
+    s.archetype_id = roman_builder_idle_archetype();
+    s.animation_manifest.variant_table = &roman_builder_variant_table();
+    return s;
   }
 
   void get_variant(const DrawContext& ctx,
@@ -1071,23 +1067,18 @@ public:
 
 class CivilianRenderer : public HumanoidRendererBase {
 public:
-  auto get_proportion_scaling() const -> QVector3D override {
-    return k_civilian_profile.as_vector();
-  }
+  CivilianRenderer()
+      : HumanoidRendererBase(make_visual_spec()) {}
 
-  auto
-  visual_spec() const -> const Render::Creature::Pipeline::UnitVisualSpec& override {
+  static auto make_visual_spec() -> Render::Creature::Pipeline::UnitVisualSpec {
     using namespace Render::Creature::Pipeline;
-    static const UnitVisualSpec spec = []() {
-      UnitVisualSpec s{};
-      s.kind = CreatureKind::Humanoid;
-      s.debug_name = "troops/roman/civilian";
-      s.scaling = k_civilian_profile.as_pipeline_scaling();
-      s.archetype_id = roman_civilian_idle_archetype();
-      s.animation_manifest.variant_table = &roman_civilian_variant_table();
-      return s;
-    }();
-    return spec;
+    UnitVisualSpec s{};
+    s.kind = CreatureKind::Humanoid;
+    s.debug_name = "troops/roman/civilian";
+    s.scaling = k_civilian_profile.as_pipeline_scaling();
+    s.archetype_id = roman_civilian_idle_archetype();
+    s.animation_manifest.variant_table = &roman_civilian_variant_table();
+    return s;
   }
 
   void get_variant(const DrawContext& ctx,

@@ -12,6 +12,7 @@
 #include <vector>
 
 #include "animation/bpat/bpat_format.h"
+#include "render/creature/bake/creature_bake_recipe.h"
 #include "wildlife_rig.h"
 #include "wolf_spec.h"
 
@@ -235,9 +236,10 @@ void bake_wolf_clip_frame(std::size_t clip_index,
 
 } // namespace
 
-auto wolf_manifest() noexcept -> const Render::Creature::SpeciesManifest& {
-  static const Render::Creature::SpeciesManifest manifest = [] {
-    Render::Creature::SpeciesManifest m;
+auto wolf_runtime_manifest() noexcept
+    -> const Render::Creature::CreatureRuntimeManifest& {
+  static const Render::Creature::CreatureRuntimeManifest manifest = [] {
+    Render::Creature::CreatureRuntimeManifest m;
     m.species_name = "wolf";
     m.species_id = Render::Creature::Bpat::k_species_wolf;
     m.bpat_file_name = "wolf.bpat";
@@ -257,13 +259,22 @@ auto wolf_manifest() noexcept -> const Render::Creature::SpeciesManifest& {
     m.lod_minimal.material_id = k_wildlife_material_id;
     m.lod_minimal.lod_mask = Render::Creature::k_lod_minimal;
     m.lod_minimal.mesh_nodes = wolf_minimal_mesh_nodes();
-    m.clips = std::span<const Render::Creature::BakeClipDescriptor>(k_wolf_clip_descs);
     m.bind_palette = &wolf_bind_palette;
     m.creature_spec = &wolf_creature_spec;
-    m.bake_clip_frame = &bake_wolf_clip_frame;
     return m;
   }();
   return manifest;
+}
+
+auto wolf_bake_recipe() noexcept -> const Render::Creature::CreatureBakeRecipe& {
+  static const Render::Creature::CreatureBakeRecipe recipe = [] {
+    Render::Creature::CreatureBakeRecipe r;
+    r.runtime = &wolf_runtime_manifest();
+    r.clips = std::span<const Render::Creature::BakeClipDescriptor>(k_wolf_clip_descs);
+    r.bake_clip_frame = &bake_wolf_clip_frame;
+    return r;
+  }();
+  return recipe;
 }
 
 } // namespace Render::Wildlife

@@ -3,7 +3,7 @@
 #include <array>
 
 #include "render/creature/pipeline/creature_asset.h"
-#include "render/humanoid/humanoid_proportion_profiles.h"
+#include "render/humanoid/schema/humanoid_proportion_profiles.h"
 #include "swordsman_style.h"
 
 namespace Render::GL::Roman {

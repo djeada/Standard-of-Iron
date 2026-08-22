@@ -7,8 +7,8 @@
 #include "game/core/component.h"
 #include "game/core/world.h"
 #include "game/systems/nation_id.h"
-#include "render/humanoid/cache_control.h"
-#include "render/humanoid/pose_cache_components.h"
+#include "render/humanoid/runtime/frame_control.h"
+#include "render/humanoid/runtime/instance_state.h"
 #include "render/scene_renderer.h"
 #include "render/selection_ring_layout.h"
 
@@ -136,7 +136,7 @@ void render_commander_auras(Renderer* renderer,
     const float glow_radius = std::clamp(0.72F + footprint * 0.35F, 0.78F, 1.15F);
     std::span<const Render::Humanoid::SoldierTurnSmoothingState> soldier_anchors;
     if (auto const* layout_cache =
-            entity->get_component<Render::Humanoid::HumanoidLayoutCacheComponent>()) {
+            entity->get_component<Render::Humanoid::HumanoidInstanceStateComponent>()) {
       soldier_anchors = layout_cache->turn_states;
     }
     const auto placements = build_selection_ring_layout(

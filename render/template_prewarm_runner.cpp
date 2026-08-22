@@ -21,6 +21,7 @@
 #include "animation/bpat/bpat_registry.h"
 #include "battle_render_optimizer.h"
 #include "creature/archetype_registry.h"
+#include "creature/assets/creature_asset_prewarmer.h"
 #include "creature/pose_intent.h"
 #include "creature/quadruped/render_stats.h"
 #include "creature/runtime_bake_guard.h"
@@ -30,6 +31,7 @@
 #include "elephant/dimensions.h"
 #include "elephant/elephant_renderer_base.h"
 #include "entity/building_render_common.h"
+#include "entity/mounted_humanoid_renderer_base.h"
 #include "entity/registry.h"
 #include "equipment/equipment_registry.h"
 #include "equipment/render_archetype_registry.h"
@@ -54,9 +56,10 @@
 #include "graphics_settings.h"
 #include "horse/dimensions.h"
 #include "horse/horse_renderer_base.h"
-#include "humanoid/cache_control.h"
-#include "humanoid/humanoid_renderer_base.h"
-#include "humanoid/render_stats.h"
+#include "humanoid/asset/humanoid_asset_prewarmer.h"
+#include "humanoid/runtime/frame_control.h"
+#include "humanoid/runtime/humanoid_renderer.h"
+#include "humanoid/runtime/runtime_stats.h"
 #include "pass/construction_preview_pass.h"
 #include "pass/frame_context.h"
 #include "pass/frame_pass_runner.h"
@@ -132,7 +135,7 @@ auto make_template_prewarm_draw_context(Renderer& renderer,
                                         HumanoidLOD lod,
                                         std::uint8_t variant,
                                         bool allow_template_cache,
-                                        bool force_horse_lod,
+                                        bool force_quadruped_lod,
                                         const AnimationInputs* animation_override,
                                         std::uint8_t attack_variant_override,
                                         bool has_attack_variant_override,
@@ -151,9 +154,9 @@ auto make_template_prewarm_draw_context(Renderer& renderer,
   ctx.variant_override = variant;
   ctx.force_humanoid_lod = true;
   ctx.forced_humanoid_lod = lod;
-  ctx.force_horse_lod = force_horse_lod;
-  if (ctx.force_horse_lod) {
-    ctx.forced_horse_lod = static_cast<HorseLOD>(lod);
+  ctx.force_quadruped_lod = force_quadruped_lod;
+  if (ctx.force_quadruped_lod) {
+    ctx.forced_quadruped_lod = static_cast<Render::Creature::CreatureLOD>(lod);
   }
   ctx.animation_override = animation_override;
   ctx.has_attack_variant_override = has_attack_variant_override;
@@ -266,6 +269,48 @@ void execute_template_prewarm_item(Renderer& renderer,
   CreatureCacheWarmupSubmitter warmup_submitter(&renderer);
   fn(ctx, warmup_submitter);
 }
+
+void prewarm_humanoid_assets_for_profile(Renderer& renderer,
+                                         const EntityRendererRegistry* entity_registry,
+                                         const PrewarmProfile& profile,
+                                         HumanoidLOD lod,
+                                         std::uint8_t variant) {
+  if (entity_registry == nullptr) {
+    return;
+  }
+  const auto handle = entity_registry->get_handle(profile.renderer_id);
+  if (handle == k_invalid_renderer_handle) {
+    return;
+  }
+  const auto* preparer = entity_registry->get_preparer(handle);
+  const auto* humanoid = dynamic_cast<const HumanoidRendererBase*>(preparer);
+  if (humanoid == nullptr) {
+    return;
+  }
+
+  Render::Humanoid::HumanoidAssetPrewarmer prewarmer(renderer.rigged_mesh_cache());
+  Render::Creature::CreatureAssetPrewarmer creature_prewarmer(
+      renderer.rigged_mesh_cache());
+  const auto& spec = humanoid->visual_spec();
+  prewarmer.prewarm({.archetype = spec.archetype_id,
+                     .lod = lod,
+                     .variant = static_cast<Render::Creature::VariantId>(variant),
+                     .creature_asset = spec.creature_asset_id});
+
+  if (const auto* mounted = dynamic_cast<const MountedHumanoidRendererBase*>(preparer);
+      mounted != nullptr) {
+    const auto& mounted_spec = mounted->mounted_visual_spec();
+    prewarmer.prewarm({.archetype = mounted_spec.rider.archetype_id,
+                       .lod = lod,
+                       .variant = static_cast<Render::Creature::VariantId>(variant),
+                       .creature_asset = mounted_spec.rider.creature_asset_id});
+    prewarmer.prewarm({.archetype = mounted_spec.mount.archetype_id,
+                       .lod = lod,
+                       .variant = static_cast<Render::Creature::VariantId>(variant),
+                       .creature_asset = mounted_spec.mount.creature_asset_id});
+  }
+}
+
 } // namespace
 
 void Renderer::cancel_async_template_prewarm() {
@@ -276,6 +321,10 @@ void Renderer::cancel_async_template_prewarm() {
 
 void Renderer::run_template_prewarm_item(const PrewarmProfile& profile,
                                          const PrewarmWorkItem& item) {
+
+  prewarm_humanoid_assets_for_profile(
+      *this, m_entity_registry.get(), profile, item.lod, item.variant);
+
   execute_template_prewarm_item(*this,
                                 item.profile_index,
                                 profile.spawn_type,
@@ -714,7 +763,7 @@ void Renderer::prewarm_unit_templates(
     return;
   }
 
-  clear_humanoid_caches();
+  reset_humanoid_runtime_context();
 
   std::vector<PrewarmWorkItem> core_work_items =
       build_template_prewarm_work_items(profiles,

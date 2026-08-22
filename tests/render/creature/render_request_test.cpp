@@ -25,8 +25,8 @@
 #include "render/elephant/elephant_spec.h"
 #include "render/gl/humanoid/humanoid_types.h"
 #include "render/horse/horse_spec.h"
-#include "render/humanoid/humanoid_spec.h"
-#include "render/humanoid/skeleton.h"
+#include "render/humanoid/asset/humanoid_spec.h"
+#include "render/humanoid/schema/skeleton_schema.h"
 #include "render/submitter.h"
 #include "render/wildlife/sheep_manifest.h"
 #include "tests/render/test_asset_paths.h"
@@ -64,7 +64,7 @@ TEST(SheepAnimation, GrazeHeadUsesLongEasedTransitionsAndAStableHold) {
   EXPECT_LT(maximum_frame_step, 0.08F)
       << "the baked head pose still changes too much between adjacent frames";
 
-  auto const& manifest = Render::Wildlife::sheep_manifest();
+  auto const& manifest = Render::Wildlife::sheep_bake_recipe();
   auto const graze =
       std::find_if(manifest.clips.begin(), manifest.clips.end(), [](auto const& clip) {
         return clip.name == std::string_view("graze");

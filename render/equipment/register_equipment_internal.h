@@ -17,8 +17,8 @@
 #include "humanoid_equipment_archetype.h"
 #include "render/horse/dimensions.h"
 #include "render/horse/horse_spec.h"
-#include "render/humanoid/humanoid_spec.h"
-#include "render/humanoid/skeleton.h"
+#include "render/humanoid/asset/humanoid_spec.h"
+#include "render/humanoid/schema/skeleton_schema.h"
 
 namespace Render::GL::EquipmentRegistration {
 

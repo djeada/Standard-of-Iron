@@ -18,7 +18,7 @@
 
 #include "game/session/session_context.h"
 #include "render/creature/pipeline/creature_prepared_state.h"
-#include "render/creature/species_manifest.h"
+#include "render/creature/schema/creature_runtime_manifest.h"
 #include "render/rigged_mesh_bake.h"
 #include "render/snapshot_mesh_bake.h"
 #include "render/software/software_rasterizer.h"
@@ -256,8 +256,8 @@ auto main(int argc, char** argv) -> int {
     return 1;
   }
 
-  auto const& manifest = species == "wolf" ? Render::Wildlife::wolf_manifest()
-                                           : Render::Wildlife::sheep_manifest();
+  auto const& manifest = species == "wolf" ? Render::Wildlife::wolf_runtime_manifest()
+                                           : Render::Wildlife::sheep_runtime_manifest();
   auto const colors = species == "wolf" ? wolf_role_colors() : sheep_role_colors();
 
   ViewSpec view{"quarter", QVector3D(0.85F, 0.42F, 0.75F)};

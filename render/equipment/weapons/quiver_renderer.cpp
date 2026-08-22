@@ -13,8 +13,8 @@
 #include "render/equipment/generated_equipment.h"
 #include "render/equipment/oriented_archetype_utils.h"
 #include "render/gl/render_constants.h"
-#include "render/humanoid/humanoid_math.h"
-#include "render/humanoid/humanoid_spec.h"
+#include "render/humanoid/asset/humanoid_spec.h"
+#include "render/humanoid/runtime/humanoid_math.h"
 #include "render/math/creature_math_utils.h"
 
 namespace Render::GL {

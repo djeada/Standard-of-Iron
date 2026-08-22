@@ -5,36 +5,39 @@
 #include <string>
 #include <vector>
 
-#include "render/creature/species_manifest.h"
+#include "render/creature/bake/creature_bake_recipe.h"
+#include "render/creature/schema/creature_runtime_manifest.h"
+#include "render/elephant/elephant_bake_recipe.h"
 #include "render/elephant/elephant_manifest.h"
+#include "render/horse/horse_bake_recipe.h"
 #include "render/horse/horse_manifest.h"
-#include "render/humanoid/humanoid_manifest.h"
+#include "render/humanoid/asset/humanoid_manifest.h"
 
 namespace {
 
-using Render::Creature::SpeciesManifest;
+using Render::Creature::CreatureBakeRecipe;
 
-auto all_manifests() -> std::vector<const SpeciesManifest*> {
-  std::vector<const SpeciesManifest*> out;
+auto all_manifests() -> std::vector<const CreatureBakeRecipe*> {
+  std::vector<const CreatureBakeRecipe*> out;
   for (auto const profile : Render::Humanoid::humanoid_bake_profiles()) {
-    out.push_back(&Render::Humanoid::humanoid_manifest(profile));
+    out.push_back(&Render::Humanoid::humanoid_bake_recipe(profile));
   }
-  out.push_back(&Render::Horse::horse_manifest());
-  out.push_back(&Render::Elephant::elephant_manifest());
+  out.push_back(&Render::Horse::horse_bake_recipe());
+  out.push_back(&Render::Elephant::elephant_bake_recipe());
   return out;
 }
 
 TEST(SpeciesManifestParityTest, EveryManifestIsBakeable) {
   for (const auto* manifest : all_manifests()) {
-    SCOPED_TRACE(std::string(manifest->species_name));
-    EXPECT_FALSE(manifest->species_name.empty());
-    EXPECT_FALSE(manifest->bpat_file_name.empty());
-    ASSERT_NE(manifest->bind_palette, nullptr);
-    ASSERT_NE(manifest->creature_spec, nullptr);
+    SCOPED_TRACE(std::string(manifest->runtime->species_name));
+    EXPECT_FALSE(manifest->runtime->species_name.empty());
+    EXPECT_FALSE(manifest->runtime->bpat_file_name.empty());
+    ASSERT_NE(manifest->runtime->bind_palette, nullptr);
+    ASSERT_NE(manifest->runtime->creature_spec, nullptr);
     ASSERT_NE(manifest->bake_clip_frame, nullptr);
-    EXPECT_NE(manifest->topology, nullptr);
+    EXPECT_NE(manifest->runtime->topology, nullptr);
     EXPECT_FALSE(manifest->clips.empty());
-    EXPECT_FALSE(manifest->bind_palette().empty());
+    EXPECT_FALSE(manifest->runtime->bind_palette().empty());
     for (auto const& clip : manifest->clips) {
       SCOPED_TRACE(std::string(clip.name));
       EXPECT_FALSE(clip.name.empty());
@@ -48,18 +51,18 @@ TEST(SpeciesManifestParityTest, SpeciesIdsAndFileNamesAreUnique) {
   std::set<std::uint32_t> ids;
   std::set<std::string> files;
   for (const auto* manifest : all_manifests()) {
-    SCOPED_TRACE(std::string(manifest->species_name));
-    EXPECT_TRUE(ids.insert(manifest->species_id).second)
-        << "duplicate species id " << manifest->species_id;
-    EXPECT_TRUE(files.insert(std::string(manifest->bpat_file_name)).second)
-        << "duplicate bpat file " << manifest->bpat_file_name;
+    SCOPED_TRACE(std::string(manifest->runtime->species_name));
+    EXPECT_TRUE(ids.insert(manifest->runtime->species_id).second)
+        << "duplicate species id " << manifest->runtime->species_id;
+    EXPECT_TRUE(files.insert(std::string(manifest->runtime->bpat_file_name)).second)
+        << "duplicate bpat file " << manifest->runtime->bpat_file_name;
   }
 }
 
 TEST(SpeciesManifestParityTest, ClipFrameHookFillsOnePalettePerBone) {
   for (const auto* manifest : all_manifests()) {
-    SCOPED_TRACE(std::string(manifest->species_name));
-    auto const bones = manifest->bind_palette().size();
+    SCOPED_TRACE(std::string(manifest->runtime->species_name));
+    auto const bones = manifest->runtime->bind_palette().size();
     ASSERT_GT(bones, 0U);
     std::vector<QMatrix4x4> palettes;
     manifest->bake_clip_frame(0U, 0U, palettes, nullptr);
@@ -69,7 +72,7 @@ TEST(SpeciesManifestParityTest, ClipFrameHookFillsOnePalettePerBone) {
 
 TEST(SpeciesManifestParityTest, SocketsAreBakedAlongsidePalettes) {
   for (const auto* manifest : all_manifests()) {
-    SCOPED_TRACE(std::string(manifest->species_name));
+    SCOPED_TRACE(std::string(manifest->runtime->species_name));
     if (manifest->sockets.empty()) {
       continue;
     }
@@ -85,11 +88,12 @@ TEST(SpeciesManifestParityTest, SocketsAreBakedAlongsidePalettes) {
 
 TEST(SpeciesManifestParityTest, OnlySpeciesNamingASnapshotShipOne) {
 
-  EXPECT_FALSE(Render::Horse::horse_manifest().minimal_snapshot_file_name.empty());
   EXPECT_FALSE(
-      Render::Elephant::elephant_manifest().minimal_snapshot_file_name.empty());
+      Render::Horse::horse_runtime_manifest().minimal_snapshot_file_name.empty());
+  EXPECT_FALSE(
+      Render::Elephant::elephant_runtime_manifest().minimal_snapshot_file_name.empty());
   for (auto const profile : Render::Humanoid::humanoid_bake_profiles()) {
-    EXPECT_TRUE(Render::Humanoid::humanoid_manifest(profile)
+    EXPECT_TRUE(Render::Humanoid::humanoid_runtime_manifest(profile)
                     .minimal_snapshot_file_name.empty());
   }
 }

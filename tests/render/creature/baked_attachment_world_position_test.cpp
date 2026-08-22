@@ -28,7 +28,7 @@
 #include "render/equipment/weapons/shield_renderer.h"
 #include "render/equipment/weapons/sword_renderer.h"
 #include "render/gl/humanoid/humanoid_types.h"
-#include "render/humanoid/humanoid_spec.h"
+#include "render/humanoid/asset/humanoid_spec.h"
 #include "render/render_archetype.h"
 #include "render/rigged_mesh_bake.h"
 #include "render/static_attachment_spec.h"

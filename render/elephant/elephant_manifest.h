@@ -1,10 +1,10 @@
 #pragma once
 
-#include "render/creature/species_manifest.h"
+#include "render/creature/schema/creature_runtime_manifest.h"
 
 namespace Render::Elephant {
 
-[[nodiscard]] auto
-elephant_manifest() noexcept -> const Render::Creature::SpeciesManifest&;
+[[nodiscard]] auto elephant_runtime_manifest() noexcept
+    -> const Render::Creature::CreatureRuntimeManifest&;
 
 }

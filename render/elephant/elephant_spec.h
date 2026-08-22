@@ -70,6 +70,8 @@ enum class ElephantBone : std::uint8_t {
   FootBR = SourceFootBackR,
   Head = SourceBone003,
   TrunkTip = SourceBone014,
+
+  MountBack = SourceBone001,
 };
 
 inline constexpr std::size_t k_elephant_bone_count = k_elephant_source_bone_count;
@@ -163,6 +165,8 @@ inline constexpr int k_elephant_material_id = 8;
 void fill_elephant_role_colors(
     const Render::GL::ElephantVariant& variant,
     std::array<QVector3D, k_elephant_role_count>& out_roles) noexcept;
+
+void initialize_elephant_asset();
 
 [[nodiscard]] auto
 elephant_creature_spec() noexcept -> const Render::Creature::CreatureSpec&;

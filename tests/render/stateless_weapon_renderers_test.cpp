@@ -22,7 +22,7 @@
 #include "render/equipment/weapons/sword_renderer.h"
 #include "render/equipment/weapons/sword_roman.h"
 #include "render/gl/humanoid/humanoid_types.h"
-#include "render/humanoid/skeleton.h"
+#include "render/humanoid/runtime/skeleton_evaluator.h"
 #include "render/palette.h"
 
 namespace {

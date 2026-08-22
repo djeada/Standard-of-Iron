@@ -12,8 +12,8 @@
 #include "render/creature/pipeline/unit_visual_spec.h"
 #include "render/equipment/equipment_registry.h"
 #include "render/equipment/humanoid_equipment_archetype.h"
-#include "render/humanoid/humanoid_renderer_base.h"
-#include "render/humanoid/style_palette.h"
+#include "render/humanoid/runtime/humanoid_renderer.h"
+#include "render/humanoid/runtime/style_palette.h"
 #include "render/palette.h"
 
 namespace Render::GL {
@@ -81,14 +81,12 @@ public:
   SwordsmanRenderer(const SwordsmanRendererProfile& profile,
                     std::string_view renderer_key,
                     Render::Creature::Pipeline::CreatureAssetId creature_asset_id,
-                    Render::Creature::Pipeline::PoseLayerFn pose_layer)
+                    Render::Humanoid::HumanoidPosePolicy pose_policy)
       : m_profile(profile)
       , m_renderer_key(renderer_key)
       , m_creature_asset_id(creature_asset_id)
-      , m_pose_layer(pose_layer) {}
-
-  auto get_proportion_scaling() const -> QVector3D override {
-    return m_profile.proportion_profile.as_vector();
+      , m_pose_policy(pose_policy) {
+    set_visual_spec(build_visual_spec());
   }
 
   auto get_torso_scale() const -> float override {
@@ -106,13 +104,8 @@ public:
     return m_profile.kneel_depth_multiplier;
   }
 
-  auto
-  visual_spec() const -> const Render::Creature::Pipeline::UnitVisualSpec& override {
+  auto build_visual_spec() const -> Render::Creature::Pipeline::UnitVisualSpec {
     using namespace Render::Creature::Pipeline;
-
-    if (m_visual_spec_baked) {
-      return m_visual_spec_cache;
-    }
 
     const auto loadout = Render::GL::Nation::resolve_equipment_loadout(m_renderer_key);
     std::array<EquipmentHandle, 7> handles{};
@@ -129,10 +122,8 @@ public:
         Render::Creature::ArchetypeRegistry::k_humanoid_base,
         std::span<const EquipmentHandle>(handles.data(), m_profile.loadout_slot_count));
     spec.creature_asset_id = m_creature_asset_id;
-    spec.animation_manifest.pose_layer = m_pose_layer;
-    m_visual_spec_cache = spec;
-    m_visual_spec_baked = true;
-    return m_visual_spec_cache;
+    spec.animation_manifest.pose_policy = m_pose_policy;
+    return spec;
   }
 
   void get_variant(const DrawContext& ctx,
@@ -147,7 +138,8 @@ private:
   const SwordsmanRendererProfile& m_profile;
   std::string_view m_renderer_key;
   Render::Creature::Pipeline::CreatureAssetId m_creature_asset_id;
-  Render::Creature::Pipeline::PoseLayerFn m_pose_layer{nullptr};
+  Render::Humanoid::HumanoidPosePolicy m_pose_policy{
+      Render::Humanoid::HumanoidPosePolicy::None};
 
   void apply_palette_overrides(const SwordsmanStyleConfig& style,
                                const QVector3D& team_tint,
@@ -199,7 +191,7 @@ void register_swordsman_renderer_profile(
         std::make_shared<SwordsmanRenderer>(profile,
                                             renderer.renderer_key,
                                             renderer.creature_asset_id,
-                                            renderer.pose_layer);
+                                            renderer.pose_policy);
     register_humanoid_renderer(
         registry, std::string(renderer.renderer_key), renderer_instance);
   }

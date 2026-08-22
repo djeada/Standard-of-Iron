@@ -17,7 +17,7 @@
 #include "render/entity/registry.h"
 #include "render/gl/humanoid/humanoid_types.h"
 #include "render/graphics_settings.h"
-#include "render/humanoid/humanoid_spec.h"
+#include "render/humanoid/asset/humanoid_spec.h"
 #include "render/profiling/frame_profile.h"
 
 namespace Render::Creature::Pipeline {

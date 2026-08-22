@@ -21,11 +21,11 @@
 #include "render/equipment/helmets/carthage_heavy_helmet.h"
 #include "render/equipment/humanoid_equipment_archetype.h"
 #include "render/equipment/weapons/spear_renderer.h"
-#include "render/humanoid/facial_hair_catalog.h"
-#include "render/humanoid/humanoid_renderer_base.h"
-#include "render/humanoid/humanoid_spec.h"
-#include "render/humanoid/skeleton.h"
-#include "render/humanoid/style_palette.h"
+#include "render/humanoid/asset/facial_hair_catalog.h"
+#include "render/humanoid/asset/humanoid_spec.h"
+#include "render/humanoid/runtime/humanoid_renderer.h"
+#include "render/humanoid/runtime/style_palette.h"
+#include "render/humanoid/schema/skeleton_schema.h"
 #include "render/palette.h"
 
 namespace Render::GL {
@@ -359,10 +359,8 @@ public:
       : m_profile(profile)
       , m_renderer_key(renderer_key)
       , m_creature_asset_id(creature_asset_id)
-      , m_use_beard_archetypes(use_beard_archetypes) {}
-
-  auto get_proportion_scaling() const -> QVector3D override {
-    return m_profile.proportion_profile.as_vector();
+      , m_use_beard_archetypes(use_beard_archetypes) {
+    set_visual_spec(build_visual_spec());
   }
 
   auto get_torso_scale() const -> float override {
@@ -380,15 +378,11 @@ public:
     return m_profile.kneel_depth_multiplier;
   }
 
-  auto
-  visual_spec() const -> const Render::Creature::Pipeline::UnitVisualSpec& override {
+  auto build_visual_spec() const -> Render::Creature::Pipeline::UnitVisualSpec {
     using namespace Render::Creature::Pipeline;
 
     if (m_profile.ensure_styles_registered != nullptr) {
       m_profile.ensure_styles_registered();
-    }
-    if (m_visual_spec_baked) {
-      return m_visual_spec_cache;
     }
 
     const auto loadout = Render::GL::Nation::resolve_equipment_loadout(m_renderer_key);
@@ -409,9 +403,7 @@ public:
     if (m_profile.use_carthage_beard_archetypes && m_use_beard_archetypes) {
       spec.animation_manifest.variant_table = &spearman_variant_table();
     }
-    m_visual_spec_cache = spec;
-    m_visual_spec_baked = true;
-    return m_visual_spec_cache;
+    return spec;
   }
 
   void get_variant(const DrawContext& ctx,

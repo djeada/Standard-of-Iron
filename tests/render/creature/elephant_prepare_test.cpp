@@ -287,8 +287,13 @@ TEST(ElephantPrepare, MinimalRenderUsesPrebakedSnapshotAssetWithoutRiggedBake) {
   recorder.snapshot_mesh_cache().clear();
   recorder.rigged_mesh_cache().clear();
 
-  renderer.render(
-      ctx, anim, profile, nullptr, nullptr, recorder, Render::GL::HorseLOD::Minimal);
+  renderer.render(ctx,
+                  anim,
+                  profile,
+                  nullptr,
+                  nullptr,
+                  recorder,
+                  Render::Creature::CreatureLOD::Minimal);
 
   EXPECT_GT(recorder.snapshot_mesh_cache().size(), 0U);
   EXPECT_EQ(recorder.rigged_mesh_cache().size(), 0U);
@@ -331,8 +336,13 @@ TEST(ElephantPrepare, MinimalRenderDoesNotFallbackToRiggedBakeWhenSnapshotMissin
   recorder.snapshot_mesh_cache().clear();
   recorder.rigged_mesh_cache().clear();
 
-  renderer.render(
-      ctx, anim, profile, nullptr, nullptr, recorder, Render::GL::HorseLOD::Minimal);
+  renderer.render(ctx,
+                  anim,
+                  profile,
+                  nullptr,
+                  nullptr,
+                  recorder,
+                  Render::Creature::CreatureLOD::Minimal);
 
   EXPECT_EQ(recorder.snapshot_mesh_cache().size(), 0U);
   EXPECT_EQ(recorder.rigged_mesh_cache().size(), 0U);
@@ -406,8 +416,8 @@ TEST(ElephantPrepare, SharedWalkRunClassifierControlsPreparedPlaybackState) {
   Render::Elephant::ElephantPreparation prep;
   Render::GL::DrawContext ctx{};
   ctx.world_view = Render::WorldView::of_active_session();
-  ctx.force_horse_lod = true;
-  ctx.forced_horse_lod = Render::GL::HorseLOD::Full;
+  ctx.force_quadruped_lod = true;
+  ctx.forced_quadruped_lod = Render::Creature::CreatureLOD::Full;
 
   Engine::Core::StandaloneEntity entity_scratch(77);
   Engine::Core::Entity& entity = entity_scratch.entity();
@@ -633,8 +643,8 @@ TEST(ElephantPrepare, FullTemplatePrewarmBypassesSnapshotCache) {
   ctx.world_view = Render::WorldView::of_active_session();
   ctx.entity = &entity;
   ctx.template_prewarm = true;
-  ctx.force_horse_lod = true;
-  ctx.forced_horse_lod = Render::GL::HorseLOD::Full;
+  ctx.force_quadruped_lod = true;
+  ctx.forced_quadruped_lod = Render::Creature::CreatureLOD::Full;
 
   Render::GL::AnimationInputs const anim{};
   auto profile = make_test_elephant_profile();

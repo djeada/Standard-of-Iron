@@ -35,7 +35,7 @@ auto component_headers() -> std::vector<fs::path> {
   const auto root = find_repo_root();
   return {root / "game" / "core" / "component.h",
           root / "render" / "creature" / "animation_state_components.h",
-          root / "render" / "humanoid" / "pose_cache_components.h"};
+          root / "render" / "humanoid" / "runtime" / "instance_state.h"};
 }
 
 } // namespace

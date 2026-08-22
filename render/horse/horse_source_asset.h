@@ -8,6 +8,7 @@
 #include <string_view>
 
 #include "dimensions.h"
+#include "render/creature/assets/compiled_creature_asset_status.h"
 #include "render/creature/quadruped/mesh_graph.h"
 #include "render/creature/skeleton.h"
 
@@ -24,14 +25,6 @@ inline constexpr float k_horse_mesh_scale_x = 0.59F * Render::GL::k_horse_scale;
 inline constexpr float k_horse_mesh_scale_y = 0.59F * Render::GL::k_horse_scale;
 inline constexpr float k_horse_mesh_scale_z = 0.5015F * Render::GL::k_horse_scale;
 inline constexpr float k_horse_mesh_ground_y = -0.0112192873F;
-
-struct HorseSourceAssetStatus {
-  bool loaded{false};
-  std::size_t vertex_count{0U};
-  std::size_t triangle_count{0U};
-  std::size_t clip_count{0U};
-  std::string error{};
-};
 
 [[nodiscard]] auto horse_source_mesh_nodes() noexcept
     -> std::span<const Render::Creature::Quadruped::MeshNode>;
@@ -50,7 +43,7 @@ horse_source_bone_defs() noexcept -> std::span<const Render::Creature::BoneDef>;
     float normalized_phase,
     Render::GL::MountedAttachmentFrame& frame) noexcept -> bool;
 
-[[nodiscard]] auto
-horse_source_asset_status() noexcept -> const HorseSourceAssetStatus&;
+[[nodiscard]] auto horse_source_asset_status() noexcept
+    -> const Render::Creature::CompiledCreatureAssetStatus&;
 
 } // namespace Render::Horse

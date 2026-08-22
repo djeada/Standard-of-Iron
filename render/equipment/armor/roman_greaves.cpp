@@ -10,7 +10,7 @@
 #include "render/equipment/attachment_builder.h"
 #include "render/equipment/equipment_submit.h"
 #include "render/gl/primitives.h"
-#include "render/humanoid/style_palette.h"
+#include "render/humanoid/runtime/style_palette.h"
 #include "render/render_archetype.h"
 
 namespace Render::GL {

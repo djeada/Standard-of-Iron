@@ -10,7 +10,7 @@
 #include "render/equipment/helmets/historical_helmets.h"
 #include "render/equipment/helmets/roman_heavy_helmet.h"
 #include "render/equipment/helmets/roman_light_helmet.h"
-#include "render/humanoid/humanoid_renderer_base.h"
+#include "render/humanoid/runtime/humanoid_renderer.h"
 #include "render/palette.h"
 #include "render/submitter.h"
 
