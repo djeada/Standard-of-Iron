@@ -18,6 +18,7 @@ begin_frame            bind HDR scene target, clear
 execute_scene
   ├─ shadow cascades   (own FBO, restores the scene target)
   ├─ sky               fullscreen pass, depth write off, before all geometry
+  ├─ sky box           RPG mode only, cube around the camera, alpha-blended over the sky
   └─ world geometry    writes linear radiance, no clamp, no tone curve
 resolve_scene
   ├─ bright pass       threshold + knee, third resolution (k_bloom_divisor)
@@ -316,6 +317,50 @@ to look.
 
 Before this the sky was a flat `glClearColor`, which is what produced the hard horizon
 line where the terrain simply stopped.
+
+### The commander-view sky box
+
+`sky.frag` is shaded for the RTS camera, which looks down: the flat cloud bands read
+fine at a shallow pitch and cost almost nothing. Commander view looks _up_, and there
+the bands are obviously a painted plane. So RPG mode draws a second sky on top of the
+first — a unit cube centred on the camera (`sky_box.vert`, translation stripped from
+the view matrix, `gl_Position = clip.xyww`) whose faces raymarch a real cloud slab
+(`sky_box.frag`).
+
+Both shaders take their gradient, dusk band, sun, moon and stars from
+`include/sky_common.glsl`, so the only thing that actually changes between the two is
+the clouds. That is what makes the cross-fade cheap: `SkyBoxPipeline::draw` alpha-blends
+the box over the already-drawn flat sky with `u_sky_box_blend`, and because everything
+except the cloud layer is identical, the dissolve reads as bands thickening into
+volumes rather than as two different skies swapping.
+
+The march itself is bounded on every side. Rays at or below `k_box_min_upward` return
+early, so roughly the bottom half of the screen never enters the loop; the slab is
+`k_box_slab_base`..`k_box_slab_top` with the far end clamped to `k_box_march_reach` so
+near-horizon rays cannot march forever; the loop breaks once transmittance falls under
+`k_box_transmittance_cutoff`; and `SOI_SKY_BOX_STEPS`/`SOI_SKY_BOX_LIGHT_STEPS` scale
+8/1 → 24/3 across the shader tiers, and `k_box_max_step` caps the step length so a
+grazing ray cannot stretch one step across a whole cloud.
+
+Density is a 2D fbm — mixed with a second, finer fbm for the silhouette edges —
+thresholded by `environment_cloud_cover()` plus `k_box_coverage_floor`, shaped
+vertically by a rounded profile and then carved by one 3D noise sample weighted towards
+the cloud tops. That is much cheaper than a 3D fbm, and the slab is deliberately thin
+(`k_box_slab_base`..`k_box_slab_top`) relative to `1.0 / k_box_field_scale`: a slab that
+is tall next to its cloud width extrudes the 2D field into vertical pillars, which is
+exactly what a side-on commander camera shows. Wide and flat reads as cumulus. Lighting
+is a short march toward the sun, Beer-Lambert with a powder term and a clamped
+Henyey-Greenstein phase for the silver lining; the ambient term is `sky_cloud_tint()`,
+the same colour the RTS bands use. The march start is jittered with interleaved gradient
+noise rather than a hash — a white-noise offset at these step counts reads as speckle
+across the whole sky.
+
+`Renderer::set_world_render_mode` only moves a target. `SkyBoxTransition`
+(`render/gl/backend/sky_box_transition.h`) ramps towards it over
+`k_transition_seconds`, clamps any single frame's delta to `k_max_step_seconds` so a
+stall cannot snap the sky over, and eases the ramp with a smoothstep. When it reports
+`is_visible() == false` — which is every RTS frame — the pass is skipped entirely, so
+the RTS path costs exactly what it did before.
 
 ## Terrain
 

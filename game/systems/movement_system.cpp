@@ -98,12 +98,7 @@ auto formation_turn_speed_degrees(const Engine::Core::Entity& entity,
 
 auto formation_navigation_clearance(const Engine::Core::Entity& entity) -> float {
   auto const layout = FormationCombat::resolve_layout(entity);
-  float lateral_extent = layout.body_radius;
-  for (auto const& slot : layout.live_slots) {
-    lateral_extent =
-        std::max(lateral_extent, std::abs(slot.local_x) + layout.body_radius);
-  }
-  return std::max(0.1F, lateral_extent);
+  return Pathfinding::traversal_clearance_for_body(layout.body_radius);
 }
 
 struct HeadingReference {
@@ -221,6 +216,10 @@ auto formation_pose_allowed(const Engine::Core::Entity& entity,
     return true;
   }
 
+  if (movement->get_has_target()) {
+    return true;
+  }
+
   auto const layout = FormationCombat::resolve_layout(entity);
   if (layout.live_slots.size() <= 1U) {
     return true;
@@ -236,8 +235,7 @@ auto formation_pose_allowed(const Engine::Core::Entity& entity,
     QVector3D const soldier(center_x + cos_yaw * slot.local_x + sin_yaw * slot.local_z,
                             0.0F,
                             center_z - sin_yaw * slot.local_x + cos_yaw * slot.local_z);
-    if (!pathfinder->is_world_position_walkable(
-            soldier, passability, layout.body_radius)) {
+    if (!pathfinder->is_world_position_walkable(soldier, passability)) {
       return false;
     }
   }

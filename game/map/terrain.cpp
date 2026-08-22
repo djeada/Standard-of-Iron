@@ -1615,8 +1615,9 @@ void TerrainHeightMap::restore_from_data(const std::vector<float>& heights,
 auto TerrainHeightMap::getBridgeDeckHeight(float world_x, float world_z) const
     -> std::optional<float> {
 
-  float const along_margin = m_tile_size * k_bridge_entry_margin_tiles;
-  float const perp_margin = m_tile_size * 0.5F;
+  float const along_margin =
+      m_tile_size * (k_bridge_entry_margin_tiles + k_bridge_cell_half_span_tiles);
+  float const perp_margin = m_tile_size * k_bridge_cell_half_span_tiles;
 
   std::optional<float> deck_y;
   float nearest_perp_dist = std::numeric_limits<float>::max();

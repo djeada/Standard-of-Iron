@@ -1503,10 +1503,33 @@ TEST_F(AISystemTest, AssaultBehaviorImmediatelyBreachesHostileGateAcrossAttackLa
   behavior.execute(snapshot, context, 1.1F, commands);
 
   ASSERT_EQ(commands.size(), 1U);
-  EXPECT_EQ(commands.front().type, Game::Systems::AI::AICommandType::MoveUnits);
-  ASSERT_EQ(commands.front().move_target_x.size(), 1U);
-  EXPECT_NEAR(commands.front().move_target_x.front(), 8.0F, 0.01F);
-  EXPECT_LT(std::abs(commands.front().move_target_z.front()), 2.5F);
+  EXPECT_EQ(commands.front().type, Game::Systems::AI::AICommandType::AttackTarget);
+  EXPECT_EQ(commands.front().target_id, 101U);
+  EXPECT_TRUE(commands.front().should_chase);
+}
+
+TEST_F(AISystemTest, AssaultBehaviorDoesNotReplaceActiveAuthoredMarch) {
+  Game::Systems::AI::AssaultBehavior behavior;
+
+  Game::Systems::AI::AISnapshot snapshot;
+  auto assault_unit = make_unit(1, 0.0F, 0.0F);
+  assault_unit.is_assault = true;
+  assault_unit.has_march_target = true;
+  assault_unit.march_target_x = 40.0F;
+  assault_unit.march_target_z = 0.0F;
+  assault_unit.movement.has_target = true;
+  snapshot.friendly_units = {assault_unit};
+  snapshot.strategic_objectives = {make_enemy_building(101, 20.0F, 20.0F)};
+
+  Game::Systems::AI::AIContext context;
+  context.player_id = 3;
+  context.assault_unit_ids = {1U};
+  context.assault_unit_count = 1;
+
+  std::vector<Game::Systems::AI::AICommand> commands;
+  behavior.execute(snapshot, context, 1.1F, commands);
+
+  EXPECT_TRUE(commands.empty());
 }
 
 TEST_F(AISystemTest, HarassBehaviorPicksSoldierOverCloserBuilding) {

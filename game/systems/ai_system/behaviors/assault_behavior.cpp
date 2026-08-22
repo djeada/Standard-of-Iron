@@ -300,8 +300,10 @@ void AssaultBehavior::execute(const AISnapshot& snapshot,
   const bool breaching = breach != nullptr;
   const float attack_point_x = target != nullptr ? target->pos_x : objective_x;
   const float attack_point_z = target != nullptr ? target->pos_z : objective_z;
-  float approach_x = attack_point_x;
-  float approach_z = attack_point_z;
+
+  const bool has_authored_march = marching != assault_units.end();
+  float approach_x = has_authored_march ? advance_goal_x : attack_point_x;
+  float approach_z = has_authored_march ? advance_goal_z : attack_point_z;
   float lateral_x = 0.0F;
   float lateral_z = 0.0F;
   if (breaching) {
@@ -329,8 +331,13 @@ void AssaultBehavior::execute(const AISnapshot& snapshot,
     const float distance_to_target_sq = distance_squared(
         unit->pos_x, 0.0F, unit->pos_z, attack_point_x, 0.0F, attack_point_z);
 
-    if (target != nullptr && distance_to_target_sq <= engage_radius_sq) {
+    if (target != nullptr &&
+        (distance_to_target_sq <= engage_radius_sq || hostile_gate_ahead)) {
       engage_ids.push_back(unit->id);
+      continue;
+    }
+
+    if (has_authored_march && unit->movement.has_target && !breaching) {
       continue;
     }
 
@@ -345,9 +352,9 @@ void AssaultBehavior::execute(const AISnapshot& snapshot,
 
     const float angle = static_cast<float>(index) * 0.9F;
     const float ring = k_formation_spread * static_cast<float>(1 + (index % 3));
-    advance_x.push_back(attack_point_x + std::cos(angle) * ring);
+    advance_x.push_back(approach_x + std::cos(angle) * ring);
     advance_y.push_back(0.0F);
-    advance_z.push_back(attack_point_z + std::sin(angle) * ring);
+    advance_z.push_back(approach_z + std::sin(angle) * ring);
   }
 
   if (!engage_ids.empty()) {
