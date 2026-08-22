@@ -675,9 +675,12 @@ void prepare_humanoid_instances(const HumanoidRendererBase& owner,
       smoothing_inputs.target_z = turn_slot_world.z();
       smoothing_inputs.formation_yaw_degrees =
           transform_comp->rotation.y + applied_yaw_offset;
+      smoothing_inputs.formation_center_x = transform_comp->position.x;
+      smoothing_inputs.formation_center_z = transform_comp->position.z;
       smoothing_inputs.dt = turn_smoothing_dt;
       smoothing_inputs.max_speed = turn_smoothing_cap * cap_jitter;
-      smoothing_inputs.turn_rate_degrees = is_mounted_spawn ? 240.0F : 540.0F;
+      smoothing_inputs.turn_rate_degrees =
+          (is_mounted_spawn ? 150.0F : 300.0F) * cap_jitter;
       smoothing_inputs.allow_travel_yaw = turn_smoothing_travel_yaw;
 
       smoothing_inputs.frame_index = frame_index + 1U;

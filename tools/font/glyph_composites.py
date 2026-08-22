@@ -19,9 +19,6 @@ from __future__ import annotations
 from glyph_geometry import CAP, THIN, cw, ellipse
 from glyph_shapes import BOWL_THIN, Glyph
 
-# Marks sit above the cap line, so accented capitals are taller than plain
-# ones. That is correct and intended -- the alternative is squashing the base
-# letter, which makes MÁS shorter than MAS in the same line of a title.
 MARK_Y = CAP + 40
 MARK_WEIGHT = THIN * 0.92
 MARK_REACH = 150.0
@@ -150,11 +147,7 @@ MARKS = {
     "cedilla": cedilla,
 }
 
-# character -> (base letter, mark, dx, dy)
-#
-# dx is resolved against the base glyph's own width at build time; the number
-# here is a fraction of that width, so a mark stays centred if a letter is
-# later redrawn wider. dy is absolute, because marks all sit on one line.
+
 ACCENTED = {
     "Á": ("A", "acute", 0.50, 0.0),
     "À": ("A", "grave", 0.50, 0.0),

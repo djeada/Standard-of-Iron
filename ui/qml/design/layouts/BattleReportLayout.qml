@@ -342,10 +342,7 @@ FocusScope {
                                             width: parent.width - parent.spacing - Design.Typography.subheading
                                             text: root.figure(root.localArmy, tile.modelData.key)
                                             color: Design.Theme.textPrimary
-                                            // Tallies, so the brand face carries them. When the
-                                            // locale asks for Arabic-Indic digits the whole string
-                                            // falls back together, which is the one case where a
-                                            // fallback does not split a word across two faces.
+
                                             font.family: Design.Typography.titleFamily
                                             font.pixelSize: Design.Typography.heading
                                             font.weight: Design.Typography.bold

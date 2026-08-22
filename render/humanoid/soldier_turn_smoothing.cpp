@@ -8,6 +8,10 @@ namespace Render::Humanoid {
 
 namespace {
 
+constexpr float k_wheel_path_min_radius = 0.35F;
+constexpr float k_wheel_path_min_angle_degrees = 50.0F;
+constexpr float k_wheel_path_arrival_angle_degrees = 8.0F;
+
 [[nodiscard]] auto wrap_degrees(float degrees) -> float {
   float wrapped = std::fmod(degrees + 180.0F, 360.0F);
   if (wrapped < 0.0F) {
@@ -61,18 +65,62 @@ auto resolve_soldier_turn_smoothing(SoldierTurnSmoothingState& state,
   }
 
   float const max_step = inputs.max_speed * inputs.dt;
-  float const step = std::min(distance, max_step);
+  float step = std::min(distance, max_step);
   float travel_yaw = state.body_yaw_degrees;
   if (distance > 1e-5F && step > 0.0F) {
-    float const inv = step / distance;
-    state.world_x += to_target_x * inv;
-    state.world_z += to_target_z * inv;
+    float step_x = to_target_x;
+    float step_z = to_target_z;
 
-    travel_yaw =
-        std::atan2(to_target_x, to_target_z) * (180.0F / std::numbers::pi_v<float>);
+    float const current_x = state.world_x - inputs.formation_center_x;
+    float const current_z = state.world_z - inputs.formation_center_z;
+    float const target_x = inputs.target_x - inputs.formation_center_x;
+    float const target_z = inputs.target_z - inputs.formation_center_z;
+    float const current_radius = std::hypot(current_x, current_z);
+    float const target_radius = std::hypot(target_x, target_z);
+    float const dot = current_x * target_x + current_z * target_z;
+    float const cross = current_z * target_x - current_x * target_z;
+    float const angle = std::atan2(cross, dot);
+    float const angle_degrees = std::abs(angle) * (180.0F / std::numbers::pi_v<float>);
+
+    bool const wheel_path = inputs.allow_wheel_path &&
+                            current_radius >= k_wheel_path_min_radius &&
+                            target_radius >= k_wheel_path_min_radius &&
+                            angle_degrees >= k_wheel_path_min_angle_degrees;
+    if (wheel_path) {
+
+      float const turn_sign = angle < 0.0F ? -1.0F : 1.0F;
+      float const tangent_x = turn_sign * current_z / current_radius;
+      float const tangent_z = -turn_sign * current_x / current_radius;
+      float const radial_error = target_radius - current_radius;
+      float const radial_x = current_x / current_radius;
+      float const radial_z = current_z / current_radius;
+      float const radial_weight =
+          std::clamp(radial_error / current_radius, -0.35F, 0.35F);
+      step_x = tangent_x + radial_x * radial_weight;
+      step_z = tangent_z + radial_z * radial_weight;
+
+      float const direction_length = std::hypot(step_x, step_z);
+      step_x /= direction_length;
+      step_z /= direction_length;
+      step = max_step;
+    } else {
+      float const inv_distance = 1.0F / distance;
+      step_x *= inv_distance;
+      step_z *= inv_distance;
+    }
+
+    if (angle_degrees < k_wheel_path_arrival_angle_degrees) {
+      step = std::min(distance, max_step);
+    }
+    state.world_x += step_x * step;
+    state.world_z += step_z * step;
+
+    travel_yaw = std::atan2(step_x, step_z) * (180.0F / std::numbers::pi_v<float>);
   }
 
-  float const remaining = std::max(0.0F, distance - step);
+  float const remaining_x = inputs.target_x - state.world_x;
+  float const remaining_z = inputs.target_z - state.world_z;
+  float const remaining = std::hypot(remaining_x, remaining_z);
   if (state.relocating) {
     state.relocating = remaining > inputs.settle_distance;
   } else {

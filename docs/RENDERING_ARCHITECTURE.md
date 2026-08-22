@@ -372,6 +372,12 @@ Before sorting:                          After sorting:
 
 This sorting pass is what transforms a random pile of draw requests into something the GPU can chew through efficiently. The difference between sorted and unsorted can easily be 2-3x in frame time.
 
+### The pass byte outranks the transparency bucket
+
+Priority 1 above is only true _within_ a render pass. `SortIdentity` packs `pass` at bit 56 and `pipeline` at bit 48, both above `transparency_bucket` at bit 44, and `RenderPassOrder` puts `TerrainScatter = 2` a long way ahead of `Mesh = 5`. So every scatter command — grass, stones, tents, camp fires — drew before every wall, building and creature, whatever its alpha. A camp fire standing in front of a wall was blended into the framebuffer first, wrote no depth (correctly, it is transparent), and then the wall drew over it and covered it. `scatter_species_is_blended()` in `render/draw_commands.h` is the fix: a blended scatter species is re-homed into the `Mesh` pass with `transparency_bucket = 1`, so it sorts after every opaque pipeline in that pass. Add a species to that predicate whenever its executor turns blending on.
+
+The mirror-image rule is that **opaque geometry must write depth**. `Stone` was the one opaque scatter species running under `DepthMaskScope(false)`, so it left the depth buffer holding the terrain behind it; every tree and prop in the later `Mesh` pass then passed its own depth test and painted straight over stones that were plainly in front. `tests/render/draw_queue_sort_order_test.cpp` pins both halves.
+
 ## The backend and its pipelines
 
 The Backend class in [backend.cpp](https://github.com/djeada/Standard-of-Iron/blob/main/render/gl/backend.cpp) is where OpenGL finally gets involved. It inherits from QOpenGLFunctions_3_3_Core, which gives it access to all the GL functions without polluting the global namespace.

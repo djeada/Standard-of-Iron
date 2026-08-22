@@ -225,7 +225,7 @@ void Backend::execute_scatter_commands(const PreparedBatch& prepared,
         break;
       }
 
-      DepthMaskScope const depth_mask(false);
+      DepthMaskScope const depth_mask(true);
       BlendScope const blend(false);
 
       Shader* stone_shader = m_vegetation_pipeline->stone_shader();

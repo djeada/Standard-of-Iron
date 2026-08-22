@@ -142,6 +142,10 @@ void DrawQueue::populate_sort_identity_prefix(const DrawCmd& cmd,
     const auto& deco = std::get<TerrainScatterCmdIndex>(cmd);
     identity.pipeline = static_cast<std::uint8_t>(SortPipeline::TerrainScatterGrass) +
                         static_cast<std::uint8_t>(deco.species);
+    if (scatter_species_is_blended(deco.species)) {
+      identity.pass = static_cast<std::uint8_t>(RenderPassOrder::Mesh);
+      identity.transparency_bucket = 1U;
+    }
     break;
   }
   case DrawCmdType::TerrainSurface:

@@ -18,17 +18,6 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
-# Import the geometry modules from beside this file, and refuse to cache their
-# bytecode.
-#
-# The cached .pyc is a real hazard here rather than a theoretical one: these
-# modules are imported by absolute path from whatever directory the build is
-# invoked in, and a __pycache__ that falls out of step with its source makes
-# this script emit a font that no longer matches the geometry it was compiled
-# from -- silently, and with every letter still looking correct, because the
-# stale module is a previous version of the same alphabet. That defeats the
-# whole point of committing a generated .ttf, since the file and the source
-# stop agreeing without anything reporting it.
 sys.dont_write_bytecode = True
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
@@ -59,19 +48,17 @@ OUTPUT = (
     / "StandardIronDisplay-Bold.ttf"
 )
 
-# Cubic-to-quadratic tolerance in em units. Tight enough that the bowls stay
-# round on a poster, loose enough that a glyph does not carry hundreds of
-# points.
+
 CURVE_TOLERANCE = 0.6
 
-# 2026-01-01T00:00:00Z, in seconds since the TrueType epoch of 1904-01-01.
+
 BUILD_EPOCH = 3850070400
 
-# Letters whose ink retreats from the advance and so want tighter sidebearings.
+
 ROUND = set("OQCGDSU0368")
 DIAGONAL = set("AVWXYTJ7")
 
-# Postscript glyph names for the characters that need one.
+
 GLYPH_NAMES = {
     ".": "period",
     "\u2026": "ellipsis",
@@ -168,8 +155,7 @@ def record(glyph) -> RecordingPen:
         return shape
 
     added = resolve(glyph.contours, glyph.paths, [], [])
-    # Parts resolve on their own before they join, so a bowl's trim cannot
-    # reach the stem it is being trimmed to meet.
+
     for part in glyph.parts:
         resolved = resolve(part.contours, part.paths, part.holes, part.hole_paths)
         added = op(
@@ -248,7 +234,7 @@ def build() -> Path:
     outlines: dict = {}
     advances: dict = {}
     cmap: dict = {}
-    placement: dict = {}  # glyph name -> (ink left, ink width) after shifting
+    placement: dict = {}
 
     outlines[".notdef"] = TTGlyphPen(None).glyph()
     advances[".notdef"] = int(UPM * 0.5)
@@ -278,8 +264,6 @@ def build() -> Path:
         cmap[ord(character)] = name
         glyph_order.append(name)
 
-    # Marks keep the coordinates they were drawn at and carry no advance: they
-    # exist only to be referenced by the accented composites below.
     for mark_name, factory in MARKS.items():
         pen = record(factory())
         bounds = ink_bounds(pen)
@@ -296,8 +280,7 @@ def build() -> Path:
         base_name = glyph_name_for(base)
         base_left, base_width = placement[base_name]
         mark_left, mark_width = placement[mark]
-        # Centre the mark on the fraction of the base letter the table asks
-        # for, then back out the mark's own drawn offset.
+
         dx = base_left + (base_width * fraction) - (mark_width / 2.0) - mark_left
         composites[name] = (base_name, mark, dx, dy)
         advances[name] = advances[base_name]
@@ -309,8 +292,7 @@ def build() -> Path:
     builder.setupCharacterMap(cmap)
 
     for name, (base_name, mark, dx, dy) in composites.items():
-        # The pen validates component names against a glyph set, so hand it the
-        # outlines built so far rather than None.
+
         pen = TTGlyphPen(outlines)
         pen.addComponent(base_name, (1, 0, 0, 1, 0, 0))
         pen.addComponent(mark, (1, 0, 0, 1, round(dx), round(dy)))
@@ -352,9 +334,6 @@ def build() -> Path:
         sCapHeight=CAP,
         usWeightClass=700,
         fsSelection=0x20,
-        # PANOSE, in full because the table is packed field by field:
-        # latin text / cove-and-wedge serifs / very heavy / modern-even width /
-        # very high contrast, with the remaining classifications left at "any".
         panose={
             "bFamilyType": 2,
             "bSerifStyle": 4,
@@ -373,11 +352,6 @@ def build() -> Path:
     builder.setupPost(isFixedPitch=0, underlinePosition=-120, underlineThickness=90)
     builder.font["head"].macStyle = 1
 
-    # Pin the head timestamps. fontTools stamps them with the current time,
-    # which makes every rebuild differ in bytes from the last one even when
-    # nothing about the letters changed -- and since the .ttf is committed,
-    # that turns a no-op regeneration into a diff and hides the real ones.
-    # BUILD_EPOCH is 2026-01-01 in the TrueType epoch (seconds since 1904).
     builder.font["head"].created = BUILD_EPOCH
     builder.font["head"].modified = BUILD_EPOCH
 

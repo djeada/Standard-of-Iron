@@ -1,0 +1,282 @@
+{
+  "id": "imperial_capital",
+  "title": "AURELIA MAGNA",
+  "subtitle": "STANDARD OF IRON",
+  "width": 1920,
+  "height": 1080,
+  "fps": 30,
+  "supersample": 1,
+  "transition": {
+    "type": "dissolve",
+    "duration": 0.45
+  },
+  "shots": [
+    {
+      "name": "gate",
+      "scenario": "promo_imperial_capital",
+      "seed": 8190,
+      "start": 30.0,
+      "duration": 4.1,
+      "focus": {
+        "mode": "point",
+        "point": [0.0, 0.0, 118.0],
+        "smoothing": 0.85
+      },
+      "camera": [
+        {
+          "time": 0.0,
+          "distance": 30,
+          "pitch": 9,
+          "yaw": 180,
+          "fov": 30,
+          "height": 2.6
+        },
+        {
+          "time": 4.1,
+          "distance": 20,
+          "pitch": 9,
+          "yaw": 180,
+          "fov": 30,
+          "height": 2.6,
+          "ease": "smooth"
+        }
+      ],
+      "caption": "AURELIA MAGNA"
+    },
+    {
+      "name": "farm",
+      "scenario": "promo_imperial_capital",
+      "seed": 8190,
+      "start": 26.0,
+      "duration": 4.1,
+      "focus": {
+        "mode": "point",
+        "point": [-150.0, 0.0, 232.0],
+        "smoothing": 0.85
+      },
+      "camera": [
+        {
+          "time": 0.0,
+          "distance": 26,
+          "pitch": 12,
+          "yaw": 58,
+          "fov": 30,
+          "height": 3.4
+        },
+        {
+          "time": 4.1,
+          "distance": 26,
+          "pitch": 12,
+          "yaw": 74,
+          "fov": 30,
+          "height": 3.4,
+          "ease": "smooth"
+        }
+      ],
+      "caption": "THE FIELDS THAT FEED IT"
+    },
+    {
+      "name": "avenue",
+      "scenario": "promo_imperial_capital",
+      "seed": 8190,
+      "start": 56.0,
+      "duration": 4.1,
+      "focus": {
+        "mode": "group",
+        "group": "capital_column_swords",
+        "smoothing": 0.85
+      },
+      "camera": [
+        {
+          "time": 0.0,
+          "distance": 22,
+          "pitch": 10,
+          "yaw": 74,
+          "fov": 30,
+          "height": 2.4
+        },
+        {
+          "time": 4.1,
+          "distance": 22,
+          "pitch": 10,
+          "yaw": 84,
+          "fov": 30,
+          "height": 2.4,
+          "ease": "smooth"
+        }
+      ],
+      "caption": "THE LEGION COMES UP"
+    },
+    {
+      "name": "work",
+      "scenario": "promo_imperial_capital",
+      "seed": 8190,
+      "start": 40.0,
+      "duration": 4.1,
+      "focus": {
+        "mode": "group",
+        "group": "capital_masons_forum",
+        "smoothing": 0.85
+      },
+      "camera": [
+        {
+          "time": 0.0,
+          "distance": 20,
+          "pitch": 13,
+          "yaw": 156,
+          "fov": 30,
+          "height": 3.0
+        },
+        {
+          "time": 4.1,
+          "distance": 14,
+          "pitch": 13,
+          "yaw": 156,
+          "fov": 30,
+          "height": 2.2,
+          "ease": "smooth"
+        }
+      ],
+      "caption": "THE CITY BUILDS ITSELF"
+    },
+    {
+      "name": "sites",
+      "scenario": "promo_imperial_capital",
+      "seed": 8190,
+      "start": 52.0,
+      "duration": 4.1,
+      "focus": {
+        "mode": "group",
+        "group": "capital_masons_upper",
+        "smoothing": 0.85
+      },
+      "camera": [
+        {
+          "time": 0.0,
+          "distance": 18,
+          "pitch": 12,
+          "yaw": 306,
+          "fov": 30,
+          "height": 2.6
+        },
+        {
+          "time": 4.1,
+          "distance": 18,
+          "pitch": 12,
+          "yaw": 322,
+          "fov": 30,
+          "height": 2.6,
+          "ease": "smooth"
+        }
+      ],
+      "caption": "SCAFFOLD BY SCAFFOLD"
+    },
+    {
+      "name": "haul",
+      "scenario": "promo_imperial_capital",
+      "seed": 8190,
+      "start": 44.0,
+      "duration": 4.1,
+      "focus": {
+        "mode": "group",
+        "group": "capital_carriers_forum",
+        "smoothing": 0.85
+      },
+      "camera": [
+        {
+          "time": 0.0,
+          "distance": 15,
+          "pitch": 11,
+          "yaw": 88,
+          "fov": 30,
+          "height": 1.8
+        },
+        {
+          "time": 4.1,
+          "distance": 15,
+          "pitch": 11,
+          "yaw": 98,
+          "fov": 30,
+          "height": 1.8,
+          "ease": "smooth"
+        }
+      ],
+      "caption": "STONE, TIMBER AND IRON"
+    },
+    {
+      "name": "sanctum",
+      "scenario": "promo_imperial_capital",
+      "seed": 8190,
+      "start": 70.0,
+      "duration": 4.1,
+      "focus": {
+        "mode": "point",
+        "point": [0.0, 0.0, -306.0],
+        "smoothing": 0.85
+      },
+      "camera": [
+        {
+          "time": 0.0,
+          "distance": 34,
+          "pitch": 16,
+          "yaw": 200,
+          "fov": 30,
+          "height": 3.0
+        },
+        {
+          "time": 4.1,
+          "distance": 40,
+          "pitch": 29,
+          "yaw": 200,
+          "fov": 30,
+          "height": 15.0,
+          "ease": "smooth"
+        }
+      ],
+      "caption": "AND THE GODS ABOVE IT"
+    },
+    {
+      "name": "reveal",
+      "scenario": "promo_imperial_capital",
+      "seed": 8190,
+      "start": 66.0,
+      "duration": 4.4,
+      "focus": {
+        "mode": "point",
+        "point": [0.0, 0.0, -60.0],
+        "smoothing": 0.85
+      },
+      "camera": [
+        {
+          "time": 0.0,
+          "distance": 150,
+          "pitch": 26,
+          "yaw": 196,
+          "fov": 32,
+          "height": 26.0
+        },
+        {
+          "time": 4.4,
+          "distance": 300,
+          "pitch": 40,
+          "yaw": 224,
+          "fov": 32,
+          "height": 86.0,
+          "ease": "smooth"
+        }
+      ],
+      "caption": "STANDARD OF IRON"
+    }
+  ],
+  "grade": {
+    "contrast": 1.14,
+    "saturation": 1.28,
+    "brightness": 0.01,
+    "gamma": 1.02,
+    "grain": 2,
+    "vignette": 0.12,
+    "sharpen": 0.7
+  },
+  "music": "assets/audio/music/base/base_army_camp_resting.ogg",
+  "music_start": 0.0
+}

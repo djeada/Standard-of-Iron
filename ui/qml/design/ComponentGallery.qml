@@ -61,10 +61,6 @@ ScrollView {
                     Layout.preferredHeight: implicitHeight
                     implicitHeight: typefaces.implicitHeight + Design.Metrics.space24
 
-                    // The three families, side by side, because the only way to
-                    // catch a title face that has quietly stopped loading is to
-                    // look at it: the fallback is a perfectly readable serif, so
-                    // nothing appears broken until someone compares.
                     Column {
                         id: typefaces
 

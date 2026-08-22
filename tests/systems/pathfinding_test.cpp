@@ -66,6 +66,30 @@ TEST_F(PathfindingTest, TreeCellsRemainBlockedButDistinguishable) {
   EXPECT_EQ(pathfinding.cell_value(3, 4), Game::Systems::Pathfinding::CellValue::Tree);
   EXPECT_TRUE(pathfinding.is_tree(3, 4));
   EXPECT_FALSE(pathfinding.is_walkable(3, 4));
+
+  QVector3D const beside_tree = pathfinding.grid_to_world({4, 4});
+  EXPECT_TRUE(pathfinding.is_world_position_walkable(beside_tree));
+  EXPECT_FALSE(pathfinding.is_world_position_walkable(
+      beside_tree, Game::Systems::Pathfinding::Passability::Light, 0.6F));
+}
+
+TEST_F(PathfindingTest, FormationClearanceRoutesAroundBlockedFootprints) {
+  Game::Systems::Pathfinding pathfinding(9, 9);
+  pathfinding.set_grid_offset(-4.0F, -4.0F);
+  pathfinding.update_navigation_grid();
+  pathfinding.set_obstacle(4, 4, true);
+
+  constexpr float k_clearance = 0.6F;
+  auto const path = pathfinding.find_path(
+      {1, 4}, {7, 4}, Game::Systems::Pathfinding::Passability::Light, k_clearance);
+
+  ASSERT_FALSE(path.empty());
+  for (auto const& cell : path) {
+    EXPECT_TRUE(pathfinding.is_world_position_walkable(
+        pathfinding.grid_to_world(cell),
+        Game::Systems::Pathfinding::Passability::Light,
+        k_clearance));
+  }
 }
 
 TEST_F(PathfindingTest, BoulderCellsRemainBlockedButDistinguishable) {
@@ -312,6 +336,16 @@ TEST_F(PathfindingTest, TerrainClearRebuildsStaleTopologyCells) {
   pathfinding.set_grid_offset(-10.0F, -10.0F);
   pathfinding.update_navigation_grid();
   ASSERT_FALSE(pathfinding.is_walkable(10, 10));
+
+  int east_bank = 11;
+  while (east_bank < map_def.grid.width && !pathfinding.is_walkable(east_bank, 10)) {
+    ++east_bank;
+  }
+  ASSERT_LT(east_bank, map_def.grid.width);
+  QVector3D const bank_world = pathfinding.grid_to_world({east_bank, 10});
+  EXPECT_TRUE(pathfinding.is_world_position_walkable(bank_world));
+  EXPECT_FALSE(pathfinding.is_world_position_walkable(
+      bank_world, Game::Systems::Pathfinding::Passability::Light, 0.6F));
 
   terrain.clear();
   pathfinding.update_navigation_grid();

@@ -1,6 +1,7 @@
 #include <QVector3D>
 
 #include <algorithm>
+#include <cmath>
 #include <gtest/gtest.h>
 #include <limits>
 #include <vector>
@@ -12,6 +13,7 @@
 #include "game/map/terrain_service.h"
 #include "game/systems/building_collision_registry.h"
 #include "game/systems/command_service.h"
+#include "game/systems/formation_combat_geometry.h"
 #include "game/systems/local_avoidance_system.h"
 #include "game/systems/movement_system.h"
 #include "game/systems/nav_grid.h"
@@ -106,19 +108,25 @@ protected:
   }
 };
 
-TEST_F(CommandServiceTest, UnitRadiusUsesSelectionRingFootprint) {
+TEST_F(CommandServiceTest, UnitRadiusEnclosesTheRenderedFormation) {
   Engine::Core::World world;
   auto* unit = create_unit(world, 0.0F, 0.0F, Game::Units::SpawnType::Archer);
   ASSERT_NE(unit, nullptr);
 
-  float const expected_radius =
-      std::max(Game::Units::TroopConfig::instance().get_selection_ring_size(
-                   Game::Units::SpawnType::Archer) *
-                   0.5F,
-               0.5F);
+  auto const layout = Game::Systems::FormationCombat::resolve_layout(*unit);
+  float expected_radius = std::max(layout.body_radius, 0.5F);
+  for (auto const& slot : layout.live_slots) {
+    expected_radius = std::max(
+        expected_radius, std::hypot(slot.local_x, slot.local_z) + layout.body_radius);
+  }
 
-  EXPECT_FLOAT_EQ(Game::Systems::CommandService::get_unit_radius(world, unit->get_id()),
-                  expected_radius);
+  float const resolved =
+      Game::Systems::CommandService::get_unit_radius(world, unit->get_id());
+  EXPECT_FLOAT_EQ(resolved, expected_radius);
+  EXPECT_GT(resolved,
+            Game::Units::TroopConfig::instance().get_selection_ring_size(
+                Game::Units::SpawnType::Archer) *
+                0.5F);
 }
 
 TEST_F(CommandServiceTest, MotionSnapshotCapturesDirectTransformDisplacement) {
