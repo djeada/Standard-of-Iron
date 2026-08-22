@@ -120,32 +120,26 @@ void GateService::refresh_blockers(Engine::Core::World& world) {
   auto& storage = blocker_storage();
   storage.clear();
 
-  for (auto* entity : world.collect_entities_with<GateComponent>()) {
-    if (entity == nullptr || entity->has_component<PendingRemovalComponent>()) {
+  for (auto [entity_id, gate, transform, unit] :
+       world.view<GateComponent, TransformComponent, UnitComponent>()) {
+    if (world.has<PendingRemovalComponent>(entity_id)) {
       continue;
     }
 
-    const auto* gate = entity->get_component<GateComponent>();
-    const auto* transform = entity->get_component<TransformComponent>();
-    const auto* unit = entity->get_component<UnitComponent>();
-    if (gate == nullptr || transform == nullptr || unit == nullptr) {
-      continue;
-    }
-
-    if (unit->health <= 0 || !gate->blocks_movement()) {
+    if (unit.health <= 0 || !gate.blocks_movement()) {
       continue;
     }
 
     const auto bounds = passage_blocker_bounds(
-        transform->position.x, transform->position.z, transform->rotation.y);
+        transform.position.x, transform.position.z, transform.rotation.y);
 
     storage.push_back(GateBlocker{
         .min_x = bounds.min_x,
         .max_x = bounds.max_x,
         .min_z = bounds.min_z,
         .max_z = bounds.max_z,
-        .owner_id = unit->owner_id,
-        .entity_id = entity->get_id(),
+        .owner_id = unit.owner_id,
+        .entity_id = entity_id,
     });
   }
 }

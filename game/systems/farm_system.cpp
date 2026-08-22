@@ -4,32 +4,37 @@
 
 #include "../core/component.h"
 #include "../core/ownership_constants.h"
+#include "../core/system_context.h"
 #include "../core/world.h"
 
 namespace Game::Systems {
 
-void FarmSystem::update(Engine::Core::World* world, float delta_time) {
-  if (world == nullptr || delta_time <= 0.0F) {
+void FarmSystem::run(Engine::Core::SystemContext& context) {
+  const float delta_time = context.delta_time();
+  if (delta_time <= 0.0F) {
     return;
   }
 
-  for (auto* entity : world->collect_entities_with<Engine::Core::FarmComponent>()) {
-    auto* farm = entity->get_component<Engine::Core::FarmComponent>();
-    if (farm == nullptr || farm->ripe()) {
+  for (auto [entity_id, farm, unit] :
+       context.view<Engine::Core::FarmComponent, Engine::Core::UnitComponent>()) {
+    if (farm.ripe() || unit.health <= 0 ||
+        Game::Core::is_neutral_owner(unit.owner_id)) {
       continue;
     }
-    const auto* unit = entity->get_component<Engine::Core::UnitComponent>();
-    if (unit == nullptr || unit->health <= 0 ||
-        Game::Core::is_neutral_owner(unit->owner_id)) {
+    if (context.has<Engine::Core::PendingRemovalComponent>(entity_id) ||
+        context.has<Engine::Core::DismantleSiteComponent>(entity_id)) {
       continue;
     }
-    if (entity->has_component<Engine::Core::PendingRemovalComponent>() ||
-        entity->has_component<Engine::Core::DismantleSiteComponent>()) {
-      continue;
-    }
-    float const cycle = std::max(farm->cycle_seconds, 0.001F);
-    farm->growth = std::min(1.0F, farm->growth + delta_time / cycle);
+    float const cycle = std::max(farm.cycle_seconds, 0.001F);
+    farm.growth = std::min(1.0F, farm.growth + delta_time / cycle);
   }
+}
+
+auto FarmSystem::access() const -> Engine::Core::SystemAccess {
+  using namespace Engine::Core;
+  return SystemAccess::declare(
+      Reads<UnitComponent, PendingRemovalComponent, DismantleSiteComponent>{},
+      Writes<FarmComponent>{});
 }
 
 } // namespace Game::Systems

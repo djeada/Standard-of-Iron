@@ -10,6 +10,7 @@
 
 #include "../core/component.h"
 #include "../core/event_manager.h"
+#include "../core/system_context.h"
 #include "../core/world.h"
 #include "../core/world_spatial_index.h"
 #include "combat_rules.h"
@@ -22,14 +23,11 @@ namespace Game::Systems {
 
 namespace {
 
-auto matches_heal_affinity(const Engine::Core::Entity* target,
+auto matches_heal_affinity(Engine::Core::SystemContext& context,
+                           Engine::Core::EntityID target_id,
                            Engine::Core::HealerComponent::TargetAffinity affinity)
     -> bool {
-  if (target == nullptr) {
-    return false;
-  }
-
-  bool const target_is_undead = target->has_component<Engine::Core::UndeadComponent>();
+  bool const target_is_undead = context.has<Engine::Core::UndeadComponent>(target_id);
   switch (affinity) {
   case Engine::Core::HealerComponent::TargetAffinity::UndeadAllies:
     return target_is_undead;
@@ -41,39 +39,39 @@ auto matches_heal_affinity(const Engine::Core::Entity* target,
 
 } // namespace
 
-void HealingSystem::update(Engine::Core::World* world, float delta_time) {
-  process_healing(world, delta_time);
+void HealingSystem::run(Engine::Core::SystemContext& context) {
+  process_healing(context);
 }
 
-void HealingSystem::process_healing(Engine::Core::World* world, float delta_time) {
-  auto healers = world->collect_entities_with<Engine::Core::HealerComponent>();
-  auto* healing_beam_system = world->get_system<HealingBeamSystem>();
+void HealingSystem::process_healing(Engine::Core::SystemContext& context) {
+  const float delta_time = context.delta_time();
+  auto* healing_beam_system = context.world().get_system<HealingBeamSystem>();
 
-  auto& index = world->spatial_index();
-  index.refresh(*world);
+  auto& index = context.spatial_index();
+  index.refresh(context.world());
   std::vector<Engine::Core::EntityID> candidates;
 
-  for (auto* healer : healers) {
-    if (healer->has_component<Engine::Core::PendingRemovalComponent>()) {
+  for (auto [healer, healer_comp_ref, healer_unit_ref, healer_transform_ref] :
+       context.entity_view<Engine::Core::HealerComponent,
+                           Engine::Core::UnitComponent,
+                           Engine::Core::TransformComponent>()) {
+    const Engine::Core::EntityID healer_id = healer.get_id();
+    if (context.has<Engine::Core::PendingRemovalComponent>(healer_id)) {
       continue;
     }
 
-    auto* healer_unit = healer->get_component<Engine::Core::UnitComponent>();
-    auto* healer_transform = healer->get_component<Engine::Core::TransformComponent>();
-    auto* healer_comp = healer->get_component<Engine::Core::HealerComponent>();
-
-    if ((healer_unit == nullptr) || (healer_transform == nullptr) ||
-        (healer_comp == nullptr)) {
-      continue;
-    }
+    auto* healer_comp = &healer_comp_ref;
+    const auto* healer_unit = &healer_unit_ref;
+    auto* healer_transform = &healer_transform_ref;
 
     if (healer_unit->health <= 0) {
       continue;
     }
 
-    auto const* healer_attack = healer->get_component<Engine::Core::AttackComponent>();
+    auto const* healer_attack =
+        context.try_get<Engine::Core::AttackComponent>(healer_id);
     if (healer_attack != nullptr && healer_attack->in_melee_lock &&
-        Game::Systems::CombatRules::participates_in_rts_melee_lock(healer)) {
+        Game::Systems::CombatRules::participates_in_rts_melee_lock(&healer)) {
       healer_comp->is_healing_active = false;
       continue;
     }
@@ -101,15 +99,15 @@ void HealingSystem::process_healing(Engine::Core::World* world, float delta_time
     std::sort(candidates.begin(), candidates.end());
 
     for (const Engine::Core::EntityID candidate_id : candidates) {
-      auto* target = world->get_entity(candidate_id);
+      auto* target = context.world().get_entity(candidate_id);
       if (target == nullptr ||
-          target->has_component<Engine::Core::PendingRemovalComponent>()) {
+          context.has<Engine::Core::PendingRemovalComponent>(candidate_id)) {
         continue;
       }
 
-      auto* target_unit = target->get_component<Engine::Core::UnitComponent>();
+      auto* target_unit = context.try_get<Engine::Core::UnitComponent>(candidate_id);
       auto* target_transform =
-          target->get_component<Engine::Core::TransformComponent>();
+          context.try_get<Engine::Core::TransformComponent>(candidate_id);
 
       if ((target_unit == nullptr) || (target_transform == nullptr)) {
         continue;
@@ -122,7 +120,7 @@ void HealingSystem::process_healing(Engine::Core::World* world, float delta_time
       if (target_unit->owner_id != healer_unit->owner_id) {
         continue;
       }
-      if (!matches_heal_affinity(target, healer_comp->target_affinity)) {
+      if (!matches_heal_affinity(context, candidate_id, healer_comp->target_affinity)) {
         continue;
       }
 
@@ -172,6 +170,19 @@ void HealingSystem::process_healing(Engine::Core::World* world, float delta_time
       healer_comp->is_healing_active = false;
     }
   }
+}
+
+auto HealingSystem::access() const -> Engine::Core::SystemAccess {
+  using namespace Engine::Core;
+  return SystemAccess::declare(
+      Reads<AttackComponent,
+            AttackTargetComponent,
+            CommanderComponent,
+            UndeadComponent,
+            RpgHealthComponent,
+            FormationRosterPresentationComponent,
+            PendingRemovalComponent>{},
+      Writes<UnitComponent, TransformComponent, HealerComponent>{});
 }
 
 } // namespace Game::Systems

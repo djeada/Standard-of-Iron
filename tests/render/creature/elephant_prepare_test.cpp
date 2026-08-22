@@ -263,7 +263,8 @@ TEST(ElephantPrepare, MinimalRenderUsesPrebakedSnapshotAssetWithoutRiggedBake) {
       << snapshot_reg.last_error();
 
   Render::GL::ElephantRendererBase const renderer;
-  Engine::Core::Entity entity(1);
+  Engine::Core::StandaloneEntity entity_scratch(1);
+  Engine::Core::Entity& entity = entity_scratch.entity();
   auto* unit = entity.add_component<Engine::Core::UnitComponent>();
   unit->spawn_type = Game::Units::SpawnType::Elephant;
   unit->owner_id = 1;
@@ -306,7 +307,8 @@ TEST(ElephantPrepare, MinimalRenderDoesNotFallbackToRiggedBakeWhenSnapshotMissin
   snapshot_reg.clear();
 
   Render::GL::ElephantRendererBase const renderer;
-  Engine::Core::Entity entity(1);
+  Engine::Core::StandaloneEntity entity_scratch(1);
+  Engine::Core::Entity& entity = entity_scratch.entity();
   auto* unit = entity.add_component<Engine::Core::UnitComponent>();
   unit->spawn_type = Game::Units::SpawnType::Elephant;
   unit->owner_id = 1;
@@ -407,7 +409,8 @@ TEST(ElephantPrepare, SharedWalkRunClassifierControlsPreparedPlaybackState) {
   ctx.force_horse_lod = true;
   ctx.forced_horse_lod = Render::GL::HorseLOD::Full;
 
-  Engine::Core::Entity entity(77);
+  Engine::Core::StandaloneEntity entity_scratch(77);
+  Engine::Core::Entity& entity = entity_scratch.entity();
   auto* unit = entity.add_component<Engine::Core::UnitComponent>(100, 100, 1.0F, 12.0F);
   auto* transform = entity.add_component<Engine::Core::TransformComponent>();
   ASSERT_NE(unit, nullptr);
@@ -612,7 +615,8 @@ TEST(ElephantPrepare, FullStationaryPreparationEmitsIdleShadowRequest) {
 
 TEST(ElephantPrepare, FullTemplatePrewarmBypassesSnapshotCache) {
   Render::GL::ElephantRendererBase const renderer;
-  Engine::Core::Entity entity(1);
+  Engine::Core::StandaloneEntity entity_scratch(1);
+  Engine::Core::Entity& entity = entity_scratch.entity();
   auto* unit = entity.add_component<Engine::Core::UnitComponent>();
   unit->spawn_type = Game::Units::SpawnType::Elephant;
   unit->owner_id = 1;

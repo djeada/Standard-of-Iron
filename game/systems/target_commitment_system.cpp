@@ -1,7 +1,10 @@
 #include "target_commitment_system.h"
 
+#include <algorithm>
+
 #include "../core/component.h"
 #include "../core/entity.h"
+#include "../core/system_context.h"
 #include "../core/world.h"
 
 namespace Game::Systems {
@@ -19,53 +22,43 @@ auto is_committed_phase(Engine::Core::CombatAnimationState state) -> bool {
   }
 }
 
-auto is_target_valid(Engine::Core::World* world,
+auto is_target_valid(Engine::Core::SystemContext& context,
                      Engine::Core::EntityID target_id) -> bool {
-  if (target_id == 0) {
+  if (target_id == 0 || !context.is_alive(target_id) ||
+      context.has<Engine::Core::PendingRemovalComponent>(target_id)) {
     return false;
   }
-  auto* target = world->get_entity(target_id);
-  if (target == nullptr) {
-    return false;
-  }
-  if (target->has_component<Engine::Core::PendingRemovalComponent>()) {
-    return false;
-  }
-  auto* unit = target->get_component<Engine::Core::UnitComponent>();
+  const auto* unit = context.try_get<Engine::Core::UnitComponent>(target_id);
   return unit != nullptr && unit->health > 0;
 }
 
 } // namespace
 
-void TargetCommitmentSystem::update(Engine::Core::World* world, float delta_time) {
-  if (world == nullptr || delta_time < 0.0F) {
+void TargetCommitmentSystem::run(Engine::Core::SystemContext& context) {
+  const float delta_time = context.delta_time();
+  if (delta_time < 0.0F) {
     return;
   }
 
   m_diagnostics = {};
 
-  world->resolve_entities_into(world->entities_with<Engine::Core::AttackComponent>(),
-                               m_query_scratch);
-
-  for (auto* entity : m_query_scratch) {
-    auto* atk = entity->get_component<Engine::Core::AttackComponent>();
-    if (atk == nullptr) {
-      continue;
-    }
-
-    auto* unit = entity->get_component<Engine::Core::UnitComponent>();
+  for (auto [entity_id, atk] : context.view<Engine::Core::AttackComponent>()) {
+    const auto* unit = context.try_get<Engine::Core::UnitComponent>(entity_id);
     if (unit == nullptr || unit->health <= 0) {
       continue;
     }
 
-    auto* commitment = entity->get_component<Engine::Core::TargetCommitmentComponent>();
-
-    auto* combat_state = entity->get_component<Engine::Core::CombatStateComponent>();
-    auto* attack_target = entity->get_component<Engine::Core::AttackTargetComponent>();
+    auto* commitment =
+        context.try_get<Engine::Core::TargetCommitmentComponent>(entity_id);
+    const auto* combat_state =
+        context.try_get<Engine::Core::CombatStateComponent>(entity_id);
+    auto* attack_target =
+        context.try_get<Engine::Core::AttackTargetComponent>(entity_id);
 
     if (commitment == nullptr) {
-      if (atk->in_melee_lock && attack_target != nullptr) {
-        commitment = entity->add_component<Engine::Core::TargetCommitmentComponent>();
+      if (atk.in_melee_lock && attack_target != nullptr) {
+        commitment =
+            context.emplace<Engine::Core::TargetCommitmentComponent>(entity_id);
         if (commitment != nullptr) {
           commitment->committed_target_id = attack_target->target_id;
           commitment->cooldown_remaining =
@@ -84,7 +77,7 @@ void TargetCommitmentSystem::update(Engine::Core::World* world, float delta_time
         combat_state != nullptr && is_committed_phase(combat_state->animation_state);
     commitment->in_committed_phase = in_committed;
 
-    if (!is_target_valid(world, commitment->committed_target_id)) {
+    if (!is_target_valid(context, commitment->committed_target_id)) {
 
       commitment->committed_target_id = 0;
       commitment->cooldown_remaining = 0.0F;
@@ -100,11 +93,11 @@ void TargetCommitmentSystem::update(Engine::Core::World* world, float delta_time
 
         attack_target->target_id = commitment->committed_target_id;
         attack_target->should_chase = true;
-        if (atk->in_melee_lock &&
-            atk->melee_lock_target_id != commitment->committed_target_id) {
+        if (atk.in_melee_lock &&
+            atk.melee_lock_target_id != commitment->committed_target_id) {
 
-          atk->in_melee_lock = false;
-          atk->melee_lock_target_id = 0;
+          atk.in_melee_lock = false;
+          atk.melee_lock_target_id = 0;
         }
         ++m_diagnostics.switches_blocked;
       } else {
@@ -116,6 +109,13 @@ void TargetCommitmentSystem::update(Engine::Core::World* world, float delta_time
       }
     }
   }
+}
+
+auto TargetCommitmentSystem::access() const -> Engine::Core::SystemAccess {
+  using namespace Engine::Core;
+  return SystemAccess::declare(
+      Reads<UnitComponent, CombatStateComponent, PendingRemovalComponent>{},
+      Writes<AttackComponent, AttackTargetComponent, TargetCommitmentComponent>{});
 }
 
 } // namespace Game::Systems

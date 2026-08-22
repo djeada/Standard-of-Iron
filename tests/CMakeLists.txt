@@ -79,6 +79,7 @@ add_executable(
     command/command_codec_test.cpp
     core/entity_handle_test.cpp
     core/world_view_test.cpp
+    core/component_storage_test.cpp
     core/world_spatial_index_test.cpp
     core/system_schedule_test.cpp
     core/ground_type_test.cpp
@@ -127,6 +128,7 @@ add_executable(
     architecture/qml_surface_test.cpp
     architecture/release_contract_test.cpp
     architecture/documentation_accuracy_test.cpp
+    architecture/component_data_test.cpp
     simulation_main.cpp
 )
 target_link_libraries(

@@ -474,22 +474,22 @@ auto VictoryService::summarize_world(Engine::Core::World& world) const -> WorldS
       (local_nation != nullptr) ? local_nation->id
                                 : nation_registry.default_nation_id();
 
-  auto entities = world.collect_entities_with<Engine::Core::UnitComponent>();
-  for (auto* entity : entities) {
-    auto* unit = entity->get_component<Engine::Core::UnitComponent>();
-    if ((unit == nullptr) || unit->health <= 0) {
+  for (auto [entity_id, unit_ref] : world.view<Engine::Core::UnitComponent>()) {
+    const auto* unit = &unit_ref;
+    if (unit->health <= 0) {
       continue;
     }
 
+    const bool is_commander = world.has<Engine::Core::CommanderComponent>(entity_id);
     bool const is_local_unit = (unit->owner_id == m_local_owner_id);
     if (is_local_unit) {
       summary.local_has_units = true;
-      if (entity->get_component<Engine::Core::CommanderComponent>() != nullptr) {
+      if (is_commander) {
         summary.local_commander_count += 1;
       } else if (Game::Units::is_troop_spawn(unit->spawn_type)) {
         summary.local_non_commander_troop_count += 1;
       }
-    } else if (entity->get_component<Engine::Core::CommanderComponent>() != nullptr &&
+    } else if (is_commander &&
                m_owner_registry.are_enemies(m_local_owner_id, unit->owner_id)) {
       if (m_rule_set.include_ambient_undead ||
           unit->nation_id != Game::Systems::NationID::IronSepulcher) {
@@ -508,7 +508,8 @@ auto VictoryService::summarize_world(Engine::Core::World& world) const -> WorldS
         m_tracked_local_structure_types.contains(unit_type)) {
       summary.local_owned_structure_counts[unit_type] += 1;
       if (m_requires_captured_structure_tracking) {
-        auto* building = entity->get_component<Engine::Core::BuildingComponent>();
+        const auto* building =
+            world.try_get<Engine::Core::BuildingComponent>(entity_id);
         if (building != nullptr && building->original_nation_id != local_nation_id) {
           summary.local_captured_structure_counts[unit_type] += 1;
         }

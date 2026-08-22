@@ -89,17 +89,20 @@ auto resolve_commander_contact_target(Engine::Core::World* world,
 
   Engine::Core::Entity* best = nullptr;
   float best_score = -1000000.0F;
-  for (auto* candidate : world->collect_entities_with<Engine::Core::UnitComponent>()) {
-    if (candidate == nullptr || candidate == &commander ||
+  for (auto [candidate_ref, candidate_unit, candidate_transform_ref] :
+       world->entity_view<Engine::Core::UnitComponent,
+                          Engine::Core::TransformComponent>()) {
+    (void)candidate_unit;
+    Engine::Core::Entity* candidate = &candidate_ref;
+    auto const* candidate_transform = &candidate_transform_ref;
+    if (candidate == &commander ||
         !is_valid_enemy_unit(commander_unit, candidate, false) ||
         !target_in_swing_arc(commander, *candidate, reach)) {
       continue;
     }
-    auto const* candidate_transform =
-        candidate->get_component<Engine::Core::TransformComponent>();
     auto const* commander_transform =
         commander.get_component<Engine::Core::TransformComponent>();
-    if (candidate_transform == nullptr || commander_transform == nullptr) {
+    if (commander_transform == nullptr) {
       continue;
     }
     float const dx = candidate_transform->position.x - commander_transform->position.x;
@@ -258,111 +261,103 @@ void process_combat_state(Engine::Core::World* world, float delta_time) {
       Engine::Core::Timing::combat_state_update());
   process_spear_brace_state(world, delta_time);
   process_mounted_charge_intents(world, delta_time);
-  auto units = world->collect_entities_with<Engine::Core::CombatStateComponent>();
-
-  for (auto* unit : units) {
-    if (unit->has_component<Engine::Core::PendingRemovalComponent>()) {
+  for (auto [unit, combat_state] :
+       world->entity_view<Engine::Core::CombatStateComponent>()) {
+    if (unit.has_component<Engine::Core::PendingRemovalComponent>()) {
       continue;
     }
 
-    auto* combat_state = unit->get_component<Engine::Core::CombatStateComponent>();
-    if (combat_state == nullptr) {
-      continue;
-    }
-
-    if (combat_state->is_hit_paused) {
-      combat_state->hit_pause_remaining -= delta_time;
-      if (combat_state->hit_pause_remaining <= 0.0F) {
-        combat_state->is_hit_paused = false;
-        combat_state->hit_pause_remaining = 0.0F;
+    if (combat_state.is_hit_paused) {
+      combat_state.hit_pause_remaining -= delta_time;
+      if (combat_state.hit_pause_remaining <= 0.0F) {
+        combat_state.is_hit_paused = false;
+        combat_state.hit_pause_remaining = 0.0F;
       }
       continue;
     }
 
-    if (bow_draw_is_held(*unit)) {
+    if (bow_draw_is_held(unit)) {
 
       continue;
     }
 
-    combat_state->state_time += delta_time;
+    combat_state.state_time += delta_time;
 
     int transitions = 0;
-    while (combat_state->state_duration > 0.0F &&
-           combat_state->state_time >= combat_state->state_duration &&
-           transitions < 8) {
+    while (combat_state.state_duration > 0.0F &&
+           combat_state.state_time >= combat_state.state_duration && transitions < 8) {
       ++transitions;
-      float const carry = combat_state->state_time - combat_state->state_duration;
-      switch (combat_state->animation_state) {
+      float const carry = combat_state.state_time - combat_state.state_duration;
+      switch (combat_state.animation_state) {
       case CS::Advance:
-        combat_state->animation_state = CS::WindUp;
-        combat_state->state_duration = phase_duration_for_state(
-            *unit, *combat_state, combat_state->animation_state);
+        combat_state.animation_state = CS::WindUp;
+        combat_state.state_duration =
+            phase_duration_for_state(unit, combat_state, combat_state.animation_state);
         break;
       case CS::WindUp:
-        combat_state->animation_state = CS::Strike;
-        combat_state->state_duration = phase_duration_for_state(
-            *unit, *combat_state, combat_state->animation_state);
+        combat_state.animation_state = CS::Strike;
+        combat_state.state_duration =
+            phase_duration_for_state(unit, combat_state, combat_state.animation_state);
         break;
       case CS::Strike:
-        combat_state->animation_state = CS::Impact;
-        combat_state->state_duration = phase_duration_for_state(
-            *unit, *combat_state, combat_state->animation_state);
+        combat_state.animation_state = CS::Impact;
+        combat_state.state_duration =
+            phase_duration_for_state(unit, combat_state, combat_state.animation_state);
 
-        if (!combat_state->damage_dealt_this_swing) {
+        if (!combat_state.damage_dealt_this_swing) {
           auto const* commander =
-              unit->get_component<Engine::Core::CommanderComponent>();
+              unit.get_component<Engine::Core::CommanderComponent>();
           auto const* action =
-              unit->get_component<Engine::Core::RpgCommanderActionComponent>();
+              unit.get_component<Engine::Core::RpgCommanderActionComponent>();
           if (commander != nullptr && commander->fpv_controlled &&
               (action == nullptr || action->combat_action_id == 0U)) {
-            deal_commander_contact_damage(world, *unit, *combat_state);
+            deal_commander_contact_damage(world, unit, combat_state);
           }
         }
         break;
       case CS::Impact:
-        combat_state->animation_state = CS::Recover;
-        combat_state->state_duration = phase_duration_for_state(
-            *unit, *combat_state, combat_state->animation_state);
+        combat_state.animation_state = CS::Recover;
+        combat_state.state_duration =
+            phase_duration_for_state(unit, combat_state, combat_state.animation_state);
         break;
       case CS::Recover:
 
-        if (combat_state->input_buffered) {
-          combat_state->animation_state = CS::Advance;
-          combat_state->state_duration = phase_duration_for_state(
-              *unit, *combat_state, combat_state->animation_state);
-          combat_state->input_buffered = false;
-          combat_state->damage_dealt_this_swing = false;
-          reset_action_events_if_present(*unit);
+        if (combat_state.input_buffered) {
+          combat_state.animation_state = CS::Advance;
+          combat_state.state_duration = phase_duration_for_state(
+              unit, combat_state, combat_state.animation_state);
+          combat_state.input_buffered = false;
+          combat_state.damage_dealt_this_swing = false;
+          reset_action_events_if_present(unit);
         } else {
-          combat_state->animation_state = CS::Reposition;
-          combat_state->state_duration = phase_duration_for_state(
-              *unit, *combat_state, combat_state->animation_state);
+          combat_state.animation_state = CS::Reposition;
+          combat_state.state_duration = phase_duration_for_state(
+              unit, combat_state, combat_state.animation_state);
         }
         break;
       case CS::Reposition:
       case CS::Idle:
       default:
-        combat_state->animation_state = CS::Idle;
-        combat_state->state_duration = 0.0F;
-        combat_state->input_buffered = false;
+        combat_state.animation_state = CS::Idle;
+        combat_state.state_duration = 0.0F;
+        combat_state.input_buffered = false;
         break;
       }
-      combat_state->state_time = carry;
+      combat_state.state_time = carry;
     }
   }
 
-  for (auto* unit :
-       world->collect_entities_with<Engine::Core::RpgCommanderActionComponent>()) {
-    if (unit == nullptr ||
-        unit->has_component<Engine::Core::PendingRemovalComponent>()) {
+  for (auto [unit, action] :
+       world->entity_view<Engine::Core::RpgCommanderActionComponent>()) {
+    (void)action;
+    if (unit.has_component<Engine::Core::PendingRemovalComponent>()) {
       continue;
     }
-    auto* presentation_state =
-        unit->get_component<Engine::Core::CombatStateComponent>();
+    auto* presentation_state = unit.get_component<Engine::Core::CombatStateComponent>();
     if (presentation_state != nullptr && presentation_state->is_hit_paused) {
       continue;
     }
-    process_authored_combat_action(world, *unit, presentation_state, delta_time);
+    process_authored_combat_action(world, unit, presentation_state, delta_time);
   }
 }
 

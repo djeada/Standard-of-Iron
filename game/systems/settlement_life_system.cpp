@@ -156,24 +156,23 @@ void collect_settlement_candidates(Engine::Core::World& world,
   out.clear();
 
   float const radius_sq = resident.roam_radius * resident.roam_radius;
-  for (auto* entity : world.collect_entities_with<Engine::Core::BuildingComponent>()) {
-    auto* unit = entity->get_component<Engine::Core::UnitComponent>();
-    auto* transform = entity->get_component<Engine::Core::TransformComponent>();
-    if ((unit == nullptr) || (transform == nullptr) || unit->health <= 0) {
+  for (auto [entity_id, building, unit, transform] :
+       world.view<Engine::Core::BuildingComponent,
+                  Engine::Core::UnitComponent,
+                  Engine::Core::TransformComponent>()) {
+    (void)building;
+    if (unit.health <= 0 || unit.owner_id != owner_id) {
       continue;
     }
-    if (unit->owner_id != owner_id) {
+    if (Game::Units::is_wall_network_spawn(unit.spawn_type)) {
       continue;
     }
-    if (Game::Units::is_wall_network_spawn(unit->spawn_type)) {
-      continue;
-    }
-    float const dx = transform->position.x - resident.hearth_x;
-    float const dz = transform->position.z - resident.hearth_z;
+    float const dx = transform.position.x - resident.hearth_x;
+    float const dz = transform.position.z - resident.hearth_z;
     if ((dx * dx) + (dz * dz) > radius_sq) {
       continue;
     }
-    out.push_back({Candidate::Kind::Building, entity->get_id(), {}});
+    out.push_back({Candidate::Kind::Building, entity_id, {}});
   }
 
   auto const& terrain = Game::Map::TerrainService::instance();
@@ -211,22 +210,24 @@ auto find_settlement_anchor(Engine::Core::World& world,
   std::optional<QVector3D> nearest;
   float nearest_distance_sq = search_radius * search_radius;
 
-  for (auto* entity : world.collect_entities_with<Engine::Core::BuildingComponent>()) {
-    auto const* unit = entity->get_component<Engine::Core::UnitComponent>();
-    auto const* transform = entity->get_component<Engine::Core::TransformComponent>();
-    if ((unit == nullptr) || (transform == nullptr) || unit->health <= 0 ||
-        unit->owner_id != owner_id ||
-        Game::Units::is_wall_network_spawn(unit->spawn_type)) {
+  for (auto [entity_id, building, unit, transform] :
+       world.view<Engine::Core::BuildingComponent,
+                  Engine::Core::UnitComponent,
+                  Engine::Core::TransformComponent>()) {
+    (void)building;
+    (void)entity_id;
+    if (unit.health <= 0 || unit.owner_id != owner_id ||
+        Game::Units::is_wall_network_spawn(unit.spawn_type)) {
       continue;
     }
-    float const dx = transform->position.x - from_x;
-    float const dz = transform->position.z - from_z;
+    float const dx = transform.position.x - from_x;
+    float const dz = transform.position.z - from_z;
     float const distance_sq = (dx * dx) + (dz * dz);
     if (distance_sq > nearest_distance_sq) {
       continue;
     }
     nearest_distance_sq = distance_sq;
-    nearest = QVector3D(transform->position.x, 0.0F, transform->position.z);
+    nearest = QVector3D(transform.position.x, 0.0F, transform.position.z);
   }
 
   return nearest;
@@ -253,17 +254,13 @@ auto endangers_residents(Game::Units::SpawnType type) -> bool {
 void collect_armed_units(Engine::Core::World& world,
                          std::vector<SettlementLifeSystem::ArmedUnit>& out) {
   out.clear();
-  for (auto* entity : world.collect_entities_with<Engine::Core::UnitComponent>()) {
-    auto const* unit = entity->get_component<Engine::Core::UnitComponent>();
-    if ((unit == nullptr) || unit->health <= 0 ||
-        !endangers_residents(unit->spawn_type)) {
+  for (auto [entity_id, unit, transform] :
+       world.view<Engine::Core::UnitComponent, Engine::Core::TransformComponent>()) {
+    (void)entity_id;
+    if (unit.health <= 0 || !endangers_residents(unit.spawn_type)) {
       continue;
     }
-    auto const* transform = entity->get_component<Engine::Core::TransformComponent>();
-    if (transform == nullptr) {
-      continue;
-    }
-    out.push_back({transform->position.x, transform->position.z, unit->owner_id});
+    out.push_back({transform.position.x, transform.position.z, unit.owner_id});
   }
 }
 
@@ -342,17 +339,18 @@ void run_from(Engine::Core::World& world,
 }
 
 void adopt_idle_civilians(Engine::Core::World& world) {
-  for (auto* entity : world.collect_entities_with<Engine::Core::UnitComponent>()) {
-    auto const* unit = entity->get_component<Engine::Core::UnitComponent>();
-    if ((unit == nullptr) || unit->spawn_type != Game::Units::SpawnType::Civilian ||
-        unit->health <= 0) {
+  for (auto [entity, unit_ref, transform_ref] :
+       world.entity_view<Engine::Core::UnitComponent,
+                         Engine::Core::TransformComponent>()) {
+    auto const* unit = &unit_ref;
+    auto const* transform = &transform_ref;
+    if (unit->spawn_type != Game::Units::SpawnType::Civilian || unit->health <= 0) {
       continue;
     }
-    if (entity->has_component<SettlementResidentComponent>()) {
+    if (entity.has_component<SettlementResidentComponent>()) {
       continue;
     }
-    auto const* transform = entity->get_component<Engine::Core::TransformComponent>();
-    if ((transform == nullptr) || !is_unclaimed_by_the_player(*entity)) {
+    if (!is_unclaimed_by_the_player(entity)) {
       continue;
     }
 
@@ -365,7 +363,7 @@ void adopt_idle_civilians(Engine::Core::World& world) {
       continue;
     }
 
-    auto* resident = entity->add_component<SettlementResidentComponent>();
+    auto* resident = entity.add_component<SettlementResidentComponent>();
     if (resident == nullptr) {
       continue;
     }
@@ -389,8 +387,7 @@ void SettlementLifeSystem::update(Engine::Core::World* world, float delta_time) 
     adopt_idle_civilians(*world);
   }
 
-  auto residents = world->collect_entities_with<SettlementResidentComponent>();
-  if (residents.empty()) {
+  if (world->entities_with<SettlementResidentComponent>().empty()) {
     return;
   }
 
@@ -403,16 +400,16 @@ void SettlementLifeSystem::update(Engine::Core::World* world, float delta_time) 
 
   std::vector<Candidate> candidates;
 
-  for (auto* entity : residents) {
-    auto* resident = entity->get_component<SettlementResidentComponent>();
-    auto* unit = entity->get_component<Engine::Core::UnitComponent>();
-    auto* transform = entity->get_component<Engine::Core::TransformComponent>();
-    auto* movement = entity->get_component<Engine::Core::MovementComponent>();
-
-    if ((resident == nullptr) || (unit == nullptr) || (transform == nullptr) ||
-        (movement == nullptr)) {
-      continue;
-    }
+  for (auto [entity_ref, resident_ref, unit_ref, transform_ref, movement_ref] :
+       world->entity_view<SettlementResidentComponent,
+                          Engine::Core::UnitComponent,
+                          Engine::Core::TransformComponent,
+                          Engine::Core::MovementComponent>()) {
+    Engine::Core::Entity* entity = &entity_ref;
+    auto* resident = &resident_ref;
+    auto* unit = &unit_ref;
+    auto* transform = &transform_ref;
+    auto* movement = &movement_ref;
 
     if (unit->health <= 0) {
 

@@ -21,6 +21,8 @@ public:
 
   void update(Engine::Core::World* world, float delta_time) override;
 
+  [[nodiscard]] auto access() const -> Engine::Core::SystemAccess override;
+
   void spawn_beam(const QVector3D& healer_pos,
                   const QVector3D& target_pos,
                   const QVector3D& color = QVector3D(0.3F, 1.0F, 0.5F),

@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <vector>
 
 #include "../../core/component.h"
 #include "../../core/world.h"
@@ -48,79 +49,78 @@ auto apply_burning_tick_damage(Engine::Core::World* world,
 auto process_cursed_statuses(Engine::Core::World* world,
                              float delta_time,
                              CombatStatusEffectUpdateResult& result) -> void {
-  for (auto* entity :
-       world->collect_entities_with<Engine::Core::CursedStatusComponent>()) {
-    if (entity == nullptr ||
-        entity->has_component<Engine::Core::PendingRemovalComponent>()) {
+  std::vector<Engine::Core::EntityID> expired;
+  for (auto [entity_id, cursed] : world->view<Engine::Core::CursedStatusComponent>()) {
+    if (world->has<Engine::Core::PendingRemovalComponent>(entity_id)) {
       continue;
     }
 
-    auto* cursed = entity->get_component<Engine::Core::CursedStatusComponent>();
-    if (cursed == nullptr) {
-      continue;
+    cursed.remaining_duration = std::max(0.0F, cursed.remaining_duration - delta_time);
+    if (cursed.remaining_duration <= 0.0F) {
+      expired.push_back(entity_id);
     }
-
-    cursed->remaining_duration =
-        std::max(0.0F, cursed->remaining_duration - delta_time);
-    if (cursed->remaining_duration <= 0.0F) {
-      entity->remove_component<Engine::Core::CursedStatusComponent>();
-      ++result.expired_curses;
-    }
+  }
+  for (const Engine::Core::EntityID entity_id : expired) {
+    world->remove<Engine::Core::CursedStatusComponent>(entity_id);
+    ++result.expired_curses;
   }
 }
 
 auto process_burning_statuses(Engine::Core::World* world,
                               float delta_time,
                               CombatStatusEffectUpdateResult& result) -> void {
-  for (auto* entity :
-       world->collect_entities_with<Engine::Core::BurningStatusComponent>()) {
-    if (entity == nullptr ||
-        entity->has_component<Engine::Core::PendingRemovalComponent>()) {
+  std::vector<Engine::Core::EntityID> expired;
+  for (auto [entity, burning] :
+       world->entity_view<Engine::Core::BurningStatusComponent>()) {
+    const Engine::Core::EntityID entity_id = entity.get_id();
+    if (world->has<Engine::Core::PendingRemovalComponent>(entity_id)) {
       continue;
     }
 
-    auto* burning = entity->get_component<Engine::Core::BurningStatusComponent>();
-    auto* unit = entity->get_component<Engine::Core::UnitComponent>();
-    if (burning == nullptr || unit == nullptr || unit->health <= 0) {
-      entity->remove_component<Engine::Core::BurningStatusComponent>();
-      ++result.expired_burning_statuses;
+    auto* unit = world->try_get<Engine::Core::UnitComponent>(entity_id);
+    if (unit == nullptr || unit->health <= 0) {
+      expired.push_back(entity_id);
       continue;
     }
 
-    burning->remaining_duration =
-        std::max(0.0F, burning->remaining_duration - delta_time);
-    burning->ignition_elapsed += delta_time;
-    burning->tick_accumulator += delta_time;
+    burning.remaining_duration =
+        std::max(0.0F, burning.remaining_duration - delta_time);
+    burning.ignition_elapsed += delta_time;
+    burning.tick_accumulator += delta_time;
 
-    float const tick_interval = std::max(0.05F, burning->tick_interval);
-    while (burning->remaining_duration > 0.0F &&
-           burning->tick_accumulator >= tick_interval) {
-      burning->tick_accumulator -= tick_interval;
+    float const tick_interval = std::max(0.05F, burning.tick_interval);
+    bool extinguished = false;
+    while (burning.remaining_duration > 0.0F &&
+           burning.tick_accumulator >= tick_interval) {
+      burning.tick_accumulator -= tick_interval;
 
-      int damage = burning->damage_per_tick;
-      if (auto* undead = entity->get_component<Engine::Core::UndeadComponent>();
+      int damage = burning.damage_per_tick;
+      if (auto* undead = world->try_get<Engine::Core::UndeadComponent>(entity_id);
           undead != nullptr) {
         damage = static_cast<int>(
             std::round(static_cast<float>(damage) * undead->fire_damage_multiplier *
-                       burning->fire_bonus_multiplier));
+                       burning.fire_bonus_multiplier));
       }
 
       if (apply_burning_tick_damage(
-              world, *entity, std::max(1, damage), burning->attacker_id)) {
+              world, entity, std::max(1, damage), burning.attacker_id)) {
         ++result.burning_ticks;
       }
 
-      unit = entity->get_component<Engine::Core::UnitComponent>();
+      unit = world->try_get<Engine::Core::UnitComponent>(entity_id);
       if (unit == nullptr || unit->health <= 0) {
-        entity->remove_component<Engine::Core::BurningStatusComponent>();
-        ++result.expired_burning_statuses;
+        extinguished = true;
         break;
       }
     }
 
-    if (entity->get_component<Engine::Core::BurningStatusComponent>() != nullptr &&
-        burning->remaining_duration <= 0.0F) {
-      entity->remove_component<Engine::Core::BurningStatusComponent>();
+    if (extinguished || burning.remaining_duration <= 0.0F) {
+      expired.push_back(entity_id);
+    }
+  }
+
+  for (const Engine::Core::EntityID entity_id : expired) {
+    if (world->remove<Engine::Core::BurningStatusComponent>(entity_id)) {
       ++result.expired_burning_statuses;
     }
   }
@@ -129,26 +129,24 @@ auto process_burning_statuses(Engine::Core::World* world,
 auto process_fire_patches(Engine::Core::World* world,
                           float delta_time,
                           CombatStatusEffectUpdateResult& result) -> void {
+  if (world->entities_with<Engine::Core::FirePatchComponent>().empty()) {
+    return;
+  }
+
   auto units = world->collect_entities_with<Engine::Core::UnitComponent>();
-  for (auto* entity :
-       world->collect_entities_with<Engine::Core::FirePatchComponent>()) {
-    if (entity == nullptr ||
-        entity->has_component<Engine::Core::PendingRemovalComponent>()) {
+  for (auto [entity, fire_patch, transform] :
+       world->entity_view<Engine::Core::FirePatchComponent,
+                          Engine::Core::TransformComponent>()) {
+    (void)transform;
+    const Engine::Core::EntityID entity_id = entity.get_id();
+    if (world->has<Engine::Core::PendingRemovalComponent>(entity_id)) {
       continue;
     }
 
-    auto* fire_patch = entity->get_component<Engine::Core::FirePatchComponent>();
-    auto* transform = entity->get_component<Engine::Core::TransformComponent>();
-    if (fire_patch == nullptr || transform == nullptr) {
-      entity->add_component<Engine::Core::PendingRemovalComponent>();
-      ++result.expired_fire_patches;
-      continue;
-    }
-
-    fire_patch->remaining_duration =
-        std::max(0.0F, fire_patch->remaining_duration - delta_time);
-    if (fire_patch->remaining_duration <= 0.0F) {
-      entity->add_component<Engine::Core::PendingRemovalComponent>();
+    fire_patch.remaining_duration =
+        std::max(0.0F, fire_patch.remaining_duration - delta_time);
+    if (fire_patch.remaining_duration <= 0.0F) {
+      world->emplace<Engine::Core::PendingRemovalComponent>(entity_id);
       ++result.expired_fire_patches;
       continue;
     }
@@ -159,7 +157,7 @@ auto process_fire_patches(Engine::Core::World* world,
         continue;
       }
 
-      if (apply_fire_patch_contact_effect(world, *entity, *candidate)) {
+      if (apply_fire_patch_contact_effect(world, entity, *candidate)) {
         ++result.fire_patch_contacts;
       }
     }
@@ -169,39 +167,29 @@ auto process_fire_patches(Engine::Core::World* world,
 } // namespace
 
 void process_stagger_recovery(Engine::Core::World* world, float delta_time) {
-  for (auto* staggered :
-       world->collect_entities_with<Engine::Core::StaggerComponent>()) {
-    if (staggered == nullptr ||
-        Game::Systems::CombatRules::uses_rpg_combat_rules(staggered)) {
-
+  std::vector<Engine::Core::EntityID> recovered;
+  for (auto [entity, stagger] : world->entity_view<Engine::Core::StaggerComponent>()) {
+    if (Game::Systems::CombatRules::uses_rpg_combat_rules(&entity)) {
       continue;
     }
-    auto* stagger = staggered->get_component<Engine::Core::StaggerComponent>();
-    if (stagger == nullptr) {
-      continue;
+    stagger.remaining -= delta_time;
+    if (stagger.remaining <= 0.0F) {
+      recovered.push_back(entity.get_id());
     }
-    stagger->remaining -= delta_time;
-    if (stagger->remaining <= 0.0F) {
-      staggered->remove_component<Engine::Core::StaggerComponent>();
-    }
+  }
+  for (const Engine::Core::EntityID entity_id : recovered) {
+    world->remove<Engine::Core::StaggerComponent>(entity_id);
   }
 }
 
 void process_signature_presentations(Engine::Core::World* world, float delta_time) {
-  for (auto* entity : world->collect_entities_with<
-                      Engine::Core::CommanderSignaturePresentationComponent>()) {
-    if (entity == nullptr) {
-      continue;
-    }
-    auto* presentation =
-        entity->get_component<Engine::Core::CommanderSignaturePresentationComponent>();
-    if (presentation == nullptr) {
-      continue;
-    }
-    for (auto& entry : presentation->entries) {
+  for (auto [entity_id, presentation] :
+       world->view<Engine::Core::CommanderSignaturePresentationComponent>()) {
+    (void)entity_id;
+    for (auto& entry : presentation.entries) {
       entry.age += delta_time;
     }
-    std::erase_if(presentation->entries,
+    std::erase_if(presentation.entries,
                   [](auto const& entry) { return entry.age >= entry.lifetime; });
   }
 }

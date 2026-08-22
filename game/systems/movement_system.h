@@ -24,6 +24,8 @@ public:
 
   void update(Engine::Core::World* world, float delta_time) override;
 
+  [[nodiscard]] auto access() const -> Engine::Core::SystemAccess override;
+
 private:
   friend class CommandService;
 

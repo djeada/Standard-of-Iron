@@ -249,7 +249,8 @@ auto render_bow_mesh_count(const char* renderer_id,
     ctx.force_single_soldier = true;
     ctx.allow_template_cache = false;
 
-    Engine::Core::Entity entity(1);
+    Engine::Core::StandaloneEntity entity_scratch(1);
+    Engine::Core::Entity& entity = entity_scratch.entity();
     auto* unit =
         entity.add_component<Engine::Core::UnitComponent>(100, 100, 1.0F, 12.0F);
     EXPECT_NE(unit, nullptr);
@@ -311,7 +312,8 @@ auto render_direct_bow_mesh_count(const char* renderer_id,
   ctx.force_single_soldier = true;
   ctx.allow_template_cache = false;
 
-  Engine::Core::Entity entity(1);
+  Engine::Core::StandaloneEntity entity_scratch(1);
+  Engine::Core::Entity& entity = entity_scratch.entity();
   auto* unit = entity.add_component<Engine::Core::UnitComponent>(100, 100, 1.0F, 12.0F);
   EXPECT_NE(unit, nullptr);
   if (unit == nullptr) {
@@ -353,7 +355,8 @@ auto render_runtime_mesh_count(const char* renderer_id,
   ctx.force_single_soldier = true;
   ctx.allow_template_cache = false;
 
-  Engine::Core::Entity entity(1);
+  Engine::Core::StandaloneEntity entity_scratch(1);
+  Engine::Core::Entity& entity = entity_scratch.entity();
   auto* unit = entity.add_component<Engine::Core::UnitComponent>(100, 100, 1.0F, 12.0F);
   EXPECT_NE(unit, nullptr);
   if (unit == nullptr) {
@@ -402,7 +405,8 @@ auto find_archetype_id(std::string_view debug_name) -> Render::Creature::Archety
   Render::GL::register_built_in_entity_renderers(renderer_registry);
   auto const renderer = renderer_registry.get(std::string(debug_name));
   if (renderer) {
-    Engine::Core::Entity entity(1);
+    Engine::Core::StandaloneEntity entity_scratch(1);
+    Engine::Core::Entity& entity = entity_scratch.entity();
     entity.add_component<Engine::Core::UnitComponent>(100, 100, 1.0F, 12.0F);
     Render::GL::DrawContext ctx{};
     ctx.world_view = Render::WorldView::of_active_session();
@@ -459,7 +463,8 @@ auto render_archer_idle_bone_palette(
   ctx.world_view = Render::WorldView::of_active_session();
   ctx.force_single_soldier = true;
   ctx.allow_template_cache = false;
-  Engine::Core::Entity entity(1);
+  Engine::Core::StandaloneEntity entity_scratch(1);
+  Engine::Core::Entity& entity = entity_scratch.entity();
   auto* unit = entity.add_component<Engine::Core::UnitComponent>(100, 100, 0.0F, 0.0F);
   EXPECT_NE(unit, nullptr);
   if (unit == nullptr) {
@@ -520,7 +525,8 @@ auto moving_palette_changes_over_time(const char* renderer_id,
   ctx.force_humanoid_lod = true;
   ctx.forced_humanoid_lod = Render::Creature::CreatureLOD::Full;
 
-  Engine::Core::Entity entity(1);
+  Engine::Core::StandaloneEntity entity_scratch(1);
+  Engine::Core::Entity& entity = entity_scratch.entity();
   auto* unit = entity.add_component<Engine::Core::UnitComponent>(100, 100, 1.0F, 12.0F);
   auto* movement = entity.add_component<Engine::Core::MovementComponent>();
   auto* transform = entity.add_component<Engine::Core::TransformComponent>();
@@ -598,7 +604,8 @@ auto render_builder_submission_count(const char* renderer_id,
   ctx.force_single_soldier = true;
   ctx.allow_template_cache = false;
 
-  Engine::Core::Entity entity(1);
+  Engine::Core::StandaloneEntity entity_scratch(1);
+  Engine::Core::Entity& entity = entity_scratch.entity();
   auto* unit = entity.add_component<Engine::Core::UnitComponent>(100, 100, 0.0F, 0.0F);
   EXPECT_NE(unit, nullptr);
   if (unit == nullptr) {
@@ -645,7 +652,8 @@ auto render_builder_unique_tool_mesh_count(
   ctx.world_view = Render::WorldView::of_active_session();
   ctx.allow_template_cache = false;
 
-  Engine::Core::Entity entity(1);
+  Engine::Core::StandaloneEntity entity_scratch(1);
+  Engine::Core::Entity& entity = entity_scratch.entity();
   auto* unit = entity.add_component<Engine::Core::UnitComponent>(100, 100, 0.0F, 0.0F);
   EXPECT_NE(unit, nullptr);
   if (unit == nullptr) {
@@ -698,7 +706,8 @@ auto render_civilian_submission_count(const char* renderer_id,
   ctx.force_single_soldier = true;
   ctx.allow_template_cache = false;
 
-  Engine::Core::Entity entity(2);
+  Engine::Core::StandaloneEntity entity_scratch(2);
+  Engine::Core::Entity& entity = entity_scratch.entity();
   auto* unit = entity.add_component<Engine::Core::UnitComponent>(100, 100, 0.0F, 0.0F);
   EXPECT_NE(unit, nullptr);
   if (unit == nullptr) {
@@ -731,7 +740,8 @@ auto render_builder_bone_palette(const char* renderer_id,
   ctx.force_single_soldier = true;
   ctx.allow_template_cache = false;
 
-  Engine::Core::Entity entity(1);
+  Engine::Core::StandaloneEntity entity_scratch(1);
+  Engine::Core::Entity& entity = entity_scratch.entity();
   auto* unit = entity.add_component<Engine::Core::UnitComponent>(100, 100, 0.0F, 0.0F);
   EXPECT_NE(unit, nullptr);
   if (unit == nullptr) {
@@ -848,7 +858,8 @@ auto render_builder_min_world_y(const char* renderer_id,
   ctx.world_view = Render::WorldView::of_active_session();
   ctx.allow_template_cache = false;
 
-  Engine::Core::Entity entity(1);
+  Engine::Core::StandaloneEntity entity_scratch(1);
+  Engine::Core::Entity& entity = entity_scratch.entity();
   auto* unit = entity.add_component<Engine::Core::UnitComponent>(100, 100, 0.0F, 0.0F);
   EXPECT_NE(unit, nullptr);
   if (unit == nullptr) {
@@ -1003,7 +1014,8 @@ TEST(HumanoidPrepare, MainRowStillSubmitsOneRiggedCall) {
 
 TEST(HumanoidPrepare, TemplatePrewarmRenderWarmsSnapshotCache) {
   SnapshotPrewarmRenderer const renderer;
-  Engine::Core::Entity entity(1);
+  Engine::Core::StandaloneEntity entity_scratch(1);
+  Engine::Core::Entity& entity = entity_scratch.entity();
   auto* unit = entity.add_component<Engine::Core::UnitComponent>();
   unit->spawn_type = Game::Units::SpawnType::Knight;
   unit->owner_id = 1;
@@ -1195,7 +1207,8 @@ TEST(HumanoidPrepare, PersistentEntitySwordsmanWalkRequestAdvancesPhaseOverTime)
   if (warm_renderer) {
     Render::GL::DrawContext warm_ctx{};
     warm_ctx.allow_template_cache = false;
-    Engine::Core::Entity warm_entity(997);
+    Engine::Core::StandaloneEntity warm_entity_scratch(997);
+    Engine::Core::Entity& warm_entity = warm_entity_scratch.entity();
     auto* warm_unit =
         warm_entity.add_component<Engine::Core::UnitComponent>(100, 100, 1.0F, 12.0F);
     ASSERT_NE(warm_unit, nullptr);
@@ -1216,7 +1229,8 @@ TEST(HumanoidPrepare, PersistentEntitySwordsmanWalkRequestAdvancesPhaseOverTime)
   spec.creature_asset_id = Render::Creature::Pipeline::k_humanoid_sword_asset;
   FixedSpecRenderer owner(spec);
 
-  Engine::Core::Entity entity(1);
+  Engine::Core::StandaloneEntity entity_scratch(1);
+  Engine::Core::Entity& entity = entity_scratch.entity();
   auto* unit = entity.add_component<Engine::Core::UnitComponent>(100, 100, 1.0F, 12.0F);
   auto* movement = entity.add_component<Engine::Core::MovementComponent>();
   auto* transform = entity.add_component<Engine::Core::TransformComponent>();
@@ -1290,7 +1304,8 @@ TEST(HumanoidPrepare, StoppingAUnitBlendsTheStrideOutInsteadOfCutting) {
   {
     Render::GL::DrawContext warm_ctx{};
     warm_ctx.allow_template_cache = false;
-    Engine::Core::Entity warm_entity(998);
+    Engine::Core::StandaloneEntity warm_entity_scratch(998);
+    Engine::Core::Entity& warm_entity = warm_entity_scratch.entity();
     auto* warm_unit =
         warm_entity.add_component<Engine::Core::UnitComponent>(100, 100, 1.0F, 12.0F);
     ASSERT_NE(warm_unit, nullptr);
@@ -1311,7 +1326,8 @@ TEST(HumanoidPrepare, StoppingAUnitBlendsTheStrideOutInsteadOfCutting) {
   spec.creature_asset_id = Render::Creature::Pipeline::k_humanoid_sword_asset;
   FixedSpecRenderer owner(spec);
 
-  Engine::Core::Entity entity(1);
+  Engine::Core::StandaloneEntity entity_scratch(1);
+  Engine::Core::Entity& entity = entity_scratch.entity();
   auto* unit = entity.add_component<Engine::Core::UnitComponent>(100, 100, 1.0F, 12.0F);
   auto* movement = entity.add_component<Engine::Core::MovementComponent>();
   auto* transform = entity.add_component<Engine::Core::TransformComponent>();
@@ -1426,7 +1442,8 @@ TEST(HumanoidPrepare, MultiSoldierCombatFallbackOffsetsAttackPhasePerSoldier) {
   if (warm_renderer) {
     Render::GL::DrawContext warm_ctx{};
     warm_ctx.allow_template_cache = false;
-    Engine::Core::Entity warm_entity(996);
+    Engine::Core::StandaloneEntity warm_entity_scratch(996);
+    Engine::Core::Entity& warm_entity = warm_entity_scratch.entity();
     auto* warm_unit =
         warm_entity.add_component<Engine::Core::UnitComponent>(100, 100, 1.0F, 12.0F);
     ASSERT_NE(warm_unit, nullptr);
@@ -1447,7 +1464,8 @@ TEST(HumanoidPrepare, MultiSoldierCombatFallbackOffsetsAttackPhasePerSoldier) {
   spec.creature_asset_id = Render::Creature::Pipeline::k_humanoid_sword_asset;
   FixedSpecRenderer const owner(spec);
 
-  Engine::Core::Entity entity(2);
+  Engine::Core::StandaloneEntity entity_scratch(2);
+  Engine::Core::Entity& entity = entity_scratch.entity();
   auto* unit = entity.add_component<Engine::Core::UnitComponent>(100, 100, 1.0F, 12.0F);
   ASSERT_NE(unit, nullptr);
   unit->spawn_type = Game::Units::SpawnType::Knight;
@@ -1661,7 +1679,8 @@ TEST(HumanoidPrepare, ActiveBuilderWorkOverridesSharedTravellingRowsWithCircle) 
   ctx.world_view = Render::WorldView::of_active_session();
   ctx.allow_template_cache = false;
 
-  Engine::Core::Entity entity(4242);
+  Engine::Core::StandaloneEntity entity_scratch(4242);
+  Engine::Core::Entity& entity = entity_scratch.entity();
   auto* unit = entity.add_component<Engine::Core::UnitComponent>(100, 100, 1.0F, 2.0F);
   ASSERT_NE(unit, nullptr);
   unit->spawn_type = Game::Units::SpawnType::Builder;
@@ -5708,7 +5727,8 @@ TEST(HumanoidPrepare, ConstructionVariantTableMapsFourRolesToExpectedRequests) {
   spec.animation_manifest.variant_table = &k_variant_table;
   FixedSpecRenderer const owner(spec);
 
-  Engine::Core::Entity entity(17);
+  Engine::Core::StandaloneEntity entity_scratch(17);
+  Engine::Core::Entity& entity = entity_scratch.entity();
   auto* unit = entity.add_component<Engine::Core::UnitComponent>(100, 100, 0.0F, 0.0F);
   auto* builder = entity.add_component<Engine::Core::BuilderProductionComponent>();
   ASSERT_NE(unit, nullptr);
@@ -5836,7 +5856,8 @@ auto render_builder_rigged_meshes(
   ctx.allow_template_cache = false;
   ctx.animation_time = 0.5F;
 
-  Engine::Core::Entity entity(1);
+  Engine::Core::StandaloneEntity entity_scratch(1);
+  Engine::Core::Entity& entity = entity_scratch.entity();
   auto* unit = entity.add_component<Engine::Core::UnitComponent>(100, 100, 0.0F, 0.0F);
   EXPECT_NE(unit, nullptr);
   if (unit == nullptr) {
@@ -6187,7 +6208,8 @@ TEST(HumanoidPrepare, LegacySpearPlaybackHelperKeepsHoldBaseClip) {
   ctx.force_single_soldier = true;
   ctx.allow_template_cache = false;
 
-  Engine::Core::Entity entity(1);
+  Engine::Core::StandaloneEntity entity_scratch(1);
+  Engine::Core::Entity& entity = entity_scratch.entity();
   auto* unit = entity.add_component<Engine::Core::UnitComponent>(100, 100, 1.0F, 12.0F);
   ASSERT_NE(unit, nullptr);
   unit->spawn_type = Game::Units::SpawnType::Spearman;
@@ -6234,7 +6256,8 @@ TEST(HumanoidPrepare, LegacyArcherPlaybackHelperKeepsHoldBaseClip) {
   ctx.force_single_soldier = true;
   ctx.allow_template_cache = false;
 
-  Engine::Core::Entity entity(1);
+  Engine::Core::StandaloneEntity entity_scratch(1);
+  Engine::Core::Entity& entity = entity_scratch.entity();
   auto* unit = entity.add_component<Engine::Core::UnitComponent>(100, 100, 1.0F, 12.0F);
   ASSERT_NE(unit, nullptr);
   unit->spawn_type = Game::Units::SpawnType::Archer;
@@ -6275,7 +6298,8 @@ TEST(HumanoidPrepare, AttackRequestsUsePerSoldierVisualPhaseOffsets) {
   ctx.has_seed_override = true;
   ctx.seed_override = 0x1234ABCDU;
 
-  Engine::Core::Entity entity(42);
+  Engine::Core::StandaloneEntity entity_scratch(42);
+  Engine::Core::Entity& entity = entity_scratch.entity();
   auto* unit = entity.add_component<Engine::Core::UnitComponent>(100, 100, 1.0F, 12.0F);
   ASSERT_NE(unit, nullptr);
   unit->owner_id = 1;
@@ -6345,7 +6369,8 @@ TEST(HumanoidPrepare, MovingCombatRecoveryUsesAttackClipInsteadOfWalkClip) {
   ctx.force_single_soldier = true;
   ctx.animation_time = 10.0F;
 
-  Engine::Core::Entity entity(42);
+  Engine::Core::StandaloneEntity entity_scratch(42);
+  Engine::Core::Entity& entity = entity_scratch.entity();
   auto* unit = entity.add_component<Engine::Core::UnitComponent>(100, 100, 1.0F, 12.0F);
   auto* movement = entity.add_component<Engine::Core::MovementComponent>();
   auto* combat_state = entity.add_component<Engine::Core::CombatStateComponent>();
@@ -6386,7 +6411,8 @@ TEST(HumanoidPrepare, CombatAdvancePreservesWalkClipWhileClosingDistance) {
   ctx.force_single_soldier = true;
   ctx.animation_time = 10.0F;
 
-  Engine::Core::Entity entity(142);
+  Engine::Core::StandaloneEntity entity_scratch(142);
+  Engine::Core::Entity& entity = entity_scratch.entity();
   auto* unit = entity.add_component<Engine::Core::UnitComponent>(100, 100, 1.0F, 12.0F);
   auto* movement = entity.add_component<Engine::Core::MovementComponent>();
   auto* combat_state = entity.add_component<Engine::Core::CombatStateComponent>();
@@ -6429,7 +6455,8 @@ TEST(HumanoidPrepare, FireballSpecialAttackResolvesExplicitCastIntent) {
   ctx.world_view = Render::WorldView::of_active_session();
   ctx.animation_time = 8.0F;
 
-  Engine::Core::Entity entity(900);
+  Engine::Core::StandaloneEntity entity_scratch(900);
+  Engine::Core::Entity& entity = entity_scratch.entity();
   auto* unit = entity.add_component<Engine::Core::UnitComponent>(100, 100, 1.0F, 12.0F);
   auto* attack = entity.add_component<Engine::Core::AttackComponent>();
   auto* combat_state = entity.add_component<Engine::Core::CombatStateComponent>();
@@ -6476,7 +6503,8 @@ TEST(HumanoidPrepare, CursedArrowSpecialAttackStaysGenericRangedIntent) {
   ctx.world_view = Render::WorldView::of_active_session();
   ctx.animation_time = 8.0F;
 
-  Engine::Core::Entity entity(901);
+  Engine::Core::StandaloneEntity entity_scratch(901);
+  Engine::Core::Entity& entity = entity_scratch.entity();
   auto* unit = entity.add_component<Engine::Core::UnitComponent>(100, 100, 1.0F, 12.0F);
   auto* attack = entity.add_component<Engine::Core::AttackComponent>();
   auto* combat_state = entity.add_component<Engine::Core::CombatStateComponent>();
@@ -6514,7 +6542,8 @@ TEST(HumanoidPrepare, MeleeLockKeepsStaleForcedDisplacementOffTheRootLayer) {
   ctx.force_single_soldier = true;
   ctx.animation_time = 6.2F;
 
-  Engine::Core::Entity entity(143);
+  Engine::Core::StandaloneEntity entity_scratch(143);
+  Engine::Core::Entity& entity = entity_scratch.entity();
   auto* unit = entity.add_component<Engine::Core::UnitComponent>(100, 100, 2.0F, 12.0F);
   auto* attack = entity.add_component<Engine::Core::AttackComponent>();
   auto* motion = entity.add_component<Engine::Core::MotionPresentationComponent>();
@@ -6563,7 +6592,8 @@ TEST(HumanoidPrepare, CommandedMovementWithoutVelocityStillBuildsStride) {
   ctx.force_single_soldier = true;
   ctx.animation_time = 3.0F;
 
-  Engine::Core::Entity entity(43);
+  Engine::Core::StandaloneEntity entity_scratch(43);
+  Engine::Core::Entity& entity = entity_scratch.entity();
   auto* unit = entity.add_component<Engine::Core::UnitComponent>(100, 100, 2.3F, 12.0F);
   auto* movement = entity.add_component<Engine::Core::MovementComponent>();
   auto* transform = entity.add_component<Engine::Core::TransformComponent>();
@@ -6615,7 +6645,8 @@ TEST(HumanoidPrepare, ActiveTargetMovementStillTriggersWalkAnimation) {
   ctx.force_single_soldier = true;
   ctx.animation_time = 4.0F;
 
-  Engine::Core::Entity entity(44);
+  Engine::Core::StandaloneEntity entity_scratch(44);
+  Engine::Core::Entity& entity = entity_scratch.entity();
   auto* unit = entity.add_component<Engine::Core::UnitComponent>(100, 100, 2.2F, 12.0F);
   auto* movement = entity.add_component<Engine::Core::MovementComponent>();
   auto* transform = entity.add_component<Engine::Core::TransformComponent>();
@@ -6657,7 +6688,8 @@ TEST(HumanoidPrepare, WaypointMovementStillTriggersWalkAnimation) {
   ctx.force_single_soldier = true;
   ctx.animation_time = 4.5F;
 
-  Engine::Core::Entity entity(45);
+  Engine::Core::StandaloneEntity entity_scratch(45);
+  Engine::Core::Entity& entity = entity_scratch.entity();
   auto* unit = entity.add_component<Engine::Core::UnitComponent>(100, 100, 2.0F, 12.0F);
   auto* movement = entity.add_component<Engine::Core::MovementComponent>();
   auto* transform = entity.add_component<Engine::Core::TransformComponent>();
@@ -6698,7 +6730,8 @@ TEST(HumanoidPrepare, VelocityOnlyMovementStillTriggersWalkAnimation) {
   ctx.force_single_soldier = true;
   ctx.animation_time = 5.0F;
 
-  Engine::Core::Entity entity(46);
+  Engine::Core::StandaloneEntity entity_scratch(46);
+  Engine::Core::Entity& entity = entity_scratch.entity();
   auto* unit = entity.add_component<Engine::Core::UnitComponent>(100, 100, 2.0F, 12.0F);
   auto* movement = entity.add_component<Engine::Core::MovementComponent>();
   auto* transform = entity.add_component<Engine::Core::TransformComponent>();
@@ -6738,7 +6771,8 @@ TEST(HumanoidPrepare, ChaseIntentOutOfRangeTriggersWalkAnimation) {
   ctx.animation_time = 5.5F;
 
   Engine::Core::World world;
-  Engine::Core::Entity attacker(47);
+  Engine::Core::StandaloneEntity attacker_scratch(47);
+  Engine::Core::Entity& attacker = attacker_scratch.entity();
   auto* unit =
       attacker.add_component<Engine::Core::UnitComponent>(100, 100, 2.4F, 12.0F);
   auto* attack = attacker.add_component<Engine::Core::AttackComponent>();
@@ -6789,7 +6823,8 @@ TEST(HumanoidPrepare, ChaseIntentInRangePreservesAttackInsteadOfWalk) {
   ctx.animation_time = 6.0F;
 
   Engine::Core::World world;
-  Engine::Core::Entity attacker(48);
+  Engine::Core::StandaloneEntity attacker_scratch(48);
+  Engine::Core::Entity& attacker = attacker_scratch.entity();
   auto* unit =
       attacker.add_component<Engine::Core::UnitComponent>(100, 100, 2.4F, 12.0F);
   auto* attack = attacker.add_component<Engine::Core::AttackComponent>();
@@ -6840,7 +6875,8 @@ TEST(HumanoidPrepare, ActiveMoveSegmentInRangeStillTriggersWalkAnimation) {
   ctx.animation_time = 6.1F;
 
   Engine::Core::World world;
-  Engine::Core::Entity attacker(148);
+  Engine::Core::StandaloneEntity attacker_scratch(148);
+  Engine::Core::Entity& attacker = attacker_scratch.entity();
   auto* unit =
       attacker.add_component<Engine::Core::UnitComponent>(100, 100, 2.4F, 12.0F);
   auto* movement = attacker.add_component<Engine::Core::MovementComponent>();
@@ -6899,7 +6935,8 @@ TEST(HumanoidPrepare, MotionSnapshotDrivesWalkWithoutMovementComponentIntent) {
   ctx.force_single_soldier = true;
   ctx.animation_time = 6.2F;
 
-  Engine::Core::Entity entity(149);
+  Engine::Core::StandaloneEntity entity_scratch(149);
+  Engine::Core::Entity& entity = entity_scratch.entity();
   auto* unit = entity.add_component<Engine::Core::UnitComponent>(100, 100, 2.4F, 12.0F);
   auto* transform = entity.add_component<Engine::Core::TransformComponent>();
   auto* motion = entity.add_component<Engine::Core::MotionPresentationComponent>();
@@ -6940,7 +6977,8 @@ TEST(HumanoidPrepare, SampledMovementSnapshotDrivesPreparationAfterIntentClears)
   ctx.force_single_soldier = true;
   ctx.animation_time = 6.5F;
 
-  Engine::Core::Entity entity(49);
+  Engine::Core::StandaloneEntity entity_scratch(49);
+  Engine::Core::Entity& entity = entity_scratch.entity();
   auto* unit = entity.add_component<Engine::Core::UnitComponent>(100, 100, 2.3F, 12.0F);
   auto* movement = entity.add_component<Engine::Core::MovementComponent>();
   auto* transform = entity.add_component<Engine::Core::TransformComponent>();
@@ -6987,7 +7025,8 @@ TEST(HumanoidPrepare, IdleAnimationOverrideSuppressesLiveMovementIntent) {
   ctx.force_single_soldier = true;
   ctx.animation_time = 7.0F;
 
-  Engine::Core::Entity entity(50);
+  Engine::Core::StandaloneEntity entity_scratch(50);
+  Engine::Core::Entity& entity = entity_scratch.entity();
   auto* unit = entity.add_component<Engine::Core::UnitComponent>(100, 100, 2.0F, 12.0F);
   auto* movement = entity.add_component<Engine::Core::MovementComponent>();
   auto* transform = entity.add_component<Engine::Core::TransformComponent>();
@@ -7025,7 +7064,8 @@ TEST(HumanoidPrepare, MovingAnimationOverrideBuildsStrideWithoutLiveIntent) {
   ctx.force_single_soldier = true;
   ctx.animation_time = 7.5F;
 
-  Engine::Core::Entity entity(51);
+  Engine::Core::StandaloneEntity entity_scratch(51);
+  Engine::Core::Entity& entity = entity_scratch.entity();
   auto* unit = entity.add_component<Engine::Core::UnitComponent>(100, 100, 2.0F, 12.0F);
   auto* transform = entity.add_component<Engine::Core::TransformComponent>();
   ASSERT_NE(unit, nullptr);
@@ -7085,7 +7125,8 @@ TEST(HumanoidPrepare, CommanderFpvAttacksKeepAuthoredClipPhaseMapping) {
   ctx.world_view = Render::WorldView::of_active_session();
   ctx.force_single_soldier = true;
 
-  Engine::Core::Entity entity(42);
+  Engine::Core::StandaloneEntity entity_scratch(42);
+  Engine::Core::Entity& entity = entity_scratch.entity();
   auto* unit = entity.add_component<Engine::Core::UnitComponent>(100, 100, 1.0F, 12.0F);
   ASSERT_NE(unit, nullptr);
   unit->owner_id = 1;
@@ -7135,7 +7176,8 @@ TEST(HumanoidPrepare, StationaryCommanderGuardUsesHoldClipButMovingGuardKeepsWal
     ctx.force_single_soldier = true;
     ctx.allow_template_cache = false;
 
-    Engine::Core::Entity entity(1);
+    Engine::Core::StandaloneEntity entity_scratch(1);
+    Engine::Core::Entity& entity = entity_scratch.entity();
     auto* unit =
         entity.add_component<Engine::Core::UnitComponent>(100, 100, 1.0F, 12.0F);
     ASSERT_NE(unit, nullptr);
@@ -7410,7 +7452,8 @@ TEST(HumanoidPrepare, CommanderGuardReusesNationShieldFormationArchetype) {
         commander_ctx.force_single_soldier = true;
         commander_ctx.allow_template_cache = false;
 
-        Engine::Core::Entity commander_entity(1);
+        Engine::Core::StandaloneEntity commander_entity_scratch(1);
+        Engine::Core::Entity& commander_entity = commander_entity_scratch.entity();
         auto* unit = commander_entity.add_component<Engine::Core::UnitComponent>(
             100, 100, 1.0F, 12.0F);
         ASSERT_NE(unit, nullptr);
@@ -7495,7 +7538,8 @@ TEST(HumanoidPrepare, ShieldBearingGuardFallsBackToNationFrontFormationPose) {
         guard_ctx.force_single_soldier = true;
         guard_ctx.allow_template_cache = false;
 
-        Engine::Core::Entity entity(1);
+        Engine::Core::StandaloneEntity entity_scratch(1);
+        Engine::Core::Entity& entity = entity_scratch.entity();
         auto* unit =
             entity.add_component<Engine::Core::UnitComponent>(100, 100, 1.0F, 12.0F);
         ASSERT_NE(unit, nullptr);
@@ -7544,7 +7588,8 @@ TEST(HumanoidPrepare, FormationSamplingBlendsRomanInfantryShieldGuardInAndOut) {
   ctx.world_view = Render::WorldView::of_active_session();
   ctx.allow_template_cache = false;
 
-  Engine::Core::Entity entity(81);
+  Engine::Core::StandaloneEntity entity_scratch(81);
+  Engine::Core::Entity& entity = entity_scratch.entity();
   auto* unit = entity.add_component<Engine::Core::UnitComponent>(100, 100, 1.0F, 12.0F);
   ASSERT_NE(unit, nullptr);
   unit->spawn_type = Game::Units::SpawnType::Knight;
@@ -7592,7 +7637,8 @@ TEST(HumanoidPrepare, HoldSamplingBlendsKneelInAndOutFromVisualState) {
   ctx.world_view = Render::WorldView::of_active_session();
   ctx.allow_template_cache = false;
 
-  Engine::Core::Entity entity(82);
+  Engine::Core::StandaloneEntity entity_scratch(82);
+  Engine::Core::Entity& entity = entity_scratch.entity();
   auto* persistent =
       entity.add_component<Render::Creature::HumanoidAnimationStateComponent>();
   ASSERT_NE(persistent, nullptr);
@@ -7641,7 +7687,8 @@ TEST(HumanoidPrepare, HeldSpearAndBowAttacksKeepPersistentKneelingState) {
     ctx.world_view = Render::WorldView::of_active_session();
     ctx.allow_template_cache = false;
 
-    Engine::Core::Entity entity(820 + index);
+    Engine::Core::StandaloneEntity entity_scratch(820 + index);
+    Engine::Core::Entity& entity = entity_scratch.entity();
     auto* unit = entity.add_component<Engine::Core::UnitComponent>();
     ASSERT_NE(unit, nullptr);
     unit->spawn_type = spawn_types[index];
@@ -7684,7 +7731,8 @@ TEST(HumanoidPrepare, FormationGuardDoesNotBuildHiddenKneelWhileAttacking) {
   ctx.world_view = Render::WorldView::of_active_session();
   ctx.allow_template_cache = false;
 
-  Engine::Core::Entity entity(83);
+  Engine::Core::StandaloneEntity entity_scratch(83);
+  Engine::Core::Entity& entity = entity_scratch.entity();
   auto* unit = entity.add_component<Engine::Core::UnitComponent>(100, 100, 1.0F, 12.0F);
   ASSERT_NE(unit, nullptr);
   unit->spawn_type = Game::Units::SpawnType::Knight;
@@ -7728,7 +7776,8 @@ TEST(HumanoidPrepare, ExplicitSpearBraceFeedsGuardAnimationState) {
   ctx.world_view = Render::WorldView::of_active_session();
   ctx.allow_template_cache = false;
 
-  Engine::Core::Entity entity(830);
+  Engine::Core::StandaloneEntity entity_scratch(830);
+  Engine::Core::Entity& entity = entity_scratch.entity();
   ASSERT_NE(entity.add_component<Render::Creature::HumanoidAnimationStateComponent>(),
             nullptr);
   auto* brace = entity.add_component<Engine::Core::SpearBraceComponent>();
@@ -7760,7 +7809,8 @@ TEST(HumanoidPrepare, MeleeAttackSmoothlyExitsExistingHoldKneel) {
   ctx.world_view = Render::WorldView::of_active_session();
   ctx.allow_template_cache = false;
 
-  Engine::Core::Entity entity(84);
+  Engine::Core::StandaloneEntity entity_scratch(84);
+  Engine::Core::Entity& entity = entity_scratch.entity();
   ASSERT_NE(entity.add_component<Render::Creature::HumanoidAnimationStateComponent>(),
             nullptr);
   auto* hold_mode = entity.add_component<Engine::Core::HoldModeComponent>();
@@ -7830,8 +7880,9 @@ TEST(HumanoidPrepare, FormationUsesRomanTopInteriorAndDistinctCarthageFrontShiel
     ctx.force_single_soldier = false;
     ctx.allow_template_cache = false;
 
-    Engine::Core::Entity entity(
+    Engine::Core::StandaloneEntity entity_scratch(
         nation_id == Game::Systems::NationID::RomanRepublic ? 101 : 102);
+    Engine::Core::Entity& entity = entity_scratch.entity();
     auto* unit =
         entity.add_component<Engine::Core::UnitComponent>(100, 100, 1.0F, 12.0F);
     EXPECT_NE(unit, nullptr);
@@ -8021,7 +8072,8 @@ TEST(HumanoidPrepare, RomanFormationFrontShieldMatchesDefaultRomanGuardFallback)
     ctx.force_single_soldier = true;
     ctx.allow_template_cache = false;
 
-    Engine::Core::Entity entity(111 + (formation_active ? 1 : 0));
+    Engine::Core::StandaloneEntity entity_scratch(111 + (formation_active ? 1 : 0));
+    Engine::Core::Entity& entity = entity_scratch.entity();
     auto* unit =
         entity.add_component<Engine::Core::UnitComponent>(100, 100, 1.0F, 12.0F);
     EXPECT_NE(unit, nullptr);
@@ -8110,7 +8162,8 @@ TEST(HumanoidPrepare, CarthageFormationFrontShieldTiltsOverBody) {
     ctx.force_single_soldier = true;
     ctx.allow_template_cache = false;
 
-    Engine::Core::Entity entity(121 + (formation_active ? 1 : 0));
+    Engine::Core::StandaloneEntity entity_scratch(121 + (formation_active ? 1 : 0));
+    Engine::Core::Entity& entity = entity_scratch.entity();
     auto* unit =
         entity.add_component<Engine::Core::UnitComponent>(100, 100, 1.0F, 12.0F);
     EXPECT_NE(unit, nullptr);
@@ -8219,7 +8272,8 @@ TEST(HumanoidPrepare, RomanSwordsmanUsesRomanScutumRoleLayout) {
   ctx.force_single_soldier = true;
   ctx.allow_template_cache = false;
 
-  Engine::Core::Entity entity(1);
+  Engine::Core::StandaloneEntity entity_scratch(1);
+  Engine::Core::Entity& entity = entity_scratch.entity();
   auto* unit = entity.add_component<Engine::Core::UnitComponent>(100, 100, 1.0F, 12.0F);
   ASSERT_NE(unit, nullptr);
   unit->spawn_type = Game::Units::SpawnType::Knight;
@@ -8256,7 +8310,8 @@ TEST(HumanoidPrepare, BuiltInRomanSwordsmanRemainsVisibleAfterGuardTransition) {
   ctx.force_humanoid_lod = true;
   ctx.forced_humanoid_lod = Render::Creature::CreatureLOD::Full;
 
-  Engine::Core::Entity entity(91);
+  Engine::Core::StandaloneEntity entity_scratch(91);
+  Engine::Core::Entity& entity = entity_scratch.entity();
   auto* unit = entity.add_component<Engine::Core::UnitComponent>(100, 100, 1.0F, 12.0F);
   auto* persistent =
       entity.add_component<Render::Creature::HumanoidAnimationStateComponent>();
@@ -8294,7 +8349,8 @@ TEST(HumanoidPrepare, RomanArcherUsesRomanCloakRoleLayout) {
   ctx.force_single_soldier = true;
   ctx.allow_template_cache = false;
 
-  Engine::Core::Entity entity(1);
+  Engine::Core::StandaloneEntity entity_scratch(1);
+  Engine::Core::Entity& entity = entity_scratch.entity();
   auto* unit = entity.add_component<Engine::Core::UnitComponent>(100, 100, 1.0F, 12.0F);
   ASSERT_NE(unit, nullptr);
   unit->spawn_type = Game::Units::SpawnType::Archer;
@@ -8326,7 +8382,8 @@ TEST(HumanoidPrepare, RomanSpearmanUsesGreavesAndShoulderRoleLayout) {
   ctx.force_single_soldier = true;
   ctx.allow_template_cache = false;
 
-  Engine::Core::Entity entity(1);
+  Engine::Core::StandaloneEntity entity_scratch(1);
+  Engine::Core::Entity& entity = entity_scratch.entity();
   auto* unit = entity.add_component<Engine::Core::UnitComponent>(100, 100, 1.0F, 12.0F);
   ASSERT_NE(unit, nullptr);
   unit->spawn_type = Game::Units::SpawnType::Spearman;
@@ -8358,7 +8415,8 @@ TEST(HumanoidPrepare, CarthageSwordsmanUsesCarthageShieldRoleLayout) {
   ctx.force_single_soldier = true;
   ctx.allow_template_cache = false;
 
-  Engine::Core::Entity entity(1);
+  Engine::Core::StandaloneEntity entity_scratch(1);
+  Engine::Core::Entity& entity = entity_scratch.entity();
   auto* unit = entity.add_component<Engine::Core::UnitComponent>(100, 100, 1.0F, 12.0F);
   ASSERT_NE(unit, nullptr);
   unit->spawn_type = Game::Units::SpawnType::Knight;
@@ -8390,7 +8448,8 @@ TEST(HumanoidPrepare, RomanHealerUsesSenatorRobeRoleLayout) {
   ctx.force_single_soldier = true;
   ctx.allow_template_cache = false;
 
-  Engine::Core::Entity entity(1);
+  Engine::Core::StandaloneEntity entity_scratch(1);
+  Engine::Core::Entity& entity = entity_scratch.entity();
   auto* unit = entity.add_component<Engine::Core::UnitComponent>(100, 100, 1.0F, 12.0F);
   ASSERT_NE(unit, nullptr);
   unit->spawn_type = Game::Units::SpawnType::Healer;
@@ -8418,7 +8477,8 @@ TEST(HumanoidPrepare, CarthageHealerUsesDarkMageRobeRoleLayout) {
   ctx.force_single_soldier = true;
   ctx.allow_template_cache = false;
 
-  Engine::Core::Entity entity(1);
+  Engine::Core::StandaloneEntity entity_scratch(1);
+  Engine::Core::Entity& entity = entity_scratch.entity();
   auto* unit = entity.add_component<Engine::Core::UnitComponent>(100, 100, 1.0F, 12.0F);
   ASSERT_NE(unit, nullptr);
   unit->spawn_type = Game::Units::SpawnType::Healer;
@@ -8446,7 +8506,8 @@ TEST(HumanoidPrepare, RomanBuilderUsesSupportLoadoutRoleLayout) {
   ctx.force_single_soldier = true;
   ctx.allow_template_cache = false;
 
-  Engine::Core::Entity entity(1);
+  Engine::Core::StandaloneEntity entity_scratch(1);
+  Engine::Core::Entity& entity = entity_scratch.entity();
   auto* unit = entity.add_component<Engine::Core::UnitComponent>(100, 100, 1.0F, 12.0F);
   ASSERT_NE(unit, nullptr);
   unit->spawn_type = Game::Units::SpawnType::Builder;
@@ -8477,7 +8538,8 @@ TEST(HumanoidPrepare, CarthageBuilderUsesSupportLoadoutRoleLayout) {
   ctx.force_single_soldier = true;
   ctx.allow_template_cache = false;
 
-  Engine::Core::Entity entity(1);
+  Engine::Core::StandaloneEntity entity_scratch(1);
+  Engine::Core::Entity& entity = entity_scratch.entity();
   auto* unit = entity.add_component<Engine::Core::UnitComponent>(100, 100, 1.0F, 12.0F);
   ASSERT_NE(unit, nullptr);
   unit->spawn_type = Game::Units::SpawnType::Builder;
@@ -8508,7 +8570,8 @@ TEST(HumanoidPrepare, RomanCivilianUsesDataLoadoutRoleLayout) {
   ctx.force_single_soldier = true;
   ctx.allow_template_cache = false;
 
-  Engine::Core::Entity entity(1);
+  Engine::Core::StandaloneEntity entity_scratch(1);
+  Engine::Core::Entity& entity = entity_scratch.entity();
   auto* unit = entity.add_component<Engine::Core::UnitComponent>(100, 100, 1.0F, 12.0F);
   ASSERT_NE(unit, nullptr);
   unit->spawn_type = Game::Units::SpawnType::Civilian;
@@ -8537,7 +8600,8 @@ TEST(HumanoidPrepare, CarthageCivilianUsesDataLoadoutRoleLayout) {
   ctx.force_single_soldier = true;
   ctx.allow_template_cache = false;
 
-  Engine::Core::Entity entity(1);
+  Engine::Core::StandaloneEntity entity_scratch(1);
+  Engine::Core::Entity& entity = entity_scratch.entity();
   auto* unit = entity.add_component<Engine::Core::UnitComponent>(100, 100, 1.0F, 12.0F);
   ASSERT_NE(unit, nullptr);
   unit->spawn_type = Game::Units::SpawnType::Civilian;
@@ -8583,7 +8647,8 @@ TEST(HumanoidPrepare, RomanMountedSwordsmanUsesRomanScutumRoleLayout) {
   ctx.force_single_soldier = true;
   ctx.allow_template_cache = false;
 
-  Engine::Core::Entity entity(1);
+  Engine::Core::StandaloneEntity entity_scratch(1);
+  Engine::Core::Entity& entity = entity_scratch.entity();
   auto* unit = entity.add_component<Engine::Core::UnitComponent>(100, 100, 1.0F, 12.0F);
   ASSERT_NE(unit, nullptr);
   unit->spawn_type = Game::Units::SpawnType::MountedKnight;
@@ -8615,7 +8680,8 @@ TEST(HumanoidPrepare, CarthageMountedSwordsmanUsesCarthageShieldRoleLayout) {
   ctx.force_single_soldier = true;
   ctx.allow_template_cache = false;
 
-  Engine::Core::Entity entity(1);
+  Engine::Core::StandaloneEntity entity_scratch(1);
+  Engine::Core::Entity& entity = entity_scratch.entity();
   auto* unit = entity.add_component<Engine::Core::UnitComponent>(100, 100, 1.0F, 12.0F);
   ASSERT_NE(unit, nullptr);
   unit->spawn_type = Game::Units::SpawnType::MountedKnight;
@@ -8645,7 +8711,8 @@ TEST(HumanoidPrepare, BowReadyRootRequestUsesSurfaceGroundingContract) {
   ctx.force_single_soldier = true;
   ctx.allow_template_cache = false;
 
-  Engine::Core::Entity entity(1);
+  Engine::Core::StandaloneEntity entity_scratch(1);
+  Engine::Core::Entity& entity = entity_scratch.entity();
   auto* unit = entity.add_component<Engine::Core::UnitComponent>(100, 100, 0.0F, 0.0F);
   ASSERT_NE(unit, nullptr);
   unit->spawn_type = Game::Units::SpawnType::Archer;
@@ -8679,7 +8746,8 @@ TEST(HumanoidPrepare, BowReadySubmittedSurfaceGroundingTouchesTerrain) {
   ctx.force_single_soldier = true;
   ctx.allow_template_cache = false;
 
-  Engine::Core::Entity entity(1);
+  Engine::Core::StandaloneEntity entity_scratch(1);
+  Engine::Core::Entity& entity = entity_scratch.entity();
   auto* unit = entity.add_component<Engine::Core::UnitComponent>(100, 100, 0.0F, 0.0F);
   ASSERT_NE(unit, nullptr);
   unit->spawn_type = Game::Units::SpawnType::Archer;
@@ -8713,7 +8781,8 @@ TEST(HumanoidPrepare, CommanderJumpLiftSurvivesSurfaceGrounding) {
   ctx.force_single_soldier = true;
   ctx.allow_template_cache = false;
 
-  Engine::Core::Entity entity(1);
+  Engine::Core::StandaloneEntity entity_scratch(1);
+  Engine::Core::Entity& entity = entity_scratch.entity();
   auto* unit = entity.add_component<Engine::Core::UnitComponent>(100, 100, 0.0F, 0.0F);
   ASSERT_NE(unit, nullptr);
   unit->spawn_type = Game::Units::SpawnType::Knight;
@@ -8755,7 +8824,8 @@ TEST(HumanoidPrepare, RenderIndividualsOverrideLimitsPreparedSoldiers) {
   ctx.world_view = Render::WorldView::of_active_session();
   ctx.allow_template_cache = false;
 
-  Engine::Core::Entity entity(1);
+  Engine::Core::StandaloneEntity entity_scratch(1);
+  Engine::Core::Entity& entity = entity_scratch.entity();
   auto* unit = entity.add_component<Engine::Core::UnitComponent>(100, 100, 0.0F, 0.0F);
   ASSERT_NE(unit, nullptr);
   unit->spawn_type = Game::Units::SpawnType::Archer;
@@ -8788,7 +8858,8 @@ TEST(HumanoidPrepare, ActiveSoldierCasualtiesRenderDeathRequests) {
   ctx.world_view = Render::WorldView::of_active_session();
   ctx.allow_template_cache = false;
 
-  Engine::Core::Entity entity(1);
+  Engine::Core::StandaloneEntity entity_scratch(1);
+  Engine::Core::Entity& entity = entity_scratch.entity();
   auto* unit = entity.add_component<Engine::Core::UnitComponent>(60, 100, 0.0F, 0.0F);
   ASSERT_NE(unit, nullptr);
   unit->spawn_type = Game::Units::SpawnType::Archer;
@@ -8841,7 +8912,8 @@ TEST(HumanoidPrepare, LaunchedChargeCasualtyTravelsAndTumblesInSubmittedWorld) {
   ctx.allow_template_cache = false;
 
   auto casualty_origin = [&owner, &ctx](bool launched) {
-    Engine::Core::Entity entity(1);
+    Engine::Core::StandaloneEntity entity_scratch(1);
+    Engine::Core::Entity& entity = entity_scratch.entity();
     auto* unit = entity.add_component<Engine::Core::UnitComponent>(75, 100, 0.0F, 0.0F);
     unit->spawn_type = Game::Units::SpawnType::Spearman;
     unit->nation_id = Game::Systems::NationID::Carthage;
@@ -8903,7 +8975,8 @@ TEST(HumanoidPrepare, BowReadySubmittedVisibleGeometryTouchesTerrain) {
   ctx.force_single_soldier = true;
   ctx.allow_template_cache = false;
 
-  Engine::Core::Entity entity(1);
+  Engine::Core::StandaloneEntity entity_scratch(1);
+  Engine::Core::Entity& entity = entity_scratch.entity();
   auto* unit = entity.add_component<Engine::Core::UnitComponent>(100, 100, 0.0F, 0.0F);
   ASSERT_NE(unit, nullptr);
   unit->spawn_type = Game::Units::SpawnType::Archer;
@@ -8942,7 +9015,8 @@ TEST(HumanoidPrepare, BuiltInArchersUseSurfaceGroundingInIdlePose) {
     ctx.force_single_soldier = true;
     ctx.allow_template_cache = false;
 
-    Engine::Core::Entity entity(1);
+    Engine::Core::StandaloneEntity entity_scratch(1);
+    Engine::Core::Entity& entity = entity_scratch.entity();
     auto* unit =
         entity.add_component<Engine::Core::UnitComponent>(100, 100, 0.0F, 0.0F);
     ASSERT_NE(unit, nullptr);
@@ -8986,7 +9060,8 @@ TEST(HumanoidPrepare, BuiltInArchersVisibleIdleGeometryTouchesTerrain) {
     ctx.force_single_soldier = true;
     ctx.allow_template_cache = false;
 
-    Engine::Core::Entity entity(1);
+    Engine::Core::StandaloneEntity entity_scratch(1);
+    Engine::Core::Entity& entity = entity_scratch.entity();
     auto* unit =
         entity.add_component<Engine::Core::UnitComponent>(100, 100, 0.0F, 0.0F);
     ASSERT_NE(unit, nullptr);
@@ -9317,7 +9392,8 @@ TEST(HumanoidPrepare, BuildLocomotionStateSkipsPersistentWritesWhenUpdatesDisabl
 }
 
 TEST(HumanoidPrepare, TemplatePrewarmSamplingLeavesPersistentAnimationStateUntouched) {
-  Engine::Core::Entity entity(7);
+  Engine::Core::StandaloneEntity entity_scratch(7);
+  Engine::Core::Entity& entity = entity_scratch.entity();
   auto* humanoid_state =
       entity.add_component<Render::Creature::HumanoidAnimationStateComponent>();
   ASSERT_NE(humanoid_state, nullptr);
@@ -9526,7 +9602,8 @@ TEST(HumanoidPrepare, RunPoseCanEnterFlightPhaseWhileWalkKeepsSupport) {
 
 TEST(HumanoidPrepare, TemplatePrewarmRenderLeavesHumanoidAnimationStateUntouched) {
   SnapshotPrewarmRenderer const renderer;
-  Engine::Core::Entity entity(9);
+  Engine::Core::StandaloneEntity entity_scratch(9);
+  Engine::Core::Entity& entity = entity_scratch.entity();
   auto* unit = entity.add_component<Engine::Core::UnitComponent>();
   ASSERT_NE(unit, nullptr);
   unit->spawn_type = Game::Units::SpawnType::Knight;
@@ -9629,7 +9706,8 @@ TEST(HumanoidPrepare, IdleArchersKeepNeutralBowReadyPhase) {
   ctx.force_single_soldier = true;
   ctx.allow_template_cache = false;
 
-  Engine::Core::Entity entity(42);
+  Engine::Core::StandaloneEntity entity_scratch(42);
+  Engine::Core::Entity& entity = entity_scratch.entity();
   auto* unit = entity.add_component<Engine::Core::UnitComponent>(100, 100, 1.0F, 12.0F);
   ASSERT_NE(unit, nullptr);
   unit->spawn_type = Game::Units::SpawnType::Archer;
@@ -9656,7 +9734,8 @@ TEST(HumanoidPrepare, FormationAmbientIdlesStaggerAndRotatePerSoldier) {
   ctx.force_humanoid_lod = true;
   ctx.forced_humanoid_lod = Render::Creature::CreatureLOD::Full;
 
-  Engine::Core::Entity entity(4242);
+  Engine::Core::StandaloneEntity entity_scratch(4242);
+  Engine::Core::Entity& entity = entity_scratch.entity();
   auto* unit = entity.add_component<Engine::Core::UnitComponent>(100, 100, 1.0F, 2.0F);
   ASSERT_NE(unit, nullptr);
   unit->spawn_type = Game::Units::SpawnType::Knight;
@@ -9716,7 +9795,8 @@ TEST(HumanoidPrepare, PopulationLodKeepsRepresentativesAcrossFormationFootprint)
   ctx.allow_template_cache = false;
   ctx.max_rendered_individuals = 4;
 
-  Engine::Core::Entity entity(43);
+  Engine::Core::StandaloneEntity entity_scratch(43);
+  Engine::Core::Entity& entity = entity_scratch.entity();
   auto* unit = entity.add_component<Engine::Core::UnitComponent>(100, 100, 1.0F, 12.0F);
   ASSERT_NE(unit, nullptr);
   unit->spawn_type = Game::Units::SpawnType::Knight;
@@ -9740,7 +9820,8 @@ TEST(HumanoidPrepare, SwordAttackRecoveryStaysOnOutgoingClipBeforeIdle) {
   ctx.force_single_soldier = true;
   ctx.allow_template_cache = false;
 
-  Engine::Core::Entity entity(42);
+  Engine::Core::StandaloneEntity entity_scratch(42);
+  Engine::Core::Entity& entity = entity_scratch.entity();
   auto* unit = entity.add_component<Engine::Core::UnitComponent>(100, 100, 1.0F, 12.0F);
   ASSERT_NE(unit, nullptr);
   unit->spawn_type = Game::Units::SpawnType::Knight;
@@ -9874,7 +9955,8 @@ TEST(HumanoidPrepare,
   ctx.world_view = Render::WorldView::of_active_session();
   ctx.allow_template_cache = false;
 
-  Engine::Core::Entity entity(77);
+  Engine::Core::StandaloneEntity entity_scratch(77);
+  Engine::Core::Entity& entity = entity_scratch.entity();
   auto* unit = entity.add_component<Engine::Core::UnitComponent>(100, 100, 1.0F, 12.0F);
   ASSERT_NE(unit, nullptr);
   unit->spawn_type = Game::Units::SpawnType::Spearman;
@@ -9902,7 +9984,8 @@ TEST(HumanoidPrepare,
   ctx.force_single_soldier = true;
   ctx.animation_time = 11.0F;
 
-  Engine::Core::Entity entity(901);
+  Engine::Core::StandaloneEntity entity_scratch(901);
+  Engine::Core::Entity& entity = entity_scratch.entity();
   auto* unit = entity.add_component<Engine::Core::UnitComponent>(100, 100, 2.2F, 12.0F);
   auto* transform = entity.add_component<Engine::Core::TransformComponent>();
   auto* motion = entity.add_component<Engine::Core::MotionPresentationComponent>();
@@ -9942,7 +10025,8 @@ TEST(HumanoidPrepare, RaceWindowSnapshotRunFlagDrivesRunningEvenWithoutLiveStami
   ctx.force_single_soldier = true;
   ctx.animation_time = 12.0F;
 
-  Engine::Core::Entity entity(902);
+  Engine::Core::StandaloneEntity entity_scratch(902);
+  Engine::Core::Entity& entity = entity_scratch.entity();
   auto* unit = entity.add_component<Engine::Core::UnitComponent>(100, 100, 4.0F, 12.0F);
   auto* transform = entity.add_component<Engine::Core::TransformComponent>();
   auto* motion = entity.add_component<Engine::Core::MotionPresentationComponent>();
@@ -9979,7 +10063,8 @@ TEST(HumanoidPrepare, HitReactionDoesNotMoveOrSquashFormationRoot) {
   ctx.force_single_soldier = true;
   ctx.allow_template_cache = false;
 
-  Engine::Core::Entity entity(421);
+  Engine::Core::StandaloneEntity entity_scratch(421);
+  Engine::Core::Entity& entity = entity_scratch.entity();
   auto* unit = entity.add_component<Engine::Core::UnitComponent>(100, 100, 1.0F, 12.0F);
   auto* transform = entity.add_component<Engine::Core::TransformComponent>();
   ASSERT_NE(unit, nullptr);
@@ -10029,7 +10114,8 @@ TEST(HumanoidPrepare, FogHiddenMemberIsRejectedBeforeBodyPreparation) {
   ctx.force_single_soldier = true;
   ctx.allow_template_cache = false;
 
-  Engine::Core::Entity entity(422);
+  Engine::Core::StandaloneEntity entity_scratch(422);
+  Engine::Core::Entity& entity = entity_scratch.entity();
   auto* unit = entity.add_component<Engine::Core::UnitComponent>(100, 100, 1.0F, 12.0F);
   auto* transform = entity.add_component<Engine::Core::TransformComponent>();
   ASSERT_NE(unit, nullptr);
@@ -10068,7 +10154,8 @@ TEST(HumanoidPrepare, SoldierUsesCentralFrustumGuardBandAtScreenEdge) {
   ctx.force_single_soldier = true;
   ctx.allow_template_cache = false;
 
-  Engine::Core::Entity entity(423);
+  Engine::Core::StandaloneEntity entity_scratch(423);
+  Engine::Core::Entity& entity = entity_scratch.entity();
   auto* unit = entity.add_component<Engine::Core::UnitComponent>(100, 100, 1.0F, 12.0F);
   auto* transform = entity.add_component<Engine::Core::TransformComponent>();
   ASSERT_NE(unit, nullptr);

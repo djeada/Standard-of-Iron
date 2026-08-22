@@ -8,7 +8,7 @@
   "game/map": 2,
   "game/mission": 5,
   "game/render_bridge": 4,
-  "game/systems": 95,
+  "game/systems": 8,
   "game/units": 1,
   "game/wildlife": 2,
   "render": 3,

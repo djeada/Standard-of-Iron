@@ -289,7 +289,8 @@ TEST_F(HumanoidPoseControllerTest, AirborneJumpAmbientIdleLiftsFeetAndPelvis) {
 }
 
 TEST(HumanoidAnimationInputs, IdleDurationTracksUninterruptedIdleTime) {
-  Engine::Core::Entity entity(1);
+  Engine::Core::StandaloneEntity scratch(1);
+  Engine::Core::Entity& entity = scratch.entity();
   auto* movement = entity.add_component<Engine::Core::MovementComponent>();
   auto* motion = entity.add_component<Engine::Core::MotionPresentationComponent>();
   ASSERT_NE(movement, nullptr);
@@ -323,7 +324,8 @@ TEST(HumanoidAnimationInputs, IdleDurationTracksUninterruptedIdleTime) {
 }
 
 TEST(HumanoidAnimationInputs, FpvCommanderGuardSetsGuardingWithoutHoldMode) {
-  Engine::Core::Entity entity(1);
+  Engine::Core::StandaloneEntity scratch(1);
+  Engine::Core::Entity& entity = scratch.entity();
   auto* commander = entity.add_component<Engine::Core::CommanderComponent>();
   auto* guard = entity.add_component<Engine::Core::CommanderGuardComponent>();
   ASSERT_NE(commander, nullptr);
@@ -350,7 +352,8 @@ TEST(HumanoidAnimationInputs, FpvCommanderGuardSetsGuardingWithoutHoldMode) {
 }
 
 TEST(HumanoidAnimationInputs, FpvCommanderVelocityTriggersMovementAnimation) {
-  Engine::Core::Entity entity(1);
+  Engine::Core::StandaloneEntity scratch(1);
+  Engine::Core::Entity& entity = scratch.entity();
   auto* commander = entity.add_component<Engine::Core::CommanderComponent>();
   auto* movement = entity.add_component<Engine::Core::MovementComponent>();
   auto* motion = entity.add_component<Engine::Core::MotionPresentationComponent>();

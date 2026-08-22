@@ -2,122 +2,82 @@
 
 #include <cstddef>
 #include <cstdint>
-#include <functional>
-#include <memory>
-#include <type_traits>
-#include <typeindex>
 #include <utility>
-#include <vector>
 
-#include "component_pool.h"
 #include "component_registry.h"
+#include "entity_id.h"
+#include "registry.h"
 
 namespace Engine::Core {
 
-using EntityID = std::uint64_t;
-constexpr EntityID NULL_ENTITY = 0;
-
-namespace Handle {
-
-constexpr unsigned k_index_bits = 32U;
-constexpr EntityID k_index_mask = (EntityID{1} << k_index_bits) - 1U;
-
-constexpr auto make(std::uint32_t index, std::uint32_t generation) -> EntityID {
-  return (static_cast<EntityID>(generation) << k_index_bits) |
-         static_cast<EntityID>(index);
-}
-
-constexpr auto index_of(EntityID id) -> std::uint32_t {
-  return static_cast<std::uint32_t>(id & k_index_mask);
-}
-
-constexpr auto generation_of(EntityID id) -> std::uint32_t {
-  return static_cast<std::uint32_t>(id >> k_index_bits);
-}
-
-} // namespace Handle
-
-class Component {
-public:
-  Component() = default;
-  virtual ~Component() = default;
-  Component(const Component&) = default;
-  auto operator=(const Component&) -> Component& = default;
-  Component(Component&&) = default;
-  auto operator=(Component&&) -> Component& = default;
-};
-
-using ComponentChangeCallback =
-    std::function<void(EntityID, ComponentTypeId, std::type_index, bool)>;
+using ComponentChangeCallback = Registry::ComponentChangeCallback;
 
 class Entity {
 public:
-  Entity(EntityID id);
+  Entity() = default;
 
-  auto get_id() const -> EntityID;
+  Entity(EntityID id, Registry* registry)
+      : m_id(id)
+      , m_registry(registry) {}
 
-  void set_component_change_callback(ComponentChangeCallback callback);
+  [[nodiscard]] auto get_id() const -> EntityID { return m_id; }
+
+  [[nodiscard]] auto registry() const -> Registry* { return m_registry; }
 
   template <typename T, typename... Args>
   auto add_component(Args&&... args) -> T* {
-    static_assert(std::is_base_of_v<Component, T>, "T must inherit from Component");
-
-    T* ptr =
-        Detail::ComponentPool<T>::instance().construct(std::forward<Args>(args)...);
-    const ComponentTypeId slot = component_type_id<T>();
-    if (m_components_by_type.size() <= slot) {
-      m_components_by_type.resize(slot + 1);
-    }
-    m_components_by_type[slot] =
-        ComponentPtr(ptr, Detail::PooledComponentDeleter{&Detail::release_to_pool<T>});
-
-    if (m_component_change_callback) {
-      m_component_change_callback(m_id, slot, std::type_index(typeid(T)), true);
-    }
-
-    return ptr;
+    return m_registry == nullptr
+               ? nullptr
+               : m_registry->emplace<T>(m_id, std::forward<Args>(args)...);
   }
 
   template <typename T>
-  auto get_component() -> T* {
-    const ComponentTypeId slot = component_type_id<T>();
-    if (slot < m_components_by_type.size()) {
-      return static_cast<T*>(m_components_by_type[slot].get());
-    }
-    return nullptr;
+  [[nodiscard]] auto get_component() -> T* {
+    return m_registry == nullptr ? nullptr : m_registry->try_get<T>(m_id);
   }
 
   template <typename T>
-  auto get_component() const -> const T* {
-    const ComponentTypeId slot = component_type_id<T>();
-    if (slot < m_components_by_type.size()) {
-      return static_cast<const T*>(m_components_by_type[slot].get());
-    }
-    return nullptr;
+  [[nodiscard]] auto get_component() const -> const T* {
+    return m_registry == nullptr ? nullptr : m_registry->try_get<T>(m_id);
   }
 
   template <typename T>
   void remove_component() {
-    const ComponentTypeId slot = component_type_id<T>();
-    if (slot < m_components_by_type.size() && m_components_by_type[slot] != nullptr) {
-      m_components_by_type[slot].reset();
-
-      if (m_component_change_callback) {
-        m_component_change_callback(m_id, slot, std::type_index(typeid(T)), false);
-      }
+    if (m_registry != nullptr) {
+      m_registry->remove<T>(m_id);
     }
   }
 
   template <typename T>
-  auto has_component() const -> bool {
-    const ComponentTypeId slot = component_type_id<T>();
-    return slot < m_components_by_type.size() && m_components_by_type[slot] != nullptr;
+  [[nodiscard]] auto has_component() const -> bool {
+    return m_registry != nullptr && m_registry->has<T>(m_id);
   }
 
 private:
-  EntityID m_id;
-  std::vector<ComponentPtr> m_components_by_type;
-  ComponentChangeCallback m_component_change_callback;
+  EntityID m_id{NULL_ENTITY};
+  Registry* m_registry{nullptr};
+};
+
+class StandaloneEntity {
+public:
+  explicit StandaloneEntity(EntityID entity_id = 1)
+      : m_entity(m_registry.create_entity_with_id(entity_id), &m_registry) {}
+
+  StandaloneEntity(const StandaloneEntity&) = delete;
+  StandaloneEntity(StandaloneEntity&&) = delete;
+  auto operator=(const StandaloneEntity&) -> StandaloneEntity& = delete;
+  auto operator=(StandaloneEntity&&) -> StandaloneEntity& = delete;
+  ~StandaloneEntity() = default;
+
+  [[nodiscard]] auto entity() noexcept -> Entity& { return m_entity; }
+  [[nodiscard]] auto entity() const noexcept -> const Entity& { return m_entity; }
+
+  auto operator*() noexcept -> Entity& { return m_entity; }
+  auto operator->() noexcept -> Entity* { return &m_entity; }
+
+private:
+  Registry m_registry;
+  Entity m_entity;
 };
 
 template <typename T, typename... Args>

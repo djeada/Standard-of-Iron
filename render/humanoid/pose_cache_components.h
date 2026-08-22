@@ -29,7 +29,7 @@ struct SoldierSelectionCache {
   Render::Creature::Pipeline::HumanoidAnimationSelection selection{};
 };
 
-struct HumanoidLayoutCacheComponent : public Engine::Core::Component {
+struct HumanoidLayoutCacheComponent {
   std::vector<SoldierLayout> soldiers;
   std::vector<Render::Creature::HumanoidAnimationStateComponent> animation_states;
   std::vector<Render::Creature::SoldierCombatLaneState> combat_lanes;

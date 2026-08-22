@@ -17,6 +17,8 @@ public:
 
   void update(Engine::Core::World* world, float delta_time) override;
 
+  [[nodiscard]] auto access() const -> Engine::Core::SystemAccess override;
+
 private:
   float m_think_cooldown{0.0F};
 };

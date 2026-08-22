@@ -1,5 +1,6 @@
 #pragma once
 
+#include <algorithm>
 #include <array>
 #include <atomic>
 #include <cstddef>
@@ -20,6 +21,7 @@
 
 #include "deferred_mutations.h"
 #include "entity.h"
+#include "registry.h"
 #include "system.h"
 #include "system_profiler.h"
 #include "world_spatial_index.h"
@@ -146,6 +148,31 @@ public:
     return entities_with(component_type_id<T>());
   }
 
+  template <typename T, typename... Args>
+  auto emplace(EntityID entity_id, Args&&... args) -> T* {
+    return m_registry.emplace<T>(entity_id, std::forward<Args>(args)...);
+  }
+
+  template <typename T>
+  [[nodiscard]] auto try_get(EntityID entity_id) -> T* {
+    return m_registry.try_get<T>(entity_id);
+  }
+
+  template <typename T>
+  [[nodiscard]] auto try_get(EntityID entity_id) const -> const T* {
+    return m_registry.try_get<T>(entity_id);
+  }
+
+  template <typename T>
+  [[nodiscard]] auto has(EntityID entity_id) const -> bool {
+    return m_registry.has<T>(entity_id);
+  }
+
+  template <typename T>
+  auto remove(EntityID entity_id) -> bool {
+    return m_registry.remove<T>(entity_id);
+  }
+
   template <typename... Components>
   [[nodiscard]] auto view() -> View<Components...> {
     return View<Components...>(*this);
@@ -185,7 +212,10 @@ public:
   auto get_next_entity_id() const -> EntityID;
   void set_next_entity_id(EntityID next_id);
 
-  auto get_entity_mutex() -> std::recursive_mutex& { return m_entity_mutex; }
+  auto get_entity_mutex() -> std::recursive_mutex& { return m_registry.mutex(); }
+
+  [[nodiscard]] auto registry() noexcept -> Registry& { return m_registry; }
+  [[nodiscard]] auto registry() const noexcept -> const Registry& { return m_registry; }
 
   using EntityDestroyedHook = void (*)(EntityID);
   static void set_entity_destroyed_hook(EntityDestroyedHook hook);
@@ -200,30 +230,23 @@ public:
 private:
   World(bool presentation_enabled, bool render_snapshot);
 
-  struct ComponentSet {
-    static constexpr std::uint32_t k_absent = 0xFFFFFFFFU;
+  class HandleTable {
+  public:
+    static constexpr std::size_t k_page_size = 512;
 
-    std::vector<EntityID> dense;
-    std::vector<std::uint32_t> sparse;
+    auto bind(EntityID entity_id, Registry* registry) -> Entity*;
+    [[nodiscard]] auto find(std::uint32_t index) const -> Entity*;
 
-    void insert(EntityID id);
-    void erase(EntityID id);
-    [[nodiscard]] auto contains(EntityID id) const -> bool;
-    void clear();
-  };
+  private:
+    using Page = std::array<Entity, k_page_size>;
 
-  struct EntitySlot {
-    std::unique_ptr<Entity> entity;
-
-    std::uint32_t generation = 0;
+    std::vector<std::unique_ptr<Page>> m_pages;
   };
 
   void on_component_changed(EntityID entity_id,
                             ComponentTypeId type_id,
                             std::type_index component_type,
                             bool added);
-
-  void setup_entity_callback(Entity* entity);
 
   auto
   collect_entities_with_type(ComponentTypeId type_id,
@@ -238,21 +261,16 @@ private:
   }
 
   [[nodiscard]] auto resolve(EntityID entity_id) const -> Entity*;
-  void detach_from_all_component_sets(EntityID entity_id);
+  [[nodiscard]] auto collect_units_matching(int owner_id,
+                                            bool owned) const -> std::vector<Entity*>;
   void publish_render_snapshot();
 
-  std::vector<EntitySlot> m_slots;
-  std::vector<std::uint32_t> m_free_slots;
-  std::size_t m_live_count = 0;
+  Registry m_registry;
+  mutable HandleTable m_handles;
 
   std::vector<std::unique_ptr<System>> m_systems;
   std::vector<SystemPhase> m_system_phases;
   DeferredMutations m_deferred;
-  mutable std::recursive_mutex m_entity_mutex;
-
-  mutable std::atomic<std::uint64_t> m_entity_lock_owner{0};
-
-  std::vector<ComponentSet> m_component_sets;
 
   template <typename Callback>
   struct ObserverEntry {
@@ -282,51 +300,29 @@ private:
   std::uint64_t m_render_publish_revision{0};
 };
 
-[[nodiscard]] inline auto this_thread_lock_token() noexcept -> std::uint64_t {
-  static std::atomic<std::uint64_t> next_token{1};
-  static const thread_local std::uint64_t token =
-      next_token.fetch_add(1, std::memory_order_relaxed);
-  return token;
-}
-
 class World::EntityLock {
 public:
   explicit EntityLock(const World& world)
-      : m_world(&world) {
-    const std::uint64_t token = this_thread_lock_token();
-    if (world.m_entity_lock_owner.load(std::memory_order_relaxed) == token) {
-      return;
-    }
-    world.m_entity_mutex.lock();
-    world.m_entity_lock_owner.store(token, std::memory_order_relaxed);
-    m_acquired = true;
-  }
+      : m_lock(world.m_registry) {}
 
   EntityLock(const EntityLock&) = delete;
   EntityLock(EntityLock&&) = delete;
   auto operator=(const EntityLock&) -> EntityLock& = delete;
   auto operator=(EntityLock&&) -> EntityLock& = delete;
-
-  ~EntityLock() {
-    if (!m_acquired) {
-      return;
-    }
-
-    m_world->m_entity_lock_owner.store(0, std::memory_order_relaxed);
-    m_world->m_entity_mutex.unlock();
-  }
+  ~EntityLock() = default;
 
 private:
-  const World* m_world;
-  bool m_acquired{false};
+  Registry::Lock m_lock;
 };
 
 template <typename Fn>
 void World::for_each_entity(Fn&& fn) const {
   const EntityLock lock(*this);
-  for (const auto& slot : m_slots) {
-    if (slot.entity != nullptr) {
-      fn(*slot.entity);
+  const std::size_t count = m_registry.slot_count();
+  for (std::size_t index = 1; index < count; ++index) {
+    if (Entity* entity =
+            resolve(m_registry.entity_at_index(static_cast<std::uint32_t>(index)))) {
+      fn(*entity);
     }
   }
 }
@@ -336,7 +332,7 @@ class World::BasicView {
 public:
   static_assert(sizeof...(Components) > 0, "a view needs at least one component");
 
-  using ComponentPointers = std::tuple<Components*...>;
+  using Storages = std::tuple<ComponentStorage<Components>*...>;
   using Head = std::conditional_t<WithEntity, Entity&, EntityID>;
   using Reference = std::tuple<Head, Components&...>;
 
@@ -348,9 +344,8 @@ public:
     using pointer = void;
     using reference = Reference;
 
-    Iterator(World* world, std::span<const EntityID> ids, std::size_t index)
-        : m_world(world)
-        , m_ids(ids)
+    Iterator(const BasicView* owner, std::size_t index)
+        : m_owner(owner)
         , m_index(index) {
       seek();
     }
@@ -361,7 +356,7 @@ public:
             if constexpr (WithEntity) {
               return Reference(*m_entity, *components...);
             } else {
-              return Reference(m_ids[m_index], *components...);
+              return Reference(m_id, *components...);
             }
           },
           m_components);
@@ -383,60 +378,81 @@ public:
 
   private:
     void seek() {
-      while (m_index < m_ids.size()) {
-        if (Entity* entity = m_world->resolve(m_ids[m_index])) {
-          m_components = ComponentPointers(entity->get_component<Components>()...);
-          const bool complete = std::apply(
-              [](auto*... components) { return ((components != nullptr) && ...); },
-              m_components);
-          if (complete) {
-            m_entity = entity;
-            return;
+      while (m_index < m_owner->live_count()) {
+        m_id = m_owner->m_source->entities()[m_index];
+        m_components = std::apply(
+            [id = m_id](auto*... storages) {
+              return std::tuple<Components*...>(storages->try_get(id)...);
+            },
+            m_owner->m_storages);
+        const bool complete = std::apply(
+            [](auto*... components) { return ((components != nullptr) && ...); },
+            m_components);
+        if (complete) {
+          if constexpr (WithEntity) {
+            m_entity = m_owner->m_world->resolve(m_id);
+            if (m_entity == nullptr) {
+              ++m_index;
+              continue;
+            }
           }
+          return;
         }
         ++m_index;
       }
+      m_index = m_owner->m_limit;
       m_entity = nullptr;
     }
 
-    World* m_world{nullptr};
-    std::span<const EntityID> m_ids;
+    const BasicView* m_owner{nullptr};
     std::size_t m_index{0};
+    EntityID m_id{NULL_ENTITY};
     Entity* m_entity{nullptr};
-    ComponentPointers m_components{};
+    std::tuple<Components*...> m_components{};
   };
 
   explicit BasicView(World& world)
       : m_world(&world)
       , m_lock(world) {
-    const std::array<ComponentTypeId, sizeof...(Components)> type_ids{
-        component_type_id<Components>()...};
-    std::size_t smallest = std::numeric_limits<std::size_t>::max();
-    for (const ComponentTypeId type_id : type_ids) {
-      if (type_id >= world.m_component_sets.size()) {
-        m_ids = {};
-        world.note_view_opened(0);
-        return;
-      }
-      const std::vector<EntityID>& dense = world.m_component_sets[type_id].dense;
-      if (dense.size() < smallest) {
-        smallest = dense.size();
-        m_ids = dense;
-      }
+    m_storages = Storages(world.m_registry.find_storage<Components>()...);
+    const bool complete = std::apply(
+        [](auto*... storages) { return ((storages != nullptr) && ...); }, m_storages);
+    if (!complete) {
+      world.note_view_opened(0);
+      return;
     }
-    world.note_view_opened(m_ids.size());
+
+    std::apply(
+        [this](auto*... storages) {
+          (
+              [&] {
+                if (m_source == nullptr || storages->size() < m_limit) {
+                  m_source = storages;
+                  m_limit = storages->size();
+                }
+              }(),
+              ...);
+        },
+        m_storages);
+    world.note_view_opened(m_limit);
   }
 
-  [[nodiscard]] auto begin() const -> Iterator { return {m_world, m_ids, 0}; }
-  [[nodiscard]] auto end() const -> Iterator { return {m_world, m_ids, m_ids.size()}; }
+  [[nodiscard]] auto begin() const -> Iterator { return {this, 0}; }
+  [[nodiscard]] auto end() const -> Iterator { return {this, m_limit}; }
 
-  [[nodiscard]] auto candidate_count() const -> std::size_t { return m_ids.size(); }
+  [[nodiscard]] auto candidate_count() const -> std::size_t { return m_limit; }
 
   [[nodiscard]] auto empty() const -> bool { return begin() == end(); }
 
 private:
+  [[nodiscard]] auto live_count() const -> std::size_t {
+    return m_source == nullptr ? std::size_t{0} : std::min(m_limit, m_source->size());
+  }
+
   World* m_world{nullptr};
-  std::span<const EntityID> m_ids;
+  Storages m_storages{};
+  const IComponentStorage* m_source{nullptr};
+  std::size_t m_limit{0};
   EntityLock m_lock;
 };
 

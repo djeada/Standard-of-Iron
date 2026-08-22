@@ -42,13 +42,13 @@ void disband_troop(Engine::Core::Entity& entity, Engine::Core::UnitComponent& un
 } // namespace
 
 auto has_living_commander(Engine::Core::World& world, int owner_id) -> bool {
-  for (auto* entity : world.collect_entities_with<Engine::Core::CommanderComponent>()) {
-    if (entity == nullptr ||
-        entity->has_component<Engine::Core::PendingRemovalComponent>()) {
+  for (auto [entity_id, commander, unit] :
+       world.view<Engine::Core::CommanderComponent, Engine::Core::UnitComponent>()) {
+    (void)commander;
+    if (world.has<Engine::Core::PendingRemovalComponent>(entity_id)) {
       continue;
     }
-    auto* unit = entity->get_component<Engine::Core::UnitComponent>();
-    if (unit != nullptr && unit->owner_id == owner_id && unit->health > 0) {
+    if (unit.owner_id == owner_id && unit.health > 0) {
       return true;
     }
   }
@@ -60,22 +60,21 @@ auto collapse_owner(Engine::Core::World& world, int owner_id) -> bool {
     return false;
   }
 
-  std::vector<Engine::Core::Entity*> owned;
-  for (auto* entity : world.collect_entities_with<Engine::Core::UnitComponent>()) {
-    if (entity == nullptr ||
-        entity->has_component<Engine::Core::PendingRemovalComponent>()) {
+  std::vector<Engine::Core::EntityID> owned;
+  for (auto [entity_id, unit] : world.view<Engine::Core::UnitComponent>()) {
+    if (world.has<Engine::Core::PendingRemovalComponent>(entity_id)) {
       continue;
     }
-    auto* unit = entity->get_component<Engine::Core::UnitComponent>();
-    if (unit != nullptr && unit->owner_id == owner_id) {
-      owned.push_back(entity);
+    if (unit.owner_id == owner_id) {
+      owned.push_back(entity_id);
     }
   }
 
   bool collapsed_anything = false;
-  for (auto* entity : owned) {
-    auto* unit = entity->get_component<Engine::Core::UnitComponent>();
-    if (unit == nullptr) {
+  for (const Engine::Core::EntityID entity_id : owned) {
+    auto* entity = world.get_entity(entity_id);
+    auto* unit = world.try_get<Engine::Core::UnitComponent>(entity_id);
+    if (entity == nullptr || unit == nullptr) {
       continue;
     }
 

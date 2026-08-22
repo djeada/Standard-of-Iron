@@ -268,8 +268,11 @@ auto raycast_enemy_bodies(Engine::Core::World& world,
   }
 
   std::optional<AimHit> best;
-  for (auto* candidate : world.collect_entities_with<Engine::Core::UnitComponent>()) {
-    if (candidate == nullptr || candidate == &commander ||
+  for (auto [candidate_ref, candidate_unit] :
+       world.entity_view<Engine::Core::UnitComponent>()) {
+    (void)candidate_unit;
+    Engine::Core::Entity* candidate = &candidate_ref;
+    if (candidate == &commander ||
         !Game::Systems::Combat::is_valid_enemy_unit(commander_unit, candidate, false)) {
       continue;
     }

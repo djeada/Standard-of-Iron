@@ -37,7 +37,7 @@ auto contains(const std::string& haystack, const std::string& needle) -> bool {
 
 TEST(DocumentationAccuracy, StatedEntityIdWidthMatchesTheCode) {
   const auto root = find_repo_root();
-  const auto entity = read_text(root / "game" / "core" / "entity.h");
+  const auto entity = read_text(root / "game" / "core" / "entity_id.h");
   const auto readme = read_text(root / "README.md");
   ASSERT_FALSE(entity.empty());
   ASSERT_FALSE(readme.empty());
@@ -50,16 +50,21 @@ TEST(DocumentationAccuracy, StatedEntityIdWidthMatchesTheCode) {
       << "the README describes a 32-bit entity id that no longer exists";
 }
 
-TEST(DocumentationAccuracy, DoesNotClaimComponentsAvoidPolymorphism) {
+TEST(DocumentationAccuracy, ComponentsCarryNoPolymorphicBase) {
   const auto root = find_repo_root();
   const auto entity = read_text(root / "game" / "core" / "entity.h");
-  const auto readme = read_text(root / "README.md");
+  const auto components = read_text(root / "game" / "core" / "component.h");
+  const auto architecture = read_text(root / "docs" / "ARCHITECTURE.md");
   ASSERT_FALSE(entity.empty());
+  ASSERT_FALSE(components.empty());
+  ASSERT_FALSE(architecture.empty());
 
-  const bool polymorphic = contains(entity, "virtual ~Component()");
-  ASSERT_TRUE(polymorphic);
-  EXPECT_FALSE(contains(readme, "Polymorphism is avoided"))
-      << "components still share a polymorphic base; the README says otherwise";
+  EXPECT_FALSE(contains(entity, "virtual ~Component()"))
+      << "the polymorphic component base is back; update the docs with it";
+  EXPECT_FALSE(contains(components, ": public Component"))
+      << "a component derives from a base again; update the docs with it";
+  EXPECT_FALSE(contains(architecture, "polymorphic base with a virtual destructor"))
+      << "the architecture doc still describes the removed component base";
 }
 
 TEST(DocumentationAccuracy, DoesNotDenyTheSoftwareRenderingBackend) {

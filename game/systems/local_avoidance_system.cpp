@@ -10,6 +10,7 @@
 
 #include "../core/component.h"
 #include "../core/entity.h"
+#include "../core/system_context.h"
 #include "../core/world.h"
 #include "../map/terrain_service.h"
 #include "building_collision_registry.h"
@@ -31,19 +32,21 @@ auto to_cell(float x, float z, float inv_cell_size) -> CellKey {
           static_cast<int>(std::floor(z * inv_cell_size))};
 }
 
-auto compute_avoidance_priority(const Engine::Core::Entity& entity) -> std::uint8_t {
-  if (entity.has_component<Engine::Core::BuildingComponent>()) {
+auto compute_avoidance_priority(Engine::Core::SystemContext& context,
+                                Engine::Core::EntityID entity_id) -> std::uint8_t {
+  if (context.has<Engine::Core::BuildingComponent>(entity_id)) {
     return 4;
   }
-  const auto* atk = entity.get_component<Engine::Core::AttackComponent>();
+  const auto* atk = context.try_get<Engine::Core::AttackComponent>(entity_id);
   if (atk != nullptr && atk->in_melee_lock) {
     return 3;
   }
-  const auto* intent = entity.get_component<Engine::Core::MovementIntentComponent>();
+  const auto* intent =
+      context.try_get<Engine::Core::MovementIntentComponent>(entity_id);
   if (intent != nullptr) {
     return intent->priority;
   }
-  const auto* movement = entity.get_component<Engine::Core::MovementComponent>();
+  const auto* movement = context.try_get<Engine::Core::MovementComponent>(entity_id);
   if (movement != nullptr && movement->get_has_target()) {
     return 1;
   }
@@ -69,18 +72,18 @@ auto LocalAvoidanceSystem::cell_key(int cell_x, int cell_z) -> std::int64_t {
   return static_cast<std::int64_t>((high << 32U) | low);
 }
 
-void LocalAvoidanceSystem::update(Engine::Core::World* world, float delta_time) {
-  if (world == nullptr || delta_time <= 0.0F) {
+void LocalAvoidanceSystem::run(Engine::Core::SystemContext& context) {
+  const float delta_time = context.delta_time();
+  if (delta_time <= 0.0F) {
     return;
   }
 
   m_diagnostics = {};
 
-  auto const unit_ids = world->entities_with<Engine::Core::UnitComponent>();
+  auto const unit_ids = context.entities_with<Engine::Core::UnitComponent>();
   if (unit_ids.empty()) {
     return;
   }
-  world->resolve_entities_into(unit_ids, m_query_scratch);
 
   float const inv_cell_size = 1.0F / k_default_cell_size;
   for (std::int64_t const key : m_active_cell_keys) {
@@ -94,26 +97,25 @@ void LocalAvoidanceSystem::update(Engine::Core::World* world, float delta_time) 
   m_active_cell_keys.reserve(std::max(m_previous_cell_count, unit_ids.size() / 2U));
   m_circles.reserve(unit_ids.size());
 
-  for (auto* entity : m_query_scratch) {
-    auto* transform = entity->get_component<Engine::Core::TransformComponent>();
-    auto* unit = entity->get_component<Engine::Core::UnitComponent>();
-    if (transform == nullptr || unit == nullptr || unit->health <= 0) {
+  for (auto [entity_id, unit, transform] :
+       context.view<Engine::Core::UnitComponent, Engine::Core::TransformComponent>()) {
+    if (unit.health <= 0) {
       continue;
     }
-    if (entity->has_component<Engine::Core::BuildingComponent>()) {
+    if (context.has<Engine::Core::BuildingComponent>(entity_id)) {
       continue;
     }
-    if (entity->has_component<Engine::Core::PendingRemovalComponent>()) {
+    if (context.has<Engine::Core::PendingRemovalComponent>(entity_id)) {
       continue;
     }
 
     UnitCircle circle;
-    circle.id = entity->get_id();
-    circle.x = transform->position.x;
-    circle.z = transform->position.z;
-    circle.radius = CommandService::get_unit_radius(*world, entity->get_id());
+    circle.id = entity_id;
+    circle.x = transform.position.x;
+    circle.z = transform.position.z;
+    circle.radius = CommandService::get_unit_radius(context.world(), entity_id);
 
-    auto* movement = entity->get_component<Engine::Core::MovementComponent>();
+    const auto* movement = context.try_get<Engine::Core::MovementComponent>(entity_id);
     if (movement != nullptr) {
       circle = UnitCircle{circle.id,
                           circle.x,
@@ -126,7 +128,7 @@ void LocalAvoidanceSystem::update(Engine::Core::World* world, float delta_time) 
                           movement->has_waypoints()};
     }
 
-    circle.priority = compute_avoidance_priority(*entity);
+    circle.priority = compute_avoidance_priority(context, entity_id);
 
     std::size_t const idx = m_circles.size();
     m_circles.push_back(circle);
@@ -253,10 +255,7 @@ void LocalAvoidanceSystem::update(Engine::Core::World* world, float delta_time) 
         sep_z = lateral_z;
       }
 
-      auto* entity = world->get_entity(ci.id);
-      auto* movement = entity != nullptr
-                           ? entity->get_component<Engine::Core::MovementComponent>()
-                           : nullptr;
+      auto* movement = context.try_get<Engine::Core::MovementComponent>(ci.id);
       if (movement != nullptr) {
 
         movement->set_manual_velocity(ci.vx + sep_x, ci.vz + sep_z);
@@ -270,6 +269,17 @@ void LocalAvoidanceSystem::update(Engine::Core::World* world, float delta_time) 
     m_diagnostics.average_neighbors_checked =
         total_neighbors_checked / static_cast<std::uint32_t>(m_circles.size());
   }
+}
+
+auto LocalAvoidanceSystem::access() const -> Engine::Core::SystemAccess {
+  using namespace Engine::Core;
+  return SystemAccess::declare(Reads<UnitComponent,
+                                     TransformComponent,
+                                     AttackComponent,
+                                     MovementIntentComponent,
+                                     BuildingComponent,
+                                     PendingRemovalComponent>{},
+                               Writes<MovementComponent>{});
 }
 
 } // namespace Game::Systems

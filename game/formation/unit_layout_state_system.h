@@ -21,6 +21,8 @@ class UnitLayoutStateSystem : public Engine::Core::System {
 public:
   void update(Engine::Core::World* world, float delta_time) override;
 
+  [[nodiscard]] auto access() const -> Engine::Core::SystemAccess override;
+
   [[nodiscard]] static auto
   desired_state(const Engine::Core::Entity& entity) -> UnitLayoutState;
 
