@@ -20,6 +20,7 @@
 #include "render/creature/quadruped/render_stats.h"
 #include "render/gl/humanoid/animation/animation_inputs.h"
 #include "render/horse/horse_motion.h"
+#include "render/math/creature_math_utils.h"
 #include "render/submitter.h"
 #include "scene/camera.h"
 
@@ -146,7 +147,13 @@ void prepare_elephant_render(const Render::GL::ElephantRendererBase& owner,
                 anim,
                 Engine::Core::get_or_add_component<
                     Render::Creature::ElephantAnimationStateComponent>(ctx.entity),
-                Render::GL::mount_model_scale(ctx.entity));
+                Render::GL::mount_model_scale(ctx.entity),
+                Animation::resolve_soldier_individuality({
+                    .soldier_seed =
+                        ctx.entity != nullptr
+                            ? Render::Creature::stable_entity_seed(ctx.entity->get_id())
+                            : 0U,
+                }));
 
   HowdahAttachmentFrame const howdah =
       (shared_howdah != nullptr) ? *shared_howdah : motion.howdah;

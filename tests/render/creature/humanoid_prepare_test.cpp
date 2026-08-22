@@ -4664,14 +4664,46 @@ TEST(AnimationCoreIntentManifest, LifecycleActionsOverrideCombatIntent) {
   EXPECT_EQ(hit.semantic.action, Animation::ActionIntent::HitReaction);
 }
 
-TEST(AnimationCoreLayoutManifest, StructuredPhaseOffsetIsDeterministicAndBounded) {
-  auto const first = Animation::structured_layout_phase_offset(1, 2, 3, 4, 0x12345678U);
-  auto const second =
-      Animation::structured_layout_phase_offset(1, 2, 3, 4, 0x12345678U);
+TEST(AnimationCoreIndividuality, GaitOffsetIsDeterministicAndBounded) {
+  Animation::SoldierIndividualityInputs const inputs{
+      .soldier_seed = 0x12345678U, .row = 1, .col = 2, .rows = 3, .cols = 4};
+  auto const first = Animation::resolve_soldier_individuality(inputs);
+  auto const second = Animation::resolve_soldier_individuality(inputs);
 
-  EXPECT_FLOAT_EQ(first, second);
-  EXPECT_GE(first, 0.0F);
-  EXPECT_LE(first, 0.25F);
+  EXPECT_FLOAT_EQ(first.gait_phase_offset, second.gait_phase_offset);
+  EXPECT_GE(first.gait_phase_offset, 0.0F);
+  EXPECT_LE(first.gait_phase_offset, 0.25F);
+}
+
+TEST(AnimationCoreIndividuality, ALoneFigureIsNotDesynchronizedFromAnything) {
+  auto const alone = Animation::resolve_soldier_individuality({
+      .soldier_seed = 0x12345678U,
+      .single_soldier = true,
+  });
+
+  EXPECT_FLOAT_EQ(alone.gait_phase_offset, 0.0F);
+  EXPECT_FLOAT_EQ(alone.cadence_scale, 1.0F);
+  EXPECT_FLOAT_EQ(alone.swing_phase_offset, 0.0F);
+  EXPECT_FLOAT_EQ(alone.swing_tempo_scale, 1.0F);
+  EXPECT_FLOAT_EQ(alone.swing_plane_offset, 0.0F);
+}
+
+TEST(AnimationCoreIndividuality, NeighboursGetGenuinelyDifferentStrideAndSwing) {
+
+  auto const left = Animation::resolve_soldier_individuality(
+      {.soldier_seed = 0x11111111U, .row = 0, .col = 0, .rows = 2, .cols = 4});
+  auto const right = Animation::resolve_soldier_individuality(
+      {.soldier_seed = 0x22222222U, .row = 0, .col = 1, .rows = 2, .cols = 4});
+
+  EXPECT_NE(left.gait_phase_offset, right.gait_phase_offset);
+  EXPECT_NE(left.cadence_scale, right.cadence_scale);
+  EXPECT_NE(left.swing_phase_offset, right.swing_phase_offset);
+  EXPECT_NE(left.swing_plane_offset, right.swing_plane_offset);
+
+  EXPECT_LT(std::abs(left.cadence_scale - right.cadence_scale),
+            2.0F * Animation::k_individuality_cadence_spread);
+  EXPECT_LT(std::abs(left.swing_plane_offset - right.swing_plane_offset),
+            2.0F * Animation::k_individuality_swing_spread);
 }
 
 TEST(AnimationCoreLayoutManifest, SingleSoldierPolicyHasNoJitter) {
@@ -4696,7 +4728,7 @@ TEST(AnimationCoreLayoutManifest, SingleSoldierPolicyHasNoJitter) {
   EXPECT_FLOAT_EQ(policy.offset_z_delta, 0.0F);
   EXPECT_FLOAT_EQ(policy.vertical_jitter, 0.0F);
   EXPECT_FLOAT_EQ(policy.yaw_delta, 0.0F);
-  EXPECT_FLOAT_EQ(policy.phase_offset, 0.0F);
+  EXPECT_FLOAT_EQ(policy.individuality.gait_phase_offset, 0.0F);
 }
 
 TEST(AnimationCoreLayoutManifest, MultiSoldierPolicyOwnsRankSeedAndJitter) {
@@ -4719,8 +4751,8 @@ TEST(AnimationCoreLayoutManifest, MultiSoldierPolicyOwnsRankSeedAndJitter) {
   EXPECT_EQ(policy.inst_seed, 0x12345678U ^ std::uint32_t(3 * 9176U));
   EXPECT_NE(policy.vertical_jitter, 0.0F);
   EXPECT_NE(policy.yaw_delta, 0.0F);
-  EXPECT_GE(policy.phase_offset, 0.0F);
-  EXPECT_LE(policy.phase_offset, 0.25F);
+  EXPECT_GE(policy.individuality.gait_phase_offset, 0.0F);
+  EXPECT_LE(policy.individuality.gait_phase_offset, 0.25F);
 }
 
 TEST(AnimationCoreLayoutManifest, MeleeAttackKeepsFormationRootStable) {
@@ -4740,7 +4772,8 @@ TEST(AnimationCoreLayoutManifest, MeleeAttackKeepsFormationRootStable) {
   auto const melee = Animation::resolve_soldier_layout_policy(inputs);
 
   EXPECT_FLOAT_EQ(idle.vertical_jitter, melee.vertical_jitter);
-  EXPECT_FLOAT_EQ(idle.phase_offset, melee.phase_offset);
+  EXPECT_FLOAT_EQ(idle.individuality.gait_phase_offset,
+                  melee.individuality.gait_phase_offset);
   EXPECT_FLOAT_EQ(idle.offset_x_delta, melee.offset_x_delta);
   EXPECT_FLOAT_EQ(idle.offset_z_delta, melee.offset_z_delta);
   EXPECT_FLOAT_EQ(idle.yaw_delta, melee.yaw_delta);
@@ -9149,7 +9182,8 @@ TEST(HumanoidPrepare, BuildSoldierLayoutIsDeterministic) {
   EXPECT_FLOAT_EQ(first.offset_z, second.offset_z);
   EXPECT_FLOAT_EQ(first.vertical_jitter, second.vertical_jitter);
   EXPECT_FLOAT_EQ(first.yaw_offset, second.yaw_offset);
-  EXPECT_FLOAT_EQ(first.phase_offset, second.phase_offset);
+  EXPECT_FLOAT_EQ(first.individuality.gait_phase_offset,
+                  second.individuality.gait_phase_offset);
   EXPECT_EQ(first.inst_seed, second.inst_seed);
 }
 
@@ -9174,7 +9208,7 @@ TEST(HumanoidPrepare, BuildSoldierLayoutLeavesSingleSoldierUnjittered) {
   EXPECT_FLOAT_EQ(layout.offset_z, 0.0F);
   EXPECT_FLOAT_EQ(layout.vertical_jitter, 0.0F);
   EXPECT_FLOAT_EQ(layout.yaw_offset, 0.0F);
-  EXPECT_FLOAT_EQ(layout.phase_offset, 0.0F);
+  EXPECT_FLOAT_EQ(layout.individuality.gait_phase_offset, 0.0F);
   EXPECT_EQ(layout.inst_seed, inputs.seed);
 }
 
@@ -9219,7 +9253,7 @@ TEST(HumanoidPrepare, BuildLocomotionStateIsDeterministicForRun) {
   inputs.movement_target = QVector3D(3.0F, 0.0F, 8.0F);
   inputs.has_movement_target = true;
   inputs.animation_time = 1.5F;
-  inputs.phase_offset = 0.125F;
+  inputs.individuality.gait_phase_offset = 0.125F;
 
   auto const first = Render::Humanoid::build_humanoid_locomotion_state(inputs);
   auto const second = Render::Humanoid::build_humanoid_locomotion_state(inputs);
@@ -9242,7 +9276,7 @@ TEST(HumanoidPrepare, BuildLocomotionStateUsesAuthoritativeMovementState) {
   inputs.entity_forward = QVector3D(0.0F, 0.0F, 1.0F);
   inputs.locomotion_direction = QVector3D(0.0F, 0.0F, 1.0F);
   inputs.animation_time = 1.0F;
-  inputs.phase_offset = 0.0F;
+  inputs.individuality.gait_phase_offset = 0.0F;
 
   inputs.move_speed = 2.30F;
   auto const walking = Render::Humanoid::build_humanoid_locomotion_state(inputs);
@@ -9265,7 +9299,7 @@ TEST(HumanoidPrepare, BuildLocomotionStateWalkCadenceTightensAsSpeedRises) {
   inputs.entity_forward = QVector3D(0.0F, 0.0F, 1.0F);
   inputs.locomotion_direction = QVector3D(0.0F, 0.0F, 1.0F);
   inputs.animation_time = 1.0F;
-  inputs.phase_offset = 0.0F;
+  inputs.individuality.gait_phase_offset = 0.0F;
 
   inputs.move_speed = 1.25F;
   auto const slow_walk = Render::Humanoid::build_humanoid_locomotion_state(inputs);
@@ -9282,7 +9316,7 @@ TEST(HumanoidPrepare, BuildLocomotionStateAnimatesIdlePhaseOverTime) {
   inputs.anim.movement_state = Render::Creature::MovementAnimationState::Idle;
   inputs.variation.walk_speed_mult = 1.0F;
   inputs.animation_time = 0.10F;
-  inputs.phase_offset = 0.125F;
+  inputs.individuality.gait_phase_offset = 0.125F;
 
   auto const first = Render::Humanoid::build_humanoid_locomotion_state(inputs);
 
@@ -9312,7 +9346,7 @@ TEST(HumanoidPrepare, BuildLocomotionStateKeepsAdvancingPhaseDuringCadenceChange
   inputs.variation.walk_speed_mult = 1.0F;
   inputs.entity_forward = QVector3D(0.0F, 0.0F, 1.0F);
   inputs.locomotion_direction = QVector3D(0.0F, 0.0F, 1.0F);
-  inputs.phase_offset = 0.125F;
+  inputs.individuality.gait_phase_offset = 0.125F;
   inputs.persistent_state = &persistent;
   inputs.allow_persistent_update = true;
   inputs.animation_time = 1.00F;
@@ -9340,7 +9374,7 @@ TEST(HumanoidPrepare, BuildLocomotionStatePreservesPhaseAcrossWalkRunTransition)
   inputs.variation.walk_speed_mult = 1.0F;
   inputs.entity_forward = QVector3D(0.0F, 0.0F, 1.0F);
   inputs.locomotion_direction = QVector3D(0.0F, 0.0F, 1.0F);
-  inputs.phase_offset = 0.125F;
+  inputs.individuality.gait_phase_offset = 0.125F;
   inputs.persistent_state = &persistent;
   inputs.allow_persistent_update = true;
 
@@ -9367,7 +9401,7 @@ TEST(HumanoidPrepare, BuildLocomotionStateSkipsPersistentWritesWhenUpdatesDisabl
   inputs.variation.walk_speed_mult = 1.0F;
   inputs.entity_forward = QVector3D(0.0F, 0.0F, 1.0F);
   inputs.locomotion_direction = QVector3D(0.0F, 0.0F, 1.0F);
-  inputs.phase_offset = 0.125F;
+  inputs.individuality.gait_phase_offset = 0.125F;
   inputs.persistent_state = &persistent;
   inputs.allow_persistent_update = true;
   inputs.anim.movement_state = Render::Creature::MovementAnimationState::Walk;
@@ -9657,7 +9691,7 @@ TEST(HumanoidPrepare, WalkRunTransitionKeepsPlaybackGroundingCoherent) {
   inputs.variation = Render::GL::VariationParams::from_seed(2222U);
   inputs.entity_forward = QVector3D(0.0F, 0.0F, 1.0F);
   inputs.locomotion_direction = QVector3D(0.0F, 0.0F, 1.0F);
-  inputs.phase_offset = 0.125F;
+  inputs.individuality.gait_phase_offset = 0.125F;
   inputs.persistent_state = &persistent;
   inputs.allow_persistent_update = true;
   inputs.anim.movement_state = Render::Creature::MovementAnimationState::Walk;

@@ -158,6 +158,9 @@ private:
   InputState m_input;
   float m_view_yaw = 0.0F;
   float m_view_pitch = 0.0F;
+
+  float m_previous_view_yaw = 0.0F;
+  float m_previous_view_pitch = 0.0F;
   QPoint m_mouse_center;
   bool m_mouse_center_valid = false;
   QPoint m_last_mouse_global;

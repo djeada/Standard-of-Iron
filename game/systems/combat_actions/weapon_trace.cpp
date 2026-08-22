@@ -13,6 +13,7 @@
 
 #include "../../../animation/attack_pose_manifest.h"
 #include "../../../animation/clip_manifest.h"
+#include "../../../animation/melee_swing_manifest.h"
 #include "../../core/component.h"
 #include "../../core/world.h"
 #include "../combat_system/combat_utils.h"
@@ -272,24 +273,6 @@ mounted_seat_relative(Animation::MountedSeatOffset offset) -> QVector3D {
 
 [[nodiscard]] auto normalized_or_forward(QVector3D value) -> QVector3D {
   return normalized_or(value, QVector3D(0.0F, 0.0F, 1.0F));
-}
-
-[[nodiscard]] auto
-local_sword_blade_direction(const CombatActionDefinition& definition,
-                            const QVector3D& previous_grip,
-                            const QVector3D& current_grip) -> QVector3D {
-  if (definition.attack_direction == Engine::Core::AttackDirection::Thrust) {
-    return QVector3D(0.0F, -0.08F, 1.0F).normalized();
-  }
-
-  QVector3D const sweep = current_grip - previous_grip;
-  if (definition.attack_direction == Engine::Core::AttackDirection::LeftSlash ||
-      definition.attack_direction == Engine::Core::AttackDirection::RightSlash) {
-    QVector3D const direction = QVector3D(sweep.x() * 0.35F, -0.08F, 1.0F);
-    return normalized_or_forward(direction);
-  }
-
-  return QVector3D(0.0F, -0.20F, 1.0F).normalized();
 }
 
 [[nodiscard]] auto sample_weapon_attack_pose(const CombatActionDefinition& definition,
@@ -693,9 +676,31 @@ sample_mounted_spear_trace_segment(const AttackerFrame& frame,
   return sample;
 }
 
+struct WeaponContactShape {
+  float lateral_limit{0.0F};
+  float min_forward{0.0F};
+};
+
+[[nodiscard]] auto contact_shape(const CombatActionDefinition& definition,
+                                 const Engine::Core::MeleeIntent& intent,
+                                 float target_radius) -> WeaponContactShape {
+  float const vertical = std::clamp(std::abs(intent.strike_dir_y), 0.0F, 1.0F);
+  float const thrust = intent.thrust_amount;
+
+  float const cut_lateral = definition.hit_shape.reach * 0.70F;
+  float const overhead_lateral = std::max(0.55F, definition.hit_shape.radius);
+  float const sweep_lateral = std::lerp(cut_lateral, overhead_lateral, vertical);
+
+  return {.lateral_limit =
+              std::lerp(sweep_lateral, definition.hit_shape.radius, thrust) +
+              target_radius,
+          .min_forward = std::lerp(std::lerp(0.05F, 0.10F, vertical), 0.25F, thrust)};
+}
+
 [[nodiscard]] auto
 weapon_contact_score(const LocalTargetSample& sample,
-                     const CombatActionDefinition& definition) -> float {
+                     const CombatActionDefinition& definition,
+                     const Engine::Core::MeleeIntent& intent) -> float {
   if (sample.entity == nullptr || !std::isfinite(sample.forward) ||
       !std::isfinite(sample.right) || !std::isfinite(sample.distance) ||
       sample.forward <= 0.0F) {
@@ -707,31 +712,9 @@ weapon_contact_score(const LocalTargetSample& sample,
     return std::numeric_limits<float>::infinity();
   }
 
-  float lateral_limit = definition.hit_shape.reach * 0.70F + sample.radius;
-  float min_forward = 0.0F;
-  switch (definition.attack_direction) {
-  case Engine::Core::AttackDirection::Thrust:
-    lateral_limit = definition.hit_shape.radius + sample.radius;
-    min_forward = 0.20F;
-    break;
-  case Engine::Core::AttackDirection::Overhead:
-  case Engine::Core::AttackDirection::HeavyOverhead:
-    lateral_limit = std::max(0.55F, definition.hit_shape.radius) + sample.radius;
-    min_forward = 0.10F;
-    break;
-  case Engine::Core::AttackDirection::LeftSlash:
-  case Engine::Core::AttackDirection::RightSlash:
-  default:
-    min_forward = 0.05F;
-    break;
-  }
-  if (definition.weapon_family == WeaponFamily::Spear &&
-      definition.attack_direction == Engine::Core::AttackDirection::Thrust) {
-    lateral_limit = definition.hit_shape.radius + sample.radius;
-    min_forward = std::max(min_forward, 0.25F);
-  }
-
-  if (sample.forward < min_forward || std::abs(sample.right) > lateral_limit) {
+  auto const shape = contact_shape(definition, intent, sample.radius);
+  if (sample.forward < shape.min_forward ||
+      std::abs(sample.right) > shape.lateral_limit) {
     return std::numeric_limits<float>::infinity();
   }
 
@@ -742,8 +725,77 @@ weapon_contact_score(const LocalTargetSample& sample,
 
 namespace {
 
+[[nodiscard]] auto anchor_intent_for(const CombatActionDefinition& definition)
+    -> Engine::Core::MeleeIntent {
+  return Engine::Core::melee_intent_from_attack_direction(definition.attack_direction,
+                                                          definition.hit_shape.reach);
+}
+
+inline constexpr float k_steered_trace_threshold = 0.15F;
+
+[[nodiscard]] auto steer_amount(const CombatActionDefinition& definition,
+                                const Engine::Core::MeleeIntent& intent) -> float {
+  return Engine::Core::melee_intent_strike_delta(anchor_intent_for(definition), intent);
+}
+
+[[nodiscard]] auto sample_solved_swing_segment(const AttackerFrame& frame,
+                                               const CombatActionDefinition& definition,
+                                               const Engine::Core::MeleeIntent& intent,
+                                               float window_start,
+                                               float window_end,
+                                               float previous,
+                                               float current) -> WeaponTraceSegment {
+  using HP = Render::GL::HumanProportions;
+  WeaponTraceSegment segment;
+
+  float const window = std::max(window_end - window_start, 1.0e-4F);
+  auto swing_phase = [&](float action_time) {
+    float const t = std::clamp((action_time - window_start) / window, 0.0F, 1.0F);
+    return std::lerp(Animation::k_melee_apex_time, Animation::k_melee_follow_time, t);
+  };
+
+  Animation::MeleeSwingInputs swing{};
+  swing.intent = intent;
+  swing.shoulder_y = HP::SHOULDER_Y;
+  swing.arm_reach = HP::UPPER_ARM_LEN + HP::FORE_ARM_LEN;
+
+  swing.phase = swing_phase(previous);
+  auto const previous_sample = Animation::resolve_melee_swing(swing);
+  swing.phase = swing_phase(current);
+  auto const current_sample = Animation::resolve_melee_swing(swing);
+
+  auto grip_of = [](const Animation::MeleeSwingSample& sample) {
+    return QVector3D(sample.grip.x, sample.grip.y, sample.grip.z);
+  };
+  auto blade_of = [](const Animation::MeleeSwingSample& sample) {
+    return QVector3D(
+        sample.blade_direction.x, sample.blade_direction.y, sample.blade_direction.z);
+  };
+
+  float const blade_length = definition.weapon_family == WeaponFamily::Spear
+                                 ? definition.hit_shape.reach
+                                 : std::max(0.45F, definition.hit_shape.reach * 0.46F);
+  float const base_offset =
+      definition.weapon_family == WeaponFamily::Spear ? 0.15F : 0.08F;
+
+  QVector3D const previous_grip = grip_of(previous_sample);
+  QVector3D const current_grip = grip_of(current_sample);
+  QVector3D const previous_dir = blade_of(previous_sample);
+  QVector3D const current_dir = blade_of(current_sample);
+
+  segment.previous_base = to_world(frame, previous_grip + previous_dir * base_offset);
+  segment.current_base = to_world(frame, current_grip + current_dir * base_offset);
+  segment.previous_tip = to_world(frame, previous_grip + previous_dir * blade_length);
+  segment.current_tip = to_world(frame, current_grip + current_dir * blade_length);
+  segment.radius = std::max(0.04F, definition.hit_shape.radius);
+  segment.source = WeaponTraceSegmentSource::AuthoredPose;
+  segment.valid = true;
+  return segment;
+}
+
 auto sample_authored_weapon_trace_segment(const AttackerFrame& frame,
                                           const CombatActionDefinition& definition,
+                                          const Engine::Core::MeleeIntent& intent,
                                           WeaponTraceTimeSpan time_span)
     -> WeaponTraceSegment {
   WeaponTraceSegment segment;
@@ -767,6 +819,12 @@ auto sample_authored_weapon_trace_segment(const AttackerFrame& frame,
   float const current = std::clamp(raw_current, window_start, window_end);
   if (previous > current) {
     previous = current;
+  }
+
+  if (steer_amount(definition, intent) > k_steered_trace_threshold &&
+      !is_mounted_weapon_action(definition.id)) {
+    return sample_solved_swing_segment(
+        frame, definition, intent, window_start, window_end, previous, current);
   }
 
   if (definition.weapon_family == WeaponFamily::Sword) {
@@ -812,10 +870,9 @@ auto sample_authored_weapon_trace_segment(const AttackerFrame& frame,
     segment.current_base = to_world(frame, current_grip + current_dir * 0.15F);
   } else {
     float const blade_length = std::max(0.45F, definition.hit_shape.reach * 0.46F);
-    QVector3D const previous_dir =
-        local_sword_blade_direction(definition, previous_grip, current_grip);
-    QVector3D const current_dir =
-        local_sword_blade_direction(definition, previous_grip, current_grip);
+    QVector3D const previous_dir = normalized_or_forward(
+        QVector3D(intent.blade_dir_x, intent.blade_dir_y, intent.blade_dir_z));
+    QVector3D const current_dir = previous_dir;
     previous_tip = previous_grip + previous_dir * blade_length;
     current_tip = current_grip + current_dir * blade_length;
     segment.previous_base = to_world(frame, previous_grip + previous_dir * 0.08F);
@@ -830,14 +887,26 @@ auto sample_authored_weapon_trace_segment(const AttackerFrame& frame,
   return segment;
 }
 
+[[nodiscard]] auto
+live_intent_of(const Engine::Core::Entity& attacker,
+               const CombatActionDefinition& definition) -> Engine::Core::MeleeIntent {
+  if (auto const* combat =
+          attacker.get_component<Engine::Core::CombatStateComponent>()) {
+    return combat->intent;
+  }
+  return anchor_intent_for(definition);
+}
+
 } // namespace
 
 auto sample_authored_weapon_trace_segment(Engine::Core::Entity& attacker,
                                           const CombatActionDefinition& definition,
                                           WeaponTraceTimeSpan time_span)
     -> WeaponTraceSegment {
-  return sample_authored_weapon_trace_segment(
-      attacker_frame(attacker), definition, time_span);
+  return sample_authored_weapon_trace_segment(attacker_frame(attacker),
+                                              definition,
+                                              live_intent_of(attacker, definition),
+                                              time_span);
 }
 
 auto find_weapon_trace_contact(
@@ -876,8 +945,11 @@ auto find_weapon_trace_contact(
   }
 
   auto const presented_attacker = presented_attacker_frame(attacker, target_hint_id);
-  auto const segment = sample_authored_weapon_trace_segment(
-      presented_attacker.frame, definition, time_span);
+  auto const segment =
+      sample_authored_weapon_trace_segment(presented_attacker.frame,
+                                           definition,
+                                           live_intent_of(attacker, definition),
+                                           time_span);
   if (!segment.valid) {
     return find_weapon_trace_contact(
         world, attacker, definition, target_hint_id, ignored_target_ids);
@@ -967,6 +1039,7 @@ auto find_weapon_trace_contact(
   }
   auto const presented_attacker = presented_attacker_frame(attacker, target_hint_id);
   contact.attacker_soldier_slot = presented_attacker.soldier_slot;
+  auto const intent = live_intent_of(attacker, definition);
 
   auto consider = [&](Engine::Core::Entity* candidate,
                       float& best_score,
@@ -989,13 +1062,7 @@ auto find_weapon_trace_contact(
           sample.forward <= 0.0F) {
         continue;
       }
-      if (definition.weapon_family == WeaponFamily::Spear &&
-          definition.attack_direction == Engine::Core::AttackDirection::Thrust &&
-          std::abs(sample.right) > definition.hit_shape.radius + sample.radius) {
-        continue;
-      }
-
-      float const score = weapon_contact_score(sample, definition);
+      float const score = weapon_contact_score(sample, definition, intent);
       if (!std::isfinite(score) || score >= best_score) {
         continue;
       }

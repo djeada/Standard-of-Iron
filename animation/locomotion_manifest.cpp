@@ -432,6 +432,8 @@ build_targets(const HumanoidLocomotionInputs& inputs) noexcept -> LocomotionTarg
   } else {
     targets.cycle_time = inputs.tuning.idle_cycle_time;
   }
+
+  targets.cycle_time /= std::clamp(inputs.cadence_scale, 0.80F, 1.25F);
   targets.base_phase =
       wrap_locomotion_phase((inputs.sample_time + inputs.phase_offset) /
                             std::max(0.001F, targets.cycle_time));

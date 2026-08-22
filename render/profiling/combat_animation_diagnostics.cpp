@@ -50,9 +50,7 @@ auto attack_phase_window(Render::GL::CombatAnimPhase phase,
                          bool amplified_attack,
                          bool finisher_attack) noexcept -> CombatPhaseWindow {
   auto const window =
-      Animation::attack_phase_window(Render::Creature::animation_combat_phase(phase),
-                                     amplified_attack,
-                                     finisher_attack);
+      Animation::attack_phase_window(phase, amplified_attack, finisher_attack);
   return {window.start, window.end, window.offset_weight};
 }
 
@@ -62,7 +60,7 @@ auto scrubbed_combat_phase_from_attack_phase(float attack_phase,
     -> ScrubbedCombatPhase {
   auto const scrubbed = Animation::scrubbed_combat_phase_from_attack_phase(
       attack_phase, amplified_attack, finisher_attack);
-  return {Render::Creature::engine_combat_phase(scrubbed.phase), scrubbed.progress};
+  return {scrubbed.phase, scrubbed.progress};
 }
 
 auto combat_phase_name(Render::GL::CombatAnimPhase phase) noexcept -> const char* {
