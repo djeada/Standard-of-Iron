@@ -1216,11 +1216,15 @@ auto resolve_humanoid_construction_pose(
     float const stroke = std::sin(cycle);
     float const abs_stroke = std::abs(stroke);
     float const body_sway = std::cos(cycle + jitter_phase * 0.7F);
+    float const effort =
+        0.5F + 0.5F * std::sin(cycle - 0.5F * std::numbers::pi_v<float>);
+    float const blade_chatter = std::sin(cycle * 3.0F + jitter_phase) * abs_stroke;
 
     sample.use_two_handed_grip = true;
     sample.grip_center = {0.04F + body_sway * 0.012F,
-                          shoulder_y - 0.12F + abs_stroke * 0.010F,
-                          0.46F + stroke * 0.18F};
+                          shoulder_y - 0.12F + abs_stroke * 0.010F +
+                              blade_chatter * 0.004F,
+                          0.46F + stroke * 0.18F + blade_chatter * 0.008F};
     sample.hand_separation = 0.22F + abs_stroke * 0.03F;
 
     float const lean = 0.065F + abs_stroke * 0.030F;
@@ -1236,6 +1240,8 @@ auto resolve_humanoid_construction_pose(
 
     float const lateral_shift = stroke * 0.018F;
     sample.pelvis_x_delta += lateral_shift;
+    sample.pelvis_y_delta -= 0.012F + effort * 0.010F;
+    sample.pelvis_z_delta -= stroke * 0.016F;
     sample.shoulder_l_x_delta += lateral_shift * 0.50F;
     sample.shoulder_r_x_delta += lateral_shift * 0.50F;
 
@@ -1256,6 +1262,8 @@ auto resolve_humanoid_construction_pose(
     PoseVec3 const brace_pos{-0.14F, shoulder_y - 0.34F, 0.42F};
 
     sample.left_hand = brace_pos;
+    float impact = 1.0F - std::clamp(std::abs(work_phase - 0.56F) / 0.13F, 0.0F, 1.0F);
+    impact = smoothstep(impact);
     float torso_lean = 0.04F;
     float shoulder_r_drop = 0.0F;
     float head_drop = 0.0F;
@@ -1302,6 +1310,11 @@ auto resolve_humanoid_construction_pose(
     sample.shoulder_r_y_delta += shoulder_r_drop;
     sample.shoulder_l_y_delta -= 0.015F;
     sample.head_y_delta -= head_drop;
+    sample.left_hand.z += impact * 0.045F;
+    sample.left_hand.y -= impact * 0.018F;
+    sample.pelvis_y_delta -= 0.012F + impact * 0.035F;
+    sample.pelvis_z_delta -= 0.025F - impact * 0.055F;
+    sample.pelvis_x_delta -= impact * 0.012F;
     sample.foot_l_z_delta -= 0.06F;
     sample.foot_r_z_delta += 0.05F;
     sample.knee_l_z_delta -= 0.03F;
@@ -1315,6 +1328,7 @@ auto resolve_humanoid_construction_pose(
     float const cycle = work_phase * two_pi;
     float const sweep = std::sin(cycle);
     float const lift = std::max(0.0F, -std::cos(cycle));
+    float const follow_through = std::max(0.0F, std::sin(cycle - 0.35F));
 
     sample.right_hand = {0.02F + sweep * 0.30F,
                          shoulder_y - 0.62F + lift * 0.14F,
@@ -1331,8 +1345,10 @@ auto resolve_humanoid_construction_pose(
     sample.shoulder_r_y_delta -= 0.06F + std::abs(sweep) * 0.02F;
     sample.head_y_delta -= 0.05F;
     sample.pelvis_x_delta += sweep * 0.02F;
+    sample.pelvis_y_delta -= 0.025F + follow_through * 0.018F;
+    sample.pelvis_z_delta += 0.025F - lift * 0.045F;
     sample.shoulder_l_x_delta += sweep * 0.04F;
-    sample.shoulder_r_x_delta += sweep * 0.05F;
+    sample.shoulder_r_x_delta += sweep * 0.05F + follow_through * 0.025F;
     sample.foot_l_z_delta += 0.05F;
     sample.foot_r_z_delta -= 0.04F;
     sample.knee_l_z_delta += 0.03F;
@@ -1385,6 +1401,11 @@ auto resolve_humanoid_construction_pose(
   sample.neck_z_delta += torso_lean * 0.70F;
   sample.head_z_delta += torso_lean * 0.55F;
   sample.shoulder_r_y_delta += shoulder_drop;
+  float const chisel_impact =
+      1.0F - std::clamp(std::abs(work_phase - 0.58F) / 0.11F, 0.0F, 1.0F);
+  sample.pelvis_y_delta -=
+      (kneeling ? 0.018F : 0.008F) + smoothstep(chisel_impact) * 0.018F;
+  sample.pelvis_z_delta -= smoothstep(chisel_impact) * 0.015F;
 
   if (kneeling) {
     sample.shoulder_l_y_delta -= 0.02F;

@@ -42,6 +42,33 @@ struct HumanoidPlaybackPhaseInputs {
   float gait_cycle_phase{0.0F};
 };
 
+struct HumanoidConstructionTransitionState {
+  float blend{0.0F};
+  float last_sample_time{0.0F};
+  float retained_phase{0.0F};
+  HumanoidConstructionRole retained_role{HumanoidConstructionRole::None};
+  bool initialized{false};
+};
+
+struct HumanoidConstructionTransitionInputs {
+  HumanoidConstructionTransitionState state{};
+  bool constructing{false};
+  float sample_time{0.0F};
+  float construction_phase{0.0F};
+  HumanoidConstructionRole role{HumanoidConstructionRole::None};
+  float enter_duration{0.28F};
+  float exit_duration{0.38F};
+};
+
+struct HumanoidConstructionTransitionSample {
+  HumanoidConstructionTransitionState state{};
+  float pose_weight{0.0F};
+  float phase{0.0F};
+  HumanoidConstructionRole role{HumanoidConstructionRole::None};
+
+  [[nodiscard]] auto active() const noexcept -> bool { return pose_weight > 0.001F; }
+};
+
 [[nodiscard]] auto normalize_clip_phase(float phase, bool loops) noexcept -> float;
 
 [[nodiscard]] auto humanoid_hold_transition_amount(
@@ -55,5 +82,9 @@ humanoid_hold_phase(const HumanoidHoldPhaseInputs& inputs) noexcept -> float;
 
 [[nodiscard]] auto resolve_humanoid_playback_phase(
     const HumanoidPlaybackPhaseInputs& inputs) noexcept -> float;
+
+[[nodiscard]] auto resolve_humanoid_construction_transition(
+    const HumanoidConstructionTransitionInputs& inputs) noexcept
+    -> HumanoidConstructionTransitionSample;
 
 } // namespace Animation

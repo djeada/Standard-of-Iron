@@ -9,8 +9,9 @@ namespace Render::Humanoid {
 namespace {
 
 constexpr float k_wheel_path_min_radius = 0.35F;
-constexpr float k_wheel_path_min_angle_degrees = 50.0F;
-constexpr float k_wheel_path_arrival_angle_degrees = 8.0F;
+constexpr float k_wheel_path_blend_start_degrees = 40.0F;
+constexpr float k_wheel_path_blend_end_degrees = 65.0F;
+constexpr float k_turn_direction_epsilon_degrees = 0.05F;
 
 [[nodiscard]] auto wrap_degrees(float degrees) -> float {
   float wrapped = std::fmod(degrees + 180.0F, 360.0F);
@@ -26,6 +27,16 @@ constexpr float k_wheel_path_arrival_angle_degrees = 8.0F;
   float const diff = wrap_degrees(target_degrees - current_degrees);
   float const step = std::clamp(diff, -max_step_degrees, max_step_degrees);
   return wrap_degrees(current_degrees + step);
+}
+
+[[nodiscard]] auto smoothstep(float edge0, float edge1, float value) -> float {
+  float const t = std::clamp((value - edge0) / (edge1 - edge0), 0.0F, 1.0F);
+  return t * t * (3.0F - 2.0F * t);
+}
+
+[[nodiscard]] auto
+blend_degrees(float from_degrees, float to_degrees, float amount) -> float {
+  return wrap_degrees(from_degrees + wrap_degrees(to_degrees - from_degrees) * amount);
 }
 
 } // namespace
@@ -46,6 +57,8 @@ auto resolve_soldier_turn_smoothing(SoldierTurnSmoothingState& state,
     state.world_x = inputs.target_x;
     state.world_z = inputs.target_z;
     state.body_yaw_degrees = wrap_degrees(inputs.formation_yaw_degrees);
+    state.formation_yaw_degrees = wrap_degrees(inputs.formation_yaw_degrees);
+    state.wheel_direction = 0.0F;
     state.valid = true;
     state.relocating = false;
     result.x = state.world_x;
@@ -64,12 +77,23 @@ auto resolve_soldier_turn_smoothing(SoldierTurnSmoothingState& state,
     return result;
   }
 
+  float const formation_yaw_delta =
+      wrap_degrees(inputs.formation_yaw_degrees - state.formation_yaw_degrees);
+  if (std::abs(formation_yaw_delta) > k_turn_direction_epsilon_degrees) {
+    state.wheel_direction = formation_yaw_delta < 0.0F ? -1.0F : 1.0F;
+  }
+  state.formation_yaw_degrees = wrap_degrees(inputs.formation_yaw_degrees);
+
   float const max_step = inputs.max_speed * inputs.dt;
   float step = std::min(distance, max_step);
   float travel_yaw = state.body_yaw_degrees;
+  float wheel_amount = 0.0F;
   if (distance > 1e-5F && step > 0.0F) {
-    float step_x = to_target_x;
-    float step_z = to_target_z;
+    float const inv_distance = 1.0F / distance;
+    float const direct_x = to_target_x * inv_distance;
+    float const direct_z = to_target_z * inv_distance;
+    float step_x = direct_x;
+    float step_z = direct_z;
 
     float const current_x = state.world_x - inputs.formation_center_x;
     float const current_z = state.world_z - inputs.formation_center_z;
@@ -84,11 +108,14 @@ auto resolve_soldier_turn_smoothing(SoldierTurnSmoothingState& state,
 
     bool const wheel_path = inputs.allow_wheel_path &&
                             current_radius >= k_wheel_path_min_radius &&
-                            target_radius >= k_wheel_path_min_radius &&
-                            angle_degrees >= k_wheel_path_min_angle_degrees;
+                            target_radius >= k_wheel_path_min_radius;
     if (wheel_path) {
-
-      float const turn_sign = angle < 0.0F ? -1.0F : 1.0F;
+      wheel_amount = smoothstep(k_wheel_path_blend_start_degrees,
+                                k_wheel_path_blend_end_degrees,
+                                angle_degrees);
+      float const geometric_direction = angle < 0.0F ? -1.0F : 1.0F;
+      float const turn_sign =
+          state.wheel_direction != 0.0F ? state.wheel_direction : geometric_direction;
       float const tangent_x = turn_sign * current_z / current_radius;
       float const tangent_z = -turn_sign * current_x / current_radius;
       float const radial_error = target_radius - current_radius;
@@ -96,22 +123,22 @@ auto resolve_soldier_turn_smoothing(SoldierTurnSmoothingState& state,
       float const radial_z = current_z / current_radius;
       float const radial_weight =
           std::clamp(radial_error / current_radius, -0.35F, 0.35F);
-      step_x = tangent_x + radial_x * radial_weight;
-      step_z = tangent_z + radial_z * radial_weight;
+      float const wheel_x = tangent_x + radial_x * radial_weight;
+      float const wheel_z = tangent_z + radial_z * radial_weight;
 
+      step_x = direct_x + (wheel_x - direct_x) * wheel_amount;
+      step_z = direct_z + (wheel_z - direct_z) * wheel_amount;
       float const direction_length = std::hypot(step_x, step_z);
-      step_x /= direction_length;
-      step_z /= direction_length;
-      step = max_step;
-    } else {
-      float const inv_distance = 1.0F / distance;
-      step_x *= inv_distance;
-      step_z *= inv_distance;
+      if (direction_length > 1.0e-5F) {
+        step_x /= direction_length;
+        step_z /= direction_length;
+      } else {
+        step_x = tangent_x;
+        step_z = tangent_z;
+      }
+      step += (max_step - step) * wheel_amount;
     }
 
-    if (angle_degrees < k_wheel_path_arrival_angle_degrees) {
-      step = std::min(distance, max_step);
-    }
     state.world_x += step_x * step;
     state.world_z += step_z * step;
 
@@ -126,13 +153,18 @@ auto resolve_soldier_turn_smoothing(SoldierTurnSmoothingState& state,
   } else {
     state.relocating = remaining > inputs.relocate_distance;
   }
+  if (!state.relocating) {
+    state.wheel_direction = 0.0F;
+  }
   result.relocating = state.relocating;
   result.travel_speed = inputs.dt > 0.0F ? step / inputs.dt : 0.0F;
   result.travel_yaw_degrees = wrap_degrees(travel_yaw);
 
   bool const face_travel =
       inputs.allow_travel_yaw && result.relocating && result.travel_speed > 0.3F;
-  float const yaw_target = face_travel ? travel_yaw : inputs.formation_yaw_degrees;
+  float const travel_facing =
+      blend_degrees(travel_yaw, inputs.formation_yaw_degrees, wheel_amount);
+  float const yaw_target = face_travel ? travel_facing : inputs.formation_yaw_degrees;
   state.body_yaw_degrees = turn_toward(
       state.body_yaw_degrees, yaw_target, inputs.turn_rate_degrees * inputs.dt);
 

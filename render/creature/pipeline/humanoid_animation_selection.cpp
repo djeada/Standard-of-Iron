@@ -584,6 +584,55 @@ auto apply_hold_stance_crossfade(HumanoidAnimationSelection& selection,
   return true;
 }
 
+auto apply_construction_crossfade(HumanoidAnimationSelection& selection,
+                                  const Render::GL::HumanoidAnimationContext& anim,
+                                  const UnitVisualSpec& spec,
+                                  std::uint32_t seed,
+                                  const Render::GL::HumanoidVariant* variant) noexcept
+    -> bool {
+  float const blend = std::clamp(anim.construction_blend, 0.0F, 1.0F);
+  if (anim.construction_role == Animation::HumanoidConstructionRole::None ||
+      anim.inputs.is_attacking || anim.inputs.is_hit_reacting ||
+      anim.inputs.is_mounted || anim.inputs.is_dying || anim.inputs.is_dead) {
+    return false;
+  }
+
+  auto const build_rest_selection = [&]() {
+    Render::GL::HumanoidAnimationContext resting = anim;
+    resting.inputs.is_constructing = false;
+    resting.construction_role = Animation::HumanoidConstructionRole::None;
+    resting.construction_blend = 0.0F;
+    return build_selection_for_pose(
+        spec, resting, Render::Creature::resolve_pose(resting.inputs), seed, variant);
+  };
+  if (blend <= 0.001F) {
+    selection = build_rest_selection();
+    return true;
+  }
+
+  Render::GL::HumanoidAnimationContext working = anim;
+  working.inputs.is_constructing = true;
+  HumanoidAnimationSelection const work_selection = build_selection_for_pose(
+      spec, working, Render::Creature::resolve_pose(working.inputs), seed, variant);
+  if (!work_selection.clip_id.has_value()) {
+    return false;
+  }
+
+  selection = work_selection;
+  if (blend >= 0.999F) {
+    return true;
+  }
+
+  HumanoidAnimationSelection const rest_selection = build_rest_selection();
+  if (rest_selection.clip_id.has_value()) {
+    selection.full_body_blend = playback_layer_from_selection(
+        rest_selection,
+        1.0F - blend,
+        Render::Creature::PlaybackLayerMode::FullBodyBlend);
+  }
+  return true;
+}
+
 } // namespace
 
 auto resolve_humanoid_animation_selection(
@@ -627,6 +676,10 @@ auto resolve_humanoid_animation_selection(
         carry, 1.0F, Render::Creature::PlaybackLayerMode::UpperBodyOverlay);
     return true;
   };
+
+  if (apply_construction_crossfade(selection, anim, spec, seed, variant)) {
+    return selection;
+  }
 
   if (apply_locomotion_crossfade(selection, anim, spec, seed, variant)) {
     apply_resource_carry_overlay(selection);

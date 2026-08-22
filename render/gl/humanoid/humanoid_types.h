@@ -353,6 +353,7 @@ struct HumanoidAnimationContext {
   float ambient_idle_blend{0.0F};
   float idle_breath_phase{0.0F};
   ConstructionRole construction_role{ConstructionRole::None};
+  float construction_blend{1.0F};
 
   auto locomotion_speed() const -> float { return gait.speed; }
   auto locomotion_normalized_speed() const -> float { return gait.normalized_speed; }

@@ -127,4 +127,46 @@ auto resolve_humanoid_playback_phase(const HumanoidPlaybackPhaseInputs& inputs) 
   return inputs.gait_cycle_phase;
 }
 
+auto resolve_humanoid_construction_transition(
+    const HumanoidConstructionTransitionInputs& inputs) noexcept
+    -> HumanoidConstructionTransitionSample {
+  HumanoidConstructionTransitionSample sample{};
+  sample.state = inputs.state;
+
+  if (!sample.state.initialized) {
+    sample.state.initialized = true;
+    sample.state.last_sample_time = inputs.sample_time;
+  }
+
+  float const elapsed =
+      std::clamp(inputs.sample_time - sample.state.last_sample_time, 0.0F, 0.10F);
+  sample.state.last_sample_time = inputs.sample_time;
+
+  if (inputs.constructing) {
+    sample.state.retained_phase = normalize_clip_phase(inputs.construction_phase, true);
+    sample.state.retained_role = inputs.role == HumanoidConstructionRole::None
+                                     ? HumanoidConstructionRole::Hammer
+                                     : inputs.role;
+  }
+
+  float const duration =
+      inputs.constructing ? inputs.enter_duration : inputs.exit_duration;
+  float const target = inputs.constructing ? 1.0F : 0.0F;
+  float const max_step = elapsed / std::max(duration, 0.01F);
+  if (sample.state.blend < target) {
+    sample.state.blend = std::min(target, sample.state.blend + max_step);
+  } else {
+    sample.state.blend = std::max(target, sample.state.blend - max_step);
+  }
+
+  sample.pose_weight = smoothstep01(sample.state.blend);
+  sample.phase = sample.state.retained_phase;
+  sample.role = sample.state.retained_role;
+  if (!inputs.constructing && sample.state.blend <= 0.0F) {
+    sample.state.retained_role = HumanoidConstructionRole::None;
+    sample.role = HumanoidConstructionRole::None;
+  }
+  return sample;
+}
+
 } // namespace Animation

@@ -30,6 +30,7 @@ static constexpr int max_waypoint_skip_count = 4;
 
 static constexpr float k_stuck_timeout_seconds = 3.0F;
 static constexpr float k_stuck_progress_epsilon_sq = 0.15F * 0.15F;
+constexpr float k_resolved_goal_progress_epsilon_sq = 0.01F;
 
 namespace {
 
@@ -94,11 +95,6 @@ auto formation_turn_speed_degrees(const Engine::Core::Entity& entity,
   float const derived =
       max_outer_speed / turn_radius * 180.0F / std::numbers::pi_v<float>;
   return std::clamp(derived, 30.0F, single_body_turn_speed);
-}
-
-auto formation_navigation_clearance(const Engine::Core::Entity& entity) -> float {
-  auto const layout = FormationCombat::resolve_layout(entity);
-  return Pathfinding::traversal_clearance_for_body(layout.body_radius);
 }
 
 struct HeadingReference {
@@ -634,7 +630,8 @@ void MovementSystem::move_unit(Engine::Core::Entity* entity,
   }
 
   float const previous_clearance = movement->navigation_clearance;
-  movement->set_navigation_clearance(formation_navigation_clearance(*entity));
+  movement->set_navigation_clearance(
+      FormationCombat::formation_navigation_clearance(*entity));
   if (movement->get_has_target() && movement->get_has_requested_goal() &&
       std::abs(previous_clearance - movement->navigation_clearance) > 0.25F) {
     assign_navigation_target(NavGrid::get_pathfinder(),
@@ -822,18 +819,24 @@ void MovementSystem::move_unit(Engine::Core::Entity* entity,
   if (movement->has_target && !destination_allowed && current_position_allowed) {
     Point const requested_goal = NavGrid::world_to_grid(final_goal.x(), final_goal.z());
     auto const nearest_goal = NavGrid::find_nearest_walkable_grid(requested_goal, 32);
-    if (nearest_goal.has_value()) {
-      QVector3D const resolved_goal = NavGrid::grid_to_world(*nearest_goal);
+    if (!nearest_goal.has_value()) {
+      movement->vx = 0.0F;
+      movement->vz = 0.0F;
+      return;
+    }
+
+    QVector3D const resolved_goal = NavGrid::grid_to_world(*nearest_goal);
+    float const resolved_dx = resolved_goal.x() - final_goal.x();
+    float const resolved_dz = resolved_goal.z() - final_goal.z();
+    if (resolved_dx * resolved_dx + resolved_dz * resolved_dz >
+        k_resolved_goal_progress_epsilon_sq) {
       movement->goal_x = resolved_goal.x();
       movement->goal_y = resolved_goal.z();
       MovementSystem::retarget_unit(*world, entity->get_id(), resolved_goal);
       movement->vx = 0.0F;
       movement->vz = 0.0F;
-    } else {
-      movement->vx = 0.0F;
-      movement->vz = 0.0F;
+      return;
     }
-    return;
   }
 
   if (!movement->has_target) {

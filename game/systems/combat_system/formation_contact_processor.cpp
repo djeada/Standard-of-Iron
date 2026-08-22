@@ -14,6 +14,7 @@
 #include "../../core/component.h"
 #include "../../core/world.h"
 #include "../formation_combat_geometry.h"
+#include "combat_utils.h"
 
 namespace Game::Systems::Combat {
 namespace {
@@ -213,7 +214,8 @@ auto valid_melee_edge(Engine::Core::World& world,
          attacker_unit->health > 0 && target_unit->health > 0 &&
          !target->has_component<Engine::Core::PendingRemovalComponent>() &&
          (FormationCombat::has_formation_slots(attacker) ||
-          FormationCombat::has_formation_slots(*target));
+          FormationCombat::has_formation_slots(*target)) &&
+         !structure_separates_combatants(&attacker, target);
 }
 
 void sort_fronts(std::vector<Engine::Core::FormationContactFront>& fronts) {

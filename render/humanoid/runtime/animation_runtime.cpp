@@ -15,6 +15,7 @@ namespace Render::Humanoid {
 void reset_humanoid_locomotion_state(
     Render::Creature::HumanoidAnimationStateComponent& state) {
   state.locomotion = {};
+  state.construction_transition = {};
   state.combat_visual = {};
 }
 

@@ -1931,6 +1931,48 @@ TEST(AnimationCorePlaybackManifest, SettledHoldUsesItsBreathingCycle) {
                   0.37F);
 }
 
+TEST(AnimationCorePlaybackManifest, ConstructionPoseEasesInAndRetainsItsRole) {
+  Animation::HumanoidConstructionTransitionState state{};
+  auto sample = Animation::resolve_humanoid_construction_transition({
+      .state = state,
+      .constructing = false,
+      .sample_time = 1.0F,
+  });
+
+  sample = Animation::resolve_humanoid_construction_transition({
+      .state = sample.state,
+      .constructing = true,
+      .sample_time = 1.10F,
+      .construction_phase = 0.42F,
+      .role = Animation::HumanoidConstructionRole::Saw,
+  });
+
+  EXPECT_GT(sample.pose_weight, 0.0F);
+  EXPECT_LT(sample.pose_weight, 1.0F);
+  EXPECT_FLOAT_EQ(sample.phase, 0.42F);
+  EXPECT_EQ(sample.role, Animation::HumanoidConstructionRole::Saw);
+}
+
+TEST(AnimationCorePlaybackManifest, ConstructionPoseEasesOutFromTheLastWorkFrame) {
+  Animation::HumanoidConstructionTransitionState state{};
+  state.initialized = true;
+  state.blend = 1.0F;
+  state.last_sample_time = 2.0F;
+  state.retained_phase = 0.68F;
+  state.retained_role = Animation::HumanoidConstructionRole::Hammer;
+
+  auto const sample = Animation::resolve_humanoid_construction_transition({
+      .state = state,
+      .constructing = false,
+      .sample_time = 2.10F,
+  });
+
+  EXPECT_GT(sample.pose_weight, 0.0F);
+  EXPECT_LT(sample.pose_weight, 1.0F);
+  EXPECT_FLOAT_EQ(sample.phase, 0.68F);
+  EXPECT_EQ(sample.role, Animation::HumanoidConstructionRole::Hammer);
+}
+
 TEST(AnimationCoreActionManifest, DeathActionSuppressesOtherActionFlags) {
   auto const sample = Animation::resolve_humanoid_action_sample({
       .death =
@@ -2882,12 +2924,14 @@ TEST(AnimationCoreAttackPoseManifest, ConstructionSawOwnsGripAndBodyDeltas) {
 
   EXPECT_TRUE(sample.use_two_handed_grip);
   EXPECT_NEAR(sample.grip_center.x, 0.04F, 0.0001F);
-  EXPECT_NEAR(sample.grip_center.y, 1.09F, 0.0001F);
-  EXPECT_NEAR(sample.grip_center.z, 0.64F, 0.0001F);
+  EXPECT_NEAR(sample.grip_center.y, 1.086F, 0.0001F);
+  EXPECT_NEAR(sample.grip_center.z, 0.632F, 0.0001F);
   EXPECT_NEAR(sample.hand_separation, 0.25F, 0.0001F);
   EXPECT_NEAR(sample.shoulder_r_z_delta, 0.095F, 0.0001F);
   EXPECT_NEAR(sample.shoulder_l_y_delta, -0.04F, 0.0001F);
   EXPECT_NEAR(sample.pelvis_x_delta, 0.018F, 0.0001F);
+  EXPECT_LT(sample.pelvis_y_delta, 0.0F);
+  EXPECT_LT(sample.pelvis_z_delta, 0.0F);
   EXPECT_FLOAT_EQ(sample.foot_l_z_delta, -0.030F);
   EXPECT_FLOAT_EQ(sample.foot_r_z_delta, 0.045F);
 }

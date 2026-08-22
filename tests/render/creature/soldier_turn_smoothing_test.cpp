@@ -234,6 +234,47 @@ TEST(SoldierTurnSmoothing, AHalfTurnWheelsAroundInsteadOfCrossingTheRanks) {
   EXPECT_NEAR(result.z, 0.0F, 0.1F);
 }
 
+TEST(SoldierTurnSmoothing, OppositeWingsKeepOneFormationFacingDuringAHalfTurn) {
+  auto inputs = default_inputs();
+  SoldierTurnSmoothingState right_wing{};
+  SoldierTurnSmoothingState left_wing{};
+
+  inputs.target_x = 3.0F;
+  std::ignore = resolve_soldier_turn_smoothing(right_wing, inputs);
+  inputs.target_x = -3.0F;
+  std::ignore = resolve_soldier_turn_smoothing(left_wing, inputs);
+
+  inputs.formation_yaw_degrees = 180.0F;
+  inputs.target_x = -3.0F;
+  auto const right_result = resolve_soldier_turn_smoothing(right_wing, inputs);
+  inputs.target_x = 3.0F;
+  auto const left_result = resolve_soldier_turn_smoothing(left_wing, inputs);
+
+  EXPECT_GT(right_result.z, 0.0F);
+  EXPECT_LT(left_result.z, 0.0F);
+  EXPECT_NEAR(right_result.yaw_degrees, left_result.yaw_degrees, 1.0e-3F);
+  EXPECT_LT(right_result.yaw_degrees, 0.0F);
+}
+
+TEST(SoldierTurnSmoothing, WheelDirectionStaysStableAfterTheHeadingChange) {
+  SoldierTurnSmoothingState state{};
+  auto inputs = default_inputs();
+  inputs.target_x = 3.0F;
+  std::ignore = resolve_soldier_turn_smoothing(state, inputs);
+
+  inputs.target_x = -3.0F;
+  inputs.formation_yaw_degrees = 179.0F;
+  auto first = resolve_soldier_turn_smoothing(state, inputs);
+  EXPECT_LT(first.z, 0.0F);
+
+  inputs.target_z = 0.001F;
+  for (int frame = 0; frame < 30; ++frame) {
+    auto const next = resolve_soldier_turn_smoothing(state, inputs);
+    EXPECT_LE(next.z, first.z);
+    first = next;
+  }
+}
+
 TEST(SoldierTurnSmoothing, ASmallTurnStillTakesTheDirectCorrection) {
   SoldierTurnSmoothingState state{};
   auto inputs = default_inputs();

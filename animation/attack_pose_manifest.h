@@ -123,6 +123,8 @@ struct HumanoidConstructionPoseSample {
   float head_y_delta{0.0F};
   float head_z_delta{0.0F};
   float pelvis_x_delta{0.0F};
+  float pelvis_y_delta{0.0F};
+  float pelvis_z_delta{0.0F};
   float foot_l_z_delta{0.0F};
   float foot_r_z_delta{0.0F};
   float knee_l_z_delta{0.0F};
