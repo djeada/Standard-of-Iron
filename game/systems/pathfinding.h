@@ -81,12 +81,12 @@ public:
 
   [[nodiscard]] auto is_terrain_walkable(int x, int y) const -> bool;
   auto is_world_position_walkable(const QVector3D& world_position,
-                                  Passability passability = Passability::Light) const
-      -> bool;
-  auto
-  is_world_segment_walkable(const QVector3D& from,
-                            const QVector3D& to,
-                            Passability passability = Passability::Light) const -> bool;
+                                  Passability passability = Passability::Light,
+                                  float clearance_radius = 0.0F) const -> bool;
+  auto is_world_segment_walkable(const QVector3D& from,
+                                 const QVector3D& to,
+                                 Passability passability = Passability::Light,
+                                 float clearance_radius = 0.0F) const -> bool;
   auto path_waypoint_world_position(const Point& path_cell) const -> QVector3D;
 
   void update_navigation_grid();
@@ -104,7 +104,8 @@ public:
 
   auto find_path(const Point& start,
                  const Point& end,
-                 Passability passability = Passability::Light) -> std::vector<Point>;
+                 Passability passability = Passability::Light,
+                 float clearance_radius = 0.0F) -> std::vector<Point>;
 
   [[nodiscard]] auto navigation_revision() const -> std::uint64_t {
     return m_navigation_revision.load(std::memory_order_acquire);
@@ -119,10 +120,12 @@ public:
 private:
   auto find_path_internal(const Point& start,
                           const Point& end,
-                          Passability passability) -> std::vector<Point>;
+                          Passability passability,
+                          float clearance_radius) -> std::vector<Point>;
   auto resolve_walkable_endpoint(const Point& requested,
                                  Point& resolved,
-                                 Passability passability) const -> bool;
+                                 Passability passability,
+                                 float clearance_radius) const -> bool;
   void apply_forest_cells(int min_x, int max_x, int min_z, int max_z);
   void rebuild_forest_index();
   void force_map_passage_cells_walkable(int min_x, int max_x, int min_z, int max_z);
@@ -137,6 +140,10 @@ private:
   static constexpr int k_diagonal_step_cost = 14;
 
   static constexpr int k_edge_step_penalty = 1;
+
+  static constexpr int k_clearance_radius = 3;
+  static constexpr int k_clearance_ring_penalty = 4;
+  static constexpr int k_clearance_avoid_weight = 6;
   static constexpr int k_turn_penalty = 1;
 
   static constexpr int k_heuristic_weight_numerator = 12;
@@ -202,6 +209,7 @@ private:
     int end_x;
     int end_y;
     Passability passability;
+    int clearance_quarters;
 
     auto operator==(const PathCacheKey&) const -> bool = default;
   };

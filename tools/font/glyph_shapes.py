@@ -90,16 +90,10 @@ class Glyph:
     fixed_advance: float | None = None
 
 
-# Ring weights. Bowls carry slightly less weight at the top and bottom than the
-# stems do, which is what stops a heavy caps face from looking like a slab.
 BOWL_SIDE = STEM - 8
 BOWL_THIN = THIN
 
-# Optical sidebearing multipliers. A round letter set on the same flat
-# sidebearing as H looks loose, and a diagonal one looks looser still, because
-# the ink retreats from the advance as the eye travels up the stroke. These are
-# applied by the builder rather than baked into each glyph so that the numbers
-# sit together where they can be compared.
+
 ROUND_SIDES = 0.80
 DIAGONAL_SIDES = 0.66
 
@@ -300,8 +294,7 @@ def letter_g() -> Glyph:
     cx, cy = width / 2.0, CAP / 2.0
     rx, ry = width / 2.0, CAP / 2.0
     bowl = ring_parts(cx, cy, rx, ry, glyph)
-    # Open the upper right only. The lower arc has to survive all the way to
-    # mid height, because that is where the bar meets the right wall.
+
     bowl.holes.append(
         cw(
             [
@@ -312,8 +305,7 @@ def letter_g() -> Glyph:
             ]
         )
     )
-    # The bar, projecting inward from the right wall, wedge-ended where it
-    # stops in open counter.
+
     glyph.contours.append(
         bar(cx + rx * 0.14, cx + rx, cy - THIN * 0.5, cy + THIN * 0.5, flare_left=True)
     )

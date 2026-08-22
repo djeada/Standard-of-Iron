@@ -12,6 +12,7 @@
 #include "../map/terrain_service.h"
 #include "combat_rules.h"
 #include "command_service.h"
+#include "formation_combat_geometry.h"
 #include "movement_system.h"
 #include "nav_grid.h"
 #include "order_service.h"
@@ -33,21 +34,23 @@ auto passability_for(const Engine::Core::MovementComponent& movement)
 
 auto is_direct_path_walkable(const QVector3D& from,
                              const QVector3D& to,
-                             Pathfinding::Passability passability) -> bool {
+                             Pathfinding::Passability passability,
+                             float clearance_radius) -> bool {
   auto* pathfinder = NavGrid::get_pathfinder();
   if (pathfinder != nullptr) {
     pathfinder->update_navigation_grid();
-    return pathfinder->is_world_segment_walkable(from, to, passability);
+    return pathfinder->is_world_segment_walkable(
+        from, to, passability, clearance_radius);
   }
 
   return NavGrid::is_world_position_walkable(to);
 }
 
-auto is_walkable_cell(int x, int y) -> bool {
-  return NavGrid::is_grid_walkable({x, y});
-}
-
-auto find_recovery_cell(const Point& origin, Point& recovery_cell) -> bool {
+auto find_recovery_cell(const Pathfinding& pathfinder,
+                        const Point& origin,
+                        Pathfinding::Passability passability,
+                        float clearance_radius,
+                        Point& recovery_cell) -> bool {
   for (int radius = 1; radius <= k_recovery_search_radius; ++radius) {
     bool found_candidate = false;
     float best_distance_sq = std::numeric_limits<float>::infinity();
@@ -61,7 +64,10 @@ auto find_recovery_cell(const Point& origin, Point& recovery_cell) -> bool {
 
         int const check_x = origin.x + dx;
         int const check_y = origin.y + dy;
-        if (!is_walkable_cell(check_x, check_y)) {
+        if (!pathfinder.is_world_position_walkable(
+                pathfinder.grid_to_world({check_x, check_y}),
+                passability,
+                clearance_radius)) {
           continue;
         }
 
@@ -83,17 +89,35 @@ auto find_recovery_cell(const Point& origin, Point& recovery_cell) -> bool {
   return false;
 }
 
-auto resolve_walkable_direct_target(const QVector3D& target) -> QVector3D {
-  if (NavGrid::is_world_position_walkable(target)) {
+auto resolve_walkable_direct_target(const QVector3D& target,
+                                    Pathfinding::Passability passability,
+                                    float clearance_radius) -> QVector3D {
+  auto* pathfinder = NavGrid::get_pathfinder();
+  if (pathfinder == nullptr) {
+    return target;
+  }
+  pathfinder->update_navigation_grid();
+  if (pathfinder->is_world_position_walkable(target, passability, clearance_radius)) {
     return target;
   }
 
   Point const target_grid = NavGrid::world_to_grid(target.x(), target.z());
-  auto const nearest = NavGrid::find_nearest_walkable_grid(target_grid, 64);
-  if (!nearest.has_value()) {
-    return target;
+  for (int radius = 1; radius <= 64; ++radius) {
+    for (int dz = -radius; dz <= radius; ++dz) {
+      for (int dx = -radius; dx <= radius; ++dx) {
+        if (std::abs(dx) != radius && std::abs(dz) != radius) {
+          continue;
+        }
+        Point const candidate{target_grid.x + dx, target_grid.y + dz};
+        QVector3D const world = pathfinder->grid_to_world(candidate);
+        if (pathfinder->is_world_position_walkable(
+                world, passability, clearance_radius)) {
+          return world;
+        }
+      }
+    }
   }
-  return NavGrid::grid_to_world(*nearest);
+  return target;
 }
 
 auto should_include_resolved_start_waypoint(const Point& start) -> bool {
@@ -145,12 +169,14 @@ auto align_portal_waypoint(const QVector3D& waypoint,
 void pull_path_taut(Pathfinding& pathfinder,
                     const Engine::Core::TransformComponent& transform,
                     Pathfinding::Passability passability,
+                    float clearance_radius,
                     std::vector<std::pair<float, float>>& path) {
   if (path.size() < 3U) {
     return;
   }
   auto shortcut_allowed = [&](const QVector3D& from, const QVector3D& to) -> bool {
-    return pathfinder.is_world_segment_walkable(from, to, passability) &&
+    return pathfinder.is_world_segment_walkable(
+               from, to, passability, clearance_radius) &&
            !segment_traverses_navigation_portal(from, to);
   };
 
@@ -182,6 +208,16 @@ struct PreparedMove {
   float previous_vz{0.0F};
   bool preserve_velocity{false};
 };
+
+auto navigation_clearance_for(const Engine::Core::Entity& entity) -> float {
+  auto const layout = FormationCombat::resolve_layout(entity);
+  float lateral_extent = layout.body_radius;
+  for (auto const& slot : layout.live_slots) {
+    lateral_extent =
+        std::max(lateral_extent, std::abs(slot.local_x) + layout.body_radius);
+  }
+  return std::max(0.1F, lateral_extent);
+}
 
 auto prepare_move(Engine::Core::World& world,
                   Engine::Core::EntityID unit_id,
@@ -224,6 +260,7 @@ auto prepare_move(Engine::Core::World& world,
   if (movement == nullptr) {
     return {};
   }
+  movement->set_navigation_clearance(navigation_clearance_for(*entity));
 
   PreparedMove result;
   result.entity = entity;
@@ -280,7 +317,11 @@ auto MovementSystem::assign_path_to_movement(
     movement.path.emplace_back(waypoint.x(), waypoint.z());
   }
 
-  pull_path_taut(pathfinder, transform, passability_for(movement), movement.path);
+  pull_path_taut(pathfinder,
+                 transform,
+                 passability_for(movement),
+                 movement.get_navigation_clearance(),
+                 movement.path);
 
   while (movement.has_waypoints()) {
     const auto& wp = movement.current_waypoint();
@@ -321,7 +362,10 @@ void MovementSystem::assign_navigation_target(
     float const moved_z = requested_target.z() - movement.requested_goal_z;
     if (moved_x * moved_x + moved_z * moved_z <=
             k_route_keep_goal_shift * k_route_keep_goal_shift &&
-        NavGrid::is_world_position_walkable(requested_target)) {
+        (pathfinder == nullptr ||
+         pathfinder->is_world_position_walkable(requested_target,
+                                                passability_for(movement),
+                                                movement.get_navigation_clearance()))) {
       movement.requested_goal_x = requested_target.x();
       movement.requested_goal_z = requested_target.z();
       movement.path.back() = {requested_target.x(), requested_target.z()};
@@ -343,7 +387,7 @@ void MovementSystem::assign_navigation_target(
     return;
   }
   if (pathfinder == nullptr) {
-    assign_direct_target(movement, resolve_walkable_direct_target(requested_target));
+    assign_direct_target(movement, requested_target);
     return;
   }
 
@@ -354,20 +398,32 @@ void MovementSystem::assign_navigation_target(
 
   bool const portal_route =
       segment_traverses_navigation_portal(current_pos, requested_target);
-  if (start == end || (is_direct_path_walkable(
-                           current_pos, requested_target, passability_for(movement)) &&
-                       !portal_route)) {
-    assign_direct_target(movement, resolve_walkable_direct_target(requested_target));
+  bool const direct_clear =
+      is_direct_path_walkable(current_pos,
+                              requested_target,
+                              passability_for(movement),
+                              movement.get_navigation_clearance());
+  if ((start == end && direct_clear) || (direct_clear && !portal_route)) {
+    assign_direct_target(
+        movement,
+        resolve_walkable_direct_target(requested_target,
+                                       passability_for(movement),
+                                       movement.get_navigation_clearance()));
     return;
   }
 
-  auto const path = pathfinder->find_path(start, end, passability_for(movement));
-  bool const include_first_waypoint = should_include_resolved_start_waypoint(start);
+  auto const path = pathfinder->find_path(
+      start, end, passability_for(movement), movement.get_navigation_clearance());
+  bool const include_first_waypoint = should_include_resolved_start_waypoint(start) ||
+                                      (!path.empty() && path.front() != start);
   if (!assign_path_to_movement(
           *pathfinder, path, transform, movement, include_first_waypoint)) {
     QVector3D const fallback =
-        path.empty() ? resolve_walkable_direct_target(requested_target)
-                     : pathfinder->path_waypoint_world_position(path.back());
+        path.empty()
+            ? resolve_walkable_direct_target(requested_target,
+                                             passability_for(movement),
+                                             movement.get_navigation_clearance())
+            : pathfinder->path_waypoint_world_position(path.back());
     assign_direct_target(movement, fallback);
   }
 }
@@ -385,7 +441,11 @@ auto MovementSystem::assign_local_recovery_move(
       NavGrid::world_to_grid(current_position.x(), current_position.z());
 
   Point recovery_cell{};
-  if (!find_recovery_cell(current_grid, recovery_cell)) {
+  if (!find_recovery_cell(*pathfinder,
+                          current_grid,
+                          passability_for(*movement),
+                          movement->get_navigation_clearance(),
+                          recovery_cell)) {
 
     constexpr int k_emergency_search_radius = 64;
     auto const nearest =
@@ -414,8 +474,10 @@ auto MovementSystem::assign_local_recovery_move(
   QVector3D resolved_goal = safe_pos;
   if (had_active_target) {
     Point const desired_goal = NavGrid::world_to_grid(goal.x(), goal.z());
-    auto const route =
-        pathfinder->find_path(recovery_cell, desired_goal, passability_for(*movement));
+    auto const route = pathfinder->find_path(recovery_cell,
+                                             desired_goal,
+                                             passability_for(*movement),
+                                             movement->get_navigation_clearance());
     if (route.size() > 1) {
       recovery_waypoints.reserve(route.size());
       for (std::size_t idx = 1; idx < route.size(); ++idx) {
@@ -546,21 +608,26 @@ void MovementSystem::issue_move_units(Engine::Core::World& world,
       NavGrid::world_to_grid(leader_target.x(), leader_target.z());
 
   auto group_passability = Pathfinding::Passability::Light;
+  float group_clearance = 0.0F;
   for (auto const& move : prepared) {
     if (move.movement != nullptr && !move.movement->get_can_enter_forest()) {
       group_passability = Pathfinding::Passability::Heavy;
-      break;
+    }
+    if (move.movement != nullptr) {
+      group_clearance =
+          std::max(group_clearance, move.movement->get_navigation_clearance());
     }
   }
 
   bool const leader_direct =
-      leader_start_cell == leader_target_cell ||
-      (is_direct_path_walkable(leader_start, leader_target, group_passability) &&
+      is_direct_path_walkable(
+          leader_start, leader_target, group_passability, group_clearance) &&
+      (leader_start_cell == leader_target_cell ||
        !segment_traverses_navigation_portal(leader_start, leader_target));
   std::vector<Point> corridor;
   if (!leader_direct) {
-    corridor =
-        pathfinder->find_path(leader_start_cell, leader_target_cell, group_passability);
+    corridor = pathfinder->find_path(
+        leader_start_cell, leader_target_cell, group_passability, group_clearance);
   }
 
   constexpr int k_shared_corridor_region_radius = 16;
@@ -591,8 +658,16 @@ void MovementSystem::issue_move_units(Engine::Core::World& world,
       QVector3D const current(
           move.transform->position.x, 0.0F, move.transform->position.z);
       if (same_regions &&
-          pathfinder->is_world_segment_walkable(current, corridor_entry) &&
-          pathfinder->is_world_segment_walkable(corridor_exit, targets[i])) {
+          pathfinder->is_world_segment_walkable(
+              current,
+              corridor_entry,
+              passability_for(*move.movement),
+              move.movement->get_navigation_clearance()) &&
+          pathfinder->is_world_segment_walkable(
+              corridor_exit,
+              targets[i],
+              passability_for(*move.movement),
+              move.movement->get_navigation_clearance())) {
         assigned =
             assign_path_to_movement(*pathfinder,
                                     corridor,
@@ -600,7 +675,10 @@ void MovementSystem::issue_move_units(Engine::Core::World& world,
                                     *move.movement,
                                     should_include_resolved_start_waypoint(start));
         if (assigned) {
-          QVector3D const resolved_target = resolve_walkable_direct_target(targets[i]);
+          QVector3D const resolved_target =
+              resolve_walkable_direct_target(targets[i],
+                                             passability_for(*move.movement),
+                                             move.movement->get_navigation_clearance());
           if (std::hypot(resolved_target.x() - corridor_exit.x(),
                          resolved_target.z() - corridor_exit.z()) > 0.01F) {
             move.movement->path.emplace_back(resolved_target.x(), resolved_target.z());
@@ -615,9 +693,13 @@ void MovementSystem::issue_move_units(Engine::Core::World& world,
           move.transform->position.x, 0.0F, move.transform->position.z);
       Point const start = NavGrid::world_to_grid(current.x(), current.z());
       Point const target = NavGrid::world_to_grid(targets[i].x(), targets[i].z());
-      bool const direct = start == target ||
-                          (is_direct_path_walkable(
-                               current, targets[i], passability_for(*move.movement)) &&
+      bool const direct_clear =
+          is_direct_path_walkable(current,
+                                  targets[i],
+                                  passability_for(*move.movement),
+                                  move.movement->get_navigation_clearance());
+      bool const direct =
+          direct_clear && (start == target ||
                            !segment_traverses_navigation_portal(current, targets[i]));
       if (direct || movement_system == nullptr ||
           synchronous_fallbacks < k_path_requests_per_tick) {

@@ -30,10 +30,6 @@ public:
   explicit GlyphProbe(QObject* parent = nullptr)
       : QObject(parent) {}
 
-  // Answers through the font engine, so a character supplied by a fallback
-  // counts as present. That is the right question for the interface glyphs:
-  // what matters there is that the player sees the mark, not which family
-  // drew it.
   Q_INVOKABLE static QStringList missing(const QString& family, const QString& text) {
     QFont const font(family);
     const QFontMetrics metrics(font);
@@ -51,9 +47,6 @@ public:
     return absent;
   }
 
-  // Asks one physical face with nothing behind it. This is the right question
-  // for the brand face, where a fallback is the failure: it means half a word
-  // renders in another typeface.
   Q_INVOKABLE static QStringList missingWithoutFallback(const QString& family,
                                                         const QString& text) {
     const QRawFont face = QRawFont::fromFont(QFont(family));

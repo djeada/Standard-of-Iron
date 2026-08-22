@@ -96,6 +96,16 @@ auto formation_turn_speed_degrees(const Engine::Core::Entity& entity,
   return std::clamp(derived, 30.0F, single_body_turn_speed);
 }
 
+auto formation_navigation_clearance(const Engine::Core::Entity& entity) -> float {
+  auto const layout = FormationCombat::resolve_layout(entity);
+  float lateral_extent = layout.body_radius;
+  for (auto const& slot : layout.live_slots) {
+    lateral_extent =
+        std::max(lateral_extent, std::abs(slot.local_x) + layout.body_radius);
+  }
+  return std::max(0.1F, lateral_extent);
+}
+
 struct HeadingReference {
   bool valid{false};
   float yaw{0.0F};
@@ -165,7 +175,13 @@ auto formation_navigation_speed(const Engine::Core::Entity& entity,
          Game::Formation::ArmyFormationRuntime::move_speed_multiplier(entity);
 }
 
-void apply_desired_yaw(Engine::Core::TransformComponent* transform,
+auto formation_pose_allowed(const Engine::Core::Entity& entity,
+                            float center_x,
+                            float center_z,
+                            float yaw_degrees) -> bool;
+
+void apply_desired_yaw(const Engine::Core::Entity& entity,
+                       Engine::Core::TransformComponent* transform,
                        float delta_time,
                        float turn_speed_degrees) {
   if ((transform == nullptr) || !transform->has_desired_yaw) {
@@ -177,14 +193,55 @@ void apply_desired_yaw(Engine::Core::TransformComponent* transform,
   float const diff = std::fmod((target_yaw - current + 540.0F), 360.0F) - 180.0F;
   float const step = std::clamp(
       diff, -turn_speed_degrees * delta_time, turn_speed_degrees * delta_time);
-  transform->rotation.y = current + step;
+  float const candidate_yaw = current + step;
+  if (formation_pose_allowed(
+          entity, transform->position.x, transform->position.z, candidate_yaw)) {
+    transform->rotation.y = candidate_yaw;
+  }
 
   float const remaining_diff =
       std::fmod((target_yaw - transform->rotation.y + 540.0F), 360.0F) - 180.0F;
   if (std::fabs(remaining_diff) < 0.5F) {
-    transform->rotation.y = target_yaw;
-    transform->has_desired_yaw = false;
+    if (formation_pose_allowed(
+            entity, transform->position.x, transform->position.z, target_yaw)) {
+      transform->rotation.y = target_yaw;
+      transform->has_desired_yaw = false;
+    }
   }
+}
+
+auto formation_pose_allowed(const Engine::Core::Entity& entity,
+                            float center_x,
+                            float center_z,
+                            float yaw_degrees) -> bool {
+  auto const* movement = entity.get_component<Engine::Core::MovementComponent>();
+  auto* pathfinder = NavGrid::get_pathfinder();
+  if (movement == nullptr || pathfinder == nullptr ||
+      movement->get_structure_approach_target() != 0) {
+    return true;
+  }
+
+  auto const layout = FormationCombat::resolve_layout(entity);
+  if (layout.live_slots.size() <= 1U) {
+    return true;
+  }
+
+  auto const passability = movement->get_can_enter_forest()
+                               ? Pathfinding::Passability::Light
+                               : Pathfinding::Passability::Heavy;
+  float const yaw = yaw_degrees * std::numbers::pi_v<float> / 180.0F;
+  float const sin_yaw = std::sin(yaw);
+  float const cos_yaw = std::cos(yaw);
+  for (auto const& slot : layout.live_slots) {
+    QVector3D const soldier(center_x + cos_yaw * slot.local_x + sin_yaw * slot.local_z,
+                            0.0F,
+                            center_z - sin_yaw * slot.local_x + cos_yaw * slot.local_z);
+    if (!pathfinder->is_world_position_walkable(
+            soldier, passability, layout.body_radius)) {
+      return false;
+    }
+  }
+  return true;
 }
 
 auto is_point_allowed(const QVector3D& pos,
@@ -210,11 +267,23 @@ auto is_point_allowed(const QVector3D& pos,
     }
   }
 
-  if (NavGrid::is_world_position_walkable(pos)) {
-    return true;
+  auto const* movement = entity.get_component<Engine::Core::MovementComponent>();
+  auto* pathfinder = NavGrid::get_pathfinder();
+  bool navigation_allows = NavGrid::is_world_position_walkable(pos);
+  if (pathfinder != nullptr && movement != nullptr) {
+    pathfinder->update_navigation_grid();
+    navigation_allows = pathfinder->is_world_position_walkable(
+        pos,
+        movement->get_can_enter_forest() ? Pathfinding::Passability::Light
+                                         : Pathfinding::Passability::Heavy,
+        movement->get_navigation_clearance());
+  }
+  if (navigation_allows) {
+    auto const* transform = entity.get_component<Engine::Core::TransformComponent>();
+    return transform == nullptr ||
+           formation_pose_allowed(entity, pos.x(), pos.z(), transform->rotation.y);
   }
 
-  auto const* movement = entity.get_component<Engine::Core::MovementComponent>();
   auto* structure = world != nullptr && movement != nullptr &&
                             movement->get_structure_approach_target() != 0
                         ? world->get_entity(movement->get_structure_approach_target())
@@ -292,14 +361,22 @@ void finalize_orientation(Engine::Core::Entity* entity,
     float const diff = std::fmod((target_yaw - current + 540.0F), 360.0F) - 180.0F;
     float const step =
         std::clamp(diff, -turn_speed * delta_time, turn_speed * delta_time);
-    transform->rotation.y = current + step;
+    float const candidate_yaw = current + step;
+    if (formation_pose_allowed(
+            *entity, transform->position.x, transform->position.z, candidate_yaw)) {
+      transform->rotation.y = candidate_yaw;
+    }
   } else if (transform->has_desired_yaw) {
     float const current = transform->rotation.y;
     float const target_yaw = transform->desired_yaw;
     float const diff = std::fmod((target_yaw - current + 540.0F), 360.0F) - 180.0F;
     float const step =
         std::clamp(diff, -turn_speed * delta_time, turn_speed * delta_time);
-    transform->rotation.y = current + step;
+    float const candidate_yaw = current + step;
+    if (formation_pose_allowed(
+            *entity, transform->position.x, transform->position.z, candidate_yaw)) {
+      transform->rotation.y = candidate_yaw;
+    }
     if (std::fabs(diff) < 0.5F && !shell_holds_its_face) {
       transform->has_desired_yaw = false;
     }
@@ -558,6 +635,18 @@ void MovementSystem::move_unit(Engine::Core::Entity* entity,
     return;
   }
 
+  float const previous_clearance = movement->navigation_clearance;
+  movement->set_navigation_clearance(formation_navigation_clearance(*entity));
+  if (movement->get_has_target() && movement->get_has_requested_goal() &&
+      std::abs(previous_clearance - movement->navigation_clearance) > 0.25F) {
+    assign_navigation_target(NavGrid::get_pathfinder(),
+                             *transform,
+                             *movement,
+                             QVector3D(movement->get_requested_goal_x(),
+                                       0.0F,
+                                       movement->get_requested_goal_z()));
+  }
+
   if (unit->health <= 0 ||
       entity->has_component<Engine::Core::PendingRemovalComponent>()) {
     return;
@@ -610,7 +699,8 @@ void MovementSystem::move_unit(Engine::Core::Entity* entity,
 
   if (in_hold_mode) {
     if (!entity->has_component<Engine::Core::BuildingComponent>()) {
-      apply_desired_yaw(transform,
+      apply_desired_yaw(*entity,
+                        transform,
                         delta_time,
                         formation_turn_speed_degrees(
                             *entity,

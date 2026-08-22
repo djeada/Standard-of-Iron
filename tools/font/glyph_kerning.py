@@ -18,8 +18,6 @@ means finding the group it behaves like instead of guessing a number.
 
 from __future__ import annotations
 
-# A diagonal whose apex leans away from an upright: the space between them is
-# empty at one end and closed at the other, and the eye averages it as a hole.
 DIAGONAL_BESIDE_UPRIGHT = {
     ("A", "V"): -52,
     ("A", "W"): -46,
@@ -46,8 +44,7 @@ DIAGONAL_BESIDE_UPRIGHT = {
     ("D", "Y"): -24,
 }
 
-# A round beside a diagonal, or two rounds: the curve retreats from the advance
-# on both sides, so the flat sidebearing lands too wide.
+
 ROUND_BESIDE_DIAGONAL = {
     ("T", "O"): -30,
     ("T", "C"): -30,
@@ -68,8 +65,7 @@ ROUND_BESIDE_DIAGONAL = {
     ("D", "O"): -12,
 }
 
-# T and V over a following stem. These read as a hole in almost every word the
-# game sets: SURVIVE, VICTORY, TERRITORY, THE.
+
 DIAGONAL_OVER_STEM = {
     ("T", "S"): -22,
     ("T", "U"): -20,
@@ -83,7 +79,7 @@ DIAGONAL_OVER_STEM = {
     ("T", "M"): -14,
 }
 
-# Punctuation tucks under an overhang rather than sitting beside it.
+
 PUNCTUATION_PAIRS = {
     ("A", "period"): -70,
     ("A", "comma"): -70,
@@ -100,8 +96,7 @@ PUNCTUATION_PAIRS = {
     ("period", "quotedbl"): -50,
 }
 
-# Figures. The reels set these large and alone, where a bad pair is at its most
-# visible: 1 is narrow and sits inside its own advance, and 7 overhangs.
+
 FIGURE_PAIRS = {
     ("one", "one"): -30,
     ("seven", "one"): -34,

@@ -139,6 +139,8 @@ struct ArenaScenarioElevationPatch {
   QVector3D center;
   float radius{8.0F};
   float height{3.0F};
+
+  float plateau{0.0F};
 };
 
 struct ArenaScenarioFormationOrder {
@@ -295,6 +297,8 @@ struct ArenaScenarioDefinition {
   float duration_seconds{12.0F};
 
   float arena_floor_half_extent{18.0F};
+
+  int terrain_grid_extent{0};
 
   float terrain_height_scale_override{0.0F};
 

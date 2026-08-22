@@ -16,6 +16,7 @@
 #include "../units/troop_config.h"
 #include "building_collision_registry.h"
 #include "combat_rules.h"
+#include "formation_combat_geometry.h"
 #include "movement_system.h"
 #include "nav_grid.h"
 #include "pathfinding.h"
@@ -245,11 +246,13 @@ auto CommandService::get_unit_radius(Engine::Core::World& world,
     return 0.5F;
   }
 
-  float const selection_ring_size =
-      Game::Units::TroopConfig::instance().get_selection_ring_size(
-          unit_comp->spawn_type);
-
-  return std::max(selection_ring_size * 0.5F, k_unit_radius_threshold);
+  auto const layout = FormationCombat::resolve_layout(*entity);
+  float radius = std::max(layout.body_radius, k_unit_radius_threshold);
+  for (auto const& slot : layout.live_slots) {
+    radius =
+        std::max(radius, std::hypot(slot.local_x, slot.local_z) + layout.body_radius);
+  }
+  return radius;
 }
 
 void CommandService::move_unit(Engine::Core::World& world,

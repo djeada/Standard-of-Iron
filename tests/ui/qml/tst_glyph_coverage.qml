@@ -18,16 +18,10 @@ TestCase {
         return GlyphProbe.missing(Typography.displayFamily, text);
     }
 
-    // No fallback allowed here: the point of the brand face is that it is the
-    // one drawing the word. A missing glyph that Qt quietly serves from another
-    // family looks fine to GlyphProbe.missing() and looks wrong on screen.
     function missingTitleCharacters(text) {
         return GlyphProbe.missingWithoutFallback(Typography.titleFamily, text);
     }
 
-    // titleFamily is loaded from qrc rather than named, so a broken path or a
-    // font dropped from assets.qrc shows up as a silent fall back to the serif
-    // -- readable, so nobody notices, and wrong on every title in the game.
     function test_the_title_face_loads_from_the_bundle() {
         compare(Typography.brandFont.status, FontLoader.Ready, "bundled title face did not load from qrc");
         verify(Typography.titleFamily.length > 0, "titleFamily is empty");

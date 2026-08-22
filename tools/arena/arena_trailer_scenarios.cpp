@@ -199,7 +199,12 @@ auto definition(QString id,
 }
 
 constexpr float k_river_z = 16.0F;
+constexpr float k_river_width = 6.0F;
+constexpr float k_river_bend_z = 2.0F;
 constexpr float k_bridge_x = -2.0F;
+constexpr float k_bridge_reach =
+    Game::Map::river_bank_standing_half_width(k_river_width) +
+    Game::Map::bridge_bank_landing(Game::Map::k_min_bridge_width, k_river_width);
 constexpr float k_fort_cx = 30.0F;
 constexpr float k_fort_cz = -16.0F;
 constexpr float k_fort_half = 10.0F;
@@ -597,17 +602,22 @@ void dress_valley(ArenaScenarioDefinition& scenario, const ValleyOptions& option
   scenario.arena_floor_half_extent = 56.0F;
 
   scenario.rivers.push_back(Game::Map::RiverSegment{
-      {-45.0F, 0.0F, k_river_z}, {45.0F, 0.0F, k_river_z}, 6.0F});
-  scenario.bridges.push_back(Game::Map::Bridge{{k_bridge_x, 0.0F, k_river_z - 5.5F},
-                                               {k_bridge_x, 0.0F, k_river_z + 5.5F},
-                                               4.5F,
-                                               0.45F});
+      {-45.0F, 0.0F, k_river_z}, {4.0F, 0.0F, k_river_z}, k_river_width});
+  scenario.rivers.push_back(Game::Map::RiverSegment{
+      {4.0F, 0.0F, k_river_z}, {18.0F, 0.0F, k_river_bend_z}, k_river_width});
+  scenario.rivers.push_back(Game::Map::RiverSegment{
+      {18.0F, 0.0F, k_river_bend_z}, {45.0F, 0.0F, k_river_bend_z}, k_river_width});
+  scenario.bridges.push_back(
+      Game::Map::Bridge{{k_bridge_x, 0.0F, k_river_z - k_bridge_reach},
+                        {k_bridge_x, 0.0F, k_river_z + k_bridge_reach},
+                        4.5F,
+                        0.45F});
 
   scenario.roads.push_back(street({k_bridge_x, 0.0F, k_valley_street_z},
-                                  {k_bridge_x, 0.0F, k_river_z - 5.5F},
+                                  {k_bridge_x, 0.0F, k_river_z - k_bridge_reach},
                                   2.8F));
-  scenario.roads.push_back(
-      street({k_bridge_x, 0.0F, k_river_z + 5.5F}, {k_bridge_x, 0.0F, 38.0F}, 2.8F));
+  scenario.roads.push_back(street(
+      {k_bridge_x, 0.0F, k_river_z + k_bridge_reach}, {k_bridge_x, 0.0F, 38.0F}, 2.8F));
   scenario.roads.push_back(street({k_roman_town_x + 14.0F, 0.0F, k_valley_street_z},
                                   {k_roman_hamlet_x - 14.0F, 0.0F, k_valley_street_z},
                                   3.0F));
