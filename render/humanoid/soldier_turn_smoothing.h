@@ -29,6 +29,9 @@ struct SoldierTurnSmoothingInputs {
 
   float formation_yaw_degrees{0.0F};
 
+  float formation_center_x{0.0F};
+  float formation_center_z{0.0F};
+
   float dt{0.0F};
 
   float max_speed{2.5F};
@@ -42,6 +45,8 @@ struct SoldierTurnSmoothingInputs {
   float relocate_distance{0.30F};
 
   bool allow_travel_yaw{true};
+
+  bool allow_wheel_path{true};
 
   std::uint32_t frame_index{0U};
 };

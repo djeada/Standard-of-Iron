@@ -254,8 +254,8 @@ void add_well(BuildingArchetypeDesc& desc, const CarthageFarmPalette& c) {
                     BuildingStateMask::All);
   constexpr int k_coping_stones = 12;
   for (int stone = 0; stone < k_coping_stones; ++stone) {
-    float const angle = static_cast<float>(stone) * 6.2831853F /
-                        static_cast<float>(k_coping_stones);
+    float const angle =
+        static_cast<float>(stone) * 6.2831853F / static_cast<float>(k_coping_stones);
     QVector3D const stone_center =
         centre + QVector3D(std::cos(angle) * 0.095F,
                            0.14F + (decay_hash(601 + stone) - 0.5F) * 0.006F,

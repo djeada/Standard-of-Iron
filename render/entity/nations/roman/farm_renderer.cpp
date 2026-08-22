@@ -52,9 +52,8 @@ void add_stone_boundary(BuildingArchetypeDesc& desc, const RomanFarmPalette& c) 
       QVector3D const half(step.x() != 0.0F ? std::abs(step.x()) * 0.46F : k_wall_half,
                            k_wall_h * (0.85F + decay_hash(seed + i * 3) * 0.3F),
                            step.z() != 0.0F ? std::abs(step.z()) * 0.46F : k_wall_half);
-      QVector3D const block_colour =
-          (i % 3 == 0 ? c.limestone_shade : c.limestone) *
-          (0.94F + decay_hash(seed + i * 7) * 0.10F);
+      QVector3D const block_colour = (i % 3 == 0 ? c.limestone_shade : c.limestone) *
+                                     (0.94F + decay_hash(seed + i * 7) * 0.10F);
       desc.add_rotated_box(
           centre + QVector3D(horizontal ? jitter * 0.35F : jitter,
                              half.y(),
@@ -203,28 +202,19 @@ void add_ox_cart(BuildingArchetypeDesc& desc, const RomanFarmPalette& c) {
     QVector3D const hub = centre + QVector3D(0.0F, k_wheel_r, sz * 0.15F);
     constexpr int k_spokes = 8;
     for (int spoke = 0; spoke < k_spokes; ++spoke) {
-      float const angle = static_cast<float>(spoke) * 6.2831853F /
-                          static_cast<float>(k_spokes);
-      float const next_angle = static_cast<float>(spoke + 1) * 6.2831853F /
-                               static_cast<float>(k_spokes);
+      float const angle =
+          static_cast<float>(spoke) * 6.2831853F / static_cast<float>(k_spokes);
+      float const next_angle =
+          static_cast<float>(spoke + 1) * 6.2831853F / static_cast<float>(k_spokes);
       QVector3D const rim =
-          hub + QVector3D(std::cos(angle) * k_wheel_r,
-                          std::sin(angle) * k_wheel_r,
-                          0.0F);
-      QVector3D const next_rim =
-          hub + QVector3D(std::cos(next_angle) * k_wheel_r,
-                          std::sin(next_angle) * k_wheel_r,
-                          0.0F);
-      desc.add_cylinder(hub,
-                        rim,
-                        0.007F,
-                        c.cedar,
-                        k_building_state_mask_intact);
-      desc.add_cylinder(rim,
-                        next_rim,
-                        0.009F,
-                        c.cedar_dark,
-                        k_building_state_mask_intact);
+          hub +
+          QVector3D(std::cos(angle) * k_wheel_r, std::sin(angle) * k_wheel_r, 0.0F);
+      QVector3D const next_rim = hub + QVector3D(std::cos(next_angle) * k_wheel_r,
+                                                 std::sin(next_angle) * k_wheel_r,
+                                                 0.0F);
+      desc.add_cylinder(hub, rim, 0.007F, c.cedar, k_building_state_mask_intact);
+      desc.add_cylinder(
+          rim, next_rim, 0.009F, c.cedar_dark, k_building_state_mask_intact);
     }
     desc.add_cylinder(hub + QVector3D(0.0F, 0.0F, -0.016F),
                       hub + QVector3D(0.0F, 0.0F, 0.016F),

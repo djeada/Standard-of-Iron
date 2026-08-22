@@ -16,73 +16,92 @@
       "scenario": "promo_imperial_capital",
       "seed": 8190,
       "start": 30.0,
-      "duration": 6.0,
+      "duration": 4.1,
       "focus": {
         "mode": "point",
-        "point": [
-          0.0,
-          0.0,
-          120.0
-        ],
-        "smoothing": 0.7
+        "point": [0.0, 0.0, 118.0],
+        "smoothing": 0.85
       },
       "camera": [
         {
           "time": 0.0,
-          "distance": 84,
-          "pitch": 11,
-          "yaw": 354,
-          "fov": 40,
-          "height": 5.0
+          "distance": 30,
+          "pitch": 9,
+          "yaw": 180,
+          "fov": 30,
+          "height": 2.6
         },
         {
-          "time": 2.2,
-          "distance": 76,
-          "pitch": 12,
-          "yaw": 356,
-          "fov": 40,
-          "height": 5.4,
-          "ease": "smooth"
-        },
-        {
-          "time": 6.0,
-          "distance": 58,
-          "pitch": 14,
-          "yaw": 2,
-          "fov": 40,
-          "height": 6.2,
+          "time": 4.1,
+          "distance": 20,
+          "pitch": 9,
+          "yaw": 180,
+          "fov": 30,
+          "height": 2.6,
           "ease": "smooth"
         }
       ],
       "caption": "AURELIA MAGNA"
     },
     {
-      "name": "avenue",
+      "name": "farm",
       "scenario": "promo_imperial_capital",
       "seed": 8190,
-      "start": 56.0,
-      "duration": 5.5,
+      "start": 26.0,
+      "duration": 4.1,
       "focus": {
-        "mode": "group",
-        "group": "capital_column_swords",
-        "smoothing": 0.7
+        "mode": "point",
+        "point": [-150.0, 0.0, 232.0],
+        "smoothing": 0.85
       },
       "camera": [
         {
           "time": 0.0,
-          "distance": 48,
-          "pitch": 11,
-          "yaw": 62,
-          "fov": 38,
-          "height": 3.0
+          "distance": 26,
+          "pitch": 12,
+          "yaw": 58,
+          "fov": 30,
+          "height": 3.4
         },
         {
-          "time": 5.5,
-          "distance": 46,
-          "pitch": 13,
-          "yaw": 88,
-          "fov": 38,
-          "height": 3.8,
+          "time": 4.1,
+          "distance": 26,
+          "pitch": 12,
+          "yaw": 74,
+          "fov": 30,
+          "height": 3.4,
+          "ease": "smooth"
+        }
+      ],
+      "caption": "THE FIELDS THAT FEED IT"
+    },
+    {
+      "name": "avenue",
+      "scenario": "promo_imperial_capital",
+      "seed": 8190,
+      "start": 56.0,
+      "duration": 4.1,
+      "focus": {
+        "mode": "group",
+        "group": "capital_column_swords",
+        "smoothing": 0.85
+      },
+      "camera": [
+        {
+          "time": 0.0,
+          "distance": 22,
+          "pitch": 10,
+          "yaw": 74,
+          "fov": 30,
+          "height": 2.4
+        },
+        {
+          "time": 4.1,
+          "distance": 22,
+          "pitch": 10,
+          "yaw": 84,
+          "fov": 30,
+          "height": 2.4,
           "ease": "smooth"
         }
       ],
@@ -92,38 +111,29 @@
       "name": "work",
       "scenario": "promo_imperial_capital",
       "seed": 8190,
-      "start": 34.0,
-      "duration": 6.0,
+      "start": 40.0,
+      "duration": 4.1,
       "focus": {
         "mode": "group",
         "group": "capital_masons_forum",
-        "smoothing": 0.7
+        "smoothing": 0.85
       },
       "camera": [
         {
           "time": 0.0,
-          "distance": 40,
-          "pitch": 30,
-          "yaw": 148,
-          "fov": 38,
-          "height": 11.0
-        },
-        {
-          "time": 3.0,
-          "distance": 27,
-          "pitch": 21,
+          "distance": 20,
+          "pitch": 13,
           "yaw": 156,
-          "fov": 38,
-          "height": 5.5,
-          "ease": "smooth"
+          "fov": 30,
+          "height": 3.0
         },
         {
-          "time": 6.0,
-          "distance": 19,
-          "pitch": 16,
-          "yaw": 162,
-          "fov": 38,
-          "height": 3.2,
+          "time": 4.1,
+          "distance": 14,
+          "pitch": 13,
+          "yaw": 156,
+          "fov": 30,
+          "height": 2.2,
           "ease": "smooth"
         }
       ],
@@ -134,37 +144,28 @@
       "scenario": "promo_imperial_capital",
       "seed": 8190,
       "start": 52.0,
-      "duration": 5.0,
+      "duration": 4.1,
       "focus": {
         "mode": "group",
         "group": "capital_masons_upper",
-        "smoothing": 0.7
+        "smoothing": 0.85
       },
       "camera": [
         {
           "time": 0.0,
-          "distance": 34,
-          "pitch": 15,
-          "yaw": 300,
-          "fov": 40,
-          "height": 4.5
+          "distance": 18,
+          "pitch": 12,
+          "yaw": 306,
+          "fov": 30,
+          "height": 2.6
         },
         {
-          "time": 2.5,
-          "distance": 32,
-          "pitch": 15,
-          "yaw": 318,
-          "fov": 40,
-          "height": 4.6,
-          "ease": "smooth"
-        },
-        {
-          "time": 5.0,
-          "distance": 30,
-          "pitch": 16,
-          "yaw": 334,
-          "fov": 40,
-          "height": 4.8,
+          "time": 4.1,
+          "distance": 18,
+          "pitch": 12,
+          "yaw": 322,
+          "fov": 30,
+          "height": 2.6,
           "ease": "smooth"
         }
       ],
@@ -175,176 +176,96 @@
       "scenario": "promo_imperial_capital",
       "seed": 8190,
       "start": 44.0,
-      "duration": 5.5,
+      "duration": 4.1,
       "focus": {
         "mode": "group",
         "group": "capital_carriers_forum",
-        "smoothing": 0.7
+        "smoothing": 0.85
       },
       "camera": [
         {
           "time": 0.0,
-          "distance": 19,
-          "pitch": 13,
-          "yaw": 84,
-          "fov": 34,
-          "height": 1.9
-        },
-        {
-          "time": 2.7,
-          "distance": 16,
-          "pitch": 12,
-          "yaw": 95,
-          "fov": 34,
-          "height": 1.7,
-          "ease": "smooth"
-        },
-        {
-          "time": 5.5,
-          "distance": 14,
+          "distance": 15,
           "pitch": 11,
-          "yaw": 105,
-          "fov": 34,
-          "height": 1.6,
+          "yaw": 88,
+          "fov": 30,
+          "height": 1.8
+        },
+        {
+          "time": 4.1,
+          "distance": 15,
+          "pitch": 11,
+          "yaw": 98,
+          "fov": 30,
+          "height": 1.8,
           "ease": "smooth"
         }
       ],
       "caption": "STONE, TIMBER AND IRON"
     },
     {
-      "name": "upper",
+      "name": "sanctum",
       "scenario": "promo_imperial_capital",
       "seed": 8190,
-      "start": 24.0,
-      "duration": 5.5,
+      "start": 70.0,
+      "duration": 4.1,
       "focus": {
         "mode": "point",
-        "point": [
-          0.0,
-          0.0,
-          -100.0
-        ],
-        "smoothing": 0.7
+        "point": [0.0, 0.0, -306.0],
+        "smoothing": 0.85
       },
       "camera": [
         {
           "time": 0.0,
-          "distance": 94,
-          "pitch": 21,
-          "yaw": 350,
-          "fov": 40,
-          "height": 13.0
+          "distance": 34,
+          "pitch": 16,
+          "yaw": 200,
+          "fov": 30,
+          "height": 3.0
         },
         {
-          "time": 2.4,
-          "distance": 86,
-          "pitch": 20,
-          "yaw": 354,
-          "fov": 40,
-          "height": 11.0,
-          "ease": "smooth"
-        },
-        {
-          "time": 6.0,
-          "distance": 62,
-          "pitch": 17,
-          "yaw": 6,
-          "fov": 40,
-          "height": 7.0,
+          "time": 4.1,
+          "distance": 40,
+          "pitch": 29,
+          "yaw": 200,
+          "fov": 30,
+          "height": 15.0,
           "ease": "smooth"
         }
       ],
-      "caption": "THE UPPER QUARTER"
-    },
-    {
-      "name": "citadel",
-      "scenario": "promo_imperial_capital",
-      "seed": 8190,
-      "start": 40.0,
-      "duration": 5.5,
-      "focus": {
-        "mode": "point",
-        "point": [
-          0.0,
-          0.0,
-          -306.0
-        ],
-        "smoothing": 0.7
-      },
-      "camera": [
-        {
-          "time": 0.0,
-          "distance": 96,
-          "pitch": 11,
-          "yaw": 344,
-          "fov": 40,
-          "height": 44.0
-        },
-        {
-          "time": 2.2,
-          "distance": 92,
-          "pitch": 13,
-          "yaw": 348,
-          "fov": 40,
-          "height": 50.0,
-          "ease": "smooth"
-        },
-        {
-          "time": 6.0,
-          "distance": 74,
-          "pitch": 19,
-          "yaw": 358,
-          "fov": 40,
-          "height": 60.0,
-          "ease": "smooth"
-        }
-      ],
-      "caption": "THE TEMPLE ON THE MOUNTAIN"
+      "caption": "AND THE GODS ABOVE IT"
     },
     {
       "name": "reveal",
       "scenario": "promo_imperial_capital",
       "seed": 8190,
       "start": 66.0,
-      "duration": 7.0,
+      "duration": 4.4,
       "focus": {
         "mode": "point",
-        "point": [
-          0.0,
-          0.0,
-          -60.0
-        ],
-        "smoothing": 0.7
+        "point": [0.0, 0.0, -60.0],
+        "smoothing": 0.85
       },
       "camera": [
         {
           "time": 0.0,
-          "distance": 250,
-          "pitch": 24,
-          "yaw": 350,
-          "fov": 44,
-          "height": 18.0
+          "distance": 150,
+          "pitch": 26,
+          "yaw": 196,
+          "fov": 32,
+          "height": 26.0
         },
         {
-          "time": 2.5,
+          "time": 4.4,
           "distance": 300,
-          "pitch": 28,
-          "yaw": 356,
-          "fov": 44,
-          "height": 24.0,
-          "ease": "smooth"
-        },
-        {
-          "time": 7.0,
-          "distance": 470,
           "pitch": 40,
-          "yaw": 8,
-          "fov": 44,
-          "height": 40.0,
+          "yaw": 224,
+          "fov": 32,
+          "height": 86.0,
           "ease": "smooth"
         }
       ],
-      "caption": "ONE CITY, BUILT IN RINGS"
+      "caption": "STANDARD OF IRON"
     }
   ],
   "grade": {

@@ -629,27 +629,27 @@ legion crosses the bridge and marches the sacred way for the whole run.
 
 **Six things the first cut got wrong, all visible only in a render.**
 
-- *A lake takes its surface height from the terrain under its centre.* Put one on
+- _A lake takes its surface height from the terrain under its centre._ Put one on
   an elevation patch and `add_lakes` carves the bed at that raised level while the
   ground around it drops away - the lake comes out as a cylinder floating over the
   countryside. Lakes belong on flat ground, clear of every patch.
-- *Buildings authored outside `arena_floor_half_extent` stand on procedural
-  terrain*, which at this scale is a hillside. Keep every authored thing inside
+- _Buildings authored outside `arena_floor_half_extent` stand on procedural
+  terrain_, which at this scale is a hillside. Keep every authored thing inside
   the flat floor unless you mean it to be on a slope.
-- *`ArenaScenarioResourcePatch` lays its members along one spacing vector*, so a
+- _`ArenaScenarioResourcePatch` lays its members along one spacing vector_, so a
   patch of 18 pine trees is a straight line of 18 pine trees. `grove()` emits one
   single-count patch per tree at a hashed polar offset with size variation; use it
   for anything natural.
-- *A hill built from concentric circular patches is a perfect cone.* The patch
+- _A hill built from concentric circular patches is a perfect cone._ The patch
   profile now takes a `plateau` radius (constant height inside it, smoothstep
   outside), and the sacred mountain is one plateau patch plus eight offset lobes -
   irregular silhouette, a genuinely flat 150 m summit for the citadel, and the
   south sector deliberately left lobe-free so the sacred way climbs a natural
   shoulder. Nothing is authored on the slopes.
-- *The layout contracts measure axis-aligned footprints*, so a house turned 40
+- _The layout contracts measure axis-aligned footprints_, so a house turned 40
   degrees passes them and still visibly clips its neighbour. `CityPlanner` expands
   each footprint to its rotated AABB before testing.
-- *A city with no work in it reads as a model.* The scene runs harvest crews on
+- _A city with no work in it reads as a model._ The scene runs harvest crews on
   repeating cycles at authored groves, boulder fields and ore seams, carrier
   parties on `DeliverToStructure`, AI builder gangs, repair crews on two
   deliberately damaged buildings, and `SetFarmGrowth` on every farm so the fields

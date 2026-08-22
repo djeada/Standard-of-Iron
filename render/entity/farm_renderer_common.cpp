@@ -93,8 +93,6 @@ void add_soil_bed(BuildingArchetypeDesc& desc,
                palette.ash,
                BuildingStateMask::Destroyed);
 
-  // Small, rotated clods break up the otherwise perfectly flat rectangular bed.
-  // Keeping them low prevents them from fighting the furrows at the play camera.
   for (int patch = 0; patch < 24; ++patch) {
     const int patch_seed = spec.seed * 613 + patch * 37;
     const float px = (hash01(patch_seed) - 0.5F) * 1.82F * spec.half_x;
@@ -120,22 +118,20 @@ void add_soil_bed(BuildingArchetypeDesc& desc,
     const float offset = -row_span + row_step * (static_cast<float>(row) + 0.5F);
     for (int segment = 0; segment < k_ridge_segments; ++segment) {
       const int ridge_seed = spec.seed * 31 + row * 11 + segment;
-      const float a = -ridge_length +
-                      2.0F * ridge_length * static_cast<float>(segment) /
-                          static_cast<float>(k_ridge_segments);
-      const float b = -ridge_length +
-                      2.0F * ridge_length * static_cast<float>(segment + 1) /
-                          static_cast<float>(k_ridge_segments);
+      const float a = -ridge_length + 2.0F * ridge_length *
+                                          static_cast<float>(segment) /
+                                          static_cast<float>(k_ridge_segments);
+      const float b = -ridge_length + 2.0F * ridge_length *
+                                          static_cast<float>(segment + 1) /
+                                          static_cast<float>(k_ridge_segments);
       const float wobble_a = (hash01(ridge_seed) - 0.5F) * row_step * 0.14F;
       const float wobble_b = (hash01(ridge_seed + 1) - 0.5F) * row_step * 0.14F;
       QVector3D const start =
-          spec.rows_along_x
-              ? spec.center + QVector3D(a, y + 0.034F, offset + wobble_a)
-              : spec.center + QVector3D(offset + wobble_a, y + 0.034F, a);
+          spec.rows_along_x ? spec.center + QVector3D(a, y + 0.034F, offset + wobble_a)
+                            : spec.center + QVector3D(offset + wobble_a, y + 0.034F, a);
       QVector3D const end =
-          spec.rows_along_x
-              ? spec.center + QVector3D(b, y + 0.034F, offset + wobble_b)
-              : spec.center + QVector3D(offset + wobble_b, y + 0.034F, b);
+          spec.rows_along_x ? spec.center + QVector3D(b, y + 0.034F, offset + wobble_b)
+                            : spec.center + QVector3D(offset + wobble_b, y + 0.034F, b);
       const float radius = ridge_radius * (0.82F + hash01(ridge_seed + 7) * 0.30F);
       desc.add_cylinder(
           start, end, radius, palette.soil_light, k_building_state_mask_intact);
@@ -167,14 +163,14 @@ void add_stubble(BuildingArchetypeDesc& desc,
       const float row_jitter = (hash01(seed + 3) - 0.5F) * row_step * 0.30F;
       QVector3D const base =
           spec.rows_along_x
-              ? spec.center + QVector3D(run, spec.ground_y + 0.045F, offset + row_jitter)
-              : spec.center + QVector3D(offset + row_jitter, spec.ground_y + 0.045F, run);
+              ? spec.center +
+                    QVector3D(run, spec.ground_y + 0.045F, offset + row_jitter)
+              : spec.center +
+                    QVector3D(offset + row_jitter, spec.ground_y + 0.045F, run);
       const float height = 0.03F + hash01(seed + 5) * 0.025F;
       const float angle = hash01(seed + 11) * 6.2831853F;
       QVector3D const cut_tip =
-          base + QVector3D(std::cos(angle) * 0.008F,
-                           height,
-                           std::sin(angle) * 0.008F);
+          base + QVector3D(std::cos(angle) * 0.008F, height, std::sin(angle) * 0.008F);
       desc.add_cylinder(base,
                         cut_tip,
                         0.006F,
@@ -224,7 +220,7 @@ void add_crop(BuildingArchetypeDesc& desc,
     const float row_tint = 0.96F + hash01(spec.seed * 229 + row * 13) * 0.08F;
     for (int i = 0; i < per_row; ++i) {
       ++seed;
-      // A few gaps and shorter edge plants stop the crop from forming a clipped wall.
+
       if (hash01(seed + 109) < (stage == 1 ? 0.12F : 0.055F)) {
         continue;
       }
@@ -235,16 +231,15 @@ void add_crop(BuildingArchetypeDesc& desc,
       const float edge_distance =
           std::min(static_cast<float>(i), static_cast<float>(per_row - i - 1));
       const float edge_scale = std::clamp(0.78F + edge_distance * 0.11F, 0.78F, 1.0F);
-      const float growth_patch =
-          0.95F + std::sin(static_cast<float>(i) * 0.43F +
-                           static_cast<float>(row) * 0.71F +
-                           static_cast<float>(spec.seed)) *
-                      0.05F;
-      const float scale = (0.84F + hash01(seed + 29) * 0.30F) * edge_scale *
-                          row_vigor * growth_patch;
-      const float lean_angle =
-          prevailing_lean_angle + (hash01(seed + 41) - 0.5F) * 0.85F +
-          std::sin(static_cast<float>(row) * 0.67F) * 0.10F;
+      const float growth_patch = 0.95F + std::sin(static_cast<float>(i) * 0.43F +
+                                                  static_cast<float>(row) * 0.71F +
+                                                  static_cast<float>(spec.seed)) *
+                                             0.05F;
+      const float scale =
+          (0.84F + hash01(seed + 29) * 0.30F) * edge_scale * row_vigor * growth_patch;
+      const float lean_angle = prevailing_lean_angle +
+                               (hash01(seed + 41) - 0.5F) * 0.85F +
+                               std::sin(static_cast<float>(row) * 0.67F) * 0.10F;
       const float lean = look.lean * (0.4F + hash01(seed + 53));
 
       QVector3D const base =
@@ -257,8 +252,7 @@ void add_crop(BuildingArchetypeDesc& desc,
                                              look.height * scale,
                                              std::sin(lean_angle) * lean);
       const bool shaded = hash01(seed + 61) < 0.35F;
-      const float colour_variation =
-          row_tint * (0.96F + hash01(seed + 67) * 0.08F);
+      const float colour_variation = row_tint * (0.96F + hash01(seed + 67) * 0.08F);
       QVector3D const stalk_colour =
           (shaded ? stalk_shade_colour : stalk_base_colour) * colour_variation;
 

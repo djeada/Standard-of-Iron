@@ -679,58 +679,20 @@ void add_colonnade(CityPlanner& planner,
 
 void add_temple_star(CityPlanner& planner, QVector3D centre) {
   constexpr float k_deg_to_rad = 0.01745329251994329577F;
-  constexpr int k_arms = 8;
-  constexpr int k_per_arm = 5;
-  constexpr float k_arm_inner = 6.4F;
-  constexpr float k_arm_step = 5.2F;
-  constexpr int k_core_ring = 6;
-  constexpr float k_core_radius = 5.2F;
+  constexpr int k_points = 5;
+  constexpr float k_radius = 5.6F;
 
-  int index = 0;
-  for (int i = 0; i < k_core_ring; ++i) {
+  for (int index = 0; index < k_points; ++index) {
     const float degrees =
-        (360.0F / static_cast<float>(k_core_ring)) * static_cast<float>(i);
+        (360.0F / static_cast<float>(k_points)) * static_cast<float>(index);
     const float radians = degrees * k_deg_to_rad;
-    planner.place(QStringLiteral("capital_sanctum_%1").arg(index++),
+    planner.place(QStringLiteral("capital_sanctum_%1").arg(index),
                   Spawn::Temple,
-                  {centre.x() + (std::cos(radians) * k_core_radius),
+                  {centre.x() + (std::cos(radians) * k_radius),
                    0.0F,
-                   centre.z() + (std::sin(radians) * k_core_radius)},
+                   centre.z() + (std::sin(radians) * k_radius)},
                   degrees + 90.0F,
                   false);
-  }
-
-  for (int arm = 0; arm < k_arms; ++arm) {
-    const float degrees =
-        (360.0F / static_cast<float>(k_arms)) * static_cast<float>(arm);
-    const float radians = degrees * k_deg_to_rad;
-    for (int step = 0; step < k_per_arm; ++step) {
-      const float reach = k_arm_inner + (static_cast<float>(step) * k_arm_step);
-      planner.place(QStringLiteral("capital_sanctum_%1").arg(index++),
-                    Spawn::Temple,
-                    {centre.x() + (std::cos(radians) * reach),
-                     0.0F,
-                     centre.z() + (std::sin(radians) * reach)},
-                    degrees + 90.0F,
-                    false);
-    }
-  }
-
-  for (int arm = 0; arm < k_arms; ++arm) {
-    const float degrees =
-        (360.0F / static_cast<float>(k_arms)) * static_cast<float>(arm) +
-        (180.0F / static_cast<float>(k_arms));
-    const float radians = degrees * k_deg_to_rad;
-    for (int step = 2; step < 4; ++step) {
-      const float reach = k_arm_inner + (static_cast<float>(step) * k_arm_step);
-      planner.place(QStringLiteral("capital_sanctum_%1").arg(index++),
-                    Spawn::Temple,
-                    {centre.x() + (std::cos(radians) * reach),
-                     0.0F,
-                     centre.z() + (std::sin(radians) * reach)},
-                    degrees + 90.0F,
-                    false);
-    }
   }
 }
 
@@ -834,9 +796,9 @@ void add_monuments(ArenaScenarioDefinition& scenario, CityPlanner& planner) {
         std::pair{"_tower_bridge_se", QVector3D(24.0F, 0.0F, 202.0F)},
         std::pair{"_tower_ford_w", QVector3D(-142.0F, 0.0F, 150.0F)},
         std::pair{"_tower_ford_e", QVector3D(-98.0F, 0.0F, 150.0F)},
-        std::pair{"_tower_sacred_w", QVector3D(-26.0F, 0.0F, -216.0F)},
-        std::pair{"_tower_sacred_e", QVector3D(26.0F, 0.0F, -216.0F)},
-        std::pair{"_tower_road_north", QVector3D(-98.0F, 0.0F, -262.0F)},
+        std::pair{"_tower_sacred_w", QVector3D(-30.0F, 0.0F, -152.0F)},
+        std::pair{"_tower_sacred_e", QVector3D(30.0F, 0.0F, -152.0F)},
+        std::pair{"_tower_road_north", QVector3D(-124.0F, 0.0F, -196.0F)},
         std::pair{"_tower_road_east", QVector3D(266.0F, 0.0F, -60.0F)},
         std::pair{"_tower_road_west", QVector3D(-264.0F, 0.0F, -60.0F)},
         std::pair{"_tower_road_south", QVector3D(4.0F, 0.0F, 268.0F)}}) {
@@ -866,7 +828,7 @@ void add_monuments(ArenaScenarioDefinition& scenario, CityPlanner& planner) {
                     38.0F,
                     k_mountain_z - 24.0F,
                     270.0F},
-           Landmark{"capital_lower_temple", Spawn::Temple, -20.0F, -212.0F, 180.0F},
+           Landmark{"capital_lower_temple", Spawn::Temple, -26.0F, -150.0F, 180.0F},
 
            Landmark{"capital_basilica", Spawn::Marketplace, -26.0F, k_forum_z, 90.0F},
            Landmark{"capital_curia", Spawn::Marketplace, 26.0F, k_forum_z, 270.0F},
@@ -896,14 +858,14 @@ void add_monuments(ArenaScenarioDefinition& scenario, CityPlanner& planner) {
 
   add_colonnade(planner,
                 QStringLiteral("capital_portico_west"),
-                {-20.0F, 0.0F, -146.0F},
-                {-20.0F, 0.0F, -250.0F},
+                {-20.0F, 0.0F, -104.0F},
+                {-20.0F, 0.0F, -142.0F},
                 6.5F,
                 90.0F);
   add_colonnade(planner,
                 QStringLiteral("capital_portico_east"),
-                {20.0F, 0.0F, -146.0F},
-                {20.0F, 0.0F, -250.0F},
+                {20.0F, 0.0F, -104.0F},
+                {20.0F, 0.0F, -142.0F},
                 6.5F,
                 270.0F);
   add_colonnade(planner,
@@ -1322,8 +1284,8 @@ void add_relief(ArenaScenarioDefinition& scenario) {
 void add_dressing(ArenaScenarioDefinition& scenario) {
   scenario.resource_patches = {
       patch("magic_shrine", 1, {k_avenue_x, 0.0F, k_mountain_z - 56.0F}, {}, 1.8F),
-      patch("statue", 9, {-27.0F, 0.0F, -150.0F}, {0.0F, 0.0F, -12.0F}, 1.4F),
-      patch("statue", 9, {27.0F, 0.0F, -150.0F}, {0.0F, 0.0F, -12.0F}, 1.4F),
+      patch("statue", 6, {-27.0F, 0.0F, -104.0F}, {0.0F, 0.0F, -8.0F}, 1.4F),
+      patch("statue", 6, {27.0F, 0.0F, -104.0F}, {0.0F, 0.0F, -8.0F}, 1.4F),
       patch("statue", 6, {-47.0F, 0.0F, k_forum_z - 22.0F}, {0.0F, 0.0F, 9.0F}, 1.3F),
       patch("statue", 6, {47.0F, 0.0F, k_forum_z - 22.0F}, {0.0F, 0.0F, 9.0F}, 1.3F),
       patch(
@@ -1491,6 +1453,30 @@ void add_dressing(ArenaScenarioDefinition& scenario) {
            Scatter{"plant", 24, 100.0F, 34.0F, 15.0F, 12.0F, 0.95F},
            Scatter{"plant", 22, -20.0F, -270.0F, 12.0F, 14.0F, 1.0F},
            Scatter{"plant", 22, 20.0F, -270.0F, 12.0F, 14.0F, 1.0F},
+
+           Scatter{"plant", 12, -74.0F, -50.0F, 5.0F, 4.5F, 0.95F},
+           Scatter{"plant", 12, 76.0F, -46.0F, 5.0F, 4.5F, 0.95F},
+           Scatter{"plant", 11, -112.0F, -14.0F, 4.6F, 4.2F, 0.95F},
+           Scatter{"plant", 11, 114.0F, -18.0F, 4.6F, 4.2F, 0.95F},
+           Scatter{"plant", 12, -56.0F, 44.0F, 5.2F, 4.6F, 0.95F},
+           Scatter{"plant", 12, 58.0F, 40.0F, 5.2F, 4.6F, 0.95F},
+           Scatter{"plant", 10, -146.0F, -74.0F, 4.4F, 4.0F, 0.95F},
+           Scatter{"plant", 10, 148.0F, -70.0F, 4.4F, 4.0F, 0.95F},
+           Scatter{"plant", 11, -92.0F, 92.0F, 4.8F, 4.4F, 0.95F},
+           Scatter{"plant", 11, 94.0F, 88.0F, 4.8F, 4.4F, 0.95F},
+           Scatter{"plant", 10, -34.0F, -142.0F, 4.6F, 4.2F, 0.95F},
+           Scatter{"plant", 10, 36.0F, -138.0F, 4.6F, 4.2F, 0.95F},
+
+           Scatter{"olive_tree", 7, -78.0F, -22.0F, 8.0F, 7.0F, 1.0F},
+           Scatter{"olive_tree", 7, 80.0F, -26.0F, 8.0F, 7.0F, 1.0F},
+           Scatter{"olive_tree", 8, -120.0F, 62.0F, 9.0F, 7.5F, 1.0F},
+           Scatter{"olive_tree", 8, 122.0F, 58.0F, 9.0F, 7.5F, 1.0F},
+           Scatter{"olive_tree", 7, -60.0F, -132.0F, 8.0F, 7.0F, 1.0F},
+           Scatter{"olive_tree", 7, 62.0F, -128.0F, 8.0F, 7.0F, 1.0F},
+           Scatter{"pine_tree", 6, -104.0F, -58.0F, 7.0F, 6.0F, 1.05F},
+           Scatter{"pine_tree", 6, 106.0F, -54.0F, 7.0F, 6.0F, 1.05F},
+           Scatter{"pine_tree", 6, -30.0F, 74.0F, 7.0F, 6.0F, 1.05F},
+           Scatter{"pine_tree", 6, 32.0F, 70.0F, 7.0F, 6.0F, 1.05F},
        }) {
     grove(scenario,
           item.type,

@@ -29,18 +29,18 @@ constexpr float k_far_distance_sq = 120.0F * 120.0F;
 constexpr float k_detail_distance_sq = 46.0F * 46.0F;
 constexpr float k_cull_radius = 0.8F;
 
-constexpr float k_carry_height = 0.50F;
-constexpr float k_carry_forward = 0.34F;
-constexpr float k_hand_span = 0.185F;
+constexpr float k_grip_height = 0.89F;
+constexpr float k_grip_forward = 0.08F;
+constexpr float k_hand_span = 0.19F;
 constexpr int k_max_visible_carriers = 8;
 
 constexpr QVector3D k_timber{0.47F, 0.32F, 0.18F};
 constexpr QVector3D k_timber_cut{0.72F, 0.56F, 0.34F};
 constexpr QVector3D k_stone_light{0.76F, 0.73F, 0.66F};
 constexpr QVector3D k_stone_dark{0.44F, 0.42F, 0.38F};
-constexpr QVector3D k_ore{0.30F, 0.29F, 0.31F};
-constexpr QVector3D k_ore_rust{0.44F, 0.27F, 0.16F};
-constexpr QVector3D k_basket{0.55F, 0.43F, 0.25F};
+constexpr QVector3D k_ore{0.24F, 0.25F, 0.28F};
+constexpr QVector3D k_ore_light{0.39F, 0.40F, 0.43F};
+constexpr QVector3D k_ore_rust{0.53F, 0.29F, 0.14F};
 constexpr QVector3D k_straw{0.84F, 0.68F, 0.32F};
 constexpr QVector3D k_straw_dark{0.62F, 0.47F, 0.20F};
 constexpr QVector3D k_grain_head{0.92F, 0.78F, 0.40F};
@@ -112,18 +112,17 @@ void draw_log(ISubmitter& out,
               const QMatrix4x4& frame,
               std::uint32_t seed,
               bool detailed) {
-  constexpr float k_radius = 0.062F;
-  constexpr float k_half_length = k_hand_span + 0.145F;
+  constexpr float k_radius = 0.085F;
+  constexpr float k_half_length = k_hand_span + 0.25F;
   constexpr std::array<std::array<float, 2>, 3> k_bundle{
-      {{-0.066F, 0.0F}, {0.066F, 0.0F}, {0.0F, 0.112F}}};
+      {{-0.09F, 0.0F}, {0.09F, 0.0F}, {0.0F, 0.145F}}};
 
-  Mesh* const cube = get_unit_cube();
   for (std::size_t i = 0; i < k_bundle.size(); ++i) {
     auto const log_seed = static_cast<std::uint32_t>(seed + 17U + (i * 41U));
     float const skew = jitter(log_seed, 0.035F);
     float const half_length = k_half_length + jitter(log_seed * 3U, 0.045F);
-    float const y = k_carry_height + k_bundle.at(i).at(1);
-    float const z = k_carry_forward + k_bundle.at(i).at(0);
+    float const y = k_grip_height + k_bundle.at(i).at(1);
+    float const z = k_grip_forward + k_bundle.at(i).at(0);
     QVector3D const left(-half_length, y - skew, z);
     QVector3D const right(half_length, y + skew, z);
 
@@ -134,15 +133,17 @@ void draw_log(ISubmitter& out,
     if (!detailed) {
       continue;
     }
-    for (const auto& end : {left, right}) {
-      put(out,
-          cube,
-          frame,
-          end,
-          QVector3D(0.013F, k_radius * 0.84F, k_radius * 0.84F),
-          QVector3D(),
-          tint(k_timber_cut, 0.94F + (rand01(log_seed * 7U) * 0.12F)));
-    }
+    QVector3D const end_axis = (right - left).normalized() * 0.014F;
+    QVector3D const cut_color =
+        tint(k_timber_cut, 0.94F + (rand01(log_seed * 7U) * 0.12F));
+    out.mesh(get_unit_cylinder(10),
+             Render::Geom::cylinder_between(
+                 frame, left - end_axis, left + end_axis, k_radius * 0.88F),
+             cut_color);
+    out.mesh(get_unit_cylinder(10),
+             Render::Geom::cylinder_between(
+                 frame, right - end_axis, right + end_axis, k_radius * 0.88F),
+             cut_color);
   }
 }
 
@@ -151,67 +152,63 @@ void draw_block(ISubmitter& out,
                 std::uint32_t seed,
                 bool detailed) {
   Mesh* const cube = get_unit_cube();
+  Mesh* const stone = Render::Geom::Stone::get();
   put(out,
-      cube,
+      (stone != nullptr) ? stone : cube,
       frame,
-      QVector3D(0.0F, k_carry_height - 0.02F, k_carry_forward + 0.02F),
-      QVector3D(0.150F, 0.098F, 0.118F),
-      QVector3D(0.0F, jitter(seed, 7.0F), 0.0F),
+      QVector3D(0.0F, k_grip_height + 0.015F, k_grip_forward),
+      QVector3D(0.235F, 0.165F, 0.185F),
+      QVector3D(jitter(seed * 5U, 8.0F), jitter(seed, 12.0F), 0.0F),
       tint(k_stone_light, 0.84F + (rand01(seed * 3U) * 0.20F)));
 
   if (!detailed) {
     return;
   }
-  Mesh* const stone = Render::Geom::Stone::get();
   put(out,
       (stone != nullptr) ? stone : cube,
       frame,
-      QVector3D(
-          jitter(seed * 5U, 0.05F), k_carry_height + 0.14F, k_carry_forward + 0.01F),
-      QVector3D(0.072F, 0.052F, 0.064F),
+      QVector3D(jitter(seed * 7U, 0.07F),
+                k_grip_height + 0.17F,
+                k_grip_forward + jitter(seed * 11U, 0.045F)),
+      QVector3D(0.105F, 0.072F, 0.088F),
       QVector3D(0.0F, rand01(seed * 11U) * 360.0F, 0.0F),
       tint(k_stone_dark, 1.05F + (rand01(seed * 13U) * 0.20F)));
 }
 
-void draw_ore_basket(ISubmitter& out,
-                     const QMatrix4x4& frame,
-                     std::uint32_t seed,
-                     bool detailed) {
-  Mesh* const basket = get_unit_tapered_cylinder(0.72F, 1.0F, 10);
-  QMatrix4x4 body = frame;
-  body.translate(0.0F, k_carry_height - 0.04F, k_carry_forward);
-  body.scale(0.175F, 0.125F, 0.155F);
-  out.mesh(basket, body, tint(k_basket, 0.90F + (rand01(seed) * 0.22F)));
-
+void draw_iron_ore(ISubmitter& out,
+                   const QMatrix4x4& frame,
+                   std::uint32_t seed,
+                   bool detailed) {
+  Mesh* const stone = Render::Geom::Stone::get();
   Mesh* const cube = get_unit_cube();
   put(out,
-      cube,
+      (stone != nullptr) ? stone : cube,
       frame,
-      QVector3D(0.0F, k_carry_height + 0.085F, k_carry_forward),
-      QVector3D(0.180F, 0.018F, 0.160F),
-      QVector3D(),
-      tint(k_basket, 0.70F));
+      QVector3D(0.0F, k_grip_height + 0.025F, k_grip_forward),
+      QVector3D(0.245F, 0.16F, 0.18F),
+      QVector3D(jitter(seed * 3U, 8.0F), jitter(seed, 14.0F), 0.0F),
+      tint(k_ore, 0.90F + (rand01(seed) * 0.18F)));
 
   if (!detailed) {
     return;
   }
-  Mesh* const stone = Render::Geom::Stone::get();
-  Mesh* const fallback = get_unit_sphere();
-  constexpr std::array<std::array<float, 2>, 3> k_lumps{
-      {{-0.072F, -0.040F}, {0.068F, 0.032F}, {0.000F, 0.076F}}};
-  for (std::size_t i = 0; i < k_lumps.size(); ++i) {
-    auto const lump_seed = static_cast<std::uint32_t>(seed + 61U + (i * 37U));
-    float const radius = 0.058F + (rand01(lump_seed) * 0.020F);
-    QVector3D const base = (rand01(lump_seed * 3U) > 0.6F) ? k_ore_rust : k_ore;
+  constexpr std::array<std::array<float, 3>, 4> k_veins{{{-0.13F, 0.10F, -0.08F},
+                                                         {0.12F, 0.08F, 0.07F},
+                                                         {-0.05F, 0.17F, 0.04F},
+                                                         {0.08F, -0.07F, -0.09F}}};
+  for (std::size_t i = 0; i < k_veins.size(); ++i) {
+    auto const vein_seed = static_cast<std::uint32_t>(seed + 61U + (i * 37U));
+    float const radius = 0.04F + (rand01(vein_seed) * 0.022F);
+    QVector3D const vein_color = (i % 2U == 0U) ? k_ore_rust : k_ore_light;
     put(out,
-        (stone != nullptr) ? stone : fallback,
+        (stone != nullptr) ? stone : cube,
         frame,
-        QVector3D(k_lumps.at(i).at(0),
-                  k_carry_height + 0.10F + (radius * 0.45F),
-                  k_carry_forward + k_lumps.at(i).at(1)),
-        QVector3D(radius, radius * 0.78F, radius * 0.92F),
-        QVector3D(0.0F, rand01(lump_seed * 5U) * 360.0F, 0.0F),
-        tint(base, 0.98F + (rand01(lump_seed * 7U) * 0.26F)));
+        QVector3D(k_veins.at(i).at(0),
+                  k_grip_height + k_veins.at(i).at(1),
+                  k_grip_forward + k_veins.at(i).at(2)),
+        QVector3D(radius * 1.55F, radius * 0.58F, radius),
+        QVector3D(0.0F, rand01(vein_seed * 5U) * 360.0F, 0.0F),
+        tint(vein_color, 0.96F + (rand01(vein_seed * 7U) * 0.22F)));
   }
 }
 
@@ -222,16 +219,16 @@ void draw_sheaf(ISubmitter& out,
 
   Mesh* const cylinder = get_unit_cylinder(10);
   constexpr float k_half_length = k_hand_span + 0.115F;
-  QVector3D const left(-k_half_length, k_carry_height + 0.02F, k_carry_forward);
-  QVector3D const right(k_half_length, k_carry_height + 0.06F, k_carry_forward);
+  QVector3D const left(-k_half_length, k_grip_height + 0.02F, k_grip_forward);
+  QVector3D const right(k_half_length, k_grip_height + 0.06F, k_grip_forward);
   out.mesh(cylinder,
            Render::Geom::cylinder_between(frame, left, right, 0.105F),
            tint(k_straw, 0.92F + (rand01(seed) * 0.16F)));
   out.mesh(cylinder,
            Render::Geom::cylinder_between(
                frame,
-               QVector3D(-0.02F, k_carry_height + 0.04F, k_carry_forward),
-               QVector3D(0.02F, k_carry_height + 0.04F, k_carry_forward),
+               QVector3D(-0.02F, k_grip_height + 0.04F, k_grip_forward),
+               QVector3D(0.02F, k_grip_height + 0.04F, k_grip_forward),
                0.112F),
            k_twine);
   if (!detailed) {
@@ -249,8 +246,8 @@ void draw_sheaf(ISubmitter& out,
         cube,
         frame,
         QVector3D(k_heads.at(i).at(0),
-                  k_carry_height + k_heads.at(i).at(1),
-                  k_carry_forward + k_heads.at(i).at(2)),
+                  k_grip_height + k_heads.at(i).at(1),
+                  k_grip_forward + k_heads.at(i).at(2)),
         QVector3D(0.055F, 0.018F, 0.018F),
         QVector3D(0.0F, 0.0F, jitter(head_seed, 18.0F)),
         tint(k_grain_head, 0.92F + (rand01(head_seed) * 0.16F)));
@@ -258,7 +255,7 @@ void draw_sheaf(ISubmitter& out,
   put(out,
       cube,
       frame,
-      QVector3D(0.0F, k_carry_height - 0.07F, k_carry_forward),
+      QVector3D(0.0F, k_grip_height - 0.07F, k_grip_forward),
       QVector3D(0.30F, 0.02F, 0.06F),
       QVector3D(),
       k_straw_dark);
@@ -274,7 +271,7 @@ void draw_load(ISubmitter& out,
     draw_block(out, frame, seed, detailed);
     return;
   case ResourceType::Iron:
-    draw_ore_basket(out, frame, seed, detailed);
+    draw_iron_ore(out, frame, seed, detailed);
     return;
   case ResourceType::Food:
     draw_sheaf(out, frame, seed, detailed);

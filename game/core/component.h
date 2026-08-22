@@ -235,6 +235,13 @@ public:
   [[nodiscard]] auto get_can_enter_forest() const -> bool { return can_enter_forest; }
   void set_can_enter_forest(bool allowed) { can_enter_forest = allowed; }
 
+  [[nodiscard]] auto get_navigation_clearance() const -> float {
+    return navigation_clearance;
+  }
+  void set_navigation_clearance(float radius) {
+    navigation_clearance = std::max(0.0F, radius);
+  }
+
 private:
   friend class Game::Systems::MovementSystem;
   friend class Serialization;
@@ -252,6 +259,8 @@ private:
 
   bool has_requested_goal{false};
   float requested_goal_x{0.0F}, requested_goal_z{0.0F};
+
+  float navigation_clearance{0.5F};
 
   bool stuck_ref_valid{false};
   float stuck_ref_x{0.0F}, stuck_ref_z{0.0F};
