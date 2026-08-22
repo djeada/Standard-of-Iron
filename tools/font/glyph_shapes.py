@@ -16,6 +16,7 @@ from dataclasses import dataclass, field
 
 from glyph_geometry import (
     CAP,
+    CURVE_OVERSHOOT,
     EXT,
     SIDEBEARING,
     STEM,
@@ -224,7 +225,15 @@ def letter_b() -> Glyph:
     """
     width = 588
     glyph = Glyph(contours=[stem(0, STEM)], advance=width + 2 * SIDEBEARING)
-    stem_bowl(glyph, STEM, width - 40, CAP * 0.74, CAP * 0.26)
+    upper_bottom = CAP * 0.48
+    upper_top = CAP + CURVE_OVERSHOOT
+    stem_bowl(
+        glyph,
+        STEM,
+        width - 40,
+        (upper_bottom + upper_top) / 2.0,
+        (upper_top - upper_bottom) / 2.0,
+    )
     stem_bowl(glyph, STEM, width, CAP * 0.26, CAP * 0.29)
     return glyph
 
@@ -236,7 +245,7 @@ def letter_c() -> Glyph:
     width = 624
     glyph = Glyph(advance=width + 2 * SIDEBEARING)
     cx, cy = width / 2.0, CAP / 2.0
-    rx, ry = width / 2.0, CAP / 2.0
+    rx, ry = width / 2.0, CAP / 2.0 + CURVE_OVERSHOOT
     bowl = ring_parts(cx, cy, rx, ry, glyph)
     bowl.holes.append(blade_mouth(cx, cy, rx, ry, ry * 0.30))
     return glyph
@@ -245,7 +254,7 @@ def letter_c() -> Glyph:
 def letter_d() -> Glyph:
     width = 624
     glyph = Glyph(contours=[stem(0, STEM)], advance=width + 2 * SIDEBEARING)
-    stem_bowl(glyph, STEM, width, CAP / 2.0, CAP / 2.0)
+    stem_bowl(glyph, STEM, width, CAP / 2.0, CAP / 2.0 + CURVE_OVERSHOOT)
     return glyph
 
 
@@ -292,7 +301,7 @@ def letter_g() -> Glyph:
     width = 648
     glyph = Glyph(advance=width + 2 * SIDEBEARING)
     cx, cy = width / 2.0, CAP / 2.0
-    rx, ry = width / 2.0, CAP / 2.0
+    rx, ry = width / 2.0, CAP / 2.0 + CURVE_OVERSHOOT
     bowl = ring_parts(cx, cy, rx, ry, glyph)
 
     bowl.holes.append(
@@ -341,7 +350,13 @@ def letter_j() -> Glyph:
     hook_cy = CAP * 0.30
     glyph = Glyph(advance=width + 2 * SIDEBEARING)
     stem_centre = width - STEM / 2.0
-    bowl = ring_parts(stem_centre - 178, hook_cy, 178 + STEM / 2.0, hook_cy, glyph)
+    bowl = ring_parts(
+        stem_centre - 178,
+        hook_cy,
+        178 + STEM / 2.0,
+        hook_cy + CURVE_OVERSHOOT,
+        glyph,
+    )
     bowl.holes.append(mask(-240, hook_cy, width + 120, CAP + 120))
     glyph.contours.append(
         stem(width - STEM, width, y_bottom=hook_cy, head=True, foot=False)
@@ -415,14 +430,28 @@ def letter_o() -> Glyph:
     """
     width = 664
     glyph = Glyph(advance=width + 2 * SIDEBEARING)
-    ring_parts(width / 2.0, CAP / 2.0, width / 2.0, CAP / 2.0, glyph)
+    ring_parts(
+        width / 2.0,
+        CAP / 2.0,
+        width / 2.0,
+        CAP / 2.0 + CURVE_OVERSHOOT,
+        glyph,
+    )
     return glyph
 
 
 def letter_p() -> Glyph:
     width = 566
     glyph = Glyph(contours=[stem(0, STEM, head=True)], advance=width + 2 * SIDEBEARING)
-    stem_bowl(glyph, STEM, width, CAP * 0.725, CAP * 0.275)
+    bowl_bottom = CAP * 0.45
+    bowl_top = CAP + CURVE_OVERSHOOT
+    stem_bowl(
+        glyph,
+        STEM,
+        width,
+        (bowl_bottom + bowl_top) / 2.0,
+        (bowl_top - bowl_bottom) / 2.0,
+    )
     return glyph
 
 
@@ -447,7 +476,9 @@ def letter_r() -> Glyph:
     """
     width = 614
     glyph = Glyph(contours=[stem(0, STEM, head=True)], advance=width + 2 * SIDEBEARING)
-    cy, ry = CAP * 0.735, CAP * 0.265
+    bowl_bottom = CAP * 0.47
+    bowl_top = CAP + CURVE_OVERSHOOT
+    cy, ry = (bowl_bottom + bowl_top) / 2.0, (bowl_top - bowl_bottom) / 2.0
     stem_bowl(glyph, STEM, width - 90, cy, ry)
     glyph.contours.append(
         diagonal(STEM + 40, cy - ry + 30, width, 0, STEM - 20, STEM + 20)
@@ -469,8 +500,10 @@ def letter_s() -> Glyph:
     """
     width = 548
     glyph = Glyph(advance=width + 2 * SIDEBEARING)
-    upper_cy, upper_r = CAP * 0.73, CAP * 0.27
-    lower_cy, lower_r = CAP * 0.285, CAP * 0.285
+    upper_cy = CAP * 0.73 + CURVE_OVERSHOOT / 2.0
+    upper_r = CAP * 0.27 + CURVE_OVERSHOOT / 2.0
+    lower_cy = CAP * 0.285 - CURVE_OVERSHOOT / 2.0
+    lower_r = CAP * 0.285 + CURVE_OVERSHOOT / 2.0
     upper = ring_parts(width * 0.50, upper_cy, width * 0.50, upper_r, glyph)
     lower = ring_parts(width * 0.50, lower_cy, width * 0.50, lower_r, glyph)
     upper.holes.append(
@@ -516,7 +549,9 @@ def letter_u() -> Glyph:
     width = 628
     bowl_cy = CAP * 0.305
     glyph = Glyph(advance=width + 2 * SIDEBEARING)
-    bowl = ring_parts(width / 2.0, bowl_cy, width / 2.0, bowl_cy, glyph)
+    bowl = ring_parts(
+        width / 2.0, bowl_cy, width / 2.0, bowl_cy + CURVE_OVERSHOOT, glyph
+    )
     bowl.holes.append(mask(-100, bowl_cy, width + 100, CAP + 100))
     glyph.contours.append(stem(0, STEM, y_bottom=bowl_cy - 10, foot=False))
     glyph.contours.append(stem(width - THIN, width, y_bottom=bowl_cy - 10, foot=False))

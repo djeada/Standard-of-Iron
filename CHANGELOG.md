@@ -34,6 +34,19 @@ tools/font/build_standard_iron.py`, then `tools/font/proof.py` to look at it).
 
 ### Fixed
 
+- **Swords no longer reach through a wall, and the men holding them walk
+  around it.** Melee damage was already refused across a structure, but the
+  approach step measured plain distance, decided an engagement it could not
+  reach was already close enough, and stopped the unit — so a squad ordered onto
+  an enemy behind a wall stood facing the stonework for the rest of the battle,
+  and a formation front could still form through it, soldiers swinging at men
+  they could not touch. An attacker separated by a wall or a shut gate now looks
+  for somewhere to stand beside its target, on the target's own side and clear
+  enough of the wall for its whole formation to fit, and marches around; the
+  fight starts when it gets there. Nothing goes around on its own initiative —
+  auto-engagement, AI orders and retaliation still drop an enemy they cannot
+  reach — and archers still shoot over the wall as before.
+
 - **Promotional reels no longer letter themselves differently on every
   machine.** `scripts/promo-edit.py` used to walk an eight-deep list of
   `/usr/share/fonts` paths and caption a video with whichever face it found

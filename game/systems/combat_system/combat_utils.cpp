@@ -3,6 +3,8 @@
 #include <algorithm>
 #include <cmath>
 #include <limits>
+#include <numbers>
+#include <optional>
 
 #include "../../core/component.h"
 #include "../../core/world.h"
@@ -12,6 +14,7 @@
 #include "../combat_rules.h"
 #include "../formation_combat_geometry.h"
 #include "../gate_service.h"
+#include "../nav_grid.h"
 #include "../owner_registry.h"
 #include "structure_combat.h"
 
@@ -19,6 +22,12 @@ namespace Game::Systems::Combat {
 
 namespace {
 constexpr float k_combat_query_cell_size = 15.0F;
+
+constexpr int k_bypass_arc_samples = 12;
+
+constexpr float k_min_bypass_standoff = 0.75F;
+
+constexpr float k_bypass_clearance_margin = 0.75F;
 } // namespace
 
 CombatQueryContext::CombatQueryContext()
@@ -283,6 +292,12 @@ auto combat_radius(Engine::Core::Entity* entity) -> float {
   return radius;
 }
 
+auto structure_separates_positions(const QVector3D& from, const QVector3D& to) -> bool {
+  return Game::Systems::BuildingCollisionRegistry::instance()
+             .segment_crosses_blocking_building(from.x(), from.z(), to.x(), to.z()) ||
+         Game::Systems::GateService::blocks_line(from, to);
+}
+
 auto structure_separates_combatants(Engine::Core::Entity* attacker,
                                     Engine::Core::Entity* target) -> bool {
   if ((attacker == nullptr) || (target == nullptr)) {
@@ -303,9 +318,48 @@ auto structure_separates_combatants(Engine::Core::Entity* attacker,
   QVector3D const from(
       attacker_transform->position.x, 0.0F, attacker_transform->position.z);
   QVector3D const to(target_transform->position.x, 0.0F, target_transform->position.z);
-  return Game::Systems::BuildingCollisionRegistry::instance()
-             .segment_crosses_blocking_building(from.x(), from.z(), to.x(), to.z()) ||
-         Game::Systems::GateService::blocks_line(from, to);
+  return structure_separates_positions(from, to);
+}
+
+auto melee_bypass_destination(const QVector3D& attacker_position,
+                              const QVector3D& target_position,
+                              float standoff_distance,
+                              float clearance_radius) -> std::optional<QVector3D> {
+  QVector3D const target(target_position.x(), 0.0F, target_position.z());
+  float const standoff = std::max(standoff_distance, k_min_bypass_standoff);
+
+  QVector3D approach(
+      attacker_position.x() - target.x(), 0.0F, attacker_position.z() - target.z());
+  float const approach_length_sq = approach.lengthSquared();
+  float const base_angle =
+      approach_length_sq > 0.000001F ? std::atan2(approach.z(), approach.x()) : 0.0F;
+
+  constexpr float k_arc_step =
+      2.0F * std::numbers::pi_v<float> / static_cast<float>(k_bypass_arc_samples);
+  for (int index = 0; index < k_bypass_arc_samples; ++index) {
+    float const offset = static_cast<float>((index + 1) / 2) * k_arc_step;
+    float const angle = base_angle + (index % 2 == 0 ? offset : -offset);
+    QVector3D const candidate(target.x() + std::cos(angle) * standoff,
+                              0.0F,
+                              target.z() + std::sin(angle) * standoff);
+    if (structure_separates_positions(candidate, target)) {
+      continue;
+    }
+    if (!Game::Systems::NavGrid::is_world_position_walkable(candidate)) {
+      continue;
+    }
+    float const clearance = clearance_radius + k_bypass_clearance_margin;
+    if (Game::Systems::BuildingCollisionRegistry::instance()
+            .is_rect_overlapping_blocking_building(candidate.x() - clearance,
+                                                   candidate.x() + clearance,
+                                                   candidate.z() - clearance,
+                                                   candidate.z() + clearance)) {
+      continue;
+    }
+    return candidate;
+  }
+
+  return std::nullopt;
 }
 
 auto melee_walled_off_from(Engine::Core::Entity* attacker,

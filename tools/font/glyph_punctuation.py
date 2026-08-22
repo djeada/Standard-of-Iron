@@ -13,6 +13,7 @@ from __future__ import annotations
 
 from glyph_geometry import (
     CAP,
+    CURVE_OVERSHOOT,
     STEM,
     THIN,
     bar,
@@ -58,7 +59,10 @@ def digit_one() -> Glyph:
 def digit_two() -> Glyph:
     width = 556
     glyph = Glyph()
-    cy, ry = FIG * 0.715, FIG * 0.285
+
+    bowl_bottom = FIG * 0.43
+    bowl_top = FIG + CURVE_OVERSHOOT
+    cy, ry = (bowl_bottom + bowl_top) / 2.0, (bowl_top - bowl_bottom) / 2.0
     bowl = ring_parts(width / 2.0, cy, width / 2.0, ry, glyph)
     bowl.holes.append(mask(-80, -80, width + 80, cy))
     glyph.contours.append(
@@ -81,8 +85,10 @@ def digit_three() -> Glyph:
     """
     width = 536
     glyph = Glyph()
-    upper_cy, upper_r = FIG * 0.735, FIG * 0.265
-    lower_cy, lower_r = FIG * 0.275, FIG * 0.275
+    upper_cy = FIG * 0.735 + CURVE_OVERSHOOT / 2.0
+    upper_r = FIG * 0.265 + CURVE_OVERSHOOT / 2.0
+    lower_cy = FIG * 0.275 - CURVE_OVERSHOOT / 2.0
+    lower_r = FIG * 0.275 + CURVE_OVERSHOOT / 2.0
     upper_cx, lower_cx = width * 0.47, width * 0.49
     upper = ring_parts(upper_cx, upper_cy, upper_cx, upper_r, glyph)
     lower = ring_parts(lower_cx, lower_cy, lower_cx, lower_r, glyph)
@@ -111,7 +117,8 @@ def digit_five() -> Glyph:
     """
     width = 540
     glyph = Glyph()
-    cy, ry = FIG * 0.295, FIG * 0.295
+    cy = FIG * 0.295 - CURVE_OVERSHOOT / 2.0
+    ry = FIG * 0.295 + CURVE_OVERSHOOT / 2.0
     bowl_cx = width * 0.49
     bowl = ring_parts(bowl_cx, cy, bowl_cx, ry, glyph)
     bowl.holes.append(mask(-100, cy - ry * 0.28, bowl_cx, FIG + 100))
@@ -128,7 +135,8 @@ def digit_six() -> Glyph:
     """
     width = 560
     glyph = Glyph()
-    cy, ry = FIG * 0.29, FIG * 0.29
+    cy = FIG * 0.29 - CURVE_OVERSHOOT / 2.0
+    ry = FIG * 0.29 + CURVE_OVERSHOOT / 2.0
     ring_parts(width / 2.0, cy, width / 2.0, ry, glyph)
     glyph.contours.append(
         diagonal(width * 0.74, FIG, 14, cy + ry * 0.5, STEM - 34, STEM)
@@ -153,15 +161,28 @@ def digit_seven() -> Glyph:
 def digit_eight() -> Glyph:
     width = 572
     glyph = Glyph()
-    ring_parts(width * 0.50, FIG * 0.735, width * 0.435, FIG * 0.265, glyph)
-    ring_parts(width * 0.50, FIG * 0.28, width * 0.50, FIG * 0.28, glyph)
+    ring_parts(
+        width * 0.50,
+        FIG * 0.735 + CURVE_OVERSHOOT / 2.0,
+        width * 0.435,
+        FIG * 0.265 + CURVE_OVERSHOOT / 2.0,
+        glyph,
+    )
+    ring_parts(
+        width * 0.50,
+        FIG * 0.28 - CURVE_OVERSHOOT / 2.0,
+        width * 0.50,
+        FIG * 0.28 + CURVE_OVERSHOOT / 2.0,
+        glyph,
+    )
     return glyph
 
 
 def digit_nine() -> Glyph:
     width = 560
     glyph = Glyph()
-    cy, ry = FIG * 0.71, FIG * 0.29
+    cy = FIG * 0.71 + CURVE_OVERSHOOT / 2.0
+    ry = FIG * 0.29 + CURVE_OVERSHOOT / 2.0
     ring_parts(width / 2.0, cy, width / 2.0, ry, glyph)
     glyph.contours.append(
         diagonal(width - 14, cy - ry * 0.5, width * 0.26, 0, STEM, STEM - 34)
