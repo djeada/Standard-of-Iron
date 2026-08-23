@@ -331,6 +331,40 @@ The compact surfaces are the selection summary — an info button and a three-st
 both gated on the readout knowing the unit, so wildlife offers nothing rather than an
 empty panel — and `RecruitCard.qml`, the one card the recruit grid repeats.
 
+### `IronProgressBar` eases its value, never its geometry
+
+The health and stamina bars in the selection summary used to flicker between
+empty and full during a fight. The values behind them were fine: a headless
+probe (`tests/headless/selected_unit_readout_test.cpp`) watches exactly what the
+HUD reads — health, `max_health` and the stamina ratio — every tick through a
+real battle and never sees a dip that recovers.
+
+The bar was animating the wrong property. `IronProgressBar` put a
+`Behavior` on the fill rectangle's **width**, and width changes for two unrelated
+reasons: the value moved, or the bar got laid out. Only the first is worth
+animating. A delegate is created with its parent still zero-width, so the fill's
+first real width is a _change_, not an initial assignment — which is exactly the
+case a `Behavior` does animate. Every freshly created bar therefore swept from
+empty up to its value.
+
+That happens constantly in the selected-force panel. `HUDBottom.refresh_selection()`
+calls `grouped_by_type()`, which returns a **new** `QVariantList` every time, and
+assigning a new array to a `Repeater`'s model destroys and rebuilds every
+delegate. During a fight the selection refreshes continuously, so both bars were
+rebuilt and re-swept over and over.
+
+The fix is one indirection: ease a `real animatedPosition` bound to
+`visualPosition`, and let the fill's width follow that position directly. Layout
+changes now land immediately; a genuine value change still eases.
+`tst_component_library.qml` pins both halves — the fill must reach its target
+without animating when the bar is resized, and must still ease when the value
+moves.
+
+The general rule for this design system: **animate the quantity that carries the
+meaning, not a pixel measurement that happens to track it.** A `Behavior` on a
+geometric property will fire for every relayout, reparent and delegate rebuild,
+and none of those are state changes the player should see.
+
 ## The battle report
 
 `BattleReportLayout` is the after-action screen, opened from the outcome banner's
@@ -502,6 +536,37 @@ the component belongs in the library first.
   verdicts, the local commander's colour and faction, and a match it cannot read
 
 They run headless via `ctest -R design_system_qml`, and from `make test`.
+
+### The suite does not touch the display, and that is deliberate
+
+Not one of these tests reads a rendered pixel — they assert visibility, text,
+colour and geometry. They are still real Qt Quick windows, though, so by default
+they were hostage to the desktop twice over. Wall time tracked whatever else was
+drawing: 13 s on an idle machine, 34 s against a busy compositor, 166 s at worst.
+And the tests that assert keyboard focus need the window manager to _activate_
+the window, which it will not do while another window holds focus — `when:
+windowShown` promises a shown window, not an active one, so `forceActiveFocus`
+set `focus` and nothing observable followed.
+
+`design_system_qml_test.cpp` therefore defaults `QT_QPA_PLATFORM` to `offscreen`
+before `QGuiApplication` exists. The whole suite now runs in about 8 s, and it
+stays at 8 s with two GPU-saturating processes running beside it. Both defaults
+yield to the environment, so a real display is one variable away when a failure
+needs watching:
+
+```bash
+QT_QPA_PLATFORM=xcb QT_QUICK_BACKEND=rhi ./build/bin/design_system_qml_tests
+```
+
+Two habits keep it that way. **Assert settled states by polling, not by
+sleeping**: `wait(600)` spends a fixed amount of wall clock, and how much
+animation that buys depends on frame delivery, so a flourish that should have
+finished is still fading on a slow machine and gets counted. Give the animation
+its intended time and then `tryVerify` that the scene settled — `tst_rpg_fpv_overlay.qml`
+does exactly this, and its three overlay counts had been failing for that reason.
+**And never assume the window is active**: a test that needs keyboard focus
+should wait for activation first, so a stolen focus reports itself as a stolen
+focus instead of as a widget that never appeared.
 
 On the C++ side: `preferences_test.cpp` covers the persistence layer including
 clamping and corrupted values, `selection_grouping_test.cpp` covers the HUD

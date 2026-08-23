@@ -1281,6 +1281,61 @@ Dies ist vielleicht ein Scharmützel, oder es wurden keine Ziele festgelegt.</tr
     </message>
 </context>
 <context>
+    <name>CursorLayer</name>
+    <message>
+        <source>Enemy target</source>
+        <translation>Feindliches Ziel</translation>
+    </message>
+    <message>
+        <source>Cannot attack ally</source>
+        <translation>Verbündete können nicht angegriffen werden</translation>
+    </message>
+    <message>
+        <source>Cannot attack this target</source>
+        <translation>Dieses Ziel kann nicht angegriffen werden</translation>
+    </message>
+    <message>
+        <source>Selection cannot attack</source>
+        <translation>Die Auswahl kann nicht angreifen</translation>
+    </message>
+    <message>
+        <source>In range</source>
+        <translation>In Reichweite</translation>
+    </message>
+    <message>
+        <source>Too close</source>
+        <translation>Zu nah</translation>
+    </message>
+    <message>
+        <source>Out of range</source>
+        <translation>Außer Reichweite</translation>
+    </message>
+    <message>
+        <source>No firing line</source>
+        <translation>Keine Schusslinie</translation>
+    </message>
+    <message>
+        <source>Collect</source>
+        <translation>Sammeln</translation>
+    </message>
+    <message>
+        <source>Deliver civilians</source>
+        <translation>Siedler abliefern</translation>
+    </message>
+    <message>
+        <source>Repair</source>
+        <translation>Reparieren</translation>
+    </message>
+    <message>
+        <source>Harvest grain</source>
+        <translation>Getreide ernten</translation>
+    </message>
+    <message>
+        <source>Slaughter sheep</source>
+        <translation>Schaf schlachten</translation>
+    </message>
+</context>
+<context>
     <name>EconomyCoach</name>
     <message>
         <source>Economy prompts</source>
@@ -2302,58 +2357,6 @@ Dies ist vielleicht ein Scharmützel, oder es wurden keine Ziele festgelegt.</tr
     <message>
         <source>%1/%2 walls  •  %3 wood</source>
         <translation>%1/%2 Mauern  •  %3 Holz</translation>
-    </message>
-    <message>
-        <source>Enemy target</source>
-        <translation>Feindliches Ziel</translation>
-    </message>
-    <message>
-        <source>Cannot attack ally</source>
-        <translation>Verbündete können nicht angegriffen werden</translation>
-    </message>
-    <message>
-        <source>Cannot attack this target</source>
-        <translation>Dieses Ziel kann nicht angegriffen werden</translation>
-    </message>
-    <message>
-        <source>Selection cannot attack</source>
-        <translation>Die Auswahl kann nicht angreifen</translation>
-    </message>
-    <message>
-        <source>In range</source>
-        <translation>In Reichweite</translation>
-    </message>
-    <message>
-        <source>Too close</source>
-        <translation>Zu nah</translation>
-    </message>
-    <message>
-        <source>Out of range</source>
-        <translation>Außer Reichweite</translation>
-    </message>
-    <message>
-        <source>No firing line</source>
-        <translation>Keine Schusslinie</translation>
-    </message>
-    <message>
-        <source>Collect</source>
-        <translation>Sammeln</translation>
-    </message>
-    <message>
-        <source>Deliver civilians</source>
-        <translation>Siedler abliefern</translation>
-    </message>
-    <message>
-        <source>Repair</source>
-        <translation>Reparieren</translation>
-    </message>
-    <message>
-        <source>Harvest grain</source>
-        <translation>Getreide ernten</translation>
-    </message>
-    <message>
-        <source>Slaughter sheep</source>
-        <translation>Schaf schlachten</translation>
     </message>
 </context>
 <context>

@@ -3,7 +3,9 @@
 #include <QFont>
 #include <QFontMetrics>
 #include <QQmlEngine>
+#include <QQuickWindow>
 #include <QRawFont>
+#include <QSGRendererInterface>
 #include <QSettings>
 #include <QStandardPaths>
 #include <QTemporaryDir>
@@ -87,6 +89,11 @@ public:
 public slots:
   void applicationAvailable() {
 
+    if (qEnvironmentVariableIsEmpty("QT_QUICK_BACKEND") &&
+        qEnvironmentVariableIsEmpty("QMLSCENE_DEVICE")) {
+      QQuickWindow::setSceneGraphBackend(QStringLiteral("software"));
+    }
+
     QStandardPaths::setTestModeEnabled(true);
     g_settings_dir = new QTemporaryDir();
     if (g_settings_dir->isValid()) {
@@ -124,6 +131,14 @@ public slots:
   }
 };
 
-QUICK_TEST_MAIN_WITH_SETUP(design_system, DesignSystemTestSetup)
+int main(int argc, char** argv) {
+  if (qEnvironmentVariableIsEmpty("QT_QPA_PLATFORM")) {
+    qputenv("QT_QPA_PLATFORM", "offscreen");
+  }
+  QTEST_SET_MAIN_SOURCE_PATH
+  DesignSystemTestSetup setup;
+
+  return quick_test_main_with_setup(argc, argv, "design_system", nullptr, &setup);
+}
 
 #include "design_system_qml_test.moc"

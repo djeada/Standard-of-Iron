@@ -35,6 +35,73 @@ TestCase {
             });
     }
 
+    function test_a_selection_that_churns_never_empties_the_bars() {
+        var summary = makeSummary(1, makeGroups([{
+                        "typeKey": "swordsman",
+                        "count": 1,
+                        "health": 0.8,
+                        "stamina": 0.6
+                    }]));
+        var churn = [{
+                "count": 2,
+                "groups": makeGroups([{
+                            "typeKey": "swordsman",
+                            "count": 1,
+                            "health": 0.8,
+                            "stamina": 0.6
+                        }, {
+                            "typeKey": "archer",
+                            "count": 1,
+                            "health": 0.4,
+                            "stamina": 0.9
+                        }])
+            }, {
+                "count": 1,
+                "groups": makeGroups([{
+                            "typeKey": "swordsman",
+                            "count": 1,
+                            "health": 0.7,
+                            "stamina": 0.5
+                        }])
+            }, {
+                "count": 2,
+                "groups": makeGroups([{
+                            "typeKey": "swordsman",
+                            "count": 1,
+                            "health": 0.7,
+                            "stamina": 0.5
+                        }, {
+                            "typeKey": "archer",
+                            "count": 1,
+                            "health": 0.2,
+                            "stamina": 0.8
+                        }])
+            }, {
+                "count": 1,
+                "groups": makeGroups([{
+                            "typeKey": "swordsman",
+                            "count": 1,
+                            "health": 0.6,
+                            "stamina": 0.4
+                        }])
+            }];
+        for (var i = 0; i < churn.length; ++i) {
+            summary.groups = churn[i].groups;
+            summary.unitCount = churn[i].count;
+            var healthBar = findChild(summary, "selectionHealthBar");
+            if (healthBar !== null) {
+                verify(healthBar.value !== undefined, "health bar value went undefined at step " + i);
+                verify(healthBar.value > 0.0, "health bar collapsed to empty at step " + i + " while a unit was still selected");
+            }
+            var staminaBar = findChild(summary, "selectionStaminaBar");
+            if (staminaBar !== null) {
+                verify(staminaBar.value !== undefined, "stamina bar value went undefined at step " + i);
+                verify(staminaBar.value > 0.0, "stamina bar collapsed to empty at step " + i + " while a unit was still selected");
+            }
+        }
+        summary.destroy();
+    }
+
     function test_no_selection_reports_empty() {
         var summary = makeSummary(0, []);
         verify(summary.empty);

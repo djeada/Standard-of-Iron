@@ -90,3 +90,91 @@ TEST(LodSelector, BatchingRatioShrinksFullRange) {
 
   EXPECT_NEAR(sq1, 81.0F, 1e-3F);
 }
+
+using Render::Pipeline::k_default_minimal_tier_individuals;
+using Render::Pipeline::k_min_unit_projected_radius_px;
+using Render::Pipeline::representative_individual_count;
+
+TEST(LodSelector, ADefaultApparentScaleReproducesTheDistanceTest) {
+  LodInputs in;
+  in.full_detail_max_distance_sq = 900.0F;
+  in.distance_sq = 901.0F;
+  EXPECT_EQ(select_lod(in), LodTier::Simplified);
+
+  in.apparent_size_scale = 1.0F;
+  EXPECT_EQ(select_lod(in), LodTier::Simplified);
+}
+
+TEST(LodSelector, ABiggerApparentSizeKeepsFullDetailFurtherOut) {
+  LodInputs in;
+  in.full_detail_max_distance_sq = 900.0F;
+  in.distance_sq = 1600.0F;
+  EXPECT_EQ(select_lod(in), LodTier::Simplified);
+
+  in.apparent_size_scale = 2.0F;
+  EXPECT_EQ(select_lod(in), LodTier::Full);
+}
+
+TEST(LodSelector, ASmallerApparentSizeDropsDetailSooner) {
+  LodInputs in;
+  in.full_detail_max_distance_sq = 900.0F;
+  in.distance_sq = 800.0F;
+  EXPECT_EQ(select_lod(in), LodTier::Full);
+
+  in.apparent_size_scale = 0.5F;
+  EXPECT_EQ(select_lod(in), LodTier::Simplified);
+}
+
+TEST(LodSelector, TheMinimalBandShrinksWithTheApparentSizeToo) {
+  LodInputs in;
+  in.full_detail_max_distance_sq = 900.0F;
+  in.distance_sq = 1000.0F;
+  EXPECT_EQ(select_lod(in), LodTier::Simplified);
+
+  in.apparent_size_scale = 0.5F;
+  EXPECT_EQ(select_lod(in), LodTier::Minimal);
+}
+
+TEST(LodSelector, AnUnknownProjectedSizeNeverCulls) {
+  LodInputs in;
+  in.projected_radius_px = -1.0F;
+  in.min_projected_radius_px = k_min_unit_projected_radius_px;
+  EXPECT_EQ(select_lod(in), LodTier::Full);
+}
+
+TEST(LodSelector, ASubPixelUnitIsRejected) {
+  LodInputs in;
+  in.projected_radius_px = 0.2F;
+  in.min_projected_radius_px = k_min_unit_projected_radius_px;
+  EXPECT_EQ(select_lod(in), LodTier::Culled);
+}
+
+TEST(LodSelector, ASelectedSubPixelUnitStillDraws) {
+  LodInputs in;
+  in.projected_radius_px = 0.2F;
+  in.min_projected_radius_px = k_min_unit_projected_radius_px;
+  in.selected = true;
+  EXPECT_EQ(select_lod(in), LodTier::Full);
+}
+
+TEST(LodSelector, RepresentativesFallBackToTheOldConstantWhenSizeIsUnknown) {
+  EXPECT_EQ(representative_individual_count(-1.0F), k_default_minimal_tier_individuals);
+}
+
+TEST(LodSelector, RepresentativesNeverExceedTheOldConstant) {
+  for (float radius = 0.0F; radius < 400.0F; radius += 0.5F) {
+    EXPECT_LE(representative_individual_count(radius),
+              k_default_minimal_tier_individuals)
+        << "radius " << radius;
+    EXPECT_GE(representative_individual_count(radius), 1) << "radius " << radius;
+  }
+}
+
+TEST(LodSelector, RepresentativesThinOutAsTheFormationShrinks) {
+  EXPECT_EQ(representative_individual_count(200.0F),
+            k_default_minimal_tier_individuals);
+  EXPECT_EQ(representative_individual_count(60.0F), 6);
+  EXPECT_EQ(representative_individual_count(30.0F), 4);
+  EXPECT_EQ(representative_individual_count(16.0F), 2);
+  EXPECT_EQ(representative_individual_count(4.0F), 1);
+}

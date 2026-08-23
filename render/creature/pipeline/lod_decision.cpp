@@ -2,9 +2,20 @@
 
 namespace Render::Creature::Pipeline {
 
+auto lod_reference_distance(float distance,
+                            float apparent_size_scale) noexcept -> float {
+  return apparent_size_scale > 0.0F ? distance / apparent_size_scale : distance;
+}
+
 auto select_distance_lod(float distance,
                          const LodDistanceThresholds& t) noexcept -> CreatureLOD {
-  if (distance < t.full) {
+  return select_distance_lod(distance, t, 1.0F);
+}
+
+auto select_distance_lod(float distance,
+                         const LodDistanceThresholds& t,
+                         float apparent_size_scale) noexcept -> CreatureLOD {
+  if (lod_reference_distance(distance, apparent_size_scale) < t.full) {
     return CreatureLOD::Full;
   }
   if (distance < t.cull) {
@@ -27,7 +38,7 @@ auto decide_creature_lod(const CreatureLodDecisionInputs& in) noexcept
     return out;
   }
 
-  out.lod = select_distance_lod(in.distance, in.thresholds);
+  out.lod = select_distance_lod(in.distance, in.thresholds, in.apparent_size_scale);
 
   if (out.lod == CreatureLOD::Culled) {
     out.culled = true;

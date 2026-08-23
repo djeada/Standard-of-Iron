@@ -7,7 +7,16 @@ ProgressBar {
 
     property color fillColor: Design.Theme.accent
 
+    property real animatedPosition: control.visualPosition
+
     implicitHeight: Math.max(8, Design.Metrics.space8)
+
+    Behavior on animatedPosition  {
+        NumberAnimation {
+            duration: Design.Motion.fast
+            easing.type: Design.Motion.standardEasing
+        }
+    }
 
     background: Rectangle {
         color: Design.Theme.panelIron
@@ -18,17 +27,10 @@ ProgressBar {
 
     contentItem: Item {
         Rectangle {
-            width: control.visualPosition * parent.width
+            width: control.animatedPosition * parent.width
             height: parent.height
             radius: height / 2
             color: control.fillColor
-
-            Behavior on width  {
-                NumberAnimation {
-                    duration: Design.Motion.fast
-                    easing.type: Design.Motion.standardEasing
-                }
-            }
         }
     }
 }
