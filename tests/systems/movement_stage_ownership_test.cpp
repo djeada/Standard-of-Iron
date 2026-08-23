@@ -211,7 +211,9 @@ TEST(MovementStageOwnershipTest, OneTickOfTraceAccountsForTheWholeChain) {
 
   world.add_system(std::make_unique<Game::Systems::MovementPipeline>(),
                    SystemPhase::Movement);
-  for (int tick = 0; tick < 12; ++tick) {
+  // Long enough to clear the body turn and the motor's launch lag: the first
+  // few ticks are legitimately Turning, not Following.
+  for (int tick = 0; tick < 90; ++tick) {
     world.update(1.0F / 60.0F);
   }
 

@@ -58,6 +58,8 @@ auto healthy_run(std::uint32_t ticks = 120U) -> std::vector<MovementTroopSample>
     sample.accepted_dx = speed * k_step;
     sample.route_advance = speed * k_step;
     sample.remaining_arclength = std::max(0.0F, 10.0F - x);
+    sample.order_seconds = static_cast<float>(tick) * k_step;
+    sample.presentation_valid = true;
     sample.presentation_state = 1U;
     sample.direction_source = MovementDirectionSource::AcceptedVelocity;
     sample.waypoint_index = 0U;
@@ -74,6 +76,7 @@ auto healthy_run(std::uint32_t ticks = 120U) -> std::vector<MovementTroopSample>
   arrival.accepted_dx = 0.0F;
   arrival.route_advance = 0.0F;
   arrival.remaining_arclength = 0.0F;
+  arrival.presentation_valid = true;
   arrival.presentation_state = 0U;
   arrival.direction_source = MovementDirectionSource::BodyForward;
   samples.push_back(arrival);
@@ -212,9 +215,13 @@ TEST(MovementAnalysisTest, WalkingInPlaceIsAStallAndAGaitMismatch) {
     sample.state = MovementOrderState::Following;
     sample.remaining_arclength = 12.0F;
     sample.route_advance = 0.0F;
+    // Past the launch allowance: this body has had time to accelerate and has
+    // not moved.
+    sample.order_seconds = 1.0F + static_cast<float>(tick) * k_step;
     sample.accepted_vx = 0.0F;
     sample.accepted_vz = 0.0F;
     // The renderer is told to walk while the motor accepted nothing.
+    sample.presentation_valid = true;
     sample.presentation_state = 1U;
     sample.direction_source = MovementDirectionSource::DesiredVelocity;
     sample.desired_vx = 2.0F;
@@ -247,7 +254,9 @@ TEST(MovementAnalysisTest, AlternatingHeadingIsRejected) {
     sample.root_x = x;
     sample.route_advance = 2.0F * k_step;
     sample.remaining_arclength = std::max(0.0F, 4.0F - x);
+    sample.order_seconds = static_cast<float>(tick) * k_step;
     sample.accepted_vx = 2.0F;
+    sample.presentation_valid = true;
     sample.presentation_state = (tick == 59U) ? 0U : 1U;
     sample.direction_source = MovementDirectionSource::AcceptedVelocity;
     // Yaw flicks left and right every tick on a straight route.
@@ -345,6 +354,7 @@ TEST(MovementAnalysisTest, DigestIsStableAndSensitiveToBehaviour) {
 TEST(MovementAnalysisTest, TimelineWindowNamesTheFailingTick) {
   auto samples = healthy_run();
   for (std::size_t index = 30; index < 60; ++index) {
+    samples[index].order_seconds = 1.0F + static_cast<float>(index) * k_step;
     samples[index].route_advance = 0.0F;
     samples[index].accepted_vx = 0.0F;
     samples[index].remaining_arclength = samples[29].remaining_arclength;

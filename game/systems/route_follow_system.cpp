@@ -20,9 +20,44 @@ namespace Game::Systems {
 
 namespace {
 
-constexpr int k_max_waypoint_skip_count = 4;
 constexpr float k_resolved_goal_progress_epsilon_sq = 0.01F;
 constexpr float k_clearance_repath_threshold = 0.25F;
+
+// Progress is measured as forward arclength, not as displacement in any
+// direction: orbiting an obstacle or rocking back and forth used to keep the
+// stuck timer reset and the order alive forever.
+//
+// It is a *rate*, accumulated over the declare window, not a per-tick distance.
+// A per-tick epsilon declares a slow siege engine blocked while it is visibly
+// crossing the map: 0.56 m/s is 0.009 m per 60 Hz tick.
+constexpr float k_progress_window_metres = 0.03F;
+
+// The escalation ladder. Each rung is bounded so a failing route cannot reissue
+// the same first step indefinitely.
+// A body accelerates through a first-order lag, so from a standstill even a
+// healthy order covers only a few centimetres in the first third of a second.
+// Judging it for lack of progress before that measures the motor's time
+// constant, not a defect. This is an explicit, bounded launch allowance tied to
+// the start of an order -- not a widened stall epsilon.
+constexpr float k_launch_grace_seconds = 0.60F;
+constexpr float k_block_declare_seconds = 0.35F;
+// Comfortably inside the 0.50 s the gate allows for escalation, so the
+// implementation and the gate never race on the same number.
+constexpr float k_block_escalate_seconds = 0.40F;
+constexpr float k_repath_settle_seconds = 0.60F;
+constexpr float k_recovery_budget_seconds = 1.50F;
+constexpr std::uint32_t k_max_repath_attempts = 3U;
+
+// How far ahead of the projected point steering aims, and how far back along
+// the route the projection may search. Both are bounded so a body pushed
+// sideways by a crowd cannot re-acquire a distant part of its own route.
+constexpr float k_lookahead_speed_seconds = 0.35F;
+constexpr float k_lookahead_min = 0.45F;
+constexpr float k_lookahead_max = 2.0F;
+constexpr float k_projection_window_min = 1.5F;
+constexpr float k_degenerate_aim_distance = 0.15F;
+
+constexpr std::uint64_t k_route_prune_interval_ticks = 600U;
 
 } // namespace
 
@@ -133,12 +168,22 @@ void RouteFollowSystem::update(Engine::Core::World* world, float delta_time) {
     return;
   }
   world->each<Engine::Core::MovementComponent>(
-      [world, delta_time](Engine::Core::EntityID id, Engine::Core::MovementComponent&) {
+      [this, world, delta_time](Engine::Core::EntityID id,
+                                Engine::Core::MovementComponent&) {
         auto* entity = world->get_entity(id);
         if (entity != nullptr) {
           follow(*entity, *world, delta_time);
         }
       });
+
+  // The cache is keyed by entity, so it has to shed dead entries. Sweeping it
+  // on a long interval keeps the per-tick cost at zero for a stable battle.
+  if (world->tick_id() - m_prune_tick >= k_route_prune_interval_ticks) {
+    m_prune_tick = world->tick_id();
+    std::erase_if(m_routes, [world](auto const& entry) {
+      return world->get_entity(entry.first) == nullptr;
+    });
+  }
 }
 
 void RouteFollowSystem::follow(Engine::Core::Entity& entity,
@@ -243,92 +288,292 @@ void RouteFollowSystem::follow(Engine::Core::Entity& entity,
   auto const* stamina = entity.get_component<Engine::Core::StaminaComponent>();
   float const max_speed = formation_navigation_speed(entity, *unit, stamina);
 
-  if (movement->has_waypoints()) {
-    auto const& waypoint = movement->current_waypoint();
-    movement->target_x = waypoint.first;
-    movement->target_y = waypoint.second;
+  // ---- route geometry ------------------------------------------------------
+  //
+  // The route is rebuilt only when its revision changes, and progress along it
+  // is a monotonically increasing arclength. A waypoint is consumed because the
+  // body passed its arclength, never because it re-entered an arrival circle
+  // from the far side.
+  auto& route = m_routes[entity.get_id()];
+  bool route_changed = false;
+  if (!route.valid() || route.route_revision() != movement->get_route_revision()) {
+    route_changed = true;
+    // The revision is recorded by build() even when it fails, so a degenerate
+    // route is not rebuilt on every tick -- which used to reset the progress
+    // measurement every tick and keep the watchdog permanently asleep.
+    route.build(movement->get_route_revision(),
+                movement->get_topology_revision(),
+                transform->position.x,
+                transform->position.z,
+                movement->get_path(),
+                movement->get_path_index(),
+                movement->get_target_x(),
+                movement->get_target_y());
+  } else if (!movement->get_path().empty()) {
+    // A chase order edits the last waypoint in place rather than replanning.
+    // Following that edit keeps the arclength already travelled.
+    auto const& last = movement->get_path().back();
+    auto const [final_x, final_z] = route.final_point();
+    if (std::hypot(last.first - final_x, last.second - final_z) > 1.0e-4F) {
+      route.update_final_point(last.first, last.second);
+    }
   }
 
   float const waypoint_arrive_radius =
       std::clamp(max_speed * delta_time * 2.0F, 0.05F, 0.25F);
-  bool const current_target_is_final =
-      !movement->has_waypoints() || movement->remaining_waypoints() <= 1;
   float const arrive_radius =
-      current_target_is_final
-          ? (movement->get_precise_arrival()
-                 ? waypoint_arrive_radius
-                 : std::max(waypoint_arrive_radius,
-                            std::clamp(CommandService::get_unit_radius(
-                                           world, entity.get_id()) *
-                                           1.1F,
-                                       0.25F,
-                                       0.9F)))
-          : waypoint_arrive_radius;
-  float const arrive_radius_sq = arrive_radius * arrive_radius;
+      movement->get_precise_arrival()
+          ? waypoint_arrive_radius
+          : std::max(waypoint_arrive_radius,
+                     std::clamp(
+                         CommandService::get_unit_radius(world, entity.get_id()) * 1.1F,
+                         0.25F,
+                         0.9F));
 
-  float dx = movement->get_target_x() - transform->position.x;
-  float dz = movement->get_target_y() - transform->position.z;
-  float dist2 = dx * dx + dz * dz;
+  float aim_x = movement->get_target_x();
+  float aim_z = movement->get_target_y();
+  float endpoint_x = movement->get_target_x();
+  float endpoint_z = movement->get_target_y();
+  float remaining = 0.0F;
+  float tangent_x = 0.0F;
+  float tangent_z = 0.0F;
 
-  int safety_counter = k_max_waypoint_skip_count;
-  while (movement->get_has_target() && dist2 < arrive_radius_sq &&
-         safety_counter-- > 0) {
-    if (movement->has_waypoints()) {
+  if (route.valid()) {
+    float const window =
+        std::max(k_projection_window_min,
+                 max_speed * delta_time * 8.0F + movement->get_navigation_clearance());
+    auto const projection =
+        route.project(transform->position.x, transform->position.z, window);
+    route.advance_to(projection.s);
+    float const s = route.travelled();
+    remaining = route.remaining();
+    facts->progress.lateral_route_error = projection.lateral;
+
+    // Keep the waypoint index the rest of the game reads in step with the
+    // arclength, so nothing downstream sees a route the follower has left.
+    std::size_t const target_index = route.waypoint_index_at(s);
+    while (movement->get_path_index() < target_index && movement->has_waypoints()) {
       movement->advance_waypoint();
-      if (movement->has_waypoints()) {
-        auto const& waypoint = movement->current_waypoint();
-        movement->target_x = waypoint.first;
-        movement->target_y = waypoint.second;
-        dx = movement->get_target_x() - transform->position.x;
-        dz = movement->get_target_y() - transform->position.z;
-        dist2 = dx * dx + dz * dz;
-        continue;
-      }
+    }
+    auto const final_point = route.final_point();
+    endpoint_x = final_point.first;
+    endpoint_z = final_point.second;
+    if (movement->has_waypoints()) {
+      auto const& waypoint = movement->current_waypoint();
+      movement->target_x = waypoint.first;
+      movement->target_y = waypoint.second;
+    } else {
+      movement->target_x = endpoint_x;
+      movement->target_y = endpoint_z;
     }
 
+    float const lookahead = std::clamp(
+        max_speed * k_lookahead_speed_seconds, k_lookahead_min, k_lookahead_max);
+    float aim_s = std::min(s + lookahead, route.next_vertex_s(s));
+    auto aim = route.point_at(aim_s);
+    if (std::hypot(aim.first - transform->position.x,
+                   aim.second - transform->position.z) < k_degenerate_aim_distance) {
+      aim_s = std::min(route.length(), route.next_vertex_s(aim_s));
+      aim = route.point_at(aim_s);
+    }
+    aim_x = aim.first;
+    aim_z = aim.second;
+
+    auto const tangent = route.tangent_at(s);
+    tangent_x = tangent.first;
+    tangent_z = tangent.second;
+  } else {
+    // No planned geometry: the route is the straight segment to the current
+    // target, which is what a direct assignment produces.
+    remaining = std::hypot(endpoint_x - transform->position.x,
+                           endpoint_z - transform->position.z);
+    facts->progress.lateral_route_error = 0.0F;
+  }
+
+  if (!update_progress(entity,
+                       world,
+                       *transform,
+                       *movement,
+                       *facts,
+                       remaining,
+                       route_changed,
+                       delta_time)) {
+    return;
+  }
+
+  // ---- arrival -------------------------------------------------------------
+  float const endpoint_distance = std::hypot(endpoint_x - transform->position.x,
+                                             endpoint_z - transform->position.z);
+  if (remaining <= arrive_radius && endpoint_distance <= arrive_radius) {
     movement->stop();
     OrderService::clear_player_order_intent(&entity);
     facts->progress.state = Engine::Core::MovementOrderState::Arrived;
+    facts->progress.no_progress_seconds = 0.0F;
+    facts->progress.no_progress_advance = 0.0F;
+    facts->progress.remaining_arclength = 0.0F;
+    route.clear();
 
     auto* guard_mode = entity.get_component<Engine::Core::GuardModeComponent>();
     if ((guard_mode != nullptr) && guard_mode->active &&
         guard_mode->returning_to_guard_position) {
       guard_mode->returning_to_guard_position = false;
     }
-    break;
-  }
-
-  if (!movement->get_has_target()) {
     return;
   }
 
-  float const distance = std::sqrt(std::max(dist2, 0.0F));
+  float const dx = aim_x - transform->position.x;
+  float const dz = aim_z - transform->position.z;
+  float const distance = std::hypot(dx, dz);
   float const nx = dx / std::max(0.0001F, distance);
   float const nz = dz / std::max(0.0001F, distance);
+  if (tangent_x == 0.0F && tangent_z == 0.0F) {
+    tangent_x = nx;
+    tangent_z = nz;
+  }
 
+  // Arrival braking is a route fact: it needs the distance left on the route,
+  // not the distance to whichever point steering happens to aim at.
   float desired_speed = max_speed;
   auto const* move_attack = entity.get_component<Engine::Core::AttackComponent>();
   bool const ranged_mode =
       (move_attack != nullptr) && move_attack->can_ranged &&
       move_attack->current_mode == Engine::Core::AttackComponent::CombatMode::Ranged;
   float const slow_radius = ranged_mode ? arrive_radius : arrive_radius * 1.5F;
-  if (distance < slow_radius) {
-    desired_speed = max_speed * (distance / slow_radius);
+  if (remaining < slow_radius) {
+    desired_speed = max_speed * (remaining / slow_radius);
   }
 
   facts->desired.valid = true;
   facts->desired.velocity_x = nx * desired_speed;
   facts->desired.velocity_z = nz * desired_speed;
-  facts->desired.tangent_x = nx;
-  facts->desired.tangent_z = nz;
-  facts->desired.lookahead_x = movement->get_target_x();
-  facts->desired.lookahead_z = movement->get_target_y();
+  facts->desired.tangent_x = tangent_x;
+  facts->desired.tangent_z = tangent_z;
+  facts->desired.lookahead_x = aim_x;
+  facts->desired.lookahead_z = aim_z;
   facts->desired.speed_limit = max_speed;
+}
 
-  if (!Engine::Core::is_active_movement_state(facts->progress.state) ||
-      facts->progress.state == Engine::Core::MovementOrderState::Recovering) {
-    facts->progress.state = Engine::Core::MovementOrderState::Following;
+auto RouteFollowSystem::route_for(Engine::Core::EntityID entity_id) const
+    -> const MovementRoute* {
+  auto const found = m_routes.find(entity_id);
+  return found == m_routes.end() ? nullptr : &found->second;
+}
+
+// The escalation ladder from todo2.md: Following -> LocallyBlocked -> Repathing
+// -> Recovering -> Unreachable. Every rung is bounded, and the only way out of
+// an active order is one of the declared terminal states.
+auto RouteFollowSystem::update_progress(Engine::Core::Entity& entity,
+                                        Engine::Core::World& world,
+                                        Engine::Core::TransformComponent& transform,
+                                        Engine::Core::MovementComponent& movement,
+                                        Engine::Core::MovementFactsComponent& facts,
+                                        float remaining,
+                                        bool route_changed,
+                                        float delta_time) -> bool {
+  using Engine::Core::MovementOrderState;
+  using Engine::Core::MovementRepathReason;
+
+  auto& progress = facts.progress;
+  MovementOrderState const entry_state = progress.state;
+
+  // Forward route progress since the follower last published, measured on the
+  // same route. Lateral orbiting contributes nothing, and a rebuilt route is
+  // not a regression -- its arclength is measured from somewhere else.
+  float const previous_remaining = progress.remaining_arclength;
+  bool const comparable = !route_changed && previous_remaining > 0.0F;
+  float const advance = comparable ? previous_remaining - remaining : 0.0F;
+  progress.route_advance = advance;
+  progress.remaining_arclength = remaining;
+
+  if (progress.tracked_order != movement.get_order_sequence()) {
+    progress.tracked_order = movement.get_order_sequence();
+    progress.order_seconds = 0.0F;
+    progress.no_progress_seconds = 0.0F;
+    progress.no_progress_advance = 0.0F;
+    progress.repath_attempts = 0;
   }
+  progress.order_seconds += delta_time;
+
+  progress.no_progress_seconds += delta_time;
+  progress.no_progress_advance += std::max(0.0F, advance);
+  if (route_changed || progress.no_progress_advance >= k_progress_window_metres) {
+    progress.no_progress_seconds = 0.0F;
+    progress.no_progress_advance = 0.0F;
+    progress.repath_attempts = 0;
+    if (progress.state != MovementOrderState::Yielding) {
+      progress.state = MovementOrderState::Following;
+    }
+  }
+
+  switch (progress.state) {
+  case MovementOrderState::Following:
+  case MovementOrderState::Turning:
+    if (progress.order_seconds > k_launch_grace_seconds &&
+        progress.no_progress_seconds > k_block_declare_seconds) {
+      progress.state = MovementOrderState::LocallyBlocked;
+    }
+    break;
+
+  case MovementOrderState::LocallyBlocked:
+    if (progress.state_seconds > k_block_escalate_seconds) {
+      if (progress.repath_attempts >= k_max_repath_attempts) {
+        progress.state = MovementOrderState::Recovering;
+        progress.repath_reason = MovementRepathReason::RecoveryEscalation;
+      } else {
+        QVector3D const goal =
+            movement.get_has_requested_goal()
+                ? QVector3D(movement.get_requested_goal_x(),
+                            0.0F,
+                            movement.get_requested_goal_z())
+                : QVector3D(movement.get_goal_x(), 0.0F, movement.get_goal_y());
+        MovementSystem::retarget_unit(world, entity.get_id(), goal);
+        ++progress.repath_count;
+        ++progress.repath_attempts;
+        progress.repath_reason = MovementRepathReason::Blocked;
+        progress.state = MovementOrderState::Repathing;
+      }
+    }
+    break;
+
+  case MovementOrderState::Repathing:
+    if (progress.state_seconds > k_repath_settle_seconds) {
+      progress.state = MovementOrderState::LocallyBlocked;
+    }
+    break;
+
+  case MovementOrderState::Recovering: {
+    QVector3D const current(transform.position.x, 0.0F, transform.position.z);
+    QVector3D const goal(movement.get_goal_x(), 0.0F, movement.get_goal_y());
+    if (progress.state_seconds <= k_recovery_budget_seconds) {
+      MovementSystem::assign_local_recovery_move(current, goal, &movement);
+      break;
+    }
+    movement.stop();
+    OrderService::clear_player_order_intent(&entity);
+    progress.state = MovementOrderState::Unreachable;
+    progress.no_progress_seconds = 0.0F;
+    progress.no_progress_advance = 0.0F;
+    progress.remaining_arclength = 0.0F;
+    m_routes.erase(entity.get_id());
+    break;
+  }
+
+  default:
+    progress.state = MovementOrderState::Following;
+    break;
+  }
+
+  // The old displacement-based stuck timer is gone, but `get_stuck_time()` is
+  // still what the presentation layer reads to decide a body has stalled. Mirror
+  // the route-progress measure into it so there is one number, not two.
+  movement.stuck_timer = progress.no_progress_seconds;
+  movement.stuck_ref_valid = false;
+
+  progress.previous_state = entry_state;
+  progress.state_seconds =
+      progress.state == entry_state ? progress.state_seconds + delta_time : 0.0F;
+
+  return movement.get_has_target();
 }
 
 auto RouteFollowSystem::access() const -> Engine::Core::SystemAccess {

@@ -200,6 +200,7 @@
         "because a formation's turn radius and speed multiplier shape the move."
       ],
       "files": [
+        "game/systems/movement_route",
         "game/systems/route_follow_system",
         "game/systems/movement_system",
         "game/systems/movement_pipeline",

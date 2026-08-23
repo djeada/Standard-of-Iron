@@ -15,6 +15,7 @@ namespace Engine::Core {
 // Per-simulation-tick record for one troop entity. Plain data; the recorder
 // never reads back into the world.
 struct MovementTroopSample {
+  std::uint64_t session_id{0};
   std::uint64_t tick{0};
   EntityID entity_id{0};
   int owner_id{0};
@@ -68,6 +69,7 @@ struct MovementTroopSample {
   float route_advance{0.0F};
   float lateral_route_error{0.0F};
   float no_progress_seconds{0.0F};
+  float order_seconds{0.0F};
   std::uint32_t blocked_steps{0};
   std::uint32_t repath_count{0};
   MovementRepathReason repath_reason{MovementRepathReason::None};
@@ -88,6 +90,7 @@ struct MovementTroopSample {
   float transition_progress{0.0F};
   float mode_dwell_seconds{0.0F};
 
+  bool presentation_valid{false};
   std::uint8_t presentation_state{0};
   float presentation_speed{0.0F};
   float presentation_dir_x{0.0F};
@@ -99,6 +102,7 @@ struct MovementTroopSample {
 
 // Per-rendered-frame record for one soldier inside a troop entity.
 struct MovementSoldierSample {
+  std::uint64_t session_id{0};
   std::uint64_t frame{0};
   std::uint64_t previous_tick{0};
   std::uint64_t current_tick{0};
@@ -165,6 +169,12 @@ public:
 
   [[nodiscard]] auto enabled() const noexcept -> bool { return m_enabled; }
 
+  // Opens a file session from SOI_MOVEMENT_TRACE_DIR the first time it is
+  // called, so any binary that runs a world -- a headless test, the arena, the
+  // game -- can produce an artifact without a code change. Does nothing when
+  // the variable is unset or a session is already open.
+  void configure_from_environment();
+
   // Streams JSONL into `directory` (created if needed) and writes manifest.json.
   // Returns false and stays disabled if the directory cannot be opened.
   auto begin_file_session(const std::string& directory,
@@ -196,6 +206,7 @@ private:
   struct Session;
 
   bool m_enabled{false};
+  bool m_environment_checked{false};
   mutable std::mutex m_mutex;
   std::unique_ptr<Session> m_session;
 };

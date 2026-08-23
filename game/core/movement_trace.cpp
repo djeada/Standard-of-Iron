@@ -3,6 +3,7 @@
 #include <array>
 #include <charconv>
 #include <cstdio>
+#include <cstdlib>
 #include <filesystem>
 #include <fstream>
 #include <locale>
@@ -183,6 +184,7 @@ constexpr std::size_t k_default_soldier_limit = 4000000U;
 
 auto to_json(const MovementTroopSample& s) -> std::string {
   FlatJsonWriter w;
+  w.field("session", s.session_id);
   w.field("tick", s.tick);
   w.field("entity", static_cast<std::uint64_t>(s.entity_id));
   w.field("owner", s.owner_id);
@@ -231,6 +233,7 @@ auto to_json(const MovementTroopSample& s) -> std::string {
   w.field("advance", s.route_advance);
   w.field("lat_err", s.lateral_route_error);
   w.field("no_progress", s.no_progress_seconds);
+  w.field("order_seconds", s.order_seconds);
   w.field("blocked_steps", s.blocked_steps);
   w.field("repaths", s.repath_count);
   w.field("repath_reason", static_cast<std::uint32_t>(s.repath_reason));
@@ -248,6 +251,7 @@ auto to_json(const MovementTroopSample& s) -> std::string {
   w.field("target_files", s.target_files);
   w.field("transition", s.transition_progress);
   w.field("dwell", s.mode_dwell_seconds);
+  w.field("pres_valid", s.presentation_valid);
   w.field("pres_state", static_cast<std::uint32_t>(s.presentation_state));
   w.field("pres_speed", s.presentation_speed);
   w.field("pres_dx", s.presentation_dir_x);
@@ -260,6 +264,7 @@ auto to_json(const MovementTroopSample& s) -> std::string {
 
 auto to_json(const MovementSoldierSample& s) -> std::string {
   FlatJsonWriter w;
+  w.field("session", s.session_id);
   w.field("frame", s.frame);
   w.field("prev_tick", s.previous_tick);
   w.field("tick", s.current_tick);
@@ -319,6 +324,7 @@ auto to_json(const MovementTraceManifest& m) -> std::string {
 }
 
 auto parse_troop_sample(const std::string& line, MovementTroopSample& out) -> bool {
+  read_u64(line, "session", out.session_id);
   if (!read_u64(line, "tick", out.tick)) {
     return false;
   }
@@ -373,6 +379,7 @@ auto parse_troop_sample(const std::string& line, MovementTroopSample& out) -> bo
   read_float(line, "advance", out.route_advance);
   read_float(line, "lat_err", out.lateral_route_error);
   read_float(line, "no_progress", out.no_progress_seconds);
+  read_float(line, "order_seconds", out.order_seconds);
   read_small(line, "blocked_steps", out.blocked_steps);
   read_small(line, "repaths", out.repath_count);
   read_small(line, "repath_reason", out.repath_reason);
@@ -394,6 +401,7 @@ auto parse_troop_sample(const std::string& line, MovementTroopSample& out) -> bo
   read_small(line, "target_files", out.target_files);
   read_float(line, "transition", out.transition_progress);
   read_float(line, "dwell", out.mode_dwell_seconds);
+  read_bool(line, "pres_valid", out.presentation_valid);
   read_small(line, "pres_state", out.presentation_state);
   read_float(line, "pres_speed", out.presentation_speed);
   read_float(line, "pres_dx", out.presentation_dir_x);
@@ -405,6 +413,7 @@ auto parse_troop_sample(const std::string& line, MovementTroopSample& out) -> bo
 }
 
 auto parse_soldier_sample(const std::string& line, MovementSoldierSample& out) -> bool {
+  read_u64(line, "session", out.session_id);
   if (!read_u64(line, "frame", out.frame)) {
     return false;
   }
@@ -464,6 +473,28 @@ struct MovementTrace::Session {
 auto MovementTrace::instance() -> MovementTrace& {
   static MovementTrace singleton;
   return singleton;
+}
+
+void MovementTrace::configure_from_environment() {
+  if (m_environment_checked) {
+    return;
+  }
+  m_environment_checked = true;
+  const char* const directory = std::getenv("SOI_MOVEMENT_TRACE_DIR");
+  if (directory == nullptr || *directory == '\0') {
+    return;
+  }
+
+  MovementTraceManifest manifest;
+  manifest.scenario = "environment";
+  manifest.fixed_step_seconds = 1.0F / 60.0F;
+  if (const char* const scenario = std::getenv("SOI_MOVEMENT_TRACE_SCENARIO")) {
+    manifest.scenario = scenario;
+  }
+  if (const char* const commit = std::getenv("SOI_MOVEMENT_TRACE_COMMIT")) {
+    manifest.commit = commit;
+  }
+  begin_file_session(directory, manifest);
 }
 
 auto MovementTrace::begin_file_session(const std::string& directory,

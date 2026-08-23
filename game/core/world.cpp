@@ -162,6 +162,7 @@ void begin_motion_presentation_frame(World& world, float delta_time) {
 // the motor actually accepted, and the gait the renderer will be told to play.
 void publish_movement_trace_frame(World& world) {
   auto& trace = MovementTrace::instance();
+  trace.configure_from_environment();
   if (!trace.enabled()) {
     return;
   }
@@ -179,6 +180,7 @@ void publish_movement_trace_frame(World& world) {
         auto const* motion = entity->get_component<MotionPresentationComponent>();
 
         MovementTroopSample sample;
+        sample.session_id = world.instance_id();
         sample.tick = world.tick_id();
         sample.entity_id = id;
         sample.owner_id = unit.owner_id;
@@ -197,6 +199,7 @@ void publish_movement_trace_frame(World& world) {
           sample.previous_root_yaw = motion->previous_rotation_y;
         }
         if (motion != nullptr) {
+          sample.presentation_valid = world.presentation_enabled();
           sample.presentation_state = static_cast<std::uint8_t>(motion->state);
           sample.presentation_speed = motion->speed;
           sample.presentation_dir_x = motion->direction_x;
@@ -248,6 +251,7 @@ void publish_movement_trace_frame(World& world) {
         sample.route_advance = facts.progress.route_advance;
         sample.lateral_route_error = facts.progress.lateral_route_error;
         sample.no_progress_seconds = facts.progress.no_progress_seconds;
+        sample.order_seconds = facts.progress.order_seconds;
         sample.blocked_steps = facts.progress.blocked_steps;
         sample.repath_count = facts.progress.repath_count;
         sample.repath_reason = facts.progress.repath_reason;
@@ -1059,8 +1063,13 @@ World::World()
     : World(true, false) {
 }
 
+namespace {
+std::atomic<std::uint64_t> g_next_world_instance_id{1};
+} // namespace
+
 World::World(bool presentation_enabled, bool render_snapshot)
-    : m_presentation_enabled(presentation_enabled)
+    : m_instance_id(g_next_world_instance_id.fetch_add(1, std::memory_order_relaxed))
+    , m_presentation_enabled(presentation_enabled)
     , m_is_render_snapshot(render_snapshot) {
   m_registry.set_component_change_callback([this](EntityID entity_id,
                                                   ComponentTypeId type_id,

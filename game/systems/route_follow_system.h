@@ -3,10 +3,12 @@
 #include <QVector3D>
 
 #include <cstdint>
+#include <unordered_map>
 
 #include "../core/component.h"
 #include "../core/system.h"
 #include "../core/world.h"
+#include "movement_route.h"
 
 namespace Game::Systems {
 
@@ -55,9 +57,30 @@ public:
                          float position_x,
                          float position_z) -> float;
 
+  // The route geometry the follower is currently driving, or nullptr.
+  [[nodiscard]] auto
+  route_for(Engine::Core::EntityID entity_id) const -> const MovementRoute*;
+
 private:
-  static void
+  void
   follow(Engine::Core::Entity& entity, Engine::Core::World& world, float delta_time);
+
+  // Advances the escalation ladder from last tick's accepted motion and
+  // publishes the declared state. Returns false when the order has ended.
+  auto update_progress(Engine::Core::Entity& entity,
+                       Engine::Core::World& world,
+                       Engine::Core::TransformComponent& transform,
+                       Engine::Core::MovementComponent& movement,
+                       Engine::Core::MovementFactsComponent& facts,
+                       float remaining,
+                       bool route_changed,
+                       float delta_time) -> bool;
+
+  // Route geometry is a per-entity cache, not component data: it is rebuilt
+  // whenever the route revision changes, and copying it into every render
+  // snapshot would cost a vector copy per entity per frame.
+  std::unordered_map<Engine::Core::EntityID, MovementRoute> m_routes;
+  std::uint64_t m_prune_tick{0};
 };
 
 } // namespace Game::Systems

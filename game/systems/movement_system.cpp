@@ -26,9 +26,6 @@
 
 namespace Game::Systems {
 
-static constexpr float k_stuck_timeout_seconds = 3.0F;
-static constexpr float k_stuck_progress_epsilon_sq = 0.15F * 0.15F;
-
 namespace {
 
 constexpr float hold_mode_turn_speed_degrees = 180.0F;
@@ -65,6 +62,15 @@ constexpr float k_traversal_min_visual_half_width = 0.38F;
 constexpr float k_traversal_squeeze_epsilon = 0.05F;
 constexpr float k_traversal_squeeze_rate = 8.0F;
 constexpr float k_traversal_release_rate = 3.5F;
+
+// Substepping bound: a body may not advance more than this fraction of a nav
+// cell in one collision query, so nothing tunnels through a thin wall on a
+// hitch or at cavalry speed.
+constexpr float k_motor_substep_cells = 0.45F;
+constexpr int k_max_motor_substeps = 8;
+
+// Below this translation scale the body is turning, not travelling.
+constexpr float k_turning_translation_threshold = 0.35F;
 
 auto body_turn_speed_degrees(Game::Units::SpawnType type) -> float {
   switch (type) {
@@ -603,6 +609,110 @@ void MovementSystem::update_traversal_presentation(
 
 namespace {
 
+// One accepted planar displacement.
+//
+// The old motor tried the whole step, then global X alone, then global Z alone,
+// and zeroed the other axis' velocity when one of them worked. That loses the
+// tangential speed at every wall, sticks bodies on corners, and lets a fast body
+// step straight over a thin cell. This substeps by a bound derived from the nav
+// cell and slides along the contact plane instead.
+struct SweepResult {
+  float accepted_dx{0.0F};
+  float accepted_dz{0.0F};
+  float rejected_dx{0.0F};
+  float rejected_dz{0.0F};
+  float accepted_fraction{1.0F};
+  bool contact{false};
+  bool blocked{false};
+  float normal_x{0.0F};
+  float normal_z{0.0F};
+};
+
+template <typename AllowedFn>
+auto sweep_body(float origin_x,
+                float origin_z,
+                float delta_x,
+                float delta_z,
+                float substep_length,
+                const AllowedFn& allowed) -> SweepResult {
+  SweepResult result;
+  float const total = std::hypot(delta_x, delta_z);
+  if (total <= 1.0e-6F) {
+    return result;
+  }
+
+  int const substeps =
+      std::clamp(static_cast<int>(std::ceil(total / std::max(0.02F, substep_length))),
+                 1,
+                 k_max_motor_substeps);
+
+  float x = origin_x;
+  float z = origin_z;
+  float remaining_x = delta_x;
+  float remaining_z = delta_z;
+
+  for (int step = 0; step < substeps; ++step) {
+    float const fraction = 1.0F / static_cast<float>(substeps - step);
+    float const step_x = remaining_x * fraction;
+    float const step_z = remaining_z * fraction;
+    if (std::hypot(step_x, step_z) <= 1.0e-7F) {
+      break;
+    }
+
+    if (allowed(x + step_x, z + step_z)) {
+      x += step_x;
+      z += step_z;
+      remaining_x -= step_x;
+      remaining_z -= step_z;
+      continue;
+    }
+
+    bool const x_clear = allowed(x + step_x, z);
+    bool const z_clear = allowed(x, z + step_z);
+
+    float normal_x = 0.0F;
+    float normal_z = 0.0F;
+    if (x_clear && (!z_clear || std::abs(step_x) >= std::abs(step_z))) {
+      x += step_x;
+      normal_z = step_z > 0.0F ? -1.0F : 1.0F;
+    } else if (z_clear) {
+      z += step_z;
+      normal_x = step_x > 0.0F ? -1.0F : 1.0F;
+    } else {
+      result.blocked = true;
+      result.contact = true;
+      float const length = std::hypot(remaining_x, remaining_z);
+      if (length > 1.0e-6F) {
+        result.normal_x = -remaining_x / length;
+        result.normal_z = -remaining_z / length;
+      }
+      break;
+    }
+
+    result.contact = true;
+    result.normal_x = normal_x;
+    result.normal_z = normal_z;
+
+    // Keep the tangential part of what is left and drop the part pressing into
+    // the plane, so a body brushing a wall keeps walking along it.
+    remaining_x -= step_x;
+    remaining_z -= step_z;
+    float const into = remaining_x * normal_x + remaining_z * normal_z;
+    if (into < 0.0F) {
+      remaining_x -= normal_x * into;
+      remaining_z -= normal_z * into;
+    }
+  }
+
+  result.accepted_dx = x - origin_x;
+  result.accepted_dz = z - origin_z;
+  result.rejected_dx = delta_x - result.accepted_dx;
+  result.rejected_dz = delta_z - result.accepted_dz;
+  result.accepted_fraction = std::clamp(
+      std::hypot(result.accepted_dx, result.accepted_dz) / total, 0.0F, 1.0F);
+  return result;
+}
+
 // The motor's per-archetype limits. Acceleration and damping used to be spelled
 // inline where the desired velocity was computed, which made them read like
 // route policy; they are motor policy.
@@ -827,26 +937,27 @@ void MovementSystem::move_unit(Engine::Core::Entity* entity,
 
   float const old_x = transform->position.x;
   float const old_z = transform->position.z;
+
+  // A body that has to turn a long way before it can travel publishes Turning
+  // rather than pretending the route failed to move it.
   auto const heading = heading_reference(*entity, *transform, *movement, unit);
   float const translation_scale =
       was_on_valid_tile ? heading_translation_scale(transform->rotation.y, heading)
                         : 1.0F;
+  if (translation_scale < k_turning_translation_threshold &&
+      facts->progress.state == Engine::Core::MovementOrderState::Following) {
+    facts->progress.state = Engine::Core::MovementOrderState::Turning;
+  }
 
   float const translated_vx = movement->vx * translation_scale;
   float const translated_vz = movement->vz * translation_scale;
-  float const new_x = old_x + translated_vx * delta_time;
-  float const new_z = old_z + translated_vz * delta_time;
-
-  auto cell_walkable = [entity](float wx, float wz) -> bool {
-    return is_movement_point_allowed(QVector3D(wx, 0.0F, wz), *entity);
-  };
 
   auto const& collision = BuildingCollisionRegistry::instance();
   float const trapped_depth =
       was_on_valid_tile ? 0.0F : collision.blocking_penetration_depth(old_x, old_z);
   auto step_allowed = [&](float wx, float wz) -> bool {
     if (was_on_valid_tile) {
-      return cell_walkable(wx, wz);
+      return is_movement_point_allowed(QVector3D(wx, 0.0F, wz), *entity);
     }
     if (trapped_depth > 0.0F) {
       return collision.blocking_penetration_depth(wx, wz) < trapped_depth;
@@ -854,36 +965,28 @@ void MovementSystem::move_unit(Engine::Core::Entity* entity,
     return !collision.is_point_in_blocking_building(wx, wz);
   };
 
-  bool contact = false;
-  bool fully_blocked = false;
-  float contact_nx = 0.0F;
-  float contact_nz = 0.0F;
+  auto const* pathfinder = NavGrid::get_pathfinder();
+  float const cell_size = pathfinder != nullptr ? pathfinder->grid_cell_size() : 1.0F;
+  auto const sweep = sweep_body(old_x,
+                                old_z,
+                                translated_vx * delta_time,
+                                translated_vz * delta_time,
+                                std::max(0.05F, cell_size * k_motor_substep_cells),
+                                step_allowed);
 
-  if (step_allowed(new_x, new_z)) {
-    transform->position.x = new_x;
-    transform->position.z = new_z;
-  } else {
-    contact = true;
-    bool const x_axis_clear = step_allowed(new_x, old_z);
-    bool const z_axis_clear = step_allowed(old_x, new_z);
+  transform->position.x = old_x + sweep.accepted_dx;
+  transform->position.z = old_z + sweep.accepted_dz;
 
-    if (x_axis_clear) {
-      transform->position.x = new_x;
-      movement->vz = 0.0F;
-      contact_nz = translated_vz > 0.0F ? -1.0F : 1.0F;
-    } else if (z_axis_clear) {
-      transform->position.z = new_z;
-      movement->vx = 0.0F;
-      contact_nx = translated_vx > 0.0F ? -1.0F : 1.0F;
-    } else {
-      movement->vx = 0.0F;
-      movement->vz = 0.0F;
-      fully_blocked = true;
-      float const length = std::hypot(translated_vx, translated_vz);
-      if (length > 1.0e-5F) {
-        contact_nx = -translated_vx / length;
-        contact_nz = -translated_vz / length;
-      }
+  if (sweep.blocked) {
+    movement->vx = 0.0F;
+    movement->vz = 0.0F;
+  } else if (sweep.contact) {
+    // Remove only the component pressing into the contact plane; the speed
+    // along the wall survives.
+    float const into = movement->vx * sweep.normal_x + movement->vz * sweep.normal_z;
+    if (into < 0.0F) {
+      movement->vx -= sweep.normal_x * into;
+      movement->vz -= sweep.normal_z * into;
     }
   }
 
@@ -896,85 +999,36 @@ void MovementSystem::move_unit(Engine::Core::Entity* entity,
     movement->travelled -= k_travelled_wrap;
   }
 
-  float const attempted_dx = translated_vx * delta_time;
-  float const attempted_dz = translated_vz * delta_time;
-  float const attempted_length = std::hypot(attempted_dx, attempted_dz);
-
   facts->motor.valid = true;
   facts->motor.accepted_dx = stepped_x;
   facts->motor.accepted_dz = stepped_z;
   facts->motor.accepted_vx = stepped_x / std::max(1.0e-5F, delta_time);
   facts->motor.accepted_vz = stepped_z / std::max(1.0e-5F, delta_time);
-  facts->motor.rejected_dx = attempted_dx - stepped_x;
-  facts->motor.rejected_dz = attempted_dz - stepped_z;
-  facts->motor.accepted_fraction =
-      attempted_length > 1.0e-6F
-          ? std::clamp(std::hypot(stepped_x, stepped_z) / attempted_length, 0.0F, 1.0F)
-          : 1.0F;
-  facts->motor.blocked = fully_blocked;
-  facts->motor.has_contact = contact;
-  facts->motor.contact_nx = contact_nx;
-  facts->motor.contact_nz = contact_nz;
-  facts->motor.penetration_depth = collision.blocking_penetration_depth(
-      transform->position.x, transform->position.z);
+  facts->motor.rejected_dx = sweep.rejected_dx;
+  facts->motor.rejected_dz = sweep.rejected_dz;
+  facts->motor.accepted_fraction = sweep.accepted_fraction;
+  facts->motor.blocked = sweep.blocked;
+  facts->motor.has_contact = sweep.contact;
+  facts->motor.contact_nx = sweep.normal_x;
+  facts->motor.contact_nz = sweep.normal_z;
+  // Penetration is only penetration where the passability source the motor
+  // itself uses says the point is illegal. A body standing in a gate passage is
+  // inside a building footprint and entirely legal, and reporting that as
+  // 1.5 m of penetration buries the real ones.
+  QVector3D const settled_pos(transform->position.x, 0.0F, transform->position.z);
+  facts->motor.penetration_depth =
+      is_movement_point_allowed(settled_pos, *entity)
+          ? 0.0F
+          : collision.blocking_penetration_depth(transform->position.x,
+                                                 transform->position.z);
 
-  update_movement_progress(*entity, *transform, *movement, *facts, delta_time);
+  if (sweep.blocked) {
+    ++facts->progress.blocked_steps;
+  } else if (facts->motor.accepted_fraction > 0.5F) {
+    facts->progress.blocked_steps = 0;
+  }
 
   finalize_orientation(entity, transform, movement, delta_time);
-}
-
-void MovementSystem::update_movement_progress(
-    Engine::Core::Entity& entity,
-    const Engine::Core::TransformComponent& transform,
-    Engine::Core::MovementComponent& movement,
-    Engine::Core::MovementFactsComponent& facts,
-    float delta_time) {
-  float const remaining = RouteFollowSystem::remaining_route_length(
-      movement, transform.position.x, transform.position.z);
-  facts.progress.route_advance =
-      movement.get_has_target() ? facts.progress.remaining_arclength - remaining : 0.0F;
-  facts.progress.remaining_arclength = remaining;
-
-  if (facts.motor.blocked) {
-    ++facts.progress.blocked_steps;
-    facts.progress.state = Engine::Core::MovementOrderState::LocallyBlocked;
-  } else if (facts.progress.state == Engine::Core::MovementOrderState::LocallyBlocked) {
-    facts.progress.state = Engine::Core::MovementOrderState::Following;
-  }
-
-  if (!movement.get_has_target()) {
-    movement.stuck_ref_valid = false;
-    movement.stuck_timer = 0.0F;
-    facts.progress.no_progress_seconds = 0.0F;
-    facts.progress.blocked_steps = 0;
-    return;
-  }
-
-  float const px = transform.position.x;
-  float const pz = transform.position.z;
-  if (!movement.stuck_ref_valid) {
-    movement.stuck_ref_x = px;
-    movement.stuck_ref_z = pz;
-    movement.stuck_timer = 0.0F;
-    movement.stuck_ref_valid = true;
-  } else {
-    float const moved_x = px - movement.stuck_ref_x;
-    float const moved_z = pz - movement.stuck_ref_z;
-    if (moved_x * moved_x + moved_z * moved_z > k_stuck_progress_epsilon_sq) {
-      movement.stuck_ref_x = px;
-      movement.stuck_ref_z = pz;
-      movement.stuck_timer = 0.0F;
-    } else {
-      movement.stuck_timer += delta_time;
-      if (movement.stuck_timer >= k_stuck_timeout_seconds) {
-        movement.stop();
-        OrderService::clear_player_order_intent(&entity);
-        movement.stuck_ref_valid = false;
-        facts.progress.state = Engine::Core::MovementOrderState::Unreachable;
-      }
-    }
-  }
-  facts.progress.no_progress_seconds = movement.stuck_timer;
 }
 
 auto MovementSystem::access() const -> Engine::Core::SystemAccess {

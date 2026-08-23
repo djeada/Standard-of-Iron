@@ -86,6 +86,14 @@ public:
 
   [[nodiscard]] auto tick_id() const noexcept -> std::uint64_t { return m_tick_id; }
 
+  // Distinguishes one world from another inside a single process. Entity ids
+  // restart per world, so anything that records samples across worlds -- a
+  // trace spanning a whole test binary, a replay comparison -- has to key on
+  // this as well or it will splice two unrelated bodies into one timeline.
+  [[nodiscard]] auto instance_id() const noexcept -> std::uint64_t {
+    return m_instance_id;
+  }
+
   [[nodiscard]] auto spatial_index() -> WorldSpatialIndex& { return m_spatial_index; }
   [[nodiscard]] auto spatial_index() const -> const WorldSpatialIndex& {
     return m_spatial_index;
@@ -289,6 +297,7 @@ private:
   SystemProfiler m_system_profiler;
   SystemProfiler::QueryCounters m_query_counters;
   std::uint64_t m_tick_id{0};
+  std::uint64_t m_instance_id{0};
   bool m_presentation_enabled{true};
   bool m_is_render_snapshot{false};
   std::atomic<bool> m_render_snapshots_requested{false};

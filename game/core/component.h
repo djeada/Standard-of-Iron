@@ -320,10 +320,13 @@ public:
 
   // Cleared by the route follower at the top of each Movement phase so a stale
   // fact from last tick can never be read as this tick's answer.
+  // `motor` is deliberately not cleared: the motor runs after the follower and
+  // republishes it from every gate, so what the follower reads here is last
+  // tick's accepted result -- exactly what the progress watchdog needs to
+  // decide whether the body actually went anywhere.
   void begin_tick() {
     desired = {};
     steering = {};
-    motor = {};
   }
 };
 

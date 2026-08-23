@@ -22,11 +22,20 @@ auto is_active_state(MovementOrderState state) -> bool {
   return is_active_movement_state(state);
 }
 
-// Yielding and Repathing are declared holds: the plan allows no route progress
-// while one of them is published, and nothing else.
+// A declared block or queue. The gate's rule is "an active order with no
+// declared queue/block", so these four states are exempt from the stall check
+// -- and each is separately bounded below, so declaring one is not a way to
+// stall forever.
 auto is_declared_hold(MovementOrderState state) -> bool {
-  return state == MovementOrderState::Yielding ||
-         state == MovementOrderState::Repathing;
+  switch (state) {
+  case MovementOrderState::Yielding:
+  case MovementOrderState::Repathing:
+  case MovementOrderState::LocallyBlocked:
+  case MovementOrderState::Recovering:
+    return true;
+  default:
+    return false;
+  }
 }
 
 auto accepted_speed(const MovementTroopSample& sample) -> float {
@@ -106,6 +115,7 @@ struct EntityWalkState {
   OpenFinding idle_while_moving;
   OpenFinding obstruction;
   OpenFinding penetration;
+  OpenFinding recovery;
 
   float stall_seconds{0.0F};
   float stall_advance{0.0F};
@@ -115,6 +125,8 @@ struct EntityWalkState {
   float gait_stopped_seconds{0.0F};
   float gait_moving_seconds{0.0F};
   float blocked_seconds{0.0F};
+  float turning_seconds{0.0F};
+  float recovering_seconds{0.0F};
   float penetration_seconds{0.0F};
   float active_seconds{0.0F};
   int blocked_streak{0};
@@ -135,6 +147,7 @@ struct EntityWalkState {
   std::uint32_t waypoint_regressions{0};
   std::uint32_t previous_waypoint_index{0};
   std::uint64_t previous_route_id{0};
+  std::uint64_t previous_route_revision{0};
   TraversalLayoutMode previous_mode{TraversalLayoutMode::Normal};
   bool has_previous_mode{false};
   std::uint32_t mode_changes{0};
@@ -252,14 +265,19 @@ void analyze_troops(const std::vector<MovementTroopSample>& troops,
                     const MovementGateThresholds& thresholds,
                     MovementAnalysis& analysis,
                     FindingSink& sink) {
-  std::map<EntityID, std::vector<const MovementTroopSample*>> by_entity;
+  // Entity ids restart with every world, so a trace that spans more than one
+  // has to be keyed on the session too. Splicing two worlds' samples into one
+  // timeline invents teleports and heading flips that never happened.
+  std::map<std::pair<std::uint64_t, EntityID>, std::vector<const MovementTroopSample*>>
+      by_entity;
   for (auto const& sample : troops) {
-    by_entity[sample.entity_id].push_back(&sample);
+    by_entity[{sample.session_id, sample.entity_id}].push_back(&sample);
   }
 
   float const step = std::max(1.0e-4F, thresholds.fixed_step_seconds);
 
-  for (auto& [entity_id, samples] : by_entity) {
+  for (auto& [key, samples] : by_entity) {
+    EntityID const entity_id = key.second;
     std::stable_sort(
         samples.begin(),
         samples.end(),
@@ -310,7 +328,20 @@ void analyze_troops(const std::vector<MovementTroopSample>& troops,
       }
 
       // -- progress stalls -------------------------------------------------
-      if (active && !is_declared_hold(sample.state)) {
+      //
+      // Turning is a declared state -- a body that has to swing round before it
+      // can travel is not failing to travel -- but it is bounded, so a turn
+      // that never ends is still a stall.
+      if (sample.state == MovementOrderState::Turning) {
+        walk.turning_seconds += dt;
+      } else {
+        walk.turning_seconds = 0.0F;
+      }
+      bool const turning_hold = sample.state == MovementOrderState::Turning &&
+                                walk.turning_seconds <= thresholds.max_turning_seconds;
+      bool const launching = sample.order_seconds < thresholds.launch_grace_seconds;
+
+      if (active && !is_declared_hold(sample.state) && !turning_hold && !launching) {
         walk.stall_seconds += dt;
         walk.stall_advance += sample.route_advance;
         if (walk.stall_advance >= thresholds.progress_stall_advance_metres) {
@@ -338,6 +369,14 @@ void analyze_troops(const std::vector<MovementTroopSample>& troops,
       }
 
       // -- route arclength regression --------------------------------------
+      //
+      // A new route is measured from somewhere else, so its arclength is not
+      // comparable with the old one's.
+      if (sample.route_revision != walk.previous_route_revision) {
+        walk.has_min_remaining = false;
+        walk.regression_seconds = 0.0F;
+        FindingSink::close(walk.regression);
+      }
       if (active) {
         if (!walk.has_min_remaining) {
           walk.min_remaining = sample.remaining_arclength;
@@ -370,6 +409,24 @@ void analyze_troops(const std::vector<MovementTroopSample>& troops,
         walk.has_min_remaining = false;
         walk.regression_seconds = 0.0F;
         FindingSink::close(walk.regression);
+      }
+
+      // -- bounded recovery --------------------------------------------------
+      if (sample.state == MovementOrderState::Recovering) {
+        walk.recovering_seconds += dt;
+        if (walk.recovering_seconds > thresholds.max_recovering_seconds) {
+          sink.extend(walk.recovery,
+                      MovementFindingKind::ObstructionNotEscalated,
+                      entity_id,
+                      0,
+                      sample.tick,
+                      walk.recovering_seconds,
+                      text("Recovering for %.2fs without a terminal outcome",
+                           static_cast<double>(walk.recovering_seconds)));
+        }
+      } else {
+        walk.recovering_seconds = 0.0F;
+        FindingSink::close(walk.recovery);
       }
 
       // -- obstruction escalation ------------------------------------------
@@ -552,8 +609,12 @@ void analyze_troops(const std::vector<MovementTroopSample>& troops,
       }
 
       // -- gait truth -------------------------------------------------------
+      //
+      // A headless run with presentation disabled never publishes a gait, and
+      // an unpublished gait is not a gait defect.
       bool const locomotion = sample.presentation_state != 0U;
-      if (locomotion && speed < thresholds.gait_stopped_speed) {
+      if (sample.presentation_valid && locomotion &&
+          speed < thresholds.gait_stopped_speed) {
         walk.gait_stopped_seconds += dt;
         if (walk.gait_stopped_seconds > thresholds.gait_mismatch_seconds) {
           sink.extend(walk.gait_without_motion,
@@ -572,7 +633,8 @@ void analyze_troops(const std::vector<MovementTroopSample>& troops,
         FindingSink::close(walk.gait_without_motion);
       }
 
-      if (!locomotion && speed > thresholds.gait_moving_speed) {
+      if (sample.presentation_valid && !locomotion &&
+          speed > thresholds.gait_moving_speed) {
         walk.gait_moving_seconds += dt;
         if (walk.gait_moving_seconds > thresholds.gait_mismatch_seconds) {
           sink.extend(walk.idle_while_moving,
@@ -590,7 +652,7 @@ void analyze_troops(const std::vector<MovementTroopSample>& troops,
         FindingSink::close(walk.idle_while_moving);
       }
 
-      if (locomotion &&
+      if (sample.presentation_valid && locomotion &&
           sample.direction_source == MovementDirectionSource::DesiredVelocity) {
         sink.add(MovementFindingKind::DirectionSourceNotAccepted,
                  entity_id,
@@ -707,6 +769,7 @@ void analyze_troops(const std::vector<MovementTroopSample>& troops,
       walk.previous_state = sample.state;
       walk.previous_waypoint_index = sample.waypoint_index;
       walk.previous_route_id = sample.route_id;
+      walk.previous_route_revision = sample.route_revision;
       walk.previous_tick = sample.tick;
       walk.has_previous = true;
     }
@@ -735,18 +798,26 @@ void analyze_soldiers(const std::vector<MovementSoldierSample>& soldiers,
                       MovementAnalysis& analysis,
                       FindingSink& sink) {
   struct Key {
+    std::uint64_t session;
     EntityID troop;
     std::uint32_t slot;
     auto operator<(const Key& other) const -> bool {
+      if (session != other.session) {
+        return session < other.session;
+      }
       return troop != other.troop ? troop < other.troop : slot < other.slot;
     }
   };
 
   std::map<Key, std::vector<const MovementSoldierSample*>> by_slot;
-  std::map<std::pair<std::uint64_t, EntityID>, std::vector<std::uint32_t>> per_frame;
+  std::map<Key, std::vector<std::uint32_t>> per_frame;
   for (auto const& sample : soldiers) {
-    by_slot[Key{sample.troop_id, sample.stable_slot}].push_back(&sample);
-    per_frame[{sample.frame, sample.troop_id}].push_back(sample.stable_slot);
+    by_slot[Key{sample.session_id, sample.troop_id, sample.stable_slot}].push_back(
+        &sample);
+    per_frame[Key{sample.session_id,
+                  sample.troop_id,
+                  static_cast<std::uint32_t>(sample.frame)}]
+        .push_back(sample.stable_slot);
   }
 
   for (auto& [frame_key, slots] : per_frame) {
@@ -755,9 +826,9 @@ void analyze_soldiers(const std::vector<MovementSoldierSample>& soldiers,
     auto const duplicate = std::adjacent_find(sorted.begin(), sorted.end());
     if (duplicate != sorted.end()) {
       sink.add(MovementFindingKind::SlotIdentityChanged,
-               frame_key.second,
+               frame_key.troop,
                *duplicate,
-               frame_key.first,
+               frame_key.slot,
                0.0F,
                text("slot %u submitted twice in one frame", *duplicate));
     }

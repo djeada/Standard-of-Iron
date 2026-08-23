@@ -145,10 +145,16 @@ struct MotorFacts {
 // Written by the progress stage.
 struct MovementProgressFacts {
   MovementOrderState state{MovementOrderState::Idle};
+  MovementOrderState previous_state{MovementOrderState::Idle};
   float remaining_arclength{0.0F};
   float route_advance{0.0F};
   float lateral_route_error{0.0F};
   float no_progress_seconds{0.0F};
+  float no_progress_advance{0.0F};
+  // Seconds since this order was accepted. The motor's first-order lag means a
+  // body needs a bounded launch before it can be judged for lack of progress.
+  float order_seconds{0.0F};
+  std::uint64_t tracked_order{0};
   float state_seconds{0.0F};
   std::uint32_t blocked_steps{0};
   std::uint32_t repath_count{0};

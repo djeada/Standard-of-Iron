@@ -483,32 +483,32 @@ and no renderer input reads desired velocity as actual motion.
 
 ### Route representation and stability
 
-- [ ] Replace “waypoints only” with a route object that contains a stable ID,
+- [x] Replace “waypoints only” with a route object that contains a stable ID,
       topology revision, polyline segments, cumulative arclength, clearance/width
       metadata, portal spans, and an explicit final arrival region.
-- [ ] Project the root onto the current route segment and advance monotonically
+- [x] Project the root onto the current route segment and advance monotonically
       by segment/arclength. Do not use only distance-to-waypoint circles that can
       be re-entered from alternating sides.
-- [ ] Use bounded lookahead along route arclength. Blend corner tangents over a
+- [x] Use bounded lookahead along route arclength. Blend corner tangents over a
       distance appropriate to turn radius; never flip directly between grid
       staircase legs.
-- [ ] Preserve a valid route across small moving-target changes and root motion.
+- [x] Preserve a valid route across small moving-target changes and root motion.
       Repath only for a material goal change, invalid remaining segment,
       topology change, declared deadlock escalation, or failed recovery.
 - [ ] Keep a stable side around an obstacle until the chosen branch is cleared.
       Equal-cost alternatives need deterministic tie-breaking and route-retain
       hysteresis.
-- [ ] Validate and consume path-request topology/order revisions. Discarded work
+- [x] Validate and consume path-request topology/order revisions. Discarded work
       must not stop or reset current movement.
 
 ### Swept motor
 
-- [ ] Integrate one accepted planar displacement from steered velocity using a
+- [x] Integrate one accepted planar displacement from steered velocity using a
       swept body/envelope, not endpoint point sampling.
-- [ ] Return contact time, contact normal, accepted fraction, penetration, and
+- [x] Return contact time, contact normal, accepted fraction, penetration, and
       remaining displacement. Slide against the actual contact plane instead of
       trying global X and Z axes independently.
-- [ ] Substep only from a declared maximum travel/curvature bound so hitches and
+- [x] Substep only from a declared maximum travel/curvature bound so hitches and
       fast bodies cannot tunnel through thin cells or corners.
 - [ ] Make acceleration, deceleration, maximum speed, turn rate, and arrival
       braking explicit per archetype. Heading restrictions may reduce forward
@@ -519,10 +519,10 @@ and no renderer input reads desired velocity as actual motion.
 
 ### Progress watchdog as a state machine
 
-- [ ] Measure forward route arclength, accepted displacement, distance from the
+- [x] Measure forward route arclength, accepted displacement, distance from the
       current segment, and motor contacts. Do not reset from arbitrary lateral
       displacement.
-- [ ] Use explicit escalation:
+- [x] Use explicit escalation:
 
     1. `Following` — normal progress;
     2. `LocallyBlocked` — hold stable direction/queue briefly;
@@ -530,7 +530,7 @@ and no renderer input reads desired velocity as actual motion.
     4. `Recovering` — invalid-start or local ejection path;
     5. `Unreachable` — stop, idle, and publish reason.
 
-- [ ] Bound attempts and time in every state. A failed repath cannot reissue the
+- [x] Bound attempts and time in every state. A failed repath cannot reissue the
       same first step forever.
 - [ ] A unit may visibly idle while queued, but its order state must say
       `Yielding/Queued`, not “walking with velocity.”
@@ -541,6 +541,30 @@ Every single-troop baseline scene arrives or declares a correct terminal result.
 There are zero indefinite active moves, zero blocked-cell penetrations, zero
 uncommanded branch flips, and zero locomotion frames unsupported by accepted
 root/layout displacement.
+
+## Open decisions raised by the traces
+
+### A body never reaches its authored speed (found 2026-08-24, Milestone 2)
+
+`MovementTrace` on the tight-gap and gate suites shows every troop settling
+below the speed its troop profile authors. The motor integrates
+
+```text
+v' = (v + (S - v) * 4S * dt) * (1 - 0.5 * 6 * dt)
+```
+
+whose fixed point is a _fraction_ of `S` that itself depends on `S`: measured
+0.56 m/s against a desired 1.00 (siege), 1.90 against 2.50, and 2.09 against
+2.70. So authored speeds are not honoured and the spread between slow and fast
+troops is compressed. This predates the recovery -- the same accel/damping pair
+was inline in the old `move_unit` -- and it is the reason the first draft of the
+progress watchdog declared a visibly-moving catapult blocked.
+
+Gate 2's arrival budget ("route length / minimum speed plus 1.0 s") cannot be
+honest while this stands. Fixing it makes every unit 1.3x-1.8x faster, which is
+a balance change, not a movement repair, so it is recorded here rather than
+applied: **decide whether to honour authored speeds and re-tune the troop
+profiles, or to re-author the profiles at the speeds units actually reach.**
 
 ## Milestone 3: predictive avoidance and crowd coordination
 

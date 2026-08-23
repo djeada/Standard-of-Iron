@@ -224,6 +224,7 @@ add_library(
     STATIC
     systems/order_service.cpp
     systems/command_service.cpp
+    systems/movement_route.cpp
     systems/route_follow_system.cpp
     systems/movement_system.cpp
     systems/movement_pipeline.cpp

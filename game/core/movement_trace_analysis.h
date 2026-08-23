@@ -18,6 +18,13 @@ struct MovementGateThresholds {
   // route progress below 0.03 m.
   float progress_stall_window_seconds{0.35F};
   float progress_stall_advance_metres{0.03F};
+  // An order is not judged for lack of progress until the body has had this
+  // long to accelerate out of a standstill. See k_launch_grace_seconds.
+  float launch_grace_seconds{0.60F};
+  // Turning is a declared state, but it may not last forever.
+  float max_turning_seconds{2.0F};
+  // Nor may recovery: the ladder must reach a terminal outcome.
+  float max_recovering_seconds{2.0F};
 
   // "Persistent obstruction": a repath/queue/unreachable transition must begin
   // within 0.50 s.
