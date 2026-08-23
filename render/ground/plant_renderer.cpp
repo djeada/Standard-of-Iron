@@ -84,6 +84,7 @@ void PlantRenderer::generate_plant_instances() {
     const float half_w = static_cast<float>(m_width) * 0.5F;
     const float half_h = static_cast<float>(m_height) * 0.5F;
     const auto& terrain_service = world().terrain_or_empty();
+    const auto prop_profile = Game::Map::make_scatter_profile(m_biome_settings);
     for (const auto& prop : m_world_props) {
       if (prop.type != Game::Map::WorldProp::Type::Plant) {
         continue;
@@ -97,8 +98,8 @@ void PlantRenderer::generate_plant_instances() {
                                        static_cast<int>(std::round(prop.z)),
                                        m_noise_seed ^ 0xC2E84B6AU);
       const float color_var = rand_01(var_state);
-      const QVector3D base_color(0.19F, 0.34F, 0.20F);
-      const QVector3D var_color(0.27F, 0.41F, 0.26F);
+      const QVector3D base_color = prop_profile.grass_primary * 0.64F;
+      const QVector3D var_color = prop_profile.grass_secondary * 0.66F;
       const QVector3D tint = base_color * (1.0F - color_var) + var_color * color_var;
       const float sway_phase = rand_01(var_state) * MathConstants::k_two_pi;
       const float plant_type = std::floor(rand_01(var_state) * k_plant_type_count);
