@@ -84,6 +84,8 @@ struct WorldProp {
     Boulder,
     PineTree,
     OliveTree,
+    CypressTree,
+    PalmTree,
     Plant,
     IronOre,
     MagicShrine,
@@ -156,7 +158,8 @@ is_settlement_world_prop_type(WorldProp::Type type) -> bool {
 }
 
 [[nodiscard]] constexpr auto is_tree_world_prop_type(WorldProp::Type type) -> bool {
-  return type == WorldProp::Type::PineTree || type == WorldProp::Type::OliveTree;
+  return type == WorldProp::Type::PineTree || type == WorldProp::Type::OliveTree ||
+         type == WorldProp::Type::CypressTree || type == WorldProp::Type::PalmTree;
 }
 
 [[nodiscard]] constexpr auto is_boulder_world_prop_type(WorldProp::Type type) -> bool {
@@ -187,6 +190,8 @@ is_harvestable_world_prop_type(WorldProp::Type type) -> bool {
   case WorldProp::Type::Boulder:
   case WorldProp::Type::PineTree:
   case WorldProp::Type::OliveTree:
+  case WorldProp::Type::CypressTree:
+  case WorldProp::Type::PalmTree:
   case WorldProp::Type::IronOre:
   case WorldProp::Type::MagicShrine:
   case WorldProp::Type::AbandonedHome:
@@ -217,6 +222,10 @@ world_prop_type_to_string(WorldProp::Type type) -> QLatin1String {
     return QLatin1String("pine_tree");
   case WorldProp::Type::OliveTree:
     return QLatin1String("olive_tree");
+  case WorldProp::Type::CypressTree:
+    return QLatin1String("cypress_tree");
+  case WorldProp::Type::PalmTree:
+    return QLatin1String("palm_tree");
   case WorldProp::Type::Plant:
     return QLatin1String("plant");
   case WorldProp::Type::IronOre:
@@ -269,6 +278,14 @@ world_prop_type_to_string(WorldProp::Type type) -> QLatin1String {
     out = WorldProp::Type::OliveTree;
     return true;
   }
+  if (value == QLatin1String("cypress_tree")) {
+    out = WorldProp::Type::CypressTree;
+    return true;
+  }
+  if (value == QLatin1String("palm_tree")) {
+    out = WorldProp::Type::PalmTree;
+    return true;
+  }
   if (value == QLatin1String("plant")) {
     out = WorldProp::Type::Plant;
     return true;
@@ -312,6 +329,10 @@ world_prop_type_to_string(WorldProp::Type type) -> QLatin1String {
     return 4.50F;
   case WorldProp::Type::OliveTree:
     return 4.00F;
+  case WorldProp::Type::CypressTree:
+    return 3.60F;
+  case WorldProp::Type::PalmTree:
+    return 4.20F;
   case WorldProp::Type::Plant:
     return 0.55F;
   case WorldProp::Type::IronOre:
@@ -331,6 +352,8 @@ world_prop_type_to_string(WorldProp::Type type) -> QLatin1String {
 
   case WorldProp::Type::PineTree:
   case WorldProp::Type::OliveTree:
+  case WorldProp::Type::CypressTree:
+  case WorldProp::Type::PalmTree:
   case WorldProp::Type::DeadTree:
     return 0.22F;
 

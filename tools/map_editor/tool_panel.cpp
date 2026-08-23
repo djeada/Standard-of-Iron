@@ -65,6 +65,10 @@ auto toolDescription(ToolType tool) -> QString {
     return "Place authored pine trees as explicit world props.";
   case ToolType::PropOliveTree:
     return "Place authored olive trees as explicit world props.";
+  case ToolType::PropCypressTree:
+    return "Place authored cypress trees as explicit world props.";
+  case ToolType::PropPalmTree:
+    return "Place authored palm trees as explicit world props.";
   case ToolType::PropPlant:
     return "Place authored ground plants as explicit world props.";
   case ToolType::PropIronOre:
@@ -344,26 +348,40 @@ void ToolPanel::setup_ui() {
   add_tool_button(props_layout,
                   5,
                   0,
+                  "Cypress Tree",
+                  "\u2660",
+                  "Place authored cypress trees.",
+                  ToolType::PropCypressTree);
+  add_tool_button(props_layout,
+                  5,
+                  1,
+                  "Palm Tree",
+                  "\u2748",
+                  "Place authored palm trees.",
+                  ToolType::PropPalmTree);
+  add_tool_button(props_layout,
+                  6,
+                  0,
                   "Plant",
                   "\u2740",
                   "Place authored ground plants.",
                   ToolType::PropPlant);
   add_tool_button(props_layout,
-                  5,
+                  6,
                   1,
                   "Iron Ore",
                   "◆",
                   "Place authored iron ore deposits.",
                   ToolType::PropIronOre);
   add_tool_button(props_layout,
-                  6,
+                  7,
                   0,
                   "Abandoned Home",
                   "\u2302",
                   "Place a derelict home.",
                   ToolType::PropAbandonedHome);
   add_tool_button(props_layout,
-                  6,
+                  7,
                   1,
                   "Statue",
                   "\u265F",

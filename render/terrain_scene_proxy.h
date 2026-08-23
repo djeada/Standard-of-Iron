@@ -10,8 +10,6 @@
 #include "ground/fog_renderer.h"
 #include "ground/ground_renderer.h"
 #include "ground/map_boundary_fog_renderer.h"
-#include "ground/olive_renderer.h"
-#include "ground/pine_renderer.h"
 #include "ground/plant_renderer.h"
 #include "ground/rain_renderer.h"
 #include "ground/river_renderer.h"
@@ -22,6 +20,7 @@
 #include "ground/terrain_renderer.h"
 #include "ground/terrain_scatter_manager.h"
 #include "ground/terrain_surface_manager.h"
+#include "ground/tree_renderer.h"
 #include "scene_renderer.h"
 #include "terrain_scene_types.h"
 
@@ -131,11 +130,8 @@ public:
   [[nodiscard]] auto plant() const -> PlantRenderer* {
     return m_scatter != nullptr ? m_scatter->plant() : nullptr;
   }
-  [[nodiscard]] auto pine() const -> PineRenderer* {
-    return m_scatter != nullptr ? m_scatter->pine() : nullptr;
-  }
-  [[nodiscard]] auto olive() const -> OliveRenderer* {
-    return m_scatter != nullptr ? m_scatter->olive() : nullptr;
+  [[nodiscard]] auto tree(Game::Map::TreeSpecies species) const -> TreeRenderer* {
+    return m_scatter != nullptr ? m_scatter->tree(species) : nullptr;
   }
   [[nodiscard]] auto firecamp() const -> FireCampRenderer* {
     return m_scatter != nullptr ? m_scatter->firecamp() : nullptr;
