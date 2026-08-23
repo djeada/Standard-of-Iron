@@ -136,6 +136,8 @@ auto resolve_humanoid_construction_transition(
   if (!sample.state.initialized) {
     sample.state.initialized = true;
     sample.state.last_sample_time = inputs.sample_time;
+
+    sample.state.blend = inputs.constructing ? 1.0F : 0.0F;
   }
 
   float const elapsed =

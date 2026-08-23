@@ -325,6 +325,12 @@ public:
   float stalled_seconds{0.0F};
   float tick_delta_time{0.0F};
 
+  bool traversal_squeeze_active{false};
+  float traversal_lateral_scale{1.0F};
+  float traversal_target_lateral_scale{1.0F};
+  float traversal_available_half_width{0.0F};
+  float traversal_desired_half_width{0.0F};
+
   void set_state(MotionPresentationState next_state) noexcept {
     previous_state = state;
     state = next_state;

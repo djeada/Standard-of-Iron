@@ -1,7 +1,9 @@
 #include <algorithm>
 #include <cmath>
 #include <gtest/gtest.h>
+#include <limits>
 #include <memory>
+#include <numbers>
 #include <vector>
 
 #include "game/command/command.h"
@@ -259,6 +261,56 @@ TEST_F(WallSiegeTest, WallKeepsItsOrientationWhenStruckFromAnAngle) {
   EXPECT_LE(position_of(*session, raider).z(),
             besieged_face_z() - contact_clearance + 0.05F)
       << "the raider embedded in the wall while trying to strike it";
+}
+
+TEST_F(WallSiegeTest, FrontRankVisuallyReachesTheFacadeFromWalkableGround) {
+  auto session = make_match();
+  const ScopedSession scope(*session);
+  const EntityID wall = build_wall(*session);
+  ASSERT_NE(wall, 0U);
+  const EntityID raider = spawn_troop(*session,
+                                      Game::Units::SpawnType::Spearman,
+                                      k_raider,
+                                      0.0F,
+                                      besieged_face_z() - 4.0F);
+  ASSERT_NE(raider, 0U);
+  order_attack(*session, raider, wall);
+  run_for(*session, 12.0);
+
+  auto* raider_entity = session->world().get_entity(raider);
+  auto* wall_entity = session->world().get_entity(wall);
+  ASSERT_NE(raider_entity, nullptr);
+  ASSERT_NE(wall_entity, nullptr);
+  auto const* transform = raider_entity->get_component<TransformComponent>();
+  auto const* presentation =
+      raider_entity->get_component<Engine::Core::FormationPresentationComponent>();
+  ASSERT_NE(transform, nullptr);
+  ASSERT_NE(presentation, nullptr);
+  EXPECT_TRUE(Game::Systems::NavGrid::is_world_position_walkable(
+      QVector3D(transform->position.x, 0.0F, transform->position.z)));
+  EXPECT_TRUE(presentation->melee_ordered);
+
+  float closest_visible_gap = std::numeric_limits<float>::infinity();
+  float const yaw = transform->rotation.y * std::numbers::pi_v<float> / 180.0F;
+  float const sin_yaw = std::sin(yaw);
+  float const cos_yaw = std::cos(yaw);
+  for (auto const& soldier : presentation->soldiers) {
+    if (!soldier.alive) {
+      continue;
+    }
+    QVector3D const position(
+        transform->position.x + cos_yaw * soldier.local_x + sin_yaw * soldier.local_z,
+        0.0F,
+        transform->position.z - sin_yaw * soldier.local_x + cos_yaw * soldier.local_z);
+    closest_visible_gap = std::min(
+        closest_visible_gap,
+        Game::Systems::Combat::structure_surface_distance(*wall_entity, position));
+  }
+  float const contact_clearance =
+      Game::Systems::Combat::structure_attack_profile(raider_entity).contact_clearance;
+  EXPECT_LE(closest_visible_gap, contact_clearance + 0.15F)
+      << "the front rank did not visually reach the wall it was attacking";
+  EXPECT_LT(health_of(*session, wall), 4000);
 }
 
 TEST_F(WallSiegeTest, GateKeepsItsAxisAfterBeingHackedAndLosingANeighbour) {

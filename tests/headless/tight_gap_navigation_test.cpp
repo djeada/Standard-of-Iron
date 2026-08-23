@@ -17,6 +17,7 @@
 #include "game/systems/building_collision_registry.h"
 #include "game/systems/command_service.h"
 #include "game/systems/default_content.h"
+#include "game/systems/formation_combat_geometry.h"
 #include "game/systems/nation_registry.h"
 #include "game/systems/nav_grid.h"
 #include "game/systems/owner_registry.h"
@@ -64,6 +65,9 @@ protected:
     map.grid.width = size;
     map.grid.height = size;
     map.grid.tile_size = 1.0F;
+    map.biome.procedural_boulders_enabled = false;
+    map.biome.procedural_iron_ore_enabled = false;
+    map.biome.procedural_trees_enabled = false;
     return match(map);
   }
 
@@ -338,6 +342,161 @@ TEST_F(TightGapNavigationTest, AnArmyFunnelsThroughAOneCellGap) {
   const int arrived = march_east(army, world_of(36, k_gap_z), 90.0);
   EXPECT_GE(arrived, static_cast<int>(army.size()))
       << arrived << " of " << army.size() << " made it through the gap";
+}
+
+TEST_F(TightGapNavigationTest, FormationSqueezeChangesPresentationButNotCombatLayout) {
+  open_field();
+  m_session->world().set_presentation_enabled(true);
+  constexpr int k_gap_z = 24;
+  wall_off_column(24, k_gap_z);
+
+  const EntityID id = spawn(Game::Units::SpawnType::Spearman, world_of(14, k_gap_z));
+  auto* entity = m_session->world().get_entity(id);
+  ASSERT_NE(entity, nullptr);
+  auto const original_layout = Game::Systems::FormationCombat::resolve_layout(*entity);
+  float original_half_width = 0.0F;
+  for (auto const& slot : original_layout.live_slots) {
+    original_half_width = std::max(original_half_width, std::abs(slot.local_x));
+  }
+  ASSERT_GT(original_half_width, 0.5F);
+
+  CommandService::move_unit(m_session->world(), id, world_of(42, k_gap_z));
+  bool squeezed = false;
+  float narrowest_presented_half_width = original_half_width;
+  const double step = m_session->clock().tick_seconds();
+  for (double elapsed = 0.0; elapsed < 30.0; elapsed += step) {
+    run_for(step);
+    auto const* motion =
+        entity->get_component<Engine::Core::MotionPresentationComponent>();
+    auto const* presentation =
+        entity->get_component<Engine::Core::FormationPresentationComponent>();
+    if (motion == nullptr || presentation == nullptr ||
+        motion->traversal_target_lateral_scale >= 0.999F) {
+      continue;
+    }
+
+    squeezed = true;
+    float presented_half_width = 0.0F;
+    for (auto const& soldier : presentation->soldiers) {
+      if (soldier.alive) {
+        presented_half_width =
+            std::max(presented_half_width, std::abs(soldier.local_x));
+      }
+    }
+    narrowest_presented_half_width =
+        std::min(narrowest_presented_half_width, presented_half_width);
+
+    auto const authoritative_layout =
+        Game::Systems::FormationCombat::resolve_layout(*entity);
+    ASSERT_EQ(authoritative_layout.live_slots.size(),
+              original_layout.live_slots.size());
+    for (std::size_t index = 0; index < original_layout.live_slots.size(); ++index) {
+      EXPECT_FLOAT_EQ(authoritative_layout.live_slots[index].local_x,
+                      original_layout.live_slots[index].local_x);
+      EXPECT_FLOAT_EQ(authoritative_layout.live_slots[index].local_z,
+                      original_layout.live_slots[index].local_z);
+    }
+  }
+
+  EXPECT_TRUE(squeezed);
+  EXPECT_LT(narrowest_presented_half_width, original_half_width * 0.8F);
+  EXPECT_GT(position_of(id).x(), world_of(38, k_gap_z).x());
+
+  run_for(2.0);
+  auto const* restored =
+      entity->get_component<Engine::Core::MotionPresentationComponent>();
+  ASSERT_NE(restored, nullptr);
+  EXPECT_FALSE(restored->traversal_squeeze_active);
+  EXPECT_NEAR(restored->traversal_lateral_scale, 1.0F, 0.001F);
+}
+
+TEST_F(TightGapNavigationTest, LargeBodySqueezeExistsOnlyInTheRenderSnapshot) {
+  open_field();
+  m_session->world().set_presentation_enabled(true);
+  m_session->world().request_render_snapshots();
+  constexpr int k_gap_z = 24;
+  wall_off_column(24, k_gap_z);
+
+  const EntityID id = spawn(Game::Units::SpawnType::Elephant, world_of(14, k_gap_z));
+  auto* entity = m_session->world().get_entity(id);
+  ASSERT_NE(entity, nullptr);
+  auto* authoritative = entity->get_component<TransformComponent>();
+  ASSERT_NE(authoritative, nullptr);
+  float const original_scale_x = authoritative->scale.x;
+  CommandService::move_unit(m_session->world(), id, world_of(34, k_gap_z));
+
+  bool observed_render_squeeze = false;
+  const double step = m_session->clock().tick_seconds();
+  for (double elapsed = 0.0; elapsed < 30.0; elapsed += step) {
+    run_for(step);
+    auto const* motion =
+        entity->get_component<Engine::Core::MotionPresentationComponent>();
+    if (motion == nullptr || motion->traversal_lateral_scale >= 0.99F) {
+      continue;
+    }
+    auto const snapshot = m_session->world().acquire_render_snapshot();
+    auto const* rendered = snapshot != nullptr ? snapshot->get_entity(id) : nullptr;
+    auto const* rendered_transform =
+        rendered != nullptr ? rendered->get_component<TransformComponent>() : nullptr;
+    ASSERT_NE(rendered_transform, nullptr);
+    EXPECT_FLOAT_EQ(authoritative->scale.x, original_scale_x);
+    EXPECT_LT(rendered_transform->scale.x, original_scale_x);
+    observed_render_squeeze = true;
+    break;
+  }
+  EXPECT_TRUE(observed_render_squeeze);
+  EXPECT_FLOAT_EQ(authoritative->scale.x, original_scale_x);
+
+  run_for(30.0);
+  run_for(2.0);
+  auto const* restored_motion =
+      entity->get_component<Engine::Core::MotionPresentationComponent>();
+  ASSERT_NE(restored_motion, nullptr);
+  EXPECT_GT(position_of(id).x(), world_of(30, k_gap_z).x())
+      << "target_scale=" << restored_motion->traversal_target_lateral_scale
+      << " available=" << restored_motion->traversal_available_half_width
+      << " desired=" << restored_motion->traversal_desired_half_width;
+  EXPECT_FALSE(restored_motion->traversal_squeeze_active)
+      << "position=(" << position_of(id).x() << "," << position_of(id).z()
+      << ") yaw=" << authoritative->rotation.y
+      << " target_scale=" << restored_motion->traversal_target_lateral_scale
+      << " available=" << restored_motion->traversal_available_half_width
+      << " desired=" << restored_motion->traversal_desired_half_width;
+  auto const restored_snapshot = m_session->world().acquire_render_snapshot();
+  auto const* restored_entity =
+      restored_snapshot != nullptr ? restored_snapshot->get_entity(id) : nullptr;
+  auto const* restored_transform =
+      restored_entity != nullptr ? restored_entity->get_component<TransformComponent>()
+                                 : nullptr;
+  ASSERT_NE(restored_transform, nullptr);
+  EXPECT_FLOAT_EQ(restored_transform->scale.x, original_scale_x);
+}
+
+TEST_F(TightGapNavigationTest, SiegeBodyTurnsAtABoundedRateBeforeFullSpeed) {
+  open_field();
+  const QVector3D start = world_of(14, 24);
+  const EntityID id = spawn(Game::Units::SpawnType::Catapult, start, 0.0F);
+  auto* entity = m_session->world().get_entity(id);
+  ASSERT_NE(entity, nullptr);
+  auto* transform = entity->get_component<TransformComponent>();
+  auto const* unit = entity->get_component<UnitComponent>();
+  ASSERT_NE(transform, nullptr);
+  ASSERT_NE(unit, nullptr);
+
+  CommandService::move_unit(m_session->world(), id, world_of(34, 24));
+  float const step = static_cast<float>(m_session->clock().tick_seconds());
+  m_session->world().update(step);
+
+  EXPECT_GT(transform->rotation.y, 0.0F);
+  EXPECT_LE(transform->rotation.y, 100.0F * step + 0.01F);
+  EXPECT_LT(
+      std::hypot(transform->position.x - start.x(), transform->position.z - start.z()),
+      unit->speed * step * 0.5F);
+
+  run_for(3.0);
+  EXPECT_GT(transform->rotation.y, 75.0F);
+  EXPECT_LT(transform->rotation.y, 95.0F);
+  EXPECT_GT(transform->position.x, start.x() + 0.5F);
 }
 
 TEST_F(TightGapNavigationTest, AnArmyCrossesARiverOnTheBridgeDeck) {

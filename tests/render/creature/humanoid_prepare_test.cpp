@@ -1953,6 +1953,19 @@ TEST(AnimationCorePlaybackManifest, ConstructionPoseEasesInAndRetainsItsRole) {
   EXPECT_EQ(sample.role, Animation::HumanoidConstructionRole::Saw);
 }
 
+TEST(AnimationCorePlaybackManifest, ColdConstructionStateStartsInWorkPose) {
+  auto const sample = Animation::resolve_humanoid_construction_transition({
+      .constructing = true,
+      .sample_time = 3.25F,
+      .construction_phase = 0.42F,
+      .role = Animation::HumanoidConstructionRole::Hammer,
+  });
+
+  EXPECT_FLOAT_EQ(sample.pose_weight, 1.0F);
+  EXPECT_FLOAT_EQ(sample.phase, 0.42F);
+  EXPECT_EQ(sample.role, Animation::HumanoidConstructionRole::Hammer);
+}
+
 TEST(AnimationCorePlaybackManifest, ConstructionPoseEasesOutFromTheLastWorkFrame) {
   Animation::HumanoidConstructionTransitionState state{};
   state.initialized = true;
