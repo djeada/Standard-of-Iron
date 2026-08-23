@@ -40,10 +40,9 @@ void set_player_move_intent(Engine::Core::Entity* entity) {
     return;
   }
 
-  auto* intent = entity->get_component<Engine::Core::PlayerOrderIntentComponent>();
-  if (intent == nullptr) {
-    intent = entity->add_component<Engine::Core::PlayerOrderIntentComponent>();
-  }
+  auto* intent =
+      Engine::Core::get_or_add_component<Engine::Core::PlayerOrderIntentComponent>(
+          entity);
   if (intent == nullptr) {
     return;
   }
@@ -95,10 +94,9 @@ void OrderService::release_settlement_resident(Engine::Core::Entity* entity) {
     return;
   }
 
-  auto* resident = entity->get_component<Engine::Core::SettlementResidentComponent>();
-  if (resident == nullptr) {
-    resident = entity->add_component<Engine::Core::SettlementResidentComponent>();
-  }
+  auto* resident =
+      Engine::Core::get_or_add_component<Engine::Core::SettlementResidentComponent>(
+          entity);
   if (resident == nullptr) {
     return;
   }

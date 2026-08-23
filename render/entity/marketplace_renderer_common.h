@@ -14,7 +14,6 @@ using MarketplaceArchetypeResolver = const RenderArchetype& (*)(BuildingState);
 struct MarketplaceRendererConfig {
   std::string_view nation_slug;
   MarketplaceArchetypeResolver archetype;
-  BuildingHealthBarStyle health_bar;
   BuildingSelectionStyle selection;
 };
 

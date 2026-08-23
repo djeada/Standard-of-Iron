@@ -12,7 +12,6 @@
 namespace Render::GL {
 
 using DefenseTowerArchetypeResolver = const RenderArchetype& (*)(BuildingState);
-using DefenseTowerHealthStyleResolver = BuildingHealthBarStyle (*)(BuildingState);
 using DefenseTowerBannerDrawer = void (*)(const DrawContext&,
                                           ISubmitter&,
                                           const QVector3D&,
@@ -21,7 +20,6 @@ using DefenseTowerBannerDrawer = void (*)(const DrawContext&,
 struct DefenseTowerRendererConfig {
   std::string_view nation_slug;
   DefenseTowerArchetypeResolver archetype;
-  DefenseTowerHealthStyleResolver health_bar_style;
   DefenseTowerBannerDrawer draw_banner;
   BuildingSelectionStyle selection;
   float night_brazier_deck_y = 2.90F;

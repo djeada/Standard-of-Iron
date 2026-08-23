@@ -352,7 +352,6 @@ add_executable(
     render/barracks_flag_renderer_test.cpp
     render/building_archetype_desc_test.cpp
     render/building_render_common_test.cpp
-    render/health_bar_visibility_test.cpp
     render/mode_indicator_test.cpp
     render/mode_indicator_placement_test.cpp
     render/shader_source_test.cpp

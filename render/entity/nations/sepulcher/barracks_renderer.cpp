@@ -98,8 +98,6 @@ void register_barracks_renderer(EntityRendererRegistry& registry) {
         }
 
         draw_grave_banner(ctx, out, unit, white, team, &cloth);
-        draw_building_health_bar(
-            out, ctx, BuildingHealthBarStyle{1.2F, 0.10F, 2.4F, true});
         draw_building_selection_overlay(out, ctx, BuildingSelectionStyle{2.4F, 2.0F});
       });
 }

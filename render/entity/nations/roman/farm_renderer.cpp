@@ -332,7 +332,6 @@ void register_farm_renderer(EntityRendererRegistry& registry) {
       registry,
       FarmRendererConfig{.nation_slug = "roman",
                          .archetype = &farm_archetype,
-                         .health_bar = BuildingHealthBarStyle{1.0F, 0.08F, 0.9F},
                          .selection = BuildingSelectionStyle{2.2F, 2.2F}});
 }
 

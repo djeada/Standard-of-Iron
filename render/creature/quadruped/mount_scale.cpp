@@ -2,14 +2,17 @@
 
 #include "game/core/component.h"
 #include "game/core/entity.h"
+#include "game/core/world.h"
 
 namespace Render::Creature::Quadruped {
 
-auto mount_model_scale(const Engine::Core::Entity* entity) noexcept -> float {
-  if (entity == nullptr) {
+auto mount_model_scale(const Engine::Core::World* world,
+                       const Engine::Core::Entity* entity) noexcept -> float {
+  if (world == nullptr || entity == nullptr) {
     return 1.0F;
   }
-  const auto* transform = entity->get_component<Engine::Core::TransformComponent>();
+  const auto* transform =
+      world->try_get<Engine::Core::TransformComponent>(entity->get_id());
   if (transform == nullptr) {
     return 1.0F;
   }

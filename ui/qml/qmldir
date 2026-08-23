@@ -18,6 +18,7 @@ ObjectivesPanel 1.0 ObjectivesPanel.qml
 CommanderMessagePanel 1.0 CommanderMessagePanel.qml
 HUDBottomCommander 1.0 HUDBottomCommander.qml
 RpgFpvOverlay 1.0 RpgFpvOverlay.qml
+RpgMeter 1.0 RpgMeter.qml
 RpgDamageNumbers 1.0 RpgDamageNumbers.qml
 CombatDamageNumbers 1.0 CombatDamageNumbers.qml
 EconomyCoach 1.0 EconomyCoach.qml

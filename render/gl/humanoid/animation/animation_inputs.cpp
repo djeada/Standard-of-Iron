@@ -521,9 +521,7 @@ auto sample_anim_state(const DrawContext& ctx) -> AnimationInputs {
   if (ctx.world == nullptr || presentation == nullptr ||
       !presentation->snapshot_valid) {
 
-    Engine::Core::publish_creature_presentation(ctx.entity, ctx.world);
-    presentation =
-        ctx.entity->get_component<Engine::Core::CreaturePresentationComponent>();
+    presentation = Engine::Core::publish_creature_presentation(ctx.entity, ctx.world);
   }
   if (presentation != nullptr && presentation->snapshot_valid) {
     anim.visual_movement = resolve_visual_movement_state(ctx);

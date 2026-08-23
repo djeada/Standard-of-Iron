@@ -596,7 +596,6 @@ void register_temple_renderer(EntityRendererRegistry& registry) {
       registry,
       TempleRendererConfig{.nation_slug = "carthage",
                            .archetype = &temple_archetype,
-                           .health_bar = BuildingHealthBarStyle{1.0F, 0.08F, 1.5F},
                            .selection = BuildingSelectionStyle{1.9F, 1.9F}});
 }
 

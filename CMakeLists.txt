@@ -827,6 +827,7 @@ if(QT_VERSION_MAJOR EQUAL 6)
             ui/qml/UnitInspectPanel.qml
             ui/qml/RecruitCard.qml
             ui/qml/RpgFpvOverlay.qml
+            ui/qml/RpgMeter.qml
             ui/qml/RpgDamageNumbers.qml
             ui/qml/CombatDamageNumbers.qml
             ui/qml/FormationPanel.qml

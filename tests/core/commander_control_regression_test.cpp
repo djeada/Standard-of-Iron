@@ -480,11 +480,14 @@ TEST(CommanderControlRegressionTest, CommanderRpgHudUsesSingleOverlayPresentatio
 
   EXPECT_TRUE(contains(fpv_overlay_source, "property real bottomInset: 0"));
 
+  EXPECT_TRUE(contains(fpv_overlay_source, "id: hudBand"));
   EXPECT_TRUE(contains(fpv_overlay_source,
                        "anchors.bottomMargin: root.bottomInset + root.scaled(20)"));
-  EXPECT_EQ(2,
+  EXPECT_EQ(1,
             occurrences(fpv_overlay_source,
-                        "anchors.bottomMargin: root.bottomInset + root.scaled(20)"));
+                        "anchors.bottomMargin: root.bottomInset + root.scaled(20)"))
+      << "the commander HUD is one bottom band; every plate hangs off it so a "
+         "single inset keeps them all clear of the RTS panel";
 }
 
 TEST(CommanderControlRegressionTest,

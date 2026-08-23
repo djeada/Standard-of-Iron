@@ -11,7 +11,6 @@ void register_marketplace_renderer_variant(EntityRendererRegistry& registry,
       [config](const DrawContext& ctx, ISubmitter& out) {
         const BuildingState state = resolve_building_state(ctx);
         submit_building_instance(out, ctx, config.archetype(state));
-        draw_building_health_bar(out, ctx, config.health_bar);
         draw_building_selection_overlay(out, ctx, config.selection);
       });
 }
