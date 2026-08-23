@@ -19,6 +19,8 @@ enum class ScatterRuleSpecies {
   Plant,
   Pine,
   Olive,
+  Cypress,
+  Palm,
   FireCamp,
   Tent,
   SupplyCart,

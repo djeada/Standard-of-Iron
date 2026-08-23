@@ -193,6 +193,60 @@ scatter_density_multiplier(ScatterRuleSpecies species,
     scene_multiplier *= 0.65F + sample.dryness * 0.60F + sample.rockiness * 0.25F -
                         sample.river_influence * 0.25F;
     break;
+  case ScatterRuleSpecies::Cypress:
+    switch (sample.archetype) {
+    case ScatterSceneArchetype::CampOutskirts:
+      scene_multiplier = 1.80F;
+      break;
+    case ScatterSceneArchetype::ShelteredHollow:
+      scene_multiplier = 1.35F;
+      break;
+    case ScatterSceneArchetype::FertilePatch:
+      scene_multiplier = 1.10F;
+      break;
+    case ScatterSceneArchetype::DryClearing:
+      scene_multiplier = 0.70F;
+      break;
+    case ScatterSceneArchetype::RockyPatch:
+      scene_multiplier = 0.60F;
+      break;
+    case ScatterSceneArchetype::RiverFringe:
+      scene_multiplier = 0.45F;
+      break;
+    case ScatterSceneArchetype::OpenField:
+      scene_multiplier = 1.00F;
+      break;
+    }
+    scene_multiplier *= 0.50F + sample.shelter * 0.45F + sample.road_influence * 0.85F +
+                        sample.cluster_bias * 0.45F;
+    break;
+  case ScatterRuleSpecies::Palm:
+    switch (sample.archetype) {
+    case ScatterSceneArchetype::RiverFringe:
+      scene_multiplier = 2.10F;
+      break;
+    case ScatterSceneArchetype::DryClearing:
+      scene_multiplier = 1.10F;
+      break;
+    case ScatterSceneArchetype::FertilePatch:
+      scene_multiplier = 0.70F;
+      break;
+    case ScatterSceneArchetype::CampOutskirts:
+      scene_multiplier = 0.50F;
+      break;
+    case ScatterSceneArchetype::ShelteredHollow:
+      scene_multiplier = 0.40F;
+      break;
+    case ScatterSceneArchetype::RockyPatch:
+      scene_multiplier = 0.30F;
+      break;
+    case ScatterSceneArchetype::OpenField:
+      scene_multiplier = 1.00F;
+      break;
+    }
+    scene_multiplier *= 0.45F + sample.river_influence * 1.15F +
+                        sample.dryness * 0.40F - sample.rockiness * 0.20F;
+    break;
   }
   return std::clamp(scene_multiplier, 0.0F, 2.6F);
 }
@@ -214,6 +268,13 @@ scatter_spawn_chance(ScatterRuleSpecies species,
     break;
   case ScatterRuleSpecies::Olive:
     chance += sample.dryness * 0.18F - sample.river_influence * 0.18F;
+    break;
+  case ScatterRuleSpecies::Cypress:
+    chance += sample.road_influence * 0.20F + sample.shelter * 0.08F -
+              sample.rockiness * 0.10F;
+    break;
+  case ScatterRuleSpecies::Palm:
+    chance += sample.river_influence * 0.24F - sample.shelter * 0.10F;
     break;
   case ScatterRuleSpecies::FireCamp:
     chance += sample.dryness * 0.10F - sample.camp_influence * 0.25F -
@@ -247,6 +308,12 @@ scatter_scale_bias(ScatterRuleSpecies species,
   case ScatterRuleSpecies::Olive:
     return std::clamp(
         0.88F + sample.dryness * 0.18F + sample.rockiness * 0.08F, 0.80F, 1.22F);
+  case ScatterRuleSpecies::Cypress:
+    return std::clamp(
+        0.88F + sample.shelter * 0.16F + sample.cluster_bias * 0.10F, 0.82F, 1.16F);
+  case ScatterRuleSpecies::Palm:
+    return std::clamp(
+        0.86F + sample.river_influence * 0.22F + sample.dryness * 0.08F, 0.80F, 1.20F);
   case ScatterRuleSpecies::FireCamp:
     return std::clamp(0.92F + sample.dryness * 0.12F, 0.85F, 1.12F);
   case ScatterRuleSpecies::Tent:
@@ -297,6 +364,13 @@ scatter_cluster_satellite_count(ScatterRuleSpecies species,
                          ? 2
                          : 1;
     break;
+  case ScatterRuleSpecies::Cypress:
+    min_satellites = sample.road_influence > 0.45F ? 1 : 0;
+    max_satellites = sample.archetype == ScatterSceneArchetype::CampOutskirts ? 3 : 2;
+    break;
+  case ScatterRuleSpecies::Palm:
+    max_satellites = sample.archetype == ScatterSceneArchetype::RiverFringe ? 2 : 1;
+    break;
   case ScatterRuleSpecies::FireCamp:
   case ScatterRuleSpecies::Tent:
   case ScatterRuleSpecies::SupplyCart:
@@ -331,6 +405,14 @@ scatter_cluster_radius_tiles(ScatterRuleSpecies species,
   case ScatterRuleSpecies::Olive:
     min_radius = 1.50F;
     max_radius = 3.20F;
+    break;
+  case ScatterRuleSpecies::Cypress:
+    min_radius = 1.10F;
+    max_radius = 2.20F;
+    break;
+  case ScatterRuleSpecies::Palm:
+    min_radius = 1.40F;
+    max_radius = 2.90F;
     break;
   case ScatterRuleSpecies::FireCamp:
   case ScatterRuleSpecies::Tent:

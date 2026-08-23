@@ -31,6 +31,11 @@ constexpr float k_plant_density_area_scale = 4.0F / 9.0F;
 constexpr float k_plant_edge_padding_scale = 0.35F;
 constexpr float k_reference_scatter_extent = 220.0F;
 
+constexpr float k_plant_type_shrub = 0.0F;
+constexpr float k_plant_type_rosette = 1.0F;
+constexpr float k_plant_type_frond = 2.0F;
+constexpr float k_plant_type_count = 3.0F;
+
 } // namespace
 
 namespace Render::GL {
@@ -96,7 +101,7 @@ void PlantRenderer::generate_plant_instances() {
       const QVector3D var_color(0.27F, 0.41F, 0.26F);
       const QVector3D tint = base_color * (1.0F - color_var) + var_color * color_var;
       const float sway_phase = rand_01(var_state) * MathConstants::k_two_pi;
-      const float plant_type = std::floor(rand_01(var_state) * 4.0F);
+      const float plant_type = std::floor(rand_01(var_state) * k_plant_type_count);
 
       PlantInstanceGpu inst;
       inst.pos_scale = QVector4D(pos.x(),
@@ -165,12 +170,12 @@ void PlantRenderer::generate_plant_instances() {
     float plant_type = 0.0F;
     if (scene.archetype == ScatterSceneArchetype::RiverFringe ||
         scene.archetype == ScatterSceneArchetype::FertilePatch) {
-      plant_type = std::floor(rand_01(state) * 2.0F);
+      plant_type = rand_01(state) < 0.45F ? k_plant_type_shrub : k_plant_type_frond;
     } else if (scene.archetype == ScatterSceneArchetype::DryClearing ||
                scene.dryness > 0.65F) {
-      plant_type = 2.0F + std::floor(rand_01(state) * 2.0F);
+      plant_type = rand_01(state) < 0.55F ? k_plant_type_rosette : k_plant_type_shrub;
     } else {
-      plant_type = std::floor(rand_01(state) * 4.0F);
+      plant_type = std::floor(rand_01(state) * k_plant_type_count);
     }
 
     float const color_var = remap(rand_01(state), 0.0F, 1.0F);

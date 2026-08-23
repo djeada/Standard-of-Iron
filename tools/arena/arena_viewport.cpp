@@ -234,6 +234,14 @@ auto world_prop_type_from_string(const QString& prop_type)
       normalized == QStringLiteral("olive")) {
     return Game::Map::WorldProp::Type::OliveTree;
   }
+  if (normalized == QStringLiteral("cypress_tree") ||
+      normalized == QStringLiteral("cypress")) {
+    return Game::Map::WorldProp::Type::CypressTree;
+  }
+  if (normalized == QStringLiteral("palm_tree") ||
+      normalized == QStringLiteral("palm")) {
+    return Game::Map::WorldProp::Type::PalmTree;
+  }
   if (normalized == QStringLiteral("plant")) {
     return Game::Map::WorldProp::Type::Plant;
   }

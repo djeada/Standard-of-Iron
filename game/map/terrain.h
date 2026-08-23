@@ -4,7 +4,9 @@
 #include <QVector3D>
 
 #include <algorithm>
+#include <array>
 #include <cmath>
+#include <cstddef>
 #include <cstdint>
 #include <memory>
 #include <numbers>
@@ -268,17 +270,34 @@ struct BiomeProfiles {
   WindProfile wind;
 };
 
+enum class TreeSpecies : std::uint8_t {
+  Pine = 0,
+  Olive,
+  Cypress,
+  Palm
+};
+
+inline constexpr std::size_t k_tree_species_count = 4;
+
+struct TreeScatterRule {
+  bool allowed = false;
+  float base_density = 0.0F;
+  float density_scale = 0.0F;
+  float scale_min = 1.0F;
+  float scale_max = 2.0F;
+};
+
 struct TerrainScatterRules {
-  bool allow_pines = true;
-  bool allow_olives = false;
-  float pine_base_density = 0.2F;
-  float pine_density_scale = 0.3F;
-  float pine_scale_min = 1.9F;
-  float pine_scale_max = 3.4F;
-  float olive_base_density = 0.05F;
-  float olive_density_scale = 0.08F;
-  float olive_scale_min = 3.2F;
-  float olive_scale_max = 5.8F;
+  std::array<TreeScatterRule, k_tree_species_count> trees{};
+
+  [[nodiscard]] constexpr auto
+  tree(TreeSpecies species) const -> const TreeScatterRule& {
+    return trees[static_cast<std::size_t>(species)];
+  }
+
+  [[nodiscard]] constexpr auto tree(TreeSpecies species) -> TreeScatterRule& {
+    return trees[static_cast<std::size_t>(species)];
+  }
 };
 
 inline auto
@@ -363,38 +382,40 @@ inline auto make_biome_profiles(const BiomeSettings& settings) -> BiomeProfiles 
 
 inline auto make_scatter_rules(GroundType ground_type) -> TerrainScatterRules {
   TerrainScatterRules rules;
+
+  auto& pine = rules.tree(TreeSpecies::Pine);
+  pine = {true, 0.2F, 0.3F, 1.9F, 3.4F};
+  auto& olive = rules.tree(TreeSpecies::Olive);
+  olive = {false, 0.05F, 0.08F, 3.2F, 5.8F};
+
+  auto& cypress = rules.tree(TreeSpecies::Cypress);
+  auto& palm = rules.tree(TreeSpecies::Palm);
+
   switch (ground_type) {
   case GroundType::GrassDry:
-    rules.allow_pines = false;
-    rules.allow_olives = true;
-    rules.olive_base_density = 0.08F;
-    rules.olive_density_scale = 0.10F;
-    rules.olive_scale_min = 2.8F;
-    rules.olive_scale_max = 5.0F;
+    pine.allowed = false;
+    olive = {true, 0.08F, 0.10F, 2.8F, 5.0F};
+    cypress = {true, 0.060F, 0.240F, 2.6F, 4.2F};
+    palm = {true, 0.100F, 0.400F, 3.0F, 4.6F};
     break;
   case GroundType::ForestMud:
-    rules.pine_base_density = 0.32F;
-    rules.pine_density_scale = 0.42F;
-    rules.pine_scale_min = 2.1F;
-    rules.pine_scale_max = 3.8F;
+    pine = {true, 0.32F, 0.42F, 2.1F, 3.8F};
+    cypress = {true, 0.072F, 0.120F, 2.8F, 4.6F};
     break;
   case GroundType::SoilFertile:
-    rules.allow_pines = false;
-    rules.allow_olives = true;
-    rules.olive_base_density = 0.08F;
-    rules.olive_density_scale = 0.12F;
-    rules.olive_scale_min = 3.0F;
-    rules.olive_scale_max = 5.4F;
+    pine.allowed = false;
+    olive = {true, 0.08F, 0.12F, 3.0F, 5.4F};
+    cypress = {true, 0.090F, 0.200F, 2.8F, 4.6F};
+    palm = {true, 0.108F, 0.240F, 3.0F, 4.6F};
     break;
   case GroundType::SoilRocky:
-    rules.allow_pines = false;
-    rules.allow_olives = false;
+    pine.allowed = false;
+    olive.allowed = false;
+    cypress = {true, 0.054F, 0.300F, 2.4F, 3.9F};
     break;
   case GroundType::AlpineMix:
-    rules.pine_base_density = 0.10F;
-    rules.pine_density_scale = 0.20F;
-    rules.pine_scale_min = 1.7F;
-    rules.pine_scale_max = 3.0F;
+    pine = {true, 0.10F, 0.20F, 1.7F, 3.0F};
+    cypress = {true, 0.042F, 0.350F, 2.4F, 4.0F};
     break;
   }
   return rules;

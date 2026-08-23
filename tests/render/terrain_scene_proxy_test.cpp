@@ -32,7 +32,7 @@ TEST(TerrainSceneProxyTest, GroupsTerrainPassesInLegacySubmissionOrder) {
 
   const auto& passes = proxy.passes();
 
-  ASSERT_EQ(passes.size(), 26U);
+  ASSERT_EQ(passes.size(), 28U);
   EXPECT_EQ(proxy.surface(), &surface);
   EXPECT_EQ(proxy.ground(), surface.ground());
   EXPECT_EQ(proxy.terrain(), surface.terrain());
@@ -43,8 +43,10 @@ TEST(TerrainSceneProxyTest, GroupsTerrainPassesInLegacySubmissionOrder) {
   EXPECT_NE(proxy.biome(), nullptr);
   EXPECT_NE(proxy.stone(), nullptr);
   EXPECT_NE(proxy.plant(), nullptr);
-  EXPECT_NE(proxy.pine(), nullptr);
-  EXPECT_NE(proxy.olive(), nullptr);
+  EXPECT_NE(proxy.tree(Game::Map::TreeSpecies::Pine), nullptr);
+  EXPECT_NE(proxy.tree(Game::Map::TreeSpecies::Olive), nullptr);
+  EXPECT_NE(proxy.tree(Game::Map::TreeSpecies::Cypress), nullptr);
+  EXPECT_NE(proxy.tree(Game::Map::TreeSpecies::Palm), nullptr);
   EXPECT_NE(proxy.firecamp(), nullptr);
   EXPECT_EQ(proxy.rain(), &rain);
   EXPECT_EQ(proxy.fog(), &fog);
@@ -63,23 +65,26 @@ TEST(TerrainSceneProxyTest, GroupsTerrainPassesInLegacySubmissionOrder) {
   EXPECT_EQ(passes[6], static_cast<Render::GL::IRenderPass*>(proxy.biome()));
   EXPECT_EQ(passes[7], static_cast<Render::GL::IRenderPass*>(proxy.stone()));
   EXPECT_EQ(passes[8], static_cast<Render::GL::IRenderPass*>(proxy.plant()));
-  EXPECT_EQ(passes[9], static_cast<Render::GL::IRenderPass*>(proxy.pine()));
-  EXPECT_EQ(passes[10], static_cast<Render::GL::IRenderPass*>(proxy.olive()));
-  EXPECT_EQ(passes[11], static_cast<Render::GL::IRenderPass*>(proxy.firecamp()));
-  EXPECT_NE(passes[12], nullptr);
-  EXPECT_NE(passes[13], nullptr);
-  EXPECT_NE(passes[14], nullptr);
-  EXPECT_NE(passes[15], nullptr);
-  EXPECT_NE(passes[16], nullptr);
-  EXPECT_NE(passes[17], nullptr);
-  EXPECT_NE(passes[18], nullptr);
-  EXPECT_NE(passes[19], nullptr);
-  EXPECT_NE(passes[20], nullptr);
-  EXPECT_NE(passes[21], nullptr);
-  EXPECT_EQ(passes[22], &rain);
-  EXPECT_EQ(passes[23], &fog);
-  EXPECT_EQ(passes[24], &boundary_fog);
-  EXPECT_EQ(passes[25], nullptr);
+  EXPECT_EQ(
+      passes[9],
+      static_cast<Render::GL::IRenderPass*>(proxy.tree(Game::Map::TreeSpecies::Pine)));
+  EXPECT_EQ(
+      passes[10],
+      static_cast<Render::GL::IRenderPass*>(proxy.tree(Game::Map::TreeSpecies::Olive)));
+  EXPECT_EQ(passes[11],
+            static_cast<Render::GL::IRenderPass*>(
+                proxy.tree(Game::Map::TreeSpecies::Cypress)));
+  EXPECT_EQ(
+      passes[12],
+      static_cast<Render::GL::IRenderPass*>(proxy.tree(Game::Map::TreeSpecies::Palm)));
+  EXPECT_EQ(passes[13], static_cast<Render::GL::IRenderPass*>(proxy.firecamp()));
+  for (std::size_t i = 14; i <= 23; ++i) {
+    EXPECT_NE(passes[i], nullptr);
+  }
+  EXPECT_EQ(passes[24], &rain);
+  EXPECT_EQ(passes[25], &fog);
+  EXPECT_EQ(passes[26], &boundary_fog);
+  EXPECT_EQ(passes[27], nullptr);
 }
 
 TEST_F(TerrainSceneProxyServiceTest, ExposesTerrainFieldAndRoadSegments) {
@@ -139,7 +144,7 @@ TEST_F(TerrainSceneProxyServiceTest, ExposesTerrainFieldAndRoadSegments) {
   EXPECT_EQ(feature_chunks[3].geometry_count, 1U);
 
   const auto scatters = proxy.scatter_chunks();
-  ASSERT_EQ(scatters.size(), 16U);
+  ASSERT_EQ(scatters.size(), 18U);
   EXPECT_EQ(scatters[0].species, Render::GL::ScatterSpeciesId::Grass);
   EXPECT_EQ(scatters[0].visibility_mode,
             Render::GL::ScatterVisibilityMode::InstanceFiltered);
@@ -154,28 +159,30 @@ TEST_F(TerrainSceneProxyServiceTest, ExposesTerrainFieldAndRoadSegments) {
             Render::GL::ScatterVisibilityMode::InstanceFiltered);
   EXPECT_EQ(scatters[3].species, Render::GL::ScatterSpeciesId::Pine);
   EXPECT_EQ(scatters[4].species, Render::GL::ScatterSpeciesId::Olive);
-  EXPECT_EQ(scatters[5].species, Render::GL::ScatterSpeciesId::FireCamp);
-  EXPECT_TRUE(scatters[5].gpu_ready);
-  EXPECT_EQ(scatters[6].species, Render::GL::ScatterSpeciesId::Tent);
-  EXPECT_TRUE(scatters[6].gpu_ready);
-  EXPECT_EQ(scatters[7].species, Render::GL::ScatterSpeciesId::SupplyCart);
+  EXPECT_EQ(scatters[5].species, Render::GL::ScatterSpeciesId::Cypress);
+  EXPECT_EQ(scatters[6].species, Render::GL::ScatterSpeciesId::Palm);
+  EXPECT_EQ(scatters[7].species, Render::GL::ScatterSpeciesId::FireCamp);
   EXPECT_TRUE(scatters[7].gpu_ready);
-  EXPECT_EQ(scatters[8].species, Render::GL::ScatterSpeciesId::WeaponRack);
+  EXPECT_EQ(scatters[8].species, Render::GL::ScatterSpeciesId::Tent);
   EXPECT_TRUE(scatters[8].gpu_ready);
-  EXPECT_EQ(scatters[9].species, Render::GL::ScatterSpeciesId::Ruins);
+  EXPECT_EQ(scatters[9].species, Render::GL::ScatterSpeciesId::SupplyCart);
   EXPECT_TRUE(scatters[9].gpu_ready);
-  EXPECT_EQ(scatters[10].species, Render::GL::ScatterSpeciesId::DeadTree);
+  EXPECT_EQ(scatters[10].species, Render::GL::ScatterSpeciesId::WeaponRack);
   EXPECT_TRUE(scatters[10].gpu_ready);
-  EXPECT_EQ(scatters[11].species, Render::GL::ScatterSpeciesId::Boulder);
+  EXPECT_EQ(scatters[11].species, Render::GL::ScatterSpeciesId::Ruins);
   EXPECT_TRUE(scatters[11].gpu_ready);
-  EXPECT_EQ(scatters[12].species, Render::GL::ScatterSpeciesId::IronOre);
+  EXPECT_EQ(scatters[12].species, Render::GL::ScatterSpeciesId::DeadTree);
   EXPECT_TRUE(scatters[12].gpu_ready);
-  EXPECT_EQ(scatters[13].species, Render::GL::ScatterSpeciesId::MagicShrine);
+  EXPECT_EQ(scatters[13].species, Render::GL::ScatterSpeciesId::Boulder);
   EXPECT_TRUE(scatters[13].gpu_ready);
-  EXPECT_EQ(scatters[14].species, Render::GL::ScatterSpeciesId::AbandonedHome);
+  EXPECT_EQ(scatters[14].species, Render::GL::ScatterSpeciesId::IronOre);
   EXPECT_TRUE(scatters[14].gpu_ready);
-  EXPECT_EQ(scatters[15].species, Render::GL::ScatterSpeciesId::Statue);
+  EXPECT_EQ(scatters[15].species, Render::GL::ScatterSpeciesId::MagicShrine);
   EXPECT_TRUE(scatters[15].gpu_ready);
+  EXPECT_EQ(scatters[16].species, Render::GL::ScatterSpeciesId::AbandonedHome);
+  EXPECT_TRUE(scatters[16].gpu_ready);
+  EXPECT_EQ(scatters[17].species, Render::GL::ScatterSpeciesId::Statue);
+  EXPECT_TRUE(scatters[17].gpu_ready);
   EXPECT_FALSE(scatter.last_sync_stats().did_upload_or_rebuild());
 }
 

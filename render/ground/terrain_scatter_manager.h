@@ -2,12 +2,14 @@
 
 #include <QVector3D>
 
+#include <array>
 #include <cstdint>
 #include <memory>
 #include <mutex>
 #include <vector>
 
 #include "game/map/map_definition.h"
+#include "game/map/terrain.h"
 #include "i_scatter_pass.h"
 #include "render/terrain_scene_types.h"
 
@@ -21,13 +23,12 @@ class IronOreRenderer;
 class MagicShrineRenderer;
 class AbandonedHomeRenderer;
 class StatueRenderer;
-class OliveRenderer;
-class PineRenderer;
 class PlantRenderer;
 class RuinsRenderer;
 class StoneRenderer;
 class SupplyCartRenderer;
 class TentRenderer;
+class TreeRenderer;
 class WeaponRackRenderer;
 
 class TerrainScatterManager : public IRenderPass {
@@ -55,8 +56,7 @@ public:
   [[nodiscard]] auto biome() const -> BiomeRenderer*;
   [[nodiscard]] auto stone() const -> StoneRenderer*;
   [[nodiscard]] auto plant() const -> PlantRenderer*;
-  [[nodiscard]] auto pine() const -> PineRenderer*;
-  [[nodiscard]] auto olive() const -> OliveRenderer*;
+  [[nodiscard]] auto tree(Game::Map::TreeSpecies species) const -> TreeRenderer*;
   [[nodiscard]] auto firecamp() const -> FireCampRenderer*;
   [[nodiscard]] auto tent() const -> TentRenderer*;
   [[nodiscard]] auto supply_cart() const -> SupplyCartRenderer*;
@@ -90,8 +90,7 @@ private:
   std::unique_ptr<BiomeRenderer> m_biome;
   std::unique_ptr<StoneRenderer> m_stone;
   std::unique_ptr<PlantRenderer> m_plant;
-  std::unique_ptr<PineRenderer> m_pine;
-  std::unique_ptr<OliveRenderer> m_olive;
+  std::array<std::unique_ptr<TreeRenderer>, Game::Map::k_tree_species_count> m_trees;
   std::unique_ptr<FireCampRenderer> m_firecamp;
   std::unique_ptr<TentRenderer> m_tent;
   std::unique_ptr<SupplyCartRenderer> m_supply_cart;

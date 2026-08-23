@@ -145,8 +145,7 @@ private:
             {{world_x, world_z}, std::max(world_prop.radius, 1.5F)});
         continue;
       }
-      if (world_prop.type == Game::Map::WorldProp::Type::PineTree ||
-          world_prop.type == Game::Map::WorldProp::Type::OliveTree) {
+      if (Game::Map::is_tree_world_prop_type(world_prop.type)) {
         const float radius = std::max(1.5F, world_prop.scale * 2.5F);
         m_structure_anchors.push_back({{world_x, world_z}, radius});
         continue;

@@ -2,8 +2,6 @@
 
 #include <QVector3D>
 
-#include <cstdint>
-#include <memory>
 #include <vector>
 
 #include "game/map/map_definition.h"
@@ -11,14 +9,17 @@
 #include "render/decoration_gpu.h"
 #include "scatter_renderer_base.h"
 
+namespace Render::Ground {
+struct TreeScatterProfile;
+}
+
 namespace Render::GL {
-class Buffer;
 class Renderer;
 
-class PineRenderer : public ScatterRendererBase<TreeInstanceGpu, FoliageBatchParams> {
+class TreeRenderer : public ScatterRendererBase<TreeInstanceGpu, FoliageBatchParams> {
 public:
-  PineRenderer();
-  ~PineRenderer() override;
+  explicit TreeRenderer(Game::Map::TreeSpecies species);
+  ~TreeRenderer() override;
 
   void configure(const Game::Map::TerrainHeightMap& height_map,
                  const Game::Map::BiomeSettings& biome_settings,
@@ -33,14 +34,19 @@ public:
 
   void submit(Renderer& renderer, ResourceManager* resources) override;
 
+  [[nodiscard]] auto species() const -> Game::Map::TreeSpecies { return m_species; }
+
   [[nodiscard]] auto instances_for_test() const -> const std::vector<TreeInstanceGpu>& {
     return m_state.instances;
   }
 
 private:
-  void rebuild_pine_instances();
-  void append_world_prop_pines();
-  void generate_procedural_pines(std::vector<TreeInstanceGpu>& out) const;
+  void rebuild_instances();
+  void append_world_prop_trees();
+  void generate_procedural_trees(std::vector<TreeInstanceGpu>& out) const;
+
+  Game::Map::TreeSpecies m_species;
+  const Render::Ground::TreeScatterProfile* m_profile;
 };
 
 } // namespace Render::GL

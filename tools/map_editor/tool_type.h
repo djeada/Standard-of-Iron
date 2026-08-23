@@ -23,6 +23,8 @@ enum class ToolType {
   PropBoulder,
   PropPineTree,
   PropOliveTree,
+  PropCypressTree,
+  PropPalmTree,
   PropPlant,
   PropIronOre,
   PropAbandonedHome,

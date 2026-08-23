@@ -271,6 +271,8 @@ auto build_showcase_definitions() -> std::vector<ArenaScenarioDefinition> {
         prop(QStringLiteral("boulder"), {-11.0F, 0.0F, -15.0F}, 1.2F, 5),
         prop(QStringLiteral("iron_ore"), {9.0F, 0.0F, -15.0F}, 1.1F, 4),
         prop(QStringLiteral("olive_tree"), {25.0F, 0.0F, -4.0F}, 1.0F, 3),
+        prop(QStringLiteral("cypress_tree"), {-4.0F, 0.0F, -19.0F}, 1.0F, 3),
+        prop(QStringLiteral("palm_tree"), {16.0F, 0.0F, -19.0F}, 1.0F, 3),
     };
 
     activity.groups = {

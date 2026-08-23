@@ -13,7 +13,6 @@ set(RENDER_GROUND_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/ground/river_renderer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/ground/road_network_geometry.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/ground/road_renderer.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/ground/olive_renderer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/ground/riverbank_renderer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/ground/riverbank_asset_renderer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/ground/bridge_renderer.cpp
@@ -21,7 +20,7 @@ set(RENDER_GROUND_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/ground/biome_renderer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/ground/stone_renderer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/ground/plant_renderer.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/ground/pine_renderer.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/ground/tree_renderer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/ground/firecamp_renderer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/ground/terrain_scatter_manager.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/ground/tent_renderer.cpp

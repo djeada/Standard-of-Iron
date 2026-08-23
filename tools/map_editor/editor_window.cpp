@@ -1092,6 +1092,12 @@ void EditorWindow::on_tool_selected(ToolType tool) {
   case ToolType::PropOliveTree:
     tool_name = "Olive Tree";
     break;
+  case ToolType::PropCypressTree:
+    tool_name = "Cypress Tree";
+    break;
+  case ToolType::PropPalmTree:
+    tool_name = "Palm Tree";
+    break;
   case ToolType::PropPlant:
     tool_name = "Plant";
     break;
