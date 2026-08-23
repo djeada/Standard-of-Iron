@@ -319,7 +319,8 @@ auto validateMissionFile(const QString& file_path) -> ValidationResult {
   return result;
 }
 
-auto validateMapFile(const QString& file_path) -> ValidationResult {
+auto validateMapFile(Game::Session::SessionContext& session,
+                     const QString& file_path) -> ValidationResult {
   ValidationResult result;
 
   Game::Map::MapDefinition map_definition;
@@ -334,8 +335,8 @@ auto validateMapFile(const QString& file_path) -> ValidationResult {
     return result;
   }
 
-  Game::Systems::BuildingCollisionRegistry::instance().clear();
-  auto& terrain = Game::Map::TerrainService::instance();
+  session.building_collision().clear();
+  auto& terrain = session.terrain();
   terrain.clear();
   terrain.initialize(map_definition);
 
@@ -364,7 +365,7 @@ auto validateMapFile(const QString& file_path) -> ValidationResult {
   }
 
   terrain.clear();
-  Game::Systems::BuildingCollisionRegistry::instance().clear();
+  session.building_collision().clear();
   return result;
 }
 
@@ -555,7 +556,8 @@ auto main(int argc, char* argv[]) -> int {
     std::cout << "\nValidating " << map_files.size() << " map(s)..." << '\n';
 
     for (const auto& map_file : map_files) {
-      const ValidationResult result = validateMapFile(maps_dir.filePath(map_file));
+      const ValidationResult result =
+          validateMapFile(session, maps_dir.filePath(map_file));
       printResults(result, QString("maps/") + map_file);
       if (!result.success) {
         all_valid = false;

@@ -96,7 +96,8 @@ auto ProductionViewModel::selected_farm_state() const -> QVariantMap {
 
 auto ProductionViewModel::unit_info(const QString& unit_type,
                                     const QString& nation_id) const -> QVariantMap {
-  return App::Economy::unit_production_info(unit_type, nation_id);
+  return App::Economy::unit_production_info(
+      m_context.session->nations(), unit_type, nation_id);
 }
 
 auto ProductionViewModel::marketplace_buy(const QString& resource_key) -> bool {

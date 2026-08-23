@@ -34,8 +34,9 @@ auto prettify_building_identifier(const QString& value) -> QString {
 
 } // namespace
 
-BuildingPanel::BuildingPanel(QWidget* parent)
-    : QWidget(parent) {
+BuildingPanel::BuildingPanel(Game::Systems::NationRegistry& nations, QWidget* parent)
+    : QWidget(parent)
+    , m_nations(nations) {
   auto* layout = new QVBoxLayout(this);
   layout->setContentsMargins(8, 8, 8, 8);
   layout->setSpacing(8);
@@ -149,7 +150,7 @@ void BuildingPanel::populate_nation_options() {
     return;
   }
 
-  auto& registry = Game::Systems::NationRegistry::instance();
+  auto& registry = m_nations;
   Game::Systems::initialize_default_content(registry);
   const auto& nations = registry.get_all_nations();
 

@@ -11,6 +11,7 @@
 #include "game/core/world.h"
 #include "game/map/terrain_service.h"
 #include "game/render_bridge/picking_service.h"
+#include "game/session/session_context.h"
 #include "game/systems/order_service.h"
 #include "game/systems/selection_system.h"
 
@@ -41,7 +42,7 @@ auto seed_barracks_rally_preview_impl(Engine::Core::World* world,
     return std::nullopt;
   }
 
-  auto& terrain = Game::Map::TerrainService::instance();
+  auto& terrain = Game::Session::session_for(*world).terrain();
   for (auto const entity_id : selection_system->get_selected_units()) {
     auto* entity = world->get_entity(entity_id);
     if (entity == nullptr) {

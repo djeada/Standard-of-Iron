@@ -8,6 +8,7 @@
 #include <numbers>
 #include <vector>
 
+#include "../../core/ambient_session.h"
 #include "../../core/component.h"
 #include "../../core/world.h"
 #include "../combat_system/combat_random.h"
@@ -152,7 +153,7 @@ void refresh_commander_engagement(Engine::Core::World* world,
   float const forward_x = std::sin(yaw_radians);
   float const forward_z = std::cos(yaw_radians);
   float const radius_sq = engagement->ring_radius * engagement->ring_radius;
-  auto& owners = Game::Systems::OwnerRegistry::instance();
+  auto& owners = *Game::Session::services_for(*world).owners;
 
   std::vector<EngagedFighter> fighters;
   bool has_formation_opponent = false;

@@ -18,6 +18,7 @@
 #include "game/core/world.h"
 #include "game/map/render_visibility_rules.h"
 #include "game/render_bridge/selection_controller.h"
+#include "game/session/session_context.h"
 #include "game/systems/match_snapshot.h"
 #include "game/systems/selection_system.h"
 
@@ -53,7 +54,7 @@ auto ActivityViewModel::unit(qulonglong unit_id) const -> QVariantMap {
 
 auto ActivityViewModel::unit_profile(const QString& unit_type,
                                      const QString& nation_id) const -> QVariantMap {
-  return App::Economy::unit_profile(unit_type, nation_id);
+  return App::Economy::unit_profile(m_context.session->nations(), unit_type, nation_id);
 }
 
 auto ActivityViewModel::selection_summary() const -> QVariantMap {

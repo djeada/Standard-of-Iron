@@ -3,6 +3,10 @@
 #include <QString>
 #include <QWidget>
 
+namespace Game::Systems {
+class NationRegistry;
+}
+
 class QCheckBox;
 class QComboBox;
 class QDoubleSpinBox;
@@ -14,7 +18,7 @@ class UnitPanel : public QWidget {
   Q_OBJECT
 
 public:
-  explicit UnitPanel(QWidget* parent = nullptr);
+  explicit UnitPanel(Game::Systems::NationRegistry& nations, QWidget* parent = nullptr);
 
   void set_animation_paused(bool paused);
   void set_selection_summary(const QString& summary);
@@ -51,6 +55,7 @@ private:
   void populate_unit_options(const QString& nation_id,
                              const QString& preferred_unit_type = QString());
 
+  Game::Systems::NationRegistry& m_nations;
   QCheckBox* m_pause_checkbox = nullptr;
   QComboBox* m_owner_box = nullptr;
   QComboBox* m_nation_box = nullptr;

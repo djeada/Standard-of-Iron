@@ -23,6 +23,7 @@
 #include "game/map/mission_definition.h"
 #include "game/map/mission_loader.h"
 #include "game/map/terrain_service.h"
+#include "game/session/session_context.h"
 #include "game/systems/building_collision_registry.h"
 #include "game/systems/default_content.h"
 #include "game/systems/nation_registry.h"
@@ -136,7 +137,12 @@ TEST_F(CampaignContentIntegrationTest, EveryMissionsGroundStandsUpAndMeansWhatIt
     EXPECT_GT(forest_cells, 0) << where << ": authored woods produced no forest ground";
 
     Engine::Core::World world;
-    Game::Systems::UndeadAwakeningSystem undead;
+    auto& session = Game::Session::SessionContext::active();
+    Game::Systems::UndeadAwakeningSystem undead({.terrain = session.terrain(),
+                                                 .owners = session.owners(),
+                                                 .nations = session.nations(),
+                                                 .stats = session.stats(),
+                                                 .economy = session.economy()});
     undead.configure(map);
     undead.update(&world, 0.1F);
     for (const auto& zone : map.undead_zones) {

@@ -26,7 +26,8 @@ protected:
 };
 
 TEST_F(UnitProfileTest, ARecruitableUnitCarriesStatsCostsRolesAndLore) {
-  const auto profile = App::Economy::unit_profile("spearman", "roman_republic");
+  const auto profile = App::Economy::unit_profile(
+      Game::Systems::NationRegistry::instance(), "spearman", "roman_republic");
 
   ASSERT_TRUE(profile.value("valid").toBool());
   EXPECT_EQ(profile.value("display_name").toString(), QStringLiteral("Triarius"));
@@ -52,8 +53,10 @@ TEST_F(UnitProfileTest, ARecruitableUnitCarriesStatsCostsRolesAndLore) {
 }
 
 TEST_F(UnitProfileTest, NationsOverrideTheHistoryThatFollowsTheirNameForTheUnit) {
-  const auto roman = App::Economy::unit_profile("swordsman", "roman_republic");
-  const auto carthaginian = App::Economy::unit_profile("swordsman", "carthage");
+  const auto roman = App::Economy::unit_profile(
+      Game::Systems::NationRegistry::instance(), "swordsman", "roman_republic");
+  const auto carthaginian = App::Economy::unit_profile(
+      Game::Systems::NationRegistry::instance(), "swordsman", "carthage");
 
   ASSERT_TRUE(roman.value("valid").toBool());
   ASSERT_TRUE(carthaginian.value("valid").toBool());
@@ -69,7 +72,8 @@ TEST_F(UnitProfileTest, NationsOverrideTheHistoryThatFollowsTheirNameForTheUnit)
 }
 
 TEST_F(UnitProfileTest, ARangedUnitReportsItsRangedAttackAsThePrimaryOne) {
-  const auto archer = App::Economy::unit_profile("archer", "roman_republic");
+  const auto archer = App::Economy::unit_profile(
+      Game::Systems::NationRegistry::instance(), "archer", "roman_republic");
   ASSERT_TRUE(archer.value("valid").toBool());
 
   EXPECT_TRUE(archer.value("prefers_ranged").toBool());
@@ -78,7 +82,8 @@ TEST_F(UnitProfileTest, ARangedUnitReportsItsRangedAttackAsThePrimaryOne) {
   EXPECT_DOUBLE_EQ(archer.value("attack_range").toDouble(),
                    archer.value("ranged_range").toDouble());
 
-  const auto swordsman = App::Economy::unit_profile("swordsman", "roman_republic");
+  const auto swordsman = App::Economy::unit_profile(
+      Game::Systems::NationRegistry::instance(), "swordsman", "roman_republic");
   ASSERT_TRUE(swordsman.value("valid").toBool());
   EXPECT_FALSE(swordsman.value("prefers_ranged").toBool());
   EXPECT_EQ(swordsman.value("attack_damage").toInt(),
@@ -86,7 +91,8 @@ TEST_F(UnitProfileTest, ARangedUnitReportsItsRangedAttackAsThePrimaryOne) {
 }
 
 TEST_F(UnitProfileTest, ADocumentedAbilityCarriesItsNameAndEffect) {
-  const auto priest = App::Economy::unit_profile("grave_priest", "iron_sepulcher");
+  const auto priest = App::Economy::unit_profile(
+      Game::Systems::NationRegistry::instance(), "grave_priest", "iron_sepulcher");
   ASSERT_TRUE(priest.value("valid").toBool());
 
   const auto abilities = priest.value("abilities").toList();
@@ -100,7 +106,9 @@ TEST_F(UnitProfileTest, ADocumentedAbilityCarriesItsNameAndEffect) {
 
 TEST_F(UnitProfileTest, ACommanderKeepsItsAuthoredProse) {
   const auto commander =
-      App::Economy::unit_profile("carthage_sword_commander", "carthage");
+      App::Economy::unit_profile(Game::Systems::NationRegistry::instance(),
+                                 "carthage_sword_commander",
+                                 "carthage");
   ASSERT_TRUE(commander.value("valid").toBool());
 
   EXPECT_TRUE(commander.value("is_commander").toBool());
@@ -112,7 +120,8 @@ TEST_F(UnitProfileTest, ACommanderKeepsItsAuthoredProse) {
 }
 
 TEST_F(UnitProfileTest, AnUnknownUnitIsReportedInvalidRatherThanFabricated) {
-  const auto profile = App::Economy::unit_profile("not_a_unit", "roman_republic");
+  const auto profile = App::Economy::unit_profile(
+      Game::Systems::NationRegistry::instance(), "not_a_unit", "roman_republic");
 
   EXPECT_FALSE(profile.value("valid").toBool());
   EXPECT_FALSE(profile.value("has_lore").toBool());
@@ -131,8 +140,10 @@ TEST_F(UnitProfileTest, TheRecruitCardAndTheInspectPanelReadTheSameNumbers) {
                                 "builder",
                                 "elephant"}) {
     const QString type = QString::fromLatin1(unit_type);
-    const auto recruit = App::Economy::unit_production_info(type, "roman_republic");
-    const auto inspect = App::Economy::unit_profile(type, "roman_republic");
+    const auto recruit = App::Economy::unit_production_info(
+        Game::Systems::NationRegistry::instance(), type, "roman_republic");
+    const auto inspect = App::Economy::unit_profile(
+        Game::Systems::NationRegistry::instance(), type, "roman_republic");
 
     for (const auto* key : {"display_name",
                             "cost",

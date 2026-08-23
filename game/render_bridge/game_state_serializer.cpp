@@ -13,6 +13,7 @@
 #include "../map/explored_mask_codec.h"
 #include "../map/terrain_service.h"
 #include "../map/visibility_service.h"
+#include "../session/session_context.h"
 #include "../systems/nation_id.h"
 #include "../systems/nation_registry.h"
 #include "../util/json_vec_utils.h"
@@ -61,12 +62,13 @@ void owner_resources_from_json(const QJsonArray& rows_array,
 
 } // namespace
 
-auto GameStateSerializer::build_metadata(const Engine::Core::World&,
+auto GameStateSerializer::build_metadata(const Engine::Core::World& world,
                                          const Render::GL::Camera* camera,
                                          const LevelSnapshot& level,
                                          const RuntimeSnapshot& runtime)
     -> QJsonObject {
 
+  auto& session = Game::Session::session_for(world);
   QJsonObject metadata;
   metadata["map_path"] = level.map_path;
   metadata["map_name"] = level.map_name;
@@ -113,7 +115,7 @@ auto GameStateSerializer::build_metadata(const Engine::Core::World&,
   metadata["game_max_troops_per_player"] =
       Game::GameConfig::instance().get_max_troops_per_player();
 
-  const auto& terrain_service = Game::Map::TerrainService::instance();
+  const auto& terrain_service = session.terrain();
   if (const auto* height_map = terrain_service.get_height_map()) {
     metadata["grid_width"] = height_map->get_width();
     metadata["grid_height"] = height_map->get_height();
@@ -151,7 +153,7 @@ auto GameStateSerializer::build_metadata(const Engine::Core::World&,
 
   QJsonArray nations_array;
   for (const auto& [player_id, nation_id] :
-       NationRegistry::instance().player_nation_assignments()) {
+       session.nations().player_nation_assignments()) {
     QJsonObject nation_obj;
     nation_obj["owner_id"] = player_id;
     nation_obj["nation"] = nation_id_to_qstring(nation_id);
@@ -159,7 +161,7 @@ auto GameStateSerializer::build_metadata(const Engine::Core::World&,
   }
   metadata["player_nations"] = nations_array;
 
-  const auto& visibility = Game::Map::VisibilityService::instance();
+  const auto& visibility = session.visibility();
   if (visibility.is_initialized()) {
     const auto snapshot = visibility.snapshot();
     const auto mask = Game::Map::explored_mask_from_cells(
@@ -178,7 +180,7 @@ auto GameStateSerializer::build_metadata(const Engine::Core::World&,
 }
 
 void GameStateSerializer::restore_visibility_from_metadata(
-    const QJsonObject& metadata) {
+    Game::Map::VisibilityService& visibility, const QJsonObject& metadata) {
   if (!metadata.contains("visibility")) {
     return;
   }
@@ -195,7 +197,6 @@ void GameStateSerializer::restore_visibility_from_metadata(
     return;
   }
 
-  auto& visibility = Game::Map::VisibilityService::instance();
   if (!visibility.restore_explored(mask.explored, mask.width, mask.height)) {
     qWarning() << "GameStateSerializer: saved exploration mask does not match the "
                   "restored map grid; ignoring it";
@@ -296,7 +297,7 @@ void GameStateSerializer::restore_runtime_from_metadata(const QJsonObject& metad
 }
 
 void GameStateSerializer::restore_player_nations_from_metadata(
-    const QJsonObject& metadata) {
+    NationRegistry& nations, const QJsonObject& metadata) {
   if (!metadata.contains("player_nations")) {
     return;
   }
@@ -315,7 +316,7 @@ void GameStateSerializer::restore_player_nations_from_metadata(
     assignments.emplace_back(nation_obj.value("owner_id").toInt(0), nation_id);
   }
 
-  NationRegistry::instance().restore_player_nations(assignments);
+  nations.restore_player_nations(assignments);
 }
 
 void GameStateSerializer::restore_level_from_metadata(const QJsonObject& metadata,

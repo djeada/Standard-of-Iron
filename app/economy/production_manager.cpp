@@ -21,6 +21,7 @@
 #include "game/map/map_transformer.h"
 #include "game/map/terrain_service.h"
 #include "game/render_bridge/picking_service.h"
+#include "game/session/session_context.h"
 #include "game/systems/building_collision_registry.h"
 #include "game/systems/construction_cost_catalog.h"
 #include "game/systems/food_targets.h"
@@ -236,13 +237,18 @@ auto resolve_construction_pointer_hit(Engine::Core::World* world,
           ? Game::Systems::PickingService::screen_to_ground(
                 screen_point, camera, viewport.width, viewport.height, hit)
           : Game::Systems::PickingService::screen_to_surface(
-                screen_point, camera, viewport.width, viewport.height, hit);
+                Game::Session::session_for(*world).terrain(),
+                screen_point,
+                camera,
+                viewport.width,
+                viewport.height,
+                hit);
   if (!has_hit) {
     return std::nullopt;
   }
 
   if (is_harvest_construction_item(item_type)) {
-    auto& terrain_service = Game::Map::TerrainService::instance();
+    auto& terrain_service = Game::Session::session_for(*world).terrain();
     if (App::Economy::is_collect_item(item_type)) {
       if (auto food_hit = resolve_food_target_hit(
               world, owner_id, camera, viewport, screen_point, terrain_service);
@@ -251,10 +257,11 @@ auto resolve_construction_pointer_hit(Engine::Core::World* world,
       }
     }
     const CrewClaims claims = crew_claims(world, crew);
-    auto resolved_target = resolve_harvest_target_at_position(item_type, hit, claims);
+    auto resolved_target =
+        resolve_harvest_target_at_position(terrain_service, item_type, hit, claims);
     if (!resolved_target.has_value()) {
       resolved_target = resolve_harvest_target_from_screen(
-          item_type, camera, viewport, screen_point, claims);
+          terrain_service, item_type, camera, viewport, screen_point, claims);
     }
     if (!resolved_target.has_value()) {
       return std::nullopt;
@@ -291,7 +298,7 @@ void ProductionManager::start_building_placement(const QString& building_type,
   m_is_direct_building_placement = true;
   m_active_placement_owner_id = local_owner_id;
 
-  auto& nation_registry = Game::Systems::NationRegistry::instance();
+  auto& nation_registry = Game::Session::session_for(*m_world).nations();
   if (const auto* nation = nation_registry.get_nation_for_player(local_owner_id)) {
     m_active_placement_nation_id = nation->id;
   } else {
@@ -615,7 +622,7 @@ void ProductionManager::on_construction_confirm() {
       return;
     }
 
-    if (prop_taken(Game::Map::TerrainService::instance(),
+    if (prop_taken(Game::Session::session_for(*m_world).terrain(),
                    placement.target->id,
                    crew_claims(m_world, m_pending_construction_builders))) {
       set_construction_preview_valid(false);
@@ -664,6 +671,7 @@ void ProductionManager::on_construction_confirm() {
   }
 
   if (!Game::Systems::StructurePlacementService::footprint_is_clear(
+          *m_world,
           m_construction_placement_position.x(),
           m_construction_placement_position.z(),
           m_pending_construction_type.toStdString())) {
@@ -678,10 +686,10 @@ void ProductionManager::on_construction_confirm() {
     const Game::Systems::ResourceAmounts resource_costs =
         App::Economy::construction_costs(m_pending_construction_type);
     if (!resource_costs.empty() &&
-        !Game::Systems::PlayerResourceRegistry::instance().has_at_least(
-            owner_id, resource_costs)) {
-      emit construction_placement_rejected(
-          App::Economy::insufficient_resources_reason(owner_id, resource_costs));
+        !Game::Session::session_for(*m_world).economy().has_at_least(owner_id,
+                                                                     resource_costs)) {
+      emit construction_placement_rejected(App::Economy::insufficient_resources_reason(
+          Game::Session::session_for(*m_world).economy(), owner_id, resource_costs));
       return;
     }
     App::Core::OrderRequest request;
@@ -848,6 +856,7 @@ void ProductionManager::update_non_wall_construction_preview(
   } else {
     set_construction_preview_valid(
         Game::Systems::StructurePlacementService::footprint_is_clear(
+            *m_world,
             world_position.x(),
             world_position.z(),
             m_pending_construction_type.toStdString()));
@@ -922,7 +931,7 @@ auto ProductionManager::pending_construction_nation_id() const
     }
   }
 
-  return Game::Systems::NationRegistry::instance().default_nation_id();
+  return Game::Session::session_for(*m_world).nations().default_nation_id();
 }
 
 auto ProductionManager::is_wall_construction_mode() const -> bool {
@@ -969,7 +978,7 @@ void ProductionManager::append_preview_entity(const QString& item_type,
     return;
   }
 
-  auto& terrain_service = Game::Map::TerrainService::instance();
+  auto& terrain_service = Game::Session::session_for(*m_world).terrain();
   QVector3D resolved_position = world_position;
   if (terrain_service.is_initialized()) {
     resolved_position = terrain_service.resolve_surface_world_position(
@@ -1022,7 +1031,7 @@ void ProductionManager::rebuild_wall_preview_entities() {
     return;
   }
 
-  auto& terrain_service = Game::Map::TerrainService::instance();
+  auto& terrain_service = Game::Session::session_for(*m_world).terrain();
   const int owner_id = pending_construction_owner_id();
   const auto nation_id = pending_construction_nation_id();
 
@@ -1146,10 +1155,10 @@ void ProductionManager::confirm_wall_construction_plan() {
   total_cost.set(Game::Systems::ResourceType::Wood,
                  valid_segment_count *
                      App::Economy::wood_per_wall_segment(m_pending_construction_type));
-  if (!Game::Systems::PlayerResourceRegistry::instance().has_at_least(owner_id,
-                                                                      total_cost)) {
-    emit construction_placement_rejected(
-        App::Economy::insufficient_resources_reason(owner_id, total_cost));
+  if (!Game::Session::session_for(*m_world).economy().has_at_least(owner_id,
+                                                                   total_cost)) {
+    emit construction_placement_rejected(App::Economy::insufficient_resources_reason(
+        Game::Session::session_for(*m_world).economy(), owner_id, total_cost));
     set_construction_preview_active(!m_wall_preview_segments.empty());
     set_construction_preview_valid(false);
     return;
@@ -1217,7 +1226,9 @@ void ProductionManager::confirm_direct_building_placement() {
     return;
   case Game::Systems::PlacementRuling::Unaffordable:
     emit construction_placement_rejected(App::Economy::insufficient_resources_reason(
-        owner_id, App::Economy::construction_costs(m_pending_construction_type)));
+        Game::Session::session_for(*m_world).economy(),
+        owner_id,
+        App::Economy::construction_costs(m_pending_construction_type)));
     return;
   case Game::Systems::PlacementRuling::NoFactory:
   case Game::Systems::PlacementRuling::SpawnFailed:
@@ -1273,7 +1284,12 @@ auto ProductionManager::set_rally_at_screen(qreal sx,
 
   QVector3D hit;
   if (!Game::Systems::PickingService::screen_to_surface(
-          QPointF(sx, sy), *m_camera, viewport.width, viewport.height, hit)) {
+          Game::Session::session_for(*m_world).terrain(),
+          QPointF(sx, sy),
+          *m_camera,
+          viewport.width,
+          viewport.height,
+          hit)) {
     return false;
   }
 

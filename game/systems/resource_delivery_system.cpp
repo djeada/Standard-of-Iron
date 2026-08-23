@@ -7,6 +7,7 @@
 #include <limits>
 #include <vector>
 
+#include "../core/ambient_session.h"
 #include "../core/component.h"
 #include "../core/event_manager.h"
 #include "../core/ownership_constants.h"
@@ -72,11 +73,14 @@ auto drop_point_for(const Engine::Core::TransformComponent& depot) -> StockpileP
   return stockpile_drop_point(depot.position.x, depot.position.z, depot.rotation.y);
 }
 
-void credit_load(int owner_id, const Engine::Core::ResourceCarryComponent& carry) {
+void credit_load(Engine::Core::World& world,
+                 int owner_id,
+                 const Engine::Core::ResourceCarryComponent& carry) {
+  auto& resources = *Game::Session::services_for(world).economy;
   for (ResourceType const type : k_all_resource_types) {
     int const amount = carry.amounts.get(type);
     if (amount > 0) {
-      PlayerResourceRegistry::instance().add_harvested(owner_id, type, amount);
+      resources.add_harvested(owner_id, type, amount);
     }
   }
 }
@@ -90,7 +94,7 @@ void approach_fill(float& current, float target, float delta_time) {
 }
 
 void sync_stockpile_displays(Engine::Core::World* world, float delta_time) {
-  auto& resources = PlayerResourceRegistry::instance();
+  auto& resources = *Game::Session::services_for(*world).economy;
 
   for (auto [entity_id, unit_ref] : world->view<Engine::Core::UnitComponent>()) {
     const auto* unit = &unit_ref;
@@ -172,7 +176,7 @@ void ResourceDeliverySystem::update(Engine::Core::World* world, float delta_time
           world, unit->owner_id, transform->position.x, transform->position.z);
       if (depot == nullptr) {
 
-        credit_load(unit->owner_id, *carry);
+        credit_load(*world, unit->owner_id, *carry);
         unloaded.push_back(hauler->get_id());
         continue;
       }
@@ -202,7 +206,7 @@ void ResourceDeliverySystem::update(Engine::Core::World* world, float delta_time
     if (dist_sq <= k_stockpile_drop_radius * k_stockpile_drop_radius ||
         (out_of_patience && depot_dist_sq <= k_stockpile_depot_arrival_radius *
                                                  k_stockpile_depot_arrival_radius)) {
-      credit_load(unit->owner_id, *carry);
+      credit_load(*world, unit->owner_id, *carry);
       if (auto* stockpile = depot->get_component<Engine::Core::StockpileComponent>()) {
         stockpile->deposit_flash = k_stockpile_deposit_flash_seconds;
       }

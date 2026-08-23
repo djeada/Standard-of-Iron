@@ -16,6 +16,10 @@ namespace Engine::Core {
 using EntityID = std::uint64_t;
 }
 
+namespace Game::Map {
+class VisibilityService;
+}
+
 namespace Game::Systems {
 
 class CameraController;
@@ -24,10 +28,10 @@ class SelectionSystem;
 
 class CameraService {
 public:
-  CameraService();
+  explicit CameraService(const Game::Map::VisibilityService& visibility);
   ~CameraService();
 
-  static void sync_map_bounds(Render::GL::Camera& camera);
+  void sync_map_bounds(Render::GL::Camera& camera) const;
   void move(Render::GL::Camera& camera, float dx, float dz);
   void elevate(Render::GL::Camera& camera, float dy);
   void zoom(Render::GL::Camera& camera, float delta);
@@ -39,16 +43,17 @@ public:
   follow_selection(Render::GL::Camera& camera, Engine::Core::World& world, bool enable);
   void set_follow_lerp(Render::GL::Camera& camera, float alpha);
   [[nodiscard]] static auto get_distance(const Render::GL::Camera& camera) -> float;
-  static void reset_camera(Render::GL::Camera& camera,
-                           Engine::Core::World& world,
-                           int local_owner_id,
-                           Engine::Core::EntityID player_unit_id);
-  static void snap_to_entity(Render::GL::Camera& camera, Engine::Core::Entity& entity);
+  void reset_camera(Render::GL::Camera& camera,
+                    Engine::Core::World& world,
+                    int local_owner_id,
+                    Engine::Core::EntityID player_unit_id);
+  void snap_to_entity(Render::GL::Camera& camera, Engine::Core::Entity& entity);
   void update_follow(Render::GL::Camera& camera,
                      Engine::Core::World& world,
                      bool follow_enabled);
 
 private:
+  const Game::Map::VisibilityService& m_visibility;
   std::unique_ptr<CameraController> m_controller;
   std::unique_ptr<CameraFollowSystem> m_follow_system;
 };

@@ -103,8 +103,8 @@ auto add_wall_piece(SessionContext& session,
                                                  center.z(),
                                                  k_defender);
   if (is_gate) {
-    Game::Systems::GateService::sync_gate_footprint(entity->get_id(),
-                                                    transform->rotation.y);
+    Game::Systems::GateService::sync_gate_footprint(
+        session.world(), entity->get_id(), transform->rotation.y);
   }
   return entity->get_id();
 }

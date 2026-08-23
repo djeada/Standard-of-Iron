@@ -8,6 +8,7 @@
 #include <unordered_map>
 #include <vector>
 
+#include "../core/ambient_session.h"
 #include "../core/component.h"
 #include "../core/entity.h"
 #include "../core/system_context.h"
@@ -53,9 +54,10 @@ auto compute_avoidance_priority(Engine::Core::SystemContext& context,
   return 2;
 }
 
-auto point_is_in_navigation_passage(float x, float z) -> bool {
-  for (const auto& passage :
-       BuildingCollisionRegistry::instance().navigation_passages()) {
+auto point_is_in_navigation_passage(const BuildingCollisionRegistry& buildings,
+                                    float x,
+                                    float z) -> bool {
+  for (const auto& passage : buildings.navigation_passages()) {
     if (std::abs(x - passage.center_x) <= passage.width * 0.5F + 0.5F &&
         std::abs(z - passage.center_z) <= passage.depth * 0.5F + 0.5F) {
       return true;
@@ -84,6 +86,10 @@ void LocalAvoidanceSystem::run(Engine::Core::SystemContext& context) {
   if (unit_ids.empty()) {
     return;
   }
+
+  const auto& services = Game::Session::services_for(context.world());
+  const auto& terrain = *services.terrain;
+  const auto& buildings = *services.building_collision;
 
   float const inv_cell_size = 1.0F / k_default_cell_size;
   for (std::int64_t const key : m_active_cell_keys) {
@@ -252,13 +258,13 @@ void LocalAvoidanceSystem::run(Engine::Core::SystemContext& context) {
         float lateral_z = sep_z - forward_z * forward_separation;
         float const lateral_length = std::hypot(lateral_x, lateral_z);
         if (lateral_length > 1.0e-4F) {
-          auto& terrain = Game::Map::TerrainService::instance();
           Point const cell = NavGrid::world_to_grid(ci.x, ci.z);
           bool portal_constrains_lateral = ci.follows_navigation_path ||
                                            terrain.is_on_bridge(ci.x, ci.z) ||
                                            terrain.is_hill_entrance(cell.x, cell.y);
           if (!portal_constrains_lateral) {
-            portal_constrains_lateral = point_is_in_navigation_passage(ci.x, ci.z);
+            portal_constrains_lateral =
+                point_is_in_navigation_passage(buildings, ci.x, ci.z);
           }
           float const probe_distance = std::max(0.75F, ci.radius + 0.25F);
           QVector3D const lateral_probe(

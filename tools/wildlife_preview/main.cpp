@@ -259,6 +259,10 @@ auto main(int argc, char** argv) -> int {
 
   auto const& recipe = species == "wolf" ? Render::Wildlife::wolf_bake_recipe()
                                          : Render::Wildlife::sheep_bake_recipe();
+  if (!recipe.complete()) {
+    std::cerr << "bake recipe for '" << species << "' is incomplete\n";
+    return 1;
+  }
   auto const colors = species == "wolf" ? wolf_role_colors() : sheep_role_colors();
 
   ViewSpec view{"quarter", QVector3D(0.85F, 0.42F, 0.75F)};

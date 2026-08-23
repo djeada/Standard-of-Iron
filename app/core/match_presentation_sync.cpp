@@ -11,6 +11,7 @@
 #include "app/world/unit_queries.h"
 #include "game/core/world.h"
 #include "game/map/visibility_service.h"
+#include "game/session/session_context.h"
 #include "game/systems/selection_system.h"
 #include "scene/camera.h"
 
@@ -63,7 +64,7 @@ auto collect_attack_targeting(const SelectionAttackContext& ctx)
         ctx.world, selection_system->get_selected_units(), QStringLiteral("attack"));
   }
 
-  auto& visibility = Game::Map::VisibilityService::instance();
+  auto& visibility = Game::Session::session_for(*ctx.world).visibility();
   const auto snapshot =
       visibility.is_initialized() ? visibility.snapshot_ptr() : nullptr;
 

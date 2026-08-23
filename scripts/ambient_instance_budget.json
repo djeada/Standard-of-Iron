@@ -1,25 +1,9 @@
 {
-  "app/audio": 2,
-  "app/commander": 9,
-  "app/core": 19,
-  "app/economy": 15,
-  "app/orders": 2,
-  "app/persistence": 8,
-  "app/session": 22,
-  "app/world": 4,
-  "game/command": 5,
   "game/core": 1,
   "game/formation": 4,
   "game/map": 13,
-  "game/mission": 7,
-  "game/render_bridge": 7,
-  "game/save": 4,
-  "game/systems": 107,
+  "game/systems": 27,
   "game/units": 8,
   "game/visuals": 1,
-  "game/wildlife": 3,
-  "render": 1,
-  "tools/arena": 45,
-  "tools/balance_sim": 4,
-  "tools/content_validator": 3
+  "game/wildlife": 3
 }

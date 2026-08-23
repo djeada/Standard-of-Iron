@@ -15,15 +15,16 @@
 
 #include "arena_viewport.h"
 #include "building_panel.h"
+#include "game/session/session_context.h"
 #include "prop_panel.h"
 #include "terrain_panel.h"
 #include "unit_panel.h"
 
-ArenaWindow::ArenaWindow(QWidget* parent)
+ArenaWindow::ArenaWindow(Game::Session::SessionContext& session, QWidget* parent)
     : QMainWindow(parent)
     , m_terrain_panel(new TerrainPanel())
-    , m_unit_panel(new UnitPanel())
-    , m_building_panel(new BuildingPanel())
+    , m_unit_panel(new UnitPanel(session.nations()))
+    , m_building_panel(new BuildingPanel(session.nations()))
     , m_prop_panel(new PropPanel()) {
   setWindowTitle("Standard of Iron Arena");
 
@@ -51,7 +52,7 @@ ArenaWindow::ArenaWindow(QWidget* parent)
   auto* splitter = new QSplitter(Qt::Horizontal, central);
   splitter->setChildrenCollapsible(false);
 
-  m_viewport = new ArenaViewport(splitter);
+  m_viewport = new ArenaViewport(session, splitter);
   m_viewport->setMinimumSize(480, 400);
   splitter->addWidget(m_viewport);
 

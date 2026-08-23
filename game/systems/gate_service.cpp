@@ -4,6 +4,7 @@
 #include <cmath>
 #include <utility>
 
+#include "../core/ambient_session.h"
 #include "../core/entity.h"
 #include "../core/world.h"
 #include "building_collision_registry.h"
@@ -104,10 +105,11 @@ auto GateService::passage_blocker_bounds(float center_x,
           .max_z = axis_z + half_z};
 }
 
-void GateService::sync_gate_footprint(Engine::Core::EntityID entity_id,
+void GateService::sync_gate_footprint(Engine::Core::World& world,
+                                      Engine::Core::EntityID entity_id,
                                       float rotation_y) {
   const auto extent = structure_extent(rotation_y);
-  BuildingCollisionRegistry::instance().resize_building(
+  Game::Session::services_for(world).building_collision->resize_building(
       entity_id,
       BuildingCollisionRegistry::BuildingSize{.width = extent.half_x * 2.0F,
                                               .depth = extent.half_z * 2.0F});
@@ -117,11 +119,14 @@ auto GateService::is_gate(const Engine::Core::Entity& entity) -> bool {
   return entity.get_component<GateComponent>() != nullptr;
 }
 
-auto GateService::serves_owner(int gate_owner_id, int unit_owner_id) -> bool {
+auto GateService::serves_owner(const Engine::Core::World& world,
+                               int gate_owner_id,
+                               int unit_owner_id) -> bool {
   if (gate_owner_id <= 0 || unit_owner_id <= 0) {
     return false;
   }
-  return OwnerRegistry::instance().are_allies(gate_owner_id, unit_owner_id);
+  return Game::Session::services_for(world).owners->are_allies(gate_owner_id,
+                                                               unit_owner_id);
 }
 
 auto GateService::gate_at(Engine::Core::World& world,

@@ -34,7 +34,7 @@ void expect_all_combo_boxes_populated(QWidget& panel) {
 
 TEST_F(ArenaPanelPopulationTest,
        UnitPanelPopulatesComboBoxesWithoutPreinitializedNationRegistry) {
-  UnitPanel panel;
+  UnitPanel panel(Game::Systems::NationRegistry::instance());
 
   expect_all_combo_boxes_populated(panel);
   EXPECT_FALSE(panel.selected_nation_id().isEmpty());
@@ -43,7 +43,7 @@ TEST_F(ArenaPanelPopulationTest,
 
 TEST_F(ArenaPanelPopulationTest,
        BuildingPanelPopulatesComboBoxesWithoutPreinitializedNationRegistry) {
-  BuildingPanel panel;
+  BuildingPanel panel(Game::Systems::NationRegistry::instance());
 
   expect_all_combo_boxes_populated(panel);
   EXPECT_FALSE(panel.selected_nation_id().isEmpty());

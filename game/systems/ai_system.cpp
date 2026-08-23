@@ -42,9 +42,9 @@ auto initial_ai_update_timer(std::size_t index,
   return update_interval * static_cast<float>(index) / static_cast<float>(count);
 }
 
-void apply_nation_default_strategy(AI::AIContext& context) {
-  const auto* nation = Game::Systems::NationRegistry::instance().get_nation_for_player(
-      context.player_id);
+void apply_nation_default_strategy(AI::AIContext& context,
+                                   const Game::Systems::NationRegistry& nations) {
+  const auto* nation = nations.get_nation_for_player(context.player_id);
   if (nation == nullptr) {
     return;
   }
@@ -61,7 +61,8 @@ void apply_nation_default_strategy(AI::AIContext& context) {
 
 } // namespace
 
-AISystem::AISystem() {
+AISystem::AISystem(Services services)
+    : m_services(services) {
 
   m_building_attacked_subscription =
       Engine::Core::ScopedEventSubscription<Engine::Core::BuildingAttackedEvent>(
@@ -106,7 +107,7 @@ void AISystem::shutdown_workers() {
 }
 
 void AISystem::initialize_ai_players() {
-  auto& registry = OwnerRegistry::instance();
+  auto& registry = m_services.owners;
   const auto& ai_owner_ids = registry.get_ai_owner_ids();
 
   if (ai_owner_ids.empty()) {
@@ -123,7 +124,7 @@ void AISystem::initialize_ai_players() {
     instance.worker = std::make_unique<AI::AIWorker>(*instance.behavior_registry);
     instance.update_timer =
         initial_ai_update_timer(index, ai_owner_ids.size(), m_update_interval);
-    apply_nation_default_strategy(instance.context);
+    apply_nation_default_strategy(instance.context, m_services.nations);
 
     m_ai_instances.push_back(std::move(instance));
   }

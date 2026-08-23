@@ -21,6 +21,10 @@ namespace Engine::Core {
 class World;
 }
 
+namespace Game::Session {
+class SessionContext;
+}
+
 namespace Game::Systems {
 class SaveLoadService;
 class VictoryService;
@@ -33,6 +37,7 @@ class Camera;
 namespace App::Core {
 
 struct SaveRuntimeContext {
+  Game::Session::SessionContext& session;
   bool paused = false;
   float time_scale = 1.0F;
   int local_owner_id = 1;
@@ -43,6 +48,7 @@ struct SaveRuntimeContext {
 };
 
 struct ApplyRuntimeContext {
+  Game::Session::SessionContext& session;
   bool& paused;
   float& time_scale;
   int& local_owner_id;

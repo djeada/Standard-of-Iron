@@ -48,6 +48,17 @@ struct AmbientServices {
 
 [[nodiscard]] auto ambient_services() -> const AmbientServices&;
 
+[[nodiscard]] auto
+services_for(const Engine::Core::World& world) -> const AmbientServices&;
+
+[[nodiscard]] auto
+services_for_or_null(const Engine::Core::World& world) -> const AmbientServices*;
+
+void bind_world_services(const Engine::Core::World& world,
+                         const AmbientServices* services);
+
+void unbind_world_services(const Engine::Core::World& world);
+
 [[nodiscard]] auto ambient_services_or_null() -> const AmbientServices*;
 
 auto set_ambient_services(const AmbientServices* services) -> const AmbientServices*;

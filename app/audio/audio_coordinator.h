@@ -10,9 +10,14 @@ namespace Game::Mission {
 struct MissionDefinition;
 }
 
+namespace Game::Systems {
+class NationRegistry;
+}
+
 class AudioCoordinator {
 public:
-  explicit AudioCoordinator(Game::Audio::AudioEventHandler* event_handler);
+  AudioCoordinator(Game::Audio::AudioEventHandler* event_handler,
+                   Game::Systems::NationRegistry& nations);
 
   void apply_frontend_music_context(const QString& context);
   void configure_audio_manifest_mappings(int local_owner_id);
@@ -26,5 +31,6 @@ public:
 
 private:
   Game::Audio::AudioEventHandler* m_event_handler = nullptr;
+  Game::Systems::NationRegistry& m_nations;
   QString m_current_ambient_sound_id;
 };

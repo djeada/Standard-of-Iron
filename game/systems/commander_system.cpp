@@ -6,6 +6,7 @@
 #include <cmath>
 #include <optional>
 
+#include "../core/ambient_session.h"
 #include "../core/component.h"
 #include "../core/event_manager.h"
 #include "../core/world.h"
@@ -256,7 +257,7 @@ void collapse_nation_if_leaderless(Engine::Core::World& world, int owner_id) {
     return;
   }
 
-  const auto& owners = OwnerRegistry::instance();
+  const auto& owners = *Game::Session::services_for(world).owners;
   const QString name = QString::fromStdString(owners.get_owner_name(owner_id));
   Engine::Core::EventManager::instance().publish(Engine::Core::MissionAnnouncementEvent(
       name.isEmpty()

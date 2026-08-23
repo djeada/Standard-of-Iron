@@ -55,8 +55,8 @@ TEST_F(ArenaTerrainAlignmentTest, BuildingsKeepTheirPlotWhenTerrainIsRebuilt) {
   auto* wall = make_building(
       world, Game::Units::SpawnType::WallSegment, "wall_segment", 8.0F, 0.0F);
 
-  Arena::align_entity_to_ground(world, barracks->get_id());
-  Arena::align_entity_to_ground(world, wall->get_id());
+  Arena::align_entity_to_ground(*barracks, Game::Map::TerrainService::instance());
+  Arena::align_entity_to_ground(*wall, Game::Map::TerrainService::instance());
 
   const auto* barracks_transform = barracks->get_component<TransformComponent>();
   const auto* wall_transform = wall->get_component<TransformComponent>();
@@ -79,8 +79,8 @@ TEST_F(ArenaTerrainAlignmentTest, TroopsAreStillPushedOutOfOccupiedGround) {
   unit->owner_id = 1;
   unit->spawn_type = Game::Units::SpawnType::Knight;
 
-  EXPECT_FALSE(Arena::entity_keeps_planar_position(world, soldier->get_id()));
-  Arena::align_entity_to_ground(world, soldier->get_id());
+  EXPECT_FALSE(Arena::entity_keeps_planar_position(*soldier));
+  Arena::align_entity_to_ground(*soldier, Game::Map::TerrainService::instance());
 
   const auto* transform = soldier->get_component<TransformComponent>();
   ASSERT_NE(transform, nullptr);
@@ -95,7 +95,7 @@ TEST_F(ArenaTerrainAlignmentTest, ConstructionSitesAreAnchoredLikeFinishedBuildi
   site->add_component<TransformComponent>(-4.0F, 0.0F, 2.0F);
   site->add_component<Engine::Core::WallConstructionSiteComponent>();
 
-  EXPECT_TRUE(Arena::entity_keeps_planar_position(world, site->get_id()));
+  EXPECT_TRUE(Arena::entity_keeps_planar_position(*site));
 }
 
 } // namespace

@@ -26,7 +26,9 @@ struct VictoryConfig;
 namespace Game::Systems {
 
 class GlobalStatsRegistry;
+class NationRegistry;
 class OwnerRegistry;
+class PlayerResourceRegistry;
 
 struct StructureRequirement {
   std::vector<QString> structure_types;
@@ -114,7 +116,14 @@ struct VictoryRuleSet {
 
 class VictoryService {
 public:
-  VictoryService();
+  struct Services {
+    Game::Systems::GlobalStatsRegistry& stats;
+    Game::Systems::OwnerRegistry& owners;
+    Game::Systems::NationRegistry& nations;
+    Game::Systems::PlayerResourceRegistry& economy;
+  };
+
+  explicit VictoryService(Services services);
   ~VictoryService();
 
   void configure(const Game::Map::VictoryConfig& config, int local_owner_id);
@@ -212,6 +221,8 @@ private:
 
   Game::Systems::GlobalStatsRegistry& m_stats_registry;
   Game::Systems::OwnerRegistry& m_owner_registry;
+  Game::Systems::NationRegistry& m_nations;
+  Game::Systems::PlayerResourceRegistry& m_economy;
 };
 
 } // namespace Game::Systems

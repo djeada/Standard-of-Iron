@@ -9,6 +9,7 @@
 #include "game/core/world.h"
 #include "game/map/map_definition.h"
 #include "game/map/terrain_service.h"
+#include "game/session/session_context.h"
 #include "game/systems/building_collision_registry.h"
 #include "game/systems/commander_system.h"
 #include "game/systems/default_content.h"
@@ -138,7 +139,13 @@ public:
     m_map.undead_zones = scenario.undead_zones;
     Game::Map::TerrainService::instance().initialize(m_map);
 
-    m_world.add_system(std::make_unique<Game::Systems::UndeadAwakeningSystem>());
+    auto& session = Game::Session::SessionContext::active();
+    m_world.add_system(std::make_unique<Game::Systems::UndeadAwakeningSystem>(
+        Game::Systems::UndeadAwakeningSystem::Services{.terrain = session.terrain(),
+                                                       .owners = session.owners(),
+                                                       .nations = session.nations(),
+                                                       .stats = session.stats(),
+                                                       .economy = session.economy()}));
     undead().configure(m_map);
   }
 
