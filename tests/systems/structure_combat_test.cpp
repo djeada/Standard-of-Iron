@@ -8,6 +8,8 @@
 #include "systems/building_collision_registry.h"
 #include "systems/combat_system/damage_application.h"
 #include "systems/combat_system/structure_combat.h"
+#include "systems/nav_grid.h"
+#include "systems/pathfinding.h"
 #include "units/spawn_type.h"
 
 namespace {
@@ -150,7 +152,7 @@ TEST_F(StructureCombatTest, RotatedFootprintReturnsTheVisibleFacade) {
   EXPECT_NEAR(contact.outward_normal.z(), -1.0F, 0.001F);
 }
 
-TEST_F(StructureCombatTest, MeleeApproachPlacesTheVisibleSoldierAtTheFacade) {
+TEST_F(StructureCombatTest, MeleeApproachUsesTheClosestWalkableFacadePosition) {
   Engine::Core::World world;
   auto* attacker = add_attacker(world, Game::Units::SpawnType::Knight, 0.0F, 0.0F);
   auto* structure = add_structure(world, Game::Units::SpawnType::Barracks, 0.0F, 6.0F);
@@ -164,6 +166,24 @@ TEST_F(StructureCombatTest, MeleeApproachPlacesTheVisibleSoldierAtTheFacade) {
   auto* transform = attacker->get_component<Engine::Core::TransformComponent>();
   transform->position.x = approach.destination.x();
   transform->position.z = approach.destination.z();
+
+  Game::Systems::NavGrid::initialize(33, 33);
+  auto* pathfinder = Game::Systems::NavGrid::get_pathfinder();
+  ASSERT_NE(pathfinder, nullptr);
+  pathfinder->mark_navigation_grid_dirty();
+  pathfinder->update_navigation_grid();
+  EXPECT_FALSE(pathfinder->is_world_position_walkable(approach.destination));
+  EXPECT_FALSE(
+      Game::Systems::Combat::structure_melee_contact_active(*attacker, *structure));
+
+  auto const navigated =
+      Game::Systems::Combat::structure_navigation_melee_approach(*attacker, *structure);
+  EXPECT_FALSE(navigated.reached);
+  EXPECT_TRUE(pathfinder->is_world_position_walkable(navigated.destination));
+  EXPECT_LT(navigated.destination.z(), approach.destination.z());
+
+  transform->position.x = navigated.destination.x();
+  transform->position.z = navigated.destination.z();
   EXPECT_TRUE(
       Game::Systems::Combat::structure_melee_contact_active(*attacker, *structure));
 }

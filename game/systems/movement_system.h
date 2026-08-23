@@ -50,6 +50,12 @@ private:
                            float delta_time) const -> bool;
 
   static void
+  update_traversal_presentation(Engine::Core::Entity& entity,
+                                const Engine::Core::TransformComponent& transform,
+                                const Engine::Core::MovementComponent& movement,
+                                float delta_time);
+
+  static void
   assign_navigation_target(Pathfinding* pathfinder,
                            const Engine::Core::TransformComponent& transform,
                            Engine::Core::MovementComponent& movement,

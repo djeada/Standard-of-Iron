@@ -283,6 +283,23 @@ TEST_F(GateSystemTest, OpenGateStopsBlockingMoves) {
                                         QVector3D(0.0F, 0.0F, -0.5F)));
 }
 
+TEST_F(GateSystemTest, GateStateIsPublishedIntoTheNavigationGrid) {
+  World world;
+  make_wall(world, -2.0F, 0.0F, k_gate_owner);
+  make_wall(world, 2.0F, 0.0F, k_gate_owner);
+  auto* gate_entity = make_gate(world, 0.0F, 0.0F, k_gate_owner);
+  WallNetworkService::refresh_world(world);
+  Point const gate_cell = NavGrid::world_to_grid(0.0F, 0.0F);
+
+  tick(world, 0.1F);
+  EXPECT_FALSE(NavGrid::is_grid_walkable(gate_cell));
+
+  gate_entity->get_component<GateComponent>()->manual_mode =
+      GateComponent::ManualMode::ForcedOpen;
+  tick(world, 2.0F);
+  EXPECT_TRUE(NavGrid::is_grid_walkable(gate_cell));
+}
+
 TEST_F(GateSystemTest, ABodyAlreadyInThePassageIsNeverTrapped) {
   World world;
   make_gate(world, 0.0F, 0.0F, k_gate_owner);

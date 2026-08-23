@@ -1439,7 +1439,8 @@ void process_attacks(Engine::Core::World* world,
                 hold_position = true;
               }
             } else {
-              auto const approach = structure_melee_approach(*attacker, *target);
+              auto const approach =
+                  structure_navigation_melee_approach(*attacker, *target);
               desired_pos = approach.destination;
               desired_pos.setY(0.0F);
               hold_position = approach.reached;

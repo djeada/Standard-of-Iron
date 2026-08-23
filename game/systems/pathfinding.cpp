@@ -15,6 +15,7 @@
 
 #include "../map/terrain_service.h"
 #include "building_collision_registry.h"
+#include "gate_service.h"
 #include "map/terrain.h"
 
 namespace Game::Systems {
@@ -485,8 +486,35 @@ void Pathfinding::update_region(int min_x, int max_x, int min_z, int max_z) {
 
   force_navigation_passages_walkable(min_x, max_x, min_z, max_z);
   force_map_passage_cells_walkable(min_x, max_x, min_z, max_z);
+  apply_gate_blocker_cells(min_x, max_x, min_z, max_z);
 
   rebuild_clearance(min_x - 1, max_x + 1, min_z - 1, max_z + 1);
+}
+
+void Pathfinding::apply_gate_blocker_cells(int min_x, int max_x, int min_z, int max_z) {
+  min_x = std::max(0, min_x);
+  max_x = std::min(m_width - 1, max_x);
+  min_z = std::max(0, min_z);
+  max_z = std::min(m_height - 1, max_z);
+  if (min_x > max_x || min_z > max_z) {
+    return;
+  }
+  for (auto const& blocker : GateService::blockers()) {
+    float const center_x = (blocker.min_x + blocker.max_x) * 0.5F;
+    float const center_z = (blocker.min_z + blocker.max_z) * 0.5F;
+    float const half_x = (blocker.max_x - blocker.min_x) * 0.5F;
+    float const half_z = (blocker.max_z - blocker.min_z) * 0.5F;
+    auto const range = cells_covering(center_x, center_z, half_x, half_z);
+    for (int grid_z = std::max(range.min_z, min_z);
+         grid_z <= std::min(range.max_z, max_z);
+         ++grid_z) {
+      for (int grid_x = std::max(range.min_x, min_x);
+           grid_x <= std::min(range.max_x, max_x);
+           ++grid_x) {
+        m_navigation_grid.set(grid_x, grid_z, CellValue::Blocked);
+      }
+    }
+  }
 }
 
 void Pathfinding::force_navigation_passages_walkable(int min_x,

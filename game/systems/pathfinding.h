@@ -139,6 +139,7 @@ private:
   void rebuild_forest_index();
   void force_map_passage_cells_walkable(int min_x, int max_x, int min_z, int max_z);
   void force_navigation_passages_walkable(int min_x, int max_x, int min_z, int max_z);
+  void apply_gate_blocker_cells(int min_x, int max_x, int min_z, int max_z);
 
   static auto calculate_heuristic(const Point& a, const Point& b) -> int;
 
