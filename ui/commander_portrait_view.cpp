@@ -14,16 +14,12 @@
 
 #include "animation/rig/humanoid_proportions.h"
 #include "animation/showcase_pose_manifest.h"
+#include "commander_portrait_scenes.h"
 #include "game/core/component.h"
 #include "game/core/entity.h"
 #include "game/core/world.h"
 #include "game/systems/nation_id.h"
-#include "game/systems/showcase_routine_system.h"
-#include "game/units/factory.h"
-#include "game/units/troop_type.h"
-#include "game/units/unit.h"
 #include "render/creature/pipeline/creature_bone_probe.h"
-#include "render/graphics_settings.h"
 #include "render/humanoid/schema/skeleton_schema.h"
 #include "render/scene_renderer.h"
 #include "scene/camera.h"
@@ -75,8 +71,11 @@ auto move_for_pose(const QString& pose) -> Animation::HumanoidShowcaseMove {
 class CommanderPortraitView::PortraitRenderer
     : public QQuickFramebufferObject::Renderer {
 public:
-  PortraitRenderer() = default;
-  ~PortraitRenderer() override { release_scene(); }
+  PortraitRenderer() { UI::CommanderPortraitScenes::instance().add_reference(); }
+  ~PortraitRenderer() override {
+    release_scene();
+    UI::CommanderPortraitScenes::instance().release_reference();
+  }
 
   PortraitRenderer(const PortraitRenderer&) = delete;
   auto operator=(const PortraitRenderer&) -> PortraitRenderer& = delete;
@@ -135,11 +134,9 @@ private:
   bool m_scene_dirty = true;
   bool m_pose_dirty = true;
 
-  std::unique_ptr<Render::GL::Renderer> m_renderer;
-  std::unique_ptr<Render::GL::Camera> m_camera;
-  std::unique_ptr<Engine::Core::World> m_world;
-  std::unique_ptr<Game::Units::UnitFactoryRegistry> m_factory;
-  std::unique_ptr<Game::Units::Unit> m_unit;
+  Render::GL::Renderer* m_renderer = nullptr;
+  Render::GL::Camera* m_camera = nullptr;
+  Engine::Core::World* m_world = nullptr;
   Engine::Core::EntityID m_entity = 0;
   bool m_renderer_failed = false;
 
@@ -150,15 +147,10 @@ void CommanderPortraitView::PortraitRenderer::release_scene() {
   m_focus = QVector3D(0.0F, k_default_focus_height, 0.0F);
   m_focus_target = m_focus;
   m_focus_settled = false;
-  m_unit.reset();
-  m_world.reset();
-  m_factory.reset();
+  m_world = nullptr;
   m_entity = 0;
-  if (m_renderer != nullptr) {
-    m_renderer->shutdown();
-    m_renderer.reset();
-  }
-  m_camera.reset();
+  m_renderer = nullptr;
+  m_camera = nullptr;
 }
 
 auto CommanderPortraitView::PortraitRenderer::ensure_scene() -> bool {
@@ -166,58 +158,25 @@ auto CommanderPortraitView::PortraitRenderer::ensure_scene() -> bool {
     return false;
   }
   if (m_scene_dirty) {
-    m_unit.reset();
     m_entity = 0;
-    m_world.reset();
+    m_world = nullptr;
   }
 
-  Game::Units::TroopType troop_type{};
-  if (!Game::Units::try_parse_troop_type(m_troop_type, troop_type)) {
+  auto& scenes = UI::CommanderPortraitScenes::instance();
+  m_renderer = scenes.renderer();
+  m_camera = scenes.camera();
+  if (m_renderer == nullptr || m_camera == nullptr) {
+    m_renderer_failed = true;
     return false;
   }
 
-  if (m_renderer == nullptr) {
-    m_renderer = std::make_unique<Render::GL::Renderer>(
-        Render::GraphicsSettings::instance().backend_kind());
-    if (!m_renderer->initialize()) {
-      m_renderer.reset();
-      m_renderer_failed = true;
-      return false;
-    }
-    m_camera = std::make_unique<Render::GL::Camera>();
-  }
-
   if (m_world == nullptr) {
-
-    m_world = std::make_unique<Engine::Core::World>();
-    m_world->add_system(std::make_unique<Game::Systems::ShowcaseRoutineSystem>());
-
-    m_factory = std::make_unique<Game::Units::UnitFactoryRegistry>();
-    Game::Units::register_built_in_units(*m_factory);
-
-    Game::Units::SpawnParams params;
-    params.position = QVector3D(0.0F, 0.0F, 0.0F);
-    params.player_id = 1;
-    params.spawn_type = Game::Units::spawn_typeFromTroopType(troop_type);
-    params.ai_controlled = false;
-    params.enables_production = false;
-
-    m_unit = m_factory->create(troop_type, *m_world, params);
-    if (m_unit == nullptr) {
+    const auto scene = scenes.acquire(m_troop_type);
+    if (scene.world == nullptr) {
       return false;
     }
-    m_entity = m_unit->id();
-
-    auto* entity = m_world->get_entity(m_entity);
-    if (entity == nullptr) {
-      return false;
-    }
-    if (auto* transform = entity->get_component<Engine::Core::TransformComponent>()) {
-      transform->rotation.y = k_body_yaw_degrees;
-      transform->desired_yaw = k_body_yaw_degrees;
-      transform->has_desired_yaw = true;
-    }
-    entity->add_component<Engine::Core::ShowcaseRoutineComponent>();
+    m_world = scene.world;
+    m_entity = scene.entity;
     m_pose_dirty = true;
   }
 
@@ -383,7 +342,7 @@ void CommanderPortraitView::PortraitRenderer::render() {
                     QVector3D(0.0F, 1.0F, 0.0F));
   m_camera->set_perspective(k_field_of_view, aspect, 0.05F, 40.0F);
 
-  m_renderer->set_camera(m_camera.get());
+  m_renderer->set_camera(m_camera);
   m_renderer->set_viewport(m_size.width(), m_size.height());
   m_renderer->set_environment_lighting(portrait_lighting());
 
@@ -400,7 +359,7 @@ void CommanderPortraitView::PortraitRenderer::render() {
   m_renderer->begin_frame();
   {
     Render::Creature::Pipeline::ScopedBoneProbe const probe_scope(&head_probe);
-    m_renderer->render_world(m_world.get());
+    m_renderer->render_world(m_world);
   }
   m_renderer->end_frame();
 

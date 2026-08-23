@@ -42,6 +42,7 @@
 #include "../render/profiling/frame_continuity_analyzer.h"
 #include "../render/profiling/frame_profile.h"
 #include "app/core/game_engine.h"
+#include "commander_portrait_scenes.h"
 
 namespace {
 constexpr double k_runtime_benchmark_warmup_seconds = 2.0;
@@ -183,6 +184,7 @@ GLView::GLRenderer::GLRenderer(QPointer<GLView> view, QPointer<GameEngine> engin
   if (m_benchmark_seconds > 0.0) {
     Render::Profiling::global_profile().enabled = true;
   }
+  UI::CommanderPortraitScenes::instance().add_reference();
   if (qEnvironmentVariableIntValue("SOI_RUNTIME_CONTINUITY") != 0) {
     m_continuity_probe = std::make_unique<RuntimeContinuityProbe>();
     Render::Profiling::CombatAnimationDiagnostics::instance().set_enabled(true);
@@ -197,6 +199,7 @@ GLView::GLRenderer::~GLRenderer() {
   if (m_continuity_probe != nullptr) {
     Render::Profiling::CombatAnimationDiagnostics::instance().set_enabled(false);
   }
+  UI::CommanderPortraitScenes::instance().release_reference();
 }
 
 void GLView::GLRenderer::render() {
@@ -306,6 +309,8 @@ void GLView::GLRenderer::render() {
       m_ready_reported = true;
       QMetaObject::invokeMethod(m_view, "notify_renderer_ready", Qt::QueuedConnection);
     }
+
+    warm_commander_portraits();
   } catch (const std::exception& e) {
     qCritical() << "GLRenderer::render() exception:" << e.what();
     return;
@@ -315,6 +320,14 @@ void GLView::GLRenderer::render() {
   }
 
   update();
+}
+
+void GLView::GLRenderer::warm_commander_portraits() {
+  if (m_pending_commander_speakers.isEmpty()) {
+    return;
+  }
+  UI::CommanderPortraitScenes::instance().warm(m_pending_commander_speakers);
+  m_pending_commander_speakers.clear();
 }
 
 void GLView::GLRenderer::observe_runtime_continuity() {
@@ -649,6 +662,10 @@ void GLView::GLRenderer::synchronize(QQuickFramebufferObject* item) {
   m_engine = qobject_cast<GameEngine*>(view->engine());
   if (m_engine != nullptr) {
     m_engine->set_input_viewport_size(view->width(), view->height());
+  }
+
+  if (m_engine != nullptr && !m_engine->is_loading()) {
+    m_pending_commander_speakers = m_engine->commander_message_speakers();
   }
 
   const auto& graphics = Render::GraphicsSettings::instance();

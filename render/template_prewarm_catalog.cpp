@@ -116,6 +116,26 @@ auto prewarm_attack_family_for_spawn(Game::Units::SpawnType spawn_type,
 
 } // namespace
 
+auto prewarm_owner_slot(int owner_id) noexcept -> std::size_t {
+
+  if (owner_id < 0) {
+    return k_prewarm_owner_slots - 1U;
+  }
+  return static_cast<std::size_t>(owner_id) % (k_prewarm_owner_slots - 1U);
+}
+
+auto prewarm_entity_id_for_variant(std::size_t profile_index,
+                                   int owner_id,
+                                   std::uint8_t lod,
+                                   std::uint8_t variant) noexcept -> std::uint32_t {
+  return 1U + static_cast<std::uint32_t>((((profile_index * k_prewarm_owner_slots) +
+                                           prewarm_owner_slot(owner_id)) *
+                                              4U +
+                                          static_cast<std::size_t>(lod)) *
+                                             k_template_variant_count +
+                                         static_cast<std::size_t>(variant));
+}
+
 auto build_template_prewarm_anim_catalog(const Render::Creature::ArchetypeRegistry&
                                              archetypes) -> TemplatePrewarmAnimCatalog {
   TemplatePrewarmAnimCatalog catalog;

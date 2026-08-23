@@ -5,6 +5,7 @@ class QOpenGLDebugLogger;
 #include <QPointer>
 #include <QQuickFramebufferObject>
 #include <QString>
+#include <QStringList>
 
 #include <array>
 #include <chrono>
@@ -56,6 +57,7 @@ private:
     QPointer<GLView> m_view;
     QPointer<GameEngine> m_engine;
     bool m_ready_reported = false;
+    QStringList m_pending_commander_speakers;
     QSize m_size;
     int m_fbo_msaa_samples = -1;
     std::uint32_t m_fbo_graphics_generation = 0;
@@ -90,6 +92,7 @@ private:
     std::uint64_t m_benchmark_view_model_us = 0;
     std::unique_ptr<RuntimeContinuityProbe> m_continuity_probe;
 
+    void warm_commander_portraits();
     void observe_runtime_continuity();
     void observe_runtime_benchmark(std::chrono::steady_clock::time_point frame_start,
                                    double update_ms,
