@@ -2,6 +2,7 @@
 
 #include <QJsonObject>
 #include <QString>
+#include <QStringList>
 #include <QVector3D>
 
 #include <cstdint>
@@ -61,6 +62,8 @@ public:
 
   [[nodiscard]] auto has_messages() const -> bool { return !m_rules.empty(); }
 
+  [[nodiscard]] auto speaker_ids() const -> const QStringList& { return m_speaker_ids; }
+
   void notify_mission_start();
   void notify_victory();
   void notify_defeat();
@@ -117,6 +120,7 @@ private:
   auto promote_next() -> bool;
 
   std::vector<Rule> m_rules;
+  QStringList m_speaker_ids;
   std::vector<Pending> m_pending;
 
   std::optional<CommanderMessageCue> m_active;

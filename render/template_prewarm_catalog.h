@@ -45,6 +45,15 @@ struct TemplatePrewarmAnimSelection {
   std::size_t expected_template_count{0};
 };
 
+constexpr std::size_t k_prewarm_owner_slots = 16U;
+
+auto prewarm_owner_slot(int owner_id) noexcept -> std::size_t;
+
+auto prewarm_entity_id_for_variant(std::size_t profile_index,
+                                   int owner_id,
+                                   std::uint8_t lod,
+                                   std::uint8_t variant) noexcept -> std::uint32_t;
+
 auto build_template_prewarm_anim_catalog(const Render::Creature::ArchetypeRegistry&
                                              archetypes) -> TemplatePrewarmAnimCatalog;
 
