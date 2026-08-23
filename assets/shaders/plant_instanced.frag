@@ -35,7 +35,7 @@ float segment_sdf(vec2 p, vec2 a, vec2 b, float r) {
   return length(pa - ba * h) - r;
 }
 
-float bush_sdf(vec2 uv, float seed) {
+float shrub_sdf(vec2 uv, float seed) {
   vec2 p = (uv - vec2(0.5, 0.46)) * vec2(1.12, 1.0);
   float sdf = 1e9;
 
@@ -65,29 +65,37 @@ float rosette_sdf(vec2 uv, float seed) {
   return r - wave - 0.006;
 }
 
-float cactus_sdf(vec2 uv, float seed) {
-  vec2 p = (uv - 0.5) * vec2(0.92, 1.08);
-  float sdf = length(p) - 0.48;
+float blade_sdf(vec2 p, vec2 a, vec2 b, float r_base, float r_tip) {
+  vec2 pa = p - a;
+  vec2 ba = b - a;
+  float h = clamp(dot(pa, ba) / max(dot(ba, ba), 1e-5), 0.0, 1.0);
+  return length(pa - ba * h) - mix(r_base, r_tip, h);
+}
 
-  for (int i = 0; i < 3; i++) {
+float frond_sdf(vec2 uv, float seed) {
+  vec2 p = (uv - vec2(0.5, 0.05)) * vec2(0.92, 1.0);
+  vec2 root = vec2((h11(seed * 4.1) - 0.5) * 0.05, 0.0);
+  float sdf = 1e9;
+
+  for (int i = 0; i < 5; i++) {
     float fi = float(i);
-    float ang = mix(-1.6, 1.6, h11(seed * 3.3 + fi));
-    vec2 c = vec2(0.22 * cos(ang), 0.12 + 0.25 * abs(sin(ang)));
-    vec2 e = vec2(0.22, 0.30) * mix(0.7, 1.1, h11(seed * 6.1 + fi));
-
-    float d = length((p - c) / e) - 1.0;
-    sdf = min(sdf, d);
+    float lean = (fi - 2.0) * 0.52 + (h11(seed * 6.3 + fi) - 0.5) * 0.26;
+    float len = 0.46 + h11(seed * 8.7 + fi) * 0.26;
+    vec2 tip = root + vec2(sin(lean), cos(lean)) * len;
+    vec2 mid = mix(root, tip, 0.50) + vec2(sin(lean) * 0.06, 0.05);
+    sdf = min(sdf, blade_sdf(p, root, mid, 0.125, 0.108));
+    sdf = min(sdf, blade_sdf(p, mid, tip, 0.108, 0.030));
   }
 
-  return sdf - 0.006;
+  return sdf;
 }
 
 float plant_sdf(vec2 uv, float type_val, float seed) {
-  if (type_val < 0.45)
-    return bush_sdf(uv, seed);
-  if (type_val < 0.80)
+  if (type_val < 0.34)
+    return shrub_sdf(uv, seed);
+  if (type_val < 0.67)
     return rosette_sdf(uv, seed);
-  return cactus_sdf(uv, seed);
+  return frond_sdf(uv, seed);
 }
 
 vec2 sdf_grad(vec2 uv, float type_val, float seed, float step_uv) {
@@ -105,7 +113,7 @@ vec2 sdf_grad(vec2 uv, float type_val, float seed, float step_uv) {
 }
 
 void main() {
-  float type_val = (mod(floor(v_type + 0.5), 4.0) + 0.5) * 0.25;
+  float type_val = (mod(floor(v_type + 0.5), 3.0) + 0.5) / 3.0;
   float sdf = plant_sdf(v_tex_coord, type_val, v_seed);
 
   float sdf_aa = clamp(fwidth(sdf) * 0.85, 0.0015, 0.025);

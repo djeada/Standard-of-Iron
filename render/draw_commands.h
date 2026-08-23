@@ -99,6 +99,8 @@ struct TerrainScatterCmd {
     Plant,
     Pine,
     Olive,
+    Cypress,
+    Palm,
     FireCamp,
     Tent,
     SupplyCart,

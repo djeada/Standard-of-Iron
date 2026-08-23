@@ -24,6 +24,10 @@ auto resolve_foliage_draw(const BackendPipelines::VegetationPipeline& veg,
     return {veg.pine_shader(), &veg.m_pine_mesh, &veg.m_pine_uniforms};
   case S::Olive:
     return {veg.olive_shader(), &veg.m_olive_mesh, &veg.m_olive_uniforms};
+  case S::Cypress:
+    return {veg.pine_shader(), &veg.m_cypress_mesh, &veg.m_pine_uniforms};
+  case S::Palm:
+    return {veg.olive_shader(), &veg.m_palm_mesh, &veg.m_olive_uniforms};
   default:
     return {};
   }
@@ -278,7 +282,9 @@ void Backend::execute_scatter_commands(const PreparedBatch& prepared,
     }
     case TerrainScatterCmd::Species::Plant:
     case TerrainScatterCmd::Species::Pine:
-    case TerrainScatterCmd::Species::Olive: {
+    case TerrainScatterCmd::Species::Olive:
+    case TerrainScatterCmd::Species::Cypress:
+    case TerrainScatterCmd::Species::Palm: {
       if (!m_vegetation_pipeline) {
         break;
       }
