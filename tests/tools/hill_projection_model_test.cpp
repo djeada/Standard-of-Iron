@@ -1,8 +1,12 @@
 #include <QJsonArray>
 #include <QJsonObject>
+#include <QPair>
+#include <QSet>
 
+#include <algorithm>
 #include <gtest/gtest.h>
 
+#include "game/map/terrain.h"
 #include "game/map/terrain_footprint.h"
 #include "tools/map_editor/hill_projection_model.h"
 #include "tools/map_editor/map_json_keys.h"
@@ -266,7 +270,7 @@ TEST(HillProjectionModelTest, ApplyKeepsEntrancesOnTheRimAndWithinTheLimit) {
   EXPECT_GT(std::sqrt(dx * dx + dz * dz), 8.0);
 }
 
-TEST(HillProjectionModelTest, ProjectionApplyWritesFullExtentsAndCenter) {
+TEST(HillProjectionModelTest, ProjectionApplyKeepsAPaintedBodyAsAMask) {
   const QJsonObject hill{{MapJsonKeys::type, "hill"},
                          {MapJsonKeys::x, 40.0},
                          {MapJsonKeys::z, 40.0},
@@ -285,8 +289,10 @@ TEST(HillProjectionModelTest, ProjectionApplyWritesFullExtentsAndCenter) {
 
   const QJsonObject updated = HillProjection::apply_projection_to_hill_json(
       hill, model, hill_cells, entrance_cells);
-  EXPECT_DOUBLE_EQ(updated.value(MapJsonKeys::width).toDouble(), 2.0);
-  EXPECT_DOUBLE_EQ(updated.value(MapJsonKeys::depth).toDouble(), 1.0);
+  EXPECT_EQ(updated.value(MapJsonKeys::shape).toString(), QStringLiteral("mask"));
+  EXPECT_EQ(updated.value(MapJsonKeys::cells).toArray().size(), 3);
+  EXPECT_DOUBLE_EQ(updated.value(MapJsonKeys::width).toDouble(), 3.0);
+  EXPECT_DOUBLE_EQ(updated.value(MapJsonKeys::depth).toDouble(), 2.0);
   EXPECT_DOUBLE_EQ(updated.value(MapJsonKeys::x).toDouble(),
                    model.origin_x + half_span + 1.0);
   EXPECT_DOUBLE_EQ(updated.value(MapJsonKeys::z).toDouble(),
@@ -342,4 +348,186 @@ TEST(HillProjectionModelTest, MountainProjectionMatchesRuntimeEllipse) {
   EXPECT_FALSE(updated.contains(MapJsonKeys::width));
   EXPECT_FALSE(updated.contains(MapJsonKeys::depth));
   EXPECT_FALSE(updated.contains(MapJsonKeys::entrances));
+}
+
+TEST(HillProjectionModelTest, CorridorShapeProjectsALongThinBody) {
+  const QJsonObject corridor{{MapJsonKeys::type, "hill"},
+                             {MapJsonKeys::x, 40.0},
+                             {MapJsonKeys::z, 40.0},
+                             {MapJsonKeys::width, 40.0},
+                             {MapJsonKeys::depth, 10.0},
+                             {MapJsonKeys::height, 3.0},
+                             {MapJsonKeys::shape, "corridor"}};
+
+  const auto model = HillProjection::build_model(corridor, {1.0, 96, 96});
+
+  ASSERT_TRUE(model.shape.is_spine());
+  int min_x = model.grid_width;
+  int max_x = 0;
+  int min_z = model.grid_height;
+  int max_z = 0;
+  for (const QPoint& cell : model.hill_cells) {
+    min_x = std::min(min_x, cell.x());
+    max_x = std::max(max_x, cell.x());
+    min_z = std::min(min_z, cell.y());
+    max_z = std::max(max_z, cell.y());
+  }
+  EXPECT_GE(max_x - min_x, 36);
+  EXPECT_LE(max_z - min_z, 12);
+}
+
+TEST(HillProjectionModelTest, RingShapeLeavesTheCentreUnpainted) {
+  const QJsonObject ring{{MapJsonKeys::type, "hill"},
+                         {MapJsonKeys::x, 40.0},
+                         {MapJsonKeys::z, 40.0},
+                         {MapJsonKeys::width, 40.0},
+                         {MapJsonKeys::depth, 40.0},
+                         {MapJsonKeys::thickness, 8.0},
+                         {MapJsonKeys::height, 3.0},
+                         {MapJsonKeys::shape, "ring"}};
+
+  const auto model = HillProjection::build_model(ring, {1.0, 96, 96});
+  const QPoint centre(static_cast<int>(std::lround(model.center_x - model.origin_x)),
+                      static_cast<int>(std::lround(model.center_z - model.origin_z)));
+
+  EXPECT_FALSE(contains_cell(model.hill_cells, centre));
+  EXPECT_TRUE(contains_cell(model.hill_cells, centre + QPoint(16, 0)));
+}
+
+TEST(HillProjectionModelTest, UnchangedShapedBodyKeepsItsAuthoredShape) {
+  const QJsonObject arc{{MapJsonKeys::type, "hill"},
+                        {MapJsonKeys::x, 40.0},
+                        {MapJsonKeys::z, 40.0},
+                        {MapJsonKeys::width, 44.0},
+                        {MapJsonKeys::depth, 44.0},
+                        {MapJsonKeys::thickness, 10.0},
+                        {MapJsonKeys::arc, 120.0},
+                        {MapJsonKeys::height, 3.0},
+                        {MapJsonKeys::shape, "arc"}};
+
+  const auto model = HillProjection::build_model(arc, {1.0, 96, 96});
+  const QJsonObject updated =
+      HillProjection::apply_projection_to_hill_json(arc, model, model.hill_cells, {});
+
+  EXPECT_EQ(updated.value(MapJsonKeys::shape).toString(), QStringLiteral("arc"));
+  EXPECT_FALSE(updated.contains(MapJsonKeys::cells));
+  EXPECT_DOUBLE_EQ(updated.value(MapJsonKeys::width).toDouble(), 44.0);
+  EXPECT_DOUBLE_EQ(updated.value(MapJsonKeys::arc).toDouble(), 120.0);
+}
+
+TEST(HillProjectionModelTest, PaintedBodyRoundTripsAsAnExactMask) {
+  const QJsonObject blob{{MapJsonKeys::type, "hill"},
+                         {MapJsonKeys::x, 40.0},
+                         {MapJsonKeys::z, 40.0},
+                         {MapJsonKeys::radius, 10.0},
+                         {MapJsonKeys::height, 3.0}};
+
+  const auto model = HillProjection::build_model(blob, {1.0, 96, 96});
+  QVector<QPoint> painted = model.hill_cells;
+  const QPoint anchor = painted.first();
+  painted.removeFirst();
+  painted.append(anchor + QPoint(0, -1));
+  painted.append(anchor + QPoint(1, -1));
+
+  const QJsonObject updated =
+      HillProjection::apply_projection_to_hill_json(blob, model, painted, {});
+  ASSERT_EQ(updated.value(MapJsonKeys::shape).toString(), QStringLiteral("mask"));
+  ASSERT_FALSE(updated.value(MapJsonKeys::cells).toArray().isEmpty());
+
+  const auto reloaded = HillProjection::build_model(updated, {1.0, 96, 96});
+
+  QVector<QPoint> painted_world;
+  painted_world.reserve(painted.size());
+  for (const QPoint& cell : painted) {
+    painted_world.append(
+        QPoint(static_cast<int>(std::lround(model.origin_x)) + cell.x(),
+               static_cast<int>(std::lround(model.origin_z)) + cell.y()));
+  }
+  QVector<QPoint> reloaded_world;
+  reloaded_world.reserve(reloaded.hill_cells.size());
+  for (const QPoint& cell : reloaded.hill_cells) {
+    reloaded_world.append(
+        QPoint(static_cast<int>(std::lround(reloaded.origin_x)) + cell.x(),
+               static_cast<int>(std::lround(reloaded.origin_z)) + cell.y()));
+  }
+
+  std::sort(painted_world.begin(), painted_world.end(), [](QPoint a, QPoint b) {
+    return a.y() == b.y() ? a.x() < b.x() : a.y() < b.y();
+  });
+  std::sort(reloaded_world.begin(), reloaded_world.end(), [](QPoint a, QPoint b) {
+    return a.y() == b.y() ? a.x() < b.x() : a.y() < b.y();
+  });
+  EXPECT_EQ(reloaded_world, painted_world);
+}
+
+namespace {
+
+constexpr int k_runtime_grid = 96;
+constexpr float k_runtime_tile = 1.0F;
+
+auto runtime_hill_cells(const QJsonObject& hill) -> QSet<QPair<int, int>> {
+  const float half = k_runtime_grid * 0.5F - 0.5F;
+
+  Game::Map::TerrainFeature feature;
+  feature.type = Game::Map::TerrainType::Hill;
+  feature.center_x = static_cast<float>(hill.value(MapJsonKeys::x).toDouble()) - half;
+  feature.center_z = static_cast<float>(hill.value(MapJsonKeys::z).toDouble()) - half;
+  feature.width = static_cast<float>(hill.value(MapJsonKeys::width).toDouble(0.0));
+  feature.depth = static_cast<float>(hill.value(MapJsonKeys::depth).toDouble(0.0));
+  feature.radius = static_cast<float>(hill.value(MapJsonKeys::radius).toDouble(0.0));
+  feature.height = static_cast<float>(hill.value(MapJsonKeys::height).toDouble(3.0));
+  feature.rotation_deg = 0.0F;
+  feature.thickness =
+      static_cast<float>(hill.value(MapJsonKeys::thickness).toDouble(0.0));
+  feature.has_sweep = hill.contains(MapJsonKeys::arc);
+  feature.sweep_degrees =
+      static_cast<float>(hill.value(MapJsonKeys::arc).toDouble(0.0));
+  Game::Map::parse_hill_shape(hill.value(MapJsonKeys::shape).toString().toStdString(),
+                              feature.shape);
+
+  Game::Map::TerrainHeightMap height_map(
+      k_runtime_grid, k_runtime_grid, k_runtime_tile);
+  height_map.build_from_features({feature});
+
+  QSet<QPair<int, int>> cells;
+  for (int z = 0; z < k_runtime_grid; ++z) {
+    for (int x = 0; x < k_runtime_grid; ++x) {
+      if (height_map.getTerrainType(x, z) == Game::Map::TerrainType::Hill) {
+        cells.insert({x, z});
+      }
+    }
+  }
+  return cells;
+}
+
+} // namespace
+
+TEST(HillProjectionModelTest, ShapedProjectionMatchesTheRuntimeFootprint) {
+  const QJsonObject corridor{{MapJsonKeys::type, "hill"},
+                             {MapJsonKeys::x, 48.0},
+                             {MapJsonKeys::z, 48.0},
+                             {MapJsonKeys::width, 40.0},
+                             {MapJsonKeys::depth, 12.0},
+                             {MapJsonKeys::height, 3.0},
+                             {MapJsonKeys::shape, "corridor"}};
+
+  const auto model =
+      HillProjection::build_model(corridor, {1.0, k_runtime_grid, k_runtime_grid});
+  const QSet<QPair<int, int>> runtime = runtime_hill_cells(corridor);
+  ASSERT_FALSE(model.hill_cells.isEmpty());
+  ASSERT_FALSE(runtime.isEmpty());
+
+  int matched = 0;
+  for (const QPoint& cell : model.hill_cells) {
+    const int map_x = static_cast<int>(std::lround(model.origin_x)) + cell.x();
+    const int map_z = static_cast<int>(std::lround(model.origin_z)) + cell.y();
+    if (runtime.contains({map_x, map_z})) {
+      ++matched;
+    }
+  }
+
+  const double covered =
+      static_cast<double>(matched) / static_cast<double>(model.hill_cells.size());
+  EXPECT_GT(covered, 0.8) << "the projection panel previews " << model.hill_cells.size()
+                          << " cells but the runtime raised " << matched << " of them";
 }

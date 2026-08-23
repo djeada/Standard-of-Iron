@@ -16,7 +16,7 @@ HillProjectionWidget::HillProjectionWidget(QWidget* parent)
 
 QVector<QPair<QString, QColor>> HillProjectionWidget::layer_definitions() const {
   return {
-      {QStringLiteral("Hill"), k_hill_color},
+      {QStringLiteral("Draw hill"), k_hill_color},
       {QStringLiteral("Entrance"), k_entrance_color},
       {QStringLiteral("Nothing"), QColor()},
   };

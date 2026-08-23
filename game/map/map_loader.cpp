@@ -826,6 +826,76 @@ void read_terrain(const QJsonArray& arr,
         float(terrain_obj.value("height").toDouble(default_feature_height));
     feature.rotation_deg = float(terrain_obj.value("rotation").toDouble(0.0));
 
+    if (feature.type == TerrainType::Hill) {
+      const QString shape_str = terrain_obj.value("shape").toString();
+      if (!shape_str.isEmpty() &&
+          !parse_hill_shape(shape_str.toStdString(), feature.shape)) {
+        qWarning() << "MapLoader: unknown hill shape" << shape_str
+                   << "- defaulting to blob";
+        feature.shape = HillShape::Blob;
+      }
+      feature.thickness = float(terrain_obj.value("thickness").toDouble(0.0));
+      feature.taper = float(terrain_obj.value("taper").toDouble(0.0));
+      feature.has_sweep = terrain_obj.contains("arc");
+      feature.sweep_degrees = float(terrain_obj.value("arc").toDouble(0.0));
+      feature.has_sweep_start = terrain_obj.contains("arc_start");
+      feature.sweep_start_degrees = float(terrain_obj.value("arc_start").toDouble(0.0));
+
+      if (terrain_obj.value("cells").isArray()) {
+        const QJsonArray cell_arr = terrain_obj.value("cells").toArray();
+        const float tile = std::max(min_tile_size, grid.tile_size);
+        const auto append_cell = [&](double cell_x, double cell_z) {
+          if (coord_sys == CoordSystem::Grid) {
+            feature.mask_cells.emplace_back(
+                float(
+                    (cell_x - (grid.width * grid_center_offset - grid_center_offset)) *
+                    tile),
+                0.0F,
+                float(
+                    (cell_z - (grid.height * grid_center_offset - grid_center_offset)) *
+                    tile));
+          } else {
+            feature.mask_cells.emplace_back(float(cell_x), 0.0F, float(cell_z));
+          }
+        };
+        for (const auto cell_val : cell_arr) {
+          const QJsonArray entry = cell_val.toArray();
+          if (entry.size() == 2) {
+            append_cell(entry.at(0).toDouble(0.0), entry.at(1).toDouble(0.0));
+          } else if (entry.size() == 3) {
+            const double row = entry.at(0).toDouble(0.0);
+            const int from = int(std::lround(entry.at(1).toDouble(0.0)));
+            const int to = int(std::lround(entry.at(2).toDouble(0.0)));
+            for (int column = std::min(from, to); column <= std::max(from, to);
+                 ++column) {
+              append_cell(double(column), row);
+            }
+          }
+        }
+      }
+
+      if (terrain_obj.value("points").isArray()) {
+        const QJsonArray point_arr = terrain_obj.value("points").toArray();
+        feature.shape_points.reserve(point_arr.size());
+        for (const auto point_val : point_arr) {
+          const QJsonObject point_obj = point_val.toObject();
+          const float point_x = float(point_obj.value("x").toDouble(0.0));
+          const float point_z = float(point_obj.value("z").toDouble(0.0));
+          if (coord_sys == CoordSystem::Grid) {
+            const float tile = std::max(min_tile_size, grid.tile_size);
+            feature.shape_points.emplace_back(
+                (point_x - (grid.width * grid_center_offset - grid_center_offset)) *
+                    tile,
+                0.0F,
+                (point_z - (grid.height * grid_center_offset - grid_center_offset)) *
+                    tile);
+          } else {
+            feature.shape_points.emplace_back(point_x, 0.0F, point_z);
+          }
+        }
+      }
+    }
+
     if (terrain_obj.contains("entrances") && terrain_obj.value("entrances").isArray()) {
       auto entrance_arr = terrain_obj.value("entrances").toArray();
       for (const auto entrance_val : entrance_arr) {
