@@ -23,16 +23,46 @@ using Engine::Core::UnitComponent;
 constexpr float k_occupancy_margin = 0.6F;
 
 struct GateRecord {
-  Engine::Core::Entity* entity{nullptr};
   GateComponent* gate{nullptr};
   float center_x{0.0F};
   float center_z{0.0F};
+  float rotation_y{0.0F};
   float occupancy_half_x{0.0F};
   float occupancy_half_z{0.0F};
   int owner_id{0};
   bool wants_open{false};
   bool occupied{false};
 };
+
+auto movement_intends_to_cross(const GateRecord& gate,
+                               const TransformComponent& transform,
+                               const Engine::Core::MovementComponent& movement)
+    -> bool {
+  if (!movement.get_has_target()) {
+    return false;
+  }
+
+  float const target_x = movement.get_has_requested_goal()
+                             ? movement.get_requested_goal_x()
+                             : movement.get_goal_x();
+  float const target_z = movement.get_has_requested_goal()
+                             ? movement.get_requested_goal_z()
+                             : movement.get_goal_y();
+  bool const spans_x = GateComponent::spans_x_axis(gate.rotation_y);
+  float const from_across = spans_x ? transform.position.z - gate.center_z
+                                    : transform.position.x - gate.center_x;
+  float const to_across = spans_x ? target_z - gate.center_z : target_x - gate.center_x;
+  if (from_across * to_across > 0.0F || std::abs(from_across - to_across) < 0.001F) {
+    return false;
+  }
+
+  float const t = from_across / (from_across - to_across);
+  float const crossing_along =
+      spans_x ? transform.position.x + (target_x - transform.position.x) * t
+              : transform.position.z + (target_z - transform.position.z) * t;
+  float const gate_along = spans_x ? gate.center_x : gate.center_z;
+  return std::abs(crossing_along - gate_along) <= GateComponent::k_passage_half_width;
+}
 
 auto derive_state(const GateComponent& gate, bool opening) -> GateComponent::State {
   if (gate.open_amount >= 1.0F) {
@@ -75,10 +105,10 @@ void GateSystem::update(Engine::Core::World* world, float delta_time) {
     const bool spans_x = GateComponent::spans_x_axis(transform->rotation.y);
     const float along_margin = spans_x ? k_occupancy_margin : 0.0F;
     const float across_margin = spans_x ? 0.0F : k_occupancy_margin;
-    gates.push_back(GateRecord{.entity = entity,
-                               .gate = gate,
+    gates.push_back(GateRecord{.gate = gate,
                                .center_x = transform->position.x,
                                .center_z = transform->position.z,
+                               .rotation_y = transform->rotation.y,
                                .occupancy_half_x = passage.half_x + along_margin,
                                .occupancy_half_z = passage.half_z + across_margin,
                                .owner_id = unit->owner_id});
@@ -111,6 +141,16 @@ void GateSystem::update(Engine::Core::World* world, float delta_time) {
       const float dz = transform->position.z - record.center_z;
       const float radius = record.gate->trigger_radius;
       if ((dx * dx) + (dz * dz) <= radius * radius) {
+        record.wants_open = true;
+      }
+
+      auto const* moving_entity = world->get_entity(entity_id);
+      auto const* movement =
+          moving_entity != nullptr
+              ? moving_entity->get_component<Engine::Core::MovementComponent>()
+              : nullptr;
+      if (movement != nullptr &&
+          movement_intends_to_cross(record, *transform, *movement)) {
         record.wants_open = true;
       }
 
@@ -171,9 +211,11 @@ void GateSystem::update(Engine::Core::World* world, float delta_time) {
 
 auto GateSystem::access() const -> Engine::Core::SystemAccess {
   using namespace Engine::Core;
-  return SystemAccess::declare(
-      Reads<TransformComponent, UnitComponent, PendingRemovalComponent>{},
-      Writes<GateComponent>{});
+  return SystemAccess::declare(Reads<TransformComponent,
+                                     UnitComponent,
+                                     MovementComponent,
+                                     PendingRemovalComponent>{},
+                               Writes<GateComponent>{});
 }
 
 } // namespace Game::Systems

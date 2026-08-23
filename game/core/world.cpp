@@ -750,6 +750,16 @@ void copy_presentation_snapshot_components(const Entity& source, Entity& destina
 void copy_render_components(const Entity& source, Entity& destination) {
   copy_authoritative_snapshot_components(source, destination);
   copy_presentation_snapshot_components(source, destination);
+
+  auto const* motion = source.get_component<MotionPresentationComponent>();
+  auto const* formation = source.get_component<FormationPresentationComponent>();
+  auto* transform = destination.get_component<TransformComponent>();
+  bool const formation_handles_squeeze =
+      formation != nullptr && formation->soldiers.size() > 1U;
+  if (transform != nullptr && motion != nullptr && motion->traversal_squeeze_active &&
+      !formation_handles_squeeze) {
+    transform->scale.x *= std::clamp(motion->traversal_lateral_scale, 0.1F, 1.0F);
+  }
 }
 
 namespace {
@@ -773,7 +783,8 @@ auto render_entity_is_stable(const Entity& entity) -> bool {
   bool const moving = (movement != nullptr &&
                        (movement->get_has_target() || movement->has_waypoints() ||
                         std::hypot(movement->get_vx(), movement->get_vz()) > 0.001F)) ||
-                      (motion != nullptr && motion->has_locomotion());
+                      (motion != nullptr &&
+                       (motion->has_locomotion() || motion->traversal_squeeze_active));
   bool const active_creature =
       creature != nullptr &&
       (creature->combat_active || creature->is_constructing || creature->is_healing ||

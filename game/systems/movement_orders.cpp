@@ -49,7 +49,6 @@ auto is_direct_path_walkable(const QVector3D& from,
 auto find_recovery_cell(const Pathfinding& pathfinder,
                         const Point& origin,
                         Pathfinding::Passability passability,
-                        float clearance_radius,
                         Point& recovery_cell) -> bool {
   for (int radius = 1; radius <= k_recovery_search_radius; ++radius) {
     bool found_candidate = false;
@@ -65,9 +64,7 @@ auto find_recovery_cell(const Pathfinding& pathfinder,
         int const check_x = origin.x + dx;
         int const check_y = origin.y + dy;
         if (!pathfinder.is_world_position_walkable(
-                pathfinder.grid_to_world({check_x, check_y}),
-                passability,
-                clearance_radius)) {
+                pathfinder.grid_to_world({check_x, check_y}), passability, 0.0F)) {
           continue;
         }
 
@@ -90,14 +87,13 @@ auto find_recovery_cell(const Pathfinding& pathfinder,
 }
 
 auto resolve_walkable_direct_target(const QVector3D& target,
-                                    Pathfinding::Passability passability,
-                                    float clearance_radius) -> QVector3D {
+                                    Pathfinding::Passability passability) -> QVector3D {
   auto* pathfinder = NavGrid::get_pathfinder();
   if (pathfinder == nullptr) {
     return target;
   }
   pathfinder->update_navigation_grid();
-  if (pathfinder->is_world_position_walkable(target, passability, clearance_radius)) {
+  if (pathfinder->is_world_position_walkable(target, passability, 0.0F)) {
     return target;
   }
 
@@ -110,8 +106,7 @@ auto resolve_walkable_direct_target(const QVector3D& target,
         }
         Point const candidate{target_grid.x + dx, target_grid.y + dz};
         QVector3D const world = pathfinder->grid_to_world(candidate);
-        if (pathfinder->is_world_position_walkable(
-                world, passability, clearance_radius)) {
+        if (pathfinder->is_world_position_walkable(world, passability, 0.0F)) {
           return world;
         }
       }
@@ -354,9 +349,8 @@ void MovementSystem::assign_navigation_target(
     if (moved_x * moved_x + moved_z * moved_z <=
             k_route_keep_goal_shift * k_route_keep_goal_shift &&
         (pathfinder == nullptr ||
-         pathfinder->is_world_position_walkable(requested_target,
-                                                passability_for(movement),
-                                                movement.get_navigation_clearance()))) {
+         pathfinder->is_world_position_walkable(
+             requested_target, passability_for(movement), 0.0F))) {
       movement.requested_goal_x = requested_target.x();
       movement.requested_goal_z = requested_target.z();
       movement.path.back() = {requested_target.x(), requested_target.z()};
@@ -369,14 +363,6 @@ void MovementSystem::assign_navigation_target(
   movement.requested_goal_z = requested_target.z();
   movement.has_requested_goal = true;
 
-  QVector3D const approach_delta =
-      requested_target -
-      QVector3D(transform.position.x, requested_target.y(), transform.position.z);
-  if (movement.structure_approach_target_id != 0 &&
-      approach_delta.lengthSquared() <= 9.0F) {
-    assign_direct_target(movement, requested_target);
-    return;
-  }
   if (pathfinder == nullptr) {
     assign_direct_target(movement, requested_target);
     return;
@@ -397,9 +383,7 @@ void MovementSystem::assign_navigation_target(
   if ((start == end && direct_clear) || (direct_clear && !portal_route)) {
     assign_direct_target(
         movement,
-        resolve_walkable_direct_target(requested_target,
-                                       passability_for(movement),
-                                       movement.get_navigation_clearance()));
+        resolve_walkable_direct_target(requested_target, passability_for(movement)));
     return;
   }
 
@@ -410,11 +394,9 @@ void MovementSystem::assign_navigation_target(
   if (!assign_path_to_movement(
           *pathfinder, path, transform, movement, include_first_waypoint)) {
     QVector3D const fallback =
-        path.empty()
-            ? resolve_walkable_direct_target(requested_target,
-                                             passability_for(movement),
-                                             movement.get_navigation_clearance())
-            : pathfinder->path_waypoint_world_position(path.back());
+        path.empty() ? resolve_walkable_direct_target(requested_target,
+                                                      passability_for(movement))
+                     : pathfinder->path_waypoint_world_position(path.back());
     assign_direct_target(movement, fallback);
   }
 }
@@ -432,11 +414,8 @@ auto MovementSystem::assign_local_recovery_move(
       NavGrid::world_to_grid(current_position.x(), current_position.z());
 
   Point recovery_cell{};
-  if (!find_recovery_cell(*pathfinder,
-                          current_grid,
-                          passability_for(*movement),
-                          movement->get_navigation_clearance(),
-                          recovery_cell)) {
+  if (!find_recovery_cell(
+          *pathfinder, current_grid, passability_for(*movement), recovery_cell)) {
 
     constexpr int k_emergency_search_radius = 64;
     auto const nearest =
@@ -666,10 +645,8 @@ void MovementSystem::issue_move_units(Engine::Core::World& world,
                                     *move.movement,
                                     should_include_resolved_start_waypoint(start));
         if (assigned) {
-          QVector3D const resolved_target =
-              resolve_walkable_direct_target(targets[i],
-                                             passability_for(*move.movement),
-                                             move.movement->get_navigation_clearance());
+          QVector3D const resolved_target = resolve_walkable_direct_target(
+              targets[i], passability_for(*move.movement));
           if (std::hypot(resolved_target.x() - corridor_exit.x(),
                          resolved_target.z() - corridor_exit.z()) > 0.01F) {
             move.movement->path.emplace_back(resolved_target.x(), resolved_target.z());

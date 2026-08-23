@@ -19,7 +19,6 @@
 #include "core/component.h"
 #include "defensive_unit_layout_service.h"
 #include "formation_combat_geometry.h"
-#include "gate_service.h"
 #include "nav_grid.h"
 #include "order_service.h"
 #include "pathfinding.h"
@@ -62,6 +61,12 @@ constexpr float k_formation_heading_speed_fraction = 0.25F;
 constexpr float k_formation_intent_min_distance = 1.0F;
 constexpr float full_translation_heading_error_degrees = 20.0F;
 constexpr float stopped_translation_heading_error_degrees = 100.0F;
+
+constexpr float k_traversal_probe_step_cells = 0.2F;
+constexpr float k_traversal_min_visual_half_width = 0.38F;
+constexpr float k_traversal_squeeze_epsilon = 0.05F;
+constexpr float k_traversal_squeeze_rate = 8.0F;
+constexpr float k_traversal_release_rate = 3.5F;
 
 auto body_turn_speed_degrees(Game::Units::SpawnType type) -> float {
   switch (type) {
@@ -166,13 +171,7 @@ auto formation_navigation_speed(const Engine::Core::Entity& entity,
          Game::Formation::ArmyFormationRuntime::move_speed_multiplier(entity);
 }
 
-auto formation_pose_allowed(const Engine::Core::Entity& entity,
-                            float center_x,
-                            float center_z,
-                            float yaw_degrees) -> bool;
-
-void apply_desired_yaw(const Engine::Core::Entity& entity,
-                       Engine::Core::TransformComponent* transform,
+void apply_desired_yaw(Engine::Core::TransformComponent* transform,
                        float delta_time,
                        float turn_speed_degrees) {
   if ((transform == nullptr) || !transform->has_desired_yaw) {
@@ -184,70 +183,18 @@ void apply_desired_yaw(const Engine::Core::Entity& entity,
   float const diff = std::fmod((target_yaw - current + 540.0F), 360.0F) - 180.0F;
   float const step = std::clamp(
       diff, -turn_speed_degrees * delta_time, turn_speed_degrees * delta_time);
-  float const candidate_yaw = current + step;
-  if (formation_pose_allowed(
-          entity, transform->position.x, transform->position.z, candidate_yaw)) {
-    transform->rotation.y = candidate_yaw;
-  }
+  transform->rotation.y = current + step;
 
   float const remaining_diff =
       std::fmod((target_yaw - transform->rotation.y + 540.0F), 360.0F) - 180.0F;
   if (std::fabs(remaining_diff) < 0.5F) {
-    if (formation_pose_allowed(
-            entity, transform->position.x, transform->position.z, target_yaw)) {
-      transform->rotation.y = target_yaw;
-      transform->has_desired_yaw = false;
-    }
+    transform->rotation.y = target_yaw;
+    transform->has_desired_yaw = false;
   }
-}
-
-auto formation_pose_allowed(const Engine::Core::Entity& entity,
-                            float center_x,
-                            float center_z,
-                            float yaw_degrees) -> bool {
-  auto const* movement = entity.get_component<Engine::Core::MovementComponent>();
-  auto* pathfinder = NavGrid::get_pathfinder();
-  if (movement == nullptr || pathfinder == nullptr ||
-      movement->get_structure_approach_target() != 0) {
-    return true;
-  }
-
-  if (movement->get_has_target()) {
-    return true;
-  }
-
-  auto const layout = FormationCombat::resolve_layout(entity);
-  if (layout.live_slots.size() <= 1U) {
-    return true;
-  }
-
-  auto const passability = movement->get_can_enter_forest()
-                               ? Pathfinding::Passability::Light
-                               : Pathfinding::Passability::Heavy;
-  float const yaw = yaw_degrees * std::numbers::pi_v<float> / 180.0F;
-  float const sin_yaw = std::sin(yaw);
-  float const cos_yaw = std::cos(yaw);
-  for (auto const& slot : layout.live_slots) {
-    QVector3D const soldier(center_x + cos_yaw * slot.local_x + sin_yaw * slot.local_z,
-                            0.0F,
-                            center_z - sin_yaw * slot.local_x + cos_yaw * slot.local_z);
-    if (!pathfinder->is_world_position_walkable(soldier, passability)) {
-      return false;
-    }
-  }
-  return true;
 }
 
 auto is_point_allowed(const QVector3D& pos,
-                      const Engine::Core::Entity& entity,
-                      Engine::Core::World* world) -> bool {
-  if (auto const* transform = entity.get_component<Engine::Core::TransformComponent>();
-      transform != nullptr &&
-      GateService::blocks_move(
-          QVector3D(transform->position.x, 0.0F, transform->position.z), pos)) {
-    return false;
-  }
-
+                      const Engine::Core::Entity& entity) -> bool {
   if (auto const* builder_prod =
           entity.get_component<Engine::Core::BuilderProductionComponent>();
       builder_prod != nullptr && builder_prod->in_progress &&
@@ -270,35 +217,9 @@ auto is_point_allowed(const QVector3D& pos,
         pos,
         movement->get_can_enter_forest() ? Pathfinding::Passability::Light
                                          : Pathfinding::Passability::Heavy,
-        movement->get_navigation_clearance());
+        0.0F);
   }
-  if (navigation_allows) {
-    auto const* transform = entity.get_component<Engine::Core::TransformComponent>();
-    return transform == nullptr ||
-           formation_pose_allowed(entity, pos.x(), pos.z(), transform->rotation.y);
-  }
-
-  auto* structure = world != nullptr && movement != nullptr &&
-                            movement->get_structure_approach_target() != 0
-                        ? world->get_entity(movement->get_structure_approach_target())
-                        : nullptr;
-  if (structure == nullptr ||
-      !structure->has_component<Engine::Core::BuildingComponent>()) {
-    return false;
-  }
-  float const facade_distance =
-      Game::Systems::Combat::structure_surface_distance(*structure, pos);
-  constexpr float k_max_final_approach_depth = 2.25F;
-  constexpr float k_contact_tolerance = 0.05F;
-  float const physical_clearance = std::max(
-      0.04F,
-      Game::Systems::Combat::structure_attack_profile(&entity).contact_clearance -
-          k_contact_tolerance);
-
-  return facade_distance >= physical_clearance &&
-         facade_distance <= k_max_final_approach_depth &&
-         !BuildingCollisionRegistry::instance().is_circle_overlapping_building(
-             pos.x(), pos.z(), physical_clearance, structure->get_id());
+  return navigation_allows;
 }
 
 } // namespace
@@ -355,22 +276,14 @@ void finalize_orientation(Engine::Core::Entity* entity,
     float const diff = std::fmod((target_yaw - current + 540.0F), 360.0F) - 180.0F;
     float const step =
         std::clamp(diff, -turn_speed * delta_time, turn_speed * delta_time);
-    float const candidate_yaw = current + step;
-    if (formation_pose_allowed(
-            *entity, transform->position.x, transform->position.z, candidate_yaw)) {
-      transform->rotation.y = candidate_yaw;
-    }
+    transform->rotation.y = current + step;
   } else if (transform->has_desired_yaw) {
     float const current = transform->rotation.y;
     float const target_yaw = transform->desired_yaw;
     float const diff = std::fmod((target_yaw - current + 540.0F), 360.0F) - 180.0F;
     float const step =
         std::clamp(diff, -turn_speed * delta_time, turn_speed * delta_time);
-    float const candidate_yaw = current + step;
-    if (formation_pose_allowed(
-            *entity, transform->position.x, transform->position.z, candidate_yaw)) {
-      transform->rotation.y = candidate_yaw;
-    }
+    transform->rotation.y = current + step;
     if (std::fabs(diff) < 0.5F && !shell_holds_its_face) {
       transform->has_desired_yaw = false;
     }
@@ -618,6 +531,114 @@ auto MovementSystem::apply_duel_footwork(Engine::Core::Entity* entity,
   return true;
 }
 
+void MovementSystem::update_traversal_presentation(
+    Engine::Core::Entity& entity,
+    const Engine::Core::TransformComponent& transform,
+    const Engine::Core::MovementComponent& movement,
+    float delta_time) {
+  auto* presentation =
+      entity.get_component<Engine::Core::MotionPresentationComponent>();
+  if (presentation == nullptr) {
+    return;
+  }
+
+  bool const traversal_in_progress =
+      movement.get_has_target() || movement.has_waypoints() ||
+      std::hypot(movement.get_vx(), movement.get_vz()) > 0.05F ||
+      presentation->traversal_squeeze_active;
+  if (!traversal_in_progress) {
+    presentation->traversal_squeeze_active = false;
+    presentation->traversal_lateral_scale = 1.0F;
+    presentation->traversal_target_lateral_scale = 1.0F;
+    presentation->traversal_available_half_width = 0.0F;
+    presentation->traversal_desired_half_width = 0.0F;
+    return;
+  }
+
+  float target_scale = 1.0F;
+  float available_half_width = 0.0F;
+  float desired_half_width = 0.0F;
+  auto* pathfinder = NavGrid::get_pathfinder();
+  if (pathfinder != nullptr) {
+    pathfinder->update_navigation_grid();
+    auto const passability = movement.get_can_enter_forest()
+                                 ? Pathfinding::Passability::Light
+                                 : Pathfinding::Passability::Heavy;
+    auto const layout = FormationCombat::resolve_layout(entity);
+    desired_half_width = FormationCombat::formation_navigation_clearance(entity);
+    float longitudinal_half_extent = layout.body_radius;
+    for (auto const& slot : layout.live_slots) {
+      longitudinal_half_extent = std::max(longitudinal_half_extent,
+                                          std::abs(slot.local_z) + layout.body_radius);
+    }
+
+    float const yaw = transform.rotation.y * std::numbers::pi_v<float> / 180.0F;
+    QVector3D const forward(std::sin(yaw), 0.0F, std::cos(yaw));
+    QVector3D const lateral(forward.z(), 0.0F, -forward.x());
+    QVector3D const center(transform.position.x, 0.0F, transform.position.z);
+    float const cell_size = std::max(0.1F, pathfinder->grid_cell_size());
+    float const ray_step = cell_size * k_traversal_probe_step_cells;
+    float const longitudinal_step = cell_size * 0.5F;
+
+    auto available_on_side = [&](const QVector3D& probe, float side) -> float {
+      float previous = 0.0F;
+      for (float distance = ray_step; distance <= desired_half_width + ray_step;
+           distance += ray_step) {
+        float const clamped_distance = std::min(distance, desired_half_width);
+        QVector3D const point = probe + lateral * (clamped_distance * side);
+        if (!pathfinder->is_world_position_walkable(point, passability)) {
+          return previous;
+        }
+        previous = clamped_distance;
+        if (clamped_distance >= desired_half_width) {
+          break;
+        }
+      }
+      return desired_half_width;
+    };
+
+    available_half_width = desired_half_width;
+    int const longitudinal_samples =
+        std::max(1,
+                 static_cast<int>(
+                     std::ceil((longitudinal_half_extent * 2.0F) / longitudinal_step)));
+    bool sampled_walkable_center = false;
+    for (int sample = 0; sample <= longitudinal_samples; ++sample) {
+      float const t =
+          static_cast<float>(sample) / static_cast<float>(longitudinal_samples);
+      float const offset =
+          -longitudinal_half_extent + t * longitudinal_half_extent * 2.0F;
+      QVector3D const probe = center + forward * offset;
+      if (!pathfinder->is_world_position_walkable(probe, passability)) {
+        continue;
+      }
+      sampled_walkable_center = true;
+      available_half_width = std::min({available_half_width,
+                                       available_on_side(probe, -1.0F),
+                                       available_on_side(probe, 1.0F)});
+    }
+
+    if (sampled_walkable_center && desired_half_width > k_traversal_squeeze_epsilon &&
+        available_half_width + k_traversal_squeeze_epsilon < desired_half_width) {
+      float const visible_half_width =
+          std::max(available_half_width, k_traversal_min_visual_half_width);
+      target_scale = std::clamp(visible_half_width / desired_half_width, 0.1F, 1.0F);
+    }
+  }
+
+  float const current = std::clamp(presentation->traversal_lateral_scale, 0.1F, 1.0F);
+  float const rate =
+      target_scale < current ? k_traversal_squeeze_rate : k_traversal_release_rate;
+  float const max_step = rate * std::max(0.0F, delta_time);
+  presentation->traversal_lateral_scale =
+      current + std::clamp(target_scale - current, -max_step, max_step);
+  presentation->traversal_target_lateral_scale = target_scale;
+  presentation->traversal_available_half_width = available_half_width;
+  presentation->traversal_desired_half_width = desired_half_width;
+  presentation->traversal_squeeze_active =
+      target_scale < 0.999F || presentation->traversal_lateral_scale < 0.999F;
+}
+
 void MovementSystem::move_unit(Engine::Core::Entity* entity,
                                Engine::Core::World* world,
                                float delta_time) {
@@ -644,8 +665,16 @@ void MovementSystem::move_unit(Engine::Core::Entity* entity,
 
   if (unit->health <= 0 ||
       entity->has_component<Engine::Core::PendingRemovalComponent>()) {
+    if (auto* presentation =
+            entity->get_component<Engine::Core::MotionPresentationComponent>()) {
+      presentation->traversal_squeeze_active = false;
+      presentation->traversal_lateral_scale = 1.0F;
+      presentation->traversal_target_lateral_scale = 1.0F;
+    }
     return;
   }
+
+  update_traversal_presentation(*entity, *transform, *movement, delta_time);
 
   if (should_skip_navigation(*entity)) {
     if (auto const* commander =
@@ -694,8 +723,7 @@ void MovementSystem::move_unit(Engine::Core::Entity* entity,
 
   if (in_hold_mode) {
     if (!entity->has_component<Engine::Core::BuildingComponent>()) {
-      apply_desired_yaw(*entity,
-                        transform,
+      apply_desired_yaw(transform,
                         delta_time,
                         formation_turn_speed_degrees(
                             *entity,
@@ -802,9 +830,8 @@ void MovementSystem::move_unit(Engine::Core::Entity* entity,
   QVector3D const final_goal(movement->goal_x, 0.0F, movement->goal_y);
 
   QVector3D const current_pos_3d(transform->position.x, 0.0F, transform->position.z);
-  bool const current_position_allowed =
-      is_point_allowed(current_pos_3d, *entity, world);
-  bool const destination_allowed = is_point_allowed(final_goal, *entity, world);
+  bool const current_position_allowed = is_point_allowed(current_pos_3d, *entity);
+  bool const destination_allowed = is_point_allowed(final_goal, *entity);
 
   auto* stamina = entity->get_component<Engine::Core::StaminaComponent>();
   const float max_speed = formation_navigation_speed(*entity, *unit, stamina);
@@ -944,8 +971,8 @@ void MovementSystem::move_unit(Engine::Core::Entity* entity,
   float const new_x = old_x + translated_vx * delta_time;
   float const new_z = old_z + translated_vz * delta_time;
 
-  auto cell_walkable = [entity, world](float wx, float wz) -> bool {
-    return is_point_allowed(QVector3D(wx, 0.0F, wz), *entity, world);
+  auto cell_walkable = [entity](float wx, float wz) -> bool {
+    return is_point_allowed(QVector3D(wx, 0.0F, wz), *entity);
   };
 
   auto const& collision = BuildingCollisionRegistry::instance();
@@ -1010,7 +1037,8 @@ auto MovementSystem::access() const -> Engine::Core::SystemAccess {
                                       TransformComponent,
                                       AttackComponent,
                                       StaminaComponent,
-                                      TerrainContextComponent>{});
+                                      TerrainContextComponent,
+                                      MotionPresentationComponent>{});
 }
 
 } // namespace Game::Systems

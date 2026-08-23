@@ -13,9 +13,9 @@
 #include "../building_collision_registry.h"
 #include "../combat_rules.h"
 #include "../formation_combat_geometry.h"
-#include "../gate_service.h"
 #include "../nav_grid.h"
 #include "../owner_registry.h"
+#include "../pathfinding.h"
 #include "structure_combat.h"
 
 namespace Game::Systems::Combat {
@@ -293,9 +293,13 @@ auto combat_radius(Engine::Core::Entity* entity) -> float {
 }
 
 auto structure_separates_positions(const QVector3D& from, const QVector3D& to) -> bool {
+  if (auto* pathfinder = Game::Systems::NavGrid::get_pathfinder()) {
+    pathfinder->update_navigation_grid();
+    return !pathfinder->is_world_segment_walkable(
+        from, to, Game::Systems::Pathfinding::Passability::Light, 0.0F);
+  }
   return Game::Systems::BuildingCollisionRegistry::instance()
-             .segment_crosses_blocking_building(from.x(), from.z(), to.x(), to.z()) ||
-         Game::Systems::GateService::blocks_line(from, to);
+      .segment_crosses_blocking_building(from.x(), from.z(), to.x(), to.z());
 }
 
 auto structure_separates_combatants(Engine::Core::Entity* attacker,
