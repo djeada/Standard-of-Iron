@@ -29,8 +29,10 @@
 namespace Engine::Core {
 
 class World;
+class CreaturePresentationComponent;
 
-void publish_creature_presentation(Entity* entity, World* world);
+auto publish_creature_presentation(Entity* entity,
+                                   World* world) -> CreaturePresentationComponent*;
 
 class World {
 public:

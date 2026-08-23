@@ -293,18 +293,6 @@ auto tower_archetype(BuildingState state) -> const RenderArchetype& {
   return k_set.for_state(state);
 }
 
-auto tower_health_bar_style(BuildingState state) -> BuildingHealthBarStyle {
-  switch (state) {
-  case BuildingState::Damaged:
-    return BuildingHealthBarStyle{0.96F, 0.085F, 2.82F, true};
-  case BuildingState::Destroyed:
-    return BuildingHealthBarStyle{0.90F, 0.08F, 1.86F, true};
-  case BuildingState::Normal:
-  default:
-    return BuildingHealthBarStyle{1.02F, 0.09F, 3.18F, true};
-  }
-}
-
 auto tower_banner_style(BuildingState state)
     -> BarracksFlagRenderer::HangingBannerStyle {
   if (state == BuildingState::Damaged) {
@@ -401,7 +389,6 @@ void register_defense_tower_renderer(Render::GL::EntityRendererRegistry& registr
       registry,
       DefenseTowerRendererConfig{.nation_slug = "carthage",
                                  .archetype = &tower_archetype,
-                                 .health_bar_style = &tower_health_bar_style,
                                  .draw_banner = &draw_tower_banner_for_team,
                                  .selection = BuildingSelectionStyle{1.6F, 1.6F},
                                  .night_brazier_deck_y = 2.24F,

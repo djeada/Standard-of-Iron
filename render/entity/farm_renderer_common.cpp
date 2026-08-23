@@ -407,7 +407,6 @@ void register_farm_renderer_variant(EntityRendererRegistry& registry,
         }
         const BuildingState state = resolve_building_state(ctx);
         submit_building_instance(out, ctx, config.archetype(state, stage));
-        draw_building_health_bar(out, ctx, config.health_bar);
         draw_building_selection_overlay(out, ctx, config.selection);
       });
 }

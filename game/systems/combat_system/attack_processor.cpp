@@ -623,10 +623,8 @@ void sync_melee_lock_target(Engine::Core::Entity* attacker,
     return;
   }
 
-  auto* attack_target = attacker->get_component<Engine::Core::AttackTargetComponent>();
-  if (attack_target == nullptr) {
-    attack_target = attacker->add_component<Engine::Core::AttackTargetComponent>();
-  }
+  auto* attack_target =
+      Engine::Core::get_or_add_component<Engine::Core::AttackTargetComponent>(attacker);
   if (attack_target != nullptr) {
     auto const* commitment =
         attacker->get_component<Engine::Core::TargetCommitmentComponent>();
@@ -1535,10 +1533,9 @@ void process_attacks(Engine::Core::World* world,
             }
           }
 
-          auto* movement = attacker->get_component<Engine::Core::MovementComponent>();
-          if (movement == nullptr) {
-            movement = attacker->add_component<Engine::Core::MovementComponent>();
-          }
+          auto* movement =
+              Engine::Core::get_or_add_component<Engine::Core::MovementComponent>(
+                  attacker);
 
           if (movement != nullptr) {
             if (target_is_building && !ranged_unit) {

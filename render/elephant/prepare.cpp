@@ -162,7 +162,7 @@ void prepare_elephant_render(const Render::GL::ElephantRendererBase& owner,
                 anim,
                 Engine::Core::get_or_add_component<
                     Render::Creature::ElephantAnimationStateComponent>(ctx.entity),
-                Render::Creature::Quadruped::mount_model_scale(ctx.entity),
+                Render::Creature::Quadruped::mount_model_scale(ctx.world, ctx.entity),
                 Animation::resolve_soldier_individuality({
                     .soldier_seed =
                         ctx.entity != nullptr

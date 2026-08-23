@@ -283,10 +283,8 @@ void process_loading_siege_unit(Engine::Core::World* world,
     return;
   }
 
-  auto* loading = siege->get_component<Engine::Core::CatapultLoadingComponent>();
-  if (loading == nullptr) {
-    loading = siege->add_component<Engine::Core::CatapultLoadingComponent>();
-  }
+  auto* loading =
+      Engine::Core::get_or_add_component<Engine::Core::CatapultLoadingComponent>(siege);
 
   auto const* attack = siege->get_component<Engine::Core::AttackComponent>();
   bool const in_melee_lock =

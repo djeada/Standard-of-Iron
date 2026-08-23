@@ -41,7 +41,6 @@ void register_barracks_renderer_variant(EntityRendererRegistry& registry,
         submit_building_instance(
             out, ctx, config.archetype(resolve_building_state(ctx), unit, white));
         config.draw_ornaments(ctx, out, unit, white, team, &cloth);
-        draw_building_health_bar(out, ctx, config.health_bar);
         draw_building_selection_overlay(out, ctx, config.selection);
       });
 }

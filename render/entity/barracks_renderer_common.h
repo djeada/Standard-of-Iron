@@ -29,7 +29,6 @@ struct BarracksRendererConfig {
   std::string_view nation_slug;
   BarracksArchetypeResolver archetype;
   BarracksOrnamentDrawer draw_ornaments;
-  BuildingHealthBarStyle health_bar;
   BuildingSelectionStyle selection;
 };
 

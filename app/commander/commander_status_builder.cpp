@@ -338,9 +338,8 @@ auto build_controlled_commander_status(const CommanderStatusInput& input)
     const Engine::Core::EntityID focus_id = prefer_lock ? locked_id : aim_id;
     const std::uint16_t focus_slot = prefer_lock ? locked_slot : aim_slot;
     auto* focus_entity = focus_id != 0 ? world->get_entity(focus_id) : nullptr;
-    auto* focus_unit = focus_entity != nullptr
-                           ? focus_entity->get_component<Engine::Core::UnitComponent>()
-                           : nullptr;
+    auto const* focus_unit =
+        focus_id != 0 ? world->try_get<Engine::Core::UnitComponent>(focus_id) : nullptr;
     if (focus_entity != nullptr && focus_unit != nullptr && focus_unit->health > 0) {
       if (auto const sample = Game::Systems::RpgCombat::resolve_soldier_target(
               *focus_entity, focus_slot)) {
@@ -357,7 +356,7 @@ auto build_controlled_commander_status(const CommanderStatusInput& input)
         const int focus_hp = focus.health;
         const int focus_max_hp = focus.max_health;
         if (auto const* focus_commander =
-                focus_entity->get_component<Engine::Core::CommanderComponent>();
+                world->try_get<Engine::Core::CommanderComponent>(focus_id);
             focus_commander != nullptr && !focus_commander->display_name.empty()) {
           focus_name = Game::Util::tr_asset(Game::Util::k_commanders_context,
                                             focus_commander->display_name);
@@ -371,20 +370,20 @@ auto build_controlled_commander_status(const CommanderStatusInput& input)
                 : 0.0;
       }
       auto const* focus_stagger =
-          focus_entity->get_component<Engine::Core::StaggerComponent>();
+          world->try_get<Engine::Core::StaggerComponent>(focus_id);
       result["focus_target_staggered"] =
           focus_stagger != nullptr && focus_stagger->remaining > 0.0F;
       auto const* focus_guard =
-          focus_entity->get_component<Engine::Core::CommanderGuardComponent>();
+          world->try_get<Engine::Core::CommanderGuardComponent>(focus_id);
       result["focus_target_guard_broken"] =
           focus_guard != nullptr && focus_guard->guard_break_remaining > 0.0F;
     }
   }
   if (locked_id != 0 && world != nullptr) {
-    auto* locked_ent = world->get_entity(locked_id);
-    if (locked_ent != nullptr) {
-      auto* locked_unit = locked_ent->get_component<Engine::Core::UnitComponent>();
-      auto* locked_cmd = locked_ent->get_component<Engine::Core::CommanderComponent>();
+    {
+      auto const* locked_unit = world->try_get<Engine::Core::UnitComponent>(locked_id);
+      auto const* locked_cmd =
+          world->try_get<Engine::Core::CommanderComponent>(locked_id);
       if (locked_unit != nullptr && locked_unit->health > 0) {
         App::World::UnitDescription locked;
         if (App::World::describe_unit(world, locked_id, locked)) {
@@ -402,12 +401,12 @@ auto build_controlled_commander_status(const CommanderStatusInput& input)
               lmax > 0 ? static_cast<double>(lhp) / static_cast<double>(lmax) : 0.0;
         }
 
-        auto* locked_stagger =
-            locked_ent->get_component<Engine::Core::StaggerComponent>();
+        auto const* locked_stagger =
+            world->try_get<Engine::Core::StaggerComponent>(locked_id);
         result["locked_target_staggered"] =
             locked_stagger != nullptr && locked_stagger->remaining > 0.0F;
-        auto* locked_guard =
-            locked_ent->get_component<Engine::Core::CommanderGuardComponent>();
+        auto const* locked_guard =
+            world->try_get<Engine::Core::CommanderGuardComponent>(locked_id);
         result["locked_target_guard_broken"] =
             locked_guard != nullptr && locked_guard->guard_break_remaining > 0.0F;
       }

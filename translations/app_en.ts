@@ -7051,32 +7051,40 @@ Builders reap it for the food that recruits civilians</translation>
 <context>
     <name>RpgFpvOverlay</name>
     <message>
-        <source>HP %1/%2</source>
-        <translation>HP %1/%2</translation>
+        <source>GUARD BROKEN</source>
+        <translation>GUARD BROKEN</translation>
     </message>
     <message>
-        <source>STM %1%</source>
-        <translation>STM %1%</translation>
+        <source>PUNISH</source>
+        <translation>PUNISH</translation>
     </message>
     <message>
         <source>FINISHER</source>
         <translation>FINISHER</translation>
     </message>
     <message>
-        <source>COMBO</source>
-        <translation>COMBO</translation>
+        <source>HP %1/%2</source>
+        <translation>HP %1/%2</translation>
     </message>
     <message>
-        <source>POSTURE</source>
-        <translation>POSTURE</translation>
+        <source>TARGET</source>
+        <translation>TARGET</translation>
     </message>
     <message>
-        <source>GUARD BROKEN</source>
-        <translation>GUARD BROKEN</translation>
+        <source>%1%</source>
+        <translation>%1%</translation>
     </message>
     <message>
-        <source>⚡ PUNISH ⚡</source>
-        <translation>⚡ PUNISH ⚡</translation>
+        <source>STAGGERED</source>
+        <translation>STAGGERED</translation>
+    </message>
+    <message>
+        <source>BOW  ·  X</source>
+        <translation>BOW  ·  X</translation>
+    </message>
+    <message>
+        <source>BLADE  ·  X</source>
+        <translation>BLADE  ·  X</translation>
     </message>
     <message>
         <source>BASH</source>
@@ -7093,14 +7101,6 @@ Builders reap it for the food that recruits civilians</translation>
     <message>
         <source>READY</source>
         <translation>READY</translation>
-    </message>
-    <message>
-        <source>BOW  ·  X</source>
-        <translation>BOW  ·  X</translation>
-    </message>
-    <message>
-        <source>BLADE  ·  X</source>
-        <translation>BLADE  ·  X</translation>
     </message>
 </context>
 <context>
