@@ -4,6 +4,7 @@
 #include <QVector3D>
 
 #include <gtest/gtest.h>
+#include <unordered_set>
 #include <vector>
 
 #include "game/core/component.h"
@@ -313,6 +314,37 @@ TEST(TemplatePrewarmRegression, WorkItemsSkipUnsupportedAttackFamiliesPerSpawn) 
   EXPECT_EQ(spearman_items, 2);
   EXPECT_EQ(spear_attack_items, 2);
   EXPECT_EQ(ranged_attack_items, 2);
+}
+
+TEST(TemplatePrewarmRegression, NeutralOwnerKeepsScratchEntityIdsSmall) {
+  constexpr int k_neutral_owner_id = -1;
+
+  const auto neutral_id =
+      Render::GL::prewarm_entity_id_for_variant(0U, k_neutral_owner_id, 0U, 0U);
+  EXPECT_GT(neutral_id, 0U);
+  EXPECT_LT(neutral_id, 1024U);
+
+  const auto deep_profile_id =
+      Render::GL::prewarm_entity_id_for_variant(63U, k_neutral_owner_id, 2U, 7U);
+  EXPECT_LT(deep_profile_id, 65536U);
+}
+
+TEST(TemplatePrewarmRegression, ScratchEntityIdsStayDistinctPerDomain) {
+  std::unordered_set<std::uint32_t> ids;
+  for (std::size_t profile_index = 0; profile_index < 8U; ++profile_index) {
+    for (int owner_id : {-1, 0, 1, 2}) {
+      for (std::uint8_t lod = 0; lod < 3U; ++lod) {
+        for (std::uint8_t variant = 0; variant < Render::GL::k_template_variant_count;
+             ++variant) {
+          const auto id = Render::GL::prewarm_entity_id_for_variant(
+              profile_index, owner_id, lod, variant);
+          EXPECT_GT(id, 0U);
+          EXPECT_LT(id, 65536U);
+          EXPECT_TRUE(ids.insert(id).second);
+        }
+      }
+    }
+  }
 }
 
 TEST(TemplatePrewarmRegression, FullLodWorkItemsNeverQueueLowerDetail) {

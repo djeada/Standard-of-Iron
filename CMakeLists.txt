@@ -764,6 +764,7 @@ add_library(soi_app ALIAS app_core)
 qt6_add_executable(standard_of_iron
     main.cpp
     ui/campaign_map_view.cpp
+    ui/commander_portrait_scenes.cpp
     ui/commander_portrait_view.cpp
     ui/gl_view.cpp
     ${SOI_ASSET_STRINGS_CPP}

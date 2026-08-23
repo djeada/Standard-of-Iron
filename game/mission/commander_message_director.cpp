@@ -91,6 +91,10 @@ void CommanderMessageDirector::configure(const MissionDefinition& mission,
       cue.speaker_name = authored.speaker;
     }
 
+    if (!cue.speaker_id.isEmpty() && !m_speaker_ids.contains(cue.speaker_id)) {
+      m_speaker_ids.push_back(cue.speaker_id);
+    }
+
     rule.cue = std::move(cue);
 
     if (authored.condition.at.has_value() && to_world) {
@@ -107,6 +111,7 @@ void CommanderMessageDirector::configure(const MissionDefinition& mission,
 
 void CommanderMessageDirector::clear() {
   unsubscribe();
+  m_speaker_ids.clear();
   m_rules.clear();
   m_pending.clear();
   m_active.reset();
