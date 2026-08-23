@@ -13,6 +13,7 @@ Item {
 
     readonly property real resolutionScale: Math.max(0.75, Math.min(2.0, height / 1080))
     readonly property real uiScale: Math.max(0.75, Math.min(4.0, root.resolutionScale * Design.A11y.uiScale))
+
     function scaled(value) {
         return Math.round(value * root.uiScale);
     }
@@ -21,10 +22,21 @@ Item {
         return Math.max(Design.Typography.minimumSize, Math.round(rung * root.resolutionScale));
     }
 
+    function shade(base, alpha) {
+        return Qt.rgba(base.r, base.g, base.b, alpha);
+    }
+
+    readonly property color ember: Design.Theme.danger
+    readonly property color bronze: Design.Theme.accent
+    readonly property color bronzeBright: Design.Theme.focus
+    readonly property color bone: Design.Theme.parchment
+    readonly property color iron: Design.Theme.backgroundDeep
+    readonly property color steel: Qt.rgba(0.63, 0.69, 0.75, 1.0)
+
     property real pulsePhase
 
     NumberAnimation on pulsePhase  {
-        running: root.visible
+        running: root.visible && Design.Motion.allowAmbientLoops
         from: 0.0
         to: 1.0
         duration: 1000
@@ -44,6 +56,21 @@ Item {
     readonly property real focalPixels: (root.height * 0.5) / Math.tan(verticalFovDegrees * Math.PI / 360.0)
 
     readonly property real bowSpreadPixels: bowStance ? Math.min(root.height * 0.24, focalPixels * Math.tan(Math.min(28.0, Number(status_value("bow_spread_degrees", 0.0))) * Math.PI / 180.0)) : 0.0
+
+    readonly property real healthRatio: Math.max(0.0, Math.min(1.0, Number(status_value("health_ratio", 1.0))))
+    readonly property real staminaRatio: Math.max(0.0, Math.min(1.0, Number(status_value("stamina_ratio", 1.0))))
+    readonly property real postureRatio: Math.max(0.0, Math.min(1.0, Number(status_value("posture_ratio", 0.0))))
+    readonly property int comboStep: Number(status_value("combo_step", 0))
+    readonly property bool finisherReady: status_value("finisher_ready", false) === true
+    readonly property bool punishActive: status_value("punish_active", false) === true
+    readonly property bool guardBroken: status_value("guard_broken", false) === true
+    readonly property bool lockedOn: status_value("focus_marker_locked", false) === true
+    readonly property bool skirmishContext: String(status_value("fight_context", "none")) === "skirmish"
+
+    readonly property real targetRatio: Math.max(0.0, Math.min(1.0, Number(status_value("focus_target_hp_ratio", 0.0))))
+    readonly property bool targetStaggered: status_value("focus_target_staggered", false) === true
+    readonly property bool targetGuardBroken: status_value("focus_target_guard_broken", false) === true
+    readonly property bool targetPunishable: targetStaggered || targetGuardBroken
 
     function status_value(key, fallback) {
         if (!status || status[key] === undefined || status[key] === null) {
@@ -75,6 +102,16 @@ Item {
         default:
             return 0;
         }
+    }
+
+    function vitality_color(ratio) {
+        if (ratio <= 0.3) {
+            return root.ember;
+        }
+        if (ratio <= 0.6) {
+            return Qt.tint(root.ember, root.shade(Design.Theme.warning, 0.35));
+        }
+        return root.ember;
     }
 
     Timer {
@@ -129,41 +166,42 @@ Item {
             gradient: Gradient {
                 GradientStop {
                     position: 0.0
-                    color: "#cc8b0000"
+                    color: root.shade(root.ember, 0.62)
                 }
                 GradientStop {
                     position: 0.35
-                    color: "#00000000"
+                    color: "transparent"
                 }
                 GradientStop {
                     position: 0.65
-                    color: "#00000000"
+                    color: "transparent"
                 }
                 GradientStop {
                     position: 1.0
-                    color: "#cc8b0000"
+                    color: root.shade(root.ember, 0.62)
                 }
             }
         }
+
         Rectangle {
             anchors.fill: parent
             rotation: 90
             gradient: Gradient {
                 GradientStop {
                     position: 0.0
-                    color: "#aa6b0000"
+                    color: root.shade(root.ember, 0.42)
                 }
                 GradientStop {
-                    position: 0.30
-                    color: "#00000000"
+                    position: 0.3
+                    color: "transparent"
                 }
                 GradientStop {
-                    position: 0.70
-                    color: "#00000000"
+                    position: 0.7
+                    color: "transparent"
                 }
                 GradientStop {
                     position: 1.0
-                    color: "#aa6b0000"
+                    color: root.shade(root.ember, 0.42)
                 }
             }
         }
@@ -188,25 +226,25 @@ Item {
             gradient: Gradient {
                 GradientStop {
                     position: 0.0
-                    color: "#60ff0000"
+                    color: root.shade(root.ember, 0.42)
                 }
                 GradientStop {
                     position: 0.45
-                    color: "#00000000"
+                    color: "transparent"
                 }
                 GradientStop {
                     position: 0.55
-                    color: "#00000000"
+                    color: "transparent"
                 }
                 GradientStop {
                     position: 1.0
-                    color: "#60ff0000"
+                    color: root.shade(root.ember, 0.42)
                 }
             }
         }
 
         SequentialAnimation on opacity  {
-            running: Design.A11y.screenEffectIntensity > 0.0 && Number(root.status_value("health_ratio", 1.0)) < 0.30 && Number(root.status_value("health_ratio", 1.0)) > 0.0
+            running: Design.A11y.screenEffectIntensity > 0.0 && root.healthRatio < 0.3 && root.healthRatio > 0.0
             loops: Animation.Infinite
             NumberAnimation {
                 from: 0.0
@@ -236,12 +274,12 @@ Item {
             radius: root.scaled(12)
             color: "transparent"
             border.width: Math.max(2, root.scaled(4))
-            border.color: "#3388ccff"
+            border.color: root.shade(root.steel, 0.24)
         }
 
         Behavior on opacity  {
             NumberAnimation {
-                duration: 120
+                duration: Design.Motion.fast
             }
         }
     }
@@ -258,8 +296,8 @@ Item {
             anchors.fill: parent
             radius: width / 2
             color: "transparent"
-            border.width: 5
-            border.color: "#ffffff"
+            border.width: Math.max(2, root.scaled(5))
+            border.color: root.bone
         }
 
         Behavior on opacity  {
@@ -274,7 +312,7 @@ Item {
         anchors.centerIn: parent
         width: root.scaled(230)
         height: width
-        property color accentColor: "#8bdcff"
+        property color accentColor: root.steel
         opacity: 0.0
         visible: opacity > 0.0
 
@@ -282,7 +320,7 @@ Item {
             anchors.fill: parent
             radius: width / 2
             color: "transparent"
-            border.width: 4
+            border.width: Math.max(2, root.scaled(4))
             border.color: combatEntryFlash.accentColor
         }
     }
@@ -290,75 +328,40 @@ Item {
     Item {
         id: combatFrame
         anchors.fill: parent
-        visible: root.status_value("focus_marker_locked", false) === true
-        opacity: visible ? (0.22 + Math.min(0.16, Number(root.status_value("combo_step", 0)) * 0.04)) : 0.0
+        visible: root.lockedOn
+        opacity: visible ? (0.55 + Math.min(0.3, root.comboStep * 0.08)) : 0.0
 
-        Rectangle {
-            anchors.left: parent.left
-            anchors.leftMargin: root.scaled(24)
-            anchors.verticalCenter: parent.verticalCenter
-            width: Math.max(2, root.scaled(4))
-            height: root.scaled(180)
-            radius: width / 2
-            color: root.status_value("finisher_ready", false) === true ? "#d6ffd36b" : "#8abfe8ff"
+        readonly property color railColor: root.finisherReady ? root.bronzeBright : root.bronze
+
+        Behavior on opacity  {
+            NumberAnimation {
+                duration: Design.Motion.normal
+            }
         }
 
-        Rectangle {
-            anchors.right: parent.right
-            anchors.rightMargin: root.scaled(24)
-            anchors.verticalCenter: parent.verticalCenter
-            width: Math.max(2, root.scaled(4))
-            height: root.scaled(180)
-            radius: width / 2
-            color: root.status_value("finisher_ready", false) === true ? "#d6ffd36b" : "#8abfe8ff"
-        }
+        Repeater {
+            model: [-1, 1]
 
-        Rectangle {
-            anchors.left: parent.left
-            anchors.leftMargin: root.scaled(24)
-            anchors.verticalCenter: parent.verticalCenter
-            anchors.verticalCenterOffset: -root.scaled(54)
-            width: root.scaled(92)
-            height: Math.max(1, root.scaled(2))
-            radius: 1
-            rotation: -10
-            color: "#88f6f3e7"
-        }
+            delegate: Rectangle {
+                required property int modelData
 
-        Rectangle {
-            anchors.left: parent.left
-            anchors.leftMargin: root.scaled(24)
-            anchors.verticalCenter: parent.verticalCenter
-            anchors.verticalCenterOffset: root.scaled(54)
-            width: root.scaled(92)
-            height: Math.max(1, root.scaled(2))
-            radius: 1
-            rotation: 10
-            color: "#88f6f3e7"
-        }
-
-        Rectangle {
-            anchors.right: parent.right
-            anchors.rightMargin: root.scaled(24)
-            anchors.verticalCenter: parent.verticalCenter
-            anchors.verticalCenterOffset: -root.scaled(54)
-            width: root.scaled(92)
-            height: Math.max(1, root.scaled(2))
-            radius: 1
-            rotation: 10
-            color: "#88f6f3e7"
-        }
-
-        Rectangle {
-            anchors.right: parent.right
-            anchors.rightMargin: root.scaled(24)
-            anchors.verticalCenter: parent.verticalCenter
-            anchors.verticalCenterOffset: root.scaled(54)
-            width: root.scaled(92)
-            height: Math.max(1, root.scaled(2))
-            radius: 1
-            rotation: -10
-            color: "#88f6f3e7"
+                anchors.left: modelData < 0 ? parent.left : undefined
+                anchors.right: modelData > 0 ? parent.right : undefined
+                anchors.top: parent.top
+                anchors.bottom: parent.bottom
+                width: root.scaled(96)
+                gradient: Gradient {
+                    orientation: Gradient.Horizontal
+                    GradientStop {
+                        position: 0.0
+                        color: modelData < 0 ? root.shade(combatFrame.railColor, 0.3) : "transparent"
+                    }
+                    GradientStop {
+                        position: 1.0
+                        color: modelData < 0 ? "transparent" : root.shade(combatFrame.railColor, 0.3)
+                    }
+                }
+            }
         }
     }
 
@@ -373,10 +376,10 @@ Item {
         Rectangle {
             anchors.centerIn: parent
             width: root.scaled(164)
-            height: root.scaled(6)
+            height: Math.max(2, root.scaled(6))
             radius: height / 2
             rotation: root.attack_sweep_rotation(root.status_value("attack_direction", 0))
-            color: "#d7ffd28a"
+            color: root.shade(root.bone, 0.82)
         }
 
         Rectangle {
@@ -385,7 +388,7 @@ Item {
             height: Math.max(1, root.scaled(2))
             radius: height / 2
             rotation: root.attack_sweep_rotation(root.status_value("attack_direction", 0)) + 90
-            color: "#99ffffff"
+            color: root.shade(root.bronzeBright, 0.6)
         }
     }
 
@@ -395,26 +398,23 @@ Item {
         opacity: 0.0
         visible: opacity > 0.0
 
-        Rectangle {
-            anchors.left: parent.left
-            anchors.leftMargin: root.scaled(72)
-            anchors.verticalCenter: parent.verticalCenter
-            width: root.scaled(180)
-            height: root.scaled(6)
-            radius: height / 2
-            rotation: -20
-            color: "#88b8fff6"
-        }
+        Repeater {
+            model: [-1, 1]
 
-        Rectangle {
-            anchors.right: parent.right
-            anchors.rightMargin: root.scaled(72)
-            anchors.verticalCenter: parent.verticalCenter
-            width: root.scaled(180)
-            height: root.scaled(6)
-            radius: height / 2
-            rotation: 20
-            color: "#88b8fff6"
+            delegate: Rectangle {
+                required property int modelData
+
+                anchors.left: modelData < 0 ? parent.left : undefined
+                anchors.right: modelData > 0 ? parent.right : undefined
+                anchors.leftMargin: root.scaled(72)
+                anchors.rightMargin: root.scaled(72)
+                anchors.verticalCenter: parent.verticalCenter
+                width: root.scaled(180)
+                height: Math.max(2, root.scaled(6))
+                radius: height / 2
+                rotation: modelData * 20
+                color: root.shade(root.steel, 0.55)
+            }
         }
     }
 
@@ -430,63 +430,60 @@ Item {
             anchors.fill: parent
             radius: width / 2
             color: "transparent"
-            border.width: 6
-            border.color: "#ff6a36"
+            border.width: Math.max(2, root.scaled(6))
+            border.color: root.ember
         }
     }
 
-    readonly property bool skirmishContext: String(status_value("fight_context", "none")) === "skirmish"
+    Repeater {
+        model: [{
+                "side": "left",
+                "name": "rpgLeftThreatPip",
+                "flag": "threat_left"
+            }, {
+                "side": "right",
+                "name": "rpgRightThreatPip",
+                "flag": "threat_right"
+            }]
 
-    Item {
-        id: leftThreatPip
-        objectName: "rpgLeftThreatPip"
-        anchors.left: parent.left
-        anchors.leftMargin: root.scaled(22)
-        anchors.verticalCenter: parent.verticalCenter
-        width: root.scaled(14)
-        height: root.scaled(46)
-        visible: root.skirmishContext && root.status_value("threat_left", false) === true
-        opacity: visible ? 0.55 + 0.35 * root.slowPulse : 0.0
+        delegate: Item {
+            required property var modelData
 
-        Canvas {
-            anchors.fill: parent
-            onPaint: {
-                var ctx = getContext("2d");
-                ctx.clearRect(0, 0, width, height);
-                ctx.beginPath();
-                ctx.moveTo(width, 0);
-                ctx.lineTo(0, height / 2);
-                ctx.lineTo(width, height);
-                ctx.closePath();
-                ctx.fillStyle = "#e08a3c";
-                ctx.fill();
-            }
-        }
-    }
+            objectName: modelData.name
+            anchors.left: modelData.side === "left" ? parent.left : undefined
+            anchors.right: modelData.side === "right" ? parent.right : undefined
+            anchors.leftMargin: root.scaled(22)
+            anchors.rightMargin: root.scaled(22)
+            anchors.verticalCenter: parent.verticalCenter
+            width: root.scaled(14)
+            height: root.scaled(46)
+            visible: root.skirmishContext && root.status_value(modelData.flag, false) === true
+            opacity: visible ? 0.55 + 0.35 * root.slowPulse : 0.0
 
-    Item {
-        id: rightThreatPip
-        objectName: "rpgRightThreatPip"
-        anchors.right: parent.right
-        anchors.rightMargin: root.scaled(22)
-        anchors.verticalCenter: parent.verticalCenter
-        width: root.scaled(14)
-        height: root.scaled(46)
-        visible: root.skirmishContext && root.status_value("threat_right", false) === true
-        opacity: visible ? 0.55 + 0.35 * root.slowPulse : 0.0
+            Canvas {
+                anchors.fill: parent
+                readonly property bool pointsRight: modelData.side === "right"
+                readonly property color pipColor: root.bronze
 
-        Canvas {
-            anchors.fill: parent
-            onPaint: {
-                var ctx = getContext("2d");
-                ctx.clearRect(0, 0, width, height);
-                ctx.beginPath();
-                ctx.moveTo(0, 0);
-                ctx.lineTo(width, height / 2);
-                ctx.lineTo(0, height);
-                ctx.closePath();
-                ctx.fillStyle = "#e08a3c";
-                ctx.fill();
+                onPipColorChanged: requestPaint()
+
+                onPaint: {
+                    var ctx = getContext("2d");
+                    ctx.clearRect(0, 0, width, height);
+                    ctx.beginPath();
+                    if (pointsRight) {
+                        ctx.moveTo(0, 0);
+                        ctx.lineTo(width, height / 2);
+                        ctx.lineTo(0, height);
+                    } else {
+                        ctx.moveTo(width, 0);
+                        ctx.lineTo(0, height / 2);
+                        ctx.lineTo(width, height);
+                    }
+                    ctx.closePath();
+                    ctx.fillStyle = pipColor;
+                    ctx.fill();
+                }
             }
         }
     }
@@ -494,28 +491,27 @@ Item {
     Item {
         id: lockBrackets
 
-        readonly property bool lockedOn: root.status_value("focus_marker_locked", false) === true
-        readonly property int armLength: root.scaled(lockedOn ? 20 : 15)
+        readonly property int armLength: root.scaled(root.lockedOn ? 20 : 15)
         readonly property int armThickness: Math.max(2, root.scaled(3))
-        readonly property color armColor: lockedOn ? "#ffe6a8" : "#cfefff"
+        readonly property color armColor: root.lockedOn ? root.bronzeBright : root.shade(root.bone, 0.8)
 
-        width: Math.max(root.scaled(38), Math.min(root.scaled(220), root.focusScreenHeight * (lockedOn ? 0.78 : 0.66)))
+        width: Math.max(root.scaled(38), Math.min(root.scaled(220), root.focusScreenHeight * (root.lockedOn ? 0.78 : 0.66)))
         height: width
         x: root.focusProjected ? root.focusScreenX - width / 2 : (parent.width - width) / 2
         y: root.focusProjected ? root.focusScreenY - height / 2 : (parent.height - height) / 2
         visible: root.focusProjected && root.status_value("focus_marker_valid", false) === true
-        opacity: visible ? (lockedOn ? 0.95 : 0.7) : 0.0
+        opacity: visible ? (root.lockedOn ? 0.95 : 0.7) : 0.0
 
         Behavior on width  {
             NumberAnimation {
-                duration: 140
+                duration: Design.Motion.fast
                 easing.type: Easing.OutQuad
             }
         }
 
         Behavior on opacity  {
             NumberAnimation {
-                duration: 120
+                duration: Design.Motion.fast
             }
         }
 
@@ -535,6 +531,8 @@ Item {
                 }]
 
             delegate: Item {
+                required property var modelData
+
                 width: lockBrackets.armLength
                 height: lockBrackets.armLength
                 anchors.left: modelData.hAnchor === "left" ? lockBrackets.left : undefined
@@ -566,20 +564,20 @@ Item {
     Item {
         id: crosshair
         objectName: "rpgCrosshair"
-        width: root.scaled(58)
-        height: root.scaled(58)
+
+        width: root.scaled(54)
+        height: width
         anchors.centerIn: parent
         opacity: root.status_value("guard_active", false) === true ? 0.4 : 0.96
 
-        property int comboStep: Number(root.status_value("combo_step", 0))
-        property bool finisherReady: root.status_value("finisher_ready", false) === true
-        property bool punishActive: root.status_value("punish_active", false) === true
-        property bool lockedOn: root.status_value("focus_marker_locked", false) === true
-        property bool targetInRange: root.status_value("aim_candidate_in_range", false) === true
-        property color crossColor: root.bowFullDraw ? "#ffe07a" : (finisherReady ? "#ffe07a" : (punishActive ? "#ff9952" : (targetInRange ? "#52f4ff" : (lockedOn ? "#bfe8ff" : "#f3efe6"))))
-        property real crossSize: finisherReady ? 1.18 : (targetInRange ? 1.12 : (comboStep >= 2 ? 1.08 : 1.0))
-
+        readonly property bool targetInRange: root.status_value("aim_candidate_in_range", false) === true
+        readonly property color crossColor: (root.bowFullDraw || root.finisherReady) ? root.bronzeBright : (root.punishActive ? root.ember : (targetInRange || root.lockedOn ? root.bronze : root.shade(root.bone, 0.9)))
+        readonly property real crossSize: root.finisherReady ? 1.16 : (targetInRange ? 1.1 : (root.comboStep >= 2 ? 1.06 : 1.0))
+        readonly property int tickThickness: Math.max(2, root.scaled(3))
+        readonly property int tickLength: root.scaled(15)
         property real tickGap: root.scaled(7) + root.bowSpreadPixels
+
+        scale: crossSize
 
         Behavior on tickGap  {
             NumberAnimation {
@@ -588,70 +586,68 @@ Item {
             }
         }
 
-        scale: crossSize
-
         Behavior on scale  {
             NumberAnimation {
-                duration: 150
+                duration: Design.Motion.fast
                 easing.type: Easing.OutBack
             }
         }
 
         Rectangle {
             anchors.centerIn: parent
-            width: root.scaled(34)
+            width: root.scaled(32)
             height: width
             radius: width / 2
-            color: "#18000000"
-            border.width: 1
-            border.color: "#30ffffff"
+            color: root.shade(root.iron, 0.18)
+            border.width: Design.Metrics.borderThin
+            border.color: root.shade(crosshair.crossColor, 0.28)
         }
 
         Rectangle {
             anchors.centerIn: parent
-            width: Math.max(3, root.scaled(7))
+            width: Math.max(3, root.scaled(6))
             height: width
             radius: width / 2
             color: crosshair.crossColor
         }
 
         Rectangle {
-            width: Math.max(2, root.scaled(2))
-            height: root.scaled(16)
+            width: crosshair.tickThickness
+            height: crosshair.tickLength
             color: crosshair.crossColor
             opacity: 0.9
-            anchors.horizontalCenter: parent.horizontalCenter
-            anchors.bottom: parent.verticalCenter
+            anchors.horizontalCenter: crosshair.horizontalCenter
+            anchors.bottom: crosshair.verticalCenter
             anchors.bottomMargin: crosshair.tickGap
         }
 
         Rectangle {
-            width: Math.max(2, root.scaled(2))
-            height: root.scaled(16)
+            width: crosshair.tickThickness
+            height: crosshair.tickLength
             color: crosshair.crossColor
             opacity: 0.9
-            anchors.horizontalCenter: parent.horizontalCenter
-            anchors.top: parent.verticalCenter
+            anchors.horizontalCenter: crosshair.horizontalCenter
+            anchors.top: crosshair.verticalCenter
             anchors.topMargin: crosshair.tickGap
         }
 
         Rectangle {
-            width: root.scaled(16)
-            height: Math.max(2, root.scaled(2))
+            width: crosshair.tickLength
+            height: crosshair.tickThickness
             color: crosshair.crossColor
             opacity: 0.9
-            anchors.verticalCenter: parent.verticalCenter
-            anchors.right: parent.horizontalCenter
+            anchors.verticalCenter: crosshair.verticalCenter
+            anchors.right: crosshair.horizontalCenter
             anchors.rightMargin: crosshair.tickGap
         }
 
         Rectangle {
-            width: root.scaled(16)
-            height: Math.max(2, root.scaled(2))
+            width: crosshair.tickLength
+            height: crosshair.tickThickness
             color: crosshair.crossColor
             opacity: 0.9
-            anchors.verticalCenter: parent.verticalCenter
-            anchors.left: parent.horizontalCenter
+            anchors.verticalCenter: crosshair.verticalCenter
+            anchors.left: crosshair.horizontalCenter
             anchors.leftMargin: crosshair.tickGap
         }
     }
@@ -667,7 +663,7 @@ Item {
         antialiasing: true
 
         readonly property real progress: root.bowDrawProgress
-        readonly property color ringColor: root.bowStrained ? "#ff7a5a" : (root.bowFullDraw ? "#ffe07a" : "#bfe8ff")
+        readonly property color ringColor: root.bowStrained ? root.ember : (root.bowFullDraw ? root.bronzeBright : root.shade(root.bone, 0.85))
 
         onProgressChanged: requestPaint()
         onRingColorChanged: requestPaint()
@@ -681,7 +677,7 @@ Item {
             var radius = width / 2 - root.scaled(4);
             var start = -Math.PI / 2;
             ctx.lineWidth = Math.max(2, root.scaled(3));
-            ctx.strokeStyle = "#4d000000";
+            ctx.strokeStyle = Qt.rgba(0, 0, 0, 0.35);
             ctx.beginPath();
             ctx.arc(cx, cy, radius, 0, 2 * Math.PI);
             ctx.stroke();
@@ -696,7 +692,7 @@ Item {
 
         Behavior on opacity  {
             NumberAnimation {
-                duration: 120
+                duration: Design.Motion.fast
             }
         }
 
@@ -706,534 +702,571 @@ Item {
             height: width
             radius: width / 2
             color: "transparent"
-            border.width: 2
-            border.color: "#ffe07a"
+            border.width: Design.Metrics.borderFocus
+            border.color: root.bronzeBright
             visible: root.bowFullDraw
             opacity: 0.35 + 0.35 * root.slowPulse
         }
     }
 
     Item {
-        id: focusPlate
-        objectName: "rpgFocusPlate"
+        id: combatCallout
+        objectName: "rpgCombatCallout"
 
-        readonly property int barWidth: root.scaled(132)
-        readonly property string targetName: String(root.status_value("focus_target_name", ""))
-        readonly property real hpRatio: Math.max(0.0, Math.min(1.0, Number(root.status_value("focus_target_hp_ratio", 0.0))))
-        readonly property bool lockedOn: root.status_value("focus_marker_locked", false) === true
-
-        width: barWidth
-        height: root.scaled(30)
-        x: Math.max(root.scaled(4), Math.min(root.width - width - root.scaled(4), root.focusScreenX - width / 2))
-        y: Math.max(root.topInset + root.scaled(4), Math.min(root.height - root.bottomInset - height, root.focusScreenY - Math.max(root.scaled(34), root.focusScreenHeight * 0.62) - height))
-        visible: root.focusProjected && Number(root.status_value("focus_target_max_hp", 0)) > 0
+        anchors.horizontalCenter: parent.horizontalCenter
+        anchors.bottom: parent.verticalCenter
+        anchors.bottomMargin: root.scaled(78)
+        width: calloutLabel.implicitWidth + root.scaled(34)
+        height: calloutLabel.implicitHeight + root.scaled(12)
+        visible: root.guardBroken || root.punishActive || root.finisherReady
         opacity: visible ? 1.0 : 0.0
+
+        readonly property color toneColor: root.guardBroken ? root.ember : (root.punishActive ? Design.Theme.warning : root.bronzeBright)
 
         Behavior on opacity  {
             NumberAnimation {
-                duration: 140
-            }
-        }
-
-        Row {
-            id: plateHeading
-            anchors.horizontalCenter: parent.horizontalCenter
-            spacing: root.scaled(4)
-
-            Rectangle {
-                anchors.verticalCenter: parent.verticalCenter
-                width: root.scaled(7)
-                height: width
-                rotation: 45
-                color: focusPlate.lockedOn ? "#ffcf6b" : "#e05a4a"
-            }
-
-            Text {
-                anchors.verticalCenter: parent.verticalCenter
-                text: focusPlate.targetName
-                color: "#f2ece0"
-                font.pixelSize: root.fontSize(Design.Typography.label)
-                font.bold: true
-                style: Text.Outline
-                styleColor: "#cc000000"
-            }
-        }
-
-        Rectangle {
-            anchors.top: plateHeading.bottom
-            anchors.topMargin: root.scaled(3)
-            anchors.horizontalCenter: parent.horizontalCenter
-            width: focusPlate.barWidth
-            height: root.scaled(5)
-            color: "#cc12100c"
-            border.width: 1
-            border.color: "#88000000"
-
-            Rectangle {
-                anchors.left: parent.left
-                anchors.verticalCenter: parent.verticalCenter
-                anchors.margins: 1
-                width: Math.max(0, (parent.width - 2) * focusPlate.hpRatio)
-                height: parent.height - 2
-                color: root.status_value("focus_target_guard_broken", false) === true ? "#ffe07a" : (root.status_value("focus_target_staggered", false) === true ? "#ffb347" : "#c0281c")
-
-                Behavior on width  {
-                    NumberAnimation {
-                        duration: 200
-                        easing.type: Easing.OutQuad
-                    }
-                }
-            }
-        }
-    }
-
-    readonly property int abilityTileSize: scaled(60)
-    readonly property int abilityRowWidth: abilityTileSize * 3 + scaled(24)
-
-    readonly property int abilityBandWidth: abilityRowWidth + scaled(28) + scaled(12)
-
-    Item {
-        id: hudBarsRow
-        objectName: "rpgHudBarsRow"
-        anchors.bottom: parent.bottom
-
-        anchors.bottomMargin: root.bottomInset + root.scaled(20)
-        anchors.horizontalCenter: parent.horizontalCenter
-
-        width: Math.max(root.scaled(180), Math.min(root.scaled(460), root.width - 2 * root.abilityBandWidth))
-        height: root.scaled(34)
-
-        RowLayout {
-            anchors.fill: parent
-            spacing: root.scaled(8)
-
-            Item {
-                Layout.fillWidth: true
-                Layout.fillHeight: true
-
-                Rectangle {
-                    anchors.fill: parent
-                    radius: 6
-                    color: "#d20a0b10"
-                    border.color: "#55cc3333"
-                    border.width: 1
-                }
-
-                Rectangle {
-                    id: healthDrain
-                    property real drainRatio: Number(root.status_value("health_ratio", 1.0))
-                    anchors.left: parent.left
-                    anchors.leftMargin: 3
-                    anchors.verticalCenter: parent.verticalCenter
-                    width: (parent.width - 6) * drainRatio
-                    height: parent.height - 6
-                    radius: 4
-                    color: "#66442222"
-
-                    Behavior on width  {
-                        NumberAnimation {
-                            duration: 600
-                            easing.type: Easing.OutQuad
-                        }
-                    }
-                }
-
-                Rectangle {
-                    id: healthFill
-                    property real hpRatio: Number(root.status_value("health_ratio", 1.0))
-                    anchors.left: parent.left
-                    anchors.leftMargin: 3
-                    anchors.verticalCenter: parent.verticalCenter
-                    width: (parent.width - 6) * hpRatio
-                    height: parent.height - 6
-                    radius: 4
-                    color: "#cc3333"
-
-                    Behavior on width  {
-                        NumberAnimation {
-                            duration: 180
-                            easing.type: Easing.OutQuad
-                        }
-                    }
-                }
-
-                Text {
-                    anchors.centerIn: parent
-                    text: qsTr("HP %1/%2").arg(Number(root.status_value("health", 0))).arg(Number(root.status_value("max_health", 100)))
-                    color: "#ffffff"
-                    font.pixelSize: root.fontSize(Design.Typography.label)
-                    font.bold: true
-                    style: Text.Outline
-                    styleColor: "#88000000"
-                }
-            }
-
-            Item {
-                Layout.fillWidth: true
-                Layout.fillHeight: true
-
-                Rectangle {
-                    anchors.fill: parent
-                    radius: 6
-                    color: "#d20a0b10"
-                    border.color: "#443a9e3a"
-                    border.width: 1
-                }
-
-                Rectangle {
-                    id: staminaDrain
-                    property real stamRatio: Number(root.status_value("stamina_ratio", 1.0))
-                    anchors.left: parent.left
-                    anchors.leftMargin: 3
-                    anchors.verticalCenter: parent.verticalCenter
-                    width: (parent.width - 6) * stamRatio
-                    height: parent.height - 6
-                    radius: 4
-                    color: "#662e8b2e"
-
-                    Behavior on width  {
-                        NumberAnimation {
-                            duration: 600
-                            easing.type: Easing.OutQuad
-                        }
-                    }
-                }
-
-                Rectangle {
-                    id: staminaFill
-                    property real stamRatio: Number(root.status_value("stamina_ratio", 1.0))
-                    anchors.left: parent.left
-                    anchors.leftMargin: 3
-                    anchors.verticalCenter: parent.verticalCenter
-                    width: (parent.width - 6) * stamRatio
-                    height: parent.height - 6
-                    radius: 4
-                    color: "#3a9e3a"
-                    opacity: stamRatio < 0.20 ? (0.45 + 0.55 * root.slowPulse) : 1.0
-
-                    Behavior on width  {
-                        NumberAnimation {
-                            duration: 140
-                            easing.type: Easing.OutQuad
-                        }
-                    }
-                }
-
-                Text {
-                    anchors.centerIn: parent
-                    text: qsTr("STM %1%").arg(Number(root.status_value("stamina_ratio", 1) * 100).toFixed(0))
-                    color: "#cff7ffff"
-                    font.pixelSize: root.fontSize(Design.Typography.label)
-                    font.bold: true
-                    style: Text.Outline
-                    styleColor: "#66000000"
-                }
-            }
-        }
-    }
-
-    Row {
-        id: comboIndicator
-        objectName: "rpgComboIndicator"
-
-        property int combo: Number(root.status_value("combo_step", 0))
-        property bool finisherReady: root.status_value("finisher_ready", false) === true
-
-        anchors.bottom: postureBar.top
-        anchors.bottomMargin: root.scaled(6)
-        anchors.horizontalCenter: parent.horizontalCenter
-        spacing: root.scaled(6)
-        visible: combo > 0
-        opacity: visible ? 1.0 : 0.0
-
-        Behavior on opacity  {
-            NumberAnimation {
-                duration: 200
-            }
-        }
-
-        Text {
-            anchors.verticalCenter: parent.verticalCenter
-            text: comboIndicator.finisherReady ? qsTr("FINISHER") : qsTr("COMBO")
-            color: comboIndicator.finisherReady ? "#ffdd00" : "#99ffffff"
-            font.pixelSize: root.fontSize(Design.Typography.caption)
-            font.bold: true
-            font.letterSpacing: 1.2
-            style: Text.Outline
-            styleColor: "#88000000"
-        }
-
-        Repeater {
-            model: 4
-
-            delegate: Rectangle {
-                readonly property bool lit: index < comboIndicator.combo
-                readonly property bool isFinisher: index === 3
-
-                anchors.verticalCenter: comboIndicator.verticalCenter
-                width: root.scaled(lit ? 16 : 11)
-                height: root.scaled(6)
-                radius: height / 2
-                color: lit ? (isFinisher ? "#ffdd00" : "#8bdcff") : "#44ffffff"
-                opacity: lit && isFinisher ? (0.55 + 0.45 * root.slowPulse) : 1.0
-
-                Behavior on width  {
-                    NumberAnimation {
-                        duration: 140
-                        easing.type: Easing.OutBack
-                    }
-                }
-
-                Behavior on color  {
-                    ColorAnimation {
-                        duration: 120
-                    }
-                }
-            }
-        }
-    }
-
-    Item {
-        id: postureBar
-        objectName: "rpgPostureBar"
-
-        anchors.bottom: hudBarsRow.top
-        anchors.bottomMargin: root.scaled(6)
-        anchors.horizontalCenter: parent.horizontalCenter
-        width: Math.min(root.scaled(216), hudBarsRow.width)
-        height: root.scaled(14)
-        visible: Number(root.status_value("posture_ratio", 0.0)) > 0.05
-        opacity: visible ? 1.0 : 0.0
-
-        Behavior on opacity  {
-            NumberAnimation {
-                duration: 200
+                duration: Design.Motion.fast
             }
         }
 
         Rectangle {
             anchors.fill: parent
-            radius: 4
-            color: "#900a0a0d"
-            border.color: "#44ffd18a"
-            border.width: 1
-        }
-
-        Rectangle {
-            property real postureRatio: Number(root.status_value("posture_ratio", 0.0))
-            anchors.left: parent.left
-            anchors.leftMargin: 2
-            anchors.verticalCenter: parent.verticalCenter
-            width: (parent.width - 4) * postureRatio
-            height: parent.height - 4
-            radius: 3
-            color: postureRatio > 0.75 ? "#ccff5533" : (postureRatio > 0.45 ? "#ccff9b2e" : "#cce7d347")
-
-            Behavior on width  {
-                NumberAnimation {
-                    duration: 120
-                }
-            }
+            radius: Design.Metrics.radiusSmall
+            color: root.shade(root.iron, 0.62)
+            border.width: Design.Metrics.borderThin
+            border.color: root.shade(combatCallout.toneColor, 0.55)
         }
 
         Text {
+            id: calloutLabel
             anchors.centerIn: parent
-            text: qsTr("POSTURE")
-            color: "#99ffffff"
-            font.pixelSize: root.fontSize(Design.Typography.caption)
-            font.bold: true
-            font.letterSpacing: 1.0
+            text: root.guardBroken ? qsTr("GUARD BROKEN") : (root.punishActive ? qsTr("PUNISH") : qsTr("FINISHER"))
+            color: combatCallout.toneColor
+            font.family: Design.Typography.family
+            font.pixelSize: root.fontSize(Design.Typography.label)
+            font.weight: Design.Typography.bold
+            font.letterSpacing: Design.Typography.trackingWide
+            style: Text.Outline
+            styleColor: root.shade(root.iron, 0.8)
         }
     }
 
     Item {
-        id: guardBreakWarning
-        anchors.centerIn: parent
-        anchors.verticalCenterOffset: -root.scaled(120)
-        visible: root.status_value("guard_broken", false) === true
-        opacity: visible ? 1.0 : 0.0
+        id: hudBand
+        objectName: "rpgHudBand"
 
-        Behavior on opacity  {
-            NumberAnimation {
-                duration: 150
-            }
-        }
-
-        Text {
-            anchors.centerIn: parent
-            text: qsTr("GUARD BROKEN")
-            color: "#ff4444"
-            font.pixelSize: root.fontSize(Design.Typography.subheading)
-            font.bold: true
-            font.letterSpacing: 2.0
-            style: Text.Outline
-            styleColor: "#cc000000"
-        }
-    }
-
-    Item {
-        id: punishIndicator
-        anchors.centerIn: parent
-        anchors.verticalCenterOffset: -root.scaled(90)
-        visible: root.status_value("punish_active", false) === true
-        opacity: visible ? 1.0 : 0.0
-
-        Behavior on opacity  {
-            NumberAnimation {
-                duration: 100
-            }
-        }
-
-        Text {
-            anchors.centerIn: parent
-            text: qsTr("\u26A1 PUNISH \u26A1")
-            color: "#ffcc00"
-            font.pixelSize: root.fontSize(Design.Typography.bodyLarge)
-            font.bold: true
-            style: Text.Outline
-            styleColor: "#88000000"
-        }
-    }
-
-    Rectangle {
-        id: weaponStanceChip
-        objectName: "rpgWeaponStanceChip"
-
-        anchors.right: abilityCooldowns.right
-        anchors.bottom: abilityCooldowns.top
-        anchors.bottomMargin: root.scaled(8)
-        width: stanceLabel.implicitWidth + root.scaled(18)
-        height: root.scaled(22)
-        radius: root.scaled(6)
-        color: "#b0140f0a"
-        border.width: 1
-        border.color: root.bowStance ? "#88d8c07a" : "#88b8c4cc"
-        visible: root.status_value("can_switch_weapon", false) === true
-
-        Text {
-            id: stanceLabel
-            anchors.centerIn: parent
-            text: root.bowStance ? qsTr("BOW  ·  X") : qsTr("BLADE  ·  X")
-            color: root.bowStance ? "#f0dcae" : "#d6e2ea"
-            font.pixelSize: root.fontSize(Design.Typography.caption)
-            font.bold: true
-            font.letterSpacing: 1.0
-        }
-    }
-
-    Row {
-        id: abilityCooldowns
-        objectName: "rpgAbilityCooldowns"
+        anchors.left: parent.left
         anchors.right: parent.right
-        anchors.rightMargin: root.scaled(28)
         anchors.bottom: parent.bottom
         anchors.bottomMargin: root.bottomInset + root.scaled(20)
-        spacing: root.scaled(12)
+        height: Math.max(vitalsPlate.height, Math.max(abilityColumn.height, targetPlate.height))
 
-        Repeater {
-            model: [{
-                    "name": qsTr("BASH"),
-                    "key": "F",
-                    "cdKey": "shield_bash_cooldown_remaining",
-                    "totalKey": "shield_bash_cooldown",
-                    "readyKey": "shield_bash_ready"
-                }, {
-                    "name": qsTr("RUSH"),
-                    "key": "1",
-                    "cdKey": "vanguard_rush_cooldown_remaining",
-                    "totalKey": "vanguard_rush_cooldown",
-                    "readyKey": "vanguard_rush_ready"
-                }, {
-                    "name": qsTr("WIND"),
-                    "key": "2",
-                    "cdKey": "second_wind_cooldown_remaining",
-                    "totalKey": "second_wind_cooldown",
-                    "readyKey": "second_wind_ready"
-                }]
+        readonly property int edgeMargin: root.scaled(24)
 
-            delegate: Item {
-                width: root.abilityTileSize
-                height: root.abilityTileSize
+        Item {
+            id: vitalsPlate
+            objectName: "rpgVitalsPlate"
 
-                property bool isReady: root.status_value(modelData.readyKey, true) === true
-                property real cdRatio: root.cooldown_ratio(modelData.cdKey, modelData.totalKey)
+            anchors.left: parent.left
+            anchors.leftMargin: hudBand.edgeMargin
+            anchors.bottom: parent.bottom
+            width: Math.min(root.scaled(330), root.width * 0.34)
+            height: vitalsColumn.implicitHeight + 2 * root.scaled(11)
 
-                Rectangle {
-                    anchors.fill: parent
-                    radius: root.scaled(12)
-                    color: parent.isReady ? "#5a1a3d22" : "#5a281312"
-                    border.width: 2
-                    border.color: parent.isReady ? "#a0ffe0a6" : "#888c6d4e"
+            Rectangle {
+                anchors.fill: parent
+                anchors.margins: -root.scaled(3)
+                radius: Design.Metrics.radiusLarge
+                color: root.shade(root.iron, 0.35)
+            }
+
+            Rectangle {
+                anchors.fill: parent
+                radius: Design.Metrics.radiusMedium
+                border.width: Design.Metrics.borderThin
+                border.color: root.shade(root.bronze, 0.75)
+                gradient: Gradient {
+                    GradientStop {
+                        position: 0.0
+                        color: root.shade(Design.Theme.panelLeather, 0.94)
+                    }
+                    GradientStop {
+                        position: 1.0
+                        color: root.shade(root.iron, 0.96)
+                    }
+                }
+            }
+
+            Rectangle {
+                anchors.fill: parent
+                anchors.margins: Math.max(2, root.scaled(3))
+                radius: Design.Metrics.radiusSmall
+                color: "transparent"
+                border.width: Design.Metrics.borderThin
+                border.color: root.shade(root.bone, 0.1)
+            }
+
+            Repeater {
+                model: [{
+                        "h": "left",
+                        "v": "top"
+                    }, {
+                        "h": "right",
+                        "v": "top"
+                    }, {
+                        "h": "left",
+                        "v": "bottom"
+                    }, {
+                        "h": "right",
+                        "v": "bottom"
+                    }]
+
+                delegate: Rectangle {
+                    required property var modelData
+
+                    width: Math.max(2, root.scaled(3))
+                    height: width
+                    radius: width / 2
+                    color: root.shade(root.bronze, 0.8)
+                    anchors.left: modelData.h === "left" ? vitalsPlate.left : undefined
+                    anchors.right: modelData.h === "right" ? vitalsPlate.right : undefined
+                    anchors.top: modelData.v === "top" ? vitalsPlate.top : undefined
+                    anchors.bottom: modelData.v === "bottom" ? vitalsPlate.bottom : undefined
+                    anchors.margins: root.scaled(6)
+                }
+            }
+
+            ColumnLayout {
+                id: vitalsColumn
+
+                anchors.left: parent.left
+                anchors.right: parent.right
+                anchors.top: parent.top
+                anchors.margins: root.scaled(11)
+                spacing: root.scaled(6)
+
+                RowLayout {
+                    Layout.fillWidth: true
+                    spacing: root.scaled(8)
+
+                    Row {
+                        id: comboIndicator
+                        objectName: "rpgComboIndicator"
+
+                        Layout.alignment: Qt.AlignVCenter
+                        spacing: root.scaled(4)
+                        opacity: root.comboStep > 0 ? 1.0 : 0.25
+
+                        Behavior on opacity  {
+                            NumberAnimation {
+                                duration: Design.Motion.normal
+                            }
+                        }
+
+                        Repeater {
+                            model: 4
+
+                            delegate: Rectangle {
+                                required property int index
+
+                                readonly property bool lit: index < root.comboStep
+                                readonly property bool isFinisher: index === 3
+
+                                anchors.verticalCenter: comboIndicator.verticalCenter
+                                width: root.scaled(7)
+                                height: width
+                                rotation: 45
+                                radius: 1
+                                color: lit ? (isFinisher ? root.bronzeBright : root.bronze) : root.shade(root.bone, 0.16)
+                                opacity: lit && isFinisher ? (0.6 + 0.4 * root.slowPulse) : 1.0
+
+                                Behavior on color  {
+                                    ColorAnimation {
+                                        duration: Design.Motion.fast
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    Text {
+                        Layout.fillWidth: true
+                        text: String(root.status_value("name", ""))
+                        color: root.shade(root.bone, 0.88)
+                        elide: Text.ElideRight
+                        font.family: Design.Typography.titleFamily
+                        font.pixelSize: root.fontSize(Design.Typography.label)
+                        font.letterSpacing: Design.Typography.trackingTitle
+                        font.capitalization: Font.AllUppercase
+                        font.hintingPreference: Design.Typography.titleHinting
+                        font.kerning: true
+                    }
+
+                    Text {
+                        Layout.alignment: Qt.AlignVCenter
+                        text: qsTr("HP %1/%2").arg(Number(root.status_value("health", 0))).arg(Number(root.status_value("max_health", 0)))
+                        color: root.shade(root.bone, 0.96)
+                        font.family: Design.Typography.family
+                        font.pixelSize: root.fontSize(Design.Typography.label)
+                        font.weight: Design.Typography.bold
+                    }
                 }
 
-                Rectangle {
-                    anchors.fill: parent
-                    anchors.margins: root.scaled(5)
-                    radius: root.scaled(9)
-                    color: "transparent"
-                    border.width: 1
-                    border.color: parent.isReady ? "#35ffffff" : "#22000000"
+                RpgMeter {
+                    objectName: "rpgHealthMeter"
+
+                    Layout.fillWidth: true
+                    Layout.preferredHeight: root.scaled(19)
+                    value: root.healthRatio
+                    ghostValue: root.healthRatio
+                    ghostDuration: Design.Motion.reducedMotion ? 0 : 620
+                    fillColor: Qt.darker(root.ember, 1.18)
+                    frameColor: root.bronze
+                    frameOpacity: 0.7
+                    segments: 4
                 }
 
-                Rectangle {
-                    anchors.fill: parent
-                    anchors.margins: root.scaled(5)
-                    radius: root.scaled(9)
-                    color: "#33000000"
-                    clip: true
-                    visible: !parent.isReady
+                RpgMeter {
+                    Layout.fillWidth: true
+                    Layout.maximumWidth: vitalsColumn.width * 0.84
+                    Layout.preferredHeight: root.scaled(10)
+                    value: root.staminaRatio
+                    fillColor: Qt.darker(Design.Theme.success, 1.35)
+                    frameColor: root.bronze
+                    frameOpacity: 0.4
+                    crest: false
+                    starved: root.staminaRatio < 0.2
+                }
+
+                Item {
+                    id: postureBar
+                    objectName: "rpgPostureBar"
+
+                    Layout.fillWidth: true
+                    Layout.maximumWidth: vitalsColumn.width * 0.66
+                    Layout.preferredHeight: root.scaled(8)
+                    opacity: root.postureRatio > 0.05 ? 1.0 : 0.0
+
+                    Behavior on opacity  {
+                        NumberAnimation {
+                            duration: Design.Motion.normal
+                        }
+                    }
+
+                    RpgMeter {
+                        anchors.fill: parent
+                        value: root.postureRatio
+                        fillColor: root.postureRatio > 0.75 ? root.ember : Design.Theme.warning
+                        frameColor: Design.Theme.warning
+                        frameOpacity: 0.35
+                        crest: false
+                        segments: 6
+                    }
+                }
+            }
+        }
+
+        Item {
+            id: targetPlate
+            objectName: "rpgTargetPlate"
+
+            readonly property int sideWidth: Math.max(vitalsPlate.width, abilityColumn.width)
+            readonly property int available: root.width - 2 * (sideWidth + hudBand.edgeMargin + root.scaled(16))
+
+            anchors.horizontalCenter: parent.horizontalCenter
+            anchors.bottom: parent.bottom
+            width: Math.max(0, Math.min(root.scaled(330), available))
+            height: targetColumn.implicitHeight + 2 * root.scaled(10)
+            visible: Number(root.status_value("focus_target_max_hp", 0)) > 0 && width >= root.scaled(150)
+            opacity: visible ? 1.0 : 0.0
+
+            Behavior on opacity  {
+                NumberAnimation {
+                    duration: Design.Motion.fast
+                }
+            }
+
+            Rectangle {
+                anchors.fill: parent
+                anchors.margins: -root.scaled(3)
+                radius: Design.Metrics.radiusLarge
+                color: root.shade(root.iron, 0.35)
+            }
+
+            Rectangle {
+                anchors.fill: parent
+                radius: Design.Metrics.radiusMedium
+                border.width: Design.Metrics.borderThin
+                border.color: root.shade(root.lockedOn ? root.bronze : root.bone, root.lockedOn ? 0.7 : 0.24)
+                gradient: Gradient {
+                    GradientStop {
+                        position: 0.0
+                        color: root.shade(Design.Theme.panelLeather, 0.9)
+                    }
+                    GradientStop {
+                        position: 1.0
+                        color: root.shade(root.iron, 0.94)
+                    }
+                }
+            }
+
+            ColumnLayout {
+                id: targetColumn
+
+                anchors.left: parent.left
+                anchors.right: parent.right
+                anchors.top: parent.top
+                anchors.margins: root.scaled(10)
+                spacing: root.scaled(5)
+
+                RowLayout {
+                    Layout.fillWidth: true
+                    spacing: root.scaled(6)
 
                     Rectangle {
-                        anchors.bottom: parent.bottom
-                        width: parent.width
-                        height: parent.height * parent.parent.cdRatio
-                        color: "#7a4a3a30"
+                        Layout.alignment: Qt.AlignVCenter
+                        Layout.preferredWidth: root.scaled(8)
+                        Layout.preferredHeight: root.scaled(8)
+                        rotation: 45
+                        radius: 1
+                        color: root.lockedOn ? root.bronzeBright : root.shade(root.bone, 0.45)
                     }
-                }
-
-                Rectangle {
-                    anchors.top: parent.top
-                    anchors.right: parent.right
-                    anchors.topMargin: root.scaled(6)
-                    anchors.rightMargin: root.scaled(6)
-                    radius: width / 2
-                    color: parent.isReady ? "#d6f8e6a0" : "#88796c58"
-                    width: root.scaled(18)
-                    height: width
 
                     Text {
-                        anchors.centerIn: parent
-                        text: modelData.key
-                        color: "#1a120b"
+                        text: qsTr("TARGET")
+                        color: root.shade(root.bone, 0.5)
+                        font.family: Design.Typography.family
                         font.pixelSize: root.fontSize(Design.Typography.caption)
-                        font.bold: true
+                        font.weight: Design.Typography.bold
+                        font.letterSpacing: Design.Typography.trackingWide
                     }
-                }
-
-                Column {
-                    id: abilityLabels
-                    anchors.centerIn: parent
-                    anchors.verticalCenterOffset: root.scaled(4)
-                    spacing: root.scaled(2)
-
-                    readonly property bool ready: root.status_value(modelData.readyKey, true) === true
 
                     Text {
-                        anchors.horizontalCenter: parent.horizontalCenter
-                        text: modelData.name
-                        color: abilityLabels.ready ? "#eeffeeee" : "#88aaaaaa"
+                        Layout.fillWidth: true
+                        text: String(root.status_value("focus_target_name", ""))
+                        color: root.shade(root.bone, 0.95)
+                        elide: Text.ElideRight
+                        horizontalAlignment: Text.AlignRight
+                        font.family: Design.Typography.titleFamily
                         font.pixelSize: root.fontSize(Design.Typography.label)
-                        font.bold: true
-                        font.letterSpacing: 0.8
+                        font.letterSpacing: Design.Typography.trackingTitle
+                        font.capitalization: Font.AllUppercase
+                        font.hintingPreference: Design.Typography.titleHinting
+                        font.kerning: true
+                    }
+                }
+
+                RowLayout {
+                    Layout.fillWidth: true
+                    spacing: root.scaled(6)
+
+                    RpgMeter {
+                        objectName: "rpgTargetMeter"
+
+                        Layout.fillWidth: true
+                        Layout.preferredHeight: root.scaled(12)
+                        value: root.targetRatio
+                        fillColor: root.targetPunishable ? root.bronzeBright : root.shade(root.bone, 0.78)
+                        frameColor: root.bone
+                        frameOpacity: 0.25
+                        crest: false
                     }
 
                     Text {
-                        anchors.horizontalCenter: parent.horizontalCenter
-                        text: abilityLabels.ready ? qsTr("READY") : Math.ceil(Number(root.status_value(modelData.cdKey, 0.0))).toString()
-                        color: abilityLabels.ready ? "#d2ffe7cb" : "#d2f5c88f"
-                        font.pixelSize: root.fontSize(Design.Typography.caption)
-                        font.bold: true
-                        font.letterSpacing: 0.7
+                        Layout.preferredWidth: root.scaled(38)
+                        text: qsTr("%1%").arg(Math.round(root.targetRatio * 100))
+                        color: root.shade(root.bone, 0.8)
+                        horizontalAlignment: Text.AlignRight
+                        font.family: Design.Typography.family
+                        font.pixelSize: root.fontSize(Design.Typography.label)
+                        font.weight: Design.Typography.bold
+                    }
+                }
+
+                Text {
+                    Layout.fillWidth: true
+                    text: root.targetGuardBroken ? qsTr("GUARD BROKEN") : qsTr("STAGGERED")
+                    color: Design.Theme.warning
+                    elide: Text.ElideRight
+                    visible: root.targetPunishable
+                    font.family: Design.Typography.family
+                    font.pixelSize: root.fontSize(Design.Typography.caption)
+                    font.weight: Design.Typography.bold
+                    font.letterSpacing: Design.Typography.trackingWide
+                }
+            }
+        }
+
+        Column {
+            id: abilityColumn
+
+            anchors.right: parent.right
+            anchors.rightMargin: hudBand.edgeMargin
+            anchors.bottom: parent.bottom
+            spacing: root.scaled(7)
+
+            readonly property int tileSize: root.scaled(70)
+
+            Rectangle {
+                id: weaponStanceChip
+                objectName: "rpgWeaponStanceChip"
+
+                anchors.right: parent.right
+                width: stanceLabel.implicitWidth + root.scaled(18)
+                height: root.scaled(22)
+                radius: Design.Metrics.radiusSmall
+                color: root.shade(root.iron, 0.9)
+                border.width: Design.Metrics.borderThin
+                border.color: root.shade(root.bronze, 0.6)
+                visible: root.status_value("can_switch_weapon", false) === true
+
+                Text {
+                    id: stanceLabel
+                    anchors.centerIn: parent
+                    text: root.bowStance ? qsTr("BOW  ·  X") : qsTr("BLADE  ·  X")
+                    color: root.shade(root.bone, 0.85)
+                    font.family: Design.Typography.family
+                    font.pixelSize: root.fontSize(Design.Typography.caption)
+                    font.weight: Design.Typography.bold
+                    font.letterSpacing: Design.Typography.trackingWide
+                }
+            }
+
+            Row {
+                id: abilityCooldowns
+                objectName: "rpgAbilityCooldowns"
+
+                anchors.right: parent.right
+                spacing: root.scaled(9)
+
+                Repeater {
+                    model: [{
+                            "name": qsTr("BASH"),
+                            "key": "F",
+                            "cdKey": "shield_bash_cooldown_remaining",
+                            "totalKey": "shield_bash_cooldown",
+                            "readyKey": "shield_bash_ready"
+                        }, {
+                            "name": qsTr("RUSH"),
+                            "key": "1",
+                            "cdKey": "vanguard_rush_cooldown_remaining",
+                            "totalKey": "vanguard_rush_cooldown",
+                            "readyKey": "vanguard_rush_ready"
+                        }, {
+                            "name": qsTr("WIND"),
+                            "key": "2",
+                            "cdKey": "second_wind_cooldown_remaining",
+                            "totalKey": "second_wind_cooldown",
+                            "readyKey": "second_wind_ready"
+                        }]
+
+                    delegate: Item {
+                        id: abilityTile
+                        required property var modelData
+
+                        readonly property bool isReady: root.status_value(abilityTile.modelData.readyKey, true) === true
+                        readonly property real cdRatio: root.cooldown_ratio(abilityTile.modelData.cdKey, abilityTile.modelData.totalKey)
+
+                        width: Math.max(abilityColumn.tileSize, tileLabels.implicitWidth + root.scaled(22))
+                        height: Math.max(abilityColumn.tileSize, tileLabels.implicitHeight + keycap.height + root.scaled(20))
+
+                        Rectangle {
+                            id: tileFace
+                            anchors.fill: parent
+                            radius: Design.Metrics.radiusMedium
+                            border.width: Design.Metrics.borderThin
+                            border.color: abilityTile.isReady ? root.shade(root.bronze, 0.95) : root.shade(root.bone, 0.24)
+                            clip: true
+                            gradient: Gradient {
+                                GradientStop {
+                                    position: 0.0
+                                    color: root.shade(Design.Theme.panelLeather, 0.94)
+                                }
+                                GradientStop {
+                                    position: 1.0
+                                    color: root.shade(root.iron, 0.96)
+                                }
+                            }
+
+                            Rectangle {
+                                anchors.left: parent.left
+                                anchors.bottom: parent.bottom
+                                width: parent.width * (1.0 - abilityTile.cdRatio)
+                                height: Math.max(2, root.scaled(4))
+                                visible: !abilityTile.isReady
+                                color: root.shade(root.bronze, 0.8)
+
+                                Behavior on width  {
+                                    NumberAnimation {
+                                        duration: Design.Motion.fast
+                                    }
+                                }
+                            }
+
+                            Behavior on border.color  {
+                                ColorAnimation {
+                                    duration: Design.Motion.normal
+                                }
+                            }
+                        }
+
+                        Rectangle {
+                            anchors.fill: parent
+                            anchors.margins: Math.max(2, root.scaled(4))
+                            radius: Design.Metrics.radiusSmall
+                            color: "transparent"
+                            border.width: Design.Metrics.borderThin
+                            border.color: abilityTile.isReady ? root.shade(root.bone, 0.16) : "transparent"
+                        }
+
+                        Rectangle {
+                            id: keycap
+                            anchors.top: parent.top
+                            anchors.right: parent.right
+                            anchors.topMargin: root.scaled(6)
+                            anchors.rightMargin: root.scaled(6)
+                            width: root.scaled(17)
+                            height: width
+                            radius: Design.Metrics.radiusSmall
+                            color: abilityTile.isReady ? root.shade(root.bronze, 0.95) : root.shade(root.bone, 0.26)
+
+                            Text {
+                                anchors.centerIn: parent
+                                text: abilityTile.modelData.key
+                                color: abilityTile.isReady ? root.iron : root.shade(root.bone, 0.6)
+                                font.family: Design.Typography.family
+                                font.pixelSize: root.fontSize(Design.Typography.caption)
+                                font.weight: Design.Typography.bold
+                            }
+                        }
+
+                        Column {
+                            id: tileLabels
+                            anchors.horizontalCenter: parent.horizontalCenter
+                            anchors.bottom: parent.bottom
+                            anchors.bottomMargin: root.scaled(9)
+                            spacing: root.scaled(2)
+
+                            Text {
+                                anchors.horizontalCenter: parent.horizontalCenter
+                                text: abilityTile.modelData.name
+                                color: abilityTile.isReady ? root.shade(root.bone, 0.96) : root.shade(root.bone, 0.62)
+                                font.family: Design.Typography.family
+                                font.pixelSize: root.fontSize(Design.Typography.label)
+                                font.weight: Design.Typography.bold
+                                font.letterSpacing: Design.Typography.trackingTitle
+                            }
+
+                            Text {
+                                anchors.horizontalCenter: parent.horizontalCenter
+                                text: abilityTile.isReady ? qsTr("READY") : Math.ceil(Number(root.status_value(abilityTile.modelData.cdKey, 0.0))).toString()
+                                color: abilityTile.isReady ? root.shade(root.bronze, 0.95) : root.shade(root.bone, 0.72)
+                                font.family: Design.Typography.family
+                                font.pixelSize: root.fontSize(Design.Typography.caption)
+                                font.weight: Design.Typography.medium
+                                font.letterSpacing: Design.Typography.trackingTitle
+                            }
+                        }
                     }
                 }
             }
@@ -1246,13 +1279,14 @@ Item {
     property bool _prevPerfectGuard: false
     property bool _prevDodge: false
     property bool _prevLockedTarget: false
+
     onStatusChanged: {
-        var hp = Number(status_value("health_ratio", 1.0));
+        var hp = root.healthRatio;
         var attacking = root.status_value("is_attacking", false) === true;
-        var guardBroken = root.status_value("guard_broken", false) === true;
+        var guardBroken = root.guardBroken;
         var perfectGuard = root.status_value("perfect_guard_active", false) === true;
         var dodgeActive = root.status_value("dodge_active", false) === true;
-        var hasLockedTarget = root.status_value("focus_marker_locked", false) === true;
+        var hasLockedTarget = root.lockedOn;
         if (_prevHealth >= 0.0 && hp < _prevHealth) {
             var damage_severity = Math.min(1.0, (_prevHealth - hp) * 3.0);
             damageVignette.opacity = damage_severity * 0.8 * Design.A11y.screenEffectIntensity;
@@ -1263,7 +1297,7 @@ Item {
             attackSweepDecay.restart();
         }
         if (perfectGuard && !_prevPerfectGuard) {
-            combatEntryFlash.accentColor = "#bce7ff";
+            combatEntryFlash.accentColor = root.bone;
             combatEntryFlash.opacity = 0.24;
             combatEntryDecay.restart();
         }
@@ -1276,7 +1310,7 @@ Item {
             dodgeTrailDecay.restart();
         }
         if (hasLockedTarget && !_prevLockedTarget) {
-            combatEntryFlash.accentColor = "#8ad6ff";
+            combatEntryFlash.accentColor = root.bronze;
             combatEntryFlash.opacity = 0.14;
             combatEntryDecay.restart();
         }

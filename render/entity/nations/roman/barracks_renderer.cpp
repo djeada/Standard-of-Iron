@@ -784,8 +784,6 @@ void register_barracks_renderer(Render::GL::EntityRendererRegistry& registry) {
       BarracksRendererConfig{.nation_slug = "roman",
                              .archetype = &barracks_archetype,
                              .draw_ornaments = &draw_barracks_ornaments,
-                             .health_bar =
-                                 BuildingHealthBarStyle{1.4F, 0.10F, 2.75F, true},
                              .selection = BuildingSelectionStyle{2.6F, 2.2F}});
 }
 

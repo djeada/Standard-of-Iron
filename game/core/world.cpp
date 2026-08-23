@@ -410,15 +410,16 @@ auto builder_work_job(std::string_view product_type) -> std::uint8_t {
   return static_cast<std::uint8_t>(HumanoidWorkJob::Build);
 }
 
-void publish_creature_presentation_entity(Entity* entity, World* world) {
+auto publish_creature_presentation_entity(Entity* entity, World* world)
+    -> CreaturePresentationComponent* {
   if (entity == nullptr) {
-    return;
+    return nullptr;
   }
   auto const* unit = entity->get_component<UnitComponent>();
 
   auto* presentation = get_or_add_component<CreaturePresentationComponent>(entity);
   if (presentation == nullptr) {
-    return;
+    return nullptr;
   }
   CreaturePresentationComponent next;
   next.snapshot_valid = true;
@@ -676,6 +677,7 @@ void publish_creature_presentation_entity(Entity* entity, World* world) {
     ++next.revision;
   }
   *presentation = next;
+  return presentation;
 }
 
 void publish_creature_presentation_frame(World& world) {
@@ -904,8 +906,9 @@ auto render_entity_signature(const Entity& entity) -> std::uint64_t {
 
 } // namespace
 
-void publish_creature_presentation(Entity* entity, World* world) {
-  publish_creature_presentation_entity(entity, world);
+auto publish_creature_presentation(Entity* entity,
+                                   World* world) -> CreaturePresentationComponent* {
+  return publish_creature_presentation_entity(entity, world);
 }
 
 auto World::HandleTable::bind(EntityID entity_id, Registry* registry) -> Entity* {

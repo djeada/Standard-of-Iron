@@ -341,7 +341,6 @@ void register_home_renderer(Render::GL::EntityRendererRegistry& registry) {
       HomeRendererConfig{.nation_slug = "carthage",
                          .archetype = &home_archetype,
                          .palette_slots = &home_palette_slots,
-                         .health_bar = BuildingHealthBarStyle{1.0F, 0.08F, 1.5F},
                          .selection = BuildingSelectionStyle{2.1F, 2.1F}});
 }
 

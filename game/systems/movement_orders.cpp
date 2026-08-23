@@ -238,10 +238,8 @@ auto prepare_move(Engine::Core::World& world,
   if (transform == nullptr) {
     return {};
   }
-  auto* movement = entity->get_component<Engine::Core::MovementComponent>();
-  if (movement == nullptr) {
-    movement = entity->add_component<Engine::Core::MovementComponent>();
-  }
+  auto* movement =
+      Engine::Core::get_or_add_component<Engine::Core::MovementComponent>(entity);
   if (movement == nullptr) {
     return {};
   }

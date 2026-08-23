@@ -23,7 +23,6 @@ using FarmArchetypeResolver = const RenderArchetype& (*)(BuildingState, int stag
 struct FarmRendererConfig {
   std::string_view nation_slug;
   FarmArchetypeResolver archetype;
-  BuildingHealthBarStyle health_bar;
   BuildingSelectionStyle selection;
 };
 

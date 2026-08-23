@@ -77,7 +77,6 @@ void register_defense_tower_renderer_variant(EntityRendererRegistry& registry,
         submit_building_instance(out, ctx, config.archetype(state));
         config.draw_banner(ctx, out, team, state);
         draw_night_braziers(ctx, out, config, state);
-        draw_building_health_bar(out, ctx, config.health_bar_style(state));
         draw_building_selection_overlay(out, ctx, config.selection);
       });
 }

@@ -202,10 +202,9 @@ void process_mounted_charge_intents(Engine::Core::World* world, float delta_time
       continue;
     }
 
-    auto* charge = entity->get_component<Engine::Core::MountedChargeComponent>();
-    if (charge == nullptr) {
-      charge = entity->add_component<Engine::Core::MountedChargeComponent>();
-    }
+    auto* charge =
+        Engine::Core::get_or_add_component<Engine::Core::MountedChargeComponent>(
+            entity);
     if (charge == nullptr) {
       continue;
     }

@@ -330,10 +330,8 @@ void CommandService::attack_target(Engine::Core::World& world,
 
     OrderService::prepare_for_attack(e);
 
-    auto* attack_target = e->get_component<Engine::Core::AttackTargetComponent>();
-    if (attack_target == nullptr) {
-      attack_target = e->add_component<Engine::Core::AttackTargetComponent>();
-    }
+    auto* attack_target =
+        Engine::Core::get_or_add_component<Engine::Core::AttackTargetComponent>(e);
     if (attack_target == nullptr) {
       continue;
     }

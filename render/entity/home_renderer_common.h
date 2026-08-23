@@ -19,7 +19,6 @@ struct HomeRendererConfig {
   std::string_view nation_slug;
   HomeArchetypeResolver archetype;
   HomePaletteSlotsResolver palette_slots;
-  BuildingHealthBarStyle health_bar;
   BuildingSelectionStyle selection;
 };
 

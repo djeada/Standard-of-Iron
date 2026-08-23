@@ -32,6 +32,10 @@ class World;
 using EntityID = std::uint64_t;
 } // namespace Engine::Core
 
+namespace Game::Map {
+class VisibilityService;
+} // namespace Game::Map
+
 namespace Game::Systems {
 class CameraService;
 class PickingService;
@@ -340,6 +344,7 @@ private:
   void reconfigure_terrain_from_state();
   void apply_initial_visibility();
   void update_fog_of_war(float dt);
+  auto visibility_service() -> Game::Map::VisibilityService&;
   auto spawn_single_building(int owner_id,
                              Game::Systems::NationID nation_id,
                              Game::Units::SpawnType building_type,
@@ -406,6 +411,7 @@ private:
   std::unique_ptr<Render::GL::MapBoundaryFogRenderer> m_boundary_fog;
   std::unique_ptr<Render::GL::AmbientFogRenderer> m_ambient_fog;
   std::unique_ptr<Render::GL::RainRenderer> m_rain;
+  Game::Map::VisibilityService* m_visibility_service{nullptr};
   std::unique_ptr<Game::Systems::CameraService> m_camera_service;
   std::unique_ptr<Game::Systems::PickingService> m_picking_service;
   std::unique_ptr<CommanderControlController> m_rpg_commander_controller;

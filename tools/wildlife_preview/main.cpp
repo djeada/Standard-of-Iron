@@ -17,6 +17,7 @@
 #include <vector>
 
 #include "game/session/session_context.h"
+#include "render/creature/bake/creature_bake_recipe.h"
 #include "render/creature/pipeline/creature_prepared_state.h"
 #include "render/creature/schema/creature_runtime_manifest.h"
 #include "render/rigged_mesh_bake.h"
@@ -182,7 +183,7 @@ auto compose(const std::vector<QImage>& tiles,
   return sheet;
 }
 
-auto render_clip(const Render::Creature::SpeciesManifest& manifest,
+auto render_clip(const Render::Creature::CreatureBakeRecipe& recipe,
                  std::span<const QVector3D> role_colors,
                  std::size_t clip_index,
                  int samples,
@@ -190,8 +191,8 @@ auto render_clip(const Render::Creature::SpeciesManifest& manifest,
                  const RasterSettings& settings,
                  std::vector<QImage>& out_tiles,
                  std::vector<std::string>& out_labels) -> bool {
-  auto const& spec = manifest.creature_spec();
-  auto const bind = manifest.bind_palette();
+  auto const& spec = recipe.runtime->creature_spec();
+  auto const bind = recipe.runtime->bind_palette();
   BakedRiggedMeshCpu const baked =
       Render::Creature::bake_rigged_mesh_cpu({&spec.lod_full, bind});
   if (baked.vertices.empty()) {
@@ -199,7 +200,7 @@ auto render_clip(const Render::Creature::SpeciesManifest& manifest,
     return false;
   }
 
-  auto const& desc = manifest.clips[clip_index];
+  auto const& desc = recipe.clips[clip_index];
   std::uint32_t const frame_count = std::max<std::uint32_t>(desc.frame_count, 1U);
 
   Bounds clip_bounds;
@@ -210,7 +211,7 @@ auto render_clip(const Render::Creature::SpeciesManifest& manifest,
         (static_cast<float>(sample) / static_cast<float>(samples)) *
         static_cast<float>(frame_count));
     std::vector<QMatrix4x4> palette;
-    manifest.bake_clip_frame(
+    recipe.bake_clip_frame(
         clip_index, std::min(frame_index, frame_count - 1U), palette, nullptr);
     if (palette.size() < bind.size()) {
       std::cerr << "clip frame produced a short palette\n";
@@ -256,8 +257,8 @@ auto main(int argc, char** argv) -> int {
     return 1;
   }
 
-  auto const& manifest = species == "wolf" ? Render::Wildlife::wolf_runtime_manifest()
-                                           : Render::Wildlife::sheep_runtime_manifest();
+  auto const& recipe = species == "wolf" ? Render::Wildlife::wolf_bake_recipe()
+                                         : Render::Wildlife::sheep_bake_recipe();
   auto const colors = species == "wolf" ? wolf_role_colors() : sheep_role_colors();
 
   ViewSpec view{"quarter", QVector3D(0.85F, 0.42F, 0.75F)};
@@ -276,12 +277,12 @@ auto main(int argc, char** argv) -> int {
 
   std::vector<QImage> tiles;
   std::vector<std::string> labels;
-  for (std::size_t index = 0; index < manifest.clips.size(); ++index) {
-    std::string const name(manifest.clips[index].name);
+  for (std::size_t index = 0; index < recipe.clips.size(); ++index) {
+    std::string const name(recipe.clips[index].name);
     if (!wanted_clip.empty() && name != wanted_clip) {
       continue;
     }
-    if (!render_clip(manifest, colors, index, samples, view, settings, tiles, labels)) {
+    if (!render_clip(recipe, colors, index, samples, view, settings, tiles, labels)) {
       return 1;
     }
   }
