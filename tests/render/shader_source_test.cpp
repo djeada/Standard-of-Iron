@@ -686,7 +686,7 @@ TEST(ShaderSource, TerrainGroundOccludesHollowsFromTheHeightField) {
             std::string::npos);
   EXPECT_NE(flat.find("float terrain_cavity = 1.0 - sheltered_ground;"),
             std::string::npos);
-  EXPECT_NE(flat.find("ambient_occlusion *= mix(1.0, sheltered_ground"),
+  EXPECT_NE(flat.find("ambient_occlusion *= mix(1.0, max(sheltered_ground, 0.38)"),
             std::string::npos);
 
   EXPECT_NE(flat.find("terrain_cavity * 0.20 - slope * 0.24"), std::string::npos);

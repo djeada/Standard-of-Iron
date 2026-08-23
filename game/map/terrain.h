@@ -155,8 +155,8 @@ terrainTypeFromString(const std::string& str) -> std::optional<TerrainType> {
 
 struct BiomeSettings {
   GroundType ground_type = GroundType::ForestMud;
-  QVector3D grass_primary{0.30F, 0.60F, 0.28F};
-  QVector3D grass_secondary{0.44F, 0.70F, 0.32F};
+  QVector3D grass_primary{0.27F, 0.52F, 0.25F};
+  QVector3D grass_secondary{0.38F, 0.61F, 0.29F};
   QVector3D grass_dry{0.72F, 0.66F, 0.48F};
   QVector3D soil_color{0.28F, 0.24F, 0.18F};
   QVector3D rock_low{0.48F, 0.46F, 0.44F};
@@ -204,8 +204,8 @@ struct BiomeSettings {
 
 struct TerrainSurfaceProfile {
   GroundType ground_type = GroundType::ForestMud;
-  QVector3D grass_primary{0.30F, 0.60F, 0.28F};
-  QVector3D grass_secondary{0.44F, 0.70F, 0.32F};
+  QVector3D grass_primary{0.27F, 0.52F, 0.25F};
+  QVector3D grass_secondary{0.38F, 0.61F, 0.29F};
   QVector3D grass_dry{0.72F, 0.66F, 0.48F};
   QVector3D soil_color{0.28F, 0.24F, 0.18F};
   QVector3D rock_low{0.48F, 0.46F, 0.44F};
@@ -228,8 +228,8 @@ struct TerrainSurfaceProfile {
 
 struct TerrainScatterProfile {
   GroundType ground_type = GroundType::ForestMud;
-  QVector3D grass_primary{0.30F, 0.60F, 0.28F};
-  QVector3D grass_secondary{0.44F, 0.70F, 0.32F};
+  QVector3D grass_primary{0.27F, 0.52F, 0.25F};
+  QVector3D grass_secondary{0.38F, 0.61F, 0.29F};
   QVector3D grass_dry{0.72F, 0.66F, 0.48F};
   QVector3D soil_color{0.28F, 0.24F, 0.18F};
   QVector3D rock_low{0.48F, 0.46F, 0.44F};
@@ -427,8 +427,8 @@ inline void apply_ground_type_defaults(BiomeSettings& settings,
   switch (ground_type) {
   case GroundType::ForestMud:
 
-    settings.grass_primary = QVector3D(0.28F, 0.58F, 0.26F);
-    settings.grass_secondary = QVector3D(0.40F, 0.68F, 0.30F);
+    settings.grass_primary = QVector3D(0.27F, 0.52F, 0.25F);
+    settings.grass_secondary = QVector3D(0.38F, 0.61F, 0.29F);
     settings.grass_dry = QVector3D(0.76F, 0.70F, 0.48F);
     settings.soil_color = QVector3D(0.28F, 0.24F, 0.18F);
     settings.rock_low = QVector3D(0.48F, 0.46F, 0.44F);
@@ -595,8 +595,8 @@ inline void apply_ground_type_defaults(BiomeSettings& settings,
 
   case GroundType::SoilFertile:
 
-    settings.grass_primary = QVector3D(0.24F, 0.56F, 0.22F);
-    settings.grass_secondary = QVector3D(0.33F, 0.65F, 0.29F);
+    settings.grass_primary = QVector3D(0.24F, 0.50F, 0.22F);
+    settings.grass_secondary = QVector3D(0.32F, 0.58F, 0.28F);
     settings.grass_dry = QVector3D(0.52F, 0.48F, 0.32F);
     settings.soil_color = QVector3D(0.20F, 0.16F, 0.12F);
     settings.rock_low = QVector3D(0.38F, 0.36F, 0.34F);

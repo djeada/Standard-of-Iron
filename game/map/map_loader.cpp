@@ -129,17 +129,16 @@ auto read_vector3(const QJsonValue& value, const QVector3D& fallback) -> QVector
 
 void read_biome(const QJsonObject& obj, BiomeSettings& out) {
 
+  GroundType parsed_ground_type = GroundType::ForestMud;
   if (obj.contains(GROUND_TYPE)) {
     const QString ground_type_str = obj.value(GROUND_TYPE).toString();
-    GroundType parsed_ground_type;
-    if (try_parse_ground_type(ground_type_str, parsed_ground_type)) {
-      apply_ground_type_defaults(out, parsed_ground_type);
-    } else {
+    if (!try_parse_ground_type(ground_type_str, parsed_ground_type)) {
       qWarning() << "MapLoader: unknown ground type" << ground_type_str
                  << "- using default (forest_mud)";
-      apply_ground_type_defaults(out, GroundType::ForestMud);
+      parsed_ground_type = GroundType::ForestMud;
     }
   }
+  apply_ground_type_defaults(out, parsed_ground_type);
 
   if (obj.contains(SEED)) {
     out.seed =
