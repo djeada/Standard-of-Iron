@@ -39,9 +39,10 @@ QtObject {
     readonly property int regular: Font.Normal
     readonly property int medium: Font.DemiBold
     readonly property int bold: Font.Bold
+    readonly property int titleHinting: Font.PreferVerticalHinting
 
     readonly property real trackingWide: 1.5
-    readonly property real trackingTitle: 0.7
-    readonly property real trackingHero: 1.2
+    readonly property real trackingTitle: 0.6
+    readonly property real trackingHero: 1.0
     readonly property real trackingNormal: 0.0
 }

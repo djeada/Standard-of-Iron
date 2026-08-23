@@ -228,6 +228,8 @@ FocusScope {
                             font.capitalization: Font.AllUppercase
                             font.pixelSize: Design.Typography.title
                             font.weight: Design.Typography.bold
+                            font.hintingPreference: Design.Typography.titleHinting
+                            font.kerning: true
                             font.letterSpacing: Design.Typography.trackingTitle
                             elide: Text.ElideRight
                         }
@@ -346,6 +348,8 @@ FocusScope {
                                             font.family: Design.Typography.titleFamily
                                             font.pixelSize: Design.Typography.heading
                                             font.weight: Design.Typography.bold
+                                            font.hintingPreference: Design.Typography.titleHinting
+                                            font.kerning: true
                                             fontSizeMode: Text.HorizontalFit
                                             minimumPixelSize: Design.Typography.minimumSize
                                             elide: Text.ElideRight
@@ -622,6 +626,8 @@ FocusScope {
                                         font.family: Design.Typography.titleFamily
                                         font.pixelSize: Design.Typography.subheading
                                         font.weight: Design.Typography.bold
+                                        font.hintingPreference: Design.Typography.titleHinting
+                                        font.kerning: true
                                         horizontalAlignment: Text.AlignRight
                                         fontSizeMode: Text.HorizontalFit
                                         minimumPixelSize: Design.Typography.minimumSize

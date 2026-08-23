@@ -851,8 +851,7 @@ if(QT_VERSION_MAJOR EQUAL 6)
             ui/qml/ProfilingOverlay.qml
             ui/qml/CommanderInputLayer.qml
             ui/qml/RtsInputLayer.qml
-            ui/qml/CursorManager.qml
-            ui/qml/ContextIntentPreview.qml
+            ui/qml/CursorLayer.qml
             ui/qml/PlayerFeedbackLayer.qml
             ui/qml/LoadScreen.qml
         RESOURCES

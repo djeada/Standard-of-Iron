@@ -176,6 +176,7 @@ struct HumanoidUnitAnimationRuntime {
   bool turn_smoothing_active{false};
   float turn_smoothing_cap{2.5F};
   bool turn_smoothing_travel_yaw{true};
+  bool turn_smoothing_stagger{true};
 
   bool unit_is_archer{false};
   std::uint32_t ctx_entity_id{0U};
@@ -641,6 +642,7 @@ auto resolve_unit_animation_runtime(const HumanoidUnitSnapshot& s,
   bool turn_smoothing_active = false;
   float turn_smoothing_cap = 2.5F;
   bool turn_smoothing_travel_yaw = true;
+  bool turn_smoothing_stagger = true;
   if (layout_cache_comp != nullptr && allow_animation_persistence &&
       transform_comp != nullptr && !ctx.force_single_soldier && !has_entity_death &&
       total_layout_count > 1) {
@@ -677,6 +679,7 @@ auto resolve_unit_animation_runtime(const HumanoidUnitSnapshot& s,
     if (combat_active) {
       turn_smoothing_cap *= 2.0F;
       turn_smoothing_travel_yaw = false;
+      turn_smoothing_stagger = false;
     }
   }
   bool const unit_is_archer =
@@ -711,6 +714,7 @@ auto resolve_unit_animation_runtime(const HumanoidUnitSnapshot& s,
   result.turn_smoothing_active = turn_smoothing_active;
   result.turn_smoothing_cap = turn_smoothing_cap;
   result.turn_smoothing_travel_yaw = turn_smoothing_travel_yaw;
+  result.turn_smoothing_stagger = turn_smoothing_stagger;
   result.unit_is_archer = unit_is_archer;
   result.ctx_entity_id = ctx_entity_id;
   result.unit_origin = unit_origin;
@@ -779,6 +783,7 @@ void append_prepared_soldier(const HumanoidUnitSnapshot& s,
   const bool turn_smoothing_active = u.turn_smoothing_active;
   const float turn_smoothing_cap = u.turn_smoothing_cap;
   const bool turn_smoothing_travel_yaw = u.turn_smoothing_travel_yaw;
+  const bool turn_smoothing_stagger = u.turn_smoothing_stagger;
   const bool unit_is_archer = u.unit_is_archer;
   const std::uint32_t ctx_entity_id = u.ctx_entity_id;
   const bool unit_fog_visible = u.unit_fog_visible;
@@ -911,8 +916,8 @@ void append_prepared_soldier(const HumanoidUnitSnapshot& s,
       static_cast<std::size_t>(idx) < layout_cache_comp->turn_states.size()) {
     turn_slot_world = unit_base.map(QVector3D(offset_x, 0.0F, offset_z));
 
-    float const cap_jitter =
-        0.97F + 0.06F * static_cast<float>(inst_seed % 97U) / 96.0F;
+    auto const turn_variation = soldier_turn_variation(
+        inst_seed, static_cast<int>(layout.row_index), rows, is_mounted_spawn);
     SoldierTurnSmoothingInputs smoothing_inputs{};
     smoothing_inputs.target_x = turn_slot_world.x();
     smoothing_inputs.target_z = turn_slot_world.z();
@@ -921,9 +926,12 @@ void append_prepared_soldier(const HumanoidUnitSnapshot& s,
     smoothing_inputs.formation_center_x = transform_comp->position.x;
     smoothing_inputs.formation_center_z = transform_comp->position.z;
     smoothing_inputs.dt = turn_smoothing_dt;
-    smoothing_inputs.max_speed = turn_smoothing_cap * cap_jitter;
+    smoothing_inputs.max_speed =
+        turn_smoothing_cap * turn_variation.catch_up_speed_scale;
     smoothing_inputs.turn_rate_degrees =
-        (is_mounted_spawn ? 150.0F : 300.0F) * cap_jitter;
+        (is_mounted_spawn ? 150.0F : 300.0F) * turn_variation.turn_rate_scale;
+    smoothing_inputs.response_delay_seconds =
+        turn_smoothing_stagger ? turn_variation.response_delay_seconds : 0.0F;
     smoothing_inputs.allow_travel_yaw = turn_smoothing_travel_yaw;
 
     smoothing_inputs.frame_index = frame_index + 1U;

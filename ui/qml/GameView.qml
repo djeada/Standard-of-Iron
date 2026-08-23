@@ -19,24 +19,18 @@ Item {
     readonly property bool camera_pan_active: renderArea.key_pan_count > 0 || renderArea.mouse_pan_active
 
     onConstruction_preview_activeChanged: {
-        if (constructionCursor)
-            constructionCursor.requestPaint();
-        if (collectCursorOverlay)
-            collectCursorOverlay.requestPaint();
+        if (cursorLayer)
+            cursorLayer.refresh_construction_glyphs();
     }
 
     onConstruction_preview_validChanged: {
-        if (constructionCursor)
-            constructionCursor.requestPaint();
-        if (collectCursorOverlay)
-            collectCursorOverlay.requestPaint();
+        if (cursorLayer)
+            cursorLayer.refresh_construction_glyphs();
     }
 
     onIs_placing_constructionChanged: {
-        if (constructionCursor)
-            constructionCursor.requestPaint();
-        if (collectCursorOverlay)
-            collectCursorOverlay.requestPaint();
+        if (cursorLayer)
+            cursorLayer.refresh_construction_glyphs();
     }
 
     signal map_clicked(real x, real y)
@@ -462,15 +456,14 @@ Item {
             hoverEnabled: true
             propagateComposedEvents: true
             preventStealing: true
-            cursorShape: game_view.is_rally_placement() ? Qt.CrossCursor : (game_view.cursor_mode !== "normal" ? Qt.BlankCursor : Qt.ArrowCursor)
+            cursorShape: cursorLayer.replacesPointer ? Qt.BlankCursor : Qt.ArrowCursor
             enabled: game_view.visible && typeof game !== 'undefined' && (game.commander.mode_state !== "active" || game_view.is_rally_placement())
             onEntered: {
-                contextIntentPreview.tracking = true;
                 if (typeof game !== 'undefined' && game.orders.set_hover_at_screen)
                     game.orders.set_hover_at_screen(0, 0);
             }
             onExited: {
-                contextIntentPreview.tracking = false;
+                cursorLayer.clear_order_feedback();
                 if (typeof game !== 'undefined' && game.orders.set_hover_at_screen)
                     game.orders.set_hover_at_screen(-1, -1);
             }
@@ -483,9 +476,6 @@ Item {
                     selectionBox.width = Math.abs(endX - start_x);
                     selectionBox.height = Math.abs(endY - start_y);
                 } else {
-                    contextIntentPreview.cursorX = mouse.x;
-                    contextIntentPreview.cursorY = mouse.y;
-                    contextIntentPreview.tracking = true;
                     if (typeof game !== 'undefined' && game.orders.set_hover_at_screen)
                         game.orders.set_hover_at_screen(mouse.x, mouse.y);
                     if ((mouse.buttons & Qt.RightButton) && typeof game !== 'undefined' && game.orders.on_right_move) {
@@ -525,9 +515,7 @@ Item {
             }
             onPressed: function (mouse) {
                 game_view.forceActiveFocus();
-                contextIntentPreview.cursorX = mouse.x;
-                contextIntentPreview.cursorY = mouse.y;
-                contextIntentPreview.acknowledge();
+                cursorLayer.acknowledge();
                 if (mouse.button === Qt.LeftButton) {
                     if (game_view.cursor_mode === "attack") {
                         if (typeof game !== 'undefined' && game.orders.attack_at)
@@ -666,12 +654,6 @@ Item {
         }
     }
 
-    ContextIntentPreview {
-        id: contextIntentPreview
-
-        anchors.fill: parent
-    }
-
     PlayerFeedbackLayer {
         id: playerFeedbackLayer
 
@@ -734,362 +716,20 @@ Item {
         }
     }
 
-    Item {
-        id: customCursorContainer
+    CursorLayer {
+        id: cursorLayer
 
-        visible: game_view.cursor_mode !== "normal"
-        width: 32
-        height: 32
-        z: 999999
-        x: (typeof game !== 'undefined' && game.global_cursor_x) ? game.global_cursor_x - 16 : 0
-        y: (typeof game !== 'undefined' && game.global_cursor_y) ? game.global_cursor_y - 16 : 0
-
-        Item {
-            id: attackCursorContainer
-
-            property real pulse_scale: 1
-
-            visible: game_view.cursor_mode === "attack"
-            anchors.fill: parent
-
-            Canvas {
-                id: attackCursor
-
-                anchors.fill: parent
-                scale: attackCursorContainer.pulse_scale
-                transformOrigin: Item.Center
-                onPaint: {
-                    var ctx = getContext("2d");
-                    ctx.clearRect(0, 0, width, height);
-                    ctx.strokeStyle = Theme.accentBright;
-                    ctx.lineWidth = 3;
-                    ctx.beginPath();
-                    ctx.moveTo(16, 4);
-                    ctx.lineTo(16, 28);
-                    ctx.stroke();
-                    ctx.beginPath();
-                    ctx.moveTo(4, 16);
-                    ctx.lineTo(28, 16);
-                    ctx.stroke();
-                    ctx.fillStyle = Theme.accentBright;
-                    ctx.beginPath();
-                    ctx.arc(16, 16, 4, 0, Math.PI * 2);
-                    ctx.fill();
-                    ctx.strokeStyle = Qt.rgba(0.75, 0.27, 0.18, 0.5);
-                    ctx.lineWidth = 1;
-                    ctx.beginPath();
-                    ctx.arc(16, 16, 7, 0, Math.PI * 2);
-                    ctx.stroke();
-                    ctx.strokeStyle = Theme.accentBright;
-                    ctx.lineWidth = 2;
-                    ctx.beginPath();
-                    ctx.moveTo(8, 12);
-                    ctx.lineTo(8, 8);
-                    ctx.lineTo(12, 8);
-                    ctx.stroke();
-                    ctx.beginPath();
-                    ctx.moveTo(20, 8);
-                    ctx.lineTo(24, 8);
-                    ctx.lineTo(24, 12);
-                    ctx.stroke();
-                    ctx.beginPath();
-                    ctx.moveTo(8, 20);
-                    ctx.lineTo(8, 24);
-                    ctx.lineTo(12, 24);
-                    ctx.stroke();
-                    ctx.beginPath();
-                    ctx.moveTo(20, 24);
-                    ctx.lineTo(24, 24);
-                    ctx.lineTo(24, 20);
-                    ctx.stroke();
-                }
-                Component.onCompleted: requestPaint()
-            }
-
-            SequentialAnimation on pulse_scale  {
-                running: attackCursorContainer.visible
-                loops: Animation.Infinite
-
-                NumberAnimation {
-                    from: 1
-                    to: 1.2
-                    duration: 400
-                    easing.type: Easing.InOutQuad
-                }
-
-                NumberAnimation {
-                    from: 1.2
-                    to: 1
-                    duration: 400
-                    easing.type: Easing.InOutQuad
-                }
-            }
-        }
-
-        Canvas {
-            id: guardCursor
-
-            visible: game_view.cursor_mode === "guard"
-            anchors.fill: parent
-            onPaint: {
-                var ctx = getContext("2d");
-                ctx.clearRect(0, 0, width, height);
-                ctx.fillStyle = Theme.thumbBr;
-                ctx.strokeStyle = Theme.panelBr;
-                ctx.lineWidth = 2;
-                ctx.beginPath();
-                ctx.moveTo(16, 6);
-                ctx.lineTo(24, 10);
-                ctx.lineTo(24, 18);
-                ctx.lineTo(16, 26);
-                ctx.lineTo(8, 18);
-                ctx.lineTo(8, 10);
-                ctx.closePath();
-                ctx.fill();
-                ctx.stroke();
-                ctx.strokeStyle = Theme.textMain;
-                ctx.lineWidth = 2;
-                ctx.beginPath();
-                ctx.moveTo(13, 16);
-                ctx.lineTo(15, 18);
-                ctx.lineTo(19, 12);
-                ctx.stroke();
-            }
-            Component.onCompleted: requestPaint()
-        }
-
-        Canvas {
-            id: patrolCursor
-
-            visible: game_view.cursor_mode === "patrol"
-            anchors.fill: parent
-            onPaint: {
-                var ctx = getContext("2d");
-                ctx.clearRect(0, 0, width, height);
-                ctx.strokeStyle = Theme.accent;
-                ctx.lineWidth = 2;
-                ctx.beginPath();
-                ctx.arc(16, 16, 10, 0, Math.PI * 2);
-                ctx.stroke();
-                ctx.fillStyle = Theme.accent;
-                ctx.beginPath();
-                ctx.moveTo(26, 16);
-                ctx.lineTo(22, 13);
-                ctx.lineTo(22, 19);
-                ctx.closePath();
-                ctx.fill();
-                ctx.beginPath();
-                ctx.moveTo(6, 16);
-                ctx.lineTo(10, 13);
-                ctx.lineTo(10, 19);
-                ctx.closePath();
-                ctx.fill();
-                ctx.beginPath();
-                ctx.arc(16, 16, 3, 0, Math.PI * 2);
-                ctx.fill();
-            }
-            Component.onCompleted: requestPaint()
-        }
-
-        Canvas {
-            id: deliverCursor
-
-            visible: game_view.cursor_mode === "deliver"
-            anchors.fill: parent
-            onPaint: {
-                var ctx = getContext("2d");
-                ctx.clearRect(0, 0, width, height);
-                ctx.strokeStyle = Theme.accentBright;
-                ctx.fillStyle = StyleGuide.historical.wax;
-                ctx.lineWidth = 2;
-                ctx.beginPath();
-                ctx.arc(16, 16, 11, 0, Math.PI * 2);
-                ctx.stroke();
-                ctx.beginPath();
-                ctx.moveTo(9, 16);
-                ctx.lineTo(23, 16);
-                ctx.stroke();
-                ctx.beginPath();
-                ctx.moveTo(16, 9);
-                ctx.lineTo(16, 23);
-                ctx.stroke();
-                ctx.beginPath();
-                ctx.moveTo(24, 16);
-                ctx.lineTo(18, 11);
-                ctx.lineTo(18, 21);
-                ctx.closePath();
-                ctx.fill();
-            }
-            Component.onCompleted: requestPaint()
-        }
-
-        Item {
-            id: rallyPlacementCursor
-
-            visible: game_view.is_rally_placement()
-            anchors.fill: parent
-
-            Image {
-                anchors.centerIn: parent
-                width: 28
-                height: 28
-                source: StyleGuide.icon_path("rally_mode.png")
-                fillMode: Image.PreserveAspectFit
-                smooth: true
-                mipmap: true
-            }
-        }
-
-        Canvas {
-            id: constructionCursor
-
-            visible: game_view.is_placing_construction && game_view.cursor_mode !== "collect"
-            anchors.fill: parent
-            onPaint: {
-                var ctx = getContext("2d");
-                ctx.clearRect(0, 0, width, height);
-                var active = game_view.construction_preview_active;
-                var ok = active && game_view.construction_preview_valid;
-                var primary = !active ? "#D8C17A" : (ok ? "#75D36B" : "#D36060");
-                var secondary = !active ? "#51401A" : (ok ? "#163A16" : "#4A1717");
-                ctx.strokeStyle = primary;
-                ctx.lineWidth = 2.5;
-                ctx.beginPath();
-                ctx.arc(16, 16, 10, 0, Math.PI * 2);
-                ctx.stroke();
-                ctx.fillStyle = Qt.rgba(0, 0, 0, 0.25);
-                ctx.beginPath();
-                ctx.arc(16, 16, 6, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.strokeStyle = secondary;
-                ctx.lineWidth = 2;
-                ctx.beginPath();
-                ctx.moveTo(16, 5);
-                ctx.lineTo(16, 11);
-                ctx.moveTo(16, 21);
-                ctx.lineTo(16, 27);
-                ctx.moveTo(5, 16);
-                ctx.lineTo(11, 16);
-                ctx.moveTo(21, 16);
-                ctx.lineTo(27, 16);
-                ctx.stroke();
-                ctx.strokeStyle = primary;
-                ctx.lineWidth = 2.5;
-                if (!active) {
-                    ctx.beginPath();
-                    ctx.moveTo(16, 10);
-                    ctx.lineTo(16, 22);
-                    ctx.moveTo(10, 16);
-                    ctx.lineTo(22, 16);
-                    ctx.stroke();
-                } else if (ok) {
-                    ctx.beginPath();
-                    ctx.moveTo(11, 17);
-                    ctx.lineTo(15, 21);
-                    ctx.lineTo(22, 12);
-                    ctx.stroke();
-                } else {
-                    ctx.beginPath();
-                    ctx.moveTo(11, 11);
-                    ctx.lineTo(21, 21);
-                    ctx.moveTo(21, 11);
-                    ctx.lineTo(11, 21);
-                    ctx.stroke();
-                }
-            }
-            Component.onCompleted: requestPaint()
-        }
-
-        Design.IronVectorIcon {
-            id: repairCursor
-
-            visible: game_view.cursor_mode === "repair"
-            anchors.centerIn: parent
-            width: 22
-            height: 22
-            iconId: "repair"
-        }
-
-        Item {
-            id: collectCursorContainer
-
-            visible: game_view.cursor_mode === "collect"
-            anchors.fill: parent
-
-            Image {
-                anchors.centerIn: parent
-                width: 18
-                height: 18
-                source: StyleGuide.icon_path("collect_mode.png")
-                fillMode: Image.PreserveAspectFit
-                smooth: true
-                mipmap: true
-                opacity: !game_view.construction_preview_active ? 0.9 : (game_view.construction_preview_valid ? 1 : 0.7)
-            }
-
-            Canvas {
-                id: collectCursorOverlay
-
-                anchors.fill: parent
-                onPaint: {
-                    var ctx = getContext("2d");
-                    ctx.clearRect(0, 0, width, height);
-                    var active = game_view.construction_preview_active;
-                    var ok = active && game_view.construction_preview_valid;
-                    var primary = !active ? "#D8C17A" : (ok ? "#75D36B" : "#D36060");
-                    var secondary = !active ? "#51401A" : (ok ? "#163A16" : "#4A1717");
-                    ctx.strokeStyle = primary;
-                    ctx.lineWidth = 2.5;
-                    ctx.beginPath();
-                    ctx.arc(16, 16, 10, 0, Math.PI * 2);
-                    ctx.stroke();
-                    ctx.strokeStyle = secondary;
-                    ctx.lineWidth = 2;
-                    ctx.beginPath();
-                    ctx.moveTo(16, 5);
-                    ctx.lineTo(16, 9);
-                    ctx.moveTo(16, 23);
-                    ctx.lineTo(16, 27);
-                    ctx.moveTo(5, 16);
-                    ctx.lineTo(9, 16);
-                    ctx.moveTo(23, 16);
-                    ctx.lineTo(27, 16);
-                    ctx.stroke();
-                    ctx.strokeStyle = primary;
-                    ctx.lineWidth = 2.5;
-                    ctx.fillStyle = primary;
-                    ctx.beginPath();
-                    ctx.arc(11, 11, 2, 0, Math.PI * 2);
-                    ctx.arc(21, 11, 2, 0, Math.PI * 2);
-                    ctx.arc(16, 22, 2, 0, Math.PI * 2);
-                    ctx.fill();
-                    ctx.strokeStyle = primary;
-                    ctx.lineWidth = 2.5;
-                    if (!active) {
-                        ctx.beginPath();
-                        ctx.moveTo(16, 10);
-                        ctx.lineTo(16, 22);
-                        ctx.moveTo(10, 16);
-                        ctx.lineTo(22, 16);
-                        ctx.stroke();
-                    } else if (ok) {
-                        ctx.beginPath();
-                        ctx.moveTo(11, 17);
-                        ctx.lineTo(15, 21);
-                        ctx.lineTo(22, 12);
-                        ctx.stroke();
-                    } else {
-                        ctx.beginPath();
-                        ctx.moveTo(11, 11);
-                        ctx.lineTo(21, 21);
-                        ctx.moveTo(21, 11);
-                        ctx.lineTo(11, 21);
-                        ctx.stroke();
-                    }
-                }
-                Component.onCompleted: requestPaint()
-            }
-        }
+        anchors.fill: parent
+        mode: game_view.cursor_mode
+        rallyPlacement: game_view.is_rally_placement()
+        placingConstruction: game_view.is_placing_construction
+        constructionPreviewActive: game_view.construction_preview_active
+        constructionPreviewValid: game_view.construction_preview_valid
+        pointerX: typeof game !== 'undefined' ? game.global_cursor_x : 0
+        pointerY: typeof game !== 'undefined' ? game.global_cursor_y : 0
+        intentData: (typeof game !== 'undefined' && game.orders) ? game.orders.context_intent : null
+        attackHint: (typeof game !== 'undefined' && game.activity) ? game.activity.attack_target_hint : null
+        interactionHint: (typeof game !== 'undefined' && game.activity) ? game.activity.interaction_target_hint : null
     }
 
     Rectangle {
@@ -1116,283 +756,12 @@ Item {
         }
     }
 
-    Rectangle {
-        id: orderFeedbackBanner
-
-        property string kind: ""
-        property bool accepted: true
-        property string message: ""
-        property real anchor_x: 0
-        property real anchor_y: 0
-
-        function glyph_for(kind, accepted) {
-            if (!accepted)
-                return "\u2298";
-            switch (kind) {
-            case "attack":
-                return "\u2694";
-            case "move":
-                return "\u279C";
-            case "guard":
-                return "\u26E8";
-            case "patrol":
-                return "\u21BB";
-            case "hold":
-                return "\u23F8";
-            case "stop":
-                return "\u25A0";
-            case "build":
-                return "\u2692";
-            case "gather":
-                return "\u26CF";
-            case "deliver":
-                return "\u2302";
-            case "repair":
-                return "\u2692";
-            case "rally":
-                return "\u2691";
-            case "formation":
-                return "\u2637";
-            }
-            return "\u2713";
-        }
-
-        function show(kind, accepted, message) {
-            if (!message || message.length === 0)
-                return;
-            orderFeedbackBanner.kind = kind;
-            orderFeedbackBanner.accepted = accepted;
-            orderFeedbackBanner.message = message;
-            if (typeof game !== 'undefined') {
-                orderFeedbackBanner.anchor_x = game.global_cursor_x;
-                orderFeedbackBanner.anchor_y = game.global_cursor_y;
-            }
-            orderFeedbackBanner.opacity = 1;
-            orderFeedbackDismiss.interval = accepted ? 1400 : 2600;
-            orderFeedbackDismiss.restart();
-        }
-
-        visible: opacity > 0.01
-        opacity: 0
-        z: 999998
-        radius: 5
-        color: "#C8141414"
-        border.color: accepted ? Theme.successBr : Theme.dangerBr
-        border.width: 1
-        width: orderFeedbackRow.implicitWidth + 16
-        height: orderFeedbackRow.implicitHeight + 8
-        x: Math.min(Math.max(0, anchor_x + 22), game_view.width - width)
-        y: Math.min(Math.max(0, anchor_y + 44), game_view.height - height)
-
-        Behavior on opacity  {
-            NumberAnimation {
-                duration: 220
-            }
-        }
-
-        Timer {
-            id: orderFeedbackDismiss
-
-            interval: 1400
-            repeat: false
-            onTriggered: orderFeedbackBanner.opacity = 0
-        }
-
-        Row {
-            id: orderFeedbackRow
-
-            anchors.centerIn: parent
-            spacing: 6
-
-            Text {
-                anchors.verticalCenter: parent.verticalCenter
-                color: orderFeedbackBanner.accepted ? Theme.successText : Theme.dangerBr
-                text: orderFeedbackBanner.glyph_for(orderFeedbackBanner.kind, orderFeedbackBanner.accepted)
-                font.pixelSize: Design.Typography.label
-            }
-
-            Text {
-                anchors.verticalCenter: parent.verticalCenter
-                color: orderFeedbackBanner.accepted ? Theme.textMain : Theme.warningText
-                text: orderFeedbackBanner.message
-                font.pixelSize: Design.Typography.caption
-            }
-        }
-    }
-
     Connections {
         function onOrder_feedback(kind, accepted, message, failure) {
-            orderFeedbackBanner.show(kind, accepted, message);
-            contextIntentPreview.report_outcome(accepted, message, failure);
+            cursorLayer.report_order_feedback(kind, accepted, message);
         }
 
         target: typeof game !== 'undefined' ? game : null
-    }
-
-    Rectangle {
-        id: attackTargetHint
-
-        readonly property var hint: (typeof game !== 'undefined' && game.activity && game.activity.attack_target_hint) ? game.activity.attack_target_hint : ({
-                "state": "none",
-                "name": "",
-                "range": "none"
-            })
-        readonly property bool attackable: hint.state === "valid"
-        readonly property bool in_range: hint.range === "in_range"
-
-        function hint_text() {
-            switch (hint.state) {
-            case "valid":
-                return hint.name && hint.name.length > 0 ? hint.name : qsTr("Enemy target");
-            case "ally":
-                return qsTr("Cannot attack ally");
-            case "neutral":
-                return qsTr("Cannot attack this target");
-            case "no_attackers":
-                return qsTr("Selection cannot attack");
-            }
-            return "";
-        }
-
-        function range_text() {
-            switch (hint.range) {
-            case "in_range":
-                return qsTr("In range");
-            case "too_close":
-                return qsTr("Too close");
-            case "out_of_range":
-                return qsTr("Out of range");
-            case "blocked":
-                return qsTr("No firing line");
-            }
-            return "";
-        }
-
-        function range_glyph() {
-            switch (hint.range) {
-            case "in_range":
-                return "\u25CE";
-            case "too_close":
-                return "\u25B3";
-            case "out_of_range":
-                return "\u25CB";
-            case "blocked":
-                return "\u2715";
-            }
-            return "";
-        }
-
-        visible: game_view.cursor_mode === "attack" && hint.state !== "none"
-        z: 999999
-        radius: 5
-        color: "#C8141414"
-        border.color: attackable ? Theme.dangerBr : Theme.panelBr
-        border.width: 1
-        width: attackTargetHintRow.implicitWidth + 14
-        height: attackTargetHintRow.implicitHeight + 8
-        x: typeof game !== 'undefined' ? Math.min(Math.max(0, game.global_cursor_x + 22), game_view.width - width) : 0
-        y: typeof game !== 'undefined' ? Math.min(Math.max(0, game.global_cursor_y + 20), game_view.height - height) : 0
-
-        Row {
-            id: attackTargetHintRow
-
-            anchors.centerIn: parent
-            spacing: 6
-
-            Text {
-                anchors.verticalCenter: parent.verticalCenter
-                color: attackTargetHint.attackable ? Theme.dangerBr : Theme.textDim
-                text: attackTargetHint.attackable ? "⚔" : "⊘"
-                font.pixelSize: Design.Typography.label
-            }
-
-            Text {
-                anchors.verticalCenter: parent.verticalCenter
-                color: attackTargetHint.attackable ? Theme.textMain : Theme.textDim
-                text: attackTargetHint.hint_text()
-                font.pixelSize: Design.Typography.caption
-            }
-
-            Text {
-                anchors.verticalCenter: parent.verticalCenter
-                visible: attackTargetHint.range_text().length > 0
-                color: attackTargetHint.in_range ? Theme.successText : Theme.warningText
-                text: attackTargetHint.range_glyph() + " " + attackTargetHint.range_text()
-                font.pixelSize: Design.Typography.caption
-            }
-        }
-    }
-
-    Rectangle {
-        id: interactionTargetHint
-
-        readonly property var hint: (typeof game !== 'undefined' && game.activity && game.activity.interaction_target_hint) ? game.activity.interaction_target_hint : ({
-                "action": "none"
-            })
-
-        function action_text() {
-            switch (hint.action) {
-            case "gather":
-                return qsTr("Collect");
-            case "deliver":
-                return qsTr("Deliver civilians");
-            case "repair":
-                return qsTr("Repair");
-            case "harvest":
-                return qsTr("Harvest grain");
-            case "slaughter":
-                return qsTr("Slaughter sheep");
-            }
-            return "";
-        }
-
-        function action_glyph() {
-            switch (hint.action) {
-            case "gather":
-                return Design.Icons.collect;
-            case "deliver":
-                return Design.Icons.deliver;
-            case "repair":
-                return "\u2692";
-            case "harvest":
-                return Design.Icons.collect;
-            case "slaughter":
-                return Design.Icons.collect;
-            }
-            return "";
-        }
-
-        visible: game_view.cursor_mode === "normal" && hint.action !== "none"
-        z: 999999
-        radius: 5
-        color: "#C8141414"
-        border.color: Theme.panelBr
-        border.width: 1
-        width: interactionTargetHintRow.implicitWidth + 14
-        height: interactionTargetHintRow.implicitHeight + 8
-        x: typeof game !== 'undefined' ? Math.min(Math.max(0, game.global_cursor_x + 22), game_view.width - width) : 0
-        y: typeof game !== 'undefined' ? Math.min(Math.max(0, game.global_cursor_y + 20), game_view.height - height) : 0
-
-        Row {
-            id: interactionTargetHintRow
-
-            anchors.centerIn: parent
-            spacing: 6
-
-            Text {
-                anchors.verticalCenter: parent.verticalCenter
-                color: Theme.accent
-                text: interactionTargetHint.action_glyph()
-                font.pixelSize: Design.Typography.label
-            }
-
-            Text {
-                anchors.verticalCenter: parent.verticalCenter
-                color: Theme.textMain
-                text: interactionTargetHint.action_text()
-                font.pixelSize: Design.Typography.caption
-            }
-        }
     }
 
     Timer {

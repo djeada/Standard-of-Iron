@@ -28,6 +28,9 @@ constexpr float k_target_switch_hysteresis = 0.35F;
 constexpr float k_max_reposition_speed = 1.8F;
 constexpr float k_contact_yaw_hold_seconds = 0.6F;
 constexpr float k_disengage_turn_degrees = 120.0F;
+constexpr float k_tight_file_spacing_scale = 0.72F;
+constexpr float k_tight_rank_spacing_scale = 0.82F;
+constexpr float k_tight_body_spacing_scale = 1.08F;
 
 struct PairEvaluation {
   std::uint64_t signature{0};
@@ -574,6 +577,65 @@ void publish_formation_presentation(Engine::Core::World& world, float delta_time
         motion != nullptr && motion->traversal_squeeze_active
             ? std::clamp(motion->traversal_lateral_scale, 0.1F, 1.0F)
             : 1.0F;
+    bool traversal_reflows = false;
+    int traversal_files = 1;
+    int traversal_rows = 1;
+    float traversal_file_spacing = layout.spacing;
+    float traversal_rank_spacing = layout.spacing;
+    float traversal_min_lateral_scale = k_tight_file_spacing_scale;
+    bool const tight_corridor_active =
+        motion != nullptr && motion->traversal_target_lateral_scale < 0.999F;
+    if (tight_corridor_active && layout.live_slots.size() > 1U) {
+      int normal_files = 1;
+      for (auto const& slot : layout.live_slots) {
+        int const files_in_rank = static_cast<int>(std::count_if(
+            layout.live_slots.begin(),
+            layout.live_slots.end(),
+            [&slot](auto const& candidate) { return candidate.row == slot.row; }));
+        normal_files = std::max(normal_files, files_in_rank);
+      }
+
+      float const body_diameter = layout.body_radius * 2.0F;
+      float minimum_authored_file_spacing = std::numeric_limits<float>::infinity();
+      for (std::size_t first = 0; first < layout.live_slots.size(); ++first) {
+        for (std::size_t second = first + 1; second < layout.live_slots.size();
+             ++second) {
+          auto const& left = layout.live_slots[first];
+          auto const& right = layout.live_slots[second];
+          if (left.row != right.row) {
+            continue;
+          }
+          float const separation = std::abs(left.local_x - right.local_x);
+          if (separation > 0.01F) {
+            minimum_authored_file_spacing =
+                std::min(minimum_authored_file_spacing, separation);
+          }
+        }
+      }
+      if (std::isfinite(minimum_authored_file_spacing)) {
+        traversal_min_lateral_scale = std::clamp(
+            body_diameter * k_tight_body_spacing_scale / minimum_authored_file_spacing,
+            k_tight_file_spacing_scale,
+            1.0F);
+      }
+      traversal_file_spacing = std::max(body_diameter * k_tight_body_spacing_scale,
+                                        layout.spacing * k_tight_file_spacing_scale);
+      traversal_rank_spacing = std::max(body_diameter * k_tight_body_spacing_scale,
+                                        layout.spacing * k_tight_rank_spacing_scale);
+      float const available_center_span =
+          std::max(0.0F, motion->traversal_available_half_width * 2.0F - body_diameter);
+      int const files_that_fit =
+          1 + static_cast<int>(std::floor(available_center_span /
+                                          std::max(0.05F, traversal_file_spacing)));
+      traversal_files = std::clamp(
+          files_that_fit,
+          1,
+          std::min(normal_files, static_cast<int>(layout.live_slots.size())));
+      traversal_reflows = traversal_files < normal_files;
+      traversal_rows =
+          (static_cast<int>(layout.live_slots.size()) + traversal_files - 1) /
+          traversal_files;
+    }
     Engine::Core::EntityID const outgoing_target =
         target_ref != nullptr ? target_ref->target_id : 0U;
     bool const outgoing_melee =
@@ -608,12 +670,34 @@ void publish_formation_presentation(Engine::Core::World& world, float delta_time
     bool const attacks_structure =
         outgoing_melee && display_opponent != nullptr && is_building(display_opponent);
     float closest_structure_gap = std::numeric_limits<float>::infinity();
+    StructureSurfaceContact structure_facade{};
+    float structure_render_shift = 0.0F;
+    float structure_shift_local_x = 0.0F;
+    float structure_shift_local_z = 0.0F;
     if (attacks_structure && actor_transform != nullptr) {
+      QVector3D const root(actor_transform->position.x,
+                           actor_transform->position.y,
+                           actor_transform->position.z);
+      structure_facade = closest_structure_surface(*display_opponent, root);
       for (auto const& slot : layout.live_slots) {
         QVector3D const anchor(slot.world_x, actor_transform->position.y, slot.world_z);
-        closest_structure_gap =
-            std::min(closest_structure_gap,
-                     closest_structure_surface(*display_opponent, anchor).distance);
+        QVector3D const from_facade = anchor - structure_facade.point;
+        closest_structure_gap = std::min(
+            closest_structure_gap,
+            QVector3D::dotProduct(from_facade, structure_facade.outward_normal));
+      }
+      if (std::isfinite(closest_structure_gap)) {
+        float const desired_gap = structure_attack_profile(entity).contact_clearance;
+        structure_render_shift = std::max(0.0F, desired_gap - closest_structure_gap);
+
+        float const yaw =
+            actor_transform->rotation.y * std::numbers::pi_v<float> / 180.0F;
+        float const sin_yaw = std::sin(yaw);
+        float const cos_yaw = std::cos(yaw);
+        QVector3D const world_shift =
+            structure_facade.outward_normal * structure_render_shift;
+        structure_shift_local_x = cos_yaw * world_shift.x() - sin_yaw * world_shift.z();
+        structure_shift_local_z = sin_yaw * world_shift.x() + cos_yaw * world_shift.z();
       }
     }
     struct DamageCarrier {
@@ -640,6 +724,7 @@ void publish_formation_presentation(Engine::Core::World& world, float delta_time
     std::size_t const previous_directive_count = directives.size();
     bool soldiers_changed = previous_directive_count != layout.all_slots.size();
     directives.resize(layout.all_slots.size());
+    int traversal_live_ordinal = 0;
     for (auto const& original_slot : layout.all_slots) {
       auto const* live_slot = find_live_slot(layout, original_slot.index);
       std::optional<Engine::Core::FormationSoldierPresentation> previous_value;
@@ -653,10 +738,40 @@ void publish_formation_presentation(Engine::Core::World& world, float delta_time
       directive.row = live_slot != nullptr ? live_slot->row : original_slot.row;
       directive.col = live_slot != nullptr ? live_slot->col : original_slot.col;
       directive.local_x =
-          (live_slot != nullptr ? live_slot->local_x : original_slot.local_x) *
-          traversal_lateral_scale;
+          live_slot != nullptr ? live_slot->local_x : original_slot.local_x;
       directive.local_z =
           live_slot != nullptr ? live_slot->local_z : original_slot.local_z;
+      if (live_slot != nullptr && traversal_reflows) {
+        int const rank_from_front = traversal_live_ordinal / traversal_files;
+        int const col = traversal_live_ordinal % traversal_files;
+        int const files_in_rank = std::min(traversal_files,
+                                           static_cast<int>(layout.live_slots.size()) -
+                                               rank_from_front * traversal_files);
+        int const row = traversal_rows - 1 - rank_from_front;
+        directive.row = static_cast<std::uint16_t>(row);
+        directive.col = static_cast<std::uint16_t>(col);
+        directive.local_x = (static_cast<float>(col) -
+                             (static_cast<float>(files_in_rank) - 1.0F) * 0.5F) *
+                            traversal_file_spacing;
+        directive.local_z = (static_cast<float>(row) -
+                             (static_cast<float>(traversal_rows) - 1.0F) * 0.5F) *
+                            traversal_rank_spacing;
+      } else if (live_slot != nullptr) {
+
+        float const safe_scale =
+            motion != nullptr && motion->traversal_squeeze_active
+                ? std::max(traversal_lateral_scale, traversal_min_lateral_scale)
+                : 1.0F;
+        directive.local_x *= safe_scale;
+      }
+      if (live_slot != nullptr) {
+        ++traversal_live_ordinal;
+      }
+      if (live_slot != nullptr && structure_render_shift > 0.0F) {
+
+        directive.local_x += structure_shift_local_x;
+        directive.local_z += structure_shift_local_z;
+      }
       directive.local_yaw =
           live_slot != nullptr ? live_slot->local_yaw : original_slot.local_yaw;
       directive.alive = live_slot != nullptr;
@@ -784,8 +899,11 @@ void publish_formation_presentation(Engine::Core::World& world, float delta_time
               local_to_world(*actor_transform, directive.local_x, directive.local_z);
           auto const surface =
               closest_structure_surface(*display_opponent, anchor_world);
-          bool const facade_rank =
-              surface.distance <= closest_structure_gap + layout.spacing * 0.55F;
+          float const facade_gap = QVector3D::dotProduct(
+              anchor_world - structure_facade.point, structure_facade.outward_normal);
+          bool const facade_rank = facade_gap <= closest_structure_gap +
+                                                     structure_render_shift +
+                                                     layout.spacing * 0.55F;
           if (facade_rank) {
             auto const contact_vector = local_contact_vector(*actor_transform,
                                                              directive.local_x,
@@ -841,7 +959,7 @@ void publish_formation_presentation(Engine::Core::World& world, float delta_time
         }
       }
 
-      if (previous != nullptr && directive.alive) {
+      if (previous != nullptr && directive.alive && !traversal_reflows) {
         float const step_time = std::max(0.0F, delta_time);
         float const blend = 1.0F - std::exp(-6.5F * step_time);
         float step_x = (directive.local_x - previous->local_x) * blend;
@@ -856,6 +974,23 @@ void publish_formation_presentation(Engine::Core::World& world, float delta_time
         }
         directive.local_x = previous->local_x + step_x;
         directive.local_z = previous->local_z + step_z;
+      }
+      if (directive.alive && attacks_structure && actor_transform != nullptr &&
+          structure_facade.outward_normal.lengthSquared() > 0.000001F) {
+
+        auto const rendered =
+            local_to_world(*actor_transform, directive.local_x, directive.local_z);
+        float const facade_gap = QVector3D::dotProduct(
+            rendered - structure_facade.point, structure_facade.outward_normal);
+        if (facade_gap < 0.0F) {
+          QVector3D const correction = structure_facade.outward_normal * (-facade_gap);
+          float const yaw =
+              actor_transform->rotation.y * std::numbers::pi_v<float> / 180.0F;
+          float const sin_yaw = std::sin(yaw);
+          float const cos_yaw = std::cos(yaw);
+          directive.local_x += cos_yaw * correction.x() - sin_yaw * correction.z();
+          directive.local_z += sin_yaw * correction.x() + cos_yaw * correction.z();
+        }
       }
       soldiers_changed =
           soldiers_changed || previous == nullptr || *previous != directive;

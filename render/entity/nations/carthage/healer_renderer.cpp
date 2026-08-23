@@ -57,11 +57,6 @@ using Render::Geom::sphere_at;
 
 namespace Render::GL::Carthage {
 
-namespace {
-
-constexpr auto k_profile =
-    Render::GL::Humanoid::k_support_proportion_profile.with_offset({.x = 0.01F});
-
 void apply_grave_priest_cast_pose(const Render::GL::HumanoidAnimationContext& anim,
                                   HumanoidPose& io_pose) {
   Render::Humanoid::apply_skeleton_proportion_pose(io_pose);
@@ -93,6 +88,11 @@ void apply_grave_priest_cast_pose(const Render::GL::HumanoidAnimationContext& an
                      up * (0.04F + 0.05F * intensity) - right * 0.07F;
   io_pose.head_pos += up * (0.015F * intensity) + forward * (0.025F * intensity);
 }
+
+namespace {
+
+constexpr auto k_profile =
+    Render::GL::Humanoid::k_support_proportion_profile.with_offset({.x = 0.01F});
 
 constexpr std::uint32_t k_dark_mage_role_count = 6;
 

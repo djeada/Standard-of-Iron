@@ -83,6 +83,8 @@ ScrollView {
                             font.capitalization: Font.AllUppercase
                             font.pixelSize: Design.Typography.heading
                             font.weight: Design.Typography.bold
+                            font.hintingPreference: Design.Typography.titleHinting
+                            font.kerning: true
                             font.letterSpacing: Design.Typography.trackingTitle
                             elide: Text.ElideRight
                         }

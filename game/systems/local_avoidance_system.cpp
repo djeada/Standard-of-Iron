@@ -170,6 +170,26 @@ void LocalAvoidanceSystem::run(Engine::Core::SystemContext& context) {
             continue;
           }
           auto& cj = m_circles[j];
+          auto const* own_formation =
+              context.try_get<Engine::Core::FormationModeComponent>(ci.id);
+          auto const* other_formation =
+              context.try_get<Engine::Core::FormationModeComponent>(cj.id);
+          auto const* own_unit = context.try_get<Engine::Core::UnitComponent>(ci.id);
+          auto const* other_unit = context.try_get<Engine::Core::UnitComponent>(cj.id);
+          bool const same_friendly_formation_owner =
+              own_formation != nullptr && other_formation != nullptr &&
+              own_formation->formation_id != 0U &&
+              other_formation->formation_id != 0U && own_unit != nullptr &&
+              other_unit != nullptr && own_unit->owner_id != 0 &&
+              own_unit->owner_id == other_unit->owner_id;
+          bool const same_formation =
+              own_formation != nullptr && other_formation != nullptr &&
+              own_formation->formation_id != 0U &&
+              own_formation->formation_id == other_formation->formation_id;
+          if (same_formation || same_friendly_formation_owner) {
+
+            continue;
+          }
           float const ddx = ci.x - cj.x;
           float const ddz = ci.z - cj.z;
           float const dist_sq = ddx * ddx + ddz * ddz;

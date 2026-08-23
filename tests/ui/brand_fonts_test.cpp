@@ -165,6 +165,38 @@ TEST_F(TitleFamilyUsageTest, EveryBindingIsUppercasedOrNumeric) {
          "source. The display face has no lowercase; see docs/TYPOGRAPHY.md.";
 }
 
+TEST_F(TitleFamilyUsageTest, EveryBindingUsesTheDisplayRasterizationSettings) {
+  const QStringList files = qml_sources();
+  ASSERT_FALSE(files.isEmpty()) << "no QML found; run the suite from the repo root";
+
+  static const QRegularExpression binding(
+      QStringLiteral(R"(font\.family:\s*Design\.Typography\.titleFamily)"));
+
+  QStringList offenders;
+  for (const QString& path : files) {
+    const QStringList lines = read(path).split(QLatin1Char('\n'));
+    for (qsizetype index = 0; index < lines.size(); ++index) {
+      if (!binding.match(lines.at(index)).hasMatch()) {
+        continue;
+      }
+
+      const qsizetype from = std::max<qsizetype>(0, index - 12);
+      const qsizetype to = std::min<qsizetype>(lines.size() - 1, index + 12);
+      const QString block = lines.mid(from, to - from + 1).join(QLatin1Char('\n'));
+      const bool vertically_hinted = block.contains(
+          QStringLiteral("font.hintingPreference: Design.Typography.titleHinting"));
+      const bool kerned = block.contains(QStringLiteral("font.kerning: true"));
+      if (!vertically_hinted || !kerned) {
+        offenders.append(
+            QStringLiteral("%1:%2").arg(QFileInfo(path).fileName()).arg(index + 1));
+      }
+    }
+  }
+
+  EXPECT_EQ(offenders.join(QStringLiteral(", ")), QString())
+      << "titleFamily bound without the shared hinting and kerning settings";
+}
+
 TEST_F(TitleFamilyUsageTest, TheGuardActuallyFindsTheBindingsItGuards) {
 
   const QStringList files = qml_sources();

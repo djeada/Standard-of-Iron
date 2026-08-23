@@ -1085,6 +1085,50 @@ TEST(HumanoidPrepare, PoseLayerNeverRunsDuringRuntimePreparation) {
   EXPECT_LT(pose.head_pos.y(), untouched.head_pos.y());
 }
 
+TEST(HumanoidPrepare, EveryPosePolicyResolvesToADefinitionThatMovesThePose) {
+  Render::GL::HumanoidPose base{};
+  base.neck_base = QVector3D(0.0F, 1.4F, 0.0F);
+  base.head_pos = QVector3D(0.0F, 1.6F, 0.0F);
+  base.hand_r = QVector3D(0.25F, 1.0F, 0.0F);
+  base.hand_l = QVector3D(-0.25F, 1.0F, 0.0F);
+  base.elbow_r = QVector3D(0.22F, 1.15F, 0.0F);
+  base.elbow_l = QVector3D(-0.22F, 1.15F, 0.0F);
+
+  Render::GL::HumanoidAnimationContext anim{};
+  anim.inputs.is_casting = true;
+  anim.inputs.cast_kind = Render::GL::CastVisualKind::Fireball;
+  anim.attack_phase = 0.5F;
+
+  Render::Entity::HumanoidPosePolicyInputs inputs;
+  inputs.animation = &anim;
+
+  for (auto const policy : {Render::Humanoid::HumanoidPosePolicy::SkeletonProportions,
+                            Render::Humanoid::HumanoidPosePolicy::HealerChannel,
+                            Render::Humanoid::HumanoidPosePolicy::HealerStaff,
+                            Render::Humanoid::HumanoidPosePolicy::GravePriestCast}) {
+    Render::GL::HumanoidPose pose = base;
+    Render::Entity::apply_humanoid_pose_policy(policy, inputs, pose);
+    EXPECT_NE(pose.head_pos, base.head_pos)
+        << "pose policy " << static_cast<int>(policy) << " left the pose untouched";
+  }
+
+  Render::GL::HumanoidPose cast = base;
+  Render::Entity::apply_humanoid_pose_policy(
+      Render::Humanoid::HumanoidPosePolicy::GravePriestCast, inputs, cast);
+
+  Render::GL::HumanoidAnimationContext resting{};
+  Render::Entity::HumanoidPosePolicyInputs resting_inputs;
+  resting_inputs.animation = &resting;
+  Render::GL::HumanoidPose idle = base;
+  Render::Entity::apply_humanoid_pose_policy(
+      Render::Humanoid::HumanoidPosePolicy::GravePriestCast, resting_inputs, idle);
+
+  EXPECT_GT(cast.hand_r.z(), idle.hand_r.z())
+      << "the grave priest must push his casting hand forward";
+  EXPECT_GT(cast.hand_r.y(), idle.hand_r.y())
+      << "the grave priest must raise his casting hand";
+}
+
 TEST(HumanoidPrepare, FacialHairUsesBakedArchetypeWithoutPostBodyDraw) {
   BeardRenderer const renderer;
   Render::GL::DrawContext ctx{};

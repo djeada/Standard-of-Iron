@@ -71,6 +71,7 @@ void paint_rpg_bow_hud(QImage& frame, const ArenaViewport::RpgBowHudState& state
 
   QPainter painter(&frame);
   painter.setRenderHint(QPainter::Antialiasing, true);
+  painter.setRenderHint(QPainter::TextAntialiasing, true);
 
   painter.setFont(Arena::Typography::small_label(ui));
 
