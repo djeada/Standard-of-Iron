@@ -675,7 +675,8 @@
       "type": "hill",
       "width": 16,
       "x": 74,
-      "z": 17
+      "z": 17,
+      "shape": "corridor"
     },
     {
       "depth": 8,
@@ -694,7 +695,8 @@
       "type": "hill",
       "width": 16,
       "x": 46,
-      "z": 103
+      "z": 103,
+      "shape": "corridor"
     },
     {
       "depth": 14,
@@ -771,6 +773,54 @@
       "width": 8,
       "x": 69,
       "z": 69
+    },
+    {
+      "type": "hill",
+      "shape": "arc",
+      "x": 20,
+      "z": 100,
+      "width": 52,
+      "depth": 52,
+      "thickness": 8,
+      "arc": 100,
+      "arc_start": -95,
+      "taper": 0.35,
+      "height": 2.6,
+      "entrances": [
+        {
+          "x": 22.4,
+          "z": 86.2
+        },
+        {
+          "x": 33.8,
+          "z": 97.6
+        }
+      ],
+      "description": "Boomerang ridge wrapping the south-west barracks. Only the pocket behind it carries ramps, so whoever holds the barracks holds the high ground."
+    },
+    {
+      "type": "hill",
+      "shape": "arc",
+      "x": 100,
+      "z": 20,
+      "width": 52,
+      "depth": 52,
+      "thickness": 8,
+      "arc": 100,
+      "arc_start": 85,
+      "taper": 0.35,
+      "height": 2.6,
+      "entrances": [
+        {
+          "x": 97.6,
+          "z": 33.8
+        },
+        {
+          "x": 86.2,
+          "z": 22.4
+        }
+      ],
+      "description": "Boomerang ridge wrapping the north-east barracks. Mirrors the south-west arc."
     }
   ],
   "time_of_day": "day",

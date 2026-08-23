@@ -272,6 +272,7 @@ void TerrainHeightMap::build_from_features(
     if (feature.type == TerrainType::Hill) {
       const bool campaign_landform_scale =
           Game::Map::is_campaign_landform_scale(m_width, m_height);
+      const bool shaped_hill = feature.shape != Game::Map::HillShape::Blob;
       const auto footprint =
           Game::Map::hill_footprint_cells({.width = feature.width,
                                            .depth = feature.depth,
@@ -280,18 +281,79 @@ void TerrainHeightMap::build_from_features(
                                            .tile_size = m_tile_size,
                                            .grid_center_x = grid_center_x,
                                            .grid_center_z = grid_center_z,
-                                           .campaign_scale = campaign_landform_scale});
-      float const hill_rotation_deg = footprint.rotation_deg;
-      const auto crown = Game::Map::hill_crown_cells(
+                                           .campaign_scale = campaign_landform_scale,
+                                           .shaped = shaped_hill});
+      float const hill_rotation_deg =
+          feature.shape == Game::Map::HillShape::Mask ? 0.0F : footprint.rotation_deg;
+      const float angle_rad = hill_rotation_deg * k_deg_to_rad;
+      const float cos_a = std::cos(angle_rad);
+      const float sin_a = std::sin(angle_rad);
+
+      const auto crown_profile = Game::Map::hill_crown_profile(
           footprint, feature.height, m_tile_size, campaign_landform_scale);
-      const float hill_height = crown.height;
+      const float hill_height = crown_profile.height;
+
+      Game::Map::HillShapeAuthoring authoring;
+      authoring.shape = feature.shape;
+      authoring.thickness = feature.thickness;
+      authoring.sweep_degrees = feature.sweep_degrees;
+      authoring.sweep_start_degrees = feature.sweep_start_degrees;
+      authoring.taper = feature.taper;
+      authoring.has_sweep = feature.has_sweep;
+      authoring.has_sweep_start = feature.has_sweep_start;
+      authoring.local_points.reserve(feature.shape_points.size());
+      for (const auto& point : feature.shape_points) {
+        const float point_dx =
+            (point.x() / m_tile_size) + grid_half_width - grid_center_x;
+        const float point_dz =
+            (point.z() / m_tile_size) + grid_half_height - grid_center_z;
+        authoring.local_points.push_back({point_dx * cos_a + point_dz * sin_a,
+                                          -point_dx * sin_a + point_dz * cos_a});
+      }
+
+      auto shape_params =
+          Game::Map::hill_shape_params(footprint, authoring, m_tile_size);
+      shape_params.mask_center_x = grid_center_x;
+      shape_params.mask_center_z = grid_center_z;
+      const float mask_reference = std::min(footprint.half_width, footprint.half_depth);
+      shape_params.mask_inset_cells =
+          std::max(mask_reference - Game::Map::hill_crown_extent_cells(crown_profile,
+                                                                       mask_reference),
+                   1.0F);
+      shape_params.mask_cells.reserve(feature.mask_cells.size());
+      for (const auto& cell : feature.mask_cells) {
+        shape_params.mask_cells.push_back(
+            {int(std::lround((cell.x() / m_tile_size) + grid_half_width)),
+             int(std::lround((cell.z() / m_tile_size) + grid_half_height))});
+      }
+      const Game::Map::HillShapeGeometry shape_geometry =
+          Game::Map::build_hill_shape(shape_params);
+      const bool shaped_geometry = shape_geometry.is_shaped();
+
+      const float crown_thickness = Game::Map::hill_crown_extent_cells(
+          crown_profile, shape_geometry.half_thickness);
+
+      Game::Map::HillCrownCells crown;
+      crown.height = hill_height;
+      if (shaped_geometry) {
+        crown.half_width = crown_thickness;
+        crown.half_depth = crown_thickness;
+      } else {
+        crown.half_width =
+            Game::Map::hill_crown_extent_cells(crown_profile, footprint.half_width);
+        crown.half_depth =
+            Game::Map::hill_crown_extent_cells(crown_profile, footprint.half_depth);
+      }
 
       const float slope_width = footprint.half_width;
       const float slope_depth = footprint.half_depth;
       const float plateau_width = crown.half_width;
       const float plateau_depth = crown.half_depth;
 
-      const float max_extent = std::max(slope_width, slope_depth) * 1.18F;
+      const float max_extent = (shaped_geometry ? std::max(shape_geometry.bound_half_x,
+                                                           shape_geometry.bound_half_z)
+                                                : std::max(slope_width, slope_depth)) *
+                               1.18F;
       const int min_x = std::max(0, int(std::floor(grid_center_x - max_extent - 1.0F)));
       const int max_x =
           std::min(m_width - 1, int(std::ceil(grid_center_x + max_extent + 1.0F)));
@@ -304,9 +366,6 @@ void TerrainHeightMap::build_from_features(
       std::vector<std::uint8_t> entrance_line_mask(map_cell_count, 0);
       std::vector<int> entrance_indices;
 
-      const float angle_rad = hill_rotation_deg * k_deg_to_rad;
-      const float cos_a = std::cos(angle_rad);
-      const float sin_a = std::sin(angle_rad);
       const float feature_phase =
           grid_center_x * 0.083F + grid_center_z * 0.127F + hill_height * 0.31F;
       const auto hill_seed =
@@ -321,15 +380,35 @@ void TerrainHeightMap::build_from_features(
           .phase = feature_phase,
           .seed = hill_seed,
           .rounded_crown = campaign_landform_scale,
+          .shape = &shape_geometry,
+          .crown_thickness = crown_thickness,
+      };
+
+      auto local_to_world = [&](float local_x, float local_z) {
+        const float grid_x = grid_center_x + local_x * cos_a - local_z * sin_a;
+        const float grid_z = grid_center_z + local_x * sin_a + local_z * cos_a;
+        return QVector3D((grid_x - grid_half_width) * m_tile_size,
+                         0.0F,
+                         (grid_z - grid_half_height) * m_tile_size);
       };
 
       std::vector<QVector3D> hill_entrances = feature.entrances;
       if (hill_entrances.empty()) {
-
-        const float fallback_distance = slope_width * m_tile_size * 0.98F;
-        hill_entrances.emplace_back(feature.center_x - cos_a * fallback_distance,
-                                    0.0F,
-                                    feature.center_z - sin_a * fallback_distance);
+        if (shape_geometry.is_spine()) {
+          const auto pose = Game::Map::hill_shape_pose_at(shape_geometry, 0.5F);
+          const float reach = shape_geometry.half_thickness + 3.0F;
+          hill_entrances.push_back(
+              local_to_world(pose.position.x + pose.tangent.z * reach,
+                             pose.position.z - pose.tangent.x * reach));
+        } else if (shape_geometry.is_mask()) {
+          hill_entrances.push_back(
+              local_to_world(-shape_geometry.bound_half_x - 1.0F, 0.0F));
+        } else {
+          const float fallback_distance = slope_width * m_tile_size * 0.98F;
+          hill_entrances.emplace_back(feature.center_x - cos_a * fallback_distance,
+                                      0.0F,
+                                      feature.center_z - sin_a * fallback_distance);
+        }
       }
 
       auto slope_distance = [&](float local_x, float local_z) {
@@ -439,8 +518,25 @@ void TerrainHeightMap::build_from_features(
           m_heights[entrance_idx] = std::max(m_heights[entrance_idx], 0.0F);
         }
 
-        float dir_x = grid_center_x - float(ex);
-        float dir_z = grid_center_z - float(ez);
+        float target_grid_x = grid_center_x;
+        float target_grid_z = grid_center_z;
+        if (shaped_geometry) {
+          const float entrance_dx = float(ex) - grid_center_x;
+          const float entrance_dz = float(ez) - grid_center_z;
+          const auto target = Game::Map::hill_shape_ramp_target(
+              entrance_dx * cos_a + entrance_dz * sin_a,
+              -entrance_dx * sin_a + entrance_dz * cos_a,
+              shape_geometry);
+          target_grid_x = grid_center_x + target.x * cos_a - target.z * sin_a;
+          target_grid_z = grid_center_z + target.x * sin_a + target.z * cos_a;
+        }
+
+        float dir_x = target_grid_x - float(ex);
+        float dir_z = target_grid_z - float(ez);
+        if (std::hypot(dir_x, dir_z) < 0.001F) {
+          dir_x = grid_center_x - float(ex);
+          dir_z = grid_center_z - float(ez);
+        }
         float const length = std::sqrt(dir_x * dir_x + dir_z * dir_z);
         if (length < 0.001F) {
           continue;

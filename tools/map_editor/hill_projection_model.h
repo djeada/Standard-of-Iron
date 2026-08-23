@@ -6,6 +6,8 @@
 #include <QStringList>
 #include <QVector>
 
+#include "game/map/terrain_footprint.h"
+
 namespace MapEditor::HillProjection {
 
 inline constexpr int k_min_entrances = 1;
@@ -34,6 +36,7 @@ struct Model {
   double hill_half_depth = 10.0;
   double organic_spread = 0.0;
   bool is_mountain = false;
+  Game::Map::HillShapeGeometry shape;
   MapContext context;
   QVector<QPoint> hill_cells;
   QVector<QPoint> entrance_cells;
@@ -60,6 +63,17 @@ auto entrance_issues(const Model& model,
 
 auto entrances_from_cells(const Model& model,
                           const QVector<QPoint>& entrance_cells) -> QJsonArray;
+
+auto shape_geometry_from_json(const QJsonObject& hill_json,
+                              double center_x,
+                              double center_z,
+                              double rotation_deg,
+                              const Game::Map::FootprintCells& footprint,
+                              double tile_size) -> Game::Map::HillShapeGeometry;
+
+auto mask_cells_to_json(const QVector<QPoint>& cells,
+                        double origin_x,
+                        double origin_z) -> QJsonArray;
 
 auto apply_projection_to_hill_json(const QJsonObject& base_hill_json,
                                    const Model& model,

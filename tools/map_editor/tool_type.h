@@ -5,6 +5,10 @@ namespace MapEditor {
 enum class ToolType {
   Select,
   Hill,
+  HillRidge,
+  HillArc,
+  HillElbow,
+  HillRing,
   Mountain,
   River,
   Road,
