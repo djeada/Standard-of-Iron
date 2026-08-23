@@ -14,6 +14,7 @@
 
 #include "render/creature/part_graph.h"
 #include "render/gl/humanoid/humanoid_types.h"
+#include "render/pipeline/screen_metrics.h"
 #include "render/submission_visibility.h"
 #include "render/submitter.h"
 #include "render/world_view.h"
@@ -62,6 +63,8 @@ struct DrawContext {
   RendererHandle renderer_handle = k_invalid_renderer_handle;
   class Backend* backend = nullptr;
   const Camera* camera = nullptr;
+
+  Render::Pipeline::ScreenMetrics screen_metrics{};
 
   const SubmissionVisibilityPolicy* submission_visibility = nullptr;
   SubmissionFogMode submission_fog_mode = SubmissionFogMode::Ignore;

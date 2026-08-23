@@ -30,6 +30,7 @@
 #include "render/creature/pipeline/creature_render_graph.h"
 #include "render/creature/quadruped/runtime_context.h"
 #include "render/humanoid/runtime/runtime_context.h"
+#include "render/pipeline/screen_metrics.h"
 #include "render/render_view_state.h"
 #include "render/world_render_mode.h"
 #include "render/world_view.h"
@@ -427,6 +428,8 @@ private:
   };
 
   [[nodiscard]] auto visibility_mode_config() const -> VisibilityModeConfig;
+
+  [[nodiscard]] auto frame_screen_metrics() const -> Render::Pipeline::ScreenMetrics;
 
   void render_construction_previews(Engine::Core::World* world,
                                     const Game::Map::VisibilityService* vis,

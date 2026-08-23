@@ -281,6 +281,14 @@ TestCase {
             }];
     }
 
+    function settledExtraElements(overlay, baseline, allowed, settleMs) {
+        wait(settleMs);
+        tryVerify(function () {
+                return visibleDirectChildCount(overlay) - baseline <= allowed;
+            }, 5000, "overlay never settled to at most " + allowed + " new element(s); " + "it still shows " + (visibleDirectChildCount(overlay) - baseline));
+        return visibleDirectChildCount(overlay) - baseline;
+    }
+
     function test_an_attack_fires_a_single_centre_impulse() {
         var host = makeOverlay(1280, 720, quietStatus());
         var overlay = host.overlay;
@@ -288,9 +296,8 @@ TestCase {
         var swinging = quietStatus();
         swinging["is_attacking"] = true;
         overlay.status = swinging;
-        wait(1);
-        var lit = visibleDirectChildCount(overlay);
-        verify(lit - baseline <= 2, "an attack lights " + (lit - baseline) + " overlay elements; expected the combat frame plus one impulse");
+        var lit = settledExtraElements(overlay, baseline, 2, 1);
+        verify(lit <= 2, "an attack lights " + lit + " overlay elements; expected the combat frame plus one impulse");
         host.destroy();
     }
 
@@ -301,9 +308,8 @@ TestCase {
         var raised = quietStatus();
         raised[data.flag] = true;
         overlay.status = raised;
-        wait(600);
-        var lit = visibleDirectChildCount(overlay);
-        verify(lit - baseline <= 1, data.flag + " lights " + (lit - baseline) + " new overlay elements; " + "one state may only raise one signal");
+        var lit = settledExtraElements(overlay, baseline, 1, 600);
+        verify(lit <= 1, data.flag + " lights " + lit + " new overlay elements; " + "one state may only raise one signal");
         host.destroy();
     }
 

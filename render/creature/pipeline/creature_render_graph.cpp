@@ -106,6 +106,9 @@ auto evaluate_creature_lod(const CreatureGraphInputs& inputs,
   lod_inputs.forced_lod = inputs.forced_lod;
   lod_inputs.has_camera = inputs.has_camera;
   lod_inputs.distance = inputs.camera_distance;
+  if (inputs.ctx != nullptr) {
+    lod_inputs.apparent_size_scale = inputs.ctx->screen_metrics.apparent_size_scale();
+  }
   lod_inputs.thresholds = config.thresholds;
   lod_inputs.apply_visibility_budget = config.apply_visibility_budget;
   lod_inputs.budget_grant_full = inputs.budget_grant_full;

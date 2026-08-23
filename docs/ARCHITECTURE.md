@@ -562,6 +562,63 @@ simulation ms per tick, peak RSS, the per-system table and a world digest. The
 digest is the guard — if it moves between runs, the workload changed and the
 numbers are not comparable.
 
+**The digest guards a binary against itself, not one binary against another.**
+Release builds compile with `-ffast-math`, which lets the compiler re-associate
+and contract floating-point expressions however inlining happens to fall out. A
+refactor that provably computes the same thing can therefore still move the last
+bit of a distance, and a battle diverges from a one-ULP difference within a few
+hundred ticks. So: identical digests across two runs of one binary are the
+determinism contract (`scripts/check-replay-determinism.sh` enforces the real
+one, by record-and-replay). Different digests across two builds are evidence of
+nothing on their own — measure the quantity that actually changed instead. When
+`resolve_contact_context` below was rewritten, the check that mattered was a
+compile-gated pass that ran the old and new loops side by side on live data:
+`surface_gap` was bit-identical in all 37 million comparisons and
+`contact_center_distance` differed by one ULP in 0.4% of them.
+
+### What the profile actually said
+
+At 5,000 units the per-system table is not close: `CombatSystem` was 1.65 s of a
+1.67 s tick. Everything else together — movement, avoidance, AI, economy — was
+under 16 ms. Two things were true underneath that, and only one of them was
+guessable from reading the code:
+
+- `FormationCombat::resolve_contact_context` was 62% of the whole simulation in
+  a `perf` profile, with the layout resolution feeding it another 6%. It scans
+  every slot of the attacker's formation against every slot of the target's, and
+  it did so **twice** — once for the nearest pair of bodies and once for the
+  contact distance along the axis, over exactly the same pairs.
+- It also returned two `FormationLayout` objects **by value**, three vectors
+  each, and `contact_geometry()` — which is what six of the eight call sites
+  use — threw both away. That is six vector copies per query, and there are
+  about 179,000 queries per tick at 2,000 units.
+
+Both are fixed: one fused pass, and `resolve_layout_entry` hands out a pointer to
+the cached layout so nothing is copied. `resolve_layout` is still there,
+unchanged, for the callers that want their own copy. Together they take about
+17% off the whole simulation at both 2,000 and 5,000 units (2,000 units over 240
+ticks: 295 ms to 245 ms mean, 344 ms to 281 ms p95).
+
+### Two things that were tried and did not work
+
+**Caching the contact geometry per pair.** The same pair is queried around 59
+times over a run, which looks like an obvious memoisation. Instrumenting it
+showed why it cannot work: of 10.7 million lookups, 176,915 hit, 180,954 found
+nothing, and **10.4 million found the entry and rejected it as stale**. Each pair
+is asked about roughly once per tick, and by the next tick the units have moved,
+so every entry is invalid before it is ever reused. The cache was removed. The
+lesson is in the ratio: a high repeat count across a run says nothing about
+whether a cache can hit.
+
+**Hashing only `health > 0` into the layout signature.** The layout reads health
+exactly once, as `health > 0` for a rigid body, so hashing the exact value looked
+like pure over-invalidation — every point of damage rebuilding three vectors of
+slots. It measured as noise, and it broke ten navigation tests. The layout cache
+is keyed by `const Entity*` and validated only by that signature, so two
+different worlds in one process can put an entity at the same address with the
+same id; the exact health value was, accidentally, what kept them apart. Any
+future attempt to widen that cache's tolerance has to fix the key first.
+
 ## Simulation and presentation ownership
 
 Mutable entities belong to the simulation thread. In the Qt Quick client that

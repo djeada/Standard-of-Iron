@@ -1,4 +1,5 @@
 import QtQuick 2.15
+import QtQuick.Window 2.15
 import QtTest 1.15
 import StandardOfIron.Design 1.0
 
@@ -13,6 +14,14 @@ TestCase {
 
     function makeButton(props) {
         return buttonComponent.createObject(testCase, props || {});
+    }
+
+    function requireActiveWindow() {
+        var window = testCase.Window.window;
+        verify(window !== null, "the test case has no window");
+        tryVerify(function () {
+                return window.active;
+            }, 5000, "the test window never became active, so keyboard focus cannot be delivered");
     }
 
     function test_art_and_glyph_follow_the_action_id() {
@@ -176,6 +185,7 @@ TestCase {
                 "height": 48
             });
         verify(!button.tooltip.visible);
+        requireActiveWindow();
         button.forceActiveFocus(Qt.TabFocusReason);
         tryVerify(function () {
                 return button.tooltip.visible;
@@ -200,6 +210,7 @@ TestCase {
                 "hint": "Stand fast.",
                 "disabledReason": "Hold is only available to archers and spearmen"
             });
+        requireActiveWindow();
         button.forceActiveFocus(Qt.TabFocusReason);
         tryVerify(function () {
                 return button.tooltip.visible;

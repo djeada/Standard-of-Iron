@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <bit>
 #include <cmath>
+#include <cstdio>
 #include <limits>
 #include <numbers>
 #include <unordered_map>
@@ -101,6 +102,8 @@ struct LayoutCacheEntry {
 thread_local std::unordered_map<const Engine::Core::Entity*, LayoutCacheEntry>
     g_layout_cache;
 
+thread_local std::uint64_t g_layout_cache_generation = 0;
+
 void hash_combine(std::uint64_t& seed, std::uint64_t value) noexcept {
   seed ^= value + 0x9e3779b97f4a7c15ULL + (seed << 6U) + (seed >> 2U);
 }
@@ -121,6 +124,7 @@ auto layout_signature(const Engine::Core::Entity& entity) -> std::uint64_t {
         signature,
         static_cast<std::uint64_t>(unit->render_individuals_per_unit_override));
     hash_combine(signature, unit->uses_nation_formation_profile ? 1U : 0U);
+
     hash_combine(signature, static_cast<std::uint64_t>(unit->health));
     hash_combine(signature, static_cast<std::uint64_t>(unit->max_health));
   }
@@ -175,6 +179,7 @@ void store_layout_cache(const Engine::Core::Entity* entity,
                         const FormationLayout& layout) {
   if (g_layout_cache.size() > 8192U) {
     g_layout_cache.clear();
+    ++g_layout_cache_generation;
   }
   LayoutCacheEntry& cache = g_layout_cache[entity];
   cache.local_signature = signature;
@@ -299,13 +304,20 @@ auto living_slot_indices(const Engine::Core::Entity& entity,
   return living;
 }
 
-auto resolve_layout(const Engine::Core::Entity& entity) -> FormationLayout {
-  FormationLayout result;
+namespace {
+
+void build_layout_into_cache(const Engine::Core::Entity& entity,
+                             const Engine::Core::UnitComponent& unit_ref,
+                             const Engine::Core::TransformComponent& resolved_transform,
+                             std::uint64_t signature);
+
+auto resolve_layout_entry(const Engine::Core::Entity& entity)
+    -> const LayoutCacheEntry* {
   auto const* unit = entity.get_component<Engine::Core::UnitComponent>();
-  auto const* transform = entity.get_component<Engine::Core::TransformComponent>();
   if (unit == nullptr) {
-    return result;
+    return nullptr;
   }
+  auto const* transform = entity.get_component<Engine::Core::TransformComponent>();
 
   Engine::Core::TransformComponent const identity_transform{};
   auto const& resolved_transform =
@@ -323,8 +335,20 @@ auto resolve_layout(const Engine::Core::Entity& entity) -> FormationLayout {
       cached->second.world_z = resolved_transform.position.z;
       cached->second.yaw = resolved_transform.rotation.y;
     }
-    return cached->second.layout;
+    return &cached->second;
   }
+
+  build_layout_into_cache(entity, *unit, resolved_transform, signature);
+  auto const rebuilt = g_layout_cache.find(&entity);
+  return rebuilt != g_layout_cache.end() ? &rebuilt->second : nullptr;
+}
+
+void build_layout_into_cache(const Engine::Core::Entity& entity,
+                             const Engine::Core::UnitComponent& unit_ref,
+                             const Engine::Core::TransformComponent& resolved_transform,
+                             std::uint64_t signature) {
+  FormationLayout result;
+  auto const* unit = &unit_ref;
 
   bool const rigid_body = entity.has_component<Engine::Core::BuildingComponent>() ||
                           entity.has_component<Engine::Core::ElephantComponent>();
@@ -358,7 +382,7 @@ auto resolve_layout(const Engine::Core::Entity& entity) -> FormationLayout {
       result.occupied_slots.push_back(slot);
     }
     store_layout_cache(&entity, signature, resolved_transform, result);
-    return result;
+    return;
   }
 
   auto const definition = resolve_definition(*unit);
@@ -480,7 +504,13 @@ auto resolve_layout(const Engine::Core::Entity& entity) -> FormationLayout {
     result.occupied_slots.push_back(casualty_slot);
   }
   store_layout_cache(&entity, signature, resolved_transform, result);
-  return result;
+}
+
+} // namespace
+
+auto resolve_layout(const Engine::Core::Entity& entity) -> FormationLayout {
+  auto const* entry = resolve_layout_entry(entity);
+  return entry != nullptr ? entry->layout : FormationLayout{};
 }
 
 auto formation_turn_radius(const Engine::Core::Entity& entity) -> float {
@@ -512,26 +542,78 @@ auto has_formation_slots(const Engine::Core::Entity& entity) -> bool {
   return unit != nullptr && resolve_definition(*unit).total_count > 1;
 }
 
-auto resolve_contact_context(const Engine::Core::Entity& attacker,
-                             const Engine::Core::Entity& target)
-    -> FormationContactContext {
-  FormationContactContext context;
-  ContactGeometry& result = context.geometry;
+namespace {
+
+struct ResolvedContact {
+  const FormationLayout* attacker_layout{nullptr};
+  const FormationLayout* target_layout{nullptr};
+  ContactGeometry geometry;
+};
+
+void accumulate_slot_contact(const Engine::Core::TransformComponent& attacker_transform,
+                             const Engine::Core::TransformComponent& target_transform,
+                             const FormationLayout& attacker_layout,
+                             const FormationLayout& target_layout,
+                             float dir_x,
+                             float dir_z,
+                             bool has_direction,
+                             ContactGeometry& result) {
+  const float contact_radius = attacker_layout.body_radius + target_layout.body_radius;
+  const float contact_radius_sq = contact_radius * contact_radius;
+
+  float nearest = std::numeric_limits<float>::infinity();
+  for (auto const& attacker_slot : attacker_layout.occupied_slots) {
+    const float attacker_offset_x =
+        attacker_slot.world_x - attacker_transform.position.x;
+    const float attacker_offset_z =
+        attacker_slot.world_z - attacker_transform.position.z;
+
+    for (auto const& target_slot : target_layout.occupied_slots) {
+      nearest = std::min(nearest, slot_distance(attacker_slot, target_slot));
+
+      if (!has_direction) {
+        continue;
+      }
+      const float relative_x =
+          (target_slot.world_x - target_transform.position.x) - attacker_offset_x;
+      const float relative_z =
+          (target_slot.world_z - target_transform.position.z) - attacker_offset_z;
+      const float parallel = (relative_x * dir_x) + (relative_z * dir_z);
+      const float relative_sq = (relative_x * relative_x) + (relative_z * relative_z);
+      const float lateral_sq = std::max(0.0F, relative_sq - (parallel * parallel));
+      if (lateral_sq > contact_radius_sq) {
+        continue;
+      }
+      const float candidate = -parallel + std::sqrt(contact_radius_sq - lateral_sq);
+      result.contact_center_distance =
+          std::max(result.contact_center_distance, candidate);
+    }
+  }
+
+  result.surface_gap =
+      nearest - attacker_layout.body_radius - target_layout.body_radius;
+}
+
+auto resolve_contact(const Engine::Core::Entity& attacker,
+                     const Engine::Core::Entity& target) -> ResolvedContact {
+  ResolvedContact resolved;
+  ContactGeometry& result = resolved.geometry;
   auto const* attacker_transform =
       attacker.get_component<Engine::Core::TransformComponent>();
   auto const* target_transform =
       target.get_component<Engine::Core::TransformComponent>();
   if (attacker_transform == nullptr || target_transform == nullptr) {
     result.surface_gap = std::numeric_limits<float>::infinity();
-    return context;
+    return resolved;
   }
 
   float const dx = target_transform->position.x - attacker_transform->position.x;
   float const dz = target_transform->position.z - attacker_transform->position.z;
-  result.center_distance = std::sqrt(dx * dx + dz * dz);
+  result.center_distance = std::sqrt((dx * dx) + (dz * dz));
   result.uses_formation_slots =
       has_formation_slots(attacker) || has_formation_slots(target);
   if (!result.uses_formation_slots) {
+
     result.surface_gap = result.center_distance;
 
     float const body_contact = single_body_radius(attacker, attacker_transform->scale) +
@@ -540,56 +622,43 @@ auto resolve_contact_context(const Engine::Core::Entity& attacker,
     result.contact_center_distance = body_contact;
     result.engagement_center_distance =
         body_contact + std::max(0.0F, reach - body_contact) * k_single_body_reach_share;
-    return context;
+    return resolved;
   }
 
-  context.attacker_layout = resolve_layout(attacker);
-  context.target_layout = resolve_layout(target);
-  auto const& attacker_layout = context.attacker_layout;
-  auto const& target_layout = context.target_layout;
+  const std::uint64_t generation_before = g_layout_cache_generation;
+  const LayoutCacheEntry* attacker_entry = resolve_layout_entry(attacker);
+  const LayoutCacheEntry* target_entry = resolve_layout_entry(target);
+  if (g_layout_cache_generation != generation_before) {
+
+    auto const refreshed = g_layout_cache.find(&attacker);
+    attacker_entry = refreshed != g_layout_cache.end() ? &refreshed->second : nullptr;
+  }
+
+  static const FormationLayout k_absent_layout{};
+  auto const& attacker_layout =
+      attacker_entry != nullptr ? attacker_entry->layout : k_absent_layout;
+  auto const& target_layout =
+      target_entry != nullptr ? target_entry->layout : k_absent_layout;
+  resolved.attacker_layout = &attacker_layout;
+  resolved.target_layout = &target_layout;
+
   result.formation_overlap_required =
       has_formation_slots(attacker) && has_formation_slots(target);
-
   result.contact_tolerance =
       std::min(attacker_layout.body_radius, target_layout.body_radius) * 0.15F;
-  float nearest = std::numeric_limits<float>::infinity();
-  for (auto const& attacker_slot : attacker_layout.occupied_slots) {
-    for (auto const& target_slot : target_layout.occupied_slots) {
-      nearest = std::min(nearest, slot_distance(attacker_slot, target_slot));
-    }
-  }
-  result.surface_gap =
-      nearest - attacker_layout.body_radius - target_layout.body_radius;
 
-  if (result.center_distance > 0.0001F) {
-    float const dir_x = dx / result.center_distance;
-    float const dir_z = dz / result.center_distance;
-    float const contact_radius =
-        attacker_layout.body_radius + target_layout.body_radius;
-    float const contact_radius_sq = contact_radius * contact_radius;
+  const bool has_direction = result.center_distance > 0.0001F;
+  const float dir_x = has_direction ? dx / result.center_distance : 0.0F;
+  const float dir_z = has_direction ? dz / result.center_distance : 0.0F;
+  accumulate_slot_contact(*attacker_transform,
+                          *target_transform,
+                          attacker_layout,
+                          target_layout,
+                          dir_x,
+                          dir_z,
+                          has_direction,
+                          result);
 
-    for (auto const& attacker_slot : attacker_layout.occupied_slots) {
-      float const attacker_offset_x =
-          attacker_slot.world_x - attacker_transform->position.x;
-      float const attacker_offset_z =
-          attacker_slot.world_z - attacker_transform->position.z;
-      for (auto const& target_slot : target_layout.occupied_slots) {
-        float const relative_x =
-            (target_slot.world_x - target_transform->position.x) - attacker_offset_x;
-        float const relative_z =
-            (target_slot.world_z - target_transform->position.z) - attacker_offset_z;
-        float const parallel = relative_x * dir_x + relative_z * dir_z;
-        float const relative_sq = relative_x * relative_x + relative_z * relative_z;
-        float const lateral_sq = std::max(0.0F, relative_sq - parallel * parallel);
-        if (lateral_sq > contact_radius_sq) {
-          continue;
-        }
-        float const candidate = -parallel + std::sqrt(contact_radius_sq - lateral_sq);
-        result.contact_center_distance =
-            std::max(result.contact_center_distance, candidate);
-      }
-    }
-  }
   if (result.formation_overlap_required) {
 
     float const rank_spacing = std::min(attacker_layout.spacing, target_layout.spacing);
@@ -611,12 +680,31 @@ auto resolve_contact_context(const Engine::Core::Entity& attacker,
                  result.center_distance - result.surface_gap +
                      melee_reach(attacker) * k_mixed_body_approach_margin);
   }
+
+  return resolved;
+}
+
+} // namespace
+
+auto resolve_contact_context(const Engine::Core::Entity& attacker,
+                             const Engine::Core::Entity& target)
+    -> FormationContactContext {
+  const ResolvedContact resolved = resolve_contact(attacker, target);
+  FormationContactContext context;
+  context.geometry = resolved.geometry;
+  if (resolved.attacker_layout != nullptr) {
+    context.attacker_layout = *resolved.attacker_layout;
+  }
+  if (resolved.target_layout != nullptr) {
+    context.target_layout = *resolved.target_layout;
+  }
   return context;
 }
 
 auto contact_geometry(const Engine::Core::Entity& attacker,
                       const Engine::Core::Entity& target) -> ContactGeometry {
-  return resolve_contact_context(attacker, target).geometry;
+
+  return resolve_contact(attacker, target).geometry;
 }
 
 auto single_combat_strike_distance(const Engine::Core::Entity& attacker,
