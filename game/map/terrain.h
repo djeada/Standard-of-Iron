@@ -12,6 +12,8 @@
 #include <string>
 #include <vector>
 
+#include "hill_shape.h"
+
 namespace Game::Map {
 
 enum class TerrainType {
@@ -626,6 +628,16 @@ struct TerrainFeature {
   std::vector<QVector3D> entrances;
 
   float rotation_deg = 0.0F;
+
+  HillShape shape = HillShape::Blob;
+  float thickness = 0.0F;
+  float sweep_degrees = 0.0F;
+  float sweep_start_degrees = 0.0F;
+  float taper = 0.0F;
+  bool has_sweep = false;
+  bool has_sweep_start = false;
+  std::vector<QVector3D> shape_points;
+  std::vector<QVector3D> mask_cells;
 };
 
 enum class WaterElevationMode : std::uint8_t {

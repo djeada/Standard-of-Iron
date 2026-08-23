@@ -69,5 +69,12 @@ inline constexpr const char* patrol_waypoints = "patrol_waypoints";
 
 inline constexpr const char* depth = "depth";
 inline constexpr const char* entrances = "entrances";
+inline constexpr const char* shape = "shape";
+inline constexpr const char* thickness = "thickness";
+inline constexpr const char* arc = "arc";
+inline constexpr const char* arc_start = "arc_start";
+inline constexpr const char* taper = "taper";
+inline constexpr const char* points = "points";
+inline constexpr const char* cells = "cells";
 inline constexpr const char* waypoints = "waypoints";
 } // namespace MapEditor::MapJsonKeys

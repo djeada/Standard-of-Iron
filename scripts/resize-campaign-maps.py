@@ -49,6 +49,27 @@ MAPS = (
 )
 
 
+def scale_hill_cells(cells: list, scale_x: float, scale_z: float) -> list:
+    """Rescale a painted hill mask, keeping every span a whole number of cells."""
+    scaled: list = []
+    for row in cells:
+        if not isinstance(row, list):
+            continue
+        if len(row) == 2:
+            scaled.append(
+                [round(float(row[0]) * scale_x), round(float(row[1]) * scale_z)]
+            )
+        elif len(row) == 3:
+            scaled.append(
+                [
+                    round(float(row[0]) * scale_z),
+                    round(float(row[1]) * scale_x),
+                    round(float(row[2]) * scale_x),
+                ]
+            )
+    return scaled
+
+
 def number(value: float) -> int | float:
     rounded = round(value, 2)
     return int(rounded) if abs(rounded - round(rounded)) < 1.0e-7 else rounded
@@ -97,8 +118,14 @@ def scale_map(definition: dict[str, Any], target: int) -> tuple[float, float]:
             feature["depth"] = number(float(feature["depth"]) * scale_z)
         if isinstance(feature.get("radius"), (int, float)):
             feature["radius"] = number(float(feature["radius"]) * scale_mean)
+        if isinstance(feature.get("thickness"), (int, float)):
+            feature["thickness"] = number(float(feature["thickness"]) * scale_mean)
         for entrance in feature.get("entrances") or []:
             scale_xz_object(entrance, scale_x, scale_z)
+        for point in feature.get("points") or []:
+            scale_xz_object(point, scale_x, scale_z)
+        if isinstance(feature.get("cells"), list):
+            feature["cells"] = scale_hill_cells(feature["cells"], scale_x, scale_z)
 
     for lake in definition.get("lakes") or []:
         scale_xz_object(lake, scale_x, scale_z)

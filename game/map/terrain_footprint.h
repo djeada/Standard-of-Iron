@@ -3,6 +3,9 @@
 #include <algorithm>
 #include <cmath>
 #include <cstdint>
+#include <vector>
+
+#include "hill_shape.h"
 
 namespace Game::Map {
 
@@ -60,6 +63,7 @@ struct HillFootprintInput {
   float grid_center_x = 0.0F;
   float grid_center_z = 0.0F;
   bool campaign_scale = false;
+  bool shaped = false;
 };
 
 struct MountainFootprintInput {
@@ -121,7 +125,7 @@ hill_footprint_cells(const HillFootprintInput& input) -> FootprintCells {
   footprint.organic_spread =
       input.campaign_scale ? k_hill_organic_spread : k_hill_compact_organic_spread;
 
-  if (input.campaign_scale &&
+  if (input.campaign_scale && !input.shaped &&
       hill_radius_is_authoritative(full_width, full_depth, input.radius)) {
     width_cells *= k_campaign_hill_width_scale;
     footprint.rotation_deg += footprint_hash_to_float01(footprint_hash_coords(
@@ -136,6 +140,36 @@ hill_footprint_cells(const HillFootprintInput& input) -> FootprintCells {
   footprint.half_width = std::max(k_hill_min_slope_cells, width_cells * 0.5F);
   footprint.half_depth = std::max(k_hill_min_slope_cells, depth_cells * 0.5F);
   return footprint;
+}
+
+struct HillShapeAuthoring {
+  HillShape shape = HillShape::Blob;
+  float thickness = 0.0F;
+  float sweep_degrees = 0.0F;
+  float sweep_start_degrees = 0.0F;
+  float taper = 0.0F;
+  bool has_sweep = false;
+  bool has_sweep_start = false;
+  std::vector<HillShapePoint> local_points;
+};
+
+[[nodiscard]] inline auto hill_shape_params(const FootprintCells& footprint,
+                                            const HillShapeAuthoring& authored,
+                                            float tile_size) -> HillShapeParams {
+  const float tile = std::max(tile_size, 0.0001F);
+  HillShapeParams params;
+  params.shape = authored.shape;
+  params.half_width_cells = footprint.half_width;
+  params.half_depth_cells = footprint.half_depth;
+  params.half_thickness_cells =
+      authored.thickness > 0.0F ? authored.thickness * 0.5F / tile : 0.0F;
+  params.sweep_degrees = authored.sweep_degrees;
+  params.sweep_start_degrees = authored.sweep_start_degrees;
+  params.has_sweep = authored.has_sweep;
+  params.has_sweep_start = authored.has_sweep_start;
+  params.taper = authored.taper;
+  params.points = authored.local_points;
+  return params;
 }
 
 [[nodiscard]] inline auto mountain_major_radius_cells(float radius_cells) -> float {
@@ -175,10 +209,17 @@ struct HillCrownCells {
   float height = 0.0F;
 };
 
-[[nodiscard]] inline auto hill_crown_cells(const FootprintCells& footprint,
-                                           float authored_height,
-                                           float tile_size,
-                                           bool campaign_scale) -> HillCrownCells {
+struct HillCrownProfile {
+  float height = 0.0F;
+  float slope_run = 0.0F;
+  float minimum_crown_fraction = 0.0F;
+  float maximum_slope_fraction = 0.0F;
+};
+
+[[nodiscard]] inline auto hill_crown_profile(const FootprintCells& footprint,
+                                             float authored_height,
+                                             float tile_size,
+                                             bool campaign_scale) -> HillCrownProfile {
   const float tile = std::max(tile_size, 0.0001F);
   const float scaled_height =
       authored_height * (campaign_scale ? k_campaign_hill_height_scale : 1.0F);
@@ -186,30 +227,44 @@ struct HillCrownCells {
       std::min(footprint.width_cells, footprint.depth_cells) * tile *
       k_hill_footprint_height_ratio;
 
-  HillCrownCells crown;
-  crown.height =
+  HillCrownProfile profile;
+  profile.height =
       campaign_scale ? std::max(scaled_height, footprint_height) : scaled_height;
 
   const float elevation_cells =
-      std::max(crown.height / tile, k_hill_min_elevation_cells);
-  const float slope_run =
+      std::max(profile.height / tile, k_hill_min_elevation_cells);
+  profile.slope_run =
       campaign_scale
           ? std::max(k_campaign_slope_run_min_cells,
                      elevation_cells * k_campaign_slope_run_scale)
           : std::max(k_slope_run_min_cells, elevation_cells * k_slope_run_scale);
-  const float minimum_crown_fraction =
+  profile.minimum_crown_fraction =
       campaign_scale ? k_campaign_min_crown_fraction : k_min_crown_fraction;
-  const float maximum_slope_fraction =
+  profile.maximum_slope_fraction =
       campaign_scale ? k_campaign_max_slope_fraction : k_max_slope_fraction;
+  return profile;
+}
 
-  const auto crown_extent = [&](float slope_extent) {
-    return std::max(
-        {k_hill_min_crown_cells,
-         slope_extent * minimum_crown_fraction,
-         slope_extent - std::min(slope_extent * maximum_slope_fraction, slope_run)});
-  };
-  crown.half_width = crown_extent(footprint.half_width);
-  crown.half_depth = crown_extent(footprint.half_depth);
+[[nodiscard]] inline auto hill_crown_extent_cells(const HillCrownProfile& profile,
+                                                  float slope_extent) -> float {
+  return std::max(
+      {k_hill_min_crown_cells,
+       slope_extent * profile.minimum_crown_fraction,
+       slope_extent -
+           std::min(slope_extent * profile.maximum_slope_fraction, profile.slope_run)});
+}
+
+[[nodiscard]] inline auto hill_crown_cells(const FootprintCells& footprint,
+                                           float authored_height,
+                                           float tile_size,
+                                           bool campaign_scale) -> HillCrownCells {
+  const HillCrownProfile profile =
+      hill_crown_profile(footprint, authored_height, tile_size, campaign_scale);
+
+  HillCrownCells crown;
+  crown.height = profile.height;
+  crown.half_width = hill_crown_extent_cells(profile, footprint.half_width);
+  crown.half_depth = hill_crown_extent_cells(profile, footprint.half_depth);
   return crown;
 }
 

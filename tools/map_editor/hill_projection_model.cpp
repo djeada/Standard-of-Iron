@@ -268,6 +268,38 @@ auto append_rotated_ellipse_cells(Model* model,
   }
 }
 
+auto append_shaped_cells(Model* model,
+                         const Game::Map::HillShapeGeometry& geometry,
+                         double rotation_deg) -> void {
+  if (model == nullptr || !geometry.is_shaped()) {
+    return;
+  }
+
+  const RotationAxes axes = rotation_axes(rotation_deg);
+  for (int cell_z = 0; cell_z < model->grid_height; ++cell_z) {
+    const double world_z = world_z_from_cell(*model, cell_z);
+    for (int cell_x = 0; cell_x < model->grid_width; ++cell_x) {
+      const double world_x = world_x_from_cell(*model, cell_x);
+      const auto [local_u, local_v] =
+          project_world(world_x - model->center_x, world_z - model->center_z, axes);
+      bool inside = false;
+      if (geometry.is_mask()) {
+        inside = Game::Map::hill_shape_mask_distance(
+                     static_cast<float>(world_x - model->center_x),
+                     static_cast<float>(world_z - model->center_z),
+                     geometry) <= 0.0F;
+      } else {
+        const Game::Map::HillSpineSample sample = Game::Map::sample_hill_spine(
+            static_cast<float>(local_u), static_cast<float>(local_v), geometry);
+        inside = sample.distance <= sample.half_thickness;
+      }
+      if (inside) {
+        model->hill_cells.append(QPoint(cell_x, cell_z));
+      }
+    }
+  }
+}
+
 auto oriented_bounds_from_cells(const Model& model,
                                 const QVector<QPoint>& cells,
                                 double rotation_deg) -> OrientedBounds {
@@ -443,6 +475,102 @@ auto component_order(const QVector<QPoint>& lhs, const QVector<QPoint>& rhs) -> 
 
 } // namespace
 
+auto shape_geometry_from_json(const QJsonObject& hill_json,
+                              double center_x,
+                              double center_z,
+                              double rotation_deg,
+                              const Game::Map::FootprintCells& footprint,
+                              double tile_size) -> Game::Map::HillShapeGeometry {
+  Game::Map::HillShapeGeometry empty;
+  Game::Map::HillShape shape = Game::Map::HillShape::Blob;
+  const QString shape_name = hill_json.value(MapJsonKeys::shape).toString().trimmed();
+  if (!Game::Map::parse_hill_shape(shape_name.toStdString(), shape) ||
+      shape == Game::Map::HillShape::Blob) {
+    return empty;
+  }
+
+  const RotationAxes axes = rotation_axes(rotation_deg);
+
+  Game::Map::HillShapeAuthoring authoring;
+  authoring.shape = shape;
+  authoring.thickness =
+      static_cast<float>(hill_json.value(MapJsonKeys::thickness).toDouble(0.0));
+  authoring.has_sweep = hill_json.contains(MapJsonKeys::arc);
+  authoring.sweep_degrees =
+      static_cast<float>(hill_json.value(MapJsonKeys::arc).toDouble(0.0));
+  authoring.has_sweep_start = hill_json.contains(MapJsonKeys::arc_start);
+  authoring.sweep_start_degrees =
+      static_cast<float>(hill_json.value(MapJsonKeys::arc_start).toDouble(0.0));
+  authoring.taper =
+      static_cast<float>(hill_json.value(MapJsonKeys::taper).toDouble(0.0));
+
+  for (const QJsonValue point_value : hill_json.value(MapJsonKeys::points).toArray()) {
+    const QJsonObject point = point_value.toObject();
+    double point_x = 0.0;
+    double point_z = 0.0;
+    if (!numeric_value(point.value(MapJsonKeys::x), &point_x) ||
+        !numeric_value(point.value(MapJsonKeys::z), &point_z)) {
+      continue;
+    }
+    const auto [local_u, local_v] =
+        project_world(point_x - center_x, point_z - center_z, axes);
+    authoring.local_points.push_back(
+        {static_cast<float>(local_u), static_cast<float>(local_v)});
+  }
+
+  auto params =
+      Game::Map::hill_shape_params(footprint, authoring, static_cast<float>(tile_size));
+  params.mask_center_x = static_cast<float>(center_x);
+  params.mask_center_z = static_cast<float>(center_z);
+  for (const QJsonValue row_value : hill_json.value(MapJsonKeys::cells).toArray()) {
+    const QJsonArray row = row_value.toArray();
+    if (row.size() == 2) {
+      params.mask_cells.push_back(
+          {static_cast<int>(std::lround(row.at(0).toDouble(0.0))),
+           static_cast<int>(std::lround(row.at(1).toDouble(0.0)))});
+    } else if (row.size() == 3) {
+      const int cell_z = static_cast<int>(std::lround(row.at(0).toDouble(0.0)));
+      const int from = static_cast<int>(std::lround(row.at(1).toDouble(0.0)));
+      const int to = static_cast<int>(std::lround(row.at(2).toDouble(0.0)));
+      for (int cell_x = std::min(from, to); cell_x <= std::max(from, to); ++cell_x) {
+        params.mask_cells.push_back({cell_x, cell_z});
+      }
+    }
+  }
+
+  return Game::Map::build_hill_shape(params);
+}
+
+auto mask_cells_to_json(const QVector<QPoint>& cells,
+                        double origin_x,
+                        double origin_z) -> QJsonArray {
+  QVector<QPoint> sorted = cells;
+  std::sort(sorted.begin(), sorted.end(), [](const QPoint& lhs, const QPoint& rhs) {
+    if (lhs.y() == rhs.y()) {
+      return lhs.x() < rhs.x();
+    }
+    return lhs.y() < rhs.y();
+  });
+
+  QJsonArray rows;
+  qsizetype index = 0;
+  while (index < sorted.size()) {
+    const int row = sorted[index].y();
+    int span_start = sorted[index].x();
+    int span_end = span_start;
+    ++index;
+    while (index < sorted.size() && sorted[index].y() == row &&
+           sorted[index].x() <= span_end + 1) {
+      span_end = std::max(span_end, sorted[index].x());
+      ++index;
+    }
+    rows.append(QJsonArray{static_cast<double>(row) + origin_z,
+                           static_cast<double>(span_start) + origin_x,
+                           static_cast<double>(span_end) + origin_x});
+  }
+  return rows;
+}
+
 auto build_model(const QJsonObject& hill_json, const MapContext& context) -> Model {
   Model model;
   model.context = context;
@@ -488,17 +616,40 @@ auto build_model(const QJsonObject& hill_json, const MapContext& context) -> Mod
   model.runtime_rotation_deg = footprint.rotation_deg;
   model.organic_spread = footprint.organic_spread;
 
+  if (!model.is_mountain) {
+    model.shape = shape_geometry_from_json(hill_json,
+                                           model.center_x,
+                                           model.center_z,
+                                           model.runtime_rotation_deg,
+                                           footprint,
+                                           static_cast<double>(tile));
+    if (model.shape.is_mask()) {
+      model.runtime_rotation_deg = 0.0;
+    }
+  }
+
   const QVector<EntranceSpec> entrance_specs = read_entrance_specs(
       hill_json.value(MapJsonKeys::entrances).toArray(), &model.invalid_entrances);
 
-  const int half_span = projection_half_span(model, footprint, entrance_specs);
+  Game::Map::FootprintCells span_footprint = footprint;
+  if (model.shape.is_shaped()) {
+    span_footprint.half_width = model.shape.bound_half_x;
+    span_footprint.half_depth = model.shape.bound_half_z;
+  }
+  const int half_span = projection_half_span(model, span_footprint, entrance_specs);
   model.grid_width = (half_span * 2) + 1;
   model.grid_height = model.grid_width;
   model.origin_x = std::round(model.center_x) - static_cast<double>(half_span);
   model.origin_z = std::round(model.center_z) - static_cast<double>(half_span);
 
-  append_rotated_ellipse_cells(
-      &model, model.hill_half_width, model.hill_half_depth, model.runtime_rotation_deg);
+  if (model.shape.is_shaped()) {
+    append_shaped_cells(&model, model.shape, model.runtime_rotation_deg);
+  } else {
+    append_rotated_ellipse_cells(&model,
+                                 model.hill_half_width,
+                                 model.hill_half_depth,
+                                 model.runtime_rotation_deg);
+  }
   if (model.hill_cells.isEmpty()) {
     const QPoint center_cell = cell_from_world(model, model.center_x, model.center_z);
     if (in_bounds(model, center_cell)) {
@@ -725,6 +876,47 @@ auto apply_projection_to_hill_json(const QJsonObject& base_hill_json,
   const double tile = model_tile_size(model);
 
   const QVector<QPoint> normalized_hill = unique_in_bounds_cells(model, hill_cells);
+  const bool body_unchanged = normalized_hill == model.hill_cells;
+
+  if (!is_mountain && !normalized_hill.isEmpty() && !body_unchanged) {
+    const OrientedBounds bounds =
+        oriented_bounds_from_cells(model, normalized_hill, 0.0);
+    updated[MapJsonKeys::shape] = QStringLiteral("mask");
+    updated[MapJsonKeys::cells] =
+        mask_cells_to_json(normalized_hill, model.origin_x, model.origin_z);
+    updated[MapJsonKeys::x] = (bounds.min_u + bounds.max_u) * 0.5;
+    updated[MapJsonKeys::z] = (bounds.min_v + bounds.max_v) * 0.5;
+    updated[MapJsonKeys::width] = (bounds.max_u - bounds.min_u + 1.0) * tile;
+    updated[MapJsonKeys::depth] = (bounds.max_v - bounds.min_v + 1.0) * tile;
+    updated.remove(MapJsonKeys::radius);
+    updated.remove(MapJsonKeys::rotation);
+    updated.remove(MapJsonKeys::points);
+    updated.remove(MapJsonKeys::arc);
+    updated.remove(MapJsonKeys::arc_start);
+    updated.remove(MapJsonKeys::thickness);
+    updated.remove(MapJsonKeys::taper);
+
+    const QJsonArray painted_entrances = entrances_from_cells(
+        model, normalize_entrance_cells(model, normalized_hill, entrance_cells));
+    if (painted_entrances.isEmpty()) {
+      updated.remove(MapJsonKeys::entrances);
+    } else {
+      updated[MapJsonKeys::entrances] = painted_entrances;
+    }
+    return updated;
+  }
+
+  if (!is_mountain && model.shape.is_shaped() && body_unchanged) {
+    const QJsonArray kept_entrances = entrances_from_cells(
+        model, normalize_entrance_cells(model, normalized_hill, entrance_cells));
+    if (kept_entrances.isEmpty()) {
+      updated.remove(MapJsonKeys::entrances);
+    } else {
+      updated[MapJsonKeys::entrances] = kept_entrances;
+    }
+    return updated;
+  }
+
   if (!normalized_hill.isEmpty()) {
     const OrientedBounds bounds =
         oriented_bounds_from_cells(model, normalized_hill, rotation_deg);

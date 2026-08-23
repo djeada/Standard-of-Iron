@@ -44,6 +44,37 @@ auto translated_entrances(const QJsonArray& entrances,
   return moved;
 }
 
+auto translated_cells(const QJsonArray& cells, float dx, float dz) -> QJsonArray {
+  QJsonArray moved;
+  for (const QJsonValue value : cells) {
+    const QJsonArray row = value.toArray();
+    if (row.size() == 2) {
+      moved.append(QJsonArray{row.at(0).toDouble() + static_cast<double>(dx),
+                              row.at(1).toDouble() + static_cast<double>(dz)});
+    } else if (row.size() == 3) {
+      moved.append(QJsonArray{row.at(0).toDouble() + static_cast<double>(dz),
+                              row.at(1).toDouble() + static_cast<double>(dx),
+                              row.at(2).toDouble() + static_cast<double>(dx)});
+    } else {
+      moved.append(value);
+    }
+  }
+  return moved;
+}
+
+auto translated_terrain(TerrainElement element, float dx, float dz) -> TerrainElement {
+  if (!element.cells.isEmpty()) {
+    dx = std::round(dx);
+    dz = std::round(dz);
+  }
+  element.x += dx;
+  element.z += dz;
+  element.entrances = translated_entrances(element.entrances, dx, dz);
+  element.points = translated_entrances(element.points, dx, dz);
+  element.cells = translated_cells(element.cells, dx, dz);
+  return element;
+}
+
 } // namespace
 
 auto is_valid_kind(int kind) -> bool {
@@ -184,10 +215,7 @@ auto translated(const ElementSnapshot& snap, const QPointF& delta) -> ElementSna
                           return ElementSnapshot{e};
                         },
                         [&](TerrainElement e) {
-                          e.x += dx;
-                          e.z += dz;
-                          e.entrances = translated_entrances(e.entrances, dx, dz);
-                          return ElementSnapshot{e};
+                          return ElementSnapshot{translated_terrain(e, dx, dz)};
                         },
                         [&](auto e) {
                           e.x += dx;
@@ -222,12 +250,8 @@ auto snapped_to_grid(const ElementSnapshot& snap) -> ElementSnapshot {
             return ElementSnapshot{e};
           },
           [](TerrainElement e) {
-            const float dx = round_cell(e.x) - e.x;
-            const float dz = round_cell(e.z) - e.z;
-            e.x += dx;
-            e.z += dz;
-            e.entrances = translated_entrances(e.entrances, dx, dz);
-            return ElementSnapshot{e};
+            return ElementSnapshot{
+                translated_terrain(e, round_cell(e.x) - e.x, round_cell(e.z) - e.z)};
           },
           [](auto e) {
             e.x = round_cell(e.x);

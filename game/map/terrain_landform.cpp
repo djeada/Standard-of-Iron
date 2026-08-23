@@ -62,10 +62,162 @@ auto organic_ellipse(float x,
   return std::hypot(nx, nz) / boundary;
 }
 
+auto organic_spine_boundary(float along_cells,
+                            float side,
+                            float phase,
+                            float roughness,
+                            std::uint32_t seed) -> float {
+  const float s = along_cells * 0.16F;
+  return std::clamp(
+      1.0F + std::sin(s + phase) * roughness * 0.30F +
+          std::sin(s * 1.73F - phase * 1.31F) * roughness * 0.24F +
+          signed_fbm(
+              s * 0.61F + phase, side * 3.17F - phase * 0.41F, seed ^ 0x91E10DA5U, 3) *
+              roughness * 0.26F,
+      1.0F - roughness,
+      1.0F + roughness);
+}
+
 auto smooth_union_distance(float a, float b, float blend) -> float {
   const float width = std::max(blend, 0.001F);
   const float h = std::clamp(0.5F + 0.5F * (b - a) / width, 0.0F, 1.0F);
   return b * (1.0F - h) + a * h - width * h * (1.0F - h);
+}
+
+auto hill_elevation_fraction(float outer_distance,
+                             float crown_distance,
+                             float domain_x,
+                             float domain_z,
+                             float angle,
+                             float phase,
+                             std::uint32_t seed,
+                             bool rounded_crown) -> float {
+  const float slope_band = std::max(crown_distance - outer_distance, 0.08F);
+  const float slope_position =
+      std::clamp((1.0F - outer_distance) / slope_band, 0.0F, 1.0F);
+  const float lower_slope = std::pow(slope_position, 1.28F);
+  const float upper_slope = 1.0F - std::pow(1.0F - slope_position, 1.38F);
+  const float shoulder_blend = smoothstep01((slope_position - 0.42F) / 0.36F);
+  float elevation =
+      (lower_slope * (1.0F - shoulder_blend) + upper_slope * shoulder_blend) * 0.94F;
+
+  const float mid_slope = 4.0F * elevation * (1.0F - elevation);
+  const float angular_warp =
+      signed_fbm(domain_x * 1.4F, domain_z * 1.4F, seed ^ 0x03707344U, 3) * 1.25F;
+  const float drainage_a =
+      std::pow(0.5F + 0.5F * std::cos(angle * 7.0F + angular_warp + phase), 14.0F);
+  const float drainage_b = std::pow(
+      0.5F + 0.5F * std::cos(angle * 11.0F - angular_warp * 0.7F - phase), 20.0F);
+  const float drainage = std::max(drainage_a, drainage_b * 0.72F);
+  elevation *= 1.0F - drainage * mid_slope * 0.11F;
+
+  const float weathering = signed_fbm(
+      domain_x * 3.1F + phase, domain_z * 3.1F - phase, seed ^ 0xC2B2AE35U, 4);
+  elevation += weathering * mid_slope * 0.022F;
+
+  const float toe = smoothstep01((elevation - 0.04F) / 0.18F) *
+                    (1.0F - smoothstep01((elevation - 0.24F) / 0.18F));
+  const float sediment =
+      (0.55F +
+       0.45F * value_noise(domain_x * 4.0F, domain_z * 4.0F, seed ^ 0xA4093822U)) *
+      toe * 0.055F;
+  elevation = std::clamp(elevation + sediment, 0.0F, 1.0F);
+  if (crown_distance <= 1.0F) {
+    const float summit_core = smoothstep01((1.0F - crown_distance) / 0.22F);
+    elevation = rounded_crown ? 0.94F + 0.06F * summit_core : 1.0F;
+  }
+  return elevation;
+}
+
+auto sample_mask_hill(float local_x,
+                      float local_z,
+                      const Game::Map::Landform::HillConfig& config)
+    -> Game::Map::Landform::HillSample {
+  const Game::Map::HillShapeGeometry& geometry = *config.shape;
+  const float inset = std::max(geometry.mask_inset, 0.5F);
+  const float signed_distance =
+      Game::Map::hill_shape_mask_distance(local_x, local_z, geometry);
+
+  const float outer_distance = 1.0F + signed_distance / inset;
+  const float crown_distance = 2.0F + signed_distance / inset;
+  if (outer_distance > 1.0F) {
+    return {.outer_distance = outer_distance, .crown_distance = crown_distance};
+  }
+
+  const float domain_x = local_x / inset;
+  const float domain_z = local_z / inset;
+  const float angle = std::atan2(local_z, local_x);
+  const float elevation = hill_elevation_fraction(outer_distance,
+                                                  crown_distance,
+                                                  domain_x,
+                                                  domain_z,
+                                                  angle,
+                                                  config.phase,
+                                                  config.seed,
+                                                  config.rounded_crown);
+  return {.outer_distance = outer_distance,
+          .crown_distance = crown_distance,
+          .elevation_fraction = elevation};
+}
+
+auto sample_spine_hill(float local_x,
+                       float local_z,
+                       const Game::Map::Landform::HillConfig& config)
+    -> Game::Map::Landform::HillSample {
+  const Game::Map::HillShapeGeometry& geometry = *config.shape;
+  const float base_thickness = std::max(geometry.half_thickness, 0.5F);
+  const float scale = 1.0F / std::max(base_thickness, 1.0F);
+  const float domain_x = local_x * scale;
+  const float domain_z = local_z * scale;
+  const float warp_strength = config.rounded_crown ? 0.170F : 0.110F;
+  const float warp_x =
+      signed_fbm(domain_x * 0.75F, domain_z * 0.75F, config.seed ^ 0x243F6A88U, 4) *
+      base_thickness * warp_strength;
+  const float warp_z = signed_fbm(domain_x * 0.75F + 11.0F,
+                                  domain_z * 0.75F - 7.0F,
+                                  config.seed ^ 0x85A308D3U,
+                                  4) *
+                       base_thickness * warp_strength;
+
+  const Game::Map::HillSpineSample spine =
+      Game::Map::sample_hill_spine(local_x + warp_x, local_z + warp_z, geometry);
+
+  const float along_cells = spine.along * geometry.total_length;
+  const float outer_roughness = config.rounded_crown ? 0.28F : 0.13F;
+  const float outer_boundary = organic_spine_boundary(
+      along_cells, spine.side, config.phase, outer_roughness, config.seed);
+  const float outer_thickness = std::max(spine.half_thickness * outer_boundary, 0.001F);
+  const float outer_distance = spine.distance / outer_thickness;
+
+  const float crown_ratio =
+      std::clamp(config.crown_thickness / base_thickness, 0.05F, 0.94F);
+  const float crown_roughness = config.rounded_crown ? 0.19F : 0.07F;
+  const float crown_boundary = organic_spine_boundary(along_cells,
+                                                      spine.side,
+                                                      config.phase + 0.10F,
+                                                      crown_roughness,
+                                                      config.seed ^ 0x13198A2EU);
+  const float crown_thickness =
+      std::max(spine.half_thickness * crown_ratio * crown_boundary, 0.001F);
+  const float crown_distance = spine.distance / crown_thickness;
+
+  if (outer_distance > 1.0F) {
+    return {.outer_distance = outer_distance, .crown_distance = crown_distance};
+  }
+
+  const float ridge_angle = along_cells / std::max(base_thickness * 1.5F, 1.0F) +
+                            (spine.side < 0.0F ? std::numbers::pi_v<float> : 0.0F);
+  const float elevation = hill_elevation_fraction(outer_distance,
+                                                  crown_distance,
+                                                  domain_x,
+                                                  domain_z,
+                                                  ridge_angle,
+                                                  config.phase,
+                                                  config.seed,
+                                                  config.rounded_crown);
+  return {.outer_distance = outer_distance,
+          .crown_distance = crown_distance,
+          .elevation_fraction = elevation};
 }
 
 } // namespace
@@ -73,6 +225,13 @@ auto smooth_union_distance(float a, float b, float blend) -> float {
 namespace Game::Map::Landform {
 
 auto sample_hill(float local_x, float local_z, const HillConfig& config) -> HillSample {
+  if (config.shape != nullptr && config.shape->is_mask()) {
+    return sample_mask_hill(local_x, local_z, config);
+  }
+  if (config.shape != nullptr && config.shape->is_spine()) {
+    return sample_spine_hill(local_x, local_z, config);
+  }
+
   const float min_radius =
       std::max(std::min(config.outer_radius_x, config.outer_radius_z), 1.0F);
   const float scale = 1.0F / min_radius;
@@ -147,47 +306,16 @@ auto sample_hill(float local_x, float local_z, const HillConfig& config) -> Hill
     return {.outer_distance = outer_distance, .crown_distance = crown_distance};
   }
 
-  const float slope_band = std::max(crown_distance - outer_distance, 0.08F);
-  const float slope_position =
-      std::clamp((1.0F - outer_distance) / slope_band, 0.0F, 1.0F);
-  const float lower_slope = std::pow(slope_position, 1.28F);
-  const float upper_slope = 1.0F - std::pow(1.0F - slope_position, 1.38F);
-  const float shoulder_blend = smoothstep01((slope_position - 0.42F) / 0.36F);
-  float elevation =
-      (lower_slope * (1.0F - shoulder_blend) + upper_slope * shoulder_blend) * 0.94F;
-
   const float angle = std::atan2(z / std::max(config.outer_radius_z, 0.001F),
                                  x / std::max(config.outer_radius_x, 0.001F));
-  const float mid_slope = 4.0F * elevation * (1.0F - elevation);
-  const float angular_warp =
-      signed_fbm(domain_x * 1.4F, domain_z * 1.4F, config.seed ^ 0x03707344U, 3) *
-      1.25F;
-  const float drainage_a = std::pow(
-      0.5F + 0.5F * std::cos(angle * 7.0F + angular_warp + config.phase), 14.0F);
-  const float drainage_b = std::pow(
-      0.5F + 0.5F * std::cos(angle * 11.0F - angular_warp * 0.7F - config.phase),
-      20.0F);
-  const float drainage = std::max(drainage_a, drainage_b * 0.72F);
-  elevation *= 1.0F - drainage * mid_slope * 0.11F;
-
-  const float weathering = signed_fbm(domain_x * 3.1F + config.phase,
-                                      domain_z * 3.1F - config.phase,
-                                      config.seed ^ 0xC2B2AE35U,
-                                      4);
-  elevation += weathering * mid_slope * 0.022F;
-
-  const float toe = smoothstep01((elevation - 0.04F) / 0.18F) *
-                    (1.0F - smoothstep01((elevation - 0.24F) / 0.18F));
-  const float sediment = (0.55F + 0.45F * value_noise(domain_x * 4.0F,
-                                                      domain_z * 4.0F,
-                                                      config.seed ^ 0xA4093822U)) *
-                         toe * 0.055F;
-  elevation = std::clamp(elevation + sediment, 0.0F, 1.0F);
-  if (crown_distance <= 1.0F) {
-
-    const float summit_core = smoothstep01((1.0F - crown_distance) / 0.22F);
-    elevation = config.rounded_crown ? 0.94F + 0.06F * summit_core : 1.0F;
-  }
+  const float elevation = hill_elevation_fraction(outer_distance,
+                                                  crown_distance,
+                                                  domain_x,
+                                                  domain_z,
+                                                  angle,
+                                                  config.phase,
+                                                  config.seed,
+                                                  config.rounded_crown);
   return {.outer_distance = outer_distance,
           .crown_distance = crown_distance,
           .elevation_fraction = elevation};
