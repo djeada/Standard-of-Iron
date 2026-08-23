@@ -17,6 +17,8 @@ struct CreatureLodDecisionInputs {
   bool has_camera{true};
   float distance{0.0F};
 
+  float apparent_size_scale{1.0F};
+
   LodDistanceThresholds thresholds{};
 
   bool apply_visibility_budget{false};
@@ -39,6 +41,14 @@ struct CreatureLodDecision {
 [[nodiscard]] auto
 select_distance_lod(float distance,
                     const LodDistanceThresholds& t) noexcept -> CreatureLOD;
+
+[[nodiscard]] auto
+select_distance_lod(float distance,
+                    const LodDistanceThresholds& t,
+                    float apparent_size_scale) noexcept -> CreatureLOD;
+
+[[nodiscard]] auto lod_reference_distance(float distance,
+                                          float apparent_size_scale) noexcept -> float;
 
 [[nodiscard]] auto decide_creature_lod(const CreatureLodDecisionInputs& in) noexcept
     -> CreatureLodDecision;

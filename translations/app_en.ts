@@ -1281,6 +1281,61 @@ This may be a skirmish, or objectives have not been configured.</translation>
     </message>
 </context>
 <context>
+    <name>CursorLayer</name>
+    <message>
+        <source>Enemy target</source>
+        <translation>Enemy target</translation>
+    </message>
+    <message>
+        <source>Cannot attack ally</source>
+        <translation>Cannot attack ally</translation>
+    </message>
+    <message>
+        <source>Cannot attack this target</source>
+        <translation>Cannot attack this target</translation>
+    </message>
+    <message>
+        <source>Selection cannot attack</source>
+        <translation>Selection cannot attack</translation>
+    </message>
+    <message>
+        <source>In range</source>
+        <translation>In range</translation>
+    </message>
+    <message>
+        <source>Too close</source>
+        <translation>Too close</translation>
+    </message>
+    <message>
+        <source>Out of range</source>
+        <translation>Out of range</translation>
+    </message>
+    <message>
+        <source>No firing line</source>
+        <translation>No firing line</translation>
+    </message>
+    <message>
+        <source>Collect</source>
+        <translation>Collect</translation>
+    </message>
+    <message>
+        <source>Deliver civilians</source>
+        <translation>Deliver civilians</translation>
+    </message>
+    <message>
+        <source>Repair</source>
+        <translation>Repair</translation>
+    </message>
+    <message>
+        <source>Harvest grain</source>
+        <translation>Harvest grain</translation>
+    </message>
+    <message>
+        <source>Slaughter sheep</source>
+        <translation>Slaughter sheep</translation>
+    </message>
+</context>
+<context>
     <name>EconomyCoach</name>
     <message>
         <source>Economy prompts</source>
@@ -2302,58 +2357,6 @@ This may be a skirmish, or objectives have not been configured.</translation>
     <message>
         <source>%1/%2 walls  •  %3 wood</source>
         <translation>%1/%2 walls  •  %3 wood</translation>
-    </message>
-    <message>
-        <source>Enemy target</source>
-        <translation>Enemy target</translation>
-    </message>
-    <message>
-        <source>Cannot attack ally</source>
-        <translation>Cannot attack ally</translation>
-    </message>
-    <message>
-        <source>Cannot attack this target</source>
-        <translation>Cannot attack this target</translation>
-    </message>
-    <message>
-        <source>Selection cannot attack</source>
-        <translation>Selection cannot attack</translation>
-    </message>
-    <message>
-        <source>In range</source>
-        <translation>In range</translation>
-    </message>
-    <message>
-        <source>Too close</source>
-        <translation>Too close</translation>
-    </message>
-    <message>
-        <source>Out of range</source>
-        <translation>Out of range</translation>
-    </message>
-    <message>
-        <source>No firing line</source>
-        <translation>No firing line</translation>
-    </message>
-    <message>
-        <source>Collect</source>
-        <translation>Collect</translation>
-    </message>
-    <message>
-        <source>Deliver civilians</source>
-        <translation>Deliver civilians</translation>
-    </message>
-    <message>
-        <source>Repair</source>
-        <translation>Repair</translation>
-    </message>
-    <message>
-        <source>Harvest grain</source>
-        <translation>Harvest grain</translation>
-    </message>
-    <message>
-        <source>Slaughter sheep</source>
-        <translation>Slaughter sheep</translation>
     </message>
 </context>
 <context>

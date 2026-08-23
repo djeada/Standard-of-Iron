@@ -68,6 +68,7 @@
 #include "pass/frame_context.h"
 #include "pass/primitive_flush_pass.h"
 #include "pipeline/lod_selector.h"
+#include "pipeline/screen_metrics.h"
 #include "primitive_batch.h"
 #include "profiling/combat_animation_diagnostics.h"
 #include "profiling/frame_profile.h"
@@ -275,6 +276,9 @@ struct UnitRenderEntry {
   int owner_id{0};
   float indicator_height{0.0F};
   float distance_sq{0.0F};
+
+  float view_distance_sq{0.0F};
+  float cull_radius{0.0F};
 };
 
 struct RenderEntry {
@@ -298,6 +302,7 @@ struct UnitSubmitContext {
   const Render::BattleRenderOptimizer::FrameSnapshot* optimizer{nullptr};
 
   Render::BattleRenderOptimizer::FrameStats* optimizer_stats{nullptr};
+  Render::Pipeline::ScreenMetrics screen_metrics{};
   float batching_ratio{0.0F};
   float full_shader_max_distance_sq{0.0F};
   std::uint32_t optimizer_frame{0};
@@ -554,6 +559,14 @@ auto Renderer::compute_rpg_lens_gap(Engine::Core::World& world) const
   return rpg_lens_gap;
 }
 
+auto Renderer::frame_screen_metrics() const -> Render::Pipeline::ScreenMetrics {
+  if (m_camera == nullptr || m_viewport_height <= 0) {
+    return {};
+  }
+  return Render::Pipeline::ScreenMetrics::from_viewport(m_camera->get_fov(),
+                                                        m_viewport_height);
+}
+
 void Renderer::collect_unit_entries(Engine::Core::World& world,
                                     std::span<const Engine::Core::EntityID> entity_ids,
                                     bool visibility_enabled,
@@ -635,11 +648,14 @@ void Renderer::collect_unit_entries(Engine::Core::World& world,
       entry.in_frustum = visibility_result.in_frustum;
       entry.fog_visible = visibility_result.fog_visible;
 
+      entry.cull_radius = cull_radius;
       if (m_camera != nullptr) {
         QVector3D const cam_pos = m_camera->get_position();
         float const dx = unit_pos.x() - cam_pos.x();
         float const dz = unit_pos.z() - cam_pos.z();
         entry.distance_sq = dx * dx + dz * dz;
+        float const dy = unit_pos.y() - cam_pos.y();
+        entry.view_distance_sq = entry.distance_sq + dy * dy;
       }
 
       if (!entry.in_frustum || !entry.fog_visible) {
@@ -801,10 +817,21 @@ auto Renderer::plan_unit_entry(UnitRenderEntry& entry,
             : SubmissionFogMode::Ignore;
     draw_ctx.animation_throttled = !should_update_animation;
 
+    draw_ctx.screen_metrics = ctx.screen_metrics;
+
+    float const projected_radius_px =
+        ctx.full_creature_detail
+            ? -1.0F
+            : ctx.screen_metrics.projected_radius_px_from_distance_sq(
+                  entry.view_distance_sq, entry.cull_radius);
+
     Render::Pipeline::LodInputs lod_in;
     lod_in.distance_sq = entry.distance_sq;
     lod_in.visible_unit_count = ctx.visible_unit_count;
     lod_in.full_detail_max_distance_sq = ctx.full_shader_max_distance_sq;
+    lod_in.apparent_size_scale = ctx.screen_metrics.apparent_size_scale();
+    lod_in.projected_radius_px = projected_radius_px;
+    lod_in.min_projected_radius_px = Render::Pipeline::k_min_unit_projected_radius_px;
     lod_in.selected = entry.selected;
     lod_in.hovered = entry.hovered;
     lod_in.in_frustum = entry.in_frustum;
@@ -819,7 +846,8 @@ auto Renderer::plan_unit_entry(UnitRenderEntry& entry,
 
     if (!entry.selected && !entry.hovered && !ctx.full_creature_detail &&
         tier == Render::Pipeline::LodTier::Minimal) {
-      draw_ctx.max_rendered_individuals = 8;
+      draw_ctx.max_rendered_individuals =
+          Render::Pipeline::representative_individual_count(projected_radius_px);
     }
 
     if (ctx.full_creature_detail) {
@@ -1158,6 +1186,7 @@ void Renderer::render_world(Engine::Core::World* world) {
                                      .batch_submitter = &batch_submitter,
                                      .optimizer = &optimizer_frame_snapshot,
                                      .optimizer_stats = &optimizer_stats,
+                                     .screen_metrics = frame_screen_metrics(),
                                      .batching_ratio = batching_ratio,
                                      .full_shader_max_distance_sq =
                                          full_shader_max_distance_sq,

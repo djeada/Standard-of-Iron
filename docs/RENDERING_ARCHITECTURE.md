@@ -65,7 +65,7 @@ The rule for consumers is that the choice is made once, on a generation change, 
 
 **Shader tiers are compiled, not branched.** Every GLSL stage gets `SOI_QUALITY_TIER` spliced in after its `#version` line (see `assets/shaders/include/quality.glsl` for the derived macros: `SOI_TERRAIN_NOISE_OCTAVES`, `SOI_SURFACE_DETAIL`, `SOI_ULTRA_EFFECTS`), so a tier is a different program, not a uniform tested per fragment. Low strips the layered noise, micro-relief, wear/grime, screen-space AO and the cascade lookup out entirely; Ultra compiles in PCSS contact-hardening shadows, shadowed and back-lit grass blades and the extra water and terrain octaves. `Shader::reload()` makes a live tier switch possible: uniform handles are stable indices into a per-shader table that is re-resolved against the new program, every value set through `set_uniform` and every uniform-block binding is replayed, so the pipelines' cached handles and one-time sampler bindings survive. `tests/render/shader_reload_test.cpp` exercises that on an offscreen context.
 
-**Creatures have two rendered LODs, Full and Minimal, plus a cull distance.** `CreatureLOD::Culled` is not a third level; it marks a creature past `CreatureLodSettings::cull_distance`, which is not drawn. High and Ultra disable the LOD cut (every creature in range is Full) and never cull; Medium uses the authored full-detail distances; Low pulls them in and culls at 120 m.
+**Creatures have two rendered LODs, Full and Minimal, plus a cull distance.** `CreatureLOD::Culled` is not a third level; it marks a creature past `CreatureLodSettings::cull_distance`, which is not drawn. High and Ultra disable the LOD cut (every creature in range is Full) and never cull -- and, because they never ask, they also skip the projected-size work described under [LOD is decided in pixels, not in metres](#lod-is-decided-in-pixels-not-in-metres); Medium uses the authored full-detail distances; Low pulls them in and culls at 120 m. Those authored distances are read as apparent sizes rather than raw metres, so the same preset means the same detail on a 720-line window and a 4K one.
 
 What the presets mean: **High** is the game as designed (every shader feature, full LOD, four 4096 cascades, the whole post chain, MSAA 4x) and is the default; **Ultra** keeps all of that and adds the expensive extras (tier-3 shaders, MSAA 8x); **Medium** keeps shadows and post but small (two 1024 cascades, no godrays, 2x MSAA, tier-1 shaders, authored LOD); **Low** exists so weak hardware reaches 30 fps: no cascades, no bloom/godrays/AO/FXAA (the composite still runs for the tone grade and fog), 30% grass, tier-0 shaders, aggressive LOD.
 
@@ -1120,16 +1120,11 @@ Release builds compile out every `glGetError` check in the render layer, so misu
 
 When more than 15 units are visible on screen, the `BattleRenderOptimizer` kicks in to keep rendering fresh without sacrificing visual quality. This system provides several tricks that work independently of LOD:
 
-### Temporal culling
+### Battle mode is a batching threshold, not a culling one
 
-Static or idle units are rendered on alternating frames. If a unit isn't moving, selected, or hovered, it may be skipped on odd or even frames based on its entity ID. This effectively cuts the render load for idle units in half while remaining imperceptible to the player.
+Crossing `battle_mode_unit_threshold` never removes a unit from the frame. It raises the batching boost and it arms animation throttling; nothing in the optimizer decides whether a body is drawn. There used to be a temporal skip here -- render half the idle units on even frames, the other half on odd -- and it was deleted because it never emitted a single skip in a real frame while still costing a test per unit. `tests/render/battle_render_optimizer_test.cpp` pins that: `BattleModeIsABatchingThresholdNotACullingOne`. Visibility is settled earlier, by the frustum and fog test in `collect_unit_entries`, and detail is settled after it by the LOD tier.
 
-```
-Frame 1: Render units with (entity_id + frame) % 2 == 0
-Frame 2: Render units with (entity_id + frame) % 2 == 0  (different set)
-```
-
-Moving units, selected units, and hovered units always render every frame to maintain responsiveness.
+The frame's configuration is snapshotted once, in `begin_frame()`. `FrameSnapshot::should_update_animation` is a `const noexcept` call on that snapshot, so the thousands of per-unit questions a battle frame asks never touch the mutex that guards the settings.
 
 ### Animation throttling
 
@@ -1141,12 +1136,70 @@ The batching ratio is boosted proportionally when more units are visible. This p
 
 The optimizer can be configured via `BattleRenderConfig`:
 
-- `temporal_culling_threshold`: Unit count that triggers temporal culling (default: 15)
+- `battle_mode_unit_threshold`: Unit count that arms battle mode and the batching boost (default: 15)
 - `animation_throttle_threshold`: Unit count that triggers animation throttling (default: 30)
 - `animation_throttle_distance`: Distance beyond which animations are throttled (default: 40.0)
 - `animation_skip_frames`: How many frames to skip for distant animations (default: 2)
 
 See [battle_render_optimizer.h](https://github.com/djeada/Standard-of-Iron/blob/main/render/battle_render_optimizer.h) for the implementation.
+
+### LOD is decided in pixels, not in metres
+
+Every LOD distance in this renderer -- the 12 m humanoid full-detail band, the 30 m tier
+distance in `compute_full_detail_max_distance_sq`, the 120 m and 200 m cull distances --
+was calibrated by eye. What the eye was actually judging is how large a body lands on
+screen, and that is not a distance: the same soldier at 30 m covers twice as many pixels
+on a 2160-line viewport as on a 1080-line one, and a narrower field of view stretches him
+further still. A threshold in metres alone therefore means a different amount of detail on
+every machine.
+
+`render/pipeline/screen_metrics.h` carries the one number that closes the gap.
+`ScreenMetrics::from_viewport(fov, viewport_height_px)` resolves the focal length in
+pixels (`0.5 * height / tan(0.5 * fov)`) and, once, the `size_scale` it implies against
+the reference screen the thresholds were tuned on -- 1080 lines at 45 degrees. Callers
+then divide a distance by that scale, which is exactly the same test as comparing a
+projected pixel radius against the threshold's pixel equivalent, and keeps every
+calibrated number meaning what it meant.
+
+```
+projected_radius_px = focal_length_px * world_radius / distance
+reference_distance  = distance / size_scale
+```
+
+Three decisions consume it, all inside the profiles that run LOD at all:
+
+- `Render::Pipeline::select_lod` scales the full-detail distance budget by `size_scale`
+  squared, and rejects a unit outright below `k_min_unit_projected_radius_px`. That
+  sub-pixel test is a guard for long commander sight lines and oversized maps rather than
+  a saving on a normal one; a selected or hovered unit is exempt.
+- `decide_creature_lod` divides the camera distance by the scale before it consults the
+  full-detail threshold, so a soldier keeps his geometry for exactly as long as he is
+  worth the pixels. Its **cull** threshold stays an absolute world distance: how detailed
+  a body is drawn is a question about pixels, but whether it is drawn at all is a question
+  about what the player may see, and a soldier must not wink out of a distant battle
+  because the window got shorter.
+- The far-formation individual cap, which used to be a flat eight bodies for any unit in
+  the minimal tier, now thins with the formation's projected radius through
+  `representative_individual_count`. Eight remains the answer for the nearest unit that
+  reaches the tier and for any unit whose size is unknown, so the ladder can only tighten.
+
+Two properties are deliberate. The metrics resolve to `known() == false` whenever there is
+no viewport -- prewarm, previews, tests -- and every query then answers exactly as the
+raw-distance code did, so an unwired caller cannot silently shift LOD. And **High and
+Ultra never evaluate any of it**: those presets set `creature_lod.enabled = false`, the
+scene walk takes that as `full_creature_detail`, and the projected size is not even
+computed. The screen-space work exists for Medium and Low, which are the presets that
+trade detail for frames in the first place.
+
+The scale is clamped to [0.25, 4.0]. Outside that band the viewport or the field of view
+is nonsense, not a request for sixteen times the detail. It is not a frame budget either:
+`CreatureLodSettings::max_full_detail_units` and `VisibilityBudgetTracker` already cap how
+many creatures may be Full at once, so making the distance test honest cannot flood a
+frame on a high-resolution display.
+
+See `tests/render/pipeline/screen_metrics_test.cpp`, whose last case is the whole point of
+the type: one metre threshold has to land on one pixel size across every viewport and
+field of view.
 
 ### Creature parts are a bake-time description, not a runtime one
 
