@@ -1,4 +1,5 @@
 #version 330 core
+#include "environment_lighting.glsl"
 #include "noise.glsl"
 
 in vec2 v_tex_coord;
@@ -46,11 +47,12 @@ void main() {
       u_alpha * edge_fade * height_fade * moving_bands * (0.22 + 0.78 * wisps);
   alpha *= 0.82 + 0.18 * smoothstep(-0.25, 0.25, v_sheet_drift);
 
-  vec3 dark_color = u_color * vec3(0.78, 0.80, 0.82);
-  vec3 light_color = u_color * vec3(1.18, 1.20, 1.24);
+  vec3 haze_base = mix(u_color, environment_fog_color(), 0.55) * environment_exposure();
+  vec3 dark_color = haze_base * vec3(0.78, 0.80, 0.82);
+  vec3 light_color = haze_base * vec3(1.18, 1.20, 1.24);
   vec3 color = mix(dark_color, light_color, density_field);
   color *= front_light;
-  color += vec3(0.035, 0.040, 0.038) * wisps;
+  color += vec3(0.035, 0.040, 0.038) * wisps * environment_exposure();
 
   frag_color = vec4(color, clamp(alpha, 0.0, 0.92));
 }
