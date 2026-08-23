@@ -201,6 +201,7 @@ add_executable(
     headless/wall_siege_test.cpp
     headless/tight_gap_navigation_test.cpp
     headless/battle_speed_load_test.cpp
+    headless/selected_unit_readout_test.cpp
     simulation_main.cpp
 )
 target_link_libraries(
@@ -389,6 +390,7 @@ add_executable(
     render/rig_dsl_interpreter_test.cpp
     render/rigged_pipeline_test.cpp
     render/pipeline/lod_selector_test.cpp
+    render/pipeline/screen_metrics_test.cpp
     render/pipeline/creature_lod_decision_test.cpp
     render/pipeline/creature_asset_registry_test.cpp
     render/pipeline/instance_coalescer_test.cpp

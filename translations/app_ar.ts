@@ -1281,6 +1281,61 @@ This may be a skirmish, or objectives have not been configured.</source>
     </message>
 </context>
 <context>
+    <name>CursorLayer</name>
+    <message>
+        <source>Enemy target</source>
+        <translation>هدف معادٍ</translation>
+    </message>
+    <message>
+        <source>Cannot attack ally</source>
+        <translation>لا يمكن مهاجمة حليف</translation>
+    </message>
+    <message>
+        <source>Cannot attack this target</source>
+        <translation>لا يمكن مهاجمة هذا الهدف</translation>
+    </message>
+    <message>
+        <source>Selection cannot attack</source>
+        <translation>التحديد لا يستطيع الهجوم</translation>
+    </message>
+    <message>
+        <source>In range</source>
+        <translation>ضمن المدى</translation>
+    </message>
+    <message>
+        <source>Too close</source>
+        <translation>قريب جداً</translation>
+    </message>
+    <message>
+        <source>Out of range</source>
+        <translation>خارج المدى</translation>
+    </message>
+    <message>
+        <source>No firing line</source>
+        <translation>لا خط رماية</translation>
+    </message>
+    <message>
+        <source>Collect</source>
+        <translation>جمع</translation>
+    </message>
+    <message>
+        <source>Deliver civilians</source>
+        <translation>تسليم المدنيين</translation>
+    </message>
+    <message>
+        <source>Repair</source>
+        <translation>إصلاح</translation>
+    </message>
+    <message>
+        <source>Harvest grain</source>
+        <translation>حصاد الحبوب</translation>
+    </message>
+    <message>
+        <source>Slaughter sheep</source>
+        <translation>ذبح خروف</translation>
+    </message>
+</context>
+<context>
     <name>EconomyCoach</name>
     <message>
         <source>Economy prompts</source>
@@ -2302,58 +2357,6 @@ This may be a skirmish, or objectives have not been configured.</source>
     <message>
         <source>%1/%2 walls  •  %3 wood</source>
         <translation>%1/%2 من الأسوار  •  %3 خشب</translation>
-    </message>
-    <message>
-        <source>Enemy target</source>
-        <translation>هدف معادٍ</translation>
-    </message>
-    <message>
-        <source>Cannot attack ally</source>
-        <translation>لا يمكن مهاجمة حليف</translation>
-    </message>
-    <message>
-        <source>Cannot attack this target</source>
-        <translation>لا يمكن مهاجمة هذا الهدف</translation>
-    </message>
-    <message>
-        <source>Selection cannot attack</source>
-        <translation>التحديد لا يستطيع الهجوم</translation>
-    </message>
-    <message>
-        <source>In range</source>
-        <translation>ضمن المدى</translation>
-    </message>
-    <message>
-        <source>Too close</source>
-        <translation>قريب جداً</translation>
-    </message>
-    <message>
-        <source>Out of range</source>
-        <translation>خارج المدى</translation>
-    </message>
-    <message>
-        <source>No firing line</source>
-        <translation>لا خط رماية</translation>
-    </message>
-    <message>
-        <source>Collect</source>
-        <translation>جمع</translation>
-    </message>
-    <message>
-        <source>Deliver civilians</source>
-        <translation>تسليم المدنيين</translation>
-    </message>
-    <message>
-        <source>Repair</source>
-        <translation>إصلاح</translation>
-    </message>
-    <message>
-        <source>Harvest grain</source>
-        <translation>حصاد الحبوب</translation>
-    </message>
-    <message>
-        <source>Slaughter sheep</source>
-        <translation>ذبح خروف</translation>
     </message>
 </context>
 <context>

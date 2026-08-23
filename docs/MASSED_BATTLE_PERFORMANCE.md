@@ -540,3 +540,34 @@ terrain scatter stays on; the low-resolution framing pass
 (`--promo-spec` at 640×360, then first/middle/last frames of every clip
 tiled with ffmpeg) is what caught the two shots that opened behind a pine and
 the crane that flew above the mountain ring.
+
+## An outside GPU review, checked item by item
+
+A review of the repository from the outside proposed ten changes to the crowd
+renderer. Most of them describe work this tree has already done, two of them
+were tried here and rejected on measurement, and one was a real gap. The list is
+kept because the reasoning matters more than the verdicts: anyone arriving at
+the same conclusions from a file listing should find out here why the tree looks
+the way it does.
+
+| #   | Proposal                                                                                  | Status                                                                                                                                                                                                                                                                                                                                                                    |
+| --- | ----------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | `BattleRenderOptimizer::should_render_unit()` always returns true, so culling is disabled | Already gone. The function does not exist; battle mode is a batching threshold and `tests/render/battle_render_optimizer_test.cpp` pins that. Visibility is settled by the frustum and fog test in `collect_unit_entries`.                                                                                                                                                |
+| 2   | Replace per-entity component lookups in submission with a dense render-world snapshot     | Partly done, and the rest is not what the profile asks for. `UnitRenderCache` already hands submission resolved component pointers out of a dense entry vector, preparation runs on a worker pool, and the renderer reads a snapshot world rather than the live one. A full SoA GPU-instance rewrite is a large change against a frame that measures GPU-bound.           |
+| 3   | Make the GPU generate draw calls: compute cull, compaction, indirect commands             | Done, and then measured against the alternative. `rigged_cull.comp` culls per triangle, `rigged_cull_finalize.comp` writes the command, and the draw is `glDrawElementsIndirect`. Full-detail batches deliberately use exact indexed SSBO instancing instead: 4,360 logical commands collapse to 25 draws, and the compute path is the reduced-detail and fallback route. |
+| 4   | Send 16 bytes of animation state per soldier instead of bone matrices                     | Done. BPAT v3 palettes are GPU-resident and shared; an instance carries baked frame offsets. What still uploads a palette is a soldier carrying an _owned_ blended pose, and those are deduplicated per distinct blend.                                                                                                                                                   |
+| 5   | `should_update_animation()` copies the config under a mutex, per unit per frame           | Already gone. `begin_frame()` takes one `FrameSnapshot`; the per-unit call is `const noexcept` on that snapshot and touches no lock.                                                                                                                                                                                                                                      |
+| 6   | Four dimensions of LOD, down to formation proxies at extreme range                        | Partly done, and extended by this pass. Geometry and animation LOD exist per creature; the far-formation cap that stood at a flat eight bodies now thins with the formation's projected size. A true impostor tier remains out of scope for the full-LOD invariant this document defends.                                                                                 |
+| 7   | Cull and select LOD on screen-space size, not distance alone                              | **This was the real gap, and it is now closed.** See _LOD is decided in pixels, not in metres_ in [RENDERING_ARCHITECTURE.md](RENDERING_ARCHITECTURE.md).                                                                                                                                                                                                                 |
+| 8   | Static battlefield geometry should be uploaded once and stay resident                     | Done. `shared_geometry_cache`, `static_mesh_upload`, `world_chunk` and the baked terrain field textures own that; per-frame traffic is camera, instances and effects.                                                                                                                                                                                                     |
+| 9   | Stream instances through a persistent mapped ring with fences                             | Tried, kept where it pays. `PersistentRingBuffer` backs the cylinder pipeline. The rigged streams use orphaned immutable ranges instead, which is what removed the 100-200 ms SSBO-overwrite stalls; a `perf` profile of the ring put about 10% of samples in `glClientWaitSync`.                                                                                         |
+| 10  | Keep authoritative gameplay off the GPU                                                   | Already the architecture. Simulation is a fixed CPU tick, the GPU consumes a presentation snapshot, and nothing reads back.                                                                                                                                                                                                                                               |
+
+The one substantive change, item 7, is not a throughput optimization on the
+machine this document benchmarks: High and Ultra force full detail and never
+evaluate LOD at all, so the massed-battle numbers above are untouched by it. It
+is a correctness fix for Medium and Low, where a threshold written in metres
+used to mean a different amount of detail on every window size and field of
+view. The measurable claim is the narrow one, and it is a unit test rather than
+a trace: a metre threshold now lands on the same pixel size across every
+viewport (`tests/render/pipeline/screen_metrics_test.cpp`).

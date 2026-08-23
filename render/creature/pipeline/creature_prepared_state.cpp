@@ -123,14 +123,15 @@ auto resolve_humanoid_lod_state(const HumanoidLodStateInputs& inputs)
         (inputs.soldier_world_pos - ctx.camera->get_position()).length();
   }
   lod_in.distance = state.camera_distance;
+  lod_in.apparent_size_scale = ctx.screen_metrics.apparent_size_scale();
   lod_in.thresholds = inputs.config.thresholds;
   lod_in.apply_visibility_budget = inputs.config.apply_visibility_budget;
   lod_in.budget_grant_full = true;
 
   if (lod_in.apply_visibility_budget && !ctx.force_humanoid_lod &&
       ctx.camera != nullptr) {
-    const auto distance_lod =
-        select_distance_lod(state.camera_distance, lod_in.thresholds);
+    const auto distance_lod = select_distance_lod(
+        state.camera_distance, lod_in.thresholds, lod_in.apparent_size_scale);
     if (distance_lod == Render::Creature::CreatureLOD::Full) {
       const auto granted =
           Render::VisibilityBudgetTracker::instance().request_humanoid_lod(
