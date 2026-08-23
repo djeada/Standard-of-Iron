@@ -15,6 +15,7 @@
 #include "../../core/world.h"
 #include "../formation_combat_geometry.h"
 #include "combat_utils.h"
+#include "structure_combat.h"
 
 namespace Game::Systems::Combat {
 namespace {
@@ -485,6 +486,17 @@ struct LocalContactVector {
   float yaw{0.0F};
 };
 
+auto local_to_world(const Engine::Core::TransformComponent& actor,
+                    float local_x,
+                    float local_z) -> QVector3D {
+  float const yaw = actor.rotation.y * std::numbers::pi_v<float> / 180.0F;
+  float const sin_yaw = std::sin(yaw);
+  float const cos_yaw = std::cos(yaw);
+  return {actor.position.x + cos_yaw * local_x + sin_yaw * local_z,
+          actor.position.y,
+          actor.position.z - sin_yaw * local_x + cos_yaw * local_z};
+}
+
 auto local_contact_vector(const Engine::Core::TransformComponent& actor,
                           float source_local_x,
                           float source_local_z,
@@ -556,6 +568,12 @@ void publish_formation_presentation(Engine::Core::World& world, float delta_time
         entity->get_component<Engine::Core::AttackTargetComponent>();
     auto const* contact =
         entity->get_component<Engine::Core::FormationContactComponent>();
+    auto const* motion =
+        entity->get_component<Engine::Core::MotionPresentationComponent>();
+    float const traversal_lateral_scale =
+        motion != nullptr && motion->traversal_squeeze_active
+            ? std::clamp(motion->traversal_lateral_scale, 0.1F, 1.0F)
+            : 1.0F;
     Engine::Core::EntityID const outgoing_target =
         target_ref != nullptr ? target_ref->target_id : 0U;
     bool const outgoing_melee =
@@ -586,6 +604,18 @@ void publish_formation_presentation(Engine::Core::World& world, float delta_time
 
     auto const* actor_transform =
         entity->get_component<Engine::Core::TransformComponent>();
+    auto* display_opponent = world.get_entity(display_target);
+    bool const attacks_structure =
+        outgoing_melee && display_opponent != nullptr && is_building(display_opponent);
+    float closest_structure_gap = std::numeric_limits<float>::infinity();
+    if (attacks_structure && actor_transform != nullptr) {
+      for (auto const& slot : layout.live_slots) {
+        QVector3D const anchor(slot.world_x, actor_transform->position.y, slot.world_z);
+        closest_structure_gap =
+            std::min(closest_structure_gap,
+                     closest_structure_surface(*display_opponent, anchor).distance);
+      }
+    }
     struct DamageCarrier {
       const Engine::Core::FormationContactFront* front{nullptr};
       std::optional<std::uint16_t> attacker_slot;
@@ -623,7 +653,8 @@ void publish_formation_presentation(Engine::Core::World& world, float delta_time
       directive.row = live_slot != nullptr ? live_slot->row : original_slot.row;
       directive.col = live_slot != nullptr ? live_slot->col : original_slot.col;
       directive.local_x =
-          live_slot != nullptr ? live_slot->local_x : original_slot.local_x;
+          (live_slot != nullptr ? live_slot->local_x : original_slot.local_x) *
+          traversal_lateral_scale;
       directive.local_z =
           live_slot != nullptr ? live_slot->local_z : original_slot.local_z;
       directive.local_yaw =
@@ -748,6 +779,39 @@ void publish_formation_presentation(Engine::Core::World& world, float delta_time
         directive.combat_role =
             combat_role_for(layout.seed, original_slot.index, false);
         directive.action = action_for_role(directive.combat_role);
+        if (attacks_structure && actor_transform != nullptr) {
+          QVector3D const anchor_world =
+              local_to_world(*actor_transform, directive.local_x, directive.local_z);
+          auto const surface =
+              closest_structure_surface(*display_opponent, anchor_world);
+          bool const facade_rank =
+              surface.distance <= closest_structure_gap + layout.spacing * 0.55F;
+          if (facade_rank) {
+            auto const contact_vector = local_contact_vector(*actor_transform,
+                                                             directive.local_x,
+                                                             directive.local_z,
+                                                             surface.point.x(),
+                                                             surface.point.z());
+            float const prior_yaw =
+                previous != nullptr ? previous->local_yaw : directive.local_yaw;
+            float const yaw_delta =
+                std::remainder(contact_vector.yaw - prior_yaw, 360.0F);
+            float const max_turn = 300.0F * std::max(0.0F, delta_time);
+            directive.local_yaw =
+                prior_yaw + std::clamp(yaw_delta, -max_turn, max_turn);
+
+            float const desired_gap =
+                structure_attack_profile(entity).contact_clearance;
+            float const pull_distance =
+                std::clamp(surface.distance - desired_gap, 0.0F, layout.spacing * 1.6F);
+            if (contact_vector.distance > 0.0001F) {
+              directive.local_x +=
+                  contact_vector.x / contact_vector.distance * pull_distance;
+              directive.local_z +=
+                  contact_vector.z / contact_vector.distance * pull_distance;
+            }
+          }
+        }
         if (previous != nullptr && presentation->target_id == display_target &&
             (previous->action == Engine::Core::FormationSoldierAction::MeleeEngaged ||
              previous->action ==

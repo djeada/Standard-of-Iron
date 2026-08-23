@@ -10,6 +10,8 @@
 #include "../../units/spawn_type.h"
 #include "../building_collision_registry.h"
 #include "../formation_combat_geometry.h"
+#include "../nav_grid.h"
+#include "../pathfinding.h"
 
 namespace Game::Systems::Combat {
 namespace {
@@ -341,12 +343,64 @@ auto structure_melee_approach(const Engine::Core::Entity& attacker,
   return result;
 }
 
+auto structure_navigation_melee_approach(const Engine::Core::Entity& attacker,
+                                         const Engine::Core::Entity& structure,
+                                         float extra_tolerance) -> StructureApproach {
+  StructureApproach result = structure_melee_approach(attacker, structure);
+  auto const* transform = attacker.get_component<Engine::Core::TransformComponent>();
+  auto* pathfinder = Game::Systems::NavGrid::get_pathfinder();
+  if (transform == nullptr || pathfinder == nullptr) {
+    return result;
+  }
+
+  pathfinder->update_navigation_grid();
+  auto const* movement = attacker.get_component<Engine::Core::MovementComponent>();
+  auto const passability = movement != nullptr && !movement->get_can_enter_forest()
+                               ? Game::Systems::Pathfinding::Passability::Heavy
+                               : Game::Systems::Pathfinding::Passability::Light;
+  QVector3D const current(transform->position.x, 0.0F, transform->position.z);
+  bool const current_walkable =
+      pathfinder->is_world_position_walkable(current, passability, 0.0F);
+  if (current_walkable && result.reached) {
+    return result;
+  }
+
+  if (!pathfinder->is_world_position_walkable(result.destination, passability, 0.0F)) {
+    auto const [anchor, surface] = closest_attacker_anchor(attacker, structure);
+    (void)anchor;
+    float const cell_size = std::max(0.1F, pathfinder->grid_cell_size());
+    float const step = cell_size * 0.1F;
+    float const max_outward_search =
+        BuildingCollisionRegistry::get_grid_padding() + cell_size * 1.5F;
+    bool resolved = false;
+    for (float distance = step; distance <= max_outward_search; distance += step) {
+      QVector3D const candidate =
+          result.destination + surface.outward_normal * distance;
+      if (!pathfinder->is_world_position_walkable(candidate, passability, 0.0F)) {
+        continue;
+      }
+      result.destination = candidate;
+      resolved = true;
+      break;
+    }
+    if (!resolved) {
+      result.reached = false;
+      return result;
+    }
+  }
+
+  float const root_distance = std::hypot(result.destination.x() - current.x(),
+                                         result.destination.z() - current.z());
+  float const arrival_tolerance = 0.08F + std::max(0.0F, extra_tolerance);
+  result.reached = current_walkable && root_distance <= arrival_tolerance;
+  return result;
+}
+
 auto structure_melee_contact_active(const Engine::Core::Entity& attacker,
                                     const Engine::Core::Entity& structure,
                                     float extra_tolerance) -> bool {
-  auto const approach = structure_melee_approach(attacker, structure);
-  return approach.current_surface_gap <=
-         approach.desired_surface_gap + std::max(0.0F, extra_tolerance);
+  return structure_navigation_melee_approach(attacker, structure, extra_tolerance)
+      .reached;
 }
 
 auto structure_surface_distance(const Engine::Core::Entity& structure,

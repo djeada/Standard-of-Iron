@@ -13,6 +13,7 @@
 #include "game/systems/nation_registry.h"
 #include "game/systems/nav_grid.h"
 #include "game/systems/owner_registry.h"
+#include "game/systems/pathfinding.h"
 #include "game/systems/runtime_system_registry.h"
 #include "units/factory.h"
 #include "units/unit.h"
@@ -636,4 +637,42 @@ TEST_F(MeleeEngagementTest, BypassDestinationIsRefusedWhenNoStandingSpotClears) 
   const auto bypass = Game::Systems::Combat::melee_bypass_destination(
       QVector3D(0.0F, 0.0F, 0.0F), QVector3D(10.0F, 0.0F, 0.0F), 4.0F, 1.75F);
   EXPECT_FALSE(bypass.has_value());
+}
+
+TEST_F(MeleeEngagementTest, GridOnlyObstaclePreventsMeleeThroughIt) {
+  Engine::Core::World world;
+  auto* pathfinder = Game::Systems::NavGrid::get_pathfinder();
+  ASSERT_NE(pathfinder, nullptr);
+  pathfinder->update_navigation_grid();
+  Game::Systems::Point const obstacle{24, 24};
+  pathfinder->set_obstacle(obstacle.x, obstacle.y, true);
+
+  QVector3D const attacker_position =
+      Game::Systems::NavGrid::grid_to_world({obstacle.x - 1, obstacle.y});
+  QVector3D const defender_position =
+      Game::Systems::NavGrid::grid_to_world({obstacle.x + 1, obstacle.y});
+  auto* attacker = spawn(world,
+                         Game::Units::SpawnType::Knight,
+                         1,
+                         attacker_position,
+                         Game::Systems::NationID::Carthage);
+  auto* defender = spawn(world,
+                         Game::Units::SpawnType::Knight,
+                         2,
+                         defender_position,
+                         Game::Systems::NationID::RomanRepublic);
+  ASSERT_NE(attacker, nullptr);
+  ASSERT_NE(defender, nullptr);
+  auto* attack = attacker->get_component<AttackComponent>();
+  ASSERT_NE(attack, nullptr);
+  attack->current_mode = AttackComponent::CombatMode::Melee;
+
+  EXPECT_FALSE(Game::Systems::BuildingCollisionRegistry::instance()
+                   .segment_crosses_blocking_building(attacker_position.x(),
+                                                      attacker_position.z(),
+                                                      defender_position.x(),
+                                                      defender_position.z()));
+  EXPECT_TRUE(Game::Systems::Combat::structure_separates_positions(attacker_position,
+                                                                   defender_position));
+  EXPECT_FALSE(Game::Systems::Combat::is_in_range(attacker, defender, 100.0F));
 }

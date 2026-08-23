@@ -25,6 +25,23 @@ auto blocker_storage() -> std::vector<GateBlocker>& {
   return storage;
 }
 
+auto same_blocker(const GateBlocker& lhs, const GateBlocker& rhs) -> bool {
+  return lhs.min_x == rhs.min_x && lhs.max_x == rhs.max_x && lhs.min_z == rhs.min_z &&
+         lhs.max_z == rhs.max_z && lhs.owner_id == rhs.owner_id &&
+         lhs.entity_id == rhs.entity_id;
+}
+
+void publish_navigation_blocker_change(bool obstruction_released) {
+  auto* pathfinder = NavGrid::get_pathfinder();
+  if (pathfinder == nullptr) {
+    return;
+  }
+  pathfinder->mark_navigation_grid_dirty();
+  if (obstruction_released) {
+    pathfinder->mark_obstruction_released();
+  }
+}
+
 } // namespace
 
 auto GateService::structure_extent(float rotation_y) -> GateExtent {
@@ -118,7 +135,7 @@ auto GateService::gate_at(Engine::Core::World& world,
 
 void GateService::refresh_blockers(Engine::Core::World& world) {
   auto& storage = blocker_storage();
-  storage.clear();
+  std::vector<GateBlocker> refreshed;
 
   for (auto [entity_id, gate, transform, unit] :
        world.view<GateComponent, TransformComponent, UnitComponent>()) {
@@ -133,7 +150,7 @@ void GateService::refresh_blockers(Engine::Core::World& world) {
     const auto bounds = passage_blocker_bounds(
         transform.position.x, transform.position.z, transform.rotation.y);
 
-    storage.push_back(GateBlocker{
+    refreshed.push_back(GateBlocker{
         .min_x = bounds.min_x,
         .max_x = bounds.max_x,
         .min_z = bounds.min_z,
@@ -142,10 +159,31 @@ void GateService::refresh_blockers(Engine::Core::World& world) {
         .entity_id = entity_id,
     });
   }
+
+  bool const changed =
+      storage.size() != refreshed.size() ||
+      !std::equal(storage.begin(), storage.end(), refreshed.begin(), same_blocker);
+  if (!changed) {
+    return;
+  }
+  bool const obstruction_released =
+      std::any_of(storage.begin(), storage.end(), [&refreshed](auto const& previous) {
+        return std::none_of(
+            refreshed.begin(), refreshed.end(), [&previous](auto const& current) {
+              return same_blocker(previous, current);
+            });
+      });
+  storage = std::move(refreshed);
+  publish_navigation_blocker_change(obstruction_released);
 }
 
 void GateService::clear_blockers() {
-  blocker_storage().clear();
+  auto& storage = blocker_storage();
+  if (storage.empty()) {
+    return;
+  }
+  storage.clear();
+  publish_navigation_blocker_change(true);
 }
 
 auto GateService::blockers() -> const std::vector<GateBlocker>& {

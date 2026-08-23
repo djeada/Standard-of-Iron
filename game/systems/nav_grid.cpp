@@ -6,6 +6,7 @@
 
 #include "../map/terrain_service.h"
 #include "building_collision_registry.h"
+#include "gate_service.h"
 #include "pathfinding.h"
 
 namespace Game::Systems {
@@ -13,6 +14,8 @@ namespace Game::Systems {
 std::unique_ptr<Pathfinding> NavGrid::s_pathfinder = nullptr;
 
 void NavGrid::initialize(int world_width, int world_height) {
+
+  GateService::clear_blockers();
   s_pathfinder = std::make_unique<Pathfinding>(world_width, world_height);
 
   float const offset_x = -(world_width * 0.5F - 0.5F);

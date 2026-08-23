@@ -59,6 +59,11 @@ closest_structure_surface(const Engine::Core::Entity& structure,
 structure_melee_approach(const Engine::Core::Entity& attacker,
                          const Engine::Core::Entity& structure) -> StructureApproach;
 
+[[nodiscard]] auto
+structure_navigation_melee_approach(const Engine::Core::Entity& attacker,
+                                    const Engine::Core::Entity& structure,
+                                    float extra_tolerance = 0.0F) -> StructureApproach;
+
 [[nodiscard]] auto structure_melee_contact_active(const Engine::Core::Entity& attacker,
                                                   const Engine::Core::Entity& structure,
                                                   float extra_tolerance = 0.0F) -> bool;
