@@ -268,6 +268,51 @@ TEST_F(CommanderControlControllerTest,
 }
 
 TEST_F(CommanderControlControllerTest,
+       FpvCommanderMovementAnimationSurvivesSustainedWalking) {
+  Engine::Core::World world;
+  auto* commander = create_commander(world, 0.0F, 0.0F);
+  ASSERT_NE(commander, nullptr);
+
+  auto* commander_data = commander->get_component<Engine::Core::CommanderComponent>();
+  ASSERT_NE(commander_data, nullptr);
+  commander_data->fpv_controlled = true;
+
+  CommanderControlController controller;
+  controller.input().forward = true;
+
+  Render::GL::Camera camera;
+  world.add_system(std::make_unique<Game::Systems::MovementSystem>());
+
+  constexpr float k_step = 0.05F;
+  float elapsed = 0.0F;
+  for (int frame = 0; frame < 40; ++frame) {
+    ASSERT_TRUE(controller.update(world, commander->get_id(), 1, camera, k_step));
+    world.update(k_step);
+    elapsed += k_step;
+
+    Render::GL::DrawContext ctx{};
+    ctx.entity = commander;
+    ctx.animation_time = elapsed;
+    auto anim = Render::GL::sample_anim_state(ctx);
+    ASSERT_TRUE(Render::Creature::is_moving_animation(anim.movement_state))
+        << "locomotion went stale after " << elapsed << "s of held input";
+  }
+
+  controller.input().forward = false;
+  for (int frame = 0; frame < 20; ++frame) {
+    ASSERT_TRUE(controller.update(world, commander->get_id(), 1, camera, k_step));
+    world.update(k_step);
+    elapsed += k_step;
+  }
+
+  Render::GL::DrawContext idle_ctx{};
+  idle_ctx.entity = commander;
+  idle_ctx.animation_time = elapsed;
+  auto const idle_anim = Render::GL::sample_anim_state(idle_ctx);
+  EXPECT_FALSE(Render::Creature::is_moving_animation(idle_anim.movement_state));
+}
+
+TEST_F(CommanderControlControllerTest,
        FpvCommanderAttackAnimationPrefersCombatActionIdOverLegacyStyle) {
   Engine::Core::World world;
   auto* commander = create_commander(world, 0.0F, 0.0F);

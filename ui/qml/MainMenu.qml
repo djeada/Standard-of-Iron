@@ -430,6 +430,8 @@ Item {
                             font.capitalization: Font.AllUppercase
                             font.pixelSize: Design.Typography.display(root.narrow ? 36 : 54)
                             font.weight: Design.Typography.bold
+                            font.hintingPreference: Design.Typography.titleHinting
+                            font.kerning: true
                             font.letterSpacing: root.narrow ? Design.Typography.trackingTitle : Design.Typography.trackingHero
                             elide: Text.ElideRight
                             maximumLineCount: 1
@@ -446,6 +448,8 @@ Item {
                             font.capitalization: Font.AllUppercase
                             font.pixelSize: Design.Typography.display(root.narrow ? 36 : 54)
                             font.weight: Design.Typography.bold
+                            font.hintingPreference: Design.Typography.titleHinting
+                            font.kerning: true
                             font.letterSpacing: root.narrow ? Design.Typography.trackingTitle : Design.Typography.trackingHero
                             elide: Text.ElideRight
                             maximumLineCount: 1

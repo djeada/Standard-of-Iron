@@ -154,7 +154,7 @@ def digit_seven() -> Glyph:
             bar(0, width, FIG - THIN, FIG, flare_left=True, flare_right=True),
             diagonal(width - 104, FIG - THIN, width * 0.22, 0, STEM + 20, STEM - 50),
         ],
-        holes=[cut(width * 0.32, 170, 60, facing="left")],
+        holes=[cut(width * 0.32, 170, 42, facing="left")],
     )
 
 
@@ -191,20 +191,24 @@ def digit_nine() -> Glyph:
 
 
 def _dot(cx: float, cy: float, size: float):
-    """Punctuation dots are squared, not round: chiselled, and they survive
-    the black border the captions are drawn behind."""
+    """A compact, chamfered punctuation mark in the face's chisel language."""
     half = size / 2.0
+    chamfer = size * 0.14
     return cw(
         [
-            (cx - half, cy - half),
-            (cx - half, cy + half),
-            (cx + half, cy + half),
-            (cx + half, cy - half),
+            (cx - half + chamfer, cy - half),
+            (cx - half, cy - half + chamfer),
+            (cx - half, cy + half - chamfer),
+            (cx - half + chamfer, cy + half),
+            (cx + half - chamfer, cy + half),
+            (cx + half, cy + half - chamfer),
+            (cx + half, cy - half + chamfer),
+            (cx + half - chamfer, cy - half),
         ]
     )
 
 
-DOT = 168.0
+DOT = 132.0
 
 
 def period() -> Glyph:
@@ -213,7 +217,7 @@ def period() -> Glyph:
 
 def ellipsis() -> Glyph:
 
-    size, gap = 132.0, 58.0
+    size, gap = 108.0, 50.0
     return Glyph(
         contours=[
             _dot(size / 2.0 + index * (size + gap), size / 2.0, size)

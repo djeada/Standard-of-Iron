@@ -7,6 +7,7 @@
 namespace {
 
 using Render::Humanoid::resolve_soldier_turn_smoothing;
+using Render::Humanoid::soldier_turn_variation;
 using Render::Humanoid::SoldierTurnSmoothingInputs;
 using Render::Humanoid::SoldierTurnSmoothingState;
 
@@ -93,6 +94,49 @@ TEST(SoldierTurnSmoothing, ASettledSoldierEasesBackToTheFormationFacing) {
   }
   EXPECT_FALSE(result.relocating);
   EXPECT_NEAR(std::abs(result.yaw_degrees), 180.0F, 1.0F);
+}
+
+TEST(SoldierTurnSmoothing, IndividualResponseDelayStaggersDirectionChanges) {
+  SoldierTurnSmoothingState immediate{};
+  SoldierTurnSmoothingState delayed{};
+  auto immediate_inputs = default_inputs();
+  auto delayed_inputs = default_inputs();
+  std::ignore = resolve_soldier_turn_smoothing(immediate, immediate_inputs);
+  std::ignore = resolve_soldier_turn_smoothing(delayed, delayed_inputs);
+
+  immediate_inputs.formation_yaw_degrees = 90.0F;
+  delayed_inputs.formation_yaw_degrees = 90.0F;
+  delayed_inputs.response_delay_seconds = 0.12F;
+  auto const immediate_turn =
+      resolve_soldier_turn_smoothing(immediate, immediate_inputs);
+  auto delayed_turn = resolve_soldier_turn_smoothing(delayed, delayed_inputs);
+
+  EXPECT_GT(immediate_turn.yaw_degrees, 0.0F);
+  EXPECT_FLOAT_EQ(delayed_turn.yaw_degrees, 0.0F);
+  for (int frame = 0; frame < 12; ++frame) {
+    delayed_turn = resolve_soldier_turn_smoothing(delayed, delayed_inputs);
+  }
+  EXPECT_GT(delayed_turn.yaw_degrees, 0.0F);
+  for (int frame = 0; frame < 120; ++frame) {
+    delayed_turn = resolve_soldier_turn_smoothing(delayed, delayed_inputs);
+  }
+  EXPECT_NEAR(delayed_turn.yaw_degrees, 90.0F, 1.0F);
+}
+
+TEST(SoldierTurnSmoothing, RearRanksReactLaterWithBoundedIndividualVariation) {
+  constexpr std::uint32_t k_seed = 0x12345678U;
+  auto const front = soldier_turn_variation(k_seed, 3, 4, false);
+  auto const rear = soldier_turn_variation(k_seed, 0, 4, false);
+  auto const mounted = soldier_turn_variation(k_seed, 3, 4, true);
+
+  EXPECT_LT(front.response_delay_seconds, rear.response_delay_seconds);
+  EXPECT_GT(mounted.response_delay_seconds, front.response_delay_seconds);
+  EXPECT_GE(front.catch_up_speed_scale, 0.90F);
+  EXPECT_LE(front.catch_up_speed_scale, 1.08F);
+  EXPECT_GE(front.turn_rate_scale, 0.78F);
+  EXPECT_LE(front.turn_rate_scale, 1.18F);
+  EXPECT_EQ(front.response_delay_seconds,
+            soldier_turn_variation(k_seed, 3, 4, false).response_delay_seconds);
 }
 
 TEST(SoldierTurnSmoothing, CombatKeepsTheFormationFacingWhileStepping) {

@@ -147,6 +147,51 @@ TEST(CommanderControlRegressionTest, GameViewRestoresInputFocusAcrossModes) {
   EXPECT_FALSE(contains(commander_source, "root.game.commander_"));
 }
 
+TEST(CommanderControlRegressionTest, OnlyCursorLayerReplacesThePointer) {
+  const auto root = find_repo_root();
+  const auto game_view_source = read_text(root / "ui" / "qml" / "GameView.qml");
+  const auto cursor_layer_source = read_text(root / "ui" / "qml" / "CursorLayer.qml");
+  const auto cursor_manager_header = app_source(root, "cursor_manager.h");
+  ASSERT_FALSE(game_view_source.empty());
+  ASSERT_FALSE(cursor_layer_source.empty());
+  ASSERT_FALSE(cursor_manager_header.empty());
+
+  EXPECT_FALSE(
+      std::filesystem::exists(root / "ui" / "qml" / "ContextIntentPreview.qml"));
+  EXPECT_FALSE(std::filesystem::exists(root / "ui" / "qml" / "CursorManager.qml"));
+
+  EXPECT_TRUE(contains(cursor_layer_source, "readonly property bool replacesPointer"));
+  EXPECT_TRUE(contains(
+      game_view_source,
+      "cursorShape: cursorLayer.replacesPointer ? Qt.BlankCursor : Qt.ArrowCursor"));
+  EXPECT_FALSE(contains(game_view_source, "Qt.CrossCursor"));
+
+  EXPECT_FALSE(contains(cursor_manager_header, "update_cursor_shape"));
+
+  EXPECT_EQ(occurrences(game_view_source, "cursorShape:"), 1);
+}
+
+TEST(CommanderControlRegressionTest, OrderFeedbackSpeaksThroughOneCursorChip) {
+  const auto root = find_repo_root();
+  const auto game_view_source = read_text(root / "ui" / "qml" / "GameView.qml");
+  const auto cursor_layer_source = read_text(root / "ui" / "qml" / "CursorLayer.qml");
+  const auto context_intent_header = app_source(root, "context_intent.h");
+  ASSERT_FALSE(game_view_source.empty());
+  ASSERT_FALSE(cursor_layer_source.empty());
+  ASSERT_FALSE(context_intent_header.empty());
+
+  EXPECT_TRUE(contains(game_view_source,
+                       "cursorLayer.report_order_feedback(kind, accepted, message);"));
+  EXPECT_TRUE(contains(cursor_layer_source, "readonly property string source:"));
+
+  EXPECT_FALSE(contains(game_view_source, "orderFeedbackBanner"));
+  EXPECT_FALSE(contains(game_view_source, "attackTargetHint"));
+  EXPECT_FALSE(contains(game_view_source, "interactionTargetHint"));
+
+  EXPECT_TRUE(contains(context_intent_header, "ContextIntent::None"));
+  EXPECT_TRUE(contains(context_intent_header, "auto advises() const -> bool"));
+}
+
 TEST(CommanderControlRegressionTest, GameViewRoutesRightGestureThroughTheOrdersSlice) {
   const auto root = find_repo_root();
   const auto source = read_text(root / "ui" / "qml" / "GameView.qml");

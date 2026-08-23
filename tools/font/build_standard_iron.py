@@ -39,7 +39,7 @@ from pathops import PathOp, op
 
 FAMILY = "Standard Iron Display"
 STYLE = "Bold"
-VERSION = "1.000"
+VERSION = "1.100"
 
 OUTPUT = (
     Path(__file__).resolve().parents[2]
@@ -49,7 +49,11 @@ OUTPUT = (
 )
 
 
-CURVE_TOLERANCE = 0.6
+CURVE_TOLERANCE = 0.25
+
+
+GASP_DOGRAY = 0x0002
+GASP_SYMMETRIC_SMOOTHING = 0x0008
 
 
 BUILD_EPOCH = 3850070400
@@ -244,6 +248,22 @@ def build_kerning(builder, available: set) -> None:
     builder.font["kern"] = table
 
 
+def build_rasterization_preferences(builder) -> None:
+    """Request grayscale smoothing without grid-fitting at every display size.
+
+    Standard Iron deliberately carries no hand-written TrueType instructions.
+    Asking a rasterizer to grid-fit those unhinted outlines can distort the
+    narrow counters and diagonal serifs, especially in the small score cells.
+    Vertical-only hinting is selected by the UI; this table gives non-Qt
+    consumers the matching smooth scan-conversion preference.
+    """
+    table = newTable("gasp")
+    table.gaspRange = {
+        0xFFFF: GASP_DOGRAY | GASP_SYMMETRIC_SMOOTHING,
+    }
+    builder.font["gasp"] = table
+
+
 def build() -> Path:
     sources: dict = {}
     sources.update(LETTERS)
@@ -356,7 +376,7 @@ def build() -> Path:
         panose={
             "bFamilyType": 2,
             "bSerifStyle": 4,
-            "bWeight": 9,
+            "bWeight": 8,
             "bProportion": 4,
             "bContrast": 8,
             "bStrokeVariation": 0,
@@ -367,6 +387,7 @@ def build() -> Path:
         },
     )
     build_kerning(builder, set(glyph_order))
+    build_rasterization_preferences(builder)
 
     builder.setupPost(isFixedPitch=0, underlinePosition=-120, underlineThickness=90)
     builder.font["head"].macStyle = 1

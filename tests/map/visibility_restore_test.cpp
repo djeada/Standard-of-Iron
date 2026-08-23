@@ -2,6 +2,8 @@
 #include <gtest/gtest.h>
 #include <vector>
 
+#include "game/core/component.h"
+#include "game/core/world.h"
 #include "game/map/visibility_service.h"
 
 namespace {
@@ -68,6 +70,36 @@ TEST(VisibilityRestore, PublishesANewSnapshotSoTheFogRedraws) {
   const auto after = visibility.snapshot();
   EXPECT_GT(after.version, before);
   EXPECT_EQ(static_cast<VisibilityState>(after.cells[10]), VisibilityState::Explored);
+
+  visibility.reset();
+}
+
+TEST(VisibilityReveal, AUnitClearsHalfAgainItsVisionRange) {
+  auto& visibility = VisibilityService::instance();
+  visibility.initialize(81, 81, 1.0F);
+
+  Engine::Core::World world;
+  auto* scout = world.create_entity();
+  ASSERT_NE(scout, nullptr);
+  scout->add_component<Engine::Core::TransformComponent>(0.0F, 0.0F, 0.0F);
+  auto* unit = scout->add_component<Engine::Core::UnitComponent>();
+  ASSERT_NE(unit, nullptr);
+  unit->owner_id = 1;
+  unit->health = 100;
+  unit->max_health = 100;
+  unit->vision_range = 20.0F;
+
+  visibility.compute_immediate(world, 1);
+
+  const auto snapshot = visibility.snapshot();
+  ASSERT_TRUE(snapshot.initialized);
+
+  EXPECT_TRUE(snapshot.is_visible_world(0.0F, 20.0F))
+      << "the authored vision range must still be clear";
+  EXPECT_TRUE(snapshot.is_visible_world(0.0F, 28.0F))
+      << "the fog reveal reaches half again the authored vision range";
+  EXPECT_FALSE(snapshot.is_visible_world(0.0F, 34.0F))
+      << "the reveal must still stop, not uncover the map";
 
   visibility.reset();
 }

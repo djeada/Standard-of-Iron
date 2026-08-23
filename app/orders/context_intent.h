@@ -17,6 +17,7 @@ class World;
 namespace App::Core {
 
 enum class ContextIntent : std::uint8_t {
+  None,
   Invalid,
   Move,
   Attack,
@@ -47,13 +48,17 @@ struct ContextIntentRequest {
 };
 
 struct ContextIntentResolution {
-  ContextIntent intent = ContextIntent::Invalid;
+  ContextIntent intent = ContextIntent::None;
   Engine::Core::EntityID target = 0;
   bool has_position = false;
   QVector3D position;
   QString reason;
 
-  [[nodiscard]] auto valid() const -> bool { return intent != ContextIntent::Invalid; }
+  [[nodiscard]] auto valid() const -> bool {
+    return intent != ContextIntent::Invalid && intent != ContextIntent::None;
+  }
+
+  [[nodiscard]] auto advises() const -> bool { return intent != ContextIntent::None; }
 };
 
 [[nodiscard]] auto

@@ -1,13 +1,9 @@
 #include "humanoid_pose_policies.h"
 
 #include "render/entity/healer_renderer_common.h"
+#include "render/entity/nations/carthage/healer_renderer.h"
 #include "render/gl/humanoid/humanoid_types.h"
 #include "render/humanoid/asset/humanoid_spec.h"
-
-namespace Render::GL::Carthage {
-void apply_grave_priest_cast_pose(const Render::GL::HumanoidAnimationContext& anim,
-                                  Render::GL::HumanoidPose& io_pose);
-}
 
 namespace Render::Entity {
 

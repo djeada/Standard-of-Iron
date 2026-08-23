@@ -487,12 +487,10 @@ void GameEngine::build_services_and_controllers() {
     qWarning() << "Failed to initialize AudioEventHandler";
   }
 
-  connect(m_cursor_manager.get(), &CursorManager::mode_changed, this, [this]() {
-    if (m_cursor_manager && (m_window != nullptr)) {
-      m_cursor_manager->update_cursor_shape(m_window);
-    }
-    emit cursor_mode_changed();
-  });
+  connect(m_cursor_manager.get(),
+          &CursorManager::mode_changed,
+          this,
+          &GameEngine::cursor_mode_changed);
   connect(m_cursor_manager.get(),
           &CursorManager::global_cursor_changed,
           this,

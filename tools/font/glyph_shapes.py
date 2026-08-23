@@ -91,12 +91,12 @@ class Glyph:
     fixed_advance: float | None = None
 
 
-BOWL_SIDE = STEM - 8
-BOWL_THIN = THIN
+BOWL_SIDE = STEM - 10
+BOWL_THIN = THIN - 2
 
 
-ROUND_SIDES = 0.80
-DIAGONAL_SIDES = 0.66
+ROUND_SIDES = 0.84
+DIAGONAL_SIDES = 0.72
 
 
 def ring(cx: float, cy: float, rx: float, ry: float) -> tuple[list, list]:
@@ -150,10 +150,10 @@ def blade_mouth(cx: float, cy: float, rx: float, ry: float, opening: float):
     """
     return cw(
         [
-            (cx + rx * 0.30, cy - opening),
-            (cx + rx * 2.0, cy - opening - ry * 0.55),
-            (cx + rx * 2.0, cy + opening + ry * 0.55),
-            (cx + rx * 0.30, cy + opening),
+            (cx + rx * 0.38, cy - opening),
+            (cx + rx * 1.7, cy - opening - ry * 0.48),
+            (cx + rx * 1.7, cy + opening + ry * 0.48),
+            (cx + rx * 0.38, cy + opening),
         ]
     )
 
@@ -192,11 +192,10 @@ def apex_pair(
 
 
 def letter_a() -> Glyph:
-    """The crossbar sits low -- around a quarter of the cap height rather than
-    the usual half. It is the single loudest proportion in the alphabet:
-    dropping it opens the counter into a broad triangle and makes ROMA and
-    CARTHAGE read as monumental rather than as ordinary type. One bite out of
-    the thin stroke, at the height of the bar.
+    """The crossbar sits low -- around the lower third rather than at midline.
+    It is the single loudest proportion in the alphabet: dropping it opens the
+    counter into a broad triangle and makes ROMA and CARTHAGE read as monumental
+    rather than as ordinary type. One bite marks the thin stroke near the bar.
     """
     width = 664
     apex, over = width / 2.0, 42.0
@@ -204,7 +203,7 @@ def letter_a() -> Glyph:
     contours = apex_pair(apex, over, left_foot, right_foot, THIN, STEM)
     contours.append(foot_serif(left_foot, THIN + 26))
     contours.append(foot_serif(right_foot, STEM + 26))
-    bar_bottom = CAP * 0.27
+    bar_bottom = CAP * 0.31
     contours.append(bar(140, width - 140, bar_bottom, bar_bottom + THIN))
     counter = [
         (apex - 58, CAP - 96),
@@ -214,7 +213,7 @@ def letter_a() -> Glyph:
     ]
     return Glyph(
         contours=contours,
-        holes=[cw(counter), cut(206, CAP * 0.47, 70, facing="right")],
+        holes=[cw(counter), cut(212, CAP * 0.49, 46, facing="right")],
         advance=width + 2 * SIDEBEARING,
     )
 
@@ -273,7 +272,7 @@ def letter_e() -> Glyph:
     )
     return Glyph(
         contours=contours,
-        holes=[cut(STEM + 46, mid + THIN * 0.46, 54, facing="right")],
+        holes=[cut(STEM + 44, mid + THIN * 0.46, 40, facing="right")],
         advance=width + 2 * SIDEBEARING,
     )
 
@@ -307,16 +306,16 @@ def letter_g() -> Glyph:
     bowl.holes.append(
         cw(
             [
-                (cx + rx * 0.26, cy + THIN * 0.58),
+                (cx + rx * 0.34, cy + THIN * 0.54),
                 (cx + rx * 2.2, cy - ry * 0.16),
                 (cx + rx * 2.2, cy + ry * 2.5),
-                (cx + rx * 0.26, cy + ry * 2.5),
+                (cx + rx * 0.34, cy + ry * 2.5),
             ]
         )
     )
 
     glyph.contours.append(
-        bar(cx + rx * 0.14, cx + rx, cy - THIN * 0.5, cy + THIN * 0.5, flare_left=True)
+        bar(cx + rx * 0.20, cx + rx, cy - THIN * 0.5, cy + THIN * 0.5, flare_left=True)
     )
     return glyph
 
@@ -378,7 +377,7 @@ def letter_k() -> Glyph:
     ]
     return Glyph(
         contours=contours,
-        holes=[cut(width - 128, junction + 148, 56, facing="right")],
+        holes=[cut(width - 128, junction + 148, 42, facing="right")],
         advance=width + 2 * SIDEBEARING,
     )
 
@@ -402,8 +401,8 @@ def letter_m() -> Glyph:
     contours = [
         diagonal(left_head, CAP, left_foot, 0, THIN, THIN),
         diagonal(right_head, CAP, right_foot, 0, STEM, STEM),
-        diagonal(THIN, CAP, width / 2.0, 104, STEM - 26, STEM - 50),
-        diagonal(width - THIN, CAP, width / 2.0, 104, THIN, STEM - 50),
+        diagonal(THIN, CAP, width / 2.0, 124, STEM - 26, STEM - 50),
+        diagonal(width - THIN, CAP, width / 2.0, 124, THIN, STEM - 50),
         head_serif(left_head, THIN),
         head_serif(right_head, STEM),
         foot_serif(left_foot, THIN),
@@ -483,7 +482,7 @@ def letter_r() -> Glyph:
     glyph.contours.append(
         diagonal(STEM + 40, cy - ry + 30, width, 0, STEM - 20, STEM + 20)
     )
-    glyph.holes.append(cut(width - 30, 120, 62, facing="left"))
+    glyph.holes.append(cut(width - 30, 120, 44, facing="left"))
     return glyph
 
 

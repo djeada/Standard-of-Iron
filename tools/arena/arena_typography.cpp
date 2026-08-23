@@ -13,9 +13,9 @@ auto branded(double base, double ui, double tracking) -> QFont {
   QFont font(Ui::BrandFonts::title_family());
   font.setPixelSize(static_cast<int>(std::lround(base * ui)));
   font.setBold(true);
-
   font.setCapitalization(QFont::AllUppercase);
-
+  font.setHintingPreference(QFont::PreferVerticalHinting);
+  font.setKerning(true);
   font.setLetterSpacing(QFont::AbsoluteSpacing, tracking * ui);
   return font;
 }
