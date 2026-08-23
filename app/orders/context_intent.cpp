@@ -41,6 +41,13 @@ auto invalid(const QString& reason) -> ContextIntentResolution {
   return resolution;
 }
 
+auto nothing_to_advise(const QString& reason) -> ContextIntentResolution {
+  ContextIntentResolution resolution;
+  resolution.intent = ContextIntent::None;
+  resolution.reason = reason;
+  return resolution;
+}
+
 auto ground_move(const ContextIntentRequest& request) -> ContextIntentResolution {
   if (!request.has_ground) {
     return invalid(QObject::tr("No ground under the cursor"));
@@ -59,6 +66,8 @@ auto ground_move(const ContextIntentRequest& request) -> ContextIntentResolution
 
 auto context_intent_name(ContextIntent intent) -> const char* {
   switch (intent) {
+  case ContextIntent::None:
+    return "none";
   case ContextIntent::Invalid:
     return "invalid";
   case ContextIntent::Move:
@@ -76,10 +85,10 @@ auto context_intent_name(ContextIntent intent) -> const char* {
 auto resolve_context_intent(const ContextIntentRequest& request)
     -> ContextIntentResolution {
   if (request.world == nullptr) {
-    return invalid(QObject::tr("No match is running"));
+    return nothing_to_advise(QObject::tr("No match is running"));
   }
   if (request.spectator_mode) {
-    return invalid(QObject::tr("Spectating"));
+    return nothing_to_advise(QObject::tr("Spectating"));
   }
 
   if (rally_placement_mode(request.cursor_mode)) {
@@ -107,7 +116,7 @@ auto resolve_context_intent(const ContextIntentRequest& request)
   const bool has_selection =
       request.selection != nullptr && !request.selection->empty();
   if (!has_selection) {
-    return invalid(QObject::tr("Nothing selected"));
+    return nothing_to_advise(QObject::tr("Nothing selected"));
   }
 
   if (interact_mode(request.cursor_mode)) {
@@ -165,6 +174,7 @@ auto to_variant_map(const ContextIntentResolution& resolution) -> QVariantMap {
   map[QStringLiteral("intent")] =
       QString::fromLatin1(context_intent_name(resolution.intent));
   map[QStringLiteral("valid")] = resolution.valid();
+  map[QStringLiteral("advises")] = resolution.advises();
   map[QStringLiteral("targetId")] = static_cast<qulonglong>(resolution.target);
   map[QStringLiteral("hasPosition")] = resolution.has_position;
   map[QStringLiteral("x")] = resolution.position.x();

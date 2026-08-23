@@ -17,7 +17,8 @@ namespace {
 auto add_attacker(Engine::Core::World& world,
                   Game::Units::SpawnType type,
                   float x = 0.0F,
-                  float z = 0.0F) -> Engine::Core::Entity* {
+                  float z = 0.0F,
+                  int individuals = 1) -> Engine::Core::Entity* {
   auto* entity = world.create_entity();
   auto* transform = entity->add_component<Engine::Core::TransformComponent>(x, 0.0F, z);
   transform->scale = {0.55F, 0.55F, 0.55F};
@@ -25,7 +26,7 @@ auto add_attacker(Engine::Core::World& world,
       entity->add_component<Engine::Core::UnitComponent>(100, 100, 1.0F, 12.0F);
   unit->owner_id = 1;
   unit->spawn_type = type;
-  unit->render_individuals_per_unit_override = 1;
+  unit->render_individuals_per_unit_override = individuals;
   auto* attack = entity->add_component<Engine::Core::AttackComponent>();
   attack->can_melee = true;
   attack->current_mode = Engine::Core::AttackComponent::CombatMode::Melee;
@@ -150,6 +151,38 @@ TEST_F(StructureCombatTest, RotatedFootprintReturnsTheVisibleFacade) {
   EXPECT_NEAR(contact.distance, 3.0F, 0.001F);
   EXPECT_NEAR(contact.outward_normal.x(), 0.0F, 0.001F);
   EXPECT_NEAR(contact.outward_normal.z(), -1.0F, 0.001F);
+}
+
+TEST_F(StructureCombatTest, RegisteredGateFootprintIsNotRotatedTwice) {
+  Engine::Core::World world;
+  auto* gate =
+      add_structure(world, Game::Units::SpawnType::WallGate, 0.0F, 6.0F, 90.0F);
+  Game::Systems::BuildingCollisionRegistry::instance().resize_building(
+      gate->get_id(), {.width = 3.0F, .depth = 9.0F});
+
+  auto const contact = Game::Systems::Combat::closest_structure_surface(
+      *gate, QVector3D(0.0F, 0.0F, -2.0F));
+
+  EXPECT_NEAR(contact.point.x(), 0.0F, 0.001F);
+  EXPECT_NEAR(contact.point.z(), 1.5F, 0.001F);
+  EXPECT_NEAR(contact.distance, 3.5F, 0.001F);
+  EXPECT_NEAR(contact.outward_normal.x(), 0.0F, 0.001F);
+  EXPECT_NEAR(contact.outward_normal.z(), -1.0F, 0.001F);
+}
+
+TEST_F(StructureCombatTest, FullFormationApproachUsesItsNavigationRoot) {
+  Engine::Core::World world;
+  auto* attacker =
+      add_attacker(world, Game::Units::SpawnType::Spearman, 0.0F, 0.0F, 36);
+  auto* wall = add_structure(world, Game::Units::SpawnType::WallSegment, 0.0F, 12.0F);
+
+  auto const approach =
+      Game::Systems::Combat::structure_melee_approach(*attacker, *wall);
+
+  EXPECT_FALSE(approach.reached);
+  EXPECT_NEAR(approach.current_surface_gap, 11.0F, 0.001F);
+  EXPECT_NEAR(approach.destination.x(), 0.0F, 0.001F);
+  EXPECT_NEAR(approach.destination.z(), 10.18F, 0.001F);
 }
 
 TEST_F(StructureCombatTest, MeleeApproachUsesTheClosestWalkableFacadePosition) {

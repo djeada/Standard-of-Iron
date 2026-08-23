@@ -235,6 +235,35 @@ TEST_F(TightGapNavigationTest, RouteKeepsClearOfAWallItRunsAlong) {
   }
 }
 
+TEST_F(TightGapNavigationTest, FormationDoesNotSqueezeAlongASingleWall) {
+  open_field();
+  m_session->world().set_presentation_enabled(true);
+  constexpr int k_wall_z = 24;
+  for (int grid_x = 10; grid_x <= 38; ++grid_x) {
+    block_cell(grid_x, k_wall_z);
+  }
+  refresh_grid();
+
+  const EntityID id =
+      spawn(Game::Units::SpawnType::Spearman, world_of(6, k_wall_z + 2), 90.0F);
+  auto* entity = m_session->world().get_entity(id);
+  ASSERT_NE(entity, nullptr);
+  CommandService::move_unit(m_session->world(), id, world_of(42, k_wall_z + 2));
+
+  bool squeezed = false;
+  const double step = m_session->clock().tick_seconds();
+  for (double elapsed = 0.0; elapsed < 30.0; elapsed += step) {
+    run_for(step);
+    auto const* motion =
+        entity->get_component<Engine::Core::MotionPresentationComponent>();
+    squeezed = squeezed ||
+               (motion != nullptr && motion->traversal_target_lateral_scale < 0.999F);
+  }
+
+  EXPECT_FALSE(squeezed) << "a wall on only one side was mistaken for a tight corridor";
+  EXPECT_GT(position_of(id).x(), world_of(38, k_wall_z + 2).x());
+}
+
 TEST_F(TightGapNavigationTest, ADiagonalWallOneCellThickIsStillAWall) {
   open_field(k_bare_field);
   constexpr int k_anti_diagonal = 30;
@@ -363,6 +392,7 @@ TEST_F(TightGapNavigationTest, FormationSqueezeChangesPresentationButNotCombatLa
   CommandService::move_unit(m_session->world(), id, world_of(42, k_gap_z));
   bool squeezed = false;
   float narrowest_presented_half_width = original_half_width;
+  float separation_at_narrowest = std::numeric_limits<float>::infinity();
   const double step = m_session->clock().tick_seconds();
   for (double elapsed = 0.0; elapsed < 30.0; elapsed += step) {
     run_for(step);
@@ -383,8 +413,27 @@ TEST_F(TightGapNavigationTest, FormationSqueezeChangesPresentationButNotCombatLa
             std::max(presented_half_width, std::abs(soldier.local_x));
       }
     }
-    narrowest_presented_half_width =
-        std::min(narrowest_presented_half_width, presented_half_width);
+    if (presented_half_width < narrowest_presented_half_width) {
+      narrowest_presented_half_width = presented_half_width;
+      separation_at_narrowest = std::numeric_limits<float>::infinity();
+      for (std::size_t left = 0; left < presentation->soldiers.size(); ++left) {
+        auto const& first = presentation->soldiers[left];
+        if (!first.alive) {
+          continue;
+        }
+        for (std::size_t right = left + 1; right < presentation->soldiers.size();
+             ++right) {
+          auto const& second = presentation->soldiers[right];
+          if (!second.alive) {
+            continue;
+          }
+          separation_at_narrowest =
+              std::min(separation_at_narrowest,
+                       std::hypot(first.local_x - second.local_x,
+                                  first.local_z - second.local_z));
+        }
+      }
+    }
 
     auto const authoritative_layout =
         Game::Systems::FormationCombat::resolve_layout(*entity);
@@ -400,6 +449,8 @@ TEST_F(TightGapNavigationTest, FormationSqueezeChangesPresentationButNotCombatLa
 
   EXPECT_TRUE(squeezed);
   EXPECT_LT(narrowest_presented_half_width, original_half_width * 0.8F);
+  EXPECT_GE(separation_at_narrowest, 0.55F)
+      << "tight-corridor presentation stacked soldiers on top of each other";
   EXPECT_GT(position_of(id).x(), world_of(38, k_gap_z).x());
 
   run_for(2.0);

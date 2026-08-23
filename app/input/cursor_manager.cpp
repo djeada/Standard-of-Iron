@@ -7,7 +7,6 @@
 #include <QQuickWindow>
 #include <QThread>
 #include <qglobal.h>
-#include <qnamespace.h>
 #include <qobject.h>
 #include <qpoint.h>
 #include <qtmetamacros.h>
@@ -58,28 +57,6 @@ void CursorManager::set_mode(CursorMode mode) {
 
 void CursorManager::set_mode(const QString& mode) {
   set_mode(CursorModeUtils::fromString(mode));
-}
-
-void CursorManager::update_cursor_shape(QQuickWindow* window) {
-  if (window == nullptr) {
-    return;
-  }
-
-  Qt::CursorShape const desired_cursor =
-      (m_cursor_mode == CursorMode::Normal) ? Qt::ArrowCursor : Qt::BlankCursor;
-
-  if (m_current_cursor != desired_cursor) {
-    m_current_cursor = desired_cursor;
-    QPointer<QQuickWindow> const safe_window(window);
-    QMetaObject::invokeMethod(
-        window,
-        [safe_window, desired_cursor]() {
-          if (safe_window != nullptr) {
-            safe_window->setCursor(desired_cursor);
-          }
-        },
-        Qt::AutoConnection);
-  }
 }
 
 auto CursorManager::global_cursor_x(QQuickWindow* window) -> qreal {

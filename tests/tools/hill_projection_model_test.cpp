@@ -482,8 +482,10 @@ auto runtime_hill_cells(const QJsonObject& hill) -> QSet<QPair<int, int>> {
   feature.has_sweep = hill.contains(MapJsonKeys::arc);
   feature.sweep_degrees =
       static_cast<float>(hill.value(MapJsonKeys::arc).toDouble(0.0));
-  Game::Map::parse_hill_shape(hill.value(MapJsonKeys::shape).toString().toStdString(),
-                              feature.shape);
+  if (!Game::Map::parse_hill_shape(
+          hill.value(MapJsonKeys::shape).toString().toStdString(), feature.shape)) {
+    feature.shape = Game::Map::HillShape::Blob;
+  }
 
   Game::Map::TerrainHeightMap height_map(
       k_runtime_grid, k_runtime_grid, k_runtime_tile);

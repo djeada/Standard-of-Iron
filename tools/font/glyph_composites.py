@@ -20,8 +20,8 @@ from glyph_geometry import CAP, THIN, cw, ellipse
 from glyph_shapes import BOWL_THIN, Glyph
 
 MARK_Y = CAP + 40
-MARK_WEIGHT = THIN * 0.92
-MARK_REACH = 150.0
+MARK_WEIGHT = THIN * 0.84
+MARK_REACH = 138.0
 
 
 def acute() -> Glyph:
@@ -30,8 +30,8 @@ def acute() -> Glyph:
             cw(
                 [
                     (0, MARK_Y),
-                    (MARK_REACH * 0.55, MARK_Y + 170),
-                    (MARK_REACH * 0.55 + MARK_WEIGHT, MARK_Y + 170),
+                    (MARK_REACH * 0.55, MARK_Y + 152),
+                    (MARK_REACH * 0.55 + MARK_WEIGHT, MARK_Y + 152),
                     (MARK_WEIGHT, MARK_Y),
                 ]
             )
@@ -54,10 +54,10 @@ def circumflex() -> Glyph:
             cw(
                 [
                     (0, MARK_Y),
-                    (span / 2.0, MARK_Y + 180),
+                    (span / 2.0, MARK_Y + 158),
                     (span, MARK_Y),
                     (span - MARK_WEIGHT * 0.9, MARK_Y),
-                    (span / 2.0, MARK_Y + 180 - MARK_WEIGHT * 1.15),
+                    (span / 2.0, MARK_Y + 158 - MARK_WEIGHT * 1.15),
                     (MARK_WEIGHT * 0.9, MARK_Y),
                 ]
             )
@@ -66,7 +66,7 @@ def circumflex() -> Glyph:
 
 
 def tilde() -> Glyph:
-    span, wave = MARK_REACH * 1.7, 78.0
+    span, wave = MARK_REACH * 1.7, 62.0
     top = MARK_Y + 60
     return Glyph(
         contours=[
@@ -87,8 +87,8 @@ def tilde() -> Glyph:
 
 
 def dieresis() -> Glyph:
-    size = MARK_WEIGHT * 1.15
-    gap = size * 1.9
+    size = MARK_WEIGHT
+    gap = size * 1.7
 
     def square(x0: float):
         return cw(

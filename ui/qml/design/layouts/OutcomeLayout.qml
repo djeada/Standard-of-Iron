@@ -62,6 +62,8 @@ Item {
                 font.capitalization: Font.AllUppercase
                 font.pixelSize: Design.Typography.title
                 font.weight: Design.Typography.bold
+                font.hintingPreference: Design.Typography.titleHinting
+                font.kerning: true
                 font.letterSpacing: Design.Typography.trackingTitle
                 horizontalAlignment: Text.AlignHCenter
                 wrapMode: Text.WordWrap

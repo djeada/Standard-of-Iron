@@ -290,7 +290,11 @@ TEST_F(WallSiegeTest, FrontRankVisuallyReachesTheFacadeFromWalkableGround) {
       QVector3D(transform->position.x, 0.0F, transform->position.z)));
   EXPECT_TRUE(presentation->melee_ordered);
 
+  QVector3D const root_position(transform->position.x, 0.0F, transform->position.z);
+  auto const root_surface =
+      Game::Systems::Combat::closest_structure_surface(*wall_entity, root_position);
   float closest_visible_gap = std::numeric_limits<float>::infinity();
+  float minimum_visible_facade_gap = std::numeric_limits<float>::infinity();
   float const yaw = transform->rotation.y * std::numbers::pi_v<float> / 180.0F;
   float const sin_yaw = std::sin(yaw);
   float const cos_yaw = std::cos(yaw);
@@ -305,9 +309,17 @@ TEST_F(WallSiegeTest, FrontRankVisuallyReachesTheFacadeFromWalkableGround) {
     closest_visible_gap = std::min(
         closest_visible_gap,
         Game::Systems::Combat::structure_surface_distance(*wall_entity, position));
+    minimum_visible_facade_gap =
+        std::min(minimum_visible_facade_gap,
+                 QVector3D::dotProduct(position - root_surface.point,
+                                       root_surface.outward_normal));
   }
   float const contact_clearance =
       Game::Systems::Combat::structure_attack_profile(raider_entity).contact_clearance;
+  EXPECT_LE(root_surface.distance, contact_clearance + 1.5F)
+      << "the grid-controlled unit root stopped a formation-depth away from the wall";
+  EXPECT_GE(minimum_visible_facade_gap, -0.05F)
+      << "the rendered formation crossed through the attacked wall facade";
   EXPECT_LE(closest_visible_gap, contact_clearance + 0.15F)
       << "the front rank did not visually reach the wall it was attacking";
   EXPECT_LT(health_of(*session, wall), 4000);

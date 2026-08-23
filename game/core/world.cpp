@@ -203,12 +203,16 @@ void finalize_motion_presentation_frame(World& world, float delta_time) {
         bool const has_navigation_intent =
             has_active_navigation_segment || has_component_velocity;
 
+        float const direct_control_speed_sq =
+            commander != nullptr && commander->fpv_controlled
+                ? (commander->fpv_motion_vx * commander->fpv_motion_vx) +
+                      (commander->fpv_motion_vz * commander->fpv_motion_vz)
+                : 0.0F;
+        bool const direct_control_velocity =
+            direct_control_speed_sq > k_motion_velocity_epsilon_sq;
         bool const direct_control_moving =
             commander != nullptr && commander->fpv_controlled &&
-            ((commander->fpv_motion_vx * commander->fpv_motion_vx +
-              commander->fpv_motion_vz * commander->fpv_motion_vz) >
-                 k_motion_velocity_epsilon_sq ||
-             has_component_velocity);
+            (direct_control_velocity || has_component_velocity);
         bool const builder_bypass =
             builder_prod != nullptr && builder_prod->bypass_movement_active;
 
@@ -223,14 +227,16 @@ void finalize_motion_presentation_frame(World& world, float delta_time) {
             (motion->has_chase_intent && has_active_navigation_segment);
         bool const making_progress =
             displacement_sq >=
-            (k_motion_stall_speed * safe_dt) * (k_motion_stall_speed * safe_dt);
+                (k_motion_stall_speed * safe_dt) * (k_motion_stall_speed * safe_dt) ||
+            direct_control_speed_sq >= k_motion_stall_speed * k_motion_stall_speed;
         if (!wants_locomotion || making_progress) {
           motion->stalled_seconds = 0.0F;
         } else {
           motion->stalled_seconds += std::max(0.0F, delta_time);
         }
-        float const no_ground_gained =
-            movement != nullptr ? movement->get_stuck_time() : 0.0F;
+        float const no_ground_gained = (movement != nullptr && !direct_control_moving)
+                                           ? movement->get_stuck_time()
+                                           : 0.0F;
 
         MotionPresentationSample sample{};
         sample.displaced = displaced;
@@ -250,8 +256,10 @@ void finalize_motion_presentation_frame(World& world, float delta_time) {
         motion->state_time = motion->state_changed
                                  ? 0.0F
                                  : motion->state_time + std::max(0.0F, delta_time);
-        motion->has_velocity = displaced || has_component_velocity;
-        motion->has_navigation_intent = has_navigation_intent || builder_bypass;
+        motion->has_velocity =
+            displaced || has_component_velocity || direct_control_velocity;
+        motion->has_navigation_intent =
+            has_navigation_intent || builder_bypass || direct_control_moving;
 
         motion->displacement_x = displacement_x;
         motion->displacement_z = displacement_z;
@@ -268,6 +276,10 @@ void finalize_motion_presentation_frame(World& world, float delta_time) {
           motion->velocity_x = displacement_x / safe_dt;
           motion->velocity_z = displacement_z / safe_dt;
           motion->speed = std::sqrt(displacement_sq) / safe_dt;
+        } else if (direct_control_velocity) {
+          motion->velocity_x = commander->fpv_motion_vx;
+          motion->velocity_z = commander->fpv_motion_vz;
+          motion->speed = std::sqrt(direct_control_speed_sq);
         } else {
           motion->velocity_x = 0.0F;
           motion->velocity_z = 0.0F;
@@ -309,6 +321,9 @@ void finalize_motion_presentation_frame(World& world, float delta_time) {
         } else if (displaced) {
           motion->direction_x = displacement_x;
           motion->direction_z = displacement_z;
+        } else if (direct_control_velocity) {
+          motion->direction_x = commander->fpv_motion_vx;
+          motion->direction_z = commander->fpv_motion_vz;
         } else if (motion->has_movement_target) {
           motion->direction_x = motion->movement_target_x - transform->position.x;
           motion->direction_z = motion->movement_target_z - transform->position.z;

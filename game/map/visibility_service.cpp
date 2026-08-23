@@ -26,6 +26,7 @@ auto VisibilityService::instance() -> VisibilityService& {
 namespace {
 
 constexpr float k_default_vision_range = 12.0F;
+constexpr float k_fog_reveal_scale = 1.5F;
 constexpr float k_half_cell_offset = 0.5F;
 constexpr float k_min_tile_size = 0.0001F;
 constexpr std::chrono::milliseconds k_min_job_interval{50};
@@ -165,7 +166,8 @@ auto VisibilityService::gather_vision_sources(Engine::Core::World& world, int pl
       continue;
     }
 
-    const float vision_range = std::max(unit->vision_range, k_default_vision_range);
+    const float vision_range =
+        std::max(unit->vision_range, k_default_vision_range) * k_fog_reveal_scale;
     const int center_x = world_to_grid(transform->position.x, m_half_width);
     const int center_z = world_to_grid(transform->position.z, m_half_height);
     if (!in_bounds(center_x, center_z)) {

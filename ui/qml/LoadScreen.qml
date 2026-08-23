@@ -147,6 +147,8 @@ Rectangle {
             font.capitalization: Font.AllUppercase
             font.pixelSize: Design.Typography.hero
             font.weight: Design.Typography.bold
+            font.hintingPreference: Design.Typography.titleHinting
+            font.kerning: true
             font.letterSpacing: Design.Typography.trackingHero
             style: Text.Outline
             styleColor: "#120D09"

@@ -2,14 +2,13 @@
 
 #include <algorithm>
 #include <cmath>
-#include <limits>
 #include <numbers>
 #include <string>
+#include <utility>
 
 #include "../../core/component.h"
 #include "../../units/spawn_type.h"
 #include "../building_collision_registry.h"
-#include "../formation_combat_geometry.h"
 #include "../nav_grid.h"
 #include "../pathfinding.h"
 
@@ -35,18 +34,20 @@ structure_footprint(const Engine::Core::Entity& structure) -> StructureFootprint
     result.yaw_radians = transform->rotation.y * std::numbers::pi_v<float> / 180.0F;
   }
 
+  if (auto const* registered =
+          Game::Systems::BuildingCollisionRegistry::instance().find_building(
+              structure.get_id())) {
+    result.center_x = registered->center_x;
+    result.center_z = registered->center_z;
+    result.half_width = std::max(0.1F, registered->width * 0.5F);
+    result.half_depth = std::max(0.1F, registered->depth * 0.5F);
+    result.yaw_radians = 0.0F;
+    return result;
+  }
+
   auto size = Game::Systems::BuildingCollisionRegistry::get_building_size(
       unit != nullptr ? Game::Units::spawn_typeToString(unit->spawn_type)
                       : std::string{});
-  for (auto const& registered :
-       Game::Systems::BuildingCollisionRegistry::instance().get_all_buildings()) {
-    if (registered.entity_id != structure.get_id()) {
-      continue;
-    }
-    size.width = registered.width;
-    size.depth = registered.depth;
-    break;
-  }
   result.half_width = std::max(0.1F, size.width * 0.5F);
   result.half_depth = std::max(0.1F, size.depth * 0.5F);
   return result;
@@ -106,31 +107,6 @@ structure_footprint(const Engine::Core::Entity& structure) -> StructureFootprint
   default:
     return 0.9F;
   }
-}
-
-[[nodiscard]] auto closest_attacker_anchor(const Engine::Core::Entity& attacker,
-                                           const Engine::Core::Entity& structure)
-    -> std::pair<QVector3D, StructureSurfaceContact> {
-  auto const layout = Game::Systems::FormationCombat::resolve_layout(attacker);
-  auto const* transform = attacker.get_component<Engine::Core::TransformComponent>();
-  QVector3D fallback;
-  if (transform != nullptr) {
-    fallback = {transform->position.x, transform->position.y, transform->position.z};
-  }
-
-  QVector3D best_anchor = fallback;
-  auto best_surface = closest_structure_surface(structure, fallback);
-  float best_distance = best_surface.distance;
-  for (auto const& slot : layout.live_slots) {
-    QVector3D const anchor(slot.world_x, fallback.y(), slot.world_z);
-    auto const surface = closest_structure_surface(structure, anchor);
-    if (surface.distance < best_distance) {
-      best_distance = surface.distance;
-      best_anchor = anchor;
-      best_surface = surface;
-    }
-  }
-  return {best_anchor, best_surface};
 }
 
 } // namespace
@@ -329,16 +305,17 @@ auto structure_melee_approach(const Engine::Core::Entity& attacker,
     result.reached = true;
     return result;
   }
-  result.destination = {
-      transform->position.x, transform->position.y, transform->position.z};
-  auto const [anchor, surface] = closest_attacker_anchor(attacker, structure);
-  (void)anchor;
+  QVector3D const root(
+      transform->position.x, transform->position.y, transform->position.z);
+  result.destination = root;
+  auto const surface = closest_structure_surface(structure, root);
   result.current_surface_gap = surface.distance;
   result.desired_surface_gap = structure_attack_profile(&attacker).contact_clearance;
   result.reached = result.current_surface_gap <= result.desired_surface_gap + 0.05F;
   if (!result.reached) {
-    float const travel = result.current_surface_gap - result.desired_surface_gap;
-    result.destination -= surface.outward_normal * travel;
+    result.destination =
+        surface.point + surface.outward_normal * result.desired_surface_gap;
+    result.destination.setY(root.y());
   }
   return result;
 }
@@ -366,8 +343,7 @@ auto structure_navigation_melee_approach(const Engine::Core::Entity& attacker,
   }
 
   if (!pathfinder->is_world_position_walkable(result.destination, passability, 0.0F)) {
-    auto const [anchor, surface] = closest_attacker_anchor(attacker, structure);
-    (void)anchor;
+    auto const surface = closest_structure_surface(structure, current);
     float const cell_size = std::max(0.1F, pathfinder->grid_cell_size());
     float const step = cell_size * 0.1F;
     float const max_outward_search =

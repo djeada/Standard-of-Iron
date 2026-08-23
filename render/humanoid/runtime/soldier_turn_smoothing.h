@@ -17,12 +17,27 @@ struct SoldierTurnSmoothingState {
   float world_z{0.0F};
   float body_yaw_degrees{0.0F};
   float formation_yaw_degrees{0.0F};
+  float facing_yaw_degrees{0.0F};
   float wheel_direction{0.0F};
+  float turn_delay_remaining{0.0F};
+  float formation_stable_seconds{0.0F};
 
   std::uint32_t updated_frame{0U};
   bool valid{false};
   bool relocating{false};
+  bool turn_pending{false};
 };
+
+struct SoldierTurnVariation {
+  float catch_up_speed_scale{1.0F};
+  float turn_rate_scale{1.0F};
+  float response_delay_seconds{0.0F};
+};
+
+[[nodiscard]] auto soldier_turn_variation(std::uint32_t seed,
+                                          int row,
+                                          int rows,
+                                          bool mounted) -> SoldierTurnVariation;
 
 struct SoldierTurnSmoothingInputs {
 
@@ -39,6 +54,8 @@ struct SoldierTurnSmoothingInputs {
   float max_speed{2.5F};
 
   float turn_rate_degrees{540.0F};
+
+  float response_delay_seconds{0.0F};
 
   float snap_distance{7.0F};
 

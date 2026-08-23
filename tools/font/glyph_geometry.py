@@ -49,18 +49,18 @@ BASELINE = 0
 ASCENDER = 780
 DESCENDER = -220
 
-STEM = 148
-THIN = 96
+STEM = 140
+THIN = 90
 
-EXT = 42
-WEDGE_H = 64
+EXT = 34
+WEDGE_H = 70
 
 CUT_DEGREES = 35.0
 
-SIDEBEARING = 46
+SIDEBEARING = 50
 
 
-CURVE_OVERSHOOT = 12
+CURVE_OVERSHOOT = 14
 
 Point = tuple[float, float]
 Contour = list[Point]
@@ -245,7 +245,7 @@ def cut(
 
 def ellipse(cx: float, cy: float, rx: float, ry: float) -> list:
     """A bowl, as four cubic arcs. Returned as pen instructions, not points."""
-    k = 0.5522847498
+    k = 0.5522847498307936
     ox, oy = rx * k, ry * k
     return [
         ("move", (cx, cy + ry)),
