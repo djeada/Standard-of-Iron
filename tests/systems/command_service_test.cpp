@@ -15,7 +15,7 @@
 #include "game/systems/command_service.h"
 #include "game/systems/formation_combat_geometry.h"
 #include "game/systems/local_avoidance_system.h"
-#include "game/systems/movement_system.h"
+#include "game/systems/movement_pipeline.h"
 #include "game/systems/nav_grid.h"
 #include "game/systems/pathfinding.h"
 #include "game/units/troop_config.h"
@@ -90,7 +90,7 @@ protected:
                                const std::vector<Engine::Core::Entity*>& units,
                                int steps = 180,
                                float delta_time = 0.1F) {
-    Game::Systems::MovementSystem movement_system;
+    Game::Systems::MovementPipeline movement_system;
     for (int i = 0; i < steps; ++i) {
       movement_system.update(&world, delta_time);
       for (auto* unit : units) {
@@ -158,7 +158,7 @@ TEST_F(CommandServiceTest, InfantryMovementPublishesWalkAnimationStateImmediatel
   MovementTestAccess::set_goal_x(*movement, 5.0F);
   MovementTestAccess::set_goal_y(*movement, 0.0F);
 
-  world.add_system(std::make_unique<Game::Systems::MovementSystem>());
+  world.add_system(std::make_unique<Game::Systems::MovementPipeline>());
   world.update(0.1F);
 
   auto* motion = unit->get_component<Engine::Core::MotionPresentationComponent>();
@@ -244,7 +244,7 @@ TEST_F(CommandServiceTest, ArrivalStopsNavigationWalkAnimationImmediately) {
   motion->has_movement_target = true;
   motion->speed = 1.0F;
 
-  world.add_system(std::make_unique<Game::Systems::MovementSystem>());
+  world.add_system(std::make_unique<Game::Systems::MovementPipeline>());
   world.update(0.1F);
 
   EXPECT_FALSE(movement->get_has_target());
@@ -346,7 +346,7 @@ TEST_F(CommandServiceTest, SharpWaypointTurnLimitsSidewaysTranslation) {
   MovementTestAccess::set_goal_x(*movement, 10.0F);
   MovementTestAccess::set_goal_y(*movement, 0.0F);
 
-  Game::Systems::MovementSystem movement_system;
+  Game::Systems::MovementPipeline movement_system;
   movement_system.update(&world, 0.1F);
 
   EXPECT_LT(transform->position.x, 0.05F);
@@ -441,7 +441,7 @@ TEST_F(CommandServiceTest, IdleMovementDoesNotResurrectStaleGoal) {
   MovementTestAccess::set_goal_x(*movement, 12.0F);
   MovementTestAccess::set_goal_y(*movement, 0.0F);
 
-  world.add_system(std::make_unique<Game::Systems::MovementSystem>());
+  world.add_system(std::make_unique<Game::Systems::MovementPipeline>());
   world.update(0.1F);
 
   EXPECT_FALSE(movement->get_has_target());
@@ -464,7 +464,7 @@ TEST_F(CommandServiceTest, InvalidTileRecoveryAssignsSafeTargetImmediately) {
                                                              transform->position.z);
   pathfinder->set_obstacle(blocked.x, blocked.y, true);
 
-  Game::Systems::MovementSystem movement_system;
+  Game::Systems::MovementPipeline movement_system;
   movement_system.update(&world, 0.1F);
 
   EXPECT_TRUE(movement->get_has_target());
@@ -496,7 +496,7 @@ TEST_F(CommandServiceTest, InvalidTileRecoveryKeepsActiveOrder) {
                                                              transform->position.z);
   pathfinder->set_obstacle(blocked.x, blocked.y, true);
 
-  Game::Systems::MovementSystem movement_system;
+  Game::Systems::MovementPipeline movement_system;
   movement_system.update(&world, 0.1F);
 
   EXPECT_TRUE(movement->get_has_target());
@@ -527,7 +527,7 @@ TEST_F(CommandServiceTest, RepeatedInvalidTileRecoveryKeepsOrder) {
                                                              transform->position.z);
   pathfinder->set_obstacle(blocked.x, blocked.y, true);
 
-  Game::Systems::MovementSystem movement_system;
+  Game::Systems::MovementPipeline movement_system;
 
   for (int i = 0; i < 10; ++i) {
     transform->position.x = 0.0F;
@@ -566,7 +566,7 @@ TEST_F(CommandServiceTest, ReverseMoveTurnsThenResumesTranslation) {
 
   Game::Systems::CommandService::move_unit(
       world, entity->get_id(), QVector3D(0.0F, 0.0F, -6.0F));
-  Game::Systems::MovementSystem movement_system;
+  Game::Systems::MovementPipeline movement_system;
   for (int frame = 0; frame < 20; ++frame) {
     movement_system.update(&world, 0.10F);
   }
@@ -598,7 +598,7 @@ TEST_F(CommandServiceTest, BlockedSegmentKeepsDirectOrderForRecovery) {
   MovementTestAccess::set_target_y(*movement, 0.0F);
   MovementTestAccess::set_goal_x(*movement, 4.0F);
   MovementTestAccess::set_goal_y(*movement, 0.0F);
-  Game::Systems::MovementSystem movement_system;
+  Game::Systems::MovementPipeline movement_system;
   movement_system.update(&world, 0.1F);
 
   EXPECT_TRUE(movement->get_has_target());
@@ -1085,7 +1085,7 @@ TEST_F(CommandServiceTest, InvalidPositionAssignsNearbyWalkableRecoveryMove) {
       transform->position.x, transform->position.z);
   pathfinder->set_obstacle(current_grid.x, current_grid.y, true);
 
-  Game::Systems::MovementSystem movement_system;
+  Game::Systems::MovementPipeline movement_system;
   movement_system.update(&world, 0.3F);
 
   EXPECT_TRUE(movement->get_has_target());
@@ -1125,7 +1125,7 @@ TEST_F(CommandServiceTest, PersistentInvalidPositionRetargetsToNearbyRecoveryCel
     pathfinder->set_obstacle(blocked.x, blocked.y, true);
   }
 
-  world.add_system(std::make_unique<Game::Systems::MovementSystem>());
+  world.add_system(std::make_unique<Game::Systems::MovementPipeline>());
 
   for (int i = 0; i < 8; ++i) {
     world.update(0.1F);
@@ -1204,7 +1204,7 @@ TEST_F(CommandServiceTest, LocalRecoveryDoesNotSpliceBlockedGoalBackIntoPath) {
   MovementTestAccess::set_goal_x(*movement, requested_goal.x());
   MovementTestAccess::set_goal_y(*movement, requested_goal.z());
 
-  Game::Systems::MovementSystem movement_system;
+  Game::Systems::MovementPipeline movement_system;
   movement_system.update(&world, 0.3F);
 
   auto const stored_goal = Game::Systems::NavGrid::world_to_grid(
@@ -1269,7 +1269,7 @@ TEST_F(CommandServiceTest, MultiUnitBridgeCrossingUsesWalkableBridgeCells) {
 
   std::vector<Engine::Core::Entity*> const units = {left, center, right};
   std::vector<bool> crossed_bridge(units.size(), false);
-  Game::Systems::MovementSystem movement_system;
+  Game::Systems::MovementPipeline movement_system;
   auto const* height_map = Game::Map::TerrainService::instance().get_height_map();
   ASSERT_NE(height_map, nullptr);
 
@@ -1366,7 +1366,7 @@ TEST_F(CommandServiceTest, RuntimeLocalAvoidanceKeepsBridgeEntrantsOnWalkableCel
     units.push_back(unit);
   }
 
-  Game::Systems::MovementSystem movement_system;
+  Game::Systems::MovementPipeline movement_system;
   Game::Systems::LocalAvoidanceSystem avoidance_system;
   for (int frame = 0; frame < 20; ++frame) {
     movement_system.update(&world, 0.1F);
@@ -1416,7 +1416,7 @@ TEST_F(CommandServiceTest, UnitApproachingBridgeMovesOnWalkableCells) {
   MovementTestAccess::set_goal_y(*movement, 0.0F);
   MovementTestAccess::set_has_target(*movement, true);
 
-  Game::Systems::MovementSystem movement_system;
+  Game::Systems::MovementPipeline movement_system;
   movement_system.update(&world, 0.1F);
 
   EXPECT_LT(transform->position.x, -3.0F);

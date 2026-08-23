@@ -20,10 +20,12 @@
 #include "../wildlife/wildlife_species.h"
 #include "entity.h"
 #include "melee_intent.h"
+#include "movement_facts.h"
 
 namespace Game::Systems {
 class MovementSystem;
-}
+class RouteFollowSystem;
+} // namespace Game::Systems
 
 namespace Engine::Core {
 
@@ -234,6 +236,21 @@ public:
 
   [[nodiscard]] auto get_stuck_time() const -> float { return stuck_timer; }
 
+  [[nodiscard]] auto get_precise_arrival() const -> bool { return precise_arrival; }
+
+  // A new player/AI order bumps the sequence; an internal repath bumps only the
+  // route revision. Async route work must match both before it may publish, and
+  // the trace needs them apart to tell a repath from a fresh command.
+  [[nodiscard]] auto get_order_sequence() const -> std::uint64_t {
+    return order_sequence;
+  }
+  [[nodiscard]] auto get_route_revision() const -> std::uint64_t {
+    return route_revision;
+  }
+  [[nodiscard]] auto get_topology_revision() const -> std::uint64_t {
+    return topology_revision;
+  }
+
   [[nodiscard]] auto get_can_enter_forest() const -> bool { return can_enter_forest; }
   void set_can_enter_forest(bool allowed) { can_enter_forest = allowed; }
 
@@ -246,6 +263,7 @@ public:
 
 private:
   friend class Game::Systems::MovementSystem;
+  friend class Game::Systems::RouteFollowSystem;
   friend class Serialization;
   friend struct MovementTestAccess;
 
@@ -271,6 +289,33 @@ private:
   bool precise_arrival{false};
   EntityID structure_approach_target_id{0};
   bool can_enter_forest{true};
+
+  std::uint64_t order_sequence{0};
+  std::uint64_t route_revision{0};
+  std::uint64_t topology_revision{0};
+};
+
+// One component so the storage cost is one lookup per entity per stage; the
+// ownership rule is per block, not per component.
+class MovementFactsComponent {
+public:
+  RootPoseFacts previous_root;
+  RouteIntentFacts route;
+  DesiredMotionFacts desired;
+  SteeringFacts steering;
+  MotorFacts motor;
+  MovementProgressFacts progress;
+  TraversalLayoutFacts traversal;
+
+  MovementDirectionSource direction_source{MovementDirectionSource::None};
+
+  // Cleared by the route follower at the top of each Movement phase so a stale
+  // fact from last tick can never be read as this tick's answer.
+  void begin_tick() {
+    desired = {};
+    steering = {};
+    motor = {};
+  }
 };
 
 enum class PlayerOrderIntentKind : std::uint8_t {
@@ -306,6 +351,7 @@ public:
   bool snapshot_valid{false};
   bool initialized{false};
   float previous_x{0.0F}, previous_y{0.0F}, previous_z{0.0F};
+  float previous_rotation_y{0.0F};
   float displacement_x{0.0F}, displacement_z{0.0F};
   float velocity_x{0.0F}, velocity_z{0.0F};
   float speed{0.0F};

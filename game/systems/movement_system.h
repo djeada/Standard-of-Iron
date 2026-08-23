@@ -28,6 +28,7 @@ public:
 
 private:
   friend class CommandService;
+  friend class RouteFollowSystem;
 
   static auto
   assign_local_recovery_move(const QVector3D& current_position,
@@ -83,6 +84,13 @@ private:
 
   void
   move_unit(Engine::Core::Entity* entity, Engine::Core::World* world, float delta_time);
+
+  static void
+  update_movement_progress(Engine::Core::Entity& entity,
+                           const Engine::Core::TransformComponent& transform,
+                           Engine::Core::MovementComponent& movement,
+                           Engine::Core::MovementFactsComponent& facts,
+                           float delta_time);
 
   void
   repath_after_obstruction_release(Engine::Core::World& world,

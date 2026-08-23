@@ -35,7 +35,7 @@
 #include "systems/combat_system/spear_brace_processor.h"
 #include "systems/command_service.h"
 #include "systems/healing_system.h"
-#include "systems/movement_system.h"
+#include "systems/movement_pipeline.h"
 #include "systems/nav_grid.h"
 #include "systems/owner_registry.h"
 #include "systems/projectile_system.h"
@@ -325,7 +325,7 @@ TEST_F(CombatModeTest, AutoEngagementResumesAfterManualMoveArrives) {
   ASSERT_NE(movement, nullptr);
   ASSERT_TRUE(Game::Systems::Combat::suppresses_opportunistic_combat(spearman));
 
-  MovementSystem movement_system;
+  MovementPipeline movement_system;
   movement_system.update(world.get(), 0.016F);
 
   EXPECT_FALSE(movement->get_has_target());
@@ -1897,7 +1897,7 @@ TEST_F(CombatModeTest, SingleBodyMeleeLockedUnitsTurnToFaceWhileStopped) {
   EXPECT_FALSE(attacker_transform->has_desired_yaw);
   EXPECT_FALSE(enemy_transform->has_desired_yaw);
 
-  MovementSystem movement_system;
+  MovementPipeline movement_system;
   movement_system.update(world.get(), 0.25F);
 
   EXPECT_NEAR(attacker_transform->rotation.y, 90.0F, 3.0F);

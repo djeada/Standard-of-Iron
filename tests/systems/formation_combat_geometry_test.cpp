@@ -11,7 +11,7 @@
 #include "systems/combat_system/damage_application.h"
 #include "systems/combat_system/formation_contact_processor.h"
 #include "systems/formation_combat_geometry.h"
-#include "systems/movement_system.h"
+#include "systems/movement_pipeline.h"
 #include "systems/troop_profile_service.h"
 
 namespace {
@@ -679,7 +679,7 @@ TEST(FormationCombatGeometry, MovementAndFacingAreFrozenDuringRtsMeleeLock) {
   transform->desired_yaw = 90.0F;
   transform->has_desired_yaw = true;
 
-  Game::Systems::MovementSystem movement_system;
+  Game::Systems::MovementPipeline movement_system;
   movement_system.update(&world, 0.25F);
 
   EXPECT_FALSE(movement->get_has_target());

@@ -29,6 +29,7 @@
 #include "component.h"
 #include "core/entity.h"
 #include "core/system.h"
+#include "movement_trace.h"
 
 namespace Engine::Core {
 
@@ -149,10 +150,117 @@ void begin_motion_presentation_frame(World& world, float delta_time) {
     motion->previous_x = transform->position.x;
     motion->previous_y = transform->position.y;
     motion->previous_z = transform->position.z;
+    motion->previous_rotation_y = transform->rotation.y;
     motion->tick_delta_time = std::max(0.0F, delta_time);
     motion->snapshot_valid = false;
     motion->initialized = true;
   }
+}
+
+// Emitted after presentation so one record carries the whole tick: the order
+// state, the route the follower used, the correction steering asked for, what
+// the motor actually accepted, and the gait the renderer will be told to play.
+void publish_movement_trace_frame(World& world) {
+  auto& trace = MovementTrace::instance();
+  if (!trace.enabled()) {
+    return;
+  }
+
+  world.each<MovementFactsComponent, TransformComponent, UnitComponent>(
+      [&world, &trace](EntityID id,
+                       MovementFactsComponent& facts,
+                       TransformComponent& transform,
+                       UnitComponent& unit) {
+        Entity* entity = world.get_entity(id);
+        if (entity == nullptr) {
+          return;
+        }
+        auto const* movement = entity->get_component<MovementComponent>();
+        auto const* motion = entity->get_component<MotionPresentationComponent>();
+
+        MovementTroopSample sample;
+        sample.tick = world.tick_id();
+        sample.entity_id = id;
+        sample.owner_id = unit.owner_id;
+        sample.troop_type = static_cast<std::uint8_t>(unit.spawn_type);
+        sample.state = facts.progress.state;
+        sample.root_x = transform.position.x;
+        sample.root_z = transform.position.z;
+        sample.root_yaw = transform.rotation.y;
+        if (facts.previous_root.valid) {
+          sample.previous_root_x = facts.previous_root.x;
+          sample.previous_root_z = facts.previous_root.z;
+          sample.previous_root_yaw = facts.previous_root.yaw;
+        } else if (motion != nullptr) {
+          sample.previous_root_x = motion->previous_x;
+          sample.previous_root_z = motion->previous_z;
+          sample.previous_root_yaw = motion->previous_rotation_y;
+        }
+        if (motion != nullptr) {
+          sample.presentation_state = static_cast<std::uint8_t>(motion->state);
+          sample.presentation_speed = motion->speed;
+          sample.presentation_dir_x = motion->direction_x;
+          sample.presentation_dir_z = motion->direction_z;
+          sample.corridor_half_width = motion->traversal_available_half_width;
+        }
+        sample.command_sequence = facts.route.command_sequence;
+        sample.route_revision = facts.route.route_revision;
+        sample.topology_revision = facts.route.topology_revision;
+        sample.requested_goal_x = facts.route.requested_goal_x;
+        sample.requested_goal_z = facts.route.requested_goal_z;
+        sample.resolved_goal_x = facts.route.resolved_goal_x;
+        sample.resolved_goal_z = facts.route.resolved_goal_z;
+        if (movement != nullptr) {
+          sample.waypoint_index =
+              static_cast<std::uint32_t>(movement->get_path_index());
+          sample.waypoint_count =
+              static_cast<std::uint32_t>(movement->get_path().size());
+          sample.waypoint_x = movement->get_target_x();
+          sample.waypoint_z = movement->get_target_y();
+          sample.envelope_radius = movement->get_navigation_clearance();
+        }
+        sample.lookahead_x = facts.desired.lookahead_x;
+        sample.lookahead_z = facts.desired.lookahead_z;
+        sample.tangent_x = facts.desired.tangent_x;
+        sample.tangent_z = facts.desired.tangent_z;
+        sample.desired_vx = facts.desired.velocity_x;
+        sample.desired_vz = facts.desired.velocity_z;
+        sample.avoidance_dx = facts.steering.correction_x;
+        sample.avoidance_dz = facts.steering.correction_z;
+        sample.steered_vx = facts.steering.velocity_x;
+        sample.steered_vz = facts.steering.velocity_z;
+        sample.neighbor_count = facts.steering.neighbor_count;
+        sample.nearest_time_to_collision = facts.steering.nearest_time_to_collision;
+        sample.passing_side = facts.steering.passing_side;
+        sample.solver_result = facts.steering.solver_result;
+        sample.queue_owner = facts.steering.queue_owner;
+        sample.has_contact = facts.motor.has_contact;
+        sample.contact_nx = facts.motor.contact_nx;
+        sample.contact_nz = facts.motor.contact_nz;
+        sample.accepted_dx = facts.motor.accepted_dx;
+        sample.accepted_dz = facts.motor.accepted_dz;
+        sample.accepted_vx = facts.motor.accepted_vx;
+        sample.accepted_vz = facts.motor.accepted_vz;
+        sample.rejected_dx = facts.motor.rejected_dx;
+        sample.rejected_dz = facts.motor.rejected_dz;
+        sample.penetration_depth = facts.motor.penetration_depth;
+        sample.remaining_arclength = facts.progress.remaining_arclength;
+        sample.route_advance = facts.progress.route_advance;
+        sample.lateral_route_error = facts.progress.lateral_route_error;
+        sample.no_progress_seconds = facts.progress.no_progress_seconds;
+        sample.blocked_steps = facts.progress.blocked_steps;
+        sample.repath_count = facts.progress.repath_count;
+        sample.repath_reason = facts.progress.repath_reason;
+        sample.traversal_mode = facts.traversal.mode;
+        sample.portal_id = facts.traversal.portal_id;
+        sample.current_files = facts.traversal.current_files;
+        sample.target_files = facts.traversal.target_files;
+        sample.transition_progress = facts.traversal.transition_progress;
+        sample.mode_dwell_seconds = facts.traversal.mode_dwell_seconds;
+        sample.soldier_body_radius = facts.traversal.soldier_body_radius;
+        sample.direction_source = facts.direction_source;
+        trace.record(sample);
+      });
 }
 
 void finalize_motion_presentation_frame(World& world, float delta_time) {
@@ -183,11 +291,18 @@ void finalize_motion_presentation_frame(World& world, float delta_time) {
         float const displacement_sq =
             displacement_x * displacement_x + displacement_z * displacement_z;
 
-        float movement_speed_sq = 0.0F;
-        if (movement != nullptr) {
-          movement_speed_sq = movement->get_vx() * movement->get_vx() +
-                              movement->get_vz() * movement->get_vz();
-        }
+        // Locomotion is asserted from what the motor accepted, never from what
+        // the route follower wanted. A body pressed against a wall has a desired
+        // velocity and no accepted one, and used to be told to walk anyway.
+        auto* facts = entity.get_component<MovementFactsComponent>();
+        bool const motor_published = facts != nullptr && facts->motor.valid;
+        float const motion_vx = motor_published       ? facts->motor.accepted_vx
+                                : movement != nullptr ? movement->get_vx()
+                                                      : 0.0F;
+        float const motion_vz = motor_published       ? facts->motor.accepted_vz
+                                : movement != nullptr ? movement->get_vz()
+                                                      : 0.0F;
+        float const movement_speed_sq = motion_vx * motion_vx + motion_vz * motion_vz;
         bool const has_component_velocity =
             movement_speed_sq > k_motion_velocity_epsilon_sq;
 
@@ -263,9 +378,9 @@ void finalize_motion_presentation_frame(World& world, float delta_time) {
 
         motion->displacement_x = displacement_x;
         motion->displacement_z = displacement_z;
-        if (has_component_velocity && movement != nullptr) {
-          motion->velocity_x = movement->get_vx();
-          motion->velocity_z = movement->get_vz();
+        if (has_component_velocity) {
+          motion->velocity_x = motion_vx;
+          motion->velocity_z = motion_vz;
           motion->speed = std::sqrt(movement_speed_sq);
 
           if (displaced) {
@@ -315,24 +430,33 @@ void finalize_motion_presentation_frame(World& world, float delta_time) {
           }
         }
 
-        if (has_component_velocity && movement != nullptr) {
-          motion->direction_x = movement->get_vx();
-          motion->direction_z = movement->get_vz();
+        MovementDirectionSource direction_source = MovementDirectionSource::None;
+        if (has_component_velocity) {
+          motion->direction_x = motion_vx;
+          motion->direction_z = motion_vz;
+          direction_source = motor_published ? MovementDirectionSource::AcceptedVelocity
+                                             : MovementDirectionSource::DesiredVelocity;
         } else if (displaced) {
           motion->direction_x = displacement_x;
           motion->direction_z = displacement_z;
         } else if (direct_control_velocity) {
           motion->direction_x = commander->fpv_motion_vx;
           motion->direction_z = commander->fpv_motion_vz;
+          direction_source = MovementDirectionSource::AcceptedVelocity;
         } else if (motion->has_movement_target) {
           motion->direction_x = motion->movement_target_x - transform->position.x;
           motion->direction_z = motion->movement_target_z - transform->position.z;
+          direction_source = MovementDirectionSource::RouteTangent;
         } else {
           auto [forward_x, forward_z] = forward_xz_from_yaw(transform->rotation.y);
           motion->direction_x = forward_x;
           motion->direction_z = forward_z;
+          direction_source = MovementDirectionSource::BodyForward;
         }
         normalize_xz(motion->direction_x, motion->direction_z);
+        if (facts != nullptr) {
+          facts->direction_source = direction_source;
+        }
 
         if (direct_control_moving) {
           motion->source = MotionPresentationSource::DirectControl;
@@ -712,6 +836,7 @@ void copy_authoritative_snapshot_components(const Entity& source, Entity& destin
   copy_snapshot_component<UnitComponent>(source, destination);
   copy_snapshot_component<RenderableComponent>(source, destination);
   copy_snapshot_component<MovementComponent>(source, destination);
+  copy_snapshot_component<MovementFactsComponent>(source, destination);
   copy_snapshot_component<BuildingComponent>(source, destination);
   copy_snapshot_component<PendingRemovalComponent>(source, destination);
   copy_snapshot_component<AttackComponent>(source, destination);
@@ -1206,6 +1331,7 @@ void World::update(float delta_time) {
     finalize_motion_presentation_frame(*this, delta_time);
     publish_creature_presentation_frame(*this);
   }
+  publish_movement_trace_frame(*this);
   if (!m_is_render_snapshot &&
       m_render_snapshots_requested.load(std::memory_order_acquire)) {
     publish_render_snapshot();

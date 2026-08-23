@@ -19,17 +19,7 @@ auto shortest_angle(float from_degrees, float to_degrees) -> float {
 }
 
 auto is_active_state(MovementOrderState state) -> bool {
-  switch (state) {
-  case MovementOrderState::Following:
-  case MovementOrderState::Turning:
-  case MovementOrderState::LocallyBlocked:
-  case MovementOrderState::Yielding:
-  case MovementOrderState::Repathing:
-  case MovementOrderState::Recovering:
-    return true;
-  default:
-    return false;
-  }
+  return is_active_movement_state(state);
 }
 
 // Yielding and Repathing are declared holds: the plan allows no route progress

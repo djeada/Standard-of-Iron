@@ -47,6 +47,7 @@ add_library(
     core/ambient_session.cpp
     core/event_manager.cpp
     core/simulation_timing.cpp
+    core/movement_facts.cpp
     core/movement_trace.cpp
     core/movement_trace_analysis.cpp
     session/simulation_clock.cpp
@@ -223,7 +224,9 @@ add_library(
     STATIC
     systems/order_service.cpp
     systems/command_service.cpp
+    systems/route_follow_system.cpp
     systems/movement_system.cpp
+    systems/movement_pipeline.cpp
     systems/movement_orders.cpp
     systems/local_avoidance_system.cpp
     systems/formation_move_dispatch_system.cpp

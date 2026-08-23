@@ -54,6 +54,27 @@ auto compute_avoidance_priority(Engine::Core::SystemContext& context,
   return 2;
 }
 
+// The steered velocity is a separate fact from the desired one. The motor stays
+// the authority that accepts or rejects the displacement it implies.
+void publish_steering(Engine::Core::SystemContext& context,
+                      Engine::Core::EntityID entity_id,
+                      float desired_x,
+                      float desired_z,
+                      float correction_x,
+                      float correction_z,
+                      std::uint32_t neighbor_count) {
+  auto* facts = context.try_get<Engine::Core::MovementFactsComponent>(entity_id);
+  if (facts == nullptr || !facts->desired.valid) {
+    return;
+  }
+  facts->steering.valid = true;
+  facts->steering.correction_x = correction_x;
+  facts->steering.correction_z = correction_z;
+  facts->steering.velocity_x = desired_x + correction_x;
+  facts->steering.velocity_z = desired_z + correction_z;
+  facts->steering.neighbor_count = neighbor_count;
+}
+
 auto point_is_in_navigation_passage(const BuildingCollisionRegistry& buildings,
                                     float x,
                                     float z) -> bool {
@@ -122,13 +143,20 @@ void LocalAvoidanceSystem::run(Engine::Core::SystemContext& context) {
     circle.radius = CommandService::get_unit_radius(context.world(), entity_id);
 
     const auto* movement = context.try_get<Engine::Core::MovementComponent>(entity_id);
+    const auto* facts =
+        context.try_get<Engine::Core::MovementFactsComponent>(entity_id);
     if (movement != nullptr) {
+      // Steering reads the route follower's desired velocity, never the motor's
+      // integrated one. Correcting an already-integrated velocity and handing it
+      // back for further integration is what let avoidance and movement take
+      // turns overwriting the same number.
+      bool const has_desired = facts != nullptr && facts->desired.valid;
       circle = UnitCircle{circle.id,
                           circle.x,
                           circle.z,
                           circle.radius,
-                          movement->get_vx(),
-                          movement->get_vz(),
+                          has_desired ? facts->desired.velocity_x : 0.0F,
+                          has_desired ? facts->desired.velocity_z : 0.0F,
                           circle.priority,
                           movement->get_has_target(),
                           movement->has_waypoints()};
@@ -281,12 +309,16 @@ void LocalAvoidanceSystem::run(Engine::Core::SystemContext& context) {
         sep_z = lateral_z;
       }
 
-      auto* movement = context.try_get<Engine::Core::MovementComponent>(ci.id);
-      if (movement != nullptr) {
-
-        movement->set_manual_velocity(ci.vx + sep_x, ci.vz + sep_z);
-      }
+      publish_steering(context,
+                       ci.id,
+                       ci.vx,
+                       ci.vz,
+                       sep_x,
+                       sep_z,
+                       static_cast<std::uint32_t>(neighbor_count));
       ++overlaps_detected;
+    } else {
+      publish_steering(context, ci.id, ci.vx, ci.vz, 0.0F, 0.0F, 0U);
     }
   }
 
@@ -305,7 +337,7 @@ auto LocalAvoidanceSystem::access() const -> Engine::Core::SystemAccess {
                                      MovementIntentComponent,
                                      BuildingComponent,
                                      PendingRemovalComponent>{},
-                               Writes<MovementComponent>{});
+                               Writes<MovementFactsComponent>{});
 }
 
 } // namespace Game::Systems

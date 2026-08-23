@@ -8,70 +8,9 @@
 #include <vector>
 
 #include "entity_id.h"
+#include "movement_facts.h"
 
 namespace Engine::Core {
-
-// One declared movement state. The order state is the contract todo2.md asks
-// for: an accepted order is always in exactly one of these, and the terminal
-// ones are the only legal ways for an order to stop being active.
-enum class MovementOrderState : std::uint8_t {
-  Idle = 0,
-  Following,
-  Turning,
-  LocallyBlocked,
-  Yielding,
-  Repathing,
-  Recovering,
-  Arrived,
-  Unreachable,
-  Cancelled,
-  Superseded
-};
-
-[[nodiscard]] auto
-is_terminal_movement_state(MovementOrderState state) noexcept -> bool;
-[[nodiscard]] auto movement_state_name(MovementOrderState state) noexcept -> const
-    char*;
-
-// Where the presented facing came from this tick. Recorded so a gait/heading
-// defect can be attributed instead of guessed at.
-enum class MovementDirectionSource : std::uint8_t {
-  None = 0,
-  AcceptedVelocity,
-  RouteTangent,
-  BodyForward,
-  DesiredVelocity,
-  LayoutRelocation
-};
-
-[[nodiscard]] auto
-movement_direction_source_name(MovementDirectionSource source) noexcept -> const char*;
-
-// The width ladder from Milestone 5. Recorded here so the trace can prove a
-// single enter/exit per physical passage.
-enum class TraversalLayoutMode : std::uint8_t {
-  Normal = 0,
-  NarrowRanks,
-  MarchingOrder,
-  SingleFile
-};
-
-[[nodiscard]] auto
-traversal_layout_mode_name(TraversalLayoutMode mode) noexcept -> const char*;
-
-enum class MovementRepathReason : std::uint8_t {
-  None = 0,
-  GoalChanged,
-  TopologyChanged,
-  RouteInvalid,
-  Blocked,
-  ClearanceChanged,
-  ObstructionReleased,
-  RecoveryEscalation
-};
-
-[[nodiscard]] auto
-movement_repath_reason_name(MovementRepathReason reason) noexcept -> const char*;
 
 // Per-simulation-tick record for one troop entity. Plain data; the recorder
 // never reads back into the world.

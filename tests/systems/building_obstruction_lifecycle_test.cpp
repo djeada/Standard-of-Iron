@@ -13,7 +13,7 @@
 #include "systems/building_collision_registry.h"
 #include "systems/combat_system/damage_processor.h"
 #include "systems/command_service.h"
-#include "systems/movement_system.h"
+#include "systems/movement_pipeline.h"
 #include "systems/nation_id.h"
 #include "systems/nav_grid.h"
 #include "systems/pathfinding.h"
@@ -338,7 +338,7 @@ TEST_F(BuildingObstructionLifecycleTest, UnitsRerouteThroughNewlyOpenedBreach) {
     CommandService::move_unit(world, soldier->get_id(), destination);
   }
 
-  MovementSystem movement_system;
+  MovementPipeline movement_system;
   constexpr float k_step = 1.0F / 30.0F;
 
   for (int step = 0; step < 45; ++step) {

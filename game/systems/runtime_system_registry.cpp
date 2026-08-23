@@ -33,6 +33,7 @@
 #include "production_system.h"
 #include "projectile_system.h"
 #include "resource_delivery_system.h"
+#include "route_follow_system.h"
 #include "rpg_combat_system/rpg_engagement_system.h"
 #include "selection_system.h"
 #include "settlement_life_system.h"
@@ -56,6 +57,8 @@ void register_runtime_systems(Engine::Core::World& world) {
   world.add_system(std::make_unique<StaminaSystem>(), Engine::Core::SystemPhase::Input);
 
   world.add_system(std::make_unique<GateSystem>(), Engine::Core::SystemPhase::Movement);
+  world.add_system(std::make_unique<RouteFollowSystem>(),
+                   Engine::Core::SystemPhase::Movement);
   world.add_system(std::make_unique<LocalAvoidanceSystem>(),
                    Engine::Core::SystemPhase::Movement);
   world.add_system(std::make_unique<MovementSystem>(),
