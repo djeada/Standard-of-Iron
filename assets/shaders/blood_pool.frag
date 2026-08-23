@@ -22,8 +22,8 @@ void main() {
 
   vec2 seeded = c + vec2(u_seed * 8.31, u_seed * 3.77);
   float edge_noise =
-      (noise(seeded * 4.4) - 0.5) * 0.34 + (noise(seeded * 9.5) - 0.5) * 0.16;
-  float alpha = smoothstep(1.0 + edge_noise, 0.46 + edge_noise * 0.35, dist);
+      (noise(seeded * 4.4) - 0.5) * 0.52 + (noise(seeded * 9.5) - 0.5) * 0.24;
+  float alpha = smoothstep(1.0 + edge_noise, 0.42 + edge_noise * 0.45, dist);
 
   float droplet_1 = 1.0 - smoothstep(0.045, 0.12, length(c - vec2(0.47, -0.28)));
   float droplet_2 = 1.0 - smoothstep(0.035, 0.09, length(c - vec2(-0.56, 0.18)));
@@ -31,6 +31,8 @@ void main() {
   float droplets = max(max(droplet_1, droplet_2), droplet_3);
   droplets *= smoothstep(0.45, 1.25, u_radius);
   alpha = max(alpha, droplets * 0.72);
+  float mottle = 0.68 + noise(seeded * 6.2) * 0.30 + noise(seeded * 15.5) * 0.14;
+  alpha *= mix(mottle, 1.0, smoothstep(0.55, 0.15, dist));
   alpha *= u_alpha_scale;
 
   vec3 wet = vec3(0.22, 0.012, 0.010);

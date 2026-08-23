@@ -30,7 +30,7 @@ uniform float u_ambient_boost, u_rock_detail_strength;
 const float k_soi_terrain_detail_damping = 0.45;
 const float k_soi_terrain_relief_damping = 0.55;
 const float k_soi_terrain_hue_scale = 0.042;
-const float k_soi_terrain_hue_amount = 0.26;
+const float k_soi_terrain_hue_amount = 0.33;
 const float k_soi_terrain_earth_scale = 0.016;
 const float k_soi_terrain_earth_amount = 0.55;
 const vec3 k_soi_terrain_shade_moss = vec3(0.74, 0.86, 0.92);
@@ -831,10 +831,11 @@ void main() {
                         0.58,
               0.0,
               1.0);
-    float alpine_snow_field = alpine_snow_large * 0.74 + alpine_snow_small * 0.26;
-    float alpine_snow_accumulation = smoothstep(0.43, 0.60, alpine_snow_field);
-    float alpine_snow_edge = smoothstep(0.36, 0.48, alpine_snow_field) *
-                             (1.0 - smoothstep(0.60, 0.72, alpine_snow_field));
+    float alpine_snow_field = alpine_snow_large * 0.55 + alpine_snow_small * 0.45;
+    alpine_snow_field += high_ground * 0.14 - low_ground * 0.10;
+    float alpine_snow_accumulation = smoothstep(0.46, 0.57, alpine_snow_field);
+    float alpine_snow_edge = smoothstep(0.40, 0.49, alpine_snow_field) *
+                             (1.0 - smoothstep(0.57, 0.68, alpine_snow_field));
     alpine_snow_accumulation = max(alpine_snow_accumulation, alpine_snow_edge * 0.35);
 
     float alpine_snow_slope_retention = 1.0 - smoothstep(0.12, 0.42, slope);
@@ -987,7 +988,8 @@ void main() {
 
   ambient_occlusion *= 1.0 - relief_lost * relief_amp * 0.30;
   ambient_occlusion *= 1.0 - 0.10 * smoothstep(0.20, 0.75, slope);
-  ambient_occlusion *= mix(1.0, sheltered_ground, 0.60 * (1.0 - 0.45 * entry_mask));
+  ambient_occlusion *=
+      mix(1.0, max(sheltered_ground, 0.38), 0.60 * (1.0 - 0.45 * entry_mask));
 
   float sun_ground_span = length(L.xz);
   vec2 sun_ground_dir = (sun_ground_span > 1e-4) ? L.xz / sun_ground_span : vec2(0.0);
@@ -999,6 +1001,9 @@ void main() {
 
   vec3 sun_light = environment_primary_color() * environment_primary_intensity();
   vec3 ambient_term = ambient_occlusion * environment_ambient_light(detail_normal);
+  float steep_fill = smoothstep(0.30, 0.72, slope) * rock_mask;
+  ambient_term +=
+      environment_sky_color() * environment_ambient_intensity() * steep_fill * 0.24;
 
   float wet_glint = wet_surface * pow(max(dot(detail_normal, L), 0.0), 10.0) * 0.07;
 

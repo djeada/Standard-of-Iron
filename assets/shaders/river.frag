@@ -128,9 +128,9 @@ void main() {
   float ndv = max(dot(normal, view_dir), 0.0);
   float ndl = max(dot(normal, light_dir), 0.0);
 
-  const vec3 shallow_water = vec3(0.085, 0.285, 0.280);
-  const vec3 deep_water = vec3(0.070, 0.255, 0.270);
-  const vec3 suspended_silt = vec3(0.155, 0.270, 0.200);
+  const vec3 shallow_water = vec3(0.095, 0.255, 0.240);
+  const vec3 deep_water = vec3(0.062, 0.205, 0.220);
+  const vec3 suspended_silt = vec3(0.165, 0.250, 0.185);
 
   float shore_distance =
       u_water_surface_kind == 1 ? tex_coord.y : min(tex_coord.x, 1.0 - tex_coord.x);
@@ -140,18 +140,22 @@ void main() {
   vec3 body_color = mix(shallow_water, deep_water, optical_depth);
   float silt = (1.0 - normalized_depth) *
                smoothstep(0.45, 0.78, fbm(world_pos.xz * 0.075 + 31.0));
-  body_color = mix(body_color, suspended_silt, silt * 0.16);
+  body_color = mix(body_color, suspended_silt, silt * 0.28);
+
+  vec3 sun_light = environment_primary_color() * environment_primary_intensity();
+  vec3 water_lighting =
+      (environment_ambient_light(normal) + sun_light * (ndl * 0.62 + 0.20)) *
+      environment_exposure();
 
   vec3 reflected_dir = reflect(-view_dir, normal);
-  vec3 reflection = procedural_sky(reflected_dir, light_dir);
+  vec3 reflection = procedural_sky(reflected_dir, light_dir) * environment_exposure();
   float fresnel = fresnel_schlick(ndv, 0.020);
   float reflection_weight = 0.035 + fresnel * 0.22;
-  vec3 color = mix(body_color * (0.91 + ndl * 0.12), reflection, reflection_weight);
+  vec3 color = mix(body_color * water_lighting, reflection, reflection_weight);
 
   float roughness = mix(0.34, 0.46, saturate(length(gradient) * 1.5));
   float specular = ggx_specular(normal, view_dir, light_dir, roughness, 0.020);
-  color += environment_primary_color() * environment_primary_intensity() *
-           min(specular, 0.42) * 0.15;
+  color += sun_light * environment_exposure() * min(specular, 0.42) * 0.15;
 
   float river_energy = 1.0 - lake;
   float shore_band = 1.0 - smoothstep(0.006, 0.060, shore_distance);
@@ -162,7 +166,7 @@ void main() {
   crest *=
       smoothstep(0.55, 0.86, fbm(world_pos.xz * 1.15 - vec2(time * 0.18, time * 0.08)));
   float foam = saturate(shore_foam + crest * mix(0.010, 0.022, river_energy));
-  color = mix(color, vec3(0.76, 0.86, 0.84), foam);
+  color = mix(color, vec3(0.76, 0.86, 0.84) * water_lighting, foam);
 
   color = apply_visibility_memory(color, world_pos.xz);
   color *= u_segment_visibility;
