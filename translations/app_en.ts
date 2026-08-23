@@ -4543,18 +4543,6 @@ to see preview</translation>
         <translation>Unnamed Map</translation>
     </message>
     <message>
-        <source>A balanced Mediterranean skirmish map set among olive groves, dry wadis, terraced hills, and dusty farm roads. Control of the center and side ridges helps, but victory is standard barracks elimination.</source>
-        <translation>A balanced Mediterranean skirmish map set among olive groves, dry wadis, terraced hills, and dusty farm roads. Control of the center and side ridges helps, but victory is standard barracks elimination.</translation>
-    </message>
-    <message>
-        <source>A large balanced mountain skirmish map with two fortified bases, a contested central ridge, narrow high passes, flank trails, alpine streams, and strong archer positions. Victory is standard barracks elimination.</source>
-        <translation>A large balanced mountain skirmish map with two fortified bases, a contested central ridge, narrow high passes, flank trails, alpine streams, and strong archer positions. Victory is standard barracks elimination.</translation>
-    </message>
-    <message>
-        <source>A rich strategic crossroads map with contested central bridges, neutral corner barracks, flank routes, and high ground around key crossings.</source>
-        <translation>A rich strategic crossroads map with contested central bridges, neutral corner barracks, flank routes, and high ground around key crossings.</translation>
-    </message>
-    <message>
         <source>Battle of Cannae</source>
         <translation>Battle of Cannae</translation>
     </message>
@@ -4587,32 +4575,12 @@ to see preview</translation>
         <translation>Crossing the Rhone - Polished Maze Version</translation>
     </message>
     <message>
-        <source>Forest Battlefield</source>
-        <translation>Forest Battlefield</translation>
-    </message>
-    <message>
         <source>Iron Sepulcher Watch</source>
         <translation>Iron Sepulcher Watch</translation>
     </message>
     <message>
-        <source>Mountain Strongholds</source>
-        <translation>Mountain Strongholds</translation>
-    </message>
-    <message>
-        <source>River Crossroads</source>
-        <translation>River Crossroads</translation>
-    </message>
-    <message>
         <source>Small authored scenario that demonstrates ruins, a shrine, and undead awakening zones.</source>
         <translation>Small authored scenario that demonstrates ruins, a shrine, and undead awakening zones.</translation>
-    </message>
-    <message>
-        <source>Spanish Olive Grove</source>
-        <translation>Spanish Olive Grove</translation>
-    </message>
-    <message>
-        <source>A dense symmetrical forest battlefield for two active players, built around road reading, ambush forests, hill control, side objectives, and two neutral barracks. There are no rivers, bridges, or mountains. Roads deliberately route around hills instead of crossing over them.</source>
-        <translation>A dense symmetrical forest battlefield for two active players, built around road reading, ambush forests, hill control, side objectives, and two neutral barracks. There are no rivers, bridges, or mountains. Roads deliberately route around hills instead of crossing over them.</translation>
     </message>
     <message>
         <source>A quiet meadow between a Carthaginian camp and a Roman outpost, laid out for the tutorial: timber, stone and ore within a short walk of the barracks, a scouting party to practise on, and a small enemy camp to take once the army is ready.</source>
@@ -4621,6 +4589,54 @@ to see preview</translation>
     <message>
         <source>Training Meadow</source>
         <translation>Training Meadow</translation>
+    </message>
+    <message>
+        <source>A fertile valley for two. One channel runs the whole map north to south and only two fords cross it. A cross spur on each bank means you either hug the water or swing wide to reach them, and the boomerang ridge cupping each start makes the back door terrain rather than a wall. Nothing haunts this valley: it is the plain match, with no Sepulcher to distract either side.</source>
+        <translation>A fertile valley for two. One channel runs the whole map north to south and only two fords cross it. A cross spur on each bank means you either hug the water or swing wide to reach them, and the boomerang ridge cupping each start makes the back door terrain rather than a wall. Nothing haunts this valley: it is the plain match, with no Sepulcher to distract either side.</translation>
+    </message>
+    <message>
+        <source>Amber Delta</source>
+        <translation>Amber Delta</translation>
+    </message>
+    <message>
+        <source>Blackpine Hollow</source>
+        <translation>Blackpine Hollow</translation>
+    </message>
+    <message>
+        <source>Copper Canyons</source>
+        <translation>Copper Canyons</translation>
+    </message>
+    <message>
+        <source>Deep wet pine forest for two. A crater wall rings the shrine bowl at the centre and no road enters it - the gates cut through its rim are the only way in, so the middle belongs to whoever will fight for it on foot. Everything else is one ring road and the trees.</source>
+        <translation>Deep wet pine forest for two. A crater wall rings the shrine bowl at the centre and no road enters it - the gates cut through its rim are the only way in, so the middle belongs to whoever will fight for it on foot. Everything else is one ring road and the trees.</translation>
+    </message>
+    <message>
+        <source>Four camps in a snowed-in basin. Two melt races cross at its centre and cut the ground into quarters, so every neighbour is a bridge away: an inner crossing in the open, or a longer one out under the rim ranges. Four corner tarns and four barrow cairns fill the rest.</source>
+        <translation>Four camps in a snowed-in basin. Two melt races cross at its centre and cut the ground into quarters, so every neighbour is a bridge away: an inner crossing in the open, or a longer one out under the rim ranges. Four corner tarns and four barrow cairns fill the rest.</translation>
+    </message>
+    <message>
+        <source>Four camps on a dry Iberian hillside. No river runs here - the terraces are the map. Each camp looks out through a horned terrace wall with a gate at either horn, and the old press mound in the middle is high ground four worn tracks climb.</source>
+        <translation>Four camps on a dry Iberian hillside. No river runs here - the terraces are the map. Each camp looks out through a horned terrace wall with a gate at either horn, and the old press mound in the middle is high ground four worn tracks climb.</translation>
+    </message>
+    <message>
+        <source>Frostmere Basin</source>
+        <translation>Frostmere Basin</translation>
+    </message>
+    <message>
+        <source>Six camps in a banded rock desert. Three races cross at the middle and cut the ground into six wedges, so every neighbour is two crossings away: one under the junction knaps, one out at the rim stacks. A mesa lies across each wedge, and the lane past it is where the sector is won.</source>
+        <translation>Six camps in a banded rock desert. Three races cross at the middle and cut the ground into six wedges, so every neighbour is two crossings away: one under the junction knaps, one out at the rim stacks. A mesa lies across each wedge, and the lane past it is where the sector is won.</translation>
+    </message>
+    <message>
+        <source>Sunbaked Terraces</source>
+        <translation>Sunbaked Terraces</translation>
+    </message>
+    <message>
+        <source>The Two Fords</source>
+        <translation>The Two Fords</translation>
+    </message>
+    <message>
+        <source>Three camps a side along one broad channel. The Amber runs the whole map and only three ferry crossings span it, so a bank is a front line: the highway behind each bank links its three camps, and every attack has to buy a bridge first.</source>
+        <translation>Three camps a side along one broad channel. The Amber runs the whole map and only three ferry crossings span it, so a bank is a front line: the highway behind each bank links its three camps, and every attack has to buy a bridge first.</translation>
     </message>
 </context>
 <context>
