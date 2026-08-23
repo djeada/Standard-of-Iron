@@ -251,6 +251,15 @@ public:
     return topology_revision;
   }
 
+  // Both are the order pipeline's to call and nobody else's: a new accepted
+  // player/AI order begins an order, an assignment of route geometry begins a
+  // route. MovementStageOwnershipTest pins the call sites.
+  void begin_order() { ++order_sequence; }
+  void begin_route(std::uint64_t topology) {
+    ++route_revision;
+    topology_revision = topology;
+  }
+
   [[nodiscard]] auto get_can_enter_forest() const -> bool { return can_enter_forest; }
   void set_can_enter_forest(bool allowed) { can_enter_forest = allowed; }
 

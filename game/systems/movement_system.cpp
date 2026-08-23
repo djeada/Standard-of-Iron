@@ -277,6 +277,13 @@ void MovementSystem::process_pending_path_requests(Engine::Core::World& world) {
     auto* transform = entity->get_component<Engine::Core::TransformComponent>();
     auto* movement = entity->get_component<Engine::Core::MovementComponent>();
     if (transform != nullptr && movement != nullptr) {
+      // A deferred route may only publish if it still belongs to the order that
+      // asked for it. A newer command supersedes it silently rather than
+      // stopping the movement that command started.
+      if (movement->get_order_sequence() != request.order_sequence) {
+        ++processed;
+        continue;
+      }
       float const goal_dx = movement->get_goal_x() - request.target.x();
       float const goal_dz = movement->get_goal_y() - request.target.z();
       if (goal_dx * goal_dx + goal_dz * goal_dz > 0.01F) {
@@ -294,14 +301,15 @@ void MovementSystem::process_pending_path_requests(Engine::Core::World& world) {
 auto MovementSystem::enqueue_pending_path_request(Engine::Core::EntityID entity_id,
                                                   const QVector3D& target,
                                                   bool precise_arrival,
-                                                  std::uint64_t navigation_revision)
+                                                  std::uint64_t navigation_revision,
+                                                  std::uint64_t order_sequence)
     -> bool {
   cancel_pending_path_request(entity_id);
   if (m_pending_path_requests.size() >= k_max_pending_path_requests) {
     return false;
   }
   m_pending_path_requests.push_back(
-      {entity_id, target, navigation_revision, precise_arrival});
+      {entity_id, target, navigation_revision, order_sequence, precise_arrival});
   return true;
 }
 

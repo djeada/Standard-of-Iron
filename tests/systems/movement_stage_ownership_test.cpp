@@ -146,6 +146,49 @@ TEST(MovementStageOwnershipTest, TheCompositePipelineKeepsTheSameOrder) {
   EXPECT_LT(steer, motor);
 }
 
+TEST(MovementStageOwnershipTest, OnlyTheOrderPipelineBeginsOrdersAndRoutes) {
+  for (const char* relative : {"game/systems/movement_system.cpp",
+                               "game/systems/route_follow_system.cpp",
+                               "game/systems/local_avoidance_system.cpp",
+                               "game/systems/movement_pipeline.cpp"}) {
+    const auto source = read_source(relative);
+    ASSERT_FALSE(source.empty()) << relative;
+    EXPECT_EQ(source.find("begin_order()"), std::string::npos)
+        << relative << " bumps the order sequence; only the order pipeline may";
+    EXPECT_EQ(source.find("begin_route("), std::string::npos)
+        << relative << " bumps the route revision; only the order pipeline may";
+  }
+
+  const auto orders = read_source("game/systems/movement_orders.cpp");
+  ASSERT_FALSE(orders.empty());
+  EXPECT_NE(orders.find("begin_order()"), std::string::npos);
+  EXPECT_NE(orders.find("begin_route("), std::string::npos);
+}
+
+TEST(MovementStageOwnershipTest, ANewOrderSupersedesADeferredRoute) {
+  Game::Systems::NavGrid::initialize(64, 64);
+  SessionContext session;
+  const ScopedSession scope(session);
+  World& world = session.world();
+
+  auto* entity = world.create_entity();
+  entity->add_component<TransformComponent>(0.0F, 0.0F, 0.0F);
+  auto* unit = entity->add_component<UnitComponent>(100, 100, 2.0F, 12.0F);
+  unit->owner_id = 1;
+  auto* movement = entity->add_component<MovementComponent>();
+
+  Game::Systems::CommandService::move_unit(world, entity->get_id(), {8.0F, 0.0F, 0.0F});
+  const auto first = movement->get_order_sequence();
+  const auto first_route = movement->get_route_revision();
+  EXPECT_GT(first, 0U);
+  EXPECT_GT(first_route, 0U);
+
+  Game::Systems::CommandService::move_unit(world, entity->get_id(), {0.0F, 0.0F, 9.0F});
+  EXPECT_GT(movement->get_order_sequence(), first)
+      << "a second accepted order reused the first order's sequence";
+  EXPECT_GT(movement->get_route_revision(), first_route);
+}
+
 // Gate 1: one tick of trace must account for every transition from the accepted
 // order to the accepted displacement.
 TEST(MovementStageOwnershipTest, OneTickOfTraceAccountsForTheWholeChain) {

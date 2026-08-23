@@ -300,22 +300,22 @@ JSON manifest is acceptable.
 
 ### Per-tick troop record
 
-- [ ] Simulation tick, entity ID, owner, troop type, command sequence, order kind,
+- [x] Simulation tick, entity ID, owner, troop type, command sequence, order kind,
       and declared movement outcome/state.
-- [ ] Root position/yaw and previous root position/yaw.
-- [ ] Requested goal, resolved goal, route ID/revision, topology revision,
+- [x] Root position/yaw and previous root position/yaw.
+- [x] Requested goal, resolved goal, route ID/revision, topology revision,
       waypoint index/count, current waypoint, lookahead point, route tangent,
       and remaining route arclength.
-- [ ] Desired speed/velocity, avoidance correction, steered velocity, collision
+- [x] Desired speed/velocity, avoidance correction, steered velocity, collision
       contact/normal, accepted displacement/velocity, and rejected displacement.
-- [ ] Distance advanced along the route, lateral route error, no-progress time,
+- [x] Distance advanced along the route, lateral route error, no-progress time,
       blocked-step count, repath count/reason, and queue/yield owner.
-- [ ] Neighbor candidates in stable ID order, time-to-collision, selected passing
+- [x] Neighbor candidates in stable ID order, time-to-collision, selected passing
       side, priority, lane/portal reservation, and solver result.
-- [ ] Navigation envelope radius/half-width, sampled corridor width, portal ID,
+- [x] Navigation envelope radius/half-width, sampled corridor width, portal ID,
       traversal mode, current/target file count, transition progress, and state
       dwell timers.
-- [ ] Motion-presentation state, speed, direction, direction source, gait state,
+- [x] Motion-presentation state, speed, direction, direction source, gait state,
       and locomotion phase.
 
 ### Per-rendered-frame soldier record
@@ -331,15 +331,15 @@ JSON manifest is acceptable.
 
 ### Artifact analysis
 
-- [ ] Add an analyzer that reports progress stalls, distance regressions,
+- [x] Add an analyzer that reports progress stalls, distance regressions,
       blocked-step streaks, replans, waypoint churn, heading sign flips, angular
       velocity/acceleration, layout toggles, layout aspect ratio, soldier root
       jumps, ring error, gait mismatch, collision penetration, and starvation.
-- [ ] Produce a compact summary table and a timeline plot for the worst entity
+- [x] Produce a compact summary table and a timeline plot for the worst entity
       and worst soldier. A video is supporting evidence, not the only evidence.
-- [ ] Store the first failing tick/frame and a short window before and after it
+- [x] Store the first failing tick/frame and a short window before and after it
       so the cause can be inspected without opening a multi-minute trace.
-- [ ] Add a movement digest covering command outcome, accepted root samples,
+- [x] Add a movement digest covering command outcome, accepted root samples,
       route revisions, portal order, traversal modes, and stable slot mapping.
 
 ## Target ownership model
@@ -437,7 +437,7 @@ does not remove the scenario from the plan.
 
 ### Separate movement facts
 
-- [ ] Replace overloaded velocity semantics with explicit data, whether as one
+- [x] Replace overloaded velocity semantics with explicit data, whether as one
       component or narrow components:
 
     - `RouteIntent`: order/goal/route identity and desired progress;
@@ -447,15 +447,15 @@ does not remove the scenario from the plan.
     - `MovementProgress`: route arclength, no-progress state, attempts, outcome;
     - `MotionPresentation`: presentation-only state derived from `MotorResult`.
 
-- [ ] Give each field one writer. `LocalAvoidanceSystem` must never overwrite
+- [x] Give each field one writer. `LocalAvoidanceSystem` must never overwrite
       the authoritative velocity later used as if it were already integrated.
-- [ ] Make schedule dependencies explicit and test them: route following before
+- [x] Make schedule dependencies explicit and test them: route following before
       steering, steering before motor, motor before progress/presentation, and
       presentation before render snapshot publication.
-- [ ] Add a monotonically increasing order sequence. Async/pending route work
+- [x] Add a monotonically increasing order sequence. Async/pending route work
       must match entity, order sequence, goal revision, and topology revision
       before it can publish.
-- [ ] Define terminal outcomes and expose them to tests/diagnostics. Clearing
+- [x] Define terminal outcomes and expose them to tests/diagnostics. Clearing
       `has_target` without a reason is not an outcome contract.
 
 ### One spatial contract

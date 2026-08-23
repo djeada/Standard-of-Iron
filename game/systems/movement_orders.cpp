@@ -246,6 +246,10 @@ auto prepare_move(Engine::Core::World& world,
   movement->set_navigation_clearance(
       FormationCombat::formation_navigation_clearance(*entity));
 
+  // A new accepted order, not an internal repath: async route work queued
+  // against an older sequence can no longer publish over it.
+  movement->begin_order();
+
   PreparedMove result;
   result.entity = entity;
   result.transform = transform;
@@ -259,8 +263,18 @@ auto prepare_move(Engine::Core::World& world,
 
 } // namespace
 
+namespace {
+
+void stamp_route_revision(Engine::Core::MovementComponent& movement) {
+  auto const* pathfinder = NavGrid::get_pathfinder();
+  movement.begin_route(pathfinder != nullptr ? pathfinder->navigation_revision() : 0U);
+}
+
+} // namespace
+
 void MovementSystem::assign_direct_target(Engine::Core::MovementComponent& movement,
                                           const QVector3D& target) {
+  stamp_route_revision(movement);
   movement.clear_path();
   movement.target_x = target.x();
   movement.target_y = target.z();
@@ -282,6 +296,7 @@ auto MovementSystem::assign_path_to_movement(
     return false;
   }
 
+  stamp_route_revision(movement);
   movement.clear_path();
   std::size_t const first_waypoint_index = include_first_waypoint ? 0U : 1U;
   movement.path.reserve(path_points.size() - first_waypoint_index);
@@ -677,7 +692,8 @@ void MovementSystem::issue_move_units(Engine::Core::World& world,
                      move.entity->get_id(),
                      targets[i],
                      options.kind == MoveOrderKind::AttackChase,
-                     pathfinder->navigation_revision())) {
+                     pathfinder->navigation_revision(),
+                     move.movement->get_order_sequence())) {
         move.movement->stop();
         move.movement->set_rest_position(targets[i].x(), targets[i].z());
       } else if (corridor.size() > 1U) {
