@@ -82,6 +82,7 @@ add_executable(
     core/component_storage_test.cpp
     core/world_spatial_index_test.cpp
     core/system_schedule_test.cpp
+    core/movement_trace_test.cpp
     core/ground_type_test.cpp
     core/building_spawn_setup_test.cpp
     map/terrain_profiles_test.cpp

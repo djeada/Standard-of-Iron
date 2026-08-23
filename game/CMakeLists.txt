@@ -47,6 +47,8 @@ add_library(
     core/ambient_session.cpp
     core/event_manager.cpp
     core/simulation_timing.cpp
+    core/movement_trace.cpp
+    core/movement_trace_analysis.cpp
     session/simulation_clock.cpp
     systems/unit_activity.cpp
     util/asset_text.cpp
