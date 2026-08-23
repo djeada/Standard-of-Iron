@@ -2758,8 +2758,15 @@ void ArenaViewport::reset_arena() {
   }
 }
 
+auto ArenaViewport::visibility_service() -> Game::Map::VisibilityService& {
+  if (m_visibility_service == nullptr) {
+    m_visibility_service = &Game::Map::VisibilityService::instance();
+  }
+  return *m_visibility_service;
+}
+
 void ArenaViewport::apply_initial_visibility() {
-  auto& visibility = Game::Map::VisibilityService::instance();
+  auto& visibility = visibility_service();
   if (!m_fog_of_war_enabled) {
     visibility.reveal_all();
     return;
@@ -2781,7 +2788,7 @@ void ArenaViewport::set_fog_of_war_enabled(bool enabled) {
   m_fog_of_war_enabled = enabled;
   m_visibility_accumulator = 0.0F;
 
-  auto& visibility = Game::Map::VisibilityService::instance();
+  auto& visibility = visibility_service();
   if (!enabled) {
     if (m_fog != nullptr) {
       m_fog->set_enabled(false);
@@ -2802,7 +2809,7 @@ void ArenaViewport::update_fog_of_war(float dt) {
   if (!m_fog_of_war_enabled || m_fog == nullptr) {
     return;
   }
-  auto& visibility = Game::Map::VisibilityService::instance();
+  auto& visibility = visibility_service();
   if (!visibility.is_initialized()) {
     return;
   }
@@ -4733,9 +4740,7 @@ void ArenaViewport::align_units_to_terrain() {
     if (unit == nullptr) {
       continue;
     }
-    if (auto* entity = m_world->get_entity(unit->id()); entity != nullptr) {
-      Arena::align_entity_to_ground(*entity);
-    }
+    Arena::align_entity_to_ground(*m_world, unit->id());
   }
 }
 

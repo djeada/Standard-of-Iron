@@ -693,7 +693,7 @@ TEST(RenderArchetypeBuildings, TowerBannersRiseAboveRooflines) {
   EXPECT_GT(carthage_bounds.max.y(), k_carthage_tower_min_banner_height);
 }
 
-TEST(RenderArchetypeBuildings, RomanTowerHealthBarOnlyShowsWhileUnderAttack) {
+TEST(RenderArchetypeBuildings, RomanTowerDrawsNoHealthBarWhileUnderAttack) {
   using namespace Render::GL;
 
   EntityRendererRegistry registry;
@@ -738,10 +738,10 @@ TEST(RenderArchetypeBuildings, RomanTowerHealthBarOnlyShowsWhileUnderAttack) {
 
   const std::size_t idle_count = render_mesh_count(false);
   const std::size_t under_attack_count = render_mesh_count(true);
-  EXPECT_GT(under_attack_count, idle_count);
+  EXPECT_EQ(under_attack_count, idle_count);
 }
 
-TEST(RenderArchetypeBuildings, RomanHomeHealthBarOnlyShowsWhileUnderAttack) {
+TEST(RenderArchetypeBuildings, RomanHomeDrawsNoHealthBarWhileUnderAttack) {
   using namespace Render::GL;
 
   EntityRendererRegistry registry;
@@ -786,10 +786,10 @@ TEST(RenderArchetypeBuildings, RomanHomeHealthBarOnlyShowsWhileUnderAttack) {
 
   const std::size_t idle_count = render_mesh_count(false);
   const std::size_t under_attack_count = render_mesh_count(true);
-  EXPECT_GT(under_attack_count, idle_count);
+  EXPECT_EQ(under_attack_count, idle_count);
 }
 
-TEST(RenderArchetypeBuildings, RomanHomeHealthBarShowsOnRecentCombatHit) {
+TEST(RenderArchetypeBuildings, RomanHomeDrawsNoHealthBarOnRecentCombatHit) {
   using namespace Render::GL;
 
   EntityRendererRegistry registry;
@@ -833,7 +833,7 @@ TEST(RenderArchetypeBuildings, RomanHomeHealthBarShowsOnRecentCombatHit) {
 
   const std::size_t idle_count = render_mesh_count(false);
   const std::size_t recent_hit_count = render_mesh_count(true);
-  EXPECT_GT(recent_hit_count, idle_count);
+  EXPECT_EQ(recent_hit_count, idle_count);
 }
 
 TEST(RenderArchetypeBuildings, DestroyedRomanTowerRemovesBannerTint) {

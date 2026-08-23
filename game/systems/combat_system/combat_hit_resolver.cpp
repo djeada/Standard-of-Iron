@@ -309,10 +309,8 @@ void apply_cursed_projectile_status_if_needed(
     return;
   }
 
-  auto* morale = target.get_component<Engine::Core::MoraleComponent>();
-  if (morale == nullptr) {
-    morale = target.add_component<Engine::Core::MoraleComponent>();
-  }
+  auto* morale =
+      Engine::Core::get_or_add_component<Engine::Core::MoraleComponent>(target);
 
   auto* cursed = target.get_component<Engine::Core::CursedStatusComponent>();
   bool created_cursed = false;

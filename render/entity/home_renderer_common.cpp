@@ -25,7 +25,6 @@ void register_home_renderer_variant(EntityRendererRegistry& registry,
         const auto palette_slots = config.palette_slots(team);
         submit_building_instance(
             out, ctx, config.archetype(resolve_building_state(ctx)), palette_slots);
-        draw_building_health_bar(out, ctx, config.health_bar);
         draw_building_selection_overlay(out, ctx, config.selection);
       });
 }

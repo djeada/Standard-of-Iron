@@ -497,10 +497,8 @@ void begin_death_sequence(Engine::Core::Entity* target,
   }
 
   auto* unit = target->get_component<Engine::Core::UnitComponent>();
-  auto* death = target->get_component<Engine::Core::DeathAnimationComponent>();
-  if (death == nullptr) {
-    death = target->add_component<Engine::Core::DeathAnimationComponent>();
-  }
+  auto* death =
+      Engine::Core::get_or_add_component<Engine::Core::DeathAnimationComponent>(target);
   if (death == nullptr) {
     return;
   }
@@ -572,13 +570,12 @@ auto is_valid_retaliation_attacker(Engine::Core::Entity* attacker) -> bool {
   if (attacker == nullptr) {
     return false;
   }
-  if (attacker->get_component<Engine::Core::UnitComponent>() == nullptr) {
+  auto const* unit = attacker->get_component<Engine::Core::UnitComponent>();
+  if (unit == nullptr) {
     return false;
   }
   if (attacker->has_component<Engine::Core::BuildingComponent>()) {
-    auto* unit = attacker->get_component<Engine::Core::UnitComponent>();
-    return (unit != nullptr) &&
-           unit->spawn_type == Game::Units::SpawnType::DefenseTower;
+    return unit->spawn_type == Game::Units::SpawnType::DefenseTower;
   }
   return true;
 }
@@ -634,10 +631,8 @@ auto can_reach_attacker(Engine::Core::Entity* entity,
 
 void engage_retaliation_target(Engine::Core::Entity* entity,
                                Engine::Core::EntityID attacker_id) {
-  auto* attack_target = entity->get_component<Engine::Core::AttackTargetComponent>();
-  if (attack_target == nullptr) {
-    attack_target = entity->add_component<Engine::Core::AttackTargetComponent>();
-  }
+  auto* attack_target =
+      Engine::Core::get_or_add_component<Engine::Core::AttackTargetComponent>(entity);
   if (attack_target == nullptr) {
     return;
   }
@@ -885,10 +880,10 @@ void add_or_extend_stagger(Engine::Core::Entity* entity, float duration) {
   if (entity == nullptr || duration <= 0.0F) {
     return;
   }
-  if (auto* stagger = entity->get_component<Engine::Core::StaggerComponent>()) {
+  auto* stagger = Engine::Core::get_or_add_component<Engine::Core::StaggerComponent>(
+      entity, duration);
+  if (stagger != nullptr) {
     stagger->remaining = std::max(stagger->remaining, duration);
-  } else {
-    entity->add_component<Engine::Core::StaggerComponent>(duration);
   }
 }
 
@@ -898,15 +893,12 @@ void add_or_extend_stagger(Engine::Core::Entity* entity,
   if (entity == nullptr || duration <= 0.0F) {
     return;
   }
-  if (auto* stagger = entity->get_component<Engine::Core::StaggerComponent>()) {
+  auto* stagger = Engine::Core::get_or_add_component<Engine::Core::StaggerComponent>(
+      entity, duration);
+  if (stagger != nullptr) {
     stagger->remaining = std::max(stagger->remaining, duration);
     if (static_cast<std::uint8_t>(tier) > static_cast<std::uint8_t>(stagger->tier)) {
       stagger->tier = tier;
-    }
-  } else {
-    auto* new_stagger = entity->add_component<Engine::Core::StaggerComponent>(duration);
-    if (new_stagger != nullptr) {
-      new_stagger->tier = tier;
     }
   }
 }
@@ -1189,10 +1181,8 @@ void apply_hit_feedback(Engine::Core::Entity* target,
           ? std::clamp(impulse.weapon_speed / k_reference_weapon_speed, 0.55F, 2.1F)
           : 1.0F;
 
-  auto* feedback = target->get_component<Engine::Core::HitFeedbackComponent>();
-  if (feedback == nullptr) {
-    feedback = target->add_component<Engine::Core::HitFeedbackComponent>();
-  }
+  auto* feedback =
+      Engine::Core::get_or_add_component<Engine::Core::HitFeedbackComponent>(target);
   if (feedback == nullptr) {
     return;
   }

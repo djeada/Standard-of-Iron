@@ -311,10 +311,8 @@ void tick_rpg_combat(Engine::Core::World* world,
     if (stagger->remaining <= 0.0F) {
       recovered.push_back(staggered->get_id());
     } else {
-      auto* fb = staggered->get_component<Engine::Core::HitFeedbackComponent>();
-      if (fb == nullptr) {
-        fb = staggered->add_component<Engine::Core::HitFeedbackComponent>();
-      }
+      auto* fb = Engine::Core::get_or_add_component<Engine::Core::HitFeedbackComponent>(
+          staggered);
       if (fb != nullptr) {
         fb->is_reacting = true;
         fb->reaction_time = 0.0F;

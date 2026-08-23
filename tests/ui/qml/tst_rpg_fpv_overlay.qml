@@ -30,6 +30,13 @@ TestCase {
             "focus_marker_valid": true,
             "focus_marker_locked": true,
             "locked_target_name": "Hasdrubal Barca",
+            "focus_target_name": "Hasdrubal Barca",
+            "focus_target_hp": 40,
+            "focus_target_max_hp": 220,
+            "focus_target_hp_ratio": 0.18,
+            "focus_target_staggered": true,
+            "can_switch_weapon": true,
+            "name": "Marcus Aurelius",
             "shield_bash_ready": false,
             "shield_bash_cooldown": 3.0,
             "shield_bash_cooldown_remaining": 2.4,
@@ -171,19 +178,26 @@ TestCase {
     function test_bottom_bands_never_collide(data) {
         var host = makeOverlay(data.w, data.h, loudStatus());
         var overlay = host.overlay;
-        var bars = findChild(overlay, "rpgHudBarsRow");
+        var vitals = findChild(overlay, "rpgVitalsPlate");
         var abilities = findChild(overlay, "rpgAbilityCooldowns");
+        var target = findChild(overlay, "rpgTargetPlate");
         var posture = findChild(overlay, "rpgPostureBar");
         var combo = findChild(overlay, "rpgComboIndicator");
-        verify(bars !== null, "hud bars row is missing");
+        verify(vitals !== null, "vitals plate is missing");
         verify(abilities !== null, "ability cooldown row is missing");
+        verify(target !== null, "target plate is missing");
         verify(posture !== null, "posture bar is missing");
         verify(combo !== null, "combo indicator is missing");
-        var barsRect = rectIn(overlay, bars);
+        var vitalsRect = rectIn(overlay, vitals);
         var abilitiesRect = rectIn(overlay, abilities);
-        verify(!overlaps(barsRect, abilitiesRect), "vitals bars collide with the ability row at " + data.tag);
+        verify(!overlaps(vitalsRect, abilitiesRect), "the vitals plate collides with the ability row at " + data.tag);
         verify(!overlaps(rectIn(overlay, posture), abilitiesRect), "posture bar collides with the ability row at " + data.tag);
         verify(!overlaps(rectIn(overlay, combo), abilitiesRect), "combo indicator collides with the ability row at " + data.tag);
+        if (target.visible) {
+            var targetRect = rectIn(overlay, target);
+            verify(!overlaps(targetRect, vitalsRect), "the target plate collides with the vitals plate at " + data.tag);
+            verify(!overlaps(targetRect, abilitiesRect), "the target plate collides with the ability row at " + data.tag);
+        }
         host.destroy();
     }
 
@@ -197,7 +211,7 @@ TestCase {
         overlay.topInset = 50;
         overlay.bottomInset = 96;
         wait(1);
-        var names = ["rpgHudBarsRow", "rpgAbilityCooldowns", "rpgPostureBar", "rpgComboIndicator", "rpgFocusPlate", "rpgWeaponStanceChip", "rpgLeftThreatPip", "rpgRightThreatPip"];
+        var names = ["rpgHudBand", "rpgVitalsPlate", "rpgAbilityCooldowns", "rpgPostureBar", "rpgComboIndicator", "rpgTargetPlate", "rpgWeaponStanceChip", "rpgLeftThreatPip", "rpgRightThreatPip"];
         var tolerance = 1.0;
         var checked = 0;
         for (var i = 0; i < names.length; ++i) {
@@ -250,6 +264,10 @@ TestCase {
             "focus_marker_valid": false,
             "focus_marker_locked": false,
             "locked_target_name": "",
+            "focus_target_max_hp": 0,
+            "focus_target_hp_ratio": 0.0,
+            "focus_target_staggered": false,
+            "focus_target_guard_broken": false,
             "shield_bash_ready": true,
             "vanguard_rush_ready": true,
             "second_wind_ready": true

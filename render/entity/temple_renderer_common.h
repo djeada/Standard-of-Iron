@@ -14,7 +14,6 @@ using TempleArchetypeResolver = const RenderArchetype& (*)(BuildingState);
 struct TempleRendererConfig {
   std::string_view nation_slug;
   TempleArchetypeResolver archetype;
-  BuildingHealthBarStyle health_bar;
   BuildingSelectionStyle selection;
 };
 

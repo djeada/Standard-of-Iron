@@ -340,7 +340,6 @@ void register_home_renderer(Render::GL::EntityRendererRegistry& registry) {
       HomeRendererConfig{.nation_slug = "roman",
                          .archetype = &home_archetype,
                          .palette_slots = &home_palette_slots,
-                         .health_bar = BuildingHealthBarStyle{1.0F, 0.08F, 1.6F},
                          .selection = BuildingSelectionStyle{2.25F, 2.25F}});
 }
 

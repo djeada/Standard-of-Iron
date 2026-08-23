@@ -7051,32 +7051,40 @@ Los constructores lo siegan para la comida que recluta civiles</translation>
 <context>
     <name>RpgFpvOverlay</name>
     <message>
-        <source>HP %1/%2</source>
-        <translation>PS %1/%2</translation>
+        <source>GUARD BROKEN</source>
+        <translation>GUARDIA ROTA</translation>
     </message>
     <message>
-        <source>STM %1%</source>
-        <translation>AGT %1%</translation>
+        <source>PUNISH</source>
+        <translation>CASTIGO</translation>
     </message>
     <message>
         <source>FINISHER</source>
         <translation>REMATE</translation>
     </message>
     <message>
-        <source>COMBO</source>
-        <translation>COMBO</translation>
+        <source>HP %1/%2</source>
+        <translation>PS %1/%2</translation>
     </message>
     <message>
-        <source>POSTURE</source>
-        <translation>POSTURA</translation>
+        <source>TARGET</source>
+        <translation>OBJETIVO</translation>
     </message>
     <message>
-        <source>GUARD BROKEN</source>
-        <translation>GUARDIA ROTA</translation>
+        <source>%1%</source>
+        <translation>%1 %</translation>
     </message>
     <message>
-        <source>⚡ PUNISH ⚡</source>
-        <translation>⚡ CASTIGO ⚡</translation>
+        <source>STAGGERED</source>
+        <translation>TAMBALEANTE</translation>
+    </message>
+    <message>
+        <source>BOW  ·  X</source>
+        <translation>ARCO  ·  X</translation>
+    </message>
+    <message>
+        <source>BLADE  ·  X</source>
+        <translation>HOJA  ·  X</translation>
     </message>
     <message>
         <source>BASH</source>
@@ -7093,14 +7101,6 @@ Los constructores lo siegan para la comida que recluta civiles</translation>
     <message>
         <source>READY</source>
         <translation>LISTO</translation>
-    </message>
-    <message>
-        <source>BOW  ·  X</source>
-        <translation>ARCO  ·  X</translation>
-    </message>
-    <message>
-        <source>BLADE  ·  X</source>
-        <translation>HOJA  ·  X</translation>
     </message>
 </context>
 <context>

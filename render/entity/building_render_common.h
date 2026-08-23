@@ -12,13 +12,6 @@
 
 namespace Render::GL {
 
-struct BuildingHealthBarStyle {
-  float width{1.0F};
-  float height{0.08F};
-  float y{1.5F};
-  bool draw_segment_highlights{false};
-};
-
 struct BuildingSelectionStyle {
   float scale_x{1.5F};
   float scale_z{1.5F};
@@ -32,7 +25,6 @@ struct BuildingInstanceCacheStats {
 
 auto resolve_building_health_ratio(const DrawContext& ctx) -> float;
 
-auto building_health_bar_visible(const DrawContext& ctx) -> bool;
 auto resolve_building_state(const DrawContext& ctx) -> BuildingState;
 auto building_renderer_key(std::string_view nation_slug,
                            std::string_view building_type) -> std::string;
@@ -67,9 +59,6 @@ void submit_building_cylinder(ISubmitter& out,
                               Texture* texture,
                               float alpha = 1.0F);
 
-void draw_building_health_bar(ISubmitter& out,
-                              const DrawContext& ctx,
-                              const BuildingHealthBarStyle& style);
 void draw_building_selection_overlay(ISubmitter& out,
                                      const DrawContext& ctx,
                                      const BuildingSelectionStyle& style);
