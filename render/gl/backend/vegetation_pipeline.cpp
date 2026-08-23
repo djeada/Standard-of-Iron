@@ -71,6 +71,8 @@ auto VegetationPipeline::initialize() -> bool {
   initialize_plant_pipeline();
   initialize_pine_pipeline();
   initialize_olive_pipeline();
+  initialize_cypress_pipeline();
+  initialize_palm_pipeline();
   initialize_fire_camp_pipeline();
   initialize_tent_pipeline();
   initialize_supply_cart_pipeline();
@@ -92,6 +94,8 @@ auto VegetationPipeline::all_meshes() -> std::array<StaticMeshBuffers*, k_mesh_c
           &m_plant_mesh,
           &m_pine_mesh,
           &m_olive_mesh,
+          &m_cypress_mesh,
+          &m_palm_mesh,
           &m_firecamp_mesh,
           &m_tent_mesh,
           &m_supply_cart_mesh,

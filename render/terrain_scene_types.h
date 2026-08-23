@@ -63,6 +63,8 @@ enum class ScatterSpeciesId {
   Plant,
   Pine,
   Olive,
+  Cypress,
+  Palm,
   FireCamp,
   Tent,
   SupplyCart,

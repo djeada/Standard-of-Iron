@@ -34,46 +34,49 @@ TEST(TerrainProfilesTest, SplitsBiomeIntoSurfaceAndScatterViews) {
 
 TEST(TerrainProfilesTest, ScatterRulesCentralizeDryGroundTreeChoice) {
   const auto dry_rules = Game::Map::make_scatter_rules(Game::Map::GroundType::GrassDry);
-  EXPECT_FALSE(dry_rules.allow_pines);
-  EXPECT_TRUE(dry_rules.allow_olives);
-  EXPECT_FLOAT_EQ(dry_rules.olive_base_density, 0.08F);
-  EXPECT_FLOAT_EQ(dry_rules.olive_density_scale, 0.10F);
-  EXPECT_FLOAT_EQ(dry_rules.olive_scale_min, 2.8F);
-  EXPECT_FLOAT_EQ(dry_rules.olive_scale_max, 5.0F);
+  EXPECT_FALSE(dry_rules.tree(Game::Map::TreeSpecies::Pine).allowed);
+  EXPECT_TRUE(dry_rules.tree(Game::Map::TreeSpecies::Olive).allowed);
+  EXPECT_FLOAT_EQ(dry_rules.tree(Game::Map::TreeSpecies::Olive).base_density, 0.08F);
+  EXPECT_FLOAT_EQ(dry_rules.tree(Game::Map::TreeSpecies::Olive).density_scale, 0.10F);
+  EXPECT_FLOAT_EQ(dry_rules.tree(Game::Map::TreeSpecies::Olive).scale_min, 2.8F);
+  EXPECT_FLOAT_EQ(dry_rules.tree(Game::Map::TreeSpecies::Olive).scale_max, 5.0F);
 
   const auto forest_rules =
       Game::Map::make_scatter_rules(Game::Map::GroundType::ForestMud);
-  EXPECT_TRUE(forest_rules.allow_pines);
-  EXPECT_FALSE(forest_rules.allow_olives);
-  EXPECT_FLOAT_EQ(forest_rules.pine_base_density, 0.32F);
-  EXPECT_FLOAT_EQ(forest_rules.pine_density_scale, 0.42F);
-  EXPECT_FLOAT_EQ(forest_rules.pine_scale_min, 2.1F);
-  EXPECT_FLOAT_EQ(forest_rules.pine_scale_max, 3.8F);
-  EXPECT_FLOAT_EQ(forest_rules.olive_base_density, 0.05F);
-  EXPECT_FLOAT_EQ(forest_rules.olive_density_scale, 0.08F);
+  EXPECT_TRUE(forest_rules.tree(Game::Map::TreeSpecies::Pine).allowed);
+  EXPECT_FALSE(forest_rules.tree(Game::Map::TreeSpecies::Olive).allowed);
+  EXPECT_FLOAT_EQ(forest_rules.tree(Game::Map::TreeSpecies::Pine).base_density, 0.32F);
+  EXPECT_FLOAT_EQ(forest_rules.tree(Game::Map::TreeSpecies::Pine).density_scale, 0.42F);
+  EXPECT_FLOAT_EQ(forest_rules.tree(Game::Map::TreeSpecies::Pine).scale_min, 2.1F);
+  EXPECT_FLOAT_EQ(forest_rules.tree(Game::Map::TreeSpecies::Pine).scale_max, 3.8F);
+  EXPECT_FLOAT_EQ(forest_rules.tree(Game::Map::TreeSpecies::Olive).base_density, 0.05F);
+  EXPECT_FLOAT_EQ(forest_rules.tree(Game::Map::TreeSpecies::Olive).density_scale,
+                  0.08F);
 
   const auto fertile_rules =
       Game::Map::make_scatter_rules(Game::Map::GroundType::SoilFertile);
-  EXPECT_FALSE(fertile_rules.allow_pines);
-  EXPECT_TRUE(fertile_rules.allow_olives);
-  EXPECT_FLOAT_EQ(fertile_rules.olive_base_density, 0.08F);
-  EXPECT_FLOAT_EQ(fertile_rules.olive_density_scale, 0.12F);
-  EXPECT_FLOAT_EQ(fertile_rules.olive_scale_min, 3.0F);
-  EXPECT_FLOAT_EQ(fertile_rules.olive_scale_max, 5.4F);
+  EXPECT_FALSE(fertile_rules.tree(Game::Map::TreeSpecies::Pine).allowed);
+  EXPECT_TRUE(fertile_rules.tree(Game::Map::TreeSpecies::Olive).allowed);
+  EXPECT_FLOAT_EQ(fertile_rules.tree(Game::Map::TreeSpecies::Olive).base_density,
+                  0.08F);
+  EXPECT_FLOAT_EQ(fertile_rules.tree(Game::Map::TreeSpecies::Olive).density_scale,
+                  0.12F);
+  EXPECT_FLOAT_EQ(fertile_rules.tree(Game::Map::TreeSpecies::Olive).scale_min, 3.0F);
+  EXPECT_FLOAT_EQ(fertile_rules.tree(Game::Map::TreeSpecies::Olive).scale_max, 5.4F);
 
   const auto rocky_rules =
       Game::Map::make_scatter_rules(Game::Map::GroundType::SoilRocky);
-  EXPECT_FALSE(rocky_rules.allow_pines);
-  EXPECT_FALSE(rocky_rules.allow_olives);
+  EXPECT_FALSE(rocky_rules.tree(Game::Map::TreeSpecies::Pine).allowed);
+  EXPECT_FALSE(rocky_rules.tree(Game::Map::TreeSpecies::Olive).allowed);
 
   const auto alpine_rules =
       Game::Map::make_scatter_rules(Game::Map::GroundType::AlpineMix);
-  EXPECT_TRUE(alpine_rules.allow_pines);
-  EXPECT_FALSE(alpine_rules.allow_olives);
-  EXPECT_FLOAT_EQ(alpine_rules.pine_base_density, 0.10F);
-  EXPECT_FLOAT_EQ(alpine_rules.pine_density_scale, 0.20F);
-  EXPECT_FLOAT_EQ(alpine_rules.pine_scale_min, 1.7F);
-  EXPECT_FLOAT_EQ(alpine_rules.pine_scale_max, 3.0F);
+  EXPECT_TRUE(alpine_rules.tree(Game::Map::TreeSpecies::Pine).allowed);
+  EXPECT_FALSE(alpine_rules.tree(Game::Map::TreeSpecies::Olive).allowed);
+  EXPECT_FLOAT_EQ(alpine_rules.tree(Game::Map::TreeSpecies::Pine).base_density, 0.10F);
+  EXPECT_FLOAT_EQ(alpine_rules.tree(Game::Map::TreeSpecies::Pine).density_scale, 0.20F);
+  EXPECT_FLOAT_EQ(alpine_rules.tree(Game::Map::TreeSpecies::Pine).scale_min, 1.7F);
+  EXPECT_FLOAT_EQ(alpine_rules.tree(Game::Map::TreeSpecies::Pine).scale_max, 3.0F);
 }
 
 } // namespace

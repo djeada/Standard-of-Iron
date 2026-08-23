@@ -1,9 +1,13 @@
 #include <algorithm>
+#include <array>
+#include <cstddef>
 #include <filesystem>
 #include <gtest/gtest.h>
 
 #include "game/map/map_loader.h"
+#include "game/map/procedural_tree_generation.h"
 #include "game/map/scatter/ground_utils.h"
+#include "game/map/scatter/tree_scatter_walk.h"
 #include "game/map/terrain.h"
 #include "game/map/terrain_service.h"
 #include "render/decoration_gpu.h"
@@ -12,13 +16,12 @@
 #include "render/ground/dead_tree_renderer.h"
 #include "render/ground/iron_ore_renderer.h"
 #include "render/ground/magic_shrine_renderer.h"
-#include "render/ground/olive_renderer.h"
-#include "render/ground/pine_renderer.h"
 #include "render/ground/plant_renderer.h"
 #include "render/ground/scatter_renderer_state.h"
 #include "render/ground/scatter_runtime.h"
 #include "render/ground/stone_renderer.h"
 #include "render/ground/terrain_scatter_manager.h"
+#include "render/ground/tree_renderer.h"
 #include "render/world_view.h"
 
 namespace {
@@ -288,7 +291,8 @@ TEST(ScatterRuntimeTest, RuntimePropRefreshDoesNotRescatterPlantsOrStones) {
 
   const std::size_t plant_count_before = scatter.plant()->instance_count();
   const std::size_t stone_count_before = scatter.stone()->instance_count();
-  const std::size_t pine_count_before = scatter.pine()->instance_count();
+  const std::size_t pine_count_before =
+      scatter.tree(Game::Map::TreeSpecies::Pine)->instance_count();
   const std::size_t boulder_count_before = scatter.boulder()->instance_count();
   const std::size_t iron_ore_count_before = scatter.iron_ore()->instance_count();
 
@@ -323,7 +327,8 @@ TEST(ScatterRuntimeTest, RuntimePropRefreshDoesNotRescatterPlantsOrStones) {
 
   EXPECT_EQ(scatter.plant()->instance_count(), plant_count_before);
   EXPECT_EQ(scatter.stone()->instance_count(), stone_count_before);
-  EXPECT_LT(scatter.pine()->instance_count(), pine_count_before);
+  EXPECT_LT(scatter.tree(Game::Map::TreeSpecies::Pine)->instance_count(),
+            pine_count_before);
   EXPECT_LT(scatter.boulder()->instance_count(), boulder_count_before);
   EXPECT_LT(scatter.iron_ore()->instance_count(), iron_ore_count_before);
 
@@ -336,7 +341,7 @@ TEST(ScatterRuntimeTest, ProceduralPinesUseResolvedSurfaceHeightAndReducedScaleR
   auto const* height_map = terrain.get_height_map();
   ASSERT_NE(height_map, nullptr);
 
-  Render::GL::PineRenderer renderer;
+  Render::GL::TreeRenderer renderer(Game::Map::TreeSpecies::Pine);
   renderer.set_world_view(Render::WorldView::of_active_session());
   renderer.configure(*height_map,
                      terrain.biome_settings(),
@@ -353,7 +358,8 @@ TEST(ScatterRuntimeTest, ProceduralPinesUseResolvedSurfaceHeightAndReducedScaleR
                     instance.pos_scale.x(), instance.pos_scale.z(), 0.0F, 0.0F),
                 0.001F);
     EXPECT_LE(instance.pos_scale.w(),
-              scatter_rules.pine_scale_max * height_map->get_tile_size() * 1.18F +
+              scatter_rules.tree(Game::Map::TreeSpecies::Pine).scale_max *
+                      height_map->get_tile_size() * 1.18F +
                   0.001F);
   }
 
@@ -366,7 +372,7 @@ TEST(ScatterRuntimeTest, ProceduralOlivesUseResolvedSurfaceHeightAndReducedScale
   auto const* height_map = terrain.get_height_map();
   ASSERT_NE(height_map, nullptr);
 
-  Render::GL::OliveRenderer renderer;
+  Render::GL::TreeRenderer renderer(Game::Map::TreeSpecies::Olive);
   renderer.set_world_view(Render::WorldView::of_active_session());
   renderer.configure(*height_map,
                      terrain.biome_settings(),
@@ -383,8 +389,78 @@ TEST(ScatterRuntimeTest, ProceduralOlivesUseResolvedSurfaceHeightAndReducedScale
                     instance.pos_scale.x(), instance.pos_scale.z(), 0.0F, 0.0F),
                 0.001F);
     EXPECT_LE(instance.pos_scale.w(),
-              scatter_rules.olive_scale_max * height_map->get_tile_size() * 1.22F +
+              scatter_rules.tree(Game::Map::TreeSpecies::Olive).scale_max *
+                      height_map->get_tile_size() * 1.22F +
                   0.001F);
+  }
+
+  terrain.clear();
+}
+
+TEST(ScatterRuntimeTest, EveryTreeSpeciesScattersOnAGroundTypeThatAllowsIt) {
+  struct Case {
+    Game::Map::TreeSpecies species;
+    Game::Map::GroundType ground_type;
+    std::uint32_t seed;
+  };
+  const std::array<Case, 4> cases{{
+      {Game::Map::TreeSpecies::Pine, Game::Map::GroundType::ForestMud, 1337U},
+      {Game::Map::TreeSpecies::Olive, Game::Map::GroundType::GrassDry, 4242U},
+      {Game::Map::TreeSpecies::Cypress, Game::Map::GroundType::SoilFertile, 5150U},
+      {Game::Map::TreeSpecies::Palm, Game::Map::GroundType::GrassDry, 6301U},
+  }};
+
+  auto& terrain = Game::Map::TerrainService::instance();
+  for (const auto& test_case : cases) {
+    terrain.initialize(make_tree_map_definition(test_case.ground_type, test_case.seed));
+    auto const* height_map = terrain.get_height_map();
+    ASSERT_NE(height_map, nullptr);
+
+    Render::GL::TreeRenderer renderer(test_case.species);
+    renderer.set_world_view(Render::WorldView::of_active_session());
+    renderer.configure(*height_map,
+                       terrain.biome_settings(),
+                       terrain.authored_world_props(),
+                       terrain.world_props());
+
+    EXPECT_GT(renderer.instance_count(), 0U)
+        << "tree species " << static_cast<int>(test_case.species)
+        << " is allowed on its ground type but scattered nothing";
+    terrain.clear();
+  }
+}
+
+TEST(ScatterRuntimeTest, TheWorldPropGeneratorAgreesWithTheProceduralScatter) {
+  auto& terrain = Game::Map::TerrainService::instance();
+  terrain.initialize(make_tree_map_definition(Game::Map::GroundType::GrassDry, 4242U));
+  auto const* height_map = terrain.get_height_map();
+  ASSERT_NE(height_map, nullptr);
+
+  const auto generated =
+      Game::Map::generate_procedural_world_props(*height_map,
+                                                 terrain.biome_settings(),
+                                                 terrain.coord_system(),
+                                                 terrain.authored_world_props());
+
+  for (std::size_t i = 0; i < Game::Map::k_tree_species_count; ++i) {
+    const auto species = static_cast<Game::Map::TreeSpecies>(i);
+    const auto prop_type = Render::Ground::tree_scatter_profile(species).prop_type;
+
+    Render::GL::TreeRenderer renderer(species);
+    renderer.set_world_view(Render::WorldView::of_active_session());
+    renderer.configure(
+        *height_map, terrain.biome_settings(), terrain.authored_world_props(), {});
+
+    const auto generated_count = static_cast<std::size_t>(
+        std::count_if(generated.begin(),
+                      generated.end(),
+                      [prop_type](const Game::Map::WorldProp& prop) {
+                        return prop.type == prop_type;
+                      }));
+    EXPECT_EQ(renderer.instance_count(), generated_count)
+        << "the harvestable world props and the drawn biome scatter must come "
+           "from the same walk for tree species "
+        << i;
   }
 
   terrain.clear();
@@ -431,7 +507,7 @@ TEST(ScatterRuntimeTest, WorldPropRefreshReusesTheProceduralBiomeScatter) {
   const auto& seed_props = terrain.authored_world_props();
   auto runtime_props = terrain.world_props();
 
-  Render::GL::PineRenderer pines;
+  Render::GL::TreeRenderer pines(Game::Map::TreeSpecies::Pine);
   pines.set_world_view(Render::WorldView::of_active_session());
   Render::GL::BoulderRenderer boulders;
   boulders.set_world_view(Render::WorldView::of_active_session());

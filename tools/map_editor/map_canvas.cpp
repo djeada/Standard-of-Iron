@@ -152,6 +152,10 @@ auto world_prop_type_for_tool(ToolType tool) -> QString {
     return QStringLiteral("pine_tree");
   case ToolType::PropOliveTree:
     return QStringLiteral("olive_tree");
+  case ToolType::PropCypressTree:
+    return QStringLiteral("cypress_tree");
+  case ToolType::PropPalmTree:
+    return QStringLiteral("palm_tree");
   case ToolType::PropPlant:
     return QStringLiteral("plant");
   case ToolType::PropIronOre:
@@ -1882,6 +1886,8 @@ void MapCanvas::draw_current_placement(QPainter& painter) {
   case ToolType::PropBoulder:
   case ToolType::PropPineTree:
   case ToolType::PropOliveTree:
+  case ToolType::PropCypressTree:
+  case ToolType::PropPalmTree:
   case ToolType::PropPlant:
   case ToolType::PropIronOre:
   case ToolType::PropAbandonedHome:

@@ -63,6 +63,8 @@ public:
   StaticMeshBuffers m_plant_mesh;
   StaticMeshBuffers m_pine_mesh;
   StaticMeshBuffers m_olive_mesh;
+  StaticMeshBuffers m_cypress_mesh;
+  StaticMeshBuffers m_palm_mesh;
   StaticMeshBuffers m_firecamp_mesh;
 
   [[nodiscard]] auto tent_shader() const -> GL::Shader* { return m_tent_shader; }
@@ -112,7 +114,7 @@ public:
   StaticMeshBuffers m_statue_mesh;
 
 private:
-  static constexpr std::size_t k_mesh_count = 14;
+  static constexpr std::size_t k_mesh_count = 16;
 
   auto all_meshes() -> std::array<StaticMeshBuffers*, k_mesh_count>;
 
@@ -120,6 +122,8 @@ private:
   void initialize_plant_pipeline();
   void initialize_pine_pipeline();
   void initialize_olive_pipeline();
+  void initialize_cypress_pipeline();
+  void initialize_palm_pipeline();
   void initialize_fire_camp_pipeline();
   void initialize_tent_pipeline();
   void initialize_supply_cart_pipeline();

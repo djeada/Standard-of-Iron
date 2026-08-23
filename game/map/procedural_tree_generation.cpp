@@ -2,11 +2,13 @@
 
 #include <algorithm>
 #include <cmath>
+#include <cstddef>
 #include <cstdint>
 #include <vector>
 
 #include "../../game/map/scatter/scatter_composition.h"
 #include "../../game/map/scatter/spawn_validator.h"
+#include "../../game/map/scatter/tree_scatter_walk.h"
 #include "terrain.h"
 
 namespace Game::Map {
@@ -16,11 +18,8 @@ namespace {
 using namespace Render::Ground;
 using std::uint32_t;
 
-constexpr int k_tree_cell_span = 4;
 constexpr int k_boulder_cell_span = 6;
 constexpr int k_iron_ore_cell_span = 18;
-constexpr float k_tree_density_area_scale = 16.0F / 36.0F;
-constexpr float k_tree_edge_padding_scale = 0.35F;
 constexpr int k_min_runtime_tree_map_size = 32;
 constexpr float k_min_tile_size = 0.0001F;
 
@@ -65,26 +64,22 @@ void append_generated_world_prop(std::vector<WorldProp>& out,
   out.push_back(prop);
 }
 
-void append_generated_pines(std::vector<WorldProp>& out,
+void append_generated_trees(std::vector<WorldProp>& out,
                             const TerrainHeightMap& height_map,
                             const BiomeSettings& biome_settings,
                             CoordSystem coord_system,
-                            const std::vector<WorldProp>& anchor_world_props) {
+                            const std::vector<WorldProp>& anchor_world_props,
+                            TreeSpecies species) {
   const auto scatter_profile = make_scatter_profile(biome_settings);
   const auto scatter_rules = make_scatter_rules(scatter_profile.ground_type);
-  if (!scatter_rules.allow_pines) {
+  const auto& rule = scatter_rules.tree(species);
+  if (!rule.allowed) {
     return;
-  }
-
-  float pine_density = scatter_rules.pine_base_density;
-  if (scatter_profile.plant_density > 0.0F) {
-    pine_density = scatter_profile.plant_density * scatter_rules.pine_density_scale;
   }
 
   const int width = height_map.get_width();
   const int height = height_map.get_height();
   const float tile_size = height_map.get_tile_size();
-  const float tile_safe = std::max(0.1F, tile_size);
 
   SpawnTerrainCache terrain_cache;
   terrain_cache.build_from_height_map(height_map.get_height_data(),
@@ -93,285 +88,40 @@ void append_generated_pines(std::vector<WorldProp>& out,
                                       height,
                                       tile_size);
 
-  SpawnValidationConfig config = make_tree_spawn_config();
-  config.grid_width = width;
-  config.grid_height = height;
-  config.tile_size = tile_size;
-  config.edge_padding = scatter_profile.spawn_edge_padding * k_tree_edge_padding_scale;
+  const auto& profile = tree_scatter_profile(species);
 
+  TreeScatterWalkInput input;
+  input.terrain_cache = &terrain_cache;
+  input.width = width;
+  input.height = height;
+  input.tile_size = tile_size;
+  input.noise_seed = biome_settings.seed;
+  input.density = tree_scatter_density(scatter_rules, scatter_profile, species);
+  input.scale_min = rule.scale_min;
+  input.scale_max = rule.scale_max;
+
+  const SpawnValidationConfig config = make_tree_scatter_spawn_config(
+      profile, input, scatter_profile.spawn_edge_padding);
   SpawnValidator validator(terrain_cache, config);
   ScatterCompositionContext composition(
       terrain_cache, width, height, tile_size, biome_settings, anchor_world_props);
+  input.validator = &validator;
+  input.composition = &composition;
 
-  auto add_pine = [&](float gx, float gz, uint32_t& state) -> bool {
-    if (!validator.can_spawn_at_grid(gx, gz)) {
-      return false;
-    }
-
-    auto const scene = composition.sample_grid(gx, gz, state ^ 0x92C3B17FU);
-    if (scene.obstacle_influence >= 1.0F) {
-      return false;
-    }
-    if (rand_01(state) > scatter_spawn_chance(ScatterRuleSpecies::Pine, scene)) {
-      return false;
-    }
-
-    float world_x = 0.0F;
-    float world_z = 0.0F;
-    validator.grid_to_world(gx, gz, world_x, world_z);
-
-    float const scale = remap(rand_01(state),
-                              scatter_rules.pine_scale_min,
-                              scatter_rules.pine_scale_max) *
-                        tile_safe * scatter_scale_bias(ScatterRuleSpecies::Pine, scene);
-    (void)remap(rand_01(state), 0.0F, 1.0F);
-    (void)remap(
-        rand_01(state), 0.03F + scene.dryness * 0.05F, 0.10F + scene.rockiness * 0.06F);
-    (void)(rand_01(state) * MathConstants::k_two_pi);
-    float const rotation = rand_01(state) * MathConstants::k_two_pi;
-    (void)rand_01(state);
-    (void)rand_01(state);
-    (void)rand_01(state);
-
-    append_generated_world_prop(out,
-                                WorldProp::Type::PineTree,
-                                height_map,
-                                coord_system,
-                                world_x,
-                                world_z,
-                                scale,
-                                rotation);
-    return true;
-  };
-
-  for (int z = 0; z < height; z += k_tree_cell_span) {
-    for (int x = 0; x < width; x += k_tree_cell_span) {
-      int const sample_x = std::min(x + k_tree_cell_span / 2, width - 1);
-      int const sample_z = std::min(z + k_tree_cell_span / 2, height - 1);
-      int const idx = sample_z * width + sample_x;
-
-      float const slope = terrain_cache.get_slope_at(sample_x, sample_z);
-      if (slope > 0.75F) {
-        continue;
-      }
-
-      uint32_t state = hash_coords(
-          x, z, biome_settings.seed ^ 0xAB12CD34U ^ static_cast<uint32_t>(idx));
-      auto const cell_scene = composition.sample_grid(static_cast<float>(sample_x),
-                                                      static_cast<float>(sample_z),
-                                                      state ^ 0x5E2C4B81U);
-
-      Game::Map::TerrainType const terrain_type =
-          terrain_cache.get_terrain_type_at(sample_x, sample_z);
-      float density_mult = 1.0F;
-      if (terrain_type == Game::Map::TerrainType::Hill) {
-        density_mult = 1.2F;
-      } else if (terrain_type == Game::Map::TerrainType::Mountain) {
-        density_mult = 0.4F;
-      } else if (terrain_type == Game::Map::TerrainType::Forest) {
-        density_mult = 2.25F;
-      }
-
-      uint32_t cls_state = hash_coords(x / 8, z / 8, biome_settings.seed ^ 0x4F2E9A7BU);
-      float const macro_noise = rand_01(cls_state);
-      uint32_t mid_state = hash_coords(x / 4, z / 4, biome_settings.seed ^ 0xB3C71E4DU);
-      float const mid_noise = rand_01(mid_state);
-      float const cluster_noise = macro_noise * 0.65F + mid_noise * 0.35F;
-      float const cluster_mult = 0.45F + cluster_noise * cluster_noise * 1.75F;
-      density_mult *= scatter_density_multiplier(ScatterRuleSpecies::Pine, cell_scene);
-
-      float const effective_density = pine_density * density_mult *
-                                      (0.70F + cell_scene.cluster_bias * 1.10F) *
-                                      k_tree_density_area_scale * cluster_mult;
-      if (effective_density < 0.04F) {
-        continue;
-      }
-      if (rand_01(state) > scatter_spawn_chance(ScatterRuleSpecies::Pine, cell_scene)) {
-        continue;
-      }
-      int pine_count = static_cast<int>(std::floor(effective_density));
-      float const frac = effective_density - float(pine_count);
-      if (rand_01(state) < frac) {
-        pine_count += 1;
-      }
-
-      for (int i = 0; i < pine_count; ++i) {
-        float const gx = float(x) + rand_01(state) * float(k_tree_cell_span);
-        float const gz = float(z) + rand_01(state) * float(k_tree_cell_span);
-        if (!add_pine(gx, gz, state)) {
-          continue;
-        }
-
-        auto const leader_scene = composition.sample_grid(gx, gz, state ^ 0x07E84CD3U);
-        int const satellite_count = scatter_cluster_satellite_count(
-            ScatterRuleSpecies::Pine, leader_scene, state);
-        for (int satellite = 0; satellite < satellite_count; ++satellite) {
-          float const angle = rand_01(state) * MathConstants::k_two_pi;
-          float const radius_tiles = scatter_cluster_radius_tiles(
-              ScatterRuleSpecies::Pine, leader_scene, state);
-          add_pine(gx + std::cos(angle) * radius_tiles,
-                   gz + std::sin(angle) * radius_tiles,
-                   state);
-        }
-      }
-    }
-  }
-}
-
-void append_generated_olives(std::vector<WorldProp>& out,
-                             const TerrainHeightMap& height_map,
-                             const BiomeSettings& biome_settings,
-                             CoordSystem coord_system,
-                             const std::vector<WorldProp>& anchor_world_props) {
-  const auto scatter_profile = make_scatter_profile(biome_settings);
-  const auto scatter_rules = make_scatter_rules(scatter_profile.ground_type);
-  if (!scatter_rules.allow_olives) {
-    return;
-  }
-
-  float olive_density = scatter_rules.olive_base_density;
-  if (scatter_profile.plant_density > 0.0F) {
-    olive_density = scatter_profile.plant_density * scatter_rules.olive_density_scale;
-  }
-
-  const int width = height_map.get_width();
-  const int height = height_map.get_height();
-  const float tile_size = height_map.get_tile_size();
-  const float tile_safe = std::max(0.1F, tile_size);
-
-  SpawnTerrainCache terrain_cache;
-  terrain_cache.build_from_height_map(height_map.get_height_data(),
-                                      height_map.getTerrainTypes(),
-                                      width,
-                                      height,
-                                      tile_size);
-
-  SpawnValidationConfig config = make_tree_spawn_config();
-  config.grid_width = width;
-  config.grid_height = height;
-  config.tile_size = tile_size;
-  config.edge_padding = scatter_profile.spawn_edge_padding * k_tree_edge_padding_scale;
-  config.max_slope = 0.65F;
-
-  SpawnValidator validator(terrain_cache, config);
-  ScatterCompositionContext composition(
-      terrain_cache, width, height, tile_size, biome_settings, anchor_world_props);
-
-  auto add_olive = [&](float gx, float gz, uint32_t& state) -> bool {
-    if (!validator.can_spawn_at_grid(gx, gz)) {
-      return false;
-    }
-
-    auto const scene = composition.sample_grid(gx, gz, state ^ 0x16C92A4FU);
-    if (scene.obstacle_influence >= 1.0F) {
-      return false;
-    }
-    if (rand_01(state) > scatter_spawn_chance(ScatterRuleSpecies::Olive, scene)) {
-      return false;
-    }
-
-    float world_x = 0.0F;
-    float world_z = 0.0F;
-    validator.grid_to_world(gx, gz, world_x, world_z);
-
-    (void)remap(rand_01(state), 0.0F, 1.0F);
-    (void)remap(
-        rand_01(state), 0.08F + scene.rockiness * 0.04F, 0.18F + scene.dryness * 0.08F);
-    (void)(rand_01(state) * MathConstants::k_two_pi);
-    float const rotation = rand_01(state) * MathConstants::k_two_pi;
-    (void)rand_01(state);
-    (void)rand_01(state);
-    (void)rand_01(state);
-    float const scale = remap(rand_01(state),
-                              scatter_rules.olive_scale_min,
-                              scatter_rules.olive_scale_max) *
-                        tile_safe *
-                        scatter_scale_bias(ScatterRuleSpecies::Olive, scene);
-
-    append_generated_world_prop(out,
-                                WorldProp::Type::OliveTree,
-                                height_map,
-                                coord_system,
-                                world_x,
-                                world_z,
-                                scale,
-                                rotation);
-    return true;
-  };
-
-  for (int z = 0; z < height; z += k_tree_cell_span) {
-    for (int x = 0; x < width; x += k_tree_cell_span) {
-      int const sample_x = std::min(x + k_tree_cell_span / 2, width - 1);
-      int const sample_z = std::min(z + k_tree_cell_span / 2, height - 1);
-      int const idx = sample_z * width + sample_x;
-
-      float const slope = terrain_cache.get_slope_at(sample_x, sample_z);
-      if (slope > 0.65F) {
-        continue;
-      }
-
-      uint32_t state = hash_coords(
-          x, z, biome_settings.seed ^ 0xCD34EF56U ^ static_cast<uint32_t>(idx));
-      auto const cell_scene = composition.sample_grid(static_cast<float>(sample_x),
-                                                      static_cast<float>(sample_z),
-                                                      state ^ 0x62D1E7AFU);
-
-      Game::Map::TerrainType const terrain_type =
-          terrain_cache.get_terrain_type_at(sample_x, sample_z);
-      float density_mult = 1.0F;
-      if (terrain_type == Game::Map::TerrainType::Hill) {
-        density_mult = 1.15F;
-      } else if (terrain_type == Game::Map::TerrainType::Mountain) {
-        density_mult = 0.5F;
-      } else if (terrain_type == Game::Map::TerrainType::Forest) {
-        density_mult = 0.45F;
-      }
-
-      uint32_t cls_state = hash_coords(x / 8, z / 8, biome_settings.seed ^ 0xC7E4F1A3U);
-      float const macro_noise = rand_01(cls_state);
-      uint32_t mid_state = hash_coords(x / 4, z / 4, biome_settings.seed ^ 0xA2B5D8E6U);
-      float const mid_noise = rand_01(mid_state);
-      float const cluster_noise = macro_noise * 0.65F + mid_noise * 0.35F;
-      float const cluster_mult = 0.40F + cluster_noise * cluster_noise * 1.65F;
-      density_mult *= scatter_density_multiplier(ScatterRuleSpecies::Olive, cell_scene);
-
-      float const effective_density = olive_density * density_mult *
-                                      (0.70F + cell_scene.cluster_bias * 1.05F) *
-                                      k_tree_density_area_scale * cluster_mult;
-      if (effective_density < 0.04F) {
-        continue;
-      }
-      if (rand_01(state) >
-          scatter_spawn_chance(ScatterRuleSpecies::Olive, cell_scene)) {
-        continue;
-      }
-      int olive_count = static_cast<int>(std::floor(effective_density));
-      float const frac = effective_density - float(olive_count);
-      if (rand_01(state) < frac) {
-        olive_count += 1;
-      }
-
-      for (int i = 0; i < olive_count; ++i) {
-        float const gx = float(x) + rand_01(state) * float(k_tree_cell_span);
-        float const gz = float(z) + rand_01(state) * float(k_tree_cell_span);
-        if (!add_olive(gx, gz, state)) {
-          continue;
-        }
-
-        auto const leader_scene = composition.sample_grid(gx, gz, state ^ 0x0E63A1B2U);
-        int const satellite_count = scatter_cluster_satellite_count(
-            ScatterRuleSpecies::Olive, leader_scene, state);
-        for (int satellite = 0; satellite < satellite_count; ++satellite) {
-          float const angle = rand_01(state) * MathConstants::k_two_pi;
-          float const radius_tiles = scatter_cluster_radius_tiles(
-              ScatterRuleSpecies::Olive, leader_scene, state);
-          add_olive(gx + std::cos(angle) * radius_tiles,
-                    gz + std::sin(angle) * radius_tiles,
-                    state);
-        }
-      }
-    }
-  }
+  walk_tree_scatter(
+      profile,
+      input,
+      [&](const TreeScatterSample& sample, const ScatterCompositionSample&) {
+        append_generated_world_prop(out,
+                                    profile.prop_type,
+                                    height_map,
+                                    coord_system,
+                                    sample.world_x,
+                                    sample.world_z,
+                                    sample.scale,
+                                    sample.rotation);
+        return true;
+      });
 }
 
 void append_generated_boulders(std::vector<WorldProp>& out,
@@ -611,10 +361,14 @@ auto generate_procedural_world_props(const TerrainHeightMap& height_map,
         generated, height_map, biome_settings, coord_system, anchor_world_props);
   }
   if (biome_settings.procedural_trees_enabled) {
-    append_generated_pines(
-        generated, height_map, biome_settings, coord_system, anchor_world_props);
-    append_generated_olives(
-        generated, height_map, biome_settings, coord_system, anchor_world_props);
+    for (std::size_t i = 0; i < k_tree_species_count; ++i) {
+      append_generated_trees(generated,
+                             height_map,
+                             biome_settings,
+                             coord_system,
+                             anchor_world_props,
+                             static_cast<TreeSpecies>(i));
+    }
   }
   return generated;
 }

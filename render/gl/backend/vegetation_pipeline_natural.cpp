@@ -579,4 +579,216 @@ void VegetationPipeline::initialize_iron_ore_pipeline() {
   upload_prop_mesh_impl(verts, idx, m_iron_ore_mesh);
 }
 
+void VegetationPipeline::initialize_cypress_pipeline() {
+  initializeOpenGLFunctions();
+  release_mesh_buffers(*this, m_cypress_mesh);
+
+  struct CypressVertex {
+    QVector3D position;
+    QVector3D tex_coord;
+    QVector3D normal;
+  };
+
+  constexpr int k_segments = 20;
+  RingLoftBuilder loft(k_segments);
+  loft.reserve(16);
+
+  struct SpireRing {
+    float radius;
+    float y;
+    float normal_up;
+    float v;
+    float weight;
+    QVector2D offset;
+  };
+  constexpr std::array<SpireRing, 12> k_spire{{
+      {0.062F, -0.01F, -0.10F, 0.00F, 0.0F, QVector2D(0.0F, 0.0F)},
+      {0.050F, 0.14F, 0.02F, 0.10F, 0.0F, QVector2D(0.008F, 0.005F)},
+      {0.042F, 0.28F, 0.06F, 0.22F, 0.0F, QVector2D(0.016F, 0.009F)},
+      {0.078F, 0.32F, -0.42F, 0.36F, 0.35F, QVector2D(0.014F, 0.008F)},
+      {0.132F, 0.46F, -0.16F, 0.44F, 0.70F, QVector2D(0.010F, -0.006F)},
+      {0.158F, 0.64F, 0.02F, 0.53F, 1.00F, QVector2D(-0.008F, 0.010F)},
+      {0.162F, 0.84F, 0.04F, 0.62F, 1.00F, QVector2D(0.012F, 0.006F)},
+      {0.150F, 1.04F, 0.08F, 0.70F, 1.00F, QVector2D(-0.010F, -0.008F)},
+      {0.128F, 1.22F, 0.14F, 0.78F, 0.95F, QVector2D(0.008F, 0.012F)},
+      {0.098F, 1.38F, 0.24F, 0.85F, 0.85F, QVector2D(-0.006F, 0.006F)},
+      {0.062F, 1.52F, 0.42F, 0.92F, 0.70F, QVector2D(0.004F, -0.004F)},
+      {0.028F, 1.64F, 0.72F, 0.98F, 0.45F, QVector2D(0.0F, 0.0F)},
+  }};
+
+  std::vector<int> chain;
+  chain.reserve(k_spire.size());
+  for (const SpireRing& ring : k_spire) {
+    chain.push_back(loft.add_ring(
+        {ring.radius, ring.y, ring.normal_up, ring.v, ring.weight, ring.offset}));
+  }
+  for (std::size_t i = 1; i < chain.size(); ++i) {
+    loft.connect(chain[i - 1U], chain[i]);
+  }
+  loft.cap(chain.front(), -0.03F, QVector2D(0.0F, 0.0F), 0.0F, 0.0F, false);
+  loft.cap(chain.back(), 1.72F, QVector2D(0.0F, 0.0F), 1.02F, 0.30F, true);
+
+  std::vector<CypressVertex> vertices;
+  vertices.reserve(loft.vertices().size());
+  for (const auto& v : loft.vertices()) {
+    vertices.push_back({v.position, QVector3D(v.u, v.v, v.weight), v.normal});
+  }
+
+  constexpr std::array<VertexAttributeLayout, 3> k_cypress_attributes{{
+      {k_foliage_position_location, vec3, offsetof(CypressVertex, position)},
+      {k_foliage_tex_coord_location, vec3, offsetof(CypressVertex, tex_coord)},
+      {k_foliage_normal_location, vec3, offsetof(CypressVertex, normal)},
+  }};
+  upload_static_instanced_mesh(*this,
+                               m_cypress_mesh,
+                               vertices.data(),
+                               vertices.size(),
+                               sizeof(CypressVertex),
+                               k_cypress_attributes,
+                               loft.indices().data(),
+                               loft.indices().size(),
+                               k_foliage_instance_locations);
+}
+
+void VegetationPipeline::initialize_palm_pipeline() {
+  initializeOpenGLFunctions();
+  release_mesh_buffers(*this, m_palm_mesh);
+
+  struct PalmVertex {
+    QVector3D position;
+    QVector2D tex_coord;
+    QVector3D normal;
+  };
+
+  constexpr int k_trunk_segments = olive_tree_segments;
+  constexpr float k_pi = 3.14159265F;
+  constexpr float k_two_pi = 6.28318530718F;
+  constexpr int k_frond_count = 11;
+  constexpr int k_frond_stations = 7;
+
+  RingLoftBuilder loft(k_trunk_segments);
+  loft.reserve(10);
+
+  struct TrunkRing {
+    float radius;
+    float y;
+    float normal_up;
+    float v;
+    QVector2D offset;
+  };
+  constexpr std::array<TrunkRing, 8> k_trunk{{
+      {0.088F, -0.015F, -0.34F, 0.04F, QVector2D(0.0F, 0.0F)},
+      {0.086F, 0.20F, -0.04F, 0.11F, QVector2D(0.010F, 0.004F)},
+      {0.072F, 0.42F, 0.02F, 0.19F, QVector2D(0.024F, 0.010F)},
+      {0.062F, 0.62F, 0.06F, 0.27F, QVector2D(0.040F, 0.016F)},
+      {0.055F, 0.76F, 0.10F, 0.36F, QVector2D(0.050F, 0.019F)},
+      {0.050F, 0.84F, 0.14F, 0.45F, QVector2D(0.055F, 0.021F)},
+      {0.046F, 0.90F, 0.18F, 0.52F, QVector2D(0.058F, 0.022F)},
+      {0.042F, 0.95F, 0.26F, 0.58F, QVector2D(0.060F, 0.022F)},
+  }};
+  std::vector<int> trunk_chain;
+  trunk_chain.reserve(k_trunk.size());
+  for (const TrunkRing& ring : k_trunk) {
+    trunk_chain.push_back(loft.add_ring(
+        {ring.radius, ring.y, ring.normal_up, ring.v, 0.0F, ring.offset}));
+  }
+  for (std::size_t i = 1; i < trunk_chain.size(); ++i) {
+    loft.connect(trunk_chain[i - 1U], trunk_chain[i]);
+  }
+  loft.cap(trunk_chain.front(), -0.04F, QVector2D(0.0F, 0.0F), 0.0F, 0.0F, false);
+
+  std::vector<PalmVertex> vertices;
+  vertices.reserve(loft.vertices().size() +
+                   static_cast<std::size_t>(k_frond_count * k_frond_stations * 4));
+  for (const auto& vertex : loft.vertices()) {
+    vertices.push_back({vertex.position, QVector2D(vertex.u, vertex.v), vertex.normal});
+  }
+  std::vector<std::uint16_t> indices = loft.indices();
+
+  const QVector3D crown(
+      k_trunk.back().offset.x(), k_trunk.back().y, k_trunk.back().offset.y());
+  const auto first_frond_vertex = static_cast<std::uint16_t>(vertices.size());
+
+  for (int f = 0; f < k_frond_count; ++f) {
+    const float frond_u = static_cast<float>(f) / static_cast<float>(k_frond_count);
+    const float wobble = std::sin(static_cast<float>(f) * 2.399963F);
+    const float yaw = frond_u * k_two_pi + wobble * 0.12F;
+    const float length = 0.66F + wobble * 0.08F;
+    const float rise = 0.26F + wobble * 0.05F;
+    const float droop = 0.62F + wobble * 0.10F;
+    const QVector3D dir(std::cos(yaw), 0.0F, std::sin(yaw));
+    const QVector3D side(-std::sin(yaw), 0.0F, std::cos(yaw));
+
+    const auto base = static_cast<std::uint16_t>(vertices.size());
+    for (int station = 0; station < k_frond_stations; ++station) {
+      const float t =
+          static_cast<float>(station) / static_cast<float>(k_frond_stations - 1);
+      const float lift = rise * std::sin(t * 1.7278F) - droop * t * t * t;
+
+      const float pinnate = (station % 2 == 0) ? 1.0F : 0.64F;
+      const float half_width =
+          0.104F * pinnate * std::sin(std::clamp(t * 0.86F + 0.10F, 0.0F, 1.0F) * k_pi);
+      const float fold = -half_width * 1.15F;
+
+      const QVector3D spine = crown + dir * (length * t) + QVector3D(0.0F, lift, 0.0F);
+      const QVector2D uv(frond_u, 0.60F + t * 0.34F);
+      const QVector3D up(0.0F, 1.0F, 0.0F);
+      const QVector3D droop_edge(0.0F, fold, 0.0F);
+
+      vertices.push_back({spine + side * half_width + droop_edge, uv, up});
+      vertices.push_back({spine, uv, up});
+      vertices.push_back({spine, uv, up});
+      vertices.push_back({spine - side * half_width + droop_edge, uv, up});
+    }
+
+    for (int station = 0; station + 1 < k_frond_stations; ++station) {
+      const auto lower = static_cast<std::uint16_t>(base + station * 4);
+      const auto upper = static_cast<std::uint16_t>(lower + 4);
+      for (int half = 0; half < 2; ++half) {
+        const auto a0 = static_cast<std::uint16_t>(lower + half * 2);
+        const auto a1 = static_cast<std::uint16_t>(lower + half * 2 + 1);
+        const auto b0 = static_cast<std::uint16_t>(upper + half * 2);
+        const auto b1 = static_cast<std::uint16_t>(upper + half * 2 + 1);
+        indices.insert(indices.end(), {a0, b0, b1, a0, b1, a1});
+      }
+    }
+  }
+
+  for (std::size_t i = first_frond_vertex; i < vertices.size(); ++i) {
+    vertices[i].normal = QVector3D(0.0F, 0.0F, 0.0F);
+  }
+  for (std::size_t i = 0; i + 2 < indices.size(); i += 3) {
+    if (indices[i] < first_frond_vertex) {
+      continue;
+    }
+    const QVector3D& p0 = vertices[indices[i]].position;
+    const QVector3D& p1 = vertices[indices[i + 1]].position;
+    const QVector3D& p2 = vertices[indices[i + 2]].position;
+    const QVector3D face = QVector3D::crossProduct(p1 - p0, p2 - p0);
+    vertices[indices[i]].normal += face;
+    vertices[indices[i + 1]].normal += face;
+    vertices[indices[i + 2]].normal += face;
+  }
+  for (std::size_t i = first_frond_vertex; i < vertices.size(); ++i) {
+    const QVector3D normal = vertices[i].normal;
+    vertices[i].normal =
+        normal.isNull() ? QVector3D(0.0F, 1.0F, 0.0F) : normal.normalized();
+  }
+
+  constexpr std::array<VertexAttributeLayout, 3> k_palm_attributes{{
+      {k_foliage_position_location, vec3, offsetof(PalmVertex, position)},
+      {k_foliage_tex_coord_location, vec2, offsetof(PalmVertex, tex_coord)},
+      {k_foliage_normal_location, vec3, offsetof(PalmVertex, normal)},
+  }};
+  upload_static_instanced_mesh(*this,
+                               m_palm_mesh,
+                               vertices.data(),
+                               vertices.size(),
+                               sizeof(PalmVertex),
+                               k_palm_attributes,
+                               indices.data(),
+                               indices.size(),
+                               k_foliage_instance_locations);
+}
+
 } // namespace Render::GL::BackendPipelines

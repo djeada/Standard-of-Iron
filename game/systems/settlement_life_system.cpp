@@ -50,6 +50,8 @@ auto is_life_prop(Game::Map::WorldProp::Type type) -> bool {
   case Game::Map::WorldProp::Type::WeaponRack:
   case Game::Map::WorldProp::Type::Plant:
   case Game::Map::WorldProp::Type::OliveTree:
+  case Game::Map::WorldProp::Type::CypressTree:
+  case Game::Map::WorldProp::Type::PalmTree:
     return true;
   default:
     return false;

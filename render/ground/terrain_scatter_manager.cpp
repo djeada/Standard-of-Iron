@@ -14,14 +14,13 @@
 #include "render/ground/firecamp_renderer.h"
 #include "render/ground/iron_ore_renderer.h"
 #include "render/ground/magic_shrine_renderer.h"
-#include "render/ground/olive_renderer.h"
-#include "render/ground/pine_renderer.h"
 #include "render/ground/plant_renderer.h"
 #include "render/ground/ruins_renderer.h"
 #include "render/ground/statue_renderer.h"
 #include "render/ground/stone_renderer.h"
 #include "render/ground/supply_cart_renderer.h"
 #include "render/ground/tent_renderer.h"
+#include "render/ground/tree_renderer.h"
 #include "render/ground/weapon_rack_renderer.h"
 #include "render/scene_renderer.h"
 
@@ -49,8 +48,10 @@ TerrainScatterManager::TerrainScatterManager()
     : m_biome(std::make_unique<BiomeRenderer>())
     , m_stone(std::make_unique<StoneRenderer>())
     , m_plant(std::make_unique<PlantRenderer>())
-    , m_pine(std::make_unique<PineRenderer>())
-    , m_olive(std::make_unique<OliveRenderer>())
+    , m_trees{std::make_unique<TreeRenderer>(Game::Map::TreeSpecies::Pine),
+              std::make_unique<TreeRenderer>(Game::Map::TreeSpecies::Olive),
+              std::make_unique<TreeRenderer>(Game::Map::TreeSpecies::Cypress),
+              std::make_unique<TreeRenderer>(Game::Map::TreeSpecies::Palm)}
     , m_firecamp(std::make_unique<FireCampRenderer>())
     , m_tent(std::make_unique<TentRenderer>())
     , m_supply_cart(std::make_unique<SupplyCartRenderer>())
@@ -62,22 +63,29 @@ TerrainScatterManager::TerrainScatterManager()
     , m_magic_shrine(std::make_unique<MagicShrineRenderer>())
     , m_abandoned_home(std::make_unique<AbandonedHomeRenderer>())
     , m_statue(std::make_unique<StatueRenderer>())
-    , m_scatter_passes{{ScatterSpeciesId::Grass, m_biome.get()},
-                       {ScatterSpeciesId::Stone, m_stone.get()},
-                       {ScatterSpeciesId::Plant, m_plant.get()},
-                       {ScatterSpeciesId::Pine, m_pine.get()},
-                       {ScatterSpeciesId::Olive, m_olive.get()},
-                       {ScatterSpeciesId::FireCamp, m_firecamp.get()},
-                       {ScatterSpeciesId::Tent, m_tent.get()},
-                       {ScatterSpeciesId::SupplyCart, m_supply_cart.get()},
-                       {ScatterSpeciesId::WeaponRack, m_weapon_rack.get()},
-                       {ScatterSpeciesId::Ruins, m_ruins.get()},
-                       {ScatterSpeciesId::DeadTree, m_dead_tree.get()},
-                       {ScatterSpeciesId::Boulder, m_boulder.get()},
-                       {ScatterSpeciesId::IronOre, m_iron_ore.get()},
-                       {ScatterSpeciesId::MagicShrine, m_magic_shrine.get()},
-                       {ScatterSpeciesId::AbandonedHome, m_abandoned_home.get()},
-                       {ScatterSpeciesId::Statue, m_statue.get()}} {
+    , m_scatter_passes{
+          {ScatterSpeciesId::Grass, m_biome.get()},
+          {ScatterSpeciesId::Stone, m_stone.get()},
+          {ScatterSpeciesId::Plant, m_plant.get()},
+          {ScatterSpeciesId::Pine,
+           m_trees[static_cast<std::size_t>(Game::Map::TreeSpecies::Pine)].get()},
+          {ScatterSpeciesId::Olive,
+           m_trees[static_cast<std::size_t>(Game::Map::TreeSpecies::Olive)].get()},
+          {ScatterSpeciesId::Cypress,
+           m_trees[static_cast<std::size_t>(Game::Map::TreeSpecies::Cypress)].get()},
+          {ScatterSpeciesId::Palm,
+           m_trees[static_cast<std::size_t>(Game::Map::TreeSpecies::Palm)].get()},
+          {ScatterSpeciesId::FireCamp, m_firecamp.get()},
+          {ScatterSpeciesId::Tent, m_tent.get()},
+          {ScatterSpeciesId::SupplyCart, m_supply_cart.get()},
+          {ScatterSpeciesId::WeaponRack, m_weapon_rack.get()},
+          {ScatterSpeciesId::Ruins, m_ruins.get()},
+          {ScatterSpeciesId::DeadTree, m_dead_tree.get()},
+          {ScatterSpeciesId::Boulder, m_boulder.get()},
+          {ScatterSpeciesId::IronOre, m_iron_ore.get()},
+          {ScatterSpeciesId::MagicShrine, m_magic_shrine.get()},
+          {ScatterSpeciesId::AbandonedHome, m_abandoned_home.get()},
+          {ScatterSpeciesId::Statue, m_statue.get()}} {
   m_passes.reserve(m_scatter_passes.size());
   for (const auto& entry : m_scatter_passes) {
     m_passes.push_back(entry.pass);
@@ -102,16 +110,13 @@ void TerrainScatterManager::configure(
   m_biome->configure(height_map, biome_settings);
   m_stone->configure(height_map, biome_settings, m_scatter_seed_world_props);
   m_plant->configure(height_map, biome_settings, m_scatter_seed_world_props);
-  m_pine->configure(height_map,
-                    biome_settings,
-                    m_scatter_seed_world_props,
-                    runtime_world_props,
-                    m_use_world_props_exclusively);
-  m_olive->configure(height_map,
-                     biome_settings,
-                     m_scatter_seed_world_props,
-                     runtime_world_props,
-                     m_use_world_props_exclusively);
+  for (auto& tree_pass : m_trees) {
+    tree_pass->configure(height_map,
+                         biome_settings,
+                         m_scatter_seed_world_props,
+                         runtime_world_props,
+                         m_use_world_props_exclusively);
+  }
   m_firecamp->configure(height_map, biome_settings, runtime_world_props);
   m_tent->configure(height_map, biome_settings, runtime_world_props);
   m_supply_cart->configure(height_map, biome_settings, runtime_world_props);
@@ -141,8 +146,9 @@ void TerrainScatterManager::refresh_runtime_world_props(
   m_use_world_props_exclusively =
       should_use_runtime_harvest_props_exclusively(runtime_world_props, false);
 
-  m_pine->refresh_world_props(runtime_world_props, m_use_world_props_exclusively);
-  m_olive->refresh_world_props(runtime_world_props, m_use_world_props_exclusively);
+  for (auto& tree_pass : m_trees) {
+    tree_pass->refresh_world_props(runtime_world_props, m_use_world_props_exclusively);
+  }
   m_boulder->refresh_world_props(runtime_world_props, m_use_world_props_exclusively);
   m_dead_tree->refresh_world_props(runtime_world_props);
 
@@ -225,12 +231,9 @@ auto TerrainScatterManager::plant() const -> PlantRenderer* {
   return m_plant.get();
 }
 
-auto TerrainScatterManager::pine() const -> PineRenderer* {
-  return m_pine.get();
-}
-
-auto TerrainScatterManager::olive() const -> OliveRenderer* {
-  return m_olive.get();
+auto TerrainScatterManager::tree(Game::Map::TreeSpecies species) const
+    -> TreeRenderer* {
+  return m_trees[static_cast<std::size_t>(species)].get();
 }
 
 auto TerrainScatterManager::firecamp() const -> FireCampRenderer* {
