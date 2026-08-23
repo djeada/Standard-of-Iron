@@ -3,7 +3,6 @@
 #include <QObject>
 #include <QString>
 #include <QVector3D>
-#include <QtGui/QCursor>
 
 #include "app/input/cursor_mode.h"
 
@@ -20,8 +19,6 @@ public:
   [[nodiscard]] auto mode_string() const -> QString {
     return CursorModeUtils::toString(m_cursor_mode);
   }
-
-  void update_cursor_shape(QQuickWindow* window);
 
   static auto global_cursor_x(QQuickWindow* window) -> qreal;
   static auto global_cursor_y(QQuickWindow* window) -> qreal;
@@ -41,7 +38,6 @@ signals:
 
 private:
   CursorMode m_cursor_mode{CursorMode::Normal};
-  Qt::CursorShape m_current_cursor = Qt::ArrowCursor;
   bool m_has_first_waypoint = false;
   QVector3D m_first_waypoint;
 };

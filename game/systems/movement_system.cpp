@@ -602,7 +602,7 @@ void MovementSystem::update_traversal_presentation(
         std::max(1,
                  static_cast<int>(
                      std::ceil((longitudinal_half_extent * 2.0F) / longitudinal_step)));
-    bool sampled_walkable_center = false;
+    bool sampled_tight_corridor = false;
     for (int sample = 0; sample <= longitudinal_samples; ++sample) {
       float const t =
           static_cast<float>(sample) / static_cast<float>(longitudinal_samples);
@@ -612,13 +612,21 @@ void MovementSystem::update_traversal_presentation(
       if (!pathfinder->is_world_position_walkable(probe, passability)) {
         continue;
       }
-      sampled_walkable_center = true;
-      available_half_width = std::min({available_half_width,
-                                       available_on_side(probe, -1.0F),
-                                       available_on_side(probe, 1.0F)});
+      float const left = available_on_side(probe, -1.0F);
+      float const right = available_on_side(probe, 1.0F);
+      bool const left_constrained =
+          left + k_traversal_squeeze_epsilon < desired_half_width;
+      bool const right_constrained =
+          right + k_traversal_squeeze_epsilon < desired_half_width;
+      if (!left_constrained || !right_constrained) {
+        continue;
+      }
+
+      sampled_tight_corridor = true;
+      available_half_width = std::min({available_half_width, left, right});
     }
 
-    if (sampled_walkable_center && desired_half_width > k_traversal_squeeze_epsilon &&
+    if (sampled_tight_corridor && desired_half_width > k_traversal_squeeze_epsilon &&
         available_half_width + k_traversal_squeeze_epsilon < desired_half_width) {
       float const visible_half_width =
           std::max(available_half_width, k_traversal_min_visual_half_width);

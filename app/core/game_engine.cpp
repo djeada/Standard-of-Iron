@@ -404,7 +404,6 @@ void GameEngine::set_cursor_mode(CursorMode mode) {
     return;
   }
   m_cursor_manager->set_mode(mode);
-  m_cursor_manager->update_cursor_shape(m_window);
 }
 
 void GameEngine::set_cursor_mode(const QString& mode) {

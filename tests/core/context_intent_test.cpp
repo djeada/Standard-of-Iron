@@ -78,6 +78,7 @@ TEST_F(ContextIntentTest, UnwalkableGroundReadsAsInvalidWithAReason) {
   const auto resolution = resolve_context_intent(request);
   EXPECT_EQ(resolution.intent, ContextIntent::Invalid);
   EXPECT_FALSE(resolution.valid());
+  EXPECT_TRUE(resolution.advises());
   EXPECT_FALSE(resolution.reason.isEmpty());
 }
 
@@ -89,9 +90,11 @@ TEST_F(ContextIntentTest, NoGroundUnderTheCursorReadsAsInvalid) {
   EXPECT_EQ(resolve_context_intent(request).intent, ContextIntent::Invalid);
 }
 
-TEST_F(ContextIntentTest, AnEmptySelectionReadsAsInvalid) {
+TEST_F(ContextIntentTest, AnEmptySelectionAdvisesNothingRatherThanRefusing) {
   const auto resolution = resolve_context_intent(base_request());
-  EXPECT_EQ(resolution.intent, ContextIntent::Invalid);
+  EXPECT_EQ(resolution.intent, ContextIntent::None);
+  EXPECT_FALSE(resolution.advises());
+  EXPECT_FALSE(resolution.valid());
   EXPECT_FALSE(resolution.reason.isEmpty());
 }
 
@@ -137,7 +140,9 @@ TEST_F(ContextIntentTest, SpectatorsGetNoIntentAtAll) {
   add_selected_unit();
   auto request = base_request();
   request.spectator_mode = true;
-  EXPECT_EQ(resolve_context_intent(request).intent, ContextIntent::Invalid);
+  const auto resolution = resolve_context_intent(request);
+  EXPECT_EQ(resolution.intent, ContextIntent::None);
+  EXPECT_FALSE(resolution.advises());
 }
 
 TEST_F(ContextIntentTest, ConstructionPlacementReadsAsInteract) {
@@ -147,6 +152,7 @@ TEST_F(ContextIntentTest, ConstructionPlacementReadsAsInteract) {
 }
 
 TEST_F(ContextIntentTest, EveryIntentHasAStableNameForQml) {
+  EXPECT_STREQ(App::Core::context_intent_name(ContextIntent::None), "none");
   EXPECT_STREQ(App::Core::context_intent_name(ContextIntent::Invalid), "invalid");
   EXPECT_STREQ(App::Core::context_intent_name(ContextIntent::Move), "move");
   EXPECT_STREQ(App::Core::context_intent_name(ContextIntent::Attack), "attack");
