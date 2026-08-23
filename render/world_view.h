@@ -44,8 +44,6 @@ public:
   [[nodiscard]] static auto
   of(const Game::Session::SessionContext& session) -> WorldView;
 
-  [[nodiscard]] static auto of_active_session() -> WorldView;
-
   [[nodiscard]] auto terrain() const noexcept -> const Game::Map::TerrainService* {
     return m_terrain;
   }

@@ -7,6 +7,7 @@
 #include <optional>
 #include <vector>
 
+#include "../core/ambient_session.h"
 #include "../core/component.h"
 #include "../core/world.h"
 #include "../map/map_definition.h"
@@ -74,13 +75,15 @@ auto roll_errand_role(std::uint32_t& rng) -> SettlementErrandRole {
                                             : SettlementErrandRole::Loiter;
 }
 
-auto errand_at_building(const Engine::Core::TransformComponent& building_transform,
+auto errand_at_building(const Engine::Core::World& world,
+                        const Engine::Core::TransformComponent& building_transform,
                         Engine::Core::EntityID building_id,
                         std::uint32_t& rng) -> Errand {
   float half_width = 1.5F;
   float half_depth = 1.5F;
   if (const auto* footprint =
-          BuildingCollisionRegistry::instance().find_building(building_id);
+          Game::Session::services_for(world).building_collision->find_building(
+              building_id);
       footprint != nullptr) {
     half_width = footprint->width * 0.5F;
     half_depth = footprint->depth * 0.5F;
@@ -177,7 +180,7 @@ void collect_settlement_candidates(Engine::Core::World& world,
     out.push_back({Candidate::Kind::Building, entity_id, {}});
   }
 
-  auto const& terrain = Game::Map::TerrainService::instance();
+  auto const& terrain = *Game::Session::services_for(world).terrain;
   for (auto const& prop : terrain.world_props()) {
     if (!is_life_prop(prop.type)) {
       continue;
@@ -266,7 +269,8 @@ void collect_armed_units(Engine::Core::World& world,
   }
 }
 
-auto nearest_danger(const std::vector<SettlementLifeSystem::ArmedUnit>& armed_units,
+auto nearest_danger(const Engine::Core::World& world,
+                    const std::vector<SettlementLifeSystem::ArmedUnit>& armed_units,
                     int resident_owner_id,
                     float x,
                     float z,
@@ -281,7 +285,8 @@ auto nearest_danger(const std::vector<SettlementLifeSystem::ArmedUnit>& armed_un
     if (distance_sq > nearest_distance_sq) {
       continue;
     }
-    if (!OwnerRegistry::instance().are_enemies(resident_owner_id, armed.owner_id)) {
+    if (!Game::Session::services_for(world).owners->are_enemies(resident_owner_id,
+                                                                armed.owner_id)) {
       continue;
     }
     nearest_distance_sq = distance_sq;
@@ -463,7 +468,8 @@ void SettlementLifeSystem::update(Engine::Core::World* world, float delta_time) 
     if (alarm_due && !fighting) {
       bool const already_fleeing = resident->errand == SettlementErrand::Fleeing;
       auto const danger =
-          nearest_danger(m_armed_units,
+          nearest_danger(*world,
+                         m_armed_units,
                          unit->owner_id,
                          transform->position.x,
                          transform->position.z,
@@ -574,7 +580,7 @@ void SettlementLifeSystem::update(Engine::Core::World* world, float delta_time) 
             continue;
           }
           proposal = errand_at_building(
-              *building_transform, candidate.entity_id, resident->rng_state);
+              *world, *building_transform, candidate.entity_id, resident->rng_state);
         } else {
           proposal = errand_at_prop(candidate.position, resident->rng_state);
         }

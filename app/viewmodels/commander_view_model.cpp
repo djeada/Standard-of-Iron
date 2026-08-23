@@ -21,6 +21,7 @@
 #include "game/core/event_manager.h"
 #include "game/core/world.h"
 #include "game/render_bridge/picking_service.h"
+#include "game/session/session_context.h"
 #include "game/systems/match_snapshot.h"
 #include "game/systems/nav_grid.h"
 #include "game/systems/selection_system.h"
@@ -608,7 +609,12 @@ void CommanderViewModel::update_rally_preview_at(qreal sx, qreal sy) {
       picking->screen_to_ground(QPointF(sx, sy), *camera, width, height, hit)) {
     m_rally_preview = Game::Systems::NavGrid::snap_to_walkable_ground(hit);
   } else if (cursor->mode() == CursorMode::PlaceBarracksRally &&
-             picking->screen_to_surface(QPointF(sx, sy), *camera, width, height, hit)) {
+             picking->screen_to_surface(m_context.session->terrain(),
+                                        QPointF(sx, sy),
+                                        *camera,
+                                        width,
+                                        height,
+                                        hit)) {
     m_rally_preview = hit;
   }
 }

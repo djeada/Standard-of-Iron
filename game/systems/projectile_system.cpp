@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <cmath>
 
+#include "../core/ambient_session.h"
 #include "../core/component.h"
 #include "../core/event_manager.h"
 #include "../core/world.h"
@@ -313,7 +314,7 @@ void ProjectileSystem::update(Engine::Core::World* world, float delta_time) {
     projectile->update(delta_time);
     if (projectile->get_progress() >= k_min_progress_for_impact) {
       auto const resolution = resolve_impact(world, projectile.get());
-      publish_impact(*projectile, resolution);
+      publish_impact(world, *projectile, resolution);
       projectile->deactivate();
     }
   }
@@ -401,7 +402,8 @@ void ProjectileSystem::confirm_commander_hit(Engine::Core::World* world,
   ++targets->hit_confirm_sequence;
 }
 
-void ProjectileSystem::publish_impact(const Projectile& projectile,
+void ProjectileSystem::publish_impact(Engine::Core::World* world,
+                                      const Projectile& projectile,
                                       const ImpactResolution& resolution) {
   bool ballista_bolt = false;
   bool aimed_shot = false;
@@ -438,10 +440,11 @@ void ProjectileSystem::publish_impact(const Projectile& projectile,
           ? "combat.hit.arrow"
           : impact_cue_for_kind(projectile.get_kind(), ballista_bolt)));
 
-  record_spent_projectile(projectile, incoming_direction, ballista_bolt);
+  record_spent_projectile(world, projectile, incoming_direction, ballista_bolt);
 }
 
-void ProjectileSystem::record_spent_projectile(const Projectile& projectile,
+void ProjectileSystem::record_spent_projectile(Engine::Core::World* world,
+                                               const Projectile& projectile,
                                                const QVector3D& incoming_direction,
                                                bool ballista_bolt) {
   if (!leaves_a_shaft(projectile.get_kind())) {
@@ -451,7 +454,10 @@ void ProjectileSystem::record_spent_projectile(const Projectile& projectile,
   std::uint64_t const seed = m_impact_sequence;
   QVector3D const impact = projectile.get_end();
   float const ground_y =
-      Game::Map::TerrainService::instance().get_terrain_height(impact.x(), impact.z());
+      world != nullptr
+          ? Game::Session::services_for(*world).terrain->get_terrain_height(impact.x(),
+                                                                            impact.z())
+          : 0.0F;
 
   constexpr float k_scatter_radius = 0.34F;
   float const scatter_angle = scatter_unit(seed ^ 0x94d049bbULL) * 6.2831853F;

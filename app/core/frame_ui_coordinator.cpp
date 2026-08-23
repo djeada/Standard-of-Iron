@@ -12,6 +12,7 @@
 #include "game/core/component.h"
 #include "game/core/world.h"
 #include "game/map/terrain_service.h"
+#include "game/session/session_context.h"
 #include "game/systems/arrow_system.h"
 #include "game/systems/healing_beam_system.h"
 #include "game/systems/nation_registry.h"
@@ -375,10 +376,11 @@ void render_effects(const RenderEffectsContext& context,
 
   if (context.command_controller != nullptr &&
       context.command_controller->formation().is_placing_formation()) {
+    auto& session = Game::Session::session_for(*context.world);
     Render::GL::FormationPlacementInfo placement;
     placement.position =
         context.command_controller->formation().get_formation_placement_position();
-    placement.position.setY(Game::Map::TerrainService::instance().get_terrain_height(
+    placement.position.setY(session.terrain().get_terrain_height(
         placement.position.x(), placement.position.z()));
     placement.angle_degrees =
         context.command_controller->formation().get_formation_facing_degrees();
@@ -387,8 +389,7 @@ void render_effects(const RenderEffectsContext& context,
     placement.active = true;
 
     const auto* nation =
-        Game::Systems::NationRegistry::instance().get_nation_for_player(
-            context.local_owner_id);
+        session.nations().get_nation_for_player(context.local_owner_id);
     if (nation != nullptr) {
       switch (nation->id) {
       case Game::Systems::NationID::RomanRepublic:
@@ -410,7 +411,7 @@ void render_effects(const RenderEffectsContext& context,
     for (const auto& slot : preview.slot_list) {
       Render::GL::FormationSlotMarker marker;
       marker.position = slot.world_position;
-      marker.position.setY(Game::Map::TerrainService::instance().get_terrain_height(
+      marker.position.setY(session.terrain().get_terrain_height(
           slot.world_position.x(), slot.world_position.z()));
       marker.radius = std::max(0.6F, preview.spacing * 0.45F);
       marker.facing_degrees = slot.facing;

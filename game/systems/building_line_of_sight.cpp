@@ -34,10 +34,11 @@ auto slab_intersection(float start,
 
 } // namespace
 
-auto first_building_intersection_fraction(const QVector3D& start,
+auto first_building_intersection_fraction(const BuildingCollisionRegistry& registry,
+                                          const QVector3D& start,
                                           const QVector3D& end,
                                           unsigned int ignore_entity_id) -> float {
-  auto const& buildings = BuildingCollisionRegistry::instance().get_all_buildings();
+  auto const& buildings = registry.get_all_buildings();
   float best_fraction = 1.0F;
   const QVector3D delta = end - start;
   for (const auto& building : buildings) {
@@ -71,10 +72,12 @@ auto first_building_intersection_fraction(const QVector3D& start,
   return best_fraction;
 }
 
-auto has_clear_building_los(const QVector3D& start,
+auto has_clear_building_los(const BuildingCollisionRegistry& buildings,
+                            const QVector3D& start,
                             const QVector3D& end,
                             unsigned int ignore_entity_id) -> bool {
-  return first_building_intersection_fraction(start, end, ignore_entity_id) >= 1.0F;
+  return first_building_intersection_fraction(
+             buildings, start, end, ignore_entity_id) >= 1.0F;
 }
 
 } // namespace Game::Systems

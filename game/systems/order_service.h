@@ -4,7 +4,8 @@
 
 namespace Engine::Core {
 class Entity;
-}
+class World;
+} // namespace Engine::Core
 
 namespace Game::Systems {
 
@@ -23,7 +24,8 @@ public:
   static void reset_movement(Engine::Core::Entity* entity);
   static void clear_civilian_delivery(Engine::Core::Entity* entity);
 
-  static void clear_builder_task(Engine::Core::Entity* entity);
+  static void clear_builder_task(Engine::Core::World& world,
+                                 Engine::Core::Entity* entity);
   static void clear_builder_gather_order(Engine::Core::Entity* entity);
   static void release_settlement_resident(Engine::Core::Entity* entity);
   static void clear_patrol(Engine::Core::Entity* entity);

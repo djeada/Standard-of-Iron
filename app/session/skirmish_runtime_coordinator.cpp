@@ -6,6 +6,7 @@
 #include "game/core/component.h"
 #include "game/core/world.h"
 #include "game/game_config.h"
+#include "game/session/session_context.h"
 #include "game/systems/owner_registry.h"
 #include "game/systems/player_resource_registry.h"
 #include "game/units/spawn_type.h"
@@ -95,10 +96,10 @@ void SkirmishRuntimeCoordinator::center_camera_on_local_forces(
 
 void SkirmishRuntimeCoordinator::initialize_player_resources(
     const InitializePlayerResourcesContext& ctx) const {
-  auto& resources = Game::Systems::PlayerResourceRegistry::instance();
+  auto& resources = ctx.session.economy();
   resources.clear();
 
-  auto& owner_registry = Game::Systems::OwnerRegistry::instance();
+  auto& owner_registry = ctx.session.owners();
   for (const auto& owner : owner_registry.get_all_owners()) {
     resources.ensure_owner(owner.owner_id);
   }

@@ -16,6 +16,7 @@
 #include "game/core/entity.h"
 #include "game/map/terrain.h"
 #include "game/map/terrain_service.h"
+#include "game/session/session_context.h"
 #include "render/creature/animation_state_components.h"
 #include "render/creature/archetype_registry.h"
 #include "render/creature/pipeline/creature_render_state.h"
@@ -278,7 +279,7 @@ TEST(ElephantPrepare, MinimalRenderUsesPrebakedSnapshotAssetWithoutRiggedBake) {
   renderable->visible = true;
 
   Render::GL::DrawContext ctx{};
-  ctx.world_view = Render::WorldView::of_active_session();
+  ctx.world_view = Render::WorldView::of(Game::Session::SessionContext::active());
   ctx.entity = &entity;
 
   Render::GL::AnimationInputs const anim{};
@@ -327,7 +328,7 @@ TEST(ElephantPrepare, MinimalRenderDoesNotFallbackToRiggedBakeWhenSnapshotMissin
   renderable->visible = true;
 
   Render::GL::DrawContext ctx{};
-  ctx.world_view = Render::WorldView::of_active_session();
+  ctx.world_view = Render::WorldView::of(Game::Session::SessionContext::active());
   ctx.entity = &entity;
 
   Render::GL::AnimationInputs const anim{};
@@ -415,7 +416,7 @@ TEST(ElephantPrepare, SharedWalkRunClassifierControlsPreparedPlaybackState) {
   Render::GL::ElephantProfile profile = make_test_elephant_profile();
   Render::Elephant::ElephantPreparation prep;
   Render::GL::DrawContext ctx{};
-  ctx.world_view = Render::WorldView::of_active_session();
+  ctx.world_view = Render::WorldView::of(Game::Session::SessionContext::active());
   ctx.force_quadruped_lod = true;
   ctx.forced_quadruped_lod = Render::Creature::CreatureLOD::Full;
 
@@ -537,7 +538,7 @@ TEST(ElephantPrepare, MinimalPreparationSnapsElephantBodyToTerrainHeight) {
 
   Render::GL::ElephantRendererBase const owner;
   Render::GL::DrawContext ctx{};
-  ctx.world_view = Render::WorldView::of_active_session();
+  ctx.world_view = Render::WorldView::of(Game::Session::SessionContext::active());
   ctx.model.translate(0.2F, 11.0F, -0.35F);
 
   Render::GL::ElephantProfile profile = Render::GL::make_elephant_profile(
@@ -564,7 +565,7 @@ TEST(ElephantPrepare, FullPreparationEmitsWalkingShadowRequest) {
 
   Render::GL::ElephantRendererBase const owner;
   Render::GL::DrawContext ctx{};
-  ctx.world_view = Render::WorldView::of_active_session();
+  ctx.world_view = Render::WorldView::of(Game::Session::SessionContext::active());
   ctx.template_prewarm = true;
   Render::GL::AnimationInputs const anim{
       .time = 0.4F,
@@ -596,7 +597,7 @@ TEST(ElephantPrepare, FullStationaryPreparationEmitsIdleShadowRequest) {
 
   Render::GL::ElephantRendererBase const owner;
   Render::GL::DrawContext ctx{};
-  ctx.world_view = Render::WorldView::of_active_session();
+  ctx.world_view = Render::WorldView::of(Game::Session::SessionContext::active());
   ctx.template_prewarm = true;
   Render::GL::AnimationInputs const anim{
       .time = 0.2F,
@@ -640,7 +641,7 @@ TEST(ElephantPrepare, FullTemplatePrewarmBypassesSnapshotCache) {
   renderable->visible = true;
 
   Render::GL::DrawContext ctx{};
-  ctx.world_view = Render::WorldView::of_active_session();
+  ctx.world_view = Render::WorldView::of(Game::Session::SessionContext::active());
   ctx.entity = &entity;
   ctx.template_prewarm = true;
   ctx.force_quadruped_lod = true;
@@ -664,7 +665,7 @@ TEST(ElephantPrepare, ShadowBatchEmptyWithoutResources) {
 
   Render::GL::ElephantRendererBase const owner;
   Render::GL::DrawContext ctx{};
-  ctx.world_view = Render::WorldView::of_active_session();
+  ctx.world_view = Render::WorldView::of(Game::Session::SessionContext::active());
   ctx.allow_template_cache = true;
 
   Render::GL::AnimationInputs const anim{};

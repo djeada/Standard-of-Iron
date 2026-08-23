@@ -1191,7 +1191,10 @@ struct ArenaScenarioRunner::Impl {
       }
       break;
     case ScenarioCommandKind::HarvestResource: {
-      auto& terrain = Game::Map::TerrainService::instance();
+      if (host.terrain == nullptr) {
+        break;
+      }
+      auto& terrain = *host.terrain;
       const QString kind = step.resource_kind;
       if (kind == QStringLiteral("grain") || kind == QStringLiteral("sheep")) {
         const std::string_view product =
@@ -1837,7 +1840,10 @@ struct ArenaScenarioRunner::Impl {
       return;
     }
     constexpr float k_body_radius = 0.35F;
-    auto const& registry = Game::Systems::BuildingCollisionRegistry::instance();
+    if (host.building_collision == nullptr) {
+      return;
+    }
+    auto const& registry = *host.building_collision;
     const float unit_x = transform->position.x;
     const float unit_z = transform->position.z;
     const bool in_gateway =
@@ -1968,8 +1974,8 @@ struct ArenaScenarioRunner::Impl {
     } else {
       maximum_elevation[group] = std::max(maximum_elevation.value(group), position.y());
     }
-    if (Game::Map::TerrainService::instance().is_on_bridge(position.x(),
-                                                           position.z())) {
+    if (host.terrain != nullptr &&
+        host.terrain->is_on_bridge(position.x(), position.z())) {
       bridge_traversal_seen[group] = true;
     }
     auto const* target = entity->get_component<Engine::Core::AttackTargetComponent>();
@@ -2353,7 +2359,8 @@ struct ArenaScenarioRunner::Impl {
     }
     centroid /= static_cast<float>(living);
 
-    auto const* height_map = Game::Map::TerrainService::instance().get_height_map();
+    auto const* height_map =
+        host.terrain != nullptr ? host.terrain->get_height_map() : nullptr;
     if (height_map == nullptr) {
       return;
     }

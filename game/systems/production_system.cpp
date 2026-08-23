@@ -7,6 +7,7 @@
 #include <limits>
 #include <optional>
 
+#include "../core/ambient_session.h"
 #include "../core/component.h"
 #include "../core/event_manager.h"
 #include "../core/ownership_constants.h"
@@ -51,8 +52,9 @@ void apply_production_profile(Engine::Core::ProductionComponent* prod,
   prod->villager_cost = profile.production.cost;
 }
 
-auto resolve_nation_id(int owner_id) -> Game::Systems::NationID {
-  auto& registry = NationRegistry::instance();
+auto resolve_nation_id(const Engine::Core::World& world,
+                       int owner_id) -> Game::Systems::NationID {
+  auto& registry = *Game::Session::services_for(world).nations;
   if (const auto* nation = registry.get_nation_for_player(owner_id)) {
     return nation->id;
   }
@@ -149,13 +151,15 @@ void load_onto_hauler(Engine::Core::Entity* worker,
   carry->amounts.add(resource_type, amount);
 }
 
-void clear_builder_task_target(Engine::Core::BuilderProductionComponent* builder,
+void clear_builder_task_target(Engine::Core::World& world,
+                               Engine::Core::BuilderProductionComponent* builder,
                                bool release_tree = true) {
   if (builder == nullptr) {
     return;
   }
   if (release_tree && builder->task_target_reserved) {
-    Game::Map::TerrainService::instance().release_world_prop(builder->task_target_id);
+    Game::Session::services_for(world).terrain->release_world_prop(
+        builder->task_target_id);
   }
   builder->has_task_target = false;
   builder->task_target_id = 0;
@@ -261,7 +265,7 @@ auto skip_invalid_wall_site(Engine::Core::World* world,
   builder->time_remaining = 0.0F;
   builder->construction_complete = false;
   builder->bypass_movement_active = false;
-  clear_builder_task_target(builder, false);
+  clear_builder_task_target(*world, builder, false);
   builder->report_fault(Engine::Core::BuilderTaskFault::TargetLost);
   WallNetworkService::refresh_world(*world);
   assign_next_wall_site(world, builder_entity, builder);
@@ -353,7 +357,8 @@ auto food_target_still_valid(Engine::Core::World* world,
   return sheep_is_slaughterable(*target);
 }
 
-void abandon_food_task(Engine::Core::BuilderProductionComponent* builder,
+void abandon_food_task(Engine::Core::World& world,
+                       Engine::Core::BuilderProductionComponent* builder,
                        Engine::Core::BuilderTaskFault fault) {
   builder->in_progress = false;
   builder->time_remaining = 0.0F;
@@ -362,7 +367,7 @@ void abandon_food_task(Engine::Core::BuilderProductionComponent* builder,
   builder->at_construction_site = false;
   builder->bypass_movement_active = false;
   builder->structure_task_entity_id = 0;
-  clear_builder_task_target(builder, false);
+  clear_builder_task_target(world, builder, false);
   builder->report_fault(fault);
 }
 
@@ -465,7 +470,7 @@ void ProductionSystem::update(Engine::Core::World* world, float delta_time) {
     }
 
     const int owner_id = (unit_comp != nullptr) ? unit_comp->owner_id : -1;
-    const auto nation_id = resolve_nation_id(owner_id);
+    const auto nation_id = resolve_nation_id(*world, owner_id);
     const auto current_profile =
         TroopProfileService::instance().get_profile(nation_id, prod->product_type);
     int const production_cost = current_profile.production.cost;
@@ -485,7 +490,7 @@ void ProductionSystem::update(Engine::Core::World* world, float delta_time) {
       auto* u = e->get_component<Engine::Core::UnitComponent>();
       if ((t != nullptr) && (u != nullptr)) {
 
-        int const current_troops = Game::Systems::troop_count_for(u->owner_id);
+        int const current_troops = Game::Systems::troop_count_for(*world, u->owner_id);
         int const max_troops = Game::GameConfig::instance().get_max_troops_per_player();
         if (current_troops + production_cost > max_troops) {
           prod->in_progress = false;
@@ -587,7 +592,8 @@ void ProductionSystem::update(Engine::Core::World* world, float delta_time) {
         builder_prod->structure_task_entity_id != 0 &&
         (builder_prod->has_construction_site || builder_prod->in_progress)) {
       if (!food_target_still_valid(world, e, builder_prod)) {
-        abandon_food_task(builder_prod, Engine::Core::BuilderTaskFault::TargetLost);
+        abandon_food_task(
+            *world, builder_prod, Engine::Core::BuilderTaskFault::TargetLost);
         continue;
       }
       if (builder_prod->product_type == k_builder_product_slaughter_sheep &&
@@ -680,7 +686,7 @@ void ProductionSystem::update(Engine::Core::World* world, float delta_time) {
         builder_prod->in_progress = false;
         builder_prod->construction_complete = false;
         builder_prod->time_remaining = 0.0F;
-        clear_builder_task_target(builder_prod);
+        clear_builder_task_target(*world, builder_prod);
         builder_prod->report_fault(Engine::Core::BuilderTaskFault::Interrupted);
         continue;
       }
@@ -713,7 +719,7 @@ void ProductionSystem::update(Engine::Core::World* world, float delta_time) {
       builder_prod->has_construction_site = false;
       builder_prod->at_construction_site = false;
       builder_prod->structure_task_entity_id = 0;
-      clear_builder_task_target(builder_prod, false);
+      clear_builder_task_target(*world, builder_prod, false);
       continue;
     }
 
@@ -736,7 +742,7 @@ void ProductionSystem::update(Engine::Core::World* world, float delta_time) {
       builder_prod->has_construction_site = false;
       builder_prod->at_construction_site = false;
       builder_prod->structure_task_entity_id = 0;
-      clear_builder_task_target(builder_prod, false);
+      clear_builder_task_target(*world, builder_prod, false);
       continue;
     }
 
@@ -762,7 +768,7 @@ void ProductionSystem::update(Engine::Core::World* world, float delta_time) {
         } else if (is_harvest_builder_product(builder_prod->product_type)) {
           bool const harvested =
               builder_prod->has_task_target &&
-              Game::Map::TerrainService::instance().harvest_world_prop(
+              Game::Session::services_for(*world).terrain->harvest_world_prop(
                   builder_prod->task_target_id);
           if (harvested) {
             ResourceType resource_type = ResourceType::Wood;
@@ -789,7 +795,7 @@ void ProductionSystem::update(Engine::Core::World* world, float delta_time) {
                   tree_grid.x - 1, tree_grid.x + 1, tree_grid.y - 1, tree_grid.y + 1);
             }
           } else {
-            clear_builder_task_target(builder_prod);
+            clear_builder_task_target(*world, builder_prod);
             builder_prod->report_fault(Engine::Core::BuilderTaskFault::TargetLost);
           }
         } else {
@@ -853,7 +859,7 @@ void ProductionSystem::update(Engine::Core::World* world, float delta_time) {
               builder_prod->time_remaining = 0.0F;
               builder_prod->has_construction_site = false;
               builder_prod->at_construction_site = false;
-              clear_builder_task_target(builder_prod, false);
+              clear_builder_task_target(*world, builder_prod, false);
               continue;
             }
 
@@ -896,7 +902,7 @@ void ProductionSystem::update(Engine::Core::World* world, float delta_time) {
       builder_prod->has_construction_site = false;
       builder_prod->at_construction_site = false;
       builder_prod->construction_site_entity_id = 0;
-      clear_builder_task_target(builder_prod, false);
+      clear_builder_task_target(*world, builder_prod, false);
     }
   }
 }

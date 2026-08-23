@@ -10,6 +10,7 @@
 #include "game/core/component.h"
 #include "game/core/entity.h"
 #include "game/core/world.h"
+#include "game/session/session_context.h"
 #include "game/systems/nation_registry.h"
 #include "game/systems/troop_profile_service.h"
 #include "render/creature/archetype_registry.h"
@@ -414,7 +415,7 @@ TEST(TemplatePrewarmRegression, PreparedAnimationStateHonorsOverride) {
   override_anim.is_attacking = true;
 
   Render::GL::DrawContext ctx{};
-  ctx.world_view = Render::WorldView::of_active_session();
+  ctx.world_view = Render::WorldView::of(Game::Session::SessionContext::active());
   ctx.animation_override = &override_anim;
 
   auto const state = resolve_humanoid_animation_state(ctx);
@@ -432,7 +433,7 @@ TEST(TemplatePrewarmRegression, ElephantPreparedAnimationPromotesMeleeLock) {
   attack->in_melee_lock = true;
 
   Render::GL::DrawContext ctx{};
-  ctx.world_view = Render::WorldView::of_active_session();
+  ctx.world_view = Render::WorldView::of(Game::Session::SessionContext::active());
   ctx.entity = &entity;
 
   auto const state = resolve_elephant_animation_state(ctx);
@@ -459,7 +460,7 @@ TEST(TemplatePrewarmRegression, HumanoidAnimationPromotesIdleMeleeLock) {
   combat_state->animation_state = Engine::Core::CombatAnimationState::Idle;
 
   Render::GL::DrawContext ctx{};
-  ctx.world_view = Render::WorldView::of_active_session();
+  ctx.world_view = Render::WorldView::of(Game::Session::SessionContext::active());
   ctx.entity = &entity;
 
   auto const state = resolve_humanoid_animation_state(ctx);
@@ -475,7 +476,7 @@ TEST(TemplatePrewarmRegression, PreparedHumanoidLodCarriesDistanceCull) {
   camera.set_position(QVector3D(0.0F, 0.0F, 0.0F));
 
   Render::GL::DrawContext ctx{};
-  ctx.world_view = Render::WorldView::of_active_session();
+  ctx.world_view = Render::WorldView::of(Game::Session::SessionContext::active());
   ctx.camera = &camera;
 
   HumanoidLodStateInputs inputs{};
@@ -495,7 +496,7 @@ TEST(TemplatePrewarmRegression, SelectedHumanoidLodStaysFullAtDistance) {
   camera.set_position(QVector3D(0.0F, 0.0F, 0.0F));
 
   Render::GL::DrawContext ctx{};
-  ctx.world_view = Render::WorldView::of_active_session();
+  ctx.world_view = Render::WorldView::of(Game::Session::SessionContext::active());
   ctx.camera = &camera;
   ctx.selected = true;
 
@@ -618,7 +619,7 @@ TEST(TemplatePrewarmRegression, AllLodLevelsRespectPrewarmFiltering) {
 
 TEST(TemplatePrewarmRegression, SeedDerivationIsDeterministic) {
   Render::GL::DrawContext ctx{};
-  ctx.world_view = Render::WorldView::of_active_session();
+  ctx.world_view = Render::WorldView::of(Game::Session::SessionContext::active());
   ctx.has_seed_override = false;
 
   auto seed1 = derive_unit_seed(ctx, nullptr);
@@ -631,7 +632,7 @@ TEST(TemplatePrewarmRegression, SeedDerivationIsDeterministic) {
 
 TEST(TemplatePrewarmRegression, SeedOverrideRespected) {
   Render::GL::DrawContext ctx{};
-  ctx.world_view = Render::WorldView::of_active_session();
+  ctx.world_view = Render::WorldView::of(Game::Session::SessionContext::active());
   ctx.has_seed_override = true;
   ctx.seed_override = 0xCAFEBABEU;
 
@@ -732,7 +733,8 @@ TEST(TemplatePrewarmRegression, WorldPrewarmSupplementsMissingBuilderProfiles) {
   add_test_unit(
       *archer, SpawnType::Archer, NationID::RomanRepublic, 1, "troops/roman/archer");
 
-  renderer.set_world_view(Render::WorldView::of_active_session());
+  renderer.set_world_view(
+      Render::WorldView::of(Game::Session::SessionContext::active()));
   renderer.prewarm_unit_templates(&world);
   Render::Creature::set_runtime_bake_forbidden(true);
 
@@ -796,7 +798,8 @@ TEST(TemplatePrewarmRegression, WorldPrewarmsRomanCivilianTemplates) {
                 1,
                 "troops/roman/civilian");
 
-  renderer.set_world_view(Render::WorldView::of_active_session());
+  renderer.set_world_view(
+      Render::WorldView::of(Game::Session::SessionContext::active()));
   renderer.prewarm_unit_templates(&world);
   Render::Creature::set_runtime_bake_forbidden(true);
 
@@ -866,7 +869,8 @@ TEST(TemplatePrewarmRegression, WorldPrewarmsCarthageCivilianTemplates) {
                 1,
                 "troops/carthage/civilian");
 
-  renderer.set_world_view(Render::WorldView::of_active_session());
+  renderer.set_world_view(
+      Render::WorldView::of(Game::Session::SessionContext::active()));
   renderer.prewarm_unit_templates(&world);
   Render::Creature::set_runtime_bake_forbidden(true);
 
@@ -936,7 +940,8 @@ TEST(TemplatePrewarmRegression, WorldPrewarmsCommanderTemplates) {
                 1,
                 "troops/carthage/commanders/hannibal_barca");
 
-  renderer.set_world_view(Render::WorldView::of_active_session());
+  renderer.set_world_view(
+      Render::WorldView::of(Game::Session::SessionContext::active()));
   renderer.prewarm_unit_templates(&world);
   Render::Creature::set_runtime_bake_forbidden(true);
 
@@ -1007,7 +1012,8 @@ TEST(TemplatePrewarmRegression, WorldPrewarmsRomanSwordsmanGuardTemplates) {
                 1,
                 "troops/roman/swordsman");
 
-  renderer.set_world_view(Render::WorldView::of_active_session());
+  renderer.set_world_view(
+      Render::WorldView::of(Game::Session::SessionContext::active()));
   renderer.prewarm_unit_templates(&world);
   Render::Creature::set_runtime_bake_forbidden(true);
 
@@ -1084,7 +1090,8 @@ TEST(TemplatePrewarmRegression, WorldPrewarmsCarthageSpearmanFacialHairVariants)
                 1,
                 "troops/carthage/spearman");
 
-  renderer.set_world_view(Render::WorldView::of_active_session());
+  renderer.set_world_view(
+      Render::WorldView::of(Game::Session::SessionContext::active()));
   renderer.prewarm_unit_templates(&world);
   Render::Creature::set_runtime_bake_forbidden(true);
 

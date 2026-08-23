@@ -7,6 +7,7 @@
 #include "game/mission/mission_setup_coordinator.h"
 #include "game/mission/mission_wave_director.h"
 #include "game/mission/mission_waves.h"
+#include "game/session/session_context.h"
 
 namespace {
 
@@ -350,7 +351,8 @@ TEST(MissionWaveBuild, AuthoredPhasesGroupWavesAcrossAis) {
   const auto waves = Game::Mission::build_pending_mission_waves(
       {.mission = mission,
        .mission_difficulty = QStringLiteral("normal"),
-       .level = level});
+       .level = level,
+       .nations = Game::Session::SessionContext::active().nations()});
 
   ASSERT_EQ(waves.size(), 4U);
   for (const auto& wave : waves) {
@@ -388,7 +390,10 @@ TEST(MissionWaveBuild, DifficultyAndEscalationScaleWaveSize) {
 
     Game::Systems::LevelSnapshot level;
     return Game::Mission::build_pending_mission_waves(
-        {.mission = mission, .mission_difficulty = mission_difficulty, .level = level});
+        {.mission = mission,
+         .mission_difficulty = mission_difficulty,
+         .level = level,
+         .nations = Game::Session::SessionContext::active().nations()});
   };
 
   const auto baseline = build(QStringLiteral("normal"), QStringLiteral("normal"), 0.0F);
@@ -431,7 +436,8 @@ TEST(MissionWaveBuild, ArchetypesExpandOnTopOfTheAuthoredComposition) {
   const auto waves = Game::Mission::build_pending_mission_waves(
       {.mission = mission,
        .mission_difficulty = QStringLiteral("normal"),
-       .level = level});
+       .level = level,
+       .nations = Game::Session::SessionContext::active().nations()});
 
   ASSERT_EQ(waves.size(), 1U);
   EXPECT_GT(waves[0].composition.size(), 1U);

@@ -29,6 +29,7 @@
 #include "../formation/army_formation_registry.h"
 #include "../map/terrain.h"
 #include "../map/terrain_service.h"
+#include "../session/session_context.h"
 #include "../systems/nation_id.h"
 #include "../systems/owner_registry.h"
 #include "../units/spawn_type.h"
@@ -2290,14 +2291,15 @@ auto Serialization::serialize_world(const World* world) -> QJsonDocument {
     entities_array.append(serialize_entity(&entity));
   });
 
+  auto& session = Game::Session::session_for(*world);
   world_obj["entities"] = entities_array;
   world_obj["nextEntityId"] = static_cast<qint64>(world->get_next_entity_id());
   world_obj["schemaVersion"] = 2;
-  world_obj["owner_registry"] = Game::Systems::OwnerRegistry::instance().to_json();
+  world_obj["owner_registry"] = session.owners().to_json();
   world_obj["army_formations"] =
       Game::Formation::ArmyFormationRegistry::instance().to_json();
 
-  const auto& terrain_service = Game::Map::TerrainService::instance();
+  const auto& terrain_service = session.terrain();
   if (terrain_service.is_initialized() &&
       (terrain_service.get_height_map() != nullptr)) {
     world_obj["terrain"] = serialize_terrain(terrain_service.get_height_map(),
@@ -2330,9 +2332,9 @@ void Serialization::deserialize_world(World* world, const QJsonDocument& doc) {
     world->set_next_entity_id(next_id);
   }
 
+  auto& session = Game::Session::session_for(*world);
   if (world_obj.contains("owner_registry")) {
-    Game::Systems::OwnerRegistry::instance().from_json(
-        world_obj["owner_registry"].toObject());
+    session.owners().from_json(world_obj["owner_registry"].toObject());
   }
 
   Game::Formation::ArmyFormationRegistry::instance().from_json(
@@ -2362,7 +2364,7 @@ void Serialization::deserialize_world(World* world, const QJsonDocument& doc) {
                         authored_world_props,
                         terrain_obj);
 
-    auto& terrain_service = Game::Map::TerrainService::instance();
+    auto& terrain_service = session.terrain();
     terrain_service.restore_from_serialized(width,
                                             height,
                                             tile_size,

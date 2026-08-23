@@ -3,6 +3,10 @@
 #include <QString>
 #include <QWidget>
 
+namespace Game::Systems {
+class NationRegistry;
+}
+
 class QComboBox;
 class QLabel;
 class QSpinBox;
@@ -11,7 +15,8 @@ class BuildingPanel : public QWidget {
   Q_OBJECT
 
 public:
-  explicit BuildingPanel(QWidget* parent = nullptr);
+  explicit BuildingPanel(Game::Systems::NationRegistry& nations,
+                         QWidget* parent = nullptr);
 
   void set_selection_summary(const QString& summary);
   [[nodiscard]] auto selected_owner_id() const -> int;
@@ -28,6 +33,7 @@ signals:
 private:
   void populate_nation_options();
 
+  Game::Systems::NationRegistry& m_nations;
   QComboBox* m_owner_box = nullptr;
   QComboBox* m_nation_box = nullptr;
   QComboBox* m_building_box = nullptr;

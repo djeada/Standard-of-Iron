@@ -430,7 +430,7 @@ auto main(int argc, char** argv) -> int {
     return 2;
   }
 
-  ArenaWindow window;
+  ArenaWindow window(session);
   UiShell::prepare_tool_window(window);
   window.resize(1600, 900);
   window.show();

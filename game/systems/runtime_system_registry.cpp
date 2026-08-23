@@ -7,6 +7,7 @@
 #include "../core/world.h"
 #include "../formation/army_formation_registry.h"
 #include "../formation/unit_layout_state_system.h"
+#include "../session/session_context.h"
 #include "../wildlife/wildlife_system.h"
 #include "ai_system.h"
 #include "arrow_system.h"
@@ -43,6 +44,7 @@
 namespace Game::Systems {
 
 void register_runtime_systems(Engine::Core::World& world) {
+  auto& session = Game::Session::session_for(world);
 
   world.add_system(std::make_unique<Game::Command::CommandSystem>(),
                    Engine::Core::SystemPhase::Input);
@@ -82,8 +84,15 @@ void register_runtime_systems(Engine::Core::World& world) {
                    Engine::Core::SystemPhase::Combat);
   world.add_system(std::make_unique<CaptureSystem>(),
                    Engine::Core::SystemPhase::Combat);
-  world.add_system(std::make_unique<AISystem>(), Engine::Core::SystemPhase::Strategy);
-  world.add_system(std::make_unique<UndeadAwakeningSystem>(),
+  world.add_system(std::make_unique<AISystem>(AISystem::Services{
+                       .owners = session.owners(), .nations = session.nations()}),
+                   Engine::Core::SystemPhase::Strategy);
+  world.add_system(std::make_unique<UndeadAwakeningSystem>(
+                       UndeadAwakeningSystem::Services{.terrain = session.terrain(),
+                                                       .owners = session.owners(),
+                                                       .nations = session.nations(),
+                                                       .stats = session.stats(),
+                                                       .economy = session.economy()}),
                    Engine::Core::SystemPhase::Strategy);
   world.add_system(std::make_unique<ProductionSystem>(),
                    Engine::Core::SystemPhase::Economy);

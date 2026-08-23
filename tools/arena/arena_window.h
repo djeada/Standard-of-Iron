@@ -2,6 +2,10 @@
 
 #include <QMainWindow>
 
+namespace Game::Session {
+class SessionContext;
+}
+
 class ArenaViewport;
 class TerrainPanel;
 class UnitPanel;
@@ -13,7 +17,8 @@ class ArenaWindow : public QMainWindow {
   Q_OBJECT
 
 public:
-  explicit ArenaWindow(QWidget* parent = nullptr);
+  explicit ArenaWindow(Game::Session::SessionContext& session,
+                       QWidget* parent = nullptr);
   [[nodiscard]] auto viewport() const noexcept -> ArenaViewport* { return m_viewport; }
 
 private:

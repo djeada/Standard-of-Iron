@@ -7,6 +7,10 @@
 
 #include "balance_fixture.h"
 
+namespace Game::Session {
+class SessionContext;
+}
+
 namespace Balance {
 
 enum class Outcome : std::uint8_t {
@@ -55,7 +59,7 @@ struct BattleResult {
   InvalidBehaviourCounts invalid;
 };
 
-void initialize_simulation_environment();
+void initialize_simulation_environment(Game::Session::SessionContext& session);
 
 struct TraceSample {
   float time_seconds{0.0F};
@@ -69,7 +73,8 @@ struct TraceSample {
   int units_moving{0};
 };
 
-auto run_battle(const Fixture& fixture,
+auto run_battle(Game::Session::SessionContext& session,
+                const Fixture& fixture,
                 std::uint32_t seed,
                 bool swap_sides,
                 std::vector<TraceSample>* trace = nullptr) -> BattleResult;

@@ -53,7 +53,7 @@ void RuntimeFrameOrchestrator::advance_simulation(
 
   Game::Session::SessionContext& session =
       scene.session != nullptr ? *scene.session
-                               : Game::Session::SessionContext::active();
+                               : Game::Session::session_for(*scene.world);
 
   session.clock().set_time_scale(time_scale);
   {

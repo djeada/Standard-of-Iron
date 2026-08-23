@@ -9,6 +9,7 @@
 #include <string_view>
 #include <vector>
 
+#include "../core/ambient_session.h"
 #include "../core/component.h"
 #include "../core/world.h"
 #include "../map/terrain_service.h"
@@ -185,7 +186,7 @@ auto collides_with_registered_building(Engine::Core::World& world,
                                        const std::string& building_type,
                                        Engine::Core::EntityID ignore_entity_id = 0)
     -> bool {
-  auto& collision_registry = BuildingCollisionRegistry::instance();
+  auto& collision_registry = *Game::Session::services_for(world).building_collision;
   if (!placement_can_touch_wall_network_structures(building_type)) {
     return collision_registry.is_circle_overlapping_building(
         pos_x, pos_z, radius, ignore_entity_id);
@@ -231,7 +232,7 @@ auto is_buildable_world_position(float pos_x,
   }
 
   if (placement_can_touch_wall_network_structures(building_type)) {
-    if (auto& terrain_service = Game::Map::TerrainService::instance();
+    if (auto& terrain_service = *Game::Session::services_for(world).terrain;
         terrain_service.is_initialized()) {
       Game::Systems::Point const grid =
           Game::Systems::NavGrid::world_to_grid(pos_x, pos_z);
@@ -247,7 +248,7 @@ auto is_buildable_world_position(float pos_x,
     if (!pathfinder->is_walkable(grid.x, grid.y)) {
       return false;
     }
-    if (auto& terrain_service = Game::Map::TerrainService::instance();
+    if (auto& terrain_service = *Game::Session::services_for(world).terrain;
         terrain_service.is_initialized() &&
         !terrain_service.is_walkable(grid.x, grid.y)) {
       return false;
@@ -362,7 +363,8 @@ auto preserved_isolated_rotation(float current_rotation_y) -> float {
   return (quarter_turns % 2) == 0 ? 0.0F : 90.0F;
 }
 
-void update_wall_entity_visuals(Engine::Core::Entity* entity,
+void update_wall_entity_visuals(Engine::Core::World& world,
+                                Engine::Core::Entity* entity,
                                 WallSegmentComponent* wall,
                                 std::uint8_t connection_mask) {
   if (entity == nullptr || wall == nullptr) {
@@ -398,7 +400,7 @@ void update_wall_entity_visuals(Engine::Core::Entity* entity,
   wall->connection_mask = connection_mask;
 
   if (is_gate && entity->has_component<GateComponent>()) {
-    GateService::sync_gate_footprint(entity->get_id(), transform->rotation.y);
+    GateService::sync_gate_footprint(world, entity->get_id(), transform->rotation.y);
   }
 }
 
@@ -676,9 +678,11 @@ auto WallNetworkService::resolve_appearance(Game::Systems::NationID nation_id,
 
 namespace {
 
-auto blocking_building_covers(float world_x, float world_z) -> bool {
+auto blocking_building_covers(const Engine::Core::World& world,
+                              float world_x,
+                              float world_z) -> bool {
   for (const auto& building :
-       BuildingCollisionRegistry::instance().get_all_buildings()) {
+       Game::Session::services_for(world).building_collision->get_all_buildings()) {
     if (!building.blocks_navigation) {
       continue;
     }
@@ -778,7 +782,7 @@ auto collect_navigation_passages(
         }
 
         const auto center = NavGrid::grid_to_world(Point{gap_x, gap_z});
-        if (blocking_building_covers(center.x(), center.z())) {
+        if (blocking_building_covers(world, center.x(), center.z())) {
           continue;
         }
         emit_passage(gap_x, gap_z, mask);
@@ -817,10 +821,10 @@ void WallNetworkService::refresh_world(Engine::Core::World& world) {
     }
     const auto mask =
         compute_connection_mask(occupancy, wall->grid_x, wall->grid_z, self_cells);
-    update_wall_entity_visuals(&entity, wall, mask);
+    update_wall_entity_visuals(world, &entity, wall, mask);
   }
 
-  BuildingCollisionRegistry::instance().set_navigation_passages(
+  Game::Session::services_for(world).building_collision->set_navigation_passages(
       collect_navigation_passages(world, connection_occupancy));
 }
 

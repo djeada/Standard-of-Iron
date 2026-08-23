@@ -19,15 +19,32 @@ using EntityID = std::uint64_t;
 class World;
 } // namespace Engine::Core
 
+namespace Game::Map {
+class TerrainService;
+}
+
 namespace Game::Units {
 class UnitFactoryRegistry;
 }
 
 namespace Game::Systems {
 
+class GlobalStatsRegistry;
+class NationRegistry;
+class OwnerRegistry;
+class PlayerResourceRegistry;
+
 class UndeadAwakeningSystem : public Engine::Core::System, public UndeadZoneQuery {
 public:
-  UndeadAwakeningSystem();
+  struct Services {
+    Game::Map::TerrainService& terrain;
+    OwnerRegistry& owners;
+    NationRegistry& nations;
+    GlobalStatsRegistry& stats;
+    PlayerResourceRegistry& economy;
+  };
+
+  explicit UndeadAwakeningSystem(Services services);
   ~UndeadAwakeningSystem() override;
 
   void configure(const Game::Map::MapDefinition& map_definition);
@@ -97,6 +114,7 @@ private:
   [[nodiscard]] auto find_zone(const QString& zone_id) const -> const RuntimeZone*;
   [[nodiscard]] auto find_zone_mutable(const QString& zone_id) -> RuntimeZone*;
 
+  Services m_services;
   std::vector<RuntimeZone> m_zones;
   QHash<QString, int> m_zone_index;
   std::shared_ptr<Game::Units::UnitFactoryRegistry> m_factory_registry;

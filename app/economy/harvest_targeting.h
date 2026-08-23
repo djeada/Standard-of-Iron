@@ -72,6 +72,7 @@ evaluate_harvest_placement(Engine::Core::World* world,
                            std::uint64_t preferred_target_id = 0) -> HarvestPlacement;
 
 [[nodiscard]] auto resolve_harvest_target_at_position(
+    Game::Map::TerrainService& terrain_service,
     const QString& item_type,
     const QVector3D& world_position,
     const CrewClaims& claims,
@@ -81,11 +82,12 @@ evaluate_harvest_placement(Engine::Core::World* world,
                               std::uint64_t prop_id,
                               const CrewClaims& claims) -> bool;
 
-[[nodiscard]] auto resolve_harvest_target_from_screen(const QString& item_type,
-                                                      const Render::GL::Camera& camera,
-                                                      const ViewportState& viewport,
-                                                      const QPointF& screen_point,
-                                                      const CrewClaims& claims)
-    -> std::optional<ResolvedHarvestTarget>;
+[[nodiscard]] auto resolve_harvest_target_from_screen(
+    Game::Map::TerrainService& terrain_service,
+    const QString& item_type,
+    const Render::GL::Camera& camera,
+    const ViewportState& viewport,
+    const QPointF& screen_point,
+    const CrewClaims& claims) -> std::optional<ResolvedHarvestTarget>;
 
 } // namespace App::Economy

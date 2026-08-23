@@ -126,7 +126,7 @@ auto main(int argc, char** argv) -> int {
   const int seed_override =
       parser.isSet(seeds_option) ? parser.value(seeds_option).toInt() : 0;
 
-  Balance::initialize_simulation_environment();
+  Balance::initialize_simulation_environment(session);
 
   std::vector<Balance::FixtureSummary> summaries;
   for (auto& fixture : fixtures) {
@@ -139,7 +139,7 @@ auto main(int argc, char** argv) -> int {
 
     if (parser.isSet(trace_option)) {
       std::vector<Balance::TraceSample> trace;
-      const auto result = Balance::run_battle(fixture, 1U, false, &trace);
+      const auto result = Balance::run_battle(session, fixture, 1U, false, &trace);
       QTextStream out(stdout);
       out << "== trace " << fixture.id << " -> "
           << Balance::outcome_name(result.outcome) << " @"
@@ -163,9 +163,9 @@ auto main(int argc, char** argv) -> int {
     std::vector<Balance::BattleResult> results;
     for (int seed = 0; seed < fixture.seeds; ++seed) {
       const auto seed_value = static_cast<std::uint32_t>(seed) * 0x9E3779B9U + 1U;
-      results.push_back(Balance::run_battle(fixture, seed_value, false));
+      results.push_back(Balance::run_battle(session, fixture, seed_value, false));
       if (fixture.mirror_sides) {
-        results.push_back(Balance::run_battle(fixture, seed_value, true));
+        results.push_back(Balance::run_battle(session, fixture, seed_value, true));
       }
     }
     summaries.push_back(Balance::summarize(fixture, std::move(results)));

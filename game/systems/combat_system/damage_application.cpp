@@ -10,6 +10,7 @@
 #include <optional>
 #include <vector>
 
+#include "../../core/ambient_session.h"
 #include "../../core/component.h"
 #include "../../core/event_manager.h"
 #include "../../core/world.h"
@@ -1092,8 +1093,9 @@ apply_unit_damage(Engine::Core::World* world,
       }
     }
 
-    if (target->has_component<Engine::Core::BuildingComponent>()) {
-      BuildingCollisionRegistry::instance().unregister_building(target->get_id());
+    if (world != nullptr && target->has_component<Engine::Core::BuildingComponent>()) {
+      Game::Session::services_for(*world).building_collision->unregister_building(
+          target->get_id());
     }
     if (world != nullptr &&
         target->get_component<Engine::Core::WallSegmentComponent>() != nullptr) {

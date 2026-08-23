@@ -112,6 +112,8 @@ private:
   std::unique_ptr<State> m_state;
 };
 
+[[nodiscard]] auto session_for(const Engine::Core::World& world) -> SessionContext&;
+
 class ScopedSession {
 public:
   explicit ScopedSession(SessionContext& session)

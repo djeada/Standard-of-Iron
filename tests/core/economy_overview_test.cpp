@@ -306,7 +306,7 @@ TEST_F(EconomyOverviewTest, TheCoachFinishesOnceAnArmyHasBeenRaised) {
                                        Game::Units::SpawnType::Archer,
                                        false));
   }
-  ASSERT_GE(Game::Systems::troop_count_for(k_owner),
+  ASSERT_GE(Game::Systems::troop_count_for(world, k_owner),
             App::Core::k_economy_coach_army_population);
 
   const QVariantMap coach = App::Core::build_economy_coach_state(request(), baseline);

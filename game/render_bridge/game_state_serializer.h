@@ -14,11 +14,17 @@ namespace Engine::Core {
 class World;
 } // namespace Engine::Core
 
+namespace Game::Map {
+class VisibilityService;
+}
+
 namespace Render::GL {
 class Camera;
 }
 
 namespace Game::Systems {
+
+class NationRegistry;
 
 class GameStateSerializer {
 public:
@@ -38,9 +44,11 @@ public:
   static void restore_level_from_metadata(const QJsonObject& metadata,
                                           LevelSnapshot& level);
 
-  static void restore_player_nations_from_metadata(const QJsonObject& metadata);
+  static void restore_player_nations_from_metadata(NationRegistry& nations,
+                                                   const QJsonObject& metadata);
 
-  static void restore_visibility_from_metadata(const QJsonObject& metadata);
+  static void restore_visibility_from_metadata(Game::Map::VisibilityService& visibility,
+                                               const QJsonObject& metadata);
 };
 
 } // namespace Game::Systems

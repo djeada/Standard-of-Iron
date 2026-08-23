@@ -17,6 +17,7 @@
 
 #include "../core/component.h"
 #include "../core/world.h"
+#include "../session/session_context.h"
 #include "../session/world_digest.h"
 #include "../units/factory.h"
 #include "../units/unit.h"
@@ -105,8 +106,8 @@ auto wrap_degrees(float value) -> double {
   return wrapped > 180.0 ? 360.0 - wrapped : wrapped;
 }
 
-void configure_registries(bool use_ai) {
-  auto& owners = Game::Systems::OwnerRegistry::instance();
+void configure_registries(Game::Session::SessionContext& session, bool use_ai) {
+  auto& owners = session.owners();
   owners.clear();
   owners.register_owner_with_id(
       k_player_owner, Game::Systems::OwnerType::Player, "Verifier Player");
@@ -118,12 +119,12 @@ void configure_registries(bool use_ai) {
   owners.set_owner_team(k_enemy_owner, 2);
   owners.set_local_player_id(k_player_owner);
 
-  auto& nations = Game::Systems::NationRegistry::instance();
+  auto& nations = session.nations();
   Game::Systems::initialize_default_content(nations);
   nations.clear_player_assignments();
   nations.set_player_nation(k_player_owner, Game::Systems::NationID::RomanRepublic);
   nations.set_player_nation(k_enemy_owner, Game::Systems::NationID::Carthage);
-  Game::Systems::TroopCountRegistry::instance().initialize();
+  session.troop_counts().initialize();
   Game::Systems::NavGrid::initialize(static_cast<int>(k_world_extent),
                                      static_cast<int>(k_world_extent));
 }
@@ -226,7 +227,6 @@ void issue_opposed_orders(ScenarioWorld& scenario, bool command_enemy) {
 auto build_world(ScenarioId id, Engine::Core::World* into = nullptr)
     -> std::unique_ptr<ScenarioWorld> {
   bool const use_ai = id == ScenarioId::BotSkirmish;
-  configure_registries(use_ai);
   auto scenario = std::make_unique<ScenarioWorld>();
   if (into != nullptr) {
     scenario->world = into;
@@ -234,6 +234,7 @@ auto build_world(ScenarioId id, Engine::Core::World* into = nullptr)
     scenario->owned_world = std::make_unique<Engine::Core::World>();
     scenario->world = scenario->owned_world.get();
   }
+  configure_registries(Game::Session::session_for(*scenario->world), use_ai);
   Game::Units::register_built_in_units(scenario->factories);
 
   switch (id) {

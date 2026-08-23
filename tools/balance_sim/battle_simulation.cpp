@@ -19,6 +19,7 @@
 #include "game/core/world.h"
 #include "game/map/map_definition.h"
 #include "game/map/terrain_service.h"
+#include "game/session/session_context.h"
 #include "game/systems/arrow_system.h"
 #include "game/systems/cleanup_system.h"
 #include "game/systems/combat_status_effect_system.h"
@@ -375,7 +376,7 @@ auto outcome_name(Outcome outcome) -> QString {
   return QStringLiteral("timeout");
 }
 
-void initialize_simulation_environment() {
+void initialize_simulation_environment(Game::Session::SessionContext& session) {
   static bool initialized = false;
   if (initialized) {
     return;
@@ -384,15 +385,16 @@ void initialize_simulation_environment() {
 
   load_creature_pose_assets();
 
-  Game::Systems::initialize_default_content(Game::Systems::NationRegistry::instance());
+  Game::Systems::initialize_default_content(session.nations());
   Game::Units::register_built_in_units(factory_registry());
 }
 
-auto run_battle(const Fixture& fixture,
+auto run_battle(Game::Session::SessionContext& session,
+                const Fixture& fixture,
                 std::uint32_t seed,
                 bool swap_sides,
                 std::vector<TraceSample>* trace) -> BattleResult {
-  initialize_simulation_environment();
+  initialize_simulation_environment(session);
 
   const FixtureSide& side_a_def = swap_sides ? fixture.side_b : fixture.side_a;
   const FixtureSide& side_b_def = swap_sides ? fixture.side_a : fixture.side_b;
@@ -401,17 +403,17 @@ auto run_battle(const Fixture& fixture,
   result.seed = seed;
   result.sides_swapped = swap_sides;
 
-  auto& owners = Game::Systems::OwnerRegistry::instance();
+  auto& owners = session.owners();
   owners.clear();
   owners.register_owner_with_id(k_side_a_owner, Game::Systems::OwnerType::Player, "A");
   owners.register_owner_with_id(k_side_b_owner, Game::Systems::OwnerType::Player, "B");
   owners.set_local_player_id(k_side_a_owner);
 
-  auto& nations = Game::Systems::NationRegistry::instance();
+  auto& nations = session.nations();
   nations.set_player_nation(k_side_a_owner, side_a_def.nation);
   nations.set_player_nation(k_side_b_owner, side_b_def.nation);
 
-  Game::Map::TerrainService::instance().initialize(
+  session.terrain().initialize(
       flat_map_definition(fixture.grid_width, fixture.grid_height));
   Game::Systems::NavGrid::initialize(fixture.grid_width, fixture.grid_height);
 

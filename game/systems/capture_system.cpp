@@ -6,6 +6,7 @@
 #include <cmath>
 #include <vector>
 
+#include "../core/ambient_session.h"
 #include "../core/component.h"
 #include "../core/event_manager.h"
 #include "../core/ownership_constants.h"
@@ -65,7 +66,7 @@ void CaptureSystem::tally_nearby_troops(Engine::Core::World& world,
   }
 }
 
-void CaptureSystem::transfer_barrack_ownership(Engine::Core::World*,
+void CaptureSystem::transfer_barrack_ownership(Engine::Core::World* world,
                                                Engine::Core::Entity* barrack,
                                                int new_owner_id) {
   auto* unit = barrack->get_component<Engine::Core::UnitComponent>();
@@ -80,7 +81,7 @@ void CaptureSystem::transfer_barrack_ownership(Engine::Core::World*,
   int const previous_owner_id = unit->owner_id;
   unit->owner_id = new_owner_id;
 
-  Game::Systems::BuildingCollisionRegistry::instance().update_building_owner(
+  Game::Session::services_for(*world).building_collision->update_building_owner(
       barrack->get_id(), new_owner_id);
 
   if (!Game::Core::is_neutral_owner(new_owner_id) && (prod == nullptr)) {
