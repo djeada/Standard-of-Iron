@@ -2,6 +2,7 @@
 
 #include <vector>
 
+#include "../core/ambient_session.h"
 #include "../core/component.h"
 #include "../core/entity.h"
 #include "../core/event_manager.h"
@@ -17,7 +18,8 @@ namespace Game::Systems::NationCollapse {
 namespace {
 
 void tear_down_structure(Engine::Core::World& world, Engine::Core::Entity& entity) {
-  BuildingCollisionRegistry::instance().unregister_building(entity.get_id());
+  Game::Session::services_for(world).building_collision->unregister_building(
+      entity.get_id());
 
   const bool was_wall =
       entity.get_component<Engine::Core::WallSegmentComponent>() != nullptr;

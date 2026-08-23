@@ -1,7 +1,9 @@
 #include "order_service.h"
 
+#include "../core/ambient_session.h"
 #include "../core/component.h"
 #include "../core/entity.h"
+#include "../core/world.h"
 #include "../map/terrain_service.h"
 
 namespace Game::Systems {
@@ -120,7 +122,8 @@ void OrderService::clear_builder_gather_order(Engine::Core::Entity* entity) {
   }
 }
 
-void OrderService::clear_builder_task(Engine::Core::Entity* entity) {
+void OrderService::clear_builder_task(Engine::Core::World& world,
+                                      Engine::Core::Entity* entity) {
   if (entity == nullptr) {
     return;
   }
@@ -131,7 +134,8 @@ void OrderService::clear_builder_task(Engine::Core::Entity* entity) {
   }
 
   if (builder->task_target_reserved) {
-    Game::Map::TerrainService::instance().release_world_prop(builder->task_target_id);
+    Game::Session::services_for(world).terrain->release_world_prop(
+        builder->task_target_id);
   }
   builder->in_progress = false;
   builder->time_remaining = 0.0F;

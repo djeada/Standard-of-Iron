@@ -227,8 +227,10 @@ auto build_mission_ambience_queries(const Game::Mission::MissionDefinition* miss
 
 } // namespace
 
-AudioCoordinator::AudioCoordinator(Game::Audio::AudioEventHandler* event_handler)
-    : m_event_handler(event_handler) {
+AudioCoordinator::AudioCoordinator(Game::Audio::AudioEventHandler* event_handler,
+                                   Game::Systems::NationRegistry& nations)
+    : m_event_handler(event_handler)
+    , m_nations(nations) {
 }
 
 void AudioCoordinator::apply_frontend_music_context(const QString& context) {
@@ -329,9 +331,7 @@ void AudioCoordinator::configure_audio_ambient_mappings(int local_owner_id) {
 
   QString faction_tag = QStringLiteral("roman");
   if (local_owner_id != 0) {
-    if (const auto* nation =
-            Game::Systems::NationRegistry::instance().get_nation_for_player(
-                local_owner_id);
+    if (const auto* nation = m_nations.get_nation_for_player(local_owner_id);
         nation != nullptr) {
       faction_tag = nation_audio_tag(nation->id);
     }
@@ -426,9 +426,7 @@ void AudioCoordinator::apply_mission_ambience(
 
   QString faction_tag = QStringLiteral("roman");
   if (local_owner_id != 0) {
-    if (const auto* nation =
-            Game::Systems::NationRegistry::instance().get_nation_for_player(
-                local_owner_id);
+    if (const auto* nation = m_nations.get_nation_for_player(local_owner_id);
         nation != nullptr) {
       faction_tag = nation_audio_tag(nation->id);
     }

@@ -226,7 +226,7 @@ public:
   [[nodiscard]] int enemy_troops_defeated() const;
   [[nodiscard]] QVariantMap selected_player_state() const;
 
-  Q_INVOKABLE [[nodiscard]] static QVariantMap get_player_stats(int owner_id);
+  Q_INVOKABLE [[nodiscard]] QVariantMap get_player_stats(int owner_id);
 
   [[nodiscard]] int selected_player_id() const { return m_selected_player_id; }
   void set_selected_player_id(int id);

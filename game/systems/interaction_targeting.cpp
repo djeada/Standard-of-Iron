@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <limits>
 
+#include "../core/ambient_session.h"
 #include "../core/component.h"
 #include "../core/world.h"
 #include "../map/terrain_service.h"
@@ -42,7 +43,7 @@ struct Scored {
 void collect_resource_nodes(const InteractionTargetingRequest& request,
                             float max_distance_sq,
                             std::vector<Scored>& out) {
-  const auto& terrain = Game::Map::TerrainService::instance();
+  const auto& terrain = *Game::Session::services_for(*request.world).terrain;
   for (const auto& prop : terrain.world_props()) {
     if (!Game::Map::is_harvestable_world_prop_type(prop.type) ||
         terrain.is_world_prop_reserved(prop.id)) {

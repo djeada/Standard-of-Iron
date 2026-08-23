@@ -214,13 +214,14 @@ auto LevelOrchestrator::load_skirmish(const QString& map_path,
     ai_system->reinitialize();
   }
 
-  auto& troops = Game::Systems::TroopCountRegistry::instance();
+  auto& session = Game::Session::session_for(world);
+  auto& troops = session.troop_counts();
   troops.rebuild_from_world(world);
 
-  auto& stats_registry = Game::Systems::GlobalStatsRegistry::instance();
+  auto& stats_registry = session.stats();
   stats_registry.rebuild_from_world(world);
 
-  auto& owner_registry = Game::Systems::OwnerRegistry::instance();
+  auto& owner_registry = session.owners();
   const auto& all_owners = owner_registry.get_all_owners();
   for (const auto& owner : all_owners) {
     if (owner.type == Game::Systems::OwnerType::Player ||

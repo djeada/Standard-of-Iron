@@ -2,6 +2,7 @@
 
 #include "game/core/world.h"
 #include "game/mission/campaign_manager.h"
+#include "game/session/session_context.h"
 #include "game/systems/match_snapshot.h"
 #include "game/systems/victory_service.h"
 #include "game/util/asset_text.h"
@@ -49,6 +50,7 @@ void MissionWaveRuntime::restore(const MissionWaveBinding& binding,
       {.mission = mission,
        .mission_difficulty = binding.campaign->current_mission_context().difficulty,
        .level = *binding.level,
+       .nations = Game::Session::session_for(*binding.world).nations(),
        .defense_reference_world_position = defense_reference});
 
   m_events = Game::Mission::build_pending_mission_events(mission);

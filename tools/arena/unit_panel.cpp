@@ -42,8 +42,9 @@ auto prettify_identifier(const QString& value) -> QString {
 
 } // namespace
 
-UnitPanel::UnitPanel(QWidget* parent)
-    : QWidget(parent) {
+UnitPanel::UnitPanel(Game::Systems::NationRegistry& nations, QWidget* parent)
+    : QWidget(parent)
+    , m_nations(nations) {
   auto* layout = new QVBoxLayout(this);
   layout->setContentsMargins(8, 8, 8, 8);
   layout->setSpacing(8);
@@ -435,7 +436,7 @@ void UnitPanel::populate_nation_options() {
   }
 
   QString const preferred = selected_nation_id();
-  auto& registry = Game::Systems::NationRegistry::instance();
+  auto& registry = m_nations;
   Game::Systems::initialize_default_content(registry);
   const auto& nations = registry.get_all_nations();
 
@@ -476,8 +477,7 @@ void UnitPanel::populate_unit_options(const QString& nation_id,
     return;
   }
 
-  const auto* nation =
-      Game::Systems::NationRegistry::instance().get_nation(parsed_nation_id);
+  const auto* nation = m_nations.get_nation(parsed_nation_id);
   if (nation == nullptr) {
     m_unit_box->clear();
     return;

@@ -880,6 +880,66 @@ Only after that do items 1, 3, 4 and 6 become measurable.
 
 ---
 
+# Architecture review
+
+Yes. I found a few architectural mistakes, but I **would not redesign the project from scratch**. The core direction is good; the main problem is that your intended boundaries are clearer in the README than they are in the actual build graph.
+
+Your declared architecture is strong for an RTS: authoritative fixed-tick simulation, a unified command pipeline, deterministic RNG, per-match `SessionContext`, ECS underneath it, and rendering outside the simulation. Those are good choices for future replay, multiplayer, headless testing, and tooling. ([GitHub][1])
+
+The problems I would fix, in priority order:
+
+1. **High: your simulation boundary leaks into rendering.** This is the biggest issue I found. The README says `game_sim` is headless and links no renderer. But the current `game_systems` CMake target links `render_gl` **PUBLICLY**:
+   `game_systems -> render_gl`. Worse, that same target contains combat, AI, pathfinding, production, persistence, camera services, picking, minimap texture management, camera viewport rendering, and `visual_catalog`. ([GitHub][1])
+
+    That's the dependency direction I would reverse. Simulation should produce state/events/snapshots; presentation should consume them.
+
+    I would move toward:
+
+    ```text
+    engine_core
+        ↓
+    game_sim
+        ├── game_persistence
+        ├── game_view
+        └── audio adapters
+               ↓
+            render_gl
+               ↓
+            app_core
+               ↓
+        standard_of_iron
+    ```
+
+    `game_sim` should contain commands, ECS-facing gameplay systems, AI, economy, combat, pathfinding, terrain semantics, ownership, RNG, etc. It should have **zero knowledge of `render_gl`**.
+
+2. **High: `game_systems` has become a “everything game-related” mega-module.** This is more important than the number of source files. Save/load, SQL-facing persistence, minimap texture generation, camera/picking services, visuals, loaders, and authoritative simulation all sharing one library means your directory structure gives you separation that CMake does not actually enforce. ([GitHub][2])
+
+    For example, I would split it approximately into `game_sim`, `game_content`, `game_persistence`, and `game_view`. `minimap_generator` might legitimately consume simulation/map data, but `minimap_texture_manager`, `camera_viewport_layer`, camera services, and picking are presentation/view concerns.
+
+3. **Medium: `app_core` is an architectural concept, not yet a real boundary.** The README depicts an `app_core` layer. In CMake, however, `game_engine.cpp`, coordinators, models, controllers, UI classes, etc. are compiled directly into the `standard_of_iron` executable. The executable then links the low-level libraries itself. ([GitHub][1])
+
+    I would make `app_core` an actual library target. Then `main.cpp` should be almost purely a composition root. That gives you a compile-time rule rather than a convention.
+
+4. **Medium: the remaining ambient singleton access is dangerous for exactly where you're heading.** Your README already acknowledges that you're migrating `instance()` accessors to explicit `SessionContext&`. Finish that migration before multiplayer/replay work. ([GitHub][3])
+
+    `SessionContext` is one of the better decisions in the architecture. Hidden global registries, clocks, RNGs, selection state, ownership state, etc. undermine it because two simultaneous simulations can silently interact. Prefer passing either `SessionContext&` or, better in many cases, the narrow service/state object a system actually needs.
+
+5. **Medium: your test architecture is allowing interface drift instead of making it painful immediately.** The main test binary pulls together application code, game systems, renderer code, map-editor code, arena code, Qt UI dependencies, etc. The tests CMake also explicitly creates a subset binary because three tests have compile breakage caused by an interface that “drifted from the real registry.” ([GitHub][4])
+
+    That's an architectural signal, not merely a testing nuisance. I'd have CI independently build/test `engine_core`, `game_sim`, persistence, rendering, and application layers. A simulation test should not need `render_gl` or Qt Widgets to link.
+
+6. **Low/medium: your documentation and executable architecture have drifted apart.** README describes `game_sim → game_view/render_gl → app_core`, and links `docs/ARCHITECTURE.md` as the specification. The current `docs/` directory doesn't contain that architecture document, while the actual targets are `engine_core`, `game_systems`, `render_gl`, and the monolithic executable. ([GitHub][1])
+
+    I would treat the CMake dependency graph as the architectural source of truth and add a CI check for forbidden dependencies. Otherwise architecture diagrams inevitably become aspirational.
+
+One smaller thing I'd revisit later: `engine_core` itself publicly depends on `Qt::Gui` and `animation_core`. ([GitHub][2]) That's not inherently wrong—`Qt::Gui` has useful math types and does not mean OpenGL—but if `engine_core` is supposed to be your truly reusable/headless kernel, I'd eventually try to reduce it toward a very small dependency surface.
+
+### What I would _not_ change
+
+I would keep the ECS, generational entity handles, fixed tick, deterministic RNG, common `CommandQueue` for player/AI/script orders, and per-match `SessionContext`. Those pieces all point in the right direction.
+
+---
+
 ## Unrelated bug found and fixed along the way
 
 The selected-unit HUD flickered between empty and full health/stamina during

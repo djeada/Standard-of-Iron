@@ -15,6 +15,7 @@
 #include "game/core/component.h"
 #include "game/core/world.h"
 #include "game/map/terrain_service.h"
+#include "game/session/session_context.h"
 #include "game/systems/building_collision_registry.h"
 #include "game/systems/building_line_of_sight.h"
 #include "game/systems/combat_actions/combat_action_definition.h"
@@ -58,8 +59,10 @@ auto signed_angle_delta(float target_degrees, float current_degrees) -> float {
 
 constexpr float k_commander_body_radius = 0.34F;
 
-auto structure_blocks_commander_body(float x, float z) -> bool {
-  auto const& registry = Game::Systems::BuildingCollisionRegistry::instance();
+auto structure_blocks_commander_body(Game::Session::SessionContext& session,
+                                     float x,
+                                     float z) -> bool {
+  auto const& registry = session.building_collision();
   auto blocked_by = [x, z](const Game::Systems::BuildingFootprint& footprint) {
     if (!footprint.blocks_navigation) {
       return false;
@@ -87,14 +90,15 @@ auto structure_blocks_commander_body(float x, float z) -> bool {
   return false;
 }
 
-auto structure_padding_covers_cell(const Game::Systems::Pathfinding& pathfinder,
+auto structure_padding_covers_cell(Game::Session::SessionContext& session,
+                                   const Game::Systems::Pathfinding& pathfinder,
                                    int grid_x,
                                    int grid_z) -> bool {
 
   constexpr float k_cell_slack = 1.0F;
   float const cell_x = static_cast<float>(grid_x) + pathfinder.get_grid_offset_x();
   float const cell_z = static_cast<float>(grid_z) + pathfinder.get_grid_offset_z();
-  auto const& registry = Game::Systems::BuildingCollisionRegistry::instance();
+  auto const& registry = session.building_collision();
   auto covers = [cell_x, cell_z](const Game::Systems::BuildingFootprint& footprint) {
     if (!footprint.blocks_navigation) {
       return false;
@@ -151,7 +155,7 @@ auto scatter_prop_blocks_commander_body(const Game::Systems::Pathfinding& pathfi
   return false;
 }
 
-auto is_walkable_at(float x, float z) -> bool {
+auto is_walkable_at(Game::Session::SessionContext& session, float x, float z) -> bool {
   using CellValue = Game::Systems::Pathfinding::CellValue;
 
   if (auto* pathfinder = Game::Systems::NavGrid::get_pathfinder()) {
@@ -166,22 +170,22 @@ auto is_walkable_at(float x, float z) -> bool {
                                      cell == CellValue::Boulder ||
                                      cell == CellValue::IronOre;
       if (!scatter_prop_cell &&
-          !structure_padding_covers_cell(*pathfinder, grid.x, grid.y)) {
+          !structure_padding_covers_cell(session, *pathfinder, grid.x, grid.y)) {
         return false;
       }
     }
     if (scatter_prop_blocks_commander_body(*pathfinder, grid.x, grid.y, x, z)) {
       return false;
     }
-    return !structure_blocks_commander_body(x, z);
+    return !structure_blocks_commander_body(session, x, z);
   }
-  auto& terrain = Game::Map::TerrainService::instance();
+  auto& terrain = session.terrain();
   if (terrain.is_initialized() &&
       !terrain.is_walkable(static_cast<int>(std::round(x)),
                            static_cast<int>(std::round(z)))) {
     return false;
   }
-  return !structure_blocks_commander_body(x, z);
+  return !structure_blocks_commander_body(session, x, z);
 }
 
 constexpr float k_fpv_walk_speed_scale = 1.25F;
@@ -218,18 +222,21 @@ auto airborne_step(float to_x, float to_z) -> GroundMove {
   return {.x = to_x, .z = to_z, .moved = true};
 }
 
-auto resolve_ground_step(float from_x,
+auto resolve_ground_step(Game::Session::SessionContext& session,
+                         float from_x,
                          float from_z,
                          float to_x,
                          float to_z) -> GroundMove {
-  if (is_walkable_at(to_x, to_z)) {
+  if (is_walkable_at(session, to_x, to_z)) {
     return {.x = to_x, .z = to_z, .moved = true};
   }
 
   float const delta_x = to_x - from_x;
   float const delta_z = to_z - from_z;
-  bool const slide_x_free = std::abs(delta_x) > 1.0e-5F && is_walkable_at(to_x, from_z);
-  bool const slide_z_free = std::abs(delta_z) > 1.0e-5F && is_walkable_at(from_x, to_z);
+  bool const slide_x_free =
+      std::abs(delta_x) > 1.0e-5F && is_walkable_at(session, to_x, from_z);
+  bool const slide_z_free =
+      std::abs(delta_z) > 1.0e-5F && is_walkable_at(session, from_x, to_z);
 
   if (slide_x_free && (!slide_z_free || std::abs(delta_x) >= std::abs(delta_z))) {
     return {.x = to_x, .z = from_z, .moved = true};
@@ -240,12 +247,18 @@ auto resolve_ground_step(float from_x,
   return {.x = from_x, .z = from_z, .moved = false};
 }
 
-auto resolve_reachable_ground_position(const QVector3D& start,
+auto buildings_of(const Engine::Core::World& world)
+    -> const Game::Systems::BuildingCollisionRegistry& {
+  return Game::Session::session_for(world).building_collision();
+}
+
+auto resolve_reachable_ground_position(Game::Session::SessionContext& session,
+                                       const QVector3D& start,
                                        const QVector3D& desired,
                                        unsigned int ignore_entity_id = 0) -> QVector3D {
   QVector3D candidate = desired;
   const float blocked_fraction = Game::Systems::first_building_intersection_fraction(
-      start, desired, ignore_entity_id);
+      session.building_collision(), start, desired, ignore_entity_id);
   if (blocked_fraction < 1.0F) {
     const float safe_fraction = std::clamp(blocked_fraction - 0.08F, 0.0F, 1.0F);
     candidate = start + (desired - start) * safe_fraction;
@@ -257,7 +270,7 @@ auto resolve_reachable_ground_position(const QVector3D& start,
     const float sample_t =
         static_cast<float>(sample_index) / static_cast<float>(k_samples);
     const QVector3D sample = start + (candidate - start) * sample_t;
-    if (!is_walkable_at(sample.x(), sample.z())) {
+    if (!is_walkable_at(session, sample.x(), sample.z())) {
       break;
     }
     best = sample;
@@ -343,8 +356,11 @@ void separate_commander_from_bodies(Engine::Core::World& world,
 
   float const target_x = transform.position.x + push.x();
   float const target_z = transform.position.z + push.z();
-  auto const step = resolve_ground_step(
-      transform.position.x, transform.position.z, target_x, target_z);
+  auto const step = resolve_ground_step(Game::Session::session_for(world),
+                                        transform.position.x,
+                                        transform.position.z,
+                                        target_x,
+                                        target_z);
   transform.position.x = step.x;
   transform.position.z = step.z;
 }
@@ -716,7 +732,7 @@ void CommanderControlController::cycle_lock_on_target(
   constexpr float k_lock_range_sq = k_lock_range * k_lock_range;
   constexpr float k_lock_max_angle_degrees = 70.0F;
 
-  auto& owners = Game::Systems::OwnerRegistry::instance();
+  auto& owners = Game::Session::session_for(world).owners();
   const QVector3D origin(transform->position.x, 0.0F, transform->position.z);
 
   struct Candidate {
@@ -753,7 +769,8 @@ void CommanderControlController::cycle_lock_on_target(
       const float angle_diff =
           signed_angle_delta(std::atan2(dx, dz) * 57.29577951308232F, m_view_yaw);
       if (std::abs(angle_diff) > k_lock_max_angle_degrees ||
-          !Game::Systems::has_clear_building_los(origin, soldier.position)) {
+          !Game::Systems::has_clear_building_los(
+              buildings_of(world), origin, soldier.position)) {
         continue;
       }
       Candidate const resolved{
@@ -935,8 +952,11 @@ void CommanderControlController::apply_strike_lunge(
   const float step = std::min(gap, k_lunge_speed * lunge_shape * dt);
   const float step_x = transform.position.x + (to_x / distance) * step;
   const float step_z = transform.position.z + (to_z / distance) * step;
-  auto const resolved =
-      resolve_ground_step(transform.position.x, transform.position.z, step_x, step_z);
+  auto const resolved = resolve_ground_step(Game::Session::session_for(world),
+                                            transform.position.x,
+                                            transform.position.z,
+                                            step_x,
+                                            step_z);
   if (!resolved.moved) {
     return;
   }
@@ -978,7 +998,8 @@ void CommanderControlController::update_lock_on_yaw(Engine::Core::World& world,
   constexpr float k_lock_drop_sq = 18.0F * 18.0F;
   const QVector3D origin(cmd_transform->position.x, 0.0F, cmd_transform->position.z);
   const QVector3D target_pos = target_sample->position;
-  const bool target_visible = Game::Systems::has_clear_building_los(origin, target_pos);
+  const bool target_visible =
+      Game::Systems::has_clear_building_los(buildings_of(world), origin, target_pos);
 
   const float target_yaw = std::atan2(dx, dz) * 57.29577951308232F;
   const float diff = signed_angle_delta(target_yaw, m_view_yaw);
@@ -1079,7 +1100,7 @@ auto CommanderControlController::find_primary_target(
   const QVector3D forward(std::sin(yaw_rad), 0.0F, std::cos(yaw_rad));
   const QVector3D origin(
       commander_transform->position.x, 0.0F, commander_transform->position.z);
-  auto& owners = Game::Systems::OwnerRegistry::instance();
+  auto& owners = Game::Session::session_for(world).owners();
 
   auto eligible_samples = [&](Engine::Core::EntityID entity_id) -> std::vector<Target> {
     auto* entity = world.get_entity(entity_id);
@@ -1106,7 +1127,8 @@ auto CommanderControlController::find_primary_target(
       float const distance = to_target.length();
       if (distance <= 0.0001F ||
           distance > max_range + std::max(0.0F, sample.body_radius) ||
-          !Game::Systems::has_clear_building_los(origin, sample.position)) {
+          !Game::Systems::has_clear_building_los(
+              buildings_of(world), origin, sample.position)) {
         continue;
       }
       to_target /= distance;
@@ -1274,7 +1296,7 @@ auto CommanderControlController::resolve_ability_target(Engine::Core::World& wor
 
   const QVector3D origin(transform->position.x, 0.0F, transform->position.z);
   const float max_range_sq = max_range * max_range;
-  auto& owners = Game::Systems::OwnerRegistry::instance();
+  auto& owners = Game::Session::session_for(world).owners();
 
   auto qualifies = [&](Engine::Core::EntityID candidate_id) -> bool {
     auto* candidate = world.get_entity(candidate_id);
@@ -1294,7 +1316,7 @@ auto CommanderControlController::resolve_ability_target(Engine::Core::World& wor
     const QVector3D target(
         candidate_transform->position.x, 0.0F, candidate_transform->position.z);
     return (target - origin).lengthSquared() <= max_range_sq &&
-           Game::Systems::has_clear_building_los(origin, target);
+           Game::Systems::has_clear_building_los(buildings_of(world), origin, target);
   };
 
   if (m_locked_target_id != 0 && qualifies(m_locked_target_id)) {
@@ -1351,7 +1373,7 @@ void CommanderControlController::try_activate_shield_bash(
     return;
   }
 
-  auto& owners = Game::Systems::OwnerRegistry::instance();
+  auto& owners = Game::Session::session_for(world).owners();
   const QVector3D cmd_pos(
       transform->position.x, transform->position.y, transform->position.z);
   for (auto* entity : world.collect_entities_with<Engine::Core::UnitComponent>()) {
@@ -1465,8 +1487,8 @@ void CommanderControlController::try_activate_vanguard_rush(
   }
 
   const QVector3D desired = start + rush_direction * rush_distance;
-  const QVector3D resolved =
-      resolve_reachable_ground_position(start, desired, commander_id);
+  const QVector3D resolved = resolve_reachable_ground_position(
+      Game::Session::session_for(world), start, desired, commander_id);
   transform->position.x = resolved.x();
   transform->position.z = resolved.z();
   if (movement != nullptr) {
@@ -1483,7 +1505,8 @@ void CommanderControlController::try_activate_vanguard_rush(
                                  target_transform->position.y,
                                  target_transform->position.z);
       if ((target_pos - resolved).length() <= 2.35F &&
-          Game::Systems::has_clear_building_los(resolved, target_pos)) {
+          Game::Systems::has_clear_building_los(
+              buildings_of(world), resolved, target_pos)) {
         Game::Systems::RpgCombat::deal_commander_attack_damage(
             &world, target, k_rush_damage, commander_id);
         if (target_unit->health > 0) {
@@ -1824,7 +1847,7 @@ auto CommanderControlController::update_impl(Engine::Core::World& world,
   }
 
   auto mark_jump_safe_position = [&](float x, float z) {
-    if (!jump_active || !is_walkable_at(x, z)) {
+    if (!jump_active || !is_walkable_at(Game::Session::session_for(world), x, z)) {
       return;
     }
     m_jump_safe_position_valid = true;
@@ -1841,8 +1864,11 @@ auto CommanderControlController::update_impl(Engine::Core::World& world,
         transform->position.x + m_dodge_direction.x() * k_dodge_speed * roll_dt;
     const float nz =
         transform->position.z + m_dodge_direction.z() * k_dodge_speed * roll_dt;
-    auto const step =
-        resolve_ground_step(transform->position.x, transform->position.z, nx, nz);
+    auto const step = resolve_ground_step(Game::Session::session_for(world),
+                                          transform->position.x,
+                                          transform->position.z,
+                                          nx,
+                                          nz);
     transform->position.x = step.x;
     transform->position.z = step.z;
     if (movement != nullptr) {
@@ -1872,8 +1898,11 @@ auto CommanderControlController::update_impl(Engine::Core::World& world,
       const float speed = std::max(0.1F, unit->speed) * 0.4F;
       const float nx = transform->position.x + move.x() * speed * dt;
       const float nz = transform->position.z + move.z() * speed * dt;
-      auto const step =
-          resolve_ground_step(transform->position.x, transform->position.z, nx, nz);
+      auto const step = resolve_ground_step(Game::Session::session_for(world),
+                                            transform->position.x,
+                                            transform->position.z,
+                                            nx,
+                                            nz);
       if (step.moved) {
         float const step_vx = dt > 0.0F ? (step.x - transform->position.x) / dt : 0.0F;
         float const step_vz = dt > 0.0F ? (step.z - transform->position.z) / dt : 0.0F;
@@ -1932,8 +1961,11 @@ auto CommanderControlController::update_impl(Engine::Core::World& world,
           transform->position.z + direction.z() * m_planar_speed_smooth * dt;
       auto const step = jump_active
                             ? airborne_step(nx, nz)
-                            : resolve_ground_step(
-                                  transform->position.x, transform->position.z, nx, nz);
+                            : resolve_ground_step(Game::Session::session_for(world),
+                                                  transform->position.x,
+                                                  transform->position.z,
+                                                  nx,
+                                                  nz);
       if (step.moved) {
         float const step_vx = dt > 0.0F ? (step.x - transform->position.x) / dt : 0.0F;
         float const step_vz = dt > 0.0F ? (step.z - transform->position.z) / dt : 0.0F;
@@ -1956,7 +1988,9 @@ auto CommanderControlController::update_impl(Engine::Core::World& world,
     }
   }
   if (m_jump_safe_position_valid && !jump_active) {
-    if (!is_walkable_at(transform->position.x, transform->position.z)) {
+    if (!is_walkable_at(Game::Session::session_for(world),
+                        transform->position.x,
+                        transform->position.z)) {
       transform->position.x = m_jump_last_walkable_position.x();
       transform->position.z = m_jump_last_walkable_position.z();
       if (movement != nullptr) {
@@ -2382,6 +2416,9 @@ void CommanderControlController::update_camera(Engine::Core::World& world,
   inputs.soft_focus_position = soft_focus_position;
   inputs.fight_context = fight_context;
   inputs.threat_side_bias = threat_side_bias;
+  auto& camera_session = Game::Session::session_for(world);
+  inputs.terrain = &camera_session.terrain();
+  inputs.buildings = &camera_session.building_collision();
 
   float const previous_bob_phase = m_camera_rig.update(camera, inputs);
   if (m_latency_probe != nullptr) {

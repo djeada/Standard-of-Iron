@@ -36,12 +36,12 @@ auto PickingService::screen_to_ground(const Render::GL::Camera& cam,
       screen_pt.x(), screen_pt.y(), qreal(view_w), qreal(view_h), out_world);
 }
 
-auto PickingService::screen_to_surface(const Render::GL::Camera& cam,
+auto PickingService::screen_to_surface(const Game::Map::TerrainService& terrain_service,
+                                       const Render::GL::Camera& cam,
                                        int view_w,
                                        int view_h,
                                        const QPointF& screen_pt,
                                        QVector3D& out_world) -> bool {
-  auto& terrain_service = Game::Map::TerrainService::instance();
   if (view_w <= 0 || view_h <= 0 || !terrain_service.is_initialized() ||
       terrain_service.get_height_map() == nullptr) {
     return screen_to_ground(cam, view_w, view_h, screen_pt, out_world);

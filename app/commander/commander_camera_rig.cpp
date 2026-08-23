@@ -314,7 +314,9 @@ auto CommanderCameraRig::update(Render::GL::Camera& camera,
   }
 
   float const blocked_fraction =
-      Game::Systems::first_building_intersection_fraction(pivot, eye_desired);
+      inputs.buildings != nullptr ? Game::Systems::first_building_intersection_fraction(
+                                        *inputs.buildings, pivot, eye_desired)
+                                  : 1.0F;
   float const occlusion_target =
       blocked_fraction < 1.0F ? std::clamp(blocked_fraction - 0.06F,
                                            inputs.close_camera_mode ? 0.12F : 0.22F,
@@ -330,9 +332,8 @@ auto CommanderCameraRig::update(Render::GL::Camera& camera,
     eye_desired = pivot + (eye_desired - pivot) * m_occlusion_fraction;
   }
 
-  auto const& terrain = Game::Map::TerrainService::instance();
-  if (terrain.is_initialized()) {
-    float const eye_ground_y = terrain.resolve_surface_world_y(
+  if (inputs.terrain != nullptr && inputs.terrain->is_initialized()) {
+    float const eye_ground_y = inputs.terrain->resolve_surface_world_y(
         eye_desired.x(), eye_desired.z(), 0.0F, eye_desired.y());
     eye_desired.setY(
         std::max(eye_desired.y(), eye_ground_y + k_camera_terrain_clearance));

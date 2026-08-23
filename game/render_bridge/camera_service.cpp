@@ -19,15 +19,16 @@
 
 namespace Game::Systems {
 
-CameraService::CameraService()
-    : m_controller(std::make_unique<CameraController>())
+CameraService::CameraService(const Game::Map::VisibilityService& visibility)
+    : m_visibility(visibility)
+    , m_controller(std::make_unique<CameraController>())
     , m_follow_system(std::make_unique<CameraFollowSystem>()) {
 }
 
 CameraService::~CameraService() = default;
 
-void CameraService::sync_map_bounds(Render::GL::Camera& camera) {
-  const auto& visibility = Game::Map::VisibilityService::instance();
+void CameraService::sync_map_bounds(Render::GL::Camera& camera) const {
+  const auto& visibility = m_visibility;
   if (!visibility.is_initialized()) {
     camera.clear_map_bounds();
     return;

@@ -16,6 +16,7 @@
 #include "game/core/entity.h"
 #include "game/map/terrain.h"
 #include "game/map/terrain_service.h"
+#include "game/session/session_context.h"
 #include "render/creature/animation_state_components.h"
 #include "render/creature/archetype_registry.h"
 #include "render/creature/pipeline/creature_render_state.h"
@@ -166,7 +167,7 @@ TEST(HorsePrepare, TemplatePrewarmRenderWarmsSnapshotCache) {
   renderable->visible = true;
 
   Render::GL::DrawContext ctx{};
-  ctx.world_view = Render::WorldView::of_active_session();
+  ctx.world_view = Render::WorldView::of(Game::Session::SessionContext::active());
   ctx.entity = &entity;
   ctx.template_prewarm = true;
 
@@ -249,7 +250,7 @@ TEST(HorsePrepare, MinimalRenderUsesPrebakedSnapshotAssetWithoutRiggedBake) {
   renderable->visible = true;
 
   Render::GL::DrawContext ctx{};
-  ctx.world_view = Render::WorldView::of_active_session();
+  ctx.world_view = Render::WorldView::of(Game::Session::SessionContext::active());
   ctx.entity = &entity;
 
   Render::GL::AnimationInputs const anim{};
@@ -300,7 +301,7 @@ TEST(HorsePrepare, MinimalRenderDoesNotFallbackToRiggedBakeWhenSnapshotMissing) 
   renderable->visible = true;
 
   Render::GL::DrawContext ctx{};
-  ctx.world_view = Render::WorldView::of_active_session();
+  ctx.world_view = Render::WorldView::of(Game::Session::SessionContext::active());
   ctx.entity = &entity;
 
   Render::GL::AnimationInputs const anim{};
@@ -328,7 +329,7 @@ TEST(HorsePrepare, MinimalPreparationSnapsHorseHoofContactToTerrainHeight) {
 
   Render::GL::HorseRendererBase const owner;
   Render::GL::DrawContext ctx{};
-  ctx.world_view = Render::WorldView::of_active_session();
+  ctx.world_view = Render::WorldView::of(Game::Session::SessionContext::active());
   ctx.model.translate(-0.3F, 6.0F, 0.45F);
 
   Render::GL::HorseProfile profile = Render::GL::make_horse_profile(
@@ -613,7 +614,7 @@ TEST(HorsePrepare, ShadowBatchEmptyWithoutResources) {
 
   Render::GL::HorseRendererBase const owner;
   Render::GL::DrawContext ctx{};
-  ctx.world_view = Render::WorldView::of_active_session();
+  ctx.world_view = Render::WorldView::of(Game::Session::SessionContext::active());
   ctx.allow_template_cache = true;
   Render::GL::AnimationInputs const anim{};
   Render::GL::HumanoidAnimationContext const rider_ctx{};

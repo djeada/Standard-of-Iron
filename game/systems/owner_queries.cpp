@@ -1,5 +1,6 @@
 #include "owner_queries.h"
 
+#include "../core/ambient_session.h"
 #include "../core/component.h"
 #include "../core/entity.h"
 #include "../core/world.h"
@@ -28,7 +29,7 @@ auto collect_units(const Engine::Core::World& world,
 
 auto allied_units(const Engine::Core::World& world,
                   int owner_id) -> std::vector<Engine::Core::Entity*> {
-  auto& owners = OwnerRegistry::instance();
+  auto& owners = *Game::Session::services_for(world).owners;
   return collect_units(
       world, [owner_id, &owners](const Engine::Core::UnitComponent& unit) {
         return unit.owner_id == owner_id || owners.are_allies(owner_id, unit.owner_id);
@@ -37,15 +38,15 @@ auto allied_units(const Engine::Core::World& world,
 
 auto enemy_units(const Engine::Core::World& world,
                  int owner_id) -> std::vector<Engine::Core::Entity*> {
-  auto& owners = OwnerRegistry::instance();
+  auto& owners = *Game::Session::services_for(world).owners;
   return collect_units(world,
                        [owner_id, &owners](const Engine::Core::UnitComponent& unit) {
                          return owners.are_enemies(owner_id, unit.owner_id);
                        });
 }
 
-auto troop_count_for(int owner_id) -> int {
-  return TroopCountRegistry::instance().get_troop_count(owner_id);
+auto troop_count_for(const Engine::Core::World& world, int owner_id) -> int {
+  return Game::Session::services_for(world).troop_counts->get_troop_count(owner_id);
 }
 
 } // namespace Game::Systems

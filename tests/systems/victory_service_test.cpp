@@ -8,6 +8,7 @@
 #include "core/event_manager.h"
 #include "core/world.h"
 #include "game/map/map_definition.h"
+#include "game/session/session_context.h"
 #include "game/systems/default_content.h"
 #include "game/systems/global_stats_registry.h"
 #include "game/systems/nation_registry.h"
@@ -16,6 +17,14 @@
 #include "game/systems/victory_service.h"
 
 namespace {
+
+auto victory_services() -> Game::Systems::VictoryService::Services {
+  auto& session = Game::Session::SessionContext::active();
+  return {.stats = session.stats(),
+          .owners = session.owners(),
+          .nations = session.nations(),
+          .economy = session.economy()};
+}
 
 auto survive_for(float duration) -> Game::Systems::VictoryRule {
   return Game::Systems::SurviveTimeVictoryRule{duration};
@@ -87,7 +96,7 @@ protected:
     nation_registry.set_player_nation(3, Game::Systems::NationID::RomanRepublic);
 
     Game::Systems::GlobalStatsRegistry::instance().clear();
-    m_service = std::make_unique<Game::Systems::VictoryService>();
+    m_service = std::make_unique<Game::Systems::VictoryService>(victory_services());
   }
 
   void TearDown() override {

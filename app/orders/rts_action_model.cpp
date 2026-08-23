@@ -8,6 +8,7 @@
 #include "game/core/component.h"
 #include "game/core/entity.h"
 #include "game/core/world.h"
+#include "game/session/session_context.h"
 #include "game/systems/builder_product_types.h"
 #include "game/systems/combat_system/combat_types.h"
 #include "game/systems/owner_registry.h"
@@ -185,7 +186,8 @@ auto unit_component(const Engine::Core::Entity* entity)
 }
 
 auto unit_is_eligible_for_action(const Engine::Core::Entity& entity,
-                                 ActionId action) -> bool {
+                                 ActionId action,
+                                 const Game::Systems::OwnerRegistry& owners) -> bool {
   const auto* unit = unit_component(&entity);
   switch (action) {
   case ActionId::Attack:
@@ -218,9 +220,7 @@ auto unit_is_eligible_for_action(const Engine::Core::Entity& entity,
   case ActionId::Gate:
 
     return entity.get_component<Engine::Core::GateComponent>() != nullptr &&
-           unit != nullptr &&
-           unit->owner_id ==
-               Game::Systems::OwnerRegistry::instance().get_local_player_id();
+           unit != nullptr && unit->owner_id == owners.get_local_player_id();
   case ActionId::Unknown:
     break;
   }
@@ -406,9 +406,10 @@ auto get_status(const App::Core::ActionContext& context,
   }
 
   const Engine::Core::Entity* first_eligible = nullptr;
+  const auto& owners = Game::Session::session_for(*context.world).owners();
   for (const auto entity_id : *selected) {
     auto* entity = context.world->get_entity(entity_id);
-    if ((entity == nullptr) || !unit_is_eligible_for_action(*entity, action)) {
+    if ((entity == nullptr) || !unit_is_eligible_for_action(*entity, action, owners)) {
       continue;
     }
 
@@ -615,9 +616,10 @@ auto filter_selected_units_for_action(
   }
 
   filtered.reserve(selected.size());
+  const auto& owners = Game::Session::session_for(*world).owners();
   for (const auto entity_id : selected) {
     auto* entity = world->get_entity(entity_id);
-    if ((entity != nullptr) && unit_is_eligible_for_action(*entity, action)) {
+    if ((entity != nullptr) && unit_is_eligible_for_action(*entity, action, owners)) {
       filtered.push_back(entity_id);
     }
   }

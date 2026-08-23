@@ -6,6 +6,7 @@
 
 #include "game/core/world.h"
 #include "game/render_bridge/camera_service.h"
+#include "game/session/session_context.h"
 #include "game/systems/match_snapshot.h"
 #include "scene/camera.h"
 
@@ -18,10 +19,10 @@ RtsCameraController::RtsCameraController(Render::GL::Camera* camera,
 }
 
 void RtsCameraController::sync_map_bounds() {
-  if (!m_camera) {
+  if (!m_camera || m_camera_service == nullptr) {
     return;
   }
-  Game::Systems::CameraService::sync_map_bounds(*m_camera);
+  m_camera_service->sync_map_bounds(*m_camera);
 }
 
 void RtsCameraController::move(float dx, float dz) {

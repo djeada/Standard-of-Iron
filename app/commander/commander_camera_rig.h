@@ -9,6 +9,14 @@ namespace Engine::Core {
 enum class FightContext : std::uint8_t;
 }
 
+namespace Game::Map {
+class TerrainService;
+}
+
+namespace Game::Systems {
+class BuildingCollisionRegistry;
+}
+
 namespace Render::GL {
 class Camera;
 }
@@ -51,6 +59,8 @@ struct CommanderCameraInputs {
   std::optional<QVector3D> soft_focus_position;
   Engine::Core::FightContext fight_context{};
   float threat_side_bias{0.0F};
+  const Game::Map::TerrainService* terrain{nullptr};
+  const Game::Systems::BuildingCollisionRegistry* buildings{nullptr};
 };
 
 class CommanderCameraRig {

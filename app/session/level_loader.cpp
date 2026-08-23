@@ -15,6 +15,7 @@
 #include "game/map/map_loader.h"
 #include "game/map/map_transformer.h"
 #include "game/map/terrain_service.h"
+#include "game/session/session_context.h"
 #include "game/systems/nation_registry.h"
 #include "game/systems/owner_registry.h"
 #include "game/units/factory.h"
@@ -37,7 +38,8 @@ auto LevelLoader::loadFromAssets(const QString& map_path,
     -> LevelLoadResult {
   LevelLoadResult res;
 
-  auto& owners = Game::Systems::OwnerRegistry::instance();
+  auto& session = Game::Session::session_for(world);
+  auto& owners = session.owners();
 
   auto unit_reg = std::make_shared<Game::Units::UnitFactoryRegistry>();
   Game::Units::register_built_in_units(*unit_reg);
@@ -65,7 +67,7 @@ auto LevelLoader::loadFromAssets(const QString& map_path,
                      ? def.rain.intensity
                      : 0.0F});
 
-    Game::Map::TerrainService::instance().initialize(def);
+    session.terrain().initialize(def);
 
     App::Core::Environment::apply(def, renderer, camera);
     res.cam_fov = def.camera.fov_y;
@@ -82,7 +84,7 @@ auto LevelLoader::loadFromAssets(const QString& map_path,
       res.player_unit_id = rt.unit_ids.front();
     } else {
 
-      auto& nationRegistry = Game::Systems::NationRegistry::instance();
+      auto& nationRegistry = session.nations();
       auto reg = Game::Map::MapTransformer::get_factory_registry();
       if (reg) {
         Game::Units::SpawnParams sp;
@@ -115,7 +117,7 @@ auto LevelLoader::loadFromAssets(const QString& map_path,
         }
       }
       if (!has_barracks) {
-        auto& nationRegistry = Game::Systems::NationRegistry::instance();
+        auto& nationRegistry = session.nations();
         auto reg2 = Game::Map::MapTransformer::get_factory_registry();
         if (reg2) {
           Game::Units::SpawnParams sp;
@@ -148,7 +150,7 @@ auto LevelLoader::loadFromAssets(const QString& map_path,
     res.grid_height = 50;
     res.tile_size = 1.0F;
 
-    auto& nationRegistry = Game::Systems::NationRegistry::instance();
+    auto& nationRegistry = session.nations();
     auto reg = Game::Map::MapTransformer::get_factory_registry();
     if (reg) {
       Game::Units::SpawnParams sp;

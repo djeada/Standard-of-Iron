@@ -2,6 +2,7 @@
 
 #include "game/map/map_definition.h"
 #include "game/map/terrain_service.h"
+#include "game/session/session_context.h"
 #include "render/ground/fog_renderer.h"
 #include "render/ground/ground_renderer.h"
 #include "render/ground/map_boundary_fog_renderer.h"
@@ -107,7 +108,7 @@ TEST_F(TerrainSceneProxyServiceTest, ExposesTerrainFieldAndRoadSegments) {
   Render::GL::TerrainSceneProxy const proxy(
       &surface, &features, &scatter, nullptr, nullptr, nullptr);
 
-  proxy.set_world_view(Render::WorldView::of_active_session());
+  proxy.set_world_view(Render::WorldView::of(Game::Session::SessionContext::active()));
 
   ASSERT_TRUE(proxy.has_field());
   const auto& field = proxy.field();

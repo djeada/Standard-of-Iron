@@ -195,10 +195,10 @@ namespace {
 constexpr float k_mission_stage_poll_seconds = 0.25F;
 constexpr float k_interaction_targeting_interval = 0.1F;
 
-auto build_resource_map(int owner_id) -> QVariantMap {
+auto build_resource_map(Game::Session::SessionContext& session,
+                        int owner_id) -> QVariantMap {
   QVariantMap resources;
-  Game::Systems::ResourceAmounts const amounts =
-      Game::Systems::PlayerResourceRegistry::instance().get_all(owner_id);
+  Game::Systems::ResourceAmounts const amounts = session.economy().get_all(owner_id);
   for (Game::Systems::ResourceType const type : Game::Systems::k_all_resource_types) {
     resources[QLatin1String(Game::Systems::resource_type_key(type))] =
         amounts.get(type);
@@ -206,13 +206,14 @@ auto build_resource_map(int owner_id) -> QVariantMap {
   return resources;
 }
 
-auto build_player_state_map(int owner_id, int population_cap) -> QVariantMap {
+auto build_player_state_map(Game::Session::SessionContext& session,
+                            int owner_id,
+                            int population_cap) -> QVariantMap {
   QVariantMap state;
   state["owner_id"] = owner_id;
-  state["population"] =
-      Game::Systems::TroopCountRegistry::instance().get_troop_count(owner_id);
+  state["population"] = session.troop_counts().get_troop_count(owner_id);
   state["population_cap"] = population_cap;
-  state["resources"] = build_resource_map(owner_id);
+  state["resources"] = build_resource_map(session, owner_id);
   return state;
 }
 
@@ -491,7 +492,7 @@ auto GameEngine::scene_context() const -> AppSceneContext {
 auto GameEngine::get_player_stats(int owner_id) -> QVariantMap {
   QVariantMap result;
 
-  auto& stats_registry = Game::Systems::GlobalStatsRegistry::instance();
+  auto& stats_registry = m_session->stats();
   const auto* stats = stats_registry.get_stats(owner_id);
 
   if (stats != nullptr) {
@@ -815,9 +816,7 @@ void GameEngine::render(int pixel_width, int pixel_height) {
     m_renderer->set_viewport(m_viewport.width, m_viewport.height);
   }
 
-  m_renderer->set_world_view(m_session != nullptr
-                                 ? Render::WorldView::of(*m_session)
-                                 : Render::WorldView::of_active_session());
+  m_renderer->set_world_view(Render::WorldView::of(*m_session));
 
   m_renderer->begin_frame();
 
@@ -1184,7 +1183,7 @@ void GameEngine::sync_interaction_targeting(float delta_time) {
     }
 
     if (request.has_builders || request.has_civilians) {
-      auto& visibility = Game::Map::VisibilityService::instance();
+      auto& visibility = m_session->visibility();
       const auto snapshot =
           visibility.is_initialized() ? visibility.snapshot_ptr() : nullptr;
 
@@ -1479,7 +1478,7 @@ void GameEngine::start_skirmish_internal(const QString& map_path,
     apply_skirmish_commander_setup(player_configs);
     apply_mission_setup();
     m_skirmish_runtime->initialize_player_resources(
-        {m_level, m_runtime.local_owner_id, campaign_mission_def});
+        {*m_session, m_level, m_runtime.local_owner_id, campaign_mission_def});
     configure_mission_victory_conditions();
     configure_rain_system();
     if (m_environment_clock) {
@@ -1693,7 +1692,7 @@ void GameEngine::reset_mission_runtime_state() {
   if (m_commander_message_view_model) {
     m_commander_message_view_model->clear();
   }
-  Game::Systems::PlayerResourceRegistry::instance().clear();
+  m_session->economy().clear();
   sync_selected_player_state();
   reset_economy_coach();
   m_audio_coordinator->stop_mission_ambience();
@@ -1719,7 +1718,7 @@ void GameEngine::update_mission_waves(float dt) {
     Game::Audio::play_cue(cue.toStdString());
   }
   if (effects.reward_granted) {
-    auto& resources = Game::Systems::PlayerResourceRegistry::instance();
+    auto& resources = m_session->economy();
     for (const auto type : Game::Systems::k_all_resource_types) {
       const int amount = effects.reward.get(type);
       if (amount > 0) {
@@ -2234,7 +2233,8 @@ void GameEngine::load_game_from_slot(const QString& slot_name) {
 
 auto GameEngine::to_runtime_snapshot() const -> Game::Systems::RuntimeSnapshot {
   return m_save_load_coordinator->to_runtime_snapshot(
-      {.paused = m_runtime.paused,
+      {.session = *m_session,
+       .paused = m_runtime.paused,
        .time_scale = m_runtime.time_scale,
        .local_owner_id = m_runtime.local_owner_id,
        .victory_state = m_runtime.victory_state,
@@ -2248,7 +2248,8 @@ void GameEngine::apply_runtime_snapshot(
   bool follow_selection = m_camera_view_model->following_selection();
   m_save_load_coordinator->apply_runtime_snapshot(
       snapshot,
-      {.paused = m_runtime.paused,
+      {.session = *m_session,
+       .paused = m_runtime.paused,
        .time_scale = m_runtime.time_scale,
        .local_owner_id = m_runtime.local_owner_id,
        .victory_state = m_runtime.victory_state,
@@ -2390,7 +2391,7 @@ void GameEngine::sync_selected_player_state() {
   int const owner_id =
       m_selected_player_id > 0 ? m_selected_player_id : m_runtime.local_owner_id;
   QVariantMap const next_state =
-      build_player_state_map(owner_id, m_level.max_troops_per_player);
+      build_player_state_map(*m_session, owner_id, m_level.max_troops_per_player);
   if (m_selected_player_state == next_state) {
     return;
   }
@@ -2524,7 +2525,7 @@ void GameEngine::sync_economy_state() {
 }
 
 void GameEngine::sync_scatter_world_props() {
-  auto& terrain_service = Game::Map::TerrainService::instance();
+  auto& terrain_service = m_session->terrain();
   if (m_scatter == nullptr || !terrain_service.is_initialized() ||
       terrain_service.get_height_map() == nullptr) {
     return;
@@ -2576,7 +2577,7 @@ void GameEngine::exit_game() {
 
 auto GameEngine::get_owner_info() const -> QVariantList {
   QVariantList result;
-  const auto& owner_registry = Game::Systems::OwnerRegistry::instance();
+  const auto& owner_registry = m_session->owners();
   const auto& nations = m_session->nations();
   const auto& owners = owner_registry.get_all_owners();
 
@@ -2609,8 +2610,8 @@ auto GameEngine::get_owner_info() const -> QVariantList {
             ? QString::fromStdString(
                   Game::Systems::nation_id_to_string(owner_nation->id))
             : QString();
-    owner_map["state"] =
-        build_player_state_map(owner.owner_id, m_level.max_troops_per_player);
+    owner_map["state"] = build_player_state_map(
+        *m_session, owner.owner_id, m_level.max_troops_per_player);
 
     result.append(owner_map);
   }
@@ -2619,8 +2620,8 @@ auto GameEngine::get_owner_info() const -> QVariantList {
 }
 
 auto GameEngine::local_player_nation() const -> QString {
-  const auto* nation = Game::Systems::NationRegistry::instance().get_nation_for_player(
-      m_runtime.local_owner_id);
+  const auto* nation =
+      m_session->nations().get_nation_for_player(m_runtime.local_owner_id);
   if (nation == nullptr) {
     return {};
   }
@@ -2636,7 +2637,7 @@ void GameEngine::get_selected_unit_ids(std::vector<Engine::Core::EntityID>& out)
 }
 
 void GameEngine::on_unit_spawned(const Engine::Core::UnitSpawnedEvent& event) {
-  auto& owners = Game::Systems::OwnerRegistry::instance();
+  auto& owners = m_session->owners();
 
   if (event.owner_id == m_runtime.local_owner_id) {
     if (event.spawn_type == Game::Units::SpawnType::Barracks) {
@@ -2669,7 +2670,7 @@ void GameEngine::on_unit_spawned(const Engine::Core::UnitSpawnedEvent& event) {
 }
 
 void GameEngine::on_unit_died(const Engine::Core::UnitDiedEvent& event) {
-  auto& owners = Game::Systems::OwnerRegistry::instance();
+  auto& owners = m_session->owners();
 
   if (event.owner_id == m_runtime.local_owner_id) {
     if (event.spawn_type == Game::Units::SpawnType::Barracks) {

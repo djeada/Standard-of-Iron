@@ -27,6 +27,7 @@
 #include "game/mission/campaign_manager.h"
 #include "game/mission/mission_commander_setup.h"
 #include "game/mission/mission_waves.h"
+#include "game/session/session_context.h"
 #include "game/systems/ai_system.h"
 #include "game/systems/ai_system/ai_strategy.h"
 #include "game/systems/command_service.h"
@@ -116,8 +117,9 @@ auto MissionSetupCoordinator::apply_mission_setup(
   }
 
   const auto& mission = *ctx.campaign.current_mission_definition();
-  auto& owner_registry = Game::Systems::OwnerRegistry::instance();
-  auto& nation_registry = Game::Systems::NationRegistry::instance();
+  auto& session = Game::Session::session_for(ctx.world);
+  auto& owner_registry = session.owners();
+  auto& nation_registry = session.nations();
 
   Game::Map::MapDefinition map_def;
   QString map_error;
@@ -471,6 +473,7 @@ auto MissionSetupCoordinator::apply_mission_setup(
         {.mission = mission,
          .mission_difficulty = ctx.campaign.current_mission_context().difficulty,
          .level = ctx.level,
+         .nations = nation_registry,
          .defense_reference_world_position = defense_reference_world_position});
     ctx.pending_waves.insert(ctx.pending_waves.end(),
                              std::make_move_iterator(built.begin()),
@@ -526,7 +529,7 @@ void apply_skirmish_ai_strategies(Engine::Core::World& world,
     return;
   }
 
-  auto& owner_registry = Game::Systems::OwnerRegistry::instance();
+  auto& owner_registry = Game::Session::session_for(world).owners();
   for (const int owner_id : owner_ids) {
     if (owner_id == local_owner_id || !owner_registry.is_ai(owner_id)) {
       continue;
@@ -562,8 +565,9 @@ auto MissionSetupCoordinator::apply_skirmish_commander_setup(
     return effects;
   }
 
-  auto& owner_registry = Game::Systems::OwnerRegistry::instance();
-  auto& nation_registry = Game::Systems::NationRegistry::instance();
+  auto& session = Game::Session::session_for(ctx.world);
+  auto& owner_registry = session.owners();
+  auto& nation_registry = session.nations();
 
   Game::Map::MapDefinition map_def;
   QString map_error;

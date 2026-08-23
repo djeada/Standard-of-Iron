@@ -68,9 +68,4 @@ auto WorldView::of(const Game::Session::SessionContext& session) -> WorldView {
   return view;
 }
 
-auto WorldView::of_active_session() -> WorldView {
-
-  return of(Game::Session::SessionContext::active());
-}
-
 } // namespace Render

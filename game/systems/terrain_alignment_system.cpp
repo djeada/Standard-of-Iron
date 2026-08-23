@@ -2,6 +2,7 @@
 
 #include <QVector3D>
 
+#include "../core/ambient_session.h"
 #include "../core/component.h"
 #include "../core/entity.h"
 #include "../core/system_context.h"
@@ -11,7 +12,7 @@
 namespace Game::Systems {
 
 void TerrainAlignmentSystem::run(Engine::Core::SystemContext& context) {
-  auto& terrain_service = Game::Map::TerrainService::instance();
+  auto& terrain_service = *Game::Session::services_for(context.world()).terrain;
 
   if (!terrain_service.is_initialized()) {
     return;

@@ -12,6 +12,7 @@
 #include "core/component.h"
 #include "core/entity.h"
 #include "core/world.h"
+#include "game/session/session_context.h"
 #include "map/map_definition.h"
 #include "map/render_visibility_rules.h"
 #include "map/visibility_service.h"
@@ -541,7 +542,8 @@ TEST(MinimapManagerTest, RepeatedRestoresKeepRebuildingTheMinimap) {
   auto world = std::make_unique<Engine::Core::World>();
 
   MinimapManager manager;
-  VisibilityCoordinator coordinator;
+  VisibilityCoordinator coordinator(
+      Game::Session::SessionContext::active().visibility());
   coordinator.set_presenters(nullptr, &manager);
 
   AppSceneContext scene;
@@ -650,7 +652,8 @@ TEST(VisibilityCoordinatorTest, ForceRepublishSyncsFogAfterMinimapGeneration) {
   ASSERT_NE(scout_unit, nullptr);
   scout_unit->vision_range = 2.0F;
 
-  VisibilityCoordinator coordinator;
+  VisibilityCoordinator coordinator(
+      Game::Session::SessionContext::active().visibility());
   MinimapManager manager;
   coordinator.set_presenters(nullptr, &manager);
   coordinator.initialize_for_world(*world, 1, 64, 64, 1.0F, false);
@@ -674,7 +677,8 @@ TEST(VisibilityCoordinatorTest, InitializePublishesSameSnapshotVersionToAllPrese
 
   RecordingVisibilityFramePresenter fog_presenter;
   RecordingVisibilityFramePresenter minimap_presenter;
-  VisibilityCoordinator coordinator;
+  VisibilityCoordinator coordinator(
+      Game::Session::SessionContext::active().visibility());
   coordinator.set_frame_presenters(&fog_presenter, &minimap_presenter);
   coordinator.initialize_for_world(*world, 1, 32, 32, 1.0F, false);
 
@@ -695,7 +699,8 @@ TEST(VisibilityCoordinatorTest, UpdateSkipsPresenterRepublishWhenVersionIsUnchan
 
   RecordingVisibilityFramePresenter fog_presenter;
   RecordingVisibilityFramePresenter minimap_presenter;
-  VisibilityCoordinator coordinator;
+  VisibilityCoordinator coordinator(
+      Game::Session::SessionContext::active().visibility());
   coordinator.set_frame_presenters(&fog_presenter, &minimap_presenter);
   coordinator.initialize_for_world(*world, 1, 32, 32, 1.0F, false);
 
@@ -714,7 +719,8 @@ TEST(VisibilityCoordinatorTest, SpectatorToggleClearsAndRepublishesAllPresenters
 
   RecordingVisibilityFramePresenter fog_presenter;
   RecordingVisibilityFramePresenter minimap_presenter;
-  VisibilityCoordinator coordinator;
+  VisibilityCoordinator coordinator(
+      Game::Session::SessionContext::active().visibility());
   coordinator.set_frame_presenters(&fog_presenter, &minimap_presenter);
   coordinator.initialize_for_world(*world, 1, 32, 32, 1.0F, false);
 

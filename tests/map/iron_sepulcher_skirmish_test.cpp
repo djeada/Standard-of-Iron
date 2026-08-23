@@ -16,6 +16,7 @@
 #include "game/map/map_loader.h"
 #include "game/map/terrain_service.h"
 #include "game/map/visibility_service.h"
+#include "game/session/session_context.h"
 #include "game/systems/capture_system.h"
 #include "game/systems/default_content.h"
 #include "game/systems/global_stats_registry.h"
@@ -28,6 +29,14 @@
 #include "scene/camera.h"
 
 namespace {
+
+auto victory_services() -> Game::Systems::VictoryService::Services {
+  auto& session = Game::Session::SessionContext::active();
+  return {.stats = session.stats(),
+          .owners = session.owners(),
+          .nations = session.nations(),
+          .economy = session.economy()};
+}
 
 constexpr char k_map_path[] = "assets/maps/map_iron_sepulcher_watch.json";
 constexpr int k_local_player_id = 1;
@@ -139,7 +148,7 @@ TEST_F(IronSepulcherSkirmishTest, SoloSkirmishAwakensAndIsWonByPurifyingTheShrin
   ASSERT_NE(undead, nullptr);
   undead->configure(map_definition);
 
-  Game::Systems::VictoryService victory;
+  Game::Systems::VictoryService victory(victory_services());
   victory.configure(load_result.victory_config, selected_player_id);
   victory.set_undead_zone_query(undead);
 
@@ -281,7 +290,7 @@ TEST_F(IronSepulcherSkirmishTest, DormantSepulcherDoesNotHandTheSkirmishAnEarlyW
   ASSERT_NE(undead, nullptr);
   undead->configure(map_definition);
 
-  Game::Systems::VictoryService victory;
+  Game::Systems::VictoryService victory(victory_services());
   victory.configure(load_result.victory_config, selected_player_id);
   victory.set_undead_zone_query(undead);
 
@@ -320,7 +329,7 @@ TEST_F(IronSepulcherSkirmishTest, RazingTheShrineBarracksDestroysItsGarrison) {
   ASSERT_NE(undead, nullptr);
   undead->configure(map_definition);
 
-  Game::Systems::VictoryService victory;
+  Game::Systems::VictoryService victory(victory_services());
   victory.configure(load_result.victory_config, selected_player_id);
   victory.set_undead_zone_query(undead);
 

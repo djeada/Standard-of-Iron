@@ -13,6 +13,10 @@ class World;
 using EntityID = std::uint64_t;
 } // namespace Engine::Core
 
+namespace Game::Map {
+class TerrainService;
+}
+
 namespace Render::GL {
 class Camera;
 }
@@ -42,17 +46,19 @@ public:
                                QVector3D& out_world) -> bool {
     return screen_to_ground(camera, view_w, view_h, screen_pt, out_world);
   }
-  static auto screen_to_surface(const Render::GL::Camera& camera,
+  static auto screen_to_surface(const Game::Map::TerrainService& terrain,
+                                const Render::GL::Camera& camera,
                                 int view_w,
                                 int view_h,
                                 const QPointF& screen_pt,
                                 QVector3D& out_world) -> bool;
-  static auto screen_to_surface(const QPointF& screen_pt,
+  static auto screen_to_surface(const Game::Map::TerrainService& terrain,
+                                const QPointF& screen_pt,
                                 const Render::GL::Camera& camera,
                                 int view_w,
                                 int view_h,
                                 QVector3D& out_world) -> bool {
-    return screen_to_surface(camera, view_w, view_h, screen_pt, out_world);
+    return screen_to_surface(terrain, camera, view_w, view_h, screen_pt, out_world);
   }
   static auto world_to_screen(const Render::GL::Camera& camera,
                               int view_w,

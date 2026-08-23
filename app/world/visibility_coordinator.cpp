@@ -60,8 +60,7 @@ void VisibilityCoordinator::initialize_for_world(Engine::Core::World& world,
                                                  int height,
                                                  float tile_size,
                                                  bool spectator_mode) {
-  auto& visibility = Game::Map::VisibilityService::instance();
-  visibility.initialize(width, height, tile_size);
+  m_visibility.initialize(width, height, tile_size);
   m_update_accumulator = 0.0F;
   m_presenters_hidden = spectator_mode;
 
@@ -70,12 +69,12 @@ void VisibilityCoordinator::initialize_for_world(Engine::Core::World& world,
   }
 
   if (spectator_mode) {
-    visibility.reveal_all();
+    m_visibility.reveal_all();
     clear_presenters();
     return;
   }
 
-  visibility.compute_immediate(world, local_owner_id);
+  m_visibility.compute_immediate(world, local_owner_id);
   publish_current_frame(true);
 }
 
@@ -84,8 +83,7 @@ void VisibilityCoordinator::update(Engine::Core::World& world,
                                    float dt,
                                    float update_interval,
                                    bool spectator_mode) {
-  auto& visibility = Game::Map::VisibilityService::instance();
-  if (!visibility.is_initialized()) {
+  if (!m_visibility.is_initialized()) {
     clear_presenters();
     return;
   }
@@ -112,7 +110,7 @@ void VisibilityCoordinator::update(Engine::Core::World& world,
   m_update_accumulator += dt;
   if (m_update_accumulator >= update_interval) {
     m_update_accumulator = 0.0F;
-    visibility.update(world, local_owner_id);
+    m_visibility.update(world, local_owner_id);
   }
 
   publish_current_frame(false);
@@ -137,7 +135,7 @@ void VisibilityCoordinator::clear_presenters() {
 
 auto VisibilityCoordinator::current_snapshot() const
     -> Game::Map::VisibilityService::SnapshotPtr {
-  return Game::Map::VisibilityService::instance().snapshot_ptr();
+  return m_visibility.snapshot_ptr();
 }
 
 void VisibilityCoordinator::publish_snapshot(

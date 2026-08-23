@@ -24,6 +24,9 @@ public:
 
 class VisibilityCoordinator {
 public:
+  explicit VisibilityCoordinator(Game::Map::VisibilityService& visibility)
+      : m_visibility(visibility) {}
+
   class FogPresenterAdapter final : public VisibilityFramePresenter {
   public:
     void bind(Render::GL::FogRenderer* fog);
@@ -76,6 +79,7 @@ private:
   void publish_snapshot(const Game::Map::VisibilityService::SnapshotPtr& snapshot,
                         bool force);
 
+  Game::Map::VisibilityService& m_visibility;
   Render::GL::FogRenderer* m_fog = nullptr;
   FogPresenterAdapter m_fog_presenter_adapter;
   MinimapPresenterAdapter m_minimap_presenter_adapter;

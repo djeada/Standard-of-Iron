@@ -19,6 +19,7 @@
 #include "game/core/entity.h"
 #include "game/map/terrain.h"
 #include "game/map/terrain_service.h"
+#include "game/session/session_context.h"
 #include "game/systems/nation_id.h"
 #include "game/units/spawn_type.h"
 #include "render/creature/archetype_registry.h"
@@ -466,7 +467,7 @@ auto capture_case(const Render::GL::EntityRendererRegistry& registry,
   gcase.configure(anim);
 
   Render::GL::DrawContext ctx{};
-  ctx.world_view = Render::WorldView::of_active_session();
+  ctx.world_view = Render::WorldView::of(Game::Session::SessionContext::active());
   ctx.entity = &entity;
   ctx.animation_time = anim.time;
   ctx.animation_override = &anim;

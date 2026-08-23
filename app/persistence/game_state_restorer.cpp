@@ -11,6 +11,7 @@
 #include "game/map/map_loader.h"
 #include "game/map/terrain_service.h"
 #include "game/map/visibility_service.h"
+#include "game/session/session_context.h"
 #include "game/systems/match_snapshot.h"
 #include "game/systems/nav_grid.h"
 #include "game/systems/owner_registry.h"
@@ -41,7 +42,7 @@ void GameStateRestorer::rebuild_entity_cache(Engine::Core::World* world,
 
   entity_cache.reset();
 
-  auto& owners = Game::Systems::OwnerRegistry::instance();
+  auto& owners = Game::Session::session_for(*world).owners();
   auto entities = world->collect_entities_with<Engine::Core::UnitComponent>();
   for (auto* e : entities) {
     auto* unit = e->get_component<Engine::Core::UnitComponent>();
@@ -83,7 +84,7 @@ void GameStateRestorer::restore_environment_from_metadata(
   const float fallback_tile_size =
       static_cast<float>(metadata.value("tile_size").toDouble(1.0));
 
-  auto& terrain_service = Game::Map::TerrainService::instance();
+  auto& terrain_service = Game::Session::session_for(*world).terrain();
 
   Game::Map::MapDefinition def;
   QString map_error;
