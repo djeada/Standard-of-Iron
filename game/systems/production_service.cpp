@@ -2,6 +2,7 @@
 
 #include <vector>
 
+#include "../core/ambient_session.h"
 #include "../core/component.h"
 #include "../core/event_manager.h"
 #include "../core/world.h"
@@ -74,8 +75,9 @@ find_first_selected_temple(Engine::Core::World& world,
 
 namespace {
 
-auto resolve_nation_id(int owner_id) -> Game::Systems::NationID {
-  auto& registry = NationRegistry::instance();
+auto resolve_nation_id(const Engine::Core::World& world,
+                       int owner_id) -> Game::Systems::NationID {
+  auto& registry = *Game::Session::services_for(world).nations;
   if (const auto* nation = registry.get_nation_for_player(owner_id)) {
     return nation->id;
   }
@@ -120,7 +122,8 @@ auto recruiting_building_for(Game::Units::TroopType unit_type)
 
 namespace {
 
-auto production_ruling(Engine::Core::Entity& building,
+auto production_ruling(Engine::Core::World& world,
+                       Engine::Core::Entity& building,
                        Game::Units::TroopType unit_type) -> ProductionResult {
   const auto* unit = building.get_component<Engine::Core::UnitComponent>();
   if (unit == nullptr) {
@@ -135,7 +138,7 @@ auto production_ruling(Engine::Core::Entity& building,
   }
   const auto* production = building.get_component<Engine::Core::ProductionComponent>();
   const auto profile = TroopProfileService::instance().get_profile(
-      resolve_nation_id(unit->owner_id), unit_type);
+      resolve_nation_id(world, unit->owner_id), unit_type);
   const int production_cost = profile.production.cost;
   const int manpower_available =
       production != nullptr ? production->manpower_available : 0;
@@ -148,7 +151,7 @@ auto production_ruling(Engine::Core::Entity& building,
       return ProductionResult::PerBarracksLimitReached;
     }
   } else {
-    const int current_troops = Game::Systems::troop_count_for(unit->owner_id);
+    const int current_troops = Game::Systems::troop_count_for(world, unit->owner_id);
     const int max_troops = Game::GameConfig::instance().get_max_troops_per_player();
     if (current_troops + production_cost > max_troops) {
       return ProductionResult::GlobalTroopLimitReached;
@@ -163,7 +166,7 @@ auto production_ruling(Engine::Core::Entity& building,
   if (total_in_queue >= max_queue_size) {
     return ProductionResult::QueueFull;
   }
-  if (!PlayerResourceRegistry::instance().has_at_least(
+  if (!Game::Session::services_for(world).economy->has_at_least(
           unit->owner_id, profile.production.resource_costs)) {
     return ProductionResult::InsufficientResources;
   }
@@ -180,7 +183,7 @@ auto ProductionService::can_start_production(Engine::Core::World& world,
   if (building == nullptr) {
     return ProductionResult::NoBarracks;
   }
-  return production_ruling(*building, unit_type);
+  return production_ruling(world, *building, unit_type);
 }
 
 auto ProductionService::start_production(Engine::Core::World& world,
@@ -191,15 +194,17 @@ auto ProductionService::start_production(Engine::Core::World& world,
   if (building == nullptr) {
     return ProductionResult::NoBarracks;
   }
-  auto* p =
-      Engine::Core::get_or_add_component<Engine::Core::ProductionComponent>(building);
-  if (const auto ruling = production_ruling(*building, unit_type);
+  auto* p = building->get_component<Engine::Core::ProductionComponent>();
+  if (p == nullptr) {
+    p = building->add_component<Engine::Core::ProductionComponent>();
+  }
+  if (const auto ruling = production_ruling(world, *building, unit_type);
       ruling != ProductionResult::Success) {
     return ruling;
   }
   const auto* unit = building->get_component<Engine::Core::UnitComponent>();
   const int owner_id = unit->owner_id;
-  const auto nation_id = resolve_nation_id(owner_id);
+  const auto nation_id = resolve_nation_id(world, owner_id);
   const auto profile =
       TroopProfileService::instance().get_profile(nation_id, unit_type);
 
@@ -214,7 +219,8 @@ auto ProductionService::start_production(Engine::Core::World& world,
   Engine::Core::EventManager::instance().publish(
       Engine::Core::AudioCueEvent("build.unit_queued"));
   p->manpower_available -= profile.production.cost;
-  PlayerResourceRegistry::instance().spend(owner_id, profile.production.resource_costs);
+  Game::Session::services_for(world).economy->spend(owner_id,
+                                                    profile.production.resource_costs);
   return ProductionResult::Success;
 }
 
@@ -226,7 +232,10 @@ auto ProductionService::set_rally_point(Engine::Core::World& world,
   if (e == nullptr) {
     return false;
   }
-  auto* p = Engine::Core::get_or_add_component<Engine::Core::ProductionComponent>(e);
+  auto* p = e->get_component<Engine::Core::ProductionComponent>();
+  if (p == nullptr) {
+    p = e->add_component<Engine::Core::ProductionComponent>();
+  }
   if (p == nullptr) {
     return false;
   }
@@ -273,9 +282,10 @@ auto ProductionService::get_selected_barracks_state(
   out_state = {};
   out_state.has_barracks = true;
   if (e->get_component<Engine::Core::UnitComponent>() != nullptr) {
-    out_state.nation_id = resolve_nation_id(owner_id);
+    out_state.nation_id = resolve_nation_id(world, owner_id);
   } else {
-    out_state.nation_id = NationRegistry::instance().default_nation_id();
+    out_state.nation_id =
+        Game::Session::services_for(world).nations->default_nation_id();
   }
   if (auto* p = e->get_component<Engine::Core::ProductionComponent>()) {
     out_state.in_progress = p->in_progress;
@@ -306,9 +316,10 @@ auto ProductionService::get_selected_home_state(
   out_state = {};
   out_state.has_home = true;
   if (e->get_component<Engine::Core::UnitComponent>() != nullptr) {
-    out_state.nation_id = resolve_nation_id(owner_id);
+    out_state.nation_id = resolve_nation_id(world, owner_id);
   } else {
-    out_state.nation_id = NationRegistry::instance().default_nation_id();
+    out_state.nation_id =
+        Game::Session::services_for(world).nations->default_nation_id();
   }
 
   if (auto* p = e->get_component<Engine::Core::ProductionComponent>()) {
@@ -340,7 +351,7 @@ auto ProductionService::get_selected_temple_state(
   out_state = {};
   out_state.has_temple = true;
 
-  out_state.nation_id = resolve_nation_id(owner_id);
+  out_state.nation_id = resolve_nation_id(world, owner_id);
 
   if (auto* p = e->get_component<Engine::Core::ProductionComponent>()) {
     out_state.in_progress = p->in_progress;

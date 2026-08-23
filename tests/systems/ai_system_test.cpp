@@ -197,7 +197,9 @@ protected:
 };
 
 TEST_F(AISystemTest, ReinitializePicksUpOwnersRegisteredAfterConstruction) {
-  Game::Systems::AISystem ai_system;
+  Game::Systems::AISystem ai_system(Game::Systems::AISystem::Services{
+      .owners = Game::Systems::OwnerRegistry::instance(),
+      .nations = Game::Systems::NationRegistry::instance()});
 
   EXPECT_EQ(ai_system.ai_player_count(), 0U);
 
@@ -219,7 +221,9 @@ TEST_F(AISystemTest, ReinitializeStaggersInitialUpdateTimersAcrossAIPlayers) {
   owners.register_owner_with_id(3, Game::Systems::OwnerType::AI, "AI-2");
   owners.register_owner_with_id(4, Game::Systems::OwnerType::AI, "AI-3");
 
-  Game::Systems::AISystem ai_system;
+  Game::Systems::AISystem ai_system(Game::Systems::AISystem::Services{
+      .owners = Game::Systems::OwnerRegistry::instance(),
+      .nations = Game::Systems::NationRegistry::instance()});
   ai_system.set_update_interval(0.6F);
   ai_system.reinitialize();
 
@@ -824,7 +828,8 @@ TEST_F(AISystemTest, SepulcherReasonerPrefersStructuralShrineAnchorWithoutBarrac
   Game::Systems::AI::AIContext context;
   context.player_id = 3;
 
-  Game::Systems::AI::AISnapshotBuilder::attach_nation(snapshot, context.player_id);
+  Game::Systems::AI::AISnapshotBuilder::attach_nation(
+      snapshot, context.player_id, Game::Systems::NationRegistry::instance());
   Game::Systems::AI::AIReasoner::update_context(snapshot, context);
 
   EXPECT_TRUE(context.has_base_anchor);
@@ -1820,7 +1825,8 @@ TEST_F(AISystemTest, ProductionContinuesFromSurvivingBaseWhenMainBaseIsDestroyed
   context.player_id = 3;
   context.max_troops_per_player = 500;
 
-  Game::Systems::AI::AISnapshotBuilder::attach_nation(snapshot, context.player_id);
+  Game::Systems::AI::AISnapshotBuilder::attach_nation(
+      snapshot, context.player_id, Game::Systems::NationRegistry::instance());
   Game::Systems::AI::AIReasoner::update_context(snapshot, context);
   const auto* main = Game::Systems::AI::AIBaseManager::main_base(context);
   ASSERT_NE(main, nullptr);
@@ -1832,7 +1838,8 @@ TEST_F(AISystemTest, ProductionContinuesFromSurvivingBaseWhenMainBaseIsDestroyed
   after_loss.game_time = 25.0F;
   after_loss.friendly_units = {make_barracks(70, 100.0F, 40.0F)};
 
-  Game::Systems::AI::AISnapshotBuilder::attach_nation(after_loss, context.player_id);
+  Game::Systems::AI::AISnapshotBuilder::attach_nation(
+      after_loss, context.player_id, Game::Systems::NationRegistry::instance());
   Game::Systems::AI::AIReasoner::update_context(after_loss, context);
 
   ASSERT_EQ(context.bases.size(), 1U);
@@ -1893,7 +1900,8 @@ TEST_F(AISystemTest, BaseManagerReleasesAssignmentsOwnedByADestroyedBase) {
       make_unit(1, 101.0F, 41.0F),
   };
 
-  Game::Systems::AI::AISnapshotBuilder::attach_nation(after_loss, context.player_id);
+  Game::Systems::AI::AISnapshotBuilder::attach_nation(
+      after_loss, context.player_id, Game::Systems::NationRegistry::instance());
   Game::Systems::AI::AIReasoner::update_context(after_loss, context);
 
   EXPECT_EQ(context.reassigned_units_last_update, 1);
@@ -2019,7 +2027,8 @@ TEST_F(AISystemTest, ProductionBehaviorSetsRallyPointPerBase) {
   context.player_id = 3;
   context.max_troops_per_player = 500;
 
-  Game::Systems::AI::AISnapshotBuilder::attach_nation(snapshot, context.player_id);
+  Game::Systems::AI::AISnapshotBuilder::attach_nation(
+      snapshot, context.player_id, Game::Systems::NationRegistry::instance());
   Game::Systems::AI::AIReasoner::update_context(snapshot, context);
 
   std::vector<Game::Systems::AI::AICommand> commands;
@@ -2056,7 +2065,8 @@ TEST_F(AISystemTest, ProductionBehaviorRespectsPerBaseQueueLimit) {
   context.player_id = 3;
   context.max_troops_per_player = 500;
 
-  Game::Systems::AI::AISnapshotBuilder::attach_nation(snapshot, context.player_id);
+  Game::Systems::AI::AISnapshotBuilder::attach_nation(
+      snapshot, context.player_id, Game::Systems::NationRegistry::instance());
   Game::Systems::AI::AIReasoner::update_context(snapshot, context);
 
   std::vector<Game::Systems::AI::AICommand> commands;

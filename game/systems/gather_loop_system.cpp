@@ -8,6 +8,7 @@
 #include <string_view>
 #include <vector>
 
+#include "../core/ambient_session.h"
 #include "../core/component.h"
 #include "../core/world.h"
 #include "../map/terrain_service.h"
@@ -25,10 +26,11 @@ constexpr float k_work_standoff = 1.8F;
 
 constexpr int k_work_position_search_radius = 4;
 
-auto find_next_node(const std::string& product_type,
+auto find_next_node(const Engine::Core::World& world,
+                    const std::string& product_type,
                     float anchor_x,
                     float anchor_z) -> std::optional<Game::Map::WorldPropTarget> {
-  auto const& terrain = Game::Map::TerrainService::instance();
+  auto const& terrain = *Game::Session::services_for(world).terrain;
   float const radius = GatherLoopSystem::k_search_radius;
 
   if (product_type == k_builder_product_cut_tree) {
@@ -99,15 +101,16 @@ auto owner_of(const Engine::Core::Entity& worker) -> int {
   return unit != nullptr ? unit->owner_id : 0;
 }
 
-auto node_is_hidden_by_fog(const Engine::Core::Entity& worker,
+auto node_is_hidden_by_fog(const Engine::Core::World& world,
+                           const Engine::Core::Entity& worker,
                            float x,
                            float z) -> bool {
+  const auto& services = Game::Session::services_for(world);
   const auto* unit = worker.get_component<Engine::Core::UnitComponent>();
-  if (unit == nullptr ||
-      unit->owner_id != OwnerRegistry::instance().get_local_player_id()) {
+  if (unit == nullptr || unit->owner_id != services.owners->get_local_player_id()) {
     return false;
   }
-  auto const& visibility = Game::Map::VisibilityService::instance();
+  auto const& visibility = *services.visibility;
   if (!visibility.is_initialized()) {
     return false;
   }
@@ -120,7 +123,7 @@ auto rank_nearby_nodes(Engine::Core::World& world,
                        float from_x,
                        float from_z,
                        float radius) -> std::vector<Candidate> {
-  auto const& terrain = Game::Map::TerrainService::instance();
+  auto const& terrain = *Game::Session::services_for(world).terrain;
   std::string_view const priority = builder.auto_gather_priority;
   float const radius_sq = radius > 0.0F ? radius * radius : 0.0F;
 
@@ -139,7 +142,7 @@ auto rank_nearby_nodes(Engine::Core::World& world,
       continue;
     }
 
-    if (node_is_hidden_by_fog(worker, position.x(), position.z())) {
+    if (node_is_hidden_by_fog(world, worker, position.x(), position.z())) {
       continue;
     }
 
@@ -257,7 +260,7 @@ auto claim_from(Engine::Core::World& world,
                 Engine::Core::TransformComponent& transform,
                 Engine::Core::MovementComponent& movement,
                 float radius) -> bool {
-  auto& terrain = Game::Map::TerrainService::instance();
+  auto& terrain = *Game::Session::services_for(world).terrain;
   auto const candidates = rank_nearby_nodes(
       world, worker, builder, transform.position.x, transform.position.z, radius);
 
@@ -328,7 +331,7 @@ void GatherLoopSystem::update(Engine::Core::World* world, float delta_time) {
   }
   m_think_cooldown = k_think_interval;
 
-  auto& terrain = Game::Map::TerrainService::instance();
+  auto& terrain = *Game::Session::services_for(*world).terrain;
 
   for (auto* entity :
        world->collect_entities_with<Engine::Core::BuilderProductionComponent>()) {
@@ -402,7 +405,8 @@ void GatherLoopSystem::update(Engine::Core::World* world, float delta_time) {
       continue;
     }
 
-    auto const next = find_next_node(builder->gather_product_type,
+    auto const next = find_next_node(*world,
+                                     builder->gather_product_type,
                                      builder->gather_anchor_x,
                                      builder->gather_anchor_z);
     if (!next.has_value()) {

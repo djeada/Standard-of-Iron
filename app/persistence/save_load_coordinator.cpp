@@ -60,12 +60,10 @@ auto SaveLoadCoordinator::to_runtime_snapshot(const SaveRuntimeContext& context)
   snapshot.cursor_mode = static_cast<int>(context.cursor_mode);
   snapshot.selected_player_id = context.selected_player_id;
   snapshot.follow_selection = context.follow_selection;
-  snapshot.resources_by_owner =
-      Game::Systems::PlayerResourceRegistry::instance().snapshot();
-  snapshot.harvested_by_owner =
-      Game::Systems::PlayerResourceRegistry::instance().harvested_snapshot();
+  auto& session = context.session;
+  snapshot.resources_by_owner = session.economy().snapshot();
+  snapshot.harvested_by_owner = session.economy().harvested_snapshot();
 
-  auto& session = Game::Session::SessionContext::active();
   snapshot.simulation_tick = session.clock().tick();
   snapshot.rng_seed = session.rng().seed();
   snapshot.rng_draw_count = session.rng().draw_count();
@@ -80,12 +78,10 @@ void SaveLoadCoordinator::apply_runtime_snapshot(
   context.victory_state = snapshot.victory_state;
   context.selected_player_id = snapshot.selected_player_id;
   context.follow_selection = snapshot.follow_selection;
-  Game::Systems::PlayerResourceRegistry::instance().restore(
-      snapshot.resources_by_owner);
-  Game::Systems::PlayerResourceRegistry::instance().restore_harvested(
-      snapshot.harvested_by_owner);
+  auto& session = context.session;
+  session.economy().restore(snapshot.resources_by_owner);
+  session.economy().restore_harvested(snapshot.harvested_by_owner);
 
-  auto& session = Game::Session::SessionContext::active();
   session.clock().restore(snapshot.simulation_tick);
   session.rng().restore(snapshot.rng_seed, snapshot.rng_draw_count);
 
@@ -161,7 +157,8 @@ auto SaveLoadCoordinator::load_from_slot(const LoadFromSlotContext& context) con
   const QJsonObject metadata = record.metadata;
   restore_mission_context(record, context.campaign_manager);
 
-  Game::Systems::GameStateSerializer::restore_player_nations_from_metadata(metadata);
+  Game::Systems::GameStateSerializer::restore_player_nations_from_metadata(
+      Game::Session::session_for(context.world).nations(), metadata);
   Game::Systems::GameStateSerializer::restore_level_from_metadata(metadata,
                                                                   context.level);
   Game::Systems::GameStateSerializer::restore_camera_from_metadata(
@@ -178,7 +175,8 @@ auto SaveLoadCoordinator::load_from_slot(const LoadFromSlotContext& context) con
       context.scene.minimap_manager,
       context.scene.visibility_coordinator);
 
-  Game::Systems::GameStateSerializer::restore_visibility_from_metadata(metadata);
+  Game::Systems::GameStateSerializer::restore_visibility_from_metadata(
+      Game::Session::session_for(context.world).visibility(), metadata);
   if (context.scene.visibility_coordinator != nullptr) {
     context.scene.visibility_coordinator->publish_current_frame(true);
   }

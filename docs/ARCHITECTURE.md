@@ -248,16 +248,41 @@ nowhere to put a hypothetical world.
 
 Reaching a session, in order of preference:
 
-1. take a `SessionContext&` parameter;
-2. `SessionContext::for_world(world)` — a system already holds the world it
-   operates on, so it can resolve its session without consulting a global;
-3. `SessionContext::active()` — the ambient accessor. The registry `instance()`
-   functions (`OwnerRegistry::instance()` and friends) resolve through the same
-   binding, `Game::Session::ambient_services()` in `game/core/ambient_session.h`.
-   They remain because several hundred call sites still use them; they are no
-   longer singletons, only shortcuts to the installed session. A binary that
-   never constructs a session gets the default one, exactly as before, because
-   the session module installs it as the binding's fallback.
+1. take the narrow service the code actually needs — a `TerrainService&`, an
+   `OwnerRegistry&` — handed over at construction. `VictoryService::Services`,
+   `AISystem::Services` and `UndeadAwakeningSystem::Services` are the shape:
+   a struct of references, filled in by whoever composes the match
+   (`register_runtime_systems`, `game_engine_composition.cpp`). This is the only
+   option available to a module _below_ the session, and it is the best one
+   anywhere, because the signature then says what the code touches;
+2. take a `SessionContext&` parameter, or resolve one with
+   `Game::Session::session_for(world)` (`game/session/session_context.h`) — the
+   session that owns `world`, falling back to the ambient binding for a
+   standalone world no session owns. Only modules above the session may do this:
+   `command`, `save`, `mission`, `ai`, `runtime`, `view` and everything in
+   `app/`;
+3. `Game::Session::services_for(world)` (`game/core/ambient_session.h`) — the
+   same resolution expressed one layer down, returning the `AmbientServices` of
+   the session that owns `world`. It lives beside the ambient binding rather
+   than on `SessionContext` precisely so that `combat`, `economy`, `movement`,
+   `navigation`, `registries` and `simulation` can use it without pointing at a
+   module above them. Prefer 1 where the service is fixed for the object's
+   lifetime; this is for free functions and per-entity helpers that are handed a
+   world and nothing else;
+4. `SessionContext::active()` and the registry `instance()` functions
+   (`OwnerRegistry::instance()` and friends), which resolve through the same
+   binding. These answer "the match bound to this thread", which is wrong the
+   moment two sessions coexist, so they are the migration's target rather than
+   an option. They are no longer singletons, only shortcuts to the installed
+   session, and a binary that never constructs one gets the default, exactly as
+   before, because the session module installs it as the binding's fallback.
+
+`scripts/check-ambient-instances.py` ratchets option 4 down: it counts the call
+sites per directory and fails if any directory has more than
+`scripts/ambient_instance_budget.json` allows (`--write` lowers the file after a
+clean-up). The client, the tools and the upper `game/` modules are at zero; what
+is left is 65 sites, and the largest single blocker is `NavGrid` — see
+"Known limitations".
 
 `ScopedSession` installs a session for a scope and restores the previous binding
 on exit — that is how a test gets isolation. `ScopedThreadSession` does the same
@@ -782,12 +807,23 @@ merely moved:
 
 These are real and deliberate, not oversights:
 
-- Most gameplay code still reaches per-match state through the ambient
-  `instance()` accessors rather than an explicit `SessionContext&`. The isolation
-  mechanism is in place; the call-site migration is incremental, and
-  `scripts/check-ambient-instances.py` keeps it from going backwards: the
-  count per directory may only fall (`scripts/ambient_instance_budget.json`
-  is the ceiling; `--write` lowers it after a clean-up).
+- 65 call sites still reach per-match state through the ambient `instance()`
+  accessors rather than a named service. `app/`, `ui/`, `render/`, `tools/` and
+  the `game/` modules above the session are at zero and pinned there by
+  `scripts/ambient_instance_budget.json`; what is left is 35 in `game/systems`
+  and 30 spread across `game/map`, `game/units`, `game/formation` and
+  `game/wildlife`.
+- `NavGrid` is the largest single reason the last of those cannot be converted.
+  It is a `static std::unique_ptr<Pathfinding>` process global with an entirely
+  static API and roughly eighty `NavGrid::initialize` call sites, and
+  `Pathfinding` reads terrain and the building-collision registry on nine lines
+  of its own. Nothing can hand it a session's services until the pathfinder is
+  owned by the session rather than by the class, which is a project of its own
+  rather than a call-site sweep. The remainder are per-entity helpers deep in
+  `movement_system`, `combat_utils`, `structure_combat` and
+  `defensive_unit_layout_service` that are handed an `Entity&` and no world;
+  each needs a service reference threaded from its entry point, and their
+  callers reach into `app/`, `tools/` and the tests.
 - Component storage is a per-type sparse set: a packed array of the entity ids
   that carry the component, and the component data itself in page-allocated
   blocks the registry owns. Lookup is `EntityID -> dense position -> slot`, all

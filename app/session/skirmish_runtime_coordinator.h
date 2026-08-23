@@ -20,6 +20,10 @@ namespace Engine::Core {
 class World;
 }
 
+namespace Game::Session {
+class SessionContext;
+}
+
 namespace Game::Systems {
 class VictoryService;
 }
@@ -60,6 +64,7 @@ struct CenterCameraOnLocalForcesContext {
 };
 
 struct InitializePlayerResourcesContext {
+  Game::Session::SessionContext& session;
   const Game::Systems::LevelSnapshot& level;
   int local_owner_id = 1;
   const Game::Mission::MissionDefinition* mission_definition = nullptr;

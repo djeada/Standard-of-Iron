@@ -11,10 +11,10 @@ namespace {
 constexpr const char* k_context = "ProductionManager";
 
 [[nodiscard]] auto
-first_missing_resource_name(int owner_id,
+first_missing_resource_name(const Game::Systems::PlayerResourceRegistry& economy,
+                            int owner_id,
                             const Game::Systems::ResourceAmounts& cost) -> QString {
-  const Game::Systems::ResourceAmounts available =
-      Game::Systems::PlayerResourceRegistry::instance().get_all(owner_id);
+  const Game::Systems::ResourceAmounts available = economy.get_all(owner_id);
   for (const Game::Systems::ResourceType type : Game::Systems::k_all_resource_types) {
     if (available.get(type) < cost.get(type)) {
       return resource_name(type);
@@ -62,10 +62,12 @@ auto wood_per_wall_segment(const QString& item_type) -> int {
       .resource_costs.get(Game::Systems::ResourceType::Wood);
 }
 
-auto insufficient_resources_reason(
-    int owner_id, const Game::Systems::ResourceAmounts& cost) -> QString {
+auto insufficient_resources_reason(const Game::Systems::PlayerResourceRegistry& economy,
+                                   int owner_id,
+                                   const Game::Systems::ResourceAmounts& cost)
+    -> QString {
   return QCoreApplication::translate(k_context, "Not enough %1.")
-      .arg(first_missing_resource_name(owner_id, cost));
+      .arg(first_missing_resource_name(economy, owner_id, cost));
 }
 
 auto wall_segment_failure_text(const Game::Systems::PlannedWallSegment& segment)

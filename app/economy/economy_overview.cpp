@@ -65,6 +65,12 @@ struct OwnerScan {
   bool barracks_producing = false;
 };
 
+auto troop_population_of(const EconomyOverviewRequest& request) -> int {
+  return request.world != nullptr
+             ? Game::Systems::troop_count_for(*request.world, request.owner_id)
+             : 0;
+}
+
 auto scan_owner(Engine::Core::World* world, int owner_id) -> OwnerScan {
   OwnerScan scan;
   if (world == nullptr) {
@@ -346,7 +352,7 @@ auto build_production_help(const EconomyOverviewRequest& request) -> QVariantMap
   auto& registry = *request.resources;
   const ResourceAmounts available = registry.get_all(request.owner_id);
   const OwnerScan scan = scan_owner(request.world, request.owner_id);
-  const int troop_count = Game::Systems::troop_count_for(request.owner_id);
+  const int troop_count = troop_population_of(request);
 
   QVariantList buildings;
   for (const auto& item : building_items()) {
@@ -440,7 +446,7 @@ auto build_production_help(const EconomyOverviewRequest& request) -> QVariantMap
 auto capture_economy_coach_baseline(const EconomyOverviewRequest& request)
     -> EconomyCoachBaseline {
   const OwnerScan scan = scan_owner(request.world, request.owner_id);
-  return {.troop_population = Game::Systems::troop_count_for(request.owner_id),
+  return {.troop_population = troop_population_of(request),
           .building_count = scan.building_count,
           .captured = true};
 }
@@ -448,7 +454,7 @@ auto capture_economy_coach_baseline(const EconomyOverviewRequest& request)
 auto build_economy_coach_state(const EconomyOverviewRequest& request,
                                const EconomyCoachBaseline& baseline) -> QVariantMap {
   const OwnerScan scan = scan_owner(request.world, request.owner_id);
-  const int troop_population = Game::Systems::troop_count_for(request.owner_id);
+  const int troop_population = troop_population_of(request);
   const ResourceAmounts harvested =
       request.resources != nullptr
           ? request.resources->get_harvested_all(request.owner_id)

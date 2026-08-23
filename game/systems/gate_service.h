@@ -51,11 +51,15 @@ public:
   [[nodiscard]] static auto
   passage_blocker_bounds(float center_x, float center_z, float rotation_y) -> WorldRect;
 
-  static void sync_gate_footprint(Engine::Core::EntityID entity_id, float rotation_y);
+  static void sync_gate_footprint(Engine::Core::World& world,
+                                  Engine::Core::EntityID entity_id,
+                                  float rotation_y);
 
   [[nodiscard]] static auto is_gate(const Engine::Core::Entity& entity) -> bool;
 
-  [[nodiscard]] static auto serves_owner(int gate_owner_id, int unit_owner_id) -> bool;
+  [[nodiscard]] static auto serves_owner(const Engine::Core::World& world,
+                                         int gate_owner_id,
+                                         int unit_owner_id) -> bool;
 
   [[nodiscard]] static auto
   gate_at(Engine::Core::World& world,

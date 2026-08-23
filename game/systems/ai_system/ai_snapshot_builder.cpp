@@ -10,6 +10,7 @@
 #include "../../core/world.h"
 #include "../../game_config.h"
 #include "../../map/terrain_service.h"
+#include "../../session/session_context.h"
 #include "../nation_registry.h"
 #include "../owner_queries.h"
 #include "../player_resource_registry.h"
@@ -79,9 +80,10 @@ auto is_visible_to_sources(const Engine::Core::TransformComponent& transform,
 
 namespace Game::Systems::AI {
 
-void AISnapshotBuilder::attach_nation(AISnapshot& snapshot, int ai_owner_id) {
-  const auto* nation =
-      Game::Systems::NationRegistry::instance().get_nation_for_player(ai_owner_id);
+void AISnapshotBuilder::attach_nation(AISnapshot& snapshot,
+                                      int ai_owner_id,
+                                      const Game::Systems::NationRegistry& nations) {
+  const auto* nation = nations.get_nation_for_player(ai_owner_id);
   if (nation != nullptr) {
     snapshot.nation = std::make_shared<const Game::Systems::Nation>(*nation);
   }
@@ -89,13 +91,13 @@ void AISnapshotBuilder::attach_nation(AISnapshot& snapshot, int ai_owner_id) {
 
 auto AISnapshotBuilder::build(const Engine::Core::World& world,
                               int ai_owner_id) -> AISnapshot {
+  auto& session = Game::Session::session_for(world);
   AISnapshot snapshot;
   snapshot.player_id = ai_owner_id;
-  snapshot.resources =
-      Game::Systems::PlayerResourceRegistry::instance().get_all(ai_owner_id);
+  snapshot.resources = session.economy().get_all(ai_owner_id);
   snapshot.has_resource_snapshot = true;
 
-  auto& terrain_service = Game::Map::TerrainService::instance();
+  auto& terrain_service = session.terrain();
   for (const auto& prop : terrain_service.world_props()) {
     if (!Game::Map::is_harvestable_world_prop_type(prop.type)) {
       continue;
@@ -110,9 +112,8 @@ auto AISnapshotBuilder::build(const Engine::Core::World& world,
   }
 
   auto friendlies = world.get_units_owned_by(ai_owner_id);
-  const auto* nation =
-      Game::Systems::NationRegistry::instance().get_nation_for_player(ai_owner_id);
-  attach_nation(snapshot, ai_owner_id);
+  const auto* nation = session.nations().get_nation_for_player(ai_owner_id);
+  attach_nation(snapshot, ai_owner_id, session.nations());
   snapshot.max_troops_per_player =
       Game::GameConfig::instance().get_max_troops_per_player();
   if (const auto* height_map =
@@ -223,7 +224,7 @@ auto AISnapshotBuilder::build(const Engine::Core::World& world,
   snapshot.strategic_objectives.reserve(enemies.size());
 
   if (nation != nullptr && !nation->has_economy) {
-    const auto& world_props = Game::Map::TerrainService::instance().world_props();
+    const auto& world_props = terrain_service.world_props();
     snapshot.defense_anchors.reserve(world_props.size());
     for (const auto& prop : world_props) {
       if (prop.type != Game::Map::WorldProp::Type::Ruins &&

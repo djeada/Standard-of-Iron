@@ -63,7 +63,9 @@ auto is_followup_wave_trigger(const QString& trigger) -> bool {
 
 } // namespace
 
-UndeadAwakeningSystem::UndeadAwakeningSystem() = default;
+UndeadAwakeningSystem::UndeadAwakeningSystem(Services services)
+    : m_services(services) {
+}
 
 UndeadAwakeningSystem::~UndeadAwakeningSystem() = default;
 
@@ -82,7 +84,7 @@ void UndeadAwakeningSystem::configure(const Game::Map::MapDefinition& map_defini
   m_zone_index.clear();
   m_zones.reserve(map_definition.undead_zones.size());
 
-  auto const& terrain_service = Game::Map::TerrainService::instance();
+  auto const& terrain_service = m_services.terrain;
   Game::Map::UndeadShrineExclusions shrine_exclusions;
 
   for (const auto& zone_definition : map_definition.undead_zones) {
@@ -192,7 +194,7 @@ auto UndeadAwakeningSystem::serialize_state() const -> QJsonArray {
 
 void UndeadAwakeningSystem::ensure_zone_owner_registered(
     const RuntimeZone& zone) const {
-  auto& owners = Game::Systems::OwnerRegistry::instance();
+  auto& owners = m_services.owners;
   if (owners.get_owner_type(zone.definition.owner_id) == OwnerType::Neutral) {
 
     owners.register_owner_with_id(
@@ -207,18 +209,17 @@ void UndeadAwakeningSystem::ensure_zone_owner_registered(
                                                     : zone.definition.owner_id);
   owners.set_owner_color(zone.definition.owner_id, 0.62F, 0.64F, 0.71F);
 
-  auto& nations = Game::Systems::NationRegistry::instance();
+  auto& nations = m_services.nations;
   nations.set_player_nation(zone.definition.owner_id,
                             Game::Systems::NationID::IronSepulcher);
-  Game::Systems::GlobalStatsRegistry::instance().mark_game_start(
-      zone.definition.owner_id);
+  m_services.stats.mark_game_start(zone.definition.owner_id);
 }
 
 void UndeadAwakeningSystem::place_zone_shrine(
     const Game::Map::MapDefinition& map_definition,
     RuntimeZone& zone,
     Game::Map::UndeadShrineExclusions& exclusions) const {
-  auto& terrain_service = Game::Map::TerrainService::instance();
+  auto& terrain_service = m_services.terrain;
 
   auto const placement = Game::Map::plan_undead_zone_shrine(
       terrain_service, map_definition, zone.definition, exclusions);
@@ -271,7 +272,7 @@ void UndeadAwakeningSystem::refresh_active_spawns(Engine::Core::World& world,
 
 auto UndeadAwakeningSystem::should_awaken_zone(Engine::Core::World& world,
                                                const RuntimeZone& zone) const -> bool {
-  auto const& owners = Game::Systems::OwnerRegistry::instance();
+  auto const& owners = m_services.owners;
 
   for (const auto& raw_trigger : zone.definition.awaken_on) {
     QString const trigger = raw_trigger.trimmed().toLower();
@@ -346,7 +347,7 @@ auto UndeadAwakeningSystem::can_spawn_wave(const RuntimeZone& zone) const -> boo
 
 auto UndeadAwakeningSystem::spawn_position_for_index(
     const RuntimeZone& zone, int spawn_index, int spawn_count) const -> QVector3D {
-  auto const& terrain_service = Game::Map::TerrainService::instance();
+  auto const& terrain_service = m_services.terrain;
   QVector3D const origin =
       (zone.anchor_world_prop_id != 0) ? zone.anchor_world : zone.center_world;
 
@@ -473,7 +474,7 @@ void UndeadAwakeningSystem::pay_clear_reward(Engine::Core::World& world,
     return;
   }
 
-  int beneficiary = OwnerRegistry::instance().get_local_player_id();
+  int beneficiary = m_services.owners.get_local_player_id();
   if (captured && zone.anchor_entity_id != 0) {
     auto* anchor = world.get_entity(zone.anchor_entity_id);
     auto* unit = anchor != nullptr
@@ -484,7 +485,7 @@ void UndeadAwakeningSystem::pay_clear_reward(Engine::Core::World& world,
     }
   }
 
-  auto& resources = PlayerResourceRegistry::instance();
+  auto& resources = m_services.economy;
   QStringList spoils;
   for (ResourceType const type : k_all_resource_types) {
     int const amount = zone.definition.clear_reward.get(type);
@@ -496,8 +497,7 @@ void UndeadAwakeningSystem::pay_clear_reward(Engine::Core::World& world,
         QString::fromLatin1(resource_type_key(type))));
   }
 
-  if (spoils.isEmpty() ||
-      beneficiary != OwnerRegistry::instance().get_local_player_id()) {
+  if (spoils.isEmpty() || beneficiary != m_services.owners.get_local_player_id()) {
     return;
   }
 

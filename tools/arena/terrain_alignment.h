@@ -1,18 +1,19 @@
 #pragma once
 
-#include "game/core/entity.h"
-
 namespace Engine::Core {
-class World;
+class Entity;
+}
+
+namespace Game::Map {
+class TerrainService;
 }
 
 namespace Arena {
 
 [[nodiscard]] auto
-entity_keeps_planar_position(Engine::Core::World& world,
-                             Engine::Core::EntityID entity_id) -> bool;
+entity_keeps_planar_position(const Engine::Core::Entity& entity) -> bool;
 
-void align_entity_to_ground(Engine::Core::World& world,
-                            Engine::Core::EntityID entity_id);
+void align_entity_to_ground(Engine::Core::Entity& entity,
+                            const Game::Map::TerrainService& terrain);
 
 } // namespace Arena

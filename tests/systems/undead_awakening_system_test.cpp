@@ -9,6 +9,7 @@
 #include "core/world.h"
 #include "game/map/map_definition.h"
 #include "game/map/terrain_service.h"
+#include "game/session/session_context.h"
 #include "game/systems/building_collision_registry.h"
 #include "game/systems/default_content.h"
 #include "game/systems/global_stats_registry.h"
@@ -133,6 +134,15 @@ auto add_intruder(Engine::Core::World& world,
   return entity;
 }
 
+auto undead_services() -> Game::Systems::UndeadAwakeningSystem::Services {
+  auto& session = Game::Session::SessionContext::active();
+  return {.terrain = session.terrain(),
+          .owners = session.owners(),
+          .nations = session.nations(),
+          .stats = session.stats(),
+          .economy = session.economy()};
+}
+
 auto count_owner_units(Engine::Core::World& world, int owner_id) -> int {
   int count = 0;
   for (auto* entity : world.collect_entities_with<Engine::Core::UnitComponent>()) {
@@ -174,7 +184,7 @@ protected:
 
 TEST_F(UndeadAwakeningSystemTest, SpawnsOnlyAfterEnemyUnitEntersZone) {
   Engine::Core::World world;
-  Game::Systems::UndeadAwakeningSystem system;
+  Game::Systems::UndeadAwakeningSystem system(undead_services());
 
   const Game::Map::MapDefinition map_definition = make_test_map();
   Game::Map::TerrainService::instance().initialize(map_definition);
@@ -213,7 +223,7 @@ TEST_F(UndeadAwakeningSystemTest, RestoredStateDoesNotRespawnActiveWave) {
   const Game::Map::MapDefinition map_definition = make_test_map();
   Game::Map::TerrainService::instance().initialize(map_definition);
 
-  Game::Systems::UndeadAwakeningSystem first_system;
+  Game::Systems::UndeadAwakeningSystem first_system(undead_services());
   first_system.configure(map_definition);
 
   auto* player_entity = world.create_entity();
@@ -232,7 +242,7 @@ TEST_F(UndeadAwakeningSystemTest, RestoredStateDoesNotRespawnActiveWave) {
   first_system.update(&world, 0.1F);
   ASSERT_EQ(count_owner_units(world, 99), 2);
 
-  Game::Systems::UndeadAwakeningSystem restored_system;
+  Game::Systems::UndeadAwakeningSystem restored_system(undead_services());
   restored_system.configure(map_definition);
   restored_system.restore_state(first_system.serialize_state());
   restored_system.update(&world, 0.1F);
@@ -242,7 +252,7 @@ TEST_F(UndeadAwakeningSystemTest, RestoredStateDoesNotRespawnActiveWave) {
 
 TEST_F(UndeadAwakeningSystemTest, ZoneWithoutAuthoredWavesRaisesTheDefaultGarrison) {
   Engine::Core::World world;
-  Game::Systems::UndeadAwakeningSystem system;
+  Game::Systems::UndeadAwakeningSystem system(undead_services());
 
   Game::Map::MapDefinition map_definition = make_test_map();
   map_definition.undead_zones.front().waves.clear();
@@ -268,7 +278,7 @@ TEST_F(UndeadAwakeningSystemTest, ZoneWithoutAuthoredWavesRaisesTheDefaultGarris
 
 TEST_F(UndeadAwakeningSystemTest, MapAuthoredWavesOverrideTheDefaultGarrison) {
   Engine::Core::World world;
-  Game::Systems::UndeadAwakeningSystem system;
+  Game::Systems::UndeadAwakeningSystem system(undead_services());
 
   const Game::Map::MapDefinition map_definition = make_test_map();
   Game::Map::TerrainService::instance().initialize(map_definition);
@@ -289,7 +299,7 @@ TEST_F(UndeadAwakeningSystemTest, MapAuthoredWavesOverrideTheDefaultGarrison) {
 
 TEST_F(UndeadAwakeningSystemTest, WaveRisesTogetherAtDistinctSpreadPositions) {
   Engine::Core::World world;
-  Game::Systems::UndeadAwakeningSystem system;
+  Game::Systems::UndeadAwakeningSystem system(undead_services());
 
   Game::Map::MapDefinition map_definition = make_test_map();
   map_definition.undead_zones.front().waves.front().units = {
@@ -324,7 +334,7 @@ TEST_F(UndeadAwakeningSystemTest, WaveRisesTogetherAtDistinctSpreadPositions) {
 
 TEST_F(UndeadAwakeningSystemTest, ShrineZoneGarrisonsACapturableSepulcherBarracks) {
   Engine::Core::World world;
-  Game::Systems::UndeadAwakeningSystem system;
+  Game::Systems::UndeadAwakeningSystem system(undead_services());
 
   const Game::Map::MapDefinition map_definition = make_shrine_map();
   Game::Map::TerrainService::instance().initialize(map_definition);
@@ -349,7 +359,7 @@ TEST_F(UndeadAwakeningSystemTest, ShrineZoneGarrisonsACapturableSepulcherBarrack
 
 TEST_F(UndeadAwakeningSystemTest, RuinZoneAlsoRaisesAShrineBesideItsRuins) {
   Engine::Core::World world;
-  Game::Systems::UndeadAwakeningSystem system;
+  Game::Systems::UndeadAwakeningSystem system(undead_services());
 
   const Game::Map::MapDefinition map_definition = make_test_map();
   Game::Map::TerrainService::instance().initialize(map_definition);
@@ -379,7 +389,7 @@ TEST_F(UndeadAwakeningSystemTest, RuinZoneAlsoRaisesAShrineBesideItsRuins) {
 
 TEST_F(UndeadAwakeningSystemTest, EveryZoneRaisesExactlyOneShrineOfItsOwn) {
   Engine::Core::World world;
-  Game::Systems::UndeadAwakeningSystem system;
+  Game::Systems::UndeadAwakeningSystem system(undead_services());
 
   const Game::Map::MapDefinition map_definition = make_two_zone_map();
   Game::Map::TerrainService::instance().initialize(map_definition);
@@ -422,7 +432,7 @@ TEST_F(UndeadAwakeningSystemTest, ReconfiguringAZoneDoesNotStampOutASecondShrine
   const Game::Map::MapDefinition map_definition = make_two_zone_map();
   Game::Map::TerrainService::instance().initialize(map_definition);
 
-  Game::Systems::UndeadAwakeningSystem system;
+  Game::Systems::UndeadAwakeningSystem system(undead_services());
   system.configure(map_definition);
   const std::uint64_t first_prop_id =
       system.shrine_prop_id(QStringLiteral("north_zone"));
@@ -435,7 +445,7 @@ TEST_F(UndeadAwakeningSystemTest, ReconfiguringAZoneDoesNotStampOutASecondShrine
 
 TEST_F(UndeadAwakeningSystemTest, WorldSpaceZoneKeepsItsShrinePropAndBarracksTogether) {
   Engine::Core::World world;
-  Game::Systems::UndeadAwakeningSystem system;
+  Game::Systems::UndeadAwakeningSystem system(undead_services());
 
   Game::Map::MapDefinition terrain_map;
   terrain_map.grid.width = 64;
@@ -489,7 +499,7 @@ TEST_F(UndeadAwakeningSystemTest, WorldSpaceZoneKeepsItsShrinePropAndBarracksTog
 
 TEST_F(UndeadAwakeningSystemTest, ZoneDrownedByALakeReportsItsShrinePlacementFailure) {
   Engine::Core::World world;
-  Game::Systems::UndeadAwakeningSystem system;
+  Game::Systems::UndeadAwakeningSystem system(undead_services());
 
   Game::Map::MapDefinition map_definition = make_test_map();
   map_definition.world_props.clear();
@@ -514,7 +524,7 @@ TEST_F(UndeadAwakeningSystemTest, ShrineHealthAndZoneAssociationSurviveASaveLoad
   const Game::Map::MapDefinition map_definition = make_two_zone_map();
   Game::Map::TerrainService::instance().initialize(map_definition);
 
-  Game::Systems::UndeadAwakeningSystem first_system;
+  Game::Systems::UndeadAwakeningSystem first_system(undead_services());
   first_system.configure(map_definition);
   first_system.update(&world, 0.1F);
 
@@ -526,7 +536,7 @@ TEST_F(UndeadAwakeningSystemTest, ShrineHealthAndZoneAssociationSurviveASaveLoad
   ASSERT_NE(anchor_unit, nullptr);
   anchor_unit->health = 640;
 
-  Game::Systems::UndeadAwakeningSystem restored_system;
+  Game::Systems::UndeadAwakeningSystem restored_system(undead_services());
   restored_system.configure(map_definition);
   restored_system.restore_state(first_system.serialize_state());
   restored_system.update(&world, 0.1F);
@@ -540,7 +550,7 @@ TEST_F(UndeadAwakeningSystemTest, ShrineHealthAndZoneAssociationSurviveASaveLoad
 
 TEST_F(UndeadAwakeningSystemTest, LosingTheShrineBreaksTheGarrisonAndClearsTheZone) {
   Engine::Core::World world;
-  Game::Systems::UndeadAwakeningSystem system;
+  Game::Systems::UndeadAwakeningSystem system(undead_services());
 
   const Game::Map::MapDefinition map_definition = make_shrine_map();
   Game::Map::TerrainService::instance().initialize(map_definition);
@@ -564,7 +574,7 @@ TEST_F(UndeadAwakeningSystemTest, LosingTheShrineBreaksTheGarrisonAndClearsTheZo
 
 TEST_F(UndeadAwakeningSystemTest, BreakingTheGarrisonPaysTheAuthoredClearReward) {
   Engine::Core::World world;
-  Game::Systems::UndeadAwakeningSystem system;
+  Game::Systems::UndeadAwakeningSystem system(undead_services());
 
   Game::Map::MapDefinition map_definition = make_shrine_map();
   ASSERT_FALSE(map_definition.undead_zones.empty());
@@ -604,7 +614,7 @@ TEST_F(UndeadAwakeningSystemTest, BreakingTheGarrisonPaysTheAuthoredClearReward)
 
 TEST_F(UndeadAwakeningSystemTest, ZoneWithoutAClearRewardPaysNothing) {
   Engine::Core::World world;
-  Game::Systems::UndeadAwakeningSystem system;
+  Game::Systems::UndeadAwakeningSystem system(undead_services());
 
   const Game::Map::MapDefinition map_definition = make_shrine_map();
   ASSERT_TRUE(map_definition.undead_zones.front().clear_reward.empty());
@@ -631,7 +641,7 @@ TEST_F(UndeadAwakeningSystemTest, BrokenGarrisonSurvivesASaveLoadRoundTrip) {
   const Game::Map::MapDefinition map_definition = make_shrine_map();
   Game::Map::TerrainService::instance().initialize(map_definition);
 
-  Game::Systems::UndeadAwakeningSystem first_system;
+  Game::Systems::UndeadAwakeningSystem first_system(undead_services());
   first_system.configure(map_definition);
   add_intruder(world, {0.5F, 0.0F, 0.5F});
   first_system.update(&world, 0.1F);
@@ -641,7 +651,7 @@ TEST_F(UndeadAwakeningSystemTest, BrokenGarrisonSurvivesASaveLoadRoundTrip) {
   first_system.update(&world, 0.1F);
   ASSERT_TRUE(first_system.is_zone_cleared(k_shrine_zone_id));
 
-  Game::Systems::UndeadAwakeningSystem restored_system;
+  Game::Systems::UndeadAwakeningSystem restored_system(undead_services());
   restored_system.configure(map_definition);
   restored_system.restore_state(first_system.serialize_state());
   restored_system.update(&world, 0.1F);
@@ -653,7 +663,7 @@ TEST_F(UndeadAwakeningSystemTest, BrokenGarrisonSurvivesASaveLoadRoundTrip) {
 
 TEST_F(UndeadAwakeningSystemTest, EveryWaveAnnouncesItsNumberOutOfTheTotal) {
   Engine::Core::World world;
-  Game::Systems::UndeadAwakeningSystem system;
+  Game::Systems::UndeadAwakeningSystem system(undead_services());
 
   std::vector<QString> announcements;
   Engine::Core::ScopedEventSubscription<Engine::Core::MissionAnnouncementEvent> const
@@ -690,7 +700,7 @@ TEST_F(UndeadAwakeningSystemTest, EveryWaveAnnouncesItsNumberOutOfTheTotal) {
 
 TEST_F(UndeadAwakeningSystemTest, UnclearedWaveIsFollowedByTheNextOnceItTimesOut) {
   Engine::Core::World world;
-  Game::Systems::UndeadAwakeningSystem system;
+  Game::Systems::UndeadAwakeningSystem system(undead_services());
 
   const Game::Map::MapDefinition map_definition = make_two_wave_shrine_map(5.0F);
   Game::Map::TerrainService::instance().initialize(map_definition);
@@ -711,7 +721,7 @@ TEST_F(UndeadAwakeningSystemTest, UnclearedWaveIsFollowedByTheNextOnceItTimesOut
 
 TEST_F(UndeadAwakeningSystemTest, ZeroWaveTimeoutWaitsForTheWaveToBeCleared) {
   Engine::Core::World world;
-  Game::Systems::UndeadAwakeningSystem system;
+  Game::Systems::UndeadAwakeningSystem system(undead_services());
 
   const Game::Map::MapDefinition map_definition = make_two_wave_shrine_map(0.0F);
   Game::Map::TerrainService::instance().initialize(map_definition);
@@ -730,7 +740,7 @@ TEST_F(UndeadAwakeningSystemTest, ZeroWaveTimeoutWaitsForTheWaveToBeCleared) {
 
 TEST_F(UndeadAwakeningSystemTest, ShrineCaptureIsLockedWhileAnyGuardianStands) {
   Engine::Core::World world;
-  Game::Systems::UndeadAwakeningSystem system;
+  Game::Systems::UndeadAwakeningSystem system(undead_services());
 
   const Game::Map::MapDefinition map_definition = make_two_wave_shrine_map(0.0F);
   Game::Map::TerrainService::instance().initialize(map_definition);
@@ -761,7 +771,7 @@ TEST_F(UndeadAwakeningSystemTest, ShrineCaptureIsLockedWhileAnyGuardianStands) {
 
 TEST_F(UndeadAwakeningSystemTest, AwakeningAndDefeatEachAnnounceExactlyOnce) {
   Engine::Core::World world;
-  Game::Systems::UndeadAwakeningSystem system;
+  Game::Systems::UndeadAwakeningSystem system(undead_services());
 
   std::vector<QString> announcements;
   Engine::Core::ScopedEventSubscription<Engine::Core::MissionAnnouncementEvent> const
