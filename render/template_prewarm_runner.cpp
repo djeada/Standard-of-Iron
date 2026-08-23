@@ -94,17 +94,6 @@ auto prewarm_seed_for_variant(int owner_id,
   return seed;
 }
 
-auto prewarm_entity_id_for_variant(std::size_t profile_index,
-                                   int owner_id,
-                                   std::uint8_t lod,
-                                   std::uint8_t variant) noexcept -> std::uint32_t {
-  return 1U + static_cast<std::uint32_t>(
-                  (((profile_index * 16U) + static_cast<std::size_t>(owner_id)) * 4U +
-                   static_cast<std::size_t>(lod)) *
-                      k_template_variant_count +
-                  static_cast<std::size_t>(variant));
-}
-
 void populate_template_prewarm_entity(Engine::Core::Entity& entity,
                                       Game::Units::SpawnType spawn_type,
                                       Game::Systems::NationID nation_id,

@@ -129,7 +129,7 @@ void main() {
   vec3 dry = vec3(0.38, 0.36, 0.24);
 
   vec3 base = mix(lush, dry, dryness);
-  base = mix(base, v_color, 0.40);
+  base = mix(base, v_color, 0.62);
   base *= 0.94;
 
   base = mix(base, base * vec3(1.22, 1.16, 0.86), smoothstep(0.35, 1.0, v_height));

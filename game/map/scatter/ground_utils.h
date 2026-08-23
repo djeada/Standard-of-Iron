@@ -127,20 +127,20 @@ inline auto grass_blade_toning(Game::Map::GroundType ground_type) -> GrassBladeT
   switch (ground_type) {
   case Game::Map::GroundType::SoilFertile:
 
-    return {{0.15F, 0.29F, 0.11F}, 0.34F, 0.20F, 1.30F};
+    return {{0.15F, 0.29F, 0.11F}, 0.26F, 0.20F, 1.24F};
   case Game::Map::GroundType::ForestMud:
 
-    return {{0.13F, 0.25F, 0.13F}, 0.38F, 0.22F, 1.26F};
+    return {{0.13F, 0.25F, 0.13F}, 0.29F, 0.22F, 1.20F};
   case Game::Map::GroundType::AlpineMix:
 
-    return {{0.21F, 0.29F, 0.17F}, 0.28F, 0.15F, 1.12F};
+    return {{0.21F, 0.29F, 0.17F}, 0.22F, 0.15F, 1.10F};
   case Game::Map::GroundType::SoilRocky:
 
-    return {{0.25F, 0.29F, 0.15F}, 0.28F, 0.16F, 1.10F};
+    return {{0.25F, 0.29F, 0.15F}, 0.22F, 0.16F, 1.08F};
   case Game::Map::GroundType::GrassDry:
   default:
 
-    return {{0.18F, 0.34F, 0.12F}, 0.24F, 0.15F, 1.14F};
+    return {{0.18F, 0.34F, 0.12F}, 0.19F, 0.15F, 1.12F};
   }
 }
 

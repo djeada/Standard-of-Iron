@@ -298,6 +298,9 @@ public:
     return std::unique_lock<std::recursive_mutex>(m_frame_mutex);
   }
   [[nodiscard]] bool renderer_initialized() const { return m_runtime.initialized; }
+  [[nodiscard]] auto commander_message_speakers() const -> const QStringList& {
+    return m_commander_message_director.speaker_ids();
+  }
   void set_release_self_test_mode(bool enabled) noexcept {
     m_release_self_test_mode = enabled;
   }
