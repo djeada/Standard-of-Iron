@@ -198,7 +198,7 @@ void prepare_horse_impl(const Render::GL::HorseRendererBase& owner,
                 rider_ctx,
                 Engine::Core::get_or_add_component<
                     Render::Creature::HorseAnimationStateComponent>(ctx.entity),
-                Render::Creature::Quadruped::mount_model_scale(ctx.entity));
+                Render::Creature::Quadruped::mount_model_scale(ctx.world, ctx.entity));
   Render::GL::DrawContext horse_ctx = ctx;
   horse_ctx.model = (shared_grounded_world != nullptr)
                         ? *shared_grounded_world

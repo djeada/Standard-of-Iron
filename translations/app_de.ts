@@ -7051,32 +7051,40 @@ Baumeister ernten es als Nahrung, die Zivilisten rekrutiert</translation>
 <context>
     <name>RpgFpvOverlay</name>
     <message>
-        <source>HP %1/%2</source>
-        <translation>TP %1/%2</translation>
+        <source>GUARD BROKEN</source>
+        <translation>DECKUNG GEBROCHEN</translation>
     </message>
     <message>
-        <source>STM %1%</source>
-        <translation>AUS %1 %</translation>
+        <source>PUNISH</source>
+        <translation>BESTRAFEN</translation>
     </message>
     <message>
         <source>FINISHER</source>
         <translation>FINISHER</translation>
     </message>
     <message>
-        <source>COMBO</source>
-        <translation>COMBO</translation>
+        <source>HP %1/%2</source>
+        <translation>TP %1/%2</translation>
     </message>
     <message>
-        <source>POSTURE</source>
-        <translation>HALTUNG</translation>
+        <source>TARGET</source>
+        <translation>ZIEL</translation>
     </message>
     <message>
-        <source>GUARD BROKEN</source>
-        <translation>DECKUNG GEBROCHEN</translation>
+        <source>%1%</source>
+        <translation>%1 %</translation>
     </message>
     <message>
-        <source>⚡ PUNISH ⚡</source>
-        <translation>⚡ BESTRAFEN ⚡</translation>
+        <source>STAGGERED</source>
+        <translation>TAUMELND</translation>
+    </message>
+    <message>
+        <source>BOW  ·  X</source>
+        <translation>BOGEN  ·  X</translation>
+    </message>
+    <message>
+        <source>BLADE  ·  X</source>
+        <translation>KLINGE  ·  X</translation>
     </message>
     <message>
         <source>BASH</source>
@@ -7093,14 +7101,6 @@ Baumeister ernten es als Nahrung, die Zivilisten rekrutiert</translation>
     <message>
         <source>READY</source>
         <translation>BEREIT</translation>
-    </message>
-    <message>
-        <source>BOW  ·  X</source>
-        <translation>BOGEN  ·  X</translation>
-    </message>
-    <message>
-        <source>BLADE  ·  X</source>
-        <translation>KLINGE  ·  X</translation>
     </message>
 </context>
 <context>

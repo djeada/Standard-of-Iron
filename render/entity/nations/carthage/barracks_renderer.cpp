@@ -915,8 +915,6 @@ void register_barracks_renderer(Render::GL::EntityRendererRegistry& registry) {
       BarracksRendererConfig{.nation_slug = "carthage",
                              .archetype = &barracks_archetype,
                              .draw_ornaments = &draw_barracks_ornaments,
-                             .health_bar =
-                                 BuildingHealthBarStyle{1.4F, 0.10F, 2.45F, true},
                              .selection = BuildingSelectionStyle{2.4F, 2.0F}});
 }
 

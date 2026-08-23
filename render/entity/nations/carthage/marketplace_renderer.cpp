@@ -440,7 +440,6 @@ void register_marketplace_renderer(EntityRendererRegistry& registry) {
       registry,
       MarketplaceRendererConfig{.nation_slug = "carthage",
                                 .archetype = &marketplace_archetype,
-                                .health_bar = BuildingHealthBarStyle{1.0F, 0.08F, 1.1F},
                                 .selection = BuildingSelectionStyle{1.7F, 1.7F}});
 }
 

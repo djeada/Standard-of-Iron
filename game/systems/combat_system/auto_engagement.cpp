@@ -106,10 +106,8 @@ void AutoEngagement::process(Engine::Core::World*,
     }
 
     if (nearest_enemy != nullptr) {
-      auto* attack_target = unit->get_component<Engine::Core::AttackTargetComponent>();
-      if (attack_target == nullptr) {
-        attack_target = unit->add_component<Engine::Core::AttackTargetComponent>();
-      }
+      auto* attack_target =
+          Engine::Core::get_or_add_component<Engine::Core::AttackTargetComponent>(unit);
       if (attack_target != nullptr) {
         attack_target->target_id = nearest_enemy->get_id();
         attack_target->should_chase = !shoots_without_closing;

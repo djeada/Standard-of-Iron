@@ -443,7 +443,6 @@ void register_marketplace_renderer(EntityRendererRegistry& registry) {
       registry,
       MarketplaceRendererConfig{.nation_slug = "roman",
                                 .archetype = &marketplace_archetype,
-                                .health_bar = BuildingHealthBarStyle{1.0F, 0.08F, 1.2F},
                                 .selection = BuildingSelectionStyle{1.8F, 1.8F}});
 }
 

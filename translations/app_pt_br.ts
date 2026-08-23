@@ -7051,32 +7051,40 @@ Os construtores os ceifam pela comida que recruta civis</translation>
 <context>
     <name>RpgFpvOverlay</name>
     <message>
-        <source>HP %1/%2</source>
-        <translation>PV %1/%2</translation>
+        <source>GUARD BROKEN</source>
+        <translation>GUARDA QUEBRADA</translation>
     </message>
     <message>
-        <source>STM %1%</source>
-        <translation>VGR %1%</translation>
+        <source>PUNISH</source>
+        <translation>PUNIR</translation>
     </message>
     <message>
         <source>FINISHER</source>
         <translation>GOLPE FINAL</translation>
     </message>
     <message>
-        <source>COMBO</source>
-        <translation>COMBO</translation>
+        <source>HP %1/%2</source>
+        <translation>PV %1/%2</translation>
     </message>
     <message>
-        <source>POSTURE</source>
-        <translation>POSTURA</translation>
+        <source>TARGET</source>
+        <translation>ALVO</translation>
     </message>
     <message>
-        <source>GUARD BROKEN</source>
-        <translation>GUARDA QUEBRADA</translation>
+        <source>%1%</source>
+        <translation>%1%</translation>
     </message>
     <message>
-        <source>⚡ PUNISH ⚡</source>
-        <translation>⚡ PUNIR ⚡</translation>
+        <source>STAGGERED</source>
+        <translation>CAMBALEANTE</translation>
+    </message>
+    <message>
+        <source>BOW  ·  X</source>
+        <translation>ARCO  ·  X</translation>
+    </message>
+    <message>
+        <source>BLADE  ·  X</source>
+        <translation>LÂMINA  ·  X</translation>
     </message>
     <message>
         <source>BASH</source>
@@ -7093,14 +7101,6 @@ Os construtores os ceifam pela comida que recruta civis</translation>
     <message>
         <source>READY</source>
         <translation>PRONTO</translation>
-    </message>
-    <message>
-        <source>BOW  ·  X</source>
-        <translation>ARCO  ·  X</translation>
-    </message>
-    <message>
-        <source>BLADE  ·  X</source>
-        <translation>LÂMINA  ·  X</translation>
     </message>
 </context>
 <context>

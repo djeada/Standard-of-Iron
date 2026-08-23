@@ -49,7 +49,6 @@ set(RENDER_ENTITY_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/building_archetype_desc.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/building_decay.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/building_render_common.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/entity/health_bar_visibility.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/wall_renderer_common.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/wall_gate_renderer_common.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/entity/barracks_renderer.cpp

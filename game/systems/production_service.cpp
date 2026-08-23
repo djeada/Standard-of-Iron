@@ -191,10 +191,8 @@ auto ProductionService::start_production(Engine::Core::World& world,
   if (building == nullptr) {
     return ProductionResult::NoBarracks;
   }
-  auto* p = building->get_component<Engine::Core::ProductionComponent>();
-  if (p == nullptr) {
-    p = building->add_component<Engine::Core::ProductionComponent>();
-  }
+  auto* p =
+      Engine::Core::get_or_add_component<Engine::Core::ProductionComponent>(building);
   if (const auto ruling = production_ruling(*building, unit_type);
       ruling != ProductionResult::Success) {
     return ruling;
@@ -228,10 +226,7 @@ auto ProductionService::set_rally_point(Engine::Core::World& world,
   if (e == nullptr) {
     return false;
   }
-  auto* p = e->get_component<Engine::Core::ProductionComponent>();
-  if (p == nullptr) {
-    p = e->add_component<Engine::Core::ProductionComponent>();
-  }
+  auto* p = Engine::Core::get_or_add_component<Engine::Core::ProductionComponent>(e);
   if (p == nullptr) {
     return false;
   }

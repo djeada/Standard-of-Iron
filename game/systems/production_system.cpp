@@ -141,10 +141,8 @@ void load_onto_hauler(Engine::Core::Entity* worker,
   if (worker == nullptr || amount <= 0) {
     return;
   }
-  auto* carry = worker->get_component<Engine::Core::ResourceCarryComponent>();
-  if (carry == nullptr) {
-    carry = worker->add_component<Engine::Core::ResourceCarryComponent>();
-  }
+  auto* carry =
+      Engine::Core::get_or_add_component<Engine::Core::ResourceCarryComponent>(worker);
   if (carry == nullptr) {
     return;
   }

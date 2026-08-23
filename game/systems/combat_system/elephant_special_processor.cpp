@@ -156,10 +156,9 @@ void publish_foot_stomps(Engine::Core::Entity& elephant) {
 }
 
 void begin_panic(Engine::Core::Entity* elephant, float duration) {
-  auto* panic = elephant->get_component<Engine::Core::ElephantPanicComponent>();
-  if (panic == nullptr) {
-    panic = elephant->add_component<Engine::Core::ElephantPanicComponent>();
-  }
+  auto* panic =
+      Engine::Core::get_or_add_component<Engine::Core::ElephantPanicComponent>(
+          elephant);
   panic->duration = duration;
 }
 
@@ -288,10 +287,8 @@ void process_elephant(Engine::Core::Entity* entity,
     return;
   }
 
-  auto* elephant = entity->get_component<Engine::Core::ElephantComponent>();
-  if (elephant == nullptr) {
-    elephant = entity->add_component<Engine::Core::ElephantComponent>();
-  }
+  auto* elephant =
+      Engine::Core::get_or_add_component<Engine::Core::ElephantComponent>(entity);
 
   float const health_ratio =
       static_cast<float>(unit->health) / static_cast<float>(unit->max_health);

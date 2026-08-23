@@ -7063,32 +7063,40 @@ Builders reap it for the food that recruits civilians</source>
 <context>
     <name>RpgFpvOverlay</name>
     <message>
-        <source>HP %1/%2</source>
-        <translation>الصحة %1/%2</translation>
+        <source>GUARD BROKEN</source>
+        <translation>انكسرت الحراسة</translation>
     </message>
     <message>
-        <source>STM %1%</source>
-        <translation>الجَلَد %1%</translation>
+        <source>PUNISH</source>
+        <translation>عقاب</translation>
     </message>
     <message>
         <source>FINISHER</source>
         <translation>الضربة القاضية</translation>
     </message>
     <message>
-        <source>COMBO</source>
-        <translation>سلسلة</translation>
+        <source>HP %1/%2</source>
+        <translation>الصحة %1/%2</translation>
     </message>
     <message>
-        <source>POSTURE</source>
-        <translation>الاتزان</translation>
+        <source>TARGET</source>
+        <translation>الهدف</translation>
     </message>
     <message>
-        <source>GUARD BROKEN</source>
-        <translation>انكسرت الحراسة</translation>
+        <source>%1%</source>
+        <translation>%1%</translation>
     </message>
     <message>
-        <source>⚡ PUNISH ⚡</source>
-        <translation>⚡ عقاب ⚡</translation>
+        <source>STAGGERED</source>
+        <translation>مترنّح</translation>
+    </message>
+    <message>
+        <source>BOW  ·  X</source>
+        <translation>قوس  ·  X</translation>
+    </message>
+    <message>
+        <source>BLADE  ·  X</source>
+        <translation>نصل  ·  X</translation>
     </message>
     <message>
         <source>BASH</source>
@@ -7105,14 +7113,6 @@ Builders reap it for the food that recruits civilians</source>
     <message>
         <source>READY</source>
         <translation>جاهز</translation>
-    </message>
-    <message>
-        <source>BOW  ·  X</source>
-        <translation>قوس  ·  X</translation>
-    </message>
-    <message>
-        <source>BLADE  ·  X</source>
-        <translation>نصل  ·  X</translation>
     </message>
 </context>
 <context>
