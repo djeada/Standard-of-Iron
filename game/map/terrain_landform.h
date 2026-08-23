@@ -3,6 +3,8 @@
 #include <cstdint>
 #include <vector>
 
+#include "hill_shape.h"
+
 namespace Game::Map::Landform {
 
 struct HillConfig {
@@ -14,6 +16,8 @@ struct HillConfig {
   float phase = 0.0F;
   std::uint32_t seed = 1337U;
   bool rounded_crown = true;
+  const HillShapeGeometry* shape = nullptr;
+  float crown_thickness = 0.0F;
 };
 
 struct HillSample {

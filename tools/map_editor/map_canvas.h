@@ -138,6 +138,11 @@ private:
   [[nodiscard]] QVector<ElementSnapshot>
   without_duplicate_commanders(const QVector<ElementSnapshot>& snaps,
                                int* rejected_count) const;
+  void draw_terrain_outline(QPainter& painter,
+                            const TerrainElement& elem,
+                            const QPoint& center,
+                            const QPen& pen,
+                            double margin_px);
   void draw_terrain_feature(QPainter& painter,
                             const TerrainElement& elem,
                             const QPoint& center);
@@ -153,6 +158,9 @@ private:
                     int marker_radius_px = -1);
   [[nodiscard]] Game::Map::FootprintCells
   terrain_footprint(const TerrainElement& elem) const;
+  [[nodiscard]] Game::Map::HillShapeGeometry
+  terrain_shape(const TerrainElement& elem) const;
+  [[nodiscard]] static QVector<QPoint> terrain_mask_cells(const TerrainElement& elem);
   [[nodiscard]] QSizeF terrain_ellipse_px(const TerrainElement& elem) const;
   [[nodiscard]] int terrain_marker_radius_px(const TerrainElement& elem) const;
   [[nodiscard]] float terrain_hit_radius_px(const TerrainElement& elem) const;

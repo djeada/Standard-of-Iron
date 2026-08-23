@@ -772,6 +772,15 @@ void MapData::parse_terrain_array(const QJsonArray& arr) {
     elem.depth = static_cast<float>(obj[MapJsonKeys::depth].toDouble(0.0));
     elem.height = static_cast<float>(obj[MapJsonKeys::height].toDouble(3.0));
     elem.rotation = static_cast<float>(obj[MapJsonKeys::rotation].toDouble(0.0));
+    elem.shape = obj[MapJsonKeys::shape].toString();
+    elem.thickness = static_cast<float>(obj[MapJsonKeys::thickness].toDouble(0.0));
+    elem.has_arc = obj.contains(MapJsonKeys::arc);
+    elem.arc = static_cast<float>(obj[MapJsonKeys::arc].toDouble(0.0));
+    elem.has_arc_start = obj.contains(MapJsonKeys::arc_start);
+    elem.arc_start = static_cast<float>(obj[MapJsonKeys::arc_start].toDouble(0.0));
+    elem.taper = static_cast<float>(obj[MapJsonKeys::taper].toDouble(0.0));
+    elem.points = obj[MapJsonKeys::points].toArray();
+    elem.cells = obj[MapJsonKeys::cells].toArray();
     elem.entrances = obj[MapJsonKeys::entrances].toArray();
 
     const QStringList known_keys = {MapJsonKeys::type,
@@ -782,6 +791,13 @@ void MapData::parse_terrain_array(const QJsonArray& arr) {
                                     MapJsonKeys::depth,
                                     MapJsonKeys::height,
                                     MapJsonKeys::rotation,
+                                    MapJsonKeys::shape,
+                                    MapJsonKeys::thickness,
+                                    MapJsonKeys::arc,
+                                    MapJsonKeys::arc_start,
+                                    MapJsonKeys::taper,
+                                    MapJsonKeys::points,
+                                    MapJsonKeys::cells,
                                     MapJsonKeys::entrances};
     elem.extra_fields = copyExtraFields(obj, known_keys);
 
@@ -991,6 +1007,27 @@ QJsonArray MapData::terrain_to_json() const {
     obj[MapJsonKeys::height] = static_cast<double>(elem.height);
     if (elem.rotation != 0.0F) {
       obj[MapJsonKeys::rotation] = static_cast<double>(elem.rotation);
+    }
+    if (!elem.shape.isEmpty() && elem.shape != QStringLiteral("blob")) {
+      obj[MapJsonKeys::shape] = elem.shape;
+    }
+    if (elem.thickness > 0.0F) {
+      obj[MapJsonKeys::thickness] = static_cast<double>(elem.thickness);
+    }
+    if (elem.has_arc) {
+      obj[MapJsonKeys::arc] = static_cast<double>(elem.arc);
+    }
+    if (elem.has_arc_start) {
+      obj[MapJsonKeys::arc_start] = static_cast<double>(elem.arc_start);
+    }
+    if (elem.taper > 0.0F) {
+      obj[MapJsonKeys::taper] = static_cast<double>(elem.taper);
+    }
+    if (!elem.points.isEmpty()) {
+      obj[MapJsonKeys::points] = elem.points;
+    }
+    if (!elem.cells.isEmpty()) {
+      obj[MapJsonKeys::cells] = elem.cells;
     }
     if (!elem.entrances.isEmpty()) {
       obj[MapJsonKeys::entrances] = elem.entrances;

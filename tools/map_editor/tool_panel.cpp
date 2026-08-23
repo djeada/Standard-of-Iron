@@ -29,6 +29,14 @@ auto toolDescription(ToolType tool) -> QString {
     return "Select placed elements, drag them, or double-click to edit.";
   case ToolType::Hill:
     return "Place round or width/depth-based hills.";
+  case ToolType::HillRidge:
+    return "Place a straight ridge hill that forces a fight along its length.";
+  case ToolType::HillArc:
+    return "Place a boomerang ridge. Tuck one into a corner for a natural keep.";
+  case ToolType::HillElbow:
+    return "Place an L-shaped ridge that walls off two approaches at once.";
+  case ToolType::HillRing:
+    return "Place a ring of high ground around a hollow bailey.";
   case ToolType::Mountain:
     return "Place high mountains with editable JSON properties.";
   case ToolType::River:
@@ -220,9 +228,37 @@ void ToolPanel::setup_ui() {
                   "\u25B3",
                   "Place mountain peaks.",
                   ToolType::Mountain);
+  add_tool_button(terrain_layout,
+                  1,
+                  0,
+                  "Ridge",
+                  "\u25AC",
+                  "Place a straight corridor ridge.",
+                  ToolType::HillRidge);
+  add_tool_button(terrain_layout,
+                  1,
+                  1,
+                  "Boomerang",
+                  "\u25DC",
+                  "Place a bent ridge that wraps a corner.",
+                  ToolType::HillArc);
+  add_tool_button(terrain_layout,
+                  2,
+                  0,
+                  "Elbow",
+                  "\u2517",
+                  "Place an L-shaped ridge.",
+                  ToolType::HillElbow);
+  add_tool_button(terrain_layout,
+                  2,
+                  1,
+                  "Ring",
+                  "\u25CE",
+                  "Place a ring hill around a hollow bailey.",
+                  ToolType::HillRing);
   add_tool_button(
       terrain_layout,
-      1,
+      3,
       0,
       "Forest",
       "\u2660",
@@ -560,7 +596,8 @@ void ToolPanel::setup_ui() {
                       "Right click with no tool armed: context menu\n"
                       "Del / Backspace: delete selected\n"
                       "Shift + click/drag: free placement (no snap)\n"
-                      "Double-click element: edit JSON (hills include a top-grid)\n"
+                      "Double-click element: edit JSON (hills open a cell grid you "
+                      "can draw their shape on)\n"
                       "Double-click empty grid: resize map",
                       "panelHint",
                       tips_group));

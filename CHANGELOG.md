@@ -11,6 +11,22 @@ may change in any release — see [Save compatibility](#save-compatibility).
 
 ### Added
 
+- **Hills have shapes now, not just an ellipse.** A `terrain` entry of type
+  `hill` takes a `shape`: `corridor` for a straight ridge that forces a fight
+  along its length, `arc` for a boomerang or a corner wrap, `elbow` for a hard
+  L, `ring` for a band around a hollow bailey, `path` for a ridge that follows
+  authored points, and `mask` for exactly the cells drawn in the map editor.
+  `thickness`, `arc`, `arc_start` and `taper` shape the band; everything else
+  about a hill — crown, slope, rim, entrance ramps, erosion — is unchanged,
+  because every shape is a distance field the existing hill code already reads.
+  The renderer needs no changes at all: it draws the height map. The map
+  editor's terrain box gained Ridge, Boomerang, Elbow and Ring tools, its canvas
+  draws the real silhouette instead of a bounding ellipse, and painting a hill's
+  cells in the projection panel now saves them as an exact `mask` instead of
+  refitting them to an ellipse. `assets/maps/map_rivers.json` ships a mirrored
+  pair of boomerang ridges wrapping its two neutral barracks. Documented in
+  [docs/HILL_SHAPES.md](docs/HILL_SHAPES.md).
+
 - **The game has its own typeface.** Standard of Iron now ships **Standard Iron
   Display**, an original Roman monumental face — wedge serifs, a low-slung `A`,
   a broad `T`, a blade-legged `R`, a long-tailed `Q`, wedge serifs on every

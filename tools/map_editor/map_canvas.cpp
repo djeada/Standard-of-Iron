@@ -9,6 +9,7 @@
 #include <QMouseEvent>
 #include <QPainter>
 #include <QPainterPath>
+#include <QPainterPathStroker>
 #include <QPolygonF>
 #include <QSet>
 #include <QSizeF>
@@ -51,6 +52,69 @@ constexpr int k_minor_grid_alpha = 90;
 const QColor k_hover_select_color(100, 200, 255);
 const QColor k_hover_erase_color(255, 80, 80);
 constexpr float k_entry_crest_width_scale = 1.12F;
+
+auto is_mask_hill(const TerrainElement& elem) -> bool {
+  return elem.type == QStringLiteral("hill") && !elem.cells.isEmpty() &&
+         elem.shape.trimmed().compare(QStringLiteral("mask"), Qt::CaseInsensitive) == 0;
+}
+
+auto is_terrain_feature_tool(ToolType tool) -> bool {
+  switch (tool) {
+  case ToolType::Hill:
+  case ToolType::HillRidge:
+  case ToolType::HillArc:
+  case ToolType::HillElbow:
+  case ToolType::HillRing:
+  case ToolType::Mountain:
+    return true;
+  default:
+    return false;
+  }
+}
+
+auto default_terrain_element(ToolType tool) -> TerrainElement {
+  TerrainElement elem;
+  elem.type =
+      tool == ToolType::Mountain ? QStringLiteral("mountain") : QStringLiteral("hill");
+  elem.height = tool == ToolType::Mountain ? 8.0F : 3.0F;
+  elem.radius = 10.0F;
+
+  switch (tool) {
+  case ToolType::HillRidge:
+    elem.shape = QStringLiteral("corridor");
+    elem.radius = 0.0F;
+    elem.width = 36.0F;
+    elem.depth = 10.0F;
+    break;
+  case ToolType::HillArc:
+    elem.shape = QStringLiteral("arc");
+    elem.radius = 0.0F;
+    elem.width = 40.0F;
+    elem.depth = 40.0F;
+    elem.thickness = 10.0F;
+    elem.has_arc = true;
+    elem.arc = 120.0F;
+    elem.taper = 0.35F;
+    break;
+  case ToolType::HillElbow:
+    elem.shape = QStringLiteral("elbow");
+    elem.radius = 0.0F;
+    elem.width = 34.0F;
+    elem.depth = 34.0F;
+    elem.thickness = 10.0F;
+    break;
+  case ToolType::HillRing:
+    elem.shape = QStringLiteral("ring");
+    elem.radius = 0.0F;
+    elem.width = 40.0F;
+    elem.depth = 40.0F;
+    elem.thickness = 10.0F;
+    break;
+  default:
+    break;
+  }
+  return elem;
+}
 
 QPointF snap_pos(const QPointF& gp) {
   return {std::round(gp.x()), std::round(gp.y())};
@@ -1159,10 +1223,6 @@ void MapCanvas::draw_terrain_element(QPainter& painter, int i) {
   bool const is_selected = is_selected_element(0, i);
   bool const is_hovered = (m_hovered_type == 0 && m_hovered_index == i);
 
-  const QSizeF ellipse = terrain_ellipse_px(elem);
-  const auto rx = static_cast<int>(ellipse.width());
-  const auto ry = static_cast<int>(ellipse.height());
-
   draw_terrain_feature(painter, elem, pos);
 
   QPen outline_pen;
@@ -1173,25 +1233,10 @@ void MapCanvas::draw_terrain_element(QPainter& painter, int i) {
   } else {
     outline_pen = QPen(Qt::white, 1);
   }
-  const auto outline_rotation =
-      static_cast<double>(terrain_footprint(elem).rotation_deg);
-  painter.save();
-  painter.setPen(outline_pen);
-  painter.setBrush(Qt::NoBrush);
-  painter.translate(pos);
-  painter.rotate(outline_rotation);
-  painter.drawEllipse(QPointF(0, 0), static_cast<double>(rx), static_cast<double>(ry));
-  painter.restore();
+  draw_terrain_outline(painter, elem, pos, outline_pen, 0.0);
 
   if (is_hovered && !is_selected) {
-    painter.save();
-    painter.setPen(QPen(hover_ring_color, 2));
-    painter.setBrush(Qt::NoBrush);
-    painter.translate(pos);
-    painter.rotate(outline_rotation);
-    painter.drawEllipse(
-        QPointF(0, 0), static_cast<double>(rx + 4), static_cast<double>(ry + 4));
-    painter.restore();
+    draw_terrain_outline(painter, elem, pos, QPen(hover_ring_color, 2), 4.0);
   }
 
   draw_terrain_entrances(painter, elem);
@@ -1818,6 +1863,10 @@ void MapCanvas::draw_current_placement(QPainter& painter) {
   QString type;
   switch (m_current_tool) {
   case ToolType::Hill:
+  case ToolType::HillRidge:
+  case ToolType::HillArc:
+  case ToolType::HillElbow:
+  case ToolType::HillRing:
     type = "hill";
     break;
   case ToolType::Mountain:
@@ -1898,11 +1947,9 @@ void MapCanvas::draw_current_placement(QPainter& painter) {
         QRect(widget_pos.x() - 10, widget_pos.y() - 10, 20, 20), Qt::AlignCenter, "☠");
   } else if (!type.isEmpty()) {
     if (type == QStringLiteral("hill") || type == QStringLiteral("mountain")) {
-      TerrainElement preview;
-      preview.type = type;
-      preview.radius = 10.0F;
-      preview.width = 10.0F;
-      preview.depth = 10.0F;
+      TerrainElement preview = default_terrain_element(m_current_tool);
+      preview.x = static_cast<float>(grid_pos.x());
+      preview.z = static_cast<float>(grid_pos.y());
       draw_terrain_feature(painter, preview, widget_pos);
     } else if (type == QStringLiteral("barracks") ||
                type == QStringLiteral("village") ||
@@ -2211,22 +2258,159 @@ MapCanvas::terrain_footprint(const TerrainElement& elem) const {
     return lake;
   }
 
-  return Game::Map::hill_footprint_cells({.width = elem.width,
-                                          .depth = elem.depth,
-                                          .radius = elem.radius,
-                                          .rotation_deg = elem.rotation,
-                                          .tile_size = tile_size,
-                                          .grid_center_x = elem.x,
-                                          .grid_center_z = elem.z,
-                                          .campaign_scale = campaign_scale});
+  Game::Map::HillShape shape = Game::Map::HillShape::Blob;
+  const bool shaped =
+      Game::Map::parse_hill_shape(elem.shape.trimmed().toStdString(), shape) &&
+      shape != Game::Map::HillShape::Blob;
+
+  Game::Map::FootprintCells footprint =
+      Game::Map::hill_footprint_cells({.width = elem.width,
+                                       .depth = elem.depth,
+                                       .radius = elem.radius,
+                                       .rotation_deg = elem.rotation,
+                                       .tile_size = tile_size,
+                                       .grid_center_x = elem.x,
+                                       .grid_center_z = elem.z,
+                                       .campaign_scale = campaign_scale,
+                                       .shaped = shaped});
+  if (shape == Game::Map::HillShape::Mask) {
+    footprint.rotation_deg = 0.0F;
+  }
+  return footprint;
+}
+
+Game::Map::HillShapeGeometry
+MapCanvas::terrain_shape(const TerrainElement& elem) const {
+  Game::Map::HillShapeGeometry geometry;
+  if (elem.type != QStringLiteral("hill")) {
+    return geometry;
+  }
+
+  Game::Map::HillShape shape = Game::Map::HillShape::Blob;
+  if (!Game::Map::parse_hill_shape(elem.shape.trimmed().toStdString(), shape) ||
+      shape == Game::Map::HillShape::Blob) {
+    return geometry;
+  }
+
+  const Game::Map::FootprintCells footprint = terrain_footprint(elem);
+  const double radians =
+      static_cast<double>(footprint.rotation_deg) * std::numbers::pi / 180.0;
+  const double cos_yaw = std::cos(radians);
+  const double sin_yaw = std::sin(radians);
+
+  Game::Map::HillShapeAuthoring authoring;
+  authoring.shape = shape;
+  authoring.thickness = elem.thickness;
+  authoring.has_sweep = elem.has_arc;
+  authoring.has_sweep_start = elem.has_arc_start;
+  authoring.sweep_degrees = elem.arc;
+  authoring.sweep_start_degrees = elem.arc_start;
+  authoring.taper = elem.taper;
+  for (const QJsonValue point_value : elem.points) {
+    const QJsonObject point = point_value.toObject();
+    const double dx = point.value(MapJsonKeys::x).toDouble(0.0) - elem.x;
+    const double dz = point.value(MapJsonKeys::z).toDouble(0.0) - elem.z;
+    authoring.local_points.push_back(
+        {static_cast<float>(dx * cos_yaw + dz * sin_yaw),
+         static_cast<float>(-dx * sin_yaw + dz * cos_yaw)});
+  }
+
+  if (shape == Game::Map::HillShape::Mask) {
+    return geometry;
+  }
+
+  const auto params = Game::Map::hill_shape_params(
+      footprint,
+      authoring,
+      m_map_data != nullptr ? std::max(m_map_data->grid().tile_size, 0.0001F) : 1.0F);
+  return Game::Map::build_hill_shape(params);
+}
+
+QVector<QPoint> MapCanvas::terrain_mask_cells(const TerrainElement& elem) {
+  QVector<QPoint> cells;
+  for (const QJsonValue row_value : elem.cells) {
+    const QJsonArray row = row_value.toArray();
+    if (row.size() == 2) {
+      cells.append(QPoint(static_cast<int>(std::lround(row.at(0).toDouble(0.0))),
+                          static_cast<int>(std::lround(row.at(1).toDouble(0.0)))));
+    } else if (row.size() == 3) {
+      const int cell_z = static_cast<int>(std::lround(row.at(0).toDouble(0.0)));
+      const int from = static_cast<int>(std::lround(row.at(1).toDouble(0.0)));
+      const int to = static_cast<int>(std::lround(row.at(2).toDouble(0.0)));
+      for (int cell_x = std::min(from, to); cell_x <= std::max(from, to); ++cell_x) {
+        cells.append(QPoint(cell_x, cell_z));
+      }
+    }
+  }
+  return cells;
 }
 
 QSizeF MapCanvas::terrain_ellipse_px(const TerrainElement& elem) const {
   const Game::Map::FootprintCells footprint = terrain_footprint(elem);
-  const float rx = footprint.half_width * static_cast<float>(grid_cell_size) * m_zoom;
-  const float ry = footprint.half_depth * static_cast<float>(grid_cell_size) * m_zoom;
+  const Game::Map::HillShapeGeometry shape = terrain_shape(elem);
+  const float half_width = shape.is_spine() ? shape.bound_half_x : footprint.half_width;
+  const float half_depth = shape.is_spine() ? shape.bound_half_z : footprint.half_depth;
+  const float rx = half_width * static_cast<float>(grid_cell_size) * m_zoom;
+  const float ry = half_depth * static_cast<float>(grid_cell_size) * m_zoom;
 
   return {std::max(static_cast<float>(marker_radius_px()), rx), std::max(4.0F, ry)};
+}
+
+void MapCanvas::draw_terrain_outline(QPainter& painter,
+                                     const TerrainElement& elem,
+                                     const QPoint& center,
+                                     const QPen& pen,
+                                     double margin_px) {
+  const Game::Map::FootprintCells footprint = terrain_footprint(elem);
+  const Game::Map::HillShapeGeometry shape = terrain_shape(elem);
+  const double cell_px = static_cast<double>(grid_cell_size) * m_zoom;
+
+  painter.save();
+  painter.setPen(pen);
+  painter.setBrush(Qt::NoBrush);
+  painter.translate(center);
+  painter.scale(-1.0, -1.0);
+  painter.rotate(static_cast<double>(footprint.rotation_deg));
+
+  if (shape.is_spine()) {
+    QPainterPath spine_path;
+    spine_path.moveTo(shape.spine.front().x * cell_px, shape.spine.front().z * cell_px);
+    for (std::size_t i = 1; i < shape.spine.size(); ++i) {
+      spine_path.lineTo(shape.spine[i].x * cell_px, shape.spine[i].z * cell_px);
+    }
+    QPainterPathStroker stroker;
+    stroker.setWidth(
+        std::max(2.0, shape.half_thickness * 2.0 * cell_px + margin_px * 2.0));
+    stroker.setCapStyle(Qt::RoundCap);
+    stroker.setJoinStyle(Qt::RoundJoin);
+    painter.drawPath(stroker.createStroke(spine_path));
+  } else if (is_mask_hill(elem)) {
+    const QVector<QPoint> cells = terrain_mask_cells(elem);
+    double min_x = 0.0;
+    double max_x = 0.0;
+    double min_z = 0.0;
+    double max_z = 0.0;
+    bool first = true;
+    for (const QPoint& cell : cells) {
+      const double local_x = static_cast<double>(cell.x()) - elem.x;
+      const double local_z = static_cast<double>(cell.y()) - elem.z;
+      min_x = first ? local_x : std::min(min_x, local_x);
+      max_x = first ? local_x : std::max(max_x, local_x);
+      min_z = first ? local_z : std::min(min_z, local_z);
+      max_z = first ? local_z : std::max(max_z, local_z);
+      first = false;
+    }
+    painter.drawRect(QRectF((min_x - 0.5) * cell_px - margin_px,
+                            (min_z - 0.5) * cell_px - margin_px,
+                            (max_x - min_x + 1.0) * cell_px + margin_px * 2.0,
+                            (max_z - min_z + 1.0) * cell_px + margin_px * 2.0));
+  } else {
+    const QSizeF ellipse = terrain_ellipse_px(elem);
+    painter.drawEllipse(
+        QPointF(0, 0), ellipse.width() + margin_px, ellipse.height() + margin_px);
+  }
+
+  painter.restore();
 }
 
 void MapCanvas::draw_terrain_feature(QPainter& painter,
@@ -2239,6 +2423,7 @@ void MapCanvas::draw_terrain_feature(QPainter& painter,
 
   painter.save();
   painter.translate(center);
+  painter.scale(-1.0, -1.0);
   painter.rotate(static_cast<double>(footprint.rotation_deg));
 
   if (elem.type == QStringLiteral("hill")) {
@@ -2248,15 +2433,51 @@ void MapCanvas::draw_terrain_feature(QPainter& painter,
     const QColor inner(120, 98, 58);
     const QColor peak(96, 74, 42);
 
+    const Game::Map::HillShapeGeometry shape = terrain_shape(elem);
     painter.setPen(Qt::NoPen);
-    painter.setBrush(outer);
-    painter.drawEllipse(QPointF(0, 0), rx, ry);
 
-    painter.setBrush(mid);
-    painter.drawEllipse(QPointF(0, 0), rx * 0.72, ry * 0.72);
+    if (shape.is_spine()) {
+      const double cell_px = static_cast<double>(grid_cell_size) * m_zoom;
+      QPainterPath spine_path;
+      spine_path.moveTo(shape.spine.front().x * cell_px,
+                        shape.spine.front().z * cell_px);
+      for (std::size_t i = 1; i < shape.spine.size(); ++i) {
+        spine_path.lineTo(shape.spine[i].x * cell_px, shape.spine[i].z * cell_px);
+      }
 
-    painter.setBrush(inner);
-    painter.drawEllipse(QPointF(0, 0), rx * 0.45, ry * 0.45);
+      const auto stroke = [&](const QColor& color, double half_thickness_cells) {
+        QPen pen(color,
+                 std::max(2.0, half_thickness_cells * 2.0 * cell_px),
+                 Qt::SolidLine,
+                 Qt::RoundCap,
+                 Qt::RoundJoin);
+        painter.setPen(pen);
+        painter.drawPath(spine_path);
+      };
+      stroke(outer, shape.half_thickness);
+      stroke(mid, shape.half_thickness * 0.72);
+      stroke(inner, shape.half_thickness * 0.45);
+      painter.setPen(Qt::NoPen);
+    } else if (is_mask_hill(elem)) {
+      const double cell_px = static_cast<double>(grid_cell_size) * m_zoom;
+      painter.setBrush(outer);
+      for (const QPoint& cell : terrain_mask_cells(elem)) {
+        painter.drawRect(
+            QRectF((static_cast<double>(cell.x()) - elem.x - 0.5) * cell_px,
+                   (static_cast<double>(cell.y()) - elem.z - 0.5) * cell_px,
+                   cell_px,
+                   cell_px));
+      }
+    } else {
+      painter.setBrush(outer);
+      painter.drawEllipse(QPointF(0, 0), rx, ry);
+
+      painter.setBrush(mid);
+      painter.drawEllipse(QPointF(0, 0), rx * 0.72, ry * 0.72);
+
+      painter.setBrush(inner);
+      painter.drawEllipse(QPointF(0, 0), rx * 0.45, ry * 0.45);
+    }
 
     painter.setBrush(peak);
     const double dot_r = std::max(2.5, std::min(rx, ry) * 0.18);
@@ -2290,7 +2511,9 @@ void MapCanvas::draw_terrain_feature(QPainter& painter,
     painter.drawEllipse(QPointF(0, 0), rx * 0.82, ry * 0.82);
   }
 
-  if (footprint.organic_spread > 0.0F) {
+  const bool shaped_hill = elem.type == QStringLiteral("hill") &&
+                           (terrain_shape(elem).is_spine() || is_mask_hill(elem));
+  if (footprint.organic_spread > 0.0F && !shaped_hill) {
     const double spread = 1.0 + static_cast<double>(footprint.organic_spread);
     painter.setBrush(Qt::NoBrush);
     painter.setPen(QPen(QColor(255, 226, 168, 130), 1.0, Qt::DotLine));
@@ -3046,13 +3269,10 @@ void MapCanvas::place_element(const QPointF& raw_grid_pos) {
 
   const QPointF grid_pos = clamp_to_grid(raw_grid_pos);
 
-  if (m_current_tool == ToolType::Hill || m_current_tool == ToolType::Mountain) {
-    TerrainElement elem;
-    elem.type = (m_current_tool == ToolType::Hill) ? "hill" : "mountain";
+  if (is_terrain_feature_tool(m_current_tool)) {
+    TerrainElement elem = default_terrain_element(m_current_tool);
     elem.x = static_cast<float>(grid_pos.x());
     elem.z = static_cast<float>(grid_pos.y());
-    elem.radius = 10.0F;
-    elem.height = (m_current_tool == ToolType::Hill) ? 3.0F : 8.0F;
     m_map_data->execute_command(std::make_unique<AddTerrainCmd>(m_map_data, elem));
   } else if (!world_prop_type_for_tool(m_current_tool).isEmpty()) {
     WorldPropElement elem;

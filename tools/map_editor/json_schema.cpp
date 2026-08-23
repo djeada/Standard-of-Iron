@@ -117,6 +117,57 @@ auto terrain_schema(const QString& sub_type) -> JsonSchema {
           "rotation", "number", "0", "Footprint rotation in degrees, clockwise.", 0.0),
   };
 
+  if (!is_mountain && !is_lake) {
+    schema.fields.append(
+        optional_field("shape",
+                       "string",
+                       "blob",
+                       "Footprint family. blob is the classic mound; corridor is a "
+                       "straight ridge; arc bends into a boomerang or a corner wrap; "
+                       "elbow is a hard L; ring encloses a hollow bailey; path "
+                       "follows authored points; mask uses the cells you painted.",
+                       QStringLiteral("corridor"),
+                       {"blob", "corridor", "arc", "elbow", "ring", "path", "mask"}));
+    schema.fields.append(
+        optional_field("thickness",
+                       "number",
+                       "derived",
+                       "Band thickness in cells across the ridge. Ignored by blob.",
+                       8.0));
+    schema.fields.append(
+        optional_field("arc",
+                       "number",
+                       "120",
+                       "Sweep in degrees for arc and ring, or the angle between the "
+                       "two arms for elbow.",
+                       120.0));
+    schema.fields.append(optional_field(
+        "arc_start",
+        "number",
+        "centred",
+        "Where an arc begins, in degrees. Defaults to a sweep centred on +x.",
+        0.0));
+    schema.fields.append(
+        optional_field("taper",
+                       "number",
+                       "0",
+                       "0 … 1. Narrows an open shape towards its two ends.",
+                       0.4));
+    schema.fields.append(
+        optional_field("points",
+                       "array",
+                       "[]",
+                       "path only: spine points, [{\"x\": 0, \"z\": 0}, …].",
+                       QJsonArray{}));
+    schema.fields.append(
+        optional_field("cells",
+                       "array",
+                       "[]",
+                       "mask only: painted rows as [z, x_from, x_to] spans. Painted "
+                       "in the projection panel rather than by hand.",
+                       QJsonArray{}));
+  }
+
   if (!is_mountain) {
     JsonFieldSpec entrances =
         optional_field("entrances",

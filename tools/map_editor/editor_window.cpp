@@ -97,7 +97,7 @@ auto createGuidePanel(QWidget* parent) -> QWidget* {
                          "2. Click on the canvas to place or start drawing.\n"
                          "3. Drag placed items to refine positioning.\n"
                          "4. Double-click elements to edit JSON (hills also show a "
-                         "top-projection entrance grid).\n"
+                         "cell grid: draw the hill shape or its entrances).\n"
                          "5. Save the map when the layout looks right.",
                          panel));
 
@@ -1037,6 +1037,18 @@ void EditorWindow::on_tool_selected(ToolType tool) {
     break;
   case ToolType::Hill:
     tool_name = "Hill";
+    break;
+  case ToolType::HillRidge:
+    tool_name = "Ridge hill";
+    break;
+  case ToolType::HillArc:
+    tool_name = "Boomerang hill";
+    break;
+  case ToolType::HillElbow:
+    tool_name = "Elbow hill";
+    break;
+  case ToolType::HillRing:
+    tool_name = "Ring hill";
     break;
   case ToolType::Mountain:
     tool_name = "Mountain";

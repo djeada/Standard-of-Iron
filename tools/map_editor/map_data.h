@@ -25,6 +25,15 @@ struct TerrainElement {
   float depth = 0.0F;
   float height = 3.0F;
   float rotation = 0.0F;
+  QString shape;
+  float thickness = 0.0F;
+  float arc = 0.0F;
+  float arc_start = 0.0F;
+  float taper = 0.0F;
+  bool has_arc = false;
+  bool has_arc_start = false;
+  QJsonArray points;
+  QJsonArray cells;
   QJsonArray entrances;
   QJsonObject extra_fields;
 };

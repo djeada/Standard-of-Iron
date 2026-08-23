@@ -96,6 +96,7 @@ add_executable(
     map/terrain_topology_audit_test.cpp
     map/map_transformer_test.cpp
     map/hill_crown_geometry_test.cpp
+    map/hill_shape_test.cpp
     map/terrain_footprint_test.cpp
     map/undead_shrine_placement_test.cpp
     map/time_of_day_test.cpp
