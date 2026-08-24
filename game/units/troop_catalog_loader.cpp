@@ -206,6 +206,8 @@ auto TroopCatalogLoader::load_from_file(const QString& path) -> bool {
     const QJsonObject production = ensure_object(troop_obj.value("production"));
     troop_class.production.cost =
         read_int(production, "cost", troop_class.production.cost);
+    troop_class.production.population =
+        read_int(production, "population", troop_class.production.population);
     troop_class.production.resource_costs = read_resource_amounts(
         production, "resource_costs", troop_class.production.resource_costs);
     troop_class.production.build_time =

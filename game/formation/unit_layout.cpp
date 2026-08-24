@@ -34,7 +34,7 @@ struct StateName {
   const char* name;
 };
 
-constexpr std::array<StateName, 7> k_state_names = {{
+constexpr std::array<StateName, 8> k_state_names = {{
     {UnitLayoutState::Normal, "normal"},
     {UnitLayoutState::Defensive, "defensive"},
     {UnitLayoutState::Attacking, "attacking"},
@@ -42,6 +42,7 @@ constexpr std::array<StateName, 7> k_state_names = {{
     {UnitLayoutState::Marching, "marching"},
     {UnitLayoutState::Routing, "routing"},
     {UnitLayoutState::Disrupted, "disrupted"},
+    {UnitLayoutState::Working, "working"},
 }};
 
 auto hash_u32(std::uint32_t value) -> std::uint32_t {
@@ -171,6 +172,11 @@ auto style_for_state(UnitLayoutStyle style, UnitLayoutState state) -> UnitLayout
     style.depth_jitter = std::max(style.depth_jitter, 0.28F) * 1.4F;
     style.facing_jitter_degrees = std::max(style.facing_jitter_degrees, 18.0F);
     style.rank_stagger *= 1.6F;
+    break;
+  case UnitLayoutState::Working:
+    style.lateral_jitter = std::max(style.lateral_jitter, 0.14F);
+    style.depth_jitter = std::max(style.depth_jitter, 0.14F);
+    style.facing_jitter_degrees = std::max(style.facing_jitter_degrees, 8.0F);
     break;
   }
   return style;
@@ -338,6 +344,33 @@ void register_generic_styles(std::vector<UnitLayoutStyle>& out) {
     style.lateral_jitter = 0.16F;
     style.depth_jitter = 0.16F;
     style.facing_jitter_degrees = 8.0F;
+    out.push_back(style);
+  }
+  {
+
+    auto style = make_style("worker_gang", UnitLayoutShape::LooseOrder);
+    style.lateral_spacing_scale = 1.10F;
+    style.depth_spacing_scale = 1.12F;
+    style.rank_stagger = 0.42F;
+    style.rear_rank_loosening = 0.12F;
+    style.lateral_jitter = 0.26F;
+    style.depth_jitter = 0.24F;
+    style.rear_jitter_gain = 0.20F;
+    style.facing_jitter_degrees = 16.0F;
+    style.min_separation_scale = 0.50F;
+    out.push_back(style);
+  }
+  {
+
+    auto style = make_style("worker_file", UnitLayoutShape::Column);
+    style.column_files = 3.0F;
+    style.lateral_spacing_scale = 0.95F;
+    style.depth_spacing_scale = 1.15F;
+    style.rank_stagger = 0.34F;
+    style.lateral_jitter = 0.16F;
+    style.depth_jitter = 0.14F;
+    style.facing_jitter_degrees = 7.0F;
+    style.min_separation_scale = 0.48F;
     out.push_back(style);
   }
   {
@@ -976,7 +1009,41 @@ auto UnitLayoutSystem::rows_for(int count, int max_per_row) -> int {
   return std::max(1, (std::max(1, count) + cols - 1) / cols);
 }
 
+namespace {
+
+[[nodiscard]] auto shortest_yaw_delta(float from, float to) -> float {
+  float delta = std::fmod(to - from + 540.0F, 360.0F) - 180.0F;
+  return delta;
+}
+
+} // namespace
+
 auto UnitLayoutSystem::offset(const UnitLayoutQuery& query) const -> SoldierOffset {
+  if (query.blend_from == k_invalid_layout || query.blend_from == query.layout ||
+      query.blend_ratio >= 0.999F) {
+    return raw_offset(query);
+  }
+
+  float const t = std::clamp(query.blend_ratio, 0.0F, 1.0F);
+  UnitLayoutQuery from_query = query;
+  from_query.layout = query.blend_from;
+  from_query.blend_from = k_invalid_layout;
+  from_query.blend_ratio = 1.0F;
+  auto const from = raw_offset(from_query);
+
+  UnitLayoutQuery to_query = query;
+  to_query.blend_from = k_invalid_layout;
+  to_query.blend_ratio = 1.0F;
+  auto const to = raw_offset(to_query);
+
+  float const smooth = t * t * (3.0F - 2.0F * t);
+  return {from.offset_x + (to.offset_x - from.offset_x) * smooth,
+          from.offset_z + (to.offset_z - from.offset_z) * smooth,
+          from.yaw_offset +
+              shortest_yaw_delta(from.yaw_offset, to.yaw_offset) * smooth};
+}
+
+auto UnitLayoutSystem::raw_offset(const UnitLayoutQuery& query) const -> SoldierOffset {
   const auto& style = UnitLayoutLibrary::instance().style(query.layout);
 
   int const total =
@@ -1113,7 +1180,9 @@ auto UnitLayoutSystem::compute(UnitLayoutId layout,
                                int max_per_row,
                                float spacing,
                                std::uint32_t seed,
-                               float formed_ratio) const -> std::vector<SoldierOffset> {
+                               float formed_ratio,
+                               UnitLayoutId blend_from,
+                               float blend_ratio) const -> std::vector<SoldierOffset> {
   std::vector<SoldierOffset> out;
   int const safe_count = std::max(0, count);
   if (safe_count == 0) {
@@ -1136,6 +1205,8 @@ auto UnitLayoutSystem::compute(UnitLayoutId layout,
     query.spacing = spacing;
     query.seed = seed;
     query.formed_ratio = formed_ratio;
+    query.blend_from = blend_from;
+    query.blend_ratio = blend_ratio;
     out.push_back(offset(query));
   }
   return out;

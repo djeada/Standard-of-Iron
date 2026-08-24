@@ -1,5 +1,6 @@
 #include <QVector3D>
 
+#include <cmath>
 #include <gtest/gtest.h>
 
 #include "core/component.h"
@@ -160,6 +161,53 @@ TEST_F(GatherLoopSystemTest, AnExhaustedRoundIsRetiredInsteadOfRescannedForever)
   ASSERT_NE(builder, nullptr);
   EXPECT_FALSE(builder->has_gather_order);
   EXPECT_FALSE(builder->has_task_target);
+}
+
+TEST_F(GatherLoopSystemTest, TheWorkSpotSitsOnTheWorkerSideOfTheTree) {
+
+  struct Approach {
+    const char* name;
+    float x;
+    float z;
+  };
+  const Approach approaches[] = {{"north", 0.0F, -8.0F},
+                                 {"south", 0.0F, 8.0F},
+                                 {"west", -8.0F, 0.0F},
+                                 {"east", 8.0F, 0.0F}};
+
+  for (const auto& approach : approaches) {
+    lay_out_trees(1);
+    const QVector3D tree =
+        Game::Map::TerrainService::instance().world_prop_world_position(
+            Game::Map::TerrainService::instance().world_props().front());
+    float const worker_x = tree.x() + approach.x;
+    float const worker_z = tree.z() + approach.z;
+
+    Engine::Core::World world;
+    auto* worker = add_woodcutter(world, worker_x, worker_z);
+
+    think(world);
+
+    const auto* builder =
+        worker->get_component<Engine::Core::BuilderProductionComponent>();
+    ASSERT_NE(builder, nullptr) << approach.name;
+    ASSERT_TRUE(builder->has_construction_site) << approach.name;
+
+    float const to_tree = std::hypot(builder->construction_site_x - tree.x(),
+                                     builder->construction_site_z - tree.z());
+    EXPECT_LT(to_tree, 2.0F)
+        << approach.name << ": the work spot must hug the tree, not sit off to a side";
+
+    float const spot_dx = builder->construction_site_x - tree.x();
+    float const spot_dz = builder->construction_site_z - tree.z();
+    float const facing = (spot_dx * approach.x) + (spot_dz * approach.z);
+    EXPECT_GE(facing, 0.0F) << approach.name
+                            << ": the crew must never walk round to the far side"
+                            << " tree=(" << tree.x() << "," << tree.z() << ")"
+                            << " worker=(" << worker_x << "," << worker_z << ")"
+                            << " spot=(" << builder->construction_site_x << ","
+                            << builder->construction_site_z << ")";
+  }
 }
 
 TEST_F(GatherLoopSystemTest, AWorkerSentToBuildIsNotPulledOffTheBuildingSite) {

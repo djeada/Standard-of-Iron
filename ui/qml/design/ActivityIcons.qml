@@ -98,7 +98,7 @@ QtObject {
             "deliver": {
                 "icon": "deliver",
                 "label": qsTr("Delivering"),
-                "hint": qsTr("Carrying its load to the barracks."),
+                "hint": qsTr("Carrying its load to the barracks; it cannot be interrupted until the load is dropped off."),
                 "resource": ""
             },
             "heal": {
@@ -143,6 +143,12 @@ QtObject {
             "interrupted": {
                 "label": qsTr("Interrupted"),
                 "hint": qsTr("Work stopped part-way; re-issue the order to resume."),
+                "tone": "warning",
+                "decorated": true
+            },
+            "locked": {
+                "label": qsTr("Cannot be interrupted"),
+                "hint": qsTr("Hauling a load to the barracks. New orders wait until the load is dropped off."),
                 "tone": "warning",
                 "decorated": true
             }

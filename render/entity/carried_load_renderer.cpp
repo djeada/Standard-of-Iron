@@ -48,6 +48,10 @@ constexpr QVector3D k_straw{0.84F, 0.68F, 0.32F};
 constexpr QVector3D k_straw_dark{0.62F, 0.47F, 0.20F};
 constexpr QVector3D k_grain_head{0.92F, 0.78F, 0.40F};
 constexpr QVector3D k_twine{0.36F, 0.24F, 0.12F};
+constexpr QVector3D k_fleece{0.86F, 0.83F, 0.76F};
+constexpr QVector3D k_fleece_shade{0.68F, 0.64F, 0.57F};
+constexpr QVector3D k_meat{0.62F, 0.24F, 0.22F};
+constexpr QVector3D k_hoof{0.24F, 0.21F, 0.19F};
 
 auto rand01(std::uint32_t seed) -> float {
   std::uint32_t value = seed + 0x9E3779B9U;
@@ -264,9 +268,63 @@ void draw_sheaf(ISubmitter& out,
       k_straw_dark);
 }
 
+void draw_carcass(ISubmitter& out,
+                  const QMatrix4x4& frame,
+                  std::uint32_t seed,
+                  bool detailed) {
+
+  Mesh* const cylinder = get_unit_cylinder(10);
+  Mesh* const cube = get_unit_cube();
+
+  constexpr float k_half_length = k_hand_span + 0.10F;
+  float const sag = jitter(seed, 0.018F);
+  QVector3D const left(-k_half_length, k_grip_height + 0.02F + sag, k_grip_forward);
+  QVector3D const right(k_half_length, k_grip_height + 0.03F - sag, k_grip_forward);
+
+  out.mesh(cylinder,
+           Render::Geom::cylinder_between(frame, left, right, 0.115F),
+           tint(k_fleece, 0.92F + (rand01(seed) * 0.14F)));
+
+  put(out,
+      cube,
+      frame,
+      QVector3D(k_half_length + 0.055F, k_grip_height - 0.035F, k_grip_forward + 0.01F),
+      QVector3D(0.062F, 0.050F, 0.052F),
+      QVector3D(0.0F, 0.0F, jitter(seed * 3U, 22.0F)),
+      tint(k_fleece_shade, 0.96F));
+
+  if (!detailed) {
+    return;
+  }
+
+  put(out,
+      cube,
+      frame,
+      QVector3D(-k_half_length - 0.030F, k_grip_height + 0.035F, k_grip_forward),
+      QVector3D(0.034F, 0.034F, 0.036F),
+      QVector3D(),
+      k_meat);
+
+  constexpr std::array<std::array<float, 2>, 4> k_legs{
+      {{-0.11F, -0.05F}, {-0.05F, 0.06F}, {0.07F, -0.06F}, {0.12F, 0.05F}}};
+  for (std::size_t i = 0; i < k_legs.size(); ++i) {
+    auto const leg_seed = static_cast<std::uint32_t>(seed + 47U + (i * 31U));
+    QVector3D const root(
+        k_legs.at(i).at(0), k_grip_height - 0.02F, k_grip_forward + k_legs.at(i).at(1));
+    QVector3D const hoof(k_legs.at(i).at(0) + jitter(leg_seed, 0.02F),
+                         k_grip_height - 0.145F,
+                         k_grip_forward + (k_legs.at(i).at(1) * 1.45F));
+    out.mesh(cylinder,
+             Render::Geom::cylinder_between(frame, root, hoof, 0.017F),
+             tint(k_fleece_shade, 0.90F + (rand01(leg_seed) * 0.18F)));
+    put(out, cube, frame, hoof, QVector3D(0.018F, 0.014F, 0.018F), QVector3D(), k_hoof);
+  }
+}
+
 void draw_load(ISubmitter& out,
                const QMatrix4x4& frame,
                ResourceType type,
+               Engine::Core::CarriedFoodForm food_form,
                std::uint32_t seed,
                bool detailed) {
   switch (type) {
@@ -277,7 +335,11 @@ void draw_load(ISubmitter& out,
     draw_iron_ore(out, frame, seed, detailed);
     return;
   case ResourceType::Food:
-    draw_sheaf(out, frame, seed, detailed);
+    if (food_form == Engine::Core::CarriedFoodForm::Meat) {
+      draw_carcass(out, frame, seed, detailed);
+    } else {
+      draw_sheaf(out, frame, seed, detailed);
+    }
     return;
   default:
     draw_log(out, frame, seed, detailed);
@@ -349,6 +411,7 @@ auto submit_carried_loads(Engine::Core::World* world,
       draw_load(out,
                 frame,
                 type,
+                carry->food_form,
                 static_cast<std::uint32_t>((hauler->get_id() * 131U) +
                                            (static_cast<std::uint32_t>(slot) * 29U)),
                 detailed);

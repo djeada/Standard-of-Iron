@@ -131,9 +131,10 @@ auto default_troop_formation_profile(TroopType troop) -> TroopFormationProfile {
   case TroopType::Builder:
     profile.roles = mask({RoleTag::Worker, RoleTag::Civilian});
     profile.army_roles = {ArmyRole::Reserve};
-    profile.unit_layout = "work_party";
-    profile.defensive_layout = "work_party";
-    profile.marching_layout = "work_party";
+    profile.unit_layout = "worker_gang";
+    profile.defensive_layout = "worker_gang";
+    profile.marching_layout = "worker_file";
+    profile.working_layout = "work_party";
     break;
 
   case TroopType::Civilian:
@@ -217,6 +218,9 @@ void TroopRoleRegistry::merge_profile(TroopType troop,
   }
   if (!overrides.marching_layout.empty()) {
     target.marching_layout = overrides.marching_layout;
+  }
+  if (!overrides.working_layout.empty()) {
+    target.working_layout = overrides.working_layout;
   }
 }
 

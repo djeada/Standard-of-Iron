@@ -1784,6 +1784,8 @@ public:
   std::uint16_t layout_id{0xFFFFU};
   std::uint16_t requested_layout_id{0xFFFFU};
 
+  std::uint16_t previous_layout_id{0xFFFFU};
+
   [[nodiscard]] auto is_formed() const noexcept -> bool { return phase == 1U; }
 };
 
@@ -1902,7 +1904,7 @@ class HomeComponent {
 public:
   HomeComponent() = default;
 
-  int population_contribution{50};
+  int population_contribution{18};
   Engine::Core::EntityID nearest_barracks_id{0};
   float update_cooldown{0.0F};
   float family_generation_cooldown{0.0F};
@@ -1915,6 +1917,13 @@ public:
   CivilianDeliveryComponent() = default;
 
   EntityID target_barracks_id{0};
+};
+
+enum class CarriedFoodForm : std::uint8_t {
+
+  Grain = 0,
+
+  Meat = 1,
 };
 
 class ResourceCarryComponent {
@@ -1932,6 +1941,8 @@ public:
   }
 
   Game::Systems::ResourceAmounts amounts{};
+
+  CarriedFoodForm food_form{CarriedFoodForm::Grain};
 
   EntityID depot_entity_id{0};
   float depot_x{0.0F};

@@ -1,8 +1,10 @@
+#include <algorithm>
 #include <gtest/gtest.h>
 #include <vector>
 
 #include "game/core/component.h"
 #include "game/core/world.h"
+#include "game/game_config.h"
 #include "game/systems/home_system.h"
 #include "game/systems/nation_registry.h"
 #include "game/systems/player_resource_registry.h"
@@ -17,6 +19,12 @@
 #include "game/units/troop_catalog_loader.h"
 
 namespace {
+
+[[nodiscard]] auto archer_production() -> Game::Units::TroopProductionStats {
+  const auto* archer =
+      Game::Units::TroopCatalog::instance().get_class(Game::Units::TroopType::Archer);
+  return archer != nullptr ? archer->production : Game::Units::TroopProductionStats{};
+}
 
 class HomeManpowerSystemTest : public ::testing::Test {
 protected:
@@ -89,6 +97,46 @@ TEST_F(HomeManpowerSystemTest,
   EXPECT_FLOAT_EQ(home_component->family_generation_cooldown, 8.0F);
 }
 
+TEST_F(HomeManpowerSystemTest, NoSingleRecruitSwallowsAWholeMapsPopulationCap) {
+  ASSERT_TRUE(Game::Units::TroopCatalogLoader::load_default_catalog());
+
+  const int cap = Game::GameConfig::instance().get_max_troops_per_player();
+  ASSERT_GT(cap, 0);
+
+  const auto& catalog = Game::Units::TroopCatalog::instance().get_all_classes();
+  ASSERT_FALSE(catalog.empty());
+
+  int heaviest = 0;
+  for (const auto& [type, troop_class] : catalog) {
+    const int population = troop_class.production.population_cost();
+    EXPECT_LE(population, cap / 5)
+        << Game::Units::troop_typeToString(type)
+        << " alone eats more than a fifth of the population cap";
+    heaviest = std::max(heaviest, population);
+  }
+  ASSERT_GT(heaviest, 0);
+
+  EXPECT_GE(cap / heaviest, 8)
+      << "the cap should field a real army of the heaviest unit, not a handful";
+}
+
+TEST_F(HomeManpowerSystemTest, PopulationIsCountedSeparatelyFromRecruitmentCost) {
+  ASSERT_TRUE(Game::Units::TroopCatalogLoader::load_default_catalog());
+
+  const auto* archer =
+      Game::Units::TroopCatalog::instance().get_class(Game::Units::TroopType::Archer);
+  ASSERT_NE(archer, nullptr);
+  EXPECT_GT(archer->production.population, 0)
+      << "population is authored, not inferred from the manpower price";
+  EXPECT_EQ(archer->production.population_cost(), archer->production.population);
+
+  Game::Units::TroopProductionStats unpriced;
+  unpriced.cost = 37;
+  unpriced.population = 0;
+  EXPECT_EQ(unpriced.population_cost(), 37)
+      << "a troop with no authored population still falls back to its cost";
+}
+
 TEST_F(HomeManpowerSystemTest, BarracksProductionConsumesAvailableManpowerWhenQueued) {
   Engine::Core::World world;
   ASSERT_TRUE(Game::Units::TroopCatalogLoader::load_default_catalog());
@@ -99,13 +147,17 @@ TEST_F(HomeManpowerSystemTest, BarracksProductionConsumesAvailableManpowerWhenQu
   ASSERT_NE(unit, nullptr);
   ASSERT_NE(production, nullptr);
 
+  const auto archer = archer_production();
+
   unit->spawn_type = Game::Units::SpawnType::Barracks;
   unit->owner_id = 1;
   production->max_units = 500;
   production->produced_count = 500;
-  production->manpower_available = 40;
-  Game::Systems::PlayerResourceRegistry::instance().set(
-      1, Game::Systems::ResourceType::Wood, 12);
+  production->manpower_available = archer.cost - 1;
+  for (const auto type : Game::Systems::k_all_resource_types) {
+    Game::Systems::PlayerResourceRegistry::instance().set(
+        1, type, archer.resource_costs.get(type));
+  }
 
   const std::vector<Engine::Core::EntityID> selected = {barracks->get_id()};
 
@@ -116,7 +168,8 @@ TEST_F(HomeManpowerSystemTest, BarracksProductionConsumesAvailableManpowerWhenQu
   EXPECT_EQ(result, Game::Systems::ProductionResult::InsufficientManpower);
   EXPECT_FALSE(production->in_progress);
 
-  production->manpower_available = 60;
+  const int pool = archer.cost + 10;
+  production->manpower_available = pool;
   result = Game::Systems::ProductionService::start_production(
       world,
       Game::Systems::ProductionService::find_selected_barracks(world, selected, 1),
@@ -124,7 +177,7 @@ TEST_F(HomeManpowerSystemTest, BarracksProductionConsumesAvailableManpowerWhenQu
 
   EXPECT_EQ(result, Game::Systems::ProductionResult::Success);
   EXPECT_TRUE(production->in_progress);
-  EXPECT_EQ(production->manpower_available, 60 - production->villager_cost);
+  EXPECT_EQ(production->manpower_available, pool - archer.cost);
 }
 
 TEST_F(HomeManpowerSystemTest, BarracksProductionRequiresConfiguredResources) {
@@ -137,11 +190,13 @@ TEST_F(HomeManpowerSystemTest, BarracksProductionRequiresConfiguredResources) {
   ASSERT_NE(unit, nullptr);
   ASSERT_NE(production, nullptr);
 
+  const auto archer = archer_production();
+
   unit->spawn_type = Game::Units::SpawnType::Barracks;
   unit->owner_id = 1;
   production->max_units = 500;
   production->produced_count = 500;
-  production->manpower_available = 60;
+  production->manpower_available = archer.cost + 10;
 
   const std::vector<Engine::Core::EntityID> selected = {barracks->get_id()};
   auto& resources = Game::Systems::PlayerResourceRegistry::instance();
@@ -153,7 +208,9 @@ TEST_F(HomeManpowerSystemTest, BarracksProductionRequiresConfiguredResources) {
   EXPECT_EQ(result, Game::Systems::ProductionResult::InsufficientResources);
   EXPECT_FALSE(production->in_progress);
 
-  resources.set(1, Game::Systems::ResourceType::Wood, 12);
+  for (const auto type : Game::Systems::k_all_resource_types) {
+    resources.set(1, type, archer.resource_costs.get(type));
+  }
 
   result = Game::Systems::ProductionService::start_production(
       world,
@@ -161,7 +218,9 @@ TEST_F(HomeManpowerSystemTest, BarracksProductionRequiresConfiguredResources) {
       Game::Units::TroopType::Archer);
   EXPECT_EQ(result, Game::Systems::ProductionResult::Success);
   EXPECT_TRUE(production->in_progress);
-  EXPECT_EQ(resources.get(1, Game::Systems::ResourceType::Wood), 0);
+  for (const auto type : Game::Systems::k_all_resource_types) {
+    EXPECT_EQ(resources.get(1, type), 0) << "resource index " << static_cast<int>(type);
+  }
 }
 
 TEST_F(HomeManpowerSystemTest, InitialBarracksSpawnStartsWithAuthoredManpowerReserve) {

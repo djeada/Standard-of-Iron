@@ -66,6 +66,7 @@
 #include "app/core/game_speed.h"
 #include "app/core/match_presentation_sync.h"
 #include "app/core/user_settings.h"
+#include "app/economy/harvest_targeting.h"
 #include "app/economy/production_manager.h"
 #include "app/input/cursor_manager.h"
 #include "app/input/cursor_mode.h"
@@ -1229,7 +1230,15 @@ void GameEngine::sync_interaction_targeting(float delta_time) {
   QVariantMap hint;
   hint[QStringLiteral("action")] = QStringLiteral("none");
 
-  if ((m_world != nullptr) && !m_level.is_spectator_mode) {
+  bool const interaction_mode_armed = App::Economy::interaction_highlights_armed(
+      m_cursor_manager != nullptr ? m_cursor_manager->mode() : CursorMode::Normal,
+      m_production_manager != nullptr &&
+          m_production_manager->is_placing_construction(),
+      m_production_manager != nullptr
+          ? m_production_manager->pending_builder_construction_type()
+          : QString());
+
+  if ((m_world != nullptr) && !m_level.is_spectator_mode && interaction_mode_armed) {
     std::vector<Engine::Core::EntityID> selection;
     if (auto* selection_system =
             m_world->get_system<Game::Systems::SelectionSystem>()) {

@@ -29,6 +29,18 @@ public:
   [[nodiscard]] static auto
   is_layout_formed(const Engine::Core::Entity& entity) -> bool;
 
+  struct LayoutBlend {
+
+    float formed_ratio{1.0F};
+
+    UnitLayoutId blend_from{k_invalid_layout};
+
+    float blend_ratio{1.0F};
+  };
+
+  [[nodiscard]] static auto
+  layout_blend(const Engine::Core::Entity& entity) -> LayoutBlend;
+
   [[nodiscard]] static auto formed_ratio(const Engine::Core::Entity& entity) -> float;
 
   [[nodiscard]] static auto transition_seconds_for(UnitLayoutState from,

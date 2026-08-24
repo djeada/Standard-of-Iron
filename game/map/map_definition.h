@@ -44,7 +44,7 @@ struct UnitSpawn {
   float z = 0.0F;
   int player_id = 0;
   int team_id = 0;
-  int max_population = 100;
+  int max_population = 60;
   std::optional<Game::Systems::NationID> nation;
   QString behavior;
   float guard_radius = 10.0F;
@@ -68,7 +68,7 @@ struct StructureEntry {
   StructureGeometry geometry = PointStructureGeometry{};
   int player_id = 0;
   int team_id = 0;
-  int max_population = 100;
+  int max_population = 60;
   float rotation = 0.0F;
   QString nation;
 };
@@ -494,7 +494,7 @@ struct MapDefinition {
   std::vector<FogZone> fog_zones;
   BiomeSettings biome;
   CoordSystem coordSystem = CoordSystem::Grid;
-  int max_troops_per_player = 500;
+  int max_troops_per_player = 250;
   VictoryConfig victory;
   RainSettings rain;
   Game::Wildlife::WildlifeSettings wildlife;

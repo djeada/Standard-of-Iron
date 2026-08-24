@@ -221,6 +221,16 @@ auto issue_builder_dismantle_command(
   return App::Core::submit_player_order(*world, local_owner_id, std::move(request));
 }
 
+namespace {
+
+auto is_hauling_a_load(const Engine::Core::World& world,
+                       Engine::Core::EntityID unit) -> bool {
+  const auto* carry = world.try_get<Engine::Core::ResourceCarryComponent>(unit);
+  return carry != nullptr && !carry->empty();
+}
+
+} // namespace
+
 auto submit_ground_move(Engine::Core::World& world,
                         const std::vector<Engine::Core::EntityID>& units,
                         const QVector3D& destination,
@@ -230,6 +240,19 @@ auto submit_ground_move(Engine::Core::World& world,
     return App::Core::rejected_order_at(
         OrderKind::Move, App::Core::no_selection_reason(), destination);
   }
+
+  std::vector<Engine::Core::EntityID> movable;
+  movable.reserve(units.size());
+  for (auto const id : units) {
+    if (!is_hauling_a_load(world, id)) {
+      movable.push_back(id);
+    }
+  }
+  if (movable.empty()) {
+    return App::Core::rejected_order_at(
+        OrderKind::Move, App::Core::hauling_load_reason(), destination);
+  }
+  const std::vector<Engine::Core::EntityID>& orderable = movable;
 
   if (Game::Systems::NavGrid::get_pathfinder() != nullptr &&
       !Game::Systems::NavGrid::is_world_position_walkable(destination)) {
@@ -242,8 +265,8 @@ auto submit_ground_move(Engine::Core::World& world,
   }
 
   const auto plan =
-      Game::Systems::CommandService::plan_ground_move(world, units, destination);
-  if (units.size() != plan.positions.size()) {
+      Game::Systems::CommandService::plan_ground_move(world, orderable, destination);
+  if (orderable.size() != plan.positions.size()) {
     return App::Core::rejected_order_at(
         OrderKind::Move,
         App::Core::rejection_refusal(Game::Command::Rejection::MalformedPayload,
@@ -252,7 +275,7 @@ auto submit_ground_move(Engine::Core::World& world,
   }
 
   Game::Command::Move move;
-  move.units = units;
+  move.units = orderable;
   move.targets.assign(plan.positions.begin(), plan.positions.end());
   move.facing_angles = plan.facing_angles;
   move.kind = Game::Systems::MoveOrderKind::FormationMove;

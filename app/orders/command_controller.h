@@ -77,6 +77,10 @@ public:
   set_auto_gather(bool active,
                   const QString& priority_product_type = {}) -> CommandResult;
   auto on_run_command() -> CommandResult;
+
+  auto start_food_harvest(Engine::Core::EntityID target,
+                          const QString& product_type,
+                          int local_owner_id) -> CommandResult;
   void enable_run_mode_for_selected();
   void disable_run_mode_for_selected();
   auto on_guard_click(qreal sx,

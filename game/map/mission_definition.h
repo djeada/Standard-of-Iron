@@ -34,7 +34,7 @@ struct UnitSetup {
 struct BuildingSetup {
   QString type;
   Position position;
-  int max_population = 100;
+  int max_population = 60;
 };
 
 using Resources = Game::Systems::ResourceAmounts;

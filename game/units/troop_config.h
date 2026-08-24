@@ -32,6 +32,26 @@ public:
     return 50;
   }
 
+  auto get_population_cost(TroopType unit_type) const -> int {
+    auto it = m_population_cost.find(unit_type);
+    if (it != m_population_cost.end()) {
+      return it->second;
+    }
+    return get_production_cost(unit_type);
+  }
+
+  auto get_population_cost(const std::string& unit_type) const -> int {
+    return get_population_cost(troop_typeFromString(unit_type));
+  }
+
+  auto get_population_cost(SpawnType spawn_type) const -> int {
+    auto troop_type_opt = spawn_typeToTroopType(spawn_type);
+    if (troop_type_opt) {
+      return get_population_cost(*troop_type_opt);
+    }
+    return 50;
+  }
+
   auto get_build_time(TroopType unit_type) const -> float {
     auto it = m_build_time.find(unit_type);
     if (it != m_build_time.end()) {
@@ -189,6 +209,7 @@ private:
   void reload_from_catalog() {
     m_individuals_per_unit.clear();
     m_production_cost.clear();
+    m_population_cost.clear();
     m_build_time.clear();
     m_max_units_per_row.clear();
     m_selection_ring_size.clear();
@@ -201,6 +222,7 @@ private:
       auto type = troop_class.unit_type;
       m_individuals_per_unit[type] = troop_class.individuals_per_unit;
       m_production_cost[type] = troop_class.production.cost;
+      m_population_cost[type] = troop_class.production.population_cost();
       m_build_time[type] = troop_class.production.build_time;
       m_max_units_per_row[type] = troop_class.max_units_per_row;
       m_selection_ring_size[type] = troop_class.visuals.selection_ring_size;
@@ -212,6 +234,7 @@ private:
 
   std::unordered_map<TroopType, int> m_individuals_per_unit;
   std::unordered_map<TroopType, int> m_production_cost;
+  std::unordered_map<TroopType, int> m_population_cost;
   std::unordered_map<TroopType, float> m_build_time;
   std::unordered_map<TroopType, int> m_max_units_per_row;
   std::unordered_map<TroopType, float> m_selection_ring_size;

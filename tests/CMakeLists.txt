@@ -351,6 +351,7 @@ add_executable(
     render/spawn_validator_test.cpp
     render/battle_render_optimizer_test.cpp
     render/barracks_flag_renderer_test.cpp
+    render/carried_load_renderer_test.cpp
     render/building_archetype_desc_test.cpp
     render/building_render_common_test.cpp
     render/mode_indicator_test.cpp
@@ -499,6 +500,7 @@ add_executable(
     core/commander_direct_control_latency_test.cpp
     core/commander_mode_transition_test.cpp
     core/context_intent_test.cpp
+    core/harvest_targeting_test.cpp
     core/player_feedback_test.cpp
     core/input_command_handler_test.cpp
     core/tutorial_mission_test.cpp
