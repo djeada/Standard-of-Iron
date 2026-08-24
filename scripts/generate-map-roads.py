@@ -24,6 +24,10 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Iterable, Sequence
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+
+from map_hill_shapes import hill_shape_strokes
+
 Point = tuple[float, float]
 
 CAMPAIGN_MAPS = (
@@ -683,6 +687,23 @@ class RoutingField:
                 full_width = radius * 2.68
                 full_depth = radius * 1.60
             rotation = float(feature.get("rotation", 0.0))
+            strokes, half_thickness = hill_shape_strokes(feature)
+            if strokes:
+
+                core_radius = self.coords.distance_to_grid(half_thickness)
+                for start, end in strokes:
+                    grid_start = self.coords.to_grid(start)
+                    grid_end = self.coords.to_grid(end)
+                    self._raster_capsule(
+                        self.terrain_core, grid_start, grid_end, core_radius
+                    )
+                    self._raster_capsule(
+                        self.terrain,
+                        grid_start,
+                        grid_end,
+                        core_radius + self.clearance,
+                    )
+                continue
             self._raster_ellipse(
                 self.terrain_core,
                 center,

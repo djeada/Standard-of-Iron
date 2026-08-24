@@ -52,6 +52,10 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Sequence
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+
+from map_hill_shapes import canonical_hill_shape, hill_half_thickness
+
 CAMPAIGN_MAPS = (
     "assets/maps/map_crossing_rhone.json",
     "assets/maps/map_crossing_alps.json",
@@ -228,6 +232,7 @@ def _load_road_generator():
     path = Path(__file__).resolve().parent / "generate-map-roads.py"
     module = types.ModuleType("soi_road_generator")
     module.__dict__["__name__"] = "soi_road_generator"
+    module.__dict__["__file__"] = str(path)
     sys.modules["soi_road_generator"] = module
     exec(compile(path.read_text(), str(path), "exec"), module.__dict__)
     return module
@@ -269,6 +274,10 @@ class TerrainMask:
                 continue
             half_width, half_depth = hill_extents(feature)
             if half_width <= 0.0 or half_depth <= 0.0:
+                continue
+            if canonical_hill_shape(feature.get("shape")):
+
+                feature["thickness"] = hill_half_thickness(feature) * 2.0 * influence
                 continue
             feature.pop("radius", None)
             feature["width"] = half_width * 2.0 * influence

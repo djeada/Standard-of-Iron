@@ -13,7 +13,7 @@ namespace {
 
 // clang-format off
 [[maybe_unused]] const char* const k_asset_strings[] = {
-    // 420 strings across 7 contexts.
+    // 424 strings across 7 contexts.
     // ---- Missions (217) ----
     QT_TRANSLATE_NOOP("Missions", "202 BC: Scipio arranged lanes through his infantry to blunt Hannibal's elephants, while Masinissa and Laelius commanded superior allied cavalry. The returning cavalry helped decide the battle. The Sepulcher intervention is the campaign's deliberate dark-fantasy break from history."),
     QT_TRANSLATE_NOOP("Missions", "215-212 BC: Hannibal campaigned across Campania while Capua served as his principal Italian ally and winter base. This dark-fantasy composite condenses several Roman attempts to contain and isolate the Carthaginian army."),
@@ -253,26 +253,30 @@ namespace {
     QT_TRANSLATE_NOOP("Campaigns", "The last standards fall under an African sky. Rome and Carthage will remember the field differently; the Iron Sepulcher remembers only that both armies finally entered its reach."),
     QT_TRANSLATE_NOOP("Campaigns", "The survivors flee toward Placentia through sleet and mud. Roman tents, grain, and weapons are captured; bodies beneath the ice rise only when nobody is watching."),
 
-    // ---- Maps (20) ----
-    QT_TRANSLATE_NOOP("Maps", "A balanced Mediterranean skirmish map set among olive groves, dry wadis, terraced hills, and dusty farm roads. Control of the center and side ridges helps, but victory is standard barracks elimination."),
-    QT_TRANSLATE_NOOP("Maps", "A dense symmetrical forest battlefield for two active players, built around road reading, ambush forests, hill control, side objectives, and two neutral barracks. There are no rivers, bridges, or mountains. Roads deliberately route around hills instead of crossing over them."),
-    QT_TRANSLATE_NOOP("Maps", "A large balanced mountain skirmish map with two fortified bases, a contested central ridge, narrow high passes, flank trails, alpine streams, and strong archer positions. Victory is standard barracks elimination."),
+    // ---- Maps (24) ----
+    QT_TRANSLATE_NOOP("Maps", "A fertile valley for two. One channel runs the whole map north to south and only two fords cross it. A cross spur on each bank means you either hug the water or swing wide to reach them, and the boomerang ridge cupping each start makes the back door terrain rather than a wall. Nothing haunts this valley: it is the plain match, with no Sepulcher to distract either side."),
     QT_TRANSLATE_NOOP("Maps", "A quiet meadow between a Carthaginian camp and a Roman outpost, laid out for the tutorial: timber, stone and ore within a short walk of the barracks, a scouting party to practise on, and a small enemy camp to take once the army is ready."),
-    QT_TRANSLATE_NOOP("Maps", "A rich strategic crossroads map with contested central bridges, neutral corner barracks, flank routes, and high ground around key crossings."),
+    QT_TRANSLATE_NOOP("Maps", "Amber Delta"),
     QT_TRANSLATE_NOOP("Maps", "Battle of Cannae"),
     QT_TRANSLATE_NOOP("Maps", "Battle of Lake Trasimene"),
     QT_TRANSLATE_NOOP("Maps", "Battle of Ticino"),
     QT_TRANSLATE_NOOP("Maps", "Battle of Trebia"),
     QT_TRANSLATE_NOOP("Maps", "Battle of Zama"),
+    QT_TRANSLATE_NOOP("Maps", "Blackpine Hollow"),
     QT_TRANSLATE_NOOP("Maps", "Campania Campaign"),
+    QT_TRANSLATE_NOOP("Maps", "Copper Canyons"),
     QT_TRANSLATE_NOOP("Maps", "Crossing the Alps"),
     QT_TRANSLATE_NOOP("Maps", "Crossing the Rhone - Polished Maze Version"),
-    QT_TRANSLATE_NOOP("Maps", "Forest Battlefield"),
+    QT_TRANSLATE_NOOP("Maps", "Deep wet pine forest for two. A crater wall rings the shrine bowl at the centre and no road enters it - the gates cut through its rim are the only way in, so the middle belongs to whoever will fight for it on foot. Everything else is one ring road and the trees."),
+    QT_TRANSLATE_NOOP("Maps", "Four camps in a snowed-in basin. Two melt races cross at its centre and cut the ground into quarters, so every neighbour is a bridge away: an inner crossing in the open, or a longer one out under the rim ranges. Four corner tarns and four barrow cairns fill the rest."),
+    QT_TRANSLATE_NOOP("Maps", "Four camps on a dry Iberian hillside. No river runs here - the terraces are the map. Each camp looks out through a horned terrace wall with a gate at either horn, and the old press mound in the middle is high ground four worn tracks climb."),
+    QT_TRANSLATE_NOOP("Maps", "Frostmere Basin"),
     QT_TRANSLATE_NOOP("Maps", "Iron Sepulcher Watch"),
-    QT_TRANSLATE_NOOP("Maps", "Mountain Strongholds"),
-    QT_TRANSLATE_NOOP("Maps", "River Crossroads"),
+    QT_TRANSLATE_NOOP("Maps", "Six camps in a banded rock desert. Three races cross at the middle and cut the ground into six wedges, so every neighbour is two crossings away: one under the junction knaps, one out at the rim stacks. A mesa lies across each wedge, and the lane past it is where the sector is won."),
     QT_TRANSLATE_NOOP("Maps", "Small authored scenario that demonstrates ruins, a shrine, and undead awakening zones."),
-    QT_TRANSLATE_NOOP("Maps", "Spanish Olive Grove"),
+    QT_TRANSLATE_NOOP("Maps", "Sunbaked Terraces"),
+    QT_TRANSLATE_NOOP("Maps", "The Two Fords"),
+    QT_TRANSLATE_NOOP("Maps", "Three camps a side along one broad channel. The Amber runs the whole map and only three ferry crossings span it, so a bank is a front line: the highway behind each bank links its three camps, and every attack has to buy a bridge first."),
     QT_TRANSLATE_NOOP("Maps", "Training Meadow"),
 
     // ---- Nations (5) ----

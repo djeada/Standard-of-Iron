@@ -73,9 +73,9 @@ TEST_F(GroundTypeTest, ApplyGroundTypeDefaultsForestMud) {
   apply_ground_type_defaults(settings, GroundType::ForestMud);
 
   EXPECT_EQ(settings.ground_type, GroundType::ForestMud);
-  EXPECT_FLOAT_EQ(settings.grass_primary.x(), 0.28F);
-  EXPECT_FLOAT_EQ(settings.grass_primary.y(), 0.58F);
-  EXPECT_FLOAT_EQ(settings.grass_primary.z(), 0.26F);
+  EXPECT_FLOAT_EQ(settings.grass_primary.x(), 0.27F);
+  EXPECT_FLOAT_EQ(settings.grass_primary.y(), 0.52F);
+  EXPECT_FLOAT_EQ(settings.grass_primary.z(), 0.25F);
   EXPECT_FLOAT_EQ(settings.soil_color.x(), 0.28F);
   EXPECT_FLOAT_EQ(settings.soil_color.y(), 0.24F);
   EXPECT_FLOAT_EQ(settings.soil_color.z(), 0.18F);
