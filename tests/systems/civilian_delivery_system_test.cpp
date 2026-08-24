@@ -13,6 +13,7 @@
 #include "game/systems/player_resource_registry.h"
 #include "game/systems/production_service.h"
 #include "game/units/spawn_type.h"
+#include "game/units/troop_config.h"
 #include "game/units/troop_type.h"
 
 namespace {
@@ -30,9 +31,11 @@ TEST(CivilianDeliverySystemTest, HomeRecruitsCivilianUsingHomeManpowerPool) {
   home_unit->owner_id = 1;
   home_prod->product_type = Game::Units::TroopType::Civilian;
   home_prod->build_time = 5.0F;
+  const int villager_cost = Game::Units::TroopConfig::instance().get_production_cost(
+      Game::Units::TroopType::Civilian);
   home_prod->max_units = 3;
-  home_prod->manpower_available = 8;
-  home_prod->villager_cost = 8;
+  home_prod->manpower_available = villager_cost;
+  home_prod->villager_cost = villager_cost;
   Game::Systems::PlayerResourceRegistry::instance().set(
       1, Game::Systems::ResourceType::Food, 40);
 

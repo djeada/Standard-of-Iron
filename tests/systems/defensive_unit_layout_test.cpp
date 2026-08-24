@@ -290,6 +290,49 @@ TEST_F(DefensiveUnitLayoutTest, RoutingImmediatelyDropsDefensiveBenefits) {
             static_cast<std::uint8_t>(Game::Formation::UnitLayoutState::Routing));
 }
 
+TEST_F(DefensiveUnitLayoutTest, AWorkCrewOnlyRingsUpWhileItIsActuallyWorking) {
+  auto* worker = spawn(NationID::RomanRepublic, Game::Units::SpawnType::Builder);
+  auto* builder = worker->add_component<BuilderProductionComponent>();
+  initialize_layouts();
+
+  auto const& library = Game::Formation::UnitLayoutLibrary::instance();
+  auto const work_party = library.resolve("rome", "work_party");
+  ASSERT_NE(work_party, Game::Formation::k_invalid_layout);
+
+  const auto* state = layout(*worker);
+  ASSERT_NE(state, nullptr);
+  const auto idle_layout = state->layout_id;
+  EXPECT_NE(idle_layout, work_party)
+      << "a crew waiting for orders should not already be ringed up";
+
+  builder->in_progress = true;
+  builder->at_construction_site = true;
+  layouts.update(world.get(), 1.0F / 60.0F);
+
+  EXPECT_EQ(state->requested_layout_id, work_party);
+  EXPECT_EQ(state->previous_layout_id, idle_layout);
+  EXPECT_LT(Game::Formation::UnitLayoutStateSystem::layout_blend(*worker).blend_ratio,
+            1.0F)
+      << "the ring should be walked into, not snapped to";
+
+  advance(2.0F);
+  EXPECT_EQ(state->layout_id, work_party);
+  EXPECT_FLOAT_EQ(
+      Game::Formation::UnitLayoutStateSystem::layout_blend(*worker).blend_ratio, 1.0F);
+
+  builder->in_progress = false;
+  builder->at_construction_site = false;
+  layouts.update(world.get(), 1.0F / 60.0F);
+
+  EXPECT_EQ(state->requested_layout_id, idle_layout);
+  EXPECT_EQ(state->previous_layout_id, work_party);
+  EXPECT_LT(Game::Formation::UnitLayoutStateSystem::layout_blend(*worker).blend_ratio,
+            1.0F);
+
+  advance(2.0F);
+  EXPECT_EQ(state->layout_id, idle_layout);
+}
+
 TEST_F(DefensiveUnitLayoutTest, UnitLayoutTransitionSurvivesSaveAndLoad) {
   auto* roman = spawn(NationID::RomanRepublic);
   initialize_layouts();

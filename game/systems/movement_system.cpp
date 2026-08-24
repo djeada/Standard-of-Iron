@@ -801,7 +801,7 @@ void MovementSystem::move_unit(Engine::Core::Entity* entity,
   }
 
   if (auto const* traversal =
-          entity->get_component<Engine::Core::UnitTraversalLayoutState>();
+          entity->get_component<Engine::Core::UnitTraversalLayoutStateComponent>();
       traversal != nullptr && traversal->root_motion_blocked && world != nullptr &&
       world->presentation_enabled() &&
       entity->has_component<Engine::Core::RenderableComponent>()) {
@@ -913,7 +913,7 @@ auto MovementSystem::access() const -> Engine::Core::SystemAccess {
                                      ElephantComponent,
                                      RpgCommanderActionComponent,
                                      BuilderProductionComponent,
-                                     UnitTraversalLayoutState,
+                                     UnitTraversalLayoutStateComponent,
                                      RenderableComponent,
                                      PendingRemovalComponent>{},
                                Writes<MovementComponent,

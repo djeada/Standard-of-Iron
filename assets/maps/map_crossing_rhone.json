@@ -313,7 +313,7 @@
             "z": 240
         }
     ],
-    "max_troops_per_player": 2200,
+    "max_troops_per_player": 900,
     "name": "Crossing the Rhone - Polished Maze Version",
     "rain": {
         "active_duration": 70,
@@ -4372,7 +4372,7 @@
             "facing": "east",
             "homes": 0,
             "id": "rhone_player_camp",
-            "max_population": 150,
+            "max_population": 50,
             "nation": "carthage",
             "player_id": 1,
             "tier": "marching_camp",
@@ -4385,7 +4385,7 @@
             "facing": "west",
             "homes": 8,
             "id": "rhone_hill_fort",
-            "max_population": 180,
+            "max_population": 60,
             "nation": "roman_republic",
             "on_hill": false,
             "player_id": 2,
@@ -4397,7 +4397,7 @@
             "authored": true,
             "facing": "south",
             "id": "rhone_river_town",
-            "max_population": 200,
+            "max_population": 70,
             "nation": "roman_republic",
             "on_hill": true,
             "player_id": 3,
@@ -4969,7 +4969,7 @@
         },
         {
             "authored": true,
-            "max_population": 200,
+            "max_population": 70,
             "nation": "roman_republic",
             "player_id": 3,
             "type": "barracks",
@@ -5144,7 +5144,7 @@
         },
         {
             "authored": true,
-            "max_population": 180,
+            "max_population": 60,
             "nation": "roman_republic",
             "player_id": 2,
             "type": "barracks",

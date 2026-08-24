@@ -213,7 +213,7 @@
             "z": 100
         }
     ],
-    "max_troops_per_player": 3000,
+    "max_troops_per_player": 1000,
     "name": "Battle of Cannae",
     "rain": {
         "enabled": false
@@ -1349,7 +1349,7 @@
             "authored": true,
             "facing": "west",
             "id": "cannae_consular_town",
-            "max_population": 220,
+            "max_population": 75,
             "nation": "roman_republic",
             "player_id": 2,
             "tier": "town",
@@ -1887,7 +1887,7 @@
         },
         {
             "authored": true,
-            "max_population": 150,
+            "max_population": 50,
             "nation": "carthage",
             "player_id": 1,
             "type": "barracks",
@@ -1964,7 +1964,7 @@
         },
         {
             "authored": true,
-            "max_population": 220,
+            "max_population": 75,
             "nation": "roman_republic",
             "player_id": 2,
             "type": "barracks",
@@ -2112,7 +2112,7 @@
         },
         {
             "authored": true,
-            "max_population": 180,
+            "max_population": 60,
             "nation": "roman_republic",
             "player_id": 3,
             "type": "barracks",
@@ -2212,7 +2212,7 @@
         },
         {
             "authored": true,
-            "max_population": 180,
+            "max_population": 60,
             "nation": "roman_republic",
             "player_id": 4,
             "type": "barracks",
@@ -2244,7 +2244,7 @@
             "z": 458
         },
         {
-            "max_population": 150,
+            "max_population": 50,
             "type": "barracks",
             "x": 519,
             "z": 587

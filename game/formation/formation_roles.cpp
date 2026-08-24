@@ -206,6 +206,7 @@ auto parse_troop_formation_profile(const QJsonObject& formation_object,
   assign("unit_layout", out.unit_layout);
   assign("defensive_layout", out.defensive_layout);
   assign("marching_layout", out.marching_layout);
+  assign("working_layout", out.working_layout);
 
   return touched;
 }

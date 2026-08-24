@@ -729,6 +729,7 @@ auto Serialization::serialize_entity(const Entity* entity) -> QJsonObject {
     layout_obj["transition_seconds"] = static_cast<double>(layout->transition_seconds);
     layout_obj["layout_id"] = static_cast<int>(layout->layout_id);
     layout_obj["requested_layout_id"] = static_cast<int>(layout->requested_layout_id);
+    layout_obj["previous_layout_id"] = static_cast<int>(layout->previous_layout_id);
     entity_obj["unit_layout_state"] = layout_obj;
   }
 
@@ -792,6 +793,7 @@ auto Serialization::serialize_entity(const Entity* entity) -> QJsonObject {
     carry_obj["amounts"] = amounts_obj;
     carry_obj["depot_entity_id"] = static_cast<qint64>(carry->depot_entity_id);
     carry_obj["has_depot"] = carry->has_depot;
+    carry_obj["food_form"] = static_cast<int>(carry->food_form);
     entity_obj["resource_carry"] = carry_obj;
   }
 
@@ -1676,6 +1678,8 @@ void Serialization::deserialize_entity(Entity* entity, const QJsonObject& json) 
         static_cast<std::uint16_t>(layout_obj["layout_id"].toInt(0xFFFF));
     layout->requested_layout_id =
         static_cast<std::uint16_t>(layout_obj["requested_layout_id"].toInt(0xFFFF));
+    layout->previous_layout_id =
+        static_cast<std::uint16_t>(layout_obj["previous_layout_id"].toInt(0xFFFF));
   }
 
   if (json.contains("stamina")) {
@@ -1745,6 +1749,9 @@ void Serialization::deserialize_entity(Entity* entity, const QJsonObject& json) 
     carry->depot_entity_id =
         static_cast<EntityID>(carry_obj["depot_entity_id"].toVariant().toULongLong());
     carry->has_depot = carry_obj["has_depot"].toBool(false);
+    carry->food_form = carry_obj["food_form"].toInt(0) == 1
+                           ? Engine::Core::CarriedFoodForm::Meat
+                           : Engine::Core::CarriedFoodForm::Grain;
   }
 
   if (json.contains("settlement_resident")) {

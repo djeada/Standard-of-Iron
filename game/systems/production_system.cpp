@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <cmath>
 #include <limits>
+#include <numbers>
 #include <optional>
 
 #include "../core/ambient_session.h"
@@ -36,6 +37,30 @@
 namespace Game::Systems {
 
 namespace {
+
+void face_work_target(Engine::Core::TransformComponent& transform,
+                      const Engine::Core::BuilderProductionComponent& builder) {
+  float target_x = 0.0F;
+  float target_z = 0.0F;
+  if (builder.has_task_target || builder.structure_task_entity_id != 0) {
+    target_x = builder.task_target_x;
+    target_z = builder.task_target_z;
+  } else if (builder.has_construction_site) {
+    target_x = builder.construction_site_x;
+    target_z = builder.construction_site_z;
+  } else {
+    return;
+  }
+
+  float const dx = target_x - transform.position.x;
+  float const dz = target_z - transform.position.z;
+  if ((dx * dx) + (dz * dz) < 0.01F) {
+    return;
+  }
+
+  transform.desired_yaw = std::atan2(dx, dz) * 180.0F / std::numbers::pi_v<float>;
+  transform.has_desired_yaw = true;
+}
 
 constexpr auto k_collect_stone_product_type = k_builder_product_collect_stone;
 constexpr auto k_collect_iron_ore_product_type = k_builder_product_collect_iron_ore;
@@ -137,9 +162,11 @@ void activate_bypass_movement(Engine::Core::BuilderProductionComponent* builder,
   builder->bypass_target_z = target_z;
 }
 
-void load_onto_hauler(Engine::Core::Entity* worker,
-                      ResourceType resource_type,
-                      int amount) {
+void load_onto_hauler(
+    Engine::Core::Entity* worker,
+    ResourceType resource_type,
+    int amount,
+    Engine::Core::CarriedFoodForm food_form = Engine::Core::CarriedFoodForm::Grain) {
   if (worker == nullptr || amount <= 0) {
     return;
   }
@@ -147,6 +174,11 @@ void load_onto_hauler(Engine::Core::Entity* worker,
       Engine::Core::get_or_add_component<Engine::Core::ResourceCarryComponent>(worker);
   if (carry == nullptr) {
     return;
+  }
+
+  if (resource_type == ResourceType::Food &&
+      carry->amounts.get(ResourceType::Food) <= 0) {
+    carry->food_form = food_form;
   }
   carry->amounts.add(resource_type, amount);
 }
@@ -429,6 +461,7 @@ auto complete_food_harvest(Engine::Core::World* world,
   }
   auto* target = world->get_entity(builder->structure_task_entity_id);
   int reward = 0;
+  auto form = Engine::Core::CarriedFoodForm::Grain;
   if (builder->product_type == k_builder_product_harvest_grain) {
     auto* crop = target->get_component<Engine::Core::FarmComponent>();
     if (crop == nullptr) {
@@ -439,8 +472,10 @@ auto complete_food_harvest(Engine::Core::World* world,
   } else {
     slaughter_sheep(world, worker, target->get_id());
     reward = k_slaughter_sheep_food_reward;
+
+    form = Engine::Core::CarriedFoodForm::Meat;
   }
-  load_onto_hauler(worker, ResourceType::Food, reward);
+  load_onto_hauler(worker, ResourceType::Food, reward, form);
   return true;
 }
 
@@ -492,7 +527,8 @@ void ProductionSystem::update(Engine::Core::World* world, float delta_time) {
 
         int const current_troops = Game::Systems::troop_count_for(*world, u->owner_id);
         int const max_troops = Game::GameConfig::instance().get_max_troops_per_player();
-        if (current_troops + production_cost > max_troops) {
+        if (current_troops + current_profile.production.population_cost() >
+            max_troops) {
           prod->in_progress = false;
           prod->time_remaining = 0.0F;
           continue;
@@ -659,6 +695,8 @@ void ProductionSystem::update(Engine::Core::World* world, float delta_time) {
                                         builder_prod->construction_site_z);
             movement->stop();
           }
+
+          face_work_target(*transform, *builder_prod);
         } else {
 
           if (!builder_prod->bypass_movement_active) {

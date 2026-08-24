@@ -229,7 +229,7 @@ auto civilian_item(Game::Systems::NationID nation_id) -> UnitItem {
   entry.item.display_name =
       Game::Util::tr_asset(Game::Util::k_units_context, profile.display_name);
   entry.item.costs = profile.production.resource_costs;
-  entry.population_cost = profile.production.cost;
+  entry.population_cost = profile.production.population_cost();
   entry.build_time = profile.production.build_time;
   entry.individuals_per_unit = profile.individuals_per_unit;
   return entry;
@@ -257,7 +257,7 @@ auto unit_items(const Game::Systems::NationRegistry* nations,
     entry.item.display_name =
         Game::Util::tr_asset(Game::Util::k_units_context, profile.display_name);
     entry.item.costs = profile.production.resource_costs;
-    entry.population_cost = profile.production.cost;
+    entry.population_cost = profile.production.population_cost();
     entry.build_time = profile.production.build_time;
     entry.individuals_per_unit = profile.individuals_per_unit;
     items.push_back(std::move(entry));

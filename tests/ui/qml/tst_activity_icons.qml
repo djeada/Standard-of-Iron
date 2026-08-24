@@ -41,9 +41,9 @@ TestCase {
         verify(!ActivityIcons.isGathering("construct"));
     }
 
-    function test_the_four_order_states_are_all_described() {
+    function test_the_five_order_states_are_all_described() {
         var states = ActivityIcons.stateIds();
-        compare(states.length, 4);
+        compare(states.length, 5);
         for (var i = 0; i < states.length; ++i) {
             verify(ActivityIcons.state(states[i]).label.length > 0);
             verify(ActivityIcons.state(states[i]).hint.length > 0);
@@ -52,6 +52,7 @@ TestCase {
         verify(states.indexOf("queued") >= 0);
         verify(states.indexOf("unavailable") >= 0);
         verify(states.indexOf("interrupted") >= 0);
+        verify(states.indexOf("locked") >= 0);
     }
 
     function test_an_unknown_activity_degrades_to_idle_rather_than_breaking() {

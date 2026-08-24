@@ -12,6 +12,7 @@
 #include "game/map/visibility_service.h"
 #include "game/render_bridge/picking_service.h"
 #include "game/render_bridge/selection_controller.h"
+#include "game/systems/builder_product_types.h"
 #include "game/systems/interaction_targeting.h"
 #include "game/systems/selection_system.h"
 #include "scene/camera.h"
@@ -81,16 +82,21 @@ void InputCommandHandler::on_right_click(qreal sx,
   Engine::Core::EntityID const enemy_id = App::Utils::pick_enemy_unit_at_screen(
       m_world, m_camera, sx, sy, viewport.width, viewport.height, local_owner_id);
 
-  QString gather_product;
-  Engine::Core::EntityID interaction_target = 0;
-  if (enemy_id == 0 && resolve_context_interaction(
-                           sx, sy, viewport, gather_product, interaction_target)) {
-    if (!gather_product.isEmpty()) {
+  if (enemy_id == 0) {
+    auto const interaction = resolve_context_interaction(sx, sy, viewport);
+    if (interaction.is_gather()) {
       m_command_controller->disable_run_mode_for_selected();
-      (void)m_command_controller->set_auto_gather(true, gather_product);
+      (void)m_command_controller->set_auto_gather(true,
+                                                  interaction.gather_product_type);
       return;
     }
-    if (interaction_target != 0) {
+    if (interaction.is_food_task()) {
+      m_command_controller->disable_run_mode_for_selected();
+      (void)m_command_controller->start_food_harvest(
+          interaction.target, interaction.food_product_type, local_owner_id);
+      return;
+    }
+    if (interaction.is_repair()) {
       on_builder_repair_click(sx, sy, local_owner_id, viewport);
       return;
     }
@@ -108,15 +114,23 @@ auto InputCommandHandler::resolve_context_interaction(
     const ViewportState& viewport,
     QString& out_product_type,
     Engine::Core::EntityID& out_target) const -> bool {
-  out_product_type.clear();
-  out_target = 0;
+  auto const interaction = resolve_context_interaction(sx, sy, viewport);
+  out_product_type = interaction.gather_product_type;
+  out_target = interaction.target;
+  return interaction.is_gather() || interaction.is_food_task() ||
+         interaction.is_repair();
+}
+
+auto InputCommandHandler::resolve_context_interaction(
+    qreal sx, qreal sy, const ViewportState& viewport) const -> ContextInteraction {
+  ContextInteraction interaction;
   if (m_world == nullptr || m_camera == nullptr || m_picking_service == nullptr) {
-    return false;
+    return interaction;
   }
 
   auto* selection_system = m_world->get_system<Game::Systems::SelectionSystem>();
   if (selection_system == nullptr) {
-    return false;
+    return interaction;
   }
 
   Game::Systems::InteractionTargetingRequest request;
@@ -134,7 +148,7 @@ auto InputCommandHandler::resolve_context_interaction(
     }
   }
   if (!request.has_builders && !request.has_civilians) {
-    return false;
+    return interaction;
   }
 
   request.hovered_entity_id =
@@ -153,29 +167,49 @@ auto InputCommandHandler::resolve_context_interaction(
   request.max_markers = Game::Systems::k_interaction_highlight_max_markers;
 
   auto const highlights = Game::Systems::collect_interaction_target_highlights(request);
-  switch (highlights.hovered_action) {
-  case Game::Systems::InteractionAction::Gather:
-  case Game::Systems::InteractionAction::Harvest: {
-    for (const auto& marker : highlights.markers) {
-      if (!marker.hovered) {
-        continue;
-      }
-      auto const product = Game::Systems::harvest_product_for_prop(marker.prop_type);
-      out_product_type =
-          QString::fromLatin1(product.data(), static_cast<qsizetype>(product.size()));
-      return !out_product_type.isEmpty();
+
+  const Game::Systems::InteractionTargetMarker* hovered = nullptr;
+  for (const auto& marker : highlights.markers) {
+    if (marker.hovered) {
+      hovered = &marker;
+      break;
     }
-    return false;
   }
-  case Game::Systems::InteractionAction::Repair:
-    out_target = highlights.hovered_entity_id;
-    return out_target != 0;
-  case Game::Systems::InteractionAction::Deliver:
+
+  switch (highlights.hovered_action) {
+  case Game::Systems::InteractionAction::Gather: {
+    if (hovered == nullptr) {
+      return interaction;
+    }
+    auto const product = Game::Systems::harvest_product_for_prop(hovered->prop_type);
+    interaction.gather_product_type =
+        QString::fromLatin1(product.data(), static_cast<qsizetype>(product.size()));
+    return interaction;
+  }
+  case Game::Systems::InteractionAction::Harvest:
+    if (hovered == nullptr || hovered->entity_id == 0) {
+      return interaction;
+    }
+    interaction.food_product_type =
+        QString::fromLatin1(Game::Systems::k_builder_product_harvest_grain);
+    interaction.target = hovered->entity_id;
+    return interaction;
   case Game::Systems::InteractionAction::Slaughter:
+    if (hovered == nullptr || hovered->entity_id == 0) {
+      return interaction;
+    }
+    interaction.food_product_type =
+        QString::fromLatin1(Game::Systems::k_builder_product_slaughter_sheep);
+    interaction.target = hovered->entity_id;
+    return interaction;
+  case Game::Systems::InteractionAction::Repair:
+    interaction.target = highlights.hovered_entity_id;
+    return interaction;
+  case Game::Systems::InteractionAction::Deliver:
   case Game::Systems::InteractionAction::None:
     break;
   }
-  return false;
+  return interaction;
 }
 
 void InputCommandHandler::on_minimap_right_click(const QVector3D& world_target,

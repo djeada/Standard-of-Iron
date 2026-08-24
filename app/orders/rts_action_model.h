@@ -26,6 +26,7 @@ struct ActionContext {
 
 [[nodiscard]] auto get_action_states(const ActionContext& context) -> QVariantMap;
 [[nodiscard]] auto get_current_action_mode(const ActionContext& context) -> QString;
+[[nodiscard]] auto has_commandable_selection(Engine::Core::World* world) -> bool;
 [[nodiscard]] auto get_toggle_state(Engine::Core::World* world,
                                     const QString& action_id) -> QString;
 [[nodiscard]] auto get_mode_availability(Engine::Core::World* world) -> QVariantMap;

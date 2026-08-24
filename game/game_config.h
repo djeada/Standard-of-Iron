@@ -26,7 +26,7 @@ struct ArrowConfig {
 struct GameplayConfig {
   float visibility_update_interval = 0.075F;
   float formation_spacing_default = 1.0F;
-  int max_troops_per_player = 500;
+  int max_troops_per_player = 250;
 };
 
 class GameConfig {

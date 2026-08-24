@@ -36,6 +36,11 @@ auto select_unit_layout(const FormationDoctrineId& doctrine,
       generic = &profile.marching_layout;
     }
     break;
+  case UnitLayoutState::Working:
+    if (!profile.working_layout.empty()) {
+      generic = &profile.working_layout;
+    }
+    break;
   case UnitLayoutState::Normal:
   case UnitLayoutState::Attacking:
   case UnitLayoutState::Routing:
@@ -51,7 +56,7 @@ auto select_unit_layout(const FormationDoctrineId& doctrine,
                         UnitLayoutState state,
                         bool is_constructing) -> UnitLayoutId {
   if (is_constructing) {
-    return UnitLayoutLibrary::instance().resolve(doctrine, "work_party");
+    return select_unit_layout(doctrine, troop, UnitLayoutState::Working);
   }
   return select_unit_layout(doctrine, troop, state);
 }

@@ -125,6 +125,11 @@ constexpr std::array k_fields = std::to_array<FieldSpec>({
     {"UnitLayoutStateComponent",
      AuthoritativeSerialized,
      "Internal soldier layout, transition phase and progress."},
+    {"UnitTraversalLayoutStateComponent",
+     DerivedRebuilt,
+     "Live column-narrowing state for a unit crossing a portal: route, mode, "
+     "file counts and per-slot progress. Rebuilt by the traversal layout system "
+     "from the restored route, so it is copied for the renderer but not saved."},
     {"StaminaComponent", AuthoritativeSerialized, "Stamina pool and run request."},
     {"SpecialAttackComponent", AuthoritativeSerialized, "Special ability cooldowns."},
     {"CatapultLoadingComponent", AuthoritativeSerialized, "Reload progress."},

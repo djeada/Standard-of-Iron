@@ -9,6 +9,7 @@
 #include <unordered_set>
 #include <vector>
 
+#include "app/input/cursor_mode.h"
 #include "game/core/entity.h"
 #include "game/map/terrain_service.h"
 #include "game/systems/nav_grid_types.h"
@@ -57,6 +58,11 @@ using CrewClaims = std::unordered_set<std::uint64_t>;
 
 [[nodiscard]] auto is_collect_item(const QString& item_type) -> bool;
 [[nodiscard]] auto is_harvest_construction_item(const QString& item_type) -> bool;
+
+[[nodiscard]] auto
+interaction_highlights_armed(CursorMode cursor_mode,
+                             bool placing_construction,
+                             const QString& pending_item_type) -> bool;
 [[nodiscard]] auto generic_collect_failure_reason() -> QString;
 [[nodiscard]] auto harvest_product_type(HarvestTargetKind kind) -> const char*;
 

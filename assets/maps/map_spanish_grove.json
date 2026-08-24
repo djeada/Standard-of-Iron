@@ -8,7 +8,7 @@
     "height": 240,
     "tile_size": 1.0
   },
-  "max_troops_per_player": 800,
+  "max_troops_per_player": 280,
   "camera": {
     "center": [
       120.0,
@@ -1757,7 +1757,7 @@
       "x": 120.0,
       "z": 40.0,
       "player_id": 1,
-      "max_population": 400,
+      "max_population": 140,
       "team_id": 1,
       "description": "Player 1 barracks."
     },
@@ -1767,7 +1767,7 @@
       "x": 200.0,
       "z": 120.0,
       "player_id": 2,
-      "max_population": 400,
+      "max_population": 140,
       "team_id": 2,
       "description": "Player 2 barracks."
     },
@@ -1777,7 +1777,7 @@
       "x": 120.0,
       "z": 200.0,
       "player_id": 3,
-      "max_population": 400,
+      "max_population": 140,
       "team_id": 3,
       "description": "Player 3 barracks."
     },
@@ -1787,7 +1787,7 @@
       "x": 40.0,
       "z": 120.0,
       "player_id": 4,
-      "max_population": 400,
+      "max_population": 140,
       "team_id": 4,
       "description": "Player 4 barracks."
     },
@@ -1797,7 +1797,7 @@
       "x": 50.0,
       "z": 88.0,
       "player_id": 0,
-      "max_population": 130,
+      "max_population": 45,
       "description": "Neutral farmstead barracks beside the grove track."
     },
     {
@@ -1806,7 +1806,7 @@
       "x": 152.0,
       "z": 50.0,
       "player_id": 0,
-      "max_population": 130,
+      "max_population": 45,
       "description": "Neutral farmstead barracks beside the grove track."
     },
     {
@@ -1815,7 +1815,7 @@
       "x": 190.0,
       "z": 152.0,
       "player_id": 0,
-      "max_population": 130,
+      "max_population": 45,
       "description": "Neutral farmstead barracks beside the grove track."
     },
     {
@@ -1824,7 +1824,7 @@
       "x": 88.0,
       "z": 190.0,
       "player_id": 0,
-      "max_population": 130,
+      "max_population": 45,
       "description": "Neutral farmstead barracks beside the grove track."
     },
     {

@@ -613,6 +613,8 @@ quality:
 		| xargs -0 -r $(PYTHON) scripts/check-quality-markers.py
 	@echo "$(BOLD)$(BLUE)Checking QML typography...$(RESET)"
 	@$(PYTHON) scripts/check-typography.py
+	@echo "$(BOLD)$(BLUE)Checking QML thread-safety boundary...$(RESET)"
+	@$(PYTHON) scripts/check-frame-lock.py
 	@$(PYTHON) scripts/validate_qrc_resources.py
 # The include-graph pass needs no compiler either, and it is the only thing
 # that sees a missing <array> before the weekly Windows build does.

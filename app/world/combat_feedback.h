@@ -4,6 +4,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <mutex>
 #include <vector>
 
 #include "game/core/entity.h"
@@ -43,11 +44,9 @@ public:
 
   [[nodiscard]] auto pop_ready() -> std::vector<CombatHitFeedback>;
 
-  [[nodiscard]] auto pending() const -> const std::vector<CombatHitFeedback>& {
-    return m_pending;
-  }
+  [[nodiscard]] auto pending() const -> std::vector<CombatHitFeedback>;
 
-  void clear() { m_pending.clear(); }
+  void clear();
 
   [[nodiscard]] static auto priority(const CombatHitFeedback& hit) -> float;
 
@@ -55,6 +54,7 @@ public:
   to_variant(const std::vector<CombatHitFeedback>& hits) -> QVariantList;
 
 private:
+  mutable std::mutex m_mutex;
   Limits m_limits;
   std::vector<CombatHitFeedback> m_pending;
   std::uint32_t m_sequence = 0;

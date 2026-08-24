@@ -98,6 +98,7 @@ struct OrderOutcome {
 [[nodiscard]] auto unreachable_reason() -> OrderRefusal;
 [[nodiscard]] auto out_of_range_reason() -> OrderRefusal;
 [[nodiscard]] auto unit_busy_reason() -> OrderRefusal;
+[[nodiscard]] auto hauling_load_reason() -> OrderRefusal;
 [[nodiscard]] auto insufficient_resources_reason() -> OrderRefusal;
 [[nodiscard]] auto barracks_full_reason() -> OrderRefusal;
 [[nodiscard]] auto no_repairs_needed_reason() -> OrderRefusal;
