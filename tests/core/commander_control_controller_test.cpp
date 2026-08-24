@@ -13,7 +13,7 @@
 #include "game/systems/building_collision_registry.h"
 #include "game/systems/combat_actions/combat_action_definition.h"
 #include "game/systems/combat_actions/combat_action_events.h"
-#include "game/systems/movement_system.h"
+#include "game/systems/movement_pipeline.h"
 #include "game/systems/nav_grid.h"
 #include "game/systems/pathfinding.h"
 #include "game/systems/rpg_combat_system/rpg_targeting.h"
@@ -221,7 +221,7 @@ TEST_F(CommanderControlControllerTest,
   MovementTestAccess::set_vz(*movement, 1.5F);
   commander_data->jump_active = true;
 
-  Game::Systems::MovementSystem movement_system;
+  Game::Systems::MovementPipeline movement_system;
   movement_system.update(&world, 0.25F);
 
   EXPECT_FLOAT_EQ(transform->position.x, 0.0F);
@@ -249,7 +249,7 @@ TEST_F(CommanderControlControllerTest,
   Render::GL::Camera camera;
   ASSERT_TRUE(controller.update(world, commander->get_id(), 1, camera, 0.2F));
 
-  world.add_system(std::make_unique<Game::Systems::MovementSystem>());
+  world.add_system(std::make_unique<Game::Systems::MovementPipeline>());
   world.update(0.2F);
 
   Render::GL::DrawContext ctx{};
@@ -281,7 +281,7 @@ TEST_F(CommanderControlControllerTest,
   controller.input().forward = true;
 
   Render::GL::Camera camera;
-  world.add_system(std::make_unique<Game::Systems::MovementSystem>());
+  world.add_system(std::make_unique<Game::Systems::MovementPipeline>());
 
   constexpr float k_step = 0.05F;
   float elapsed = 0.0F;

@@ -8,7 +8,7 @@
 #include "game/map/terrain_service.h"
 #include "game/systems/building_collision_registry.h"
 #include "game/systems/marketplace_system.h"
-#include "game/systems/movement_system.h"
+#include "game/systems/movement_pipeline.h"
 #include "game/systems/nav_grid.h"
 #include "game/systems/pathfinding.h"
 #include "game/systems/player_resource_registry.h"
@@ -351,7 +351,7 @@ TEST_F(ProductionSystemTest, HarvestingBuilderStaysCenteredOnResourceAnchor) {
     production->task_target_z = target_world.z();
     production->task_target_reserved = true;
 
-    Game::Systems::MovementSystem movement_system;
+    Game::Systems::MovementPipeline movement_system;
     movement_system.update(&world, 0.1F);
 
     EXPECT_FALSE(movement->get_has_target());

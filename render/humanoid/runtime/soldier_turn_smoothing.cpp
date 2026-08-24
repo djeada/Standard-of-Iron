@@ -85,6 +85,11 @@ auto resolve_soldier_turn_smoothing(SoldierTurnSmoothingState& state,
   SoldierTurnSmoothingResult result{};
   state.updated_frame = inputs.frame_index;
 
+  if (inputs.position_is_authoritative) {
+    state.world_x = inputs.target_x;
+    state.world_z = inputs.target_z;
+  }
+
   float const to_target_x = inputs.target_x - state.world_x;
   float const to_target_z = inputs.target_z - state.world_z;
   float const distance =

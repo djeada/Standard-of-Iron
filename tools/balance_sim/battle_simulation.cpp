@@ -30,7 +30,7 @@
 #include "game/systems/default_content.h"
 #include "game/systems/healing_beam_system.h"
 #include "game/systems/healing_system.h"
-#include "game/systems/movement_system.h"
+#include "game/systems/movement_pipeline.h"
 #include "game/systems/nation_registry.h"
 #include "game/systems/nav_grid.h"
 #include "game/systems/owner_registry.h"
@@ -423,7 +423,7 @@ auto run_battle(Game::Session::SessionContext& session,
   world.add_system(std::make_unique<Game::Systems::CombatStatusEffectSystem>());
   world.add_system(std::make_unique<Game::Systems::ProjectileSystem>());
   world.add_system(std::make_unique<Game::Systems::StaminaSystem>());
-  world.add_system(std::make_unique<Game::Systems::MovementSystem>());
+  world.add_system(std::make_unique<Game::Systems::MovementPipeline>());
   world.add_system(std::make_unique<Game::Systems::CombatSystem>());
   world.add_system(std::make_unique<Game::Systems::CommanderSystem>());
   world.add_system(std::make_unique<Game::Systems::HealingBeamSystem>());

@@ -16,6 +16,14 @@ struct MovementTestAccess {
     m.path = std::move(v);
   }
   static void set_path_index(MovementComponent& m, std::size_t v) { m.path_index = v; }
+  static void set_route_lane_state(MovementComponent& m,
+                                   float minimum_scale,
+                                   std::size_t opening_waypoint,
+                                   std::size_t reform_waypoint) {
+    m.route_lane_min_scale = minimum_scale;
+    m.route_opening_waypoint_index = opening_waypoint;
+    m.route_reform_waypoint_index = reform_waypoint;
+  }
   static void set_stuck_time(MovementComponent& m, float v) { m.stuck_timer = v; }
 };
 
