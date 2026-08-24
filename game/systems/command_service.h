@@ -51,6 +51,20 @@ public:
   static void issue_ground_move(Engine::Core::World& world,
                                 const std::vector<Engine::Core::EntityID>& units,
                                 const GroundMovePlan& plan);
+  // A troop is not one disc. `envelope` is the circle that contains its whole
+  // formation -- the right radius for predicting an encounter and for planning
+  // a route through a gap. `core` is the body a single soldier actually
+  // occupies: two troops whose outer files touch are not interpenetrating, and
+  // pushing them apart at envelope distance spreads a battle line out by
+  // metres.
+  struct UnitRadii {
+    float core{0.5F};
+    float envelope{0.5F};
+  };
+
+  static auto get_unit_radii(Engine::Core::World& world,
+                             Engine::Core::EntityID entity_id) -> UnitRadii;
+
   static auto get_unit_radius(Engine::Core::World& world,
                               Engine::Core::EntityID entity_id) -> float;
 

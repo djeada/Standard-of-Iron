@@ -576,7 +576,7 @@ void analyze_troops(const std::vector<MovementTroopSample>& troops,
 
       // -- uncommanded travel-direction reversals --------------------------
       float const speed = accepted_speed(sample);
-      if (speed > thresholds.gait_stopped_speed) {
+      if (speed > thresholds.reversal_min_speed) {
         float const direction =
             std::atan2(sample.accepted_vx, sample.accepted_vz) * 180.0F / 3.14159265F;
         if (walk.has_previous_direction) {

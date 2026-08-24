@@ -234,25 +234,32 @@ auto CommandService::structure_work_position(const QVector3D& worker_position,
                 structure_position.z() + dir_z * final_scale));
 }
 
-auto CommandService::get_unit_radius(Engine::Core::World& world,
-                                     Engine::Core::EntityID entity_id) -> float {
+auto CommandService::get_unit_radii(Engine::Core::World& world,
+                                    Engine::Core::EntityID entity_id) -> UnitRadii {
+  UnitRadii radii;
   auto* entity = world.get_entity(entity_id);
   if (entity == nullptr) {
-    return 0.5F;
+    return radii;
   }
 
   auto* unit_comp = entity->get_component<Engine::Core::UnitComponent>();
   if (unit_comp == nullptr) {
-    return 0.5F;
+    return radii;
   }
 
   auto const layout = FormationCombat::resolve_layout(*entity);
-  float radius = std::max(layout.body_radius, k_unit_radius_threshold);
+  radii.core = std::max(layout.body_radius, k_unit_radius_threshold);
+  radii.envelope = radii.core;
   for (auto const& slot : layout.live_slots) {
-    radius =
-        std::max(radius, std::hypot(slot.local_x, slot.local_z) + layout.body_radius);
+    radii.envelope = std::max(
+        radii.envelope, std::hypot(slot.local_x, slot.local_z) + layout.body_radius);
   }
-  return radius;
+  return radii;
+}
+
+auto CommandService::get_unit_radius(Engine::Core::World& world,
+                                     Engine::Core::EntityID entity_id) -> float {
+  return get_unit_radii(world, entity_id).envelope;
 }
 
 void CommandService::move_unit(Engine::Core::World& world,

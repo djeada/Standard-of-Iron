@@ -50,6 +50,10 @@ struct MovementGateThresholds {
   float reversal_degrees{15.0F};
   float reversal_window_seconds{0.50F};
   int reversal_allowance{1};
+  // Below this the heading of the accepted velocity is numerical noise on a
+  // body that is barely moving, not a visible reversal. A creeping body is
+  // caught by the stall and gait rules instead.
+  float reversal_min_speed{0.35F};
 
   // Angular rate/acceleration ceilings, degrees per second and per second^2.
   float max_angular_speed_degrees{760.0F};

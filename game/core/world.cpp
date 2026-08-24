@@ -235,7 +235,7 @@ void publish_movement_trace_frame(World& world) {
         sample.neighbor_count = facts.steering.neighbor_count;
         sample.nearest_time_to_collision = facts.steering.nearest_time_to_collision;
         sample.passing_side = facts.steering.passing_side;
-        sample.solver_result = facts.steering.solver_result;
+        sample.solver_result = static_cast<std::uint8_t>(facts.steering.result);
         sample.queue_owner = facts.steering.queue_owner;
         sample.has_contact = facts.motor.has_contact;
         sample.contact_nx = facts.motor.contact_nx;

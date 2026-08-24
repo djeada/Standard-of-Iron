@@ -40,6 +40,11 @@ constexpr float k_progress_window_metres = 0.03F;
 // constant, not a defect. This is an explicit, bounded launch allowance tied to
 // the start of an order -- not a widened stall epsilon.
 constexpr float k_launch_grace_seconds = 0.60F;
+
+// Held up by traffic is a declared state, not a failure to travel. It is
+// bounded: a body that has yielded for this long is not in a queue, it is in a
+// deadlock, and the ladder takes over.
+constexpr float k_yield_budget_seconds = 8.0F;
 constexpr float k_block_declare_seconds = 0.35F;
 // Comfortably inside the 0.50 s the gate allows for escalation, so the
 // implementation and the gate never race on the same number.
@@ -494,6 +499,15 @@ auto RouteFollowSystem::update_progress(Engine::Core::Entity& entity,
   }
   progress.order_seconds += delta_time;
 
+  // Last tick's steering answer. A body that gave way to crossing traffic is
+  // yielding, and counting that as no progress is what made a busy crossing
+  // repath itself to a standstill.
+  bool const yielding_to_traffic =
+      facts.steering.valid &&
+      (facts.steering.result == Engine::Core::SteeringResult::Yielded ||
+       facts.steering.result == Engine::Core::SteeringResult::Separating) &&
+      progress.state != MovementOrderState::Recovering;
+
   progress.no_progress_seconds += delta_time;
   progress.no_progress_advance += std::max(0.0F, advance);
   if (route_changed || progress.no_progress_advance >= k_progress_window_metres) {
@@ -505,11 +519,25 @@ auto RouteFollowSystem::update_progress(Engine::Core::Entity& entity,
     }
   }
 
+  if (yielding_to_traffic && (progress.state == MovementOrderState::Following ||
+                              progress.state == MovementOrderState::Turning ||
+                              progress.state == MovementOrderState::Yielding)) {
+    progress.state = MovementOrderState::Yielding;
+  }
+
   switch (progress.state) {
   case MovementOrderState::Following:
   case MovementOrderState::Turning:
     if (progress.order_seconds > k_launch_grace_seconds &&
         progress.no_progress_seconds > k_block_declare_seconds) {
+      progress.state = MovementOrderState::LocallyBlocked;
+    }
+    break;
+
+  case MovementOrderState::Yielding:
+    if (!yielding_to_traffic) {
+      progress.state = MovementOrderState::Following;
+    } else if (progress.state_seconds > k_yield_budget_seconds) {
       progress.state = MovementOrderState::LocallyBlocked;
     }
     break;

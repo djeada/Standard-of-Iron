@@ -111,6 +111,14 @@ struct DesiredMotionFacts {
   bool turning_in_place{false};
 };
 
+enum class SteeringResult : std::uint8_t {
+  Unconstrained = 0,
+  Deviated,
+  Slowed,
+  Yielded,
+  Separating
+};
+
 // Written by the steering stage (local avoidance / queue policy).
 struct SteeringFacts {
   bool valid{false};
@@ -118,10 +126,16 @@ struct SteeringFacts {
   float velocity_z{0.0F};
   float correction_x{0.0F};
   float correction_z{0.0F};
+  // A bounded push out of an overlap that already exists. Kept apart from the
+  // steered velocity so ordinary avoidance is never confused with recovering
+  // from a bad initial condition, and applied by the motor so it cannot move a
+  // root through a wall.
+  float separation_x{0.0F};
+  float separation_z{0.0F};
   std::uint32_t neighbor_count{0};
   float nearest_time_to_collision{-1.0F};
   std::int8_t passing_side{0};
-  std::uint8_t solver_result{0};
+  SteeringResult result{SteeringResult::Unconstrained};
   EntityID queue_owner{0};
 };
 
@@ -160,6 +174,20 @@ struct MovementProgressFacts {
   std::uint32_t repath_count{0};
   std::uint32_t repath_attempts{0};
   MovementRepathReason repath_reason{MovementRepathReason::None};
+};
+
+// Which way this body has committed to pass its current encounters, and for how
+// long. Persisting the choice is what stops a symmetric pair from swapping
+// sides every time the geometry crosses a tie.
+struct PassingCommitmentFacts {
+  std::int8_t side{0};
+  float held_seconds{0.0F};
+  // The deviation the solver settled on last tick, in degrees off the route's
+  // desired direction. Re-deciding the whole fan from scratch every tick is
+  // what makes a body in traffic chatter between two nearly equal answers, so
+  // the new answer is rate-limited against this one.
+  std::int8_t angle_index{-1};
+  float deviation_degrees{0.0F};
 };
 
 // Written by the traversal-layout owner.

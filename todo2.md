@@ -463,10 +463,10 @@ does not remove the scenario from the plan.
 - [ ] Document world/grid conversion, cell bounds, obstacle rasterization,
       body/envelope radius, arrival tolerance, and inclusive/exclusive contact
       rules in one navigation contract.
-- [ ] Make point walkability, swept segment validation, A* neighbor validity,
+- [x] Make point walkability, swept segment validation, A* neighbor validity,
       string pulling, motor collision, target snapping, and recovery use the
       same passability source and corner convention.
-- [ ] Distinguish a troop's normal formation envelope from its permitted transit
+- [x] Distinguish a troop's normal formation envelope from its permitted transit
       envelope. Path cost may prefer normal-width routes while a valid transit
       envelope still permits a genuine choke.
 - [ ] Treat trees, stones, buildings, walls/gates, bridges, hill entrances,
@@ -495,7 +495,7 @@ and no renderer input reads desired velocity as actual motion.
 - [x] Preserve a valid route across small moving-target changes and root motion.
       Repath only for a material goal change, invalid remaining segment,
       topology change, declared deadlock escalation, or failed recovery.
-- [ ] Keep a stable side around an obstacle until the chosen branch is cleared.
+- [x] Keep a stable side around an obstacle until the chosen branch is cleared.
       Equal-cost alternatives need deterministic tie-breaking and route-retain
       hysteresis.
 - [x] Validate and consume path-request topology/order revisions. Discarded work
@@ -510,10 +510,10 @@ and no renderer input reads desired velocity as actual motion.
       trying global X and Z axes independently.
 - [x] Substep only from a declared maximum travel/curvature bound so hitches and
       fast bodies cannot tunnel through thin cells or corners.
-- [ ] Make acceleration, deceleration, maximum speed, turn rate, and arrival
+- [x] Make acceleration, deceleration, maximum speed, turn rate, and arrival
       braking explicit per archetype. Heading restrictions may reduce forward
       speed, but must publish `Turning` rather than masquerade as failed travel.
-- [ ] Resolve invalid-start recovery as a bounded state with a safe target and
+- [x] Resolve invalid-start recovery as a bounded state with a safe target and
       progress metric. It may authoritatively eject/snap only after a logged
       smooth-recovery budget is exhausted.
 
@@ -532,7 +532,7 @@ and no renderer input reads desired velocity as actual motion.
 
 - [x] Bound attempts and time in every state. A failed repath cannot reissue the
       same first step forever.
-- [ ] A unit may visibly idle while queued, but its order state must say
+- [x] A unit may visibly idle while queued, but its order state must say
       `Yielding/Queued`, not “walking with velocity.”
 
 ### Gate 2
@@ -570,21 +570,21 @@ profiles, or to re-author the profiles at the speeds units actually reach.**
 
 ### Deterministic local solver
 
-- [ ] Build the neighbor set from predicted swept circles/envelopes and a bounded
+- [x] Build the neighbor set from predicted swept circles/envelopes and a bounded
       time horizon, not only current overlaps.
-- [ ] Feed it immutable desired velocity and return a separate steered velocity.
+- [x] Feed it immutable desired velocity and return a separate steered velocity.
       The motor remains the authority that accepts or rejects displacement.
-- [ ] Sort constraints by stable entity ID and explicit priority. Specify the
+- [x] Sort constraints by stable entity ID and explicit priority. Specify the
       exact tie break for symmetric encounters.
-- [ ] Add stable left/right passing preference with hysteresis. Keep the chosen
+- [x] Add stable left/right passing preference with hysteresis. Keep the chosen
       side until separation and route projection prove the encounter is clear.
-- [ ] Preserve a minimum forward-progress objective when a collision-free
+- [x] Preserve a minimum forward-progress objective when a collision-free
       velocity exists. Pure lateral oscillation is not a valid solution.
 - [ ] Define interactions for same selected group, same army formation, allied
       unrelated traffic, stopped units, enemies outside melee lock, siege,
       elephants, and builders. Do not implement coordination by broadly ignoring
       friendly bodies.
-- [ ] Add deterministic bounded overlap correction for bad initial conditions.
+- [x] Add deterministic bounded overlap correction for bad initial conditions.
       It must be separated from ordinary steering and may not teleport roots.
 
 ### Portal queues and lanes

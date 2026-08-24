@@ -310,6 +310,7 @@ class MovementFactsComponent {
 public:
   RootPoseFacts previous_root;
   RouteIntentFacts route;
+  PassingCommitmentFacts passing;
   DesiredMotionFacts desired;
   SteeringFacts steering;
   MotorFacts motor;
@@ -320,14 +321,12 @@ public:
 
   // Cleared by the route follower at the top of each Movement phase so a stale
   // fact from last tick can never be read as this tick's answer.
-  // `motor` is deliberately not cleared: the motor runs after the follower and
-  // republishes it from every gate, so what the follower reads here is last
-  // tick's accepted result -- exactly what the progress watchdog needs to
-  // decide whether the body actually went anywhere.
-  void begin_tick() {
-    desired = {};
-    steering = {};
-  }
+  // Only the intent is cleared. `steering` and `motor` are republished every
+  // tick by the stages that own them, so what the follower reads at the top of
+  // the phase is last tick's steered answer and last tick's accepted result --
+  // exactly what the progress watchdog needs to tell a body that was held up in
+  // traffic from one that is going nowhere.
+  void begin_tick() { desired = {}; }
 };
 
 enum class PlayerOrderIntentKind : std::uint8_t {

@@ -70,12 +70,22 @@ TEST_F(LocalAvoidanceTest, LargeGroupProducesSteeringWithoutTeleportingUnits) {
     EXPECT_FLOAT_EQ(transform->position.x, original_positions[i].first);
     EXPECT_FLOAT_EQ(transform->position.z, original_positions[i].second);
   }
+  // Bodies that start on top of each other are a bad initial condition, not an
+  // encounter to steer around: the solver answers with a bounded separation
+  // push, and leaves the route intent alone.
   EXPECT_TRUE(std::any_of(units.begin(), units.end(), [](const Entity* entity) {
     const auto* facts = entity->get_component<MovementFactsComponent>();
     return facts != nullptr && facts->steering.valid &&
-           (std::abs(facts->steering.correction_x) > 0.001F ||
-            std::abs(facts->steering.correction_z) > 0.001F);
+           (std::abs(facts->steering.separation_x) > 0.001F ||
+            std::abs(facts->steering.separation_z) > 0.001F);
   }));
+  for (const auto* entity : units) {
+    const auto* facts = entity->get_component<MovementFactsComponent>();
+    ASSERT_NE(facts, nullptr);
+    EXPECT_LE(std::hypot(facts->steering.separation_x, facts->steering.separation_z),
+              Game::Systems::LocalAvoidanceSystem::k_overlap_correction_speed +
+                  1.0e-3F);
+  }
   for (const auto* entity : units) {
     const auto* movement = entity->get_component<MovementComponent>();
     ASSERT_NE(movement, nullptr);

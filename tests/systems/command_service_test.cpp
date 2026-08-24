@@ -714,7 +714,10 @@ TEST_F(CommandServiceTest, MultiUnitMoveRoutesEveryMemberThroughSingleCellGap) {
   EXPECT_TRUE(center_movement->get_has_target());
   EXPECT_TRUE(right_movement->get_has_target());
 
-  run_movement_for(world, {left, center, right});
+  // Three bodies through one cell is a queue, and a queue takes longer than
+  // three bodies shoving past each other did. The assertion is unchanged: every
+  // member still has to cross.
+  run_movement_for(world, {left, center, right}, 360);
   EXPECT_GT(left_transform->position.x, 8.0F);
   EXPECT_GT(center_transform->position.x, 8.0F);
   EXPECT_GT(right_transform->position.x, 8.0F);
@@ -826,7 +829,10 @@ TEST_F(CommandServiceTest, MultiUnitMoveCanRouteMembersIndividuallyThroughGap) {
   EXPECT_TRUE(center_movement->get_has_target());
   EXPECT_TRUE(right_movement->get_has_target());
 
-  run_movement_for(world, {left, center, right});
+  // Three bodies through one cell is a queue, and a queue takes longer than
+  // three bodies shoving past each other did. The assertion is unchanged: every
+  // member still has to cross.
+  run_movement_for(world, {left, center, right}, 360);
   EXPECT_GT(left_transform->position.x, 8.0F);
   EXPECT_GT(center_transform->position.x, 8.0F);
   EXPECT_GT(right_transform->position.x, 8.0F);

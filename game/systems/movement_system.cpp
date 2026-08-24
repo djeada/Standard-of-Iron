@@ -628,6 +628,10 @@ struct SweepResult {
   float normal_z{0.0F};
 };
 
+// `allowed(from_x, from_z, to_x, to_z)` decides one transition, not one point:
+// the planner refuses to cut a diagonal corner between two blocked cells, and
+// the motor has to refuse the same one or a body squeezes through a wall the
+// route says is sealed.
 template <typename AllowedFn>
 auto sweep_body(float origin_x,
                 float origin_z,
@@ -659,7 +663,7 @@ auto sweep_body(float origin_x,
       break;
     }
 
-    if (allowed(x + step_x, z + step_z)) {
+    if (allowed(x, z, x + step_x, z + step_z)) {
       x += step_x;
       z += step_z;
       remaining_x -= step_x;
@@ -667,8 +671,8 @@ auto sweep_body(float origin_x,
       continue;
     }
 
-    bool const x_clear = allowed(x + step_x, z);
-    bool const z_clear = allowed(x, z + step_z);
+    bool const x_clear = allowed(x, z, x + step_x, z);
+    bool const z_clear = allowed(x, z, x, z + step_z);
 
     float normal_x = 0.0F;
     float normal_z = 0.0F;
@@ -910,7 +914,7 @@ void MovementSystem::move_unit(Engine::Core::Entity* entity,
   float target_vx = 0.0F;
   float target_vz = 0.0F;
   bool have_target_velocity = false;
-  if (facts->steering.valid) {
+  if (facts->desired.valid && facts->steering.valid) {
     target_vx = facts->steering.velocity_x;
     target_vz = facts->steering.velocity_z;
     have_target_velocity = true;
@@ -949,13 +953,22 @@ void MovementSystem::move_unit(Engine::Core::Entity* entity,
     facts->progress.state = Engine::Core::MovementOrderState::Turning;
   }
 
-  float const translated_vx = movement->vx * translation_scale;
-  float const translated_vz = movement->vz * translation_scale;
+  float translated_vx = movement->vx * translation_scale;
+  float translated_vz = movement->vz * translation_scale;
+
+  // A bounded push out of an overlap that already exists. It is displacement,
+  // not locomotion: it goes through the sweep so it can never move a root into
+  // a wall, and it is deliberately not folded into the integrated velocity, so
+  // it neither accelerates the body nor tells the renderer to walk.
+  if (facts->desired.valid && facts->steering.valid) {
+    translated_vx += facts->steering.separation_x;
+    translated_vz += facts->steering.separation_z;
+  }
 
   auto const& collision = BuildingCollisionRegistry::instance();
   float const trapped_depth =
       was_on_valid_tile ? 0.0F : collision.blocking_penetration_depth(old_x, old_z);
-  auto step_allowed = [&](float wx, float wz) -> bool {
+  auto point_allowed = [&](float wx, float wz) -> bool {
     if (was_on_valid_tile) {
       return is_movement_point_allowed(QVector3D(wx, 0.0F, wz), *entity);
     }
@@ -963,6 +976,24 @@ void MovementSystem::move_unit(Engine::Core::Entity* entity,
       return collision.blocking_penetration_depth(wx, wz) < trapped_depth;
     }
     return !collision.is_point_in_blocking_building(wx, wz);
+  };
+
+  auto step_allowed = [&](float from_x, float from_z, float to_x, float to_z) -> bool {
+    if (!point_allowed(to_x, to_z)) {
+      return false;
+    }
+    Point const from_cell = NavGrid::world_to_grid(from_x, from_z);
+    Point const to_cell = NavGrid::world_to_grid(to_x, to_z);
+    if (from_cell.x == to_cell.x || from_cell.y == to_cell.y) {
+      return true;
+    }
+    // A diagonal cell transition is only legal when both shared-edge cells are
+    // open. A* refuses this corner; without the same rule here a body walks
+    // through the vertex of a diagonal wall the route treats as solid.
+    QVector3D const across_x = NavGrid::grid_to_world({to_cell.x, from_cell.y});
+    QVector3D const across_z = NavGrid::grid_to_world({from_cell.x, to_cell.y});
+    return point_allowed(across_x.x(), across_x.z()) &&
+           point_allowed(across_z.x(), across_z.z());
   };
 
   auto const* pathfinder = NavGrid::get_pathfinder();

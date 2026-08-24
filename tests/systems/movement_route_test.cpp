@@ -163,6 +163,14 @@ protected:
     Game::Systems::NationRegistry::instance().clear();
   }
 
+  // A determinism comparison needs two runs whose entity identities line up, so
+  // each capture gets its own world rather than reusing one with fresh handles.
+  void reset_session() {
+    m_scope.reset();
+    m_session.reset();
+    SetUp();
+  }
+
   static auto world_of(int grid_x, int grid_z) -> QVector3D {
     return NavGrid::grid_to_world(Point(grid_x, grid_z));
   }
@@ -300,4 +308,151 @@ TEST_F(MovementMotorTest, AnOpenGroundOrderProducesNoFindings) {
                                  << Engine::Core::format_movement_summary(analysis);
 
   EXPECT_GT(position_of(id).x(), world_of(36, 24).x());
+}
+
+// Gate 3: two crossing streams must both clear without starvation, without an
+// unresolved overlap, and without either side alternating its passing choice.
+TEST_F(MovementMotorTest, CrossingStreamsBothClearWithoutFindings) {
+  Engine::Core::MovementTraceManifest manifest;
+  manifest.scenario = "crossing_streams";
+  manifest.fixed_step_seconds = static_cast<float>(m_session->clock().tick_seconds());
+  const Engine::Core::ScopedMovementTrace trace(manifest);
+
+  // A troop's body is its whole formation, several metres across, so both the
+  // spawn line and the destination slots are spaced wider than that. Slots
+  // closer together than the bodies are wide are a group-placement defect, and
+  // Milestone 4 owns it; this scenario is about the crossing.
+  std::vector<EntityID> eastbound;
+  std::vector<EntityID> northbound;
+  for (int index = 0; index < 4; ++index) {
+    eastbound.push_back(
+        spawn(Game::Units::SpawnType::Spearman, world_of(10, 18 + index * 5)));
+    northbound.push_back(
+        spawn(Game::Units::SpawnType::Spearman, world_of(18 + index * 5, 10)));
+  }
+
+  std::vector<QVector3D> east_targets;
+  std::vector<QVector3D> north_targets;
+  for (int index = 0; index < 4; ++index) {
+    east_targets.push_back(world_of(38, 18 + index * 5));
+    north_targets.push_back(world_of(18 + index * 5, 38));
+  }
+  CommandService::move_units(m_session->world(), eastbound, east_targets);
+  CommandService::move_units(m_session->world(), northbound, north_targets);
+
+  run_for(45.0);
+
+  Engine::Core::MovementGateThresholds thresholds;
+  thresholds.fixed_step_seconds = manifest.fixed_step_seconds;
+  const auto analysis = Engine::Core::analyze_active_movement_trace(thresholds);
+  EXPECT_TRUE(analysis.passed()) << Engine::Core::format_movement_findings(analysis)
+                                 << Engine::Core::format_movement_summary(analysis);
+
+  for (const auto id : eastbound) {
+    EXPECT_GT(position_of(id).x(), world_of(34, 24).x())
+        << "an eastbound member never crossed";
+  }
+  for (const auto id : northbound) {
+    EXPECT_GT(position_of(id).z(), world_of(24, 34).z())
+        << "a northbound member never crossed";
+  }
+}
+
+// A body already following a route on open ground must not wobble merely
+// because a crowd is armed somewhere nearby.
+TEST_F(MovementMotorTest, OpenGroundTravelIsUnconstrainedBesideACrowd) {
+  std::vector<EntityID> crowd;
+  for (int index = 0; index < 8; ++index) {
+    crowd.push_back(spawn(Game::Units::SpawnType::Spearman, world_of(20 + index, 8)));
+  }
+  const EntityID lone = spawn(Game::Units::SpawnType::Spearman, world_of(10, 30));
+  ASSERT_NE(lone, 0U);
+
+  std::vector<QVector3D> crowd_targets(crowd.size(), world_of(24, 16));
+  CommandService::move_units(m_session->world(), crowd, crowd_targets);
+  CommandService::move_unit(m_session->world(), lone, world_of(38, 30));
+
+  run_for(6.0);
+
+  const auto* facts = facts_of(lone);
+  ASSERT_NE(facts, nullptr);
+  EXPECT_EQ(facts->steering.result, Engine::Core::SteeringResult::Unconstrained)
+      << "an untroubled body was steered by a crowd it will never meet";
+  EXPECT_NEAR(facts->steering.correction_x, 0.0F, 1.0e-4F);
+  EXPECT_NEAR(facts->steering.correction_z, 0.0F, 1.0e-4F);
+}
+
+// A head-on pair commits to one side and holds it. The old solver averaged
+// every overlap correction, so a symmetric encounter could alternate between
+// two equally plausible escapes for as long as it lasted.
+TEST_F(MovementMotorTest, APassingSideIsHeldOnceCommitted) {
+  const EntityID west = spawn(Game::Units::SpawnType::Spearman, world_of(16, 24));
+  const EntityID east = spawn(Game::Units::SpawnType::Spearman, world_of(32, 24));
+  ASSERT_NE(west, 0U);
+  ASSERT_NE(east, 0U);
+
+  CommandService::move_unit(m_session->world(), west, world_of(34, 24));
+  CommandService::move_unit(m_session->world(), east, world_of(14, 24));
+
+  std::vector<std::int8_t> west_sides;
+  const double step = m_session->clock().tick_seconds();
+  for (double elapsed = 0.0; elapsed < 12.0; elapsed += step) {
+    m_session->clock().advance(step);
+    while (m_session->clock().consume_tick()) {
+      m_session->world().update(static_cast<float>(step));
+    }
+    if (const auto* facts = facts_of(west); facts != nullptr) {
+      west_sides.push_back(facts->steering.passing_side);
+    }
+  }
+
+  int reversals = 0;
+  std::int8_t committed = 0;
+  for (const auto side : west_sides) {
+    if (side == 0) {
+      continue;
+    }
+    if (committed != 0 && side != committed) {
+      ++reversals;
+    }
+    committed = side;
+  }
+  EXPECT_LE(reversals, 1) << "the passing side alternated " << reversals << " times";
+
+  // And both bodies get past each other rather than deadlocking nose to nose.
+  EXPECT_GT(position_of(west).x(), world_of(30, 24).x());
+  EXPECT_LT(position_of(east).x(), world_of(18, 24).x());
+}
+
+// Gate 3: repeated runs of the same commands in one binary produce the same
+// movement digest.
+TEST_F(MovementMotorTest, RepeatedRunsAgreeOnTheMovementDigest) {
+  auto capture = [this]() {
+    reset_session();
+    Engine::Core::MovementTraceManifest manifest;
+    manifest.scenario = "crowd_digest";
+    const Engine::Core::ScopedMovementTrace trace(manifest);
+
+    std::vector<EntityID> crowd;
+    for (int index = 0; index < 9; ++index) {
+      crowd.push_back(spawn(Game::Units::SpawnType::Spearman,
+                            world_of(14 + (index % 3), 22 + (index / 3))));
+    }
+    std::vector<QVector3D> targets;
+    for (std::size_t index = 0; index < crowd.size(); ++index) {
+      targets.push_back(
+          world_of(34 + static_cast<int>(index % 3), 22 + static_cast<int>(index / 3)));
+    }
+    CommandService::move_units(m_session->world(), crowd, targets);
+    run_for(20.0);
+
+    auto& sink = Engine::Core::MovementTrace::instance();
+    const auto digest =
+        Engine::Core::movement_digest(sink.troop_samples(), sink.soldier_samples());
+    return digest;
+  };
+
+  const auto first = capture();
+  const auto second = capture();
+  EXPECT_EQ(first, second) << "the same command stream produced two behaviours";
 }
