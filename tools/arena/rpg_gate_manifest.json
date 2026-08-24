@@ -107,9 +107,7 @@
       "id": "rpg_motor_start_stop",
       "status": "expected_red",
       "gate": "3",
-      "issue_codes": [
-        "planted_foot_slide"
-      ],
+      "issue_codes": ["planted_foot_slide"],
       "notes": "New with the Gate 2 motor work; reproduces on every run at 2.05 s. The motor half passes. The cause is not the motor and not the gait blend: render/humanoid/runtime/poser.cpp guards the whole locomotion pose behind if (is_moving), so when the state flips the feet are assigned the idle stance in one frame and every bit of locomotion_blend smoothing is bypassed. The reported 0.091 m is the frame before the real 0.23 m snap. Three cheaper fixes were tried and measured worse or inert -- see docs/RPG_PLAYABILITY.md. Owned by Gate 3 phase continuity, and it touches every humanoid.",
       "repeats": 3,
       "reproduction": "deterministic",

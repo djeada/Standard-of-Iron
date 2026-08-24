@@ -1874,7 +1874,8 @@ auto CommanderControlController::update_impl(Engine::Core::World& world,
   }
 
   auto mark_jump_safe_position = [&](float x, float z) {
-    if (!jump_active || !App::Core::CommanderMotor::is_walkable_at(Game::Session::session_for(world), x, z)) {
+    if (!jump_active || !App::Core::CommanderMotor::is_walkable_at(
+                            Game::Session::session_for(world), x, z)) {
       return;
     }
     m_jump_safe_position_valid = true;
@@ -2033,9 +2034,9 @@ auto CommanderControlController::update_impl(Engine::Core::World& world,
     }
   }
   if (m_jump_safe_position_valid && !jump_active) {
-    if (!App::Core::CommanderMotor::is_walkable_at(
-            Game::Session::session_for(world), transform->position.x,
-            transform->position.z)) {
+    if (!App::Core::CommanderMotor::is_walkable_at(Game::Session::session_for(world),
+                                                   transform->position.x,
+                                                   transform->position.z)) {
       motor_snap_back_distance =
           std::hypot(m_jump_last_walkable_position.x() - transform->position.x,
                      m_jump_last_walkable_position.z() - transform->position.z);

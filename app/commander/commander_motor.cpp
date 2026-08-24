@@ -5,11 +5,11 @@
 
 #include "game/core/component.h"
 #include "game/map/terrain_service.h"
+#include "game/session/session_context.h"
 #include "game/systems/building_collision_registry.h"
 #include "game/systems/building_line_of_sight.h"
 #include "game/systems/nav_grid.h"
 #include "game/systems/pathfinding.h"
-#include "game/session/session_context.h"
 
 namespace App::Core {
 
@@ -167,8 +167,10 @@ auto resolve_ground_step(Game::Session::SessionContext& session,
 
   float const delta_x = to_x - from_x;
   float const delta_z = to_z - from_z;
-  bool const slide_x_free = std::abs(delta_x) > 1.0e-5F && walkable_point(session, to_x, from_z);
-  bool const slide_z_free = std::abs(delta_z) > 1.0e-5F && walkable_point(session, from_x, to_z);
+  bool const slide_x_free =
+      std::abs(delta_x) > 1.0e-5F && walkable_point(session, to_x, from_z);
+  bool const slide_z_free =
+      std::abs(delta_z) > 1.0e-5F && walkable_point(session, from_x, to_z);
 
   if (slide_x_free && (!slide_z_free || std::abs(delta_x) >= std::abs(delta_z))) {
     return {.x = to_x, .z = from_z, .moved = true};
@@ -222,14 +224,13 @@ auto CommanderMotor::advance(Game::Session::SessionContext& session,
                              Engine::Core::TransformComponent& transform,
                              const CommanderMotorRequest& request)
     -> CommanderMotorResult {
-  GroundMove const step =
-      request.airborne
-          ? airborne_step(request.to.x(), request.to.z())
-          : resolve_ground_step(session,
-                                request.from.x(),
-                                request.from.z(),
-                                request.to.x(),
-                                request.to.z());
+  GroundMove const step = request.airborne
+                              ? airborne_step(request.to.x(), request.to.z())
+                              : resolve_ground_step(session,
+                                                    request.from.x(),
+                                                    request.from.z(),
+                                                    request.to.x(),
+                                                    request.to.z());
 
   CommanderMotorResult result;
   result.source = request.source;

@@ -373,10 +373,10 @@ auto CommanderCameraRig::update(Render::GL::Camera& camera,
   m_trace.building_blocked_fraction = blocked_fraction;
   m_trace.occlusion_fraction = m_occlusion_fraction;
   m_trace.terrain_lift = terrain_lift;
-  m_trace.eye_clearance =
-      inputs.buildings != nullptr
-          ? Game::Systems::nearest_building_body_clearance(*inputs.buildings, eye_desired)
-          : std::numeric_limits<float>::max();
+  m_trace.eye_clearance = inputs.buildings != nullptr
+                              ? Game::Systems::nearest_building_body_clearance(
+                                    *inputs.buildings, eye_desired)
+                              : std::numeric_limits<float>::max();
   m_trace.fov = m_fov_current;
   m_trace.yaw = m_state.yaw;
   m_trace.pitch = m_state.pitch;

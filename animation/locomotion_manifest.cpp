@@ -663,12 +663,12 @@ auto resolve_humanoid_locomotion_variation(
   if (inputs.blend_from_presence) {
 
     float const run = std::clamp(inputs.run_presence, 0.0F, 1.0F);
-    float const walk = std::clamp(inputs.locomotion_presence, 0.0F, 1.0F) * (1.0F - run);
+    float const walk =
+        std::clamp(inputs.locomotion_presence, 0.0F, 1.0F) * (1.0F - run);
     sample.walk_speed_multiplier *= 1.0F + (0.25F * run) + (0.05F * walk);
     sample.arm_swing_amplitude *= 1.0F + (0.12F * run);
     sample.stance_width *= 1.0F - (0.04F * run);
-    sample.posture_slump =
-        std::min(0.16F, sample.posture_slump + (0.020F * run));
+    sample.posture_slump = std::min(0.16F, sample.posture_slump + (0.020F * run));
   } else if (inputs.running) {
     sample.walk_speed_multiplier *= 1.25F;
     sample.arm_swing_amplitude *= 1.12F;

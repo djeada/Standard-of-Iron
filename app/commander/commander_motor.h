@@ -35,9 +35,8 @@ class CommanderMotor {
 public:
   [[nodiscard]] static auto body_radius() -> float;
 
-  [[nodiscard]] static auto is_walkable_at(Game::Session::SessionContext& session,
-                                           float x,
-                                           float z) -> bool;
+  [[nodiscard]] static auto
+  is_walkable_at(Game::Session::SessionContext& session, float x, float z) -> bool;
 
   [[nodiscard]] static auto
   reachable_ground_position(Game::Session::SessionContext& session,
