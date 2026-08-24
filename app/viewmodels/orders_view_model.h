@@ -62,6 +62,7 @@ public:
   Q_INVOKABLE [[nodiscard]] QString command_mode() const;
   Q_INVOKABLE [[nodiscard]] QString toggle_state(const QString& mode) const;
   Q_INVOKABLE [[nodiscard]] QVariantMap mode_availability() const;
+  Q_INVOKABLE [[nodiscard]] bool has_commandable_selection() const;
 
   // Called by the engine once per frame while it holds the frame lock.
   void publish_frame();

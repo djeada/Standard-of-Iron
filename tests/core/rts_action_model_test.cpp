@@ -356,4 +356,41 @@ TEST(RtsActionModel, AnEmptySelectionStillCarriesTheStaticOrderFacts) {
                   .isEmpty());
 }
 
+TEST(RtsActionModel, ASelectedCommanderCountsAsACommandableSelection) {
+  Engine::Core::World world;
+  world.add_system(std::make_unique<Game::Systems::SelectionSystem>());
+  auto* selection = world.get_system<Game::Systems::SelectionSystem>();
+  ASSERT_NE(selection, nullptr);
+
+  add_selected_unit(world, *selection, Game::Units::SpawnType::RomanFieldCommander);
+
+  EXPECT_TRUE(App::Core::has_commandable_selection(&world));
+
+  const auto states = App::Core::get_action_states({.world = &world});
+  EXPECT_TRUE(
+      states[QStringLiteral("attack")].toMap()[QStringLiteral("enabled")].toBool());
+  EXPECT_TRUE(
+      states[QStringLiteral("guard")].toMap()[QStringLiteral("enabled")].toBool());
+  EXPECT_TRUE(
+      states[QStringLiteral("patrol")].toMap()[QStringLiteral("enabled")].toBool());
+  EXPECT_TRUE(
+      states[QStringLiteral("stop")].toMap()[QStringLiteral("enabled")].toBool());
+}
+
+TEST(RtsActionModel, BuildingsAndWildlifeAreNotACommandableSelection) {
+  Engine::Core::World world;
+  world.add_system(std::make_unique<Game::Systems::SelectionSystem>());
+  auto* selection = world.get_system<Game::Systems::SelectionSystem>();
+  ASSERT_NE(selection, nullptr);
+
+  EXPECT_FALSE(App::Core::has_commandable_selection(&world));
+
+  add_selected_unit(world, *selection, Game::Units::SpawnType::Barracks);
+  add_selected_unit(world, *selection, Game::Units::SpawnType::Sheep);
+  EXPECT_FALSE(App::Core::has_commandable_selection(&world));
+
+  add_selected_unit(world, *selection, Game::Units::SpawnType::Archer);
+  EXPECT_TRUE(App::Core::has_commandable_selection(&world));
+}
+
 } // namespace

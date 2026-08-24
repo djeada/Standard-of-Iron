@@ -20,6 +20,7 @@
 #include "game/core/world.h"
 #include "game/systems/nation_id.h"
 #include "render/creature/pipeline/creature_bone_probe.h"
+#include "render/creature/runtime_bake_guard.h"
 #include "render/humanoid/schema/skeleton_schema.h"
 #include "render/scene_renderer.h"
 #include "scene/camera.h"
@@ -325,6 +326,8 @@ void CommanderPortraitView::PortraitRenderer::render() {
     post_face_anchor();
     return;
   }
+
+  Render::Creature::RuntimeBakeAllowScope const allow_bakes;
 
   if (!ensure_scene()) {
     return;

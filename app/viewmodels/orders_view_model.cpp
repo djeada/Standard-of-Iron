@@ -474,6 +474,11 @@ auto OrdersViewModel::mode_availability() const -> QVariantMap {
   return App::Core::get_mode_availability(m_context.world);
 }
 
+auto OrdersViewModel::has_commandable_selection() const -> bool {
+  const auto frame_lock = m_host.lock_frame();
+  return App::Core::has_commandable_selection(m_context.world);
+}
+
 auto OrdersViewModel::action_enabled(const QString& action_id) const -> bool {
   return action_states()
       .value(action_id)
