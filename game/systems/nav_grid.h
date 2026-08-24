@@ -25,6 +25,11 @@ public:
   [[nodiscard]] static auto
   find_nearest_walkable_grid(const Point& origin,
                              int max_search_radius) -> std::optional<Point>;
+
+  [[nodiscard]] static auto
+  find_nearest_walkable_grid_facing(const Point& origin,
+                                    const QVector3D& approach_from,
+                                    int max_search_radius) -> std::optional<Point>;
   [[nodiscard]] static auto
   snap_to_walkable_ground(const QVector3D& world_position) -> QVector3D;
   [[nodiscard]] static auto snap_to_walkable_ground(const QVector3D& world_position,

@@ -14,6 +14,7 @@
 #include "game/units/factory.h"
 #include "game/units/troop_type.h"
 #include "game/units/unit.h"
+#include "render/creature/runtime_bake_guard.h"
 #include "render/graphics_settings.h"
 #include "render/scene_renderer.h"
 #include "scene/camera.h"
@@ -183,6 +184,8 @@ void CommanderPortraitScenes::warm(const QStringList& troop_types) {
   if (signature == m_warmed_signature) {
     return;
   }
+
+  Render::Creature::RuntimeBakeAllowScope const allow_bakes;
 
   QOpenGLContext* context = QOpenGLContext::currentContext();
   if ((context == nullptr) || !context->isValid()) {

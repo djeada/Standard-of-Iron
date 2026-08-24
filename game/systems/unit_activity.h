@@ -39,6 +39,8 @@ enum class ActivityState : std::uint8_t {
   Queued,
   Unavailable,
   Interrupted,
+
+  Locked,
 };
 
 struct UnitActivity {

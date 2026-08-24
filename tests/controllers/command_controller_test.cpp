@@ -7,6 +7,7 @@
 #include "game/core/world.h"
 #include "game/map/terrain_service.h"
 #include "game/render_bridge/picking_service.h"
+#include "game/systems/builder_product_types.h"
 #include "game/systems/building_collision_registry.h"
 #include "game/systems/nav_grid.h"
 #include "game/systems/selection_system.h"
@@ -472,6 +473,52 @@ TEST_F(CommandControllerTest, GuardClickReportsTheAnchor) {
   EXPECT_NEAR(result.order.destination.x(), anchor.x(), 0.25F);
   EXPECT_NEAR(result.order.destination.z(), anchor.z(), 0.25F);
   ASSERT_EQ(seen.size(), 1U);
+}
+
+TEST_F(CommandControllerTest, SendingABuilderAtASheepStartsTheSlaughter) {
+  auto* builder = create_unit(-2.0F, 0.0F, 1, Game::Units::SpawnType::Builder);
+  ASSERT_NE(builder, nullptr);
+  builder->add_component<Engine::Core::BuilderProductionComponent>();
+
+  auto* sheep = create_unit(3.0F, 0.0F, 0, Game::Units::SpawnType::Sheep);
+  ASSERT_NE(sheep, nullptr);
+  sheep->add_component<Engine::Core::WildlifeComponent>();
+  sheep->get_component<Engine::Core::UnitComponent>()->health = 40;
+  sheep->get_component<Engine::Core::UnitComponent>()->max_health = 40;
+
+  selection_system->select_unit(builder->get_id());
+
+  auto const result = command_controller->start_food_harvest(
+      sheep->get_id(),
+      QString::fromLatin1(Game::Systems::k_builder_product_slaughter_sheep),
+      1);
+
+  EXPECT_TRUE(result.order.accepted()) << result.order.reason.toStdString();
+  const auto* task = builder->get_component<Engine::Core::BuilderProductionComponent>();
+  ASSERT_NE(task, nullptr);
+  EXPECT_EQ(task->structure_task_entity_id, sheep->get_id());
+  EXPECT_EQ(task->product_type,
+            std::string(Game::Systems::k_builder_product_slaughter_sheep));
+  EXPECT_TRUE(task->has_construction_site);
+}
+
+TEST_F(CommandControllerTest, ASheepOrderWithNoBuilderInTheSelectionIsRefused) {
+  auto* archer = create_unit(-2.0F, 0.0F, 1, Game::Units::SpawnType::Archer);
+  ASSERT_NE(archer, nullptr);
+  auto* sheep = create_unit(3.0F, 0.0F, 0, Game::Units::SpawnType::Sheep);
+  ASSERT_NE(sheep, nullptr);
+  sheep->add_component<Engine::Core::WildlifeComponent>();
+  sheep->get_component<Engine::Core::UnitComponent>()->health = 40;
+
+  selection_system->select_unit(archer->get_id());
+
+  auto const result = command_controller->start_food_harvest(
+      sheep->get_id(),
+      QString::fromLatin1(Game::Systems::k_builder_product_slaughter_sheep),
+      1);
+
+  EXPECT_TRUE(result.order.rejected());
+  EXPECT_FALSE(result.order.reason.isEmpty());
 }
 
 TEST_F(CommandControllerTest, StopWithEmptySelectionIsRejectedNotSilent) {

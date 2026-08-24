@@ -111,7 +111,8 @@ TEST(FormationCombatGeometry, TraversalAnchorsDriveSpatialQueriesWithoutPresenta
   auto* unit = add_spearmen(world, 1, 3.0F, 90.0F);
   auto const layout = Game::Systems::FormationCombat::resolve_layout(*unit);
   ASSERT_FALSE(layout.live_slots.empty());
-  auto* traversal = unit->add_component<Engine::Core::UnitTraversalLayoutState>();
+  auto* traversal =
+      unit->add_component<Engine::Core::UnitTraversalLayoutStateComponent>();
   Engine::Core::UnitTraversalSlotState slot;
   slot.slot_index = layout.live_slots.front().index;
   slot.current_local_x = 1.25F;
@@ -137,7 +138,8 @@ TEST(FormationCombatGeometry, PresentationFactsComposeOverTraversalAnchors) {
   auto const layout = Game::Systems::FormationCombat::resolve_layout(*unit);
   ASSERT_FALSE(layout.live_slots.empty());
   auto const slot_index = layout.live_slots.front().index;
-  auto* traversal = unit->add_component<Engine::Core::UnitTraversalLayoutState>();
+  auto* traversal =
+      unit->add_component<Engine::Core::UnitTraversalLayoutStateComponent>();
   traversal->slot_states.push_back({.slot_index = slot_index,
                                     .current_local_x = 8.0F,
                                     .current_local_z = 9.0F,
@@ -173,13 +175,13 @@ TEST(FormationCombatGeometry, EngagementPairsMeasureComposedTraversalAnchors) {
   auto const attacker_slot = attacker_layout.live_slots.front().index;
   auto const target_slot = target_layout.live_slots.front().index;
   auto* attacker_traversal =
-      attacker->add_component<Engine::Core::UnitTraversalLayoutState>();
+      attacker->add_component<Engine::Core::UnitTraversalLayoutStateComponent>();
   attacker_traversal->slot_states.push_back({.slot_index = attacker_slot,
                                              .current_local_x = 0.0F,
                                              .current_local_z = 10.0F,
                                              .alive = true});
   auto* target_traversal =
-      target->add_component<Engine::Core::UnitTraversalLayoutState>();
+      target->add_component<Engine::Core::UnitTraversalLayoutStateComponent>();
   target_traversal->slot_states.push_back({.slot_index = target_slot,
                                            .current_local_x = 0.0F,
                                            .current_local_z = -10.0F,
@@ -1142,7 +1144,8 @@ TEST(FormationCombatGeometry, CasualtyFreezesAtItsTraversalAnchor) {
   auto const before = Game::Systems::FormationCombat::resolve_layout(*unit);
   ASSERT_FALSE(before.live_slots.empty());
   auto const slot_index = before.live_slots.front().index;
-  auto* traversal = unit->add_component<Engine::Core::UnitTraversalLayoutState>();
+  auto* traversal =
+      unit->add_component<Engine::Core::UnitTraversalLayoutStateComponent>();
   traversal->slot_states.push_back({.slot_index = slot_index,
                                     .current_local_x = -0.75F,
                                     .current_local_z = 3.5F,

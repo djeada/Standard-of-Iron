@@ -191,6 +191,14 @@ auto unit_busy_reason() -> OrderRefusal {
                                       "Those units are busy with another order.")};
 }
 
+auto hauling_load_reason() -> OrderRefusal {
+  return {OrderFailure::UnitBusy,
+          QCoreApplication::translate(
+              "OrderFeedback",
+              "Hauling a load - it cannot be interrupted until the load is "
+              "dropped off.")};
+}
+
 auto insufficient_resources_reason() -> OrderRefusal {
   return {OrderFailure::InsufficientResources,
           QCoreApplication::translate("OrderFeedback", "Not enough resources.")};

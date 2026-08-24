@@ -525,7 +525,7 @@ void read_spawns(const QJsonArray& arr, std::vector<UnitSpawn>& out) {
     }
 
     spawn.team_id = spawn_obj.value(TEAM_ID).toInt(0);
-    constexpr int default_max_population = 100;
+    constexpr int default_max_population = 60;
     spawn.max_population =
         spawn_obj.value(MAX_POPULATION).toInt(default_max_population);
 
@@ -1309,7 +1309,7 @@ auto read_structures(const QJsonArray& arr,
     }
     entry.player_id = obj.value("player_id").toInt(0);
     entry.team_id = obj.value(TEAM_ID).toInt(0);
-    entry.max_population = obj.value(MAX_POPULATION).toInt(100);
+    entry.max_population = obj.value(MAX_POPULATION).toInt(60);
     entry.rotation = float(obj.value(ROTATION).toDouble(0.0));
     entry.nation = obj.value("nation").toString();
 

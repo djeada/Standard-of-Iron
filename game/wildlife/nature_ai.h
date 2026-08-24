@@ -2,7 +2,9 @@
 
 #include <cstdint>
 #include <memory>
+#include <optional>
 #include <string_view>
+#include <utility>
 #include <vector>
 
 #include "wildlife_species.h"
@@ -77,6 +79,12 @@ public:
   auto operator=(NatureActions&&) -> NatureActions& = delete;
 
   virtual void move_to(const NatureContext& ctx, float world_x, float world_z) = 0;
+
+  [[nodiscard]] virtual auto
+  bypass_around_obstacle(const NatureContext& ctx,
+                         float prey_x,
+                         float prey_z,
+                         float standoff) -> std::optional<std::pair<float, float>> = 0;
   virtual void halt(const NatureContext& ctx) = 0;
   virtual void face_toward(const NatureContext& ctx, float world_x, float world_z) = 0;
   virtual void set_travel_speed(const NatureContext& ctx, bool urgent) = 0;

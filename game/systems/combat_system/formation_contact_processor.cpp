@@ -567,7 +567,7 @@ void publish_formation_presentation(Engine::Core::World& world, float delta_time
     auto const* contact =
         entity->get_component<Engine::Core::FormationContactComponent>();
     auto const* traversal =
-        entity->get_component<Engine::Core::UnitTraversalLayoutState>();
+        entity->get_component<Engine::Core::UnitTraversalLayoutStateComponent>();
     Engine::Core::EntityID const outgoing_target =
         target_ref != nullptr ? target_ref->target_id : 0U;
     bool const outgoing_melee =

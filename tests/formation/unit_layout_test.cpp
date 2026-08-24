@@ -531,6 +531,71 @@ TEST_F(UnitLayoutTest, ConstructingBuildersOverrideTheirTroopLayout) {
   EXPECT_EQ(working, layout("rome", "work_party"));
 }
 
+TEST_F(UnitLayoutTest, IdleBuildersDoNotStandInAWorkCircle) {
+  using Game::Units::TroopType;
+  auto const idle = Game::Formation::select_unit_layout(
+      "rome", TroopType::Builder, UnitLayoutState::Normal);
+  auto const marching = Game::Formation::select_unit_layout(
+      "rome", TroopType::Builder, UnitLayoutState::Marching);
+  auto const working = Game::Formation::select_unit_layout(
+      "rome", TroopType::Builder, UnitLayoutState::Working);
+
+  EXPECT_EQ(working, layout("rome", "work_party"));
+  EXPECT_NE(idle, working)
+      << "a crew standing about should not be ringed around nothing";
+  EXPECT_NE(marching, working);
+  EXPECT_NE(idle, marching);
+
+  auto const idle_shape = UnitLayoutLibrary::instance().style(idle).shape;
+  EXPECT_NE(idle_shape, Game::Formation::UnitLayoutShape::Circle);
+}
+
+TEST_F(UnitLayoutTest, ALayoutBlendWalksFromOneShapeToTheOther) {
+  auto const from = layout("rome", "work_party");
+  auto const to = layout("rome", "worker_gang");
+  ASSERT_NE(from, k_invalid_layout);
+  ASSERT_NE(to, k_invalid_layout);
+
+  constexpr int k_total = 8;
+  constexpr int k_index = 3;
+  auto make = [&](UnitLayoutId target, UnitLayoutId blend_from, float ratio) {
+    UnitLayoutQuery query;
+    query.layout = target;
+    query.index = k_index;
+    query.row = 0;
+    query.col = k_index;
+    query.rows = 1;
+    query.cols = k_total;
+    query.count = k_total;
+    query.spacing = 1.0F;
+    query.seed = 0x51EEDU;
+    query.blend_from = blend_from;
+    query.blend_ratio = ratio;
+    return UnitLayoutSystem::instance().offset(query);
+  };
+
+  auto const start = make(from, k_invalid_layout, 1.0F);
+  auto const finish = make(to, k_invalid_layout, 1.0F);
+  auto const at_zero = make(to, from, 0.0F);
+  auto const at_one = make(to, from, 1.0F);
+  auto const midway = make(to, from, 0.5F);
+
+  EXPECT_NEAR(at_zero.offset_x, start.offset_x, 1.0e-4F);
+  EXPECT_NEAR(at_zero.offset_z, start.offset_z, 1.0e-4F);
+  EXPECT_NEAR(at_one.offset_x, finish.offset_x, 1.0e-4F);
+  EXPECT_NEAR(at_one.offset_z, finish.offset_z, 1.0e-4F);
+
+  float const span =
+      std::hypot(finish.offset_x - start.offset_x, finish.offset_z - start.offset_z);
+  ASSERT_GT(span, 0.1F) << "the two shapes must actually differ to blend";
+  float const from_start =
+      std::hypot(midway.offset_x - start.offset_x, midway.offset_z - start.offset_z);
+  float const from_finish =
+      std::hypot(midway.offset_x - finish.offset_x, midway.offset_z - finish.offset_z);
+  EXPECT_LT(from_start, span);
+  EXPECT_LT(from_finish, span);
+}
+
 TEST_F(UnitLayoutTest, EveryTroopTypeResolvesToARegisteredLayout) {
   using Game::Units::TroopType;
   for (int i = 0; i <= static_cast<int>(TroopType::Builder); ++i) {

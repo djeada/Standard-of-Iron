@@ -3912,7 +3912,8 @@ TEST_F(CombatModeTest, RpgTargetingUsesTraversalPoseWithoutPresentationFacts) {
   formation_unit->render_individuals_per_unit_override = 6;
   auto const layout = Game::Systems::FormationCombat::resolve_layout(*formation);
   ASSERT_FALSE(layout.live_slots.empty());
-  auto* traversal = formation->add_component<Engine::Core::UnitTraversalLayoutState>();
+  auto* traversal =
+      formation->add_component<Engine::Core::UnitTraversalLayoutStateComponent>();
   traversal->slot_states.push_back({.slot_index = layout.live_slots.front().index,
                                     .current_local_x = -2.0F,
                                     .current_local_z = 4.5F,

@@ -270,7 +270,7 @@
             "z": 420
         }
     ],
-    "max_troops_per_player": 2400,
+    "max_troops_per_player": 950,
     "name": "Battle of Trebia",
     "rain": {
         "active_duration": 120,
@@ -2141,7 +2141,7 @@
             "authored": true,
             "facing": "south",
             "id": "trebia_winter_camp",
-            "max_population": 180,
+            "max_population": 60,
             "nation": "roman_republic",
             "on_hill": false,
             "player_id": 2,
@@ -2637,7 +2637,7 @@
         },
         {
             "authored": true,
-            "max_population": 150,
+            "max_population": 50,
             "nation": "carthage",
             "player_id": 1,
             "type": "barracks",
@@ -2721,7 +2721,7 @@
         },
         {
             "authored": true,
-            "max_population": 180,
+            "max_population": 60,
             "nation": "roman_republic",
             "player_id": 2,
             "type": "barracks",
@@ -2853,7 +2853,7 @@
         },
         {
             "authored": true,
-            "max_population": 220,
+            "max_population": 75,
             "nation": "roman_republic",
             "player_id": 3,
             "type": "barracks",
@@ -2941,7 +2941,7 @@
             "z": 134.12
         },
         {
-            "max_population": 150,
+            "max_population": 50,
             "type": "barracks",
             "x": 557,
             "z": 559

@@ -193,6 +193,8 @@ TEST_F(FoodEconomyTest, ReapingARipeFarmLoadsFoodAndSowsTheFieldAgain) {
   ASSERT_NE(carry, nullptr);
   EXPECT_EQ(carry->amounts.get(Game::Systems::ResourceType::Food),
             Game::Systems::k_harvest_grain_food_reward);
+  EXPECT_EQ(carry->food_form, Engine::Core::CarriedFoodForm::Grain)
+      << "a reaped field is carried home as a sheaf";
 
   const auto* farm = farm_entity->get_component<Engine::Core::FarmComponent>();
   EXPECT_FLOAT_EQ(farm->growth, 0.0F) << "the reaped field starts its next cycle";
@@ -246,11 +248,33 @@ TEST_F(FoodEconomyTest, SlaughteringASheepKillsItAndLoadsFood) {
   EXPECT_EQ(carry->amounts.get(Game::Systems::ResourceType::Food),
             Game::Systems::k_slaughter_sheep_food_reward);
 
+  EXPECT_EQ(carry->food_form, Engine::Core::CarriedFoodForm::Meat)
+      << "a butchered sheep is carried home as meat, not as a sheaf of grain";
+
   EXPECT_EQ(sheep->get_component<Engine::Core::UnitComponent>()->health, 0);
   const auto* death = sheep->get_component<Engine::Core::DeathAnimationComponent>();
   ASSERT_NE(death, nullptr) << "the carcass plays the animal death sequence";
   EXPECT_EQ(death->profile, Engine::Core::DeathSequenceProfile::Horse);
   EXPECT_FALSE(Game::Systems::sheep_is_slaughterable(*sheep));
+}
+
+TEST_F(FoodEconomyTest, AButcheredSheepIsDeliveredToTheStockpileAsFood) {
+  Engine::Core::World world;
+  auto* sheep = add_sheep(world, 8.0F, 8.0F);
+  auto* worker = add_builder(world, 7.2F, 8.0F);
+  put_to_work(*worker, *sheep, Game::Systems::k_builder_product_slaughter_sheep);
+
+  Game::Systems::ProductionSystem production;
+  production.update(&world, 0.1F);
+
+  Game::Systems::ResourceDeliverySystem delivery;
+  delivery.update(&world, 0.1F);
+
+  EXPECT_EQ(Game::Systems::PlayerResourceRegistry::instance().get(
+                k_owner, Game::Systems::ResourceType::Food),
+            Game::Systems::k_slaughter_sheep_food_reward);
+  EXPECT_EQ(worker->get_component<Engine::Core::ResourceCarryComponent>(), nullptr)
+      << "the hauler puts the carcass down once it is credited";
 }
 
 TEST_F(FoodEconomyTest, ASheepBeingButcheredIsHeldStill) {

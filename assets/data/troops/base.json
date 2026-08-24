@@ -4,9 +4,11 @@
       "id": "archer",
       "display_name": "Archer",
       "production": {
-        "cost": 50,
+        "cost": 20,
+        "population": 20,
         "resource_costs": {
-          "wood": 12
+          "wood": 30,
+          "iron": 10
         },
         "build_time": 5.0,
         "priority": 10,
@@ -57,10 +59,11 @@
       "id": "swordsman",
       "display_name": "Swordsman",
       "production": {
-        "cost": 90,
+        "cost": 15,
+        "population": 15,
         "resource_costs": {
-          "wood": 12,
-          "iron": 10
+          "wood": 10,
+          "iron": 30
         },
         "build_time": 7.0,
         "priority": 10,
@@ -114,10 +117,11 @@
       "id": "spearman",
       "display_name": "Spearman",
       "production": {
-        "cost": 75,
+        "cost": 24,
+        "population": 24,
         "resource_costs": {
-          "wood": 12,
-          "iron": 6
+          "wood": 30,
+          "iron": 15
         },
         "build_time": 6.0,
         "priority": 5,
@@ -171,10 +175,12 @@
       "id": "horse_swordsman",
       "display_name": "Mounted Knight",
       "production": {
-        "cost": 145,
+        "cost": 18,
+        "population": 18,
         "resource_costs": {
-          "wood": 20,
-          "iron": 14
+          "wood": 15,
+          "iron": 30,
+          "food": 30
         },
         "build_time": 10.0,
         "priority": 15,
@@ -225,10 +231,12 @@
       "id": "horse_archer",
       "display_name": "Horse Archer",
       "production": {
-        "cost": 120,
+        "cost": 20,
+        "population": 20,
         "resource_costs": {
-          "wood": 22,
-          "iron": 10
+          "wood": 25,
+          "iron": 15,
+          "food": 30
         },
         "build_time": 9.0,
         "priority": 12,
@@ -281,10 +289,12 @@
       "id": "horse_spearman",
       "display_name": "Horse Spearman",
       "production": {
-        "cost": 135,
+        "cost": 18,
+        "population": 18,
         "resource_costs": {
-          "wood": 22,
-          "iron": 12
+          "wood": 25,
+          "iron": 22,
+          "food": 30
         },
         "build_time": 9.5,
         "priority": 13,
@@ -336,10 +346,12 @@
       "id": "healer",
       "display_name": "Healer",
       "production": {
-        "cost": 75,
+        "cost": 4,
+        "population": 4,
         "resource_costs": {
-          "wood": 8,
-          "stone": 4
+          "wood": 10,
+          "stone": 10,
+          "food": 15
         },
         "build_time": 7.0,
         "priority": 8,
@@ -390,6 +402,7 @@
       "display_name": "Skeleton Swordsman",
       "production": {
         "cost": 0,
+        "population": 0,
         "build_time": 0.0,
         "priority": 10,
         "is_melee": true
@@ -441,6 +454,7 @@
       "display_name": "Skeleton Archer",
       "production": {
         "cost": 0,
+        "population": 0,
         "build_time": 0.0,
         "priority": 8,
         "is_melee": false
@@ -493,6 +507,7 @@
       "display_name": "Grave Priest",
       "production": {
         "cost": 0,
+        "population": 0,
         "build_time": 0.0,
         "priority": 20,
         "is_melee": false
@@ -546,9 +561,11 @@
       "id": "catapult",
       "display_name": "Catapult",
       "production": {
-        "cost": 250,
+        "cost": 12,
+        "population": 12,
         "resource_costs": {
           "wood": 90,
+          "stone": 20,
           "iron": 35
         },
         "build_time": 15.0,
@@ -600,7 +617,8 @@
       "id": "ballista",
       "display_name": "Ballista",
       "production": {
-        "cost": 200,
+        "cost": 10,
+        "population": 10,
         "resource_costs": {
           "wood": 75,
           "iron": 45
@@ -654,10 +672,12 @@
       "id": "elephant",
       "display_name": "War Elephant",
       "production": {
-        "cost": 350,
+        "cost": 24,
+        "population": 24,
         "resource_costs": {
-          "wood": 30,
-          "iron": 20
+          "wood": 40,
+          "iron": 25,
+          "food": 90
         },
         "build_time": 20.0,
         "priority": 2,
@@ -709,7 +729,14 @@
       "id": "roman_legion_organizer",
       "display_name": "Quintus Fabius Maximus",
       "production": {
-        "cost": 340,
+        "cost": 20,
+        "population": 20,
+        "resource_costs": {
+          "wood": 30,
+          "stone": 20,
+          "iron": 40,
+          "food": 40
+        },
         "build_time": 30.0,
         "priority": 20,
         "is_melee": true
@@ -753,7 +780,14 @@
       "id": "roman_veteran_consul",
       "display_name": "Publius Cornelius Scipio",
       "production": {
-        "cost": 360,
+        "cost": 20,
+        "population": 20,
+        "resource_costs": {
+          "wood": 30,
+          "stone": 20,
+          "iron": 40,
+          "food": 40
+        },
         "build_time": 31.0,
         "priority": 20,
         "is_melee": true
@@ -797,7 +831,14 @@
       "id": "roman_field_commander",
       "display_name": "Marcus Claudius Marcellus",
       "production": {
-        "cost": 320,
+        "cost": 20,
+        "population": 20,
+        "resource_costs": {
+          "wood": 30,
+          "stone": 20,
+          "iron": 40,
+          "food": 40
+        },
         "build_time": 27.0,
         "priority": 20,
         "is_melee": false
@@ -841,7 +882,14 @@
       "id": "carthage_spear_commander",
       "display_name": "Hanno the Great",
       "production": {
-        "cost": 350,
+        "cost": 20,
+        "population": 20,
+        "resource_costs": {
+          "wood": 30,
+          "stone": 20,
+          "iron": 40,
+          "food": 40
+        },
         "build_time": 30.0,
         "priority": 20,
         "is_melee": true
@@ -885,7 +933,14 @@
       "id": "carthage_bow_commander",
       "display_name": "Hasdrubal Barca",
       "production": {
-        "cost": 330,
+        "cost": 20,
+        "population": 20,
+        "resource_costs": {
+          "wood": 30,
+          "stone": 20,
+          "iron": 40,
+          "food": 40
+        },
         "build_time": 28.0,
         "priority": 20,
         "is_melee": false
@@ -929,7 +984,14 @@
       "id": "carthage_sword_commander",
       "display_name": "Hannibal Barca",
       "production": {
-        "cost": 430,
+        "cost": 20,
+        "population": 20,
+        "resource_costs": {
+          "wood": 30,
+          "stone": 20,
+          "iron": 40,
+          "food": 40
+        },
         "build_time": 34.0,
         "priority": 20,
         "is_melee": true
@@ -973,9 +1035,10 @@
       "id": "builder",
       "display_name": "Builder",
       "production": {
-        "cost": 60,
+        "cost": 10,
+        "population": 10,
         "resource_costs": {
-          "wood": 10
+          "wood": 20
         },
         "build_time": 6.0,
         "priority": 4,
@@ -1008,8 +1071,10 @@
           "worker",
           "civilian"
         ],
-        "unit_layout": "work_party",
-        "defensive_layout": "work_party",
+        "unit_layout": "worker_gang",
+        "defensive_layout": "worker_gang",
+        "marching_layout": "worker_file",
+        "working_layout": "work_party",
         "army_roles": [
           "reserve"
         ]
@@ -1025,7 +1090,8 @@
       "id": "civilian",
       "display_name": "Civilian",
       "production": {
-        "cost": 8,
+        "cost": 1,
+        "population": 1,
         "resource_costs": {
           "food": 20
         },

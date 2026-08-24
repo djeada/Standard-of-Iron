@@ -3,6 +3,8 @@
 #include <QObject>
 #include <QVariantMap>
 
+#include "app/core/frame_snapshot.h"
+
 namespace App::Core {
 struct ClientContext;
 class ClientHost;
@@ -35,6 +37,8 @@ public:
 
   Q_INVOKABLE [[nodiscard]] QVariantMap project_world(float x, float y, float z) const;
 
+  void publish_frame();
+
   [[nodiscard]] auto distance() const -> float;
   [[nodiscard]] auto following_selection() const -> bool {
     return m_following_selection;
@@ -50,6 +54,8 @@ signals:
   void moved();
 
 private:
+  App::Core::Published<App::Core::CameraProjection> m_projection;
+
   const App::Core::ClientContext& m_context;
   App::Core::ClientHost& m_host;
   bool m_following_selection = false;

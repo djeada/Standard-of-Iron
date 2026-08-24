@@ -306,6 +306,8 @@ public:
   }
   void simulate(float dt);
   void update_presentation(float dt);
+  void publish_frame_snapshots();
+  void capture_render_selection();
   void update(float dt);
   void render(int pixel_width, int pixel_height);
   void set_input_viewport_size(qreal width, qreal height);
@@ -478,6 +480,7 @@ private:
   std::unique_ptr<Game::Session::ScopedSession> m_session_scope;
   Engine::Core::World* m_world = nullptr;
   std::vector<Engine::Core::EntityID> m_selected_render_ids;
+  bool m_selected_render_ids_dirty = false;
   std::vector<Engine::Core::EntityID> m_scratch_selected_ids;
   std::unique_ptr<Render::GL::Renderer> m_renderer;
   std::unique_ptr<Render::GL::Camera> m_rts_camera;
@@ -559,7 +562,14 @@ private:
   std::atomic<std::uint64_t> m_simulation_tick_us{0};
   std::atomic<float> m_simulation_time_scale{0.0F};
   std::unique_ptr<QThread> m_simulation_thread;
-  std::recursive_mutex m_frame_mutex;
+  mutable std::recursive_mutex m_frame_mutex;
+
+  static constexpr float k_max_deferred_presentation_seconds = 0.1F;
+  float m_deferred_presentation_dt = 0.0F;
+
+  static constexpr int k_frame_lock_handoff_yields = 64;
+  std::atomic<int> m_frame_lock_waiters{0};
+
   int m_loading_overlay_frames_remaining = 0;
   qint64 m_loading_overlay_last_frame_ms = 0;
   qint64 m_loading_overlay_min_duration_ms = 0;

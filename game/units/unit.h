@@ -31,7 +31,7 @@ struct SpawnParams {
   int player_id = 0;
   SpawnType spawn_type = SpawnType::Archer;
   bool ai_controlled = false;
-  int max_population = 100;
+  int max_population = 60;
   Game::Systems::NationID nation_id = Game::Systems::NationID::RomanRepublic;
   bool is_initial_spawn = true;
 

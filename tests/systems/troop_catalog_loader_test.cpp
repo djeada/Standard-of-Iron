@@ -57,7 +57,7 @@ TEST(TroopCatalogLoader, CivilianStaysInLoadedCatalog) {
   ASSERT_NE(civilian, nullptr);
   EXPECT_EQ(civilian->display_name, "Civilian");
   EXPECT_EQ(civilian->visuals.renderer_id, "troops/roman/civilian");
-  EXPECT_EQ(civilian->production.cost, 8);
+  EXPECT_EQ(civilian->production.cost, 1);
 }
 
 TEST(TroopCatalogLoader, FrontlineInfantryKeepConfiguredFormationSpacing) {
@@ -95,11 +95,11 @@ TEST(TroopCatalogLoader, ProductionResourceCostsLoadForEconomyUnits) {
   ASSERT_NE(civilian, nullptr);
 
   EXPECT_EQ(archer->production.resource_costs.get(Game::Systems::ResourceType::Wood),
-            12);
+            30);
   EXPECT_EQ(archer->production.resource_costs.get(Game::Systems::ResourceType::Stone),
             0);
   EXPECT_EQ(builder->production.resource_costs.get(Game::Systems::ResourceType::Wood),
-            10);
+            20);
   EXPECT_EQ(builder->production.resource_costs.get(Game::Systems::ResourceType::Food),
             0);
 

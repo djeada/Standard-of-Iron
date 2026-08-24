@@ -43,6 +43,37 @@ constexpr float k_degenerate_aim_distance = 0.15F;
 
 constexpr std::uint64_t k_route_prune_interval_ticks = 600U;
 
+constexpr float k_short_route_slack = 0.75F;
+
+[[nodiscard]] auto is_escalating_state(Engine::Core::MovementOrderState state) -> bool {
+
+  switch (state) {
+  case Engine::Core::MovementOrderState::LocallyBlocked:
+  case Engine::Core::MovementOrderState::Yielding:
+  case Engine::Core::MovementOrderState::Repathing:
+  case Engine::Core::MovementOrderState::Recovering:
+  case Engine::Core::MovementOrderState::Unreachable:
+    return true;
+  default:
+    return false;
+  }
+}
+
+[[nodiscard]] auto
+route_stops_short_of_the_order(const Engine::Core::MovementComponent& movement,
+                               const Engine::Core::TransformComponent& transform,
+                               float arrive_radius) -> bool {
+
+  if (!movement.get_has_requested_goal()) {
+    return false;
+  }
+
+  float const to_requested =
+      std::hypot(movement.get_requested_goal_x() - transform.position.x,
+                 movement.get_requested_goal_z() - transform.position.z);
+  return to_requested > arrive_radius + k_short_route_slack;
+}
+
 } // namespace
 
 auto is_movement_point_allowed(const QVector3D& pos,
@@ -392,6 +423,14 @@ void RouteFollowSystem::follow(Engine::Core::Entity& entity,
   float const endpoint_distance = std::hypot(endpoint_x - transform->position.x,
                                              endpoint_z - transform->position.z);
   if (remaining <= arrive_radius && endpoint_distance <= arrive_radius) {
+
+    if (route_stops_short_of_the_order(*movement, *transform, arrive_radius)) {
+
+      if (!is_escalating_state(facts->progress.state)) {
+        facts->progress.state = Engine::Core::MovementOrderState::LocallyBlocked;
+      }
+      return;
+    }
     movement->stop();
     OrderService::clear_player_order_intent(&entity);
     facts->progress.state = Engine::Core::MovementOrderState::Arrived;
@@ -481,10 +520,14 @@ auto RouteFollowSystem::update_progress(Engine::Core::Entity& entity,
 
   progress.no_progress_seconds += delta_time;
   progress.no_progress_advance += std::max(0.0F, advance);
-  if (route_changed || progress.no_progress_advance >= k_progress_window_metres) {
+  bool const covered_ground = progress.no_progress_advance >= k_progress_window_metres;
+  if (route_changed || covered_ground) {
     progress.no_progress_seconds = 0.0F;
     progress.no_progress_advance = 0.0F;
-    progress.repath_attempts = 0;
+
+    if (covered_ground) {
+      progress.repath_attempts = 0;
+    }
     if (progress.state != MovementOrderState::Yielding) {
       progress.state = MovementOrderState::Following;
     }

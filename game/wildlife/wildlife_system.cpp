@@ -18,6 +18,7 @@
 #include "../core/ownership_constants.h"
 #include "../core/world.h"
 #include "../map/map_definition.h"
+#include "../systems/combat_system/combat_utils.h"
 #include "../systems/combat_system/damage_application.h"
 #include "../systems/command_service.h"
 #include "../systems/nav_grid.h"
@@ -535,12 +536,19 @@ void WildlifeSystem::collect_animals(Engine::Core::World& world) {
 
 auto WildlifeSystem::begin_bite(Engine::Core::Entity& entity,
                                 Engine::Core::WildlifeComponent& wildlife,
-                                const PreyRef& prey) -> bool {
+                                const PreyRef& prey,
+                                float hunter_x,
+                                float hunter_z) -> bool {
   if (wildlife.state_timer > 0.0F || wildlife.bite_timer > 0.0F) {
     return false;
   }
   const auto* attack = entity.get_component<Engine::Core::AttackComponent>();
   if (attack == nullptr) {
+    return false;
+  }
+
+  if (Game::Systems::Combat::structure_separates_positions(
+          QVector3D(hunter_x, 0.0F, hunter_z), QVector3D(prey.x, 0.0F, prey.z))) {
     return false;
   }
 
@@ -584,7 +592,7 @@ void WildlifeSystem::try_contact_bite(Engine::Core::World& world,
     return;
   }
 
-  begin_bite(*animal.entity, wildlife, prey);
+  begin_bite(*animal.entity, wildlife, prey, animal.x, animal.z);
 }
 
 void WildlifeSystem::release_if_stalled(const AnimalRef& animal,
@@ -795,6 +803,25 @@ public:
     m_owner.issue_move(m_world, ctx.entity->get_id(), world_x, world_z);
   }
 
+  [[nodiscard]] auto bypass_around_obstacle(const NatureContext& ctx,
+                                            float prey_x,
+                                            float prey_z,
+                                            float standoff)
+      -> std::optional<std::pair<float, float>> override {
+    QVector3D const from(ctx.x, 0.0F, ctx.z);
+    QVector3D const prey(prey_x, 0.0F, prey_z);
+    if (!Game::Systems::Combat::structure_separates_positions(from, prey)) {
+      return std::nullopt;
+    }
+
+    auto const around =
+        Game::Systems::Combat::melee_bypass_destination(from, prey, standoff, 0.0F);
+    if (!around.has_value()) {
+      return std::nullopt;
+    }
+    return std::make_pair(around->x(), around->z());
+  }
+
   void halt(const NatureContext& ctx) override {
     if (ctx.movement != nullptr) {
       ctx.movement->stop();
@@ -912,7 +939,7 @@ public:
   }
 
   auto bite(const NatureContext& ctx, const PreyRef& prey) -> bool override {
-    return m_owner.begin_bite(*ctx.entity, *ctx.wildlife, prey);
+    return m_owner.begin_bite(*ctx.entity, *ctx.wildlife, prey, ctx.x, ctx.z);
   }
 
 private:
@@ -1041,7 +1068,11 @@ void WildlifeSystem::update(Engine::Core::World* world, float delta_time) {
         float const dx = prey.x - wolf_transform->position.x;
         float const dz = prey.z - wolf_transform->position.z;
         float const contact_reach = k_wolf_bite_range + prey.radius + 0.30F;
-        if ((dx * dx) + (dz * dz) <= contact_reach * contact_reach) {
+
+        bool const walled_off = Game::Systems::Combat::structure_separates_positions(
+            QVector3D(wolf_transform->position.x, 0.0F, wolf_transform->position.z),
+            QVector3D(prey.x, 0.0F, prey.z));
+        if (!walled_off && (dx * dx) + (dz * dz) <= contact_reach * contact_reach) {
           const auto damage = Game::Systems::Combat::apply_unit_damage(
               world, prey.entity, attack->melee_damage, animal.entity->get_id());
 

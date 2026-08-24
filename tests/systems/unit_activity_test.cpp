@@ -141,14 +141,16 @@ TEST(UnitActivityTest, AGathererHaulingItsLoadReportsDelivery) {
 
   auto activity = classify_unit_activity(*entity);
   EXPECT_EQ(activity.kind, ActivityKind::Deliver);
-  EXPECT_EQ(activity.state, ActivityState::Queued);
+  EXPECT_EQ(activity.state, ActivityState::Locked);
 
   auto* movement = entity->add_component<Engine::Core::MovementComponent>();
   MovementTestAccess::set_has_target(*movement, true);
 
   activity = classify_unit_activity(*entity);
   EXPECT_EQ(activity.kind, ActivityKind::Deliver);
-  EXPECT_EQ(activity.state, ActivityState::Active);
+  EXPECT_EQ(activity.state, ActivityState::Locked)
+      << "a hauling worker reads as locked in both legs of the trip: the player "
+         "cannot interrupt it either way";
 }
 
 TEST(UnitActivityTest, AnEmptiedGathererStopsReportingDelivery) {
@@ -231,7 +233,8 @@ TEST(UnitActivityTest, IdsRoundTripSoQmlAndCppNameTheSameThing) {
   for (const auto state : {ActivityState::Active,
                            ActivityState::Queued,
                            ActivityState::Unavailable,
-                           ActivityState::Interrupted}) {
+                           ActivityState::Interrupted,
+                           ActivityState::Locked}) {
     EXPECT_EQ(
         Game::Systems::activity_state_from_id(Game::Systems::activity_state_id(state)),
         state);

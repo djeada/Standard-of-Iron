@@ -415,6 +415,9 @@ auto indicator_color(IndicatorKind kind, IndicatorState state) noexcept -> QVect
     return base * 0.35F + QVector3D(1.0F, 0.30F, 0.22F) * 0.65F;
   case IndicatorState::Interrupted:
     return base * 0.40F + QVector3D(1.0F, 0.72F, 0.24F) * 0.60F;
+  case IndicatorState::Locked:
+
+    return base * 0.45F + QVector3D(0.98F, 0.86F, 0.42F) * 0.55F;
   }
   return base;
 }
@@ -427,6 +430,7 @@ auto indicator_state_alpha(IndicatorState state) noexcept -> float {
     return k_indicator_alpha * 0.78F;
   case IndicatorState::Unavailable:
   case IndicatorState::Interrupted:
+  case IndicatorState::Locked:
     return k_indicator_alpha;
   }
   return k_indicator_alpha;

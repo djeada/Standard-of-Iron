@@ -568,6 +568,20 @@ auto get_current_action_mode(const ActionContext& context) -> QString {
   return QStringLiteral("normal");
 }
 
+auto has_commandable_selection(Engine::Core::World* world) -> bool {
+  const auto* selected = selected_units(world);
+  if (selected == nullptr) {
+    return false;
+  }
+  for (const auto entity_id : *selected) {
+    const auto* unit = unit_component(world->get_entity(entity_id));
+    if ((unit != nullptr) && Game::Units::is_troop_spawn(unit->spawn_type)) {
+      return true;
+    }
+  }
+  return false;
+}
+
 auto get_toggle_state(Engine::Core::World* world, const QString& action_id) -> QString {
   ActionContext context;
   context.world = world;

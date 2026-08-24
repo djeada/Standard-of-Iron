@@ -142,7 +142,7 @@ auto unit_profile(const Game::Systems::NationRegistry& nations,
   info["prefers_ranged"] = prefers_ranged;
 
   info["cost"] = profile.production.cost;
-  info["population_cost"] = profile.production.cost;
+  info["population_cost"] = profile.production.population_cost();
   info["resource_costs"] = to_variant_map(profile.production.resource_costs);
   info["build_time"] = static_cast<double>(profile.production.build_time);
   info["individuals_per_unit"] = profile.individuals_per_unit;

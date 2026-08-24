@@ -58,6 +58,15 @@ auto harvest_product_for(Game::Map::WorldProp::Type type) -> std::string_view {
 auto work_position_beside(const Game::Map::WorldPropTarget& node,
                           float worker_x,
                           float worker_z) -> QVector3D {
+
+  Point const node_grid = NavGrid::world_to_grid(node.x, node.z);
+  if (auto const cell = NavGrid::find_nearest_walkable_grid_facing(
+          node_grid,
+          QVector3D(worker_x, 0.0F, worker_z),
+          k_work_position_search_radius)) {
+    return NavGrid::snap_to_walkable_ground(NavGrid::grid_to_world(*cell));
+  }
+
   QVector3D approach(worker_x - node.x, 0.0F, worker_z - node.z);
   if (approach.lengthSquared() < 0.01F) {
     approach = QVector3D(1.0F, 0.0F, 0.0F);

@@ -2,7 +2,7 @@
   "name": "Iron Sepulcher Watch",
   "description": "Small authored scenario that demonstrates ruins, a shrine, and undead awakening zones.",
   "coord_system": "grid",
-  "max_troops_per_player": 800,
+  "max_troops_per_player": 280,
   "grid": {
     "width": 48,
     "height": 48,
@@ -142,7 +142,7 @@
       "player_id": 1,
       "team_id": 1,
       "nation": "roman_republic",
-      "max_population": 180
+      "max_population": 60
     }
   ],
   "rain": {

@@ -8,6 +8,7 @@
 #include <cstdint>
 #include <deque>
 #include <functional>
+#include <mutex>
 #include <vector>
 
 #include "game/core/entity_id.h"
@@ -58,8 +59,8 @@ public:
   void publish(PlayerFeedbackEvent event);
 
   [[nodiscard]] auto drain() -> std::vector<PlayerFeedbackEvent>;
-  [[nodiscard]] auto pending() const -> std::size_t { return m_pending.size(); }
-  [[nodiscard]] auto dropped() const -> std::uint64_t { return m_dropped; }
+  [[nodiscard]] auto pending() const -> std::size_t;
+  [[nodiscard]] auto dropped() const -> std::uint64_t;
 
   void clear();
 
@@ -69,6 +70,7 @@ private:
     Listener listener;
   };
 
+  mutable std::mutex m_mutex;
   std::vector<Subscription> m_listeners;
   std::deque<PlayerFeedbackEvent> m_pending;
   ListenerId m_next_listener_id = 1;

@@ -213,13 +213,13 @@ TEST(NationLoader, ProfilesPreserveConfiguredResourceCostsAcrossNations) {
 
   EXPECT_EQ(
       roman_archer.production.resource_costs.get(Game::Systems::ResourceType::Wood),
-      12);
+      30);
   EXPECT_EQ(
       carthage_archer.production.resource_costs.get(Game::Systems::ResourceType::Wood),
-      12);
+      30);
   EXPECT_EQ(
       roman_builder.production.resource_costs.get(Game::Systems::ResourceType::Wood),
-      10);
+      20);
   EXPECT_EQ(
       roman_builder.production.resource_costs.get(Game::Systems::ResourceType::Food),
       0);

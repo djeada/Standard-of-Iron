@@ -88,7 +88,7 @@ auto mode_for_files(std::uint32_t files,
 }
 
 void rebuild_stable_mapping(const FormationCombat::FormationLayout& layout,
-                            Engine::Core::UnitTraversalLayoutState& state) {
+                            Engine::Core::UnitTraversalLayoutStateComponent& state) {
   if (state.stable_slot_mapping.size() == layout.all_slots.size() &&
       std::all_of(
           layout.all_slots.begin(), layout.all_slots.end(), [&state](auto const& slot) {
@@ -259,7 +259,7 @@ auto measure_width(const Engine::Core::Entity& entity,
   return result;
 }
 
-void publish_facts(const Engine::Core::UnitTraversalLayoutState& state,
+void publish_facts(const Engine::Core::UnitTraversalLayoutStateComponent& state,
                    Engine::Core::TraversalLayoutFacts& facts) {
   facts.mode = state.mode;
   facts.target_mode = state.target_mode;
@@ -280,7 +280,7 @@ void update_slot_states(const Engine::Core::TransformComponent& transform,
                         const FormationCombat::FormationLayout& layout,
                         bool reset_transition,
                         float step,
-                        Engine::Core::UnitTraversalLayoutState& state) {
+                        Engine::Core::UnitTraversalLayoutStateComponent& state) {
   std::vector<Engine::Core::UnitTraversalSlotState> next;
   next.reserve(layout.all_slots.size());
   bool const reflows =
@@ -578,9 +578,8 @@ void UnitTraversalLayoutSystem::update(Engine::Core::World* world, float delta_t
         facts == nullptr) {
       return;
     }
-    auto* state =
-        Engine::Core::get_or_add_component<Engine::Core::UnitTraversalLayoutState>(
-            &entity);
+    auto* state = Engine::Core::get_or_add_component<
+        Engine::Core::UnitTraversalLayoutStateComponent>(&entity);
     if (state == nullptr) {
       return;
     }
@@ -749,7 +748,7 @@ auto UnitTraversalLayoutSystem::access() const -> Engine::Core::SystemAccess {
             TransformComponent,
             MovementComponent,
             UnitLayoutStateComponent>{},
-      Writes<MovementFactsComponent, UnitTraversalLayoutState>{});
+      Writes<MovementFactsComponent, UnitTraversalLayoutStateComponent>{});
 }
 
 } // namespace Game::Systems
