@@ -241,7 +241,7 @@
             "z": 400
         }
     ],
-    "max_troops_per_player": 2000,
+    "max_troops_per_player": 1100,
     "name": "Battle of Ticino",
     "rain": {
         "active_duration": 80,
@@ -2107,7 +2107,7 @@
             "authored": true,
             "facing": "west",
             "id": "ticino_consular_town",
-            "max_population": 200,
+            "max_population": 70,
             "nation": "roman_republic",
             "player_id": 2,
             "tier": "town",
@@ -2118,7 +2118,7 @@
             "authored": true,
             "facing": "west",
             "id": "ticino_reserve_camp",
-            "max_population": 150,
+            "max_population": 50,
             "nation": "roman_republic",
             "on_hill": false,
             "player_id": 3,
@@ -2578,7 +2578,7 @@
         },
         {
             "authored": true,
-            "max_population": 150,
+            "max_population": 50,
             "nation": "carthage",
             "player_id": 1,
             "type": "barracks",
@@ -2646,7 +2646,7 @@
         },
         {
             "authored": true,
-            "max_population": 220,
+            "max_population": 75,
             "nation": "roman_republic",
             "player_id": 2,
             "type": "barracks",
@@ -2794,7 +2794,7 @@
         },
         {
             "authored": true,
-            "max_population": 180,
+            "max_population": 60,
             "nation": "roman_republic",
             "player_id": 3,
             "type": "barracks",
@@ -2826,7 +2826,7 @@
             "z": 155
         },
         {
-            "max_population": 150,
+            "max_population": 50,
             "type": "barracks",
             "x": 280,
             "z": 598

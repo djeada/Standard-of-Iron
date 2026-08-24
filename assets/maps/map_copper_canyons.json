@@ -8,7 +8,7 @@
     "height": 300,
     "tile_size": 1.0
   },
-  "max_troops_per_player": 600,
+  "max_troops_per_player": 220,
   "camera": {
     "center": [
       150.0,
@@ -2659,7 +2659,7 @@
       "x": 255.0,
       "z": 150.0,
       "player_id": 1,
-      "max_population": 400,
+      "max_population": 140,
       "team_id": 1,
       "description": "Player 1 barracks."
     },
@@ -2669,7 +2669,7 @@
       "x": 202.5,
       "z": 240.9,
       "player_id": 2,
-      "max_population": 400,
+      "max_population": 140,
       "team_id": 2,
       "description": "Player 2 barracks."
     },
@@ -2679,7 +2679,7 @@
       "x": 97.5,
       "z": 240.9,
       "player_id": 3,
-      "max_population": 400,
+      "max_population": 140,
       "team_id": 3,
       "description": "Player 3 barracks."
     },
@@ -2689,7 +2689,7 @@
       "x": 45.0,
       "z": 150.0,
       "player_id": 4,
-      "max_population": 400,
+      "max_population": 140,
       "team_id": 4,
       "description": "Player 4 barracks."
     },
@@ -2699,7 +2699,7 @@
       "x": 97.5,
       "z": 59.1,
       "player_id": 5,
-      "max_population": 400,
+      "max_population": 140,
       "team_id": 5,
       "description": "Player 5 barracks."
     },
@@ -2709,7 +2709,7 @@
       "x": 202.5,
       "z": 59.1,
       "player_id": 6,
-      "max_population": 400,
+      "max_population": 140,
       "team_id": 6,
       "description": "Player 6 barracks."
     },
@@ -2719,7 +2719,7 @@
       "x": 215.7,
       "z": 167.6,
       "player_id": 0,
-      "max_population": 120,
+      "max_population": 40,
       "description": "Neutral mine camp in the sector's throat."
     },
     {
@@ -2728,7 +2728,7 @@
       "x": 167.6,
       "z": 215.7,
       "player_id": 0,
-      "max_population": 120,
+      "max_population": 40,
       "description": "Neutral mine camp in the sector's throat."
     },
     {
@@ -2737,7 +2737,7 @@
       "x": 101.9,
       "z": 198.1,
       "player_id": 0,
-      "max_population": 120,
+      "max_population": 40,
       "description": "Neutral mine camp in the sector's throat."
     },
     {
@@ -2746,7 +2746,7 @@
       "x": 84.3,
       "z": 132.4,
       "player_id": 0,
-      "max_population": 120,
+      "max_population": 40,
       "description": "Neutral mine camp in the sector's throat."
     },
     {
@@ -2755,7 +2755,7 @@
       "x": 132.4,
       "z": 84.3,
       "player_id": 0,
-      "max_population": 120,
+      "max_population": 40,
       "description": "Neutral mine camp in the sector's throat."
     },
     {
@@ -2764,7 +2764,7 @@
       "x": 198.1,
       "z": 101.9,
       "player_id": 0,
-      "max_population": 120,
+      "max_population": 40,
       "description": "Neutral mine camp in the sector's throat."
     },
     {

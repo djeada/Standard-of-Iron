@@ -223,7 +223,7 @@
             "z": 560
         }
     ],
-    "max_troops_per_player": 3000,
+    "max_troops_per_player": 1050,
     "name": "Battle of Zama",
     "rain": {
         "enabled": false
@@ -1656,7 +1656,7 @@
             "facing": "east",
             "homes": 1,
             "id": "zama_punic_camp",
-            "max_population": 180,
+            "max_population": 60,
             "minimum_homes": 1,
             "nation": "carthage",
             "outer_towers": 2,
@@ -1670,7 +1670,7 @@
             "authored": true,
             "facing": "west",
             "id": "zama_scipio_town",
-            "max_population": 220,
+            "max_population": 75,
             "nation": "roman_republic",
             "player_id": 2,
             "tier": "town",
@@ -2225,7 +2225,7 @@
         },
         {
             "authored": true,
-            "max_population": 150,
+            "max_population": 50,
             "nation": "carthage",
             "player_id": 1,
             "type": "barracks",
@@ -2310,7 +2310,7 @@
         },
         {
             "authored": true,
-            "max_population": 220,
+            "max_population": 75,
             "nation": "roman_republic",
             "player_id": 2,
             "type": "barracks",
@@ -2522,7 +2522,7 @@
         },
         {
             "authored": true,
-            "max_population": 180,
+            "max_population": 60,
             "nation": "roman_republic",
             "player_id": 3,
             "type": "barracks",
@@ -2646,7 +2646,7 @@
         },
         {
             "authored": true,
-            "max_population": 180,
+            "max_population": 60,
             "nation": "roman_republic",
             "player_id": 4,
             "type": "barracks",
@@ -2729,7 +2729,7 @@
         },
         {
             "authored": true,
-            "max_population": 180,
+            "max_population": 60,
             "nation": "roman_republic",
             "player_id": 5,
             "type": "barracks",

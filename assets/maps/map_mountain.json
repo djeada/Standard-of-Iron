@@ -8,7 +8,7 @@
     "height": 240,
     "tile_size": 1.0
   },
-  "max_troops_per_player": 800,
+  "max_troops_per_player": 280,
   "camera": {
     "center": [
       120.0,
@@ -1705,7 +1705,7 @@
       "x": 52.0,
       "z": 52.0,
       "player_id": 1,
-      "max_population": 400,
+      "max_population": 140,
       "team_id": 1,
       "description": "Player 1 barracks."
     },
@@ -1715,7 +1715,7 @@
       "x": 188.0,
       "z": 52.0,
       "player_id": 2,
-      "max_population": 400,
+      "max_population": 140,
       "team_id": 2,
       "description": "Player 2 barracks."
     },
@@ -1725,7 +1725,7 @@
       "x": 188.0,
       "z": 188.0,
       "player_id": 3,
-      "max_population": 400,
+      "max_population": 140,
       "team_id": 3,
       "description": "Player 3 barracks."
     },
@@ -1735,7 +1735,7 @@
       "x": 52.0,
       "z": 188.0,
       "player_id": 4,
-      "max_population": 400,
+      "max_population": 140,
       "team_id": 4,
       "description": "Player 4 barracks."
     },
@@ -1745,7 +1745,7 @@
       "x": 60.0,
       "z": 96.0,
       "player_id": 0,
-      "max_population": 130,
+      "max_population": 45,
       "description": "Neutral waystation on the quarter's back road."
     },
     {
@@ -1754,7 +1754,7 @@
       "x": 144.0,
       "z": 60.0,
       "player_id": 0,
-      "max_population": 130,
+      "max_population": 45,
       "description": "Neutral waystation on the quarter's back road."
     },
     {
@@ -1763,7 +1763,7 @@
       "x": 180.0,
       "z": 144.0,
       "player_id": 0,
-      "max_population": 130,
+      "max_population": 45,
       "description": "Neutral waystation on the quarter's back road."
     },
     {
@@ -1772,7 +1772,7 @@
       "x": 96.0,
       "z": 180.0,
       "player_id": 0,
-      "max_population": 130,
+      "max_population": 45,
       "description": "Neutral waystation on the quarter's back road."
     },
     {

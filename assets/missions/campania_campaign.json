@@ -19,7 +19,7 @@
           "x": 322,
           "z": 238
         },
-        "max_population": 220
+        "max_population": 75
       },
       {
         "type": "home",
@@ -27,7 +27,7 @@
           "x": 301,
           "z": 250
         },
-        "max_population": 220
+        "max_population": 75
       },
       {
         "type": "home",
@@ -35,7 +35,7 @@
           "x": 343,
           "z": 250
         },
-        "max_population": 220
+        "max_population": 75
       },
       {
         "type": "home",
@@ -43,7 +43,7 @@
           "x": 301,
           "z": 271
         },
-        "max_population": 220
+        "max_population": 75
       },
       {
         "type": "home",
@@ -51,7 +51,7 @@
           "x": 343,
           "z": 271
         },
-        "max_population": 220
+        "max_population": 75
       }
     ],
     "starting_resources": {
@@ -84,7 +84,7 @@
             "x": 120,
             "z": 78
           },
-          "max_population": 160
+          "max_population": 55
         },
         {
           "type": "home",
@@ -92,7 +92,7 @@
             "x": 96,
             "z": 80
           },
-          "max_population": 160
+          "max_population": 55
         },
         {
           "type": "home",
@@ -100,7 +100,7 @@
             "x": 140,
             "z": 72
           },
-          "max_population": 160
+          "max_population": 55
         }
       ],
       "waves": [
@@ -238,7 +238,7 @@
             "x": 392,
             "z": 546
           },
-          "max_population": 160
+          "max_population": 55
         },
         {
           "type": "home",
@@ -246,7 +246,7 @@
             "x": 372,
             "z": 548
           },
-          "max_population": 160
+          "max_population": 55
         },
         {
           "type": "home",
@@ -254,7 +254,7 @@
             "x": 412,
             "z": 548
           },
-          "max_population": 160
+          "max_population": 55
         }
       ],
       "waves": [
@@ -366,7 +366,7 @@
             "x": 582,
             "z": 284
           },
-          "max_population": 160
+          "max_population": 55
         },
         {
           "type": "home",
@@ -374,7 +374,7 @@
             "x": 582,
             "z": 318
           },
-          "max_population": 160
+          "max_population": 55
         },
         {
           "type": "defense_tower",
