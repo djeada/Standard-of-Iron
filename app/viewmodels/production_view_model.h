@@ -4,6 +4,7 @@
 #include <QString>
 #include <QVariantMap>
 
+#include "app/core/frame_snapshot.h"
 #include "game/command/command.h"
 
 namespace App::Core {
@@ -22,6 +23,9 @@ public:
                       QObject* parent = nullptr);
 
   Q_INVOKABLE [[nodiscard]] bool has_selected_type(const QString& type) const;
+
+  // Called by the engine once per frame while it holds the frame lock.
+  void publish_frame();
   Q_INVOKABLE void recruit_near_selected(const QString& unit_type);
 
   Q_INVOKABLE [[nodiscard]] QVariantMap selected_state() const;
@@ -45,6 +49,8 @@ signals:
   void player_state_stale();
 
 private:
+  App::Core::Published<App::Core::SelectionReadout> m_readout;
+
   [[nodiscard]] auto trade(const QString& resource_key,
                            Game::Command::TradeDirection direction) -> bool;
 

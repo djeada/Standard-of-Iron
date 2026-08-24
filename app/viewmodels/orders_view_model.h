@@ -5,6 +5,8 @@
 #include <QString>
 #include <QVariantMap>
 
+#include "app/core/frame_snapshot.h"
+
 namespace App::Core {
 struct ClientContext;
 class ClientHost;
@@ -61,6 +63,9 @@ public:
   Q_INVOKABLE [[nodiscard]] QString toggle_state(const QString& mode) const;
   Q_INVOKABLE [[nodiscard]] QVariantMap mode_availability() const;
 
+  // Called by the engine once per frame while it holds the frame lock.
+  void publish_frame();
+
   [[nodiscard]] auto context_intent() const -> QVariantMap { return m_context_intent; }
   void refresh_context_intent(qreal sx, qreal sy);
   void clear_context_intent();
@@ -73,6 +78,8 @@ public:
 
 private:
   [[nodiscard]] auto action_enabled(const QString& action_id) const -> bool;
+
+  App::Core::Published<App::Core::OrdersReadout> m_readout;
 
   struct RightMouseGesture {
     QPointF press_position;

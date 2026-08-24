@@ -641,6 +641,7 @@ add_library(
     app/core/language_manager.cpp
     app/core/match_presentation_sync.cpp
     app/core/player_feedback.cpp
+    app/core/frame_snapshot.cpp
     app/core/runtime_frame_orchestrator.cpp
     # app/mission -- the client's half of running a mission. The mission logic
     # itself is game/mission (soi_mission_runtime); what is left here is reading

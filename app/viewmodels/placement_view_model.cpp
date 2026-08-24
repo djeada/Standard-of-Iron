@@ -1,5 +1,7 @@
 #include "app/viewmodels/placement_view_model.h"
 
+#include <utility>
+
 #include "app/core/client_context.h"
 #include "app/economy/production_manager.h"
 #include "app/economy/production_readouts.h"
@@ -26,14 +28,97 @@ void PlacementViewModel::on_formation_command() {
   handler->on_formation_command();
 }
 
+// Rebuilds the placement layer's read-only state once per frame. QML checks
+// is_placing_formation and is_placing_construction on every mouse move, so these
+// must not each take the frame lock.
+void PlacementViewModel::publish_frame() {
+  App::Core::PlacementReadout readout;
+  readout.any_selected_in_formation_mode = [this]() -> bool {
+    auto* handler = m_context.input;
+    return handler != nullptr && handler->any_selected_in_formation_mode();
+  }();
+  readout.placing_formation = [this]() -> bool {
+    auto* commands = m_context.commands;
+    return commands != nullptr && commands->formation().is_placing_formation();
+  }();
+  readout.dragging_formation = [this]() -> bool {
+    auto* handler = m_context.input;
+    return handler != nullptr && handler->is_dragging_formation();
+  }();
+  readout.formation_intent = [this]() -> QString {
+    auto* commands = m_context.commands;
+    return commands == nullptr ? QString() : commands->formation().formation_intent();
+  }();
+  readout.formation_intents = [this]() -> QStringList {
+    auto* commands = m_context.commands;
+    return commands == nullptr ? QStringList()
+                               : commands->formation().formation_intents();
+  }();
+  readout.formation_doctrine_options = [this]() -> QVariantList {
+    auto* commands = m_context.commands;
+    return commands == nullptr ? QVariantList()
+                               : commands->formation().formation_doctrine_options();
+  }();
+  readout.formation_options = [this]() -> QVariantMap {
+    auto* commands = m_context.commands;
+    return commands == nullptr ? QVariantMap()
+                               : commands->formation().formation_options();
+  }();
+  readout.selected_formation_status = [this]() -> QVariantMap {
+    auto* commands = m_context.commands;
+    return commands == nullptr ? QVariantMap()
+                               : commands->formation().selected_formation_status();
+  }();
+  readout.placing_construction = [this]() -> bool {
+    auto* production = m_context.production;
+    return production != nullptr && production->is_placing_construction();
+  }();
+  readout.construction_preview_active = [this]() -> bool {
+    auto* production = m_context.production;
+    return production != nullptr && production->construction_preview_active();
+  }();
+  readout.construction_preview_valid = [this]() -> bool {
+    auto* production = m_context.production;
+    return production != nullptr && production->construction_preview_valid();
+  }();
+  readout.construction_preview_rotatable = [this]() -> bool {
+    auto* production = m_context.production;
+    return production != nullptr && production->construction_preview_rotatable();
+  }();
+  readout.construction_preview_segment_count = [this]() -> int {
+    auto* production = m_context.production;
+    return production != nullptr ? production->construction_preview_segment_count() : 0;
+  }();
+  readout.construction_preview_valid_segment_count = [this]() -> int {
+    auto* production = m_context.production;
+    return production != nullptr
+               ? production->construction_preview_valid_segment_count()
+               : 0;
+  }();
+  readout.construction_preview_total_cost = [this]() -> int {
+    auto* production = m_context.production;
+    return production != nullptr ? production->construction_preview_total_cost() : 0;
+  }();
+  readout.pending_builder_construction_type = [this]() -> QString {
+    auto* production = m_context.production;
+    return production != nullptr ? production->pending_builder_construction_type()
+                                 : QString();
+  }();
+  readout.pending_building_type = [this]() -> QString {
+    auto* production = m_context.production;
+    return production != nullptr ? production->pending_building_type() : QString();
+  }();
+  m_readout.publish(std::move(readout));
+}
+
 auto PlacementViewModel::any_selected_in_formation_mode() const -> bool {
-  auto* handler = m_context.input;
-  return handler != nullptr && handler->any_selected_in_formation_mode();
+  const auto readout = m_readout.read();
+  return readout ? readout->any_selected_in_formation_mode : false;
 }
 
 auto PlacementViewModel::is_placing_formation() const -> bool {
-  auto* commands = m_context.commands;
-  return commands != nullptr && commands->formation().is_placing_formation();
+  const auto readout = m_readout.read();
+  return readout ? readout->placing_formation : false;
 }
 
 void PlacementViewModel::on_formation_mouse_move(qreal sx, qreal sy) {
@@ -99,6 +184,7 @@ void PlacementViewModel::on_formation_drag_update(qreal sx, qreal sy) {
 }
 
 void PlacementViewModel::on_formation_drag_end() {
+  const auto frame_lock = m_host.lock_frame();
   auto* handler = m_context.input;
   if (handler == nullptr) {
     return;
@@ -108,11 +194,12 @@ void PlacementViewModel::on_formation_drag_end() {
 }
 
 auto PlacementViewModel::is_dragging_formation() const -> bool {
-  auto* handler = m_context.input;
-  return handler != nullptr && handler->is_dragging_formation();
+  const auto readout = m_readout.read();
+  return readout ? readout->dragging_formation : false;
 }
 
 void PlacementViewModel::set_formation_intent(const QString& intent_id) {
+  const auto frame_lock = m_host.lock_frame();
   auto* commands = m_context.commands;
   if (commands == nullptr) {
     return;
@@ -122,18 +209,18 @@ void PlacementViewModel::set_formation_intent(const QString& intent_id) {
 }
 
 auto PlacementViewModel::formation_intent() const -> QString {
-  auto* commands = m_context.commands;
-  return commands == nullptr ? QString() : commands->formation().formation_intent();
+  const auto readout = m_readout.read();
+  return readout ? readout->formation_intent : QString{};
 }
 
 auto PlacementViewModel::formation_intents() const -> QStringList {
-  auto* commands = m_context.commands;
-  return commands == nullptr ? QStringList()
-                             : commands->formation().formation_intents();
+  const auto readout = m_readout.read();
+  return readout ? readout->formation_intents : QStringList{};
 }
 
 auto PlacementViewModel::formation_intent_display_name(const QString& intent_id) const
     -> QString {
+  const auto frame_lock = m_host.lock_frame();
   auto* commands = m_context.commands;
   return commands == nullptr
              ? QString()
@@ -142,6 +229,7 @@ auto PlacementViewModel::formation_intent_display_name(const QString& intent_id)
 
 auto PlacementViewModel::formation_intent_unavailable_reason(
     const QString& intent_id) const -> QString {
+  const auto frame_lock = m_host.lock_frame();
   auto* commands = m_context.commands;
   return commands == nullptr
              ? QString()
@@ -149,24 +237,22 @@ auto PlacementViewModel::formation_intent_unavailable_reason(
 }
 
 auto PlacementViewModel::selected_formation_status() const -> QVariantMap {
-  auto* commands = m_context.commands;
-  return commands == nullptr ? QVariantMap()
-                             : commands->formation().selected_formation_status();
+  const auto readout = m_readout.read();
+  return readout ? readout->selected_formation_status : QVariantMap{};
 }
 
 auto PlacementViewModel::formation_doctrine_options() const -> QVariantList {
-  auto* commands = m_context.commands;
-  return commands == nullptr ? QVariantList()
-                             : commands->formation().formation_doctrine_options();
+  const auto readout = m_readout.read();
+  return readout ? readout->formation_doctrine_options : QVariantList{};
 }
 
 auto PlacementViewModel::formation_options() const -> QVariantMap {
-  auto* commands = m_context.commands;
-  return commands == nullptr ? QVariantMap()
-                             : commands->formation().formation_options();
+  const auto readout = m_readout.read();
+  return readout ? readout->formation_options : QVariantMap{};
 }
 
 void PlacementViewModel::reset_formation_options() {
+  const auto frame_lock = m_host.lock_frame();
   auto* commands = m_context.commands;
   if (commands != nullptr) {
     commands->formation().reset_formation_options();
@@ -175,6 +261,7 @@ void PlacementViewModel::reset_formation_options() {
 }
 
 void PlacementViewModel::set_formation_frontage_preset(const QString& preset) {
+  const auto frame_lock = m_host.lock_frame();
   auto* commands = m_context.commands;
   if (commands != nullptr) {
     commands->formation().set_formation_frontage_preset(preset);
@@ -183,6 +270,7 @@ void PlacementViewModel::set_formation_frontage_preset(const QString& preset) {
 }
 
 void PlacementViewModel::set_formation_depth_preset(const QString& preset) {
+  const auto frame_lock = m_host.lock_frame();
   auto* commands = m_context.commands;
   if (commands != nullptr) {
     commands->formation().set_formation_depth_preset(preset);
@@ -191,6 +279,7 @@ void PlacementViewModel::set_formation_depth_preset(const QString& preset) {
 }
 
 void PlacementViewModel::set_formation_spacing_preset(const QString& preset) {
+  const auto frame_lock = m_host.lock_frame();
   auto* commands = m_context.commands;
   if (commands != nullptr) {
     commands->formation().set_formation_spacing_preset(preset);
@@ -199,6 +288,7 @@ void PlacementViewModel::set_formation_spacing_preset(const QString& preset) {
 }
 
 void PlacementViewModel::set_formation_flank_preference(const QString& preference) {
+  const auto frame_lock = m_host.lock_frame();
   auto* commands = m_context.commands;
   if (commands != nullptr) {
     commands->formation().set_formation_flank_preference(preference);
@@ -207,6 +297,7 @@ void PlacementViewModel::set_formation_flank_preference(const QString& preferenc
 }
 
 void PlacementViewModel::set_formation_ranged_placement(const QString& placement) {
+  const auto frame_lock = m_host.lock_frame();
   auto* commands = m_context.commands;
   if (commands != nullptr) {
     commands->formation().set_formation_ranged_placement(placement);
@@ -215,6 +306,7 @@ void PlacementViewModel::set_formation_ranged_placement(const QString& placement
 }
 
 void PlacementViewModel::set_formation_reserve_rows(int rows) {
+  const auto frame_lock = m_host.lock_frame();
   auto* commands = m_context.commands;
   if (commands != nullptr) {
     commands->formation().set_formation_reserve_rows(rows);
@@ -223,6 +315,7 @@ void PlacementViewModel::set_formation_reserve_rows(int rows) {
 }
 
 void PlacementViewModel::set_formation_movement_policy(const QString& policy) {
+  const auto frame_lock = m_host.lock_frame();
   auto* commands = m_context.commands;
   if (commands != nullptr) {
     commands->formation().set_formation_movement_policy(policy);
@@ -231,6 +324,7 @@ void PlacementViewModel::set_formation_movement_policy(const QString& policy) {
 }
 
 void PlacementViewModel::set_formation_mixed_policy(const QString& policy) {
+  const auto frame_lock = m_host.lock_frame();
   auto* commands = m_context.commands;
   if (commands != nullptr) {
     commands->formation().set_formation_mixed_policy(policy);
@@ -239,6 +333,7 @@ void PlacementViewModel::set_formation_mixed_policy(const QString& policy) {
 }
 
 void PlacementViewModel::set_formation_doctrine_override(const QString& doctrine) {
+  const auto frame_lock = m_host.lock_frame();
   auto* commands = m_context.commands;
   if (commands != nullptr) {
     commands->formation().set_formation_doctrine_override(doctrine);
@@ -247,6 +342,7 @@ void PlacementViewModel::set_formation_doctrine_override(const QString& doctrine
 }
 
 void PlacementViewModel::set_formation_preserve_order(bool preserve) {
+  const auto frame_lock = m_host.lock_frame();
   auto* commands = m_context.commands;
   if (commands != nullptr) {
     commands->formation().set_formation_preserve_order(preserve);
@@ -255,6 +351,7 @@ void PlacementViewModel::set_formation_preserve_order(bool preserve) {
 }
 
 void PlacementViewModel::adjust_formation_depth(float wheel_delta) {
+  const auto frame_lock = m_host.lock_frame();
   auto* commands = m_context.commands;
   if (commands != nullptr) {
     commands->formation().adjust_formation_depth(wheel_delta);
@@ -263,45 +360,43 @@ void PlacementViewModel::adjust_formation_depth(float wheel_delta) {
 }
 
 auto PlacementViewModel::is_placing_construction() const -> bool {
-  auto* production = m_context.production;
-  return production != nullptr && production->is_placing_construction();
+  const auto readout = m_readout.read();
+  return readout ? readout->placing_construction : false;
 }
 
 auto PlacementViewModel::pending_builder_construction_type() const -> QString {
-  auto* production = m_context.production;
-  return production != nullptr ? production->pending_builder_construction_type()
-                               : QString();
+  const auto readout = m_readout.read();
+  return readout ? readout->pending_builder_construction_type : QString{};
 }
 
 auto PlacementViewModel::construction_preview_active() const -> bool {
-  auto* production = m_context.production;
-  return production != nullptr && production->construction_preview_active();
+  const auto readout = m_readout.read();
+  return readout ? readout->construction_preview_active : false;
 }
 
 auto PlacementViewModel::construction_preview_valid() const -> bool {
-  auto* production = m_context.production;
-  return production != nullptr && production->construction_preview_valid();
+  const auto readout = m_readout.read();
+  return readout ? readout->construction_preview_valid : false;
 }
 
 auto PlacementViewModel::construction_preview_rotatable() const -> bool {
-  auto* production = m_context.production;
-  return production != nullptr && production->construction_preview_rotatable();
+  const auto readout = m_readout.read();
+  return readout ? readout->construction_preview_rotatable : false;
 }
 
 auto PlacementViewModel::construction_preview_segment_count() const -> int {
-  auto* production = m_context.production;
-  return production != nullptr ? production->construction_preview_segment_count() : 0;
+  const auto readout = m_readout.read();
+  return readout ? readout->construction_preview_segment_count : 0;
 }
 
 auto PlacementViewModel::construction_preview_valid_segment_count() const -> int {
-  auto* production = m_context.production;
-  return production != nullptr ? production->construction_preview_valid_segment_count()
-                               : 0;
+  const auto readout = m_readout.read();
+  return readout ? readout->construction_preview_valid_segment_count : 0;
 }
 
 auto PlacementViewModel::construction_preview_total_cost() const -> int {
-  auto* production = m_context.production;
-  return production != nullptr ? production->construction_preview_total_cost() : 0;
+  const auto readout = m_readout.read();
+  return readout ? readout->construction_preview_total_cost : 0;
 }
 
 void PlacementViewModel::on_construction_mouse_move(qreal sx, qreal sy) {
@@ -362,6 +457,7 @@ void PlacementViewModel::on_construction_confirm() {
 }
 
 void PlacementViewModel::on_construction_cancel() {
+  const auto frame_lock = m_host.lock_frame();
   auto* production = m_context.production;
   if (production != nullptr) {
     production->on_construction_cancel();
@@ -372,6 +468,7 @@ void PlacementViewModel::on_construction_cancel() {
 }
 
 void PlacementViewModel::start_builder_construction(const QString& item_type) {
+  const auto frame_lock = m_host.lock_frame();
   auto* production = m_context.production;
   if (production == nullptr) {
     return;
@@ -410,6 +507,7 @@ void PlacementViewModel::place_building_at_screen(qreal sx, qreal sy) {
 }
 
 void PlacementViewModel::cancel_building_placement() {
+  const auto frame_lock = m_host.lock_frame();
   auto* production = m_context.production;
   if (production != nullptr) {
     production->cancel_building_placement();
@@ -418,8 +516,8 @@ void PlacementViewModel::cancel_building_placement() {
 }
 
 auto PlacementViewModel::pending_building_type() const -> QString {
-  auto* production = m_context.production;
-  return production != nullptr ? production->pending_building_type() : QString();
+  const auto readout = m_readout.read();
+  return readout ? readout->pending_building_type : QString{};
 }
 
 } // namespace App::ViewModels

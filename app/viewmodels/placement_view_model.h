@@ -7,6 +7,8 @@
 #include <QVariantList>
 #include <QVariantMap>
 
+#include "app/core/frame_snapshot.h"
+
 namespace App::Core {
 struct ClientContext;
 class ClientHost;
@@ -50,6 +52,9 @@ public:
                      QObject* parent = nullptr);
 
   Q_INVOKABLE void on_formation_command();
+  // Called by the engine once per frame while it holds the frame lock.
+  void publish_frame();
+
   Q_INVOKABLE [[nodiscard]] bool any_selected_in_formation_mode() const;
   Q_INVOKABLE [[nodiscard]] bool is_placing_formation() const;
   Q_INVOKABLE void on_formation_mouse_move(qreal sx, qreal sy);
@@ -117,6 +122,8 @@ signals:
   void construction_preview_summary_changed();
 
 private:
+  App::Core::Published<App::Core::PlacementReadout> m_readout;
+
   const App::Core::ClientContext& m_context;
   App::Core::ClientHost& m_host;
 };

@@ -3,6 +3,7 @@
 #include <QVariantMap>
 
 #include <algorithm>
+#include <mutex>
 
 namespace App::Core {
 
@@ -24,6 +25,7 @@ auto CombatFeedbackStore::priority(const CombatHitFeedback& hit) -> float {
 }
 
 void CombatFeedbackStore::push(CombatHitFeedback hit) {
+  const std::lock_guard<std::mutex> guard(m_mutex);
   hit.age = 0.0F;
   hit.hits = std::max(1, hit.hits);
 
@@ -66,12 +68,14 @@ void CombatFeedbackStore::update(float dt) {
   if (dt <= 0.0F) {
     return;
   }
+  const std::lock_guard<std::mutex> guard(m_mutex);
   for (auto& hit : m_pending) {
     hit.age += dt;
   }
 }
 
 auto CombatFeedbackStore::pop_ready() -> std::vector<CombatHitFeedback> {
+  const std::lock_guard<std::mutex> guard(m_mutex);
   std::vector<CombatHitFeedback> ready;
   std::vector<CombatHitFeedback> keep;
   keep.reserve(m_pending.size());
@@ -87,6 +91,16 @@ auto CombatFeedbackStore::pop_ready() -> std::vector<CombatHitFeedback> {
     return priority(a) > priority(b);
   });
   return ready;
+}
+
+auto CombatFeedbackStore::pending() const -> std::vector<CombatHitFeedback> {
+  const std::lock_guard<std::mutex> guard(m_mutex);
+  return m_pending;
+}
+
+void CombatFeedbackStore::clear() {
+  const std::lock_guard<std::mutex> guard(m_mutex);
+  m_pending.clear();
 }
 
 auto CombatFeedbackStore::to_variant(const std::vector<CombatHitFeedback>& hits)

@@ -8,6 +8,7 @@
 #include <cstdint>
 #include <deque>
 #include <functional>
+#include <mutex>
 #include <vector>
 
 #include "game/core/entity_id.h"
@@ -45,6 +46,10 @@ struct PlayerFeedbackEvent {
   std::uint64_t sequence = 0;
 };
 
+// Published from the simulation thread and drained by a QML timer on the GUI
+// thread, so the bus owns its own lock rather than borrowing the frame lock.
+// Listeners run outside the lock: they are engine callbacks that reach back into
+// game state, and holding a queue lock across them would invert the lock order.
 class PlayerFeedbackBus {
 public:
   using Listener = std::function<void(const PlayerFeedbackEvent&)>;
@@ -58,8 +63,8 @@ public:
   void publish(PlayerFeedbackEvent event);
 
   [[nodiscard]] auto drain() -> std::vector<PlayerFeedbackEvent>;
-  [[nodiscard]] auto pending() const -> std::size_t { return m_pending.size(); }
-  [[nodiscard]] auto dropped() const -> std::uint64_t { return m_dropped; }
+  [[nodiscard]] auto pending() const -> std::size_t;
+  [[nodiscard]] auto dropped() const -> std::uint64_t;
 
   void clear();
 
@@ -69,6 +74,7 @@ private:
     Listener listener;
   };
 
+  mutable std::mutex m_mutex;
   std::vector<Subscription> m_listeners;
   std::deque<PlayerFeedbackEvent> m_pending;
   ListenerId m_next_listener_id = 1;
