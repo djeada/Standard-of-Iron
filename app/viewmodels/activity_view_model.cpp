@@ -186,8 +186,7 @@ auto ActivityViewModel::pop_player_feedback_events() -> QVariantList {
   if (m_context.feedback == nullptr) {
     return out;
   }
-  // PlayerFeedbackBus carries its own lock; the GUI thread must not wait on
-  // frame work just to drain a queue.
+
   const auto events = m_context.feedback->drain();
   out.reserve(static_cast<qsizetype>(events.size()));
   for (const auto& event : events) {
@@ -197,7 +196,7 @@ auto ActivityViewModel::pop_player_feedback_events() -> QVariantList {
 }
 
 auto ActivityViewModel::pop_combat_damage_events() -> QVariantList {
-  // CombatFeedbackStore carries its own lock (see combat_feedback.h).
+
   return App::Core::CombatFeedbackStore::to_variant(m_feedback.pop_ready());
 }
 

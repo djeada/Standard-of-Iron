@@ -598,6 +598,9 @@ TEST(CommanderControlRegressionTest, FpvCombatUsesSharedCombatRulesHelper) {
       read_text(root / "game" / "systems" / "combat_system" / "attack_processor.cpp");
   const auto movement_system =
       read_text(root / "game" / "systems" / "movement_system.cpp");
+
+  const auto route_follow_system =
+      read_text(root / "game" / "systems" / "route_follow_system.cpp");
   const auto movement_orders =
       read_text(root / "game" / "systems" / "movement_orders.cpp");
   const auto command_service =
@@ -618,6 +621,7 @@ TEST(CommanderControlRegressionTest, FpvCombatUsesSharedCombatRulesHelper) {
   ASSERT_FALSE(combat_rules.empty());
   ASSERT_FALSE(attack_processor.empty());
   ASSERT_FALSE(movement_system.empty());
+  ASSERT_FALSE(route_follow_system.empty());
   ASSERT_FALSE(movement_orders.empty());
   ASSERT_FALSE(command_service.empty());
   ASSERT_FALSE(scene_walk.empty());
@@ -639,7 +643,8 @@ TEST(CommanderControlRegressionTest, FpvCombatUsesSharedCombatRulesHelper) {
       contains(attack_processor, "CombatRules::clear_rts_melee_lock(attacker);"));
   EXPECT_FALSE(
       contains(attack_processor, "CombatRules::clear_rts_melee_lock(target);"));
-  EXPECT_TRUE(contains(movement_system, "CombatRules::participates_in_rts_melee_lock"));
+  EXPECT_TRUE(
+      contains(route_follow_system, "CombatRules::participates_in_rts_melee_lock"));
   EXPECT_TRUE(contains(movement_orders, "CombatRules::participates_in_rts_melee_lock"));
 
   EXPECT_FALSE(contains(scene_walk, "CombatRules::participates_in_rts_melee_lock"));

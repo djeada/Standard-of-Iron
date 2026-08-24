@@ -46,9 +46,11 @@ auto commander_entry(const Game::Units::CommanderDefinition& definition,
 } // namespace
 
 MatchSetupViewModel::MatchSetupViewModel(const App::Core::ClientContext& context,
+                                         App::Core::ClientHost& host,
                                          QObject* parent)
     : QObject(parent)
-    , m_context(context) {
+    , m_context(context)
+    , m_host(host) {
 }
 
 void MatchSetupViewModel::start_loading_maps() {
@@ -74,8 +76,8 @@ void MatchSetupViewModel::set_maps_loading(bool loading) {
 }
 
 auto MatchSetupViewModel::nations() const -> QVariantList {
-  // frame-lock-exempt: NationRegistry is only written by the match loaders, and
-  // this screen runs before a match owns the simulation and render threads.
+  const auto frame_lock = m_host.lock_frame();
+
   if (m_context.session == nullptr) {
     return {};
   }
@@ -111,7 +113,8 @@ auto MatchSetupViewModel::nations() const -> QVariantList {
 
 auto MatchSetupViewModel::commanders_for_nation(const QString& nation_id) const
     -> QVariantList {
-  // frame-lock-exempt: reads the same setup-only NationRegistry as nations().
+  const auto frame_lock = m_host.lock_frame();
+
   if (m_context.session == nullptr) {
     return {};
   }

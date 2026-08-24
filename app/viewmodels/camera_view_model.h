@@ -37,7 +37,6 @@ public:
 
   Q_INVOKABLE [[nodiscard]] QVariantMap project_world(float x, float y, float z) const;
 
-  // Called by the engine once per frame while it holds the frame lock.
   void publish_frame();
 
   [[nodiscard]] auto distance() const -> float;

@@ -138,7 +138,8 @@ struct AssignedLine {
 
 auto assign_lines(const DoctrineIntentTemplate& tmpl,
                   const std::vector<ArmyFormationMember>& members,
-                  bool preserve_order) -> std::vector<AssignedLine> {
+                  bool preserve_order,
+                  float facing) -> std::vector<AssignedLine> {
   std::vector<AssignedLine> lines;
   lines.reserve(tmpl.lines.size());
   for (const auto& rule : tmpl.lines) {
@@ -159,19 +160,25 @@ auto assign_lines(const DoctrineIntentTemplate& tmpl,
     }
   }
 
+  float const yaw = facing * k_deg_to_rad;
+  QVector3D const lateral_axis(std::cos(yaw), 0.0F, -std::sin(yaw));
   for (auto& line : lines) {
     if (preserve_order) {
       continue;
     }
     std::stable_sort(line.members.begin(),
                      line.members.end(),
-                     [](const ArmyFormationMember* a, const ArmyFormationMember* b) {
+                     [&](const ArmyFormationMember* a, const ArmyFormationMember* b) {
                        if (a->troop_type != b->troop_type) {
                          return static_cast<int>(a->troop_type) <
                                 static_cast<int>(b->troop_type);
                        }
-                       if (a->current_position.x() != b->current_position.x()) {
-                         return a->current_position.x() < b->current_position.x();
+                       float const a_lateral =
+                           QVector3D::dotProduct(a->current_position, lateral_axis);
+                       float const b_lateral =
+                           QVector3D::dotProduct(b->current_position, lateral_axis);
+                       if (a_lateral != b_lateral) {
+                         return a_lateral < b_lateral;
                        }
                        return a->entity_id < b->entity_id;
                      });
@@ -730,14 +737,15 @@ auto ArmyFormationPlanner::plan_local_slots(
     const DoctrineIntentTemplate& tmpl,
     const ArmyFormationOptions& options,
     float spacing,
-    float requested_frontage) -> std::vector<FormationSlot> {
+    float requested_frontage,
+    float facing) -> std::vector<FormationSlot> {
   std::vector<FormationSlot> slot_list;
   if (members.empty()) {
     return slot_list;
   }
   slot_list.reserve(members.size());
 
-  auto lines = assign_lines(tmpl, members, options.preserve_member_order);
+  auto lines = assign_lines(tmpl, members, options.preserve_member_order, facing);
 
   Bounds all_bounds;
   Bounds body_bounds;
@@ -918,8 +926,8 @@ auto ArmyFormationPlanner::build_layout(const std::vector<ArmyFormationMember>& 
                    std::clamp(request.options.spacing_scale, 0.4F, 2.5F));
   layout.spacing = spacing;
 
-  layout.slot_list =
-      plan_local_slots(members, *tmpl, request.options, spacing, request.frontage);
+  layout.slot_list = plan_local_slots(
+      members, *tmpl, request.options, spacing, request.frontage, request.facing);
   if (layout.slot_list.empty()) {
     layout.rejection_reason = "The formation template produced no slot_list.";
     return layout;

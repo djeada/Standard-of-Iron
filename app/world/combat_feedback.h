@@ -27,11 +27,6 @@ struct CombatHitFeedback {
   float age = 0.0F;
 };
 
-// Written by the simulation thread (combat events), advanced by the render
-// thread, and drained by a QML timer on the GUI thread, so the store owns its
-// own lock instead of borrowing the frame lock. The critical sections are a few
-// dozen bytes of arithmetic; the GUI thread never waits on frame work to drain
-// it, and a caller cannot get the synchronisation wrong by forgetting.
 class CombatFeedbackStore {
 public:
   struct Limits {

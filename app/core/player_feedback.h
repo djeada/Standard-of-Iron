@@ -46,10 +46,6 @@ struct PlayerFeedbackEvent {
   std::uint64_t sequence = 0;
 };
 
-// Published from the simulation thread and drained by a QML timer on the GUI
-// thread, so the bus owns its own lock rather than borrowing the frame lock.
-// Listeners run outside the lock: they are engine callbacks that reach back into
-// game state, and holding a queue lock across them would invert the lock order.
 class PlayerFeedbackBus {
 public:
   using Listener = std::function<void(const PlayerFeedbackEvent&)>;

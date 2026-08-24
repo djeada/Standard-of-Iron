@@ -24,7 +24,6 @@ public:
 
   Q_INVOKABLE [[nodiscard]] bool has_selected_type(const QString& type) const;
 
-  // Called by the engine once per frame while it holds the frame lock.
   void publish_frame();
   Q_INVOKABLE void recruit_near_selected(const QString& unit_type);
 

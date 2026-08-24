@@ -563,28 +563,10 @@ private:
   std::atomic<float> m_simulation_time_scale{0.0F};
   std::unique_ptr<QThread> m_simulation_thread;
   mutable std::recursive_mutex m_frame_mutex;
-  // Presentation is the render thread's share of the frame lock, and the
-  // simulation holds that lock for a whole 16.7 ms tick. Blocking there stalls
-  // the graphics thread behind a tick already in flight -- measured at 30-53 ms
-  // of waiting for about 1 ms of actual work. So a contended frame is skipped
-  // instead and its dt carried into the next frame that does get the lock, which
-  // keeps every dt-driven animation on the right clock.
-  //
-  // The bound is in game time, not frames, so it means the same thing at 30 fps
-  // as at 300: once this much presentation time has already been deferred, the
-  // next contended frame waits for the lock rather than skipping again, and
-  // presentation can never be starved outright. Testing what is already deferred
-  // rather than what would be means one skip is always allowed, however long a
-  // single frame ran.
+
   static constexpr float k_max_deferred_presentation_seconds = 0.1F;
   float m_deferred_presentation_dt = 0.0F;
 
-  // A simulation tick that overruns its period makes sleep_until return at once,
-  // so the simulation re-acquires the frame lock with no gap. std::recursive_mutex
-  // is not fair, and the simulation -- already running with the lock's cacheline
-  // hot -- wins that race almost every time, which starves the render thread.
-  // The render thread registers itself here before blocking, and the simulation
-  // yields between ticks while anyone is waiting, so the lock changes hands.
   static constexpr int k_frame_lock_handoff_yields = 64;
   std::atomic<int> m_frame_lock_waiters{0};
 

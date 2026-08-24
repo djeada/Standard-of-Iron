@@ -28,9 +28,6 @@ void PlacementViewModel::on_formation_command() {
   handler->on_formation_command();
 }
 
-// Rebuilds the placement layer's read-only state once per frame. QML checks
-// is_placing_formation and is_placing_construction on every mouse move, so these
-// must not each take the frame lock.
 void PlacementViewModel::publish_frame() {
   App::Core::PlacementReadout readout;
   readout.any_selected_in_formation_mode = [this]() -> bool {

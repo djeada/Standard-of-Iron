@@ -452,8 +452,6 @@ auto OrdersViewModel::action_states() const -> QVariantMap {
   return App::Core::get_action_states(action_context(m_context));
 }
 
-// The command bar refreshes its mode from a 100 ms timer; publishing it with
-// the frame keeps that timer off the frame lock.
 void OrdersViewModel::publish_frame() {
   m_readout.publish(
       {.command_mode = App::Core::get_current_action_mode(action_context(m_context))});

@@ -99,7 +99,8 @@ TEST_F(FormationCohesionTest, UnitsStandingInTheirSlotsReadAsFormed) {
   ASSERT_NE(formation, nullptr);
 
   stand_in_slots(*formation);
-  ArmyFormationRuntime::refresh_cohesion(m_world, *formation);
+  formation->has_destination = false;
+  ArmyFormationRuntime::refresh_shape_state(m_world, *formation);
 
   EXPECT_FLOAT_EQ(formation->cohesion, 1.0F);
   EXPECT_EQ(formation->phase, FormationPhase::Formed);
@@ -118,13 +119,13 @@ TEST_F(FormationCohesionTest, AScatteredGroupReadsAsDisrupted) {
     transform->position.x = 20.0F;
     transform->position.z = 20.0F;
   }
-  ArmyFormationRuntime::refresh_cohesion(m_world, *formation);
+  ArmyFormationRuntime::refresh_shape_state(m_world, *formation);
 
   EXPECT_FLOAT_EQ(formation->cohesion, 0.0F);
   EXPECT_EQ(formation->phase, FormationPhase::Disrupted);
 }
 
-TEST_F(FormationCohesionTest, APartlyArrivedGroupIsStillFormingUp) {
+TEST_F(FormationCohesionTest, APartlyArrivedGroupIsStillReforming) {
   auto const ids = build_army(16);
   auto* formation = commit_group(ids);
   ASSERT_NE(formation, nullptr);
@@ -141,11 +142,46 @@ TEST_F(FormationCohesionTest, APartlyArrivedGroupIsStillFormingUp) {
     transform->position.z = 20.0F;
     ++moved_away;
   }
-  ArmyFormationRuntime::refresh_cohesion(m_world, *formation);
+  ArmyFormationRuntime::refresh_shape_state(m_world, *formation);
 
   EXPECT_GT(formation->cohesion, 0.45F);
   EXPECT_LT(formation->cohesion, 0.8F);
-  EXPECT_EQ(formation->phase, FormationPhase::Forming);
+  EXPECT_EQ(formation->phase, FormationPhase::Reforming);
+}
+
+TEST_F(FormationCohesionTest, LifecycleComesFromCorridorProgressAndMemberSlots) {
+  auto const ids = build_army(16);
+  auto* formation = commit_group(ids);
+  ASSERT_NE(formation, nullptr);
+  stand_in_slots(*formation);
+
+  formation->has_destination = true;
+  formation->move_plan.corridor = {QVector3D(140.0F, 0.0F, 140.0F)};
+  formation->move_plan.corridor_index = 0;
+  formation->move_plan.active = true;
+  formation->advance_progress = 0.0F;
+  ArmyFormationRuntime::refresh_shape_state(m_world, *formation);
+  EXPECT_EQ(formation->phase, FormationPhase::Opening);
+
+  formation->advance_progress = formation->spacing * 2.0F;
+  ArmyFormationRuntime::refresh_shape_state(m_world, *formation);
+  EXPECT_EQ(formation->phase, FormationPhase::Traversing);
+
+  formation->move_plan.clear();
+  auto* lagging = m_world.get_entity(ids.front());
+  ASSERT_NE(lagging, nullptr);
+  auto* lagging_transform = lagging->get_component<Engine::Core::TransformComponent>();
+  ASSERT_NE(lagging_transform, nullptr);
+  lagging_transform->position.x += formation->spacing * 3.0F;
+  ArmyFormationRuntime::refresh_shape_state(m_world, *formation);
+  EXPECT_EQ(formation->phase, FormationPhase::Reforming);
+  EXPECT_TRUE(formation->has_destination);
+
+  stand_in_slots(*formation);
+  ArmyFormationRuntime::refresh_shape_state(m_world, *formation);
+  EXPECT_EQ(formation->phase, FormationPhase::Arrived);
+  EXPECT_FALSE(formation->has_destination);
+  EXPECT_TRUE(formation->is_formed());
 }
 
 TEST_F(FormationCohesionTest, PhaseDrivesTheDamageTakenMultiplier) {
@@ -153,7 +189,7 @@ TEST_F(FormationCohesionTest, PhaseDrivesTheDamageTakenMultiplier) {
   auto* formation = commit_group(ids);
   ASSERT_NE(formation, nullptr);
   stand_in_slots(*formation);
-  ArmyFormationRuntime::refresh_cohesion(m_world, *formation);
+  ArmyFormationRuntime::refresh_shape_state(m_world, *formation);
 
   auto* member = m_world.get_entity(ids.front());
   ASSERT_NE(member, nullptr);
@@ -165,7 +201,7 @@ TEST_F(FormationCohesionTest, PhaseDrivesTheDamageTakenMultiplier) {
   float const disrupted = ArmyFormationRuntime::damage_taken_multiplier(*member);
   EXPECT_GT(disrupted, 1.0F) << "a disrupted line should take extra damage";
 
-  formation->phase = FormationPhase::Forming;
+  formation->phase = FormationPhase::Reforming;
   EXPECT_FLOAT_EQ(ArmyFormationRuntime::damage_taken_multiplier(*member), 1.0F);
 }
 
@@ -203,6 +239,7 @@ TEST_F(FormationCohesionTest, TheRuntimeTickMeasuresCohesionWithoutBeingAsked) {
   stand_in_slots(*formation);
 
   auto const group_id = formation->id;
+  formation->has_destination = false;
   ArmyFormationRegistry::instance().find(group_id)->cohesion = 0.0F;
   ArmyFormationRegistry::instance().find(group_id)->phase = FormationPhase::Disrupted;
 
@@ -220,7 +257,8 @@ TEST_F(FormationCohesionTest, FormingUpActuallyChangesDamageTakenInCombat) {
   auto* formation = commit_group(ids);
   ASSERT_NE(formation, nullptr);
   stand_in_slots(*formation);
-  ArmyFormationRuntime::refresh_cohesion(m_world, *formation);
+  formation->has_destination = false;
+  ArmyFormationRuntime::refresh_shape_state(m_world, *formation);
   ASSERT_EQ(formation->phase, FormationPhase::Formed);
 
   constexpr int k_raw_damage = 40;
@@ -255,7 +293,7 @@ TEST_F(FormationCohesionTest, CohesionSurvivesASaveAndLoad) {
   auto* formation = commit_group(ids);
   ASSERT_NE(formation, nullptr);
   stand_in_slots(*formation);
-  ArmyFormationRuntime::refresh_cohesion(m_world, *formation);
+  ArmyFormationRuntime::refresh_shape_state(m_world, *formation);
 
   auto const group_id = formation->id;
   auto const saved_cohesion = formation->cohesion;

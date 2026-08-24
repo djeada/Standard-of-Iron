@@ -45,6 +45,11 @@ TEST_F(LocalAvoidanceTest, LargeGroupProducesSteeringWithoutTeleportingUnits) {
     MovementTestAccess::set_target_y(*movement, 5.0F);
     MovementTestAccess::set_vx(*movement, 1.0F);
     MovementTestAccess::set_vz(*movement, 0.0F);
+
+    auto* facts = entity->add_component<MovementFactsComponent>();
+    facts->desired.valid = true;
+    facts->desired.velocity_x = 1.0F;
+    facts->desired.velocity_z = 0.0F;
     units.push_back(entity);
   }
 
@@ -64,11 +69,26 @@ TEST_F(LocalAvoidanceTest, LargeGroupProducesSteeringWithoutTeleportingUnits) {
     EXPECT_FLOAT_EQ(transform->position.x, original_positions[i].first);
     EXPECT_FLOAT_EQ(transform->position.z, original_positions[i].second);
   }
+
   EXPECT_TRUE(std::any_of(units.begin(), units.end(), [](const Entity* entity) {
-    const auto* movement = entity->get_component<MovementComponent>();
-    return movement != nullptr && (std::abs(movement->get_vx() - 1.0F) > 0.001F ||
-                                   std::abs(movement->get_vz()) > 0.001F);
+    const auto* facts = entity->get_component<MovementFactsComponent>();
+    return facts != nullptr && facts->steering.valid &&
+           (std::abs(facts->steering.separation_x) > 0.001F ||
+            std::abs(facts->steering.separation_z) > 0.001F);
   }));
+  for (const auto* entity : units) {
+    const auto* facts = entity->get_component<MovementFactsComponent>();
+    ASSERT_NE(facts, nullptr);
+    EXPECT_LE(std::hypot(facts->steering.separation_x, facts->steering.separation_z),
+              Game::Systems::LocalAvoidanceSystem::k_overlap_correction_speed +
+                  1.0e-3F);
+  }
+  for (const auto* entity : units) {
+    const auto* movement = entity->get_component<MovementComponent>();
+    ASSERT_NE(movement, nullptr);
+    EXPECT_FLOAT_EQ(movement->get_vx(), 1.0F);
+    EXPECT_FLOAT_EQ(movement->get_vz(), 0.0F);
+  }
   EXPECT_GT(system.diagnostics().overlaps_detected, 0U);
   EXPECT_GT(system.diagnostics().average_neighbors_checked, 200U);
 }

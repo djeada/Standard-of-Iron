@@ -52,7 +52,7 @@ public:
                      QObject* parent = nullptr);
 
   Q_INVOKABLE void on_formation_command();
-  // Called by the engine once per frame while it holds the frame lock.
+
   void publish_frame();
 
   Q_INVOKABLE [[nodiscard]] bool any_selected_in_formation_mode() const;

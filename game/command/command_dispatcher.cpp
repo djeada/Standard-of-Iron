@@ -1,6 +1,7 @@
 #include "command_dispatcher.h"
 
 #include <algorithm>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -45,27 +46,14 @@ void for_each_subject(World& world, const std::vector<EntityID>& units, Fn&& fn)
 }
 
 void apply_move(World& world, const Move& move) {
-
-  for (std::size_t i = 0; i < move.units.size() && i < move.facing_angles.size(); ++i) {
-    auto* entity = world.get_entity(move.units[i]);
-    if (entity == nullptr) {
-      continue;
-    }
-    const auto* formation_mode =
-        entity->get_component<Engine::Core::FormationModeComponent>();
-    if (formation_mode == nullptr || !formation_mode->active) {
-      continue;
-    }
-    if (auto* transform = entity->get_component<Engine::Core::TransformComponent>()) {
-      transform->desired_yaw = move.facing_angles[i];
-      transform->has_desired_yaw = true;
-    }
-  }
-
   std::vector<Game::Systems::CommandService::MoveIntent> intents;
   intents.reserve(move.units.size());
   for (std::size_t i = 0; i < move.units.size(); ++i) {
-    intents.push_back({.unit_id = move.units[i], .target = move.targets[i]});
+    intents.push_back({.unit_id = move.units[i],
+                       .target = move.targets[i],
+                       .facing_angle = i < move.facing_angles.size()
+                                           ? std::optional<float>(move.facing_angles[i])
+                                           : std::nullopt});
   }
 
   Game::Systems::CommandService::MoveOptions options;
@@ -297,7 +285,7 @@ void apply_commander_ability(World& world, const UseCommanderAbility& order) {
     const std::vector<EntityID> subject{order.commander};
     auto const plan =
         Game::Systems::CommandService::plan_ground_move(world, subject, order.target);
-    if (plan.positions.empty()) {
+    if (!plan.fully_placeable_for(subject)) {
       return;
     }
     commander->begin_flag_rally(

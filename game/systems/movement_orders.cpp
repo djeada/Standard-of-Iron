@@ -17,6 +17,7 @@
 #include "nav_grid.h"
 #include "order_service.h"
 #include "pathfinding.h"
+#include "route_corridor_planner.h"
 
 namespace Game::Systems {
 
@@ -246,6 +247,8 @@ auto prepare_move(Engine::Core::World& world,
   movement->set_navigation_clearance(
       FormationCombat::formation_navigation_clearance(*entity));
 
+  movement->begin_order();
+
   PreparedMove result;
   result.entity = entity;
   result.transform = transform;
@@ -259,8 +262,22 @@ auto prepare_move(Engine::Core::World& world,
 
 } // namespace
 
+namespace {
+
+void stamp_route_revision(Engine::Core::MovementComponent& movement) {
+  auto const* pathfinder = NavGrid::get_pathfinder();
+  movement.begin_route(pathfinder != nullptr ? pathfinder->navigation_revision() : 0U);
+}
+
+} // namespace
+
 void MovementSystem::assign_direct_target(Engine::Core::MovementComponent& movement,
                                           const QVector3D& target) {
+  stamp_route_revision(movement);
+  if (movement.route_id == 0U) {
+    movement.route_id =
+        RouteCorridorPlanner::identity({target}, movement.get_topology_revision());
+  }
   movement.clear_path();
   movement.target_x = target.x();
   movement.target_y = target.z();
@@ -277,19 +294,59 @@ auto MovementSystem::assign_path_to_movement(
     const Engine::Core::TransformComponent& transform,
     Engine::Core::MovementComponent& movement,
     bool include_first_waypoint) -> bool {
-  constexpr float skip_threshold_sq = CommandService::WAYPOINT_SKIP_THRESHOLD_SQ;
   if (path_points.size() <= 1) {
     return false;
   }
 
-  movement.clear_path();
   std::size_t const first_waypoint_index = include_first_waypoint ? 0U : 1U;
-  movement.path.reserve(path_points.size() - first_waypoint_index);
+  std::vector<QVector3D> waypoints;
+  waypoints.reserve(path_points.size() - first_waypoint_index);
   for (std::size_t idx = first_waypoint_index; idx < path_points.size(); ++idx) {
     QVector3D const raw_waypoint =
         pathfinder.path_waypoint_world_position(path_points[idx]);
     QVector3D const waypoint =
         align_portal_waypoint(raw_waypoint, idx + 1U == path_points.size());
+    if (!waypoints.empty()) {
+      QVector3D const delta = waypoint - waypoints.back();
+      float const dx = delta.x();
+      float const dz = delta.z();
+      if (dx * dx + dz * dz <= 1.0e-6F) {
+        continue;
+      }
+    }
+    waypoints.push_back(waypoint);
+  }
+
+  QVector3D const resolved_goal =
+      pathfinder.path_waypoint_world_position(path_points.back());
+  return assign_waypoints_to_movement(
+      pathfinder, waypoints, resolved_goal, transform, movement);
+}
+
+auto MovementSystem::assign_waypoints_to_movement(
+    Pathfinding& pathfinder,
+    const std::vector<QVector3D>& waypoints,
+    const QVector3D& resolved_goal,
+    const Engine::Core::TransformComponent& transform,
+    Engine::Core::MovementComponent& movement) -> bool {
+  constexpr float skip_threshold_sq = CommandService::WAYPOINT_SKIP_THRESHOLD_SQ;
+  if (waypoints.empty()) {
+    return false;
+  }
+
+  stamp_route_revision(movement);
+  if (movement.route_id == 0U) {
+    movement.route_id =
+        RouteCorridorPlanner::identity(waypoints, movement.get_topology_revision());
+  }
+  movement.clear_path();
+  movement.route_lane_min_scale = 1.0F;
+  movement.route_opening_waypoint_index = 0U;
+  movement.route_reform_waypoint_index = 0U;
+  movement.path.reserve(waypoints.size());
+  for (std::size_t index = 0; index < waypoints.size(); ++index) {
+    QVector3D const waypoint =
+        align_portal_waypoint(waypoints[index], index + 1U == waypoints.size());
     if (!movement.path.empty()) {
       auto const& previous = movement.path.back();
       float const dx = waypoint.x() - previous.first;
@@ -323,12 +380,13 @@ auto MovementSystem::assign_path_to_movement(
   }
 
   const auto& wp = movement.current_waypoint();
-  QVector3D const resolved_goal =
-      pathfinder.path_waypoint_world_position(path_points.back());
   movement.target_x = wp.first;
   movement.target_y = wp.second;
   movement.goal_x = resolved_goal.x();
   movement.goal_y = resolved_goal.z();
+  movement.requested_goal_x = resolved_goal.x();
+  movement.requested_goal_z = resolved_goal.z();
+  movement.has_requested_goal = true;
   movement.has_target = true;
   movement.vx = 0.0F;
   movement.vz = 0.0F;
@@ -385,18 +443,26 @@ void MovementSystem::assign_navigation_target(
     return;
   }
 
-  auto const path = pathfinder->find_path(
-      start, end, passability_for(movement), movement.get_navigation_clearance());
-  bool const include_first_waypoint = should_include_resolved_start_waypoint(start) ||
-                                      (!path.empty() && path.front() != start);
-  if (!assign_path_to_movement(
-          *pathfinder, path, transform, movement, include_first_waypoint)) {
-    QVector3D const fallback =
-        path.empty() ? resolve_walkable_direct_target(requested_target,
-                                                      passability_for(movement))
-                     : pathfinder->path_waypoint_world_position(path.back());
+  auto const corridor = RouteCorridorPlanner::plan(*pathfinder,
+                                                   current_pos,
+                                                   requested_target,
+                                                   passability_for(movement),
+                                                   movement.get_navigation_clearance());
+  if (!corridor.reachable() || !assign_waypoints_to_movement(*pathfinder,
+                                                             corridor.centerline,
+                                                             corridor.centerline.back(),
+                                                             transform,
+                                                             movement)) {
+    QVector3D const fallback = corridor.centerline.empty()
+                                   ? resolve_walkable_direct_target(
+                                         requested_target, passability_for(movement))
+                                   : corridor.centerline.back();
     assign_direct_target(movement, fallback);
   }
+
+  movement.requested_goal_x = requested_target.x();
+  movement.requested_goal_z = requested_target.z();
+  movement.has_requested_goal = true;
 }
 
 auto MovementSystem::assign_local_recovery_move(
@@ -550,6 +616,23 @@ void MovementSystem::issue_move_units(Engine::Core::World& world,
     }
   }
 
+  float declared_group_pace = std::numeric_limits<float>::max();
+  for (auto const& move : prepared) {
+    const auto* unit = move.entity != nullptr
+                           ? move.entity->get_component<Engine::Core::UnitComponent>()
+                           : nullptr;
+    if (move.movement != nullptr && unit != nullptr && unit->speed > 0.0F) {
+      declared_group_pace = std::min(declared_group_pace, unit->speed);
+    }
+  }
+  if (std::isfinite(declared_group_pace)) {
+    for (auto& move : prepared) {
+      if (move.movement != nullptr) {
+        move.movement->declared_group_pace = declared_group_pace;
+      }
+    }
+  }
+
   auto* pathfinder = NavGrid::get_pathfinder();
   auto const leader_it =
       std::find_if(prepared.begin(), prepared.end(), [](PreparedMove const& move) {
@@ -565,16 +648,6 @@ void MovementSystem::issue_move_units(Engine::Core::World& world,
     return;
   }
 
-  std::size_t const leader_index =
-      static_cast<std::size_t>(std::distance(prepared.begin(), leader_it));
-  QVector3D const leader_start(
-      leader_it->transform->position.x, 0.0F, leader_it->transform->position.z);
-  QVector3D const leader_target = targets[leader_index];
-  Point const leader_start_cell =
-      NavGrid::world_to_grid(leader_start.x(), leader_start.z());
-  Point const leader_target_cell =
-      NavGrid::world_to_grid(leader_target.x(), leader_target.z());
-
   auto group_passability = Pathfinding::Passability::Light;
   float group_clearance = 0.0F;
   for (auto const& move : prepared) {
@@ -587,18 +660,50 @@ void MovementSystem::issue_move_units(Engine::Core::World& world,
     }
   }
 
-  bool const leader_direct =
-      is_direct_path_walkable(
-          leader_start, leader_target, group_passability, group_clearance) &&
-      (leader_start_cell == leader_target_cell ||
-       !segment_traverses_navigation_portal(leader_start, leader_target));
-  std::vector<Point> corridor;
-  if (!leader_direct) {
-    corridor = pathfinder->find_path(
-        leader_start_cell, leader_target_cell, group_passability, group_clearance);
+  std::vector<std::size_t> canonical_members;
+  canonical_members.reserve(prepared.size());
+  for (std::size_t index = 0; index < prepared.size(); ++index) {
+    if (prepared[index].entity != nullptr && prepared[index].transform != nullptr &&
+        prepared[index].movement != nullptr) {
+      canonical_members.push_back(index);
+    }
   }
+  std::sort(canonical_members.begin(),
+            canonical_members.end(),
+            [&](std::size_t lhs, std::size_t rhs) {
+              return prepared[lhs].entity->get_id() < prepared[rhs].entity->get_id();
+            });
 
-  constexpr int k_shared_corridor_region_radius = 16;
+  QVector3D group_start;
+  QVector3D group_target;
+  for (std::size_t const index : canonical_members) {
+    group_start += QVector3D(prepared[index].transform->position.x,
+                             0.0F,
+                             prepared[index].transform->position.z);
+    group_target += targets[index];
+  }
+  float const member_count = static_cast<float>(canonical_members.size());
+  group_start /= member_count;
+  group_target /= member_count;
+  QVector3D const slot_center = group_target;
+  group_start = NavGrid::snap_to_walkable_ground(group_start, 16);
+  group_target = NavGrid::snap_to_walkable_ground(group_target, 16);
+  auto const corridor = RouteCorridorPlanner::plan(
+      *pathfinder, group_start, group_target, group_passability, group_clearance);
+
+  QVector3D final_tangent(0.0F, 0.0F, 1.0F);
+  if (corridor.reachable()) {
+    for (std::size_t index = corridor.centerline.size() - 1U; index > 0U; --index) {
+      final_tangent = corridor.centerline[index] - corridor.centerline[index - 1U];
+      final_tangent.setY(0.0F);
+      if (final_tangent.lengthSquared() > 1.0e-6F) {
+        final_tangent.normalize();
+        break;
+      }
+    }
+  }
+  QVector3D const final_right(final_tangent.z(), 0.0F, -final_tangent.x());
+
   std::size_t synchronous_fallbacks = 0;
   for (std::size_t i = 0; i < prepared.size(); ++i) {
     auto& move = prepared[i];
@@ -607,50 +712,48 @@ void MovementSystem::issue_move_units(Engine::Core::World& world,
     }
 
     bool assigned = false;
-    if (corridor.size() > 1U) {
-      Point const start = NavGrid::world_to_grid(move.transform->position.x,
-                                                 move.transform->position.z);
-      Point const target = NavGrid::world_to_grid(targets[i].x(), targets[i].z());
-      bool const same_regions =
-          std::abs(start.x - leader_start_cell.x) <= k_shared_corridor_region_radius &&
-          std::abs(start.y - leader_start_cell.y) <= k_shared_corridor_region_radius &&
-          std::abs(target.x - leader_target_cell.x) <=
-              k_shared_corridor_region_radius &&
-          std::abs(target.y - leader_target_cell.y) <= k_shared_corridor_region_radius;
-      QVector3D const corridor_exit =
-          pathfinder->path_waypoint_world_position(corridor.back());
-      std::size_t const entry_index =
-          should_include_resolved_start_waypoint(start) ? 0U : 1U;
-      QVector3D const corridor_entry =
-          pathfinder->path_waypoint_world_position(corridor[entry_index]);
+    if (corridor.reachable()) {
       QVector3D const current(
           move.transform->position.x, 0.0F, move.transform->position.z);
-      if (same_regions &&
-          pathfinder->is_world_segment_walkable(
-              current,
-              corridor_entry,
-              passability_for(*move.movement),
-              move.movement->get_navigation_clearance()) &&
-          pathfinder->is_world_segment_walkable(
-              corridor_exit,
-              targets[i],
-              passability_for(*move.movement),
-              move.movement->get_navigation_clearance())) {
-        assigned =
-            assign_path_to_movement(*pathfinder,
-                                    corridor,
-                                    *move.transform,
-                                    *move.movement,
-                                    should_include_resolved_start_waypoint(start));
+      QVector3D const target_offset = targets[i] - slot_center;
+      float const lateral_offset = QVector3D::dotProduct(target_offset, final_right);
+      auto const lane =
+          RouteCorridorPlanner::fit_lane(*pathfinder,
+                                         corridor,
+                                         current,
+                                         targets[i],
+                                         lateral_offset,
+                                         passability_for(*move.movement),
+                                         move.movement->get_navigation_clearance());
+      if (lane.valid()) {
+        assigned = assign_waypoints_to_movement(
+            *pathfinder, lane.waypoints, targets[i], *move.transform, *move.movement);
         if (assigned) {
-          QVector3D const resolved_target = resolve_walkable_direct_target(
-              targets[i], passability_for(*move.movement));
-          if (std::hypot(resolved_target.x() - corridor_exit.x(),
-                         resolved_target.z() - corridor_exit.z()) > 0.01F) {
-            move.movement->path.emplace_back(resolved_target.x(), resolved_target.z());
+          move.movement->route_id = corridor.id;
+          move.movement->route_lane_offset = lateral_offset;
+          move.movement->route_lane_min_scale = lane.minimum_lateral_scale;
+          auto nearest_waypoint = [&](const QVector3D& point) {
+            std::size_t nearest = 0U;
+            float nearest_distance_sq = std::numeric_limits<float>::max();
+            for (std::size_t waypoint = 0; waypoint < move.movement->path.size();
+                 ++waypoint) {
+              float const dx = move.movement->path[waypoint].first - point.x();
+              float const dz = move.movement->path[waypoint].second - point.z();
+              float const distance_sq = dx * dx + dz * dz;
+              if (distance_sq < nearest_distance_sq) {
+                nearest = waypoint;
+                nearest_distance_sq = distance_sq;
+              }
+            }
+            return nearest;
+          };
+          if (lane.opening_point.has_value() && lane.reform_point.has_value()) {
+            move.movement->route_opening_waypoint_index =
+                nearest_waypoint(*lane.opening_point);
+            move.movement->route_reform_waypoint_index =
+                std::max(move.movement->route_opening_waypoint_index + 1U,
+                         nearest_waypoint(*lane.reform_point));
           }
-          move.movement->goal_x = resolved_target.x();
-          move.movement->goal_y = resolved_target.z();
         }
       }
     }
@@ -677,12 +780,10 @@ void MovementSystem::issue_move_units(Engine::Core::World& world,
                      move.entity->get_id(),
                      targets[i],
                      options.kind == MoveOrderKind::AttackChase,
-                     pathfinder->navigation_revision())) {
+                     pathfinder->navigation_revision(),
+                     move.movement->get_order_sequence())) {
         move.movement->stop();
         move.movement->set_rest_position(targets[i].x(), targets[i].z());
-      } else if (corridor.size() > 1U) {
-        assigned = assign_path_to_movement(
-            *pathfinder, corridor, *move.transform, *move.movement, false);
       }
     }
     if (move.preserve_velocity && move.movement->get_has_target()) {
@@ -700,10 +801,36 @@ void MovementSystem::issue_move_units(Engine::Core::World& world,
 void MovementSystem::issue_move_units(Engine::Core::World& world,
                                       const std::vector<MoveIntent>& intents,
                                       const MoveOptions& options) {
-
+  std::vector<Engine::Core::EntityID> units;
+  std::vector<QVector3D> targets;
+  units.reserve(intents.size());
+  targets.reserve(intents.size());
   for (const auto& intent : intents) {
-    issue_move(world, intent.unit_id, intent.target, options);
+    units.push_back(intent.unit_id);
+    targets.push_back(intent.target);
+    if (!intent.facing_angle.has_value()) {
+      continue;
+    }
+    auto* entity = world.get_entity(intent.unit_id);
+    auto const* formation_mode =
+        entity != nullptr
+            ? entity->get_component<Engine::Core::FormationModeComponent>()
+            : nullptr;
+    auto* transform = entity != nullptr
+                          ? entity->get_component<Engine::Core::TransformComponent>()
+                          : nullptr;
+    if (formation_mode != nullptr && formation_mode->active && transform != nullptr) {
+      transform->desired_yaw = *intent.facing_angle;
+      transform->has_desired_yaw = true;
+    }
   }
+  if (options.kind == MoveOrderKind::AttackChase) {
+    for (const auto& intent : intents) {
+      issue_move(world, intent.unit_id, intent.target, options);
+    }
+    return;
+  }
+  issue_move_units(world, units, targets, options);
 }
 
 } // namespace Game::Systems

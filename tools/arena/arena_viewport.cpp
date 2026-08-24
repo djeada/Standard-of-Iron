@@ -5181,6 +5181,18 @@ void ArenaViewport::draw_rpg_hud(QPainter& painter) {
     case Engine::Core::MotionPresentationState::Walk:
       state_parts << QStringLiteral("WALK");
       break;
+    case Engine::Core::MotionPresentationState::Turning:
+      state_parts << QStringLiteral("TURN");
+      break;
+    case Engine::Core::MotionPresentationState::Yielding:
+      state_parts << QStringLiteral("YIELD");
+      break;
+    case Engine::Core::MotionPresentationState::Recovering:
+      state_parts << QStringLiteral("RECOVER");
+      break;
+    case Engine::Core::MotionPresentationState::ForcedDisplacement:
+      state_parts << QStringLiteral("FORCED");
+      break;
     default:
       state_parts << QStringLiteral("IDLE");
       break;

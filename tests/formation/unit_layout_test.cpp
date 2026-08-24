@@ -415,6 +415,35 @@ TEST_F(UnitLayoutTest, CavalryUsesMoreDepthPerRankThanInfantry) {
   EXPECT_GT(depth_span(cavalry), depth_span(infantry));
 }
 
+TEST_F(UnitLayoutTest, ForcedTraversalFilesRetainAuthoredDoctrineTraits) {
+  auto forced = [](UnitLayoutId id) {
+    std::vector<SoldierOffset> offsets;
+    for (int index = 0; index < 12; ++index) {
+      UnitLayoutQuery query;
+      query.layout = id;
+      query.index = index;
+      query.count = 12;
+      query.forced_files = 2;
+      query.spacing = 1.0F;
+      query.seed = 0x1234ABCDU;
+      offsets.push_back(UnitLayoutSystem::instance().offset(query));
+    }
+    return offsets;
+  };
+
+  auto const roman = forced(layout("rome", "spear_ranks"));
+  auto const carthaginian = forced(layout("carthage", "spear_ranks"));
+  ASSERT_EQ(roman.size(), carthaginian.size());
+  EXPECT_GT(depth_span(roman), 5.0F);
+  EXPECT_GT(depth_span(carthaginian), 5.0F);
+  EXPECT_GT(lateral_span(roman), 1.2F);
+  EXPECT_LT(lateral_span(roman), 1.7F);
+  EXPECT_GT(lateral_span(carthaginian), 1.2F);
+  EXPECT_LT(lateral_span(carthaginian), 1.7F);
+  EXPECT_GT(std::abs(depth_span(roman) - depth_span(carthaginian)), 0.25F);
+  EXPECT_GT(std::abs(roman[2].offset_x - carthaginian[2].offset_x), 0.05F);
+}
+
 TEST_F(UnitLayoutTest, WorkPartiesFaceInwardAroundTheirSite) {
   auto const id = layout("rome", "work_party");
   constexpr int k_total = 8;

@@ -61,10 +61,6 @@ ProductionViewModel::ProductionViewModel(const App::Core::ClientContext& context
     , m_host(host) {
 }
 
-// Rebuilds the whole panel readout in one pass over the selection. The HUD
-// polls this from a 100 ms timer through eighteen has_selected_type() bindings
-// and six panel states; doing it here means one walk on the thread that owns
-// the world instead of twenty-four walks under the frame lock.
 void ProductionViewModel::publish_frame() {
   App::Core::SelectionReadout readout;
 

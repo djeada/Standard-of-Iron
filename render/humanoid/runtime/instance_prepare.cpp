@@ -952,6 +952,7 @@ void append_prepared_soldier(const HumanoidUnitSnapshot& s,
     smoothing_inputs.response_delay_seconds =
         turn_smoothing_stagger ? turn_variation.response_delay_seconds : 0.0F;
     smoothing_inputs.allow_travel_yaw = turn_smoothing_travel_yaw;
+    smoothing_inputs.position_is_authoritative = formation_presentation != nullptr;
 
     smoothing_inputs.frame_index = frame_index + 1U;
     turn_smoothing = resolve_soldier_turn_smoothing(

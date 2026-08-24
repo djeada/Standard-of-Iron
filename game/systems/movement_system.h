@@ -28,6 +28,7 @@ public:
 
 private:
   friend class CommandService;
+  friend class RouteFollowSystem;
 
   static auto
   assign_local_recovery_move(const QVector3D& current_position,
@@ -43,17 +44,17 @@ private:
                                       const Engine::Core::TransformComponent& transform,
                                       Engine::Core::MovementComponent& movement,
                                       bool include_first_waypoint = false) -> bool;
+  static auto
+  assign_waypoints_to_movement(Pathfinding& pathfinder,
+                               const std::vector<QVector3D>& waypoints,
+                               const QVector3D& resolved_goal,
+                               const Engine::Core::TransformComponent& transform,
+                               Engine::Core::MovementComponent& movement) -> bool;
   auto apply_duel_footwork(Engine::Core::Entity* entity,
                            Engine::Core::World* world,
                            Engine::Core::TransformComponent& transform,
                            Engine::Core::AttackComponent& attack,
                            float delta_time) const -> bool;
-
-  static void
-  update_traversal_presentation(Engine::Core::Entity& entity,
-                                const Engine::Core::TransformComponent& transform,
-                                const Engine::Core::MovementComponent& movement,
-                                float delta_time);
 
   static void
   assign_navigation_target(Pathfinding* pathfinder,
@@ -96,13 +97,15 @@ private:
     Engine::Core::EntityID entity_id{0};
     QVector3D target;
     std::uint64_t navigation_revision{0};
+    std::uint64_t order_sequence{0};
     bool precise_arrival{false};
   };
 
   auto enqueue_pending_path_request(Engine::Core::EntityID entity_id,
                                     const QVector3D& target,
                                     bool precise_arrival,
-                                    std::uint64_t navigation_revision) -> bool;
+                                    std::uint64_t navigation_revision,
+                                    std::uint64_t order_sequence) -> bool;
   void cancel_pending_path_request(Engine::Core::EntityID entity_id);
   std::deque<PendingPathRequest> m_pending_path_requests;
 

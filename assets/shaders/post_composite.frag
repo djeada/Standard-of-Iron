@@ -162,8 +162,7 @@ float valley_fog(vec3 world) {
   float dawn = environment_low_sun_amount();
   float weather = clamp(environment_fog_density() * 40.0, 0.0, 1.0);
   float time_gain = k_ground_fog_gain + night * k_ground_fog_night_gain +
-                    dawn * k_ground_fog_dawn_gain +
-                    weather * k_ground_fog_weather_gain;
+                    dawn * k_ground_fog_dawn_gain + weather * k_ground_fog_weather_gain;
   return clamp(strength * low * breakup * (0.25 + 0.75 * thickness) * time_gain,
                0.0,
                k_ground_fog_max_opacity);

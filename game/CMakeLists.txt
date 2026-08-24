@@ -47,6 +47,9 @@ add_library(
     core/ambient_session.cpp
     core/event_manager.cpp
     core/simulation_timing.cpp
+    core/movement_facts.cpp
+    core/movement_trace.cpp
+    core/movement_trace_analysis.cpp
     session/simulation_clock.cpp
     systems/unit_activity.cpp
     util/asset_text.cpp
@@ -139,6 +142,7 @@ add_library(
     STATIC
     systems/nav_grid.cpp
     systems/pathfinding.cpp
+    systems/route_corridor_planner.cpp
     systems/spatial_grid.cpp
     systems/gate_service.cpp
     systems/wall_network_service.cpp
@@ -221,7 +225,11 @@ add_library(
     STATIC
     systems/order_service.cpp
     systems/command_service.cpp
+    systems/movement_route.cpp
+    systems/route_follow_system.cpp
     systems/movement_system.cpp
+    systems/unit_traversal_layout_system.cpp
+    systems/movement_pipeline.cpp
     systems/movement_orders.cpp
     systems/local_avoidance_system.cpp
     systems/formation_move_dispatch_system.cpp

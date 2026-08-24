@@ -570,8 +570,14 @@ public:
     float const dir_x = length > 0.001F ? dx / length : 1.0F;
     float const dir_z = length > 0.001F ? dz / length : 0.0F;
     float const standoff = std::max(0.0F, civilian.distance - k_civilian_standoff);
-    float const target_x = ctx.x + (dir_x * standoff);
-    float const target_z = ctx.z + (dir_z * standoff);
+    float target_x = ctx.x + (dir_x * standoff);
+    float target_z = ctx.z + (dir_z * standoff);
+
+    if (auto const around = actions.bypass_around_obstacle(
+            ctx, civilian.x, civilian.z, k_civilian_standoff)) {
+      target_x = around->first;
+      target_z = around->second;
+    }
     wildlife.target_x = target_x;
     wildlife.target_z = target_z;
     actions.move_to(ctx, target_x, target_z);

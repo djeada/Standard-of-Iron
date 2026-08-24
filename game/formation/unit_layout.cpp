@@ -1055,18 +1055,22 @@ auto UnitLayoutSystem::raw_offset(const UnitLayoutQuery& query) const -> Soldier
   float const jitter_gain = 1.0F + (1.0F - formed) * 2.0F;
 
   RankSlot grid;
-  switch (style.shape) {
-  case UnitLayoutShape::Column:
-    grid = rank_slot_for(
-        query.index, total, static_cast<int>(std::lround(style.column_files)));
-    break;
-  case UnitLayoutShape::Wedge:
-    grid = wedge_slot_for(
-        std::clamp(query.index, 0, total - 1), total, style.wedge_growth);
-    break;
-  default:
-    grid = rank_slot_for(query.index, total, std::max(1, query.cols));
-    break;
+  if (query.forced_files > 0) {
+    grid = rank_slot_for(query.index, total, query.forced_files);
+  } else {
+    switch (style.shape) {
+    case UnitLayoutShape::Column:
+      grid = rank_slot_for(
+          query.index, total, static_cast<int>(std::lround(style.column_files)));
+      break;
+    case UnitLayoutShape::Wedge:
+      grid = wedge_slot_for(
+          std::clamp(query.index, 0, total - 1), total, style.wedge_growth);
+      break;
+    default:
+      grid = rank_slot_for(query.index, total, std::max(1, query.cols));
+      break;
+    }
   }
 
   if (total <= 1) {

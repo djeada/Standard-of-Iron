@@ -361,9 +361,6 @@ void GameEngine::set_active_camera(Render::GL::Camera* camera) {
   Render::GL::CameraVisibility::instance().set_camera(&m_render_camera);
 }
 
-// Copies the live camera into the render thread's own copy. Called from
-// update_presentation, which already holds the frame lock; render() then adjusts
-// the aspect on that copy without taking the lock at all.
 void GameEngine::sync_render_camera() {
   if (m_camera == nullptr) {
     return;
@@ -371,9 +368,6 @@ void GameEngine::sync_render_camera() {
   m_render_camera = *m_camera;
 }
 
-// Picks the entities the renderer should outline. Runs under the frame lock in
-// update_presentation because it walks the selection system; render() only reads
-// the result.
 void GameEngine::capture_render_selection() {
   auto* selection_system = m_world != nullptr
                                ? m_world->get_system<Game::Systems::SelectionSystem>()
@@ -678,8 +672,7 @@ void GameEngine::stop_simulation_thread() {
 }
 
 namespace {
-// Marks the frame lock as contended for as long as it is alive, so the
-// simulation knows to let go between ticks instead of re-taking it immediately.
+
 class FrameLockWaiter {
 public:
   explicit FrameLockWaiter(std::atomic<int>& waiters)
@@ -838,9 +831,6 @@ void GameEngine::update_presentation(float dt) {
   }
 }
 
-// Rebuilds every read-model QML polls, on the thread that already owns the
-// world and already holds the frame lock. After this returns the HUD can read
-// all of it without blocking, so the GUI thread never waits on frame work.
 void GameEngine::publish_frame_snapshots() {
   m_camera_view_model->publish_frame();
   m_commander_view_model->publish_frame();
@@ -864,10 +854,6 @@ void GameEngine::render(int pixel_width, int pixel_height) {
     m_viewport.height = pixel_height;
   }
 
-  // Camera and selection were captured under the frame lock in
-  // update_presentation. m_render_camera is the render thread's own copy, so the
-  // aspect for this frame's viewport can be applied without any lock, and
-  // render_world() creates the render snapshot if it does not exist yet.
   if (m_viewport.width > 0 && m_viewport.height > 0) {
     const float aspect =
         static_cast<float>(m_viewport.width) / static_cast<float>(m_viewport.height);
@@ -2704,9 +2690,8 @@ auto GameEngine::get_owner_info() const -> QVariantList {
 }
 
 auto GameEngine::local_player_nation() const -> QString {
-  // frame-lock-exempt: NationRegistry is only written by the match loaders
-  // (skirmish/mission setup, save restore), never by the simulation or render
-  // thread, so the player-to-nation map is stable for the life of a match.
+  const std::lock_guard<std::recursive_mutex> frame_lock(m_frame_mutex);
+
   const auto* nation =
       m_session->nations().get_nation_for_player(m_runtime.local_owner_id);
   if (nation == nullptr) {

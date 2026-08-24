@@ -128,9 +128,7 @@ void CameraViewModel::publish_frame() {
 }
 
 auto CameraViewModel::project_world(float x, float y, float z) const -> QVariantMap {
-  // QML projects a point per damage number, per focus marker, per overlay --
-  // many times a frame. Project against the snapshot the engine published with
-  // the last frame so none of that touches the frame lock.
+
   QVariantMap result;
   result["valid"] = false;
   result["x"] = 0.0;
