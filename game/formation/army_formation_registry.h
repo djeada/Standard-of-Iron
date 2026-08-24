@@ -75,7 +75,7 @@ public:
                          const QVector3D& destination,
                          float facing);
 
-  static void refresh_cohesion(Engine::Core::World& world, ArmyFormation& formation);
+  static void refresh_shape_state(Engine::Core::World& world, ArmyFormation& formation);
 
   [[nodiscard]] static auto
   damage_taken_multiplier(const Engine::Core::Entity& entity) -> float;

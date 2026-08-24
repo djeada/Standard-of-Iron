@@ -17,12 +17,20 @@ void FormationMoveDispatchSystem::update(Engine::Core::World* world, float) {
       continue;
     }
     formation->moves_pending = false;
+    std::vector<CommandService::MoveIntent> intents;
+    intents.reserve(formation->slot_list.size());
     for (const auto& slot : formation->slot_list) {
       if (slot.occupant == 0U || slot.status == Game::Formation::SlotStatus::Blocked) {
         continue;
       }
-      CommandService::move_unit(*world, slot.occupant, slot.world_position);
+      intents.push_back({.unit_id = slot.occupant,
+                         .target = slot.world_position,
+                         .facing_angle = slot.facing});
     }
+    CommandService::move_units(
+        *world,
+        intents,
+        {.kind = MoveOrderKind::FormationMove, .preserve_formation_mode = true});
   }
 }
 

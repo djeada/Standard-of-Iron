@@ -21,7 +21,7 @@
 #include "game/systems/combat_system/combat_utils.h"
 #include "game/systems/combat_system/damage_application.h"
 #include "game/systems/default_content.h"
-#include "game/systems/movement_system.h"
+#include "game/systems/movement_pipeline.h"
 #include "game/systems/nation_registry.h"
 #include "game/systems/nav_grid.h"
 #include "game/systems/owner_registry.h"
@@ -641,7 +641,7 @@ TEST_F(WildlifeSystemTest, MoveTargetsStayOnWalkableGround) {
 TEST_F(WildlifeSystemTest, GrazingSheepTurnAtAnAnimalsPaceNotAWeatherVanes) {
   World world;
   WildlifeSystem system;
-  Game::Systems::MovementSystem movement;
+  Game::Systems::MovementPipeline movement;
   system.configure(make_settings(), 1U);
   system.update(&world, 0.05F);
 
@@ -677,7 +677,7 @@ TEST_F(WildlifeSystemTest, GrazingSheepTurnAtAnAnimalsPaceNotAWeatherVanes) {
 TEST_F(WildlifeSystemTest, AWanderingSheepKeepsTheDestinationItPicked) {
   World world;
   WildlifeSystem system;
-  Game::Systems::MovementSystem movement;
+  Game::Systems::MovementPipeline movement;
   system.configure(make_settings(), 1U);
   system.update(&world, 0.05F);
 

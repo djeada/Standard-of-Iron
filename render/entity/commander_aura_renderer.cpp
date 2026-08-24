@@ -7,8 +7,6 @@
 #include "game/core/component.h"
 #include "game/core/world.h"
 #include "game/systems/nation_id.h"
-#include "render/humanoid/runtime/frame_control.h"
-#include "render/humanoid/runtime/instance_state.h"
 #include "render/scene_renderer.h"
 #include "render/selection_ring_layout.h"
 
@@ -134,19 +132,12 @@ void render_commander_auras(Renderer* renderer,
     }
     const float footprint = std::max(transform->scale.x, transform->scale.z);
     const float glow_radius = std::clamp(0.72F + footprint * 0.35F, 0.78F, 1.15F);
-    std::span<const Render::Humanoid::SoldierTurnSmoothingState> soldier_anchors;
-    if (auto const* layout_cache =
-            entity->get_component<Render::Humanoid::HumanoidInstanceStateComponent>()) {
-      soldier_anchors = layout_cache->turn_states;
-    }
     const auto placements = build_selection_ring_layout(
         {.soldiers = soldiers,
          .ring_size = glow_radius,
          .position = QVector3D(
              transform->position.x, transform->position.y, transform->position.z),
-         .yaw_degrees = transform->rotation.y,
-         .soldier_anchors = soldier_anchors,
-         .anchor_frame = humanoid_current_frame() + 1U});
+         .yaw_degrees = transform->rotation.y});
     for (auto const& placement : placements) {
       renderer->healer_aura(QVector3D(placement.world_x,
                                       transform->position.y + 0.35F,

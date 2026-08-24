@@ -11,7 +11,7 @@
 #include "systems/combat_system/damage_application.h"
 #include "systems/combat_system/formation_contact_processor.h"
 #include "systems/formation_combat_geometry.h"
-#include "systems/movement_system.h"
+#include "systems/movement_pipeline.h"
 #include "systems/troop_profile_service.h"
 
 namespace {
@@ -88,6 +88,112 @@ TEST(FormationCombatGeometry, NationTroopProfileOwnsFormationShape) {
   EXPECT_EQ(carthage_definition.total_count, 28);
   EXPECT_EQ(carthage_definition.max_per_row, 7);
   EXPECT_EQ(carthage_definition.doctrine, "carthage");
+}
+
+TEST(FormationCombatGeometry, LargeDeepReflowRiskRaisesRouteCostClearance) {
+  Engine::Core::World world;
+  auto* entity = add_spearmen(world, 1, 0.0F, 0.0F);
+  auto* unit = entity->get_component<Engine::Core::UnitComponent>();
+  ASSERT_NE(unit, nullptr);
+  unit->render_individuals_per_unit_override = 12;
+  float const small =
+      Game::Systems::FormationCombat::formation_navigation_clearance(*entity);
+
+  unit->render_individuals_per_unit_override = 30;
+  float const large =
+      Game::Systems::FormationCombat::formation_navigation_clearance(*entity);
+
+  EXPECT_GT(large, small * 1.15F);
+}
+
+TEST(FormationCombatGeometry, TraversalAnchorsDriveSpatialQueriesWithoutPresentation) {
+  Engine::Core::World world;
+  auto* unit = add_spearmen(world, 1, 3.0F, 90.0F);
+  auto const layout = Game::Systems::FormationCombat::resolve_layout(*unit);
+  ASSERT_FALSE(layout.live_slots.empty());
+  auto* traversal = unit->add_component<Engine::Core::UnitTraversalLayoutState>();
+  Engine::Core::UnitTraversalSlotState slot;
+  slot.slot_index = layout.live_slots.front().index;
+  slot.current_local_x = 1.25F;
+  slot.current_local_z = -2.5F;
+  slot.alive = true;
+  traversal->slot_states.push_back(slot);
+
+  auto const anchors =
+      Game::Systems::FormationCombat::soldier_spatial_anchors(*unit, layout);
+
+  ASSERT_FALSE(anchors.empty());
+  EXPECT_EQ(anchors.front().source,
+            Game::Systems::FormationCombat::SoldierAnchorSource::TraversalLayout);
+  EXPECT_FLOAT_EQ(anchors.front().local_x, 1.25F);
+  EXPECT_FLOAT_EQ(anchors.front().local_z, -2.5F);
+  EXPECT_NEAR(anchors.front().world_x, -2.5F, 0.0001F);
+  EXPECT_NEAR(anchors.front().world_z, 1.75F, 0.0001F);
+}
+
+TEST(FormationCombatGeometry, PresentationFactsComposeOverTraversalAnchors) {
+  Engine::Core::World world;
+  auto* unit = add_spearmen(world, 1, 0.0F, 0.0F);
+  auto const layout = Game::Systems::FormationCombat::resolve_layout(*unit);
+  ASSERT_FALSE(layout.live_slots.empty());
+  auto const slot_index = layout.live_slots.front().index;
+  auto* traversal = unit->add_component<Engine::Core::UnitTraversalLayoutState>();
+  traversal->slot_states.push_back({.slot_index = slot_index,
+                                    .current_local_x = 8.0F,
+                                    .current_local_z = 9.0F,
+                                    .alive = true});
+  auto* presentation =
+      unit->add_component<Engine::Core::FormationPresentationComponent>();
+  presentation->soldiers.push_back({.slot_index = slot_index,
+                                    .local_x = -1.5F,
+                                    .local_z = 2.25F,
+                                    .local_yaw = 31.0F,
+                                    .alive = true});
+
+  auto const anchors =
+      Game::Systems::FormationCombat::soldier_spatial_anchors(*unit, layout);
+
+  ASSERT_FALSE(anchors.empty());
+  EXPECT_EQ(anchors.front().source,
+            Game::Systems::FormationCombat::SoldierAnchorSource::PresentationFacts);
+  EXPECT_FLOAT_EQ(anchors.front().local_x, -1.5F);
+  EXPECT_FLOAT_EQ(anchors.front().local_z, 2.25F);
+  EXPECT_FLOAT_EQ(anchors.front().local_yaw, 31.0F);
+}
+
+TEST(FormationCombatGeometry, EngagementPairsMeasureComposedTraversalAnchors) {
+  Engine::Core::World world;
+  auto* attacker = add_spearmen(world, 1, 0.0F, 0.0F);
+  auto* target = add_spearmen(world, 2, 20.0F, 0.0F);
+  auto const attacker_layout =
+      Game::Systems::FormationCombat::resolve_layout(*attacker);
+  auto const target_layout = Game::Systems::FormationCombat::resolve_layout(*target);
+  ASSERT_FALSE(attacker_layout.live_slots.empty());
+  ASSERT_FALSE(target_layout.live_slots.empty());
+  auto const attacker_slot = attacker_layout.live_slots.front().index;
+  auto const target_slot = target_layout.live_slots.front().index;
+  auto* attacker_traversal =
+      attacker->add_component<Engine::Core::UnitTraversalLayoutState>();
+  attacker_traversal->slot_states.push_back({.slot_index = attacker_slot,
+                                             .current_local_x = 0.0F,
+                                             .current_local_z = 10.0F,
+                                             .alive = true});
+  auto* target_traversal =
+      target->add_component<Engine::Core::UnitTraversalLayoutState>();
+  target_traversal->slot_states.push_back({.slot_index = target_slot,
+                                           .current_local_x = 0.0F,
+                                           .current_local_z = -10.0F,
+                                           .alive = true});
+
+  auto const pairs = Game::Systems::FormationCombat::engagement_pairs(
+      *attacker, *target, attacker_layout, target_layout);
+  auto const pair = std::find_if(pairs.begin(), pairs.end(), [attacker_slot](auto& p) {
+    return p.attacker_slot == attacker_slot;
+  });
+
+  ASSERT_NE(pair, pairs.end());
+  EXPECT_EQ(pair->target_slot, target_slot);
+  EXPECT_NEAR(pair->root_distance, 0.0F, 0.0001F);
 }
 
 TEST(FormationCombatGeometry, CompactFixtureOverrideKeepsProfileFrontage) {
@@ -679,7 +785,7 @@ TEST(FormationCombatGeometry, MovementAndFacingAreFrozenDuringRtsMeleeLock) {
   transform->desired_yaw = 90.0F;
   transform->has_desired_yaw = true;
 
-  Game::Systems::MovementSystem movement_system;
+  Game::Systems::MovementPipeline movement_system;
   movement_system.update(&world, 0.25F);
 
   EXPECT_FALSE(movement->get_has_target());
@@ -1028,4 +1134,28 @@ TEST(FormationCombatGeometry,
   EXPECT_FLOAT_EQ(casualty.local_x, expected.local_x);
   EXPECT_FLOAT_EQ(casualty.local_z, expected.local_z);
   EXPECT_FLOAT_EQ(casualty.local_yaw, expected.local_yaw);
+}
+
+TEST(FormationCombatGeometry, CasualtyFreezesAtItsTraversalAnchor) {
+  Engine::Core::World world;
+  auto* unit = add_spearmen(world, 1, 0.0F, 0.0F);
+  auto const before = Game::Systems::FormationCombat::resolve_layout(*unit);
+  ASSERT_FALSE(before.live_slots.empty());
+  auto const slot_index = before.live_slots.front().index;
+  auto* traversal = unit->add_component<Engine::Core::UnitTraversalLayoutState>();
+  traversal->slot_states.push_back({.slot_index = slot_index,
+                                    .current_local_x = -0.75F,
+                                    .current_local_z = 3.5F,
+                                    .alive = true});
+
+  auto const result = Game::Systems::Combat::apply_unit_damage(&world, unit, 10, 0U);
+
+  ASSERT_EQ(result.queued_soldier_casualties, 1);
+  auto const* casualties =
+      unit->get_component<Engine::Core::SoldierCasualtyAnimationComponent>();
+  ASSERT_NE(casualties, nullptr);
+  ASSERT_EQ(casualties->entries.size(), 1U);
+  EXPECT_EQ(casualties->entries.front().slot_index, slot_index);
+  EXPECT_FLOAT_EQ(casualties->entries.front().local_x, -0.75F);
+  EXPECT_FLOAT_EQ(casualties->entries.front().local_z, 3.5F);
 }
