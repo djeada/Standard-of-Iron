@@ -36,10 +36,6 @@ auto to_cell(float x, float z, float inv_cell_size) -> CellKey {
           static_cast<int>(std::floor(z * inv_cell_size))};
 }
 
-// The fan, in the order it is tried. Straight ahead first, then alternating
-// sides from the smallest deviation outwards: ties break toward the earlier
-// entry, so two mirror-image bodies given the same encounter make the same
-// decision rather than each picking the side that lets them collide.
 constexpr std::array<float, LocalAvoidanceSystem::k_candidate_angle_count>
     k_candidate_angles_degrees{
         0.0F, -12.0F, 12.0F, -26.0F, 26.0F, -45.0F, 45.0F, -70.0F, 70.0F};
@@ -47,17 +43,12 @@ constexpr std::array<float, LocalAvoidanceSystem::k_candidate_angle_count>
 constexpr std::array<float, LocalAvoidanceSystem::k_candidate_speed_count>
     k_candidate_speed_scales{1.0F, 0.6F, 0.25F};
 
-// Cost weights. Deviation from the route's intent is cheap; a predicted
-// collision inside the horizon is expensive; standing still is worse than
-// deviating, so the solver keeps forward progress whenever one exists.
 constexpr float k_deviation_weight = 1.0F;
 constexpr float k_collision_weight = 40.0F;
 constexpr float k_stopping_penalty = 1.6F;
 constexpr float k_side_commitment_bonus = 0.45F;
 constexpr float k_angle_commitment_bonus = 0.30F;
-// How fast a body may swing its avoidance deviation. Slow enough that two
-// near-equal answers cannot trade places tick by tick, fast enough to clear a
-// full-width dodge in well under a second.
+
 constexpr float k_deviation_rate_degrees_per_second = 150.0F;
 
 auto compute_avoidance_priority(Engine::Core::SystemContext& context,
@@ -93,9 +84,6 @@ auto point_is_in_navigation_passage(const BuildingCollisionRegistry& buildings,
   return false;
 }
 
-// Smallest t >= 0 at which two discs moving at a constant relative velocity
-// touch, or -1 when they never do inside the horizon. Already-touching pairs
-// return 0.
 auto time_to_collision(float px,
                        float pz,
                        float vx,
@@ -176,10 +164,7 @@ void LocalAvoidanceSystem::build_index(Engine::Core::SystemContext& context) {
       circle.follows_navigation_path = movement->has_waypoints();
     }
     if (facts != nullptr && facts->desired.valid) {
-      // Steering reads the route follower's desired velocity, never the motor's
-      // integrated one. Correcting an already-integrated velocity and handing it
-      // back for further integration is what let avoidance and movement take
-      // turns overwriting the same number.
+
       circle.desired_vx = facts->desired.velocity_x;
       circle.desired_vz = facts->desired.velocity_z;
       circle.predicted_vx = facts->steering.valid ? facts->steering.velocity_x
@@ -194,9 +179,7 @@ void LocalAvoidanceSystem::build_index(Engine::Core::SystemContext& context) {
             context.try_get<Engine::Core::FormationModeComponent>(entity_id)) {
       circle.formation_id = formation->formation_id;
     }
-    // The body this one is trying to reach. Avoiding it is not coordination --
-    // it is refusing the order, and it is why a charge used to settle just
-    // outside its own weapon's reach.
+
     if (const auto* attack = context.try_get<Engine::Core::AttackComponent>(entity_id);
         attack != nullptr && attack->in_melee_lock) {
       circle.engaged_target = attack->melee_lock_target_id;
@@ -252,8 +235,6 @@ auto LocalAvoidanceSystem::gather_neighbors(std::size_t self,
           continue;
         }
 
-        // Reciprocal assumption: both are steering, so each takes a share of
-        // the avoidance. A stationary or higher-priority body takes less.
         float response = 0.5F;
         if (!them.avoids || !them.is_moving) {
           response = 1.0F;
@@ -262,20 +243,14 @@ auto LocalAvoidanceSystem::gather_neighbors(std::size_t self,
         } else if (them.priority < me.priority) {
           response = 0.25F;
         } else {
-          // Equal priority: give way to the body on the right. It is the
-          // declared tie break for a symmetric encounter -- deterministic, and
-          // unlike "lower id wins" it does not hand one body permanent
-          // right of way over another, so two crossing streams take turns
-          // instead of both stopping.
+
           float const speed = std::hypot(me.desired_vx, me.desired_vz);
           if (speed > 1.0e-4F) {
             float const cross = (me.desired_vx * pz - me.desired_vz * px) / speed;
             response = cross < 0.0F ? 0.8F : 0.2F;
           }
         }
-        // Members of one formation are already coordinated by their shared
-        // route, so they yield to each other less -- but they never ignore each
-        // other, which is what used to let a formation overlap itself.
+
         if (them.formation_id != 0U && them.formation_id == me.formation_id) {
           response *= 0.6F;
         }
@@ -291,8 +266,6 @@ auto LocalAvoidanceSystem::gather_neighbors(std::size_t self,
     }
   }
 
-  // Stable ordering by entity id, then keep the most urgent few. Sorting by id
-  // first means two runs of the same tick see the same set in the same order.
   std::sort(m_neighbors.begin(),
             m_neighbors.end(),
             [this](const Neighbor& lhs, const Neighbor& rhs) {
@@ -345,8 +318,7 @@ void LocalAvoidanceSystem::run(Engine::Core::SystemContext& context) {
   for (std::size_t self = 0; self < m_circles.size(); ++self) {
     auto const& me = m_circles[self];
     if (!me.avoids) {
-      // Nothing published an intent for this body, so last tick's steered
-      // answer must not be readable as this tick's.
+
       if (auto* stale = context.try_get<Engine::Core::MovementFactsComponent>(me.id)) {
         stale->steering.valid = false;
       }
@@ -374,10 +346,6 @@ void LocalAvoidanceSystem::run(Engine::Core::SystemContext& context) {
 
     float const desired_speed = std::hypot(me.desired_vx, me.desired_vz);
 
-    // Inside a portal, on a bridge or on a hill entrance there is no room to
-    // step aside. Both the separation push and any lateral steering have to
-    // respect that, or bodies spread across a choke's walls instead of queueing
-    // through it.
     Point const own_cell = NavGrid::world_to_grid(me.x, me.z);
     bool corridor_constrained = me.follows_navigation_path ||
                                 terrain.is_on_bridge(me.x, me.z) ||
@@ -386,9 +354,7 @@ void LocalAvoidanceSystem::run(Engine::Core::SystemContext& context) {
       corridor_constrained = point_is_in_navigation_passage(buildings, me.x, me.z);
     }
     if (!corridor_constrained && me.formation_id != 0U) {
-      // Sidestepping a member of one's own formation is not avoidance, it is
-      // crossing: the two swap files and the rank order inverts. Squadmates
-      // pace each other instead.
+
       for (auto const& neighbor : m_neighbors) {
         if (m_circles[neighbor.index].formation_id == me.formation_id) {
           corridor_constrained = true;
@@ -397,17 +363,13 @@ void LocalAvoidanceSystem::run(Engine::Core::SystemContext& context) {
       }
     }
 
-    // Bounded correction for bad initial conditions. Deliberately separate from
-    // steering: it exists to leave an overlap that already happened, not to
-    // avoid one that has not.
     float separation_x = 0.0F;
     float separation_z = 0.0F;
     for (auto const& neighbor : m_neighbors) {
       auto const& them = m_circles[neighbor.index];
       float const px = me.x - them.x;
       float const pz = me.z - them.z;
-      // Separation undoes real interpenetration, so it uses the core body, not
-      // the formation envelope.
+
       float const combined = me.core_radius + them.core_radius;
       float const distance = std::hypot(px, pz);
       if (distance >= combined || combined <= 1.0e-4F) {
@@ -419,8 +381,7 @@ void LocalAvoidanceSystem::run(Engine::Core::SystemContext& context) {
         nx = px / distance;
         nz = pz / distance;
       } else {
-        // Exactly coincident: break the tie on stable ids, never on a clock or
-        // a random number, so a replay puts them on the same sides.
+
         bool const first = me.id < them.id;
         nx = first ? 1.0F : -1.0F;
       }
@@ -430,9 +391,7 @@ void LocalAvoidanceSystem::run(Engine::Core::SystemContext& context) {
       ++overlaps_detected;
     }
     if (corridor_constrained && desired_speed > 1.0e-4F) {
-      // Only the along-corridor component survives. A body behind is pushed
-      // forward, a body ahead pushes this one back: that is a queue, and it is
-      // the only shape a choke has room for.
+
       float const tangent_x = me.desired_vx / desired_speed;
       float const tangent_z = me.desired_vz / desired_speed;
       float const along = separation_x * tangent_x + separation_z * tangent_z;
@@ -460,8 +419,6 @@ void LocalAvoidanceSystem::run(Engine::Core::SystemContext& context) {
     }
     facts->steering.nearest_time_to_collision = nearest_ttc;
 
-    // Open ground: nothing is predicted to hit this body, so it keeps its
-    // intent unchanged and costs one distance test per neighbour.
     if (nearest_ttc < 0.0F) {
       float const relax = k_deviation_rate_degrees_per_second * delta_time;
       facts->passing.deviation_degrees =
@@ -508,16 +465,13 @@ void LocalAvoidanceSystem::run(Engine::Core::SystemContext& context) {
 
         float cost =
             k_deviation_weight * std::hypot(vx - me.desired_vx, vz - me.desired_vz);
-        // A collision-free velocity that still makes ground is always better
-        // than stopping, so pure lateral oscillation is never the answer.
+
         cost += k_stopping_penalty * (1.0F - k_candidate_speed_scales[speed_index]) *
                 desired_speed;
         if (side != 0 && side == facts->passing.side) {
           cost -= k_side_commitment_bonus * desired_speed;
         }
-        // Holding last tick's answer is cheaper than swapping to one that is
-        // only marginally better: without this the body chatters between two
-        // near-equal deviations every tick.
+
         if (angle_index == facts->passing.angle_index) {
           cost -= k_angle_commitment_bonus * desired_speed;
         }
@@ -525,10 +479,7 @@ void LocalAvoidanceSystem::run(Engine::Core::SystemContext& context) {
         for (auto const& neighbor : m_neighbors) {
           auto const& them = m_circles[neighbor.index];
           float const combined = me.radius + them.radius + k_separation_radius;
-          // Already overlapping: that is the separation term's job, and scoring
-          // it here adds the same constant to every candidate, which only
-          // drowns out the neighbours whose time-to-collision can still
-          // discriminate between them.
+
           if (std::hypot(them.x - me.x, them.z - me.z) < me.radius + them.radius) {
             continue;
           }
@@ -555,8 +506,6 @@ void LocalAvoidanceSystem::run(Engine::Core::SystemContext& context) {
       }
     }
 
-    // Lateral escapes that would leave the corridor are not escapes. A body in
-    // a portal, on a bridge or on a hill entrance can only slow down.
     float const lateral_x = best_vx - me.desired_vx;
     float const lateral_z = best_vz - me.desired_vz;
     if (float const lateral = std::hypot(lateral_x, lateral_z); lateral > 1.0e-4F) {
@@ -585,10 +534,6 @@ void LocalAvoidanceSystem::run(Engine::Core::SystemContext& context) {
       facts->passing.held_seconds += delta_time;
     }
 
-    // Explicit hysteresis on the deviation itself. The candidate fan is
-    // re-evaluated every tick, and two nearly equal answers on opposite sides
-    // of the route would otherwise trade places tick by tick; limiting how fast
-    // the deviation may change turns that into one smooth arc.
     {
       float const chosen_speed = std::hypot(best_vx, best_vz);
       float deviation = 0.0F;

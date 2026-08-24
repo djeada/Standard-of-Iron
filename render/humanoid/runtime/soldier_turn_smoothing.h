@@ -67,6 +67,8 @@ struct SoldierTurnSmoothingInputs {
 
   bool allow_wheel_path{true};
 
+  bool position_is_authoritative{false};
+
   std::uint32_t frame_index{0U};
 };
 

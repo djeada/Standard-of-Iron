@@ -40,6 +40,24 @@ struct FormationLayout {
   std::vector<SoldierSlot> occupied_slots;
 };
 
+enum class SoldierAnchorSource : std::uint8_t {
+  BaseLayout = 0,
+  TraversalLayout,
+  PresentationFacts,
+};
+
+struct SoldierSpatialAnchor {
+  std::uint16_t slot_index{0U};
+  std::uint16_t row{0U};
+  std::uint16_t col{0U};
+  float local_x{0.0F};
+  float local_z{0.0F};
+  float local_yaw{0.0F};
+  float world_x{0.0F};
+  float world_z{0.0F};
+  SoldierAnchorSource source{SoldierAnchorSource::BaseLayout};
+};
+
 struct FormationDefinition {
   int total_count{1};
   int max_per_row{1};
@@ -79,6 +97,13 @@ resolve_definition(const Engine::Core::UnitComponent& unit,
 
 [[nodiscard]] auto
 resolve_layout(const Engine::Core::Entity& entity) -> FormationLayout;
+
+[[nodiscard]] auto soldier_spatial_anchors(const Engine::Core::Entity& entity)
+    -> std::vector<SoldierSpatialAnchor>;
+
+[[nodiscard]] auto soldier_spatial_anchors(const Engine::Core::Entity& entity,
+                                           const FormationLayout& base_layout)
+    -> std::vector<SoldierSpatialAnchor>;
 
 [[nodiscard]] auto living_slot_indices(const Engine::Core::Entity& entity,
                                        int total_count) -> std::vector<std::uint16_t>;

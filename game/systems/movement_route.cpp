@@ -7,8 +7,6 @@ namespace Game::Systems {
 
 namespace {
 
-// Squared distance from (px,pz) to the segment a->b, plus the parameter along
-// it. One helper so projection, lateral error and tangent all agree.
 struct SegmentHit {
   float t{0.0F};
   float distance_sq{0.0F};
@@ -194,8 +192,7 @@ auto MovementRoute::final_point() const -> std::pair<float, float> {
 }
 
 auto MovementRoute::waypoint_index_at(float s) const -> std::size_t {
-  // Vertex 0 is the origin the route was built from, so vertex n maps to the
-  // caller's waypoint first_waypoint + n - 1.
+
   std::size_t vertex = 0;
   for (std::size_t index = 1; index < m_points.size(); ++index) {
     if (s + 1.0e-4F >= m_points[index].cumulative) {

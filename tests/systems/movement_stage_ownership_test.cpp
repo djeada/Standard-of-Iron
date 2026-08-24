@@ -20,6 +20,7 @@
 #include "game/systems/nav_grid.h"
 #include "game/systems/route_follow_system.h"
 #include "game/systems/runtime_system_registry.h"
+#include "game/systems/unit_traversal_layout_system.h"
 
 namespace {
 
@@ -65,7 +66,6 @@ auto read_source(const std::string& relative) -> std::string {
   return buffer.str();
 }
 
-// Where in the registered order a system of this type sits, or npos.
 template <typename SystemType>
 auto index_of_system(World& world) -> std::size_t {
   const auto& systems = world.systems();
@@ -120,17 +120,23 @@ TEST(MovementStageOwnershipTest, TheRegistryOrdersFollowThenSteerThenMotor) {
   const auto steer =
       index_of_system<Game::Systems::LocalAvoidanceSystem>(session.world());
   const auto motor = index_of_system<Game::Systems::MovementSystem>(session.world());
+  const auto traversal =
+      index_of_system<Game::Systems::UnitTraversalLayoutSystem>(session.world());
 
   ASSERT_NE(follow, std::string::npos);
   ASSERT_NE(steer, std::string::npos);
   ASSERT_NE(motor, std::string::npos);
+  ASSERT_NE(traversal, std::string::npos);
   EXPECT_LT(follow, steer) << "steering ran before there was an intent to steer";
   EXPECT_LT(steer, motor) << "the motor ran before steering could correct it";
+  EXPECT_LT(motor, traversal)
+      << "traversal layout ran before the motor published its accepted pose";
 
   const auto phases = session.world().system_phases();
   EXPECT_EQ(phases[follow], SystemPhase::Movement);
   EXPECT_EQ(phases[steer], SystemPhase::Movement);
   EXPECT_EQ(phases[motor], SystemPhase::Movement);
+  EXPECT_EQ(phases[traversal], SystemPhase::Movement);
 }
 
 TEST(MovementStageOwnershipTest, TheCompositePipelineKeepsTheSameOrder) {
@@ -139,11 +145,14 @@ TEST(MovementStageOwnershipTest, TheCompositePipelineKeepsTheSameOrder) {
   const auto follow = source.find("m_route_follow.update");
   const auto steer = source.find("m_avoidance.update");
   const auto motor = source.find("m_motor.update");
+  const auto traversal = source.find("m_traversal_layout.update");
   ASSERT_NE(follow, std::string::npos);
   ASSERT_NE(steer, std::string::npos);
   ASSERT_NE(motor, std::string::npos);
+  ASSERT_NE(traversal, std::string::npos);
   EXPECT_LT(follow, steer);
   EXPECT_LT(steer, motor);
+  EXPECT_LT(motor, traversal);
 }
 
 TEST(MovementStageOwnershipTest, OnlyTheOrderPipelineBeginsOrdersAndRoutes) {
@@ -189,8 +198,6 @@ TEST(MovementStageOwnershipTest, ANewOrderSupersedesADeferredRoute) {
   EXPECT_GT(movement->get_route_revision(), first_route);
 }
 
-// Gate 1: one tick of trace must account for every transition from the accepted
-// order to the accepted displacement.
 TEST(MovementStageOwnershipTest, OneTickOfTraceAccountsForTheWholeChain) {
   Game::Systems::NavGrid::initialize(64, 64);
   SessionContext session;
@@ -211,8 +218,7 @@ TEST(MovementStageOwnershipTest, OneTickOfTraceAccountsForTheWholeChain) {
 
   world.add_system(std::make_unique<Game::Systems::MovementPipeline>(),
                    SystemPhase::Movement);
-  // Long enough to clear the body turn and the motor's launch lag: the first
-  // few ticks are legitimately Turning, not Following.
+
   for (int tick = 0; tick < 90; ++tick) {
     world.update(1.0F / 60.0F);
   }
@@ -229,9 +235,11 @@ TEST(MovementStageOwnershipTest, OneTickOfTraceAccountsForTheWholeChain) {
       continue;
     }
     saw_moving_tick = true;
+    EXPECT_NE(sample.route_id, 0U)
+        << "the trace lost the order pipeline's authoritative route identity";
+    EXPECT_GE(sample.lane_scale, 0.0F);
+    EXPECT_LE(sample.lane_scale, 1.0F);
 
-    // The chain has to be reconstructible: desired + correction is the steered
-    // velocity, and the accepted displacement is what the motor kept of it.
     if (sample.neighbor_count > 0U) {
       EXPECT_NEAR(sample.steered_vx, sample.desired_vx + sample.avoidance_dx, 1.0e-4F);
       EXPECT_NEAR(sample.steered_vz, sample.desired_vz + sample.avoidance_dz, 1.0e-4F);

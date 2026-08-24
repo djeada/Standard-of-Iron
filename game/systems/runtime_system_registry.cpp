@@ -41,6 +41,7 @@
 #include "stamina_system.h"
 #include "terrain_alignment_system.h"
 #include "undead_awakening_system.h"
+#include "unit_traversal_layout_system.h"
 
 namespace Game::Systems {
 
@@ -62,6 +63,8 @@ void register_runtime_systems(Engine::Core::World& world) {
   world.add_system(std::make_unique<LocalAvoidanceSystem>(),
                    Engine::Core::SystemPhase::Movement);
   world.add_system(std::make_unique<MovementSystem>(),
+                   Engine::Core::SystemPhase::Movement);
+  world.add_system(std::make_unique<UnitTraversalLayoutSystem>(),
                    Engine::Core::SystemPhase::Movement);
   world.add_system(std::make_unique<PatrolSystem>(),
                    Engine::Core::SystemPhase::Movement);

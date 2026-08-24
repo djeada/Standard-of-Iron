@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <cmath>
 #include <gtest/gtest.h>
 #include <string>
@@ -37,8 +38,6 @@ auto manifest() -> MovementTraceManifest {
   return m;
 }
 
-// A troop walking a straight 10 m line and arriving: the trace every gate is
-// compared against.
 auto healthy_run(std::uint32_t ticks = 120U) -> std::vector<MovementTroopSample> {
   std::vector<MovementTroopSample> samples;
   float x = 0.0F;
@@ -133,6 +132,10 @@ TEST(MovementTraceTest, TroopSampleSurvivesAJsonRoundTrip) {
   original.accepted_vx = 1.75F;
   original.accepted_vz = -0.5F;
   original.remaining_arclength = 31.75F;
+  original.route_id = 4401U;
+  original.lane_offset = -2.5F;
+  original.lane_scale = 0.5F;
+  original.cohesion_pace = 1.25F;
   original.waypoint_index = 4U;
   original.waypoint_count = 9U;
   original.repath_count = 3U;
@@ -158,6 +161,10 @@ TEST(MovementTraceTest, TroopSampleSurvivesAJsonRoundTrip) {
   EXPECT_FLOAT_EQ(parsed.accepted_vx, original.accepted_vx);
   EXPECT_FLOAT_EQ(parsed.accepted_vz, original.accepted_vz);
   EXPECT_FLOAT_EQ(parsed.remaining_arclength, original.remaining_arclength);
+  EXPECT_EQ(parsed.route_id, original.route_id);
+  EXPECT_FLOAT_EQ(parsed.lane_offset, original.lane_offset);
+  EXPECT_FLOAT_EQ(parsed.lane_scale, original.lane_scale);
+  EXPECT_FLOAT_EQ(parsed.cohesion_pace, original.cohesion_pace);
   EXPECT_EQ(parsed.waypoint_index, original.waypoint_index);
   EXPECT_EQ(parsed.repath_count, original.repath_count);
   EXPECT_EQ(parsed.traversal_mode, original.traversal_mode);
@@ -215,12 +222,11 @@ TEST(MovementAnalysisTest, WalkingInPlaceIsAStallAndAGaitMismatch) {
     sample.state = MovementOrderState::Following;
     sample.remaining_arclength = 12.0F;
     sample.route_advance = 0.0F;
-    // Past the launch allowance: this body has had time to accelerate and has
-    // not moved.
+
     sample.order_seconds = 1.0F + static_cast<float>(tick) * k_step;
     sample.accepted_vx = 0.0F;
     sample.accepted_vz = 0.0F;
-    // The renderer is told to walk while the motor accepted nothing.
+
     sample.presentation_valid = true;
     sample.presentation_state = 1U;
     sample.direction_source = MovementDirectionSource::DesiredVelocity;
@@ -259,7 +265,7 @@ TEST(MovementAnalysisTest, AlternatingHeadingIsRejected) {
     sample.presentation_valid = true;
     sample.presentation_state = (tick == 59U) ? 0U : 1U;
     sample.direction_source = MovementDirectionSource::AcceptedVelocity;
-    // Yaw flicks left and right every tick on a straight route.
+
     sample.root_yaw = (tick % 2U == 0U) ? 84.0F : 96.0F;
     samples.push_back(sample);
   }
@@ -284,7 +290,7 @@ TEST(MovementAnalysisTest, RingOffTheBodyAnchorIsRejectedAtTinyError) {
     sample.shadow_root_z = sample.body_root_z;
     sample.picking_root_x = sample.body_root_x;
     sample.picking_root_z = sample.body_root_z;
-    // One millimetre of ring slip: invisible on screen, still a contract break.
+
     sample.ring_root_x = sample.body_root_x + 0.001F;
     sample.ring_root_z = sample.body_root_z;
     soldiers.push_back(sample);
@@ -305,7 +311,7 @@ TEST(MovementAnalysisTest, SoldierSlotSnapIsRejected) {
     sample.frame = frame;
     sample.troop_id = 2U;
     sample.stable_slot = 4U;
-    // The formation reflows into a column between frame 2 and 3.
+
     sample.body_root_x = frame < 3U ? 0.0F : 2.0F;
     sample.body_root_z = 0.0F;
     sample.shadow_root_x = sample.body_root_x;
@@ -341,7 +347,6 @@ TEST(MovementAnalysisTest, DigestIsStableAndSensitiveToBehaviour) {
   EXPECT_NE(Engine::Core::movement_digest(baseline, {}),
             Engine::Core::movement_digest(diverged, {}));
 
-  // Presentation-only differences must not move the digest.
   auto presentation_only = baseline;
   for (auto& sample : presentation_only) {
     sample.locomotion_phase += 0.25F;

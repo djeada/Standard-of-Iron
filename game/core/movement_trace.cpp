@@ -14,14 +14,8 @@ namespace Engine::Core {
 
 namespace {
 
-// The trace is a flat numeric record per line, so the writer never needs a
-// general JSON encoder and the reader never needs a general JSON parser.
 class FlatJsonWriter {
 public:
-  // The stream is pinned to the classic locale and floats go through
-  // std::to_chars: a trace written on a comma-decimal host must still parse on
-  // a point-decimal host, and a comma inside a value would break the reader's
-  // field scan outright.
   FlatJsonWriter() { m_out.imbue(std::locale::classic()); }
 
   void field(std::string_view key, float value) {
@@ -205,6 +199,9 @@ auto to_json(const MovementTroopSample& s) -> std::string {
   w.field("route_id", s.route_id);
   w.field("route_rev", s.route_revision);
   w.field("topo_rev", s.topology_revision);
+  w.field("lane_offset", s.lane_offset);
+  w.field("lane_scale", s.lane_scale);
+  w.field("cohesion_pace", s.cohesion_pace);
   w.field("wp_index", s.waypoint_index);
   w.field("wp_count", s.waypoint_count);
   w.field("wp_x", s.waypoint_x);
@@ -351,6 +348,9 @@ auto parse_troop_sample(const std::string& line, MovementTroopSample& out) -> bo
   read_u64(line, "route_id", out.route_id);
   read_u64(line, "route_rev", out.route_revision);
   read_u64(line, "topo_rev", out.topology_revision);
+  read_float(line, "lane_offset", out.lane_offset);
+  read_float(line, "lane_scale", out.lane_scale);
+  read_float(line, "cohesion_pace", out.cohesion_pace);
   read_small(line, "wp_index", out.waypoint_index);
   read_small(line, "wp_count", out.waypoint_count);
   read_float(line, "wp_x", out.waypoint_x);

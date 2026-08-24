@@ -22,10 +22,6 @@ auto is_active_state(MovementOrderState state) -> bool {
   return is_active_movement_state(state);
 }
 
-// A declared block or queue. The gate's rule is "an active order with no
-// declared queue/block", so these four states are exempt from the stall check
-// -- and each is separately bounded below, so declaring one is not a way to
-// stall forever.
 auto is_declared_hold(MovementOrderState state) -> bool {
   switch (state) {
   case MovementOrderState::Yielding:
@@ -69,8 +65,6 @@ public:
     m_analysis.findings.push_back(std::move(finding));
   }
 
-  // Extends the open run instead of emitting one finding per tick, so a ten
-  // second stall reads as one entry with a duration.
   void extend(OpenFinding& run,
               MovementFindingKind kind,
               EntityID entity,
@@ -265,9 +259,7 @@ void analyze_troops(const std::vector<MovementTroopSample>& troops,
                     const MovementGateThresholds& thresholds,
                     MovementAnalysis& analysis,
                     FindingSink& sink) {
-  // Entity ids restart with every world, so a trace that spans more than one
-  // has to be keyed on the session too. Splicing two worlds' samples into one
-  // timeline invents teleports and heading flips that never happened.
+
   std::map<std::pair<std::uint64_t, EntityID>, std::vector<const MovementTroopSample*>>
       by_entity;
   for (auto const& sample : troops) {
@@ -327,11 +319,6 @@ void analyze_troops(const std::vector<MovementTroopSample>& troops,
         walk.active_seconds = 0.0F;
       }
 
-      // -- progress stalls -------------------------------------------------
-      //
-      // Turning is a declared state -- a body that has to swing round before it
-      // can travel is not failing to travel -- but it is bounded, so a turn
-      // that never ends is still a stall.
       if (sample.state == MovementOrderState::Turning) {
         walk.turning_seconds += dt;
       } else {
@@ -368,10 +355,6 @@ void analyze_troops(const std::vector<MovementTroopSample>& troops,
         FindingSink::close(walk.stall);
       }
 
-      // -- route arclength regression --------------------------------------
-      //
-      // A new route is measured from somewhere else, so its arclength is not
-      // comparable with the old one's.
       if (sample.route_revision != walk.previous_route_revision) {
         walk.has_min_remaining = false;
         walk.regression_seconds = 0.0F;
@@ -411,7 +394,6 @@ void analyze_troops(const std::vector<MovementTroopSample>& troops,
         FindingSink::close(walk.regression);
       }
 
-      // -- bounded recovery --------------------------------------------------
       if (sample.state == MovementOrderState::Recovering) {
         walk.recovering_seconds += dt;
         if (walk.recovering_seconds > thresholds.max_recovering_seconds) {
@@ -429,7 +411,6 @@ void analyze_troops(const std::vector<MovementTroopSample>& troops,
         FindingSink::close(walk.recovery);
       }
 
-      // -- obstruction escalation ------------------------------------------
       if (sample.state == MovementOrderState::LocallyBlocked) {
         walk.blocked_seconds += dt;
         if (walk.blocked_seconds > thresholds.obstruction_response_seconds) {
@@ -447,7 +428,6 @@ void analyze_troops(const std::vector<MovementTroopSample>& troops,
         FindingSink::close(walk.obstruction);
       }
 
-      // -- blocked-step streaks --------------------------------------------
       bool const rejected_step =
           sample.has_contact &&
           std::hypot(sample.accepted_dx, sample.accepted_dz) < 1.0e-4F;
@@ -466,7 +446,6 @@ void analyze_troops(const std::vector<MovementTroopSample>& troops,
         walk.blocked_streak = 0;
       }
 
-      // -- static penetration ----------------------------------------------
       if (sample.penetration_depth > 0.0F) {
         walk.penetration_seconds += dt;
         if (walk.penetration_seconds > thresholds.collision_recovery_seconds) {
@@ -485,7 +464,6 @@ void analyze_troops(const std::vector<MovementTroopSample>& troops,
         FindingSink::close(walk.penetration);
       }
 
-      // -- repath and waypoint churn ---------------------------------------
       if (sample.repath_count > walk.repaths_in_order) {
         walk.repaths_in_order = sample.repath_count;
         if (static_cast<int>(walk.repaths_in_order) > thresholds.repath_allowance) {
@@ -516,7 +494,6 @@ void analyze_troops(const std::vector<MovementTroopSample>& troops,
         }
       }
 
-      // -- heading oscillation and angular limits --------------------------
       if (walk.has_previous_yaw) {
         float const delta = shortest_angle(walk.previous_yaw, sample.root_yaw);
         float const angular_speed = std::fabs(delta) / dt;
@@ -574,7 +551,6 @@ void analyze_troops(const std::vector<MovementTroopSample>& troops,
       walk.previous_yaw = sample.root_yaw;
       walk.has_previous_yaw = true;
 
-      // -- uncommanded travel-direction reversals --------------------------
       float const speed = accepted_speed(sample);
       if (speed > thresholds.reversal_min_speed) {
         float const direction =
@@ -608,10 +584,6 @@ void analyze_troops(const std::vector<MovementTroopSample>& troops,
         walk.has_previous_direction = true;
       }
 
-      // -- gait truth -------------------------------------------------------
-      //
-      // A headless run with presentation disabled never publishes a gait, and
-      // an unpublished gait is not a gait defect.
       bool const locomotion = sample.presentation_state != 0U;
       if (sample.presentation_valid && locomotion &&
           speed < thresholds.gait_stopped_speed) {
@@ -662,7 +634,6 @@ void analyze_troops(const std::vector<MovementTroopSample>& troops,
                  "gait direction taken from desired velocity, not accepted motion");
       }
 
-      // -- arrival ----------------------------------------------------------
       if (sample.state == MovementOrderState::Arrived) {
         if (!walk.arrival_pending &&
             walk.previous_state != MovementOrderState::Arrived) {
@@ -698,7 +669,6 @@ void analyze_troops(const std::vector<MovementTroopSample>& troops,
                       movement_state_name(sample.state)));
       }
 
-      // -- traversal layout lifecycle ---------------------------------------
       if (walk.has_previous_mode) {
         if (sample.traversal_mode != walk.previous_mode) {
           ++walk.mode_changes;
@@ -740,7 +710,6 @@ void analyze_troops(const std::vector<MovementTroopSample>& troops,
       walk.has_previous_mode = true;
       walk.previous_portal = sample.portal_id;
 
-      // A single file is only legal when the corridor cannot hold two bodies.
       if (sample.current_files == 1U && sample.soldier_body_radius > 0.0F &&
           sample.corridor_half_width > 2.0F * sample.soldier_body_radius) {
         sink.add(MovementFindingKind::LayoutAspectRatio,
@@ -754,7 +723,6 @@ void analyze_troops(const std::vector<MovementTroopSample>& troops,
                                        std::max(0.01F, sample.soldier_body_radius))));
       }
 
-      // -- starvation --------------------------------------------------------
       if (walk.active_seconds > thresholds.starvation_seconds) {
         sink.add(MovementFindingKind::Starvation,
                  entity_id,
@@ -1108,9 +1076,7 @@ auto format_soldier_timeline(const std::vector<MovementSoldierSample>& soldiers,
 auto movement_digest(const std::vector<MovementTroopSample>& troops,
                      const std::vector<MovementSoldierSample>& soldiers)
     -> std::string {
-  // FNV-1a over the facts the plan names as the behavioural contract. Root
-  // samples are quantised to a millimetre so a digest compares behaviour, not
-  // float noise.
+
   std::uint64_t hash = 1469598103934665603ULL;
   auto mix = [&hash](std::uint64_t value) {
     for (int byte = 0; byte < 8; ++byte) {
@@ -1142,7 +1108,11 @@ auto movement_digest(const std::vector<MovementTroopSample>& troops,
     mix(sample->entity_id);
     mix(static_cast<std::uint64_t>(sample->state));
     mix(sample->command_sequence);
+    mix(sample->route_id);
     mix(sample->route_revision);
+    mix_position(sample->lane_offset);
+    mix_position(sample->lane_scale);
+    mix_position(sample->cohesion_pace);
     mix(sample->portal_id);
     mix(static_cast<std::uint64_t>(sample->traversal_mode));
     mix(sample->current_files);

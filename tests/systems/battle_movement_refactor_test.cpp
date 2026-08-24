@@ -45,8 +45,7 @@ TEST_F(LocalAvoidanceTest, LargeGroupProducesSteeringWithoutTeleportingUnits) {
     MovementTestAccess::set_target_y(*movement, 5.0F);
     MovementTestAccess::set_vx(*movement, 1.0F);
     MovementTestAccess::set_vz(*movement, 0.0F);
-    // Steering consumes the route follower's desired velocity and answers with
-    // a separate steered velocity; it may not write the motor's integrated one.
+
     auto* facts = entity->add_component<MovementFactsComponent>();
     facts->desired.valid = true;
     facts->desired.velocity_x = 1.0F;
@@ -70,9 +69,7 @@ TEST_F(LocalAvoidanceTest, LargeGroupProducesSteeringWithoutTeleportingUnits) {
     EXPECT_FLOAT_EQ(transform->position.x, original_positions[i].first);
     EXPECT_FLOAT_EQ(transform->position.z, original_positions[i].second);
   }
-  // Bodies that start on top of each other are a bad initial condition, not an
-  // encounter to steer around: the solver answers with a bounded separation
-  // push, and leaves the route intent alone.
+
   EXPECT_TRUE(std::any_of(units.begin(), units.end(), [](const Entity* entity) {
     const auto* facts = entity->get_component<MovementFactsComponent>();
     return facts != nullptr && facts->steering.valid &&

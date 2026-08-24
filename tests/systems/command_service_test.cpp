@@ -9,6 +9,8 @@
 #include "core/component.h"
 #include "core/system.h"
 #include "core/world.h"
+#include "game/formation/army_formation_registry.h"
+#include "game/formation/army_formation_service.h"
 #include "game/map/map_definition.h"
 #include "game/map/terrain_service.h"
 #include "game/systems/building_collision_registry.h"
@@ -18,6 +20,7 @@
 #include "game/systems/movement_pipeline.h"
 #include "game/systems/nav_grid.h"
 #include "game/systems/pathfinding.h"
+#include "game/systems/route_follow_system.h"
 #include "game/units/troop_config.h"
 #include "render/entity/registry.h"
 #include "render/gl/humanoid/animation/animation_inputs.h"
@@ -48,12 +51,14 @@ private:
 class CommandServiceTest : public ::testing::Test {
 protected:
   void SetUp() override {
+    Game::Formation::ArmyFormationRegistry::instance().clear();
     Game::Systems::BuildingCollisionRegistry::instance().clear();
     Game::Map::TerrainService::instance().clear();
     Game::Systems::NavGrid::initialize(32, 32);
   }
 
   void TearDown() override {
+    Game::Formation::ArmyFormationRegistry::instance().clear();
     Game::Map::TerrainService::instance().clear();
     Game::Systems::BuildingCollisionRegistry::instance().clear();
   }
@@ -714,9 +719,6 @@ TEST_F(CommandServiceTest, MultiUnitMoveRoutesEveryMemberThroughSingleCellGap) {
   EXPECT_TRUE(center_movement->get_has_target());
   EXPECT_TRUE(right_movement->get_has_target());
 
-  // Three bodies through one cell is a queue, and a queue takes longer than
-  // three bodies shoving past each other did. The assertion is unchanged: every
-  // member still has to cross.
   run_movement_for(world, {left, center, right}, 360);
   EXPECT_GT(left_transform->position.x, 8.0F);
   EXPECT_GT(center_transform->position.x, 8.0F);
@@ -829,13 +831,100 @@ TEST_F(CommandServiceTest, MultiUnitMoveCanRouteMembersIndividuallyThroughGap) {
   EXPECT_TRUE(center_movement->get_has_target());
   EXPECT_TRUE(right_movement->get_has_target());
 
-  // Three bodies through one cell is a queue, and a queue takes longer than
-  // three bodies shoving past each other did. The assertion is unchanged: every
-  // member still has to cross.
   run_movement_for(world, {left, center, right}, 360);
   EXPECT_GT(left_transform->position.x, 8.0F);
   EXPECT_GT(center_transform->position.x, 8.0F);
   EXPECT_GT(right_transform->position.x, 8.0F);
+}
+
+TEST_F(CommandServiceTest, GroupMoveOwnsOneCorridorWithStableMemberLaneOffsets) {
+  Engine::Core::World world;
+  auto* left = create_unit(world, -10.0F, -3.0F, Game::Units::SpawnType::Archer);
+  auto* center = create_unit(world, -10.0F, 0.0F, Game::Units::SpawnType::Archer);
+  auto* right = create_unit(world, -10.0F, 3.0F, Game::Units::SpawnType::Archer);
+  ASSERT_NE(left, nullptr);
+  ASSERT_NE(center, nullptr);
+  ASSERT_NE(right, nullptr);
+
+  auto* pathfinder = Game::Systems::NavGrid::get_pathfinder();
+  ASSERT_NE(pathfinder, nullptr);
+  pathfinder->update_navigation_grid();
+  for (int world_z = -4; world_z <= 4; ++world_z) {
+    Game::Systems::Point const wall_cell =
+        Game::Systems::NavGrid::world_to_grid(0.0F, static_cast<float>(world_z));
+    pathfinder->set_obstacle(wall_cell.x, wall_cell.y, true);
+  }
+
+  Game::Systems::CommandService::move_units(
+      world,
+      std::vector<Game::Systems::CommandService::MoveIntent>{
+          {.unit_id = right->get_id(), .target = QVector3D(10.0F, 0.0F, 3.0F)},
+          {.unit_id = center->get_id(), .target = QVector3D(10.0F, 0.0F, 0.0F)},
+          {.unit_id = left->get_id(), .target = QVector3D(10.0F, 0.0F, -3.0F)}});
+
+  auto const* left_movement = left->get_component<Engine::Core::MovementComponent>();
+  auto const* center_movement =
+      center->get_component<Engine::Core::MovementComponent>();
+  auto const* right_movement = right->get_component<Engine::Core::MovementComponent>();
+  ASSERT_NE(left_movement, nullptr);
+  ASSERT_NE(center_movement, nullptr);
+  ASSERT_NE(right_movement, nullptr);
+
+  std::uint64_t const corridor_id = center_movement->get_route_id();
+  EXPECT_NE(corridor_id, 0U);
+  EXPECT_EQ(left_movement->get_route_id(), corridor_id);
+  EXPECT_EQ(right_movement->get_route_id(), corridor_id);
+  EXPECT_NE(left_movement->get_route_lane_offset(),
+            center_movement->get_route_lane_offset());
+  EXPECT_NE(center_movement->get_route_lane_offset(),
+            right_movement->get_route_lane_offset());
+  EXPECT_TRUE(left_movement->get_has_target());
+  EXPECT_TRUE(center_movement->get_has_target());
+  EXPECT_TRUE(right_movement->get_has_target());
+
+  float const left_lane = left_movement->get_route_lane_offset();
+  float const center_lane = center_movement->get_route_lane_offset();
+  float const right_lane = right_movement->get_route_lane_offset();
+  Game::Systems::CommandService::move_units(
+      world,
+      std::vector<Game::Systems::CommandService::MoveIntent>{
+          {.unit_id = left->get_id(), .target = QVector3D(10.0F, 0.0F, -3.0F)},
+          {.unit_id = center->get_id(), .target = QVector3D(10.0F, 0.0F, 0.0F)},
+          {.unit_id = right->get_id(), .target = QVector3D(10.0F, 0.0F, 3.0F)}});
+  EXPECT_EQ(left_movement->get_route_id(), corridor_id);
+  EXPECT_EQ(center_movement->get_route_id(), corridor_id);
+  EXPECT_EQ(right_movement->get_route_id(), corridor_id);
+  EXPECT_FLOAT_EQ(left_movement->get_route_lane_offset(), left_lane);
+  EXPECT_FLOAT_EQ(center_movement->get_route_lane_offset(), center_lane);
+  EXPECT_FLOAT_EQ(right_movement->get_route_lane_offset(), right_lane);
+}
+
+TEST_F(CommandServiceTest, MixedSpeedGroupPublishesAndUsesOneDeclaredPace) {
+  Engine::Core::World world;
+  auto* slow = create_unit(world, -10.0F, -2.0F, Game::Units::SpawnType::Archer);
+  auto* fast = create_unit(world, -10.0F, 2.0F, Game::Units::SpawnType::Archer);
+  ASSERT_NE(slow, nullptr);
+  ASSERT_NE(fast, nullptr);
+  slow->get_component<Engine::Core::UnitComponent>()->speed = 2.0F;
+  fast->get_component<Engine::Core::UnitComponent>()->speed = 4.0F;
+
+  Game::Systems::CommandService::move_units(
+      world,
+      std::vector<Game::Systems::CommandService::MoveIntent>{
+          {.unit_id = slow->get_id(), .target = QVector3D(10.0F, 0.0F, -2.0F)},
+          {.unit_id = fast->get_id(), .target = QVector3D(10.0F, 0.0F, 2.0F)}});
+  Game::Systems::RouteFollowSystem route_follower;
+  route_follower.update(&world, 0.1F);
+
+  for (auto* member : {slow, fast}) {
+    const auto* movement = member->get_component<Engine::Core::MovementComponent>();
+    const auto* facts = member->get_component<Engine::Core::MovementFactsComponent>();
+    ASSERT_NE(movement, nullptr);
+    ASSERT_NE(facts, nullptr);
+    EXPECT_FLOAT_EQ(movement->get_declared_group_pace(), 2.0F);
+    EXPECT_FLOAT_EQ(facts->route.cohesion_pace, 2.0F);
+    EXPECT_NEAR(facts->desired.speed_limit, 2.0F, 0.001F);
+  }
 }
 
 TEST_F(CommandServiceTest,
@@ -928,6 +1017,153 @@ TEST_F(CommandServiceTest, PlannedMoveExpandsSharedDestinationIntoFormationSlots
   EXPECT_EQ(distinct_goal_count, 3U);
 }
 
+TEST_F(CommandServiceTest, GroupSlotAssignmentIsStableAcrossSelectionOrder) {
+  Engine::Core::World world;
+  auto* left = create_unit(world, -10.0F, -3.0F, Game::Units::SpawnType::Archer);
+  auto* center = create_unit(world, -10.0F, 0.0F, Game::Units::SpawnType::Archer);
+  auto* right = create_unit(world, -10.0F, 3.0F, Game::Units::SpawnType::Archer);
+  ASSERT_NE(left, nullptr);
+  ASSERT_NE(center, nullptr);
+  ASSERT_NE(right, nullptr);
+
+  QVector3D const target(10.0F, 0.0F, 0.0F);
+  auto const forward = Game::Systems::CommandService::resolve_group_slots(
+      world, {left->get_id(), center->get_id(), right->get_id()}, target);
+  auto const reversed = Game::Systems::CommandService::resolve_group_slots(
+      world, {right->get_id(), center->get_id(), left->get_id()}, target);
+  ASSERT_EQ(forward.size(), 3U);
+  ASSERT_EQ(reversed.size(), 3U);
+
+  auto position_for = [](auto const& resolved_slots, Engine::Core::EntityID member) {
+    auto const it =
+        std::find_if(resolved_slots.begin(),
+                     resolved_slots.end(),
+                     [&](auto const& slot) { return slot.member == member; });
+    EXPECT_NE(it, resolved_slots.end());
+    return it != resolved_slots.end() ? it->position : QVector3D{};
+  };
+  for (auto const member : {left->get_id(), center->get_id(), right->get_id()}) {
+    QVector3D const lhs = position_for(forward, member);
+    QVector3D const rhs = position_for(reversed, member);
+    EXPECT_NEAR(lhs.x(), rhs.x(), 0.001F);
+    EXPECT_NEAR(lhs.z(), rhs.z(), 0.001F);
+  }
+  for (auto const& slot : forward) {
+    EXPECT_NEAR(slot.facing_angle, 90.0F, 0.001F);
+  }
+  for (auto const& slot : reversed) {
+    EXPECT_NEAR(slot.facing_angle, 90.0F, 0.001F);
+  }
+
+  EXPECT_LT(position_for(forward, left->get_id()).z(),
+            position_for(forward, center->get_id()).z());
+  EXPECT_LT(position_for(forward, center->get_id()).z(),
+            position_for(forward, right->get_id()).z());
+
+  auto const edited = Game::Systems::CommandService::resolve_group_slots(
+      world,
+      {left->get_id(), center->get_id(), right->get_id()},
+      target + QVector3D(0.2F, 0.0F, 0.1F));
+  ASSERT_EQ(edited.size(), forward.size());
+  for (std::size_t index = 0; index < forward.size(); ++index) {
+    EXPECT_EQ(edited[index].stable_slot_id, forward[index].stable_slot_id);
+  }
+}
+
+TEST_F(CommandServiceTest, GroupMovePreservesExistingArmyFormationSlotIdentity) {
+  Engine::Core::World world;
+  auto* first = create_unit(world, -8.0F, -3.0F, Game::Units::SpawnType::Spearman);
+  auto* second = create_unit(world, -8.0F, 0.0F, Game::Units::SpawnType::Spearman);
+  auto* third = create_unit(world, -8.0F, 3.0F, Game::Units::SpawnType::Spearman);
+  ASSERT_NE(first, nullptr);
+  ASSERT_NE(second, nullptr);
+  ASSERT_NE(third, nullptr);
+
+  std::vector<Engine::Core::EntityID> const units = {
+      first->get_id(), second->get_id(), third->get_id()};
+  Game::Formation::ArmyFormationRequest request;
+  request.members = units;
+  request.anchor = QVector3D(-8.0F, 0.0F, 0.0F);
+  request.facing = 90.0F;
+  auto const committed = Game::Formation::ArmyFormationService::commit(world, request);
+  ASSERT_TRUE(committed.valid);
+  ASSERT_NE(committed.group_id, Game::Formation::k_invalid_group);
+
+  auto const first_plan = Game::Systems::CommandService::plan_ground_move(
+      world, units, QVector3D(10.0F, 0.0F, 0.0F));
+  auto const edited_plan = Game::Systems::CommandService::plan_ground_move(
+      world, units, QVector3D(10.2F, 0.0F, 0.1F));
+  ASSERT_EQ(first_plan.member_slots.size(), units.size());
+  ASSERT_EQ(edited_plan.member_slots.size(), units.size());
+
+  for (std::size_t index = 0; index < units.size(); ++index) {
+    auto const* membership =
+        world.get_entity(units[index])
+            ->get_component<Engine::Core::ArmyFormationMembershipComponent>();
+    ASSERT_NE(membership, nullptr);
+    EXPECT_EQ(first_plan.member_slots[index].stable_slot_id, membership->slot_id);
+    EXPECT_EQ(edited_plan.member_slots[index].stable_slot_id, membership->slot_id);
+  }
+}
+
+TEST_F(CommandServiceTest, BlockedGroupSlotsAreDeclaredAndNotIssuedAsSharedGoals) {
+  Engine::Core::World world;
+  auto* first = create_unit(world, -10.0F, -2.0F, Game::Units::SpawnType::Archer);
+  auto* second = create_unit(world, -10.0F, 2.0F, Game::Units::SpawnType::Archer);
+  ASSERT_NE(first, nullptr);
+  ASSERT_NE(second, nullptr);
+
+  auto* pathfinder = Game::Systems::NavGrid::get_pathfinder();
+  ASSERT_NE(pathfinder, nullptr);
+  pathfinder->update_navigation_grid();
+  for (int z = 0; z < 32; ++z) {
+    for (int x = 0; x < 32; ++x) {
+      pathfinder->set_obstacle(x, z, true);
+    }
+  }
+
+  std::vector<Engine::Core::EntityID> const units = {first->get_id(), second->get_id()};
+  auto const plan = Game::Systems::CommandService::plan_ground_move(
+      world, units, QVector3D(10.0F, 0.0F, 0.0F));
+  ASSERT_EQ(plan.member_slots.size(), units.size());
+  EXPECT_TRUE(std::all_of(
+      plan.member_slots.begin(), plan.member_slots.end(), [](auto const& slot) {
+        return slot.placement == Game::Systems::CommandService::SlotPlacement::Blocked;
+      }));
+  EXPECT_EQ(plan.member_slots[0].position, QVector3D(-10.0F, 0.0F, -2.0F));
+  EXPECT_EQ(plan.member_slots[1].position, QVector3D(-10.0F, 0.0F, 2.0F));
+
+  Game::Systems::CommandService::issue_ground_move(world, units, plan);
+  EXPECT_FALSE(
+      first->get_component<Engine::Core::MovementComponent>()->get_has_target());
+  EXPECT_FALSE(
+      second->get_component<Engine::Core::MovementComponent>()->get_has_target());
+}
+
+TEST_F(CommandServiceTest, GroupSlotsMustBeReachableNotMerelyWalkable) {
+  Engine::Core::World world;
+  auto* first = create_unit(world, -10.0F, -2.0F, Game::Units::SpawnType::Archer);
+  auto* second = create_unit(world, -10.0F, 2.0F, Game::Units::SpawnType::Archer);
+  ASSERT_NE(first, nullptr);
+  ASSERT_NE(second, nullptr);
+
+  auto* pathfinder = Game::Systems::NavGrid::get_pathfinder();
+  ASSERT_NE(pathfinder, nullptr);
+  pathfinder->update_navigation_grid();
+  for (int z = 0; z < 32; ++z) {
+    pathfinder->set_obstacle(16, z, true);
+  }
+
+  std::vector<Engine::Core::EntityID> const units = {first->get_id(), second->get_id()};
+  auto const plan = Game::Systems::CommandService::plan_ground_move(
+      world, units, QVector3D(10.0F, 0.0F, 0.0F));
+  ASSERT_EQ(plan.member_slots.size(), units.size());
+  EXPECT_TRUE(std::all_of(
+      plan.member_slots.begin(), plan.member_slots.end(), [](auto const& slot) {
+        return slot.placement == Game::Systems::CommandService::SlotPlacement::Blocked;
+      }));
+}
+
 TEST_F(CommandServiceTest, FormationMovePreservesCurrentRelativeShape) {
   Engine::Core::World world;
   auto* first = create_unit(world, -8.0F, -3.0F, Game::Units::SpawnType::Spearman);
@@ -942,12 +1178,21 @@ TEST_F(CommandServiceTest, FormationMovePreservesCurrentRelativeShape) {
   auto const plan = Game::Systems::CommandService::plan_ground_move(
       world, units, QVector3D(8.0F, 0.0F, 4.0F), true);
 
-  ASSERT_EQ(plan.positions.size(), 3U);
+  ASSERT_EQ(plan.member_slots.size(), 3U);
   EXPECT_TRUE(plan.preserve_formation_mode);
-  EXPECT_LT(plan.positions[0].x(), plan.positions[1].x());
-  EXPECT_LT(plan.positions[1].x(), plan.positions[2].x());
-  EXPECT_NEAR(plan.positions[1].x() - plan.positions[0].x(), 3.0F, 0.01F);
-  EXPECT_NEAR(plan.positions[2].x() - plan.positions[1].x(), 3.0F, 0.01F);
+  EXPECT_LT(plan.member_slots[0].position.x(), plan.member_slots[1].position.x());
+  EXPECT_LT(plan.member_slots[1].position.x(), plan.member_slots[2].position.x());
+  EXPECT_NEAR(plan.member_slots[1].position.x() - plan.member_slots[0].position.x(),
+              3.0F,
+              0.01F);
+  EXPECT_NEAR(plan.member_slots[2].position.x() - plan.member_slots[1].position.x(),
+              3.0F,
+              0.01F);
+  float const facing = plan.member_slots.front().facing_angle;
+  EXPECT_NE(facing, 0.0F);
+  for (auto const& slot : plan.member_slots) {
+    EXPECT_FLOAT_EQ(slot.facing_angle, facing);
+  }
 }
 
 TEST_F(CommandServiceTest, PlannedMoveUsesLargeUnitFootprintForSharedDestination) {

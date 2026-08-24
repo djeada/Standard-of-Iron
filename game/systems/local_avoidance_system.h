@@ -24,19 +24,6 @@ struct LocalAvoidanceDiagnostics {
   std::uint32_t candidates_evaluated{0};
 };
 
-// Stage two of the Movement phase: predictive avoidance.
-//
-// The old solver was overlap-reactive -- it acted only after two circles were
-// already intersecting, averaged every correction, and skipped avoidance
-// entirely between members of the same formation or the same owner. That is not
-// coordination; it permits overlap and moves the repair downstream. Symmetric
-// crowds could also alternate between two equally plausible escapes, because
-// nothing remembered which side an encounter had already committed to.
-//
-// This solver predicts. It builds the neighbour set from swept circles over a
-// bounded time horizon, evaluates a fixed, deterministically ordered fan of
-// candidate velocities, and publishes the winner as a steered velocity. The
-// motor remains the authority on what displacement is accepted.
 class LocalAvoidanceSystem : public Engine::Core::System {
 public:
   void run(Engine::Core::SystemContext& context) override;
@@ -48,22 +35,17 @@ public:
   }
 
   static constexpr float k_default_cell_size = 4.0F;
-  // Bodies keep this much air between them before either is asked to steer.
+
   static constexpr float k_separation_radius = 0.15F;
-  // How far ahead the solver looks. Beyond it, an encounter is not this tick's
-  // problem and open ground costs nothing.
+
   static constexpr float k_time_horizon_seconds = 2.5F;
-  // Deterministic candidate fan. Angles are tried in this order and ties break
-  // toward the earlier entry, so two symmetric bodies never coin-flip.
+
   static constexpr int k_candidate_angle_count = 9;
   static constexpr int k_candidate_speed_count = 3;
   static constexpr std::size_t k_max_neighbors = 6;
-  // A committed passing side is held for at least this long, so a pair cannot
-  // swap sides every time the geometry crosses a tie.
+
   static constexpr float k_passing_side_hold_seconds = 1.25F;
-  // Bodies that start the tick already overlapping get a bounded push. It is
-  // separate from steering and is applied by the motor, so it can never move a
-  // root through a wall.
+
   static constexpr float k_overlap_correction_speed = 1.5F;
 
 private:
@@ -75,9 +57,7 @@ private:
     float core_radius{0.5F};
     float desired_vx{0.0F};
     float desired_vz{0.0F};
-    // What this body actually steered to last tick. Predicting a neighbour from
-    // its raw intent makes both of a pair believe the other will barrel through,
-    // so both keep dodging.
+
     float predicted_vx{0.0F};
     float predicted_vz{0.0F};
     float max_speed{0.0F};

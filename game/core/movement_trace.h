@@ -12,8 +12,6 @@
 
 namespace Engine::Core {
 
-// Per-simulation-tick record for one troop entity. Plain data; the recorder
-// never reads back into the world.
 struct MovementTroopSample {
   std::uint64_t session_id{0};
   std::uint64_t tick{0};
@@ -39,6 +37,9 @@ struct MovementTroopSample {
   std::uint64_t route_id{0};
   std::uint64_t route_revision{0};
   std::uint64_t topology_revision{0};
+  float lane_offset{0.0F};
+  float lane_scale{1.0F};
+  float cohesion_pace{0.0F};
   std::uint32_t waypoint_index{0};
   std::uint32_t waypoint_count{0};
   float waypoint_x{0.0F};
@@ -100,7 +101,6 @@ struct MovementTroopSample {
   float locomotion_phase{0.0F};
 };
 
-// Per-rendered-frame record for one soldier inside a troop entity.
 struct MovementSoldierSample {
   std::uint64_t session_id{0};
   std::uint64_t frame{0};
@@ -144,8 +144,6 @@ struct MovementSoldierSample {
   bool relocation_drives_locomotion{false};
 };
 
-// Everything that must be recorded alongside an artifact so a run can be
-// reproduced: seed, commands, topology, step, caps, build, preset, composition.
 struct MovementTraceManifest {
   std::uint64_t seed{0};
   std::string command_stream;
@@ -161,27 +159,17 @@ struct MovementTraceManifest {
   std::vector<std::pair<std::string, std::string>> extra;
 };
 
-// Opt-in trace sink. Disabled it costs one predictable bool load per call site;
-// there is no string formatting on the disabled path and no allocation.
 class MovementTrace {
 public:
   static auto instance() -> MovementTrace&;
 
   [[nodiscard]] auto enabled() const noexcept -> bool { return m_enabled; }
 
-  // Opens a file session from SOI_MOVEMENT_TRACE_DIR the first time it is
-  // called, so any binary that runs a world -- a headless test, the arena, the
-  // game -- can produce an artifact without a code change. Does nothing when
-  // the variable is unset or a session is already open.
   void configure_from_environment();
 
-  // Streams JSONL into `directory` (created if needed) and writes manifest.json.
-  // Returns false and stays disabled if the directory cannot be opened.
   auto begin_file_session(const std::string& directory,
                           const MovementTraceManifest& manifest) -> bool;
 
-  // Records into memory only. Used by headless gates that assert on the
-  // analysis instead of parsing an artifact back.
   void begin_memory_session(const MovementTraceManifest& manifest);
 
   void end_session();
@@ -197,7 +185,6 @@ public:
   [[nodiscard]] auto troop_sample_count() const -> std::size_t;
   [[nodiscard]] auto soldier_sample_count() const -> std::size_t;
 
-  // Bounds the in-memory buffers so a soak run cannot grow without limit.
   void set_memory_sample_limit(std::size_t troop_limit, std::size_t soldier_limit);
 
 private:
@@ -211,7 +198,6 @@ private:
   std::unique_ptr<Session> m_session;
 };
 
-// Scoped memory-session helper for tests.
 class ScopedMovementTrace {
 public:
   explicit ScopedMovementTrace(const MovementTraceManifest& manifest);

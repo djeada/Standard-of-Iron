@@ -86,10 +86,6 @@ public:
 
   [[nodiscard]] auto tick_id() const noexcept -> std::uint64_t { return m_tick_id; }
 
-  // Distinguishes one world from another inside a single process. Entity ids
-  // restart per world, so anything that records samples across worlds -- a
-  // trace spanning a whole test binary, a replay comparison -- has to key on
-  // this as well or it will splice two unrelated bodies into one timeline.
   [[nodiscard]] auto instance_id() const noexcept -> std::uint64_t {
     return m_instance_id;
   }

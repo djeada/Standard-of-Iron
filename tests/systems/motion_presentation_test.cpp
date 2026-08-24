@@ -52,7 +52,7 @@ TEST(MotionPresentationTest, AUnitThatCannotAdvanceStopsPresentingAWalk) {
   movement->set_manual_velocity(1.7F, 0.0F);
 
   world.update(k_step);
-  EXPECT_EQ(motion_state(*walker), Engine::Core::MotionPresentationState::Walk);
+  EXPECT_EQ(motion_state(*walker), Engine::Core::MotionPresentationState::Idle);
 
   for (int tick = 0; tick < 30; ++tick) {
     movement->set_manual_velocity(1.7F, 0.0F);
@@ -77,7 +77,63 @@ TEST(MotionPresentationTest, AUnitThatKeepsMovingKeepsWalking) {
     world.update(k_step);
   }
 
-  EXPECT_EQ(motion_state(*walker), Engine::Core::MotionPresentationState::Walk);
+  EXPECT_EQ(motion_state(*walker),
+            Engine::Core::MotionPresentationState::ForcedDisplacement);
+}
+
+TEST(MotionPresentationTest, AcceptedMotorFactsOwnPresentedVelocityAndDisplacement) {
+  Engine::Core::World world;
+  auto glide = std::make_unique<ScriptedGlide>();
+  auto* glide_ref = glide.get();
+  world.add_system(std::move(glide));
+  auto* walker = add_walker(world);
+  auto* facts = walker->add_component<Engine::Core::MovementFactsComponent>();
+  glide_ref->speed = 1.7F;
+  facts->motor.valid = true;
+  facts->motor.accepted_dx = glide_ref->speed * k_step;
+  facts->motor.accepted_vx = glide_ref->speed;
+
+  world.update(k_step);
+
+  auto const* motion =
+      walker->get_component<Engine::Core::MotionPresentationComponent>();
+  ASSERT_NE(motion, nullptr);
+  EXPECT_EQ(motion->state, Engine::Core::MotionPresentationState::Walk);
+  EXPECT_FLOAT_EQ(motion->displacement_x, facts->motor.accepted_dx);
+  EXPECT_FLOAT_EQ(motion->velocity_x, facts->motor.accepted_vx);
+  EXPECT_FLOAT_EQ(motion->speed, facts->motor.accepted_vx);
+  EXPECT_EQ(facts->direction_source,
+            Engine::Core::MovementDirectionSource::AcceptedVelocity);
+}
+
+TEST(MotionPresentationTest, NonTranslatingOrderStatesRemainDistinct) {
+  Engine::Core::World world;
+  auto* walker = add_walker(world);
+  auto* facts = walker->add_component<Engine::Core::MovementFactsComponent>();
+  facts->motor.valid = true;
+  facts->desired.valid = true;
+  facts->desired.tangent_x = 1.0F;
+  facts->desired.tangent_z = 0.0F;
+
+  facts->progress.state = Engine::Core::MovementOrderState::Turning;
+  world.update(k_step);
+  auto const* motion =
+      walker->get_component<Engine::Core::MotionPresentationComponent>();
+  ASSERT_NE(motion, nullptr);
+  EXPECT_EQ(motion->state, Engine::Core::MotionPresentationState::Turning);
+  EXPECT_FLOAT_EQ(motion->direction_x, 1.0F);
+  EXPECT_EQ(facts->direction_source,
+            Engine::Core::MovementDirectionSource::RouteTangent);
+
+  facts->progress.state = Engine::Core::MovementOrderState::Yielding;
+  world.update(k_step);
+  EXPECT_EQ(motion->state, Engine::Core::MotionPresentationState::Yielding);
+  EXPECT_FALSE(motion->has_locomotion());
+
+  facts->progress.state = Engine::Core::MovementOrderState::Recovering;
+  world.update(k_step);
+  EXPECT_EQ(motion->state, Engine::Core::MotionPresentationState::Recovering);
+  EXPECT_FALSE(motion->has_locomotion());
 }
 
 TEST(MotionPresentationTest, AStalledUnitWalksAgainOnceItIsFreed) {
@@ -101,7 +157,8 @@ TEST(MotionPresentationTest, AStalledUnitWalksAgainOnceItIsFreed) {
     world.update(k_step);
   }
 
-  EXPECT_EQ(motion_state(*walker), Engine::Core::MotionPresentationState::Walk);
+  EXPECT_EQ(motion_state(*walker),
+            Engine::Core::MotionPresentationState::ForcedDisplacement);
 }
 
 } // namespace

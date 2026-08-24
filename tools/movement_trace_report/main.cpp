@@ -1,14 +1,4 @@
-// Reads a MovementTrace artifact directory and prints the analysis.
-//
-// The plan's rule is that a movement defect must become a machine-readable
-// failure before anyone touches the code that causes it. This is the tool that
-// turns a captured run into that failure: a summary table, the findings ranked
-// by first occurrence, and a timeline window around the first failing tick for
-// the worst entity and the worst soldier.
-//
-//   movement_trace_report <directory> [--timeline N] [--quiet] [--digest]
-//
-// Exits nonzero when the analysis finds anything, so it can be a gate.
+
 
 #include <cstdlib>
 #include <cstring>

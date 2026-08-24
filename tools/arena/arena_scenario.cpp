@@ -1032,7 +1032,10 @@ struct ArenaScenarioRunner::Impl {
       auto const& group_ids = ids(step.group);
       auto plan = Game::Systems::CommandService::plan_ground_move(
           world, group_ids, world_origin + step.destination);
-      Game::Systems::CommandService::move_units(world, group_ids, plan.positions);
+      if (plan.fully_placeable_for(group_ids)) {
+        Game::Systems::CommandService::move_units(
+            world, group_ids, plan.target_positions());
+      }
       arm_response(step.group, command_name(step.command));
       break;
     }
@@ -1322,7 +1325,10 @@ struct ArenaScenarioRunner::Impl {
       auto const& group_ids = ids(step.group);
       auto plan = Game::Systems::CommandService::plan_ground_move(
           world, group_ids, world_origin + step.destination);
-      Game::Systems::CommandService::move_units(world, group_ids, plan.positions);
+      if (plan.fully_placeable_for(group_ids)) {
+        Game::Systems::CommandService::move_units(
+            world, group_ids, plan.target_positions());
+      }
       arm_response(step.group, command_name(step.command));
       break;
     }

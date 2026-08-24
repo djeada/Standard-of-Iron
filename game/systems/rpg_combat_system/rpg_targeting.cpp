@@ -2,42 +2,10 @@
 
 #include <algorithm>
 #include <cmath>
-#include <numbers>
 
 #include "../formation_combat_geometry.h"
 
 namespace Game::Systems::RpgCombat {
-
-namespace {
-
-[[nodiscard]] auto presented_soldier(
-    const Engine::Core::FormationPresentationComponent* presentation,
-    std::uint16_t slot) -> const Engine::Core::FormationSoldierPresentation* {
-  if (presentation == nullptr) {
-    return nullptr;
-  }
-  auto const found =
-      std::find_if(presentation->soldiers.begin(),
-                   presentation->soldiers.end(),
-                   [slot](auto const& soldier) { return soldier.slot_index == slot; });
-  return found != presentation->soldiers.end() && found->alive ? &*found : nullptr;
-}
-
-[[nodiscard]] auto
-presented_world_position(const Engine::Core::TransformComponent& transform,
-                         float local_x,
-                         float local_z) -> QVector3D {
-  float const yaw = transform.rotation.y * std::numbers::pi_v<float> / 180.0F;
-  float const sin_yaw = std::sin(yaw);
-  float const cos_yaw = std::cos(yaw);
-  return {
-      transform.position.x + cos_yaw * local_x + sin_yaw * local_z,
-      transform.position.y,
-      transform.position.z - sin_yaw * local_x + cos_yaw * local_z,
-  };
-}
-
-} // namespace
 
 auto live_soldier_targets(Engine::Core::Entity& entity) -> std::vector<SoldierTarget> {
   std::vector<SoldierTarget> result;
@@ -49,23 +17,15 @@ auto live_soldier_targets(Engine::Core::Entity& entity) -> std::vector<SoldierTa
 
   auto const layout = FormationCombat::resolve_layout(entity);
   if (FormationCombat::has_formation_slots(entity)) {
-    auto const* presentation =
-        entity.get_component<Engine::Core::FormationPresentationComponent>();
-    result.reserve(layout.live_slots.size());
-    for (auto const& slot : layout.live_slots) {
-      auto const* presented = presented_soldier(presentation, slot.index);
-      QVector3D const position =
-          presented != nullptr
-              ? presented_world_position(
-                    *transform, presented->local_x, presented->local_z)
-              : QVector3D(slot.world_x, transform->position.y, slot.world_z);
+    auto const anchors = FormationCombat::soldier_spatial_anchors(entity, layout);
+    result.reserve(anchors.size());
+    for (auto const& anchor : anchors) {
       result.push_back({
           .entity = &entity,
           .entity_id = entity.get_id(),
-          .soldier_slot = slot.index,
-          .position = position,
-          .yaw_degrees = transform->rotation.y +
-                         (presented != nullptr ? presented->local_yaw : slot.local_yaw),
+          .soldier_slot = anchor.slot_index,
+          .position = {anchor.world_x, transform->position.y, anchor.world_z},
+          .yaw_degrees = transform->rotation.y + anchor.local_yaw,
           .body_radius = layout.body_radius,
       });
     }

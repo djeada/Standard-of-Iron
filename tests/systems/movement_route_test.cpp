@@ -20,9 +20,11 @@
 #include "game/systems/nav_grid.h"
 #include "game/systems/owner_registry.h"
 #include "game/systems/pathfinding.h"
+#include "game/systems/route_corridor_planner.h"
 #include "game/systems/runtime_system_registry.h"
 #include "game/units/factory.h"
 #include "game/units/spawn_type.h"
+#include "tests/support/movement_test_access.h"
 
 namespace {
 
@@ -36,8 +38,8 @@ using Game::Systems::CommandService;
 using Game::Systems::MovementRoute;
 using Game::Systems::NavGrid;
 using Game::Systems::Point;
+using Game::Systems::RouteCorridorPlanner;
 
-// An L: five metres east, then five metres north.
 auto corner_route() -> MovementRoute {
   MovementRoute route;
   const std::vector<std::pair<float, float>> waypoints{{5.0F, 0.0F}, {5.0F, 5.0F}};
@@ -61,8 +63,6 @@ TEST(MovementRouteTest, ProgressNeverRunsBackwards) {
   const float advanced = route.travelled();
   EXPECT_NEAR(advanced, 4.0F, 1.0e-3F);
 
-  // Pushed back down the route by a crowd: the body is nearer the start, but
-  // the route it has consumed is not.
   route.advance_to(route.project(1.0F, 0.0F, 6.0F).s);
   EXPECT_GE(route.travelled(), advanced);
 }
@@ -72,8 +72,6 @@ TEST(MovementRouteTest, ProjectionOnlySearchesForwardWithinItsWindow) {
   route.advance_to(route.project(5.0F, 4.0F, 12.0F).s);
   EXPECT_NEAR(route.travelled(), 9.0F, 1.0e-3F);
 
-  // A point sitting on the first leg is outside the window, so it cannot
-  // re-acquire a part of the route the body already left.
   const auto projection = route.project(1.0F, 0.0F, 1.0F);
   EXPECT_GE(projection.s, 9.0F);
 }
@@ -87,8 +85,7 @@ TEST(MovementRouteTest, LateralErrorIsTheDistanceOffTheLine) {
 
 TEST(MovementRouteTest, SteeringNeverAimsPastTheCorner) {
   const auto route = corner_route();
-  // Two metres in, a two-metre lookahead would otherwise cut the corner and
-  // walk the body through whatever the corner is bending around.
+
   EXPECT_NEAR(route.next_vertex_s(2.0F), 5.0F, 1.0e-3F);
   EXPECT_NEAR(route.next_vertex_s(5.0F), 10.0F, 1.0e-3F);
 
@@ -108,9 +105,7 @@ TEST(MovementRouteTest, ADegenerateBuildStillRecordsItsRevision) {
   MovementRoute route;
   EXPECT_FALSE(route.build(7U, 0U, 1.0F, 1.0F, {}, 0U, 1.0F, 1.0F));
   EXPECT_FALSE(route.valid());
-  // Otherwise the follower rebuilds it every tick, and a rebuild resets the
-  // progress measurement -- which is how an order stayed Following for
-  // seventeen seconds without moving.
+
   EXPECT_EQ(route.route_revision(), 7U);
 }
 
@@ -122,6 +117,129 @@ TEST(MovementRouteTest, AMovingGoalKeepsTheArclengthAlreadyTravelled) {
   route.update_final_point(5.0F, 6.0F);
   EXPECT_FLOAT_EQ(route.length(), 11.0F);
   EXPECT_FLOAT_EQ(route.travelled(), travelled);
+}
+
+TEST(RouteCorridorPlannerTest, MembersReceiveDistinctLanesWithValidConnectors) {
+  NavGrid::initialize(64, 64);
+  auto* pathfinder = NavGrid::get_pathfinder();
+  ASSERT_NE(pathfinder, nullptr);
+  pathfinder->update_navigation_grid();
+
+  QVector3D const center_start = NavGrid::grid_to_world({12, 32});
+  QVector3D const center_destination = NavGrid::grid_to_world({52, 32});
+  auto const corridor =
+      RouteCorridorPlanner::plan(*pathfinder,
+                                 center_start,
+                                 center_destination,
+                                 Game::Systems::Pathfinding::Passability::Light,
+                                 0.25F);
+  ASSERT_TRUE(corridor.reachable());
+
+  QVector3D const left_start = center_start + QVector3D(-2.0F, 0.0F, -3.0F);
+  QVector3D const right_start = center_start + QVector3D(-2.0F, 0.0F, 3.0F);
+  QVector3D const left_destination = center_destination + QVector3D(2.0F, 0.0F, -3.0F);
+  QVector3D const right_destination = center_destination + QVector3D(2.0F, 0.0F, 3.0F);
+
+  auto const left =
+      RouteCorridorPlanner::fit_lane(*pathfinder,
+                                     corridor,
+                                     left_start,
+                                     left_destination,
+                                     3.0F,
+                                     Game::Systems::Pathfinding::Passability::Light,
+                                     0.25F);
+  auto const right =
+      RouteCorridorPlanner::fit_lane(*pathfinder,
+                                     corridor,
+                                     right_start,
+                                     right_destination,
+                                     -3.0F,
+                                     Game::Systems::Pathfinding::Passability::Light,
+                                     0.25F);
+  ASSERT_TRUE(left.valid());
+  ASSERT_TRUE(right.valid());
+
+  EXPECT_EQ(left.waypoints.front(), left_start);
+  EXPECT_EQ(right.waypoints.front(), right_start);
+  EXPECT_EQ(left.waypoints.back(), left_destination);
+  EXPECT_EQ(right.waypoints.back(), right_destination);
+  ASSERT_GT(left.waypoints.size(), 3U);
+  ASSERT_GT(right.waypoints.size(), 3U);
+  EXPECT_LT(left.waypoints[left.waypoints.size() / 2U].z(),
+            right.waypoints[right.waypoints.size() / 2U].z());
+
+  auto expect_route_clear = [&](auto const& lane) {
+    for (std::size_t index = 1; index < lane.waypoints.size(); ++index) {
+      EXPECT_TRUE(pathfinder->is_world_segment_walkable(
+          lane.waypoints[index - 1U],
+          lane.waypoints[index],
+          Game::Systems::Pathfinding::Passability::Light,
+          0.25F));
+    }
+  };
+  expect_route_clear(left);
+  expect_route_clear(right);
+}
+
+TEST(RouteCorridorPlannerTest, NarrowPortalDeclaresControlledLaneCompression) {
+  NavGrid::initialize(64, 64);
+  auto* pathfinder = NavGrid::get_pathfinder();
+  ASSERT_NE(pathfinder, nullptr);
+  pathfinder->update_navigation_grid();
+  for (int x = 29; x <= 35; ++x) {
+    for (int z = 0; z < 64; ++z) {
+      if (z >= 29 && z <= 35) {
+        continue;
+      }
+      pathfinder->set_obstacle(x, z, true);
+    }
+  }
+
+  QVector3D const start = NavGrid::grid_to_world({12, 32});
+  QVector3D const destination = NavGrid::grid_to_world({52, 32});
+  EXPECT_FALSE(pathfinder->is_world_position_walkable(
+      NavGrid::grid_to_world({32, 38}),
+      Game::Systems::Pathfinding::Passability::Light,
+      0.25F));
+  EXPECT_FALSE(pathfinder->is_world_segment_walkable(
+      start + QVector3D(0.0F, 0.0F, 12.0F),
+      destination + QVector3D(0.0F, 0.0F, 12.0F),
+      Game::Systems::Pathfinding::Passability::Light,
+      0.25F));
+  Game::Systems::RouteCorridorPlan corridor;
+  corridor.id = 1U;
+  corridor.centerline = {start, destination};
+  ASSERT_TRUE(corridor.reachable());
+
+  auto const lane =
+      RouteCorridorPlanner::fit_lane(*pathfinder,
+                                     corridor,
+                                     start + QVector3D(0.0F, 0.0F, 12.0F),
+                                     destination + QVector3D(0.0F, 0.0F, 12.0F),
+                                     -12.0F,
+                                     Game::Systems::Pathfinding::Passability::Light,
+                                     0.25F);
+  ASSERT_TRUE(lane.valid());
+  EXPECT_TRUE(lane.requires_controlled_break());
+  EXPECT_LT(lane.minimum_lateral_scale, 1.0F);
+  EXPECT_TRUE(lane.opening_point.has_value());
+  EXPECT_TRUE(lane.reform_point.has_value());
+}
+
+TEST(RouteCorridorPlannerTest, LaneScaleReformsAfterTheExitWaypoint) {
+  Engine::Core::MovementComponent movement;
+  MovementTestAccess::set_path(
+      movement, {{0.0F, 0.0F}, {1.0F, 0.0F}, {2.0F, 0.0F}, {3.0F, 0.0F}});
+  MovementTestAccess::set_route_lane_state(movement, 0.25F, 1U, 3U);
+
+  MovementTestAccess::set_path_index(movement, 0U);
+  EXPECT_FLOAT_EQ(movement.get_route_lane_scale(), 1.0F);
+  MovementTestAccess::set_path_index(movement, 1U);
+  EXPECT_FLOAT_EQ(movement.get_route_lane_scale(), 0.25F);
+  MovementTestAccess::set_path_index(movement, 2U);
+  EXPECT_FLOAT_EQ(movement.get_route_lane_scale(), 0.25F);
+  MovementTestAccess::set_path_index(movement, 3U);
+  EXPECT_FLOAT_EQ(movement.get_route_lane_scale(), 1.0F);
 }
 
 namespace {
@@ -163,8 +281,6 @@ protected:
     Game::Systems::NationRegistry::instance().clear();
   }
 
-  // A determinism comparison needs two runs whose entity identities line up, so
-  // each capture gets its own world rather than reusing one with fresh handles.
   void reset_session() {
     m_scope.reset();
     m_session.reset();
@@ -246,8 +362,6 @@ protected:
 
 } // namespace
 
-// Gate 2: an accepted order never stays active forever. A goal behind a sealed
-// wall must reach a declared terminal outcome, not idle with the order alive.
 TEST_F(MovementMotorTest, AnUnreachableGoalEndsInADeclaredOutcome) {
   seal_column(30);
   const EntityID id = spawn(Game::Units::SpawnType::Spearman, world_of(20, 24));
@@ -270,16 +384,11 @@ TEST_F(MovementMotorTest, AnUnreachableGoalEndsInADeclaredOutcome) {
   EXPECT_FALSE(movement->get_has_target());
 }
 
-// The old motor tried global X, then global Z, and zeroed the other axis'
-// velocity. A body walking diagonally into a wall therefore stopped dead
-// instead of sliding along it.
 TEST_F(MovementMotorTest, AWallDoesNotStopTravelAlongIt) {
   seal_column(30);
   const EntityID id = spawn(Game::Units::SpawnType::Spearman, world_of(28, 10));
   ASSERT_NE(id, 0U);
 
-  // A goal on the far side and well up the wall: the route hugs the wall, and
-  // the body must keep making ground along it.
   CommandService::move_unit(m_session->world(), id, world_of(29, 40));
   run_for(12.0);
 
@@ -287,8 +396,6 @@ TEST_F(MovementMotorTest, AWallDoesNotStopTravelAlongIt) {
       << "the body stopped at the wall instead of travelling along it";
 }
 
-// Gate 2 again: a whole run of an ordinary open-ground order must produce no
-// findings at all.
 TEST_F(MovementMotorTest, AnOpenGroundOrderProducesNoFindings) {
   const EntityID id = spawn(Game::Units::SpawnType::Spearman, world_of(10, 24));
   ASSERT_NE(id, 0U);
@@ -310,18 +417,12 @@ TEST_F(MovementMotorTest, AnOpenGroundOrderProducesNoFindings) {
   EXPECT_GT(position_of(id).x(), world_of(36, 24).x());
 }
 
-// Gate 3: two crossing streams must both clear without starvation, without an
-// unresolved overlap, and without either side alternating its passing choice.
 TEST_F(MovementMotorTest, CrossingStreamsBothClearWithoutFindings) {
   Engine::Core::MovementTraceManifest manifest;
   manifest.scenario = "crossing_streams";
   manifest.fixed_step_seconds = static_cast<float>(m_session->clock().tick_seconds());
   const Engine::Core::ScopedMovementTrace trace(manifest);
 
-  // A troop's body is its whole formation, several metres across, so both the
-  // spawn line and the destination slots are spaced wider than that. Slots
-  // closer together than the bodies are wide are a group-placement defect, and
-  // Milestone 4 owns it; this scenario is about the crossing.
   std::vector<EntityID> eastbound;
   std::vector<EntityID> northbound;
   for (int index = 0; index < 4; ++index) {
@@ -358,8 +459,6 @@ TEST_F(MovementMotorTest, CrossingStreamsBothClearWithoutFindings) {
   }
 }
 
-// A body already following a route on open ground must not wobble merely
-// because a crowd is armed somewhere nearby.
 TEST_F(MovementMotorTest, OpenGroundTravelIsUnconstrainedBesideACrowd) {
   std::vector<EntityID> crowd;
   for (int index = 0; index < 8; ++index) {
@@ -382,9 +481,6 @@ TEST_F(MovementMotorTest, OpenGroundTravelIsUnconstrainedBesideACrowd) {
   EXPECT_NEAR(facts->steering.correction_z, 0.0F, 1.0e-4F);
 }
 
-// A head-on pair commits to one side and holds it. The old solver averaged
-// every overlap correction, so a symmetric encounter could alternate between
-// two equally plausible escapes for as long as it lasted.
 TEST_F(MovementMotorTest, APassingSideIsHeldOnceCommitted) {
   const EntityID west = spawn(Game::Units::SpawnType::Spearman, world_of(16, 24));
   const EntityID east = spawn(Game::Units::SpawnType::Spearman, world_of(32, 24));
@@ -419,13 +515,10 @@ TEST_F(MovementMotorTest, APassingSideIsHeldOnceCommitted) {
   }
   EXPECT_LE(reversals, 1) << "the passing side alternated " << reversals << " times";
 
-  // And both bodies get past each other rather than deadlocking nose to nose.
   EXPECT_GT(position_of(west).x(), world_of(30, 24).x());
   EXPECT_LT(position_of(east).x(), world_of(18, 24).x());
 }
 
-// Gate 3: repeated runs of the same commands in one binary produce the same
-// movement digest.
 TEST_F(MovementMotorTest, RepeatedRunsAgreeOnTheMovementDigest) {
   auto capture = [this]() {
     reset_session();

@@ -7,6 +7,7 @@
 #include <string>
 #include <vector>
 
+#include "../formation/army_formation_types.h"
 #include "order_service.h"
 
 namespace Engine::Core {
@@ -22,11 +23,27 @@ struct Point;
 
 class CommandService {
 public:
+  using SlotPlacement = Game::Formation::SlotStatus;
+
+  struct GroupSlot {
+    Engine::Core::EntityID member{0};
+    QVector3D position;
+    int stable_slot_id{Game::Formation::k_invalid_slot};
+    float facing_angle{0.0F};
+    SlotPlacement placement{SlotPlacement::Valid};
+  };
+
   struct GroundMovePlan {
     QVector3D resolved_target;
-    std::vector<QVector3D> positions;
-    std::vector<float> facing_angles;
+    std::vector<GroupSlot> member_slots;
     bool preserve_formation_mode = false;
+
+    [[nodiscard]] auto
+    matches_members(const std::vector<Engine::Core::EntityID>& units) const -> bool;
+    [[nodiscard]] auto
+    fully_placeable_for(const std::vector<Engine::Core::EntityID>& units) const -> bool;
+    [[nodiscard]] auto target_positions() const -> std::vector<QVector3D>;
+    [[nodiscard]] auto facing_angles() const -> std::vector<float>;
   };
 
   struct MoveOptions {
@@ -37,6 +54,7 @@ public:
   struct MoveIntent {
     Engine::Core::EntityID unit_id{};
     QVector3D target;
+    std::optional<float> facing_angle;
   };
 
   static constexpr int DIRECT_PATH_THRESHOLD = 8;
@@ -51,12 +69,7 @@ public:
   static void issue_ground_move(Engine::Core::World& world,
                                 const std::vector<Engine::Core::EntityID>& units,
                                 const GroundMovePlan& plan);
-  // A troop is not one disc. `envelope` is the circle that contains its whole
-  // formation -- the right radius for predicting an encounter and for planning
-  // a route through a gap. `core` is the body a single soldier actually
-  // occupies: two troops whose outer files touch are not interpenetrating, and
-  // pushing them apart at envelope distance spreads a battle line out by
-  // metres.
+
   struct UnitRadii {
     float core{0.5F};
     float envelope{0.5F};
@@ -102,10 +115,11 @@ public:
                             Engine::Core::EntityID target_id,
                             bool should_chase = true);
 
-private:
-  static auto resolve_move_targets(Engine::Core::World& world,
-                                   const std::vector<Engine::Core::EntityID>& units,
-                                   const QVector3D& center) -> std::vector<QVector3D>;
+  static auto
+  resolve_group_slots(Engine::Core::World& world,
+                      const std::vector<Engine::Core::EntityID>& units,
+                      const QVector3D& center,
+                      bool preserve_current_shape = false) -> std::vector<GroupSlot>;
 };
 
 } // namespace Game::Systems

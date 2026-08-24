@@ -48,8 +48,6 @@ namespace {
 constexpr float k_motion_displacement_epsilon_sq = 1.0e-6F;
 constexpr float k_motion_velocity_epsilon_sq = 1.0e-4F;
 constexpr float k_motion_stall_speed = 0.15F;
-constexpr float k_motion_stall_grace_seconds = 0.4F;
-constexpr float k_motion_no_progress_seconds = 0.6F;
 [[nodiscard]] auto
 forward_xz_from_yaw(float yaw_degrees) noexcept -> std::pair<float, float> {
   float const yaw_rad = yaw_degrees * std::numbers::pi_v<float> / 180.0F;
@@ -110,23 +108,30 @@ attack_target_is_in_range(World& world,
 
 struct MotionPresentationSample {
   bool displaced{false};
-  bool stalled{false};
   bool has_component_velocity{false};
-  bool has_navigation_intent{false};
-  bool direct_control_moving{false};
-  bool builder_bypass{false};
-  bool has_chase_intent{false};
-  bool has_active_navigation_segment{false};
   bool is_running{false};
+  bool forced_displacement{false};
+  MovementOrderState order_state{MovementOrderState::Idle};
 };
 
 [[nodiscard]] auto resolve_motion_presentation_state(
     const MotionPresentationSample& sample) noexcept -> MotionPresentationState {
-  bool const moving = sample.displaced || sample.direct_control_moving ||
-                      sample.builder_bypass || sample.has_component_velocity ||
-                      (sample.has_chase_intent && sample.has_active_navigation_segment);
-  if (!moving || sample.stalled) {
-    return MotionPresentationState::Idle;
+  if (!sample.displaced && !sample.has_component_velocity) {
+    switch (sample.order_state) {
+    case MovementOrderState::Turning:
+      return MotionPresentationState::Turning;
+    case MovementOrderState::LocallyBlocked:
+    case MovementOrderState::Yielding:
+      return MotionPresentationState::Yielding;
+    case MovementOrderState::Repathing:
+    case MovementOrderState::Recovering:
+      return MotionPresentationState::Recovering;
+    default:
+      return MotionPresentationState::Idle;
+    }
+  }
+  if (sample.forced_displacement) {
+    return MotionPresentationState::ForcedDisplacement;
   }
   return sample.is_running ? MotionPresentationState::Run
                            : MotionPresentationState::Walk;
@@ -157,9 +162,6 @@ void begin_motion_presentation_frame(World& world, float delta_time) {
   }
 }
 
-// Emitted after presentation so one record carries the whole tick: the order
-// state, the route the follower used, the correction steering asked for, what
-// the motor actually accepted, and the gait the renderer will be told to play.
 void publish_movement_trace_frame(World& world) {
   auto& trace = MovementTrace::instance();
   trace.configure_from_environment();
@@ -204,11 +206,14 @@ void publish_movement_trace_frame(World& world) {
           sample.presentation_speed = motion->speed;
           sample.presentation_dir_x = motion->direction_x;
           sample.presentation_dir_z = motion->direction_z;
-          sample.corridor_half_width = motion->traversal_available_half_width;
         }
         sample.command_sequence = facts.route.command_sequence;
+        sample.route_id = facts.route.route_id;
         sample.route_revision = facts.route.route_revision;
         sample.topology_revision = facts.route.topology_revision;
+        sample.lane_offset = facts.route.lane_offset;
+        sample.lane_scale = facts.route.lane_scale;
+        sample.cohesion_pace = facts.route.cohesion_pace;
         sample.requested_goal_x = facts.route.requested_goal_x;
         sample.requested_goal_z = facts.route.requested_goal_z;
         sample.resolved_goal_x = facts.route.resolved_goal_x;
@@ -262,6 +267,7 @@ void publish_movement_trace_frame(World& world) {
         sample.transition_progress = facts.traversal.transition_progress;
         sample.mode_dwell_seconds = facts.traversal.mode_dwell_seconds;
         sample.soldier_body_radius = facts.traversal.soldier_body_radius;
+        sample.corridor_half_width = facts.traversal.corridor_half_width;
         sample.direction_source = facts.direction_source;
         trace.record(sample);
       });
@@ -273,7 +279,7 @@ void finalize_motion_presentation_frame(World& world, float delta_time) {
       [&world, delta_time, safe_dt](EntityID id,
                                     MotionPresentationComponent& motion_value,
                                     TransformComponent& transform_value,
-                                    UnitComponent& unit_value) {
+                                    UnitComponent&) {
         Entity* entity_ptr = world.get_entity(id);
         if (entity_ptr == nullptr) {
           return;
@@ -281,8 +287,6 @@ void finalize_motion_presentation_frame(World& world, float delta_time) {
         Entity& entity = *entity_ptr;
         auto* motion = &motion_value;
         auto* transform = &transform_value;
-        auto* unit = &unit_value;
-
         auto* movement = entity.get_component<MovementComponent>();
         auto* attack = entity.get_component<AttackComponent>();
         auto* attack_target = entity.get_component<AttackTargetComponent>();
@@ -290,22 +294,21 @@ void finalize_motion_presentation_frame(World& world, float delta_time) {
         auto* builder_prod = entity.get_component<BuilderProductionComponent>();
         auto* stamina = entity.get_component<StaminaComponent>();
 
-        float const displacement_x = transform->position.x - motion->previous_x;
-        float const displacement_z = transform->position.z - motion->previous_z;
-        float const displacement_sq =
-            displacement_x * displacement_x + displacement_z * displacement_z;
+        float const observed_displacement_x =
+            transform->position.x - motion->previous_x;
+        float const observed_displacement_z =
+            transform->position.z - motion->previous_z;
 
-        // Locomotion is asserted from what the motor accepted, never from what
-        // the route follower wanted. A body pressed against a wall has a desired
-        // velocity and no accepted one, and used to be told to walk anyway.
         auto* facts = entity.get_component<MovementFactsComponent>();
         bool const motor_published = facts != nullptr && facts->motor.valid;
-        float const motion_vx = motor_published       ? facts->motor.accepted_vx
-                                : movement != nullptr ? movement->get_vx()
-                                                      : 0.0F;
-        float const motion_vz = motor_published       ? facts->motor.accepted_vz
-                                : movement != nullptr ? movement->get_vz()
-                                                      : 0.0F;
+        float const displacement_x =
+            motor_published ? facts->motor.accepted_dx : observed_displacement_x;
+        float const displacement_z =
+            motor_published ? facts->motor.accepted_dz : observed_displacement_z;
+        float const displacement_sq =
+            displacement_x * displacement_x + displacement_z * displacement_z;
+        float const motion_vx = motor_published ? facts->motor.accepted_vx : 0.0F;
+        float const motion_vz = motor_published ? facts->motor.accepted_vz : 0.0F;
         float const movement_speed_sq = motion_vx * motion_vx + motion_vz * motion_vz;
         bool const has_component_velocity =
             movement_speed_sq > k_motion_velocity_epsilon_sq;
@@ -353,21 +356,13 @@ void finalize_motion_presentation_frame(World& world, float delta_time) {
         } else {
           motion->stalled_seconds += std::max(0.0F, delta_time);
         }
-        float const no_ground_gained = (movement != nullptr && !direct_control_moving)
-                                           ? movement->get_stuck_time()
-                                           : 0.0F;
-
         MotionPresentationSample sample{};
         sample.displaced = displaced;
-        sample.stalled = motion->stalled_seconds >= k_motion_stall_grace_seconds ||
-                         no_ground_gained >= k_motion_no_progress_seconds;
         sample.has_component_velocity = has_component_velocity;
-        sample.has_navigation_intent = has_navigation_intent;
-        sample.direct_control_moving = direct_control_moving;
-        sample.builder_bypass = builder_bypass;
-        sample.has_chase_intent = motion->has_chase_intent;
-        sample.has_active_navigation_segment = has_active_navigation_segment;
         sample.is_running = stamina != nullptr && stamina->is_running;
+        sample.forced_displacement = displaced && !motor_published;
+        sample.order_state =
+            facts != nullptr ? facts->progress.state : MovementOrderState::Idle;
 
         const MotionPresentationState next_state =
             resolve_motion_presentation_state(sample);
@@ -402,12 +397,7 @@ void finalize_motion_presentation_frame(World& world, float delta_time) {
         } else {
           motion->velocity_x = 0.0F;
           motion->velocity_z = 0.0F;
-          motion->speed = next_state != MotionPresentationState::Idle
-                              ? std::max(0.1F, unit->speed)
-                              : 0.0F;
-          if (next_state == MotionPresentationState::Run && stamina != nullptr) {
-            motion->speed *= StaminaComponent::k_run_speed_multiplier;
-          }
+          motion->speed = 0.0F;
         }
 
         motion->has_movement_target = false;
@@ -447,9 +437,10 @@ void finalize_motion_presentation_frame(World& world, float delta_time) {
           motion->direction_x = commander->fpv_motion_vx;
           motion->direction_z = commander->fpv_motion_vz;
           direction_source = MovementDirectionSource::AcceptedVelocity;
-        } else if (motion->has_movement_target) {
-          motion->direction_x = motion->movement_target_x - transform->position.x;
-          motion->direction_z = motion->movement_target_z - transform->position.z;
+        } else if (next_state == MotionPresentationState::Turning && facts != nullptr &&
+                   facts->desired.valid) {
+          motion->direction_x = facts->desired.tangent_x;
+          motion->direction_z = facts->desired.tangent_z;
           direction_source = MovementDirectionSource::RouteTangent;
         } else {
           auto [forward_x, forward_z] = forward_xz_from_yaw(transform->rotation.y);
@@ -466,12 +457,12 @@ void finalize_motion_presentation_frame(World& world, float delta_time) {
           motion->source = MotionPresentationSource::DirectControl;
         } else if (builder_bypass) {
           motion->source = MotionPresentationSource::BuilderBypass;
+        } else if (displaced && !motor_published) {
+          motion->source = MotionPresentationSource::ForcedDisplacement;
         } else if (motion->has_chase_intent) {
           motion->source = MotionPresentationSource::Chase;
         } else if (has_navigation_intent) {
           motion->source = MotionPresentationSource::Navigation;
-        } else if (displaced) {
-          motion->source = MotionPresentationSource::ForcedDisplacement;
         } else {
           motion->source = MotionPresentationSource::None;
         }
@@ -861,6 +852,7 @@ void copy_authoritative_snapshot_components(const Entity& source, Entity& destin
   copy_snapshot_component<HoldModeComponent>(source, destination);
   copy_snapshot_component<FormationModeComponent>(source, destination);
   copy_snapshot_component<UnitLayoutStateComponent>(source, destination);
+  copy_snapshot_component<UnitTraversalLayoutState>(source, destination);
   copy_snapshot_component<SpearBraceComponent>(source, destination);
   copy_snapshot_component<StaminaComponent>(source, destination);
   copy_snapshot_component<MoraleComponent>(source, destination);
@@ -897,14 +889,14 @@ void copy_render_components(const Entity& source, Entity& destination) {
   copy_authoritative_snapshot_components(source, destination);
   copy_presentation_snapshot_components(source, destination);
 
-  auto const* motion = source.get_component<MotionPresentationComponent>();
+  auto const* traversal = source.get_component<UnitTraversalLayoutState>();
   auto const* formation = source.get_component<FormationPresentationComponent>();
   auto* transform = destination.get_component<TransformComponent>();
   bool const formation_handles_squeeze =
       formation != nullptr && formation->soldiers.size() > 1U;
-  if (transform != nullptr && motion != nullptr && motion->traversal_squeeze_active &&
+  if (transform != nullptr && traversal != nullptr && traversal->active &&
       !formation_handles_squeeze) {
-    transform->scale.x *= std::clamp(motion->traversal_lateral_scale, 0.1F, 1.0F);
+    transform->scale.x *= std::clamp(traversal->lateral_scale, 0.1F, 1.0F);
   }
 }
 
@@ -921,6 +913,7 @@ void render_hash_float(std::uint64_t& seed, float value) {
 auto render_entity_is_stable(const Entity& entity) -> bool {
   auto const* movement = entity.get_component<MovementComponent>();
   auto const* motion = entity.get_component<MotionPresentationComponent>();
+  auto const* traversal = entity.get_component<UnitTraversalLayoutState>();
   auto const* creature = entity.get_component<CreaturePresentationComponent>();
   auto const* target = entity.get_component<AttackTargetComponent>();
   auto const* combat = entity.get_component<CombatStateComponent>();
@@ -929,8 +922,8 @@ auto render_entity_is_stable(const Entity& entity) -> bool {
   bool const moving = (movement != nullptr &&
                        (movement->get_has_target() || movement->has_waypoints() ||
                         std::hypot(movement->get_vx(), movement->get_vz()) > 0.001F)) ||
-                      (motion != nullptr &&
-                       (motion->has_locomotion() || motion->traversal_squeeze_active));
+                      (motion != nullptr && motion->has_locomotion()) ||
+                      (traversal != nullptr && traversal->active);
   bool const active_creature =
       creature != nullptr &&
       (creature->combat_active || creature->is_constructing || creature->is_healing ||
@@ -1011,6 +1004,18 @@ auto render_entity_signature(const Entity& entity) -> std::uint64_t {
     render_hash_combine(signature, layout->phase);
     render_hash_combine(signature, layout->layout_id);
     render_hash_float(signature, layout->transition_progress);
+  }
+  if (auto const* traversal = entity.get_component<UnitTraversalLayoutState>()) {
+    render_hash_combine(signature, traversal->route_id);
+    render_hash_combine(signature, traversal->portal_id);
+    render_hash_combine(signature, static_cast<std::uint64_t>(traversal->mode));
+    render_hash_combine(signature, static_cast<std::uint64_t>(traversal->target_mode));
+    render_hash_combine(signature, traversal->current_files);
+    render_hash_combine(signature, traversal->target_files);
+    render_hash_float(signature, traversal->transition_curve);
+    render_hash_float(signature, traversal->lateral_scale);
+    render_hash_combine(signature, traversal->root_motion_blocked ? 1U : 0U);
+    render_hash_combine(signature, traversal->active ? 1U : 0U);
   }
   if (auto const* morale = entity.get_component<MoraleComponent>()) {
     render_hash_float(signature, morale->morale);

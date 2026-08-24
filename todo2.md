@@ -611,32 +611,32 @@ digest. Open-ground groups do not wobble because crowd logic is armed nearby.
 
 ### Stable member assignment
 
-- [ ] Canonicalize selection members by stable entity identity, while preserving
+- [x] Canonicalize selection members by stable entity identity, while preserving
       existing army-formation slot identity where it exists.
-- [ ] Generate destination slots through one terrain fitter with uniqueness,
+- [x] Generate destination slots through one terrain fitter with uniqueness,
       reachability, body separation, and explicit `Valid/Adjusted/Blocked`
       results. Never send several members to one fallback center.
-- [ ] Minimize member crossing when assigning current members to destination
+- [x] Minimize member crossing when assigning current members to destination
       slots. Preserve the mapping across repaths and small destination edits.
-- [ ] Use the same high-level corridor for coherence, but give each member a
+- [x] Use the same high-level corridor for coherence, but give each member a
       route lane/offset and valid start/exit connector. Copying identical leader
       waypoints is not a complete group route.
-- [ ] Derive group facing from the stable corridor tangent/formation intent,
+- [x] Derive group facing from the stable corridor tangent/formation intent,
       never from whichever member's avoidance velocity changed most recently.
 
 ### Group shape lifecycle
 
-- [ ] Define `Formed`, `Opening`, `Traversing`, `Reforming`, `Disrupted`, and
+- [x] Define `Formed`, `Opening`, `Traversing`, `Reforming`, `Disrupted`, and
       `Arrived` from measured member/slot state.
-- [ ] Preserve formation on open ground within a bounded slot error. Allow a
+- [x] Preserve formation on open ground within a bounded slot error. Allow a
       declared controlled break at a portal instead of forcing all members onto
       an impossible wide envelope.
-- [ ] Pace faster members relative to route/slot error without making the whole
+- [x] Pace faster members relative to route/slot error without making the whole
       group repeatedly start and stop.
-- [ ] Reform progressively after the last relevant member clears the portal.
+- [x] Reform progressively after the last relevant member clears the portal.
       Destination arrival waits for each valid member slot, not just the group
       centroid.
-- [ ] Mixed-speed selections either use a declared cohesion pace or split into
+- [x] Mixed-speed selections either use a declared cohesion pace or split into
       deterministic subgroups. The rule must be visible in the order trace.
 
 ### Gate 4
@@ -653,62 +653,62 @@ inside the combat contact publisher.
 
 ### Authoritative traversal-layout state
 
-- [ ] Introduce one `UnitTraversalLayoutState` owner containing route/portal ID,
+- [x] Introduce one `UnitTraversalLayoutState` owner containing route/portal ID,
       normal layout ID, traversal mode, current and target file count, stable
       slot mapping, entry/exit progress, transition curve, and dwell timers.
-- [ ] Move traversal-layout policy out of
+- [x] Move traversal-layout policy out of
       `publish_formation_presentation`/combat contact code into a dedicated
       system that runs from route corridor metadata and the accepted troop pose.
-- [ ] Measure upcoming usable width along the route tangent over the complete
+- [x] Measure upcoming usable width along the route tangent over the complete
       unit envelope. Center the sample on the corridor, not transient body yaw.
-- [ ] Look ahead far enough to finish narrowing before the head reaches the
+- [x] Look ahead far enough to finish narrowing before the head reaches the
       passage. Keep the mode until the last soldier/tail clears an explicit exit
       margin.
-- [ ] Add separate enter/exit width thresholds, minimum dwell, and tail-clear
+- [x] Add separate enter/exit width thresholds, minimum dwell, and tail-clear
       hysteresis. One physical passage produces at most one enter and one exit.
 
 ### Width-aware shape ladder
 
-- [ ] Choose the maximum safe number of files from usable width, body diameter,
+- [x] Choose the maximum safe number of files from usable width, body diameter,
       minimum separation, and faction/layout constraints.
-- [ ] Use a declared ladder such as `Normal -> Narrow ranks -> Marching order ->
+- [x] Use a declared ladder such as `Normal -> Narrow ranks -> Marching order ->
 Single file`. Skip only modes that physically cannot fit.
-- [ ] Add an aspect-ratio/depth policy for large head counts. If a very narrow
+- [x] Add an aspect-ratio/depth policy for large head counts. If a very narrow
       route would make an unacceptable 30-soldier shape and a reasonable wide
       detour exists, path cost should prefer the detour. If the single-body
       passage is the only route, use an orderly stable column because physics
       requires it, not because every constrained sample maps to one column.
-- [ ] Preserve recognizable faction spacing/stagger/arc traits within the safe
+- [x] Preserve recognizable faction spacing/stagger/arc traits within the safe
       width instead of replacing every doctrine with the same generic grid.
-- [ ] Keep casualties in stable slots through transition; never compact/redeal
+- [x] Keep casualties in stable slots through transition; never compact/redeal
       all survivors merely because the file count changes.
 
 ### Continuous slot mapping
 
-- [ ] Compute a deterministic target slot for every stable soldier ID while
+- [x] Compute a deterministic target slot for every stable soldier ID while
       minimizing crossings and preserving front-to-back order.
-- [ ] Interpolate previous to target anchors with a C1-continuous curve and
+- [x] Interpolate previous to target anchors with a C1-continuous curve and
       per-archetype speed/acceleration caps. Do not skip smoothing during reflow.
-- [ ] Drive transition progress by actual allowed relocation, not only elapsed
+- [x] Drive transition progress by actual allowed relocation, not only elapsed
       time, so a blocked soldier does not visually pass through a prop or another
       soldier to meet a deadline.
-- [ ] Enforce minimum soldier separation and obstacle clearance throughout the
+- [x] Enforce minimum soldier separation and obstacle clearance throughout the
       entire interpolation, not only at endpoints.
-- [ ] Publish previous/current soldier anchors and actual relocation velocity as
+- [x] Publish previous/current soldier anchors and actual relocation velocity as
       presentation facts. Renderer code must not independently chase the same
       target in world space.
 
 ### Simulation/render/combat policy
 
-- [ ] Decide and document whether traversal anchors participate in combat,
+- [x] Decide and document whether traversal anchors participate in combat,
       soldier targeting, and picking. The preferred contract is one simulation
       presentation anchor set for all soldier-level spatial queries; if combat is
       intentionally disabled/deferred inside a portal, make that an explicit
       state rather than using the normal combat layout at different coordinates.
-- [ ] Ensure the troop collision/transit envelope matches the active soldier
+- [x] Ensure the troop collision/transit envelope matches the active soldier
       layout closely enough that visible soldiers never pass through solid
       trees, stones, or buildings while the root remains legal.
-- [ ] Keep defensive layout, combat stance, army formation, and traversal layout
+- [x] Keep defensive layout, combat stance, army formation, and traversal layout
       as independent inputs with an explicit precedence/composition table.
 
 ### Gate 5
@@ -723,13 +723,13 @@ intersections, or generic-column choices where multiple files fit.
 
 ### Troop-root presentation
 
-- [ ] Build motion presentation from `MotorResult.accepted_velocity` and accepted
+- [x] Build motion presentation from `MotorResult.accepted_velocity` and accepted
       displacement. Desired/steered velocity may appear in diagnostics but may
       not assert that the body moved.
 - [ ] Select direction from accepted velocity above a threshold, otherwise the
       stable route tangent while intentionally turning, otherwise body forward.
       Add angular hysteresis and rate limits appropriate to the archetype.
-- [ ] Distinguish `Idle`, `Turning`, `Walking`, `Running`, `Yielding`,
+- [x] Distinguish `Idle`, `Turning`, `Walking`, `Running`, `Yielding`,
       `Recovering`, and `ForcedDisplacement` where animation needs a different
       visual response.
 - [ ] Arrival braking and blocked/yield states must fade gait once and remain

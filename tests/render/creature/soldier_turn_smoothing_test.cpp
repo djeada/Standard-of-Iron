@@ -65,6 +65,22 @@ TEST(SoldierTurnSmoothing, TheStepNeverExceedsTheSpeedCap) {
   EXPECT_NEAR(result.travel_speed, inputs.max_speed, 1e-3F);
 }
 
+TEST(SoldierTurnSmoothing, PublishedSimulationAnchorOwnsPosition) {
+  SoldierTurnSmoothingState state{};
+  auto inputs = default_inputs();
+  std::ignore = resolve_soldier_turn_smoothing(state, inputs);
+
+  inputs.target_x = 3.25F;
+  inputs.target_z = -1.75F;
+  inputs.max_speed = 0.01F;
+  inputs.position_is_authoritative = true;
+  auto const result = resolve_soldier_turn_smoothing(state, inputs);
+
+  EXPECT_FLOAT_EQ(result.x, inputs.target_x);
+  EXPECT_FLOAT_EQ(result.z, inputs.target_z);
+  EXPECT_FALSE(result.relocating);
+}
+
 TEST(SoldierTurnSmoothing, ARelocatingSoldierFacesHisDirectionOfTravel) {
   SoldierTurnSmoothingState state{};
   auto inputs = default_inputs();

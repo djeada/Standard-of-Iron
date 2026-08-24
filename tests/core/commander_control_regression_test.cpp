@@ -585,8 +585,7 @@ TEST(CommanderControlRegressionTest, FpvCombatUsesSharedCombatRulesHelper) {
       read_text(root / "game" / "systems" / "combat_system" / "attack_processor.cpp");
   const auto movement_system =
       read_text(root / "game" / "systems" / "movement_system.cpp");
-  // The melee-lock gate moved to the route follower when the Movement phase was
-  // split: the follower decides who owns a body, the motor only integrates.
+
   const auto route_follow_system =
       read_text(root / "game" / "systems" / "route_follow_system.cpp");
   const auto movement_orders =

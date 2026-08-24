@@ -57,19 +57,9 @@ constexpr float k_formation_intent_min_distance = 1.0F;
 constexpr float full_translation_heading_error_degrees = 20.0F;
 constexpr float stopped_translation_heading_error_degrees = 100.0F;
 
-constexpr float k_traversal_probe_step_cells = 0.2F;
-constexpr float k_traversal_min_visual_half_width = 0.38F;
-constexpr float k_traversal_squeeze_epsilon = 0.05F;
-constexpr float k_traversal_squeeze_rate = 8.0F;
-constexpr float k_traversal_release_rate = 3.5F;
-
-// Substepping bound: a body may not advance more than this fraction of a nav
-// cell in one collision query, so nothing tunnels through a thin wall on a
-// hitch or at cavalry speed.
 constexpr float k_motor_substep_cells = 0.45F;
 constexpr int k_max_motor_substeps = 8;
 
-// Below this translation scale the body is turning, not travelling.
 constexpr float k_turning_translation_threshold = 0.35F;
 
 auto body_turn_speed_degrees(Game::Units::SpawnType type) -> float {
@@ -283,9 +273,7 @@ void MovementSystem::process_pending_path_requests(Engine::Core::World& world) {
     auto* transform = entity->get_component<Engine::Core::TransformComponent>();
     auto* movement = entity->get_component<Engine::Core::MovementComponent>();
     if (transform != nullptr && movement != nullptr) {
-      // A deferred route may only publish if it still belongs to the order that
-      // asked for it. A newer command supersedes it silently rather than
-      // stopping the movement that command started.
+
       if (movement->get_order_sequence() != request.order_sequence) {
         ++processed;
         continue;
@@ -491,131 +479,8 @@ auto MovementSystem::apply_duel_footwork(Engine::Core::Entity* entity,
   return true;
 }
 
-void MovementSystem::update_traversal_presentation(
-    Engine::Core::Entity& entity,
-    const Engine::Core::TransformComponent& transform,
-    const Engine::Core::MovementComponent& movement,
-    float delta_time) {
-  auto* presentation =
-      entity.get_component<Engine::Core::MotionPresentationComponent>();
-  if (presentation == nullptr) {
-    return;
-  }
-
-  bool const traversal_in_progress =
-      movement.get_has_target() || movement.has_waypoints() ||
-      std::hypot(movement.get_vx(), movement.get_vz()) > 0.05F ||
-      presentation->traversal_squeeze_active;
-  if (!traversal_in_progress) {
-    presentation->traversal_squeeze_active = false;
-    presentation->traversal_lateral_scale = 1.0F;
-    presentation->traversal_target_lateral_scale = 1.0F;
-    presentation->traversal_available_half_width = 0.0F;
-    presentation->traversal_desired_half_width = 0.0F;
-    return;
-  }
-
-  float target_scale = 1.0F;
-  float available_half_width = 0.0F;
-  float desired_half_width = 0.0F;
-  auto* pathfinder = NavGrid::get_pathfinder();
-  if (pathfinder != nullptr) {
-    pathfinder->update_navigation_grid();
-    auto const passability = movement.get_can_enter_forest()
-                                 ? Pathfinding::Passability::Light
-                                 : Pathfinding::Passability::Heavy;
-    auto const layout = FormationCombat::resolve_layout(entity);
-    desired_half_width = FormationCombat::formation_navigation_clearance(entity);
-    float longitudinal_half_extent = layout.body_radius;
-    for (auto const& slot : layout.live_slots) {
-      longitudinal_half_extent = std::max(longitudinal_half_extent,
-                                          std::abs(slot.local_z) + layout.body_radius);
-    }
-
-    float const yaw = transform.rotation.y * std::numbers::pi_v<float> / 180.0F;
-    QVector3D const forward(std::sin(yaw), 0.0F, std::cos(yaw));
-    QVector3D const lateral(forward.z(), 0.0F, -forward.x());
-    QVector3D const center(transform.position.x, 0.0F, transform.position.z);
-    float const cell_size = std::max(0.1F, pathfinder->grid_cell_size());
-    float const ray_step = cell_size * k_traversal_probe_step_cells;
-    float const longitudinal_step = cell_size * 0.5F;
-
-    auto available_on_side = [&](const QVector3D& probe, float side) -> float {
-      float previous = 0.0F;
-      for (float distance = ray_step; distance <= desired_half_width + ray_step;
-           distance += ray_step) {
-        float const clamped_distance = std::min(distance, desired_half_width);
-        QVector3D const point = probe + lateral * (clamped_distance * side);
-        if (!pathfinder->is_world_position_walkable(point, passability)) {
-          return previous;
-        }
-        previous = clamped_distance;
-        if (clamped_distance >= desired_half_width) {
-          break;
-        }
-      }
-      return desired_half_width;
-    };
-
-    available_half_width = desired_half_width;
-    int const longitudinal_samples =
-        std::max(1,
-                 static_cast<int>(
-                     std::ceil((longitudinal_half_extent * 2.0F) / longitudinal_step)));
-    bool sampled_tight_corridor = false;
-    for (int sample = 0; sample <= longitudinal_samples; ++sample) {
-      float const t =
-          static_cast<float>(sample) / static_cast<float>(longitudinal_samples);
-      float const offset =
-          -longitudinal_half_extent + t * longitudinal_half_extent * 2.0F;
-      QVector3D const probe = center + forward * offset;
-      if (!pathfinder->is_world_position_walkable(probe, passability)) {
-        continue;
-      }
-      float const left = available_on_side(probe, -1.0F);
-      float const right = available_on_side(probe, 1.0F);
-      bool const left_constrained =
-          left + k_traversal_squeeze_epsilon < desired_half_width;
-      bool const right_constrained =
-          right + k_traversal_squeeze_epsilon < desired_half_width;
-      if (!left_constrained || !right_constrained) {
-        continue;
-      }
-
-      sampled_tight_corridor = true;
-      available_half_width = std::min({available_half_width, left, right});
-    }
-
-    if (sampled_tight_corridor && desired_half_width > k_traversal_squeeze_epsilon &&
-        available_half_width + k_traversal_squeeze_epsilon < desired_half_width) {
-      float const visible_half_width =
-          std::max(available_half_width, k_traversal_min_visual_half_width);
-      target_scale = std::clamp(visible_half_width / desired_half_width, 0.1F, 1.0F);
-    }
-  }
-
-  float const current = std::clamp(presentation->traversal_lateral_scale, 0.1F, 1.0F);
-  float const rate =
-      target_scale < current ? k_traversal_squeeze_rate : k_traversal_release_rate;
-  float const max_step = rate * std::max(0.0F, delta_time);
-  presentation->traversal_lateral_scale =
-      current + std::clamp(target_scale - current, -max_step, max_step);
-  presentation->traversal_target_lateral_scale = target_scale;
-  presentation->traversal_available_half_width = available_half_width;
-  presentation->traversal_desired_half_width = desired_half_width;
-  presentation->traversal_squeeze_active =
-      target_scale < 0.999F || presentation->traversal_lateral_scale < 0.999F;
-}
-
 namespace {
 
-// One accepted planar displacement.
-//
-// The old motor tried the whole step, then global X alone, then global Z alone,
-// and zeroed the other axis' velocity when one of them worked. That loses the
-// tangential speed at every wall, sticks bodies on corners, and lets a fast body
-// step straight over a thin cell. This substeps by a bound derived from the nav
-// cell and slides along the contact plane instead.
 struct SweepResult {
   float accepted_dx{0.0F};
   float accepted_dz{0.0F};
@@ -628,10 +493,6 @@ struct SweepResult {
   float normal_z{0.0F};
 };
 
-// `allowed(from_x, from_z, to_x, to_z)` decides one transition, not one point:
-// the planner refuses to cut a diagonal corner between two blocked cells, and
-// the motor has to refuse the same one or a body squeezes through a wall the
-// route says is sealed.
 template <typename AllowedFn>
 auto sweep_body(float origin_x,
                 float origin_z,
@@ -697,8 +558,6 @@ auto sweep_body(float origin_x,
     result.normal_x = normal_x;
     result.normal_z = normal_z;
 
-    // Keep the tangential part of what is left and drop the part pressing into
-    // the plane, so a body brushing a wall keeps walking along it.
     remaining_x -= step_x;
     remaining_z -= step_z;
     float const into = remaining_x * normal_x + remaining_z * normal_z;
@@ -717,9 +576,6 @@ auto sweep_body(float origin_x,
   return result;
 }
 
-// The motor's per-archetype limits. Acceleration and damping used to be spelled
-// inline where the desired velocity was computed, which made them read like
-// route policy; they are motor policy.
 struct MotorLimits {
   float max_speed{0.0F};
   float acceleration{0.0F};
@@ -759,16 +615,8 @@ void MovementSystem::move_unit(Engine::Core::Entity* entity,
 
   if (unit->health <= 0 ||
       entity->has_component<Engine::Core::PendingRemovalComponent>()) {
-    if (auto* presentation =
-            entity->get_component<Engine::Core::MotionPresentationComponent>()) {
-      presentation->traversal_squeeze_active = false;
-      presentation->traversal_lateral_scale = 1.0F;
-      presentation->traversal_target_lateral_scale = 1.0F;
-    }
     return;
   }
-
-  update_traversal_presentation(*entity, *transform, *movement, delta_time);
 
   MovementGate const gate = classify_movement_gate(*entity);
 
@@ -901,13 +749,6 @@ void MovementSystem::move_unit(Engine::Core::Entity* entity,
     return;
   }
 
-  // ---- route-following motor ------------------------------------------------
-  //
-  // Everything above decided that nothing else owns this body. From here the
-  // motor consumes the steered velocity the avoidance stage published, or the
-  // route follower's desired velocity when no steering ran, and produces one
-  // accepted displacement. It never re-derives the route.
-
   auto* stamina = entity->get_component<Engine::Core::StaminaComponent>();
   MotorLimits const limits = motor_limits(*entity, *unit, stamina);
 
@@ -942,8 +783,6 @@ void MovementSystem::move_unit(Engine::Core::Entity* entity,
   float const old_x = transform->position.x;
   float const old_z = transform->position.z;
 
-  // A body that has to turn a long way before it can travel publishes Turning
-  // rather than pretending the route failed to move it.
   auto const heading = heading_reference(*entity, *transform, *movement, unit);
   float const translation_scale =
       was_on_valid_tile ? heading_translation_scale(transform->rotation.y, heading)
@@ -956,13 +795,21 @@ void MovementSystem::move_unit(Engine::Core::Entity* entity,
   float translated_vx = movement->vx * translation_scale;
   float translated_vz = movement->vz * translation_scale;
 
-  // A bounded push out of an overlap that already exists. It is displacement,
-  // not locomotion: it goes through the sweep so it can never move a root into
-  // a wall, and it is deliberately not folded into the integrated velocity, so
-  // it neither accelerates the body nor tells the renderer to walk.
   if (facts->desired.valid && facts->steering.valid) {
     translated_vx += facts->steering.separation_x;
     translated_vz += facts->steering.separation_z;
+  }
+
+  if (auto const* traversal =
+          entity->get_component<Engine::Core::UnitTraversalLayoutState>();
+      traversal != nullptr && traversal->root_motion_blocked && world != nullptr &&
+      world->presentation_enabled() &&
+      entity->has_component<Engine::Core::RenderableComponent>()) {
+    translated_vx = 0.0F;
+    translated_vz = 0.0F;
+    movement->vx = 0.0F;
+    movement->vz = 0.0F;
+    facts->progress.state = Engine::Core::MovementOrderState::Yielding;
   }
 
   auto const& collision = BuildingCollisionRegistry::instance();
@@ -987,9 +834,7 @@ void MovementSystem::move_unit(Engine::Core::Entity* entity,
     if (from_cell.x == to_cell.x || from_cell.y == to_cell.y) {
       return true;
     }
-    // A diagonal cell transition is only legal when both shared-edge cells are
-    // open. A* refuses this corner; without the same rule here a body walks
-    // through the vertex of a diagonal wall the route treats as solid.
+
     QVector3D const across_x = NavGrid::grid_to_world({to_cell.x, from_cell.y});
     QVector3D const across_z = NavGrid::grid_to_world({from_cell.x, to_cell.y});
     return point_allowed(across_x.x(), across_x.z()) &&
@@ -1012,8 +857,7 @@ void MovementSystem::move_unit(Engine::Core::Entity* entity,
     movement->vx = 0.0F;
     movement->vz = 0.0F;
   } else if (sweep.contact) {
-    // Remove only the component pressing into the contact plane; the speed
-    // along the wall survives.
+
     float const into = movement->vx * sweep.normal_x + movement->vz * sweep.normal_z;
     if (into < 0.0F) {
       movement->vx -= sweep.normal_x * into;
@@ -1042,10 +886,7 @@ void MovementSystem::move_unit(Engine::Core::Entity* entity,
   facts->motor.has_contact = sweep.contact;
   facts->motor.contact_nx = sweep.normal_x;
   facts->motor.contact_nz = sweep.normal_z;
-  // Penetration is only penetration where the passability source the motor
-  // itself uses says the point is illegal. A body standing in a gate passage is
-  // inside a building footprint and entirely legal, and reporting that as
-  // 1.5 m of penetration buries the real ones.
+
   QVector3D const settled_pos(transform->position.x, 0.0F, transform->position.z);
   facts->motor.penetration_depth =
       is_movement_point_allowed(settled_pos, *entity)
@@ -1072,14 +913,15 @@ auto MovementSystem::access() const -> Engine::Core::SystemAccess {
                                      ElephantComponent,
                                      RpgCommanderActionComponent,
                                      BuilderProductionComponent,
+                                     UnitTraversalLayoutState,
+                                     RenderableComponent,
                                      PendingRemovalComponent>{},
                                Writes<MovementComponent,
                                       MovementFactsComponent,
                                       TransformComponent,
                                       AttackComponent,
                                       StaminaComponent,
-                                      TerrainContextComponent,
-                                      MotionPresentationComponent>{});
+                                      TerrainContextComponent>{});
 }
 
 } // namespace Game::Systems

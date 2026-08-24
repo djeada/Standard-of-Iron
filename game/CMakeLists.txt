@@ -142,6 +142,7 @@ add_library(
     STATIC
     systems/nav_grid.cpp
     systems/pathfinding.cpp
+    systems/route_corridor_planner.cpp
     systems/spatial_grid.cpp
     systems/gate_service.cpp
     systems/wall_network_service.cpp
@@ -227,6 +228,7 @@ add_library(
     systems/movement_route.cpp
     systems/route_follow_system.cpp
     systems/movement_system.cpp
+    systems/unit_traversal_layout_system.cpp
     systems/movement_pipeline.cpp
     systems/movement_orders.cpp
     systems/local_avoidance_system.cpp

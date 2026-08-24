@@ -238,9 +238,6 @@ public:
 
   [[nodiscard]] auto get_precise_arrival() const -> bool { return precise_arrival; }
 
-  // A new player/AI order bumps the sequence; an internal repath bumps only the
-  // route revision. Async route work must match both before it may publish, and
-  // the trace needs them apart to tell a repath from a fresh command.
   [[nodiscard]] auto get_order_sequence() const -> std::uint64_t {
     return order_sequence;
   }
@@ -250,11 +247,30 @@ public:
   [[nodiscard]] auto get_topology_revision() const -> std::uint64_t {
     return topology_revision;
   }
+  [[nodiscard]] auto get_route_id() const -> std::uint64_t { return route_id; }
+  [[nodiscard]] auto get_route_lane_offset() const -> float {
+    return route_lane_offset;
+  }
+  [[nodiscard]] auto get_route_lane_scale() const -> float {
+    if (route_lane_min_scale >= 0.99F || path_index < route_opening_waypoint_index ||
+        path_index >= route_reform_waypoint_index) {
+      return 1.0F;
+    }
+    return route_lane_min_scale;
+  }
+  [[nodiscard]] auto get_declared_group_pace() const -> float {
+    return declared_group_pace;
+  }
 
-  // Both are the order pipeline's to call and nobody else's: a new accepted
-  // player/AI order begins an order, an assignment of route geometry begins a
-  // route. MovementStageOwnershipTest pins the call sites.
-  void begin_order() { ++order_sequence; }
+  void begin_order() {
+    ++order_sequence;
+    route_id = 0U;
+    route_lane_offset = 0.0F;
+    route_lane_min_scale = 1.0F;
+    route_opening_waypoint_index = 0U;
+    route_reform_waypoint_index = 0U;
+    declared_group_pace = 0.0F;
+  }
   void begin_route(std::uint64_t topology) {
     ++route_revision;
     topology_revision = topology;
@@ -302,10 +318,14 @@ private:
   std::uint64_t order_sequence{0};
   std::uint64_t route_revision{0};
   std::uint64_t topology_revision{0};
+  std::uint64_t route_id{0};
+  float route_lane_offset{0.0F};
+  float route_lane_min_scale{1.0F};
+  std::size_t route_opening_waypoint_index{0U};
+  std::size_t route_reform_waypoint_index{0U};
+  float declared_group_pace{0.0F};
 };
 
-// One component so the storage cost is one lookup per entity per stage; the
-// ownership rule is per block, not per component.
 class MovementFactsComponent {
 public:
   RootPoseFacts previous_root;
@@ -319,13 +339,6 @@ public:
 
   MovementDirectionSource direction_source{MovementDirectionSource::None};
 
-  // Cleared by the route follower at the top of each Movement phase so a stale
-  // fact from last tick can never be read as this tick's answer.
-  // Only the intent is cleared. `steering` and `motor` are republished every
-  // tick by the stages that own them, so what the follower reads at the top of
-  // the phase is last tick's steered answer and last tick's accepted result --
-  // exactly what the progress watchdog needs to tell a body that was held up in
-  // traffic from one that is going nowhere.
   void begin_tick() { desired = {}; }
 };
 
@@ -351,8 +364,12 @@ enum class MotionPresentationSource : std::uint8_t {
 
 enum class MotionPresentationState : std::uint8_t {
   Idle,
+  Turning,
   Walk,
-  Run
+  Run,
+  Yielding,
+  Recovering,
+  ForcedDisplacement
 };
 
 class MotionPresentationComponent {
@@ -382,12 +399,6 @@ public:
   float stalled_seconds{0.0F};
   float tick_delta_time{0.0F};
 
-  bool traversal_squeeze_active{false};
-  float traversal_lateral_scale{1.0F};
-  float traversal_target_lateral_scale{1.0F};
-  float traversal_available_half_width{0.0F};
-  float traversal_desired_half_width{0.0F};
-
   void set_state(MotionPresentationState next_state) noexcept {
     previous_state = state;
     state = next_state;
@@ -398,13 +409,16 @@ public:
     return state == MotionPresentationState::Idle;
   }
   [[nodiscard]] auto is_walk_state() const noexcept -> bool {
-    return state == MotionPresentationState::Walk;
+    return state == MotionPresentationState::Walk ||
+           state == MotionPresentationState::ForcedDisplacement;
   }
   [[nodiscard]] auto is_run_state() const noexcept -> bool {
     return state == MotionPresentationState::Run;
   }
   [[nodiscard]] auto has_locomotion() const noexcept -> bool {
-    return state != MotionPresentationState::Idle;
+    return state == MotionPresentationState::Walk ||
+           state == MotionPresentationState::Run ||
+           state == MotionPresentationState::ForcedDisplacement;
   }
 };
 
@@ -1844,6 +1858,77 @@ public:
   [[nodiscard]] auto is_formed() const noexcept -> bool { return phase == 1U; }
 };
 
+struct UnitTraversalSlotState {
+  std::uint16_t slot_index{0U};
+  std::uint16_t row{0U};
+  std::uint16_t col{0U};
+  float start_local_x{0.0F};
+  float start_local_z{0.0F};
+  float previous_local_x{0.0F};
+  float previous_local_z{0.0F};
+  float current_local_x{0.0F};
+  float current_local_z{0.0F};
+  float target_local_x{0.0F};
+  float target_local_z{0.0F};
+  float velocity_x{0.0F};
+  float velocity_z{0.0F};
+  bool alive{false};
+  bool blocked{false};
+
+  auto operator==(const UnitTraversalSlotState&) const -> bool = default;
+};
+
+class UnitTraversalLayoutState {
+public:
+  std::uint64_t route_id{0U};
+  std::uint32_t portal_id{0U};
+  std::uint16_t normal_layout_id{0xFFFFU};
+
+  TraversalLayoutMode mode{TraversalLayoutMode::Normal};
+  TraversalLayoutMode target_mode{TraversalLayoutMode::Normal};
+  std::uint32_t normal_files{1U};
+  std::uint32_t current_files{1U};
+  std::uint32_t target_files{1U};
+  std::vector<std::uint16_t> stable_slot_mapping;
+  std::vector<UnitTraversalSlotState> slot_states;
+
+  float entry_progress{0.0F};
+  float exit_progress{1.0F};
+  float transition_progress{1.0F};
+  float transition_curve{1.0F};
+  float transition_seconds{0.0F};
+  float transition_total_distance{0.0F};
+  float transition_remaining_distance{0.0F};
+  float mode_dwell_seconds{0.0F};
+  float tail_clear_seconds{0.0F};
+  std::uint32_t blocked_slot_count{0U};
+  bool root_motion_blocked{false};
+
+  float lateral_scale{1.0F};
+  float target_lateral_scale{1.0F};
+  float available_half_width{0.0F};
+  float desired_half_width{0.0F};
+  float soldier_body_radius{0.0F};
+  float file_spacing{0.0F};
+  float rank_spacing{0.0F};
+  float minimum_lateral_scale{1.0F};
+
+  bool active{false};
+
+  [[nodiscard]] auto
+  slot_for(std::uint16_t slot_index) const noexcept -> const UnitTraversalSlotState* {
+    if (slot_index < slot_states.size() &&
+        slot_states[slot_index].slot_index == slot_index) {
+      return &slot_states[slot_index];
+    }
+    auto const slot = std::find_if(
+        slot_states.begin(), slot_states.end(), [slot_index](auto const& candidate) {
+          return candidate.slot_index == slot_index;
+        });
+    return slot != slot_states.end() ? &*slot : nullptr;
+  }
+};
+
 class StaminaComponent {
 public:
   static constexpr float k_run_speed_multiplier = 1.5F;
@@ -2219,6 +2304,11 @@ struct FormationSoldierPresentation {
   std::uint16_t col{0};
   float local_x{0.0F};
   float local_z{0.0F};
+  float previous_local_x{0.0F};
+  float previous_local_z{0.0F};
+  float relocation_velocity_x{0.0F};
+  float relocation_velocity_z{0.0F};
+  bool relocation_blocked{false};
   float local_yaw{0.0F};
   bool alive{false};
   FormationSoldierAction action{FormationSoldierAction::FollowUnit};

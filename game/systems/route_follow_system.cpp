@@ -23,39 +23,18 @@ namespace {
 constexpr float k_resolved_goal_progress_epsilon_sq = 0.01F;
 constexpr float k_clearance_repath_threshold = 0.25F;
 
-// Progress is measured as forward arclength, not as displacement in any
-// direction: orbiting an obstacle or rocking back and forth used to keep the
-// stuck timer reset and the order alive forever.
-//
-// It is a *rate*, accumulated over the declare window, not a per-tick distance.
-// A per-tick epsilon declares a slow siege engine blocked while it is visibly
-// crossing the map: 0.56 m/s is 0.009 m per 60 Hz tick.
 constexpr float k_progress_window_metres = 0.03F;
 
-// The escalation ladder. Each rung is bounded so a failing route cannot reissue
-// the same first step indefinitely.
-// A body accelerates through a first-order lag, so from a standstill even a
-// healthy order covers only a few centimetres in the first third of a second.
-// Judging it for lack of progress before that measures the motor's time
-// constant, not a defect. This is an explicit, bounded launch allowance tied to
-// the start of an order -- not a widened stall epsilon.
 constexpr float k_launch_grace_seconds = 0.60F;
 
-// Held up by traffic is a declared state, not a failure to travel. It is
-// bounded: a body that has yielded for this long is not in a queue, it is in a
-// deadlock, and the ladder takes over.
 constexpr float k_yield_budget_seconds = 8.0F;
 constexpr float k_block_declare_seconds = 0.35F;
-// Comfortably inside the 0.50 s the gate allows for escalation, so the
-// implementation and the gate never race on the same number.
+
 constexpr float k_block_escalate_seconds = 0.40F;
 constexpr float k_repath_settle_seconds = 0.60F;
 constexpr float k_recovery_budget_seconds = 1.50F;
 constexpr std::uint32_t k_max_repath_attempts = 3U;
 
-// How far ahead of the projected point steering aims, and how far back along
-// the route the projection may search. Both are bounded so a body pushed
-// sideways by a crowd cannot re-acquire a distant part of its own route.
 constexpr float k_lookahead_speed_seconds = 0.35F;
 constexpr float k_lookahead_min = 0.45F;
 constexpr float k_lookahead_max = 2.0F;
@@ -108,9 +87,14 @@ auto formation_navigation_speed(const Engine::Core::Entity& entity,
                                 const Engine::Core::UnitComponent& unit,
                                 const Engine::Core::StaminaComponent* stamina)
     -> float {
-  return max_navigation_speed(unit, stamina) *
-         DefensiveUnitLayoutService::move_speed_multiplier(entity) *
-         Game::Formation::ArmyFormationRuntime::move_speed_multiplier(entity);
+  float speed = max_navigation_speed(unit, stamina) *
+                DefensiveUnitLayoutService::move_speed_multiplier(entity) *
+                Game::Formation::ArmyFormationRuntime::move_speed_multiplier(entity);
+  const auto* movement = entity.get_component<Engine::Core::MovementComponent>();
+  if (movement != nullptr && movement->get_declared_group_pace() > 0.0F) {
+    speed = std::min(speed, movement->get_declared_group_pace());
+  }
+  return speed;
 }
 
 auto classify_movement_gate(const Engine::Core::Entity& entity) -> MovementGate {
@@ -181,8 +165,6 @@ void RouteFollowSystem::update(Engine::Core::World* world, float delta_time) {
         }
       });
 
-  // The cache is keyed by entity, so it has to shed dead entries. Sweeping it
-  // on a long interval keeps the per-tick cost at zero for a stable battle.
   if (world->tick_id() - m_prune_tick >= k_route_prune_interval_ticks) {
     m_prune_tick = world->tick_id();
     std::erase_if(m_routes, [world](auto const& entry) {
@@ -220,10 +202,6 @@ void RouteFollowSystem::follow(Engine::Core::Entity& entity,
     return;
   }
 
-  // The formation envelope changes when a troop takes casualties or changes
-  // layout. A materially different envelope invalidates the route it was
-  // planned against, so this is a declared repath cause rather than a silent
-  // reuse of a route the body no longer fits.
   float const previous_clearance = movement->get_navigation_clearance();
   movement->set_navigation_clearance(
       FormationCombat::formation_navigation_clearance(entity));
@@ -243,7 +221,24 @@ void RouteFollowSystem::follow(Engine::Core::Entity& entity,
 
   facts->route.has_goal = movement->get_has_target();
   facts->route.command_sequence = movement->get_order_sequence();
+  facts->route.route_id = movement->get_route_id();
   facts->route.route_revision = movement->get_route_revision();
+  facts->route.topology_revision = movement->get_topology_revision();
+  facts->route.lane_offset = movement->get_route_lane_offset();
+  facts->route.lane_scale = movement->get_route_lane_scale();
+  facts->route.cohesion_pace = 0.0F;
+  const auto* membership =
+      entity.get_component<Engine::Core::ArmyFormationMembershipComponent>();
+  if (membership != nullptr && membership->is_valid()) {
+    const auto* formation =
+        Game::Formation::ArmyFormationRegistry::instance().find(membership->group_id);
+    if (formation != nullptr) {
+      facts->route.cohesion_pace = formation->cohesion_pace;
+    }
+  }
+  if (facts->route.cohesion_pace <= 0.0F) {
+    facts->route.cohesion_pace = movement->get_declared_group_pace();
+  }
   facts->route.requested_goal_x = movement->get_requested_goal_x();
   facts->route.requested_goal_z = movement->get_requested_goal_z();
   facts->route.resolved_goal_x = movement->get_goal_x();
@@ -293,19 +288,11 @@ void RouteFollowSystem::follow(Engine::Core::Entity& entity,
   auto const* stamina = entity.get_component<Engine::Core::StaminaComponent>();
   float const max_speed = formation_navigation_speed(entity, *unit, stamina);
 
-  // ---- route geometry ------------------------------------------------------
-  //
-  // The route is rebuilt only when its revision changes, and progress along it
-  // is a monotonically increasing arclength. A waypoint is consumed because the
-  // body passed its arclength, never because it re-entered an arrival circle
-  // from the far side.
   auto& route = m_routes[entity.get_id()];
   bool route_changed = false;
   if (!route.valid() || route.route_revision() != movement->get_route_revision()) {
     route_changed = true;
-    // The revision is recorded by build() even when it fails, so a degenerate
-    // route is not rebuilt on every tick -- which used to reset the progress
-    // measurement every tick and keep the watchdog permanently asleep.
+
     route.build(movement->get_route_revision(),
                 movement->get_topology_revision(),
                 transform->position.x,
@@ -315,8 +302,7 @@ void RouteFollowSystem::follow(Engine::Core::Entity& entity,
                 movement->get_target_x(),
                 movement->get_target_y());
   } else if (!movement->get_path().empty()) {
-    // A chase order edits the last waypoint in place rather than replanning.
-    // Following that edit keeps the arclength already travelled.
+
     auto const& last = movement->get_path().back();
     auto const [final_x, final_z] = route.final_point();
     if (std::hypot(last.first - final_x, last.second - final_z) > 1.0e-4F) {
@@ -354,8 +340,6 @@ void RouteFollowSystem::follow(Engine::Core::Entity& entity,
     remaining = route.remaining();
     facts->progress.lateral_route_error = projection.lateral;
 
-    // Keep the waypoint index the rest of the game reads in step with the
-    // arclength, so nothing downstream sees a route the follower has left.
     std::size_t const target_index = route.waypoint_index_at(s);
     while (movement->get_path_index() < target_index && movement->has_waypoints()) {
       movement->advance_waypoint();
@@ -388,8 +372,7 @@ void RouteFollowSystem::follow(Engine::Core::Entity& entity,
     tangent_x = tangent.first;
     tangent_z = tangent.second;
   } else {
-    // No planned geometry: the route is the straight segment to the current
-    // target, which is what a direct assignment produces.
+
     remaining = std::hypot(endpoint_x - transform->position.x,
                            endpoint_z - transform->position.z);
     facts->progress.lateral_route_error = 0.0F;
@@ -406,7 +389,6 @@ void RouteFollowSystem::follow(Engine::Core::Entity& entity,
     return;
   }
 
-  // ---- arrival -------------------------------------------------------------
   float const endpoint_distance = std::hypot(endpoint_x - transform->position.x,
                                              endpoint_z - transform->position.z);
   if (remaining <= arrive_radius && endpoint_distance <= arrive_radius) {
@@ -436,8 +418,6 @@ void RouteFollowSystem::follow(Engine::Core::Entity& entity,
     tangent_z = nz;
   }
 
-  // Arrival braking is a route fact: it needs the distance left on the route,
-  // not the distance to whichever point steering happens to aim at.
   float desired_speed = max_speed;
   auto const* move_attack = entity.get_component<Engine::Core::AttackComponent>();
   bool const ranged_mode =
@@ -464,9 +444,6 @@ auto RouteFollowSystem::route_for(Engine::Core::EntityID entity_id) const
   return found == m_routes.end() ? nullptr : &found->second;
 }
 
-// The escalation ladder from todo2.md: Following -> LocallyBlocked -> Repathing
-// -> Recovering -> Unreachable. Every rung is bounded, and the only way out of
-// an active order is one of the declared terminal states.
 auto RouteFollowSystem::update_progress(Engine::Core::Entity& entity,
                                         Engine::Core::World& world,
                                         Engine::Core::TransformComponent& transform,
@@ -481,9 +458,6 @@ auto RouteFollowSystem::update_progress(Engine::Core::Entity& entity,
   auto& progress = facts.progress;
   MovementOrderState const entry_state = progress.state;
 
-  // Forward route progress since the follower last published, measured on the
-  // same route. Lateral orbiting contributes nothing, and a rebuilt route is
-  // not a regression -- its arclength is measured from somewhere else.
   float const previous_remaining = progress.remaining_arclength;
   bool const comparable = !route_changed && previous_remaining > 0.0F;
   float const advance = comparable ? previous_remaining - remaining : 0.0F;
@@ -499,9 +473,6 @@ auto RouteFollowSystem::update_progress(Engine::Core::Entity& entity,
   }
   progress.order_seconds += delta_time;
 
-  // Last tick's steering answer. A body that gave way to crossing traffic is
-  // yielding, and counting that as no progress is what made a busy crossing
-  // repath itself to a standstill.
   bool const yielding_to_traffic =
       facts.steering.valid &&
       (facts.steering.result == Engine::Core::SteeringResult::Yielded ||
@@ -591,9 +562,6 @@ auto RouteFollowSystem::update_progress(Engine::Core::Entity& entity,
     break;
   }
 
-  // The old displacement-based stuck timer is gone, but `get_stuck_time()` is
-  // still what the presentation layer reads to decide a body has stalled. Mirror
-  // the route-progress measure into it so there is one number, not two.
   movement.stuck_timer = progress.no_progress_seconds;
   movement.stuck_ref_valid = false;
 
