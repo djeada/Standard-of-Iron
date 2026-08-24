@@ -1,15 +1,24 @@
 #include <algorithm>
 #include <gtest/gtest.h>
 #include <map>
+#include <memory>
 #include <set>
 #include <utility>
 #include <vector>
 
+#include "game/core/component.h"
+#include "game/core/world.h"
 #include "game/map/campaign_loader.h"
+#include "game/map/map_transformer.h"
 #include "game/map/mission_loader.h"
 #include "game/mission/mission_commander_setup.h"
+#include "game/mission/mission_setup_coordinator.h"
+#include "game/systems/default_content.h"
 #include "game/systems/nation_id.h"
+#include "game/systems/nation_registry.h"
+#include "game/systems/owner_registry.h"
 #include "game/units/commander_catalog.h"
+#include "game/units/factory.h"
 #include "game/units/troop_type.h"
 #include "utils/resource_utils.h"
 
@@ -28,6 +37,63 @@ TEST(MissionCommanderSetupTest, FallsBackWhenConfiguredCommanderBelongsToOtherNa
   EXPECT_EQ(Game::Mission::resolve_commander_troop(
                 "carthage", QStringLiteral("roman_veteran_consul")),
             QStringLiteral("carthage_sword_commander"));
+}
+
+TEST(MissionCommanderSetupTest, SkirmishSelectionReplacesMapAuthoredCommander) {
+  struct RegistryCleanup {
+    ~RegistryCleanup() {
+      Game::Map::MapTransformer::setFactoryRegistry(nullptr);
+      Game::Systems::NationRegistry::instance().clear();
+      Game::Systems::OwnerRegistry::instance().clear();
+    }
+  } cleanup;
+
+  auto factory = std::make_shared<Game::Units::UnitFactoryRegistry>();
+  Game::Units::register_built_in_units(*factory);
+  Game::Map::MapTransformer::setFactoryRegistry(factory);
+
+  auto& owners = Game::Systems::OwnerRegistry::instance();
+  owners.clear();
+  owners.register_owner_with_id(1, Game::Systems::OwnerType::Player, "Player");
+  owners.set_local_player_id(1);
+
+  auto& nations = Game::Systems::NationRegistry::instance();
+  nations.clear();
+  Game::Systems::initialize_default_content(nations);
+  nations.set_player_nation(1, Game::Systems::NationID::RomanRepublic);
+
+  Engine::Core::World world;
+  Game::Units::SpawnParams authored_params;
+  authored_params.player_id = 1;
+  authored_params.nation_id = Game::Systems::NationID::RomanRepublic;
+  authored_params.spawn_type = Game::Units::SpawnType::RomanLegionOrganizer;
+  authored_params.position = QVector3D(12.0F, 0.0F, 18.0F);
+  auto authored = factory->create(authored_params.spawn_type, world, authored_params);
+  ASSERT_NE(authored, nullptr);
+  const auto authored_id = authored->id();
+
+  Game::Systems::LevelSnapshot level;
+  level.map_path = QStringLiteral("assets/maps/map_rivers.json");
+  QVariantMap player_config;
+  player_config.insert(QStringLiteral("player_id"), 1);
+  player_config.insert(QStringLiteral("isHuman"), true);
+  player_config.insert(QStringLiteral("commanderTroop"),
+                       QStringLiteral("roman_field_commander"));
+
+  Game::Mission::MissionSetupCoordinator coordinator;
+  const auto effects = coordinator.apply_skirmish_commander_setup(
+      {world, nullptr, level, 1}, QVariantList{player_config});
+  EXPECT_TRUE(effects.mission_announcements.isEmpty());
+
+  EXPECT_EQ(world.get_entity(authored_id), nullptr);
+  const auto commanders =
+      world.collect_entities_with<Engine::Core::CommanderComponent>();
+  ASSERT_EQ(commanders.size(), 1U);
+  const auto* selected =
+      commanders.front()->get_component<Engine::Core::UnitComponent>();
+  ASSERT_NE(selected, nullptr);
+  EXPECT_EQ(selected->owner_id, 1);
+  EXPECT_EQ(selected->spawn_type, Game::Units::SpawnType::RomanFieldCommander);
 }
 
 TEST(MissionCommanderSetupTest, PrefersAuthoredTroopPositions) {

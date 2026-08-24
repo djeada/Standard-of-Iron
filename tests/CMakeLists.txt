@@ -91,6 +91,7 @@ add_executable(
     map/map_bridge_coverage_test.cpp
     map/river_bank_walkability_test.cpp
     map/map_hill_entrance_smoothness_test.cpp
+    map/map_skirmish_reachability_test.cpp
     map/map_weather_coverage_test.cpp
     map/map_wildlife_config_test.cpp
     map/terrain_topology_audit_test.cpp

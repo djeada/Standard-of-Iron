@@ -1,0 +1,4134 @@
+{
+  "name": "Copper Canyons",
+  "description": "Six camps in a banded rock desert. Three races cross at the middle and cut the ground into six wedges, so every neighbour is two crossings away: one under the junction knaps, one out at the rim stacks. A mesa lies across each wedge, and the lane past it is where the sector is won.",
+  "theme": "Copper dust, flash rain, and six armies in the same canyon system.",
+  "coord_system": "grid",
+  "grid": {
+    "width": 300,
+    "height": 300,
+    "tile_size": 1.0
+  },
+  "max_troops_per_player": 600,
+  "camera": {
+    "center": [
+      150.0,
+      0,
+      150.0
+    ],
+    "distance": 90.0,
+    "tilt_deg": 48.0,
+    "yaw": 225.0,
+    "fov_y": 45.0,
+    "near": 1.0,
+    "far": 840.0
+  },
+  "time_of_day": "afternoon",
+  "environment": {
+    "start_time": 15.5,
+    "time_mode": "continuous",
+    "day_length_seconds": 2400.0,
+    "lighting_profile": "mediterranean_summer"
+  },
+  "biome": {
+    "ground_type": "soil_rocky",
+    "seed": 90144,
+    "patch_density": 2.6,
+    "patch_jitter": 0.84,
+    "plant_density": 0.3,
+    "rock_exposure": 0.8,
+    "soil_roughness": 0.86,
+    "moisture_level": 0.3,
+    "grass_primary": [
+      0.38,
+      0.44,
+      0.26
+    ],
+    "grass_secondary": [
+      0.46,
+      0.52,
+      0.3
+    ],
+    "grass_dry": [
+      0.6,
+      0.5,
+      0.34
+    ],
+    "soil_color": [
+      0.57,
+      0.42,
+      0.3
+    ],
+    "rock_low": [
+      0.58,
+      0.44,
+      0.34
+    ],
+    "rock_high": [
+      0.78,
+      0.66,
+      0.54
+    ],
+    "height_noise": [
+      0.28,
+      0.07
+    ],
+    "ground_irregularity_enabled": true,
+    "irregularity_scale": 0.19,
+    "irregularity_amplitude": 0.1
+  },
+  "rain": {
+    "enabled": true,
+    "type": "rain",
+    "intensity": 0.55,
+    "cycle_duration": 280.0,
+    "active_duration": 60.0,
+    "fade_duration": 6.0,
+    "wind_strength": 0.4,
+    "wind_direction": 300.0
+  },
+  "terrain": [
+    {
+      "id": "p1_clearing",
+      "type": "flat",
+      "x": 255.0,
+      "z": 150.0,
+      "width": 46.0,
+      "depth": 40.0,
+      "description": "Player 1 camp floor."
+    },
+    {
+      "id": "p1_shoulder",
+      "type": "hill",
+      "x": 255.0,
+      "z": 150.0,
+      "width": 50.0,
+      "depth": 60.0,
+      "height": 2.8,
+      "shape": "arc",
+      "thickness": 15.0,
+      "arc": 170.0,
+      "taper": 0.2,
+      "description": "Mesa horn cupping player 1's camp; the mouth faces the canyon junction.",
+      "entrances": [
+        {
+          "x": 262.85,
+          "z": 140.98
+        },
+        {
+          "x": 275.94,
+          "z": 166.35
+        }
+      ]
+    },
+    {
+      "id": "p2_clearing",
+      "type": "flat",
+      "x": 202.5,
+      "z": 240.9,
+      "width": 46.0,
+      "depth": 40.0,
+      "description": "Player 2 camp floor."
+    },
+    {
+      "id": "p2_shoulder",
+      "type": "hill",
+      "x": 202.5,
+      "z": 240.9,
+      "width": 50.0,
+      "depth": 60.0,
+      "height": 2.8,
+      "shape": "arc",
+      "thickness": 15.0,
+      "arc": 170.0,
+      "rotation": 60.0,
+      "taper": 0.2,
+      "description": "Mesa horn cupping player 2's camp; the mouth faces the canyon junction.",
+      "entrances": [
+        {
+          "x": 214.23,
+          "z": 243.19
+        },
+        {
+          "x": 198.81,
+          "z": 267.21
+        }
+      ]
+    },
+    {
+      "id": "p3_clearing",
+      "type": "flat",
+      "x": 97.5,
+      "z": 240.9,
+      "width": 46.0,
+      "depth": 40.0,
+      "description": "Player 3 camp floor."
+    },
+    {
+      "id": "p3_shoulder",
+      "type": "hill",
+      "x": 97.5,
+      "z": 240.9,
+      "width": 50.0,
+      "depth": 60.0,
+      "height": 2.8,
+      "shape": "arc",
+      "thickness": 15.0,
+      "arc": 170.0,
+      "rotation": 120.0,
+      "taper": 0.2,
+      "description": "Mesa horn cupping player 3's camp; the mouth faces the canyon junction.",
+      "entrances": [
+        {
+          "x": 101.38,
+          "z": 252.21
+        },
+        {
+          "x": 72.87,
+          "z": 250.86
+        }
+      ]
+    },
+    {
+      "id": "p4_clearing",
+      "type": "flat",
+      "x": 45.0,
+      "z": 150.0,
+      "width": 46.0,
+      "depth": 40.0,
+      "description": "Player 4 camp floor."
+    },
+    {
+      "id": "p4_shoulder",
+      "type": "hill",
+      "x": 45.0,
+      "z": 150.0,
+      "width": 50.0,
+      "depth": 60.0,
+      "height": 2.8,
+      "shape": "arc",
+      "thickness": 15.0,
+      "arc": 170.0,
+      "rotation": 180.0,
+      "taper": 0.2,
+      "description": "Mesa horn cupping player 4's camp; the mouth faces the canyon junction.",
+      "entrances": [
+        {
+          "x": 37.15,
+          "z": 159.02
+        },
+        {
+          "x": 24.06,
+          "z": 133.65
+        }
+      ]
+    },
+    {
+      "id": "p5_clearing",
+      "type": "flat",
+      "x": 97.5,
+      "z": 59.1,
+      "width": 46.0,
+      "depth": 40.0,
+      "description": "Player 5 camp floor."
+    },
+    {
+      "id": "p5_shoulder",
+      "type": "hill",
+      "x": 97.5,
+      "z": 59.1,
+      "width": 50.0,
+      "depth": 60.0,
+      "height": 2.8,
+      "shape": "arc",
+      "thickness": 15.0,
+      "arc": 170.0,
+      "rotation": 240.0,
+      "taper": 0.2,
+      "description": "Mesa horn cupping player 5's camp; the mouth faces the canyon junction.",
+      "entrances": [
+        {
+          "x": 85.77,
+          "z": 56.81
+        },
+        {
+          "x": 101.19,
+          "z": 32.79
+        }
+      ]
+    },
+    {
+      "id": "p6_clearing",
+      "type": "flat",
+      "x": 202.5,
+      "z": 59.1,
+      "width": 46.0,
+      "depth": 40.0,
+      "description": "Player 6 camp floor."
+    },
+    {
+      "id": "p6_shoulder",
+      "type": "hill",
+      "x": 202.5,
+      "z": 59.1,
+      "width": 50.0,
+      "depth": 60.0,
+      "height": 2.8,
+      "shape": "arc",
+      "thickness": 15.0,
+      "arc": 170.0,
+      "rotation": 300.0,
+      "taper": 0.2,
+      "description": "Mesa horn cupping player 6's camp; the mouth faces the canyon junction.",
+      "entrances": [
+        {
+          "x": 198.62,
+          "z": 47.79
+        },
+        {
+          "x": 227.13,
+          "z": 49.14
+        }
+      ]
+    },
+    {
+      "id": "inner_mesa_1",
+      "type": "hill",
+      "x": 228.0,
+      "z": 150.0,
+      "width": 50.0,
+      "depth": 22.0,
+      "height": 3.4,
+      "shape": "corridor",
+      "thickness": 12.0,
+      "rotation": 90.0,
+      "description": "Copper mesa across the sector, leaving a lane at each end.",
+      "entrances": [
+        {
+          "x": 222.0,
+          "z": 141.64
+        },
+        {
+          "x": 234.0,
+          "z": 158.36
+        }
+      ]
+    },
+    {
+      "id": "inner_mesa_2",
+      "type": "hill",
+      "x": 189.0,
+      "z": 217.5,
+      "width": 50.0,
+      "depth": 22.0,
+      "height": 3.4,
+      "shape": "corridor",
+      "thickness": 12.0,
+      "rotation": 150.0,
+      "description": "Copper mesa across the sector, leaving a lane at each end.",
+      "entrances": [
+        {
+          "x": 193.24,
+          "z": 208.12
+        },
+        {
+          "x": 184.76,
+          "z": 226.88
+        }
+      ]
+    },
+    {
+      "id": "inner_mesa_3",
+      "type": "hill",
+      "x": 111.0,
+      "z": 217.5,
+      "width": 50.0,
+      "depth": 22.0,
+      "height": 3.4,
+      "shape": "corridor",
+      "thickness": 12.0,
+      "rotation": 210.0,
+      "description": "Copper mesa across the sector, leaving a lane at each end.",
+      "entrances": [
+        {
+          "x": 121.24,
+          "z": 216.48
+        },
+        {
+          "x": 100.76,
+          "z": 218.52
+        }
+      ]
+    },
+    {
+      "id": "inner_mesa_4",
+      "type": "hill",
+      "x": 72.0,
+      "z": 150.0,
+      "width": 50.0,
+      "depth": 22.0,
+      "height": 3.4,
+      "shape": "corridor",
+      "thickness": 12.0,
+      "rotation": 270.0,
+      "description": "Copper mesa across the sector, leaving a lane at each end.",
+      "entrances": [
+        {
+          "x": 78.0,
+          "z": 158.36
+        },
+        {
+          "x": 66.0,
+          "z": 141.64
+        }
+      ]
+    },
+    {
+      "id": "inner_mesa_5",
+      "type": "hill",
+      "x": 111.0,
+      "z": 82.5,
+      "width": 50.0,
+      "depth": 22.0,
+      "height": 3.4,
+      "shape": "corridor",
+      "thickness": 12.0,
+      "rotation": 330.0,
+      "description": "Copper mesa across the sector, leaving a lane at each end.",
+      "entrances": [
+        {
+          "x": 106.76,
+          "z": 91.88
+        },
+        {
+          "x": 115.24,
+          "z": 73.12
+        }
+      ]
+    },
+    {
+      "id": "inner_mesa_6",
+      "type": "hill",
+      "x": 189.0,
+      "z": 82.5,
+      "width": 50.0,
+      "depth": 22.0,
+      "height": 3.4,
+      "shape": "corridor",
+      "thickness": 12.0,
+      "rotation": 30.0,
+      "description": "Copper mesa across the sector, leaving a lane at each end.",
+      "entrances": [
+        {
+          "x": 178.76,
+          "z": 83.52
+        },
+        {
+          "x": 199.24,
+          "z": 81.48
+        }
+      ]
+    },
+    {
+      "id": "back_elbow_1",
+      "type": "hill",
+      "x": 298.0,
+      "z": 150.0,
+      "width": 56.0,
+      "depth": 46.0,
+      "height": 3.2,
+      "shape": "elbow",
+      "thickness": 14.0,
+      "arc": 100.0,
+      "rotation": 210.0,
+      "description": "Elbow of banded rock at the sector's back wall.",
+      "entrances": [
+        {
+          "x": 286.26,
+          "z": 169.78
+        },
+        {
+          "x": 310.07,
+          "z": 161.22
+        }
+      ]
+    },
+    {
+      "id": "back_elbow_2",
+      "type": "hill",
+      "x": 224.0,
+      "z": 278.2,
+      "width": 56.0,
+      "depth": 46.0,
+      "height": 3.2,
+      "shape": "elbow",
+      "thickness": 14.0,
+      "arc": 100.0,
+      "rotation": 270.0,
+      "description": "Elbow of banded rock at the sector's back wall.",
+      "entrances": [
+        {
+          "x": 201.0,
+          "z": 277.92
+        },
+        {
+          "x": 220.32,
+          "z": 294.27
+        }
+      ]
+    },
+    {
+      "id": "back_elbow_3",
+      "type": "hill",
+      "x": 76.0,
+      "z": 278.2,
+      "width": 56.0,
+      "depth": 46.0,
+      "height": 3.2,
+      "shape": "elbow",
+      "thickness": 14.0,
+      "arc": 100.0,
+      "rotation": 330.0,
+      "description": "Elbow of banded rock at the sector's back wall.",
+      "entrances": [
+        {
+          "x": 64.74,
+          "z": 258.14
+        },
+        {
+          "x": 60.25,
+          "z": 283.05
+        }
+      ]
+    },
+    {
+      "id": "back_elbow_4",
+      "type": "hill",
+      "x": 2.0,
+      "z": 150.0,
+      "width": 56.0,
+      "depth": 46.0,
+      "height": 3.2,
+      "shape": "elbow",
+      "thickness": 14.0,
+      "arc": 100.0,
+      "rotation": 30.0,
+      "description": "Elbow of banded rock at the sector's back wall.",
+      "entrances": [
+        {
+          "x": 13.74,
+          "z": 130.22
+        },
+        {
+          "x": -10.07,
+          "z": 138.78
+        }
+      ]
+    },
+    {
+      "id": "back_elbow_5",
+      "type": "hill",
+      "x": 76.0,
+      "z": 21.8,
+      "width": 56.0,
+      "depth": 46.0,
+      "height": 3.2,
+      "shape": "elbow",
+      "thickness": 14.0,
+      "arc": 100.0,
+      "rotation": 90.0,
+      "description": "Elbow of banded rock at the sector's back wall.",
+      "entrances": [
+        {
+          "x": 99.0,
+          "z": 22.08
+        },
+        {
+          "x": 79.68,
+          "z": 5.73
+        }
+      ]
+    },
+    {
+      "id": "back_elbow_6",
+      "type": "hill",
+      "x": 224.0,
+      "z": 21.8,
+      "width": 56.0,
+      "depth": 46.0,
+      "height": 3.2,
+      "shape": "elbow",
+      "thickness": 14.0,
+      "arc": 100.0,
+      "rotation": 150.0,
+      "description": "Elbow of banded rock at the sector's back wall.",
+      "entrances": [
+        {
+          "x": 235.26,
+          "z": 41.86
+        },
+        {
+          "x": 239.75,
+          "z": 16.95
+        }
+      ]
+    },
+    {
+      "id": "rim_stack_1",
+      "type": "mountain",
+      "x": 256.1,
+      "z": 256.1,
+      "width": 58.0,
+      "depth": 34.0,
+      "height": 10.0,
+      "rotation": 45.0,
+      "description": "Rim stack between two sectors."
+    },
+    {
+      "id": "rim_stack_2",
+      "type": "mountain",
+      "x": 111.2,
+      "z": 294.9,
+      "width": 58.0,
+      "depth": 34.0,
+      "height": 10.0,
+      "rotation": 105.0,
+      "description": "Rim stack between two sectors."
+    },
+    {
+      "id": "rim_stack_3",
+      "type": "mountain",
+      "x": 5.1,
+      "z": 188.8,
+      "width": 58.0,
+      "depth": 34.0,
+      "height": 10.0,
+      "rotation": 165.0,
+      "description": "Rim stack between two sectors."
+    },
+    {
+      "id": "rim_stack_4",
+      "type": "mountain",
+      "x": 43.9,
+      "z": 43.9,
+      "width": 58.0,
+      "depth": 34.0,
+      "height": 10.0,
+      "rotation": 225.0,
+      "description": "Rim stack between two sectors."
+    },
+    {
+      "id": "rim_stack_5",
+      "type": "mountain",
+      "x": 188.8,
+      "z": 5.1,
+      "width": 58.0,
+      "depth": 34.0,
+      "height": 10.0,
+      "rotation": 285.0,
+      "description": "Rim stack between two sectors."
+    },
+    {
+      "id": "rim_stack_6",
+      "type": "mountain",
+      "x": 294.9,
+      "z": 111.2,
+      "width": 58.0,
+      "depth": 34.0,
+      "height": 10.0,
+      "rotation": 345.0,
+      "description": "Rim stack between two sectors."
+    }
+  ],
+  "forests": [
+    {
+      "id": "junction_scrub_1",
+      "x": 192.0,
+      "z": 150.0,
+      "radius": 14.0
+    },
+    {
+      "id": "junction_scrub_2",
+      "x": 171.0,
+      "z": 186.4,
+      "radius": 14.0
+    },
+    {
+      "id": "junction_scrub_3",
+      "x": 129.0,
+      "z": 186.4,
+      "radius": 14.0
+    },
+    {
+      "id": "junction_scrub_4",
+      "x": 108.0,
+      "z": 150.0,
+      "radius": 14.0
+    },
+    {
+      "id": "junction_scrub_5",
+      "x": 129.0,
+      "z": 113.6,
+      "radius": 14.0
+    },
+    {
+      "id": "junction_scrub_6",
+      "x": 171.0,
+      "z": 113.6,
+      "radius": 14.0
+    },
+    {
+      "id": "rim_stand_1",
+      "x": 220.7,
+      "z": 220.7,
+      "radius": 15.0
+    },
+    {
+      "id": "rim_stand_2",
+      "x": 124.1,
+      "z": 246.6,
+      "radius": 15.0
+    },
+    {
+      "id": "rim_stand_3",
+      "x": 53.4,
+      "z": 175.9,
+      "radius": 15.0
+    },
+    {
+      "id": "rim_stand_4",
+      "x": 79.3,
+      "z": 79.3,
+      "radius": 15.0
+    },
+    {
+      "id": "rim_stand_5",
+      "x": 175.9,
+      "z": 53.4,
+      "radius": 15.0
+    },
+    {
+      "id": "rim_stand_6",
+      "x": 246.6,
+      "z": 124.1,
+      "radius": 15.0
+    }
+  ],
+  "rivers": [
+    {
+      "start": [
+        1.0,
+        63.97
+      ],
+      "end": [
+        299.0,
+        236.03
+      ],
+      "width": 8.0,
+      "id": "canyon_race_1"
+    },
+    {
+      "start": [
+        150.0,
+        1.0
+      ],
+      "end": [
+        150.0,
+        299.0
+      ],
+      "width": 8.0,
+      "id": "canyon_race_2"
+    },
+    {
+      "start": [
+        299.0,
+        63.97
+      ],
+      "end": [
+        1.0,
+        236.03
+      ],
+      "width": 8.0,
+      "id": "canyon_race_3"
+    }
+  ],
+  "lakes": [],
+  "bridges": [
+    {
+      "id": "inner_crossing_1",
+      "start": [
+        193.59,
+        170.55
+      ],
+      "end": [
+        189.59,
+        177.48
+      ],
+      "width": 11.0,
+      "height": 0.6
+    },
+    {
+      "id": "outer_crossing_1",
+      "start": [
+        255.9,
+        206.53
+      ],
+      "end": [
+        251.9,
+        213.46
+      ],
+      "width": 10.0,
+      "height": 0.6
+    },
+    {
+      "id": "inner_crossing_2",
+      "start": [
+        154,
+        198
+      ],
+      "end": [
+        146,
+        198
+      ],
+      "width": 11.0,
+      "height": 0.6
+    },
+    {
+      "id": "outer_crossing_2",
+      "start": [
+        154,
+        270
+      ],
+      "end": [
+        146,
+        270
+      ],
+      "width": 10.0,
+      "height": 0.6
+    },
+    {
+      "id": "inner_crossing_3",
+      "start": [
+        110.41,
+        177.48
+      ],
+      "end": [
+        106.41,
+        170.55
+      ],
+      "width": 11.0,
+      "height": 0.6
+    },
+    {
+      "id": "outer_crossing_3",
+      "start": [
+        48.1,
+        213.46
+      ],
+      "end": [
+        44.1,
+        206.53
+      ],
+      "width": 10.0,
+      "height": 0.6
+    },
+    {
+      "id": "inner_crossing_4",
+      "start": [
+        106.41,
+        129.45
+      ],
+      "end": [
+        110.41,
+        122.52
+      ],
+      "width": 11.0,
+      "height": 0.6
+    },
+    {
+      "id": "outer_crossing_4",
+      "start": [
+        44.1,
+        93.47
+      ],
+      "end": [
+        48.1,
+        86.54
+      ],
+      "width": 10.0,
+      "height": 0.6
+    },
+    {
+      "id": "inner_crossing_5",
+      "start": [
+        146,
+        102
+      ],
+      "end": [
+        154,
+        102
+      ],
+      "width": 11.0,
+      "height": 0.6
+    },
+    {
+      "id": "outer_crossing_5",
+      "start": [
+        146,
+        30
+      ],
+      "end": [
+        154,
+        30
+      ],
+      "width": 10.0,
+      "height": 0.6
+    },
+    {
+      "id": "inner_crossing_6",
+      "start": [
+        189.59,
+        122.52
+      ],
+      "end": [
+        193.59,
+        129.45
+      ],
+      "width": 11.0,
+      "height": 0.6
+    },
+    {
+      "id": "outer_crossing_6",
+      "start": [
+        251.9,
+        86.54
+      ],
+      "end": [
+        255.9,
+        93.47
+      ],
+      "width": 10.0,
+      "height": 0.6
+    }
+  ],
+  "roads": [
+    {
+      "id": "inner_approach_1",
+      "start": [
+        255,
+        150
+      ],
+      "end": [
+        202.6,
+        154.9
+      ],
+      "width": 4.2,
+      "style": "default",
+      "waypoints": [
+        [
+          255,
+          150
+        ],
+        [
+          244.8461,
+          163.3846
+        ],
+        [
+          234.6923,
+          176.7693
+        ],
+        [
+          230.2,
+          179
+        ],
+        [
+          225.8,
+          179
+        ],
+        [
+          221.191,
+          176.8629
+        ],
+        [
+          211.8955,
+          165.8814
+        ],
+        [
+          202.6,
+          154.9
+        ]
+      ]
+    },
+    {
+      "id": "inner_span_1",
+      "start": [
+        202.6,
+        154.9
+      ],
+      "end": [
+        180.6,
+        193.1
+      ],
+      "width": 4.2,
+      "style": "default",
+      "waypoints": [
+        [
+          202.6,
+          154.9
+        ],
+        [
+          196.2669,
+          165.9171
+        ],
+        [
+          193.5918,
+          170.5503
+        ],
+        [
+          189.5916,
+          177.4784
+        ],
+        [
+          186.9165,
+          182.1116
+        ],
+        [
+          180.6,
+          193.1
+        ]
+      ]
+    },
+    {
+      "id": "inner_exit_1",
+      "start": [
+        180.6,
+        193.1
+      ],
+      "end": [
+        202.5,
+        240.9
+      ],
+      "width": 4.2,
+      "style": "default",
+      "waypoints": [
+        [
+          180.6,
+          193.1
+        ],
+        [
+          194.92,
+          195.8792
+        ],
+        [
+          209.24,
+          198.6584
+        ],
+        [
+          212.12,
+          200.4
+        ],
+        [
+          213.88,
+          202.6
+        ],
+        [
+          215,
+          205.7929
+        ],
+        [
+          215,
+          210.48
+        ],
+        [
+          213.9697,
+          215.2997
+        ],
+        [
+          208.2348,
+          228.0999
+        ],
+        [
+          202.5,
+          240.9
+        ]
+      ]
+    },
+    {
+      "id": "outer_approach_1",
+      "start": [
+        255,
+        150
+      ],
+      "end": [
+        264.9,
+        190.9
+      ],
+      "width": 3.6,
+      "style": "default",
+      "waypoints": [
+        [
+          255,
+          150
+        ],
+        [
+          250,
+          160
+        ],
+        [
+          245,
+          170
+        ],
+        [
+          245,
+          175.76
+        ],
+        [
+          246.7007,
+          179.4578
+        ],
+        [
+          250.04,
+          182.32
+        ],
+        [
+          254.2763,
+          185.2176
+        ],
+        [
+          264.9,
+          190.9
+        ]
+      ]
+    },
+    {
+      "id": "outer_span_1",
+      "start": [
+        264.9,
+        190.9
+      ],
+      "end": [
+        242.9,
+        229.1
+      ],
+      "width": 3.6,
+      "style": "default",
+      "waypoints": [
+        [
+          264.9,
+          190.9
+        ],
+        [
+          258.5795,
+          201.8953
+        ],
+        [
+          255.9044,
+          206.5285
+        ],
+        [
+          251.9042,
+          213.4566
+        ],
+        [
+          249.2291,
+          218.0898
+        ],
+        [
+          242.9,
+          229.1
+        ]
+      ]
+    },
+    {
+      "id": "outer_exit_1",
+      "start": [
+        242.9,
+        229.1
+      ],
+      "end": [
+        202.5,
+        240.9
+      ],
+      "width": 3.6,
+      "style": "default",
+      "waypoints": [
+        [
+          242.9,
+          229.1
+        ],
+        [
+          234.45,
+          224.55
+        ],
+        [
+          226,
+          220
+        ],
+        [
+          219.52,
+          220
+        ],
+        [
+          215.36,
+          221.9133
+        ],
+        [
+          212.68,
+          225.04
+        ],
+        [
+          209.6533,
+          229.2023
+        ],
+        [
+          202.5,
+          240.9
+        ]
+      ]
+    },
+    {
+      "id": "inner_approach_2",
+      "start": [
+        202.5,
+        240.9
+      ],
+      "end": [
+        172,
+        198
+      ],
+      "width": 4.2,
+      "style": "default",
+      "waypoints": [
+        [
+          202.5,
+          240.9
+        ],
+        [
+          186.3365,
+          239.0728
+        ],
+        [
+          170.173,
+          237.2456
+        ],
+        [
+          166.6,
+          235.32
+        ],
+        [
+          163,
+          231
+        ],
+        [
+          163,
+          224.52
+        ],
+        [
+          163.8848,
+          219.6405
+        ],
+        [
+          167.9424,
+          208.8202
+        ],
+        [
+          172,
+          198
+        ]
+      ]
+    },
+    {
+      "id": "inner_span_2",
+      "start": [
+        172,
+        198
+      ],
+      "end": [
+        128,
+        198
+      ],
+      "width": 4.2,
+      "style": "default",
+      "waypoints": [
+        [
+          172,
+          198
+        ],
+        [
+          159.35,
+          198
+        ],
+        [
+          154,
+          198
+        ],
+        [
+          146,
+          198
+        ],
+        [
+          140.65,
+          198
+        ],
+        [
+          128,
+          198
+        ]
+      ]
+    },
+    {
+      "id": "inner_exit_2",
+      "start": [
+        128,
+        198
+      ],
+      "end": [
+        97.5,
+        240.9
+      ],
+      "width": 4.2,
+      "style": "default",
+      "waypoints": [
+        [
+          128,
+          198
+        ],
+        [
+          132.1336,
+          209.9416
+        ],
+        [
+          136.2673,
+          221.8832
+        ],
+        [
+          137,
+          226.24
+        ],
+        [
+          137,
+          229.8131
+        ],
+        [
+          135.32,
+          233.4
+        ],
+        [
+          132.68,
+          235.6
+        ],
+        [
+          128.8278,
+          237.2529
+        ],
+        [
+          113.1639,
+          239.0764
+        ],
+        [
+          97.5,
+          240.9
+        ]
+      ]
+    },
+    {
+      "id": "outer_approach_2",
+      "start": [
+        202.5,
+        240.9
+      ],
+      "end": [
+        172,
+        270
+      ],
+      "width": 3.6,
+      "style": "default",
+      "waypoints": [
+        [
+          202.5,
+          240.9
+        ],
+        [
+          191.3423,
+          241.401
+        ],
+        [
+          180.1847,
+          241.9019
+        ],
+        [
+          176.6,
+          243.68
+        ],
+        [
+          173,
+          248
+        ],
+        [
+          172.5,
+          259
+        ],
+        [
+          172,
+          270
+        ]
+      ]
+    },
+    {
+      "id": "outer_span_2",
+      "start": [
+        172,
+        270
+      ],
+      "end": [
+        128,
+        270
+      ],
+      "width": 3.6,
+      "style": "default",
+      "waypoints": [
+        [
+          172,
+          270
+        ],
+        [
+          159.35,
+          270
+        ],
+        [
+          154,
+          270
+        ],
+        [
+          146,
+          270
+        ],
+        [
+          140.65,
+          270
+        ],
+        [
+          128,
+          270
+        ]
+      ]
+    },
+    {
+      "id": "outer_exit_2",
+      "start": [
+        128,
+        270
+      ],
+      "end": [
+        97.5,
+        240.9
+      ],
+      "width": 3.6,
+      "style": "default",
+      "waypoints": [
+        [
+          128,
+          270
+        ],
+        [
+          127.5523,
+          259.7032
+        ],
+        [
+          127.1046,
+          249.4064
+        ],
+        [
+          125.04,
+          245.6
+        ],
+        [
+          120,
+          242
+        ],
+        [
+          108.75,
+          241.45
+        ],
+        [
+          97.5,
+          240.9
+        ]
+      ]
+    },
+    {
+      "id": "inner_approach_3",
+      "start": [
+        97.5,
+        240.9
+      ],
+      "end": [
+        119.4,
+        193.1
+      ],
+      "width": 4.2,
+      "style": "default",
+      "waypoints": [
+        [
+          97.5,
+          240.9
+        ],
+        [
+          91.25,
+          225.95
+        ],
+        [
+          85,
+          211
+        ],
+        [
+          85,
+          205.1869
+        ],
+        [
+          86.68,
+          201.6
+        ],
+        [
+          89.32,
+          199.4
+        ],
+        [
+          93.155,
+          197.6282
+        ],
+        [
+          106.2775,
+          195.3641
+        ],
+        [
+          119.4,
+          193.1
+        ]
+      ]
+    },
+    {
+      "id": "inner_span_3",
+      "start": [
+        119.4,
+        193.1
+      ],
+      "end": [
+        97.4,
+        154.9
+      ],
+      "width": 4.2,
+      "style": "default",
+      "waypoints": [
+        [
+          119.4,
+          193.1
+        ],
+        [
+          113.0835,
+          182.1116
+        ],
+        [
+          110.4084,
+          177.4784
+        ],
+        [
+          106.4082,
+          170.5503
+        ],
+        [
+          103.7331,
+          165.9171
+        ],
+        [
+          97.4,
+          154.9
+        ]
+      ]
+    },
+    {
+      "id": "inner_exit_3",
+      "start": [
+        97.4,
+        154.9
+      ],
+      "end": [
+        45,
+        150
+      ],
+      "width": 4.2,
+      "style": "default",
+      "waypoints": [
+        [
+          97.4,
+          154.9
+        ],
+        [
+          88.1045,
+          165.8814
+        ],
+        [
+          78.809,
+          176.8629
+        ],
+        [
+          74.2,
+          179
+        ],
+        [
+          69.8,
+          179
+        ],
+        [
+          65.3077,
+          176.7693
+        ],
+        [
+          55.1539,
+          163.3846
+        ],
+        [
+          45,
+          150
+        ]
+      ]
+    },
+    {
+      "id": "outer_approach_3",
+      "start": [
+        97.5,
+        240.9
+      ],
+      "end": [
+        57.1,
+        229.1
+      ],
+      "width": 3.6,
+      "style": "default",
+      "waypoints": [
+        [
+          97.5,
+          240.9
+        ],
+        [
+          91.5954,
+          231.9722
+        ],
+        [
+          85.6908,
+          223.0444
+        ],
+        [
+          83.88,
+          221.44
+        ],
+        [
+          82.12,
+          220.56
+        ],
+        [
+          79.7478,
+          220
+        ],
+        [
+          74.52,
+          220
+        ],
+        [
+          69.8494,
+          221.3135
+        ],
+        [
+          57.1,
+          229.1
+        ]
+      ]
+    },
+    {
+      "id": "outer_span_3",
+      "start": [
+        57.1,
+        229.1
+      ],
+      "end": [
+        35.1,
+        190.9
+      ],
+      "width": 3.6,
+      "style": "default",
+      "waypoints": [
+        [
+          57.1,
+          229.1
+        ],
+        [
+          50.7709,
+          218.0898
+        ],
+        [
+          48.0958,
+          213.4566
+        ],
+        [
+          44.0956,
+          206.5285
+        ],
+        [
+          41.4205,
+          201.8953
+        ],
+        [
+          35.1,
+          190.9
+        ]
+      ]
+    },
+    {
+      "id": "outer_exit_3",
+      "start": [
+        35.1,
+        190.9
+      ],
+      "end": [
+        45,
+        150
+      ],
+      "width": 3.6,
+      "style": "default",
+      "waypoints": [
+        [
+          35.1,
+          190.9
+        ],
+        [
+          43.4061,
+          185.8421
+        ],
+        [
+          51.7121,
+          180.7842
+        ],
+        [
+          53.56,
+          178.6
+        ],
+        [
+          54.44,
+          176.4
+        ],
+        [
+          55,
+          173.4922
+        ],
+        [
+          55,
+          169.24
+        ],
+        [
+          53.8643,
+          165.0693
+        ],
+        [
+          45,
+          150
+        ]
+      ]
+    },
+    {
+      "id": "inner_approach_4",
+      "start": [
+        45,
+        150
+      ],
+      "end": [
+        97.4,
+        145.1
+      ],
+      "width": 4.2,
+      "style": "default",
+      "waypoints": [
+        [
+          45,
+          150
+        ],
+        [
+          55.1539,
+          136.6154
+        ],
+        [
+          65.3077,
+          123.2307
+        ],
+        [
+          69.8,
+          121
+        ],
+        [
+          74.2,
+          121
+        ],
+        [
+          78.809,
+          123.1371
+        ],
+        [
+          88.1045,
+          134.1186
+        ],
+        [
+          97.4,
+          145.1
+        ]
+      ]
+    },
+    {
+      "id": "inner_span_4",
+      "start": [
+        97.4,
+        145.1
+      ],
+      "end": [
+        119.4,
+        106.9
+      ],
+      "width": 4.2,
+      "style": "default",
+      "waypoints": [
+        [
+          97.4,
+          145.1
+        ],
+        [
+          103.7331,
+          134.0829
+        ],
+        [
+          106.4082,
+          129.4497
+        ],
+        [
+          110.4084,
+          122.5216
+        ],
+        [
+          113.0835,
+          117.8884
+        ],
+        [
+          119.4,
+          106.9
+        ]
+      ]
+    },
+    {
+      "id": "inner_exit_4",
+      "start": [
+        119.4,
+        106.9
+      ],
+      "end": [
+        97.5,
+        59.1
+      ],
+      "width": 4.2,
+      "style": "default",
+      "waypoints": [
+        [
+          119.4,
+          106.9
+        ],
+        [
+          105.08,
+          104.1208
+        ],
+        [
+          90.76,
+          101.3416
+        ],
+        [
+          87.88,
+          99.6
+        ],
+        [
+          86.12,
+          97.4
+        ],
+        [
+          85,
+          94.2071
+        ],
+        [
+          85,
+          89.52
+        ],
+        [
+          86.0303,
+          84.7003
+        ],
+        [
+          91.7652,
+          71.9001
+        ],
+        [
+          97.5,
+          59.1
+        ]
+      ]
+    },
+    {
+      "id": "outer_approach_4",
+      "start": [
+        45,
+        150
+      ],
+      "end": [
+        35.1,
+        109.1
+      ],
+      "width": 3.6,
+      "style": "default",
+      "waypoints": [
+        [
+          45,
+          150
+        ],
+        [
+          50,
+          140
+        ],
+        [
+          55,
+          130
+        ],
+        [
+          55,
+          124.24
+        ],
+        [
+          53.2993,
+          120.5422
+        ],
+        [
+          49.96,
+          117.68
+        ],
+        [
+          45.7237,
+          114.7824
+        ],
+        [
+          35.1,
+          109.1
+        ]
+      ]
+    },
+    {
+      "id": "outer_span_4",
+      "start": [
+        35.1,
+        109.1
+      ],
+      "end": [
+        57.1,
+        70.9
+      ],
+      "width": 3.6,
+      "style": "default",
+      "waypoints": [
+        [
+          35.1,
+          109.1
+        ],
+        [
+          41.4205,
+          98.1047
+        ],
+        [
+          44.0956,
+          93.4715
+        ],
+        [
+          48.0958,
+          86.5434
+        ],
+        [
+          50.7709,
+          81.9102
+        ],
+        [
+          57.1,
+          70.9
+        ]
+      ]
+    },
+    {
+      "id": "outer_exit_4",
+      "start": [
+        57.1,
+        70.9
+      ],
+      "end": [
+        97.5,
+        59.1
+      ],
+      "width": 3.6,
+      "style": "default",
+      "waypoints": [
+        [
+          57.1,
+          70.9
+        ],
+        [
+          65.55,
+          75.45
+        ],
+        [
+          74,
+          80
+        ],
+        [
+          80.48,
+          80
+        ],
+        [
+          84.64,
+          78.0867
+        ],
+        [
+          87.32,
+          74.96
+        ],
+        [
+          90.3467,
+          70.7977
+        ],
+        [
+          97.5,
+          59.1
+        ]
+      ]
+    },
+    {
+      "id": "inner_approach_5",
+      "start": [
+        97.5,
+        59.1
+      ],
+      "end": [
+        128,
+        102
+      ],
+      "width": 4.2,
+      "style": "default",
+      "waypoints": [
+        [
+          97.5,
+          59.1
+        ],
+        [
+          113.6635,
+          60.9272
+        ],
+        [
+          129.827,
+          62.7544
+        ],
+        [
+          133.4,
+          64.68
+        ],
+        [
+          137,
+          69
+        ],
+        [
+          137,
+          75.48
+        ],
+        [
+          136.1152,
+          80.3595
+        ],
+        [
+          132.0576,
+          91.1798
+        ],
+        [
+          128,
+          102
+        ]
+      ]
+    },
+    {
+      "id": "inner_span_5",
+      "start": [
+        128,
+        102
+      ],
+      "end": [
+        172,
+        102
+      ],
+      "width": 4.2,
+      "style": "default",
+      "waypoints": [
+        [
+          128,
+          102
+        ],
+        [
+          140.65,
+          102
+        ],
+        [
+          146,
+          102
+        ],
+        [
+          154,
+          102
+        ],
+        [
+          159.35,
+          102
+        ],
+        [
+          172,
+          102
+        ]
+      ]
+    },
+    {
+      "id": "inner_exit_5",
+      "start": [
+        172,
+        102
+      ],
+      "end": [
+        202.5,
+        59.1
+      ],
+      "width": 4.2,
+      "style": "default",
+      "waypoints": [
+        [
+          172,
+          102
+        ],
+        [
+          167.8664,
+          90.0584
+        ],
+        [
+          163.7327,
+          78.1168
+        ],
+        [
+          163,
+          73.76
+        ],
+        [
+          163,
+          70.1869
+        ],
+        [
+          164.68,
+          66.6
+        ],
+        [
+          167.32,
+          64.4
+        ],
+        [
+          171.1722,
+          62.7471
+        ],
+        [
+          186.8361,
+          60.9236
+        ],
+        [
+          202.5,
+          59.1
+        ]
+      ]
+    },
+    {
+      "id": "outer_approach_5",
+      "start": [
+        97.5,
+        59.1
+      ],
+      "end": [
+        128,
+        30
+      ],
+      "width": 3.6,
+      "style": "default",
+      "waypoints": [
+        [
+          97.5,
+          59.1
+        ],
+        [
+          108.6577,
+          58.599
+        ],
+        [
+          119.8153,
+          58.0981
+        ],
+        [
+          123.4,
+          56.32
+        ],
+        [
+          127,
+          52
+        ],
+        [
+          127.5,
+          41
+        ],
+        [
+          128,
+          30
+        ]
+      ]
+    },
+    {
+      "id": "outer_span_5",
+      "start": [
+        128,
+        30
+      ],
+      "end": [
+        172,
+        30
+      ],
+      "width": 3.6,
+      "style": "default",
+      "waypoints": [
+        [
+          128,
+          30
+        ],
+        [
+          140.65,
+          30
+        ],
+        [
+          146,
+          30
+        ],
+        [
+          154,
+          30
+        ],
+        [
+          159.35,
+          30
+        ],
+        [
+          172,
+          30
+        ]
+      ]
+    },
+    {
+      "id": "outer_exit_5",
+      "start": [
+        172,
+        30
+      ],
+      "end": [
+        202.5,
+        59.1
+      ],
+      "width": 3.6,
+      "style": "default",
+      "waypoints": [
+        [
+          172,
+          30
+        ],
+        [
+          172.4477,
+          40.2968
+        ],
+        [
+          172.8954,
+          50.5936
+        ],
+        [
+          174.96,
+          54.4
+        ],
+        [
+          180,
+          58
+        ],
+        [
+          191.25,
+          58.55
+        ],
+        [
+          202.5,
+          59.1
+        ]
+      ]
+    },
+    {
+      "id": "inner_approach_6",
+      "start": [
+        202.5,
+        59.1
+      ],
+      "end": [
+        180.6,
+        106.9
+      ],
+      "width": 4.2,
+      "style": "default",
+      "waypoints": [
+        [
+          202.5,
+          59.1
+        ],
+        [
+          208.75,
+          74.05
+        ],
+        [
+          215,
+          89
+        ],
+        [
+          215,
+          94.8131
+        ],
+        [
+          213.32,
+          98.4
+        ],
+        [
+          210.68,
+          100.6
+        ],
+        [
+          206.845,
+          102.3718
+        ],
+        [
+          193.7225,
+          104.6359
+        ],
+        [
+          180.6,
+          106.9
+        ]
+      ]
+    },
+    {
+      "id": "inner_span_6",
+      "start": [
+        180.6,
+        106.9
+      ],
+      "end": [
+        202.6,
+        145.1
+      ],
+      "width": 4.2,
+      "style": "default",
+      "waypoints": [
+        [
+          180.6,
+          106.9
+        ],
+        [
+          186.9165,
+          117.8884
+        ],
+        [
+          189.5916,
+          122.5216
+        ],
+        [
+          193.5918,
+          129.4497
+        ],
+        [
+          196.2669,
+          134.0829
+        ],
+        [
+          202.6,
+          145.1
+        ]
+      ]
+    },
+    {
+      "id": "inner_exit_6",
+      "start": [
+        202.6,
+        145.1
+      ],
+      "end": [
+        255,
+        150
+      ],
+      "width": 4.2,
+      "style": "default",
+      "waypoints": [
+        [
+          202.6,
+          145.1
+        ],
+        [
+          211.8955,
+          134.1186
+        ],
+        [
+          221.191,
+          123.1371
+        ],
+        [
+          225.8,
+          121
+        ],
+        [
+          230.2,
+          121
+        ],
+        [
+          234.6923,
+          123.2307
+        ],
+        [
+          244.8461,
+          136.6154
+        ],
+        [
+          255,
+          150
+        ]
+      ]
+    },
+    {
+      "id": "outer_approach_6",
+      "start": [
+        202.5,
+        59.1
+      ],
+      "end": [
+        242.9,
+        70.9
+      ],
+      "width": 3.6,
+      "style": "default",
+      "waypoints": [
+        [
+          202.5,
+          59.1
+        ],
+        [
+          208.4046,
+          68.0278
+        ],
+        [
+          214.3092,
+          76.9556
+        ],
+        [
+          216.12,
+          78.56
+        ],
+        [
+          217.88,
+          79.44
+        ],
+        [
+          220.2522,
+          80
+        ],
+        [
+          225.48,
+          80
+        ],
+        [
+          230.1506,
+          78.6865
+        ],
+        [
+          242.9,
+          70.9
+        ]
+      ]
+    },
+    {
+      "id": "outer_span_6",
+      "start": [
+        242.9,
+        70.9
+      ],
+      "end": [
+        264.9,
+        109.1
+      ],
+      "width": 3.6,
+      "style": "default",
+      "waypoints": [
+        [
+          242.9,
+          70.9
+        ],
+        [
+          249.2291,
+          81.9102
+        ],
+        [
+          251.9042,
+          86.5434
+        ],
+        [
+          255.9044,
+          93.4715
+        ],
+        [
+          258.5795,
+          98.1047
+        ],
+        [
+          264.9,
+          109.1
+        ]
+      ]
+    },
+    {
+      "id": "outer_exit_6",
+      "start": [
+        264.9,
+        109.1
+      ],
+      "end": [
+        255,
+        150
+      ],
+      "width": 3.6,
+      "style": "default",
+      "waypoints": [
+        [
+          264.9,
+          109.1
+        ],
+        [
+          256.5939,
+          114.1579
+        ],
+        [
+          248.2879,
+          119.2158
+        ],
+        [
+          246.44,
+          121.4
+        ],
+        [
+          245.56,
+          123.6
+        ],
+        [
+          245,
+          126.5078
+        ],
+        [
+          245,
+          130.76
+        ],
+        [
+          246.1357,
+          134.9307
+        ],
+        [
+          255,
+          150
+        ]
+      ]
+    },
+    {
+      "start": [
+        140.65,
+        270
+      ],
+      "end": [
+        142,
+        298
+      ],
+      "width": 3.2,
+      "style": "default",
+      "waypoints": [
+        [
+          140.65,
+          270
+        ],
+        [
+          141.325,
+          284
+        ],
+        [
+          142,
+          298
+        ]
+      ]
+    },
+    {
+      "start": [
+        140.65,
+        30
+      ],
+      "end": [
+        142,
+        1
+      ],
+      "width": 3.2,
+      "style": "default",
+      "waypoints": [
+        [
+          140.65,
+          30
+        ],
+        [
+          141.325,
+          15.5
+        ],
+        [
+          142,
+          1
+        ]
+      ]
+    }
+  ],
+  "landmarks": [
+    {
+      "id": "sanctuary_1",
+      "kind": "sanctuary",
+      "x": 193.8,
+      "z": 193.8,
+      "facing": "north"
+    },
+    {
+      "id": "hamlet_2",
+      "kind": "hamlet",
+      "x": 134.0,
+      "z": 209.9,
+      "facing": "north"
+    },
+    {
+      "id": "watch_3",
+      "kind": "watch",
+      "x": 90.1,
+      "z": 166.0,
+      "facing": "north"
+    },
+    {
+      "id": "sanctuary_4",
+      "kind": "sanctuary",
+      "x": 106.2,
+      "z": 106.2,
+      "facing": "north"
+    },
+    {
+      "id": "hamlet_5",
+      "kind": "hamlet",
+      "x": 166.0,
+      "z": 90.1,
+      "facing": "north"
+    },
+    {
+      "id": "watch_6",
+      "kind": "watch",
+      "x": 209.9,
+      "z": 134.0,
+      "facing": "north"
+    }
+  ],
+  "structures": [
+    {
+      "id": "p1_barracks",
+      "type": "barracks",
+      "x": 255.0,
+      "z": 150.0,
+      "player_id": 1,
+      "max_population": 400,
+      "team_id": 1,
+      "description": "Player 1 barracks."
+    },
+    {
+      "id": "p2_barracks",
+      "type": "barracks",
+      "x": 202.5,
+      "z": 240.9,
+      "player_id": 2,
+      "max_population": 400,
+      "team_id": 2,
+      "description": "Player 2 barracks."
+    },
+    {
+      "id": "p3_barracks",
+      "type": "barracks",
+      "x": 97.5,
+      "z": 240.9,
+      "player_id": 3,
+      "max_population": 400,
+      "team_id": 3,
+      "description": "Player 3 barracks."
+    },
+    {
+      "id": "p4_barracks",
+      "type": "barracks",
+      "x": 45.0,
+      "z": 150.0,
+      "player_id": 4,
+      "max_population": 400,
+      "team_id": 4,
+      "description": "Player 4 barracks."
+    },
+    {
+      "id": "p5_barracks",
+      "type": "barracks",
+      "x": 97.5,
+      "z": 59.1,
+      "player_id": 5,
+      "max_population": 400,
+      "team_id": 5,
+      "description": "Player 5 barracks."
+    },
+    {
+      "id": "p6_barracks",
+      "type": "barracks",
+      "x": 202.5,
+      "z": 59.1,
+      "player_id": 6,
+      "max_population": 400,
+      "team_id": 6,
+      "description": "Player 6 barracks."
+    },
+    {
+      "id": "mine_camp_1_barracks",
+      "type": "barracks",
+      "x": 215.7,
+      "z": 167.6,
+      "player_id": 0,
+      "max_population": 120,
+      "description": "Neutral mine camp in the sector's throat."
+    },
+    {
+      "id": "mine_camp_2_barracks",
+      "type": "barracks",
+      "x": 167.6,
+      "z": 215.7,
+      "player_id": 0,
+      "max_population": 120,
+      "description": "Neutral mine camp in the sector's throat."
+    },
+    {
+      "id": "mine_camp_3_barracks",
+      "type": "barracks",
+      "x": 101.9,
+      "z": 198.1,
+      "player_id": 0,
+      "max_population": 120,
+      "description": "Neutral mine camp in the sector's throat."
+    },
+    {
+      "id": "mine_camp_4_barracks",
+      "type": "barracks",
+      "x": 84.3,
+      "z": 132.4,
+      "player_id": 0,
+      "max_population": 120,
+      "description": "Neutral mine camp in the sector's throat."
+    },
+    {
+      "id": "mine_camp_5_barracks",
+      "type": "barracks",
+      "x": 132.4,
+      "z": 84.3,
+      "player_id": 0,
+      "max_population": 120,
+      "description": "Neutral mine camp in the sector's throat."
+    },
+    {
+      "id": "mine_camp_6_barracks",
+      "type": "barracks",
+      "x": 198.1,
+      "z": 101.9,
+      "player_id": 0,
+      "max_population": 120,
+      "description": "Neutral mine camp in the sector's throat."
+    },
+    {
+      "type": "temple",
+      "x": 193.8,
+      "z": 193.8,
+      "player_id": -1,
+      "landmark": "sanctuary_1"
+    },
+    {
+      "type": "temple",
+      "x": 106.2,
+      "z": 106.2,
+      "player_id": -1,
+      "landmark": "sanctuary_4"
+    }
+  ],
+  "spawns": [
+    {
+      "id": "p1_builder",
+      "type": "builder",
+      "x": 246.0,
+      "z": 155.0,
+      "player_id": 1
+    },
+    {
+      "id": "p1_healer",
+      "type": "healer",
+      "x": 246.0,
+      "z": 145.0,
+      "player_id": 1
+    },
+    {
+      "id": "p2_builder",
+      "type": "builder",
+      "x": 193.67,
+      "z": 235.61,
+      "player_id": 2
+    },
+    {
+      "id": "p2_healer",
+      "type": "healer",
+      "x": 202.33,
+      "z": 230.61,
+      "player_id": 2
+    },
+    {
+      "id": "p3_builder",
+      "type": "builder",
+      "x": 97.67,
+      "z": 230.61,
+      "player_id": 3
+    },
+    {
+      "id": "p3_healer",
+      "type": "healer",
+      "x": 106.33,
+      "z": 235.61,
+      "player_id": 3
+    },
+    {
+      "id": "p4_builder",
+      "type": "builder",
+      "x": 54.0,
+      "z": 145.0,
+      "player_id": 4
+    },
+    {
+      "id": "p4_healer",
+      "type": "healer",
+      "x": 54.0,
+      "z": 155.0,
+      "player_id": 4
+    },
+    {
+      "id": "p5_builder",
+      "type": "builder",
+      "x": 106.33,
+      "z": 64.39,
+      "player_id": 5
+    },
+    {
+      "id": "p5_healer",
+      "type": "healer",
+      "x": 97.67,
+      "z": 69.39,
+      "player_id": 5
+    },
+    {
+      "id": "p6_builder",
+      "type": "builder",
+      "x": 202.33,
+      "z": 69.39,
+      "player_id": 6
+    },
+    {
+      "id": "p6_healer",
+      "type": "healer",
+      "x": 193.67,
+      "z": 64.39,
+      "player_id": 6
+    }
+  ],
+  "world_props": [
+    {
+      "id": "p1_tent_a",
+      "type": "tent",
+      "x": 264.0,
+      "z": 159.0,
+      "rotation": 180.0
+    },
+    {
+      "id": "p1_tent_b",
+      "type": "tent",
+      "x": 264.0,
+      "z": 141.0,
+      "rotation": 180.0
+    },
+    {
+      "id": "p1_cart",
+      "type": "supply_cart",
+      "x": 257.0,
+      "z": 137.0,
+      "rotation": 270.0
+    },
+    {
+      "id": "p1_rack",
+      "type": "weapon_rack",
+      "x": 252.0,
+      "z": 162.0,
+      "rotation": 180.0
+    },
+    {
+      "id": "p1_statue",
+      "type": "statue",
+      "x": 240.0,
+      "z": 150.0,
+      "rotation": 180.0
+    },
+    {
+      "id": "p2_tent_a",
+      "type": "tent",
+      "x": 199.21,
+      "z": 253.19,
+      "rotation": 240.0
+    },
+    {
+      "id": "p2_tent_b",
+      "type": "tent",
+      "x": 214.79,
+      "z": 244.19,
+      "rotation": 240.0
+    },
+    {
+      "id": "p2_cart",
+      "type": "supply_cart",
+      "x": 214.76,
+      "z": 236.13,
+      "rotation": 330.0
+    },
+    {
+      "id": "p2_rack",
+      "type": "weapon_rack",
+      "x": 190.61,
+      "z": 244.3,
+      "rotation": 240.0
+    },
+    {
+      "id": "p2_statue",
+      "type": "statue",
+      "x": 195.0,
+      "z": 227.91,
+      "rotation": 240.0
+    },
+    {
+      "id": "p3_tent_a",
+      "type": "tent",
+      "x": 85.21,
+      "z": 244.19,
+      "rotation": 300.0
+    },
+    {
+      "id": "p3_tent_b",
+      "type": "tent",
+      "x": 100.79,
+      "z": 253.19,
+      "rotation": 300.0
+    },
+    {
+      "id": "p3_cart",
+      "type": "supply_cart",
+      "x": 107.76,
+      "z": 249.13,
+      "rotation": 390.0
+    },
+    {
+      "id": "p3_rack",
+      "type": "weapon_rack",
+      "x": 88.61,
+      "z": 232.3,
+      "rotation": 300.0
+    },
+    {
+      "id": "p3_statue",
+      "type": "statue",
+      "x": 105.0,
+      "z": 227.91,
+      "rotation": 300.0
+    },
+    {
+      "id": "p4_tent_a",
+      "type": "tent",
+      "x": 36.0,
+      "z": 141.0,
+      "rotation": 360.0
+    },
+    {
+      "id": "p4_tent_b",
+      "type": "tent",
+      "x": 36.0,
+      "z": 159.0,
+      "rotation": 360.0
+    },
+    {
+      "id": "p4_cart",
+      "type": "supply_cart",
+      "x": 43.0,
+      "z": 163.0,
+      "rotation": 450.0
+    },
+    {
+      "id": "p4_rack",
+      "type": "weapon_rack",
+      "x": 48.0,
+      "z": 138.0,
+      "rotation": 360.0
+    },
+    {
+      "id": "p4_statue",
+      "type": "statue",
+      "x": 60.0,
+      "z": 150.0,
+      "rotation": 360.0
+    },
+    {
+      "id": "p5_tent_a",
+      "type": "tent",
+      "x": 100.79,
+      "z": 46.81,
+      "rotation": 420.0
+    },
+    {
+      "id": "p5_tent_b",
+      "type": "tent",
+      "x": 85.21,
+      "z": 55.81,
+      "rotation": 420.0
+    },
+    {
+      "id": "p5_cart",
+      "type": "supply_cart",
+      "x": 85.24,
+      "z": 63.87,
+      "rotation": 510.0
+    },
+    {
+      "id": "p5_rack",
+      "type": "weapon_rack",
+      "x": 109.39,
+      "z": 55.7,
+      "rotation": 420.0
+    },
+    {
+      "id": "p5_statue",
+      "type": "statue",
+      "x": 105.0,
+      "z": 72.09,
+      "rotation": 420.0
+    },
+    {
+      "id": "p6_tent_a",
+      "type": "tent",
+      "x": 214.79,
+      "z": 55.81,
+      "rotation": 480.0
+    },
+    {
+      "id": "p6_tent_b",
+      "type": "tent",
+      "x": 199.21,
+      "z": 46.81,
+      "rotation": 480.0
+    },
+    {
+      "id": "p6_cart",
+      "type": "supply_cart",
+      "x": 192.24,
+      "z": 50.87,
+      "rotation": 570.0
+    },
+    {
+      "id": "p6_rack",
+      "type": "weapon_rack",
+      "x": 211.39,
+      "z": 67.7,
+      "rotation": 480.0
+    },
+    {
+      "id": "p6_statue",
+      "type": "statue",
+      "x": 195.0,
+      "z": 72.09,
+      "rotation": 480.0
+    },
+    {
+      "id": "mine_camp_1_ruin",
+      "type": "ruins",
+      "x": 205.7,
+      "z": 176.6,
+      "scale": 0.9
+    },
+    {
+      "id": "mine_camp_1_cart",
+      "type": "supply_cart",
+      "x": 224.7,
+      "z": 160.6
+    },
+    {
+      "id": "mine_camp_2_ruin",
+      "type": "ruins",
+      "x": 157.6,
+      "z": 224.7,
+      "scale": 0.9,
+      "rotation": 60.0
+    },
+    {
+      "id": "mine_camp_2_cart",
+      "type": "supply_cart",
+      "x": 176.6,
+      "z": 208.7,
+      "rotation": 60.0
+    },
+    {
+      "id": "mine_camp_3_ruin",
+      "type": "ruins",
+      "x": 91.9,
+      "z": 207.1,
+      "scale": 0.9,
+      "rotation": 120.0
+    },
+    {
+      "id": "mine_camp_3_cart",
+      "type": "supply_cart",
+      "x": 110.9,
+      "z": 191.1,
+      "rotation": 120.0
+    },
+    {
+      "id": "mine_camp_4_ruin",
+      "type": "ruins",
+      "x": 74.3,
+      "z": 141.4,
+      "scale": 0.9,
+      "rotation": 180.0
+    },
+    {
+      "id": "mine_camp_4_cart",
+      "type": "supply_cart",
+      "x": 93.3,
+      "z": 125.4,
+      "rotation": 180.0
+    },
+    {
+      "id": "mine_camp_5_ruin",
+      "type": "ruins",
+      "x": 122.4,
+      "z": 93.3,
+      "scale": 0.9,
+      "rotation": 240.0
+    },
+    {
+      "id": "mine_camp_5_cart",
+      "type": "supply_cart",
+      "x": 141.4,
+      "z": 77.3,
+      "rotation": 240.0
+    },
+    {
+      "id": "mine_camp_6_ruin",
+      "type": "ruins",
+      "x": 188.1,
+      "z": 110.9,
+      "scale": 0.9,
+      "rotation": 300.0
+    },
+    {
+      "id": "mine_camp_6_cart",
+      "type": "supply_cart",
+      "x": 207.1,
+      "z": 94.9,
+      "rotation": 300.0
+    },
+    {
+      "id": "vein_1_0",
+      "type": "iron_ore",
+      "x": 185.36,
+      "z": 153.67,
+      "rotation": 34.38
+    },
+    {
+      "id": "vein_1_1",
+      "type": "iron_ore",
+      "x": 178.17,
+      "z": 156.24,
+      "rotation": 106.38
+    },
+    {
+      "id": "vein_1_2",
+      "type": "iron_ore",
+      "x": 173.5,
+      "z": 150.18,
+      "rotation": 178.38
+    },
+    {
+      "id": "vein_1_3",
+      "type": "iron_ore",
+      "x": 177.82,
+      "z": 143.88,
+      "rotation": 250.38
+    },
+    {
+      "id": "vein_1_4",
+      "type": "iron_ore",
+      "x": 185.15,
+      "z": 146.03,
+      "rotation": 322.38
+    },
+    {
+      "id": "vein_2_0",
+      "type": "iron_ore",
+      "x": 170.36,
+      "z": 179.67,
+      "rotation": 34.38
+    },
+    {
+      "id": "vein_2_1",
+      "type": "iron_ore",
+      "x": 163.17,
+      "z": 182.24,
+      "rotation": 106.38
+    },
+    {
+      "id": "vein_2_2",
+      "type": "iron_ore",
+      "x": 158.5,
+      "z": 176.18,
+      "rotation": 178.38
+    },
+    {
+      "id": "vein_2_3",
+      "type": "iron_ore",
+      "x": 162.82,
+      "z": 169.88,
+      "rotation": 250.38
+    },
+    {
+      "id": "vein_2_4",
+      "type": "iron_ore",
+      "x": 170.15,
+      "z": 172.03,
+      "rotation": 322.38
+    },
+    {
+      "id": "vein_3_0",
+      "type": "iron_ore",
+      "x": 140.36,
+      "z": 179.67,
+      "rotation": 34.38
+    },
+    {
+      "id": "vein_3_1",
+      "type": "iron_ore",
+      "x": 133.17,
+      "z": 182.24,
+      "rotation": 106.38
+    },
+    {
+      "id": "vein_3_2",
+      "type": "iron_ore",
+      "x": 128.5,
+      "z": 176.18,
+      "rotation": 178.38
+    },
+    {
+      "id": "vein_3_3",
+      "type": "iron_ore",
+      "x": 132.82,
+      "z": 169.88,
+      "rotation": 250.38
+    },
+    {
+      "id": "vein_3_4",
+      "type": "iron_ore",
+      "x": 140.15,
+      "z": 172.03,
+      "rotation": 322.38
+    },
+    {
+      "id": "vein_4_0",
+      "type": "iron_ore",
+      "x": 125.36,
+      "z": 153.67,
+      "rotation": 34.38
+    },
+    {
+      "id": "vein_4_1",
+      "type": "iron_ore",
+      "x": 118.17,
+      "z": 156.24,
+      "rotation": 106.38
+    },
+    {
+      "id": "vein_4_2",
+      "type": "iron_ore",
+      "x": 113.5,
+      "z": 150.18,
+      "rotation": 178.38
+    },
+    {
+      "id": "vein_4_3",
+      "type": "iron_ore",
+      "x": 117.82,
+      "z": 143.88,
+      "rotation": 250.38
+    },
+    {
+      "id": "vein_4_4",
+      "type": "iron_ore",
+      "x": 125.15,
+      "z": 146.03,
+      "rotation": 322.38
+    },
+    {
+      "id": "vein_5_0",
+      "type": "iron_ore",
+      "x": 140.36,
+      "z": 127.67,
+      "rotation": 34.38
+    },
+    {
+      "id": "vein_5_1",
+      "type": "iron_ore",
+      "x": 133.17,
+      "z": 130.24,
+      "rotation": 106.38
+    },
+    {
+      "id": "vein_5_2",
+      "type": "iron_ore",
+      "x": 128.5,
+      "z": 124.18,
+      "rotation": 178.38
+    },
+    {
+      "id": "vein_5_3",
+      "type": "iron_ore",
+      "x": 132.82,
+      "z": 117.88,
+      "rotation": 250.38
+    },
+    {
+      "id": "vein_5_4",
+      "type": "iron_ore",
+      "x": 140.15,
+      "z": 120.03,
+      "rotation": 322.38
+    },
+    {
+      "id": "vein_6_0",
+      "type": "iron_ore",
+      "x": 170.36,
+      "z": 127.67,
+      "rotation": 34.38
+    },
+    {
+      "id": "vein_6_1",
+      "type": "iron_ore",
+      "x": 163.17,
+      "z": 130.24,
+      "rotation": 106.38
+    },
+    {
+      "id": "vein_6_2",
+      "type": "iron_ore",
+      "x": 158.5,
+      "z": 124.18,
+      "rotation": 178.38
+    },
+    {
+      "id": "vein_6_3",
+      "type": "iron_ore",
+      "x": 162.82,
+      "z": 117.88,
+      "rotation": 250.38
+    },
+    {
+      "id": "vein_6_4",
+      "type": "iron_ore",
+      "x": 170.15,
+      "z": 120.03,
+      "rotation": 322.38
+    },
+    {
+      "type": "statue",
+      "x": 199.3,
+      "z": 184.8,
+      "scale": 1.0,
+      "rotation": 90.0,
+      "landmark": "sanctuary_1"
+    },
+    {
+      "type": "statue",
+      "x": 192.3,
+      "z": 184.8,
+      "scale": 1.0,
+      "rotation": 270.0,
+      "landmark": "sanctuary_1"
+    },
+    {
+      "type": "statue",
+      "x": 200.71,
+      "z": 174.39,
+      "scale": 1.0,
+      "rotation": 90.0,
+      "landmark": "sanctuary_1"
+    },
+    {
+      "type": "statue",
+      "x": 184.3,
+      "z": 175.8,
+      "scale": 1.0,
+      "rotation": 270.0,
+      "landmark": "sanctuary_1"
+    },
+    {
+      "type": "ruins",
+      "x": 200.8,
+      "z": 202.8,
+      "scale": 1.1,
+      "rotation": 90.0,
+      "landmark": "sanctuary_1"
+    },
+    {
+      "type": "ruins",
+      "x": 187.8,
+      "z": 204.8,
+      "scale": 0.9,
+      "rotation": 270.0,
+      "landmark": "sanctuary_1"
+    },
+    {
+      "type": "dead_tree",
+      "x": 192.8,
+      "z": 207.8,
+      "scale": 1.0,
+      "rotation": 90.0,
+      "landmark": "sanctuary_1"
+    },
+    {
+      "type": "firecamp",
+      "x": 195.8,
+      "z": 187.8,
+      "scale": 1.0,
+      "rotation": 0.0,
+      "landmark": "sanctuary_1",
+      "radius": 3.2,
+      "intensity": 1.2,
+      "persistent": true
+    },
+    {
+      "type": "abandoned_home",
+      "x": 140.0,
+      "z": 209.9,
+      "scale": 1.0,
+      "rotation": 90.0,
+      "landmark": "hamlet_2"
+    },
+    {
+      "type": "abandoned_home",
+      "x": 130.41,
+      "z": 204.31,
+      "scale": 1.0,
+      "rotation": 270.0,
+      "landmark": "hamlet_2"
+    },
+    {
+      "type": "abandoned_home",
+      "x": 127.0,
+      "z": 217.9,
+      "scale": 1.0,
+      "rotation": 270.0,
+      "landmark": "hamlet_2"
+    },
+    {
+      "type": "abandoned_home",
+      "x": 139.0,
+      "z": 221.9,
+      "scale": 0.9,
+      "rotation": 90.0,
+      "landmark": "hamlet_2"
+    },
+    {
+      "type": "ruins",
+      "x": 137.0,
+      "z": 197.9,
+      "scale": 1.1,
+      "rotation": 90.0,
+      "landmark": "hamlet_2"
+    },
+    {
+      "type": "ruins",
+      "x": 121.0,
+      "z": 213.9,
+      "scale": 0.9,
+      "rotation": 270.0,
+      "landmark": "hamlet_2"
+    },
+    {
+      "type": "dead_tree",
+      "x": 144.59,
+      "z": 207.31,
+      "scale": 1.0,
+      "rotation": 90.0,
+      "landmark": "hamlet_2"
+    },
+    {
+      "type": "dead_tree",
+      "x": 134.0,
+      "z": 225.9,
+      "scale": 0.9,
+      "rotation": 270.0,
+      "landmark": "hamlet_2"
+    },
+    {
+      "type": "statue",
+      "x": 90.1,
+      "z": 170.0,
+      "scale": 1.0,
+      "rotation": 0.0,
+      "landmark": "watch_3"
+    },
+    {
+      "type": "tent",
+      "x": 95.1,
+      "z": 160.0,
+      "scale": 1.0,
+      "rotation": 90.0,
+      "landmark": "watch_3"
+    },
+    {
+      "type": "tent",
+      "x": 86.1,
+      "z": 159.0,
+      "scale": 1.0,
+      "rotation": 270.0,
+      "landmark": "watch_3"
+    },
+    {
+      "type": "tent",
+      "x": 92.1,
+      "z": 154.0,
+      "scale": 0.95,
+      "rotation": 90.0,
+      "landmark": "watch_3"
+    },
+    {
+      "type": "supply_cart",
+      "x": 82.1,
+      "z": 163.0,
+      "scale": 1.0,
+      "rotation": 270.0,
+      "landmark": "watch_3"
+    },
+    {
+      "type": "weapon_rack",
+      "x": 98.1,
+      "z": 164.0,
+      "scale": 1.0,
+      "rotation": 90.0,
+      "landmark": "watch_3"
+    },
+    {
+      "type": "firecamp",
+      "x": 90.1,
+      "z": 158.0,
+      "scale": 1.0,
+      "rotation": 0.0,
+      "landmark": "watch_3",
+      "radius": 3.2,
+      "intensity": 1.2,
+      "persistent": true
+    },
+    {
+      "type": "ruins",
+      "x": 84.1,
+      "z": 178.0,
+      "scale": 0.9,
+      "rotation": 270.0,
+      "landmark": "watch_3"
+    },
+    {
+      "type": "statue",
+      "x": 110.17,
+      "z": 100.9,
+      "scale": 1.0,
+      "rotation": 90.0,
+      "landmark": "sanctuary_4"
+    },
+    {
+      "type": "statue",
+      "x": 100.7,
+      "z": 97.2,
+      "scale": 1.0,
+      "rotation": 270.0,
+      "landmark": "sanctuary_4"
+    },
+    {
+      "type": "statue",
+      "x": 107.26,
+      "z": 94.85,
+      "scale": 1.0,
+      "rotation": 90.0,
+      "landmark": "sanctuary_4"
+    },
+    {
+      "type": "statue",
+      "x": 96.46,
+      "z": 83.96,
+      "scale": 1.0,
+      "rotation": 270.0,
+      "landmark": "sanctuary_4"
+    },
+    {
+      "type": "ruins",
+      "x": 113.2,
+      "z": 115.2,
+      "scale": 1.1,
+      "rotation": 90.0,
+      "landmark": "sanctuary_4"
+    },
+    {
+      "type": "ruins",
+      "x": 102.2,
+      "z": 117.2,
+      "scale": 0.9,
+      "rotation": 270.0,
+      "landmark": "sanctuary_4"
+    },
+    {
+      "type": "dead_tree",
+      "x": 107.2,
+      "z": 120.2,
+      "scale": 1.0,
+      "rotation": 90.0,
+      "landmark": "sanctuary_4"
+    },
+    {
+      "type": "firecamp",
+      "x": 106.2,
+      "z": 100.2,
+      "scale": 1.0,
+      "rotation": 0.0,
+      "landmark": "sanctuary_4",
+      "radius": 3.2,
+      "intensity": 1.2,
+      "persistent": true
+    },
+    {
+      "type": "abandoned_home",
+      "x": 172.0,
+      "z": 90.1,
+      "scale": 1.0,
+      "rotation": 90.0,
+      "landmark": "hamlet_5"
+    },
+    {
+      "type": "abandoned_home",
+      "x": 161.0,
+      "z": 83.1,
+      "scale": 1.0,
+      "rotation": 270.0,
+      "landmark": "hamlet_5"
+    },
+    {
+      "type": "abandoned_home",
+      "x": 157.59,
+      "z": 96.69,
+      "scale": 1.0,
+      "rotation": 270.0,
+      "landmark": "hamlet_5"
+    },
+    {
+      "type": "abandoned_home",
+      "x": 175.24,
+      "z": 106.34,
+      "scale": 0.9,
+      "rotation": 90.0,
+      "landmark": "hamlet_5"
+    },
+    {
+      "type": "ruins",
+      "x": 169.0,
+      "z": 78.1,
+      "scale": 1.1,
+      "rotation": 90.0,
+      "landmark": "hamlet_5"
+    },
+    {
+      "type": "ruins",
+      "x": 155.0,
+      "z": 94.1,
+      "scale": 0.9,
+      "rotation": 270.0,
+      "landmark": "hamlet_5"
+    },
+    {
+      "type": "dead_tree",
+      "x": 178.0,
+      "z": 86.1,
+      "scale": 1.0,
+      "rotation": 90.0,
+      "landmark": "hamlet_5"
+    },
+    {
+      "type": "dead_tree",
+      "x": 164.0,
+      "z": 106.1,
+      "scale": 0.9,
+      "rotation": 270.0,
+      "landmark": "hamlet_5"
+    },
+    {
+      "type": "statue",
+      "x": 209.9,
+      "z": 138.0,
+      "scale": 1.0,
+      "rotation": 0.0,
+      "landmark": "watch_6"
+    },
+    {
+      "type": "tent",
+      "x": 214.9,
+      "z": 128.0,
+      "scale": 1.0,
+      "rotation": 90.0,
+      "landmark": "watch_6"
+    },
+    {
+      "type": "tent",
+      "x": 205.9,
+      "z": 127.0,
+      "scale": 1.0,
+      "rotation": 270.0,
+      "landmark": "watch_6"
+    },
+    {
+      "type": "tent",
+      "x": 211.9,
+      "z": 122.0,
+      "scale": 0.95,
+      "rotation": 90.0,
+      "landmark": "watch_6"
+    },
+    {
+      "type": "supply_cart",
+      "x": 201.9,
+      "z": 131.0,
+      "scale": 1.0,
+      "rotation": 270.0,
+      "landmark": "watch_6"
+    },
+    {
+      "type": "weapon_rack",
+      "x": 217.9,
+      "z": 132.0,
+      "scale": 1.0,
+      "rotation": 90.0,
+      "landmark": "watch_6"
+    },
+    {
+      "type": "firecamp",
+      "x": 209.9,
+      "z": 126.0,
+      "scale": 1.0,
+      "rotation": 0.0,
+      "landmark": "watch_6",
+      "radius": 3.2,
+      "intensity": 1.2,
+      "persistent": true
+    },
+    {
+      "type": "ruins",
+      "x": 203.9,
+      "z": 146.0,
+      "scale": 0.9,
+      "rotation": 270.0,
+      "landmark": "watch_6"
+    }
+  ],
+  "firecamps": [
+    {
+      "id": "p1_fire",
+      "x": 258.0,
+      "z": 150.0,
+      "intensity": 1.05,
+      "radius": 3.4
+    },
+    {
+      "id": "p2_fire",
+      "x": 204.0,
+      "z": 243.5,
+      "intensity": 1.05,
+      "radius": 3.4
+    },
+    {
+      "id": "p3_fire",
+      "x": 96.0,
+      "z": 243.5,
+      "intensity": 1.05,
+      "radius": 3.4
+    },
+    {
+      "id": "p4_fire",
+      "x": 42.0,
+      "z": 150.0,
+      "intensity": 1.05,
+      "radius": 3.4
+    },
+    {
+      "id": "p5_fire",
+      "x": 96.0,
+      "z": 56.5,
+      "intensity": 1.05,
+      "radius": 3.4
+    },
+    {
+      "id": "p6_fire",
+      "x": 204.0,
+      "z": 56.5,
+      "intensity": 1.05,
+      "radius": 3.4
+    },
+    {
+      "id": "mine_camp_1_fire",
+      "x": 220.7,
+      "z": 173.6,
+      "radius": 3.0
+    },
+    {
+      "id": "mine_camp_2_fire",
+      "x": 172.6,
+      "z": 221.7,
+      "radius": 3.0
+    },
+    {
+      "id": "mine_camp_3_fire",
+      "x": 106.9,
+      "z": 204.1,
+      "radius": 3.0
+    },
+    {
+      "id": "mine_camp_4_fire",
+      "x": 89.3,
+      "z": 138.4,
+      "radius": 3.0
+    },
+    {
+      "id": "mine_camp_5_fire",
+      "x": 137.4,
+      "z": 90.3,
+      "radius": 3.0
+    },
+    {
+      "id": "mine_camp_6_fire",
+      "x": 203.1,
+      "z": 107.9,
+      "radius": 3.0
+    }
+  ],
+  "undead_zones": [
+    {
+      "id": "copper_tomb_1",
+      "anchor_type": "ruins",
+      "x": 234.3,
+      "z": 220.7,
+      "radius": 12.0,
+      "leash_radius": 18.0,
+      "owner_id": 99,
+      "team_id": 99,
+      "fog_density": 0.3,
+      "awaken_on": [
+        "unit_enters_radius"
+      ],
+      "waves": [
+        {
+          "trigger": "initial",
+          "units": {
+            "skeleton_swordsman": 3,
+            "skeleton_archer": 2
+          }
+        },
+        {
+          "trigger": "after_clear",
+          "units": {
+            "grave_priest": 1
+          }
+        }
+      ],
+      "clear_reward": {
+        "gold": 120,
+        "iron": 60
+      }
+    },
+    {
+      "id": "copper_tomb_2",
+      "anchor_type": "magic_shrine",
+      "x": 130.9,
+      "z": 258.3,
+      "radius": 12.0,
+      "leash_radius": 18.0,
+      "owner_id": 99,
+      "team_id": 99,
+      "fog_density": 0.3,
+      "awaken_on": [
+        "unit_enters_radius"
+      ],
+      "waves": [
+        {
+          "trigger": "initial",
+          "units": {
+            "skeleton_swordsman": 3,
+            "skeleton_archer": 2
+          }
+        },
+        {
+          "trigger": "after_clear",
+          "units": {
+            "grave_priest": 1
+          }
+        }
+      ],
+      "clear_reward": {
+        "gold": 120,
+        "iron": 60
+      }
+    },
+    {
+      "id": "copper_tomb_3",
+      "anchor_type": "ruins",
+      "x": 46.6,
+      "z": 187.6,
+      "radius": 12.0,
+      "leash_radius": 18.0,
+      "owner_id": 99,
+      "team_id": 99,
+      "fog_density": 0.3,
+      "awaken_on": [
+        "unit_enters_radius"
+      ],
+      "waves": [
+        {
+          "trigger": "initial",
+          "units": {
+            "skeleton_swordsman": 3,
+            "skeleton_archer": 2
+          }
+        },
+        {
+          "trigger": "after_clear",
+          "units": {
+            "grave_priest": 1
+          }
+        }
+      ],
+      "clear_reward": {
+        "gold": 120,
+        "iron": 60
+      }
+    },
+    {
+      "id": "copper_tomb_4",
+      "anchor_type": "magic_shrine",
+      "x": 65.7,
+      "z": 79.3,
+      "radius": 12.0,
+      "leash_radius": 18.0,
+      "owner_id": 99,
+      "team_id": 99,
+      "fog_density": 0.3,
+      "awaken_on": [
+        "unit_enters_radius"
+      ],
+      "waves": [
+        {
+          "trigger": "initial",
+          "units": {
+            "skeleton_swordsman": 3,
+            "skeleton_archer": 2
+          }
+        },
+        {
+          "trigger": "after_clear",
+          "units": {
+            "grave_priest": 1
+          }
+        }
+      ],
+      "clear_reward": {
+        "gold": 120,
+        "iron": 60
+      }
+    },
+    {
+      "id": "copper_tomb_5",
+      "anchor_type": "ruins",
+      "x": 169.1,
+      "z": 41.7,
+      "radius": 12.0,
+      "leash_radius": 18.0,
+      "owner_id": 99,
+      "team_id": 99,
+      "fog_density": 0.3,
+      "awaken_on": [
+        "unit_enters_radius"
+      ],
+      "waves": [
+        {
+          "trigger": "initial",
+          "units": {
+            "skeleton_swordsman": 3,
+            "skeleton_archer": 2
+          }
+        },
+        {
+          "trigger": "after_clear",
+          "units": {
+            "grave_priest": 1
+          }
+        }
+      ],
+      "clear_reward": {
+        "gold": 120,
+        "iron": 60
+      }
+    },
+    {
+      "id": "copper_tomb_6",
+      "anchor_type": "magic_shrine",
+      "x": 253.4,
+      "z": 112.4,
+      "radius": 12.0,
+      "leash_radius": 18.0,
+      "owner_id": 99,
+      "team_id": 99,
+      "fog_density": 0.3,
+      "awaken_on": [
+        "unit_enters_radius"
+      ],
+      "waves": [
+        {
+          "trigger": "initial",
+          "units": {
+            "skeleton_swordsman": 3,
+            "skeleton_archer": 2
+          }
+        },
+        {
+          "trigger": "after_clear",
+          "units": {
+            "grave_priest": 1
+          }
+        }
+      ],
+      "clear_reward": {
+        "gold": 120,
+        "iron": 60
+      }
+    }
+  ],
+  "wildlife": {
+    "enabled": true,
+    "seed": 90144,
+    "near_simulation_radius": 76.0,
+    "far_simulation_radius": 150.0,
+    "sheep": {
+      "enabled": true,
+      "groups": 2,
+      "group_size_min": 5,
+      "group_size_max": 8,
+      "roam_radius": 13.0,
+      "respawn": true,
+      "respawn_delay": 120.0,
+      "spawn_areas": [
+        {
+          "x": 96.0,
+          "z": 150.0,
+          "radius": 16.0
+        },
+        {
+          "x": 204.0,
+          "z": 150.0,
+          "radius": 16.0
+        }
+      ],
+      "alert_radius": 11.0
+    },
+    "wolves": {
+      "enabled": true,
+      "groups": 2,
+      "group_size_min": 3,
+      "group_size_max": 5,
+      "roam_radius": 26.0,
+      "respawn": true,
+      "respawn_delay": 160.0,
+      "spawn_areas": [
+        {
+          "x": 150.0,
+          "z": 74.0,
+          "radius": 20.0
+        },
+        {
+          "x": 150.0,
+          "z": 226.0,
+          "radius": 20.0
+        }
+      ],
+      "aggression": 0.45
+    },
+    "birds": {
+      "enabled": true,
+      "groups": 2,
+      "group_size_min": 3,
+      "group_size_max": 7,
+      "flight_height": 9.0,
+      "flyover_interval_min": 18.0,
+      "flyover_interval_max": 46.0
+    }
+  },
+  "starting_resources": {
+    "gold": 250,
+    "food": 200,
+    "wood": 250,
+    "stone": 120,
+    "iron": 80
+  },
+  "victory": {
+    "type": "elimination",
+    "key_structures": [
+      "barracks"
+    ],
+    "defeat_conditions": [
+      "no_key_structures",
+      "no_commander",
+      "only_commander_remaining"
+    ]
+  }
+}

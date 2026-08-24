@@ -1,1517 +1,2759 @@
 {
-    "biome": {
-        "blade_height": [
-            0.35000000000000003,
-            0.9
-        ],
-        "blade_width": [
-            0.02,
-            0.05
-        ],
-        "grass_dry": [
-            0.48,
-            0.48,
-            0.25
-        ],
-        "grass_primary": [
-            0.18,
-            0.32,
-            0.12
-        ],
-        "grass_secondary": [
-            0.25,
-            0.42,
-            0.16
-        ],
-        "ground_irregularity_enabled": true,
-        "ground_type": "grass_dry",
-        "height_noise": [
-            0.18,
-            0.06
-        ],
-        "irregularity_amplitude": 0.07,
-        "irregularity_scale": 0.14,
-        "patch_density": 3.0500000000000003,
-        "patch_jitter": 0.8,
-        "plant_density": 0.58,
-        "rock_high": [
-            0.76,
-            0.72,
-            0.64
-        ],
-        "rock_low": [
-            0.58,
-            0.54,
-            0.46
-        ],
-        "seed": 34619,
-        "soil_color": [
-            0.67,
-            0.55,
-            0.36
-        ],
-        "spawn_edge_padding": 0,
-        "sway_speed": 1.05,
-        "sway_strength": 0.2
+  "name": "Sunbaked Terraces",
+  "description": "Four camps on a dry Iberian hillside. No river runs here - the terraces are the map. Each camp looks out through a horned terrace wall with a gate at either horn, and the old press mound in the middle is high ground four worn tracks climb.",
+  "theme": "Olives, dust, and four armies working out who owns the water.",
+  "coord_system": "grid",
+  "grid": {
+    "width": 240,
+    "height": 240,
+    "tile_size": 1.0
+  },
+  "max_troops_per_player": 800,
+  "camera": {
+    "center": [
+      120.0,
+      0,
+      120.0
+    ],
+    "distance": 76.8,
+    "tilt_deg": 48.0,
+    "yaw": 225.0,
+    "fov_y": 45.0,
+    "near": 1.0,
+    "far": 672.0
+  },
+  "time_of_day": "day",
+  "environment": {
+    "start_time": 12.5,
+    "time_mode": "continuous",
+    "day_length_seconds": 2400.0,
+    "lighting_profile": "mediterranean_summer"
+  },
+  "biome": {
+    "ground_type": "grass_dry",
+    "seed": 63052,
+    "patch_density": 2.8,
+    "patch_jitter": 0.86,
+    "plant_density": 0.34,
+    "crack_intensity": 0.6,
+    "moisture_level": 0.16,
+    "grass_saturation": 0.78,
+    "grass_primary": [
+      0.29,
+      0.44,
+      0.21
+    ],
+    "grass_secondary": [
+      0.4,
+      0.53,
+      0.25
+    ],
+    "grass_dry": [
+      0.55,
+      0.51,
+      0.28
+    ],
+    "soil_color": [
+      0.53,
+      0.45,
+      0.33
+    ],
+    "rock_low": [
+      0.63,
+      0.59,
+      0.53
+    ],
+    "rock_high": [
+      0.79,
+      0.76,
+      0.71
+    ],
+    "height_noise": [
+      0.18,
+      0.06
+    ],
+    "ground_irregularity_enabled": true,
+    "irregularity_scale": 0.16,
+    "irregularity_amplitude": 0.075
+  },
+  "rain": {
+    "enabled": false,
+    "type": "rain",
+    "intensity": 0.0
+  },
+  "terrain": [
+    {
+      "id": "p1_clearing",
+      "type": "flat",
+      "x": 120.0,
+      "z": 40.0,
+      "width": 46.0,
+      "depth": 38.0,
+      "description": "Player 1 camp floor."
     },
-    "bridges": [
+    {
+      "id": "p1_shoulder",
+      "type": "hill",
+      "x": 120.0,
+      "z": 40.0,
+      "width": 58.0,
+      "depth": 68.0,
+      "height": 2.5,
+      "shape": "arc",
+      "thickness": 17.0,
+      "arc": 120.0,
+      "rotation": 270.0,
+      "taper": 0.2,
+      "description": "Terrace wall cupping player 1's camp.",
+      "entrances": [
         {
-            "end": [
-                96.62,
-                84.56
-            ],
-            "height": 0.55,
-            "start": [
-                93.19,
-                82.14
-            ],
-            "width": 8.0
+          "x": 111.69,
+          "z": 29.58
         },
         {
-            "end": [
-                183.38,
-                195.44
-            ],
-            "height": 0.55,
-            "start": [
-                186.81,
-                197.86
-            ],
-            "width": 8.0
-        },
-        {
-            "end": [
-                107.71,
-                69.46
-            ],
-            "height": 0.55,
-            "start": [
-                104.38,
-                66.89
-            ],
-            "width": 3.9
-        },
-        {
-            "end": [
-                172.29,
-                210.54
-            ],
-            "height": 0.55,
-            "start": [
-                175.62,
-                213.11
-            ],
-            "width": 3.9
+          "x": 133.43,
+          "z": 13.36
         }
-    ],
-    "camera": {
-        "center": [
-            140,
-            0,
-            140
+      ]
+    },
+    {
+      "id": "p2_clearing",
+      "type": "flat",
+      "x": 200.0,
+      "z": 120.0,
+      "width": 46.0,
+      "depth": 38.0,
+      "description": "Player 2 camp floor."
+    },
+    {
+      "id": "p2_shoulder",
+      "type": "hill",
+      "x": 200.0,
+      "z": 120.0,
+      "width": 58.0,
+      "depth": 68.0,
+      "height": 2.5,
+      "shape": "arc",
+      "thickness": 17.0,
+      "arc": 120.0,
+      "rotation": 0.0,
+      "taper": 0.2,
+      "description": "Terrace wall cupping player 2's camp.",
+      "entrances": [
+        {
+          "x": 210.42,
+          "z": 111.69
+        },
+        {
+          "x": 226.64,
+          "z": 133.43
+        }
+      ]
+    },
+    {
+      "id": "p3_clearing",
+      "type": "flat",
+      "x": 120.0,
+      "z": 200.0,
+      "width": 46.0,
+      "depth": 38.0,
+      "description": "Player 3 camp floor."
+    },
+    {
+      "id": "p3_shoulder",
+      "type": "hill",
+      "x": 120.0,
+      "z": 200.0,
+      "width": 58.0,
+      "depth": 68.0,
+      "height": 2.5,
+      "shape": "arc",
+      "thickness": 17.0,
+      "arc": 120.0,
+      "rotation": 90.0,
+      "taper": 0.2,
+      "description": "Terrace wall cupping player 3's camp.",
+      "entrances": [
+        {
+          "x": 128.31,
+          "z": 210.42
+        },
+        {
+          "x": 106.57,
+          "z": 226.64
+        }
+      ]
+    },
+    {
+      "id": "p4_clearing",
+      "type": "flat",
+      "x": 40.0,
+      "z": 120.0,
+      "width": 46.0,
+      "depth": 38.0,
+      "description": "Player 4 camp floor."
+    },
+    {
+      "id": "p4_shoulder",
+      "type": "hill",
+      "x": 40.0,
+      "z": 120.0,
+      "width": 58.0,
+      "depth": 68.0,
+      "height": 2.5,
+      "shape": "arc",
+      "thickness": 17.0,
+      "arc": 120.0,
+      "rotation": 180.0,
+      "taper": 0.2,
+      "description": "Terrace wall cupping player 4's camp.",
+      "entrances": [
+        {
+          "x": 29.58,
+          "z": 128.31
+        },
+        {
+          "x": 13.36,
+          "z": 106.57
+        }
+      ]
+    },
+    {
+      "id": "upper_terrace_1",
+      "type": "hill",
+      "x": 120.0,
+      "z": 96.0,
+      "width": 74.0,
+      "depth": 40.0,
+      "height": 3.2,
+      "shape": "arc",
+      "thickness": 15.0,
+      "arc": 130.0,
+      "rotation": 270.0,
+      "taper": 0.3,
+      "description": "Upper olive terrace: its horns leave a gate at each end.",
+      "entrances": [
+        {
+          "x": 119.13,
+          "z": 76.01
+        },
+        {
+          "x": 133.66,
+          "z": 68.18
+        }
+      ]
+    },
+    {
+      "id": "upper_terrace_2",
+      "type": "hill",
+      "x": 144.0,
+      "z": 120.0,
+      "width": 74.0,
+      "depth": 40.0,
+      "height": 3.2,
+      "shape": "arc",
+      "thickness": 15.0,
+      "arc": 130.0,
+      "rotation": 0.0,
+      "taper": 0.3,
+      "description": "Upper olive terrace: its horns leave a gate at each end.",
+      "entrances": [
+        {
+          "x": 163.99,
+          "z": 119.13
+        },
+        {
+          "x": 171.82,
+          "z": 133.66
+        }
+      ]
+    },
+    {
+      "id": "upper_terrace_3",
+      "type": "hill",
+      "x": 120.0,
+      "z": 144.0,
+      "width": 74.0,
+      "depth": 40.0,
+      "height": 3.2,
+      "shape": "arc",
+      "thickness": 15.0,
+      "arc": 130.0,
+      "rotation": 90.0,
+      "taper": 0.3,
+      "description": "Upper olive terrace: its horns leave a gate at each end.",
+      "entrances": [
+        {
+          "x": 120.87,
+          "z": 163.99
+        },
+        {
+          "x": 106.34,
+          "z": 171.82
+        }
+      ]
+    },
+    {
+      "id": "upper_terrace_4",
+      "type": "hill",
+      "x": 96.0,
+      "z": 120.0,
+      "width": 74.0,
+      "depth": 40.0,
+      "height": 3.2,
+      "shape": "arc",
+      "thickness": 15.0,
+      "arc": 130.0,
+      "rotation": 180.0,
+      "taper": 0.3,
+      "description": "Upper olive terrace: its horns leave a gate at each end.",
+      "entrances": [
+        {
+          "x": 76.01,
+          "z": 120.87
+        },
+        {
+          "x": 68.18,
+          "z": 106.34
+        }
+      ]
+    },
+    {
+      "id": "corner_elbow_1",
+      "type": "hill",
+      "x": 44.0,
+      "z": 44.0,
+      "width": 52.0,
+      "depth": 44.0,
+      "height": 3.0,
+      "shape": "elbow",
+      "thickness": 13.0,
+      "arc": 100.0,
+      "rotation": 225.0,
+      "description": "Dry-stone elbow folding the corner into two lanes.",
+      "entrances": [
+        {
+          "x": 28.51,
+          "z": 59.63
+        },
+        {
+          "x": 52.44,
+          "z": 56.89
+        }
+      ]
+    },
+    {
+      "id": "corner_elbow_2",
+      "type": "hill",
+      "x": 196.0,
+      "z": 44.0,
+      "width": 52.0,
+      "depth": 44.0,
+      "height": 3.0,
+      "shape": "elbow",
+      "thickness": 13.0,
+      "arc": 100.0,
+      "rotation": 315.0,
+      "description": "Dry-stone elbow folding the corner into two lanes.",
+      "entrances": [
+        {
+          "x": 180.37,
+          "z": 28.51
+        },
+        {
+          "x": 183.11,
+          "z": 52.44
+        }
+      ]
+    },
+    {
+      "id": "corner_elbow_3",
+      "type": "hill",
+      "x": 196.0,
+      "z": 196.0,
+      "width": 52.0,
+      "depth": 44.0,
+      "height": 3.0,
+      "shape": "elbow",
+      "thickness": 13.0,
+      "arc": 100.0,
+      "rotation": 45.0,
+      "description": "Dry-stone elbow folding the corner into two lanes.",
+      "entrances": [
+        {
+          "x": 211.49,
+          "z": 180.37
+        },
+        {
+          "x": 187.56,
+          "z": 183.11
+        }
+      ]
+    },
+    {
+      "id": "corner_elbow_4",
+      "type": "hill",
+      "x": 44.0,
+      "z": 196.0,
+      "width": 52.0,
+      "depth": 44.0,
+      "height": 3.0,
+      "shape": "elbow",
+      "thickness": 13.0,
+      "arc": 100.0,
+      "rotation": 135.0,
+      "description": "Dry-stone elbow folding the corner into two lanes.",
+      "entrances": [
+        {
+          "x": 59.63,
+          "z": 211.49
+        },
+        {
+          "x": 56.89,
+          "z": 187.56
+        }
+      ]
+    },
+    {
+      "id": "the_press",
+      "type": "hill",
+      "x": 120.0,
+      "z": 120.0,
+      "width": 88.0,
+      "depth": 78.0,
+      "height": 3.4,
+      "description": "The old press mound at the middle of the grove; four worn tracks climb it.",
+      "entrances": [
+        {
+          "x": 155.6,
+          "z": 142.92
+        },
+        {
+          "x": 80.19,
+          "z": 136.61
+        },
+        {
+          "x": 122.76,
+          "z": 81.08
+        }
+      ]
+    },
+    {
+      "id": "sierra_west_1",
+      "type": "mountain",
+      "x": 68.0,
+      "z": 10.0,
+      "width": 44.0,
+      "depth": 26.0,
+      "height": 8.0,
+      "description": "Sierra shoulder."
+    },
+    {
+      "id": "sierra_west_2",
+      "type": "mountain",
+      "x": 230.0,
+      "z": 68.0,
+      "width": 44.0,
+      "depth": 26.0,
+      "height": 8.0,
+      "rotation": 90.0,
+      "description": "Sierra shoulder."
+    },
+    {
+      "id": "sierra_west_3",
+      "type": "mountain",
+      "x": 172.0,
+      "z": 230.0,
+      "width": 44.0,
+      "depth": 26.0,
+      "height": 8.0,
+      "rotation": 180.0,
+      "description": "Sierra shoulder."
+    },
+    {
+      "id": "sierra_west_4",
+      "type": "mountain",
+      "x": 10.0,
+      "z": 172.0,
+      "width": 44.0,
+      "depth": 26.0,
+      "height": 8.0,
+      "rotation": 270.0,
+      "description": "Sierra shoulder."
+    },
+    {
+      "id": "sierra_east_1",
+      "type": "mountain",
+      "x": 172.0,
+      "z": 10.0,
+      "width": 44.0,
+      "depth": 26.0,
+      "height": 8.0,
+      "description": "Sierra shoulder."
+    },
+    {
+      "id": "sierra_east_2",
+      "type": "mountain",
+      "x": 230.0,
+      "z": 172.0,
+      "width": 44.0,
+      "depth": 26.0,
+      "height": 8.0,
+      "rotation": 90.0,
+      "description": "Sierra shoulder."
+    },
+    {
+      "id": "sierra_east_3",
+      "type": "mountain",
+      "x": 68.0,
+      "z": 230.0,
+      "width": 44.0,
+      "depth": 26.0,
+      "height": 8.0,
+      "rotation": 180.0,
+      "description": "Sierra shoulder."
+    },
+    {
+      "id": "sierra_east_4",
+      "type": "mountain",
+      "x": 10.0,
+      "z": 68.0,
+      "width": 44.0,
+      "depth": 26.0,
+      "height": 8.0,
+      "rotation": 270.0,
+      "description": "Sierra shoulder."
+    }
+  ],
+  "forests": [
+    {
+      "id": "olive_grove_1",
+      "x": 68.0,
+      "z": 68.0,
+      "radius": 15.0
+    },
+    {
+      "id": "olive_grove_2",
+      "x": 172.0,
+      "z": 68.0,
+      "radius": 15.0
+    },
+    {
+      "id": "olive_grove_3",
+      "x": 172.0,
+      "z": 172.0,
+      "radius": 15.0
+    },
+    {
+      "id": "olive_grove_4",
+      "x": 68.0,
+      "z": 172.0,
+      "radius": 15.0
+    },
+    {
+      "id": "cork_stand_1",
+      "x": 44.0,
+      "z": 44.0,
+      "radius": 13.0
+    },
+    {
+      "id": "cork_stand_2",
+      "x": 196.0,
+      "z": 44.0,
+      "radius": 13.0
+    },
+    {
+      "id": "cork_stand_3",
+      "x": 196.0,
+      "z": 196.0,
+      "radius": 13.0
+    },
+    {
+      "id": "cork_stand_4",
+      "x": 44.0,
+      "z": 196.0,
+      "radius": 13.0
+    }
+  ],
+  "rivers": [],
+  "lakes": [],
+  "bridges": [],
+  "roads": [
+    {
+      "id": "base_gate_a_1",
+      "start": [
+        120,
+        40
+      ],
+      "end": [
+        84,
+        80
+      ],
+      "width": 4.0,
+      "style": "default",
+      "waypoints": [
+        [
+          120,
+          40
         ],
-        "distance": 86,
-        "far": 650,
-        "fov_y": 45,
-        "near": 1,
-        "tilt_deg": 48,
-        "yaw": 220
-    },
-    "coord_system": "grid",
-    "description": "A balanced Mediterranean skirmish map set among olive groves, dry wadis, terraced hills, and dusty farm roads. Control of the center and side ridges helps, but victory is standard barracks elimination.",
-    "environment": {
-        "day_length_seconds": 1800,
-        "lighting_profile": "mediterranean_summer",
-        "start_time": 17,
-        "time_mode": "locked"
-    },
-    "forests": [
-        {
-            "id": "west_olive_forest",
-            "radius": 17,
-            "x": 32.81,
-            "z": 125.8
-        },
-        {
-            "id": "east_olive_forest",
-            "radius": 17,
-            "x": 247.19,
-            "z": 154.2
-        },
-        {
-            "id": "lower_orchard_forest",
-            "radius": 15,
-            "x": 98.02,
-            "z": 41.78
-        },
-        {
-            "id": "upper_orchard_forest",
-            "radius": 15,
-            "x": 181.98,
-            "z": 238.22
-        },
-        {
-            "id": "south_olive_forest",
-            "radius": 16,
-            "x": 94.82,
-            "z": 166.66
-        },
-        {
-            "id": "north_olive_forest",
-            "radius": 16,
-            "x": 185.18,
-            "z": 113.34
-        },
-        {
-            "id": "central_west_olive_rows",
-            "radius": 11,
-            "x": 91.99,
-            "z": 134.75
-        },
-        {
-            "id": "central_east_olive_rows",
-            "radius": 11,
-            "x": 188.01,
-            "z": 145.25
-        }
-    ],
-    "grid": {
-        "height": 280,
-        "tile_size": 1,
-        "width": 280
-    },
-    "max_troops_per_player": 2000,
-    "name": "Spanish Olive Grove",
-    "rain": {
-        "enabled": false
-    },
-    "rivers": [
-        {
-            "description": "Western dry wadi, cutting the Carthaginian corner off from the olive press.",
-            "end": [
-                172.0,
-                0.0
-            ],
-            "start": [
-                0.0,
-                192.0
-            ],
-            "waypoints": [
-                [
-                    0.0,
-                    192.0
-                ],
-                [
-                    19.46,
-                    174.82
-                ],
-                [
-                    38.05,
-                    156.87
-                ],
-                [
-                    55.25,
-                    137.67
-                ],
-                [
-                    71.06,
-                    117.22
-                ],
-                [
-                    86.0,
-                    96.0
-                ],
-                [
-                    100.94,
-                    74.78
-                ],
-                [
-                    116.75,
-                    54.33
-                ],
-                [
-                    133.95,
-                    35.13
-                ],
-                [
-                    152.54,
-                    17.18
-                ],
-                [
-                    172.0,
-                    -0.0
-                ]
-            ],
-            "width": 4.2
-        },
-        {
-            "description": "Eastern dry wadi, mirroring the western channel.",
-            "end": [
-                108.0,
-                280.0
-            ],
-            "start": [
-                280.0,
-                88.0
-            ],
-            "waypoints": [
-                [
-                    280.0,
-                    88.0
-                ],
-                [
-                    260.54,
-                    105.18
-                ],
-                [
-                    241.95,
-                    123.13
-                ],
-                [
-                    224.75,
-                    142.33
-                ],
-                [
-                    208.94,
-                    162.78
-                ],
-                [
-                    194.0,
-                    184.0
-                ],
-                [
-                    179.06,
-                    205.22
-                ],
-                [
-                    163.25,
-                    225.67
-                ],
-                [
-                    146.05,
-                    244.87
-                ],
-                [
-                    127.46,
-                    262.82
-                ],
-                [
-                    108.0,
-                    280.0
-                ]
-            ],
-            "width": 4.2
-        }
-    ],
-    "roads": [
-        {
-            "end": [
-                197,
-                208
-            ],
-            "start": [
-                83,
-                72
-            ],
-            "style": "default",
-            "waypoints": [
-                [
-                    83,
-                    72
-                ],
-                [
-                    88.8966,
-                    79.1183
-                ],
-                [
-                    93.1894,
-                    82.1407
-                ],
-                [
-                    96.6236,
-                    84.5586
-                ],
-                [
-                    100.9164,
-                    87.5809
-                ],
-                [
-                    114.0513,
-                    95.7882
-                ],
-                [
-                    127.1861,
-                    103.9956
-                ],
-                [
-                    140.321,
-                    112.2029
-                ],
-                [
-                    153.4558,
-                    120.4103
-                ],
-                [
-                    157.8741,
-                    124.3426
-                ],
-                [
-                    162.1259,
-                    129.6574
-                ],
-                [
-                    164.4396,
-                    134.9676
-                ],
-                [
-                    166.829,
-                    151.0958
-                ],
-                [
-                    169.2184,
-                    167.224
-                ],
-                [
-                    171.6077,
-                    183.3523
-                ],
-                [
-                    173.9834,
-                    187.7973
-                ],
-                [
-                    179.0836,
-                    192.4191
-                ],
-                [
-                    183.3764,
-                    195.4414
-                ],
-                [
-                    186.8106,
-                    197.8593
-                ],
-                [
-                    191.1034,
-                    200.8817
-                ],
-                [
-                    197,
-                    208
-                ]
-            ],
-            "width": 4.0
-        },
-        {
-            "end": [
-                1,
-                72
-            ],
-            "start": [
-                83,
-                72
-            ],
-            "style": "default",
-            "waypoints": [
-                [
-                    83,
-                    72
-                ],
-                [
-                    82.2485,
-                    65.2362
-                ],
-                [
-                    80.3351,
-                    61.4865
-                ],
-                [
-                    72.6649,
-                    54.5135
-                ],
-                [
-                    68.75,
-                    53
-                ],
-                [
-                    58.25,
-                    53
-                ],
-                [
-                    53.8733,
-                    53.7347
-                ],
-                [
-                    40.655,
-                    58.301
-                ],
-                [
-                    27.4367,
-                    62.8673
-                ],
-                [
-                    14.2183,
-                    67.4337
-                ],
-                [
-                    1,
-                    72
-                ]
-            ],
-            "width": 3.0
-        },
-        {
-            "end": [
-                278,
-                208
-            ],
-            "start": [
-                197,
-                208
-            ],
-            "style": "default",
-            "waypoints": [
-                [
-                    197,
-                    208
-                ],
-                [
-                    197.7515,
-                    201.2362
-                ],
-                [
-                    199.6649,
-                    197.4865
-                ],
-                [
-                    207.3351,
-                    190.5135
-                ],
-                [
-                    211.25,
-                    189
-                ],
-                [
-                    221.75,
-                    189
-                ],
-                [
-                    226.1225,
-                    189.7468
-                ],
-                [
-                    239.0918,
-                    194.3101
-                ],
-                [
-                    252.0612,
-                    198.8734
-                ],
-                [
-                    265.0306,
-                    203.4367
-                ],
-                [
-                    278,
-                    208
-                ]
-            ],
-            "width": 3.0
-        },
-        {
-            "end": [
-                64,
-                1
-            ],
-            "start": [
-                83,
-                72
-            ],
-            "style": "default",
-            "waypoints": [
-                [
-                    83,
-                    72
-                ],
-                [
-                    82.2485,
-                    65.2362
-                ],
-                [
-                    81.3727,
-                    60.8392
-                ],
-                [
-                    77.0295,
-                    45.8794
-                ],
-                [
-                    72.6863,
-                    30.9196
-                ],
-                [
-                    68.3432,
-                    15.9598
-                ],
-                [
-                    64,
-                    1
-                ]
-            ],
-            "width": 3.0
-        },
-        {
-            "end": [
-                216,
-                278
-            ],
-            "start": [
-                197,
-                208
-            ],
-            "style": "default",
-            "waypoints": [
-                [
-                    197,
-                    208
-                ],
-                [
-                    197.7515,
-                    214.7638
-                ],
-                [
-                    198.6368,
-                    219.158
-                ],
-                [
-                    202.9776,
-                    233.8685
-                ],
-                [
-                    207.3184,
-                    248.579
-                ],
-                [
-                    211.6592,
-                    263.2895
-                ],
-                [
-                    216,
-                    278
-                ]
-            ],
-            "width": 3.0
-        },
-        {
-            "end": [
-                196,
-                60
-            ],
-            "start": [
-                83,
-                72
-            ],
-            "style": "default",
-            "waypoints": [
-                [
-                    83,
-                    72
-                ],
-                [
-                    91.6147,
-                    67.8411
-                ],
-                [
-                    100.2293,
-                    63.6823
-                ],
-                [
-                    104.3828,
-                    66.8934
-                ],
-                [
-                    107.7056,
-                    69.4622
-                ],
-                [
-                    111.8591,
-                    72.6733
-                ],
-                [
-                    128.6873,
-                    70.1387
-                ],
-                [
-                    145.5154,
-                    67.604
-                ],
-                [
-                    162.3436,
-                    65.0693
-                ],
-                [
-                    179.1718,
-                    62.5347
-                ],
-                [
-                    196,
-                    60
-                ]
-            ],
-            "width": 2.7
-        },
-        {
-            "end": [
-                84,
-                220
-            ],
-            "start": [
-                197,
-                208
-            ],
-            "style": "default",
-            "waypoints": [
-                [
-                    197,
-                    208
-                ],
-                [
-                    188.3853,
-                    212.1589
-                ],
-                [
-                    179.7707,
-                    216.3177
-                ],
-                [
-                    175.6172,
-                    213.1066
-                ],
-                [
-                    172.2944,
-                    210.5378
-                ],
-                [
-                    168.1409,
-                    207.3267
-                ],
-                [
-                    151.3127,
-                    209.8613
-                ],
-                [
-                    134.4846,
-                    212.396
-                ],
-                [
-                    117.6564,
-                    214.9307
-                ],
-                [
-                    100.8282,
-                    217.4653
-                ],
-                [
-                    84,
-                    220
-                ]
-            ],
-            "width": 2.7
-        },
-        {
-            "end": [
-                153.4558,
-                120.4103
-            ],
-            "start": [
-                196,
-                60
-            ],
-            "style": "default",
-            "waypoints": [
-                [
-                    196,
-                    60
-                ],
-                [
-                    187.8253,
-                    68.6289
-                ],
-                [
-                    179.6506,
-                    77.2577
-                ],
-                [
-                    176.7763,
-                    81.0646
-                ],
-                [
-                    169.0028,
-                    94.1798
-                ],
-                [
-                    161.2293,
-                    107.2951
-                ],
-                [
-                    153.4558,
-                    120.4103
-                ]
-            ],
-            "width": 3.2
-        },
-        {
-            "end": [
-                171.6077,
-                183.3523
-            ],
-            "start": [
-                84,
-                220
-            ],
-            "style": "default",
-            "waypoints": [
-                [
-                    84,
-                    220
-                ],
-                [
-                    98.6013,
-                    213.8921
-                ],
-                [
-                    113.2026,
-                    207.7841
-                ],
-                [
-                    127.8038,
-                    201.6762
-                ],
-                [
-                    142.4051,
-                    195.5682
-                ],
-                [
-                    157.0064,
-                    189.4603
-                ],
-                [
-                    171.6077,
-                    183.3523
-                ]
-            ],
-            "width": 3.2
-        }
-    ],
-    "spawns": [
-        {
-            "max_population": -1,
-            "player_id": 1,
-            "type": "archer",
-            "x": 60,
-            "z": 78
-        },
-        {
-            "max_population": -1,
-            "player_id": 1,
-            "type": "archer",
-            "x": 70,
-            "z": 66
-        },
-        {
-            "max_population": -1,
-            "player_id": 1,
-            "type": "swordsman",
-            "x": 56,
-            "z": 72
-        },
-        {
-            "max_population": -1,
-            "player_id": 1,
-            "type": "swordsman",
-            "x": 64,
-            "z": 62
-        },
-        {
-            "max_population": -1,
-            "player_id": 1,
-            "type": "spearman",
-            "x": 68,
-            "z": 78
-        },
-        {
-            "max_population": -1,
-            "player_id": 1,
-            "type": "spearman",
-            "x": 74,
-            "z": 72
-        },
-        {
-            "max_population": -1,
-            "player_id": 1,
-            "type": "horse_archer",
-            "x": 78,
-            "z": 84
-        },
-        {
-            "max_population": -1,
-            "player_id": 1,
-            "type": "horse_swordsman",
-            "x": 52,
-            "z": 86
-        },
-        {
-            "max_population": -1,
-            "player_id": 1,
-            "type": "healer",
-            "x": 54,
-            "z": 64
-        },
-        {
-            "max_population": -1,
-            "player_id": 1,
-            "type": "catapult",
-            "x": 48,
-            "z": 72
-        },
-        {
-            "max_population": -1,
-            "player_id": 2,
-            "type": "archer",
-            "x": 220,
-            "z": 202
-        },
-        {
-            "max_population": -1,
-            "player_id": 2,
-            "type": "archer",
-            "x": 210,
-            "z": 214
-        },
-        {
-            "max_population": -1,
-            "player_id": 2,
-            "type": "swordsman",
-            "x": 224,
-            "z": 208
-        },
-        {
-            "max_population": -1,
-            "player_id": 2,
-            "type": "swordsman",
-            "x": 216,
-            "z": 218
-        },
-        {
-            "max_population": -1,
-            "player_id": 2,
-            "type": "spearman",
-            "x": 212,
-            "z": 202
-        },
-        {
-            "max_population": -1,
-            "player_id": 2,
-            "type": "spearman",
-            "x": 206,
-            "z": 208
-        },
-        {
-            "max_population": -1,
-            "player_id": 2,
-            "type": "horse_swordsman",
-            "x": 228,
-            "z": 194
-        },
-        {
-            "max_population": -1,
-            "player_id": 2,
-            "type": "horse_archer",
-            "x": 202,
-            "z": 196
-        },
-        {
-            "max_population": -1,
-            "player_id": 2,
-            "type": "healer",
-            "x": 226,
-            "z": 216
-        },
-        {
-            "max_population": -1,
-            "player_id": 2,
-            "type": "catapult",
-            "x": 232,
-            "z": 208
-        }
-    ],
-    "starting_resources": {
-        "food": 200,
-        "gold": 200,
-        "iron": 100,
-        "stone": 100,
-        "wood": 150
-    },
-    "structures": [
-        {
-            "description": "Player 1 Carthaginian barracks",
-            "max_population": 240,
-            "nation": "carthage",
-            "player_id": 1,
-            "type": "barracks",
-            "x": 64,
-            "z": 72
-        },
-        {
-            "description": "Player 2 Roman barracks",
-            "max_population": 240,
-            "nation": "roman_republic",
-            "player_id": 2,
-            "type": "barracks",
-            "x": 216,
-            "z": 208
-        }
-    ],
-    "terrain": [
-        {
-            "depth": 40,
-            "description": "Southwestern Carthaginian base clearing.",
-            "height": 3,
-            "type": "flat",
-            "width": 46,
-            "x": 64,
-            "z": 72
-        },
-        {
-            "depth": 40,
-            "description": "Northeastern Roman base clearing.",
-            "height": 3,
-            "type": "flat",
-            "width": 46,
-            "x": 216,
-            "z": 208
-        },
-        {
-            "description": "Carthaginian camp rise overlooking the lower olive terraces.",
-            "entrances": [
-                {
-                    "x": 80,
-                    "z": 72
-                },
-                {
-                    "x": 64,
-                    "z": 88
-                }
-            ],
-            "height": 2.3000000000000003,
-            "radius": 15,
-            "type": "hill",
-            "x": 64,
-            "z": 72
-        },
-        {
-            "description": "Roman camp rise overlooking the upper olive terraces.",
-            "entrances": [
-                {
-                    "x": 200,
-                    "z": 208
-                },
-                {
-                    "x": 216,
-                    "z": 192
-                }
-            ],
-            "height": 2.3000000000000003,
-            "radius": 15,
-            "type": "hill",
-            "x": 216,
-            "z": 208
-        },
-        {
-            "depth": 56,
-            "description": "Cleared estate ground around the central olive press.",
-            "height": 3,
-            "type": "flat",
-            "width": 68,
-            "x": 140,
-            "z": 140
-        },
-        {
-            "description": "Central olive press hill. Powerful but exposed from four approaches.",
-            "entrances": [
-                {
-                    "x": 140,
-                    "z": 118
-                },
-                {
-                    "x": 140,
-                    "z": 162
-                },
-                {
-                    "x": 118,
-                    "z": 140
-                },
-                {
-                    "x": 162,
-                    "z": 140
-                }
-            ],
-            "height": 3.4,
-            "radius": 20,
-            "type": "hill",
-            "x": 140,
-            "z": 140
-        },
-        {
-            "description": "Lower western terrace. Good archer ground for early map control.",
-            "entrances": [
-                {
-                    "x": 78,
-                    "z": 102
-                },
-                {
-                    "x": 106,
-                    "z": 102
-                },
-                {
-                    "x": 92,
-                    "z": 88
-                },
-                {
-                    "x": 92,
-                    "z": 116
-                }
-            ],
-            "height": 2.2,
-            "radius": 13,
-            "type": "hill",
-            "x": 92,
-            "z": 102
-        },
-        {
-            "description": "Upper eastern terrace mirroring the lower western terrace.",
-            "entrances": [
-                {
-                    "x": 174,
-                    "z": 178
-                },
-                {
-                    "x": 202,
-                    "z": 178
-                },
-                {
-                    "x": 188,
-                    "z": 164
-                },
-                {
-                    "x": 188,
-                    "z": 192
-                }
-            ],
-            "height": 2.2,
-            "radius": 13,
-            "type": "hill",
-            "x": 188,
-            "z": 178
-        },
-        {
-            "description": "Abandoned shepherd hamlet near the southern wadi.",
-            "height": 3,
-            "radius": 10,
-            "type": "flat",
-            "x": 82,
-            "z": 194
-        },
-        {
-            "depth": 16,
-            "description": "Southwestern ridge above the dry wadi flank route.",
-            "entrances": [
-                {
-                    "x": 66,
-                    "z": 190
-                },
-                {
-                    "x": 98,
-                    "z": 198
-                }
-            ],
-            "height": 2.5,
-            "rotation": 18,
-            "type": "hill",
-            "width": 34,
-            "x": 82,
-            "z": 194
-        },
-        {
-            "description": "Abandoned farmstead near the northern terrace road.",
-            "height": 3,
-            "radius": 10,
-            "type": "flat",
-            "x": 198,
-            "z": 86
-        },
-        {
-            "depth": 16,
-            "description": "Northeastern ridge above the northern farm road.",
-            "entrances": [
-                {
-                    "x": 182,
-                    "z": 82
-                },
-                {
-                    "x": 214,
-                    "z": 90
-                }
-            ],
-            "height": 2.5,
-            "rotation": 198,
-            "type": "hill",
-            "width": 34,
-            "x": 198,
-            "z": 86
-        },
-        {
-            "depth": 14,
-            "description": "Northern terraced ridge. Strong for archers but slightly out of the way.",
-            "entrances": [
-                {
-                    "x": 110.22,
-                    "z": 30.96
-                },
-                {
-                    "x": 154.22,
-                    "z": 30.96
-                }
-            ],
-            "height": 2.6,
-            "rotation": 95,
-            "type": "hill",
-            "width": 44,
-            "x": 132.22,
-            "z": 30.96
-        },
-        {
-            "depth": 14,
-            "description": "Southern terraced ridge overlooking the wadi trail.",
-            "entrances": [
-                {
-                    "x": 125.78,
-                    "z": 249.04
-                },
-                {
-                    "x": 169.78,
-                    "z": 249.04
-                }
-            ],
-            "height": 2.6,
-            "rotation": 275,
-            "type": "hill",
-            "width": 44,
-            "x": 147.78,
-            "z": 249.04
-        },
-        {
-            "description": "Old olive press estate at the center of the valley.",
-            "height": 3,
-            "radius": 10,
-            "type": "flat",
-            "x": 140,
-            "z": 140
-        },
-        {
-            "description": "Southwestern rocky boundary.",
-            "height": 6.8,
-            "radius": 14,
-            "type": "mountain",
-            "x": 30,
-            "z": 34
-        },
-        {
-            "description": "Northeastern rocky boundary.",
-            "height": 6.8,
-            "radius": 14,
-            "type": "mountain",
-            "x": 250,
-            "z": 246
-        },
-        {
-            "description": "Southern map-edge limestone outcrop.",
-            "height": 6.2,
-            "radius": 12,
-            "type": "mountain",
-            "x": 34,
-            "z": 246
-        },
-        {
-            "description": "Northern map-edge limestone outcrop.",
-            "height": 6.2,
-            "radius": 12,
-            "type": "mountain",
-            "x": 246,
-            "z": 34
-        }
-    ],
-    "undead_zones": [
-        {
-            "anchor_type": "ruins",
-            "awaken_on": [
-                "unit_enters_radius"
-            ],
-            "clear_reward": {
-                "food": 120,
-                "gold": 150
-            },
-            "id": "frozen_dead",
-            "leash_radius": 43,
-            "owner_id": 99,
-            "radius": 24.19,
-            "team_id": 99,
-            "waves": [
-                {
-                    "trigger": "initial",
-                    "units": {
-                        "skeleton_swordsman": 3
-                    }
-                },
-                {
-                    "trigger": "after_clear",
-                    "units": {
-                        "grave_priest": 1,
-                        "skeleton_archer": 2
-                    }
-                }
-            ],
-            "x": 96,
-            "z": 261
-        }
-    ],
-    "victory": {
-        "defeat_conditions": [
-            "no_key_structures",
-            "no_commander",
-            "only_commander_remaining"
+        [
+          108.8947,
+          52.3392
         ],
-        "key_structures": [
-            "barracks"
+        [
+          97.7895,
+          64.6784
         ],
-        "type": "elimination"
+        [
+          86.6842,
+          77.0175
+        ],
+        [
+          84,
+          80
+        ]
+      ]
     },
-    "world_props": [
+    {
+      "id": "base_gate_b_1",
+      "start": [
+        120,
+        40
+      ],
+      "end": [
+        156,
+        80
+      ],
+      "width": 4.0,
+      "style": "default",
+      "waypoints": [
+        [
+          120,
+          40
+        ],
+        [
+          132,
+          53.3333
+        ],
+        [
+          144,
+          66.6667
+        ],
+        [
+          156,
+          80
+        ]
+      ]
+    },
+    {
+      "id": "press_ring_1",
+      "start": [
+        156,
+        80
+      ],
+      "end": [
+        160,
+        84
+      ],
+      "width": 3.8,
+      "style": "default",
+      "waypoints": [
+        [
+          156,
+          80
+        ],
+        [
+          160,
+          84
+        ]
+      ]
+    },
+    {
+      "id": "outer_ring_1",
+      "start": [
+        120,
+        40
+      ],
+      "end": [
+        76,
+        76
+      ],
+      "width": 3.4,
+      "style": "default",
+      "waypoints": [
+        [
+          120,
+          40
+        ],
+        [
+          109,
+          49
+        ],
+        [
+          98,
+          58
+        ],
+        [
+          87,
+          67
+        ],
+        [
+          76,
+          76
+        ]
+      ]
+    },
+    {
+      "id": "outer_link_1",
+      "start": [
+        76,
+        76
+      ],
+      "end": [
+        160,
+        84
+      ],
+      "width": 3.4,
+      "style": "default",
+      "waypoints": [
+        [
+          76,
+          76
+        ],
+        [
+          86.6842,
+          77.0175
+        ],
+        [
+          99.3494,
+          66.8089
+        ],
+        [
+          112.0146,
+          56.6003
+        ],
+        [
+          116.55,
+          55
+        ],
+        [
+          125.45,
+          55
+        ],
+        [
+          129.8895,
+          56.7124
+        ],
+        [
+          139.9263,
+          65.8082
+        ],
+        [
+          149.9632,
+          74.9041
+        ],
+        [
+          160,
+          84
+        ]
+      ]
+    },
+    {
+      "id": "base_gate_a_2",
+      "start": [
+        200,
+        120
+      ],
+      "end": [
+        160,
+        84
+      ],
+      "width": 4.0,
+      "style": "default",
+      "waypoints": [
+        [
+          200,
+          120
+        ],
+        [
+          187.6608,
+          108.8947
+        ],
+        [
+          175.3216,
+          97.7895
+        ],
+        [
+          162.9825,
+          86.6842
+        ],
+        [
+          160,
+          84
+        ]
+      ]
+    },
+    {
+      "id": "base_gate_b_2",
+      "start": [
+        200,
+        120
+      ],
+      "end": [
+        160,
+        156
+      ],
+      "width": 4.0,
+      "style": "default",
+      "waypoints": [
+        [
+          200,
+          120
+        ],
+        [
+          186.6667,
+          132
+        ],
+        [
+          173.3333,
+          144
+        ],
+        [
+          160,
+          156
+        ]
+      ]
+    },
+    {
+      "id": "press_ring_2",
+      "start": [
+        160,
+        156
+      ],
+      "end": [
+        156,
+        160
+      ],
+      "width": 3.8,
+      "style": "default",
+      "waypoints": [
+        [
+          160,
+          156
+        ],
+        [
+          156,
+          160
+        ]
+      ]
+    },
+    {
+      "id": "outer_ring_2",
+      "start": [
+        200,
+        120
+      ],
+      "end": [
+        164,
+        76
+      ],
+      "width": 3.4,
+      "style": "default",
+      "waypoints": [
+        [
+          200,
+          120
+        ],
+        [
+          191,
+          109
+        ],
+        [
+          182,
+          98
+        ],
+        [
+          173,
+          87
+        ],
+        [
+          164,
+          76
+        ]
+      ]
+    },
+    {
+      "id": "outer_link_2",
+      "start": [
+        164,
+        76
+      ],
+      "end": [
+        156,
+        160
+      ],
+      "width": 3.4,
+      "style": "default",
+      "waypoints": [
+        [
+          164,
+          76
+        ],
+        [
+          162.9825,
+          86.6842
+        ],
+        [
+          173.1911,
+          99.3494
+        ],
+        [
+          183.3997,
+          112.0146
+        ],
+        [
+          185,
+          116.55
+        ],
+        [
+          185,
+          125.45
+        ],
+        [
+          183.2876,
+          129.8895
+        ],
+        [
+          174.1918,
+          139.9263
+        ],
+        [
+          165.0959,
+          149.9632
+        ],
+        [
+          156,
+          160
+        ]
+      ]
+    },
+    {
+      "id": "base_gate_a_3",
+      "start": [
+        120,
+        200
+      ],
+      "end": [
+        156,
+        160
+      ],
+      "width": 4.0,
+      "style": "default",
+      "waypoints": [
+        [
+          120,
+          200
+        ],
+        [
+          131.1053,
+          187.6608
+        ],
+        [
+          142.2105,
+          175.3216
+        ],
+        [
+          153.3158,
+          162.9825
+        ],
+        [
+          156,
+          160
+        ]
+      ]
+    },
+    {
+      "id": "base_gate_b_3",
+      "start": [
+        120,
+        200
+      ],
+      "end": [
+        84,
+        160
+      ],
+      "width": 4.0,
+      "style": "default",
+      "waypoints": [
+        [
+          120,
+          200
+        ],
+        [
+          108,
+          186.6667
+        ],
+        [
+          96,
+          173.3333
+        ],
+        [
+          84,
+          160
+        ]
+      ]
+    },
+    {
+      "id": "press_ring_3",
+      "start": [
+        84,
+        160
+      ],
+      "end": [
+        80,
+        156
+      ],
+      "width": 3.8,
+      "style": "default",
+      "waypoints": [
+        [
+          84,
+          160
+        ],
+        [
+          80,
+          156
+        ]
+      ]
+    },
+    {
+      "id": "outer_ring_3",
+      "start": [
+        120,
+        200
+      ],
+      "end": [
+        164,
+        164
+      ],
+      "width": 3.4,
+      "style": "default",
+      "waypoints": [
+        [
+          120,
+          200
+        ],
+        [
+          131,
+          191
+        ],
+        [
+          142,
+          182
+        ],
+        [
+          153,
+          173
+        ],
+        [
+          164,
+          164
+        ]
+      ]
+    },
+    {
+      "id": "outer_link_3",
+      "start": [
+        164,
+        164
+      ],
+      "end": [
+        80,
+        156
+      ],
+      "width": 3.4,
+      "style": "default",
+      "waypoints": [
+        [
+          164,
+          164
+        ],
+        [
+          153.3158,
+          162.9825
+        ],
+        [
+          140.6506,
+          173.1911
+        ],
+        [
+          127.9854,
+          183.3997
+        ],
+        [
+          123.45,
+          185
+        ],
+        [
+          114.55,
+          185
+        ],
+        [
+          110.1105,
+          183.2876
+        ],
+        [
+          100.0737,
+          174.1918
+        ],
+        [
+          90.0368,
+          165.0959
+        ],
+        [
+          80,
+          156
+        ]
+      ]
+    },
+    {
+      "id": "base_gate_a_4",
+      "start": [
+        40,
+        120
+      ],
+      "end": [
+        80,
+        156
+      ],
+      "width": 4.0,
+      "style": "default",
+      "waypoints": [
+        [
+          40,
+          120
+        ],
+        [
+          52.3392,
+          131.1053
+        ],
+        [
+          64.6784,
+          142.2105
+        ],
+        [
+          77.0175,
+          153.3158
+        ],
+        [
+          80,
+          156
+        ]
+      ]
+    },
+    {
+      "id": "base_gate_b_4",
+      "start": [
+        40,
+        120
+      ],
+      "end": [
+        80,
+        84
+      ],
+      "width": 4.0,
+      "style": "default",
+      "waypoints": [
+        [
+          40,
+          120
+        ],
+        [
+          53.3333,
+          108
+        ],
+        [
+          66.6667,
+          96
+        ],
+        [
+          80,
+          84
+        ]
+      ]
+    },
+    {
+      "id": "press_ring_4",
+      "start": [
+        80,
+        84
+      ],
+      "end": [
+        84,
+        80
+      ],
+      "width": 3.8,
+      "style": "default",
+      "waypoints": [
+        [
+          80,
+          84
+        ],
+        [
+          84,
+          80
+        ]
+      ]
+    },
+    {
+      "id": "outer_ring_4",
+      "start": [
+        40,
+        120
+      ],
+      "end": [
+        76,
+        164
+      ],
+      "width": 3.4,
+      "style": "default",
+      "waypoints": [
+        [
+          40,
+          120
+        ],
+        [
+          49,
+          131
+        ],
+        [
+          58,
+          142
+        ],
+        [
+          67,
+          153
+        ],
+        [
+          76,
+          164
+        ]
+      ]
+    },
+    {
+      "id": "outer_link_4",
+      "start": [
+        76,
+        164
+      ],
+      "end": [
+        84,
+        80
+      ],
+      "width": 3.4,
+      "style": "default",
+      "waypoints": [
+        [
+          76,
+          164
+        ],
+        [
+          77.0175,
+          153.3158
+        ],
+        [
+          66.8089,
+          140.6506
+        ],
+        [
+          56.6003,
+          127.9854
+        ],
+        [
+          55,
+          123.45
+        ],
+        [
+          55,
+          114.55
+        ],
+        [
+          56.7124,
+          110.1105
+        ],
+        [
+          65.8082,
+          100.0737
+        ],
+        [
+          74.9041,
+          90.0368
+        ],
+        [
+          84,
+          80
+        ]
+      ]
+    },
+    {
+      "id": "edge_gate_1",
+      "start": [
+        120,
+        40
+      ],
+      "end": [
+        120,
+        2
+      ],
+      "width": 2.8,
+      "style": "default",
+      "waypoints": [
+        [
+          120,
+          40
+        ],
+        [
+          131.2886,
+          40.9407
+        ],
+        [
+          142.5772,
+          41.8814
+        ],
+        [
+          145.4,
+          41.72
+        ],
+        [
+          147.6,
+          41.28
+        ],
+        [
+          149.914,
+          39.9032
+        ],
+        [
+          154,
+          35
+        ],
+        [
+          154,
+          25.1
+        ],
+        [
+          152.4391,
+          21.5952
+        ],
+        [
+          144,
+          14
+        ],
+        [
+          135.5609,
+          6.4048
+        ],
+        [
+          131.9466,
+          4.56
+        ],
+        [
+          120,
+          2
+        ]
+      ]
+    },
+    {
+      "id": "edge_gate_2",
+      "start": [
+        200,
+        120
+      ],
+      "end": [
+        238,
+        120
+      ],
+      "width": 2.8,
+      "style": "default",
+      "waypoints": [
+        [
+          200,
+          120
+        ],
+        [
+          199.0593,
+          108.7114
+        ],
+        [
+          198.1186,
+          97.4228
+        ],
+        [
+          198.28,
+          94.6
+        ],
+        [
+          198.72,
+          92.4
+        ],
+        [
+          200.0968,
+          90.086
+        ],
+        [
+          205,
+          86
+        ],
+        [
+          214.9,
+          86
+        ],
+        [
+          218.4003,
+          87.565
+        ],
+        [
+          225.5,
+          95.5
+        ],
+        [
+          232.5997,
+          103.435
+        ],
+        [
+          234.5411,
+          107.0291
+        ],
+        [
+          238,
+          120
+        ]
+      ]
+    },
+    {
+      "id": "edge_gate_3",
+      "start": [
+        120,
+        200
+      ],
+      "end": [
+        120,
+        238
+      ],
+      "width": 2.8,
+      "style": "default",
+      "waypoints": [
+        [
+          120,
+          200
+        ],
+        [
+          108.7114,
+          199.0593
+        ],
+        [
+          97.4228,
+          198.1186
+        ],
+        [
+          94.6,
+          198.28
+        ],
+        [
+          92.4,
+          198.72
+        ],
+        [
+          90.086,
+          200.0968
+        ],
+        [
+          86,
+          205
+        ],
+        [
+          86,
+          214.9
+        ],
+        [
+          87.565,
+          218.4003
+        ],
+        [
+          95.5,
+          225.5
+        ],
+        [
+          103.435,
+          232.5997
+        ],
+        [
+          107.0291,
+          234.5411
+        ],
+        [
+          120,
+          238
+        ]
+      ]
+    },
+    {
+      "id": "edge_gate_4",
+      "start": [
+        40,
+        120
+      ],
+      "end": [
+        2,
+        120
+      ],
+      "width": 2.8,
+      "style": "default",
+      "waypoints": [
+        [
+          40,
+          120
+        ],
+        [
+          40.9407,
+          108.7114
+        ],
+        [
+          41.8814,
+          97.4228
+        ],
+        [
+          41.72,
+          94.6
+        ],
+        [
+          41.28,
+          92.4
+        ],
+        [
+          39.9032,
+          90.086
+        ],
+        [
+          35,
+          86
+        ],
+        [
+          25.1,
+          86
+        ],
+        [
+          21.5952,
+          87.5609
+        ],
+        [
+          14,
+          96
+        ],
+        [
+          6.4048,
+          104.4391
+        ],
+        [
+          4.56,
+          108.0534
+        ],
+        [
+          2,
+          120
+        ]
+      ]
+    },
+    {
+      "start": [
+        120,
+        2
+      ],
+      "end": [
+        120,
+        40
+      ],
+      "width": 3.2,
+      "style": "default",
+      "waypoints": [
+        [
+          120,
+          2
+        ],
+        [
+          109.0733,
+          7.4633
+        ],
+        [
+          98.1466,
+          12.9267
+        ],
+        [
+          94.1778,
+          15.5619
+        ],
+        [
+          90.4261,
+          18.7776
+        ],
+        [
+          88.16,
+          21.68
+        ],
+        [
+          86,
+          26
+        ],
+        [
+          86,
+          33.2071
+        ],
+        [
+          87.12,
+          36.4
+        ],
+        [
+          89.0581,
+          38.8226
+        ],
+        [
+          91.4,
+          40.56
+        ],
+        [
+          93.6,
+          41.44
+        ],
+        [
+          96.5078,
+          42
+        ],
+        [
+          100.04,
+          42
+        ],
+        [
+          103.948,
+          41.7836
+        ],
+        [
+          120,
+          40
+        ]
+      ]
+    },
+    {
+      "start": [
+        2,
+        120
+      ],
+      "end": [
+        40,
+        120
+      ],
+      "width": 3.2,
+      "style": "default",
+      "waypoints": [
+        [
+          2,
+          120
+        ],
+        [
+          7.4633,
+          109.0733
+        ],
+        [
+          12.9267,
+          98.1466
+        ],
+        [
+          15.5619,
+          94.1778
+        ],
+        [
+          18.7776,
+          90.4261
+        ],
+        [
+          21.68,
+          88.16
+        ],
+        [
+          26,
+          86
+        ],
+        [
+          33.2071,
+          86
+        ],
+        [
+          36.4,
+          87.12
+        ],
+        [
+          38.8226,
+          89.0581
+        ],
+        [
+          40.56,
+          91.4
+        ],
+        [
+          41.44,
+          93.6
+        ],
+        [
+          42,
+          96.5078
+        ],
+        [
+          42,
+          100.04
+        ],
+        [
+          41.7836,
+          103.948
+        ],
+        [
+          40,
+          120
+        ]
+      ]
+    }
+  ],
+  "landmarks": [
+    {
+      "id": "grove_sanctuary",
+      "kind": "sanctuary",
+      "x": 72.0,
+      "z": 88.0,
+      "facing": "east"
+    },
+    {
+      "id": "east_hamlet",
+      "kind": "hamlet",
+      "x": 152.0,
+      "z": 72.0,
+      "facing": "south"
+    },
+    {
+      "id": "south_watch",
+      "kind": "watch",
+      "x": 168.0,
+      "z": 152.0,
+      "facing": "west"
+    },
+    {
+      "id": "west_hamlet",
+      "kind": "hamlet",
+      "x": 88.0,
+      "z": 168.0,
+      "facing": "north"
+    }
+  ],
+  "structures": [
+    {
+      "id": "p1_barracks",
+      "type": "barracks",
+      "x": 120.0,
+      "z": 40.0,
+      "player_id": 1,
+      "max_population": 400,
+      "team_id": 1,
+      "description": "Player 1 barracks."
+    },
+    {
+      "id": "p2_barracks",
+      "type": "barracks",
+      "x": 200.0,
+      "z": 120.0,
+      "player_id": 2,
+      "max_population": 400,
+      "team_id": 2,
+      "description": "Player 2 barracks."
+    },
+    {
+      "id": "p3_barracks",
+      "type": "barracks",
+      "x": 120.0,
+      "z": 200.0,
+      "player_id": 3,
+      "max_population": 400,
+      "team_id": 3,
+      "description": "Player 3 barracks."
+    },
+    {
+      "id": "p4_barracks",
+      "type": "barracks",
+      "x": 40.0,
+      "z": 120.0,
+      "player_id": 4,
+      "max_population": 400,
+      "team_id": 4,
+      "description": "Player 4 barracks."
+    },
+    {
+      "id": "press_farm_1_barracks",
+      "type": "barracks",
+      "x": 50.0,
+      "z": 88.0,
+      "player_id": 0,
+      "max_population": 130,
+      "description": "Neutral farmstead barracks beside the grove track."
+    },
+    {
+      "id": "press_farm_2_barracks",
+      "type": "barracks",
+      "x": 152.0,
+      "z": 50.0,
+      "player_id": 0,
+      "max_population": 130,
+      "description": "Neutral farmstead barracks beside the grove track."
+    },
+    {
+      "id": "press_farm_3_barracks",
+      "type": "barracks",
+      "x": 190.0,
+      "z": 152.0,
+      "player_id": 0,
+      "max_population": 130,
+      "description": "Neutral farmstead barracks beside the grove track."
+    },
+    {
+      "id": "press_farm_4_barracks",
+      "type": "barracks",
+      "x": 88.0,
+      "z": 190.0,
+      "player_id": 0,
+      "max_population": 130,
+      "description": "Neutral farmstead barracks beside the grove track."
+    },
+    {
+      "type": "temple",
+      "x": 68.0,
+      "z": 88.0,
+      "player_id": -1,
+      "landmark": "grove_sanctuary"
+    }
+  ],
+  "spawns": [
+    {
+      "id": "p1_builder",
+      "type": "builder",
+      "x": 125.0,
+      "z": 49.0,
+      "player_id": 1
+    },
+    {
+      "id": "p1_healer",
+      "type": "healer",
+      "x": 115.0,
+      "z": 49.0,
+      "player_id": 1
+    },
+    {
+      "id": "p2_builder",
+      "type": "builder",
+      "x": 191.0,
+      "z": 125.0,
+      "player_id": 2
+    },
+    {
+      "id": "p2_healer",
+      "type": "healer",
+      "x": 191.0,
+      "z": 115.0,
+      "player_id": 2
+    },
+    {
+      "id": "p3_builder",
+      "type": "builder",
+      "x": 115.0,
+      "z": 191.0,
+      "player_id": 3
+    },
+    {
+      "id": "p3_healer",
+      "type": "healer",
+      "x": 125.0,
+      "z": 191.0,
+      "player_id": 3
+    },
+    {
+      "id": "p4_builder",
+      "type": "builder",
+      "x": 49.0,
+      "z": 115.0,
+      "player_id": 4
+    },
+    {
+      "id": "p4_healer",
+      "type": "healer",
+      "x": 49.0,
+      "z": 125.0,
+      "player_id": 4
+    }
+  ],
+  "world_props": [
+    {
+      "id": "p1_tent_a",
+      "type": "tent",
+      "x": 129.0,
+      "z": 31.0,
+      "rotation": 90.0
+    },
+    {
+      "id": "p1_tent_b",
+      "type": "tent",
+      "x": 111.0,
+      "z": 31.0,
+      "rotation": 90.0
+    },
+    {
+      "id": "p1_cart",
+      "type": "supply_cart",
+      "x": 107.0,
+      "z": 38.0,
+      "rotation": 180.0
+    },
+    {
+      "id": "p1_rack",
+      "type": "weapon_rack",
+      "x": 132.0,
+      "z": 43.0,
+      "rotation": 90.0
+    },
+    {
+      "id": "p1_statue",
+      "type": "statue",
+      "x": 120.0,
+      "z": 55.0,
+      "rotation": 90.0
+    },
+    {
+      "id": "p2_tent_a",
+      "type": "tent",
+      "x": 209.0,
+      "z": 129.0,
+      "rotation": 180.0
+    },
+    {
+      "id": "p2_tent_b",
+      "type": "tent",
+      "x": 209.0,
+      "z": 111.0,
+      "rotation": 180.0
+    },
+    {
+      "id": "p2_cart",
+      "type": "supply_cart",
+      "x": 202.0,
+      "z": 107.0,
+      "rotation": 270.0
+    },
+    {
+      "id": "p2_rack",
+      "type": "weapon_rack",
+      "x": 197.0,
+      "z": 132.0,
+      "rotation": 180.0
+    },
+    {
+      "id": "p2_statue",
+      "type": "statue",
+      "x": 185.0,
+      "z": 120.0,
+      "rotation": 180.0
+    },
+    {
+      "id": "p3_tent_a",
+      "type": "tent",
+      "x": 111.0,
+      "z": 209.0,
+      "rotation": 270.0
+    },
+    {
+      "id": "p3_tent_b",
+      "type": "tent",
+      "x": 129.0,
+      "z": 209.0,
+      "rotation": 270.0
+    },
+    {
+      "id": "p3_cart",
+      "type": "supply_cart",
+      "x": 133.0,
+      "z": 202.0,
+      "rotation": 360.0
+    },
+    {
+      "id": "p3_rack",
+      "type": "weapon_rack",
+      "x": 108.0,
+      "z": 197.0,
+      "rotation": 270.0
+    },
+    {
+      "id": "p3_statue",
+      "type": "statue",
+      "x": 120.0,
+      "z": 185.0,
+      "rotation": 270.0
+    },
+    {
+      "id": "p4_tent_a",
+      "type": "tent",
+      "x": 31.0,
+      "z": 111.0
+    },
+    {
+      "id": "p4_tent_b",
+      "type": "tent",
+      "x": 31.0,
+      "z": 129.0
+    },
+    {
+      "id": "p4_cart",
+      "type": "supply_cart",
+      "x": 38.0,
+      "z": 133.0,
+      "rotation": 90.0
+    },
+    {
+      "id": "p4_rack",
+      "type": "weapon_rack",
+      "x": 43.0,
+      "z": 108.0
+    },
+    {
+      "id": "p4_statue",
+      "type": "statue",
+      "x": 55.0,
+      "z": 120.0
+    },
+    {
+      "id": "press_farm_1_ruin",
+      "type": "ruins",
+      "x": 41.0,
+      "z": 96.0,
+      "scale": 0.9
+    },
+    {
+      "id": "press_farm_1_rack",
+      "type": "weapon_rack",
+      "x": 57.0,
+      "z": 82.0
+    },
+    {
+      "id": "press_farm_2_ruin",
+      "type": "ruins",
+      "x": 143.0,
+      "z": 58.0,
+      "scale": 0.9,
+      "rotation": 90.0
+    },
+    {
+      "id": "press_farm_2_rack",
+      "type": "weapon_rack",
+      "x": 159.0,
+      "z": 44.0,
+      "rotation": 90.0
+    },
+    {
+      "id": "press_farm_3_ruin",
+      "type": "ruins",
+      "x": 181.0,
+      "z": 160.0,
+      "scale": 0.9,
+      "rotation": 180.0
+    },
+    {
+      "id": "press_farm_3_rack",
+      "type": "weapon_rack",
+      "x": 197.0,
+      "z": 146.0,
+      "rotation": 180.0
+    },
+    {
+      "id": "press_farm_4_ruin",
+      "type": "ruins",
+      "x": 79.0,
+      "z": 198.0,
+      "scale": 0.9,
+      "rotation": 270.0
+    },
+    {
+      "id": "press_farm_4_rack",
+      "type": "weapon_rack",
+      "x": 95.0,
+      "z": 184.0,
+      "rotation": 270.0
+    },
+    {
+      "id": "vein_1_0",
+      "type": "iron_ore",
+      "x": 164.95,
+      "z": 103.39,
+      "rotation": 34.38
+    },
+    {
+      "id": "vein_1_1",
+      "type": "iron_ore",
+      "x": 158.31,
+      "z": 105.76,
+      "rotation": 106.38
+    },
+    {
+      "id": "vein_1_2",
+      "type": "iron_ore",
+      "x": 154.0,
+      "z": 100.17,
+      "rotation": 178.38
+    },
+    {
+      "id": "vein_1_3",
+      "type": "iron_ore",
+      "x": 157.99,
+      "z": 94.35,
+      "rotation": 250.38
+    },
+    {
+      "id": "vein_1_4",
+      "type": "iron_ore",
+      "x": 164.75,
+      "z": 96.34,
+      "rotation": 322.38
+    },
+    {
+      "id": "vein_2_0",
+      "type": "iron_ore",
+      "x": 144.95,
+      "z": 163.39,
+      "rotation": 34.38
+    },
+    {
+      "id": "vein_2_1",
+      "type": "iron_ore",
+      "x": 138.31,
+      "z": 165.76,
+      "rotation": 106.38
+    },
+    {
+      "id": "vein_2_2",
+      "type": "iron_ore",
+      "x": 134.0,
+      "z": 160.17,
+      "rotation": 178.38
+    },
+    {
+      "id": "vein_2_3",
+      "type": "iron_ore",
+      "x": 137.99,
+      "z": 154.35,
+      "rotation": 250.38
+    },
+    {
+      "id": "vein_2_4",
+      "type": "iron_ore",
+      "x": 144.75,
+      "z": 156.34,
+      "rotation": 322.38
+    },
+    {
+      "id": "vein_3_0",
+      "type": "iron_ore",
+      "x": 84.95,
+      "z": 143.39,
+      "rotation": 34.38
+    },
+    {
+      "id": "vein_3_1",
+      "type": "iron_ore",
+      "x": 78.31,
+      "z": 145.76,
+      "rotation": 106.38
+    },
+    {
+      "id": "vein_3_2",
+      "type": "iron_ore",
+      "x": 74.0,
+      "z": 140.17,
+      "rotation": 178.38
+    },
+    {
+      "id": "vein_3_3",
+      "type": "iron_ore",
+      "x": 77.99,
+      "z": 134.35,
+      "rotation": 250.38
+    },
+    {
+      "id": "vein_3_4",
+      "type": "iron_ore",
+      "x": 84.75,
+      "z": 136.34,
+      "rotation": 322.38
+    },
+    {
+      "id": "vein_4_0",
+      "type": "iron_ore",
+      "x": 104.95,
+      "z": 83.39,
+      "rotation": 34.38
+    },
+    {
+      "id": "vein_4_1",
+      "type": "iron_ore",
+      "x": 98.31,
+      "z": 85.76,
+      "rotation": 106.38
+    },
+    {
+      "id": "vein_4_2",
+      "type": "iron_ore",
+      "x": 94.0,
+      "z": 80.17,
+      "rotation": 178.38
+    },
+    {
+      "id": "vein_4_3",
+      "type": "iron_ore",
+      "x": 97.99,
+      "z": 74.35,
+      "rotation": 250.38
+    },
+    {
+      "id": "vein_4_4",
+      "type": "iron_ore",
+      "x": 104.75,
+      "z": 76.34,
+      "rotation": 322.38
+    },
+    {
+      "type": "statue",
+      "x": 77.0,
+      "z": 93.5,
+      "scale": 1.0,
+      "rotation": 180.0,
+      "landmark": "grove_sanctuary"
+    },
+    {
+      "type": "statue",
+      "x": 75.59,
+      "z": 81.09,
+      "scale": 1.0,
+      "rotation": 0.0,
+      "landmark": "grove_sanctuary"
+    },
+    {
+      "type": "statue",
+      "x": 88.83,
+      "z": 90.67,
+      "scale": 1.0,
+      "rotation": 180.0,
+      "landmark": "grove_sanctuary"
+    },
+    {
+      "type": "statue",
+      "x": 89.7,
+      "z": 84.03,
+      "scale": 1.0,
+      "rotation": 0.0,
+      "landmark": "grove_sanctuary"
+    },
+    {
+      "type": "ruins",
+      "x": 59.0,
+      "z": 95.0,
+      "scale": 1.1,
+      "rotation": 180.0,
+      "landmark": "grove_sanctuary"
+    },
+    {
+      "type": "ruins",
+      "x": 61.0,
+      "z": 82.0,
+      "scale": 0.9,
+      "rotation": 0.0,
+      "landmark": "grove_sanctuary"
+    },
+    {
+      "type": "dead_tree",
+      "x": 54.0,
+      "z": 89.0,
+      "scale": 1.0,
+      "rotation": 180.0,
+      "landmark": "grove_sanctuary"
+    },
+    {
+      "type": "firecamp",
+      "x": 74.0,
+      "z": 88.0,
+      "scale": 1.0,
+      "rotation": 90.0,
+      "landmark": "grove_sanctuary",
+      "radius": 3.2,
+      "intensity": 1.2,
+      "persistent": true
+    },
+    {
+      "type": "abandoned_home",
+      "x": 144.47,
+      "z": 75.7,
+      "scale": 1.0,
+      "rotation": 270.0,
+      "landmark": "east_hamlet"
+    },
+    {
+      "type": "abandoned_home",
+      "x": 158.53,
+      "z": 75.3,
+      "scale": 1.0,
+      "rotation": 90.0,
+      "landmark": "east_hamlet"
+    },
+    {
+      "type": "abandoned_home",
+      "x": 159.0,
+      "z": 64.0,
+      "scale": 1.0,
+      "rotation": 90.0,
+      "landmark": "east_hamlet"
+    },
+    {
+      "type": "abandoned_home",
+      "x": 149.0,
+      "z": 60.0,
+      "scale": 0.9,
+      "rotation": 270.0,
+      "landmark": "east_hamlet"
+    },
+    {
+      "type": "ruins",
+      "x": 149.0,
+      "z": 84.0,
+      "scale": 1.1,
+      "rotation": 270.0,
+      "landmark": "east_hamlet"
+    },
+    {
+      "type": "ruins",
+      "x": 165.0,
+      "z": 68.0,
+      "scale": 0.9,
+      "rotation": 90.0,
+      "landmark": "east_hamlet"
+    },
+    {
+      "type": "dead_tree",
+      "x": 140.0,
+      "z": 76.0,
+      "scale": 1.0,
+      "rotation": 270.0,
+      "landmark": "east_hamlet"
+    },
+    {
+      "type": "dead_tree",
+      "x": 154.0,
+      "z": 56.0,
+      "scale": 0.9,
+      "rotation": 90.0,
+      "landmark": "east_hamlet"
+    },
+    {
+      "type": "statue",
+      "x": 172.0,
+      "z": 152.0,
+      "scale": 1.0,
+      "rotation": 270.0,
+      "landmark": "south_watch"
+    },
+    {
+      "type": "tent",
+      "x": 162.0,
+      "z": 147.0,
+      "scale": 1.0,
+      "rotation": 0.0,
+      "landmark": "south_watch"
+    },
+    {
+      "type": "tent",
+      "x": 161.0,
+      "z": 156.0,
+      "scale": 1.0,
+      "rotation": 180.0,
+      "landmark": "south_watch"
+    },
+    {
+      "type": "tent",
+      "x": 156.0,
+      "z": 150.0,
+      "scale": 0.95,
+      "rotation": 0.0,
+      "landmark": "south_watch"
+    },
+    {
+      "type": "supply_cart",
+      "x": 165.0,
+      "z": 160.0,
+      "scale": 1.0,
+      "rotation": 180.0,
+      "landmark": "south_watch"
+    },
+    {
+      "type": "weapon_rack",
+      "x": 166.0,
+      "z": 144.0,
+      "scale": 1.0,
+      "rotation": 0.0,
+      "landmark": "south_watch"
+    },
+    {
+      "type": "firecamp",
+      "x": 160.0,
+      "z": 152.0,
+      "scale": 1.0,
+      "rotation": 270.0,
+      "landmark": "south_watch",
+      "radius": 3.2,
+      "intensity": 1.2,
+      "persistent": true
+    },
+    {
+      "type": "ruins",
+      "x": 178.0,
+      "z": 158.0,
+      "scale": 0.9,
+      "rotation": 180.0,
+      "landmark": "south_watch"
+    },
+    {
+      "type": "abandoned_home",
+      "x": 98.0,
+      "z": 168.0,
+      "scale": 1.0,
+      "rotation": 90.0,
+      "landmark": "west_hamlet"
+    },
+    {
+      "type": "abandoned_home",
+      "x": 81.47,
+      "z": 164.7,
+      "scale": 1.0,
+      "rotation": 270.0,
+      "landmark": "west_hamlet"
+    },
+    {
+      "type": "abandoned_home",
+      "x": 81.0,
+      "z": 176.0,
+      "scale": 1.0,
+      "rotation": 270.0,
+      "landmark": "west_hamlet"
+    },
+    {
+      "type": "abandoned_home",
+      "x": 91.0,
+      "z": 180.0,
+      "scale": 0.9,
+      "rotation": 90.0,
+      "landmark": "west_hamlet"
+    },
+    {
+      "type": "ruins",
+      "x": 91.0,
+      "z": 156.0,
+      "scale": 1.1,
+      "rotation": 90.0,
+      "landmark": "west_hamlet"
+    },
+    {
+      "type": "ruins",
+      "x": 75.0,
+      "z": 172.0,
+      "scale": 0.9,
+      "rotation": 270.0,
+      "landmark": "west_hamlet"
+    },
+    {
+      "type": "dead_tree",
+      "x": 100.0,
+      "z": 164.0,
+      "scale": 1.0,
+      "rotation": 90.0,
+      "landmark": "west_hamlet"
+    },
+    {
+      "type": "dead_tree",
+      "x": 86.0,
+      "z": 184.0,
+      "scale": 0.9,
+      "rotation": 270.0,
+      "landmark": "west_hamlet"
+    }
+  ],
+  "firecamps": [
+    {
+      "id": "p1_fire",
+      "x": 120.0,
+      "z": 37.0,
+      "intensity": 1.05,
+      "radius": 3.4
+    },
+    {
+      "id": "p2_fire",
+      "x": 203.0,
+      "z": 120.0,
+      "intensity": 1.05,
+      "radius": 3.4
+    },
+    {
+      "id": "p3_fire",
+      "x": 120.0,
+      "z": 203.0,
+      "intensity": 1.05,
+      "radius": 3.4
+    },
+    {
+      "id": "p4_fire",
+      "x": 37.0,
+      "z": 120.0,
+      "intensity": 1.05,
+      "radius": 3.4
+    },
+    {
+      "id": "press_farm_1_fire",
+      "x": 54.0,
+      "z": 93.0,
+      "radius": 3.0
+    },
+    {
+      "id": "press_farm_2_fire",
+      "x": 156.0,
+      "z": 55.0,
+      "radius": 3.0
+    },
+    {
+      "id": "press_farm_3_fire",
+      "x": 194.0,
+      "z": 157.0,
+      "radius": 3.0
+    },
+    {
+      "id": "press_farm_4_fire",
+      "x": 92.0,
+      "z": 195.0,
+      "radius": 3.0
+    }
+  ],
+  "undead_zones": [
+    {
+      "id": "tomb_1",
+      "anchor_type": "ruins",
+      "x": 18.0,
+      "z": 18.0,
+      "radius": 12.0,
+      "leash_radius": 18.0,
+      "owner_id": 99,
+      "team_id": 99,
+      "fog_density": 0.3,
+      "awaken_on": [
+        "unit_enters_radius"
+      ],
+      "waves": [
         {
-            "rotation": 0.6,
-            "scale": 1,
-            "type": "tent",
-            "x": 58,
-            "z": 66
+          "trigger": "initial",
+          "units": {
+            "skeleton_swordsman": 3,
+            "skeleton_archer": 2
+          }
         },
         {
-            "rotation": 2.4,
-            "scale": 1,
-            "type": "tent",
-            "x": 72,
-            "z": 78
-        },
-        {
-            "rotation": 1.4000000000000001,
-            "scale": 1,
-            "type": "supply_cart",
-            "x": 66,
-            "z": 86
-        },
-        {
-            "rotation": 4.1,
-            "scale": 1,
-            "type": "weapon_rack",
-            "x": 78,
-            "z": 68
-        },
-        {
-            "rotation": 3.6,
-            "scale": 1,
-            "type": "tent",
-            "x": 222,
-            "z": 214
-        },
-        {
-            "rotation": 5.6000000000000005,
-            "scale": 1,
-            "type": "tent",
-            "x": 208,
-            "z": 202
-        },
-        {
-            "rotation": 2.2,
-            "scale": 1,
-            "type": "supply_cart",
-            "x": 214,
-            "z": 194
-        },
-        {
-            "rotation": 0.9,
-            "scale": 1,
-            "type": "weapon_rack",
-            "x": 202,
-            "z": 212
-        },
-        {
-            "rotation": 1,
-            "scale": 1.2,
-            "type": "ruins",
-            "x": 136,
-            "z": 138
-        },
-        {
-            "rotation": 2.8000000000000003,
-            "scale": 1.1,
-            "type": "ruins",
-            "x": 145,
-            "z": 142
-        },
-        {
-            "rotation": 4.6000000000000005,
-            "scale": 0.9,
-            "type": "ruins",
-            "x": 140,
-            "z": 148
-        },
-        {
-            "rotation": 2.5,
-            "scale": 0.9,
-            "type": "supply_cart",
-            "x": 132,
-            "z": 146
-        },
-        {
-            "rotation": 0.8,
-            "scale": 1,
-            "type": "dead_tree",
-            "x": 70,
-            "z": 118
-        },
-        {
-            "rotation": 3,
-            "scale": 0.9,
-            "type": "dead_tree",
-            "x": 80,
-            "z": 112
-        },
-        {
-            "rotation": 4.2,
-            "scale": 1,
-            "type": "dead_tree",
-            "x": 210,
-            "z": 162
-        },
-        {
-            "rotation": 5.7,
-            "scale": 0.9,
-            "type": "dead_tree",
-            "x": 200,
-            "z": 168
-        },
-        {
-            "rotation": 1.8,
-            "scale": 0.9,
-            "type": "ruins",
-            "x": 80,
-            "z": 190
-        },
-        {
-            "rotation": 4.8,
-            "scale": 0.9,
-            "type": "ruins",
-            "x": 200,
-            "z": 90
-        },
-        {
-            "intensity": 1.05,
-            "persistent": true,
-            "radius": 3.2,
-            "scale": 1,
-            "type": "firecamp",
-            "x": 58,
-            "z": 78
-        },
-        {
-            "intensity": 1.1,
-            "persistent": true,
-            "radius": 3,
-            "scale": 1,
-            "type": "firecamp",
-            "x": 76,
-            "z": 64
-        },
-        {
-            "intensity": 1.05,
-            "persistent": true,
-            "radius": 3.1,
-            "scale": 1,
-            "type": "firecamp",
-            "x": 222,
-            "z": 202
-        },
-        {
-            "intensity": 0.9500000000000001,
-            "persistent": true,
-            "radius": 2.9,
-            "scale": 1,
-            "type": "firecamp",
-            "x": 204,
-            "z": 216
-        },
-        {
-            "intensity": 1.1,
-            "persistent": true,
-            "radius": 3.4,
-            "scale": 1,
-            "type": "firecamp",
-            "x": 135,
-            "z": 145
-        },
-        {
-            "intensity": 1.1,
-            "persistent": true,
-            "radius": 3.4,
-            "scale": 1,
-            "type": "firecamp",
-            "x": 145,
-            "z": 135
-        },
-        {
-            "intensity": 0.8200000000000001,
-            "persistent": true,
-            "radius": 2.6,
-            "scale": 1,
-            "type": "firecamp",
-            "x": 82,
-            "z": 194
-        },
-        {
-            "intensity": 0.8200000000000001,
-            "persistent": true,
-            "radius": 2.6,
-            "scale": 1,
-            "type": "firecamp",
-            "x": 198,
-            "z": 86
-        },
-        {
-            "intensity": 0.75,
-            "persistent": true,
-            "radius": 2.4,
-            "scale": 1,
-            "type": "firecamp",
-            "x": 140,
-            "z": 62
-        },
-        {
-            "intensity": 0.75,
-            "persistent": true,
-            "radius": 2.4,
-            "scale": 1,
-            "type": "firecamp",
-            "x": 140,
-            "z": 218
+          "trigger": "after_clear",
+          "units": {
+            "grave_priest": 1
+          }
         }
+      ],
+      "clear_reward": {
+        "gold": 120,
+        "iron": 60
+      }
+    },
+    {
+      "id": "tomb_2",
+      "anchor_type": "magic_shrine",
+      "x": 222.0,
+      "z": 18.0,
+      "radius": 12.0,
+      "leash_radius": 18.0,
+      "owner_id": 99,
+      "team_id": 99,
+      "fog_density": 0.3,
+      "awaken_on": [
+        "unit_enters_radius"
+      ],
+      "waves": [
+        {
+          "trigger": "initial",
+          "units": {
+            "skeleton_swordsman": 3,
+            "skeleton_archer": 2
+          }
+        },
+        {
+          "trigger": "after_clear",
+          "units": {
+            "grave_priest": 1
+          }
+        }
+      ],
+      "clear_reward": {
+        "gold": 120,
+        "iron": 60
+      }
+    },
+    {
+      "id": "tomb_3",
+      "anchor_type": "ruins",
+      "x": 222.0,
+      "z": 222.0,
+      "radius": 12.0,
+      "leash_radius": 18.0,
+      "owner_id": 99,
+      "team_id": 99,
+      "fog_density": 0.3,
+      "awaken_on": [
+        "unit_enters_radius"
+      ],
+      "waves": [
+        {
+          "trigger": "initial",
+          "units": {
+            "skeleton_swordsman": 3,
+            "skeleton_archer": 2
+          }
+        },
+        {
+          "trigger": "after_clear",
+          "units": {
+            "grave_priest": 1
+          }
+        }
+      ],
+      "clear_reward": {
+        "gold": 120,
+        "iron": 60
+      }
+    },
+    {
+      "id": "tomb_4",
+      "anchor_type": "magic_shrine",
+      "x": 18.0,
+      "z": 222.0,
+      "radius": 12.0,
+      "leash_radius": 18.0,
+      "owner_id": 99,
+      "team_id": 99,
+      "fog_density": 0.3,
+      "awaken_on": [
+        "unit_enters_radius"
+      ],
+      "waves": [
+        {
+          "trigger": "initial",
+          "units": {
+            "skeleton_swordsman": 3,
+            "skeleton_archer": 2
+          }
+        },
+        {
+          "trigger": "after_clear",
+          "units": {
+            "grave_priest": 1
+          }
+        }
+      ],
+      "clear_reward": {
+        "gold": 120,
+        "iron": 60
+      }
+    }
+  ],
+  "wildlife": {
+    "enabled": true,
+    "seed": 63052,
+    "near_simulation_radius": 70.0,
+    "far_simulation_radius": 140.0,
+    "sheep": {
+      "enabled": true,
+      "groups": 2,
+      "group_size_min": 5,
+      "group_size_max": 8,
+      "roam_radius": 13.0,
+      "respawn": true,
+      "respawn_delay": 120.0,
+      "spawn_areas": [
+        {
+          "x": 96.0,
+          "z": 120.0,
+          "radius": 15.0
+        },
+        {
+          "x": 144.0,
+          "z": 120.0,
+          "radius": 15.0
+        }
+      ],
+      "alert_radius": 11.0
+    },
+    "wolves": {
+      "enabled": true,
+      "groups": 2,
+      "group_size_min": 3,
+      "group_size_max": 5,
+      "roam_radius": 26.0,
+      "respawn": true,
+      "respawn_delay": 160.0,
+      "spawn_areas": [
+        {
+          "x": 60.0,
+          "z": 200.0,
+          "radius": 18.0
+        },
+        {
+          "x": 180.0,
+          "z": 40.0,
+          "radius": 18.0
+        }
+      ],
+      "aggression": 0.45
+    },
+    "birds": {
+      "enabled": true,
+      "groups": 2,
+      "group_size_min": 3,
+      "group_size_max": 7,
+      "flight_height": 9.0,
+      "flyover_interval_min": 18.0,
+      "flyover_interval_max": 46.0
+    }
+  },
+  "starting_resources": {
+    "gold": 250,
+    "food": 200,
+    "wood": 250,
+    "stone": 120,
+    "iron": 80
+  },
+  "victory": {
+    "type": "elimination",
+    "key_structures": [
+      "barracks"
+    ],
+    "defeat_conditions": [
+      "no_key_structures",
+      "no_commander",
+      "only_commander_remaining"
     ]
+  }
 }

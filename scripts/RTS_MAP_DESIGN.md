@@ -295,6 +295,19 @@ a range-sized click target swallows everything standing inside it.
 
 - Hills are defended positions with two or three authored entrances. Entrances
   face useful routes; they are not evenly scattered around the ellipse.
+- A hill is a wall, not a mound: only cells flood-connected to an entrance ramp
+  are walkable, and the rim never is. Two ramps on opposite flanks make a
+  crossing - up one side, along the crown, down the other; a pair at the same
+  point along the spine makes one gate straight through. A ring with no ramp
+  pair is a sealed bowl.
+- A hill need not be an ellipse. `shape` takes `corridor`, `arc` (boomerang),
+  `elbow`, `ring`, `path` and `mask`; `thickness` sets how wide the ridge is and
+  `arc` how far it sweeps. A shaped hill is a ridge along a spine, so its
+  concave side is open ground - the pocket of an arc is where a camp goes, and
+  the lane past the end of a corridor is where the route goes. The road, water
+  and settlement generators read the spine through `scripts/map_hill_shapes.py`
+  rather than the bounding ellipse, so authoring a boomerang does not blind them
+  to the ground inside it.
 - Use mountains only in mountain regions. Elsewhere, shape routes with hills,
   forests, water, towns, and fieldworks.
 - Keep the Iron Sepulcher on a side route so engaging it is a tactical choice.
