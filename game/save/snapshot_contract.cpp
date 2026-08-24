@@ -79,6 +79,10 @@ constexpr std::array k_fields = std::to_array<FieldSpec>({
      "Names the visual asset; the choice is authored, not derived."},
     {"UnitComponent", AuthoritativeSerialized, "Health, owner, type."},
     {"MovementComponent", AuthoritativeSerialized, "Path and destination."},
+    {"MovementFactsComponent",
+     DerivedRebuilt,
+     "One tick of movement stages: desired, steered, accepted, progress. "
+     "Republished every Movement phase from the route and the world."},
     {"PlayerOrderIntentComponent",
      AuthoritativeSerialized,
      "Distinguishes a player order from an automatic reaction."},

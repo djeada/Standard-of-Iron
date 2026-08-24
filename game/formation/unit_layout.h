@@ -92,6 +92,7 @@ struct UnitLayoutQuery {
   int rows{1};
   int cols{1};
   int count{0};
+  int forced_files{0};
   float spacing{1.0F};
   std::uint32_t seed{0U};
   float formed_ratio{1.0F};

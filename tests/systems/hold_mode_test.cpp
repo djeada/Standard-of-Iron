@@ -10,7 +10,7 @@
 #include "game/command/command_dispatcher.h"
 #include "systems/combat_system/damage_processor.h"
 #include "systems/command_service.h"
-#include "systems/movement_system.h"
+#include "systems/movement_pipeline.h"
 #include "systems/nav_grid.h"
 #include "systems/owner_registry.h"
 #include "units/spawn_type.h"
@@ -69,7 +69,7 @@ protected:
   }
 
   std::unique_ptr<World> world;
-  MovementSystem movement;
+  MovementPipeline movement;
 };
 
 TEST_F(HoldModeTest, StanceStaysLimitedToArchersAndSpearmen) {

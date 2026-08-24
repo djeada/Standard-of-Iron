@@ -219,14 +219,14 @@ void order_wave_advance(Engine::Core::World& world,
 
   const auto plan =
       Game::Systems::CommandService::plan_ground_move(world, units, target);
-  if (plan.positions.size() != units.size()) {
+  if (!plan.fully_placeable_for(units)) {
     return;
   }
 
   Game::Command::Move move;
   move.kind = Game::Systems::MoveOrderKind::ScriptedMove;
   move.units = units;
-  move.targets = plan.positions;
+  move.targets = plan.target_positions();
   Game::Command::submit(
       world, Game::Command::Source::Script, wave.owner_id, std::move(move));
 }

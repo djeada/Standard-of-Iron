@@ -243,18 +243,22 @@ auto submit_ground_move(Engine::Core::World& world,
 
   const auto plan =
       Game::Systems::CommandService::plan_ground_move(world, units, destination);
-  if (units.size() != plan.positions.size()) {
+  if (!plan.matches_members(units)) {
     return App::Core::rejected_order_at(
         OrderKind::Move,
         App::Core::rejection_refusal(Game::Command::Rejection::MalformedPayload,
                                      OrderKind::Move),
         destination);
   }
+  if (!plan.fully_placeable_for(units)) {
+    return App::Core::rejected_order_at(
+        OrderKind::Move, App::Core::unreachable_reason(), destination);
+  }
 
   Game::Command::Move move;
   move.units = units;
-  move.targets.assign(plan.positions.begin(), plan.positions.end());
-  move.facing_angles = plan.facing_angles;
+  move.targets = plan.target_positions();
+  move.facing_angles = plan.facing_angles();
   move.kind = Game::Systems::MoveOrderKind::FormationMove;
   move.preserve_formation_mode = plan.preserve_formation_mode;
 
