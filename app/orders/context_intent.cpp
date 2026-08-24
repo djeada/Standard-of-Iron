@@ -48,12 +48,30 @@ auto nothing_to_advise(const QString& reason) -> ContextIntentResolution {
   return resolution;
 }
 
+auto every_selected_unit_is_hauling(const ContextIntentRequest& request) -> bool {
+  if (request.world == nullptr || request.selection == nullptr ||
+      request.selection->empty()) {
+    return false;
+  }
+  for (auto const id : *request.selection) {
+    const auto* carry =
+        request.world->try_get<Engine::Core::ResourceCarryComponent>(id);
+    if (carry == nullptr || carry->empty()) {
+      return false;
+    }
+  }
+  return true;
+}
+
 auto ground_move(const ContextIntentRequest& request) -> ContextIntentResolution {
   if (!request.has_ground) {
     return invalid(QObject::tr("No ground under the cursor"));
   }
   if (!request.ground_is_walkable) {
     return invalid(QObject::tr("Cannot reach"));
+  }
+  if (every_selected_unit_is_hauling(request)) {
+    return invalid(QObject::tr("Hauling a load - cannot be interrupted"));
   }
   ContextIntentResolution resolution;
   resolution.intent = ContextIntent::Move;

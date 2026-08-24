@@ -83,6 +83,7 @@ struct TroopFormationProfile {
   std::string unit_layout;
   std::string defensive_layout;
   std::string marching_layout;
+  std::string working_layout;
 };
 
 [[nodiscard]] auto parse_troop_formation_profile(const QJsonObject& formation_object,

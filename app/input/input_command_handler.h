@@ -29,6 +29,25 @@ class CommandController;
 class CursorManager;
 class HoverTracker;
 
+struct ContextInteraction {
+
+  QString gather_product_type;
+
+  QString food_product_type;
+
+  Engine::Core::EntityID target = 0;
+
+  [[nodiscard]] auto is_gather() const -> bool {
+    return !gather_product_type.isEmpty();
+  }
+  [[nodiscard]] auto is_food_task() const -> bool {
+    return !food_product_type.isEmpty() && target != 0;
+  }
+  [[nodiscard]] auto is_repair() const -> bool {
+    return gather_product_type.isEmpty() && food_product_type.isEmpty() && target != 0;
+  }
+};
+
 struct ViewportState {
   int width = 0;
   int height = 0;
@@ -94,6 +113,9 @@ public:
                               const ViewportState& viewport,
                               QString& out_product_type,
                               Engine::Core::EntityID& out_target) const;
+
+  [[nodiscard]] auto resolve_context_interaction(
+      qreal sx, qreal sy, const ViewportState& viewport) const -> ContextInteraction;
 
   [[nodiscard]] bool any_selected_in_hold_mode() const;
   [[nodiscard]] bool any_selected_in_guard_mode() const;

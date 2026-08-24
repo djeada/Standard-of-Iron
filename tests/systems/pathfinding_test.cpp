@@ -1,3 +1,5 @@
+#include <QVector3D>
+
 #include <algorithm>
 #include <cmath>
 #include <gtest/gtest.h>
@@ -8,6 +10,7 @@
 #include "game/map/map_loader.h"
 #include "game/map/terrain_service.h"
 #include "game/systems/building_collision_registry.h"
+#include "game/systems/nav_grid.h"
 #include "game/systems/pathfinding.h"
 
 namespace {
@@ -45,6 +48,48 @@ auto cell_value_for_prop(const Game::Map::WorldProp& prop)
     return Game::Systems::Pathfinding::CellValue::IronOre;
   }
   return std::nullopt;
+}
+
+TEST_F(PathfindingTest, TheNearestStandingCellFacesWhoeverIsWalkingIn) {
+  Game::Map::MapDefinition map_def;
+  map_def.grid.width = 24;
+  map_def.grid.height = 24;
+  map_def.grid.tile_size = 1.0F;
+  Game::Map::apply_ground_type_defaults(map_def.biome,
+                                        Game::Map::GroundType::SoilRocky);
+  map_def.world_props.push_back(
+      {.type = Game::Map::WorldProp::Type::Boulder, .x = 12.0F, .z = 12.0F});
+
+  Game::Map::TerrainService::instance().initialize(map_def);
+  Game::Systems::NavGrid::initialize(map_def.grid.width, map_def.grid.height);
+
+  const Game::Systems::Point node = prop_grid_position(
+      map_def, Game::Map::TerrainService::instance().world_props().front());
+
+  struct Side {
+    const char* name;
+    int dx;
+    int dz;
+  };
+  const Side sides[] = {
+      {"north", 0, -6}, {"south", 0, 6}, {"west", -6, 0}, {"east", 6, 0}};
+
+  for (const auto& side : sides) {
+    const QVector3D approach =
+        Game::Systems::NavGrid::grid_to_world({node.x + side.dx, node.y + side.dz});
+    const auto cell =
+        Game::Systems::NavGrid::find_nearest_walkable_grid_facing(node, approach, 4);
+    ASSERT_TRUE(cell.has_value()) << side.name;
+
+    int const cell_dx = cell->x - node.x;
+    int const cell_dz = cell->y - node.y;
+    EXPECT_LE(std::abs(cell_dx), 1) << side.name;
+    EXPECT_LE(std::abs(cell_dz), 1) << side.name;
+    EXPECT_GT((cell_dx * side.dx) + (cell_dz * side.dz), 0)
+        << side.name
+        << ": the standing cell must sit between the worker and the rock, not on a "
+           "fixed side of it";
+  }
 }
 
 TEST_F(PathfindingTest, TreeCellsRemainBlockedButDistinguishable) {

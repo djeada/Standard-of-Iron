@@ -190,6 +190,30 @@ TEST_F(ContextIntentTest, AGatherableNodeUnderTheCursorReadsAsInteract) {
   EXPECT_TRUE(resolution.has_position);
 }
 
+TEST_F(ContextIntentTest, AHaulingCrewRefusesAMoveInsteadOfSilentlyIgnoringIt) {
+  const auto id = add_selected_unit();
+  auto* carry =
+      world.get_entity(id)->add_component<Engine::Core::ResourceCarryComponent>();
+  carry->amounts.add(Game::Systems::ResourceType::Wood, 40);
+
+  const auto resolution = resolve_context_intent(base_request());
+  EXPECT_EQ(resolution.intent, ContextIntent::Invalid);
+  EXPECT_FALSE(resolution.valid());
+  EXPECT_FALSE(resolution.reason.isEmpty())
+      << "the player must be told why the order will not stick";
+}
+
+TEST_F(ContextIntentTest, OneFreeUnitIsEnoughToKeepAMoveOrderAlive) {
+  const auto hauler = add_selected_unit();
+  auto* carry =
+      world.get_entity(hauler)->add_component<Engine::Core::ResourceCarryComponent>();
+  carry->amounts.add(Game::Systems::ResourceType::Wood, 40);
+  add_selected_unit();
+
+  const auto resolution = resolve_context_intent(base_request());
+  EXPECT_EQ(resolution.intent, ContextIntent::Move);
+}
+
 TEST_F(ContextIntentTest, AnEnemyStillWinsOverAnAvailableInteraction) {
   add_selected_unit();
   auto request = base_request();

@@ -31,7 +31,7 @@ auto MovementPipeline::access() const -> Engine::Core::SystemAccess {
                                       AttackComponent,
                                       StaminaComponent,
                                       TerrainContextComponent,
-                                      UnitTraversalLayoutState,
+                                      UnitTraversalLayoutStateComponent,
                                       GuardModeComponent,
                                       HoldModeComponent,
                                       BuilderProductionComponent>{});

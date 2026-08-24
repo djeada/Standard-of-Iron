@@ -215,7 +215,7 @@
             "z": 520
         }
     ],
-    "max_troops_per_player": 2200,
+    "max_troops_per_player": 750,
     "name": "Crossing the Alps",
     "rain": {
         "active_duration": 150,
@@ -1201,7 +1201,7 @@
             "grow_hill": false,
             "homes": 6,
             "id": "alps_column_camp",
-            "max_population": 150,
+            "max_population": 50,
             "nation": "carthage",
             "on_hill": false,
             "player_id": 1,
@@ -1213,7 +1213,7 @@
             "authored": true,
             "facing": "north",
             "id": "alps_first_pass_camp",
-            "max_population": 140,
+            "max_population": 50,
             "nation": "roman_republic",
             "player_id": 2,
             "tier": "marching_camp",
@@ -1224,7 +1224,7 @@
             "authored": true,
             "facing": "north",
             "id": "alps_high_pass_fort",
-            "max_population": 140,
+            "max_population": 50,
             "nation": "roman_republic",
             "on_hill": false,
             "player_id": 3,
@@ -1236,7 +1236,7 @@
             "authored": true,
             "facing": "west",
             "id": "alps_descent_town",
-            "max_population": 180,
+            "max_population": 60,
             "nation": "roman_republic",
             "player_id": 4,
             "tier": "town",
@@ -1719,7 +1719,7 @@
         },
         {
             "authored": true,
-            "max_population": 150,
+            "max_population": 50,
             "nation": "carthage",
             "player_id": 1,
             "type": "barracks",
@@ -1835,7 +1835,7 @@
         },
         {
             "authored": true,
-            "max_population": 120,
+            "max_population": 40,
             "nation": "roman_republic",
             "player_id": 2,
             "type": "barracks",
@@ -1894,7 +1894,7 @@
         },
         {
             "authored": true,
-            "max_population": 200,
+            "max_population": 70,
             "nation": "roman_republic",
             "player_id": 3,
             "type": "barracks",
@@ -2018,7 +2018,7 @@
         },
         {
             "authored": true,
-            "max_population": 200,
+            "max_population": 70,
             "nation": "roman_republic",
             "player_id": 4,
             "type": "barracks",
@@ -2074,7 +2074,7 @@
             "z": 579.6
         },
         {
-            "max_population": 150,
+            "max_population": 50,
             "type": "barracks",
             "x": 595,
             "z": 277

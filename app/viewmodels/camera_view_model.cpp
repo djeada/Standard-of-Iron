@@ -113,20 +113,29 @@ void CameraViewModel::set_follow_lerp(float alpha) {
   }
 }
 
+void CameraViewModel::publish_frame() {
+  const auto* camera = m_context.active_camera;
+  if (camera == nullptr || m_context.viewport == nullptr ||
+      m_context.viewport->width <= 0 || m_context.viewport->height <= 0) {
+    return;
+  }
+  m_projection.publish({.view_projection = camera->get_view_projection_matrix(),
+                        .viewport_width = m_context.viewport->width,
+                        .viewport_height = m_context.viewport->height,
+                        .distance = m_context.camera_controller != nullptr
+                                        ? m_context.camera_controller->distance()
+                                        : camera->get_distance()});
+}
+
 auto CameraViewModel::project_world(float x, float y, float z) const -> QVariantMap {
+
   QVariantMap result;
   result["valid"] = false;
   result["x"] = 0.0;
   result["y"] = 0.0;
+  const auto projection = m_projection.read();
   QPointF screen;
-  if (m_context.viewport != nullptr &&
-      App::Utils::world_to_screen(m_context.picking,
-                                  m_context.active_camera,
-                                  m_context.window,
-                                  m_context.viewport->width,
-                                  m_context.viewport->height,
-                                  QVector3D(x, y, z),
-                                  screen)) {
+  if (projection && projection->project(QVector3D(x, y, z), screen)) {
     result["valid"] = true;
     result["x"] = screen.x();
     result["y"] = screen.y();
@@ -135,10 +144,8 @@ auto CameraViewModel::project_world(float x, float y, float z) const -> QVariant
 }
 
 auto CameraViewModel::distance() const -> float {
-  if (auto* camera = m_context.camera_controller) {
-    return camera->distance();
-  }
-  return 0.0F;
+  const auto projection = m_projection.read();
+  return projection ? projection->distance : 0.0F;
 }
 
 void CameraViewModel::update_follow() {

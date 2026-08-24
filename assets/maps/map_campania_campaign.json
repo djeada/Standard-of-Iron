@@ -284,7 +284,7 @@
             "z": 400
         }
     ],
-    "max_troops_per_player": 2600,
+    "max_troops_per_player": 900,
     "name": "Campania Campaign",
     "rain": {
         "enabled": false
@@ -1681,7 +1681,7 @@
             "facing": "west",
             "homes": 10,
             "id": "campania_punic_quarter",
-            "max_population": 220,
+            "max_population": 75,
             "nation": "carthage",
             "player_id": 1,
             "tier": "town",
@@ -1736,7 +1736,7 @@
             "authored": true,
             "facing": "west",
             "id": "campania_siege_camp",
-            "max_population": 150,
+            "max_population": 50,
             "nation": "roman_republic",
             "player_id": 4,
             "tier": "fortified_camp",
@@ -2323,7 +2323,7 @@
         },
         {
             "authored": true,
-            "max_population": 220,
+            "max_population": 75,
             "nation": "carthage",
             "player_id": 1,
             "type": "barracks",
@@ -2470,7 +2470,7 @@
         },
         {
             "authored": true,
-            "max_population": 180,
+            "max_population": 60,
             "nation": "roman_republic",
             "player_id": 2,
             "type": "barracks",
@@ -2554,7 +2554,7 @@
         },
         {
             "authored": true,
-            "max_population": 180,
+            "max_population": 60,
             "nation": "roman_republic",
             "player_id": 2,
             "type": "barracks",
@@ -2629,7 +2629,7 @@
         },
         {
             "authored": true,
-            "max_population": 180,
+            "max_population": 60,
             "nation": "roman_republic",
             "player_id": 3,
             "type": "barracks",
@@ -2720,7 +2720,7 @@
         },
         {
             "authored": true,
-            "max_population": 180,
+            "max_population": 60,
             "nation": "roman_republic",
             "player_id": 3,
             "type": "barracks",
@@ -2820,7 +2820,7 @@
         },
         {
             "authored": true,
-            "max_population": 180,
+            "max_population": 60,
             "nation": "roman_republic",
             "player_id": 4,
             "type": "barracks",

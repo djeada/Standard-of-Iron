@@ -64,7 +64,7 @@ void Home::init(const SpawnParams& params) {
 
   auto* home_comp = e->add_component<Engine::Core::HomeComponent>();
   if (home_comp != nullptr) {
-    home_comp->population_contribution = 50;
+    home_comp->population_contribution = 18;
     home_comp->update_cooldown = 0.0F;
     home_comp->family_generation_interval = 12.0F;
     home_comp->family_generation_cooldown = home_comp->family_generation_interval;

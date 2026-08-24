@@ -143,6 +143,8 @@ struct HumanoidUnitSnapshot {
 
   Game::Formation::UnitLayoutId unit_layout{Game::Formation::k_invalid_layout};
   float formed_ratio{1.0F};
+  Game::Formation::UnitLayoutId blend_from_layout{Game::Formation::k_invalid_layout};
+  float layout_blend_ratio{1.0F};
 };
 
 struct HumanoidFormationRuntime {
@@ -349,6 +351,8 @@ auto snapshot_humanoid_unit(const HumanoidRendererBase& owner,
   Game::Formation::UnitLayoutId unit_layout = ctx.world_view.unit_layouts()->resolve(
       Game::Formation::k_neutral_doctrine, "close_order_infantry");
   float formed_ratio = 1.0F;
+  Game::Formation::UnitLayoutId blend_from_layout = Game::Formation::k_invalid_layout;
+  float layout_blend_ratio = 1.0F;
   if (unit_comp != nullptr) {
     auto const definition =
         Game::Systems::FormationCombat::resolve_definition(*unit_comp);
@@ -365,10 +369,14 @@ auto snapshot_humanoid_unit(const HumanoidRendererBase& owner,
   if (ctx.entity != nullptr) {
     if (const auto* layout_state =
             ctx.entity->get_component<Engine::Core::UnitLayoutStateComponent>()) {
-      formed_ratio = Game::Formation::UnitLayoutStateSystem::formed_ratio(*ctx.entity);
+      auto const blend =
+          Game::Formation::UnitLayoutStateSystem::layout_blend(*ctx.entity);
+      formed_ratio = blend.formed_ratio;
       if (layout_state->layout_id != Game::Formation::k_invalid_layout) {
         unit_layout = layout_state->layout_id;
       }
+      blend_from_layout = blend.blend_from;
+      layout_blend_ratio = blend.blend_ratio;
     }
   }
 
@@ -395,6 +403,8 @@ auto snapshot_humanoid_unit(const HumanoidRendererBase& owner,
   snapshot.entity_ground_offset = entity_ground_offset;
   snapshot.unit_layout = unit_layout;
   snapshot.formed_ratio = formed_ratio;
+  snapshot.blend_from_layout = blend_from_layout;
+  snapshot.layout_blend_ratio = layout_blend_ratio;
   return snapshot;
 }
 
@@ -414,6 +424,8 @@ auto prepare_formation_runtime(const HumanoidUnitSnapshot& s,
   const bool has_shared_formation_layout = s.has_shared_formation_layout;
   const auto unit_layout = s.unit_layout;
   const float formed_ratio = s.formed_ratio;
+  const auto blend_from_layout = s.blend_from_layout;
+  const float layout_blend_ratio = s.layout_blend_ratio;
 
   thread_local std::vector<Render::Entity::FormationInstance> transient_layouts;
   transient_layouts.clear();
@@ -437,11 +449,18 @@ auto prepare_formation_runtime(const HumanoidUnitSnapshot& s,
   layout_request.melee_attack = anim.is_attacking && anim.is_melee;
   layout_request.force_single_soldier = ctx.force_single_soldier;
   layout_request.formed_ratio = formed_ratio;
+  layout_request.blend_from = blend_from_layout;
+  layout_request.blend_ratio = layout_blend_ratio;
   layout_request.frame_index = frame_index;
   layout_request.layout_version = k_humanoid_layout_cache_version;
 
+  bool const layout_transition_active =
+      blend_from_layout != Game::Formation::k_invalid_layout &&
+      blend_from_layout != unit_layout && layout_blend_ratio < 0.999F;
   layout_request.max_cache_age =
-      layout_request.melee_attack ? 0U : ::Render::GL::k_layout_cache_max_age;
+      (layout_request.melee_attack || layout_transition_active)
+          ? 0U
+          : ::Render::GL::k_layout_cache_max_age;
   layout_request.soldier_offsets = ctx.world_view.soldier_offsets();
 
   Render::Entity::FormationLayoutResult layout_result;

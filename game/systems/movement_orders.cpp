@@ -459,6 +459,10 @@ void MovementSystem::assign_navigation_target(
                                    : corridor.centerline.back();
     assign_direct_target(movement, fallback);
   }
+
+  movement.requested_goal_x = requested_target.x();
+  movement.requested_goal_z = requested_target.z();
+  movement.has_requested_goal = true;
 }
 
 auto MovementSystem::assign_local_recovery_move(

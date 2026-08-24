@@ -71,8 +71,10 @@ auto resolve_harvest_work_position(Engine::Core::World* world,
 
   Game::Systems::Point const tree_grid =
       Game::Systems::NavGrid::world_to_grid(target.x, target.z);
-  auto const work_grid = Game::Systems::NavGrid::find_nearest_walkable_grid(
-      tree_grid, k_harvest_work_search_radius);
+  auto const work_grid = Game::Systems::NavGrid::find_nearest_walkable_grid_facing(
+      tree_grid,
+      QVector3D(transform->position.x, 0.0F, transform->position.z),
+      k_harvest_work_search_radius);
   if (!work_grid.has_value()) {
     return std::nullopt;
   }
@@ -358,6 +360,30 @@ auto harvest_product_type(HarvestTargetKind kind) -> const char* {
 
 auto is_collect_item(const QString& item_type) -> bool {
   return item_type == QLatin1String(k_collect_item_type);
+}
+
+auto interaction_highlights_armed(CursorMode cursor_mode,
+                                  bool placing_construction,
+                                  const QString& pending_item_type) -> bool {
+  switch (cursor_mode) {
+  case CursorMode::Collect:
+  case CursorMode::Repair:
+  case CursorMode::Dismantle:
+  case CursorMode::Deliver:
+    return true;
+  case CursorMode::Normal:
+  case CursorMode::Patrol:
+  case CursorMode::Attack:
+  case CursorMode::Guard:
+  case CursorMode::PlaceBuilding:
+  case CursorMode::Heal:
+  case CursorMode::Build:
+  case CursorMode::PlaceCommanderRally:
+  case CursorMode::PlaceBarracksRally:
+    break;
+  }
+
+  return placing_construction && is_harvest_construction_item(pending_item_type);
 }
 
 auto is_harvest_construction_item(const QString& item_type) -> bool {

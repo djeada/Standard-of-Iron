@@ -243,7 +243,7 @@
             "z": 440
         }
     ],
-    "max_troops_per_player": 2500,
+    "max_troops_per_player": 850,
     "name": "Battle of Lake Trasimene",
     "rain": {
         "enabled": false
@@ -1484,7 +1484,7 @@
             "facing": "north",
             "homes": 8,
             "id": "trasimene_ambush_camp",
-            "max_population": 150,
+            "max_population": 50,
             "nation": "carthage",
             "player_id": 1,
             "tier": "marching_camp",
@@ -1935,7 +1935,7 @@
         },
         {
             "authored": true,
-            "max_population": 150,
+            "max_population": 50,
             "nation": "carthage",
             "player_id": 1,
             "type": "barracks",
@@ -2010,7 +2010,7 @@
         },
         {
             "authored": true,
-            "max_population": 200,
+            "max_population": 70,
             "nation": "roman_republic",
             "player_id": 2,
             "type": "barracks",
@@ -2126,7 +2126,7 @@
         },
         {
             "authored": true,
-            "max_population": 180,
+            "max_population": 60,
             "nation": "roman_republic",
             "player_id": 3,
             "type": "barracks",
@@ -2166,13 +2166,13 @@
             "z": 120.72
         },
         {
-            "max_population": 150,
+            "max_population": 50,
             "type": "barracks",
             "x": 344,
             "z": 357
         },
         {
-            "max_population": 150,
+            "max_population": 50,
             "type": "barracks",
             "x": 550,
             "z": 363

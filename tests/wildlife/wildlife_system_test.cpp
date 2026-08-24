@@ -387,6 +387,66 @@ TEST_F(WildlifeSystemTest, WolfBiteDamageLandsAtTheAnimatedContactFrame) {
   EXPECT_EQ(wolf->bite_target_id, 0U);
 }
 
+TEST_F(WildlifeSystemTest, AWolfCannotBiteThroughASolidProp) {
+
+  auto map_definition = make_map();
+  map_definition.world_props.push_back({.type = Game::Map::WorldProp::Type::Boulder,
+                                        .x = 32.0F,
+                                        .z = 32.0F,
+                                        .scale = 1.0F});
+  Game::Map::TerrainService::instance().initialize(map_definition);
+  Game::Systems::NavGrid::initialize(map_definition.grid.width,
+                                     map_definition.grid.height);
+
+  const QVector3D rock =
+      Game::Map::TerrainService::instance().world_prop_world_position(
+          Game::Map::TerrainService::instance().world_props().front());
+
+  World world;
+  WildlifeSystem system;
+  system.configure(lone_wolf_settings(), 1U);
+  system.update(&world, 0.1F);
+
+  auto wolves = collect_species(world, Species::Wolf);
+  ASSERT_EQ(wolves.size(), 1U);
+  auto* wolf_entity = wolves.front();
+  auto* wolf = wolf_entity->get_component<Engine::Core::WildlifeComponent>();
+  auto* wolf_transform = wolf_entity->get_component<Engine::Core::TransformComponent>();
+  ASSERT_NE(wolf, nullptr);
+  ASSERT_NE(wolf_transform, nullptr);
+
+  constexpr float k_straddle = 0.8F;
+  wolf_transform->position.x = rock.x() - k_straddle;
+  wolf_transform->position.z = rock.z();
+
+  QVector3D const far_side(rock.x() + k_straddle, 0.0F, rock.z());
+  ASSERT_TRUE(Game::Systems::Combat::structure_separates_positions(
+      QVector3D(wolf_transform->position.x, 0.0F, wolf_transform->position.z),
+      far_side))
+      << "the boulder must actually stand between the wolf and its prey";
+
+  auto* victim = add_troop(world, far_side, Game::Units::SpawnType::Civilian);
+  auto* victim_unit = victim->get_component<Engine::Core::UnitComponent>();
+  ASSERT_NE(victim_unit, nullptr);
+  int const starting_health = victim_unit->health;
+
+  wolf->think_cooldown = 0.0F;
+  wolf->state_timer = 0.0F;
+
+  constexpr float k_step = 0.05F;
+  float const window =
+      Engine::Core::WildlifeComponent::k_bite_animation_seconds + 0.10F;
+  for (float elapsed = 0.0F; elapsed < window; elapsed += k_step) {
+
+    wolf_transform->position.x = rock.x() - k_straddle;
+    wolf_transform->position.z = rock.z();
+    system.update(&world, k_step);
+  }
+
+  EXPECT_EQ(victim_unit->health, starting_health)
+      << "a wolf must not bite through a solid prop it cannot reach around";
+}
+
 TEST_F(WildlifeSystemTest, BittenAnimalsFlinchSoTheHitIsVisible) {
   World world;
   WildlifeSystem system;

@@ -35,7 +35,7 @@ struct EconomyCoachBaseline {
   bool captured = false;
 };
 
-inline constexpr int k_economy_coach_army_population = 150;
+inline constexpr int k_economy_coach_army_population = 80;
 
 [[nodiscard]] auto
 build_resource_overview(const EconomyOverviewRequest& request) -> QVariantList;

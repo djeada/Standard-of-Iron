@@ -11,7 +11,8 @@ enum class UnitLayoutState : std::uint8_t {
   Braced,
   Marching,
   Routing,
-  Disrupted
+  Disrupted,
+  Working
 };
 
 } // namespace Game::Formation

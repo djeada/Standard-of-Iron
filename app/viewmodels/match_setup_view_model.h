@@ -8,6 +8,7 @@
 
 namespace App::Core {
 struct ClientContext;
+class ClientHost;
 struct MatchLaunch;
 } // namespace App::Core
 
@@ -25,8 +26,9 @@ class MatchSetupViewModel : public QObject {
       bool is_campaign_mission READ is_campaign_mission NOTIFY current_mission_changed)
 
 public:
-  explicit MatchSetupViewModel(const App::Core::ClientContext& context,
-                               QObject* parent = nullptr);
+  MatchSetupViewModel(const App::Core::ClientContext& context,
+                      App::Core::ClientHost& host,
+                      QObject* parent = nullptr);
 
   Q_INVOKABLE void start_loading_maps();
   Q_INVOKABLE [[nodiscard]] QVariantList maps() const { return m_maps; }
@@ -71,6 +73,7 @@ private:
   void launch_current_mission(const QString& kind, const QString& reference);
 
   const App::Core::ClientContext& m_context;
+  App::Core::ClientHost& m_host;
   QVariantList m_maps;
   bool m_maps_loading = false;
 };

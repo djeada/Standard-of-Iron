@@ -128,6 +128,66 @@ auto NavGrid::find_nearest_walkable_grid(const Point& origin, int max_search_rad
   return std::nullopt;
 }
 
+auto NavGrid::find_nearest_walkable_grid_facing(const Point& origin,
+                                                const QVector3D& approach_from,
+                                                int max_search_radius)
+    -> std::optional<Point> {
+  if (max_search_radius < 0) {
+    return std::nullopt;
+  }
+
+  auto is_candidate_walkable = [&](const Point& candidate) -> bool {
+    if (s_pathfinder != nullptr) {
+      return s_pathfinder->is_walkable(candidate.x, candidate.y);
+    }
+    return is_grid_walkable(candidate);
+  };
+
+  if (s_pathfinder != nullptr) {
+    s_pathfinder->update_navigation_grid();
+  }
+
+  if (is_candidate_walkable(origin)) {
+    return origin;
+  }
+
+  Point const approach_grid = world_to_grid(approach_from.x(), approach_from.z());
+
+  for (int radius = 1; radius <= max_search_radius; ++radius) {
+    Point best{};
+    long best_score = std::numeric_limits<long>::max();
+    bool found = false;
+    for (int dz = -radius; dz <= radius; ++dz) {
+      for (int dx = -radius; dx <= radius; ++dx) {
+        if (std::abs(dx) != radius && std::abs(dz) != radius) {
+          continue;
+        }
+        Point const candidate{origin.x + dx, origin.y + dz};
+        if (!is_candidate_walkable(candidate)) {
+          continue;
+        }
+
+        long const to_node = static_cast<long>(dx) * dx + static_cast<long>(dz) * dz;
+        long const ax = static_cast<long>(candidate.x) - approach_grid.x;
+        long const az = static_cast<long>(candidate.y) - approach_grid.y;
+        long const to_approach = (ax * ax) + (az * az);
+
+        long const score = (to_node * 1024L) + to_approach;
+        if (!found || score < best_score) {
+          best = candidate;
+          best_score = score;
+          found = true;
+        }
+      }
+    }
+    if (found) {
+      return best;
+    }
+  }
+
+  return std::nullopt;
+}
+
 auto NavGrid::snap_to_walkable_ground(const QVector3D& world_position) -> QVector3D {
   return snap_to_walkable_ground(world_position, 24);
 }

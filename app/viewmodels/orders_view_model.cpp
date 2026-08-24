@@ -448,19 +448,33 @@ auto action_context(const App::Core::ClientContext& context)
 } // namespace
 
 auto OrdersViewModel::action_states() const -> QVariantMap {
+  const auto frame_lock = m_host.lock_frame();
   return App::Core::get_action_states(action_context(m_context));
 }
 
+void OrdersViewModel::publish_frame() {
+  m_readout.publish(
+      {.command_mode = App::Core::get_current_action_mode(action_context(m_context))});
+}
+
 auto OrdersViewModel::command_mode() const -> QString {
-  return App::Core::get_current_action_mode(action_context(m_context));
+  const auto readout = m_readout.read();
+  return readout ? readout->command_mode : QStringLiteral("normal");
 }
 
 auto OrdersViewModel::toggle_state(const QString& mode) const -> QString {
+  const auto frame_lock = m_host.lock_frame();
   return App::Core::get_toggle_state(m_context.world, mode);
 }
 
 auto OrdersViewModel::mode_availability() const -> QVariantMap {
+  const auto frame_lock = m_host.lock_frame();
   return App::Core::get_mode_availability(m_context.world);
+}
+
+auto OrdersViewModel::has_commandable_selection() const -> bool {
+  const auto frame_lock = m_host.lock_frame();
+  return App::Core::has_commandable_selection(m_context.world);
 }
 
 auto OrdersViewModel::action_enabled(const QString& action_id) const -> bool {

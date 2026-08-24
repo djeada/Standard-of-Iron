@@ -260,6 +260,19 @@ TEST(CommanderControlRegressionTest,
   EXPECT_TRUE(contains(source, "m_right_mouse.started_formation_placement ="));
 }
 
+TEST(CommanderControlRegressionTest, CommanderPortraitBakesItsOwnBodyMeshes) {
+  const auto root = find_repo_root();
+  const auto scenes = read_text(root / "ui" / "commander_portrait_scenes.cpp");
+  const auto view = read_text(root / "ui" / "commander_portrait_view.cpp");
+  ASSERT_FALSE(scenes.empty());
+  ASSERT_FALSE(view.empty());
+
+  EXPECT_TRUE(contains(scenes, "render/creature/runtime_bake_guard.h"));
+  EXPECT_TRUE(contains(scenes, "Render::Creature::RuntimeBakeAllowScope"));
+  EXPECT_TRUE(contains(view, "render/creature/runtime_bake_guard.h"));
+  EXPECT_TRUE(contains(view, "Render::Creature::RuntimeBakeAllowScope"));
+}
+
 TEST(CommanderControlRegressionTest, CommanderRallyKeyReachesTheCommanderSlice) {
   const auto root = find_repo_root();
   const auto layer_source = read_text(root / "ui" / "qml" / "CommanderInputLayer.qml");

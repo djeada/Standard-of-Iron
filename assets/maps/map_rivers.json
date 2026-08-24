@@ -8,7 +8,7 @@
     "height": 176,
     "tile_size": 1.0
   },
-  "max_troops_per_player": 1200,
+  "max_troops_per_player": 400,
   "camera": {
     "center": [
       88.0,
@@ -988,7 +988,7 @@
       "x": 36.0,
       "z": 124.0,
       "player_id": 1,
-      "max_population": 400,
+      "max_population": 140,
       "team_id": 1,
       "description": "Player 1 barracks."
     },
@@ -998,7 +998,7 @@
       "x": 140.0,
       "z": 52.0,
       "player_id": 2,
-      "max_population": 400,
+      "max_population": 140,
       "team_id": 2,
       "description": "Player 2 barracks."
     },
@@ -1008,7 +1008,7 @@
       "x": 50.0,
       "z": 60.0,
       "player_id": 0,
-      "max_population": 140,
+      "max_population": 50,
       "description": "Neutral toll barracks either side can take."
     },
     {
@@ -1017,7 +1017,7 @@
       "x": 126.0,
       "z": 116.0,
       "player_id": 0,
-      "max_population": 140,
+      "max_population": 50,
       "description": "Neutral toll barracks either side can take."
     },
     {

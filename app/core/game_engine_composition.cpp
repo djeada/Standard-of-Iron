@@ -199,7 +199,7 @@ void GameEngine::build_client_and_view_models() {
   m_camera_view_model =
       std::make_unique<App::ViewModels::CameraViewModel>(m_client, host, this);
   m_match_setup_view_model =
-      std::make_unique<App::ViewModels::MatchSetupViewModel>(m_client, this);
+      std::make_unique<App::ViewModels::MatchSetupViewModel>(m_client, host, this);
   m_production_view_model =
       std::make_unique<App::ViewModels::ProductionViewModel>(m_client, host, this);
   m_minimap_view_model = std::make_unique<App::ViewModels::MinimapViewModel>(

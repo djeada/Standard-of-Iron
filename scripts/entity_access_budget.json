@@ -10,7 +10,7 @@
   "app/world": 21,
   "game/audio": 2,
   "game/command": 52,
-  "game/formation": 23,
+  "game/formation": 26,
   "game/map": 15,
   "game/mission": 22,
   "game/render_bridge": 19,

@@ -290,7 +290,7 @@ TEST_F(TightGapNavigationTest, FormationDoesNotSqueezeAlongASingleWall) {
   for (double elapsed = 0.0; elapsed < 30.0; elapsed += step) {
     run_for(step);
     auto const* traversal =
-        entity->get_component<Engine::Core::UnitTraversalLayoutState>();
+        entity->get_component<Engine::Core::UnitTraversalLayoutStateComponent>();
     squeezed =
         squeezed || (traversal != nullptr && traversal->target_lateral_scale < 0.999F);
   }
@@ -443,7 +443,7 @@ TEST_F(TightGapNavigationTest, FormationSqueezeChangesPresentationButNotCombatLa
   for (double elapsed = 0.0; elapsed < 30.0; elapsed += step) {
     run_for(step);
     auto const* traversal =
-        entity->get_component<Engine::Core::UnitTraversalLayoutState>();
+        entity->get_component<Engine::Core::UnitTraversalLayoutStateComponent>();
     auto const* presentation =
         entity->get_component<Engine::Core::FormationPresentationComponent>();
     if (traversal != nullptr) {
@@ -629,7 +629,7 @@ TEST_F(TightGapNavigationTest, FormationSqueezeChangesPresentationButNotCombatLa
   EXPECT_TRUE(observed_predictive_root_hold);
   EXPECT_LT(narrowest_presented_half_width, original_half_width * 0.8F);
   auto const* final_traversal =
-      entity->get_component<Engine::Core::UnitTraversalLayoutState>();
+      entity->get_component<Engine::Core::UnitTraversalLayoutStateComponent>();
   ASSERT_NE(final_traversal, nullptr);
   EXPECT_GE(separation_at_narrowest, 0.55F)
       << "tight-corridor presentation stacked soldiers on top of each other; progress="
@@ -644,7 +644,7 @@ TEST_F(TightGapNavigationTest, FormationSqueezeChangesPresentationButNotCombatLa
 
   run_for(2.0);
   auto const* restored =
-      entity->get_component<Engine::Core::UnitTraversalLayoutState>();
+      entity->get_component<Engine::Core::UnitTraversalLayoutStateComponent>();
   ASSERT_NE(restored, nullptr);
   EXPECT_FALSE(restored->active);
   EXPECT_NEAR(restored->lateral_scale, 1.0F, 0.001F);
@@ -679,7 +679,7 @@ TEST_F(TightGapNavigationTest, PhysicalPassagesSelectTheWidestSafeFileCount) {
     for (double elapsed = 0.0; elapsed < 12.0; elapsed += step) {
       run_for(step);
       auto const* traversal =
-          entity->get_component<Engine::Core::UnitTraversalLayoutState>();
+          entity->get_component<Engine::Core::UnitTraversalLayoutStateComponent>();
       if (traversal != nullptr && traversal->active) {
         entered = true;
         if (traversal->target_files < narrowest_files) {
@@ -715,7 +715,7 @@ TEST_F(TightGapNavigationTest, ThirtySoldiersClearARequiredSingleFilePassage) {
   run_for(90.0);
 
   auto const* traversal =
-      entity->get_component<Engine::Core::UnitTraversalLayoutState>();
+      entity->get_component<Engine::Core::UnitTraversalLayoutStateComponent>();
   ASSERT_NE(traversal, nullptr);
   EXPECT_GT(position_of(id).x(), world_of(54, k_gap_z).x())
       << "progress=" << traversal->transition_progress
@@ -751,7 +751,7 @@ TEST_F(TightGapNavigationTest, LargeBodySqueezeExistsOnlyInTheRenderSnapshot) {
   for (double elapsed = 0.0; elapsed < 30.0; elapsed += step) {
     run_for(step);
     auto const* traversal =
-        entity->get_component<Engine::Core::UnitTraversalLayoutState>();
+        entity->get_component<Engine::Core::UnitTraversalLayoutStateComponent>();
     if (traversal == nullptr || traversal->lateral_scale >= 0.99F) {
       continue;
     }
@@ -771,7 +771,7 @@ TEST_F(TightGapNavigationTest, LargeBodySqueezeExistsOnlyInTheRenderSnapshot) {
   run_for(30.0);
   run_for(2.0);
   auto const* restored_traversal =
-      entity->get_component<Engine::Core::UnitTraversalLayoutState>();
+      entity->get_component<Engine::Core::UnitTraversalLayoutStateComponent>();
   ASSERT_NE(restored_traversal, nullptr);
   EXPECT_GT(position_of(id).x(), world_of(30, k_gap_z).x())
       << "target_scale=" << restored_traversal->target_lateral_scale

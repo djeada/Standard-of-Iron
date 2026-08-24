@@ -109,6 +109,10 @@ attack_target_is_in_range(World& world,
 struct MotionPresentationSample {
   bool displaced{false};
   bool has_component_velocity{false};
+
+  bool direct_control_velocity{false};
+
+  bool wants_locomotion{false};
   bool is_running{false};
   bool forced_displacement{false};
   MovementOrderState order_state{MovementOrderState::Idle};
@@ -116,7 +120,8 @@ struct MotionPresentationSample {
 
 [[nodiscard]] auto resolve_motion_presentation_state(
     const MotionPresentationSample& sample) noexcept -> MotionPresentationState {
-  if (!sample.displaced && !sample.has_component_velocity) {
+  if (!sample.displaced && !sample.has_component_velocity &&
+      !sample.direct_control_velocity) {
     switch (sample.order_state) {
     case MovementOrderState::Turning:
       return MotionPresentationState::Turning;
@@ -127,7 +132,11 @@ struct MotionPresentationSample {
     case MovementOrderState::Recovering:
       return MotionPresentationState::Recovering;
     default:
-      return MotionPresentationState::Idle;
+
+      if (!sample.wants_locomotion) {
+        return MotionPresentationState::Idle;
+      }
+      break;
     }
   }
   if (sample.forced_displacement) {
@@ -359,6 +368,9 @@ void finalize_motion_presentation_frame(World& world, float delta_time) {
         MotionPresentationSample sample{};
         sample.displaced = displaced;
         sample.has_component_velocity = has_component_velocity;
+
+        sample.direct_control_velocity = direct_control_velocity;
+        sample.wants_locomotion = wants_locomotion;
         sample.is_running = stamina != nullptr && stamina->is_running;
         sample.forced_displacement = displaced && !motor_published;
         sample.order_state =
@@ -852,7 +864,7 @@ void copy_authoritative_snapshot_components(const Entity& source, Entity& destin
   copy_snapshot_component<HoldModeComponent>(source, destination);
   copy_snapshot_component<FormationModeComponent>(source, destination);
   copy_snapshot_component<UnitLayoutStateComponent>(source, destination);
-  copy_snapshot_component<UnitTraversalLayoutState>(source, destination);
+  copy_snapshot_component<UnitTraversalLayoutStateComponent>(source, destination);
   copy_snapshot_component<SpearBraceComponent>(source, destination);
   copy_snapshot_component<StaminaComponent>(source, destination);
   copy_snapshot_component<MoraleComponent>(source, destination);
@@ -889,7 +901,7 @@ void copy_render_components(const Entity& source, Entity& destination) {
   copy_authoritative_snapshot_components(source, destination);
   copy_presentation_snapshot_components(source, destination);
 
-  auto const* traversal = source.get_component<UnitTraversalLayoutState>();
+  auto const* traversal = source.get_component<UnitTraversalLayoutStateComponent>();
   auto const* formation = source.get_component<FormationPresentationComponent>();
   auto* transform = destination.get_component<TransformComponent>();
   bool const formation_handles_squeeze =
@@ -913,7 +925,7 @@ void render_hash_float(std::uint64_t& seed, float value) {
 auto render_entity_is_stable(const Entity& entity) -> bool {
   auto const* movement = entity.get_component<MovementComponent>();
   auto const* motion = entity.get_component<MotionPresentationComponent>();
-  auto const* traversal = entity.get_component<UnitTraversalLayoutState>();
+  auto const* traversal = entity.get_component<UnitTraversalLayoutStateComponent>();
   auto const* creature = entity.get_component<CreaturePresentationComponent>();
   auto const* target = entity.get_component<AttackTargetComponent>();
   auto const* combat = entity.get_component<CombatStateComponent>();
@@ -1005,7 +1017,8 @@ auto render_entity_signature(const Entity& entity) -> std::uint64_t {
     render_hash_combine(signature, layout->layout_id);
     render_hash_float(signature, layout->transition_progress);
   }
-  if (auto const* traversal = entity.get_component<UnitTraversalLayoutState>()) {
+  if (auto const* traversal =
+          entity.get_component<UnitTraversalLayoutStateComponent>()) {
     render_hash_combine(signature, traversal->route_id);
     render_hash_combine(signature, traversal->portal_id);
     render_hash_combine(signature, static_cast<std::uint64_t>(traversal->mode));

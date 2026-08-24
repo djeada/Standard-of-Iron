@@ -291,7 +291,7 @@ private:
   QJsonObject m_extra_root_fields;
   QString m_description;
   QString m_coord_system;
-  int m_max_troops_per_player = 2000;
+  int m_max_troops_per_player = 700;
   int m_next_spawn_order = 0;
 
   struct RawSpawnEntry {

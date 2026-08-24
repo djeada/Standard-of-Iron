@@ -521,7 +521,7 @@ auto soldier_spatial_anchors(const Engine::Core::Entity& entity,
   result.reserve(base_layout.live_slots.size());
   auto const* transform = entity.get_component<Engine::Core::TransformComponent>();
   auto const* traversal =
-      entity.get_component<Engine::Core::UnitTraversalLayoutState>();
+      entity.get_component<Engine::Core::UnitTraversalLayoutStateComponent>();
   auto const* presentation =
       entity.get_component<Engine::Core::FormationPresentationComponent>();
   float const root_x = transform != nullptr ? transform->position.x : 0.0F;

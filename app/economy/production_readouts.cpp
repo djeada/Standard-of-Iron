@@ -332,7 +332,7 @@ auto unit_production_info(const Game::Systems::NationRegistry& nations,
   const auto& config = Game::Units::TroopConfig::instance();
   const std::string type_str = unit_type.toStdString();
   info["cost"] = config.get_production_cost(type_str);
-  info["population_cost"] = info["cost"];
+  info["population_cost"] = config.get_population_cost(type_str);
   info["resource_costs"] = QVariantMap{};
   info["build_time"] = static_cast<double>(config.get_build_time(type_str));
   info["individuals_per_unit"] = config.get_individuals_per_unit(type_str);
