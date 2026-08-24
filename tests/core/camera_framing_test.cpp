@@ -5,6 +5,7 @@
 #include "game/camera_framing.h"
 #include "game/game_config.h"
 #include "game/render_bridge/camera_service.h"
+#include "game/session/session_context.h"
 #include "scene/camera.h"
 
 namespace {
@@ -74,7 +75,8 @@ TEST_F(CameraFramingTest, LoadingAMapMakesTheResetFollowThatMapRatherThanTheDefa
 }
 
 TEST_F(CameraFramingTest, TiltingUpRaisesTheCameraAndTiltingDownLowersIt) {
-  Game::Systems::CameraService service;
+  Game::Systems::CameraService service(
+      Game::Session::SessionContext::active().visibility());
   Render::GL::Camera camera;
   camera.set_rts_view(QVector3D(0.0F, 0.0F, 0.0F), 40.0F, 48.0F, 225.0F);
   const float opening_height = height_above_target(camera);
@@ -94,7 +96,8 @@ TEST_F(CameraFramingTest, TiltingUpRaisesTheCameraAndTiltingDownLowersIt) {
 }
 
 TEST_F(CameraFramingTest, HoldingShiftTiltsFurtherInTheSameDirection) {
-  Game::Systems::CameraService service;
+  Game::Systems::CameraService service(
+      Game::Session::SessionContext::active().visibility());
   Render::GL::Camera plain;
   Render::GL::Camera shifted;
   plain.set_rts_view(QVector3D(0.0F, 0.0F, 0.0F), 40.0F, 48.0F, 225.0F);

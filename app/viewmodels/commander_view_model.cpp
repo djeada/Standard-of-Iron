@@ -3,7 +3,9 @@
 #include <QQuickWindow>
 
 #include <algorithm>
+#include <mutex>
 #include <utility>
+#include <vector>
 
 #include "app/commander/commander_mode_coordinator.h"
 #include "app/commander/commander_status_builder.h"
@@ -21,6 +23,7 @@
 #include "game/core/event_manager.h"
 #include "game/core/world.h"
 #include "game/render_bridge/picking_service.h"
+#include "game/session/session_context.h"
 #include "game/systems/match_snapshot.h"
 #include "game/systems/nav_grid.h"
 #include "game/systems/selection_system.h"
@@ -108,6 +111,7 @@ void CommanderViewModel::restore_rts_camera() {
 }
 
 auto CommanderViewModel::available() const -> bool {
+  const auto frame_lock = m_host.lock_frame();
   return find_local_commander() != nullptr;
 }
 
@@ -143,6 +147,7 @@ auto CommanderViewModel::controlled_commander_entity() const -> Engine::Core::En
 }
 
 void CommanderViewModel::toggle_mode() {
+  const auto frame_lock = m_host.lock_frame();
   if (active()) {
     exit_mode();
     return;
@@ -221,6 +226,7 @@ void CommanderViewModel::enter_mode() {
 }
 
 void CommanderViewModel::exit_mode() {
+  const auto frame_lock = m_host.lock_frame();
   const bool was_active = active();
   const auto signals_before = capture_mode_signals();
   const ScopeExit emit_once(
@@ -308,11 +314,13 @@ void CommanderViewModel::restore_rts_selection() {
 }
 
 void CommanderViewModel::key_down(int key, int modifiers) {
+  const auto frame_lock = m_host.lock_frame();
   (void)modifiers;
   m_control.key_down(key);
 }
 
 void CommanderViewModel::key_up(int key, int modifiers) {
+  const auto frame_lock = m_host.lock_frame();
   (void)modifiers;
   m_control.key_up(key);
 }
@@ -322,26 +330,32 @@ void CommanderViewModel::reset_input() {
 }
 
 void CommanderViewModel::release_input() {
+  const auto frame_lock = m_host.lock_frame();
   m_control.release_all_input();
 }
 
 void CommanderViewModel::primary_action_down() {
+  const auto frame_lock = m_host.lock_frame();
   m_control.primary_action_down();
 }
 
 void CommanderViewModel::primary_action_up() {
+  const auto frame_lock = m_host.lock_frame();
   m_control.primary_action_up();
 }
 
 void CommanderViewModel::secondary_action_down() {
+  const auto frame_lock = m_host.lock_frame();
   m_control.secondary_action_down();
 }
 
 void CommanderViewModel::secondary_action_up() {
+  const auto frame_lock = m_host.lock_frame();
   m_control.secondary_action_up();
 }
 
 void CommanderViewModel::mouse_move(qreal dx, qreal dy) {
+  const auto frame_lock = m_host.lock_frame();
   m_control.mouse_move(dx, dy);
 }
 
@@ -349,14 +363,17 @@ void CommanderViewModel::mouse_look_at(qreal sx,
                                        qreal sy,
                                        qreal center_sx,
                                        qreal center_sy) {
+  const auto frame_lock = m_host.lock_frame();
   m_control.mouse_look_at(sx, sy, center_sx, center_sy, m_context.window);
 }
 
 void CommanderViewModel::center_mouse(qreal center_sx, qreal center_sy) {
+  const auto frame_lock = m_host.lock_frame();
   m_control.center_mouse(center_sx, center_sy, m_context.window);
 }
 
 void CommanderViewModel::trigger_aura() {
+  const auto frame_lock = m_host.lock_frame();
   auto* world = m_context.world;
   if (world == nullptr) {
     return;
@@ -393,6 +410,7 @@ void CommanderViewModel::trigger_aura() {
 }
 
 void CommanderViewModel::trigger_rally() {
+  const auto frame_lock = m_host.lock_frame();
   if (!active()) {
     return;
   }
@@ -400,18 +418,21 @@ void CommanderViewModel::trigger_rally() {
 }
 
 void CommanderViewModel::dodge() {
+  const auto frame_lock = m_host.lock_frame();
   if (active()) {
     m_control.request_dodge();
   }
 }
 
 void CommanderViewModel::jump() {
+  const auto frame_lock = m_host.lock_frame();
   if (active()) {
     m_control.request_jump();
   }
 }
 
 void CommanderViewModel::cycle_lock_on() {
+  const auto frame_lock = m_host.lock_frame();
   auto* world = m_context.world;
   if (!active() || world == nullptr) {
     return;
@@ -421,24 +442,28 @@ void CommanderViewModel::cycle_lock_on() {
 }
 
 void CommanderViewModel::special_action() {
+  const auto frame_lock = m_host.lock_frame();
   if (active()) {
     m_control.special_action();
   }
 }
 
 void CommanderViewModel::vanguard_rush() {
+  const auto frame_lock = m_host.lock_frame();
   if (active()) {
     m_control.request_vanguard_rush();
   }
 }
 
 void CommanderViewModel::second_wind() {
+  const auto frame_lock = m_host.lock_frame();
   if (active()) {
     m_control.request_second_wind();
   }
 }
 
 void CommanderViewModel::toggle_camera_mode() {
+  const auto frame_lock = m_host.lock_frame();
   auto* world = m_context.world;
   if (!active() || world == nullptr) {
     return;
@@ -448,6 +473,7 @@ void CommanderViewModel::toggle_camera_mode() {
 }
 
 void CommanderViewModel::toggle_weapon_stance() {
+  const auto frame_lock = m_host.lock_frame();
   auto* world = m_context.world;
   if (!active() || world == nullptr) {
     return;
@@ -463,6 +489,7 @@ auto CommanderViewModel::is_placing_rally() const -> bool {
 }
 
 void CommanderViewModel::start_flag_rally() {
+  const auto frame_lock = m_host.lock_frame();
   const auto effects = m_mode->begin_commander_flag_rally(
       {.world = m_context.world,
        .local_commander = find_local_commander(),
@@ -490,6 +517,7 @@ void CommanderViewModel::start_flag_rally() {
 }
 
 void CommanderViewModel::confirm_flag_rally(qreal sx, qreal sy) {
+  const auto frame_lock = m_host.lock_frame();
   const auto& viewport = *m_context.viewport;
   const auto effects = m_mode->confirm_commander_flag_rally(
       {.world = m_context.world,
@@ -517,6 +545,7 @@ void CommanderViewModel::confirm_flag_rally(qreal sx, qreal sy) {
 }
 
 void CommanderViewModel::cancel_flag_rally() {
+  const auto frame_lock = m_host.lock_frame();
   const auto effects = m_mode->cancel_commander_flag_rally(
       (m_context.cursor != nullptr ? m_context.cursor->mode() : CursorMode::Normal));
   if (effects.clear_rally_preview) {
@@ -544,6 +573,7 @@ void CommanderViewModel::begin_barracks_rally() {
 }
 
 void CommanderViewModel::confirm_barracks_rally(qreal sx, qreal sy) {
+  const auto frame_lock = m_host.lock_frame();
   const auto effects = m_mode->confirm_barracks_rally_placement(
       {.world = m_context.world,
        .production_manager = m_context.production,
@@ -562,6 +592,7 @@ void CommanderViewModel::confirm_barracks_rally(qreal sx, qreal sy) {
 }
 
 void CommanderViewModel::cancel_barracks_rally() {
+  const auto frame_lock = m_host.lock_frame();
   const auto effects = m_mode->cancel_barracks_rally_placement(
       (m_context.cursor != nullptr ? m_context.cursor->mode() : CursorMode::Normal));
   if (effects.clear_rally_preview) {
@@ -596,7 +627,12 @@ void CommanderViewModel::update_rally_preview_at(qreal sx, qreal sy) {
       picking->screen_to_ground(QPointF(sx, sy), *camera, width, height, hit)) {
     m_rally_preview = Game::Systems::NavGrid::snap_to_walkable_ground(hit);
   } else if (cursor->mode() == CursorMode::PlaceBarracksRally &&
-             picking->screen_to_surface(QPointF(sx, sy), *camera, width, height, hit)) {
+             picking->screen_to_surface(m_context.session->terrain(),
+                                        QPointF(sx, sy),
+                                        *camera,
+                                        width,
+                                        height,
+                                        hit)) {
     m_rally_preview = hit;
   }
 }
@@ -720,17 +756,33 @@ void CommanderViewModel::reset_for_new_match() {
   m_saved_rts_selection_ids.clear();
   m_rts_follow_selection_snapshot.reset();
   m_rally_preview.reset();
-  m_damage_events.clear();
+  {
+    const std::lock_guard<std::mutex> damage_lock(m_damage_events_mutex);
+    m_damage_events.clear();
+  }
 }
 
 auto CommanderViewModel::status() const -> QVariantMap {
+  const auto snapshot = m_status.read();
+  return snapshot ? *snapshot : QVariantMap{};
+}
+
+void CommanderViewModel::publish_frame() {
+  if (!active()) {
+    if (!m_status_published_empty) {
+      m_status.publish(QVariantMap{});
+      m_status_published_empty = true;
+    }
+    return;
+  }
+  m_status_published_empty = false;
   App::Core::CommanderStatusInput input;
   input.world = m_context.world;
   input.controlled_commander_id = m_controlled_commander_id;
   input.dodge_active = m_control.is_dodge_rolling();
   input.locked_target_id = m_control.locked_target_id();
   input.rally_placing = is_placing_rally();
-  return App::Core::build_controlled_commander_status(input);
+  m_status.publish(App::Core::build_controlled_commander_status(input));
 }
 
 auto CommanderViewModel::record_rpg_hit(const Engine::Core::CombatHitEvent& event)
@@ -764,6 +816,7 @@ auto CommanderViewModel::record_rpg_hit(const Engine::Core::CombatHitEvent& even
   const int lane = static_cast<int>(m_damage_event_sequence % 5U) - 2;
   ++m_damage_event_sequence;
 
+  const std::lock_guard<std::mutex> damage_lock(m_damage_events_mutex);
   if (static_cast<int>(m_damage_events.size()) >= k_max_damage_events) {
     m_damage_events.erase(m_damage_events.begin());
   }
@@ -778,9 +831,15 @@ auto CommanderViewModel::record_rpg_hit(const Engine::Core::CombatHitEvent& even
 }
 
 auto CommanderViewModel::pop_damage_events() -> QVariantList {
+  std::vector<DamageEvent> events;
+  {
+    const std::lock_guard<std::mutex> damage_lock(m_damage_events_mutex);
+    events.swap(m_damage_events);
+  }
+
   QVariantList list;
-  list.reserve(static_cast<int>(m_damage_events.size()));
-  for (const auto& event : m_damage_events) {
+  list.reserve(static_cast<int>(events.size()));
+  for (const auto& event : events) {
     QVariantMap entry;
     entry["x"] = static_cast<double>(event.wx);
     entry["y"] = static_cast<double>(event.wy);
@@ -791,7 +850,6 @@ auto CommanderViewModel::pop_damage_events() -> QVariantList {
     entry["killingBlow"] = event.killing_blow;
     list.append(entry);
   }
-  m_damage_events.clear();
   return list;
 }
 

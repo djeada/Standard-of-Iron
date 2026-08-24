@@ -7,6 +7,7 @@
 #include <set>
 #include <utility>
 
+#include "game/session/session_context.h"
 #include "tools/balance_sim/balance_fixture.h"
 #include "tools/balance_sim/balance_report.h"
 #include "tools/balance_sim/battle_simulation.h"
@@ -49,9 +50,11 @@ auto run(Balance::Fixture fixture, int seeds) -> Balance::FixtureSummary {
   std::vector<Balance::BattleResult> results;
   for (int seed = 0; seed < fixture.seeds; ++seed) {
     const auto value = static_cast<std::uint32_t>(seed) * 0x9E3779B9U + 1U;
-    results.push_back(Balance::run_battle(fixture, value, false));
+    results.push_back(Balance::run_battle(
+        Game::Session::SessionContext::active(), fixture, value, false));
     if (fixture.mirror_sides) {
-      results.push_back(Balance::run_battle(fixture, value, true));
+      results.push_back(Balance::run_battle(
+          Game::Session::SessionContext::active(), fixture, value, true));
     }
   }
   return Balance::summarize(fixture, std::move(results));
@@ -59,7 +62,9 @@ auto run(Balance::Fixture fixture, int seeds) -> Balance::FixtureSummary {
 
 class BalanceSimTest : public ::testing::Test {
 protected:
-  static void SetUpTestSuite() { Balance::initialize_simulation_environment(); }
+  static void SetUpTestSuite() {
+    Balance::initialize_simulation_environment(Game::Session::SessionContext::active());
+  }
 };
 
 TEST_F(BalanceSimTest, EveryShippedFixtureParses) {
@@ -73,8 +78,10 @@ TEST_F(BalanceSimTest, EveryShippedFixtureParses) {
 
 TEST_F(BalanceSimTest, SameSeedProducesTheSameBattle) {
   const auto fixture = load(QStringLiteral("mirror_swordsman"));
-  const auto first = Balance::run_battle(fixture, 12345U, false);
-  const auto second = Balance::run_battle(fixture, 12345U, false);
+  const auto first = Balance::run_battle(
+      Game::Session::SessionContext::active(), fixture, 12345U, false);
+  const auto second = Balance::run_battle(
+      Game::Session::SessionContext::active(), fixture, 12345U, false);
 
   EXPECT_EQ(first.outcome, second.outcome);
   EXPECT_FLOAT_EQ(first.elapsed_seconds, second.elapsed_seconds);
@@ -89,7 +96,9 @@ TEST_F(BalanceSimTest, DifferentSeedsProduceDifferentBattles) {
   const auto fixture = load(QStringLiteral("faction_line_rome_vs_carthage"));
   std::set<float> durations;
   for (const std::uint32_t seed : {1U, 7U, 999U, 4242U, 65537U}) {
-    durations.insert(Balance::run_battle(fixture, seed, false).elapsed_seconds);
+    durations.insert(Balance::run_battle(
+                         Game::Session::SessionContext::active(), fixture, seed, false)
+                         .elapsed_seconds);
   }
   EXPECT_GT(durations.size(), 1U)
       << "every seed produced an identical battle; the seed no longer varies anything";

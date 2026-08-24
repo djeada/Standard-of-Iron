@@ -29,6 +29,7 @@
 #include "component.h"
 #include "core/entity.h"
 #include "core/system.h"
+#include "movement_trace.h"
 
 namespace Engine::Core {
 
@@ -47,8 +48,6 @@ namespace {
 constexpr float k_motion_displacement_epsilon_sq = 1.0e-6F;
 constexpr float k_motion_velocity_epsilon_sq = 1.0e-4F;
 constexpr float k_motion_stall_speed = 0.15F;
-constexpr float k_motion_stall_grace_seconds = 0.4F;
-constexpr float k_motion_no_progress_seconds = 0.6F;
 [[nodiscard]] auto
 forward_xz_from_yaw(float yaw_degrees) noexcept -> std::pair<float, float> {
   float const yaw_rad = yaw_degrees * std::numbers::pi_v<float> / 180.0F;
@@ -109,23 +108,39 @@ attack_target_is_in_range(World& world,
 
 struct MotionPresentationSample {
   bool displaced{false};
-  bool stalled{false};
   bool has_component_velocity{false};
-  bool has_navigation_intent{false};
-  bool direct_control_moving{false};
-  bool builder_bypass{false};
-  bool has_chase_intent{false};
-  bool has_active_navigation_segment{false};
+
+  bool direct_control_velocity{false};
+
+  bool wants_locomotion{false};
   bool is_running{false};
+  bool forced_displacement{false};
+  MovementOrderState order_state{MovementOrderState::Idle};
 };
 
 [[nodiscard]] auto resolve_motion_presentation_state(
     const MotionPresentationSample& sample) noexcept -> MotionPresentationState {
-  bool const moving = sample.displaced || sample.direct_control_moving ||
-                      sample.builder_bypass || sample.has_component_velocity ||
-                      (sample.has_chase_intent && sample.has_active_navigation_segment);
-  if (!moving || sample.stalled) {
-    return MotionPresentationState::Idle;
+  if (!sample.displaced && !sample.has_component_velocity &&
+      !sample.direct_control_velocity) {
+    switch (sample.order_state) {
+    case MovementOrderState::Turning:
+      return MotionPresentationState::Turning;
+    case MovementOrderState::LocallyBlocked:
+    case MovementOrderState::Yielding:
+      return MotionPresentationState::Yielding;
+    case MovementOrderState::Repathing:
+    case MovementOrderState::Recovering:
+      return MotionPresentationState::Recovering;
+    default:
+
+      if (!sample.wants_locomotion) {
+        return MotionPresentationState::Idle;
+      }
+      break;
+    }
+  }
+  if (sample.forced_displacement) {
+    return MotionPresentationState::ForcedDisplacement;
   }
   return sample.is_running ? MotionPresentationState::Run
                            : MotionPresentationState::Walk;
@@ -149,10 +164,122 @@ void begin_motion_presentation_frame(World& world, float delta_time) {
     motion->previous_x = transform->position.x;
     motion->previous_y = transform->position.y;
     motion->previous_z = transform->position.z;
+    motion->previous_rotation_y = transform->rotation.y;
     motion->tick_delta_time = std::max(0.0F, delta_time);
     motion->snapshot_valid = false;
     motion->initialized = true;
   }
+}
+
+void publish_movement_trace_frame(World& world) {
+  auto& trace = MovementTrace::instance();
+  trace.configure_from_environment();
+  if (!trace.enabled()) {
+    return;
+  }
+
+  world.each<MovementFactsComponent, TransformComponent, UnitComponent>(
+      [&world, &trace](EntityID id,
+                       MovementFactsComponent& facts,
+                       TransformComponent& transform,
+                       UnitComponent& unit) {
+        Entity* entity = world.get_entity(id);
+        if (entity == nullptr) {
+          return;
+        }
+        auto const* movement = entity->get_component<MovementComponent>();
+        auto const* motion = entity->get_component<MotionPresentationComponent>();
+
+        MovementTroopSample sample;
+        sample.session_id = world.instance_id();
+        sample.tick = world.tick_id();
+        sample.entity_id = id;
+        sample.owner_id = unit.owner_id;
+        sample.troop_type = static_cast<std::uint8_t>(unit.spawn_type);
+        sample.state = facts.progress.state;
+        sample.root_x = transform.position.x;
+        sample.root_z = transform.position.z;
+        sample.root_yaw = transform.rotation.y;
+        if (facts.previous_root.valid) {
+          sample.previous_root_x = facts.previous_root.x;
+          sample.previous_root_z = facts.previous_root.z;
+          sample.previous_root_yaw = facts.previous_root.yaw;
+        } else if (motion != nullptr) {
+          sample.previous_root_x = motion->previous_x;
+          sample.previous_root_z = motion->previous_z;
+          sample.previous_root_yaw = motion->previous_rotation_y;
+        }
+        if (motion != nullptr) {
+          sample.presentation_valid = world.presentation_enabled();
+          sample.presentation_state = static_cast<std::uint8_t>(motion->state);
+          sample.presentation_speed = motion->speed;
+          sample.presentation_dir_x = motion->direction_x;
+          sample.presentation_dir_z = motion->direction_z;
+        }
+        sample.command_sequence = facts.route.command_sequence;
+        sample.route_id = facts.route.route_id;
+        sample.route_revision = facts.route.route_revision;
+        sample.topology_revision = facts.route.topology_revision;
+        sample.lane_offset = facts.route.lane_offset;
+        sample.lane_scale = facts.route.lane_scale;
+        sample.cohesion_pace = facts.route.cohesion_pace;
+        sample.requested_goal_x = facts.route.requested_goal_x;
+        sample.requested_goal_z = facts.route.requested_goal_z;
+        sample.resolved_goal_x = facts.route.resolved_goal_x;
+        sample.resolved_goal_z = facts.route.resolved_goal_z;
+        if (movement != nullptr) {
+          sample.waypoint_index =
+              static_cast<std::uint32_t>(movement->get_path_index());
+          sample.waypoint_count =
+              static_cast<std::uint32_t>(movement->get_path().size());
+          sample.waypoint_x = movement->get_target_x();
+          sample.waypoint_z = movement->get_target_y();
+          sample.envelope_radius = movement->get_navigation_clearance();
+        }
+        sample.lookahead_x = facts.desired.lookahead_x;
+        sample.lookahead_z = facts.desired.lookahead_z;
+        sample.tangent_x = facts.desired.tangent_x;
+        sample.tangent_z = facts.desired.tangent_z;
+        sample.desired_vx = facts.desired.velocity_x;
+        sample.desired_vz = facts.desired.velocity_z;
+        sample.avoidance_dx = facts.steering.correction_x;
+        sample.avoidance_dz = facts.steering.correction_z;
+        sample.steered_vx = facts.steering.velocity_x;
+        sample.steered_vz = facts.steering.velocity_z;
+        sample.neighbor_count = facts.steering.neighbor_count;
+        sample.nearest_time_to_collision = facts.steering.nearest_time_to_collision;
+        sample.passing_side = facts.steering.passing_side;
+        sample.solver_result = static_cast<std::uint8_t>(facts.steering.result);
+        sample.queue_owner = facts.steering.queue_owner;
+        sample.has_contact = facts.motor.has_contact;
+        sample.contact_nx = facts.motor.contact_nx;
+        sample.contact_nz = facts.motor.contact_nz;
+        sample.accepted_dx = facts.motor.accepted_dx;
+        sample.accepted_dz = facts.motor.accepted_dz;
+        sample.accepted_vx = facts.motor.accepted_vx;
+        sample.accepted_vz = facts.motor.accepted_vz;
+        sample.rejected_dx = facts.motor.rejected_dx;
+        sample.rejected_dz = facts.motor.rejected_dz;
+        sample.penetration_depth = facts.motor.penetration_depth;
+        sample.remaining_arclength = facts.progress.remaining_arclength;
+        sample.route_advance = facts.progress.route_advance;
+        sample.lateral_route_error = facts.progress.lateral_route_error;
+        sample.no_progress_seconds = facts.progress.no_progress_seconds;
+        sample.order_seconds = facts.progress.order_seconds;
+        sample.blocked_steps = facts.progress.blocked_steps;
+        sample.repath_count = facts.progress.repath_count;
+        sample.repath_reason = facts.progress.repath_reason;
+        sample.traversal_mode = facts.traversal.mode;
+        sample.portal_id = facts.traversal.portal_id;
+        sample.current_files = facts.traversal.current_files;
+        sample.target_files = facts.traversal.target_files;
+        sample.transition_progress = facts.traversal.transition_progress;
+        sample.mode_dwell_seconds = facts.traversal.mode_dwell_seconds;
+        sample.soldier_body_radius = facts.traversal.soldier_body_radius;
+        sample.corridor_half_width = facts.traversal.corridor_half_width;
+        sample.direction_source = facts.direction_source;
+        trace.record(sample);
+      });
 }
 
 void finalize_motion_presentation_frame(World& world, float delta_time) {
@@ -161,7 +288,7 @@ void finalize_motion_presentation_frame(World& world, float delta_time) {
       [&world, delta_time, safe_dt](EntityID id,
                                     MotionPresentationComponent& motion_value,
                                     TransformComponent& transform_value,
-                                    UnitComponent& unit_value) {
+                                    UnitComponent&) {
         Entity* entity_ptr = world.get_entity(id);
         if (entity_ptr == nullptr) {
           return;
@@ -169,8 +296,6 @@ void finalize_motion_presentation_frame(World& world, float delta_time) {
         Entity& entity = *entity_ptr;
         auto* motion = &motion_value;
         auto* transform = &transform_value;
-        auto* unit = &unit_value;
-
         auto* movement = entity.get_component<MovementComponent>();
         auto* attack = entity.get_component<AttackComponent>();
         auto* attack_target = entity.get_component<AttackTargetComponent>();
@@ -178,16 +303,22 @@ void finalize_motion_presentation_frame(World& world, float delta_time) {
         auto* builder_prod = entity.get_component<BuilderProductionComponent>();
         auto* stamina = entity.get_component<StaminaComponent>();
 
-        float const displacement_x = transform->position.x - motion->previous_x;
-        float const displacement_z = transform->position.z - motion->previous_z;
+        float const observed_displacement_x =
+            transform->position.x - motion->previous_x;
+        float const observed_displacement_z =
+            transform->position.z - motion->previous_z;
+
+        auto* facts = entity.get_component<MovementFactsComponent>();
+        bool const motor_published = facts != nullptr && facts->motor.valid;
+        float const displacement_x =
+            motor_published ? facts->motor.accepted_dx : observed_displacement_x;
+        float const displacement_z =
+            motor_published ? facts->motor.accepted_dz : observed_displacement_z;
         float const displacement_sq =
             displacement_x * displacement_x + displacement_z * displacement_z;
-
-        float movement_speed_sq = 0.0F;
-        if (movement != nullptr) {
-          movement_speed_sq = movement->get_vx() * movement->get_vx() +
-                              movement->get_vz() * movement->get_vz();
-        }
+        float const motion_vx = motor_published ? facts->motor.accepted_vx : 0.0F;
+        float const motion_vz = motor_published ? facts->motor.accepted_vz : 0.0F;
+        float const movement_speed_sq = motion_vx * motion_vx + motion_vz * motion_vz;
         bool const has_component_velocity =
             movement_speed_sq > k_motion_velocity_epsilon_sq;
 
@@ -235,21 +366,16 @@ void finalize_motion_presentation_frame(World& world, float delta_time) {
         } else {
           motion->stalled_seconds += std::max(0.0F, delta_time);
         }
-        float const no_ground_gained = (movement != nullptr && !direct_control_moving)
-                                           ? movement->get_stuck_time()
-                                           : 0.0F;
-
         MotionPresentationSample sample{};
         sample.displaced = displaced;
-        sample.stalled = motion->stalled_seconds >= k_motion_stall_grace_seconds ||
-                         no_ground_gained >= k_motion_no_progress_seconds;
         sample.has_component_velocity = has_component_velocity;
-        sample.has_navigation_intent = has_navigation_intent;
-        sample.direct_control_moving = direct_control_moving;
-        sample.builder_bypass = builder_bypass;
-        sample.has_chase_intent = motion->has_chase_intent;
-        sample.has_active_navigation_segment = has_active_navigation_segment;
+
+        sample.direct_control_velocity = direct_control_velocity;
+        sample.wants_locomotion = wants_locomotion;
         sample.is_running = stamina != nullptr && stamina->is_running;
+        sample.forced_displacement = displaced && !motor_published;
+        sample.order_state =
+            facts != nullptr ? facts->progress.state : MovementOrderState::Idle;
 
         const MotionPresentationState next_state =
             resolve_motion_presentation_state(sample);
@@ -264,9 +390,9 @@ void finalize_motion_presentation_frame(World& world, float delta_time) {
 
         motion->displacement_x = displacement_x;
         motion->displacement_z = displacement_z;
-        if (has_component_velocity && movement != nullptr) {
-          motion->velocity_x = movement->get_vx();
-          motion->velocity_z = movement->get_vz();
+        if (has_component_velocity) {
+          motion->velocity_x = motion_vx;
+          motion->velocity_z = motion_vz;
           motion->speed = std::sqrt(movement_speed_sq);
 
           if (displaced) {
@@ -284,12 +410,7 @@ void finalize_motion_presentation_frame(World& world, float delta_time) {
         } else {
           motion->velocity_x = 0.0F;
           motion->velocity_z = 0.0F;
-          motion->speed = next_state != MotionPresentationState::Idle
-                              ? std::max(0.1F, unit->speed)
-                              : 0.0F;
-          if (next_state == MotionPresentationState::Run && stamina != nullptr) {
-            motion->speed *= StaminaComponent::k_run_speed_multiplier;
-          }
+          motion->speed = 0.0F;
         }
 
         motion->has_movement_target = false;
@@ -316,35 +437,45 @@ void finalize_motion_presentation_frame(World& world, float delta_time) {
           }
         }
 
-        if (has_component_velocity && movement != nullptr) {
-          motion->direction_x = movement->get_vx();
-          motion->direction_z = movement->get_vz();
+        MovementDirectionSource direction_source = MovementDirectionSource::None;
+        if (has_component_velocity) {
+          motion->direction_x = motion_vx;
+          motion->direction_z = motion_vz;
+          direction_source = motor_published ? MovementDirectionSource::AcceptedVelocity
+                                             : MovementDirectionSource::DesiredVelocity;
         } else if (displaced) {
           motion->direction_x = displacement_x;
           motion->direction_z = displacement_z;
         } else if (direct_control_velocity) {
           motion->direction_x = commander->fpv_motion_vx;
           motion->direction_z = commander->fpv_motion_vz;
-        } else if (motion->has_movement_target) {
-          motion->direction_x = motion->movement_target_x - transform->position.x;
-          motion->direction_z = motion->movement_target_z - transform->position.z;
+          direction_source = MovementDirectionSource::AcceptedVelocity;
+        } else if (next_state == MotionPresentationState::Turning && facts != nullptr &&
+                   facts->desired.valid) {
+          motion->direction_x = facts->desired.tangent_x;
+          motion->direction_z = facts->desired.tangent_z;
+          direction_source = MovementDirectionSource::RouteTangent;
         } else {
           auto [forward_x, forward_z] = forward_xz_from_yaw(transform->rotation.y);
           motion->direction_x = forward_x;
           motion->direction_z = forward_z;
+          direction_source = MovementDirectionSource::BodyForward;
         }
         normalize_xz(motion->direction_x, motion->direction_z);
+        if (facts != nullptr) {
+          facts->direction_source = direction_source;
+        }
 
         if (direct_control_moving) {
           motion->source = MotionPresentationSource::DirectControl;
         } else if (builder_bypass) {
           motion->source = MotionPresentationSource::BuilderBypass;
+        } else if (displaced && !motor_published) {
+          motion->source = MotionPresentationSource::ForcedDisplacement;
         } else if (motion->has_chase_intent) {
           motion->source = MotionPresentationSource::Chase;
         } else if (has_navigation_intent) {
           motion->source = MotionPresentationSource::Navigation;
-        } else if (displaced) {
-          motion->source = MotionPresentationSource::ForcedDisplacement;
         } else {
           motion->source = MotionPresentationSource::None;
         }
@@ -713,6 +844,7 @@ void copy_authoritative_snapshot_components(const Entity& source, Entity& destin
   copy_snapshot_component<UnitComponent>(source, destination);
   copy_snapshot_component<RenderableComponent>(source, destination);
   copy_snapshot_component<MovementComponent>(source, destination);
+  copy_snapshot_component<MovementFactsComponent>(source, destination);
   copy_snapshot_component<BuildingComponent>(source, destination);
   copy_snapshot_component<PendingRemovalComponent>(source, destination);
   copy_snapshot_component<AttackComponent>(source, destination);
@@ -733,6 +865,7 @@ void copy_authoritative_snapshot_components(const Entity& source, Entity& destin
   copy_snapshot_component<HoldModeComponent>(source, destination);
   copy_snapshot_component<FormationModeComponent>(source, destination);
   copy_snapshot_component<UnitLayoutStateComponent>(source, destination);
+  copy_snapshot_component<UnitTraversalLayoutStateComponent>(source, destination);
   copy_snapshot_component<SpearBraceComponent>(source, destination);
   copy_snapshot_component<StaminaComponent>(source, destination);
   copy_snapshot_component<MoraleComponent>(source, destination);
@@ -770,14 +903,14 @@ void copy_render_components(const Entity& source, Entity& destination) {
   copy_authoritative_snapshot_components(source, destination);
   copy_presentation_snapshot_components(source, destination);
 
-  auto const* motion = source.get_component<MotionPresentationComponent>();
+  auto const* traversal = source.get_component<UnitTraversalLayoutStateComponent>();
   auto const* formation = source.get_component<FormationPresentationComponent>();
   auto* transform = destination.get_component<TransformComponent>();
   bool const formation_handles_squeeze =
       formation != nullptr && formation->soldiers.size() > 1U;
-  if (transform != nullptr && motion != nullptr && motion->traversal_squeeze_active &&
+  if (transform != nullptr && traversal != nullptr && traversal->active &&
       !formation_handles_squeeze) {
-    transform->scale.x *= std::clamp(motion->traversal_lateral_scale, 0.1F, 1.0F);
+    transform->scale.x *= std::clamp(traversal->lateral_scale, 0.1F, 1.0F);
   }
 }
 
@@ -794,6 +927,7 @@ void render_hash_float(std::uint64_t& seed, float value) {
 auto render_entity_is_stable(const Entity& entity) -> bool {
   auto const* movement = entity.get_component<MovementComponent>();
   auto const* motion = entity.get_component<MotionPresentationComponent>();
+  auto const* traversal = entity.get_component<UnitTraversalLayoutStateComponent>();
   auto const* creature = entity.get_component<CreaturePresentationComponent>();
   auto const* target = entity.get_component<AttackTargetComponent>();
   auto const* combat = entity.get_component<CombatStateComponent>();
@@ -802,8 +936,8 @@ auto render_entity_is_stable(const Entity& entity) -> bool {
   bool const moving = (movement != nullptr &&
                        (movement->get_has_target() || movement->has_waypoints() ||
                         std::hypot(movement->get_vx(), movement->get_vz()) > 0.001F)) ||
-                      (motion != nullptr &&
-                       (motion->has_locomotion() || motion->traversal_squeeze_active));
+                      (motion != nullptr && motion->has_locomotion()) ||
+                      (traversal != nullptr && traversal->active);
   bool const active_creature =
       creature != nullptr &&
       (creature->combat_active || creature->is_constructing || creature->is_healing ||
@@ -885,6 +1019,19 @@ auto render_entity_signature(const Entity& entity) -> std::uint64_t {
     render_hash_combine(signature, layout->layout_id);
     render_hash_float(signature, layout->transition_progress);
   }
+  if (auto const* traversal =
+          entity.get_component<UnitTraversalLayoutStateComponent>()) {
+    render_hash_combine(signature, traversal->route_id);
+    render_hash_combine(signature, traversal->portal_id);
+    render_hash_combine(signature, static_cast<std::uint64_t>(traversal->mode));
+    render_hash_combine(signature, static_cast<std::uint64_t>(traversal->target_mode));
+    render_hash_combine(signature, traversal->current_files);
+    render_hash_combine(signature, traversal->target_files);
+    render_hash_float(signature, traversal->transition_curve);
+    render_hash_float(signature, traversal->lateral_scale);
+    render_hash_combine(signature, traversal->root_motion_blocked ? 1U : 0U);
+    render_hash_combine(signature, traversal->active ? 1U : 0U);
+  }
   if (auto const* morale = entity.get_component<MoraleComponent>()) {
     render_hash_float(signature, morale->morale);
     render_hash_float(signature, morale->commander_aura_bonus);
@@ -936,8 +1083,13 @@ World::World()
     : World(true, false) {
 }
 
+namespace {
+std::atomic<std::uint64_t> g_next_world_instance_id{1};
+} // namespace
+
 World::World(bool presentation_enabled, bool render_snapshot)
-    : m_presentation_enabled(presentation_enabled)
+    : m_instance_id(g_next_world_instance_id.fetch_add(1, std::memory_order_relaxed))
+    , m_presentation_enabled(presentation_enabled)
     , m_is_render_snapshot(render_snapshot) {
   m_registry.set_component_change_callback([this](EntityID entity_id,
                                                   ComponentTypeId type_id,
@@ -1208,6 +1360,7 @@ void World::update(float delta_time) {
     finalize_motion_presentation_frame(*this, delta_time);
     publish_creature_presentation_frame(*this);
   }
+  publish_movement_trace_frame(*this);
   if (!m_is_render_snapshot &&
       m_render_snapshots_requested.load(std::memory_order_acquire)) {
     publish_render_snapshot();

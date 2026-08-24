@@ -92,9 +92,14 @@ struct UnitLayoutQuery {
   int rows{1};
   int cols{1};
   int count{0};
+  int forced_files{0};
   float spacing{1.0F};
   std::uint32_t seed{0U};
   float formed_ratio{1.0F};
+
+  UnitLayoutId blend_from{k_invalid_layout};
+
+  float blend_ratio{1.0F};
 };
 
 struct RankSlot {
@@ -149,9 +154,14 @@ public:
           int max_per_row,
           float spacing,
           std::uint32_t seed,
-          float formed_ratio = 1.0F) const -> std::vector<SoldierOffset>;
+          float formed_ratio = 1.0F,
+          UnitLayoutId blend_from = k_invalid_layout,
+          float blend_ratio = 1.0F) const -> std::vector<SoldierOffset>;
 
   [[nodiscard]] static auto rows_for(int count, int max_per_row) -> int;
+
+private:
+  [[nodiscard]] auto raw_offset(const UnitLayoutQuery& query) const -> SoldierOffset;
 };
 
 [[nodiscard]] auto apply_state_modifier(const UnitLayoutStyle& style,

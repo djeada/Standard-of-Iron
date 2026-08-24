@@ -25,13 +25,8 @@ using FrontMap = std::unordered_map<Engine::Core::EntityID,
 
 constexpr float k_target_switch_hysteresis = 0.35F;
 
-constexpr float k_max_reposition_speed = 1.8F;
 constexpr float k_contact_yaw_hold_seconds = 0.6F;
 constexpr float k_disengage_turn_degrees = 120.0F;
-constexpr float k_tight_file_spacing_scale = 0.72F;
-constexpr float k_tight_rank_spacing_scale = 0.82F;
-constexpr float k_tight_body_spacing_scale = 1.08F;
-
 struct PairEvaluation {
   std::uint64_t signature{0};
   FormationCombat::ContactGeometry geometry;
@@ -571,71 +566,8 @@ void publish_formation_presentation(Engine::Core::World& world, float delta_time
         entity->get_component<Engine::Core::AttackTargetComponent>();
     auto const* contact =
         entity->get_component<Engine::Core::FormationContactComponent>();
-    auto const* motion =
-        entity->get_component<Engine::Core::MotionPresentationComponent>();
-    float const traversal_lateral_scale =
-        motion != nullptr && motion->traversal_squeeze_active
-            ? std::clamp(motion->traversal_lateral_scale, 0.1F, 1.0F)
-            : 1.0F;
-    bool traversal_reflows = false;
-    int traversal_files = 1;
-    int traversal_rows = 1;
-    float traversal_file_spacing = layout.spacing;
-    float traversal_rank_spacing = layout.spacing;
-    float traversal_min_lateral_scale = k_tight_file_spacing_scale;
-    bool const tight_corridor_active =
-        motion != nullptr && motion->traversal_target_lateral_scale < 0.999F;
-    if (tight_corridor_active && layout.live_slots.size() > 1U) {
-      int normal_files = 1;
-      for (auto const& slot : layout.live_slots) {
-        int const files_in_rank = static_cast<int>(std::count_if(
-            layout.live_slots.begin(),
-            layout.live_slots.end(),
-            [&slot](auto const& candidate) { return candidate.row == slot.row; }));
-        normal_files = std::max(normal_files, files_in_rank);
-      }
-
-      float const body_diameter = layout.body_radius * 2.0F;
-      float minimum_authored_file_spacing = std::numeric_limits<float>::infinity();
-      for (std::size_t first = 0; first < layout.live_slots.size(); ++first) {
-        for (std::size_t second = first + 1; second < layout.live_slots.size();
-             ++second) {
-          auto const& left = layout.live_slots[first];
-          auto const& right = layout.live_slots[second];
-          if (left.row != right.row) {
-            continue;
-          }
-          float const separation = std::abs(left.local_x - right.local_x);
-          if (separation > 0.01F) {
-            minimum_authored_file_spacing =
-                std::min(minimum_authored_file_spacing, separation);
-          }
-        }
-      }
-      if (std::isfinite(minimum_authored_file_spacing)) {
-        traversal_min_lateral_scale = std::clamp(
-            body_diameter * k_tight_body_spacing_scale / minimum_authored_file_spacing,
-            k_tight_file_spacing_scale,
-            1.0F);
-      }
-      traversal_file_spacing = std::max(body_diameter * k_tight_body_spacing_scale,
-                                        layout.spacing * k_tight_file_spacing_scale);
-      traversal_rank_spacing = std::max(body_diameter * k_tight_body_spacing_scale,
-                                        layout.spacing * k_tight_rank_spacing_scale);
-      float const available_center_span =
-          std::max(0.0F, motion->traversal_available_half_width * 2.0F - body_diameter);
-      int const files_that_fit =
-          1 + static_cast<int>(std::floor(available_center_span /
-                                          std::max(0.05F, traversal_file_spacing)));
-      traversal_files = std::clamp(
-          files_that_fit,
-          1,
-          std::min(normal_files, static_cast<int>(layout.live_slots.size())));
-      traversal_reflows = traversal_files < normal_files;
-      traversal_rows =
-          (static_cast<int>(layout.live_slots.size()) + traversal_files - 1) /
-          traversal_files;
-    }
+    auto const* traversal =
+        entity->get_component<Engine::Core::UnitTraversalLayoutStateComponent>();
     Engine::Core::EntityID const outgoing_target =
         target_ref != nullptr ? target_ref->target_id : 0U;
     bool const outgoing_melee =
@@ -724,7 +656,6 @@ void publish_formation_presentation(Engine::Core::World& world, float delta_time
     std::size_t const previous_directive_count = directives.size();
     bool soldiers_changed = previous_directive_count != layout.all_slots.size();
     directives.resize(layout.all_slots.size());
-    int traversal_live_ordinal = 0;
     for (auto const& original_slot : layout.all_slots) {
       auto const* live_slot = find_live_slot(layout, original_slot.index);
       std::optional<Engine::Core::FormationSoldierPresentation> previous_value;
@@ -741,31 +672,20 @@ void publish_formation_presentation(Engine::Core::World& world, float delta_time
           live_slot != nullptr ? live_slot->local_x : original_slot.local_x;
       directive.local_z =
           live_slot != nullptr ? live_slot->local_z : original_slot.local_z;
-      if (live_slot != nullptr && traversal_reflows) {
-        int const rank_from_front = traversal_live_ordinal / traversal_files;
-        int const col = traversal_live_ordinal % traversal_files;
-        int const files_in_rank = std::min(traversal_files,
-                                           static_cast<int>(layout.live_slots.size()) -
-                                               rank_from_front * traversal_files);
-        int const row = traversal_rows - 1 - rank_from_front;
-        directive.row = static_cast<std::uint16_t>(row);
-        directive.col = static_cast<std::uint16_t>(col);
-        directive.local_x = (static_cast<float>(col) -
-                             (static_cast<float>(files_in_rank) - 1.0F) * 0.5F) *
-                            traversal_file_spacing;
-        directive.local_z = (static_cast<float>(row) -
-                             (static_cast<float>(traversal_rows) - 1.0F) * 0.5F) *
-                            traversal_rank_spacing;
-      } else if (live_slot != nullptr) {
-
-        float const safe_scale =
-            motion != nullptr && motion->traversal_squeeze_active
-                ? std::max(traversal_lateral_scale, traversal_min_lateral_scale)
-                : 1.0F;
-        directive.local_x *= safe_scale;
-      }
-      if (live_slot != nullptr) {
-        ++traversal_live_ordinal;
+      auto const* traversal_slot =
+          traversal != nullptr ? traversal->slot_for(original_slot.index) : nullptr;
+      if (live_slot != nullptr && traversal != nullptr) {
+        if (traversal_slot != nullptr) {
+          directive.row = traversal_slot->row;
+          directive.col = traversal_slot->col;
+          directive.previous_local_x = traversal_slot->previous_local_x;
+          directive.previous_local_z = traversal_slot->previous_local_z;
+          directive.local_x = traversal_slot->current_local_x;
+          directive.local_z = traversal_slot->current_local_z;
+          directive.relocation_velocity_x = traversal_slot->velocity_x;
+          directive.relocation_velocity_z = traversal_slot->velocity_z;
+          directive.relocation_blocked = traversal_slot->blocked;
+        }
       }
       if (live_slot != nullptr && structure_render_shift > 0.0F) {
 
@@ -959,21 +879,21 @@ void publish_formation_presentation(Engine::Core::World& world, float delta_time
         }
       }
 
-      if (previous != nullptr && directive.alive && !traversal_reflows) {
+      if (traversal_slot == nullptr && previous != nullptr && directive.alive) {
         float const step_time = std::max(0.0F, delta_time);
-        float const blend = 1.0F - std::exp(-6.5F * step_time);
-        float step_x = (directive.local_x - previous->local_x) * blend;
-        float step_z = (directive.local_z - previous->local_z) * blend;
-
-        float const step_length = std::hypot(step_x, step_z);
-        float const max_step = k_max_reposition_speed * step_time;
-        if (step_length > max_step && step_length > 0.0001F) {
-          float const scale = max_step / step_length;
-          step_x *= scale;
-          step_z *= scale;
-        }
-        directive.local_x = previous->local_x + step_x;
-        directive.local_z = previous->local_z + step_z;
+        directive.previous_local_x = previous->local_x;
+        directive.previous_local_z = previous->local_z;
+        directive.relocation_velocity_x =
+            step_time > 0.0F
+                ? (directive.local_x - directive.previous_local_x) / step_time
+                : 0.0F;
+        directive.relocation_velocity_z =
+            step_time > 0.0F
+                ? (directive.local_z - directive.previous_local_z) / step_time
+                : 0.0F;
+      } else if (traversal_slot == nullptr) {
+        directive.previous_local_x = directive.local_x;
+        directive.previous_local_z = directive.local_z;
       }
       if (directive.alive && attacks_structure && actor_transform != nullptr &&
           structure_facade.outward_normal.lengthSquared() > 0.000001F) {

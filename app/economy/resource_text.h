@@ -6,6 +6,10 @@
 #include "game/systems/resource_types.h"
 #include "game/systems/wall_plan_service.h"
 
+namespace Game::Systems {
+class PlayerResourceRegistry;
+}
+
 namespace App::Economy {
 
 [[nodiscard]] auto
@@ -19,7 +23,8 @@ construction_costs(const QString& item_type) -> Game::Systems::ResourceAmounts;
 [[nodiscard]] auto wood_per_wall_segment(const QString& item_type) -> int;
 
 [[nodiscard]] auto
-insufficient_resources_reason(int owner_id,
+insufficient_resources_reason(const Game::Systems::PlayerResourceRegistry& economy,
+                              int owner_id,
                               const Game::Systems::ResourceAmounts& cost) -> QString;
 
 [[nodiscard]] auto

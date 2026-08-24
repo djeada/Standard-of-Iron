@@ -631,7 +631,7 @@ ApplicationWindow {
         }
 
         anchors.fill: parent
-        z: 2
+        z: 0.5
         visible: !mainWindow.menu_visible && !mapSelect.visible
         enabled: visible
 

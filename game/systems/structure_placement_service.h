@@ -24,8 +24,10 @@ enum class PlacementRuling : std::uint8_t {
 
 class StructurePlacementService {
 public:
-  static auto
-  footprint_is_clear(float x, float z, const std::string& building_type) -> bool;
+  static auto footprint_is_clear(const Engine::Core::World& world,
+                                 float x,
+                                 float z,
+                                 const std::string& building_type) -> bool;
 
   static auto ruling(Engine::Core::World& world,
                      int owner_id,

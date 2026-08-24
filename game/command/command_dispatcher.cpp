@@ -1,6 +1,7 @@
 #include "command_dispatcher.h"
 
 #include <algorithm>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -45,27 +46,14 @@ void for_each_subject(World& world, const std::vector<EntityID>& units, Fn&& fn)
 }
 
 void apply_move(World& world, const Move& move) {
-
-  for (std::size_t i = 0; i < move.units.size() && i < move.facing_angles.size(); ++i) {
-    auto* entity = world.get_entity(move.units[i]);
-    if (entity == nullptr) {
-      continue;
-    }
-    const auto* formation_mode =
-        entity->get_component<Engine::Core::FormationModeComponent>();
-    if (formation_mode == nullptr || !formation_mode->active) {
-      continue;
-    }
-    if (auto* transform = entity->get_component<Engine::Core::TransformComponent>()) {
-      transform->desired_yaw = move.facing_angles[i];
-      transform->has_desired_yaw = true;
-    }
-  }
-
   std::vector<Game::Systems::CommandService::MoveIntent> intents;
   intents.reserve(move.units.size());
   for (std::size_t i = 0; i < move.units.size(); ++i) {
-    intents.push_back({.unit_id = move.units[i], .target = move.targets[i]});
+    intents.push_back({.unit_id = move.units[i],
+                       .target = move.targets[i],
+                       .facing_angle = i < move.facing_angles.size()
+                                           ? std::optional<float>(move.facing_angles[i])
+                                           : std::nullopt});
   }
 
   Game::Systems::CommandService::MoveOptions options;
@@ -267,9 +255,7 @@ void apply_patrol(World& world, const Patrol& patrol) {
 }
 
 void apply_trade(World& world, int owner_id, const Trade& trade) {
-  auto* session = Game::Session::SessionContext::for_world(world);
-  auto& marketplace = session != nullptr ? session->marketplace()
-                                         : Game::Systems::MarketplaceSystem::instance();
+  auto& marketplace = Game::Session::session_for(world).marketplace();
   if (trade.direction == TradeDirection::Buy) {
     static_cast<void>(marketplace.buy_resource(world, owner_id, trade.resource));
   } else {
@@ -299,7 +285,7 @@ void apply_commander_ability(World& world, const UseCommanderAbility& order) {
     const std::vector<EntityID> subject{order.commander};
     auto const plan =
         Game::Systems::CommandService::plan_ground_move(world, subject, order.target);
-    if (plan.positions.empty()) {
+    if (!plan.fully_placeable_for(subject)) {
       return;
     }
     commander->begin_flag_rally(
@@ -410,9 +396,10 @@ auto builder_of(World& world, EntityID id, int owner_id)
   return {entity, entity->get_component<Engine::Core::BuilderProductionComponent>()};
 }
 
-void release_task_target(Engine::Core::BuilderProductionComponent& builder) {
+void release_task_target(Game::Map::TerrainService& terrain,
+                         Engine::Core::BuilderProductionComponent& builder) {
   if (builder.task_target_reserved) {
-    Game::Map::TerrainService::instance().release_world_prop(builder.task_target_id);
+    terrain.release_world_prop(builder.task_target_id);
   }
   builder.has_task_target = false;
   builder.task_target_id = 0;
@@ -447,7 +434,8 @@ void apply_start_construction(World& world,
   }
   const auto costs =
       Game::Systems::construction_cost_info(order.construction_type).resource_costs;
-  auto& resources = Game::Systems::PlayerResourceRegistry::instance();
+  auto& session = Game::Session::session_for(world);
+  auto& resources = session.economy();
   if (!costs.empty() && !resources.has_at_least(owner_id, costs)) {
     return;
   }
@@ -458,7 +446,7 @@ void apply_start_construction(World& world,
     if (builder == nullptr) {
       continue;
     }
-    release_task_target(*builder);
+    release_task_target(session.terrain(), *builder);
     begin_site_work(*builder, order.construction_type, order.site, order.rotation_y);
     if (auto* movement = entity->get_component<Engine::Core::MovementComponent>()) {
       movement->set_rest_position(order.site.x(), order.site.z());
@@ -479,6 +467,7 @@ void apply_start_food_harvest(World& world, int owner_id, const StartHarvest& or
     return;
   }
 
+  auto& terrain = Game::Session::session_for(world).terrain();
   bool assigned = false;
   for (const EntityID id : order.units) {
     auto [entity, builder] = builder_of(world, id, owner_id);
@@ -488,13 +477,13 @@ void apply_start_food_harvest(World& world, int owner_id, const StartHarvest& or
     if (assigned) {
       builder->has_construction_site = false;
       builder->product_type.clear();
-      release_task_target(*builder);
+      release_task_target(terrain, *builder);
       continue;
     }
     if (Game::Systems::food_target_claimed(world, target->id, id)) {
       return;
     }
-    Game::Systems::OrderService::clear_builder_task(entity);
+    Game::Systems::OrderService::clear_builder_task(world, entity);
     Game::Systems::OrderService::clear_builder_gather_order(entity);
     const QVector3D work_position = Game::Systems::food_work_position(
         world,
@@ -519,13 +508,13 @@ void apply_start_harvest(World& world, int owner_id, const StartHarvest& order) 
     apply_start_food_harvest(world, owner_id, order);
     return;
   }
-  auto& terrain = Game::Map::TerrainService::instance();
+  auto& terrain = Game::Session::session_for(world).terrain();
 
   for (const EntityID id : order.units) {
     auto [entity, builder] = builder_of(world, id, owner_id);
     if (builder != nullptr && builder->task_target_reserved &&
         builder->task_target_id == order.resource_target) {
-      release_task_target(*builder);
+      release_task_target(terrain, *builder);
     }
   }
   if (!terrain.reserve_world_prop(order.resource_target)) {
@@ -542,10 +531,10 @@ void apply_start_harvest(World& world, int owner_id, const StartHarvest& order) 
 
       builder->has_construction_site = false;
       builder->product_type.clear();
-      release_task_target(*builder);
+      release_task_target(terrain, *builder);
       continue;
     }
-    release_task_target(*builder);
+    release_task_target(terrain, *builder);
     begin_site_work(*builder, order.construction_type, order.site, 0.0F);
     builder->has_task_target = true;
     builder->task_target_id = order.resource_target;
@@ -667,7 +656,7 @@ void apply_repair_structure(World& world, int owner_id, const RepairStructure& o
             structure_key,
             Game::Systems::CommandService::get_unit_radius(world, id));
 
-    Game::Systems::OrderService::clear_builder_task(entity);
+    Game::Systems::OrderService::clear_builder_task(world, entity);
     Game::Systems::OrderService::clear_builder_gather_order(entity);
     builder->product_type = std::string(Game::Systems::k_builder_product_repair);
     builder->build_time = Game::Systems::k_builder_repair_tick_seconds;
@@ -730,7 +719,7 @@ void apply_dismantle_structure(World& world,
             structure_key,
             Game::Systems::CommandService::get_unit_radius(world, id));
 
-    Game::Systems::OrderService::clear_builder_task(entity);
+    Game::Systems::OrderService::clear_builder_task(world, entity);
     Game::Systems::OrderService::clear_builder_gather_order(entity);
     builder->product_type = std::string(Game::Systems::k_builder_product_dismantle);
     builder->build_time = Game::Systems::dismantle_duration(structure_key);

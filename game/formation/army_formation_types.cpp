@@ -141,30 +141,38 @@ auto try_parse_mixed_policy(const QString& value)
 
 auto phase_to_string(FormationPhase phase) -> const char* {
   switch (phase) {
-  case FormationPhase::Forming:
-    return "forming";
+  case FormationPhase::Reforming:
+    return "reforming";
   case FormationPhase::Formed:
     return "formed";
   case FormationPhase::Disrupted:
     return "disrupted";
-  case FormationPhase::Breaking:
-    return "breaking";
+  case FormationPhase::Opening:
+    return "opening";
+  case FormationPhase::Traversing:
+    return "traversing";
+  case FormationPhase::Arrived:
+    return "arrived";
   }
-  return "forming";
+  return "reforming";
 }
 
 auto phase_display_name(FormationPhase phase) -> QString {
   switch (phase) {
-  case FormationPhase::Forming:
-    return QCoreApplication::translate("Formation", "Forming up");
+  case FormationPhase::Reforming:
+    return QCoreApplication::translate("Formation", "Reforming");
   case FormationPhase::Formed:
     return QCoreApplication::translate("Formation", "Formed");
   case FormationPhase::Disrupted:
     return QCoreApplication::translate("Formation", "Disrupted");
-  case FormationPhase::Breaking:
-    return QCoreApplication::translate("Formation", "Breaking");
+  case FormationPhase::Opening:
+    return QCoreApplication::translate("Formation", "Opening");
+  case FormationPhase::Traversing:
+    return QCoreApplication::translate("Formation", "Traversing");
+  case FormationPhase::Arrived:
+    return QCoreApplication::translate("Formation", "Arrived");
   }
-  return QCoreApplication::translate("Formation", "Forming up");
+  return QCoreApplication::translate("Formation", "Reforming");
 }
 
 auto ArmyFormation::find_slot(int slot_id) const -> const FormationSlot* {

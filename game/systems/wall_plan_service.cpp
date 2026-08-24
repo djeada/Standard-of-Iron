@@ -2,6 +2,7 @@
 
 #include <cmath>
 
+#include "../core/ambient_session.h"
 #include "../core/component.h"
 #include "../core/world.h"
 #include "../map/terrain_service.h"
@@ -37,8 +38,8 @@ auto item_type(const WallPlanRequest& request) -> const char* {
   return request.gate ? "wall_gate" : "wall_segment";
 }
 
-auto nation_of(int owner_id) -> NationID {
-  auto& nations = NationRegistry::instance();
+auto nation_of(const Engine::Core::World& world, int owner_id) -> NationID {
+  auto& nations = *Game::Session::services_for(world).nations;
   if (const auto* nation = nations.get_nation_for_player(owner_id)) {
     return nation->id;
   }
@@ -63,8 +64,8 @@ auto WallPlanService::plan(Engine::Core::World& world,
   WallNetworkService::build_connection_occupancy(
       world, connection_occupancy_by_owner, true, true);
 
-  int available_wood =
-      PlayerResourceRegistry::instance().get(request.owner_id, ResourceType::Wood);
+  int available_wood = Game::Session::services_for(world).economy->get(
+      request.owner_id, ResourceType::Wood);
 
   for (const auto& grid_pos : chain) {
     const auto key = WallNetworkService::encode_key(grid_pos.x, grid_pos.z);
@@ -92,7 +93,7 @@ auto WallPlanService::plan(Engine::Core::World& world,
     plan.segments.push_back(segment);
   }
 
-  const auto nation_id = nation_of(request.owner_id);
+  const auto nation_id = nation_of(world, request.owner_id);
   auto preview_occupancy = connection_occupancy_by_owner.contains(request.owner_id)
                                ? connection_occupancy_by_owner.at(request.owner_id)
                                : WallNetworkService::OccupancySet{};
@@ -103,7 +104,7 @@ auto WallPlanService::plan(Engine::Core::World& world,
     }
   }
 
-  auto& terrain = Game::Map::TerrainService::instance();
+  auto& terrain = *Game::Session::services_for(world).terrain;
   for (auto& segment : plan.segments) {
     segment.connection_mask = WallNetworkService::compute_connection_mask(
         preview_occupancy, segment.grid_x, segment.grid_z);
@@ -136,13 +137,13 @@ auto WallPlanService::commit(Engine::Core::World& world,
 
   ResourceAmounts total_cost;
   total_cost.set(ResourceType::Wood, plan.wood_cost());
-  auto& resources = PlayerResourceRegistry::instance();
+  auto& resources = *Game::Session::services_for(world).economy;
   if (!resources.has_at_least(request.owner_id, total_cost)) {
     return site_ids;
   }
   resources.spend(request.owner_id, total_cost);
 
-  const auto nation_id = nation_of(request.owner_id);
+  const auto nation_id = nation_of(world, request.owner_id);
   const std::string product = item_type(request);
   const float build_time = construction_build_time(product);
 
@@ -209,7 +210,7 @@ auto WallPlanService::commit(Engine::Core::World& world,
     if (builder == nullptr) {
       continue;
     }
-    OrderService::clear_builder_task(entity);
+    OrderService::clear_builder_task(world, entity);
     OrderService::clear_builder_gather_order(entity);
     builder->clear_auto_gather();
     if (assignments[index].empty()) {
@@ -232,7 +233,7 @@ auto WallPlanService::commit(Engine::Core::World& world,
             ? site_entity->get_component<Engine::Core::TransformComponent>()
             : nullptr;
     if (site_transform == nullptr) {
-      OrderService::clear_builder_task(entity);
+      OrderService::clear_builder_task(world, entity);
       continue;
     }
     builder->has_construction_site = true;

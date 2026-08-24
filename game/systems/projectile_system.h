@@ -89,11 +89,15 @@ private:
 
   [[nodiscard]] auto resolve_impact(Engine::Core::World* world,
                                     Projectile* projectile) -> ImpactResolution;
-  void publish_impact(const Projectile& projectile, const ImpactResolution& resolution);
+  void publish_impact(Engine::Core::World* world,
+                      const Projectile& projectile,
+                      const ImpactResolution& resolution);
   static void confirm_commander_hit(Engine::Core::World* world,
                                     Engine::Core::EntityID attacker_id,
                                     const Engine::Core::Entity& target);
-  void record_spent_projectile(const Projectile& projectile,
+
+  void record_spent_projectile(Engine::Core::World* world,
+                               const Projectile& projectile,
                                const QVector3D& incoming_direction,
                                bool ballista_bolt);
 

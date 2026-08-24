@@ -43,7 +43,11 @@ void reset_humanoid_animation_state(
   case Engine::Core::MotionPresentationState::Run:
     return Render::Creature::MovementAnimationState::Run;
   case Engine::Core::MotionPresentationState::Walk:
+  case Engine::Core::MotionPresentationState::ForcedDisplacement:
     return Render::Creature::MovementAnimationState::Walk;
+  case Engine::Core::MotionPresentationState::Turning:
+  case Engine::Core::MotionPresentationState::Yielding:
+  case Engine::Core::MotionPresentationState::Recovering:
   case Engine::Core::MotionPresentationState::Idle:
     return Render::Creature::MovementAnimationState::Idle;
   }

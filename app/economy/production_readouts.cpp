@@ -6,6 +6,7 @@
 #include "app/economy/unit_profile.h"
 #include "game/core/component.h"
 #include "game/core/world.h"
+#include "game/session/session_context.h"
 #include "game/systems/construction_cost_catalog.h"
 #include "game/systems/food_targets.h"
 #include "game/systems/harvest_yields.h"
@@ -189,7 +190,7 @@ auto selected_marketplace_state(Engine::Core::World* world,
       continue;
     }
 
-    auto const& rates = Game::Systems::MarketplaceSystem::instance().get_rates();
+    auto const& rates = Game::Session::session_for(*world).marketplace().get_rates();
     QVariantMap buy_prices;
     buy_prices["food"] = rates.buy_price_food;
     buy_prices["wood"] = rates.buy_price_wood;
@@ -320,9 +321,10 @@ auto selected_temple_state(Engine::Core::World* world,
   return m;
 }
 
-auto unit_production_info(const QString& unit_type,
+auto unit_production_info(const Game::Systems::NationRegistry& nations,
+                          const QString& unit_type,
                           const QString& nation_id) -> QVariantMap {
-  QVariantMap info = unit_profile(unit_type, nation_id);
+  QVariantMap info = unit_profile(nations, unit_type, nation_id);
   if (info.value("valid").toBool()) {
     return info;
   }
@@ -330,7 +332,7 @@ auto unit_production_info(const QString& unit_type,
   const auto& config = Game::Units::TroopConfig::instance();
   const std::string type_str = unit_type.toStdString();
   info["cost"] = config.get_production_cost(type_str);
-  info["population_cost"] = info["cost"];
+  info["population_cost"] = config.get_population_cost(type_str);
   info["resource_costs"] = QVariantMap{};
   info["build_time"] = static_cast<double>(config.get_build_time(type_str));
   info["individuals_per_unit"] = config.get_individuals_per_unit(type_str);

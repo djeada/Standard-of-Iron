@@ -20,9 +20,17 @@ class World;
 
 namespace Game::Systems {
 
+class NationRegistry;
+class OwnerRegistry;
+
 class AISystem : public Engine::Core::System {
 public:
-  AISystem();
+  struct Services {
+    OwnerRegistry& owners;
+    NationRegistry& nations;
+  };
+
+  explicit AISystem(Services services);
   ~AISystem() override;
 
   void update(Engine::Core::World* world, float delta_time) override;
@@ -74,6 +82,8 @@ private:
 
   Engine::Core::ScopedEventSubscription<Engine::Core::BuildingAttackedEvent>
       m_building_attacked_subscription;
+
+  Services m_services;
 
   void initialize_ai_players();
 

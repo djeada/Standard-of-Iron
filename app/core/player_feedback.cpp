@@ -1,7 +1,9 @@
 #include "app/core/player_feedback.h"
 
 #include <algorithm>
+#include <mutex>
 #include <utility>
+#include <vector>
 
 namespace App::Core {
 
@@ -37,12 +39,14 @@ auto PlayerFeedbackBus::subscribe(Listener listener) -> ListenerId {
   if (!listener) {
     return 0;
   }
+  const std::lock_guard<std::mutex> guard(m_mutex);
   const ListenerId id = m_next_listener_id++;
   m_listeners.push_back({.id = id, .listener = std::move(listener)});
   return id;
 }
 
 void PlayerFeedbackBus::unsubscribe(ListenerId id) {
+  const std::lock_guard<std::mutex> guard(m_mutex);
   m_listeners.erase(std::remove_if(m_listeners.begin(),
                                    m_listeners.end(),
                                    [id](const Subscription& subscription) {
@@ -52,28 +56,49 @@ void PlayerFeedbackBus::unsubscribe(ListenerId id) {
 }
 
 void PlayerFeedbackBus::publish(PlayerFeedbackEvent event) {
-  event.sequence = m_next_sequence++;
+  std::vector<Listener> listeners;
+  {
+    const std::lock_guard<std::mutex> guard(m_mutex);
+    event.sequence = m_next_sequence++;
 
-  for (const auto& subscription : m_listeners) {
-    if (subscription.listener) {
-      subscription.listener(event);
+    listeners.reserve(m_listeners.size());
+    for (const auto& subscription : m_listeners) {
+      if (subscription.listener) {
+        listeners.push_back(subscription.listener);
+      }
     }
+
+    if (m_pending.size() >= k_max_pending) {
+      m_pending.pop_front();
+      ++m_dropped;
+    }
+    m_pending.push_back(event);
   }
 
-  if (m_pending.size() >= k_max_pending) {
-    m_pending.pop_front();
-    ++m_dropped;
+  for (const auto& listener : listeners) {
+    listener(event);
   }
-  m_pending.push_back(std::move(event));
 }
 
 auto PlayerFeedbackBus::drain() -> std::vector<PlayerFeedbackEvent> {
+  const std::lock_guard<std::mutex> guard(m_mutex);
   std::vector<PlayerFeedbackEvent> out(m_pending.begin(), m_pending.end());
   m_pending.clear();
   return out;
 }
 
+auto PlayerFeedbackBus::pending() const -> std::size_t {
+  const std::lock_guard<std::mutex> guard(m_mutex);
+  return m_pending.size();
+}
+
+auto PlayerFeedbackBus::dropped() const -> std::uint64_t {
+  const std::lock_guard<std::mutex> guard(m_mutex);
+  return m_dropped;
+}
+
 void PlayerFeedbackBus::clear() {
+  const std::lock_guard<std::mutex> guard(m_mutex);
   m_pending.clear();
   m_dropped = 0;
 }

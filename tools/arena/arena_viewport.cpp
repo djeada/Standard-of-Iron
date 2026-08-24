@@ -52,6 +52,7 @@
 #include "game/map/visibility_service.h"
 #include "game/render_bridge/camera_service.h"
 #include "game/render_bridge/picking_service.h"
+#include "game/session/session_context.h"
 #include "game/systems/ai_system.h"
 #include "game/systems/arrow_system.h"
 #include "game/systems/building_collision_registry.h"
@@ -331,11 +332,11 @@ auto scenario_center(Engine::Core::World* world,
 
 namespace {
 
-void sync_camera_map_bounds(Render::GL::Camera* camera) {
+void sync_camera_map_bounds(Render::GL::Camera* camera,
+                            const Game::Map::VisibilityService& visibility) {
   if (camera == nullptr) {
     return;
   }
-  const auto& visibility = Game::Map::VisibilityService::instance();
   if (!visibility.is_initialized()) {
     camera->clear_map_bounds();
     return;
@@ -347,8 +348,9 @@ void sync_camera_map_bounds(Render::GL::Camera* camera) {
 
 } // namespace
 
-ArenaViewport::ArenaViewport(QWidget* parent)
+ArenaViewport::ArenaViewport(Game::Session::SessionContext& session, QWidget* parent)
     : QOpenGLWidget(parent)
+    , m_session(session)
     , m_spawn_nation_id(Game::Systems::NationID::RomanRepublic)
     , m_spawn_unit_type(Game::Units::TroopType::Swordsman) {
   setFocusPolicy(Qt::StrongFocus);
@@ -367,17 +369,18 @@ ArenaViewport::ArenaViewport(QWidget* parent)
   m_boundary_fog = std::move(rendering.boundary_fog);
   m_ambient_fog = std::move(rendering.ambient_fog);
   m_rain = std::move(rendering.rain);
-  m_camera_service = std::make_unique<Game::Systems::CameraService>();
+  m_camera_service =
+      std::make_unique<Game::Systems::CameraService>(m_session.visibility());
   m_picking_service = std::make_unique<Game::Systems::PickingService>();
   m_rpg_commander_controller = std::make_unique<CommanderControlController>();
   m_rpg_telegraphs = std::make_unique<Render::GL::RpgTelegraphRenderer>();
   set_force_full_creature_lod(true);
 
   RendererBootstrap::initialize_world_systems(*m_world);
-  Game::Map::VisibilityService::instance().initialize(
+  m_session.visibility().initialize(
       k_terrain_width, k_terrain_height, k_terrain_tile_size);
   apply_initial_visibility();
-  sync_camera_map_bounds(m_camera.get());
+  sync_camera_map_bounds(m_camera.get(), m_session.visibility());
   configure_runtime();
   regenerate_terrain();
   reset_camera();
@@ -406,7 +409,7 @@ ArenaViewport::~ArenaViewport() {
   m_frame_timer.stop();
   m_units.clear();
   Render::GL::CameraVisibility::instance().clear_camera();
-  Game::Map::TerrainService::instance().clear();
+  m_session.terrain().clear();
 
   if (context() != nullptr) {
     makeCurrent();
@@ -428,8 +431,8 @@ ArenaViewport::~ArenaViewport() {
 }
 
 void ArenaViewport::configure_runtime() {
-  Game::Systems::initialize_default_content(Game::Systems::NationRegistry::instance());
-  Game::Systems::TroopCountRegistry::instance().initialize();
+  Game::Systems::initialize_default_content(m_session.nations());
+  m_session.troop_counts().initialize();
   Game::Systems::NavGrid::initialize(k_terrain_width, k_terrain_height);
 
   m_unit_factory = std::make_shared<Game::Units::UnitFactoryRegistry>();
@@ -441,7 +444,7 @@ void ArenaViewport::configure_runtime() {
 }
 
 void ArenaViewport::setup_default_players() {
-  auto& owners = Game::Systems::OwnerRegistry::instance();
+  auto& owners = m_session.owners();
   owners.clear();
   owners.register_owner_with_id(
       k_local_owner_id, Game::Systems::OwnerType::Player, "Arena Player");
@@ -451,7 +454,7 @@ void ArenaViewport::setup_default_players() {
   owners.set_owner_team(k_enemy_owner_id, 2);
   owners.set_local_player_id(k_local_owner_id);
 
-  auto& nations = Game::Systems::NationRegistry::instance();
+  auto& nations = m_session.nations();
   nations.clear_player_assignments();
   nations.set_player_nation(k_local_owner_id, Game::Systems::NationID::RomanRepublic);
   nations.set_player_nation(k_enemy_owner_id, Game::Systems::NationID::Carthage);
@@ -604,7 +607,7 @@ void ArenaViewport::paintGL() {
       (m_scenario_runner != nullptr &&
        m_scenario_runner->definition().suppress_ui_overlays));
 
-  m_renderer->set_world_view(Render::WorldView::of_active_session());
+  m_renderer->set_world_view(Render::WorldView::of(m_session));
   m_renderer->begin_frame();
   if (m_terrain_scene != nullptr) {
     Render::GL::TerrainSceneSubmitOptions terrain_options;
@@ -1292,14 +1295,12 @@ auto ArenaViewport::resolve_spawn_anchor_world() const -> QVector3D {
   }
 
   return App::Utils::snap_to_walkable_ground(
-      Game::Map::TerrainService::instance().resolve_surface_world_position(
-          0.0F, 0.0F, 0.0F, 0.0F));
+      m_session.terrain().resolve_surface_world_position(0.0F, 0.0F, 0.0F, 0.0F));
 }
 
 auto ArenaViewport::is_spawn_position_available(const QVector3D& position,
                                                 float clearance) const -> bool {
-  if (Game::Map::TerrainService::instance().is_forbidden_world(position.x(),
-                                                               position.z())) {
+  if (m_session.terrain().is_forbidden_world(position.x(), position.z())) {
     return false;
   }
 
@@ -1338,9 +1339,9 @@ auto ArenaViewport::is_spawn_position_available(const QVector3D& position,
 
 auto ArenaViewport::find_available_spawn_position(const QVector3D& anchor,
                                                   float clearance) const -> QVector3D {
-  auto resolve_candidate = [anchor](float world_x, float world_z) {
+  auto resolve_candidate = [this, anchor](float world_x, float world_z) {
     return App::Utils::snap_to_walkable_ground(
-        Game::Map::TerrainService::instance().resolve_surface_world_position(
+        m_session.terrain().resolve_surface_world_position(
             world_x, world_z, 0.0F, anchor.y()));
   };
 
@@ -1422,15 +1423,14 @@ auto ArenaViewport::terrain_review_max_camera_distance() const -> float {
 }
 
 auto ArenaViewport::owner_display_name(int owner_id) const -> QString {
-  std::string const owner_name =
-      Game::Systems::OwnerRegistry::instance().get_owner_name(owner_id);
+  std::string const owner_name = m_session.owners().get_owner_name(owner_id);
   return owner_name.empty() ? QStringLiteral("Owner %1").arg(owner_id)
                             : QString::fromStdString(owner_name);
 }
 
 auto ArenaViewport::nation_display_name(Game::Systems::NationID nation_id) const
     -> QString {
-  const auto* nation = Game::Systems::NationRegistry::instance().get_nation(nation_id);
+  const auto* nation = m_session.nations().get_nation(nation_id);
   if (nation == nullptr) {
     return prettify_identifier(Game::Systems::nation_id_to_qstring(nation_id));
   }
@@ -1449,7 +1449,7 @@ auto ArenaViewport::troop_display_name(Game::Systems::NationID nation_id,
     return QStringLiteral("Unknown");
   }
 
-  const auto* nation = Game::Systems::NationRegistry::instance().get_nation(nation_id);
+  const auto* nation = m_session.nations().get_nation(nation_id);
   if (nation != nullptr) {
     auto it = std::find_if(nation->available_troops.begin(),
                            nation->available_troops.end(),
@@ -1707,23 +1707,23 @@ void ArenaViewport::regenerate_terrain() {
   const auto runtime_lakes = water_mask.get_lakes();
   const auto runtime_bridges = water_mask.get_bridges();
 
-  Game::Map::VisibilityService::instance().initialize(
+  m_session.visibility().initialize(
       m_terrain_grid_extent, m_terrain_grid_extent, k_terrain_tile_size);
-  Game::Map::TerrainService::instance().restore_from_serialized(m_terrain_grid_extent,
-                                                                m_terrain_grid_extent,
-                                                                k_terrain_tile_size,
-                                                                heights,
-                                                                terrain_types,
-                                                                runtime_rivers,
-                                                                m_arena_roads,
-                                                                runtime_bridges,
-                                                                biome,
-                                                                m_world_props,
-                                                                {},
-                                                                runtime_lakes);
+  m_session.terrain().restore_from_serialized(m_terrain_grid_extent,
+                                              m_terrain_grid_extent,
+                                              k_terrain_tile_size,
+                                              heights,
+                                              terrain_types,
+                                              runtime_rivers,
+                                              m_arena_roads,
+                                              runtime_bridges,
+                                              biome,
+                                              m_world_props,
+                                              {},
+                                              runtime_lakes);
   Game::Systems::NavGrid::initialize(m_terrain_grid_extent, m_terrain_grid_extent);
   apply_initial_visibility();
-  sync_camera_map_bounds(m_camera.get());
+  sync_camera_map_bounds(m_camera.get(), m_session.visibility());
 
   align_units_to_terrain();
   if (m_gl_initialized) {
@@ -1737,7 +1737,7 @@ void ArenaViewport::reconfigure_terrain_from_state() {
 }
 
 void ArenaViewport::configure_rendering_from_terrain() {
-  auto& terrain_service = Game::Map::TerrainService::instance();
+  auto& terrain_service = m_session.terrain();
   const auto* height_map = terrain_service.get_height_map();
   if (height_map == nullptr || m_surface == nullptr || m_features == nullptr ||
       m_scatter == nullptr) {
@@ -2302,11 +2302,10 @@ auto ArenaViewport::spawn_single_building(int owner_id,
   }
   QVector3D const spawn_position =
       requested_position.has_value()
-          ? Game::Map::TerrainService::instance().resolve_surface_world_position(
-                requested_position->x(),
-                requested_position->z(),
-                0.0F,
-                requested_position->y())
+          ? m_session.terrain().resolve_surface_world_position(requested_position->x(),
+                                                               requested_position->z(),
+                                                               0.0F,
+                                                               requested_position->y())
           : find_available_spawn_position(resolve_spawn_anchor_world(),
                                           k_building_spawn_clearance);
 
@@ -2324,7 +2323,7 @@ auto ArenaViewport::spawn_single_building(int owner_id,
 
   Engine::Core::EntityID const entity_id = unit->id();
 
-  Game::Systems::BuildingCollisionRegistry::instance().register_building(
+  m_session.building_collision().register_building(
       entity_id,
       Game::Units::spawn_typeToQString(building_type).toStdString(),
       spawn_position.x(),
@@ -2357,8 +2356,7 @@ void ArenaViewport::clear_buildings() {
       if (selection != nullptr) {
         selection->deselect_unit((*it)->id());
       }
-      Game::Systems::BuildingCollisionRegistry::instance().unregister_building(
-          (*it)->id());
+      m_session.building_collision().unregister_building((*it)->id());
       m_world->destroy_entity((*it)->id());
       it = m_units.erase(it);
     } else {
@@ -2391,7 +2389,7 @@ void ArenaViewport::set_spawn_fire_camp_radius(float value) {
 }
 
 void ArenaViewport::spawn_world_prop() {
-  auto& terrain_service = Game::Map::TerrainService::instance();
+  auto& terrain_service = m_session.terrain();
   if (terrain_service.terrain_field().empty()) {
     return;
   }
@@ -2431,8 +2429,8 @@ void ArenaViewport::place_scenario_resource_patches(
   constexpr std::array<float, 4> k_nudge_rings{0.0F, 1.2F, 2.4F, 3.6F};
   constexpr int k_nudge_directions = 8;
 
-  auto& collision = Game::Systems::BuildingCollisionRegistry::instance();
-  auto& terrain_service = Game::Map::TerrainService::instance();
+  auto& collision = m_session.building_collision();
+  auto& terrain_service = m_session.terrain();
   const auto& terrain_field = terrain_service.terrain_field();
 
   struct PlacedProp {
@@ -2599,7 +2597,7 @@ void ArenaViewport::configure_scenario_undead_zones(
   retain_zone_shrine_props(*undead_system);
 
   if (m_ambient_fog != nullptr) {
-    auto const& terrain_service = Game::Map::TerrainService::instance();
+    auto const& terrain_service = m_session.terrain();
     std::vector<Game::Map::FogZone> fog;
     fog.reserve(m_arena_undead_zones.size());
     for (const auto& zone : m_arena_undead_zones) {
@@ -2625,7 +2623,7 @@ void ArenaViewport::retain_zone_shrine_props(
     const Game::Systems::UndeadAwakeningSystem& undead_system) {
   constexpr float k_shrine_match_grid_distance = 1.0F;
 
-  auto& terrain_service = Game::Map::TerrainService::instance();
+  auto& terrain_service = m_session.terrain();
   const auto& terrain_field = terrain_service.terrain_field();
   bool planted = false;
   for (const auto& zone : m_arena_undead_zones) {
@@ -2714,7 +2712,7 @@ void ArenaViewport::clear_world_props_of_type() {
 }
 
 void ArenaViewport::reset_arena() {
-  Game::Systems::BuildingCollisionRegistry::instance().clear();
+  m_session.building_collision().clear();
   m_scenario_runner.reset();
   clear_rpg_scenario_state();
   m_frame_continuity_analyzer.reset();
@@ -2764,15 +2762,8 @@ void ArenaViewport::reset_arena() {
   }
 }
 
-auto ArenaViewport::visibility_service() -> Game::Map::VisibilityService& {
-  if (m_visibility_service == nullptr) {
-    m_visibility_service = &Game::Map::VisibilityService::instance();
-  }
-  return *m_visibility_service;
-}
-
 void ArenaViewport::apply_initial_visibility() {
-  auto& visibility = visibility_service();
+  auto& visibility = m_session.visibility();
   if (!m_fog_of_war_enabled) {
     visibility.reveal_all();
     return;
@@ -2794,7 +2785,7 @@ void ArenaViewport::set_fog_of_war_enabled(bool enabled) {
   m_fog_of_war_enabled = enabled;
   m_visibility_accumulator = 0.0F;
 
-  auto& visibility = visibility_service();
+  auto& visibility = m_session.visibility();
   if (!enabled) {
     if (m_fog != nullptr) {
       m_fog->set_enabled(false);
@@ -2815,7 +2806,7 @@ void ArenaViewport::update_fog_of_war(float dt) {
   if (!m_fog_of_war_enabled || m_fog == nullptr) {
     return;
   }
-  auto& visibility = visibility_service();
+  auto& visibility = m_session.visibility();
   if (!visibility.is_initialized()) {
     return;
   }
@@ -2921,8 +2912,8 @@ constexpr float k_cinematic_clear_fraction = 0.18F;
 constexpr int k_cinematic_ray_samples = 10;
 
 auto lift_camera_over_terrain(QVector3D position,
-                              QVector3D const& target) -> QVector3D {
-  auto& terrain = Game::Map::TerrainService::instance();
+                              QVector3D const& target,
+                              const Game::Map::TerrainService& terrain) -> QVector3D {
   if (terrain.terrain_field().empty()) {
     return position;
   }
@@ -2951,8 +2942,8 @@ void ArenaViewport::apply_cinematic_view() {
   QVector3D const offset(std::sin(yaw) * horizontal,
                          m_cinematic_distance * std::sin(pitch),
                          std::cos(yaw) * horizontal);
-  QVector3D const position =
-      lift_camera_over_terrain(m_cinematic_target + offset, m_cinematic_target);
+  QVector3D const position = lift_camera_over_terrain(
+      m_cinematic_target + offset, m_cinematic_target, m_session.terrain());
 
   QVector3D up(0.0F, 1.0F, 0.0F);
   if (std::abs(m_cinematic_roll) > 0.01F) {
@@ -3316,14 +3307,13 @@ auto ArenaViewport::load_terrain_review_map(const QString& map_path,
     m_renderer->set_clear_color(0.055F, 0.065F, 0.05F, 1.0F);
   }
 
-  auto& terrain = Game::Map::TerrainService::instance();
+  auto& terrain = m_session.terrain();
   terrain.initialize(*m_terrain_review_definition);
-  Game::Map::VisibilityService::instance().initialize(
-      m_terrain_review_definition->grid.width,
-      m_terrain_review_definition->grid.height,
-      m_terrain_review_definition->grid.tile_size);
+  m_session.visibility().initialize(m_terrain_review_definition->grid.width,
+                                    m_terrain_review_definition->grid.height,
+                                    m_terrain_review_definition->grid.tile_size);
   apply_initial_visibility();
-  sync_camera_map_bounds(m_camera.get());
+  sync_camera_map_bounds(m_camera.get(), m_session.visibility());
   Game::Systems::NavGrid::initialize(m_terrain_review_definition->grid.width,
                                      m_terrain_review_definition->grid.height);
 
@@ -3349,8 +3339,8 @@ void ArenaViewport::spawn_terrain_review_structures() {
   }
 
   const auto& definition = *m_terrain_review_definition;
-  auto& owners = Game::Systems::OwnerRegistry::instance();
-  auto& nations = Game::Systems::NationRegistry::instance();
+  auto& owners = m_session.owners();
+  auto& nations = m_session.nations();
   const auto resolve_nation =
       [&owners, &nations](int owner_id,
                           std::optional<Game::Systems::NationID> authored_nation) {
@@ -3649,9 +3639,9 @@ void ArenaViewport::load_scenario(const QString& scenario_id) {
       m_suppress_boundary_mountains) {
     reconfigure_terrain_from_state();
   }
-  auto& owners = Game::Systems::OwnerRegistry::instance();
-  auto& nations = Game::Systems::NationRegistry::instance();
-  auto& resources = Game::Systems::PlayerResourceRegistry::instance();
+  auto& owners = m_session.owners();
+  auto& nations = m_session.nations();
+  auto& resources = m_session.economy();
   for (auto const& owner_team : definition->owner_teams) {
     if (owners.get_owner_type(owner_team.owner_id) ==
         Game::Systems::OwnerType::Neutral) {
@@ -3724,7 +3714,7 @@ void ArenaViewport::load_scenario(const QString& scenario_id) {
       transform->has_desired_yaw = true;
     }
     if (building_group && entity_id != 0U) {
-      auto& collision = Game::Systems::BuildingCollisionRegistry::instance();
+      auto& collision = m_session.building_collision();
       collision.resize_building(
           entity_id,
           Game::Systems::BuildingCollisionRegistry::axis_aligned_size(
@@ -3917,11 +3907,15 @@ void ArenaViewport::load_scenario(const QString& scenario_id) {
     }
   };
 
+  host.terrain = &m_session.terrain();
+  host.building_collision = &m_session.building_collision();
+
   m_presentation_hitches_fired.clear();
   m_rpg_scripted_attack_ticks = 0;
   if (m_renderer != nullptr && m_batch_fixed_step > 0.0F) {
     m_renderer->reset_animation_time();
   }
+
   m_scenario_runner = std::make_unique<Arena::ArenaScenarioRunner>(
       *m_world, std::move(host), *definition, scenario_origin);
   const bool verify_frame_continuity = std::any_of(
@@ -4810,7 +4804,9 @@ void ArenaViewport::align_units_to_terrain() {
     if (unit == nullptr) {
       continue;
     }
-    Arena::align_entity_to_ground(*m_world, unit->id());
+    if (auto* entity = m_world->get_entity(unit->id()); entity != nullptr) {
+      Arena::align_entity_to_ground(*entity, m_session.terrain());
+    }
   }
 }
 
@@ -4893,7 +4889,7 @@ void ArenaViewport::draw_terrain_normals(QPainter& painter) {
   if (m_camera == nullptr || width() <= 0 || height() <= 0) {
     return;
   }
-  const auto& field = Game::Map::TerrainService::instance().terrain_field();
+  const auto& field = m_session.terrain().terrain_field();
   if (field.empty()) {
     return;
   }
@@ -5098,8 +5094,7 @@ void ArenaViewport::draw_combat_animation_overlay(QPainter& painter) {
 }
 
 void ArenaViewport::sync_spawn_selection_defaults() {
-  const auto* nation =
-      Game::Systems::NationRegistry::instance().get_nation(m_spawn_nation_id);
+  const auto* nation = m_session.nations().get_nation(m_spawn_nation_id);
   if (nation == nullptr || nation->available_troops.empty()) {
     return;
   }
@@ -5256,6 +5251,18 @@ void ArenaViewport::draw_rpg_hud(QPainter& painter) {
       break;
     case Engine::Core::MotionPresentationState::Walk:
       state_parts << QStringLiteral("WALK");
+      break;
+    case Engine::Core::MotionPresentationState::Turning:
+      state_parts << QStringLiteral("TURN");
+      break;
+    case Engine::Core::MotionPresentationState::Yielding:
+      state_parts << QStringLiteral("YIELD");
+      break;
+    case Engine::Core::MotionPresentationState::Recovering:
+      state_parts << QStringLiteral("RECOVER");
+      break;
+    case Engine::Core::MotionPresentationState::ForcedDisplacement:
+      state_parts << QStringLiteral("FORCED");
       break;
     default:
       state_parts << QStringLiteral("IDLE");

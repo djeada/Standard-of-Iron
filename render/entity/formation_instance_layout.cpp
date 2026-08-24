@@ -42,6 +42,8 @@ auto build_formation_instance(const FormationInstanceRequest& request)
     query.spacing = request.formation_spacing;
     query.seed = request.seed;
     query.formed_ratio = request.formed_ratio;
+    query.blend_from = request.blend_from;
+    query.blend_ratio = request.blend_ratio;
     if (request.soldier_offsets != nullptr) {
       auto const formation_offset = request.soldier_offsets->offset(query);
       instance.offset_x = formation_offset.offset_x;
@@ -73,7 +75,9 @@ auto resolve_formation_instances(FormationLayoutCache* cache,
             request.formation.individuals_per_unit &&
         cache->formation.max_per_row == request.formation.max_per_row &&
         cache->formation.spacing == request.formation.spacing &&
-        cache->unit_layout == request.unit_layout;
+        cache->unit_layout == request.unit_layout &&
+        cache->blend_from == request.blend_from &&
+        cache->blend_ratio == request.blend_ratio;
     bool const matches =
         result.preserve_state_prefix &&
         cache->instances.size() == static_cast<std::size_t>(request.total_count);
@@ -108,6 +112,8 @@ auto resolve_formation_instances(FormationLayoutCache* cache,
     instance_request.animation_time = request.animation_time;
     instance_request.unit_layout = request.unit_layout;
     instance_request.formed_ratio = request.formed_ratio;
+    instance_request.blend_from = request.blend_from;
+    instance_request.blend_ratio = request.blend_ratio;
     instance_request.soldier_offsets = request.soldier_offsets;
     generated.push_back(build_formation_instance(instance_request));
   }
@@ -115,6 +121,8 @@ auto resolve_formation_instances(FormationLayoutCache* cache,
   if (cache != nullptr) {
     cache->formation = request.formation;
     cache->unit_layout = request.unit_layout;
+    cache->blend_from = request.blend_from;
+    cache->blend_ratio = request.blend_ratio;
     cache->rows = request.rows;
     cache->cols = request.cols;
     cache->layout_version = request.layout_version;

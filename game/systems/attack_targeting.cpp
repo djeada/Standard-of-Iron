@@ -4,6 +4,7 @@
 #include <cmath>
 #include <limits>
 
+#include "../core/ambient_session.h"
 #include "../core/component.h"
 #include "../core/world.h"
 #include "../map/render_visibility_rules.h"
@@ -105,7 +106,8 @@ auto classify_attack_target(Engine::Core::World* world,
   }
 
   if (unit->owner_id == local_owner_id ||
-      OwnerRegistry::instance().are_allies(local_owner_id, unit->owner_id)) {
+      Game::Session::services_for(*world).owners->are_allies(local_owner_id,
+                                                             unit->owner_id)) {
     return AttackTargetVerdict::Ally;
   }
 

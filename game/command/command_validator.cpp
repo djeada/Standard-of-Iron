@@ -12,10 +12,7 @@ namespace Game::Command {
 namespace {
 
 auto owners_for(Engine::Core::World& world) -> Game::Systems::OwnerRegistry& {
-  if (auto* session = Game::Session::SessionContext::for_world(world)) {
-    return session->owners();
-  }
-  return Game::Session::SessionContext::active().owners();
+  return Game::Session::session_for(world).owners();
 }
 
 auto is_commandable(Engine::Core::World& world,

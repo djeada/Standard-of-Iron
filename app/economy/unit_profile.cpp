@@ -87,7 +87,9 @@ void write_commander_prose(QVariantMap& info,
 
 } // namespace
 
-auto unit_profile(const QString& unit_type, const QString& nation_id) -> QVariantMap {
+auto unit_profile(const Game::Systems::NationRegistry& nations,
+                  const QString& unit_type,
+                  const QString& nation_id) -> QVariantMap {
   QVariantMap info;
   info["unit_type"] = unit_type;
   info["display_name"] = unit_type;
@@ -102,10 +104,9 @@ auto unit_profile(const QString& unit_type, const QString& nation_id) -> QVarian
     return info;
   }
 
-  auto& registry = Game::Systems::NationRegistry::instance();
   const auto parsed_nation =
       Game::Systems::nation_id_from_string(nation_id.toStdString());
-  const auto resolved_nation = parsed_nation.value_or(registry.default_nation_id());
+  const auto resolved_nation = parsed_nation.value_or(nations.default_nation_id());
   const auto profile = Game::Systems::TroopProfileService::instance().get_profile(
       resolved_nation, *troop_type);
 
@@ -141,7 +142,7 @@ auto unit_profile(const QString& unit_type, const QString& nation_id) -> QVarian
   info["prefers_ranged"] = prefers_ranged;
 
   info["cost"] = profile.production.cost;
-  info["population_cost"] = profile.production.cost;
+  info["population_cost"] = profile.production.population_cost();
   info["resource_costs"] = to_variant_map(profile.production.resource_costs);
   info["build_time"] = static_cast<double>(profile.production.build_time);
   info["individuals_per_unit"] = profile.individuals_per_unit;

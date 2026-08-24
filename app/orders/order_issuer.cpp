@@ -10,10 +10,7 @@
 namespace App::Orders {
 
 auto local_owner(Engine::Core::World* world) -> int {
-  if (auto* session = Game::Session::SessionContext::for_world(*world)) {
-    return session->owners().get_local_player_id();
-  }
-  return Game::Systems::OwnerRegistry::instance().get_local_player_id();
+  return Game::Session::session_for(*world).owners().get_local_player_id();
 }
 
 OrderIssuer::OrderIssuer(Engine::Core::World* world, FeedbackSink sink)

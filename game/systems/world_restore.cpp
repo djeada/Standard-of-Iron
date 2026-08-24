@@ -1,5 +1,6 @@
 #include "world_restore.h"
 
+#include "../core/ambient_session.h"
 #include "../core/component.h"
 #include "../core/world.h"
 #include "../systems/building_collision_registry.h"
@@ -20,12 +21,13 @@ auto rebuild_registries_after_load(Engine::Core::World* world,
     return result;
   }
 
-  auto& owner_registry = Game::Systems::OwnerRegistry::instance();
+  const auto& services = Game::Session::services_for(*world);
+  auto& owner_registry = *services.owners;
 
-  auto& troops = Game::Systems::TroopCountRegistry::instance();
+  auto& troops = *services.troop_counts;
   troops.rebuild_from_world(*world);
 
-  auto& stats_registry = Game::Systems::GlobalStatsRegistry::instance();
+  auto& stats_registry = *services.stats;
   stats_registry.rebuild_from_world(*world);
 
   const auto& all_owners = owner_registry.get_all_owners();
@@ -49,11 +51,12 @@ auto rebuild_registries_after_load(Engine::Core::World* world,
 }
 
 void rebuild_building_collisions(Engine::Core::World* world) {
-  auto& registry = Game::Systems::BuildingCollisionRegistry::instance();
-  registry.clear();
   if (world == nullptr) {
     return;
   }
+
+  auto& registry = *Game::Session::services_for(*world).building_collision;
+  registry.clear();
 
   for (auto [entity_id, building, unit, transform] :
        world->view<Engine::Core::BuildingComponent,

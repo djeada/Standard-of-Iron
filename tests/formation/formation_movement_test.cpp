@@ -1,5 +1,6 @@
 #include <QVector3D>
 
+#include <algorithm>
 #include <cmath>
 #include <gtest/gtest.h>
 #include <vector>
@@ -8,9 +9,11 @@
 #include "core/world.h"
 #include "formation/army_formation_registry.h"
 #include "formation/army_formation_service.h"
+#include "systems/formation_move_dispatch_system.h"
 #include "systems/nation_registry.h"
 #include "systems/nav_grid.h"
 #include "systems/pathfinding.h"
+#include "systems/route_follow_system.h"
 #include "systems/troop_profile_service.h"
 
 namespace {
@@ -95,7 +98,8 @@ TEST_F(FormationMovementTest, ReformAtDestinationAnchorsStraightAtTheTarget) {
   const auto* formation = ArmyFormationRegistry::instance().find(result.group_id);
   ASSERT_NE(formation, nullptr);
   EXPECT_FALSE(formation->maintains_formation());
-  EXPECT_FALSE(formation->has_destination);
+  EXPECT_TRUE(formation->has_destination)
+      << "arrival remains pending until every placeable member slot is reached";
   EXPECT_NEAR(formation->anchor.z(), target.z(), 2.0F);
 }
 
@@ -179,6 +183,49 @@ TEST_F(FormationMovementTest, MaintainFormationSlowsItsMembersDown) {
   auto* entity = world.get_entity(units.front());
   ASSERT_NE(entity, nullptr);
   EXPECT_LT(ArmyFormationRuntime::move_speed_multiplier(*entity), 1.0F);
+}
+
+TEST_F(FormationMovementTest, MixedSpeedsShareOneDeclaredContinuousPace) {
+  Engine::Core::World world;
+  auto const units = make_squad(world);
+  auto* fast = world.get_entity(units.front());
+  ASSERT_NE(fast, nullptr);
+  auto* fast_unit = fast->get_component<Engine::Core::UnitComponent>();
+  ASSERT_NE(fast_unit, nullptr);
+  fast_unit->speed = 4.0F;
+
+  auto const result = commit(
+      world, units, QVector3D(0.0F, 0.0F, 40.0F), MovementPolicy::MaintainFormation);
+  ASSERT_TRUE(result.valid);
+  auto* formation = ArmyFormationRegistry::instance().find(result.group_id);
+  ASSERT_NE(formation, nullptr);
+
+  for (const auto& slot : formation->slot_list) {
+    auto* member = world.get_entity(slot.occupant);
+    ASSERT_NE(member, nullptr);
+    auto* transform = member->get_component<Engine::Core::TransformComponent>();
+    ASSERT_NE(transform, nullptr);
+    transform->position = {
+        slot.world_position.x(), slot.world_position.y(), slot.world_position.z()};
+  }
+  ArmyFormationRuntime::refresh_shape_state(world, *formation);
+
+  auto* slow = world.get_entity(units.back());
+  ASSERT_NE(slow, nullptr);
+  const auto* slow_unit = slow->get_component<Engine::Core::UnitComponent>();
+  ASSERT_NE(slow_unit, nullptr);
+  float const fast_multiplier = ArmyFormationRuntime::move_speed_multiplier(*fast);
+  float const slow_multiplier = ArmyFormationRuntime::move_speed_multiplier(*slow);
+  EXPECT_NEAR(formation->cohesion_pace, 1.1F, 0.001F);
+  EXPECT_NEAR(fast_unit->speed * fast_multiplier, formation->cohesion_pace, 0.001F);
+  EXPECT_NEAR(slow_unit->speed * slow_multiplier, formation->cohesion_pace, 0.001F);
+
+  auto* fast_transform = fast->get_component<Engine::Core::TransformComponent>();
+  ASSERT_NE(fast_transform, nullptr);
+  fast_transform->position.x += formation->spacing * 6.0F;
+  float const recovery_multiplier = ArmyFormationRuntime::move_speed_multiplier(*fast);
+  EXPECT_GT(recovery_multiplier, fast_multiplier);
+  EXPECT_LE(recovery_multiplier, 1.0F);
 }
 
 TEST_F(FormationMovementTest, ReformAtDestinationRunsAtFullSpeed) {
@@ -281,6 +328,57 @@ TEST_F(FormationMovementTest,
       << "a maintained move never built a corridor";
   EXPECT_FALSE(formation->move_plan.corridor.empty());
   EXPECT_NEAR(formation->move_plan.corridor.back().z(), target.z(), 2.0F);
+}
+
+TEST_F(FormationMovementTest, FormationDispatchUsesOneSharedMemberLaneCorridor) {
+  Engine::Core::World world;
+  auto const units = make_squad(world);
+  for (std::size_t index = 0; index < units.size(); ++index) {
+    auto* entity = world.get_entity(units[index]);
+    ASSERT_NE(entity, nullptr);
+    auto* transform = entity->get_component<Engine::Core::TransformComponent>();
+    auto* unit = entity->get_component<Engine::Core::UnitComponent>();
+    ASSERT_NE(transform, nullptr);
+    ASSERT_NE(unit, nullptr);
+    unit->spawn_type = Game::Units::SpawnType::Archer;
+    transform->position = {static_cast<float>(index) - 2.5F, 0.0F, -10.0F};
+  }
+
+  auto const result = commit(
+      world, units, QVector3D(0.0F, 0.0F, 10.0F), MovementPolicy::MaintainFormation);
+  ASSERT_TRUE(result.valid);
+
+  ArmyFormationRuntime runtime;
+  runtime.update(&world, 1.0F);
+
+  auto* formation = ArmyFormationRegistry::instance().find(result.group_id);
+  ASSERT_NE(formation, nullptr);
+  ASSERT_TRUE(formation->moves_pending);
+
+  Game::Systems::FormationMoveDispatchSystem dispatch;
+  dispatch.update(&world, 0.0F);
+  Game::Systems::RouteFollowSystem route_follower;
+  route_follower.update(&world, 0.1F);
+
+  std::uint64_t shared_route = 0U;
+  std::vector<float> lane_offsets;
+  for (auto const member : units) {
+    auto* entity = world.get_entity(member);
+    ASSERT_NE(entity, nullptr);
+    const auto* movement = entity->get_component<Engine::Core::MovementComponent>();
+    ASSERT_NE(movement, nullptr);
+    const auto* facts = entity->get_component<Engine::Core::MovementFactsComponent>();
+    ASSERT_NE(facts, nullptr);
+    EXPECT_FLOAT_EQ(facts->route.cohesion_pace, formation->cohesion_pace);
+    ASSERT_NE(movement->get_route_id(), 0U);
+    if (shared_route == 0U) {
+      shared_route = movement->get_route_id();
+    }
+    EXPECT_EQ(movement->get_route_id(), shared_route);
+    lane_offsets.push_back(movement->get_route_lane_offset());
+  }
+  std::sort(lane_offsets.begin(), lane_offsets.end());
+  EXPECT_LT(lane_offsets.front(), lane_offsets.back());
 }
 
 TEST_F(FormationMovementTest, TheAnchorAdvancesSmoothlyInsteadOfJumpingBetweenStages) {

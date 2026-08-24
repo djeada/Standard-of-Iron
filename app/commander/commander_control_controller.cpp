@@ -18,6 +18,7 @@
 #include "game/core/component.h"
 #include "game/core/world.h"
 #include "game/map/terrain_service.h"
+#include "game/session/session_context.h"
 #include "game/systems/building_collision_registry.h"
 #include "game/systems/building_line_of_sight.h"
 #include "game/systems/combat_actions/combat_action_definition.h"
@@ -57,6 +58,11 @@ auto signed_angle_delta(float target_degrees, float current_degrees) -> float {
     diff += 360.0F;
   }
   return diff;
+}
+
+auto buildings_of(const Engine::Core::World& world)
+    -> const Game::Systems::BuildingCollisionRegistry& {
+  return Game::Session::session_for(world).building_collision();
 }
 
 constexpr float k_fpv_walk_speed_scale = 1.25F;
@@ -169,7 +175,8 @@ void separate_commander_from_bodies(Engine::Core::World& world,
   QVector3D const from(
       transform.position.x, transform.position.y, transform.position.z);
   static_cast<void>(
-      motor.advance(transform,
+      motor.advance(Game::Session::session_for(world),
+                    transform,
                     {.from = from,
                      .to = from + QVector3D(push.x(), 0.0F, push.z()),
                      .source = App::Core::CommanderDisplacementSource::BodySeparation,
@@ -727,7 +734,7 @@ void CommanderControlController::cycle_lock_on_target(
   constexpr float k_lock_range_sq = k_lock_range * k_lock_range;
   constexpr float k_lock_max_angle_degrees = 70.0F;
 
-  auto& owners = Game::Systems::OwnerRegistry::instance();
+  auto& owners = Game::Session::session_for(world).owners();
   const QVector3D origin(transform->position.x, 0.0F, transform->position.z);
 
   struct Candidate {
@@ -764,7 +771,8 @@ void CommanderControlController::cycle_lock_on_target(
       const float angle_diff =
           signed_angle_delta(std::atan2(dx, dz) * 57.29577951308232F, m_view_yaw);
       if (std::abs(angle_diff) > k_lock_max_angle_degrees ||
-          !Game::Systems::has_clear_building_los(origin, soldier.position)) {
+          !Game::Systems::has_clear_building_los(
+              buildings_of(world), origin, soldier.position)) {
         continue;
       }
       Candidate const resolved{
@@ -947,6 +955,7 @@ void CommanderControlController::apply_strike_lunge(
   QVector3D const from(
       transform.position.x, transform.position.y, transform.position.z);
   static_cast<void>(m_motor.advance(
+      Game::Session::session_for(world),
       transform,
       {.from = from,
        .to = from + QVector3D((to_x / distance) * step, 0.0F, (to_z / distance) * step),
@@ -989,7 +998,8 @@ void CommanderControlController::update_lock_on_yaw(Engine::Core::World& world,
   constexpr float k_lock_drop_sq = 18.0F * 18.0F;
   const QVector3D origin(cmd_transform->position.x, 0.0F, cmd_transform->position.z);
   const QVector3D target_pos = target_sample->position;
-  const bool target_visible = Game::Systems::has_clear_building_los(origin, target_pos);
+  const bool target_visible =
+      Game::Systems::has_clear_building_los(buildings_of(world), origin, target_pos);
 
   const float target_yaw = std::atan2(dx, dz) * 57.29577951308232F;
   const float diff = signed_angle_delta(target_yaw, m_view_yaw);
@@ -1090,7 +1100,7 @@ auto CommanderControlController::find_primary_target(
   const QVector3D forward(std::sin(yaw_rad), 0.0F, std::cos(yaw_rad));
   const QVector3D origin(
       commander_transform->position.x, 0.0F, commander_transform->position.z);
-  auto& owners = Game::Systems::OwnerRegistry::instance();
+  auto& owners = Game::Session::session_for(world).owners();
 
   auto eligible_samples = [&](Engine::Core::EntityID entity_id) -> std::vector<Target> {
     auto* entity = world.get_entity(entity_id);
@@ -1117,7 +1127,8 @@ auto CommanderControlController::find_primary_target(
       float const distance = to_target.length();
       if (distance <= 0.0001F ||
           distance > max_range + std::max(0.0F, sample.body_radius) ||
-          !Game::Systems::has_clear_building_los(origin, sample.position)) {
+          !Game::Systems::has_clear_building_los(
+              buildings_of(world), origin, sample.position)) {
         continue;
       }
       to_target /= distance;
@@ -1272,7 +1283,7 @@ auto CommanderControlController::resolve_ability_target(Engine::Core::World& wor
 
   const QVector3D origin(transform->position.x, 0.0F, transform->position.z);
   const float max_range_sq = max_range * max_range;
-  auto& owners = Game::Systems::OwnerRegistry::instance();
+  auto& owners = Game::Session::session_for(world).owners();
 
   auto qualifies = [&](Engine::Core::EntityID candidate_id) -> bool {
     auto* candidate = world.get_entity(candidate_id);
@@ -1292,7 +1303,7 @@ auto CommanderControlController::resolve_ability_target(Engine::Core::World& wor
     const QVector3D target(
         candidate_transform->position.x, 0.0F, candidate_transform->position.z);
     return (target - origin).lengthSquared() <= max_range_sq &&
-           Game::Systems::has_clear_building_los(origin, target);
+           Game::Systems::has_clear_building_los(buildings_of(world), origin, target);
   };
 
   if (m_locked_target_id != 0 && qualifies(m_locked_target_id)) {
@@ -1349,7 +1360,7 @@ void CommanderControlController::try_activate_shield_bash(
     return;
   }
 
-  auto& owners = Game::Systems::OwnerRegistry::instance();
+  auto& owners = Game::Session::session_for(world).owners();
   const QVector3D cmd_pos(
       transform->position.x, transform->position.y, transform->position.z);
   for (auto* entity : world.collect_entities_with<Engine::Core::UnitComponent>()) {
@@ -1464,7 +1475,7 @@ void CommanderControlController::try_activate_vanguard_rush(
 
   const QVector3D desired = start + rush_direction * rush_distance;
   const QVector3D resolved = App::Core::CommanderMotor::reachable_ground_position(
-      start, desired, commander_id);
+      Game::Session::session_for(world), start, desired, commander_id);
   static_cast<void>(m_motor.teleport(
       *transform, resolved, App::Core::CommanderDisplacementSource::StrikeLunge));
   if (movement != nullptr) {
@@ -1481,7 +1492,8 @@ void CommanderControlController::try_activate_vanguard_rush(
                                  target_transform->position.y,
                                  target_transform->position.z);
       if ((target_pos - resolved).length() <= 2.35F &&
-          Game::Systems::has_clear_building_los(resolved, target_pos)) {
+          Game::Systems::has_clear_building_los(
+              buildings_of(world), resolved, target_pos)) {
         Game::Systems::RpgCombat::deal_commander_attack_damage(
             &world, target, k_rush_damage, commander_id);
         if (target_unit->health > 0) {
@@ -1862,7 +1874,7 @@ auto CommanderControlController::update_impl(Engine::Core::World& world,
   }
 
   auto mark_jump_safe_position = [&](float x, float z) {
-    if (!jump_active || !App::Core::CommanderMotor::is_walkable_at(x, z)) {
+    if (!jump_active || !App::Core::CommanderMotor::is_walkable_at(Game::Session::session_for(world), x, z)) {
       return;
     }
     m_jump_safe_position_valid = true;
@@ -1880,6 +1892,7 @@ auto CommanderControlController::update_impl(Engine::Core::World& world,
     const float nz =
         transform->position.z + m_dodge_direction.z() * k_dodge_speed * roll_dt;
     auto const step = m_motor.advance(
+        Game::Session::session_for(world),
         *transform,
         {.from = QVector3D(
              transform->position.x, transform->position.y, transform->position.z),
@@ -1919,6 +1932,7 @@ auto CommanderControlController::update_impl(Engine::Core::World& world,
       const float nx = transform->position.x + move.x() * speed * dt;
       const float nz = transform->position.z + move.z() * speed * dt;
       auto const step = m_motor.advance(
+          Game::Session::session_for(world),
           *transform,
           {.from = QVector3D(
                transform->position.x, transform->position.y, transform->position.z),
@@ -1984,6 +1998,7 @@ auto CommanderControlController::update_impl(Engine::Core::World& world,
       const float nz =
           transform->position.z + direction.z() * m_planar_speed_smooth * dt;
       auto const step = m_motor.advance(
+          Game::Session::session_for(world),
           *transform,
           {.from = QVector3D(
                transform->position.x, transform->position.y, transform->position.z),
@@ -2018,8 +2033,9 @@ auto CommanderControlController::update_impl(Engine::Core::World& world,
     }
   }
   if (m_jump_safe_position_valid && !jump_active) {
-    if (!App::Core::CommanderMotor::is_walkable_at(transform->position.x,
-                                                   transform->position.z)) {
+    if (!App::Core::CommanderMotor::is_walkable_at(
+            Game::Session::session_for(world), transform->position.x,
+            transform->position.z)) {
       motor_snap_back_distance =
           std::hypot(m_jump_last_walkable_position.x() - transform->position.x,
                      m_jump_last_walkable_position.z() - transform->position.z);
@@ -2600,6 +2616,9 @@ void CommanderControlController::update_camera(Engine::Core::World& world,
   inputs.soft_focus_position = soft_focus_position;
   inputs.fight_context = fight_context;
   inputs.threat_side_bias = threat_side_bias;
+  auto& camera_session = Game::Session::session_for(world);
+  inputs.terrain = &camera_session.terrain();
+  inputs.buildings = &camera_session.building_collision();
 
   float const previous_bob_phase = m_camera_rig.update(camera, inputs);
   if (m_latency_probe != nullptr) {

@@ -9,6 +9,7 @@
 #include "game/systems/building_line_of_sight.h"
 #include "game/systems/nav_grid.h"
 #include "game/systems/pathfinding.h"
+#include "game/session/session_context.h"
 
 namespace App::Core {
 
@@ -16,8 +17,10 @@ namespace {
 
 constexpr float k_commander_body_radius = 0.34F;
 
-auto structure_blocks_commander_body(float x, float z) -> bool {
-  auto const& registry = Game::Systems::BuildingCollisionRegistry::instance();
+auto structure_blocks_commander_body(Game::Session::SessionContext& session,
+                                     float x,
+                                     float z) -> bool {
+  auto const& registry = session.building_collision();
   auto blocked_by = [x, z](const Game::Systems::BuildingFootprint& footprint) {
     if (!footprint.blocks_navigation) {
       return false;
@@ -45,14 +48,15 @@ auto structure_blocks_commander_body(float x, float z) -> bool {
   return false;
 }
 
-auto structure_padding_covers_cell(const Game::Systems::Pathfinding& pathfinder,
+auto structure_padding_covers_cell(Game::Session::SessionContext& session,
+                                   const Game::Systems::Pathfinding& pathfinder,
                                    int grid_x,
                                    int grid_z) -> bool {
 
   constexpr float k_cell_slack = 1.0F;
   float const cell_x = static_cast<float>(grid_x) + pathfinder.get_grid_offset_x();
   float const cell_z = static_cast<float>(grid_z) + pathfinder.get_grid_offset_z();
-  auto const& registry = Game::Systems::BuildingCollisionRegistry::instance();
+  auto const& registry = session.building_collision();
   auto covers = [cell_x, cell_z](const Game::Systems::BuildingFootprint& footprint) {
     if (!footprint.blocks_navigation) {
       return false;
@@ -109,7 +113,7 @@ auto scatter_prop_blocks_commander_body(const Game::Systems::Pathfinding& pathfi
   return false;
 }
 
-auto walkable_point(float x, float z) -> bool {
+auto walkable_point(Game::Session::SessionContext& session, float x, float z) -> bool {
   using CellValue = Game::Systems::Pathfinding::CellValue;
 
   if (auto* pathfinder = Game::Systems::NavGrid::get_pathfinder()) {
@@ -124,14 +128,14 @@ auto walkable_point(float x, float z) -> bool {
                                      cell == CellValue::Boulder ||
                                      cell == CellValue::IronOre;
       if (!scatter_prop_cell &&
-          !structure_padding_covers_cell(*pathfinder, grid.x, grid.y)) {
+          !structure_padding_covers_cell(session, *pathfinder, grid.x, grid.y)) {
         return false;
       }
     }
     if (scatter_prop_blocks_commander_body(*pathfinder, grid.x, grid.y, x, z)) {
       return false;
     }
-    return !structure_blocks_commander_body(x, z);
+    return !structure_blocks_commander_body(session, x, z);
   }
   auto& terrain = Game::Map::TerrainService::instance();
   if (terrain.is_initialized() &&
@@ -139,7 +143,7 @@ auto walkable_point(float x, float z) -> bool {
                            static_cast<int>(std::round(z)))) {
     return false;
   }
-  return !structure_blocks_commander_body(x, z);
+  return !structure_blocks_commander_body(session, x, z);
 }
 
 struct GroundMove {
@@ -152,18 +156,19 @@ auto airborne_step(float to_x, float to_z) -> GroundMove {
   return {.x = to_x, .z = to_z, .moved = true};
 }
 
-auto resolve_ground_step(float from_x,
+auto resolve_ground_step(Game::Session::SessionContext& session,
+                         float from_x,
                          float from_z,
                          float to_x,
                          float to_z) -> GroundMove {
-  if (walkable_point(to_x, to_z)) {
+  if (walkable_point(session, to_x, to_z)) {
     return {.x = to_x, .z = to_z, .moved = true};
   }
 
   float const delta_x = to_x - from_x;
   float const delta_z = to_z - from_z;
-  bool const slide_x_free = std::abs(delta_x) > 1.0e-5F && walkable_point(to_x, from_z);
-  bool const slide_z_free = std::abs(delta_z) > 1.0e-5F && walkable_point(from_x, to_z);
+  bool const slide_x_free = std::abs(delta_x) > 1.0e-5F && walkable_point(session, to_x, from_z);
+  bool const slide_z_free = std::abs(delta_z) > 1.0e-5F && walkable_point(session, from_x, to_z);
 
   if (slide_x_free && (!slide_z_free || std::abs(delta_x) >= std::abs(delta_z))) {
     return {.x = to_x, .z = from_z, .moved = true};
@@ -176,13 +181,14 @@ auto resolve_ground_step(float from_x,
 
 } // namespace
 
-auto CommanderMotor::reachable_ground_position(const QVector3D& start,
+auto CommanderMotor::reachable_ground_position(Game::Session::SessionContext& session,
+                                               const QVector3D& start,
                                                const QVector3D& desired,
                                                unsigned int ignore_entity_id)
     -> QVector3D {
   QVector3D candidate = desired;
   const float blocked_fraction = Game::Systems::first_building_intersection_fraction(
-      start, desired, ignore_entity_id);
+      session.building_collision(), start, desired, ignore_entity_id);
   if (blocked_fraction < 1.0F) {
     const float safe_fraction = std::clamp(blocked_fraction - 0.08F, 0.0F, 1.0F);
     candidate = start + (desired - start) * safe_fraction;
@@ -194,7 +200,7 @@ auto CommanderMotor::reachable_ground_position(const QVector3D& start,
     const float sample_t =
         static_cast<float>(sample_index) / static_cast<float>(k_samples);
     const QVector3D sample = start + (candidate - start) * sample_t;
-    if (!walkable_point(sample.x(), sample.z())) {
+    if (!walkable_point(session, sample.x(), sample.z())) {
       break;
     }
     best = sample;
@@ -206,18 +212,24 @@ auto CommanderMotor::body_radius() -> float {
   return k_commander_body_radius;
 }
 
-auto CommanderMotor::is_walkable_at(float x, float z) -> bool {
-  return walkable_point(x, z);
+auto CommanderMotor::is_walkable_at(Game::Session::SessionContext& session,
+                                    float x,
+                                    float z) -> bool {
+  return walkable_point(session, x, z);
 }
 
-auto CommanderMotor::advance(Engine::Core::TransformComponent& transform,
+auto CommanderMotor::advance(Game::Session::SessionContext& session,
+                             Engine::Core::TransformComponent& transform,
                              const CommanderMotorRequest& request)
     -> CommanderMotorResult {
   GroundMove const step =
       request.airborne
           ? airborne_step(request.to.x(), request.to.z())
-          : resolve_ground_step(
-                request.from.x(), request.from.z(), request.to.x(), request.to.z());
+          : resolve_ground_step(session,
+                                request.from.x(),
+                                request.from.z(),
+                                request.to.x(),
+                                request.to.z());
 
   CommanderMotorResult result;
   result.source = request.source;

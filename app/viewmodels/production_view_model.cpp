@@ -4,6 +4,8 @@
 #include <QStringView>
 
 #include <optional>
+#include <utility>
+#include <vector>
 
 #include "app/core/client_context.h"
 #include "app/economy/production_manager.h"
@@ -11,10 +13,13 @@
 #include "app/orders/command_controller.h"
 #include "game/command/command.h"
 #include "game/command/command_queue.h"
+#include "game/core/component.h"
+#include "game/core/world.h"
 #include "game/render_bridge/selection_controller.h"
 #include "game/session/session_context.h"
 #include "game/systems/marketplace_system.h"
 #include "game/systems/resource_types.h"
+#include "game/units/spawn_type.h"
 
 namespace App::ViewModels {
 namespace {
@@ -56,8 +61,37 @@ ProductionViewModel::ProductionViewModel(const App::Core::ClientContext& context
     , m_host(host) {
 }
 
+void ProductionViewModel::publish_frame() {
+  App::Core::SelectionReadout readout;
+
+  if (m_context.selection != nullptr && m_context.world != nullptr) {
+    std::vector<Engine::Core::EntityID> selected;
+    m_context.selection->get_selected_unit_ids(selected);
+    for (const auto id : selected) {
+      const auto* unit = m_context.world->try_get<Engine::Core::UnitComponent>(id);
+      if (unit == nullptr) {
+        continue;
+      }
+      readout.selected_types.insert(
+          QString::fromStdString(Game::Units::spawn_typeToString(unit->spawn_type)));
+    }
+  }
+
+  const int owner = m_context.local_owner_id;
+  readout.barracks = App::Economy::selected_barracks_state(m_context.world, owner);
+  readout.home = App::Economy::selected_home_state(m_context.world, owner);
+  readout.temple = App::Economy::selected_temple_state(m_context.world, owner);
+  readout.builder = App::Economy::selected_builder_state(m_context.world);
+  readout.marketplace =
+      App::Economy::selected_marketplace_state(m_context.world, owner);
+  readout.farm = App::Economy::selected_farm_state(m_context.world, owner);
+
+  m_readout.publish(std::move(readout));
+}
+
 auto ProductionViewModel::has_selected_type(const QString& type) const -> bool {
-  return m_context.selection != nullptr && m_context.selection->has_selected_type(type);
+  const auto readout = m_readout.read();
+  return readout && readout->selected_types.contains(type);
 }
 
 void ProductionViewModel::recruit_near_selected(const QString& unit_type) {
@@ -69,34 +103,40 @@ void ProductionViewModel::recruit_near_selected(const QString& unit_type) {
 }
 
 auto ProductionViewModel::selected_state() const -> QVariantMap {
-  return App::Economy::selected_barracks_state(m_context.world,
-                                               m_context.local_owner_id);
+  const auto readout = m_readout.read();
+  return readout ? readout->barracks : QVariantMap{};
 }
 
 auto ProductionViewModel::selected_home_state() const -> QVariantMap {
-  return App::Economy::selected_home_state(m_context.world, m_context.local_owner_id);
+  const auto readout = m_readout.read();
+  return readout ? readout->home : QVariantMap{};
 }
 
 auto ProductionViewModel::selected_temple_state() const -> QVariantMap {
-  return App::Economy::selected_temple_state(m_context.world, m_context.local_owner_id);
+  const auto readout = m_readout.read();
+  return readout ? readout->temple : QVariantMap{};
 }
 
 auto ProductionViewModel::selected_builder_state() const -> QVariantMap {
-  return App::Economy::selected_builder_state(m_context.world);
+  const auto readout = m_readout.read();
+  return readout ? readout->builder : QVariantMap{};
 }
 
 auto ProductionViewModel::selected_marketplace_state() const -> QVariantMap {
-  return App::Economy::selected_marketplace_state(m_context.world,
-                                                  m_context.local_owner_id);
+  const auto readout = m_readout.read();
+  return readout ? readout->marketplace : QVariantMap{};
 }
 
 auto ProductionViewModel::selected_farm_state() const -> QVariantMap {
-  return App::Economy::selected_farm_state(m_context.world, m_context.local_owner_id);
+  const auto readout = m_readout.read();
+  return readout ? readout->farm : QVariantMap{};
 }
 
 auto ProductionViewModel::unit_info(const QString& unit_type,
                                     const QString& nation_id) const -> QVariantMap {
-  return App::Economy::unit_production_info(unit_type, nation_id);
+  const auto frame_lock = m_host.lock_frame();
+  return App::Economy::unit_production_info(
+      m_context.session->nations(), unit_type, nation_id);
 }
 
 auto ProductionViewModel::marketplace_buy(const QString& resource_key) -> bool {

@@ -499,6 +499,53 @@ The Carthaginian layout is a wider `arc`, not a roofed shell. Its front and inte
 
 The Arena scenarios `unit_layout_testudo_lock` and `unit_layout_shield_wall_lock` each spawn exactly one logical swordsman unit. Their lock expectation observes `DefensiveUnitLayoutService::is_formed`; the scenarios therefore prove an internal layout transition without smuggling an army-scale formation back into Defence Mode.
 
+### Constrained-route shape policy
+
+`RouteCorridorPlanner` owns the route centerline for both single-unit and grouped
+moves, including centering through even-width openings. `UnitTraversalLayoutSystem`
+measures that same centerline and selects the widest safe file count. Shared compact
+spacing constants live in `TraversalPolicy`; route cost and slot fitting do not keep
+independent copies.
+
+For a large roster, `formation_navigation_clearance` adds a bounded path-cost premium
+derived from the ratio between its normal depth and its possible single-file depth.
+Because pathfinding clearance is a graded cost rather than a hard exclusion, a
+reasonable wide detour wins while a one-body opening remains usable when it is the
+only route. Once a file count is selected, traversal asks the authoritative
+`UnitLayoutSystem` to generate that forced-file topology and scales only its lateral
+extent to the measured safe width. Authored doctrine spacing, stagger, arc, grouping,
+and deterministic variation therefore remain recognizable without duplicating their
+formulas in traversal code.
+
+### Soldier-anchor composition and precedence
+
+Soldier position has one composed simulation result. The inputs remain independent;
+later rows in this table refine the result owned by earlier rows and may not run a
+second position integrator:
+
+| Input                           | Owns                                                                                 | Composition rule                                                                                                                           |
+| ------------------------------- | ------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| Army formation and route        | Troop root destination, accepted root pose, group lane and pace                      | Never assigns internal soldier slots.                                                                                                      |
+| Normal or defensive unit layout | Stable soldier identity, base row/file, authored local offset and defensive pose     | `UnitLayoutStateComponent` selects the base layout before traversal is evaluated.                                                          |
+| Traversal layout                | Stable-ID row/file remap and previous/current/target local anchors                   | Overrides base row/file and local position while reflowing; it does not replace defensive eligibility or combat state.                     |
+| Combat/contact presentation     | Action, facing, damage carrier, hit reaction, and explicit contact/facade adjustment | Composes on the traversal anchor and publishes the final `FormationPresentationComponent`; it does not chase a separate positional target. |
+| Renderer                        | Mesh pose and visual facing interpolation                                            | Reads the published anchor exactly. It may smooth facing, but cannot integrate world position.                                             |
+
+`FormationCombat::soldier_spatial_anchors` is the shared query boundary. It selects
+final presentation facts when present, traversal anchors when presentation is not
+materialized, and the base layout otherwise. RPG targeting, weapon traces, casualty
+anchors, soldier selection markers, and other soldier-level spatial queries therefore
+observe the same coordinates. Ordinary RTS entity picking remains root/entity-ID
+picking; where an exact soldier slot is required, the RPG ray/targeting path resolves
+that slot through the shared boundary.
+
+The visible transit envelope is also explicit. While soldier presentation is active,
+the traversal owner predicts whether the next accepted root step would make any live
+soldier footprint illegal and publishes `root_motion_blocked`; the motor consumes that
+single fact without duplicating corridor or slot geometry. Headless root-only runs keep
+their root transit contract while still advancing traversal facts for deterministic
+state and traces.
+
 ## AI
 
 `Game::Systems::AI::plan_ai_formation` builds `ArmyFormationMember`s from AI

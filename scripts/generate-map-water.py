@@ -18,6 +18,10 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Sequence
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+
+from map_hill_shapes import hill_shape_strokes
+
 Point = tuple[float, float]
 
 CAMPAIGN_MAPS = (
@@ -264,6 +268,19 @@ class WaterField:
             )
             if kind == "mountain" and "width" not in feature:
                 width, depth = radius * 2.68, radius * 1.60
+            strokes, half_thickness = hill_shape_strokes(feature)
+            if strokes:
+
+                stroke_radius = half_thickness / self.coords.tile_size + self.clearance
+                for start, end in strokes:
+                    self._raster_capsule(
+                        self.blocked,
+                        self.coords.to_grid(start),
+                        self.coords.to_grid(end),
+                        stroke_radius,
+                        1,
+                    )
+                continue
             self._raster_ellipse(
                 center, width * 0.5, depth * 0.5, float(feature.get("rotation", 0.0))
             )

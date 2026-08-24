@@ -120,6 +120,7 @@ auto build_rule_set_from_config(const Game::Map::VictoryConfig& config)
 
   std::vector<QString> const default_defeat_structures =
       normalize_structure_types(config.key_structures);
+  bool has_commander_defeat = false;
   for (const auto& condition : config.defeat_conditions) {
     QString const normalized_condition = condition.trimmed().toLower();
     if (normalized_condition == "no_units") {
@@ -133,6 +134,7 @@ auto build_rule_set_from_config(const Game::Map::VictoryConfig& config)
     }
     if (normalized_condition == "no_commander") {
       rules.defeat_rules.emplace_back(NoCommanderDefeatRule{});
+      has_commander_defeat = true;
       continue;
     }
     if (normalized_condition == "only_commander_remaining") {
@@ -144,9 +146,12 @@ auto build_rule_set_from_config(const Game::Map::VictoryConfig& config)
   }
 
   if (rules.defeat_rules.empty()) {
-    rules.defeat_rules.emplace_back(NoCommanderDefeatRule{});
     rules.defeat_rules.emplace_back(
         OnlyCommanderRemainingDefeatRule{{QStringLiteral("barracks")}});
+  }
+
+  if (!has_commander_defeat) {
+    rules.defeat_rules.emplace_back(NoCommanderDefeatRule{});
   }
 
   return rules;
@@ -163,7 +168,7 @@ auto count_matching_structures(const QHash<QString, int>& structure_counts,
 
 } // namespace
 
-VictoryService::VictoryService()
+VictoryService::VictoryService(Services services)
     : m_unit_spawned_subscription(
           [this](const Engine::Core::UnitSpawnedEvent& e) { on_unit_spawned(e); })
     , m_unit_died_subscription(
@@ -172,8 +177,10 @@ VictoryService::VictoryService()
           [this](const Engine::Core::BarrackCapturedEvent& e) {
             on_barrack_captured(e);
           })
-    , m_stats_registry(Game::Systems::GlobalStatsRegistry::instance())
-    , m_owner_registry(Game::Systems::OwnerRegistry::instance()) {
+    , m_stats_registry(services.stats)
+    , m_owner_registry(services.owners)
+    , m_nations(services.nations)
+    , m_economy(services.economy) {
 }
 
 VictoryService::~VictoryService() = default;
@@ -468,7 +475,7 @@ auto VictoryService::summarize_world(Engine::Core::World& world) const -> WorldS
   bool const track_local_structures = !m_tracked_local_structure_types.isEmpty();
   bool const track_structures = track_enemy_structures || track_local_structures;
 
-  auto& nation_registry = Game::Systems::NationRegistry::instance();
+  auto& nation_registry = m_nations;
   const auto* local_nation = nation_registry.get_nation_for_player(m_local_owner_id);
   Game::Systems::NationID const local_nation_id =
       (local_nation != nullptr) ? local_nation->id
@@ -570,8 +577,8 @@ auto VictoryService::check_victory_rule(const VictoryRule& rule,
                        std::max(1, wave_rule.required_wave_count);
           },
           [this](const AccumulateResourcesVictoryRule& resource_rule) {
-            return PlayerResourceRegistry::instance().has_harvested_at_least(
-                m_local_owner_id, resource_rule.required);
+            return m_economy.has_harvested_at_least(m_local_owner_id,
+                                                    resource_rule.required);
           },
           [this, &summary](const EliminateCommandersVictoryRule&) {
             return m_eliminate_commanders_armed && summary.enemy_commander_count == 0;

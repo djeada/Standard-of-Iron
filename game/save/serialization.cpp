@@ -29,6 +29,7 @@
 #include "../formation/army_formation_registry.h"
 #include "../map/terrain.h"
 #include "../map/terrain_service.h"
+#include "../session/session_context.h"
 #include "../systems/nation_id.h"
 #include "../systems/owner_registry.h"
 #include "../units/spawn_type.h"
@@ -728,6 +729,7 @@ auto Serialization::serialize_entity(const Entity* entity) -> QJsonObject {
     layout_obj["transition_seconds"] = static_cast<double>(layout->transition_seconds);
     layout_obj["layout_id"] = static_cast<int>(layout->layout_id);
     layout_obj["requested_layout_id"] = static_cast<int>(layout->requested_layout_id);
+    layout_obj["previous_layout_id"] = static_cast<int>(layout->previous_layout_id);
     entity_obj["unit_layout_state"] = layout_obj;
   }
 
@@ -791,6 +793,7 @@ auto Serialization::serialize_entity(const Entity* entity) -> QJsonObject {
     carry_obj["amounts"] = amounts_obj;
     carry_obj["depot_entity_id"] = static_cast<qint64>(carry->depot_entity_id);
     carry_obj["has_depot"] = carry->has_depot;
+    carry_obj["food_form"] = static_cast<int>(carry->food_form);
     entity_obj["resource_carry"] = carry_obj;
   }
 
@@ -1675,6 +1678,8 @@ void Serialization::deserialize_entity(Entity* entity, const QJsonObject& json) 
         static_cast<std::uint16_t>(layout_obj["layout_id"].toInt(0xFFFF));
     layout->requested_layout_id =
         static_cast<std::uint16_t>(layout_obj["requested_layout_id"].toInt(0xFFFF));
+    layout->previous_layout_id =
+        static_cast<std::uint16_t>(layout_obj["previous_layout_id"].toInt(0xFFFF));
   }
 
   if (json.contains("stamina")) {
@@ -1744,6 +1749,9 @@ void Serialization::deserialize_entity(Entity* entity, const QJsonObject& json) 
     carry->depot_entity_id =
         static_cast<EntityID>(carry_obj["depot_entity_id"].toVariant().toULongLong());
     carry->has_depot = carry_obj["has_depot"].toBool(false);
+    carry->food_form = carry_obj["food_form"].toInt(0) == 1
+                           ? Engine::Core::CarriedFoodForm::Meat
+                           : Engine::Core::CarriedFoodForm::Grain;
   }
 
   if (json.contains("settlement_resident")) {
@@ -2290,14 +2298,15 @@ auto Serialization::serialize_world(const World* world) -> QJsonDocument {
     entities_array.append(serialize_entity(&entity));
   });
 
+  auto& session = Game::Session::session_for(*world);
   world_obj["entities"] = entities_array;
   world_obj["nextEntityId"] = static_cast<qint64>(world->get_next_entity_id());
   world_obj["schemaVersion"] = 2;
-  world_obj["owner_registry"] = Game::Systems::OwnerRegistry::instance().to_json();
+  world_obj["owner_registry"] = session.owners().to_json();
   world_obj["army_formations"] =
       Game::Formation::ArmyFormationRegistry::instance().to_json();
 
-  const auto& terrain_service = Game::Map::TerrainService::instance();
+  const auto& terrain_service = session.terrain();
   if (terrain_service.is_initialized() &&
       (terrain_service.get_height_map() != nullptr)) {
     world_obj["terrain"] = serialize_terrain(terrain_service.get_height_map(),
@@ -2330,9 +2339,9 @@ void Serialization::deserialize_world(World* world, const QJsonDocument& doc) {
     world->set_next_entity_id(next_id);
   }
 
+  auto& session = Game::Session::session_for(*world);
   if (world_obj.contains("owner_registry")) {
-    Game::Systems::OwnerRegistry::instance().from_json(
-        world_obj["owner_registry"].toObject());
+    session.owners().from_json(world_obj["owner_registry"].toObject());
   }
 
   Game::Formation::ArmyFormationRegistry::instance().from_json(
@@ -2362,7 +2371,7 @@ void Serialization::deserialize_world(World* world, const QJsonDocument& doc) {
                         authored_world_props,
                         terrain_obj);
 
-    auto& terrain_service = Game::Map::TerrainService::instance();
+    auto& terrain_service = session.terrain();
     terrain_service.restore_from_serialized(width,
                                             height,
                                             tile_size,

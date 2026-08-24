@@ -146,6 +146,7 @@
       ],
       "files": [
         "game/systems/pathfinding",
+        "game/systems/route_corridor_planner",
         "game/systems/spatial_grid",
         "game/systems/nav_grid",
         "game/systems/gate_service",
@@ -200,12 +201,16 @@
         "because a formation's turn radius and speed multiplier shape the move."
       ],
       "files": [
+        "game/systems/movement_route",
+        "game/systems/route_follow_system",
         "game/systems/movement_system",
+        "game/systems/movement_pipeline",
         "game/systems/movement_orders",
         "game/systems/local_avoidance_system",
         "game/systems/command_service",
         "game/systems/order_service",
-        "game/systems/formation_move_dispatch_system"
+        "game/systems/formation_move_dispatch_system",
+        "game/systems/unit_traversal_layout_system"
       ],
       "may_use": [
         "domain_types",

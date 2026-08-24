@@ -133,7 +133,7 @@ void GateSystem::update(Engine::Core::World* world, float delta_time) {
 
     for (auto& record : gates) {
 
-      if (!GateService::serves_owner(record.owner_id, unit->owner_id)) {
+      if (!GateService::serves_owner(*world, record.owner_id, unit->owner_id)) {
         continue;
       }
 

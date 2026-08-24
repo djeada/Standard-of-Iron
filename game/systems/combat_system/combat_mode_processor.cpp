@@ -5,6 +5,7 @@
 #include <limits>
 #include <vector>
 
+#include "../../core/ambient_session.h"
 #include "../../core/component.h"
 #include "../../core/world.h"
 #include "../combat_rules.h"
@@ -59,7 +60,7 @@ void update_combat_mode(Engine::Core::Entity* attacker,
     return;
   }
 
-  auto& owner_registry = Game::Systems::OwnerRegistry::instance();
+  auto& owner_registry = *Game::Session::services_for(*world).owners;
 
   const float reach = std::max(attack_comp->range, attack_comp->melee_range);
   static thread_local std::vector<Engine::Core::EntityID> nearby;

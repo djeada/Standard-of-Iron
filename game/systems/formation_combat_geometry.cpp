@@ -9,6 +9,7 @@
 #include <unordered_map>
 
 #include "../core/component.h"
+#include "../formation/traversal_layout_policy.h"
 #include "../formation/unit_layout_resolver.h"
 #include "../units/spawn_type.h"
 #include "../units/troop_catalog.h"
@@ -513,6 +514,84 @@ auto resolve_layout(const Engine::Core::Entity& entity) -> FormationLayout {
   return entry != nullptr ? entry->layout : FormationLayout{};
 }
 
+auto soldier_spatial_anchors(const Engine::Core::Entity& entity,
+                             const FormationLayout& base_layout)
+    -> std::vector<SoldierSpatialAnchor> {
+  std::vector<SoldierSpatialAnchor> result;
+  result.reserve(base_layout.live_slots.size());
+  auto const* transform = entity.get_component<Engine::Core::TransformComponent>();
+  auto const* traversal =
+      entity.get_component<Engine::Core::UnitTraversalLayoutStateComponent>();
+  auto const* presentation =
+      entity.get_component<Engine::Core::FormationPresentationComponent>();
+  float const root_x = transform != nullptr ? transform->position.x : 0.0F;
+  float const root_z = transform != nullptr ? transform->position.z : 0.0F;
+  float const yaw = transform != nullptr
+                        ? transform->rotation.y * std::numbers::pi_v<float> / 180.0F
+                        : 0.0F;
+  float const sin_yaw = std::sin(yaw);
+  float const cos_yaw = std::cos(yaw);
+  constexpr std::size_t k_missing_soldier = std::numeric_limits<std::size_t>::max();
+  std::vector<std::size_t> presentation_by_slot;
+  if (presentation != nullptr) {
+    std::uint16_t max_slot = 0U;
+    for (auto const& base : base_layout.live_slots) {
+      max_slot = std::max(max_slot, base.index);
+    }
+    presentation_by_slot.assign(static_cast<std::size_t>(max_slot) + 1U,
+                                k_missing_soldier);
+    for (std::size_t index = 0; index < presentation->soldiers.size(); ++index) {
+      auto const& soldier = presentation->soldiers[index];
+      if (soldier.alive && soldier.slot_index < presentation_by_slot.size()) {
+        presentation_by_slot[soldier.slot_index] = index;
+      }
+    }
+  }
+
+  for (auto const& base : base_layout.live_slots) {
+    SoldierSpatialAnchor anchor{
+        .slot_index = base.index,
+        .row = base.row,
+        .col = base.col,
+        .local_x = base.local_x,
+        .local_z = base.local_z,
+        .local_yaw = base.local_yaw,
+        .source = SoldierAnchorSource::BaseLayout,
+    };
+    if (traversal != nullptr) {
+      if (auto const* slot = traversal->slot_for(base.index);
+          slot != nullptr && slot->alive) {
+        anchor.row = slot->row;
+        anchor.col = slot->col;
+        anchor.local_x = slot->current_local_x;
+        anchor.local_z = slot->current_local_z;
+        anchor.source = SoldierAnchorSource::TraversalLayout;
+      }
+    }
+    if (presentation != nullptr && base.index < presentation_by_slot.size()) {
+      std::size_t const soldier_index = presentation_by_slot[base.index];
+      if (soldier_index != k_missing_soldier) {
+        auto const& soldier = presentation->soldiers[soldier_index];
+        anchor.row = soldier.row;
+        anchor.col = soldier.col;
+        anchor.local_x = soldier.local_x;
+        anchor.local_z = soldier.local_z;
+        anchor.local_yaw = soldier.local_yaw;
+        anchor.source = SoldierAnchorSource::PresentationFacts;
+      }
+    }
+    anchor.world_x = root_x + cos_yaw * anchor.local_x + sin_yaw * anchor.local_z;
+    anchor.world_z = root_z - sin_yaw * anchor.local_x + cos_yaw * anchor.local_z;
+    result.push_back(anchor);
+  }
+  return result;
+}
+
+auto soldier_spatial_anchors(const Engine::Core::Entity& entity)
+    -> std::vector<SoldierSpatialAnchor> {
+  return soldier_spatial_anchors(entity, resolve_layout(entity));
+}
+
 auto formation_turn_radius(const Engine::Core::Entity& entity) -> float {
   std::uint64_t const signature = layout_signature(entity);
   auto cached = g_layout_cache.find(&entity);
@@ -526,11 +605,27 @@ auto formation_turn_radius(const Engine::Core::Entity& entity) -> float {
 auto formation_navigation_clearance(const Engine::Core::Entity& entity) -> float {
   auto const layout = resolve_layout(entity);
   float lateral_extent = layout.body_radius;
+  float minimum_z = 0.0F;
+  float maximum_z = 0.0F;
   for (auto const& slot : layout.live_slots) {
     lateral_extent =
         std::max(lateral_extent, std::abs(slot.local_x) + layout.body_radius);
+    minimum_z = std::min(minimum_z, slot.local_z - layout.body_radius);
+    maximum_z = std::max(maximum_z, slot.local_z + layout.body_radius);
   }
-  return std::max(0.1F, lateral_extent);
+  if (layout.live_slots.size() < 20U) {
+    return std::max(0.1F, lateral_extent);
+  }
+
+  float const compact_spacing = Game::Formation::TraversalPolicy::compact_spacing(
+      layout.body_radius, layout.spacing);
+  float const single_file_depth =
+      layout.body_radius * 2.0F +
+      static_cast<float>(layout.live_slots.size() - 1U) * compact_spacing;
+  float const normal_depth = std::max(layout.spacing, maximum_z - minimum_z);
+  float const depth_ratio = single_file_depth / normal_depth;
+  float const depth_premium = std::clamp((depth_ratio - 2.0F) * 0.12F, 0.0F, 0.75F);
+  return std::max(0.1F, lateral_extent * (1.0F + depth_premium));
 }
 
 auto has_formation_slots(const Engine::Core::Entity& entity) -> bool {
@@ -544,9 +639,42 @@ auto has_formation_slots(const Engine::Core::Entity& entity) -> bool {
 
 namespace {
 
+auto spatialized_layout(const Engine::Core::Entity& entity,
+                        const FormationLayout& base_layout) -> FormationLayout {
+  FormationLayout result = base_layout;
+  auto const anchors = soldier_spatial_anchors(entity, base_layout);
+  std::vector<const SoldierSpatialAnchor*> anchor_by_slot;
+  for (auto const& anchor : anchors) {
+    if (anchor.slot_index >= anchor_by_slot.size()) {
+      anchor_by_slot.resize(static_cast<std::size_t>(anchor.slot_index) + 1U, nullptr);
+    }
+    anchor_by_slot[anchor.slot_index] = &anchor;
+  }
+  auto apply = [&anchor_by_slot](std::vector<SoldierSlot>& slot_list) {
+    for (auto& slot : slot_list) {
+      if (slot.index >= anchor_by_slot.size() ||
+          anchor_by_slot[slot.index] == nullptr) {
+        continue;
+      }
+      auto const& anchor = *anchor_by_slot[slot.index];
+      slot.row = anchor.row;
+      slot.col = anchor.col;
+      slot.local_x = anchor.local_x;
+      slot.local_z = anchor.local_z;
+      slot.local_yaw = anchor.local_yaw;
+      slot.world_x = anchor.world_x;
+      slot.world_z = anchor.world_z;
+    }
+  };
+  apply(result.all_slots);
+  apply(result.live_slots);
+  apply(result.occupied_slots);
+  return result;
+}
+
 struct ResolvedContact {
-  const FormationLayout* attacker_layout{nullptr};
-  const FormationLayout* target_layout{nullptr};
+  FormationLayout attacker_layout;
+  FormationLayout target_layout;
   ContactGeometry geometry;
 };
 
@@ -639,21 +767,24 @@ auto resolve_contact(const Engine::Core::Entity& attacker,
       attacker_entry != nullptr ? attacker_entry->layout : k_absent_layout;
   auto const& target_layout =
       target_entry != nullptr ? target_entry->layout : k_absent_layout;
-  resolved.attacker_layout = &attacker_layout;
-  resolved.target_layout = &target_layout;
+  resolved.attacker_layout = spatialized_layout(attacker, attacker_layout);
+  resolved.target_layout = spatialized_layout(target, target_layout);
+  auto const& spatial_attacker_layout = resolved.attacker_layout;
+  auto const& spatial_target_layout = resolved.target_layout;
 
   result.formation_overlap_required =
       has_formation_slots(attacker) && has_formation_slots(target);
   result.contact_tolerance =
-      std::min(attacker_layout.body_radius, target_layout.body_radius) * 0.15F;
+      std::min(spatial_attacker_layout.body_radius, spatial_target_layout.body_radius) *
+      0.15F;
 
   const bool has_direction = result.center_distance > 0.0001F;
   const float dir_x = has_direction ? dx / result.center_distance : 0.0F;
   const float dir_z = has_direction ? dz / result.center_distance : 0.0F;
   accumulate_slot_contact(*attacker_transform,
                           *target_transform,
-                          attacker_layout,
-                          target_layout,
+                          spatial_attacker_layout,
+                          spatial_target_layout,
                           dir_x,
                           dir_z,
                           has_direction,
@@ -661,9 +792,10 @@ auto resolve_contact(const Engine::Core::Entity& attacker,
 
   if (result.formation_overlap_required) {
 
-    float const rank_spacing = std::min(attacker_layout.spacing, target_layout.spacing);
-    float const body_radius =
-        std::max(attacker_layout.body_radius, target_layout.body_radius);
+    float const rank_spacing =
+        std::min(spatial_attacker_layout.spacing, spatial_target_layout.spacing);
+    float const body_radius = std::max(spatial_attacker_layout.body_radius,
+                                       spatial_target_layout.body_radius);
     result.engagement_center_distance =
         std::min(result.contact_center_distance,
                  std::max(rank_spacing * 0.30F, body_radius * 0.5F));
@@ -692,12 +824,8 @@ auto resolve_contact_context(const Engine::Core::Entity& attacker,
   const ResolvedContact resolved = resolve_contact(attacker, target);
   FormationContactContext context;
   context.geometry = resolved.geometry;
-  if (resolved.attacker_layout != nullptr) {
-    context.attacker_layout = *resolved.attacker_layout;
-  }
-  if (resolved.target_layout != nullptr) {
-    context.target_layout = *resolved.target_layout;
-  }
+  context.attacker_layout = resolved.attacker_layout;
+  context.target_layout = resolved.target_layout;
   return context;
 }
 
@@ -771,9 +899,8 @@ auto engaged_soldiers(const Engine::Core::Entity& attacker,
 auto engagement_pairs(const Engine::Core::Entity& attacker,
                       const Engine::Core::Entity& target)
     -> std::vector<Engine::Core::FormationEngagementPair> {
-  auto context = resolve_contact_context(attacker, target);
   return engagement_pairs(
-      attacker, target, context.attacker_layout, context.target_layout);
+      attacker, target, resolve_layout(attacker), resolve_layout(target));
 }
 
 auto engagement_pairs(const Engine::Core::Entity& attacker,
@@ -795,12 +922,14 @@ auto engagement_pairs(const Engine::Core::Entity& attacker,
     return result;
   }
 
+  auto const spatial_attacker_layout = spatialized_layout(attacker, attacker_layout);
+  auto const spatial_target_layout = spatialized_layout(target, target_layout);
   float const contact_distance =
-      attacker_layout.body_radius + target_layout.body_radius;
-  for (auto const& attacker_slot : attacker_layout.live_slots) {
-    auto const* closest_target = &target_layout.live_slots.front();
+      spatial_attacker_layout.body_radius + spatial_target_layout.body_radius;
+  for (auto const& attacker_slot : spatial_attacker_layout.live_slots) {
+    auto const* closest_target = &spatial_target_layout.live_slots.front();
     float closest_distance = slot_distance(attacker_slot, *closest_target);
-    for (auto const& target_slot : target_layout.live_slots) {
+    for (auto const& target_slot : spatial_target_layout.live_slots) {
       float const distance = slot_distance(attacker_slot, target_slot);
       if (distance < closest_distance ||
           (distance == closest_distance && target_slot.index < closest_target->index)) {

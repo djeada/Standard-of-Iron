@@ -9,6 +9,7 @@
 #include "animation/rig/humanoid_proportions.h"
 #include "game/core/component.h"
 #include "game/core/entity.h"
+#include "game/session/session_context.h"
 #include "render/entity/registry.h"
 #include "render/gl/humanoid/animation/animation_inputs.h"
 #include "render/humanoid/runtime/humanoid_renderer.h"
@@ -297,7 +298,7 @@ TEST(HumanoidAnimationInputs, IdleDurationTracksUninterruptedIdleTime) {
   ASSERT_NE(motion, nullptr);
 
   Render::GL::DrawContext ctx{};
-  ctx.world_view = Render::WorldView::of_active_session();
+  ctx.world_view = Render::WorldView::of(Game::Session::SessionContext::active());
   ctx.entity = &entity;
 
   ctx.animation_time = 1.0F;
@@ -335,7 +336,7 @@ TEST(HumanoidAnimationInputs, ResourceLoadRequestsCarryPose) {
   carry->amounts.set(Game::Systems::ResourceType::Wood, 20);
 
   Render::GL::DrawContext ctx{};
-  ctx.world_view = Render::WorldView::of_active_session();
+  ctx.world_view = Render::WorldView::of(Game::Session::SessionContext::active());
   ctx.entity = &entity;
 
   auto const anim = Render::GL::sample_anim_state(ctx);
@@ -354,7 +355,7 @@ TEST(HumanoidAnimationInputs, FpvCommanderGuardSetsGuardingWithoutHoldMode) {
   guard->active = true;
 
   Render::GL::DrawContext ctx{};
-  ctx.world_view = Render::WorldView::of_active_session();
+  ctx.world_view = Render::WorldView::of(Game::Session::SessionContext::active());
   ctx.entity = &entity;
   ctx.animation_time = 1.0F;
 
@@ -389,7 +390,7 @@ TEST(HumanoidAnimationInputs, FpvCommanderVelocityTriggersMovementAnimation) {
   motion->has_velocity = true;
 
   Render::GL::DrawContext ctx{};
-  ctx.world_view = Render::WorldView::of_active_session();
+  ctx.world_view = Render::WorldView::of(Game::Session::SessionContext::active());
   ctx.entity = &entity;
   ctx.animation_time = 1.0F;
 

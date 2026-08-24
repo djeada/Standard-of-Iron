@@ -199,7 +199,7 @@ void GameEngine::build_client_and_view_models() {
   m_camera_view_model =
       std::make_unique<App::ViewModels::CameraViewModel>(m_client, host, this);
   m_match_setup_view_model =
-      std::make_unique<App::ViewModels::MatchSetupViewModel>(m_client, this);
+      std::make_unique<App::ViewModels::MatchSetupViewModel>(m_client, host, this);
   m_production_view_model =
       std::make_unique<App::ViewModels::ProductionViewModel>(m_client, host, this);
   m_minimap_view_model = std::make_unique<App::ViewModels::MinimapViewModel>(
@@ -311,9 +311,9 @@ void GameEngine::build_client_and_view_models() {
           m_match_setup_view_model.get(),
           &App::ViewModels::MatchSetupViewModel::start_tutorial);
 
-  Game::Systems::initialize_default_content(Game::Systems::NationRegistry::instance());
-  Game::Systems::TroopCountRegistry::instance().initialize();
-  Game::Systems::GlobalStatsRegistry::instance().initialize();
+  Game::Systems::initialize_default_content(m_session->nations());
+  m_session->troop_counts().initialize();
+  m_session->stats().initialize();
 }
 
 void GameEngine::build_services_and_controllers() {
@@ -336,10 +336,16 @@ void GameEngine::build_services_and_controllers() {
   RendererBootstrap::initialize_world_systems(*m_world);
 
   m_picking_service = std::make_unique<Game::Systems::PickingService>();
-  m_victory_service = std::make_unique<Game::Systems::VictoryService>();
+  auto& session = *m_session;
+  m_victory_service = std::make_unique<Game::Systems::VictoryService>(
+      Game::Systems::VictoryService::Services{.stats = session.stats(),
+                                              .owners = session.owners(),
+                                              .nations = session.nations(),
+                                              .economy = session.economy()});
 
   connect_save_service_signals();
-  m_camera_service = std::make_unique<Game::Systems::CameraService>();
+  m_camera_service =
+      std::make_unique<Game::Systems::CameraService>(m_session->visibility());
   m_rain_manager = std::make_unique<Game::Systems::RainManager>();
   m_weather_audio = std::make_unique<App::Core::WeatherAudio>();
   m_environment_clock = std::make_unique<Game::Map::EnvironmentClock>();
@@ -408,7 +414,8 @@ void GameEngine::build_services_and_controllers() {
   m_audio_systemProxy = std::make_unique<App::Models::AudioSystemProxy>(this);
 
   m_minimap_manager = std::make_unique<MinimapManager>();
-  m_visibility_coordinator = std::make_unique<VisibilityCoordinator>();
+  m_visibility_coordinator =
+      std::make_unique<VisibilityCoordinator>(m_session->visibility());
   m_visibility_coordinator->set_presenters(m_fog.get(), m_minimap_manager.get());
   m_ambient_state_manager = std::make_unique<AmbientStateManager>();
 
@@ -472,7 +479,8 @@ void GameEngine::build_services_and_controllers() {
   m_selection_query_service = std::make_unique<SelectionQueryService>(m_world, this);
 
   m_audio_event_handler = std::make_unique<Game::Audio::AudioEventHandler>(m_world);
-  m_audio_coordinator = std::make_unique<AudioCoordinator>(m_audio_event_handler.get());
+  m_audio_coordinator = std::make_unique<AudioCoordinator>(m_audio_event_handler.get(),
+                                                           m_session->nations());
   m_mission_setup = std::make_unique<Game::Mission::MissionSetupCoordinator>();
   m_save_load_coordinator = std::make_unique<App::Core::SaveLoadCoordinator>();
   m_skirmish_runtime = std::make_unique<App::Core::SkirmishRuntimeCoordinator>();

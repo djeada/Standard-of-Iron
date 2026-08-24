@@ -14,7 +14,7 @@
 #include "game/session/session_context.h"
 #include "game/session/simulation_clock.h"
 #include "game/session/world_digest.h"
-#include "game/systems/movement_system.h"
+#include "game/systems/movement_pipeline.h"
 #include "game/systems/nav_grid.h"
 #include "game/systems/owner_registry.h"
 #include "game/systems/selection_system.h"
@@ -305,7 +305,7 @@ auto run_paced_battle(float speed, float real_dt, int frames) -> PacedRun {
 
   auto& world = session.world();
   world.add_system(std::make_unique<Game::Command::CommandSystem>());
-  world.add_system(std::make_unique<Game::Systems::MovementSystem>());
+  world.add_system(std::make_unique<Game::Systems::MovementPipeline>());
 
   std::vector<Engine::Core::EntityID> squad;
   for (int index = 0; index < 4; ++index) {

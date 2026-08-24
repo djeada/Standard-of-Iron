@@ -4,7 +4,6 @@
 #include <cmath>
 #include <limits>
 #include <utility>
-#include <vector>
 
 #include "building_collision_registry.h"
 
@@ -34,16 +33,13 @@ auto slab_intersection(float start,
   return t_enter <= t_exit;
 }
 
-auto registered_buildings() -> const std::vector<BuildingFootprint>& {
-  return BuildingCollisionRegistry::instance().get_all_buildings();
-}
-
 } // namespace
 
-auto first_building_intersection_fraction(const QVector3D& start,
+auto first_building_intersection_fraction(const BuildingCollisionRegistry& registry,
+                                          const QVector3D& start,
                                           const QVector3D& end,
                                           unsigned int ignore_entity_id) -> float {
-  auto const& buildings = registered_buildings();
+  auto const& buildings = registry.get_all_buildings();
   float best_fraction = 1.0F;
   const QVector3D delta = end - start;
   for (const auto& building : buildings) {
@@ -53,18 +49,18 @@ auto first_building_intersection_fraction(const QVector3D& start,
 
     float t_enter = 0.0F;
     float t_exit = 1.0F;
-    const float half_width = building.body_width * 0.5F;
-    const float half_depth = building.body_depth * 0.5F;
+    const float half_width = building.width * 0.5F;
+    const float half_depth = building.depth * 0.5F;
     if (!slab_intersection(start.x(),
                            delta.x(),
-                           building.body_center_x - half_width,
-                           building.body_center_x + half_width,
+                           building.center_x - half_width,
+                           building.center_x + half_width,
                            t_enter,
                            t_exit) ||
         !slab_intersection(start.z(),
                            delta.z(),
-                           building.body_center_z - half_depth,
-                           building.body_center_z + half_depth,
+                           building.center_z - half_depth,
+                           building.center_z + half_depth,
                            t_enter,
                            t_exit)) {
       continue;
@@ -77,11 +73,13 @@ auto first_building_intersection_fraction(const QVector3D& start,
   return best_fraction;
 }
 
-auto first_building_body_intersection_fraction(const QVector3D& start,
-                                               const QVector3D& end,
-                                               float radius,
-                                               unsigned int ignore_entity_id) -> float {
-  auto const& buildings = registered_buildings();
+auto first_building_body_intersection_fraction(
+    const BuildingCollisionRegistry& registry,
+    const QVector3D& start,
+    const QVector3D& end,
+    float radius,
+    unsigned int ignore_entity_id) -> float {
+  auto const& buildings = registry.get_all_buildings();
   float best_fraction = 1.0F;
   const QVector3D delta = end - start;
   float const grow = std::max(0.0F, radius);
@@ -126,9 +124,10 @@ auto first_building_body_intersection_fraction(const QVector3D& start,
   return best_fraction;
 }
 
-auto depenetrate_from_building_bodies(const QVector3D& point,
+auto depenetrate_from_building_bodies(const BuildingCollisionRegistry& registry,
+                                      const QVector3D& point,
                                       float radius) -> QVector3D {
-  auto const& buildings = registered_buildings();
+  auto const& buildings = registry.get_all_buildings();
   QVector3D resolved = point;
   float const grow = std::max(0.0F, radius);
 
@@ -164,8 +163,9 @@ auto depenetrate_from_building_bodies(const QVector3D& point,
   return resolved;
 }
 
-auto nearest_building_body_clearance(const QVector3D& point) -> float {
-  auto const& buildings = registered_buildings();
+auto nearest_building_body_clearance(const BuildingCollisionRegistry& registry,
+                                     const QVector3D& point) -> float {
+  auto const& buildings = registry.get_all_buildings();
   float clearance = std::numeric_limits<float>::max();
   for (const auto& building : buildings) {
     if (!building.blocks_navigation) {
@@ -189,10 +189,12 @@ auto nearest_building_body_clearance(const QVector3D& point) -> float {
   return clearance;
 }
 
-auto has_clear_building_los(const QVector3D& start,
+auto has_clear_building_los(const BuildingCollisionRegistry& buildings,
+                            const QVector3D& start,
                             const QVector3D& end,
                             unsigned int ignore_entity_id) -> bool {
-  return first_building_intersection_fraction(start, end, ignore_entity_id) >= 1.0F;
+  return first_building_intersection_fraction(
+             buildings, start, end, ignore_entity_id) >= 1.0F;
 }
 
 } // namespace Game::Systems

@@ -507,14 +507,14 @@ auto TutorialDirector::hint_for(const TutorialObservation& o) const -> QString {
       return tr("Recruits come from the barracks. Left-click your barracks to open "
                 "its production panel on the right.");
     }
-    if (o.barracks_manpower < 50) {
+    if (o.barracks_manpower < 20) {
       return tr("The barracks has only %1 population left to draw on. Every recruit "
                 "costs population; when it runs dry, build Homes - each Home raises "
                 "families, and a civilian recruited there and sent to the barracks "
                 "with Deliver refills it.")
           .arg(o.barracks_manpower);
     }
-    if (o.wood < 10 || o.iron < 4) {
+    if (o.wood < 30 || o.iron < 15) {
       return tr("A recruit card turns grey when a resource is short: soldiers need "
                 "wood for shafts and iron for blades. Send a builder to collect "
                 "more.");

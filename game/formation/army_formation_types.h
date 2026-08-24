@@ -63,10 +63,13 @@ enum class SlotStatus : std::uint8_t {
 };
 
 enum class FormationPhase : std::uint8_t {
-  Forming,
-  Formed,
-  Disrupted,
-  Breaking
+
+  Reforming = 0,
+  Formed = 1,
+  Disrupted = 2,
+  Opening = 3,
+  Traversing = 4,
+  Arrived = 5
 };
 
 [[nodiscard]] auto intent_to_string(ArmyFormationIntent intent) -> const char*;
@@ -172,9 +175,10 @@ struct ArmyFormation {
   float spacing{1.0F};
 
   ArmyFormationOptions options;
-  FormationPhase phase{FormationPhase::Forming};
+  FormationPhase phase{FormationPhase::Reforming};
 
   float cohesion{1.0F};
+  float cohesion_pace{0.0F};
 
   std::vector<EntityID> members;
   std::vector<FormationSlot> slot_list;
@@ -195,7 +199,7 @@ struct ArmyFormation {
   }
 
   [[nodiscard]] auto is_formed() const -> bool {
-    return phase == FormationPhase::Formed;
+    return phase == FormationPhase::Formed || phase == FormationPhase::Arrived;
   }
 
   [[nodiscard]] auto find_slot(int slot_id) const -> const FormationSlot*;

@@ -10,6 +10,7 @@
 #include "game/core/component.h"
 #include "game/core/world.h"
 #include "game/render_bridge/picking_service.h"
+#include "game/session/session_context.h"
 #include "game/systems/harvest_yields.h"
 #include "game/systems/nav_grid.h"
 #include "game/systems/pathfinding.h"
@@ -70,14 +71,16 @@ auto resolve_harvest_work_position(Engine::Core::World* world,
 
   Game::Systems::Point const tree_grid =
       Game::Systems::NavGrid::world_to_grid(target.x, target.z);
-  auto const work_grid = Game::Systems::NavGrid::find_nearest_walkable_grid(
-      tree_grid, k_harvest_work_search_radius);
+  auto const work_grid = Game::Systems::NavGrid::find_nearest_walkable_grid_facing(
+      tree_grid,
+      QVector3D(transform->position.x, 0.0F, transform->position.z),
+      k_harvest_work_search_radius);
   if (!work_grid.has_value()) {
     return std::nullopt;
   }
 
   QVector3D work_position = Game::Systems::NavGrid::grid_to_world(*work_grid);
-  auto& terrain_service = Game::Map::TerrainService::instance();
+  auto& terrain_service = Game::Session::session_for(*world).terrain();
   work_position.setY(terrain_service.resolve_surface_world_y(
       work_position.x(), work_position.z(), 0.0F, transform->position.y));
   return work_position;
@@ -254,7 +257,8 @@ auto find_harvest_target_near_grid(Game::Map::TerrainService& terrain_service,
   return std::nullopt;
 }
 
-auto resolve_preferred_harvest_target(const QString& item_type,
+auto resolve_preferred_harvest_target(Game::Map::TerrainService& terrain_service,
+                                      const QString& item_type,
                                       std::uint64_t target_id,
                                       const CrewClaims& claims)
     -> std::optional<ResolvedHarvestTarget> {
@@ -262,7 +266,6 @@ auto resolve_preferred_harvest_target(const QString& item_type,
     return std::nullopt;
   }
 
-  auto& terrain_service = Game::Map::TerrainService::instance();
   if (auto specific_kind = harvest_target_kind_for_item(item_type);
       specific_kind.has_value()) {
     auto target = find_specific_harvest_target_by_id(
@@ -359,6 +362,30 @@ auto is_collect_item(const QString& item_type) -> bool {
   return item_type == QLatin1String(k_collect_item_type);
 }
 
+auto interaction_highlights_armed(CursorMode cursor_mode,
+                                  bool placing_construction,
+                                  const QString& pending_item_type) -> bool {
+  switch (cursor_mode) {
+  case CursorMode::Collect:
+  case CursorMode::Repair:
+  case CursorMode::Dismantle:
+  case CursorMode::Deliver:
+    return true;
+  case CursorMode::Normal:
+  case CursorMode::Patrol:
+  case CursorMode::Attack:
+  case CursorMode::Guard:
+  case CursorMode::PlaceBuilding:
+  case CursorMode::Heal:
+  case CursorMode::Build:
+  case CursorMode::PlaceCommanderRally:
+  case CursorMode::PlaceBarracksRally:
+    break;
+  }
+
+  return placing_construction && is_harvest_construction_item(pending_item_type);
+}
+
 auto is_harvest_construction_item(const QString& item_type) -> bool {
   return harvest_target_kind_for_item(item_type).has_value() ||
          is_collect_item(item_type);
@@ -388,7 +415,8 @@ auto crew_claims(Engine::Core::World* world,
   return claims;
 }
 
-auto resolve_harvest_target_at_position(const QString& item_type,
+auto resolve_harvest_target_at_position(Game::Map::TerrainService& terrain_service,
+                                        const QString& item_type,
                                         const QVector3D& world_position,
                                         const CrewClaims& claims,
                                         std::uint64_t preferred_target_id)
@@ -397,8 +425,8 @@ auto resolve_harvest_target_at_position(const QString& item_type,
     return std::nullopt;
   }
 
-  if (auto preferred_target =
-          resolve_preferred_harvest_target(item_type, preferred_target_id, claims);
+  if (auto preferred_target = resolve_preferred_harvest_target(
+          terrain_service, item_type, preferred_target_id, claims);
       preferred_target.has_value()) {
     return preferred_target;
   }
@@ -419,7 +447,6 @@ auto resolve_harvest_target_at_position(const QString& item_type,
     return std::nullopt;
   }
 
-  auto& terrain_service = Game::Map::TerrainService::instance();
   auto const target =
       find_harvest_target_near_grid(terrain_service,
                                     resource_grid->kind,
@@ -437,11 +464,12 @@ auto evaluate_harvest_placement(Engine::Core::World* world,
                                 const QVector3D& world_position,
                                 const QString& item_type,
                                 std::uint64_t preferred_target_id) -> HarvestPlacement {
-  if (auto resolved_target =
-          resolve_harvest_target_at_position(item_type,
-                                             world_position,
-                                             crew_claims(world, builder_ids),
-                                             preferred_target_id);
+  if (auto resolved_target = resolve_harvest_target_at_position(
+          Game::Session::session_for(*world).terrain(),
+          item_type,
+          world_position,
+          crew_claims(world, builder_ids),
+          preferred_target_id);
       resolved_target.has_value()) {
     return evaluate_resolved_harvest_placement(world, builder_ids, *resolved_target);
   }
@@ -456,7 +484,8 @@ auto evaluate_harvest_placement(Engine::Core::World* world,
   return placement;
 }
 
-auto resolve_harvest_target_from_screen(const QString& item_type,
+auto resolve_harvest_target_from_screen(Game::Map::TerrainService& terrain_service,
+                                        const QString& item_type,
                                         const Render::GL::Camera& camera,
                                         const ViewportState& viewport,
                                         const QPointF& screen_point,
@@ -467,7 +496,6 @@ auto resolve_harvest_target_from_screen(const QString& item_type,
   }
 
   auto const preferred_kind = harvest_target_kind_for_item(item_type);
-  auto& terrain_service = Game::Map::TerrainService::instance();
   float best_distance_sq = std::numeric_limits<float>::infinity();
   std::optional<ResolvedHarvestTarget> best_target;
 
@@ -508,7 +536,7 @@ auto resolve_harvest_target_from_screen(const QString& item_type,
     }
 
     auto const resolved_target =
-        resolve_preferred_harvest_target(item_type, prop.id, claims);
+        resolve_preferred_harvest_target(terrain_service, item_type, prop.id, claims);
     if (!resolved_target.has_value()) {
       continue;
     }

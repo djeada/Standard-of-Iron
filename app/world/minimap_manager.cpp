@@ -16,6 +16,7 @@
 #include "game/render_bridge/minimap/minimap_generator.h"
 #include "game/render_bridge/minimap/minimap_utils.h"
 #include "game/render_bridge/minimap/unit_layer.h"
+#include "game/session/session_context.h"
 #include "game/systems/selection_system.h"
 #include "game/units/troop_type.h"
 #include "scene/camera.h"
@@ -207,7 +208,7 @@ void MinimapManager::update_units(Engine::Core::World* world,
     m_last_fog_composite_version = fog_version();
     mark_dirty();
 
-    auto& visibility_service = Game::Map::VisibilityService::instance();
+    auto& visibility_service = Game::Session::session_for(*world).visibility();
     Game::Map::Minimap::VisibilityCheckFn visibility_check = nullptr;
 
     Game::Map::VisibilityService::SnapshotPtr visibility_snapshot;

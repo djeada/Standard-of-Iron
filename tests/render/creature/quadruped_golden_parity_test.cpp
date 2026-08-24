@@ -19,6 +19,7 @@
 #include "game/core/entity.h"
 #include "game/map/terrain.h"
 #include "game/map/terrain_service.h"
+#include "game/session/session_context.h"
 #include "game/systems/nation_id.h"
 #include "game/units/spawn_type.h"
 #include "render/creature/animation_state_components.h"
@@ -256,7 +257,7 @@ void capture_horse(const HorseCase& horse_case,
   state->locomotion_phase_valid = true;
 
   Render::GL::DrawContext ctx{};
-  ctx.world_view = Render::WorldView::of_active_session();
+  ctx.world_view = Render::WorldView::of(Game::Session::SessionContext::active());
   ctx.entity = &entity;
   ctx.allow_template_cache = false;
   ctx.model.translate(0.0F, 4.0F, 0.0F);
@@ -349,7 +350,7 @@ void capture_elephant(const ElephantCase& elephant_case,
   entity.add_component<Render::Creature::ElephantAnimationStateComponent>();
 
   Render::GL::DrawContext ctx{};
-  ctx.world_view = Render::WorldView::of_active_session();
+  ctx.world_view = Render::WorldView::of(Game::Session::SessionContext::active());
   ctx.entity = &entity;
   ctx.allow_template_cache = false;
   ctx.model.translate(0.0F, 4.0F, 0.0F);
@@ -445,7 +446,7 @@ auto capture_mounted(const Render::GL::EntityRendererRegistry& registry,
   anim.visual_movement.speed_hint = mounted_case.speed_hint;
 
   Render::GL::DrawContext ctx{};
-  ctx.world_view = Render::WorldView::of_active_session();
+  ctx.world_view = Render::WorldView::of(Game::Session::SessionContext::active());
   ctx.entity = &entity;
   ctx.animation_time = anim.time;
   ctx.animation_override = &anim;

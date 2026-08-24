@@ -18,6 +18,7 @@
 #include "game/core/world.h"
 #include "game/map/render_visibility_rules.h"
 #include "game/render_bridge/selection_controller.h"
+#include "game/session/session_context.h"
 #include "game/systems/match_snapshot.h"
 #include "game/systems/selection_system.h"
 
@@ -47,16 +48,19 @@ ActivityViewModel::ActivityViewModel(const App::Core::ClientContext& context,
 }
 
 auto ActivityViewModel::unit(qulonglong unit_id) const -> QVariantMap {
+  const auto frame_lock = m_host.lock_frame();
   return activity_to_variant(App::World::unit_activity(
       m_context.world, static_cast<Engine::Core::EntityID>(unit_id)));
 }
 
 auto ActivityViewModel::unit_profile(const QString& unit_type,
                                      const QString& nation_id) const -> QVariantMap {
-  return App::Economy::unit_profile(unit_type, nation_id);
+  const auto frame_lock = m_host.lock_frame();
+  return App::Economy::unit_profile(m_context.session->nations(), unit_type, nation_id);
 }
 
 auto ActivityViewModel::selection_summary() const -> QVariantMap {
+  const auto frame_lock = m_host.lock_frame();
   QVariantMap summary;
   summary[QStringLiteral("activity")] = QStringLiteral("idle");
   summary[QStringLiteral("state")] = QStringLiteral("active");
@@ -159,18 +163,21 @@ void ActivityViewModel::set_auto_gather(bool active,
 }
 
 void ActivityViewModel::clear_inspect_target() {
-  auto* world = m_context.world;
-  if (world == nullptr) {
-    return;
+  {
+    const auto frame_lock = m_host.lock_frame();
+    auto* world = m_context.world;
+    if (world == nullptr) {
+      return;
+    }
+    auto* selection_system = world->get_system<Game::Systems::SelectionSystem>();
+    if (selection_system == nullptr) {
+      return;
+    }
+    if (selection_system->inspected_entity() == Engine::Core::NULL_ENTITY) {
+      return;
+    }
+    selection_system->clear_inspected_entity();
   }
-  auto* selection_system = world->get_system<Game::Systems::SelectionSystem>();
-  if (selection_system == nullptr) {
-    return;
-  }
-  if (selection_system->inspected_entity() == Engine::Core::NULL_ENTITY) {
-    return;
-  }
-  selection_system->clear_inspected_entity();
   emit inspect_target_cleared();
 }
 
@@ -179,13 +186,17 @@ auto ActivityViewModel::pop_player_feedback_events() -> QVariantList {
   if (m_context.feedback == nullptr) {
     return out;
   }
-  for (const auto& event : m_context.feedback->drain()) {
+
+  const auto events = m_context.feedback->drain();
+  out.reserve(static_cast<qsizetype>(events.size()));
+  for (const auto& event : events) {
     out.append(App::Core::to_variant_map(event));
   }
   return out;
 }
 
 auto ActivityViewModel::pop_combat_damage_events() -> QVariantList {
+
   return App::Core::CombatFeedbackStore::to_variant(m_feedback.pop_ready());
 }
 

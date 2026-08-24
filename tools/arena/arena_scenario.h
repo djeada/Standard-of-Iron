@@ -30,6 +30,14 @@ namespace Game::Units {
 class Unit;
 }
 
+namespace Game::Map {
+class TerrainService;
+}
+
+namespace Game::Systems {
+class BuildingCollisionRegistry;
+}
+
 namespace Arena {
 
 enum class ScenarioTriggerKind : std::uint8_t {
@@ -443,6 +451,9 @@ struct ArenaScenarioHost {
   std::function<void(Engine::Core::EntityID, float)> set_rpg_view_pitch;
 
   std::function<void(Engine::Core::EntityID, const QVector3D&)> aim_rpg_view_at;
+
+  Game::Map::TerrainService* terrain = nullptr;
+  Game::Systems::BuildingCollisionRegistry* building_collision = nullptr;
 };
 
 struct ArenaRenderedFrameTimings {

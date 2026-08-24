@@ -26,6 +26,7 @@
 #include "game/mission/campaign_manager.h"
 #include "game/mission/mission_commander_setup.h"
 #include "game/mission/mission_setup_coordinator.h"
+#include "game/session/session_context.h"
 #include "game/systems/ai_system.h"
 #include "game/systems/ai_system/ai_strategy.h"
 #include "game/systems/command_service.h"
@@ -218,14 +219,14 @@ void order_wave_advance(Engine::Core::World& world,
 
   const auto plan =
       Game::Systems::CommandService::plan_ground_move(world, units, target);
-  if (plan.positions.size() != units.size()) {
+  if (!plan.fully_placeable_for(units)) {
     return;
   }
 
   Game::Command::Move move;
   move.kind = Game::Systems::MoveOrderKind::ScriptedMove;
   move.units = units;
-  move.targets = plan.positions;
+  move.targets = plan.target_positions();
   Game::Command::submit(
       world, Game::Command::Source::Script, wave.owner_id, std::move(move));
 }
@@ -265,7 +266,7 @@ auto MissionWaves::spawn(const MissionWaveContext& ctx,
     return effects;
   }
 
-  auto& owner_registry = Game::Systems::OwnerRegistry::instance();
+  auto& owner_registry = Game::Session::session_for(ctx.world).owners();
   if (owner_registry.get_owner_type(wave.owner_id) ==
       Game::Systems::OwnerType::Neutral) {
     owner_registry.register_owner_with_id(
@@ -395,7 +396,7 @@ auto build_pending_mission_waves(const MissionWaveBuildContext& ctx)
     return mission_position_to_world(pos, map_loaded ? &map_def : nullptr, ctx.level);
   };
 
-  auto& nation_registry = Game::Systems::NationRegistry::instance();
+  const auto& nation_registry = ctx.nations;
   auto resolve_nation = [&nation_registry](const QString& nation_str) {
     const auto parsed = Game::Systems::nation_id_from_string(nation_str.toStdString());
     return parsed.value_or(nation_registry.default_nation_id());

@@ -34,8 +34,9 @@
 #include "systems/combat_system/mounted_charge_processor.h"
 #include "systems/combat_system/spear_brace_processor.h"
 #include "systems/command_service.h"
+#include "systems/formation_combat_geometry.h"
 #include "systems/healing_system.h"
-#include "systems/movement_system.h"
+#include "systems/movement_pipeline.h"
 #include "systems/nav_grid.h"
 #include "systems/owner_registry.h"
 #include "systems/projectile_system.h"
@@ -325,7 +326,7 @@ TEST_F(CombatModeTest, AutoEngagementResumesAfterManualMoveArrives) {
   ASSERT_NE(movement, nullptr);
   ASSERT_TRUE(Game::Systems::Combat::suppresses_opportunistic_combat(spearman));
 
-  MovementSystem movement_system;
+  MovementPipeline movement_system;
   movement_system.update(world.get(), 0.016F);
 
   EXPECT_FALSE(movement->get_has_target());
@@ -1897,7 +1898,7 @@ TEST_F(CombatModeTest, SingleBodyMeleeLockedUnitsTurnToFaceWhileStopped) {
   EXPECT_FALSE(attacker_transform->has_desired_yaw);
   EXPECT_FALSE(enemy_transform->has_desired_yaw);
 
-  MovementSystem movement_system;
+  MovementPipeline movement_system;
   movement_system.update(world.get(), 0.25F);
 
   EXPECT_NEAR(attacker_transform->rotation.y, 90.0F, 3.0F);
@@ -3902,6 +3903,28 @@ TEST_F(CombatModeTest, RpgTargetingUsesExactPresentedFormationSoldierPose) {
   EXPECT_NEAR(target->position.x(), 11.25F, 0.0001F);
   EXPECT_NEAR(target->position.z(), 2.5F, 0.0001F);
   EXPECT_NEAR(target->yaw_degrees, 37.0F, 0.0001F);
+}
+
+TEST_F(CombatModeTest, RpgTargetingUsesTraversalPoseWithoutPresentationFacts) {
+  auto* formation = make_enemy_soldier(*world, 10.0F, 10.0F);
+  auto* formation_unit = formation->get_component<UnitComponent>();
+  ASSERT_NE(formation_unit, nullptr);
+  formation_unit->render_individuals_per_unit_override = 6;
+  auto const layout = Game::Systems::FormationCombat::resolve_layout(*formation);
+  ASSERT_FALSE(layout.live_slots.empty());
+  auto* traversal =
+      formation->add_component<Engine::Core::UnitTraversalLayoutStateComponent>();
+  traversal->slot_states.push_back({.slot_index = layout.live_slots.front().index,
+                                    .current_local_x = -2.0F,
+                                    .current_local_z = 4.5F,
+                                    .alive = true});
+
+  auto const target = Game::Systems::RpgCombat::resolve_soldier_target(
+      *formation, layout.live_slots.front().index);
+
+  ASSERT_TRUE(target.has_value());
+  EXPECT_NEAR(target->position.x(), 8.0F, 0.0001F);
+  EXPECT_NEAR(target->position.z(), 14.5F, 0.0001F);
 }
 
 TEST_F(CombatModeTest, TimedTraceFollowsVisibleFormationDamageCarrier) {

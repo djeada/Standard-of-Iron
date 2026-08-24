@@ -46,9 +46,11 @@ auto commander_entry(const Game::Units::CommanderDefinition& definition,
 } // namespace
 
 MatchSetupViewModel::MatchSetupViewModel(const App::Core::ClientContext& context,
+                                         App::Core::ClientHost& host,
                                          QObject* parent)
     : QObject(parent)
-    , m_context(context) {
+    , m_context(context)
+    , m_host(host) {
 }
 
 void MatchSetupViewModel::start_loading_maps() {
@@ -74,6 +76,8 @@ void MatchSetupViewModel::set_maps_loading(bool loading) {
 }
 
 auto MatchSetupViewModel::nations() const -> QVariantList {
+  const auto frame_lock = m_host.lock_frame();
+
   if (m_context.session == nullptr) {
     return {};
   }
@@ -109,6 +113,8 @@ auto MatchSetupViewModel::nations() const -> QVariantList {
 
 auto MatchSetupViewModel::commanders_for_nation(const QString& nation_id) const
     -> QVariantList {
+  const auto frame_lock = m_host.lock_frame();
+
   if (m_context.session == nullptr) {
     return {};
   }

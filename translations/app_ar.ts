@@ -4555,18 +4555,6 @@ to see preview</source>
         <translation>خريطة بلا اسم</translation>
     </message>
     <message>
-        <source>A balanced Mediterranean skirmish map set among olive groves, dry wadis, terraced hills, and dusty farm roads. Control of the center and side ridges helps, but victory is standard barracks elimination.</source>
-        <translation>خريطة مناوشة متوسطية متوازنة بين بساتين الزيتون والأودية الجافة والتلال المدرَّجة ودروب المزارع المغبرّة. السيطرة على الوسط والحواف الجانبية تفيد، لكن النصر هو إبادة الثكنات المعتادة.</translation>
-    </message>
-    <message>
-        <source>A large balanced mountain skirmish map with two fortified bases, a contested central ridge, narrow high passes, flank trails, alpine streams, and strong archer positions. Victory is standard barracks elimination.</source>
-        <translation>خريطة مناوشة جبلية واسعة ومتوازنة، بقاعدتين محصّنتين، وحافة وسطى متنازع عليها، وممرات عالية ضيقة، ودروب جانبية، وجداول ألبية، ومواضع رماية قوية. النصر هو إبادة الثكنات المعتادة.</translation>
-    </message>
-    <message>
-        <source>A rich strategic crossroads map with contested central bridges, neutral corner barracks, flank routes, and high ground around key crossings.</source>
-        <translation>خريطة مفترق طرق استراتيجية غنية، بجسور وسطى متنازع عليها، وثكنات محايدة في الأركان، ومسارات جانبية، ومرتفعات حول المعابر الرئيسية.</translation>
-    </message>
-    <message>
         <source>Battle of Cannae</source>
         <translation>معركة كانّاي</translation>
     </message>
@@ -4599,32 +4587,12 @@ to see preview</source>
         <translation>عبور الرون - نسخة المتاهة المنقّحة</translation>
     </message>
     <message>
-        <source>Forest Battlefield</source>
-        <translation>ميدان الغابة</translation>
-    </message>
-    <message>
         <source>Iron Sepulcher Watch</source>
         <translation>حراسة ضريح الحديد</translation>
     </message>
     <message>
-        <source>Mountain Strongholds</source>
-        <translation>معاقل الجبل</translation>
-    </message>
-    <message>
-        <source>River Crossroads</source>
-        <translation>مفترق النهر</translation>
-    </message>
-    <message>
         <source>Small authored scenario that demonstrates ruins, a shrine, and undead awakening zones.</source>
         <translation>سيناريو صغير مُعدّ يعرض أطلالاً ومزاراً ومناطق لصحوة الموتى.</translation>
-    </message>
-    <message>
-        <source>Spanish Olive Grove</source>
-        <translation>بستان الزيتون الإسباني</translation>
-    </message>
-    <message>
-        <source>A dense symmetrical forest battlefield for two active players, built around road reading, ambush forests, hill control, side objectives, and two neutral barracks. There are no rivers, bridges, or mountains. Roads deliberately route around hills instead of crossing over them.</source>
-        <translation>ميدان غابات كثيف ومتناظر للاعبَين نشطين، مبني على قراءة الطرق، وأحراش الكمائن، والسيطرة على التلال، وأهداف جانبية، وثكنتين محايدتين. لا أنهار ولا جسور ولا جبال. وتلتف الطرق عمداً حول التلال بدل عبورها.</translation>
     </message>
     <message>
         <source>A quiet meadow between a Carthaginian camp and a Roman outpost, laid out for the tutorial: timber, stone and ore within a short walk of the barracks, a scouting party to practise on, and a small enemy camp to take once the army is ready.</source>
@@ -4633,6 +4601,54 @@ to see preview</source>
     <message>
         <source>Training Meadow</source>
         <translation>مرج التدريب</translation>
+    </message>
+    <message>
+        <source>A fertile valley for two. One channel runs the whole map north to south and only two fords cross it. A cross spur on each bank means you either hug the water or swing wide to reach them, and the boomerang ridge cupping each start makes the back door terrain rather than a wall. Nothing haunts this valley: it is the plain match, with no Sepulcher to distract either side.</source>
+        <translation>واد خصيب لاثنين. مجرى واحد يشقّ الخريطة من الشمال إلى الجنوب، ولا يعبره سوى مخاضتين. نتوء عرضي على كل ضفة يفرض الاختيار: إمّا ملازمة الماء أو الالتفاف بعيدًا. والحيد المنحني كالبوميرانغ الذي يحتضن كل نقطة بداية يجعل الباب الخلفي تضاريس لا جدارًا. لا شيء يسكن هذا الوادي: إنها المباراة الصريحة، بلا مقبرة حديدية تشتّت أيًّا من الطرفين.</translation>
+    </message>
+    <message>
+        <source>Amber Delta</source>
+        <translation>دلتا العنبر</translation>
+    </message>
+    <message>
+        <source>Blackpine Hollow</source>
+        <translation>وهدة الصنوبر الأسود</translation>
+    </message>
+    <message>
+        <source>Copper Canyons</source>
+        <translation>أخاديد النحاس</translation>
+    </message>
+    <message>
+        <source>Deep wet pine forest for two. A crater wall rings the shrine bowl at the centre and no road enters it - the gates cut through its rim are the only way in, so the middle belongs to whoever will fight for it on foot. Everything else is one ring road and the trees.</source>
+        <translation>غابة صنوبر كثيفة ورطبة لاثنين. جدار فوهة يطوّق حوض المزار في المنتصف ولا تدخله أي طريق — البوابات المشقوقة في حافته هي المدخل الوحيد، فالوسط لمن يقاتل عليه راجلًا. وما تبقّى طريق دائري واحد والأشجار.</translation>
+    </message>
+    <message>
+        <source>Four camps in a snowed-in basin. Two melt races cross at its centre and cut the ground into quarters, so every neighbour is a bridge away: an inner crossing in the open, or a longer one out under the rim ranges. Four corner tarns and four barrow cairns fill the rest.</source>
+        <translation>أربعة معسكرات في حوض تغطّيه الثلوج. مجريان من ماء الذوبان يتقاطعان في وسطه ويقطعان الأرض إلى أرباع، فكل جار يبعد جسرًا واحدًا: معبر داخلي في العراء، أو آخر أطول عند السلاسل الطرفية. أربع برك في الزوايا وأربعة أضرحة تملأ الباقي.</translation>
+    </message>
+    <message>
+        <source>Four camps on a dry Iberian hillside. No river runs here - the terraces are the map. Each camp looks out through a horned terrace wall with a gate at either horn, and the old press mound in the middle is high ground four worn tracks climb.</source>
+        <translation>أربعة معسكرات على منحدر إيبيري جاف. لا نهر هنا — المدرجات هي الخريطة. كل معسكر يطلّ عبر جدار مدرّج ذي قرنين وبوابة عند كل قرن، وتلّ المعصرة القديم في الوسط أرض مرتفعة تتسلّقها أربع دروب مطروقة.</translation>
+    </message>
+    <message>
+        <source>Frostmere Basin</source>
+        <translation>حوض البحيرة المتجمدة</translation>
+    </message>
+    <message>
+        <source>Six camps in a banded rock desert. Three races cross at the middle and cut the ground into six wedges, so every neighbour is two crossings away: one under the junction knaps, one out at the rim stacks. A mesa lies across each wedge, and the lane past it is where the sector is won.</source>
+        <translation>ستة معسكرات في صحراء صخرية مخطّطة. ثلاثة مجارٍ تتقاطع في المنتصف وتقسم الأرض إلى ستة أسافين، فكل جار يبعد معبرين: واحد تحت رُبى الملتقى، وآخر عند الأعمدة الطرفية. تعترض كل إسفين هضبة، والممر الذي يلتفّ حولها هو ما يحسم القطاع.</translation>
+    </message>
+    <message>
+        <source>Sunbaked Terraces</source>
+        <translation>المدرجات المحروقة بالشمس</translation>
+    </message>
+    <message>
+        <source>The Two Fords</source>
+        <translation>المخاضتان</translation>
+    </message>
+    <message>
+        <source>Three camps a side along one broad channel. The Amber runs the whole map and only three ferry crossings span it, so a bank is a front line: the highway behind each bank links its three camps, and every attack has to buy a bridge first.</source>
+        <translation>ثلاثة معسكرات على كل ضفة بمحاذاة مجرى عريض. يجري نهر العنبر عبر الخريطة كلها ولا يعبره سوى ثلاثة معابر عبّارات، فالضفة خط جبهة: الطريق السريع خلف كل ضفة يربط معسكراتها الثلاثة، وكل هجوم عليه أن يشتري جسرًا أولًا.</translation>
     </message>
 </context>
 <context>

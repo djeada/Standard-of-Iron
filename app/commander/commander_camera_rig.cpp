@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <limits>
 #include <numbers>
 
 #include "animation/locomotion_manifest.h"
@@ -321,8 +322,10 @@ auto CommanderCameraRig::update(Render::GL::Camera& camera,
   QVector3D const target_unconstrained = target_desired;
 
   float const blocked_fraction =
-      Game::Systems::first_building_body_intersection_fraction(
-          pivot, eye_desired, k_camera_body_radius);
+      inputs.buildings != nullptr
+          ? Game::Systems::first_building_body_intersection_fraction(
+                *inputs.buildings, pivot, eye_desired, k_camera_body_radius)
+          : 1.0F;
   float const occlusion_target =
       blocked_fraction < 1.0F ? std::clamp(blocked_fraction - 0.06F,
                                            inputs.close_camera_mode ? 0.12F : 0.22F,
@@ -338,18 +341,17 @@ auto CommanderCameraRig::update(Render::GL::Camera& camera,
     eye_desired = pivot + (eye_desired - pivot) * m_occlusion_fraction;
   }
 
-  {
+  if (inputs.buildings != nullptr) {
 
     QVector3D const cleared = Game::Systems::depenetrate_from_building_bodies(
-        eye_desired, k_camera_body_radius);
+        *inputs.buildings, eye_desired, k_camera_body_radius);
     eye_desired.setX(cleared.x());
     eye_desired.setZ(cleared.z());
   }
 
   float terrain_lift = 0.0F;
-  auto const& terrain = Game::Map::TerrainService::instance();
-  if (terrain.is_initialized()) {
-    float const eye_ground_y = terrain.resolve_surface_world_y(
+  if (inputs.terrain != nullptr && inputs.terrain->is_initialized()) {
+    float const eye_ground_y = inputs.terrain->resolve_surface_world_y(
         eye_desired.x(), eye_desired.z(), 0.0F, eye_desired.y());
     float const lifted =
         std::max(eye_desired.y(), eye_ground_y + k_camera_terrain_clearance);
@@ -371,7 +373,10 @@ auto CommanderCameraRig::update(Render::GL::Camera& camera,
   m_trace.building_blocked_fraction = blocked_fraction;
   m_trace.occlusion_fraction = m_occlusion_fraction;
   m_trace.terrain_lift = terrain_lift;
-  m_trace.eye_clearance = Game::Systems::nearest_building_body_clearance(eye_desired);
+  m_trace.eye_clearance =
+      inputs.buildings != nullptr
+          ? Game::Systems::nearest_building_body_clearance(*inputs.buildings, eye_desired)
+          : std::numeric_limits<float>::max();
   m_trace.fov = m_fov_current;
   m_trace.yaw = m_state.yaw;
   m_trace.pitch = m_state.pitch;

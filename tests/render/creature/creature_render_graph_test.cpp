@@ -6,6 +6,7 @@
 #include <atomic>
 #include <gtest/gtest.h>
 
+#include "game/session/session_context.h"
 #include "render/creature/archetype_registry.h"
 #include "render/creature/pipeline/creature_asset.h"
 #include "render/creature/pipeline/creature_render_graph.h"
@@ -303,7 +304,7 @@ TEST(CreatureRenderGraph, BuildBaseOutputSetsCulledFromDecision) {
 
 TEST(CreatureRenderGraph, BuildBaseOutputSetsPassIntentFromContext) {
   Render::GL::DrawContext ctx{};
-  ctx.world_view = Render::WorldView::of_active_session();
+  ctx.world_view = Render::WorldView::of(Game::Session::SessionContext::active());
   ctx.template_prewarm = true;
 
   CreatureGraphInputs inputs;
@@ -317,7 +318,7 @@ TEST(CreatureRenderGraph, BuildBaseOutputSetsPassIntentFromContext) {
 
 TEST(CreatureRenderGraph, BuildBaseOutputCopiesWorldMatrix) {
   Render::GL::DrawContext ctx{};
-  ctx.world_view = Render::WorldView::of_active_session();
+  ctx.world_view = Render::WorldView::of(Game::Session::SessionContext::active());
   ctx.model.translate(1.0F, 2.0F, 3.0F);
 
   CreatureGraphInputs inputs;
@@ -681,7 +682,7 @@ TEST(CreatureRenderGraph, EndToEndElephantPrepare) {
 
 TEST(CreatureRenderGraph, PrewarmContextSetsShadowPassIntent) {
   Render::GL::DrawContext ctx{};
-  ctx.world_view = Render::WorldView::of_active_session();
+  ctx.world_view = Render::WorldView::of(Game::Session::SessionContext::active());
   ctx.template_prewarm = true;
 
   CreatureGraphInputs inputs;

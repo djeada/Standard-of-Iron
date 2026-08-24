@@ -49,9 +49,11 @@ const float k_fog_inscatter_power = 5.0;
 const float k_fog_inscatter_gain = 0.42;
 const vec3 k_fog_haze_tone = vec3(0.86, 0.84, 0.82);
 
-const float k_ground_fog_gain = 0.62;
-const float k_ground_fog_night_gain = 0.55;
-const float k_ground_fog_dawn_gain = 0.75;
+const float k_ground_fog_gain = 0.30;
+const float k_ground_fog_night_gain = 0.22;
+const float k_ground_fog_dawn_gain = 0.30;
+const float k_ground_fog_weather_gain = 0.22;
+const float k_ground_fog_max_opacity = 0.45;
 const float k_ground_fog_distance_reach = 34.0;
 const vec3 k_ground_fog_lift = vec3(1.10, 1.10, 1.08);
 const float k_mist_water_ceiling = 1.7;
@@ -160,9 +162,10 @@ float valley_fog(vec3 world) {
   float dawn = environment_low_sun_amount();
   float weather = clamp(environment_fog_density() * 40.0, 0.0, 1.0);
   float time_gain = k_ground_fog_gain + night * k_ground_fog_night_gain +
-                    dawn * k_ground_fog_dawn_gain + weather * 0.5;
-  return clamp(
-      strength * low * breakup * (0.25 + 0.75 * thickness) * time_gain, 0.0, 1.0);
+                    dawn * k_ground_fog_dawn_gain + weather * k_ground_fog_weather_gain;
+  return clamp(strength * low * breakup * (0.25 + 0.75 * thickness) * time_gain,
+               0.0,
+               k_ground_fog_max_opacity);
 }
 
 vec2 ground_mist(vec3 world) {

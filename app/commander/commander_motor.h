@@ -8,6 +8,10 @@ namespace Engine::Core {
 class TransformComponent;
 }
 
+namespace Game::Session {
+class SessionContext;
+}
+
 namespace App::Core {
 
 struct CommanderMotorRequest {
@@ -31,14 +35,18 @@ class CommanderMotor {
 public:
   [[nodiscard]] static auto body_radius() -> float;
 
-  [[nodiscard]] static auto is_walkable_at(float x, float z) -> bool;
+  [[nodiscard]] static auto is_walkable_at(Game::Session::SessionContext& session,
+                                           float x,
+                                           float z) -> bool;
 
   [[nodiscard]] static auto
-  reachable_ground_position(const QVector3D& start,
+  reachable_ground_position(Game::Session::SessionContext& session,
+                            const QVector3D& start,
                             const QVector3D& desired,
                             unsigned int ignore_entity_id = 0) -> QVector3D;
 
-  auto advance(Engine::Core::TransformComponent& transform,
+  auto advance(Game::Session::SessionContext& session,
+               Engine::Core::TransformComponent& transform,
                const CommanderMotorRequest& request) -> CommanderMotorResult;
 
   auto teleport(Engine::Core::TransformComponent& transform,

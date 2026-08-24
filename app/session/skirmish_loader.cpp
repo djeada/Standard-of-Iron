@@ -36,6 +36,7 @@
 #include "game/map/map_transformer.h"
 #include "game/map/terrain_service.h"
 #include "game/map/visibility_service.h"
+#include "game/session/session_context.h"
 #include "game/systems/ai_system.h"
 #include "game/systems/building_collision_registry.h"
 #include "game/systems/global_stats_registry.h"
@@ -219,26 +220,22 @@ void SkirmishLoader::reset_game_state() {
 
   m_renderer.clear_entity_render_caches();
 
-  Game::Systems::BuildingCollisionRegistry::instance().clear();
+  auto& session = Game::Session::session_for(m_world);
+  session.building_collision().clear();
 
-  auto& owner_registry = Game::Systems::OwnerRegistry::instance();
-  owner_registry.clear();
+  session.owners().clear();
 
   Game::Map::MapTransformer::clear_player_team_overrides();
 
-  auto& visibility_service = Game::Map::VisibilityService::instance();
-  visibility_service.reset();
+  session.visibility().reset();
 
-  auto& terrain_service = Game::Map::TerrainService::instance();
-  terrain_service.clear();
+  session.terrain().clear();
 
-  auto& stats_registry = Game::Systems::GlobalStatsRegistry::instance();
-  stats_registry.clear();
+  session.stats().clear();
 
-  auto& troop_registry = Game::Systems::TroopCountRegistry::instance();
-  troop_registry.clear();
+  session.troop_counts().clear();
 
-  Game::Systems::NationRegistry::instance().clear_player_assignments();
+  session.nations().clear_player_assignments();
 
   if (m_fog != nullptr) {
     m_fog->set_enabled(true);
@@ -300,7 +297,8 @@ auto SkirmishLoader::start(const QString& map_path,
                << resolved_map_path;
   }
 
-  auto& owner_registry = Game::Systems::OwnerRegistry::instance();
+  auto& session = Game::Session::session_for(m_world);
+  auto& owner_registry = session.owners();
 
   int player_owner_id = selected_player_id;
 
@@ -357,10 +355,9 @@ auto SkirmishLoader::start(const QString& map_path,
         if (!nation_id_str.isEmpty()) {
           auto parsed =
               Game::Systems::nation_id_from_string(nation_id_str.toStdString());
-          chosen_nation = parsed.value_or(
-              Game::Systems::NationRegistry::instance().default_nation_id());
+          chosen_nation = parsed.value_or(session.nations().default_nation_id());
         } else {
-          chosen_nation = Game::Systems::NationRegistry::instance().default_nation_id();
+          chosen_nation = session.nations().default_nation_id();
         }
         nation_overrides[player_id] = chosen_nation;
 
@@ -392,7 +389,7 @@ auto SkirmishLoader::start(const QString& map_path,
   Game::Map::MapTransformer::set_local_owner_id(player_owner_id);
   Game::Map::MapTransformer::setPlayerTeamOverrides(team_overrides);
 
-  auto& nation_registry = Game::Systems::NationRegistry::instance();
+  auto& nation_registry = session.nations();
 
   for (int const player_id : map_player_ids) {
     auto nat_it = nation_overrides.find(player_id);
@@ -451,7 +448,7 @@ auto SkirmishLoader::start(const QString& map_path,
     m_on_owners_updated();
   }
 
-  auto& terrain_service = Game::Map::TerrainService::instance();
+  auto& terrain_service = session.terrain();
 
   if (m_ground != nullptr) {
     if (level_result.ok) {

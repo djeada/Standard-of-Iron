@@ -311,7 +311,7 @@ void MapData::clear() {
   m_name = "New Map";
   m_description.clear();
   m_coord_system = "grid";
-  m_max_troops_per_player = 2000;
+  m_max_troops_per_player = 700;
 
   m_grid = GridSettings{100, 100, 1.0F};
 

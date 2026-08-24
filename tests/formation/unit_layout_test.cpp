@@ -415,6 +415,35 @@ TEST_F(UnitLayoutTest, CavalryUsesMoreDepthPerRankThanInfantry) {
   EXPECT_GT(depth_span(cavalry), depth_span(infantry));
 }
 
+TEST_F(UnitLayoutTest, ForcedTraversalFilesRetainAuthoredDoctrineTraits) {
+  auto forced = [](UnitLayoutId id) {
+    std::vector<SoldierOffset> offsets;
+    for (int index = 0; index < 12; ++index) {
+      UnitLayoutQuery query;
+      query.layout = id;
+      query.index = index;
+      query.count = 12;
+      query.forced_files = 2;
+      query.spacing = 1.0F;
+      query.seed = 0x1234ABCDU;
+      offsets.push_back(UnitLayoutSystem::instance().offset(query));
+    }
+    return offsets;
+  };
+
+  auto const roman = forced(layout("rome", "spear_ranks"));
+  auto const carthaginian = forced(layout("carthage", "spear_ranks"));
+  ASSERT_EQ(roman.size(), carthaginian.size());
+  EXPECT_GT(depth_span(roman), 5.0F);
+  EXPECT_GT(depth_span(carthaginian), 5.0F);
+  EXPECT_GT(lateral_span(roman), 1.2F);
+  EXPECT_LT(lateral_span(roman), 1.7F);
+  EXPECT_GT(lateral_span(carthaginian), 1.2F);
+  EXPECT_LT(lateral_span(carthaginian), 1.7F);
+  EXPECT_GT(std::abs(depth_span(roman) - depth_span(carthaginian)), 0.25F);
+  EXPECT_GT(std::abs(roman[2].offset_x - carthaginian[2].offset_x), 0.05F);
+}
+
 TEST_F(UnitLayoutTest, WorkPartiesFaceInwardAroundTheirSite) {
   auto const id = layout("rome", "work_party");
   constexpr int k_total = 8;
@@ -500,6 +529,71 @@ TEST_F(UnitLayoutTest, ConstructingBuildersOverrideTheirTroopLayout) {
   auto const working = Game::Formation::select_unit_layout(
       "rome", TroopType::Builder, UnitLayoutState::Normal, true);
   EXPECT_EQ(working, layout("rome", "work_party"));
+}
+
+TEST_F(UnitLayoutTest, IdleBuildersDoNotStandInAWorkCircle) {
+  using Game::Units::TroopType;
+  auto const idle = Game::Formation::select_unit_layout(
+      "rome", TroopType::Builder, UnitLayoutState::Normal);
+  auto const marching = Game::Formation::select_unit_layout(
+      "rome", TroopType::Builder, UnitLayoutState::Marching);
+  auto const working = Game::Formation::select_unit_layout(
+      "rome", TroopType::Builder, UnitLayoutState::Working);
+
+  EXPECT_EQ(working, layout("rome", "work_party"));
+  EXPECT_NE(idle, working)
+      << "a crew standing about should not be ringed around nothing";
+  EXPECT_NE(marching, working);
+  EXPECT_NE(idle, marching);
+
+  auto const idle_shape = UnitLayoutLibrary::instance().style(idle).shape;
+  EXPECT_NE(idle_shape, Game::Formation::UnitLayoutShape::Circle);
+}
+
+TEST_F(UnitLayoutTest, ALayoutBlendWalksFromOneShapeToTheOther) {
+  auto const from = layout("rome", "work_party");
+  auto const to = layout("rome", "worker_gang");
+  ASSERT_NE(from, k_invalid_layout);
+  ASSERT_NE(to, k_invalid_layout);
+
+  constexpr int k_total = 8;
+  constexpr int k_index = 3;
+  auto make = [&](UnitLayoutId target, UnitLayoutId blend_from, float ratio) {
+    UnitLayoutQuery query;
+    query.layout = target;
+    query.index = k_index;
+    query.row = 0;
+    query.col = k_index;
+    query.rows = 1;
+    query.cols = k_total;
+    query.count = k_total;
+    query.spacing = 1.0F;
+    query.seed = 0x51EEDU;
+    query.blend_from = blend_from;
+    query.blend_ratio = ratio;
+    return UnitLayoutSystem::instance().offset(query);
+  };
+
+  auto const start = make(from, k_invalid_layout, 1.0F);
+  auto const finish = make(to, k_invalid_layout, 1.0F);
+  auto const at_zero = make(to, from, 0.0F);
+  auto const at_one = make(to, from, 1.0F);
+  auto const midway = make(to, from, 0.5F);
+
+  EXPECT_NEAR(at_zero.offset_x, start.offset_x, 1.0e-4F);
+  EXPECT_NEAR(at_zero.offset_z, start.offset_z, 1.0e-4F);
+  EXPECT_NEAR(at_one.offset_x, finish.offset_x, 1.0e-4F);
+  EXPECT_NEAR(at_one.offset_z, finish.offset_z, 1.0e-4F);
+
+  float const span =
+      std::hypot(finish.offset_x - start.offset_x, finish.offset_z - start.offset_z);
+  ASSERT_GT(span, 0.1F) << "the two shapes must actually differ to blend";
+  float const from_start =
+      std::hypot(midway.offset_x - start.offset_x, midway.offset_z - start.offset_z);
+  float const from_finish =
+      std::hypot(midway.offset_x - finish.offset_x, midway.offset_z - finish.offset_z);
+  EXPECT_LT(from_start, span);
+  EXPECT_LT(from_finish, span);
 }
 
 TEST_F(UnitLayoutTest, EveryTroopTypeResolvesToARegisteredLayout) {

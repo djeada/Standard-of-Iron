@@ -10,6 +10,7 @@
 #include <optional>
 #include <vector>
 
+#include "../../core/ambient_session.h"
 #include "../../core/component.h"
 #include "../../core/event_manager.h"
 #include "../../core/world.h"
@@ -346,27 +347,16 @@ auto begin_soldier_casualties(Engine::Core::Entity* target,
     return 0;
   }
 
-  auto const* presentation =
-      target->get_component<Engine::Core::FormationPresentationComponent>();
-  auto presentation_for_slot =
-      [presentation](
-          std::uint16_t slot) -> const Engine::Core::FormationSoldierPresentation* {
-    if (presentation == nullptr) {
-      return nullptr;
-    }
-    auto const found = std::find_if(
-        presentation->soldiers.begin(),
-        presentation->soldiers.end(),
-        [slot](auto const& soldier) { return soldier.slot_index == slot; });
-    return found != presentation->soldiers.end() ? &*found : nullptr;
-  };
-  auto layout_for_slot =
-      [&previous_layout](std::uint16_t slot) -> const FormationCombat::SoldierSlot* {
+  auto const spatial_anchors =
+      FormationCombat::soldier_spatial_anchors(*target, previous_layout);
+  auto spatial_anchor_for_slot =
+      [&spatial_anchors](
+          std::uint16_t slot) -> const FormationCombat::SoldierSpatialAnchor* {
     auto const found =
-        std::find_if(previous_layout.live_slots.begin(),
-                     previous_layout.live_slots.end(),
-                     [slot](auto const& soldier) { return soldier.index == slot; });
-    return found != previous_layout.live_slots.end() ? &*found : nullptr;
+        std::find_if(spatial_anchors.begin(),
+                     spatial_anchors.end(),
+                     [slot](auto const& anchor) { return anchor.slot_index == slot; });
+    return found != spatial_anchors.end() ? &*found : nullptr;
   };
   auto next_casualty_slot = [&]() -> std::optional<std::uint16_t> {
     if (roster == nullptr) {
@@ -395,13 +385,8 @@ auto begin_soldier_casualties(Engine::Core::Entity* target,
         selected_slot.has_value() ? static_cast<int>(*selected_slot) : casualty_index;
     Engine::Core::SoldierCasualtyAnimationComponent::Entry entry{};
     entry.slot_index = static_cast<std::uint16_t>(slot);
-    if (auto const* soldier = presentation_for_slot(static_cast<std::uint16_t>(slot))) {
-      entry.has_local_anchor = true;
-      entry.local_x = soldier->local_x;
-      entry.local_z = soldier->local_z;
-      entry.local_yaw = soldier->local_yaw;
-    } else if (auto const* soldier =
-                   layout_for_slot(static_cast<std::uint16_t>(slot))) {
+    if (auto const* soldier =
+            spatial_anchor_for_slot(static_cast<std::uint16_t>(slot))) {
       entry.has_local_anchor = true;
       entry.local_x = soldier->local_x;
       entry.local_z = soldier->local_z;
@@ -1092,8 +1077,9 @@ apply_unit_damage(Engine::Core::World* world,
       }
     }
 
-    if (target->has_component<Engine::Core::BuildingComponent>()) {
-      BuildingCollisionRegistry::instance().unregister_building(target->get_id());
+    if (world != nullptr && target->has_component<Engine::Core::BuildingComponent>()) {
+      Game::Session::services_for(*world).building_collision->unregister_building(
+          target->get_id());
     }
     if (world != nullptr &&
         target->get_component<Engine::Core::WallSegmentComponent>() != nullptr) {

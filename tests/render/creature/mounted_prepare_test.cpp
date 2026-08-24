@@ -14,6 +14,7 @@
 #include "animation/bpat/bpat_registry.h"
 #include "game/core/component.h"
 #include "game/core/entity.h"
+#include "game/session/session_context.h"
 #include "game/units/spawn_type.h"
 #include "render/creature/animation_state_components.h"
 #include "render/creature/archetype_registry.h"
@@ -203,7 +204,7 @@ TEST(MountedPrepare, ShadowPairProducesNoDrawCalls) {
 
   Render::GL::MountedKnightRendererBase const renderer(cfg);
   Render::GL::DrawContext ctx{};
-  ctx.world_view = Render::WorldView::of_active_session();
+  ctx.world_view = Render::WorldView::of(Game::Session::SessionContext::active());
   ctx.template_prewarm = true;
   ctx.force_single_soldier = true;
   Render::GL::AnimationInputs const anim{};
@@ -227,7 +228,7 @@ TEST(MountedPrepare, MainPairProducesTwoEntitySubmissions) {
 
   Render::GL::MountedKnightRendererBase const renderer(cfg);
   Render::GL::DrawContext ctx{};
-  ctx.world_view = Render::WorldView::of_active_session();
+  ctx.world_view = Render::WorldView::of(Game::Session::SessionContext::active());
   ctx.force_single_soldier = true;
   Render::GL::AnimationInputs const anim{};
 
@@ -383,7 +384,7 @@ TEST(MountedPrepare, TemplatePrewarmRenderWarmsMountedSnapshotCache) {
   renderable->visible = true;
 
   Render::GL::DrawContext ctx{};
-  ctx.world_view = Render::WorldView::of_active_session();
+  ctx.world_view = Render::WorldView::of(Game::Session::SessionContext::active());
   ctx.entity = &entity;
   ctx.template_prewarm = true;
   ctx.force_single_soldier = true;
@@ -405,7 +406,7 @@ TEST(MountedPrepare, MountedHumanoidPreparationQueuesRiderAndHorseBodies) {
 
   Render::GL::MountedKnightRendererBase const renderer(cfg);
   Render::GL::DrawContext ctx{};
-  ctx.world_view = Render::WorldView::of_active_session();
+  ctx.world_view = Render::WorldView::of(Game::Session::SessionContext::active());
   ctx.force_single_soldier = true;
   Render::GL::AnimationInputs const anim{};
 
@@ -440,7 +441,7 @@ TEST(MountedPrepare, MountedRiderUsesMountedChargeStateForMeleeAttack) {
 
   Render::GL::HorseSpearmanRendererBase const renderer(cfg);
   Render::GL::DrawContext ctx{};
-  ctx.world_view = Render::WorldView::of_active_session();
+  ctx.world_view = Render::WorldView::of(Game::Session::SessionContext::active());
   ctx.force_single_soldier = true;
   ctx.allow_template_cache = false;
 
@@ -470,7 +471,7 @@ TEST(MountedPrepare, MountedSwordAttackUsesMountedSwordStateWhileMoving) {
 
   Render::GL::MountedKnightRendererBase const renderer(cfg);
   Render::GL::DrawContext ctx{};
-  ctx.world_view = Render::WorldView::of_active_session();
+  ctx.world_view = Render::WorldView::of(Game::Session::SessionContext::active());
   ctx.force_single_soldier = true;
   ctx.allow_template_cache = false;
 
@@ -502,7 +503,7 @@ TEST(MountedPrepare, MountedSwordAttackRecoveryStaysOnOutgoingClipBeforeIdle) {
 
   Render::GL::MountedKnightRendererBase const renderer(cfg);
   Render::GL::DrawContext ctx{};
-  ctx.world_view = Render::WorldView::of_active_session();
+  ctx.world_view = Render::WorldView::of(Game::Session::SessionContext::active());
   ctx.force_single_soldier = true;
   ctx.allow_template_cache = false;
 
@@ -617,7 +618,7 @@ TEST(MountedPrepare, SubmitPreparationDrawsRiderFromPreparedPose) {
 
   Render::GL::MountedKnightRendererBase const renderer(cfg);
   Render::GL::DrawContext ctx{};
-  ctx.world_view = Render::WorldView::of_active_session();
+  ctx.world_view = Render::WorldView::of(Game::Session::SessionContext::active());
   ctx.force_single_soldier = true;
   Render::GL::AnimationInputs const anim{};
 
@@ -638,7 +639,7 @@ TEST(MountedPrepare, MountedRiderRequestUsesAbsoluteSeatWorld) {
 
   Render::GL::MountedKnightRendererBase const renderer(cfg);
   Render::GL::DrawContext ctx{};
-  ctx.world_view = Render::WorldView::of_active_session();
+  ctx.world_view = Render::WorldView::of(Game::Session::SessionContext::active());
   ctx.force_single_soldier = true;
   Render::GL::AnimationInputs const anim{};
 
@@ -677,7 +678,7 @@ TEST(MountedPrepare, MountedUnitGroupsRiderAndHorseBySharedWorldKey) {
 
   Render::GL::MountedKnightRendererBase const renderer(cfg);
   Render::GL::DrawContext ctx{};
-  ctx.world_view = Render::WorldView::of_active_session();
+  ctx.world_view = Render::WorldView::of(Game::Session::SessionContext::active());
   ctx.allow_template_cache = false;
 
   Engine::Core::StandaloneEntity entity_scratch(1);
@@ -741,7 +742,7 @@ TEST(MountedPrepare, MountedRiderRootAttachesToHorseSeatFrame) {
 
   InspectableMountedKnightRenderer const renderer(cfg);
   Render::GL::DrawContext ctx{};
-  ctx.world_view = Render::WorldView::of_active_session();
+  ctx.world_view = Render::WorldView::of(Game::Session::SessionContext::active());
   ctx.allow_template_cache = false;
   ctx.force_single_soldier = true;
 
@@ -833,7 +834,7 @@ TEST(MountedPrepare, AttackingMountedRiderRootAttachesToHorseSeatFrame) {
 
   InspectableMountedKnightRenderer const renderer(cfg);
   Render::GL::DrawContext ctx{};
-  ctx.world_view = Render::WorldView::of_active_session();
+  ctx.world_view = Render::WorldView::of(Game::Session::SessionContext::active());
   ctx.allow_template_cache = false;
   ctx.force_single_soldier = true;
 
@@ -932,7 +933,7 @@ TEST(MountedPrepare, MovingMountedRiderRootAttachesToHorseSeatFrame) {
 
   InspectableMountedKnightRenderer const renderer(cfg);
   Render::GL::DrawContext ctx{};
-  ctx.world_view = Render::WorldView::of_active_session();
+  ctx.world_view = Render::WorldView::of(Game::Session::SessionContext::active());
   ctx.allow_template_cache = false;
   ctx.force_single_soldier = true;
 
@@ -1024,7 +1025,7 @@ TEST(MountedPrepare, ShieldedMountedKnightMovementUsesRiggedSubmissionsOnly) {
 
   Render::GL::MountedKnightRendererBase const renderer(cfg);
   Render::GL::DrawContext ctx{};
-  ctx.world_view = Render::WorldView::of_active_session();
+  ctx.world_view = Render::WorldView::of(Game::Session::SessionContext::active());
   ctx.force_single_soldier = true;
   ctx.allow_template_cache = false;
 
@@ -1075,7 +1076,7 @@ TEST(MountedPrepare, StaleLayoutCacheVersionForcesMountedFormationRefresh) {
 
   Render::GL::MountedKnightRendererBase const renderer(cfg);
   Render::GL::DrawContext ctx{};
-  ctx.world_view = Render::WorldView::of_active_session();
+  ctx.world_view = Render::WorldView::of(Game::Session::SessionContext::active());
   ctx.allow_template_cache = false;
 
   Engine::Core::StandaloneEntity entity_scratch(1);

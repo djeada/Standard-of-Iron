@@ -5,6 +5,7 @@
 #include <cmath>
 #include <numbers>
 
+#include "../../core/ambient_session.h"
 #include "../../core/world.h"
 #include "../../map/terrain_service.h"
 #include "../building_line_of_sight.h"
@@ -84,9 +85,10 @@ view_direction(const Engine::Core::RpgCommanderAimComponent& aim) -> QVector3D {
   return std::nullopt;
 }
 
-[[nodiscard]] auto terrain_distance_along(const AimRay& ray,
+[[nodiscard]] auto terrain_distance_along(const Engine::Core::World& world,
+                                          const AimRay& ray,
                                           float max_distance) -> std::optional<float> {
-  auto const& terrain = Game::Map::TerrainService::instance();
+  auto const& terrain = *Game::Session::services_for(world).terrain;
   if (!terrain.is_initialized()) {
     return std::nullopt;
   }
@@ -267,6 +269,7 @@ auto raycast_enemy_bodies(Engine::Core::World& world,
     return std::nullopt;
   }
 
+  const auto& buildings = *Game::Session::services_for(world).building_collision;
   std::optional<AimHit> best;
   for (auto [candidate_ref, candidate_unit] :
        world.entity_view<Engine::Core::UnitComponent>()) {
@@ -288,7 +291,7 @@ auto raycast_enemy_bodies(Engine::Core::World& world,
         continue;
       }
       QVector3D const point = ray.origin + (ray.direction * *distance);
-      if (!has_clear_building_los(ray.origin, point)) {
+      if (!has_clear_building_los(buildings, ray.origin, point)) {
         continue;
       }
       best = AimHit{.entity_id = target.entity_id,
@@ -342,11 +345,13 @@ auto resolve_bow_shot(Engine::Core::World& world,
     shot.hit_body = true;
     travel = hit->distance;
   } else {
-    if (auto const ground = terrain_distance_along(sight, max_range)) {
+    if (auto const ground = terrain_distance_along(world, sight, max_range)) {
       travel = std::min(travel, *ground);
     }
     float const wall_fraction = first_building_intersection_fraction(
-        sight.origin, sight.origin + (sight.direction * travel));
+        *Game::Session::services_for(world).building_collision,
+        sight.origin,
+        sight.origin + (sight.direction * travel));
     travel *= std::clamp(wall_fraction, 0.0F, 1.0F);
   }
 

@@ -7,6 +7,7 @@
 #include "../core/world.h"
 #include "../formation/army_formation_registry.h"
 #include "../formation/unit_layout_state_system.h"
+#include "../session/session_context.h"
 #include "../wildlife/wildlife_system.h"
 #include "ai_system.h"
 #include "arrow_system.h"
@@ -32,6 +33,7 @@
 #include "production_system.h"
 #include "projectile_system.h"
 #include "resource_delivery_system.h"
+#include "route_follow_system.h"
 #include "rpg_combat_system/rpg_engagement_system.h"
 #include "selection_system.h"
 #include "settlement_life_system.h"
@@ -39,10 +41,12 @@
 #include "stamina_system.h"
 #include "terrain_alignment_system.h"
 #include "undead_awakening_system.h"
+#include "unit_traversal_layout_system.h"
 
 namespace Game::Systems {
 
 void register_runtime_systems(Engine::Core::World& world) {
+  auto& session = Game::Session::session_for(world);
 
   world.add_system(std::make_unique<Game::Command::CommandSystem>(),
                    Engine::Core::SystemPhase::Input);
@@ -54,9 +58,13 @@ void register_runtime_systems(Engine::Core::World& world) {
   world.add_system(std::make_unique<StaminaSystem>(), Engine::Core::SystemPhase::Input);
 
   world.add_system(std::make_unique<GateSystem>(), Engine::Core::SystemPhase::Movement);
+  world.add_system(std::make_unique<RouteFollowSystem>(),
+                   Engine::Core::SystemPhase::Movement);
   world.add_system(std::make_unique<LocalAvoidanceSystem>(),
                    Engine::Core::SystemPhase::Movement);
   world.add_system(std::make_unique<MovementSystem>(),
+                   Engine::Core::SystemPhase::Movement);
+  world.add_system(std::make_unique<UnitTraversalLayoutSystem>(),
                    Engine::Core::SystemPhase::Movement);
   world.add_system(std::make_unique<PatrolSystem>(),
                    Engine::Core::SystemPhase::Movement);
@@ -82,8 +90,15 @@ void register_runtime_systems(Engine::Core::World& world) {
                    Engine::Core::SystemPhase::Combat);
   world.add_system(std::make_unique<CaptureSystem>(),
                    Engine::Core::SystemPhase::Combat);
-  world.add_system(std::make_unique<AISystem>(), Engine::Core::SystemPhase::Strategy);
-  world.add_system(std::make_unique<UndeadAwakeningSystem>(),
+  world.add_system(std::make_unique<AISystem>(AISystem::Services{
+                       .owners = session.owners(), .nations = session.nations()}),
+                   Engine::Core::SystemPhase::Strategy);
+  world.add_system(std::make_unique<UndeadAwakeningSystem>(
+                       UndeadAwakeningSystem::Services{.terrain = session.terrain(),
+                                                       .owners = session.owners(),
+                                                       .nations = session.nations(),
+                                                       .stats = session.stats(),
+                                                       .economy = session.economy()}),
                    Engine::Core::SystemPhase::Strategy);
   world.add_system(std::make_unique<ProductionSystem>(),
                    Engine::Core::SystemPhase::Economy);

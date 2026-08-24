@@ -9,6 +9,7 @@
 #include "core/component.h"
 #include "core/event_manager.h"
 #include "core/world.h"
+#include "game/session/session_context.h"
 #include "game/systems/default_content.h"
 #include "map/campaign_definition.h"
 #include "map/campaign_loader.h"
@@ -20,6 +21,18 @@
 #include "systems/save_storage.h"
 #include "systems/victory_service.h"
 #include "units/spawn_type.h"
+
+namespace {
+
+auto victory_services() -> Game::Systems::VictoryService::Services {
+  auto& session = Game::Session::SessionContext::active();
+  return {.stats = session.stats(),
+          .owners = session.owners(),
+          .nations = session.nations(),
+          .economy = session.economy()};
+}
+
+} // namespace
 
 namespace {
 
@@ -205,7 +218,7 @@ TEST_F(CampaignEndToEndTest, TheOpeningMissionCanBeWonAndAdvancesTheCampaign) {
       << mission_id.toStdString() << " ships no victory rule";
 
   Engine::Core::World world;
-  VictoryService service;
+  VictoryService service(victory_services());
   service.configure(rules, 1);
 
   add_commander(world);
@@ -267,7 +280,7 @@ TEST_F(CampaignEndToEndTest, ADefeatLeavesTheCampaignExactlyWhereItWas) {
       << mission_id.toStdString() << " ships no defeat rule";
 
   Engine::Core::World world;
-  VictoryService service;
+  VictoryService service(victory_services());
   service.configure(rules, 1);
 
   QString reported_state;

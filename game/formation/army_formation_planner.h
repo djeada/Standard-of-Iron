@@ -127,7 +127,8 @@ public:
                    const DoctrineIntentTemplate& tmpl,
                    const ArmyFormationOptions& options,
                    float spacing,
-                   float requested_frontage) -> std::vector<FormationSlot>;
+                   float requested_frontage,
+                   float facing) -> std::vector<FormationSlot>;
 };
 
 } // namespace Game::Formation

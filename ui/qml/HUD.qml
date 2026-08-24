@@ -63,17 +63,7 @@ Item {
     Connections {
         function onSelected_units_changed() {
             selection_tick += 1;
-            var has_troops = false;
-            if (typeof game !== 'undefined' && game.has_units_selected && game.production.has_selected_type) {
-                var troop_types = ["warrior", "archer", "swordsman", "spearman", "healer", "catapult", "ballista", "horse_archer", "horse_swordsman", "horse_spearman", "elephant", "builder", "civilian"];
-                for (var i = 0; i < troop_types.length; i++) {
-                    if (game.production.has_selected_type(troop_types[i])) {
-                        has_troops = true;
-                        break;
-                    }
-                }
-            }
-            has_movable_units = has_troops;
+            has_movable_units = typeof game !== 'undefined' && game.orders.has_commandable_selection ? game.orders.has_commandable_selection() : false;
             refresh_command_mode();
         }
 

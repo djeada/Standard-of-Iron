@@ -9,7 +9,7 @@
 #include "game/map/map_definition.h"
 #include "game/map/terrain_service.h"
 #include "game/systems/building_collision_registry.h"
-#include "game/systems/movement_system.h"
+#include "game/systems/movement_pipeline.h"
 #include "game/systems/nav_grid.h"
 #include "game/systems/pathfinding.h"
 #include "game/systems/player_resource_registry.h"
@@ -178,7 +178,7 @@ TEST_F(ResourceDeliverySystemTest, AHaulerWalksTheWholeWayHomeBeforeTheCountersM
   const auto* transform = hauler->get_component<Engine::Core::TransformComponent>();
 
   Game::Systems::ResourceDeliverySystem delivery;
-  Game::Systems::MovementSystem movement;
+  Game::Systems::MovementPipeline movement;
 
   bool credited = false;
   for (int tick = 0; tick < 900 && !credited; ++tick) {

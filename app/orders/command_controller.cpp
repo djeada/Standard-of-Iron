@@ -32,6 +32,7 @@
 #include "game/session/session_context.h"
 #include "game/systems/combat_rules.h"
 #include "game/systems/command_service.h"
+#include "game/systems/food_targets.h"
 #include "game/systems/owner_registry.h"
 #include "game/systems/production_service.h"
 #include "game/systems/selection_system.h"
@@ -849,6 +850,69 @@ auto CommandController::on_civilian_delivery_click(qreal sx,
                                                                    local_owner_id));
   result.input_consumed = result.order.accepted();
   result.reset_cursor_to_normal = true;
+  return result;
+}
+
+auto CommandController::start_food_harvest(Engine::Core::EntityID target,
+                                           const QString& product_type,
+                                           int local_owner_id) -> CommandResult {
+  CommandResult result;
+  if (m_selection_system == nullptr || m_world == nullptr || target == 0 ||
+      product_type.isEmpty()) {
+    return result;
+  }
+
+  const auto& selected = m_selection_system->get_selected_units();
+  if (selected.empty()) {
+    result.order =
+        m_orders.reject(App::Core::OrderKind::Gather, App::Core::no_selection_reason());
+    return result;
+  }
+
+  std::vector<Engine::Core::EntityID> crew;
+  crew.reserve(selected.size());
+  for (auto const id : selected) {
+    if (m_world->try_get<Engine::Core::BuilderProductionComponent>(id) != nullptr) {
+      crew.push_back(id);
+    }
+  }
+  if (crew.empty()) {
+    result.order = m_orders.reject(
+        App::Core::OrderKind::Gather,
+        App::Core::no_eligible_units_reason(App::Core::OrderKind::Gather));
+    return result;
+  }
+
+  auto const food_target =
+      Game::Systems::resolve_food_target(*m_world, target, local_owner_id);
+  if (!food_target.has_value() ||
+      QString::fromLatin1(food_target->product_type.data(),
+                          static_cast<qsizetype>(food_target->product_type.size())) !=
+          product_type) {
+    result.order = m_orders.reject(
+        App::Core::OrderKind::Gather,
+        App::Core::no_target_under_cursor_reason(App::Core::OrderKind::Gather));
+    return result;
+  }
+  if (Game::Systems::food_target_claimed(*m_world, target)) {
+    result.order =
+        m_orders.reject(App::Core::OrderKind::Gather, App::Core::unit_busy_reason());
+    return result;
+  }
+
+  QVector3D const site(food_target->x, 0.0F, food_target->z);
+  App::Core::OrderRequest request;
+  request.kind = App::Core::OrderKind::Gather;
+  request.payload =
+      Game::Command::StartHarvest{.units = std::move(crew),
+                                  .construction_type = product_type.toStdString(),
+                                  .resource_target = target,
+                                  .site = site};
+  request.has_destination = true;
+  request.destination = site;
+  result.order = m_orders.publish(
+      App::Core::submit_player_order(*m_world, local_owner_id, std::move(request)));
+  result.input_consumed = result.order.accepted();
   return result;
 }
 

@@ -32,9 +32,9 @@ class World;
 using EntityID = std::uint64_t;
 } // namespace Engine::Core
 
-namespace Game::Map {
-class VisibilityService;
-} // namespace Game::Map
+namespace Game::Session {
+class SessionContext;
+}
 
 namespace Game::Systems {
 class CameraService;
@@ -86,7 +86,8 @@ class ArenaViewport : public QOpenGLWidget {
   Q_OBJECT
 
 public:
-  explicit ArenaViewport(QWidget* parent = nullptr);
+  explicit ArenaViewport(Game::Session::SessionContext& session,
+                         QWidget* parent = nullptr);
   ~ArenaViewport() override;
 
 public:
@@ -347,7 +348,6 @@ private:
   void reconfigure_terrain_from_state();
   void apply_initial_visibility();
   void update_fog_of_war(float dt);
-  auto visibility_service() -> Game::Map::VisibilityService&;
   auto spawn_single_building(int owner_id,
                              Game::Systems::NationID nation_id,
                              Game::Units::SpawnType building_type,
@@ -402,6 +402,7 @@ private:
   Game::Map::WeatherLightingInput m_weather_lighting{};
   QString m_animation_name = QStringLiteral("Idle");
 
+  Game::Session::SessionContext& m_session;
   std::unique_ptr<Engine::Core::World> m_world;
   std::unique_ptr<Render::GL::Renderer> m_renderer;
   bool m_prewarm_unit_templates{false};
@@ -414,7 +415,6 @@ private:
   std::unique_ptr<Render::GL::MapBoundaryFogRenderer> m_boundary_fog;
   std::unique_ptr<Render::GL::AmbientFogRenderer> m_ambient_fog;
   std::unique_ptr<Render::GL::RainRenderer> m_rain;
-  Game::Map::VisibilityService* m_visibility_service{nullptr};
   std::unique_ptr<Game::Systems::CameraService> m_camera_service;
   std::unique_ptr<Game::Systems::PickingService> m_picking_service;
   std::unique_ptr<CommanderControlController> m_rpg_commander_controller;

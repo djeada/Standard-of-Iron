@@ -142,7 +142,9 @@ private:
 
   auto begin_bite(Engine::Core::Entity& entity,
                   Engine::Core::WildlifeComponent& wildlife,
-                  const PreyRef& prey) -> bool;
+                  const PreyRef& prey,
+                  float hunter_x,
+                  float hunter_z) -> bool;
   void try_contact_bite(Engine::Core::World& world,
                         const AnimalRef& animal,
                         Engine::Core::WildlifeComponent& wildlife);

@@ -82,6 +82,7 @@ add_executable(
     core/component_storage_test.cpp
     core/world_spatial_index_test.cpp
     core/system_schedule_test.cpp
+    core/movement_trace_test.cpp
     core/ground_type_test.cpp
     core/building_spawn_setup_test.cpp
     map/terrain_profiles_test.cpp
@@ -91,6 +92,7 @@ add_executable(
     map/map_bridge_coverage_test.cpp
     map/river_bank_walkability_test.cpp
     map/map_hill_entrance_smoothness_test.cpp
+    map/map_skirmish_reachability_test.cpp
     map/map_weather_coverage_test.cpp
     map/map_wildlife_config_test.cpp
     map/terrain_topology_audit_test.cpp
@@ -170,6 +172,8 @@ add_executable(
     formation/formation_movement_test.cpp
     formation/formation_terrain_navigation_test.cpp
     systems/runtime_phase_order_test.cpp
+    systems/movement_stage_ownership_test.cpp
+    systems/movement_route_test.cpp
     systems/formation_combat_geometry_test.cpp
     systems/defensive_unit_layout_test.cpp
     systems/structure_combat_test.cpp
@@ -350,6 +354,7 @@ add_executable(
     render/spawn_validator_test.cpp
     render/battle_render_optimizer_test.cpp
     render/barracks_flag_renderer_test.cpp
+    render/carried_load_renderer_test.cpp
     render/building_archetype_desc_test.cpp
     render/building_body_footprint_test.cpp
     render/building_render_common_test.cpp
@@ -503,6 +508,7 @@ add_executable(
     core/commander_direct_control_latency_test.cpp
     core/commander_mode_transition_test.cpp
     core/context_intent_test.cpp
+    core/harvest_targeting_test.cpp
     core/player_feedback_test.cpp
     core/input_command_handler_test.cpp
     core/tutorial_mission_test.cpp

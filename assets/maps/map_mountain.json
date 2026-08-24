@@ -1,1110 +1,2702 @@
 {
-  "name": "Mountain Strongholds",
-  "description": "A large balanced mountain skirmish map with two fortified bases, a contested central ridge, narrow high passes, flank trails, alpine streams, and strong archer positions. Victory is standard barracks elimination.",
+  "name": "Frostmere Basin",
+  "description": "Four camps in a snowed-in basin. Two melt races cross at its centre and cut the ground into quarters, so every neighbour is a bridge away: an inner crossing in the open, or a longer one out under the rim ranges. Four corner tarns and four barrow cairns fill the rest.",
+  "theme": "Snow, black water, and four armies that all want the same crossings.",
   "coord_system": "grid",
-  "max_troops_per_player": 2000,
   "grid": {
-    "width": 300,
-    "height": 300,
+    "width": 240,
+    "height": 240,
     "tile_size": 1.0
   },
-  "biome": {
-    "ground_type": "alpine_mix",
-    "seed": 24611,
-    "patch_density": 3.1,
-    "patch_jitter": 0.82,
-    "blade_height": [
-      0.5,
-      1.3
-    ],
-    "blade_width": [
-      0.025,
-      0.055
-    ],
-    "sway_strength": 0.22,
-    "sway_speed": 1.15,
-    "height_noise": [
-      0.22,
-      0.08
-    ],
-    "grass_primary": [
-      0.28,
-      0.55,
-      0.3
-    ],
-    "grass_secondary": [
-      0.42,
-      0.66,
-      0.33
-    ],
-    "grass_dry": [
-      0.58,
-      0.52,
-      0.38
-    ],
-    "soil_color": [
-      0.27,
-      0.24,
-      0.2
-    ],
-    "rock_low": [
-      0.46,
-      0.45,
-      0.43
-    ],
-    "rock_high": [
-      0.7,
-      0.7,
-      0.72
-    ],
-    "plant_density": 0.52,
-    "ground_irregularity_enabled": true,
-    "irregularity_scale": 0.11,
-    "irregularity_amplitude": 0.055
-  },
+  "max_troops_per_player": 280,
   "camera": {
     "center": [
-      150,
+      120.0,
       0,
-      150
+      120.0
     ],
-    "distance": 92.0,
+    "distance": 76.8,
     "tilt_deg": 48.0,
     "yaw": 225.0,
     "fov_y": 45.0,
     "near": 1.0,
-    "far": 700.0
+    "far": 672.0
   },
   "time_of_day": "morning",
+  "environment": {
+    "start_time": 9.0,
+    "time_mode": "continuous",
+    "day_length_seconds": 2400.0,
+    "lighting_profile": "mediterranean_summer"
+  },
+  "biome": {
+    "ground_type": "alpine_mix",
+    "seed": 77310,
+    "patch_density": 2.4,
+    "patch_jitter": 0.8,
+    "plant_density": 0.24,
+    "snow_coverage": 0.62,
+    "snow_color": [
+      0.93,
+      0.95,
+      0.99
+    ],
+    "grass_primary": [
+      0.29,
+      0.4,
+      0.29
+    ],
+    "grass_secondary": [
+      0.35,
+      0.47,
+      0.34
+    ],
+    "rock_low": [
+      0.56,
+      0.59,
+      0.64
+    ],
+    "rock_high": [
+      0.88,
+      0.9,
+      0.95
+    ],
+    "height_noise": [
+      0.26,
+      0.05
+    ],
+    "ground_irregularity_enabled": true,
+    "irregularity_scale": 0.17,
+    "irregularity_amplitude": 0.09,
+    "moisture_level": 0.35
+  },
   "rain": {
     "enabled": true,
     "type": "snow",
-    "intensity": "medium",
-    "cycle_duration": 420.0,
-    "active_duration": 115.0,
-    "fade_duration": 8.0,
-    "wind_strength": 0.32,
-    "wind_direction": 70.0
+    "intensity": 0.68,
+    "cycle_duration": 330.0,
+    "active_duration": 110.0,
+    "fade_duration": 6.0,
+    "wind_strength": 0.35,
+    "wind_direction": 20.0
   },
   "terrain": [
     {
+      "id": "p1_clearing",
       "type": "flat",
-      "x": 62,
-      "z": 62,
-      "width": 48,
-      "depth": 42,
-      "description": "Southwestern base clearing."
+      "x": 52.0,
+      "z": 52.0,
+      "width": 44.0,
+      "depth": 38.0,
+      "description": "Player 1 camp floor."
     },
     {
-      "type": "flat",
-      "x": 238,
-      "z": 238,
-      "width": 48,
-      "depth": 42,
-      "description": "Northeastern base clearing."
-    },
-    {
+      "id": "p1_shoulder",
       "type": "hill",
-      "x": 62,
-      "z": 62,
-      "radius": 16,
+      "x": 52.0,
+      "z": 52.0,
+      "width": 56.0,
+      "depth": 68.0,
+      "height": 2.6,
+      "shape": "arc",
+      "thickness": 17.0,
+      "arc": 170.0,
+      "rotation": 225.0,
+      "taper": 0.2,
+      "description": "Boomerang moraine cupping player 1's camp.",
+      "entrances": [
+        {
+          "x": 38.68,
+          "z": 53.11
+        },
+        {
+          "x": 48.39,
+          "z": 22.35
+        }
+      ]
+    },
+    {
+      "id": "p2_clearing",
+      "type": "flat",
+      "x": 188.0,
+      "z": 52.0,
+      "width": 44.0,
+      "depth": 38.0,
+      "description": "Player 2 camp floor."
+    },
+    {
+      "id": "p2_shoulder",
+      "type": "hill",
+      "x": 188.0,
+      "z": 52.0,
+      "width": 56.0,
+      "depth": 68.0,
+      "height": 2.6,
+      "shape": "arc",
+      "thickness": 17.0,
+      "arc": 170.0,
+      "rotation": 315.0,
+      "taper": 0.2,
+      "description": "Boomerang moraine cupping player 2's camp.",
+      "entrances": [
+        {
+          "x": 186.89,
+          "z": 38.68
+        },
+        {
+          "x": 217.65,
+          "z": 48.39
+        }
+      ]
+    },
+    {
+      "id": "p3_clearing",
+      "type": "flat",
+      "x": 188.0,
+      "z": 188.0,
+      "width": 44.0,
+      "depth": 38.0,
+      "description": "Player 3 camp floor."
+    },
+    {
+      "id": "p3_shoulder",
+      "type": "hill",
+      "x": 188.0,
+      "z": 188.0,
+      "width": 56.0,
+      "depth": 68.0,
+      "height": 2.6,
+      "shape": "arc",
+      "thickness": 17.0,
+      "arc": 170.0,
+      "rotation": 45.0,
+      "taper": 0.2,
+      "description": "Boomerang moraine cupping player 3's camp.",
+      "entrances": [
+        {
+          "x": 201.32,
+          "z": 186.89
+        },
+        {
+          "x": 191.61,
+          "z": 217.65
+        }
+      ]
+    },
+    {
+      "id": "p4_clearing",
+      "type": "flat",
+      "x": 52.0,
+      "z": 188.0,
+      "width": 44.0,
+      "depth": 38.0,
+      "description": "Player 4 camp floor."
+    },
+    {
+      "id": "p4_shoulder",
+      "type": "hill",
+      "x": 52.0,
+      "z": 188.0,
+      "width": 56.0,
+      "depth": 68.0,
+      "height": 2.6,
+      "shape": "arc",
+      "thickness": 17.0,
+      "arc": 170.0,
+      "rotation": 135.0,
+      "taper": 0.2,
+      "description": "Boomerang moraine cupping player 4's camp.",
+      "entrances": [
+        {
+          "x": 53.11,
+          "z": 201.32
+        },
+        {
+          "x": 22.35,
+          "z": 191.61
+        }
+      ]
+    },
+    {
+      "id": "outer_spur_1",
+      "type": "hill",
+      "x": 72.0,
+      "z": 36.0,
+      "width": 40.0,
+      "depth": 22.0,
       "height": 2.8,
-      "description": "Player 1 mountain stronghold mound.",
+      "shape": "corridor",
+      "thickness": 11.0,
+      "description": "Moraine spur between the camp and the outer crossing.",
       "entrances": [
         {
-          "x": 78,
-          "z": 62
+          "x": 65.62,
+          "z": 41.5
         },
         {
-          "x": 62,
-          "z": 78
+          "x": 78.38,
+          "z": 30.5
         }
       ]
     },
     {
+      "id": "outer_spur_2",
       "type": "hill",
-      "x": 238,
-      "z": 238,
-      "radius": 16,
+      "x": 204.0,
+      "z": 72.0,
+      "width": 40.0,
+      "depth": 22.0,
       "height": 2.8,
-      "description": "Player 2 mountain stronghold mound.",
+      "shape": "corridor",
+      "thickness": 11.0,
+      "rotation": 90.0,
+      "description": "Moraine spur between the camp and the outer crossing.",
       "entrances": [
         {
-          "x": 222,
-          "z": 238
+          "x": 198.5,
+          "z": 65.62
         },
         {
-          "x": 238,
-          "z": 222
+          "x": 209.5,
+          "z": 78.38
         }
       ]
     },
     {
-      "type": "flat",
-      "x": 150,
-      "z": 150,
-      "width": 70,
-      "depth": 58,
-      "description": "Central saddle clearing around the fortress ridge."
-    },
-    {
-      "type": "flat",
-      "x": 150,
-      "z": 150,
-      "description": "Abandoned mountain fortress ruins."
-    },
-    {
+      "id": "outer_spur_3",
       "type": "hill",
-      "x": 150,
-      "z": 150,
-      "width": 36,
-      "depth": 28,
-      "height": 4.2,
-      "rotation": 25,
-      "description": "Central fortress ridge. Strong for archers, but attackable from four passes.",
+      "x": 168.0,
+      "z": 204.0,
+      "width": 40.0,
+      "depth": 22.0,
+      "height": 2.8,
+      "shape": "corridor",
+      "thickness": 11.0,
+      "rotation": 180.0,
+      "description": "Moraine spur between the camp and the outer crossing.",
       "entrances": [
         {
-          "x": 150,
-          "z": 124
+          "x": 174.38,
+          "z": 198.5
         },
         {
-          "x": 124,
-          "z": 150
-        },
-        {
-          "x": 176,
-          "z": 150
-        },
-        {
-          "x": 150,
-          "z": 176
+          "x": 161.62,
+          "z": 209.5
         }
       ]
     },
     {
+      "id": "outer_spur_4",
       "type": "hill",
-      "x": 100.7,
-      "z": 153.65,
-      "width": 26,
-      "depth": 14,
+      "x": 36.0,
+      "z": 168.0,
+      "width": 40.0,
+      "depth": 22.0,
+      "height": 2.8,
+      "shape": "corridor",
+      "thickness": 11.0,
+      "rotation": 270.0,
+      "description": "Moraine spur between the camp and the outer crossing.",
+      "entrances": [
+        {
+          "x": 41.5,
+          "z": 174.38
+        },
+        {
+          "x": 30.5,
+          "z": 161.62
+        }
+      ]
+    },
+    {
+      "id": "rim_elbow_1",
+      "type": "hill",
+      "x": 20.0,
+      "z": 86.0,
+      "width": 48.0,
+      "depth": 40.0,
       "height": 3.0,
-      "rotation": -20,
-      "description": "Western approach ridge controlling the main valley road.",
+      "shape": "elbow",
+      "thickness": 13.0,
+      "arc": 100.0,
+      "description": "Elbow of frost-shattered rock folding the quarter's flank.",
       "entrances": [
         {
-          "x": 86.7,
-          "z": 150.65
+          "x": 20.14,
+          "z": 66.0
         },
         {
-          "x": 114.7,
-          "z": 156.65
+          "x": 7.23,
+          "z": 83.12
         }
       ]
     },
     {
+      "id": "rim_elbow_2",
       "type": "hill",
-      "x": 199.3,
-      "z": 146.35,
-      "width": 26,
-      "depth": 14,
+      "x": 154.0,
+      "z": 20.0,
+      "width": 48.0,
+      "depth": 40.0,
       "height": 3.0,
-      "rotation": 160,
-      "description": "Eastern approach ridge controlling the main valley road.",
+      "shape": "elbow",
+      "thickness": 13.0,
+      "arc": 100.0,
+      "rotation": 90.0,
+      "description": "Elbow of frost-shattered rock folding the quarter's flank.",
       "entrances": [
         {
-          "x": 185.3,
-          "z": 143.35
+          "x": 174.0,
+          "z": 20.14
         },
         {
-          "x": 213.3,
-          "z": 149.35
+          "x": 156.88,
+          "z": 7.23
         }
       ]
     },
     {
+      "id": "rim_elbow_3",
       "type": "hill",
-      "x": 148.67,
-      "z": 52.02,
-      "width": 42,
-      "depth": 14,
-      "height": 3.2,
-      "rotation": 8,
-      "description": "Northern high-pass overlook. Excellent archer ground, but far from both bases.",
+      "x": 220.0,
+      "z": 154.0,
+      "width": 48.0,
+      "depth": 40.0,
+      "height": 3.0,
+      "shape": "elbow",
+      "thickness": 13.0,
+      "arc": 100.0,
+      "rotation": 180.0,
+      "description": "Elbow of frost-shattered rock folding the quarter's flank.",
       "entrances": [
         {
-          "x": 127.67,
-          "z": 52.02
+          "x": 219.86,
+          "z": 174.0
         },
         {
-          "x": 169.67,
-          "z": 52.02
+          "x": 232.77,
+          "z": 156.88
         }
       ]
     },
     {
+      "id": "rim_elbow_4",
       "type": "hill",
-      "x": 151.33,
-      "z": 247.98,
-      "width": 42,
-      "depth": 14,
-      "height": 3.2,
-      "rotation": 188,
-      "description": "Southern high-pass overlook. Mirrors the northern overlook.",
+      "x": 86.0,
+      "z": 220.0,
+      "width": 48.0,
+      "depth": 40.0,
+      "height": 3.0,
+      "shape": "elbow",
+      "thickness": 13.0,
+      "arc": 100.0,
+      "rotation": 270.0,
+      "description": "Elbow of frost-shattered rock folding the quarter's flank.",
       "entrances": [
         {
-          "x": 130.33,
-          "z": 247.98
+          "x": 66.0,
+          "z": 219.86
         },
         {
-          "x": 172.33,
-          "z": 247.98
+          "x": 83.12,
+          "z": 232.77
         }
       ]
     },
     {
-      "type": "flat",
-      "x": 72,
-      "z": 202,
-      "description": "Ruined goat-herder hamlet on the lower trail."
-    },
-    {
-      "type": "hill",
-      "x": 72,
-      "z": 202,
-      "width": 32,
-      "depth": 16,
-      "height": 2.7,
-      "rotation": 20,
-      "description": "Southwestern flank ridge above the goat trail.",
-      "entrances": [
-        {
-          "x": 56,
-          "z": 198
-        },
-        {
-          "x": 88,
-          "z": 206
-        }
-      ]
-    },
-    {
-      "type": "flat",
-      "x": 228,
-      "z": 98,
-      "description": "Ruined watch hamlet on the upper trail."
-    },
-    {
-      "type": "hill",
-      "x": 228,
-      "z": 98,
-      "width": 32,
-      "depth": 16,
-      "height": 2.7,
-      "rotation": 200,
-      "description": "Northeastern flank ridge above the upper trail.",
-      "entrances": [
-        {
-          "x": 212,
-          "z": 94
-        },
-        {
-          "x": 244,
-          "z": 102
-        }
-      ]
-    },
-    {
+      "id": "rim_west_1",
       "type": "mountain",
-      "x": 42,
-      "z": 36,
-      "radius": 18,
-      "height": 9.5,
-      "description": "Southwestern outer peak framing Player 1 base."
+      "x": 76.0,
+      "z": 8.0,
+      "width": 58.0,
+      "depth": 26.0,
+      "height": 9.0,
+      "description": "Rim range."
     },
     {
+      "id": "rim_west_2",
       "type": "mountain",
-      "x": 258,
-      "z": 264,
-      "radius": 18,
-      "height": 9.5,
-      "description": "Northeastern outer peak framing Player 2 base."
+      "x": 232.0,
+      "z": 76.0,
+      "width": 58.0,
+      "depth": 26.0,
+      "height": 9.0,
+      "rotation": 90.0,
+      "description": "Rim range."
     },
     {
+      "id": "rim_west_3",
       "type": "mountain",
-      "x": 96,
-      "z": 42,
-      "radius": 19,
-      "height": 10.5,
-      "description": "Northern lower massif shaping the high pass."
+      "x": 164.0,
+      "z": 232.0,
+      "width": 58.0,
+      "depth": 26.0,
+      "height": 9.0,
+      "rotation": 180.0,
+      "description": "Rim range."
     },
     {
+      "id": "rim_west_4",
       "type": "mountain",
-      "x": 204,
-      "z": 258,
-      "radius": 19,
-      "height": 10.5,
-      "description": "Southern lower massif shaping the mirrored high pass."
+      "x": 8.0,
+      "z": 164.0,
+      "width": 58.0,
+      "depth": 26.0,
+      "height": 9.0,
+      "rotation": 270.0,
+      "description": "Rim range."
     },
     {
+      "id": "rim_east_1",
       "type": "mountain",
-      "x": 118,
-      "z": 112,
-      "radius": 20,
-      "height": 11.5,
-      "description": "Western central mountain wall. It prevents direct blob movement into the center."
+      "x": 164.0,
+      "z": 8.0,
+      "width": 58.0,
+      "depth": 26.0,
+      "height": 9.0,
+      "description": "Rim range."
     },
     {
+      "id": "rim_east_2",
       "type": "mountain",
-      "x": 182,
-      "z": 188,
-      "radius": 20,
-      "height": 11.5,
-      "description": "Eastern central mountain wall. It mirrors the western wall."
+      "x": 232.0,
+      "z": 164.0,
+      "width": 58.0,
+      "depth": 26.0,
+      "height": 9.0,
+      "rotation": 90.0,
+      "description": "Rim range."
     },
     {
+      "id": "rim_east_3",
       "type": "mountain",
-      "x": 176,
-      "z": 112,
-      "radius": 18,
-      "height": 10.5,
-      "description": "Northern central peak separating the main road from the high pass."
+      "x": 76.0,
+      "z": 232.0,
+      "width": 58.0,
+      "depth": 26.0,
+      "height": 9.0,
+      "rotation": 180.0,
+      "description": "Rim range."
     },
     {
+      "id": "rim_east_4",
       "type": "mountain",
-      "x": 124,
-      "z": 188,
-      "radius": 18,
-      "height": 10.5,
-      "description": "Southern central peak separating the main road from the goat trail."
+      "x": 8.0,
+      "z": 76.0,
+      "width": 58.0,
+      "depth": 26.0,
+      "height": 9.0,
+      "rotation": 270.0,
+      "description": "Rim range."
+    }
+  ],
+  "forests": [
+    {
+      "id": "inner_pines_1",
+      "x": 98.0,
+      "z": 98.0,
+      "radius": 18.0
     },
     {
-      "type": "mountain",
-      "x": 38,
-      "z": 254,
-      "radius": 16,
-      "height": 8.5,
-      "description": "Southwestern map-edge mountain."
+      "id": "inner_pines_2",
+      "x": 142.0,
+      "z": 98.0,
+      "radius": 18.0
     },
     {
-      "type": "mountain",
-      "x": 262,
-      "z": 46,
-      "radius": 16,
-      "height": 8.5,
-      "description": "Northeastern map-edge mountain."
+      "id": "inner_pines_3",
+      "x": 142.0,
+      "z": 142.0,
+      "radius": 18.0
+    },
+    {
+      "id": "inner_pines_4",
+      "x": 98.0,
+      "z": 142.0,
+      "radius": 18.0
+    },
+    {
+      "id": "rim_pines_1",
+      "x": 108.0,
+      "z": 64.0,
+      "radius": 15.0
+    },
+    {
+      "id": "rim_pines_2",
+      "x": 176.0,
+      "z": 108.0,
+      "radius": 15.0
+    },
+    {
+      "id": "rim_pines_3",
+      "x": 132.0,
+      "z": 176.0,
+      "radius": 15.0
+    },
+    {
+      "id": "rim_pines_4",
+      "x": 64.0,
+      "z": 132.0,
+      "radius": 15.0
     }
   ],
   "rivers": [
     {
       "start": [
-        34,
-        134
+        120.0,
+        0.0
       ],
       "end": [
-        124,
-        142
+        120.0,
+        239.0
       ],
-      "width": 4.2,
-      "description": "Western meltwater stream slowing the approach to the central ridge."
+      "width": 7.0,
+      "id": "north_south_race"
     },
     {
       "start": [
-        176,
-        158
+        0.0,
+        120.0
       ],
       "end": [
-        266,
-        166
+        239.0,
+        120.0
       ],
-      "width": 4.2,
-      "description": "Eastern meltwater stream mirroring the western approach."
+      "width": 7.0,
+      "id": "east_west_race"
+    }
+  ],
+  "lakes": [
+    {
+      "id": "corner_tarn_1",
+      "x": 16.0,
+      "z": 16.0,
+      "width": 36.0,
+      "depth": 32.0
     },
     {
-      "start": [
-        96,
-        58
-      ],
-      "end": [
-        204,
-        82
-      ],
-      "width": 3.8,
-      "description": "Northern high-pass stream."
+      "id": "corner_tarn_2",
+      "x": 224.0,
+      "z": 16.0,
+      "width": 36.0,
+      "depth": 32.0
     },
     {
-      "start": [
-        96,
-        242
-      ],
-      "end": [
-        204,
-        218
-      ],
-      "width": 3.8,
-      "description": "Southern high-pass stream."
+      "id": "corner_tarn_3",
+      "x": 224.0,
+      "z": 224.0,
+      "width": 36.0,
+      "depth": 32.0
+    },
+    {
+      "id": "corner_tarn_4",
+      "x": 16.0,
+      "z": 224.0,
+      "width": 36.0,
+      "depth": 32.0
     }
   ],
   "bridges": [
     {
+      "id": "inner_crossing_1",
       "start": [
-        94,
-        136
+        116.5,
+        84
       ],
       "end": [
-        106,
-        140
+        123.5,
+        84
       ],
-      "width": 4.5,
-      "height": 0.65,
-      "description": "Western valley bridge."
+      "width": 10.0,
+      "height": 0.6
     },
     {
+      "id": "outer_crossing_1",
       "start": [
-        194,
-        160
+        116.5,
+        40
       ],
       "end": [
-        206,
-        164
+        123.5,
+        40
       ],
-      "width": 4.5,
-      "height": 0.65,
-      "description": "Eastern valley bridge."
+      "width": 9.0,
+      "height": 0.55
     },
     {
+      "id": "inner_crossing_2",
       "start": [
-        136,
-        66
-      ],
-      "end": [
-        148,
-        69
-      ],
-      "width": 4.0,
-      "height": 0.6,
-      "description": "Northern high-pass bridge."
-    },
-    {
-      "start": [
-        152,
-        231
-      ],
-      "end": [
-        164,
-        234
-      ],
-      "width": 4.0,
-      "height": 0.6,
-      "description": "Southern high-pass bridge."
-    },
-    {
-      "start": [
-        144,
-        144
+        156,
+        116.5
       ],
       "end": [
         156,
+        123.5
+      ],
+      "width": 10.0,
+      "height": 0.6
+    },
+    {
+      "id": "outer_crossing_2",
+      "start": [
+        200,
+        116.5
+      ],
+      "end": [
+        200,
+        123.5
+      ],
+      "width": 9.0,
+      "height": 0.55
+    },
+    {
+      "id": "inner_crossing_3",
+      "start": [
+        123.5,
         156
       ],
-      "width": 5.0,
-      "height": 0.7,
-      "description": "Old stone causeway below the central fortress ridge."
+      "end": [
+        116.5,
+        156
+      ],
+      "width": 10.0,
+      "height": 0.6
+    },
+    {
+      "id": "outer_crossing_3",
+      "start": [
+        123.5,
+        200
+      ],
+      "end": [
+        116.5,
+        200
+      ],
+      "width": 9.0,
+      "height": 0.55
+    },
+    {
+      "id": "inner_crossing_4",
+      "start": [
+        84,
+        123.5
+      ],
+      "end": [
+        84,
+        116.5
+      ],
+      "width": 10.0,
+      "height": 0.6
+    },
+    {
+      "id": "outer_crossing_4",
+      "start": [
+        40,
+        123.5
+      ],
+      "end": [
+        40,
+        116.5
+      ],
+      "width": 9.0,
+      "height": 0.55
     }
   ],
   "roads": [
     {
+      "id": "inner_span_1",
       "start": [
-        62,
-        62
+        96,
+        84
       ],
       "end": [
-        238,
-        238
+        144,
+        84
       ],
       "width": 4.2,
       "style": "default",
       "waypoints": [
         [
-          62,
-          62
+          96,
+          84
         ],
         [
-          82,
-          82
+          111.15,
+          84
         ],
         [
-          104,
-          106
+          116.5,
+          84
         ],
         [
-          126,
-          132
+          123.5,
+          84
         ],
         [
-          150,
-          150
+          128.85,
+          84
         ],
         [
-          174,
-          168
-        ],
-        [
-          196,
-          194
-        ],
-        [
-          218,
-          218
-        ],
-        [
-          238,
-          238
+          144,
+          84
         ]
-      ],
-      "description": "Main valley road. Fastest route, but it crosses the central fortress ridge."
+      ]
     },
     {
+      "id": "outer_span_1",
       "start": [
-        62,
-        62
+        96,
+        40
       ],
       "end": [
-        238,
-        238
+        144,
+        40
       ],
-      "width": 3.0,
+      "width": 3.6,
       "style": "default",
       "waypoints": [
         [
-          62,
-          62
+          96,
+          40
         ],
         [
-          84,
-          48
+          111.15,
+          40
         ],
         [
-          112,
+          116.5,
+          40
+        ],
+        [
+          123.5,
+          40
+        ],
+        [
+          128.85,
+          40
+        ],
+        [
+          144,
+          40
+        ]
+      ]
+    },
+    {
+      "id": "base_inner_1",
+      "start": [
+        52,
+        52
+      ],
+      "end": [
+        96,
+        84
+      ],
+      "width": 4.0,
+      "style": "default",
+      "waypoints": [
+        [
+          52,
           52
         ],
         [
-          142,
-          62
+          63,
+          60
         ],
         [
-          174,
-          72
+          74,
+          68
         ],
         [
-          206,
-          92
-        ],
-        [
-          226,
-          128
-        ],
-        [
-          232,
-          176
-        ],
-        [
-          238,
-          238
-        ]
-      ],
-      "description": "Northern high pass. Strong archer route, narrow and slower for cavalry."
-    },
-    {
-      "start": [
-        62,
-        62
-      ],
-      "end": [
-        238,
-        238
-      ],
-      "width": 3.0,
-      "style": "default",
-      "waypoints": [
-        [
-          62,
-          62
-        ],
-        [
-          48,
-          90
-        ],
-        [
-          52,
-          124
-        ],
-        [
-          68,
-          162
+          85,
+          76
         ],
         [
           96,
-          204
-        ],
-        [
-          136,
-          232
-        ],
-        [
-          180,
-          248
-        ],
-        [
-          218,
-          246
-        ],
-        [
-          238,
-          238
+          84
         ]
-      ],
-      "description": "Southern goat trail. Longest route, best for surprise flanks and avoiding the central fight."
+      ]
     },
     {
+      "id": "base_outer_1",
       "start": [
-        72,
-        202
+        52,
+        52
       ],
       "end": [
-        150,
-        150
+        96,
+        40
       ],
-      "width": 2.6,
+      "width": 3.4,
       "style": "default",
       "waypoints": [
         [
-          72,
-          202
+          52,
+          52
         ],
         [
-          92,
-          190
+          64.7447,
+          49.7697
         ],
         [
-          112,
-          174
+          77.4893,
+          47.5394
         ],
         [
-          132,
-          160
+          90.234,
+          45.3091
         ],
         [
-          150,
-          150
+          93.12,
+          43.6
+        ],
+        [
+          96,
+          40
         ]
-      ],
-      "description": "Lower side path from the goat trail to the central ridge."
+      ]
     },
     {
+      "id": "inner_link_1",
       "start": [
-        228,
-        98
+        144,
+        84
       ],
       "end": [
-        150,
-        150
+        188,
+        52
       ],
-      "width": 2.6,
+      "width": 4.0,
       "style": "default",
       "waypoints": [
         [
-          228,
-          98
+          144,
+          84
         ],
         [
-          208,
-          110
+          155,
+          76
+        ],
+        [
+          166,
+          68
+        ],
+        [
+          177,
+          60
         ],
         [
           188,
-          126
-        ],
-        [
-          168,
-          140
-        ],
-        [
-          150,
-          150
+          52
         ]
-      ],
-      "description": "Upper side path from the high pass to the central ridge."
+      ]
     },
     {
+      "id": "outer_link_1",
       "start": [
-        62,
-        62
+        144,
+        40
       ],
       "end": [
-        72,
-        202
+        188,
+        52
       ],
-      "width": 2.6,
+      "width": 3.4,
       "style": "default",
       "waypoints": [
         [
-          62,
-          62
+          144,
+          40
         ],
         [
-          54,
+          153.3085,
+          43.5461
+        ],
+        [
+          162.6171,
+          47.0922
+        ],
+        [
+          167.5123,
+          48.4369
+        ],
+        [
+          177.7561,
+          50.2185
+        ],
+        [
+          188,
+          52
+        ]
+      ]
+    },
+    {
+      "id": "inner_span_2",
+      "start": [
+        156,
+        96
+      ],
+      "end": [
+        156,
+        144
+      ],
+      "width": 4.2,
+      "style": "default",
+      "waypoints": [
+        [
+          156,
           96
         ],
         [
-          58,
-          132
+          156,
+          111.15
         ],
         [
-          64,
-          168
+          156,
+          116.5
         ],
         [
-          72,
-          202
+          156,
+          123.5
+        ],
+        [
+          156,
+          128.85
+        ],
+        [
+          156,
+          144
         ]
-      ],
-      "description": "Western vertical flank road."
+      ]
     },
     {
+      "id": "outer_span_2",
       "start": [
-        238,
-        238
+        200,
+        96
       ],
       "end": [
-        228,
-        98
+        200,
+        144
       ],
-      "width": 2.6,
+      "width": 3.6,
       "style": "default",
       "waypoints": [
         [
-          238,
-          238
+          200,
+          96
         ],
         [
-          246,
-          204
+          200,
+          111.15
         ],
         [
-          242,
-          168
+          200,
+          116.5
         ],
         [
-          236,
-          132
+          200,
+          123.5
         ],
         [
-          228,
-          98
+          200,
+          128.85
+        ],
+        [
+          200,
+          144
         ]
+      ]
+    },
+    {
+      "id": "base_inner_2",
+      "start": [
+        188,
+        52
       ],
-      "description": "Eastern vertical flank road."
+      "end": [
+        156,
+        96
+      ],
+      "width": 4.0,
+      "style": "default",
+      "waypoints": [
+        [
+          188,
+          52
+        ],
+        [
+          180,
+          63
+        ],
+        [
+          172,
+          74
+        ],
+        [
+          164,
+          85
+        ],
+        [
+          156,
+          96
+        ]
+      ]
+    },
+    {
+      "id": "base_outer_2",
+      "start": [
+        188,
+        52
+      ],
+      "end": [
+        200,
+        96
+      ],
+      "width": 3.4,
+      "style": "default",
+      "waypoints": [
+        [
+          188,
+          52
+        ],
+        [
+          190.2303,
+          64.7447
+        ],
+        [
+          192.4606,
+          77.4893
+        ],
+        [
+          194.6909,
+          90.234
+        ],
+        [
+          196.4,
+          93.12
+        ],
+        [
+          200,
+          96
+        ]
+      ]
+    },
+    {
+      "id": "inner_link_2",
+      "start": [
+        156,
+        144
+      ],
+      "end": [
+        188,
+        188
+      ],
+      "width": 4.0,
+      "style": "default",
+      "waypoints": [
+        [
+          156,
+          144
+        ],
+        [
+          164,
+          155
+        ],
+        [
+          172,
+          166
+        ],
+        [
+          180,
+          177
+        ],
+        [
+          188,
+          188
+        ]
+      ]
+    },
+    {
+      "id": "outer_link_2",
+      "start": [
+        200,
+        144
+      ],
+      "end": [
+        188,
+        188
+      ],
+      "width": 3.4,
+      "style": "default",
+      "waypoints": [
+        [
+          200,
+          144
+        ],
+        [
+          196.4539,
+          153.3085
+        ],
+        [
+          192.9078,
+          162.6171
+        ],
+        [
+          191.5631,
+          167.5123
+        ],
+        [
+          189.7815,
+          177.7561
+        ],
+        [
+          188,
+          188
+        ]
+      ]
+    },
+    {
+      "id": "inner_span_3",
+      "start": [
+        144,
+        156
+      ],
+      "end": [
+        96,
+        156
+      ],
+      "width": 4.2,
+      "style": "default",
+      "waypoints": [
+        [
+          144,
+          156
+        ],
+        [
+          128.85,
+          156
+        ],
+        [
+          123.5,
+          156
+        ],
+        [
+          116.5,
+          156
+        ],
+        [
+          111.15,
+          156
+        ],
+        [
+          96,
+          156
+        ]
+      ]
+    },
+    {
+      "id": "outer_span_3",
+      "start": [
+        144,
+        200
+      ],
+      "end": [
+        96,
+        200
+      ],
+      "width": 3.6,
+      "style": "default",
+      "waypoints": [
+        [
+          144,
+          200
+        ],
+        [
+          128.85,
+          200
+        ],
+        [
+          123.5,
+          200
+        ],
+        [
+          116.5,
+          200
+        ],
+        [
+          111.15,
+          200
+        ],
+        [
+          96,
+          200
+        ]
+      ]
+    },
+    {
+      "id": "base_inner_3",
+      "start": [
+        188,
+        188
+      ],
+      "end": [
+        144,
+        156
+      ],
+      "width": 4.0,
+      "style": "default",
+      "waypoints": [
+        [
+          188,
+          188
+        ],
+        [
+          177,
+          180
+        ],
+        [
+          166,
+          172
+        ],
+        [
+          155,
+          164
+        ],
+        [
+          144,
+          156
+        ]
+      ]
+    },
+    {
+      "id": "base_outer_3",
+      "start": [
+        188,
+        188
+      ],
+      "end": [
+        144,
+        200
+      ],
+      "width": 3.4,
+      "style": "default",
+      "waypoints": [
+        [
+          188,
+          188
+        ],
+        [
+          175.2553,
+          190.2303
+        ],
+        [
+          162.5107,
+          192.4606
+        ],
+        [
+          149.766,
+          194.6909
+        ],
+        [
+          146.88,
+          196.4
+        ],
+        [
+          144,
+          200
+        ]
+      ]
+    },
+    {
+      "id": "inner_link_3",
+      "start": [
+        96,
+        156
+      ],
+      "end": [
+        52,
+        188
+      ],
+      "width": 4.0,
+      "style": "default",
+      "waypoints": [
+        [
+          96,
+          156
+        ],
+        [
+          85,
+          164
+        ],
+        [
+          74,
+          172
+        ],
+        [
+          63,
+          180
+        ],
+        [
+          52,
+          188
+        ]
+      ]
+    },
+    {
+      "id": "outer_link_3",
+      "start": [
+        96,
+        200
+      ],
+      "end": [
+        52,
+        188
+      ],
+      "width": 3.4,
+      "style": "default",
+      "waypoints": [
+        [
+          96,
+          200
+        ],
+        [
+          86.6915,
+          196.4539
+        ],
+        [
+          77.3829,
+          192.9078
+        ],
+        [
+          72.4877,
+          191.5631
+        ],
+        [
+          62.2439,
+          189.7815
+        ],
+        [
+          52,
+          188
+        ]
+      ]
+    },
+    {
+      "id": "inner_span_4",
+      "start": [
+        84,
+        144
+      ],
+      "end": [
+        84,
+        96
+      ],
+      "width": 4.2,
+      "style": "default",
+      "waypoints": [
+        [
+          84,
+          144
+        ],
+        [
+          84,
+          128.85
+        ],
+        [
+          84,
+          123.5
+        ],
+        [
+          84,
+          116.5
+        ],
+        [
+          84,
+          111.15
+        ],
+        [
+          84,
+          96
+        ]
+      ]
+    },
+    {
+      "id": "outer_span_4",
+      "start": [
+        40,
+        144
+      ],
+      "end": [
+        40,
+        96
+      ],
+      "width": 3.6,
+      "style": "default",
+      "waypoints": [
+        [
+          40,
+          144
+        ],
+        [
+          40,
+          128.85
+        ],
+        [
+          40,
+          123.5
+        ],
+        [
+          40,
+          116.5
+        ],
+        [
+          40,
+          111.15
+        ],
+        [
+          40,
+          96
+        ]
+      ]
+    },
+    {
+      "id": "base_inner_4",
+      "start": [
+        52,
+        188
+      ],
+      "end": [
+        84,
+        144
+      ],
+      "width": 4.0,
+      "style": "default",
+      "waypoints": [
+        [
+          52,
+          188
+        ],
+        [
+          60,
+          177
+        ],
+        [
+          68,
+          166
+        ],
+        [
+          76,
+          155
+        ],
+        [
+          84,
+          144
+        ]
+      ]
+    },
+    {
+      "id": "base_outer_4",
+      "start": [
+        52,
+        188
+      ],
+      "end": [
+        40,
+        144
+      ],
+      "width": 3.4,
+      "style": "default",
+      "waypoints": [
+        [
+          52,
+          188
+        ],
+        [
+          49.7697,
+          175.2553
+        ],
+        [
+          47.5394,
+          162.5107
+        ],
+        [
+          45.3091,
+          149.766
+        ],
+        [
+          43.6,
+          146.88
+        ],
+        [
+          40,
+          144
+        ]
+      ]
+    },
+    {
+      "id": "inner_link_4",
+      "start": [
+        84,
+        96
+      ],
+      "end": [
+        52,
+        52
+      ],
+      "width": 4.0,
+      "style": "default",
+      "waypoints": [
+        [
+          84,
+          96
+        ],
+        [
+          76,
+          85
+        ],
+        [
+          68,
+          74
+        ],
+        [
+          60,
+          63
+        ],
+        [
+          52,
+          52
+        ]
+      ]
+    },
+    {
+      "id": "outer_link_4",
+      "start": [
+        40,
+        96
+      ],
+      "end": [
+        52,
+        52
+      ],
+      "width": 3.4,
+      "style": "default",
+      "waypoints": [
+        [
+          40,
+          96
+        ],
+        [
+          43.5461,
+          86.6915
+        ],
+        [
+          47.0922,
+          77.3829
+        ],
+        [
+          48.4369,
+          72.4877
+        ],
+        [
+          50.2185,
+          62.2439
+        ],
+        [
+          52,
+          52
+        ]
+      ]
+    },
+    {
+      "start": [
+        200,
+        111.15
+      ],
+      "end": [
+        238,
+        110
+      ],
+      "width": 3.2,
+      "style": "default",
+      "waypoints": [
+        [
+          200,
+          111.15
+        ],
+        [
+          212.6667,
+          110.7667
+        ],
+        [
+          225.3333,
+          110.3833
+        ],
+        [
+          238,
+          110
+        ]
+      ]
+    },
+    {
+      "start": [
+        111.15,
+        200
+      ],
+      "end": [
+        110,
+        238
+      ],
+      "width": 3.2,
+      "style": "default",
+      "waypoints": [
+        [
+          111.15,
+          200
+        ],
+        [
+          110.7667,
+          212.6667
+        ],
+        [
+          110.3833,
+          225.3333
+        ],
+        [
+          110,
+          238
+        ]
+      ]
+    }
+  ],
+  "landmarks": [
+    {
+      "id": "frostmere_sanctuary",
+      "kind": "sanctuary",
+      "x": 66.0,
+      "z": 78.0,
+      "facing": "south"
+    },
+    {
+      "id": "north_hamlet",
+      "kind": "hamlet",
+      "x": 162.0,
+      "z": 66.0,
+      "facing": "west"
+    },
+    {
+      "id": "south_watch",
+      "kind": "watch",
+      "x": 174.0,
+      "z": 162.0,
+      "facing": "north"
+    },
+    {
+      "id": "west_hamlet",
+      "kind": "hamlet",
+      "x": 78.0,
+      "z": 174.0,
+      "facing": "east"
+    }
+  ],
+  "structures": [
+    {
+      "id": "p1_barracks",
+      "type": "barracks",
+      "x": 52.0,
+      "z": 52.0,
+      "player_id": 1,
+      "max_population": 140,
+      "team_id": 1,
+      "description": "Player 1 barracks."
+    },
+    {
+      "id": "p2_barracks",
+      "type": "barracks",
+      "x": 188.0,
+      "z": 52.0,
+      "player_id": 2,
+      "max_population": 140,
+      "team_id": 2,
+      "description": "Player 2 barracks."
+    },
+    {
+      "id": "p3_barracks",
+      "type": "barracks",
+      "x": 188.0,
+      "z": 188.0,
+      "player_id": 3,
+      "max_population": 140,
+      "team_id": 3,
+      "description": "Player 3 barracks."
+    },
+    {
+      "id": "p4_barracks",
+      "type": "barracks",
+      "x": 52.0,
+      "z": 188.0,
+      "player_id": 4,
+      "max_population": 140,
+      "team_id": 4,
+      "description": "Player 4 barracks."
+    },
+    {
+      "id": "waystation_1_barracks",
+      "type": "barracks",
+      "x": 60.0,
+      "z": 96.0,
+      "player_id": 0,
+      "max_population": 45,
+      "description": "Neutral waystation on the quarter's back road."
+    },
+    {
+      "id": "waystation_2_barracks",
+      "type": "barracks",
+      "x": 144.0,
+      "z": 60.0,
+      "player_id": 0,
+      "max_population": 45,
+      "description": "Neutral waystation on the quarter's back road."
+    },
+    {
+      "id": "waystation_3_barracks",
+      "type": "barracks",
+      "x": 180.0,
+      "z": 144.0,
+      "player_id": 0,
+      "max_population": 45,
+      "description": "Neutral waystation on the quarter's back road."
+    },
+    {
+      "id": "waystation_4_barracks",
+      "type": "barracks",
+      "x": 96.0,
+      "z": 180.0,
+      "player_id": 0,
+      "max_population": 45,
+      "description": "Neutral waystation on the quarter's back road."
+    },
+    {
+      "type": "temple",
+      "x": 66.0,
+      "z": 80.0,
+      "player_id": -1,
+      "landmark": "frostmere_sanctuary"
     }
   ],
   "spawns": [
     {
-      "type": "archer",
-      "x": 58,
-      "z": 68,
+      "id": "p1_builder",
+      "type": "builder",
+      "x": 61.9,
+      "z": 54.83,
       "player_id": 1
     },
     {
-      "type": "archer",
-      "x": 66,
-      "z": 56,
-      "player_id": 1
-    },
-    {
-      "type": "archer",
-      "x": 70,
-      "z": 66,
-      "player_id": 1
-    },
-    {
-      "type": "swordsman",
-      "x": 54,
-      "z": 62,
-      "player_id": 1
-    },
-    {
-      "type": "swordsman",
-      "x": 62,
-      "z": 54,
-      "player_id": 1
-    },
-    {
-      "type": "spearman",
-      "x": 58,
-      "z": 58,
-      "player_id": 1
-    },
-    {
-      "type": "spearman",
-      "x": 68,
-      "z": 72,
-      "player_id": 1
-    },
-    {
-      "type": "horse_swordsman",
-      "x": 50,
-      "z": 74,
-      "player_id": 1
-    },
-    {
+      "id": "p1_healer",
       "type": "healer",
-      "x": 52,
-      "z": 56,
+      "x": 54.83,
+      "z": 61.9,
       "player_id": 1
     },
     {
-      "type": "catapult",
-      "x": 46,
-      "z": 64,
-      "player_id": 1
-    },
-    {
-      "type": "archer",
-      "x": 242,
-      "z": 232,
+      "id": "p2_builder",
+      "type": "builder",
+      "x": 185.17,
+      "z": 61.9,
       "player_id": 2
     },
     {
-      "type": "archer",
-      "x": 234,
-      "z": 244,
-      "player_id": 2
-    },
-    {
-      "type": "archer",
-      "x": 230,
-      "z": 234,
-      "player_id": 2
-    },
-    {
-      "type": "swordsman",
-      "x": 246,
-      "z": 238,
-      "player_id": 2
-    },
-    {
-      "type": "swordsman",
-      "x": 238,
-      "z": 246,
-      "player_id": 2
-    },
-    {
-      "type": "spearman",
-      "x": 242,
-      "z": 242,
-      "player_id": 2
-    },
-    {
-      "type": "spearman",
-      "x": 232,
-      "z": 228,
-      "player_id": 2
-    },
-    {
-      "type": "horse_swordsman",
-      "x": 250,
-      "z": 226,
-      "player_id": 2
-    },
-    {
+      "id": "p2_healer",
       "type": "healer",
-      "x": 248,
-      "z": 244,
+      "x": 178.1,
+      "z": 54.83,
       "player_id": 2
     },
     {
-      "type": "catapult",
-      "x": 254,
-      "z": 236,
-      "player_id": 2
-    }
-  ],
-  "firecamps": [
-    {
-      "x": 56,
-      "z": 70,
-      "intensity": 1.05,
-      "radius": 3.2
+      "id": "p3_builder",
+      "type": "builder",
+      "x": 178.1,
+      "z": 185.17,
+      "player_id": 3
     },
     {
-      "x": 72,
-      "z": 56,
-      "intensity": 1.1,
-      "radius": 3.2
+      "id": "p3_healer",
+      "type": "healer",
+      "x": 185.17,
+      "z": 178.1,
+      "player_id": 3
     },
     {
-      "x": 244,
-      "z": 230,
-      "intensity": 1.05,
-      "radius": 3.2
+      "id": "p4_builder",
+      "type": "builder",
+      "x": 54.83,
+      "z": 178.1,
+      "player_id": 4
     },
     {
-      "x": 228,
-      "z": 244,
-      "intensity": 1.1,
-      "radius": 3.2
-    },
-    {
-      "x": 150,
-      "z": 150,
-      "intensity": 1.15,
-      "radius": 3.5
-    },
-    {
-      "x": 72,
-      "z": 202,
-      "intensity": 0.8,
-      "radius": 2.6
-    },
-    {
-      "x": 228,
-      "z": 98,
-      "intensity": 0.8,
-      "radius": 2.6
-    },
-    {
-      "x": 142,
-      "z": 62,
-      "intensity": 0.75,
-      "radius": 2.4
-    },
-    {
-      "x": 158,
-      "z": 238,
-      "intensity": 0.75,
-      "radius": 2.4
+      "id": "p4_healer",
+      "type": "healer",
+      "x": 61.9,
+      "z": 185.17,
+      "player_id": 4
     }
   ],
   "world_props": [
     {
+      "id": "p1_tent_a",
       "type": "tent",
-      "x": 55,
-      "z": 56,
-      "scale": 1.0,
-      "rotation": 0.4
+      "x": 52.0,
+      "z": 39.27,
+      "rotation": 45.0
     },
     {
+      "id": "p1_tent_b",
       "type": "tent",
-      "x": 70,
-      "z": 68,
-      "scale": 1.0,
-      "rotation": 2.6
+      "x": 39.27,
+      "z": 52.0,
+      "rotation": 45.0
     },
     {
+      "id": "p1_cart",
       "type": "supply_cart",
-      "x": 58,
-      "z": 75,
-      "scale": 1.0,
-      "rotation": 1.1
+      "x": 41.39,
+      "z": 59.78,
+      "rotation": 135.0
     },
     {
+      "id": "p1_rack",
       "type": "weapon_rack",
-      "x": 75,
-      "z": 58,
-      "scale": 1.0,
-      "rotation": 4.2
+      "x": 62.61,
+      "z": 45.64,
+      "rotation": 45.0
     },
     {
+      "id": "p1_statue",
+      "type": "statue",
+      "x": 62.61,
+      "z": 62.61,
+      "rotation": 45.0
+    },
+    {
+      "id": "p2_tent_a",
       "type": "tent",
-      "x": 245,
-      "z": 244,
-      "scale": 1.0,
-      "rotation": 3.4
+      "x": 200.73,
+      "z": 52.0,
+      "rotation": 135.0
     },
     {
+      "id": "p2_tent_b",
       "type": "tent",
-      "x": 230,
-      "z": 232,
-      "scale": 1.0,
-      "rotation": 5.6
+      "x": 188.0,
+      "z": 39.27,
+      "rotation": 135.0
     },
     {
+      "id": "p2_cart",
       "type": "supply_cart",
-      "x": 242,
-      "z": 225,
-      "scale": 1.0,
-      "rotation": 2.1
+      "x": 180.22,
+      "z": 41.39,
+      "rotation": 225.0
     },
     {
+      "id": "p2_rack",
       "type": "weapon_rack",
-      "x": 225,
-      "z": 242,
+      "x": 194.36,
+      "z": 62.61,
+      "rotation": 135.0
+    },
+    {
+      "id": "p2_statue",
+      "type": "statue",
+      "x": 177.39,
+      "z": 62.61,
+      "rotation": 135.0
+    },
+    {
+      "id": "p3_tent_a",
+      "type": "tent",
+      "x": 188.0,
+      "z": 200.73,
+      "rotation": 225.0
+    },
+    {
+      "id": "p3_tent_b",
+      "type": "tent",
+      "x": 200.73,
+      "z": 188.0,
+      "rotation": 225.0
+    },
+    {
+      "id": "p3_cart",
+      "type": "supply_cart",
+      "x": 198.61,
+      "z": 180.22,
+      "rotation": 315.0
+    },
+    {
+      "id": "p3_rack",
+      "type": "weapon_rack",
+      "x": 177.39,
+      "z": 194.36,
+      "rotation": 225.0
+    },
+    {
+      "id": "p3_statue",
+      "type": "statue",
+      "x": 177.39,
+      "z": 177.39,
+      "rotation": 225.0
+    },
+    {
+      "id": "p4_tent_a",
+      "type": "tent",
+      "x": 39.27,
+      "z": 188.0,
+      "rotation": 315.0
+    },
+    {
+      "id": "p4_tent_b",
+      "type": "tent",
+      "x": 52.0,
+      "z": 200.73,
+      "rotation": 315.0
+    },
+    {
+      "id": "p4_cart",
+      "type": "supply_cart",
+      "x": 59.78,
+      "z": 198.61,
+      "rotation": 405.0
+    },
+    {
+      "id": "p4_rack",
+      "type": "weapon_rack",
+      "x": 45.64,
+      "z": 177.39,
+      "rotation": 315.0
+    },
+    {
+      "id": "p4_statue",
+      "type": "statue",
+      "x": 62.61,
+      "z": 177.39,
+      "rotation": 315.0
+    },
+    {
+      "id": "waystation_1_ruin",
+      "type": "ruins",
+      "x": 51.0,
+      "z": 104.0,
+      "scale": 0.9
+    },
+    {
+      "id": "waystation_1_cart",
+      "type": "supply_cart",
+      "x": 68.0,
+      "z": 90.0
+    },
+    {
+      "id": "waystation_2_ruin",
+      "type": "ruins",
+      "x": 135.0,
+      "z": 68.0,
+      "scale": 0.9,
+      "rotation": 90.0
+    },
+    {
+      "id": "waystation_2_cart",
+      "type": "supply_cart",
+      "x": 152.0,
+      "z": 54.0,
+      "rotation": 90.0
+    },
+    {
+      "id": "waystation_3_ruin",
+      "type": "ruins",
+      "x": 171.0,
+      "z": 152.0,
+      "scale": 0.9,
+      "rotation": 180.0
+    },
+    {
+      "id": "waystation_3_cart",
+      "type": "supply_cart",
+      "x": 188.0,
+      "z": 138.0,
+      "rotation": 180.0
+    },
+    {
+      "id": "waystation_4_ruin",
+      "type": "ruins",
+      "x": 87.0,
+      "z": 188.0,
+      "scale": 0.9,
+      "rotation": 270.0
+    },
+    {
+      "id": "waystation_4_cart",
+      "type": "supply_cart",
+      "x": 104.0,
+      "z": 174.0,
+      "rotation": 270.0
+    },
+    {
+      "id": "vein_1_0",
+      "type": "iron_ore",
+      "x": 40.95,
+      "z": 91.39,
+      "rotation": 34.38
+    },
+    {
+      "id": "vein_1_1",
+      "type": "iron_ore",
+      "x": 34.31,
+      "z": 93.76,
+      "rotation": 106.38
+    },
+    {
+      "id": "vein_1_2",
+      "type": "iron_ore",
+      "x": 30.0,
+      "z": 88.17,
+      "rotation": 178.38
+    },
+    {
+      "id": "vein_1_3",
+      "type": "iron_ore",
+      "x": 33.99,
+      "z": 82.35,
+      "rotation": 250.38
+    },
+    {
+      "id": "vein_1_4",
+      "type": "iron_ore",
+      "x": 40.75,
+      "z": 84.34,
+      "rotation": 322.38
+    },
+    {
+      "id": "vein_2_0",
+      "type": "iron_ore",
+      "x": 156.95,
+      "z": 39.39,
+      "rotation": 34.38
+    },
+    {
+      "id": "vein_2_1",
+      "type": "iron_ore",
+      "x": 150.31,
+      "z": 41.76,
+      "rotation": 106.38
+    },
+    {
+      "id": "vein_2_2",
+      "type": "iron_ore",
+      "x": 146.0,
+      "z": 36.17,
+      "rotation": 178.38
+    },
+    {
+      "id": "vein_2_3",
+      "type": "iron_ore",
+      "x": 149.99,
+      "z": 30.35,
+      "rotation": 250.38
+    },
+    {
+      "id": "vein_2_4",
+      "type": "iron_ore",
+      "x": 156.75,
+      "z": 32.34,
+      "rotation": 322.38
+    },
+    {
+      "id": "vein_3_0",
+      "type": "iron_ore",
+      "x": 208.95,
+      "z": 155.39,
+      "rotation": 34.38
+    },
+    {
+      "id": "vein_3_1",
+      "type": "iron_ore",
+      "x": 202.31,
+      "z": 157.76,
+      "rotation": 106.38
+    },
+    {
+      "id": "vein_3_2",
+      "type": "iron_ore",
+      "x": 198.0,
+      "z": 152.17,
+      "rotation": 178.38
+    },
+    {
+      "id": "vein_3_3",
+      "type": "iron_ore",
+      "x": 201.99,
+      "z": 146.35,
+      "rotation": 250.38
+    },
+    {
+      "id": "vein_3_4",
+      "type": "iron_ore",
+      "x": 208.75,
+      "z": 148.34,
+      "rotation": 322.38
+    },
+    {
+      "id": "vein_4_0",
+      "type": "iron_ore",
+      "x": 92.95,
+      "z": 207.39,
+      "rotation": 34.38
+    },
+    {
+      "id": "vein_4_1",
+      "type": "iron_ore",
+      "x": 86.31,
+      "z": 209.76,
+      "rotation": 106.38
+    },
+    {
+      "id": "vein_4_2",
+      "type": "iron_ore",
+      "x": 82.0,
+      "z": 204.17,
+      "rotation": 178.38
+    },
+    {
+      "id": "vein_4_3",
+      "type": "iron_ore",
+      "x": 85.99,
+      "z": 198.35,
+      "rotation": 250.38
+    },
+    {
+      "id": "vein_4_4",
+      "type": "iron_ore",
+      "x": 92.75,
+      "z": 200.34,
+      "rotation": 322.38
+    },
+    {
+      "type": "statue",
+      "x": 60.5,
+      "z": 89.0,
       "scale": 1.0,
-      "rotation": 0.8
+      "rotation": 270.0,
+      "landmark": "frostmere_sanctuary"
+    },
+    {
+      "type": "statue",
+      "x": 74.33,
+      "z": 91.83,
+      "scale": 1.0,
+      "rotation": 90.0,
+      "landmark": "frostmere_sanctuary"
+    },
+    {
+      "type": "statue",
+      "x": 64.2,
+      "z": 99.53,
+      "scale": 1.0,
+      "rotation": 270.0,
+      "landmark": "frostmere_sanctuary"
+    },
+    {
+      "type": "statue",
+      "x": 71.5,
+      "z": 98.0,
+      "scale": 1.0,
+      "rotation": 90.0,
+      "landmark": "frostmere_sanctuary"
     },
     {
       "type": "ruins",
-      "x": 144,
-      "z": 146,
-      "scale": 1.2,
-      "rotation": 0.5
-    },
-    {
-      "type": "ruins",
-      "x": 156,
-      "z": 154,
+      "x": 59.0,
+      "z": 71.0,
       "scale": 1.1,
-      "rotation": 2.3
+      "rotation": 270.0,
+      "landmark": "frostmere_sanctuary"
     },
     {
       "type": "ruins",
-      "x": 150,
-      "z": 160,
+      "x": 72.0,
+      "z": 69.0,
       "scale": 0.9,
-      "rotation": 4.6
+      "rotation": 90.0,
+      "landmark": "frostmere_sanctuary"
     },
     {
       "type": "dead_tree",
-      "x": 88,
-      "z": 92,
+      "x": 65.0,
+      "z": 66.0,
       "scale": 1.0,
-      "rotation": 1.1
+      "rotation": 270.0,
+      "landmark": "frostmere_sanctuary"
     },
     {
-      "type": "dead_tree",
-      "x": 99,
-      "z": 198,
+      "type": "firecamp",
+      "x": 66.0,
+      "z": 86.0,
       "scale": 1.0,
-      "rotation": 2.8
+      "rotation": 180.0,
+      "landmark": "frostmere_sanctuary",
+      "radius": 3.2,
+      "intensity": 1.2,
+      "persistent": true
     },
     {
-      "type": "dead_tree",
-      "x": 202,
-      "z": 102,
+      "type": "abandoned_home",
+      "x": 162.0,
+      "z": 60.0,
       "scale": 1.0,
-      "rotation": 4.2
+      "rotation": 0.0,
+      "landmark": "north_hamlet"
     },
     {
-      "type": "dead_tree",
-      "x": 213,
-      "z": 208,
+      "type": "abandoned_home",
+      "x": 153.0,
+      "z": 71.0,
       "scale": 1.0,
-      "rotation": 5.7
+      "rotation": 180.0,
+      "landmark": "north_hamlet"
+    },
+    {
+      "type": "abandoned_home",
+      "x": 177.85,
+      "z": 74.56,
+      "scale": 1.0,
+      "rotation": 180.0,
+      "landmark": "north_hamlet"
+    },
+    {
+      "type": "abandoned_home",
+      "x": 168.2,
+      "z": 59.45,
+      "scale": 0.9,
+      "rotation": 0.0,
+      "landmark": "north_hamlet"
     },
     {
       "type": "ruins",
-      "x": 70,
-      "z": 202,
-      "scale": 0.9,
-      "rotation": 1.8
+      "x": 150.0,
+      "z": 63.0,
+      "scale": 1.1,
+      "rotation": 0.0,
+      "landmark": "north_hamlet"
     },
     {
       "type": "ruins",
-      "x": 230,
-      "z": 98,
+      "x": 166.0,
+      "z": 79.0,
       "scale": 0.9,
-      "rotation": 4.8
+      "rotation": 180.0,
+      "landmark": "north_hamlet"
+    },
+    {
+      "type": "dead_tree",
+      "x": 158.0,
+      "z": 54.0,
+      "scale": 1.0,
+      "rotation": 0.0,
+      "landmark": "north_hamlet"
+    },
+    {
+      "type": "dead_tree",
+      "x": 178.0,
+      "z": 68.0,
+      "scale": 0.9,
+      "rotation": 180.0,
+      "landmark": "north_hamlet"
+    },
+    {
+      "type": "statue",
+      "x": 175.53,
+      "z": 162.3,
+      "scale": 1.0,
+      "rotation": 0.0,
+      "landmark": "south_watch"
+    },
+    {
+      "type": "tent",
+      "x": 179.0,
+      "z": 156.0,
+      "scale": 1.0,
+      "rotation": 90.0,
+      "landmark": "south_watch"
+    },
+    {
+      "type": "tent",
+      "x": 171.41,
+      "z": 156.41,
+      "scale": 1.0,
+      "rotation": 270.0,
+      "landmark": "south_watch"
+    },
+    {
+      "type": "tent",
+      "x": 176.0,
+      "z": 150.0,
+      "scale": 0.95,
+      "rotation": 90.0,
+      "landmark": "south_watch"
+    },
+    {
+      "type": "supply_cart",
+      "x": 166.0,
+      "z": 159.0,
+      "scale": 1.0,
+      "rotation": 270.0,
+      "landmark": "south_watch"
+    },
+    {
+      "type": "weapon_rack",
+      "x": 182.0,
+      "z": 160.0,
+      "scale": 1.0,
+      "rotation": 90.0,
+      "landmark": "south_watch"
+    },
+    {
+      "type": "firecamp",
+      "x": 174.0,
+      "z": 154.0,
+      "scale": 1.0,
+      "rotation": 0.0,
+      "landmark": "south_watch",
+      "radius": 3.2,
+      "intensity": 1.2,
+      "persistent": true
+    },
+    {
+      "type": "ruins",
+      "x": 168.0,
+      "z": 174.0,
+      "scale": 0.9,
+      "rotation": 270.0,
+      "landmark": "south_watch"
+    },
+    {
+      "type": "abandoned_home",
+      "x": 78.0,
+      "z": 180.0,
+      "scale": 1.0,
+      "rotation": 180.0,
+      "landmark": "west_hamlet"
+    },
+    {
+      "type": "abandoned_home",
+      "x": 87.0,
+      "z": 169.0,
+      "scale": 1.0,
+      "rotation": 0.0,
+      "landmark": "west_hamlet"
+    },
+    {
+      "type": "abandoned_home",
+      "x": 62.15,
+      "z": 165.44,
+      "scale": 1.0,
+      "rotation": 0.0,
+      "landmark": "west_hamlet"
+    },
+    {
+      "type": "abandoned_home",
+      "x": 71.8,
+      "z": 180.55,
+      "scale": 0.9,
+      "rotation": 180.0,
+      "landmark": "west_hamlet"
+    },
+    {
+      "type": "ruins",
+      "x": 90.0,
+      "z": 177.0,
+      "scale": 1.1,
+      "rotation": 180.0,
+      "landmark": "west_hamlet"
+    },
+    {
+      "type": "ruins",
+      "x": 74.0,
+      "z": 161.0,
+      "scale": 0.9,
+      "rotation": 0.0,
+      "landmark": "west_hamlet"
+    },
+    {
+      "type": "dead_tree",
+      "x": 82.0,
+      "z": 186.0,
+      "scale": 1.0,
+      "rotation": 180.0,
+      "landmark": "west_hamlet"
+    },
+    {
+      "type": "dead_tree",
+      "x": 62.0,
+      "z": 172.0,
+      "scale": 0.9,
+      "rotation": 0.0,
+      "landmark": "west_hamlet"
     }
   ],
+  "firecamps": [
+    {
+      "id": "p1_fire",
+      "x": 49.88,
+      "z": 49.88,
+      "intensity": 1.05,
+      "radius": 3.4
+    },
+    {
+      "id": "p2_fire",
+      "x": 190.12,
+      "z": 49.88,
+      "intensity": 1.05,
+      "radius": 3.4
+    },
+    {
+      "id": "p3_fire",
+      "x": 190.12,
+      "z": 190.12,
+      "intensity": 1.05,
+      "radius": 3.4
+    },
+    {
+      "id": "p4_fire",
+      "x": 49.88,
+      "z": 190.12,
+      "intensity": 1.05,
+      "radius": 3.4
+    },
+    {
+      "id": "waystation_1_fire",
+      "x": 64.0,
+      "z": 101.0,
+      "radius": 3.0
+    },
+    {
+      "id": "waystation_2_fire",
+      "x": 148.0,
+      "z": 65.0,
+      "radius": 3.0
+    },
+    {
+      "id": "waystation_3_fire",
+      "x": 184.0,
+      "z": 149.0,
+      "radius": 3.0
+    },
+    {
+      "id": "waystation_4_fire",
+      "x": 100.0,
+      "z": 185.0,
+      "radius": 3.0
+    }
+  ],
+  "undead_zones": [
+    {
+      "id": "cairn_1",
+      "anchor_type": "ruins",
+      "x": 30.0,
+      "z": 90.0,
+      "radius": 12.0,
+      "leash_radius": 18.0,
+      "owner_id": 99,
+      "team_id": 99,
+      "fog_density": 0.3,
+      "awaken_on": [
+        "unit_enters_radius"
+      ],
+      "waves": [
+        {
+          "trigger": "initial",
+          "units": {
+            "skeleton_swordsman": 3,
+            "skeleton_archer": 2
+          }
+        },
+        {
+          "trigger": "after_clear",
+          "units": {
+            "grave_priest": 1
+          }
+        }
+      ],
+      "clear_reward": {
+        "gold": 120,
+        "iron": 60
+      }
+    },
+    {
+      "id": "cairn_2",
+      "anchor_type": "magic_shrine",
+      "x": 150.0,
+      "z": 30.0,
+      "radius": 12.0,
+      "leash_radius": 18.0,
+      "owner_id": 99,
+      "team_id": 99,
+      "fog_density": 0.3,
+      "awaken_on": [
+        "unit_enters_radius"
+      ],
+      "waves": [
+        {
+          "trigger": "initial",
+          "units": {
+            "skeleton_swordsman": 3,
+            "skeleton_archer": 2
+          }
+        },
+        {
+          "trigger": "after_clear",
+          "units": {
+            "grave_priest": 1
+          }
+        }
+      ],
+      "clear_reward": {
+        "gold": 120,
+        "iron": 60
+      }
+    },
+    {
+      "id": "cairn_3",
+      "anchor_type": "ruins",
+      "x": 210.0,
+      "z": 150.0,
+      "radius": 12.0,
+      "leash_radius": 18.0,
+      "owner_id": 99,
+      "team_id": 99,
+      "fog_density": 0.3,
+      "awaken_on": [
+        "unit_enters_radius"
+      ],
+      "waves": [
+        {
+          "trigger": "initial",
+          "units": {
+            "skeleton_swordsman": 3,
+            "skeleton_archer": 2
+          }
+        },
+        {
+          "trigger": "after_clear",
+          "units": {
+            "grave_priest": 1
+          }
+        }
+      ],
+      "clear_reward": {
+        "gold": 120,
+        "iron": 60
+      }
+    },
+    {
+      "id": "cairn_4",
+      "anchor_type": "magic_shrine",
+      "x": 90.0,
+      "z": 210.0,
+      "radius": 12.0,
+      "leash_radius": 18.0,
+      "owner_id": 99,
+      "team_id": 99,
+      "fog_density": 0.3,
+      "awaken_on": [
+        "unit_enters_radius"
+      ],
+      "waves": [
+        {
+          "trigger": "initial",
+          "units": {
+            "skeleton_swordsman": 3,
+            "skeleton_archer": 2
+          }
+        },
+        {
+          "trigger": "after_clear",
+          "units": {
+            "grave_priest": 1
+          }
+        }
+      ],
+      "clear_reward": {
+        "gold": 120,
+        "iron": 60
+      }
+    }
+  ],
+  "wildlife": {
+    "enabled": true,
+    "seed": 77310,
+    "near_simulation_radius": 70.0,
+    "far_simulation_radius": 140.0,
+    "sheep": {
+      "enabled": true,
+      "groups": 2,
+      "group_size_min": 5,
+      "group_size_max": 8,
+      "roam_radius": 13.0,
+      "respawn": true,
+      "respawn_delay": 120.0,
+      "spawn_areas": [
+        {
+          "x": 88.0,
+          "z": 104.0,
+          "radius": 15.0
+        },
+        {
+          "x": 152.0,
+          "z": 136.0,
+          "radius": 15.0
+        }
+      ],
+      "alert_radius": 11.0
+    },
+    "wolves": {
+      "enabled": true,
+      "groups": 2,
+      "group_size_min": 3,
+      "group_size_max": 5,
+      "roam_radius": 26.0,
+      "respawn": true,
+      "respawn_delay": 160.0,
+      "spawn_areas": [
+        {
+          "x": 196.0,
+          "z": 60.0,
+          "radius": 18.0
+        },
+        {
+          "x": 44.0,
+          "z": 180.0,
+          "radius": 18.0
+        }
+      ],
+      "aggression": 0.45
+    },
+    "birds": {
+      "enabled": true,
+      "groups": 2,
+      "group_size_min": 3,
+      "group_size_max": 7,
+      "flight_height": 9.0,
+      "flyover_interval_min": 18.0,
+      "flyover_interval_max": 46.0
+    }
+  },
+  "starting_resources": {
+    "gold": 250,
+    "food": 200,
+    "wood": 250,
+    "stone": 120,
+    "iron": 80
+  },
   "victory": {
     "type": "elimination",
     "key_structures": [
@@ -1115,70 +2707,5 @@
       "no_commander",
       "only_commander_remaining"
     ]
-  },
-  "starting_resources": {
-    "gold": 200,
-    "food": 100,
-    "wood": 100,
-    "stone": 300,
-    "iron": 150
-  },
-  "structures": [
-    {
-      "type": "barracks",
-      "x": 62,
-      "z": 62,
-      "player_id": 1,
-      "max_population": 220,
-      "nation": "roman_republic",
-      "description": "Player 1 mountain barracks"
-    },
-    {
-      "type": "barracks",
-      "x": 238,
-      "z": 238,
-      "player_id": 2,
-      "max_population": 220,
-      "nation": "roman_republic",
-      "description": "Player 2 mountain barracks"
-    }
-  ],
-  "forests": [
-    {
-      "id": "mountain_forest_1",
-      "x": 30.79,
-      "z": 101.38,
-      "radius": 13
-    },
-    {
-      "id": "mountain_forest_2",
-      "x": 269.21,
-      "z": 198.62,
-      "radius": 13
-    },
-    {
-      "id": "mountain_forest_3",
-      "x": 80.47,
-      "z": 256.14,
-      "radius": 15
-    },
-    {
-      "id": "mountain_forest_4",
-      "x": 219.53,
-      "z": 43.86,
-      "radius": 15
-    },
-    {
-      "id": "mountain_forest_5",
-      "x": 149.93,
-      "z": 86.07,
-      "radius": 10
-    },
-    {
-      "id": "mountain_forest_6",
-      "x": 150.07,
-      "z": 213.93,
-      "radius": 10
-    }
-  ]
+  }
 }

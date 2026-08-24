@@ -15,6 +15,10 @@
 
 class CampaignManager;
 
+namespace Game::Systems {
+class NationRegistry;
+}
+
 namespace Engine::Core {
 class World;
 }
@@ -76,6 +80,7 @@ struct MissionWaveBuildContext {
   const Game::Mission::MissionDefinition& mission;
   QString mission_difficulty;
   const Game::Systems::LevelSnapshot& level;
+  const Game::Systems::NationRegistry& nations;
   QVector3D defense_reference_world_position{0.0F, 0.0F, 0.0F};
 };
 

@@ -12,6 +12,7 @@
 #include "../core/world.h"
 #include "../systems/nav_grid.h"
 #include "../systems/pathfinding.h"
+#include "../systems/route_corridor_planner.h"
 #include "army_formation_planner.h"
 
 namespace Game::Formation {
@@ -36,18 +37,18 @@ auto build_corridor(const QVector3D& start,
     return corridor;
   }
 
-  auto const start_cell = Game::Systems::NavGrid::world_to_grid(start.x(), start.z());
-  auto const end_cell =
-      Game::Systems::NavGrid::world_to_grid(destination.x(), destination.z());
-  auto const cells = pathfinder->find_path(start_cell, end_cell);
-  if (cells.empty()) {
-    corridor.push_back(destination);
+  auto const planned = Game::Systems::RouteCorridorPlanner::plan(
+      *pathfinder,
+      start,
+      destination,
+      Game::Systems::Pathfinding::Passability::Light,
+      0.0F);
+  if (!planned.reachable()) {
     return corridor;
   }
 
   QVector3D previous = start;
-  for (auto const& cell : cells) {
-    QVector3D const point = Game::Systems::NavGrid::grid_to_world(cell);
+  for (auto const& point : planned.centerline) {
     QVector3D const step(point.x() - previous.x(), 0.0F, point.z() - previous.z());
     if (step.length() < k_corridor_min_leg_length) {
       continue;
@@ -71,6 +72,7 @@ constexpr float k_in_slot_radius_scale = 1.35F;
 
 constexpr float k_formed_cohesion = 0.8F;
 constexpr float k_disrupted_cohesion = 0.45F;
+constexpr float k_opening_progress_spacing_scale = 1.5F;
 
 constexpr float k_formed_damage_floor = 0.88F;
 constexpr float k_disrupted_damage_penalty = 1.08F;
@@ -178,7 +180,6 @@ auto ArmyFormationRegistry::create_group(FormationDoctrineId doctrine,
   formation.intent = intent;
   formation.members = std::move(members);
   formation.needs_replan = true;
-  formation.phase = FormationPhase::Forming;
 
   for (auto const member : formation.members) {
     auto existing = m_membership.find(member);
@@ -233,7 +234,6 @@ auto ArmyFormationRegistry::add_member(FormationGroupID id, EntityID entity) -> 
   remove_member(entity);
   formation->members.push_back(entity);
   formation->needs_replan = true;
-  formation->phase = FormationPhase::Forming;
   m_membership[entity] = id;
   return true;
 }
@@ -284,7 +284,6 @@ void ArmyFormationRegistry::apply_plan(FormationGroupID id,
   formation->spacing = plan.spacing;
   formation->slot_list = plan.slot_list;
   formation->needs_replan = false;
-  formation->phase = FormationPhase::Forming;
   ++formation->plan_revision;
   reindex_membership(*formation);
 }
@@ -330,6 +329,7 @@ auto ArmyFormationRegistry::to_json() const -> QJsonObject {
     obj["spacing"] = static_cast<double>(formation->spacing);
     obj["phase"] = static_cast<int>(formation->phase);
     obj["cohesion"] = static_cast<double>(formation->cohesion);
+    obj["cohesion_pace"] = static_cast<double>(formation->cohesion_pace);
     obj["plan_revision"] = static_cast<qint64>(formation->plan_revision);
     obj["needs_replan"] = formation->needs_replan;
     obj["moves_pending"] = formation->moves_pending;
@@ -372,6 +372,7 @@ void ArmyFormationRegistry::from_json(const QJsonObject& root) {
     formation.spacing = static_cast<float>(obj["spacing"].toDouble(1.0));
     formation.phase = static_cast<FormationPhase>(obj["phase"].toInt(0));
     formation.cohesion = static_cast<float>(obj["cohesion"].toDouble(1.0));
+    formation.cohesion_pace = static_cast<float>(obj["cohesion_pace"].toDouble(0.0));
     formation.plan_revision =
         static_cast<std::uint32_t>(obj["plan_revision"].toVariant().toUInt());
     formation.needs_replan = obj["needs_replan"].toBool(false);
@@ -402,17 +403,21 @@ void ArmyFormationRegistry::from_json(const QJsonObject& root) {
   }
 }
 
-void ArmyFormationRuntime::refresh_cohesion(Engine::Core::World& world,
-                                            ArmyFormation& formation) {
+void ArmyFormationRuntime::refresh_shape_state(Engine::Core::World& world,
+                                               ArmyFormation& formation) {
   float const radius = formation.spacing * k_in_slot_radius_scale;
   float const radius_sq = radius * radius;
 
-  int occupied = 0;
+  int expected = 0;
+  int observed = 0;
   int in_slot = 0;
+  bool controlled_break = false;
+  float slowest_speed = std::numeric_limits<float>::max();
   for (const auto& slot : formation.slot_list) {
     if (slot.occupant == 0U || slot.status == SlotStatus::Blocked) {
       continue;
     }
+    ++expected;
     auto* entity = world.get_entity(slot.occupant);
     if (entity == nullptr) {
       continue;
@@ -421,7 +426,15 @@ void ArmyFormationRuntime::refresh_cohesion(Engine::Core::World& world,
     if (transform == nullptr) {
       continue;
     }
-    ++occupied;
+    const auto* unit = entity->get_component<Engine::Core::UnitComponent>();
+    if (unit != nullptr && unit->speed > 0.0F) {
+      slowest_speed = std::min(slowest_speed, unit->speed);
+    }
+    const auto* movement = entity->get_component<Engine::Core::MovementComponent>();
+    controlled_break =
+        controlled_break || (movement != nullptr && movement->get_has_target() &&
+                             movement->get_route_lane_scale() < 0.99F);
+    ++observed;
     float const off_x = transform->position.x - slot.world_position.x();
     float const off_z = transform->position.z - slot.world_position.z();
     if ((off_x * off_x) + (off_z * off_z) <= radius_sq) {
@@ -429,21 +442,49 @@ void ArmyFormationRuntime::refresh_cohesion(Engine::Core::World& world,
     }
   }
 
-  if (occupied == 0) {
+  formation.cohesion_pace =
+      formation.maintains_formation() && std::isfinite(slowest_speed)
+          ? slowest_speed * k_maintain_speed_multiplier
+          : 0.0F;
+  if (expected == 0 || observed == 0) {
     formation.cohesion = 0.0F;
     formation.phase = FormationPhase::Disrupted;
     return;
   }
 
-  formation.cohesion = static_cast<float>(in_slot) / static_cast<float>(occupied);
+  formation.cohesion = static_cast<float>(in_slot) / static_cast<float>(expected);
+  bool const all_in_slot = in_slot == expected;
 
-  if (formation.cohesion >= k_formed_cohesion) {
-    formation.phase = FormationPhase::Formed;
-  } else if (formation.cohesion <= k_disrupted_cohesion) {
+  if (formation.cohesion <= k_disrupted_cohesion) {
     formation.phase = FormationPhase::Disrupted;
-  } else {
-    formation.phase = FormationPhase::Forming;
+    return;
   }
+
+  if (formation.move_plan.has_corridor()) {
+    float const opening_distance =
+        std::max(formation.spacing, 0.1F) * k_opening_progress_spacing_scale;
+    bool const still_opening = controlled_break ||
+                               formation.advance_progress < opening_distance ||
+                               formation.cohesion < k_formed_cohesion;
+    formation.phase =
+        still_opening ? FormationPhase::Opening : FormationPhase::Traversing;
+    return;
+  }
+
+  if (formation.has_destination) {
+    if (all_in_slot) {
+      formation.has_destination = false;
+      formation.phase = FormationPhase::Arrived;
+    } else {
+      formation.phase = FormationPhase::Reforming;
+    }
+    return;
+  }
+
+  formation.phase =
+      all_in_slot && formation.phase == FormationPhase::Arrived
+          ? FormationPhase::Arrived
+          : (all_in_slot ? FormationPhase::Formed : FormationPhase::Reforming);
 }
 
 auto ArmyFormationRuntime::damage_taken_multiplier(const Engine::Core::Entity& entity)
@@ -461,7 +502,7 @@ auto ArmyFormationRuntime::damage_taken_multiplier(const Engine::Core::Entity& e
   if (formation->phase == FormationPhase::Disrupted) {
     return k_disrupted_damage_penalty;
   }
-  if (formation->phase != FormationPhase::Formed) {
+  if (!formation->is_formed()) {
     return 1.0F;
   }
 
@@ -484,7 +525,26 @@ auto ArmyFormationRuntime::move_speed_multiplier(const Engine::Core::Entity& ent
   if (formation == nullptr || !formation->maintains_formation()) {
     return 1.0F;
   }
-  return k_maintain_speed_multiplier;
+  const auto* unit = entity.get_component<Engine::Core::UnitComponent>();
+  const auto* transform = entity.get_component<Engine::Core::TransformComponent>();
+  if (unit == nullptr || transform == nullptr || unit->speed <= 0.0F) {
+    return k_maintain_speed_multiplier;
+  }
+
+  float pace = formation->cohesion_pace;
+  if (pace <= 0.0F) {
+    pace = unit->speed * k_maintain_speed_multiplier;
+  }
+  QVector3D const position(
+      transform->position.x, transform->position.y, transform->position.z);
+  float const error = formation->slot_error(position, entity.get_id());
+  float const in_slot_radius = formation->spacing * k_in_slot_radius_scale;
+  float const recovery_span = std::max(formation->spacing * 4.0F, 0.1F);
+  float const recovery =
+      error < 0.0F ? 0.0F
+                   : std::clamp((error - in_slot_radius) / recovery_span, 0.0F, 0.25F);
+  float const target_speed = pace * (1.0F + recovery);
+  return std::clamp(target_speed / unit->speed, 0.1F, 1.0F);
 }
 
 void ArmyFormationRuntime::begin_move(Engine::Core::World& world,
@@ -505,8 +565,8 @@ void ArmyFormationRuntime::begin_move(Engine::Core::World& world,
 
   if (!formation->maintains_formation()) {
     formation->anchor = destination;
-    formation->has_destination = false;
-    formation->phase = FormationPhase::Forming;
+    formation->needs_replan = false;
+    refresh_shape_state(world, *formation);
     return;
   }
 
@@ -543,6 +603,7 @@ void ArmyFormationRuntime::begin_move(Engine::Core::World& world,
 
   formation->needs_replan = true;
   static_cast<void>(replan(world, id));
+  refresh_shape_state(world, *formation);
 }
 
 void ArmyFormationRuntime::advance_maintained_groups(Engine::Core::World& world,
@@ -558,29 +619,23 @@ void ArmyFormationRuntime::advance_maintained_groups(Engine::Core::World& world,
 
     QVector3D centroid;
     int count = 0;
-    float slowest = std::numeric_limits<float>::max();
     for (auto const member : formation->members) {
       auto* entity = world.get_entity(member);
       if (entity == nullptr) {
         continue;
       }
       const auto* transform = entity->get_component<Engine::Core::TransformComponent>();
-      const auto* unit = entity->get_component<Engine::Core::UnitComponent>();
-      if (transform == nullptr || unit == nullptr) {
+      if (transform == nullptr) {
         continue;
       }
       centroid += QVector3D(
           transform->position.x, transform->position.y, transform->position.z);
-      slowest = std::min(slowest, unit->speed);
       ++count;
     }
     if (count == 0) {
       continue;
     }
     centroid /= static_cast<float>(count);
-    if (slowest >= std::numeric_limits<float>::max()) {
-      slowest = 1.0F;
-    }
 
     auto& plan = formation->move_plan;
     if (!plan.active) {
@@ -614,8 +669,6 @@ void ArmyFormationRuntime::advance_maintained_groups(Engine::Core::World& world,
                                      formation->destination.z() -
                                          formation->anchor.z());
       if (to_destination.length() <= k_stage_arrival_tolerance * 0.5F) {
-        formation->has_destination = false;
-        formation->phase = FormationPhase::Formed;
         plan.clear();
         continue;
       }
@@ -631,15 +684,16 @@ void ArmyFormationRuntime::advance_maintained_groups(Engine::Core::World& world,
     heading /= leg;
     plan.facing_direction = heading;
 
-    float const step = std::min(
-        leg, std::max(0.05F, slowest * k_maintain_speed_multiplier * delta_time));
+    float const declared_pace = formation->cohesion_pace > 0.0F
+                                    ? formation->cohesion_pace
+                                    : k_maintain_speed_multiplier;
+    float const step = std::min(leg, std::max(0.05F, declared_pace * delta_time));
     formation->anchor += heading * step;
     formation->facing = static_cast<float>(
         std::atan2(static_cast<double>(heading.x()), static_cast<double>(heading.z())) *
         180.0 / std::numbers::pi);
     formation->advance_progress += step;
     formation->needs_replan = true;
-    formation->phase = FormationPhase::Forming;
   }
 }
 
@@ -781,7 +835,7 @@ void ArmyFormationRuntime::update(Engine::Core::World* world, float delta_time) 
       if (formation == nullptr) {
         continue;
       }
-      refresh_cohesion(*world, *formation);
+      refresh_shape_state(*world, *formation);
     }
   }
 

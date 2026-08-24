@@ -41,6 +41,8 @@ struct FormationInstanceRequest {
   float animation_time{0.0F};
   Game::Formation::UnitLayoutId unit_layout{Game::Formation::k_invalid_layout};
   float formed_ratio{1.0F};
+  Game::Formation::UnitLayoutId blend_from{Game::Formation::k_invalid_layout};
+  float blend_ratio{1.0F};
 
   const Game::Formation::UnitLayoutSystem* soldier_offsets{nullptr};
 };
@@ -57,6 +59,8 @@ struct FormationLayoutCache {
   std::uint32_t layout_version{0};
   std::uint32_t seed{0};
   std::uint32_t frame_number{0};
+  Game::Formation::UnitLayoutId blend_from{Game::Formation::k_invalid_layout};
+  float blend_ratio{1.0F};
   bool valid{false};
 };
 
@@ -71,6 +75,8 @@ struct FormationLayoutRequest {
   bool melee_attack{false};
   bool force_single_soldier{false};
   float formed_ratio{1.0F};
+  Game::Formation::UnitLayoutId blend_from{Game::Formation::k_invalid_layout};
+  float blend_ratio{1.0F};
   std::uint32_t frame_index{0};
   std::uint32_t layout_version{0};
 

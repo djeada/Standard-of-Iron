@@ -8,12 +8,14 @@
 
 #include <cstdint>
 #include <memory>
+#include <mutex>
 #include <optional>
 #include <vector>
 
 #include "app/commander/commander_control_controller.h"
 #include "app/commander/commander_mode_coordinator.h"
 #include "app/commander/rts_camera_bookmark.h"
+#include "app/core/frame_snapshot.h"
 #include "render/entity/combat_dust_renderer.h"
 
 namespace Engine::Core {
@@ -90,6 +92,8 @@ public:
   Q_INVOKABLE void cancel_barracks_rally();
 
   Q_INVOKABLE [[nodiscard]] QVariantMap status() const;
+
+  void publish_frame();
   Q_INVOKABLE [[nodiscard]] QVariantList pop_damage_events();
 
   [[nodiscard]] auto controlled_commander_id() const -> Engine::Core::EntityID {
@@ -194,6 +198,11 @@ private:
     bool killing_blow = false;
   };
   static constexpr int k_max_damage_events = 96;
+  App::Core::Published<QVariantMap> m_status;
+
+  bool m_status_published_empty = false;
+
+  mutable std::mutex m_damage_events_mutex;
   std::vector<DamageEvent> m_damage_events;
   std::uint32_t m_damage_event_sequence = 0;
   float m_hit_stop_timer = 0.0F;

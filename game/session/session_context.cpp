@@ -1,8 +1,5 @@
 #include "session_context.h"
 
-#include <mutex>
-#include <unordered_map>
-
 #include "../command/command_queue.h"
 #include "../command/replay.h"
 #include "../core/ambient_session.h"
@@ -20,13 +17,6 @@
 #include "simulation_clock.h"
 
 namespace Game::Session {
-
-namespace {
-
-std::mutex g_world_owner_mutex;
-std::unordered_map<const Engine::Core::World*, SessionContext*> g_world_owners;
-
-} // namespace
 
 struct SessionContext::State {
   explicit State(const Config& config)
@@ -77,16 +67,11 @@ SessionContext::SessionContext(const Config& config)
   services.rng = &m_state->rng;
   services.commands = &m_state->commands;
 
-  const std::lock_guard<std::mutex> lock(g_world_owner_mutex);
-  g_world_owners.emplace(&m_state->world, this);
+  bind_world_services(m_state->world, &m_state->services);
 }
 
 SessionContext::~SessionContext() {
-  {
-    const std::lock_guard<std::mutex> lock(g_world_owner_mutex);
-    g_world_owners.erase(&m_state->world);
-  }
-
+  unbind_world_services(m_state->world);
   unbind_ambient_services(&m_state->services);
 }
 
@@ -238,9 +223,15 @@ auto SessionContext::active() -> SessionContext& {
 }
 
 auto SessionContext::for_world(const Engine::Core::World& world) -> SessionContext* {
-  const std::lock_guard<std::mutex> lock(g_world_owner_mutex);
-  const auto it = g_world_owners.find(&world);
-  return it != g_world_owners.end() ? it->second : nullptr;
+  const auto* services = services_for_or_null(world);
+  return services != nullptr ? services->session : nullptr;
+}
+
+auto session_for(const Engine::Core::World& world) -> SessionContext& {
+  if (auto* session = SessionContext::for_world(world)) {
+    return *session;
+  }
+  return SessionContext::active();
 }
 
 auto SessionContext::active_or_null() -> SessionContext* {

@@ -641,6 +641,7 @@ add_library(
     app/core/language_manager.cpp
     app/core/match_presentation_sync.cpp
     app/core/player_feedback.cpp
+    app/core/frame_snapshot.cpp
     app/core/runtime_frame_orchestrator.cpp
     # app/mission -- the client's half of running a mission. The mission logic
     # itself is game/mission (soi_mission_runtime); what is left here is reading
@@ -911,6 +912,8 @@ if(QT_VERSION_MAJOR EQUAL 6)
             assets/maps/map_forest.json
             assets/maps/map_rivers.json
             assets/maps/map_mountain.json
+            assets/maps/map_copper_canyons.json
+            assets/maps/map_amber_delta.json
             assets/campaigns/second_punic_war.json
             assets/campaign_map/campaign_state.json
             assets/visuals/unit_equipment_loadouts.json

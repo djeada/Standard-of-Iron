@@ -4543,18 +4543,6 @@ para ver a prévia</translation>
         <translation>Mapa sem nome</translation>
     </message>
     <message>
-        <source>A balanced Mediterranean skirmish map set among olive groves, dry wadis, terraced hills, and dusty farm roads. Control of the center and side ridges helps, but victory is standard barracks elimination.</source>
-        <translation>Um mapa de escaramuça mediterrâneo equilibrado, entre olivais, uádis secos, colinas em terraços e estradas rurais poeirentas. Controlar o centro e as cristas laterais ajuda, mas a vitória se dá pela eliminação padrão dos quartéis.</translation>
-    </message>
-    <message>
-        <source>A large balanced mountain skirmish map with two fortified bases, a contested central ridge, narrow high passes, flank trails, alpine streams, and strong archer positions. Victory is standard barracks elimination.</source>
-        <translation>Um grande mapa de escaramuça montanhosa equilibrado, com duas bases fortificadas, uma crista central disputada, passagens altas e estreitas, trilhas de flanco, riachos alpinos e boas posições para arqueiros. A vitória se dá pela eliminação padrão dos quartéis.</translation>
-    </message>
-    <message>
-        <source>A rich strategic crossroads map with contested central bridges, neutral corner barracks, flank routes, and high ground around key crossings.</source>
-        <translation>Um rico mapa estratégico de encruzilhada, com pontes centrais disputadas, quartéis neutros nos cantos, rotas de flanco e elevações ao redor das travessias principais.</translation>
-    </message>
-    <message>
         <source>Battle of Cannae</source>
         <translation>Batalha de Canas</translation>
     </message>
@@ -4587,32 +4575,12 @@ para ver a prévia</translation>
         <translation>A Travessia do Ródano – versão labirinto revisada</translation>
     </message>
     <message>
-        <source>Forest Battlefield</source>
-        <translation>Campo de Batalha da Floresta</translation>
-    </message>
-    <message>
         <source>Iron Sepulcher Watch</source>
         <translation>Vigília do Sepulcro de Ferro</translation>
     </message>
     <message>
-        <source>Mountain Strongholds</source>
-        <translation>Fortalezas da Montanha</translation>
-    </message>
-    <message>
-        <source>River Crossroads</source>
-        <translation>Encruzilhada do Rio</translation>
-    </message>
-    <message>
         <source>Small authored scenario that demonstrates ruins, a shrine, and undead awakening zones.</source>
         <translation>Pequeno cenário autoral que apresenta ruínas, um santuário e zonas de despertar de mortos-vivos.</translation>
-    </message>
-    <message>
-        <source>Spanish Olive Grove</source>
-        <translation>Olival Espanhol</translation>
-    </message>
-    <message>
-        <source>A dense symmetrical forest battlefield for two active players, built around road reading, ambush forests, hill control, side objectives, and two neutral barracks. There are no rivers, bridges, or mountains. Roads deliberately route around hills instead of crossing over them.</source>
-        <translation>Um campo de batalha florestal denso e simétrico para dois jogadores ativos, construído em torno da leitura das estradas, bosques de emboscada, controle das colinas, objetivos secundários e dois quartéis neutros. Não há rios, pontes ou montanhas. As estradas contornam as colinas de propósito, em vez de atravessá-las.</translation>
     </message>
     <message>
         <source>A quiet meadow between a Carthaginian camp and a Roman outpost, laid out for the tutorial: timber, stone and ore within a short walk of the barracks, a scouting party to practise on, and a small enemy camp to take once the army is ready.</source>
@@ -4621,6 +4589,54 @@ para ver a prévia</translation>
     <message>
         <source>Training Meadow</source>
         <translation>Campina de Treinamento</translation>
+    </message>
+    <message>
+        <source>A fertile valley for two. One channel runs the whole map north to south and only two fords cross it. A cross spur on each bank means you either hug the water or swing wide to reach them, and the boomerang ridge cupping each start makes the back door terrain rather than a wall. Nothing haunts this valley: it is the plain match, with no Sepulcher to distract either side.</source>
+        <translation>Um vale fértil para dois. Um único curso d&apos;água atravessa o mapa de norte a sul e apenas dois vaus o cruzam. Um esporão transversal em cada margem obriga a escolher: colar na água ou abrir bem para fora. A crista em bumerangue que abraça cada início transforma a porta dos fundos em terreno, não em muralha. Nada assombra este vale: é a partida limpa, sem nenhum Sepulcro para distrair os dois lados.</translation>
+    </message>
+    <message>
+        <source>Amber Delta</source>
+        <translation>Delta de Âmbar</translation>
+    </message>
+    <message>
+        <source>Blackpine Hollow</source>
+        <translation>Vale dos Pinheiros Negros</translation>
+    </message>
+    <message>
+        <source>Copper Canyons</source>
+        <translation>Cânions de Cobre</translation>
+    </message>
+    <message>
+        <source>Deep wet pine forest for two. A crater wall rings the shrine bowl at the centre and no road enters it - the gates cut through its rim are the only way in, so the middle belongs to whoever will fight for it on foot. Everything else is one ring road and the trees.</source>
+        <translation>Pinheiral fundo e encharcado para dois. Uma parede de cratera cerca a bacia do santuário no centro e nenhuma estrada entra nela — os portões abertos em sua borda são a única passagem, então o meio pertence a quem estiver disposto a disputá-lo a pé. Todo o resto é uma única estrada circular e as árvores.</translation>
+    </message>
+    <message>
+        <source>Four camps in a snowed-in basin. Two melt races cross at its centre and cut the ground into quarters, so every neighbour is a bridge away: an inner crossing in the open, or a longer one out under the rim ranges. Four corner tarns and four barrow cairns fill the rest.</source>
+        <translation>Quatro acampamentos em uma bacia coberta de neve. Dois cursos de degelo se cruzam em seu centro e cortam o terreno em quartos, de modo que cada vizinho fica a uma ponte de distância: uma travessia interna a céu aberto ou uma mais longa lá fora, sob as serras da borda. Quatro lagoas nos cantos e quatro túmulos preenchem o resto.</translation>
+    </message>
+    <message>
+        <source>Four camps on a dry Iberian hillside. No river runs here - the terraces are the map. Each camp looks out through a horned terrace wall with a gate at either horn, and the old press mound in the middle is high ground four worn tracks climb.</source>
+        <translation>Quatro acampamentos em uma encosta ibérica ressecada. Aqui não corre rio algum — os terraços são o mapa. Cada acampamento se abre por uma muralha de terraço com chifres e um portão em cada chifre, e o velho morro do lagar no meio é a altura que quatro trilhas gastas escalam.</translation>
+    </message>
+    <message>
+        <source>Frostmere Basin</source>
+        <translation>Bacia do Lago Gelado</translation>
+    </message>
+    <message>
+        <source>Six camps in a banded rock desert. Three races cross at the middle and cut the ground into six wedges, so every neighbour is two crossings away: one under the junction knaps, one out at the rim stacks. A mesa lies across each wedge, and the lane past it is where the sector is won.</source>
+        <translation>Seis acampamentos em um deserto de rocha em faixas. Três cursos se cruzam no meio e cortam o chão em seis cunhas, de modo que cada vizinho fica a duas travessias de distância: uma sob os morros do entroncamento, outra lá fora, junto aos pilares da borda. Uma mesa atravessa cada cunha, e a passagem ao lado dela decide o setor.</translation>
+    </message>
+    <message>
+        <source>Sunbaked Terraces</source>
+        <translation>Terraços Ressecados</translation>
+    </message>
+    <message>
+        <source>The Two Fords</source>
+        <translation>Os Dois Vaus</translation>
+    </message>
+    <message>
+        <source>Three camps a side along one broad channel. The Amber runs the whole map and only three ferry crossings span it, so a bank is a front line: the highway behind each bank links its three camps, and every attack has to buy a bridge first.</source>
+        <translation>Três acampamentos de cada lado ao longo de um canal largo. O Âmbar percorre o mapa inteiro e apenas três travessias de balsa o cruzam, então uma margem é uma linha de frente: a estrada atrás de cada margem liga seus três acampamentos, e todo ataque precisa comprar uma ponte primeiro.</translation>
     </message>
 </context>
 <context>

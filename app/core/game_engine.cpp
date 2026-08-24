@@ -66,6 +66,7 @@
 #include "app/core/game_speed.h"
 #include "app/core/match_presentation_sync.h"
 #include "app/core/user_settings.h"
+#include "app/economy/harvest_targeting.h"
 #include "app/economy/production_manager.h"
 #include "app/input/cursor_manager.h"
 #include "app/input/cursor_mode.h"
@@ -195,10 +196,10 @@ namespace {
 constexpr float k_mission_stage_poll_seconds = 0.25F;
 constexpr float k_interaction_targeting_interval = 0.1F;
 
-auto build_resource_map(int owner_id) -> QVariantMap {
+auto build_resource_map(Game::Session::SessionContext& session,
+                        int owner_id) -> QVariantMap {
   QVariantMap resources;
-  Game::Systems::ResourceAmounts const amounts =
-      Game::Systems::PlayerResourceRegistry::instance().get_all(owner_id);
+  Game::Systems::ResourceAmounts const amounts = session.economy().get_all(owner_id);
   for (Game::Systems::ResourceType const type : Game::Systems::k_all_resource_types) {
     resources[QLatin1String(Game::Systems::resource_type_key(type))] =
         amounts.get(type);
@@ -206,13 +207,14 @@ auto build_resource_map(int owner_id) -> QVariantMap {
   return resources;
 }
 
-auto build_player_state_map(int owner_id, int population_cap) -> QVariantMap {
+auto build_player_state_map(Game::Session::SessionContext& session,
+                            int owner_id,
+                            int population_cap) -> QVariantMap {
   QVariantMap state;
   state["owner_id"] = owner_id;
-  state["population"] =
-      Game::Systems::TroopCountRegistry::instance().get_troop_count(owner_id);
+  state["population"] = session.troop_counts().get_troop_count(owner_id);
   state["population_cap"] = population_cap;
-  state["resources"] = build_resource_map(owner_id);
+  state["resources"] = build_resource_map(session, owner_id);
   return state;
 }
 
@@ -363,13 +365,29 @@ void GameEngine::sync_render_camera() {
   if (m_camera == nullptr) {
     return;
   }
-  if (m_viewport.width > 0 && m_viewport.height > 0) {
-    float const aspect =
-        static_cast<float>(m_viewport.width) / static_cast<float>(m_viewport.height);
-    m_camera->set_perspective(
-        m_camera->get_fov(), aspect, m_camera->get_near(), m_camera->get_far());
-  }
   m_render_camera = *m_camera;
+}
+
+void GameEngine::capture_render_selection() {
+  auto* selection_system = m_world != nullptr
+                               ? m_world->get_system<Game::Systems::SelectionSystem>()
+                               : nullptr;
+  if (selection_system == nullptr) {
+    return;
+  }
+  const auto& sel = selection_system->get_selected_units();
+  m_scratch_selected_ids.clear();
+  m_scratch_selected_ids.reserve(sel.size());
+  for (const auto id : sel) {
+    if (!m_commander_view_model->should_render_selected_entity(id)) {
+      continue;
+    }
+    m_scratch_selected_ids.push_back(id);
+  }
+  if (m_scratch_selected_ids != m_selected_render_ids) {
+    m_selected_render_ids = m_scratch_selected_ids;
+    m_selected_render_ids_dirty = true;
+  }
 }
 
 void GameEngine::update_cursor(Qt::CursorShape new_cursor) {
@@ -489,9 +507,10 @@ auto GameEngine::scene_context() const -> AppSceneContext {
 }
 
 auto GameEngine::get_player_stats(int owner_id) -> QVariantMap {
+  const std::lock_guard<std::recursive_mutex> frame_lock(m_frame_mutex);
   QVariantMap result;
 
-  auto& stats_registry = Game::Systems::GlobalStatsRegistry::instance();
+  auto& stats_registry = m_session->stats();
   const auto* stats = stats_registry.get_stats(owner_id);
 
   if (stats != nullptr) {
@@ -652,6 +671,25 @@ void GameEngine::stop_simulation_thread() {
   qInfo() << "GameEngine: simulation thread stopped";
 }
 
+namespace {
+
+class FrameLockWaiter {
+public:
+  explicit FrameLockWaiter(std::atomic<int>& waiters)
+      : m_waiters(&waiters) {
+    m_waiters->fetch_add(1, std::memory_order_release);
+  }
+  FrameLockWaiter(const FrameLockWaiter&) = delete;
+  FrameLockWaiter(FrameLockWaiter&&) = delete;
+  auto operator=(const FrameLockWaiter&) -> FrameLockWaiter& = delete;
+  auto operator=(FrameLockWaiter&&) -> FrameLockWaiter& = delete;
+  ~FrameLockWaiter() { m_waiters->fetch_sub(1, std::memory_order_release); }
+
+private:
+  std::atomic<int>* m_waiters;
+};
+} // namespace
+
 void GameEngine::run_simulation_thread() {
   auto next_tick = std::chrono::steady_clock::now();
   auto last_tick = next_tick;
@@ -666,19 +704,28 @@ void GameEngine::run_simulation_thread() {
                               k_simulation_max_frame_seconds);
     last_tick = now;
 
-    const std::lock_guard<std::recursive_mutex> frame_lock(m_frame_mutex);
-    if (!try_begin_simulation_tick()) {
-      continue;
+    {
+      const std::lock_guard<std::recursive_mutex> frame_lock(m_frame_mutex);
+      if (!try_begin_simulation_tick()) {
+        continue;
+      }
+      auto const tick_start = std::chrono::steady_clock::now();
+      simulate(dt);
+      auto const tick_end = std::chrono::steady_clock::now();
+      end_simulation_tick();
+      m_simulation_tick_us.fetch_add(
+          static_cast<std::uint64_t>(
+              std::chrono::duration_cast<std::chrono::microseconds>(tick_end -
+                                                                    tick_start)
+                  .count()),
+          std::memory_order_acq_rel);
     }
-    auto const tick_start = std::chrono::steady_clock::now();
-    simulate(dt);
-    auto const tick_end = std::chrono::steady_clock::now();
-    end_simulation_tick();
-    m_simulation_tick_us.fetch_add(
-        static_cast<std::uint64_t>(
-            std::chrono::duration_cast<std::chrono::microseconds>(tick_end - tick_start)
-                .count()),
-        std::memory_order_acq_rel);
+
+    for (int spin = 0; spin < k_frame_lock_handoff_yields &&
+                       m_frame_lock_waiters.load(std::memory_order_acquire) > 0;
+         ++spin) {
+      std::this_thread::yield();
+    }
   }
 }
 
@@ -708,7 +755,17 @@ void GameEngine::simulate(float dt) {
 }
 
 void GameEngine::update_presentation(float dt) {
-  const std::lock_guard<std::recursive_mutex> frame_lock(m_frame_mutex);
+  std::unique_lock<std::recursive_mutex> frame_lock(m_frame_mutex, std::try_to_lock);
+  if (!frame_lock.owns_lock()) {
+    if (m_deferred_presentation_dt < k_max_deferred_presentation_seconds) {
+      m_deferred_presentation_dt += dt;
+      return;
+    }
+    const FrameLockWaiter waiter(m_frame_lock_waiters);
+    frame_lock.lock();
+  }
+  dt = std::min(dt + m_deferred_presentation_dt, k_simulation_max_frame_seconds);
+  m_deferred_presentation_dt = 0.0F;
   if (m_runtime.loading) {
     return;
   }
@@ -759,6 +816,9 @@ void GameEngine::update_presentation(float dt) {
   {
     Render::Profiling::AccumulatorScope const sync_scope(
         &Render::Profiling::global_profile().view_model_sync_us);
+    publish_frame_snapshots();
+    sync_render_camera();
+    capture_render_selection();
     sync_scatter_world_props();
     sync_selected_player_state();
     sync_economy_state();
@@ -769,6 +829,14 @@ void GameEngine::update_presentation(float dt) {
     sync_target_focus_markers();
     update_tutorial(real_dt);
   }
+}
+
+void GameEngine::publish_frame_snapshots() {
+  m_camera_view_model->publish_frame();
+  m_commander_view_model->publish_frame();
+  m_production_view_model->publish_frame();
+  m_orders_view_model->publish_frame();
+  m_placement_view_model->publish_frame();
 }
 
 void GameEngine::update(float dt) {
@@ -786,27 +854,17 @@ void GameEngine::render(int pixel_width, int pixel_height) {
     m_viewport.height = pixel_height;
   }
 
-  {
-    const std::lock_guard<std::recursive_mutex> frame_lock(m_frame_mutex);
-    sync_render_camera();
-    if (auto* selection_system =
-            m_world->get_system<Game::Systems::SelectionSystem>()) {
-      const auto& sel = selection_system->get_selected_units();
-      m_scratch_selected_ids.clear();
-      m_scratch_selected_ids.reserve(sel.size());
-      for (const auto id : sel) {
-        if (!m_commander_view_model->should_render_selected_entity(id)) {
-          continue;
-        }
-        m_scratch_selected_ids.push_back(id);
-      }
-
-      if (m_scratch_selected_ids != m_selected_render_ids) {
-        m_selected_render_ids = m_scratch_selected_ids;
-        m_renderer->set_selected_entities(m_selected_render_ids);
-      }
-    }
-    m_world->ensure_render_snapshot();
+  if (m_viewport.width > 0 && m_viewport.height > 0) {
+    const float aspect =
+        static_cast<float>(m_viewport.width) / static_cast<float>(m_viewport.height);
+    m_render_camera.set_perspective(m_render_camera.get_fov(),
+                                    aspect,
+                                    m_render_camera.get_near(),
+                                    m_render_camera.get_far());
+  }
+  if (m_selected_render_ids_dirty) {
+    m_selected_render_ids_dirty = false;
+    m_renderer->set_selected_entities(m_selected_render_ids);
   }
 
   m_renderer->set_camera(&m_render_camera);
@@ -815,9 +873,7 @@ void GameEngine::render(int pixel_width, int pixel_height) {
     m_renderer->set_viewport(m_viewport.width, m_viewport.height);
   }
 
-  m_renderer->set_world_view(m_session != nullptr
-                                 ? Render::WorldView::of(*m_session)
-                                 : Render::WorldView::of_active_session());
+  m_renderer->set_world_view(Render::WorldView::of(*m_session));
 
   m_renderer->begin_frame();
 
@@ -835,7 +891,11 @@ void GameEngine::render(int pixel_width, int pixel_height) {
 
   m_renderer->render_world(m_world);
   {
-    const std::lock_guard<std::recursive_mutex> frame_lock(m_frame_mutex);
+    std::unique_lock<std::recursive_mutex> frame_lock(m_frame_mutex, std::defer_lock);
+    {
+      const FrameLockWaiter waiter(m_frame_lock_waiters);
+      frame_lock.lock();
+    }
     App::Core::FrameUiCoordinator::render_effects(
         {.renderer = m_renderer.get(),
          .world = m_world,
@@ -1156,7 +1216,15 @@ void GameEngine::sync_interaction_targeting(float delta_time) {
   QVariantMap hint;
   hint[QStringLiteral("action")] = QStringLiteral("none");
 
-  if ((m_world != nullptr) && !m_level.is_spectator_mode) {
+  bool const interaction_mode_armed = App::Economy::interaction_highlights_armed(
+      m_cursor_manager != nullptr ? m_cursor_manager->mode() : CursorMode::Normal,
+      m_production_manager != nullptr &&
+          m_production_manager->is_placing_construction(),
+      m_production_manager != nullptr
+          ? m_production_manager->pending_builder_construction_type()
+          : QString());
+
+  if ((m_world != nullptr) && !m_level.is_spectator_mode && interaction_mode_armed) {
     std::vector<Engine::Core::EntityID> selection;
     if (auto* selection_system =
             m_world->get_system<Game::Systems::SelectionSystem>()) {
@@ -1184,7 +1252,7 @@ void GameEngine::sync_interaction_targeting(float delta_time) {
     }
 
     if (request.has_builders || request.has_civilians) {
-      auto& visibility = Game::Map::VisibilityService::instance();
+      auto& visibility = m_session->visibility();
       const auto snapshot =
           visibility.is_initialized() ? visibility.snapshot_ptr() : nullptr;
 
@@ -1479,7 +1547,7 @@ void GameEngine::start_skirmish_internal(const QString& map_path,
     apply_skirmish_commander_setup(player_configs);
     apply_mission_setup();
     m_skirmish_runtime->initialize_player_resources(
-        {m_level, m_runtime.local_owner_id, campaign_mission_def});
+        {*m_session, m_level, m_runtime.local_owner_id, campaign_mission_def});
     configure_mission_victory_conditions();
     configure_rain_system();
     if (m_environment_clock) {
@@ -1693,7 +1761,7 @@ void GameEngine::reset_mission_runtime_state() {
   if (m_commander_message_view_model) {
     m_commander_message_view_model->clear();
   }
-  Game::Systems::PlayerResourceRegistry::instance().clear();
+  m_session->economy().clear();
   sync_selected_player_state();
   reset_economy_coach();
   m_audio_coordinator->stop_mission_ambience();
@@ -1719,7 +1787,7 @@ void GameEngine::update_mission_waves(float dt) {
     Game::Audio::play_cue(cue.toStdString());
   }
   if (effects.reward_granted) {
-    auto& resources = Game::Systems::PlayerResourceRegistry::instance();
+    auto& resources = m_session->economy();
     for (const auto type : Game::Systems::k_all_resource_types) {
       const int amount = effects.reward.get(type);
       if (amount > 0) {
@@ -2234,7 +2302,8 @@ void GameEngine::load_game_from_slot(const QString& slot_name) {
 
 auto GameEngine::to_runtime_snapshot() const -> Game::Systems::RuntimeSnapshot {
   return m_save_load_coordinator->to_runtime_snapshot(
-      {.paused = m_runtime.paused,
+      {.session = *m_session,
+       .paused = m_runtime.paused,
        .time_scale = m_runtime.time_scale,
        .local_owner_id = m_runtime.local_owner_id,
        .victory_state = m_runtime.victory_state,
@@ -2248,7 +2317,8 @@ void GameEngine::apply_runtime_snapshot(
   bool follow_selection = m_camera_view_model->following_selection();
   m_save_load_coordinator->apply_runtime_snapshot(
       snapshot,
-      {.paused = m_runtime.paused,
+      {.session = *m_session,
+       .paused = m_runtime.paused,
        .time_scale = m_runtime.time_scale,
        .local_owner_id = m_runtime.local_owner_id,
        .victory_state = m_runtime.victory_state,
@@ -2390,7 +2460,7 @@ void GameEngine::sync_selected_player_state() {
   int const owner_id =
       m_selected_player_id > 0 ? m_selected_player_id : m_runtime.local_owner_id;
   QVariantMap const next_state =
-      build_player_state_map(owner_id, m_level.max_troops_per_player);
+      build_player_state_map(*m_session, owner_id, m_level.max_troops_per_player);
   if (m_selected_player_state == next_state) {
     return;
   }
@@ -2524,7 +2594,7 @@ void GameEngine::sync_economy_state() {
 }
 
 void GameEngine::sync_scatter_world_props() {
-  auto& terrain_service = Game::Map::TerrainService::instance();
+  auto& terrain_service = m_session->terrain();
   if (m_scatter == nullptr || !terrain_service.is_initialized() ||
       terrain_service.get_height_map() == nullptr) {
     return;
@@ -2575,8 +2645,9 @@ void GameEngine::exit_game() {
 }
 
 auto GameEngine::get_owner_info() const -> QVariantList {
+  const std::lock_guard<std::recursive_mutex> frame_lock(m_frame_mutex);
   QVariantList result;
-  const auto& owner_registry = Game::Systems::OwnerRegistry::instance();
+  const auto& owner_registry = m_session->owners();
   const auto& nations = m_session->nations();
   const auto& owners = owner_registry.get_all_owners();
 
@@ -2609,8 +2680,8 @@ auto GameEngine::get_owner_info() const -> QVariantList {
             ? QString::fromStdString(
                   Game::Systems::nation_id_to_string(owner_nation->id))
             : QString();
-    owner_map["state"] =
-        build_player_state_map(owner.owner_id, m_level.max_troops_per_player);
+    owner_map["state"] = build_player_state_map(
+        *m_session, owner.owner_id, m_level.max_troops_per_player);
 
     result.append(owner_map);
   }
@@ -2619,8 +2690,10 @@ auto GameEngine::get_owner_info() const -> QVariantList {
 }
 
 auto GameEngine::local_player_nation() const -> QString {
-  const auto* nation = Game::Systems::NationRegistry::instance().get_nation_for_player(
-      m_runtime.local_owner_id);
+  const std::lock_guard<std::recursive_mutex> frame_lock(m_frame_mutex);
+
+  const auto* nation =
+      m_session->nations().get_nation_for_player(m_runtime.local_owner_id);
   if (nation == nullptr) {
     return {};
   }
@@ -2636,7 +2709,7 @@ void GameEngine::get_selected_unit_ids(std::vector<Engine::Core::EntityID>& out)
 }
 
 void GameEngine::on_unit_spawned(const Engine::Core::UnitSpawnedEvent& event) {
-  auto& owners = Game::Systems::OwnerRegistry::instance();
+  auto& owners = m_session->owners();
 
   if (event.owner_id == m_runtime.local_owner_id) {
     if (event.spawn_type == Game::Units::SpawnType::Barracks) {
@@ -2669,7 +2742,7 @@ void GameEngine::on_unit_spawned(const Engine::Core::UnitSpawnedEvent& event) {
 }
 
 void GameEngine::on_unit_died(const Engine::Core::UnitDiedEvent& event) {
-  auto& owners = Game::Systems::OwnerRegistry::instance();
+  auto& owners = m_session->owners();
 
   if (event.owner_id == m_runtime.local_owner_id) {
     if (event.spawn_type == Game::Units::SpawnType::Barracks) {
