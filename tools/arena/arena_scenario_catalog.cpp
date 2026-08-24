@@ -156,6 +156,20 @@ void add_visual_stability(ArenaScenarioDefinition& scenario,
       expectation(Expect::FrameBudget, {}, {}, 33.34F, 0.25F));
 }
 
+void add_commander_control_metrics(ArenaScenarioDefinition& scenario,
+                                   const QString& commander_group) {
+  scenario.expectations.push_back(
+      expectation(Expect::CommanderInputEdgesAllConsumed, commander_group));
+  scenario.expectations.push_back(
+      expectation(Expect::CommanderBoomIsContinuous, commander_group, {}, 0.35F));
+  scenario.expectations.push_back(
+      expectation(Expect::CommanderMotorCorrectionWithin, commander_group, {}, 0.08F));
+  scenario.expectations.push_back(
+      expectation(Expect::CommanderCameraClearanceAtLeast, commander_group, {}, 0.10F));
+  scenario.expectations.push_back(
+      expectation(Expect::CommanderPresentedPoseAgrees, commander_group, {}, 0.01F));
+}
+
 void add_animation_quality(ArenaScenarioDefinition& scenario,
                            std::initializer_list<QString> groups) {
   for (auto const& name : groups) {
@@ -1180,6 +1194,176 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
     s.expectations.push_back(expectation(Expect::RpgLocomotionAnimationMatched,
                                          QStringLiteral("rpg_commander")));
     s.expectations.push_back(expectation(Expect::MovementAnimationObserved,
+                                         QStringLiteral("rpg_commander")));
+    s.expectations.push_back(expectation(Expect::NoFullscreenFlash));
+
+    auto hitched = s;
+    hitched.id = QString::fromLatin1(k_rpg_locomotion_hitch_id);
+    hitched.label = QStringLiteral("RPG Locomotion Under Hitches");
+    hitched.description = QStringLiteral(
+        "The locomotion script again, with four deliberately long presented "
+        "frames injected while the commander is mid-stride. A planted foot that "
+        "keeps travelling while the body reports as idle only appears when a "
+        "frame runs long, so the hitches are authored rather than waited for: "
+        "the defect reproduces on every run instead of once in five on a busy "
+        "machine.");
+    hitched.presentation_hitches = {
+        {1.20F, 33.0F}, {3.00F, 50.0F}, {5.00F, 100.0F}, {6.80F, 100.0F}};
+    result.push_back(std::move(s));
+    result.push_back(std::move(hitched));
+  }
+
+  {
+    auto s = definition(
+        QString::fromLatin1(k_rpg_motor_start_stop_id),
+        QStringLiteral("RPG Motor Start And Stop"),
+        QStringLiteral(
+            "Walk, run, halt, and reverse on open ground. The motor contract is "
+            "that a held direction settles at the configured speed, a release "
+            "decelerates rather than snapping, and a reversal does not teleport "
+            "the body through the turn."),
+        9.0F);
+    s.rpg_mode = true;
+    s.rpg_commander_group = QStringLiteral("rpg_commander");
+    s.suppress_terrain_scatter = true;
+    s.select_spawned_units = false;
+    s.suppress_spawn_anchor = true;
+    s.suppress_ui_overlays = true;
+    auto commander = group(QStringLiteral("rpg_commander"),
+                           Troop::RomanVeteranConsul,
+                           1,
+                           1,
+                           {0.0F, 0.0F, -8.0F},
+                           1);
+    commander.facing_degrees = 0.0F;
+    s.groups = {commander};
+
+    auto move = [](float time, QVector3D axes, bool run) {
+      auto step = at(time, Command::RpgMove, QStringLiteral("rpg_commander"));
+      step.destination = axes;
+      step.value = run ? 1 : 0;
+      return step;
+    };
+    s.steps = {
+        move(0.30F, {0.0F, 0.0F, 1.0F}, false),
+        move(1.80F, {0.0F, 0.0F, 0.0F}, false),
+        move(3.00F, {0.0F, 0.0F, 1.0F}, true),
+        move(5.00F, {0.0F, 0.0F, -1.0F}, true),
+        move(7.00F, {0.0F, 0.0F, 0.0F}, false),
+    };
+    add_visual_stability(s, {QStringLiteral("rpg_commander")});
+    add_animation_quality(s, {QStringLiteral("rpg_commander")});
+    s.expectations.push_back(
+        expectation(Expect::RpgWalkObserved, QStringLiteral("rpg_commander")));
+    s.expectations.push_back(
+        expectation(Expect::RpgRunObserved, QStringLiteral("rpg_commander")));
+    s.expectations.push_back(expectation(Expect::RpgLocomotionAnimationMatched,
+                                         QStringLiteral("rpg_commander")));
+    s.expectations.push_back(expectation(Expect::NoFullscreenFlash));
+    result.push_back(std::move(s));
+  }
+
+  {
+    auto s = definition(
+        QString::fromLatin1(k_rpg_motor_diagonal_id),
+        QStringLiteral("RPG Motor Diagonal"),
+        QStringLiteral(
+            "All eight input directions in turn, each held long enough to settle. "
+            "A diagonal is two axes at once and must not travel faster than a "
+            "single axis; the same script also walks every backpedal and strafe "
+            "scale past the locomotion contract."),
+        9.0F);
+    s.rpg_mode = true;
+    s.rpg_commander_group = QStringLiteral("rpg_commander");
+    s.suppress_terrain_scatter = true;
+    s.select_spawned_units = false;
+    s.suppress_spawn_anchor = true;
+    s.suppress_ui_overlays = true;
+    auto commander = group(QStringLiteral("rpg_commander"),
+                           Troop::RomanVeteranConsul,
+                           1,
+                           1,
+                           {0.0F, 0.0F, 0.0F},
+                           1);
+    commander.facing_degrees = 0.0F;
+    s.groups = {commander};
+
+    auto move = [](float time, QVector3D axes) {
+      auto step = at(time, Command::RpgMove, QStringLiteral("rpg_commander"));
+      step.destination = axes;
+      step.value = 0;
+      return step;
+    };
+    s.steps = {
+        move(0.30F, {0.0F, 0.0F, 1.0F}),
+        move(1.30F, {1.0F, 0.0F, 1.0F}),
+        move(2.30F, {1.0F, 0.0F, 0.0F}),
+        move(3.30F, {1.0F, 0.0F, -1.0F}),
+        move(4.30F, {0.0F, 0.0F, -1.0F}),
+        move(5.30F, {-1.0F, 0.0F, -1.0F}),
+        move(6.30F, {-1.0F, 0.0F, 0.0F}),
+        move(7.30F, {-1.0F, 0.0F, 1.0F}),
+        move(8.30F, {0.0F, 0.0F, 0.0F}),
+    };
+    add_visual_stability(s, {QStringLiteral("rpg_commander")});
+    add_animation_quality(s, {QStringLiteral("rpg_commander")});
+    s.expectations.push_back(
+        expectation(Expect::RpgWalkObserved, QStringLiteral("rpg_commander")));
+    s.expectations.push_back(expectation(Expect::RpgLocomotionAnimationMatched,
+                                         QStringLiteral("rpg_commander")));
+    s.expectations.push_back(expectation(Expect::NoFullscreenFlash));
+    result.push_back(std::move(s));
+  }
+
+  {
+    auto s = definition(
+        QString::fromLatin1(k_rpg_motor_figure_eight_id),
+        QStringLiteral("RPG Motor Figure Eight"),
+        QStringLiteral(
+            "Continuous camera-relative direction changes: the view yaw sweeps "
+            "while a forward input is held, so the movement basis rotates under "
+            "the motor every tick. The body must trace a smooth path rather than "
+            "stutter as the basis turns."),
+        9.0F);
+    s.rpg_mode = true;
+    s.rpg_commander_group = QStringLiteral("rpg_commander");
+    s.suppress_terrain_scatter = true;
+    s.select_spawned_units = false;
+    s.suppress_spawn_anchor = true;
+    s.suppress_ui_overlays = true;
+    auto commander = group(QStringLiteral("rpg_commander"),
+                           Troop::RomanVeteranConsul,
+                           1,
+                           1,
+                           {0.0F, 0.0F, 0.0F},
+                           1);
+    commander.facing_degrees = 0.0F;
+    s.groups = {commander};
+
+    auto move = [](float time, QVector3D axes, float yaw) {
+      auto step = at(time, Command::RpgMove, QStringLiteral("rpg_commander"));
+      step.destination = axes;
+      step.value = 0;
+      step.rpg_view_yaw_degrees = yaw;
+      return step;
+    };
+    s.steps = {
+        move(0.30F, {0.0F, 0.0F, 1.0F}, 0.0F),
+        move(1.10F, {0.0F, 0.0F, 1.0F}, 45.0F),
+        move(1.90F, {0.0F, 0.0F, 1.0F}, 90.0F),
+        move(2.70F, {0.0F, 0.0F, 1.0F}, 135.0F),
+        move(3.50F, {0.0F, 0.0F, 1.0F}, 180.0F),
+        move(4.30F, {0.0F, 0.0F, 1.0F}, 225.0F),
+        move(5.10F, {0.0F, 0.0F, 1.0F}, 270.0F),
+        move(5.90F, {0.0F, 0.0F, 1.0F}, 315.0F),
+        move(6.70F, {0.0F, 0.0F, 1.0F}, 0.0F),
+        move(8.00F, {0.0F, 0.0F, 0.0F}, 0.0F),
+    };
+    add_visual_stability(s, {QStringLiteral("rpg_commander")});
+    add_animation_quality(s, {QStringLiteral("rpg_commander")});
+    s.expectations.push_back(
+        expectation(Expect::RpgWalkObserved, QStringLiteral("rpg_commander")));
+    s.expectations.push_back(expectation(Expect::RpgLocomotionAnimationMatched,
                                          QStringLiteral("rpg_commander")));
     s.expectations.push_back(expectation(Expect::NoFullscreenFlash));
     result.push_back(std::move(s));
@@ -9907,6 +10091,12 @@ auto definitions() -> const std::vector<ArenaScenarioDefinition>& {
     values.insert(values.end(),
                   std::make_move_iterator(city.begin()),
                   std::make_move_iterator(city.end()));
+
+    for (auto& scenario : values) {
+      if (scenario.rpg_mode && !scenario.rpg_commander_group.isEmpty()) {
+        add_commander_control_metrics(scenario, scenario.rpg_commander_group);
+      }
+    }
     return values;
   }();
   return catalog;

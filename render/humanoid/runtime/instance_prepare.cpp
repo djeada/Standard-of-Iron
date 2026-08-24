@@ -824,7 +824,12 @@ void append_prepared_soldier(const HumanoidUnitSnapshot& s,
                                   float root_up_y,
                                   float root_scale_y,
                                   float root_tilt_degrees,
-                                  float hit_reaction_tilt_degrees) {
+                                  float hit_reaction_tilt_degrees,
+                                  float locomotion_blend,
+                                  float locomotion_presence,
+                                  float cycle_phase,
+                                  bool persistent_valid,
+                                  float persistent_last_sample_time) {
     if (!record_animation_diagnostics || ctx.entity == nullptr) {
       return;
     }
@@ -850,6 +855,11 @@ void append_prepared_soldier(const HumanoidUnitSnapshot& s,
     sample.root_scale_y = root_scale_y;
     sample.root_tilt_degrees = root_tilt_degrees;
     sample.hit_reaction_tilt_degrees = hit_reaction_tilt_degrees;
+    sample.locomotion_blend = locomotion_blend;
+    sample.locomotion_presence = locomotion_presence;
+    sample.cycle_phase = cycle_phase;
+    sample.persistent_valid = persistent_valid;
+    sample.persistent_last_sample_time = persistent_last_sample_time;
     animation_diagnostics.record_soldier_sample(ctx.entity->get_id(), sample);
   };
 
@@ -932,6 +942,7 @@ void append_prepared_soldier(const HumanoidUnitSnapshot& s,
   bool const soldier_is_casualty_body =
       soldier_render_anim.is_dying || soldier_render_anim.is_dead;
   if (turn_smoothing_active && !soldier_is_casualty_body &&
+      !soldier_render_anim.simulation_owns_root_motion &&
       static_cast<std::size_t>(idx) < layout_cache_comp->turn_states.size()) {
     turn_slot_world = unit_base.map(QVector3D(offset_x, 0.0F, offset_z));
 
@@ -1063,6 +1074,11 @@ void append_prepared_soldier(const HumanoidUnitSnapshot& s,
           1.0F,
           1.0F,
           0.0F,
+          0.0F,
+          0.0F,
+          0.0F,
+          0.0F,
+          false,
           0.0F);
     }
     return;
@@ -1086,6 +1102,15 @@ void append_prepared_soldier(const HumanoidUnitSnapshot& s,
   auto const locomotion_variation = Animation::resolve_humanoid_locomotion_variation({
       .has_locomotion = soldier_has_locomotion,
       .running = soldier_is_running,
+
+      .blend_from_presence = soldier_render_anim.simulation_owns_root_motion &&
+                             humanoid_anim_state != nullptr,
+      .locomotion_presence = humanoid_anim_state != nullptr
+                                 ? humanoid_anim_state->locomotion.locomotion_presence
+                                 : 0.0F,
+      .run_presence = humanoid_anim_state != nullptr
+                          ? humanoid_anim_state->locomotion.run_presence
+                          : 0.0F,
       .walk_speed_multiplier = variation.walk_speed_mult,
       .arm_swing_amplitude = variation.arm_swing_amp,
       .stance_width = variation.stance_width,
@@ -1541,15 +1566,22 @@ void append_prepared_soldier(const HumanoidUnitSnapshot& s,
         .recoil_dir_z = recoil_dir_z,
         .body_displaced_by_simulation =
             soldier_directive == nullptr && !has_shared_formation_layout,
+        .simulation_owns_lunge = soldier_render_anim.simulation_owns_root_motion,
         .seed = inst_seed,
     });
     if (root_motion.active) {
       QVector3D const root_origin = inst_ctx.model.map(QVector3D(0.0F, 0.0F, 0.0F));
       QMatrix4x4 root;
-      root.translate(
-          root_motion.world_offset_x + forward.x() * root_motion.forward_offset,
-          0.0F,
-          root_motion.world_offset_z + forward.z() * root_motion.forward_offset);
+
+      float const root_offset_x =
+          soldier_render_anim.simulation_owns_root_motion
+              ? 0.0F
+              : root_motion.world_offset_x + forward.x() * root_motion.forward_offset;
+      float const root_offset_z =
+          soldier_render_anim.simulation_owns_root_motion
+              ? 0.0F
+              : root_motion.world_offset_z + forward.z() * root_motion.forward_offset;
+      root.translate(root_offset_x, 0.0F, root_offset_z);
       root.translate(root_origin);
       if (std::abs(root_motion.pitch_degrees) > 0.01F) {
         root.rotate(root_motion.pitch_degrees, right);
@@ -1602,7 +1634,12 @@ void append_prepared_soldier(const HumanoidUnitSnapshot& s,
           root_up_y,
           root_scale_y,
           root_tilt_degrees,
-          hit_reaction_transform.tilt_degrees);
+          hit_reaction_transform.tilt_degrees,
+          anim_ctx.gait.locomotion_blend,
+          anim_ctx.gait.locomotion_presence,
+          anim_ctx.gait.cycle_phase,
+          anim_ctx.gait.persistent_valid,
+          anim_ctx.gait.persistent_last_sample_time);
     }
     return;
   }
@@ -1683,7 +1720,12 @@ void append_prepared_soldier(const HumanoidUnitSnapshot& s,
                          root_up_y,
                          root_scale_y,
                          root_tilt_degrees,
-                         hit_reaction_transform.tilt_degrees);
+                         hit_reaction_transform.tilt_degrees,
+                         anim_ctx.gait.locomotion_blend,
+                         anim_ctx.gait.locomotion_presence,
+                         anim_ctx.gait.cycle_phase,
+                         anim_ctx.gait.persistent_valid,
+                         anim_ctx.gait.persistent_last_sample_time);
   }
 
   RCP::HumanoidShadowStateInputs shadow_inputs{};

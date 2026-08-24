@@ -110,6 +110,7 @@
 namespace {
 
 constexpr int k_local_owner_id = 1;
+constexpr int k_scripted_attack_hold_ticks = 3;
 constexpr int k_enemy_owner_id = 2;
 constexpr int k_terrain_width = 128;
 constexpr int k_terrain_height = 128;
@@ -515,8 +516,13 @@ void ArenaViewport::paintGL() {
     real_dt =
         std::clamp(static_cast<float>(m_frame_clock.restart()) / 1000.0F, 0.0F, 0.1F);
   }
-  m_fps = real_dt > 0.0F ? (m_fps * 0.9F + (1.0F / real_dt) * 0.1F) : m_fps;
   bool const sampled_frame = m_batch_fixed_step <= 0.0F || m_batch_frame_in_progress;
+  if (sampled_frame && m_batch_fixed_step > 0.0F) {
+    if (float const hitch_ms = take_due_presentation_hitch(); hitch_ms > 0.0F) {
+      real_dt = hitch_ms / 1000.0F;
+    }
+  }
+  m_fps = real_dt > 0.0F ? (m_fps * 0.9F + (1.0F / real_dt) * 0.1F) : m_fps;
   float const simulation_dt = (m_paused || !sampled_frame) ? 0.0F : real_dt;
   m_environment_clock.update(simulation_dt, m_paused);
   m_environment_hour = m_environment_clock.hour();
@@ -581,6 +587,8 @@ void ArenaViewport::paintGL() {
       present_capture_preview();
     }
     if (m_scenario_runner != nullptr && sampled_frame) {
+      publish_animation_clock();
+      publish_commander_presentation_trace();
       m_scenario_runner->observe_rendered_frame(timings);
     }
     return;
@@ -764,6 +772,8 @@ void ArenaViewport::paintGL() {
   if (m_scenario_runner != nullptr && sampled_frame) {
     timings.total_ms =
         static_cast<double>(frame_work_clock.nsecsElapsed()) / 1'000'000.0;
+    publish_animation_clock();
+    publish_commander_presentation_trace();
     m_scenario_runner->observe_rendered_frame(timings);
     std::size_t const issue_revision = m_scenario_runner->issue_revision();
     if (issue_revision > m_last_scenario_issue_revision) {
@@ -927,7 +937,7 @@ void ArenaViewport::focusOutEvent(QFocusEvent* event) {
     m_rpg_mouse_captured = false;
     unsetCursor();
     if (m_rpg_commander_controller != nullptr) {
-      m_rpg_commander_controller->input() = CommanderControlController::InputState{};
+      m_rpg_commander_controller->release_all_input();
     }
   }
   QOpenGLWidget::focusOutEvent(event);
@@ -1014,10 +1024,6 @@ void ArenaViewport::mouseReleaseEvent(QMouseEvent* event) {
       m_rpg_commander_controller->primary_action_up();
     } else if (event->button() == Qt::RightButton) {
       m_rpg_commander_controller->secondary_action_up();
-      if (m_world != nullptr) {
-        m_rpg_commander_controller->release_guard(
-            *m_world, m_rpg_commander_id, k_local_owner_id);
-      }
     }
     event->accept();
     return;
@@ -3809,15 +3815,22 @@ void ArenaViewport::load_scenario(const QString& scenario_id) {
     configure_rpg_scenario_commander(entity_id);
   };
   host.rpg_primary_attack = [this](Engine::Core::EntityID entity_id) {
-    return m_world != nullptr && m_rpg_commander_controller != nullptr &&
-           entity_id == m_rpg_commander_id &&
-           m_rpg_commander_controller->primary_action(
-               *m_world, entity_id, k_local_owner_id);
+    if (m_world == nullptr || m_rpg_commander_controller == nullptr ||
+        entity_id != m_rpg_commander_id) {
+      return false;
+    }
+    if (m_rpg_commander_controller->input().primary_action) {
+      return true;
+    }
+    m_rpg_commander_controller->primary_action_down();
+    m_rpg_scripted_attack_ticks = k_scripted_attack_hold_ticks;
+    return true;
   };
   host.set_rpg_attack_held = [this](Engine::Core::EntityID entity_id, bool held) {
     if (m_rpg_commander_controller == nullptr || entity_id != m_rpg_commander_id) {
       return;
     }
+    m_rpg_scripted_attack_ticks = 0;
     if (held) {
       m_rpg_commander_controller->primary_action_down();
     } else {
@@ -3833,7 +3846,6 @@ void ArenaViewport::load_scenario(const QString& scenario_id) {
       m_rpg_commander_controller->secondary_action_down();
     } else {
       m_rpg_commander_controller->secondary_action_up();
-      m_rpg_commander_controller->release_guard(*m_world, entity_id, k_local_owner_id);
     }
   };
   host.set_rpg_move_input =
@@ -3841,12 +3853,19 @@ void ArenaViewport::load_scenario(const QString& scenario_id) {
         if (m_rpg_commander_controller == nullptr || entity_id != m_rpg_commander_id) {
           return;
         }
-        auto& input = m_rpg_commander_controller->input();
-        input.right = axes.x() > 0.5F;
-        input.left = axes.x() < -0.5F;
-        input.forward = axes.z() > 0.5F;
-        input.backward = axes.z() < -0.5F;
-        input.run = run;
+        auto& controller = *m_rpg_commander_controller;
+        auto const hold = [&controller](int key, bool held) {
+          if (held) {
+            controller.key_down(key);
+          } else {
+            controller.key_up(key);
+          }
+        };
+        hold(Qt::Key_D, axes.x() > 0.5F);
+        hold(Qt::Key_A, axes.x() < -0.5F);
+        hold(Qt::Key_W, axes.z() > 0.5F);
+        hold(Qt::Key_S, axes.z() < -0.5F);
+        hold(Qt::Key_Shift, run);
       };
   host.set_rpg_view_yaw = [this](Engine::Core::EntityID entity_id, float yaw_degrees) {
     if (m_rpg_commander_controller != nullptr && entity_id == m_rpg_commander_id) {
@@ -3890,6 +3909,12 @@ void ArenaViewport::load_scenario(const QString& scenario_id) {
 
   host.terrain = &m_session.terrain();
   host.building_collision = &m_session.building_collision();
+
+  m_presentation_hitches_fired.clear();
+  m_rpg_scripted_attack_ticks = 0;
+  if (m_renderer != nullptr && m_batch_fixed_step > 0.0F) {
+    m_renderer->reset_animation_time();
+  }
 
   m_scenario_runner = std::make_unique<Arena::ArenaScenarioRunner>(
       *m_world, std::move(host), *definition, scenario_origin);
@@ -4108,6 +4133,7 @@ void ArenaViewport::configure_rpg_scenario_commander(Engine::Core::EntityID enti
 
   m_rpg_commander_id = entity_id;
   m_rpg_commander_controller->reset();
+  m_rpg_commander_controller->set_presentation_trace_enabled(true);
   m_rpg_commander_controller->set_view_yaw(transform->rotation.y);
   m_rpg_commander_controller->set_view_pitch(k_commander_rest_view_pitch_degrees);
   commander->fpv_controlled = true;
@@ -4221,6 +4247,43 @@ auto ArenaViewport::rpg_bow_hud_state() const -> ArenaViewport::RpgBowHudState {
   return state;
 }
 
+auto ArenaViewport::take_due_presentation_hitch() -> float {
+  if (m_scenario_runner == nullptr) {
+    return 0.0F;
+  }
+  auto const& hitches = m_scenario_runner->definition().presentation_hitches;
+  if (hitches.empty()) {
+    return 0.0F;
+  }
+  if (m_presentation_hitches_fired.size() != hitches.size()) {
+    m_presentation_hitches_fired.assign(hitches.size(), false);
+  }
+  float const elapsed = m_scenario_runner->elapsed_seconds();
+  for (std::size_t index = 0; index < hitches.size(); ++index) {
+    if (m_presentation_hitches_fired[index] || elapsed < hitches[index].at_seconds) {
+      continue;
+    }
+    m_presentation_hitches_fired[index] = true;
+    return std::max(0.0F, hitches[index].frame_ms);
+  }
+  return 0.0F;
+}
+
+void ArenaViewport::publish_commander_presentation_trace() {
+  if (m_scenario_runner == nullptr || m_rpg_commander_controller == nullptr ||
+      !m_rpg_commander_controller->presentation_trace_enabled()) {
+    return;
+  }
+  m_scenario_runner->observe_commander_presentation(
+      m_rpg_commander_controller->presentation_trace());
+}
+
+void ArenaViewport::publish_animation_clock() {
+  if (m_scenario_runner != nullptr && m_renderer != nullptr) {
+    m_scenario_runner->set_animation_time(m_renderer->get_animation_time());
+  }
+}
+
 void ArenaViewport::update_rpg_scenario_controller(float simulation_dt) {
   if (simulation_dt <= 0.0F || m_rpg_commander_id == 0 ||
       m_rpg_commander_controller == nullptr || m_world == nullptr ||
@@ -4234,6 +4297,10 @@ void ArenaViewport::update_rpg_scenario_controller(float simulation_dt) {
     } else {
       clear_rpg_scenario_state();
     }
+    return;
+  }
+  if (m_rpg_scripted_attack_ticks > 0 && --m_rpg_scripted_attack_ticks == 0) {
+    m_rpg_commander_controller->primary_action_up();
   }
 }
 
@@ -4321,6 +4388,10 @@ void ArenaViewport::exit_rpg_interactive_control() {
   m_rpg_interactive = false;
   m_rpg_mouse_captured = false;
   unsetCursor();
+  if (m_rpg_commander_controller != nullptr) {
+    m_rpg_commander_controller->release_all_input();
+  }
+  m_rpg_scripted_attack_ticks = 0;
   clear_rpg_scenario_state();
   reset_camera();
   update();

@@ -515,26 +515,30 @@ void Backend::release_directional_shadow_resources() {
 
 namespace {
 
-auto allocate_shadow_array(GLuint& texture, int resolution, int layers) -> void {
-  glGenTextures(1, &texture);
-  glBindTexture(GL_TEXTURE_2D_ARRAY, texture);
-  glTexImage3D(GL_TEXTURE_2D_ARRAY,
-               0,
-               GL_DEPTH_COMPONENT24,
-               resolution,
-               resolution,
-               layers,
-               0,
-               GL_DEPTH_COMPONENT,
-               GL_FLOAT,
-               nullptr);
-  glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-  glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-  glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
-  glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+auto allocate_shadow_array(QOpenGLFunctions_3_3_Core& gl,
+                           GLuint& texture,
+                           int resolution,
+                           int layers) -> void {
+
+  gl.glGenTextures(1, &texture);
+  gl.glBindTexture(GL_TEXTURE_2D_ARRAY, texture);
+  gl.glTexImage3D(GL_TEXTURE_2D_ARRAY,
+                  0,
+                  GL_DEPTH_COMPONENT24,
+                  resolution,
+                  resolution,
+                  layers,
+                  0,
+                  GL_DEPTH_COMPONENT,
+                  GL_FLOAT,
+                  nullptr);
+  gl.glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+  gl.glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+  gl.glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+  gl.glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
   const GLfloat border[] = {1.0F, 1.0F, 1.0F, 1.0F};
-  glTexParameterfv(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_BORDER_COLOR, border);
-  glBindTexture(GL_TEXTURE_2D_ARRAY, 0);
+  gl.glTexParameterfv(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_BORDER_COLOR, border);
+  gl.glBindTexture(GL_TEXTURE_2D_ARRAY, 0);
 }
 
 auto near_cascade_split(int cascades, int resolution) -> int {
@@ -565,10 +569,10 @@ void Backend::ensure_directional_shadow_resources(int resolution, int cascades) 
   }
 
   release_directional_shadow_resources();
-  allocate_shadow_array(m_directional_shadow_texture, resolution, near_cascades);
+  allocate_shadow_array(*this, m_directional_shadow_texture, resolution, near_cascades);
   if (far_cascades > 0) {
     allocate_shadow_array(
-        m_directional_shadow_far_texture, far_resolution, far_cascades);
+        *this, m_directional_shadow_far_texture, far_resolution, far_cascades);
   }
 
   const GLfloat border[] = {1.0F, 1.0F, 1.0F, 1.0F};

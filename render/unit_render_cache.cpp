@@ -83,6 +83,7 @@ auto UnitRenderCache::get_or_create(const WorldView& world,
     data.unit = nullptr;
     data.renderable = nullptr;
     data.movement = nullptr;
+    data.presentation = nullptr;
     data.renderer_key.clear();
     data.has_renderer_handle = false;
     data.renderer_key_valid = false;
@@ -94,6 +95,8 @@ auto UnitRenderCache::get_or_create(const WorldView& world,
   auto* new_unit = entity->get_component<Engine::Core::UnitComponent>();
   auto* new_renderable = entity->get_component<Engine::Core::RenderableComponent>();
   auto* new_movement = entity->get_component<Engine::Core::MovementComponent>();
+  data.presentation =
+      entity->get_component<Engine::Core::CommanderPresentationSampleComponent>();
   auto* previous_unit = data.unit;
   auto* previous_renderable = data.renderable;
 
@@ -159,14 +162,34 @@ void UnitRenderCache::prune(std::uint32_t current_frame, std::uint32_t max_age) 
   }
 }
 
-auto UnitRenderCache::update_model_matrix(CachedUnitData& data) -> bool {
+auto UnitRenderCache::update_model_matrix(CachedUnitData& data,
+                                          float frame_delta_seconds) -> bool {
   if (data.transform == nullptr) {
     return false;
   }
 
-  const auto& pos = data.transform->position;
-  const auto& rot = data.transform->rotation;
+  auto pos = data.transform->position;
+  auto rot = data.transform->rotation;
   const auto& sc = data.transform->scale;
+
+  auto const* sample = data.presentation;
+  if (sample != nullptr && sample->valid) {
+    if (sample->tick_sequence != data.presentation_seen_sequence) {
+      data.presentation_seen_sequence = sample->tick_sequence;
+      data.presentation_age = 0.0F;
+    }
+    const float frame_dt = std::max(0.0F, frame_delta_seconds);
+    const float max_age =
+        frame_dt >= sample->tick_seconds
+            ? sample->tick_seconds
+            : sample->tick_seconds *
+                  (1.0F + Engine::Core::k_presentation_max_extrapolation);
+    data.presentation_age = std::min(data.presentation_age + frame_dt, max_age);
+    const auto pose =
+        Engine::Core::resolve_presentation_pose(*sample, data.presentation_age);
+    pos = pose.position;
+    rot.y = pose.yaw;
+  }
 
   if (data.model_matrix_valid && pos.x == data.last_pos_x && pos.y == data.last_pos_y &&
       pos.z == data.last_pos_z && rot.x == data.last_rot_x &&

@@ -83,6 +83,7 @@ struct AnimationInputs {
   std::uint16_t authored_action_clip{Animation::k_unmapped_clip};
   float authored_action_phase{0.0F};
   bool has_authored_action_phase{false};
+  bool simulation_owns_root_motion{false};
   bool finisher_attack{false};
   float attack_offset{0.0F};
   bool has_attack_offset{false};
@@ -320,6 +321,8 @@ struct HumanoidGaitDescriptor {
   auto is_running() const -> bool { return state == HumanoidMotionState::Run; }
   auto is_holding() const -> bool { return state == HumanoidMotionState::Hold; }
   auto is_attacking() const -> bool { return state == HumanoidMotionState::Attacking; }
+  bool persistent_valid{false};
+  float persistent_last_sample_time{0.0F};
 };
 
 struct HumanoidAnimationContext {

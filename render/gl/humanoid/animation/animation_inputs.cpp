@@ -344,7 +344,10 @@ void apply_persistent_stance(
   float previous_hold_pose_progress = humanoid_state->hold_pose_progress;
   if (previous_initialized && anim.time < previous_sample_time) {
     if (should_persist) {
+
+      auto const carried_locomotion = humanoid_state->locomotion;
       reset_humanoid_animation_state(*humanoid_state);
+      humanoid_state->locomotion = carried_locomotion;
       previous_initialized = false;
       previous_sample_time = 0.0F;
       previous_idle_duration = 0.0F;
@@ -558,6 +561,8 @@ auto sample_anim_state(const DrawContext& ctx) -> AnimationInputs {
     }
 
     apply_authored_action_presentation(anim, *presentation);
+
+    anim.simulation_owns_root_motion = presentation->fpv_controlled;
 
     bool const has_authored_action =
         presentation->fpv_controlled && presentation->authored_action_id != 0U;

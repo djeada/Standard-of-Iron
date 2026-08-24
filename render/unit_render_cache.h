@@ -17,6 +17,7 @@ class TransformComponent;
 class UnitComponent;
 class RenderableComponent;
 class MovementComponent;
+class CommanderPresentationSampleComponent;
 } // namespace Engine::Core
 
 namespace Engine::Core {
@@ -41,6 +42,7 @@ struct CachedUnitData {
   Engine::Core::UnitComponent* unit{nullptr};
   Engine::Core::RenderableComponent* renderable{nullptr};
   Engine::Core::MovementComponent* movement{nullptr};
+  const Engine::Core::CommanderPresentationSampleComponent* presentation{nullptr};
 
   std::string renderer_key;
   std::uint32_t renderer_handle{0};
@@ -62,6 +64,8 @@ struct CachedUnitData {
   float last_scale_y{0.0F};
   float last_scale_z{0.0F};
   bool model_matrix_valid{false};
+  std::uint32_t presentation_seen_sequence{0};
+  float presentation_age{0.0F};
   bool renderer_key_valid{false};
   bool last_is_building{false};
   Game::Units::SpawnType last_spawn_type{Game::Units::SpawnType::Archer};
@@ -84,7 +88,8 @@ public:
 
   [[nodiscard]] auto size() const -> std::size_t { return m_cache.size(); }
 
-  static auto update_model_matrix(CachedUnitData& data) -> bool;
+  static auto update_model_matrix(CachedUnitData& data,
+                                  float frame_delta_seconds) -> bool;
 
 private:
   std::unordered_map<Engine::Core::EntityID, CachedUnitData> m_cache;

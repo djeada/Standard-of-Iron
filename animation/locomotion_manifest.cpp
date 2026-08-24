@@ -493,7 +493,12 @@ auto resolve_humanoid_locomotion_sample(const HumanoidLocomotionInputs& inputs) 
     delta_time = std::max(0.0F, inputs.sample_time - previous.last_sample_time);
   }
 
+  bool const repeat_of_same_frame =
+      previous.initialized && delta_time <= 0.0F && inputs.allow_persistent_update;
+
   HumanoidLocomotionSample sample{};
+  sample.previous_seen_initialized = previous.initialized;
+  sample.previous_seen_presence = previous.locomotion_presence;
   sample.state = inputs.motion_state;
   sample.speed = inputs.speed;
   sample.cycle_time = targets.cycle_time;
@@ -531,6 +536,10 @@ auto resolve_humanoid_locomotion_sample(const HumanoidLocomotionInputs& inputs) 
   bool const residual_gait = !has_locomotion && previous.initialized &&
                              sample.locomotion_presence > k_locomotion_residual_blend;
   bool const gait_running = has_locomotion || residual_gait;
+
+  if (residual_gait && previous.state != HumanoidMotionState::Idle) {
+    sample.state = previous.state;
+  }
 
   sample.reverse_gait = previous.initialized ? previous.reverse_gait : false;
   if (has_locomotion) {
@@ -590,7 +599,8 @@ auto resolve_humanoid_locomotion_sample(const HumanoidLocomotionInputs& inputs) 
                                         : 0.0F;
 
   sample.persistent = previous;
-  if (inputs.has_persistent_state && inputs.allow_persistent_update) {
+  if (inputs.has_persistent_state && inputs.allow_persistent_update &&
+      !repeat_of_same_frame) {
     sample.write_persistent_state = true;
     sample.persistent.initialized = true;
     sample.persistent.last_sample_time = inputs.sample_time;
@@ -650,7 +660,16 @@ auto resolve_humanoid_locomotion_variation(
       .posture_slump = inputs.posture_slump,
   };
 
-  if (inputs.running) {
+  if (inputs.blend_from_presence) {
+
+    float const run = std::clamp(inputs.run_presence, 0.0F, 1.0F);
+    float const walk =
+        std::clamp(inputs.locomotion_presence, 0.0F, 1.0F) * (1.0F - run);
+    sample.walk_speed_multiplier *= 1.0F + (0.25F * run) + (0.05F * walk);
+    sample.arm_swing_amplitude *= 1.0F + (0.12F * run);
+    sample.stance_width *= 1.0F - (0.04F * run);
+    sample.posture_slump = std::min(0.16F, sample.posture_slump + (0.020F * run));
+  } else if (inputs.running) {
     sample.walk_speed_multiplier *= 1.25F;
     sample.arm_swing_amplitude *= 1.12F;
     sample.stance_width *= 0.96F;
