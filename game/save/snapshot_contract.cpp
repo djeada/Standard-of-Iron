@@ -193,6 +193,10 @@ constexpr std::array k_fields = std::to_array<FieldSpec>({
     {"MotionPresentationComponent",
      PresentationOnly,
      "Interpolation state for the renderer, refilled on the first frame."},
+    {"CommanderPresentationSampleComponent",
+     PresentationOnly,
+     "Previous and current authoritative commander pose, resolved once per "
+     "rendered frame so the body and the camera present the same anchor."},
     {"CreaturePresentationComponent",
      PresentationOnly,
      "Animation snapshot published for the renderer."},

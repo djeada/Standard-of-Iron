@@ -29,6 +29,19 @@ const std::map<std::string, BuildingCollisionRegistry::BuildingSize>
 
 };
 
+const std::map<std::string, BuildingCollisionRegistry::BuildingBody>
+    BuildingCollisionRegistry::s_building_bodies = {
+        {"barracks", {8.65F, 4.20F, 2.325F, 0.0F}},
+        {"home", {2.36F, 2.42F, 0.0F, 0.03F}},
+        {"marketplace", {2.80F, 2.80F, 0.0F, 0.0F}},
+        {"temple", {3.17F, 2.32F, -0.175F, 0.0F}},
+        {"farm", {1.98F, 2.04F, 0.0F, 0.03F}},
+        {"defense_tower", {2.60F, 2.60F, 0.0F, 0.0F}},
+        {"wall_segment", {2.02F, 0.76F, 0.0F, 0.0F}},
+        {"wall_gate", {2.02F, 0.76F, 0.0F, 0.0F}},
+
+};
+
 float BuildingCollisionRegistry::s_grid_padding =
     BuildingCollisionRegistry::k_default_grid_padding;
 
@@ -85,6 +98,32 @@ auto BuildingCollisionRegistry::get_building_size(const std::string& building_ty
   }
 
   return {2.0F, 2.0F};
+}
+
+auto BuildingCollisionRegistry::get_building_body(const std::string& building_type)
+    -> BuildingCollisionRegistry::BuildingBody {
+  auto it = s_building_bodies.find(building_type);
+  if (it != s_building_bodies.end()) {
+    return it->second;
+  }
+
+  BuildingSize const nav = get_building_size(building_type);
+  return {nav.width, nav.depth, 0.0F, 0.0F};
+}
+
+auto BuildingCollisionRegistry::rotate_body_offset(BuildingBody body,
+                                                   float facing_degrees)
+    -> BuildingCollisionRegistry::BuildingBody {
+  constexpr float k_deg_to_rad = 3.14159265358979323846F / 180.0F;
+  float const radians = facing_degrees * k_deg_to_rad;
+  float const cosine = std::cos(radians);
+  float const sine = std::sin(radians);
+  BuildingSize const rotated =
+      axis_aligned_size({body.width, body.depth}, facing_degrees);
+  return {rotated.width,
+          rotated.depth,
+          (body.offset_x * cosine) + (body.offset_z * sine),
+          (body.offset_z * cosine) - (body.offset_x * sine)};
 }
 
 auto BuildingCollisionRegistry::get_building_grid_padding(
@@ -146,6 +185,7 @@ void BuildingCollisionRegistry::register_building(Engine::Core::EntityID entity_
   BuildingSize const size =
       axis_aligned_size(get_building_size(building_type), facing_degrees);
   register_building(entity_id, building_type, center_x, center_z, owner_id, size);
+  apply_building_body(entity_id, building_type, facing_degrees);
 }
 
 auto BuildingCollisionRegistry::axis_aligned_size(BuildingSize size,
@@ -185,6 +225,22 @@ void BuildingCollisionRegistry::register_building(Engine::Core::EntityID entity_
   add_to_spatial_index(m_buildings.back());
 
   announce_region_dirty(center_x, center_z, size.width, size.depth);
+}
+
+void BuildingCollisionRegistry::apply_building_body(Engine::Core::EntityID entity_id,
+                                                    const std::string& building_type,
+                                                    float facing_degrees) {
+  auto it = m_entity_to_index.find(entity_id);
+  if (it == m_entity_to_index.end()) {
+    return;
+  }
+  auto& footprint = m_buildings[it->second];
+  BuildingBody const body =
+      rotate_body_offset(get_building_body(building_type), facing_degrees);
+  footprint.body_width = body.width;
+  footprint.body_depth = body.depth;
+  footprint.body_center_x = footprint.center_x + body.offset_x;
+  footprint.body_center_z = footprint.center_z + body.offset_z;
 }
 
 void BuildingCollisionRegistry::unregister_building(Engine::Core::EntityID entity_id) {
@@ -245,9 +301,14 @@ void BuildingCollisionRegistry::update_building_position(
   float const width = m_buildings[index].width;
   float const depth = m_buildings[index].depth;
 
+  float const body_offset_x = m_buildings[index].body_center_x - old_x;
+  float const body_offset_z = m_buildings[index].body_center_z - old_z;
+
   remove_from_spatial_index(m_buildings[index]);
   m_buildings[index].center_x = center_x;
   m_buildings[index].center_z = center_z;
+  m_buildings[index].body_center_x = center_x + body_offset_x;
+  m_buildings[index].body_center_z = center_z + body_offset_z;
   add_to_spatial_index(m_buildings[index]);
 
   announce_region_dirty(old_x, old_z, width, depth);

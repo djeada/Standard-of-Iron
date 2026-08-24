@@ -322,6 +322,9 @@ private:
   [[nodiscard]] auto terrain_review_max_camera_distance() const -> float;
   void update_active_scenario(float simulation_dt);
   void configure_rpg_scenario_commander(Engine::Core::EntityID entity_id);
+  [[nodiscard]] auto take_due_presentation_hitch() -> float;
+  void publish_animation_clock();
+  void publish_commander_presentation_trace();
   void update_rpg_scenario_controller(float simulation_dt);
   void clear_rpg_scenario_state();
   [[nodiscard]] auto rpg_interactive_key_press(QKeyEvent* event) -> bool;
@@ -524,6 +527,8 @@ private:
   float m_batch_fixed_step = 0.0F;
   float m_scenario_duration_override = 0.0F;
   std::size_t m_last_scenario_issue_revision = 0U;
+  std::vector<bool> m_presentation_hitches_fired;
+  int m_rpg_scripted_attack_ticks{0};
   bool m_scenario_finished_emitted = false;
   std::optional<Game::Map::MapDefinition> m_terrain_review_definition;
 };

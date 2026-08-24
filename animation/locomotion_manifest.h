@@ -80,6 +80,8 @@ struct HumanoidLocomotionSample {
   float travel_alignment{1.0F};
   bool reverse_gait{false};
   float acceleration{0.0F};
+  bool previous_seen_initialized{false};
+  float previous_seen_presence{0.0F};
   bool write_persistent_state{false};
   HumanoidLocomotionPersistentState persistent{};
 };
@@ -111,6 +113,10 @@ struct HumanoidLocomotionPhaseOverrideSample {
 struct HumanoidLocomotionVariationInputs {
   bool has_locomotion{false};
   bool running{false};
+
+  bool blend_from_presence{false};
+  float locomotion_presence{0.0F};
+  float run_presence{0.0F};
   float walk_speed_multiplier{1.0F};
   float arm_swing_amplitude{1.0F};
   float stance_width{1.0F};

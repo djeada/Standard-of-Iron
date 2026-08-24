@@ -64,6 +64,14 @@ protected:
     return entity;
   }
 
+  [[nodiscard]] static auto press_primary(CommanderControlController& controller,
+                                          Engine::Core::World& world,
+                                          Engine::Core::EntityID commander_id) -> bool {
+    controller.primary_action_down();
+    controller.primary_action_up();
+    return controller.update_simulation(world, commander_id, 1, 0.016F);
+  }
+
   static auto
   create_enemy(Engine::Core::World& world, float x, float z) -> Engine::Core::Entity* {
     auto* entity = world.create_entity();
@@ -86,6 +94,38 @@ protected:
     return entity;
   }
 };
+
+TEST_F(CommanderControlControllerTest,
+       CommanderWalksUpToTheDrawnFacadeNotTheNavFootprint) {
+  Engine::Core::World world;
+  auto* commander = create_commander(world, 0.0F, -5.0F);
+  ASSERT_NE(commander, nullptr);
+  auto* transform = commander->get_component<Engine::Core::TransformComponent>();
+  ASSERT_NE(transform, nullptr);
+
+  auto& registry = Game::Systems::BuildingCollisionRegistry::instance();
+  registry.register_building(9001U, "home", 0.0F, 0.0F, 2, 0.0F);
+
+  auto const nav = Game::Systems::BuildingCollisionRegistry::get_building_size("home");
+  auto const body = Game::Systems::BuildingCollisionRegistry::get_building_body("home");
+  ASSERT_LT(body.depth, nav.depth)
+      << "this test only means something while the nav footprint is the larger one";
+
+  CommanderControlController controller;
+  Render::GL::Camera camera;
+  constexpr float k_dt = 1.0F / 60.0F;
+  for (int frame = 0; frame < 240; ++frame) {
+    controller.input().forward = true;
+    ASSERT_TRUE(controller.update(world, commander->get_id(), 1, camera, k_dt));
+  }
+
+  float const reached = std::abs(transform->position.z);
+  float const facade = (body.depth * 0.5F) - body.offset_z;
+  EXPECT_LT(reached, facade + 0.45F)
+      << "the commander stopped " << reached << " m out; the drawn facade is at "
+      << facade << " m";
+  EXPECT_GT(reached, facade) << "the commander walked inside the drawn building";
+}
 
 TEST_F(CommanderControlControllerTest, JumpForwardBypassesBlockedGroundCells) {
   Engine::Core::World world;
@@ -508,7 +548,7 @@ TEST_F(CommanderControlControllerTest,
   ASSERT_NE(enemy_unit, nullptr);
 
   CommanderControlController controller;
-  ASSERT_TRUE(controller.primary_action(world, commander->get_id(), 1));
+  ASSERT_TRUE(press_primary(controller, world, commander->get_id()));
 
   EXPECT_EQ(enemy_unit->health, 100);
   EXPECT_FALSE(commander->has_component<Engine::Core::AttackTargetComponent>());
@@ -519,7 +559,9 @@ TEST_F(CommanderControlControllerTest,
   EXPECT_EQ(action->active_target_id, enemy->get_id());
   EXPECT_EQ(action->last_hit_target_id, 0U);
   auto* targets = commander->get_component<Engine::Core::RpgCommanderTargetComponent>();
-  EXPECT_EQ(targets, nullptr);
+  ASSERT_NE(targets, nullptr);
+  EXPECT_EQ(targets->explicit_lock_target_id, 0U)
+      << "a strike aims at what is in front of the commander; it does not lock on";
 }
 
 TEST_F(CommanderControlControllerTest,
@@ -540,7 +582,7 @@ TEST_F(CommanderControlControllerTest,
 
   CommanderControlController controller;
   Render::GL::Camera camera;
-  ASSERT_TRUE(controller.primary_action(world, commander->get_id(), 1));
+  ASSERT_TRUE(press_primary(controller, world, commander->get_id()));
 
   auto* combat_state = commander->get_component<Engine::Core::CombatStateComponent>();
   ASSERT_NE(combat_state, nullptr);
@@ -566,7 +608,7 @@ TEST_F(CommanderControlControllerTest,
   action->action_completed = true;
   ASSERT_TRUE(controller.update(world, commander->get_id(), 1, camera, 0.016F));
 
-  ASSERT_TRUE(controller.primary_action(world, commander->get_id(), 1));
+  ASSERT_TRUE(press_primary(controller, world, commander->get_id()));
 
   EXPECT_EQ(combat_state->attack_variant, 0U);
   EXPECT_GT(combat_state->intent.strike_dir_x, 0.0F);
@@ -699,7 +741,7 @@ TEST_F(CommanderControlControllerTest, PrimaryActionUsesSpearActionForSpearComma
   attack->melee_range = 2.6F;
 
   CommanderControlController controller;
-  ASSERT_TRUE(controller.primary_action(world, commander->get_id(), 1));
+  ASSERT_TRUE(press_primary(controller, world, commander->get_id()));
 
   auto* combat_state = commander->get_component<Engine::Core::CombatStateComponent>();
   auto* action = commander->get_component<Engine::Core::RpgCommanderActionComponent>();
@@ -734,7 +776,7 @@ TEST_F(CommanderControlControllerTest,
   attack->melee_range = 2.2F;
 
   CommanderControlController controller;
-  ASSERT_TRUE(controller.primary_action(world, commander->get_id(), 1));
+  ASSERT_TRUE(press_primary(controller, world, commander->get_id()));
 
   auto* combat_state = commander->get_component<Engine::Core::CombatStateComponent>();
   auto* action = commander->get_component<Engine::Core::RpgCommanderActionComponent>();
@@ -770,7 +812,7 @@ TEST_F(CommanderControlControllerTest,
   attack->melee_range = 3.0F;
 
   CommanderControlController controller;
-  ASSERT_TRUE(controller.primary_action(world, commander->get_id(), 1));
+  ASSERT_TRUE(press_primary(controller, world, commander->get_id()));
 
   auto* combat_state = commander->get_component<Engine::Core::CombatStateComponent>();
   auto* action = commander->get_component<Engine::Core::RpgCommanderActionComponent>();
@@ -808,7 +850,7 @@ TEST_F(CommanderControlControllerTest, PrimaryActionUsesBowActionForRangedComman
   attack->damage = 12;
 
   CommanderControlController controller;
-  ASSERT_TRUE(controller.primary_action(world, commander->get_id(), 1));
+  ASSERT_TRUE(press_primary(controller, world, commander->get_id()));
 
   auto* combat_state = commander->get_component<Engine::Core::CombatStateComponent>();
   auto* action = commander->get_component<Engine::Core::RpgCommanderActionComponent>();
@@ -817,7 +859,8 @@ TEST_F(CommanderControlControllerTest, PrimaryActionUsesBowActionForRangedComman
 
   EXPECT_EQ(attack->current_mode, Engine::Core::AttackComponent::CombatMode::Ranged);
   EXPECT_EQ(combat_state->attack_family, Engine::Core::CombatAttackFamily::Bow);
-  EXPECT_EQ(action->active_target_id, enemy->get_id());
+  EXPECT_EQ(action->active_target_id, 0U)
+      << "a drawn bow aims down the view; it does not acquire a melee target";
   EXPECT_EQ(action->combat_action_id,
             static_cast<std::uint8_t>(
                 Game::Systems::CombatActions::CombatActionId::RpgBowShot));
@@ -840,7 +883,7 @@ TEST_F(CommanderControlControllerTest, PrimaryActionUsesDedicatedFinisherSwordSw
   attack->current_mode = Engine::Core::AttackComponent::CombatMode::Melee;
 
   CommanderControlController controller;
-  ASSERT_TRUE(controller.primary_action(world, commander->get_id(), 1));
+  ASSERT_TRUE(press_primary(controller, world, commander->get_id()));
 
   auto* combat_state = commander->get_component<Engine::Core::CombatStateComponent>();
   ASSERT_NE(combat_state, nullptr);

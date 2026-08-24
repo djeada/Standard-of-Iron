@@ -211,15 +211,22 @@ Relevant implementation areas:
 
 ## Agent execution rules
 
-- [ ] Create `docs/RPG_PLAYABILITY.md` from the product contract and gates below;
+The permanent contract now lives in [`docs/RPG_PLAYABILITY.md`](docs/RPG_PLAYABILITY.md):
+the product contract, how the gate is run, how a verdict is decided, and the
+2026-08-23 baseline audit. `todo.md` stays the live checklist.
+
+- [x] Create `docs/RPG_PLAYABILITY.md` from the product contract and gates below;
       keep `todo.md` as the live checklist and link the permanent document here.
-- [ ] Add `scripts/run-rpg-gates.sh` (and a `make rpg-gate` wrapper) that builds
+- [x] Add `scripts/run-rpg-gates.sh` (and a `make rpg-gate` wrapper) that builds
       required targets, runs unit/integration tests, then runs every required RPG
       Arena case **sequentially** into a fresh artifact directory.
-- [ ] Make the gate script print one compact table: scenario, completed, passed,
+- [x] Make the gate script print one compact table: scenario, completed, passed,
       issue codes, p50, p95, max, and artifact path; exit nonzero on any failure.
-- [ ] Save the initial sequential reports as the comparison baseline outside
+- [x] Save the initial sequential reports as the comparison baseline outside
       tracked source artifacts; record the commit and build type in `run_config`.
+      `make rpg-gate-baseline` writes `artifacts/rpg-gates/baseline` (gitignored);
+      commit, dirty flag and CMake build type are merged into every
+      `run_config.json` and into `gate_run.json`.
 - [ ] Every bug fix starts with a failing deterministic regression or a new Arena
       expectation that reproduces the defect as a time series.
 - [ ] Every behavior-changing commit names the gate it makes green and includes
@@ -239,101 +246,266 @@ the important data is absent.
 
 ### 0.1 Reproduce current failures in CI-capable form
 
-- [ ] Pin the five current failures as expected-red tests on a recovery branch:
+- [x] Pin the five current failures as expected-red tests on a recovery branch:
       close-quarters clearance, obstacle slide, planted-foot stability, deliberate
-      combo timing, and protected defense contact.
-- [ ] Add a manifest listing all required RPG scenarios so adding a new `rpg_*`
+      combo timing, and protected defense contact. All five are `expected_red` in
+      `tools/arena/rpg_gate_manifest.json` with the issue codes they fail with.
+- [x] Add a manifest listing all required RPG scenarios so adding a new `rpg_*`
       case without adding it to the gate fails a test.
-- [ ] Separate behavioral pass/fail from hardware performance reporting. CI can
+      `ArenaRpgGateManifestTest` compares manifest and registry in both directions.
+- [x] Separate behavioral pass/fail from hardware performance reporting. CI can
       enforce deterministic behavior; frame budgets run on named reference
-      hardware with prewarming.
-- [ ] Add a strict `completed == true` assertion so watchdog exits cannot produce
-      an empty-issue report that looks like a normal behavioral failure.
+      hardware with prewarming. `frame_budget_exceeded` and `performance_*` are
+      reported on every row and enforced only under `--enforce-performance`.
+      Prewarming is still owed; it belongs with the Gate 7 performance contract.
+- [x] Add a strict `completed == true` assertion so watchdog exits cannot produce
+      an empty-issue report that looks like a normal behavioral failure. A
+      watchdog exit reports as `TIMEOUT` and names the `timeout.txt` that proves
+      it; anything else incomplete reports as `INCOMPLETE`. Both exit 3.
+- [x] Build authored presentation-hitch injection so a hitch-only defect can be
+      reproduced on demand. `ArenaScenarioDefinition::presentation_hitches` lists
+      `{at_seconds, frame_ms}`; the batch loop substitutes that frame time for the
+      fixed step exactly once per entry. `rpg_locomotion_hitch` exercises it with
+      33/50/100/100 ms frames, confirmed in the trace. Gate 4's `rpg_camera_hitch`
+      builds on the same field.
+- [x] Make the rendered pose a deterministic function of the simulation at a
+      fixed step. **The renderer's animation clock was never reset when a batch
+      scenario started**, so it carried 74-116 ms of window-setup wall clock and
+      every run sampled every clip at a different phase. The simulation, the
+      motor and the camera rig were already bit-identical; only the pose moved.
+      `Renderer::reset_animation_time()` is now called at batch scenario load,
+      and the rendered pose is bit-identical across runs
+      (`submitted_max_arm_reach` and `submitted_body_up_y` differ in 0 of 540
+      frames, against 173-529 before).
+- [x] `rpg_locomotion` is `required_green` again and passes 15 of 15. Its
+      planted-foot slide was the sampling artefact above, not a motor defect.
+      This proves reproducibility, not that the Gate 3 locomotion contract holds:
+      gait is still selected from requested input rather than presented velocity.
+- [ ] `rpg_melee_contact` is now pinned `expected_red` on
+      `no_visible_hit_reaction`, owned by Gate 6. Removing the phase jitter turned
+      a coin flip into a stable failure: a struck enemy stays in `AttackSword`
+      through the whole contact window and goes straight to `Dying`, with 0 of
+      ~1900 enemy soldier samples in `HitReaction` against 17 before. The
+      commander's own reaction still shows for 72 samples, so the reaction path
+      works -- the victim's in-progress attack outranks it. The threshold was not
+      relaxed to keep the scenario green.
 
 ### 0.2 Add a presentation trace
 
-Add opt-in trace records (Arena diagnostics/profiling only) with a stable schema:
+Opt-in trace records (Arena diagnostics only) are emitted as a `commander` object
+on every `trace.jsonl` frame of an `rpg_*` scenario. `App::Core::CommanderPresentationTrace`
+is the schema; `ArenaViewport` enables it when it binds a scenario commander and
+the shipped application never does. Schema and first findings are in
+[`docs/RPG_PLAYABILITY.md`](docs/RPG_PLAYABILITY.md#the-presentation-trace).
 
-- [ ] Input: event sequence, press/release edge counters, sampled frame index,
+- [x] Input: event sequence, press/release edge counters, sampled frame index,
       simulation-consumed sequence, move axes, raw look delta, yaw, and pitch.
-- [ ] Motor: authoritative previous/current pose, presented pose, desired and
-      actual velocity, grounded state, ground normal, collision normal/id/type,
-      sweep fraction, depenetration distance, and displacement source
-      (walk/dodge/root-motion/body-push/teleport).
-- [ ] Animation: selected gait/action, phase, root offset, each planted foot's
-      world position, and transition count.
-- [ ] Camera: pivot, unconstrained eye/target, resolved eye/target, boom length,
-      collision id/type/normal, clearance, framing state, yaw/pitch velocity,
-      and the commander's screen-space anchor.
-- [ ] Combat: consumed input sequence, queue result/reason, action id and phase,
-      authored window, trace start/end, contact target/slot/time, damage result,
-      guard result, i-frame result, stamina/posture delta, and hit reaction.
-- [ ] Frame pacing: presented-frame dt, simulation ticks consumed, snapshot age,
-      interpolation alpha, CPU frame time, GPU frame time, and shader/asset
-      prewarm state.
+      Consumption, drop and refusal are counted separately per verb, so an edge
+      that reaches no consumer is a number rather than a missing swing.
+- [x] Motor: authoritative previous/current pose, desired and actual velocity,
+      grounded state, blocked/slid flags, separation push, lunge distance,
+      snap-back distance, and displacement source
+      (walk/airborne/dodge-roll/dodge-recover/strike-lunge/body-separation/jump-recovery).
+- [x] Motor: presented pose. Unblocked by Gate 1.2 -- `presented_position`,
+      `presented_yaw`, `presentation_alpha` and `presentation_extrapolated` ride
+      the motor trace beside the authoritative pose.
+- [ ] Motor, still owed: ground normal, collision normal/id/type, sweep fraction
+      and depenetration distance. Those are outputs of the swept collider Gate
+      2.2 builds; today's collision is a point/grid test with no normals to
+      report.
+- [x] Animation: already carried by the existing `soldiers` array -- selected
+      animation and visual state, attack phase, transition count, and each
+      planted foot's world position. Not duplicated into the commander record.
+- [x] Camera: pivot, unconstrained eye/target, resolved eye/target, boom length
+      before and after collision, blocked fraction, occlusion fraction, terrain
+      lift, framing state and change, yaw/pitch and their velocities.
+- [x] Camera clearance: `eye_clearance` on every traced frame, signed, negative
+      when the eye is inside a building body.
+- [ ] Camera, still owed: collision id/type/normal (needs the volume query from
+      Gate 4.2), and the commander's screen-space anchor.
+- [x] Combat: action phase and normalized time, queued intent count, guard and
+      perfect-guard state, dodge state/timer/grace, locked and soft target
+      ids/slots, hit-confirm sequence, hit count, health, and stamina.
+- [ ] Combat, still owed: queue result/reason, authored window bounds, weapon
+      trace start/end, contact time, damage result, guard result, i-frame result,
+      and hit reaction. These arrive with the Gate 5 action timeline.
+- [x] Frame pacing: presented-frame dt and CPU/GPU frame time are already on each
+      trace frame (`frame_time_ms`, the `cpu_ms`/`gpu_ms` breakdowns).
+- [x] Frame pacing: interpolation alpha. `presentation_alpha` is on every
+      commander frame, along with whether the pose was extrapolated.
+- [ ] Frame pacing, still owed: simulation ticks consumed, snapshot age and
+      prewarm state. Prewarm belongs with Gate 7.1.
 
 ### 0.3 Add metric expectations, not screenshot-only checks
 
-- [ ] Implement reusable Arena expectations for maximum camera penetration,
-      minimum camera clearance, camera boom discontinuity, uncommanded angular
-      motion, screen-space anchor jitter, presentation-pose disagreement, motor
-      correction, speed discontinuity, contact multiplicity, and input-edge
-      consumption.
-- [ ] Keep captures for human review, but never accept a camera/movement repair
-      because two sparse screenshots look plausible.
+Six reusable expectation kinds now read the commander trace. Every `rpg_*`
+scenario gets the input-edge, boom-continuity and motor-correction ones
+automatically (`add_commander_control_metrics`, applied in `definitions()` to any
+scenario with `rpg_mode`). Each is unit-tested from a synthetic trace in
+`ArenaCommanderMetricsTest`, so the metric is proved to fire before it is
+trusted on a scenario.
+
+- [x] `CommanderBoomIsContinuous` -- `commander_boom_discontinuity` when the boom
+      _extends_ more than the allowance in one frame, and `commander_boom_pumping`
+      when it reverses direction repeatedly under one live obstruction. Immediate
+      retraction is deliberately allowed: Gate 4.2 requires it to prevent
+      penetration, so gating it would forbid the correct behaviour. The first
+      draft did gate it and fired on `rpg_close_quarters`' scripted 180-degree
+      yaw snap; that was the metric being wrong, not the camera.
+- [x] `NoUncommandedViewRotation` -- yaw/pitch that moves with no look delta, no
+      framing change, and no active lock.
+- [x] `CommanderMotorCorrectionWithin` -- per-tick separation push and jump
+      snap-back against a budget, named with the displacement source.
+- [x] `CommanderSpeedIsContinuous` -- planar speed change per tick expressed as
+      acceleration.
+- [x] `CommanderInputEdgesAllConsumed` -- presses must equal consumed plus
+      dropped, dropped must stay within budget, and dodge requests must resolve
+      to consumed or refused. An empty trace reports
+      `commander_input_not_traced` rather than passing silently.
+- [x] `CommanderContactCountAtMost` -- contact multiplicity per running action.
+- [x] Maximum camera penetration and minimum camera clearance. Unblocked early
+      by the Gate 2 person-scale geometry: `nearest_building_body_clearance()`
+      returns a signed horizontal distance to the nearest building body, the
+      camera trace carries it as `eye_clearance`, and
+      `CommanderCameraClearanceAtLeast` is attached to every `rpg_mode`
+      scenario. It found a real defect on its first run -- see
+      `rpg_close_quarters`. Still owed with the Gate 4.2 volume query: the
+      contact id, type and normal, which a distance function cannot report.
+- [x] Presentation-pose disagreement. `CommanderPresentedPoseAgrees` compares
+      the point the camera framed against the body that was drawn, on every
+      `rpg_mode` scenario, at 0.01 m. It found a real defect immediately: the two
+      agree to **0.0000 m** in all ten scenarios that never swing a weapon, and
+      diverge by a constant **0.2144 m** in the five melee ones -- the same value
+      in four of them, so a fixed engagement offset rather than jitter. That is
+      Gate 3's clip-root-versus-world-root item, now with a number.
+- [ ] Screen-space anchor jitter. Still needs a projection; the pose half is
+      covered by the metric above, which is stricter than a pixel budget.
+- [x] Keep captures for human review, but never accept a camera/movement repair
+      because two sparse screenshots look plausible. The gate defaults to
+      `--capture-interval 0`; captures are opt-in and never decide a verdict.
 
 **Gate 0 passes when:** the gate command reliably reports the current five
 failures, traces contain enough data to identify the responsible stage, repeated
 runs produce the same behavioral verdict, and a watchdog/incomplete run is
 unambiguously red.
 
+Status: **green.** Every pinned failure reproduces on every run with its issue
+codes recorded; the trace identifies the responsible stage for each; identical
+repeats give an identical verdict, including the rendered pose; and an incomplete
+or watchdog run reports as `INCOMPLETE` or `TIMEOUT` and always exits nonzero.
+
+The last open item closed by fixing the harness rather than the thresholds:
+resetting the renderer's animation clock at batch scenario start made the
+rendered pose reproducible, which turned one intermittent failure into a pass
+(`rpg_locomotion`) and one intermittent pass into a stable pinned failure
+(`rpg_melee_contact`). Two metric expectations from 0.3 remain unimplemented and
+are named in place rather than skipped; both need data that later gates produce.
+
 ## Gate 1: one authoritative input and presentation path
 
 ### 1.1 Input ownership
 
-- [ ] Remove the direct world attack call from
+- [x] Remove the direct world attack call from
       `CommanderViewModel::primary_action_down()`. The GUI layer only records an
       input edge; simulation is the sole action consumer.
-- [ ] Replace one-frame booleans for dodge/jump/attack presses with monotonic edge
+      `CommanderControlController::primary_action` is now private, so the GUI
+      cannot reach it again; `release_guard` had the same shape on the guard
+      release and is deleted. Reproduced first by
+      `CommanderViewModelInputTest.APressAloneDoesNotReachTheWorld` and
+      `ReleasingGuardDoesNotWriteTheWorldOutsideATick`.
+- [x] Replace one-frame booleans for dodge/jump/attack presses with monotonic edge
       sequence numbers or a bounded event queue so press+release between ticks is
-      not lost.
-- [ ] Make `CommanderFrameIntent` (or a renamed `CommanderInputSnapshot`) the
+      not lost. The sequence numbers landed with the Gate 0.2 trace; what was
+      still missing is that every edge resolves. The flag-rally branch cleared
+      four pending presses with no accounting, and `reset()` left
+      `m_primary_press_pending` set, so a queued press survived mode exit and
+      fired on re-entry. `take_input_snapshot()` and `discard_input_edges()` now own both.
+- [x] Make `CommanderFrameIntent` (or a renamed `CommanderInputSnapshot`) the
       authoritative render-to-simulation packet. Consume each edge exactly once;
-      copy held state every tick.
-- [ ] Keep raw mouse accumulation on the presentation path so camera response is
+      copy held state every tick. `CommanderFrameIntent` turned out to have no
+      production consumer at all -- an unused mirror -- while the tick read the
+      same `InputState` the GUI thread was writing. `CommanderInputSnapshot` is
+      the packet now: `take_input_snapshot()` copies held state and _moves_ the
+      six edge latches out under `m_input_mutex`, so exactly one tick can see a
+      press, and every simulation-side read goes through `m_tick_input`. A press
+      the body could not act on is carried explicitly rather than surviving by
+      accident in shared state.
+- [x] Keep raw mouse accumulation on the presentation path so camera response is
       not delayed by the simulation tick. Publish the resulting view angles to
       simulation as intent; never have simulation and presentation both integrate
-      the same raw delta.
-- [ ] Reset all held inputs and edge queues on focus loss, mouse-capture loss,
+      the same raw delta. Already true and already pinned:
+      `sample_frame_intent` calls `poll_mouse_look` from
+      `GameEngine`'s presented frame, the simulation tick reads the resulting
+      angles and never a raw delta, `CommanderControlRegressionTest` asserts
+      `update_control_mode` does not poll, and
+      `MouseLookChangesPresentedCameraWithinOneRenderedFrame` measures the
+      budget at 30, 60, 120 and 144 Hz.
+- [x] Reset all held inputs and edge queues on focus loss, mouse-capture loss,
       menu open, mode exit, commander death, loading, and window deactivation.
-- [ ] Remove the second interactive input implementation in the Arena or route it
-      through the same input packet API as the shipped application.
+      `release_all_input()` is the single entry point. `CommanderInputLayer.qml`
+      called it from nowhere: `release_actions()` released the two mouse buttons
+      and dropped its `held_keys` map on the floor without a matching `key_up`,
+      so the commander kept walking after focus loss, and nothing at all watched
+      the window's `active` or `menu_visible`. Both are wired now.
+- [x] Remove the second interactive input implementation in the Arena or route it
+      through the same input packet API as the shipped application. Routed: the
+      scripted `rpg_primary_attack` hook pressed the world directly and is now a
+      real press edge held for three ticks, the two raw `InputState{}` wipes on
+      focus-out and interactive exit go through `release_all_input()`, and
+      `set_rpg_move_input` drives `key_down`/`key_up` instead of assigning the
+      movement booleans behind the input mutex's back.
 
 ### 1.2 Shared presented commander pose
 
-- [ ] Store previous/current authoritative commander pose plus tick timestamps in
-      the render snapshot.
-- [ ] Resolve one `CommanderPresentationPose` per rendered frame from those
+- [x] Store previous/current authoritative commander pose plus tick timestamps in
+      the render snapshot. `CommanderPresentationSampleComponent` carries
+      previous/current position and yaw, the tick duration and a tick sequence
+      number, and rides `copy_presentation_snapshot_components` into the
+      snapshot. It is commander-owned rather than reusing
+      `MotionPresentationComponent`, because `begin_motion_presentation_frame`
+      latches its `previous_*` at the top of `World::update`, which the
+      commander tick has already run before -- so for the commander that pair
+      brackets nothing.
+- [x] Resolve one `CommanderPresentationPose` per rendered frame from those
       samples and the simulation clock. Feed that exact pose to both humanoid
-      submission and `CommanderCameraRig`.
-- [ ] Use interpolation under normal cadence and tightly bounded extrapolation
+      submission and `CommanderCameraRig`. One `resolve_presentation_pose()` in
+      `game/core/component.h` serves both: the controller calls it for
+      `inputs.commander_position`, and `UnitRenderCache::update_model_matrix`
+      calls it for the body. Both age their own copy from the shared tick
+      sequence, so they cannot disagree.
+- [x] Use interpolation under normal cadence and tightly bounded extrapolation
       only when the next 60 Hz snapshot is late. Never extrapolate combat contact
-      or feed a presentation pose back into simulation.
-- [ ] Snap/reset interpolation for explicit teleports, spawn, load, mode entry,
-      death, and corrections tagged above the teleport threshold.
-- [ ] Remove the camera's independent chase of the raw simulation transform once
+      or feed a presentation pose back into simulation. Extrapolation is capped
+      at half a tick and is only reachable when the presented frame is _shorter_
+      than the tick; rendering slower than the simulation clamps to the newest
+      sample instead of overshooting. Nothing reads the presented pose back:
+      simulation, collision and contact all still use `TransformComponent`.
+- [x] Snap/reset interpolation for explicit teleports, spawn, load, mode entry,
+      death, and corrections tagged above the teleport threshold. A step over
+      2 m sets `snap`, and `reset()` -- which mode entry, mode exit, focus loss
+      and commander death all go through -- requests one for the next tick.
+- [x] Remove the camera's independent chase of the raw simulation transform once
       the shared presentation pose exists.
 
 ### 1.3 Input/presentation tests
 
-- [ ] `OnePhysicalAttackPressProducesOneConsumedAttackEdge`.
-- [ ] `PressAndReleaseBetweenSimulationTicksIsConsumedOnce`.
-- [ ] `FocusLossClearsEveryHeldCommanderAction`.
-- [ ] `MouseLookChangesPresentedCameraWithinOneRenderedFrame` at 30/60/120/144
+- [x] `OnePhysicalAttackPressProducesOneConsumedAttackEdge`.
+- [x] `PressAndReleaseBetweenSimulationTicksIsConsumedOnce`.
+- [x] `FocusLossClearsEveryHeldCommanderAction`. The C++ half pins the contract;
+      the QML half that calls it is pinned by
+      `CommanderInputLayerReleasesEveryHeldInputAtOnce`, because no gtest can
+      reach a `Connections` block.
+- [x] `MouseLookChangesPresentedCameraWithinOneRenderedFrame` at 30/60/120/144
       presentation Hz over a 60 Hz simulation.
-- [ ] `BodyAndCameraUseTheSameInterpolatedAnchor` with a screen-space residual
-      below 1.5 px at 1920x1080 during steady straight travel.
-- [ ] `PresentationPoseIsFrameRateInvariant`: after the same scripted second,
+- [x] `BodyAndCameraUseTheSameInterpolatedAnchor` with a screen-space residual
+      below 1.5 px at 1920x1080 during steady straight travel. Landed as an
+      exact-agreement pair instead of a pixel budget, which is stricter and does
+      not need a projection: `TheCameraFramesThePresentedPoseNotTheRawTransform`
+      pins the camera to the resolved pose, and
+      `ModelMatrixFollowsTheCommanderPresentationPose` pins the body to the same
+      resolver. The arena confirms it end to end -- camera anchor against
+      rendered root is 0.000000 m across all 540 frames of `rpg_locomotion`.
+- [x] `PresentationPoseIsFrameRateInvariant`: after the same scripted second,
       30/60/120/144 Hz presented positions agree within 0.03 m and yaw within
       0.25 degrees.
 
@@ -341,6 +513,32 @@ unambiguously red.
 camera look responds within one presented frame, movement/action response occurs
 within one simulation tick, and the rendered body no longer steps relative to
 its camera anchor.
+
+**Status: green.** All four clauses hold and each is pinned by a test that fails
+without its fix.
+
+- One producer, one consumer. `primary_action` is private, the GUI's two direct
+  world writes are gone, and `take_input_snapshot()` moves each edge out of the
+  producer under a mutex so exactly one tick can see it. Every discard is
+  counted: `CommanderInputEdgesAllConsumed` is attached to all twelve `rpg_*`
+  scenarios and the gate reports every scripted press consumed once, zero
+  dropped.
+- Camera look within one presented frame:
+  `MouseLookChangesPresentedCameraWithinOneRenderedFrame` at 30, 60, 120 and
+  144 Hz over a 60 Hz simulation.
+- Movement and action within one simulation tick:
+  `LocomotionInputIsHonouredWithinOneSimulationTick` and
+  `AttackStartsWithinTheDirectControlBudget`, plus
+  `AHeldPressSurvivesTicksTheBodyCannotAct` for the case where the body refuses.
+- Body and camera anchor: both resolve the same
+  `CommanderPresentationSampleComponent` through one
+  `resolve_presentation_pose()`. The arena measures camera anchor against
+  rendered root at 0.000000 m over all 540 frames of `rpg_locomotion`.
+
+The one deliberate trade recorded here: the presented pose now lags the
+authoritative one by up to a tick, because it interpolates rather than
+extrapolates. Body and camera pay it together, which is the point; simulation,
+collision and contact are untouched.
 
 ## Gate 2: extract and repair the commander motor
 
@@ -350,34 +548,78 @@ and action requests, not solve geometry.
 
 ### 2.1 Motor contract
 
-- [ ] Define a motor input: desired planar direction/speed, facing mode, root
+- [x] Define a motor input: desired planar direction/speed, facing mode, root
       motion request, dodge request, vertical state, and fixed `dt`.
-- [ ] Define a motor output: authoritative pose, actual velocity, grounded state,
+      `CommanderMotorRequest` carries from/to, the named displacement source, an
+      airborne flag and `dt`. Facing is not in it: the body yaw contract lives in
+      the controller because it depends on combat state, and putting it in the
+      motor would have made the motor a combat consumer.
+- [x] Define a motor output: authoritative pose, actual velocity, grounded state,
       collision contacts, accepted root motion, and explicit correction/teleport
-      flags.
-- [ ] Route walk, run, backpedal, strafe, dodge, strike root motion, ability root
-      motion, body separation, and landing through the motor.
-- [ ] Normalize diagonal input before speed selection.
-- [ ] Use acceleration/deceleration profiles with deterministic time constants;
+      flags. `CommanderMotorResult` returns position, velocity, moved, blocked,
+      slid and the source. Contact ids and normals are still owed -- the
+      underlying query is a walkability point test, which has no contact to
+      report.
+- [x] Route walk, run, backpedal, strafe, dodge, strike root motion, ability root
+      motion, body separation, and landing through the motor. All seven writers
+      go through `CommanderMotor::advance()` or `::teleport()`, and
+      `OnlyTheMotorTranslatesTheCommander` fails if the controller ever assigns
+      `transform->position.x/z` again.
+- [x] Normalize diagonal input before speed selection. Already true, and now
+      measured: `DiagonalTravelMatchesStraightTravel` holds settled diagonal
+      speed within 1% of straight-ahead.
+- [x] Use acceleration/deceleration profiles with deterministic time constants;
       preserve responsive first motion while eliminating instant full-speed and
-      instant direction reversal.
+      instant direction reversal. Already true: the 12/16 s^-1 accel/decel pair
+      uses the `1 - exp(-rate * dt)` form, which is rate-invariant.
+      `TheSamePathIsWalkedAtEverySimulationRate` measures it at 30/60/120 Hz
+      and `SettledSpeedMatchesTheConfiguredSpeed` pins the settled speed to 2%.
 - [ ] Free mode: rotate the body toward desired movement, independently of camera
       yaw. Locked mode: face the locked target and use radial/tangential movement.
-- [ ] Add turn-in-place thresholds so looking around while idle does not spin the
-      body every tick.
+- [x] Add turn-in-place thresholds so looking around while idle does not spin the
+      body every tick. The body used to be assigned `m_view_yaw` unconditionally,
+      so it followed the camera one to one: a 108 degree look swept the body 108
+      degrees on the spot. An idle body now holds its facing until the view is
+      50 degrees away, then follows at 260 deg/s; travel turns at 900 deg/s,
+      which stays under the 70 degree pelvis-snap ceiling the Arena watches. An
+      attack, guard, dodge, jump, bow draw or lock-on still snaps the body to the
+      view, so a swing lands where the player is looking --
+      `AnAttackFacesTheViewImmediately` pins that.
 
 ### 2.2 Person-scale collision and grounding
 
-- [ ] Replace destination point/grid rejection with a swept circle/capsule against
+- [x] Replace destination point/grid rejection with a swept circle/capsule against
       exact person-scale collision geometry. The nav grid may be a broad phase or
-      out-of-bounds test; it is not the final body collider.
+      out-of-bounds test; it is not the final body collider. Done for structures,
+      which is where both red scenarios lived: `BuildingCollisionRegistry` now
+      carries a second, person-scale extent per building type taken from the
+      drawn mesh, and every person-scale query -- the commander's body
+      collision, the camera's obstruction ray, bow aim and melee line of sight --
+      uses it. The navigation footprint and its grid padding are untouched, so
+      RTS formations keep their spacing. The swept capsule itself is still owed;
+      what is there is an exact rectangle test at the destination.
 - [ ] Give collision queries stable surface ids, normals, vertical bounds, and
       material/type. Include registered buildings, authored obstacles, gates,
       trees/boulders/ore that block a body, terrain edges, and map bounds.
 - [ ] Perform conservative advancement/substeps for large `dt`, dodge, and root
-      motion so no displacement tunnels through thin geometry.
+      motion so no displacement tunnels through thin geometry. **Tried to
+      reproduce and could not.** `NoDisplacementTunnelsThroughAThinWall` and
+      `ADodgeDoesNotTunnelThroughAThinWall` drive a walk and a dodge into a
+      one-cell wall on 250 ms frames -- four times the worst hitch the Arena can
+      author -- and nothing crosses. The reason is arithmetic: a 1 m nav cell
+      plus a 0.34 m body radius against a 0.94 m walk step, and a dodge whose
+      `roll_dt` is clamped to the remaining roll timer. This stays open rather
+      than done, because the tests only prove today's numbers; leave them in
+      place and re-check if body radius, cell size or dodge speed move.
 - [ ] Project remaining velocity onto the contact plane for continuous wall slide;
-      solve corners iteratively with a fixed deterministic contact order.
+      solve corners iteratively with a fixed deterministic contact order. Partly
+      there and worth knowing why it has not bitten: every collision surface in
+      the game today is axis aligned -- nav cells, and building bodies stored as
+      world-axis rectangles even when the building is rotated -- so
+      `resolve_ground_step`'s axis-aligned slide is exact for all of them.
+      `AWallDoesNotResetTheWholeMotor` measures a real slide along one.
+      A contact-plane projection is what a non-axis-aligned collider would need,
+      and there is not one yet.
 - [ ] Use a small skin width and bounded depenetration. Never zero all velocity
       because one axis is blocked.
 - [ ] Add stable ground sampling, slope limit, ground snap, crest handling, and a
@@ -397,11 +639,20 @@ where supported; compare authoritative results, not wall-clock timing:
 - [ ] `rpg_motor_start_stop`: walk/run starts, stops, and rapid reversals.
 - [ ] `rpg_motor_diagonal`: all eight input directions; diagonal speed error <= 1%.
 - [ ] `rpg_motor_figure_eight`: continuous camera-relative direction changes.
-- [ ] Repair `rpg_close_quarters`: reach the authored 1.90 m envelope with zero
-      penetration and no visual-state oscillation.
-- [ ] Repair `rpg_obstacle_slide`: maintain contact clearance while travelling at
+- [x] Repair `rpg_close_quarters`: reach the authored 1.90 m envelope with zero
+      penetration and no visual-state oscillation. Green. The cause was not the
+      motor: `home` registers a 4.3 x 4.4 m navigation footprint for a building
+      drawn 2.36 x 2.42 m, so the commander was stopped 2.54 m from a facade he
+      was asked to reach at 1.90 m. The 1.90 m envelope was unreachable, not
+      missed. `pose_oscillation` went with it -- the visual state was flipping
+      because the commander was walking into an invisible wall.
+- [x] Repair `rpg_obstacle_slide`: maintain contact clearance while travelling at
       least the existing 1.50 m along the facade; no zero-speed pulses longer
-      than one simulation tick while valid tangential input is held.
+      than one simulation tick while valid tangential input is held. Green from
+      the same fix. Worth noting for whoever picks up the swept-capsule work:
+      `motor.slid` was zero in both scenarios and stayed zero, because neither
+      was ever a slide failure -- the commander was walking head-on into a
+      collider that was not where it appeared to be.
 - [ ] `rpg_motor_corner`: enter/leave convex and concave corners without sticking,
       tunneling, alternating normals, or correction oscillation.
 - [ ] `rpg_motor_slope_and_crest`: uphill/downhill/sidehill/crest traversal with no
@@ -418,27 +669,82 @@ where supported; compare authoritative results, not wall-clock timing:
 clearance/slide failures are green, fixed inputs produce frame-rate-invariant
 paths, and collision traces contain no penetration or unexplained correction.
 
+**Status: all four clauses hold; the section is not finished.**
+
+- All seven writers of commander translation go through `CommanderMotor`, and
+  `OnlyTheMotorTranslatesTheCommander` fails if the controller assigns
+  `transform->position.x/z` again.
+- Both clearance/slide scenarios pass their Gate 2 expectations.
+  `rpg_close_quarters` is pinned red again against **gate 4**: fixing the
+  clearance let the commander reach a wall for the first time, and the camera
+  eye turns out to end up 0.339 m inside the house at the 180 degree yaw snap.
+  Its Gate 2 clause is fixed and stays fixed.
+- Frame-rate-invariant paths: `TheSamePathIsWalkedAtEverySimulationRate` at
+  30/60/120 Hz, within 0.03 m.
+- No penetration or unexplained correction: `CommanderMotorCorrectionWithin`
+  (0.08 m) rides all twelve scenarios and is green in every one.
+
+What is still owed here, and should not be mistaken for done: ground sampling,
+slope limit and the step-up/step-down contract; the synthetic jump; contact ids
+and normals; and the six `rpg_motor_*` scenarios. The three tunnelling and
+slide items above are annotated with what was measured rather than ticked.
+
 ## Gate 3: locomotion quality and pose agreement
 
-- [ ] Drive gait blend, phase rate, and footstep timing from the motor's **actual
-      presented velocity**, not requested input or a fallback unit speed.
-- [ ] Maintain phase continuity through idle/walk/run/backpedal/strafe transitions.
+- [x] Drive gait blend, phase rate, and footstep timing from the motor's **actual
+      presented velocity**, not requested input or a fallback unit speed. The
+      commander now publishes `fpv_motion_requested` from the motor's own state
+      -- requested speed or a smoothed speed still above the idle floor -- so a
+      coasting body keeps its gait instead of flipping to Idle the moment the
+      achieved velocity chatters against an obstacle.
+- [x] Maintain phase continuity through idle/walk/run/backpedal/strafe transitions.
+      The gait was being advanced **twice per frame** -- a second prepare pass
+      re-ran the fade with an uninitialised `previous`, wiping the first pass's
+      result. A locomotion sample whose `sample_time` has not advanced no longer
+      writes persistent state, so preparing a frame twice is a no-op. Presence
+      now fades 0.8703 -> 0.7575 -> 0.6592 instead of collapsing to zero, and
+      the 0.23 m foot snap at a stop is gone.
 - [ ] Add directional locomotion for lock-on strafing/backpedal; do not play a
       forward gait while translating sideways or backward.
 - [ ] Add turn-in-place and moving-turn pose contracts for the free/locked facing
       rules from Gate 2.
-- [ ] Ensure collision-rejected movement decelerates the gait instead of flipping
-      walk/idle every tick.
-- [ ] Feed accepted combat root motion to animation and motor from one authored
-      curve; the clip root and world root may not independently lunge.
+- [x] Ensure collision-rejected movement decelerates the gait instead of flipping
+      walk/idle every tick. `rpg_close_quarters` was flipping visual state five
+      times in one second while coasting into a wall: each frame the step was
+      alternately blocked and not, so the reported velocity chattered between
+      zero and non-zero. It reports one transition on entry and one on exit now,
+      and the scenario is green.
+- [x] Feed accepted combat root motion to animation and motor from one authored
+      curve; the clip root and world root may not independently lunge. They were
+      doing exactly that: the motor lunged the commander while the renderer
+      applied its own `resolve_combat_root_motion` world offset -- melee lunge
+      and hit-reaction stumble -- on top, leaving the drawn body up to 0.2144 m
+      from the point the camera framed. For a simulation-owned body the renderer
+      keeps the pose half (lean, pitch, squash) and drops the translation.
+      `CommanderPresentedPoseAgrees` holds the two to 0.01 m.
 - [ ] Repair `rpg_locomotion` and lower the flat-ground planted-foot slide ceiling
       to <= 0.025 m per presented frame after transition settling.
-- [ ] During steady held input, allow at most one locomotion-state transition on
-      entry and one on exit; never five changes in one second.
+      `rpg_locomotion` itself is green; `rpg_motor_start_stop` is the remaining
+      red and it is one measured fact away from a cause. See
+      docs/RPG_PLAYABILITY.md: the gait's persistent state arrives at the solver
+      holding the **default** value, not a stale one, on the frame after a
+      Walk/Idle transition -- so a fresh component is reaching it. Six code
+      hypotheses have been tried and reverted; the ceiling should not be lowered
+      until that is understood.
+- [x] During steady held input, allow at most one locomotion-state transition on
+      entry and one on exit; never five changes in one second. Pinned by
+      `pose_oscillation` on every `rpg_mode` scenario, green in all of them.
 - [ ] Add rendered tests for start/stop, 180-degree reversal, eight-way lock-on,
       wall contact, slope, dodge exit, attack exit, and low-stamina run exit.
-- [ ] Compare visual root to shared presented pose every frame; unexplained
+- [x] Compare visual root to shared presented pose every frame; unexplained
       position error <= 0.02 m and yaw error <= 0.5 degrees.
+      `CommanderPresentedPoseAgrees` enforces both on all fifteen scenarios, at
+      0.01 m -- twice as tight as asked -- and 0.5 degrees. The yaw half caught
+      an ordering bug in Gate 1.2's own code the moment it was switched on: the
+      presentation sample was published before the tick wrote the body yaw, so
+      the presented pose reported the previous tick's facing. Under a
+      max-rate turn that is exactly 900 deg/s over 60 Hz -- the reported error
+      was 15.000 degrees in four scenarios, to three decimal places.
 
 **Gate 3 passes when:** the commander never skates, shuffles in the wrong
 direction, pops between idle/walk, or disagrees with the motor in any mandatory

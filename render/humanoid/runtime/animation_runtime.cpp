@@ -1,5 +1,6 @@
 #include <algorithm>
 #include <cmath>
+#include <cstdint>
 
 #include "animation/locomotion_manifest.h"
 #include "animation/micro_variation_manifest.h"
@@ -179,7 +180,7 @@ auto build_humanoid_locomotion_state(const HumanoidLocomotionInputs& inputs)
   state.locomotion_velocity = inputs.locomotion_direction * inputs.move_speed;
   state.movement_target = inputs.movement_target;
 
-  state.gait.state = gait_state;
+  state.gait.state = sample.state;
   state.gait.speed = state.move_speed;
   state.gait.velocity = state.locomotion_velocity;
   state.gait.has_target = state.has_movement_target;
@@ -191,6 +192,8 @@ auto build_humanoid_locomotion_state(const HumanoidLocomotionInputs& inputs)
   state.gait.locomotion_blend = sample.locomotion_blend;
   state.gait.run_blend = sample.run_blend;
   state.gait.locomotion_presence = sample.locomotion_presence;
+  state.gait.persistent_valid = sample.previous_seen_initialized;
+  state.gait.persistent_last_sample_time = sample.previous_seen_presence;
   state.gait.run_presence = sample.run_presence;
   state.gait.turn_amount = sample.turn_amount;
   state.gait.travel_alignment = sample.travel_alignment;

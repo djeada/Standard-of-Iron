@@ -120,4 +120,64 @@ TEST_F(UnitRenderCacheTest, RefreshesRendererKeyAndInvalidatesHandleWhenInputsCh
   EXPECT_FALSE(second.has_renderer_handle);
 }
 
+TEST_F(UnitRenderCacheTest, ModelMatrixFollowsTheCommanderPresentationPose) {
+  Render::UnitRenderCache cache;
+
+  Engine::Core::StandaloneEntity entity_scratch(41);
+  Engine::Core::Entity& entity = entity_scratch.entity();
+  entity.add_component<Engine::Core::RenderableComponent>();
+  entity.add_component<Engine::Core::UnitComponent>(100, 100, 0.0F, 0.0F);
+  auto* transform =
+      entity.add_component<Engine::Core::TransformComponent>(0.0F, 0.0F, 4.0F);
+  ASSERT_NE(transform, nullptr);
+
+  auto* sample =
+      entity.add_component<Engine::Core::CommanderPresentationSampleComponent>();
+  ASSERT_NE(sample, nullptr);
+  sample->valid = true;
+  sample->snap = false;
+  sample->tick_sequence = 7;
+  sample->tick_seconds = 1.0F / 60.0F;
+  sample->previous_position = {0.0F, 0.0F, 3.0F};
+  sample->position = {0.0F, 0.0F, 4.0F};
+
+  auto& cached = cache.get_or_create(world_view, 41, &entity, 1);
+  ASSERT_NE(cached.presentation, nullptr);
+
+  constexpr float k_quarter = (1.0F / 60.0F) * 0.25F;
+  ASSERT_TRUE(Render::UnitRenderCache::update_model_matrix(cached, k_quarter));
+  EXPECT_NEAR(cached.model_matrix.column(3).z(), 3.25F, 1.0e-4F)
+      << "a quarter of a tick in, the body must sit a quarter of the way along";
+
+  ASSERT_TRUE(Render::UnitRenderCache::update_model_matrix(cached, k_quarter * 3.0F));
+  EXPECT_NEAR(cached.model_matrix.column(3).z(), 4.0F, 1.0e-4F)
+      << "a whole tick in, the body must sit on the authoritative sample";
+}
+
+TEST_F(UnitRenderCacheTest, ASnappedPresentationSampleIsNotInterpolated) {
+  Render::UnitRenderCache cache;
+
+  Engine::Core::StandaloneEntity entity_scratch(42);
+  Engine::Core::Entity& entity = entity_scratch.entity();
+  entity.add_component<Engine::Core::RenderableComponent>();
+  entity.add_component<Engine::Core::UnitComponent>(100, 100, 0.0F, 0.0F);
+  entity.add_component<Engine::Core::TransformComponent>(0.0F, 0.0F, 40.0F);
+
+  auto* sample =
+      entity.add_component<Engine::Core::CommanderPresentationSampleComponent>();
+  ASSERT_NE(sample, nullptr);
+  sample->valid = true;
+  sample->snap = true;
+  sample->tick_sequence = 3;
+  sample->tick_seconds = 1.0F / 60.0F;
+  sample->previous_position = {0.0F, 0.0F, 0.0F};
+  sample->position = {0.0F, 0.0F, 40.0F};
+
+  auto& cached = cache.get_or_create(world_view, 42, &entity, 1);
+  ASSERT_TRUE(
+      Render::UnitRenderCache::update_model_matrix(cached, (1.0F / 60.0F) * 0.25F));
+  EXPECT_NEAR(cached.model_matrix.column(3).z(), 40.0F, 1.0e-4F)
+      << "a teleport must not be smeared across the screen";
+}
+
 } // namespace
