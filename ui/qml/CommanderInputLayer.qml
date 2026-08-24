@@ -27,10 +27,8 @@ Item {
     function release_actions() {
         if (root.commander === null)
             return;
-        if (root.commander.primary_action_up)
-            root.commander.primary_action_up();
-        if (root.commander.secondary_action_up)
-            root.commander.secondary_action_up();
+        if (root.commander.release_input)
+            root.commander.release_input();
         root.held_keys = ({});
     }
 
@@ -180,6 +178,20 @@ Item {
         } else {
             release_actions();
         }
+    }
+
+    Connections {
+        function onActiveChanged() {
+            if (root.mainWindowRef && !root.mainWindowRef.active)
+                root.release_actions();
+        }
+
+        function onMenu_visibleChanged() {
+            if (root.mainWindowRef && root.mainWindowRef.menu_visible)
+                root.release_actions();
+        }
+
+        target: root.mainWindowRef
     }
 
     MouseArea {

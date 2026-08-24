@@ -140,8 +140,13 @@ auto resolve_combat_root_motion(const CombatRootMotionInputs& inputs) noexcept
       inputs.phase != CombatTransactionPhase::None &&
       inputs.phase != CombatTransactionPhase::ExitBlend) {
     float const p = clamp01(inputs.attack_phase);
-    sample.forward_offset = melee_lunge_offset(
-        inputs.attack_family, p, inputs.swing_outcome, inputs.formation_member);
+
+    sample.forward_offset = inputs.simulation_owns_lunge
+                                ? 0.0F
+                                : melee_lunge_offset(inputs.attack_family,
+                                                     p,
+                                                     inputs.swing_outcome,
+                                                     inputs.formation_member);
 
     float const windup = smooth01(segment(p, 0.08F, 0.30F)) *
                          (1.0F - smooth01(segment(p, 0.30F, 0.48F)));

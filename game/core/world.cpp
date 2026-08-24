@@ -212,7 +212,8 @@ void finalize_motion_presentation_frame(World& world, float delta_time) {
             direct_control_speed_sq > k_motion_velocity_epsilon_sq;
         bool const direct_control_moving =
             commander != nullptr && commander->fpv_controlled &&
-            (direct_control_velocity || has_component_velocity);
+            (direct_control_velocity || has_component_velocity ||
+             commander->fpv_motion_requested);
         bool const builder_bypass =
             builder_prod != nullptr && builder_prod->bypass_movement_active;
 
@@ -751,6 +752,7 @@ void copy_authoritative_snapshot_components(const Entity& source, Entity& destin
 
 void copy_presentation_snapshot_components(const Entity& source, Entity& destination) {
   copy_snapshot_component<MotionPresentationComponent>(source, destination);
+  copy_snapshot_component<CommanderPresentationSampleComponent>(source, destination);
   copy_snapshot_component<CreaturePresentationComponent>(source, destination);
   copy_snapshot_component<FormationRosterPresentationComponent>(source, destination);
   copy_snapshot_component<FormationPresentationComponent>(source, destination);

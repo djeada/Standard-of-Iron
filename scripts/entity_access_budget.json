@@ -20,7 +20,7 @@
   "game/units": 172,
   "game/util": 1,
   "game/wildlife": 33,
-  "render": 34,
+  "render": 35,
   "render/entity": 89,
   "render/geom": 4,
   "render/gl": 6,

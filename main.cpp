@@ -1206,19 +1206,25 @@ auto main(int argc, char* argv[]) -> int {
     }
 
     auto renderer_ready = std::make_shared<bool>(false);
+
+    auto self_test_settled = std::make_shared<bool>(false);
     QObject::connect(
         gl_view, &GLView::renderer_ready, &app, [window, renderer_ready]() {
           *renderer_ready = true;
           window->update();
         });
-    QObject::connect(window, &QQuickWindow::frameSwapped, &app, [renderer_ready]() {
-      if (!*renderer_ready) {
-        return;
-      }
-      qInfo() << "SOI_RENDERER_SELF_TEST: PASS - gameplay OpenGL "
-                 "frame rendered and presented";
-      QGuiApplication::exit(0);
-    });
+    QObject::connect(window,
+                     &QQuickWindow::frameSwapped,
+                     &app,
+                     [renderer_ready, self_test_settled]() {
+                       if (!*renderer_ready || *self_test_settled) {
+                         return;
+                       }
+                       *self_test_settled = true;
+                       qInfo() << "SOI_RENDERER_SELF_TEST: PASS - gameplay OpenGL "
+                                  "frame rendered and presented";
+                       QGuiApplication::exit(0);
+                     });
 
     if (!root_obj->setProperty("game_started", true) ||
         !root_obj->setProperty("menu_visible", false)) {
@@ -1228,7 +1234,11 @@ auto main(int argc, char* argv[]) -> int {
     window->show();
     window->update();
 
-    QTimer::singleShot(30000, &app, []() {
+    QTimer::singleShot(30000, &app, [self_test_settled]() {
+      if (*self_test_settled) {
+        return;
+      }
+      *self_test_settled = true;
       qCritical() << "SOI_RENDERER_SELF_TEST: FAIL - no gameplay frame was "
                      "presented within 30 seconds";
       QGuiApplication::exit(10);
@@ -1238,6 +1248,8 @@ auto main(int argc, char* argv[]) -> int {
   if (release_self_test) {
     auto mission_ready = std::make_shared<bool>(false);
     auto presented_frames = std::make_shared<int>(0);
+
+    auto release_test_settled = std::make_shared<bool>(false);
     auto polls = std::make_shared<int>(0);
     auto* readiness_poll = new QTimer(&app);
     readiness_poll->setInterval(250);
@@ -1248,11 +1260,13 @@ auto main(int argc, char* argv[]) -> int {
                       mission_ready,
                       polls,
                       window,
-                      readiness_poll]() {
+                      readiness_poll,
+                      release_test_settled]() {
                        if (!game_engine_ptr->last_error().isEmpty()) {
                          qCritical() << "SOI_MISSION_SELF_TEST: FAIL -"
                                      << game_engine_ptr->last_error();
                          readiness_poll->stop();
+                         *release_test_settled = true;
                          QGuiApplication::exit(17);
                          return;
                        }
@@ -1278,7 +1292,7 @@ auto main(int argc, char* argv[]) -> int {
     QObject::connect(window,
                      &QQuickWindow::frameSwapped,
                      &app,
-                     [mission_ready, presented_frames, window]() {
+                     [mission_ready, presented_frames, window, release_test_settled]() {
                        if (!*mission_ready) {
                          return;
                        }
@@ -1291,6 +1305,7 @@ auto main(int argc, char* argv[]) -> int {
                        if (*presented_frames > 3) {
                          return;
                        }
+                       *release_test_settled = true;
                        qInfo() << "SOI_MISSION_SELF_TEST: PASS - authored packaged "
                                   "mission loaded with entities";
                        qInfo()
@@ -1302,7 +1317,14 @@ auto main(int argc, char* argv[]) -> int {
     QTimer::singleShot(
         1500000,
         &app,
-        [game_engine_ptr = game_engine.get(), mission_ready, presented_frames]() {
+        [game_engine_ptr = game_engine.get(),
+         mission_ready,
+         presented_frames,
+         release_test_settled]() {
+          if (*release_test_settled) {
+            return;
+          }
+          *release_test_settled = true;
           qCritical().noquote()
               << "SOI_MISSION_SELF_TEST: FAIL - mission did not load and present "
                  "frames within 1500 seconds; pending:"

@@ -57,6 +57,8 @@ constexpr float k_hit_kick_fov = 2.6F;
 constexpr float k_threat_bias_follow = 3.0F;
 constexpr float k_threat_bias_side = 0.30F;
 
+constexpr float k_camera_body_radius = 0.28F;
+
 constexpr float k_commander_near_plane = 0.05F;
 constexpr float k_camera_terrain_clearance = 0.55F;
 
@@ -131,6 +133,7 @@ void CommanderCameraRig::reset() {
   m_focus_weight_smooth = 0.0F;
   m_focus_side_nudge_smooth = 0.0F;
   m_occlusion_fraction = 1.0F;
+  m_trace = {};
 }
 
 void CommanderCameraRig::add_impact_kick(float strength) {
@@ -149,6 +152,7 @@ auto CommanderCameraRig::update(Render::GL::Camera& camera,
   m_state.yaw = inputs.view_yaw_degrees;
   m_state.pitch = inputs.view_pitch_degrees;
 
+  CommanderFramingState const previous_framing_state = m_framing_state;
   m_framing_state = select_framing(
       inputs.aiming_bow, inputs.lock_target_active, inputs.fight_context);
   Framing const framing_target = framing_for(m_framing_state, inputs.close_camera_mode);
@@ -313,8 +317,12 @@ auto CommanderCameraRig::update(Render::GL::Camera& camera,
     }
   }
 
+  QVector3D const eye_unconstrained = eye_desired;
+  QVector3D const target_unconstrained = target_desired;
+
   float const blocked_fraction =
-      Game::Systems::first_building_intersection_fraction(pivot, eye_desired);
+      Game::Systems::first_building_body_intersection_fraction(
+          pivot, eye_desired, k_camera_body_radius);
   float const occlusion_target =
       blocked_fraction < 1.0F ? std::clamp(blocked_fraction - 0.06F,
                                            inputs.close_camera_mode ? 0.12F : 0.22F,
@@ -330,13 +338,49 @@ auto CommanderCameraRig::update(Render::GL::Camera& camera,
     eye_desired = pivot + (eye_desired - pivot) * m_occlusion_fraction;
   }
 
+  {
+
+    QVector3D const cleared = Game::Systems::depenetrate_from_building_bodies(
+        eye_desired, k_camera_body_radius);
+    eye_desired.setX(cleared.x());
+    eye_desired.setZ(cleared.z());
+  }
+
+  float terrain_lift = 0.0F;
   auto const& terrain = Game::Map::TerrainService::instance();
   if (terrain.is_initialized()) {
     float const eye_ground_y = terrain.resolve_surface_world_y(
         eye_desired.x(), eye_desired.z(), 0.0F, eye_desired.y());
-    eye_desired.setY(
-        std::max(eye_desired.y(), eye_ground_y + k_camera_terrain_clearance));
+    float const lifted =
+        std::max(eye_desired.y(), eye_ground_y + k_camera_terrain_clearance);
+    terrain_lift = lifted - eye_desired.y();
+    eye_desired.setY(lifted);
   }
+
+  m_trace.valid = true;
+  m_trace.commander_position = commander_position;
+  m_trace.visual_anchor = m_state.visual_anchor;
+  m_trace.anchor_lag = (commander_position - m_state.visual_anchor).length();
+  m_trace.pivot = pivot;
+  m_trace.eye_unconstrained = eye_unconstrained;
+  m_trace.target_unconstrained = target_unconstrained;
+  m_trace.eye_resolved = eye_desired;
+  m_trace.target_resolved = target_desired;
+  m_trace.boom_unconstrained = (eye_unconstrained - pivot).length();
+  m_trace.boom_resolved = (eye_desired - pivot).length();
+  m_trace.building_blocked_fraction = blocked_fraction;
+  m_trace.occlusion_fraction = m_occlusion_fraction;
+  m_trace.terrain_lift = terrain_lift;
+  m_trace.eye_clearance = Game::Systems::nearest_building_body_clearance(eye_desired);
+  m_trace.fov = m_fov_current;
+  m_trace.yaw = m_state.yaw;
+  m_trace.pitch = m_state.pitch;
+  m_trace.yaw_velocity = m_state.yaw_velocity;
+  m_trace.pitch_velocity = m_state.pitch_velocity;
+  m_trace.ground_y = m_ground_y;
+  m_trace.framing_state = m_framing_state;
+  m_trace.framing_changed = m_framing_state != previous_framing_state;
+  m_trace.dt = dt;
 
   m_eye_smooth = eye_desired;
   m_target_smooth = target_desired;

@@ -7,9 +7,12 @@
 #include <algorithm>
 #include <array>
 #include <cmath>
+#include <limits>
+#include <mutex>
 #include <numbers>
 #include <vector>
 
+#include "app/commander/commander_motor.h"
 #include "game/accessibility/motion_settings.h"
 #include "game/audio/audio_cues.h"
 #include "game/core/component.h"
@@ -56,135 +59,13 @@ auto signed_angle_delta(float target_degrees, float current_degrees) -> float {
   return diff;
 }
 
-constexpr float k_commander_body_radius = 0.34F;
-
-auto structure_blocks_commander_body(float x, float z) -> bool {
-  auto const& registry = Game::Systems::BuildingCollisionRegistry::instance();
-  auto blocked_by = [x, z](const Game::Systems::BuildingFootprint& footprint) {
-    if (!footprint.blocks_navigation) {
-      return false;
-    }
-    float const half_width = footprint.width * 0.5F;
-    float const half_depth = footprint.depth * 0.5F;
-    float const closest_x =
-        std::clamp(x, footprint.center_x - half_width, footprint.center_x + half_width);
-    float const closest_z =
-        std::clamp(z, footprint.center_z - half_depth, footprint.center_z + half_depth);
-    float const dx = x - closest_x;
-    float const dz = z - closest_z;
-    return ((dx * dx) + (dz * dz)) < k_commander_body_radius * k_commander_body_radius;
-  };
-  for (auto const& building : registry.get_all_buildings()) {
-    if (blocked_by(building)) {
-      return true;
-    }
-  }
-  for (auto const& obstacle : registry.authored_obstacles()) {
-    if (blocked_by(obstacle)) {
-      return true;
-    }
-  }
-  return false;
-}
-
-auto structure_padding_covers_cell(const Game::Systems::Pathfinding& pathfinder,
-                                   int grid_x,
-                                   int grid_z) -> bool {
-
-  constexpr float k_cell_slack = 1.0F;
-  float const cell_x = static_cast<float>(grid_x) + pathfinder.get_grid_offset_x();
-  float const cell_z = static_cast<float>(grid_z) + pathfinder.get_grid_offset_z();
-  auto const& registry = Game::Systems::BuildingCollisionRegistry::instance();
-  auto covers = [cell_x, cell_z](const Game::Systems::BuildingFootprint& footprint) {
-    if (!footprint.blocks_navigation) {
-      return false;
-    }
-    float const half_width =
-        (footprint.width * 0.5F) + footprint.grid_padding + k_cell_slack;
-    float const half_depth =
-        (footprint.depth * 0.5F) + footprint.grid_padding + k_cell_slack;
-    return std::abs(cell_x - footprint.center_x) <= half_width &&
-           std::abs(cell_z - footprint.center_z) <= half_depth;
-  };
-  for (auto const& building : registry.get_all_buildings()) {
-    if (covers(building)) {
-      return true;
-    }
-  }
-  for (auto const& obstacle : registry.authored_obstacles()) {
-    if (covers(obstacle)) {
-      return true;
-    }
-  }
-  return false;
-}
-
-constexpr float k_scatter_prop_block_radius = 0.52F;
-
-auto scatter_prop_blocks_commander_body(const Game::Systems::Pathfinding& pathfinder,
-                                        int grid_x,
-                                        int grid_z,
-                                        float x,
-                                        float z) -> bool {
-  using CellValue = Game::Systems::Pathfinding::CellValue;
-
-  float const clearance = k_scatter_prop_block_radius + k_commander_body_radius;
-
-  for (int offset_z = -1; offset_z <= 1; ++offset_z) {
-    for (int offset_x = -1; offset_x <= 1; ++offset_x) {
-      int const cell_x = grid_x + offset_x;
-      int const cell_z = grid_z + offset_z;
-      auto const cell = pathfinder.cell_value(cell_x, cell_z);
-      if (cell != CellValue::Tree && cell != CellValue::Boulder &&
-          cell != CellValue::IronOre) {
-        continue;
-      }
-      float const dx =
-          x - (static_cast<float>(cell_x) + pathfinder.get_grid_offset_x());
-      float const dz =
-          z - (static_cast<float>(cell_z) + pathfinder.get_grid_offset_z());
-      if (((dx * dx) + (dz * dz)) < clearance * clearance) {
-        return true;
-      }
-    }
-  }
-  return false;
-}
-
-auto is_walkable_at(float x, float z) -> bool {
-  using CellValue = Game::Systems::Pathfinding::CellValue;
-
-  if (auto* pathfinder = Game::Systems::NavGrid::get_pathfinder()) {
-    const auto grid = Game::Systems::NavGrid::world_to_grid(x, z);
-    const auto cell = pathfinder->cell_value(grid.x, grid.y);
-
-    if (cell != CellValue::Walkable) {
-      if (!pathfinder->is_terrain_walkable(grid.x, grid.y)) {
-        return false;
-      }
-      bool const scatter_prop_cell = cell == CellValue::Tree ||
-                                     cell == CellValue::Boulder ||
-                                     cell == CellValue::IronOre;
-      if (!scatter_prop_cell &&
-          !structure_padding_covers_cell(*pathfinder, grid.x, grid.y)) {
-        return false;
-      }
-    }
-    if (scatter_prop_blocks_commander_body(*pathfinder, grid.x, grid.y, x, z)) {
-      return false;
-    }
-    return !structure_blocks_commander_body(x, z);
-  }
-  auto& terrain = Game::Map::TerrainService::instance();
-  if (terrain.is_initialized() &&
-      !terrain.is_walkable(static_cast<int>(std::round(x)),
-                           static_cast<int>(std::round(z)))) {
-    return false;
-  }
-  return !structure_blocks_commander_body(x, z);
-}
-
 constexpr float k_fpv_walk_speed_scale = 1.25F;
+
+constexpr float k_move_blocked_decay_rate = 16.0F;
+
+constexpr float k_turn_in_place_threshold_degrees = 50.0F;
+constexpr float k_turn_in_place_rate_degrees = 260.0F;
+constexpr float k_body_travel_turn_rate_degrees = 900.0F;
 
 constexpr float k_fov_hip = 68.0F;
 constexpr float k_strike_step_reach = 1.45F;
@@ -208,63 +89,6 @@ auto directional_speed_scale(int forward_axis, int right_axis) -> float {
   return 1.0F;
 }
 
-struct GroundMove {
-  float x{0.0F};
-  float z{0.0F};
-  bool moved{false};
-};
-
-auto airborne_step(float to_x, float to_z) -> GroundMove {
-  return {.x = to_x, .z = to_z, .moved = true};
-}
-
-auto resolve_ground_step(float from_x,
-                         float from_z,
-                         float to_x,
-                         float to_z) -> GroundMove {
-  if (is_walkable_at(to_x, to_z)) {
-    return {.x = to_x, .z = to_z, .moved = true};
-  }
-
-  float const delta_x = to_x - from_x;
-  float const delta_z = to_z - from_z;
-  bool const slide_x_free = std::abs(delta_x) > 1.0e-5F && is_walkable_at(to_x, from_z);
-  bool const slide_z_free = std::abs(delta_z) > 1.0e-5F && is_walkable_at(from_x, to_z);
-
-  if (slide_x_free && (!slide_z_free || std::abs(delta_x) >= std::abs(delta_z))) {
-    return {.x = to_x, .z = from_z, .moved = true};
-  }
-  if (slide_z_free) {
-    return {.x = from_x, .z = to_z, .moved = true};
-  }
-  return {.x = from_x, .z = from_z, .moved = false};
-}
-
-auto resolve_reachable_ground_position(const QVector3D& start,
-                                       const QVector3D& desired,
-                                       unsigned int ignore_entity_id = 0) -> QVector3D {
-  QVector3D candidate = desired;
-  const float blocked_fraction = Game::Systems::first_building_intersection_fraction(
-      start, desired, ignore_entity_id);
-  if (blocked_fraction < 1.0F) {
-    const float safe_fraction = std::clamp(blocked_fraction - 0.08F, 0.0F, 1.0F);
-    candidate = start + (desired - start) * safe_fraction;
-  }
-
-  QVector3D best = start;
-  constexpr int k_samples = 8;
-  for (int sample_index = 1; sample_index <= k_samples; ++sample_index) {
-    const float sample_t =
-        static_cast<float>(sample_index) / static_cast<float>(k_samples);
-    const QVector3D sample = start + (candidate - start) * sample_t;
-    if (!is_walkable_at(sample.x(), sample.z())) {
-      break;
-    }
-    best = sample;
-  }
-  return best;
-}
-
 constexpr float k_body_separation_scan_range = 3.0F;
 
 constexpr float k_body_separation_max_push_per_second = 2.4F;
@@ -273,6 +97,7 @@ void separate_commander_from_bodies(Engine::Core::World& world,
                                     Engine::Core::Entity& commander,
                                     Engine::Core::EntityID commander_id,
                                     Engine::Core::TransformComponent& transform,
+                                    App::Core::CommanderMotor& motor,
                                     float dt) {
   if (dt <= 0.0F) {
     return;
@@ -310,8 +135,8 @@ void separate_commander_from_bodies(Engine::Core::World& world,
          Game::Systems::RpgCombat::live_soldier_targets(*candidate)) {
       QVector3D offset =
           origin - QVector3D(soldier.position.x(), 0.0F, soldier.position.z());
-      float const min_distance =
-          k_commander_body_radius + std::max(soldier.body_radius, 0.05F);
+      float const min_distance = App::Core::CommanderMotor::body_radius() +
+                                 std::max(soldier.body_radius, 0.05F);
       float const distance_sq = offset.lengthSquared();
       if (distance_sq >= min_distance * min_distance) {
         continue;
@@ -341,18 +166,177 @@ void separate_commander_from_bodies(Engine::Core::World& world,
     push = push.normalized() * max_push;
   }
 
-  float const target_x = transform.position.x + push.x();
-  float const target_z = transform.position.z + push.z();
-  auto const step = resolve_ground_step(
-      transform.position.x, transform.position.z, target_x, target_z);
-  transform.position.x = step.x;
-  transform.position.z = step.z;
+  QVector3D const from(
+      transform.position.x, transform.position.y, transform.position.z);
+  static_cast<void>(
+      motor.advance(transform,
+                    {.from = from,
+                     .to = from + QVector3D(push.x(), 0.0F, push.z()),
+                     .source = App::Core::CommanderDisplacementSource::BodySeparation,
+                     .airborne = false,
+                     .dt = dt}));
 }
 
 } // namespace
 
+void CommanderControlController::publish_presentation_sample(
+    Engine::Core::Entity& commander,
+    const Engine::Core::TransformComponent& transform,
+    float dt) {
+  auto* sample = Engine::Core::get_or_add_component<
+      Engine::Core::CommanderPresentationSampleComponent>(&commander);
+  if (sample == nullptr) {
+    return;
+  }
+
+  auto const previous = sample->position;
+  float const step_x = transform.position.x - previous.x;
+  float const step_z = transform.position.z - previous.z;
+  bool const teleported =
+      !sample->valid || ((step_x * step_x) + (step_z * step_z)) >
+                            (Engine::Core::k_presentation_teleport_threshold *
+                             Engine::Core::k_presentation_teleport_threshold);
+
+  sample->previous_position = sample->valid ? previous : transform.position;
+  sample->previous_yaw = sample->valid ? sample->yaw : transform.rotation.y;
+  sample->position = transform.position;
+  sample->yaw = transform.rotation.y;
+  sample->tick_seconds = dt;
+  sample->snap = teleported || m_presentation_snap_requested;
+  sample->valid = true;
+  ++sample->tick_sequence;
+  m_presentation_snap_requested = false;
+}
+
+auto CommanderControlController::advance_presentation_pose(
+    Engine::Core::Entity& commander,
+    const Engine::Core::TransformComponent& transform,
+    float dt) -> Engine::Core::PresentationPose {
+  auto const* sample =
+      commander.get_component<Engine::Core::CommanderPresentationSampleComponent>();
+  if (sample == nullptr || !sample->valid) {
+    m_presentation_pose.position = transform.position;
+    m_presentation_pose.yaw = transform.rotation.y;
+    m_presentation_pose.alpha = 1.0F;
+    m_presentation_pose.extrapolated = false;
+    return m_presentation_pose;
+  }
+
+  if (sample->tick_sequence != m_presentation_seen_sequence) {
+    m_presentation_seen_sequence = sample->tick_sequence;
+    m_presentation_age = 0.0F;
+  }
+
+  float const frame_dt = std::max(0.0F, dt);
+  float const max_age =
+      frame_dt >= sample->tick_seconds
+          ? sample->tick_seconds
+          : sample->tick_seconds *
+                (1.0F + Engine::Core::k_presentation_max_extrapolation);
+  m_presentation_age = std::min(m_presentation_age + frame_dt, max_age);
+  m_presentation_pose =
+      Engine::Core::resolve_presentation_pose(*sample, m_presentation_age);
+  return m_presentation_pose;
+}
+
+void CommanderControlController::snap_presentation_pose() {
+  m_presentation_snap_requested = true;
+  m_presentation_age = 0.0F;
+}
+
+auto CommanderControlController::take_input_snapshot() -> CommanderInputSnapshot {
+  const std::lock_guard<std::mutex> guard(m_input_mutex);
+
+  CommanderInputSnapshot snapshot;
+  snapshot.forward = m_input.forward;
+  snapshot.backward = m_input.backward;
+  snapshot.left = m_input.left;
+  snapshot.right = m_input.right;
+  snapshot.turn_left = m_input.turn_left;
+  snapshot.turn_right = m_input.turn_right;
+  snapshot.run = m_input.run;
+  snapshot.primary_held = m_input.primary_action;
+  snapshot.guard_held = m_input.secondary_action;
+
+  snapshot.primary_pressed = m_primary_press_pending;
+  snapshot.dodge_pressed = m_input.dodge_requested;
+  snapshot.jump_pressed = m_input.jump_requested;
+  snapshot.shield_bash_pressed = m_input.shield_bash_requested;
+  snapshot.vanguard_rush_pressed = m_input.vanguard_rush_requested;
+  snapshot.second_wind_pressed = m_input.second_wind_requested;
+
+  snapshot.has_dodge_direction = m_has_requested_dodge_direction;
+  snapshot.dodge_direction = m_requested_dodge_direction;
+
+  m_primary_press_pending = false;
+  m_input.dodge_requested = false;
+  m_input.jump_requested = false;
+  m_input.shield_bash_requested = false;
+  m_input.vanguard_rush_requested = false;
+  m_input.second_wind_requested = false;
+  m_has_requested_dodge_direction = false;
+  m_requested_dodge_direction = QVector3D(0.0F, 0.0F, 0.0F);
+
+  snapshot.sequence = ++m_input_snapshot_sequence;
+  return snapshot;
+}
+
+void CommanderControlController::discard_input_edges(CommanderInputSnapshot& snapshot) {
+  if (m_carried_primary_press) {
+    ++m_edges.primary_dropped_sequence;
+    m_carried_primary_press = false;
+  }
+  if (snapshot.primary_pressed) {
+    ++m_edges.primary_dropped_sequence;
+    snapshot.primary_pressed = false;
+  }
+  if (snapshot.dodge_pressed) {
+    ++m_edges.dodge_refused_sequence;
+    snapshot.dodge_pressed = false;
+  }
+  if (snapshot.jump_pressed) {
+    ++m_edges.jump_refused_sequence;
+    snapshot.jump_pressed = false;
+  }
+  snapshot.shield_bash_pressed = false;
+  snapshot.vanguard_rush_pressed = false;
+  snapshot.second_wind_pressed = false;
+  snapshot.has_dodge_direction = false;
+  snapshot.dodge_direction = QVector3D(0.0F, 0.0F, 0.0F);
+}
+
+void CommanderControlController::release_all_input() {
+  auto pending = take_input_snapshot();
+  discard_input_edges(pending);
+  discard_input_edges(m_tick_input);
+  if (pending.primary_held) {
+    ++m_edges.primary_release_sequence;
+  }
+  if (pending.guard_held) {
+    ++m_edges.guard_release_sequence;
+  }
+  {
+    const std::lock_guard<std::mutex> guard(m_input_mutex);
+    m_input = {};
+  }
+  m_tick_input = {};
+  m_move_right_axis = 0;
+  m_move_forward_axis = 0;
+  m_move_running = false;
+  m_move_speed = 0.0F;
+  m_primary_held_duration = 0.0F;
+  m_primary_scan_cooldown = 0.0F;
+  m_last_mouse_valid = false;
+  m_mouse_center_valid = false;
+  m_mouse_recentering = false;
+}
+
 void CommanderControlController::reset() {
-  m_input = {};
+  release_all_input();
+  snap_presentation_pose();
+  m_presentation_seen_sequence = 0;
+  m_body_yaw_valid = false;
+  m_turning_in_place = false;
   m_frame_intent = {};
   m_intent_sample_valid = false;
   m_mouse_center_valid = false;
@@ -415,6 +399,7 @@ auto CommanderControlController::input() const -> const InputState& {
 }
 
 void CommanderControlController::key_down(int key) {
+  const std::lock_guard<std::mutex> input_guard(m_input_mutex);
   if (m_latency_probe != nullptr) {
     m_latency_probe->note_input();
   }
@@ -446,6 +431,7 @@ void CommanderControlController::key_down(int key) {
 }
 
 void CommanderControlController::key_up(int key) {
+  const std::lock_guard<std::mutex> input_guard(m_input_mutex);
   switch (key) {
   case Qt::Key_W:
     m_input.forward = false;
@@ -477,12 +463,17 @@ void CommanderControlController::primary_action_down() {
   if (m_latency_probe != nullptr) {
     m_latency_probe->note_input();
   }
+  const std::lock_guard<std::mutex> input_guard(m_input_mutex);
+  ++m_edges.primary_press_sequence;
   m_input.primary_action = true;
   m_primary_press_pending = true;
-  m_input.primary_action_scan_cooldown = 0.0F;
 }
 
 void CommanderControlController::primary_action_up() {
+  const std::lock_guard<std::mutex> input_guard(m_input_mutex);
+  if (m_input.primary_action) {
+    ++m_edges.primary_release_sequence;
+  }
   m_input.primary_action = false;
 }
 
@@ -490,10 +481,18 @@ void CommanderControlController::secondary_action_down() {
   if (m_latency_probe != nullptr) {
     m_latency_probe->note_input();
   }
+  const std::lock_guard<std::mutex> input_guard(m_input_mutex);
+  if (!m_input.secondary_action) {
+    ++m_edges.guard_press_sequence;
+  }
   m_input.secondary_action = true;
 }
 
 void CommanderControlController::secondary_action_up() {
+  const std::lock_guard<std::mutex> input_guard(m_input_mutex);
+  if (m_input.secondary_action) {
+    ++m_edges.guard_release_sequence;
+  }
   m_input.secondary_action = false;
 }
 
@@ -587,14 +586,17 @@ auto CommanderControlController::sample_frame_intent(QQuickWindow* window)
   m_intent_sample_pitch = m_view_pitch;
   m_frame_intent.view_yaw = m_view_yaw;
   m_frame_intent.view_pitch = m_view_pitch;
-  m_frame_intent.move = QVector2D(
-      static_cast<float>((m_input.right ? 1 : 0) - (m_input.left ? 1 : 0)),
-      static_cast<float>((m_input.forward ? 1 : 0) - (m_input.backward ? 1 : 0)));
-  m_frame_intent.guard = m_input.secondary_action;
-  m_frame_intent.attack_held = m_input.primary_action;
-  m_frame_intent.run = m_input.run;
-  m_frame_intent.dodge_pressed = m_input.dodge_requested;
-  m_frame_intent.jump_pressed = m_input.jump_requested;
+  {
+    const std::lock_guard<std::mutex> input_guard(m_input_mutex);
+    m_frame_intent.move = QVector2D(
+        static_cast<float>((m_input.right ? 1 : 0) - (m_input.left ? 1 : 0)),
+        static_cast<float>((m_input.forward ? 1 : 0) - (m_input.backward ? 1 : 0)));
+    m_frame_intent.guard = m_input.secondary_action;
+    m_frame_intent.attack_held = m_input.primary_action;
+    m_frame_intent.run = m_input.run;
+    m_frame_intent.dodge_pressed = m_input.dodge_requested;
+    m_frame_intent.jump_pressed = m_input.jump_requested;
+  }
   ++m_frame_intent.frame_index;
   return m_frame_intent;
 }
@@ -632,11 +634,15 @@ void CommanderControlController::request_dodge() {
   if (m_latency_probe != nullptr) {
     m_latency_probe->note_input();
   }
+  const std::lock_guard<std::mutex> input_guard(m_input_mutex);
+  ++m_edges.dodge_request_sequence;
   m_has_requested_dodge_direction = false;
   m_input.dodge_requested = true;
 }
 
 void CommanderControlController::request_dodge(const QVector3D& world_direction) {
+  const std::lock_guard<std::mutex> input_guard(m_input_mutex);
+  ++m_edges.dodge_request_sequence;
   m_requested_dodge_direction =
       QVector3D(world_direction.x(), 0.0F, world_direction.z());
   m_has_requested_dodge_direction =
@@ -648,18 +654,23 @@ void CommanderControlController::request_jump() {
   if (m_latency_probe != nullptr) {
     m_latency_probe->note_input();
   }
+  const std::lock_guard<std::mutex> input_guard(m_input_mutex);
+  ++m_edges.jump_request_sequence;
   m_input.jump_requested = true;
 }
 
 void CommanderControlController::special_action() {
+  const std::lock_guard<std::mutex> input_guard(m_input_mutex);
   m_input.shield_bash_requested = true;
 }
 
 void CommanderControlController::request_vanguard_rush() {
+  const std::lock_guard<std::mutex> input_guard(m_input_mutex);
   m_input.vanguard_rush_requested = true;
 }
 
 void CommanderControlController::request_second_wind() {
+  const std::lock_guard<std::mutex> input_guard(m_input_mutex);
   m_input.second_wind_requested = true;
 }
 
@@ -933,15 +944,15 @@ void CommanderControlController::apply_strike_lunge(
 
   constexpr float k_lunge_speed = 4.6F;
   const float step = std::min(gap, k_lunge_speed * lunge_shape * dt);
-  const float step_x = transform.position.x + (to_x / distance) * step;
-  const float step_z = transform.position.z + (to_z / distance) * step;
-  auto const resolved =
-      resolve_ground_step(transform.position.x, transform.position.z, step_x, step_z);
-  if (!resolved.moved) {
-    return;
-  }
-  transform.position.x = resolved.x;
-  transform.position.z = resolved.z;
+  QVector3D const from(
+      transform.position.x, transform.position.y, transform.position.z);
+  static_cast<void>(m_motor.advance(
+      transform,
+      {.from = from,
+       .to = from + QVector3D((to_x / distance) * step, 0.0F, (to_z / distance) * step),
+       .source = App::Core::CommanderDisplacementSource::StrikeLunge,
+       .airborne = false,
+       .dt = dt}));
 }
 
 void CommanderControlController::update_lock_on_yaw(Engine::Core::World& world,
@@ -983,9 +994,9 @@ void CommanderControlController::update_lock_on_yaw(Engine::Core::World& world,
   const float target_yaw = std::atan2(dx, dz) * 57.29577951308232F;
   const float diff = signed_angle_delta(target_yaw, m_view_yaw);
   const bool escape_input =
-      (m_input.run && m_input.backward) ||
-      (m_input.dodge_requested && (m_input.backward || m_input.run));
-  if (escape_input || (m_input.run && std::abs(diff) > 95.0F)) {
+      (m_tick_input.run && m_tick_input.backward) ||
+      (m_tick_input.dodge_pressed && (m_tick_input.backward || m_tick_input.run));
+  if (escape_input || (m_tick_input.run && std::abs(diff) > 95.0F)) {
     m_locked_target_id = 0;
     m_locked_target_slot = Engine::Core::RpgCommanderTargetComponent::k_no_soldier_slot;
     m_soft_target_id = 0;
@@ -1228,7 +1239,7 @@ auto CommanderControlController::primary_action(Engine::Core::World& world,
            .move_forward_axis = m_move_forward_axis,
            .primary_held_duration =
                pending != nullptr ? pending->held_duration : m_primary_held_duration,
-           .has_swing = pending != nullptr,
+           .has_swing = pending != nullptr && pending->has_swing,
            .swing = pending != nullptr ? pending->swing : Engine::Core::MeleeIntent{}});
 
   if (attack_result.outcome == Engine::Core::CombatIntentOutcome::Accepted) {
@@ -1247,19 +1258,6 @@ auto CommanderControlController::queued_intent_count(
           ? commander->get_component<Engine::Core::CombatIntentQueueComponent>()
           : nullptr;
   return intents != nullptr ? static_cast<int>(intents->count) : 0;
-}
-
-void CommanderControlController::release_guard(Engine::Core::World& world,
-                                               Engine::Core::EntityID commander_id,
-                                               int local_owner_id) {
-  if (auto* commander = controlled_commander(world, commander_id, local_owner_id)) {
-    if (auto* guard =
-            commander->get_component<Engine::Core::CommanderGuardComponent>()) {
-      guard->active = false;
-      guard->perfect_guard_remaining = 0.0F;
-    }
-  }
-  m_guard_was_active = false;
 }
 
 auto CommanderControlController::resolve_ability_target(Engine::Core::World& world,
@@ -1329,8 +1327,8 @@ void CommanderControlController::try_activate_shield_bash(
     Engine::Core::Entity& commander,
     Engine::Core::EntityID commander_id,
     int local_owner_id) {
-  const bool bash_requested = m_input.shield_bash_requested;
-  m_input.shield_bash_requested = false;
+  const bool bash_requested = m_tick_input.shield_bash_pressed;
+  m_tick_input.shield_bash_pressed = false;
   if (!bash_requested) {
     return;
   }
@@ -1393,8 +1391,8 @@ void CommanderControlController::try_activate_vanguard_rush(
     Engine::Core::Entity& commander,
     Engine::Core::EntityID commander_id,
     int local_owner_id) {
-  const bool rush_requested = m_input.vanguard_rush_requested;
-  m_input.vanguard_rush_requested = false;
+  const bool rush_requested = m_tick_input.vanguard_rush_pressed;
+  m_tick_input.vanguard_rush_pressed = false;
   if (!rush_requested) {
     return;
   }
@@ -1434,7 +1432,7 @@ void CommanderControlController::try_activate_vanguard_rush(
             commander, Engine::Core::MountedChargeIntentSource::Player)) {
       m_vanguard_rush_cooldown = k_rush_cooldown;
       Game::Audio::play_cue(Game::Audio::Cue::k_combat_vanguard_rush);
-      m_input.primary_action_scan_cooldown = 0.18F;
+      m_primary_scan_cooldown = 0.18F;
       if (cmd_comp != nullptr) {
         cmd_comp->vanguard_rush_cooldown_remaining = m_vanguard_rush_cooldown;
       }
@@ -1465,14 +1463,14 @@ void CommanderControlController::try_activate_vanguard_rush(
   }
 
   const QVector3D desired = start + rush_direction * rush_distance;
-  const QVector3D resolved =
-      resolve_reachable_ground_position(start, desired, commander_id);
-  transform->position.x = resolved.x();
-  transform->position.z = resolved.z();
+  const QVector3D resolved = App::Core::CommanderMotor::reachable_ground_position(
+      start, desired, commander_id);
+  static_cast<void>(m_motor.teleport(
+      *transform, resolved, App::Core::CommanderDisplacementSource::StrikeLunge));
   if (movement != nullptr) {
     movement->set_manual_velocity(rush_direction.x() * 8.0F, rush_direction.z() * 8.0F);
   }
-  m_input.primary_action_scan_cooldown = 0.18F;
+  m_primary_scan_cooldown = 0.18F;
 
   if (target != nullptr) {
     auto* target_unit = target->get_component<Engine::Core::UnitComponent>();
@@ -1512,8 +1510,8 @@ void CommanderControlController::try_activate_vanguard_rush(
 
 void CommanderControlController::try_activate_second_wind(
     Engine::Core::Entity& commander) {
-  const bool second_wind_requested = m_input.second_wind_requested;
-  m_input.second_wind_requested = false;
+  const bool second_wind_requested = m_tick_input.second_wind_pressed;
+  m_tick_input.second_wind_pressed = false;
   if (!second_wind_requested) {
     return;
   }
@@ -1600,6 +1598,16 @@ auto CommanderControlController::update_impl(Engine::Core::World& world,
     return false;
   }
 
+  m_tick_input = take_input_snapshot();
+  m_tick_input.primary_pressed =
+      m_tick_input.primary_pressed || m_carried_primary_press;
+  m_carried_primary_press = false;
+
+  auto const* active_action =
+      commander->get_component<Engine::Core::RpgCommanderActionComponent>();
+  bool const attack_animation_active =
+      active_action != nullptr && active_action->action_running;
+
   auto* movement = commander->get_component<Engine::Core::MovementComponent>();
   if (movement == nullptr) {
     movement = commander->add_component<Engine::Core::MovementComponent>();
@@ -1615,14 +1623,21 @@ auto CommanderControlController::update_impl(Engine::Core::World& world,
     update_ability_cooldowns(cmd_comp, dt);
     cmd_comp->fpv_motion_vx = 0.0F;
     cmd_comp->fpv_motion_vz = 0.0F;
+    cmd_comp->fpv_motion_requested = false;
 
-    m_input.primary_action = false;
-    m_input.secondary_action = false;
-    m_input.dodge_requested = false;
-    m_input.jump_requested = false;
-    m_input.shield_bash_requested = false;
-    m_input.vanguard_rush_requested = false;
-    m_input.second_wind_requested = false;
+    discard_input_edges(m_tick_input);
+    if (m_tick_input.primary_held) {
+      ++m_edges.primary_release_sequence;
+    }
+    if (m_tick_input.guard_held) {
+      ++m_edges.guard_release_sequence;
+    }
+    {
+      const std::lock_guard<std::mutex> input_guard(m_input_mutex);
+      m_input.primary_action = false;
+      m_input.secondary_action = false;
+    }
+    m_tick_input = {};
     m_move_speed = 0.0F;
     m_move_right_axis = 0;
     m_move_forward_axis = 0;
@@ -1644,6 +1659,7 @@ auto CommanderControlController::update_impl(Engine::Core::World& world,
       rpg->dodge_grace_remaining = 0.0F;
     }
 
+    publish_presentation_sample(*commander, *transform, dt);
     if (camera != nullptr) {
       update_camera(world, *commander, *camera, dt);
     }
@@ -1660,17 +1676,18 @@ auto CommanderControlController::update_impl(Engine::Core::World& world,
   constexpr float k_degrees_to_radians = 0.017453292519943295F;
   constexpr float k_turn_speed_degrees = 105.0F;
   if (m_locked_target_id == 0) {
-    if (m_input.turn_left) {
+    if (m_tick_input.turn_left) {
       m_view_yaw -= k_turn_speed_degrees * dt;
     }
-    if (m_input.turn_right) {
+    if (m_tick_input.turn_right) {
       m_view_yaw += k_turn_speed_degrees * dt;
     }
   }
   m_view_yaw = wrap_angle_degrees(m_view_yaw);
 
-  const int forward_axis = (m_input.forward ? 1 : 0) - (m_input.backward ? 1 : 0);
-  const int right_axis = (m_input.right ? 1 : 0) - (m_input.left ? 1 : 0);
+  const int forward_axis =
+      (m_tick_input.forward ? 1 : 0) - (m_tick_input.backward ? 1 : 0);
+  const int right_axis = (m_tick_input.right ? 1 : 0) - (m_tick_input.left ? 1 : 0);
 
   const float yaw_rad = m_view_yaw * k_degrees_to_radians;
   const QVector3D forward(std::sin(yaw_rad), 0.0F, std::cos(yaw_rad));
@@ -1681,23 +1698,39 @@ auto CommanderControlController::update_impl(Engine::Core::World& world,
   float actual_speed_for_bob = 0.0F;
   bool run_for_bob = false;
 
+  float traced_stamina = -1.0F;
+  QVector3D const motor_previous_position(
+      transform->position.x, transform->position.y, transform->position.z);
+  auto motor_source = App::Core::CommanderDisplacementSource::None;
+  bool motor_blocked = false;
+  bool motor_slid = false;
+  float motor_requested_speed = 0.0F;
+  float motor_separation_push = 0.0F;
+  float motor_lunge_distance = 0.0F;
+  float motor_snap_back_distance = 0.0F;
+
   constexpr float k_fov_kick_decay = 22.0F;
   m_dodge_fov_kick = std::max(0.0F, m_dodge_fov_kick - k_fov_kick_decay * dt);
   constexpr float k_jump_duration = 0.58F;
   constexpr float k_jump_peak_height = 0.34F;
 
-  const bool ability_requested = m_input.shield_bash_requested ||
-                                 m_input.vanguard_rush_requested ||
-                                 m_input.second_wind_requested;
+  const bool ability_requested = m_tick_input.shield_bash_pressed ||
+                                 m_tick_input.vanguard_rush_pressed ||
+                                 m_tick_input.second_wind_pressed;
   const bool jump_blocked_by_action =
-      m_dodge_state != DodgeState::None || m_input.primary_action ||
-      m_input.secondary_action || ability_requested ||
+      m_dodge_state != DodgeState::None || m_tick_input.primary_held ||
+      m_tick_input.guard_held || ability_requested ||
       (combat_state != nullptr &&
        combat_state->animation_state != Engine::Core::CombatAnimationState::Idle);
   const bool should_jump =
-      m_input.jump_requested && m_jump_timer <= 0.0F && !jump_blocked_by_action;
-  const bool jump_refused = m_input.jump_requested && !should_jump;
-  m_input.jump_requested = false;
+      m_tick_input.jump_pressed && m_jump_timer <= 0.0F && !jump_blocked_by_action;
+  const bool jump_refused = m_tick_input.jump_pressed && !should_jump;
+  if (should_jump) {
+    ++m_edges.jump_consumed_sequence;
+  } else if (jump_refused) {
+    ++m_edges.jump_refused_sequence;
+  }
+  m_tick_input.jump_pressed = false;
   if (jump_refused) {
     Game::Audio::play_cue(Game::Audio::Cue::k_combat_ability_refused);
   }
@@ -1737,14 +1770,14 @@ auto CommanderControlController::update_impl(Engine::Core::World& world,
     cmd_comp->posture = std::max(
         0.0F,
         cmd_comp->posture -
-            ((m_guard_was_active || m_input.secondary_action) ? 8.0F : 18.0F) * dt);
+            ((m_guard_was_active || m_tick_input.guard_held) ? 8.0F : 18.0F) * dt);
   }
 
   if (guard != nullptr) {
     guard->perfect_guard_remaining =
         std::max(0.0F, guard->perfect_guard_remaining - dt);
     guard->guard_break_remaining = std::max(0.0F, guard->guard_break_remaining - dt);
-    if (!m_input.secondary_action) {
+    if (!m_tick_input.guard_held) {
       guard->rearm_requires_release = false;
     }
   }
@@ -1772,18 +1805,23 @@ auto CommanderControlController::update_impl(Engine::Core::World& world,
     }
   }
 
-  const bool should_dodge = m_input.dodge_requested &&
+  const bool should_dodge = m_tick_input.dodge_pressed &&
                             m_dodge_state == DodgeState::None && m_jump_timer <= 0.0F &&
                             body_allows_now(*commander).accepts_dodge;
-  const bool dodge_refused = m_input.dodge_requested && !should_dodge;
-  QVector3D const requested_dodge_direction = m_requested_dodge_direction;
-  bool const has_requested_dodge_direction = m_has_requested_dodge_direction;
-  m_input.dodge_requested = false;
+  const bool dodge_refused = m_tick_input.dodge_pressed && !should_dodge;
+  if (should_dodge) {
+    ++m_edges.dodge_consumed_sequence;
+  } else if (dodge_refused) {
+    ++m_edges.dodge_refused_sequence;
+  }
+  QVector3D const requested_dodge_direction = m_tick_input.dodge_direction;
+  bool const has_requested_dodge_direction = m_tick_input.has_dodge_direction;
+  m_tick_input.dodge_pressed = false;
   if (dodge_refused) {
     Game::Audio::play_cue(Game::Audio::Cue::k_combat_ability_refused);
   }
-  m_has_requested_dodge_direction = false;
-  m_requested_dodge_direction = QVector3D(0.0F, 0.0F, 0.0F);
+  m_tick_input.has_dodge_direction = false;
+  m_tick_input.dodge_direction = QVector3D(0.0F, 0.0F, 0.0F);
 
   if (should_dodge) {
     m_dodge_direction =
@@ -1824,7 +1862,7 @@ auto CommanderControlController::update_impl(Engine::Core::World& world,
   }
 
   auto mark_jump_safe_position = [&](float x, float z) {
-    if (!jump_active || !is_walkable_at(x, z)) {
+    if (!jump_active || !App::Core::CommanderMotor::is_walkable_at(x, z)) {
       return;
     }
     m_jump_safe_position_valid = true;
@@ -1841,10 +1879,18 @@ auto CommanderControlController::update_impl(Engine::Core::World& world,
         transform->position.x + m_dodge_direction.x() * k_dodge_speed * roll_dt;
     const float nz =
         transform->position.z + m_dodge_direction.z() * k_dodge_speed * roll_dt;
-    auto const step =
-        resolve_ground_step(transform->position.x, transform->position.z, nx, nz);
-    transform->position.x = step.x;
-    transform->position.z = step.z;
+    auto const step = m_motor.advance(
+        *transform,
+        {.from = QVector3D(
+             transform->position.x, transform->position.y, transform->position.z),
+         .to = QVector3D(nx, transform->position.y, nz),
+         .source = App::Core::CommanderDisplacementSource::DodgeRoll,
+         .airborne = false,
+         .dt = dt});
+    motor_source = step.source;
+    motor_requested_speed = k_dodge_speed;
+    motor_blocked = step.blocked;
+    motor_slid = step.slid;
     if (movement != nullptr) {
       movement->set_manual_velocity(m_dodge_direction.x() * k_dodge_speed,
                                     m_dodge_direction.z() * k_dodge_speed);
@@ -1872,17 +1918,23 @@ auto CommanderControlController::update_impl(Engine::Core::World& world,
       const float speed = std::max(0.1F, unit->speed) * 0.4F;
       const float nx = transform->position.x + move.x() * speed * dt;
       const float nz = transform->position.z + move.z() * speed * dt;
-      auto const step =
-          resolve_ground_step(transform->position.x, transform->position.z, nx, nz);
+      auto const step = m_motor.advance(
+          *transform,
+          {.from = QVector3D(
+               transform->position.x, transform->position.y, transform->position.z),
+           .to = QVector3D(nx, transform->position.y, nz),
+           .source = App::Core::CommanderDisplacementSource::DodgeRecover,
+           .airborne = false,
+           .dt = dt});
+      motor_source = step.source;
+      motor_requested_speed = speed;
+      motor_blocked = step.blocked;
+      motor_slid = step.slid;
       if (step.moved) {
-        float const step_vx = dt > 0.0F ? (step.x - transform->position.x) / dt : 0.0F;
-        float const step_vz = dt > 0.0F ? (step.z - transform->position.z) / dt : 0.0F;
-        transform->position.x = step.x;
-        transform->position.z = step.z;
         if (movement != nullptr) {
-          movement->set_manual_velocity(step_vx, step_vz);
+          movement->set_manual_velocity(step.velocity.x(), step.velocity.z());
         }
-        actual_speed_for_bob = std::hypot(step_vx, step_vz);
+        actual_speed_for_bob = step.velocity.length();
       } else if (movement != nullptr) {
         movement->set_manual_velocity(0.0F, 0.0F);
       }
@@ -1899,7 +1951,7 @@ auto CommanderControlController::update_impl(Engine::Core::World& world,
       float speed = std::max(0.1F, unit->speed) * k_fpv_walk_speed_scale;
 
       auto const* stamina = Game::Systems::ensure_run_stamina(*commander);
-      running = m_input.run && !drawing_bow && stamina != nullptr &&
+      running = m_tick_input.run && !drawing_bow && stamina != nullptr &&
                 (stamina->is_running || stamina->can_start_running());
       if (running) {
         speed *= Engine::Core::StaminaComponent::k_run_speed_multiplier;
@@ -1922,6 +1974,7 @@ auto CommanderControlController::update_impl(Engine::Core::World& world,
     if (target_speed <= 0.0F && m_planar_speed_smooth < 0.05F) {
       m_planar_speed_smooth = 0.0F;
     }
+    motor_requested_speed = target_speed;
 
     if (m_planar_speed_smooth > 0.01F) {
       QVector3D const direction =
@@ -1930,23 +1983,32 @@ auto CommanderControlController::update_impl(Engine::Core::World& world,
           transform->position.x + direction.x() * m_planar_speed_smooth * dt;
       const float nz =
           transform->position.z + direction.z() * m_planar_speed_smooth * dt;
-      auto const step = jump_active
-                            ? airborne_step(nx, nz)
-                            : resolve_ground_step(
-                                  transform->position.x, transform->position.z, nx, nz);
+      auto const step = m_motor.advance(
+          *transform,
+          {.from = QVector3D(
+               transform->position.x, transform->position.y, transform->position.z),
+           .to = QVector3D(nx, transform->position.y, nz),
+           .source = jump_active ? App::Core::CommanderDisplacementSource::Airborne
+                                 : App::Core::CommanderDisplacementSource::Walk,
+           .airborne = jump_active,
+           .dt = dt});
+      motor_source = step.source;
+      motor_blocked = step.blocked;
+      motor_slid = step.slid;
       if (step.moved) {
-        float const step_vx = dt > 0.0F ? (step.x - transform->position.x) / dt : 0.0F;
-        float const step_vz = dt > 0.0F ? (step.z - transform->position.z) / dt : 0.0F;
-        transform->position.x = step.x;
-        transform->position.z = step.z;
-        mark_jump_safe_position(step.x, step.z);
+        mark_jump_safe_position(step.position.x(), step.position.z());
         if (movement != nullptr) {
-          movement->set_manual_velocity(step_vx, step_vz);
+          movement->set_manual_velocity(step.velocity.x(), step.velocity.z());
         }
-        actual_speed_for_bob = std::hypot(step_vx, step_vz);
+        actual_speed_for_bob = step.velocity.length();
         run_for_bob = running;
       } else {
-        m_planar_speed_smooth = 0.0F;
+
+        m_planar_speed_smooth *=
+            std::exp(-k_move_blocked_decay_rate * std::max(dt, 0.0F));
+        if (m_planar_speed_smooth < 0.05F) {
+          m_planar_speed_smooth = 0.0F;
+        }
         if (movement != nullptr) {
           movement->set_manual_velocity(0.0F, 0.0F);
         }
@@ -1956,9 +2018,16 @@ auto CommanderControlController::update_impl(Engine::Core::World& world,
     }
   }
   if (m_jump_safe_position_valid && !jump_active) {
-    if (!is_walkable_at(transform->position.x, transform->position.z)) {
-      transform->position.x = m_jump_last_walkable_position.x();
-      transform->position.z = m_jump_last_walkable_position.z();
+    if (!App::Core::CommanderMotor::is_walkable_at(transform->position.x,
+                                                   transform->position.z)) {
+      motor_snap_back_distance =
+          std::hypot(m_jump_last_walkable_position.x() - transform->position.x,
+                     m_jump_last_walkable_position.z() - transform->position.z);
+      motor_source = App::Core::CommanderDisplacementSource::JumpRecovery;
+      static_cast<void>(
+          m_motor.teleport(*transform,
+                           m_jump_last_walkable_position,
+                           App::Core::CommanderDisplacementSource::JumpRecovery));
       if (movement != nullptr) {
         movement->set_manual_velocity(0.0F, 0.0F);
       }
@@ -1969,14 +2038,74 @@ auto CommanderControlController::update_impl(Engine::Core::World& world,
   }
 
   if (!jump_active) {
+    float const before_lunge_x = transform->position.x;
+    float const before_lunge_z = transform->position.z;
     apply_strike_lunge(world, *commander, *transform, dt);
-    separate_commander_from_bodies(world, *commander, commander_id, *transform, dt);
+    motor_lunge_distance = std::hypot(transform->position.x - before_lunge_x,
+                                      transform->position.z - before_lunge_z);
+    if (motor_lunge_distance > 1.0e-5F) {
+      motor_source = App::Core::CommanderDisplacementSource::StrikeLunge;
+    }
+    float const before_push_x = transform->position.x;
+    float const before_push_z = transform->position.z;
+    separate_commander_from_bodies(
+        world, *commander, commander_id, *transform, m_motor, dt);
+    motor_separation_push = std::hypot(transform->position.x - before_push_x,
+                                       transform->position.z - before_push_z);
+    if (motor_separation_push > 1.0e-5F &&
+        motor_source == App::Core::CommanderDisplacementSource::None) {
+      motor_source = App::Core::CommanderDisplacementSource::BodySeparation;
+    }
   }
 
   m_move_speed = actual_speed_for_bob;
   m_move_right_axis = right_axis;
   m_move_forward_axis = forward_axis;
   m_move_running = run_for_bob;
+
+  bool const body_must_face_view =
+      m_tick_input.primary_held || m_tick_input.guard_held ||
+      m_dodge_state != DodgeState::None || jump_active || drawing_bow ||
+      m_locked_target_id != 0 || attack_animation_active;
+  bool const body_follows_travel = m_planar_speed_smooth > 0.05F;
+
+  if (!m_body_yaw_valid) {
+    m_body_yaw = m_view_yaw;
+    m_body_yaw_valid = true;
+  }
+
+  if (body_must_face_view) {
+    m_body_yaw = m_view_yaw;
+    m_turning_in_place = false;
+  } else {
+    float const offset = signed_angle_delta(m_view_yaw, m_body_yaw);
+    float turn_rate = 0.0F;
+    if (body_follows_travel) {
+      turn_rate = k_body_travel_turn_rate_degrees;
+      m_turning_in_place = false;
+    } else {
+      if (std::abs(offset) > k_turn_in_place_threshold_degrees) {
+        m_turning_in_place = true;
+      }
+      turn_rate = m_turning_in_place ? k_turn_in_place_rate_degrees : 0.0F;
+    }
+
+    float const step = turn_rate * std::max(0.0F, dt);
+    if (step <= 0.0F) {
+
+    } else if (std::abs(offset) <= step) {
+      m_body_yaw = m_view_yaw;
+      m_turning_in_place = false;
+    } else {
+      m_body_yaw = wrap_angle_degrees(m_body_yaw + std::copysign(step, offset));
+    }
+  }
+
+  transform->rotation.y = m_body_yaw;
+  transform->desired_yaw = m_body_yaw;
+  transform->has_desired_yaw = true;
+
+  publish_presentation_sample(*commander, *transform, dt);
 
   set_view_pitch(m_view_pitch);
   if (camera != nullptr) {
@@ -1989,7 +2118,7 @@ auto CommanderControlController::update_impl(Engine::Core::World& world,
        .view_pitch_degrees = m_view_pitch,
        .move_speed = m_move_speed,
        .running = m_move_running,
-       .primary_held = m_input.primary_action,
+       .primary_held = m_tick_input.primary_held,
        .camera_origin = m_camera_rig.eye(),
        .camera_origin_valid = m_camera_rig.eye_valid(),
        .camera_forward = m_camera_rig.forward(),
@@ -1998,6 +2127,8 @@ auto CommanderControlController::update_impl(Engine::Core::World& world,
   if (cmd_comp != nullptr) {
     cmd_comp->fpv_motion_vx = (movement != nullptr) ? movement->get_vx() : 0.0F;
     cmd_comp->fpv_motion_vz = (movement != nullptr) ? movement->get_vz() : 0.0F;
+    cmd_comp->fpv_motion_requested =
+        motor_requested_speed > 0.0F || m_planar_speed_smooth > 0.05F;
   }
 
   if (movement != nullptr && actual_speed_for_bob > 0.05F) {
@@ -2009,18 +2140,16 @@ auto CommanderControlController::update_impl(Engine::Core::World& world,
 
     if (auto* stamina = commander->get_component<Engine::Core::StaminaComponent>()) {
       stamina->run_requested = m_move_running;
+      traced_stamina = stamina->stamina;
     }
   } else if (auto* stamina =
                  commander->get_component<Engine::Core::StaminaComponent>()) {
     stamina->run_requested = false;
+    traced_stamina = stamina->stamina;
   }
 
-  transform->rotation.y = m_view_yaw;
-  transform->desired_yaw = m_view_yaw;
-  transform->has_desired_yaw = true;
-
   guard = commander->get_component<Engine::Core::CommanderGuardComponent>();
-  if (m_input.secondary_action) {
+  if (m_tick_input.guard_held) {
     if (guard == nullptr) {
       guard = commander->add_component<Engine::Core::CommanderGuardComponent>();
     }
@@ -2070,11 +2199,7 @@ auto CommanderControlController::update_impl(Engine::Core::World& world,
   try_activate_vanguard_rush(world, *commander, commander_id, local_owner_id);
   try_activate_second_wind(*commander);
 
-  auto const* active_action =
-      commander->get_component<Engine::Core::RpgCommanderActionComponent>();
-  bool const attack_animation_active =
-      active_action != nullptr && active_action->action_running;
-  if (m_input.primary_action) {
+  if (m_tick_input.primary_held) {
     m_combo_miss_timer = 0.0F;
     m_primary_held_duration += dt;
   } else if (attack_animation_active) {
@@ -2090,9 +2215,8 @@ auto CommanderControlController::update_impl(Engine::Core::World& world,
     }
   }
 
-  if (m_input.primary_action_scan_cooldown > 0.0F) {
-    m_input.primary_action_scan_cooldown =
-        std::max(0.0F, m_input.primary_action_scan_cooldown - dt);
+  if (m_primary_scan_cooldown > 0.0F) {
+    m_primary_scan_cooldown = std::max(0.0F, m_primary_scan_cooldown - dt);
   }
 
   auto* intents =
@@ -2102,8 +2226,10 @@ auto CommanderControlController::update_impl(Engine::Core::World& world,
     Game::Systems::CombatActions::expire_stale_intents(*intents, dt);
   }
 
+  float traced_dodge_grace_remaining = 0.0F;
   if (auto* rpg = commander->get_component<Engine::Core::RpgHealthComponent>()) {
     rpg->dodge_grace_remaining = std::max(0.0F, rpg->dodge_grace_remaining - dt);
+    traced_dodge_grace_remaining = rpg->dodge_grace_remaining;
   }
 
   bool const waiting_for_release = aim != nullptr && aim->relaxed_from_overhold;
@@ -2111,23 +2237,33 @@ auto CommanderControlController::update_impl(Engine::Core::World& world,
                                    m_jump_timer <= 0.0F && !waiting_for_release;
 
   if (intents != nullptr && body_can_take_input) {
-    bool const auto_repeat = m_input.primary_action && intents->empty() &&
+    bool const auto_repeat = m_tick_input.primary_held && intents->empty() &&
                              !attack_animation_active &&
-                             m_input.primary_action_scan_cooldown <= 0.0F;
-    if (m_primary_press_pending || auto_repeat) {
+                             m_primary_scan_cooldown <= 0.0F;
+    if (m_tick_input.primary_pressed || auto_repeat) {
       auto const* body =
           commander->get_component<Engine::Core::CommanderBodyControlComponent>();
       Engine::Core::CombatActionIntent intent;
-      intent.swing =
-          body != nullptr ? body->steered_intent : Engine::Core::MeleeIntent{};
+      intent.has_swing = body != nullptr;
+      if (body != nullptr) {
+        intent.swing = body->steered_intent;
+      }
       intent.pressed_at = intents->clock;
       intents->push(intent);
-      m_primary_press_pending = false;
-      m_input.primary_action_scan_cooldown = 0.08F;
+      if (m_tick_input.primary_pressed) {
+        ++m_edges.primary_consumed_sequence;
+      }
+      m_tick_input.primary_pressed = false;
+      m_primary_scan_cooldown = 0.08F;
     }
   }
-  if (!m_input.primary_action) {
-    m_primary_press_pending = false;
+  if (!m_tick_input.primary_held) {
+    if (m_tick_input.primary_pressed) {
+      ++m_edges.primary_dropped_sequence;
+    }
+    m_tick_input.primary_pressed = false;
+  } else {
+    m_carried_primary_press = m_tick_input.primary_pressed;
   }
 
   if (intents != nullptr && !intents->empty() && body_can_take_input) {
@@ -2156,7 +2292,7 @@ auto CommanderControlController::update_impl(Engine::Core::World& world,
         m_latency_probe->note_attack_start();
         m_latency_probe->note_pose_response();
       }
-      m_input.primary_action_scan_cooldown = 0.08F;
+      m_primary_scan_cooldown = 0.08F;
     }
   }
 
@@ -2168,8 +2304,8 @@ auto CommanderControlController::update_impl(Engine::Core::World& world,
        .move_right_axis = m_move_right_axis,
        .move_forward_axis = m_move_forward_axis,
        .held_duration = m_primary_held_duration,
-       .primary_held = m_input.primary_action,
-       .guard_held = m_input.secondary_action,
+       .primary_held = m_tick_input.primary_held,
+       .guard_held = m_tick_input.guard_held,
        .delta_time = dt});
   m_previous_view_yaw = m_view_yaw;
   m_previous_view_pitch = m_view_pitch;
@@ -2253,6 +2389,87 @@ auto CommanderControlController::update_impl(Engine::Core::World& world,
   if (m_latency_probe != nullptr) {
     m_latency_probe->note_simulation_response();
   }
+
+  if (m_trace_enabled) {
+    ++m_trace.sequence;
+    m_trace.valid = true;
+    m_trace.time_seconds += dt;
+
+    m_trace.input = m_edges;
+    m_trace.input.frame_index = m_frame_intent.frame_index;
+    m_trace.input.move_forward_axis = forward_axis;
+    m_trace.input.move_right_axis = right_axis;
+    m_trace.input.run_held = m_tick_input.run;
+    m_trace.input.primary_held = m_tick_input.primary_held;
+    m_trace.input.guard_held = m_tick_input.guard_held;
+    m_trace.input.primary_held_duration = m_primary_held_duration;
+    m_trace.input.look_delta_yaw = m_view_yaw - m_previous_view_yaw;
+    m_trace.input.look_delta_pitch = m_view_pitch - m_previous_view_pitch;
+    m_trace.input.view_yaw = m_view_yaw;
+    m_trace.input.view_pitch = m_view_pitch;
+
+    QVector3D const motor_position(
+        transform->position.x, transform->position.y, transform->position.z);
+    m_trace.motor.previous_position = motor_previous_position;
+    m_trace.motor.position = motor_position;
+    m_trace.motor.desired_velocity =
+        (move.lengthSquared() > 0.0001F ? move.normalized() : QVector3D()) *
+        motor_requested_speed;
+    m_trace.motor.actual_velocity =
+        dt > 0.0F ? (motor_position - motor_previous_position) / dt : QVector3D();
+    m_trace.motor.requested_speed = motor_requested_speed;
+    m_trace.motor.smoothed_speed = m_planar_speed_smooth;
+    m_trace.motor.speed_error =
+        m_trace.motor.actual_velocity.length() - motor_requested_speed;
+    m_trace.motor.grounded = !jump_active;
+    m_trace.motor.blocked = motor_blocked;
+    m_trace.motor.slid = motor_slid;
+    m_trace.motor.separation_push = motor_separation_push;
+    m_trace.motor.lunge_distance = motor_lunge_distance;
+    m_trace.motor.snap_back_distance = motor_snap_back_distance;
+    m_trace.motor.displacement_source = motor_source;
+    m_trace.motor.dt = dt;
+    m_trace.motor.presented_position = QVector3D(m_presentation_pose.position.x,
+                                                 m_presentation_pose.position.y,
+                                                 m_presentation_pose.position.z);
+    m_trace.motor.presented_yaw = m_presentation_pose.yaw;
+    m_trace.motor.presentation_alpha = m_presentation_pose.alpha;
+    m_trace.motor.presentation_extrapolated = m_presentation_pose.extrapolated;
+
+    m_trace.camera = m_camera_rig.trace();
+
+    m_trace.combat = App::Core::CommanderCombatTrace{};
+    if (active_action != nullptr) {
+      m_trace.combat.action_phase = static_cast<int>(active_action->phase);
+      m_trace.combat.action_normalized_time = active_action->normalized_action_time;
+      m_trace.combat.action_running = active_action->action_running;
+      m_trace.combat.action_hit_count = active_action->hit_target_count;
+    }
+    if (intents != nullptr) {
+      m_trace.combat.queued_intents = static_cast<int>(intents->count);
+    }
+    if (guard != nullptr) {
+      m_trace.combat.guard_active = guard->active;
+      m_trace.combat.perfect_guard_remaining = guard->perfect_guard_remaining;
+    }
+    m_trace.combat.dodge_state = static_cast<int>(m_dodge_state);
+    m_trace.combat.dodge_timer = m_dodge_timer;
+    m_trace.combat.dodge_grace_remaining = traced_dodge_grace_remaining;
+    m_trace.combat.health = unit->health;
+    m_trace.combat.locked_target_id = m_locked_target_id;
+    m_trace.combat.locked_target_slot =
+        m_locked_target_slot == std::numeric_limits<std::uint16_t>::max()
+            ? -1
+            : static_cast<int>(m_locked_target_slot);
+    m_trace.combat.soft_target_id = m_soft_target_id;
+    m_trace.combat.soft_target_slot =
+        m_soft_target_slot == std::numeric_limits<std::uint16_t>::max()
+            ? -1
+            : static_cast<int>(m_soft_target_slot);
+    m_trace.combat.hit_confirm_sequence = m_observed_hit_confirm_sequence;
+    m_trace.combat.stamina = traced_stamina;
+  }
+
   return true;
 }
 
@@ -2376,8 +2593,9 @@ void CommanderControlController::update_camera(Engine::Core::World& world,
   inputs.dodge_rolling = m_dodge_state == DodgeState::Rolling;
   inputs.dodge_tilt_progress = 1.0F - std::clamp(m_dodge_timer / 0.22F, 0.0F, 1.0F);
   inputs.dodge_direction = m_dodge_direction;
+  auto const pose = advance_presentation_pose(commander, *transform, dt);
   inputs.commander_position =
-      QVector3D(transform->position.x, transform->position.y, transform->position.z);
+      QVector3D(pose.position.x, pose.position.y, pose.position.z);
   inputs.lock_target_position = lock_target_position;
   inputs.soft_focus_position = soft_focus_position;
   inputs.fight_context = fight_context;

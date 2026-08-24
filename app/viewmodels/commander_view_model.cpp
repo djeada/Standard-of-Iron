@@ -321,20 +321,12 @@ void CommanderViewModel::reset_input() {
   m_control.reset();
 }
 
-void CommanderViewModel::primary_action() {
-  auto* world = m_context.world;
-  if (world == nullptr) {
-    return;
-  }
-  if (!m_control.primary_action(
-          *world, m_controlled_commander_id, m_context.local_owner_id)) {
-    exit_mode();
-  }
+void CommanderViewModel::release_input() {
+  m_control.release_all_input();
 }
 
 void CommanderViewModel::primary_action_down() {
   m_control.primary_action_down();
-  primary_action();
 }
 
 void CommanderViewModel::primary_action_up() {
@@ -347,10 +339,6 @@ void CommanderViewModel::secondary_action_down() {
 
 void CommanderViewModel::secondary_action_up() {
   m_control.secondary_action_up();
-  if (auto* world = m_context.world; world != nullptr) {
-    m_control.release_guard(
-        *world, m_controlled_commander_id, m_context.local_owner_id);
-  }
 }
 
 void CommanderViewModel::mouse_move(qreal dx, qreal dy) {

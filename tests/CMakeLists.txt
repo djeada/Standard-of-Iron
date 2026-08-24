@@ -351,6 +351,7 @@ add_executable(
     render/battle_render_optimizer_test.cpp
     render/barracks_flag_renderer_test.cpp
     render/building_archetype_desc_test.cpp
+    render/building_body_footprint_test.cpp
     render/building_render_common_test.cpp
     render/mode_indicator_test.cpp
     render/mode_indicator_placement_test.cpp
@@ -495,6 +496,10 @@ add_executable(
     core/commander_control_regression_test.cpp
     core/commander_camera_rig_test.cpp
     core/commander_control_controller_test.cpp
+    core/commander_presentation_trace_test.cpp
+    core/commander_view_model_input_test.cpp
+    core/commander_presentation_pose_test.cpp
+    core/commander_motor_test.cpp
     core/commander_direct_control_latency_test.cpp
     core/commander_mode_transition_test.cpp
     core/context_intent_test.cpp
@@ -564,6 +569,8 @@ endif()
 add_executable(
     arena_tests
     tools/arena_scenarios_test.cpp
+    tools/arena_rpg_gate_manifest_test.cpp
+    tools/arena_commander_metrics_test.cpp
     tools/arena_scenario_runner_test.cpp
     tools/arena_frame_continuity_test.cpp
     tools/arena_panel_population_test.cpp

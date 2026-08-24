@@ -1,0 +1,137 @@
+{
+  "schema_version": 1,
+  "unit_test_filters": [
+    {
+      "binary": "app_tests",
+      "filter": "CommanderCameraRig*:CommanderControlControllerTest.*:CommanderDirectControlLatencyTest.*:CommanderModeTransitionTest.*:CommanderControlRegressionTest.*:CommanderPresentationTraceTest.*:CommanderDisplacementSourceTest.*"
+    },
+    {
+      "binary": "arena_tests",
+      "filter": "ArenaRpgGateManifestTest.*:ArenaCommanderMetricsTest.*:ArenaScenariosTest.*"
+    }
+  ],
+  "scenario_defaults": {
+    "fps": 60,
+    "capture_interval": 0.0,
+    "repeats": 1,
+    "reproduction": "deterministic"
+  },
+  "scenarios": [
+    {
+      "id": "rpg_melee_contact",
+      "status": "expected_red",
+      "gate": "6",
+      "notes": "A struck enemy never enters a visible hit reaction: it stays in AttackSword through the whole contact window and goes straight to Dying. This was a coin flip until 2026-08-24. The renderer's animation clock was not reset at batch scenario start, so each run sampled the victim's attack clip at a different phase; at some phases the reaction won and the scenario passed. With the clock reset the run is deterministic and it fails 5 of 5 at 5.40 s, with 0 of ~1900 enemy soldier samples in HitReaction against 17 before. The commander's own reaction still shows for 72 samples, so the reaction path works -- it is the victim's in-progress attack that outranks it. Gate 6 owns the fix: 'contact must read with camera motion disabled'. Also carries the melee pose divergence: Body and camera agree to 0.0000 m in every scenario that does not swing a weapon. In melee they diverge by a constant 0.2144 m -- the same value in four separate scenarios, so it is a fixed offset applied during engagement, not jitter, and it is present on frames where combat.action_running is false as well as true. That is Gate 3's 'the clip root and the world root may not independently lunge': the renderer moves the visual root for melee while the motor, and therefore the camera anchor, does not.",
+      "issue_codes": [
+        "no_visible_hit_reaction",
+        "commander_presented_pose_disagreement"
+      ]
+    },
+    {
+      "id": "rpg_defense_contact",
+      "status": "expected_red",
+      "gate": "5",
+      "issue_codes": [
+        "rpg_block_contact_not_observed",
+        "rpg_health_changed",
+        "commander_presented_pose_disagreement"
+      ],
+      "notes": "No block contact is published and protected health is lost; guard/dodge feedback is fired on request rather than on a resolved contact. Also carries the melee pose divergence: Body and camera agree to 0.0000 m in every scenario that does not swing a weapon. In melee they diverge by a constant 0.2144 m -- the same value in four separate scenarios, so it is a fixed offset applied during engagement, not jitter, and it is present on frames where combat.action_running is false as well as true. That is Gate 3's 'the clip root and the world root may not independently lunge': the renderer moves the visual root for melee while the motor, and therefore the camera anchor, does not."
+    },
+    {
+      "id": "rpg_projectile_block",
+      "status": "required_green",
+      "gate": "5",
+      "notes": "Guard raised before an arrow arrives; keep and tighten to an exact guard phase."
+    },
+    {
+      "id": "rpg_escort_crowd",
+      "status": "required_green",
+      "gate": "3",
+      "notes": "Green. The renderer was applying combat root motion -- lunge and hit reaction -- as a world translation on top of the motor's own displacement, so the drawn body sat up to 0.2144 m from the point the camera was framing. For a simulation-owned body the renderer now owns pose only: the lean, pitch and squash still play, the world offset does not. CommanderPresentedPoseAgrees holds it at 0.01 m."
+    },
+    {
+      "id": "rpg_locomotion",
+      "status": "required_green",
+      "gate": "3",
+      "notes": "Walk, run, backpedal, strafe and halt on open ground. Was pinned red for an intermittent planted-foot slide; the cause was the harness, not the game. The renderer's animation clock was never reset when a batch scenario started, so it carried 74-116 ms of window-setup wall clock and every run sampled the walk clip at a different phase. With the clock reset at scenario load the rendered pose is bit-identical across runs and this passes 15 of 15. It now proves reproducibility, not that the Gate 3 locomotion contract holds -- gait is still selected from requested input rather than presented velocity, which Gate 3 owns.",
+      "repeats": 3
+    },
+    {
+      "id": "rpg_locomotion_hitch",
+      "status": "required_green",
+      "gate": "3",
+      "notes": "The locomotion script with 33/50/100/100 ms presented frames authored into it. Built while hunting the rpg_locomotion planted-foot slide; it ruled long frames out as the cause, which pointed at the animation clock instead. It stays as the hitch-resilience case and as the working example of ArenaPresentationHitch, which Gate 4's rpg_camera_hitch needs."
+    },
+    {
+      "id": "rpg_close_quarters",
+      "status": "required_green",
+      "gate": "4",
+      "notes": "Green. Two defects, one per gate. Gate 2: person-scale queries were using the RTS navigation footprint, so the commander was stopped a metre short of the facade. Gate 4: with the wall finally reachable, the camera eye ended up 0.339 m inside the house at the 180 degree yaw snap, because the boom query was a zero-radius ray and the minimum-boom clamp pinned the eye short of the surface. The boom now sweeps a camera radius and the resolved eye is depenetrated from building bodies."
+    },
+    {
+      "id": "rpg_obstacle_slide",
+      "status": "required_green",
+      "gate": "2",
+      "notes": "Green since the commander's body collision and line of sight stopped using the RTS navigation footprint. 'home' registers a 4.3 x 4.4 m nav box for a building drawn 2.36 x 2.42 m, so a person-sized commander was stopped a metre short of every facade and the camera's obstruction ray fired on empty air. Person-scale queries now use the drawn extents from BuildingCollisionRegistry::get_building_body(); the nav footprint and its grid padding are untouched, so RTS formations keep their spacing."
+    },
+    {
+      "id": "rpg_combo_cadence",
+      "status": "expected_red",
+      "gate": "5",
+      "issue_codes": [
+        "rpg_swing_cadence_too_slow",
+        "commander_presented_pose_disagreement"
+      ],
+      "notes": "A held attack left a 1.25 s gap against a 1.10 s contract. This scenario is replaced by deliberate timed presses once melee auto-repeat is removed; it is not loosened until it passes. Also carries the melee pose divergence: Body and camera agree to 0.0000 m in every scenario that does not swing a weapon. In melee they diverge by a constant 0.2144 m -- the same value in four separate scenarios, so it is a fixed offset applied during engagement, not jitter, and it is present on frames where combat.action_running is false as well as true. That is Gate 3's 'the clip root and the world root may not independently lunge': the renderer moves the visual root for melee while the motor, and therefore the camera anchor, does not."
+    },
+    {
+      "id": "rpg_pass_ranks",
+      "status": "required_green",
+      "gate": "4",
+      "notes": "Commander walks through friendly ranks; base case for camera crowd work."
+    },
+    {
+      "id": "rpg_strike_lunge",
+      "status": "required_green",
+      "gate": "3",
+      "notes": "Green. The renderer was applying combat root motion -- lunge and hit reaction -- as a world translation on top of the motor's own displacement, so the drawn body sat up to 0.2144 m from the point the camera was framing. For a simulation-owned body the renderer now owns pose only: the lean, pitch and squash still play, the world offset does not. CommanderPresentedPoseAgrees holds it at 0.01 m."
+    },
+    {
+      "id": "rpg_bow_volley",
+      "status": "required_green",
+      "gate": "5",
+      "notes": "Outside the first sword slice; kept green so the bow path does not rot while the sword matrix is rebuilt."
+    },
+    {
+      "id": "rpg_motor_start_stop",
+      "status": "expected_red",
+      "gate": "3",
+      "issue_codes": [
+        "planted_foot_slide"
+      ],
+      "notes": "New with the Gate 2 motor work; reproduces on every run at 2.05 s. The motor half passes. The cause is not the motor and not the gait blend: render/humanoid/runtime/poser.cpp guards the whole locomotion pose behind if (is_moving), so when the state flips the feet are assigned the idle stance in one frame and every bit of locomotion_blend smoothing is bypassed. The reported 0.091 m is the frame before the real 0.23 m snap. Three cheaper fixes were tried and measured worse or inert -- see docs/RPG_PLAYABILITY.md. Owned by Gate 3 phase continuity, and it touches every humanoid.",
+      "repeats": 3,
+      "reproduction": "deterministic",
+      "intermittent": false
+    },
+    {
+      "id": "rpg_motor_diagonal",
+      "status": "required_green",
+      "gate": "2",
+      "notes": "All eight input directions held long enough to settle. Green: diagonal input is normalised before speed selection, so two axes at once travel no faster than one.",
+      "repeats": 1,
+      "reproduction": "deterministic",
+      "intermittent": false
+    },
+    {
+      "id": "rpg_motor_figure_eight",
+      "status": "required_green",
+      "gate": "3",
+      "notes": "Green across three repeats per sweep and standalone. Its intermittent planted_foot_slide went away with the gait double-advance fix; rpg_motor_start_stop carries what remains of that defect.",
+      "repeats": 3,
+      "reproduction": "deterministic",
+      "intermittent": false
+    }
+  ]
+}

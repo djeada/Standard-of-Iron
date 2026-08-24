@@ -752,7 +752,7 @@ auto Renderer::plan_unit_entry(UnitRenderEntry& entry,
     return plan;
   }
 
-  UnitRenderCache::update_model_matrix(*entry.cache);
+  UnitRenderCache::update_model_matrix(*entry.cache, m_last_frame_delta);
   const QMatrix4x4& model_matrix = entry.cache->model_matrix;
 
   auto const* fn = m_entity_registry->get(entry.renderer_handle);
@@ -1098,6 +1098,7 @@ void Renderer::render_world(Engine::Core::World* world) {
         m_render_world_snapshot.get() != render_snapshot.get()) {
       transfer_render_runtime_state(*m_render_world_snapshot, *render_snapshot);
     }
+
     m_render_world_snapshot = render_snapshot;
     world = render_snapshot.get();
   }

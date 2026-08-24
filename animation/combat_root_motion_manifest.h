@@ -41,6 +41,7 @@ struct CombatRootMotionInputs {
   float recoil_dir_z{0.0F};
 
   bool body_displaced_by_simulation{false};
+  bool simulation_owns_lunge{false};
   std::uint32_t seed{0U};
 };
 

@@ -56,8 +56,10 @@ constexpr float k_default_frame_budget_ms = 33.34F;
 constexpr float k_default_fall_up_y = 0.72F;
 
 constexpr float k_default_foot_slide = 0.08F;
+constexpr float k_boom_reversal_floor = 0.005F;
+constexpr float k_presented_yaw_allowance_degrees = 0.5F;
 constexpr float k_planted_root_step = 0.02F;
-constexpr float k_planted_foot_height = 0.12F;
+constexpr float k_planted_foot_height = 0.05F;
 constexpr float k_default_hand_step = 0.90F;
 constexpr float k_default_pelvis_step = 70.0F;
 constexpr float k_default_attack_torso_sweep = 6.0F;
@@ -167,6 +169,143 @@ auto command_name(ScenarioCommandKind kind) -> QString {
 
 auto json_vector(const QVector3D& value) -> QJsonArray {
   return {value.x(), value.y(), value.z()};
+}
+
+auto framing_state_name(App::Core::CommanderFramingState state) -> QString {
+  switch (state) {
+  case App::Core::CommanderFramingState::Explore:
+    return QStringLiteral("explore");
+  case App::Core::CommanderFramingState::Melee:
+    return QStringLiteral("melee");
+  case App::Core::CommanderFramingState::DuelLock:
+    return QStringLiteral("duel_lock");
+  case App::Core::CommanderFramingState::BowAim:
+    return QStringLiteral("bow_aim");
+  }
+  return QStringLiteral("unknown");
+}
+
+auto commander_trace_json(const App::Core::CommanderPresentationTrace& trace)
+    -> QJsonObject {
+  auto const& input = trace.input;
+  auto const& motor = trace.motor;
+  auto const& camera = trace.camera;
+  auto const& combat = trace.combat;
+
+  QJsonObject input_json{
+      {QStringLiteral("frame_index"), static_cast<qint64>(input.frame_index)},
+      {QStringLiteral("primary_press_sequence"),
+       static_cast<qint64>(input.primary_press_sequence)},
+      {QStringLiteral("primary_release_sequence"),
+       static_cast<qint64>(input.primary_release_sequence)},
+      {QStringLiteral("primary_consumed_sequence"),
+       static_cast<qint64>(input.primary_consumed_sequence)},
+      {QStringLiteral("primary_dropped_sequence"),
+       static_cast<qint64>(input.primary_dropped_sequence)},
+      {QStringLiteral("guard_press_sequence"),
+       static_cast<qint64>(input.guard_press_sequence)},
+      {QStringLiteral("guard_release_sequence"),
+       static_cast<qint64>(input.guard_release_sequence)},
+      {QStringLiteral("dodge_request_sequence"),
+       static_cast<qint64>(input.dodge_request_sequence)},
+      {QStringLiteral("dodge_consumed_sequence"),
+       static_cast<qint64>(input.dodge_consumed_sequence)},
+      {QStringLiteral("dodge_refused_sequence"),
+       static_cast<qint64>(input.dodge_refused_sequence)},
+      {QStringLiteral("jump_request_sequence"),
+       static_cast<qint64>(input.jump_request_sequence)},
+      {QStringLiteral("jump_consumed_sequence"),
+       static_cast<qint64>(input.jump_consumed_sequence)},
+      {QStringLiteral("jump_refused_sequence"),
+       static_cast<qint64>(input.jump_refused_sequence)},
+      {QStringLiteral("move_axes"),
+       QJsonArray{input.move_forward_axis, input.move_right_axis}},
+      {QStringLiteral("run_held"), input.run_held},
+      {QStringLiteral("primary_held"), input.primary_held},
+      {QStringLiteral("guard_held"), input.guard_held},
+      {QStringLiteral("primary_held_duration"), input.primary_held_duration},
+      {QStringLiteral("look_delta"),
+       QJsonArray{input.look_delta_yaw, input.look_delta_pitch}},
+      {QStringLiteral("view_yaw"), input.view_yaw},
+      {QStringLiteral("view_pitch"), input.view_pitch}};
+
+  QJsonObject motor_json{
+      {QStringLiteral("previous_position"), json_vector(motor.previous_position)},
+      {QStringLiteral("position"), json_vector(motor.position)},
+      {QStringLiteral("desired_velocity"), json_vector(motor.desired_velocity)},
+      {QStringLiteral("actual_velocity"), json_vector(motor.actual_velocity)},
+      {QStringLiteral("requested_speed"), motor.requested_speed},
+      {QStringLiteral("smoothed_speed"), motor.smoothed_speed},
+      {QStringLiteral("speed_error"), motor.speed_error},
+      {QStringLiteral("grounded"), motor.grounded},
+      {QStringLiteral("blocked"), motor.blocked},
+      {QStringLiteral("slid"), motor.slid},
+      {QStringLiteral("separation_push"), motor.separation_push},
+      {QStringLiteral("lunge_distance"), motor.lunge_distance},
+      {QStringLiteral("snap_back_distance"), motor.snap_back_distance},
+      {QStringLiteral("displacement_source"),
+       QString::fromLatin1(
+           App::Core::displacement_source_name(motor.displacement_source))},
+      {QStringLiteral("dt"), motor.dt},
+      {QStringLiteral("presented_position"), json_vector(motor.presented_position)},
+      {QStringLiteral("presented_yaw"), motor.presented_yaw},
+      {QStringLiteral("presentation_alpha"), motor.presentation_alpha},
+      {QStringLiteral("presentation_extrapolated"), motor.presentation_extrapolated}};
+
+  QJsonObject camera_json{
+      {QStringLiteral("valid"), camera.valid},
+      {QStringLiteral("commander_position"), json_vector(camera.commander_position)},
+      {QStringLiteral("visual_anchor"), json_vector(camera.visual_anchor)},
+      {QStringLiteral("anchor_lag"), camera.anchor_lag},
+      {QStringLiteral("pivot"), json_vector(camera.pivot)},
+      {QStringLiteral("eye_unconstrained"), json_vector(camera.eye_unconstrained)},
+      {QStringLiteral("target_unconstrained"),
+       json_vector(camera.target_unconstrained)},
+      {QStringLiteral("eye_resolved"), json_vector(camera.eye_resolved)},
+      {QStringLiteral("target_resolved"), json_vector(camera.target_resolved)},
+      {QStringLiteral("boom_unconstrained"), camera.boom_unconstrained},
+      {QStringLiteral("boom_resolved"), camera.boom_resolved},
+      {QStringLiteral("building_blocked_fraction"), camera.building_blocked_fraction},
+      {QStringLiteral("occlusion_fraction"), camera.occlusion_fraction},
+      {QStringLiteral("terrain_lift"), camera.terrain_lift},
+      {QStringLiteral("eye_clearance"), camera.eye_clearance},
+      {QStringLiteral("fov"), camera.fov},
+      {QStringLiteral("yaw"), camera.yaw},
+      {QStringLiteral("pitch"), camera.pitch},
+      {QStringLiteral("yaw_velocity"), camera.yaw_velocity},
+      {QStringLiteral("pitch_velocity"), camera.pitch_velocity},
+      {QStringLiteral("ground_y"), camera.ground_y},
+      {QStringLiteral("framing_state"), framing_state_name(camera.framing_state)},
+      {QStringLiteral("framing_changed"), camera.framing_changed},
+      {QStringLiteral("dt"), camera.dt}};
+
+  QJsonObject combat_json{
+      {QStringLiteral("action_phase"), combat.action_phase},
+      {QStringLiteral("action_normalized_time"), combat.action_normalized_time},
+      {QStringLiteral("action_running"), combat.action_running},
+      {QStringLiteral("queued_intents"), combat.queued_intents},
+      {QStringLiteral("guard_active"), combat.guard_active},
+      {QStringLiteral("perfect_guard_remaining"), combat.perfect_guard_remaining},
+      {QStringLiteral("dodge_state"), combat.dodge_state},
+      {QStringLiteral("dodge_timer"), combat.dodge_timer},
+      {QStringLiteral("dodge_grace_remaining"), combat.dodge_grace_remaining},
+      {QStringLiteral("locked_target_id"),
+       static_cast<qint64>(combat.locked_target_id)},
+      {QStringLiteral("locked_target_slot"), combat.locked_target_slot},
+      {QStringLiteral("soft_target_id"), static_cast<qint64>(combat.soft_target_id)},
+      {QStringLiteral("soft_target_slot"), combat.soft_target_slot},
+      {QStringLiteral("hit_confirm_sequence"),
+       static_cast<qint64>(combat.hit_confirm_sequence)},
+      {QStringLiteral("action_hit_count"), combat.action_hit_count},
+      {QStringLiteral("health"), combat.health},
+      {QStringLiteral("stamina"), combat.stamina}};
+
+  return QJsonObject{{QStringLiteral("sequence"), static_cast<qint64>(trace.sequence)},
+                     {QStringLiteral("time_seconds"), trace.time_seconds},
+                     {QStringLiteral("input"), input_json},
+                     {QStringLiteral("motor"), motor_json},
+                     {QStringLiteral("camera"), camera_json},
+                     {QStringLiteral("combat"), combat_json}};
 }
 
 auto expectation_requires_zone(ArenaExpectationKind kind) -> bool {
@@ -458,6 +597,14 @@ struct ArenaScenarioRunner::Impl {
     float submitted_body_up_y{1.0F};
     float submitted_max_arm_reach{0.0F};
     bool submitted_body_pose_valid{false};
+    QVector3D foot_l_world;
+    QVector3D foot_r_world;
+    float locomotion_blend{0.0F};
+    float locomotion_presence{0.0F};
+    float cycle_phase{0.0F};
+    bool persistent_valid{false};
+    float sample_time{0.0F};
+    float persistent_last_sample_time{0.0F};
     QString declared_action;
     int declared_target_slot{-1};
     float declared_surface_gap{0.0F};
@@ -482,11 +629,13 @@ struct ArenaScenarioRunner::Impl {
 
   struct TraceFrame {
     float time_seconds{0.0F};
+    float animation_time{0.0F};
     double frame_time_ms{0.0};
     ArenaRenderedFrameTimings timings;
     std::vector<TraceUnit> units;
     std::vector<TraceSoldier> soldiers;
     std::vector<TraceAnimal> animals;
+    App::Core::CommanderPresentationTrace commander;
   };
 
   struct TravelObservation {
@@ -594,6 +743,8 @@ struct ArenaScenarioRunner::Impl {
   QHash<QString, std::vector<float>> initial_formation_projection;
   QSet<QString> issue_keys;
   std::vector<TraceFrame> trace;
+  App::Core::CommanderPresentationTrace commander_trace;
+  float animation_time{0.0F};
   ArenaScenarioReport report;
   ArenaEnvironmentSnapshot environment_snapshot;
   float elapsed{0.0F};
@@ -668,6 +819,17 @@ struct ArenaScenarioRunner::Impl {
       }
     }
     return total;
+  }
+
+  [[nodiscard]] auto commander_frames() const -> std::vector<const TraceFrame*> {
+    std::vector<const TraceFrame*> frames;
+    frames.reserve(trace.size());
+    for (auto const& frame : trace) {
+      if (frame.commander.valid) {
+        frames.push_back(&frame);
+      }
+    }
+    return frames;
   }
 
   [[nodiscard]] auto group_destroyed(const QString& group) const -> bool {
@@ -2710,6 +2872,14 @@ struct ArenaScenarioRunner::Impl {
            soldier.submitted_body_up_y,
            soldier.submitted_max_arm_reach,
            soldier.submitted_body_pose_valid,
+           soldier.foot_l_world,
+           soldier.foot_r_world,
+           soldier.locomotion_blend,
+           soldier.locomotion_presence,
+           soldier.cycle_phase,
+           soldier.persistent_valid,
+           soldier.sample_time,
+           soldier.persistent_last_sample_time,
            declared_action,
            directive != nullptr &&
                    (directive->action ==
@@ -2912,6 +3082,7 @@ struct ArenaScenarioRunner::Impl {
             };
             consider_foot(soldier.foot_l_world, previous.foot_l_world);
             consider_foot(soldier.foot_r_world, previous.foot_r_world);
+
             if (planted_slide > allowed) {
               add_issue(QStringLiteral("planted_foot_slide"),
                         QStringLiteral("%1 entity %2 soldier %3 planted foot slid %4 m "
@@ -3578,6 +3749,286 @@ struct ArenaScenarioRunner::Impl {
                         .arg(static_cast<int>(expectation.threshold)));
         }
         break;
+      case ArenaExpectationKind::CommanderPresentedPoseAgrees: {
+        float const allowed =
+            expectation.threshold > 0.0F ? expectation.threshold : 0.01F;
+        auto const frames = commander_frames();
+        float worst = 0.0F;
+        float worst_time = 0.0F;
+        float worst_yaw = 0.0F;
+        float worst_yaw_time = 0.0F;
+        int compared = 0;
+        for (auto const* frame : frames) {
+          auto const& shot = frame->commander.camera;
+          if (!shot.valid || frame->soldiers.empty()) {
+            continue;
+          }
+          ++compared;
+          float const gap = horizontal_distance(shot.commander_position,
+                                                frame->soldiers[0].root_position);
+          if (gap > worst) {
+            worst = gap;
+            worst_time = frame->time_seconds;
+          }
+
+          float const yaw_error =
+              std::abs(shortest_degrees(frame->commander.motor.presented_yaw,
+                                        frame->soldiers[0].root_yaw_degrees));
+          if (yaw_error > worst_yaw) {
+            worst_yaw = yaw_error;
+            worst_yaw_time = frame->time_seconds;
+          }
+        }
+        if (compared == 0) {
+          add_issue(QStringLiteral("commander_pose_not_compared"),
+                    QStringLiteral("%1 never had a camera and a rendered body in the "
+                                   "same frame")
+                        .arg(expectation.group));
+          break;
+        }
+        if (worst > allowed) {
+          add_issue(QStringLiteral("commander_presented_pose_disagreement"),
+                    QStringLiteral("the camera framed a point %1 m from the body it "
+                                   "was drawing at %2 s (allowed %3 m)")
+                        .arg(worst, 0, 'f', 4)
+                        .arg(worst_time, 0, 'f', 2)
+                        .arg(allowed, 0, 'f', 4));
+        }
+        if (worst_yaw > k_presented_yaw_allowance_degrees) {
+          add_issue(QStringLiteral("commander_presented_yaw_disagreement"),
+                    QStringLiteral("the presented pose faced %1 degrees away from the "
+                                   "body that was drawn at %2 s (allowed %3)")
+                        .arg(worst_yaw, 0, 'f', 3)
+                        .arg(worst_yaw_time, 0, 'f', 2)
+                        .arg(k_presented_yaw_allowance_degrees, 0, 'f', 2));
+        }
+        break;
+      }
+      case ArenaExpectationKind::CommanderCameraClearanceAtLeast: {
+        float const required =
+            expectation.threshold > 0.0F ? expectation.threshold : 0.10F;
+        auto const frames = commander_frames();
+        float worst = std::numeric_limits<float>::max();
+        float worst_time = 0.0F;
+        int sampled = 0;
+        for (auto const* frame : frames) {
+          auto const& shot = frame->commander.camera;
+          if (!shot.valid) {
+            continue;
+          }
+          ++sampled;
+          if (shot.eye_clearance < worst) {
+            worst = shot.eye_clearance;
+            worst_time = frame->time_seconds;
+          }
+        }
+        if (sampled == 0) {
+          add_issue(QStringLiteral("commander_camera_not_traced"),
+                    QStringLiteral("%1 never published a camera trace")
+                        .arg(expectation.group));
+          break;
+        }
+        if (worst < 0.0F) {
+          add_issue(QStringLiteral("commander_camera_penetrated"),
+                    QStringLiteral("camera eye was %1 m inside a building at %2 s")
+                        .arg(-worst, 0, 'f', 3)
+                        .arg(worst_time, 0, 'f', 2));
+        } else if (worst < required) {
+          add_issue(QStringLiteral("commander_camera_clearance"),
+                    QStringLiteral("camera eye came within %1 m of a building at %2 s "
+                                   "(needs %3 m)")
+                        .arg(worst, 0, 'f', 3)
+                        .arg(worst_time, 0, 'f', 2)
+                        .arg(required, 0, 'f', 3));
+        }
+        break;
+      }
+      case ArenaExpectationKind::CommanderBoomIsContinuous: {
+        float const allowed =
+            expectation.threshold > 0.0F ? expectation.threshold : 0.35F;
+        auto const frames = commander_frames();
+        float previous_boom = 0.0F;
+        float previous_step = 0.0F;
+        bool have_previous = false;
+        int reversals = 0;
+        for (auto const* frame : frames) {
+          auto const& shot = frame->commander.camera;
+          if (!shot.valid) {
+            continue;
+          }
+          if (have_previous) {
+            float const step = shot.boom_resolved - previous_boom;
+
+            if (step > allowed) {
+              add_issue(QStringLiteral("commander_boom_discontinuity"),
+                        QStringLiteral("camera boom extended %1 m in one frame at %2 s "
+                                       "(allowed %3 m); retraction may be immediate "
+                                       "but release has to be damped")
+                            .arg(step, 0, 'f', 3)
+                            .arg(frame->time_seconds, 0, 'f', 2)
+                            .arg(allowed, 0, 'f', 3));
+              break;
+            }
+            if (std::abs(step) > k_boom_reversal_floor &&
+                std::abs(previous_step) > k_boom_reversal_floor &&
+                ((step > 0.0F) != (previous_step > 0.0F)) &&
+                shot.building_blocked_fraction < 1.0F) {
+              ++reversals;
+            }
+            previous_step = step;
+          }
+          previous_boom = shot.boom_resolved;
+          have_previous = true;
+        }
+        int const allowed_reversals =
+            std::max(2, static_cast<int>(std::lround(expectation.distance)));
+        if (reversals > allowed_reversals) {
+          add_issue(QStringLiteral("commander_boom_pumping"),
+                    QStringLiteral("camera boom reversed direction %1 times while an "
+                                   "obstruction stayed active (allowed %2)")
+                        .arg(reversals)
+                        .arg(allowed_reversals));
+        }
+        break;
+      }
+      case ArenaExpectationKind::NoUncommandedViewRotation: {
+        float const allowed =
+            expectation.threshold > 0.0F ? expectation.threshold : 0.05F;
+        for (auto const* frame : commander_frames()) {
+          auto const& shot = frame->commander.camera;
+          auto const& in = frame->commander.input;
+          if (!shot.valid || shot.framing_changed ||
+              frame->commander.combat.locked_target_id != 0) {
+            continue;
+          }
+          if (std::abs(in.look_delta_yaw) > 1.0e-4F ||
+              std::abs(in.look_delta_pitch) > 1.0e-4F) {
+            continue;
+          }
+          float const yaw_step = std::abs(shot.yaw_velocity * shot.dt);
+          float const pitch_step = std::abs(shot.pitch_velocity * shot.dt);
+          if (yaw_step > allowed || pitch_step > allowed) {
+            add_issue(
+                QStringLiteral("commander_view_rotated_uncommanded"),
+                QStringLiteral("view turned %1 deg yaw / %2 deg pitch at %3 s with no "
+                               "look input, no lock and no framing change (allowed %4)")
+                    .arg(yaw_step, 0, 'f', 3)
+                    .arg(pitch_step, 0, 'f', 3)
+                    .arg(frame->time_seconds, 0, 'f', 2)
+                    .arg(allowed, 0, 'f', 3));
+            break;
+          }
+        }
+        break;
+      }
+      case ArenaExpectationKind::CommanderMotorCorrectionWithin: {
+        float const allowed =
+            expectation.threshold > 0.0F ? expectation.threshold : 0.08F;
+        for (auto const* frame : commander_frames()) {
+          auto const& motor = frame->commander.motor;
+          float const correction =
+              std::max(motor.snap_back_distance, motor.separation_push);
+          if (correction > allowed) {
+            add_issue(
+                QStringLiteral("commander_motor_correction"),
+                QStringLiteral("motor corrected the body %1 m in one tick at %2 s via "
+                               "%3 (allowed %4 m)")
+                    .arg(correction, 0, 'f', 3)
+                    .arg(frame->time_seconds, 0, 'f', 2)
+                    .arg(QString::fromLatin1(
+                        App::Core::displacement_source_name(motor.displacement_source)))
+                    .arg(allowed, 0, 'f', 3));
+            break;
+          }
+        }
+        break;
+      }
+      case ArenaExpectationKind::CommanderSpeedIsContinuous: {
+        float const allowed =
+            expectation.threshold > 0.0F ? expectation.threshold : 4.0F;
+        float previous_speed = 0.0F;
+        bool have_previous = false;
+        for (auto const* frame : commander_frames()) {
+          auto const& motor = frame->commander.motor;
+          float const speed = motor.actual_velocity.length();
+          if (have_previous && motor.dt > 0.0F) {
+            float const change = std::abs(speed - previous_speed) / motor.dt;
+            if (change > allowed) {
+              add_issue(
+                  QStringLiteral("commander_speed_discontinuity"),
+                  QStringLiteral("planar speed changed %1 m/s^2 at %2 s via %3 "
+                                 "(allowed %4 m/s^2)")
+                      .arg(change, 0, 'f', 2)
+                      .arg(frame->time_seconds, 0, 'f', 2)
+                      .arg(QString::fromLatin1(App::Core::displacement_source_name(
+                          motor.displacement_source)))
+                      .arg(allowed, 0, 'f', 2));
+              break;
+            }
+          }
+          previous_speed = speed;
+          have_previous = true;
+        }
+        break;
+      }
+      case ArenaExpectationKind::CommanderInputEdgesAllConsumed: {
+        auto const frames = commander_frames();
+        if (frames.empty()) {
+          add_issue(QStringLiteral("commander_input_not_traced"),
+                    QStringLiteral("no commander presentation trace was recorded, so "
+                                   "input edges cannot be accounted for"));
+          break;
+        }
+        auto const& last = frames.back()->commander.input;
+        if (last.primary_press_sequence !=
+            last.primary_consumed_sequence + last.primary_dropped_sequence) {
+          add_issue(
+              QStringLiteral("commander_attack_edge_unaccounted"),
+              QStringLiteral("%1 attack presses produced %2 consumed and %3 dropped; "
+                             "every edge must land in exactly one of the two")
+                  .arg(last.primary_press_sequence)
+                  .arg(last.primary_consumed_sequence)
+                  .arg(last.primary_dropped_sequence));
+        }
+        auto const allowed_drops =
+            static_cast<std::uint64_t>(std::max(0.0F, expectation.threshold));
+        if (last.primary_dropped_sequence > allowed_drops) {
+          add_issue(QStringLiteral("commander_attack_edge_dropped"),
+                    QStringLiteral("%1 attack presses were dropped without reaching "
+                                   "the simulation (allowed %2)")
+                        .arg(last.primary_dropped_sequence)
+                        .arg(allowed_drops));
+        }
+        if (last.dodge_request_sequence !=
+            last.dodge_consumed_sequence + last.dodge_refused_sequence) {
+          add_issue(
+              QStringLiteral("commander_dodge_edge_unaccounted"),
+              QStringLiteral("%1 dodge requests produced %2 consumed and %3 refused")
+                  .arg(last.dodge_request_sequence)
+                  .arg(last.dodge_consumed_sequence)
+                  .arg(last.dodge_refused_sequence));
+        }
+        break;
+      }
+      case ArenaExpectationKind::CommanderContactCountAtMost: {
+        int const allowed =
+            std::max(1,
+                     static_cast<int>(std::lround(
+                         expectation.threshold > 0.0F ? expectation.threshold : 1.0F)));
+        for (auto const* frame : commander_frames()) {
+          auto const& combat = frame->commander.combat;
+          if (combat.action_running && combat.action_hit_count > allowed) {
+            add_issue(QStringLiteral("commander_contact_multiplicity"),
+                      QStringLiteral("one action landed %1 contacts by %2 s, but at "
+                                     "most %3 is authored")
+                          .arg(combat.action_hit_count)
+                          .arg(frame->time_seconds, 0, 'f', 2)
+                          .arg(allowed));
+            break;
+          }
+        }
+        break;
+      }
       case ArenaExpectationKind::GroupIsRendered:
         if (rendered_by_group.value(expectation.group, 0U) == 0U) {
           add_issue(QStringLiteral("group_not_rendered"),
@@ -4269,6 +4720,15 @@ void ArenaScenarioRunner::observe_rendered_frame(double frame_time_ms) {
   observe_rendered_frame(timings);
 }
 
+void ArenaScenarioRunner::set_animation_time(float seconds) {
+  m_impl->animation_time = seconds;
+}
+
+void ArenaScenarioRunner::observe_commander_presentation(
+    const App::Core::CommanderPresentationTrace& trace) {
+  m_impl->commander_trace = trace;
+}
+
 void ArenaScenarioRunner::observe_rendered_frame(
     const ArenaRenderedFrameTimings& timings) {
   if (!m_impl->started) {
@@ -4279,6 +4739,8 @@ void ArenaScenarioRunner::observe_rendered_frame(
   frame.time_seconds = m_impl->elapsed;
   frame.frame_time_ms = timings.total_ms;
   frame.timings = timings;
+  frame.commander = m_impl->commander_trace;
+  frame.animation_time = m_impl->animation_time;
   m_impl->record_animals(frame);
   for (auto* entity :
        m_impl->world.collect_entities_with<Engine::Core::BuildingComponent>()) {
@@ -4565,6 +5027,15 @@ auto ArenaScenarioRunner::write_artifacts(const QString& directory,
           {QStringLiteral("submitted_max_arm_reach"), soldier.submitted_max_arm_reach},
           {QStringLiteral("submitted_body_pose_valid"),
            soldier.submitted_body_pose_valid},
+          {QStringLiteral("foot_l_world"), json_vector(soldier.foot_l_world)},
+          {QStringLiteral("foot_r_world"), json_vector(soldier.foot_r_world)},
+          {QStringLiteral("locomotion_blend"), soldier.locomotion_blend},
+          {QStringLiteral("locomotion_presence"), soldier.locomotion_presence},
+          {QStringLiteral("cycle_phase"), soldier.cycle_phase},
+          {QStringLiteral("persistent_valid"), soldier.persistent_valid},
+          {QStringLiteral("sample_time"), soldier.sample_time},
+          {QStringLiteral("previous_locomotion_presence"),
+           soldier.persistent_last_sample_time},
           {QStringLiteral("declared_action"), soldier.declared_action},
           {QStringLiteral("declared_target_slot"), soldier.declared_target_slot},
           {QStringLiteral("declared_surface_gap"), soldier.declared_surface_gap},
@@ -4576,7 +5047,7 @@ auto ArenaScenarioRunner::write_artifacts(const QString& directory,
           {QStringLiteral("culled"), soldier.culled},
           {QStringLiteral("cull_reason"), soldier.cull_reason}});
     }
-    QJsonObject const line{
+    QJsonObject line{
         {QStringLiteral("time_seconds"), frame.time_seconds},
         {QStringLiteral("frame_time_ms"), frame.frame_time_ms},
         {QStringLiteral("frame_breakdown_ms"),
@@ -4619,9 +5090,13 @@ auto ArenaScenarioRunner::write_artifacts(const QString& directory,
               static_cast<qint64>(frame.timings.shadow_rigged_instanced_draws)},
              {QStringLiteral("shadow_single_draws"),
               static_cast<qint64>(frame.timings.shadow_rigged_single_draws)}}},
+        {QStringLiteral("animation_time"), frame.animation_time},
         {QStringLiteral("units"), units},
         {QStringLiteral("animals"), animals},
         {QStringLiteral("soldiers"), soldiers}};
+    if (frame.commander.valid) {
+      line.insert(QStringLiteral("commander"), commander_trace_json(frame.commander));
+    }
     trace_file.write(QJsonDocument(line).toJson(QJsonDocument::Compact));
     trace_file.write("\n");
   }

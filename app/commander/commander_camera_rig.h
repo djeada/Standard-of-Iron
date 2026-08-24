@@ -31,6 +31,33 @@ struct CommanderCameraState {
   bool anchor_valid{false};
 };
 
+struct CommanderCameraTrace {
+  bool valid{false};
+  QVector3D commander_position{};
+  QVector3D visual_anchor{};
+  float anchor_lag{0.0F};
+  QVector3D pivot{};
+  QVector3D eye_unconstrained{};
+  QVector3D target_unconstrained{};
+  QVector3D eye_resolved{};
+  QVector3D target_resolved{};
+  float boom_unconstrained{0.0F};
+  float boom_resolved{0.0F};
+  float building_blocked_fraction{1.0F};
+  float occlusion_fraction{1.0F};
+  float terrain_lift{0.0F};
+  float eye_clearance{0.0F};
+  float fov{0.0F};
+  float yaw{0.0F};
+  float pitch{0.0F};
+  float yaw_velocity{0.0F};
+  float pitch_velocity{0.0F};
+  float ground_y{0.0F};
+  CommanderFramingState framing_state{CommanderFramingState::Explore};
+  bool framing_changed{false};
+  float dt{0.0F};
+};
+
 struct CommanderCameraInputs {
   float dt{0.0F};
   float view_yaw_degrees{0.0F};
@@ -73,6 +100,7 @@ public:
   [[nodiscard]] auto bob_phase() const -> float { return m_bob_phase; }
   [[nodiscard]] auto bob_amplitude() const -> float { return m_bob_amplitude; }
   [[nodiscard]] auto state() const -> const CommanderCameraState& { return m_state; }
+  [[nodiscard]] auto trace() const -> const CommanderCameraTrace& { return m_trace; }
 
   static auto
   select_framing(bool aiming_bow,
@@ -123,6 +151,8 @@ private:
 
   float m_ground_y{0.0F};
   bool m_ground_valid{false};
+
+  CommanderCameraTrace m_trace{};
 };
 
 } // namespace App::Core

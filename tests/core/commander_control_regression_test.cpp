@@ -122,6 +122,22 @@ TEST(CommanderControlRegressionTest,
   EXPECT_TRUE(contains(source, "root.gameView.forceActiveFocus();"));
 }
 
+TEST(CommanderControlRegressionTest, CommanderInputLayerReleasesEveryHeldInputAtOnce) {
+  const auto root = find_repo_root();
+  const auto source = read_text(root / "ui" / "qml" / "CommanderInputLayer.qml");
+  const auto view_model_source = app_source(root, "commander_view_model.cpp");
+  ASSERT_FALSE(source.empty());
+  ASSERT_FALSE(view_model_source.empty());
+
+  EXPECT_TRUE(contains(source, "root.commander.release_input();"));
+  EXPECT_TRUE(contains(source, "onActiveChanged"));
+  EXPECT_TRUE(contains(source, "onMenu_visibleChanged"));
+  EXPECT_TRUE(contains(view_model_source, "void CommanderViewModel::release_input()"));
+  EXPECT_TRUE(contains(view_model_source, "m_control.release_all_input();"));
+  EXPECT_FALSE(contains(view_model_source, "m_control.primary_action("));
+  EXPECT_FALSE(contains(view_model_source, "m_control.release_guard("));
+}
+
 TEST(CommanderControlRegressionTest, GameViewRestoresInputFocusAcrossModes) {
   const auto root = find_repo_root();
   const auto source = read_text(root / "ui" / "qml" / "GameView.qml");
@@ -801,16 +817,50 @@ TEST(CommanderControlRegressionTest, CommanderJumpAddsVisualLiftToRenderAndCamer
   EXPECT_TRUE(contains(ambient_manifest_source, ".type = HumanoidAmbientIdle::Jump,"));
 }
 
+TEST(CommanderControlRegressionTest, OnlyTheMotorTranslatesTheCommander) {
+  const auto root = find_repo_root();
+  const auto controller_source = app_source(root, "commander_control_controller.cpp");
+  const auto motor_source = app_source(root, "commander_motor.cpp");
+  ASSERT_FALSE(controller_source.empty());
+  ASSERT_FALSE(motor_source.empty());
+
+  for (const std::string write : {"transform->position.x =",
+                                  "transform->position.z =",
+                                  "transform.position.x =",
+                                  "transform.position.z ="}) {
+    EXPECT_FALSE(contains(controller_source, write))
+        << "the controller writes " << write
+        << " directly. Commander translation goes through CommanderMotor so that "
+           "every displacement is collision-checked and reported once.";
+  }
+
+  EXPECT_TRUE(contains(motor_source, "transform.position.x = step.x;"));
+  EXPECT_TRUE(contains(motor_source, "transform.position.z = step.z;"));
+
+  for (const std::string source : {"CommanderDisplacementSource::Walk",
+                                   "CommanderDisplacementSource::Airborne",
+                                   "CommanderDisplacementSource::DodgeRoll",
+                                   "CommanderDisplacementSource::DodgeRecover",
+                                   "CommanderDisplacementSource::StrikeLunge",
+                                   "CommanderDisplacementSource::BodySeparation"}) {
+    EXPECT_TRUE(contains(controller_source, source))
+        << source << " has to reach the motor as a named displacement source";
+  }
+}
+
 TEST(CommanderControlRegressionTest,
      CommanderJumpAllowsAirborneTraversalAcrossGroundObstacles) {
   const auto root = find_repo_root();
   const auto controller_source = app_source(root, "commander_control_controller.cpp");
+  const auto motor_source = app_source(root, "commander_motor.cpp");
   const auto movement_source =
       read_text(root / "game" / "systems" / "movement_system.cpp");
   ASSERT_FALSE(controller_source.empty());
+  ASSERT_FALSE(motor_source.empty());
   ASSERT_FALSE(movement_source.empty());
 
-  EXPECT_TRUE(contains(controller_source, "airborne_step(nx, nz)"));
+  EXPECT_TRUE(contains(controller_source, ".airborne = jump_active,"));
+  EXPECT_TRUE(contains(motor_source, "airborne_step(request.to.x(), request.to.z())"));
   EXPECT_TRUE(contains(controller_source, "jump_active"));
   EXPECT_TRUE(contains(controller_source, "m_jump_safe_position_valid"));
   EXPECT_TRUE(contains(movement_source, "commander->jump_active"));
