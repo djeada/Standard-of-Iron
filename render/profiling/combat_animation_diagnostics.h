@@ -121,6 +121,11 @@ struct SoldierAnimationDebugSample {
   float root_up_y{1.0F};
   float root_scale_y{1.0F};
   float root_tilt_degrees{0.0F};
+  float locomotion_blend{0.0F};
+  float locomotion_presence{0.0F};
+  float cycle_phase{0.0F};
+  bool persistent_valid{false};
+  float persistent_last_sample_time{0.0F};
   float hit_reaction_tilt_degrees{0.0F};
 
   float submitted_body_up_y{1.0F};

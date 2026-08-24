@@ -64,6 +64,7 @@ public:
 
   Q_INVOKABLE void key_down(int key, int modifiers = 0);
   Q_INVOKABLE void key_up(int key, int modifiers = 0);
+  Q_INVOKABLE void release_input();
   Q_INVOKABLE void primary_action_down();
   Q_INVOKABLE void primary_action_up();
   Q_INVOKABLE void secondary_action_down();
@@ -116,6 +117,9 @@ public:
   [[nodiscard]] auto frame_intent() const -> const CommanderFrameIntent& {
     return m_control.frame_intent();
   }
+  [[nodiscard]] auto input_edges() const -> const App::Core::CommanderInputTrace& {
+    return m_control.input_edges();
+  }
 
   void restore_direct_control_if_ready();
   void render_effects();
@@ -164,7 +168,6 @@ private:
   void enter_rts_runtime_mode();
   void enter_commander_runtime_mode();
   void exit_commander_runtime_mode();
-  void primary_action();
   void cancel_active_placement();
   void seed_flag_rally_preview_from_view_center();
 

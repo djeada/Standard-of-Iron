@@ -27,6 +27,11 @@ struct BuildingFootprint {
   float grid_padding{k_default_building_grid_padding};
   bool blocks_navigation{true};
 
+  float body_center_x{0.0F};
+  float body_center_z{0.0F};
+  float body_width{0.0F};
+  float body_depth{0.0F};
+
   BuildingFootprint(float x,
                     float z,
                     float w,
@@ -40,7 +45,11 @@ struct BuildingFootprint {
       , depth(d)
       , owner_id(owner)
       , entity_id(id)
-      , grid_padding(padding) {}
+      , grid_padding(padding)
+      , body_center_x(x)
+      , body_center_z(z)
+      , body_width(w)
+      , body_depth(d) {}
 };
 
 struct NavigationPassage {
@@ -79,8 +88,20 @@ public:
 
   static auto get_building_size(const std::string& building_type) -> BuildingSize;
 
+  struct BuildingBody {
+    float width;
+    float depth;
+    float offset_x;
+    float offset_z;
+  };
+
+  static auto get_building_body(const std::string& building_type) -> BuildingBody;
+
   static auto axis_aligned_size(BuildingSize size,
                                 float facing_degrees) -> BuildingSize;
+
+  static auto rotate_body_offset(BuildingBody body,
+                                 float facing_degrees) -> BuildingBody;
 
   static auto get_building_grid_padding(const std::string& building_type) -> float;
 
@@ -109,6 +130,10 @@ public:
   authored_obstacles() const -> const std::vector<BuildingFootprint>& {
     return m_authored_obstacles;
   }
+
+  void apply_building_body(Engine::Core::EntityID entity_id,
+                           const std::string& building_type,
+                           float facing_degrees);
 
   void update_building_position(Engine::Core::EntityID entity_id,
                                 float center_x,
@@ -220,6 +245,7 @@ private:
   float m_max_half_extent{0.0F};
 
   static const std::map<std::string, BuildingSize> s_building_sizes;
+  static const std::map<std::string, BuildingBody> s_building_bodies;
 
   static float s_grid_padding;
 };

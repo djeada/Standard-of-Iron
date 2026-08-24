@@ -108,8 +108,18 @@ public:
   auto camera() const -> Camera* { return m_camera; }
   auto backend() -> Backend* { return m_gl_backend; }
 
-  void update_animation_time(float delta_time) { m_accumulated_time += delta_time; }
+  void update_animation_time(float delta_time) {
+    m_accumulated_time += delta_time;
+    m_last_frame_delta = delta_time;
+  }
+  [[nodiscard]] auto last_frame_delta() const -> float { return m_last_frame_delta; }
   auto get_animation_time() const -> float { return m_accumulated_time; }
+
+  void reset_animation_time() {
+    m_accumulated_time = 0.0F;
+    m_last_frame_delta = 0.0F;
+    m_animation_time_cache.clear();
+  }
 
   auto resources() const -> ResourceManager* {
     return m_backend ? m_backend->resources() : nullptr;
@@ -521,6 +531,7 @@ private:
   int m_viewport_height = 0;
   GridParams m_grid_params;
   float m_accumulated_time = 0.0F;
+  float m_last_frame_delta = 0.0F;
   std::atomic<bool> m_paused{false};
   RenderViewState m_view;
   Render::WorldView m_world_view;

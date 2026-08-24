@@ -57,6 +57,13 @@ protected:
 
   static auto measure(const Injection& inject, double settle_seconds = 0.5)
       -> App::Core::CommanderLatencySample {
+    return measure_at(k_render_frame_seconds, inject, settle_seconds);
+  }
+
+  static auto
+  measure_at(double frame_seconds,
+             const Injection& inject,
+             double settle_seconds = 0.5) -> App::Core::CommanderLatencySample {
     Engine::Core::World world;
     auto* commander = create_commander(world);
     EXPECT_NE(commander, nullptr);
@@ -78,15 +85,15 @@ protected:
       probe.set_time(now);
       static_cast<void>(controller.sample_frame_intent(nullptr));
       controller.update_camera_presentation(
-          world, commander_id, camera, static_cast<float>(k_render_frame_seconds));
+          world, commander_id, camera, static_cast<float>(frame_seconds));
 
-      tick_accumulator += k_render_frame_seconds;
+      tick_accumulator += frame_seconds;
       while (tick_accumulator >= k_simulation_tick_seconds) {
         tick_accumulator -= k_simulation_tick_seconds;
         static_cast<void>(controller.update_simulation(
             world, commander_id, 1, static_cast<float>(k_simulation_tick_seconds)));
       }
-      now += k_render_frame_seconds;
+      now += frame_seconds;
     };
 
     for (int warmup = 0; warmup < 30; ++warmup) {
@@ -94,7 +101,7 @@ protected:
     }
 
     const auto settle_frames =
-        static_cast<int>(std::ceil(settle_seconds / k_render_frame_seconds));
+        static_cast<int>(std::ceil(settle_seconds / frame_seconds));
     for (int frame = 0; frame < settle_frames; ++frame) {
       if (!injected) {
         injected = true;
@@ -131,15 +138,20 @@ protected:
 };
 
 TEST_F(CommanderDirectControlLatencyTest,
-       MouseLookReachesTheCameraWithinOneRenderedFrame) {
-  const auto sample = measure(
-      [](CommanderControlController& controller) { controller.mouse_move(24.0, 0.0); });
+       MouseLookChangesPresentedCameraWithinOneRenderedFrame) {
+  for (double const presentation_hz : {30.0, 60.0, 120.0, 144.0}) {
+    const double frame_seconds = 1.0 / presentation_hz;
+    const auto sample =
+        measure_at(frame_seconds, [](CommanderControlController& controller) {
+          controller.mouse_move(24.0, 0.0);
+        });
 
-  ASSERT_TRUE(sample.has_input());
-  ASSERT_GE(sample.camera_seconds, 0.0);
-  EXPECT_LE(sample.camera_seconds - sample.input_seconds,
-            k_render_frame_seconds + 1.0e-6)
-      << App::Core::describe(sample);
+    ASSERT_TRUE(sample.has_input()) << presentation_hz << " Hz";
+    ASSERT_GE(sample.camera_seconds, 0.0) << presentation_hz << " Hz";
+    EXPECT_LE(sample.camera_seconds - sample.input_seconds, frame_seconds + 1.0e-6)
+        << presentation_hz
+        << " Hz over a 60 Hz simulation: " << App::Core::describe(sample);
+  }
 }
 
 TEST_F(CommanderDirectControlLatencyTest,

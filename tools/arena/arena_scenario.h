@@ -11,6 +11,7 @@
 #include <unordered_map>
 #include <vector>
 
+#include "app/commander/commander_presentation_trace.h"
 #include "game/formation/army_formation_types.h"
 #include "game/map/map_definition.h"
 #include "game/map/terrain.h"
@@ -282,6 +283,14 @@ enum class ArenaExpectationKind : std::uint8_t {
   WildlifeCasualtyObserved,
   RangeIndicatorObserved,
   RangeIndicatorCountAtMost,
+  CommanderBoomIsContinuous,
+  CommanderCameraClearanceAtLeast,
+  CommanderPresentedPoseAgrees,
+  NoUncommandedViewRotation,
+  CommanderMotorCorrectionWithin,
+  CommanderSpeedIsContinuous,
+  CommanderInputEdgesAllConsumed,
+  CommanderContactCountAtMost,
 };
 
 struct ArenaExpectation {
@@ -294,6 +303,11 @@ struct ArenaExpectation {
   float threshold{0.0F};
   float distance{0.0F};
   QVector3D position;
+};
+
+struct ArenaPresentationHitch {
+  float at_seconds{0.0F};
+  float frame_ms{33.0F};
 };
 
 struct ArenaCameraView {
@@ -335,6 +349,7 @@ struct ArenaScenarioDefinition {
   bool collect_animation_diagnostics{true};
   bool rpg_mode{false};
   QString rpg_commander_group;
+  std::vector<ArenaPresentationHitch> presentation_hitches;
   Render::GraphicsQuality graphics_quality{Render::GraphicsQuality::High};
   Game::Map::EnvironmentDefinition environment{};
   Game::Map::WeatherLightingInput weather{};
@@ -483,6 +498,9 @@ public:
   void update(float simulation_dt);
   void observe_rendered_frame(double frame_time_ms);
   void observe_rendered_frame(const ArenaRenderedFrameTimings& timings);
+  void
+  observe_commander_presentation(const App::Core::CommanderPresentationTrace& trace);
+  void set_animation_time(float seconds);
   void report_external_issue(QString code, QString message);
   void set_duration_limit(float duration_seconds);
 

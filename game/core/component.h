@@ -640,6 +640,7 @@ enum class CombatIntentOutcome : std::uint8_t {
 struct CombatActionIntent {
 
   MeleeIntent swing{};
+  bool has_swing{false};
 
   float pressed_at{0.0F};
   float held_duration{0.0F};
@@ -1197,6 +1198,7 @@ public:
   float jump_height_offset{0.0F};
   float fpv_motion_vx{0.0F};
   float fpv_motion_vz{0.0F};
+  bool fpv_motion_requested{false};
   float posture{0.0F};
   float posture_max{100.0F};
   float punish_window_remaining{0.0F};
@@ -2381,6 +2383,66 @@ enum class CreatureCastPresentation : std::uint8_t {
   None,
   Fireball,
 };
+
+class CommanderPresentationSampleComponent {
+public:
+  CommanderPresentationSampleComponent() = default;
+
+  using Vec3 = TransformComponent::Vec3;
+
+  bool valid{false};
+  bool snap{true};
+  std::uint32_t tick_sequence{0};
+  float tick_seconds{0.0F};
+
+  Vec3 previous_position{0.0F, 0.0F, 0.0F};
+  float previous_yaw{0.0F};
+  Vec3 position{0.0F, 0.0F, 0.0F};
+  float yaw{0.0F};
+};
+
+struct PresentationPose {
+  TransformComponent::Vec3 position{0.0F, 0.0F, 0.0F};
+  float yaw{0.0F};
+  float alpha{1.0F};
+  bool extrapolated{false};
+};
+
+inline constexpr float k_presentation_max_extrapolation = 0.5F;
+
+inline constexpr float k_presentation_teleport_threshold = 2.0F;
+
+[[nodiscard]] inline auto
+resolve_presentation_pose(const CommanderPresentationSampleComponent& sample,
+                          float age_seconds) -> PresentationPose {
+  PresentationPose pose;
+  pose.position = sample.position;
+  pose.yaw = sample.yaw;
+  if (!sample.valid || sample.snap || sample.tick_seconds <= 0.0F) {
+    return pose;
+  }
+
+  float const alpha = std::clamp(
+      age_seconds / sample.tick_seconds, 0.0F, 1.0F + k_presentation_max_extrapolation);
+  pose.alpha = alpha;
+  pose.extrapolated = alpha > 1.0F;
+  pose.position = {sample.previous_position.x +
+                       ((sample.position.x - sample.previous_position.x) * alpha),
+                   sample.previous_position.y +
+                       ((sample.position.y - sample.previous_position.y) * alpha),
+                   sample.previous_position.z +
+                       ((sample.position.z - sample.previous_position.z) * alpha)};
+
+  float delta = sample.yaw - sample.previous_yaw;
+  while (delta > 180.0F) {
+    delta -= 360.0F;
+  }
+  while (delta < -180.0F) {
+    delta += 360.0F;
+  }
+  pose.yaw = sample.previous_yaw + (delta * alpha);
+  return pose;
+}
 
 class CreaturePresentationComponent {
 public:

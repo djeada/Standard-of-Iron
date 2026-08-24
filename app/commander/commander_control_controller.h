@@ -6,11 +6,16 @@
 
 #include <cstdint>
 #include <limits>
+#include <mutex>
 
 #include "app/commander/commander_camera_rig.h"
 #include "app/commander/commander_frame_intent.h"
+#include "app/commander/commander_input_snapshot.h"
 #include "app/commander/commander_latency_probe.h"
+#include "app/commander/commander_motor.h"
+#include "app/commander/commander_presentation_trace.h"
 #include "app/core/player_feedback.h"
+#include "game/core/component.h"
 
 class QQuickWindow;
 
@@ -46,7 +51,6 @@ public:
     bool run = false;
     bool primary_action = false;
     bool secondary_action = false;
-    float primary_action_scan_cooldown = 0.0F;
     bool dodge_requested = false;
     bool jump_requested = false;
     bool shield_bash_requested = false;
@@ -55,6 +59,7 @@ public:
   };
 
   void reset();
+  void release_all_input();
   void set_view_yaw(float yaw);
   void set_view_pitch(float pitch);
   [[nodiscard]] float view_yaw() const;
@@ -114,12 +119,6 @@ public:
                       Engine::Core::EntityID commander_id,
                       int local_owner_id,
                       float extra_reach = 0.0F);
-  [[nodiscard]] bool primary_action(Engine::Core::World& world,
-                                    Engine::Core::EntityID commander_id,
-                                    int local_owner_id);
-  void release_guard(Engine::Core::World& world,
-                     Engine::Core::EntityID commander_id,
-                     int local_owner_id);
   [[nodiscard]] bool update(Engine::Core::World& world,
                             Engine::Core::EntityID commander_id,
                             int local_owner_id,
@@ -133,8 +132,45 @@ public:
                                   Engine::Core::EntityID commander_id,
                                   Render::GL::Camera& camera,
                                   float dt);
+  void snap_presentation_pose();
+  [[nodiscard]] auto
+  presentation_pose() const -> const Engine::Core::PresentationPose& {
+    return m_presentation_pose;
+  }
+
+  void set_presentation_trace_enabled(bool enabled) {
+    m_trace_enabled = enabled;
+    if (!enabled) {
+      m_trace = {};
+    }
+  }
+  [[nodiscard]] auto presentation_trace_enabled() const -> bool {
+    return m_trace_enabled;
+  }
+  [[nodiscard]] auto
+  presentation_trace() const -> const App::Core::CommanderPresentationTrace& {
+    return m_trace;
+  }
+  [[nodiscard]] auto input_edges() const -> const App::Core::CommanderInputTrace& {
+    return m_edges;
+  }
+  [[nodiscard]] auto camera_trace() const -> const App::Core::CommanderCameraTrace& {
+    return m_camera_rig.trace();
+  }
 
 private:
+  [[nodiscard]] auto take_input_snapshot() -> CommanderInputSnapshot;
+  void discard_input_edges(CommanderInputSnapshot& snapshot);
+  void publish_presentation_sample(Engine::Core::Entity& commander,
+                                   const Engine::Core::TransformComponent& transform,
+                                   float dt);
+  [[nodiscard]] auto
+  advance_presentation_pose(Engine::Core::Entity& commander,
+                            const Engine::Core::TransformComponent& transform,
+                            float dt) -> Engine::Core::PresentationPose;
+  [[nodiscard]] bool primary_action(Engine::Core::World& world,
+                                    Engine::Core::EntityID commander_id,
+                                    int local_owner_id);
   [[nodiscard]] bool update_impl(Engine::Core::World& world,
                                  Engine::Core::EntityID commander_id,
                                  int local_owner_id,
@@ -189,6 +225,7 @@ private:
   bool m_mouse_recentering = false;
 
   App::Core::CommanderCameraRig m_camera_rig;
+  App::Core::CommanderMotor m_motor;
 
   float m_move_speed = 0.0F;
   float m_planar_speed_smooth = 0.0F;
@@ -213,6 +250,18 @@ private:
   float m_combo_miss_timer = 0.0F;
   float m_primary_held_duration = 0.0F;
   bool m_primary_press_pending = false;
+  float m_primary_scan_cooldown = 0.0F;
+  bool m_carried_primary_press = false;
+  float m_body_yaw = 0.0F;
+  bool m_body_yaw_valid = false;
+  bool m_turning_in_place = false;
+  Engine::Core::PresentationPose m_presentation_pose;
+  bool m_presentation_snap_requested = true;
+  std::uint32_t m_presentation_seen_sequence = 0;
+  float m_presentation_age = 0.0F;
+  CommanderInputSnapshot m_tick_input;
+  std::uint64_t m_input_snapshot_sequence = 0;
+  mutable std::mutex m_input_mutex;
   float m_shield_bash_cooldown = 0.0F;
   float m_vanguard_rush_cooldown = 0.0F;
   float m_second_wind_cooldown = 0.0F;
@@ -224,4 +273,8 @@ private:
   std::uint16_t m_primary_target_slot{std::numeric_limits<std::uint16_t>::max()};
   float m_lock_lost_timer = 0.0F;
   bool m_guard_was_active = false;
+
+  bool m_trace_enabled = false;
+  App::Core::CommanderPresentationTrace m_trace;
+  App::Core::CommanderInputTrace m_edges;
 };

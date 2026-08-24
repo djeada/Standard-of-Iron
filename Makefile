@@ -39,6 +39,8 @@ FORMAT_JOBS ?= $(shell command -v nproc >/dev/null 2>&1 && nproc || echo 4)
 FORMAT_BASE ?= origin/main
 # Extra flags forwarded to the driver (e.g. FORMAT_ARGS="--verbose").
 FORMAT_ARGS ?=
+# Extra flags forwarded to scripts/run-rpg-gates.sh (e.g. RPG_GATE_ARGS="--skip-build").
+RPG_GATE_ARGS ?=
 # Allow the lint step to skip comment stripping (set to empty to skip).
 LINT_STRIP ?= --strip-comments
 # Extra GoogleTest flags (e.g. TEST_ARGS="--gtest_filter=SaveLoadServiceTest.*").
@@ -437,6 +439,15 @@ test-validator: build
 test-promo-first-frame:
 	@echo "$(BOLD)$(BLUE)Running promo first-frame tests...$(RESET)"
 	@bash tests/promo_first_frame_test.sh
+
+## Run the RPG playability gate: build, commander unit tests, then every rpg_* Arena scenario sequentially.
+.PHONY: rpg-gate rpg-gate-baseline
+rpg-gate:
+	@bash scripts/run-rpg-gates.sh --build-dir $(BUILD_DIR) $(RPG_GATE_ARGS)
+
+## Same run, written to artifacts/rpg-gates/baseline as the comparison baseline.
+rpg-gate-baseline:
+	@bash scripts/run-rpg-gates.sh --build-dir $(BUILD_DIR) --baseline $(RPG_GATE_ARGS)
 
 # ---- Formatting (also strips comments via remove-comments.sh) ----
 .PHONY: format format-check format-changed format-check-changed \
