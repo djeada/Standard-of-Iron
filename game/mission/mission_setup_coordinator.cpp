@@ -664,7 +664,11 @@ auto MissionSetupCoordinator::apply_skirmish_commander_setup(
       continue;
     }
 
-    std::vector<Engine::Core::EntityID> existing_commanders;
+    struct ExistingCommander {
+      Engine::Core::EntityID id = 0;
+      int health = 0;
+    };
+    std::vector<ExistingCommander> existing_commanders;
     QVector3D existing_position{0.0F, 0.0F, 0.0F};
     bool has_existing_position = false;
     for (auto* entity :
@@ -674,7 +678,7 @@ auto MissionSetupCoordinator::apply_skirmish_commander_setup(
       }
       const auto* unit = entity->get_component<Engine::Core::UnitComponent>();
       if (unit != nullptr && unit->owner_id == owner_id && unit->health > 0) {
-        existing_commanders.push_back(entity->get_id());
+        existing_commanders.push_back({entity->get_id(), unit->health});
         if (!has_existing_position) {
           if (const auto* xform =
                   entity->get_component<Engine::Core::TransformComponent>()) {
@@ -712,15 +716,28 @@ auto MissionSetupCoordinator::apply_skirmish_commander_setup(
     params.spawn_type = *spawn_type;
     params.ai_controlled = owner_registry.is_ai(owner_id);
     params.nation_id = nation_id;
+
+    for (const auto& existing : existing_commanders) {
+      if (auto* existing_unit =
+              ctx.world.try_get<Engine::Core::UnitComponent>(existing.id)) {
+        existing_unit->health = 0;
+      }
+    }
     auto unit = reg->create(params.spawn_type, ctx.world, params);
     if (!unit) {
+      for (const auto& existing : existing_commanders) {
+        if (auto* existing_unit =
+                ctx.world.try_get<Engine::Core::UnitComponent>(existing.id)) {
+          existing_unit->health = existing.health;
+        }
+      }
       qWarning() << "Skirmish commander setup: failed to spawn commander"
                  << commander_troop << "for owner" << owner_id;
       continue;
     }
 
-    for (const auto id : existing_commanders) {
-      ctx.world.destroy_entity(id);
+    for (const auto& existing : existing_commanders) {
+      ctx.world.destroy_entity(existing.id);
     }
   }
 

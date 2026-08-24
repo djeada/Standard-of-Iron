@@ -269,6 +269,38 @@ TEST_F(VictoryServiceTest, CommanderDeathTriggersDefeatEvenWithArmyRemaining) {
   EXPECT_EQ(m_service->get_victory_state(), QStringLiteral("defeat"));
 }
 
+TEST_F(VictoryServiceTest, MapSpecificDefeatConditionsCannotDisableCommanderLoss) {
+  Engine::Core::World world;
+  auto* commander = create_unit(world,
+                                1,
+                                Game::Units::SpawnType::RomanFieldCommander,
+                                Game::Systems::NationID::RomanRepublic);
+  ASSERT_NE(commander, nullptr);
+  ASSERT_NE(create_unit(world,
+                        1,
+                        Game::Units::SpawnType::Spearman,
+                        Game::Systems::NationID::RomanRepublic),
+            nullptr);
+
+  Game::Map::VictoryConfig config;
+  config.victory_type = QStringLiteral("survive_time");
+  config.survive_time_duration = 999.0F;
+  config.defeat_conditions = {QStringLiteral("no_units")};
+
+  m_service->configure(config, 1);
+  advance_past_startup_delay(world);
+  ASSERT_FALSE(m_service->is_game_over());
+
+  auto* commander_unit = commander->get_component<Engine::Core::UnitComponent>();
+  ASSERT_NE(commander_unit, nullptr);
+  commander_unit->health = 0;
+  Engine::Core::EventManager::instance().publish(Engine::Core::UnitDiedEvent(
+      commander->get_id(), 1, Game::Units::SpawnType::RomanFieldCommander));
+
+  EXPECT_TRUE(m_service->is_game_over());
+  EXPECT_EQ(m_service->get_victory_state(), QStringLiteral("defeat"));
+}
+
 TEST_F(VictoryServiceTest, CommanderAloneWithoutBarracksTriggersDefeat) {
   Engine::Core::World world;
   ASSERT_NE(create_unit(world,

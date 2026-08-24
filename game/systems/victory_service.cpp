@@ -120,6 +120,7 @@ auto build_rule_set_from_config(const Game::Map::VictoryConfig& config)
 
   std::vector<QString> const default_defeat_structures =
       normalize_structure_types(config.key_structures);
+  bool has_commander_defeat = false;
   for (const auto& condition : config.defeat_conditions) {
     QString const normalized_condition = condition.trimmed().toLower();
     if (normalized_condition == "no_units") {
@@ -133,6 +134,7 @@ auto build_rule_set_from_config(const Game::Map::VictoryConfig& config)
     }
     if (normalized_condition == "no_commander") {
       rules.defeat_rules.emplace_back(NoCommanderDefeatRule{});
+      has_commander_defeat = true;
       continue;
     }
     if (normalized_condition == "only_commander_remaining") {
@@ -144,9 +146,12 @@ auto build_rule_set_from_config(const Game::Map::VictoryConfig& config)
   }
 
   if (rules.defeat_rules.empty()) {
-    rules.defeat_rules.emplace_back(NoCommanderDefeatRule{});
     rules.defeat_rules.emplace_back(
         OnlyCommanderRemainingDefeatRule{{QStringLiteral("barracks")}});
+  }
+
+  if (!has_commander_defeat) {
+    rules.defeat_rules.emplace_back(NoCommanderDefeatRule{});
   }
 
   return rules;
