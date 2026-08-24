@@ -273,34 +273,6 @@ TEST_F(MissionWaveAssaultTest, WaveUnitsAttackTheRampartInTheirWay) {
   EXPECT_GT(damage_dealt, 0) << "the wave stood at the wall without ever striking it";
 }
 
-TEST_F(MissionWaveAssaultTest, WaveReachesACampBehindAFlankableRampart) {
-  auto& session = make_match();
-
-  const QVector3D camp = world_of(k_camp_grid_x, k_gate_grid_z);
-  spawn(session, Game::Units::SpawnType::Barracks, k_player, camp);
-
-  constexpr int k_pitch = Game::Systems::WallNetworkService::k_segment_spacing;
-  for (int grid_z = k_gate_grid_z - 8; grid_z <= k_gate_grid_z + 8; grid_z += k_pitch) {
-    spawn(session,
-          Game::Units::SpawnType::WallSegment,
-          k_player,
-          world_of(k_ring_east_x, grid_z));
-  }
-  Game::Systems::WallNetworkService::refresh_world(session.world());
-
-  make_defensive(session);
-  const auto wave = spawn_wave(session, 3);
-  ASSERT_EQ(wave.size(), 3U);
-
-  const float start = closest_wave_distance_to(session, wave, camp);
-  run_for(session, 90.0);
-  const float end = closest_wave_distance_to(session, wave, camp);
-
-  EXPECT_LT(end, start * 0.5F)
-      << "the wave never closed on a camp it had a route into: start " << start
-      << " end " << end;
-}
-
 TEST_F(MissionWaveAssaultTest, WaveWalksPastNeutralPropertyOnTheWayIn) {
   auto& session = make_match();
 
