@@ -26,10 +26,13 @@ TEST(MapCatalogTest, MapsWithUndeadZonesAreSoloPlayable) {
 }
 
 TEST(MapCatalogTest, ConventionalSkirmishMapsAreNotSoloPlayable) {
-  const QVariantMap entry = load_map_entry(QStringLiteral("map_forest.json"));
+
+  const QVariantMap entry = load_map_entry(QStringLiteral("map_rivers.json"));
 
   ASSERT_FALSE(entry.isEmpty());
-  EXPECT_FALSE(entry.value(QStringLiteral("soloPlayable")).toBool());
+  EXPECT_FALSE(entry.value(QStringLiteral("soloPlayable")).toBool())
+      << "The Two Fords is the skirmish set's plain match: it ships no undead "
+         "zone, so it needs a second player to be worth starting";
   EXPECT_GE(entry.value(QStringLiteral("playerCount")).toInt(), 2);
 }
 
