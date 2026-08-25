@@ -923,7 +923,8 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
                        1,
                        {0.0F, 0.0F, 0.5F},
                        6);
-    enemy.health_override = enemy.max_health_override = 500;
+
+    enemy.health_override = enemy.max_health_override = 4000;
     s.groups = {commander, enemy};
     s.steps = {
         at(0.15F,
@@ -1502,14 +1503,101 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
 
   {
     auto s = definition(
-        QString::fromLatin1(k_rpg_combo_cadence_id),
-        QStringLiteral("RPG Combo Cadence"),
+        QString::fromLatin1(k_rpg_one_press_one_attack_id),
+        QStringLiteral("RPG One Press One Attack"),
         QStringLiteral(
-            "Behind-head commander holds the attack input against a six-soldier "
-            "formation. Every swing has to chain out of the previous one inside "
-            "its cancel window, so a held attack reads as a combo rather than as "
-            "one committed animation the player waits out."),
+            "Three deliberate attack presses, well clear of each other, then the "
+            "attack input held down for a second. One press has to request exactly "
+            "one attack and holding must never repeat it: melee auto-repeat is not "
+            "a contract this mode offers."),
         7.0F);
+    s.rpg_mode = true;
+    s.rpg_commander_group = QStringLiteral("rpg_commander");
+    s.suppress_terrain_scatter = true;
+    s.select_spawned_units = false;
+    s.suppress_spawn_anchor = true;
+    s.suppress_ui_overlays = true;
+    auto commander = group(QStringLiteral("rpg_commander"),
+                           Troop::RomanVeteranConsul,
+                           1,
+                           1,
+                           {0.0F, 0.0F, -1.8F},
+                           1);
+    commander.facing_degrees = 0.0F;
+    auto enemy = group(QStringLiteral("training_dummy"),
+                       Troop::Swordsman,
+                       2,
+                       1,
+                       {0.0F, 0.0F, 0.5F},
+                       1);
+    enemy.health_override = enemy.max_health_override = 6000;
+    s.groups = {commander, enemy};
+
+    auto hold_attack = [](float time, bool held) {
+      auto step = at(time, Command::RpgAttackHold, QStringLiteral("rpg_commander"));
+      step.enabled = held;
+      return step;
+    };
+    s.steps = {
+        at(0.60F, Command::RpgPrimaryAttack, QStringLiteral("rpg_commander")),
+        at(2.10F, Command::RpgPrimaryAttack, QStringLiteral("rpg_commander")),
+        at(3.60F, Command::RpgPrimaryAttack, QStringLiteral("rpg_commander")),
+        hold_attack(5.00F, true),
+        hold_attack(6.60F, false),
+    };
+    add_visual_stability(
+        s, {QStringLiteral("rpg_commander"), QStringLiteral("training_dummy")});
+
+    {
+      auto three_presses = expectation(Expect::CommanderCombatCounterWithin,
+                                       QStringLiteral("rpg_commander"),
+                                       {},
+                                       3.0F,
+                                       0.0F);
+      three_presses.counter_key = QStringLiteral("accepted");
+      three_presses.end_seconds = 4.90F;
+      three_presses.maximum = 3.0F;
+      s.expectations.push_back(three_presses);
+    }
+    {
+      auto held_press = expectation(Expect::CommanderCombatCounterWithin,
+                                    QStringLiteral("rpg_commander"),
+                                    {},
+                                    1.0F,
+                                    4.95F);
+      held_press.counter_key = QStringLiteral("accepted");
+      held_press.end_seconds = 7.0F;
+      held_press.maximum = 1.0F;
+      s.expectations.push_back(held_press);
+    }
+    {
+      auto no_expiry = expectation(Expect::CommanderCombatCounterWithin,
+                                   QStringLiteral("rpg_commander"));
+      no_expiry.counter_key = QStringLiteral("expired");
+      no_expiry.maximum = 0.0F;
+      s.expectations.push_back(no_expiry);
+    }
+    s.expectations.push_back(expectation(Expect::CommanderContactCountAtMost,
+                                         QStringLiteral("rpg_commander"),
+                                         {},
+                                         1.0F));
+    s.expectations.push_back(
+        expectation(Expect::AttackAnimationObserved, QStringLiteral("rpg_commander")));
+    s.expectations.push_back(expectation(Expect::NoFullscreenFlash));
+    result.push_back(std::move(s));
+  }
+
+  {
+    auto s = definition(
+        QString::fromLatin1(k_rpg_attack_buffer_window_id),
+        QStringLiteral("RPG Attack Buffer Window"),
+        QStringLiteral(
+            "Timed individual presses against the authored action timeline: one "
+            "clean press, one pressed late enough in the previous swing that the "
+            "buffer carries it into the next, and one pressed so early that the "
+            "buffer must let it expire rather than storing a swing the player has "
+            "forgotten about. Replaces the held-input combo cadence case."),
+        8.0F);
     s.rpg_mode = true;
     s.rpg_commander_group = QStringLiteral("rpg_commander");
     s.suppress_terrain_scatter = true;
@@ -1529,35 +1617,467 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
                        1,
                        {0.0F, 0.0F, 0.5F},
                        6);
-    enemy.health_override = enemy.max_health_override = 4000;
+    enemy.health_override = enemy.max_health_override = 6000;
     s.groups = {commander, enemy};
 
-    auto hold_attack = [](float time, bool held) {
-      auto step = at(time, Command::RpgAttackHold, QStringLiteral("rpg_commander"));
-      step.enabled = held;
-      return step;
-    };
     s.steps = {
-        hold_attack(0.40F, true),
-        hold_attack(5.60F, false),
+
+        at(0.60F, Command::RpgPrimaryAttack, QStringLiteral("rpg_commander")),
+
+        at(1.20F, Command::RpgPrimaryAttack, QStringLiteral("rpg_commander")),
+
+        at(3.50F, Command::RpgPrimaryAttack, QStringLiteral("rpg_commander")),
+
+        at(3.90F, Command::RpgPrimaryAttack, QStringLiteral("rpg_commander")),
     };
     add_visual_stability(
         s, {QStringLiteral("rpg_commander"), QStringLiteral("enemy_formation")});
 
-    s.expectations.push_back(expectation(Expect::RpgSwingCadenceWithin,
+    {
+      auto buffered = expectation(Expect::CommanderCombatCounterWithin,
+                                  QStringLiteral("rpg_commander"),
+                                  {},
+                                  1.0F,
+                                  1.15F);
+      buffered.counter_key = QStringLiteral("buffered");
+      buffered.end_seconds = 2.40F;
+      s.expectations.push_back(buffered);
+    }
+    {
+      auto carried = expectation(Expect::CommanderCombatCounterWithin,
+                                 QStringLiteral("rpg_commander"),
+                                 {},
+                                 1.0F,
+                                 1.15F);
+      carried.counter_key = QStringLiteral("accepted");
+      carried.end_seconds = 2.40F;
+      carried.maximum = 1.0F;
+      s.expectations.push_back(carried);
+    }
+    {
+      auto expired = expectation(Expect::CommanderCombatCounterWithin,
+                                 QStringLiteral("rpg_commander"),
+                                 {},
+                                 1.0F,
+                                 3.85F);
+      expired.counter_key = QStringLiteral("expired");
+      expired.end_seconds = 5.60F;
+      s.expectations.push_back(expired);
+
+      auto not_carried = expectation(Expect::CommanderCombatCounterWithin,
+                                     QStringLiteral("rpg_commander"),
+                                     {},
+                                     0.0F,
+                                     3.85F);
+      not_carried.counter_key = QStringLiteral("accepted");
+      not_carried.end_seconds = 5.60F;
+      not_carried.maximum = 0.0F;
+      s.expectations.push_back(not_carried);
+    }
+    {
+      auto overflow = expectation(Expect::CommanderCombatCounterWithin,
+                                  QStringLiteral("rpg_commander"));
+      overflow.counter_key = QStringLiteral("overflow");
+      overflow.maximum = 0.0F;
+      s.expectations.push_back(overflow);
+    }
+    s.expectations.push_back(expectation(Expect::CommanderContactCountAtMost,
                                          QStringLiteral("rpg_commander"),
                                          {},
-                                         1.10F,
-                                         0.0F,
-                                         5.0F));
-    s.expectations.push_back(
-        expectation(Expect::AttackAnimationObserved, QStringLiteral("rpg_commander")));
+                                         1.0F));
     s.expectations.push_back(expectation(Expect::RpgStrikeAnimationMatched,
                                          QStringLiteral("rpg_commander")));
     s.expectations.push_back(expectation(Expect::RpgDamageContactObserved,
                                          QStringLiteral("enemy_formation")));
+    s.expectations.push_back(expectation(Expect::NoFullscreenFlash));
+    result.push_back(std::move(s));
+  }
+
+  {
+    auto s = definition(
+        QString::fromLatin1(k_rpg_attack_whiff_recovery_id),
+        QStringLiteral("RPG Attack Whiff Recovery"),
+        QStringLiteral(
+            "Two attacks swung at empty air with the nearest enemy well outside "
+            "reach. A miss still commits to its authored timeline and recovers "
+            "from it, and it must never invent a contact to justify itself."),
+        6.0F);
+    s.rpg_mode = true;
+    s.rpg_commander_group = QStringLiteral("rpg_commander");
+    s.suppress_terrain_scatter = true;
+    s.select_spawned_units = false;
+    s.suppress_spawn_anchor = true;
+    s.suppress_ui_overlays = true;
+    auto commander = group(QStringLiteral("rpg_commander"),
+                           Troop::RomanVeteranConsul,
+                           1,
+                           1,
+                           {0.0F, 0.0F, 0.0F},
+                           1);
+    commander.facing_degrees = 0.0F;
+    auto enemy = group(QStringLiteral("distant_enemy"),
+                       Troop::Swordsman,
+                       2,
+                       1,
+                       {0.0F, 0.0F, 22.0F},
+                       1);
+    enemy.health_override = enemy.max_health_override = 6000;
+    s.groups = {commander, enemy};
+    s.steps = {
+        at(0.60F, Command::RpgPrimaryAttack, QStringLiteral("rpg_commander")),
+        at(3.20F, Command::RpgPrimaryAttack, QStringLiteral("rpg_commander")),
+    };
+    add_visual_stability(s, {QStringLiteral("rpg_commander")});
+
+    {
+      auto accepted = expectation(Expect::CommanderCombatCounterWithin,
+                                  QStringLiteral("rpg_commander"),
+                                  {},
+                                  2.0F);
+      accepted.counter_key = QStringLiteral("accepted");
+      accepted.maximum = 2.0F;
+      s.expectations.push_back(accepted);
+    }
+    s.expectations.push_back(expectation(Expect::CommanderContactCountAtMost,
+                                         QStringLiteral("rpg_commander"),
+                                         {},
+                                         1.0F));
     s.expectations.push_back(
-        expectation(Expect::GroupHealthReduced, QStringLiteral("enemy_formation")));
+        expectation(Expect::AttackAnimationObserved, QStringLiteral("rpg_commander")));
+    s.expectations.push_back(
+        expectation(Expect::AttackRecoveryObserved, QStringLiteral("rpg_commander")));
+    s.expectations.push_back(
+        expectation(Expect::NoActiveCombatAtEnd, QStringLiteral("rpg_commander")));
+    s.expectations.push_back(
+        expectation(Expect::GroupHealthUnchanged, QStringLiteral("distant_enemy")));
+    s.expectations.push_back(expectation(Expect::NoFullscreenFlash));
+    result.push_back(std::move(s));
+  }
+
+  {
+    auto s = definition(
+        QString::fromLatin1(k_rpg_attack_wall_contact_id),
+        QStringLiteral("RPG Attack Into A Wall"),
+        QStringLiteral(
+            "The commander closes on a house with an enemy standing on the far "
+            "side of it and swings. Authored root motion has to stop at the "
+            "facade with the rest of the motor's rules, and the weapon trace may "
+            "never reach a body through a structure."),
+        8.0F);
+    s.rpg_mode = true;
+    s.rpg_commander_group = QStringLiteral("rpg_commander");
+    s.suppress_terrain_scatter = true;
+    s.select_spawned_units = false;
+    s.suppress_spawn_anchor = true;
+    s.suppress_ui_overlays = true;
+    auto commander = group(QStringLiteral("rpg_commander"),
+                           Troop::RomanVeteranConsul,
+                           1,
+                           1,
+                           {0.0F, 0.0F, -4.0F},
+                           1);
+    commander.facing_degrees = 0.0F;
+    auto home = building(QStringLiteral("wall_home"),
+                         Game::Units::SpawnType::Home,
+                         Nation::RomanRepublic,
+                         1,
+                         1,
+                         {0.0F, 0.0F, 0.0F});
+    home.health_override = home.max_health_override = 8000;
+    auto enemy = group(QStringLiteral("sheltered_enemy"),
+                       Troop::Swordsman,
+                       2,
+                       1,
+                       {0.0F, 0.0F, 2.6F},
+                       1);
+    enemy.health_override = enemy.max_health_override = 6000;
+    s.groups = {commander, home, enemy};
+
+    auto move =
+        [](float time, QVector3D axes, bool run, std::optional<float> yaw = {}) {
+          auto step = at(time, Command::RpgMove, QStringLiteral("rpg_commander"));
+          step.destination = axes;
+          step.value = run ? 1 : 0;
+          step.rpg_view_yaw_degrees = yaw;
+          return step;
+        };
+    s.steps = {
+        move(0.30F, {0.0F, 0.0F, 1.0F}, false, 0.0F),
+        move(2.60F, {0.0F, 0.0F, 0.0F}, false),
+        at(3.00F, Command::RpgPrimaryAttack, QStringLiteral("rpg_commander")),
+        at(5.00F, Command::RpgPrimaryAttack, QStringLiteral("rpg_commander")),
+    };
+    add_visual_stability(s, {QStringLiteral("rpg_commander")});
+
+    {
+      auto accepted = expectation(Expect::CommanderCombatCounterWithin,
+                                  QStringLiteral("rpg_commander"),
+                                  {},
+                                  2.0F);
+      accepted.counter_key = QStringLiteral("accepted");
+      accepted.maximum = 2.0F;
+      s.expectations.push_back(accepted);
+    }
+    s.expectations.push_back(
+        expectation(Expect::GroupHealthUnchanged, QStringLiteral("sheltered_enemy")));
+    s.expectations.push_back(expectation(Expect::CommanderContactCountAtMost,
+                                         QStringLiteral("rpg_commander"),
+                                         {},
+                                         1.0F));
+    s.expectations.push_back(expectation(Expect::NoFullscreenFlash));
+    result.push_back(std::move(s));
+  }
+
+  {
+    auto s = definition(
+        QString::fromLatin1(k_rpg_stamina_refusal_id),
+        QStringLiteral("RPG Stamina Refusal And Recovery"),
+        QStringLiteral(
+            "Attacks pressed until the stamina pool cannot pay for one, then a "
+            "pause, then one more. Every insufficient-stamina press has to come "
+            "back as a counted refusal rather than a dead click, and the pool has "
+            "to recover enough to swing again."),
+        14.0F);
+    s.rpg_mode = true;
+    s.rpg_commander_group = QStringLiteral("rpg_commander");
+    s.suppress_terrain_scatter = true;
+    s.select_spawned_units = false;
+    s.suppress_spawn_anchor = true;
+    s.suppress_ui_overlays = true;
+    auto commander = group(QStringLiteral("rpg_commander"),
+                           Troop::RomanVeteranConsul,
+                           1,
+                           1,
+                           {0.0F, 0.0F, -1.8F},
+                           1);
+    commander.facing_degrees = 0.0F;
+    auto enemy = group(QStringLiteral("training_dummy"),
+                       Troop::Swordsman,
+                       2,
+                       1,
+                       {0.0F, 0.0F, 0.5F},
+                       1);
+    enemy.health_override = enemy.max_health_override = 9000;
+    s.groups = {commander, enemy};
+
+    s.steps.reserve(14);
+    for (int index = 0; index < 12; ++index) {
+      s.steps.push_back(at(0.60F + (0.85F * static_cast<float>(index)),
+                           Command::RpgPrimaryAttack,
+                           QStringLiteral("rpg_commander")));
+    }
+    s.steps.push_back(
+        at(13.20F, Command::RpgPrimaryAttack, QStringLiteral("rpg_commander")));
+    add_visual_stability(
+        s, {QStringLiteral("rpg_commander"), QStringLiteral("training_dummy")});
+
+    {
+      auto refused = expectation(Expect::CommanderCombatCounterWithin,
+                                 QStringLiteral("rpg_commander"),
+                                 {},
+                                 1.0F);
+      refused.counter_key = QStringLiteral("refused");
+      refused.end_seconds = 11.0F;
+      s.expectations.push_back(refused);
+    }
+    {
+      auto recovered = expectation(Expect::CommanderCombatCounterWithin,
+                                   QStringLiteral("rpg_commander"),
+                                   {},
+                                   1.0F,
+                                   13.10F);
+      recovered.counter_key = QStringLiteral("accepted");
+      recovered.end_seconds = 14.0F;
+      s.expectations.push_back(recovered);
+    }
+    s.expectations.push_back(expectation(Expect::CommanderContactCountAtMost,
+                                         QStringLiteral("rpg_commander"),
+                                         {},
+                                         1.0F));
+    s.expectations.push_back(expectation(Expect::NoFullscreenFlash));
+    result.push_back(std::move(s));
+  }
+
+  {
+    auto s = definition(
+        QString::fromLatin1(k_rpg_skirmish_three_attackers_id),
+        QStringLiteral("RPG Three Attacker Skirmish"),
+        QStringLiteral(
+            "Three swordsmen close on a guarding commander from three sides. The "
+            "engagement ring decides who may press, and the commander has to keep "
+            "getting readable openings: a crowd may not chain unavoidable contacts "
+            "or hold him staggered until he dies."),
+        12.0F);
+    s.rpg_mode = true;
+    s.rpg_commander_group = QStringLiteral("rpg_commander");
+    s.suppress_terrain_scatter = true;
+    s.select_spawned_units = false;
+    s.suppress_spawn_anchor = true;
+    s.suppress_ui_overlays = true;
+    auto commander = group(QStringLiteral("rpg_commander"),
+                           Troop::RomanVeteranConsul,
+                           1,
+                           1,
+                           {0.0F, 0.0F, 0.0F},
+                           1);
+    commander.facing_degrees = 0.0F;
+    auto front = group(QStringLiteral("attacker_front"),
+                       Troop::Swordsman,
+                       2,
+                       1,
+                       {0.0F, 0.0F, 3.2F},
+                       1);
+    auto left = group(QStringLiteral("attacker_left"),
+                      Troop::Swordsman,
+                      2,
+                      1,
+                      {-3.0F, 0.0F, 1.4F},
+                      1);
+    auto right = group(QStringLiteral("attacker_right"),
+                       Troop::Swordsman,
+                       2,
+                       1,
+                       {3.0F, 0.0F, 1.4F},
+                       1);
+    front.health_override = front.max_health_override = 4000;
+    left.health_override = left.max_health_override = 4000;
+    right.health_override = right.max_health_override = 4000;
+    s.groups = {commander, front, left, right};
+
+    auto guard = [](float time, bool enabled) {
+      auto step = at(time, Command::RpgGuard, QStringLiteral("rpg_commander"));
+      step.enabled = enabled;
+      return step;
+    };
+    s.steps = {
+        guard(0.20F, true),
+        at(0.40F,
+           Command::Attack,
+           QStringLiteral("attacker_front"),
+           QStringLiteral("rpg_commander")),
+        at(0.40F,
+           Command::Attack,
+           QStringLiteral("attacker_left"),
+           QStringLiteral("rpg_commander")),
+        at(0.40F,
+           Command::Attack,
+           QStringLiteral("attacker_right"),
+           QStringLiteral("rpg_commander")),
+        at(4.00F, Command::RpgPrimaryAttack, QStringLiteral("rpg_commander")),
+        at(6.00F, Command::RpgPrimaryAttack, QStringLiteral("rpg_commander")),
+        at(8.00F, Command::RpgPrimaryAttack, QStringLiteral("rpg_commander")),
+    };
+    add_visual_stability(s,
+                         {QStringLiteral("rpg_commander"),
+                          QStringLiteral("attacker_front"),
+                          QStringLiteral("attacker_left"),
+                          QStringLiteral("attacker_right")});
+
+    {
+      auto swings = expectation(Expect::CommanderCombatCounterWithin,
+                                QStringLiteral("rpg_commander"),
+                                {},
+                                2.0F,
+                                3.90F);
+      swings.counter_key = QStringLiteral("accepted");
+      swings.end_seconds = 12.0F;
+      s.expectations.push_back(swings);
+    }
+    s.expectations.push_back(expectation(Expect::CommanderContactCountAtMost,
+                                         QStringLiteral("rpg_commander"),
+                                         {},
+                                         1.0F));
+    s.expectations.push_back(
+        expectation(Expect::GroupExists, QStringLiteral("rpg_commander")));
+    s.expectations.push_back(expectation(Expect::NoFullscreenFlash));
+    result.push_back(std::move(s));
+  }
+
+  {
+    auto s = definition(
+        QString::fromLatin1(k_rpg_lock_cycle_id),
+        QStringLiteral("RPG Lock Cycle, Occlusion And Death"),
+        QStringLiteral(
+            "A third enemy stands directly behind a house on the view centre while "
+            "two others stand clear of it. Lock-on must refuse the occluded one, "
+            "cycle across the screen between the two it can see, and drop the lock "
+            "when the locked target dies rather than falling through to the one it "
+            "cannot see."),
+        7.0F);
+    s.rpg_mode = true;
+    s.rpg_commander_group = QStringLiteral("rpg_commander");
+    s.suppress_terrain_scatter = true;
+    s.select_spawned_units = false;
+    s.suppress_spawn_anchor = true;
+    s.suppress_ui_overlays = true;
+    auto commander = group(QStringLiteral("rpg_commander"),
+                           Troop::RomanVeteranConsul,
+                           1,
+                           1,
+                           {0.0F, 0.0F, 0.0F},
+                           1);
+    commander.facing_degrees = 0.0F;
+    auto shelter = building(QStringLiteral("lock_shelter"),
+                            Game::Units::SpawnType::Home,
+                            Nation::RomanRepublic,
+                            1,
+                            1,
+                            {0.0F, 0.0F, 5.0F});
+    shelter.health_override = shelter.max_health_override = 8000;
+    auto hidden = group(
+        QStringLiteral("hidden_enemy"), Troop::Swordsman, 2, 1, {0.0F, 0.0F, 7.6F}, 1);
+    auto left = group(
+        QStringLiteral("left_enemy"), Troop::Swordsman, 2, 1, {-1.6F, 0.0F, 6.0F}, 1);
+    auto right = group(
+        QStringLiteral("right_enemy"), Troop::Swordsman, 2, 1, {4.0F, 0.0F, 6.0F}, 1);
+    hidden.health_override = hidden.max_health_override = 4000;
+    left.health_override = left.max_health_override = 4000;
+    right.health_override = right.max_health_override = 4000;
+    s.groups = {commander, shelter, hidden, left, right};
+
+    auto kill = [](float time, QString target) {
+      auto step = at(time, Command::SetHealth, std::move(target));
+      step.value = 0;
+      return step;
+    };
+    s.steps = {
+        at(0.50F, Command::RpgCycleLockOn, QStringLiteral("rpg_commander")),
+        at(1.60F, Command::RpgCycleLockOn, QStringLiteral("rpg_commander")),
+        kill(3.00F, QStringLiteral("left_enemy")),
+        kill(3.00F, QStringLiteral("right_enemy")),
+    };
+    add_visual_stability(s, {QStringLiteral("rpg_commander")});
+
+    {
+      auto held = expectation(Expect::CommanderLockStateWithin,
+                              QStringLiteral("rpg_commander"),
+                              {},
+                              0.0F,
+                              0.70F);
+      held.counter_key = QStringLiteral("held");
+      held.end_seconds = 2.90F;
+      s.expectations.push_back(held);
+    }
+    {
+      auto changed = expectation(Expect::CommanderLockStateWithin,
+                                 QStringLiteral("rpg_commander"),
+                                 {},
+                                 0.0F,
+                                 1.50F);
+      changed.counter_key = QStringLiteral("changed");
+      changed.end_seconds = 2.90F;
+      s.expectations.push_back(changed);
+    }
+    {
+      auto cleared = expectation(Expect::CommanderLockStateWithin,
+                                 QStringLiteral("rpg_commander"),
+                                 {},
+                                 0.0F,
+                                 4.00F);
+      cleared.counter_key = QStringLiteral("cleared");
+      cleared.end_seconds = 7.00F;
+      s.expectations.push_back(cleared);
+    }
     s.expectations.push_back(expectation(Expect::NoFullscreenFlash));
     result.push_back(std::move(s));
   }

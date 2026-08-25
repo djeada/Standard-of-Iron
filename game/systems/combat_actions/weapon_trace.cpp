@@ -15,6 +15,7 @@
 #include "../../../animation/clip_manifest.h"
 #include "../../../animation/melee_swing_manifest.h"
 #include "../../core/component.h"
+#include "../../core/simulation_timing.h"
 #include "../../core/world.h"
 #include "../combat_rules.h"
 #include "../combat_system/combat_utils.h"
@@ -926,6 +927,8 @@ auto find_weapon_trace_contact(
     WeaponTraceTimeSpan time_span,
     Engine::Core::EntityID target_hint_id,
     std::span<const Engine::Core::EntityID> ignored_target_ids) -> WeaponTraceContact {
+  Engine::Core::Timing::ScopedAccumulator const scope(
+      Engine::Core::Timing::commander_weapon_trace());
   constexpr float k_max_trace_sample_span = 0.025F;
   float const trace_span =
       time_span.current_normalized_time - time_span.previous_normalized_time;
@@ -1027,7 +1030,8 @@ auto find_weapon_trace_contact(
       best_contact.distance = sample.distance;
       best_contact.local_forward = sample.forward;
       best_contact.local_right = sample.right;
-      best_contact.contact_point = distance.point;
+      best_contact.contact_point =
+          Game::Systems::RpgCombat::hurt_body_contact_point(soldier, distance.point);
       best_contact.contact_speed = tip_speed;
     }
   };
@@ -1048,6 +1052,8 @@ auto find_weapon_trace_contact(
     const CombatActionDefinition& definition,
     Engine::Core::EntityID target_hint_id,
     std::span<const Engine::Core::EntityID> ignored_target_ids) -> WeaponTraceContact {
+  Engine::Core::Timing::ScopedAccumulator const scope(
+      Engine::Core::Timing::commander_weapon_trace());
   WeaponTraceContact contact;
   contact.attacker_id = attacker.get_id();
 
@@ -1095,7 +1101,8 @@ auto find_weapon_trace_contact(
       best_contact.distance = sample.distance;
       best_contact.local_forward = sample.forward;
       best_contact.local_right = sample.right;
-      best_contact.contact_point = sample.world_position;
+      best_contact.contact_point = Game::Systems::RpgCombat::hurt_body_contact_point(
+          soldier, presented_attacker.frame.origin);
     }
   };
 

@@ -463,21 +463,6 @@ auto CommanderModeCoordinator::update_commander_control_mode(
     return effects;
   }
 
-  auto* commander = context.world->get_entity(context.controlled_commander_id);
-  if (commander != nullptr) {
-    auto* commander_data = commander->get_component<Engine::Core::CommanderComponent>();
-    if (commander_data != nullptr && commander_data->just_struck_enemy) {
-      commander_data->just_struck_enemy = false;
-      float hit_stop_duration = 0.10F;
-      if (commander_data->last_strike_combo_step >= 3) {
-        hit_stop_duration = 0.18F;
-      } else if (commander_data->power_strike_active) {
-        hit_stop_duration = 0.14F;
-      }
-      effects.hit_stop_duration = hit_stop_duration;
-    }
-  }
-
   return effects;
 }
 

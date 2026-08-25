@@ -7,18 +7,6 @@
 
 namespace Animation {
 
-namespace {
-
-[[nodiscard]] auto centered_grid_coordinate(int index, int count) noexcept -> float {
-  if (count <= 1) {
-    return 0.0F;
-  }
-  float const normalized = static_cast<float>(index) / static_cast<float>(count - 1);
-  return normalized * 2.0F - 1.0F;
-}
-
-} // namespace
-
 auto layout_random(std::uint32_t& state) noexcept -> float {
   state = state * 1664525U + 1013904223U;
   return static_cast<float>(state & 0x7FFFFFU) / static_cast<float>(0x7FFFFFU);

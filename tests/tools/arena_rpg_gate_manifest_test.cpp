@@ -40,7 +40,8 @@ auto registered_rpg_ids() -> std::set<QString> {
 
 auto manifest_ids(const QJsonObject& manifest) -> std::set<QString> {
   std::set<QString> ids;
-  for (const auto& value : manifest.value(QStringLiteral("scenarios")).toArray()) {
+  QJsonArray const scenarios = manifest.value(QStringLiteral("scenarios")).toArray();
+  for (const QJsonValue value : scenarios) {
     ids.insert(value.toObject().value(QStringLiteral("id")).toString());
   }
   return ids;
@@ -91,7 +92,8 @@ TEST(ArenaRpgGateManifestTest, EveryGateEntryNamesARegisteredScenario) {
 
 TEST(ArenaRpgGateManifestTest, EveryEntryCarriesAKnownStatusAndOwningGate) {
   const QJsonObject manifest = load_manifest();
-  for (const auto& value : manifest.value(QStringLiteral("scenarios")).toArray()) {
+  QJsonArray const scenarios = manifest.value(QStringLiteral("scenarios")).toArray();
+  for (const QJsonValue value : scenarios) {
     const QJsonObject entry = value.toObject();
     const QString id = entry.value(QStringLiteral("id")).toString();
     const QString status = entry.value(QStringLiteral("status")).toString();

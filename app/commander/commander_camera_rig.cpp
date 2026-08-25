@@ -6,8 +6,10 @@
 #include <numbers>
 
 #include "animation/locomotion_manifest.h"
+#include "game/accessibility/commander_input_settings.h"
 #include "game/accessibility/motion_settings.h"
 #include "game/core/component.h"
+#include "game/core/simulation_timing.h"
 #include "game/map/terrain_service.h"
 #include "game/systems/building_line_of_sight.h"
 #include "scene/camera.h"
@@ -54,6 +56,9 @@ constexpr float k_aim_sway_damping = 0.72F;
 constexpr float k_hit_kick_decay = 9.0F;
 constexpr float k_hit_kick_dolly = 0.14F;
 constexpr float k_hit_kick_fov = 2.6F;
+
+constexpr float k_hit_kick_max_degrees = 3.0F;
+constexpr float k_fov_max_degrees_per_second = 45.0F;
 
 constexpr float k_threat_bias_follow = 3.0F;
 constexpr float k_threat_bias_side = 0.30F;
@@ -143,8 +148,16 @@ void CommanderCameraRig::add_impact_kick(float strength) {
 
 auto CommanderCameraRig::update(Render::GL::Camera& camera,
                                 const CommanderCameraInputs& inputs) -> float {
+  Engine::Core::Timing::ScopedAccumulator const scope(
+      Engine::Core::Timing::commander_camera());
   float const dt = inputs.dt;
   float const motion_scale = Game::Accessibility::MotionSettings::camera_motion_scale();
+  float const bob_scale =
+      Game::Accessibility::CommanderInput::head_bob_enabled() ? motion_scale : 0.0F;
+  float const impulse_scale =
+      Game::Accessibility::CommanderInput::camera_impulse_enabled() ? motion_scale
+                                                                    : 0.0F;
+  float const fov_scale = Game::Accessibility::CommanderInput::field_of_view_scale();
 
   float const yaw_step = signed_degrees_between(inputs.view_yaw_degrees, m_state.yaw);
   float const pitch_step = inputs.view_pitch_degrees - m_state.pitch;
@@ -180,7 +193,7 @@ auto CommanderCameraRig::update(Render::GL::Camera& camera,
   float const aim_blend = std::clamp(m_aim_blend, 0.0F, 1.0F);
   float const sway_scale = 1.0F - (k_aim_sway_damping * aim_blend);
 
-  float const bob_amp_target = (inputs.move_speed > 0.05F) ? motion_scale : 0.0F;
+  float const bob_amp_target = (inputs.move_speed > 0.05F) ? bob_scale : 0.0F;
   m_bob_amplitude += (bob_amp_target - m_bob_amplitude) * smooth_alpha(k_bob_decay, dt);
   float const previous_bob_phase = m_bob_phase;
   if (inputs.move_speed > 0.05F) {
@@ -211,15 +224,13 @@ auto CommanderCameraRig::update(Render::GL::Camera& camera,
   if (m_hit_impact_kick < 0.001F) {
     m_hit_impact_kick = 0.0F;
   }
-  float const hit_kick = m_hit_impact_kick * motion_scale;
+  float const hit_kick = m_hit_impact_kick * impulse_scale;
 
-  float const fov_target =
-      m_framing_current.fov +
-      ((inputs.move_running && inputs.move_speed > 0.05F) ? k_fov_run_boost : 0.0F) +
-      inputs.dodge_fov_kick + (k_hit_kick_fov * hit_kick);
-  m_fov_current += (fov_target - m_fov_current) * smooth_alpha(k_fov_lerp, dt);
-  camera.set_perspective(
-      m_fov_current, camera.get_aspect(), k_commander_near_plane, camera.get_far());
+  float const framing_fov = (m_framing_current.fov * fov_scale) +
+                            ((inputs.move_running && inputs.move_speed > 0.05F)
+                                 ? k_fov_run_boost * motion_scale
+                                 : 0.0F) +
+                            (inputs.dodge_fov_kick * motion_scale);
 
   float const yaw_rad = inputs.view_yaw_degrees * k_deg2rad;
   float const pitch_rad = inputs.view_pitch_degrees * k_deg2rad;
@@ -409,6 +420,16 @@ auto CommanderCameraRig::update(Render::GL::Camera& camera,
 
   QVector3D const up_final = (up_leaned + right_world * dodge_tilt_rad).normalized();
   camera.look_at(m_eye_smooth, m_target_smooth, up_final);
+
+  float const impulse_degrees =
+      std::clamp(k_hit_kick_fov * hit_kick, 0.0F, k_hit_kick_max_degrees);
+  float const fov_target = framing_fov + impulse_degrees;
+  float fov_step = (fov_target - m_fov_current) * smooth_alpha(k_fov_lerp, dt);
+  float const fov_step_limit = k_fov_max_degrees_per_second * std::max(dt, 0.0F);
+  fov_step = std::clamp(fov_step, -fov_step_limit, fov_step_limit);
+  m_fov_current += fov_step;
+  camera.set_perspective(
+      m_fov_current, camera.get_aspect(), k_commander_near_plane, camera.get_far());
 
   QVector3D const view_axis = m_target_smooth - m_eye_smooth;
   if (view_axis.lengthSquared() > 1.0e-6F) {

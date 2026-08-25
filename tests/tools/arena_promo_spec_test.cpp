@@ -1,6 +1,7 @@
 #include <algorithm>
 #include <cmath>
 #include <gtest/gtest.h>
+#include <utility>
 #include <vector>
 
 #include "tools/arena/promo_spec.h"

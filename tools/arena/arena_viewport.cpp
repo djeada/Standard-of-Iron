@@ -66,6 +66,7 @@
 #include "game/systems/owner_registry.h"
 #include "game/systems/player_resource_registry.h"
 #include "game/systems/projectile_system.h"
+#include "game/systems/run_stamina.h"
 #include "game/systems/selection_system.h"
 #include "game/systems/target_focus.h"
 #include "game/systems/troop_count_registry.h"
@@ -3906,6 +3907,21 @@ void ArenaViewport::load_scenario(const QString& scenario_id) {
     m_rpg_commander_controller->set_view_pitch(
         std::asin(std::clamp(direction.y(), -1.0F, 1.0F)) * k_radians_to_degrees);
   };
+  host.cycle_rpg_lock_on = [this](Engine::Core::EntityID entity_id) {
+    if (m_world == nullptr || m_rpg_commander_controller == nullptr ||
+        entity_id != m_rpg_commander_id) {
+      return;
+    }
+    m_rpg_commander_controller->cycle_lock_on_target(
+        *m_world, m_rpg_commander_id, k_local_owner_id);
+  };
+  host.rpg_locked_target =
+      [this](Engine::Core::EntityID entity_id) -> Engine::Core::EntityID {
+    if (m_rpg_commander_controller == nullptr || entity_id != m_rpg_commander_id) {
+      return 0;
+    }
+    return m_rpg_commander_controller->locked_target_id();
+  };
   host.request_rpg_dodge = [this](Engine::Core::EntityID entity_id,
                                   const QVector3D& world_direction) {
     if (m_rpg_commander_controller != nullptr && entity_id == m_rpg_commander_id) {
@@ -4150,6 +4166,13 @@ void ArenaViewport::configure_rpg_scenario_commander(Engine::Core::EntityID enti
   commander->posture = 0.0F;
   commander->punish_window_remaining = 0.0F;
   Game::Systems::CombatRules::clear_rts_combat_tracking(entity);
+
+  if (auto* stamina = Game::Systems::ensure_run_stamina(*entity)) {
+    stamina->stamina = stamina->max_stamina;
+    stamina->regen_delay_remaining = 0.0F;
+    stamina->is_running = false;
+    stamina->run_requested = false;
+  }
 
   auto* rpg =
       Engine::Core::get_or_add_component<Engine::Core::RpgHealthComponent>(entity);

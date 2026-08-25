@@ -108,6 +108,13 @@ bool bake_species_manifest(const std::filesystem::path& out_dir,
   const Render::Creature::CreatureRuntimeManifest& manifest = *recipe.runtime;
 
   auto const bind_palette = manifest.bind_palette();
+  if (bind_palette.empty()) {
+    std::cerr << "[bpat_baker] " << manifest.species_name
+              << ": runtime manifest returned an empty bind palette"
+              << " (source creature package missing, unreadable, or rejected"
+                 " by its integrity check); cannot bake\n";
+    return false;
+  }
   std::vector<QMatrix4x4> inverse_bind;
   inverse_bind.reserve(bind_palette.size());
   for (const QMatrix4x4& m : bind_palette) {

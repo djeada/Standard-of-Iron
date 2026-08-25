@@ -25,8 +25,10 @@ using Trigger = ScenarioTriggerKind;
 using Troop = Game::Units::TroopType;
 
 [[nodiscard]] auto plot_hash(int a, int b, int c) -> unsigned {
-  unsigned value =
-      static_cast<unsigned>((a * 73856093) ^ (b * 19349663) ^ (c * 83492791));
+
+  unsigned value = (static_cast<unsigned>(a) * 73856093U) ^
+                   (static_cast<unsigned>(b) * 19349663U) ^
+                   (static_cast<unsigned>(c) * 83492791U);
   value ^= value >> 13U;
   value *= 2246822519U;
   value ^= value >> 16U;
@@ -38,7 +40,6 @@ using Troop = Game::Units::TroopType;
 }
 
 constexpr int k_grid_extent = 768;
-constexpr float k_world_half = 384.0F;
 constexpr float k_content_half = 300.0F;
 
 constexpr float k_gate_tower_exclusion = 12.0F;

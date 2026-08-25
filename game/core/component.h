@@ -637,7 +637,8 @@ enum class CombatIntentOutcome : std::uint8_t {
   Committed,
   GuardBroken,
   Staggered,
-  NoFighter
+  NoFighter,
+  Expired
 };
 
 struct CombatActionIntent {
@@ -655,7 +656,7 @@ public:
 
   static constexpr std::size_t k_capacity = 3U;
 
-  static constexpr float k_intent_lifetime = 0.45F;
+  static constexpr float k_intent_lifetime = 0.15F;
 
   std::array<CombatActionIntent, k_capacity> entries{};
   std::uint8_t count{0};
@@ -664,6 +665,12 @@ public:
 
   CombatIntentOutcome last_outcome{CombatIntentOutcome::Accepted};
   float last_outcome_age{0.0F};
+
+  std::uint32_t accepted_intents{0};
+  std::uint32_t buffered_intents{0};
+  std::uint32_t refused_intents{0};
+  std::uint32_t expired_intents{0};
+  std::uint32_t overflow_intents{0};
 
   [[nodiscard]] auto empty() const noexcept -> bool { return count == 0U; }
 
@@ -678,6 +685,7 @@ public:
         entries[i - 1] = entries[i];
       }
       --count;
+      ++overflow_intents;
     }
     entries[count++] = intent;
   }
@@ -695,6 +703,27 @@ public:
   void clear() noexcept { count = 0U; }
 
   void record(CombatIntentOutcome outcome) noexcept {
+    if (outcome != last_outcome || outcome == CombatIntentOutcome::Accepted) {
+      switch (outcome) {
+      case CombatIntentOutcome::Accepted:
+        ++accepted_intents;
+        break;
+      case CombatIntentOutcome::Buffered:
+      case CombatIntentOutcome::Recovering:
+      case CombatIntentOutcome::Committed:
+        ++buffered_intents;
+        break;
+      case CombatIntentOutcome::Expired:
+        ++expired_intents;
+        break;
+      case CombatIntentOutcome::InsufficientStamina:
+      case CombatIntentOutcome::GuardBroken:
+      case CombatIntentOutcome::Staggered:
+      case CombatIntentOutcome::NoFighter:
+        ++refused_intents;
+        break;
+      }
+    }
     last_outcome = outcome;
     last_outcome_age = 0.0F;
   }
@@ -894,6 +923,8 @@ public:
   TelegraphCue telegraph_cue{TelegraphCue::None};
 
   static constexpr float k_combat_animation_hit_pause_duration = 0.10F;
+
+  static constexpr float k_player_hit_pause_duration = 0.045F;
   static constexpr float k_advance_duration = 0.22F;
   static constexpr float k_wind_up_duration = 0.42F;
   static constexpr float k_strike_duration = 0.34F;
@@ -1341,6 +1372,13 @@ public:
   float dodge_grace_remaining{0.0F};
   float dodge_dir_x{0.0F};
   float dodge_dir_z{0.0F};
+
+  std::uint32_t blocked_contacts{0};
+  std::uint32_t perfect_guard_contacts{0};
+  std::uint32_t dodged_contacts{0};
+  std::uint32_t damaging_contacts{0};
+  std::uint32_t guard_broken_contacts{0};
+  RpgContactOutcome last_contact_outcome{RpgContactOutcome::Damage};
 };
 
 class StaggerComponent {
@@ -1369,11 +1407,18 @@ public:
     bool pressing{false};
   };
 
+  struct PressTenure {
+    EntityID entity_id{0};
+    float started_at{0.0F};
+  };
+
   std::vector<Slot> engagement_slots;
   float ring_radius{5.0F};
 
   float pressure_clock{0.0F};
   FightContext fight_context{FightContext::None};
+
+  std::vector<PressTenure> press_tenure;
 
   [[nodiscard]] auto pressing_count() const noexcept -> int {
     int pressing = 0;
@@ -1946,12 +1991,24 @@ public:
 
   StaminaComponent() noexcept = default;
 
+  static constexpr float k_regen_delay_seconds = 0.75F;
+
   float stamina{k_default_max_stamina};
   float max_stamina{k_default_max_stamina};
   float regen_rate{k_default_regen_rate};
   float depletion_rate{k_default_depletion_rate};
   bool is_running{false};
   bool run_requested{false};
+
+  float regen_delay_remaining{0.0F};
+
+  void spend(float cost) noexcept {
+    if (cost <= 0.0F) {
+      return;
+    }
+    stamina = stamina - cost > 0.0F ? stamina - cost : 0.0F;
+    regen_delay_remaining = k_regen_delay_seconds;
+  }
 
   [[nodiscard]] auto get_stamina_ratio() const noexcept -> float {
     return max_stamina > 0.0F ? stamina / max_stamina : 0.0F;

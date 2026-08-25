@@ -61,6 +61,11 @@ void StaminaSystem::run(Engine::Core::SystemContext& context) {
       continue;
     }
 
+    if (stamina->regen_delay_remaining > 0.0F) {
+      stamina->regen_delay_remaining =
+          std::max(0.0F, stamina->regen_delay_remaining - delta_time);
+    }
+
     const auto* motion =
         entity.get_component<Engine::Core::MotionPresentationComponent>();
     const auto* movement = entity.get_component<Engine::Core::MovementComponent>();
@@ -75,13 +80,15 @@ void StaminaSystem::run(Engine::Core::SystemContext& context) {
         if (!stamina->has_stamina()) {
           stamina->is_running = false;
         }
-      } else {
+      } else if (stamina->regen_delay_remaining <= 0.0F) {
 
         regenerate_stamina(*stamina, delta_time);
       }
     } else {
       stamina->is_running = false;
-      regenerate_stamina(*stamina, delta_time);
+      if (stamina->regen_delay_remaining <= 0.0F) {
+        regenerate_stamina(*stamina, delta_time);
+      }
     }
   }
 }

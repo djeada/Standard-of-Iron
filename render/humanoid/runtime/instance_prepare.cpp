@@ -206,8 +206,6 @@ auto snapshot_humanoid_unit(const HumanoidRendererBase& owner,
     Engine::Core::publish_creature_presentation(ctx.entity, nullptr);
   }
 
-  auto& profile = Render::Profiling::global_profile();
-
   FormationParams const formation = HumanoidRendererBase::resolve_formation(owner, ctx);
 
   Engine::Core::UnitComponent* unit_comp = nullptr;
@@ -554,7 +552,6 @@ auto resolve_unit_animation_runtime(const HumanoidUnitSnapshot& s,
   const auto* creature_presentation = s.creature_presentation;
   const bool has_shared_formation_layout = s.has_shared_formation_layout;
   const bool has_entity_death = s.has_entity_death;
-  const bool is_mounted_spawn = s.is_mounted_spawn;
   const int total_layout_count = s.total_layout_count;
   auto* layout_cache_comp = f.layout_cache_comp;
   const bool allow_animation_persistence = f.allow_animation_persistence;
@@ -601,47 +598,6 @@ auto resolve_unit_animation_runtime(const HumanoidUnitSnapshot& s,
       Render::Profiling::CombatAnimationDiagnostics::instance();
   const bool record_animation_diagnostics =
       animation_diagnostics.enabled() || animation_diagnostics.logging_enabled();
-  auto record_soldier_debug = [&](int idx,
-                                  const AnimationInputs&,
-                                  const AnimationInputs& resolved_anim,
-                                  float attack_phase,
-                                  Render::Creature::AnimationStateId animation_state,
-                                  HumanoidLOD lod,
-                                  Render::Profiling::SoldierCullReason cull_reason,
-                                  bool transient_recovery_override,
-                                  const QVector3D& root_position,
-                                  float root_yaw_degrees,
-                                  float root_up_y,
-                                  float root_scale_y,
-                                  float root_tilt_degrees,
-                                  float hit_reaction_tilt_degrees) {
-    if (!record_animation_diagnostics || ctx.entity == nullptr) {
-      return;
-    }
-
-    Render::Profiling::SoldierAnimationDebugSample sample{};
-    sample.soldier_index = idx;
-    sample.sample_time = resolved_anim.time;
-    sample.combat_phase = resolved_anim.combat_phase;
-    sample.combat_phase_progress = resolved_anim.combat_phase_progress;
-    sample.attack_phase = attack_phase;
-    sample.attack_variant = resolved_anim.attack_variant;
-    sample.is_attacking = resolved_anim.is_attacking;
-    sample.is_hit_reacting = resolved_anim.is_hit_reacting;
-    sample.is_in_melee_lock = resolved_anim.is_in_melee_lock;
-    sample.transient_recovery_override = transient_recovery_override;
-    sample.locomotion_state = resolved_anim.movement_state;
-    sample.animation_state = animation_state;
-    sample.lod = static_cast<std::uint8_t>(lod);
-    sample.cull_reason = cull_reason;
-    sample.root_position = root_position;
-    sample.root_yaw_degrees = root_yaw_degrees;
-    sample.root_up_y = root_up_y;
-    sample.root_scale_y = root_scale_y;
-    sample.root_tilt_degrees = root_tilt_degrees;
-    sample.hit_reaction_tilt_degrees = hit_reaction_tilt_degrees;
-    animation_diagnostics.record_soldier_sample(ctx.entity->get_id(), sample);
-  };
 
   bool const formation_fight_active = has_shared_formation_layout &&
                                       formation_presentation->melee_ordered &&
@@ -815,6 +771,7 @@ void append_prepared_soldier(const HumanoidUnitSnapshot& s,
   const HumanoidVariant& variant = variant_base;
 
   auto& animation_diagnostics = *u.animation_diagnostics;
+  bool swing_recoil_active = false;
   auto record_soldier_debug = [&](int soldier_index,
                                   const AnimationInputs&,
                                   const AnimationInputs& resolved_anim,
@@ -847,6 +804,7 @@ void append_prepared_soldier(const HumanoidUnitSnapshot& s,
     sample.attack_variant = resolved_anim.attack_variant;
     sample.is_attacking = resolved_anim.is_attacking;
     sample.is_hit_reacting = resolved_anim.is_hit_reacting;
+    sample.is_swing_recoiling = swing_recoil_active;
     sample.is_in_melee_lock = resolved_anim.is_in_melee_lock;
     sample.transient_recovery_override = transient_recovery_override;
     sample.locomotion_state = resolved_anim.movement_state;
@@ -909,7 +867,7 @@ void append_prepared_soldier(const HumanoidUnitSnapshot& s,
 
   bool const authored_swing_owns_body =
       soldier_render_anim.has_authored_action_phase && soldier_render_anim.is_attacking;
-  bool swing_recoil_active =
+  swing_recoil_active =
       (authored_swing_owns_body || soldier_render_anim.hit_reaction_kind ==
                                        Engine::Core::HitReactionKind::Recoil) &&
       soldier_render_anim.is_hit_reacting;

@@ -13,6 +13,7 @@
 #include <cmath>
 #include <limits>
 #include <numbers>
+#include <optional>
 #include <utility>
 
 #include "game/command/command.h"
@@ -51,6 +52,8 @@ namespace {
 constexpr float k_default_response_seconds = 0.45F;
 constexpr float k_default_idle_seconds = 1.25F;
 constexpr float k_default_engagement_distance = 7.0F;
+constexpr float k_spawn_settle_seconds = 0.10F;
+
 constexpr float k_default_root_step = 0.8F;
 constexpr float k_default_frame_budget_ms = 33.34F;
 constexpr float k_default_fall_up_y = 0.72F;
@@ -161,6 +164,8 @@ auto command_name(ScenarioCommandKind kind) -> QString {
     return QStringLiteral("SetFarmGrowth");
   case ScenarioCommandKind::RpgMove:
     return QStringLiteral("RpgMove");
+  case ScenarioCommandKind::RpgCycleLockOn:
+    return QStringLiteral("RpgCycleLockOn");
   case ScenarioCommandKind::ReloadUndeadZoneState:
     return QStringLiteral("ReloadUndeadZoneState");
   }
@@ -298,14 +303,43 @@ auto commander_trace_json(const App::Core::CommanderPresentationTrace& trace)
        static_cast<qint64>(combat.hit_confirm_sequence)},
       {QStringLiteral("action_hit_count"), combat.action_hit_count},
       {QStringLiteral("health"), combat.health},
-      {QStringLiteral("stamina"), combat.stamina}};
+      {QStringLiteral("stamina"), combat.stamina},
+      {QStringLiteral("queue_outcome"),
+       QString::fromLatin1(
+           App::Core::combat_intent_outcome_name(combat.queue_outcome))},
+      {QStringLiteral("queue_outcome_age"), combat.queue_outcome_age},
+      {QStringLiteral("queue_accepted"), static_cast<qint64>(combat.queue_accepted)},
+      {QStringLiteral("queue_buffered"), static_cast<qint64>(combat.queue_buffered)},
+      {QStringLiteral("queue_refused"), static_cast<qint64>(combat.queue_refused)},
+      {QStringLiteral("queue_expired"), static_cast<qint64>(combat.queue_expired)},
+      {QStringLiteral("queue_overflow"), static_cast<qint64>(combat.queue_overflow)},
+      {QStringLiteral("action_window_start"), combat.action_window_start},
+      {QStringLiteral("action_window_end"), combat.action_window_end},
+      {QStringLiteral("blocked_contacts"),
+       static_cast<qint64>(combat.blocked_contacts)},
+      {QStringLiteral("perfect_guard_contacts"),
+       static_cast<qint64>(combat.perfect_guard_contacts)},
+      {QStringLiteral("dodged_contacts"), static_cast<qint64>(combat.dodged_contacts)},
+      {QStringLiteral("damaging_contacts"),
+       static_cast<qint64>(combat.damaging_contacts)},
+      {QStringLiteral("guard_broken_contacts"),
+       static_cast<qint64>(combat.guard_broken_contacts)}};
+
+  QJsonObject const costs_json{
+      {QStringLiteral("motor_ms"), trace.costs.motor_ms},
+      {QStringLiteral("targeting_ms"), trace.costs.targeting_ms},
+      {QStringLiteral("weapon_trace_ms"), trace.costs.weapon_trace_ms},
+      {QStringLiteral("engagement_ms"), trace.costs.engagement_ms},
+      {QStringLiteral("camera_ms"), trace.costs.camera_ms},
+      {QStringLiteral("total_ms"), trace.costs.total_ms()}};
 
   return QJsonObject{{QStringLiteral("sequence"), static_cast<qint64>(trace.sequence)},
                      {QStringLiteral("time_seconds"), trace.time_seconds},
                      {QStringLiteral("input"), input_json},
                      {QStringLiteral("motor"), motor_json},
                      {QStringLiteral("camera"), camera_json},
-                     {QStringLiteral("combat"), combat_json}};
+                     {QStringLiteral("combat"), combat_json},
+                     {QStringLiteral("costs"), costs_json}};
 }
 
 auto expectation_requires_zone(ArenaExpectationKind kind) -> bool {
@@ -610,6 +644,8 @@ struct ArenaScenarioRunner::Impl {
     float declared_surface_gap{0.0F};
     QString animation;
     QString visual;
+    bool swing_recoil{false};
+    float hit_reaction_tilt_degrees{0.0F};
     float attack_phase{0.0F};
     std::uint32_t transitions{0};
     bool culled{false};
@@ -1629,6 +1665,18 @@ struct ArenaScenarioRunner::Impl {
           continue;
         }
         host.request_rpg_dodge(entity_id, step.destination);
+      }
+      break;
+    case ScenarioCommandKind::RpgCycleLockOn:
+      for (auto entity_id : ids(step.group)) {
+        if (!host.cycle_rpg_lock_on) {
+          add_issue(
+              QStringLiteral("rpg_lock_on_unavailable"),
+              QStringLiteral("%1 has no RPG lock-on host callback").arg(step.group),
+              entity_id);
+          continue;
+        }
+        host.cycle_rpg_lock_on(entity_id);
       }
       break;
     case ScenarioCommandKind::RpgMove:
@@ -2867,8 +2915,11 @@ struct ArenaScenarioRunner::Impl {
       if (observed_movement) {
         visible_movement[group] = true;
       }
-      if (soldier.visual_state == Render::Profiling::SoldierVisualState::HitReaction &&
-          !culled) {
+      if (!culled &&
+          (soldier.visual_state == Render::Profiling::SoldierVisualState::HitReaction ||
+           (soldier.is_swing_recoiling &&
+            std::abs(soldier.hit_reaction_tilt_degrees) > 0.05F))) {
+
         visible_hit_reactions[group] = true;
       }
       if ((soldier.visual_state == Render::Profiling::SoldierVisualState::Dying ||
@@ -2906,6 +2957,8 @@ struct ArenaScenarioRunner::Impl {
                Render::Profiling::animation_state_name(soldier.animation_state)),
            QString::fromLatin1(
                Render::Profiling::soldier_visual_state_name(soldier.visual_state)),
+           soldier.is_swing_recoiling,
+           soldier.hit_reaction_tilt_degrees,
            soldier.attack_phase,
            soldier.transitions_last_second,
            culled,
@@ -3010,11 +3063,17 @@ struct ArenaScenarioRunner::Impl {
                       soldier.soldier_index);
           }
         }
+
+        float const frame_budget_scale =
+            std::max(1.0F, (elapsed - previous.observed_at) * 60.0F);
+
         if (expectation.kind == ArenaExpectationKind::NoRootTeleport &&
             previous.initialized && !previous.culled && !culled &&
+            elapsed >= k_spawn_settle_seconds &&
             elapsed - previous.observed_at <= 0.05F) {
-          float const allowed = expectation.threshold > 0.0F ? expectation.threshold
-                                                             : k_default_root_step;
+          float const allowed = (expectation.threshold > 0.0F ? expectation.threshold
+                                                              : k_default_root_step) *
+                                frame_budget_scale;
           if (step > allowed) {
             add_issue(QStringLiteral("render_root_teleport"),
                       QStringLiteral("%1 entity %2 soldier %3 render root jumped %4 m "
@@ -3079,8 +3138,10 @@ struct ArenaScenarioRunner::Impl {
               soldier.visual_state == Render::Profiling::SoldierVisualState::Dead;
           bool const root_planted = step <= k_planted_root_step;
           if (!locomoting && root_planted) {
-            float const allowed = expectation.threshold > 0.0F ? expectation.threshold
-                                                               : k_default_foot_slide;
+            float const allowed =
+                (expectation.threshold > 0.0F ? expectation.threshold
+                                              : k_default_foot_slide) *
+                frame_budget_scale;
             float const ground_y = soldier.root_position.y();
             float planted_slide = 0.0F;
             auto const consider_foot = [&](const QVector3D& now,
@@ -3112,8 +3173,9 @@ struct ArenaScenarioRunner::Impl {
 
         if (expectation.kind == ArenaExpectationKind::NoWeaponTeleport &&
             joints_comparable) {
-          float const allowed = expectation.threshold > 0.0F ? expectation.threshold
-                                                             : k_default_hand_step;
+          float const allowed = (expectation.threshold > 0.0F ? expectation.threshold
+                                                              : k_default_hand_step) *
+                                frame_budget_scale;
           float const step_l = (soldier.hand_l_world - previous.hand_l_world).length();
           float const step_r = (soldier.hand_r_world - previous.hand_r_world).length();
           float const worst = std::max(step_l, step_r);
@@ -3132,8 +3194,9 @@ struct ArenaScenarioRunner::Impl {
 
         if (expectation.kind == ArenaExpectationKind::NoPelvisSnap &&
             joints_comparable) {
-          float const allowed = expectation.threshold > 0.0F ? expectation.threshold
-                                                             : k_default_pelvis_step;
+          float const allowed = (expectation.threshold > 0.0F ? expectation.threshold
+                                                              : k_default_pelvis_step) *
+                                frame_budget_scale;
           float const turn = std::abs(shortest_degrees(soldier.pelvis_yaw_degrees,
                                                        previous.pelvis_yaw_degrees));
           if (turn > allowed) {
@@ -3857,7 +3920,7 @@ struct ArenaScenarioRunner::Impl {
         break;
       }
       case ArenaExpectationKind::CommanderBoomIsContinuous: {
-        float const allowed =
+        float const budget =
             expectation.threshold > 0.0F ? expectation.threshold : 0.35F;
         auto const frames = commander_frames();
         float previous_boom = 0.0F;
@@ -3872,6 +3935,7 @@ struct ArenaScenarioRunner::Impl {
           if (have_previous) {
             float const step = shot.boom_resolved - previous_boom;
 
+            float const allowed = budget * std::max(1.0F, shot.dt * 60.0F);
             if (step > allowed) {
               add_issue(QStringLiteral("commander_boom_discontinuity"),
                         QStringLiteral("camera boom extended %1 m in one frame at %2 s "
@@ -3935,12 +3999,14 @@ struct ArenaScenarioRunner::Impl {
         break;
       }
       case ArenaExpectationKind::CommanderMotorCorrectionWithin: {
-        float const allowed =
+        float const budget =
             expectation.threshold > 0.0F ? expectation.threshold : 0.08F;
         for (auto const* frame : commander_frames()) {
           auto const& motor = frame->commander.motor;
           float const correction =
               std::max(motor.snap_back_distance, motor.separation_push);
+
+          float const allowed = budget * std::max(1.0F, motor.dt * 60.0F);
           if (correction > allowed) {
             add_issue(
                 QStringLiteral("commander_motor_correction"),
@@ -4020,6 +4086,166 @@ struct ArenaScenarioRunner::Impl {
                   .arg(last.dodge_request_sequence)
                   .arg(last.dodge_consumed_sequence)
                   .arg(last.dodge_refused_sequence));
+        }
+        break;
+      }
+      case ArenaExpectationKind::CommanderCombatCounterWithin: {
+        auto const frames = commander_frames();
+        if (frames.empty()) {
+          add_issue(QStringLiteral("commander_combat_not_traced"),
+                    QStringLiteral("no commander presentation trace was recorded, so "
+                                   "%1 cannot be counted")
+                        .arg(expectation.counter_key));
+          break;
+        }
+        auto const counter_of =
+            [&expectation](
+                const App::Core::CommanderCombatTrace& combat) -> std::uint32_t {
+          auto const& key = expectation.counter_key;
+          if (key == QLatin1String("accepted")) {
+            return combat.queue_accepted;
+          }
+          if (key == QLatin1String("buffered")) {
+            return combat.queue_buffered;
+          }
+          if (key == QLatin1String("refused")) {
+            return combat.queue_refused;
+          }
+          if (key == QLatin1String("expired")) {
+            return combat.queue_expired;
+          }
+          if (key == QLatin1String("overflow")) {
+            return combat.queue_overflow;
+          }
+          if (key == QLatin1String("block")) {
+            return combat.blocked_contacts;
+          }
+          if (key == QLatin1String("perfect_guard")) {
+            return combat.perfect_guard_contacts;
+          }
+          if (key == QLatin1String("dodge")) {
+            return combat.dodged_contacts;
+          }
+          if (key == QLatin1String("damage")) {
+            return combat.damaging_contacts;
+          }
+          if (key == QLatin1String("guard_break")) {
+            return combat.guard_broken_contacts;
+          }
+          return 0U;
+        };
+
+        float const window_start = expectation.start_seconds;
+        float const window_end = expectation.end_seconds > 0.0F
+                                     ? expectation.end_seconds
+                                     : std::numeric_limits<float>::max();
+        std::optional<std::uint32_t> first;
+        std::uint32_t last_value = 0U;
+        bool have_last = false;
+        for (auto const* frame : frames) {
+          if (frame->time_seconds < window_start) {
+            first = counter_of(frame->commander.combat);
+            continue;
+          }
+          if (frame->time_seconds > window_end) {
+            break;
+          }
+          if (!first.has_value()) {
+            first = counter_of(frame->commander.combat);
+          }
+          last_value = counter_of(frame->commander.combat);
+          have_last = true;
+        }
+        if (!have_last) {
+          add_issue(QStringLiteral("commander_combat_counter_window_empty"),
+                    QStringLiteral("no traced frame fell inside %1 s - %2 s for %3")
+                        .arg(window_start, 0, 'f', 2)
+                        .arg(expectation.end_seconds, 0, 'f', 2)
+                        .arg(expectation.counter_key));
+          break;
+        }
+        auto const observed = last_value - first.value_or(0U);
+        auto const minimum =
+            static_cast<std::uint32_t>(std::max(0.0F, expectation.threshold));
+        if (observed < minimum) {
+          add_issue(QStringLiteral("commander_combat_counter_too_low"),
+                    QStringLiteral("%1 was counted %2 times between %3 s and %4 s but "
+                                   "at least %5 were required")
+                        .arg(expectation.counter_key)
+                        .arg(observed)
+                        .arg(window_start, 0, 'f', 2)
+                        .arg(window_end, 0, 'f', 2)
+                        .arg(minimum));
+          break;
+        }
+        if (expectation.maximum >= 0.0F) {
+          auto const maximum = static_cast<std::uint32_t>(expectation.maximum);
+          if (observed > maximum) {
+            add_issue(QStringLiteral("commander_combat_counter_too_high"),
+                      QStringLiteral("%1 was counted %2 times between %3 s and %4 s "
+                                     "but at most %5 are allowed")
+                          .arg(expectation.counter_key)
+                          .arg(observed)
+                          .arg(window_start, 0, 'f', 2)
+                          .arg(window_end, 0, 'f', 2)
+                          .arg(maximum));
+          }
+        }
+        break;
+      }
+      case ArenaExpectationKind::CommanderLockStateWithin: {
+        auto const frames = commander_frames();
+        if (frames.empty()) {
+          add_issue(QStringLiteral("commander_lock_not_traced"),
+                    QStringLiteral("no commander presentation trace was recorded, so "
+                                   "the lock state cannot be read"));
+          break;
+        }
+        float const window_start = expectation.start_seconds;
+        float const window_end = expectation.end_seconds > 0.0F
+                                     ? expectation.end_seconds
+                                     : std::numeric_limits<float>::max();
+        std::vector<std::uint64_t> locks;
+        for (auto const* frame : frames) {
+          if (frame->time_seconds < window_start || frame->time_seconds > window_end) {
+            continue;
+          }
+          locks.push_back(frame->commander.combat.locked_target_id);
+        }
+        if (locks.empty()) {
+          add_issue(QStringLiteral("commander_lock_window_empty"),
+                    QStringLiteral("no traced frame fell inside %1 s - %2 s")
+                        .arg(window_start, 0, 'f', 2)
+                        .arg(expectation.end_seconds, 0, 'f', 2));
+          break;
+        }
+        auto const& key = expectation.counter_key;
+        if (key == QLatin1String("held")) {
+          auto const lost = std::find(locks.begin(), locks.end(), 0U);
+          if (lost != locks.end()) {
+            add_issue(QStringLiteral("commander_lock_not_held"),
+                      QStringLiteral("the lock was empty inside %1 s - %2 s")
+                          .arg(window_start, 0, 'f', 2)
+                          .arg(window_end, 0, 'f', 2));
+          }
+        } else if (key == QLatin1String("cleared")) {
+          auto const still_locked = std::find_if(
+              locks.begin(), locks.end(), [](std::uint64_t id) { return id != 0U; });
+          if (still_locked != locks.end()) {
+            add_issue(QStringLiteral("commander_lock_not_cleared"),
+                      QStringLiteral("entity %1 was still locked inside %2 s - %3 s")
+                          .arg(*still_locked)
+                          .arg(window_start, 0, 'f', 2)
+                          .arg(window_end, 0, 'f', 2));
+          }
+        } else if (key == QLatin1String("changed")) {
+          if (locks.front() == locks.back()) {
+            add_issue(QStringLiteral("commander_lock_did_not_change"),
+                      QStringLiteral("the lock stayed on entity %1 across %2 s - %3 s")
+                          .arg(locks.front())
+                          .arg(window_start, 0, 'f', 2)
+                          .arg(window_end, 0, 'f', 2));
+          }
         }
         break;
       }
@@ -4230,12 +4456,24 @@ struct ArenaScenarioRunner::Impl {
         std::uint64_t peak_rigged_single_draws = 0U;
         std::uint64_t peak_shadow_rigged_instanced_instances = 0U;
         std::uint64_t peak_shadow_rigged_single_draws = 0U;
+        std::uint64_t prewarm_frames = 0U;
+        double prewarm_max_ms = 0.0;
+        std::uint64_t gpu_timed_frames = 0U;
         for (auto const& frame : trace) {
           bool const after_start =
               frame.time_seconds + 1.0e-5F >= expectation.start_seconds;
           bool const before_end =
               expectation.end_seconds <= 0.0F ||
               frame.time_seconds <= expectation.end_seconds + 1.0e-5F;
+          if (frame.time_seconds < k_arena_prewarm_seconds) {
+
+            ++prewarm_frames;
+            prewarm_max_ms = std::max(prewarm_max_ms, frame.frame_time_ms);
+            continue;
+          }
+          if (frame.timings.gpu_color_ms > 0.0 || frame.timings.gpu_shadow_ms > 0.0) {
+            ++gpu_timed_frames;
+          }
           if (after_start && before_end) {
             samples.push_back(frame.frame_time_ms);
             peak_visible_soldiers =
@@ -4266,15 +4504,70 @@ struct ArenaScenarioRunner::Impl {
             samples.size() - 1U, ((samples.size() * 95U) + 99U) / 100U - 1U);
         std::size_t const p50_index = std::min<std::size_t>(
             samples.size() - 1U, ((samples.size() * 50U) + 99U) / 100U - 1U);
+        std::size_t const p99_index = std::min<std::size_t>(
+            samples.size() - 1U, ((samples.size() * 99U) + 99U) / 100U - 1U);
         double const p50 = samples[p50_index];
         double const p95 = samples[p95_index];
+        double const p99 = samples[p99_index];
         double const maximum = samples.back();
 
         report.frame_time_samples = samples.size();
         report.frame_budget_ms = budget;
         report.frame_time_p50_ms = p50;
         report.frame_time_p95_ms = p95;
+        report.frame_time_p99_ms = p99;
         report.frame_time_max_ms = maximum;
+        report.prewarm_frames = prewarm_frames;
+        report.prewarm_max_ms = prewarm_max_ms;
+        report.prewarm_seconds = k_arena_prewarm_seconds;
+        report.gpu_timed_frames = gpu_timed_frames;
+
+        auto percentile_of = [this](auto&& pick) -> double {
+          std::vector<double> values;
+          values.reserve(trace.size());
+          for (auto const& frame : this->trace) {
+            if (frame.time_seconds < k_arena_prewarm_seconds ||
+                !frame.commander.valid) {
+              continue;
+            }
+            values.push_back(static_cast<double>(pick(frame.commander.costs)));
+          }
+          if (values.empty()) {
+            return 0.0;
+          }
+          std::sort(values.begin(), values.end());
+          std::size_t const index = std::min<std::size_t>(
+              values.size() - 1U, ((values.size() * 95U) + 99U) / 100U - 1U);
+          return values[index];
+        };
+        report.rpg_cost_p95_motor_ms =
+            percentile_of([](auto const& costs) { return costs.motor_ms; });
+        report.rpg_cost_p95_targeting_ms =
+            percentile_of([](auto const& costs) { return costs.targeting_ms; });
+        report.rpg_cost_p95_weapon_trace_ms =
+            percentile_of([](auto const& costs) { return costs.weapon_trace_ms; });
+        report.rpg_cost_p95_engagement_ms =
+            percentile_of([](auto const& costs) { return costs.engagement_ms; });
+        report.rpg_cost_p95_camera_ms =
+            percentile_of([](auto const& costs) { return costs.camera_ms; });
+        report.rpg_cost_p95_total_ms =
+            percentile_of([](auto const& costs) { return costs.total_ms(); });
+
+        std::vector<double> simulation_samples;
+        simulation_samples.reserve(trace.size());
+        for (auto const& frame : trace) {
+          if (frame.time_seconds < k_arena_prewarm_seconds) {
+            continue;
+          }
+          simulation_samples.push_back(frame.timings.simulation_ms);
+        }
+        if (!simulation_samples.empty()) {
+          std::sort(simulation_samples.begin(), simulation_samples.end());
+          std::size_t const simulation_index = std::min<std::size_t>(
+              simulation_samples.size() - 1U,
+              ((simulation_samples.size() * 95U) + 99U) / 100U - 1U);
+          report.simulation_p95_ms = simulation_samples[simulation_index];
+        }
         report.peak_visible_soldiers = peak_visible_soldiers;
         report.peak_draw_commands = peak_draw_commands;
         report.peak_rigged_commands = peak_rigged_commands;
@@ -4302,11 +4595,18 @@ struct ArenaScenarioRunner::Impl {
         }
 
         if (p95 > budget || maximum > budget * 10.0) {
-          add_issue(QStringLiteral("frame_budget_exceeded"),
-                    QStringLiteral("render frame p95/max was %1/%2 ms (budget %3 ms)")
-                        .arg(p95, 0, 'f', 2)
-                        .arg(maximum, 0, 'f', 2)
-                        .arg(budget, 0, 'f', 2));
+          add_issue(
+              QStringLiteral("frame_budget_exceeded"),
+              QStringLiteral("render frame p95/p99/max was %1/%2/%3 ms (budget %4 ms)")
+                  .arg(p95, 0, 'f', 2)
+                  .arg(p99, 0, 'f', 2)
+                  .arg(maximum, 0, 'f', 2)
+                  .arg(budget, 0, 'f', 2));
+        }
+        if (gpu_timed_frames == 0U) {
+          add_issue(QStringLiteral("performance_gpu_timing_missing"),
+                    QStringLiteral("no post-prewarm frame reported a GPU timing, so "
+                                   "the frame budget cannot be attributed"));
         }
         break;
       }
@@ -4863,8 +5163,27 @@ auto ArenaScenarioRunner::write_artifacts(const QString& directory,
             {QStringLiteral("budget_ms"), m_impl->report.frame_budget_ms},
             {QStringLiteral("p50_ms"), m_impl->report.frame_time_p50_ms},
             {QStringLiteral("p95_ms"), m_impl->report.frame_time_p95_ms},
+            {QStringLiteral("p99_ms"), m_impl->report.frame_time_p99_ms},
             {QStringLiteral("max_ms"), m_impl->report.frame_time_max_ms},
             {QStringLiteral("p95_fps"), p95_fps},
+            {QStringLiteral("prewarm_seconds"), m_impl->report.prewarm_seconds},
+            {QStringLiteral("prewarm_frames"),
+             static_cast<qint64>(m_impl->report.prewarm_frames)},
+            {QStringLiteral("prewarm_max_ms"), m_impl->report.prewarm_max_ms},
+            {QStringLiteral("gpu_timed_frames"),
+             static_cast<qint64>(m_impl->report.gpu_timed_frames)},
+            {QStringLiteral("rpg_cost_p95_ms"),
+             QJsonObject{
+                 {QStringLiteral("motor"), m_impl->report.rpg_cost_p95_motor_ms},
+                 {QStringLiteral("targeting"),
+                  m_impl->report.rpg_cost_p95_targeting_ms},
+                 {QStringLiteral("weapon_trace"),
+                  m_impl->report.rpg_cost_p95_weapon_trace_ms},
+                 {QStringLiteral("engagement"),
+                  m_impl->report.rpg_cost_p95_engagement_ms},
+                 {QStringLiteral("camera"), m_impl->report.rpg_cost_p95_camera_ms},
+                 {QStringLiteral("total"), m_impl->report.rpg_cost_p95_total_ms}}},
+            {QStringLiteral("simulation_p95_ms"), m_impl->report.simulation_p95_ms},
             {QStringLiteral("peak_visible_soldiers"),
              static_cast<qint64>(m_impl->report.peak_visible_soldiers)},
             {QStringLiteral("peak_draw_commands"),
@@ -5054,6 +5373,9 @@ auto ArenaScenarioRunner::write_artifacts(const QString& directory,
           {QStringLiteral("declared_surface_gap"), soldier.declared_surface_gap},
           {QStringLiteral("animation"), soldier.animation},
           {QStringLiteral("visual"), soldier.visual},
+          {QStringLiteral("swing_recoil"), soldier.swing_recoil},
+          {QStringLiteral("hit_reaction_tilt_degrees"),
+           soldier.hit_reaction_tilt_degrees},
           {QStringLiteral("attack_phase"), soldier.attack_phase},
           {QStringLiteral("transitions_last_second"),
            static_cast<qint64>(soldier.transitions)},

@@ -2,6 +2,7 @@
 #include <gtest/gtest.h>
 #include <vector>
 
+#include "game/core/ambient_session.h"
 #include "game/core/component.h"
 #include "game/core/world.h"
 #include "game/game_config.h"
@@ -20,10 +21,14 @@
 
 namespace {
 
-[[nodiscard]] auto archer_production() -> Game::Units::TroopProductionStats {
-  const auto* archer =
-      Game::Units::TroopCatalog::instance().get_class(Game::Units::TroopType::Archer);
-  return archer != nullptr ? archer->production : Game::Units::TroopProductionStats{};
+[[nodiscard]] auto archer_production(Engine::Core::World& world, int owner_id)
+    -> Game::Units::TroopProductionStats {
+  auto& nations = *Game::Session::services_for(world).nations;
+  const auto* nation = nations.get_nation_for_player(owner_id);
+  const auto nation_id = nation != nullptr ? nation->id : nations.default_nation_id();
+  return Game::Systems::TroopProfileService::instance()
+      .get_profile(nation_id, Game::Units::TroopType::Archer)
+      .production;
 }
 
 class HomeManpowerSystemTest : public ::testing::Test {
@@ -147,7 +152,7 @@ TEST_F(HomeManpowerSystemTest, BarracksProductionConsumesAvailableManpowerWhenQu
   ASSERT_NE(unit, nullptr);
   ASSERT_NE(production, nullptr);
 
-  const auto archer = archer_production();
+  const auto archer = archer_production(world, 1);
 
   unit->spawn_type = Game::Units::SpawnType::Barracks;
   unit->owner_id = 1;
@@ -190,7 +195,7 @@ TEST_F(HomeManpowerSystemTest, BarracksProductionRequiresConfiguredResources) {
   ASSERT_NE(unit, nullptr);
   ASSERT_NE(production, nullptr);
 
-  const auto archer = archer_production();
+  const auto archer = archer_production(world, 1);
 
   unit->spawn_type = Game::Units::SpawnType::Barracks;
   unit->owner_id = 1;

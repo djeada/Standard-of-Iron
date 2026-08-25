@@ -5,6 +5,8 @@
 #include <algorithm>
 #include <cmath>
 #include <cstdint>
+#include <cstdio>
+#include <cstdlib>
 #include <limits>
 #include <numbers>
 #include <optional>
@@ -278,6 +280,13 @@ void publish_formation_hit(
       Engine::Core::FormationHitPresentationComponent>(&target);
   if (hit == nullptr) {
     return;
+  }
+  if (std::getenv("SOI_HITDBG") != nullptr) {
+    std::fprintf(stderr,
+                 "[hitdbg] publish target=%llu slot=%u kind=%d\n",
+                 static_cast<unsigned long long>(target.get_id()),
+                 static_cast<unsigned>(*slot),
+                 static_cast<int>(kind));
   }
   hit->attacker_id = attacker_id;
   hit->soldier_slot = *slot;
@@ -594,28 +603,6 @@ auto note_wildlife_aggressor(Engine::Core::Entity* target,
   wildlife->hostile_timer = Game::Wildlife::k_hostility_duration;
   wildlife->think_cooldown = 0.0F;
   return true;
-}
-
-auto can_retaliate(Engine::Core::Entity* entity,
-                   const Engine::Core::UnitComponent* unit) -> bool {
-  if ((entity == nullptr) || (unit == nullptr)) {
-    return false;
-  }
-  if (entity->has_component<Engine::Core::BuildingComponent>()) {
-    return false;
-  }
-  if (unit->spawn_type == Game::Units::SpawnType::Civilian) {
-    return false;
-  }
-  if (!Game::Systems::CombatRules::participates_in_rts_melee_lock(entity)) {
-    return false;
-  }
-  return entity->get_component<Engine::Core::AttackComponent>() != nullptr;
-}
-
-auto can_reach_attacker(Engine::Core::Entity* entity,
-                        Engine::Core::Entity* attacker) -> bool {
-  return !melee_walled_off_from(entity, attacker);
 }
 
 void engage_retaliation_target(Engine::Core::Entity* entity,

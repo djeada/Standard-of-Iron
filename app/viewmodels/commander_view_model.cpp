@@ -283,7 +283,6 @@ void CommanderViewModel::cancel_active_placement() {
 }
 
 void CommanderViewModel::exit_commander_runtime_mode() {
-  m_hit_stop_timer = 0.0F;
   m_telegraphs.clear();
 }
 
@@ -669,10 +668,6 @@ void CommanderViewModel::update_control_mode(float dt) {
     exit_mode();
     return;
   }
-  if (effects.hit_stop_duration.has_value()) {
-    m_hit_stop_timer = *effects.hit_stop_duration;
-    m_hit_stop_total = *effects.hit_stop_duration;
-  }
 }
 
 void CommanderViewModel::sample_frame_intent() {
@@ -703,19 +698,9 @@ void CommanderViewModel::restore_direct_control_if_ready() {
 }
 
 auto CommanderViewModel::time_effect_scale(float scaled_dt, bool paused) -> float {
-  if (!active()) {
-    return 1.0F;
-  }
-  if (!paused && m_hit_stop_timer > 0.0F) {
-    m_hit_stop_timer -= scaled_dt;
-    if (m_hit_stop_timer < 0.0F) {
-      m_hit_stop_timer = 0.0F;
-    } else {
-      const float progress =
-          1.0F - std::clamp(m_hit_stop_timer / m_hit_stop_total, 0.0F, 1.0F);
-      return progress < 0.5F ? 0.04F : (0.04F + 0.96F * (progress - 0.5F) * 2.0F);
-    }
-  }
+
+  static_cast<void>(scaled_dt);
+  static_cast<void>(paused);
   return 1.0F;
 }
 

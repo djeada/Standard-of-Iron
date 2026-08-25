@@ -127,7 +127,6 @@ struct CommanderUpdateContext {
 
 struct CommanderUpdateEffects {
   bool should_exit_commander_mode = false;
-  std::optional<float> hit_stop_duration;
 };
 
 struct CommanderDirectControlContext {
