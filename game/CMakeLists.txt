@@ -142,6 +142,7 @@ add_library(
     STATIC
     systems/nav_grid.cpp
     systems/pathfinding.cpp
+    systems/walkability.cpp
     systems/route_corridor_planner.cpp
     systems/spatial_grid.cpp
     systems/gate_service.cpp

@@ -10,6 +10,7 @@
 #include "arena_ambience_scenarios.h"
 #include "arena_city_scenarios.h"
 #include "arena_formation_scenarios.h"
+#include "arena_navigation_scenarios.h"
 #include "arena_scenarios.h"
 #include "arena_showcase_scenarios.h"
 #include "arena_trailer_scenarios.h"
@@ -10075,6 +10076,10 @@ auto definitions() -> const std::vector<ArenaScenarioDefinition>& {
     values.insert(values.end(),
                   std::make_move_iterator(formation.begin()),
                   std::make_move_iterator(formation.end()));
+    auto navigation = build_navigation_definitions();
+    values.insert(values.end(),
+                  std::make_move_iterator(navigation.begin()),
+                  std::make_move_iterator(navigation.end()));
     auto wildlife = build_wildlife_definitions();
     values.insert(values.end(),
                   std::make_move_iterator(wildlife.begin()),

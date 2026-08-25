@@ -23,6 +23,7 @@
 #include "../systems/command_service.h"
 #include "../systems/nav_grid.h"
 #include "../systems/order_service.h"
+#include "../systems/walkability.h"
 #include "../units/factory.h"
 #include "../units/spawn_type.h"
 #include "bird_flock.h"
@@ -45,6 +46,8 @@ constexpr float k_wolf_bite_flinch_seconds = 0.30F;
 constexpr float k_wolf_bite_blood_chance = 0.34F;
 constexpr float k_wolf_bite_blood_spread = 0.55F;
 constexpr float k_move_reissue_epsilon = 0.75F;
+
+constexpr float k_animal_navigation_radius = 0.0F;
 constexpr float k_troop_threat_strength = 1.0F;
 constexpr float k_spawn_scatter = 3.2F;
 constexpr int k_open_point_attempts = 8;
@@ -763,8 +766,16 @@ void WildlifeSystem::issue_move(Engine::Core::World& world,
                                 Engine::Core::EntityID entity_id,
                                 float world_x,
                                 float world_z) {
-  QVector3D const destination = Game::Systems::NavGrid::snap_to_walkable_ground(
-      QVector3D(world_x, 0.0F, world_z));
+
+  Game::Systems::BodyProfile profile;
+  profile.radius = k_animal_navigation_radius;
+  QVector3D const requested(world_x, 0.0F, world_z);
+  QVector3D const standable =
+      Game::Systems::Walkability::nearest_standable(requested, profile, 24.0F)
+          .value_or(requested);
+
+  QVector3D const destination =
+      Game::Systems::NavGrid::snap_to_walkable_ground(standable);
 
   auto* entity = world.get_entity(entity_id);
   if (entity != nullptr) {

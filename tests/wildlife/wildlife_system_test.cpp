@@ -25,11 +25,19 @@
 #include "game/systems/nation_registry.h"
 #include "game/systems/nav_grid.h"
 #include "game/systems/owner_registry.h"
+#include "game/systems/walkability.h"
 #include "game/wildlife/bird_flock.h"
 #include "game/wildlife/wildlife_config.h"
 #include "game/wildlife/wildlife_system.h"
 
 namespace {
+
+auto animal_can_stand(float world_x, float world_z) -> bool {
+  Game::Systems::BodyProfile profile;
+  profile.radius = 0.0F;
+  return Game::Systems::Walkability::can_stand(QVector3D(world_x, 0.0F, world_z),
+                                               profile);
+}
 
 using Engine::Core::Entity;
 using Engine::Core::World;
@@ -694,7 +702,7 @@ TEST_F(WildlifeSystemTest, MoveTargetsStayOnWalkableGround) {
   for (auto* entity : collect_species(world, Species::Sheep)) {
     const auto* wildlife = entity->get_component<Engine::Core::WildlifeComponent>();
     ASSERT_NE(wildlife, nullptr);
-    EXPECT_FALSE(terrain.is_forbidden_world(wildlife->target_x, wildlife->target_z));
+    EXPECT_TRUE(animal_can_stand(wildlife->target_x, wildlife->target_z));
   }
 }
 
@@ -869,8 +877,7 @@ TEST_F(WildlifeSystemTest, AMapThatNeverAuthoredWildlifeStillGetsAPopulation) {
   for (auto* entity : world.collect_entities_with<Engine::Core::WildlifeComponent>()) {
     const auto* transform = entity->get_component<Engine::Core::TransformComponent>();
     ASSERT_NE(transform, nullptr);
-    EXPECT_FALSE(
-        terrain.is_forbidden_world(transform->position.x, transform->position.z));
+    EXPECT_TRUE(animal_can_stand(transform->position.x, transform->position.z));
   }
 }
 
@@ -905,8 +912,7 @@ TEST_F(WildlifeSystemTest, ShippedForestMapPopulatesEverySpeciesItEnables) {
   for (auto* entity : world.collect_entities_with<Engine::Core::WildlifeComponent>()) {
     const auto* transform = entity->get_component<Engine::Core::TransformComponent>();
     ASSERT_NE(transform, nullptr);
-    EXPECT_FALSE(
-        terrain.is_forbidden_world(transform->position.x, transform->position.z));
+    EXPECT_TRUE(animal_can_stand(transform->position.x, transform->position.z));
   }
 }
 

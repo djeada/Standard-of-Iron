@@ -433,6 +433,9 @@ Item {
                             font.hintingPreference: Design.Typography.titleHinting
                             font.kerning: true
                             font.letterSpacing: root.narrow ? Design.Typography.trackingTitle : Design.Typography.trackingHero
+
+                            fontSizeMode: Text.HorizontalFit
+                            minimumPixelSize: 16
                             elide: Text.ElideRight
                             maximumLineCount: 1
                             opacity: 0.48
@@ -451,6 +454,8 @@ Item {
                             font.hintingPreference: Design.Typography.titleHinting
                             font.kerning: true
                             font.letterSpacing: root.narrow ? Design.Typography.trackingTitle : Design.Typography.trackingHero
+                            fontSizeMode: Text.HorizontalFit
+                            minimumPixelSize: 16
                             elide: Text.ElideRight
                             maximumLineCount: 1
                         }

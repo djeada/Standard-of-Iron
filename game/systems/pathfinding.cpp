@@ -171,6 +171,9 @@ auto Pathfinding::cell_range_world_bounds(const CellRange& range) const -> World
 }
 
 void Pathfinding::set_obstacle(int x, int y, bool is_obstacle) {
+
+  update_navigation_grid();
+
   std::unique_lock<std::shared_mutex> const lock(m_navigation_mutex);
   m_navigation_grid.set(x, y, is_obstacle ? CellValue::Blocked : CellValue::Walkable);
 
@@ -561,10 +564,27 @@ void Pathfinding::apply_building_cells(
   if (!building.blocks_navigation) {
     return;
   }
-  auto const range = cells_covering(building.center_x,
-                                    building.center_z,
-                                    (building.width * 0.5F) + building.grid_padding,
-                                    (building.depth * 0.5F) + building.grid_padding);
+
+  float const routing_half_x = (building.width * 0.5F) + building.grid_padding;
+  float const routing_half_z = (building.depth * 0.5F) + building.grid_padding;
+  float min_x_world = building.center_x - routing_half_x;
+  float max_x_world = building.center_x + routing_half_x;
+  float min_z_world = building.center_z - routing_half_z;
+  float max_z_world = building.center_z + routing_half_z;
+  if (building.body_width > 0.0F && building.body_depth > 0.0F) {
+    min_x_world =
+        std::min(min_x_world, building.body_center_x - (building.body_width * 0.5F));
+    max_x_world =
+        std::max(max_x_world, building.body_center_x + (building.body_width * 0.5F));
+    min_z_world =
+        std::min(min_z_world, building.body_center_z - (building.body_depth * 0.5F));
+    max_z_world =
+        std::max(max_z_world, building.body_center_z + (building.body_depth * 0.5F));
+  }
+  auto const range = cells_covering((min_x_world + max_x_world) * 0.5F,
+                                    (min_z_world + max_z_world) * 0.5F,
+                                    (max_x_world - min_x_world) * 0.5F,
+                                    (max_z_world - min_z_world) * 0.5F);
   int const from_x = std::max({range.min_x, min_x, 0});
   int const to_x = std::min({range.max_x, max_x, m_width - 1});
   int const from_z = std::max({range.min_z, min_z, 0});

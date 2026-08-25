@@ -302,6 +302,8 @@ auto structure_separates_positions(const QVector3D& from, const QVector3D& to) -
       .segment_crosses_blocking_building(from.x(), from.z(), to.x(), to.z());
 }
 
+constexpr float k_contact_separation_exemption = 1.6F;
+
 auto structure_separates_combatants(Engine::Core::Entity* attacker,
                                     Engine::Core::Entity* target) -> bool {
   if ((attacker == nullptr) || (target == nullptr)) {
@@ -322,6 +324,11 @@ auto structure_separates_combatants(Engine::Core::Entity* attacker,
   QVector3D const from(
       attacker_transform->position.x, 0.0F, attacker_transform->position.z);
   QVector3D const to(target_transform->position.x, 0.0F, target_transform->position.z);
+
+  float const separation = (to - from).length();
+  if (separation <= k_contact_separation_exemption) {
+    return false;
+  }
   return structure_separates_positions(from, to);
 }
 
@@ -465,6 +472,69 @@ auto suppresses_opportunistic_combat(Engine::Core::Entity* unit) -> bool {
   return (intent != nullptr) && intent->suppress_opportunistic_combat &&
          (movement != nullptr) &&
          (movement->get_has_target() || movement->has_waypoints());
+}
+
+auto may_engage(Engine::Core::Entity* unit,
+                Engine::Core::Entity* enemy,
+                EngagementTrigger trigger) -> bool {
+  if (unit == nullptr || enemy == nullptr || unit == enemy) {
+    return false;
+  }
+  auto* unit_comp = unit->get_component<Engine::Core::UnitComponent>();
+  if (unit_comp == nullptr || unit_comp->health <= 0) {
+    return false;
+  }
+  if (unit->has_component<Engine::Core::PendingRemovalComponent>() ||
+      enemy->has_component<Engine::Core::PendingRemovalComponent>()) {
+    return false;
+  }
+
+  if (unit->has_component<Engine::Core::BuildingComponent>() ||
+      unit->has_component<Engine::Core::WildlifeComponent>()) {
+    return false;
+  }
+  if (unit_comp->spawn_type == Game::Units::SpawnType::Civilian) {
+    return false;
+  }
+  auto* attack_comp = unit->get_component<Engine::Core::AttackComponent>();
+  if (attack_comp == nullptr) {
+    return false;
+  }
+  if (!Game::Systems::CombatRules::participates_in_rts_melee_lock(unit)) {
+    return false;
+  }
+
+  if (!is_auto_acquirable_enemy(unit_comp, enemy, true)) {
+    return false;
+  }
+  if (melee_walled_off_from(unit, enemy)) {
+    return false;
+  }
+
+  if (attack_comp->in_melee_lock) {
+    return false;
+  }
+
+  auto* guard_mode = unit->get_component<Engine::Core::GuardModeComponent>();
+  if (guard_mode != nullptr && guard_mode->active &&
+      guard_mode->returning_to_guard_position) {
+    return false;
+  }
+
+  if (trigger != EngagementTrigger::Opportunity) {
+
+    return true;
+  }
+
+  auto* attack_target = unit->get_component<Engine::Core::AttackTargetComponent>();
+  if (attack_target != nullptr && attack_target->target_id != 0) {
+    return false;
+  }
+  if (suppresses_opportunistic_combat(unit)) {
+    return false;
+  }
+  auto* movement = unit->get_component<Engine::Core::MovementComponent>();
+  return movement == nullptr || !movement->get_has_target();
 }
 
 auto is_unit_idle(Engine::Core::Entity* unit) -> bool {

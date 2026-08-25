@@ -750,6 +750,8 @@ auto ArmyFormationRuntime::replan(Engine::Core::World& world,
   request.spacing = formation->spacing;
   request.group_id = id;
 
+  request.preserve_previous_slots = true;
+
   bool const advancing_along_corridor = formation->maintains_formation() &&
                                         formation->has_destination &&
                                         formation->move_plan.active;
@@ -757,8 +759,9 @@ auto ArmyFormationRuntime::replan(Engine::Core::World& world,
 
   auto const plan = ArmyFormationPlanner::plan(world, request);
   if (!plan.valid) {
-    formation->phase = FormationPhase::Disrupted;
+
     formation->needs_replan = false;
+    refresh_shape_state(world, *formation);
     return false;
   }
 

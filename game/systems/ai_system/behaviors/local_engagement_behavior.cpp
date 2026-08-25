@@ -86,9 +86,14 @@ auto is_local_responder(const EntitySnapshot& entity,
 
 } // namespace
 
-auto LocalEngagementBehavior::fresh_responder_slots(
-    int already_fighting, const AIStrategyConfig& strategy) -> int {
-  return std::max(0, strategy.max_local_responders - std::max(0, already_fighting));
+auto LocalEngagementBehavior::fresh_responder_slots(int already_fighting,
+                                                    const AIStrategyConfig& strategy,
+                                                    int threat_count) -> int {
+
+  constexpr int k_responders_per_threat = 3;
+  int const budget = std::max(strategy.max_local_responders,
+                              std::max(1, threat_count) * k_responders_per_threat);
+  return std::max(0, budget - std::max(0, already_fighting));
 }
 
 void LocalEngagementBehavior::execute(const AISnapshot& snapshot,
@@ -169,8 +174,10 @@ void LocalEngagementBehavior::execute(const AISnapshot& snapshot,
         fresh.push_back(unit);
       }
     }
-    const auto fresh_slots = static_cast<std::size_t>(fresh_responder_slots(
-        static_cast<int>(already_fighting.size()), context.strategy_config));
+    const auto fresh_slots = static_cast<std::size_t>(
+        fresh_responder_slots(static_cast<int>(already_fighting.size()),
+                              context.strategy_config,
+                              static_cast<int>(cluster.threats.size())));
     fresh.resize(std::min(fresh.size(), fresh_slots));
 
     candidates = already_fighting;

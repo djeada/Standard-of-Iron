@@ -347,28 +347,57 @@ world_prop_type_to_string(WorldProp::Type type) -> QLatin1String {
   return 1.0F;
 }
 
-[[nodiscard]] constexpr auto world_prop_ground_fraction(WorldProp::Type type) -> float {
+[[nodiscard]] constexpr auto
+world_prop_model_half_extent(WorldProp::Type type) -> float {
   switch (type) {
-
+  case WorldProp::Type::Ruins:
+    return 0.94F;
+  case WorldProp::Type::AbandonedHome:
+    return 1.16F;
+  case WorldProp::Type::SupplyCart:
+    return 1.42F;
+  case WorldProp::Type::WeaponRack:
+    return 0.88F;
+  case WorldProp::Type::MagicShrine:
+    return 0.86F;
+  case WorldProp::Type::Statue:
+    return 0.55F;
+  case WorldProp::Type::Tent:
+    return 0.55F;
+  case WorldProp::Type::FireCamp:
+    return 0.90F;
   case WorldProp::Type::PineTree:
   case WorldProp::Type::OliveTree:
   case WorldProp::Type::CypressTree:
   case WorldProp::Type::PalmTree:
   case WorldProp::Type::DeadTree:
-    return 0.22F;
-
-  case WorldProp::Type::Tent:
-  case WorldProp::Type::SupplyCart:
-  case WorldProp::Type::WeaponRack:
-  case WorldProp::Type::AbandonedHome:
-  case WorldProp::Type::Ruins:
-    return 0.55F;
-  case WorldProp::Type::FireCamp:
-    return 0.90F;
+    return 1.0F;
   default:
     break;
   }
-  return 0.40F;
+  return 0.55F;
+}
+
+[[nodiscard]] constexpr auto
+world_prop_blocks_only_its_stem(WorldProp::Type type) -> bool {
+  switch (type) {
+  case WorldProp::Type::PineTree:
+  case WorldProp::Type::OliveTree:
+  case WorldProp::Type::CypressTree:
+  case WorldProp::Type::PalmTree:
+  case WorldProp::Type::DeadTree:
+    return true;
+  default:
+    break;
+  }
+  return false;
+}
+
+inline constexpr float k_world_prop_stem_fraction = 0.22F;
+
+[[nodiscard]] constexpr auto world_prop_ground_fraction(WorldProp::Type type) -> float {
+  return world_prop_blocks_only_its_stem(type) ? k_world_prop_stem_fraction
+                                               : world_prop_model_half_extent(type);
 }
 
 [[nodiscard]] constexpr auto world_prop_ground_radius(WorldProp::Type type,

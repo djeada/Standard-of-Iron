@@ -12,7 +12,6 @@
 #include "../map/terrain_service.h"
 #include "../units/spawn_type.h"
 #include "../units/troop_config.h"
-#include "building_collision_registry.h"
 #include "combat_rules.h"
 #include "combat_system/structure_combat.h"
 #include "command_service.h"
@@ -23,6 +22,7 @@
 #include "order_service.h"
 #include "pathfinding.h"
 #include "route_follow_system.h"
+#include "walkability.h"
 
 namespace Game::Systems {
 
@@ -168,27 +168,34 @@ void apply_desired_yaw(Engine::Core::TransformComponent* transform,
 
 namespace {
 
+void clamp_to_map_bounds(Engine::Core::TransformComponent& transform) {
+  auto& terrain = Game::Map::TerrainService::instance();
+  if (!terrain.is_initialized()) {
+    return;
+  }
+  const Game::Map::TerrainHeightMap* hm = terrain.get_height_map();
+  if (hm == nullptr) {
+    return;
+  }
+  const float tile = hm->get_tile_size();
+  const int w = hm->get_width();
+  const int h = hm->get_height();
+  if (w <= 0 || h <= 0) {
+    return;
+  }
+  const float half_w = w * 0.5F - 0.5F;
+  const float half_h = h * 0.5F - 0.5F;
+  transform.position.x =
+      std::clamp(transform.position.x, -half_w * tile, half_w * tile);
+  transform.position.z =
+      std::clamp(transform.position.z, -half_h * tile, half_h * tile);
+}
+
 void finalize_orientation(Engine::Core::Entity* entity,
                           Engine::Core::TransformComponent* transform,
                           Engine::Core::MovementComponent* movement,
                           float delta_time) {
-  auto& terrain = Game::Map::TerrainService::instance();
-  if (terrain.is_initialized()) {
-    const Game::Map::TerrainHeightMap* hm = terrain.get_height_map();
-    if (hm != nullptr) {
-      const float tile = hm->get_tile_size();
-      const int w = hm->get_width();
-      const int h = hm->get_height();
-      if (w > 0 && h > 0) {
-        const float half_w = w * 0.5F - 0.5F;
-        const float half_h = h * 0.5F - 0.5F;
-        transform->position.x =
-            std::clamp(transform->position.x, -half_w * tile, half_w * tile);
-        transform->position.z =
-            std::clamp(transform->position.z, -half_h * tile, half_h * tile);
-      }
-    }
-  }
+  clamp_to_map_bounds(*transform);
 
   auto* terrain_ctx = entity->get_component<Engine::Core::TerrainContextComponent>();
   if (terrain_ctx != nullptr && terrain_ctx->audio_cooldown > 0.0F) {
@@ -389,96 +396,6 @@ namespace {
 
 } // namespace
 
-auto MovementSystem::apply_duel_footwork(Engine::Core::Entity* entity,
-                                         Engine::Core::World* world,
-                                         Engine::Core::TransformComponent& transform,
-                                         Engine::Core::AttackComponent& attack,
-                                         float delta_time) const -> bool {
-  if (world == nullptr || !duel_footwork_body(*entity)) {
-    return false;
-  }
-
-  auto* opponent = world->get_entity(attack.melee_lock_target_id);
-  if (opponent == nullptr || !duel_footwork_body(*opponent)) {
-    return false;
-  }
-
-  auto const* opponent_attack =
-      opponent->get_component<Engine::Core::AttackComponent>();
-  if (opponent_attack == nullptr || !opponent_attack->in_melee_lock ||
-      opponent_attack->melee_lock_target_id != entity->get_id()) {
-    return false;
-  }
-
-  auto const* opponent_transform =
-      opponent->get_component<Engine::Core::TransformComponent>();
-  if (opponent_transform == nullptr) {
-    return false;
-  }
-
-  float const rx = transform.position.x - opponent_transform->position.x;
-  float const rz = transform.position.z - opponent_transform->position.z;
-  if ((rx * rx) + (rz * rz) < k_duel_min_reach_sq) {
-    return false;
-  }
-
-  auto const lhs = std::min(entity->get_id(), opponent->get_id());
-  auto const rhs = std::max(entity->get_id(), opponent->get_id());
-  float const direction = (((lhs + rhs) & 1U) == 0U) ? 1.0F : -1.0F;
-  float const sway = std::sin(m_duel_clock * 2.0F * std::numbers::pi_v<float> /
-                              k_duel_footwork_period_seconds);
-  float const angle = direction * sway * k_duel_footwork_degrees_per_second *
-                      delta_time * std::numbers::pi_v<float> / 180.0F;
-
-  float const cos_a = std::cos(angle);
-  float const sin_a = std::sin(angle);
-  transform.position.x = opponent_transform->position.x + (rx * cos_a) - (rz * sin_a);
-  transform.position.z = opponent_transform->position.z + (rx * sin_a) + (rz * cos_a);
-
-  {
-    float const breath_phase = static_cast<float>(entity->get_id() % 17U) / 17.0F *
-                               2.0F * std::numbers::pi_v<float>;
-    float const advance = duel_measure_target(*entity, m_duel_clock, breath_phase);
-
-    float const own_reach = attack.melee_range;
-    float const opponent_reach =
-        opponent_attack != nullptr ? opponent_attack->melee_range : own_reach;
-    float const base_separation = std::clamp(0.5F * (own_reach + opponent_reach) *
-                                                 k_duel_base_separation_fraction,
-                                             k_duel_base_separation_min,
-                                             k_duel_base_separation_max);
-    float const desired_separation =
-        std::max(k_duel_min_separation, base_separation - advance);
-    float const to_x = opponent_transform->position.x - transform.position.x;
-    float const to_z = opponent_transform->position.z - transform.position.z;
-    float const separation = std::hypot(to_x, to_z);
-    if (separation > 0.0001F) {
-      float const error = separation - desired_separation;
-      float const max_step = k_duel_measure_step_speed * delta_time;
-      float step = std::clamp(
-          error * k_duel_measure_gain_per_second * delta_time, -max_step, max_step);
-      step = std::min(step, std::max(0.0F, separation - k_duel_min_separation));
-      transform.position.x += to_x / separation * step;
-      transform.position.z += to_z / separation * step;
-      attack.melee_footwork_offset = step;
-    }
-  }
-
-  float const face_x = opponent_transform->position.x - transform.position.x;
-  float const face_z = opponent_transform->position.z - transform.position.z;
-  float const target_yaw =
-      std::atan2(face_x, face_z) * 180.0F / std::numbers::pi_v<float>;
-  float const current = transform.rotation.y;
-  float const diff = std::fmod((target_yaw - current + 540.0F), 360.0F) - 180.0F;
-  transform.rotation.y =
-      current + std::clamp(diff,
-                           -k_duel_footwork_turn_degrees_per_second * delta_time,
-                           k_duel_footwork_turn_degrees_per_second * delta_time);
-  transform.desired_yaw = transform.rotation.y;
-  transform.has_desired_yaw = false;
-  return true;
-}
-
 namespace {
 
 struct SweepResult {
@@ -591,7 +508,243 @@ auto motor_limits(const Engine::Core::Entity& entity,
   return limits;
 }
 
+class MotorCollision {
+public:
+  MotorCollision(const Engine::Core::Entity& entity,
+                 float origin_x,
+                 float origin_z,
+                 bool respect_body_radius = false)
+      : m_entity(&entity)
+      , m_respect_body_radius(respect_body_radius) {
+    QVector3D const origin(origin_x, 0.0F, origin_z);
+    m_valid_tile = allowed_here(origin);
+    if (!m_valid_tile) {
+      m_trapped_depth = Walkability::penetration(origin, body_profile(entity));
+    }
+  }
+
+  [[nodiscard]] auto was_on_valid_tile() const -> bool { return m_valid_tile; }
+
+  [[nodiscard]] auto point_allowed(float wx, float wz) const -> bool {
+    QVector3D const point(wx, 0.0F, wz);
+    if (m_valid_tile) {
+      return allowed_here(point);
+    }
+    if (m_trapped_depth > 0.0F) {
+
+      return Walkability::penetration(point, body_profile(*m_entity)) < m_trapped_depth;
+    }
+    return allowed_here(point);
+  }
+
+  [[nodiscard]] auto
+  step_allowed(float from_x, float from_z, float to_x, float to_z) const -> bool {
+    if (!point_allowed(to_x, to_z)) {
+      return false;
+    }
+    Point const from_cell = NavGrid::world_to_grid(from_x, from_z);
+    Point const to_cell = NavGrid::world_to_grid(to_x, to_z);
+    if (from_cell.x == to_cell.x || from_cell.y == to_cell.y) {
+      return true;
+    }
+    QVector3D const across_x = NavGrid::grid_to_world({to_cell.x, from_cell.y});
+    QVector3D const across_z = NavGrid::grid_to_world({from_cell.x, to_cell.y});
+    return point_allowed(across_x.x(), across_x.z()) &&
+           point_allowed(across_z.x(), across_z.z());
+  }
+
+  [[nodiscard]] static auto
+  body_profile(const Engine::Core::Entity& entity) -> BodyProfile {
+    BodyProfile profile;
+    if (auto const* movement = entity.get_component<Engine::Core::MovementComponent>();
+        movement != nullptr) {
+      profile.radius = movement->get_navigation_clearance();
+      profile.passability = movement->get_can_enter_forest()
+                                ? Pathfinding::Passability::Light
+                                : Pathfinding::Passability::Heavy;
+    }
+    return profile;
+  }
+
+private:
+  [[nodiscard]] auto allowed_here(const QVector3D& point) const -> bool {
+    if (m_respect_body_radius) {
+      return Walkability::can_stand(point, body_profile(*m_entity));
+    }
+    return is_movement_point_allowed(point, *m_entity);
+  }
+
+  const Engine::Core::Entity* m_entity;
+  bool m_respect_body_radius{false};
+  bool m_valid_tile{true};
+  float m_trapped_depth{0.0F};
+};
+
+void unstick_body(const Engine::Core::Entity& entity,
+                  Engine::Core::TransformComponent& transform,
+                  float delta_time) {
+  if (entity.has_component<Engine::Core::BuildingComponent>()) {
+    return;
+  }
+
+  if (auto const* commander = entity.get_component<Engine::Core::CommanderComponent>();
+      commander != nullptr && commander->jump_active) {
+    return;
+  }
+
+  QVector3D const here(transform.position.x, 0.0F, transform.position.z);
+  if (is_movement_point_allowed(here, entity)) {
+    return;
+  }
+
+  BodyProfile profile = MotorCollision::body_profile(entity);
+  profile.radius = 0.0F;
+  if (Walkability::penetration(here, profile) <= 0.0F) {
+    return;
+  }
+
+  constexpr float k_escape_search_radius = 16.0F;
+  auto const escape =
+      Walkability::nearest_standable(here, profile, k_escape_search_radius);
+  if (!escape.has_value()) {
+    return;
+  }
+  float const dx = escape->x() - here.x();
+  float const dz = escape->z() - here.z();
+  float const distance = std::hypot(dx, dz);
+  if (distance <= 1.0e-4F) {
+    return;
+  }
+
+  auto const* unit = entity.get_component<Engine::Core::UnitComponent>();
+  float const speed = unit != nullptr ? std::max(0.5F, unit->speed) : 1.5F;
+  float const travel = std::min(distance, speed * std::max(delta_time, 0.0F));
+  transform.position.x += dx / distance * travel;
+  transform.position.z += dz / distance * travel;
+}
+
+auto slide_body_to(const Engine::Core::Entity& entity,
+                   Engine::Core::TransformComponent& transform,
+                   float target_x,
+                   float target_z,
+                   bool respect_body_radius = false) -> SweepResult {
+  MotorCollision const collision(
+      entity, transform.position.x, transform.position.z, respect_body_radius);
+  auto const* pathfinder = NavGrid::get_pathfinder();
+  float const cell_size = pathfinder != nullptr ? pathfinder->grid_cell_size() : 1.0F;
+  auto const sweep = sweep_body(transform.position.x,
+                                transform.position.z,
+                                target_x - transform.position.x,
+                                target_z - transform.position.z,
+                                std::max(0.05F, cell_size * k_motor_substep_cells),
+                                [&collision](float fx, float fz, float tx, float tz) {
+                                  return collision.step_allowed(fx, fz, tx, tz);
+                                });
+  transform.position.x += sweep.accepted_dx;
+  transform.position.z += sweep.accepted_dz;
+  return sweep;
+}
+
 } // namespace
+
+auto MovementSystem::apply_duel_footwork(Engine::Core::Entity* entity,
+                                         Engine::Core::World* world,
+                                         Engine::Core::TransformComponent& transform,
+                                         Engine::Core::AttackComponent& attack,
+                                         float delta_time) const -> bool {
+  if (world == nullptr || !duel_footwork_body(*entity)) {
+    return false;
+  }
+
+  auto* opponent = world->get_entity(attack.melee_lock_target_id);
+  if (opponent == nullptr || !duel_footwork_body(*opponent)) {
+    return false;
+  }
+
+  auto const* opponent_attack =
+      opponent->get_component<Engine::Core::AttackComponent>();
+  if (opponent_attack == nullptr || !opponent_attack->in_melee_lock ||
+      opponent_attack->melee_lock_target_id != entity->get_id()) {
+    return false;
+  }
+
+  auto const* opponent_transform =
+      opponent->get_component<Engine::Core::TransformComponent>();
+  if (opponent_transform == nullptr) {
+    return false;
+  }
+
+  float const rx = transform.position.x - opponent_transform->position.x;
+  float const rz = transform.position.z - opponent_transform->position.z;
+  if ((rx * rx) + (rz * rz) < k_duel_min_reach_sq) {
+    return false;
+  }
+
+  auto const lhs = std::min(entity->get_id(), opponent->get_id());
+  auto const rhs = std::max(entity->get_id(), opponent->get_id());
+  float const direction = (((lhs + rhs) & 1U) == 0U) ? 1.0F : -1.0F;
+  float const sway = std::sin(m_duel_clock * 2.0F * std::numbers::pi_v<float> /
+                              k_duel_footwork_period_seconds);
+  float const angle = direction * sway * k_duel_footwork_degrees_per_second *
+                      delta_time * std::numbers::pi_v<float> / 180.0F;
+
+  float const cos_a = std::cos(angle);
+  float const sin_a = std::sin(angle);
+
+  slide_body_to(*entity,
+                transform,
+                opponent_transform->position.x + (rx * cos_a) - (rz * sin_a),
+                opponent_transform->position.z + (rx * sin_a) + (rz * cos_a),
+                true);
+
+  {
+    float const breath_phase = static_cast<float>(entity->get_id() % 17U) / 17.0F *
+                               2.0F * std::numbers::pi_v<float>;
+    float const advance = duel_measure_target(*entity, m_duel_clock, breath_phase);
+
+    float const own_reach = attack.melee_range;
+    float const opponent_reach =
+        opponent_attack != nullptr ? opponent_attack->melee_range : own_reach;
+    float const base_separation = std::clamp(0.5F * (own_reach + opponent_reach) *
+                                                 k_duel_base_separation_fraction,
+                                             k_duel_base_separation_min,
+                                             k_duel_base_separation_max);
+    float const desired_separation =
+        std::max(k_duel_min_separation, base_separation - advance);
+    float const to_x = opponent_transform->position.x - transform.position.x;
+    float const to_z = opponent_transform->position.z - transform.position.z;
+    float const separation = std::hypot(to_x, to_z);
+    if (separation > 0.0001F) {
+      float const error = separation - desired_separation;
+      float const max_step = k_duel_measure_step_speed * delta_time;
+      float step = std::clamp(
+          error * k_duel_measure_gain_per_second * delta_time, -max_step, max_step);
+      step = std::min(step, std::max(0.0F, separation - k_duel_min_separation));
+      auto const measure =
+          slide_body_to(*entity,
+                        transform,
+                        transform.position.x + (to_x / separation * step),
+                        transform.position.z + (to_z / separation * step),
+                        true);
+      attack.melee_footwork_offset =
+          std::copysign(std::hypot(measure.accepted_dx, measure.accepted_dz), step);
+    }
+  }
+
+  float const face_x = opponent_transform->position.x - transform.position.x;
+  float const face_z = opponent_transform->position.z - transform.position.z;
+  float const target_yaw =
+      std::atan2(face_x, face_z) * 180.0F / std::numbers::pi_v<float>;
+  float const current = transform.rotation.y;
+  float const diff = std::fmod((target_yaw - current + 540.0F), 360.0F) - 180.0F;
+  transform.rotation.y =
+      current + std::clamp(diff,
+                           -k_duel_footwork_turn_degrees_per_second * delta_time,
+                           k_duel_footwork_turn_degrees_per_second * delta_time);
+  transform.desired_yaw = transform.rotation.y;
+  transform.has_desired_yaw = false;
+  return true;
+}
 
 void MovementSystem::move_unit(Engine::Core::Entity* entity,
                                Engine::Core::World* world,
@@ -617,6 +770,8 @@ void MovementSystem::move_unit(Engine::Core::Entity* entity,
       entity->has_component<Engine::Core::PendingRemovalComponent>()) {
     return;
   }
+
+  unstick_body(*entity, *transform, delta_time);
 
   MovementGate const gate = classify_movement_gate(*entity);
 
@@ -696,6 +851,13 @@ void MovementSystem::move_unit(Engine::Core::Entity* entity,
       transform->desired_yaw = transform->rotation.y;
       transform->has_desired_yaw = false;
     }
+
+    clamp_to_map_bounds(*transform);
+    facts->motor.valid = true;
+    facts->motor.accepted_dx = transform->position.x - previous_x;
+    facts->motor.accepted_dz = transform->position.z - previous_z;
+    facts->motor.accepted_vx = facts->motor.accepted_dx / std::max(1.0e-5F, delta_time);
+    facts->motor.accepted_vz = facts->motor.accepted_dz / std::max(1.0e-5F, delta_time);
     return;
   }
 
@@ -812,34 +974,7 @@ void MovementSystem::move_unit(Engine::Core::Entity* entity,
     facts->progress.state = Engine::Core::MovementOrderState::Yielding;
   }
 
-  auto const& collision = BuildingCollisionRegistry::instance();
-  float const trapped_depth =
-      was_on_valid_tile ? 0.0F : collision.blocking_penetration_depth(old_x, old_z);
-  auto point_allowed = [&](float wx, float wz) -> bool {
-    if (was_on_valid_tile) {
-      return is_movement_point_allowed(QVector3D(wx, 0.0F, wz), *entity);
-    }
-    if (trapped_depth > 0.0F) {
-      return collision.blocking_penetration_depth(wx, wz) < trapped_depth;
-    }
-    return !collision.is_point_in_blocking_building(wx, wz);
-  };
-
-  auto step_allowed = [&](float from_x, float from_z, float to_x, float to_z) -> bool {
-    if (!point_allowed(to_x, to_z)) {
-      return false;
-    }
-    Point const from_cell = NavGrid::world_to_grid(from_x, from_z);
-    Point const to_cell = NavGrid::world_to_grid(to_x, to_z);
-    if (from_cell.x == to_cell.x || from_cell.y == to_cell.y) {
-      return true;
-    }
-
-    QVector3D const across_x = NavGrid::grid_to_world({to_cell.x, from_cell.y});
-    QVector3D const across_z = NavGrid::grid_to_world({from_cell.x, to_cell.y});
-    return point_allowed(across_x.x(), across_x.z()) &&
-           point_allowed(across_z.x(), across_z.z());
-  };
+  MotorCollision const collision(*entity, old_x, old_z);
 
   auto const* pathfinder = NavGrid::get_pathfinder();
   float const cell_size = pathfinder != nullptr ? pathfinder->grid_cell_size() : 1.0F;
@@ -848,7 +983,9 @@ void MovementSystem::move_unit(Engine::Core::Entity* entity,
                                 translated_vx * delta_time,
                                 translated_vz * delta_time,
                                 std::max(0.05F, cell_size * k_motor_substep_cells),
-                                step_allowed);
+                                [&collision](float fx, float fz, float tx, float tz) {
+                                  return collision.step_allowed(fx, fz, tx, tz);
+                                });
 
   transform->position.x = old_x + sweep.accepted_dx;
   transform->position.z = old_z + sweep.accepted_dz;
@@ -891,8 +1028,8 @@ void MovementSystem::move_unit(Engine::Core::Entity* entity,
   facts->motor.penetration_depth =
       is_movement_point_allowed(settled_pos, *entity)
           ? 0.0F
-          : collision.blocking_penetration_depth(transform->position.x,
-                                                 transform->position.z);
+          : Walkability::penetration(settled_pos,
+                                     MotorCollision::body_profile(*entity));
 
   if (sweep.blocked) {
     ++facts->progress.blocked_steps;

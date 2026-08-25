@@ -104,6 +104,8 @@ public:
                          float distance = CameraDefaults::k_default_rts_distance);
   void apply_soft_boundaries(bool is_panning = false);
 
+  void enforce_pitch_limits();
+
   [[nodiscard]] auto get_view_matrix() const -> QMatrix4x4;
   [[nodiscard]] auto get_projection_matrix() const -> QMatrix4x4;
   [[nodiscard]] auto get_view_projection_matrix() const -> QMatrix4x4;
@@ -115,6 +117,8 @@ public:
   [[nodiscard]] auto get_position() const -> const QVector3D& { return m_position; }
   [[nodiscard]] auto get_distance() const -> float;
   [[nodiscard]] auto get_pitch_deg() const -> float;
+  [[nodiscard]] auto get_pitch_min_deg() const -> float { return m_pitch_min_deg; }
+  [[nodiscard]] auto get_pitch_max_deg() const -> float { return m_pitch_max_deg; }
   [[nodiscard]] auto get_fov() const -> float { return m_fov; }
   [[nodiscard]] auto get_aspect() const -> float { return m_aspect; }
   [[nodiscard]] auto get_near() const -> float { return m_near_plane; }

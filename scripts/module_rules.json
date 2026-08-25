@@ -146,6 +146,7 @@
       ],
       "files": [
         "game/systems/pathfinding",
+        "game/systems/walkability",
         "game/systems/route_corridor_planner",
         "game/systems/spatial_grid",
         "game/systems/nav_grid",

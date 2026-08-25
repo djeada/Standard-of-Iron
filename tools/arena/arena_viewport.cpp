@@ -1695,6 +1695,15 @@ void ArenaViewport::regenerate_terrain() {
   biome.height_noise_amplitude =
       std::clamp(m_terrain_settings.height_scale * 0.05F, 0.05F, 1.25F);
 
+  if (!m_arena_terrain_features.empty()) {
+    Game::Map::TerrainHeightMap featured(
+        m_terrain_grid_extent, m_terrain_grid_extent, k_terrain_tile_size);
+    featured.restore_from_data(heights, terrain_types, {}, {});
+    featured.build_from_features(m_arena_terrain_features);
+    heights = featured.get_height_data();
+    terrain_types = featured.getTerrainTypes();
+  }
+
   Game::Map::TerrainHeightMap water_mask(
       m_terrain_grid_extent, m_terrain_grid_extent, k_terrain_tile_size);
   water_mask.restore_from_data(heights, terrain_types, {}, {});
@@ -3609,6 +3618,7 @@ void ArenaViewport::load_scenario(const QString& scenario_id) {
   m_arena_bridges = definition->bridges;
   m_arena_roads = definition->roads;
   m_arena_elevation_patches = definition->elevation_patches;
+  m_arena_terrain_features = definition->terrain_features;
   m_arena_floor_half_extent = definition->arena_floor_half_extent;
   m_terrain_grid_extent = definition->terrain_grid_extent > 0
                               ? definition->terrain_grid_extent

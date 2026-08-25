@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <array>
 #include <cmath>
+#include <limits>
 #include <utility>
 
 #include "nav_grid.h"
@@ -45,8 +46,28 @@ auto path_points(Pathfinding& pathfinder,
   std::vector<QVector3D> points;
   points.reserve(cells.size() + 1U);
   append_distinct(points, start);
+
+  QVector3D const travel = destination - start;
+  float const travel_length = std::hypot(travel.x(), travel.z());
+  QVector3D const heading =
+      travel_length > 1.0e-4F ? travel / travel_length : QVector3D();
+  bool leading = travel_length > 1.0e-4F;
   for (auto const& cell : cells) {
-    append_distinct(points, pathfinder.path_waypoint_world_position(cell));
+    QVector3D const waypoint = pathfinder.path_waypoint_world_position(cell);
+    if (leading) {
+      QVector3D const offset = waypoint - start;
+      float const forward = (offset.x() * heading.x()) + (offset.z() * heading.z());
+      if (forward <= 0.0F) {
+        continue;
+      }
+      leading = false;
+    }
+    append_distinct(points, waypoint);
+  }
+  if (points.size() < 2U) {
+
+    points.clear();
+    append_distinct(points, start);
   }
   if (pathfinder.is_world_segment_walkable(
           points.back(), destination, passability, clearance)) {
@@ -219,12 +240,31 @@ auto RouteCorridorPlanner::fit_lane(Pathfinding& pathfinder,
     return result;
   }
 
+  std::size_t entry_index = 0;
+  {
+    float best = std::numeric_limits<float>::max();
+    for (std::size_t index = 0; index < corridor.centerline.size(); ++index) {
+      float const distance =
+          (corridor.centerline[index] - member_start).lengthSquared();
+      if (distance < best) {
+        best = distance;
+        entry_index = index;
+      }
+    }
+
+    if (entry_index + 1U >= corridor.centerline.size() &&
+        corridor.centerline.size() >= 2U) {
+      entry_index = corridor.centerline.size() - 2U;
+    }
+  }
+
   std::vector<QVector3D> lane_points;
   lane_points.reserve(corridor.centerline.size());
   float previous_scale = 1.0F;
   bool awaiting_reform = false;
-  constexpr std::array<float, 5> k_scale_steps{1.0F, 0.75F, 0.5F, 0.25F, 0.0F};
-  for (std::size_t index = 0; index < corridor.centerline.size(); ++index) {
+
+  constexpr std::array<float, 5> k_scale_steps{1.0F, 0.75F, 0.5F, 0.3F, 0.16F};
+  for (std::size_t index = entry_index; index < corridor.centerline.size(); ++index) {
     QVector3D const tangent = tangent_at(corridor.centerline, index);
     QVector3D const right(tangent.z(), 0.0F, -tangent.x());
     QVector3D const previous = lane_points.empty() ? member_start : lane_points.back();
@@ -259,12 +299,13 @@ auto RouteCorridorPlanner::fit_lane(Pathfinding& pathfinder,
       break;
     }
     if (!placed) {
+
       QVector3D const center = corridor.centerline[index];
       if (!append_connector(
               pathfinder, lane_points, previous, center, passability, clearance)) {
         return result;
       }
-      previous_scale = 0.0F;
+      previous_scale = k_scale_steps.back();
       result.minimum_lateral_scale = 0.0F;
       if (!result.opening_point.has_value()) {
         result.opening_point = center;

@@ -681,10 +681,7 @@ void alert_nearby_allies(Engine::Core::World* world,
     if (dx * dx + dz * dz > radius_sq) {
       continue;
     }
-    if (!can_retaliate(ally, ally_unit) || !can_reach_attacker(ally, attacker)) {
-      continue;
-    }
-    if (suppresses_opportunistic_combat(ally)) {
+    if (!may_engage(ally, attacker, EngagementTrigger::SquadAlert)) {
       continue;
     }
     if (has_active_engagement(world, ally, ally_unit)) {
@@ -711,14 +708,11 @@ void assign_retaliation_target_if_needed(Engine::Core::World* world,
   }
 
   auto* unit = target->get_component<Engine::Core::UnitComponent>();
-  if (!can_retaliate(target, unit)) {
-    return;
-  }
   if (has_active_engagement(world, target, unit)) {
     return;
   }
 
-  if (can_reach_attacker(target, attacker)) {
+  if (may_engage(target, attacker, EngagementTrigger::Retaliation)) {
     engage_retaliation_target(target, attacker->get_id());
   }
   alert_nearby_allies(world, target, attacker);
