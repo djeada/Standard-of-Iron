@@ -527,6 +527,8 @@ void Renderer::terrain_scatter(const TerrainScatterCmd& cmd) {
   case TerrainScatterCmd::Species::Plant:
   case TerrainScatterCmd::Species::Pine:
   case TerrainScatterCmd::Species::Olive:
+  case TerrainScatterCmd::Species::Cypress:
+  case TerrainScatterCmd::Species::Palm:
     submitted.foliage.time = m_accumulated_time;
     break;
   case TerrainScatterCmd::Species::FireCamp:

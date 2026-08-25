@@ -79,6 +79,22 @@ auto resolve_damage_carrier(Engine::Core::Entity& entity,
   return resolve_soldier_target(entity, carrier->slot_index);
 }
 
+auto hurt_body_contact_point(const SoldierTarget& target,
+                             const QVector3D& from) noexcept -> QVector3D {
+  float const radius = std::max(0.05F, target.body_radius);
+  float const y = std::clamp(from.y(),
+                             target.position.y() + k_hurt_body_min_height,
+                             target.position.y() + k_hurt_body_max_height);
+  QVector3D planar(
+      from.x() - target.position.x(), 0.0F, from.z() - target.position.z());
+  float const distance = planar.length();
+  if (!std::isfinite(distance) || distance <= 0.0001F) {
+    return {target.position.x(), y, target.position.z()};
+  }
+  planar *= std::min(distance, radius) / distance;
+  return {target.position.x() + planar.x(), y, target.position.z() + planar.z()};
+}
+
 auto horizontal_distance(const QVector3D& lhs, const QVector3D& rhs) noexcept -> float {
   return std::hypot(rhs.x() - lhs.x(), rhs.z() - lhs.z());
 }

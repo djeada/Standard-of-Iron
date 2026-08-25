@@ -33,6 +33,10 @@ constexpr float k_guard_stand_off = 0.28F;
 constexpr float k_guard_plate_offset = 0.30F;
 constexpr float k_guard_plate_radius = 0.60F;
 
+constexpr float k_guard_low_coverage = 0.25F;
+constexpr float k_guard_high_coverage = 2.10F;
+constexpr float k_guard_contact_side_dot = -0.20F;
+
 auto attack_comes_from_the_front(const Engine::Core::TransformComponent& target,
                                  const Engine::Core::TransformComponent& attacker,
                                  float frontal_arc_dot) -> bool {
@@ -48,7 +52,7 @@ auto attack_comes_from_the_front(const Engine::Core::TransformComponent& target,
   return QVector3D::dotProduct(forward, to_attacker) >= frontal_arc_dot;
 }
 
-auto guard_intercepts_contact(Engine::Core::Entity* target,
+auto contact_enters_guard_arc(Engine::Core::Entity* target,
                               Engine::Core::Entity* attacker,
                               const Engine::Core::CommanderGuardComponent& guard,
                               std::optional<QVector3D> contact_point) -> bool {
@@ -63,6 +67,36 @@ auto guard_intercepts_contact(Engine::Core::Entity* target,
   }
   if (!attack_comes_from_the_front(
           *target_transform, *attacker_transform, guard.frontal_arc_dot)) {
+    return false;
+  }
+  if (!contact_point.has_value()) {
+    return true;
+  }
+
+  float const local_height = contact_point->y() - target_transform->position.y;
+  if (local_height < k_guard_low_coverage || local_height > k_guard_high_coverage) {
+    return false;
+  }
+
+  const float yaw = target_transform->rotation.y * k_degrees_to_radians;
+  QVector3D const forward(std::sin(yaw), 0.0F, std::cos(yaw));
+  QVector3D const to_contact(contact_point->x() - target_transform->position.x,
+                             0.0F,
+                             contact_point->z() - target_transform->position.z);
+  if (to_contact.lengthSquared() <= 0.0001F) {
+    return true;
+  }
+  return QVector3D::dotProduct(forward, to_contact.normalized()) >=
+         k_guard_contact_side_dot;
+}
+
+auto contact_meets_guard_plate(Engine::Core::Entity* target,
+                               const Engine::Core::CommanderGuardComponent& guard,
+                               std::optional<QVector3D> contact_point) -> bool {
+  auto const* target_transform =
+      target != nullptr ? target->get_component<Engine::Core::TransformComponent>()
+                        : nullptr;
+  if (target_transform == nullptr) {
     return false;
   }
   if (!contact_point.has_value()) {
@@ -192,7 +226,8 @@ auto resolve_perfect_guard(Engine::Core::World* world,
   auto* attacker = world->get_entity(attacker_id);
   if (guard == nullptr || attacker == nullptr || !guard->active ||
       guard->guard_break_remaining > 0.0F || guard->perfect_guard_remaining <= 0.0F ||
-      !guard_intercepts_contact(target, attacker, *guard, contact_point)) {
+      !contact_enters_guard_arc(target, attacker, *guard, contact_point) ||
+      !contact_meets_guard_plate(target, *guard, contact_point)) {
     return false;
   }
 
@@ -221,7 +256,7 @@ auto resolve_commander_guard(Engine::Core::World* world,
   auto* guard = target->get_component<Engine::Core::CommanderGuardComponent>();
   auto* attacker = world->get_entity(attacker_id);
   if (guard == nullptr || attacker == nullptr ||
-      !guard_intercepts_contact(target, attacker, *guard, contact_point)) {
+      !contact_enters_guard_arc(target, attacker, *guard, contact_point)) {
     return result;
   }
 
@@ -270,16 +305,36 @@ auto resolve_commander_guard(Engine::Core::World* world,
   return result;
 }
 
-auto attacker_spawn_type(Engine::Core::World* world,
-                         Engine::Core::EntityID attacker_id) -> Game::Units::SpawnType {
-  if (world == nullptr || attacker_id == 0) {
-    return Game::Units::SpawnType::Knight;
+void record_resolved_contact(Engine::Core::Entity* defender,
+                             const CommanderDamageResult& result) {
+  auto* rpg = defender != nullptr
+                  ? defender->get_component<Engine::Core::RpgHealthComponent>()
+                  : nullptr;
+  if (rpg == nullptr) {
+    return;
   }
-  auto* attacker = world->get_entity(attacker_id);
-  auto* unit = attacker != nullptr
-                   ? attacker->get_component<Engine::Core::UnitComponent>()
-                   : nullptr;
-  return unit != nullptr ? unit->spawn_type : Game::Units::SpawnType::Knight;
+  if (result.dodged) {
+    ++rpg->dodged_contacts;
+    rpg->last_contact_outcome = Engine::Core::RpgContactOutcome::Dodge;
+    return;
+  }
+  if (result.perfect_guarded) {
+    ++rpg->perfect_guard_contacts;
+    rpg->last_contact_outcome = Engine::Core::RpgContactOutcome::PerfectGuard;
+    return;
+  }
+  if (result.guard_broken) {
+    ++rpg->guard_broken_contacts;
+  }
+  if (result.blocked) {
+    ++rpg->blocked_contacts;
+    rpg->last_contact_outcome = Engine::Core::RpgContactOutcome::Block;
+    return;
+  }
+  if (result.effective_damage > 0) {
+    ++rpg->damaging_contacts;
+    rpg->last_contact_outcome = Engine::Core::RpgContactOutcome::Damage;
+  }
 }
 
 void mark_commander_hit(Engine::Core::CommanderComponent& commander,
@@ -403,6 +458,7 @@ deal_damage_to_rpg_commander(Engine::Core::World* world,
   auto* attacker = world->get_entity(attacker_id);
   if (dodge_beats_contact(commander, attacker, contact_point)) {
     result.dodged = true;
+    record_resolved_contact(commander, result);
     return result;
   }
 
@@ -411,6 +467,7 @@ deal_damage_to_rpg_commander(Engine::Core::World* world,
     result.perfect_guarded = true;
     result.blocked = true;
     play_guard_cue(commander, "combat.perfect_guard");
+    record_resolved_contact(commander, result);
     return result;
   }
 
@@ -428,6 +485,7 @@ deal_damage_to_rpg_commander(Engine::Core::World* world,
       world, commander, guard.damage, attacker_id, contact_point, impact_speed);
   result.effective_damage = rpg_result.effective_damage;
   result.killed = rpg_result.killed;
+  record_resolved_contact(commander, result);
 
   if (rpg_result.effective_damage <= 0) {
     return result;

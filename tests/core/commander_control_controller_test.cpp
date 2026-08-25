@@ -1211,6 +1211,58 @@ TEST_F(CommanderControlControllerTest, ChaseLensFiltersGroundReliefButNotJumps) 
   EXPECT_GT(peak_jump_eye_y - raised_eye_y, k_jump_peak_height * 0.5F);
 }
 
+TEST_F(CommanderControlControllerTest, ACommittedStrikeDoesNotFollowRawCameraYaw) {
+  Engine::Core::World world;
+  auto* commander = create_commander(world, 0.0F, 0.0F);
+  auto* enemy = create_enemy(world, 0.0F, 1.6F);
+  ASSERT_NE(commander, nullptr);
+  ASSERT_NE(enemy, nullptr);
+
+  auto* commander_data = commander->get_component<Engine::Core::CommanderComponent>();
+  ASSERT_NE(commander_data, nullptr);
+  commander_data->fpv_controlled = true;
+  auto* attack = commander->add_component<Engine::Core::AttackComponent>();
+  ASSERT_NE(attack, nullptr);
+  attack->current_mode = Engine::Core::AttackComponent::CombatMode::Melee;
+  auto* transform = commander->get_component<Engine::Core::TransformComponent>();
+  ASSERT_NE(transform, nullptr);
+
+  CommanderControlController controller;
+  controller.set_view_yaw(0.0F);
+  constexpr float k_dt = 1.0F / 60.0F;
+
+  ASSERT_TRUE(press_primary(controller, world, commander->get_id()));
+  auto* action = commander->get_component<Engine::Core::RpgCommanderActionComponent>();
+  ASSERT_NE(action, nullptr);
+  ASSERT_TRUE(action->action_running);
+
+  auto const* definition = Game::Systems::CombatActions::find_combat_action_definition(
+      static_cast<Game::Systems::CombatActions::CombatActionId>(
+          action->combat_action_id));
+  ASSERT_NE(definition, nullptr);
+
+  action->normalized_action_time =
+      Game::Systems::CombatActions::action_event_normalized_time(
+          *definition,
+          Game::Systems::CombatActions::CombatActionEventType::WeaponTraceStart,
+          0.4F) +
+      0.05F;
+  ASSERT_FLOAT_EQ(Game::Systems::CombatActions::melee_interruption_at(
+                      *definition, action->normalized_action_time)
+                      .redirect_authority,
+                  0.35F);
+
+  float const committed_yaw = transform->rotation.y;
+  controller.set_view_yaw(150.0F);
+  ASSERT_TRUE(controller.update_simulation(world, commander->get_id(), 1, k_dt));
+
+  float const turned = std::abs(controller.view_yaw() - transform->rotation.y);
+  EXPECT_GT(turned, 100.0F)
+      << "a committed strike must not snap the body 150 degrees onto the camera";
+  EXPECT_LT(std::abs(transform->rotation.y - committed_yaw), 10.0F)
+      << "the body may steer inside its authored authority, not beyond it";
+}
+
 TEST_F(CommanderControlControllerTest, IsolatedSwingsDoNotReplayTheSameClip) {
   Engine::Core::World world;
   auto* commander = create_commander(world, 0.0F, 0.0F);
@@ -1231,9 +1283,9 @@ TEST_F(CommanderControlControllerTest, IsolatedSwingsDoNotReplayTheSameClip) {
 
   std::vector<std::uint8_t> swing_clips;
   for (int swing = 0; swing < 3; ++swing) {
-    controller.input().primary_action = true;
+    controller.primary_action_down();
     ASSERT_TRUE(controller.update(world, commander->get_id(), 1, camera, 0.016F));
-    controller.input().primary_action = false;
+    controller.primary_action_up();
 
     auto* action =
         commander->get_component<Engine::Core::RpgCommanderActionComponent>();
@@ -1280,9 +1332,9 @@ TEST_F(CommanderControlControllerTest, StrikeCarriesTheCommanderIntoATargetOutOf
   controller.set_view_yaw(0.0F);
   Render::GL::Camera camera;
 
-  controller.input().primary_action = true;
+  controller.primary_action_down();
   ASSERT_TRUE(controller.update(world, commander->get_id(), 1, camera, 0.016F));
-  controller.input().primary_action = false;
+  controller.primary_action_up();
 
   auto* action = commander->get_component<Engine::Core::RpgCommanderActionComponent>();
   ASSERT_NE(action, nullptr);

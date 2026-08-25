@@ -144,6 +144,34 @@ public:
 
   [[nodiscard]] static auto has_indirect_draw() -> bool { return has_core_4_3(); }
 
+  struct AdapterDescription {
+    QString vendor;
+    QString renderer;
+    QString version;
+  };
+
+  [[nodiscard]] static auto describe_adapter() -> AdapterDescription {
+    AdapterDescription description;
+    auto* ctx = QOpenGLContext::currentContext();
+    if (ctx == nullptr) {
+      return description;
+    }
+    auto* functions = ctx->functions();
+    if (functions == nullptr) {
+      return description;
+    }
+    auto const read = [functions](GLenum name) -> QString {
+      const auto* value = functions->glGetString(name);
+      return value != nullptr
+                 ? QString::fromLatin1(reinterpret_cast<const char*>(value))
+                 : QString();
+    };
+    description.vendor = read(GL_VENDOR);
+    description.renderer = read(GL_RENDERER);
+    description.version = read(GL_VERSION);
+    return description;
+  }
+
   static void report_feature_tiers() {
     qInfo() << (has_core_4_1() ? "SOI_GL_TIER_41: PASS"
                                : "SOI_GL_TIER_41: UNAVAILABLE");

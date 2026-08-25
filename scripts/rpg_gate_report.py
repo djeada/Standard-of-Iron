@@ -60,6 +60,12 @@ DEFAULT_MANIFEST = REPO_ROOT / "tools" / "arena" / "rpg_gate_manifest.json"
 PERFORMANCE_ISSUE_CODES = {"frame_budget_exceeded"}
 PERFORMANCE_ISSUE_PREFIX = "performance_"
 
+
+STRICT_P95_MS = 16.67
+STRICT_P99_MS = 20.0
+STRICT_MAX_MS = 33.3
+STRICT_SIMULATION_P95_MS = 8.0
+
 EXIT_OK = 0
 EXIT_BEHAVIOUR = 1
 EXIT_INCOMPLETE = 3
@@ -198,6 +204,46 @@ class ScenarioOutcome:
                     codes.append(code)
         return ",".join(codes) if codes else "-"
 
+    def strict_performance_failures(self) -> list[str]:
+        """Gate 7.1's numeric contract, evaluated per repeat.
+
+        Reported on every run so the numbers are visible; it only decides the
+        exit status under --enforce-performance.
+        """
+        failures: list[str] = []
+        for index, run in enumerate(self.runs):
+            performance = run.performance
+            if not performance:
+                continue
+            label = f"run {index + 1}/{len(self.runs)}"
+            p95 = performance.get("p95_ms")
+            p99 = performance.get("p99_ms")
+            maximum = performance.get("max_ms")
+            if p95 is not None and float(p95) > STRICT_P95_MS:
+                failures.append(
+                    f"{label} p95 {float(p95):.2f} ms over the {STRICT_P95_MS} ms budget"
+                )
+            if p99 is not None and float(p99) > STRICT_P99_MS:
+                failures.append(
+                    f"{label} p99 {float(p99):.2f} ms over the {STRICT_P99_MS} ms budget"
+                )
+            if maximum is not None and float(maximum) > STRICT_MAX_MS:
+                failures.append(
+                    f"{label} post-prewarm max {float(maximum):.2f} ms over the "
+                    f"{STRICT_MAX_MS} ms hitch ceiling"
+                )
+            simulation = performance.get("simulation_p95_ms")
+            if simulation is not None and float(simulation) > STRICT_SIMULATION_P95_MS:
+                failures.append(
+                    f"{label} simulation p95 {float(simulation):.2f} ms leaves under "
+                    f"half the {STRICT_P95_MS} ms frame to presentation"
+                )
+            if performance.get("gpu_timed_frames", 0) == 0:
+                failures.append(f"{label} reported no GPU timing")
+            if "prewarm_frames" not in performance:
+                failures.append(f"{label} did not mark its prewarm window")
+        return failures
+
     def timing(self, key: str, aggregate=max) -> str:
         values = [
             float(run.performance[key])
@@ -285,6 +331,7 @@ def main() -> int:
                 outcome.issue_codes(),
                 outcome.timing("p50_ms"),
                 outcome.timing("p95_ms"),
+                outcome.timing("p99_ms"),
                 outcome.timing("max_ms"),
                 str(outcome.artifact_dir),
             ]
@@ -300,6 +347,7 @@ def main() -> int:
         "issue codes",
         "p50",
         "p95",
+        "p99",
         "max",
         "artifacts",
     ]
@@ -316,6 +364,10 @@ def main() -> int:
             print(f"  {outcome.scenario_id}: {error}")
 
     for outcome in outcomes:
+        for message in outcome.strict_performance_failures():
+            print(f"  performance contract: {outcome.scenario_id}: {message}")
+            if args.enforce_performance and status == EXIT_OK:
+                status = EXIT_PERFORMANCE
         for issue in outcome.performance_issues:
             label = (
                 "performance"

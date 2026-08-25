@@ -113,9 +113,12 @@ auto read_float(const std::string& line, std::string_view key, float& out) -> bo
   if (text.empty()) {
     return false;
   }
+
+  std::istringstream stream{std::string(text)};
+  stream.imbue(std::locale::classic());
   float parsed = 0.0F;
-  auto const result = std::from_chars(text.data(), text.data() + text.size(), parsed);
-  if (result.ec != std::errc{}) {
+  stream >> parsed;
+  if (stream.fail() || !(stream >> std::ws).eof()) {
     return false;
   }
   out = parsed;

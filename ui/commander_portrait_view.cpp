@@ -39,8 +39,6 @@ constexpr float k_default_focus_height = 1.31F;
 
 constexpr float k_focus_tau = 0.30F;
 
-constexpr float k_body_yaw_degrees = 14.0F;
-
 constexpr float k_max_frame_seconds = 0.1F;
 
 constexpr float k_head_radius = Render::GL::HumanProportions::HEAD_RADIUS;

@@ -3,11 +3,15 @@
   "unit_test_filters": [
     {
       "binary": "app_tests",
-      "filter": "CommanderCameraRig*:CommanderControlControllerTest.*:CommanderDirectControlLatencyTest.*:CommanderModeTransitionTest.*:CommanderControlRegressionTest.*:CommanderPresentationTraceTest.*:CommanderDisplacementSourceTest.*"
+      "filter": "CommanderCameraRig*:CommanderControlControllerTest.*:CommanderDirectControlLatencyTest.*:CommanderModeTransitionTest.*:CommanderControlRegressionTest.*:CommanderPresentationTraceTest.*:CommanderDisplacementSourceTest.*:CommanderDefenseWindowsTest.*:CommanderAccessibilityTest.*:CommanderLifecycleSoakTest.*"
     },
     {
       "binary": "arena_tests",
       "filter": "ArenaRpgGateManifestTest.*:ArenaCommanderMetricsTest.*:ArenaScenariosTest.*"
+    },
+    {
+      "binary": "combat_balance_tests",
+      "filter": "CombatModeTest.*"
     }
   ],
   "scenario_defaults": {
@@ -19,24 +23,57 @@
   "scenarios": [
     {
       "id": "rpg_melee_contact",
-      "status": "expected_red",
+      "status": "required_green",
       "gate": "6",
-      "notes": "A struck enemy never enters a visible hit reaction: it stays in AttackSword through the whole contact window and goes straight to Dying. This was a coin flip until 2026-08-24. The renderer's animation clock was not reset at batch scenario start, so each run sampled the victim's attack clip at a different phase; at some phases the reaction won and the scenario passed. With the clock reset the run is deterministic and it fails 5 of 5 at 5.40 s, with 0 of ~1900 enemy soldier samples in HitReaction against 17 before. The commander's own reaction still shows for 72 samples, so the reaction path works -- it is the victim's in-progress attack that outranks it. Gate 6 owns the fix: 'contact must read with camera motion disabled'. Also carries the melee pose divergence: Body and camera agree to 0.0000 m in every scenario that does not swing a weapon. In melee they diverge by a constant 0.2144 m -- the same value in four separate scenarios, so it is a fixed offset applied during engagement, not jitter, and it is present on frames where combat.action_running is false as well as true. That is Gate 3's 'the clip root and the world root may not independently lunge': the renderer moves the visual root for melee while the motor, and therefore the camera anchor, does not.",
-      "issue_codes": [
-        "no_visible_hit_reaction",
-        "commander_presented_pose_disagreement"
-      ]
+      "notes": "Green. Two separate defects, neither the one the earlier note guessed. First, the scenario was authored with 500 unit health across six soldiers, so every commander strike was lethal and the victim went to Die: a killing blow is not a hit reaction. Enemy health is 4000 now, so a struck soldier survives to react. Second, a soldier struck mid-swing deliberately does not play the full-body flinch -- instance_prepare turns it into a swing recoil so the swing is not cut in half -- and nothing reported that, so the instrument saw only 'Attack'. The recoil and its tilt are on every soldier sample now (swing_recoil, hit_reaction_tilt_degrees) and HitReactionObserved accepts a recoil with real tilt. The struck soldier recoils 5.77 degrees for 17 frames per contact."
     },
     {
       "id": "rpg_defense_contact",
-      "status": "expected_red",
+      "status": "required_green",
       "gate": "5",
-      "issue_codes": [
-        "rpg_block_contact_not_observed",
-        "rpg_health_changed",
-        "commander_presented_pose_disagreement"
-      ],
-      "notes": "No block contact is published and protected health is lost; guard/dodge feedback is fired on request rather than on a resolved contact. Also carries the melee pose divergence: Body and camera agree to 0.0000 m in every scenario that does not swing a weapon. In melee they diverge by a constant 0.2144 m -- the same value in four separate scenarios, so it is a fixed offset applied during engagement, not jitter, and it is present on frames where combat.action_running is false as well as true. That is Gate 3's 'the clip root and the world root may not independently lunge': the renderer moves the visual root for melee while the motor, and therefore the camera anchor, does not."
+      "notes": "Green. Two defects, both Gate 5. The incoming contact point was a point on the attacker's blade -- 2.04 m above the ground for an overhead swing -- and the guard test measured it against a 0.60 m plate at chest height, so a frontal sword blow landed a metre outside the guard and was never a block. The weapon trace now resolves every contact onto the target's hurt body, and ordinary blocking is the authored guard arc while the plate test is what a perfect guard has to meet. The block is published and protected health is unchanged."
+    },
+    {
+      "id": "rpg_one_press_one_attack",
+      "status": "required_green",
+      "gate": "5",
+      "notes": "Three deliberate presses and one held input. Melee auto-repeat is gone, so a press requests exactly one attack and a held button requests exactly one more."
+    },
+    {
+      "id": "rpg_attack_buffer_window",
+      "status": "required_green",
+      "gate": "5",
+      "notes": "Replaces rpg_combo_cadence. Deliberate timed presses against the authored timeline: a clean press, a late press the 0.15 s buffer carries into the next swing, and a press so early the buffer must let it expire. The old scenario held the button and asserted a swing cadence, which is exactly the auto-repeat contract Gate 5.1 removes."
+    },
+    {
+      "id": "rpg_attack_whiff_recovery",
+      "status": "required_green",
+      "gate": "5",
+      "notes": "Two swings at empty air. A miss commits to its timeline, recovers, and invents no contact."
+    },
+    {
+      "id": "rpg_attack_wall_contact",
+      "status": "required_green",
+      "gate": "5",
+      "notes": "Swings into a house with an enemy sheltering behind it. Root motion stops at the facade and the weapon trace never reaches a body through a structure."
+    },
+    {
+      "id": "rpg_stamina_refusal_and_recovery",
+      "status": "required_green",
+      "gate": "5",
+      "notes": "Presses until the pool cannot pay, then one more after a pause. Every refusal is counted; none is a dead click."
+    },
+    {
+      "id": "rpg_skirmish_three_attackers",
+      "status": "required_green",
+      "gate": "5",
+      "notes": "Three attackers, engagement-ring budget, and the commander still gets openings to swing in."
+    },
+    {
+      "id": "rpg_lock_occlusion_death_cycle",
+      "status": "required_green",
+      "gate": "5",
+      "notes": "Lock-on refuses a target it has no line of sight to, cycles across the screen between the two it can see, and drops the lock when the locked target dies instead of falling through to the occluded one."
     },
     {
       "id": "rpg_projectile_block",
@@ -46,9 +83,10 @@
     },
     {
       "id": "rpg_escort_crowd",
-      "status": "required_green",
+      "status": "expected_red",
       "gate": "3",
-      "notes": "Green. The renderer was applying combat root motion -- lunge and hit reaction -- as a world translation on top of the motor's own displacement, so the drawn body sat up to 0.2144 m from the point the camera was framing. For a simulation-owned body the renderer now owns pose only: the lean, pitch and squash still play, the world offset does not. CommanderPresentedPoseAgrees holds it at 0.01 m."
+      "notes": "Regressed at HEAD (35d87259), before the Gate 5 work and independent of it: three enemy_line soldiers jump 1.4-1.6 m of render root in one frame at 0.23 s and one is submitted with a 0.70 body up-vector while alive at 2.18 s. Bisected by running the scenario on a pristine checkout of 35d87259, where it fails identically; the last green run is artifacts/rpg-gates/run-20260824-231504, taken from the dirty worktree that became that commit. Owned by Gate 3 (pose agreement), pinned here so the Gate 5 slice is not masked by it.",
+      "issue_codes": ["render_root_teleport", "unexpected_fall_pose"]
     },
     {
       "id": "rpg_locomotion",
@@ -74,16 +112,6 @@
       "status": "required_green",
       "gate": "2",
       "notes": "Green since the commander's body collision and line of sight stopped using the RTS navigation footprint. 'home' registers a 4.3 x 4.4 m nav box for a building drawn 2.36 x 2.42 m, so a person-sized commander was stopped a metre short of every facade and the camera's obstruction ray fired on empty air. Person-scale queries now use the drawn extents from BuildingCollisionRegistry::get_building_body(); the nav footprint and its grid padding are untouched, so RTS formations keep their spacing."
-    },
-    {
-      "id": "rpg_combo_cadence",
-      "status": "expected_red",
-      "gate": "5",
-      "issue_codes": [
-        "rpg_swing_cadence_too_slow",
-        "commander_presented_pose_disagreement"
-      ],
-      "notes": "A held attack left a 1.25 s gap against a 1.10 s contract. This scenario is replaced by deliberate timed presses once melee auto-repeat is removed; it is not loosened until it passes. Also carries the melee pose divergence: Body and camera agree to 0.0000 m in every scenario that does not swing a weapon. In melee they diverge by a constant 0.2144 m -- the same value in four separate scenarios, so it is a fixed offset applied during engagement, not jitter, and it is present on frames where combat.action_running is false as well as true. That is Gate 3's 'the clip root and the world root may not independently lunge': the renderer moves the visual root for melee while the motor, and therefore the camera anchor, does not."
     },
     {
       "id": "rpg_pass_ranks",

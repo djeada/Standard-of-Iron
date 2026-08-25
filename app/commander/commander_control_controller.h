@@ -191,6 +191,10 @@ private:
                                   Engine::Core::EntityID commander_id,
                                   int local_owner_id);
   void try_activate_second_wind(Engine::Core::Entity& commander);
+  void
+  publish_resolved_defense_feedback(Engine::Core::Entity& commander,
+                                    Engine::Core::EntityID commander_id,
+                                    const Engine::Core::TransformComponent& transform);
   void update_camera(Engine::Core::World& world,
                      Engine::Core::Entity& commander,
                      Render::GL::Camera& camera,
@@ -242,6 +246,10 @@ private:
   float m_dodge_fov_kick = 0.0F;
 
   std::uint32_t m_observed_hit_confirm_sequence = 0;
+  std::uint32_t m_observed_blocked_contacts = 0;
+  std::uint32_t m_observed_perfect_guard_contacts = 0;
+  std::uint32_t m_observed_dodged_contacts = 0;
+  std::uint32_t m_observed_guard_broken_contacts = 0;
   std::uint8_t m_observed_action_hit_count = 0;
   float m_jump_timer = 0.0F;
   bool m_jump_safe_position_valid = false;
@@ -272,6 +280,9 @@ private:
   std::uint16_t m_soft_target_slot{std::numeric_limits<std::uint16_t>::max()};
   std::uint16_t m_primary_target_slot{std::numeric_limits<std::uint16_t>::max()};
   float m_lock_lost_timer = 0.0F;
+  float m_lock_spring_yaw = 0.0F;
+  bool m_lock_spring_yaw_valid = false;
+  float m_lock_manual_override_timer = 0.0F;
   bool m_guard_was_active = false;
 
   bool m_trace_enabled = false;

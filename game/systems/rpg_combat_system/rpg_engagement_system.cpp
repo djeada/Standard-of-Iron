@@ -1,6 +1,7 @@
 #include "rpg_engagement_system.h"
 
 #include "../../core/component.h"
+#include "../../core/simulation_timing.h"
 #include "../../core/world.h"
 #include "rpg_combat_processor.h"
 
@@ -10,6 +11,8 @@ void RpgEngagementSystem::update(Engine::Core::World* world, float delta_time) {
   if (world == nullptr) {
     return;
   }
+  Engine::Core::Timing::ScopedAccumulator const scope(
+      Engine::Core::Timing::commander_engagement());
 
   for (auto* entity :
        world->collect_entities_with<Engine::Core::CommanderComponent>()) {

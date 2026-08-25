@@ -68,6 +68,11 @@ void expire_stale_intents(Engine::Core::CombatIntentQueueComponent& queue,
       queue.entries[kept++] = queue.entries[i];
     }
   }
+  if (kept < queue.count) {
+    queue.count = kept;
+    queue.record(Engine::Core::CombatIntentOutcome::Expired);
+    return;
+  }
   queue.count = kept;
 }
 
@@ -113,7 +118,9 @@ auto CombatActionService::request_attack(
   if (combat_state != nullptr && !interruption.accepts_attack &&
       combat_state->animation_state != Engine::Core::CombatAnimationState::Idle) {
     result.accepted = true;
+    result.buffered = true;
     result.outcome = Engine::Core::CombatIntentOutcome::Recovering;
+    record_outcome(*attacker, result.outcome);
     return result;
   }
 
@@ -306,7 +313,7 @@ auto CombatActionService::request_attack(
             ? (heavy ? definition->heavy_stamina_cost : definition->light_stamina_cost)
             : (heavy ? Engine::Core::CombatStateComponent::k_stamina_cost_heavy_attack
                      : Engine::Core::CombatStateComponent::k_stamina_cost_light_attack);
-    stamina->stamina = std::max(0.0F, stamina->stamina - cost);
+    stamina->spend(cost);
   }
 
   if (combat_state != nullptr) {

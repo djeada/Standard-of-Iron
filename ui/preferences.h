@@ -39,6 +39,20 @@ class UiPreferences : public QObject {
                  NOTIFY tutorial_completed_changed)
   Q_PROPERTY(qreal screenEffectIntensity READ screen_effect_intensity WRITE
                  set_screen_effect_intensity NOTIFY screen_effect_intensity_changed)
+  Q_PROPERTY(qreal commanderLookSensitivityX READ commander_look_sensitivity_x WRITE
+                 set_commander_look_sensitivity_x NOTIFY commander_input_changed)
+  Q_PROPERTY(qreal commanderLookSensitivityY READ commander_look_sensitivity_y WRITE
+                 set_commander_look_sensitivity_y NOTIFY commander_input_changed)
+  Q_PROPERTY(bool commanderInvertLookY READ commander_invert_look_y WRITE
+                 set_commander_invert_look_y NOTIFY commander_input_changed)
+  Q_PROPERTY(bool commanderCameraImpulse READ commander_camera_impulse WRITE
+                 set_commander_camera_impulse NOTIFY commander_input_changed)
+  Q_PROPERTY(bool commanderHeadBob READ commander_head_bob WRITE set_commander_head_bob
+                 NOTIFY commander_input_changed)
+  Q_PROPERTY(qreal commanderFieldOfViewScale READ commander_field_of_view_scale WRITE
+                 set_commander_field_of_view_scale NOTIFY commander_input_changed)
+  Q_PROPERTY(bool commanderGuardIsToggle READ commander_guard_is_toggle WRITE
+                 set_commander_guard_is_toggle NOTIFY commander_input_changed)
   Q_PROPERTY(QStringList colorVisionModes READ color_vision_modes CONSTANT)
   Q_PROPERTY(qreal minUiScale READ min_ui_scale CONSTANT)
   Q_PROPERTY(qreal maxUiScale READ max_ui_scale CONSTANT)
@@ -79,6 +93,26 @@ public:
     return m_screen_effect_intensity;
   }
 
+  [[nodiscard]] auto commander_look_sensitivity_x() const -> qreal {
+    return m_commander_look_sensitivity_x;
+  }
+  [[nodiscard]] auto commander_look_sensitivity_y() const -> qreal {
+    return m_commander_look_sensitivity_y;
+  }
+  [[nodiscard]] auto commander_invert_look_y() const -> bool {
+    return m_commander_invert_look_y;
+  }
+  [[nodiscard]] auto commander_camera_impulse() const -> bool {
+    return m_commander_camera_impulse;
+  }
+  [[nodiscard]] auto commander_head_bob() const -> bool { return m_commander_head_bob; }
+  [[nodiscard]] auto commander_field_of_view_scale() const -> qreal {
+    return m_commander_field_of_view_scale;
+  }
+  [[nodiscard]] auto commander_guard_is_toggle() const -> bool {
+    return m_commander_guard_is_toggle;
+  }
+
   [[nodiscard]] auto effective_team_patterns() const -> bool;
 
   [[nodiscard]] static auto color_vision_modes() -> QStringList;
@@ -101,6 +135,13 @@ public:
   void set_camera_legend_seen(bool seen);
   void set_tutorial_completed(bool completed);
   void set_screen_effect_intensity(qreal intensity);
+  void set_commander_look_sensitivity_x(qreal scale);
+  void set_commander_look_sensitivity_y(qreal scale);
+  void set_commander_invert_look_y(bool enabled);
+  void set_commander_camera_impulse(bool enabled);
+  void set_commander_head_bob(bool enabled);
+  void set_commander_field_of_view_scale(qreal scale);
+  void set_commander_guard_is_toggle(bool enabled);
 
   Q_INVOKABLE void reset_to_defaults();
 
@@ -119,9 +160,11 @@ signals:
   void camera_legend_seen_changed();
   void tutorial_completed_changed();
   void screen_effect_intensity_changed();
+  void commander_input_changed();
 
 private:
   explicit UiPreferences(QObject* parent = nullptr);
+  void publish_commander_input_settings() const;
 
   static UiPreferences* m_instance;
 
@@ -134,6 +177,13 @@ private:
   bool m_edge_scroll_enabled;
   qreal m_edge_scroll_sensitivity;
   qreal m_camera_motion_scale;
+  qreal m_commander_look_sensitivity_x;
+  qreal m_commander_look_sensitivity_y;
+  bool m_commander_invert_look_y;
+  bool m_commander_camera_impulse;
+  bool m_commander_head_bob;
+  qreal m_commander_field_of_view_scale;
+  bool m_commander_guard_is_toggle;
   bool m_damage_numbers;
   QString m_damage_number_mode;
   bool m_camera_legend_seen;
