@@ -339,7 +339,10 @@ public:
 
   MovementDirectionSource direction_source{MovementDirectionSource::None};
 
-  void begin_tick() { desired = {}; }
+  void begin_tick() {
+    desired = {};
+    motor = {};
+  }
 };
 
 enum class PlayerOrderIntentKind : std::uint8_t {

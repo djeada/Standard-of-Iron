@@ -824,6 +824,35 @@ void Camera::apply_soft_boundaries(bool is_panning) {
   }
 
   m_last_position = m_position;
+
+  enforce_pitch_limits();
+}
+
+void Camera::enforce_pitch_limits() {
+  QVector3D const offset = m_position - m_target;
+  float const radius = offset.length();
+  if (radius < k_tiny) {
+    return;
+  }
+
+  float yaw_deg = 0.0F;
+  float pitch_deg = 0.0F;
+  compute_yaw_pitch_from_offset(offset, yaw_deg, pitch_deg);
+  float const clamped = qBound(m_pitch_min_deg, pitch_deg, m_pitch_max_deg);
+  if (std::abs(clamped - pitch_deg) < 1e-4F) {
+    return;
+  }
+
+  float const yaw_rad = qDegreesToRadians(yaw_deg);
+  float const pitch_rad = qDegreesToRadians(clamped);
+  QVector3D const dir(std::sin(yaw_rad) * std::cos(pitch_rad),
+                      std::sin(pitch_rad),
+                      std::cos(yaw_rad) * std::cos(pitch_rad));
+  QVector3D const forward = safe_normalize(dir, m_front);
+  m_position = m_target - forward * radius;
+  m_last_position = m_position;
+  invalidate_cached_geometry();
+  orthonormalize((m_target - m_position), m_front, m_right, m_up);
 }
 
 void Camera::clamp_above_ground() {

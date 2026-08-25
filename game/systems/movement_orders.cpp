@@ -4,6 +4,7 @@
 #include <cmath>
 #include <cstddef>
 #include <limits>
+#include <optional>
 #include <utility>
 #include <vector>
 
@@ -18,6 +19,7 @@
 #include "order_service.h"
 #include "pathfinding.h"
 #include "route_corridor_planner.h"
+#include "walkability.h"
 
 namespace Game::Systems {
 
@@ -47,73 +49,35 @@ auto is_direct_path_walkable(const QVector3D& from,
   return NavGrid::is_world_position_walkable(to);
 }
 
+auto nearest_standable_world(const QVector3D& position,
+                             Pathfinding::Passability passability,
+                             float search_radius) -> std::optional<QVector3D> {
+  BodyProfile profile;
+  profile.radius = 0.0F;
+  profile.passability = passability;
+  return Walkability::nearest_standable(position, profile, search_radius);
+}
+
 auto find_recovery_cell(const Pathfinding& pathfinder,
                         const Point& origin,
                         Pathfinding::Passability passability,
                         Point& recovery_cell) -> bool {
-  for (int radius = 1; radius <= k_recovery_search_radius; ++radius) {
-    bool found_candidate = false;
-    float best_distance_sq = std::numeric_limits<float>::infinity();
-    Point best_candidate{};
-
-    for (int dy = -radius; dy <= radius; ++dy) {
-      for (int dx = -radius; dx <= radius; ++dx) {
-        if (std::abs(dx) != radius && std::abs(dy) != radius) {
-          continue;
-        }
-
-        int const check_x = origin.x + dx;
-        int const check_y = origin.y + dy;
-        if (!pathfinder.is_world_position_walkable(
-                pathfinder.grid_to_world({check_x, check_y}), passability, 0.0F)) {
-          continue;
-        }
-
-        auto const distance_sq = static_cast<float>(dx * dx + dy * dy);
-        if (distance_sq < best_distance_sq) {
-          best_distance_sq = distance_sq;
-          best_candidate = {check_x, check_y};
-          found_candidate = true;
-        }
-      }
-    }
-
-    if (found_candidate) {
-      recovery_cell = best_candidate;
-      return true;
-    }
+  auto const spot =
+      nearest_standable_world(pathfinder.grid_to_world(origin),
+                              passability,
+                              static_cast<float>(k_recovery_search_radius));
+  if (!spot.has_value()) {
+    return false;
   }
-
-  return false;
+  recovery_cell = NavGrid::world_to_grid(spot->x(), spot->z());
+  return true;
 }
 
 auto resolve_walkable_direct_target(const QVector3D& target,
                                     Pathfinding::Passability passability) -> QVector3D {
-  auto* pathfinder = NavGrid::get_pathfinder();
-  if (pathfinder == nullptr) {
-    return target;
-  }
-  pathfinder->update_navigation_grid();
-  if (pathfinder->is_world_position_walkable(target, passability, 0.0F)) {
-    return target;
-  }
-
-  Point const target_grid = NavGrid::world_to_grid(target.x(), target.z());
-  for (int radius = 1; radius <= 64; ++radius) {
-    for (int dz = -radius; dz <= radius; ++dz) {
-      for (int dx = -radius; dx <= radius; ++dx) {
-        if (std::abs(dx) != radius && std::abs(dz) != radius) {
-          continue;
-        }
-        Point const candidate{target_grid.x + dx, target_grid.y + dz};
-        QVector3D const world = pathfinder->grid_to_world(candidate);
-        if (pathfinder->is_world_position_walkable(world, passability, 0.0F)) {
-          return world;
-        }
-      }
-    }
-  }
-  return target;
+  constexpr float k_target_search_radius = 64.0F;
+  return nearest_standable_world(target, passability, k_target_search_radius)
+      .value_or(target);
 }
 
 auto should_include_resolved_start_waypoint(const Point& start) -> bool {
@@ -402,7 +366,19 @@ void MovementSystem::assign_navigation_target(
       movement.remaining_waypoints() > 1U) {
     float const moved_x = requested_target.x() - movement.requested_goal_x;
     float const moved_z = requested_target.z() - movement.requested_goal_z;
-    if (moved_x * moved_x + moved_z * moved_z <=
+
+    bool old_route_still_leads_there = true;
+    if (movement.has_waypoints()) {
+      auto const& next_waypoint = movement.path[movement.path_index];
+      float const to_waypoint_x = next_waypoint.first - transform.position.x;
+      float const to_waypoint_z = next_waypoint.second - transform.position.z;
+      float const to_goal_x = requested_target.x() - transform.position.x;
+      float const to_goal_z = requested_target.z() - transform.position.z;
+      old_route_still_leads_there =
+          (to_waypoint_x * to_goal_x) + (to_waypoint_z * to_goal_z) >= 0.0F;
+    }
+    if (old_route_still_leads_there &&
+        moved_x * moved_x + moved_z * moved_z <=
             k_route_keep_goal_shift * k_route_keep_goal_shift &&
         (pathfinder == nullptr ||
          pathfinder->is_world_position_walkable(

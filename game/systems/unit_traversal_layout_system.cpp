@@ -40,6 +40,12 @@ constexpr float k_heavy_relocation_speed = 1.2F;
 constexpr float k_heavy_relocation_acceleration = 4.8F;
 constexpr float k_entry_alignment_cosine = 0.94F;
 
+constexpr float k_minimum_squeeze_scale = 0.12F;
+
+constexpr float k_soldier_probe_reach = 0.88F;
+
+constexpr float k_minimum_presented_separation = 0.15F;
+
 struct WidthMeasurement {
   float available_half_width{0.0F};
   float desired_half_width{0.0F};
@@ -283,55 +289,10 @@ void update_slot_states(const Engine::Core::TransformComponent& transform,
                         Engine::Core::UnitTraversalLayoutStateComponent& state) {
   std::vector<Engine::Core::UnitTraversalSlotState> next;
   next.reserve(layout.all_slots.size());
-  bool const reflows =
-      state.target_files < state.normal_files && state.stable_slot_mapping.size() > 1U;
-  int const files = reflows ? static_cast<int>(state.target_files) : 1;
-  float normal_front_z = 0.0F;
-  if (!layout.all_slots.empty()) {
-    normal_front_z = std::max_element(layout.all_slots.begin(),
-                                      layout.all_slots.end(),
-                                      [](auto const& left, auto const& right) {
-                                        return left.local_z < right.local_z;
-                                      })
-                         ->local_z;
-  }
-  std::vector<Game::Formation::SoldierOffset> traversal_offsets;
-  float traversal_front_z = 0.0F;
-  float traversal_lateral_scale = 1.0F;
-  if (reflows) {
-    auto const& layout_library = Game::Formation::UnitLayoutLibrary::instance();
-    auto const& layout_system = Game::Formation::UnitLayoutSystem::instance();
-    auto const& style = layout_library.style(state.normal_layout_id);
-    float const authored_spacing =
-        state.file_spacing / std::max(0.1F, style.lateral_spacing_scale);
-    traversal_offsets.reserve(state.stable_slot_mapping.size());
-    for (std::size_t ordinal = 0; ordinal < state.stable_slot_mapping.size();
-         ++ordinal) {
-      traversal_offsets.push_back(layout_system.offset(
-          {.layout = state.normal_layout_id,
-           .index = static_cast<int>(ordinal),
-           .count = static_cast<int>(state.stable_slot_mapping.size()),
-           .forced_files = files,
-           .spacing = authored_spacing,
-           .seed = layout.seed,
-           .formed_ratio = 1.0F}));
-    }
-    traversal_front_z = std::max_element(traversal_offsets.begin(),
-                                         traversal_offsets.end(),
-                                         [](auto const& left, auto const& right) {
-                                           return left.offset_z < right.offset_z;
-                                         })
-                            ->offset_z;
-    float max_lateral = 0.0F;
-    for (auto const& offset : traversal_offsets) {
-      max_lateral = std::max(max_lateral, std::abs(offset.offset_x));
-    }
-    float const safe_lateral =
-        std::max(0.0F, state.available_half_width - state.soldier_body_radius);
-    if (max_lateral > safe_lateral && max_lateral > 0.001F) {
-      traversal_lateral_scale = safe_lateral / max_lateral;
-    }
-  }
+
+  float const corridor_half_width = state.available_half_width -
+                                    (layout.body_radius * k_soldier_probe_reach) -
+                                    k_width_epsilon;
   for (auto const& slot : layout.all_slots) {
     Engine::Core::UnitTraversalSlotState target;
     if (auto const* previous = state.slot_for(slot.index)) {
@@ -353,25 +314,9 @@ void update_slot_states(const Engine::Core::TransformComponent& transform,
         [&slot](auto const& candidate) { return candidate.index == slot.index; });
     target.target_local_x = slot.local_x;
     target.target_local_z = slot.local_z;
-    if (reflows) {
-      auto const mapping = std::find(state.stable_slot_mapping.begin(),
-                                     state.stable_slot_mapping.end(),
-                                     slot.index);
-      int const ordinal = mapping != state.stable_slot_mapping.end()
-                              ? static_cast<int>(std::distance(
-                                    state.stable_slot_mapping.begin(), mapping))
-                              : static_cast<int>(slot.index);
-      auto const grid = Game::Formation::rank_slot_for(
-          ordinal, static_cast<int>(state.stable_slot_mapping.size()), files);
-      target.row = static_cast<std::uint16_t>(grid.row);
-      target.col = static_cast<std::uint16_t>(grid.col);
-      auto const& authored = traversal_offsets[static_cast<std::size_t>(ordinal)];
-      target.target_local_x = authored.offset_x * traversal_lateral_scale;
+    if (state.active) {
 
-      target.target_local_z = normal_front_z + authored.offset_z - traversal_front_z;
-    } else if (state.active) {
-      target.target_local_x *=
-          std::max(state.lateral_scale, state.minimum_lateral_scale);
+      target.target_local_x *= state.lateral_scale;
     }
     if (reset_transition) {
       target.start_local_x = target.current_local_x;
@@ -419,26 +364,52 @@ void update_slot_states(const Engine::Core::TransformComponent& transform,
       };
 
   auto const limits = relocation_limits(unit.spawn_type);
+
+  if (state.active && corridor_half_width > 0.0F) {
+    float widest = 0.0F;
+    for (auto const& slot : next) {
+      if (slot.alive) {
+        widest = std::max(widest, std::abs(slot.target_local_x));
+      }
+    }
+    float const floor_correction =
+        state.file_spacing > 0.01F
+            ? std::min(1.0F, k_minimum_presented_separation / state.file_spacing)
+            : k_minimum_squeeze_scale;
+    if (widest > corridor_half_width) {
+      float const correction = std::max(corridor_half_width / widest, floor_correction);
+      for (auto& slot : next) {
+        slot.target_local_x *= correction;
+      }
+    }
+
+    if (widest > 0.001F) {
+      float const live_limit = std::max(corridor_half_width, widest * floor_correction);
+
+      float const max_step = limits.speed * step;
+      for (auto& slot : next) {
+        float const share = std::abs(slot.target_local_x) / widest;
+        float const allowance = live_limit * share;
+        if (std::abs(slot.current_local_x) <= allowance) {
+          continue;
+        }
+        float const bounded = std::copysign(allowance, slot.current_local_x);
+        slot.current_local_x +=
+            std::clamp(bounded - slot.current_local_x, -max_step, max_step);
+      }
+    }
+  }
+
   float const minimum_separation =
       std::max(Game::Formation::TraversalPolicy::k_minimum_soldier_separation,
                layout.body_radius * 2.0F * 1.04F);
-  bool const primary_reflow_complete =
-      std::all_of(next.begin(), next.end(), [reflows](auto const& slot) {
-        if (!slot.alive) {
-          return true;
-        }
-        return reflows ? std::abs(slot.current_local_z - slot.target_local_z) < 0.01F
-                       : std::abs(slot.current_local_x - slot.target_local_x) < 0.01F;
-      });
   state.blocked_slot_count = 0U;
   for (auto& slot : next) {
     slot.previous_local_x = slot.current_local_x;
     slot.previous_local_z = slot.current_local_z;
 
-    float const waypoint_x =
-        reflows && !primary_reflow_complete ? slot.start_local_x : slot.target_local_x;
-    float const waypoint_z =
-        !reflows && !primary_reflow_complete ? slot.start_local_z : slot.target_local_z;
+    float const waypoint_x = slot.target_local_x;
+    float const waypoint_z = slot.target_local_z;
     float const error_x = waypoint_x - slot.current_local_x;
     float const error_z = waypoint_z - slot.current_local_z;
     float const distance = std::hypot(error_x, error_z);
@@ -531,35 +502,6 @@ void update_slot_states(const Engine::Core::TransformComponent& transform,
   state.transition_curve = smoothstep(state.transition_progress);
 
   state.root_motion_blocked = false;
-  if (state.active && state.target_files < state.normal_files &&
-      state.transition_progress < 0.999F) {
-    float predicted_dx = facts.desired.velocity_x * step;
-    float predicted_dz = facts.desired.velocity_z * step;
-    if (facts.steering.valid) {
-      predicted_dx = (facts.steering.velocity_x + facts.steering.separation_x) * step;
-      predicted_dz = (facts.steering.velocity_z + facts.steering.separation_z) * step;
-    }
-    int current_score = 0;
-    int predicted_score = 0;
-    bool current_envelope_clear = true;
-    bool predicted_envelope_clear = true;
-    for (auto const& slot : state.slot_states) {
-      if (!slot.alive) {
-        continue;
-      }
-      int const current_slot_score =
-          walkability_score(slot.current_local_x, slot.current_local_z, 0.0F, 0.0F);
-      int const predicted_slot_score = walkability_score(
-          slot.current_local_x, slot.current_local_z, predicted_dx, predicted_dz);
-      current_score += current_slot_score;
-      predicted_score += predicted_slot_score;
-      current_envelope_clear = current_envelope_clear && current_slot_score == 9;
-      predicted_envelope_clear = predicted_envelope_clear && predicted_slot_score == 9;
-    }
-    state.root_motion_blocked = current_envelope_clear
-                                    ? !predicted_envelope_clear
-                                    : predicted_score <= current_score;
-  }
 }
 
 } // namespace
@@ -599,6 +541,10 @@ void UnitTraversalLayoutSystem::update(Engine::Core::World* world, float delta_t
     state->rank_spacing = state->file_spacing;
     state->minimum_lateral_scale =
         Game::Formation::TraversalPolicy::k_formation_spacing_scale;
+    float layout_half_width = 0.0F;
+    for (auto const& slot : layout.all_slots) {
+      layout_half_width = std::max(layout_half_width, std::abs(slot.local_x));
+    }
     float authored_spacing = std::numeric_limits<float>::infinity();
     for (std::size_t first = 0; first < layout.all_slots.size(); ++first) {
       for (std::size_t second = first + 1; second < layout.all_slots.size(); ++second) {
@@ -613,10 +559,11 @@ void UnitTraversalLayoutSystem::update(Engine::Core::World* world, float delta_t
       }
     }
     if (std::isfinite(authored_spacing)) {
+
       state->minimum_lateral_scale = std::clamp(
           body_diameter * Game::Formation::TraversalPolicy::k_body_spacing_scale /
               authored_spacing,
-          Game::Formation::TraversalPolicy::k_formation_spacing_scale,
+          k_minimum_squeeze_scale,
           1.0F);
     }
 
@@ -635,14 +582,8 @@ void UnitTraversalLayoutSystem::update(Engine::Core::World* world, float delta_t
     auto const width = measure_width(entity, *transform, *movement, *facts, layout);
     state->available_half_width = width.available_half_width;
     state->desired_half_width = width.desired_half_width;
-    std::uint32_t target_files = state->normal_files;
-    if (moving && width.constrained && layout.all_slots.size() > 1U) {
-      float const center_span =
-          std::max(0.0F, width.available_half_width * 2.0F - body_diameter);
-      target_files = static_cast<std::uint32_t>(
-          1 + std::floor(center_span / std::max(0.05F, state->file_spacing)));
-      target_files = std::clamp(target_files, 1U, state->normal_files);
-    }
+
+    std::uint32_t const target_files = state->normal_files;
 
     state->mode_dwell_seconds += step;
     bool const wants_traversal =
@@ -707,12 +648,19 @@ void UnitTraversalLayoutSystem::update(Engine::Core::World* world, float delta_t
     }
 
     float target_scale = 1.0F;
-    if (state->active && width.desired_half_width > k_width_epsilon) {
-      target_scale = std::clamp(
-          std::max(width.available_half_width, k_minimum_visible_half_width) /
-              width.desired_half_width,
-          0.1F,
-          1.0F);
+    if (state->active) {
+      if (layout_half_width > k_width_epsilon) {
+        float const usable_half_width = width.available_half_width -
+                                        (layout.body_radius * k_soldier_probe_reach) -
+                                        k_width_epsilon;
+        target_scale = std::clamp(
+            usable_half_width / layout_half_width, k_minimum_squeeze_scale, 1.0F);
+      } else if (width.desired_half_width > k_width_epsilon) {
+
+        target_scale = std::clamp(width.available_half_width / width.desired_half_width,
+                                  k_minimum_squeeze_scale,
+                                  1.0F);
+      }
     }
     state->target_lateral_scale = target_scale;
     float const rate =

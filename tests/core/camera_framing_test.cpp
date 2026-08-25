@@ -112,3 +112,63 @@ TEST_F(CameraFramingTest, HoldingShiftTiltsFurtherInTheSameDirection) {
 }
 
 } // namespace
+
+TEST_F(CameraFramingTest, ThePitchNeverEscapesItsBandHoweverFarTheCameraStrays) {
+  Render::GL::Camera camera;
+  camera.set_map_bounds({.tile_size = 1.0F, .width = 64, .height = 64});
+  camera.set_rts_view(QVector3D(0.0F, 0.0F, 0.0F), 40.0F, 55.0F, 0.0F);
+  settle(camera);
+
+  float const min_pitch = camera.get_pitch_min_deg();
+  float const max_pitch = camera.get_pitch_max_deg();
+  ASSERT_LT(min_pitch, max_pitch);
+
+  for (float const distance : {200.0F, -400.0F, 800.0F, -1600.0F}) {
+    camera.set_position(QVector3D(distance, camera.get_position().y(), distance));
+    settle(camera);
+    float const pitch = camera.get_pitch_deg();
+    EXPECT_GE(pitch, min_pitch - 0.01F)
+        << "pitch escaped below its band at offset " << distance;
+    EXPECT_LE(pitch, max_pitch + 0.01F)
+        << "pitch escaped above its band at offset " << distance;
+  }
+
+  for (int step = 0; step < 40; ++step) {
+    camera.pan(60.0F, 60.0F);
+    settle(camera);
+  }
+  EXPECT_GE(camera.get_pitch_deg(), min_pitch - 0.01F);
+  EXPECT_LE(camera.get_pitch_deg(), max_pitch + 0.01F);
+}
+
+TEST_F(CameraFramingTest, AResetRestoresTheFramingEvenWhileFollowing) {
+  Render::GL::Camera camera;
+  camera.set_map_bounds({.tile_size = 1.0F, .width = 64, .height = 64});
+  camera.set_rts_view(QVector3D(0.0F, 0.0F, 0.0F), 40.0F, 55.0F, 0.0F);
+  camera.set_follow_enabled(true);
+  camera.capture_follow_offset();
+
+  camera.set_position(QVector3D(900.0F, 4.0F, 900.0F));
+  settle(camera);
+  for (int frame = 0; frame < 5; ++frame) {
+    camera.update_follow(QVector3D(0.0F, 0.0F, 0.0F));
+  }
+
+  const auto framing = Game::GameConfig::instance().camera_reset_framing();
+  camera.set_rts_view(
+      QVector3D(0.0F, 0.0F, 0.0F), framing.distance, framing.pitch, framing.yaw);
+  camera.capture_follow_offset();
+  settle(camera);
+  float const pitch_after_reset = camera.get_pitch_deg();
+  float const height_after_reset = height_above_target(camera);
+
+  for (int frame = 0; frame < 5; ++frame) {
+    camera.update_follow(QVector3D(0.0F, 0.0F, 0.0F));
+  }
+
+  EXPECT_NEAR(camera.get_pitch_deg(), pitch_after_reset, 0.5F)
+      << "following pulled the camera back off the framing the reset just set";
+  EXPECT_NEAR(height_above_target(camera), height_after_reset, 1.0F);
+  EXPECT_GT(height_after_reset, 1.0F)
+      << "the reset left the camera down at ground level";
+}

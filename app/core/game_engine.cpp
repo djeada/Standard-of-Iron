@@ -1109,6 +1109,16 @@ auto accepted_order_cue(App::Core::OrderKind kind) -> const char* {
 
 } // namespace
 
+void GameEngine::report_affordability_refusal(App::Core::OrderFailure failure,
+                                              const QString& message) {
+  App::Core::OrderOutcome outcome;
+  outcome.kind = App::Core::OrderKind::Build;
+  outcome.status = App::Core::OrderStatus::Rejected;
+  outcome.failure = failure;
+  outcome.reason = message;
+  handle_order_feedback(outcome);
+}
+
 void GameEngine::handle_order_feedback(const App::Core::OrderOutcome& outcome) {
   if (!outcome.issued()) {
     return;

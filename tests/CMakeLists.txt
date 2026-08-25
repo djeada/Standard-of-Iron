@@ -204,6 +204,7 @@ add_executable(
     headless/gate_traversal_test.cpp
     headless/wall_siege_test.cpp
     headless/tight_gap_navigation_test.cpp
+    headless/playable_ground_test.cpp
     headless/battle_speed_load_test.cpp
     headless/selected_unit_readout_test.cpp
     simulation_main.cpp
@@ -333,6 +334,7 @@ soi_register_test_binary(persistence_tests)
 add_executable(
     render_tests
     ${CMAKE_CURRENT_SOURCE_DIR}/test_assets.qrc
+    render/prop_model_footprint_test.cpp
     render/unit_primitive_convention_test.cpp
     render/instance_draw_guard_test.cpp
     render/pose_controller_test.cpp

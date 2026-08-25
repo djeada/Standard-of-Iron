@@ -111,11 +111,6 @@ auto UnitLayoutStateSystem::desired_state(const Engine::Core::Entity& entity)
     return UnitLayoutState::Braced;
   }
 
-  if (const auto* movement = entity.get_component<Engine::Core::MovementComponent>();
-      movement != nullptr && movement->get_has_target()) {
-    return UnitLayoutState::Marching;
-  }
-
   return UnitLayoutState::Normal;
 }
 

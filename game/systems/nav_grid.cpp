@@ -8,6 +8,7 @@
 #include "building_collision_registry.h"
 #include "gate_service.h"
 #include "pathfinding.h"
+#include "walkability.h"
 
 namespace Game::Systems {
 
@@ -77,55 +78,28 @@ auto NavGrid::is_world_position_walkable(const QVector3D& world_position) -> boo
   return is_grid_walkable(grid);
 }
 
+namespace {
+
+auto cell_profile() -> BodyProfile {
+  BodyProfile profile;
+
+  profile.radius = 0.0F;
+  return profile;
+}
+
+} // namespace
+
 auto NavGrid::find_nearest_walkable_grid(const Point& origin, int max_search_radius)
     -> std::optional<Point> {
   if (max_search_radius < 0) {
     return std::nullopt;
   }
-
-  auto is_candidate_walkable = [&](const Point& candidate) -> bool {
-    if (s_pathfinder != nullptr) {
-      return s_pathfinder->is_walkable(candidate.x, candidate.y);
-    }
-    return is_grid_walkable(candidate);
-  };
-
-  if (s_pathfinder != nullptr) {
-    s_pathfinder->update_navigation_grid();
+  auto const spot = Walkability::nearest_standable(
+      grid_to_world(origin), cell_profile(), static_cast<float>(max_search_radius));
+  if (!spot.has_value()) {
+    return std::nullopt;
   }
-
-  if (is_candidate_walkable(origin)) {
-    return origin;
-  }
-
-  for (int radius = 1; radius <= max_search_radius; ++radius) {
-    Point best{};
-    int best_distance_sq = std::numeric_limits<int>::max();
-    bool found = false;
-    for (int dz = -radius; dz <= radius; ++dz) {
-      for (int dx = -radius; dx <= radius; ++dx) {
-        if (std::abs(dx) != radius && std::abs(dz) != radius) {
-          continue;
-        }
-        Point const candidate{origin.x + dx, origin.y + dz};
-        if (!is_candidate_walkable(candidate)) {
-          continue;
-        }
-
-        int const distance_sq = dx * dx + dz * dz;
-        if (!found || distance_sq < best_distance_sq) {
-          best = candidate;
-          best_distance_sq = distance_sq;
-        }
-        found = true;
-      }
-    }
-    if (found) {
-      return best;
-    }
-  }
-
-  return std::nullopt;
+  return world_to_grid(spot->x(), spot->z());
 }
 
 auto NavGrid::find_nearest_walkable_grid_facing(const Point& origin,
@@ -135,57 +109,15 @@ auto NavGrid::find_nearest_walkable_grid_facing(const Point& origin,
   if (max_search_radius < 0) {
     return std::nullopt;
   }
-
-  auto is_candidate_walkable = [&](const Point& candidate) -> bool {
-    if (s_pathfinder != nullptr) {
-      return s_pathfinder->is_walkable(candidate.x, candidate.y);
-    }
-    return is_grid_walkable(candidate);
-  };
-
-  if (s_pathfinder != nullptr) {
-    s_pathfinder->update_navigation_grid();
+  auto const spot =
+      Walkability::nearest_standable(grid_to_world(origin),
+                                     cell_profile(),
+                                     static_cast<float>(max_search_radius),
+                                     approach_from);
+  if (!spot.has_value()) {
+    return std::nullopt;
   }
-
-  if (is_candidate_walkable(origin)) {
-    return origin;
-  }
-
-  Point const approach_grid = world_to_grid(approach_from.x(), approach_from.z());
-
-  for (int radius = 1; radius <= max_search_radius; ++radius) {
-    Point best{};
-    long best_score = std::numeric_limits<long>::max();
-    bool found = false;
-    for (int dz = -radius; dz <= radius; ++dz) {
-      for (int dx = -radius; dx <= radius; ++dx) {
-        if (std::abs(dx) != radius && std::abs(dz) != radius) {
-          continue;
-        }
-        Point const candidate{origin.x + dx, origin.y + dz};
-        if (!is_candidate_walkable(candidate)) {
-          continue;
-        }
-
-        long const to_node = static_cast<long>(dx) * dx + static_cast<long>(dz) * dz;
-        long const ax = static_cast<long>(candidate.x) - approach_grid.x;
-        long const az = static_cast<long>(candidate.y) - approach_grid.y;
-        long const to_approach = (ax * ax) + (az * az);
-
-        long const score = (to_node * 1024L) + to_approach;
-        if (!found || score < best_score) {
-          best = candidate;
-          best_score = score;
-          found = true;
-        }
-      }
-    }
-    if (found) {
-      return best;
-    }
-  }
-
-  return std::nullopt;
+  return world_to_grid(spot->x(), spot->z());
 }
 
 auto NavGrid::snap_to_walkable_ground(const QVector3D& world_position) -> QVector3D {

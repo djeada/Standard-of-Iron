@@ -392,7 +392,7 @@ TEST_F(SiegeSpecialProcessorTest, RetaliationDoesNotAlertDistantAlly) {
   EXPECT_TRUE((ally_target == nullptr) || (ally_target->target_id == 0));
 }
 
-TEST_F(SiegeSpecialProcessorTest, SquadAlertSkipsAllyUnderManualMoveOrder) {
+TEST_F(SiegeSpecialProcessorTest, SquadAlertReachesAnAllyUnderAManualMoveOrder) {
   auto* defender = make_enemy(0.0F, 0.0F, 0.0F, 2);
   defender->add_component<AttackComponent>(2.0F, 12, 1.0F);
   auto* ally = make_enemy(3.0F, 0.0F, 0.0F, 2);
@@ -408,7 +408,9 @@ TEST_F(SiegeSpecialProcessorTest, SquadAlertSkipsAllyUnderManualMoveOrder) {
   Combat::deal_damage(world.get(), defender, 15, attacker->get_id());
 
   auto* ally_target = ally->get_component<AttackTargetComponent>();
-  EXPECT_TRUE((ally_target == nullptr) || (ally_target->target_id == 0));
+  ASSERT_NE(ally_target, nullptr);
+  EXPECT_EQ(ally_target->target_id, attacker->get_id())
+      << "a marching ally ignored an attack on the man beside it";
 
   auto* defender_target = defender->get_component<AttackTargetComponent>();
   ASSERT_NE(defender_target, nullptr);

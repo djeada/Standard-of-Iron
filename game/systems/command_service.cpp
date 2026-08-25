@@ -24,6 +24,7 @@
 #include "nav_grid.h"
 #include "pathfinding.h"
 #include "units/spawn_type.h"
+#include "walkability.h"
 
 namespace Game::Systems {
 
@@ -56,6 +57,55 @@ auto slot_is_reachable(Engine::Core::World& world,
   return !route.empty() && route.back() == target;
 }
 
+auto rescued_slot_position(Engine::Core::World& world,
+                           Engine::Core::EntityID member,
+                           const QVector3D& ideal) -> QVector3D {
+  auto* entity = world.get_entity(member);
+  auto const* transform =
+      entity != nullptr ? entity->get_component<Engine::Core::TransformComponent>()
+                        : nullptr;
+  QVector3D const home =
+      transform != nullptr
+          ? QVector3D(transform->position.x, 0.0F, transform->position.z)
+          : ideal;
+
+  BodyProfile profile;
+  if (entity != nullptr) {
+    if (auto const* movement =
+            entity->get_component<Engine::Core::MovementComponent>()) {
+      profile.radius = movement->get_navigation_clearance();
+      profile.passability = movement->get_can_enter_forest()
+                                ? Pathfinding::Passability::Light
+                                : Pathfinding::Passability::Heavy;
+    }
+  }
+
+  constexpr float k_rescue_search_radius = 12.0F;
+  auto const standable =
+      Walkability::nearest_standable(ideal, profile, k_rescue_search_radius, home);
+  QVector3D const anchor = standable.value_or(ideal);
+
+  if (slot_is_reachable(world, member, anchor)) {
+    return anchor;
+  }
+
+  auto* pathfinder = NavGrid::get_pathfinder();
+  if (pathfinder == nullptr) {
+    return home;
+  }
+  pathfinder->update_navigation_grid();
+  auto const route =
+      pathfinder->find_path(NavGrid::world_to_grid(home.x(), home.z()),
+                            NavGrid::world_to_grid(anchor.x(), anchor.z()),
+                            profile.passability,
+                            profile.radius);
+  if (route.empty()) {
+    return home;
+  }
+  QVector3D const closest = NavGrid::grid_to_world(route.back());
+  return Walkability::can_stand(closest, profile) ? closest : home;
+}
+
 } // namespace
 
 auto CommandService::GroundMovePlan::matches_members(
@@ -77,6 +127,12 @@ auto CommandService::GroundMovePlan::fully_placeable_for(
          std::none_of(member_slots.begin(), member_slots.end(), [](auto const& slot) {
            return slot.placement == SlotPlacement::Blocked;
          });
+}
+
+auto CommandService::GroundMovePlan::anyone_can_move() const -> bool {
+  return std::any_of(member_slots.begin(), member_slots.end(), [](auto const& slot) {
+    return slot.placement != SlotPlacement::Blocked;
+  });
 }
 
 auto CommandService::GroundMovePlan::target_positions() const
@@ -149,13 +205,10 @@ auto CommandService::resolve_group_slots(
         slot.placement = SlotPlacement::Blocked;
       }
       if (slot.placement == SlotPlacement::Blocked) {
-        auto* entity = world.get_entity(slot.member);
-        auto const* transform =
-            entity != nullptr
-                ? entity->get_component<Engine::Core::TransformComponent>()
-                : nullptr;
-        if (transform != nullptr) {
-          slot.position = QVector3D(transform->position.x, 0.0F, transform->position.z);
+
+        slot.position = rescued_slot_position(world, slot.member, slot.position);
+        if (slot_is_reachable(world, slot.member, slot.position)) {
+          slot.placement = SlotPlacement::Adjusted;
         }
       }
       resolved_slots.push_back(slot);
@@ -273,8 +326,14 @@ auto CommandService::resolve_group_slots(
     result.placement = fitted_slot->status;
     if (result.placement == SlotPlacement::Blocked ||
         !slot_is_reachable(world, result.member, result.position)) {
-      result.position = member_position;
-      result.placement = SlotPlacement::Blocked;
+
+      result.position = rescued_slot_position(world, result.member, result.position);
+      result.placement = slot_is_reachable(world, result.member, result.position)
+                             ? SlotPlacement::Adjusted
+                             : SlotPlacement::Blocked;
+      if (result.placement == SlotPlacement::Blocked) {
+        result.position = member_position;
+      }
       return result;
     }
     return result;
@@ -309,7 +368,8 @@ auto CommandService::plan_ground_move(Engine::Core::World& world,
 void CommandService::issue_ground_move(Engine::Core::World& world,
                                        const std::vector<Engine::Core::EntityID>& units,
                                        const GroundMovePlan& plan) {
-  if (units.empty() || !plan.fully_placeable_for(units)) {
+
+  if (units.empty() || !plan.matches_members(units) || !plan.anyone_can_move()) {
     return;
   }
 

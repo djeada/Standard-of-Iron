@@ -42,6 +42,8 @@ public:
     matches_members(const std::vector<Engine::Core::EntityID>& units) const -> bool;
     [[nodiscard]] auto
     fully_placeable_for(const std::vector<Engine::Core::EntityID>& units) const -> bool;
+
+    [[nodiscard]] auto anyone_can_move() const -> bool;
     [[nodiscard]] auto target_positions() const -> std::vector<QVector3D>;
     [[nodiscard]] auto facing_angles() const -> std::vector<float>;
   };

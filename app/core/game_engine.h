@@ -375,6 +375,9 @@ private:
   attack_sync_context() const -> App::Core::PresentationSync::SelectionAttackContext;
   void handle_order_feedback(const App::Core::OrderOutcome& outcome);
 
+  void report_affordability_refusal(App::Core::OrderFailure failure,
+                                    const QString& message);
+
 public:
   [[nodiscard]] auto player_feedback() -> App::Core::PlayerFeedbackBus& {
     return m_player_feedback;

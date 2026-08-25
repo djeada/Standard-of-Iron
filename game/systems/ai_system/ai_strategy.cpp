@@ -40,8 +40,15 @@ void clamp_style_targets(AIStrategyConfig& config) {
       std::clamp(config.expansion_site_distance, 18.0F, 40.0F);
   config.proactive_attack_size =
       std::max(config.proactive_attack_size, config.reactive_attack_size);
+
+  constexpr float k_minimum_local_response_radius = 30.0F;
+  if (config.local_response_radius > 0.0F) {
+    config.local_response_radius =
+        std::max(config.local_response_radius, k_minimum_local_response_radius);
+  }
   config.local_response_radius = std::clamp(config.local_response_radius, 0.0F, 60.0F);
-  config.max_local_responders = std::clamp(config.max_local_responders, 0, 8);
+
+  config.max_local_responders = std::clamp(config.max_local_responders, 0, 24);
 }
 
 } // namespace
