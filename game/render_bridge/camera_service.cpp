@@ -139,6 +139,10 @@ void CameraService::snap_to_entity(Render::GL::Camera& camera,
     QVector3D const center(t->position.x, t->position.y, t->position.z);
     const auto framing = Game::GameConfig::instance().camera_reset_framing();
     camera.set_rts_view(center, framing.distance, framing.pitch, framing.yaw);
+
+    if (camera.is_follow_enabled()) {
+      camera.capture_follow_offset();
+    }
   }
 }
 

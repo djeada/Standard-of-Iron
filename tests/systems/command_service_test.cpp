@@ -1155,13 +1155,29 @@ TEST_F(CommandServiceTest, GroupSlotsMustBeReachableNotMerelyWalkable) {
   }
 
   std::vector<Engine::Core::EntityID> const units = {first->get_id(), second->get_id()};
-  auto const plan = Game::Systems::CommandService::plan_ground_move(
-      world, units, QVector3D(10.0F, 0.0F, 0.0F));
+  QVector3D const requested(10.0F, 0.0F, 0.0F);
+  auto const plan =
+      Game::Systems::CommandService::plan_ground_move(world, units, requested);
   ASSERT_EQ(plan.member_slots.size(), units.size());
-  EXPECT_TRUE(std::all_of(
-      plan.member_slots.begin(), plan.member_slots.end(), [](auto const& slot) {
-        return slot.placement == Game::Systems::CommandService::SlotPlacement::Blocked;
-      }));
+
+  for (auto const& slot : plan.member_slots) {
+    EXPECT_LT(slot.position.x(), 16.0F)
+        << "a member was sent to a slot on the far side of the wall";
+    if (slot.placement != Game::Systems::CommandService::SlotPlacement::Blocked) {
+      auto* entity = world.get_entity(slot.member);
+      ASSERT_NE(entity, nullptr);
+      auto const* transform = entity->get_component<Engine::Core::TransformComponent>();
+      ASSERT_NE(transform, nullptr);
+      auto const route = pathfinder->find_path(
+          Game::Systems::NavGrid::world_to_grid(transform->position.x,
+                                                transform->position.z),
+          Game::Systems::NavGrid::world_to_grid(slot.position.x(), slot.position.z()));
+      ASSERT_FALSE(route.empty());
+      EXPECT_TRUE(route.back() == Game::Systems::NavGrid::world_to_grid(
+                                      slot.position.x(), slot.position.z()))
+          << "an issued slot was not actually reachable";
+    }
+  }
 }
 
 TEST_F(CommandServiceTest, FormationMovePreservesCurrentRelativeShape) {

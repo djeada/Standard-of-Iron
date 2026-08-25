@@ -18,6 +18,12 @@
 #include "scene/camera.h"
 
 namespace App::ViewModels {
+
+namespace {
+
+constexpr int k_cursor_ground_snap_cells = 8;
+} // namespace
+
 namespace {
 
 constexpr double k_drag_threshold_squared = 36.0;
@@ -174,8 +180,11 @@ void OrdersViewModel::refresh_context_intent(qreal sx, qreal sy) {
           mapped, *camera, viewport->width, viewport->height, ground)) {
     request.has_ground = true;
     request.ground = ground;
+
+    QVector3D const settled = Game::Systems::NavGrid::snap_to_walkable_ground(
+        ground, k_cursor_ground_snap_cells);
     request.ground_is_walkable =
-        Game::Systems::NavGrid::is_world_position_walkable(ground);
+        Game::Systems::NavGrid::is_world_position_walkable(settled);
   }
 
   const auto resolution = App::Core::resolve_context_intent(request);

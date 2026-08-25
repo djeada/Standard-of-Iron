@@ -355,11 +355,14 @@ Rectangle {
     radius: 6
 
     ScrollView {
+        id: productionScroll
+
         anchors.fill: parent
         anchors.margins: 10
         clip: true
         ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
-        ScrollBar.vertical.policy: ScrollBar.AsNeeded
+
+        ScrollBar.vertical.policy: productionScroll.contentHeight > productionScroll.height ? ScrollBar.AlwaysOn : ScrollBar.AlwaysOff
 
         Column {
             width: productionPanel.width - 20
@@ -1040,6 +1043,29 @@ Rectangle {
                                 opacity: parent.is_enabled ? 0.9 : 0.4
                             }
 
+                            Rectangle {
+                                anchors.left: parent.left
+                                anchors.right: parent.right
+                                anchors.bottom: parent.bottom
+                                anchors.margins: 1
+                                height: parent.height * 0.5
+                                radius: 6
+                                gradient: Gradient {
+                                    GradientStop {
+                                        position: 0.0
+                                        color: "#00120A05"
+                                    }
+                                    GradientStop {
+                                        position: 0.45
+                                        color: "#CC120A05"
+                                    }
+                                    GradientStop {
+                                        position: 1.0
+                                        color: "#F2120A05"
+                                    }
+                                }
+                            }
+
                             Text {
                                 anchors.horizontalCenter: parent.horizontalCenter
                                 anchors.bottom: parent.bottom
@@ -1178,6 +1204,29 @@ Rectangle {
                                 color: parent.is_enabled ? "#F4E7C8" : "#6B5231"
                                 font.pixelSize: Design.Typography.glyph
                                 opacity: parent.is_enabled ? 0.9 : 0.4
+                            }
+
+                            Rectangle {
+                                anchors.left: parent.left
+                                anchors.right: parent.right
+                                anchors.bottom: parent.bottom
+                                anchors.margins: 1
+                                height: parent.height * 0.5
+                                radius: 6
+                                gradient: Gradient {
+                                    GradientStop {
+                                        position: 0.0
+                                        color: "#00120A05"
+                                    }
+                                    GradientStop {
+                                        position: 0.45
+                                        color: "#CC120A05"
+                                    }
+                                    GradientStop {
+                                        position: 1.0
+                                        color: "#F2120A05"
+                                    }
+                                }
                             }
 
                             Text {
@@ -1320,6 +1369,29 @@ Rectangle {
                                 opacity: parent.is_enabled ? 0.9 : 0.4
                             }
 
+                            Rectangle {
+                                anchors.left: parent.left
+                                anchors.right: parent.right
+                                anchors.bottom: parent.bottom
+                                anchors.margins: 1
+                                height: parent.height * 0.5
+                                radius: 6
+                                gradient: Gradient {
+                                    GradientStop {
+                                        position: 0.0
+                                        color: "#00120A05"
+                                    }
+                                    GradientStop {
+                                        position: 0.45
+                                        color: "#CC120A05"
+                                    }
+                                    GradientStop {
+                                        position: 1.0
+                                        color: "#F2120A05"
+                                    }
+                                }
+                            }
+
                             Text {
                                 anchors.horizontalCenter: parent.horizontalCenter
                                 anchors.bottom: parent.bottom
@@ -1458,6 +1530,29 @@ Rectangle {
                                 color: parent.is_enabled ? "#F4E7C8" : "#6B5231"
                                 font.pixelSize: Design.Typography.glyph
                                 opacity: parent.is_enabled ? 0.9 : 0.4
+                            }
+
+                            Rectangle {
+                                anchors.left: parent.left
+                                anchors.right: parent.right
+                                anchors.bottom: parent.bottom
+                                anchors.margins: 1
+                                height: parent.height * 0.5
+                                radius: 6
+                                gradient: Gradient {
+                                    GradientStop {
+                                        position: 0.0
+                                        color: "#00120A05"
+                                    }
+                                    GradientStop {
+                                        position: 0.45
+                                        color: "#CC120A05"
+                                    }
+                                    GradientStop {
+                                        position: 1.0
+                                        color: "#F2120A05"
+                                    }
+                                }
                             }
 
                             Text {
@@ -1600,6 +1695,29 @@ Rectangle {
                                 opacity: parent.is_enabled ? 0.9 : 0.4
                             }
 
+                            Rectangle {
+                                anchors.left: parent.left
+                                anchors.right: parent.right
+                                anchors.bottom: parent.bottom
+                                anchors.margins: 1
+                                height: parent.height * 0.5
+                                radius: 6
+                                gradient: Gradient {
+                                    GradientStop {
+                                        position: 0.0
+                                        color: "#00120A05"
+                                    }
+                                    GradientStop {
+                                        position: 0.45
+                                        color: "#CC120A05"
+                                    }
+                                    GradientStop {
+                                        position: 1.0
+                                        color: "#F2120A05"
+                                    }
+                                }
+                            }
+
                             Text {
                                 anchors.horizontalCenter: parent.horizontalCenter
                                 anchors.bottom: parent.bottom
@@ -1738,6 +1856,29 @@ Rectangle {
                                 color: parent.is_enabled ? "#F4E7C8" : "#6B5231"
                                 font.pixelSize: Design.Typography.glyph
                                 opacity: parent.is_enabled ? 0.9 : 0.4
+                            }
+
+                            Rectangle {
+                                anchors.left: parent.left
+                                anchors.right: parent.right
+                                anchors.bottom: parent.bottom
+                                anchors.margins: 1
+                                height: parent.height * 0.5
+                                radius: 6
+                                gradient: Gradient {
+                                    GradientStop {
+                                        position: 0.0
+                                        color: "#00120A05"
+                                    }
+                                    GradientStop {
+                                        position: 0.45
+                                        color: "#CC120A05"
+                                    }
+                                    GradientStop {
+                                        position: 1.0
+                                        color: "#F2120A05"
+                                    }
+                                }
                             }
 
                             Text {
@@ -1880,6 +2021,29 @@ Rectangle {
                                 opacity: parent.is_enabled ? 0.9 : 0.4
                             }
 
+                            Rectangle {
+                                anchors.left: parent.left
+                                anchors.right: parent.right
+                                anchors.bottom: parent.bottom
+                                anchors.margins: 1
+                                height: parent.height * 0.5
+                                radius: 6
+                                gradient: Gradient {
+                                    GradientStop {
+                                        position: 0.0
+                                        color: "#00120A05"
+                                    }
+                                    GradientStop {
+                                        position: 0.45
+                                        color: "#CC120A05"
+                                    }
+                                    GradientStop {
+                                        position: 1.0
+                                        color: "#F2120A05"
+                                    }
+                                }
+                            }
+
                             Text {
                                 anchors.horizontalCenter: parent.horizontalCenter
                                 anchors.bottom: parent.bottom
@@ -2020,6 +2184,29 @@ Rectangle {
                                 opacity: parent.is_enabled ? 0.9 : 0.4
                             }
 
+                            Rectangle {
+                                anchors.left: parent.left
+                                anchors.right: parent.right
+                                anchors.bottom: parent.bottom
+                                anchors.margins: 1
+                                height: parent.height * 0.5
+                                radius: 6
+                                gradient: Gradient {
+                                    GradientStop {
+                                        position: 0.0
+                                        color: "#00120A05"
+                                    }
+                                    GradientStop {
+                                        position: 0.45
+                                        color: "#CC120A05"
+                                    }
+                                    GradientStop {
+                                        position: 1.0
+                                        color: "#F2120A05"
+                                    }
+                                }
+                            }
+
                             Text {
                                 anchors.horizontalCenter: parent.horizontalCenter
                                 anchors.bottom: parent.bottom
@@ -2158,6 +2345,29 @@ Rectangle {
                                 color: parent.is_enabled ? "#F4E7C8" : "#6B5231"
                                 font.pixelSize: Design.Typography.glyph
                                 opacity: parent.is_enabled ? 0.9 : 0.4
+                            }
+
+                            Rectangle {
+                                anchors.left: parent.left
+                                anchors.right: parent.right
+                                anchors.bottom: parent.bottom
+                                anchors.margins: 1
+                                height: parent.height * 0.5
+                                radius: 6
+                                gradient: Gradient {
+                                    GradientStop {
+                                        position: 0.0
+                                        color: "#00120A05"
+                                    }
+                                    GradientStop {
+                                        position: 0.45
+                                        color: "#CC120A05"
+                                    }
+                                    GradientStop {
+                                        position: 1.0
+                                        color: "#F2120A05"
+                                    }
+                                }
                             }
 
                             Text {

@@ -154,6 +154,16 @@ auto build_rule_set_from_config(const Game::Map::VictoryConfig& config)
     rules.defeat_rules.emplace_back(NoCommanderDefeatRule{});
   }
 
+  bool const already_wins_on_commanders =
+      std::any_of(rules.victory_rules.begin(),
+                  rules.victory_rules.end(),
+                  [](const VictoryRule& rule) {
+                    return std::holds_alternative<EliminateCommandersVictoryRule>(rule);
+                  });
+  if (!already_wins_on_commanders) {
+    rules.victory_rules.emplace_back(EliminateCommandersVictoryRule{});
+  }
+
   return rules;
 }
 

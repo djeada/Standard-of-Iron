@@ -10,6 +10,7 @@
 #include "game/core/world.h"
 #include "game/map/map_definition.h"
 #include "game/map/terrain_service.h"
+#include "game/session/session_context.h"
 #include "game/systems/building_collision_registry.h"
 #include "game/systems/combat_actions/combat_action_definition.h"
 #include "game/systems/combat_actions/combat_action_events.h"
@@ -205,7 +206,7 @@ TEST_F(CommanderControlControllerTest, ScriptedDodgeUsesRequestedWorldDirection)
 }
 
 TEST_F(CommanderControlControllerTest,
-       JumpLandingSnapsBackWhenNoWalkableLandingExists) {
+       JumpLandingInsideAnObstacleRecoversOntoWalkableGround) {
   Engine::Core::World world;
   auto* commander = create_commander(world, 0.0F, 0.0F);
   ASSERT_NE(commander, nullptr);
@@ -225,12 +226,26 @@ TEST_F(CommanderControlControllerTest,
   controller.request_jump();
 
   Render::GL::Camera camera;
-  ASSERT_TRUE(controller.update(world, commander->get_id(), 1, camera, 0.2F));
-  float const first_safe_z = transform->position.z;
-  ASSERT_TRUE(controller.update(world, commander->get_id(), 1, camera, 0.2F));
-  ASSERT_TRUE(controller.update(world, commander->get_id(), 1, camera, 0.2F));
+  auto& session = Game::Session::session_for(world);
+  for (int frame = 0; frame < 8; ++frame) {
+    ASSERT_TRUE(controller.update(world, commander->get_id(), 1, camera, 0.2F));
+  }
 
-  EXPECT_NEAR(transform->position.z, first_safe_z, 0.0001F);
+  EXPECT_TRUE(App::Core::CommanderMotor::is_walkable_at(
+      session, transform->position.x, transform->position.z))
+      << "landed at " << transform->position.x << ", " << transform->position.z;
+
+  float const settled_x = transform->position.x;
+  float const settled_z = transform->position.z;
+  controller.input().forward = false;
+  controller.input().backward = true;
+  for (int frame = 0; frame < 4; ++frame) {
+    ASSERT_TRUE(controller.update(world, commander->get_id(), 1, camera, 0.1F));
+  }
+  EXPECT_GT(
+      std::hypot(transform->position.x - settled_x, transform->position.z - settled_z),
+      0.05F)
+      << "commander froze after landing";
 }
 
 TEST_F(CommanderControlControllerTest,

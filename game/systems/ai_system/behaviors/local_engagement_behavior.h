@@ -28,7 +28,10 @@ public:
   [[nodiscard]] auto can_run_concurrently() const -> bool override { return true; }
 
   [[nodiscard]] static auto
-  fresh_responder_slots(int already_fighting, const AIStrategyConfig& strategy) -> int;
+
+  fresh_responder_slots(int already_fighting,
+                        const AIStrategyConfig& strategy,
+                        int threat_count) -> int;
 
 private:
   float m_timer = 0.0F;

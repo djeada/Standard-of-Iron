@@ -15,6 +15,7 @@
 #include "nav_grid.h"
 #include "order_service.h"
 #include "pathfinding.h"
+#include "walkability.h"
 
 namespace Game::Systems {
 
@@ -92,17 +93,37 @@ auto is_movement_point_allowed(const QVector3D& pos,
   }
 
   auto const* movement = entity.get_component<Engine::Core::MovementComponent>();
-  auto* pathfinder = NavGrid::get_pathfinder();
-  bool navigation_allows = NavGrid::is_world_position_walkable(pos);
-  if (pathfinder != nullptr && movement != nullptr) {
-    pathfinder->update_navigation_grid();
-    navigation_allows = pathfinder->is_world_position_walkable(
-        pos,
-        movement->get_can_enter_forest() ? Pathfinding::Passability::Light
-                                         : Pathfinding::Passability::Heavy,
-        0.0F);
+  BodyProfile profile;
+
+  profile.radius = 0.0F;
+  if (movement != nullptr) {
+    profile.passability = movement->get_can_enter_forest()
+                              ? Pathfinding::Passability::Light
+                              : Pathfinding::Passability::Heavy;
   }
-  return navigation_allows;
+  return Walkability::can_stand(pos, profile);
+}
+
+auto goal_is_reachable_from(const Engine::Core::MovementComponent& movement,
+                            const QVector3D& current,
+                            const QVector3D& goal) -> bool {
+  auto* pathfinder = NavGrid::get_pathfinder();
+  if (pathfinder == nullptr) {
+    return false;
+  }
+  pathfinder->update_navigation_grid();
+  Point const start_cell = NavGrid::world_to_grid(current.x(), current.z());
+  Point const goal_cell = NavGrid::world_to_grid(goal.x(), goal.z());
+  auto const passability = movement.get_can_enter_forest()
+                               ? Pathfinding::Passability::Light
+                               : Pathfinding::Passability::Heavy;
+  auto const route = pathfinder->find_path(
+      start_cell, goal_cell, passability, movement.get_navigation_clearance());
+  if (route.empty()) {
+    return false;
+  }
+
+  return route.back() == goal_cell;
 }
 
 auto max_navigation_speed(const Engine::Core::UnitComponent& unit,
@@ -588,6 +609,17 @@ auto RouteFollowSystem::update_progress(Engine::Core::Entity& entity,
     QVector3D const goal(movement.get_goal_x(), 0.0F, movement.get_goal_y());
     if (progress.state_seconds <= k_recovery_budget_seconds) {
       MovementSystem::assign_local_recovery_move(current, goal, &movement);
+      break;
+    }
+
+    if (goal_is_reachable_from(movement, current, goal)) {
+      progress.state = MovementOrderState::LocallyBlocked;
+      progress.repath_attempts = 0;
+      progress.no_progress_seconds = 0.0F;
+      progress.no_progress_advance = 0.0F;
+      MovementSystem::retarget_unit(world, entity.get_id(), goal);
+      ++progress.repath_count;
+      progress.repath_reason = MovementRepathReason::Blocked;
       break;
     }
     movement.stop();

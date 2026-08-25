@@ -698,3 +698,49 @@ TEST_F(VictoryServiceTest, SurviveWavesVictoryWaitsForEveryRequiredPhase) {
 }
 
 } // namespace
+
+TEST_F(VictoryServiceTest, KillingTheEnemyCommanderWinsJustAsLosingYoursLoses) {
+  Engine::Core::World world;
+  ASSERT_NE(create_unit(world,
+                        1,
+                        Game::Units::SpawnType::RomanFieldCommander,
+                        Game::Systems::NationID::RomanRepublic),
+            nullptr);
+  ASSERT_NE(create_unit(world,
+                        1,
+                        Game::Units::SpawnType::Barracks,
+                        Game::Systems::NationID::RomanRepublic),
+            nullptr);
+
+  auto* enemy_commander = create_unit(world,
+                                      2,
+                                      Game::Units::SpawnType::CarthageSwordCommander,
+                                      Game::Systems::NationID::Carthage);
+  ASSERT_NE(enemy_commander, nullptr);
+
+  ASSERT_NE(create_unit(world,
+                        2,
+                        Game::Units::SpawnType::Barracks,
+                        Game::Systems::NationID::Carthage),
+            nullptr);
+  ASSERT_NE(create_unit(world,
+                        2,
+                        Game::Units::SpawnType::Spearman,
+                        Game::Systems::NationID::Carthage),
+            nullptr);
+
+  Game::Map::VictoryConfig config;
+  m_service->configure(config, 1);
+  advance_past_startup_delay(world);
+  ASSERT_FALSE(m_service->is_game_over());
+
+  auto* enemy_unit = enemy_commander->get_component<Engine::Core::UnitComponent>();
+  ASSERT_NE(enemy_unit, nullptr);
+  enemy_unit->health = 0;
+  Engine::Core::EventManager::instance().publish(Engine::Core::UnitDiedEvent(
+      enemy_commander->get_id(), 2, Game::Units::SpawnType::CarthageSwordCommander));
+
+  EXPECT_TRUE(m_service->is_game_over())
+      << "the enemy commander fell and the match carried on";
+  EXPECT_EQ(m_service->get_victory_state(), QStringLiteral("victory"));
+}

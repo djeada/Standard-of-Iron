@@ -8,7 +8,7 @@ Item {
 
     property var status: ({})
 
-    readonly property int content_width: Design.A11y.scaled(220)
+    readonly property int content_width: Design.A11y.scaled(300)
 
     readonly property bool has_formation: status.active === true
     readonly property real cohesion: status.cohesion !== undefined ? status.cohesion : 0
@@ -135,6 +135,9 @@ Item {
                     Layout.fillWidth: true
                     color: Design.Theme.textSecondary
                     elide: Text.ElideRight
+
+                    fontSizeMode: Text.HorizontalFit
+                    minimumPixelSize: Math.round(Design.Typography.caption * 0.8)
                     font.family: Design.Typography.family
                     font.pixelSize: Design.Typography.caption
                     text: statusBadge.status.doctrine_display_name !== undefined ? statusBadge.status.doctrine_display_name : ""

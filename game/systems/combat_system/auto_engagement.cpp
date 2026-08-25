@@ -101,7 +101,8 @@ void AutoEngagement::process(Engine::Core::World*,
     }
 
     auto* nearest_enemy = find_nearest_enemy(unit, query_context, detection_range);
-    if (nearest_enemy != nullptr && melee_walled_off_from(unit, nearest_enemy)) {
+    if (nearest_enemy != nullptr &&
+        !may_engage(unit, nearest_enemy, EngagementTrigger::Opportunity)) {
       nearest_enemy = nullptr;
     }
 
