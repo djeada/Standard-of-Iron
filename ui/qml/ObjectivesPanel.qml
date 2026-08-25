@@ -49,6 +49,13 @@ Item {
         target: root.game_ready() ? game.setup : null
     }
 
+    MouseArea {
+        anchors.fill: parent
+        acceptedButtons: Qt.AllButtons
+        hoverEnabled: true
+        onWheel: wheel => wheel.accepted = true
+    }
+
     Rectangle {
         anchors.fill: parent
         color: Design.Theme.scrim

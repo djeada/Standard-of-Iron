@@ -405,6 +405,7 @@ add_executable(
     render/rig_dsl/barracks_rig_test.cpp
     render/bpat/bpat_format_test.cpp
     render/bpat/bpat_registry_test.cpp
+    render/formation_locomotion_state_test.cpp
     render/humanoid/skeleton_test.cpp
     render/humanoid/humanoid_spec_test.cpp
     render/horse/mounted_seat_frame_test.cpp

@@ -11,6 +11,7 @@
 #include "../core/event_manager.h"
 #include "../core/world.h"
 #include "command_service.h"
+#include "healing_rules.h"
 #include "nation_collapse_service.h"
 #include "owner_registry.h"
 #include "troop_profile_service.h"
@@ -492,8 +493,10 @@ void CommanderSystem::update(Engine::Core::World* world, float delta_time) {
             const int restored =
                 static_cast<int>(std::floor(buff->health_regen_accumulator));
             if (restored > 0) {
-              candidate_unit->health = std::min(candidate_unit->max_health,
-                                                candidate_unit->health + restored);
+
+              candidate_unit->health =
+                  std::min(HealingRules::maximum_recoverable_health(*candidate),
+                           candidate_unit->health + restored);
               buff->health_regen_accumulator -= static_cast<float>(restored);
             }
           }

@@ -16,6 +16,8 @@ struct UnitDescription {
   QString nation;
   int health = 0;
   int max_health = 0;
+  int soldiers = 0;
+  int max_soldiers = 0;
   bool is_building = false;
   bool alive = false;
 };

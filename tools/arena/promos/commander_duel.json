@@ -83,7 +83,7 @@
       "start": 6.45,
       "duration": 1.05,
       "slow_motion": 2.4,
-      "shake": 0.05,
+      "shake": 0.03,
       "focus": {
         "mode": "group_pair",
         "group": "scipio",
@@ -104,7 +104,7 @@
           "time": 2.52,
           "distance": 7.8,
           "pitch": 16,
-          "yaw": 14,
+          "yaw": 21.76,
           "fov": 38,
           "height": 1.5,
           "roll": 2,
@@ -156,7 +156,7 @@
       "start": 13.35,
       "duration": 1.05,
       "slow_motion": 2.2,
-      "shake": 0.04,
+      "shake": 0.03,
       "focus": {
         "mode": "group_pair",
         "group": "scipio",
@@ -176,7 +176,7 @@
           "time": 2.31,
           "distance": 7.2,
           "pitch": 15,
-          "yaw": 338,
+          "yaw": 338.28,
           "fov": 38,
           "height": 1.5,
           "ease": "linear"
@@ -228,7 +228,7 @@
       "start": 20.1,
       "duration": 1.1,
       "slow_motion": 2.2,
-      "shake": 0.045,
+      "shake": 0.03,
       "focus": {
         "mode": "group_pair",
         "group": "scipio",
@@ -249,7 +249,7 @@
           "time": 2.42,
           "distance": 7.4,
           "pitch": 15,
-          "yaw": 122,
+          "yaw": 87.04,
           "fov": 38,
           "height": 1.5,
           "roll": -2,
@@ -269,7 +269,7 @@
       "start": 31.85,
       "duration": 1.6,
       "slow_motion": 2.4,
-      "shake": 0.05,
+      "shake": 0.03,
       "focus": {
         "mode": "group_pair",
         "group": "scipio",

@@ -159,7 +159,9 @@ Item {
                 game.placement.on_formation_cancel();
             else if (game_view.is_rally_placement())
                 game_view.cancel_rally_placement();
-            else if (typeof mainWindow !== 'undefined' && !mainWindow.menu_visible)
+            else if (typeof mainWindow !== 'undefined' && mainWindow.menu_visible)
+                mainWindow.menu_visible = false;
+            else if (typeof mainWindow !== 'undefined' && !mainWindow.overlay_active)
                 mainWindow.menu_visible = true;
             return true;
         case "global.quicksave":

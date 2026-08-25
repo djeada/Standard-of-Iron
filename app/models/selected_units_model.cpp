@@ -7,6 +7,24 @@
 #include "app/world/unit_queries.h"
 #include "game/render_bridge/selection_controller.h"
 
+namespace {
+
+auto health_ratio_of(const App::World::UnitDescription& unit) -> double {
+  if (unit.max_health <= 0) {
+    return 0.0;
+  }
+  return static_cast<double>(std::clamp(unit.health, 0, unit.max_health)) /
+         static_cast<double>(unit.max_health);
+}
+
+auto activity_text(const Game::Systems::UnitActivity& activity, bool state) -> QString {
+  const auto text = state ? Game::Systems::activity_state_id(activity.state)
+                          : Game::Systems::activity_kind_id(activity.kind);
+  return QString::fromUtf8(text.data(), static_cast<int>(text.size()));
+}
+
+} // namespace
+
 SelectedUnitsModel::SelectedUnitsModel(const App::Core::ClientContext& context,
                                        QObject* parent)
     : QAbstractListModel(parent)
@@ -38,11 +56,8 @@ auto SelectedUnitsModel::data(const QModelIndex& index, int role) const -> QVari
     return {};
   }
   if (role == ActivityRole || role == ActivityStateRole) {
-    const auto activity = App::World::unit_activity(m_context.world, id);
-    const auto text = role == ActivityRole
-                          ? Game::Systems::activity_kind_id(activity.kind)
-                          : Game::Systems::activity_state_id(activity.state);
-    return QString::fromUtf8(text.data(), static_cast<int>(text.size()));
+    return activity_text(App::World::unit_activity(m_context.world, id),
+                         role == ActivityStateRole);
   }
 
   App::World::UnitDescription unit;
@@ -58,11 +73,14 @@ auto SelectedUnitsModel::data(const QModelIndex& index, int role) const -> QVari
   if (role == max_healthRole) {
     return unit.max_health;
   }
+  if (role == SoldiersRole) {
+    return unit.soldiers;
+  }
+  if (role == MaxSoldiersRole) {
+    return unit.max_soldiers;
+  }
   if (role == HealthRatioRole) {
-    return unit.max_health > 0
-               ? static_cast<double>(std::clamp(unit.health, 0, unit.max_health)) /
-                     static_cast<double>(unit.max_health)
-               : 0.0;
+    return health_ratio_of(unit);
   }
   if (role == NationRole) {
     return unit.nation;
@@ -88,6 +106,8 @@ auto SelectedUnitsModel::roleNames() const -> QHash<int, QByteArray> {
           {HealthRole, "health"},
           {max_healthRole, "max_health"},
           {HealthRatioRole, "health_ratio"},
+          {SoldiersRole, "soldiers"},
+          {MaxSoldiersRole, "max_soldiers"},
           {NationRole, "nation"},
           {StaminaRatioRole, "stamina_ratio"},
           {IsRunningRole, "is_running"},
@@ -99,17 +119,29 @@ auto SelectedUnitsModel::roleNames() const -> QHash<int, QByteArray> {
 auto SelectedUnitsModel::grouped_by_type() const -> QVariantList {
   QVariantList units;
   units.reserve(static_cast<int>(m_ids.size()));
-  for (int row = 0; row < rowCount(); ++row) {
-    const QModelIndex model_index = index(row, 0);
+
+  for (const auto id : m_ids) {
+    App::World::UnitDescription described;
+    if (!App::World::describe_unit(m_context.world, id, described)) {
+      continue;
+    }
+    QString type_key;
+    (void)App::World::unit_type_key(m_context.world, id, type_key);
+    App::World::UnitStamina stamina;
+    (void)App::World::describe_unit_stamina(m_context.world, id, stamina);
+    const auto activity = App::World::unit_activity(m_context.world, id);
+
     QVariantMap unit;
-    unit[QStringLiteral("unit_type")] = data(model_index, UnitTypeRole);
-    unit[QStringLiteral("name")] = data(model_index, NameRole);
-    unit[QStringLiteral("nation")] = data(model_index, NationRole);
-    unit[QStringLiteral("health_ratio")] = data(model_index, HealthRatioRole);
-    unit[QStringLiteral("stamina_ratio")] = data(model_index, StaminaRatioRole);
-    unit[QStringLiteral("can_run")] = data(model_index, CanRunRole);
-    unit[QStringLiteral("activity")] = data(model_index, ActivityRole);
-    unit[QStringLiteral("activity_state")] = data(model_index, ActivityStateRole);
+    unit[QStringLiteral("unit_type")] = type_key;
+    unit[QStringLiteral("name")] = described.name;
+    unit[QStringLiteral("nation")] = described.nation;
+    unit[QStringLiteral("health_ratio")] = health_ratio_of(described);
+    unit[QStringLiteral("soldiers")] = described.soldiers;
+    unit[QStringLiteral("max_soldiers")] = described.max_soldiers;
+    unit[QStringLiteral("stamina_ratio")] = static_cast<double>(stamina.ratio);
+    unit[QStringLiteral("can_run")] = stamina.can_run;
+    unit[QStringLiteral("activity")] = activity_text(activity, false);
+    unit[QStringLiteral("activity_state")] = activity_text(activity, true);
     units.append(unit);
   }
   return App::Models::selection_groups_to_variant(
@@ -145,6 +177,8 @@ void SelectedUnitsModel::refresh() {
                        {HealthRole,
                         max_healthRole,
                         HealthRatioRole,
+                        SoldiersRole,
+                        MaxSoldiersRole,
                         StaminaRatioRole,
                         IsRunningRole,
                         CanRunRole,

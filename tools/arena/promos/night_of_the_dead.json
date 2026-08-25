@@ -108,7 +108,7 @@
       "start": 11.0,
       "duration": 1.2,
       "slow_motion": 2.2,
-      "shake": 0.05,
+      "shake": 0.03,
       "focus": {
         "mode": "group",
         "group": "roman_column",
@@ -159,10 +159,10 @@
           "time": 1.1,
           "distance": 6.0,
           "pitch": 8,
-          "yaw": 6,
+          "yaw": 8.8,
           "fov": 50,
           "height": 2.2,
-          "roll": -3,
+          "roll": -1.4,
           "ease": "linear"
         }
       ]
@@ -189,7 +189,7 @@
         {
           "time": 2.8,
           "distance": 28,
-          "pitch": 32,
+          "pitch": 28.8,
           "yaw": 238,
           "fov": 44,
           "height": 1.2,
