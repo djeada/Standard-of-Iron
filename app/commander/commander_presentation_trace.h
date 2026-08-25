@@ -112,6 +112,59 @@ struct CommanderCombatTrace {
   int action_hit_count{0};
   int health{-1};
   float stamina{-1.0F};
+
+  int queue_outcome{0};
+  float queue_outcome_age{0.0F};
+  std::uint32_t queue_accepted{0};
+  std::uint32_t queue_buffered{0};
+  std::uint32_t queue_refused{0};
+  std::uint32_t queue_expired{0};
+  std::uint32_t queue_overflow{0};
+
+  float action_window_start{0.0F};
+  float action_window_end{0.0F};
+
+  std::uint32_t blocked_contacts{0};
+  std::uint32_t perfect_guard_contacts{0};
+  std::uint32_t dodged_contacts{0};
+  std::uint32_t damaging_contacts{0};
+  std::uint32_t guard_broken_contacts{0};
+};
+
+[[nodiscard]] inline auto combat_intent_outcome_name(int outcome) -> const char* {
+  switch (outcome) {
+  case 0:
+    return "accepted";
+  case 1:
+    return "buffered";
+  case 2:
+    return "insufficient_stamina";
+  case 3:
+    return "recovering";
+  case 4:
+    return "committed";
+  case 5:
+    return "guard_broken";
+  case 6:
+    return "staggered";
+  case 7:
+    return "no_fighter";
+  case 8:
+    return "expired";
+  }
+  return "unknown";
+}
+
+struct CommanderCostTrace {
+  float motor_ms{0.0F};
+  float targeting_ms{0.0F};
+  float weapon_trace_ms{0.0F};
+  float engagement_ms{0.0F};
+  float camera_ms{0.0F};
+
+  [[nodiscard]] auto total_ms() const noexcept -> float {
+    return motor_ms + targeting_ms + weapon_trace_ms + engagement_ms + camera_ms;
+  }
 };
 
 struct CommanderPresentationTrace {
@@ -122,6 +175,7 @@ struct CommanderPresentationTrace {
   CommanderMotorTrace motor;
   CommanderCameraTrace camera;
   CommanderCombatTrace combat;
+  CommanderCostTrace costs;
 };
 
 } // namespace App::Core

@@ -24,6 +24,22 @@ private:
 
 [[nodiscard]] auto combat_state_update() noexcept -> MicrosecondAccumulator&;
 
+[[nodiscard]] auto commander_motor() noexcept -> MicrosecondAccumulator&;
+[[nodiscard]] auto commander_targeting() noexcept -> MicrosecondAccumulator&;
+[[nodiscard]] auto commander_weapon_trace() noexcept -> MicrosecondAccumulator&;
+[[nodiscard]] auto commander_engagement() noexcept -> MicrosecondAccumulator&;
+[[nodiscard]] auto commander_camera() noexcept -> MicrosecondAccumulator&;
+
+struct RpgCostSample {
+  std::uint64_t motor_us{0};
+  std::uint64_t targeting_us{0};
+  std::uint64_t weapon_trace_us{0};
+  std::uint64_t engagement_us{0};
+  std::uint64_t camera_us{0};
+};
+
+[[nodiscard]] auto sample_and_reset_rpg_costs() noexcept -> RpgCostSample;
+
 class ScopedAccumulator {
 public:
   explicit ScopedAccumulator(MicrosecondAccumulator& accumulator) noexcept

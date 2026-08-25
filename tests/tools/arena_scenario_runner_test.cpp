@@ -900,17 +900,20 @@ TEST(ArenaScenarioRunnerTest, FrameBudgetReportsMeasuredPercentilesAndFps) {
   budget.kind = Arena::ArenaExpectationKind::FrameBudget;
   budget.threshold = 9.99F;
   scenario.expectations = {budget};
+  scenario.duration_seconds = 3.0F;
   Arena::ArenaScenarioRunner runner(world, make_entity_host(world), scenario);
   ASSERT_TRUE(runner.start());
 
+  runner.update(Arena::k_arena_prewarm_seconds + 0.05F);
   for (double const frame_ms : {4.0, 5.0, 6.0, 7.0, 8.0}) {
     Arena::ArenaRenderedFrameTimings timings;
     timings.total_ms = frame_ms;
     timings.visible_soldiers = 24U;
     timings.draw_calls = 12U;
+    timings.gpu_color_ms = 1.0;
     runner.observe_rendered_frame(timings);
   }
-  runner.update(1.0F);
+  runner.update(3.0F);
 
   auto const& report = runner.report();
   ASSERT_TRUE(report.passed()) << report.summary().toStdString();
@@ -926,9 +929,10 @@ TEST(ArenaScenarioRunnerTest, FrameBudgetReportsMeasuredPercentilesAndFps) {
                                                        "instanced instances")));
 }
 
-TEST(ArenaScenarioRunnerTest, FrameBudgetRejectsAnEmptyTroopRender) {
+TEST(ArenaScenarioRunnerTest, PrewarmFramesAreReportedButNotBudgeted) {
   Engine::Core::World world;
   auto scenario = minimal_definition();
+  scenario.duration_seconds = 3.0F;
   Arena::ArenaExpectation budget;
   budget.kind = Arena::ArenaExpectationKind::FrameBudget;
   budget.threshold = 9.99F;
@@ -936,8 +940,79 @@ TEST(ArenaScenarioRunnerTest, FrameBudgetRejectsAnEmptyTroopRender) {
   Arena::ArenaScenarioRunner runner(world, make_entity_host(world), scenario);
   ASSERT_TRUE(runner.start());
 
+  {
+
+    Arena::ArenaRenderedFrameTimings startup;
+    startup.total_ms = 480.0;
+    startup.visible_soldiers = 24U;
+    startup.draw_calls = 12U;
+    startup.gpu_color_ms = 1.0;
+    runner.observe_rendered_frame(startup);
+  }
+
+  runner.update(Arena::k_arena_prewarm_seconds + 0.05F);
+  for (int frame = 0; frame < 5; ++frame) {
+    Arena::ArenaRenderedFrameTimings timings;
+    timings.total_ms = 6.0;
+    timings.visible_soldiers = 24U;
+    timings.draw_calls = 12U;
+    timings.gpu_color_ms = 1.0;
+    runner.observe_rendered_frame(timings);
+  }
+  runner.update(3.0F);
+
+  auto const& report = runner.report();
+  EXPECT_TRUE(report.passed()) << report.summary().toStdString();
+  EXPECT_EQ(report.frame_time_samples, 5U);
+  EXPECT_DOUBLE_EQ(report.frame_time_max_ms, 6.0);
+  EXPECT_EQ(report.prewarm_frames, 1U);
+  EXPECT_DOUBLE_EQ(report.prewarm_max_ms, 480.0);
+  EXPECT_EQ(report.gpu_timed_frames, 5U);
+}
+
+TEST(ArenaScenarioRunnerTest, AFrameBudgetWithoutGpuTimingIsReportedAsMissing) {
+  Engine::Core::World world;
+  auto scenario = minimal_definition();
+  scenario.duration_seconds = 3.0F;
+  Arena::ArenaExpectation budget;
+  budget.kind = Arena::ArenaExpectationKind::FrameBudget;
+  budget.threshold = 9.99F;
+  scenario.expectations = {budget};
+  Arena::ArenaScenarioRunner runner(world, make_entity_host(world), scenario);
+  ASSERT_TRUE(runner.start());
+
+  runner.update(Arena::k_arena_prewarm_seconds + 0.05F);
+  for (int frame = 0; frame < 5; ++frame) {
+    Arena::ArenaRenderedFrameTimings timings;
+    timings.total_ms = 6.0;
+    timings.visible_soldiers = 24U;
+    timings.draw_calls = 12U;
+    runner.observe_rendered_frame(timings);
+  }
+  runner.update(3.0F);
+
+  auto const& report = runner.report();
+  EXPECT_EQ(report.gpu_timed_frames, 0U);
+  auto const& issues = report.issues;
+  EXPECT_TRUE(std::any_of(issues.begin(), issues.end(), [](auto const& issue) {
+    return issue.code == QStringLiteral("performance_gpu_timing_missing");
+  }));
+}
+
+TEST(ArenaScenarioRunnerTest, FrameBudgetRejectsAnEmptyTroopRender) {
+  Engine::Core::World world;
+  auto scenario = minimal_definition();
+  Arena::ArenaExpectation budget;
+  budget.kind = Arena::ArenaExpectationKind::FrameBudget;
+  budget.threshold = 9.99F;
+  scenario.expectations = {budget};
+  scenario.duration_seconds = 3.0F;
+  Arena::ArenaScenarioRunner runner(world, make_entity_host(world), scenario);
+  ASSERT_TRUE(runner.start());
+
+  runner.update(Arena::k_arena_prewarm_seconds + 0.05F);
   runner.observe_rendered_frame(1.0);
-  runner.update(1.0F);
+  runner.update(3.0F);
 
   EXPECT_TRUE(contains_code(runner.report(),
                             QStringLiteral("performance_scene_rendered_no_creatures")));

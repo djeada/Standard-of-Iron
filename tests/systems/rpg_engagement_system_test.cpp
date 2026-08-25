@@ -239,6 +239,104 @@ TEST_F(RpgEngagementSystemTest, FormationOpponentsAreNeverDraggedByTheRing) {
   EXPECT_TRUE(single_tf->has_desired_yaw);
 }
 
+TEST_F(RpgEngagementSystemTest, AtMostOnePresserComesFromBehindTheCommander) {
+  auto* commander = create_unit(world, 0.0F, 0.0F, 1);
+  auto* commander_transform = commander->get_component<TransformComponent>();
+  ASSERT_NE(commander_transform, nullptr);
+  commander_transform->rotation.y = 0.0F;
+
+  for (int index = 0; index < 8; ++index) {
+    float const angle = static_cast<float>(index) * 45.0F * 3.14159265F / 180.0F;
+    create_unit(world, std::sin(angle) * 2.2F, std::cos(angle) * 2.2F, 2);
+  }
+
+  Game::Systems::RpgCombat::refresh_commander_engagement(&world, commander->get_id());
+  auto* engagement = commander->get_component<RpgEngagementComponent>();
+  ASSERT_NE(engagement, nullptr);
+
+  int behind = 0;
+  for (auto const& slot : engagement->engagement_slots) {
+    if (slot.pressing && std::abs(slot.signed_angle_degrees) > 100.0F) {
+      ++behind;
+    }
+  }
+  EXPECT_LE(behind, 1)
+      << "a crowd may not press from outside the arc the player can see";
+  EXPECT_GT(engagement->pressing_count(), 0);
+}
+
+TEST_F(RpgEngagementSystemTest, TheAttackerBudgetIsDeterministic) {
+  auto build = [](World& target) {
+    auto* commander = create_unit(target, 0.0F, 0.0F, 1);
+    commander->get_component<TransformComponent>()->rotation.y = 0.0F;
+    for (int index = 0; index < 9; ++index) {
+      float const angle = static_cast<float>(index) * 40.0F * 3.14159265F / 180.0F;
+      create_unit(target, std::sin(angle) * 2.4F, std::cos(angle) * 2.4F, 2);
+    }
+    return commander->get_id();
+  };
+
+  World first;
+  World second;
+  auto const first_id = build(first);
+  auto const second_id = build(second);
+
+  Game::Systems::RpgCombat::refresh_commander_engagement(&first, first_id);
+  Game::Systems::RpgCombat::refresh_commander_engagement(&second, second_id);
+
+  auto pressers = [](World& target, EntityID commander_id) {
+    std::vector<EntityID> ids;
+    auto const* engagement =
+        target.get_entity(commander_id)->get_component<RpgEngagementComponent>();
+    for (auto const& slot : engagement->engagement_slots) {
+      if (slot.pressing) {
+        ids.push_back(slot.entity_id);
+      }
+    }
+    std::sort(ids.begin(), ids.end());
+    return ids;
+  };
+
+  EXPECT_EQ(pressers(first, first_id), pressers(second, second_id))
+      << "the same ring must choose the same attackers in two identical worlds";
+}
+
+TEST_F(RpgEngagementSystemTest, ACrowdCannotHoldEveryBearingForever) {
+  auto* commander = create_unit(world, 0.0F, 0.0F, 1);
+  commander->get_component<TransformComponent>()->rotation.y = 0.0F;
+  for (int index = 0; index < 10; ++index) {
+    float const angle = static_cast<float>(index) * 36.0F * 3.14159265F / 180.0F;
+    create_unit(world, std::sin(angle) * 2.3F, std::cos(angle) * 2.3F, 2);
+  }
+
+  auto* engagement =
+      Engine::Core::get_or_add_component<RpgEngagementComponent>(commander);
+  ASSERT_NE(engagement, nullptr);
+
+  int const crowd = 10;
+  int const capacity = std::clamp(1 + (crowd / 3), 1, 4);
+  std::vector<EntityID> ever_pressed;
+
+  constexpr float k_dt = 1.0F / 60.0F;
+  for (int tick = 0; tick < 600; ++tick) {
+    engagement->pressure_clock += k_dt;
+    Game::Systems::RpgCombat::refresh_commander_engagement(&world, commander->get_id());
+    EXPECT_LE(engagement->pressing_count(), capacity)
+        << "the ring exceeded its budget at tick " << tick;
+    for (auto const& slot : engagement->engagement_slots) {
+      if (slot.pressing &&
+          std::find(ever_pressed.begin(), ever_pressed.end(), slot.entity_id) ==
+              ever_pressed.end()) {
+        ever_pressed.push_back(slot.entity_id);
+      }
+    }
+  }
+
+  EXPECT_GT(ever_pressed.size(), static_cast<std::size_t>(capacity))
+      << "ten seconds of pressure must rotate through the crowd, not pin the same "
+         "attackers on the commander forever";
+}
+
 TEST_F(RpgEngagementSystemTest, IdealEngageDistanceScalesWithWeaponReach) {
   auto* commander = create_unit(world, 0.0F, 0.0F, 1);
 

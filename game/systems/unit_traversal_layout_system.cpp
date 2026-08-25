@@ -25,7 +25,6 @@ namespace {
 constexpr float k_probe_step_cells = 0.2F;
 constexpr float k_width_epsilon = 0.05F;
 constexpr float k_exit_width_margin = 0.12F;
-constexpr float k_minimum_visible_half_width = 0.38F;
 constexpr float k_enter_dwell_seconds = 0.12F;
 constexpr float k_minimum_mode_dwell_seconds = 0.50F;
 constexpr float k_tail_clear_seconds = 0.35F;

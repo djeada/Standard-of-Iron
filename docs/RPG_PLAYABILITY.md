@@ -816,6 +816,307 @@ a one-frame discontinuity elsewhere; the next suspect is
 1.25 from a raw `running` bool rather than the smoothed `run_presence`, and so
 steps the gait's spatial scale by 25% on the frame a run ends.
 
+## The sword slice, Gate 5
+
+The first slice is one on-foot sword commander, one sword enemy, and the verbs
+move, camera, lock, light attack, guard, and dodge. Four defects were found and
+repaired here; each is named with the measurement that found it.
+
+### One press is one attack
+
+`update_impl` used to build an attack intent from either a press edge **or** an
+`auto_repeat` branch that fired whenever the attack button was held, the queue
+was empty and no animation was running. That is melee auto-repeat, and it is the
+contract Gate 5.1 removes: holding the button now requests exactly one attack,
+the same as tapping it. `rpg_one_press_one_attack` presses three times and then
+holds the button for 1.6 s, and asserts exactly four accepted actions.
+
+The removal made two unit tests fail, and they were right to: they set
+`controller.input().primary_action = true` directly and never produced a press
+edge. A held flag with no edge behind it is not an attack request. Both now go
+through `primary_action_down()`/`primary_action_up()`.
+
+### The input buffer is observable
+
+`CombatIntentQueueComponent` buffered presses for 0.45 s and reported only the
+last outcome. It now buffers for the authored 0.15 s and counts every outcome
+class -- accepted, buffered, refused, expired and overflow -- so a press that
+never becomes a swing is a number instead of a silent loss. `Expired` is a new
+outcome; `expire_stale_intents` records it when it drops an entry, and `push`
+counts an overflow when a fourth press arrives inside the window.
+
+`rpg_attack_buffer_window` replaces `rpg_combo_cadence`, which measured the
+cadence of a _held_ button and therefore tested exactly the auto-repeat contract
+that is now gone. The replacement presses deliberately: one clean press, one
+late enough in the previous swing that the buffer carries it into the next, and
+one so early that the buffer has to let it expire.
+
+### Contacts resolve onto the hurt body
+
+`rpg_defense_contact` had been red since the baseline audit with "no block
+contact published and protected health lost". The guard was not broken. The
+incoming contact point was a point on the _attacker's blade_: for an overhead
+swing, 3.05 m in world space, 2.04 m above the commander's feet, which is above
+his head. The guard test measured that point against a 0.60 m plate at chest
+height and correctly concluded it was nowhere near the guard.
+
+Two repairs, both in the direction Gate 5.3 asks for:
+
+1. `hurt_body_contact_point()` clamps the blade's closest point onto the
+   target's hurt body -- a capsule from 0.30 m to 1.70 m with the body radius --
+   so the contact reported to damage, reaction, sparks and the guard is a point
+   on the body that was actually hit.
+2. Ordinary blocking is the authored guard arc (`frontal_arc_dot`, plus vertical
+   coverage and the guarded side of the body). The 0.60 m plate test is what a
+   _perfect_ guard has to meet, which is what makes the perfect window a skill
+   check rather than an accident of where the blade tip happened to be.
+
+### Line of sight was measured against the navigation box
+
+Writing `rpg_lock_occlusion_death_cycle` produced a scenario where lock-on
+refused all three enemies, including one standing four metres to the side of the
+house. `has_clear_building_los` read `building.width`/`building.depth` -- the RTS
+navigation footprint -- so a `home` drawn 2.36 x 2.42 m cast a 4.3 x 4.4 m shadow
+over every person-scale sight line: lock acquisition, melee line of sight and bow
+aim. It reads the person-scale body now, the same repair Gate 2 made for the body
+collider and the camera boom, and the only reason it survived that pass is that
+nothing measured it.
+
+### Lock-on holds at close range and yields to the hand
+
+Three additions, each with a number behind it:
+
+- Inside 0.75 m the lock stops solving facing; from 0.75 m to 2 m its authority
+  tapers in; and the spring can never turn the view faster than 220 deg/s. A
+  target pinned inside the commander's own footprint used to swing the view 148
+  degrees in half a second. It moves under one degree now.
+- Cycling is screen-space: the first lock takes the target nearest the view
+  centre, each cycle steps to the next target to the right, and the rightmost
+  wraps to the leftmost. It used to step through a list sorted by distance from
+  the centre, which is not an order a player can predict.
+- A look input during lock suspends the spring for 0.35 s, so manual look steers
+  without unlocking.
+
+What is deliberately not done here: the lock still reaches the camera by writing
+`m_view_yaw`, the player's stored free-look yaw. Gate 4.1 forbids that and owns
+the fix -- a camera-owned framing yaw with the player's free-look preserved
+underneath it.
+
+### Defence feedback follows a resolved contact
+
+`PerfectGuard` was published when the player raised the guard and `DodgeSuccess`
+when the player pressed dodge. Neither event meant anything had been defended.
+`RpgHealthComponent` now counts resolved contacts by outcome -- blocked, perfect,
+dodged, damaging, guard-broken -- at the single point where damage resolves, and
+the controller publishes feedback from a change in those counters. Pinned by
+`DefenceFeedbackFollowsAResolvedContactNotARequest` and
+`GuardFeedbackWaitsForAContactToBlock`.
+
+### Stamina became a real constraint
+
+A light attack costs 12 stamina, regeneration is 10/s and a swing takes about
+0.9 s, so the pool never moved: the commander could swing forever. Regeneration
+now pauses for 0.75 s after any spend (`StaminaComponent::spend`), which makes
+the pool the constraint the Gate 5.4 contract assumes.
+`rpg_stamina_refusal_and_recovery` presses until the pool cannot pay, checks the
+refusal is counted, waits, and swings again. The Arena commander also gets a
+stamina component now -- it had none, so its trace reported `-1`.
+
+### Guard and dodge windows are authored in one place
+
+`game/systems/combat_actions/commander_defense_timeline.h` holds the guard raise,
+perfect window, release and break-recovery times and the dodge startup,
+i-frame interval, roll and recovery times. `CommanderDefenseWindowsTest` drives
+the boundary matrix Gate 5.5 asks for -- a contact one tick inside the perfect
+window, one tick after it, and well after it; i-frames at 30, 60 and 120 Hz --
+frame-exact, which a rendered scenario cannot be.
+
+## Feedback that reads, Gate 6
+
+### The hit pause no longer stops the player's timeline
+
+A contact set `is_hit_paused` on the attacker, and `process_combat_state` used
+that flag to skip the authored action timeline entirely. The measured effect on
+the player's own swing was a 0.22 s freeze of `normalized_action_time` at 0.408,
+which delays every window that follows: cancel, exit-safe, and therefore the next
+accepted input. The pause is now presentation-local for a player-controlled
+commander (0.045 s, and it never gates the timeline); other units keep the
+original punch.
+
+### A struck soldier reads, and the instrument can see it
+
+`rpg_melee_contact` was pinned red on `no_visible_hit_reaction` with the note
+that the victim's in-progress attack outranked the reaction. Two separate things
+were wrong.
+
+The scenario gave the six-soldier enemy 500 health, so every commander strike
+was lethal: the "missing reaction" was a death animation, correctly outranking a
+flinch. With 4000 health the victim survives to react.
+
+The second is real and deliberate: `instance_prepare` converts a hit reaction
+into a _swing recoil_ when the victim is mid-swing, so a contact does not cut a
+swing in half. Nothing reported that, so the diagnostics said "Attack" and the
+Arena concluded no reaction had been shown. `is_swing_recoiling` and
+`hit_reaction_tilt_degrees` now ride every soldier sample, and
+`HitReactionObserved` accepts a recoil that carries real tilt. The struck
+soldier recoils 5.77 degrees for 17 frames per contact.
+
+### Accessibility gates
+
+`Game::Accessibility::CommanderInput` holds look sensitivity X and Y, invert Y,
+camera impulse on/off, head bob on/off, an FOV scale, and hold-versus-toggle
+guard; `UiPreferences` persists all seven and publishes them. The camera rig
+already scaled bob and impact kick by `camera_motion_scale`; it now also honours
+the individual switches, and run/dodge FOV kicks scale with reduced motion.
+`CommanderAccessibilityTest` proves each knob changes behaviour rather than only
+being stored.
+
+## Performance and lifecycle, Gate 7
+
+### Prewarm is separated from the budget
+
+The first 0.75 s of every scenario is a prewarm window. Its frames are excluded
+from p50/p95/p99/max and reported separately as `prewarm_frames` and
+`prewarm_max_ms`, because a 306 ms first frame is shader and asset compilation,
+not a gameplay hitch. `PrewarmFramesAreReportedButNotBudgeted` pins the split.
+
+`run_config.json` now names the machine the numbers came from -- CPU model, GPU
+vendor and renderer, GL version, OS, kernel and viewport size -- so a report can
+be read against the hardware it was taken on.
+
+`scripts/rpg_gate_report.py` evaluates the Gate 7.1 contract on every run and
+prints it, and fails the gate on it only under `--enforce-performance`: p95 <=
+16.67 ms, p99 <= 20.0 ms, post-prewarm max <= 33.3 ms, GPU timing present, and a
+marked prewarm window. A frame budget with no GPU timing at all is reported as
+`performance_gpu_timing_missing`.
+
+These numbers are worthless on a loaded box. Check `uptime` first: a run taken
+while another build is using twenty cores reported a p50 four times its quiet
+value.
+
+### Soak and lifecycle
+
+`CommanderLifecycleSoakTest` covers the parts of Gate 7.2 that do not need a
+window: a hundred enter/exit cycles restoring every commander flag and input
+state, a ten-minute duel at 60 Hz where every input edge stays accounted for and
+the buffer never overflows, and a pause injected at forty different points
+inside an action, each of which has to leave no action running two seconds later.
+
+The ten-minute duel is deliberately headless. Long unattended GPU renders have
+hard-crashed this machine twice, and a soak that measures input accounting does
+not need pixels.
+
+## There is no roll pose to check the i-frames against
+
+Gate 5.4 asks for the hurtbox and i-frame window to be verified against the
+rendered roll rather than a timer. It cannot be written yet: through the whole
+dodge the commander is submitted as `Run`, a run cycle played fast, and his root
+height never leaves 1.006 m. The dodge is a translation with a locomotion clip on
+top; there is no roll in the manifest.
+
+The numbers the pose has to satisfy when it is authored: the roll is 0.22 s and
+the i-frames are its first 0.12 s, so a visible tuck has to land inside the first
+half or the invulnerability will not read.
+
+## Two rules the crowd was missing
+
+The engagement ring's attacker budget was already deterministic --
+`deterministic_unit_roll(entity_id, epoch)`, no RNG state -- and two identical
+worlds now prove it. What it lacked was fairness.
+
+At most one presser may come from outside the 100-degree arc the player can see;
+before that, a ring could fill entirely with attackers behind him.
+
+And a presser's `-0.55` incumbency bonus becomes a `+2.4` penalty after three
+seconds in the slot, so the ring rotates. `ACrowdCannotHoldEveryBearingForever`
+found that ten attackers pinned the same four on the commander for the whole ten
+seconds it watched, which is the chained pressure Gate 5.4 forbids.
+
+## A committed strike no longer follows the camera
+
+`body_must_face_view` included `attack_animation_active`, so every tick of a
+running swing assigned `m_body_yaw = m_view_yaw`. A 150-degree mouse flick during
+the active frames turned the body 150 degrees with it, which is what Gate 5.1
+means by "raw camera yaw rotating a committed body arbitrarily through its
+strike".
+
+The authored allowance already existed and nothing read it:
+`melee_interruption_at` publishes `redirect_authority` per phase -- 1.0 in
+windup, 0.35 in the early strike, 0.0 once committed. The body yaw now follows
+the view at that authority, so a swing still starts where the player is looking
+and stops obeying the mouse once the blade is out.
+
+## The second freeze was the whole simulation clock
+
+`CommanderViewModel::time_effect_scale` multiplied `GameEngine::simulate`'s time
+scale by **0.04** for the first half of a 0.10-0.18 s window every time the
+commander landed a hit. Not the commander's animation: the whole match --
+every unit, every projectile, the mission timers -- at four per cent speed. It
+is the "near-global freeze" Gate 6.3 names, and it is deleted: the timer, the
+`hit_stop_duration` field on `CommanderUpdateEffects`, and the scale.
+`LandingAHitNeverSlowsTheSimulationClock` fails if it comes back.
+
+The per-entity hit pause documented above was the other half. Both were found
+the same way -- by asking what a contact does to the _clock_, not to the pose.
+
+## Per-frame budgets have to scale with the frame
+
+Running the gate at `--fps 30` failed six scenarios; four of them were the
+metrics rather than the game. `planted_foot_slide`, `pelvis_snap`,
+`commander_motor_correction` and `commander_boom_discontinuity` are all budgets
+authored as "so many metres (or degrees) between frames" at 60 Hz, so a doubled
+step trips them by construction. They are multiplied by `frame_time * 60`, never
+below 1, so a 60 Hz run measures exactly what it measured before, a 30 Hz run
+measures the same physical rate, and an authored 100 ms hitch frame is judged
+against what a 100 ms frame can legitimately cover.
+
+That took 30 Hz from six failures to two, and the two left are real:
+`rpg_stamina_refusal_and_recovery` accepts nine swings at 30 Hz and ten at 120
+against eleven at 60, so the pool never reaches a refusal; and
+`rpg_close_quarters` trips the `fullscreen_flash` image check on its scripted
+180-degree yaw snap, because consecutive frames are twice as far apart.
+
+The clause this was meant to satisfy -- "behaviour is identical; only
+presentation sampling changes" -- is still owed, because the Arena's `--fps` is
+the batch loop's fixed _simulation_ step. Decoupling render frames from
+simulation steps in the batch loop is the missing piece.
+
+## What the RPG systems actually cost
+
+Five scoped accumulators -- motor, targeting, weapon trace, engagement, camera --
+sample and reset once per tick, ride the commander trace as `costs`, and are
+reported as `rpg_cost_p95_ms` beside `simulation_p95_ms`.
+
+First measurement, `rpg_skirmish_three_attackers` at 60 Hz: the simulation tick
+is 0.19 ms at p95, and the entire RPG slice inside it is 0.019 ms -- engagement
+0.021, camera 0.010, weapon trace 0.004, targeting 0.002, motor below the
+timer's resolution. Whatever a 13 ms frame is spent on, it is not these.
+
+## Where the gate stands after the sword slice
+
+21 scenarios: 19 green, 2 known-red, 0 unexpected failures, 0 undeclared flakes,
+0 incomplete. Both reds predate this work -- `rpg_motor_start_stop` is Gate 3's
+planted-foot slide, and `rpg_escort_crowd` regressed at commit `35d87259` with a
+1.4-1.6 m render-root jump on three enemy soldiers at 0.23 s, reproduced on a
+pristine checkout of that commit before it was pinned.
+
+Every unit suite is green: 4322 gtest cases across nine binaries plus 439 QML
+cases, `scripts/run-tests.sh` exit 0.
+
+An ASan/UBSan sweep (`RelWithDebInfo`, `-DENABLE_SANITIZER=address,undefined`,
+`ASAN_OPTIONS=detect_leaks=0`) of `app_tests`, `combat_balance_tests`,
+`arena_tests` and `persistence_tests` reports zero address findings and one
+undefined-behaviour finding: a signed integer overflow in the Arena city plot
+hash, predating this work and fixed in passing. `AudioCueCatalogTest` fails only
+in the sanitized tree, whose `bin/assets` copy is six days stale -- see
+[[bin-assets-is-a-copy-not-a-symlink]].
+
+Two repository checks are red at HEAD and were red before this work:
+`check-ambient-instances` (one ambient lookup in `app/commander` against a budget
+of zero, introduced by `35d87259`) and `content_validator` (a troop layout
+reference). Neither is touched by the sword slice; both were confirmed by
+stashing the change and re-running.
+
 ## Working rules
 
 - Every bug fix starts with a failing deterministic regression or a new Arena

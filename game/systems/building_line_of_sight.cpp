@@ -193,8 +193,8 @@ auto has_clear_building_los(const BuildingCollisionRegistry& buildings,
                             const QVector3D& start,
                             const QVector3D& end,
                             unsigned int ignore_entity_id) -> bool {
-  return first_building_intersection_fraction(
-             buildings, start, end, ignore_entity_id) >= 1.0F;
+  return first_building_body_intersection_fraction(
+             buildings, start, end, 0.0F, ignore_entity_id) >= 1.0F;
 }
 
 } // namespace Game::Systems

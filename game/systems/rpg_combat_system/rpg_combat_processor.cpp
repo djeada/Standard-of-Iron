@@ -32,6 +32,12 @@ constexpr float k_obstruction_distance = 2.4F;
 
 constexpr float k_press_sector_degrees = 46.0F;
 
+constexpr float k_offscreen_press_arc_degrees = 100.0F;
+constexpr int k_max_offscreen_pressers = 1;
+
+constexpr float k_press_tenure_seconds = 3.0F;
+constexpr float k_press_tenure_penalty = 2.4F;
+
 constexpr float k_pressure_epoch_seconds = 1.35F;
 
 constexpr float k_waiting_band_near = 2.3F;
@@ -247,7 +253,15 @@ void refresh_commander_engagement(Engine::Core::World* world,
     if (std::find(previously_pressing.begin(),
                   previously_pressing.end(),
                   slot.entity_id) != previously_pressing.end()) {
-      score -= 0.55F;
+
+      auto const tenure = std::find_if(
+          engagement->press_tenure.begin(),
+          engagement->press_tenure.end(),
+          [&slot](auto const& entry) { return entry.entity_id == slot.entity_id; });
+      float const held_for = tenure != engagement->press_tenure.end()
+                                 ? engagement->pressure_clock - tenure->started_at
+                                 : 0.0F;
+      score += held_for >= k_press_tenure_seconds ? k_press_tenure_penalty : -0.55F;
     }
     scores[i] = score;
     order.push_back(i);
@@ -260,11 +274,18 @@ void refresh_commander_engagement(Engine::Core::World* world,
   int const capacity = std::clamp(1 + (crowd / 3), 1, 4);
   std::vector<float> taken_bearings;
   taken_bearings.reserve(static_cast<std::size_t>(capacity));
+  int offscreen_pressers = 0;
   for (std::size_t const index : order) {
     if (static_cast<int>(taken_bearings.size()) >= capacity) {
       break;
     }
     auto& slot = engagement->engagement_slots[index];
+
+    bool const offscreen =
+        std::abs(slot.signed_angle_degrees) > k_offscreen_press_arc_degrees;
+    if (offscreen && offscreen_pressers >= k_max_offscreen_pressers) {
+      continue;
+    }
     bool sector_taken = false;
     for (float const bearing : taken_bearings) {
       float gap = std::fmod(slot.signed_angle_degrees - bearing + 540.0F, 360.0F);
@@ -278,8 +299,26 @@ void refresh_commander_engagement(Engine::Core::World* world,
       continue;
     }
     slot.pressing = true;
+    offscreen_pressers += offscreen ? 1 : 0;
     taken_bearings.push_back(slot.signed_angle_degrees);
   }
+
+  std::vector<Engine::Core::RpgEngagementComponent::PressTenure> refreshed_tenure;
+  refreshed_tenure.reserve(engagement->press_tenure.size() + 1U);
+  for (auto const& slot : engagement->engagement_slots) {
+    if (!slot.pressing) {
+      continue;
+    }
+    auto const existing = std::find_if(
+        engagement->press_tenure.begin(),
+        engagement->press_tenure.end(),
+        [&slot](auto const& entry) { return entry.entity_id == slot.entity_id; });
+    refreshed_tenure.push_back({.entity_id = slot.entity_id,
+                                .started_at = existing != engagement->press_tenure.end()
+                                                  ? existing->started_at
+                                                  : engagement->pressure_clock});
+  }
+  engagement->press_tenure = std::move(refreshed_tenure);
 
   std::sort(
       engagement->engagement_slots.begin(),

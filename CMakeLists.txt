@@ -1018,6 +1018,10 @@ file(
     CONFIGURE_DEPENDS
     "${CMAKE_CURRENT_SOURCE_DIR}/assets/*"
 )
+# Baked creature artifacts are outputs of bake_creature_assets, which writes
+# them into bin/assets directly. Keeping them out of the staging glob avoids a
+# dependency cycle (staging -> stamp -> baked output -> baking -> staging).
+list(FILTER SOI_RUNTIME_ASSET_SOURCES EXCLUDE REGEX "assets/creatures/.*\\.(bpat|bpsm|bprm)$")
 add_custom_command(
     OUTPUT "${CMAKE_BINARY_DIR}/bin/assets/.stamp"
     COMMAND
@@ -1030,6 +1034,13 @@ add_custom_command(
 )
 add_custom_target(stage_runtime_assets DEPENDS "${CMAKE_BINARY_DIR}/bin/assets/.stamp")
 add_dependencies(standard_of_iron stage_runtime_assets)
+if(TARGET bake_creature_assets)
+    # The baker resolves creature packages against the staged copies under
+    # bin/assets before it falls back to the repo tree; staging must run
+    # first or a package edited since the last full build fails its
+    # integrity check and the bake aborts.
+    add_dependencies(bake_creature_assets stage_runtime_assets)
+endif()
 if(TARGET synthesize_ambience_assets)
     add_dependencies(stage_runtime_assets synthesize_ambience_assets)
 endif()

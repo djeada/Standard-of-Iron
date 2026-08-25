@@ -153,7 +153,6 @@ auto ruins_at(int grid_x, int grid_z) -> WorldProp {
 } // namespace
 
 TEST_F(PlayableGroundTest, DuellistsNeverFightOnTopOfARuin) {
-  const QVector3D ruin = world_of(24, 24);
   field({ruins_at(24, 24)});
 
   const EntityID ours =
@@ -224,7 +223,6 @@ TEST_F(PlayableGroundTest, ANearbyOrderNeverStartsAwayFromItsGoal) {
 }
 
 TEST_F(PlayableGroundTest, NoUnitSettlesOnGroundItMayNotStandOn) {
-  const QVector3D ruin = world_of(24, 24);
   field({ruins_at(24, 24)});
 
   std::vector<EntityID> army;
@@ -403,7 +401,6 @@ TEST_F(PlayableGroundTest, ADuellistStrandedInsideGeometryStillWalksOut) {
 }
 
 TEST_F(PlayableGroundTest, AFightBesideARuinIsNotBrokenUpByIt) {
-  const QVector3D ruin = world_of(24, 24);
   field({ruins_at(24, 24)});
 
   const EntityID ours =

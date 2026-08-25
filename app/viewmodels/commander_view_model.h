@@ -205,8 +205,6 @@ private:
   mutable std::mutex m_damage_events_mutex;
   std::vector<DamageEvent> m_damage_events;
   std::uint32_t m_damage_event_sequence = 0;
-  float m_hit_stop_timer = 0.0F;
-  float m_hit_stop_total = 0.10F;
 };
 
 } // namespace App::ViewModels

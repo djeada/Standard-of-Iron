@@ -1,8 +1,10 @@
+#include <cmath>
 #include <gtest/gtest.h>
 
 #include "app/commander/commander_camera_rig.h"
 #include "app/commander/rts_camera_bookmark.h"
 #include "core/component.h"
+#include "game/accessibility/commander_input_settings.h"
 #include "scene/camera.h"
 
 using App::Core::CommanderCameraInputs;
@@ -84,6 +86,47 @@ TEST(CommanderCameraRig, ImpactKickDecaysBackToRest) {
 
   settle(rig, camera, inputs);
   EXPECT_NEAR(rig.fov(), rest_fov, 0.1F);
+}
+
+TEST(CommanderCameraRig, ImpactKickRespectsItsAmplitudeAndVelocityBudget) {
+  CommanderCameraRig rig;
+  Render::GL::Camera camera;
+
+  auto inputs = default_inputs();
+  settle(rig, camera, inputs);
+  float const rest_fov = rig.fov();
+
+  rig.add_impact_kick(20.0F);
+  float previous = rest_fov;
+  float peak = rest_fov;
+  for (int frame = 0; frame < 60; ++frame) {
+    rig.update(camera, inputs);
+    float const now = rig.fov();
+    EXPECT_LE(std::abs(now - previous), (45.0F * inputs.dt) + 1.0e-3F)
+        << "the impulse may not move the FOV faster than its velocity budget";
+    peak = std::max(peak, now);
+    previous = now;
+  }
+
+  EXPECT_LE(peak - rest_fov, 3.0F + 1.0e-3F)
+      << "an oversized impact must still clamp to the authored amplitude budget";
+}
+
+TEST(CommanderCameraRig, ImpactKickIsOffWhenTheCameraImpulseIsDisabled) {
+  Game::Accessibility::CommanderInput::reset_to_defaults();
+  Game::Accessibility::CommanderInput::set_camera_impulse_enabled(false);
+
+  CommanderCameraRig rig;
+  Render::GL::Camera camera;
+  auto inputs = default_inputs();
+  settle(rig, camera, inputs);
+  float const rest_fov = rig.fov();
+
+  rig.add_impact_kick(1.0F);
+  rig.update(camera, inputs);
+  EXPECT_NEAR(rig.fov(), rest_fov, 0.05F);
+
+  Game::Accessibility::CommanderInput::reset_to_defaults();
 }
 
 TEST(CommanderCameraRig, MeleeFramingLooksDownAtTheFightButAimingDoesNot) {

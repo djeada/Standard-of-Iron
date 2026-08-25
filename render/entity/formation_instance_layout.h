@@ -9,7 +9,7 @@
 #include "render/gl/humanoid/humanoid_types.h"
 
 namespace Engine::Core {
-struct FormationPresentationComponent;
+class FormationPresentationComponent;
 }
 
 namespace Render::Entity {

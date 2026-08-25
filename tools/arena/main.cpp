@@ -9,6 +9,7 @@
 #include <QJsonObject>
 #include <QSet>
 #include <QSurfaceFormat>
+#include <QSysInfo>
 #include <QTextStream>
 #include <QTimer>
 
@@ -28,6 +29,7 @@
 #include "game/session/session_context.h"
 #include "promo_runner.h"
 #include "promo_spec.h"
+#include "render/gl/bootstrap.h"
 #include "render/gl/context_requirements.h"
 #include "render/graphics_settings.h"
 #include "render/profiling/frame_profile.h"
@@ -36,6 +38,46 @@
 #include "utils/resource_utils.h"
 
 namespace {
+
+[[nodiscard]] auto host_cpu_model() -> QString {
+
+  QFile info(QStringLiteral("/proc/cpuinfo"));
+  if (!info.open(QIODevice::ReadOnly | QIODevice::Text)) {
+    return QSysInfo::currentCpuArchitecture();
+  }
+  const QString contents = QString::fromUtf8(info.readAll());
+  for (auto const& line : contents.split(QLatin1Char('\n'))) {
+    if (!line.startsWith(QStringLiteral("model name"))) {
+      continue;
+    }
+    int const separator = line.indexOf(QLatin1Char(':'));
+    if (separator >= 0) {
+      return line.mid(separator + 1).trimmed();
+    }
+  }
+  return QSysInfo::currentCpuArchitecture();
+}
+
+[[nodiscard]] auto reference_hardware(const ArenaViewport* viewport) -> QJsonObject {
+  auto const& adapter = Render::GL::RenderBootstrap::adapter();
+  QJsonObject hardware{
+      {QStringLiteral("cpu"), host_cpu_model()},
+      {QStringLiteral("gpu_vendor"),
+       adapter.vendor.isEmpty() ? QStringLiteral("unknown") : adapter.vendor},
+      {QStringLiteral("gpu_renderer"),
+       adapter.renderer.isEmpty() ? QStringLiteral("unknown") : adapter.renderer},
+      {QStringLiteral("gl_version"),
+       adapter.version.isEmpty() ? QStringLiteral("unknown") : adapter.version},
+      {QStringLiteral("os"), QSysInfo::prettyProductName()},
+      {QStringLiteral("kernel"), QSysInfo::kernelVersion()}};
+  if (viewport != nullptr) {
+    hardware.insert(QStringLiteral("viewport_width"),
+                    static_cast<int>(std::lround(viewport->width())));
+    hardware.insert(QStringLiteral("viewport_height"),
+                    static_cast<int>(std::lround(viewport->height())));
+  }
+  return hardware;
+}
 
 auto parse_time_of_day(const QString& value) -> std::optional<Game::Map::TimeOfDay> {
   QString const normalized = value.trimmed().toLower();
@@ -882,7 +924,8 @@ auto main(int argc, char** argv) -> int {
           {QStringLiteral("capture_interval_seconds"), capture_interval},
           {QStringLiteral("detailed_profiling"), detailed_profiling},
           {QStringLiteral("watchdog_multiplier"), watchdog_multiplier},
-          {QStringLiteral("renderer"), QStringLiteral("ArenaViewport/OpenGL")}};
+          {QStringLiteral("renderer"), QStringLiteral("ArenaViewport/OpenGL")},
+          {QStringLiteral("reference_hardware"), reference_hardware(viewport)}};
       config_file.write(QJsonDocument(config).toJson(QJsonDocument::Indented));
     }
     qInfo().noquote() << QStringLiteral("Running rendered Arena scenario: %1").arg(id);

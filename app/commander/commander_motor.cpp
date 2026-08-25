@@ -4,6 +4,7 @@
 #include <cmath>
 
 #include "game/core/component.h"
+#include "game/core/simulation_timing.h"
 #include "game/map/terrain_service.h"
 #include "game/session/session_context.h"
 #include "game/systems/building_collision_registry.h"
@@ -129,6 +130,8 @@ auto CommanderMotor::advance(Game::Session::SessionContext&,
                              Engine::Core::TransformComponent& transform,
                              const CommanderMotorRequest& request)
     -> CommanderMotorResult {
+  Engine::Core::Timing::ScopedAccumulator const scope(
+      Engine::Core::Timing::commander_motor());
   GroundMove const step =
       request.airborne
           ? airborne_step(request.to.x(), request.to.z())

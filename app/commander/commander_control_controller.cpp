@@ -13,9 +13,11 @@
 #include <vector>
 
 #include "app/commander/commander_motor.h"
+#include "game/accessibility/commander_input_settings.h"
 #include "game/accessibility/motion_settings.h"
 #include "game/audio/audio_cues.h"
 #include "game/core/component.h"
+#include "game/core/simulation_timing.h"
 #include "game/core/world.h"
 #include "game/map/terrain_service.h"
 #include "game/session/session_context.h"
@@ -23,6 +25,7 @@
 #include "game/systems/building_line_of_sight.h"
 #include "game/systems/combat_actions/combat_action_definition.h"
 #include "game/systems/combat_actions/combat_action_service.h"
+#include "game/systems/combat_actions/commander_defense_timeline.h"
 #include "game/systems/combat_actions/melee_intent_solver.h"
 #include "game/systems/combat_system/damage_application.h"
 #include "game/systems/combat_system/damage_processor.h"
@@ -489,6 +492,17 @@ void CommanderControlController::secondary_action_down() {
     m_latency_probe->note_input();
   }
   const std::lock_guard<std::mutex> input_guard(m_input_mutex);
+  if (Game::Accessibility::CommanderInput::guard_is_toggle()) {
+
+    if (m_input.secondary_action) {
+      ++m_edges.guard_release_sequence;
+      m_input.secondary_action = false;
+    } else {
+      ++m_edges.guard_press_sequence;
+      m_input.secondary_action = true;
+    }
+    return;
+  }
   if (!m_input.secondary_action) {
     ++m_edges.guard_press_sequence;
   }
@@ -497,6 +511,10 @@ void CommanderControlController::secondary_action_down() {
 
 void CommanderControlController::secondary_action_up() {
   const std::lock_guard<std::mutex> input_guard(m_input_mutex);
+  if (Game::Accessibility::CommanderInput::guard_is_toggle()) {
+
+    return;
+  }
   if (m_input.secondary_action) {
     ++m_edges.guard_release_sequence;
   }
@@ -523,8 +541,13 @@ void CommanderControlController::mouse_move(qreal dx, qreal dy) {
   constexpr float k_mouse_yaw_sensitivity = 0.18F;
   constexpr float k_mouse_pitch_sensitivity = 0.12F;
   const float sensitivity = look_sensitivity_scale();
-  m_view_yaw += static_cast<float>(dx) * k_mouse_yaw_sensitivity * sensitivity;
-  m_view_pitch -= static_cast<float>(dy) * k_mouse_pitch_sensitivity * sensitivity;
+  const float user_x = Game::Accessibility::CommanderInput::look_sensitivity_x();
+  const float user_y = Game::Accessibility::CommanderInput::look_sensitivity_y();
+  const float pitch_sign =
+      Game::Accessibility::CommanderInput::invert_look_y() ? 1.0F : -1.0F;
+  m_view_yaw += static_cast<float>(dx) * k_mouse_yaw_sensitivity * sensitivity * user_x;
+  m_view_pitch += pitch_sign * static_cast<float>(dy) * k_mouse_pitch_sensitivity *
+                  sensitivity * user_y;
   m_view_yaw = std::fmod(m_view_yaw, 360.0F);
   if (m_view_yaw < 0.0F) {
     m_view_yaw += 360.0F;
@@ -721,6 +744,8 @@ void CommanderControlController::cycle_lock_on_target(
     Engine::Core::World& world,
     Engine::Core::EntityID commander_id,
     int local_owner_id) {
+  Engine::Core::Timing::ScopedAccumulator const lock_scope(
+      Engine::Core::Timing::commander_targeting());
   auto* commander = controlled_commander(world, commander_id, local_owner_id);
   if (commander == nullptr) {
     return;
@@ -809,28 +834,39 @@ void CommanderControlController::cycle_lock_on_target(
     return;
   }
 
-  std::stable_sort(
-      candidates.begin(), candidates.end(), [](const Candidate& a, const Candidate& b) {
-        if (a.visible != b.visible) {
-          return a.visible && !b.visible;
-        }
-        if (std::abs(a.angle_diff) != std::abs(b.angle_diff)) {
-          return std::abs(a.angle_diff) < std::abs(b.angle_diff);
-        }
-        return a.distance_sq < b.distance_sq;
-      });
-
   if (m_locked_target_id == 0) {
-    m_locked_target_id = candidates[0].id;
-    m_locked_target_slot = candidates[0].soldier_slot;
+
+    auto const nearest_to_centre =
+        std::min_element(candidates.begin(),
+                         candidates.end(),
+                         [](const Candidate& a, const Candidate& b) {
+                           if (a.visible != b.visible) {
+                             return a.visible && !b.visible;
+                           }
+                           if (std::abs(a.angle_diff) != std::abs(b.angle_diff)) {
+                             return std::abs(a.angle_diff) < std::abs(b.angle_diff);
+                           }
+                           return a.distance_sq < b.distance_sq;
+                         });
+    m_locked_target_id = nearest_to_centre->id;
+    m_locked_target_slot = nearest_to_centre->soldier_slot;
   } else {
+
+    std::stable_sort(candidates.begin(),
+                     candidates.end(),
+                     [](const Candidate& a, const Candidate& b) {
+                       if (a.angle_diff != b.angle_diff) {
+                         return a.angle_diff < b.angle_diff;
+                       }
+                       return a.distance_sq < b.distance_sq;
+                     });
     auto it =
         std::find_if(candidates.begin(), candidates.end(), [this](const Candidate& c) {
           return c.id == m_locked_target_id;
         });
     if (it == candidates.end() || std::next(it) == candidates.end()) {
-      m_locked_target_id = candidates[0].id;
-      m_locked_target_slot = candidates[0].soldier_slot;
+      m_locked_target_id = candidates.front().id;
+      m_locked_target_slot = candidates.front().soldier_slot;
     } else {
       auto const& next = *std::next(it);
       m_locked_target_id = next.id;
@@ -841,6 +877,7 @@ void CommanderControlController::cycle_lock_on_target(
   m_soft_target_slot = m_locked_target_slot;
   m_lock_lost_timer = 0.0F;
   Game::Audio::play_cue(Game::Audio::Cue::k_combat_lock_on);
+
   if (auto* rpg_targets =
           Engine::Core::get_or_add_component<Engine::Core::RpgCommanderTargetComponent>(
               commander)) {
@@ -968,6 +1005,8 @@ void CommanderControlController::update_lock_on_yaw(Engine::Core::World& world,
                                                     Engine::Core::Entity& commander,
                                                     float dt) {
   if (m_locked_target_id == 0) {
+    m_lock_spring_yaw_valid = false;
+    m_lock_manual_override_timer = 0.0F;
     return;
   }
 
@@ -1029,9 +1068,40 @@ void CommanderControlController::update_lock_on_yaw(Engine::Core::World& world,
     return;
   }
 
+  constexpr float k_lock_minimum_distance = 0.75F;
+  constexpr float k_lock_full_authority_distance = 2.0F;
+  constexpr float k_lock_max_turn_degrees_per_second = 220.0F;
+  float const target_distance = std::sqrt((dx * dx) + (dz * dz));
+  if (target_distance < k_lock_minimum_distance) {
+
+    return;
+  }
+  float const close_range_authority =
+      std::clamp((target_distance - k_lock_minimum_distance) /
+                     (k_lock_full_authority_distance - k_lock_minimum_distance),
+                 0.0F,
+                 1.0F);
+
+  constexpr float k_manual_override_seconds = 0.35F;
+  float const manual_look = std::abs(signed_angle_delta(m_view_yaw, m_lock_spring_yaw));
+  if (m_lock_spring_yaw_valid && manual_look > 0.05F) {
+    m_lock_manual_override_timer = k_manual_override_seconds;
+  }
+  if (m_lock_manual_override_timer > 0.0F) {
+    m_lock_manual_override_timer = std::max(0.0F, m_lock_manual_override_timer - dt);
+    m_lock_spring_yaw = m_view_yaw;
+    m_lock_spring_yaw_valid = true;
+    return;
+  }
+
   const float k_lock_spring = target_visible ? 8.5F : 3.5F;
-  m_view_yaw += diff * (1.0F - std::exp(-k_lock_spring * dt));
+  float step = diff * (1.0F - std::exp(-k_lock_spring * dt)) * close_range_authority;
+  float const step_limit = k_lock_max_turn_degrees_per_second * dt;
+  step = std::clamp(step, -step_limit, step_limit);
+  m_view_yaw += step;
   m_view_yaw = wrap_angle_degrees(m_view_yaw);
+  m_lock_spring_yaw = m_view_yaw;
+  m_lock_spring_yaw_valid = true;
 }
 
 auto CommanderControlController::controlled_commander(
@@ -1058,6 +1128,8 @@ auto CommanderControlController::find_primary_target(
     Engine::Core::EntityID commander_id,
     int local_owner_id,
     float extra_reach) -> Engine::Core::EntityID {
+  Engine::Core::Timing::ScopedAccumulator const scope(
+      Engine::Core::Timing::commander_targeting());
   using Target = Game::Systems::RpgCombat::SoldierTarget;
   constexpr auto k_no_slot =
       Engine::Core::RpgCommanderTargetComponent::k_no_soldier_slot;
@@ -1520,6 +1592,47 @@ void CommanderControlController::try_activate_vanguard_rush(
   }
 }
 
+void CommanderControlController::publish_resolved_defense_feedback(
+    Engine::Core::Entity& commander,
+    Engine::Core::EntityID commander_id,
+    const Engine::Core::TransformComponent& transform) {
+  auto const* rpg = commander.get_component<Engine::Core::RpgHealthComponent>();
+  if (rpg == nullptr) {
+    return;
+  }
+
+  QVector3D const at(transform.position.x, transform.position.y, transform.position.z);
+  auto publish = [&](App::Core::PlayerFeedbackType type, const char* reason) {
+    if (m_feedback == nullptr) {
+      return;
+    }
+    App::Core::PlayerFeedbackEvent event;
+    event.type = type;
+    event.entity = commander_id;
+    event.has_world_position = true;
+    event.world_position = at;
+    event.reason = QString::fromLatin1(reason);
+    m_feedback->publish(std::move(event));
+  };
+
+  if (rpg->perfect_guard_contacts != m_observed_perfect_guard_contacts) {
+    m_observed_perfect_guard_contacts = rpg->perfect_guard_contacts;
+    publish(App::Core::PlayerFeedbackType::PerfectGuard, "perfect_guard");
+  }
+  if (rpg->dodged_contacts != m_observed_dodged_contacts) {
+    m_observed_dodged_contacts = rpg->dodged_contacts;
+    publish(App::Core::PlayerFeedbackType::DodgeSuccess, "iframe_reject");
+  }
+  if (rpg->blocked_contacts != m_observed_blocked_contacts) {
+    m_observed_blocked_contacts = rpg->blocked_contacts;
+    publish(App::Core::PlayerFeedbackType::WeaponContact, "guard_block");
+  }
+  if (rpg->guard_broken_contacts != m_observed_guard_broken_contacts) {
+    m_observed_guard_broken_contacts = rpg->guard_broken_contacts;
+    publish(App::Core::PlayerFeedbackType::GuardBroken, "guard_break");
+  }
+}
+
 void CommanderControlController::try_activate_second_wind(
     Engine::Core::Entity& commander) {
   const bool second_wind_requested = m_tick_input.second_wind_pressed;
@@ -1754,9 +1867,7 @@ auto CommanderControlController::update_impl(Engine::Core::World& world,
         QVector3D(transform->position.x, transform->position.y, transform->position.z);
 
     if (auto* stamina = commander->get_component<Engine::Core::StaminaComponent>()) {
-      stamina->stamina = std::max(
-          0.0F,
-          stamina->stamina - Engine::Core::CombatStateComponent::k_stamina_cost_jump);
+      stamina->spend(Engine::Core::CombatStateComponent::k_stamina_cost_jump);
     }
   }
 
@@ -1841,35 +1952,25 @@ auto CommanderControlController::update_impl(Engine::Core::World& world,
             ? requested_dodge_direction.normalized()
             : ((move.lengthSquared() > 0.0001F) ? move.normalized() : forward);
     m_dodge_state = DodgeState::Rolling;
-    if (m_feedback != nullptr) {
-      App::Core::PlayerFeedbackEvent event;
-      event.type = App::Core::PlayerFeedbackType::DodgeSuccess;
-      event.entity = commander_id;
-      event.has_world_position = true;
-      event.world_position = QVector3D(
-          transform->position.x, transform->position.y, transform->position.z);
-      m_feedback->publish(std::move(event));
-    }
     if (m_latency_probe != nullptr) {
       m_latency_probe->note_dodge_start();
       m_latency_probe->note_pose_response();
     }
     Game::Audio::play_cue(Game::Audio::Cue::k_combat_dodge);
-    constexpr float k_dodge_roll_duration = 0.22F;
-    m_dodge_timer = k_dodge_roll_duration;
+    m_dodge_timer =
+        Game::Systems::CombatActions::k_commander_dodge_timeline.roll_seconds;
     m_dodge_fov_kick = 14.0F;
     if (auto* rpg = commander->get_component<Engine::Core::RpgHealthComponent>()) {
 
-      constexpr float k_dodge_grace_seconds = 0.12F;
-      rpg->dodge_grace_remaining = k_dodge_grace_seconds;
+      rpg->dodge_grace_remaining =
+          Game::Systems::CombatActions::k_commander_dodge_timeline
+              .invulnerable_seconds();
       rpg->dodge_dir_x = m_dodge_direction.x();
       rpg->dodge_dir_z = m_dodge_direction.z();
     }
 
     if (auto* stamina = commander->get_component<Engine::Core::StaminaComponent>()) {
-      stamina->stamina = std::max(
-          0.0F,
-          stamina->stamina - Engine::Core::CombatStateComponent::k_stamina_cost_dodge);
+      stamina->spend(Engine::Core::CombatStateComponent::k_stamina_cost_dodge);
     }
   }
 
@@ -1914,8 +2015,8 @@ auto CommanderControlController::update_impl(Engine::Core::World& world,
 
     if (m_dodge_timer <= 0.0F) {
       m_dodge_state = DodgeState::Recovering;
-      constexpr float k_dodge_recover_duration = 0.18F;
-      m_dodge_timer = k_dodge_recover_duration;
+      m_dodge_timer =
+          Game::Systems::CombatActions::k_commander_dodge_timeline.recovery_seconds;
       if (auto* rpg = commander->get_component<Engine::Core::RpgHealthComponent>()) {
         rpg->dodge_grace_remaining = 0.0F;
       }
@@ -2080,6 +2181,19 @@ auto CommanderControlController::update_impl(Engine::Core::World& world,
   m_move_forward_axis = forward_axis;
   m_move_running = run_for_bob;
 
+  float action_redirect_authority = 1.0F;
+  if (attack_animation_active) {
+    if (auto const* definition =
+            Game::Systems::CombatActions::find_combat_action_definition(
+                static_cast<Game::Systems::CombatActions::CombatActionId>(
+                    active_action->combat_action_id))) {
+      action_redirect_authority =
+          Game::Systems::CombatActions::melee_interruption_at(
+              *definition, active_action->normalized_action_time)
+              .redirect_authority;
+    }
+  }
+
   bool const body_must_face_view =
       m_tick_input.primary_held || m_tick_input.guard_held ||
       m_dodge_state != DodgeState::None || jump_active || drawing_bow ||
@@ -2091,7 +2205,20 @@ auto CommanderControlController::update_impl(Engine::Core::World& world,
     m_body_yaw_valid = true;
   }
 
-  if (body_must_face_view) {
+  if (attack_animation_active && action_redirect_authority < 1.0F) {
+
+    m_turning_in_place = false;
+    float const offset = signed_angle_delta(m_view_yaw, m_body_yaw);
+    float const step = k_body_travel_turn_rate_degrees * action_redirect_authority *
+                       std::max(0.0F, dt);
+    if (step <= 0.0F) {
+
+    } else if (std::abs(offset) <= step) {
+      m_body_yaw = m_view_yaw;
+    } else {
+      m_body_yaw = wrap_angle_degrees(m_body_yaw + std::copysign(step, offset));
+    }
+  } else if (body_must_face_view) {
     m_body_yaw = m_view_yaw;
     m_turning_in_place = false;
   } else {
@@ -2157,11 +2284,13 @@ auto CommanderControlController::update_impl(Engine::Core::World& world,
 
     if (auto* stamina = commander->get_component<Engine::Core::StaminaComponent>()) {
       stamina->run_requested = m_move_running;
-      traced_stamina = stamina->stamina;
     }
   } else if (auto* stamina =
                  commander->get_component<Engine::Core::StaminaComponent>()) {
     stamina->run_requested = false;
+  }
+  if (auto const* stamina =
+          commander->get_component<Engine::Core::StaminaComponent>()) {
     traced_stamina = stamina->stamina;
   }
 
@@ -2175,17 +2304,10 @@ auto CommanderControlController::update_impl(Engine::Core::World& world,
         !jump_active && body_allows_now(*commander).accepts_guard) {
       guard->active = true;
       if (!m_guard_was_active) {
-        guard->perfect_guard_remaining = 0.16F;
+        guard->perfect_guard_remaining =
+            Game::Systems::CombatActions::k_commander_guard_timeline
+                .perfect_window_seconds;
         Game::Audio::play_cue(Game::Audio::Cue::k_combat_guard_raise);
-        if (m_feedback != nullptr) {
-          App::Core::PlayerFeedbackEvent event;
-          event.type = App::Core::PlayerFeedbackType::PerfectGuard;
-          event.entity = commander_id;
-          event.has_world_position = true;
-          event.world_position = QVector3D(
-              transform->position.x, transform->position.y, transform->position.z);
-          m_feedback->publish(std::move(event));
-        }
         if (m_latency_probe != nullptr) {
           m_latency_probe->note_guard_start();
           m_latency_probe->note_pose_response();
@@ -2204,10 +2326,8 @@ auto CommanderControlController::update_impl(Engine::Core::World& world,
 
   if (guard != nullptr && guard->active) {
     if (auto* stamina = commander->get_component<Engine::Core::StaminaComponent>()) {
-      stamina->stamina = std::max(
-          0.0F,
-          stamina->stamina -
-              Engine::Core::CombatStateComponent::k_stamina_cost_guard_per_second * dt);
+      stamina->spend(
+          Engine::Core::CombatStateComponent::k_stamina_cost_guard_per_second * dt);
     }
   }
 
@@ -2254,10 +2374,8 @@ auto CommanderControlController::update_impl(Engine::Core::World& world,
                                    m_jump_timer <= 0.0F && !waiting_for_release;
 
   if (intents != nullptr && body_can_take_input) {
-    bool const auto_repeat = m_tick_input.primary_held && intents->empty() &&
-                             !attack_animation_active &&
-                             m_primary_scan_cooldown <= 0.0F;
-    if (m_tick_input.primary_pressed || auto_repeat) {
+
+    if (m_tick_input.primary_pressed) {
       auto const* body =
           commander->get_component<Engine::Core::CommanderBodyControlComponent>();
       Engine::Core::CombatActionIntent intent;
@@ -2380,6 +2498,8 @@ auto CommanderControlController::update_impl(Engine::Core::World& world,
     aim_candidate_id = find_primary_target(world, commander_id, local_owner_id);
   }
 
+  publish_resolved_defense_feedback(*commander, commander_id, *transform);
+
   if (auto* rpg_targets =
           Engine::Core::get_or_add_component<Engine::Core::RpgCommanderTargetComponent>(
               commander)) {
@@ -2455,6 +2575,18 @@ auto CommanderControlController::update_impl(Engine::Core::World& world,
 
     m_trace.camera = m_camera_rig.trace();
 
+    auto const costs = Engine::Core::Timing::sample_and_reset_rpg_costs();
+    constexpr float k_microseconds_to_ms = 0.001F;
+    m_trace.costs.motor_ms = static_cast<float>(costs.motor_us) * k_microseconds_to_ms;
+    m_trace.costs.targeting_ms =
+        static_cast<float>(costs.targeting_us) * k_microseconds_to_ms;
+    m_trace.costs.weapon_trace_ms =
+        static_cast<float>(costs.weapon_trace_us) * k_microseconds_to_ms;
+    m_trace.costs.engagement_ms =
+        static_cast<float>(costs.engagement_us) * k_microseconds_to_ms;
+    m_trace.costs.camera_ms =
+        static_cast<float>(costs.camera_us) * k_microseconds_to_ms;
+
     m_trace.combat = App::Core::CommanderCombatTrace{};
     if (active_action != nullptr) {
       m_trace.combat.action_phase = static_cast<int>(active_action->phase);
@@ -2464,6 +2596,38 @@ auto CommanderControlController::update_impl(Engine::Core::World& world,
     }
     if (intents != nullptr) {
       m_trace.combat.queued_intents = static_cast<int>(intents->count);
+      m_trace.combat.queue_outcome = static_cast<int>(intents->last_outcome);
+      m_trace.combat.queue_outcome_age = intents->last_outcome_age;
+      m_trace.combat.queue_accepted = intents->accepted_intents;
+      m_trace.combat.queue_buffered = intents->buffered_intents;
+      m_trace.combat.queue_refused = intents->refused_intents;
+      m_trace.combat.queue_expired = intents->expired_intents;
+      m_trace.combat.queue_overflow = intents->overflow_intents;
+    }
+    if (auto const* defense =
+            commander->get_component<Engine::Core::RpgHealthComponent>()) {
+      m_trace.combat.blocked_contacts = defense->blocked_contacts;
+      m_trace.combat.perfect_guard_contacts = defense->perfect_guard_contacts;
+      m_trace.combat.dodged_contacts = defense->dodged_contacts;
+      m_trace.combat.damaging_contacts = defense->damaging_contacts;
+      m_trace.combat.guard_broken_contacts = defense->guard_broken_contacts;
+    }
+    if (active_action != nullptr && active_action->action_running) {
+      if (auto const* definition =
+              Game::Systems::CombatActions::find_combat_action_definition(
+                  static_cast<Game::Systems::CombatActions::CombatActionId>(
+                      active_action->combat_action_id))) {
+        m_trace.combat.action_window_start =
+            Game::Systems::CombatActions::action_event_normalized_time(
+                *definition,
+                Game::Systems::CombatActions::CombatActionEventType::WeaponTraceStart,
+                0.0F);
+        m_trace.combat.action_window_end =
+            Game::Systems::CombatActions::action_event_normalized_time(
+                *definition,
+                Game::Systems::CombatActions::CombatActionEventType::WeaponTraceEnd,
+                1.0F);
+      }
     }
     if (guard != nullptr) {
       m_trace.combat.guard_active = guard->active;
