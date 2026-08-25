@@ -524,19 +524,24 @@ void GameEngine::build_services_and_controllers() {
           &App::Controllers::CommandController::troop_limit_reached,
           [this]() {
             Game::Audio::play_cue(Game::Audio::Cue::k_alert_population_limit);
-            set_error(tr("Maximum troop limit reached. Cannot produce more units."));
+            report_affordability_refusal(App::Core::OrderFailure::PopulationCap,
+                                         tr("Troop limit reached."));
           });
   connect(m_command_controller.get(),
           &App::Controllers::CommandController::insufficient_manpower,
           [this]() {
             Game::Audio::play_cue(Game::Audio::Cue::k_alert_low_resources);
-            set_error(tr("Not enough manpower. Build homes or wait for families."));
+
+            report_affordability_refusal(
+                App::Core::OrderFailure::InsufficientResources,
+                tr("Not enough manpower — build a home to raise more families."));
           });
   connect(m_command_controller.get(),
           &App::Controllers::CommandController::insufficient_resources,
           [this](const QString& message) {
             Game::Audio::play_cue(Game::Audio::Cue::k_alert_low_resources);
-            set_error(message);
+            report_affordability_refusal(App::Core::OrderFailure::InsufficientResources,
+                                         message);
           });
   connect(m_command_controller.get(),
           &App::Controllers::CommandController::formation_placement_rejected,

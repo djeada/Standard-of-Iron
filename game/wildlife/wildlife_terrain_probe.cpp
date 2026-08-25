@@ -2,12 +2,15 @@
 
 #include "../map/terrain.h"
 #include "../map/terrain_service.h"
+#include "../systems/walkability.h"
 
 namespace Game::Wildlife {
 
 namespace {
 
 constexpr float k_boundary_margin = 1.5F;
+
+constexpr float k_animal_body_radius = 0.0F;
 
 class TerrainServiceProbe final : public ITerrainProbe {
 public:
@@ -19,7 +22,11 @@ public:
     if (!bounds().contains(world_x, world_z)) {
       return true;
     }
-    return terrain.is_forbidden_world(world_x, world_z);
+
+    Game::Systems::BodyProfile profile;
+    profile.radius = k_animal_body_radius;
+    return !Game::Systems::Walkability::can_stand(QVector3D(world_x, 0.0F, world_z),
+                                                  profile);
   }
 
   [[nodiscard]] auto ground_height(float world_x,

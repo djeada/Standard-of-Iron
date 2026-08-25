@@ -361,6 +361,8 @@ struct ArenaScenarioDefinition {
   std::vector<Game::Map::RoadSegment> roads;
   std::vector<ArenaScenarioElevationPatch> elevation_patches;
 
+  std::vector<Game::Map::TerrainFeature> terrain_features;
+
   std::vector<Game::Map::UndeadZone> undead_zones;
   std::vector<ArenaScenarioOwnerTeam> owner_teams;
   std::vector<ArenaScenarioGroup> groups;

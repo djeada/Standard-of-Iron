@@ -441,6 +441,7 @@ private:
   std::vector<Game::Map::Bridge> m_arena_bridges;
   std::vector<Game::Map::RoadSegment> m_arena_roads;
   std::vector<Arena::ArenaScenarioElevationPatch> m_arena_elevation_patches;
+  std::vector<Game::Map::TerrainFeature> m_arena_terrain_features;
   float m_arena_floor_half_extent = 18.0F;
   int m_terrain_grid_extent = 128;
   bool m_suppress_boundary_mountains = false;

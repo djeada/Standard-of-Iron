@@ -12,6 +12,7 @@
 #include "../core/system_context.h"
 #include "../core/world.h"
 #include "command_service.h"
+#include "walkability.h"
 
 namespace Game::Systems {
 
@@ -21,10 +22,18 @@ struct SlotOccupancy {
   std::vector<Engine::Core::EntityID> occupants;
   std::array<bool, EngagementSlotSystem::k_max_slots_per_target> occupied{};
 
-  [[nodiscard]] auto first_open_slot() const -> std::uint8_t {
-    for (std::uint8_t idx = 0; idx < occupied.size(); ++idx) {
-      if (!occupied[idx]) {
-        return idx;
+  [[nodiscard]] auto open_slot_nearest(std::uint8_t preferred) const -> std::uint8_t {
+    auto const count = static_cast<int>(occupied.size());
+    for (int step = 0; step <= count / 2; ++step) {
+      for (int sign : {1, -1}) {
+        if (step == 0 && sign < 0) {
+          continue;
+        }
+        int const idx =
+            (static_cast<int>(preferred) + (sign * step) + (count * 2)) % count;
+        if (!occupied[static_cast<std::size_t>(idx)]) {
+          return static_cast<std::uint8_t>(idx);
+        }
       }
     }
     return EngagementSlotSystem::k_max_slots_per_target;
@@ -108,23 +117,45 @@ void EngagementSlotSystem::run(Engine::Core::SystemContext& context) {
     }
 
     auto& occupancy = target_slots[target_id];
-    std::uint8_t const slot_idx = occupancy.first_open_slot();
+
+    constexpr float k_two_pi = 2.0F * static_cast<float>(std::numbers::pi);
+    float const slot_arc = k_two_pi / static_cast<float>(k_max_slots_per_target);
+    float const approach_bearing =
+        std::atan2(attacker_transform->position.z - target_transform->position.z,
+                   attacker_transform->position.x - target_transform->position.x);
+    auto const preferred = static_cast<std::uint8_t>(
+        (static_cast<int>(std::lround(approach_bearing / slot_arc)) +
+         (k_max_slots_per_target * 2)) %
+        k_max_slots_per_target);
+
+    std::uint8_t const slot_idx = occupancy.open_slot_nearest(preferred);
     if (slot_idx >= k_max_slots_per_target) {
 
       ++m_diagnostics.overflow_redirects;
       continue;
     }
 
-    float const angle =
-        (2.0F * static_cast<float>(std::numbers::pi) * static_cast<float>(slot_idx)) /
-        static_cast<float>(k_max_slots_per_target);
+    float const angle = slot_arc * static_cast<float>(slot_idx);
 
     float const target_radius =
         CommandService::get_unit_radius(context.world(), target_id);
     float const offset_dist = target_radius + k_slot_radius_offset;
 
-    float const anchor_x = std::cos(angle) * offset_dist;
-    float const anchor_z = std::sin(angle) * offset_dist;
+    BodyProfile profile;
+    profile.radius = CommandService::get_unit_radius(context.world(), attacker_id);
+    QVector3D const target_position(target_transform->position.x,
+                                    target_transform->position.y,
+                                    target_transform->position.z);
+    float anchor_x = std::cos(angle) * offset_dist;
+    float anchor_z = std::sin(angle) * offset_dist;
+    if (auto const standable = Walkability::standing_point_around(
+            target_position, angle, offset_dist, profile);
+        standable.has_value()) {
+      anchor_x = standable->x() - target_position.x();
+      anchor_z = standable->z() - target_position.z();
+    } else {
+      ++m_diagnostics.overflow_redirects;
+    }
 
     if (slot == nullptr) {
       slot = context.emplace<Engine::Core::EngagementSlotComponent>(attacker_id);

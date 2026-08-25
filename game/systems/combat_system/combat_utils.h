@@ -123,6 +123,16 @@ auto suppresses_opportunistic_combat(Engine::Core::Entity* unit) -> bool;
 
 auto is_unit_idle(Engine::Core::Entity* unit) -> bool;
 
+enum class EngagementTrigger : std::uint8_t {
+  Opportunity,
+  Retaliation,
+  SquadAlert,
+};
+
+auto may_engage(Engine::Core::Entity* unit,
+                Engine::Core::Entity* enemy,
+                EngagementTrigger trigger) -> bool;
+
 auto find_nearest_enemy(Engine::Core::Entity* unit,
                         const CombatQueryContext& query_context,
                         float max_range,
