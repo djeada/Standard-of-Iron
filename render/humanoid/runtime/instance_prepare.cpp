@@ -815,6 +815,7 @@ void append_prepared_soldier(const HumanoidUnitSnapshot& s,
   const HumanoidVariant& variant = variant_base;
 
   auto& animation_diagnostics = *u.animation_diagnostics;
+  bool swing_recoil_active = false;
   auto record_soldier_debug = [&](int soldier_index,
                                   const AnimationInputs&,
                                   const AnimationInputs& resolved_anim,
@@ -847,6 +848,7 @@ void append_prepared_soldier(const HumanoidUnitSnapshot& s,
     sample.attack_variant = resolved_anim.attack_variant;
     sample.is_attacking = resolved_anim.is_attacking;
     sample.is_hit_reacting = resolved_anim.is_hit_reacting;
+    sample.is_swing_recoiling = swing_recoil_active;
     sample.is_in_melee_lock = resolved_anim.is_in_melee_lock;
     sample.transient_recovery_override = transient_recovery_override;
     sample.locomotion_state = resolved_anim.movement_state;
@@ -909,7 +911,7 @@ void append_prepared_soldier(const HumanoidUnitSnapshot& s,
 
   bool const authored_swing_owns_body =
       soldier_render_anim.has_authored_action_phase && soldier_render_anim.is_attacking;
-  bool swing_recoil_active =
+  swing_recoil_active =
       (authored_swing_owns_body || soldier_render_anim.hit_reaction_kind ==
                                        Engine::Core::HitReactionKind::Recoil) &&
       soldier_render_anim.is_hit_reacting;

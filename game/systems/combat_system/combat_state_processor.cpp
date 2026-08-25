@@ -205,6 +205,17 @@ auto apply_action_timeline_phase(
   return true;
 }
 
+[[nodiscard]] auto hit_pause_holds_timeline(
+    const Engine::Core::Entity& unit,
+    const Engine::Core::CombatStateComponent& combat_state) -> bool {
+  if (!combat_state.is_hit_paused) {
+    return false;
+  }
+
+  auto const* commander = unit.get_component<Engine::Core::CommanderComponent>();
+  return commander == nullptr || !commander->fpv_controlled;
+}
+
 void reset_action_events_if_present(Engine::Core::Entity& unit) {
   auto* action = unit.get_component<Engine::Core::RpgCommanderActionComponent>();
   if (action == nullptr) {
@@ -241,7 +252,8 @@ void process_combat_state(Engine::Core::World* world, float delta_time) {
       continue;
     }
     auto* presentation_state = unit.get_component<Engine::Core::CombatStateComponent>();
-    if (presentation_state != nullptr && presentation_state->is_hit_paused) {
+    if (presentation_state != nullptr &&
+        hit_pause_holds_timeline(unit, *presentation_state)) {
       continue;
     }
     process_authored_combat_action(world, unit, presentation_state, delta_time);
@@ -250,7 +262,7 @@ void process_combat_state(Engine::Core::World* world, float delta_time) {
   for (auto [unit, combat_state] :
        world->entity_view<Engine::Core::CombatStateComponent>()) {
     if (unit.has_component<Engine::Core::PendingRemovalComponent>() ||
-        combat_state.is_hit_paused) {
+        hit_pause_holds_timeline(unit, combat_state)) {
       continue;
     }
 

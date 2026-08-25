@@ -84,6 +84,7 @@ enum class ScenarioCommandKind : std::uint8_t {
   RpgGuard,
   RpgDodge,
   RpgMove,
+  RpgCycleLockOn,
 
   RepairStructure,
   DeliverToStructure,
@@ -291,6 +292,8 @@ enum class ArenaExpectationKind : std::uint8_t {
   CommanderSpeedIsContinuous,
   CommanderInputEdgesAllConsumed,
   CommanderContactCountAtMost,
+  CommanderCombatCounterWithin,
+  CommanderLockStateWithin,
 };
 
 struct ArenaExpectation {
@@ -298,6 +301,9 @@ struct ArenaExpectation {
   QString group;
   QString target_group;
   QString zone_id;
+
+  QString counter_key;
+  float maximum{-1.0F};
   float start_seconds{0.0F};
   float end_seconds{0.0F};
   float threshold{0.0F};
@@ -387,6 +393,8 @@ struct ArenaScenarioIssue {
   int soldier_index{-1};
 };
 
+inline constexpr float k_arena_prewarm_seconds = 0.75F;
+
 struct ArenaScenarioReport {
   QString scenario_id;
   float elapsed_seconds{0.0F};
@@ -396,7 +404,21 @@ struct ArenaScenarioReport {
   double frame_budget_ms{0.0};
   double frame_time_p50_ms{0.0};
   double frame_time_p95_ms{0.0};
+  double frame_time_p99_ms{0.0};
   double frame_time_max_ms{0.0};
+
+  std::uint64_t prewarm_frames{0};
+  double prewarm_max_ms{0.0};
+  double prewarm_seconds{k_arena_prewarm_seconds};
+  std::uint64_t gpu_timed_frames{0};
+
+  double rpg_cost_p95_motor_ms{0.0};
+  double rpg_cost_p95_targeting_ms{0.0};
+  double rpg_cost_p95_weapon_trace_ms{0.0};
+  double rpg_cost_p95_engagement_ms{0.0};
+  double rpg_cost_p95_camera_ms{0.0};
+  double rpg_cost_p95_total_ms{0.0};
+  double simulation_p95_ms{0.0};
   std::uint64_t peak_visible_soldiers{0};
   std::uint64_t peak_draw_commands{0};
   std::uint64_t peak_rigged_commands{0};
@@ -446,6 +468,8 @@ struct ArenaScenarioHost {
   std::function<void(Engine::Core::EntityID, bool)> set_rpg_attack_held;
   std::function<void(Engine::Core::EntityID, bool)> set_rpg_guard;
   std::function<void(Engine::Core::EntityID, const QVector3D&)> request_rpg_dodge;
+  std::function<void(Engine::Core::EntityID)> cycle_rpg_lock_on;
+  std::function<auto(Engine::Core::EntityID)->Engine::Core::EntityID> rpg_locked_target;
 
   std::function<void(Engine::Core::EntityID, const QVector3D&, bool)>
       set_rpg_move_input;

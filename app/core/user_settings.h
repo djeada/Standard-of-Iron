@@ -41,6 +41,13 @@ inline constexpr char kUiEconomyCoachKey[] = "ui/economy_coach";
 inline constexpr char kUiCameraLegendSeenKey[] = "ui/camera_legend_seen";
 inline constexpr char kUiTutorialCompletedKey[] = "ui/tutorial_completed";
 inline constexpr char kInputBindingsGroup[] = "input/bindings";
+inline constexpr char kCommanderLookSensitivityXKey[] = "commander/look_sensitivity_x";
+inline constexpr char kCommanderLookSensitivityYKey[] = "commander/look_sensitivity_y";
+inline constexpr char kCommanderInvertLookYKey[] = "commander/invert_look_y";
+inline constexpr char kCommanderCameraImpulseKey[] = "commander/camera_impulse";
+inline constexpr char kCommanderHeadBobKey[] = "commander/head_bob";
+inline constexpr char kCommanderFieldOfViewScaleKey[] = "commander/fov_scale";
+inline constexpr char kCommanderGuardToggleKey[] = "commander/guard_is_toggle";
 
 inline constexpr int kDefaultAutosaveSlotCount = 3;
 inline constexpr int kMinAutosaveSlotCount = 1;
@@ -57,6 +64,13 @@ inline constexpr double kMinEdgeScrollSensitivity = 0.25;
 inline constexpr double kMaxEdgeScrollSensitivity = 2.0;
 
 inline constexpr double kDefaultCameraMotionScale = 1.0;
+
+inline constexpr double kDefaultCommanderLookSensitivity = 1.0;
+inline constexpr double kMinCommanderLookSensitivity = 0.25;
+inline constexpr double kMaxCommanderLookSensitivity = 4.0;
+inline constexpr double kDefaultCommanderFieldOfViewScale = 1.0;
+inline constexpr double kMinCommanderFieldOfViewScale = 0.75;
+inline constexpr double kMaxCommanderFieldOfViewScale = 1.35;
 inline constexpr double kDefaultScreenEffectIntensity = 1.0;
 
 using AudioVolumes = Game::Audio::Settings::Volumes;
@@ -382,6 +396,80 @@ inline auto load_ui_camera_motion_scale() -> double {
 
 inline void save_ui_camera_motion_scale(double scale) {
   Detail::save_bounded_double(kUiCameraMotionKey, scale, 0.0, 1.0);
+}
+
+inline auto load_commander_look_sensitivity_x() -> double {
+  return Detail::load_bounded_double(kCommanderLookSensitivityXKey,
+                                     kDefaultCommanderLookSensitivity,
+                                     kMinCommanderLookSensitivity,
+                                     kMaxCommanderLookSensitivity);
+}
+
+inline void save_commander_look_sensitivity_x(double scale) {
+  Detail::save_bounded_double(kCommanderLookSensitivityXKey,
+                              scale,
+                              kMinCommanderLookSensitivity,
+                              kMaxCommanderLookSensitivity);
+}
+
+inline auto load_commander_look_sensitivity_y() -> double {
+  return Detail::load_bounded_double(kCommanderLookSensitivityYKey,
+                                     kDefaultCommanderLookSensitivity,
+                                     kMinCommanderLookSensitivity,
+                                     kMaxCommanderLookSensitivity);
+}
+
+inline void save_commander_look_sensitivity_y(double scale) {
+  Detail::save_bounded_double(kCommanderLookSensitivityYKey,
+                              scale,
+                              kMinCommanderLookSensitivity,
+                              kMaxCommanderLookSensitivity);
+}
+
+inline auto load_commander_invert_look_y() -> bool {
+  return Detail::load_bool(kCommanderInvertLookYKey, false);
+}
+
+inline void save_commander_invert_look_y(bool enabled) {
+  Detail::save_bool(kCommanderInvertLookYKey, enabled);
+}
+
+inline auto load_commander_camera_impulse() -> bool {
+  return Detail::load_bool(kCommanderCameraImpulseKey, true);
+}
+
+inline void save_commander_camera_impulse(bool enabled) {
+  Detail::save_bool(kCommanderCameraImpulseKey, enabled);
+}
+
+inline auto load_commander_head_bob() -> bool {
+  return Detail::load_bool(kCommanderHeadBobKey, true);
+}
+
+inline void save_commander_head_bob(bool enabled) {
+  Detail::save_bool(kCommanderHeadBobKey, enabled);
+}
+
+inline auto load_commander_field_of_view_scale() -> double {
+  return Detail::load_bounded_double(kCommanderFieldOfViewScaleKey,
+                                     kDefaultCommanderFieldOfViewScale,
+                                     kMinCommanderFieldOfViewScale,
+                                     kMaxCommanderFieldOfViewScale);
+}
+
+inline void save_commander_field_of_view_scale(double scale) {
+  Detail::save_bounded_double(kCommanderFieldOfViewScaleKey,
+                              scale,
+                              kMinCommanderFieldOfViewScale,
+                              kMaxCommanderFieldOfViewScale);
+}
+
+inline auto load_commander_guard_is_toggle() -> bool {
+  return Detail::load_bool(kCommanderGuardToggleKey, false);
+}
+
+inline void save_commander_guard_is_toggle(bool enabled) {
+  Detail::save_bool(kCommanderGuardToggleKey, enabled);
 }
 
 inline auto load_ui_damage_numbers() -> bool {

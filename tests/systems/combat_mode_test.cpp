@@ -3388,6 +3388,85 @@ TEST_F(CombatModeTest, AuthoredActionTimelineDoesNotReadCompatibilityPhase) {
   EXPECT_EQ(compatibility_state.animation_state, CombatAnimationState::Idle);
 }
 
+TEST_F(CombatModeTest, AWeaponTraceContactLandsOnTheTargetsHurtBody) {
+  auto* commander = make_fpv_commander(*world, 0.0F, 0.0F);
+  auto* enemy = make_enemy_soldier(*world, 0.0F, 1.3F);
+  ASSERT_NE(enemy, nullptr);
+
+  auto const* definition = Game::Systems::CombatActions::find_combat_action_definition(
+      Game::Systems::CombatActions::CombatActionId::RpgSwordOverhead);
+  ASSERT_NE(definition, nullptr);
+
+  auto* action = start_authored_action_at(
+      commander, Game::Systems::CombatActions::CombatActionId::RpgSwordOverhead, 0.44F);
+  ASSERT_NE(action, nullptr);
+  action->active_target_id = enemy->get_id();
+
+  auto const contact = Game::Systems::CombatActions::find_weapon_trace_contact(
+      *world, *commander, *definition, {0.44F, 0.58F}, enemy->get_id());
+  ASSERT_EQ(contact.target_id, enemy->get_id());
+
+  auto const* enemy_transform = enemy->get_component<TransformComponent>();
+  ASSERT_NE(enemy_transform, nullptr);
+  float const local_height = contact.contact_point.y() - enemy_transform->position.y;
+  EXPECT_GE(local_height, Game::Systems::RpgCombat::k_hurt_body_min_height);
+  EXPECT_LE(local_height, Game::Systems::RpgCombat::k_hurt_body_max_height);
+
+  float const planar =
+      std::hypot(contact.contact_point.x() - enemy_transform->position.x,
+                 contact.contact_point.z() - enemy_transform->position.z);
+  EXPECT_LE(planar, 1.0F);
+}
+
+TEST_F(CombatModeTest, OneActionAppliesOneDamageAtEverySimulationRate) {
+  const std::array<float, 4> rates{30.0F, 60.0F, 120.0F, 4.0F};
+  std::vector<int> damage_per_rate;
+  std::vector<int> contacts_per_rate;
+
+  for (float const rate : rates) {
+    World rate_world;
+    auto* commander = make_fpv_commander(rate_world, 0.0F, 0.0F);
+    auto* enemy = make_enemy_soldier(rate_world, 0.0F, 1.3F);
+    ASSERT_NE(commander, nullptr) << rate;
+    ASSERT_NE(enemy, nullptr) << rate;
+
+    auto* enemy_unit = enemy->get_component<UnitComponent>();
+    ASSERT_NE(enemy_unit, nullptr) << rate;
+    enemy_unit->health = 5000;
+    enemy_unit->max_health = 5000;
+
+    auto* combat_state = begin_commander_strike(commander, enemy->get_id());
+    ASSERT_NE(combat_state, nullptr) << rate;
+    combat_state->state_duration = 0.30F;
+    auto* action = start_authored_action_at(
+        commander,
+        Game::Systems::CombatActions::CombatActionId::RpgSwordSlashLeft,
+        0.0F);
+    ASSERT_NE(action, nullptr) << rate;
+    action->active_target_id = enemy->get_id();
+
+    float const dt = 1.0F / rate;
+    float elapsed = 0.0F;
+    while (elapsed < action->action_duration + dt) {
+      Game::Systems::Combat::process_combat_state(&rate_world, dt);
+      elapsed += dt;
+    }
+
+    damage_per_rate.push_back(5000 - enemy_unit->health);
+    contacts_per_rate.push_back(static_cast<int>(action->hit_target_count));
+  }
+
+  ASSERT_EQ(damage_per_rate.size(), rates.size());
+  for (std::size_t index = 1; index < damage_per_rate.size(); ++index) {
+    EXPECT_EQ(damage_per_rate[index], damage_per_rate[0])
+        << "rate " << rates[index] << " Hz applied different damage";
+    EXPECT_EQ(contacts_per_rate[index], contacts_per_rate[0])
+        << "rate " << rates[index] << " Hz resolved a different contact count";
+  }
+  EXPECT_GT(damage_per_rate[0], 0);
+  EXPECT_LE(contacts_per_rate[0], 1);
+}
+
 TEST_F(CombatModeTest, SwordTraceRejectsTargetsBehindCommander) {
   auto* commander = make_fpv_commander(*world, 0.0F, 0.0F);
   auto* enemy = make_enemy_soldier(*world, 0.0F, -1.2F);

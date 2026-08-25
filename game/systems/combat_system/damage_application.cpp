@@ -5,6 +5,8 @@
 #include <algorithm>
 #include <cmath>
 #include <cstdint>
+#include <cstdio>
+#include <cstdlib>
 #include <limits>
 #include <numbers>
 #include <optional>
@@ -278,6 +280,13 @@ void publish_formation_hit(
       Engine::Core::FormationHitPresentationComponent>(&target);
   if (hit == nullptr) {
     return;
+  }
+  if (std::getenv("SOI_HITDBG") != nullptr) {
+    std::fprintf(stderr,
+                 "[hitdbg] publish target=%llu slot=%u kind=%d\n",
+                 (unsigned long long)target.get_id(),
+                 (unsigned)*slot,
+                 (int)kind);
   }
   hit->attacker_id = attacker_id;
   hit->soldier_slot = *slot;

@@ -75,6 +75,7 @@ add_library(
     accessibility_runtime
     STATIC
     accessibility/team_identity.cpp
+    accessibility/commander_input_settings.cpp
     accessibility/motion_settings.cpp
 )
 target_include_directories(accessibility_runtime PUBLIC ..)

@@ -261,4 +261,69 @@ TEST_F(CommanderViewModelInputTest, FocusLossClearsEveryHeldCommanderAction) {
       << "input released on focus loss must not leave the commander walking";
 }
 
+TEST_F(CommanderViewModelInputTest, LandingAHitNeverSlowsTheSimulationClock) {
+  constexpr float k_tick = 1.0F / 60.0F;
+  auto* commander = spawn_commander(0.0F, 0.0F);
+  auto* enemy = spawn_enemy(0.0F, 1.4F);
+  ASSERT_NE(commander, nullptr);
+  ASSERT_NE(enemy, nullptr);
+  m_commander->enter_mode();
+  ASSERT_TRUE(m_commander->active());
+
+  auto* commander_data = commander->get_component<Engine::Core::CommanderComponent>();
+  ASSERT_NE(commander_data, nullptr);
+
+  EXPECT_FLOAT_EQ(m_commander->time_effect_scale(k_tick, false), 1.0F);
+
+  commander_data->just_struck_enemy = true;
+  m_commander->update_control_mode(k_tick);
+
+  for (int tick = 0; tick < 30; ++tick) {
+    EXPECT_FLOAT_EQ(m_commander->time_effect_scale(k_tick, false), 1.0F)
+        << "a landed hit must not scale the simulation clock at tick " << tick;
+  }
+  EXPECT_TRUE(commander_data->just_struck_enemy)
+      << "the hit flag belongs to the combo chain; the view model must not eat it";
+}
+
+TEST_F(CommanderViewModelInputTest, ADeadCommanderLeavesTheModeAndTheCursorBehind) {
+  constexpr float k_tick = 1.0F / 60.0F;
+  auto* commander = spawn_commander(0.0F, 0.0F);
+  ASSERT_NE(commander, nullptr);
+  m_commander->enter_mode();
+  ASSERT_TRUE(m_commander->active());
+
+  auto* unit = commander->get_component<Engine::Core::UnitComponent>();
+  ASSERT_NE(unit, nullptr);
+  unit->health = 0;
+
+  m_commander->update_control_mode(k_tick);
+
+  EXPECT_FALSE(m_commander->active())
+      << "a dead commander must not keep direct control alive";
+  EXPECT_EQ(m_host.cursor_mode, CursorMode::Normal)
+      << "death must hand the cursor back";
+
+  auto const* commander_data =
+      commander->get_component<Engine::Core::CommanderComponent>();
+  ASSERT_NE(commander_data, nullptr);
+  EXPECT_FALSE(commander_data->fpv_controlled);
+}
+
+TEST_F(CommanderViewModelInputTest, AVanishedCommanderCannotLeaveTheModeActive) {
+  constexpr float k_tick = 1.0F / 60.0F;
+  auto* commander = spawn_commander(0.0F, 0.0F);
+  ASSERT_NE(commander, nullptr);
+  auto const commander_id = commander->get_id();
+  m_commander->enter_mode();
+  ASSERT_TRUE(m_commander->active());
+
+  m_world.destroy_entity(commander_id);
+  m_commander->update_control_mode(k_tick);
+
+  EXPECT_FALSE(m_commander->active())
+      << "pending removal must not leave a live camera and input pointer";
+  EXPECT_EQ(m_host.cursor_mode, CursorMode::Normal);
+}
+
 } // namespace

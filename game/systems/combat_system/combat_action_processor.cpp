@@ -452,13 +452,21 @@ void deal_weapon_trace_damage(
   if (presentation_state != nullptr) {
     presentation_state->damage_dealt_this_swing = true;
 
+    auto const* attacker_commander =
+        attacker.get_component<Engine::Core::CommanderComponent>();
+    bool const player_controlled =
+        attacker_commander != nullptr && attacker_commander->fpv_controlled;
+
     presentation_state->is_hit_paused = true;
     presentation_state->hit_pause_remaining =
-        Engine::Core::CombatStateComponent::k_combat_animation_hit_pause_duration *
-        std::clamp(contact.contact_speed /
-                       Game::Systems::Combat::k_reference_weapon_speed,
-                   0.5F,
-                   1.6F);
+        player_controlled
+            ? Engine::Core::CombatStateComponent::k_player_hit_pause_duration
+            : Engine::Core::CombatStateComponent::
+                      k_combat_animation_hit_pause_duration *
+                  std::clamp(contact.contact_speed /
+                                 Game::Systems::Combat::k_reference_weapon_speed,
+                             0.5F,
+                             1.6F);
     presentation_state->telegraph_cue = Engine::Core::TelegraphCue::Impact;
   }
   action.last_hit_target_id = contact.target_id;

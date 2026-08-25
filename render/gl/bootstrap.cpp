@@ -23,6 +23,7 @@ auto RenderBootstrap::initialize(Renderer& renderer, Camera& camera) -> bool {
   qInfo() << "RenderBootstrap: Logging OpenGL capabilities...";
   GLCapabilities::log_capabilities();
   GLCapabilities::report_minimum_version();
+  RenderBootstrap::remember_adapter(GLCapabilities::describe_adapter());
   qInfo() << "RenderBootstrap: Capabilities logged";
 
   if (!GLCapabilities::meets_minimum_version()) {
@@ -45,6 +46,19 @@ auto RenderBootstrap::initialize(Renderer& renderer, Camera& camera) -> bool {
   qInfo() << "RenderBootstrap: Camera set, initialization complete";
 
   return true;
+}
+
+namespace {
+GLCapabilities::AdapterDescription g_adapter;
+} // namespace
+
+void RenderBootstrap::remember_adapter(
+    const GLCapabilities::AdapterDescription& adapter) {
+  g_adapter = adapter;
+}
+
+auto RenderBootstrap::adapter() -> const GLCapabilities::AdapterDescription& {
+  return g_adapter;
 }
 
 } // namespace Render::GL

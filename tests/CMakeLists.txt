@@ -309,6 +309,7 @@ add_executable(
     persistence_tests
     save/snapshot_contract_test.cpp
     core/serialization_test.cpp
+    core/commander_state_round_trip_test.cpp
     db/save_storage_test.cpp
     db/save_format_test.cpp
     db/save_load_service_test.cpp
@@ -504,6 +505,10 @@ add_executable(
     core/commander_control_regression_test.cpp
     core/commander_camera_rig_test.cpp
     core/commander_control_controller_test.cpp
+    core/commander_defense_windows_test.cpp
+    core/commander_accessibility_test.cpp
+    core/commander_lifecycle_soak_test.cpp
+    core/commander_lock_on_test.cpp
     core/commander_presentation_trace_test.cpp
     core/commander_view_model_input_test.cpp
     core/commander_presentation_pose_test.cpp

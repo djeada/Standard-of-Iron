@@ -68,7 +68,14 @@ inline constexpr char k_rpg_motor_figure_eight_id[] = "rpg_motor_figure_eight";
 inline constexpr char k_rpg_locomotion_hitch_id[] = "rpg_locomotion_hitch";
 inline constexpr char k_rpg_close_quarters_id[] = "rpg_close_quarters";
 inline constexpr char k_rpg_obstacle_slide_id[] = "rpg_obstacle_slide";
-inline constexpr char k_rpg_combo_cadence_id[] = "rpg_combo_cadence";
+inline constexpr char k_rpg_one_press_one_attack_id[] = "rpg_one_press_one_attack";
+inline constexpr char k_rpg_attack_buffer_window_id[] = "rpg_attack_buffer_window";
+inline constexpr char k_rpg_attack_whiff_recovery_id[] = "rpg_attack_whiff_recovery";
+inline constexpr char k_rpg_attack_wall_contact_id[] = "rpg_attack_wall_contact";
+inline constexpr char k_rpg_stamina_refusal_id[] = "rpg_stamina_refusal_and_recovery";
+inline constexpr char k_rpg_skirmish_three_attackers_id[] =
+    "rpg_skirmish_three_attackers";
+inline constexpr char k_rpg_lock_cycle_id[] = "rpg_lock_occlusion_death_cycle";
 inline constexpr char k_rpg_pass_ranks_id[] = "rpg_pass_ranks";
 inline constexpr char k_rpg_strike_lunge_id[] = "rpg_strike_lunge";
 inline constexpr char k_rpg_bow_volley_id[] = "rpg_bow_volley";
