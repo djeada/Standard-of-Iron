@@ -19,6 +19,8 @@ struct SelectionGroup {
   QString nation;
   int count = 0;
   int wounded_count = 0;
+  int soldiers = 0;
+  int max_soldiers = 0;
 
   double health = 0.0;
   double stamina = 1.0;
@@ -48,6 +50,8 @@ public:
     HealthRole,
     max_healthRole,
     HealthRatioRole,
+    SoldiersRole,
+    MaxSoldiersRole,
     NationRole,
     StaminaRatioRole,
     IsRunningRole,

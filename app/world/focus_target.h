@@ -27,6 +27,8 @@ struct FocusTargetInfo {
   bool is_own = false;
   int health = 0;
   int max_health = 0;
+  int soldiers = 0;
+  int max_soldiers = 0;
   double health_ratio = 0.0;
   QString activity = QStringLiteral("idle");
   QString activity_state = QStringLiteral("active");

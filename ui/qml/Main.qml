@@ -16,6 +16,8 @@ ApplicationWindow {
 
     property bool suppress_modals: false
 
+    readonly property bool overlay_active: mainWindow.menu_visible || mapSelect.visible || campaign_screen.visible || save_game_panel.visible || load_game_panel.visible || settingsPanel.visible || objectivesPanel.visible || help_panel.visible || commander_preview.visible
+
     property bool capture_view_ready: false
     property bool capture_view_settled: false
     property bool capture_tutorial_requested: false
@@ -131,7 +133,7 @@ ApplicationWindow {
 
         anchors.fill: parent
         z: 0
-        focus: !mainWindow.menu_visible
+        focus: !mainWindow.overlay_active
         visible: game_started
     }
 
@@ -296,13 +298,15 @@ ApplicationWindow {
                 mainMenu.forceActiveFocus();
         }
         onVisibleChanged: {
-            if (visible) {
+            if (visible)
                 mainMenu.forceActiveFocus();
-                gameViewItem.focus = false;
-            } else if (mainMenu.game_started) {
+            else if (mainMenu.game_started && !mainWindow.overlay_active)
                 gameViewItem.forceActiveFocus();
-            }
             mainWindow.sync_audio_context();
+        }
+        onResume_requested: function () {
+            if (mainWindow.game_started)
+                mainWindow.menu_visible = false;
         }
         onOpen_skirmish: function () {
             mapSelect.visible = true;
@@ -352,7 +356,6 @@ ApplicationWindow {
         onVisibleChanged: {
             if (visible) {
                 mapSelect.forceActiveFocus();
-                gameViewItem.focus = false;
                 Design.UiSound.panelOpen();
             } else {
                 Design.UiSound.panelClose();
@@ -385,7 +388,6 @@ ApplicationWindow {
         onVisibleChanged: {
             if (visible) {
                 campaign_screen.forceActiveFocus();
-                gameViewItem.focus = false;
                 Design.UiSound.panelOpen();
             } else {
                 Design.UiSound.panelClose();
@@ -419,7 +421,6 @@ ApplicationWindow {
         onVisibleChanged: {
             if (visible) {
                 save_game_panel.forceActiveFocus();
-                gameViewItem.focus = false;
                 Design.UiSound.panelOpen();
             } else {
                 Design.UiSound.panelClose();
@@ -449,7 +450,6 @@ ApplicationWindow {
         onVisibleChanged: {
             if (visible) {
                 load_game_panel.forceActiveFocus();
-                gameViewItem.focus = false;
                 Design.UiSound.panelOpen();
             } else {
                 Design.UiSound.panelClose();
@@ -483,7 +483,6 @@ ApplicationWindow {
         onVisibleChanged: {
             if (visible) {
                 settingsPanel.forceActiveFocus();
-                gameViewItem.focus = false;
                 Design.UiSound.panelOpen();
             } else {
                 Design.UiSound.panelClose();
@@ -506,7 +505,6 @@ ApplicationWindow {
         onVisibleChanged: {
             if (visible) {
                 objectivesPanel.forceActiveFocus();
-                gameViewItem.focus = false;
                 Design.UiSound.panelOpen();
             } else {
                 Design.UiSound.panelClose();
@@ -537,7 +535,6 @@ ApplicationWindow {
         onVisibleChanged: {
             if (visible) {
                 help_panel.forceActiveFocus();
-                gameViewItem.focus = false;
                 Design.UiSound.panelOpen();
             } else {
                 Design.UiSound.panelClose();

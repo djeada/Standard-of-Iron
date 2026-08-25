@@ -2385,6 +2385,8 @@ auto GameEngine::describe_focus_entity(Engine::Core::EntityID id) const
            : true);
   info.health = described.health;
   info.max_health = described.max_health;
+  info.soldiers = described.soldiers;
+  info.max_soldiers = described.max_soldiers;
   info.health_ratio =
       described.max_health > 0
           ? static_cast<double>(std::clamp(described.health, 0, described.max_health)) /

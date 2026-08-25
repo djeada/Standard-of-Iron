@@ -294,15 +294,34 @@ auto living_slot_indices(const Engine::Core::Entity& entity,
     return living;
   }
 
-  auto const* unit = entity.get_component<Engine::Core::UnitComponent>();
-  int const live_count = unit != nullptr
-                             ? Engine::Core::resolve_surviving_individual_count(
-                                   unit->health, unit->max_health, total_count)
-                             : total_count;
+  int const live_count = living_slot_count(entity, total_count);
   for (int idx = std::max(0, total_count - live_count); idx < total_count; ++idx) {
     living.push_back(static_cast<std::uint16_t>(idx));
   }
   return living;
+}
+
+auto living_slot_count(const Engine::Core::Entity& entity, int total_count) -> int {
+  if (total_count <= 0) {
+    return 0;
+  }
+
+  auto const* roster =
+      entity.get_component<Engine::Core::FormationRosterPresentationComponent>();
+  if (roster != nullptr &&
+      roster->alive.size() == static_cast<std::size_t>(total_count)) {
+    return static_cast<int>(std::count_if(
+        roster->alive.begin(), roster->alive.end(), [](std::uint8_t alive) {
+          return alive != 0U;
+        }));
+  }
+
+  auto const* unit = entity.get_component<Engine::Core::UnitComponent>();
+  if (unit == nullptr) {
+    return total_count;
+  }
+  return Engine::Core::resolve_surviving_individual_count(
+      unit->health, unit->max_health, total_count);
 }
 
 namespace {

@@ -5,6 +5,7 @@
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QJsonParseError>
+#include <QStringList>
 
 #include <algorithm>
 #include <cmath>
@@ -100,14 +101,18 @@ auto ease_value(Ease ease, float t) -> float {
   return clamped * clamped * (3.0F - (2.0F * clamped));
 }
 
-auto lerp_yaw(float from, float to, float blend) -> float {
+auto shorter_arc(float from, float to) -> float {
   float delta = std::fmod(to - from, 360.0F);
   if (delta > 180.0F) {
     delta -= 360.0F;
   } else if (delta < -180.0F) {
     delta += 360.0F;
   }
-  return from + (delta * blend);
+  return delta;
+}
+
+auto lerp_yaw(float from, float to, float blend) -> float {
+  return from + (shorter_arc(from, to) * blend);
 }
 
 auto hash_noise(int seed) -> float {
@@ -383,7 +388,107 @@ auto load(const QString& path, QString* error) -> std::optional<Spec> {
     spec.shots.push_back(std::move(shot));
   }
 
+  if (auto const breaches = motion_violations(spec); !breaches.empty()) {
+    if (error != nullptr) {
+      QStringList lines;
+      lines.reserve(static_cast<int>(breaches.size()));
+      for (const QString& breach : breaches) {
+        lines.push_back(breach);
+      }
+      *error = QStringLiteral("promo spec '%1' has camera work that is unwatchable "
+                              "on a phone:\n  %2")
+                   .arg(spec.id, lines.join(QStringLiteral("\n  ")));
+    }
+    return std::nullopt;
+  }
+
   return spec;
+}
+
+auto motion_violations(const Spec& spec,
+                       const MotionLimits& limits) -> std::vector<QString> {
+  std::vector<QString> breaches;
+  float total_clip_seconds = 0.0F;
+  int measured_shots = 0;
+
+  auto report = [&breaches](const QString& shot, const QString& what) {
+    breaches.push_back(QStringLiteral("%1: %2").arg(shot, what));
+  };
+
+  for (const Shot& shot : spec.shots) {
+    if (shot.flame_card) {
+      continue;
+    }
+    float const clip_seconds = shot.duration_seconds * shot.slow_motion;
+    total_clip_seconds += clip_seconds;
+    ++measured_shots;
+
+    if (clip_seconds + 1e-3F < limits.minimum_clip_seconds) {
+      report(shot.name,
+             QStringLiteral("is on screen for %1 s, under the %2 s a viewer needs to "
+                            "read a frame")
+                 .arg(clip_seconds, 0, 'f', 2)
+                 .arg(limits.minimum_clip_seconds, 0, 'f', 2));
+    }
+    if (shot.shake > limits.shake + 1e-4F) {
+      report(shot.name,
+             QStringLiteral("shakes at %1, over the %2 ceiling")
+                 .arg(shot.shake, 0, 'f', 3)
+                 .arg(limits.shake, 0, 'f', 3));
+    }
+    if (shot.gameplay_camera) {
+      continue;
+    }
+
+    for (const CameraKey& key : shot.keys) {
+      if (std::abs(key.roll) > limits.roll_magnitude_degrees + 1e-4F) {
+        report(shot.name,
+               QStringLiteral("rolls the horizon %1 degrees, over the %2 ceiling")
+                   .arg(std::abs(key.roll), 0, 'f', 1)
+                   .arg(limits.roll_magnitude_degrees, 0, 'f', 1));
+        break;
+      }
+    }
+
+    for (std::size_t index = 1; index < shot.keys.size(); ++index) {
+      const CameraKey& from = shot.keys[index - 1];
+      const CameraKey& to = shot.keys[index];
+      float const span = std::max(0.001F, to.time - from.time);
+
+      auto rate = [&](const QString& what, float delta, float limit) {
+        float const measured = std::abs(delta) / span;
+        if (measured > limit + 1e-3F) {
+          report(shot.name,
+                 QStringLiteral("swings %1 at %2 deg/s, over the %3 deg/s ceiling")
+                     .arg(what)
+                     .arg(measured, 0, 'f', 1)
+                     .arg(limit, 0, 'f', 1));
+        }
+      };
+
+      rate(QStringLiteral("yaw"),
+           shorter_arc(from.yaw, to.yaw),
+           limits.yaw_degrees_per_second);
+      rate(QStringLiteral("pitch"),
+           to.pitch - from.pitch,
+           limits.pitch_degrees_per_second);
+      rate(QStringLiteral("fov"), to.fov - from.fov, limits.fov_degrees_per_second);
+      rate(QStringLiteral("roll"), to.roll - from.roll, limits.roll_degrees_per_second);
+    }
+  }
+
+  if (measured_shots > 0) {
+    float const mean = total_clip_seconds / static_cast<float>(measured_shots);
+    if (mean + 1e-3F < limits.mean_clip_seconds) {
+      breaches.push_back(
+          QStringLiteral("the cut averages %1 s a shot, under the %2 s that keeps a "
+                         "reel from reading as strobing")
+              .arg(mean, 0, 'f', 2)
+              .arg(limits.mean_clip_seconds, 0, 'f', 2));
+    }
+  }
+
+  return breaches;
 }
 
 } // namespace Arena::Promo

@@ -30,6 +30,7 @@
 #include "systems/combat_system/combat_status_effect_processor.h"
 #include "systems/combat_system/combat_types.h"
 #include "systems/combat_system/combat_utils.h"
+#include "systems/combat_system/damage_application.h"
 #include "systems/combat_system/damage_processor.h"
 #include "systems/combat_system/mounted_charge_processor.h"
 #include "systems/combat_system/spear_brace_processor.h"
@@ -2686,6 +2687,35 @@ TEST_F(CombatModeTest, HealingRestoresSurvivorsWithoutResurrectingFormationCasua
   healing_system.update(world.get(), 0.1F);
   EXPECT_EQ(formation_unit->health, 40);
   EXPECT_FALSE(healer->is_healing_active);
+}
+
+TEST_F(CombatModeTest, DamageTakenAfterHealthOutrunsTheRosterDoesNotRaiseTheDead) {
+  auto* formation = world->create_entity();
+  formation->add_component<TransformComponent>(0.0F, 0.0F, 0.0F);
+  auto* formation_unit = formation->add_component<UnitComponent>(100, 100, 1.0F, 12.0F);
+  formation_unit->owner_id = 1;
+  formation_unit->spawn_type = Game::Units::SpawnType::Archer;
+
+  const int total_count =
+      Game::Systems::FormationCombat::resolve_definition(*formation_unit).total_count;
+  ASSERT_GT(total_count, 4);
+
+  auto* roster = formation->add_component<FormationRosterPresentationComponent>();
+  roster->total_count = static_cast<std::uint16_t>(total_count);
+  roster->live_count = 4;
+  roster->alive.assign(static_cast<std::size_t>(total_count), 0U);
+  std::fill(roster->alive.end() - 4, roster->alive.end(), std::uint8_t{1U});
+
+  Game::Systems::Combat::apply_unit_damage(world.get(), formation, 10);
+
+  const auto living =
+      std::count(roster->alive.begin(), roster->alive.end(), std::uint8_t{1U});
+  EXPECT_LE(living, 4)
+      << "a unit whose health outran its roster must not refill its ranks when hit";
+  EXPECT_EQ(roster->live_count, living)
+      << "the published survivor count must match the slots that are actually alive";
+  EXPECT_EQ(Game::Systems::FormationCombat::living_slot_count(*formation, total_count),
+            static_cast<int>(living));
 }
 
 TEST_F(CombatModeTest, GravePriestSuppressesFireballWhileUndeadHealingIsAvailable) {

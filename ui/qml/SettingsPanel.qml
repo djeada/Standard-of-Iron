@@ -84,6 +84,13 @@ Item {
             sync_audio_sliders();
     }
 
+    MouseArea {
+        anchors.fill: parent
+        acceptedButtons: Qt.AllButtons
+        hoverEnabled: true
+        onWheel: wheel => wheel.accepted = true
+    }
+
     Rectangle {
         anchors.fill: parent
         color: Theme.dim

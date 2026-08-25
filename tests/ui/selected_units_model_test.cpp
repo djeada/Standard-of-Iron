@@ -48,6 +48,10 @@ struct SelectionFixture {
     return entity;
   }
 
+  [[nodiscard]] auto role_of(int row, int role) const -> QVariant {
+    return model->data(model->index(row, 0), role);
+  }
+
   [[nodiscard]] auto counted_in_groups() const -> int {
     int total = 0;
     for (const auto& group : model->grouped_by_type()) {
@@ -106,6 +110,40 @@ TEST(SelectedUnitsModel, KeepsARowPerSoldierWhenASelectedBuildingIsFilteredOut) 
   fixture.model->refresh();
   EXPECT_EQ(resets, 0) << "an unchanged selection must not rebuild the unit chips";
   EXPECT_EQ(fixture.model->rowCount(), 1);
+}
+
+TEST(SelectedUnitsModel, ReportsTheMenStillStandingInAFormationUnit) {
+  SelectionFixture fixture;
+  auto* archers = fixture.add_soldier(Game::Units::SpawnType::Archer);
+  fixture.model->refresh();
+  ASSERT_EQ(fixture.model->rowCount(), 1);
+
+  const int roster = fixture.role_of(0, SelectedUnitsModel::MaxSoldiersRole).toInt();
+  ASSERT_GT(roster, 1) << "archers fight as a formation, not as one body";
+  EXPECT_EQ(fixture.role_of(0, SelectedUnitsModel::SoldiersRole).toInt(), roster)
+      << "an undamaged unit must show a full roster";
+
+  archers->get_component<Engine::Core::UnitComponent>()->health = 50;
+  fixture.model->refresh();
+  const int survivors = fixture.role_of(0, SelectedUnitsModel::SoldiersRole).toInt();
+  EXPECT_LT(survivors, roster) << "half a unit's health is half its men";
+  EXPECT_GT(survivors, 0);
+  EXPECT_EQ(fixture.role_of(0, SelectedUnitsModel::MaxSoldiersRole).toInt(), roster)
+      << "casualties must not shrink the denominator";
+}
+
+TEST(SelectedUnitsModel, GroupsCarryTheSoldierCountsTheHudPrints) {
+  SelectionFixture fixture;
+  fixture.add_soldier(Game::Units::SpawnType::Archer);
+  fixture.add_soldier(Game::Units::SpawnType::Archer);
+  fixture.model->refresh();
+
+  const auto groups = fixture.model->grouped_by_type();
+  ASSERT_EQ(groups.size(), 1);
+  const QVariantMap group = groups.first().toMap();
+  const int roster = fixture.role_of(0, SelectedUnitsModel::MaxSoldiersRole).toInt();
+  EXPECT_EQ(group.value(QStringLiteral("maxSoldiers")).toInt(), roster * 2);
+  EXPECT_EQ(group.value(QStringLiteral("soldiers")).toInt(), roster * 2);
 }
 
 } // namespace
