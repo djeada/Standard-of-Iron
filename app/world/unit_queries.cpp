@@ -2,6 +2,7 @@
 
 #include "game/core/component.h"
 #include "game/core/world.h"
+#include "game/systems/formation_combat_geometry.h"
 #include "game/systems/nation_id.h"
 #include "game/systems/troop_profile_service.h"
 #include "game/units/spawn_type.h"
@@ -36,6 +37,8 @@ auto describe_unit(const Engine::Core::World* world,
     out.name = QStringLiteral("Entity");
     out.health = 0;
     out.max_health = 0;
+    out.soldiers = 0;
+    out.max_soldiers = 0;
     out.alive = true;
     out.nation.clear();
     return true;
@@ -54,6 +57,16 @@ auto describe_unit(const Engine::Core::World* world,
   out.health = unit->health;
   out.max_health = unit->max_health;
   out.alive = unit->health > 0;
+  if (out.is_building) {
+    out.max_soldiers = 0;
+    out.soldiers = 0;
+  } else {
+    out.max_soldiers =
+        Game::Systems::FormationCombat::resolve_definition(*unit).total_count;
+    out.soldiers = out.alive ? Game::Systems::FormationCombat::living_slot_count(
+                                   *entity, out.max_soldiers)
+                             : 0;
+  }
   out.nation = Game::Systems::nation_id_to_qstring(unit->nation_id);
   return true;
 }

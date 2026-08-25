@@ -67,7 +67,7 @@
           "yaw": 78,
           "fov": 50,
           "height": 1.6,
-          "roll": 4,
+          "roll": 2.0,
           "ease": "linear"
         }
       ],
@@ -110,7 +110,7 @@
       "start": 6.6,
       "duration": 1.1,
       "slow_motion": 2.5,
-      "shake": 0.07,
+      "shake": 0.03,
       "focus": {
         "mode": "group_pair",
         "group": "roman_cavalry",
@@ -130,7 +130,7 @@
           "time": 1.1,
           "distance": 8.5,
           "pitch": 16,
-          "yaw": 112,
+          "yaw": 111.2,
           "fov": 52,
           "height": 1.6,
           "ease": "linear"
@@ -193,7 +193,7 @@
         {
           "time": 2.8,
           "distance": 34,
-          "pitch": 34,
+          "pitch": 31.8,
           "yaw": 176,
           "fov": 44,
           "height": 1.0,

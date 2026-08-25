@@ -20,6 +20,8 @@ TestCase {
                     "nation": specs[i].nation || "roman_republic",
                     "count": specs[i].count,
                     "woundedCount": specs[i].wounded || 0,
+                    "soldiers": specs[i].soldiers === undefined ? 0 : specs[i].soldiers,
+                    "maxSoldiers": specs[i].maxSoldiers === undefined ? 0 : specs[i].maxSoldiers,
                     "health": specs[i].health === undefined ? 1 : specs[i].health,
                     "stamina": specs[i].stamina === undefined ? 1 : specs[i].stamina,
                     "canRun": specs[i].canRun === undefined ? true : specs[i].canRun
@@ -337,6 +339,78 @@ TestCase {
         summary.destroy();
     }
 
+    function test_a_single_unit_reads_its_surviving_soldiers_out_of_its_roster() {
+        var summary = makeSummary(1, makeGroups([{
+                        "typeKey": "archer",
+                        "count": 1,
+                        "health": 0.5,
+                        "soldiers": 15,
+                        "maxSoldiers": 30
+                    }]));
+        compare(findChild(summary, "selectionHealthLabel").text, "SOLDIERS");
+        compare(findChild(summary, "selectionHealthValue").text, "15 / 30", "a mauled unit must say how many men it has left");
+        summary.groups = makeGroups([{
+                    "typeKey": "archer",
+                    "count": 1,
+                    "health": 0.2,
+                    "soldiers": 6,
+                    "maxSoldiers": 30
+                }]);
+        compare(findChild(summary, "selectionHealthValue").text, "6 / 30", "casualties must move the readout");
+        summary.destroy();
+    }
+
+    function test_a_one_body_unit_keeps_the_percentage_readout() {
+        var summary = makeSummary(1, makeGroups([{
+                        "typeKey": "catapult",
+                        "count": 1,
+                        "health": 0.65,
+                        "soldiers": 1,
+                        "maxSoldiers": 1,
+                        "canRun": false
+                    }]));
+        compare(findChild(summary, "selectionHealthLabel").text, "HEALTH");
+        compare(findChild(summary, "selectionHealthValue").text, "65%", "a single body has no roster to count out of");
+        summary.destroy();
+    }
+
+    function test_roster_cards_read_the_men_left_in_each_group() {
+        var summary = makeSummary(60, makeGroups([{
+                        "typeKey": "spearman",
+                        "count": 40,
+                        "health": 0.9,
+                        "wounded": 12,
+                        "soldiers": 648,
+                        "maxSoldiers": 720
+                    }, {
+                        "typeKey": "archer",
+                        "count": 20,
+                        "health": 0.4,
+                        "soldiers": 240,
+                        "maxSoldiers": 600
+                    }]));
+        verify(summary.army);
+        compare(findChild(summary, "selectionGroupStrength_spearman").text, "648/720");
+        compare(findChild(summary, "selectionGroupStrength_archer").text, "240/600");
+        compare(summary.soldierCount, 888);
+        compare(summary.soldierMax, 1320);
+        compare(findChild(summary, "selectionSubtitle").text, "888 soldiers ready", "the force header must count men, not unit cards");
+        summary.destroy();
+    }
+
+    function test_a_selection_without_soldier_counts_still_reads_cleanly() {
+        var summary = makeSummary(60, makeGroups([{
+                        "typeKey": "spearman",
+                        "count": 40,
+                        "health": 0.9,
+                        "wounded": 12
+                    }]));
+        var strength = findChild(summary, "selectionGroupStrength_spearman");
+        compare(strength.text, "12 wounded", "with no roster data the card falls back to the wounded line");
+        compare(findChild(summary, "selectionSubtitle").text, "60 soldiers ready");
+        summary.destroy();
+    }
+
     function test_icons_resolve_from_the_type_key_or_the_display_name() {
         var summary = makeSummary(1, []);
         var byKey = summary.iconFor("horse_archer", "roman_republic", "");
@@ -387,8 +461,24 @@ TestCase {
         fuzzyCompare(bar.value, 0.3, 0.001, "inspect health bar must show the enemy ratio");
         compare(bar.fillColor.toString(), Theme.danger.toString(), "enemy health reads in the danger colour regardless of ratio");
         compare(findChild(summary, "inspectHealthValue").text, "30 / 100");
+        verify(!findChild(summary, "inspectSoldiersValue").visible, "an enemy with no roster data must not print a soldier line");
         compare(summary.inspectHeader(), "ENEMY UNIT");
         verify(findChild(summary, "inspectAttackSummary").text.indexOf("3") >= 0, "the card says how many of your units are attacking it");
+        summary.destroy();
+    }
+
+    function test_inspecting_a_formation_shows_the_men_it_has_left() {
+        var summary = summaryComponent.createObject(testCase, {
+                "unitCount": 0,
+                "groups": [],
+                "inspected": makeFocus({
+                        "soldiers": 9,
+                        "maxSoldiers": 30
+                    })
+            });
+        var soldiers = findChild(summary, "inspectSoldiersValue");
+        verify(soldiers.visible);
+        compare(soldiers.text, "9 / 30 soldiers");
         summary.destroy();
     }
 

@@ -393,6 +393,8 @@ ScrollView {
                                     "nation": "roman_republic",
                                     "count": 40,
                                     "woundedCount": 7,
+                                    "soldiers": 592,
+                                    "maxSoldiers": 720,
                                     "health": 0.82,
                                     "stamina": 0.65
                                 }, {
@@ -401,6 +403,8 @@ ScrollView {
                                     "nation": "roman_republic",
                                     "count": 24,
                                     "woundedCount": 0,
+                                    "soldiers": 360,
+                                    "maxSoldiers": 360,
                                     "health": 1,
                                     "stamina": 0.9
                                 }]

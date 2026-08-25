@@ -58,6 +58,12 @@ auto group_selection_by_type(const QVariantList& units) -> std::vector<Selection
 
     const auto offset = static_cast<std::size_t>(std::distance(groups.begin(), match));
     match->count += 1;
+    const int max_soldiers =
+        std::max(0, unit.value(QStringLiteral("max_soldiers")).toInt());
+    const int soldiers =
+        std::clamp(unit.value(QStringLiteral("soldiers")).toInt(), 0, max_soldiers);
+    match->max_soldiers += max_soldiers;
+    match->soldiers += soldiers;
     health_sums[offset] += health;
     if (can_run) {
       match->can_run = true;
@@ -115,6 +121,8 @@ auto selection_groups_to_variant(const std::vector<SelectionGroup>& groups)
     entry[QStringLiteral("nation")] = group.nation;
     entry[QStringLiteral("count")] = group.count;
     entry[QStringLiteral("woundedCount")] = group.wounded_count;
+    entry[QStringLiteral("soldiers")] = group.soldiers;
+    entry[QStringLiteral("maxSoldiers")] = group.max_soldiers;
     entry[QStringLiteral("health")] = group.health;
     entry[QStringLiteral("stamina")] = group.stamina;
     entry[QStringLiteral("canRun")] = group.can_run;

@@ -474,6 +474,7 @@ auto prepare_formation_runtime(const HumanoidUnitSnapshot& s,
   }
   auto* soldier_layout_storage = layout_result.instances;
   bool const preserve_soldier_state_prefix = layout_result.preserve_state_prefix;
+  bool const preserve_soldier_locomotion = layout_result.preserve_locomotion_state;
 
   auto& soldier_layouts = *soldier_layout_storage;
 
@@ -497,15 +498,18 @@ auto prepare_formation_runtime(const HumanoidUnitSnapshot& s,
     animation_states.resize(static_cast<std::size_t>(total_layout_count));
     combat_lanes.resize(static_cast<std::size_t>(total_layout_count));
     visibility_frames.resize(static_cast<std::size_t>(total_layout_count), 0U);
-    if (!preserve_soldier_state_prefix) {
+    if (!preserve_soldier_locomotion) {
       for (auto& state : animation_states) {
         reset_humanoid_locomotion_state(state);
       }
+    }
+    if (!preserve_soldier_state_prefix) {
       for (auto& lane_state : combat_lanes) {
         lane_state = {};
       }
       std::fill(visibility_frames.begin(), visibility_frames.end(), 0U);
-    } else if (state_count_changed) {
+    }
+    if (preserve_soldier_locomotion && state_count_changed) {
       for (std::size_t idx = previous_state_count;
            idx < static_cast<std::size_t>(total_layout_count);
            ++idx) {

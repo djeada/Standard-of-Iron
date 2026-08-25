@@ -132,6 +132,13 @@ Item {
         target: (typeof game !== "undefined") ? game.setup : null
     }
 
+    MouseArea {
+        anchors.fill: parent
+        acceptedButtons: Qt.AllButtons
+        hoverEnabled: true
+        onWheel: wheel => wheel.accepted = true
+    }
+
     Rectangle {
         anchors.fill: parent
         color: Theme.dim

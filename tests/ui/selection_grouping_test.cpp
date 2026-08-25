@@ -26,6 +26,17 @@ auto unit(const QString& type,
   return entry;
 }
 
+auto formation(const QString& type,
+               const QString& name,
+               double health,
+               int soldiers,
+               int max_soldiers) -> QVariant {
+  QVariantMap entry = unit(type, name, health).toMap();
+  entry[QStringLiteral("soldiers")] = soldiers;
+  entry[QStringLiteral("max_soldiers")] = max_soldiers;
+  return entry;
+}
+
 TEST(SelectionGroupingTest, EmptySelectionProducesNoRows) {
   EXPECT_TRUE(group_selection_by_type({}).empty());
 }
@@ -187,12 +198,47 @@ TEST(SelectionGroupingTest, VariantConversionExposesTheKeysTheHudBindsTo) {
   EXPECT_EQ(row.value(QStringLiteral("nation")).toString(), QStringLiteral("carthage"));
   EXPECT_EQ(row.value(QStringLiteral("count")).toInt(), 1);
   EXPECT_EQ(row.value(QStringLiteral("woundedCount")).toInt(), 1);
+  EXPECT_TRUE(row.contains(QStringLiteral("soldiers")));
+  EXPECT_TRUE(row.contains(QStringLiteral("maxSoldiers")));
   EXPECT_NEAR(row.value(QStringLiteral("health")).toDouble(), 0.5, 1e-9);
   EXPECT_DOUBLE_EQ(row.value(QStringLiteral("stamina")).toDouble(), 1.0);
   EXPECT_TRUE(row.value(QStringLiteral("canRun")).toBool());
   EXPECT_EQ(row.value(QStringLiteral("activity")).toString(), QStringLiteral("idle"));
   EXPECT_EQ(row.value(QStringLiteral("activityState")).toString(),
             QStringLiteral("active"));
+}
+
+TEST(SelectionGroupingTest, AGroupAddsUpTheSoldiersStillStandingInIt) {
+  const QVariantList units{formation("archer", "Archer", 0.5, 15, 30),
+                           formation("archer", "Archer", 1.0, 30, 30),
+                           formation("archer", "Archer", 0.2, 6, 30)};
+
+  const auto groups = group_selection_by_type(units);
+
+  ASSERT_EQ(groups.size(), 1U);
+  EXPECT_EQ(groups[0].soldiers, 51);
+  EXPECT_EQ(groups[0].max_soldiers, 90)
+      << "the HUD reads a group as its living men out of the men it can hold";
+}
+
+TEST(SelectionGroupingTest, SoldierCountsNeverExceedTheUnitRoster) {
+  const QVariantList units{formation("archer", "Archer", 1.0, 99, 30),
+                           formation("archer", "Archer", 0.0, -4, 30)};
+
+  const auto groups = group_selection_by_type(units);
+
+  ASSERT_EQ(groups.size(), 1U);
+  EXPECT_EQ(groups[0].soldiers, 30);
+  EXPECT_EQ(groups[0].max_soldiers, 60);
+}
+
+TEST(SelectionGroupingTest, UnitsWithoutSoldierCountsReportNone) {
+  const auto groups = group_selection_by_type({unit("catapult", "Catapult", 1.0)});
+
+  ASSERT_EQ(groups.size(), 1U);
+  EXPECT_EQ(groups[0].soldiers, 0);
+  EXPECT_EQ(groups[0].max_soldiers, 0)
+      << "a selection built before soldier counts existed must not print 0 / 0";
 }
 
 TEST(SelectionGroupingTest, AGroupReportsTheActivityMostOfItIsDoing) {

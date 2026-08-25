@@ -211,6 +211,7 @@ inline constexpr char k_promo_last_stand_id[] = "promo_last_stand";
 inline constexpr char k_promo_night_of_the_dead_id[] = "promo_night_of_the_dead";
 inline constexpr char k_promo_storm_charge_id[] = "promo_storm_charge";
 inline constexpr char k_promo_commander_duel_id[] = "promo_commander_duel";
+inline constexpr char k_promo_commander_rally_id[] = "promo_commander_rally";
 inline constexpr char k_promo_wolf_attack_id[] = "promo_wolf_attack";
 
 inline constexpr char k_ambience_night_watch_id[] = "ambience_night_watch";
