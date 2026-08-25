@@ -40,7 +40,6 @@ using Troop = Game::Units::TroopType;
 }
 
 constexpr int k_grid_extent = 768;
-constexpr float k_world_half = 384.0F;
 constexpr float k_content_half = 300.0F;
 
 constexpr float k_gate_tower_exclusion = 12.0F;

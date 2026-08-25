@@ -305,18 +305,6 @@ auto resolve_commander_guard(Engine::Core::World* world,
   return result;
 }
 
-auto attacker_spawn_type(Engine::Core::World* world,
-                         Engine::Core::EntityID attacker_id) -> Game::Units::SpawnType {
-  if (world == nullptr || attacker_id == 0) {
-    return Game::Units::SpawnType::Knight;
-  }
-  auto* attacker = world->get_entity(attacker_id);
-  auto* unit = attacker != nullptr
-                   ? attacker->get_component<Engine::Core::UnitComponent>()
-                   : nullptr;
-  return unit != nullptr ? unit->spawn_type : Game::Units::SpawnType::Knight;
-}
-
 void record_resolved_contact(Engine::Core::Entity* defender,
                              const CommanderDamageResult& result) {
   auto* rpg = defender != nullptr

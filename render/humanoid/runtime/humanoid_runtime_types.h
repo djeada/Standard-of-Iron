@@ -16,7 +16,7 @@
 namespace Engine::Core {
 class Entity;
 class UnitComponent;
-struct CreaturePresentationComponent;
+class CreaturePresentationComponent;
 } // namespace Engine::Core
 
 namespace Render::GL {

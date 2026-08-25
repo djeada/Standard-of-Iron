@@ -80,10 +80,6 @@ auto resolve_walkable_direct_target(const QVector3D& target,
       .value_or(target);
 }
 
-auto should_include_resolved_start_waypoint(const Point& start) -> bool {
-  return !NavGrid::is_grid_walkable(start);
-}
-
 auto segment_traverses_navigation_portal(const QVector3D& from,
                                          const QVector3D& to) -> bool {
   auto& terrain = Game::Map::TerrainService::instance();

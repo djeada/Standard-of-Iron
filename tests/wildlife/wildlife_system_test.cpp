@@ -873,7 +873,6 @@ TEST_F(WildlifeSystemTest, AMapThatNeverAuthoredWildlifeStillGetsAPopulation) {
       << "derived spawn areas landed on ground the spawner refuses";
   EXPECT_GT(count_species(world, Species::Wolf), 0);
 
-  const auto& terrain = Game::Map::TerrainService::instance();
   for (auto* entity : world.collect_entities_with<Engine::Core::WildlifeComponent>()) {
     const auto* transform = entity->get_component<Engine::Core::TransformComponent>();
     ASSERT_NE(transform, nullptr);
@@ -908,7 +907,6 @@ TEST_F(WildlifeSystemTest, ShippedForestMapPopulatesEverySpeciesItEnables) {
   }
   EXPECT_TRUE(birds_seen) << "no flyover crossed the map in two minutes";
 
-  const auto& terrain = Game::Map::TerrainService::instance();
   for (auto* entity : world.collect_entities_with<Engine::Core::WildlifeComponent>()) {
     const auto* transform = entity->get_component<Engine::Core::TransformComponent>();
     ASSERT_NE(transform, nullptr);
