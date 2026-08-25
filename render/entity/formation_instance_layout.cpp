@@ -67,12 +67,14 @@ auto resolve_formation_instances(FormationLayoutCache* cache,
   result.instances = &scratch;
 
   if (cache != nullptr && cache->valid) {
-    result.preserve_state_prefix =
-        cache->seed == request.seed && cache->rows == request.rows &&
-        cache->cols == request.cols &&
+
+    result.preserve_locomotion_state =
+        cache->seed == request.seed &&
         cache->layout_version == request.layout_version &&
-        cache->formation.individuals_per_unit ==
-            request.formation.individuals_per_unit &&
+        cache->formation.individuals_per_unit == request.formation.individuals_per_unit;
+    result.preserve_state_prefix =
+        result.preserve_locomotion_state && cache->rows == request.rows &&
+        cache->cols == request.cols &&
         cache->formation.max_per_row == request.formation.max_per_row &&
         cache->formation.spacing == request.formation.spacing &&
         cache->unit_layout == request.unit_layout &&

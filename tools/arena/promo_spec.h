@@ -65,6 +65,17 @@ struct Shot {
   std::vector<CameraKey> keys;
 };
 
+struct MotionLimits {
+  float yaw_degrees_per_second{12.0F};
+  float pitch_degrees_per_second{6.0F};
+  float fov_degrees_per_second{6.0F};
+  float roll_degrees_per_second{4.0F};
+  float roll_magnitude_degrees{5.0F};
+  float shake{0.03F};
+  float minimum_clip_seconds{1.5F};
+  float mean_clip_seconds{2.0F};
+};
+
 struct Spec {
   QString id;
   QString title;
@@ -94,6 +105,9 @@ struct CapturePass {
 [[nodiscard]] auto plan_passes(const Spec& spec) -> std::vector<CapturePass>;
 
 [[nodiscard]] auto load(const QString& path, QString* error) -> std::optional<Spec>;
+
+[[nodiscard]] auto motion_violations(const Spec& spec, const MotionLimits& limits = {})
+    -> std::vector<QString>;
 
 [[nodiscard]] auto evaluate(const std::vector<CameraKey>& keys,
                             float shot_time) -> Pose;

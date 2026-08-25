@@ -1,0 +1,518 @@
+{
+  "id": "commander_rally",
+  "title": "AVERAGE ROMAN COMMANDER",
+  "subtitle": "STANDARD OF IRON",
+  "width": 1080,
+  "height": 1920,
+  "fps": 60,
+  "supersample": 1,
+  "transition": {
+    "type": "cut"
+  },
+  "shots": [
+    {
+      "name": "the_field",
+      "scenario": "promo_commander_rally",
+      "start": 12.0,
+      "duration": 3.4286,
+      "slow_motion": 1.0,
+      "focus": {
+        "mode": "group_pair",
+        "group": "roman_line",
+        "second_group": "punic_horde",
+        "smoothing": 0.6
+      },
+      "camera": [
+        {
+          "time": 0.0,
+          "distance": 18.0,
+          "pitch": 14,
+          "yaw": 96,
+          "fov": 44,
+          "height": 1.9
+        },
+        {
+          "time": 3.429,
+          "distance": 15.6,
+          "pitch": 13,
+          "yaw": 100,
+          "fov": 44,
+          "height": 1.85,
+          "ease": "smooth"
+        }
+      ],
+      "caption": "ROME IS LOSING",
+      "punch": [
+        {
+          "at": 0.0,
+          "amount": 0.11,
+          "decay": 0.236
+        },
+        {
+          "at": 1.714,
+          "amount": 0.07,
+          "decay": 0.236
+        }
+      ]
+    },
+    {
+      "name": "walk_in",
+      "scenario": "promo_commander_rally",
+      "start": 15.5,
+      "duration": 1.7143,
+      "slow_motion": 3.0,
+      "focus": {
+        "mode": "group",
+        "group": "roman_consul",
+        "smoothing": 0.3
+      },
+      "camera": [
+        {
+          "time": 0.0,
+          "distance": 7.6,
+          "pitch": 7,
+          "yaw": 112,
+          "fov": 34,
+          "height": 1.72
+        },
+        {
+          "time": 5.143,
+          "distance": 6.0,
+          "pitch": 8,
+          "yaw": 116,
+          "fov": 34,
+          "height": 1.68,
+          "ease": "smooth"
+        }
+      ],
+      "caption": "AVERAGE ROMAN COMMANDER",
+      "punch": [
+        {
+          "at": 0.0,
+          "amount": 0.11,
+          "decay": 0.236
+        },
+        {
+          "at": 1.714,
+          "amount": 0.07,
+          "decay": 0.236
+        },
+        {
+          "at": 3.429,
+          "amount": 0.07,
+          "decay": 0.236
+        }
+      ]
+    },
+    {
+      "name": "he_walks",
+      "scenario": "promo_commander_rally",
+      "start": 16.3,
+      "duration": 1.3187,
+      "slow_motion": 2.6,
+      "focus": {
+        "mode": "group",
+        "group": "roman_consul",
+        "smoothing": 0.25
+      },
+      "camera": [
+        {
+          "time": 0.0,
+          "distance": 6.2,
+          "pitch": 6,
+          "yaw": 16,
+          "fov": 32,
+          "height": 1.74
+        },
+        {
+          "time": 3.429,
+          "distance": 4.6,
+          "pitch": 6,
+          "yaw": 12,
+          "fov": 32,
+          "height": 1.7,
+          "ease": "smooth"
+        }
+      ],
+      "caption": "HIM:",
+      "punch": [
+        {
+          "at": 0.0,
+          "amount": 0.11,
+          "decay": 0.236
+        },
+        {
+          "at": 1.714,
+          "amount": 0.07,
+          "decay": 0.236
+        }
+      ]
+    },
+    {
+      "name": "rally",
+      "scenario": "promo_commander_rally",
+      "start": 17.2,
+      "duration": 1.4286,
+      "slow_motion": 2.4,
+      "focus": {
+        "mode": "group",
+        "group": "roman_consul",
+        "smoothing": 0.2
+      },
+      "camera": [
+        {
+          "time": 0.0,
+          "distance": 8.4,
+          "pitch": 10,
+          "yaw": 124,
+          "fov": 42,
+          "height": 1.8
+        },
+        {
+          "time": 3.429,
+          "distance": 7.6,
+          "pitch": 11,
+          "yaw": 130,
+          "fov": 42,
+          "height": 1.78,
+          "ease": "smooth"
+        }
+      ],
+      "caption": "CONSULAR ASSAULT",
+      "punch": [
+        {
+          "at": 0.0,
+          "amount": 0.11,
+          "decay": 0.236
+        },
+        {
+          "at": 1.714,
+          "amount": 0.07,
+          "decay": 0.236
+        }
+      ]
+    },
+    {
+      "name": "the_charge",
+      "scenario": "promo_commander_rally",
+      "start": 21.8,
+      "duration": 2.5714,
+      "slow_motion": 1.0,
+      "focus": {
+        "mode": "group",
+        "group": "roman_horse",
+        "smoothing": 0.4
+      },
+      "camera": [
+        {
+          "time": 0.0,
+          "distance": 11.5,
+          "pitch": 20,
+          "yaw": 24,
+          "fov": 46,
+          "height": 1.9
+        },
+        {
+          "time": 2.571,
+          "distance": 9.4,
+          "pitch": 16,
+          "yaw": 14,
+          "fov": 46,
+          "height": 1.75,
+          "ease": "smooth"
+        }
+      ],
+      "punch": [
+        {
+          "at": 0.0,
+          "amount": 0.11,
+          "decay": 0.236
+        },
+        {
+          "at": 1.714,
+          "amount": 0.07,
+          "decay": 0.236
+        }
+      ]
+    },
+    {
+      "name": "signature",
+      "scenario": "promo_commander_rally",
+      "start": 25.5,
+      "duration": 1.1688,
+      "slow_motion": 2.2,
+      "focus": {
+        "mode": "group",
+        "group": "roman_consul",
+        "smoothing": 0.18
+      },
+      "camera": [
+        {
+          "time": 0.0,
+          "distance": 5.6,
+          "pitch": 10,
+          "yaw": 140,
+          "fov": 36,
+          "height": 1.76
+        },
+        {
+          "time": 2.569,
+          "distance": 5.0,
+          "pitch": 11,
+          "yaw": 146,
+          "fov": 36,
+          "height": 1.72,
+          "ease": "smooth"
+        }
+      ],
+      "freeze": 0.8571,
+      "freeze_text": "SKILL ISSUE",
+      "punch": [
+        {
+          "at": 0.0,
+          "amount": 0.11,
+          "decay": 0.236
+        },
+        {
+          "at": 1.714,
+          "amount": 0.07,
+          "decay": 0.236
+        }
+      ]
+    },
+    {
+      "name": "they_break",
+      "scenario": "promo_commander_rally",
+      "start": 33.5,
+      "duration": 2.5714,
+      "slow_motion": 1.0,
+      "focus": {
+        "mode": "group_pair",
+        "group": "punic_horde",
+        "second_group": "roman_horse",
+        "smoothing": 0.45
+      },
+      "camera": [
+        {
+          "time": 0.0,
+          "distance": 8.4,
+          "pitch": 12,
+          "yaw": 150,
+          "fov": 42,
+          "height": 1.8
+        },
+        {
+          "time": 2.571,
+          "distance": 10.4,
+          "pitch": 14,
+          "yaw": 144,
+          "fov": 42,
+          "height": 1.85,
+          "ease": "smooth"
+        }
+      ],
+      "punch": [
+        {
+          "at": 0.0,
+          "amount": 0.11,
+          "decay": 0.236
+        },
+        {
+          "at": 1.714,
+          "amount": 0.07,
+          "decay": 0.236
+        }
+      ]
+    },
+    {
+      "name": "after",
+      "scenario": "promo_commander_rally",
+      "start": 44.6,
+      "duration": 4.0,
+      "slow_motion": 1.5,
+      "focus": {
+        "mode": "group_pair",
+        "group": "roman_consul",
+        "second_group": "roman_horse",
+        "smoothing": 0.6
+      },
+      "camera": [
+        {
+          "time": 0.0,
+          "distance": 6.5,
+          "pitch": 9,
+          "yaw": 116,
+          "fov": 42,
+          "height": 1.76
+        },
+        {
+          "time": 6.0,
+          "distance": 12.0,
+          "pitch": 18,
+          "yaw": 124,
+          "fov": 42,
+          "height": 1.92,
+          "ease": "smooth"
+        }
+      ],
+      "punch": [
+        {
+          "at": 0.0,
+          "amount": 0.11,
+          "decay": 0.236
+        },
+        {
+          "at": 1.714,
+          "amount": 0.07,
+          "decay": 0.236
+        },
+        {
+          "at": 3.429,
+          "amount": 0.07,
+          "decay": 0.236
+        },
+        {
+          "at": 5.143,
+          "amount": 0.07,
+          "decay": 0.236
+        }
+      ]
+    }
+  ],
+  "grade": {
+    "contrast": 1.16,
+    "saturation": 0.9,
+    "brightness": 0.0,
+    "gamma": 0.99,
+    "grain": 4,
+    "vignette": 0.22
+  },
+  "music": "artifacts/promo/reel_beat.ogg",
+  "music_start": 3.429,
+  "sfx": [
+    {
+      "file": "assets/audio/sfx/combat/battlefield_distant_mass_01.ogg",
+      "at": 0.1,
+      "gain": 1.2
+    },
+    {
+      "file": "assets/audio/sfx/combat/roman_shield_wall_impact.ogg",
+      "at": 0.25,
+      "gain": 1.8
+    },
+    {
+      "file": "assets/audio/sfx/combat/human_death_cry.ogg",
+      "at": 0.85,
+      "gain": 2.4
+    },
+    {
+      "file": "assets/audio/sfx/combat/gladius_shield_impacts_close.ogg",
+      "at": 0.9,
+      "gain": 1.35
+    },
+    {
+      "file": "assets/audio/sfx/combat/battlefield_crowd_chaos.ogg",
+      "at": 1.6,
+      "gain": 1.1
+    },
+    {
+      "file": "assets/audio/sfx/combat/human_death_cry.ogg",
+      "at": 1.68,
+      "gain": 2.4
+    },
+    {
+      "file": "assets/audio/sfx/orders/attack_horn_stab.ogg",
+      "at": 11.51,
+      "gain": 2.3
+    },
+    {
+      "file": "assets/audio/sfx/combat/roman_war_horns_orders.ogg",
+      "at": 11.51,
+      "gain": 1.7
+    },
+    {
+      "file": "assets/audio/sfx/combat/roman_cavalry_charge.ogg",
+      "at": 15.48,
+      "gain": 1.65
+    },
+    {
+      "file": "assets/audio/sfx/combat/horse_gallop_close_pass.ogg",
+      "at": 16.63,
+      "gain": 1.45
+    },
+    {
+      "file": "assets/audio/sfx/combat/human_death_cry.ogg",
+      "at": 17.4,
+      "gain": 2.4
+    },
+    {
+      "file": "assets/audio/sfx/combat/roman_shield_wall_impact.ogg",
+      "at": 17.73,
+      "gain": 1.9
+    },
+    {
+      "file": "assets/audio/sfx/combat/blade_clash_03.ogg",
+      "at": 18.0,
+      "gain": 2.2
+    },
+    {
+      "file": "assets/audio/sfx/combat/sword_hit_03.ogg",
+      "at": 18.06,
+      "gain": 1.6
+    },
+    {
+      "file": "assets/audio/sfx/combat/blade_clash_04.ogg",
+      "at": 18.33,
+      "gain": 2.2
+    },
+    {
+      "file": "assets/audio/sfx/combat/sword_hit_04.ogg",
+      "at": 18.39,
+      "gain": 1.6
+    },
+    {
+      "file": "assets/audio/sfx/combat/blade_clash_01.ogg",
+      "at": 18.66,
+      "gain": 2.2
+    },
+    {
+      "file": "assets/audio/sfx/combat/sword_hit_01.ogg",
+      "at": 18.72,
+      "gain": 1.6
+    },
+    {
+      "file": "assets/audio/sfx/combat/blade_clash_02.ogg",
+      "at": 18.99,
+      "gain": 2.2
+    },
+    {
+      "file": "assets/audio/sfx/combat/sword_hit_02.ogg",
+      "at": 19.05,
+      "gain": 1.6
+    },
+    {
+      "file": "assets/audio/sfx/combat/blade_clash_03.ogg",
+      "at": 19.32,
+      "gain": 2.2
+    },
+    {
+      "file": "assets/audio/sfx/combat/sword_hit_03.ogg",
+      "at": 19.38,
+      "gain": 1.6
+    },
+    {
+      "file": "assets/audio/sfx/combat/vanguard_rush.ogg",
+      "at": 20.77,
+      "gain": 1.25
+    },
+    {
+      "file": "assets/audio/sfx/combat/soldiers_victory_cheer.ogg",
+      "at": 23.84,
+      "gain": 1.2
+    }
+  ],
+  "beat": {
+    "bpm": 140.0,
+    "beat_seconds": 0.42857142857142855
+  }
+}

@@ -430,6 +430,60 @@ TEST(CommanderSystemTest, AuraAppliesAttackAndProductionBonusesByType) {
   EXPECT_FLOAT_EQ(barracks_prod->time_remaining, expected_haste_time);
 }
 
+TEST(CommanderSystemTest, HealthRegenAuraCannotRefillADecimatedUnit) {
+  Engine::Core::World world;
+
+  auto* commander = world.create_entity();
+  auto* commander_unit = commander->add_component<Engine::Core::UnitComponent>();
+  auto* commander_transform =
+      commander->add_component<Engine::Core::TransformComponent>();
+  auto* commander_data = commander->add_component<Engine::Core::CommanderComponent>();
+  ASSERT_NE(commander_unit, nullptr);
+  ASSERT_NE(commander_transform, nullptr);
+  ASSERT_NE(commander_data, nullptr);
+  commander_unit->owner_id = 1;
+  commander_unit->health = 100;
+  commander_unit->nation_id = Game::Systems::NationID::RomanRepublic;
+  commander_transform->position = {0.0F, 0.0F, 0.0F};
+  commander_data->bonus_type = "health_regen";
+  commander_data->aura_bonus_value = 50.0F;
+  commander_data->aura_radius = 10.0F;
+  commander_data->aura_ability_active = true;
+  commander_data->aura_ability_remaining = 10.0F;
+
+  auto* ally = world.create_entity();
+  auto* ally_unit = ally->add_component<Engine::Core::UnitComponent>();
+  auto* ally_transform = ally->add_component<Engine::Core::TransformComponent>();
+  ASSERT_NE(ally_unit, nullptr);
+  ASSERT_NE(ally_transform, nullptr);
+  ally_unit->owner_id = 1;
+  ally_unit->health = 40;
+  ally_unit->max_health = 100;
+  ally_unit->spawn_type = Game::Units::SpawnType::Archer;
+  ally_unit->nation_id = Game::Systems::NationID::RomanRepublic;
+  ally_transform->position = {2.0F, 0.0F, 0.0F};
+
+  auto* roster =
+      ally->add_component<Engine::Core::FormationRosterPresentationComponent>();
+  ASSERT_NE(roster, nullptr);
+  roster->total_count = 30;
+  roster->live_count = 15;
+  roster->alive.assign(30, 0U);
+  for (std::size_t slot = 15; slot < roster->alive.size(); ++slot) {
+    roster->alive[slot] = 1U;
+  }
+
+  Game::Systems::CommanderSystem system;
+  for (int tick = 0; tick < 20; ++tick) {
+    system.update(&world, 1.0F);
+  }
+
+  EXPECT_EQ(ally_unit->health, 50)
+      << "a half-dead unit can only be mended up to what its survivors can hold";
+  EXPECT_LT(ally_unit->health, ally_unit->max_health)
+      << "the aura must never report a decimated unit as at full strength";
+}
+
 TEST(CommanderSystemTest, AttackBoostFallsOffOutsideAura) {
   Engine::Core::World world;
 

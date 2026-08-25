@@ -41,8 +41,48 @@ Design.IronPanel {
 
     readonly property bool canShowProfile: !!root.focusProfile
 
+    readonly property int soldierCount: {
+        var total = 0;
+        for (var i = 0; i < root.groups.length; ++i)
+            total += root.soldiersOf(root.groups[i]);
+        return total;
+    }
+
+    readonly property int soldierMax: {
+        var total = 0;
+        for (var i = 0; i < root.groups.length; ++i)
+            total += root.maxSoldiersOf(root.groups[i]);
+        return total;
+    }
+
     accessibleName: qsTr("Selected units")
     Accessible.description: header.text
+
+    function soldiersOf(entry) {
+        if (!entry)
+            return 0;
+        var value = entry.soldiers;
+        return value === undefined || value === null ? 0 : value;
+    }
+
+    function maxSoldiersOf(entry) {
+        if (!entry)
+            return 0;
+        var value = entry.maxSoldiers !== undefined ? entry.maxSoldiers : entry.max_soldiers;
+        return value === undefined || value === null ? 0 : value;
+    }
+
+    function hasSoldierCount(entry) {
+        return root.maxSoldiersOf(entry) > 1;
+    }
+
+    function strengthText(entry) {
+        return qsTr("%1 / %2").arg(root.soldiersOf(entry)).arg(root.maxSoldiersOf(entry));
+    }
+
+    function strengthTextCompact(entry) {
+        return qsTr("%1/%2").arg(root.soldiersOf(entry)).arg(root.maxSoldiersOf(entry));
+    }
 
     function healthColor(ratio) {
         if (ratio > 0.6)
@@ -144,7 +184,8 @@ Design.IronPanel {
 
                 Text {
                     visible: !root.empty || root.inspecting
-                    text: root.inspecting ? root.inspected.name : root.singleUnit && root.groups.length > 0 ? root.groups[0].name : qsTr("%1 soldiers ready").arg(root.unitCount)
+                    objectName: "selectionSubtitle"
+                    text: root.inspecting ? root.inspected.name : root.singleUnit && root.groups.length > 0 ? root.groups[0].name : qsTr("%1 soldiers ready").arg(root.soldierMax > 0 ? root.soldierCount : root.unitCount)
                     color: Design.Theme.textPrimary
                     font.family: Design.Typography.displayFamily
                     font.pixelSize: Design.Typography.label
@@ -268,7 +309,7 @@ Design.IronPanel {
 
             objectName: "selectionInspectCard"
             width: parent.width
-            height: Design.Metrics.space24 * 4
+            height: Design.Metrics.space24 * 4 + (root.hasSoldierCount(root.inspected) ? Design.Metrics.space16 : 0)
             radius: Design.Metrics.radiusMedium
             color: Design.Theme.backgroundDeep
             border.width: Design.Metrics.borderThin
@@ -351,6 +392,17 @@ Design.IronPanel {
                         height: Design.Metrics.space12
                         value: root.inspected.healthRatio
                         fillColor: root.focusHealthColor(root.inspected)
+                    }
+
+                    Text {
+                        objectName: "inspectSoldiersValue"
+                        width: parent.width
+                        visible: root.hasSoldierCount(root.inspected)
+                        text: qsTr("%1 soldiers").arg(root.strengthText(root.inspected))
+                        color: Design.Theme.textSecondary
+                        font.family: Design.Typography.family
+                        font.pixelSize: Design.Typography.caption
+                        elide: Text.ElideRight
                     }
                 }
 
@@ -458,7 +510,7 @@ Design.IronPanel {
 
                             Text {
                                 objectName: "selectionHealthLabel"
-                                text: qsTr("HEALTH")
+                                text: root.hasSoldierCount(root.groups[0]) ? qsTr("SOLDIERS") : qsTr("HEALTH")
                                 color: Design.Theme.textPrimary
                                 font.family: Design.Typography.family
                                 font.pixelSize: Design.Typography.caption
@@ -471,7 +523,7 @@ Design.IronPanel {
 
                             Text {
                                 objectName: "selectionHealthValue"
-                                text: qsTr("%1%").arg(Math.round(root.groups[0].health * 100))
+                                text: root.hasSoldierCount(root.groups[0]) ? root.strengthText(root.groups[0]) : qsTr("%1%").arg(Math.round(root.groups[0].health * 100))
                                 color: root.healthColor(root.groups[0].health)
                                 font.family: Design.Typography.family
                                 font.pixelSize: Design.Typography.caption
@@ -563,9 +615,12 @@ Design.IronPanel {
                     width: Design.Metrics.space24 * 2
                     height: Design.Metrics.space24 * 2
 
+                    readonly property bool showsStrength: root.hasSoldierCount(chip.model)
+                    readonly property string strength: chip.showsStrength ? root.strengthTextCompact(chip.model) : ""
+
                     Accessible.role: Accessible.Button
                     Accessible.name: chip.model.name
-                    Accessible.description: Math.round(chip.model.health_ratio * 100) + "% — " + Design.ActivityIcons.summary(chip.model.activity, chip.model.activity_state)
+                    Accessible.description: (chip.showsStrength ? chip.strength + qsTr(" soldiers — ") : Math.round(chip.model.health_ratio * 100) + "% — ") + Design.ActivityIcons.summary(chip.model.activity, chip.model.activity_state)
 
                     Rectangle {
                         anchors.fill: parent
@@ -577,13 +632,27 @@ Design.IronPanel {
 
                     Image {
                         anchors.centerIn: parent
-                        anchors.verticalCenterOffset: -Design.Metrics.space2
+                        anchors.verticalCenterOffset: chip.showsStrength ? -Design.Metrics.space8 : -Design.Metrics.space2
                         width: Design.Metrics.iconMedium
                         height: width
                         fillMode: Image.PreserveAspectFit
                         source: root.iconFor(chip.model.unit_type, chip.model.nation, chip.model.name)
                         smooth: true
                         mipmap: true
+                    }
+
+                    Text {
+                        objectName: "selectionChipStrength_" + chip.model.unit_id
+
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        anchors.bottom: parent.bottom
+                        anchors.bottomMargin: Design.Metrics.space8
+                        visible: chip.showsStrength
+                        text: chip.strength
+                        color: root.healthColor(chip.model.health_ratio)
+                        font.family: Design.Typography.family
+                        font.pixelSize: Design.Typography.caption
+                        font.weight: Design.Typography.bold
                     }
 
                     Item {
@@ -633,7 +702,7 @@ Design.IronPanel {
 
                     ToolTip.visible: chipMouse.containsMouse
                     ToolTip.delay: Design.Metrics.tooltipDelay
-                    ToolTip.text: chip.model.name + " — " + Math.round(chip.model.health_ratio * 100) + "%" + "\n" + Design.ActivityIcons.summary(chip.model.activity, chip.model.activity_state)
+                    ToolTip.text: chip.model.name + " — " + (chip.showsStrength ? qsTr("%1 soldiers").arg(chip.strength) : Math.round(chip.model.health_ratio * 100) + "%") + "\n" + Design.ActivityIcons.summary(chip.model.activity, chip.model.activity_state)
                 }
             }
         }
@@ -669,13 +738,16 @@ Design.IronPanel {
 
                     readonly property string activityText: Design.ActivityIcons.summary(root.groupActivity(groupCard.modelData), root.groupActivityState(groupCard.modelData)) + (groupCard.modelData.mixedActivity ? qsTr(" (mixed)") : "")
 
+                    readonly property bool showsStrength: root.hasSoldierCount(groupCard.modelData)
+                    readonly property string strength: groupCard.showsStrength ? root.strengthTextCompact(groupCard.modelData) : ""
+
                     Accessible.role: Accessible.Button
                     Accessible.name: groupCard.modelData.name + " ×" + groupCard.modelData.count
-                    Accessible.description: Math.round(groupCard.modelData.health * 100) + "% — " + groupCard.activityText
+                    Accessible.description: (groupCard.showsStrength ? groupCard.strength + qsTr(" soldiers — ") : Math.round(groupCard.modelData.health * 100) + "% — ") + groupCard.activityText
 
                     ToolTip.visible: groupMouse.containsMouse
                     ToolTip.delay: Design.Metrics.tooltipDelay
-                    ToolTip.text: groupCard.modelData.name + " ×" + groupCard.modelData.count + "\n" + groupCard.activityText
+                    ToolTip.text: groupCard.modelData.name + " ×" + groupCard.modelData.count + (groupCard.showsStrength ? " — " + qsTr("%1 soldiers").arg(groupCard.strength) : "") + "\n" + groupCard.activityText
 
                     Rectangle {
                         id: portraitFrame
@@ -769,15 +841,21 @@ Design.IronPanel {
                     }
 
                     Text {
+                        objectName: "selectionGroupStrength_" + groupCard.modelData.typeKey
+
                         anchors.left: portraitFrame.right
                         anchors.leftMargin: Design.Metrics.space8
+                        anchors.right: parent.right
+                        anchors.rightMargin: Design.Metrics.space8
                         anchors.bottom: groupHealth.top
                         anchors.bottomMargin: Design.Metrics.space2
-                        visible: groupCard.modelData.woundedCount > 0 && groupFlow.cardHeight >= Design.Metrics.space24 * 3
-                        text: qsTr("%1 wounded").arg(groupCard.modelData.woundedCount)
-                        color: Design.Theme.warning
+                        visible: groupFlow.cardHeight >= Design.Metrics.space24 * 3 && (groupCard.showsStrength || groupCard.modelData.woundedCount > 0)
+                        text: groupCard.showsStrength ? groupCard.strength : qsTr("%1 wounded").arg(groupCard.modelData.woundedCount)
+                        color: groupCard.showsStrength ? root.healthColor(groupCard.modelData.health) : Design.Theme.warning
                         font.family: Design.Typography.family
                         font.pixelSize: Design.Typography.caption
+                        font.weight: groupCard.showsStrength ? Design.Typography.bold : Design.Typography.regular
+                        elide: Text.ElideRight
                     }
 
                     MouseArea {

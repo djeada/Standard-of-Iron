@@ -9635,6 +9635,195 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
 
   {
     auto s = definition(
+        QString::fromLatin1(k_promo_commander_rally_id),
+        QStringLiteral("Promo: The Consul Steps In"),
+        QStringLiteral("Afternoon capture scene. A thinned Roman line is being "
+                       "rolled up by twice its number until the consul walks up "
+                       "from the rear, calls the Consular Assault, and the legion "
+                       "turns the field with the horse coming round the flank."),
+        50.0F,
+        {30.0F, 26.0F, 0.0F});
+    s.camera_focus = QVector3D(0.0F, 1.0F, 0.0F);
+    s.select_spawned_units = false;
+    s.suppress_spawn_anchor = true;
+    s.suppress_ui_overlays = true;
+    s.force_full_creature_lod = true;
+    s.suppress_combat_dust = true;
+    s.graphics_quality = Render::GraphicsQuality::Ultra;
+    s.arena_floor_half_extent = 34.0F;
+    s.terrain_height_scale_override = 2.6F;
+
+    s.terrain_seed_override = 2024;
+    s.suppress_boundary_mountains = true;
+    {
+      constexpr int k_ring_mounds = 18;
+      constexpr float k_ring_radius = 44.0F;
+      for (int i = 0; i < k_ring_mounds; ++i) {
+        float const angle = 2.0F * std::numbers::pi_v<float> * static_cast<float>(i) /
+                            static_cast<float>(k_ring_mounds);
+        float const wobble = 0.5F * std::sin(static_cast<float>(i) * 2.3F);
+        s.elevation_patches.push_back(
+            {{k_ring_radius * std::sin(angle), 0.0F, k_ring_radius * std::cos(angle)},
+             20.0F,
+             14.5F + (2.5F * wobble)});
+      }
+    }
+    s.environment.start_time = 14.6F;
+    s.environment.time_mode = Game::Map::TimeMode::Locked;
+    s.environment.fog_density_override = 0.018F;
+    s.environment.exposure_override = 1.22F;
+
+    auto consul = group(QStringLiteral("roman_consul"),
+                        Troop::RomanVeteranConsul,
+                        1,
+                        1,
+                        {2.0F, 0.0F, -19.0F},
+                        1);
+    consul.health_override = consul.max_health_override = 12000;
+
+    auto roman_line = group(QStringLiteral("roman_line"),
+                            Troop::Swordsman,
+                            1,
+                            7,
+                            {-11.9F, 0.0F, -6.0F},
+                            12,
+                            {3.4F, 0.0F, 0.0F});
+    auto roman_spears = group(QStringLiteral("roman_spears"),
+                              Troop::Spearman,
+                              1,
+                              5,
+                              {-8.5F, 0.0F, -10.5F},
+                              12,
+                              {3.4F, 0.0F, 0.0F});
+
+    roman_line.max_health_override = 3200;
+    roman_line.health_override = 1400;
+    roman_spears.max_health_override = 3200;
+    roman_spears.health_override = 1500;
+
+    auto roman_horse = group(QStringLiteral("roman_horse"),
+                             Troop::MountedKnight,
+                             1,
+                             5,
+                             {24.0F, 0.0F, -10.0F},
+                             6,
+                             {3.6F, 0.0F, 0.0F});
+    roman_horse.max_health_override = roman_horse.health_override = 2400;
+
+    auto punic_horde = group(QStringLiteral("punic_horde"),
+                             Troop::Swordsman,
+                             2,
+                             9,
+                             {-15.3F, 0.0F, 7.0F},
+                             16,
+                             {3.4F, 0.0F, 0.0F});
+    auto punic_spears = group(QStringLiteral("punic_spears"),
+                              Troop::Spearman,
+                              2,
+                              6,
+                              {-10.2F, 0.0F, 11.5F},
+                              16,
+                              {3.4F, 0.0F, 0.0F});
+    auto punic_horse = group(QStringLiteral("punic_horse"),
+                             Troop::MountedKnight,
+                             2,
+                             4,
+                             {-26.0F, 0.0F, 12.0F},
+                             6,
+                             {3.6F, 0.0F, 0.0F});
+    punic_horde.max_health_override = punic_horde.health_override = 900;
+    punic_spears.max_health_override = punic_spears.health_override = 900;
+    punic_horse.max_health_override = punic_horse.health_override = 800;
+
+    s.groups = {consul,
+                roman_line,
+                roman_spears,
+                roman_horse,
+                punic_horde,
+                punic_spears,
+                punic_horse};
+
+    s.resource_patches = {
+        {QStringLiteral("pine"), 6, {-36.0F, 0.0F, -30.0F}, {4.0F, 0.0F, 2.5F}, 1.3F},
+        {QStringLiteral("pine"), 5, {-34.0F, 0.0F, 30.0F}, {4.2F, 0.0F, 2.0F}, 1.25F},
+        {QStringLiteral("pine"), 4, {8.0F, 0.0F, 34.0F}, {4.2F, 0.0F, 2.0F}, 1.2F},
+        {QStringLiteral("boulder"), 3, {-30.0F, 0.0F, 24.0F}, {3.4F, 0.0F, 2.0F}, 1.1F},
+        {QStringLiteral("boulder"),
+         2,
+         {-34.0F, 0.0F, -10.0F},
+         {3.6F, 0.0F, 2.0F},
+         1.0F},
+    };
+
+    auto consul_walk = at(8.0F, Command::Move, QStringLiteral("roman_consul"));
+    consul_walk.destination = {2.0F, 0.0F, -9.0F};
+
+    auto rally =
+        at(17.4F, Command::TriggerCommanderAura, QStringLiteral("roman_consul"));
+    rally.value = 18;
+
+    auto first_blood = at(6.0F, Command::ApplyDamage, QStringLiteral("roman_line"));
+    first_blood.value = 110;
+    auto second_blood = at(10.5F, Command::ApplyDamage, QStringLiteral("roman_spears"));
+    second_blood.value = 130;
+    auto third_blood = at(14.0F, Command::ApplyDamage, QStringLiteral("roman_line"));
+    third_blood.value = 120;
+
+    s.steps = {
+        at(0.2F, Command::Hold, QStringLiteral("roman_line")),
+        at(0.2F, Command::Hold, QStringLiteral("roman_spears")),
+        at(0.2F, Command::Hold, QStringLiteral("roman_horse")),
+        at(0.4F,
+           Command::AttackMove,
+           QStringLiteral("punic_horde"),
+           QStringLiteral("roman_line")),
+        at(0.6F,
+           Command::AttackMove,
+           QStringLiteral("punic_spears"),
+           QStringLiteral("roman_spears")),
+        first_blood,
+        at(6.5F,
+           Command::Charge,
+           QStringLiteral("punic_horse"),
+           QStringLiteral("roman_spears")),
+        second_blood,
+        consul_walk,
+        third_blood,
+        rally,
+        at(17.8F,
+           Command::AttackMove,
+           QStringLiteral("roman_line"),
+           QStringLiteral("punic_horde")),
+        at(18.0F,
+           Command::AttackMove,
+           QStringLiteral("roman_spears"),
+           QStringLiteral("punic_spears")),
+        at(18.2F,
+           Command::Charge,
+           QStringLiteral("roman_consul"),
+           QStringLiteral("punic_horde")),
+        at(18.6F,
+           Command::Charge,
+           QStringLiteral("roman_horse"),
+           QStringLiteral("punic_horde")),
+    };
+
+    s.expectations = {
+        expectation(Expect::GroupExists, QStringLiteral("roman_consul")),
+        expectation(Expect::GroupIsRendered, QStringLiteral("roman_line")),
+        expectation(Expect::GroupIsRendered, QStringLiteral("punic_horde")),
+        expectation(Expect::GroupIsRendered, QStringLiteral("roman_consul")),
+        expectation(Expect::GroupIsRendered, QStringLiteral("roman_horse")),
+        expectation(Expect::CommanderAuraActivated, QStringLiteral("roman_consul")),
+        expectation(Expect::CommanderAuraBuffObserved, QStringLiteral("roman_line")),
+        expectation(Expect::AttackAnimationObserved, QStringLiteral("punic_horde")),
+        expectation(Expect::DeathAnimationObserved, QStringLiteral("punic_horde")),
+    };
+    result.push_back(std::move(s));
+  }
+
+  {
+    auto s = definition(
         QString::fromLatin1(k_promo_wolf_attack_id),
         QStringLiteral("Promo: Wolves on the Fold"),
         QStringLiteral("Late-afternoon capture scene. A pack comes out of the east "

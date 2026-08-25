@@ -245,11 +245,12 @@ auto ensure_formation_roster(Engine::Core::Entity& target,
 
   int const current_live_count = static_cast<int>(std::count(
       roster->alive.begin(), roster->alive.end(), static_cast<std::uint8_t>(1U)));
-  bool const valid = roster->total_count == total_count &&
-                     roster->alive.size() == static_cast<std::size_t>(total_count) &&
-                     current_live_count == expected_live_count;
-  if (valid) {
-    roster->live_count = static_cast<std::uint16_t>(expected_live_count);
+  bool const shaped_for_this_unit =
+      roster->total_count == total_count &&
+      roster->alive.size() == static_cast<std::size_t>(total_count);
+  if (shaped_for_this_unit && current_live_count <= expected_live_count) {
+
+    roster->live_count = static_cast<std::uint16_t>(current_live_count);
     return roster;
   }
 
@@ -413,10 +414,13 @@ auto begin_soldier_casualties(Engine::Core::Entity* target,
     }
     if (roster != nullptr && slot >= 0 && slot < individuals_per_unit) {
       roster->alive[static_cast<std::size_t>(slot)] = 0U;
-      roster->live_count = static_cast<std::uint16_t>(std::max(0, new_survivors));
       ++roster->revision;
     }
     ++queued_casualties;
+  }
+  if (roster != nullptr && queued_casualties > 0) {
+    roster->live_count = static_cast<std::uint16_t>(std::count(
+        roster->alive.begin(), roster->alive.end(), static_cast<std::uint8_t>(1U)));
   }
   return queued_casualties;
 }

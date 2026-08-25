@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <cmath>
 #include <gtest/gtest.h>
 #include <vector>
@@ -33,7 +34,88 @@ auto shot(const char* name,
   return result;
 }
 
+auto calm_shot(const char* name, float clip_seconds) -> Shot {
+  auto result = shot(name, "arena", 0.0F, clip_seconds);
+  CameraKey first;
+  first.time = 0.0F;
+  first.yaw = 90.0F;
+  first.pitch = 10.0F;
+  first.fov = 40.0F;
+  CameraKey last = first;
+  last.time = clip_seconds;
+  last.yaw = 96.0F;
+  result.keys = {first, last};
+  return result;
+}
+
+auto spec_of(std::vector<Shot> shots) -> Spec {
+  Spec result;
+  result.id = QStringLiteral("test");
+  result.shots = std::move(shots);
+  return result;
+}
+
+auto mentions(const std::vector<QString>& breaches, const char* needle) -> bool {
+  return std::any_of(breaches.begin(), breaches.end(), [needle](const QString& line) {
+    return line.contains(QString::fromLatin1(needle));
+  });
+}
+
 } // namespace
+
+TEST(ArenaPromoSpecMotionTest, CalmCameraWorkPasses) {
+  EXPECT_TRUE(Arena::Promo::motion_violations(
+                  spec_of({calm_shot("wide", 3.0F), calm_shot("close", 2.5F)}))
+                  .empty());
+}
+
+TEST(ArenaPromoSpecMotionTest, AWhippingOrbitIsRefused) {
+  auto whip = calm_shot("whip", 2.0F);
+  whip.keys.back().yaw = 150.0F;
+
+  const auto breaches = Arena::Promo::motion_violations(
+      spec_of({whip, calm_shot("hold", 3.0F), calm_shot("hold_two", 3.0F)}));
+
+  EXPECT_TRUE(mentions(breaches, "swings yaw"))
+      << "a 30 deg/s orbit is the shaky-chaos camera the limits exist to stop";
+}
+
+TEST(ArenaPromoSpecMotionTest, HandheldShakeIsRefused) {
+  auto shaky = calm_shot("shaky", 3.0F);
+  shaky.shake = 0.09F;
+
+  EXPECT_TRUE(mentions(Arena::Promo::motion_violations(spec_of({shaky})), "shakes at"));
+}
+
+TEST(ArenaPromoSpecMotionTest, ARollingHorizonIsRefused) {
+  auto rolled = calm_shot("rolled", 2.0F);
+  rolled.keys.front().roll = -6.0F;
+  rolled.keys.back().roll = 6.0F;
+
+  const auto breaches = Arena::Promo::motion_violations(spec_of({rolled}));
+
+  EXPECT_TRUE(mentions(breaches, "rolls the horizon"));
+  EXPECT_TRUE(mentions(breaches, "swings roll"))
+      << "a horizon that tips one way and back inside two seconds reads as a stumble";
+}
+
+TEST(ArenaPromoSpecMotionTest, FlashCuttingIsRefused) {
+  const auto breaches = Arena::Promo::motion_violations(
+      spec_of({calm_shot("a", 0.9F), calm_shot("b", 0.9F), calm_shot("c", 0.9F)}));
+
+  EXPECT_TRUE(mentions(breaches, "is on screen for"));
+  EXPECT_TRUE(mentions(breaches, "averages"));
+}
+
+TEST(ArenaPromoSpecMotionTest, ACrashZoomIsRefused) {
+  auto zoom = calm_shot("zoom", 1.6F);
+  zoom.keys.front().fov = 54.0F;
+  zoom.keys.back().fov = 36.0F;
+
+  EXPECT_TRUE(mentions(
+      Arena::Promo::motion_violations(spec_of({zoom, calm_shot("hold", 3.0F)})),
+      "swings fov"));
+}
 
 TEST(ArenaPromoSpecTest, YawBlendsAlongTheShorterArc) {
   const std::vector<CameraKey> keys{key(0.0F, 8.0F), key(1.0F, 352.0F)};

@@ -31,6 +31,7 @@ Item {
     signal load_save
     signal save_game
     signal exit_requested
+    signal resume_requested
 
     anchors.fill: parent
     z: 10
@@ -83,8 +84,8 @@ Item {
             trigger_selection(commandList.currentIndex);
             event.accepted = true;
         } else if (event.key === Qt.Key_Escape) {
-            if (typeof mainWindow !== "undefined" && mainWindow.menu_visible && mainWindow.game_started) {
-                mainWindow.menu_visible = false;
+            if (root.game_started) {
+                root.resume_requested();
                 event.accepted = true;
             }
         }
@@ -173,6 +174,13 @@ Item {
             requiresGame: false
             accent: "#6E2B25"
         }
+    }
+
+    MouseArea {
+        anchors.fill: parent
+        acceptedButtons: Qt.AllButtons
+        hoverEnabled: true
+        onWheel: wheel => wheel.accepted = true
     }
 
     Rectangle {

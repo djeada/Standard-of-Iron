@@ -87,6 +87,7 @@ import tempfile
 from pathlib import Path
 
 CAPTION_Y_FRACTION = 0.70
+FREEZE_TEXT_Y_FRACTION = 0.44
 TITLE_Y_FRACTION = 0.42
 CAPTION_FADE = 0.25
 END_CARD_SECONDS = 2.2
@@ -95,9 +96,25 @@ FIRST_FRAME_MIN_PEAK = 8
 FIRST_FRAME_VISIBLE_LUMA = 32
 FIRST_FRAME_MIN_VISIBLE = 0.001
 
+PUNCH_MAX = 0.22
 FLASH_DELTA = 25
 FLASH_HARD_DELTA = 60
 FLASHES_PER_SECOND = 3
+
+
+MOTION_LIMITS = {
+    "yaw": 12.0,
+    "pitch": 6.0,
+    "fov": 6.0,
+    "roll_rate": 4.0,
+    "roll": 5.0,
+    "shake": 0.03,
+    "min_clip": 1.5,
+    "mean_clip": 2.0,
+}
+
+
+MOTION_P90_LIMIT = 6.0
 MASTER_TOOL_CANDIDATES = (
     "build/bin/audio_master_preview",
     "build-release/bin/audio_master_preview",
@@ -207,8 +224,14 @@ def master_music(track: Path, workdir: Path) -> Path | None:
     return rendered
 
 
-def luma_jumps(video: Path, fps: float) -> list[float]:
-    """Mean-luminance change per frame, 0-255, over the finished cut."""
+def frame_metrics(video: Path) -> tuple[list[float], list[float]]:
+    """Per-frame luminance jump and motion energy over the finished cut.
+
+    Both are read from one downscaled greyscale pass. The first is the mean
+    luminance change, which is what flashing looks like. The second is the mean
+    *absolute pixel* change, which is what a moving camera looks like -- a whip
+    pan barely moves mean luminance while replacing most of the frame.
+    """
     width, height = 64, 36
     result = subprocess.run(
         [
@@ -228,12 +251,111 @@ def luma_jumps(video: Path, fps: float) -> list[float]:
         check=False,
     )
     if result.returncode != 0 or not result.stdout:
-        return []
+        return [], []
     size = width * height
     raw = result.stdout
     frames = [raw[i * size : (i + 1) * size] for i in range(len(raw) // size)]
     means = [sum(frame) / size for frame in frames]
-    return [abs(b - a) for a, b in zip(means, means[1:], strict=False)]
+    jumps = [abs(b - a) for a, b in zip(means, means[1:], strict=False)]
+    motion = [
+        sum(abs(x - y) for x, y in zip(a, b, strict=False)) / size
+        for a, b in zip(frames, frames[1:], strict=False)
+    ]
+    return jumps, motion
+
+
+def motion_offence(motion: list[float]) -> str | None:
+    """Refuse a cut whose frame is in constant violent movement."""
+    if not motion:
+        return None
+    ordered = sorted(motion)
+    p90 = ordered[int(0.9 * (len(ordered) - 1))]
+    if p90 > MOTION_P90_LIMIT:
+        return (
+            f"nine frames in ten change by {p90:.1f}/255 or more "
+            f"(limit {MOTION_P90_LIMIT}); the camera is moving through the whole cut"
+        )
+    return None
+
+
+def shorter_arc(from_degrees: float, to_degrees: float) -> float:
+    delta = (to_degrees - from_degrees) % 360.0
+    return delta - 360.0 if delta > 180.0 else delta
+
+
+def camera_offences(spec: dict) -> list[str]:
+    """Author-time camera limits, mirrored from `Arena::Promo::motion_violations`."""
+    offences: list[str] = []
+    clips: list[float] = []
+    for shot in spec.get("shots", []):
+        if shot.get("flame_card"):
+            continue
+        name = shot.get("name", "?")
+        clip = float(shot.get("duration", 0.0)) * float(shot.get("slow_motion", 1.0))
+        clips.append(clip)
+        if clip + 1e-3 < MOTION_LIMITS["min_clip"]:
+            offences.append(
+                f"{name}: is on screen for {clip:.2f}s, under the "
+                f"{MOTION_LIMITS['min_clip']:.2f}s a viewer needs to read a frame"
+            )
+        if float(shot.get("shake", 0.0)) > MOTION_LIMITS["shake"] + 1e-4:
+            offences.append(
+                f"{name}: shakes at {float(shot['shake']):.3f}, over the "
+                f"{MOTION_LIMITS['shake']:.3f} ceiling"
+            )
+        if shot.get("gameplay_camera"):
+            continue
+        keys = shot.get("camera", [])
+        for key in keys:
+            if abs(float(key.get("roll", 0.0))) > MOTION_LIMITS["roll"] + 1e-4:
+                offences.append(
+                    f"{name}: rolls the horizon {abs(float(key['roll'])):.1f} degrees, "
+                    f"over the {MOTION_LIMITS['roll']:.1f} ceiling"
+                )
+                break
+        for before, after in zip(keys, keys[1:], strict=False):
+            span = max(
+                0.001, float(after.get("time", 0.0)) - float(before.get("time", 0.0))
+            )
+            for axis, limit, delta in (
+                (
+                    "yaw",
+                    MOTION_LIMITS["yaw"],
+                    shorter_arc(
+                        float(before.get("yaw", 0.0)), float(after.get("yaw", 0.0))
+                    ),
+                ),
+                (
+                    "pitch",
+                    MOTION_LIMITS["pitch"],
+                    float(after.get("pitch", 0.0)) - float(before.get("pitch", 0.0)),
+                ),
+                (
+                    "fov",
+                    MOTION_LIMITS["fov"],
+                    float(after.get("fov", 40.0)) - float(before.get("fov", 40.0)),
+                ),
+                (
+                    "roll",
+                    MOTION_LIMITS["roll_rate"],
+                    float(after.get("roll", 0.0)) - float(before.get("roll", 0.0)),
+                ),
+            ):
+                rate = abs(delta) / span
+                if rate > limit + 1e-3:
+                    offences.append(
+                        f"{name}: swings {axis} at {rate:.1f} deg/s, over the "
+                        f"{limit:.1f} deg/s ceiling"
+                    )
+    if clips:
+        mean = sum(clips) / len(clips)
+        if mean + 1e-3 < MOTION_LIMITS["mean_clip"]:
+            offences.append(
+                f"the cut averages {mean:.2f}s a shot, under the "
+                f"{MOTION_LIMITS['mean_clip']:.2f}s that keeps a reel from reading "
+                "as strobing"
+            )
+    return offences
 
 
 def photosensitivity_offence(jumps: list[float], fps: float) -> str | None:
@@ -595,8 +717,50 @@ def plan_timeline(
     return spans, cursor
 
 
+def punch_expression(punches: list[dict]) -> str:
+    """A zoom that snaps in on a beat and settles back before the next one.
+
+    Written as one expression of `t` so the whole reel still encodes in a single
+    pass: each punch adds `amount * exp(-(t - at) / decay)` once its time has
+    passed, and the crop is scaled back up to the frame afterwards.
+    """
+    terms = ["1"]
+    for punch in punches:
+        at = float(punch.get("at", 0.0))
+        amount = max(0.0, min(PUNCH_MAX, float(punch.get("amount", 0.08))))
+        decay = max(0.05, float(punch.get("decay", 0.25)))
+        if amount <= 0.0:
+            continue
+        terms.append(
+            f"{amount:.4f}*if(gte(t,{at:.3f}),exp(-(t-{at:.3f})/{decay:.3f}),0)"
+        )
+    return "+".join(terms)
+
+
+def shot_filter(shot: dict, width: int, height: int) -> str:
+    """Per-clip effects: hold the last frame, and punch in on the beat."""
+    stages: list[str] = []
+    freeze = float(shot.get("freeze", 0.0) or 0.0)
+    if freeze > 0.0:
+        stages.append(f"tpad=stop_mode=clone:stop_duration={freeze:.3f}")
+    punches = shot.get("punch") or []
+    if punches:
+        zoom = punch_expression(punches)
+
+        stages.append(
+            f"crop=w='trunc(iw/({zoom})/2)*2':h='trunc(ih/({zoom})/2)*2'"
+            ":x='(iw-ow)/2':y='(ih-oh)/2'"
+        )
+        stages.append(f"scale={width}:{height}:flags=bicubic")
+        stages.append("setsar=1")
+    return ",".join(stages)
+
+
 def build_join_graph(
-    lengths: list[float], joins: list[Join], spans: list[tuple[float, float]]
+    lengths: list[float],
+    joins: list[Join],
+    spans: list[tuple[float, float]],
+    effects: list[str] | None = None,
 ) -> tuple[list[str], str]:
     """Join the clips into one stream, blending where a transition asks for it.
 
@@ -619,7 +783,9 @@ def build_join_graph(
 
     chain: list[str] = []
     for index in range(len(lengths)):
-        chain.append(f"[{index}:v]settb=AVTB,setpts=PTS-STARTPTS[n{index}]")
+        extra = (effects[index] if effects and index < len(effects) else "") or ""
+        prefix = f"{extra}," if extra else ""
+        chain.append(f"[{index}:v]{prefix}settb=AVTB,setpts=PTS-STARTPTS[n{index}]")
 
     labels: list[str] = []
     for position, members in enumerate(segments):
@@ -744,6 +910,13 @@ def main() -> int:
     output.parent.mkdir(parents=True, exist_ok=True)
     staged = output.with_suffix(f".staging{output.suffix}")
 
+    offences = camera_offences(spec)
+    if offences:
+        fail(
+            "this spec's camera work is unwatchable on a phone:\n  "
+            + "\n  ".join(offences)
+        )
+
     default_kind, default_seconds = read_transition(
         spec.get("transition"), DEFAULT_TRANSITION, DEFAULT_TRANSITION_SECONDS
     )
@@ -751,6 +924,7 @@ def main() -> int:
     inputs: list[str] = []
     names: list[str] = []
     lengths: list[float] = []
+    freezes: list[float] = []
     joins: list[Join] = []
     for index, shot in enumerate(shots):
         clip = args.clips / shot["clip"]
@@ -761,8 +935,10 @@ def main() -> int:
         if length <= 0:
             fail(f"clip {clip.name} reports no duration")
         name = shot.get("name", "")
+        freeze = float(authored.get(name, {}).get("freeze", 0.0) or 0.0)
         names.append(name)
-        lengths.append(length)
+        lengths.append(length + freeze)
+        freezes.append(freeze)
         if index == 0:
             joins.append(HARD_CUT)
             continue
@@ -780,7 +956,8 @@ def main() -> int:
     width = int(manifest.get("width", 1080))
     height = int(manifest.get("height", 1920))
 
-    chain, joined = build_join_graph(lengths, joins, spans)
+    effects = [shot_filter(authored.get(name, {}), width, height) for name in names]
+    chain, joined = build_join_graph(lengths, joins, spans, effects)
     chain.append(f"[{joined}]{build_grade(spec.get('grade', {}))}[graded]")
 
     timeline = [
@@ -840,6 +1017,28 @@ def main() -> int:
         has_card = bool(spec.get("title") or spec.get("subtitle"))
         step = 0
         for index, (name, start, end) in enumerate(timeline):
+
+            freeze = freezes[index] if index < len(freezes) else 0.0
+            punchline = authored.get(name, {}).get("freeze_text")
+            if punchline and freeze > 0.0:
+                chain.append(
+                    f"[{stage}]"
+                    + drawtext(
+                        text=tracked(punchline),
+                        font=font,
+                        size=fit_font_size(
+                            tracked(punchline), font, title_size, title_safe_width
+                        ),
+                        y_expr=f"h*{FREEZE_TEXT_Y_FRACTION}",
+                        start=max(start, end - freeze + 0.05),
+                        end=end - 0.03,
+                        fade=0.08,
+                    )
+                    + f"[punch{step}]"
+                )
+                stage = f"punch{step}"
+                step += 1
+
             caption = captions.get(name)
             if not caption:
                 continue
@@ -1098,7 +1297,7 @@ def main() -> int:
         )
 
     fps = float(manifest.get("fps", 60))
-    jumps = luma_jumps(staged, fps)
+    jumps, motion = frame_metrics(staged)
     offence = photosensitivity_offence(jumps, fps)
     if not jumps:
         print("promo-edit: warning: could not measure the cut for flashing")
@@ -1113,6 +1312,16 @@ def main() -> int:
         )
     elif offence is not None:
         print(f"promo-edit: warning: --allow-flashes set; {offence}")
+
+    moving = motion_offence(motion)
+    if moving is not None:
+        reject(
+            staged,
+            output,
+            f"the cut never holds still: {moving}. Hold shots longer, drop `shake`, "
+            "and let the camera push or drift rather than orbit -- a frame the eye "
+            "cannot settle on reads as chaos however good the footage is.",
+        )
 
     staged.replace(output)
     worst = max(jumps) if jumps else 0.0

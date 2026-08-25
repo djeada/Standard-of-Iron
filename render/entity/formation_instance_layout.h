@@ -91,6 +91,8 @@ struct FormationLayoutResult {
   bool reused_cache{false};
 
   bool preserve_state_prefix{false};
+
+  bool preserve_locomotion_state{false};
 };
 
 auto resolve_formation_instances(FormationLayoutCache* cache,
