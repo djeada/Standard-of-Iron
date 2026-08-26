@@ -6,6 +6,7 @@
 #include "game/core/ownership_constants.h"
 #include "game/core/world.h"
 #include "game/map/terrain_service.h"
+#include "game/session/session_context.h"
 #include "game/systems/ai_system.h"
 #include "game/systems/ai_system/ai_base_manager.h"
 #include "game/systems/ai_system/ai_behavior_registry.h"
@@ -27,6 +28,7 @@
 #include "game/systems/ai_system/behaviors/production_behavior.h"
 #include "game/systems/nation_registry.h"
 #include "game/systems/owner_registry.h"
+#include "game/systems/player_resource_registry.h"
 
 namespace {
 
@@ -177,6 +179,10 @@ protected:
     barracks.production.max_units = 50;
     barracks.production.produced_count = 0;
     barracks.production.queue_size = queue_size;
+
+    // A barracks with no manpower cannot recruit anything, and the plan now
+    // says so rather than issuing requests the world refuses. Fund it.
+    barracks.production.manpower_available = 500;
     return barracks;
   }
 
@@ -2270,8 +2276,20 @@ TEST_F(AISystemTest, ApplierWritesPerBaseRallyPointOntoBarracks) {
       world, 3, 40.0F, 40.0F, 10.0F, true, true, Game::Units::SpawnType::Barracks);
   auto* outpost_barracks = add_world_unit(
       world, 3, 140.0F, 140.0F, 10.0F, true, true, Game::Units::SpawnType::Barracks);
-  (void)main_barracks->add_component<Engine::Core::ProductionComponent>();
-  (void)outpost_barracks->add_component<Engine::Core::ProductionComponent>();
+  // Recruiting costs both manpower and resources, and the plan now checks both
+  // instead of issuing requests the world refuses. Fund the treasury and both
+  // recruitment buildings.
+  auto& economy = Game::Session::session_for(world).economy();
+  economy.ensure_owner(3);
+  for (const auto type : Game::Systems::k_all_resource_types) {
+    economy.set(3, type, 500);
+  }
+  for (auto* barracks : {main_barracks, outpost_barracks}) {
+    auto* production = barracks->add_component<Engine::Core::ProductionComponent>();
+    ASSERT_NE(production, nullptr);
+    production->max_units = 280;
+    production->manpower_available = 280;
+  }
 
   Game::Systems::AI::AICommand main_rally;
   main_rally.type = Game::Systems::AI::AICommandType::SetRallyPoint;
@@ -2356,8 +2374,20 @@ TEST_F(AISystemTest, PipelineKeepsSecondBaseProducingAfterMainBaseIsDestroyed) {
       world, 3, 36.0F, 42.0F, 20.0F, true, true, Game::Units::SpawnType::Home);
   auto* outpost_barracks = add_world_unit(
       world, 3, 100.0F, 40.0F, 20.0F, true, true, Game::Units::SpawnType::Barracks);
-  (void)main_barracks->add_component<Engine::Core::ProductionComponent>();
-  (void)outpost_barracks->add_component<Engine::Core::ProductionComponent>();
+  // Recruiting costs both manpower and resources, and the plan now checks both
+  // instead of issuing requests the world refuses. Fund the treasury and both
+  // recruitment buildings.
+  auto& economy = Game::Session::session_for(world).economy();
+  economy.ensure_owner(3);
+  for (const auto type : Game::Systems::k_all_resource_types) {
+    economy.set(3, type, 500);
+  }
+  for (auto* barracks : {main_barracks, outpost_barracks}) {
+    auto* production = barracks->add_component<Engine::Core::ProductionComponent>();
+    ASSERT_NE(production, nullptr);
+    production->max_units = 280;
+    production->manpower_available = 280;
+  }
 
   Game::Systems::AI::AIBehaviorRegistry registry;
   registry.register_behavior(std::make_unique<Game::Systems::AI::ProductionBehavior>());
