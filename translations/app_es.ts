@@ -2248,7 +2248,7 @@ Puede tratarse de una escaramuza, o los objetivos no se han configurado.</transl
     </message>
     <message>
         <source>The line is filing through a narrow crossing.</source>
-        <translation>La línea pasa en fila por un cruce estrecho.</translation>
+        <translation>La línea pasa en fila por un paso estrecho.</translation>
     </message>
 </context>
 <context>
@@ -3468,8 +3468,8 @@ Sin ver: nunca explorado.</translation>
     <message>
         <source>Manpower in the field: %1 of %2.
 Every troop costs manpower; a squad of twelve builders costs ten. This is not a headcount - the selection panel counts soldiers.</source>
-        <translation>Efectivos en campaña: %1 de %2.
-Cada tropa cuesta efectivos; una escuadra de doce constructores cuesta diez. No es un recuento de cabezas: el panel de selección cuenta soldados.</translation>
+        <translation>Efectivos en el campo: %1 de %2.
+Cada tropa cuesta efectivos; una escuadra de doce constructores cuesta diez. Esto no es un recuento de cabezas: el panel de selección cuenta soldados.</translation>
     </message>
 </context>
 <context>

@@ -62,6 +62,7 @@ private:
                                  const QColor& border);
 
   static void draw_map_border(QPainter& painter, int width, int height);
+  static void draw_compass_rose(QPainter& painter, int width, int height);
   static void apply_vignette(QPainter& painter, int width, int height);
 
   [[nodiscard]] auto

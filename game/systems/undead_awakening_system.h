@@ -67,6 +67,15 @@ public:
 
   [[nodiscard]] auto zones_without_shrine() const -> std::vector<QString>;
 
+  struct ShrineMarker {
+    QString zone_id;
+    QVector3D world_position;
+    bool awakened = false;
+    bool cleared = false;
+  };
+
+  [[nodiscard]] auto shrine_markers() const -> std::vector<ShrineMarker>;
+
 private:
   struct RuntimeZone {
     Game::Map::UndeadZone definition;

@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <bit>
 #include <cmath>
+#include <cstdint>
 
 #include "game/core/component.h"
 #include "game/core/world.h"
@@ -18,6 +19,7 @@
 #include "game/render_bridge/minimap/unit_layer.h"
 #include "game/session/session_context.h"
 #include "game/systems/selection_system.h"
+#include "game/units/spawn_type.h"
 #include "game/units/troop_type.h"
 #include "scene/camera.h"
 
@@ -31,6 +33,50 @@ namespace {
 [[nodiscard]] auto hash_float(float value) noexcept -> std::uint64_t {
   return static_cast<std::uint64_t>(std::bit_cast<std::uint32_t>(value));
 }
+
+[[nodiscard]] auto quantize(float value, float scale) noexcept -> std::uint64_t {
+  return static_cast<std::uint64_t>(
+      static_cast<std::int64_t>(std::lround(value * scale)));
+}
+
+[[nodiscard]] auto classify_marker(Game::Units::SpawnType type) noexcept
+    -> Game::Map::Minimap::MarkerClass {
+  using Game::Map::Minimap::MarkerClass;
+  switch (type) {
+  case Game::Units::SpawnType::Barracks:
+    return MarkerClass::Stronghold;
+  case Game::Units::SpawnType::DefenseTower:
+    return MarkerClass::Tower;
+  case Game::Units::SpawnType::Temple:
+  case Game::Units::SpawnType::Marketplace:
+    return MarkerClass::Landmark;
+  case Game::Units::SpawnType::Home:
+  case Game::Units::SpawnType::Farm:
+  case Game::Units::SpawnType::WallSegment:
+  case Game::Units::SpawnType::WallGate:
+    return MarkerClass::MinorStructure;
+  default:
+    return MarkerClass::Troop;
+  }
+}
+
+[[nodiscard]] auto
+capture_step_for(const Engine::Core::CaptureComponent& capture) -> std::uint8_t {
+  if (!capture.is_being_captured || capture.capture_progress <= 0.0F) {
+    return 0;
+  }
+  const float required = std::max(capture.required_time, 0.0001F);
+  const float ratio = std::clamp(capture.capture_progress / required, 0.0F, 1.0F);
+  const auto step = static_cast<int>(
+      std::ceil(ratio * static_cast<float>(Game::Map::Minimap::k_capture_steps)));
+  return static_cast<std::uint8_t>(
+      std::clamp(step, 1, static_cast<int>(Game::Map::Minimap::k_capture_steps)));
+}
+
+constexpr float k_destination_cluster_grid = 2.0F;
+constexpr float k_origin_hash_steps = 96.0F;
+constexpr std::size_t k_max_pending_capture_alerts = 8;
+constexpr std::size_t k_max_destinations = 8;
 } // namespace
 
 MinimapManager::MinimapManager() = default;
@@ -75,6 +121,18 @@ void MinimapManager::generate_for_map(const Game::Map::MapDefinition& map_def) {
     m_minimap_fog_image = m_minimap_base_image.copy();
     m_minimap_units_image = m_minimap_fog_image;
     m_minimap_image = m_minimap_units_image;
+
+    const float inv_tile =
+        1.0F / std::max(m_tile_size, Game::Map::Minimap::Constants::k_min_tile_size);
+    m_hash_position_scale =
+        (static_cast<float>(m_minimap_base_image.width() - 1) / m_world_width) *
+        inv_tile;
+
+    m_capture_watch.clear();
+    m_capture_alerts.clear();
+    m_destinations.clear();
+    m_destination_hash = 0;
+    m_destinations_dirty = true;
 
     m_unit_layer = std::make_unique<Game::Map::Minimap::UnitLayer>();
     m_unit_layer->init(m_minimap_base_image.width(),
@@ -138,6 +196,27 @@ void MinimapManager::clear_fog() {
   mark_dirty();
 }
 
+bool MinimapManager::world_to_normalized(float world_x,
+                                         float world_z,
+                                         float& nx,
+                                         float& ny) const {
+  if (m_minimap_base_image.isNull() || m_world_width <= 0.0F ||
+      m_world_height <= 0.0F) {
+    return false;
+  }
+  const auto [normalized_x, normalized_y] = Game::Map::Minimap::world_to_normalized(
+      world_x, world_z, m_world_width, m_world_height, m_tile_size);
+  nx = normalized_x;
+  ny = normalized_y;
+  return true;
+}
+
+bool MinimapManager::consume_destinations_dirty() {
+  const bool was_dirty = m_destinations_dirty;
+  m_destinations_dirty = false;
+  return was_dirty;
+}
+
 void MinimapManager::update_units(Engine::Core::World* world,
                                   Game::Systems::SelectionSystem* selection_system,
                                   int local_owner_id) {
@@ -156,47 +235,134 @@ void MinimapManager::update_units(Engine::Core::World* world,
     std::sort(selected_ids.begin(), selected_ids.end());
   }
 
+  auto& capture_watch = m_capture_watch_scratch;
+  capture_watch.clear();
+
+  auto& destinations = m_destination_scratch;
+  auto& destination_cells = m_destination_cell_scratch;
+  destinations.clear();
+  destination_cells.clear();
+  std::uint64_t destination_hash = 0;
+  float selected_sum_x = 0.0F;
+  float selected_sum_z = 0.0F;
+  int selected_count = 0;
+
   std::uint64_t unit_hash = hash_combine(0, static_cast<std::uint64_t>(local_owner_id));
 
   {
     const std::lock_guard<std::recursive_mutex> lock(world->get_entity_mutex());
-    const auto unit_ids = world->entities_with<Engine::Core::UnitComponent>();
-    markers.reserve(unit_ids.size());
 
-    for (const Engine::Core::EntityID entity_id : unit_ids) {
-      auto* entity = world->get_entity(entity_id);
-      if (entity == nullptr) {
-        continue;
-      }
-      const auto* unit = entity->get_component<Engine::Core::UnitComponent>();
-      if (unit == nullptr || unit->health <= 0) {
-        continue;
-      }
-
-      const auto* transform = entity->get_component<Engine::Core::TransformComponent>();
-      if (transform == nullptr) {
+    for (auto [entity_id, unit, transform] :
+         world->view<Engine::Core::UnitComponent, Engine::Core::TransformComponent>()) {
+      if (unit.health <= 0 || Game::Units::is_wildlife_spawn(unit.spawn_type)) {
         continue;
       }
 
       Game::Map::Minimap::UnitMarker marker;
-      marker.world_x = transform->position.x;
-      marker.world_z = transform->position.z;
-      marker.owner_id = unit->owner_id;
+      marker.world_x = transform.position.x;
+      marker.world_z = transform.position.z;
+      marker.owner_id = unit.owner_id;
       marker.is_selected =
           std::binary_search(selected_ids.begin(), selected_ids.end(), entity_id);
-      marker.is_building = Game::Units::is_building_spawn(unit->spawn_type);
+      marker.marker_class = classify_marker(unit.spawn_type);
+
+      if (marker.marker_class == Game::Map::Minimap::MarkerClass::Stronghold) {
+        if (const auto* capture =
+                world->try_get<Engine::Core::CaptureComponent>(entity_id)) {
+          marker.capture_step = capture_step_for(*capture);
+          marker.capture_owner_id = capture->capturing_player_id;
+          marker.contested = capture->capture_blocked;
+          if (marker.capture_step > 0) {
+            capture_watch.push_back(CaptureWatch{entity_id,
+                                                 capture->capturing_player_id,
+                                                 unit.owner_id,
+                                                 marker.world_x,
+                                                 marker.world_z,
+                                                 capture->capture_blocked});
+          }
+        }
+      }
+
+      if (marker.is_selected &&
+          marker.marker_class == Game::Map::Minimap::MarkerClass::Troop) {
+        selected_sum_x += marker.world_x;
+        selected_sum_z += marker.world_z;
+        ++selected_count;
+      }
+
+      if (marker.is_selected &&
+          marker.marker_class == Game::Map::Minimap::MarkerClass::Troop &&
+          destinations.size() < k_max_destinations) {
+        if (const auto* movement =
+                world->try_get<Engine::Core::MovementComponent>(entity_id)) {
+          if (movement->get_has_target()) {
+            const float goal_x = movement->get_goal_x();
+            const float goal_z = movement->get_goal_y();
+            const auto cell_x = static_cast<std::int64_t>(
+                std::lround(goal_x / k_destination_cluster_grid));
+            const auto cell_z = static_cast<std::int64_t>(
+                std::lround(goal_z / k_destination_cluster_grid));
+            const std::uint64_t cell_key = hash_combine(
+                static_cast<std::uint64_t>(cell_x), static_cast<std::uint64_t>(cell_z));
+            const bool duplicate = std::any_of(
+                destination_cells.begin(),
+                destination_cells.end(),
+                [cell_key](std::uint64_t known) { return known == cell_key; });
+            float nx = 0.0F;
+            float ny = 0.0F;
+            if (!duplicate && world_to_normalized(goal_x, goal_z, nx, ny)) {
+              destination_cells.push_back(cell_key);
+              destinations.push_back(
+                  DestinationMarker{.nx = nx, .ny = ny, .owner_id = unit.owner_id});
+              destination_hash = hash_combine(destination_hash, cell_key);
+            }
+          }
+        }
+      }
 
       markers.push_back(marker);
 
       unit_hash = hash_combine(unit_hash, static_cast<std::uint64_t>(entity_id));
-      unit_hash = hash_combine(unit_hash, hash_float(marker.world_x));
-      unit_hash = hash_combine(unit_hash, hash_float(marker.world_z));
+      unit_hash =
+          hash_combine(unit_hash, quantize(marker.world_x, m_hash_position_scale));
+      unit_hash =
+          hash_combine(unit_hash, quantize(marker.world_z, m_hash_position_scale));
       unit_hash = hash_combine(unit_hash, static_cast<std::uint64_t>(marker.owner_id));
       unit_hash = hash_combine(unit_hash, marker.is_selected ? 1ULL : 0ULL);
-      unit_hash = hash_combine(unit_hash, marker.is_building ? 1ULL : 0ULL);
+      unit_hash =
+          hash_combine(unit_hash, static_cast<std::uint64_t>(marker.marker_class));
+      unit_hash = hash_combine(unit_hash,
+                               static_cast<std::uint64_t>(marker.capture_step) |
+                                   (marker.contested ? 0x100ULL : 0ULL));
     }
   }
   unit_hash = hash_combine(unit_hash, static_cast<std::uint64_t>(markers.size()));
+
+  if (!destinations.empty() && selected_count > 0) {
+    float origin_nx = 0.0F;
+    float origin_ny = 0.0F;
+    if (world_to_normalized(selected_sum_x / static_cast<float>(selected_count),
+                            selected_sum_z / static_cast<float>(selected_count),
+                            origin_nx,
+                            origin_ny)) {
+      for (auto& destination : destinations) {
+        destination.origin_nx = origin_nx;
+        destination.origin_ny = origin_ny;
+      }
+      destination_hash =
+          hash_combine(destination_hash, quantize(origin_nx, k_origin_hash_steps));
+      destination_hash =
+          hash_combine(destination_hash, quantize(origin_ny, k_origin_hash_steps));
+    }
+  }
+
+  collect_capture_alerts(capture_watch);
+
+  if (destination_hash != m_destination_hash) {
+    m_destination_hash = destination_hash;
+    m_destinations = destinations;
+    m_destinations_dirty = true;
+  }
 
   const bool units_changed = (unit_hash != m_last_unit_hash);
   const bool fog_changed = (fog_version() != m_last_fog_composite_version);
@@ -236,6 +402,34 @@ void MinimapManager::update_units(Engine::Core::World* world,
     m_minimap_image = m_minimap_units_image;
     m_viewport_composite_dirty = true;
   }
+}
+
+void MinimapManager::collect_capture_alerts(const std::vector<CaptureWatch>& current) {
+  for (const auto& watch : current) {
+    const auto previous = std::find_if(m_capture_watch.begin(),
+                                       m_capture_watch.end(),
+                                       [&watch](const CaptureWatch& known) {
+                                         return known.entity_id == watch.entity_id;
+                                       });
+    const bool is_new = previous == m_capture_watch.end();
+    const bool changed_hands =
+        !is_new && previous->capturing_owner_id != watch.capturing_owner_id;
+    const bool became_contested = !is_new && !previous->contested && watch.contested;
+    if (!is_new && !changed_hands && !became_contested) {
+      continue;
+    }
+
+    if (m_capture_alerts.size() >= k_max_pending_capture_alerts) {
+      break;
+    }
+    m_capture_alerts.push_back(CaptureAlert{watch.world_x,
+                                            watch.world_z,
+                                            watch.site_owner_id,
+                                            watch.capturing_owner_id,
+                                            watch.contested});
+  }
+
+  m_capture_watch.assign(current.begin(), current.end());
 }
 
 void MinimapManager::update_camera_viewport(const Render::GL::Camera* camera,

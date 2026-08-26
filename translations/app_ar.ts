@@ -2232,23 +2232,23 @@ This may be a skirmish, or objectives have not been configured.</source>
     </message>
     <message>
         <source>Opening ranks</source>
-        <translation>تفتح الصفوف</translation>
+        <translation>تُفتح الصفوف</translation>
     </message>
     <message>
         <source>Filing through</source>
-        <translation>يعبر في رتل</translation>
+        <translation>يعبرون في رتل</translation>
     </message>
     <message>
         <source>The line has reached its ground and is holding it.</source>
-        <translation>بلغ الصف أرضه وهو يحتفظ بها.</translation>
+        <translation>بلغ الصف موضعه وهو يثبت فيه.</translation>
     </message>
     <message>
         <source>The ranks are opening to let the line through.</source>
-        <translation>تنفتح الصفوف لتفسح للصف طريقه.</translation>
+        <translation>تنفتح الصفوف لتمرير الصف.</translation>
     </message>
     <message>
         <source>The line is filing through a narrow crossing.</source>
-        <translation>يعبر الصف في رتل مخاضة ضيّقة.</translation>
+        <translation>يعبر الصف في رتل ممرًا ضيقًا.</translation>
     </message>
 </context>
 <context>
@@ -3334,11 +3334,11 @@ This may be a skirmish, or objectives have not been configured.</source>
     </message>
     <message>
         <source>Manpower %1/%2</source>
-        <translation>القوة البشرية %1/%2</translation>
+        <translation>القوى البشرية %1/%2</translation>
     </message>
     <message>
         <source>Holdings %1</source>
-        <translation>الممتلكات %1</translation>
+        <translation>الحيازات %1</translation>
     </message>
     <message>
         <source>Trained %1</source>
@@ -3346,11 +3346,11 @@ This may be a skirmish, or objectives have not been configured.</source>
     </message>
     <message>
         <source>Kills %1  Losses %2</source>
-        <translation>القتلى %1  الخسائر %2</translation>
+        <translation>القتلى في صفوف العدو %1  الخسائر %2</translation>
     </message>
     <message>
         <source>the whole field</source>
-        <translation>الميدان كلّه</translation>
+        <translation>الميدان بأكمله</translation>
     </message>
 </context>
 <context>
@@ -3467,13 +3467,13 @@ Unseen: never scouted.</source>
     </message>
     <message>
         <source>Manpower</source>
-        <translation>القوة البشرية</translation>
+        <translation>القوى البشرية</translation>
     </message>
     <message>
         <source>Manpower in the field: %1 of %2.
 Every troop costs manpower; a squad of twelve builders costs ten. This is not a headcount - the selection panel counts soldiers.</source>
-        <translation>القوة البشرية في الميدان: %1 من %2.
-كل وحدة تكلّف قوة بشرية؛ فصيل من اثني عشر بنّاءً يكلّف عشرة. هذا ليس عدد الأفراد - لوحة التحديد هي التي تعدّ الجنود.</translation>
+        <translation>القوى البشرية في الميدان: %1 من %2.
+كل فرقة تكلّف قوى بشرية؛ فرقة من اثني عشر بنّاءً تكلّف عشرة. هذا ليس تعدادًا للأفراد — لوحة الاختيار هي التي تعدّ الجنود.</translation>
     </message>
 </context>
 <context>
@@ -3804,7 +3804,7 @@ Every troop costs manpower; a squad of twelve builders costs ten. This is not a 
     </message>
     <message>
         <source>One side is left holding the field.</source>
-        <translation>بقي طرف واحد يملك الميدان.</translation>
+        <translation>بقي طرف واحد ممسكًا بالميدان.</translation>
     </message>
 </context>
 <context>
@@ -4662,7 +4662,7 @@ to see preview</source>
     </message>
     <message>
         <source>Observe</source>
-        <translation>شاهد</translation>
+        <translation>مشاهدة</translation>
     </message>
     <message>
         <source>Pick a battlefield with at least two camps to watch</source>
@@ -4803,7 +4803,7 @@ to see preview</source>
     </message>
     <message>
         <source>CPU %1</source>
-        <translation>حاسوب %1</translation>
+        <translation>الحاسوب %1</translation>
     </message>
     <message>
         <source>This battlefield has fewer than two slots to observe</source>

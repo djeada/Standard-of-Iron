@@ -2244,11 +2244,11 @@ Isto pode ser uma escaramuça, ou os objetivos não foram configurados.</transla
     </message>
     <message>
         <source>The ranks are opening to let the line through.</source>
-        <translation>As fileiras estão se abrindo para deixar a linha passar.</translation>
+        <translation>As fileiras se abrem para deixar a linha passar.</translation>
     </message>
     <message>
         <source>The line is filing through a narrow crossing.</source>
-        <translation>A linha atravessa em fila uma passagem estreita.</translation>
+        <translation>A linha passa em fila por uma travessia estreita.</translation>
     </message>
 </context>
 <context>
@@ -3318,15 +3318,15 @@ Isto pode ser uma escaramuça, ou os objetivos não foram configurados.</transla
     </message>
     <message>
         <source>Following: %1</source>
-        <translation>Acompanhando: %1</translation>
+        <translation>Seguindo: %1</translation>
     </message>
     <message>
         <source>Follow the previous army</source>
-        <translation>Acompanhar o exército anterior</translation>
+        <translation>Seguir o exército anterior</translation>
     </message>
     <message>
         <source>Follow the next army</source>
-        <translation>Acompanhar o próximo exército</translation>
+        <translation>Seguir o próximo exército</translation>
     </message>
     <message>
         <source>Manpower %1/%2</source>
@@ -3469,7 +3469,7 @@ Não visto: nunca explorado.</translation>
         <source>Manpower in the field: %1 of %2.
 Every troop costs manpower; a squad of twelve builders costs ten. This is not a headcount - the selection panel counts soldiers.</source>
         <translation>Efetivos em campo: %1 de %2.
-Cada tropa custa efetivos; um esquadrão de doze construtores custa dez. Isto não é uma contagem de cabeças - o painel de seleção conta soldados.</translation>
+Cada tropa custa efetivos; um esquadrão de doze construtores custa dez. Isto não é uma contagem de cabeças — o painel de seleção conta soldados.</translation>
     </message>
 </context>
 <context>
@@ -4654,11 +4654,11 @@ para ver a prévia</translation>
     </message>
     <message>
         <source>Pick a battlefield with at least two camps to watch</source>
-        <translation>Escolha um campo de batalha com ao menos dois acampamentos para observar</translation>
+        <translation>Escolha um campo de batalha com pelo menos dois acampamentos para assistir</translation>
     </message>
     <message>
         <source>Watch the computer fight itself on this battlefield</source>
-        <translation>Assista a máquina lutar contra si mesma neste campo de batalha</translation>
+        <translation>Assista o computador lutar contra si mesmo neste campo de batalha</translation>
     </message>
 </context>
 <context>

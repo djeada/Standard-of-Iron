@@ -759,6 +759,12 @@ Item {
                 }
             }
 
+            MinimapOverlay {
+                minimap: topRoot.game_ready() ? game.minimap : null
+                paintedW: minimapImage.paintedWidth
+                paintedH: minimapImage.paintedHeight
+            }
+
             MouseArea {
                 id: minimapMouse
 

@@ -1,5 +1,7 @@
 #pragma once
 
+#include <QPointF>
+
 #include <algorithm>
 #include <cmath>
 #include <utility>
@@ -58,6 +60,27 @@ private:
   bool m_dirty = false;
 };
 
+inline constexpr int k_keep_polygon_points = 8;
+
+inline void
+keep_polygon(float cx, float cy, float half, QPointF (&out)[k_keep_polygon_points]) {
+  const auto h = static_cast<qreal>(half);
+  const auto x = static_cast<qreal>(cx);
+  const auto y = static_cast<qreal>(cy);
+  const qreal turret_top = y - h;
+  const qreal wall_top = y - h * 0.50;
+  const qreal base = y + h * 0.90;
+
+  out[0] = QPointF(x - h, base);
+  out[1] = QPointF(x - h, turret_top);
+  out[2] = QPointF(x - h * 0.44, turret_top);
+  out[3] = QPointF(x - h * 0.44, wall_top);
+  out[4] = QPointF(x + h * 0.44, wall_top);
+  out[5] = QPointF(x + h * 0.44, turret_top);
+  out[6] = QPointF(x + h, turret_top);
+  out[7] = QPointF(x + h, base);
+}
+
 inline auto
 grid_to_world_coords(float grid_x,
                      float grid_z,
@@ -88,6 +111,17 @@ inline auto world_to_pixel(float world_x,
   const float py = (rotated_z + world_height * 0.5F) * (img_height / world_height);
 
   return {px, py};
+}
+
+inline auto world_to_normalized(float world_x,
+                                float world_z,
+                                float world_width,
+                                float world_height,
+                                float tile_size) -> std::pair<float, float> {
+  const float inv_tile = 1.0F / std::max(tile_size, Constants::k_min_tile_size);
+  auto [nx, ny] = world_to_pixel(
+      world_x * inv_tile, world_z * inv_tile, world_width, world_height, 1.0F, 1.0F);
+  return {std::clamp(nx, 0.0F, 1.0F), std::clamp(ny, 0.0F, 1.0F)};
 }
 
 inline auto pixel_to_world(float px,

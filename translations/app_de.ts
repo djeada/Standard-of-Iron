@@ -2240,7 +2240,7 @@ Dies ist vielleicht ein Scharmützel, oder es wurden keine Ziele festgelegt.</tr
     </message>
     <message>
         <source>The line has reached its ground and is holding it.</source>
-        <translation>Die Linie hat ihren Boden erreicht und hält ihn.</translation>
+        <translation>Die Linie hat ihren Platz erreicht und hält ihn.</translation>
     </message>
     <message>
         <source>The ranks are opening to let the line through.</source>
@@ -2248,7 +2248,7 @@ Dies ist vielleicht ein Scharmützel, oder es wurden keine Ziele festgelegt.</tr
     </message>
     <message>
         <source>The line is filing through a narrow crossing.</source>
-        <translation>Die Linie zieht durch einen schmalen Übergang.</translation>
+        <translation>Die Linie zieht durch einen engen Übergang.</translation>
     </message>
 </context>
 <context>
@@ -3314,23 +3314,23 @@ Dies ist vielleicht ein Scharmützel, oder es wurden keine Ziele festgelegt.</tr
     <name>HUDBottomSpectator</name>
     <message>
         <source>Armies of the field</source>
-        <translation>Armeen des Feldes</translation>
+        <translation>Heere des Feldes</translation>
     </message>
     <message>
         <source>Following: %1</source>
-        <translation>Verfolgt: %1</translation>
+        <translation>Folgt: %1</translation>
     </message>
     <message>
         <source>Follow the previous army</source>
-        <translation>Der vorherigen Armee folgen</translation>
+        <translation>Dem vorherigen Heer folgen</translation>
     </message>
     <message>
         <source>Follow the next army</source>
-        <translation>Der nächsten Armee folgen</translation>
+        <translation>Dem nächsten Heer folgen</translation>
     </message>
     <message>
         <source>Manpower %1/%2</source>
-        <translation>Mannschaftsstärke %1/%2</translation>
+        <translation>Truppenstärke %1/%2</translation>
     </message>
     <message>
         <source>Holdings %1</source>
@@ -3463,13 +3463,13 @@ Unbekannt: nie aufgeklärt.</translation>
     </message>
     <message>
         <source>Manpower</source>
-        <translation>Mannschaftsstärke</translation>
+        <translation>Truppenstärke</translation>
     </message>
     <message>
         <source>Manpower in the field: %1 of %2.
 Every troop costs manpower; a squad of twelve builders costs ten. This is not a headcount - the selection panel counts soldiers.</source>
-        <translation>Mannschaftsstärke im Feld: %1 von %2.
-Jede Truppe kostet Mannschaftsstärke; ein Trupp von zwölf Bauleuten kostet zehn. Das ist keine Kopfzahl - die Auswahlanzeige zählt Soldaten.</translation>
+        <translation>Truppenstärke im Feld: %1 von %2.
+Jede Truppe kostet Truppenstärke; ein Trupp von zwölf Bauleuten kostet zehn. Das ist keine Kopfzahl – die Auswahlleiste zählt die Soldaten.</translation>
     </message>
 </context>
 <context>
@@ -4650,15 +4650,15 @@ um die Vorschau zu sehen</translation>
     </message>
     <message>
         <source>Observe</source>
-        <translation>Zuschauen</translation>
+        <translation>Zusehen</translation>
     </message>
     <message>
         <source>Pick a battlefield with at least two camps to watch</source>
-        <translation>Wähle ein Schlachtfeld mit mindestens zwei Lagern zum Zuschauen</translation>
+        <translation>Wähle ein Schlachtfeld mit mindestens zwei Lagern zum Zusehen</translation>
     </message>
     <message>
         <source>Watch the computer fight itself on this battlefield</source>
-        <translation>Zusieh, wie der Computer auf diesem Schlachtfeld gegen sich selbst kämpft</translation>
+        <translation>Dem Rechner zusehen, wie er auf diesem Schlachtfeld gegen sich selbst kämpft</translation>
     </message>
 </context>
 <context>
@@ -4795,7 +4795,7 @@ um die Vorschau zu sehen</translation>
     </message>
     <message>
         <source>This battlefield has fewer than two slots to observe</source>
-        <translation>Dieses Schlachtfeld hat weniger als zwei Plätze zum Zuschauen</translation>
+        <translation>Dieses Schlachtfeld hat weniger als zwei Plätze zum Zusehen</translation>
     </message>
 </context>
 <context>
