@@ -2055,23 +2055,18 @@ void GameEngine::note_minimap_combat_hit(const Engine::Core::CombatHitEvent& eve
     return;
   }
 
-  auto* target = m_world->get_entity(event.target_id);
-  if (target == nullptr) {
-    return;
-  }
-  const auto* transform = target->get_component<Engine::Core::TransformComponent>();
-  const auto* unit = target->get_component<Engine::Core::UnitComponent>();
+  const auto* transform =
+      m_world->try_get<Engine::Core::TransformComponent>(event.target_id);
+  const auto* unit = m_world->try_get<Engine::Core::UnitComponent>(event.target_id);
   if (transform == nullptr || unit == nullptr ||
       Game::Units::is_wildlife_spawn(unit->spawn_type)) {
     return;
   }
 
   int attacker_owner_id = 0;
-  if (auto* attacker = m_world->get_entity(event.attacker_id)) {
-    if (const auto* attacker_unit =
-            attacker->get_component<Engine::Core::UnitComponent>()) {
-      attacker_owner_id = attacker_unit->owner_id;
-    }
+  if (const auto* attacker_unit =
+          m_world->try_get<Engine::Core::UnitComponent>(event.attacker_id)) {
+    attacker_owner_id = attacker_unit->owner_id;
   }
 
   const bool is_building = Game::Units::is_building_spawn(unit->spawn_type);

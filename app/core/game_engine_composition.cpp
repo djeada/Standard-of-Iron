@@ -644,12 +644,8 @@ void GameEngine::build_services_and_controllers() {
             if (!m_minimap_view_model || m_world == nullptr) {
               return;
             }
-            auto* barrack = m_world->get_entity(e.barrack_id);
-            if (barrack == nullptr) {
-              return;
-            }
             const auto* transform =
-                barrack->get_component<Engine::Core::TransformComponent>();
+                m_world->try_get<Engine::Core::TransformComponent>(e.barrack_id);
             if (transform == nullptr) {
               return;
             }
