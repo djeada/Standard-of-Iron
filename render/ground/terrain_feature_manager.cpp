@@ -1,6 +1,7 @@
 #include "terrain_feature_manager.h"
 
 #include "render/ground/bridge_renderer.h"
+#include "render/ground/fog_renderer.h"
 #include "render/ground/river_renderer.h"
 #include "render/ground/riverbank_renderer.h"
 #include "render/ground/road_renderer.h"
@@ -30,6 +31,12 @@ void TerrainFeatureManager::configure(
   m_road->configure(road_segments, height_map);
   m_shoreline->configure(river_segments, lakes, height_map, biome_settings);
   m_bridge->configure(bridges, tile_size, height_map);
+}
+
+void TerrainFeatureManager::set_fog_renderer(FogRenderer* fog) {
+  if (m_bridge != nullptr) {
+    m_bridge->set_fog_renderer(fog);
+  }
 }
 
 void TerrainFeatureManager::submit(Renderer& renderer, ResourceManager* resources) {

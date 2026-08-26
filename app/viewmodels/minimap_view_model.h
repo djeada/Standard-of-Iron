@@ -2,6 +2,7 @@
 
 #include <QImage>
 #include <QObject>
+#include <QString>
 #include <QVector3D>
 
 #include <optional>
@@ -9,6 +10,7 @@
 namespace App::Core {
 struct ClientContext;
 class ClientHost;
+struct OrderMarker;
 } // namespace App::Core
 
 namespace App::ViewModels {
@@ -33,10 +35,15 @@ public:
 
   [[nodiscard]] auto image() const -> QImage;
 
+  void note_order_marker(const App::Core::OrderMarker& marker);
+
   void notify_image_changed() { emit image_changed(); }
 
 signals:
   void image_changed();
+
+  void order_ping(
+      qreal nx, qreal ny, const QString& color, bool rejected, qreal lifetime_seconds);
 
 private:
   [[nodiscard]] auto world_at(qreal mx,

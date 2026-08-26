@@ -112,10 +112,6 @@
         <translation>Entregando</translation>
     </message>
     <message>
-        <source>Carrying its load to the barracks.</source>
-        <translation>Levando sua carga ao quartel.</translation>
-    </message>
-    <message>
         <source>Healing</source>
         <translation>Curando</translation>
     </message>
@@ -194,6 +190,18 @@
     <message>
         <source>Slaughtering a sheep for food.</source>
         <translation>Abate uma ovelha em troca de comida.</translation>
+    </message>
+    <message>
+        <source>Carrying its load to the barracks; it cannot be interrupted until the load is dropped off.</source>
+        <translation>Leva a carga ao quartel; não pode ser interrompido até entregá-la.</translation>
+    </message>
+    <message>
+        <source>Cannot be interrupted</source>
+        <translation>Não pode ser interrompido</translation>
+    </message>
+    <message>
+        <source>Hauling a load to the barracks. New orders wait until the load is dropped off.</source>
+        <translation>Levando uma carga ao quartel. Novas ordens esperam até a entrega da carga.</translation>
     </message>
 </context>
 <context>
@@ -1845,10 +1853,6 @@ Isto pode ser uma escaramuça, ou os objetivos não foram configurados.</transla
         <translation>O cerco exige ao menos três unidades.</translation>
     </message>
     <message>
-        <source>Forming up</source>
-        <translation>Formando</translation>
-    </message>
-    <message>
         <source>Formed</source>
         <translation>Formado</translation>
     </message>
@@ -1857,8 +1861,20 @@ Isto pode ser uma escaramuça, ou os objetivos não foram configurados.</transla
         <translation>Desorganizado</translation>
     </message>
     <message>
-        <source>Breaking</source>
-        <translation>Quebrando</translation>
+        <source>Reforming</source>
+        <translation>Reformando</translation>
+    </message>
+    <message>
+        <source>Opening</source>
+        <translation>Abrindo</translation>
+    </message>
+    <message>
+        <source>Traversing</source>
+        <translation>Atravessando</translation>
+    </message>
+    <message>
+        <source>Arrived</source>
+        <translation>Chegou</translation>
     </message>
 </context>
 <context>
@@ -2312,14 +2328,6 @@ Isto pode ser uma escaramuça, ou os objetivos não foram configurados.</transla
 <context>
     <name>GameEngine</name>
     <message>
-        <source>Maximum troop limit reached. Cannot produce more units.</source>
-        <translation>Limite máximo de tropas atingido. Não é possível produzir mais unidades.</translation>
-    </message>
-    <message>
-        <source>Not enough manpower. Build homes or wait for families.</source>
-        <translation>Mão de obra insuficiente. Construa casas ou aguarde novas famílias.</translation>
-    </message>
-    <message>
         <source>Cannot start skirmish: renderer not initialized</source>
         <translation>Não é possível iniciar a escaramuça: renderizador não inicializado</translation>
     </message>
@@ -2350,6 +2358,30 @@ Isto pode ser uma escaramuça, ou os objetivos não foram configurados.</transla
     <message>
         <source>Cannot play replay: unknown launch kind &apos;%1&apos;</source>
         <translation>Não é possível reproduzir o replay: tipo de início desconhecido &quot;%1&quot;</translation>
+    </message>
+    <message>
+        <source>Our ally %1 has been defeated.</source>
+        <translation>Nosso aliado %1 foi derrotado.</translation>
+    </message>
+    <message>
+        <source>%1 has been defeated.</source>
+        <translation>%1 foi derrotado.</translation>
+    </message>
+    <message>
+        <source>Our ally %1 is finished - %2 has fallen.</source>
+        <translation>Nosso aliado %1 está acabado – %2 caiu.</translation>
+    </message>
+    <message>
+        <source>%1 is finished - %2 has fallen.</source>
+        <translation>%1 está acabado – %2 caiu.</translation>
+    </message>
+    <message>
+        <source>Troop limit reached.</source>
+        <translation>Limite de tropas atingido.</translation>
+    </message>
+    <message>
+        <source>Not enough manpower — build a home to raise more families.</source>
+        <translation>Efetivos insuficientes — construa uma casa para criar mais famílias.</translation>
     </message>
 </context>
 <context>
@@ -2392,6 +2424,13 @@ Isto pode ser uma escaramuça, ou os objetivos não foram configurados.</transla
     <message>
         <source>High plus contact-hardening shadows, foliage translucency, extra terrain detail and 8x anti-aliasing. Needs a strong GPU.</source>
         <translation>Alto mais sombras com endurecimento de contato, folhagem translúcida, detalhe extra do terreno e anti-aliasing 8x. Exige uma GPU forte.</translation>
+    </message>
+</context>
+<context>
+    <name>HUD</name>
+    <message>
+        <source>%1 FPS</source>
+        <translation>%1 FPS</translation>
     </message>
 </context>
 <context>
@@ -3841,6 +3880,22 @@ Não visto: nunca explorado.</translation>
     <message>
         <source>Unit details</source>
         <translation>Detalhes da unidade</translation>
+    </message>
+    <message>
+        <source>%1/%2</source>
+        <translation>%1/%2</translation>
+    </message>
+    <message>
+        <source>%1 soldiers</source>
+        <translation>%1 soldados</translation>
+    </message>
+    <message>
+        <source>SOLDIERS</source>
+        <translation>SOLDADOS</translation>
+    </message>
+    <message>
+        <source> soldiers — </source>
+        <translation> soldados — </translation>
     </message>
 </context>
 <context>
@@ -6108,6 +6163,10 @@ para ver a prévia</translation>
         <source>Not enough resources.</source>
         <translation>Recursos insuficientes.</translation>
     </message>
+    <message>
+        <source>Hauling a load - it cannot be interrupted until the load is dropped off.</source>
+        <translation>Levando uma carga - não pode ser interrompida até ser entregue.</translation>
+    </message>
 </context>
 <context>
     <name>OutcomeLayout</name>
@@ -6161,6 +6220,13 @@ para ver a prévia</translation>
     <message>
         <source>Every slot on this map is taken</source>
         <translation>Todas as posições deste mapa estão ocupadas</translation>
+    </message>
+</context>
+<context>
+    <name>PlayerDefeatWatcher</name>
+    <message>
+        <source>Player %1</source>
+        <translation>Jogador %1</translation>
     </message>
 </context>
 <context>
@@ -7063,6 +7129,10 @@ Os construtores os ceifam pela comida que recruta civis</translation>
         <source>No target under the cursor</source>
         <translation>Nenhum alvo sob o cursor</translation>
     </message>
+    <message>
+        <source>Hauling a load - cannot be interrupted</source>
+        <translation>Levando uma carga - sem interrupção</translation>
+    </message>
 </context>
 <context>
     <name>RpgFpvOverlay</name>
@@ -7641,6 +7711,58 @@ Os construtores os ceifam pela comida que recruta civis</translation>
     <message>
         <source>Numbers are a readout, not the feedback. Combat stays readable from motion, sound and hit reactions with them off.</source>
         <translation>Os números são uma leitura, não o retorno. O combate continua legível pelo movimento, som e reações a acertos sem eles.</translation>
+    </message>
+    <message>
+        <source>Borderless</source>
+        <translation>Sem bordas</translation>
+    </message>
+    <message>
+        <source>Windowed</source>
+        <translation>Janela</translation>
+    </message>
+    <message>
+        <source>Fullscreen</source>
+        <translation>Tela cheia</translation>
+    </message>
+    <message>
+        <source>Display Settings</source>
+        <translation>Configurações de tela</translation>
+    </message>
+    <message>
+        <source>Window Mode:</source>
+        <translation>Modo de janela:</translation>
+    </message>
+    <message>
+        <source>VSync</source>
+        <translation>VSync</translation>
+    </message>
+    <message>
+        <source>Synchronises frames with your display to remove tearing. Toggling it takes effect the next time the game starts.</source>
+        <translation>Sincroniza os quadros com a sua tela para eliminar o tearing. A alteração vale na próxima vez que o jogo for iniciado.</translation>
+    </message>
+    <message>
+        <source>Show FPS counter</source>
+        <translation>Mostrar contador de FPS</translation>
+    </message>
+    <message>
+        <source>Displays a small frame-rate readout during battle</source>
+        <translation>Exibe uma pequena leitura da taxa de quadros durante a batalha</translation>
+    </message>
+    <message>
+        <source>Camera pan speed:</source>
+        <translation>Velocidade de panorâmica da câmera:</translation>
+    </message>
+    <message>
+        <source>Camera zoom speed:</source>
+        <translation>Velocidade de zoom da câmera:</translation>
+    </message>
+    <message>
+        <source>Camera rotation speed:</source>
+        <translation>Velocidade de rotação da câmera:</translation>
+    </message>
+    <message>
+        <source>Scales keyboard panning, zooming and rotation; drag and minimap movement stay unchanged.</source>
+        <translation>Ajusta a panorâmica, o zoom e a rotação pelo teclado; arrastar e mover no minimapa permanecem inalterados.</translation>
     </message>
 </context>
 <context>

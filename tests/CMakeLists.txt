@@ -526,6 +526,7 @@ add_executable(
     core/unit_profile_test.cpp
     core/selection_query_service_test.cpp
     core/combat_feedback_test.cpp
+    core/player_defeat_watcher_test.cpp
     core/order_feedback_test.cpp
     core/rts_action_model_test.cpp
     core/runtime_frame_orchestrator_test.cpp

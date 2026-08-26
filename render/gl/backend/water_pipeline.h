@@ -68,6 +68,15 @@ public:
     GL::Shader::UniformHandle model{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle color{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle light_direction{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle visibility_texture{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle visibility_size{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle visibility_tile_size{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle explored_alpha{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle has_visibility{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle fog_mask_texture{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle fog_mask_size{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle fog_mask_tile_size{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle has_fog_mask{GL::Shader::InvalidUniform};
   };
 
   struct RoadUniforms {

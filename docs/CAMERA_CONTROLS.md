@@ -93,6 +93,17 @@ That one function is what the camp focus at load
 (`SkirmishRuntimeCoordinator::center_camera_on_local_forces`) all read, so the
 opening framing and the framing a reset returns to cannot drift apart.
 
+## Speed settings
+
+Keyboard pan, wheel zoom and `Q`/`E` rotation each carry a user speed scale —
+a quarter to three times the designed pace, set in Settings › Controls. The
+values persist through `App::Core::UserSettings` and are pushed into the
+atomics in `game/render_bridge/camera_speeds.h`, which
+`CameraService::move`, `CameraService::zoom` and `CameraService::yaw` read on
+every call. Drag pan, minimap jumps and tilt deliberately stay unscaled: they
+are already proportional to the gesture that drives them, so a multiplier would
+just resell the same motion twice.
+
 ## Edge scroll geometry
 
 The maths lives in `ui/edge_scroll.cpp` rather than inline in QML so it can be

@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <gtest/gtest.h>
 
 #include "game/map/map_definition.h"
@@ -19,6 +20,32 @@ class TerrainSceneProxyServiceTest : public ::testing::Test {
 protected:
   void TearDown() override { Game::Map::TerrainService::instance().clear(); }
 };
+
+TEST(TerrainSceneProxyTest, BridgesSubmitBeforeTheFogSheetTheyDissolveWith) {
+  Render::GL::TerrainSurfaceManager surface;
+  Render::GL::TerrainFeatureManager features;
+  Render::GL::TerrainScatterManager scatter;
+  Render::GL::RainRenderer rain;
+  Render::GL::FogRenderer fog;
+  Render::GL::MapBoundaryFogRenderer boundary_fog;
+
+  Render::GL::TerrainSceneProxy const proxy(
+      &surface, &features, &scatter, &rain, &fog, &boundary_fog);
+
+  const auto& passes = proxy.passes();
+  const auto bridge_at =
+      std::find(passes.begin(),
+                passes.end(),
+                static_cast<Render::GL::IRenderPass*>(proxy.bridge()));
+  const auto fog_at = std::find(
+      passes.begin(), passes.end(), static_cast<Render::GL::IRenderPass*>(&fog));
+
+  ASSERT_NE(bridge_at, passes.end());
+  ASSERT_NE(fog_at, passes.end());
+  EXPECT_LT(bridge_at - passes.begin(), fog_at - passes.begin())
+      << "the bridge pass pulls the fog mask forward; if the fog pass ran first the "
+         "bridge would dissolve against a frame-old mask";
+}
 
 TEST(TerrainSceneProxyTest, GroupsTerrainPassesInLegacySubmissionOrder) {
   Render::GL::TerrainSurfaceManager surface;

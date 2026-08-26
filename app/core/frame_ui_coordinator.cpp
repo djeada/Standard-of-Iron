@@ -145,32 +145,6 @@ constexpr float k_objective_marker_thickness = 0.22F;
 constexpr float k_objective_marker_lift = 0.05F;
 constexpr QVector3D k_objective_marker_color{0.95F, 0.76F, 0.36F};
 
-const QVector3D k_order_move_color(0.55F, 0.95F, 0.55F);
-const QVector3D k_order_attack_color(1.0F, 0.32F, 0.22F);
-const QVector3D k_order_guard_color(0.45F, 0.70F, 1.0F);
-const QVector3D k_order_patrol_color(0.35F, 1.0F, 0.55F);
-const QVector3D k_order_neutral_color(0.95F, 0.90F, 0.70F);
-const QVector3D k_order_rejected_color(0.72F, 0.72F, 0.74F);
-
-auto order_marker_color(App::Core::OrderKind kind, bool rejected) -> QVector3D {
-  if (rejected) {
-    return k_order_rejected_color;
-  }
-  switch (kind) {
-  case App::Core::OrderKind::Move:
-    return k_order_move_color;
-  case App::Core::OrderKind::Attack:
-    return k_order_attack_color;
-  case App::Core::OrderKind::Guard:
-  case App::Core::OrderKind::Hold:
-    return k_order_guard_color;
-  case App::Core::OrderKind::Patrol:
-    return k_order_patrol_color;
-  default:
-    return k_order_neutral_color;
-  }
-}
-
 auto order_marker_pattern(App::Core::OrderKind kind,
                           bool rejected) -> Game::Accessibility::TeamPattern {
   if (rejected) {
@@ -273,7 +247,7 @@ void render_order_markers(Render::GL::Renderer* renderer,
                             ? base_radius * (1.0F + 0.25F * ease)
                             : base_radius * (1.0F - k_order_marker_shrink * ease);
     ring.thickness = k_order_marker_thickness * (1.0F - 0.4F * ease);
-    ring.color = order_marker_color(marker.kind, marker.rejected);
+    ring.color = App::Core::order_marker_color(marker.kind, marker.rejected);
     ring.alpha = k_order_marker_alpha * (1.0F - ease);
     ring.pattern = order_marker_pattern(marker.kind, marker.rejected);
     ring.focused = !marker.rejected && marker.kind == App::Core::OrderKind::Attack;
