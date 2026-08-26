@@ -61,7 +61,7 @@ auto healthy_run(std::uint32_t ticks = 120U) -> std::vector<MovementTroopSample>
     sample.remaining_arclength = std::max(0.0F, 10.0F - x);
     sample.order_seconds = static_cast<float>(tick) * k_step;
     sample.presentation_valid = true;
-    sample.presentation_state = 1U;
+    sample.presentation_state = 2U;
     sample.direction_source = MovementDirectionSource::AcceptedVelocity;
     sample.waypoint_index = 0U;
     sample.waypoint_count = 1U;
@@ -313,7 +313,7 @@ TEST(MovementAnalysisTest, WalkingInPlaceIsAStallAndAGaitMismatch) {
     sample.accepted_vz = 0.0F;
 
     sample.presentation_valid = true;
-    sample.presentation_state = 1U;
+    sample.presentation_state = 2U;
     sample.direction_source = MovementDirectionSource::DesiredVelocity;
     sample.desired_vx = 2.0F;
     samples.push_back(sample);
