@@ -61,4 +61,3 @@ Two god objects concentrate all architectural risk:
   input, camera, motor, abilities, lock-on, audio, diagnostics.
 Fix: extract collaborators incrementally — abilities and lock-on out of
 the controller first, following CommanderCameraRig/CommanderMotor precedent.
-
