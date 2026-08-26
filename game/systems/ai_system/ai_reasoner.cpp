@@ -8,12 +8,35 @@
 #include "../../core/ownership_constants.h"
 #include "../../game_config.h"
 #include "../nation_registry.h"
+#include "../production_service.h"
 #include "ai_base_manager.h"
 #include "ai_utils.h"
 #include "systems/ai_system/ai_types.h"
 #include "units/spawn_type.h"
+#include "units/troop_type.h"
 
 namespace {
+
+// The least manpower that buys anything a barracks can recruit. Below this the
+// recruitment buildings are starved however healthy the treasury looks.
+[[nodiscard]] auto
+cheapest_recruit_cost(const Game::Systems::AI::AIContext& ctx) -> int {
+  if (ctx.nation == nullptr) {
+    return 1;
+  }
+  int cheapest = std::numeric_limits<int>::max();
+  for (const auto& troop : ctx.nation->available_troops) {
+    if (Game::Units::is_commander_troop(troop.unit_type)) {
+      continue;
+    }
+    if (Game::Systems::recruiting_building_for(troop.unit_type) !=
+        Game::Units::SpawnType::Barracks) {
+      continue;
+    }
+    cheapest = std::min(cheapest, troop.cost);
+  }
+  return cheapest == std::numeric_limits<int>::max() ? 1 : cheapest;
+}
 
 struct AnchorCandidate {
   float x = 0.0F;
@@ -338,6 +361,16 @@ auto compute_macro_targets(const Game::Systems::AI::AIContext& ctx, int catapult
 
   targets.home_count = std::max(ctx.strategy_config.base_home_target,
                                 2 + home_growth + std::min(2, extra_barracks));
+
+  // A home raises a fixed number of civilians and is then finished for good,
+  // and a civilian is the only thing that refills a barracks. Once the
+  // settlement can no longer raise one and the barracks cannot afford the
+  // cheapest recruit, the army has stopped growing for good unless more homes
+  // go up - which is exactly where a watched computer-only match froze.
+  if (ctx.home_civilians_remaining == 0 &&
+      ctx.recruitment_manpower_available < cheapest_recruit_cost(ctx)) {
+    targets.home_count = std::max(targets.home_count, ctx.home_count + 2);
+  }
   targets.barracks_count = std::max(targets.barracks_count, 1 + extra_barracks);
   targets.defense_tower_count =
       std::max(targets.defense_tower_count,
@@ -717,6 +750,8 @@ void AIReasoner::update_context(const AISnapshot& snapshot, AIContext& ctx) {
   ctx.barracks_count = 0;
   ctx.marketplace_count = 0;
   ctx.assembled_unit_count = 0;
+  ctx.recruitment_manpower_available = 0;
+  ctx.home_civilians_remaining = 0;
   ctx.effective_reserve_units = 0;
   ctx.effective_harass_units = 0;
   ctx.assault_unit_count = 0;
@@ -749,6 +784,13 @@ void AIReasoner::update_context(const AISnapshot& snapshot, AIContext& ctx) {
 
       if (entity.spawn_type == Game::Units::SpawnType::Home) {
         ctx.home_count++;
+        if (entity.production.has_component) {
+          ctx.home_civilians_remaining +=
+              std::max(0,
+                       entity.production.max_units - entity.production.produced_count -
+                           entity.production.queue_size -
+                           (entity.production.in_progress ? 1 : 0));
+        }
       } else if (entity.spawn_type == Game::Units::SpawnType::DefenseTower) {
         ctx.defense_tower_count++;
       } else if (entity.spawn_type == Game::Units::SpawnType::WallSegment) {
@@ -760,6 +802,9 @@ void AIReasoner::update_context(const AISnapshot& snapshot, AIContext& ctx) {
       }
 
       if (entity.spawn_type == Game::Units::SpawnType::Barracks) {
+        if (entity.production.has_component) {
+          ctx.recruitment_manpower_available += entity.production.manpower_available;
+        }
         if (entity.id == previous_primary_barracks) {
           sticky_primary_barracks = &entity;
         }

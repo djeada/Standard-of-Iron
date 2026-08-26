@@ -197,6 +197,7 @@ auto AISnapshotBuilder::build(const Engine::Core::World& world,
       data.production.time_remaining = production->time_remaining;
       data.production.produced_count = production->produced_count;
       data.production.max_units = production->max_units;
+      data.production.manpower_available = production->manpower_available;
       data.production.product_type = production->product_type;
       data.production.rally_set = production->rally_set;
       data.production.rally_x = production->rally_x;

@@ -217,8 +217,9 @@ void AISystem::process_results(Engine::Core::World& world) {
       ++m_completed_decision_count;
       m_applied_command_count += filtered_commands.size();
 
-      Game::Systems::AI::AICommandApplier::apply(
+      const auto report = Game::Systems::AI::AICommandApplier::apply(
           world, ai.context.player_id, filtered_commands);
+      m_refused_command_count += report.refused_production;
 
       results.pop();
     }

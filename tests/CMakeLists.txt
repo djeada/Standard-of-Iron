@@ -237,6 +237,7 @@ add_executable(
     systems/ai_system_test.cpp
     systems/wall_system_test.cpp
     headless/mission_wave_assault_test.cpp
+    headless/ai_skirmish_opening_test.cpp
     simulation_main.cpp
 )
 target_link_libraries(
