@@ -1,5 +1,6 @@
 #include "battlefield_capture.h"
 
+#include <QDebug>
 #include <QVector3D>
 
 #include <algorithm>
@@ -488,6 +489,22 @@ auto run(const RunnerConfig& config, const TickObserver& observer) -> CaptureRes
         ++out.performance.damage_events;
         if (!action->action_running && !action->action_completed) {
           ++out.quality.damage_without_visible_action;
+          if (!qEnvironmentVariableIsEmpty("SOI_CAPTURE_TRACE") &&
+              out.quality.damage_without_visible_action < 12U) {
+            qWarning("invisible damage: entity=%llu spawn=%s action_id=%u phase=%u "
+                     "duration=%.3f elapsed=%.3f norm=%.3f active=%d trace=%d "
+                     "damage=%d",
+                     static_cast<unsigned long long>(id),
+                     Game::Units::spawn_typeToString(unit->spawn_type).c_str(),
+                     static_cast<unsigned>(action->combat_action_id),
+                     static_cast<unsigned>(action->phase),
+                     action->action_duration,
+                     action->action_elapsed_time,
+                     action->normalized_action_time,
+                     static_cast<int>(action->action_active),
+                     static_cast<int>(action->weapon_trace_active),
+                     action->last_damage);
+          }
         }
       }
       previous_action_damage[id] = action != nullptr ? action->last_damage : 0;
@@ -689,7 +706,19 @@ auto verify(const CaptureResult& result) -> VerificationReport {
               "yaw_snap",
               "visible facing changed by more than 50 degrees in one tick");
   }
-  if (result.quality.locomotion_flickers > result.performance.entity_updates / 100U) {
+  // One idle/walk flip per body per ten seconds is the most a settled scenario
+  // should ever show. The old threshold was a hundredth of the raw entity-update
+  // counter, which on a sixty second run allowed 585 flickers where the worst
+  // scenario produces 83 - it could not fire, and a real regression would have
+  // passed straight through it.
+  const double live_bodies =
+      result.performance.ticks > 0U
+          ? static_cast<double>(result.performance.entity_updates) /
+                static_cast<double>(result.performance.ticks)
+          : 0.0;
+  const double flicker_budget =
+      std::max(4.0, live_bodies * result.config.duration_seconds / 10.0);
+  if (static_cast<double>(result.quality.locomotion_flickers) > flicker_budget) {
     add_issue(report, "locomotion_flicker", "idle/walk state flickered repeatedly");
   }
   if (result.quality.damage_without_visible_action != 0U) {

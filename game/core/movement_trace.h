@@ -187,10 +187,18 @@ public:
 
   void set_memory_sample_limit(std::size_t troop_limit, std::size_t soldier_limit);
 
+  // How much of a file trace to keep: one sample every `tick_stride` ticks,
+  // and at most `max_bytes` of it. A trace nobody can open answers nothing.
+  void set_file_sample_budget(std::uint64_t tick_stride, std::uint64_t max_bytes);
+  [[nodiscard]] auto file_bytes_written() const -> std::uint64_t;
+
 private:
   MovementTrace() = default;
 
   struct Session;
+
+  // Whether this sample survives the run's stride and byte budget.
+  [[nodiscard]] static auto should_write(Session& session, std::uint64_t tick) -> bool;
 
   bool m_enabled{false};
   bool m_environment_checked{false};

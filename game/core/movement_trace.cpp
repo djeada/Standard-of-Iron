@@ -177,6 +177,10 @@ auto read_bool(const std::string& line, std::string_view key, bool& out) -> bool
 constexpr std::size_t k_default_troop_limit = 4000000U;
 constexpr std::size_t k_default_soldier_limit = 4000000U;
 
+// One watched skirmish wrote 12 GB of troop samples and the report tool could
+// not read it back inside two minutes. A trace is a diagnostic, not an archive.
+constexpr std::uint64_t k_default_file_byte_budget = 512ULL * 1024ULL * 1024ULL;
+
 } // namespace
 
 auto to_json(const MovementTroopSample& s) -> std::string {
@@ -469,6 +473,16 @@ struct MovementTrace::Session {
   bool to_file{false};
   std::size_t troop_limit{k_default_troop_limit};
   std::size_t soldier_limit{k_default_soldier_limit};
+
+  // A trace of a real match is enormous: one line per body per tick came to
+  // 456 MB from a sixty second run of the eight verifier scenarios, and 12 GB
+  // from one watched skirmish, which the report tool then could not read in
+  // under two minutes. Sampling every Nth tick and stopping at a byte budget
+  // keeps a trace answerable. Both are tunable per run.
+  std::uint64_t tick_stride{1};
+  std::uint64_t byte_budget{k_default_file_byte_budget};
+  std::uint64_t bytes_written{0};
+  bool budget_reported{false};
   std::size_t troop_written{0};
   std::size_t soldier_written{0};
 };
@@ -497,7 +511,24 @@ void MovementTrace::configure_from_environment() {
   if (const char* const commit = std::getenv("SOI_MOVEMENT_TRACE_COMMIT")) {
     manifest.commit = commit;
   }
-  begin_file_session(directory, manifest);
+  if (!begin_file_session(directory, manifest)) {
+    return;
+  }
+
+  std::lock_guard<std::mutex> const lock(m_mutex);
+  if (!m_session) {
+    return;
+  }
+  std::uint64_t stride_ticks = m_session->tick_stride;
+  std::uint64_t byte_budget = m_session->byte_budget;
+  if (const char* const stride = std::getenv("SOI_MOVEMENT_TRACE_STRIDE")) {
+    stride_ticks = std::max<std::uint64_t>(1, std::strtoull(stride, nullptr, 10));
+  }
+  if (const char* const budget = std::getenv("SOI_MOVEMENT_TRACE_MAX_MB")) {
+    byte_budget = std::strtoull(budget, nullptr, 10) * 1024ULL * 1024ULL;
+  }
+  m_session->tick_stride = stride_ticks;
+  m_session->byte_budget = byte_budget;
 }
 
 auto MovementTrace::begin_file_session(const std::string& directory,
@@ -553,6 +584,39 @@ void MovementTrace::end_session() {
   }
 }
 
+void MovementTrace::set_file_sample_budget(std::uint64_t tick_stride,
+                                           std::uint64_t max_bytes) {
+  std::lock_guard<std::mutex> const lock(m_mutex);
+  if (!m_session) {
+    return;
+  }
+  m_session->tick_stride = std::max<std::uint64_t>(1, tick_stride);
+  m_session->byte_budget = max_bytes;
+}
+
+auto MovementTrace::file_bytes_written() const -> std::uint64_t {
+  std::lock_guard<std::mutex> const lock(m_mutex);
+  return m_session ? m_session->bytes_written : 0U;
+}
+
+auto MovementTrace::should_write(Session& session, std::uint64_t tick) -> bool {
+  if (session.tick_stride > 1 && (tick % session.tick_stride) != 0U) {
+    return false;
+  }
+  if (session.byte_budget == 0U || session.bytes_written < session.byte_budget) {
+    return true;
+  }
+  if (!session.budget_reported) {
+    session.budget_reported = true;
+    std::fprintf(stderr,
+                 "movement trace: reached the %llu byte budget; no more samples "
+                 "will be written. Raise SOI_MOVEMENT_TRACE_MAX_MB or increase "
+                 "SOI_MOVEMENT_TRACE_STRIDE.\n",
+                 static_cast<unsigned long long>(session.byte_budget));
+  }
+  return false;
+}
+
 void MovementTrace::record(const MovementTroopSample& sample) {
   if (!m_enabled) {
     return;
@@ -562,7 +626,12 @@ void MovementTrace::record(const MovementTroopSample& sample) {
     return;
   }
   if (m_session->to_file) {
-    m_session->troop_stream << to_json(sample) << '\n';
+    if (!should_write(*m_session, sample.tick)) {
+      return;
+    }
+    const std::string line = to_json(sample);
+    m_session->troop_stream << line << '\n';
+    m_session->bytes_written += line.size() + 1U;
     ++m_session->troop_written;
     return;
   }
@@ -582,7 +651,12 @@ void MovementTrace::record(const MovementSoldierSample& sample) {
     return;
   }
   if (m_session->to_file) {
-    m_session->soldier_stream << to_json(sample) << '\n';
+    if (!should_write(*m_session, sample.current_tick)) {
+      return;
+    }
+    const std::string line = to_json(sample);
+    m_session->soldier_stream << line << '\n';
+    m_session->bytes_written += line.size() + 1U;
     ++m_session->soldier_written;
     return;
   }
