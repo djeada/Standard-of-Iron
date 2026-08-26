@@ -12,12 +12,25 @@ class QPainter;
 
 namespace Game::Map::Minimap {
 
+enum class MarkerClass : std::uint8_t {
+  Troop = 0,
+  MinorStructure = 1,
+  Tower = 2,
+  Landmark = 3,
+  Stronghold = 4,
+};
+
+inline constexpr std::uint8_t k_capture_steps = 12;
+
 struct UnitMarker {
   float world_x = 0.0F;
   float world_z = 0.0F;
   int owner_id = 0;
   bool is_selected = false;
-  bool is_building = false;
+  MarkerClass marker_class = MarkerClass::Troop;
+  std::uint8_t capture_step = 0;
+  int capture_owner_id = 0;
+  bool contested = false;
 };
 
 using VisibilityCheckFn = std::function<bool(float world_x, float world_z)>;
@@ -31,23 +44,31 @@ struct TeamColors {
     std::uint8_t border_r, border_g, border_b;
   };
 
-  static constexpr ColorSet PLAYER_1 = {48, 82, 210, 20, 38, 125};
+  static constexpr ColorSet PLAYER_1 = {46, 74, 140, 17, 26, 54};
 
-  static constexpr ColorSet PLAYER_2 = {218, 38, 28, 122, 16, 12};
+  static constexpr ColorSet PLAYER_2 = {156, 46, 34, 56, 17, 12};
 
-  static constexpr ColorSet PLAYER_3 = {22, 158, 45, 10, 88, 22};
+  static constexpr ColorSet PLAYER_3 = {58, 112, 70, 20, 42, 26};
 
-  static constexpr ColorSet PLAYER_4 = {212, 178, 18, 118, 98, 8};
+  static constexpr ColorSet PLAYER_4 = {176, 138, 46, 70, 53, 16};
 
-  static constexpr ColorSet PLAYER_5 = {148, 28, 192, 82, 12, 115};
+  static constexpr ColorSet PLAYER_5 = {112, 52, 116, 41, 18, 43};
 
-  static constexpr ColorSet PLAYER_6 = {18, 172, 172, 8, 100, 100};
+  static constexpr ColorSet PLAYER_6 = {46, 122, 124, 16, 45, 46};
 
-  static constexpr ColorSet NEUTRAL = {125, 115, 98, 68, 60, 48};
+  static constexpr ColorSet NEUTRAL = {170, 154, 124, 52, 43, 32};
 
-  static constexpr std::uint8_t SELECT_R = 255;
-  static constexpr std::uint8_t SELECT_G = 215;
-  static constexpr std::uint8_t SELECT_B = 0;
+  static constexpr std::uint8_t SELECT_R = 226;
+  static constexpr std::uint8_t SELECT_G = 190;
+  static constexpr std::uint8_t SELECT_B = 108;
+
+  static constexpr std::uint8_t CONTESTED_R = 206;
+  static constexpr std::uint8_t CONTESTED_G = 138;
+  static constexpr std::uint8_t CONTESTED_B = 46;
+
+  static constexpr std::uint8_t INK_R = 44;
+  static constexpr std::uint8_t INK_G = 34;
+  static constexpr std::uint8_t INK_B = 24;
 
   static constexpr auto get_color(int owner_id) -> ColorSet {
     switch (owner_id) {
@@ -96,25 +117,41 @@ public:
 
   void set_building_size(float size) { m_building_half_size = size; }
 
-private:
   [[nodiscard]] auto world_to_pixel(float world_x,
                                     float world_z) const -> std::pair<float, float>;
+
+private:
+  struct PlacedMarker {
+    float px = 0.0F;
+    float py = 0.0F;
+    int owner_id = 0;
+    const UnitMarker* marker = nullptr;
+  };
 
   [[nodiscard]] auto
   get_color_for_owner(int owner_id,
                       const PlayerColorFn& player_color_fn) -> TeamColors::ColorSet;
 
-  void draw_unit_marker(QPainter& painter,
-                        float px,
-                        float py,
-                        const TeamColors::ColorSet& colors,
-                        bool is_selected);
+  void draw_troops(QPainter& painter, const PlayerColorFn& player_color_fn);
+  void draw_minor_structures(QPainter& painter, const PlayerColorFn& player_color_fn);
+  void draw_structures(QPainter& painter, const PlayerColorFn& player_color_fn);
+  void draw_strongholds(QPainter& painter, const PlayerColorFn& player_color_fn);
+  void draw_selected(QPainter& painter, const PlayerColorFn& player_color_fn);
 
-  void draw_building_marker(QPainter& painter,
-                            float px,
-                            float py,
-                            const TeamColors::ColorSet& colors,
-                            bool is_selected);
+  void draw_stronghold_shape(QPainter& painter,
+                             float px,
+                             float py,
+                             const TeamColors::ColorSet& colors,
+                             bool neutral);
+  void draw_keep_outline(QPainter& painter, float px, float py, float half) const;
+  void draw_temple_shape(QPainter& painter, float px, float py) const;
+  void draw_capture_ring(QPainter& painter,
+                         const PlacedMarker& placed,
+                         const PlayerColorFn& player_color_fn);
+  void draw_tower_shape(QPainter& painter, float px, float py) const;
+  void draw_selection_halo(QPainter& painter, const PlacedMarker& placed);
+
+  [[nodiscard]] auto stronghold_half_size() const -> float;
 
   QImage m_image;
   int m_width = 0;
@@ -132,9 +169,11 @@ private:
 
   QRect m_content_rect;
 
-  std::vector<const UnitMarker*> m_buildings;
-  std::vector<const UnitMarker*> m_units;
-  std::vector<const UnitMarker*> m_selected;
+  std::vector<PlacedMarker> m_minor_structures;
+  std::vector<PlacedMarker> m_structures;
+  std::vector<PlacedMarker> m_strongholds;
+  std::vector<PlacedMarker> m_troops;
+  std::vector<PlacedMarker> m_selected;
 };
 
 } // namespace Game::Map::Minimap
