@@ -546,6 +546,7 @@ add_executable(
     ui/selection_grouping_test.cpp
     ui/selected_units_model_test.cpp
     ui/icon_art_test.cpp
+    ui/loading_tips_test.cpp
     ui/icon_resources_test.cpp
     ui/widget_theme_test.cpp
     ui/brand_fonts_test.cpp

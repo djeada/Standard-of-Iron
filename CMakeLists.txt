@@ -723,6 +723,7 @@ add_library(
     app/viewmodels/wave_view_model.cpp
     # app/models -- Qt item models and image providers.
     app/models/graphics_settings_proxy.cpp
+    app/models/loading_tips.cpp
     app/models/map_preview_image_provider.cpp
     app/models/minimap_image_provider.cpp
     app/models/selected_units_model.cpp
