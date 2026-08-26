@@ -13,6 +13,8 @@
 #include "core/entity.h"
 #include "core/world.h"
 #include "game/session/session_context.h"
+#include "game/systems/selection_system.h"
+#include "game/units/spawn_type.h"
 #include "map/map_definition.h"
 #include "map/render_visibility_rules.h"
 #include "map/visibility_service.h"
@@ -97,6 +99,18 @@ auto add_unit(Engine::Core::World& world,
   auto* unit_comp =
       entity->add_component<Engine::Core::UnitComponent>(100, 100, 1.0F, 12.0F);
   unit_comp->owner_id = owner_id;
+  return entity;
+}
+
+auto add_structure(Engine::Core::World& world,
+                   float x,
+                   float z,
+                   int owner_id,
+                   Game::Units::SpawnType spawn_type) -> Engine::Core::Entity* {
+  auto* entity = add_unit(world, x, z, owner_id);
+  auto* unit_comp = entity->get_component<Engine::Core::UnitComponent>();
+  unit_comp->spawn_type = spawn_type;
+  (void)entity->add_component<Engine::Core::BuildingComponent>();
   return entity;
 }
 
@@ -594,6 +608,166 @@ TEST(MinimapManagerTest, MarkersFollowTileSizeWhenTilesAreNotUnitSized) {
          "times further out.";
 }
 
+TEST(MinimapManagerTest, StrongholdsAreDrawnLargerThanOrdinaryStructures) {
+  constexpr int kMapSize = 48;
+  const MapDefinition map = make_test_map(kMapSize, kMapSize, 0.0F);
+
+  auto& visibility = VisibilityService::instance();
+  visibility.initialize(kMapSize, kMapSize, 1.0F);
+  visibility.reveal_all();
+
+  auto world = std::make_unique<Engine::Core::World>();
+  (void)add_structure(*world, -12.0F, -12.0F, 1, Game::Units::SpawnType::Barracks);
+  (void)add_structure(*world, 12.0F, 12.0F, 1, Game::Units::SpawnType::Home);
+
+  MinimapManager manager;
+  manager.generate_for_map(map);
+  sync_minimap_fog_from_visibility(manager);
+  const QImage fog_only = manager.get_image().copy();
+
+  manager.update_units(world.get(), nullptr, 1);
+  const QImage with_markers = manager.get_image().copy();
+
+  const auto [village_px, village_py] =
+      world_to_pixel(with_markers, map, -12.0F, -12.0F);
+  const auto [house_px, house_py] = world_to_pixel(with_markers, map, 12.0F, 12.0F);
+
+  const int village_ink =
+      changed_pixels_in_radius(fog_only, with_markers, village_px, village_py, 10);
+  const int house_ink =
+      changed_pixels_in_radius(fog_only, with_markers, house_px, house_py, 10);
+
+  EXPECT_GT(village_ink, 0);
+  EXPECT_GT(house_ink, 0);
+  EXPECT_GT(village_ink, house_ink * 2)
+      << "A capturable village must read as the most important thing on the "
+         "minimap; a house must not compete with it.";
+}
+
+TEST(MinimapManagerTest, CaptureProgressDrawsARingOutsideTheStronghold) {
+  constexpr int kMapSize = 48;
+  const MapDefinition map = make_test_map(kMapSize, kMapSize, 0.0F);
+
+  auto& visibility = VisibilityService::instance();
+  visibility.initialize(kMapSize, kMapSize, 1.0F);
+  visibility.reveal_all();
+
+  auto world = std::make_unique<Engine::Core::World>();
+  auto* village =
+      add_structure(*world, 0.0F, 0.0F, 1, Game::Units::SpawnType::Barracks);
+  auto* capture = village->add_component<Engine::Core::CaptureComponent>();
+
+  MinimapManager manager;
+  manager.generate_for_map(map);
+  sync_minimap_fog_from_visibility(manager);
+
+  manager.update_units(world.get(), nullptr, 1);
+  const QImage idle = manager.get_image().copy();
+
+  capture->is_being_captured = true;
+  capture->capturing_player_id = 2;
+  capture->capture_progress = capture->required_time * 0.75F;
+  manager.update_units(world.get(), nullptr, 1);
+  EXPECT_TRUE(manager.consume_dirty_flag())
+      << "capture progress must invalidate the cached unit overlay.";
+  const QImage capturing = manager.get_image().copy();
+
+  const auto [px, py] = world_to_pixel(capturing, map, 0.0F, 0.0F);
+  EXPECT_GT(count_changed_pixels(idle, capturing), 0)
+      << "an in-progress capture must be visible on the minimap.";
+  EXPECT_GT(changed_pixels_in_radius(idle, capturing, px, py, 12), 0);
+}
+
+TEST(MinimapManagerTest, WildlifeNeverReachesTheMinimap) {
+  constexpr int kMapSize = 48;
+  const MapDefinition map = make_test_map(kMapSize, kMapSize, 0.0F);
+
+  auto& visibility = VisibilityService::instance();
+  visibility.initialize(kMapSize, kMapSize, 1.0F);
+  visibility.reveal_all();
+
+  auto world = std::make_unique<Engine::Core::World>();
+  auto* sheep = add_unit(*world, 4.0F, 4.0F, 0);
+  sheep->get_component<Engine::Core::UnitComponent>()->spawn_type =
+      Game::Units::SpawnType::Sheep;
+
+  MinimapManager manager;
+  manager.generate_for_map(map);
+  sync_minimap_fog_from_visibility(manager);
+  const QImage fog_only = manager.get_image().copy();
+
+  manager.update_units(world.get(), nullptr, 1);
+  EXPECT_EQ(count_changed_pixels(fog_only, manager.get_image()), 0)
+      << "grazing wildlife must not draw on the minimap, and must not churn the "
+         "unit overlay as it wanders.";
+}
+
+TEST(MinimapManagerTest, SubPixelDriftDoesNotRepaintTheUnitOverlay) {
+  constexpr int kMapSize = 128;
+  const MapDefinition map = make_test_map(kMapSize, kMapSize, 0.0F);
+
+  auto world = std::make_unique<Engine::Core::World>();
+  auto* unit = add_unit(*world, 4.0F, 4.0F, 1);
+  auto* transform = unit->get_component<Engine::Core::TransformComponent>();
+
+  MinimapManager manager;
+  manager.generate_for_map(map);
+  (void)manager.consume_dirty_flag();
+
+  manager.update_units(world.get(), nullptr, 1);
+  (void)manager.consume_dirty_flag();
+
+  transform->position.x += 0.02F;
+  manager.update_units(world.get(), nullptr, 1);
+  EXPECT_FALSE(manager.consume_dirty_flag())
+      << "drift far below one minimap pixel must not force a repaint.";
+
+  transform->position.x += 4.0F;
+  manager.update_units(world.get(), nullptr, 1);
+  EXPECT_TRUE(manager.consume_dirty_flag())
+      << "movement the player can actually see must still repaint.";
+}
+
+TEST(MinimapManagerTest, SelectedTroopDestinationsArePublished) {
+  constexpr int kMapSize = 48;
+  const MapDefinition map = make_test_map(kMapSize, kMapSize, 0.0F);
+
+  auto world = std::make_unique<Engine::Core::World>();
+  world->add_system(std::make_unique<Game::Systems::SelectionSystem>());
+  auto* unit = add_unit(*world, 0.0F, 0.0F, 1);
+  auto* movement = unit->add_component<Engine::Core::MovementComponent>();
+  movement->engage_manual_move(8.0F, -6.0F);
+
+  auto* selection = world->get_system<Game::Systems::SelectionSystem>();
+  selection->select_unit(unit->get_id());
+
+  MinimapManager manager;
+  manager.generate_for_map(map);
+  manager.update_units(world.get(), selection, 1);
+
+  ASSERT_EQ(manager.destinations().size(), 1U)
+      << "a selected squad on the move must show where it is headed.";
+
+  const auto& destination = manager.destinations().front();
+  EXPECT_GE(destination.nx, 0.0F);
+  EXPECT_LE(destination.nx, 1.0F);
+  EXPECT_GE(destination.origin_nx, 0.0F);
+  EXPECT_LE(destination.origin_nx, 1.0F);
+  EXPECT_GE(destination.origin_ny, 0.0F);
+  EXPECT_LE(destination.origin_ny, 1.0F);
+  EXPECT_EQ(destination.owner_id, 1);
+  EXPECT_GT(std::hypot(destination.nx - destination.origin_nx,
+                       destination.ny - destination.origin_ny),
+            0.01F)
+      << "the leash must run from where the squad stands to where it is going, "
+         "not collapse onto one point.";
+
+  selection->clear_selection();
+  manager.update_units(world.get(), selection, 1);
+  EXPECT_TRUE(manager.destinations().empty())
+      << "deselecting must retire the destination marker.";
+}
+
 TEST(VisibilityServiceSnapshotTest, SnapshotIfNewerReturnsPublishedFrames) {
   auto& visibility = VisibilityService::instance();
   visibility.initialize(4, 4, 1.0F);
@@ -763,6 +937,42 @@ TEST(MinimapManagerTest, NonLocalMarkersRemainHiddenInUnseenCells) {
   EXPECT_EQ(changed_pixels_in_radius(fog_only, image_with_units, enemy_px, enemy_py, 3),
             0)
       << "Enemy markers must not reveal unseen positions through fog.";
+}
+
+TEST(MinimapManagerTest, VillagesStayChartedThroughFogInTheirHolderColour) {
+  constexpr int kMapSize = 64;
+  const MapDefinition map = make_test_map(kMapSize, kMapSize, 225.0F);
+  auto& visibility = VisibilityService::instance();
+  visibility.initialize(kMapSize, kMapSize, 1.0F);
+  visibility.reset();
+
+  auto world = std::make_unique<Engine::Core::World>();
+  (void)add_unit(*world, -20.0F, -20.0F, 1);
+  auto* village =
+      add_structure(*world, 20.0F, 20.0F, 2, Game::Units::SpawnType::Barracks);
+
+  MinimapManager manager;
+  manager.generate_for_map(map);
+  (void)manager.consume_dirty_flag();
+
+  visibility.compute_immediate(*world, 1);
+  sync_minimap_fog_from_visibility(manager);
+  const QImage fog_only = manager.get_image().copy();
+
+  manager.update_units(world.get(), nullptr, 1);
+  const QImage held_by_two = manager.get_image().copy();
+  const auto [px, py] = world_to_pixel(held_by_two, map, 20.0F, 20.0F);
+
+  EXPECT_GT(changed_pixels_in_radius(fog_only, held_by_two, px, py, 8), 0)
+      << "A village must stay on the minimap even where the fog is unseen; it is "
+         "the thing the whole match is fought over.";
+
+  village->get_component<Engine::Core::UnitComponent>()->owner_id = 3;
+  manager.update_units(world.get(), nullptr, 1);
+  const QImage held_by_three = manager.get_image().copy();
+
+  EXPECT_GT(changed_pixels_in_radius(held_by_two, held_by_three, px, py, 8), 0)
+      << "A village must repaint in the colour of whichever faction holds it now.";
 }
 
 TEST(MinimapManagerTest, LocalMarkersIgnoreFogVisibilityFiltering) {
