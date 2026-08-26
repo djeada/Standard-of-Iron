@@ -1,0 +1,208 @@
+{
+  "tips": [
+    {
+      "text": "Formations are strongest when their flanks are protected.",
+      "tone": "plain"
+    },
+    {
+      "text": "High ground improves your ability to control an engagement.",
+      "tone": "plain"
+    },
+    {
+      "text": "Keep reserve troops behind the main line to respond to breakthroughs.",
+      "tone": "plain"
+    },
+    {
+      "text": "Cavalry is most effective when attacking exposed flanks or isolated units.",
+      "tone": "plain"
+    },
+    {
+      "text": "Avoid sending cavalry directly into prepared infantry formations.",
+      "tone": "plain"
+    },
+    {
+      "text": "Archers perform best when protected from direct melee combat.",
+      "tone": "plain"
+    },
+    {
+      "text": "Terrain can be as important as numbers. Use forests, hills, and narrow passages to your advantage.",
+      "tone": "plain"
+    },
+    {
+      "text": "A formation that becomes scattered is easier to surround and destroy.",
+      "tone": "plain"
+    },
+    {
+      "text": "Exhausted troops are less effective. Allow units time to recover when possible.",
+      "tone": "plain"
+    },
+    {
+      "text": "Protect your commander. Losing leadership at the wrong moment can decide a battle.",
+      "tone": "plain"
+    },
+    {
+      "text": "Direct commander control can help turn a critical fight, but exposes your commander to greater danger.",
+      "tone": "plain"
+    },
+    {
+      "text": "A well-defended position is one the enemy has not yet discovered a ridiculous way around.",
+      "tone": "wry"
+    },
+    {
+      "text": "Never underestimate the tactical value of looking busy while someone else carries the stone.",
+      "tone": "wry"
+    },
+    {
+      "text": "Cavalry can arrive quickly. Whether they should have arrived there is another question.",
+      "tone": "wry"
+    },
+    {
+      "text": "A commander who personally investigates every problem soon becomes one of them.",
+      "tone": "wry"
+    },
+    {
+      "text": "Walls are excellent defenses until someone remembers gates exist.",
+      "tone": "wry"
+    },
+    {
+      "text": "If your formation looks impressive from a distance, you are at least halfway to military competence.",
+      "tone": "wry"
+    },
+    {
+      "text": "The enemy cannot predict your strategy if you have forgotten it yourself.",
+      "tone": "wry"
+    },
+    {
+      "text": "Every supply shortage begins with someone saying, “We probably have enough.”",
+      "tone": "wry"
+    },
+    {
+      "text": "War elephants are powerful, disciplined weapons of war, right up until they have an opinion.",
+      "tone": "wry"
+    },
+    {
+      "text": "History remembers the victorious general. The quartermaster remembers who forgot to bring food.",
+      "tone": "wry"
+    },
+    {
+      "text": "Use patrol orders to secure roads, settlements, and vulnerable resource routes.",
+      "tone": "plain"
+    },
+    {
+      "text": "Workers are valuable strategic assets. Do not leave them exposed near the front.",
+      "tone": "plain"
+    },
+    {
+      "text": "Stockpiles shorten resource delivery routes and improve economic efficiency.",
+      "tone": "plain"
+    },
+    {
+      "text": "Building near resources can reduce the amount of time workers spend carrying supplies.",
+      "tone": "plain"
+    },
+    {
+      "text": "A strong economy cannot help you if the enemy cuts the road between it and your army.",
+      "tone": "plain"
+    },
+    {
+      "text": "Repairing damaged defenses before the next attack is usually cheaper than rebuilding them afterward.",
+      "tone": "plain"
+    },
+    {
+      "text": "Capturing useful infrastructure can be more valuable than destroying it.",
+      "tone": "plain"
+    },
+    {
+      "text": "Watch your supply routes when advancing deep into hostile territory.",
+      "tone": "plain"
+    },
+    {
+      "text": "War elephants can disrupt formations, but unsupported elephants can quickly become isolated.",
+      "tone": "plain"
+    },
+    {
+      "text": "Wildlife may react unpredictably to nearby troops and fighting.",
+      "tone": "plain"
+    },
+    {
+      "text": "Wolves are considerably less impressed by military rank than your soldiers are.",
+      "tone": "plain"
+    },
+    {
+      "text": "Scout unfamiliar terrain before committing your main force.",
+      "tone": "plain"
+    },
+    {
+      "text": "Keep an escape route available when fighting near rivers, cliffs, or narrow passages.",
+      "tone": "plain"
+    },
+    {
+      "text": "A retreat made early can preserve an army. A retreat made late can become a rout.",
+      "tone": "plain"
+    },
+    {
+      "text": "Concentrating your forces can overwhelm a stronger enemy fighting in separate groups.",
+      "tone": "plain"
+    },
+    {
+      "text": "Do not chase fleeing enemies so far that your own formation collapses.",
+      "tone": "plain"
+    },
+    {
+      "text": "An army marches on its stomach. The stomach, regrettably, also requires a supply line.",
+      "tone": "wry"
+    },
+    {
+      "text": "Enemy reinforcements are much less dangerous when they never reach the battlefield.",
+      "tone": "plain"
+    },
+    {
+      "text": "Every commander has a plan until a sheep joins the formation.",
+      "tone": "wry"
+    },
+    {
+      "text": "Destroying an enemy army is useful. Preventing it from fighting effectively is often enough.",
+      "tone": "plain"
+    },
+    {
+      "text": "Infantry can hold ground that faster units may struggle to defend.",
+      "tone": "plain"
+    },
+    {
+      "text": "Keep ranged troops away from routes enemy cavalry can reach quickly.",
+      "tone": "plain"
+    },
+    {
+      "text": "Battles are often decided before contact through positioning, preparation, and logistics.",
+      "tone": "plain"
+    },
+    {
+      "text": "A narrow front can prevent a numerically superior enemy from using all of its troops at once.",
+      "tone": "plain"
+    },
+    {
+      "text": "When defending, force the enemy to come to you under unfavorable conditions.",
+      "tone": "plain"
+    },
+    {
+      "text": "When attacking, look for weak points rather than spreading damage evenly across the enemy line.",
+      "tone": "plain"
+    },
+    {
+      "text": "A unit surrounded on several sides will struggle even if it began the fight at full strength.",
+      "tone": "plain"
+    },
+    {
+      "text": "The Iron Sepulcher is best approached with troops prepared for an unexpected engagement.",
+      "tone": "plain"
+    },
+    {
+      "text": "Clearing a dangerous area is not the same as securing it. Check what remains nearby.",
+      "tone": "plain"
+    },
+    {
+      "text": "The shortest path between two points is rarely the route selected by an army.",
+      "tone": "wry"
+    }
+  ]
+}
