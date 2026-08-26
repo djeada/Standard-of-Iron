@@ -73,7 +73,7 @@ FocusScope {
 
     function figure(army, key) {
         var value = army && army[key] !== undefined ? army[key] : 0;
-        return Design.Numerals.tally(value, Design.Numerals.needsArabic(root.column_values(key)));
+        return Design.Numerals.grouped(value);
     }
 
     function column_values(key) {

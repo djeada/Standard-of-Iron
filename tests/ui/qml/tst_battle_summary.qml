@@ -65,6 +65,41 @@ TestCase {
         return host;
     }
 
+    function test_an_ambient_faction_is_not_listed_as_an_army() {
+        var owners = [testCase.owner(1, "Scipio", 0, "Player", true, "roman_republic", "#c9a227"), testCase.owner(2, "Hasdrubal", 1, "AI", false, "carthage", "#9b59b6"), testCase.owner(99, "Iron Sepulcher tomb_1", 9, "AI", false, "iron_sepulcher", "#4b3f6b")];
+        owners[2].is_contender = false;
+        var byOwner = {
+            "1": testCase.stats(148, 62, 96, 7, 1834),
+            "2": testCase.stats(62, 148, 71, 2, 1834),
+            "99": testCase.stats(0, 0, 0, 4, 1834)
+        };
+        var engine = testCase.fakeEngine("victory", owners, byOwner, "");
+        var host = testCase.makeSummary(engine);
+        compare(host.summary.armies.length, 2, "an ambient faction was listed as an army");
+        for (var i = 0; i < host.summary.armies.length; ++i)
+            verify(host.summary.armies[i].ownerId !== 99, "the tomb owner reached the roster");
+        engine.destroy();
+        host.destroy();
+    }
+
+    function test_a_spectated_match_crowns_the_side_still_holding_ground() {
+        var owners = [testCase.owner(1, "CPU I", 1, "AI", false, "roman_republic", "#c9a227"), testCase.owner(2, "CPU II", 2, "AI", false, "carthage", "#9b59b6")];
+        var byOwner = {
+            "1": testCase.stats(120, 40, 60, 3, 900),
+            "2": testCase.stats(40, 120, 55, 0, 900)
+        };
+        var engine = testCase.fakeEngine("spectator", owners, byOwner, "");
+        var host = testCase.makeSummary(engine);
+        compare(host.summary.is_spectator, true);
+        compare(host.summary.outcome, "spectator");
+        for (var i = 0; i < host.summary.armies.length; ++i) {
+            var army = host.summary.armies[i];
+            compare(army.isWinner, army.ownerId === 1, army.name + " was given the wrong verdict");
+        }
+        engine.destroy();
+        host.destroy();
+    }
+
     function test_only_commanders_are_listed() {
         var engine = testCase.standardMatch("victory");
         var host = testCase.makeSummary(engine);

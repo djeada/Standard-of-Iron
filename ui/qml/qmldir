@@ -17,6 +17,7 @@ FormationStatusBadge 1.0 FormationStatusBadge.qml
 ObjectivesPanel 1.0 ObjectivesPanel.qml
 CommanderMessagePanel 1.0 CommanderMessagePanel.qml
 HUDBottomCommander 1.0 HUDBottomCommander.qml
+HUDBottomSpectator 1.0 HUDBottomSpectator.qml
 RpgFpvOverlay 1.0 RpgFpvOverlay.qml
 RpgMeter 1.0 RpgMeter.qml
 RpgDamageNumbers 1.0 RpgDamageNumbers.qml

@@ -412,10 +412,11 @@ Item {
 
                 Design.IronResourceCounter {
                     iconSource: Design.Icons.status("population")
-                    label: qsTr("Population")
+                    label: qsTr("Manpower")
                     amountText: topRoot.population() + " / " + topRoot.population_cap()
                     status: topRoot.population_status()
                     compact: topRoot.compact
+                    tooltipText: qsTr("Manpower in the field: %1 of %2.\nEvery troop costs manpower; a squad of twelve builders costs ten. This is not a headcount - the selection panel counts soldiers.").arg(topRoot.population()).arg(topRoot.population_cap())
                 }
 
                 Design.IronDivider {

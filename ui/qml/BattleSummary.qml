@@ -7,7 +7,8 @@ Item {
 
     property var engine: (typeof game !== 'undefined') ? game : null
     property bool is_victory: summaryOverlay.engine !== null && summaryOverlay.engine.victory_state === "victory"
-    property string outcome: summaryOverlay.is_victory ? "victory" : "defeat"
+    property bool is_spectator: summaryOverlay.engine !== null && summaryOverlay.engine.victory_state === "spectator"
+    property string outcome: summaryOverlay.is_spectator ? "spectator" : (summaryOverlay.is_victory ? "victory" : "defeat")
     property string headline: ""
     property string subtitle: ""
     property string factionId: ""
@@ -32,6 +33,20 @@ Item {
     function return_to_main_menu() {
         if (on_return_to_main_menu)
             on_return_to_main_menu();
+    }
+
+    function spectator_winning_team(roster) {
+        var best = -1;
+        var bestScore = -1;
+        for (var i = 0; i < roster.length; ++i) {
+            var entry = roster[i];
+            var weight = entry.villages * 1000000 + entry.score;
+            if (weight > bestScore) {
+                bestScore = weight;
+                best = entry.teamId;
+            }
+        }
+        return best;
     }
 
     function winning_team_id(owners, localTeamId) {
@@ -70,10 +85,13 @@ Item {
             var owner = owners[j];
             if (owner.type !== "Player" && owner.type !== "AI")
                 continue;
+            if (owner.is_contender === false)
+                continue;
             var stats = summaryOverlay.engine.get_player_stats(owner.id);
             longestPlayTime = Math.max(longestPlayTime, stats.playTimeSec);
             roster.push({
                     "ownerId": owner.id,
+                    "teamId": owner.team_id,
                     "name": owner.name,
                     "accent": owner.color,
                     "factionId": owner.nation ? owner.nation : "",
@@ -86,6 +104,11 @@ Item {
                     "villages": stats.barracksOwned,
                     "score": calculate_score(stats)
                 });
+        }
+        if (summaryOverlay.is_spectator) {
+            var spectatorWinner = spectator_winning_team(roster);
+            for (var k = 0; k < roster.length; ++k)
+                roster[k].isWinner = roster[k].teamId === spectatorWinner;
         }
         roster.sort(function (a, b) {
                 return b.score - a.score;

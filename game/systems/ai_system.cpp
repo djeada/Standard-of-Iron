@@ -1,5 +1,6 @@
 #include "ai_system.h"
 
+#include <QDebug>
 #include <queue>
 
 #include <algorithm>
@@ -149,6 +150,8 @@ void AISystem::update(Engine::Core::World* world, float delta_time) {
   m_total_game_time += delta_time;
   ++m_update_count;
 
+  trace_progress();
+
   m_command_filter.update(m_total_game_time);
 
   process_results(*world);
@@ -219,6 +222,34 @@ void AISystem::process_results(Engine::Core::World& world) {
 
       results.pop();
     }
+  }
+}
+
+void AISystem::trace_progress() {
+  static const bool enabled = !qEnvironmentVariableIsEmpty("SOI_AI_TRACE");
+  if (!enabled) {
+    return;
+  }
+  constexpr float k_trace_interval_seconds = 10.0F;
+  if (m_total_game_time < m_next_trace_time) {
+    return;
+  }
+  m_next_trace_time = m_total_game_time + k_trace_interval_seconds;
+
+  for (const auto& ai : m_ai_instances) {
+    const auto& context = ai.context;
+    qInfo().nospace() << "SOI_AI_TRACE t=" << m_total_game_time
+                      << " player=" << context.player_id
+                      << " state=" << static_cast<int>(context.state)
+                      << " units=" << context.total_units
+                      << " melee=" << context.melee_count
+                      << " ranged=" << context.ranged_count
+                      << " builders=" << context.builder_count
+                      << " buildings=" << context.buildings.size()
+                      << " primary_barracks=" << context.primary_barracks
+                      << " nation=" << (context.nation != nullptr)
+                      << " decisions=" << m_completed_decision_count
+                      << " commands=" << m_applied_command_count;
   }
 }
 

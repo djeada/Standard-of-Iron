@@ -132,11 +132,43 @@ TestCase {
         host.destroy();
     }
 
-    function test_a_modest_column_stays_roman() {
+    function test_the_duration_keeps_its_roman_chrome() {
+        var host = testCase.makeReport(1280, 720);
+        host.report.durationText = Numerals.span(1834);
+        compare(host.report.durationText, Numerals.span(1834));
+        verify(Numerals.span(1834).indexOf("X") !== -1, "the duration lost its roman styling");
+        host.destroy();
+    }
+
+    function test_a_measured_tally_is_written_in_arabic() {
         var host = testCase.makeReport(1280, 720);
         var rows = testCase.collect(host.report, "battleReportRow");
         var figures = testCase.collect(rows[0], "battleReportFigure");
-        compare(figures[0].text, "CXLVIII");
+        compare(figures[0].text, Numerals.grouped(148));
+        verify(figures[0].text.indexOf("C") === -1, "a kill count was spelled out in roman glyphs");
+        host.destroy();
+    }
+
+    function test_a_zero_tally_reads_as_a_digit_not_a_letter() {
+        var armies = testCase.modestField();
+        armies[0].kills = 0;
+        armies[1].kills = 0;
+        var host = testCase.makeReport(1280, 720, armies);
+        var rows = testCase.collect(host.report, "battleReportRow");
+        var figures = testCase.collect(rows[0], "battleReportFigure");
+        compare(figures[0].text, "0", "a zero tally was printed as the roman nulla glyph");
+        host.destroy();
+    }
+
+    function test_a_four_figure_score_is_readable() {
+        var armies = testCase.modestField();
+        armies[0].score = 2000;
+        armies[1].score = 700;
+        var host = testCase.makeReport(1280, 720, armies);
+        var scores = testCase.collect(host.report, "battleReportScore");
+        compare(scores[0].text, Numerals.grouped(2000));
+        compare(scores[1].text, Numerals.grouped(700));
+        verify(scores[0].text !== "MM", "a score was printed as roman numerals");
         host.destroy();
     }
 

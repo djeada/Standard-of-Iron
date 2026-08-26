@@ -23,6 +23,8 @@ Item {
     readonly property bool decided: root.victoryState !== ""
 
     readonly property string outcomeKind: {
+        if (root.victoryState === "spectator")
+            return "spectator";
         if (root.victoryState !== "victory")
             return "defeat";
         if (root.isTutorial)
@@ -32,6 +34,8 @@ Item {
 
     readonly property string headline: {
         switch (root.outcomeKind) {
+        case "spectator":
+            return qsTr("Battle Decided");
         case "campaign":
             return qsTr("The Campaign is Won");
         case "training":
@@ -44,6 +48,8 @@ Item {
 
     readonly property string subtitle: {
         switch (root.outcomeKind) {
+        case "spectator":
+            return qsTr("One side is left holding the field.");
         case "campaign":
             return qsTr("Every mission has fallen to your standard.");
         case "training":

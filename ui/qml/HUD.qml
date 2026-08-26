@@ -170,13 +170,33 @@ Item {
         anchors.left: parent.left
         anchors.right: parent.right
 
-        height: hud.commander_rpg_mode ? Math.max(96, Math.min(120, parent.height * 0.12)) : Math.max(216, parent.height * 0.24)
+        height: Design.Metrics.bottomBarHeight(parent.height, hud.commander_rpg_mode)
         clip: true
 
         Loader {
             id: bottomPanelLoader
             anchors.fill: parent
-            sourceComponent: typeof game !== 'undefined' && game.commander.mode_state === "active" ? commanderBottomHudComponent : rtsBottomHudComponent
+            sourceComponent: {
+                if (typeof game === 'undefined')
+                    return rtsBottomHudComponent;
+                if (game.is_spectator_mode)
+                    return spectatorBottomHudComponent;
+                return game.commander.mode_state === "active" ? commanderBottomHudComponent : rtsBottomHudComponent;
+            }
+        }
+
+        Component {
+            id: spectatorBottomHudComponent
+
+            HUDBottomSpectator {
+                objectName: "spectatorBottomHud"
+                anchors.fill: parent
+                selection_tick: hud.selection_tick
+                onFollow_requested: function (owner_id) {
+                    if (typeof game !== 'undefined')
+                        game.selected_player_id = owner_id;
+                }
+            }
         }
 
         Component {
