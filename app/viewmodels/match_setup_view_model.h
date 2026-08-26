@@ -14,6 +14,20 @@ struct MatchLaunch;
 
 namespace App::ViewModels {
 
+class MapList {
+public:
+  void begin_loading() { m_maps.clear(); }
+  void end_loading() {}
+  void append(const QVariantMap& map) { m_maps.append(map); }
+  void replace(const QVariantList& maps) { m_maps = maps; }
+
+  [[nodiscard]] auto maps() const -> const QVariantList& { return m_maps; }
+  [[nodiscard]] auto empty() const -> bool { return m_maps.isEmpty(); }
+
+private:
+  QVariantList m_maps;
+};
+
 class MatchSetupViewModel : public QObject {
   Q_OBJECT
 
@@ -31,7 +45,7 @@ public:
                       QObject* parent = nullptr);
 
   Q_INVOKABLE void start_loading_maps();
-  Q_INVOKABLE [[nodiscard]] QVariantList maps() const { return m_maps; }
+  Q_INVOKABLE [[nodiscard]] QVariantList maps() const { return m_maps.maps(); }
   [[nodiscard]] auto maps_loading() const -> bool { return m_maps_loading; }
   [[nodiscard]] auto nations() const -> QVariantList;
   Q_INVOKABLE [[nodiscard]] QVariantList
@@ -50,11 +64,15 @@ public:
 
   Q_INVOKABLE void start_skirmish(const QString& map_path,
                                   const QVariantList& player_configs = QVariantList());
+  Q_INVOKABLE bool start_observed_skirmish(const QString& map_path);
+  [[nodiscard]] auto
+  build_observer_player_configs(const QString& map_path) const -> QVariantList;
   Q_INVOKABLE void start_campaign_mission(const QString& mission_path);
   Q_INVOKABLE void start_mission_file(const QString& file_path);
   void start_tutorial();
 
   void set_maps(const QVariantList& maps);
+  void append_map(const QVariantMap& map);
   void set_maps_loading(bool loading);
   void notify_current_mission_changed() { emit current_mission_changed(); }
   void notify_campaigns_changed() { emit campaigns_changed(); }
@@ -74,7 +92,7 @@ private:
 
   const App::Core::ClientContext& m_context;
   App::Core::ClientHost& m_host;
-  QVariantList m_maps;
+  MapList m_maps;
   bool m_maps_loading = false;
 };
 

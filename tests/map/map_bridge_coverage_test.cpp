@@ -60,6 +60,34 @@ auto crossing_for(const Game::Map::Bridge& bridge,
 
 } // namespace
 
+TEST(MapBridgeCoverageTest, RuntimeDecksAreLongerThanTheyAreWide) {
+  const QStringList maps = shipped_maps();
+  ASSERT_FALSE(maps.isEmpty());
+
+  for (const QString& file_name : maps) {
+    auto map = load_map(file_name);
+    if (map.bridges.empty() || map.rivers.empty()) {
+      continue;
+    }
+
+    Game::Map::TerrainHeightMap terrain(
+        map.grid.width, map.grid.height, map.grid.tile_size);
+    terrain.build_from_features(map.terrain);
+    terrain.add_river_segments(map.rivers);
+    terrain.add_bridges(map.bridges);
+
+    const auto& fitted = terrain.get_bridges();
+    for (std::size_t index = 0; index < fitted.size(); ++index) {
+      const auto& bridge = fitted[index];
+      const QVector3D span = bridge.end - bridge.start;
+      const float length = std::hypot(span.x(), span.z());
+      EXPECT_GE(length, bridge.width)
+          << file_name.toStdString() << " bridge " << index << " is " << bridge.width
+          << " wide and only " << length << " long";
+    }
+  }
+}
+
 TEST(MapBridgeCoverageTest, EveryShippedBridgeReachesBankToBank) {
   const QStringList maps = shipped_maps();
   ASSERT_FALSE(maps.isEmpty());

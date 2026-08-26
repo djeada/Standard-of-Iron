@@ -167,10 +167,12 @@ add_executable(
     formation/army_formation_planner_test.cpp
     formation/formation_planner_cache_test.cpp
     formation/formation_cohesion_test.cpp
+    formation/formation_phase_vocabulary_test.cpp
     formation/army_formation_registry_test.cpp
     formation/formation_data_loader_test.cpp
     formation/formation_movement_test.cpp
     formation/formation_terrain_navigation_test.cpp
+    map/map_crossing_traversal_test.cpp
     systems/runtime_phase_order_test.cpp
     systems/movement_stage_ownership_test.cpp
     systems/movement_route_test.cpp
@@ -531,6 +533,7 @@ add_executable(
     core/rts_action_model_test.cpp
     core/runtime_frame_orchestrator_test.cpp
     core/game_speed_test.cpp
+    core/match_setup_maps_test.cpp
     core/camera_framing_test.cpp
     core/mission_objective_markers_test.cpp
     controllers/command_controller_test.cpp

@@ -27,6 +27,7 @@ Item {
     property alias roster: players_model
 
     signal map_chosen(string map_path, var player_configs)
+    signal observe_requested(string map_path)
     signal cancelled
 
     onMaps_modelChanged: Qt.callLater(function () {
@@ -510,6 +511,17 @@ Item {
         }
         validation_error = "";
         root.map_chosen(selected_map_path, get_player_configs());
+    }
+
+    function can_observe() {
+        return root.has_selection && map_slots.length >= 2;
+    }
+
+    function observe_selection() {
+        if (!can_observe())
+            return;
+        validation_error = "";
+        root.observe_requested(selected_map_path);
     }
 
     Component.onCompleted: refresh_available_nations()
@@ -1108,13 +1120,15 @@ Item {
                                 delegate: Rectangle {
                                     id: player_card
 
+                                    objectName: "rosterSeatCard"
                                     width: players_list.width - (players_list.ScrollBar.vertical.visible ? Theme.spacingMedium : 0)
                                     height: 68
                                     radius: Theme.radiusSmall
                                     color: model.isHuman ? "#33261a" : "#2c231a"
-                                    border.color: model.isHuman ? Theme.accent : Theme.thumbBr
-                                    border.width: model.isHuman ? 2 : 1
+                                    border.color: model.isEnabled ? (model.isHuman ? Theme.accent : Theme.thumbBr) : Theme.thumbBr
+                                    border.width: (model.isHuman && model.isEnabled) ? 2 : 1
                                     opacity: model.isEnabled ? 1 : 0.55
+                                    enabled: true
 
                                     RowLayout {
                                         anchors.fill: parent
@@ -1352,6 +1366,24 @@ Item {
                 Item {
                     Layout.fillWidth: true
                     visible: validation_error === "" || !root.has_selection
+                }
+
+                StyledButton {
+                    id: observe_button
+
+                    objectName: "observeButton"
+                    readonly property bool allowed: root.can_observe()
+
+                    text: qsTr("Observe")
+                    button_style: "secondary"
+                    implicitWidth: Design.Metrics.space24 * 6
+                    implicitHeight: Design.Metrics.controlHeight + Design.Metrics.space8
+                    blocked: !allowed
+                    disabledReason: qsTr("Pick a battlefield with at least two camps to watch")
+                    ToolTip.visible: hovered && allowed
+                    ToolTip.text: qsTr("Watch the computer fight itself on this battlefield")
+                    ToolTip.delay: Design.Metrics.tooltipDelay
+                    onClicked: observe_selection()
                 }
 
                 StyledButton {

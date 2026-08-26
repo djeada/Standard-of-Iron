@@ -20,10 +20,9 @@ Item {
     readonly property color phase_tone: {
         switch (phase) {
         case "formed":
+        case "arrived":
             return Design.Theme.success;
         case "disrupted":
-            return Design.Theme.danger;
-        case "breaking":
             return Design.Theme.danger;
         }
         return Design.Theme.warning;
@@ -33,10 +32,14 @@ Item {
         switch (phase) {
         case "formed":
             return qsTr("Formed");
+        case "arrived":
+            return qsTr("In position");
         case "disrupted":
             return qsTr("Disrupted");
-        case "breaking":
-            return qsTr("Breaking");
+        case "opening":
+            return qsTr("Opening ranks");
+        case "traversing":
+            return qsTr("Filing through");
         }
         return qsTr("Forming up");
     }
@@ -45,10 +48,14 @@ Item {
         switch (phase) {
         case "formed":
             return qsTr("The line is holding its shape and takes reduced damage.");
+        case "arrived":
+            return qsTr("The line has reached its ground and is holding it.");
         case "disrupted":
             return qsTr("The line has come apart and is taking extra damage. Re-issue the formation order to reform.");
-        case "breaking":
-            return qsTr("The formation is breaking up.");
+        case "opening":
+            return qsTr("The ranks are opening to let the line through.");
+        case "traversing":
+            return qsTr("The line is filing through a narrow crossing.");
         }
         return qsTr("Units are still moving into their slots.");
     }

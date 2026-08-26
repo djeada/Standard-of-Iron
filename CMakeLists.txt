@@ -827,6 +827,7 @@ if(QT_VERSION_MAJOR EQUAL 6)
             ui/qml/WaveTracker.qml
             ui/qml/HUDBottom.qml
             ui/qml/HUDBottomCommander.qml
+            ui/qml/HUDBottomSpectator.qml
             ui/qml/UnitInspectPanel.qml
             ui/qml/RecruitCard.qml
             ui/qml/RpgFpvOverlay.qml

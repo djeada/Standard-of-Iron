@@ -408,7 +408,7 @@ Rectangle {
                             Rectangle {
                                 property int queue_total: (productionContent.prod.in_progress ? 1 : 0) + (productionContent.prod.queue_size || 0)
                                 property bool is_occupied: index < queue_total
-                                property bool is_producing: index === 0 && productionContent.prod.in_progress
+                                property bool is_producing: index === 0 && productionContent.prod.in_progress === true
                                 property string queue_unit_type: {
                                     if (!is_occupied)
                                         return "";
@@ -496,7 +496,7 @@ Rectangle {
                         color: "#120D09"
                         border.color: "#2F251D"
                         border.width: 2
-                        visible: productionContent.prod.in_progress
+                        visible: productionContent.prod.in_progress === true
 
                         Rectangle {
                             anchors.left: parent.left
@@ -542,8 +542,9 @@ Rectangle {
                     }
 
                     Text {
+                        objectName: "barracksReserveLabel"
                         anchors.horizontalCenter: parent.horizontalCenter
-                        text: qsTr("Available Population: %1 / %2").arg(productionContent.prod.manpower_available || 0).arg(productionContent.prod.max_units || 0)
+                        text: qsTr("Barracks reserve: %1 / %2").arg(productionContent.prod.manpower_available || 0).arg(productionContent.prod.max_units || 0)
                         color: (productionContent.prod.manpower_available <= 0) ? "#C0403B" : "#D4B57C"
                         font.pixelSize: Design.Typography.caption
                     }
@@ -660,7 +661,7 @@ Rectangle {
                         property bool has_capacity: committed_total < (homeProductionContent.prod.max_units || 0)
                         property bool has_families: (homeProductionContent.prod.manpower_available || 0) >= productionPanel.population_cost(unit_info)
                         property var recruit_state: productionPanel.recruit_card_state(homeProductionContent.prod, unit_info, queue_total)
-                        property bool is_enabled: homeProductionContent.prod.has_home && has_capacity && recruit_state.enabled
+                        property bool is_enabled: homeProductionContent.prod.has_home === true && has_capacity && recruit_state.enabled === true
                         property bool is_hovered: civilianMouseArea.containsMouse
 
                         width: 110
@@ -797,7 +798,7 @@ Rectangle {
                     Button {
                         id: rallyButton
 
-                        readonly property bool allowed: rallyContent.prod.has_barracks || rallyContent.temple_prod.has_temple
+                        readonly property bool allowed: rallyContent.prod.has_barracks === true || rallyContent.temple_prod.has_temple === true
 
                         anchors.horizontalCenter: parent.horizontalCenter
                         width: parent.parent.width - 20
@@ -917,7 +918,7 @@ Rectangle {
                         color: "#120D09"
                         border.color: "#2F251D"
                         border.width: 2
-                        visible: builderProductionContent.builder_prod.in_progress
+                        visible: builderProductionContent.builder_prod.in_progress === true
 
                         Rectangle {
                             anchors.left: parent.left
@@ -995,7 +996,7 @@ Rectangle {
                         }
                         color: builderProductionContent.builder_prod.in_progress ? "#7F9A5F" : "#8D7146"
                         font.pixelSize: Design.Typography.caption
-                        font.bold: builderProductionContent.builder_prod.in_progress
+                        font.bold: builderProductionContent.builder_prod.in_progress === true
                         visible: true
                     }
 
@@ -2530,7 +2531,7 @@ Rectangle {
 
                     Text {
                         anchors.horizontalCenter: parent.horizontalCenter
-                        visible: marketplaceContent.market_state.has_marketplace
+                        visible: marketplaceContent.market_state.has_marketplace === true
                         text: qsTr("Gold: %1    Trade size: %2").arg(productionPanel.resource_amount(productionPanel.current_resources(), "gold")).arg(Math.max(0, marketplaceContent.market_state.trade_quantity || 0))
                         color: "#F4E7C8"
                         font.pixelSize: Design.Typography.caption
@@ -2551,7 +2552,7 @@ Rectangle {
                     Column {
                         width: parent.width
                         spacing: 6
-                        visible: marketplaceContent.market_state.has_marketplace
+                        visible: marketplaceContent.market_state.has_marketplace === true
 
                         Repeater {
                             model: productionPanel.marketplace_trade_specs
@@ -2732,7 +2733,7 @@ Rectangle {
                         color: "#120D09"
                         border.color: "#2F251D"
                         border.width: 2
-                        visible: templeContent.prod.in_progress
+                        visible: templeContent.prod.in_progress === true
 
                         Rectangle {
                             anchors.left: parent.left
@@ -2788,8 +2789,9 @@ Rectangle {
                     }
 
                     Text {
+                        objectName: "templeReserveLabel"
                         anchors.horizontalCenter: parent.horizontalCenter
-                        text: qsTr("Available Population: %1 / %2").arg(templeContent.prod.manpower_available || 0).arg(templeContent.prod.max_units || 0)
+                        text: qsTr("Temple reserve: %1 / %2").arg(templeContent.prod.manpower_available || 0).arg(templeContent.prod.max_units || 0)
                         color: (templeContent.prod.manpower_available <= 0) ? "#C0403B" : "#D4B57C"
                         font.pixelSize: Design.Typography.caption
                     }

@@ -77,6 +77,7 @@ private:
 
   float m_total_game_time = 0.0F;
   float m_update_interval = 0.3F;
+  float m_next_trace_time = 0.0F;
   std::uint64_t m_completed_decision_count{0};
   std::uint64_t m_applied_command_count{0};
 
@@ -86,6 +87,7 @@ private:
   Services m_services;
 
   void initialize_ai_players();
+  void trace_progress();
 
   static void populate_behavior_registry(AI::AIBehaviorRegistry& registry);
 

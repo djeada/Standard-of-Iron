@@ -45,12 +45,72 @@ protected:
 
   void TearDown() override {
     Game::Map::MapTransformer::setFactoryRegistry(nullptr);
+    Game::Map::MapTransformer::set_spectator_mode(false);
     Game::Map::MapTransformer::clear_player_team_overrides();
     Game::Systems::BuildingCollisionRegistry::instance().clear();
     Game::Systems::OwnerRegistry::instance().clear();
     Game::Systems::NationRegistry::instance().clear();
   }
 };
+
+namespace {
+
+auto two_camp_map() -> Game::Map::MapDefinition {
+  Game::Map::MapDefinition def;
+  def.grid.width = 16;
+  def.grid.height = 16;
+  for (int player_id : {1, 2}) {
+    def.structures.push_back({
+        .type = Game::Units::SpawnType::Barracks,
+        .geometry = Game::Map::PointStructureGeometry{QVector3D(
+            runtime_world_from_grid(4 * player_id, def.grid.width),
+            0.0F,
+            runtime_world_from_grid(4 * player_id, def.grid.height))},
+        .player_id = player_id,
+        .nation = QStringLiteral("carthage"),
+    });
+  }
+  return def;
+}
+
+} // namespace
+
+TEST_F(MapTransformerStructureTest, AnObservedMatchPutsEverySlotUnderAiControl) {
+  Engine::Core::World world;
+  Game::Map::MapTransformer::set_local_owner_id(1);
+  Game::Map::MapTransformer::set_spectator_mode(true);
+
+  auto def = two_camp_map();
+  Game::Map::MapTransformer::apply_to_world(def, world);
+
+  auto& owners = Game::Systems::OwnerRegistry::instance();
+  EXPECT_TRUE(owners.is_ai(1)) << "the followed slot was left without an AI";
+  EXPECT_TRUE(owners.is_ai(2));
+  EXPECT_TRUE(owners.get_player_owner_ids().empty())
+      << "an observed match seated a human";
+}
+
+TEST_F(MapTransformerStructureTest, APlayedMatchStillSeatsTheLocalPlayer) {
+  Engine::Core::World world;
+  Game::Map::MapTransformer::set_local_owner_id(1);
+  Game::Map::MapTransformer::set_spectator_mode(false);
+
+  auto def = two_camp_map();
+  Game::Map::MapTransformer::apply_to_world(def, world);
+
+  auto& owners = Game::Systems::OwnerRegistry::instance();
+  EXPECT_TRUE(owners.is_player(1));
+  EXPECT_TRUE(owners.is_ai(2));
+}
+
+TEST_F(MapTransformerStructureTest, SpectatorModeDoesNotLeakIntoTheNextMatch) {
+  Game::Map::MapTransformer::set_spectator_mode(true);
+  ASSERT_TRUE(Game::Map::MapTransformer::spectator_mode());
+
+  Game::Map::MapTransformer::set_spectator_mode(false);
+  EXPECT_FALSE(Game::Map::MapTransformer::spectator_mode())
+      << "a watched match would turn the next player into a bot";
+}
 
 TEST_F(MapTransformerStructureTest, SpawnsAuthoredBuildingsAndRegistersOwners) {
   Engine::Core::World world;
