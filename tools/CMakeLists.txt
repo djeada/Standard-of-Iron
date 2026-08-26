@@ -28,13 +28,18 @@ set_target_properties(
     PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
 )
 if(BUILD_TESTING)
+    # Sixty seconds, not fifteen. The `invisible_damage` defect only appeared
+    # after fifteen to twenty seconds of sustained contact, so a fifteen second
+    # gate passed while the sixty second soak `docs/GAMEPLAY_VERIFICATION.md`
+    # asks for before a release candidate failed every scenario it ran. A gate
+    # shorter than the bug is not a gate. Sixty seconds costs about five.
     add_test(
         NAME battlefield_gameplay_quality
-        COMMAND battlefield_gameplay_verifier --all --seconds 15
+        COMMAND battlefield_gameplay_verifier --all --seconds 60
     )
     set_tests_properties(
         battlefield_gameplay_quality
-        PROPERTIES LABELS "gameplay;soak" TIMEOUT 30 WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
+        PROPERTIES LABELS "gameplay;soak" TIMEOUT 120 WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
     )
     # Every scenario, run twice from the same seed, must produce the same world
     # digest on every tick. A failure here names the tick and the entity that
