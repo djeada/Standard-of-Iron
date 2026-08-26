@@ -296,7 +296,6 @@ auto Pathfinding::is_world_segment_walkable(const QVector3D& from,
         return false;
       }
     }
-    return true;
   }
 
   constexpr float k_boundary_epsilon = 1.0e-5F;

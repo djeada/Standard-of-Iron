@@ -188,26 +188,28 @@ TEST_F(MapCrossingTraversalTest, ASquadOrderedOverEveryShippedFordReachesTheFarB
       Game::Systems::CommandService::move_units(
           world, squad, std::vector<QVector3D>(squad.size(), *target));
 
-      if (qEnvironmentVariableIsSet("SOI_CROSSING_GRID")) {
-        const Game::Systems::BodyProfile probe{
-            .radius = 0.5F,
-            .passability = Game::Systems::Pathfinding::Passability::Light};
+      {
         auto* pathfinder = Game::Systems::NavGrid::get_pathfinder();
-        const auto centre = Game::Systems::NavGrid::world_to_grid(-14.0F, -25.5F);
-        for (int dz = -8; dz <= 8; ++dz) {
-          QString row;
-          for (int dx = -8; dx <= 12; ++dx) {
-            const int gx = centre.x + dx;
-            const int gz = centre.y + dz;
-            const QVector3D world_point(static_cast<float>(gx) - (176 * 0.5F - 0.5F),
-                                        0.0F,
-                                        static_cast<float>(gz) - (176 * 0.5F - 0.5F));
-            const bool grid_ok = pathfinder->is_walkable(gx, gz);
-            const bool stand_ok =
-                Game::Systems::Walkability::can_stand(world_point, probe);
-            row += grid_ok ? (stand_ok ? '.' : 'c') : '#';
-          }
-          qWarning("GRID z=%d %s", centre.y + dz, row.toLatin1().constData());
+        auto* leader = world.get_entity(squad.front());
+        const auto* movement = leader->get_component<Engine::Core::MovementComponent>();
+        const auto& path = movement->get_path();
+        const auto* transform =
+            leader->get_component<Engine::Core::TransformComponent>();
+        QVector3D previous(transform->position.x, 0.0F, transform->position.z);
+        for (std::size_t wp = 0; wp < path.size(); ++wp) {
+          const QVector3D point(path[wp].first, 0.0F, path[wp].second);
+          const auto cell = Game::Systems::NavGrid::world_to_grid(point.x(), point.z());
+          EXPECT_TRUE(pathfinder->is_walkable(cell.x, cell.y))
+              << file_name.toStdString() << " crossing " << index << ": waypoint " << wp
+              << " at (" << point.x() << "," << point.z()
+              << ") is inside a blocked cell";
+          EXPECT_TRUE(pathfinder->is_world_segment_walkable(
+              previous, point, Game::Systems::Pathfinding::Passability::Light, 0.0F))
+              << file_name.toStdString() << " crossing " << index << ": leg " << wp
+              << " from (" << previous.x() << "," << previous.z() << ") to ("
+              << point.x() << "," << point.z() << ") of " << path.size()
+              << " crosses blocked ground";
+          previous = point;
         }
       }
 
@@ -221,13 +223,12 @@ TEST_F(MapCrossingTraversalTest, ASquadOrderedOverEveryShippedFordReachesTheFarB
           const std::size_t wp = m->get_path_index();
           const float wp_x = wp < path.size() ? path[wp].first : 0.0F;
           const float wp_z = wp < path.size() ? path[wp].second : 0.0F;
-          const Game::Systems::BodyProfile probe{
-              .radius = 0.5F,
-              .passability = Game::Systems::Pathfinding::Passability::Light};
-          const bool wp_standable =
-              Game::Systems::Walkability::can_stand(QVector3D(wp_x, 0.0F, wp_z), probe);
-          const bool here_standable = Game::Systems::Walkability::can_stand(
-              QVector3D(t->position.x, 0.0F, t->position.z), probe);
+          auto* pf = Game::Systems::NavGrid::get_pathfinder();
+          const auto wp_cell = Game::Systems::NavGrid::world_to_grid(wp_x, wp_z);
+          const auto here_cell =
+              Game::Systems::NavGrid::world_to_grid(t->position.x, t->position.z);
+          const bool wp_standable = pf->is_walkable(wp_cell.x, wp_cell.y);
+          const bool here_standable = pf->is_walkable(here_cell.x, here_cell.y);
           qWarning("%s[%zu] t=%5.1fs pos=(%7.2f,%7.2f)%s goal=(%7.2f,%7.2f) "
                    "target=%d stuck=%5.2f wp=%zu/%zu v=(%5.2f,%5.2f) "
                    "next=(%7.2f,%7.2f)%s",

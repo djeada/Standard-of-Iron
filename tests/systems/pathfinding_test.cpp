@@ -565,6 +565,50 @@ TEST_F(PathfindingTest, BridgeApproachSegmentIsWalkableThroughGridCells) {
                                                     QVector3D(-1.5F, 0.0F, 0.0F)));
 }
 
+TEST_F(PathfindingTest, ASegmentWithClearanceStillWalksEveryCellItCrosses) {
+  Game::Map::MapDefinition map_def;
+  map_def.grid.width = 21;
+  map_def.grid.height = 21;
+  map_def.grid.tile_size = 1.0F;
+  Game::Map::TerrainService::instance().initialize(map_def);
+
+  Game::Systems::Pathfinding pathfinding(map_def.grid.width, map_def.grid.height);
+  pathfinding.set_grid_offset(-(static_cast<float>(map_def.grid.width) * 0.5F - 0.5F),
+                              -(static_cast<float>(map_def.grid.height) * 0.5F - 0.5F));
+  pathfinding.update_navigation_grid();
+
+  pathfinding.set_obstacle(10, 10, true);
+
+  const QVector3D from(-3.0F, 0.0F, -0.4F);
+  const QVector3D to(3.0F, 0.0F, 0.4F);
+
+  EXPECT_FALSE(pathfinding.is_world_segment_walkable(
+      from, to, Game::Systems::Pathfinding::Passability::Light, 0.0F))
+      << "the cell walk missed a blocked cell on the segment";
+  EXPECT_FALSE(pathfinding.is_world_segment_walkable(
+      from, to, Game::Systems::Pathfinding::Passability::Light, 0.4F))
+      << "a body with clearance was allowed through a blocked cell";
+}
+
+TEST_F(PathfindingTest, AnOpenSegmentIsStillWalkableWithClearance) {
+  Game::Map::MapDefinition map_def;
+  map_def.grid.width = 21;
+  map_def.grid.height = 21;
+  map_def.grid.tile_size = 1.0F;
+  Game::Map::TerrainService::instance().initialize(map_def);
+
+  Game::Systems::Pathfinding pathfinding(map_def.grid.width, map_def.grid.height);
+  pathfinding.set_grid_offset(-(static_cast<float>(map_def.grid.width) * 0.5F - 0.5F),
+                              -(static_cast<float>(map_def.grid.height) * 0.5F - 0.5F));
+  pathfinding.update_navigation_grid();
+
+  EXPECT_TRUE(pathfinding.is_world_segment_walkable(
+      QVector3D(-3.0F, 0.0F, -0.4F),
+      QVector3D(3.0F, 0.0F, 0.4F),
+      Game::Systems::Pathfinding::Passability::Light,
+      0.4F));
+}
+
 TEST_F(PathfindingTest, CrossingRhoneAuthoredBridgeRoutesAcrossRiver) {
   Game::Map::MapDefinition map_def;
   QString error;
