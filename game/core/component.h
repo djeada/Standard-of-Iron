@@ -1943,6 +1943,7 @@ public:
   std::uint32_t target_files{1U};
   std::vector<std::uint16_t> stable_slot_mapping;
   std::vector<UnitTraversalSlotState> slot_states;
+  std::uint32_t slot_states_revision{0U};
 
   float entry_progress{0.0F};
   float exit_progress{1.0F};

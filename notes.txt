@@ -62,14 +62,3 @@ Two god objects concentrate all architectural risk:
 Fix: extract collaborators incrementally — abilities and lock-on out of
 the controller first, following CommanderCameraRig/CommanderMotor precedent.
 
-Priority 4: startup cost
-------------------------
-- 194 .ogg files zlib-compressed inside QRC (pointless; they are already
-  compressed). Wastes binary size and first-touch decompression time.
-- Fix: move to loose files or rcc -no-compress; keep existing lazy/
-  streaming audio load policies.
-
-Starting point
---------------
-Priority 1.2 (melee raycast caching): highest ratio of measured impact to
-contained blast radius.

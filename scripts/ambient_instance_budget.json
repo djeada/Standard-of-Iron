@@ -1,7 +1,8 @@
 {
+  "app/world": 2,
   "game/core": 1,
   "game/formation": 4,
-  "game/map": 13,
+  "game/map": 14,
   "game/systems": 27,
   "game/units": 8,
   "game/visuals": 1,

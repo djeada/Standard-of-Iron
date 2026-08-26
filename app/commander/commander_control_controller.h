@@ -8,6 +8,7 @@
 #include <limits>
 #include <mutex>
 
+#include "app/commander/commander_abilities.h"
 #include "app/commander/commander_camera_rig.h"
 #include "app/commander/commander_frame_intent.h"
 #include "app/commander/commander_input_snapshot.h"
@@ -176,21 +177,6 @@ private:
                                  int local_owner_id,
                                  Render::GL::Camera* camera,
                                  float dt);
-  [[nodiscard]] Engine::Core::EntityID
-  resolve_ability_target(Engine::Core::World& world,
-                         Engine::Core::Entity& commander,
-                         int local_owner_id,
-                         float max_range) const;
-  void update_ability_cooldowns(Engine::Core::CommanderComponent* commander, float dt);
-  void try_activate_shield_bash(Engine::Core::World& world,
-                                Engine::Core::Entity& commander,
-                                Engine::Core::EntityID commander_id,
-                                int local_owner_id);
-  void try_activate_vanguard_rush(Engine::Core::World& world,
-                                  Engine::Core::Entity& commander,
-                                  Engine::Core::EntityID commander_id,
-                                  int local_owner_id);
-  void try_activate_second_wind(Engine::Core::Entity& commander);
   void
   publish_resolved_defense_feedback(Engine::Core::Entity& commander,
                                     Engine::Core::EntityID commander_id,
@@ -270,9 +256,7 @@ private:
   CommanderInputSnapshot m_tick_input;
   std::uint64_t m_input_snapshot_sequence = 0;
   mutable std::mutex m_input_mutex;
-  float m_shield_bash_cooldown = 0.0F;
-  float m_vanguard_rush_cooldown = 0.0F;
-  float m_second_wind_cooldown = 0.0F;
+  App::Core::CommanderAbilities m_abilities;
 
   Engine::Core::EntityID m_locked_target_id = 0;
   std::uint16_t m_locked_target_slot{std::numeric_limits<std::uint16_t>::max()};

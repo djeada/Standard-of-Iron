@@ -244,7 +244,7 @@ public:
   };
   [[nodiscard]] auto rpg_bow_hud_state() const -> RpgBowHudState;
 
-public slots:
+public:
   [[nodiscard]] auto
   attack_range_rings() const -> const std::vector<Game::Systems::AttackRangeRing>& {
     return m_attack_range_rings;
