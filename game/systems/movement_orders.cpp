@@ -106,20 +106,59 @@ auto segment_traverses_navigation_portal(const QVector3D& from,
 }
 
 auto align_portal_waypoint(const QVector3D& waypoint,
-                           bool final_waypoint) -> QVector3D {
+                           bool final_waypoint,
+                           const std::optional<QVector3D>& previous) -> QVector3D {
   if (final_waypoint) {
     return waypoint;
   }
+
+  const auto* pathfinder = NavGrid::get_pathfinder();
+  auto usable = [pathfinder, &previous](const QVector3D& candidate) {
+    if (pathfinder == nullptr) {
+      return true;
+    }
+    Point const cell = NavGrid::world_to_grid(candidate.x(), candidate.z());
+    if (!pathfinder->is_walkable(cell.x, cell.y)) {
+      return false;
+    }
+
+    return !previous.has_value() ||
+           pathfinder->is_world_segment_walkable(
+               *previous, candidate, Pathfinding::Passability::Light, 0.0F);
+  };
+
   auto& terrain = Game::Map::TerrainService::instance();
   if (auto const aligned =
           terrain.get_bridge_traversal_position(waypoint.x(), waypoint.z())) {
-    return {aligned->x(), waypoint.y(), aligned->z()};
+    QVector3D const candidate(aligned->x(), waypoint.y(), aligned->z());
+    if (usable(candidate)) {
+      return candidate;
+    }
   }
   if (auto const aligned =
           terrain.get_hill_entrance_traversal_position(waypoint.x(), waypoint.z())) {
-    return {aligned->x(), waypoint.y(), aligned->z()};
+    QVector3D const candidate(aligned->x(), waypoint.y(), aligned->z());
+    if (usable(candidate)) {
+      return candidate;
+    }
   }
   return waypoint;
+}
+
+[[nodiscard]] auto
+path_legs_are_walkable(Pathfinding& pathfinder,
+                       const Engine::Core::TransformComponent& transform,
+                       Pathfinding::Passability passability,
+                       const std::vector<std::pair<float, float>>& path) -> bool {
+  QVector3D previous(transform.position.x, 0.0F, transform.position.z);
+  for (auto const& waypoint : path) {
+    QVector3D const point(waypoint.first, 0.0F, waypoint.second);
+    if (!pathfinder.is_world_segment_walkable(previous, point, passability, 0.0F)) {
+      return false;
+    }
+    previous = point;
+  }
+  return true;
 }
 
 void pull_path_taut(Pathfinding& pathfinder,
@@ -264,8 +303,11 @@ auto MovementSystem::assign_path_to_movement(
   for (std::size_t idx = first_waypoint_index; idx < path_points.size(); ++idx) {
     QVector3D const raw_waypoint =
         pathfinder.path_waypoint_world_position(path_points[idx]);
-    QVector3D const waypoint =
-        align_portal_waypoint(raw_waypoint, idx + 1U == path_points.size());
+    QVector3D const waypoint = align_portal_waypoint(
+        raw_waypoint,
+        idx + 1U == path_points.size(),
+        waypoints.empty() ? std::optional<QVector3D>{}
+                          : std::optional<QVector3D>{waypoints.back()});
     if (!waypoints.empty()) {
       QVector3D const delta = waypoint - waypoints.back();
       float const dx = delta.x();
@@ -304,9 +346,28 @@ auto MovementSystem::assign_waypoints_to_movement(
   movement.route_opening_waypoint_index = 0U;
   movement.route_reform_waypoint_index = 0U;
   movement.path.reserve(waypoints.size());
+
+  std::vector<std::pair<float, float>> plain;
+  plain.reserve(waypoints.size());
+  for (const auto& waypoint : waypoints) {
+    if (!plain.empty()) {
+      float const dx = waypoint.x() - plain.back().first;
+      float const dz = waypoint.z() - plain.back().second;
+      if ((dx * dx) + (dz * dz) <= 1.0e-6F) {
+        continue;
+      }
+    }
+    plain.emplace_back(waypoint.x(), waypoint.z());
+  }
+
   for (std::size_t index = 0; index < waypoints.size(); ++index) {
-    QVector3D const waypoint =
-        align_portal_waypoint(waypoints[index], index + 1U == waypoints.size());
+    QVector3D const waypoint = align_portal_waypoint(
+        waypoints[index],
+        index + 1U == waypoints.size(),
+        movement.path.empty()
+            ? std::optional<QVector3D>{}
+            : std::optional<QVector3D>{QVector3D(
+                  movement.path.back().first, 0.0F, movement.path.back().second)});
     if (!movement.path.empty()) {
       auto const& previous = movement.path.back();
       float const dx = waypoint.x() - previous.first;
@@ -318,11 +379,24 @@ auto MovementSystem::assign_waypoints_to_movement(
     movement.path.emplace_back(waypoint.x(), waypoint.z());
   }
 
-  pull_path_taut(pathfinder,
-                 transform,
-                 passability_for(movement),
-                 movement.get_navigation_clearance(),
-                 movement.path);
+  if (!path_legs_are_walkable(
+          pathfinder, transform, passability_for(movement), movement.path)) {
+    movement.path = plain;
+  }
+
+  {
+
+    auto const cornered = movement.path;
+    pull_path_taut(pathfinder,
+                   transform,
+                   passability_for(movement),
+                   movement.get_navigation_clearance(),
+                   movement.path);
+    if (!path_legs_are_walkable(
+            pathfinder, transform, passability_for(movement), movement.path)) {
+      movement.path = cornered;
+    }
+  }
 
   while (movement.has_waypoints()) {
     const auto& wp = movement.current_waypoint();
