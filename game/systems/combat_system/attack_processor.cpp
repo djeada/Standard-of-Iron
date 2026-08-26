@@ -247,6 +247,17 @@ void clear_orphaned_rts_attack_presentation(Engine::Core::Entity* attacker) {
   action->active_target_id = 0U;
   action->active_target_soldier_slot =
       Engine::Core::RpgCommanderTargetComponent::k_no_soldier_slot;
+
+  // The damage an action dealt has to die with the action. Left behind, it
+  // reads on the next sample as a fresh hit landing with no action running and
+  // none just completed - which is exactly what "damage occurred without a
+  // visible action" was reporting for every scenario past fifteen seconds.
+  action->last_damage = 0;
+  action->last_hit_target_id = 0U;
+  action->last_hit_soldier_slot =
+      Engine::Core::RpgCommanderTargetComponent::k_no_soldier_slot;
+  action->hit_target_ids.fill(0U);
+  action->hit_target_count = 0U;
   action->action_running = false;
   action->action_completed = false;
   action->action_active = false;
