@@ -707,6 +707,21 @@ auto UndeadAwakeningSystem::zones_without_shrine() const -> std::vector<QString>
   return zone_ids;
 }
 
+auto UndeadAwakeningSystem::shrine_markers() const -> std::vector<ShrineMarker> {
+  std::vector<ShrineMarker> markers;
+  markers.reserve(m_zones.size());
+  for (const auto& zone : m_zones) {
+    if (!zone.shrine_placed) {
+      continue;
+    }
+    markers.push_back(ShrineMarker{zone.definition.id,
+                                   zone.shrine_world,
+                                   zone.awakened,
+                                   is_zone_cleared(zone.definition.id)});
+  }
+  return markers;
+}
+
 auto UndeadAwakeningSystem::completed_wave_count(const QString& zone_id) const -> int {
   auto const* zone = find_zone(zone_id);
   return zone != nullptr ? zone->completed_waves : 0;

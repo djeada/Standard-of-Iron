@@ -820,6 +820,7 @@ if(QT_VERSION_MAJOR EQUAL 6)
             ui/qml/StyledComboBox.qml
             ui/qml/HUD.qml
             ui/qml/HUDTop.qml
+            ui/qml/MinimapOverlay.qml
             ui/qml/CameraGuide.qml
             ui/qml/CameraLegend.qml
             ui/qml/EconomyGuide.qml

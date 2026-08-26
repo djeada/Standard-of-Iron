@@ -2195,10 +2195,6 @@ This may be a skirmish, or objectives have not been configured.</translation>
         <translation>Disrupted</translation>
     </message>
     <message>
-        <source>Breaking</source>
-        <translation>Breaking</translation>
-    </message>
-    <message>
         <source>Forming up</source>
         <translation>Forming up</translation>
     </message>
@@ -2209,10 +2205,6 @@ This may be a skirmish, or objectives have not been configured.</translation>
     <message>
         <source>The line has come apart and is taking extra damage. Re-issue the formation order to reform.</source>
         <translation>The line has come apart and is taking extra damage. Re-issue the formation order to reform.</translation>
-    </message>
-    <message>
-        <source>The formation is breaking up.</source>
-        <translation>The formation is breaking up.</translation>
     </message>
     <message>
         <source>Units are still moving into their slots.</source>
@@ -2233,6 +2225,30 @@ This may be a skirmish, or objectives have not been configured.</translation>
     <message>
         <source>%1 slot(s) blocked by terrain.</source>
         <translation>%1 slot(s) blocked by terrain.</translation>
+    </message>
+    <message>
+        <source>In position</source>
+        <translation>In position</translation>
+    </message>
+    <message>
+        <source>Opening ranks</source>
+        <translation>Opening ranks</translation>
+    </message>
+    <message>
+        <source>Filing through</source>
+        <translation>Filing through</translation>
+    </message>
+    <message>
+        <source>The line has reached its ground and is holding it.</source>
+        <translation>The line has reached its ground and is holding it.</translation>
+    </message>
+    <message>
+        <source>The ranks are opening to let the line through.</source>
+        <translation>The ranks are opening to let the line through.</translation>
+    </message>
+    <message>
+        <source>The line is filing through a narrow crossing.</source>
+        <translation>The line is filing through a narrow crossing.</translation>
     </message>
 </context>
 <context>
@@ -3295,6 +3311,45 @@ This may be a skirmish, or objectives have not been configured.</translation>
     </message>
 </context>
 <context>
+    <name>HUDBottomSpectator</name>
+    <message>
+        <source>Armies of the field</source>
+        <translation>Armies of the field</translation>
+    </message>
+    <message>
+        <source>Following: %1</source>
+        <translation>Following: %1</translation>
+    </message>
+    <message>
+        <source>Follow the previous army</source>
+        <translation>Follow the previous army</translation>
+    </message>
+    <message>
+        <source>Follow the next army</source>
+        <translation>Follow the next army</translation>
+    </message>
+    <message>
+        <source>Manpower %1/%2</source>
+        <translation>Manpower %1/%2</translation>
+    </message>
+    <message>
+        <source>Holdings %1</source>
+        <translation>Holdings %1</translation>
+    </message>
+    <message>
+        <source>Trained %1</source>
+        <translation>Trained %1</translation>
+    </message>
+    <message>
+        <source>Kills %1  Losses %2</source>
+        <translation>Kills %1  Losses %2</translation>
+    </message>
+    <message>
+        <source>the whole field</source>
+        <translation>the whole field</translation>
+    </message>
+</context>
+<context>
     <name>HUDTop</name>
     <message>
         <source>MINIMAP</source>
@@ -3323,10 +3378,6 @@ This may be a skirmish, or objectives have not been configured.</translation>
     <message>
         <source>Watching a CPU-only match. You cannot issue commands.</source>
         <translation>Watching a CPU-only match. You cannot issue commands.</translation>
-    </message>
-    <message>
-        <source>Population</source>
-        <translation>Population</translation>
     </message>
     <message>
         <source>Human players</source>
@@ -3409,6 +3460,16 @@ Unseen: never scouted.</translation>
     <message>
         <source>Click to look at the objective.</source>
         <translation>Click to look at the objective.</translation>
+    </message>
+    <message>
+        <source>Manpower</source>
+        <translation>Manpower</translation>
+    </message>
+    <message>
+        <source>Manpower in the field: %1 of %2.
+Every troop costs manpower; a squad of twelve builders costs ten. This is not a headcount - the selection panel counts soldiers.</source>
+        <translation>Manpower in the field: %1 of %2.
+Every troop costs manpower; a squad of twelve builders costs ten. This is not a headcount - the selection panel counts soldiers.</translation>
     </message>
 </context>
 <context>
@@ -3732,6 +3793,14 @@ Unseen: never scouted.</translation>
     <message>
         <source>Your command has collapsed.</source>
         <translation>Your command has collapsed.</translation>
+    </message>
+    <message>
+        <source>Battle Decided</source>
+        <translation>Battle Decided</translation>
+    </message>
+    <message>
+        <source>One side is left holding the field.</source>
+        <translation>One side is left holding the field.</translation>
     </message>
 </context>
 <context>
@@ -4579,6 +4648,18 @@ to see preview</translation>
         <source>Start the battle (Enter)</source>
         <translation>Start the battle (Enter)</translation>
     </message>
+    <message>
+        <source>Observe</source>
+        <translation>Observe</translation>
+    </message>
+    <message>
+        <source>Pick a battlefield with at least two camps to watch</source>
+        <translation>Pick a battlefield with at least two camps to watch</translation>
+    </message>
+    <message>
+        <source>Watch the computer fight itself on this battlefield</source>
+        <translation>Watch the computer fight itself on this battlefield</translation>
+    </message>
 </context>
 <context>
     <name>MapTransformer</name>
@@ -4707,6 +4788,14 @@ to see preview</translation>
     <message>
         <source>Failed to load mission preview: %1</source>
         <translation>Failed to load mission preview: %1</translation>
+    </message>
+    <message>
+        <source>CPU %1</source>
+        <translation>CPU %1</translation>
+    </message>
+    <message>
+        <source>This battlefield has fewer than two slots to observe</source>
+        <translation>This battlefield has fewer than two slots to observe</translation>
     </message>
 </context>
 <context>
@@ -6470,10 +6559,6 @@ Opens for your troops and allies</translation>
         <translation>Idle</translation>
     </message>
     <message>
-        <source>Available Population: %1 / %2</source>
-        <translation>Available Population: %1 / %2</translation>
-    </message>
-    <message>
         <source>Recruit %1
 Cost: %2
 Build time: %3s</source>
@@ -6798,6 +6883,14 @@ Builders reap it for the food that recruits civilians</translation>
     <message>
         <source>Deliver civilians here to raise the temple&apos;s available population</source>
         <translation>Deliver civilians here to raise the temple&apos;s available population</translation>
+    </message>
+    <message>
+        <source>Barracks reserve: %1 / %2</source>
+        <translation>Barracks reserve: %1 / %2</translation>
+    </message>
+    <message>
+        <source>Temple reserve: %1 / %2</source>
+        <translation>Temple reserve: %1 / %2</translation>
     </message>
 </context>
 <context>

@@ -24,9 +24,9 @@ namespace {
 
 namespace Palette {
 
-constexpr QColor PARCHMENT_BASE{235, 220, 190};
-constexpr QColor PARCHMENT_DARK{200, 180, 150};
-constexpr QColor PARCHMENT_STAIN{180, 160, 130, 24};
+constexpr QColor PARCHMENT_BASE{214, 196, 161};
+constexpr QColor PARCHMENT_DARK{176, 156, 125};
+constexpr QColor PARCHMENT_STAIN{138, 112, 78, 34};
 
 constexpr QColor INK_DARK{45, 35, 25};
 constexpr QColor INK_MEDIUM{80, 65, 50};
@@ -856,21 +856,8 @@ void MinimapGenerator::render_structures(QImage& image, const MapDefinition& map
     const auto [px, py] =
         world_to_pixel(point->position.x(), point->position.z(), map_def.grid);
 
-    QColor fill_color = Palette::STRUCTURE_STONE;
-    QColor border_color = Palette::STRUCTURE_SHADOW;
-
-    if (structure.player_id == 1) {
-      fill_color = Palette::TEAM_BLUE;
-      border_color = Palette::TEAM_BLUE_DARK;
-    } else if (structure.player_id == 2) {
-      fill_color = Palette::TEAM_RED;
-      border_color = Palette::TEAM_RED_DARK;
-    } else if (structure.player_id > 0) {
-
-      const int hue = (structure.player_id * 47 + 30) % 360;
-      fill_color.setHsv(hue, 140, 180);
-      border_color.setHsv(hue, 180, 100);
-    }
+    const QColor fill_color = Palette::STRUCTURE_STONE;
+    const QColor border_color = Palette::STRUCTURE_SHADOW;
 
     draw_fortress_icon(
         painter, px, py, structure_icon_size(structure.type), fill_color, border_color);
@@ -884,51 +871,100 @@ void MinimapGenerator::draw_fortress_icon(QPainter& painter,
                                           const QColor& fill,
                                           const QColor& border) {
 
-  const float SIZE = size;
-  const float HALF = SIZE * 0.5F;
+  constexpr float HALF_OF_SIZE = 0.62F;
+  const float half = size * HALF_OF_SIZE;
 
-  painter.setBrush(fill);
-  painter.setPen(QPen(border, 1.5));
-  painter.drawRect(
-      QRectF(cx - HALF * 0.7F, cy - HALF * 0.7F, SIZE * 0.7F, SIZE * 0.7F));
+  QPointF points[k_keep_polygon_points];
 
-  const float TOWER_SIZE = SIZE * 0.35F;
-  const float TOWER_OFFSET = HALF * 0.85F;
-
-  painter.setBrush(fill);
-  painter.setPen(QPen(border, 1.0));
-
-  for (int i = 0; i < 4; ++i) {
-    const float tx = cx + ((i & 1) != 0 ? TOWER_OFFSET : -TOWER_OFFSET);
-    const float ty = cy + ((i & 2) != 0 ? TOWER_OFFSET : -TOWER_OFFSET);
-    painter.drawRect(
-        QRectF(tx - TOWER_SIZE * 0.5F, ty - TOWER_SIZE * 0.5F, TOWER_SIZE, TOWER_SIZE));
-  }
-
-  painter.setBrush(border);
+  QColor shadow = Palette::INK_DARK;
+  shadow.setAlpha(70);
+  keep_polygon(cx + 0.9F, cy + 0.9F, half, points);
   painter.setPen(Qt::NoPen);
-  painter.drawRect(
-      QRectF(cx - SIZE * 0.12F, cy + SIZE * 0.15F, SIZE * 0.24F, SIZE * 0.25F));
+  painter.setBrush(shadow);
+  painter.drawPolygon(points, k_keep_polygon_points);
 
-  const float MERLON_W = SIZE * 0.15F;
-  const float MERLON_H = SIZE * 0.12F;
+  keep_polygon(cx, cy, half, points);
   painter.setBrush(fill);
-  painter.setPen(QPen(border, 0.8));
+  painter.setPen(QPen(border, 1.4));
+  painter.drawPolygon(points, k_keep_polygon_points);
 
-  for (int i = 0; i < 3; ++i) {
-    const float mx = cx - SIZE * 0.25F + static_cast<float>(i) * SIZE * 0.25F;
-    const float my = cy - HALF * 0.7F - MERLON_H;
-    painter.drawRect(QRectF(mx, my, MERLON_W, MERLON_H));
-  }
+  painter.setPen(Qt::NoPen);
+  painter.setBrush(border);
+  painter.drawRect(QRectF(static_cast<qreal>(cx) - size * 0.09F,
+                          static_cast<qreal>(cy) + size * 0.10F,
+                          size * 0.18F,
+                          size * 0.26F));
 }
 
 void MinimapGenerator::apply_historical_styling(QImage& image) {
   QPainter painter(&image);
   painter.setRenderHint(QPainter::Antialiasing, true);
 
+  draw_compass_rose(painter, image.width(), image.height());
+
   draw_map_border(painter, image.width(), image.height());
 
   apply_vignette(painter, image.width(), image.height());
+}
+
+void MinimapGenerator::draw_compass_rose(QPainter& painter, int width, int height) {
+
+  constexpr float ROSE_SCALE = 0.088F;
+  constexpr float ROSE_INSET = 1.62F;
+  constexpr float MINOR_RAY = 0.52F;
+  constexpr float RAY_WAIST = 0.19F;
+
+  const float radius = static_cast<float>(std::min(width, height)) * ROSE_SCALE;
+  if (radius < 6.0F) {
+    return;
+  }
+
+  const float cx = radius * ROSE_INSET;
+  const float cy = static_cast<float>(height) - radius * ROSE_INSET;
+
+  const auto& orient = MinimapOrientation::instance();
+  const float north_x = orient.sin_yaw();
+  const float north_y = -orient.cos_yaw();
+
+  QColor ring = Palette::INK_LIGHT;
+  ring.setAlpha(120);
+  painter.setBrush(Qt::NoBrush);
+  painter.setPen(QPen(ring, 0.9));
+  painter.drawEllipse(QPointF(cx, cy), radius, radius);
+  painter.drawEllipse(QPointF(cx, cy), radius * 0.24, radius * 0.24);
+
+  QColor minor_ink = Palette::INK_MEDIUM;
+  minor_ink.setAlpha(120);
+  QColor major_ink = Palette::INK_DARK;
+  major_ink.setAlpha(205);
+
+  for (int point = 0; point < 8; ++point) {
+
+    const float turn =
+        static_cast<float>(point) * 45.0F * Constants::k_degrees_to_radians;
+    const float cos_turn = std::cos(turn);
+    const float sin_turn = std::sin(turn);
+
+    const float dir_x = north_x * cos_turn - north_y * sin_turn;
+    const float dir_y = north_x * sin_turn + north_y * cos_turn;
+
+    const bool cardinal = (point % 2) == 0;
+    const float length = radius * (cardinal ? 1.0F : MINOR_RAY);
+    const float waist = radius * RAY_WAIST * (cardinal ? 1.0F : 0.72F);
+
+    const QPointF tip(cx + dir_x * length, cy + dir_y * length);
+    const QPointF left(cx - dir_y * waist, cy + dir_x * waist);
+    const QPointF right(cx + dir_y * waist, cy - dir_x * waist);
+    const QPointF points[3] = {tip, left, right};
+
+    painter.setPen(Qt::NoPen);
+    painter.setBrush(point == 0 ? major_ink : minor_ink);
+    painter.drawPolygon(points, 3);
+  }
+
+  painter.setBrush(major_ink);
+  painter.setPen(Qt::NoPen);
+  painter.drawEllipse(QPointF(cx, cy), radius * 0.11, radius * 0.11);
 }
 
 void MinimapGenerator::draw_map_border(QPainter& painter, int width, int height) {
@@ -948,8 +984,8 @@ void MinimapGenerator::apply_vignette(QPainter& painter, int width, int height) 
   QRadialGradient vignette(
       static_cast<float>(width) * 0.5F, static_cast<float>(height) * 0.5F, radius);
   vignette.setColorAt(0.0, Qt::transparent);
-  vignette.setColorAt(0.78, Qt::transparent);
-  vignette.setColorAt(1.0, QColor(60, 45, 30, 22));
+  vignette.setColorAt(0.55, QColor(60, 45, 30, 10));
+  vignette.setColorAt(1.0, QColor(42, 30, 18, 78));
 
   painter.setCompositionMode(QPainter::CompositionMode_Multiply);
   painter.fillRect(0, 0, width, height, vignette);
