@@ -765,7 +765,7 @@ Item {
                                             id: thumb_image
 
                                             anchors.fill: parent
-                                            source: map_thumbnails.source_for((typeof thumbnail !== "undefined") ? thumbnail : "", (typeof path !== "undefined") ? String(path) : "")
+                                            source: map_thumbnails.source_for((typeof thumbnail !== "undefined") ? thumbnail : ((modelData && modelData.thumbnail) ? modelData.thumbnail : ""), (typeof path !== "undefined") ? String(path) : ((modelData && modelData.path) ? String(modelData.path) : ""))
                                             asynchronous: true
                                             fillMode: Image.PreserveAspectCrop
                                             visible: status === Image.Ready

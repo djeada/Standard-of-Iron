@@ -19,6 +19,53 @@ preset), 1920x1080:
 Instruments: `battlefield_gameplay_verifier`, `movement_trace_report`, and the
 gtest suites.
 
+## What the Xephyr re-test found (2026-08-27)
+
+A second pass with the real binary under Xephyr, after all the work below
+landed: menu, skirmish setup, a player match on _Amber Delta_, and a
+computer-only match watched for nine minutes of simulated time with
+`SOI_AI_TRACE=1`.
+
+**Confirmed fixed, by looking at them:**
+
+- The battlefield list stays at seven entries across visits, and every row now
+  draws its own map.
+- **Observe** starts a computer-only match; the HUD is the army board, the top
+  bar says SPECTATOR, and the match runs to a decision instead of ending in an
+  instant defeat.
+- The computer plays. Over nine minutes: three barracks built, 46 troops
+  trained, armies of eight to eleven with four to seven melee, and **one AI
+  destroyed another's base outright**. The state histogram is the finding
+  turned inside out - `Attacking` 79 samples, `Expanding` 1, where the first
+  pass saw neither, ever:
+
+  | state | first pass | now |
+  | --- | ---: | ---: |
+  | Attacking | 0 | 79 |
+  | Expanding | 0 | 1 |
+  | Defending | pinned | 122 |
+
+- The Iron Sepulcher holds its ground with six troops and never marches, and no
+  neighbour is latched into permanent defence by it.
+- The campfire lights a small pool; the barracks beside it keeps its own colour.
+- Escape reaches the menu and the battle resumes.
+
+**Still open, seen again in this pass:**
+
+- Fog of war is worse than "a hole in the world": with the camera over
+  unexplored ground the whole viewport is a featureless tan wash with no terrain
+  at all. Item 5 below.
+- The selection ring is still blue, which in a two-player match is the enemy's
+  colour. Item 4.
+- The formation badge sits on **Forming up** at 50% cohesion indefinitely for a
+  two-unit group that has arrived and stopped. The phase vocabulary fix landed -
+  the HUD knows every phase the simulation can report - so what is wrong now is
+  that the simulation never reports a settled phase for this group. New item 10.
+
+**Worth checking:** the army board showed `Kills 0` for every army while losses
+ran to 35. That may be honest - the neutral garrison does the killing and no
+player scores it - but nothing in this pass proved it either way.
+
 ## Where the game stands
 
 The battle is a game again. A squad ordered across a ford arrives, the computer
@@ -113,6 +160,19 @@ mismatch, slot identity, layout dwell) has therefore never run on anything.
 - [ ] Emit it from the renderer's per-soldier presentation walk, or delete the
       half that cannot be fed. A gate that silently measures nothing is worse
       than no gate at all.
+
+### 10. A settled group still reads "Forming up"
+
+Two units ordered across the map arrive, stop, and hold - and the badge stays on
+**Forming up** at 50% cohesion for as long as you watch. The HUD is not the
+problem: `FormationPhaseVocabularyTest` pins all six phases the simulation can
+report, and the catalogues carry "In position", "Opening ranks" and "Filing
+through". Something upstream never leaves the forming phase for a small mixed
+group.
+
+- [ ] Find what the simulation reports for a two-unit group that has arrived,
+      and either report the settled phase or say plainly why 50% cohesion is not
+      settled.
 
 ---
 

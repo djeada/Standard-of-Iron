@@ -4,7 +4,6 @@ import QtQuick 2.15
 // thumbnail and there is no *_thumb.png anywhere in the tree, so every row fell
 // back to the same generic glyph while the real preview rendered only in the
 // detail panel. This draws that same preview into the rows.
-//
 // Held by path: a ListView recycles its delegates, and re-rendering a map every
 // time it scrolls back into view would make the list crawl. Non-visual, and the
 // generator and image store are properties rather than context lookups so a
