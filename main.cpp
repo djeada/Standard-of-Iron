@@ -141,6 +141,7 @@ auto opengl_version_supported(int major, int minor) -> bool {
 #include "app/core/language_manager.h"
 #include "app/core/user_settings.h"
 #include "app/models/graphics_settings_proxy.h"
+#include "app/models/loading_tips.h"
 #include "app/models/map_preview_image_provider.h"
 #include "app/models/minimap_image_provider.h"
 #include "app/viewmodels/match_setup_view_model.h"
@@ -992,6 +993,8 @@ auto main(int argc, char* argv[]) -> int {
       "StandardOfIron", 1, 0, "GameSpeeds", &GameSpeeds::create);
   qmlRegisterSingletonType<IconArtLibrary>(
       "StandardOfIron", 1, 0, "IconArt", &IconArtLibrary::create);
+  qmlRegisterSingletonType<LoadingTips>(
+      "StandardOfIron", 1, 0, "LoadingTips", &LoadingTips::create);
 
   qmlRegisterSingletonType<Theme>("StandardOfIron.Core", 1, 0, "Theme", &Theme::create);
   qmlRegisterSingletonType<UiPreferences>(
