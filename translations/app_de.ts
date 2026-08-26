@@ -2195,10 +2195,6 @@ Dies ist vielleicht ein Scharmützel, oder es wurden keine Ziele festgelegt.</tr
         <translation>Zerrüttet</translation>
     </message>
     <message>
-        <source>Breaking</source>
-        <translation>Zerbricht</translation>
-    </message>
-    <message>
         <source>Forming up</source>
         <translation>Formiert sich</translation>
     </message>
@@ -2209,10 +2205,6 @@ Dies ist vielleicht ein Scharmützel, oder es wurden keine Ziele festgelegt.</tr
     <message>
         <source>The line has come apart and is taking extra damage. Re-issue the formation order to reform.</source>
         <translation>Die Linie ist auseinandergefallen und erleidet zusätzlichen Schaden. Erteilt den Formationsbefehl erneut, um sie neu zu formieren.</translation>
-    </message>
-    <message>
-        <source>The formation is breaking up.</source>
-        <translation>Die Formation zerfällt.</translation>
     </message>
     <message>
         <source>Units are still moving into their slots.</source>
@@ -2233,6 +2225,30 @@ Dies ist vielleicht ein Scharmützel, oder es wurden keine Ziele festgelegt.</tr
     <message>
         <source>%1 slot(s) blocked by terrain.</source>
         <translation>%1 Platz/Plätze durch Gelände versperrt.</translation>
+    </message>
+    <message>
+        <source>In position</source>
+        <translation>In Stellung</translation>
+    </message>
+    <message>
+        <source>Opening ranks</source>
+        <translation>Reihen öffnen sich</translation>
+    </message>
+    <message>
+        <source>Filing through</source>
+        <translation>Zieht hindurch</translation>
+    </message>
+    <message>
+        <source>The line has reached its ground and is holding it.</source>
+        <translation>Die Linie hat ihren Boden erreicht und hält ihn.</translation>
+    </message>
+    <message>
+        <source>The ranks are opening to let the line through.</source>
+        <translation>Die Reihen öffnen sich, um die Linie durchzulassen.</translation>
+    </message>
+    <message>
+        <source>The line is filing through a narrow crossing.</source>
+        <translation>Die Linie zieht durch einen schmalen Übergang.</translation>
     </message>
 </context>
 <context>
@@ -3295,6 +3311,45 @@ Dies ist vielleicht ein Scharmützel, oder es wurden keine Ziele festgelegt.</tr
     </message>
 </context>
 <context>
+    <name>HUDBottomSpectator</name>
+    <message>
+        <source>Armies of the field</source>
+        <translation>Armeen des Feldes</translation>
+    </message>
+    <message>
+        <source>Following: %1</source>
+        <translation>Verfolgt: %1</translation>
+    </message>
+    <message>
+        <source>Follow the previous army</source>
+        <translation>Der vorherigen Armee folgen</translation>
+    </message>
+    <message>
+        <source>Follow the next army</source>
+        <translation>Der nächsten Armee folgen</translation>
+    </message>
+    <message>
+        <source>Manpower %1/%2</source>
+        <translation>Mannschaftsstärke %1/%2</translation>
+    </message>
+    <message>
+        <source>Holdings %1</source>
+        <translation>Besitzungen %1</translation>
+    </message>
+    <message>
+        <source>Trained %1</source>
+        <translation>Ausgebildet %1</translation>
+    </message>
+    <message>
+        <source>Kills %1  Losses %2</source>
+        <translation>Abschüsse %1  Verluste %2</translation>
+    </message>
+    <message>
+        <source>the whole field</source>
+        <translation>das ganze Feld</translation>
+    </message>
+</context>
+<context>
     <name>HUDTop</name>
     <message>
         <source>MINIMAP</source>
@@ -3323,10 +3378,6 @@ Dies ist vielleicht ein Scharmützel, oder es wurden keine Ziele festgelegt.</tr
     <message>
         <source>Watching a CPU-only match. You cannot issue commands.</source>
         <translation>Du siehst einem reinen KI-Match zu. Du kannst keine Befehle erteilen.</translation>
-    </message>
-    <message>
-        <source>Population</source>
-        <translation>Bevölkerung</translation>
     </message>
     <message>
         <source>Human players</source>
@@ -3409,6 +3460,16 @@ Unbekannt: nie aufgeklärt.</translation>
     <message>
         <source>Click to look at the objective.</source>
         <translation>Klicken, um zum Ziel zu blicken.</translation>
+    </message>
+    <message>
+        <source>Manpower</source>
+        <translation>Mannschaftsstärke</translation>
+    </message>
+    <message>
+        <source>Manpower in the field: %1 of %2.
+Every troop costs manpower; a squad of twelve builders costs ten. This is not a headcount - the selection panel counts soldiers.</source>
+        <translation>Mannschaftsstärke im Feld: %1 von %2.
+Jede Truppe kostet Mannschaftsstärke; ein Trupp von zwölf Bauleuten kostet zehn. Das ist keine Kopfzahl - die Auswahlanzeige zählt Soldaten.</translation>
     </message>
 </context>
 <context>
@@ -3732,6 +3793,14 @@ Unbekannt: nie aufgeklärt.</translation>
     <message>
         <source>Your command has collapsed.</source>
         <translation>Eure Führung ist zusammengebrochen.</translation>
+    </message>
+    <message>
+        <source>Battle Decided</source>
+        <translation>Schlacht entschieden</translation>
+    </message>
+    <message>
+        <source>One side is left holding the field.</source>
+        <translation>Eine Seite behauptet das Feld.</translation>
     </message>
 </context>
 <context>
@@ -4579,6 +4648,18 @@ um die Vorschau zu sehen</translation>
         <source>Start the battle (Enter)</source>
         <translation>Die Schlacht beginnen (Enter)</translation>
     </message>
+    <message>
+        <source>Observe</source>
+        <translation>Zuschauen</translation>
+    </message>
+    <message>
+        <source>Pick a battlefield with at least two camps to watch</source>
+        <translation>Wähle ein Schlachtfeld mit mindestens zwei Lagern zum Zuschauen</translation>
+    </message>
+    <message>
+        <source>Watch the computer fight itself on this battlefield</source>
+        <translation>Zusieh, wie der Computer auf diesem Schlachtfeld gegen sich selbst kämpft</translation>
+    </message>
 </context>
 <context>
     <name>MapTransformer</name>
@@ -4707,6 +4788,14 @@ um die Vorschau zu sehen</translation>
     <message>
         <source>Failed to load mission preview: %1</source>
         <translation>Missionsvorschau konnte nicht geladen werden: %1</translation>
+    </message>
+    <message>
+        <source>CPU %1</source>
+        <translation>CPU %1</translation>
+    </message>
+    <message>
+        <source>This battlefield has fewer than two slots to observe</source>
+        <translation>Dieses Schlachtfeld hat weniger als zwei Plätze zum Zuschauen</translation>
     </message>
 </context>
 <context>
@@ -6470,10 +6559,6 @@ Opens for your troops and allies</source>
         <translation>Untätig</translation>
     </message>
     <message>
-        <source>Available Population: %1 / %2</source>
-        <translation>Verfügbare Bevölkerung: %1 / %2</translation>
-    </message>
-    <message>
         <source>Recruit %1
 Cost: %2
 Build time: %3s</source>
@@ -6798,6 +6883,14 @@ Baumeister ernten es als Nahrung, die Zivilisten rekrutiert</translation>
     <message>
         <source>Deliver civilians here to raise the temple&apos;s available population</source>
         <translation>Liefert hier Zivilisten ab, um die verfügbare Bevölkerung des Tempels zu erhöhen</translation>
+    </message>
+    <message>
+        <source>Barracks reserve: %1 / %2</source>
+        <translation>Kasernenreserve: %1 / %2</translation>
+    </message>
+    <message>
+        <source>Temple reserve: %1 / %2</source>
+        <translation>Tempelreserve: %1 / %2</translation>
     </message>
 </context>
 <context>

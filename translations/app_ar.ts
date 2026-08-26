@@ -2195,10 +2195,6 @@ This may be a skirmish, or objectives have not been configured.</source>
         <translation>مضطرب</translation>
     </message>
     <message>
-        <source>Breaking</source>
-        <translation>ينكسر</translation>
-    </message>
-    <message>
         <source>Forming up</source>
         <translation>يتشكّل</translation>
     </message>
@@ -2209,10 +2205,6 @@ This may be a skirmish, or objectives have not been configured.</source>
     <message>
         <source>The line has come apart and is taking extra damage. Re-issue the formation order to reform.</source>
         <translation>تفكك الخط وصار يتلقى ضرراً إضافياً. أعد إصدار أمر التشكيل لإعادة تنظيمه.</translation>
-    </message>
-    <message>
-        <source>The formation is breaking up.</source>
-        <translation>التشكيل آخذ في التفكك.</translation>
     </message>
     <message>
         <source>Units are still moving into their slots.</source>
@@ -2233,6 +2225,30 @@ This may be a skirmish, or objectives have not been configured.</source>
     <message>
         <source>%1 slot(s) blocked by terrain.</source>
         <translation>%1 من المواضع تحجبها التضاريس.</translation>
+    </message>
+    <message>
+        <source>In position</source>
+        <translation>في الموضع</translation>
+    </message>
+    <message>
+        <source>Opening ranks</source>
+        <translation>تفتح الصفوف</translation>
+    </message>
+    <message>
+        <source>Filing through</source>
+        <translation>يعبر في رتل</translation>
+    </message>
+    <message>
+        <source>The line has reached its ground and is holding it.</source>
+        <translation>بلغ الصف أرضه وهو يحتفظ بها.</translation>
+    </message>
+    <message>
+        <source>The ranks are opening to let the line through.</source>
+        <translation>تنفتح الصفوف لتفسح للصف طريقه.</translation>
+    </message>
+    <message>
+        <source>The line is filing through a narrow crossing.</source>
+        <translation>يعبر الصف في رتل مخاضة ضيّقة.</translation>
     </message>
 </context>
 <context>
@@ -3299,6 +3315,45 @@ This may be a skirmish, or objectives have not been configured.</source>
     </message>
 </context>
 <context>
+    <name>HUDBottomSpectator</name>
+    <message>
+        <source>Armies of the field</source>
+        <translation>جيوش الميدان</translation>
+    </message>
+    <message>
+        <source>Following: %1</source>
+        <translation>يتابع: %1</translation>
+    </message>
+    <message>
+        <source>Follow the previous army</source>
+        <translation>تابع الجيش السابق</translation>
+    </message>
+    <message>
+        <source>Follow the next army</source>
+        <translation>تابع الجيش التالي</translation>
+    </message>
+    <message>
+        <source>Manpower %1/%2</source>
+        <translation>القوة البشرية %1/%2</translation>
+    </message>
+    <message>
+        <source>Holdings %1</source>
+        <translation>الممتلكات %1</translation>
+    </message>
+    <message>
+        <source>Trained %1</source>
+        <translation>المدرَّبة %1</translation>
+    </message>
+    <message>
+        <source>Kills %1  Losses %2</source>
+        <translation>القتلى %1  الخسائر %2</translation>
+    </message>
+    <message>
+        <source>the whole field</source>
+        <translation>الميدان كلّه</translation>
+    </message>
+</context>
+<context>
     <name>HUDTop</name>
     <message>
         <source>MINIMAP</source>
@@ -3327,10 +3382,6 @@ This may be a skirmish, or objectives have not been configured.</source>
     <message>
         <source>Watching a CPU-only match. You cannot issue commands.</source>
         <translation>أنت تشاهد مباراة بين الحاسوب فقط. لا يمكنك إصدار أوامر.</translation>
-    </message>
-    <message>
-        <source>Population</source>
-        <translation>التعداد</translation>
     </message>
     <message>
         <source>Human players</source>
@@ -3413,6 +3464,16 @@ Unseen: never scouted.</source>
     <message>
         <source>Click to look at the objective.</source>
         <translation>انقر للنظر إلى الهدف.</translation>
+    </message>
+    <message>
+        <source>Manpower</source>
+        <translation>القوة البشرية</translation>
+    </message>
+    <message>
+        <source>Manpower in the field: %1 of %2.
+Every troop costs manpower; a squad of twelve builders costs ten. This is not a headcount - the selection panel counts soldiers.</source>
+        <translation>القوة البشرية في الميدان: %1 من %2.
+كل وحدة تكلّف قوة بشرية؛ فصيل من اثني عشر بنّاءً يكلّف عشرة. هذا ليس عدد الأفراد - لوحة التحديد هي التي تعدّ الجنود.</translation>
     </message>
 </context>
 <context>
@@ -3736,6 +3797,14 @@ Unseen: never scouted.</source>
     <message>
         <source>Your command has collapsed.</source>
         <translation>انهارت قيادتك.</translation>
+    </message>
+    <message>
+        <source>Battle Decided</source>
+        <translation>حُسمت المعركة</translation>
+    </message>
+    <message>
+        <source>One side is left holding the field.</source>
+        <translation>بقي طرف واحد يملك الميدان.</translation>
     </message>
 </context>
 <context>
@@ -4591,6 +4660,18 @@ to see preview</source>
         <source>Start the battle (Enter)</source>
         <translation>ابدأ المعركة (Enter)</translation>
     </message>
+    <message>
+        <source>Observe</source>
+        <translation>شاهد</translation>
+    </message>
+    <message>
+        <source>Pick a battlefield with at least two camps to watch</source>
+        <translation>اختر ميدانًا فيه معسكران على الأقل لمشاهدته</translation>
+    </message>
+    <message>
+        <source>Watch the computer fight itself on this battlefield</source>
+        <translation>شاهد الحاسوب يقاتل نفسه في هذا الميدان</translation>
+    </message>
 </context>
 <context>
     <name>MapTransformer</name>
@@ -4719,6 +4800,14 @@ to see preview</source>
     <message>
         <source>Failed to load mission preview: %1</source>
         <translation>فشل تحميل معاينة المهمة: %1</translation>
+    </message>
+    <message>
+        <source>CPU %1</source>
+        <translation>حاسوب %1</translation>
+    </message>
+    <message>
+        <source>This battlefield has fewer than two slots to observe</source>
+        <translation>هذا الميدان فيه أقل من موضعين للمشاهدة</translation>
     </message>
 </context>
 <context>
@@ -6482,10 +6571,6 @@ Opens for your troops and allies</source>
         <translation>خامل</translation>
     </message>
     <message>
-        <source>Available Population: %1 / %2</source>
-        <translation>التعداد المتاح: %1 / %2</translation>
-    </message>
-    <message>
         <source>Recruit %1
 Cost: %2
 Build time: %3s</source>
@@ -6810,6 +6895,14 @@ Builders reap it for the food that recruits civilians</source>
     <message>
         <source>Deliver civilians here to raise the temple&apos;s available population</source>
         <translation>سلّم المدنيين هنا لزيادة السكان المتاحين للمعبد</translation>
+    </message>
+    <message>
+        <source>Barracks reserve: %1 / %2</source>
+        <translation>احتياطي الثكنة: %1 / %2</translation>
+    </message>
+    <message>
+        <source>Temple reserve: %1 / %2</source>
+        <translation>احتياطي المعبد: %1 / %2</translation>
     </message>
 </context>
 <context>

@@ -90,6 +90,7 @@ add_executable(
     map/explored_mask_codec_test.cpp
     map/visibility_restore_test.cpp
     map/map_bridge_coverage_test.cpp
+    map/map_supernatural_presence_test.cpp
     map/river_bank_walkability_test.cpp
     map/map_hill_entrance_smoothness_test.cpp
     map/map_skirmish_reachability_test.cpp

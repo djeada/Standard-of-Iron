@@ -376,6 +376,11 @@ void TerrainService::initialize(const MapDefinition& map_def) {
   m_height_map->add_river_segments(map_def.rivers);
   m_height_map->add_bridges(map_def.bridges);
   m_biome_settings = map_def.biome;
+
+  // A shipped map says what walks on it. Iron ore is lit by that, not by a
+  // constant: `map_rivers` says "Nothing haunts this valley" and its ore was
+  // still the brightest thing on the hillside.
+  set_supernatural_presence(map_def.undead_zones.empty() ? 0.0F : 1.0F);
   m_coord_system = map_def.coordSystem;
 
   m_road_segments = map_def.roads;

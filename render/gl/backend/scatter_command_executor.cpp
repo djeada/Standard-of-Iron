@@ -557,7 +557,10 @@ void Backend::execute_scatter_commands(const PreparedBatch& prepared,
         prop_shader->set_uniform(prop_uniforms->time, m_animation_time);
       }
       if (prop_uniforms->magic_strength != Shader::InvalidUniform) {
-        prop_shader->set_uniform(prop_uniforms->magic_strength, prop.magic_strength);
+        const float magic = deco_cmd_.prop.magic_strength >= 0.0F
+                                ? deco_cmd_.prop.magic_strength
+                                : prop.magic_strength;
+        prop_shader->set_uniform(prop_uniforms->magic_strength, magic);
       }
 
       glBindVertexArray(prop_vao);

@@ -33,6 +33,11 @@ void IronOreRenderer::configure(const Game::Map::TerrainHeightMap& height_map,
                                 const std::vector<Game::Map::WorldProp>& world_props) {
   configure_biome_common(biome_settings);
   m_state.params.light_direction = m_light_direction;
+
+  // Ghost-light where something walks, plain rock where nothing does.
+  constexpr float k_haunted_ore_glow = 1.15F;
+  m_state.params.magic_strength =
+      k_haunted_ore_glow * world().terrain_or_empty().supernatural_presence();
   generate_instances(world_props, height_map);
 }
 
