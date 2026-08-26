@@ -1,5 +1,6 @@
 #include "movement_trace.h"
 
+#include <algorithm>
 #include <array>
 #include <charconv>
 #include <cstdio>
