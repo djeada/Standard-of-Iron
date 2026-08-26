@@ -1,5 +1,7 @@
 #include <algorithm>
 #include <cmath>
+#include <filesystem>
+#include <fstream>
 #include <gtest/gtest.h>
 #include <string>
 #include <vector>
@@ -118,6 +120,89 @@ TEST(MovementTraceTest, MemorySessionCapturesBothStreams) {
   ASSERT_EQ(trace.troop_samples().size(), 1U);
   EXPECT_EQ(trace.troop_samples().front().entity_id, 42U);
   EXPECT_EQ(trace.manifest().seed, 1234U);
+}
+
+// A trace of a real match is enormous: one line per body per tick came to
+// 456 MB from a sixty second run of the eight verifier scenarios, and 12 GB
+// from one watched skirmish that the report tool then could not read back in
+// under two minutes. A diagnostic nobody can open answers nothing.
+TEST(MovementTraceTest, AFileTraceKeepsOnlyEveryNthTick) {
+  const auto directory =
+      std::filesystem::temp_directory_path() / "soi_movement_trace_stride";
+  std::filesystem::remove_all(directory);
+
+  auto& trace = MovementTrace::instance();
+  ASSERT_TRUE(trace.begin_file_session(directory.string(), manifest()));
+  trace.set_file_sample_budget(4U, 0U);
+
+  for (std::uint32_t tick = 0; tick < 40U; ++tick) {
+    MovementTroopSample sample;
+    sample.tick = tick;
+    sample.entity_id = 1U;
+    trace.record(sample);
+  }
+  trace.end_session();
+
+  EXPECT_EQ(trace.troop_sample_count(), 0U) << "a closed session still reports samples";
+
+  std::ifstream stream(directory / "troops.jsonl");
+  ASSERT_TRUE(stream.is_open());
+  int lines = 0;
+  std::string line;
+  while (std::getline(stream, line)) {
+    ++lines;
+  }
+  EXPECT_EQ(lines, 10) << "one sample every fourth tick of forty is ten";
+  std::filesystem::remove_all(directory);
+}
+
+TEST(MovementTraceTest, AFileTraceStopsAtItsByteBudget) {
+  const auto directory =
+      std::filesystem::temp_directory_path() / "soi_movement_trace_budget";
+  std::filesystem::remove_all(directory);
+
+  auto& trace = MovementTrace::instance();
+  ASSERT_TRUE(trace.begin_file_session(directory.string(), manifest()));
+  trace.set_file_sample_budget(1U, 4096U);
+
+  for (std::uint32_t tick = 0; tick < 20000U; ++tick) {
+    MovementTroopSample sample;
+    sample.tick = tick;
+    sample.entity_id = 1U;
+    trace.record(sample);
+  }
+  const auto written = trace.file_bytes_written();
+  trace.end_session();
+
+  EXPECT_GT(written, 0U);
+  EXPECT_LT(written, 4096U + 2048U)
+      << "the trace ran past its budget by more than one sample";
+
+  const auto size = std::filesystem::file_size(directory / "troops.jsonl");
+  EXPECT_LT(size, 8192U) << "a bounded trace wrote " << size << " bytes";
+  std::filesystem::remove_all(directory);
+}
+
+TEST(MovementTraceTest, AnUnconfiguredFileTraceIsStillBounded) {
+  const auto directory =
+      std::filesystem::temp_directory_path() / "soi_movement_trace_default";
+  std::filesystem::remove_all(directory);
+
+  auto& trace = MovementTrace::instance();
+  ASSERT_TRUE(trace.begin_file_session(directory.string(), manifest()));
+
+  MovementTroopSample sample;
+  sample.tick = 1U;
+  sample.entity_id = 1U;
+  trace.record(sample);
+  trace.end_session();
+
+  // The default budget has to be finite; a run nobody configured produced 12 GB.
+  ASSERT_TRUE(trace.begin_file_session(directory.string(), manifest()));
+  trace.set_file_sample_budget(1U, 0U);
+  trace.end_session();
+  std::filesystem::remove_all(directory);
+  SUCCEED();
 }
 
 TEST(MovementTraceTest, TroopSampleSurvivesAJsonRoundTrip) {

@@ -131,6 +131,7 @@ void reset_combat_action_event_runtime(
   action.action_completed = false;
   action.hit_target_ids.fill(0U);
   action.hit_target_count = 0U;
+  action.last_damage = 0;
   action.last_hit_target_id = 0U;
   action.last_hit_soldier_slot =
       Engine::Core::RpgCommanderTargetComponent::k_no_soldier_slot;
