@@ -341,6 +341,7 @@ add_executable(
     render_tests
     ${CMAKE_CURRENT_SOURCE_DIR}/test_assets.qrc
     render/prop_model_footprint_test.cpp
+    render/gl_deferred_delete_test.cpp
     render/unit_primitive_convention_test.cpp
     render/instance_draw_guard_test.cpp
     render/pose_controller_test.cpp

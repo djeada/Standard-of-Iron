@@ -21,8 +21,7 @@ Buffer::~Buffer() {
     return;
   }
   if (!gl_objects_can_be_released()) {
-    qWarning() << "Buffer destroyed without a current GL context; leaking buffer"
-               << m_buffer;
+    defer_gl_delete(DeferredGlObject::Buffer, m_buffer);
     return;
   }
   glDeleteBuffers(1, &m_buffer);
@@ -77,8 +76,7 @@ VertexArray::~VertexArray() {
     return;
   }
   if (!gl_objects_can_be_released()) {
-    qWarning() << "VertexArray destroyed without a current GL context; leaking vao"
-               << m_vao;
+    defer_gl_delete(DeferredGlObject::VertexArray, m_vao);
     return;
   }
   glDeleteVertexArrays(1, &m_vao);

@@ -361,13 +361,20 @@ void PostProcessPipeline::resolve_scene() {
                                   rays_enabled ? k_godray_strength : 0.0F);
   m_composite_shader->set_uniform("u_depth_range",
                                   QVector2D(m_near_plane, m_far_plane));
+  // The reduced composite shader has no grounding-occlusion pass at all, so
+  // these three are compiled out of it. A quality tier dropping a pass is not a
+  // missing uniform, and reporting it as one put five warnings in every launch
+  // log where a real one would go unnoticed.
   m_composite_shader->set_uniform(
-      "u_inverse_resolution",
+      m_composite_shader->optional_uniform_handle("u_inverse_resolution"),
       QVector2D(1.0F / static_cast<float>(m_composite.width),
                 1.0F / static_cast<float>(m_composite.height)));
-  m_composite_shader->set_uniform("u_ground_ao_radius", k_ground_ao_radius);
   m_composite_shader->set_uniform(
-      "u_ground_ao_strength", m_passes.ambient_occlusion ? k_ground_ao_strength : 0.0F);
+      m_composite_shader->optional_uniform_handle("u_ground_ao_radius"),
+      k_ground_ao_radius);
+  m_composite_shader->set_uniform(
+      m_composite_shader->optional_uniform_handle("u_ground_ao_strength"),
+      m_passes.ambient_occlusion ? k_ground_ao_strength : 0.0F);
   m_composite_shader->set_uniform("u_inverse_view_proj", m_inverse_view_proj);
   m_composite_shader->set_uniform("u_camera_position", m_camera_position);
   m_composite_shader->set_uniform("u_fog_range", QVector2D(m_fog_start, m_fog_end));
@@ -413,7 +420,7 @@ void PostProcessPipeline::resolve_scene() {
     m_fxaa_shader->use();
     m_fxaa_shader->set_uniform("u_source", 0);
     m_fxaa_shader->set_uniform(
-        "u_inverse_resolution",
+        m_fxaa_shader->optional_uniform_handle("u_inverse_resolution"),
         QVector2D(1.0F / static_cast<float>(m_composite.width),
                   1.0F / static_cast<float>(m_composite.height)));
     glBindTexture(GL_TEXTURE_2D, m_composite.color);
