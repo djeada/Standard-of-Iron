@@ -10,6 +10,7 @@
 namespace Render::GL {
 
 class BridgeRenderer;
+class FogRenderer;
 class WaterRenderer;
 class ShorelineRenderer;
 class RoadRenderer;
@@ -22,6 +23,8 @@ public:
   void configure(const Game::Map::TerrainHeightMap& height_map,
                  const std::vector<Game::Map::RoadSegment>& road_segments,
                  const Game::Map::BiomeSettings& biome_settings);
+
+  void set_fog_renderer(FogRenderer* fog);
 
   void submit(Renderer& renderer, ResourceManager* resources) override;
 

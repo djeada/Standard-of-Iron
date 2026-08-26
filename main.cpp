@@ -616,6 +616,10 @@ auto main(int argc, char* argv[]) -> int {
       fmt.setSwapInterval(interval);
       qInfo() << "Swap interval overridden by SOI_SWAP_INTERVAL:" << interval;
     }
+  } else {
+    const int interval = App::Core::UserSettings::load_display_vsync() ? 1 : 0;
+    fmt.setSwapInterval(interval);
+    qInfo() << "Swap interval from saved VSync preference:" << interval;
   }
 
   QSurfaceFormat::setDefaultFormat(fmt);

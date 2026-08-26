@@ -36,6 +36,8 @@ public:
 
   void submit(Renderer& renderer, ResourceManager* resources) override;
 
+  auto prepare_mask(Renderer& renderer) -> FogMaskResources;
+
   void advance_reveal(float dt_seconds);
 
   [[nodiscard]] auto patch_count() const -> std::size_t { return m_instances.size(); }

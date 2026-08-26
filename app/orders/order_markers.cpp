@@ -27,6 +27,36 @@ auto resolve_order_marker_anchor(Engine::Core::World* world,
   return true;
 }
 
+namespace {
+
+const QVector3D k_order_move_color(0.55F, 0.95F, 0.55F);
+const QVector3D k_order_attack_color(1.0F, 0.32F, 0.22F);
+const QVector3D k_order_guard_color(0.45F, 0.70F, 1.0F);
+const QVector3D k_order_patrol_color(0.35F, 1.0F, 0.55F);
+const QVector3D k_order_neutral_color(0.95F, 0.90F, 0.70F);
+const QVector3D k_order_rejected_color(0.72F, 0.72F, 0.74F);
+
+} // namespace
+
+auto order_marker_color(OrderKind kind, bool rejected) -> QVector3D {
+  if (rejected) {
+    return k_order_rejected_color;
+  }
+  switch (kind) {
+  case OrderKind::Move:
+    return k_order_move_color;
+  case OrderKind::Attack:
+    return k_order_attack_color;
+  case OrderKind::Guard:
+  case OrderKind::Hold:
+    return k_order_guard_color;
+  case OrderKind::Patrol:
+    return k_order_patrol_color;
+  default:
+    return k_order_neutral_color;
+  }
+}
+
 auto OrderMarkerStore::lifetime_for(OrderKind kind, bool rejected) -> float {
   if (rejected) {
     return 1.2F;
@@ -44,9 +74,10 @@ auto OrderMarkerStore::lifetime_for(OrderKind kind, bool rejected) -> float {
   }
 }
 
-void OrderMarkerStore::push(const OrderOutcome& outcome, Engine::Core::World* world) {
+auto OrderMarkerStore::push(const OrderOutcome& outcome,
+                            Engine::Core::World* world) -> const OrderMarker* {
   if (!outcome.issued()) {
-    return;
+    return nullptr;
   }
 
   OrderMarker marker;
@@ -61,13 +92,14 @@ void OrderMarkerStore::push(const OrderOutcome& outcome, Engine::Core::World* wo
   } else if (outcome.has_destination) {
     marker.position = outcome.destination;
   } else {
-    return;
+    return nullptr;
   }
 
   if (m_markers.size() >= k_max_markers) {
     m_markers.erase(m_markers.begin());
   }
   m_markers.push_back(marker);
+  return &m_markers.back();
 }
 
 void OrderMarkerStore::update(float dt, Engine::Core::World* world) {

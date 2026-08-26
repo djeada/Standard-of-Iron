@@ -228,8 +228,12 @@ def select_all() -> list[str]:
 
 def select_changed(base: str) -> list[str]:
     ref = _resolve_diff_base(base)
-    out = git("diff", "--name-only", "-z", "--diff-filter=ACMR", f"{ref}...HEAD")
-    return [p for p in out.split("\0") if p]
+
+    out = git("diff", "--name-only", "-z", "--diff-filter=ACMR", ref)
+    paths = [p for p in out.split("\0") if p]
+    out = git("ls-files", "-z", "--others", "--exclude-standard")
+    paths.extend(p for p in out.split("\0") if p)
+    return paths
 
 
 def select_staged() -> list[str]:

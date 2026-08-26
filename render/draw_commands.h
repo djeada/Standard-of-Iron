@@ -188,6 +188,7 @@ struct TerrainFeatureCmd {
   WaterSurfaceKind water_kind = WaterSurfaceKind::River;
   RoadSurfaceKind road_surface_kind = RoadSurfaceKind::PackedEarth;
   TerrainSurfaceCmd::VisibilityResources visibility{};
+  FogMaskResources fog_mask{};
   CommandPriority priority{CommandPriority::High};
 };
 

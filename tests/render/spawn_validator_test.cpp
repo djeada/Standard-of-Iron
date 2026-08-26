@@ -2,6 +2,7 @@
 
 #include "game/map/map_definition.h"
 #include "game/map/scatter/spawn_validator.h"
+#include "game/map/scatter/world_prop_clearance_index.h"
 #include "game/map/terrain_service.h"
 #include "game/systems/building_collision_registry.h"
 
@@ -385,4 +386,68 @@ TEST_F(SpawnValidatorTest, SpawnValidatorBlocksRiverClearance) {
 
   EXPECT_FALSE(validator.can_spawn_at_world(0.0F, 2.2F));
   EXPECT_TRUE(validator.can_spawn_at_world(0.0F, 2.8F));
+}
+
+TEST(WorldPropClearanceIndexTest, ASolidPropClaimsItsGroundBody) {
+  WorldPropClearanceIndex index;
+
+  WorldProp tent;
+  tent.type = WorldProp::Type::Tent;
+  tent.x = 12.0F;
+  tent.z = -7.0F;
+  tent.scale = 1.0F;
+  index.rebuild({tent}, 4.0F);
+
+  const float body = world_prop_ground_radius(WorldProp::Type::Tent, 1.0F);
+  ASSERT_GT(body, 0.0F);
+  EXPECT_EQ(index.disc_count(), 1U);
+
+  EXPECT_TRUE(index.overlaps(tent.x, tent.z, 0.0F));
+  EXPECT_TRUE(index.overlaps(tent.x + body * 0.5F, tent.z, 0.0F));
+  EXPECT_FALSE(index.overlaps(tent.x + body + 0.5F, tent.z, 0.0F));
+
+  EXPECT_TRUE(index.overlaps(tent.x + body + 0.3F, tent.z, 0.5F))
+      << "a scatter item's own footprint has to count, or a stone lands with "
+         "half of itself inside the tent";
+}
+
+TEST(WorldPropClearanceIndexTest, ATreeOnlyClaimsItsStem) {
+  WorldPropClearanceIndex index;
+
+  WorldProp pine;
+  pine.type = WorldProp::Type::PineTree;
+  pine.x = 0.0F;
+  pine.z = 0.0F;
+  pine.scale = 1.0F;
+  index.rebuild({pine}, 4.0F);
+
+  const float stem = world_prop_ground_radius(WorldProp::Type::PineTree, 1.0F);
+  const float canopy = world_prop_render_scale(WorldProp::Type::PineTree) *
+                       world_prop_model_half_extent(WorldProp::Type::PineTree);
+  ASSERT_LT(stem, canopy);
+
+  EXPECT_TRUE(index.overlaps(stem * 0.5F, 0.0F, 0.0F));
+  EXPECT_FALSE(index.overlaps(canopy * 0.9F, 0.0F, 0.0F))
+      << "grass and stones belong under a canopy; only the trunk is solid";
+}
+
+TEST(WorldPropClearanceIndexTest, PropsFurtherApartThanOneBucketStillRegister) {
+  WorldPropClearanceIndex index;
+
+  std::vector<WorldProp> props;
+  for (int i = 0; i < 40; ++i) {
+    WorldProp ruin;
+    ruin.type = WorldProp::Type::Ruins;
+    ruin.x = static_cast<float>(i) * 37.0F;
+    ruin.z = static_cast<float>(-i) * 21.0F;
+    ruin.scale = 1.0F;
+    props.push_back(ruin);
+  }
+  index.rebuild(props, 4.0F);
+
+  for (const auto& ruin : props) {
+    EXPECT_TRUE(index.overlaps(ruin.x, ruin.z, 0.0F))
+        << "bucket lookup missed a prop at " << ruin.x << ", " << ruin.z;
+  }
+  EXPECT_FALSE(index.overlaps(5000.0F, 5000.0F, 0.0F));
 }

@@ -35,6 +35,17 @@ Item {
         }
     }
 
+    function window_mode_label(mode) {
+        switch (mode) {
+        case "borderless":
+            return qsTr("Borderless");
+        case "windowed":
+            return qsTr("Windowed");
+        default:
+            return qsTr("Fullscreen");
+        }
+    }
+
     function set_audio_slider_values() {
         master_volume_slider.value = game.audio_system.get_master_volume() * 100;
         music_volume_slider.value = game.audio_system.get_music_volume() * 100;
@@ -341,6 +352,75 @@ Item {
                         spacing: Theme.spacingMedium
 
                         Label {
+                            text: qsTr("Display Settings")
+                            color: Theme.textMain
+                            font.pixelSize: Design.Typography.subheading
+                            font.bold: true
+                        }
+
+                        Rectangle {
+                            Layout.fillWidth: true
+                            Layout.preferredHeight: 2
+                            color: Theme.border
+                            opacity: 0.5
+                        }
+
+                        GridLayout {
+                            Layout.fillWidth: true
+                            columns: 2
+                            rowSpacing: Theme.spacingMedium
+                            columnSpacing: Theme.spacingMedium
+
+                            Label {
+                                text: qsTr("Window Mode:")
+                                color: Theme.textSub
+                                font.pixelSize: Design.Typography.bodyLarge
+                            }
+
+                            StyledComboBox {
+                                id: window_mode_combo_box
+
+                                Layout.fillWidth: true
+                                model: UiPreferences.displayWindowModes
+                                currentIndex: Math.max(0, UiPreferences.displayWindowModes.indexOf(UiPreferences.displayWindowMode))
+                                displayText: root.window_mode_label(currentText)
+                                onActivated: function (index) {
+                                    UiPreferences.displayWindowMode = UiPreferences.displayWindowModes[index];
+                                }
+                                delegate_text: function (data) {
+                                    return root.window_mode_label(data);
+                                }
+                            }
+
+                            Design.IronCheckBox {
+                                Layout.columnSpan: 2
+                                text: qsTr("VSync")
+                                description: qsTr("Synchronises frames with your display to remove tearing. Toggling it takes effect the next time the game starts.")
+                                checked: UiPreferences.displayVsync
+                                onToggled: UiPreferences.displayVsync = checked
+                            }
+
+                            Design.IronCheckBox {
+                                Layout.columnSpan: 2
+                                text: qsTr("Show FPS counter")
+                                description: qsTr("Displays a small frame-rate readout during battle")
+                                checked: UiPreferences.showFps
+                                onToggled: UiPreferences.showFps = checked
+                            }
+                        }
+                    }
+
+                    Rectangle {
+                        Layout.fillWidth: true
+                        Layout.preferredHeight: 1
+                        color: Theme.border
+                    }
+
+                    ColumnLayout {
+                        Layout.fillWidth: true
+                        spacing: Theme.spacingMedium
+
+                        Label {
                             text: qsTr("Graphics Settings")
                             color: Theme.textMain
                             font.pixelSize: Design.Typography.subheading
@@ -469,6 +549,108 @@ Item {
                                 font.pixelSize: Design.Typography.label
                                 wrapMode: Text.WordWrap
                                 enabled: UiPreferences.edgeScrollEnabled
+                            }
+
+                            Label {
+                                text: qsTr("Camera pan speed:")
+                                color: Theme.textSub
+                                font.pixelSize: Design.Typography.bodyLarge
+                            }
+
+                            RowLayout {
+                                Layout.fillWidth: true
+                                spacing: Theme.spacingMedium
+
+                                Design.IronSlider {
+                                    id: camera_pan_speed_slider
+
+                                    Layout.fillWidth: true
+                                    from: UiPreferences.minCameraSpeedScale
+                                    to: UiPreferences.maxCameraSpeedScale
+                                    stepSize: 0.05
+                                    snapMode: Slider.SnapAlways
+                                    value: UiPreferences.cameraPanSpeed
+                                    onMoved: UiPreferences.cameraPanSpeed = value
+                                }
+
+                                Label {
+                                    text: Design.Numerals.percent(camera_pan_speed_slider.value * 100)
+                                    color: Theme.textMain
+                                    font.pixelSize: Design.Typography.bodyLarge
+                                    Layout.preferredWidth: 96
+                                    horizontalAlignment: Text.AlignRight
+                                }
+                            }
+
+                            Label {
+                                text: qsTr("Camera zoom speed:")
+                                color: Theme.textSub
+                                font.pixelSize: Design.Typography.bodyLarge
+                            }
+
+                            RowLayout {
+                                Layout.fillWidth: true
+                                spacing: Theme.spacingMedium
+
+                                Design.IronSlider {
+                                    id: camera_zoom_speed_slider
+
+                                    Layout.fillWidth: true
+                                    from: UiPreferences.minCameraSpeedScale
+                                    to: UiPreferences.maxCameraSpeedScale
+                                    stepSize: 0.05
+                                    snapMode: Slider.SnapAlways
+                                    value: UiPreferences.cameraZoomSpeed
+                                    onMoved: UiPreferences.cameraZoomSpeed = value
+                                }
+
+                                Label {
+                                    text: Design.Numerals.percent(camera_zoom_speed_slider.value * 100)
+                                    color: Theme.textMain
+                                    font.pixelSize: Design.Typography.bodyLarge
+                                    Layout.preferredWidth: 96
+                                    horizontalAlignment: Text.AlignRight
+                                }
+                            }
+
+                            Label {
+                                text: qsTr("Camera rotation speed:")
+                                color: Theme.textSub
+                                font.pixelSize: Design.Typography.bodyLarge
+                            }
+
+                            RowLayout {
+                                Layout.fillWidth: true
+                                spacing: Theme.spacingMedium
+
+                                Design.IronSlider {
+                                    id: camera_rotation_speed_slider
+
+                                    Layout.fillWidth: true
+                                    from: UiPreferences.minCameraSpeedScale
+                                    to: UiPreferences.maxCameraSpeedScale
+                                    stepSize: 0.05
+                                    snapMode: Slider.SnapAlways
+                                    value: UiPreferences.cameraRotationSpeed
+                                    onMoved: UiPreferences.cameraRotationSpeed = value
+                                }
+
+                                Label {
+                                    text: Design.Numerals.percent(camera_rotation_speed_slider.value * 100)
+                                    color: Theme.textMain
+                                    font.pixelSize: Design.Typography.bodyLarge
+                                    Layout.preferredWidth: 96
+                                    horizontalAlignment: Text.AlignRight
+                                }
+                            }
+
+                            Label {
+                                text: qsTr("Scales keyboard panning, zooming and rotation; drag and minimap movement stay unchanged.")
+                                color: Theme.textDim
+                                font.pixelSize: Design.Typography.label
+                                wrapMode: Text.WordWrap
+                                Layout.columnSpan: 2
+                                Layout.fillWidth: true
                             }
                         }
 
