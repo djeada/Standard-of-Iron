@@ -919,22 +919,31 @@ void GameEngine::render(int pixel_width, int pixel_height) {
     std::unique_lock<std::recursive_mutex> frame_lock(m_frame_mutex, std::defer_lock);
     {
       const FrameLockWaiter waiter(m_frame_lock_waiters);
-      frame_lock.lock();
+      auto const deadline =
+          std::chrono::steady_clock::now() + k_render_effects_lock_budget;
+      while (!frame_lock.try_lock()) {
+        if (std::chrono::steady_clock::now() >= deadline) {
+          break;
+        }
+        std::this_thread::yield();
+      }
     }
-    App::Core::FrameUiCoordinator::render_effects(
-        {.renderer = m_renderer.get(),
-         .world = m_world,
-         .command_controller = m_command_controller.get(),
-         .local_owner_id = m_runtime.local_owner_id,
-         .commander_rally_preview_pos =
-             m_commander_view_model->rally_preview_position(),
-         .attack_targeting = &m_attack_targeting,
-         .attack_range_rings = &m_attack_range_rings,
-         .order_markers = &m_order_markers.markers(),
-         .target_focus = &m_target_focus,
-         .interaction_targeting = &m_interaction_targeting,
-         .objective_marker = m_mission_stage_tracker.active_target()},
-        [this]() { m_commander_view_model->render_effects(); });
+    if (frame_lock.owns_lock()) {
+      App::Core::FrameUiCoordinator::render_effects(
+          {.renderer = m_renderer.get(),
+           .world = m_world,
+           .command_controller = m_command_controller.get(),
+           .local_owner_id = m_runtime.local_owner_id,
+           .commander_rally_preview_pos =
+               m_commander_view_model->rally_preview_position(),
+           .attack_targeting = &m_attack_targeting,
+           .attack_range_rings = &m_attack_range_rings,
+           .order_markers = &m_order_markers.markers(),
+           .target_focus = &m_target_focus,
+           .interaction_targeting = &m_interaction_targeting,
+           .objective_marker = m_mission_stage_tracker.active_target()},
+          [this]() { m_commander_view_model->render_effects(); });
+    }
   }
   m_renderer->end_frame();
 

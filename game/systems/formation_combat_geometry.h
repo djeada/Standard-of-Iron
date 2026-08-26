@@ -105,6 +105,10 @@ resolve_layout(const Engine::Core::Entity& entity) -> FormationLayout;
                                            const FormationLayout& base_layout)
     -> std::vector<SoldierSpatialAnchor>;
 
+void soldier_spatial_anchors_into(const Engine::Core::Entity& entity,
+                                  const FormationLayout& base_layout,
+                                  std::vector<SoldierSpatialAnchor>& result);
+
 [[nodiscard]] auto living_slot_indices(const Engine::Core::Entity& entity,
                                        int total_count) -> std::vector<std::uint16_t>;
 

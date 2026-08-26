@@ -109,12 +109,30 @@ public:
 
   void mark_obstruction_released();
 
+  void mark_obstruction_released_at(float center_x, float center_z);
+
   [[nodiscard]] auto obstruction_revision() const -> std::uint64_t;
+
+  struct ObstructionRelease {
+    QVector3D center;
+    bool located{false};
+  };
+
+  [[nodiscard]] auto last_obstruction_release() const -> ObstructionRelease;
 
   auto find_path(const Point& start,
                  const Point& end,
                  Passability passability = Passability::Light,
                  float clearance_radius = 0.0F) -> std::vector<Point>;
+
+  static constexpr std::uint32_t k_unreachable_region = 0U;
+
+  [[nodiscard]] auto region_of(const Point& cell,
+                               Passability passability) -> std::uint32_t;
+
+  [[nodiscard]] auto can_reach(const Point& start,
+                               const Point& end,
+                               Passability passability = Passability::Light) -> bool;
 
   [[nodiscard]] auto navigation_revision() const -> std::uint64_t {
     return m_navigation_revision.load(std::memory_order_acquire);
@@ -233,6 +251,23 @@ private:
   static void push_open_node(SearchBuffers& buffers, const QueueNode& node);
   static auto pop_open_node(SearchBuffers& buffers) -> QueueNode;
 
+  struct RegionMap {
+    std::vector<std::uint32_t> labels;
+    std::uint64_t revision{0};
+    bool built{false};
+  };
+
+  static constexpr std::size_t k_passability_count = 2U;
+
+  void region_labels(const Point& first,
+                     const Point& second,
+                     Passability passability,
+                     std::uint32_t& first_label,
+                     std::uint32_t& second_label);
+  void rebuild_region_map(RegionMap& map, Passability passability) const;
+  [[nodiscard]] auto label_at(const RegionMap& map,
+                              const Point& cell) const -> std::uint32_t;
+
   void process_dirty_regions();
 
   void update_region(int min_x, int max_x, int min_z, int max_z);
@@ -254,6 +289,9 @@ private:
   bool m_full_update_required{true};
   std::atomic<std::uint64_t> m_applied_world_props_revision{0};
   std::atomic<std::uint64_t> m_obstruction_revision{0};
+  std::atomic<float> m_obstruction_center_x{0.0F};
+  std::atomic<float> m_obstruction_center_z{0.0F};
+  std::atomic<bool> m_obstruction_center_located{false};
   std::atomic<std::uint64_t> m_applied_terrain_topology_revision{0};
   std::unordered_map<int, CellValue> m_world_prop_cells;
   std::vector<bool> m_forest_cells;
@@ -261,6 +299,8 @@ private:
   std::atomic<std::uint64_t> m_navigation_revision{1};
   std::uint64_t m_path_cache_revision{0};
   std::unordered_map<PathCacheKey, std::vector<Point>, PathCacheKeyHash> m_path_cache;
+  mutable std::mutex m_region_mutex;
+  std::array<RegionMap, k_passability_count> m_region_maps;
 };
 
 } // namespace Game::Systems

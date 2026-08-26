@@ -658,6 +658,7 @@ add_library(
     app/session/skirmish_runtime_coordinator.cpp
     app/session/world_bootstrap.cpp
     # app/commander -- the first-person control mode and its camera.
+    app/commander/commander_abilities.cpp
     app/commander/commander_camera_rig.cpp
     app/commander/commander_control_controller.cpp
     app/commander/commander_motor.cpp
