@@ -772,6 +772,7 @@ void GameEngine::update_presentation(float dt) {
 
   const float real_dt = dt;
   m_order_markers.update(dt, m_world);
+  announce_player_defeats(real_dt);
   m_activity_view_model->advance_feedback(dt);
 
   const float simulation_time_scale =
@@ -829,6 +830,29 @@ void GameEngine::update_presentation(float dt) {
     sync_target_focus_markers();
     update_tutorial(real_dt);
   }
+}
+
+void GameEngine::announce_player_defeats(float dt) {
+  if (m_world == nullptr || m_level.is_spectator_mode) {
+    return;
+  }
+
+  m_player_defeat_watcher.update(
+      *m_world, m_runtime.local_owner_id, dt, [this](const auto& defeat) {
+        QString text;
+        if (defeat.commander_name.isEmpty()) {
+          text = defeat.ally
+                     ? tr("Our ally %1 has been defeated.").arg(defeat.owner_name)
+                     : tr("%1 has been defeated.").arg(defeat.owner_name);
+        } else if (defeat.ally) {
+          text = tr("Our ally %1 is finished - %2 has fallen.")
+                     .arg(defeat.owner_name, defeat.commander_name);
+        } else {
+          text = tr("%1 is finished - %2 has fallen.")
+                     .arg(defeat.owner_name, defeat.commander_name);
+        }
+        emit player_defeated(text, defeat.ally, defeat.owner_id);
+      });
 }
 
 void GameEngine::publish_frame_snapshots() {
@@ -1124,7 +1148,9 @@ void GameEngine::handle_order_feedback(const App::Core::OrderOutcome& outcome) {
     return;
   }
 
-  m_order_markers.push(outcome, m_world);
+  if (const auto* marker = m_order_markers.push(outcome, m_world)) {
+    m_minimap_view_model->note_order_marker(*marker);
+  }
 
   {
     App::Core::PlayerFeedbackEvent event;

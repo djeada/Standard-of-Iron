@@ -112,10 +112,6 @@
         <translation>Delivering</translation>
     </message>
     <message>
-        <source>Carrying its load to the barracks.</source>
-        <translation>Carrying its load to the barracks.</translation>
-    </message>
-    <message>
         <source>Healing</source>
         <translation>Healing</translation>
     </message>
@@ -194,6 +190,18 @@
     <message>
         <source>Slaughtering a sheep for food.</source>
         <translation>Slaughtering a sheep for food.</translation>
+    </message>
+    <message>
+        <source>Carrying its load to the barracks; it cannot be interrupted until the load is dropped off.</source>
+        <translation>Carrying its load to the barracks; it cannot be interrupted until the load is dropped off.</translation>
+    </message>
+    <message>
+        <source>Cannot be interrupted</source>
+        <translation>Cannot be interrupted</translation>
+    </message>
+    <message>
+        <source>Hauling a load to the barracks. New orders wait until the load is dropped off.</source>
+        <translation>Hauling a load to the barracks. New orders wait until the load is dropped off.</translation>
     </message>
 </context>
 <context>
@@ -1845,10 +1853,6 @@ This may be a skirmish, or objectives have not been configured.</translation>
         <translation>Encirclement needs at least three units.</translation>
     </message>
     <message>
-        <source>Forming up</source>
-        <translation>Forming up</translation>
-    </message>
-    <message>
         <source>Formed</source>
         <translation>Formed</translation>
     </message>
@@ -1857,8 +1861,20 @@ This may be a skirmish, or objectives have not been configured.</translation>
         <translation>Disrupted</translation>
     </message>
     <message>
-        <source>Breaking</source>
-        <translation>Breaking</translation>
+        <source>Reforming</source>
+        <translation>Reforming</translation>
+    </message>
+    <message>
+        <source>Opening</source>
+        <translation>Opening</translation>
+    </message>
+    <message>
+        <source>Traversing</source>
+        <translation>Traversing</translation>
+    </message>
+    <message>
+        <source>Arrived</source>
+        <translation>Arrived</translation>
     </message>
 </context>
 <context>
@@ -2312,14 +2328,6 @@ This may be a skirmish, or objectives have not been configured.</translation>
 <context>
     <name>GameEngine</name>
     <message>
-        <source>Maximum troop limit reached. Cannot produce more units.</source>
-        <translation>Maximum troop limit reached. Cannot produce more units.</translation>
-    </message>
-    <message>
-        <source>Not enough manpower. Build homes or wait for families.</source>
-        <translation>Not enough manpower. Build homes or wait for families.</translation>
-    </message>
-    <message>
         <source>Cannot start skirmish: renderer not initialized</source>
         <translation>Cannot start skirmish: renderer not initialized</translation>
     </message>
@@ -2350,6 +2358,30 @@ This may be a skirmish, or objectives have not been configured.</translation>
     <message>
         <source>Cannot play replay: unknown launch kind &apos;%1&apos;</source>
         <translation>Cannot play replay: unknown launch kind &apos;%1&apos;</translation>
+    </message>
+    <message>
+        <source>Our ally %1 has been defeated.</source>
+        <translation>Our ally %1 has been defeated.</translation>
+    </message>
+    <message>
+        <source>%1 has been defeated.</source>
+        <translation>%1 has been defeated.</translation>
+    </message>
+    <message>
+        <source>Our ally %1 is finished - %2 has fallen.</source>
+        <translation>Our ally %1 is finished - %2 has fallen.</translation>
+    </message>
+    <message>
+        <source>%1 is finished - %2 has fallen.</source>
+        <translation>%1 is finished - %2 has fallen.</translation>
+    </message>
+    <message>
+        <source>Troop limit reached.</source>
+        <translation>Troop limit reached.</translation>
+    </message>
+    <message>
+        <source>Not enough manpower — build a home to raise more families.</source>
+        <translation>Not enough manpower — build a home to raise more families.</translation>
     </message>
 </context>
 <context>
@@ -2392,6 +2424,13 @@ This may be a skirmish, or objectives have not been configured.</translation>
     <message>
         <source>High plus contact-hardening shadows, foliage translucency, extra terrain detail and 8x anti-aliasing. Needs a strong GPU.</source>
         <translation>High plus contact-hardening shadows, foliage translucency, extra terrain detail and 8x anti-aliasing. Needs a strong GPU.</translation>
+    </message>
+</context>
+<context>
+    <name>HUD</name>
+    <message>
+        <source>%1 FPS</source>
+        <translation>%1 FPS</translation>
     </message>
 </context>
 <context>
@@ -3841,6 +3880,22 @@ Unseen: never scouted.</translation>
     <message>
         <source>Unit details</source>
         <translation>Unit details</translation>
+    </message>
+    <message>
+        <source>%1/%2</source>
+        <translation>%1/%2</translation>
+    </message>
+    <message>
+        <source>%1 soldiers</source>
+        <translation>%1 soldiers</translation>
+    </message>
+    <message>
+        <source>SOLDIERS</source>
+        <translation>SOLDIERS</translation>
+    </message>
+    <message>
+        <source> soldiers — </source>
+        <translation> soldiers — </translation>
     </message>
 </context>
 <context>
@@ -6108,6 +6163,10 @@ to see preview</translation>
         <source>Not enough resources.</source>
         <translation>Not enough resources.</translation>
     </message>
+    <message>
+        <source>Hauling a load - it cannot be interrupted until the load is dropped off.</source>
+        <translation>Hauling a load - it cannot be interrupted until the load is dropped off.</translation>
+    </message>
 </context>
 <context>
     <name>OutcomeLayout</name>
@@ -6161,6 +6220,13 @@ to see preview</translation>
     <message>
         <source>Every slot on this map is taken</source>
         <translation>Every slot on this map is taken</translation>
+    </message>
+</context>
+<context>
+    <name>PlayerDefeatWatcher</name>
+    <message>
+        <source>Player %1</source>
+        <translation>Player %1</translation>
     </message>
 </context>
 <context>
@@ -7063,6 +7129,10 @@ Builders reap it for the food that recruits civilians</translation>
         <source>No target under the cursor</source>
         <translation>No target under the cursor</translation>
     </message>
+    <message>
+        <source>Hauling a load - cannot be interrupted</source>
+        <translation>Hauling a load - cannot be interrupted</translation>
+    </message>
 </context>
 <context>
     <name>RpgFpvOverlay</name>
@@ -7641,6 +7711,58 @@ Builders reap it for the food that recruits civilians</translation>
     <message>
         <source>Numbers are a readout, not the feedback. Combat stays readable from motion, sound and hit reactions with them off.</source>
         <translation>Numbers are a readout, not the feedback. Combat stays readable from motion, sound and hit reactions with them off.</translation>
+    </message>
+    <message>
+        <source>Borderless</source>
+        <translation>Borderless</translation>
+    </message>
+    <message>
+        <source>Windowed</source>
+        <translation>Windowed</translation>
+    </message>
+    <message>
+        <source>Fullscreen</source>
+        <translation>Fullscreen</translation>
+    </message>
+    <message>
+        <source>Display Settings</source>
+        <translation>Display Settings</translation>
+    </message>
+    <message>
+        <source>Window Mode:</source>
+        <translation>Window Mode:</translation>
+    </message>
+    <message>
+        <source>VSync</source>
+        <translation>VSync</translation>
+    </message>
+    <message>
+        <source>Synchronises frames with your display to remove tearing. Toggling it takes effect the next time the game starts.</source>
+        <translation>Synchronises frames with your display to remove tearing. Toggling it takes effect the next time the game starts.</translation>
+    </message>
+    <message>
+        <source>Show FPS counter</source>
+        <translation>Show FPS counter</translation>
+    </message>
+    <message>
+        <source>Displays a small frame-rate readout during battle</source>
+        <translation>Displays a small frame-rate readout during battle</translation>
+    </message>
+    <message>
+        <source>Camera pan speed:</source>
+        <translation>Camera pan speed:</translation>
+    </message>
+    <message>
+        <source>Camera zoom speed:</source>
+        <translation>Camera zoom speed:</translation>
+    </message>
+    <message>
+        <source>Camera rotation speed:</source>
+        <translation>Camera rotation speed:</translation>
+    </message>
+    <message>
+        <source>Scales keyboard panning, zooming and rotation; drag and minimap movement stay unchanged.</source>
+        <translation>Scales keyboard panning, zooming and rotation; drag and minimap movement stay unchanged.</translation>
     </message>
 </context>
 <context>

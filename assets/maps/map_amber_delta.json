@@ -2223,8 +2223,8 @@
     {
       "id": "ferry_house_3_ruin",
       "type": "ruins",
-      "x": 77.0,
-      "z": 250.0,
+      "x": 78.02,
+      "z": 250.51,
       "scale": 0.9,
       "rotation": 30.0
     },
@@ -2784,42 +2784,42 @@
   "firecamps": [
     {
       "id": "p1_fire",
-      "x": 53.0,
+      "x": 50.61,
       "z": 58.0,
       "intensity": 1.05,
       "radius": 3.4
     },
     {
       "id": "p2_fire",
-      "x": 41.0,
+      "x": 38.61,
       "z": 150.0,
       "intensity": 1.05,
       "radius": 3.4
     },
     {
       "id": "p3_fire",
-      "x": 53.0,
+      "x": 50.61,
       "z": 242.0,
       "intensity": 1.05,
       "radius": 3.4
     },
     {
       "id": "p4_fire",
-      "x": 247.0,
+      "x": 249.38,
       "z": 58.0,
       "intensity": 1.05,
       "radius": 3.4
     },
     {
       "id": "p5_fire",
-      "x": 259.0,
+      "x": 261.38,
       "z": 150.0,
       "intensity": 1.05,
       "radius": 3.4
     },
     {
       "id": "p6_fire",
-      "x": 247.0,
+      "x": 249.38,
       "z": 242.0,
       "intensity": 1.05,
       "radius": 3.4

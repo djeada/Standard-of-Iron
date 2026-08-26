@@ -57,6 +57,7 @@
 #include "app/world/ambient_state_manager.h"
 #include "app/world/focus_target.h"
 #include "app/world/minimap_manager.h"
+#include "app/world/player_defeat_watcher.h"
 #include "game/audio/audio_event_handler.h"
 #include "game/command/command.h"
 #include "game/command/replay.h"
@@ -307,6 +308,7 @@ public:
   void simulate(float dt);
   void update_presentation(float dt);
   void publish_frame_snapshots();
+  void announce_player_defeats(float dt);
   void capture_render_selection();
   void update(float dt);
   void render(int pixel_width, int pixel_height);
@@ -513,6 +515,7 @@ private:
   QVariantMap m_interaction_target_hint;
   std::vector<Game::Systems::AttackRangeRing> m_attack_range_rings;
   App::Core::OrderMarkerStore m_order_markers;
+  PlayerDefeatWatcher m_player_defeat_watcher;
   App::Core::PlayerFeedbackBus m_player_feedback;
   std::vector<Game::Systems::TargetFocusMarker> m_target_focus;
   QVariantMap m_inspect_target;
@@ -627,6 +630,7 @@ signals:
   void game_mode_changed();
   void commander_control_available_changed();
   void mission_announcement(QString text);
+  void player_defeated(QString text, bool ally, int owner_id);
   void order_feedback(QString kind, bool accepted, QString message, QString failure);
   void autosave_settings_changed();
 };

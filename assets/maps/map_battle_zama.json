@@ -4837,8 +4837,8 @@
             "rotation": 235.8,
             "scale": 1.06,
             "type": "statue",
-            "x": 657.21,
-            "z": 412.43
+            "x": 658.01,
+            "z": 411.52
         },
         {
             "rotation": 264.2,
@@ -5192,8 +5192,8 @@
             "landmark": "zama_desert_shrine_way",
             "scale": 1,
             "type": "ruins",
-            "x": 316,
-            "z": 274
+            "x": 316.1,
+            "z": 273.84
         },
         {
             "landmark": "zama_desert_shrine_way",
@@ -5547,8 +5547,8 @@
             "radius": 4,
             "scale": 1,
             "type": "firecamp",
-            "x": 712,
-            "z": 188.32
+            "x": 712.0,
+            "z": 186.84
         },
         {
             "authored_camp": true,
@@ -5568,8 +5568,8 @@
             "authored_camp": true,
             "scale": 1,
             "type": "supply_cart",
-            "x": 707.45,
-            "z": 188.73
+            "x": 705.7,
+            "z": 188.24
         },
         {
             "authored_camp": true,
@@ -5651,8 +5651,8 @@
             "radius": 3.4,
             "scale": 1,
             "type": "firecamp",
-            "x": 433.6,
-            "z": 183.16
+            "x": 433.02,
+            "z": 184.09
         }
     ]
 }

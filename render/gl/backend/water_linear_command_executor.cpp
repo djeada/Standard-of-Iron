@@ -315,17 +315,51 @@ void Backend::execute_water_linear_commands(const PreparedBatch& prepared,
       if (bridge_shader == nullptr) {
         break;
       }
+      const auto& bridge_uniforms = m_water_pipeline->m_bridge_uniforms;
+      const auto& fog_mask = feature.fog_mask;
       if (m_last_bound_shader != bridge_shader) {
         bridge_shader->use();
-        bridge_shader->set_uniform(m_water_pipeline->m_bridge_uniforms.light_direction,
-                                   m_light_dir);
+        bridge_shader->set_uniform(bridge_uniforms.light_direction, m_light_dir);
         m_last_bound_shader = bridge_shader;
         m_last_bound_texture = nullptr;
       }
+
+      const bool has_fog_mask = fog_mask.enabled && (fog_mask.texture != nullptr);
+
+      std::optional<BlendScope> reveal_blend_scope;
+      if (has_fog_mask) {
+
+        reveal_blend_scope.emplace(true);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        glDepthMask(GL_TRUE);
+      }
+      if (bridge_uniforms.has_fog_mask != Shader::InvalidUniform) {
+        bridge_shader->set_uniform(bridge_uniforms.has_fog_mask, has_fog_mask ? 1 : 0);
+      }
+      if (has_fog_mask) {
+        if (bridge_uniforms.fog_mask_size != Shader::InvalidUniform) {
+          bridge_shader->set_uniform(bridge_uniforms.fog_mask_size, fog_mask.size);
+        }
+        if (bridge_uniforms.fog_mask_tile_size != Shader::InvalidUniform) {
+          bridge_shader->set_uniform(bridge_uniforms.fog_mask_tile_size,
+                                     fog_mask.tile_size);
+        }
+        if (bridge_uniforms.explored_alpha != Shader::InvalidUniform) {
+          bridge_shader->set_uniform(bridge_uniforms.explored_alpha,
+                                     feature.visibility.explored_alpha);
+        }
+        fog_mask.texture->bind(TextureUnit::terrain_visibility);
+        m_last_bound_texture = fog_mask.texture;
+        if (bridge_uniforms.fog_mask_texture != Shader::InvalidUniform) {
+          bridge_shader->set_uniform(bridge_uniforms.fog_mask_texture,
+                                     TextureUnit::terrain_visibility);
+        }
+      }
+
       draw_feature_model(bridge_shader,
-                         m_water_pipeline->m_bridge_uniforms.model,
-                         m_water_pipeline->m_bridge_uniforms.mvp,
-                         m_water_pipeline->m_bridge_uniforms.color);
+                         bridge_uniforms.model,
+                         bridge_uniforms.mvp,
+                         bridge_uniforms.color);
       break;
     }
     case LinearFeatureKind::Road: {

@@ -3292,8 +3292,8 @@
             "rotation": 0.7000000000000001,
             "scale": 1.19,
             "type": "boulder",
-            "x": 99.97,
-            "z": 110.25
+            "x": 99.96,
+            "z": 109.75
         },
         {
             "rotation": 1.35,
@@ -3341,15 +3341,15 @@
             "rotation": 2.16,
             "scale": 0.93,
             "type": "iron_ore",
-            "x": 89.38,
-            "z": 106.76
+            "x": 86.95,
+            "z": 107.09
         },
         {
             "rotation": 0.73,
             "scale": 1.01,
             "type": "iron_ore",
-            "x": 82.29,
-            "z": 112.85000000000001
+            "x": 81.93,
+            "z": 113.03
         },
         {
             "rotation": 3.59,
@@ -3580,8 +3580,8 @@
             "radius": 3.1,
             "scale": 1,
             "type": "firecamp",
-            "x": 104.19,
-            "z": 104.05
+            "x": 103.86,
+            "z": 104.06
         },
         {
             "rotation": 200.6,
@@ -4359,8 +4359,8 @@
             "authored_camp": true,
             "scale": 1,
             "type": "supply_cart",
-            "x": 82.2,
-            "z": 108.8
+            "x": 81.58,
+            "z": 108.93
         },
         {
             "authored_camp": true,
@@ -4408,8 +4408,8 @@
             "authored_camp": true,
             "scale": 1,
             "type": "supply_cart",
-            "x": 201.20000000000002,
-            "z": 365.6
+            "x": 201.41,
+            "z": 365.75
         },
         {
             "authored_camp": true,

@@ -147,6 +147,24 @@ void WaterPipeline::cache_bridge_uniforms() {
   m_bridge_uniforms.color = m_bridge_shader->uniform_handle("u_color");
   m_bridge_uniforms.light_direction =
       m_bridge_shader->optional_uniform_handle("u_light_direction");
+  m_bridge_uniforms.visibility_texture =
+      m_bridge_shader->optional_uniform_handle("u_visibility_tex");
+  m_bridge_uniforms.visibility_size =
+      m_bridge_shader->optional_uniform_handle("u_visibility_size");
+  m_bridge_uniforms.visibility_tile_size =
+      m_bridge_shader->optional_uniform_handle("u_visibility_tile_size");
+  m_bridge_uniforms.explored_alpha =
+      m_bridge_shader->optional_uniform_handle("u_explored_alpha");
+  m_bridge_uniforms.has_visibility =
+      m_bridge_shader->optional_uniform_handle("u_has_visibility");
+  m_bridge_uniforms.fog_mask_texture =
+      m_bridge_shader->optional_uniform_handle("u_fog_mask_tex");
+  m_bridge_uniforms.fog_mask_size =
+      m_bridge_shader->optional_uniform_handle("u_fog_mask_size");
+  m_bridge_uniforms.fog_mask_tile_size =
+      m_bridge_shader->optional_uniform_handle("u_fog_mask_tile_size");
+  m_bridge_uniforms.has_fog_mask =
+      m_bridge_shader->optional_uniform_handle("u_has_fog_mask");
 }
 
 void WaterPipeline::cache_road_uniforms() {

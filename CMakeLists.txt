@@ -697,6 +697,7 @@ add_library(
     app/world/combat_feedback.cpp
     app/world/focus_target.cpp
     app/world/minimap_manager.cpp
+    app/world/player_defeat_watcher.cpp
     app/world/selection_query_service.cpp
     app/world/unit_queries.cpp
     app/world/visibility_coordinator.cpp

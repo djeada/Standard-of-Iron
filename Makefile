@@ -545,13 +545,17 @@ TS_SOURCE_DIRS := ui app game scene render main.cpp
 # stub it can read. Without this the catalogues silently miss a few hundred
 # strings and the coverage gate below still reports success.
 TS_ASSET_STUB := translations/asset_strings_generated.cpp
+# The number heuristic fills patterns like %1/%2 with junk ("%1% {1/%2?}")
+# instead of leaving them empty, and that junk blocks the source-language
+# seeder, so the entry stays unfinished and trips translations-check forever.
+LUPDATE_FLAGS := -no-obsolete -locations none -disable-heuristic number
 
 ## Rescan sources for translatable strings and refresh the .ts catalogues.
 translations:
 	@echo "$(BOLD)$(BLUE)Extracting player-visible strings from assets...$(RESET)"
 	@$(PYTHON) scripts/extract-asset-strings.py
 	@echo "$(BOLD)$(BLUE)Updating translation catalogues...$(RESET)"
-	@$(LUPDATE) $(TS_SOURCE_DIRS) $(TS_ASSET_STUB) -no-obsolete -locations none -ts $(TS_FILES)
+	@$(LUPDATE) $(TS_SOURCE_DIRS) $(TS_ASSET_STUB) $(LUPDATE_FLAGS) -ts $(TS_FILES)
 	@$(PYTHON) scripts/seed-source-translations.py
 	@bash scripts/ts2csv.sh > /dev/null
 	@echo "$(GREEN)✓ Catalogues and translator CSVs updated (.qm build on next compile)$(RESET)"
@@ -564,7 +568,7 @@ translations-check:
 	@tmp=$$(mktemp -d) && trap 'rm -rf "$$tmp"' EXIT && \
 	cp $(TS_FILES) "$$tmp/" && \
 	probe=""; for ts in $(TS_FILES); do probe="$$probe $$tmp/$$(basename $$ts)"; done && \
-	$(LUPDATE) $(TS_SOURCE_DIRS) $(TS_ASSET_STUB) -no-obsolete -locations none -ts $$probe >/dev/null && \
+	$(LUPDATE) $(TS_SOURCE_DIRS) $(TS_ASSET_STUB) $(LUPDATE_FLAGS) -ts $$probe >/dev/null && \
 	for ts in $(TS_FILES); do \
 		if ! diff -q "$$ts" "$$tmp/$$(basename $$ts)" >/dev/null; then \
 			echo "$(RED)$$ts is stale. Run 'make translations'.$(RESET)"; \

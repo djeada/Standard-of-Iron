@@ -39,7 +39,7 @@ def seed(text: str) -> tuple[str, int]:
         nonlocal count
         source, gap, existing = match.group(1), match.group(2), match.group(3)
 
-        if existing and existing != source:
+        if existing == source:
             return match.group(0)
         count += 1
         return f"<source>{source}</source>{gap}<translation>{source}</translation>"
