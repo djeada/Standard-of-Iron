@@ -61,6 +61,7 @@ enum class AICommandType {
   SetRallyPoint,
   StartBuilderConstruction,
   StartBuilderHarvest,
+  DeliverCivilians,
   TriggerCommanderRally,
   TriggerCommanderAura
 };
@@ -93,6 +94,11 @@ struct ProductionSnapshot {
   float time_remaining = 0.0F;
   int produced_count = 0;
   int max_units = 0;
+
+  // What the building can still spend on recruits. A barracks opens with a
+  // fixed manpower budget and refills only when a civilian walks in from a
+  // home, so a plan that ignores this asks for troops that are quietly refused.
+  int manpower_available = 0;
   Game::Units::TroopType product_type = Game::Units::TroopType::Archer;
   bool rally_set = false;
   float rally_x = 0.0F;
@@ -330,6 +336,13 @@ struct AIContext {
   int barracks_count = 0;
   int marketplace_count = 0;
   int assembled_unit_count = 0;
+
+  // Manpower the recruitment buildings can still spend, and civilians the
+  // settlement can still raise. A home yields a fixed number of civilians and
+  // is then finished for good, so an army that outgrows its homes stops dead
+  // unless more of them go up.
+  int recruitment_manpower_available = 0;
+  int home_civilians_remaining = 0;
   int effective_reserve_units = 0;
   int effective_harass_units = 0;
   int outpost_barracks_count = 0;

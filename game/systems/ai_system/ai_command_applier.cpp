@@ -1,5 +1,6 @@
 #include "ai_command_applier.h"
 
+#include <QDebug>
 #include <QVector3D>
 #include <qvectornd.h>
 
@@ -19,9 +20,11 @@
 #include "../combat_system/combat_utils.h"
 #include "../command_service.h"
 #include "../construction_cost_catalog.h"
+#include "../nation_registry.h"
 #include "../owner_queries.h"
 #include "../player_resource_registry.h"
 #include "../production_service.h"
+#include "../troop_profile_service.h"
 #include "ai_utils.h"
 #include "systems/ai_system/ai_types.h"
 #include "units/spawn_type.h"
@@ -34,11 +37,59 @@ namespace {
 void submit(Engine::Core::World& world, int owner_id, Game::Command::Payload payload) {
   Game::Command::submit(world, Game::Command::Source::AI, owner_id, std::move(payload));
 }
+
+[[nodiscard]] auto production_refusal_name(ProductionResult result) -> const char* {
+  switch (result) {
+  case ProductionResult::Success:
+    return "success";
+  case ProductionResult::NoBarracks:
+    return "no_barracks";
+  case ProductionResult::InsufficientManpower:
+    return "insufficient_manpower";
+  case ProductionResult::InsufficientResources:
+    return "insufficient_resources";
+  case ProductionResult::PerBarracksLimitReached:
+    return "per_barracks_limit";
+  case ProductionResult::WrongBuilding:
+    return "wrong_building";
+  case ProductionResult::GlobalTroopLimitReached:
+    return "global_troop_limit";
+  case ProductionResult::CommanderNotRecruitable:
+    return "commander_not_recruitable";
+  case ProductionResult::AlreadyInProgress:
+    return "already_in_progress";
+  case ProductionResult::QueueFull:
+    return "queue_full";
+  }
+  return "unknown";
+}
+
+// A refused recruitment leaves no trace anywhere: the command is dropped and
+// the computer simply never gets an army. SOI_AI_TRACE=1 says why.
+void trace_refused_production(int owner_id,
+                              Game::Units::TroopType product,
+                              ProductionResult ruling,
+                              const Engine::Core::ProductionComponent& production,
+                              int cost) {
+  static const bool enabled = !qEnvironmentVariableIsEmpty("SOI_AI_TRACE");
+  if (!enabled) {
+    return;
+  }
+  qInfo().nospace() << "SOI_AI_TRACE refused player=" << owner_id << " product="
+                    << QString::fromStdString(Game::Units::troop_typeToString(product))
+                    << " reason=" << production_refusal_name(ruling) << " cost=" << cost
+                    << " reserve=" << production.manpower_available
+                    << " produced=" << production.produced_count
+                    << " max_units=" << production.max_units
+                    << " queue=" << production.production_queue.size()
+                    << " in_progress=" << production.in_progress;
+}
 } // namespace
 
-void AICommandApplier::apply(Engine::Core::World& world,
+auto AICommandApplier::apply(Engine::Core::World& world,
                              int ai_owner_id,
-                             const std::vector<AICommand>& commands) {
+                             const std::vector<AICommand>& commands) -> ApplyReport {
+  ApplyReport report;
 
   for (const auto& command : commands) {
     switch (command.type) {
@@ -119,15 +170,43 @@ void AICommandApplier::apply(Engine::Core::World& world,
       if (production == nullptr || unit == nullptr || unit->owner_id != ai_owner_id) {
         break;
       }
-      if (Game::Systems::ProductionService::can_start_production(
-              world, command.building_id, command.product_type) !=
-          Game::Systems::ProductionResult::Success) {
+      if (const auto ruling = Game::Systems::ProductionService::can_start_production(
+              world, command.building_id, command.product_type);
+          ruling != Game::Systems::ProductionResult::Success) {
+        ++report.refused_production;
+        trace_refused_production(
+            ai_owner_id,
+            command.product_type,
+            ruling,
+            *production,
+            Game::Systems::TroopProfileService::instance()
+                .get_profile(
+                    Game::Session::session_for(world).nations().get_nation_for_player(
+                        ai_owner_id) != nullptr
+                        ? Game::Session::session_for(world)
+                              .nations()
+                              .get_nation_for_player(ai_owner_id)
+                              ->id
+                        : Game::Systems::NationID::RomanRepublic,
+                    command.product_type)
+                .production.cost);
         break;
       }
       submit(world,
              ai_owner_id,
              Game::Command::Produce{.building = command.building_id,
                                     .product = command.product_type});
+      break;
+    }
+
+    case AICommandType::DeliverCivilians: {
+      if (command.units.empty() || command.building_id == 0) {
+        break;
+      }
+      submit(world,
+             ai_owner_id,
+             Game::Command::DeliverCivilians{.units = command.units,
+                                             .barracks = command.building_id});
       break;
     }
 
@@ -185,6 +264,8 @@ void AICommandApplier::apply(Engine::Core::World& world,
     }
     }
   }
+
+  return report;
 }
 
 } // namespace Game::Systems::AI
