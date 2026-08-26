@@ -4,6 +4,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <cstddef>
 #include <cstdint>
 #include <numbers>
 #include <vector>
@@ -285,8 +286,14 @@ void MovementSystem::process_pending_path_requests(Engine::Core::World& world) {
         ++processed;
         continue;
       }
-      float const goal_dx = movement->get_goal_x() - request.target.x();
-      float const goal_dz = movement->get_goal_y() - request.target.z();
+      float const current_goal_x = movement->get_has_requested_goal()
+                                       ? movement->get_requested_goal_x()
+                                       : movement->get_goal_x();
+      float const current_goal_z = movement->get_has_requested_goal()
+                                       ? movement->get_requested_goal_z()
+                                       : movement->get_goal_y();
+      float const goal_dx = current_goal_x - request.target.x();
+      float const goal_dz = current_goal_z - request.target.z();
       if (goal_dx * goal_dx + goal_dz * goal_dz > 0.01F) {
         ++processed;
         continue;
@@ -322,6 +329,19 @@ void MovementSystem::cancel_pending_path_request(Engine::Core::EntityID entity_i
 
 void MovementSystem::repath_after_obstruction_release(
     Engine::Core::World& world, const std::vector<Engine::Core::Entity*>& movers) {
+  auto* pathfinder = NavGrid::get_pathfinder();
+  auto const release = pathfinder != nullptr ? pathfinder->last_obstruction_release()
+                                             : Pathfinding::ObstructionRelease{};
+
+  struct RepathCandidate {
+    Engine::Core::EntityID entity_id{0};
+    QVector3D goal;
+    float distance_to_release_sq{0.0F};
+  };
+
+  std::vector<RepathCandidate> candidates;
+  candidates.reserve(movers.size());
+
   for (auto* entity : movers) {
     if (entity == nullptr ||
         entity->has_component<Engine::Core::PendingRemovalComponent>()) {
@@ -338,14 +358,58 @@ void MovementSystem::repath_after_obstruction_release(
       continue;
     }
 
-    QVector3D const goal =
+    RepathCandidate candidate;
+    candidate.entity_id = entity->get_id();
+    candidate.goal =
         movement->get_has_requested_goal()
             ? QVector3D(movement->get_requested_goal_x(),
                         0.0F,
                         movement->get_requested_goal_z())
             : QVector3D(movement->get_goal_x(), 0.0F, movement->get_goal_y());
 
-    if (!retarget_unit(world, entity->get_id(), goal)) {
+    auto const* transform = entity->get_component<Engine::Core::TransformComponent>();
+    if (release.located && transform != nullptr) {
+      float const dx = transform->position.x - release.center.x();
+      float const dz = transform->position.z - release.center.z();
+      candidate.distance_to_release_sq = (dx * dx) + (dz * dz);
+    }
+    candidates.push_back(candidate);
+  }
+
+  if (release.located && candidates.size() > k_path_requests_per_tick) {
+    std::partial_sort(candidates.begin(),
+                      candidates.begin() +
+                          static_cast<std::ptrdiff_t>(k_path_requests_per_tick),
+                      candidates.end(),
+                      [](const RepathCandidate& lhs, const RepathCandidate& rhs) {
+                        return lhs.distance_to_release_sq < rhs.distance_to_release_sq;
+                      });
+  }
+
+  std::uint64_t const navigation_revision =
+      pathfinder != nullptr ? pathfinder->navigation_revision() : 0U;
+  std::size_t repathed_now = 0;
+
+  for (auto const& candidate : candidates) {
+    auto* entity = world.get_entity(candidate.entity_id);
+    if (entity == nullptr) {
+      continue;
+    }
+    auto* movement = entity->get_component<Engine::Core::MovementComponent>();
+    if (movement == nullptr) {
+      continue;
+    }
+
+    if (repathed_now < k_path_requests_per_tick) {
+      if (!retarget_unit(world, candidate.entity_id, candidate.goal)) {
+        continue;
+      }
+      ++repathed_now;
+    } else if (!enqueue_pending_path_request(candidate.entity_id,
+                                             candidate.goal,
+                                             movement->get_precise_arrival(),
+                                             navigation_revision,
+                                             movement->get_order_sequence())) {
       continue;
     }
 

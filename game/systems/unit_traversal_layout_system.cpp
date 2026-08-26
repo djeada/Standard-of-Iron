@@ -483,6 +483,7 @@ void update_slot_states(const Engine::Core::TransformComponent& transform,
   }
 
   state.slot_states = std::move(next);
+  ++state.slot_states_revision;
   float max_remaining_ratio = 0.0F;
   state.transition_total_distance = 0.0F;
   state.transition_remaining_distance = 0.0F;

@@ -29,6 +29,8 @@
 namespace Game::Systems {
 
 namespace {
+constexpr int k_stranded_start_recovery_cells = 8;
+
 auto resolve_walkable_target(const QVector3D& target) -> QVector3D {
   return NavGrid::snap_to_walkable_ground(target, 8);
 }
@@ -49,12 +51,13 @@ auto slot_is_reachable(Engine::Core::World& world,
   auto const passability = movement == nullptr || movement->get_can_enter_forest()
                                ? Pathfinding::Passability::Light
                                : Pathfinding::Passability::Heavy;
-  float const clearance = FormationCombat::formation_navigation_clearance(*entity);
-  Point const start =
-      NavGrid::world_to_grid(transform->position.x, transform->position.z);
   Point const target = NavGrid::world_to_grid(destination.x(), destination.z());
-  auto const route = pathfinder->find_path(start, target, passability, clearance);
-  return !route.empty() && route.back() == target;
+  Point const start = Pathfinding::find_nearest_walkable_point(
+      NavGrid::world_to_grid(transform->position.x, transform->position.z),
+      k_stranded_start_recovery_cells,
+      *pathfinder,
+      passability);
+  return pathfinder->can_reach(start, target, passability);
 }
 
 auto rescued_slot_position(Engine::Core::World& world,

@@ -34,11 +34,18 @@ void NavGrid::initialize(int world_width, int world_height) {
       s_pathfinder->mark_navigation_grid_dirty();
     }
   });
-  BuildingCollisionRegistry::set_obstruction_released_hook([]() {
-    if (s_pathfinder != nullptr) {
-      s_pathfinder->mark_obstruction_released();
-    }
-  });
+  BuildingCollisionRegistry::set_obstruction_released_hook(
+      [](const BuildingCollisionRegistry::ObstructionRelease& release) {
+        if (s_pathfinder == nullptr) {
+          return;
+        }
+        if (release.located) {
+          s_pathfinder->mark_obstruction_released_at(release.center_x,
+                                                     release.center_z);
+        } else {
+          s_pathfinder->mark_obstruction_released();
+        }
+      });
 }
 
 auto NavGrid::get_pathfinder() -> Pathfinding* {
