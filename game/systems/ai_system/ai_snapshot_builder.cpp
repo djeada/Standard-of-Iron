@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <cmath>
 #include <memory>
+#include <unordered_map>
 #include <utility>
 #include <vector>
 
@@ -27,6 +28,30 @@ struct VisionSource {
 };
 
 constexpr float k_min_building_vision_range = 18.0F;
+
+// A nation with no economy is a garrison: the state machine never lets it
+// attack or expand, so its troops hold their own ground for the whole match.
+// Resolving that per owner once beats a registry lookup per contact.
+class GarrisonOwners {
+public:
+  explicit GarrisonOwners(const Game::Systems::NationRegistry& nations)
+      : m_nations(&nations) {}
+
+  [[nodiscard]] auto holds_ground(int owner_id) -> bool {
+    auto known = m_resolved.find(owner_id);
+    if (known != m_resolved.end()) {
+      return known->second;
+    }
+    const auto* nation = m_nations->get_nation_for_player(owner_id);
+    const bool garrison = nation != nullptr && !nation->has_economy;
+    m_resolved.emplace(owner_id, garrison);
+    return garrison;
+  }
+
+private:
+  const Game::Systems::NationRegistry* m_nations;
+  std::unordered_map<int, bool> m_resolved;
+};
 
 auto collect_vision_sources(const std::vector<Engine::Core::Entity*>& entities)
     -> std::vector<VisionSource> {
@@ -113,6 +138,7 @@ auto AISnapshotBuilder::build(const Engine::Core::World& world,
 
   auto friendlies = world.get_units_owned_by(ai_owner_id);
   const auto* nation = session.nations().get_nation_for_player(ai_owner_id);
+  GarrisonOwners garrison_owners(session.nations());
   attach_nation(snapshot, ai_owner_id, session.nations());
   snapshot.max_troops_per_player =
       Game::GameConfig::instance().get_max_troops_per_player();
@@ -269,6 +295,7 @@ auto AISnapshotBuilder::build(const Engine::Core::World& world,
       objective.health = unit->health;
       objective.max_health = unit->max_health;
       objective.spawn_type = unit->spawn_type;
+      objective.holds_ground = garrison_owners.holds_ground(unit->owner_id);
       snapshot.strategic_objectives.push_back(std::move(objective));
     }
 
@@ -287,6 +314,7 @@ auto AISnapshotBuilder::build(const Engine::Core::World& world,
     contact.health = unit->health;
     contact.max_health = unit->max_health;
     contact.spawn_type = unit->spawn_type;
+    contact.holds_ground = garrison_owners.holds_ground(unit->owner_id);
 
     snapshot.visible_enemies.push_back(std::move(contact));
   }

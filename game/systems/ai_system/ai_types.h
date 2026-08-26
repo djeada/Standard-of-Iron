@@ -145,6 +145,14 @@ struct ContactSnapshot {
   bool is_building = false;
   int owner_id = 0;
 
+  // True when this contact belongs to a nation that cannot march - one with no
+  // economy, which the state machine never lets leave its own ground. Such a
+  // garrison standing near someone's base is scenery, not an incursion, and a
+  // plan that reads it as a standing threat sits in Defending for the whole
+  // match. It becomes a threat the moment it actually strikes a building, which
+  // arrives on the BuildingAttacked event instead.
+  bool holds_ground = false;
+
   float pos_x = 0.0F;
   float pos_y = 0.0F;
   float pos_z = 0.0F;

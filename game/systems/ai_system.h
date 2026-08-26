@@ -60,6 +60,11 @@ public:
 
   void set_ai_profile(int player_id, const AI::AIPlayerProfile& profile);
 
+  // The plan a player is currently running. A computer stuck in Defending looks
+  // from outside exactly like one that is winning, so a harness that can only
+  // count units cannot tell the difference; this is how it can.
+  [[nodiscard]] auto plan_for(int player_id) const -> const AI::AIContext*;
+
 private:
   struct AIInstance {
     AI::AIContext context;
@@ -94,7 +99,7 @@ private:
   Services m_services;
 
   void initialize_ai_players();
-  void trace_progress();
+  void trace_progress(const Engine::Core::World& world);
 
   static void populate_behavior_registry(AI::AIBehaviorRegistry& registry);
 
