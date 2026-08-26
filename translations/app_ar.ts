@@ -4241,6 +4241,213 @@ This action cannot be undone.</source>
     </message>
 </context>
 <context>
+    <name>LoadingTips</name>
+    <message>
+        <source>A commander who personally investigates every problem soon becomes one of them.</source>
+        <translation>القائد الذي يتفقّد كل مشكلة بنفسه يصير عمّا قريب واحدةً منها.</translation>
+    </message>
+    <message>
+        <source>A formation that becomes scattered is easier to surround and destroy.</source>
+        <translation>التشكيل المتناثر أسهل في تطويقه وتدميره.</translation>
+    </message>
+    <message>
+        <source>A narrow front can prevent a numerically superior enemy from using all of its troops at once.</source>
+        <translation>الجبهة الضيقة تمنع عدوًا يفوقك عددًا من الزجّ بكل قواته دفعة واحدة.</translation>
+    </message>
+    <message>
+        <source>A retreat made early can preserve an army. A retreat made late can become a rout.</source>
+        <translation>الانسحاب المبكر يحفظ جيشًا. والانسحاب المتأخر يصير هزيمة منكرة.</translation>
+    </message>
+    <message>
+        <source>A strong economy cannot help you if the enemy cuts the road between it and your army.</source>
+        <translation>لا ينفعك اقتصاد قوي إن قطع العدو الطريق بينه وبين جيشك.</translation>
+    </message>
+    <message>
+        <source>A unit surrounded on several sides will struggle even if it began the fight at full strength.</source>
+        <translation>الوحدة المطوّقة من عدة جهات تعاني ولو بدأت القتال بكامل قوتها.</translation>
+    </message>
+    <message>
+        <source>A well-defended position is one the enemy has not yet discovered a ridiculous way around.</source>
+        <translation>الموقع الحصين هو الموقع الذي لم يكتشف العدو بعدُ طريقًا سخيفًا للالتفاف حوله.</translation>
+    </message>
+    <message>
+        <source>An army marches on its stomach. The stomach, regrettably, also requires a supply line.</source>
+        <translation>الجيش يزحف على بطنه. والبطن، للأسف، يحتاج هو أيضًا إلى خط إمداد.</translation>
+    </message>
+    <message>
+        <source>Archers perform best when protected from direct melee combat.</source>
+        <translation>يبلغ الرماة أفضل أداء حين يُحمَون من الاشتباك المباشر.</translation>
+    </message>
+    <message>
+        <source>Avoid sending cavalry directly into prepared infantry formations.</source>
+        <translation>تجنّب إرسال الفرسان مباشرةً إلى تشكيلات مشاة مستعدة.</translation>
+    </message>
+    <message>
+        <source>Battles are often decided before contact through positioning, preparation, and logistics.</source>
+        <translation>كثيرًا ما تُحسم المعارك قبل التماس، بالتموضع والاستعداد والإمداد.</translation>
+    </message>
+    <message>
+        <source>Building near resources can reduce the amount of time workers spend carrying supplies.</source>
+        <translation>البناء قرب الموارد يقلل الوقت الذي يقضيه العمّال في نقل المؤن.</translation>
+    </message>
+    <message>
+        <source>Capturing useful infrastructure can be more valuable than destroying it.</source>
+        <translation>الاستيلاء على منشأة نافعة قد يكون أثمن من تدميرها.</translation>
+    </message>
+    <message>
+        <source>Cavalry can arrive quickly. Whether they should have arrived there is another question.</source>
+        <translation>يستطيع الفرسان الوصول سريعًا. أما إن كان ينبغي لهم الوصول إلى هناك فمسألة أخرى.</translation>
+    </message>
+    <message>
+        <source>Cavalry is most effective when attacking exposed flanks or isolated units.</source>
+        <translation>الفرسان أشد فاعلية حين يهاجمون أجنحة مكشوفة أو وحدات معزولة.</translation>
+    </message>
+    <message>
+        <source>Clearing a dangerous area is not the same as securing it. Check what remains nearby.</source>
+        <translation>تطهير منطقة خطرة ليس كتأمينها. تفقّد ما بقي في الجوار.</translation>
+    </message>
+    <message>
+        <source>Concentrating your forces can overwhelm a stronger enemy fighting in separate groups.</source>
+        <translation>حشد قواتك قد يسحق عدوًا أقوى يقاتل في مجموعات متفرقة.</translation>
+    </message>
+    <message>
+        <source>Destroying an enemy army is useful. Preventing it from fighting effectively is often enough.</source>
+        <translation>تدمير جيش العدو نافع. ومنعه من القتال بفاعلية يكفي في الغالب.</translation>
+    </message>
+    <message>
+        <source>Direct commander control can help turn a critical fight, but exposes your commander to greater danger.</source>
+        <translation>التحكم المباشر بالقائد قد يقلب اشتباكًا حاسمًا، لكنه يعرّضه لخطر أكبر.</translation>
+    </message>
+    <message>
+        <source>Do not chase fleeing enemies so far that your own formation collapses.</source>
+        <translation>لا تطارد الفارّين إلى حدّ ينهار عنده تشكيلك أنت.</translation>
+    </message>
+    <message>
+        <source>Enemy reinforcements are much less dangerous when they never reach the battlefield.</source>
+        <translation>تعزيزات العدو أقل خطرًا بكثير حين لا تبلغ ساحة المعركة أصلًا.</translation>
+    </message>
+    <message>
+        <source>Every commander has a plan until a sheep joins the formation.</source>
+        <translation>لكل قائد خطة إلى أن تنضم شاة إلى التشكيل.</translation>
+    </message>
+    <message>
+        <source>Every supply shortage begins with someone saying, “We probably have enough.”</source>
+        <translation>كل نقص في المؤن يبدأ بقول أحدهم: «الأرجح أن لدينا ما يكفي».</translation>
+    </message>
+    <message>
+        <source>Exhausted troops are less effective. Allow units time to recover when possible.</source>
+        <translation>القوات المنهكة أقل فاعلية. امنح الوحدات وقتًا للتعافي متى أمكن.</translation>
+    </message>
+    <message>
+        <source>Formations are strongest when their flanks are protected.</source>
+        <translation>تكون التشكيلات أقوى ما تكون حين تُحمى أجنحتها.</translation>
+    </message>
+    <message>
+        <source>High ground improves your ability to control an engagement.</source>
+        <translation>الأرض المرتفعة تحسّن قدرتك على التحكم في الاشتباك.</translation>
+    </message>
+    <message>
+        <source>History remembers the victorious general. The quartermaster remembers who forgot to bring food.</source>
+        <translation>يذكر التاريخ القائد المنتصر. أما أمين المؤن فيذكر من نسي إحضار الطعام.</translation>
+    </message>
+    <message>
+        <source>If your formation looks impressive from a distance, you are at least halfway to military competence.</source>
+        <translation>إن بدت تشكيلتك مهيبة من بعيد، فقد قطعت نصف الطريق إلى الكفاءة العسكرية.</translation>
+    </message>
+    <message>
+        <source>Infantry can hold ground that faster units may struggle to defend.</source>
+        <translation>يستطيع المشاة تثبيت أرض يعجز عن الدفاع عنها من هم أسرع منهم.</translation>
+    </message>
+    <message>
+        <source>Keep an escape route available when fighting near rivers, cliffs, or narrow passages.</source>
+        <translation>أبقِ طريق انسحاب مفتوحًا حين تقاتل قرب الأنهار أو الجروف أو الممرات الضيقة.</translation>
+    </message>
+    <message>
+        <source>Keep ranged troops away from routes enemy cavalry can reach quickly.</source>
+        <translation>أبعد قوات الرمي عن الطرق التي يبلغها فرسان العدو سريعًا.</translation>
+    </message>
+    <message>
+        <source>Keep reserve troops behind the main line to respond to breakthroughs.</source>
+        <translation>أبقِ قوات احتياطية خلف الخط الرئيسي للردّ على الاختراقات.</translation>
+    </message>
+    <message>
+        <source>Never underestimate the tactical value of looking busy while someone else carries the stone.</source>
+        <translation>لا تستهن أبدًا بالقيمة التكتيكية للتظاهر بالانشغال بينما يحمل غيرك الحجر.</translation>
+    </message>
+    <message>
+        <source>Protect your commander. Losing leadership at the wrong moment can decide a battle.</source>
+        <translation>احمِ قائدك. فقدان القيادة في اللحظة الخطأ قد يحسم معركة.</translation>
+    </message>
+    <message>
+        <source>Repairing damaged defenses before the next attack is usually cheaper than rebuilding them afterward.</source>
+        <translation>إصلاح الدفاعات المتضررة قبل الهجوم التالي أرخص عادةً من إعادة بنائها بعده.</translation>
+    </message>
+    <message>
+        <source>Scout unfamiliar terrain before committing your main force.</source>
+        <translation>استطلع الأرض المجهولة قبل أن تزجّ بقوتك الرئيسية.</translation>
+    </message>
+    <message>
+        <source>Stockpiles shorten resource delivery routes and improve economic efficiency.</source>
+        <translation>المخازن تقصّر مسارات نقل الموارد وتحسّن كفاءة الاقتصاد.</translation>
+    </message>
+    <message>
+        <source>Terrain can be as important as numbers. Use forests, hills, and narrow passages to your advantage.</source>
+        <translation>قد تكون الأرض بأهمية العدد. استغل الغابات والتلال والممرات الضيقة لصالحك.</translation>
+    </message>
+    <message>
+        <source>The Iron Sepulcher is best approached with troops prepared for an unexpected engagement.</source>
+        <translation>يُستحسن الاقتراب من ضريح الحديد بقوات مستعدة لاشتباك غير متوقع.</translation>
+    </message>
+    <message>
+        <source>The enemy cannot predict your strategy if you have forgotten it yourself.</source>
+        <translation>لا يستطيع العدو التنبؤ باستراتيجيتك إن كنت قد نسيتها أنت أيضًا.</translation>
+    </message>
+    <message>
+        <source>The shortest path between two points is rarely the route selected by an army.</source>
+        <translation>أقصر طريق بين نقطتين نادرًا ما يكون المسار الذي يختاره الجيش.</translation>
+    </message>
+    <message>
+        <source>Use patrol orders to secure roads, settlements, and vulnerable resource routes.</source>
+        <translation>استخدم أوامر الدورية لتأمين الطرق والمستوطنات ومسارات الموارد المكشوفة.</translation>
+    </message>
+    <message>
+        <source>Walls are excellent defenses until someone remembers gates exist.</source>
+        <translation>الأسوار دفاعات ممتازة إلى أن يتذكر أحدهم أن البوابات موجودة.</translation>
+    </message>
+    <message>
+        <source>War elephants are powerful, disciplined weapons of war, right up until they have an opinion.</source>
+        <translation>فيلة الحرب أسلحة قوية منضبطة، إلى أن يصير لها رأي.</translation>
+    </message>
+    <message>
+        <source>War elephants can disrupt formations, but unsupported elephants can quickly become isolated.</source>
+        <translation>تستطيع فيلة الحرب تمزيق التشكيلات، لكنها بلا إسناد تُعزل سريعًا.</translation>
+    </message>
+    <message>
+        <source>Watch your supply routes when advancing deep into hostile territory.</source>
+        <translation>راقب خطوط إمدادك حين تتوغل في أرض معادية.</translation>
+    </message>
+    <message>
+        <source>When attacking, look for weak points rather than spreading damage evenly across the enemy line.</source>
+        <translation>حين تهاجم، ابحث عن نقاط الضعف بدل توزيع الضرر بالتساوي على خط العدو.</translation>
+    </message>
+    <message>
+        <source>When defending, force the enemy to come to you under unfavorable conditions.</source>
+        <translation>حين تدافع، أرغم العدو على القدوم إليك في ظروف غير مواتية له.</translation>
+    </message>
+    <message>
+        <source>Wildlife may react unpredictably to nearby troops and fighting.</source>
+        <translation>قد تتصرف الحيوانات البرية على نحو لا يُتوقع قرب القوات والقتال.</translation>
+    </message>
+    <message>
+        <source>Wolves are considerably less impressed by military rank than your soldiers are.</source>
+        <translation>الذئاب أقل انبهارًا بالرتب العسكرية من جنودك بكثير.</translation>
+    </message>
+    <message>
+        <source>Workers are valuable strategic assets. Do not leave them exposed near the front.</source>
+        <translation>العمّال ثروة استراتيجية ثمينة. لا تتركهم مكشوفين قرب الجبهة.</translation>
+    </message>
+</context>
+<context>
     <name>Main</name>
     <message>
         <source>A new standard in the valley, and nobody under it who has held a spear more than twice.</source>

@@ -91,6 +91,11 @@ ASSET_CONTEXTS: list[dict] = [
             "intents{}/requirement_hint",
         ],
     },
+    {
+        "context": "LoadingTips",
+        "glob": "data/loading_tips.json",
+        "paths": ["tips[]/text"],
+    },
 ]
 
 CAMPAIGN_MAP_SOURCE = Path("tools/map_pipeline/provinces.py")

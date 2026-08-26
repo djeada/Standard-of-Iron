@@ -4229,6 +4229,213 @@ Esta ação não pode ser desfeita.</translation>
     </message>
 </context>
 <context>
+    <name>LoadingTips</name>
+    <message>
+        <source>A commander who personally investigates every problem soon becomes one of them.</source>
+        <translation>Um comandante que investiga pessoalmente cada problema logo se torna um deles.</translation>
+    </message>
+    <message>
+        <source>A formation that becomes scattered is easier to surround and destroy.</source>
+        <translation>Uma formação dispersa é mais fácil de cercar e destruir.</translation>
+    </message>
+    <message>
+        <source>A narrow front can prevent a numerically superior enemy from using all of its troops at once.</source>
+        <translation>Uma frente estreita impede que um inimigo numericamente superior use todas as suas tropas de uma vez.</translation>
+    </message>
+    <message>
+        <source>A retreat made early can preserve an army. A retreat made late can become a rout.</source>
+        <translation>Uma retirada feita cedo preserva um exército. Uma retirada tardia vira debandada.</translation>
+    </message>
+    <message>
+        <source>A strong economy cannot help you if the enemy cuts the road between it and your army.</source>
+        <translation>Uma economia forte não lhe serve se o inimigo cortar a estrada entre ela e seu exército.</translation>
+    </message>
+    <message>
+        <source>A unit surrounded on several sides will struggle even if it began the fight at full strength.</source>
+        <translation>Uma unidade cercada por vários lados sofrerá mesmo que tenha começado o combate em plena força.</translation>
+    </message>
+    <message>
+        <source>A well-defended position is one the enemy has not yet discovered a ridiculous way around.</source>
+        <translation>Uma posição bem defendida é aquela para a qual o inimigo ainda não descobriu um contorno ridículo.</translation>
+    </message>
+    <message>
+        <source>An army marches on its stomach. The stomach, regrettably, also requires a supply line.</source>
+        <translation>Um exército marcha sobre o estômago. O estômago, lamentavelmente, também exige uma linha de suprimento.</translation>
+    </message>
+    <message>
+        <source>Archers perform best when protected from direct melee combat.</source>
+        <translation>Os arqueiros rendem melhor quando protegidos do combate corpo a corpo.</translation>
+    </message>
+    <message>
+        <source>Avoid sending cavalry directly into prepared infantry formations.</source>
+        <translation>Evite lançar a cavalaria diretamente contra formações de infantaria preparadas.</translation>
+    </message>
+    <message>
+        <source>Battles are often decided before contact through positioning, preparation, and logistics.</source>
+        <translation>As batalhas costumam ser decididas antes do contato: por posição, preparação e logística.</translation>
+    </message>
+    <message>
+        <source>Building near resources can reduce the amount of time workers spend carrying supplies.</source>
+        <translation>Construir perto dos recursos reduz o tempo que os trabalhadores passam carregando suprimentos.</translation>
+    </message>
+    <message>
+        <source>Capturing useful infrastructure can be more valuable than destroying it.</source>
+        <translation>Capturar uma infraestrutura útil pode valer mais do que destruí-la.</translation>
+    </message>
+    <message>
+        <source>Cavalry can arrive quickly. Whether they should have arrived there is another question.</source>
+        <translation>A cavalaria pode chegar depressa. Se devia ter chegado ali é outra questão.</translation>
+    </message>
+    <message>
+        <source>Cavalry is most effective when attacking exposed flanks or isolated units.</source>
+        <translation>A cavalaria é mais eficaz atacando flancos expostos ou unidades isoladas.</translation>
+    </message>
+    <message>
+        <source>Clearing a dangerous area is not the same as securing it. Check what remains nearby.</source>
+        <translation>Limpar uma área perigosa não é o mesmo que assegurá-la. Verifique o que restou por perto.</translation>
+    </message>
+    <message>
+        <source>Concentrating your forces can overwhelm a stronger enemy fighting in separate groups.</source>
+        <translation>Concentrar suas forças pode esmagar um inimigo mais forte que luta em grupos separados.</translation>
+    </message>
+    <message>
+        <source>Destroying an enemy army is useful. Preventing it from fighting effectively is often enough.</source>
+        <translation>Destruir um exército inimigo é útil. Impedi-lo de lutar com eficácia costuma bastar.</translation>
+    </message>
+    <message>
+        <source>Direct commander control can help turn a critical fight, but exposes your commander to greater danger.</source>
+        <translation>O controle direto do comandante pode virar um combate crítico, mas o expõe a maior perigo.</translation>
+    </message>
+    <message>
+        <source>Do not chase fleeing enemies so far that your own formation collapses.</source>
+        <translation>Não persiga inimigos em fuga tão longe que sua própria formação se desfaça.</translation>
+    </message>
+    <message>
+        <source>Enemy reinforcements are much less dangerous when they never reach the battlefield.</source>
+        <translation>Os reforços inimigos são bem menos perigosos quando nunca chegam ao campo de batalha.</translation>
+    </message>
+    <message>
+        <source>Every commander has a plan until a sheep joins the formation.</source>
+        <translation>Todo comandante tem um plano até uma ovelha entrar na formação.</translation>
+    </message>
+    <message>
+        <source>Every supply shortage begins with someone saying, “We probably have enough.”</source>
+        <translation>Toda falta de suprimentos começa quando alguém diz: “Provavelmente temos o bastante.”</translation>
+    </message>
+    <message>
+        <source>Exhausted troops are less effective. Allow units time to recover when possible.</source>
+        <translation>Tropas exaustas rendem menos. Dê tempo às unidades para se recuperarem.</translation>
+    </message>
+    <message>
+        <source>Formations are strongest when their flanks are protected.</source>
+        <translation>As formações são mais fortes quando seus flancos estão protegidos.</translation>
+    </message>
+    <message>
+        <source>High ground improves your ability to control an engagement.</source>
+        <translation>O terreno elevado melhora seu controle sobre um combate.</translation>
+    </message>
+    <message>
+        <source>History remembers the victorious general. The quartermaster remembers who forgot to bring food.</source>
+        <translation>A história lembra o general vitorioso. O intendente lembra quem esqueceu de trazer a comida.</translation>
+    </message>
+    <message>
+        <source>If your formation looks impressive from a distance, you are at least halfway to military competence.</source>
+        <translation>Se sua formação impressiona de longe, você já percorreu metade do caminho até a competência militar.</translation>
+    </message>
+    <message>
+        <source>Infantry can hold ground that faster units may struggle to defend.</source>
+        <translation>A infantaria pode segurar terreno que unidades mais rápidas têm dificuldade em defender.</translation>
+    </message>
+    <message>
+        <source>Keep an escape route available when fighting near rivers, cliffs, or narrow passages.</source>
+        <translation>Mantenha uma rota de fuga ao lutar perto de rios, penhascos ou passagens estreitas.</translation>
+    </message>
+    <message>
+        <source>Keep ranged troops away from routes enemy cavalry can reach quickly.</source>
+        <translation>Mantenha as tropas de longo alcance longe de rotas que a cavalaria inimiga alcance depressa.</translation>
+    </message>
+    <message>
+        <source>Keep reserve troops behind the main line to respond to breakthroughs.</source>
+        <translation>Mantenha tropas de reserva atrás da linha principal para responder a rupturas.</translation>
+    </message>
+    <message>
+        <source>Never underestimate the tactical value of looking busy while someone else carries the stone.</source>
+        <translation>Nunca subestime o valor tático de parecer ocupado enquanto outro carrega a pedra.</translation>
+    </message>
+    <message>
+        <source>Protect your commander. Losing leadership at the wrong moment can decide a battle.</source>
+        <translation>Proteja seu comandante. Perder a liderança no momento errado pode decidir uma batalha.</translation>
+    </message>
+    <message>
+        <source>Repairing damaged defenses before the next attack is usually cheaper than rebuilding them afterward.</source>
+        <translation>Reparar defesas danificadas antes do próximo ataque costuma sair mais barato do que reconstruí-las depois.</translation>
+    </message>
+    <message>
+        <source>Scout unfamiliar terrain before committing your main force.</source>
+        <translation>Explore o terreno desconhecido antes de comprometer sua força principal.</translation>
+    </message>
+    <message>
+        <source>Stockpiles shorten resource delivery routes and improve economic efficiency.</source>
+        <translation>Os depósitos encurtam as rotas de entrega e melhoram a eficiência econômica.</translation>
+    </message>
+    <message>
+        <source>Terrain can be as important as numbers. Use forests, hills, and narrow passages to your advantage.</source>
+        <translation>O terreno pode importar tanto quanto o número. Use florestas, colinas e passagens estreitas a seu favor.</translation>
+    </message>
+    <message>
+        <source>The Iron Sepulcher is best approached with troops prepared for an unexpected engagement.</source>
+        <translation>Ao Sepulcro de Ferro convém aproximar-se com tropas preparadas para um combate inesperado.</translation>
+    </message>
+    <message>
+        <source>The enemy cannot predict your strategy if you have forgotten it yourself.</source>
+        <translation>O inimigo não pode prever sua estratégia se você mesmo a esqueceu.</translation>
+    </message>
+    <message>
+        <source>The shortest path between two points is rarely the route selected by an army.</source>
+        <translation>O caminho mais curto entre dois pontos raramente é a rota escolhida por um exército.</translation>
+    </message>
+    <message>
+        <source>Use patrol orders to secure roads, settlements, and vulnerable resource routes.</source>
+        <translation>Use ordens de patrulha para garantir estradas, povoados e rotas de recursos vulneráveis.</translation>
+    </message>
+    <message>
+        <source>Walls are excellent defenses until someone remembers gates exist.</source>
+        <translation>As muralhas são defesas excelentes até alguém lembrar que portões existem.</translation>
+    </message>
+    <message>
+        <source>War elephants are powerful, disciplined weapons of war, right up until they have an opinion.</source>
+        <translation>Elefantes de guerra são armas poderosas e disciplinadas, até terem uma opinião.</translation>
+    </message>
+    <message>
+        <source>War elephants can disrupt formations, but unsupported elephants can quickly become isolated.</source>
+        <translation>Elefantes de guerra podem desmantelar formações, mas sem apoio ficam isolados depressa.</translation>
+    </message>
+    <message>
+        <source>Watch your supply routes when advancing deep into hostile territory.</source>
+        <translation>Vigie suas rotas de suprimento ao avançar fundo em território hostil.</translation>
+    </message>
+    <message>
+        <source>When attacking, look for weak points rather than spreading damage evenly across the enemy line.</source>
+        <translation>Ao atacar, procure os pontos fracos em vez de espalhar o dano por igual na linha inimiga.</translation>
+    </message>
+    <message>
+        <source>When defending, force the enemy to come to you under unfavorable conditions.</source>
+        <translation>Ao defender, force o inimigo a vir até você em condições desfavoráveis.</translation>
+    </message>
+    <message>
+        <source>Wildlife may react unpredictably to nearby troops and fighting.</source>
+        <translation>A fauna pode reagir de forma imprevisível a tropas próximas e a combates.</translation>
+    </message>
+    <message>
+        <source>Wolves are considerably less impressed by military rank than your soldiers are.</source>
+        <translation>Os lobos se impressionam bem menos com patente militar do que seus soldados.</translation>
+    </message>
+    <message>
+        <source>Workers are valuable strategic assets. Do not leave them exposed near the front.</source>
+        <translation>Os trabalhadores são recursos estratégicos valiosos. Não os deixe expostos perto da frente.</translation>
+    </message>
+</context>
+<context>
     <name>Main</name>
     <message>
         <source>A new standard in the valley, and nobody under it who has held a spear more than twice.</source>
