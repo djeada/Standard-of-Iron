@@ -10,11 +10,41 @@ Item {
     property int selected_index: 0
     property var colors: ({})
 
+    // No shipped map authors a thumbnail and no *_thumb.png exists, so every row
+    // showed the same empty square while the real preview rendered only in the
+    // detail panel. Draw the same preview into the rows. Held by path so a
+    // recycled delegate does not re-render the map it scrolled past, and named
+    // so a test can hand in its own generator and store.
+    property var previewSource: (typeof game !== "undefined" && game.setup) ? game.setup : null
+    property var previewStore: (typeof map_preview_provider !== "undefined") ? map_preview_provider : null
+    property var thumbnailCache: ({})
+
     signal map_selected(int index)
     signal map_double_clicked
 
     function field(obj, key) {
         return (obj && obj[key] !== undefined) ? String(obj[key]) : "";
+    }
+
+    function thumbnail_source(authored, map_path) {
+        if (authored && authored !== "")
+            return authored;
+        if (!map_path || map_path === "")
+            return "";
+        if (thumbnailCache[map_path] !== undefined)
+            return thumbnailCache[map_path];
+        if (!previewSource || !previewSource.map_preview || !previewStore)
+            return "";
+        var id = "maplist:" + map_path;
+        var url = "";
+        try {
+            previewStore.set_preview_image(id, previewSource.map_preview(map_path, []));
+            url = "image://mappreview/" + id;
+        } catch (e) {
+            console.warn("MapListPanel: no preview for", map_path, e);
+        }
+        thumbnailCache[map_path] = url;
+        return url;
     }
 
     anchors.fill: parent
@@ -157,7 +187,7 @@ Item {
 
                         Image {
                             anchors.fill: parent
-                            source: (typeof thumbnail !== "undefined") ? thumbnail : ""
+                            source: root.thumbnail_source((typeof thumbnail !== "undefined") ? thumbnail : "", (typeof path !== "undefined") ? String(path) : "")
                             asynchronous: true
                             fillMode: Image.PreserveAspectCrop
                             visible: status === Image.Ready
