@@ -616,6 +616,10 @@ auto main(int argc, char* argv[]) -> int {
       fmt.setSwapInterval(interval);
       qInfo() << "Swap interval overridden by SOI_SWAP_INTERVAL:" << interval;
     }
+  } else {
+    const int interval = App::Core::UserSettings::load_display_vsync() ? 1 : 0;
+    fmt.setSwapInterval(interval);
+    qInfo() << "Swap interval from saved VSync preference:" << interval;
   }
 
   QSurfaceFormat::setDefaultFormat(fmt);
@@ -683,6 +687,7 @@ auto main(int argc, char* argv[]) -> int {
 
   QString direct_campaign_mission;
   QString direct_mission_file;
+  QString observe_map_file;
   QString record_replay_path;
   QString replay_path;
   bool replay_verify = false;
@@ -725,6 +730,11 @@ auto main(int argc, char* argv[]) -> int {
         "mission-file",
         "Start a mission definition file directly for editor testing.",
         "path");
+    QCommandLineOption const observe_opt(
+        "observe",
+        "Start this skirmish map with every slot under computer control and watch it "
+        "as a spectator.",
+        "map-path");
     QCommandLineOption const record_replay_opt(
         "record-replay",
         "Write every command the match accepts to this file, so the match can be "
@@ -778,6 +788,7 @@ auto main(int argc, char* argv[]) -> int {
     parser.addOption(graphics_preset_opt);
     parser.addOption(campaign_mission_opt);
     parser.addOption(mission_file_opt);
+    parser.addOption(observe_opt);
     parser.addOption(record_replay_opt);
     parser.addOption(replay_opt);
     parser.addOption(replay_verify_opt);
@@ -818,10 +829,12 @@ auto main(int argc, char* argv[]) -> int {
 
     direct_campaign_mission = parser.value(campaign_mission_opt).trimmed();
     direct_mission_file = parser.value(mission_file_opt).trimmed();
+    observe_map_file = parser.value(observe_opt).trimmed();
     record_replay_path = parser.value(record_replay_opt).trimmed();
     replay_path = parser.value(replay_opt).trimmed();
     replay_verify = parser.isSet(replay_verify_opt);
-    skip_briefing = parser.isSet(skip_briefing_opt) || replay_verify;
+    skip_briefing =
+        parser.isSet(skip_briefing_opt) || replay_verify || !observe_map_file.isEmpty();
     if (parser.isSet(game_speed_opt)) {
       bool speed_ok = false;
       const float requested = parser.value(game_speed_opt).toFloat(&speed_ok);
@@ -1070,7 +1083,7 @@ auto main(int argc, char* argv[]) -> int {
   }
 
   if (!direct_campaign_mission.isEmpty() || !direct_mission_file.isEmpty() ||
-      !replay_path.isEmpty()) {
+      !observe_map_file.isEmpty() || !replay_path.isEmpty()) {
 
     QTimer::singleShot(
         0,
@@ -1080,6 +1093,7 @@ auto main(int argc, char* argv[]) -> int {
          game_engine_ptr = game_engine.get(),
          direct_campaign_mission,
          direct_mission_file,
+         observe_map_file,
          replay_path,
          skip_briefing,
          direct_game_speed] {
@@ -1093,6 +1107,7 @@ auto main(int argc, char* argv[]) -> int {
           auto start_direct_mission = [game_engine_ptr,
                                        direct_campaign_mission,
                                        direct_mission_file,
+                                       observe_map_file,
                                        replay_path,
                                        mission_started,
                                        direct_game_speed]() {
@@ -1106,6 +1121,14 @@ auto main(int argc, char* argv[]) -> int {
               if (!game_engine_ptr->start_replay(replay_path)) {
                 qCritical() << "Replay could not be started:" << replay_path;
                 QCoreApplication::exit(11);
+              }
+            } else if (!observe_map_file.isEmpty()) {
+              qInfo() << "Observing a computer-only skirmish on:" << observe_map_file;
+              if (!game_engine_ptr->match_setup()->start_observed_skirmish(
+                      observe_map_file)) {
+                qCritical() << "Observed skirmish could not be started:"
+                            << observe_map_file;
+                QCoreApplication::exit(13);
               }
             } else if (!direct_mission_file.isEmpty()) {
               qInfo() << "Starting mission file directly:" << direct_mission_file;

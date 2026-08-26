@@ -2198,8 +2198,8 @@
     },
     {
       "type": "statue",
-      "x": 64.2,
-      "z": 99.53,
+      "x": 64.22,
+      "z": 99.38,
       "scale": 1.0,
       "rotation": 270.0,
       "landmark": "frostmere_sanctuary"
@@ -2412,8 +2412,8 @@
     },
     {
       "type": "ruins",
-      "x": 90.0,
-      "z": 177.0,
+      "x": 88.88,
+      "z": 176.44,
       "scale": 1.1,
       "rotation": 180.0,
       "landmark": "west_hamlet"
@@ -2446,29 +2446,29 @@
   "firecamps": [
     {
       "id": "p1_fire",
-      "x": 49.88,
-      "z": 49.88,
+      "x": 48.85,
+      "z": 48.85,
       "intensity": 1.05,
       "radius": 3.4
     },
     {
       "id": "p2_fire",
-      "x": 190.12,
-      "z": 49.88,
+      "x": 191.15,
+      "z": 48.85,
       "intensity": 1.05,
       "radius": 3.4
     },
     {
       "id": "p3_fire",
-      "x": 190.12,
-      "z": 190.12,
+      "x": 191.15,
+      "z": 191.15,
       "intensity": 1.05,
       "radius": 3.4
     },
     {
       "id": "p4_fire",
-      "x": 49.88,
-      "z": 190.12,
+      "x": 48.85,
+      "z": 191.15,
       "intensity": 1.05,
       "radius": 3.4
     },

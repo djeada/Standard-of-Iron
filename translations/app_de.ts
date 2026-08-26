@@ -112,10 +112,6 @@
         <translation>Liefert ab</translation>
     </message>
     <message>
-        <source>Carrying its load to the barracks.</source>
-        <translation>Trägt seine Last zur Kaserne.</translation>
-    </message>
-    <message>
         <source>Healing</source>
         <translation>Heilt</translation>
     </message>
@@ -194,6 +190,18 @@
     <message>
         <source>Slaughtering a sheep for food.</source>
         <translation>Schlachtet ein Schaf für Nahrung.</translation>
+    </message>
+    <message>
+        <source>Carrying its load to the barracks; it cannot be interrupted until the load is dropped off.</source>
+        <translation>Bringt seine Last zur Kaserne; kann nicht unterbrochen werden, bis die Last abgeliefert ist.</translation>
+    </message>
+    <message>
+        <source>Cannot be interrupted</source>
+        <translation>Kann nicht unterbrochen werden</translation>
+    </message>
+    <message>
+        <source>Hauling a load to the barracks. New orders wait until the load is dropped off.</source>
+        <translation>Zieht eine Last zur Kaserne. Neue Befehle warten, bis die Last abgeliefert ist.</translation>
     </message>
 </context>
 <context>
@@ -1845,10 +1853,6 @@ Dies ist vielleicht ein Scharmützel, oder es wurden keine Ziele festgelegt.</tr
         <translation>Eine Umfassung benötigt mindestens drei Einheiten.</translation>
     </message>
     <message>
-        <source>Forming up</source>
-        <translation>Formiert sich</translation>
-    </message>
-    <message>
         <source>Formed</source>
         <translation>Formiert</translation>
     </message>
@@ -1857,8 +1861,20 @@ Dies ist vielleicht ein Scharmützel, oder es wurden keine Ziele festgelegt.</tr
         <translation>Zerrüttet</translation>
     </message>
     <message>
-        <source>Breaking</source>
-        <translation>Zerbricht</translation>
+        <source>Reforming</source>
+        <translation>Formiert sich neu</translation>
+    </message>
+    <message>
+        <source>Opening</source>
+        <translation>Öffnet</translation>
+    </message>
+    <message>
+        <source>Traversing</source>
+        <translation>Durchquert</translation>
+    </message>
+    <message>
+        <source>Arrived</source>
+        <translation>Angekommen</translation>
     </message>
 </context>
 <context>
@@ -2312,14 +2328,6 @@ Dies ist vielleicht ein Scharmützel, oder es wurden keine Ziele festgelegt.</tr
 <context>
     <name>GameEngine</name>
     <message>
-        <source>Maximum troop limit reached. Cannot produce more units.</source>
-        <translation>Maximale Truppenzahl erreicht. Es können keine weiteren Einheiten ausgebildet werden.</translation>
-    </message>
-    <message>
-        <source>Not enough manpower. Build homes or wait for families.</source>
-        <translation>Nicht genug Arbeitskräfte. Baue Häuser oder warte auf Familien.</translation>
-    </message>
-    <message>
         <source>Cannot start skirmish: renderer not initialized</source>
         <translation>Scharmützel kann nicht gestartet werden: Renderer nicht initialisiert</translation>
     </message>
@@ -2350,6 +2358,30 @@ Dies ist vielleicht ein Scharmützel, oder es wurden keine Ziele festgelegt.</tr
     <message>
         <source>Cannot play replay: unknown launch kind &apos;%1&apos;</source>
         <translation>Wiederholung kann nicht abgespielt werden: unbekannte Startart „%1“</translation>
+    </message>
+    <message>
+        <source>Our ally %1 has been defeated.</source>
+        <translation>Unser Verbündeter %1 wurde besiegt.</translation>
+    </message>
+    <message>
+        <source>%1 has been defeated.</source>
+        <translation>%1 wurde besiegt.</translation>
+    </message>
+    <message>
+        <source>Our ally %1 is finished - %2 has fallen.</source>
+        <translation>Unser Verbündeter %1 ist geschlagen – %2 ist gefallen.</translation>
+    </message>
+    <message>
+        <source>%1 is finished - %2 has fallen.</source>
+        <translation>%1 ist geschlagen – %2 ist gefallen.</translation>
+    </message>
+    <message>
+        <source>Troop limit reached.</source>
+        <translation>Truppenlimit erreicht.</translation>
+    </message>
+    <message>
+        <source>Not enough manpower — build a home to raise more families.</source>
+        <translation>Nicht genug Mannstärke — baue ein Haus, um mehr Familien heranzuziehen.</translation>
     </message>
 </context>
 <context>
@@ -2392,6 +2424,13 @@ Dies ist vielleicht ein Scharmützel, oder es wurden keine Ziele festgelegt.</tr
     <message>
         <source>High plus contact-hardening shadows, foliage translucency, extra terrain detail and 8x anti-aliasing. Needs a strong GPU.</source>
         <translation>Hoch plus kontaktverhärtende Schatten, durchscheinendes Laub, zusätzliche Geländedetails und 8x Kantenglättung. Benötigt eine starke GPU.</translation>
+    </message>
+</context>
+<context>
+    <name>HUD</name>
+    <message>
+        <source>%1 FPS</source>
+        <translation>%1 FPS</translation>
     </message>
 </context>
 <context>
@@ -3841,6 +3880,22 @@ Unbekannt: nie aufgeklärt.</translation>
     <message>
         <source>Unit details</source>
         <translation>Einheitendetails</translation>
+    </message>
+    <message>
+        <source>%1/%2</source>
+        <translation>%1/%2</translation>
+    </message>
+    <message>
+        <source>%1 soldiers</source>
+        <translation>%1 Soldaten</translation>
+    </message>
+    <message>
+        <source>SOLDIERS</source>
+        <translation>SOLDATEN</translation>
+    </message>
+    <message>
+        <source> soldiers — </source>
+        <translation> Soldaten — </translation>
     </message>
 </context>
 <context>
@@ -6108,6 +6163,10 @@ um die Vorschau zu sehen</translation>
         <source>Not enough resources.</source>
         <translation>Nicht genug Rohstoffe.</translation>
     </message>
+    <message>
+        <source>Hauling a load - it cannot be interrupted until the load is dropped off.</source>
+        <translation>Zieht eine Last - sie kann nicht unterbrochen werden, bis sie abgeliefert ist.</translation>
+    </message>
 </context>
 <context>
     <name>OutcomeLayout</name>
@@ -6161,6 +6220,13 @@ um die Vorschau zu sehen</translation>
     <message>
         <source>Every slot on this map is taken</source>
         <translation>Jeder Platz auf dieser Karte ist belegt</translation>
+    </message>
+</context>
+<context>
+    <name>PlayerDefeatWatcher</name>
+    <message>
+        <source>Player %1</source>
+        <translation>Spieler %1</translation>
     </message>
 </context>
 <context>
@@ -7063,6 +7129,10 @@ Baumeister ernten es als Nahrung, die Zivilisten rekrutiert</translation>
         <source>No target under the cursor</source>
         <translation>Kein Ziel unter dem Zeiger</translation>
     </message>
+    <message>
+        <source>Hauling a load - cannot be interrupted</source>
+        <translation>Zieht eine Last - kann nicht unterbrochen werden</translation>
+    </message>
 </context>
 <context>
     <name>RpgFpvOverlay</name>
@@ -7641,6 +7711,58 @@ Baumeister ernten es als Nahrung, die Zivilisten rekrutiert</translation>
     <message>
         <source>Numbers are a readout, not the feedback. Combat stays readable from motion, sound and hit reactions with them off.</source>
         <translation>Zahlen sind eine Anzeige, kein Feedback. Der Kampf bleibt auch ohne sie an Bewegung, Klang und Trefferreaktionen lesbar.</translation>
+    </message>
+    <message>
+        <source>Borderless</source>
+        <translation>Randlos</translation>
+    </message>
+    <message>
+        <source>Windowed</source>
+        <translation>Fenster</translation>
+    </message>
+    <message>
+        <source>Fullscreen</source>
+        <translation>Vollbild</translation>
+    </message>
+    <message>
+        <source>Display Settings</source>
+        <translation>Anzeigeeinstellungen</translation>
+    </message>
+    <message>
+        <source>Window Mode:</source>
+        <translation>Fenstermodus:</translation>
+    </message>
+    <message>
+        <source>VSync</source>
+        <translation>VSync</translation>
+    </message>
+    <message>
+        <source>Synchronises frames with your display to remove tearing. Toggling it takes effect the next time the game starts.</source>
+        <translation>Synchronisiert die Bilder mit deinem Bildschirm und verhindert Tearing. Die Umschaltung wird beim nächsten Spielstart wirksam.</translation>
+    </message>
+    <message>
+        <source>Show FPS counter</source>
+        <translation>FPS-Zähler anzeigen</translation>
+    </message>
+    <message>
+        <source>Displays a small frame-rate readout during battle</source>
+        <translation>Zeigt während der Schlacht eine kleine Framerate-Anzeige</translation>
+    </message>
+    <message>
+        <source>Camera pan speed:</source>
+        <translation>Kamera-Schwenkgeschwindigkeit:</translation>
+    </message>
+    <message>
+        <source>Camera zoom speed:</source>
+        <translation>Kamera-Zoomgeschwindigkeit:</translation>
+    </message>
+    <message>
+        <source>Camera rotation speed:</source>
+        <translation>Kamera-Drehgeschwindigkeit:</translation>
+    </message>
+    <message>
+        <source>Scales keyboard panning, zooming and rotation; drag and minimap movement stay unchanged.</source>
+        <translation>Skaliert Schwenken, Zoomen und Drehen über die Tastatur; Ziehen und Bewegungen auf der Minimap bleiben unverändert.</translation>
     </message>
 </context>
 <context>

@@ -201,6 +201,8 @@ SkirmishLoader::SkirmishLoader(Engine::Core::World& world,
 }
 
 void SkirmishLoader::reset_game_state() {
+  Game::Map::MapTransformer::set_spectator_mode(false);
+
   if (auto* selection_system = m_world.get_system<Game::Systems::SelectionSystem>()) {
     selection_system->clear_selection();
   }
@@ -387,6 +389,7 @@ auto SkirmishLoader::start(const QString& map_path,
   }
 
   Game::Map::MapTransformer::set_local_owner_id(player_owner_id);
+  Game::Map::MapTransformer::set_spectator_mode(is_spectator_mode);
   Game::Map::MapTransformer::setPlayerTeamOverrides(team_overrides);
 
   auto& nation_registry = session.nations();

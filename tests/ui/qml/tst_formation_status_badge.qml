@@ -27,6 +27,67 @@ TestCase {
         badge.destroy();
     }
 
+    function test_every_phase_the_simulation_can_report_has_a_label_data() {
+        return [{
+                "tag": "reforming",
+                "phase": "reforming",
+                "label": qsTr("Forming up")
+            }, {
+                "tag": "formed",
+                "phase": "formed",
+                "label": qsTr("Formed")
+            }, {
+                "tag": "arrived",
+                "phase": "arrived",
+                "label": qsTr("In position")
+            }, {
+                "tag": "opening",
+                "phase": "opening",
+                "label": qsTr("Opening ranks")
+            }, {
+                "tag": "traversing",
+                "phase": "traversing",
+                "label": qsTr("Filing through")
+            }, {
+                "tag": "disrupted",
+                "phase": "disrupted",
+                "label": qsTr("Disrupted")
+            }];
+    }
+
+    function test_every_phase_the_simulation_can_report_has_a_label(data) {
+        var badge = makeBadge({
+                "active": true,
+                "phase": data.phase,
+                "cohesion": 0.8,
+                "member_count": 6
+            });
+        compare(badge.phase_label, data.label, data.tag + " fell through to the default label");
+        verify(badge.phase_hint.length > 0, data.tag + " has no hint");
+        badge.destroy();
+    }
+
+    function test_a_settled_line_reads_as_healthy_data() {
+        return [{
+                "tag": "formed",
+                "phase": "formed"
+            }, {
+                "tag": "arrived",
+                "phase": "arrived"
+            }];
+    }
+
+    function test_a_settled_line_reads_as_healthy(data) {
+        var badge = makeBadge({
+                "active": true,
+                "phase": data.phase,
+                "cohesion": 0.9,
+                "member_count": 6
+            });
+        compare(badge.phase_tone, Theme.success, data.tag + " was not painted as settled");
+        badge.destroy();
+    }
+
     function test_a_formed_line_reads_as_formed_and_healthy() {
         var badge = makeBadge({
                 "active": true,

@@ -105,7 +105,15 @@ ApplicationWindow {
 
     width: 1280
     height: 720
-    visibility: Window.FullScreen
+    readonly property string window_mode: UiPreferences.displayWindowMode
+    flags: window_mode === "borderless" ? (Qt.Window | Qt.FramelessWindowHint) : Qt.Window
+    visibility: {
+        if (window_mode === "windowed")
+            return Window.Windowed;
+        if (window_mode === "borderless")
+            return Window.Maximized;
+        return Window.FullScreen;
+    }
     visible: true
     LayoutMirroring.enabled: Qt.application.layoutDirection === Qt.RightToLeft
     LayoutMirroring.childrenInherit: true
@@ -366,6 +374,17 @@ ApplicationWindow {
             console.log("Main: onMap_chosen received", map_path, "with", player_configs.length, "player configs");
             if (typeof game !== 'undefined' && game.setup.start_skirmish)
                 game.setup.start_skirmish(map_path, player_configs);
+            mapSelect.visible = false;
+            mainWindow.menu_visible = false;
+            mainWindow.game_started = true;
+            mainWindow.game_paused = false;
+            gameViewItem.forceActiveFocus();
+        }
+        onObserve_requested: function (map_path) {
+            if (typeof game === 'undefined' || !game.setup.start_observed_skirmish)
+                return;
+            if (!game.setup.start_observed_skirmish(map_path))
+                return;
             mapSelect.visible = false;
             mainWindow.menu_visible = false;
             mainWindow.game_started = true;
@@ -773,6 +792,19 @@ ApplicationWindow {
         }
 
         target: Design.Notifications
+    }
+
+    Connections {
+        function onPlayer_defeated(text, ally, owner_id) {
+            if (!text || !mainWindow.game_started)
+                return;
+            Design.Notifications.push(ally ? "urgent" : "info", text, {
+                    "channel": "player-defeated-" + owner_id,
+                    "icon": Design.Icons.status("defeated")
+                });
+        }
+
+        target: game
     }
 
     Connections {

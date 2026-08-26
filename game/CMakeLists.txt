@@ -113,6 +113,7 @@ add_library(
     map/procedural_tree_generation.cpp
     map/scatter/spawn_validator.cpp
     map/scatter/tree_scatter_walk.cpp
+    map/scatter/world_prop_clearance_index.cpp
     map/terrain.cpp
     map/terrain_landform.cpp
     map/terrain_service.cpp

@@ -15,6 +15,7 @@
 #include "../units/spawn_type.h"
 #include "camera_controller.h"
 #include "camera_follow_system.h"
+#include "camera_speeds.h"
 #include "scene/camera.h"
 
 namespace Game::Systems {
@@ -41,7 +42,7 @@ void CameraService::sync_map_bounds(Render::GL::Camera& camera) const {
 void CameraService::move(Render::GL::Camera& camera, float dx, float dz) {
   sync_map_bounds(camera);
   float const dist = camera.get_distance();
-  float const scale = std::max(0.12F, dist * 0.05F);
+  float const scale = std::max(0.12F, dist * 0.05F) * CameraSpeeds::pan_scale();
   m_controller->move(camera, dx * scale, dz * scale);
 }
 
@@ -54,7 +55,7 @@ void CameraService::elevate(Render::GL::Camera& camera, float dy) {
 
 void CameraService::zoom(Render::GL::Camera& camera, float delta) {
   sync_map_bounds(camera);
-  m_controller->zoom_distance(camera, delta);
+  m_controller->zoom_distance(camera, delta * CameraSpeeds::zoom_scale());
 }
 
 auto CameraService::get_distance(const Render::GL::Camera& camera) -> float {
@@ -63,7 +64,7 @@ auto CameraService::get_distance(const Render::GL::Camera& camera) -> float {
 
 void CameraService::yaw(Render::GL::Camera& camera, float degrees) {
   sync_map_bounds(camera);
-  m_controller->yaw(camera, degrees);
+  m_controller->yaw(camera, degrees * CameraSpeeds::rotation_scale());
 }
 
 void CameraService::orbit(Render::GL::Camera& camera, float yaw_deg, float pitch_deg) {

@@ -3,6 +3,7 @@
 #include <QFont>
 #include <QFontMetrics>
 #include <QQmlEngine>
+#include <QQuickItem>
 #include <QQuickWindow>
 #include <QRawFont>
 #include <QSGRendererInterface>
@@ -80,6 +81,58 @@ public:
   }
 };
 
+class CommanderPortraitStub : public QQuickItem {
+  Q_OBJECT
+  Q_PROPERTY(QString troopType READ troop_type WRITE set_troop_type NOTIFY changed)
+  Q_PROPERTY(QString nation READ nation WRITE set_nation NOTIFY changed)
+  Q_PROPERTY(QString pose READ pose WRITE set_pose NOTIFY changed)
+  Q_PROPERTY(bool speaking READ speaking WRITE set_speaking NOTIFY changed)
+  Q_PROPERTY(bool faceValid READ face_valid NOTIFY changed)
+  Q_PROPERTY(qreal faceX READ zero NOTIFY changed)
+  Q_PROPERTY(qreal faceY READ zero NOTIFY changed)
+  Q_PROPERTY(qreal faceRadius READ zero NOTIFY changed)
+  Q_PROPERTY(qreal faceRoll READ zero NOTIFY changed)
+  Q_PROPERTY(qreal faceTurn READ zero NOTIFY changed)
+  Q_PROPERTY(qreal faceTilt READ zero NOTIFY changed)
+  Q_PROPERTY(qreal faceFacing READ zero NOTIFY changed)
+
+public:
+  explicit CommanderPortraitStub(QQuickItem* parent = nullptr)
+      : QQuickItem(parent) {}
+
+  [[nodiscard]] auto troop_type() const -> QString { return m_troop_type; }
+  void set_troop_type(const QString& value) {
+    m_troop_type = value;
+    emit changed();
+  }
+  [[nodiscard]] auto nation() const -> QString { return m_nation; }
+  void set_nation(const QString& value) {
+    m_nation = value;
+    emit changed();
+  }
+  [[nodiscard]] auto pose() const -> QString { return m_pose; }
+  void set_pose(const QString& value) {
+    m_pose = value;
+    emit changed();
+  }
+  [[nodiscard]] auto speaking() const -> bool { return m_speaking; }
+  void set_speaking(bool value) {
+    m_speaking = value;
+    emit changed();
+  }
+  [[nodiscard]] static auto face_valid() -> bool { return false; }
+  [[nodiscard]] static auto zero() -> qreal { return 0.0; }
+
+signals:
+  void changed();
+
+private:
+  QString m_troop_type;
+  QString m_nation;
+  QString m_pose;
+  bool m_speaking = false;
+};
+
 class DesignSystemTestSetup : public QObject {
   Q_OBJECT
 
@@ -115,6 +168,8 @@ public slots:
       qmlRegisterSingletonType<InputBindings>(
           uri, 1, 0, "InputBindings", &InputBindings::create);
     }
+    qmlRegisterType<CommanderPortraitStub>(
+        "StandardOfIron", 1, 0, "CommanderPortraitView");
     qmlRegisterSingletonType<GlyphProbe>(
         "StandardOfIron.TestSupport", 1, 0, "GlyphProbe", &GlyphProbe::create);
   }

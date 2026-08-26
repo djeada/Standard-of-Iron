@@ -522,8 +522,7 @@ auto MissionSetupCoordinator::apply_mission_setup(
 namespace {
 
 void apply_skirmish_ai_strategies(Engine::Core::World& world,
-                                  const QSet<int>& owner_ids,
-                                  int local_owner_id) {
+                                  const QSet<int>& owner_ids) {
   auto* ai_system = world.get_system<Game::Systems::AISystem>();
   if (ai_system == nullptr) {
     return;
@@ -531,7 +530,7 @@ void apply_skirmish_ai_strategies(Engine::Core::World& world,
 
   auto& owner_registry = Game::Session::session_for(world).owners();
   for (const int owner_id : owner_ids) {
-    if (owner_id == local_owner_id || !owner_registry.is_ai(owner_id)) {
+    if (!owner_registry.is_ai(owner_id)) {
       continue;
     }
 
@@ -745,7 +744,7 @@ auto MissionSetupCoordinator::apply_skirmish_commander_setup(
     }
   }
 
-  apply_skirmish_ai_strategies(ctx.world, processed_owner_ids, ctx.local_owner_id);
+  apply_skirmish_ai_strategies(ctx.world, processed_owner_ids);
 
   return effects;
 }

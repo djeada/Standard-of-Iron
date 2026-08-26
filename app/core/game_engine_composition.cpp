@@ -394,8 +394,7 @@ void GameEngine::build_services_and_controllers() {
           &Game::Map::MapCatalog::map_loaded,
           this,
           [this](const QVariantMap& map_data) {
-            m_catalogued_maps.append(map_data);
-            m_match_setup_view_model->set_maps(m_catalogued_maps);
+            m_match_setup_view_model->append_map(map_data);
           });
   connect(
       m_map_catalog.get(),

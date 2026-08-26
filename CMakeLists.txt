@@ -697,6 +697,7 @@ add_library(
     app/world/combat_feedback.cpp
     app/world/focus_target.cpp
     app/world/minimap_manager.cpp
+    app/world/player_defeat_watcher.cpp
     app/world/selection_query_service.cpp
     app/world/unit_queries.cpp
     app/world/visibility_coordinator.cpp
@@ -826,6 +827,7 @@ if(QT_VERSION_MAJOR EQUAL 6)
             ui/qml/WaveTracker.qml
             ui/qml/HUDBottom.qml
             ui/qml/HUDBottomCommander.qml
+            ui/qml/HUDBottomSpectator.qml
             ui/qml/UnitInspectPanel.qml
             ui/qml/RecruitCard.qml
             ui/qml/RpgFpvOverlay.qml

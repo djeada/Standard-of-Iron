@@ -82,6 +82,64 @@ TestCase {
         screen.destroy();
     }
 
+    function findCards(item, found) {
+        var out = found !== undefined ? found : [];
+        if (item === null || item === undefined)
+            return out;
+        var kids = item.children;
+        for (var i = 0; i < kids.length; ++i) {
+            if (kids[i].objectName === "rosterSeatCard")
+                out.push(kids[i]);
+            testCase.findCards(kids[i], out);
+        }
+        return out;
+    }
+
+    function test_a_dropped_seat_looks_dropped_whoever_owns_it() {
+        var screen = make_screen(two_slot_map);
+        wait(50);
+        var cards = testCase.findCards(screen);
+        compare(cards.length, 2, "every seat needs a card to read");
+        var humanCard = cards[0];
+        var cpuCard = cards[1];
+        var humanBorder = humanCard.border.width;
+        verify(humanBorder > cpuCard.border.width, "the human seat should stand out while it is in the battle");
+        screen.toggle_player_enabled(0);
+        screen.toggle_player_enabled(1);
+        wait(50);
+        cards = testCase.findCards(screen);
+        compare(cards[0].opacity, cards[1].opacity, "a dropped human seat stayed brighter than a dropped CPU seat");
+        compare(cards[0].border.width, cards[1].border.width, "a dropped human seat kept its accent border");
+        screen.destroy();
+    }
+
+    function test_a_two_camp_map_can_be_observed_without_touching_the_roster() {
+        var screen = make_screen(two_slot_map);
+        verify(screen.can_observe(), "a two camp battlefield should be watchable");
+        var watched = [];
+        screen.observe_requested.connect(function (path) {
+                watched.push(path);
+            });
+        screen.observe_selection();
+        compare(watched.length, 1, "the observe button did not ask for a match");
+        compare(watched[0], two_slot_map[0].path);
+        compare(screen.roster.count, 2, "observing must not disturb the roster");
+        verify(screen.roster.get(0).isHuman, "observing must not unseat the player");
+        screen.destroy();
+    }
+
+    function test_a_solo_battlefield_cannot_be_observed() {
+        var screen = make_screen(solo_map);
+        verify(!screen.can_observe(), "a one camp battlefield has nothing to watch");
+        var watched = [];
+        screen.observe_requested.connect(function (path) {
+                watched.push(path);
+            });
+        screen.observe_selection();
+        compare(watched.length, 0, "a solo map started an observed match anyway");
+        screen.destroy();
+    }
+
     function test_putting_both_players_on_one_team_blocks_the_start() {
         var screen = make_screen(two_slot_map);
         screen.cycle_player_team(1);

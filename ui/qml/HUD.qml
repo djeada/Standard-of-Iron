@@ -1,6 +1,7 @@
 import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 2.15
+import QtQuick.Window 2.15
 import StandardOfIron.Core 1.0 as Core
 import StandardOfIron.Design 1.0 as Design
 
@@ -92,6 +93,48 @@ Item {
         onTriggered: hud.commander_status = game.commander.status()
     }
 
+    QtObject {
+        id: fpsMeter
+
+        property int frames: 0
+        property real fps: 0
+    }
+
+    Connections {
+        target: Window.window ? Window.window : null
+        function onFrameSwapped() {
+            fpsMeter.frames += 1;
+        }
+    }
+
+    Timer {
+        id: fpsPoll
+
+        interval: 500
+        repeat: true
+        running: visible && Core.UiPreferences.showFps && Window.window !== null
+        triggeredOnStart: true
+        onTriggered: {
+            fpsMeter.fps = Math.round(fpsMeter.frames * (1000 / interval));
+            fpsMeter.frames = 0;
+            fpsReadout.text = qsTr("%1 FPS").arg(fpsMeter.fps);
+        }
+    }
+
+    Text {
+        id: fpsReadout
+
+        anchors.left: parent.left
+        anchors.bottom: parent.bottom
+        anchors.leftMargin: Design.Metrics.hudZoneMargin
+        anchors.bottomMargin: hud.bottom_panel_height + Design.Metrics.space8
+        visible: Core.UiPreferences.showFps
+        text: ""
+        color: Design.Theme.textSecondary
+        font.family: "monospace"
+        font.pixelSize: Design.Typography.caption
+    }
+
     Item {
         id: topPanel
 
@@ -127,13 +170,33 @@ Item {
         anchors.left: parent.left
         anchors.right: parent.right
 
-        height: hud.commander_rpg_mode ? Math.max(96, Math.min(120, parent.height * 0.12)) : Math.max(216, parent.height * 0.24)
+        height: Design.Metrics.bottomBarHeight(parent.height, hud.commander_rpg_mode)
         clip: true
 
         Loader {
             id: bottomPanelLoader
             anchors.fill: parent
-            sourceComponent: typeof game !== 'undefined' && game.commander.mode_state === "active" ? commanderBottomHudComponent : rtsBottomHudComponent
+            sourceComponent: {
+                if (typeof game === 'undefined')
+                    return rtsBottomHudComponent;
+                if (game.is_spectator_mode)
+                    return spectatorBottomHudComponent;
+                return game.commander.mode_state === "active" ? commanderBottomHudComponent : rtsBottomHudComponent;
+            }
+        }
+
+        Component {
+            id: spectatorBottomHudComponent
+
+            HUDBottomSpectator {
+                objectName: "spectatorBottomHud"
+                anchors.fill: parent
+                selection_tick: hud.selection_tick
+                onFollow_requested: function (owner_id) {
+                    if (typeof game !== 'undefined')
+                        game.selected_player_id = owner_id;
+                }
+            }
         }
 
         Component {

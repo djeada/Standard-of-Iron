@@ -10,6 +10,7 @@
 
 #include "game/audio/audio_constants.h"
 #include "game/audio/audio_settings.h"
+#include "game/render_bridge/camera_speeds.h"
 #include "render/graphics_settings.h"
 
 namespace App::Core::UserSettings {
@@ -40,6 +41,12 @@ inline constexpr char kUiScreenEffectsKey[] = "ui/screen_effect_intensity";
 inline constexpr char kUiEconomyCoachKey[] = "ui/economy_coach";
 inline constexpr char kUiCameraLegendSeenKey[] = "ui/camera_legend_seen";
 inline constexpr char kUiTutorialCompletedKey[] = "ui/tutorial_completed";
+inline constexpr char kDisplayWindowModeKey[] = "display/window_mode";
+inline constexpr char kDisplayVsyncKey[] = "display/vsync";
+inline constexpr char kUiShowFpsKey[] = "ui/show_fps";
+inline constexpr char kCameraPanSpeedScaleKey[] = "camera/pan_speed_scale";
+inline constexpr char kCameraZoomSpeedScaleKey[] = "camera/zoom_speed_scale";
+inline constexpr char kCameraRotationSpeedScaleKey[] = "camera/rotation_speed_scale";
 inline constexpr char kInputBindingsGroup[] = "input/bindings";
 inline constexpr char kCommanderLookSensitivityXKey[] = "commander/look_sensitivity_x";
 inline constexpr char kCommanderLookSensitivityYKey[] = "commander/look_sensitivity_y";
@@ -72,6 +79,14 @@ inline constexpr double kDefaultCommanderFieldOfViewScale = 1.0;
 inline constexpr double kMinCommanderFieldOfViewScale = 0.75;
 inline constexpr double kMaxCommanderFieldOfViewScale = 1.35;
 inline constexpr double kDefaultScreenEffectIntensity = 1.0;
+
+inline constexpr char kDefaultDisplayWindowMode[] = "fullscreen";
+inline constexpr bool kDefaultDisplayVsync = true;
+inline constexpr bool kDefaultUiShowFps = false;
+inline constexpr double kDefaultCameraSpeedScale =
+    Game::Systems::CameraSpeeds::k_default_scale;
+inline constexpr double kMinCameraSpeedScale = Game::Systems::CameraSpeeds::k_min_scale;
+inline constexpr double kMaxCameraSpeedScale = Game::Systems::CameraSpeeds::k_max_scale;
 
 using AudioVolumes = Game::Audio::Settings::Volumes;
 
@@ -533,6 +548,83 @@ inline auto load_ui_screen_effect_intensity() -> double {
 
 inline void save_ui_screen_effect_intensity(double intensity) {
   Detail::save_bounded_double(kUiScreenEffectsKey, intensity, 0.0, 1.0);
+}
+
+inline auto is_supported_window_mode(const QString& mode) -> bool {
+  return mode == QLatin1String("fullscreen") || mode == QLatin1String("borderless") ||
+         mode == QLatin1String("windowed");
+}
+
+inline auto load_display_window_mode() -> QString {
+  const QString stored = Detail::load_string(
+      kDisplayWindowModeKey, QString::fromLatin1(kDefaultDisplayWindowMode));
+  const QString normalized = stored.trimmed().toLower();
+  if (!is_supported_window_mode(normalized)) {
+    qWarning() << "Ignoring unknown saved window mode:" << stored;
+    return QString::fromLatin1(kDefaultDisplayWindowMode);
+  }
+  return normalized;
+}
+
+inline void save_display_window_mode(const QString& mode) {
+  const QString normalized = mode.trimmed().toLower();
+  if (!is_supported_window_mode(normalized)) {
+    qWarning() << "Refusing to save unknown window mode:" << mode;
+    return;
+  }
+  Detail::save_string(kDisplayWindowModeKey, normalized);
+}
+
+inline auto load_display_vsync() -> bool {
+  return Detail::load_bool(kDisplayVsyncKey, kDefaultDisplayVsync);
+}
+
+inline void save_display_vsync(bool enabled) {
+  Detail::save_bool(kDisplayVsyncKey, enabled);
+}
+
+inline auto load_ui_show_fps() -> bool {
+  return Detail::load_bool(kUiShowFpsKey, kDefaultUiShowFps);
+}
+
+inline void save_ui_show_fps(bool enabled) {
+  Detail::save_bool(kUiShowFpsKey, enabled);
+}
+
+inline auto load_camera_pan_speed_scale() -> double {
+  return Detail::load_bounded_double(kCameraPanSpeedScaleKey,
+                                     kDefaultCameraSpeedScale,
+                                     kMinCameraSpeedScale,
+                                     kMaxCameraSpeedScale);
+}
+
+inline void save_camera_pan_speed_scale(double scale) {
+  Detail::save_bounded_double(
+      kCameraPanSpeedScaleKey, scale, kMinCameraSpeedScale, kMaxCameraSpeedScale);
+}
+
+inline auto load_camera_zoom_speed_scale() -> double {
+  return Detail::load_bounded_double(kCameraZoomSpeedScaleKey,
+                                     kDefaultCameraSpeedScale,
+                                     kMinCameraSpeedScale,
+                                     kMaxCameraSpeedScale);
+}
+
+inline void save_camera_zoom_speed_scale(double scale) {
+  Detail::save_bounded_double(
+      kCameraZoomSpeedScaleKey, scale, kMinCameraSpeedScale, kMaxCameraSpeedScale);
+}
+
+inline auto load_camera_rotation_speed_scale() -> double {
+  return Detail::load_bounded_double(kCameraRotationSpeedScaleKey,
+                                     kDefaultCameraSpeedScale,
+                                     kMinCameraSpeedScale,
+                                     kMaxCameraSpeedScale);
+}
+
+inline void save_camera_rotation_speed_scale(double scale) {
+  Detail::save_bounded_double(
+      kCameraRotationSpeedScaleKey, scale, kMinCameraSpeedScale, kMaxCameraSpeedScale);
 }
 
 inline auto load_input_binding(const QString& action_id) -> QString {

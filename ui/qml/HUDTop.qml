@@ -412,10 +412,11 @@ Item {
 
                 Design.IronResourceCounter {
                     iconSource: Design.Icons.status("population")
-                    label: qsTr("Population")
+                    label: qsTr("Manpower")
                     amountText: topRoot.population() + " / " + topRoot.population_cap()
                     status: topRoot.population_status()
                     compact: topRoot.compact
+                    tooltipText: qsTr("Manpower in the field: %1 of %2.\nEvery troop costs manpower; a squad of twelve builders costs ten. This is not a headcount - the selection panel counts soldiers.").arg(topRoot.population()).arg(topRoot.population_cap())
                 }
 
                 Design.IronDivider {
@@ -671,6 +672,89 @@ Item {
                         border.width: Design.Metrics.borderFocus
                         border.color: Design.Theme.focus
                         opacity: tutorialPin.pulse
+                    }
+                }
+            }
+
+            ListModel {
+                id: minimapOrderPingModel
+            }
+
+            Connections {
+                function onOrder_ping(nx, ny, color, rejected, lifetime_seconds) {
+                    while (minimapOrderPingModel.count >= 12)
+                        minimapOrderPingModel.remove(0);
+                    minimapOrderPingModel.append({
+                            "nx": nx,
+                            "ny": ny,
+                            "pingColor": color,
+                            "rejected": rejected,
+                            "lifetimeMs": Math.max(200, lifetime_seconds * 1000)
+                        });
+                }
+
+                target: topRoot.game_ready() ? game.minimap : null
+            }
+
+            Repeater {
+                id: minimapOrderPings
+
+                model: minimapOrderPingModel
+
+                delegate: Item {
+                    id: orderPing
+
+                    required property int index
+                    required property real nx
+                    required property real ny
+                    required property string pingColor
+                    required property bool rejected
+                    required property real lifetimeMs
+
+                    readonly property real paintedW: minimapImage.paintedWidth
+                    readonly property real paintedH: minimapImage.paintedHeight
+
+                    property real ease: 0
+
+                    function retire() {
+                        if (orderPing.index >= 0 && orderPing.index < minimapOrderPingModel.count)
+                            minimapOrderPingModel.remove(orderPing.index);
+                    }
+
+                    visible: paintedW > 0 && paintedH > 0
+                    x: ((minimapImage.width - paintedW) / 2) + orderPing.nx * paintedW
+                    y: ((minimapImage.height - paintedH) / 2) + orderPing.ny * paintedH
+                    z: 14
+
+                    SequentialAnimation {
+                        running: true
+
+                        NumberAnimation {
+                            target: orderPing
+                            property: "ease"
+                            from: 0
+                            to: 1
+                            duration: Design.A11y.reducedMotion ? 1 : orderPing.lifetimeMs
+                            easing.type: Easing.OutQuad
+                        }
+
+                        ScriptAction {
+                            script: orderPing.retire()
+                        }
+                    }
+
+                    Rectangle {
+                        anchors.centerIn: parent
+
+                        readonly property real span: Design.Metrics.space16
+
+                        width: orderPing.rejected ? span * (1 + 0.3 * orderPing.ease) : span * (1 - 0.4 * orderPing.ease)
+                        height: width
+                        radius: width / 2
+                        color: "transparent"
+                        border.width: Math.max(1, Design.Metrics.borderFocus)
+                        border.color: orderPing.pingColor
+                        opacity: 1 - orderPing.ease
                     }
                 }
             }

@@ -4,10 +4,12 @@
 #include <qglobal.h>
 
 #include <algorithm>
+#include <set>
 #include <variant>
 
 #include "core/event_manager.h"
 #include "game/core/component.h"
+#include "game/core/ownership_constants.h"
 #include "game/core/world.h"
 #include "game/map/map_definition.h"
 #include "game/systems/global_stats_registry.h"
@@ -21,6 +23,8 @@ namespace Game::Systems {
 namespace {
 
 constexpr float k_startup_delay_seconds = 0.35F;
+
+constexpr float k_spectator_poll_seconds = 0.5F;
 
 template <class... Ts>
 struct Overloaded : Ts... {
@@ -214,12 +218,29 @@ void VictoryService::reset() {
   m_has_eliminate_commanders_rule = false;
   m_eliminate_commanders_armed = false;
   m_world_state_dirty = false;
+  m_spectator_mode = false;
+  m_spectator_saw_rivals = false;
+  m_spectator_poll_timer = 0.0F;
   m_last_world_summary = {};
   m_has_world_summary = false;
   m_local_owner_id = 1;
   m_victory_state.clear();
   m_world_ptr = nullptr;
   m_victory_callback = nullptr;
+}
+
+void VictoryService::set_spectator_mode(bool enabled) {
+  if (m_spectator_mode == enabled) {
+    return;
+  }
+  m_spectator_mode = enabled;
+  m_spectator_saw_rivals = false;
+  m_spectator_poll_timer = k_spectator_poll_seconds;
+  if (enabled) {
+
+    m_has_world_based_rules = true;
+    m_world_state_dirty = true;
+  }
 }
 
 void VictoryService::configure(const Game::Map::VictoryConfig& config,
@@ -264,6 +285,16 @@ void VictoryService::update(Engine::Core::World& world, float delta_time) {
   }
 
   m_elapsed_time += delta_time;
+
+  if (m_spectator_mode) {
+
+    m_spectator_poll_timer += delta_time;
+    if (m_spectator_poll_timer >= k_spectator_poll_seconds) {
+      m_spectator_poll_timer = 0.0F;
+      evaluate_spectator_state();
+    }
+    return;
+  }
 
   if (m_world_state_dirty || !m_has_world_summary) {
     evaluate_world_state(world);
@@ -420,6 +451,12 @@ void VictoryService::evaluate_world_state(Engine::Core::World& world) {
 }
 
 void VictoryService::evaluate_rules(const WorldSummary& summary) {
+  if (m_spectator_mode) {
+
+    evaluate_spectator_state();
+    return;
+  }
+
   if (!m_rule_set.victory_rules.empty()) {
     bool victory_satisfied = m_rule_set.require_all_victory_rules;
     for (const auto& rule : m_rule_set.victory_rules) {
@@ -449,10 +486,49 @@ void VictoryService::evaluate_rules(const WorldSummary& summary) {
   }
 }
 
+void VictoryService::evaluate_spectator_state() {
+  if (m_world_ptr == nullptr) {
+    return;
+  }
+
+  std::set<int> live_teams;
+  for (auto [entity_id, unit_ref] : m_world_ptr->view<Engine::Core::UnitComponent>()) {
+    const auto* unit = &unit_ref;
+    if (unit->health <= 0 || Game::Core::is_neutral_owner(unit->owner_id)) {
+      continue;
+    }
+    const auto owner_type = m_owner_registry.get_owner_type(unit->owner_id);
+    if (owner_type != OwnerType::Player && owner_type != OwnerType::AI) {
+      continue;
+    }
+    if (unit->nation_id == Game::Systems::NationID::IronSepulcher) {
+      continue;
+    }
+    live_teams.insert(m_owner_registry.get_owner_team(unit->owner_id));
+  }
+
+  if (live_teams.size() >= 2U) {
+    m_spectator_saw_rivals = true;
+    return;
+  }
+
+  if (!m_spectator_saw_rivals) {
+
+    return;
+  }
+
+  finalize_game(QStringLiteral("spectator"));
+}
+
 void VictoryService::finalize_game(const QString& state) {
   m_victory_state = state;
-  qInfo() << (state == "victory" ? "VICTORY! Conditions met."
-                                 : "DEFEAT! Condition met.");
+  if (state == QLatin1String("victory")) {
+    qInfo() << "VICTORY! Conditions met.";
+  } else if (state == QLatin1String("spectator")) {
+    qInfo() << "SPECTATOR: one side is left standing.";
+  } else {
+    qInfo() << "DEFEAT! Condition met.";
+  }
 
   const auto& all_owners = m_owner_registry.get_all_owners();
   for (const auto& owner : all_owners) {

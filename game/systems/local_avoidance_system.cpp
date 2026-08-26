@@ -51,6 +51,12 @@ constexpr float k_angle_commitment_bonus = 0.30F;
 
 constexpr float k_deviation_rate_degrees_per_second = 150.0F;
 
+// How much of a sideways separation push survives inside a movement corridor.
+// Zero deadlocks a column - two bodies overlapping across the line of march
+// cancel each other's escape - and one lets a corridor spread out like open
+// ground. See the corridor branch in update().
+constexpr float k_corridor_lateral_relief = 0.45F;
+
 auto compute_avoidance_priority(Engine::Core::SystemContext& context,
                                 Engine::Core::EntityID entity_id) -> std::uint8_t {
   if (context.has<Engine::Core::BuildingComponent>(entity_id)) {
@@ -395,8 +401,10 @@ void LocalAvoidanceSystem::run(Engine::Core::SystemContext& context) {
       float const tangent_x = me.desired_vx / desired_speed;
       float const tangent_z = me.desired_vz / desired_speed;
       float const along = separation_x * tangent_x + separation_z * tangent_z;
-      separation_x = tangent_x * along;
-      separation_z = tangent_z * along;
+      float const lateral_x = separation_x - (tangent_x * along);
+      float const lateral_z = separation_z - (tangent_z * along);
+      separation_x = (tangent_x * along) + (lateral_x * k_corridor_lateral_relief);
+      separation_z = (tangent_z * along) + (lateral_z * k_corridor_lateral_relief);
     }
 
     if (float const magnitude = std::hypot(separation_x, separation_z);

@@ -64,6 +64,7 @@
 #include "app/commander/commander_status_builder.h"
 #include "app/core/frame_ui_coordinator.h"
 #include "app/core/game_speed.h"
+#include "app/core/loading_overlay_log.h"
 #include "app/core/match_presentation_sync.h"
 #include "app/core/user_settings.h"
 #include "app/economy/harvest_targeting.h"
@@ -772,6 +773,7 @@ void GameEngine::update_presentation(float dt) {
 
   const float real_dt = dt;
   m_order_markers.update(dt, m_world);
+  announce_player_defeats(real_dt);
   m_activity_view_model->advance_feedback(dt);
 
   const float simulation_time_scale =
@@ -829,6 +831,29 @@ void GameEngine::update_presentation(float dt) {
     sync_target_focus_markers();
     update_tutorial(real_dt);
   }
+}
+
+void GameEngine::announce_player_defeats(float dt) {
+  if (m_world == nullptr || m_level.is_spectator_mode) {
+    return;
+  }
+
+  m_player_defeat_watcher.update(
+      *m_world, m_runtime.local_owner_id, dt, [this](const auto& defeat) {
+        QString text;
+        if (defeat.commander_name.isEmpty()) {
+          text = defeat.ally
+                     ? tr("Our ally %1 has been defeated.").arg(defeat.owner_name)
+                     : tr("%1 has been defeated.").arg(defeat.owner_name);
+        } else if (defeat.ally) {
+          text = tr("Our ally %1 is finished - %2 has fallen.")
+                     .arg(defeat.owner_name, defeat.commander_name);
+        } else {
+          text = tr("%1 is finished - %2 has fallen.")
+                     .arg(defeat.owner_name, defeat.commander_name);
+        }
+        emit player_defeated(text, defeat.ally, defeat.owner_id);
+      });
 }
 
 void GameEngine::publish_frame_snapshots() {
@@ -947,12 +972,11 @@ void GameEngine::update_loading_overlay() {
 
     const qint64 now_ms =
         m_loading_overlay_timer.isValid() ? m_loading_overlay_timer.elapsed() : 0;
-    qInfo().noquote() << QStringLiteral(
-                             "SOI_LOADING_OVERLAY: frame %1 of 5 presented at %2ms "
-                             "(+%3ms since the previous one)")
-                             .arg(5 - m_loading_overlay_frames_remaining)
-                             .arg(now_ms)
-                             .arg(now_ms - m_loading_overlay_last_frame_ms);
+    qInfo().noquote() << App::Core::format_loading_overlay_line(
+        5 - m_loading_overlay_frames_remaining,
+        5,
+        now_ms,
+        m_loading_overlay_last_frame_ms);
     m_loading_overlay_last_frame_ms = now_ms;
   }
 
@@ -1124,7 +1148,9 @@ void GameEngine::handle_order_feedback(const App::Core::OrderOutcome& outcome) {
     return;
   }
 
-  m_order_markers.push(outcome, m_world);
+  if (const auto* marker = m_order_markers.push(outcome, m_world)) {
+    m_minimap_view_model->note_order_marker(*marker);
+  }
 
   {
     App::Core::PlayerFeedbackEvent event;
@@ -1473,6 +1499,7 @@ void GameEngine::start_skirmish_internal(const QString& map_path,
   }
 
   m_finalize_progress_after_overlay = false;
+  m_loading_overlay_last_frame_ms = 0;
   m_loading_overlay_active = true;
   m_runtime.loading = true;
   emit is_loading_changed();
@@ -1657,6 +1684,8 @@ void GameEngine::configure_mission_victory_conditions() {
 
   m_campaign_manager->configure_mission_victory_conditions(m_victory_service.get(),
                                                            m_runtime.local_owner_id);
+
+  m_victory_service->set_spectator_mode(m_level.is_spectator_mode);
 
   m_victory_service->set_victory_callback([this](const QString& state) {
     if (m_runtime.victory_state != state) {
@@ -2692,6 +2721,8 @@ auto GameEngine::get_owner_info() const -> QVariantList {
             ? QString::fromStdString(
                   Game::Systems::nation_id_to_string(owner_nation->id))
             : QString();
+    owner_map["is_contender"] = owner.type != Game::Systems::OwnerType::Neutral &&
+                                (owner_nation == nullptr || owner_nation->has_economy);
     owner_map["state"] = build_player_state_map(
         *m_session, owner.owner_id, m_level.max_troops_per_player);
 

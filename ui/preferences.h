@@ -6,6 +6,8 @@
 #include <QString>
 #include <QStringList>
 
+#include "../game/render_bridge/camera_speeds.h"
+
 class UiPreferences : public QObject {
   Q_OBJECT
 
@@ -54,10 +56,24 @@ class UiPreferences : public QObject {
   Q_PROPERTY(bool commanderGuardIsToggle READ commander_guard_is_toggle WRITE
                  set_commander_guard_is_toggle NOTIFY commander_input_changed)
   Q_PROPERTY(QStringList colorVisionModes READ color_vision_modes CONSTANT)
+  Q_PROPERTY(QString displayWindowMode READ display_window_mode WRITE
+                 set_display_window_mode NOTIFY display_window_mode_changed)
+  Q_PROPERTY(QStringList displayWindowModes READ display_window_modes CONSTANT)
+  Q_PROPERTY(bool displayVsync READ display_vsync WRITE set_display_vsync NOTIFY
+                 display_vsync_changed)
+  Q_PROPERTY(bool showFps READ show_fps WRITE set_show_fps NOTIFY show_fps_changed)
+  Q_PROPERTY(qreal cameraPanSpeed READ camera_pan_speed WRITE set_camera_pan_speed
+                 NOTIFY camera_speeds_changed)
+  Q_PROPERTY(qreal cameraZoomSpeed READ camera_zoom_speed WRITE set_camera_zoom_speed
+                 NOTIFY camera_speeds_changed)
+  Q_PROPERTY(qreal cameraRotationSpeed READ camera_rotation_speed WRITE
+                 set_camera_rotation_speed NOTIFY camera_speeds_changed)
   Q_PROPERTY(qreal minUiScale READ min_ui_scale CONSTANT)
   Q_PROPERTY(qreal maxUiScale READ max_ui_scale CONSTANT)
   Q_PROPERTY(qreal minEdgeScrollSensitivity READ min_edge_scroll_sensitivity CONSTANT)
   Q_PROPERTY(qreal maxEdgeScrollSensitivity READ max_edge_scroll_sensitivity CONSTANT)
+  Q_PROPERTY(qreal minCameraSpeedScale READ min_camera_speed_scale CONSTANT)
+  Q_PROPERTY(qreal maxCameraSpeedScale READ max_camera_speed_scale CONSTANT)
 
 public:
   static auto instance() -> UiPreferences*;
@@ -113,6 +129,22 @@ public:
     return m_commander_guard_is_toggle;
   }
 
+  [[nodiscard]] auto display_window_mode() const -> QString {
+    return m_display_window_mode;
+  }
+  [[nodiscard]] static auto display_window_modes() -> QStringList {
+    return {QStringLiteral("fullscreen"),
+            QStringLiteral("borderless"),
+            QStringLiteral("windowed")};
+  }
+  [[nodiscard]] auto display_vsync() const -> bool { return m_display_vsync; }
+  [[nodiscard]] auto show_fps() const -> bool { return m_show_fps; }
+  [[nodiscard]] auto camera_pan_speed() const -> qreal { return m_camera_pan_speed; }
+  [[nodiscard]] auto camera_zoom_speed() const -> qreal { return m_camera_zoom_speed; }
+  [[nodiscard]] auto camera_rotation_speed() const -> qreal {
+    return m_camera_rotation_speed;
+  }
+
   [[nodiscard]] auto effective_team_patterns() const -> bool;
 
   [[nodiscard]] static auto color_vision_modes() -> QStringList;
@@ -120,6 +152,12 @@ public:
   [[nodiscard]] static auto max_ui_scale() -> qreal;
   [[nodiscard]] static auto min_edge_scroll_sensitivity() -> qreal;
   [[nodiscard]] static auto max_edge_scroll_sensitivity() -> qreal;
+  [[nodiscard]] static auto min_camera_speed_scale() -> qreal {
+    return Game::Systems::CameraSpeeds::k_min_scale;
+  }
+  [[nodiscard]] static auto max_camera_speed_scale() -> qreal {
+    return Game::Systems::CameraSpeeds::k_max_scale;
+  }
 
   void set_ui_scale(qreal scale);
   void set_reduced_motion(bool enabled);
@@ -142,6 +180,12 @@ public:
   void set_commander_head_bob(bool enabled);
   void set_commander_field_of_view_scale(qreal scale);
   void set_commander_guard_is_toggle(bool enabled);
+  void set_display_window_mode(const QString& mode);
+  void set_display_vsync(bool enabled);
+  void set_show_fps(bool enabled);
+  void set_camera_pan_speed(qreal scale);
+  void set_camera_zoom_speed(qreal scale);
+  void set_camera_rotation_speed(qreal scale);
 
   Q_INVOKABLE void reset_to_defaults();
 
@@ -161,10 +205,15 @@ signals:
   void tutorial_completed_changed();
   void screen_effect_intensity_changed();
   void commander_input_changed();
+  void display_window_mode_changed();
+  void display_vsync_changed();
+  void show_fps_changed();
+  void camera_speeds_changed();
 
 private:
   explicit UiPreferences(QObject* parent = nullptr);
   void publish_commander_input_settings() const;
+  void publish_camera_speeds() const;
 
   static UiPreferences* m_instance;
 
@@ -189,6 +238,12 @@ private:
   bool m_camera_legend_seen;
   bool m_tutorial_completed;
   qreal m_screen_effect_intensity;
+  QString m_display_window_mode;
+  bool m_display_vsync;
+  bool m_show_fps;
+  qreal m_camera_pan_speed;
+  qreal m_camera_zoom_speed;
+  qreal m_camera_rotation_speed;
 };
 
 #endif

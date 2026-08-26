@@ -12,6 +12,7 @@
 #include <memory>
 #include <vector>
 
+#include "fog_renderer.h"
 #include "game/map/visibility_service.h"
 #include "linear_feature_geometry.h"
 #include "linear_feature_submission.h"
@@ -35,6 +36,10 @@ void BridgeRenderer::configure(const std::vector<Game::Map::Bridge>& bridges,
   build_meshes();
 }
 
+void BridgeRenderer::set_fog_renderer(FogRenderer* fog) {
+  m_fog = fog;
+}
+
 void BridgeRenderer::build_meshes() {
   m_meshes.clear();
 
@@ -51,14 +56,44 @@ void BridgeRenderer::build_meshes() {
   }
 }
 
+auto BridgeRenderer::segment_cull_options(float longest_segment) const
+    -> Ground::LinearFeatureVisibilityOptions {
+
+  Ground::LinearFeatureVisibilityOptions options;
+  options.sample_count = Ground::recommended_linear_feature_visibility_sample_count(
+      longest_segment, m_tile_size);
+
+  options.explored_alpha = 1.0F;
+  options.explored_tint = QVector3D(1.0F, 1.0F, 1.0F);
+  return options;
+}
+
 void BridgeRenderer::submit(Renderer& renderer, ResourceManager* resources) {
   Q_UNUSED(resources);
+
+  float longest_segment = 0.0F;
+  for (const auto& bridge : m_bridges) {
+    longest_segment = std::max(longest_segment, (bridge.end - bridge.start).length());
+  }
+
+  TerrainSurfaceCmd::VisibilityResources visibility_resources;
+  if (renderer.static_world_visibility_filter_enabled()) {
+    visibility_resources = renderer.visibility_mask();
+  }
+
+  FogMaskResources fog_mask;
+  if (m_fog != nullptr && renderer.static_world_visibility_filter_enabled()) {
+    fog_mask = m_fog->prepare_mask(renderer);
+  }
 
   Ground::submit_linear_feature_segments(renderer,
                                          m_bridges,
                                          m_meshes,
                                          LinearFeatureKind::Bridge,
-                                         QVector3D(0.58F, 0.55F, 0.50F));
+                                         QVector3D(0.58F, 0.55F, 0.50F),
+                                         segment_cull_options(longest_segment),
+                                         visibility_resources,
+                                         fog_mask);
 }
 
 } // namespace Render::GL

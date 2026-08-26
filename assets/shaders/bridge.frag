@@ -1,8 +1,10 @@
 #version 330 core
 #include "directional_shadows.glsl"
 #include "environment_lighting.glsl"
+#include "fog_reveal.glsl"
 #include "local_lighting.glsl"
 #include "noise.glsl"
+#include "visibility_mask.glsl"
 
 in vec3 v_normal;
 in vec2 v_tex_coord;
@@ -116,13 +118,24 @@ void main() {
   vec2 uv = surface_pos * k_setts_per_metre;
   vec2 macro_uv = surface_pos * 0.45;
 
+  vec2 cell = floor(uv);
+  float cell_rnd = soi_hash_82bbee(cell);
+
+  vec2 reveal_sample = fog_reveal_sample(v_world_pos.xz);
+  float reveal_alpha = fog_reveal_alpha(reveal_sample.x);
+  if (fog_reveal_discards(reveal_alpha)) {
+    discard;
+  }
+
+  VisibilityMask vis;
+  vis.seen_now = reveal_sample.y;
+  vis.known = reveal_sample.x;
+
   vec2 F = worley_f(uv);
   float edge_metric = F.y - F.x;
   float stone_mask = smoothstep(0.030, 0.165, edge_metric);
   float mortar_mask = 1.0 - stone_mask;
 
-  vec2 cell = floor(uv);
-  float cell_rnd = soi_hash_82bbee(cell);
   vec2 local = fract(uv);
   vec2 uv_var = (rot(cell_rnd * 6.2831853) * (local - 0.5) + 0.5) + cell;
 
@@ -178,5 +191,11 @@ void main() {
 
   lit_color = apply_directional_shadow(lit_color, v_world_pos, v_normal);
   lit_color += base_color * ao * local_lighting(v_world_pos, Ng);
-  frag_color = vec4(lit_color, 1.0);
+  if (fog_reveal_active()) {
+    vec3 memory = remembered_surface_color(lit_color, u_explored_alpha) *
+                  visibility_memory_falloff(vis);
+    lit_color = mix(memory, lit_color, visibility_live_weight(vis));
+  }
+  lit_color = fog_reveal_haze(lit_color, reveal_alpha);
+  frag_color = vec4(lit_color, reveal_alpha);
 }

@@ -7,6 +7,7 @@
 #include "app/core/user_settings.h"
 #include "game/accessibility/motion_settings.h"
 #include "game/accessibility/team_identity.h"
+#include "game/render_bridge/camera_speeds.h"
 #include "ui/preferences.h"
 
 namespace {
@@ -47,6 +48,14 @@ TEST_F(UiPreferencesTest, DefaultsMatchTheShippedPresentation) {
   EXPECT_TRUE(prefs->damage_numbers());
   EXPECT_DOUBLE_EQ(prefs->screen_effect_intensity(),
                    UserSettings::kDefaultScreenEffectIntensity);
+  EXPECT_EQ(prefs->display_window_mode(),
+            QString::fromLatin1(UserSettings::kDefaultDisplayWindowMode));
+  EXPECT_TRUE(prefs->display_vsync());
+  EXPECT_FALSE(prefs->show_fps());
+  EXPECT_DOUBLE_EQ(prefs->camera_pan_speed(), UserSettings::kDefaultCameraSpeedScale);
+  EXPECT_DOUBLE_EQ(prefs->camera_zoom_speed(), UserSettings::kDefaultCameraSpeedScale);
+  EXPECT_DOUBLE_EQ(prefs->camera_rotation_speed(),
+                   UserSettings::kDefaultCameraSpeedScale);
 }
 
 TEST_F(UiPreferencesTest, UiScaleIsPersistedAndClampedToTheSupportedRange) {
@@ -111,11 +120,15 @@ TEST_F(UiPreferencesTest, CorruptedStoredValuesFallBackToDefaults) {
                       QStringLiteral("enormous"));
     settings.setValue(QString::fromLatin1(UserSettings::kUiColorVisionKey),
                       QStringLiteral("not-a-mode"));
+    settings.setValue(QString::fromLatin1(UserSettings::kDisplayWindowModeKey),
+                      QStringLiteral("cinema"));
     settings.sync();
   }
 
   EXPECT_DOUBLE_EQ(UserSettings::load_ui_scale(), UserSettings::kDefaultUiScale);
   EXPECT_EQ(UserSettings::load_ui_color_vision_mode(), QStringLiteral("none"));
+  EXPECT_EQ(UserSettings::load_display_window_mode(),
+            QString::fromLatin1(UserSettings::kDefaultDisplayWindowMode));
 }
 
 TEST_F(UiPreferencesTest, GameplayAccessibilityOptionsRoundTripThroughSettings) {
@@ -196,6 +209,60 @@ TEST_F(UiPreferencesTest, PreferencesReachTheLayersThatCannotReadSettings) {
             Accessibility::PaletteVariant::Standard);
   EXPECT_FALSE(Accessibility::TeamIdentity::patterns_enabled());
   EXPECT_FLOAT_EQ(Accessibility::MotionSettings::camera_motion_scale(), 1.0F);
+}
+
+TEST_F(UiPreferencesTest, DisplayOptionsRoundTripThroughSettings) {
+  auto* prefs = UiPreferences::instance();
+
+  prefs->set_display_window_mode(QStringLiteral("Windowed"));
+  EXPECT_EQ(prefs->display_window_mode(), QStringLiteral("windowed"));
+  EXPECT_EQ(UserSettings::load_display_window_mode(), QStringLiteral("windowed"));
+
+  prefs->set_display_window_mode(QStringLiteral("holographic"));
+  EXPECT_EQ(prefs->display_window_mode(), QStringLiteral("windowed"));
+  EXPECT_EQ(UserSettings::load_display_window_mode(), QStringLiteral("windowed"));
+
+  prefs->set_display_vsync(false);
+  EXPECT_FALSE(UserSettings::load_display_vsync());
+
+  prefs->set_show_fps(true);
+  EXPECT_TRUE(UserSettings::load_ui_show_fps());
+}
+
+TEST_F(UiPreferencesTest, CameraSpeedScalesRoundTripThroughSettings) {
+  auto* prefs = UiPreferences::instance();
+
+  prefs->set_camera_pan_speed(1.75);
+  prefs->set_camera_zoom_speed(0.5);
+  prefs->set_camera_rotation_speed(2.0);
+
+  EXPECT_DOUBLE_EQ(UserSettings::load_camera_pan_speed_scale(), 1.75);
+  EXPECT_DOUBLE_EQ(UserSettings::load_camera_zoom_speed_scale(), 0.5);
+  EXPECT_DOUBLE_EQ(UserSettings::load_camera_rotation_speed_scale(), 2.0);
+}
+
+TEST_F(UiPreferencesTest, CameraSpeedScalesAreClampedAndReachTheCameraService) {
+  namespace CameraSpeeds = Game::Systems::CameraSpeeds;
+  auto* prefs = UiPreferences::instance();
+
+  prefs->set_camera_pan_speed(50.0);
+  EXPECT_DOUBLE_EQ(prefs->camera_pan_speed(), UserSettings::kMaxCameraSpeedScale);
+  EXPECT_FLOAT_EQ(CameraSpeeds::pan_scale(),
+                  static_cast<float>(UserSettings::kMaxCameraSpeedScale));
+
+  prefs->set_camera_zoom_speed(-3.0);
+  EXPECT_DOUBLE_EQ(prefs->camera_zoom_speed(), UserSettings::kMinCameraSpeedScale);
+
+  prefs->set_camera_rotation_speed(1.5);
+  EXPECT_FLOAT_EQ(CameraSpeeds::rotation_scale(), 1.5F);
+
+  prefs->reset_to_defaults();
+  EXPECT_FLOAT_EQ(CameraSpeeds::pan_scale(),
+                  static_cast<float>(UserSettings::kDefaultCameraSpeedScale));
+  EXPECT_FLOAT_EQ(CameraSpeeds::zoom_scale(),
+                  static_cast<float>(UserSettings::kDefaultCameraSpeedScale));
+  EXPECT_FLOAT_EQ(CameraSpeeds::rotation_scale(),
+                  static_cast<float>(UserSettings::kDefaultCameraSpeedScale));
 }
 
 TEST_F(UiPreferencesTest, CorruptedGameplayOptionsFallBackToDefaults) {

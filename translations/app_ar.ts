@@ -112,10 +112,6 @@
         <translation>يوصل</translation>
     </message>
     <message>
-        <source>Carrying its load to the barracks.</source>
-        <translation>يحمل حمولته إلى الثكنة.</translation>
-    </message>
-    <message>
         <source>Healing</source>
         <translation>يعالج</translation>
     </message>
@@ -194,6 +190,18 @@
     <message>
         <source>Slaughtering a sheep for food.</source>
         <translation>يذبح خروفًا للحصول على الطعام.</translation>
+    </message>
+    <message>
+        <source>Carrying its load to the barracks; it cannot be interrupted until the load is dropped off.</source>
+        <translation>يحمل حمولته إلى الثكنة؛ لا يمكن مقاطعته حتى يسلّم الحمولة.</translation>
+    </message>
+    <message>
+        <source>Cannot be interrupted</source>
+        <translation>لا يمكن مقاطعته</translation>
+    </message>
+    <message>
+        <source>Hauling a load to the barracks. New orders wait until the load is dropped off.</source>
+        <translation>يسحب حمولة إلى الثكنة. الأوامر الجديدة تنتظر حتى تُسلَّم الحمولة.</translation>
     </message>
 </context>
 <context>
@@ -1845,10 +1853,6 @@ This may be a skirmish, or objectives have not been configured.</source>
         <translation>التطويق يحتاج ثلاث وحدات على الأقل.</translation>
     </message>
     <message>
-        <source>Forming up</source>
-        <translation>يتشكّل</translation>
-    </message>
-    <message>
         <source>Formed</source>
         <translation>متشكّل</translation>
     </message>
@@ -1857,8 +1861,20 @@ This may be a skirmish, or objectives have not been configured.</source>
         <translation>مضطرب</translation>
     </message>
     <message>
-        <source>Breaking</source>
-        <translation>ينكسر</translation>
+        <source>Reforming</source>
+        <translation>يعيد تشكيل الصف</translation>
+    </message>
+    <message>
+        <source>Opening</source>
+        <translation>يفتح</translation>
+    </message>
+    <message>
+        <source>Traversing</source>
+        <translation>يعبر</translation>
+    </message>
+    <message>
+        <source>Arrived</source>
+        <translation>وصل</translation>
     </message>
 </context>
 <context>
@@ -2312,14 +2328,6 @@ This may be a skirmish, or objectives have not been configured.</source>
 <context>
     <name>GameEngine</name>
     <message>
-        <source>Maximum troop limit reached. Cannot produce more units.</source>
-        <translation>بلغت الحد الأقصى للقوات. لا يمكن إنتاج وحدات أخرى.</translation>
-    </message>
-    <message>
-        <source>Not enough manpower. Build homes or wait for families.</source>
-        <translation>لا تكفي القوى البشرية. ابنِ مساكن أو انتظر قدوم العائلات.</translation>
-    </message>
-    <message>
         <source>Cannot start skirmish: renderer not initialized</source>
         <translation>تعذّر بدء المناوشة: محرك العرض غير مهيّأ</translation>
     </message>
@@ -2350,6 +2358,30 @@ This may be a skirmish, or objectives have not been configured.</source>
     <message>
         <source>Cannot play replay: unknown launch kind &apos;%1&apos;</source>
         <translation>تعذّر تشغيل الإعادة: نوع تشغيل غير معروف «%1»</translation>
+    </message>
+    <message>
+        <source>Our ally %1 has been defeated.</source>
+        <translation>لقد هُزم حليفنا %1.</translation>
+    </message>
+    <message>
+        <source>%1 has been defeated.</source>
+        <translation>لقد هُزم %1.</translation>
+    </message>
+    <message>
+        <source>Our ally %1 is finished - %2 has fallen.</source>
+        <translation>انتهى أمر حليفنا %1 - لقد سقط %2.</translation>
+    </message>
+    <message>
+        <source>%1 is finished - %2 has fallen.</source>
+        <translation>انتهى أمر %1 - لقد سقط %2.</translation>
+    </message>
+    <message>
+        <source>Troop limit reached.</source>
+        <translation>تم بلوغ حد القوات.</translation>
+    </message>
+    <message>
+        <source>Not enough manpower — build a home to raise more families.</source>
+        <translation>القوى البشرية غير كافية — ابنِ منزلًا لتربية المزيد من الأسر.</translation>
     </message>
 </context>
 <context>
@@ -2392,6 +2424,13 @@ This may be a skirmish, or objectives have not been configured.</source>
     <message>
         <source>High plus contact-hardening shadows, foliage translucency, extra terrain detail and 8x anti-aliasing. Needs a strong GPU.</source>
         <translation>عالٍ مع ظلال تتصلّب عند التماس، أوراق شبه شفافة، تفاصيل تضاريس إضافية وتنعيم حواف 8x. يتطلب بطاقة رسوميات قوية.</translation>
+    </message>
+</context>
+<context>
+    <name>HUD</name>
+    <message>
+        <source>%1 FPS</source>
+        <translation>%1 FPS</translation>
     </message>
 </context>
 <context>
@@ -3853,6 +3892,22 @@ Unseen: never scouted.</source>
     <message>
         <source>Unit details</source>
         <translation>تفاصيل الوحدة</translation>
+    </message>
+    <message>
+        <source>%1/%2</source>
+        <translation>%1/%2</translation>
+    </message>
+    <message>
+        <source>%1 soldiers</source>
+        <translation>%1 جنود</translation>
+    </message>
+    <message>
+        <source>SOLDIERS</source>
+        <translation>جنود</translation>
+    </message>
+    <message>
+        <source> soldiers — </source>
+        <translation> جنود — </translation>
     </message>
 </context>
 <context>
@@ -6120,6 +6175,10 @@ to see preview</source>
         <source>Not enough resources.</source>
         <translation>الموارد غير كافية.</translation>
     </message>
+    <message>
+        <source>Hauling a load - it cannot be interrupted until the load is dropped off.</source>
+        <translation>يسحب حمولة - لا يمكن مقاطعتها حتى تسليمها.</translation>
+    </message>
 </context>
 <context>
     <name>OutcomeLayout</name>
@@ -6173,6 +6232,13 @@ to see preview</source>
     <message>
         <source>Every slot on this map is taken</source>
         <translation>كل خانة في هذه الخريطة مشغولة</translation>
+    </message>
+</context>
+<context>
+    <name>PlayerDefeatWatcher</name>
+    <message>
+        <source>Player %1</source>
+        <translation>اللاعب %1</translation>
     </message>
 </context>
 <context>
@@ -7075,6 +7141,10 @@ Builders reap it for the food that recruits civilians</source>
         <source>No target under the cursor</source>
         <translation>لا يوجد هدف تحت المؤشر</translation>
     </message>
+    <message>
+        <source>Hauling a load - cannot be interrupted</source>
+        <translation>يسحب حمولة - لا يمكن مقاطعته</translation>
+    </message>
 </context>
 <context>
     <name>RpgFpvOverlay</name>
@@ -7653,6 +7723,58 @@ Builders reap it for the food that recruits civilians</source>
     <message>
         <source>Numbers are a readout, not the feedback. Combat stays readable from motion, sound and hit reactions with them off.</source>
         <translation>الأرقام قراءة وليست استجابة. يبقى القتال مفهوماً من الحركة والصوت وردود فعل الإصابة بدونها.</translation>
+    </message>
+    <message>
+        <source>Borderless</source>
+        <translation>بلا حدود</translation>
+    </message>
+    <message>
+        <source>Windowed</source>
+        <translation>نافذة</translation>
+    </message>
+    <message>
+        <source>Fullscreen</source>
+        <translation>ملء الشاشة</translation>
+    </message>
+    <message>
+        <source>Display Settings</source>
+        <translation>إعدادات العرض</translation>
+    </message>
+    <message>
+        <source>Window Mode:</source>
+        <translation>وضع النافذة:</translation>
+    </message>
+    <message>
+        <source>VSync</source>
+        <translation>VSync</translation>
+    </message>
+    <message>
+        <source>Synchronises frames with your display to remove tearing. Toggling it takes effect the next time the game starts.</source>
+        <translation>يزامن الإطارات مع شاشتك لإزالة التمزق. يسري التبديل عند بدء اللعبة في المرة القادمة.</translation>
+    </message>
+    <message>
+        <source>Show FPS counter</source>
+        <translation>إظهار عداد الإطارات</translation>
+    </message>
+    <message>
+        <source>Displays a small frame-rate readout during battle</source>
+        <translation>يعرض قراءة صغيرة لمعدل الإطارات أثناء المعركة</translation>
+    </message>
+    <message>
+        <source>Camera pan speed:</source>
+        <translation>سرعة تحريك الكاميرا:</translation>
+    </message>
+    <message>
+        <source>Camera zoom speed:</source>
+        <translation>سرعة تقريب الكاميرا:</translation>
+    </message>
+    <message>
+        <source>Camera rotation speed:</source>
+        <translation>سرعة تدوير الكاميرا:</translation>
+    </message>
+    <message>
+        <source>Scales keyboard panning, zooming and rotation; drag and minimap movement stay unchanged.</source>
+        <translation>يضبط التحريك والتقريب والتدوير بلوحة المفاتيح؛ يبقى السحب والحركة عبر الخريطة المصغرة دون تغيير.</translation>
     </message>
 </context>
 <context>
