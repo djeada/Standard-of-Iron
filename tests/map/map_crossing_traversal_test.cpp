@@ -188,6 +188,29 @@ TEST_F(MapCrossingTraversalTest, ASquadOrderedOverEveryShippedFordReachesTheFarB
       Game::Systems::CommandService::move_units(
           world, squad, std::vector<QVector3D>(squad.size(), *target));
 
+      if (qEnvironmentVariableIsSet("SOI_CROSSING_GRID")) {
+        const Game::Systems::BodyProfile probe{
+            .radius = 0.5F,
+            .passability = Game::Systems::Pathfinding::Passability::Light};
+        auto* pathfinder = Game::Systems::NavGrid::get_pathfinder();
+        const auto centre = Game::Systems::NavGrid::world_to_grid(-14.0F, -25.5F);
+        for (int dz = -8; dz <= 8; ++dz) {
+          QString row;
+          for (int dx = -8; dx <= 12; ++dx) {
+            const int gx = centre.x + dx;
+            const int gz = centre.y + dz;
+            const QVector3D world_point(static_cast<float>(gx) - (176 * 0.5F - 0.5F),
+                                        0.0F,
+                                        static_cast<float>(gz) - (176 * 0.5F - 0.5F));
+            const bool grid_ok = pathfinder->is_walkable(gx, gz);
+            const bool stand_ok =
+                Game::Systems::Walkability::can_stand(world_point, probe);
+            row += grid_ok ? (stand_ok ? '.' : 'c') : '#';
+          }
+          qWarning("GRID z=%d %s", centre.y + dz, row.toLatin1().constData());
+        }
+      }
+
       for (int tick = 0; tick < k_crossing_seconds * 30; ++tick) {
         world.update(k_tick_seconds);
         if (qEnvironmentVariableIsSet("SOI_CROSSING_DUMP") && tick % 300 == 0) {

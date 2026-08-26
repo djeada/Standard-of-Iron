@@ -51,10 +51,6 @@ constexpr float k_angle_commitment_bonus = 0.30F;
 
 constexpr float k_deviation_rate_degrees_per_second = 150.0F;
 
-// How much of a sideways separation push survives inside a movement corridor.
-// Zero deadlocks a column - two bodies overlapping across the line of march
-// cancel each other's escape - and one lets a corridor spread out like open
-// ground. See the corridor branch in update().
 constexpr float k_corridor_lateral_relief = 0.45F;
 
 auto compute_avoidance_priority(Engine::Core::SystemContext& context,
