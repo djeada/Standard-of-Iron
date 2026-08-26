@@ -207,9 +207,19 @@ void LocalAvoidanceSystem::build_index(Engine::Core::SystemContext& context) {
 auto LocalAvoidanceSystem::gather_neighbors(std::size_t self,
                                             float horizon) -> std::size_t {
   m_neighbors.clear();
+  m_neighbors.reserve(k_max_neighbors + 1U);
   auto const& me = m_circles[self];
   float const inv_cell_size = 1.0F / k_default_cell_size;
   CellKey const center = to_cell(me.x, me.z, inv_cell_size);
+
+  auto const sorts_before = [this](const Neighbor& lhs, const Neighbor& rhs) {
+    float const left = lhs.time_to_collision < 0.0F ? 1.0e9F : lhs.time_to_collision;
+    float const right = rhs.time_to_collision < 0.0F ? 1.0e9F : rhs.time_to_collision;
+    if (left != right) {
+      return left < right;
+    }
+    return m_circles[lhs.index].id < m_circles[rhs.index].id;
+  };
 
   std::uint32_t examined = 0;
   for (int dx = -1; dx <= 1; ++dx) {
@@ -237,54 +247,52 @@ auto LocalAvoidanceSystem::gather_neighbors(std::size_t self,
           continue;
         }
 
-        float response = 0.5F;
-        if (!them.avoids || !them.is_moving) {
-          response = 1.0F;
-        } else if (them.priority > me.priority) {
-          response = 0.75F;
-        } else if (them.priority < me.priority) {
-          response = 0.25F;
-        } else {
-
-          float const speed = std::hypot(me.desired_vx, me.desired_vz);
-          if (speed > 1.0e-4F) {
-            float const cross = (me.desired_vx * pz - me.desired_vz * px) / speed;
-            response = cross < 0.0F ? 0.8F : 0.2F;
-          }
-        }
-
-        if (them.formation_id != 0U && them.formation_id == me.formation_id) {
-          response *= 0.6F;
-        }
-
         float const ttc = time_to_collision(px,
                                             pz,
                                             them.predicted_vx - me.desired_vx,
                                             them.predicted_vz - me.desired_vz,
                                             combined,
                                             horizon);
-        m_neighbors.push_back({other, ttc, response});
+
+        m_neighbors.push_back({other, ttc, 0.5F});
+        std::push_heap(m_neighbors.begin(), m_neighbors.end(), sorts_before);
+        if (m_neighbors.size() > k_max_neighbors) {
+          std::pop_heap(m_neighbors.begin(), m_neighbors.end(), sorts_before);
+          m_neighbors.pop_back();
+        }
       }
     }
   }
 
-  std::sort(m_neighbors.begin(),
-            m_neighbors.end(),
-            [this](const Neighbor& lhs, const Neighbor& rhs) {
-              return m_circles[lhs.index].id < m_circles[rhs.index].id;
-            });
-  std::stable_sort(m_neighbors.begin(),
-                   m_neighbors.end(),
-                   [](const Neighbor& lhs, const Neighbor& rhs) {
-                     float const left =
-                         lhs.time_to_collision < 0.0F ? 1.0e9F : lhs.time_to_collision;
-                     float const right =
-                         rhs.time_to_collision < 0.0F ? 1.0e9F : rhs.time_to_collision;
-                     return left < right;
-                   });
-  if (m_neighbors.size() > k_max_neighbors) {
-    m_neighbors.resize(k_max_neighbors);
+  std::sort_heap(m_neighbors.begin(), m_neighbors.end(), sorts_before);
+
+  for (auto& neighbor : m_neighbors) {
+    auto const& them = m_circles[neighbor.index];
+    float const px = them.x - me.x;
+    float const pz = them.z - me.z;
+
+    float response = 0.5F;
+    if (!them.avoids || !them.is_moving) {
+      response = 1.0F;
+    } else if (them.priority > me.priority) {
+      response = 0.75F;
+    } else if (them.priority < me.priority) {
+      response = 0.25F;
+    } else {
+
+      float const speed = std::hypot(me.desired_vx, me.desired_vz);
+      if (speed > 1.0e-4F) {
+        float const cross = (me.desired_vx * pz - me.desired_vz * px) / speed;
+        response = cross < 0.0F ? 0.8F : 0.2F;
+      }
+    }
+
+    if (them.formation_id != 0U && them.formation_id == me.formation_id) {
+      response *= 0.6F;
+    }
+    neighbor.response = response;
   }
+
   return examined;
 }
 

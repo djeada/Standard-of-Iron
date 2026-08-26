@@ -417,7 +417,25 @@ void Pathfinding::mark_building_region_dirty(float center_x,
 }
 
 void Pathfinding::mark_obstruction_released() {
+  m_obstruction_center_located.store(false, std::memory_order_relaxed);
   m_obstruction_revision.fetch_add(1, std::memory_order_acq_rel);
+}
+
+void Pathfinding::mark_obstruction_released_at(float center_x, float center_z) {
+  m_obstruction_center_x.store(center_x, std::memory_order_relaxed);
+  m_obstruction_center_z.store(center_z, std::memory_order_relaxed);
+  m_obstruction_center_located.store(true, std::memory_order_relaxed);
+  m_obstruction_revision.fetch_add(1, std::memory_order_acq_rel);
+}
+
+auto Pathfinding::last_obstruction_release() const -> ObstructionRelease {
+  if (!m_obstruction_center_located.load(std::memory_order_relaxed)) {
+    return {};
+  }
+  return {.center = QVector3D(m_obstruction_center_x.load(std::memory_order_relaxed),
+                              0.0F,
+                              m_obstruction_center_z.load(std::memory_order_relaxed)),
+          .located = true};
 }
 
 auto Pathfinding::obstruction_revision() const -> std::uint64_t {
@@ -909,6 +927,103 @@ auto Pathfinding::find_path(const Point& start,
   }
   m_path_cache.emplace(key, path);
   return path;
+}
+
+auto Pathfinding::label_at(const RegionMap& map,
+                           const Point& cell) const -> std::uint32_t {
+  if (cell.x < 0 || cell.x >= m_width || cell.y < 0 || cell.y >= m_height) {
+    return k_unreachable_region;
+  }
+  auto const index = static_cast<std::size_t>(to_index(cell));
+  return index < map.labels.size() ? map.labels[index] : k_unreachable_region;
+}
+
+void Pathfinding::rebuild_region_map(RegionMap& map, Passability passability) const {
+  auto const cell_count = static_cast<std::size_t>(std::max(m_width, 0)) *
+                          static_cast<std::size_t>(std::max(m_height, 0));
+  map.labels.assign(cell_count, k_unreachable_region);
+  if (cell_count == 0U) {
+    return;
+  }
+
+  std::vector<int> frontier;
+  std::uint32_t next_label = k_unreachable_region;
+  for (int seed_y = 0; seed_y < m_height; ++seed_y) {
+    for (int seed_x = 0; seed_x < m_width; ++seed_x) {
+      int const seed_index = to_index(seed_x, seed_y);
+      if (map.labels[static_cast<std::size_t>(seed_index)] != k_unreachable_region ||
+          !is_walkable(seed_x, seed_y, passability)) {
+        continue;
+      }
+
+      ++next_label;
+      map.labels[static_cast<std::size_t>(seed_index)] = next_label;
+      frontier.clear();
+      frontier.push_back(seed_index);
+
+      while (!frontier.empty()) {
+        Point const current = to_point(frontier.back());
+        frontier.pop_back();
+
+        std::array<Point, 8> neighbors{};
+        std::size_t const neighbor_count =
+            collect_neighbors(current, neighbors, passability);
+        for (std::size_t i = 0; i < neighbor_count; ++i) {
+          Point const& neighbor = neighbors[i];
+          if (!is_walkable(neighbor.x, neighbor.y, passability)) {
+            continue;
+          }
+          auto const neighbor_index = static_cast<std::size_t>(to_index(neighbor));
+          if (map.labels[neighbor_index] != k_unreachable_region) {
+            continue;
+          }
+          map.labels[neighbor_index] = next_label;
+          frontier.push_back(static_cast<int>(neighbor_index));
+        }
+      }
+    }
+  }
+}
+
+void Pathfinding::region_labels(const Point& first,
+                                const Point& second,
+                                Passability passability,
+                                std::uint32_t& first_label,
+                                std::uint32_t& second_label) {
+  if (m_navigation_grid_dirty.load(std::memory_order_acquire)) {
+    update_navigation_grid();
+  }
+
+  std::uint64_t const revision = navigation_revision();
+  std::shared_lock<std::shared_mutex> const navigation_lock(m_navigation_mutex);
+  std::lock_guard<std::mutex> const region_lock(m_region_mutex);
+
+  auto& map = m_region_maps[static_cast<std::size_t>(passability)];
+  if (!map.built || map.revision != revision) {
+    rebuild_region_map(map, passability);
+    map.revision = revision;
+    map.built = true;
+  }
+
+  first_label = label_at(map, first);
+  second_label = label_at(map, second);
+}
+
+auto Pathfinding::region_of(const Point& cell,
+                            Passability passability) -> std::uint32_t {
+  std::uint32_t label = k_unreachable_region;
+  std::uint32_t ignored = k_unreachable_region;
+  region_labels(cell, cell, passability, label, ignored);
+  return label;
+}
+
+auto Pathfinding::can_reach(const Point& start,
+                            const Point& end,
+                            Passability passability) -> bool {
+  std::uint32_t start_label = k_unreachable_region;
+  std::uint32_t end_label = k_unreachable_region;
+  region_labels(start, end, passability, start_label, end_label);
+  return start_label != k_unreachable_region && start_label == end_label;
 }
 
 auto Pathfinding::PathCacheKeyHash::operator()(const PathCacheKey& key) const noexcept

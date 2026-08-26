@@ -82,9 +82,17 @@ public:
                                    float width,
                                    float depth);
   using GridDirtyHook = void (*)();
+
+  struct ObstructionRelease {
+    float center_x{0.0F};
+    float center_z{0.0F};
+    bool located{false};
+  };
+
+  using ObstructionReleasedHook = void (*)(const ObstructionRelease& release);
   static void set_region_dirty_hook(RegionDirtyHook hook);
   static void set_grid_dirty_hook(GridDirtyHook hook);
-  static void set_obstruction_released_hook(GridDirtyHook hook);
+  static void set_obstruction_released_hook(ObstructionReleasedHook hook);
 
   static auto get_building_size(const std::string& building_type) -> BuildingSize;
 

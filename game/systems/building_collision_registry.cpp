@@ -49,7 +49,8 @@ namespace {
 
 BuildingCollisionRegistry::RegionDirtyHook g_region_dirty_hook = nullptr;
 BuildingCollisionRegistry::GridDirtyHook g_grid_dirty_hook = nullptr;
-BuildingCollisionRegistry::GridDirtyHook g_obstruction_released_hook = nullptr;
+BuildingCollisionRegistry::ObstructionReleasedHook g_obstruction_released_hook =
+    nullptr;
 
 void announce_region_dirty(float center_x, float center_z, float width, float depth) {
   if (g_region_dirty_hook != nullptr) {
@@ -63,10 +64,20 @@ void announce_grid_dirty() {
   }
 }
 
-void announce_obstruction_released() {
+void announce_obstruction_released(
+    const BuildingCollisionRegistry::ObstructionRelease& release) {
   if (g_obstruction_released_hook != nullptr) {
-    g_obstruction_released_hook();
+    g_obstruction_released_hook(release);
   }
+}
+
+void announce_obstruction_released_at(float center_x, float center_z) {
+  announce_obstruction_released(
+      {.center_x = center_x, .center_z = center_z, .located = true});
+}
+
+void announce_obstruction_released_everywhere() {
+  announce_obstruction_released({});
 }
 
 } // namespace
@@ -79,7 +90,8 @@ void BuildingCollisionRegistry::set_grid_dirty_hook(GridDirtyHook hook) {
   g_grid_dirty_hook = hook;
 }
 
-void BuildingCollisionRegistry::set_obstruction_released_hook(GridDirtyHook hook) {
+void BuildingCollisionRegistry::set_obstruction_released_hook(
+    ObstructionReleasedHook hook) {
   g_obstruction_released_hook = hook;
 }
 
@@ -270,7 +282,7 @@ void BuildingCollisionRegistry::unregister_building(Engine::Core::EntityID entit
   release_authored_obstacles_within(center_x, center_z, width, depth);
 
   announce_region_dirty(center_x, center_z, width, depth);
-  announce_obstruction_released();
+  announce_obstruction_released_at(center_x, center_z);
 }
 
 void BuildingCollisionRegistry::release_authored_obstacles_within(float center_x,
@@ -676,7 +688,7 @@ void BuildingCollisionRegistry::clear() {
   m_max_half_extent = 0.0F;
 
   announce_grid_dirty();
-  announce_obstruction_released();
+  announce_obstruction_released_everywhere();
 }
 
 void BuildingCollisionRegistry::set_grid_padding(float padding) {

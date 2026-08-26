@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <cstdint>
 #include <gtest/gtest.h>
 #include <optional>
 #include <vector>
@@ -735,6 +736,97 @@ TEST_F(PathfindingTest, HeavyUnitsRouteAroundAWoodThatLightUnitsWalkThrough) {
     return widest;
   };
   EXPECT_GT(widest_deviation(heavy_path), widest_deviation(light_path));
+}
+
+TEST_F(PathfindingTest, ReachableRegionsAgreeWithPathSearch) {
+  using Passability = Game::Systems::Pathfinding::Passability;
+  constexpr int k_extent = 24;
+  constexpr float k_origin = -((static_cast<float>(k_extent) * 0.5F) - 0.5F);
+
+  Game::Systems::Pathfinding pathfinding(k_extent, k_extent);
+  pathfinding.set_grid_offset(k_origin, k_origin);
+  pathfinding.update_navigation_grid();
+
+  std::uint32_t seed = 0x5EED1234U;
+  auto next_random = [&seed]() {
+    seed = (seed * 1664525U) + 1013904223U;
+    return seed >> 16U;
+  };
+  for (int y = 0; y < k_extent; ++y) {
+    for (int x = 0; x < k_extent; ++x) {
+      if (next_random() % 100U < 22U) {
+        pathfinding.set_obstacle(x, y, true);
+      }
+    }
+  }
+
+  for (int offset = 2; offset <= 6; ++offset) {
+    pathfinding.set_obstacle(offset, 2, true);
+    pathfinding.set_obstacle(offset, 6, true);
+    pathfinding.set_obstacle(2, offset, true);
+    pathfinding.set_obstacle(6, offset, true);
+  }
+  for (int y = 3; y <= 5; ++y) {
+    for (int x = 3; x <= 5; ++x) {
+      pathfinding.set_obstacle(x, y, false);
+    }
+  }
+
+  int compared = 0;
+  int unreachable = 0;
+  for (int start_y = 0; start_y < k_extent; start_y += 3) {
+    for (int start_x = 0; start_x < k_extent; start_x += 3) {
+      Game::Systems::Point const start{start_x, start_y};
+      if (!pathfinding.is_walkable(start.x, start.y)) {
+        continue;
+      }
+      for (int end_y = 0; end_y < k_extent; end_y += 5) {
+        for (int end_x = 0; end_x < k_extent; end_x += 5) {
+          Game::Systems::Point const end{end_x, end_y};
+          auto const route =
+              pathfinding.find_path(start, end, Passability::Light, 0.35F);
+          bool const path_arrives = !route.empty() && route.back() == end;
+          bool const reachable = pathfinding.can_reach(start, end, Passability::Light);
+          EXPECT_EQ(reachable, path_arrives)
+              << "(" << start.x << "," << start.y << ") -> (" << end.x << "," << end.y
+              << ")";
+          ++compared;
+          if (!reachable) {
+            ++unreachable;
+          }
+        }
+      }
+    }
+  }
+
+  EXPECT_GT(compared, 100);
+  EXPECT_GT(unreachable, 0) << "the sealed chamber must make some pairs unreachable";
+}
+
+TEST_F(PathfindingTest, ReachableRegionsFollowGridEdits) {
+  using Passability = Game::Systems::Pathfinding::Passability;
+  constexpr int k_extent = 9;
+  Game::Systems::Pathfinding pathfinding(k_extent, k_extent);
+  pathfinding.set_grid_offset(-4.0F, -4.0F);
+  pathfinding.update_navigation_grid();
+
+  Game::Systems::Point const left{1, 4};
+  Game::Systems::Point const right{7, 4};
+  EXPECT_TRUE(pathfinding.can_reach(left, right, Passability::Light));
+
+  for (int y = 0; y < k_extent; ++y) {
+    pathfinding.set_obstacle(4, y, true);
+  }
+  EXPECT_FALSE(pathfinding.can_reach(left, right, Passability::Light));
+  EXPECT_NE(pathfinding.region_of(left, Passability::Light),
+            Game::Systems::Pathfinding::k_unreachable_region);
+  EXPECT_NE(pathfinding.region_of(left, Passability::Light),
+            pathfinding.region_of(right, Passability::Light));
+
+  pathfinding.set_obstacle(4, 4, false);
+  EXPECT_TRUE(pathfinding.can_reach(left, right, Passability::Light));
+  EXPECT_EQ(pathfinding.region_of({4, 0}, Passability::Light),
+            Game::Systems::Pathfinding::k_unreachable_region);
 }
 
 } // namespace

@@ -15,6 +15,7 @@
 
 #include <algorithm>
 #include <atomic>
+#include <chrono>
 #include <cstdint>
 #include <memory>
 #include <mutex>
@@ -573,6 +574,8 @@ private:
   float m_deferred_presentation_dt = 0.0F;
 
   static constexpr int k_frame_lock_handoff_yields = 64;
+
+  static constexpr std::chrono::milliseconds k_render_effects_lock_budget{8};
   std::atomic<int> m_frame_lock_waiters{0};
 
   int m_loading_overlay_frames_remaining = 0;

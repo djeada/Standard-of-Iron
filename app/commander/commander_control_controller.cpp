@@ -12,6 +12,7 @@
 #include <numbers>
 #include <vector>
 
+#include "app/commander/commander_abilities.h"
 #include "app/commander/commander_motor.h"
 #include "game/accessibility/commander_input_settings.h"
 #include "game/accessibility/motion_settings.h"
@@ -43,6 +44,8 @@
 namespace {
 
 constexpr float k_degrees_to_radians = 0.017453292519943295F;
+
+constexpr float k_ability_rescan_cooldown = 0.18F;
 
 auto wrap_angle_degrees(float degrees) -> float {
   degrees = std::fmod(degrees, 360.0F);
@@ -379,9 +382,7 @@ void CommanderControlController::reset() {
   m_guard_was_active = false;
   m_combo_miss_timer = 0.0F;
   m_primary_held_duration = 0.0F;
-  m_shield_bash_cooldown = 0.0F;
-  m_vanguard_rush_cooldown = 0.0F;
-  m_second_wind_cooldown = 0.0F;
+  m_abilities.reset();
 }
 
 void CommanderControlController::set_view_yaw(float yaw) {
@@ -1343,255 +1344,6 @@ auto CommanderControlController::queued_intent_count(
   return intents != nullptr ? static_cast<int>(intents->count) : 0;
 }
 
-auto CommanderControlController::resolve_ability_target(Engine::Core::World& world,
-                                                        Engine::Core::Entity& commander,
-                                                        int local_owner_id,
-                                                        float max_range) const
-    -> Engine::Core::EntityID {
-  auto* transform = commander.get_component<Engine::Core::TransformComponent>();
-  if (transform == nullptr) {
-    return 0;
-  }
-
-  const QVector3D origin(transform->position.x, 0.0F, transform->position.z);
-  const float max_range_sq = max_range * max_range;
-  auto& owners = Game::Session::session_for(world).owners();
-
-  auto qualifies = [&](Engine::Core::EntityID candidate_id) -> bool {
-    auto* candidate = world.get_entity(candidate_id);
-    auto* candidate_unit = (candidate != nullptr)
-                               ? candidate->get_component<Engine::Core::UnitComponent>()
-                               : nullptr;
-    auto* candidate_transform =
-        (candidate != nullptr)
-            ? candidate->get_component<Engine::Core::TransformComponent>()
-            : nullptr;
-    if (candidate_unit == nullptr || candidate_transform == nullptr ||
-        candidate_unit->health <= 0 ||
-        !owners.are_enemies(local_owner_id, candidate_unit->owner_id)) {
-      return false;
-    }
-
-    const QVector3D target(
-        candidate_transform->position.x, 0.0F, candidate_transform->position.z);
-    return (target - origin).lengthSquared() <= max_range_sq &&
-           Game::Systems::has_clear_building_los(buildings_of(world), origin, target);
-  };
-
-  if (m_locked_target_id != 0 && qualifies(m_locked_target_id)) {
-    return m_locked_target_id;
-  }
-  if (m_soft_target_id != 0 && qualifies(m_soft_target_id)) {
-    return m_soft_target_id;
-  }
-  return 0;
-}
-
-void CommanderControlController::update_ability_cooldowns(
-    Engine::Core::CommanderComponent* commander, float dt) {
-  auto decay = [dt](float& cooldown) {
-    if (cooldown > 0.0F) {
-      cooldown = std::max(0.0F, cooldown - dt);
-    }
-  };
-  decay(m_shield_bash_cooldown);
-  decay(m_vanguard_rush_cooldown);
-  decay(m_second_wind_cooldown);
-
-  if (commander != nullptr) {
-    commander->shield_bash_cooldown_remaining = m_shield_bash_cooldown;
-    commander->vanguard_rush_cooldown_remaining = m_vanguard_rush_cooldown;
-    commander->second_wind_cooldown_remaining = m_second_wind_cooldown;
-  }
-}
-
-void CommanderControlController::try_activate_shield_bash(
-    Engine::Core::World& world,
-    Engine::Core::Entity& commander,
-    Engine::Core::EntityID commander_id,
-    int local_owner_id) {
-  const bool bash_requested = m_tick_input.shield_bash_pressed;
-  m_tick_input.shield_bash_pressed = false;
-  if (!bash_requested) {
-    return;
-  }
-
-  auto* guard = commander.get_component<Engine::Core::CommanderGuardComponent>();
-  auto* cmd_comp = commander.get_component<Engine::Core::CommanderComponent>();
-  constexpr float k_bash_range = 2.5F;
-  constexpr float k_bash_stagger_duration = 0.5F;
-  constexpr float k_bash_cooldown = 3.0F;
-  if (guard == nullptr || !guard->active || m_shield_bash_cooldown > 0.0F ||
-      m_jump_timer > 0.0F) {
-    Game::Audio::play_cue(Game::Audio::Cue::k_combat_ability_refused);
-    return;
-  }
-
-  auto* transform = commander.get_component<Engine::Core::TransformComponent>();
-  if (transform == nullptr) {
-    return;
-  }
-
-  auto& owners = Game::Session::session_for(world).owners();
-  const QVector3D cmd_pos(
-      transform->position.x, transform->position.y, transform->position.z);
-  for (auto* entity : world.collect_entities_with<Engine::Core::UnitComponent>()) {
-    if (entity == nullptr || entity->get_id() == commander_id) {
-      continue;
-    }
-    auto* unit = entity->get_component<Engine::Core::UnitComponent>();
-    auto* ent_tf = entity->get_component<Engine::Core::TransformComponent>();
-    if (unit == nullptr || ent_tf == nullptr || unit->health <= 0 ||
-        !owners.are_enemies(local_owner_id, unit->owner_id)) {
-      continue;
-    }
-    const QVector3D epos(ent_tf->position.x, ent_tf->position.y, ent_tf->position.z);
-    if ((epos - cmd_pos).length() > k_bash_range) {
-      continue;
-    }
-    if (auto* existing_stagger =
-            entity->get_component<Engine::Core::StaggerComponent>()) {
-      existing_stagger->remaining =
-          std::max(existing_stagger->remaining, k_bash_stagger_duration);
-    } else {
-      entity->add_component<Engine::Core::StaggerComponent>(k_bash_stagger_duration);
-    }
-    if (auto* enemy_cmd = entity->get_component<Engine::Core::CommanderComponent>()) {
-      enemy_cmd->punish_window_remaining =
-          std::max(enemy_cmd->punish_window_remaining, 0.75F);
-    }
-  }
-
-  m_shield_bash_cooldown = k_bash_cooldown;
-  Game::Audio::play_cue(Game::Audio::Cue::k_combat_shield_bash);
-  if (cmd_comp != nullptr) {
-    cmd_comp->shield_bash_cooldown_remaining = m_shield_bash_cooldown;
-  }
-}
-
-void CommanderControlController::try_activate_vanguard_rush(
-    Engine::Core::World& world,
-    Engine::Core::Entity& commander,
-    Engine::Core::EntityID commander_id,
-    int local_owner_id) {
-  const bool rush_requested = m_tick_input.vanguard_rush_pressed;
-  m_tick_input.vanguard_rush_pressed = false;
-  if (!rush_requested) {
-    return;
-  }
-  if (m_vanguard_rush_cooldown > 0.0F || m_dodge_state != DodgeState::None ||
-      m_jump_timer > 0.0F) {
-    Game::Audio::play_cue(Game::Audio::Cue::k_combat_ability_refused);
-    return;
-  }
-
-  auto* transform = commander.get_component<Engine::Core::TransformComponent>();
-  auto* unit = commander.get_component<Engine::Core::UnitComponent>();
-  auto* movement = commander.get_component<Engine::Core::MovementComponent>();
-  auto* combat_state = commander.get_component<Engine::Core::CombatStateComponent>();
-  auto* cmd_comp = commander.get_component<Engine::Core::CommanderComponent>();
-  if (transform == nullptr || unit == nullptr ||
-      (combat_state != nullptr &&
-       combat_state->animation_state != Engine::Core::CombatAnimationState::Idle)) {
-    return;
-  }
-
-  constexpr float k_rush_cooldown = 4.5F;
-  constexpr float k_rush_max_range = 8.0F;
-  constexpr float k_rush_stop_distance = 1.35F;
-  constexpr float k_rush_default_distance = 3.6F;
-  constexpr int k_rush_damage = 18;
-  constexpr float k_rush_stagger_duration = 0.35F;
-
-  const QVector3D start(
-      transform->position.x, transform->position.y, transform->position.z);
-  const float yaw_rad = m_view_yaw * k_degrees_to_radians;
-  QVector3D rush_direction(std::sin(yaw_rad), 0.0F, std::cos(yaw_rad));
-  float rush_distance = k_rush_default_distance;
-
-  if (Game::Units::is_cavalry(unit->spawn_type) && movement != nullptr) {
-    movement->set_manual_velocity(rush_direction.x() * 8.0F, rush_direction.z() * 8.0F);
-    if (Game::Systems::Combat::request_mounted_charge(
-            commander, Engine::Core::MountedChargeIntentSource::Player)) {
-      m_vanguard_rush_cooldown = k_rush_cooldown;
-      Game::Audio::play_cue(Game::Audio::Cue::k_combat_vanguard_rush);
-      m_primary_scan_cooldown = 0.18F;
-      if (cmd_comp != nullptr) {
-        cmd_comp->vanguard_rush_cooldown_remaining = m_vanguard_rush_cooldown;
-      }
-    }
-    return;
-  }
-
-  Engine::Core::Entity* target = nullptr;
-  const auto target_id =
-      resolve_ability_target(world, commander, local_owner_id, k_rush_max_range);
-  if (target_id != 0) {
-    target = world.get_entity(target_id);
-    auto* target_transform =
-        (target != nullptr) ? target->get_component<Engine::Core::TransformComponent>()
-                            : nullptr;
-    if (target_transform != nullptr) {
-      QVector3D const to_target(target_transform->position.x - start.x(),
-                                0.0F,
-                                target_transform->position.z - start.z());
-      if (to_target.lengthSquared() > 0.0001F) {
-        const float target_distance = std::sqrt(to_target.lengthSquared());
-        rush_direction = to_target / target_distance;
-        rush_distance = std::clamp(target_distance - k_rush_stop_distance,
-                                   1.4F,
-                                   k_rush_default_distance + 0.4F);
-      }
-    }
-  }
-
-  const QVector3D desired = start + rush_direction * rush_distance;
-  const QVector3D resolved = App::Core::CommanderMotor::reachable_ground_position(
-      Game::Session::session_for(world), start, desired, commander_id);
-  static_cast<void>(m_motor.teleport(
-      *transform, resolved, App::Core::CommanderDisplacementSource::StrikeLunge));
-  if (movement != nullptr) {
-    movement->set_manual_velocity(rush_direction.x() * 8.0F, rush_direction.z() * 8.0F);
-  }
-  m_primary_scan_cooldown = 0.18F;
-
-  if (target != nullptr) {
-    auto* target_unit = target->get_component<Engine::Core::UnitComponent>();
-    auto* target_transform = target->get_component<Engine::Core::TransformComponent>();
-    if (target_unit != nullptr && target_transform != nullptr &&
-        target_unit->health > 0) {
-      const QVector3D target_pos(target_transform->position.x,
-                                 target_transform->position.y,
-                                 target_transform->position.z);
-      if ((target_pos - resolved).length() <= 2.35F &&
-          Game::Systems::has_clear_building_los(
-              buildings_of(world), resolved, target_pos)) {
-        Game::Systems::RpgCombat::deal_commander_attack_damage(
-            &world, target, k_rush_damage, commander_id);
-        if (target_unit->health > 0) {
-          if (auto* stagger = target->get_component<Engine::Core::StaggerComponent>()) {
-            stagger->remaining = std::max(stagger->remaining, k_rush_stagger_duration);
-          } else {
-            target->add_component<Engine::Core::StaggerComponent>(
-                k_rush_stagger_duration);
-          }
-          if (auto* target_cmd =
-                  target->get_component<Engine::Core::CommanderComponent>()) {
-            target_cmd->punish_window_remaining =
-                std::max(target_cmd->punish_window_remaining, 0.85F);
-          }
-        }
-      }
-    }
-  }
-
-  m_vanguard_rush_cooldown = k_rush_cooldown;
-  Game::Audio::play_cue(Game::Audio::Cue::k_combat_vanguard_rush);
-  if (cmd_comp != nullptr) {
-    cmd_comp->vanguard_rush_cooldown_remaining = m_vanguard_rush_cooldown;
-  }
-}
-
 void CommanderControlController::publish_resolved_defense_feedback(
     Engine::Core::Entity& commander,
     Engine::Core::EntityID commander_id,
@@ -1631,51 +1383,6 @@ void CommanderControlController::publish_resolved_defense_feedback(
     m_observed_guard_broken_contacts = rpg->guard_broken_contacts;
     publish(App::Core::PlayerFeedbackType::GuardBroken, "guard_break");
   }
-}
-
-void CommanderControlController::try_activate_second_wind(
-    Engine::Core::Entity& commander) {
-  const bool second_wind_requested = m_tick_input.second_wind_pressed;
-  m_tick_input.second_wind_pressed = false;
-  if (!second_wind_requested) {
-    return;
-  }
-  if (m_second_wind_cooldown > 0.0F || m_dodge_state != DodgeState::None ||
-      m_jump_timer > 0.0F) {
-    Game::Audio::play_cue(Game::Audio::Cue::k_combat_ability_refused);
-    return;
-  }
-
-  auto* cmd_comp = commander.get_component<Engine::Core::CommanderComponent>();
-  auto* combat_state = commander.get_component<Engine::Core::CombatStateComponent>();
-  if (cmd_comp == nullptr ||
-      (combat_state != nullptr &&
-       combat_state->animation_state != Engine::Core::CombatAnimationState::Idle)) {
-    return;
-  }
-
-  constexpr float k_second_wind_cooldown = 8.0F;
-  constexpr float k_second_wind_posture_restore = 55.0F;
-  constexpr float k_second_wind_stamina_restore = 35.0F;
-  constexpr float k_second_wind_guard_window = 0.35F;
-
-  cmd_comp->posture = std::max(0.0F, cmd_comp->posture - k_second_wind_posture_restore);
-  if (auto* stamina = commander.get_component<Engine::Core::StaminaComponent>()) {
-    stamina->stamina = std::min(stamina->max_stamina,
-                                stamina->stamina + k_second_wind_stamina_restore);
-  }
-  auto* guard = commander.get_component<Engine::Core::CommanderGuardComponent>();
-  if (guard == nullptr) {
-    guard = commander.add_component<Engine::Core::CommanderGuardComponent>();
-  }
-  if (guard != nullptr && guard->guard_break_remaining <= 0.0F) {
-    guard->perfect_guard_remaining =
-        std::max(guard->perfect_guard_remaining, k_second_wind_guard_window);
-  }
-
-  m_second_wind_cooldown = k_second_wind_cooldown;
-  Game::Audio::play_cue(Game::Audio::Cue::k_combat_second_wind);
-  cmd_comp->second_wind_cooldown_remaining = m_second_wind_cooldown;
 }
 
 auto CommanderControlController::update(Engine::Core::World& world,
@@ -1745,7 +1452,7 @@ auto CommanderControlController::update_impl(Engine::Core::World& world,
 
   if (cmd_comp != nullptr && cmd_comp->flag_rally_in_progress &&
       !cmd_comp->fpv_controlled) {
-    update_ability_cooldowns(cmd_comp, dt);
+    m_abilities.advance_cooldowns(cmd_comp, dt);
     cmd_comp->fpv_motion_vx = 0.0F;
     cmd_comp->fpv_motion_vz = 0.0F;
     cmd_comp->fpv_motion_requested = false;
@@ -2331,10 +2038,31 @@ auto CommanderControlController::update_impl(Engine::Core::World& world,
     }
   }
 
-  update_ability_cooldowns(cmd_comp, dt);
-  try_activate_shield_bash(world, *commander, commander_id, local_owner_id);
-  try_activate_vanguard_rush(world, *commander, commander_id, local_owner_id);
-  try_activate_second_wind(*commander);
+  App::Core::CommanderAbilityRequest ability_request;
+  ability_request.shield_bash = m_tick_input.shield_bash_pressed;
+  ability_request.vanguard_rush = m_tick_input.vanguard_rush_pressed;
+  ability_request.second_wind = m_tick_input.second_wind_pressed;
+  m_tick_input.shield_bash_pressed = false;
+  m_tick_input.vanguard_rush_pressed = false;
+  m_tick_input.second_wind_pressed = false;
+
+  m_abilities.advance_cooldowns(cmd_comp, dt);
+  if (ability_request.any()) {
+    App::Core::CommanderAbilityContext ability_context;
+    ability_context.world = &world;
+    ability_context.commander = commander;
+    ability_context.commander_id = commander_id;
+    ability_context.local_owner_id = local_owner_id;
+    ability_context.view_yaw = m_view_yaw;
+    ability_context.dodging = m_dodge_state != DodgeState::None;
+    ability_context.airborne = m_jump_timer > 0.0F;
+    ability_context.locked_target_id = m_locked_target_id;
+    ability_context.soft_target_id = m_soft_target_id;
+    ability_context.motor = &m_motor;
+    if (m_abilities.activate(ability_request, ability_context).rescan_primary_target) {
+      m_primary_scan_cooldown = k_ability_rescan_cooldown;
+    }
+  }
 
   if (m_tick_input.primary_held) {
     m_combo_miss_timer = 0.0F;
