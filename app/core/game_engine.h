@@ -437,6 +437,8 @@ private:
   void update_commander_messages(float delta_time);
   void publish_commander_message();
   void publish_mission_stages();
+  void publish_minimap_overlays(float dt);
+  void note_minimap_combat_hit(const Engine::Core::CombatHitEvent& event);
   void update_mission_stages(float delta_time);
   void restore_mission_stages(const QJsonObject& stage_state);
   void restore_mission_waves(const QJsonObject& wave_state);
@@ -592,6 +594,7 @@ private:
   Game::Mission::MissionStageTracker m_mission_stage_tracker;
   Game::Mission::CommanderMessageDirector m_commander_message_director;
   float m_mission_stage_poll_accumulator = 0.0F;
+  float m_minimap_landmark_poll_accumulator = 0.0F;
   App::Mission::MissionWaveRuntime m_mission_waves;
   App::Mission::TutorialFrameNotes m_tutorial_notes;
   float m_tutorial_observe_accumulator = 0.0F;
@@ -601,6 +604,8 @@ private:
       m_unit_spawned_subscription;
   Engine::Core::ScopedEventSubscription<Engine::Core::CombatHitEvent>
       m_combat_hit_subscription;
+  Engine::Core::ScopedEventSubscription<Engine::Core::BarrackCapturedEvent>
+      m_barrack_captured_subscription;
   Engine::Core::ScopedEventSubscription<Engine::Core::MissionAnnouncementEvent>
       m_mission_announcement_subscription;
 

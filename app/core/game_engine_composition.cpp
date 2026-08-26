@@ -635,6 +635,30 @@ void GameEngine::build_services_and_controllers() {
             if (!m_commander_view_model->record_rpg_hit(e)) {
               m_activity_view_model->record_hit(e);
             }
+            note_minimap_combat_hit(e);
+          });
+
+  m_barrack_captured_subscription =
+      Engine::Core::ScopedEventSubscription<Engine::Core::BarrackCapturedEvent>(
+          [this](const Engine::Core::BarrackCapturedEvent& e) {
+            if (!m_minimap_view_model || m_world == nullptr) {
+              return;
+            }
+            auto* barrack = m_world->get_entity(e.barrack_id);
+            if (barrack == nullptr) {
+              return;
+            }
+            const auto* transform =
+                barrack->get_component<Engine::Core::TransformComponent>();
+            if (transform == nullptr) {
+              return;
+            }
+            m_minimap_view_model->note_alert(
+                App::ViewModels::MinimapAlert::CaptureFinished,
+                transform->position.x,
+                transform->position.z,
+                e.previous_owner_id,
+                e.new_owner_id);
           });
 
   publish_client_context();

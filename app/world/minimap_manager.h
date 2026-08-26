@@ -33,6 +33,22 @@ class Camera;
 
 class MinimapManager {
 public:
+  struct DestinationMarker {
+    float nx = 0.0F;
+    float ny = 0.0F;
+    float origin_nx = 0.0F;
+    float origin_ny = 0.0F;
+    int owner_id = 0;
+  };
+
+  struct CaptureAlert {
+    float world_x = 0.0F;
+    float world_z = 0.0F;
+    int site_owner_id = 0;
+    int capturing_owner_id = 0;
+    bool contested = false;
+  };
+
   MinimapManager();
   ~MinimapManager();
 
@@ -47,6 +63,19 @@ public:
                               float screen_height);
 
   [[nodiscard]] bool consume_dirty_flag();
+
+  [[nodiscard]] bool
+  world_to_normalized(float world_x, float world_z, float& nx, float& ny) const;
+
+  [[nodiscard]] const std::vector<DestinationMarker>& destinations() const {
+    return m_destinations;
+  }
+  [[nodiscard]] bool consume_destinations_dirty();
+
+  [[nodiscard]] const std::vector<CaptureAlert>& capture_alerts() const {
+    return m_capture_alerts;
+  }
+  void clear_capture_alerts() { m_capture_alerts.clear(); }
 
   [[nodiscard]] const QImage& get_image() const { return m_minimap_image; }
   [[nodiscard]] bool has_minimap() const { return !m_minimap_base_image.isNull(); }
@@ -87,4 +116,25 @@ private:
 
   std::vector<Game::Map::Minimap::UnitMarker> m_marker_scratch;
   std::vector<Engine::Core::EntityID> m_selected_scratch;
+
+  struct CaptureWatch {
+    Engine::Core::EntityID entity_id = 0;
+    int capturing_owner_id = 0;
+    int site_owner_id = 0;
+    float world_x = 0.0F;
+    float world_z = 0.0F;
+    bool contested = false;
+  };
+
+  void collect_capture_alerts(const std::vector<CaptureWatch>& current);
+
+  std::vector<CaptureWatch> m_capture_watch;
+  std::vector<CaptureWatch> m_capture_watch_scratch;
+  std::vector<CaptureAlert> m_capture_alerts;
+  std::vector<DestinationMarker> m_destinations;
+  std::vector<DestinationMarker> m_destination_scratch;
+  std::vector<std::uint64_t> m_destination_cell_scratch;
+  std::uint64_t m_destination_hash = 0;
+  bool m_destinations_dirty = false;
+  float m_hash_position_scale = 1.0F;
 };

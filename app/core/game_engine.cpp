@@ -195,6 +195,7 @@
 namespace {
 
 constexpr float k_mission_stage_poll_seconds = 0.25F;
+constexpr float k_minimap_landmark_poll_interval = 0.5F;
 constexpr float k_interaction_targeting_interval = 0.1F;
 
 auto build_resource_map(Game::Session::SessionContext& session,
@@ -819,6 +820,7 @@ void GameEngine::update_presentation(float dt) {
     Render::Profiling::AccumulatorScope const sync_scope(
         &Render::Profiling::global_profile().view_model_sync_us);
     publish_frame_snapshots();
+    publish_minimap_overlays(dt);
     sync_render_camera();
     capture_render_selection();
     sync_scatter_world_props();
@@ -1793,6 +1795,10 @@ void GameEngine::reset_mission_runtime_state() {
   m_tutorial_notes.reset();
   m_tutorial_observe_accumulator = 0.0F;
   m_runtime.minimap_unit_update_accumulator = 0.0F;
+  m_minimap_landmark_poll_accumulator = 0.0F;
+  if (m_minimap_view_model) {
+    m_minimap_view_model->clear_overlays();
+  }
   m_mission_waves.reset();
   m_mission_stage_tracker.clear();
   m_mission_stage_poll_accumulator = 0.0F;
@@ -2038,6 +2044,104 @@ void GameEngine::publish_mission_stages() {
   }
 
   m_mission_view_model->set_stages(stages);
+}
+
+void GameEngine::note_minimap_combat_hit(const Engine::Core::CombatHitEvent& event) {
+  if (!m_minimap_view_model || m_world == nullptr || m_minimap_manager == nullptr ||
+      !m_minimap_manager->has_minimap()) {
+    return;
+  }
+  if (!m_minimap_view_model->consume_alert_budget()) {
+    return;
+  }
+
+  auto* target = m_world->get_entity(event.target_id);
+  if (target == nullptr) {
+    return;
+  }
+  const auto* transform = target->get_component<Engine::Core::TransformComponent>();
+  const auto* unit = target->get_component<Engine::Core::UnitComponent>();
+  if (transform == nullptr || unit == nullptr ||
+      Game::Units::is_wildlife_spawn(unit->spawn_type)) {
+    return;
+  }
+
+  int attacker_owner_id = 0;
+  if (auto* attacker = m_world->get_entity(event.attacker_id)) {
+    if (const auto* attacker_unit =
+            attacker->get_component<Engine::Core::UnitComponent>()) {
+      attacker_owner_id = attacker_unit->owner_id;
+    }
+  }
+
+  const bool is_building = Game::Units::is_building_spawn(unit->spawn_type);
+  m_minimap_view_model->note_alert(
+      is_building ? App::ViewModels::MinimapAlert::StructureAttacked
+                  : App::ViewModels::MinimapAlert::TroopsAttacked,
+      transform->position.x,
+      transform->position.z,
+      unit->owner_id,
+      attacker_owner_id);
+}
+
+void GameEngine::publish_minimap_overlays(float dt) {
+  if (!m_minimap_manager || !m_minimap_view_model ||
+      !m_minimap_manager->has_minimap()) {
+    return;
+  }
+
+  for (const auto& alert : m_minimap_manager->capture_alerts()) {
+    m_minimap_view_model->note_alert(
+        alert.contested ? App::ViewModels::MinimapAlert::CaptureContested
+                        : App::ViewModels::MinimapAlert::CaptureStarted,
+        alert.world_x,
+        alert.world_z,
+        alert.site_owner_id,
+        alert.capturing_owner_id);
+  }
+  m_minimap_manager->clear_capture_alerts();
+
+  if (m_minimap_manager->consume_destinations_dirty()) {
+    QVariantList destinations;
+    for (const auto& destination : m_minimap_manager->destinations()) {
+      QVariantMap entry;
+      entry["nx"] = destination.nx;
+      entry["ny"] = destination.ny;
+      entry["origin_nx"] = destination.origin_nx;
+      entry["origin_ny"] = destination.origin_ny;
+      destinations.append(entry);
+    }
+    m_minimap_view_model->set_destinations(destinations);
+  }
+
+  m_minimap_landmark_poll_accumulator += std::max(dt, 0.0F);
+  if (m_minimap_landmark_poll_accumulator < k_minimap_landmark_poll_interval) {
+    return;
+  }
+  m_minimap_landmark_poll_accumulator = 0.0F;
+
+  QVariantList landmarks;
+  if (m_world != nullptr) {
+    if (auto* undead = m_world->get_system<Game::Systems::UndeadAwakeningSystem>()) {
+      for (const auto& shrine : undead->shrine_markers()) {
+        float nx = 0.0F;
+        float ny = 0.0F;
+        if (!m_minimap_manager->world_to_normalized(
+                shrine.world_position.x(), shrine.world_position.z(), nx, ny)) {
+          continue;
+        }
+        QVariantMap entry;
+        entry["nx"] = nx;
+        entry["ny"] = ny;
+        entry["kind"] = QStringLiteral("shrine");
+        entry["state"] = shrine.cleared    ? QStringLiteral("cleared")
+                         : shrine.awakened ? QStringLiteral("awakened")
+                                           : QStringLiteral("dormant");
+        landmarks.append(entry);
+      }
+    }
+  }
+  m_minimap_view_model->set_landmarks(landmarks);
 }
 
 void GameEngine::publish_wave_status() {

@@ -59,10 +59,10 @@ private:
   float m_offset_y = 0.0F;
 
   float m_border_width = 1.25F;
-  std::uint8_t m_border_r = 255;
-  std::uint8_t m_border_g = 255;
-  std::uint8_t m_border_b = 255;
-  std::uint8_t m_border_a = 200;
+  std::uint8_t m_border_r = 236;
+  std::uint8_t m_border_g = 214;
+  std::uint8_t m_border_b = 166;
+  std::uint8_t m_border_a = 214;
 };
 
 } // namespace Game::Map::Minimap
