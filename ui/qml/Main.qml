@@ -105,7 +105,15 @@ ApplicationWindow {
 
     width: 1280
     height: 720
-    visibility: Window.FullScreen
+    readonly property string window_mode: UiPreferences.displayWindowMode
+    flags: window_mode === "borderless" ? (Qt.Window | Qt.FramelessWindowHint) : Qt.Window
+    visibility: {
+        if (window_mode === "windowed")
+            return Window.Windowed;
+        if (window_mode === "borderless")
+            return Window.Maximized;
+        return Window.FullScreen;
+    }
     visible: true
     LayoutMirroring.enabled: Qt.application.layoutDirection === Qt.RightToLeft
     LayoutMirroring.childrenInherit: true
@@ -773,6 +781,19 @@ ApplicationWindow {
         }
 
         target: Design.Notifications
+    }
+
+    Connections {
+        function onPlayer_defeated(text, ally, owner_id) {
+            if (!text || !mainWindow.game_started)
+                return;
+            Design.Notifications.push(ally ? "urgent" : "info", text, {
+                    "channel": "player-defeated-" + owner_id,
+                    "icon": Design.Icons.status("defeated")
+                });
+        }
+
+        target: game
     }
 
     Connections {

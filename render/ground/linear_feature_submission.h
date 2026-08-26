@@ -22,7 +22,9 @@ void submit_linear_feature_segments(
     const std::vector<std::unique_ptr<GL::Mesh>>& meshes,
     GL::LinearFeatureKind kind,
     const QVector3D& base_color,
-    const LinearFeatureVisibilityOptions& visibility_options = {}) {
+    const LinearFeatureVisibilityOptions& visibility_options = {},
+    const GL::TerrainSurfaceCmd::VisibilityResources& visibility_resources = {},
+    const GL::FogMaskResources& fog_mask = {}) {
   if (segments.empty() || meshes.empty()) {
     return;
   }
@@ -75,6 +77,8 @@ void submit_linear_feature_segments(
                  base_color.y() * color_multiplier.y(),
                  base_color.z() * color_multiplier.z()};
     cmd.alpha = alpha;
+    cmd.visibility = visibility_resources;
+    cmd.fog_mask = fog_mask;
     renderer.terrain_feature(cmd);
   }
 }

@@ -34,7 +34,8 @@ class OrderMarkerStore {
 public:
   static constexpr std::size_t k_max_markers = 24;
 
-  void push(const OrderOutcome& outcome, Engine::Core::World* world);
+  auto push(const OrderOutcome& outcome,
+            Engine::Core::World* world) -> const OrderMarker*;
 
   void update(float dt, Engine::Core::World* world);
 
@@ -53,5 +54,7 @@ private:
 [[nodiscard]] auto resolve_order_marker_anchor(Engine::Core::World* world,
                                                Engine::Core::EntityID target,
                                                QVector3D& out_position) -> bool;
+
+[[nodiscard]] auto order_marker_color(OrderKind kind, bool rejected) -> QVector3D;
 
 } // namespace App::Core

@@ -1,7 +1,12 @@
 #include "app/viewmodels/minimap_view_model.h"
 
+#include <QColor>
+
+#include <algorithm>
+
 #include "app/core/client_context.h"
 #include "app/input/input_command_handler.h"
+#include "app/orders/order_markers.h"
 #include "app/viewmodels/camera_view_model.h"
 #include "app/world/minimap_manager.h"
 #include "game/render_bridge/minimap/minimap_utils.h"
@@ -94,6 +99,28 @@ void MinimapViewModel::on_right_click(qreal mx,
   if (auto* input = m_context.input) {
     input->on_minimap_right_click(*target, m_context.local_owner_id);
   }
+}
+
+void MinimapViewModel::note_order_marker(const App::Core::OrderMarker& marker) {
+
+  auto* minimap = m_context.minimap;
+  if (minimap == nullptr || !minimap->has_minimap()) {
+    return;
+  }
+
+  const auto [nx, ny] = Game::Map::Minimap::world_to_pixel(marker.position.x(),
+                                                           marker.position.z(),
+                                                           minimap->get_world_width(),
+                                                           minimap->get_world_height(),
+                                                           1.0F,
+                                                           1.0F);
+
+  const QVector3D color = App::Core::order_marker_color(marker.kind, marker.rejected);
+  emit order_ping(std::clamp(nx, 0.0F, 1.0F),
+                  std::clamp(ny, 0.0F, 1.0F),
+                  QColor::fromRgbF(color.x(), color.y(), color.z()).name(),
+                  marker.rejected,
+                  marker.lifetime);
 }
 
 } // namespace App::ViewModels

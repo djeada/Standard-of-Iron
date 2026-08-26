@@ -11,6 +11,17 @@ may change in any release — see [Save compatibility](#save-compatibility).
 
 ### Added
 
+- **Display and camera speed settings.** The settings panel gains a Display
+  section: window mode (fullscreen, borderless or windowed, applied the moment
+  you pick one instead of always forcing fullscreen), a VSync toggle that is
+  written to the profile and honoured on the next launch (the
+  `SOI_SWAP_INTERVAL` environment variable still overrides it), and a
+  show-FPS-counter readout during battle. The Controls section gains camera
+  speed sliders — pan, zoom and rotation — each scaling the keyboard camera
+  commands from a quarter to three times the designed pace while drag and
+  minimap movement stay untouched. Everything persists through the usual
+  settings file and resets with the other preferences.
+
 - **Hills have shapes now, not just an ellipse.** A `terrain` entry of type
   `hill` takes a `shape`: `corridor` for a straight ridge that forces a fight
   along its length, `arc` for a boomerang or a corner wrap, `elbow` for a hard
@@ -49,6 +60,18 @@ tools/font/build_standard_iron.py`, then `tools/font/proof.py` to look at it).
   `Ui::BrandFonts`, and `scripts/promo-edit.py` resolves them repo-relative.
 
 ### Fixed
+
+- **The tooling gates no longer disagree with the working tree.**
+  `make translations` passed `-disable-heuristic number` to lupdate, so
+  patterns like `%1/%2` keep their empty, translatable entry instead of a
+  junk `%1% {1/%2?}` fill that the source-language seeder refuses to touch and
+  `translations-check` fails on forever; the seeder also identity-fills any
+  leftover heuristic text it now meets. The new display- and camera-settings
+  strings are translated in German, Spanish, Brazilian Portuguese and Arabic.
+  `format-changed`, `format-check-changed` and `lint-changed` diffed the base
+  against HEAD only, so uncommitted edits — and every untracked new file —
+  were invisible and the targets reported "nothing to do"; they now select
+  working-tree changes and untracked files as well.
 
 - **Swords no longer reach through a wall, and the men holding them walk
   around it.** Melee damage was already refused across a structure, but the

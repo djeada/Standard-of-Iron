@@ -11,6 +11,7 @@
 #include "../game/accessibility/commander_input_settings.h"
 #include "../game/accessibility/motion_settings.h"
 #include "../game/accessibility/team_identity.h"
+#include "../game/render_bridge/camera_speeds.h"
 #include "app/core/user_settings.h"
 
 namespace UserSettings = App::Core::UserSettings;
@@ -54,7 +55,13 @@ UiPreferences::UiPreferences(QObject* parent)
     , m_damage_number_mode(UserSettings::load_ui_damage_number_mode())
     , m_camera_legend_seen(UserSettings::load_ui_camera_legend_seen())
     , m_tutorial_completed(UserSettings::load_ui_tutorial_completed())
-    , m_screen_effect_intensity(UserSettings::load_ui_screen_effect_intensity()) {
+    , m_screen_effect_intensity(UserSettings::load_ui_screen_effect_intensity())
+    , m_display_window_mode(UserSettings::load_display_window_mode())
+    , m_display_vsync(UserSettings::load_display_vsync())
+    , m_show_fps(UserSettings::load_ui_show_fps())
+    , m_camera_pan_speed(UserSettings::load_camera_pan_speed_scale())
+    , m_camera_zoom_speed(UserSettings::load_camera_zoom_speed_scale())
+    , m_camera_rotation_speed(UserSettings::load_camera_rotation_speed_scale()) {
 
   Game::Accessibility::TeamIdentity::set_palette_variant_from_mode(
       m_color_vision_mode.toStdString());
@@ -63,6 +70,7 @@ UiPreferences::UiPreferences(QObject* parent)
       static_cast<float>(m_camera_motion_scale));
   Game::Accessibility::MotionSettings::set_reduced_motion(m_reduced_motion);
   publish_commander_input_settings();
+  publish_camera_speeds();
 }
 
 void UiPreferences::publish_commander_input_settings() const {
@@ -77,6 +85,13 @@ void UiPreferences::publish_commander_input_settings() const {
   CommanderInput::set_field_of_view_scale(
       static_cast<float>(m_commander_field_of_view_scale));
   CommanderInput::set_guard_is_toggle(m_commander_guard_is_toggle);
+}
+
+void UiPreferences::publish_camera_speeds() const {
+  namespace CameraSpeeds = Game::Systems::CameraSpeeds;
+  CameraSpeeds::set_pan_scale(static_cast<float>(m_camera_pan_speed));
+  CameraSpeeds::set_zoom_scale(static_cast<float>(m_camera_zoom_speed));
+  CameraSpeeds::set_rotation_scale(static_cast<float>(m_camera_rotation_speed));
 }
 
 void UiPreferences::set_commander_look_sensitivity_x(qreal scale) {
@@ -165,6 +180,86 @@ void UiPreferences::set_commander_guard_is_toggle(bool enabled) {
   UserSettings::save_commander_guard_is_toggle(enabled);
   publish_commander_input_settings();
   emit commander_input_changed();
+}
+
+void UiPreferences::set_display_window_mode(const QString& mode) {
+  const QString normalized = mode.trimmed().toLower();
+  if (!UserSettings::is_supported_window_mode(normalized) ||
+      normalized == m_display_window_mode) {
+    return;
+  }
+
+  m_display_window_mode = normalized;
+  UserSettings::save_display_window_mode(normalized);
+  emit display_window_mode_changed();
+}
+
+void UiPreferences::set_display_vsync(bool enabled) {
+  if (enabled == m_display_vsync) {
+    return;
+  }
+
+  m_display_vsync = enabled;
+  UserSettings::save_display_vsync(enabled);
+  emit display_vsync_changed();
+}
+
+void UiPreferences::set_show_fps(bool enabled) {
+  if (enabled == m_show_fps) {
+    return;
+  }
+
+  m_show_fps = enabled;
+  UserSettings::save_ui_show_fps(enabled);
+  emit show_fps_changed();
+}
+
+void UiPreferences::set_camera_pan_speed(qreal scale) {
+  if (!is_finite_scale(scale)) {
+    return;
+  }
+  const qreal clamped = std::clamp<qreal>(
+      scale, UserSettings::kMinCameraSpeedScale, UserSettings::kMaxCameraSpeedScale);
+  if (qFuzzyCompare(clamped, m_camera_pan_speed)) {
+    return;
+  }
+
+  m_camera_pan_speed = clamped;
+  UserSettings::save_camera_pan_speed_scale(clamped);
+  publish_camera_speeds();
+  emit camera_speeds_changed();
+}
+
+void UiPreferences::set_camera_zoom_speed(qreal scale) {
+  if (!is_finite_scale(scale)) {
+    return;
+  }
+  const qreal clamped = std::clamp<qreal>(
+      scale, UserSettings::kMinCameraSpeedScale, UserSettings::kMaxCameraSpeedScale);
+  if (qFuzzyCompare(clamped, m_camera_zoom_speed)) {
+    return;
+  }
+
+  m_camera_zoom_speed = clamped;
+  UserSettings::save_camera_zoom_speed_scale(clamped);
+  publish_camera_speeds();
+  emit camera_speeds_changed();
+}
+
+void UiPreferences::set_camera_rotation_speed(qreal scale) {
+  if (!is_finite_scale(scale)) {
+    return;
+  }
+  const qreal clamped = std::clamp<qreal>(
+      scale, UserSettings::kMinCameraSpeedScale, UserSettings::kMaxCameraSpeedScale);
+  if (qFuzzyCompare(clamped, m_camera_rotation_speed)) {
+    return;
+  }
+
+  m_camera_rotation_speed = clamped;
+  UserSettings::save_camera_rotation_speed_scale(clamped);
+  publish_camera_speeds();
+  emit camera_speeds_changed();
 }
 
 auto UiPreferences::instance() -> UiPreferences* {
@@ -411,4 +506,10 @@ void UiPreferences::reset_to_defaults() {
   set_commander_head_bob(true);
   set_commander_field_of_view_scale(UserSettings::kDefaultCommanderFieldOfViewScale);
   set_commander_guard_is_toggle(false);
+  set_display_window_mode(QString::fromLatin1(UserSettings::kDefaultDisplayWindowMode));
+  set_display_vsync(UserSettings::kDefaultDisplayVsync);
+  set_show_fps(UserSettings::kDefaultUiShowFps);
+  set_camera_pan_speed(UserSettings::kDefaultCameraSpeedScale);
+  set_camera_zoom_speed(UserSettings::kDefaultCameraSpeedScale);
+  set_camera_rotation_speed(UserSettings::kDefaultCameraSpeedScale);
 }

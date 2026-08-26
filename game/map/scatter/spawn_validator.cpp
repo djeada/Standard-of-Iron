@@ -4,6 +4,7 @@
 #include <cmath>
 
 #include "game/map/scatter/ground_utils.h"
+#include "game/map/scatter/world_prop_clearance_index.h"
 #include "game/map/terrain_service.h"
 #include "game/systems/building_collision_registry.h"
 
@@ -152,6 +153,10 @@ auto SpawnValidator::can_spawn_at_grid(float gx, float gz) const -> bool {
     return false;
   }
 
+  if (m_config.check_world_props && !check_world_prop_collision(world_x, world_z)) {
+    return false;
+  }
+
   if (m_config.check_roads && !check_road_collision(world_x, world_z)) {
     return false;
   }
@@ -257,6 +262,15 @@ auto SpawnValidator::check_building_collision(float world_x,
   return !building_registry.is_point_in_building(world_x, world_z);
 }
 
+auto SpawnValidator::check_world_prop_collision(float world_x,
+                                                float world_z) const -> bool {
+  const auto& index = shared_world_prop_clearance_index();
+  if (index.empty()) {
+    return true;
+  }
+  return !index.overlaps(world_x, world_z, m_config.world_prop_clearance);
+}
+
 auto SpawnValidator::check_road_collision(float world_x, float world_z) const -> bool {
   auto& terrain_service = Game::Map::TerrainService::instance();
   return !terrain_service.is_point_near_road(world_x, world_z, m_config.road_clearance);
@@ -277,6 +291,7 @@ auto SpawnValidator::check_river_clearance(float world_x, float world_z) const -
 
 auto make_plant_spawn_config() -> SpawnValidationConfig {
   SpawnValidationConfig config;
+  config.world_prop_clearance = 0.25F;
   config.edge_padding = 0.08F;
   config.max_slope = 0.65F;
   config.building_clearance = 1.6F;
@@ -297,6 +312,7 @@ auto make_plant_spawn_config() -> SpawnValidationConfig {
 
 auto make_stone_spawn_config() -> SpawnValidationConfig {
   SpawnValidationConfig config;
+  config.world_prop_clearance = 0.45F;
   config.edge_padding = 0.08F;
   config.max_slope = 0.15F;
   config.building_clearance = 2.8F;
@@ -317,6 +333,7 @@ auto make_stone_spawn_config() -> SpawnValidationConfig {
 
 auto make_tree_spawn_config() -> SpawnValidationConfig {
   SpawnValidationConfig config;
+  config.world_prop_clearance = 1.10F;
   config.edge_padding = 0.08F;
   config.max_slope = 0.75F;
   config.building_clearance = 4.5F;
@@ -337,6 +354,7 @@ auto make_tree_spawn_config() -> SpawnValidationConfig {
 
 auto make_firecamp_spawn_config() -> SpawnValidationConfig {
   SpawnValidationConfig config;
+  config.world_prop_clearance = 1.40F;
   config.edge_padding = 0.08F;
   config.max_slope = 0.30F;
   config.building_clearance = 6.0F;
@@ -357,6 +375,7 @@ auto make_firecamp_spawn_config() -> SpawnValidationConfig {
 
 auto make_grass_spawn_config() -> SpawnValidationConfig {
   SpawnValidationConfig config;
+  config.world_prop_clearance = 0.10F;
   config.edge_padding = 0.02F;
   config.max_slope = 0.92F;
   config.building_clearance = 0.8F;
@@ -376,6 +395,7 @@ auto make_grass_spawn_config() -> SpawnValidationConfig {
 
 auto make_camp_prop_spawn_config() -> SpawnValidationConfig {
   SpawnValidationConfig config;
+  config.world_prop_clearance = 1.20F;
   config.edge_padding = 0.08F;
   config.max_slope = 0.35F;
   config.building_clearance = 4.0F;

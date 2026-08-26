@@ -62,6 +62,9 @@ public:
       const auto& scatter_passes = m_scatter->passes();
       m_passes.insert(m_passes.end(), scatter_passes.begin(), scatter_passes.end());
     }
+    if (m_features != nullptr) {
+      m_features->set_fog_renderer(fog);
+    }
     m_passes.push_back(rain);
     m_passes.push_back(fog);
     m_passes.push_back(boundary_fog);

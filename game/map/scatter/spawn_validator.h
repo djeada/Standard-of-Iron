@@ -23,6 +23,8 @@ struct SpawnValidationConfig {
   float bridge_clearance = 0.0F;
   float river_clearance = 0.0F;
 
+  float world_prop_clearance = 0.0F;
+
   int river_margin = 1;
 
   bool allow_flat = true;
@@ -31,6 +33,7 @@ struct SpawnValidationConfig {
   bool allow_river = false;
 
   bool check_buildings = true;
+  bool check_world_props = true;
   bool check_roads = true;
   bool check_bridges = true;
   bool check_slope = true;
@@ -90,6 +93,9 @@ private:
 
   [[nodiscard]] auto check_building_collision(float world_x,
                                               float world_z) const -> bool;
+
+  [[nodiscard]] auto check_world_prop_collision(float world_x,
+                                                float world_z) const -> bool;
 
   [[nodiscard]] auto check_road_collision(float world_x, float world_z) const -> bool;
 

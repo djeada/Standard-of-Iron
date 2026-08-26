@@ -2061,8 +2061,8 @@
     {
       "id": "press_farm_3_ruin",
       "type": "ruins",
-      "x": 181.0,
-      "z": 160.0,
+      "x": 182.22,
+      "z": 160.81,
       "scale": 0.9,
       "rotation": 180.0
     },
@@ -2278,8 +2278,8 @@
     },
     {
       "type": "dead_tree",
-      "x": 54.0,
-      "z": 89.0,
+      "x": 54.97,
+      "z": 89.24,
       "scale": 1.0,
       "rotation": 180.0,
       "landmark": "grove_sanctuary"
@@ -2495,13 +2495,13 @@
     {
       "id": "p1_fire",
       "x": 120.0,
-      "z": 37.0,
+      "z": 36.84,
       "intensity": 1.05,
       "radius": 3.4
     },
     {
       "id": "p2_fire",
-      "x": 203.0,
+      "x": 205.38,
       "z": 120.0,
       "intensity": 1.05,
       "radius": 3.4
@@ -2509,13 +2509,13 @@
     {
       "id": "p3_fire",
       "x": 120.0,
-      "z": 203.0,
+      "z": 203.16,
       "intensity": 1.05,
       "radius": 3.4
     },
     {
       "id": "p4_fire",
-      "x": 37.0,
+      "x": 34.61,
       "z": 120.0,
       "intensity": 1.05,
       "radius": 3.4

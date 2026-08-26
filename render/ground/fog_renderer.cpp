@@ -293,14 +293,13 @@ void FogRenderer::upload_mask(Renderer& renderer) {
   m_mask_dirty = {};
 }
 
-void FogRenderer::submit(Renderer& renderer, ResourceManager* resources) {
-  (void)resources;
+auto FogRenderer::prepare_mask(Renderer& renderer) -> FogMaskResources {
   if (!m_enabled || m_width <= 0 || m_height <= 0) {
-    return;
+    return {};
   }
   if (m_fog_amount.size() !=
       static_cast<std::size_t>(m_width) * static_cast<std::size_t>(m_height)) {
-    return;
+    return {};
   }
 
   const float now = renderer.get_animation_time();
@@ -312,22 +311,32 @@ void FogRenderer::submit(Renderer& renderer, ResourceManager* resources) {
   if (m_patches_dirty) {
     rebuild_patches();
   }
-  if (m_instances.empty()) {
-    return;
-  }
 
   upload_mask(renderer);
   if (m_mask_texture == nullptr) {
-    return;
+    return {};
   }
-
-  upload_instances();
 
   FogMaskResources mask;
   mask.texture = m_mask_texture.get();
   mask.size = QVector2D(static_cast<float>(m_width), static_cast<float>(m_height));
   mask.tile_size = m_tile_size;
   mask.enabled = true;
+  return mask;
+}
+
+void FogRenderer::submit(Renderer& renderer, ResourceManager* resources) {
+  (void)resources;
+
+  const FogMaskResources mask = prepare_mask(renderer);
+  if (!mask.enabled) {
+    return;
+  }
+  if (m_instances.empty()) {
+    return;
+  }
+
+  upload_instances();
 
   if (m_instance_buffer) {
     renderer.fog_batch(m_instance_buffer.get(), m_instances.size(), mask);
