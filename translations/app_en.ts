@@ -4229,6 +4229,213 @@ This action cannot be undone.</translation>
     </message>
 </context>
 <context>
+    <name>LoadingTips</name>
+    <message>
+        <source>A commander who personally investigates every problem soon becomes one of them.</source>
+        <translation>A commander who personally investigates every problem soon becomes one of them.</translation>
+    </message>
+    <message>
+        <source>A formation that becomes scattered is easier to surround and destroy.</source>
+        <translation>A formation that becomes scattered is easier to surround and destroy.</translation>
+    </message>
+    <message>
+        <source>A narrow front can prevent a numerically superior enemy from using all of its troops at once.</source>
+        <translation>A narrow front can prevent a numerically superior enemy from using all of its troops at once.</translation>
+    </message>
+    <message>
+        <source>A retreat made early can preserve an army. A retreat made late can become a rout.</source>
+        <translation>A retreat made early can preserve an army. A retreat made late can become a rout.</translation>
+    </message>
+    <message>
+        <source>A strong economy cannot help you if the enemy cuts the road between it and your army.</source>
+        <translation>A strong economy cannot help you if the enemy cuts the road between it and your army.</translation>
+    </message>
+    <message>
+        <source>A unit surrounded on several sides will struggle even if it began the fight at full strength.</source>
+        <translation>A unit surrounded on several sides will struggle even if it began the fight at full strength.</translation>
+    </message>
+    <message>
+        <source>A well-defended position is one the enemy has not yet discovered a ridiculous way around.</source>
+        <translation>A well-defended position is one the enemy has not yet discovered a ridiculous way around.</translation>
+    </message>
+    <message>
+        <source>An army marches on its stomach. The stomach, regrettably, also requires a supply line.</source>
+        <translation>An army marches on its stomach. The stomach, regrettably, also requires a supply line.</translation>
+    </message>
+    <message>
+        <source>Archers perform best when protected from direct melee combat.</source>
+        <translation>Archers perform best when protected from direct melee combat.</translation>
+    </message>
+    <message>
+        <source>Avoid sending cavalry directly into prepared infantry formations.</source>
+        <translation>Avoid sending cavalry directly into prepared infantry formations.</translation>
+    </message>
+    <message>
+        <source>Battles are often decided before contact through positioning, preparation, and logistics.</source>
+        <translation>Battles are often decided before contact through positioning, preparation, and logistics.</translation>
+    </message>
+    <message>
+        <source>Building near resources can reduce the amount of time workers spend carrying supplies.</source>
+        <translation>Building near resources can reduce the amount of time workers spend carrying supplies.</translation>
+    </message>
+    <message>
+        <source>Capturing useful infrastructure can be more valuable than destroying it.</source>
+        <translation>Capturing useful infrastructure can be more valuable than destroying it.</translation>
+    </message>
+    <message>
+        <source>Cavalry can arrive quickly. Whether they should have arrived there is another question.</source>
+        <translation>Cavalry can arrive quickly. Whether they should have arrived there is another question.</translation>
+    </message>
+    <message>
+        <source>Cavalry is most effective when attacking exposed flanks or isolated units.</source>
+        <translation>Cavalry is most effective when attacking exposed flanks or isolated units.</translation>
+    </message>
+    <message>
+        <source>Clearing a dangerous area is not the same as securing it. Check what remains nearby.</source>
+        <translation>Clearing a dangerous area is not the same as securing it. Check what remains nearby.</translation>
+    </message>
+    <message>
+        <source>Concentrating your forces can overwhelm a stronger enemy fighting in separate groups.</source>
+        <translation>Concentrating your forces can overwhelm a stronger enemy fighting in separate groups.</translation>
+    </message>
+    <message>
+        <source>Destroying an enemy army is useful. Preventing it from fighting effectively is often enough.</source>
+        <translation>Destroying an enemy army is useful. Preventing it from fighting effectively is often enough.</translation>
+    </message>
+    <message>
+        <source>Direct commander control can help turn a critical fight, but exposes your commander to greater danger.</source>
+        <translation>Direct commander control can help turn a critical fight, but exposes your commander to greater danger.</translation>
+    </message>
+    <message>
+        <source>Do not chase fleeing enemies so far that your own formation collapses.</source>
+        <translation>Do not chase fleeing enemies so far that your own formation collapses.</translation>
+    </message>
+    <message>
+        <source>Enemy reinforcements are much less dangerous when they never reach the battlefield.</source>
+        <translation>Enemy reinforcements are much less dangerous when they never reach the battlefield.</translation>
+    </message>
+    <message>
+        <source>Every commander has a plan until a sheep joins the formation.</source>
+        <translation>Every commander has a plan until a sheep joins the formation.</translation>
+    </message>
+    <message>
+        <source>Every supply shortage begins with someone saying, “We probably have enough.”</source>
+        <translation>Every supply shortage begins with someone saying, “We probably have enough.”</translation>
+    </message>
+    <message>
+        <source>Exhausted troops are less effective. Allow units time to recover when possible.</source>
+        <translation>Exhausted troops are less effective. Allow units time to recover when possible.</translation>
+    </message>
+    <message>
+        <source>Formations are strongest when their flanks are protected.</source>
+        <translation>Formations are strongest when their flanks are protected.</translation>
+    </message>
+    <message>
+        <source>High ground improves your ability to control an engagement.</source>
+        <translation>High ground improves your ability to control an engagement.</translation>
+    </message>
+    <message>
+        <source>History remembers the victorious general. The quartermaster remembers who forgot to bring food.</source>
+        <translation>History remembers the victorious general. The quartermaster remembers who forgot to bring food.</translation>
+    </message>
+    <message>
+        <source>If your formation looks impressive from a distance, you are at least halfway to military competence.</source>
+        <translation>If your formation looks impressive from a distance, you are at least halfway to military competence.</translation>
+    </message>
+    <message>
+        <source>Infantry can hold ground that faster units may struggle to defend.</source>
+        <translation>Infantry can hold ground that faster units may struggle to defend.</translation>
+    </message>
+    <message>
+        <source>Keep an escape route available when fighting near rivers, cliffs, or narrow passages.</source>
+        <translation>Keep an escape route available when fighting near rivers, cliffs, or narrow passages.</translation>
+    </message>
+    <message>
+        <source>Keep ranged troops away from routes enemy cavalry can reach quickly.</source>
+        <translation>Keep ranged troops away from routes enemy cavalry can reach quickly.</translation>
+    </message>
+    <message>
+        <source>Keep reserve troops behind the main line to respond to breakthroughs.</source>
+        <translation>Keep reserve troops behind the main line to respond to breakthroughs.</translation>
+    </message>
+    <message>
+        <source>Never underestimate the tactical value of looking busy while someone else carries the stone.</source>
+        <translation>Never underestimate the tactical value of looking busy while someone else carries the stone.</translation>
+    </message>
+    <message>
+        <source>Protect your commander. Losing leadership at the wrong moment can decide a battle.</source>
+        <translation>Protect your commander. Losing leadership at the wrong moment can decide a battle.</translation>
+    </message>
+    <message>
+        <source>Repairing damaged defenses before the next attack is usually cheaper than rebuilding them afterward.</source>
+        <translation>Repairing damaged defenses before the next attack is usually cheaper than rebuilding them afterward.</translation>
+    </message>
+    <message>
+        <source>Scout unfamiliar terrain before committing your main force.</source>
+        <translation>Scout unfamiliar terrain before committing your main force.</translation>
+    </message>
+    <message>
+        <source>Stockpiles shorten resource delivery routes and improve economic efficiency.</source>
+        <translation>Stockpiles shorten resource delivery routes and improve economic efficiency.</translation>
+    </message>
+    <message>
+        <source>Terrain can be as important as numbers. Use forests, hills, and narrow passages to your advantage.</source>
+        <translation>Terrain can be as important as numbers. Use forests, hills, and narrow passages to your advantage.</translation>
+    </message>
+    <message>
+        <source>The Iron Sepulcher is best approached with troops prepared for an unexpected engagement.</source>
+        <translation>The Iron Sepulcher is best approached with troops prepared for an unexpected engagement.</translation>
+    </message>
+    <message>
+        <source>The enemy cannot predict your strategy if you have forgotten it yourself.</source>
+        <translation>The enemy cannot predict your strategy if you have forgotten it yourself.</translation>
+    </message>
+    <message>
+        <source>The shortest path between two points is rarely the route selected by an army.</source>
+        <translation>The shortest path between two points is rarely the route selected by an army.</translation>
+    </message>
+    <message>
+        <source>Use patrol orders to secure roads, settlements, and vulnerable resource routes.</source>
+        <translation>Use patrol orders to secure roads, settlements, and vulnerable resource routes.</translation>
+    </message>
+    <message>
+        <source>Walls are excellent defenses until someone remembers gates exist.</source>
+        <translation>Walls are excellent defenses until someone remembers gates exist.</translation>
+    </message>
+    <message>
+        <source>War elephants are powerful, disciplined weapons of war, right up until they have an opinion.</source>
+        <translation>War elephants are powerful, disciplined weapons of war, right up until they have an opinion.</translation>
+    </message>
+    <message>
+        <source>War elephants can disrupt formations, but unsupported elephants can quickly become isolated.</source>
+        <translation>War elephants can disrupt formations, but unsupported elephants can quickly become isolated.</translation>
+    </message>
+    <message>
+        <source>Watch your supply routes when advancing deep into hostile territory.</source>
+        <translation>Watch your supply routes when advancing deep into hostile territory.</translation>
+    </message>
+    <message>
+        <source>When attacking, look for weak points rather than spreading damage evenly across the enemy line.</source>
+        <translation>When attacking, look for weak points rather than spreading damage evenly across the enemy line.</translation>
+    </message>
+    <message>
+        <source>When defending, force the enemy to come to you under unfavorable conditions.</source>
+        <translation>When defending, force the enemy to come to you under unfavorable conditions.</translation>
+    </message>
+    <message>
+        <source>Wildlife may react unpredictably to nearby troops and fighting.</source>
+        <translation>Wildlife may react unpredictably to nearby troops and fighting.</translation>
+    </message>
+    <message>
+        <source>Wolves are considerably less impressed by military rank than your soldiers are.</source>
+        <translation>Wolves are considerably less impressed by military rank than your soldiers are.</translation>
+    </message>
+    <message>
+        <source>Workers are valuable strategic assets. Do not leave them exposed near the front.</source>
+        <translation>Workers are valuable strategic assets. Do not leave them exposed near the front.</translation>
+    </message>
+</context>
+<context>
     <name>Main</name>
     <message>
         <source>A new standard in the valley, and nobody under it who has held a spear more than twice.</source>

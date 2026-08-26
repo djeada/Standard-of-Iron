@@ -28,6 +28,7 @@ Rectangle {
         if (is_loading) {
             target_progress = 0;
             display_progress = 0;
+            tip_plate.draw_tip();
         } else {
             target_progress = 1;
             display_progress = 1;
@@ -285,6 +286,93 @@ Rectangle {
             color: Theme.textSubLite
             font.pixelSize: Design.Typography.label
             font.letterSpacing: 0.6
+        }
+    }
+
+    Item {
+        id: tip_plate
+
+        function draw_tip() {
+            if (typeof LoadingTips === "undefined")
+                return;
+            var drawn = LoadingTips.next();
+            if (drawn.length > 0)
+                tip_text.text = drawn;
+        }
+
+        anchors.horizontalCenter: parent.horizontalCenter
+        anchors.bottom: parent.bottom
+        anchors.bottomMargin: Math.max(30, parent.height * 0.075)
+        width: Math.min(parent.width * 0.72, 820)
+        height: tip_column.implicitHeight
+        visible: tip_text.text.length > 0
+        opacity: 1
+
+        Component.onCompleted: tip_plate.draw_tip()
+
+        SequentialAnimation {
+            id: tip_turn
+
+            NumberAnimation {
+                target: tip_plate
+                property: "opacity"
+                to: 0
+                duration: Design.A11y.reducedMotion ? 0 : 420
+                easing.type: Easing.InQuad
+            }
+
+            ScriptAction {
+                script: tip_plate.draw_tip()
+            }
+
+            NumberAnimation {
+                target: tip_plate
+                property: "opacity"
+                to: 1
+                duration: Design.A11y.reducedMotion ? 0 : 420
+                easing.type: Easing.OutQuad
+            }
+        }
+
+        Timer {
+            interval: 7000
+            running: load_screen.is_loading && tip_plate.visible
+            repeat: true
+            onTriggered: {
+                if (!tip_turn.running)
+                    tip_turn.start();
+            }
+        }
+
+        Column {
+            id: tip_column
+
+            width: parent.width
+            spacing: 10
+
+            Rectangle {
+                anchors.horizontalCenter: parent.horizontalCenter
+                width: 5
+                height: 5
+                rotation: 45
+                color: load_screen.hs.bronze
+                opacity: 0.85
+            }
+
+            Text {
+                id: tip_text
+
+                width: parent.width
+                horizontalAlignment: Text.AlignHCenter
+                wrapMode: Text.WordWrap
+                text: ""
+                color: Theme.textSubLite
+                font.pixelSize: Design.Typography.body
+                font.italic: true
+                font.letterSpacing: 0.4
+                style: Text.Outline
+                styleColor: "#120D09"
+            }
         }
     }
 }
