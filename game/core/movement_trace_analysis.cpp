@@ -14,6 +14,25 @@ namespace Engine::Core {
 
 namespace {
 
+// `MotionPresentationState`: 0 Idle, 1 Turning, 2 Walk, 3 Run, 4 Yielding,
+// 5 Recovering, 6 ForcedDisplacement. Only a gait that claims the body is
+// travelling can be a treadmill - "yielding" and "recovering" mean it has
+// stopped on purpose, and counting those reported every unit holding its
+// ground in a scrum as though it were walking on the spot.
+[[nodiscard]] constexpr auto
+state_claims_travel(std::uint8_t presentation_state) -> bool {
+  return presentation_state == 2U || presentation_state == 3U ||
+         presentation_state == 6U;
+}
+
+// The inverse check needs the opposite question. Only "idle" claims the body is
+// standing still; turning, yielding and recovering are all poses a body may
+// legitimately hold while it is being carried along by something else.
+[[nodiscard]] constexpr auto
+state_claims_stillness(std::uint8_t presentation_state) -> bool {
+  return presentation_state == 0U;
+}
+
 auto shortest_angle(float from_degrees, float to_degrees) -> float {
   return std::fmod((to_degrees - from_degrees + 540.0F), 360.0F) - 180.0F;
 }
@@ -584,7 +603,11 @@ void analyze_troops(const std::vector<MovementTroopSample>& troops,
         walk.has_previous_direction = true;
       }
 
-      bool const locomotion = sample.presentation_state != 0U;
+      // Only a gait that claims the body is travelling can be a treadmill.
+      // "Yielding" and "Recovering" mean the body has stopped on purpose, and
+      // counting them as locomotion reported every unit that held its ground in
+      // a scrum as though it were walking on the spot.
+      bool const locomotion = state_claims_travel(sample.presentation_state);
       if (sample.presentation_valid && locomotion &&
           speed < thresholds.gait_stopped_speed) {
         walk.gait_stopped_seconds += dt;
@@ -605,7 +628,8 @@ void analyze_troops(const std::vector<MovementTroopSample>& troops,
         FindingSink::close(walk.gait_without_motion);
       }
 
-      if (sample.presentation_valid && !locomotion &&
+      if (sample.presentation_valid &&
+          state_claims_stillness(sample.presentation_state) &&
           speed > thresholds.gait_moving_speed) {
         walk.gait_moving_seconds += dt;
         if (walk.gait_moving_seconds > thresholds.gait_mismatch_seconds) {
@@ -742,8 +766,15 @@ void analyze_troops(const std::vector<MovementTroopSample>& troops,
       walk.has_previous = true;
     }
 
+    // An order that was still making progress when the recording stopped has
+    // not failed to resolve; the recording ended. Flagging those turned every
+    // unit still marching at the end of a fixed-length capture into a finding -
+    // fifty six of them in a sixty second run - and buried the orders that had
+    // genuinely stopped resolving. Only a stalled order counts.
+    const bool ended_while_stalled =
+        walk.summary.max_stall_seconds > thresholds.progress_stall_window_seconds;
     if (thresholds.require_terminal_outcomes &&
-        is_active_state(walk.summary.final_state)) {
+        is_active_state(walk.summary.final_state) && ended_while_stalled) {
       sink.add(MovementFindingKind::MissingTerminalOutcome,
                entity_id,
                0,
