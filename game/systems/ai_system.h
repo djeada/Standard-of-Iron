@@ -52,6 +52,12 @@ public:
     return m_applied_command_count;
   }
 
+  // Commands the world refused outright. A plan made of these is a computer
+  // that looks busy and does nothing.
+  [[nodiscard]] auto refused_command_count() const -> std::uint64_t {
+    return m_refused_command_count;
+  }
+
   void set_ai_profile(int player_id, const AI::AIPlayerProfile& profile);
 
 private:
@@ -80,6 +86,7 @@ private:
   float m_next_trace_time = 0.0F;
   std::uint64_t m_completed_decision_count{0};
   std::uint64_t m_applied_command_count{0};
+  std::uint64_t m_refused_command_count{0};
 
   Engine::Core::ScopedEventSubscription<Engine::Core::BuildingAttackedEvent>
       m_building_attacked_subscription;
