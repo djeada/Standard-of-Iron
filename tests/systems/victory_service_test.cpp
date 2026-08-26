@@ -154,6 +154,119 @@ protected:
   std::unique_ptr<Game::Systems::VictoryService> m_service;
 };
 
+TEST_F(VictoryServiceTest, ASpectatedMatchIsNotLostByTheEmptySeatTheCameraSitsIn) {
+  Engine::Core::World world;
+  ASSERT_NE(create_unit(world, 2, Game::Units::SpawnType::Barracks), nullptr);
+  ASSERT_NE(create_unit(world, 3, Game::Units::SpawnType::Barracks), nullptr);
+
+  Game::Systems::VictoryRuleSet rules;
+  rules.victory_rules.push_back(capture_structures({QStringLiteral("barracks")}, 1));
+  rules.defeat_rules.push_back(lose_structures({QStringLiteral("barracks")}));
+  rules.defeat_rules.emplace_back(Game::Systems::NoUnitsDefeatRule{});
+
+  m_service->configure(rules, 1);
+  m_service->set_spectator_mode(true);
+  advance_past_startup_delay(world);
+
+  EXPECT_FALSE(m_service->is_game_over())
+      << "the spectator's empty seat ended the match as "
+      << m_service->get_victory_state().toStdString();
+}
+
+TEST_F(VictoryServiceTest, ASpectatedMatchEndsWhenOneSideIsLeftStanding) {
+  Engine::Core::World world;
+  auto* losing_barracks = create_unit(world, 2, Game::Units::SpawnType::Barracks);
+  ASSERT_NE(losing_barracks, nullptr);
+  ASSERT_NE(create_unit(world, 3, Game::Units::SpawnType::Barracks), nullptr);
+
+  Game::Systems::VictoryRuleSet rules;
+  rules.victory_rules.push_back(capture_structures({QStringLiteral("barracks")}, 1));
+  rules.defeat_rules.push_back(lose_structures({QStringLiteral("barracks")}));
+
+  m_service->configure(rules, 1);
+  m_service->set_spectator_mode(true);
+  advance_past_startup_delay(world);
+  ASSERT_FALSE(m_service->is_game_over());
+
+  losing_barracks->get_component<Engine::Core::UnitComponent>()->health = 0;
+  m_service->update(world, 0.6F);
+
+  EXPECT_TRUE(m_service->is_game_over());
+  EXPECT_EQ(m_service->get_victory_state(), QStringLiteral("spectator"));
+}
+
+TEST_F(VictoryServiceTest, ASpectatedMatchDoesNotEndBeforeTwoSidesHaveTakenTheField) {
+  Engine::Core::World world;
+  ASSERT_NE(create_unit(world, 2, Game::Units::SpawnType::Barracks), nullptr);
+
+  Game::Systems::VictoryRuleSet rules;
+  rules.victory_rules.push_back(capture_structures({QStringLiteral("barracks")}, 1));
+
+  m_service->configure(rules, 1);
+  m_service->set_spectator_mode(true);
+  advance_past_startup_delay(world);
+
+  EXPECT_FALSE(m_service->is_game_over())
+      << "a match with one side on the field was declared over before it began";
+}
+
+TEST_F(VictoryServiceTest, ASpectatedMatchIgnoresAmbientFactions) {
+  Engine::Core::World world;
+  ASSERT_NE(create_unit(world, 2, Game::Units::SpawnType::Barracks), nullptr);
+  auto* contender = create_unit(world, 3, Game::Units::SpawnType::Barracks);
+  ASSERT_NE(contender, nullptr);
+
+  auto& owner_registry = Game::Systems::OwnerRegistry::instance();
+  owner_registry.register_owner_with_id(
+      99, Game::Systems::OwnerType::AI, "Iron Sepulcher tomb_1");
+  owner_registry.set_owner_team(99, 9);
+  Game::Systems::NationRegistry::instance().set_player_nation(
+      99, Game::Systems::NationID::IronSepulcher);
+  auto* tomb = create_unit(world,
+                           99,
+                           Game::Units::SpawnType::Barracks,
+                           Game::Systems::NationID::IronSepulcher);
+  ASSERT_NE(tomb, nullptr);
+  tomb->get_component<Engine::Core::UnitComponent>()->nation_id =
+      Game::Systems::NationID::IronSepulcher;
+
+  Game::Systems::VictoryRuleSet rules;
+  rules.victory_rules.push_back(capture_structures({QStringLiteral("barracks")}, 1));
+
+  m_service->configure(rules, 1);
+  m_service->set_spectator_mode(true);
+  advance_past_startup_delay(world);
+  ASSERT_FALSE(m_service->is_game_over());
+
+  contender->get_component<Engine::Core::UnitComponent>()->health = 0;
+  m_service->update(world, 0.6F);
+
+  EXPECT_TRUE(m_service->is_game_over())
+      << "an ambient faction kept a decided battle running";
+  EXPECT_EQ(m_service->get_victory_state(), QStringLiteral("spectator"));
+}
+
+TEST_F(VictoryServiceTest, LeavingSpectatorModeRestoresThePlayerCentricRules) {
+  Engine::Core::World world;
+  ASSERT_NE(create_unit(world, 2, Game::Units::SpawnType::Barracks), nullptr);
+
+  Game::Systems::VictoryRuleSet rules;
+  rules.victory_rules.push_back(capture_structures({QStringLiteral("barracks")}, 1));
+  rules.defeat_rules.push_back(lose_structures({QStringLiteral("barracks")}));
+
+  m_service->configure(rules, 1);
+  m_service->set_spectator_mode(true);
+  EXPECT_TRUE(m_service->is_spectator_mode());
+
+  m_service->configure(rules, 1);
+  EXPECT_FALSE(m_service->is_spectator_mode())
+      << "a spectated match leaked its rules into the next one";
+
+  advance_past_startup_delay(world);
+  EXPECT_TRUE(m_service->is_game_over());
+  EXPECT_EQ(m_service->get_victory_state(), QStringLiteral("defeat"));
+}
+
 TEST_F(VictoryServiceTest, CaptureVictoryDoesNotCountHomeStructuresAsCaptured) {
   Engine::Core::World world;
   ASSERT_NE(create_unit(world,

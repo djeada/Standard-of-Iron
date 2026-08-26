@@ -380,6 +380,17 @@ ApplicationWindow {
             mainWindow.game_paused = false;
             gameViewItem.forceActiveFocus();
         }
+        onObserve_requested: function (map_path) {
+            if (typeof game === 'undefined' || !game.setup.start_observed_skirmish)
+                return;
+            if (!game.setup.start_observed_skirmish(map_path))
+                return;
+            mapSelect.visible = false;
+            mainWindow.menu_visible = false;
+            mainWindow.game_started = true;
+            mainWindow.game_paused = false;
+            gameViewItem.forceActiveFocus();
+        }
         onCancelled: function () {
             Design.UiSound.back();
             mapSelect.visible = false;

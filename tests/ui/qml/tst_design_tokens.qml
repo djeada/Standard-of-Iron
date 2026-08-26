@@ -128,6 +128,43 @@ TestCase {
         compare(A11y.colorVisionMode, "none");
     }
 
+    function test_the_rts_bottom_bar_grows_with_the_viewport_data() {
+        return [{
+                "tag": "720p",
+                "height": 720,
+                "expected": 230.4
+            }, {
+                "tag": "1080p",
+                "height": 1080,
+                "expected": 345.6
+            }, {
+                "tag": "1440p",
+                "height": 1440,
+                "expected": 380
+            }, {
+                "tag": "tiny",
+                "height": 480,
+                "expected": 216
+            }];
+    }
+
+    function test_the_rts_bottom_bar_grows_with_the_viewport(data) {
+        fuzzyCompare(Metrics.bottomBarHeight(data.height, false), data.expected, 0.5, data.tag);
+    }
+
+    function test_the_rts_bottom_bar_clears_a_row_of_recruit_cards_at_1080p() {
+        var barHeight = Metrics.bottomBarHeight(1080, false);
+        verify(barHeight >= 320, "the bottom bar is too short to show a recruit row at 1080p, it was " + barHeight);
+        verify(barHeight <= 1080 * 0.36, "the bottom bar ate more than a third of the battlefield");
+    }
+
+    function test_commander_mode_keeps_a_slim_bar() {
+        var rts = Metrics.bottomBarHeight(1080, false);
+        var commander = Metrics.bottomBarHeight(1080, true);
+        verify(commander < rts, "direct commander control should not carry the RTS panels");
+        compare(commander, Metrics.commanderBottomBarMaxHeight);
+    }
+
     function test_status_color_lookup_covers_the_semantic_names() {
         compare(Theme.statusColor("success").toString(), Theme.success.toString());
         compare(Theme.statusColor("danger").toString(), Theme.danger.toString());

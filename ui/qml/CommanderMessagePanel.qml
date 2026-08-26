@@ -32,13 +32,9 @@ Item {
         }
     }
 
-    Connections {
-        function onMessage_changed() {
-            messageRoot.revealed = Design.A11y.reducedMotion ? 9999 : 0;
-        }
+    readonly property string bodyText: messageRoot.source ? messageRoot.source.text : ""
 
-        target: messageRoot.source
-    }
+    onBodyTextChanged: messageRoot.revealed = Design.A11y.reducedMotion ? 9999 : 0
 
     Timer {
         id: typewriter

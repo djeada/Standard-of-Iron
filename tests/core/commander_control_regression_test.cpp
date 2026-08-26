@@ -430,12 +430,17 @@ TEST(CommanderControlRegressionTest,
   ASSERT_FALSE(view_model_header.empty());
 
   EXPECT_TRUE(contains(hud_source, "Loader {"));
+
+  EXPECT_TRUE(contains(hud_source, "if (game.is_spectator_mode)"));
+  EXPECT_TRUE(contains(hud_source, "return spectatorBottomHudComponent;"));
   EXPECT_TRUE(contains(
       hud_source,
-      "sourceComponent: typeof game !== 'undefined' && game.commander.mode_state === "
-      "\"active\" ? commanderBottomHudComponent : rtsBottomHudComponent"));
+      "return game.commander.mode_state === \"active\" ? commanderBottomHudComponent "
+      ": rtsBottomHudComponent;"));
   EXPECT_TRUE(contains(hud_source, "HUDBottomCommander {"));
+  EXPECT_TRUE(contains(hud_source, "HUDBottomSpectator {"));
   EXPECT_TRUE(contains(cmake_source, "ui/qml/HUDBottomCommander.qml"));
+  EXPECT_TRUE(contains(cmake_source, "ui/qml/HUDBottomSpectator.qml"));
   EXPECT_TRUE(contains(commander_hud_source, "game.commander.status"));
   EXPECT_TRUE(contains(commander_hud_source, "game.commander.trigger_rally"));
   EXPECT_TRUE(contains(view_model_header,

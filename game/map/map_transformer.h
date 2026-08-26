@@ -33,6 +33,9 @@ public:
   static void set_local_owner_id(int owner_id);
   static auto local_owner_id() -> int;
 
+  static void set_spectator_mode(bool enabled);
+  static auto spectator_mode() -> bool;
+
   static void setPlayerTeamOverrides(const std::unordered_map<int, int>& overrides);
   static void clear_player_team_overrides();
 };

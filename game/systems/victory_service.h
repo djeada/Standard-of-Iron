@@ -140,6 +140,10 @@ public:
 
   void reset();
 
+  void set_spectator_mode(bool enabled);
+
+  [[nodiscard]] auto is_spectator_mode() const -> bool { return m_spectator_mode; }
+
   void update(Engine::Core::World& world, float delta_time);
 
   [[nodiscard]] auto get_victory_state() const -> QString { return m_victory_state; }
@@ -172,6 +176,7 @@ private:
   void evaluate_polled_rules();
   void evaluate_world_state(Engine::Core::World& world);
   void evaluate_rules(const WorldSummary& summary);
+  void evaluate_spectator_state();
   void finalize_game(const QString& state);
 
   [[nodiscard]] auto can_evaluate() const -> bool;
@@ -198,6 +203,9 @@ private:
   bool m_has_eliminate_commanders_rule = false;
   bool m_eliminate_commanders_armed = false;
   bool m_world_state_dirty = false;
+  bool m_spectator_mode = false;
+  bool m_spectator_saw_rivals = false;
+  float m_spectator_poll_timer = 0.0F;
   std::vector<QString> m_only_commander_structure_types;
 
   int m_local_owner_id = 1;

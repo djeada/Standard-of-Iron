@@ -35,6 +35,7 @@ namespace Game::Map {
 namespace {
 std::shared_ptr<Game::Units::UnitFactoryRegistry> s_registry;
 std::unordered_map<int, int> s_player_team_overrides;
+bool s_spectator_mode = false;
 
 constexpr float k_runtime_grid_center_offset = 0.5F;
 
@@ -228,6 +229,14 @@ auto MapTransformer::local_owner_id() -> int {
   return owners.get_local_player_id();
 }
 
+void MapTransformer::set_spectator_mode(bool enabled) {
+  s_spectator_mode = enabled;
+}
+
+auto MapTransformer::spectator_mode() -> bool {
+  return s_spectator_mode;
+}
+
 void MapTransformer::setPlayerTeamOverrides(
     const std::unordered_map<int, int>& overrides) {
   s_player_team_overrides = overrides;
@@ -280,7 +289,8 @@ auto MapTransformer::apply_to_world(const MapDefinition& def,
 
     if (owner_registry.get_owner_type(player_id) == Game::Systems::OwnerType::Neutral) {
 
-      bool const is_local_player = (player_id == owner_registry.get_local_player_id());
+      bool const is_local_player =
+          !s_spectator_mode && (player_id == owner_registry.get_local_player_id());
       Game::Systems::OwnerType const owner_type = is_local_player
                                                       ? Game::Systems::OwnerType::Player
                                                       : Game::Systems::OwnerType::AI;
