@@ -36,6 +36,8 @@ constexpr float k_repath_settle_seconds = 0.60F;
 constexpr float k_recovery_budget_seconds = 1.50F;
 constexpr std::uint32_t k_max_repath_attempts = 3U;
 
+constexpr std::uint32_t k_max_order_repaths = 24U;
+
 constexpr float k_lookahead_speed_seconds = 0.35F;
 constexpr float k_lookahead_min = 0.45F;
 constexpr float k_lookahead_max = 2.0F;
@@ -530,6 +532,7 @@ auto RouteFollowSystem::update_progress(Engine::Core::Entity& entity,
     progress.no_progress_seconds = 0.0F;
     progress.no_progress_advance = 0.0F;
     progress.repath_attempts = 0;
+    progress.repath_count = 0;
   }
   progress.order_seconds += delta_time;
 
@@ -612,7 +615,8 @@ auto RouteFollowSystem::update_progress(Engine::Core::Entity& entity,
       break;
     }
 
-    if (goal_is_reachable_from(movement, current, goal)) {
+    if (progress.repath_count < k_max_order_repaths &&
+        goal_is_reachable_from(movement, current, goal)) {
       progress.state = MovementOrderState::LocallyBlocked;
       progress.repath_attempts = 0;
       progress.no_progress_seconds = 0.0F;

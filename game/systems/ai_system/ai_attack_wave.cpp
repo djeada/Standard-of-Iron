@@ -1,6 +1,7 @@
 #include "ai_attack_wave.h"
 
 #include <algorithm>
+#include <cmath>
 #include <limits>
 #include <unordered_set>
 #include <utility>
@@ -64,26 +65,56 @@ auto spent_fraction_for(const AIContext& context) -> float {
   return doctrine != nullptr ? doctrine->wave.spent_fraction : 0.35F;
 }
 
+auto nearest_matching(const std::vector<ContactSnapshot>& contacts,
+                      DoctrineTarget target_kind,
+                      float from_x,
+                      float from_z) -> const ContactSnapshot* {
+  const ContactSnapshot* best = nullptr;
+  float best_distance_sq = std::numeric_limits<float>::infinity();
+  for (const auto& contact : contacts) {
+    if (contact.health <= 0 || !matches_target(contact, target_kind)) {
+      continue;
+    }
+    const float distance_sq =
+        distance_squared(contact.pos_x, 0.0F, contact.pos_z, from_x, 0.0F, from_z);
+    if (distance_sq < best_distance_sq) {
+      best_distance_sq = distance_sq;
+      best = &contact;
+    }
+  }
+  return best;
+}
+
 auto select_wave_target(const AISnapshot& snapshot,
                         const AIContext& context,
                         float from_x,
                         float from_z) -> const ContactSnapshot* {
   for (const auto target_kind : target_priority_for(context)) {
-    const ContactSnapshot* best = nullptr;
-    float best_distance_sq = std::numeric_limits<float>::infinity();
-    for (const auto& contact : snapshot.visible_enemies) {
-      if (contact.health <= 0 || !matches_target(contact, target_kind)) {
-        continue;
-      }
-      const float distance_sq =
-          distance_squared(contact.pos_x, 0.0F, contact.pos_z, from_x, 0.0F, from_z);
-      if (distance_sq < best_distance_sq) {
-        best_distance_sq = distance_sq;
-        best = &contact;
-      }
+    if (const auto* seen =
+            nearest_matching(snapshot.visible_enemies, target_kind, from_x, from_z)) {
+      return seen;
     }
-    if (best != nullptr) {
-      return best;
+  }
+
+  for (const auto target_kind : target_priority_for(context)) {
+    if (const auto* known = nearest_matching(
+            snapshot.strategic_objectives, target_kind, from_x, from_z)) {
+      return known;
+    }
+  }
+  return nullptr;
+}
+
+auto find_contact(const AISnapshot& snapshot,
+                  Engine::Core::EntityID id) -> const ContactSnapshot* {
+  for (const auto& contact : snapshot.visible_enemies) {
+    if (contact.id == id && contact.health > 0) {
+      return &contact;
+    }
+  }
+  for (const auto& objective : snapshot.strategic_objectives) {
+    if (objective.id == id && objective.health > 0) {
+      return &objective;
     }
   }
   return nullptr;
@@ -199,11 +230,13 @@ void update_attack_wave(const AISnapshot& snapshot, AIContext& context) {
     wave.members = std::move(survivors);
 
     const int remaining = static_cast<int>(wave.members.size());
+
     const int spent_threshold =
-        std::max(1,
-                 static_cast<int>(spent_fraction_for(context) *
-                                  static_cast<float>(std::max(1, wave.initial_size))));
-    if (remaining < spent_threshold) {
+        std::max(2,
+                 static_cast<int>(
+                     std::ceil(spent_fraction_for(context) *
+                               static_cast<float>(std::max(1, wave.initial_size)))));
+    if (remaining <= spent_threshold) {
       wave.committed = false;
       wave.members.clear();
       wave.target_id = 0;
@@ -214,13 +247,7 @@ void update_attack_wave(const AISnapshot& snapshot, AIContext& context) {
     centre_x /= static_cast<float>(remaining);
     centre_z /= static_cast<float>(remaining);
 
-    const ContactSnapshot* target = nullptr;
-    for (const auto& contact : snapshot.visible_enemies) {
-      if (contact.id == wave.target_id && contact.health > 0) {
-        target = &contact;
-        break;
-      }
-    }
+    const ContactSnapshot* target = find_contact(snapshot, wave.target_id);
     if (target == nullptr) {
       target = select_wave_target(snapshot, context, centre_x, centre_z);
       if (target == nullptr) {

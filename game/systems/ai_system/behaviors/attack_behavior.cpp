@@ -19,7 +19,14 @@ namespace Game::Systems::AI {
 namespace {
 constexpr float k_gathering_advance_aggression_threshold = 0.70F;
 
+auto marches_only_in_waves(const AIContext& context) -> bool {
+  return context.strategy_config.doctrine != nullptr && !context.wave.committed;
+}
+
 auto can_advance_from_gathering(const AIContext& context, int ready_units) -> bool {
+  if (marches_only_in_waves(context)) {
+    return false;
+  }
   return context.state == AIState::Attacking ||
          (context.state == AIState::Gathering &&
           ready_units >= context.strategy_config.reactive_attack_size &&
@@ -103,7 +110,7 @@ void AttackBehavior::execute(const AISnapshot& snapshot,
   if (snapshot.visible_enemies.empty()) {
 
     constexpr int MIN_UNITS_FOR_SCOUTING = 3;
-    if (context.state == AIState::Attacking &&
+    if (context.state == AIState::Attacking && !marches_only_in_waves(context) &&
         static_cast<int>(ready_units.size()) >=
             std::max(MIN_UNITS_FOR_SCOUTING,
                      context.strategy_config.reactive_attack_size)) {
