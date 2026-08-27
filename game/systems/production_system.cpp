@@ -162,6 +162,35 @@ void activate_bypass_movement(Engine::Core::BuilderProductionComponent* builder,
   builder->bypass_target_z = target_z;
 }
 
+auto walking_to_site(const Engine::Core::BuilderProductionComponent& builder,
+                     const Engine::Core::MovementComponent& movement) -> bool {
+  if (!movement.get_has_target()) {
+    return false;
+  }
+  const float goal_x = movement.get_has_requested_goal()
+                           ? movement.get_requested_goal_x()
+                           : movement.get_goal_x();
+  const float goal_z = movement.get_has_requested_goal()
+                           ? movement.get_requested_goal_z()
+                           : movement.get_goal_y();
+  const float dx = goal_x - builder.construction_site_x;
+  const float dz = goal_z - builder.construction_site_z;
+  constexpr float k_route_goal_tolerance_sq = 0.25F;
+  return (dx * dx + dz * dz) <= k_route_goal_tolerance_sq;
+}
+
+void abandon_site_route(const Engine::Core::BuilderProductionComponent& builder,
+                        Engine::Core::MovementComponent* movement) {
+  if (movement != nullptr && walking_to_site(builder, *movement)) {
+    movement->stop();
+  }
+}
+
+auto needs_site_route(const Engine::Core::BuilderProductionComponent& builder,
+                      const Engine::Core::MovementComponent* movement) -> bool {
+  return movement != nullptr && !walking_to_site(builder, *movement);
+}
+
 void load_onto_hauler(
     Engine::Core::Entity* worker,
     ResourceType resource_type,
@@ -594,6 +623,8 @@ void ProductionSystem::update(Engine::Core::World* world, float delta_time) {
   constexpr float k_site_approach_limit_seconds = 30.0F;
   constexpr float MAX_CONSTRUCTION_DISTANCE_SQ = 9.0F;
 
+  constexpr float k_site_bypass_radius_sq = 6.25F;
+
   for (auto [entity_ref, builder_prod_ref] :
        world->entity_view<Engine::Core::BuilderProductionComponent>()) {
     Engine::Core::Entity* e = &entity_ref;
@@ -703,13 +734,26 @@ void ProductionSystem::update(Engine::Core::World* world, float delta_time) {
         } else {
           builder_prod->site_approach_seconds += delta_time;
 
-          if (!builder_prod->bypass_movement_active) {
+          if (dist_sq > k_site_bypass_radius_sq) {
+            builder_prod->bypass_movement_active = false;
+            if (needs_site_route(*builder_prod, movement)) {
+              CommandService::move_unit(
+                  *world,
+                  e->get_id(),
+                  QVector3D(builder_prod->construction_site_x,
+                            0.0F,
+                            builder_prod->construction_site_z),
+                  CommandService::MoveOptions{.kind = MoveOrderKind::RecoveryMove,
+                                              .preserve_formation_mode = true});
+            }
+          } else if (!builder_prod->bypass_movement_active) {
             activate_bypass_movement(builder_prod,
                                      builder_prod->construction_site_x,
                                      builder_prod->construction_site_z);
           }
 
           if (builder_prod->site_approach_seconds > k_site_approach_limit_seconds) {
+            abandon_site_route(*builder_prod, movement);
             builder_prod->has_construction_site = false;
             builder_prod->at_construction_site = false;
             builder_prod->in_progress = false;
@@ -904,6 +948,8 @@ void ProductionSystem::update(Engine::Core::World* world, float delta_time) {
               sp.spawn_type = Game::Units::SpawnType::Home;
             } else if (builder_prod->product_type == "marketplace") {
               sp.spawn_type = Game::Units::SpawnType::Marketplace;
+            } else if (builder_prod->product_type == "farm") {
+              sp.spawn_type = Game::Units::SpawnType::Farm;
             } else if (builder_prod->product_type == "temple") {
               sp.spawn_type = Game::Units::SpawnType::Temple;
             } else {

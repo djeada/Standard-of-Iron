@@ -503,10 +503,12 @@ TEST_F(AiSkirmishOpeningTest, AWorkerThatCannotReachItsSiteGivesUpInsteadOfHangi
 TEST_F(AiSkirmishOpeningTest, TheComputerKeepsGatheringAfterItsOpeningStockIsGone) {
   auto& session = make_match();
   auto& economy = session.economy();
+
   const auto gathered = [&economy]() {
-    return economy.get(k_left, Game::Systems::ResourceType::Wood) +
-           economy.get(k_left, Game::Systems::ResourceType::Stone) +
-           economy.get(k_left, Game::Systems::ResourceType::Iron);
+    const auto harvested = economy.get_harvested_all(k_left);
+    return harvested.get(Game::Systems::ResourceType::Wood) +
+           harvested.get(Game::Systems::ResourceType::Stone) +
+           harvested.get(Game::Systems::ResourceType::Iron);
   };
 
   run_for(session, 100.0);
@@ -515,6 +517,7 @@ TEST_F(AiSkirmishOpeningTest, TheComputerKeepsGatheringAfterItsOpeningStockIsGon
   const int later = gathered();
 
   EXPECT_GT(later, after_the_opening)
-      << "the stockpile went from " << after_the_opening << " to " << later
-      << " over three minutes; the workers are not bringing anything in";
+      << "the work parties had carried in " << after_the_opening
+      << " and three minutes later still only " << later
+      << "; nobody is bringing anything home";
 }

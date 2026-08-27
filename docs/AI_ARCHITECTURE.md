@@ -221,6 +221,25 @@ Commanders are handled separately:
 - they reposition behind the army centroid
 - they periodically trigger the rally ability
 
+The lord is also the single most valuable thing the AI owns: `NationCollapse`
+turns his death into the loss of the whole nation, barracks, workers and all.
+`CommanderBehavior` therefore treats his station as a safety question rather
+than a flavour one.
+
+- **Every station is behind the line.** The doctrines differ in how close behind
+  he rides -- three metres for the aggressive tempers, eight for the defensive
+  ones -- not in whether he stands in front of his own soldiers.
+- He only leaves home ground **at the head of a committed wave that is still at
+  full strength**, and only for a doctrine that leads its attacks at all. A
+  defensive or economic lord stays at the rally point.
+- He needs a **real escort**: with fewer than two soldiers on the field he holds
+  station at home rather than following a lone scout across the map.
+- He **turns for home** as soon as he drops below sixty percent health.
+
+Without those rules an aggressive doctrine walks its lord after the first pair
+of scouts, straight into the enemy town, and loses the match in four minutes to
+an opponent that never attacked.
+
 ## Macro and building logic
 
 The AI now uses shared macro targets instead of scattered hardcoded thresholds.
@@ -239,6 +258,55 @@ The AI now uses shared macro targets instead of scattered hardcoded thresholds.
 `BuilderBehavior` then builds toward the largest deficit while preserving important early priorities like homes and the first barracks.
 
 `ProductionBehavior` also reads from the same config, so unit production and structure growth are at least pulling in the same strategic direction.
+
+### The manpower chain
+
+Recruitment manpower is the one resource a settlement cannot cut out of the
+landscape, and every macro target above is ultimately in service of it:
+
+```text
+farm ripens (60s) -> worker cuts it for 60 food
+                  -> home spends 20 food to raise a family (3 per home, ever)
+                  -> family walks to a barracks and grants 18 manpower
+                  -> barracks spends 52+ manpower on one soldier
+```
+
+The opening barracks is seeded with the map's population cap in manpower and
+that is the only bulk the AI ever gets for free. Three consequences shape the
+macro layer:
+
+- **Housing is sized off the army the doctrine means to field**, not the army it
+  happens to have (`wave.size + garrison.minimum_units`, plus a couple). Sizing
+  it off the current army leaves a town that can only ever replace its losses
+  one at a time.
+- **Fields are a macro target of their own.** Without them the granary empties
+  around the ten-minute mark, no family is ever raised again, and the town stops
+  recruiting while its wood and stone piles look perfectly healthy. Fields are
+  broken when the store runs low and worked whenever the granary has room, so
+  the crop is cut before the cupboard is bare rather than after.
+- **A builder past a working minimum is only raised if the town could still pay
+  for a soldier afterwards.** A work crew that eats the manpower pool leaves a
+  settlement that can build anything and field nothing.
+
+When the barracks cannot afford a single recruit and no home has a family left
+to send it, `raise_homes_first` puts housing ahead of everything else --
+including the authored town plan, which yields its ordering (never its
+placement) until the town can recruit again.
+
+### Placing what it builds
+
+Two rules keep the settlement from stalling on a site it can never use:
+
+- The **layout frame is fixed by the enemy town**, not by whoever is currently
+  in sight. Every authored slot is expressed in that frame, so a facing that
+  swung whenever a scout wandered past would rotate the whole plan and no slot
+  would ever be recognised as already filled.
+- A slot counts as taken by **footprint**, not by a blanket radius. The plans
+  author wall runs four metres apart and homes five; anything wider than the two
+  buildings' own footprints swallows most of the blueprint and the settlement
+  stops halfway through it. The fallback ring placement applies the same test,
+  so a site that is already occupied is skipped rather than re-ordered every
+  cycle forever.
 
 ## Expansion logic
 
@@ -590,12 +658,35 @@ too few are left to be worth the name.
 
 Two rules are load-bearing:
 
-- A wave is made of **soldiers**. `is_combat_role_unit` only rules out buildings
-  and builders, which leaves civilians walking manpower to the barracks and
-  healers tending the line. Marching those off to war quietly stops the town
-  being able to recruit at all.
+- A wave is made of **soldiers**. `is_combat_role_unit` rules out buildings,
+  builders and civilians; healers still follow the line to tend it. Marching a
+  civilian off to war strands the eighteen manpower it was carrying to the
+  barracks, and a town that does that a few times quietly stops being able to
+  recruit at all.
 - The **garrison is taken out first**, nearest the base, and never leaves. That
   is how a doctrine splits what it holds from what it sends.
+- A wave targets what it **knows**, not only what it can see. `visible_enemies`
+  is vision-gated, so on a map where the two towns sit in opposite corners
+  nothing is ever in sight at the moment a wave is ready; the selector falls
+  back to `strategic_objectives`, which carries every enemy building and
+  commander regardless of vision, the way a player knows where the enemy castle
+  is. Without that fallback a wave never forms and no AI ever attacks.
+- A wave **disbands at or below** its spent threshold, rounded up and never
+  below two. One survivor still walking into a town is a casualty, not an
+  attack.
+- An AI with a doctrine **only marches in waves**. `AttackBehavior` has an older
+  path that walks whatever is ready toward the nearest strategic objective as
+  soon as the state machine says `Attacking`; left enabled alongside the wave
+  system it feeds soldiers to the enemy one at a time and the army never
+  accumulates to wave size at all. With a doctrine present that path is limited
+  to answering enemies already close to the group, and crossing the map is the
+  committed wave's job.
+
+Wave sizes are authored against what the economy can actually field. A doctrine
+needs `wave.size + garrison.minimum_units` soldiers alive before a single wave
+commits, and every one of those is a home that had to be built first -- so a
+wave of ten reads as "this commander never attacks", not "this commander
+attacks hard."
 
 Without authored data, wave size falls back to the strategy's own
 `proactive_attack_size` and the garrison to its `reserve_units`, so an AI with no
