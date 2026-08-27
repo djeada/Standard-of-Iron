@@ -2,11 +2,6 @@
 
 #include "render/gl/gl_lifetime.h"
 
-// A GL object can outlive the thread that owns the context: a match teardown
-// runs on the GUI thread while the render thread holds it. Every buffer and
-// vertex array freed there used to be abandoned with a warning - 3,620 of them
-// in one session of loading two matches, which is a VRAM leak per match. The
-// name is kept instead, and deleted by whoever next has a context.
 namespace {
 
 class GlDeferredDeleteTest : public ::testing::Test {
@@ -15,7 +10,7 @@ protected:
   void TearDown() override { drain(); }
 
   static void drain() {
-    // Without a current context this is a no-op, so clear the queue by hand.
+
     while (Render::GL::deferred_gl_delete_count() > 0U) {
       break;
     }

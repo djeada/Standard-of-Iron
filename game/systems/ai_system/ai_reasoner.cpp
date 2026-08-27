@@ -9,6 +9,7 @@
 #include "../../game_config.h"
 #include "../nation_registry.h"
 #include "../production_service.h"
+#include "ai_attack_wave.h"
 #include "ai_base_manager.h"
 #include "ai_utils.h"
 #include "systems/ai_system/ai_types.h"
@@ -912,6 +913,8 @@ void AIReasoner::update_context(const AISnapshot& snapshot, AIContext& ctx) {
   update_assault_unit_ids(snapshot, ctx);
   update_reserve_unit_ids(snapshot, ctx);
   update_harass_unit_ids(snapshot, ctx);
+
+  update_attack_wave(snapshot, ctx);
   ctx.assembled_unit_count = committed_army_count(snapshot, ctx);
 
   ctx.average_health = (ctx.total_units > 0)

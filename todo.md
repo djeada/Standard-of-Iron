@@ -259,7 +259,7 @@ not.
       re-apply it on reload. That keeps the memory the unload was for and drops
       the CPU cost.
 - [ ] `MiniaudioBackend: Sound still decoding, skipping play:
-  "sound_ambient.weather_rain"` fires repeatedly during load, so the weather
+"sound_ambient.weather_rain"` fires repeatedly during load, so the weather
       ambience is silently dropped rather than queued.
 
 ---

@@ -120,10 +120,7 @@ protected:
 
   static void scatter_resources(Game::Map::MapDefinition& map, int grid_x) {
     const int grid_z = k_map_size / 2;
-    // Shipped maps author world props in grid coordinates and so does the
-    // default MapDefinition, so these have to be grid too. Authored in world
-    // coordinates they are converted a second time on load and land far outside
-    // the map, which is a resource drought dressed up as a scatter.
+
     const auto add = [&map](Game::Map::WorldProp::Type type, int x, int z) {
       Game::Map::WorldProp prop;
       prop.type = type;
@@ -353,8 +350,6 @@ namespace {
 
 constexpr int k_ward = 3;
 
-// A third camp pitched right beside the left one, close enough to sit inside
-// its 30 m defence radius, owned by whichever nation the caller names.
 void seat_neighbour(SessionContext& session,
                     Game::Systems::NationID nation,
                     const std::function<EntityID(int, QVector3D)>& spawn) {
@@ -372,14 +367,6 @@ void seat_neighbour(SessionContext& session,
 
 } // namespace
 
-// The Iron Sepulcher is a bonus nation: it has no economy, so the state machine
-// never lets it attack or expand and its troops hold their own ground for the
-// whole match. A camp pitched near a tomb used to read that garrison as an
-// incursion on every single update, latch `Defending`, and sit there for the
-// rest of the game - which is exactly what a watched computer-only match
-// showed. A faction that will never come at you is not a threat. One that
-// actually strikes a building still is, and that arrives on the
-// BuildingAttacked event rather than by proximity, so nothing is lost.
 TEST_F(AiSkirmishOpeningTest, AGarrisonNationCampedNextDoorIsNotAStandingThreat) {
   auto& session = make_match();
   auto* ai = session.world().get_system<Game::Systems::AISystem>();
@@ -405,10 +392,6 @@ TEST_F(AiSkirmishOpeningTest, AGarrisonNationCampedNextDoorIsNotAStandingThreat)
       << "the computer is defending against a faction that will never come at it";
 }
 
-// The other half of the same rule: this must exclude only the nations that
-// genuinely cannot march. Put a marching nation's troops in the identical spot
-// and the camp has to notice them, or the fix above is just the threat check
-// switched off.
 TEST_F(AiSkirmishOpeningTest, AMarchingNationCampedNextDoorStillReadsAsAThreat) {
   auto& session = make_match();
   auto* ai = session.world().get_system<Game::Systems::AISystem>();
@@ -429,12 +412,6 @@ TEST_F(AiSkirmishOpeningTest, AMarchingNationCampedNextDoorStillReadsAsAThreat) 
       << "three enemy knights twelve metres from the barracks went unnoticed";
 }
 
-// A tree, a boulder and an ore seam are all stamped out of the navigation grid,
-// so a worker sent to one's centre is held out by its own footprint - a few
-// centimetres short of the fifteen the arrival check wants. It never arrives,
-// and because arriving was the only way out of the task, it never failed
-// either: five builders stood around a wood shortage for an entire match while
-// the stockpile sat frozen. Work the prop from beside it.
 TEST_F(AiSkirmishOpeningTest, AHarvestOrderSendsTheWorkerBesideThePropNotOntoIt) {
   auto& session = make_match();
   auto& terrain = session.terrain();
@@ -483,19 +460,10 @@ TEST_F(AiSkirmishOpeningTest, AHarvestOrderSendsTheWorkerBesideThePropNotOntoIt)
           builder->construction_site_x, builder->construction_site_z)))
       << "the worker was sent to stand on ground it cannot hold";
 
-  // The prop itself is still what gets harvested; only where the worker stands
-  // has moved.
   EXPECT_FLOAT_EQ(builder->task_target_x, placed.x());
   EXPECT_FLOAT_EQ(builder->task_target_z, placed.z());
 }
 
-// The other half: a work site the worker genuinely cannot reach has to end in
-// something. The bypass walk is a straight line that knows nothing about what
-// is in the way, so a site behind a building pins the worker against the wall
-// while the unstick pass shoves it back - and in the old code that was the rest
-// of the match, because the task had no exit but arrival. The movement trace
-// reported it for what it was: an order active for ninety seconds with no
-// terminal outcome, repeating forever on the same body.
 TEST_F(AiSkirmishOpeningTest, AWorkerThatCannotReachItsSiteGivesUpInsteadOfHanging) {
   auto& session = make_match();
 
@@ -512,8 +480,6 @@ TEST_F(AiSkirmishOpeningTest, AWorkerThatCannotReachItsSiteGivesUpInsteadOfHangi
       session.world().try_get<Engine::Core::BuilderProductionComponent>(builder_id);
   ASSERT_NE(builder, nullptr);
 
-  // A site under the camp's own barracks: the worker is pushed out of the
-  // footprint every tick it walks into it, so it can never stand there.
   builder->product_type = "cut_tree";
   builder->build_time = 6.0F;
   builder->time_remaining = 6.0F;
@@ -525,7 +491,6 @@ TEST_F(AiSkirmishOpeningTest, AWorkerThatCannotReachItsSiteGivesUpInsteadOfHangi
   builder->construction_site_x = barracks.x();
   builder->construction_site_z = barracks.z();
 
-  // Just past the limit, while the fault is still on display.
   run_for(session, 31.0);
 
   EXPECT_FALSE(builder->has_construction_site)
@@ -535,11 +500,6 @@ TEST_F(AiSkirmishOpeningTest, AWorkerThatCannotReachItsSiteGivesUpInsteadOfHangi
       << "the task ended without saying why, so nothing can react to it";
 }
 
-// The opening stock is spent in the first minute; everything after that is
-// income. A computer whose workers hang on their first task has no income at
-// all, which is what a watched match showed - every resource frozen from t=60
-// to the end, and an army that stopped at two fighting units because a barracks
-// with no manpower cannot recruit.
 TEST_F(AiSkirmishOpeningTest, TheComputerKeepsGatheringAfterItsOpeningStockIsGone) {
   auto& session = make_match();
   auto& economy = session.economy();

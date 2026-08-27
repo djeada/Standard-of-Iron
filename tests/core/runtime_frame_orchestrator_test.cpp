@@ -137,10 +137,6 @@ TEST(RuntimeFrameOrchestratorTest, SimulationUsesFixedSixtyHertzSteps) {
   }));
 }
 
-// The speed control is for the battle. It used to move the sun as well: the
-// environment clock advanced once per simulation tick, so at 4x a full day
-// passed every ten minutes of play and the setting a player uses most left them
-// fighting in the dark for half the match.
 TEST(RuntimeFrameOrchestratorTest, TheDayRunsInRealTimeWhateverTheBattleSpeed) {
   const auto hour_after = [](float speed, float real_seconds) {
     Game::Session::SessionContext session;

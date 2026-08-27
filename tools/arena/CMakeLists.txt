@@ -3,6 +3,7 @@ add_library(
     STATIC
     arena_scenario.cpp
     arena_scenario_catalog.cpp
+    arena_ai_duel_scenarios.cpp
     arena_ambience_scenarios.cpp
     arena_city_scenarios.cpp
     arena_formation_scenarios.cpp

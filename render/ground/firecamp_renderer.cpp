@@ -115,9 +115,7 @@ void FireCampRenderer::submit(Renderer& renderer, ResourceManager* resources) {
 }
 
 auto FireCampRenderer::fire_light_shape(float camp_radius) -> FireLightShape {
-  // The flame sits just above the logs, not at the height of the camp's own
-  // radius - a light lifted nearly two metres spreads its pool out over the
-  // ground instead of gathering it where the fire is.
+
   constexpr float k_flame_height = 0.55F;
   constexpr float k_reach_per_camp_radius = 1.8F;
   constexpr float k_min_reach = 3.0F;

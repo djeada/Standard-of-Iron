@@ -2,12 +2,6 @@ import QtQuick 2.15
 import QtTest 1.15
 import "../../../ui/qml"
 
-// No shipped map authors a thumbnail and there is no *_thumb.png anywhere in
-// the tree, so every row of the battlefield list fell back to the same generic
-// glyph while the real preview rendered only in the detail panel. The rows now
-// draw that same preview, generated once per map and held by path - a ListView
-// recycles its delegates, and re-rendering a map every time it scrolled back
-// into view would make the list crawl.
 TestCase {
     id: testCase
 
@@ -74,8 +68,6 @@ TestCase {
         thumbs.destroy();
     }
 
-    // It has to survive being used outside the running game, where neither the
-    // generator nor the image store exists.
     function test_a_missing_generator_leaves_the_row_blank_rather_than_failing() {
         var thumbs = makeThumbnails();
         thumbs.previewSource = null;
@@ -84,9 +76,6 @@ TestCase {
         thumbs.destroy();
     }
 
-    // The screen that actually shows the battlefield list has to have one. The
-    // first attempt at this fix went into MapListPanel.qml, which nothing
-    // instantiates, so it changed nothing a player could see.
     function test_the_battlefield_list_screen_carries_a_thumbnail_source() {
         var screen = mapSelectComponent.createObject(testCase);
         verify(screen !== null, "MapSelect was not created");

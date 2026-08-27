@@ -54,6 +54,8 @@
 #include "game/render_bridge/picking_service.h"
 #include "game/session/session_context.h"
 #include "game/systems/ai_system.h"
+#include "game/systems/ai_system/ai_commander_doctrine.h"
+#include "game/systems/ai_system/ai_strategy.h"
 #include "game/systems/arrow_system.h"
 #include "game/systems/building_collision_registry.h"
 #include "game/systems/combat_rules.h"
@@ -3577,6 +3579,68 @@ auto ArenaViewport::terrain_review_definition() const
                                                  : nullptr;
 }
 
+namespace {
+
+auto resolve_scenario_ai_profile(const Arena::ArenaScenarioDefinition& definition,
+                                 int owner_id,
+                                 Game::Systems::NationID nation_id)
+    -> Game::Systems::AI::AIPlayerProfile {
+  const Arena::ArenaScenarioAIProfile* authored = nullptr;
+  for (const auto& candidate : definition.ai_profiles) {
+    if (candidate.owner_id == owner_id) {
+      authored = &candidate;
+      break;
+    }
+  }
+
+  Game::Systems::AI::AIPlayerProfile profile;
+  profile.strategy = nation_id == Game::Systems::NationID::Carthage
+                         ? Game::Systems::AI::AIStrategy::Economic
+                         : Game::Systems::AI::AIStrategy::Defensive;
+
+  bool doctrine_applied = false;
+  for (const auto& group : definition.groups) {
+    if (group.owner_id != owner_id ||
+        !Game::Units::is_commander_troop(group.troop_type)) {
+      continue;
+    }
+    if (auto doctrine =
+            Game::Systems::AI::doctrine_profile_for_troop(group.troop_type)) {
+      profile = *doctrine;
+      doctrine_applied = true;
+      break;
+    }
+  }
+  (void)doctrine_applied;
+
+  if (authored == nullptr) {
+    return profile;
+  }
+  if (!authored->strategy.isEmpty()) {
+    profile.strategy =
+        Game::Systems::AI::AIStrategyFactory::parse_strategy(authored->strategy);
+  }
+  if (!authored->posture.isEmpty()) {
+    profile.posture = Game::Systems::AI::AIStrategyFactory::parse_posture(
+        authored->posture, profile.posture);
+  }
+  if (authored->aggression >= 0.0F) {
+    profile.personality.aggression = authored->aggression;
+  }
+  if (authored->defense >= 0.0F) {
+    profile.personality.defense = authored->defense;
+  }
+  if (authored->harassment >= 0.0F) {
+    profile.personality.harassment = authored->harassment;
+  }
+  if (!authored->difficulty.isEmpty()) {
+    profile.difficulty = authored->difficulty;
+  }
+  return profile;
+}
+
+} // namespace
+
 void ArenaViewport::load_scenario(const QString& scenario_id) {
   auto const* definition = Arena::Scenarios::find_definition(scenario_id);
   if (definition == nullptr || m_world == nullptr) {
@@ -3677,11 +3741,12 @@ void ArenaViewport::load_scenario(const QString& scenario_id) {
     owners.set_owner_team(group.owner_id, group.owner_id);
     nations.set_player_nation(group.owner_id, group.nation_id);
     resources.ensure_owner(group.owner_id);
-    resources.set(group.owner_id, Game::Systems::ResourceType::Gold, 150);
-    resources.set(group.owner_id, Game::Systems::ResourceType::Food, 150);
-    resources.set(group.owner_id, Game::Systems::ResourceType::Wood, 200);
-    resources.set(group.owner_id, Game::Systems::ResourceType::Stone, 180);
-    resources.set(group.owner_id, Game::Systems::ResourceType::Iron, 30);
+    const auto& stock = definition->ai_starting_resources;
+    resources.set(group.owner_id, Game::Systems::ResourceType::Gold, stock.gold);
+    resources.set(group.owner_id, Game::Systems::ResourceType::Food, stock.food);
+    resources.set(group.owner_id, Game::Systems::ResourceType::Wood, stock.wood);
+    resources.set(group.owner_id, Game::Systems::ResourceType::Stone, stock.stone);
+    resources.set(group.owner_id, Game::Systems::ResourceType::Iron, stock.iron);
   }
   QVector3D const scenario_origin = resolve_spawn_anchor_world();
 
@@ -3819,6 +3884,26 @@ void ArenaViewport::load_scenario(const QString& scenario_id) {
       m_capture_orbit_ready = true;
     }
   };
+  host.sample_ai_doctrine = [this](int owner_id) -> Arena::ArenaAIDoctrineSample {
+    Arena::ArenaAIDoctrineSample sample;
+    auto* ai_system =
+        m_world != nullptr ? m_world->get_system<Game::Systems::AISystem>() : nullptr;
+    if (ai_system == nullptr) {
+      return sample;
+    }
+    const auto state = ai_system->ai_player_state(owner_id);
+    if (!state.valid) {
+      return sample;
+    }
+    sample.valid = true;
+    sample.strategy =
+        Game::Systems::AI::AIStrategyFactory::strategy_to_string(state.strategy);
+    sample.posture =
+        Game::Systems::AI::AIStrategyFactory::posture_to_string(state.posture);
+    sample.state = Game::Systems::AI::AIStrategyFactory::state_to_string(state.state);
+    return sample;
+  };
+
   host.set_force_full_creature_lod = [this](bool enabled) {
     set_force_full_creature_lod(enabled);
   };
@@ -3981,15 +4066,15 @@ void ArenaViewport::load_scenario(const QString& scenario_id) {
   if (has_scenario_ai) {
     if (auto* ai_system = m_world->get_system<Game::Systems::AISystem>()) {
       ai_system->reinitialize();
+      QSet<int> configured_owners;
       for (const auto& group : definition->groups) {
-        if (!group.ai_controlled) {
+        if (!group.ai_controlled || configured_owners.contains(group.owner_id)) {
           continue;
         }
-        Game::Systems::AI::AIPlayerProfile profile;
-        profile.strategy = group.nation_id == Game::Systems::NationID::Carthage
-                               ? Game::Systems::AI::AIStrategy::Economic
-                               : Game::Systems::AI::AIStrategy::Defensive;
-        ai_system->set_ai_profile(group.owner_id, profile);
+        configured_owners.insert(group.owner_id);
+        ai_system->set_ai_profile(
+            group.owner_id,
+            resolve_scenario_ai_profile(*definition, group.owner_id, group.nation_id));
       }
     }
   }

@@ -533,6 +533,83 @@ For repo validation, the reliable test binary is:
 ./build/bin/simulation_tests --gtest_color=no --gtest_brief=1
 ```
 
+## Commander doctrines, town plans, and attack waves
+
+A commander is not only a unit on the field: it decides how the AI that owns it
+plays. That mapping is data, in `assets/data/ai/`, so a designer can retune an
+opponent without a compiler.
+
+### assets/data/ai/doctrines.json
+
+Keyed by the commander id from `game/units/commander_catalog.cpp`
+(`roman_veteran_consul`, `carthage_bow_commander`, ...). Every field is
+optional and falls back, in order, to the file's own `defaults` block, then to
+the `CommanderDoctrine` compiled into the commander catalog, then to the AI's
+built-in strategy tables. A missing or malformed file leaves the game entirely
+on those built-ins -- it logs a warning under `soi.ai.doctrine` and carries on.
+
+| Field                                         | Meaning                                                                               |
+| --------------------------------------------- | ------------------------------------------------------------------------------------- |
+| `strategy`, `posture`                         | Parsed by `AIStrategyFactory`; an unknown name falls back to `balanced` / `field`     |
+| `personality`                                 | `aggression`, `defense`, `harassment`, each clamped to 0..1                           |
+| `town_plan`                                   | Names a plan in `town_plans.json`; unknown names fall back to the built-in slot table |
+| `recruitment.ranged_share`                    | The mix this commander wants, replacing the inferred melee/ranged ratio               |
+| `wave.size`                                   | Fighting units, over and above the garrison, needed before a wave commits             |
+| `wave.regroup_seconds`                        | Delay after a wave is spent before the next one may form                              |
+| `wave.spent_fraction`                         | A wave disbands below this share of the size it started at                            |
+| `wave.target_priority`                        | `army`, `barracks`, `economy`, `commander`, `any`; `any` is appended if absent        |
+| `garrison.minimum_units`, `garrison.fraction` | What stays home; a garrison is never allowed to swallow the whole army                |
+
+### assets/data/ai/town_plans.json
+
+An authored settlement blueprint rather than an optimiser -- the same idea as a
+castle plan. `steps` is an ordered list of `{ building, x, z }`; the builder
+walks it and raises the first building whose slot is still empty, so a town that
+cannot afford everything still comes out shaped like its blueprint instead of
+stalling on step one. Offsets are metres in the settlement's own frame with
+**-Z as the front**: the plan is rotated so that side faces the enemy, which is
+what keeps a wall line between the homes and the threat rather than behind them.
+
+Buildings must be named as the construction catalog names them (`home`,
+`barracks`, `defense_tower`, `wall_segment`, `marketplace`, `catapult`); an
+unknown name is skipped with a warning.
+
+### Attack waves
+
+`game/systems/ai_system/ai_attack_wave.cpp` forms, holds and retires one
+committed attack at a time, from `AIReasoner::update_context` so that a garrison
+doctrine still accumulates one.
+
+The membership is latched, and that is the entire point. The force an AI can see
+at any instant excludes whichever units are currently in contact, so choosing an
+attack force fresh every cycle means that the moment the front rank engages it
+stops counting as part of the attack and the rest are re-planned without it --
+an army that arrives one soldier at a time and dies that way. A wave decides
+once, keeps its members while they fight, drops only the dead, and disbands when
+too few are left to be worth the name.
+
+Two rules are load-bearing:
+
+- A wave is made of **soldiers**. `is_combat_role_unit` only rules out buildings
+  and builders, which leaves civilians walking manpower to the barracks and
+  healers tending the line. Marching those off to war quietly stops the town
+  being able to recruit at all.
+- The **garrison is taken out first**, nearest the base, and never leaves. That
+  is how a doctrine splits what it holds from what it sends.
+
+Without authored data, wave size falls back to the strategy's own
+`proactive_attack_size` and the garrison to its `reserve_units`, so an AI with no
+doctrine behaves as it always did -- just cohesively.
+
+### Verifying it
+
+`tools/arena` carries `ai_duel_*` scenarios: two AI-run towns in opposite
+corners of the map, each with a commander, a barracks, homes, builders and its
+own resources, fighting until one is destroyed. The scenario report records per
+side what it built, how many units it produced, how many it kept home versus
+pushed past the midpoint, how long it spent in an attacking state, and who won.
+See `tools/arena/README.md`.
+
 ## What is already strong
 
 Relative to the original passive AI, the current system is much better at:
@@ -552,12 +629,14 @@ The AI is improved, but it is not yet "finished RTS AI." The most important rema
 1. **Richer force planner**
     - siege groups
     - flankers
-    - synchronized attack waves
-    - regroup / reform logic after failed pushes
+    - ~~synchronized attack waves~~ -- done, see "Attack waves" above
+    - regroup / reform logic after failed pushes (a wave regroups; a failed push
+      does not yet change what the next one targets)
 
 2. **Data-driven profiles**
-    - move strategy presets out of code into assets/data
-    - let designers tune AI personalities without recompiling
+    - ~~move strategy presets out of code into assets/data~~ -- done for
+      commander doctrines and town plans, see above
+    - the per-strategy tables in `ai_strategy.cpp` are still compiled in
 
 3. **Stronger strategic economy awareness**
     - more explicit resource pressure
@@ -573,8 +652,10 @@ The AI is improved, but it is not yet "finished RTS AI." The most important rema
 
 If you want the next biggest gains per engineering effort, the recommended order is:
 
-1. **Data-driven AI profiles** so design can iterate quickly
-2. **Richer force planner** for siege / flank / regroup behavior
+1. **Siege** -- a wave that reaches a walled town has no way through it, so a
+   defensive doctrine is currently unbeatable by an infantry-only attacker
+2. **Wave target selection that learns** -- a push that failed should change what
+   the next one goes after
 3. **Coordinated allied AI** for campaign-scale scenarios
 
 That sequence builds on the current architecture instead of fighting it.

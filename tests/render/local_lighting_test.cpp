@@ -220,20 +220,10 @@ TEST(LocalLightingTest, Std140PackingSkipsDarkLightsSoSlotsStayContiguous) {
   EXPECT_FLOAT_EQ(packed[Block::k_meta_offset], 1.0F);
 }
 
-// A campfire lit a circle nearly thirty metres across. The pool had a visible
-// edge on the ground and it recoloured a barracks twenty metres away orange -
-// the brightest thing on a Second Punic War hillside was a cooking fire. The
-// authored `radius` is the camp's own extent, the stone ring and the logs, not
-// the reach of its light; multiplying it by 4.2 and lifting the light to the
-// height of that same radius spread the pool out over the ground instead of
-// pooling it where the fire is.
 namespace {
 
-// What every shipped map authors for a camp.
 constexpr float k_authored_camp_radius = 3.4F;
 
-// The falloff in assets/shaders/lib/local_lighting.glsl, so this test measures
-// the light the player actually sees rather than the number in the struct.
 auto shader_falloff(float distance, float radius) -> float {
   const float normalized = std::clamp(distance / radius, 0.0F, 1.0F);
   float window = 1.0F - normalized * normalized;
@@ -251,12 +241,9 @@ TEST(FireCampLightTest, ACampfireDoesNotLightHalfTheHillside) {
                                << " m, a pool " << (shape.reach * 2.0F) << " m across";
   EXPECT_GE(shape.reach, 3.0F) << "a campfire that lights nothing is not a campfire";
 
-  // A barracks pitched a sensible distance from the camp must not be tinted by
-  // it. Twenty metres was where the orange wash was seen.
   EXPECT_FLOAT_EQ(shader_falloff(20.0F, shape.reach), 0.0F)
       << "the fire is still recolouring a building twenty metres away";
 
-  // And a soldier standing at the fire is lit by it.
   EXPECT_GT(shader_falloff(1.5F, shape.reach), 0.25F);
 }
 

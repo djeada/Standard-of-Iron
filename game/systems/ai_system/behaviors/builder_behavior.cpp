@@ -1,5 +1,8 @@
 #include "builder_behavior.h"
 
+#include <QDebug>
+#include <QVector2D>
+
 #include <algorithm>
 #include <array>
 #include <cmath>
@@ -12,6 +15,7 @@
 #include "../../construction_cost_catalog.h"
 #include "../../nation_registry.h"
 #include "../ai_base_manager.h"
+#include "../ai_doctrine_catalog.h"
 #include "../ai_utils.h"
 #include "systems/ai_system/ai_types.h"
 #include "units/spawn_type.h"
@@ -181,6 +185,119 @@ auto node_matches_resource(const ResourceNodeSnapshot& node,
   }
 }
 
+auto building_type_name(const std::string& name) -> const char* {
+  if (name == BUILDING_TYPE_HOME) {
+    return BUILDING_TYPE_HOME;
+  }
+  if (name == BUILDING_TYPE_DEFENSE_TOWER) {
+    return BUILDING_TYPE_DEFENSE_TOWER;
+  }
+  if (name == BUILDING_TYPE_WALL_SEGMENT) {
+    return BUILDING_TYPE_WALL_SEGMENT;
+  }
+  if (name == BUILDING_TYPE_BARRACKS) {
+    return BUILDING_TYPE_BARRACKS;
+  }
+  if (name == BUILDING_TYPE_MARKETPLACE) {
+    return BUILDING_TYPE_MARKETPLACE;
+  }
+  if (name == BUILDING_TYPE_CATAPULT) {
+    return BUILDING_TYPE_CATAPULT;
+  }
+  return nullptr;
+}
+
+auto settlement_facing(const AIContext& context,
+                       const AISnapshot& snapshot) -> QVector2D {
+  float sum_x = 0.0F;
+  float sum_z = 0.0F;
+  int count = 0;
+  for (const auto& contact : snapshot.visible_enemies) {
+    if (contact.health <= 0) {
+      continue;
+    }
+
+    const float weight = contact.is_building ? 4.0F : 1.0F;
+    sum_x += contact.pos_x * weight;
+    sum_z += contact.pos_z * weight;
+    count += static_cast<int>(weight);
+  }
+  if (count == 0) {
+    return {0.0F, -1.0F};
+  }
+
+  const float dx = (sum_x / static_cast<float>(count)) - context.base_pos_x;
+  const float dz = (sum_z / static_cast<float>(count)) - context.base_pos_z;
+  const float length = std::sqrt(std::max(0.0F, dx * dx + dz * dz));
+  if (length < 1.0F) {
+    return {0.0F, -1.0F};
+  }
+
+  return {-dx / length, -dz / length};
+}
+
+auto plan_offset_to_world(const QVector2D& facing,
+                          float local_x,
+                          float local_z) -> QVector3D {
+  const QVector2D forward = facing;
+  const QVector2D right(forward.y(), -forward.x());
+  return QVector3D(local_z * forward.x() + local_x * right.x(),
+                   0.0F,
+                   local_z * forward.y() + local_x * right.y());
+}
+
+auto authored_plan_step(const AIContext& context,
+                        const AISnapshot& snapshot,
+                        const char*& out_building,
+                        QVector3D& out_offset) -> bool {
+  const auto* doctrine = context.strategy_config.doctrine;
+  if (doctrine == nullptr || doctrine->town_plan == nullptr) {
+    return false;
+  }
+
+  constexpr float k_slot_taken_radius = 8.0F;
+  constexpr float k_slot_taken_radius_sq = k_slot_taken_radius * k_slot_taken_radius;
+
+  constexpr float k_anchor_clearance = 9.0F;
+  constexpr float k_anchor_clearance_sq = k_anchor_clearance * k_anchor_clearance;
+
+  const QVector2D facing = settlement_facing(context, snapshot);
+
+  for (const auto& step : doctrine->town_plan->steps) {
+    const QVector3D offset = plan_offset_to_world(facing, step.x, step.z);
+    const float world_x = context.base_pos_x + offset.x();
+    const float world_z = context.base_pos_z + offset.z();
+
+    if ((offset.x() * offset.x() + offset.z() * offset.z()) < k_anchor_clearance_sq) {
+      continue;
+    }
+
+    bool occupied = false;
+    for (const auto& entity : snapshot.friendly_units) {
+      if (!entity.is_building) {
+        continue;
+      }
+      if (distance_squared(entity.pos_x, 0.0F, entity.pos_z, world_x, 0.0F, world_z) <=
+          k_slot_taken_radius_sq) {
+        occupied = true;
+        break;
+      }
+    }
+    if (occupied) {
+      continue;
+    }
+
+    const char* resolved = building_type_name(step.building);
+    if (resolved == nullptr) {
+      continue;
+    }
+    out_building = resolved;
+    out_offset = offset;
+    return true;
+  }
+  return false;
+}
+
 auto planned_settlement_offset(const AIContext& context,
                                const char* building_type,
                                int construction_index) -> QVector3D {
@@ -262,6 +379,10 @@ void BuilderBehavior::execute(const AISnapshot& snapshot,
   }
 
   if (available_builders.empty()) {
+    if (qEnvironmentVariableIsSet("SOI_BUILD_TRACE")) {
+      qWarning() << "BUILDTRACE p" << context.player_id << "no available builders of"
+                 << context.builder_count;
+    }
     return;
   }
 
@@ -312,7 +433,16 @@ void BuilderBehavior::execute(const AISnapshot& snapshot,
     construction_x = exposed->center_x;
     construction_z = exposed->center_z;
   } else {
-    if (context.home_count < 2) {
+
+    const char* planned_building = nullptr;
+    QVector3D planned_offset;
+    const bool has_plan_step =
+        context.primary_barracks != 0 &&
+        authored_plan_step(context, snapshot, planned_building, planned_offset);
+
+    if (has_plan_step) {
+      building_to_construct = planned_building;
+    } else if (context.home_count < 2) {
       building_to_construct = BUILDING_TYPE_HOME;
     } else if (context.barracks_count == 0) {
       building_to_construct = BUILDING_TYPE_BARRACKS;
@@ -352,7 +482,8 @@ void BuilderBehavior::execute(const AISnapshot& snapshot,
           }
         }
       }
-      if (missing_resource == ResourceType::Count) {
+
+      if (missing_resource == ResourceType::Count && context.builder_count > 1) {
         missing_resource = recruit_reserve_shortfall(snapshot);
       }
     }
@@ -388,7 +519,11 @@ void BuilderBehavior::execute(const AISnapshot& snapshot,
       return;
     }
 
-    if (context.primary_barracks != 0) {
+    if (has_plan_step) {
+      construction_x = context.base_pos_x + planned_offset.x();
+      construction_z = context.base_pos_z + planned_offset.z();
+    } else if (context.has_base_anchor) {
+
       const QVector3D offset = planned_settlement_offset(
           context, building_to_construct, m_construction_counter);
       construction_x += offset.x();
@@ -398,6 +533,13 @@ void BuilderBehavior::execute(const AISnapshot& snapshot,
 
   clamp_to_map_bounds(snapshot, construction_x, construction_z);
 
+  if (qEnvironmentVariableIsSet("SOI_BUILD_TRACE")) {
+    qWarning() << "BUILDTRACE p" << context.player_id << "wants"
+               << (building_to_construct != nullptr ? building_to_construct : "nothing")
+               << "at" << construction_x << construction_z << "base"
+               << context.base_pos_x << context.base_pos_z << "homes"
+               << context.home_count << "barracks" << context.barracks_count;
+  }
   if (!available_builders.empty()) {
     AICommand command;
     command.type = AICommandType::StartBuilderConstruction;
@@ -444,6 +586,15 @@ auto BuilderBehavior::should_execute(const AISnapshot& snapshot,
 
   if (recruit_reserve_shortfall(snapshot) != ResourceType::Count) {
     return true;
+  }
+
+  {
+    const char* planned_building = nullptr;
+    QVector3D planned_offset;
+    if (context.primary_barracks != 0 &&
+        authored_plan_step(context, snapshot, planned_building, planned_offset)) {
+      return true;
+    }
   }
 
   return context.home_count <
