@@ -180,8 +180,6 @@ protected:
     barracks.production.produced_count = 0;
     barracks.production.queue_size = queue_size;
 
-    // A barracks with no manpower cannot recruit anything, and the plan now
-    // says so rather than issuing requests the world refuses. Fund it.
     barracks.production.manpower_available = 500;
     return barracks;
   }
@@ -2276,9 +2274,7 @@ TEST_F(AISystemTest, ApplierWritesPerBaseRallyPointOntoBarracks) {
       world, 3, 40.0F, 40.0F, 10.0F, true, true, Game::Units::SpawnType::Barracks);
   auto* outpost_barracks = add_world_unit(
       world, 3, 140.0F, 140.0F, 10.0F, true, true, Game::Units::SpawnType::Barracks);
-  // Recruiting costs both manpower and resources, and the plan now checks both
-  // instead of issuing requests the world refuses. Fund the treasury and both
-  // recruitment buildings.
+
   auto& economy = Game::Session::session_for(world).economy();
   economy.ensure_owner(3);
   for (const auto type : Game::Systems::k_all_resource_types) {
@@ -2374,9 +2370,7 @@ TEST_F(AISystemTest, PipelineKeepsSecondBaseProducingAfterMainBaseIsDestroyed) {
       world, 3, 36.0F, 42.0F, 20.0F, true, true, Game::Units::SpawnType::Home);
   auto* outpost_barracks = add_world_unit(
       world, 3, 100.0F, 40.0F, 20.0F, true, true, Game::Units::SpawnType::Barracks);
-  // Recruiting costs both manpower and resources, and the plan now checks both
-  // instead of issuing requests the world refuses. Fund the treasury and both
-  // recruitment buildings.
+
   auto& economy = Game::Session::session_for(world).economy();
   economy.ensure_owner(3);
   for (const auto type : Game::Systems::k_all_resource_types) {

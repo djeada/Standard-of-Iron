@@ -49,10 +49,6 @@ constexpr float k_motion_displacement_epsilon_sq = 1.0e-6F;
 constexpr float k_motion_velocity_epsilon_sq = 1.0e-4F;
 constexpr float k_motion_stall_speed = 0.15F;
 
-// How long a body may want to walk, and fail to move, before its gait says so.
-// The stall clock above was accumulated and never read, so a body pinned in a
-// scrum kept playing its walk cycle - four seconds of it in the casualty
-// reflow scenario, which is the treadmill a player sees.
 constexpr float k_motion_stall_gait_seconds = 0.4F;
 [[nodiscard]] auto
 forward_xz_from_yaw(float yaw_degrees) noexcept -> std::pair<float, float> {
@@ -335,11 +331,7 @@ void finalize_motion_presentation_frame(World& world, float delta_time) {
         bool const melee_footwork = attack != nullptr && attack->in_melee_lock &&
                                     !has_active_navigation_segment &&
                                     !has_component_velocity;
-        // A body jostled a millimetre by its neighbours is not walking. The
-        // gait used to be selected from any displacement at all, so a body
-        // pinned in a scrum and nudged by separation played its walk cycle at
-        // a standstill - four seconds of it in the casualty reflow scenario.
-        // Only a pace a walk cycle would explain counts as displacement here.
+
         float const gait_displacement_floor = k_motion_stall_speed * safe_dt;
         bool const displaced =
             displacement_sq > (gait_displacement_floor * gait_displacement_floor) &&

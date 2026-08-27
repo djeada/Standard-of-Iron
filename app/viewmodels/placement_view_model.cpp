@@ -78,6 +78,11 @@ void PlacementViewModel::publish_frame() {
     auto* production = m_context.production;
     return production != nullptr && production->construction_preview_valid();
   }();
+  readout.construction_preview_reason = [this]() -> QString {
+    auto* production = m_context.production;
+    return production != nullptr ? production->construction_preview_reason()
+                                 : QString();
+  }();
   readout.construction_preview_rotatable = [this]() -> bool {
     auto* production = m_context.production;
     return production != nullptr && production->construction_preview_rotatable();
@@ -374,6 +379,11 @@ auto PlacementViewModel::construction_preview_active() const -> bool {
 auto PlacementViewModel::construction_preview_valid() const -> bool {
   const auto readout = m_readout.read();
   return readout ? readout->construction_preview_valid : false;
+}
+
+auto PlacementViewModel::construction_preview_reason() const -> QString {
+  const auto readout = m_readout.read();
+  return readout ? readout->construction_preview_reason : QString();
 }
 
 auto PlacementViewModel::construction_preview_rotatable() const -> bool {

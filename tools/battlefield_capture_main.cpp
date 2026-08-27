@@ -111,9 +111,7 @@ int main(int argc, char** argv) {
     Game::BattlefieldCapture::write_verification_report(report, std::cout);
     return report.passed ? 0 : 1;
   }
-  // A single scenario without --verify dumps telemetry and returns 0 whatever
-  // it found. That is the right behaviour for inspecting a run, and a trap for
-  // anyone who expects a gate, so say so.
+
   std::fputs("note: no verdict was computed; add --verify to check this scenario, "
              "or --all to check every one\n",
              stderr);

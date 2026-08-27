@@ -807,6 +807,10 @@ ApplicationWindow {
         target: game
     }
 
+    SystemVoice {
+        engine: typeof game !== 'undefined' ? game : null
+    }
+
     Connections {
         function onMission_announcement(text) {
             if (!text || !mainWindow.game_started)
