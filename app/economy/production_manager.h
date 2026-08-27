@@ -57,6 +57,9 @@ public:
   [[nodiscard]] bool construction_preview_valid() const {
     return m_construction_preview_valid;
   }
+  [[nodiscard]] QString construction_preview_reason() const {
+    return m_construction_preview_reason;
+  }
   [[nodiscard]] bool construction_preview_active() const {
     return m_construction_preview_active;
   }
@@ -89,6 +92,7 @@ signals:
   void placing_construction_changed();
   void construction_preview_active_changed();
   void construction_preview_valid_changed();
+  void construction_preview_reason_changed();
   void construction_preview_summary_changed();
   void construction_placement_rejected(const QString& reason);
   void order_feedback(const App::Core::OrderOutcome& outcome);
@@ -99,6 +103,10 @@ private:
       const std::vector<Engine::Core::EntityID>& builder_ids);
   void set_construction_preview_active(bool active);
   void set_construction_preview_valid(bool valid);
+  void set_construction_preview_ruling(bool valid, const QString& reason);
+  void set_construction_preview_reason(const QString& reason);
+  [[nodiscard]] auto
+  non_wall_preview_ruling(const QVector3D& world_position) -> QString;
   void clear_construction_preview_summary();
   void set_construction_preview_summary(int segment_count,
                                         int valid_segment_count,
@@ -139,6 +147,7 @@ private:
   bool m_wall_preview_rotation_explicit = false;
   bool m_construction_preview_active = false;
   bool m_construction_preview_valid = false;
+  QString m_construction_preview_reason;
   int m_construction_preview_segment_count = 0;
   int m_construction_preview_valid_segment_count = 0;
   int m_construction_preview_total_cost = 0;

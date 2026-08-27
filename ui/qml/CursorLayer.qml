@@ -10,6 +10,7 @@ Item {
     property bool placingConstruction: false
     property bool constructionPreviewActive: false
     property bool constructionPreviewValid: false
+    property string constructionPreviewReason: ""
     property real pointerX: 0
     property real pointerY: 0
     property var intentData: null
@@ -650,6 +651,8 @@ Item {
         readonly property string source: {
             if (chip.orderMessage.length > 0)
                 return "order";
+            if (root.placingConstruction && root.constructionPreviewActive && !root.constructionPreviewValid && root.constructionPreviewReason.length > 0)
+                return "placement";
             if (root.intent === "invalid" && root.intentReason.length > 0)
                 return "refusal";
             if (root.mode === "attack" && chip.attack.state !== "none")
@@ -663,6 +666,7 @@ Item {
             switch (chip.source) {
             case "order":
                 return chip.order_glyph();
+            case "placement":
             case "refusal":
                 return "⊘";
             case "attack":
@@ -677,6 +681,8 @@ Item {
             switch (chip.source) {
             case "order":
                 return chip.orderMessage;
+            case "placement":
+                return root.constructionPreviewReason;
             case "refusal":
                 return root.intentReason;
             case "attack":
@@ -689,7 +695,7 @@ Item {
 
         readonly property string detail: chip.source === "attack" ? chip.attack_range_text() : ""
 
-        readonly property bool negative: chip.source === "refusal" || (chip.source === "order" && !chip.orderAccepted) || (chip.source === "attack" && chip.attack.state !== "valid")
+        readonly property bool negative: chip.source === "placement" || chip.source === "refusal" || (chip.source === "order" && !chip.orderAccepted) || (chip.source === "attack" && chip.attack.state !== "valid")
 
         visible: chip.source !== "" && chip.label.length > 0
         z: 999998

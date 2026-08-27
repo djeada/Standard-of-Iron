@@ -14,20 +14,12 @@ namespace Engine::Core {
 
 namespace {
 
-// `MotionPresentationState`: 0 Idle, 1 Turning, 2 Walk, 3 Run, 4 Yielding,
-// 5 Recovering, 6 ForcedDisplacement. Only a gait that claims the body is
-// travelling can be a treadmill - "yielding" and "recovering" mean it has
-// stopped on purpose, and counting those reported every unit holding its
-// ground in a scrum as though it were walking on the spot.
 [[nodiscard]] constexpr auto
 state_claims_travel(std::uint8_t presentation_state) -> bool {
   return presentation_state == 2U || presentation_state == 3U ||
          presentation_state == 6U;
 }
 
-// The inverse check needs the opposite question. Only "idle" claims the body is
-// standing still; turning, yielding and recovering are all poses a body may
-// legitimately hold while it is being carried along by something else.
 [[nodiscard]] constexpr auto
 state_claims_stillness(std::uint8_t presentation_state) -> bool {
   return presentation_state == 0U;
@@ -603,10 +595,6 @@ void analyze_troops(const std::vector<MovementTroopSample>& troops,
         walk.has_previous_direction = true;
       }
 
-      // Only a gait that claims the body is travelling can be a treadmill.
-      // "Yielding" and "Recovering" mean the body has stopped on purpose, and
-      // counting them as locomotion reported every unit that held its ground in
-      // a scrum as though it were walking on the spot.
       bool const locomotion = state_claims_travel(sample.presentation_state);
       if (sample.presentation_valid && locomotion &&
           speed < thresholds.gait_stopped_speed) {
@@ -766,11 +754,6 @@ void analyze_troops(const std::vector<MovementTroopSample>& troops,
       walk.has_previous = true;
     }
 
-    // An order that was still making progress when the recording stopped has
-    // not failed to resolve; the recording ended. Flagging those turned every
-    // unit still marching at the end of a fixed-length capture into a finding -
-    // fifty six of them in a sixty second run - and buried the orders that had
-    // genuinely stopped resolving. Only a stalled order counts.
     const bool ended_while_stalled =
         walk.summary.max_stall_seconds > thresholds.progress_stall_window_seconds;
     if (thresholds.require_terminal_outcomes &&

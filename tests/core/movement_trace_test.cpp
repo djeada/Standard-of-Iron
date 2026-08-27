@@ -122,10 +122,6 @@ TEST(MovementTraceTest, MemorySessionCapturesBothStreams) {
   EXPECT_EQ(trace.manifest().seed, 1234U);
 }
 
-// A trace of a real match is enormous: one line per body per tick came to
-// 456 MB from a sixty second run of the eight verifier scenarios, and 12 GB
-// from one watched skirmish that the report tool then could not read back in
-// under two minutes. A diagnostic nobody can open answers nothing.
 TEST(MovementTraceTest, AFileTraceKeepsOnlyEveryNthTick) {
   const auto directory =
       std::filesystem::temp_directory_path() / "soi_movement_trace_stride";
@@ -197,7 +193,6 @@ TEST(MovementTraceTest, AnUnconfiguredFileTraceIsStillBounded) {
   trace.record(sample);
   trace.end_session();
 
-  // The default budget has to be finite; a run nobody configured produced 12 GB.
   ASSERT_TRUE(trace.begin_file_session(directory.string(), manifest()));
   trace.set_file_sample_budget(1U, 0U);
   trace.end_session();

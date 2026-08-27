@@ -13,9 +13,7 @@ namespace Game::Systems::AI {
 namespace AICommandApplier {
 
 struct ApplyReport {
-  // Commands the world refused outright. A plan made of these is a computer
-  // that looks busy and does nothing, which is how a whole match could pass
-  // with the AI issuing thousands of decisions and never fielding an army.
+
   int refused_production = 0;
 };
 

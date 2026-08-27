@@ -22,28 +22,15 @@ namespace Game::Systems::AI {
 namespace {
 constexpr float k_rally_tolerance_sq = 4.0F;
 
-// Commanders sit at the top of every nation's priority list, and
-// `ProductionService` refuses to recruit one from a barracks. Asking for the
-// highest-priority troop therefore produced a command that was silently dropped
-// on every single decision, which is why Rome never fielded an army at all.
 [[nodiscard]] auto is_recruitable_from(const Game::Systems::TroopType& troop,
                                        Game::Units::SpawnType building) -> bool {
   if (Game::Units::is_commander_troop(troop.unit_type)) {
     return false;
   }
 
-  // Civilians come from a home and healers from a temple. Asking a barracks for
-  // one is refused, and the computer used to fall all the way through its
-  // priority list to the cheapest troop it could name - a one-manpower civilian
-  // - and then ask the barracks for that, every decision, forever.
   return Game::Systems::recruiting_building_for(troop.unit_type) == building;
 }
 
-// The preferred troop first, then everything else the nation can recruit, best
-// priority first. A plan with one candidate stalls the moment that candidate
-// is unaffordable: the barracks opens with a fixed manpower budget, and once
-// the computer had spent it on builders it re-asked for another builder every
-// decision for the rest of the match instead of recruiting something cheaper.
 [[nodiscard]] auto recruitable_candidates(const Game::Systems::Nation& nation,
                                           const Game::Systems::TroopType* preferred,
                                           Game::Units::SpawnType building)
@@ -239,12 +226,6 @@ void ProductionBehavior::execute(const AISnapshot& snapshot,
   for (const auto* entity : barracks) {
     const auto& prod = entity->production;
 
-    // `produced_count` is a home's civilian tally, and only a home is capped by
-    // it - `ProductionService` and `ProductionSystem` both enforce that limit
-    // for homes alone. Applying it to a barracks retired the building for good
-    // once its opening manpower had been spent, which is where the computer's
-    // army stopped for the rest of the match.
-
     const int max_queue_size = 5;
     int const total_in_queue = (prod.in_progress ? 1 : 0) + prod.queue_size;
     if (total_in_queue >= max_queue_size) {
@@ -272,9 +253,6 @@ void ProductionBehavior::execute(const AISnapshot& snapshot,
       }
     }
 
-    // A rally point is a standing order and costs nothing; deciding what to
-    // recruit is a purchase. Only the purchase depends on what the building can
-    // afford.
     const Game::Systems::TroopType* buying = nullptr;
     for (const auto* candidate : candidates) {
       if (affordable(*candidate, prod, snapshot.resources)) {
@@ -299,11 +277,6 @@ void ProductionBehavior::execute(const AISnapshot& snapshot,
   deliver_idle_civilians(snapshot, out_commands);
 }
 
-// A civilian is manpower on legs: it refills a barracks only when it walks into
-// one. The computer produced them and left them standing in the settlement, so
-// the barracks budget it spent on its opening builders was all it would ever
-// have. Send every civilian with nothing else to do to the nearest barracks
-// that still has room for it.
 void ProductionBehavior::deliver_idle_civilians(
     const AISnapshot& snapshot, std::vector<AICommand>& out_commands) const {
   struct Recipient {
@@ -338,7 +311,7 @@ void ProductionBehavior::deliver_idle_civilians(
     if (entity.is_building || entity.spawn_type != Game::Units::SpawnType::Civilian) {
       continue;
     }
-    // Anything already walking is either delivering itself or busy.
+
     if (entity.movement.has_component && entity.movement.has_target) {
       continue;
     }
@@ -369,11 +342,6 @@ void ProductionBehavior::deliver_idle_civilians(
   }
 }
 
-// A barracks opens with a fixed manpower budget and refills only when a
-// civilian walks in from a home. The computer built homes and then never
-// staffed one, so the budget it spent on its opening builders was the entire
-// manpower it would ever have: no civilians, no refill, no army, for the whole
-// match. Keeping every home at work is the economy this game is built around.
 void ProductionBehavior::queue_civilians_at_homes(
     const AISnapshot& snapshot, std::vector<AICommand>& out_commands) const {
   for (const auto& entity : snapshot.friendly_units) {

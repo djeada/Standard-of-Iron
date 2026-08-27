@@ -36,8 +36,8 @@ Item {
 
     width: headRadius * span
     height: width
-    x: (anchorSource ? anchorSource.faceX * anchorSource.width : 0) - (width / 2)
-    y: (anchorSource ? anchorSource.faceY * anchorSource.height : 0) - (height / 2)
+    x: (anchorSource ? anchorSource.x + (anchorSource.faceX * anchorSource.width) : 0) - (width / 2)
+    y: (anchorSource ? anchorSource.y + (anchorSource.faceY * anchorSource.height) : 0) - (height / 2)
 
     visible: anchored && headRadius > 2 && facing > -0.05
     opacity: Math.max(0.0, Math.min(1.0, (facing - 0.02) / 0.30))
