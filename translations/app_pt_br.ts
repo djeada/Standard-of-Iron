@@ -6626,6 +6626,22 @@ para ver a prévia</translation>
         <source>Building factory unavailable.</source>
         <translation>Fábrica de construções indisponível.</translation>
     </message>
+    <message>
+        <source>Nothing here is worth harvesting.</source>
+        <translation>Aqui não há nada que valha a pena colher.</translation>
+    </message>
+    <message>
+        <source>No resource here to work.</source>
+        <translation>Não há aqui recurso algum para trabalhar.</translation>
+    </message>
+    <message>
+        <source>Something is already standing here.</source>
+        <translation>Já há algo de pé aqui.</translation>
+    </message>
+    <message>
+        <source>No part of this wall can stand there.</source>
+        <translation>Nenhuma parte desta muralha pode se erguer aí.</translation>
+    </message>
 </context>
 <context>
     <name>ProductionPanel</name>
@@ -8070,6 +8086,41 @@ Os construtores os ceifam pela comida que recruta civis</translation>
     <message>
         <source>Invalid team configuration: At least two teams must be selected to start a match.</source>
         <translation>Configuração de equipes inválida: pelo menos duas equipes precisam ser selecionadas para iniciar uma partida.</translation>
+    </message>
+</context>
+<context>
+    <name>SystemVoice</name>
+    <message>
+        <source>The order was excellent. It was given to nobody.</source>
+        <translation>A ordem foi excelente. Não foi dada a ninguém.</translation>
+    </message>
+    <message>
+        <source>There is no road to that place. There may never have been one.</source>
+        <translation>Não há estrada até aquele lugar. Talvez nunca tenha havido.</translation>
+    </message>
+    <message>
+        <source>The quartermaster has checked twice. There is nothing behind the second check.</source>
+        <translation>O intendente conferiu duas vezes. Atrás da segunda conferência não há nada.</translation>
+    </message>
+    <message>
+        <source>We have the barracks, the coin and the will. We lack the people.</source>
+        <translation>Temos o quartel, a moeda e a vontade. Faltam-nos as pessoas.</translation>
+    </message>
+    <message>
+        <source>They are carrying something heavier than your orders.</source>
+        <translation>Eles carregam algo mais pesado que suas ordens.</translation>
+    </message>
+    <message>
+        <source>Willing, sir. Simply not that willing, and not from here.</source>
+        <translation>Dispostos, senhor. Só que nem tanto, e não daqui.</translation>
+    </message>
+    <message>
+        <source>Those are not ours to command. They have been very clear about it.</source>
+        <translation>Esses não estão sob nosso comando. Eles deixaram isso bem claro.</translation>
+    </message>
+    <message>
+        <source>Nothing there answers to that order. We checked.</source>
+        <translation>Ali nada responde a essa ordem. Nós verificamos.</translation>
     </message>
 </context>
 <context>

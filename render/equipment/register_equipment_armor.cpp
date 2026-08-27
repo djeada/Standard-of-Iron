@@ -26,12 +26,12 @@ auto commander_cloak_config(CommanderCloakStyle style) -> const CloakConfig& {
   static const CloakConfig fabius = [] {
     CloakConfig cfg;
 
-    cfg.primary_color = {0.52F, 0.20F, 0.18F};
+    cfg.primary_color = {0.34F, 0.055F, 0.045F};
     cfg.trim_color = {0.72F, 0.74F, 0.70F};
     cfg.length_scale = 1.04F;
     cfg.width_scale = 0.92F;
     cfg.shoulder_anchor_up = 0.06F;
-    cfg.team_blend = 0.72F;
+    cfg.team_blend = 0.20F;
     cfg.team_shade = 0.92F;
     cfg.back_material_id = 12;
     cfg.shoulder_material_id = 13;
@@ -40,12 +40,12 @@ auto commander_cloak_config(CommanderCloakStyle style) -> const CloakConfig& {
   static const CloakConfig scipio = [] {
     CloakConfig cfg;
 
-    cfg.primary_color = {0.58F, 0.24F, 0.22F};
+    cfg.primary_color = {0.58F, 0.075F, 0.045F};
     cfg.trim_color = {0.94F, 0.68F, 0.24F};
     cfg.length_scale = 1.02F;
     cfg.width_scale = 0.92F;
     cfg.shoulder_anchor_up = 0.07F;
-    cfg.team_blend = 0.72F;
+    cfg.team_blend = 0.18F;
     cfg.team_shade = 0.98F;
     cfg.back_material_id = 12;
     cfg.shoulder_material_id = 13;
@@ -53,13 +53,13 @@ auto commander_cloak_config(CommanderCloakStyle style) -> const CloakConfig& {
   }();
   static const CloakConfig marcellus = [] {
     CloakConfig cfg;
-    cfg.primary_color = {0.56F, 0.26F, 0.22F};
+    cfg.primary_color = {0.46F, 0.105F, 0.055F};
     cfg.trim_color = {0.30F, 0.28F, 0.26F};
     cfg.length_scale = 0.68F;
     cfg.width_scale = 0.78F;
     cfg.shoulder_anchor_up = 0.12F;
     cfg.show_clasp = false;
-    cfg.team_blend = 0.72F;
+    cfg.team_blend = 0.22F;
     cfg.team_shade = 1.0F;
     cfg.back_material_id = 12;
     cfg.shoulder_material_id = 13;
@@ -67,37 +67,37 @@ auto commander_cloak_config(CommanderCloakStyle style) -> const CloakConfig& {
   }();
   static const CloakConfig hanno = [] {
     CloakConfig cfg;
-    cfg.primary_color = {0.44F, 0.26F, 0.50F};
+    cfg.primary_color = {0.30F, 0.075F, 0.34F};
     cfg.trim_color = {0.90F, 0.62F, 0.22F};
     cfg.length_scale = 1.10F;
     cfg.width_scale = 1.06F;
     cfg.shoulder_anchor_up = 0.25F;
-    cfg.team_blend = 0.72F;
+    cfg.team_blend = 0.18F;
     cfg.team_shade = 0.92F;
     return cfg;
   }();
   static const CloakConfig hasdrubal = [] {
     CloakConfig cfg;
-    cfg.primary_color = {0.30F, 0.44F, 0.46F};
+    cfg.primary_color = {0.055F, 0.245F, 0.26F};
     cfg.trim_color = {0.58F, 0.30F, 0.62F};
     cfg.length_scale = 0.76F;
     cfg.width_scale = 0.86F;
     cfg.shoulder_anchor_up = 0.12F;
     cfg.show_clasp = false;
-    cfg.team_blend = 0.72F;
+    cfg.team_blend = 0.20F;
     cfg.team_shade = 1.0F;
     return cfg;
   }();
   static const CloakConfig hannibal = [] {
     CloakConfig cfg;
 
-    cfg.primary_color = {0.38F, 0.40F, 0.46F};
+    cfg.primary_color = {0.075F, 0.060F, 0.105F};
     cfg.trim_color = {0.82F, 0.54F, 0.18F};
     cfg.length_scale = 1.12F;
     cfg.width_scale = 0.92F;
     cfg.shoulder_anchor_up = 0.08F;
     cfg.drape_anchor_back = 0.60F;
-    cfg.team_blend = 0.72F;
+    cfg.team_blend = 0.16F;
     cfg.team_shade = 0.88F;
     cfg.back_material_id = 12;
     cfg.shoulder_material_id = 13;

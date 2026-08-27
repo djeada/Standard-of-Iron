@@ -2311,6 +2311,12 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
     s.select_spawned_units = false;
     s.suppress_spawn_anchor = true;
     s.suppress_ui_overlays = true;
+    s.owner_teams = {{.owner_id = 1, .team_id = 1},
+                     {.owner_id = 2, .team_id = 1},
+                     {.owner_id = 3, .team_id = 1},
+                     {.owner_id = 4, .team_id = 1},
+                     {.owner_id = 5, .team_id = 1},
+                     {.owner_id = 6, .team_id = 1}};
     struct CommanderLineupEntry {
       const char* group_name{};
       Troop troop;
@@ -2325,37 +2331,37 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
          Nation::RomanRepublic,
          1,
          {-3.0F, 0.0F, 1.7F},
-         180.0F},
+         0.0F},
         {"fabius",
          Troop::RomanLegionOrganizer,
          Nation::RomanRepublic,
          2,
          {0.0F, 0.0F, 1.7F},
-         180.0F},
+         0.0F},
         {"marcellus",
          Troop::RomanFieldCommander,
          Nation::RomanRepublic,
          3,
          {3.0F, 0.0F, 1.7F},
-         180.0F},
+         0.0F},
         {"hannibal",
          Troop::CarthageSwordCommander,
          Nation::Carthage,
          4,
          {-1.5F, 0.0F, -1.7F},
-         180.0F},
+         0.0F},
         {"hanno",
          Troop::CarthageSpearCommander,
          Nation::Carthage,
          5,
          {1.5F, 0.0F, -1.7F},
-         180.0F},
+         0.0F},
         {"hasdrubal",
          Troop::CarthageBowCommander,
          Nation::Carthage,
          6,
          {4.5F, 0.0F, -1.7F},
-         180.0F},
+         0.0F},
     };
     for (auto const& entry : entries) {
       auto commander = group(QString::fromLatin1(entry.group_name),
@@ -2367,6 +2373,8 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
       commander.nation_id = entry.nation;
       commander.facing_degrees = entry.facing;
       s.groups.push_back(std::move(commander));
+      s.steps.push_back(
+          at(0.05F, Command::Hold, QString::fromLatin1(entry.group_name)));
       s.expectations.push_back(
           expectation(Expect::GroupExists, QString::fromLatin1(entry.group_name)));
       s.expectations.push_back(
@@ -2492,12 +2500,18 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
                                   "pieces and neck guard can be judged at the size a "
                                   "player actually reads them."),
                    6.0F,
-                   {5.0F, 8.0F, 0.0F});
+                   {7.5F, 11.5F, 0.0F});
     s.suppress_terrain_scatter = true;
     s.suppress_terrain_features = true;
     s.select_spawned_units = false;
     s.suppress_spawn_anchor = true;
     s.suppress_ui_overlays = true;
+    s.owner_teams = {{.owner_id = 1, .team_id = 1},
+                     {.owner_id = 2, .team_id = 1},
+                     {.owner_id = 3, .team_id = 1},
+                     {.owner_id = 4, .team_id = 1},
+                     {.owner_id = 5, .team_id = 1},
+                     {.owner_id = 6, .team_id = 1}};
     s.camera_focus = QVector3D(0.45F, 1.10F, 0.0F);
     struct CommanderHelmetEntry {
       const char* group_name{};
@@ -2513,37 +2527,37 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
          Nation::RomanRepublic,
          1,
          {-1.9F, 0.0F, 1.3F},
-         180.0F},
+         0.0F},
         {"scipio",
          Troop::RomanVeteranConsul,
          Nation::RomanRepublic,
          2,
          {0.0F, 0.0F, 1.3F},
-         180.0F},
+         0.0F},
         {"marcellus",
          Troop::RomanFieldCommander,
          Nation::RomanRepublic,
          3,
          {1.9F, 0.0F, 1.3F},
-         180.0F},
+         0.0F},
         {"hanno",
          Troop::CarthageSpearCommander,
          Nation::Carthage,
          4,
          {-0.95F, 0.0F, -1.3F},
-         180.0F},
+         0.0F},
         {"hasdrubal",
          Troop::CarthageBowCommander,
          Nation::Carthage,
          5,
          {0.95F, 0.0F, -1.3F},
-         180.0F},
+         0.0F},
         {"hannibal",
          Troop::CarthageSwordCommander,
          Nation::Carthage,
          6,
          {2.85F, 0.0F, -1.3F},
-         180.0F},
+         0.0F},
     };
     for (auto const& entry : entries) {
       auto commander = group(QString::fromLatin1(entry.group_name),
@@ -2555,6 +2569,8 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
       commander.nation_id = entry.nation;
       commander.facing_degrees = entry.facing;
       s.groups.push_back(std::move(commander));
+      s.steps.push_back(
+          at(0.05F, Command::Hold, QString::fromLatin1(entry.group_name)));
       s.expectations.push_back(
           expectation(Expect::GroupIsRendered, QString::fromLatin1(entry.group_name)));
     }

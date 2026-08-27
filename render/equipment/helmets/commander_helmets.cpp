@@ -195,34 +195,15 @@ void add_scipio_crest(std::vector<Primitive>& primitives) {
 
 void add_marcellus_crest(std::vector<Primitive>& primitives) {
   append_specs(primitives, std::span{k_marcellus_crest_primitives});
-
-  for (int side = 0; side < 2; ++side) {
-    float const s = (side == 0) ? -1.0F : 1.0F;
-    std::array<QVector3D, 6> const plume{{
-        {s * 0.62F, 1.32F, -0.04F},
-        {s * 0.72F, 1.72F, -0.10F},
-        {s * 0.82F, 2.10F, -0.16F},
-        {s * 0.92F, 2.44F, -0.22F},
-        {s * 0.98F, 2.60F, -0.26F},
-        {s * 1.04F, 2.78F, -0.30F},
-    }};
-    add_lobed_mass(primitives, plume, 0.56F, 0.26F, k_plume_slot, 0.40F);
-    primitives.push_back(generated_cone(QVector3D(s * 0.60F, 1.10F, -0.02F),
-                                        QVector3D(s * 0.66F, 1.62F, -0.08F),
-                                        0.30F,
-                                        k_dark_slot,
-                                        1.0F,
-                                        2));
-  }
   std::array<QVector3D, 6> const tail{{
-      {0.0F, 1.66F, -0.34F},
-      {0.0F, 1.68F, -0.86F},
-      {0.0F, 1.54F, -1.34F},
-      {0.0F, 1.28F, -1.74F},
-      {0.0F, 0.96F, -2.04F},
-      {0.0F, 0.62F, -2.24F},
+      {0.0F, 1.70F, 0.36F},
+      {0.0F, 2.02F, -0.04F},
+      {0.0F, 2.06F, -0.56F},
+      {0.0F, 1.88F, -1.08F},
+      {0.0F, 1.56F, -1.54F},
+      {0.0F, 1.14F, -1.90F},
   }};
-  add_lobed_mass(primitives, tail, 0.42F, 0.20F, k_accent_slot, 0.45F);
+  add_lobed_mass(primitives, tail, 0.46F, 0.20F, k_plume_slot, 0.44F);
 }
 
 void add_hanno_crest(std::vector<Primitive>& primitives) {
@@ -336,35 +317,35 @@ auto commander_colors(CommanderHelmetStyle style, const HumanoidPalette& palette
   (void)palette;
   switch (style) {
   case CommanderHelmetStyle::Fabius:
-    return {QVector3D(0.60F, 0.63F, 0.68F),
-            QVector3D(0.26F, 0.27F, 0.31F),
-            QVector3D(0.80F, 0.82F, 0.78F),
-            QVector3D(0.66F, 0.10F, 0.09F)};
+    return {QVector3D(0.48F, 0.51F, 0.55F),
+            QVector3D(0.17F, 0.18F, 0.21F),
+            QVector3D(0.72F, 0.69F, 0.58F),
+            QVector3D(0.58F, 0.035F, 0.025F)};
   case CommanderHelmetStyle::Scipio:
-    return {QVector3D(0.55F, 0.56F, 0.59F),
-            QVector3D(0.22F, 0.20F, 0.16F),
-            QVector3D(1.0F, 0.80F, 0.34F),
-            QVector3D(0.84F, 0.11F, 0.09F)};
+    return {QVector3D(0.58F, 0.49F, 0.31F),
+            QVector3D(0.20F, 0.16F, 0.105F),
+            QVector3D(0.90F, 0.66F, 0.22F),
+            QVector3D(0.76F, 0.035F, 0.02F)};
   case CommanderHelmetStyle::Marcellus:
-    return {QVector3D(0.56F, 0.59F, 0.64F),
-            QVector3D(0.28F, 0.29F, 0.33F),
-            QVector3D(0.72F, 0.18F, 0.13F),
-            QVector3D(0.62F, 0.11F, 0.09F)};
+    return {QVector3D(0.40F, 0.43F, 0.47F),
+            QVector3D(0.14F, 0.15F, 0.18F),
+            QVector3D(0.63F, 0.31F, 0.12F),
+            QVector3D(0.62F, 0.045F, 0.025F)};
   case CommanderHelmetStyle::Hanno:
-    return {QVector3D(0.50F, 0.47F, 0.36F),
-            QVector3D(0.21F, 0.19F, 0.15F),
-            QVector3D(0.98F, 0.74F, 0.32F),
-            QVector3D(0.48F, 0.14F, 0.52F)};
+    return {QVector3D(0.48F, 0.39F, 0.24F),
+            QVector3D(0.16F, 0.13F, 0.095F),
+            QVector3D(0.84F, 0.58F, 0.20F),
+            QVector3D(0.40F, 0.055F, 0.46F)};
   case CommanderHelmetStyle::Hasdrubal:
-    return {QVector3D(0.46F, 0.44F, 0.34F),
-            QVector3D(0.20F, 0.24F, 0.25F),
-            QVector3D(0.40F, 0.76F, 0.72F),
-            QVector3D(0.44F, 0.16F, 0.52F)};
+    return {QVector3D(0.36F, 0.31F, 0.22F),
+            QVector3D(0.10F, 0.16F, 0.17F),
+            QVector3D(0.18F, 0.62F, 0.60F),
+            QVector3D(0.37F, 0.06F, 0.44F)};
   case CommanderHelmetStyle::Hannibal:
-    return {QVector3D(0.52F, 0.47F, 0.40F),
-            QVector3D(0.22F, 0.23F, 0.26F),
-            QVector3D(0.90F, 0.64F, 0.24F),
-            QVector3D(0.30F, 0.31F, 0.35F)};
+    return {QVector3D(0.38F, 0.31F, 0.22F),
+            QVector3D(0.075F, 0.08F, 0.095F),
+            QVector3D(0.78F, 0.48F, 0.14F),
+            QVector3D(0.055F, 0.055F, 0.070F)};
   }
   return {QVector3D(0.52F, 0.55F, 0.58F),
           QVector3D(0.20F, 0.20F, 0.22F),
@@ -427,7 +408,7 @@ auto commander_helmet_make_static_attachment(CommanderHelmetStyle style,
   auto spec = Render::Equipment::build_static_attachment({
       .archetype = &commander_helmet_archetype(style),
       .socket_bone_index = socket_bone_index,
-      .uniform_scale = k_helmet_uniform_scale * 1.06F,
+      .uniform_scale = k_helmet_uniform_scale,
       .authored_local_offset = k_helmet_local_offset * k_helmet_uniform_scale,
       .bind_radius = k_head_socket_radius,
       .bind_socket_transform = bind_palette_socket_bone,

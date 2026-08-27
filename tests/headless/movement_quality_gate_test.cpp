@@ -11,16 +11,6 @@
 #include "game/session/session_context.h"
 #include "game/systems/battlefield_capture.h"
 
-// `movement_trace_report` has always been able to read a trace and name what is
-// wrong with the walking, and nothing ever ran it. A watched skirmish produced
-// 91,777 findings - 58,969 direction reversals, 14,028 repath churns, 4,913
-// bodies playing a walk cycle while standing perfectly still - and every suite
-// stayed green throughout.
-//
-// This runs the same scenarios the gameplay verifier runs, with the trace on,
-// and holds the finding counts to a budget. The budgets are what the shipped
-// build produces with headroom, not aspirations: they exist so the number
-// cannot quietly climb again.
 namespace {
 
 using Engine::Core::MovementFindingKind;

@@ -444,6 +444,10 @@ void GameEngine::build_services_and_controllers() {
           m_placement_view_model.get(),
           &App::ViewModels::PlacementViewModel::construction_preview_valid_changed);
   connect(m_production_manager.get(),
+          &ProductionManager::construction_preview_reason_changed,
+          m_placement_view_model.get(),
+          &App::ViewModels::PlacementViewModel::construction_preview_reason_changed);
+  connect(m_production_manager.get(),
           &ProductionManager::construction_preview_summary_changed,
           m_placement_view_model.get(),
           &App::ViewModels::PlacementViewModel::construction_preview_summary_changed);

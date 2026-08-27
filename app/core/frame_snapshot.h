@@ -45,6 +45,7 @@ struct PlacementReadout {
   bool placing_construction = false;
   bool construction_preview_active = false;
   bool construction_preview_valid = false;
+  QString construction_preview_reason;
   bool construction_preview_rotatable = false;
   int construction_preview_segment_count = 0;
   int construction_preview_valid_segment_count = 0;

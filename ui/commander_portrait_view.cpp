@@ -44,6 +44,8 @@ constexpr float k_max_frame_seconds = 0.1F;
 constexpr float k_head_radius = Render::GL::HumanProportions::HEAD_RADIUS;
 constexpr float k_cranium_rise = k_head_radius * 0.06F;
 
+constexpr float k_face_plane = k_head_radius * 0.70F;
+
 auto portrait_lighting() -> Render::EnvironmentLightingState {
   Render::EnvironmentLightingState lighting;
   lighting.primary_direction = QVector3D(0.45F, 0.80F, 0.55F);
@@ -229,21 +231,30 @@ void CommanderPortraitView::PortraitRenderer::measure_face_anchor(
   const auto width = static_cast<qreal>(m_size.width());
   const auto height = static_cast<qreal>(m_size.height());
 
-  const QVector3D centre = head_world.map(QVector3D(0.0F, k_cranium_rise, 0.0F));
-  const QVector3D above =
-      head_world.map(QVector3D(0.0F, k_cranium_rise + k_head_radius, 0.0F));
+  const QVector3D centre =
+      head_world.map(QVector3D(0.0F, k_cranium_rise, k_face_plane));
 
   QPointF centre_screen;
-  QPointF above_screen;
-  if (!m_camera->world_to_screen(centre, width, height, centre_screen) ||
-      !m_camera->world_to_screen(above, width, height, above_screen)) {
+  if (!m_camera->world_to_screen(centre, width, height, centre_screen)) {
     return;
   }
 
-  const qreal dx = above_screen.x() - centre_screen.x();
-  const qreal dy = above_screen.y() - centre_screen.y();
-  const qreal up_length = std::hypot(dx, dy);
-  if (!(up_length > 0.5)) {
+  const QVector3D head_extent =
+      head_world.map(QVector3D(0.0F, k_cranium_rise + k_head_radius, k_face_plane)) -
+      centre;
+  const float extent_length = head_extent.length();
+  if (!(extent_length > 1.0e-6F)) {
+    return;
+  }
+
+  const QVector3D scale_probe = centre + (m_camera->get_up_vector() * extent_length);
+  QPointF scale_screen;
+  if (!m_camera->world_to_screen(scale_probe, width, height, scale_screen)) {
+    return;
+  }
+  const qreal scale_length = std::hypot(scale_screen.x() - centre_screen.x(),
+                                        scale_screen.y() - centre_screen.y());
+  if (!(scale_length > 0.5)) {
     return;
   }
 
@@ -262,12 +273,22 @@ void CommanderPortraitView::PortraitRenderer::measure_face_anchor(
   }
   view_dir.normalize();
 
+  qreal roll = 0.0;
+  QPointF roll_screen;
+  if (m_camera->world_to_screen(centre + head_extent, width, height, roll_screen)) {
+    const qreal dx = roll_screen.x() - centre_screen.x();
+    const qreal dy = roll_screen.y() - centre_screen.y();
+    if (std::hypot(dx, dy) > 0.25) {
+      roll = qRadiansToDegrees(std::atan2(dx, -dy));
+    }
+  }
+
   m_face.valid = true;
   m_face.x = centre_screen.x() / width;
   m_face.y = centre_screen.y() / height;
-  m_face.radius = up_length / height;
+  m_face.radius = scale_length / height;
 
-  m_face.roll = qRadiansToDegrees(std::atan2(dx, -dy));
+  m_face.roll = roll;
   m_face.turn = QVector3D::dotProduct(head_right, view_dir);
   m_face.tilt = QVector3D::dotProduct(head_up, view_dir);
   m_face.facing = -QVector3D::dotProduct(head_forward, view_dir);

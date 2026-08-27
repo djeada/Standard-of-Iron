@@ -17,8 +17,6 @@
 
 namespace {
 
-// The least manpower that buys anything a barracks can recruit. Below this the
-// recruitment buildings are starved however healthy the treasury looks.
 [[nodiscard]] auto
 cheapest_recruit_cost(const Game::Systems::AI::AIContext& ctx) -> int {
   if (ctx.nation == nullptr) {
@@ -362,11 +360,6 @@ auto compute_macro_targets(const Game::Systems::AI::AIContext& ctx, int catapult
   targets.home_count = std::max(ctx.strategy_config.base_home_target,
                                 2 + home_growth + std::min(2, extra_barracks));
 
-  // A home raises a fixed number of civilians and is then finished for good,
-  // and a civilian is the only thing that refills a barracks. Once the
-  // settlement can no longer raise one and the barracks cannot afford the
-  // cheapest recruit, the army has stopped growing for good unless more homes
-  // go up - which is exactly where a watched computer-only match froze.
   if (ctx.home_civilians_remaining == 0 &&
       ctx.recruitment_manpower_available < cheapest_recruit_cost(ctx)) {
     targets.home_count = std::max(targets.home_count, ctx.home_count + 2);

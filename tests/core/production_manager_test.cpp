@@ -549,7 +549,10 @@ TEST_F(ProductionManagerTest, DirectBuildingPlacementRejectsConfirmWithoutResour
 
   const QPointF screen = world_to_screen(QVector3D(0.0F, 0.0F, 0.0F));
   manager.on_construction_mouse_move(screen.x(), screen.y(), viewport);
-  ASSERT_TRUE(manager.construction_preview_valid());
+  ASSERT_FALSE(manager.construction_preview_valid())
+      << "the ghost must refuse before the click, not after it.";
+  EXPECT_FALSE(manager.construction_preview_reason().isEmpty())
+      << "an unaffordable ghost has to say so.";
 
   manager.on_construction_confirm();
 
@@ -558,11 +561,51 @@ TEST_F(ProductionManagerTest, DirectBuildingPlacementRejectsConfirmWithoutResour
 
   resources.set(1, Game::Systems::ResourceType::Wood, 90);
   resources.set(1, Game::Systems::ResourceType::Stone, 120);
+  manager.on_construction_mouse_move(screen.x(), screen.y(), viewport);
+  EXPECT_TRUE(manager.construction_preview_valid());
+  EXPECT_TRUE(manager.construction_preview_reason().isEmpty())
+      << "a buildable ghost carries no complaint.";
 
   manager.on_construction_confirm();
 
   EXPECT_FALSE(manager.is_placing_construction());
   EXPECT_NE(find_spawned_unit(Game::Units::SpawnType::DefenseTower), nullptr);
+}
+
+TEST_F(ProductionManagerTest, PreviewNamesTheReasonAFootprintIsBlocked) {
+  ProductionManager manager(&world, &picking_service, &camera);
+
+  manager.start_building_placement(QStringLiteral("defense_tower"), 1);
+  const QPointF free_ground = world_to_screen(QVector3D(0.0F, 0.0F, 0.0F));
+  manager.on_construction_mouse_move(free_ground.x(), free_ground.y(), viewport);
+  ASSERT_TRUE(manager.construction_preview_valid());
+  manager.on_construction_confirm();
+  ASSERT_NE(find_spawned_unit(Game::Units::SpawnType::DefenseTower), nullptr);
+
+  manager.start_building_placement(QStringLiteral("defense_tower"), 1);
+  manager.on_construction_mouse_move(free_ground.x(), free_ground.y(), viewport);
+
+  EXPECT_FALSE(manager.construction_preview_valid());
+  EXPECT_FALSE(manager.construction_preview_reason().isEmpty())
+      << "a ghost blocked by an existing building must say what is in the way, "
+         "not just turn red.";
+}
+
+TEST_F(ProductionManagerTest, PreviewReasonClearsWhenThePlacementIsPutAway) {
+  ProductionManager manager(&world, &picking_service, &camera);
+  auto& resources = Game::Systems::PlayerResourceRegistry::instance();
+  resources.set(1, Game::Systems::ResourceType::Wood, 0);
+  resources.set(1, Game::Systems::ResourceType::Stone, 0);
+
+  manager.start_building_placement(QStringLiteral("defense_tower"), 1);
+  const QPointF screen = world_to_screen(QVector3D(0.0F, 0.0F, 0.0F));
+  manager.on_construction_mouse_move(screen.x(), screen.y(), viewport);
+  ASSERT_FALSE(manager.construction_preview_reason().isEmpty());
+
+  manager.on_construction_cancel();
+
+  EXPECT_TRUE(manager.construction_preview_reason().isEmpty())
+      << "a stale complaint must not outlive the ghost that earned it.";
 }
 
 TEST_F(ProductionManagerTest, CollectPreviewSnapsToResourceCenterWhenNearby) {

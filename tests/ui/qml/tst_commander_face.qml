@@ -35,6 +35,8 @@ TestCase {
     }
 
     function init() {
+        stubAnchor.x = 0;
+        stubAnchor.y = 0;
         stubAnchor.faceValid = true;
         stubAnchor.faceX = 0.5;
         stubAnchor.faceY = 0.4;
@@ -59,6 +61,13 @@ TestCase {
         stubAnchor.faceY = 0.75;
         compare(face.x, (0.25 * 160) - (face.width / 2));
         compare(face.y, (0.75 * 200) - (face.height / 2));
+    }
+
+    function test_it_reads_the_anchor_in_the_portrait_frame() {
+        stubAnchor.x = 12;
+        stubAnchor.y = 7;
+        compare(face.x, 12 + (0.5 * 160) - (face.width / 2), "an inset portrait must not drag the face off the head");
+        compare(face.y, 7 + (0.4 * 200) - (face.height / 2));
     }
 
     function test_no_paint_without_an_anchor() {
