@@ -10,6 +10,7 @@
 #include "game/command/command_system.h"
 #include "game/core/component.h"
 #include "game/core/world.h"
+#include "game/map/environment_lighting.h"
 #include "game/map/map_definition.h"
 #include "game/session/session_context.h"
 #include "game/session/simulation_clock.h"
@@ -134,6 +135,81 @@ TEST(RuntimeFrameOrchestratorTest, SimulationUsesFixedSixtyHertzSteps) {
   EXPECT_TRUE(std::all_of(steps.begin(), steps.end(), [](float step) {
     return std::abs(step - 1.0F / 60.0F) < 0.000001F;
   }));
+}
+
+// The speed control is for the battle. It used to move the sun as well: the
+// environment clock advanced once per simulation tick, so at 4x a full day
+// passed every ten minutes of play and the setting a player uses most left them
+// fighting in the dark for half the match.
+TEST(RuntimeFrameOrchestratorTest, TheDayRunsInRealTimeWhateverTheBattleSpeed) {
+  const auto hour_after = [](float speed, float real_seconds) {
+    Game::Session::SessionContext session;
+    Engine::Core::World world;
+    Game::Map::EnvironmentDefinition definition;
+    definition.start_time = 8.0F;
+    definition.day_length_seconds = 240.0F;
+    definition.time_mode = Game::Map::TimeMode::Continuous;
+    Game::Map::EnvironmentClock clock(definition);
+
+    RuntimeFrameOrchestrator orchestrator;
+    RuntimeFrameState state;
+    state.simulation_time_scale = speed;
+    EntityCache entity_cache;
+
+    const float frame = 1.0F / 60.0F;
+    const int frames = static_cast<int>(real_seconds / frame);
+    for (int i = 0; i < frames; ++i) {
+      orchestrator.update(AppSceneContext{.session = &session,
+                                          .world = &world,
+                                          .environment_clock = &clock},
+                          state,
+                          entity_cache,
+                          nullptr,
+                          QString(),
+                          frame,
+                          {},
+                          {});
+    }
+    return clock.hour();
+  };
+
+  const float single = hour_after(1.0F, 60.0F);
+  const float quadruple = hour_after(4.0F, 60.0F);
+
+  EXPECT_GT(single, 8.0F) << "the day did not advance at all";
+  EXPECT_NEAR(quadruple, single, 0.05F)
+      << "four times battle speed moved the sun four times as fast";
+}
+
+TEST(RuntimeFrameOrchestratorTest, APausedMatchHoldsTheHour) {
+  Game::Session::SessionContext session;
+  Engine::Core::World world;
+  Game::Map::EnvironmentDefinition definition;
+  definition.start_time = 13.0F;
+  definition.day_length_seconds = 240.0F;
+  definition.time_mode = Game::Map::TimeMode::Continuous;
+  Game::Map::EnvironmentClock clock(definition);
+
+  RuntimeFrameOrchestrator orchestrator;
+  RuntimeFrameState state;
+  state.simulation_time_scale = 0.0F;
+  EntityCache entity_cache;
+
+  for (int i = 0; i < 600; ++i) {
+    orchestrator.update(AppSceneContext{.session = &session,
+                                        .world = &world,
+                                        .environment_clock = &clock},
+                        state,
+                        entity_cache,
+                        nullptr,
+                        QString(),
+                        1.0F / 60.0F,
+                        {},
+                        {});
+  }
+
+  EXPECT_FLOAT_EQ(clock.hour(), 13.0F)
+      << "the sun kept moving while the match was paused";
 }
 
 TEST(RuntimeFrameOrchestratorTest, HigherSpeedsRunProportionallyMoreFixedSteps) {

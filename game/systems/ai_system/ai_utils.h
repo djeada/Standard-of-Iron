@@ -77,6 +77,9 @@ inline auto is_combat_role_unit(const EntitySnapshot& entity) -> bool {
 }
 
 inline auto is_threatening_contact(const ContactSnapshot& contact) -> bool {
+  if (contact.holds_ground) {
+    return false;
+  }
   return !contact.is_building ||
          contact.spawn_type == Game::Units::SpawnType::DefenseTower;
 }

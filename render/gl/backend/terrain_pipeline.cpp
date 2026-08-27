@@ -128,10 +128,14 @@ void TerrainPipeline::cache_ground_uniforms() {
       m_ground_shader->uniform_handle("u_grass_saturation");
   m_ground_uniforms.soil_roughness =
       m_ground_shader->uniform_handle("u_soil_roughness");
+  // These two only survive compilation while SOI_SURFACE_DETAIL is on; the
+  // reduced ground shader folds the micro-relief away entirely and the linker
+  // strips them. That is a quality tier doing its job, not a missing uniform,
+  // so it must not be reported as one on every launch.
   m_ground_uniforms.micro_bump_amp =
-      m_ground_shader->uniform_handle("u_micro_bump_amp");
+      m_ground_shader->optional_uniform_handle("u_micro_bump_amp");
   m_ground_uniforms.micro_bump_freq =
-      m_ground_shader->uniform_handle("u_micro_bump_freq");
+      m_ground_shader->optional_uniform_handle("u_micro_bump_freq");
   m_ground_uniforms.micro_normal_weight =
       m_ground_shader->uniform_handle("u_micro_normal_weight");
   m_ground_uniforms.albedo_jitter = m_ground_shader->uniform_handle("u_albedo_jitter");

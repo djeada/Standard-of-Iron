@@ -50,7 +50,7 @@ TEST(TimeOfDayTest, NightKeepsAmbientHighEnoughToStayLegible) {
   const auto day = lighting_for_time_of_day(TimeOfDay::Day);
   const auto settings = lighting_for_time_of_day(TimeOfDay::Night);
   EXPECT_LT(ambient_radiance(settings), 0.10F);
-  EXPECT_FLOAT_EQ(settings.ambient_intensity, 0.30F);
+  EXPECT_FLOAT_EQ(settings.ambient_intensity, 0.32F);
   EXPECT_NEAR(settings.primary_direction.length(), 1.0F, 1e-5F);
 
   EXPECT_LT(settings.primary_intensity, day.primary_intensity * 0.5F);
@@ -171,3 +171,41 @@ TEST(TimeOfDayTest, ScriptedTransitionSnapshotRestoresExactly) {
 }
 
 } // namespace
+
+// A battle has to stay readable at every hour it can reach. Night used to sit
+// at 0.30 ambient with a 0.09 ground bounce and 0.90 exposure, which collapsed
+// terrain, roads and both armies into one blue - a player could not tell whose
+// troops were whose. The night keeps its colour and its mood; what it may not
+// do is go dark enough to hide the battle.
+namespace {
+
+[[nodiscard]] auto
+lit_floor(const Game::Map::EnvironmentLightingState& lighting) -> float {
+  const QVector3D bounce = lighting.ground_bounce_color;
+  const float bounce_luma =
+      (bounce.x() * 0.2126F) + (bounce.y() * 0.7152F) + (bounce.z() * 0.0722F);
+  return (lighting.ambient_intensity + bounce_luma) * lighting.exposure;
+}
+
+} // namespace
+
+TEST(TimeOfDayReadabilityTest, EveryHourKeepsTheBattlefieldReadable) {
+  constexpr float k_minimum_lit_floor = 0.40F;
+
+  for (int hour = 0; hour < 24; ++hour) {
+    const auto lighting = Game::Map::lighting_for_hour(static_cast<float>(hour));
+    EXPECT_GE(lit_floor(lighting), k_minimum_lit_floor)
+        << "hour " << hour << " leaves the battlefield too dark to read: ambient "
+        << lighting.ambient_intensity << ", exposure " << lighting.exposure;
+  }
+}
+
+TEST(TimeOfDayReadabilityTest, NightIsStillDarkerThanNoon) {
+  const auto midnight = Game::Map::lighting_for_hour(0.0F);
+  const auto noon = Game::Map::lighting_for_hour(13.0F);
+
+  EXPECT_LT(midnight.primary_intensity, noon.primary_intensity)
+      << "the night lift washed out the difference between night and day";
+  EXPECT_LT(midnight.sky_color.length(), noon.sky_color.length())
+      << "night lost its sky";
+}

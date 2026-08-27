@@ -30,6 +30,12 @@ Item {
     signal observe_requested(string map_path)
     signal cancelled
 
+    // Row images for the battlefield list. No map ships a thumbnail, so without
+    // this every row falls back to the same generic glyph.
+    MapThumbnails {
+        id: map_thumbnails
+    }
+
     onMaps_modelChanged: Qt.callLater(function () {
             if (selected_map_data !== null || !maps_model || (maps_model.length || 0) <= 0)
                 return;
@@ -759,7 +765,7 @@ Item {
                                             id: thumb_image
 
                                             anchors.fill: parent
-                                            source: (typeof thumbnail !== "undefined" && thumbnail !== "") ? thumbnail : ""
+                                            source: map_thumbnails.source_for((typeof thumbnail !== "undefined") ? thumbnail : ((modelData && modelData.thumbnail) ? modelData.thumbnail : ""), (typeof path !== "undefined") ? String(path) : ((modelData && modelData.path) ? String(modelData.path) : ""))
                                             asynchronous: true
                                             fillMode: Image.PreserveAspectCrop
                                             visible: status === Image.Ready

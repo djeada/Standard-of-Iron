@@ -19,6 +19,10 @@ Item {
 
     anchors.fill: parent
 
+    MapThumbnails {
+        id: thumbnails
+    }
+
     Text {
         id: title
 
@@ -157,7 +161,7 @@ Item {
 
                         Image {
                             anchors.fill: parent
-                            source: (typeof thumbnail !== "undefined") ? thumbnail : ""
+                            source: thumbnails.source_for((typeof thumbnail !== "undefined") ? thumbnail : ((modelData && modelData.thumbnail) ? modelData.thumbnail : ""), (typeof path !== "undefined") ? String(path) : ((modelData && modelData.path) ? String(modelData.path) : ""))
                             asynchronous: true
                             fillMode: Image.PreserveAspectCrop
                             visible: status === Image.Ready

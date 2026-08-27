@@ -535,14 +535,25 @@ void apply_start_harvest(World& world, int owner_id, const StartHarvest& order) 
       continue;
     }
     release_task_target(terrain, *builder);
-    begin_site_work(*builder, order.construction_type, order.site, 0.0F);
+    // Work the prop from beside it, not from on top of it. The prop's footprint
+    // is stamped out of the navigation grid, so a worker sent to its centre is
+    // held out by its own body a few centimetres short of the fifteen the
+    // arrival check wants - and the task then hangs forever, which is how five
+    // builders came to stand around a wood shortage for a whole match.
+    const QVector3D work_position =
+        Game::Systems::CommandService::world_prop_work_position(
+            terrain,
+            worker_position_or(*entity, order.site),
+            order.resource_target,
+            Game::Systems::CommandService::get_unit_radius(world, id));
+    begin_site_work(*builder, order.construction_type, work_position, 0.0F);
     builder->has_task_target = true;
     builder->task_target_id = order.resource_target;
     builder->task_target_x = order.site.x();
     builder->task_target_z = order.site.z();
     builder->task_target_reserved = true;
     if (auto* movement = entity->get_component<Engine::Core::MovementComponent>()) {
-      movement->set_rest_position(order.site.x(), order.site.z());
+      movement->set_rest_position(work_position.x(), work_position.z());
     }
     assigned = true;
   }
