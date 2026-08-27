@@ -810,6 +810,7 @@ if(QT_VERSION_MAJOR EQUAL 6)
             ui/qml/MapPreview.qml
             ui/qml/SkirmishChip.qml
             ui/qml/MapListPanel.qml
+            ui/qml/MapThumbnails.qml
             ui/qml/PlayerListItem.qml
             ui/qml/PlayerConfigPanel.qml
             ui/qml/CampaignScreen.qml

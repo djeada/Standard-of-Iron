@@ -9,6 +9,7 @@
 #include <utility>
 
 #include "../core/world.h"
+#include "../session/session_context.h"
 #include "ai_system/ai_command_applier.h"
 #include "ai_system/ai_snapshot_builder.h"
 #include "ai_system/ai_strategy.h"
@@ -26,6 +27,7 @@
 #include "core/event_manager.h"
 #include "nation_registry.h"
 #include "owner_registry.h"
+#include "player_resource_registry.h"
 #include "systems/ai_system/ai_types.h"
 #include "systems/ai_system/ai_worker.h"
 
@@ -150,7 +152,7 @@ void AISystem::update(Engine::Core::World* world, float delta_time) {
   m_total_game_time += delta_time;
   ++m_update_count;
 
-  trace_progress();
+  trace_progress(*world);
 
   m_command_filter.update(m_total_game_time);
 
@@ -226,7 +228,7 @@ void AISystem::process_results(Engine::Core::World& world) {
   }
 }
 
-void AISystem::trace_progress() {
+void AISystem::trace_progress(const Engine::Core::World& world) {
   static const bool enabled = !qEnvironmentVariableIsEmpty("SOI_AI_TRACE");
   if (!enabled) {
     return;
@@ -239,6 +241,8 @@ void AISystem::trace_progress() {
 
   for (const auto& ai : m_ai_instances) {
     const auto& context = ai.context;
+    const auto resources =
+        Game::Session::session_for(world).economy().get_all(context.player_id);
     qInfo().nospace() << "SOI_AI_TRACE t=" << m_total_game_time
                       << " player=" << context.player_id
                       << " state=" << static_cast<int>(context.state)
@@ -247,11 +251,32 @@ void AISystem::trace_progress() {
                       << " ranged=" << context.ranged_count
                       << " builders=" << context.builder_count
                       << " buildings=" << context.buildings.size()
-                      << " primary_barracks=" << context.primary_barracks
-                      << " nation=" << (context.nation != nullptr)
+                      << " primary_barracks=" << context.primary_barracks << " nation="
+                      << (context.nation != nullptr)
+                      // The army is usually bound by income rather than by the
+                      // plan, and a trace that shows only unit counts cannot
+                      // tell those apart. Manpower is what a barracks spends on
+                      // a recruit; civilians are the only thing that refills it.
+                      << " manpower=" << context.recruitment_manpower_available
+                      << " civilians_left=" << context.home_civilians_remaining
+                      << " gold=" << resources.get(ResourceType::Gold)
+                      << " food=" << resources.get(ResourceType::Food)
+                      << " wood=" << resources.get(ResourceType::Wood)
+                      << " stone=" << resources.get(ResourceType::Stone)
+                      << " iron=" << resources.get(ResourceType::Iron)
                       << " decisions=" << m_completed_decision_count
-                      << " commands=" << m_applied_command_count;
+                      << " commands=" << m_applied_command_count
+                      << " refused=" << m_refused_command_count;
   }
+}
+
+auto AISystem::plan_for(int player_id) const -> const AI::AIContext* {
+  for (const auto& ai : m_ai_instances) {
+    if (ai.context.player_id == player_id) {
+      return &ai.context;
+    }
+  }
+  return nullptr;
 }
 
 void AISystem::merge_building_attacks(const AIInstance& ai, AI::AIContext& context) {

@@ -2,6 +2,7 @@
 
 #include <QVector3D>
 
+#include <algorithm>
 #include <cstdint>
 #include <memory>
 #include <optional>
@@ -101,6 +102,16 @@ public:
 
   [[nodiscard]] auto get_height_map() const -> const TerrainHeightMap* {
     return m_height_map.get();
+  }
+
+  // How haunted this battlefield is, 0 for a plain valley. Iron ore reads as
+  // ordinary rock where nothing walks and takes its ghost-light where something
+  // does; "Nothing haunts this valley" should not be lit like a barrow.
+  [[nodiscard]] auto supernatural_presence() const -> float {
+    return m_supernatural_presence;
+  }
+  void set_supernatural_presence(float presence) {
+    m_supernatural_presence = std::clamp(presence, 0.0F, 1.0F);
   }
 
   [[nodiscard]] auto biome_settings() const -> const BiomeSettings& {
@@ -229,6 +240,7 @@ private:
   std::unique_ptr<TerrainHeightMap> m_height_map;
   TerrainField m_terrain_field;
   BiomeSettings m_biome_settings;
+  float m_supernatural_presence{1.0F};
   CoordSystem m_coord_system{CoordSystem::Grid};
   std::vector<WorldProp> m_authored_world_props;
   std::vector<WorldProp> m_world_props;

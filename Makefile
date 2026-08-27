@@ -548,7 +548,14 @@ TS_ASSET_STUB := translations/asset_strings_generated.cpp
 # The number heuristic fills patterns like %1/%2 with junk ("%1% {1/%2?}")
 # instead of leaving them empty, and that junk blocks the source-language
 # seeder, so the entry stays unfinished and trips translations-check forever.
-LUPDATE_FLAGS := -no-obsolete -locations none -disable-heuristic number
+#
+# Qt dropped that heuristic after 6.4: on a newer lupdate the same flag is
+# rejected outright ("Invalid heuristic name passed to -disable-heuristic"),
+# which failed the gate on any machine with a current Qt while passing on an
+# older one. Ask lupdate what it accepts rather than assuming.
+LUPDATE_NUMBER_HEURISTIC := $(shell $(LUPDATE) -help 2>&1 \
+	| grep -q -- 'disable-heuristic.*number' && echo '-disable-heuristic number')
+LUPDATE_FLAGS := -no-obsolete -locations none $(LUPDATE_NUMBER_HEURISTIC)
 
 ## Rescan sources for translatable strings and refresh the .ts catalogues.
 translations:
