@@ -795,6 +795,9 @@ void ProductionManager::set_construction_preview_active(bool active) {
     return;
   }
   m_construction_preview_active = active;
+  if (!active) {
+    set_construction_preview_reason({});
+  }
   emit construction_preview_active_changed();
 }
 
@@ -804,6 +807,69 @@ void ProductionManager::set_construction_preview_valid(bool valid) {
   }
   m_construction_preview_valid = valid;
   emit construction_preview_valid_changed();
+}
+
+void ProductionManager::set_construction_preview_reason(const QString& reason) {
+  if (m_construction_preview_reason == reason) {
+    return;
+  }
+  m_construction_preview_reason = reason;
+  emit construction_preview_reason_changed();
+}
+
+void ProductionManager::set_construction_preview_ruling(bool valid,
+                                                        const QString& reason) {
+  set_construction_preview_valid(valid);
+  set_construction_preview_reason(valid ? QString() : reason);
+}
+
+auto ProductionManager::non_wall_preview_ruling(const QVector3D& world_position)
+    -> QString {
+
+  if (m_pending_food_target_id != 0 &&
+      is_harvest_construction_item(m_pending_construction_type)) {
+    if (!Game::Systems::resolve_food_target(
+             *m_world, m_pending_food_target_id, pending_construction_owner_id())
+             .has_value()) {
+      return QCoreApplication::translate("ProductionManager",
+                                         "Nothing here is worth harvesting.");
+    }
+    return {};
+  }
+
+  if (is_harvest_construction_item(m_pending_construction_type)) {
+    HarvestPlacement const placement =
+        evaluate_harvest_placement(m_world,
+                                   m_pending_construction_builders,
+                                   world_position,
+                                   m_pending_construction_type,
+                                   m_pending_harvest_target_id);
+    if (!placement.valid()) {
+      return QCoreApplication::translate("ProductionManager",
+                                         "No resource here to work.");
+    }
+    return {};
+  }
+
+  if (!Game::Systems::StructurePlacementService::footprint_is_clear(
+          *m_world,
+          world_position.x(),
+          world_position.z(),
+          m_pending_construction_type.toStdString())) {
+    return QCoreApplication::translate("ProductionManager",
+                                       "Something is already standing here.");
+  }
+
+  const int owner_id = pending_construction_owner_id();
+  const Game::Systems::ResourceAmounts resource_costs =
+      App::Economy::construction_costs(m_pending_construction_type);
+  auto& economy = Game::Session::session_for(*m_world).economy();
+  if (!resource_costs.empty() && !economy.has_at_least(owner_id, resource_costs)) {
+    return App::Economy::insufficient_resources_reason(
+        economy, owner_id, resource_costs);
+  }
+
+  return {};
 }
 
 void ProductionManager::clear_construction_preview_summary() {
@@ -839,28 +905,8 @@ void ProductionManager::update_non_wall_construction_preview(
   }
 
   set_construction_preview_active(true);
-  if (m_pending_food_target_id != 0 &&
-      is_harvest_construction_item(m_pending_construction_type)) {
-    set_construction_preview_valid(
-        Game::Systems::resolve_food_target(
-            *m_world, m_pending_food_target_id, pending_construction_owner_id())
-            .has_value());
-  } else if (is_harvest_construction_item(m_pending_construction_type)) {
-    HarvestPlacement const placement =
-        evaluate_harvest_placement(m_world,
-                                   m_pending_construction_builders,
-                                   world_position,
-                                   m_pending_construction_type,
-                                   m_pending_harvest_target_id);
-    set_construction_preview_valid(placement.valid());
-  } else {
-    set_construction_preview_valid(
-        Game::Systems::StructurePlacementService::footprint_is_clear(
-            *m_world,
-            world_position.x(),
-            world_position.z(),
-            m_pending_construction_type.toStdString()));
-  }
+  const QString reason = non_wall_preview_ruling(world_position);
+  set_construction_preview_ruling(reason.isEmpty(), reason);
   rebuild_non_wall_preview_entity(world_position);
 }
 
@@ -1123,7 +1169,10 @@ void ProductionManager::rebuild_wall_preview_plan(
   const int wood_cost = plan.wood_per_segment;
 
   set_construction_preview_active(!m_wall_preview_segments.empty());
-  set_construction_preview_valid(valid_segment_count > 0);
+  set_construction_preview_ruling(
+      valid_segment_count > 0,
+      QCoreApplication::translate("ProductionManager",
+                                  "No part of this wall can stand there."));
   set_construction_preview_summary(static_cast<int>(m_wall_preview_segments.size()),
                                    valid_segment_count,
                                    valid_segment_count * wood_cost);

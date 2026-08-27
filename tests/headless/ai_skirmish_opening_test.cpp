@@ -25,17 +25,6 @@
 #include "game/units/factory.h"
 #include "game/units/spawn_type.h"
 
-// Nothing in the repo watched the computer open a skirmish. The one AI scenario
-// in `battlefield_gameplay_verifier` hands it twelve knights already spawned,
-// so it exercises the fighting AI and never the economy - which is why every AI
-// test was green while a watched computer-only match went nowhere: five or six
-// units and two or three buildings inside forty seconds, then nothing at all
-// for the next eight minutes of simulated time. No gold or food was ever
-// gathered, no army was ever built, and no side ever attacked.
-//
-// This is a skirmish opening exactly as the shipped maps author one: a barracks,
-// a builder, a healer and a commander per side, a starting stock of resources,
-// and two rival camps. It asserts that the opening actually goes somewhere.
 namespace {
 
 using Engine::Core::EntityID;
@@ -60,8 +49,6 @@ protected:
     m_factory = std::make_shared<Game::Units::UnitFactoryRegistry>();
     Game::Units::register_built_in_units(*m_factory);
 
-    // Completed recruits are spawned through the map transformer's registry,
-    // not the one a test holds.
     Game::Map::MapTransformer::setFactoryRegistry(m_factory);
   }
 
@@ -93,9 +80,6 @@ protected:
     map_definition.grid.height = k_map_size;
     map_definition.grid.tile_size = 1.0F;
 
-    // A camp with nothing to cut or quarry has no economy at all, and every
-    // shipped map scatters both around a start. Without these the harness
-    // measures a resource drought rather than the computer's plan.
     scatter_resources(map_definition, 20);
     scatter_resources(map_definition, k_map_size - 20);
     session.terrain().initialize(map_definition);
@@ -103,7 +87,6 @@ protected:
     Game::Systems::register_runtime_systems(session.world());
     session.troop_counts().initialize();
 
-    // What every shipped skirmish map hands a side at the opening bell.
     for (const int owner : {k_left, k_right}) {
       auto& economy = session.economy();
       economy.ensure_owner(owner);
@@ -243,11 +226,6 @@ TEST_F(AiSkirmishOpeningTest, TheComputerFieldsFightingTroops) {
       << " fighting units in two minutes; a builder gang is not an army";
 }
 
-// The computer used to spend its opening manpower on builders and then have no
-// way to get any more: it never staffed a home, never walked a civilian to a
-// barracks, and treated the home-only lifetime cap as though it retired the
-// barracks. This watches the loop that undoes all three - the reserve has to
-// come back up after it is spent.
 TEST_F(AiSkirmishOpeningTest, TheComputerRefillsItsRecruitmentReserve) {
   auto& session = make_match();
 
@@ -321,10 +299,6 @@ TEST_F(AiSkirmishOpeningTest, TheComputerSpendsWhatItGathers) {
       << "the computer sat on its whole opening stock for three minutes";
 }
 
-// Every nation lists its commanders at the top of its priority table, and a
-// barracks refuses to recruit one. The computer asked for the highest-priority
-// troop it could name and had that request dropped on every single decision,
-// which is how Rome went a whole match without an army while looking busy.
 TEST_F(AiSkirmishOpeningTest, TheComputerDoesNotPlanRecruitsTheWorldWillRefuse) {
   auto& session = make_match();
   auto* ai = session.world().get_system<Game::Systems::AISystem>();
@@ -342,11 +316,6 @@ TEST_F(AiSkirmishOpeningTest, TheComputerDoesNotPlanRecruitsTheWorldWillRefuse) 
          "will never grant";
 }
 
-// `produced_count` is a home's civilian tally. `ProductionService` caps a home
-// by it and a barracks by nothing, and `ProductionSystem` stops only a home
-// when it is reached - so a barracks that has spent its opening budget may
-// still recruit as soon as a civilian refills it. The computer used to apply
-// the home rule to its barracks and retire the building for good.
 TEST_F(AiSkirmishOpeningTest, ABarracksIsNotRetiredByItsLifetimeTally) {
   auto& session = make_match();
 
@@ -364,7 +333,6 @@ TEST_F(AiSkirmishOpeningTest, ABarracksIsNotRetiredByItsLifetimeTally) {
       session.world().try_get<Engine::Core::ProductionComponent>(barracks_id);
   ASSERT_NE(production, nullptr);
 
-  // Spent its whole lifetime budget, then refilled by a civilian.
   production->produced_count = production->max_units + 100;
   production->manpower_available = 280;
 

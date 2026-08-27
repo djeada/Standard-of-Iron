@@ -6638,6 +6638,22 @@ to see preview</source>
         <source>Building factory unavailable.</source>
         <translation>مصنع المباني غير متاح.</translation>
     </message>
+    <message>
+        <source>Nothing here is worth harvesting.</source>
+        <translation>لا شيء هنا يستحق الحصاد.</translation>
+    </message>
+    <message>
+        <source>No resource here to work.</source>
+        <translation>لا مورد هنا للعمل عليه.</translation>
+    </message>
+    <message>
+        <source>Something is already standing here.</source>
+        <translation>ثمة شيء قائم هنا بالفعل.</translation>
+    </message>
+    <message>
+        <source>No part of this wall can stand there.</source>
+        <translation>لا يمكن لأي جزء من هذا السور أن يقوم هناك.</translation>
+    </message>
 </context>
 <context>
     <name>ProductionPanel</name>
@@ -8082,6 +8098,41 @@ Builders reap it for the food that recruits civilians</source>
     <message>
         <source>Invalid team configuration: At least two teams must be selected to start a match.</source>
         <translation>إعداد الفرق غير صالح: يجب اختيار فريقين على الأقل لبدء مباراة.</translation>
+    </message>
+</context>
+<context>
+    <name>SystemVoice</name>
+    <message>
+        <source>The order was excellent. It was given to nobody.</source>
+        <translation>كان الأمر ممتازًا. ولم يُعطَ لأحد.</translation>
+    </message>
+    <message>
+        <source>There is no road to that place. There may never have been one.</source>
+        <translation>لا طريق إلى ذلك المكان. وربما لم يكن ثمة طريق قط.</translation>
+    </message>
+    <message>
+        <source>The quartermaster has checked twice. There is nothing behind the second check.</source>
+        <translation>تفقّد أمين المؤن مرتين. ولا شيء خلف المرة الثانية.</translation>
+    </message>
+    <message>
+        <source>We have the barracks, the coin and the will. We lack the people.</source>
+        <translation>لدينا الثكنة والمال والعزيمة. ينقصنا الناس.</translation>
+    </message>
+    <message>
+        <source>They are carrying something heavier than your orders.</source>
+        <translation>إنهم يحملون ما هو أثقل من أوامرك.</translation>
+    </message>
+    <message>
+        <source>Willing, sir. Simply not that willing, and not from here.</source>
+        <translation>راغبون يا سيدي. لكن ليس إلى هذا الحد، ولا من هنا.</translation>
+    </message>
+    <message>
+        <source>Those are not ours to command. They have been very clear about it.</source>
+        <translation>أولئك ليسوا تحت إمرتنا. وقد كانوا واضحين جدًا في ذلك.</translation>
+    </message>
+    <message>
+        <source>Nothing there answers to that order. We checked.</source>
+        <translation>لا شيء هناك يستجيب لذلك الأمر. تحققنا.</translation>
     </message>
 </context>
 <context>

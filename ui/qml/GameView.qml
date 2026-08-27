@@ -13,6 +13,7 @@ Item {
     property bool is_placing_construction: false
     property bool construction_preview_active: typeof game !== 'undefined' && game.placement.construction_preview_active
     property bool construction_preview_valid: typeof game !== 'undefined' && game.placement.construction_preview_valid
+    property string construction_preview_reason: typeof game !== 'undefined' ? game.placement.construction_preview_reason : ""
     property var pressed_keys: ({})
     property var pan_axis: ({})
 
@@ -727,6 +728,7 @@ Item {
         placingConstruction: game_view.is_placing_construction
         constructionPreviewActive: game_view.construction_preview_active
         constructionPreviewValid: game_view.construction_preview_valid
+        constructionPreviewReason: game_view.construction_preview_reason
         pointerX: typeof game !== 'undefined' ? game.global_cursor_x : 0
         pointerY: typeof game !== 'undefined' ? game.global_cursor_y : 0
         intentData: (typeof game !== 'undefined' && game.orders) ? game.orders.context_intent : null

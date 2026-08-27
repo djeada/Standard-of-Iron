@@ -117,6 +117,15 @@ Item {
                         speaking: messageRoot.showing
                     }
 
+                    CommanderFaceOverlay {
+                        id: face
+
+                        anchorSource: portrait
+                        pose: messageRoot.speakerPose
+                        accent: messageRoot.accent
+                        talking: messageRoot.showing && messageRoot.revealed < fullText.length
+                    }
+
                     Rectangle {
                         anchors.fill: parent
                         color: Qt.rgba(0.10, 0.075, 0.055, 0.52)
@@ -179,15 +188,6 @@ Item {
                                 color: Design.Theme.shadow
                             }
                         }
-                    }
-
-                    CommanderFaceOverlay {
-                        id: face
-
-                        anchorSource: portrait
-                        pose: messageRoot.speakerPose
-                        accent: messageRoot.accent
-                        talking: messageRoot.showing && messageRoot.revealed < fullText.length
                     }
                 }
             }

@@ -706,11 +706,7 @@ auto verify(const CaptureResult& result) -> VerificationReport {
               "yaw_snap",
               "visible facing changed by more than 50 degrees in one tick");
   }
-  // One idle/walk flip per body per ten seconds is the most a settled scenario
-  // should ever show. The old threshold was a hundredth of the raw entity-update
-  // counter, which on a sixty second run allowed 585 flickers where the worst
-  // scenario produces 83 - it could not fire, and a real regression would have
-  // passed straight through it.
+
   const double live_bodies =
       result.performance.ticks > 0U
           ? static_cast<double>(result.performance.entity_updates) /

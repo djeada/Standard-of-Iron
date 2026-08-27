@@ -35,6 +35,8 @@ class PlacementViewModel : public QObject {
                  placing_construction_changed)
   Q_PROPERTY(bool construction_preview_active READ construction_preview_active NOTIFY
                  construction_preview_active_changed)
+  Q_PROPERTY(QString construction_preview_reason READ construction_preview_reason NOTIFY
+                 construction_preview_reason_changed)
   Q_PROPERTY(bool construction_preview_valid READ construction_preview_valid NOTIFY
                  construction_preview_valid_changed)
   Q_PROPERTY(
@@ -93,6 +95,7 @@ public:
   Q_INVOKABLE [[nodiscard]] QString pending_builder_construction_type() const;
   Q_INVOKABLE [[nodiscard]] bool construction_preview_active() const;
   Q_INVOKABLE [[nodiscard]] bool construction_preview_valid() const;
+  Q_INVOKABLE [[nodiscard]] QString construction_preview_reason() const;
   Q_INVOKABLE [[nodiscard]] bool construction_preview_rotatable() const;
   Q_INVOKABLE [[nodiscard]] int construction_preview_segment_count() const;
   Q_INVOKABLE [[nodiscard]] int construction_preview_valid_segment_count() const;
@@ -119,6 +122,7 @@ signals:
   void placing_construction_changed();
   void construction_preview_active_changed();
   void construction_preview_valid_changed();
+  void construction_preview_reason_changed();
   void construction_preview_summary_changed();
 
 private:

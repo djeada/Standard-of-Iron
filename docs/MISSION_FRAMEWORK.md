@@ -831,11 +831,38 @@ taken from the same baked frame it skins with. Re-posing the rig on the UI side
 would have had to reproduce the per-soldier variation and the renderer's
 proportion scaling, and would drift from what was actually drawn.
 
+The anchor is taken on the **face plane**, not at the centre of the head:
+`k_face_plane` in `ui/commander_portrait_view.cpp` pushes the measured point
+0.70 head radii forward along the head bone's local +Z, which is where the
+cranium's front surface carries the eyes and mouth. A billboard hung at the head
+centre cannot follow a head that turns or tips, and the portrait camera is
+already off the model's axis by design, so the paint sat about 0.17 head radii
+low and slid as the taunt loop swung the spine. Measured against the rig's own
+face primitives, the drawing's mouth now lands on the jaw and its eye line falls
+between brow and nose.
+
+The published radius is deliberately **not** foreshortened. It is the head bone's
+own up axis -- so it carries the archetype's proportion scaling, which is about
+0.83 on a commander -- re-measured as a view-perpendicular length at the face
+plane. The overlay applies the foreshortening itself through `squashX`/`squashY`;
+publishing an already-squashed radius applied it twice and shrank the face
+whenever the head tipped.
+
+The overlay is a sibling of the portrait inside the frame, not a child of it, so
+it must read the anchor in the portrait's own coordinates -- `anchorSource.x +
+faceX * anchorSource.width`. The portrait is inset by `borderFocus`, and dropping
+that term pulled the whole face two pixels up and left, which is an eighth of a
+head radius at this size.
+
 Two things the drawing does on purpose. It is spread to about 1.3 head radii,
 because every commander is drawn wearing a helmet wider than the skull inside it
 and painting to the skull leaves a small face rattling around in a large one. And
-it sits **above** the portrait's vignette, because the vignette is there to push
-the portrait behind the text while the face is the one part meant to hold the eye.
+it sits **below** the portrait's tint and vignette, so the grade that pushes the
+portrait behind the text reaches the paint too. Drawn above them the eyes peaked
+around luminance 171 against a head whose brightest pixels were 110: the one
+thing in the panel lit by nothing, which is what read as a sticker rather than a
+face. Under the grade they peak with the head instead, and stay legible at the
+1x size the panel is actually drawn at.
 
 The mouth is tied to the panel's typewriter, so it moves for exactly as long as
 the line is still arriving and closes when it stops -- no lip track is authored.

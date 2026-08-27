@@ -178,8 +178,6 @@ auto read_bool(const std::string& line, std::string_view key, bool& out) -> bool
 constexpr std::size_t k_default_troop_limit = 4000000U;
 constexpr std::size_t k_default_soldier_limit = 4000000U;
 
-// One watched skirmish wrote 12 GB of troop samples and the report tool could
-// not read it back inside two minutes. A trace is a diagnostic, not an archive.
 constexpr std::uint64_t k_default_file_byte_budget = 512ULL * 1024ULL * 1024ULL;
 
 } // namespace
@@ -475,11 +473,6 @@ struct MovementTrace::Session {
   std::size_t troop_limit{k_default_troop_limit};
   std::size_t soldier_limit{k_default_soldier_limit};
 
-  // A trace of a real match is enormous: one line per body per tick came to
-  // 456 MB from a sixty second run of the eight verifier scenarios, and 12 GB
-  // from one watched skirmish, which the report tool then could not read in
-  // under two minutes. Sampling every Nth tick and stopping at a byte budget
-  // keeps a trace answerable. Both are tunable per run.
   std::uint64_t tick_stride{1};
   std::uint64_t byte_budget{k_default_file_byte_budget};
   std::uint64_t bytes_written{0};

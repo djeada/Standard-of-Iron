@@ -64,8 +64,6 @@ void submit(Engine::Core::World& world, int owner_id, Game::Command::Payload pay
   return "unknown";
 }
 
-// A refused recruitment leaves no trace anywhere: the command is dropped and
-// the computer simply never gets an army. SOI_AI_TRACE=1 says why.
 void trace_refused_production(int owner_id,
                               Game::Units::TroopType product,
                               ProductionResult ruling,

@@ -6626,6 +6626,22 @@ to see preview</translation>
         <source>Building factory unavailable.</source>
         <translation>Building factory unavailable.</translation>
     </message>
+    <message>
+        <source>Nothing here is worth harvesting.</source>
+        <translation>Nothing here is worth harvesting.</translation>
+    </message>
+    <message>
+        <source>No resource here to work.</source>
+        <translation>No resource here to work.</translation>
+    </message>
+    <message>
+        <source>Something is already standing here.</source>
+        <translation>Something is already standing here.</translation>
+    </message>
+    <message>
+        <source>No part of this wall can stand there.</source>
+        <translation>No part of this wall can stand there.</translation>
+    </message>
 </context>
 <context>
     <name>ProductionPanel</name>
@@ -8070,6 +8086,41 @@ Builders reap it for the food that recruits civilians</translation>
     <message>
         <source>Invalid team configuration: At least two teams must be selected to start a match.</source>
         <translation>Invalid team configuration: At least two teams must be selected to start a match.</translation>
+    </message>
+</context>
+<context>
+    <name>SystemVoice</name>
+    <message>
+        <source>The order was excellent. It was given to nobody.</source>
+        <translation>The order was excellent. It was given to nobody.</translation>
+    </message>
+    <message>
+        <source>There is no road to that place. There may never have been one.</source>
+        <translation>There is no road to that place. There may never have been one.</translation>
+    </message>
+    <message>
+        <source>The quartermaster has checked twice. There is nothing behind the second check.</source>
+        <translation>The quartermaster has checked twice. There is nothing behind the second check.</translation>
+    </message>
+    <message>
+        <source>We have the barracks, the coin and the will. We lack the people.</source>
+        <translation>We have the barracks, the coin and the will. We lack the people.</translation>
+    </message>
+    <message>
+        <source>They are carrying something heavier than your orders.</source>
+        <translation>They are carrying something heavier than your orders.</translation>
+    </message>
+    <message>
+        <source>Willing, sir. Simply not that willing, and not from here.</source>
+        <translation>Willing, sir. Simply not that willing, and not from here.</translation>
+    </message>
+    <message>
+        <source>Those are not ours to command. They have been very clear about it.</source>
+        <translation>Those are not ours to command. They have been very clear about it.</translation>
+    </message>
+    <message>
+        <source>Nothing there answers to that order. We checked.</source>
+        <translation>Nothing there answers to that order. We checked.</translation>
     </message>
 </context>
 <context>
