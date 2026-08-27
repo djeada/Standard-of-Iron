@@ -29,6 +29,19 @@ public:
 
   void clear() override;
 
+  // Where a camp's firelight sits and how far it carries. A campfire lit a
+  // circle nearly thirty metres across: the pool had a visible edge, and it
+  // recoloured a barracks twenty metres away orange. The authored `radius` is
+  // the camp's own extent - the stone ring and the logs - not the reach of its
+  // light, and multiplying it by four made the fire the brightest thing on the
+  // hillside. Named and public so the geometry can be pinned by a test rather
+  // than by looking at it.
+  struct FireLightShape {
+    float height_above_ground = 0.0F;
+    float reach = 0.0F;
+  };
+  [[nodiscard]] static auto fire_light_shape(float camp_radius) -> FireLightShape;
+
 private:
   struct DecorCylinder {
     QVector3D start;

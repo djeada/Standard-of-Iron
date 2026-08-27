@@ -87,10 +87,11 @@ void FireCampRenderer::submit(Renderer& renderer, ResourceManager* resources) {
     {
       const float flicker =
           0.92F + 0.08F * std::sin((params.time * 2.3F) + (radius_phase.y() * 6.28F));
+      const FireLightShape shape = fire_light_shape(base_radius);
       Render::LocalLight firelight;
-      firelight.position = camp_pos + QVector3D(0.0F, base_radius * 0.55F, 0.0F);
+      firelight.position = camp_pos + QVector3D(0.0F, shape.height_above_ground, 0.0F);
       firelight.color = QVector3D(1.0F, 0.52F, 0.19F);
-      firelight.radius = std::clamp(base_radius * 4.2F, 4.0F, 14.0F);
+      firelight.radius = shape.reach;
       firelight.intensity = intensity * flicker;
       renderer.local_light(firelight);
     }
@@ -111,6 +112,20 @@ void FireCampRenderer::submit(Renderer& renderer, ResourceManager* resources) {
       renderer.cylinder(piece.start, piece.end, piece.radius, color, 1.0F);
     }
   }
+}
+
+auto FireCampRenderer::fire_light_shape(float camp_radius) -> FireLightShape {
+  // The flame sits just above the logs, not at the height of the camp's own
+  // radius - a light lifted nearly two metres spreads its pool out over the
+  // ground instead of gathering it where the fire is.
+  constexpr float k_flame_height = 0.55F;
+  constexpr float k_reach_per_camp_radius = 1.8F;
+  constexpr float k_min_reach = 3.0F;
+  constexpr float k_max_reach = 6.0F;
+
+  const float radius = std::max(camp_radius, 1.0F);
+  return {std::min(radius * 0.55F, k_flame_height),
+          std::clamp(radius * k_reach_per_camp_radius, k_min_reach, k_max_reach)};
 }
 
 void FireCampRenderer::build_camp_decor(const QVector3D& camp_pos,

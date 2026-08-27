@@ -11,6 +11,7 @@
 #include "app/core/loading_overlay_log.h"
 #include "app/input/cursor_mode.h"
 #include "app/viewmodels/match_setup_view_model.h"
+#include "game/map/map_catalog.h"
 #include "game/session/session_context.h"
 #include "game/systems/default_content.h"
 #include "game/systems/nation_registry.h"
@@ -154,4 +155,26 @@ TEST_F(ObserverRosterTest, AMapWithNothingToWatchIsRefused) {
                   .isEmpty());
   EXPECT_FALSE(m_view_model->start_observed_skirmish(
       QStringLiteral("assets/maps/does_not_exist.json")));
+}
+
+// The battlefield-list rows read `path`, `name` and `thumbnail` off each
+// catalogue entry by name; QML looks roles up by name, so a renamed or missing
+// key fails silently - the row falls back to a generic glyph and nothing warns.
+// That is how the thumbnails came back empty twice, once because the fix went
+// into a component nothing instantiates and once because the delegate reached
+// for a role only reachable through `modelData`. Pin what the real catalogue
+// hands the rows.
+TEST(MatchSetupMapListTest, TheRealCatalogueCarriesTheKeysTheListRowsReadByName) {
+  const auto maps = Game::Map::MapCatalog::available_maps();
+  ASSERT_FALSE(maps.isEmpty()) << "the shipped battlefields did not load";
+
+  for (const auto& row : maps) {
+    const auto entry = row.toMap();
+    ASSERT_TRUE(entry.contains(QStringLiteral("path")))
+        << "a battlefield row has no map path, so it can draw no preview";
+    EXPECT_FALSE(entry.value(QStringLiteral("path")).toString().isEmpty());
+    EXPECT_TRUE(entry.contains(QStringLiteral("name")));
+    EXPECT_TRUE(entry.contains(QStringLiteral("thumbnail")))
+        << "the rows cannot tell an authored thumbnail from a missing one";
+  }
 }

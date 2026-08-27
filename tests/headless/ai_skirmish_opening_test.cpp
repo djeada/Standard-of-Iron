@@ -1,9 +1,12 @@
 #include <algorithm>
+#include <functional>
 #include <gtest/gtest.h>
 #include <memory>
 #include <string>
 #include <vector>
 
+#include "game/command/command.h"
+#include "game/command/command_queue.h"
 #include "game/core/component.h"
 #include "game/core/world.h"
 #include "game/map/map_definition.h"
@@ -117,11 +120,15 @@ protected:
 
   static void scatter_resources(Game::Map::MapDefinition& map, int grid_x) {
     const int grid_z = k_map_size / 2;
+    // Shipped maps author world props in grid coordinates and so does the
+    // default MapDefinition, so these have to be grid too. Authored in world
+    // coordinates they are converted a second time on load and land far outside
+    // the map, which is a resource drought dressed up as a scatter.
     const auto add = [&map](Game::Map::WorldProp::Type type, int x, int z) {
       Game::Map::WorldProp prop;
       prop.type = type;
-      prop.x = static_cast<float>(x) - (k_map_size * 0.5F - 0.5F);
-      prop.z = static_cast<float>(z) - (k_map_size * 0.5F - 0.5F);
+      prop.x = static_cast<float>(x);
+      prop.z = static_cast<float>(z);
       map.world_props.push_back(prop);
     };
     for (int ring = 0; ring < 6; ++ring) {
@@ -340,4 +347,214 @@ TEST_F(AiSkirmishOpeningTest, ABarracksIsNotRetiredByItsLifetimeTally) {
                 session.world(), barracks_id, Game::Units::TroopType::Archer),
             Game::Systems::ProductionResult::Success)
       << "the world would refuse this recruit, so the computer is right to skip it";
+}
+
+namespace {
+
+constexpr int k_ward = 3;
+
+// A third camp pitched right beside the left one, close enough to sit inside
+// its 30 m defence radius, owned by whichever nation the caller names.
+void seat_neighbour(SessionContext& session,
+                    Game::Systems::NationID nation,
+                    const std::function<EntityID(int, QVector3D)>& spawn) {
+  auto& owners = session.owners();
+  owners.register_owner_with_id(k_ward, Game::Systems::OwnerType::AI, "ward");
+  owners.set_owner_team(k_ward, 3);
+  session.nations().set_player_nation(k_ward, nation);
+
+  for (int step = 0; step < 3; ++step) {
+    spawn(k_ward,
+          Game::Systems::NavGrid::grid_to_world(
+              Game::Systems::Point(20 + 12, (k_map_size / 2) + step - 1)));
+  }
+}
+
+} // namespace
+
+// The Iron Sepulcher is a bonus nation: it has no economy, so the state machine
+// never lets it attack or expand and its troops hold their own ground for the
+// whole match. A camp pitched near a tomb used to read that garrison as an
+// incursion on every single update, latch `Defending`, and sit there for the
+// rest of the game - which is exactly what a watched computer-only match
+// showed. A faction that will never come at you is not a threat. One that
+// actually strikes a building still is, and that arrives on the
+// BuildingAttacked event rather than by proximity, so nothing is lost.
+TEST_F(AiSkirmishOpeningTest, AGarrisonNationCampedNextDoorIsNotAStandingThreat) {
+  auto& session = make_match();
+  auto* ai = session.world().get_system<Game::Systems::AISystem>();
+  ASSERT_NE(ai, nullptr);
+
+  seat_neighbour(session,
+                 Game::Systems::NationID::IronSepulcher,
+                 [this, &session](int owner, QVector3D position) {
+                   return spawn(
+                       session, Game::Units::SpawnType::Knight, owner, position);
+                 });
+
+  run_for(session, 60.0);
+
+  const auto* plan = ai->plan_for(k_left);
+  ASSERT_NE(plan, nullptr);
+  EXPECT_EQ(plan->nearby_threat_count, 0)
+      << "a garrison that cannot march was counted as " << plan->nearby_threat_count
+      << " incursions";
+  EXPECT_FALSE(plan->barracks_under_threat)
+      << "the barracks was declared under threat by neighbours who never attacked it";
+  EXPECT_NE(plan->state, Game::Systems::AI::AIState::Defending)
+      << "the computer is defending against a faction that will never come at it";
+}
+
+// The other half of the same rule: this must exclude only the nations that
+// genuinely cannot march. Put a marching nation's troops in the identical spot
+// and the camp has to notice them, or the fix above is just the threat check
+// switched off.
+TEST_F(AiSkirmishOpeningTest, AMarchingNationCampedNextDoorStillReadsAsAThreat) {
+  auto& session = make_match();
+  auto* ai = session.world().get_system<Game::Systems::AISystem>();
+  ASSERT_NE(ai, nullptr);
+
+  seat_neighbour(session,
+                 Game::Systems::NationID::Carthage,
+                 [this, &session](int owner, QVector3D position) {
+                   return spawn(
+                       session, Game::Units::SpawnType::Knight, owner, position);
+                 });
+
+  run_for(session, 60.0);
+
+  const auto* plan = ai->plan_for(k_left);
+  ASSERT_NE(plan, nullptr);
+  EXPECT_GT(plan->nearby_threat_count, 0)
+      << "three enemy knights twelve metres from the barracks went unnoticed";
+}
+
+// A tree, a boulder and an ore seam are all stamped out of the navigation grid,
+// so a worker sent to one's centre is held out by its own footprint - a few
+// centimetres short of the fifteen the arrival check wants. It never arrives,
+// and because arriving was the only way out of the task, it never failed
+// either: five builders stood around a wood shortage for an entire match while
+// the stockpile sat frozen. Work the prop from beside it.
+TEST_F(AiSkirmishOpeningTest, AHarvestOrderSendsTheWorkerBesideThePropNotOntoIt) {
+  auto& session = make_match();
+  auto& terrain = session.terrain();
+
+  const Game::Map::WorldProp* tree = nullptr;
+  for (const auto& prop : terrain.world_props()) {
+    if (Game::Map::is_tree_world_prop_type(prop.type)) {
+      tree = &prop;
+      break;
+    }
+  }
+  ASSERT_NE(tree, nullptr);
+
+  Engine::Core::EntityID builder_id = 0;
+  for (auto [id, unit] : session.world().view<UnitComponent>()) {
+    if (unit.owner_id == k_left && unit.spawn_type == Game::Units::SpawnType::Builder) {
+      builder_id = id;
+      break;
+    }
+  }
+  ASSERT_NE(builder_id, 0U);
+
+  const QVector3D placed = terrain.world_prop_world_position(*tree);
+  Game::Command::submit(
+      session.world(),
+      Game::Command::Source::AI,
+      k_left,
+      Game::Command::StartHarvest{.units = {builder_id},
+                                  .construction_type = "cut_tree",
+                                  .resource_target = tree->id,
+                                  .site = QVector3D(placed.x(), 0.0F, placed.z())});
+  run_for(session, 0.2);
+
+  const auto* builder =
+      session.world().try_get<Engine::Core::BuilderProductionComponent>(builder_id);
+  ASSERT_NE(builder, nullptr);
+  ASSERT_TRUE(builder->has_construction_site);
+
+  const float standoff = std::hypot(builder->construction_site_x - placed.x(),
+                                    builder->construction_site_z - placed.z());
+  EXPECT_GE(standoff, Game::Map::world_prop_ground_radius(tree->type, tree->scale))
+      << "the worker was sent to stand " << standoff
+      << " m from the tree's centre, inside the footprint that blocks it";
+  EXPECT_TRUE(
+      Game::Systems::NavGrid::is_grid_walkable(Game::Systems::NavGrid::world_to_grid(
+          builder->construction_site_x, builder->construction_site_z)))
+      << "the worker was sent to stand on ground it cannot hold";
+
+  // The prop itself is still what gets harvested; only where the worker stands
+  // has moved.
+  EXPECT_FLOAT_EQ(builder->task_target_x, placed.x());
+  EXPECT_FLOAT_EQ(builder->task_target_z, placed.z());
+}
+
+// The other half: a work site the worker genuinely cannot reach has to end in
+// something. The bypass walk is a straight line that knows nothing about what
+// is in the way, so a site behind a building pins the worker against the wall
+// while the unstick pass shoves it back - and in the old code that was the rest
+// of the match, because the task had no exit but arrival. The movement trace
+// reported it for what it was: an order active for ninety seconds with no
+// terminal outcome, repeating forever on the same body.
+TEST_F(AiSkirmishOpeningTest, AWorkerThatCannotReachItsSiteGivesUpInsteadOfHanging) {
+  auto& session = make_match();
+
+  Engine::Core::EntityID builder_id = 0;
+  for (auto [id, unit] : session.world().view<UnitComponent>()) {
+    if (unit.owner_id == k_left && unit.spawn_type == Game::Units::SpawnType::Builder) {
+      builder_id = id;
+      break;
+    }
+  }
+  ASSERT_NE(builder_id, 0U);
+
+  auto* builder =
+      session.world().try_get<Engine::Core::BuilderProductionComponent>(builder_id);
+  ASSERT_NE(builder, nullptr);
+
+  // A site under the camp's own barracks: the worker is pushed out of the
+  // footprint every tick it walks into it, so it can never stand there.
+  builder->product_type = "cut_tree";
+  builder->build_time = 6.0F;
+  builder->time_remaining = 6.0F;
+  builder->has_construction_site = true;
+  builder->at_construction_site = false;
+  builder->in_progress = false;
+  builder->site_approach_seconds = 0.0F;
+  const QVector3D barracks = world_of(20, k_map_size / 2);
+  builder->construction_site_x = barracks.x();
+  builder->construction_site_z = barracks.z();
+
+  // Just past the limit, while the fault is still on display.
+  run_for(session, 31.0);
+
+  EXPECT_FALSE(builder->has_construction_site)
+      << "the worker is still holding a site it has spent half a minute failing to "
+         "reach";
+  EXPECT_EQ(builder->fault, Engine::Core::BuilderTaskFault::Unreachable)
+      << "the task ended without saying why, so nothing can react to it";
+}
+
+// The opening stock is spent in the first minute; everything after that is
+// income. A computer whose workers hang on their first task has no income at
+// all, which is what a watched match showed - every resource frozen from t=60
+// to the end, and an army that stopped at two fighting units because a barracks
+// with no manpower cannot recruit.
+TEST_F(AiSkirmishOpeningTest, TheComputerKeepsGatheringAfterItsOpeningStockIsGone) {
+  auto& session = make_match();
+  auto& economy = session.economy();
+  const auto gathered = [&economy]() {
+    return economy.get(k_left, Game::Systems::ResourceType::Wood) +
+           economy.get(k_left, Game::Systems::ResourceType::Stone) +
+           economy.get(k_left, Game::Systems::ResourceType::Iron);
+  };
+
+  run_for(session, 100.0);
+  const int after_the_opening = gathered();
+  run_for(session, 200.0);
+  const int later = gathered();
+
+  EXPECT_GT(later, after_the_opening)
+      << "the stockpile went from " << after_the_opening << " to " << later
+      << " over three minutes; the workers are not bringing anything in";
 }
