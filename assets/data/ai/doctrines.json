@@ -1,0 +1,118 @@
+{
+  "version": 1,
+  "_comment": [
+    "How each commander's AI plays: what it builds, what it recruits, how big a",
+    "force it gathers before it commits one, what that force goes after, and how",
+    "much of the army never leaves home.",
+    "Every field is optional. A missing field falls back to 'defaults' below, a",
+    "missing commander falls back to the doctrine compiled into the commander",
+    "catalog, and a missing or unreadable file leaves the whole game on its",
+    "built-in tables."
+  ],
+  "defaults": {
+    "strategy": "balanced",
+    "posture": "field",
+    "personality": { "aggression": 0.5, "defense": 0.5, "harassment": 0.5 },
+    "town_plan": "",
+    "recruitment": { "ranged_share": 0.5 },
+    "wave": {
+      "size": 6,
+      "regroup_seconds": 25.0,
+      "spent_fraction": 0.35,
+      "target_priority": ["army", "barracks", "economy", "any"]
+    },
+    "garrison": { "minimum_units": 2, "fraction": 0.25 }
+  },
+  "commanders": {
+    "roman_legion_organizer": {
+      "_name": "Quintus Fabius Maximus",
+      "strategy": "defensive",
+      "posture": "garrison",
+      "personality": { "aggression": 0.25, "defense": 0.90, "harassment": 0.20 },
+      "town_plan": "roman_bulwark",
+      "recruitment": { "ranged_share": 0.45 },
+      "wave": {
+        "size": 10,
+        "regroup_seconds": 45.0,
+        "spent_fraction": 0.5,
+        "target_priority": ["army", "any"]
+      },
+      "garrison": { "minimum_units": 6, "fraction": 0.6 }
+    },
+    "roman_veteran_consul": {
+      "_name": "Publius Cornelius Scipio",
+      "strategy": "aggressive",
+      "posture": "field",
+      "personality": { "aggression": 0.80, "defense": 0.40, "harassment": 0.30 },
+      "town_plan": "roman_assault_camp",
+      "recruitment": { "ranged_share": 0.35 },
+      "wave": {
+        "size": 7,
+        "regroup_seconds": 25.0,
+        "spent_fraction": 0.3,
+        "target_priority": ["army", "barracks", "economy", "any"]
+      },
+      "garrison": { "minimum_units": 2, "fraction": 0.2 }
+    },
+    "roman_field_commander": {
+      "_name": "Marcus Claudius Marcellus",
+      "strategy": "rusher",
+      "posture": "field",
+      "personality": { "aggression": 0.90, "defense": 0.25, "harassment": 0.45 },
+      "town_plan": "roman_vanguard_camp",
+      "recruitment": { "ranged_share": 0.3 },
+      "wave": {
+        "size": 5,
+        "regroup_seconds": 18.0,
+        "spent_fraction": 0.25,
+        "target_priority": ["barracks", "army", "economy", "any"]
+      },
+      "garrison": { "minimum_units": 1, "fraction": 0.1 }
+    },
+    "carthage_spear_commander": {
+      "_name": "Hanno the Great",
+      "strategy": "economic",
+      "posture": "garrison",
+      "personality": { "aggression": 0.35, "defense": 0.75, "harassment": 0.20 },
+      "town_plan": "punic_trade_town",
+      "recruitment": { "ranged_share": 0.4 },
+      "wave": {
+        "size": 9,
+        "regroup_seconds": 40.0,
+        "spent_fraction": 0.45,
+        "target_priority": ["army", "any"]
+      },
+      "garrison": { "minimum_units": 5, "fraction": 0.5 }
+    },
+    "carthage_bow_commander": {
+      "_name": "Hasdrubal Barca",
+      "strategy": "harasser",
+      "posture": "field",
+      "personality": { "aggression": 0.55, "defense": 0.30, "harassment": 0.95 },
+      "town_plan": "punic_raider_camp",
+      "recruitment": { "ranged_share": 0.7 },
+      "wave": {
+        "size": 5,
+        "regroup_seconds": 20.0,
+        "spent_fraction": 0.3,
+        "target_priority": ["economy", "army", "barracks", "any"]
+      },
+      "garrison": { "minimum_units": 2, "fraction": 0.2 }
+    },
+    "carthage_sword_commander": {
+      "_name": "Hannibal Barca",
+      "strategy": "aggressive",
+      "posture": "field",
+      "personality": { "aggression": 0.85, "defense": 0.50, "harassment": 0.60 },
+      "town_plan": "punic_grand_camp",
+      "recruitment": { "ranged_share": 0.4 },
+      "wave": {
+        "size": 8,
+        "regroup_seconds": 22.0,
+        "spent_fraction": 0.3,
+        "target_priority": ["army", "barracks", "economy", "any"]
+      },
+      "garrison": { "minimum_units": 3, "fraction": 0.25 }
+    }
+  }
+}

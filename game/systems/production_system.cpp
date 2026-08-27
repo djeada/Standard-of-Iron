@@ -590,12 +590,7 @@ void ProductionSystem::update(Engine::Core::World* world, float delta_time) {
   }
 
   constexpr float CONSTRUCTION_ARRIVAL_DISTANCE_SQ = 0.0225F;
-  // How long a worker may spend failing to reach a work site before the task is
-  // abandoned. The bypass walk is a straight line with no idea what is in the
-  // way, so a site behind a building pins the worker against it while the
-  // unstick pass shoves it back - forever, in the old code, because arriving was
-  // the only way out. Thirty seconds is long enough for an honest walk across a
-  // camp and short enough that the planner gets to try somewhere else.
+
   constexpr float k_site_approach_limit_seconds = 30.0F;
   constexpr float MAX_CONSTRUCTION_DISTANCE_SQ = 9.0F;
 
@@ -714,9 +709,6 @@ void ProductionSystem::update(Engine::Core::World* world, float delta_time) {
                                      builder_prod->construction_site_z);
           }
 
-          // Never arrived, never failed, and nothing retried: that is the stall
-          // the movement trace kept reporting as an order active for ninety
-          // seconds with no terminal outcome. Give it an outcome.
           if (builder_prod->site_approach_seconds > k_site_approach_limit_seconds) {
             builder_prod->has_construction_site = false;
             builder_prod->at_construction_site = false;

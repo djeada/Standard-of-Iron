@@ -29,6 +29,7 @@
 #include "game/mission/mission_waves.h"
 #include "game/session/session_context.h"
 #include "game/systems/ai_system.h"
+#include "game/systems/ai_system/ai_commander_doctrine.h"
 #include "game/systems/ai_system/ai_strategy.h"
 #include "game/systems/command_service.h"
 #include "game/systems/nation_registry.h"
@@ -534,13 +535,16 @@ void apply_skirmish_ai_strategies(Engine::Core::World& world,
       continue;
     }
 
-    Game::Systems::AI::AIPlayerProfile profile;
-    profile.strategy = Game::Systems::AI::AIStrategy::Expansionist;
-    profile.posture = Game::Systems::AI::AIPosture::Field;
-    profile.personality.aggression = k_skirmish_aggression;
-    profile.personality.defense = k_skirmish_defense;
-    profile.personality.harassment = k_skirmish_harassment;
-    ai_system->set_ai_profile(owner_id, profile);
+    auto profile = Game::Systems::AI::doctrine_profile_for_owner(world, owner_id);
+    if (!profile.has_value()) {
+      profile.emplace();
+      profile->strategy = Game::Systems::AI::AIStrategy::Expansionist;
+      profile->posture = Game::Systems::AI::AIPosture::Field;
+      profile->personality.aggression = k_skirmish_aggression;
+      profile->personality.defense = k_skirmish_defense;
+      profile->personality.harassment = k_skirmish_harassment;
+    }
+    ai_system->set_ai_profile(owner_id, *profile);
   }
 }
 

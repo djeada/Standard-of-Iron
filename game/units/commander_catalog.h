@@ -43,6 +43,18 @@ struct CommanderSignature {
   int max_targets = 1;
 };
 
+struct CommanderDoctrine {
+
+  std::string ai_strategy;
+
+  std::string ai_posture;
+  float aggression = 0.5F;
+  float defense = 0.5F;
+  float harassment = 0.5F;
+
+  [[nodiscard]] auto is_authored() const -> bool { return !ai_strategy.empty(); }
+};
+
 struct CommanderDefinition {
   TroopType troop_type;
   Game::Systems::NationID nation_id;
@@ -72,6 +84,7 @@ struct CommanderDefinition {
   float aura_ability_cooldown = 60.0F;
   Game::Units::SpawnType aura_affinity_spawn_type = Game::Units::SpawnType::Knight;
   CommanderSignature signature{};
+  CommanderDoctrine doctrine{};
 };
 
 [[nodiscard]] auto

@@ -236,6 +236,8 @@ soi_register_test_binary(combat_balance_tests)
 add_executable(
     ai_tests
     systems/ai_system_test.cpp
+    systems/ai_commander_doctrine_test.cpp
+    systems/ai_doctrine_catalog_test.cpp
     systems/wall_system_test.cpp
     headless/mission_wave_assault_test.cpp
     headless/ai_skirmish_opening_test.cpp

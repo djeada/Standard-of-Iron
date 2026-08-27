@@ -273,14 +273,9 @@ protected:
     EXPECT_TRUE(builder_prod->has_task_target);
     EXPECT_EQ(builder_prod->task_target_id, target->id);
 
-    // The prop is still what gets harvested...
     EXPECT_NEAR(builder_prod->task_target_x, target->x, 0.0001F);
     EXPECT_NEAR(builder_prod->task_target_z, target->z, 0.0001F);
 
-    // ...but the worker stands beside it, not on it. A prop's footprint is
-    // stamped out of the navigation grid, so a worker sent to the centre is held
-    // out by its own body a few centimetres short of arriving, and the task then
-    // never ends.
     const float standoff = std::hypot(builder_prod->construction_site_x - target->x,
                                       builder_prod->construction_site_z - target->z);
     EXPECT_GE(standoff, prop_ground_radius(*target))
@@ -750,8 +745,6 @@ TEST_F(ProductionManagerTest, GenericCollectPreviewStaysValidOnRaisedTerrain) {
   EXPECT_NEAR(builder_prod->task_target_x, target->x, 0.0001F);
   EXPECT_NEAR(builder_prod->task_target_z, target->z, 0.0001F);
 
-  // The click still lands on the tree; where the worker stands to cut it is a
-  // step to the side of it, clear of the footprint that blocks the ground.
   EXPECT_GE(std::hypot(builder_prod->construction_site_x - target->x,
                        builder_prod->construction_site_z - target->z),
             prop_ground_radius(*target));

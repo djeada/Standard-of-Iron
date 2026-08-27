@@ -535,11 +535,7 @@ void apply_start_harvest(World& world, int owner_id, const StartHarvest& order) 
       continue;
     }
     release_task_target(terrain, *builder);
-    // Work the prop from beside it, not from on top of it. The prop's footprint
-    // is stamped out of the navigation grid, so a worker sent to its centre is
-    // held out by its own body a few centimetres short of the fifteen the
-    // arrival check wants - and the task then hangs forever, which is how five
-    // builders came to stand around a wood shortage for a whole match.
+
     const QVector3D work_position =
         Game::Systems::CommandService::world_prop_work_position(
             terrain,

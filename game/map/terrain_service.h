@@ -104,9 +104,6 @@ public:
     return m_height_map.get();
   }
 
-  // How haunted this battlefield is, 0 for a plain valley. Iron ore reads as
-  // ordinary rock where nothing walks and takes its ghost-light where something
-  // does; "Nothing haunts this valley" should not be lit like a barrow.
   [[nodiscard]] auto supernatural_presence() const -> float {
     return m_supernatural_presence;
   }

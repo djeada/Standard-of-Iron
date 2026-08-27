@@ -22,6 +22,8 @@ struct Nation;
 
 namespace Game::Systems::AI {
 
+struct AIDoctrine;
+
 enum class AIStrategy {
   Balanced,
   Aggressive,
@@ -142,12 +144,6 @@ struct ContactSnapshot {
   bool is_building = false;
   int owner_id = 0;
 
-  // True when this contact belongs to a nation that cannot march - one with no
-  // economy, which the state machine never lets leave its own ground. Such a
-  // garrison standing near someone's base is scenery, not an incursion, and a
-  // plan that reads it as a standing threat sits in Defending for the whole
-  // match. It becomes a threat the moment it actually strikes a building, which
-  // arrives on the BuildingAttacked event instead.
   bool holds_ground = false;
 
   float pos_x = 0.0F;
@@ -200,6 +196,8 @@ struct AIStrategyConfig {
   PersonalityInputs personality;
   DifficultyTuning difficulty;
 
+  const AIDoctrine* doctrine = nullptr;
+
   float aggression_modifier = 1.0F;
   float defense_modifier = 1.0F;
   float expansion_priority = 1.0F;
@@ -236,6 +234,7 @@ struct AIPlayerProfile {
   AIPosture posture = AIPosture::Field;
   AIStrategyConfig::PersonalityInputs personality;
   QString difficulty;
+  const AIDoctrine* doctrine = nullptr;
 };
 
 struct AIBase {
@@ -374,6 +373,21 @@ struct AIContext {
     float gather_spacing = 1.4F;
   };
   MacroTargets macro_targets;
+
+  struct AttackWave {
+    std::vector<Engine::Core::EntityID> members;
+    Engine::Core::EntityID target_id = 0;
+    float target_x = 0.0F;
+    float target_z = 0.0F;
+    bool committed = false;
+    int initial_size = 0;
+    float committed_at = -1000.0F;
+    float ended_at = -1000.0F;
+    float last_order_time = -1000.0F;
+  };
+  AttackWave wave;
+
+  std::vector<Engine::Core::EntityID> garrison_unit_ids;
 
   int consecutive_no_progress_cycles = 0;
   float last_meaningful_action_time = 0.0F;
