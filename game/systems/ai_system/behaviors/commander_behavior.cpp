@@ -6,6 +6,8 @@
 #include <utility>
 #include <vector>
 
+#include "../ai_attack_wave.h"
+#include "../ai_base_manager.h"
 #include "../ai_utils.h"
 #include "systems/ai_system/ai_types.h"
 #include "units/spawn_type.h"
@@ -74,9 +76,9 @@ void nearest_enemy_direction(const AISnapshot& snapshot,
 constexpr float k_rally_interval = 5.0F;
 constexpr float k_aura_interval = 20.0F;
 
-constexpr float k_shielded_offset = -6.0F;
-constexpr float k_protected_offset = -4.0F;
-constexpr float k_leading_offset = 3.0F;
+constexpr float k_shielded_offset = -8.0F;
+constexpr float k_protected_offset = -5.0F;
+constexpr float k_leading_offset = -3.0F;
 
 constexpr float k_flanking_lateral_offset = 7.0F;
 
@@ -114,6 +116,58 @@ auto aura_interval_for(const AIStrategyConfig& config) -> float {
 }
 
 constexpr float k_aura_engagement_radius = 16.0F;
+
+constexpr float k_commander_march_health = 0.6F;
+constexpr float k_home_ground_radius = AIBaseManager::k_base_defend_radius;
+constexpr float k_home_ground_radius_sq = k_home_ground_radius * k_home_ground_radius;
+
+auto leads_from_the_front(const AIStrategyConfig& config) -> bool {
+  switch (config.strategy) {
+  case AIStrategy::Aggressive:
+  case AIStrategy::Rusher:
+  case AIStrategy::Harasser:
+    return true;
+  default:
+    return false;
+  }
+}
+
+constexpr int k_minimum_escort = 2;
+
+auto commander_marches_with_army(const AIContext& context,
+                                 const EntitySnapshot& commander,
+                                 const ArmyCentre& army) -> bool {
+  if (army.count < k_minimum_escort) {
+    return false;
+  }
+
+  const float health_fraction = commander.max_health > 0
+                                    ? static_cast<float>(commander.health) /
+                                          static_cast<float>(commander.max_health)
+                                    : 1.0F;
+  if (health_fraction < k_commander_march_health) {
+    return false;
+  }
+
+  if (!context.has_base_anchor) {
+    return true;
+  }
+
+  const float dx = army.x - context.base_pos_x;
+  const float dz = army.z - context.base_pos_z;
+  if ((dx * dx + dz * dz) <= k_home_ground_radius_sq) {
+    return true;
+  }
+
+  if (!leads_from_the_front(context.strategy_config) || !context.wave.committed) {
+    return false;
+  }
+  const int escort = static_cast<int>(context.wave.members.size());
+  if (escort < std::max(k_minimum_escort, wave_size_for(context) - 1)) {
+    return false;
+  }
+  return context.combat_units >= escort + k_minimum_escort;
+}
 
 auto enemies_are_within(const AISnapshot& snapshot,
                         float centre_x,
@@ -194,7 +248,7 @@ void CommanderBehavior::execute(const AISnapshot& snapshot,
     float target_x;
     float target_z;
 
-    if (army.count > 0) {
+    if (commander_marches_with_army(context, *snap, army)) {
       const CommanderStation station = station_for(config);
       target_x =
           army.x + enemy_dir_x * station.along_axis - enemy_dir_z * station.lateral;

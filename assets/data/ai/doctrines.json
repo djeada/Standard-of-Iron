@@ -32,12 +32,12 @@
       "town_plan": "roman_bulwark",
       "recruitment": { "ranged_share": 0.45 },
       "wave": {
-        "size": 10,
+        "size": 8,
         "regroup_seconds": 45.0,
         "spent_fraction": 0.5,
         "target_priority": ["army", "any"]
       },
-      "garrison": { "minimum_units": 6, "fraction": 0.6 }
+      "garrison": { "minimum_units": 4, "fraction": 0.6 }
     },
     "roman_veteran_consul": {
       "_name": "Publius Cornelius Scipio",
@@ -77,12 +77,12 @@
       "town_plan": "punic_trade_town",
       "recruitment": { "ranged_share": 0.4 },
       "wave": {
-        "size": 9,
+        "size": 7,
         "regroup_seconds": 40.0,
         "spent_fraction": 0.45,
         "target_priority": ["army", "any"]
       },
-      "garrison": { "minimum_units": 5, "fraction": 0.5 }
+      "garrison": { "minimum_units": 4, "fraction": 0.5 }
     },
     "carthage_bow_commander": {
       "_name": "Hasdrubal Barca",
@@ -107,7 +107,7 @@
       "town_plan": "punic_grand_camp",
       "recruitment": { "ranged_share": 0.4 },
       "wave": {
-        "size": 8,
+        "size": 6,
         "regroup_seconds": 22.0,
         "spent_fraction": 0.3,
         "target_priority": ["army", "barracks", "economy", "any"]

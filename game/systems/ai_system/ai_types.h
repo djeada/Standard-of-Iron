@@ -110,6 +110,11 @@ struct BuilderProductionSnapshot {
   bool has_construction_site = false;
   bool in_progress = false;
   bool at_construction_site = false;
+  bool has_task_target = false;
+
+  Engine::Core::EntityID task_target_id = 0;
+
+  bool carrying_load = false;
   float construction_site_x = 0.0F;
   float construction_site_z = 0.0F;
 };
@@ -133,6 +138,10 @@ struct EntitySnapshot {
   bool has_march_target = false;
   float march_target_x = 0.0F;
   float march_target_z = 0.0F;
+
+  bool has_delivery_order = false;
+
+  bool crop_is_ripe = false;
 
   MovementSnapshot movement;
   ProductionSnapshot production;
@@ -252,6 +261,7 @@ struct AIBase {
 
   int barracks_count = 0;
   int home_count = 0;
+  int farm_count = 0;
   int defense_tower_count = 0;
   int queued_production = 0;
   int production_capacity = 0;
@@ -329,12 +339,15 @@ struct AIContext {
   int melee_count = 0;
   int ranged_count = 0;
   int builder_count = 0;
+
+  int civilian_count = 0;
   int damaged_units_count = 0;
 
   int visible_enemy_count = 0;
   int neutral_barracks_count = 0;
 
   int home_count = 0;
+  int farm_count = 0;
   int defense_tower_count = 0;
   int wall_segment_count = 0;
   int barracks_count = 0;
@@ -365,12 +378,15 @@ struct AIContext {
     int home_count = 2;
     int barracks_count = 1;
     int marketplace_count = 0;
+    int farm_count = 0;
     int defense_tower_count = 1;
     int wall_segment_count = 0;
     int catapult_count = 0;
     int assembly_size = 4;
     float assembly_radius = 10.0F;
     float gather_spacing = 1.4F;
+
+    bool raise_homes_first = false;
   };
   MacroTargets macro_targets;
 

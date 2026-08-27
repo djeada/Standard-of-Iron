@@ -11,6 +11,7 @@
 #include "../production_service.h"
 #include "ai_attack_wave.h"
 #include "ai_base_manager.h"
+#include "ai_doctrine_catalog.h"
 #include "ai_utils.h"
 #include "systems/ai_system/ai_types.h"
 #include "units/spawn_type.h"
@@ -325,7 +326,11 @@ auto wants_expansion(const Game::Systems::AI::AIContext& ctx) -> bool {
   return can_capture_neutral_expansion(ctx) || can_build_outpost_expansion(ctx);
 }
 
-auto compute_macro_targets(const Game::Systems::AI::AIContext& ctx, int catapult_count)
+constexpr int k_food_reserve = 60;
+
+auto compute_macro_targets(const Game::Systems::AI::AISnapshot& snapshot,
+                           const Game::Systems::AI::AIContext& ctx,
+                           int catapult_count)
     -> Game::Systems::AI::AIContext::MacroTargets {
   Game::Systems::AI::AIContext::MacroTargets targets;
   if (is_no_economy_nation(ctx)) {
@@ -345,6 +350,8 @@ auto compute_macro_targets(const Game::Systems::AI::AIContext& ctx, int catapult
   targets.builder_count = ctx.strategy_config.target_builder_count;
   targets.barracks_count = ctx.strategy_config.desired_barracks_count;
   targets.marketplace_count = 1;
+
+  targets.farm_count = std::clamp(1 + (ctx.home_count / 2), 1, 6);
   targets.defense_tower_count = ctx.strategy_config.desired_defense_tower_count;
   targets.wall_segment_count = ctx.strategy_config.desired_wall_segment_count;
   targets.catapult_count = ctx.strategy_config.desired_catapult_count;
@@ -361,9 +368,22 @@ auto compute_macro_targets(const Game::Systems::AI::AIContext& ctx, int catapult
   targets.home_count = std::max(ctx.strategy_config.base_home_target,
                                 2 + home_growth + std::min(2, extra_barracks));
 
-  if (ctx.home_civilians_remaining == 0 &&
+  const auto* doctrine = ctx.strategy_config.doctrine;
+  const int army_the_doctrine_wants =
+      doctrine != nullptr ? doctrine->wave.size + doctrine->garrison.minimum_units
+                          : proactive_attack_size(ctx.strategy_config) +
+                                std::max(0, ctx.strategy_config.reserve_units);
+  targets.home_count = std::max(targets.home_count, 2 + army_the_doctrine_wants);
+
+  if (snapshot.has_resource_snapshot &&
+      snapshot.resources.get(Game::Systems::ResourceType::Food) < k_food_reserve) {
+    targets.farm_count = std::max(targets.farm_count, ctx.farm_count + 1);
+  }
+
+  if (ctx.home_civilians_remaining == 0 && ctx.civilian_count == 0 &&
       ctx.recruitment_manpower_available < cheapest_recruit_cost(ctx)) {
     targets.home_count = std::max(targets.home_count, ctx.home_count + 2);
+    targets.raise_homes_first = true;
   }
   targets.barracks_count = std::max(targets.barracks_count, 1 + extra_barracks);
   targets.defense_tower_count =
@@ -722,6 +742,7 @@ void AIReasoner::update_context(const AISnapshot& snapshot, AIContext& ctx) {
   ctx.melee_count = 0;
   ctx.ranged_count = 0;
   ctx.builder_count = 0;
+  ctx.civilian_count = 0;
   ctx.damaged_units_count = 0;
   ctx.average_health = 1.0F;
   ctx.rally_x = 0.0F;
@@ -739,6 +760,7 @@ void AIReasoner::update_context(const AISnapshot& snapshot, AIContext& ctx) {
   ctx.visible_enemy_count = 0;
   ctx.neutral_barracks_count = 0;
   ctx.home_count = 0;
+  ctx.farm_count = 0;
   ctx.defense_tower_count = 0;
   ctx.wall_segment_count = 0;
   ctx.barracks_count = 0;
@@ -793,6 +815,8 @@ void AIReasoner::update_context(const AISnapshot& snapshot, AIContext& ctx) {
         ctx.barracks_count++;
       } else if (entity.spawn_type == Game::Units::SpawnType::Marketplace) {
         ctx.marketplace_count++;
+      } else if (entity.spawn_type == Game::Units::SpawnType::Farm) {
+        ctx.farm_count++;
       }
 
       if (entity.spawn_type == Game::Units::SpawnType::Barracks) {
@@ -818,6 +842,10 @@ void AIReasoner::update_context(const AISnapshot& snapshot, AIContext& ctx) {
 
     if (entity.spawn_type == Game::Units::SpawnType::Builder) {
       ctx.builder_count++;
+    }
+
+    if (entity.spawn_type == Game::Units::SpawnType::Civilian) {
+      ctx.civilian_count++;
     }
 
     if (ctx.nation != nullptr) {
@@ -909,7 +937,7 @@ void AIReasoner::update_context(const AISnapshot& snapshot, AIContext& ctx) {
     }
   }
 
-  ctx.macro_targets = compute_macro_targets(ctx, catapult_count);
+  ctx.macro_targets = compute_macro_targets(snapshot, ctx, catapult_count);
   update_assault_unit_ids(snapshot, ctx);
   update_reserve_unit_ids(snapshot, ctx);
   update_harass_unit_ids(snapshot, ctx);

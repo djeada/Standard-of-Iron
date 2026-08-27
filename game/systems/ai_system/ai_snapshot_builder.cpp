@@ -197,6 +197,13 @@ auto AISnapshotBuilder::build(const Engine::Core::World& world,
     data.is_building = entity->has_component<Engine::Core::BuildingComponent>();
     data.is_commander = entity->has_component<Engine::Core::CommanderComponent>();
     data.is_assault = is_assault;
+    data.has_delivery_order =
+        world.has<Engine::Core::CivilianDeliveryComponent>(data.id);
+    if (const auto* crop = world.try_get<Engine::Core::FarmComponent>(data.id);
+        crop != nullptr) {
+      data.crop_is_ripe =
+          crop->ripe() && !world.has<Engine::Core::DismantleSiteComponent>(data.id);
+    }
     if (is_assault) {
       data.has_march_target = assault_wave->has_march_target;
       data.march_target_x = assault_wave->march_target_x;
@@ -236,6 +243,19 @@ auto AISnapshotBuilder::build(const Engine::Core::World& world,
           builder_prod->has_construction_site;
       data.builder_production.in_progress = builder_prod->in_progress;
       data.builder_production.at_construction_site = builder_prod->at_construction_site;
+      data.builder_production.has_task_target =
+          builder_prod->has_task_target || builder_prod->structure_task_entity_id != 0;
+
+      if (builder_prod->structure_task_entity_id != 0) {
+        data.builder_production.task_target_id = builder_prod->structure_task_entity_id;
+      } else if (builder_prod->has_task_target) {
+        data.builder_production.task_target_id = builder_prod->task_target_id;
+      }
+      if (const auto* carry =
+              world.try_get<Engine::Core::ResourceCarryComponent>(data.id);
+          carry != nullptr && !carry->empty()) {
+        data.builder_production.carrying_load = true;
+      }
       data.builder_production.construction_site_x = builder_prod->construction_site_x;
       data.builder_production.construction_site_z = builder_prod->construction_site_z;
     }

@@ -73,7 +73,9 @@ inline auto is_entity_engaged(const EntitySnapshot& entity,
 }
 
 inline auto is_combat_role_unit(const EntitySnapshot& entity) -> bool {
-  return !entity.is_building && entity.spawn_type != Game::Units::SpawnType::Builder;
+
+  return !entity.is_building && entity.spawn_type != Game::Units::SpawnType::Builder &&
+         entity.spawn_type != Game::Units::SpawnType::Civilian;
 }
 
 inline auto is_threatening_contact(const ContactSnapshot& contact) -> bool {

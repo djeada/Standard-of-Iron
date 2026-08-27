@@ -135,8 +135,9 @@ void add_side(ArenaScenarioDefinition& scenario, const DuelSide& side) {
   scenario.groups.push_back(duel_group(side,
                                        prefix + QStringLiteral("_builder"),
                                        Troop::Builder,
-                                       1,
-                                       {-4.0F, 0.0F, -4.0F}));
+                                       4,
+                                       {-6.0F, 0.0F, -4.0F},
+                                       {2.4F, 0.0F, 0.0F}));
 
   ArenaScenarioBattleSide battle_side;
   battle_side.owner_id = side.owner_id;
@@ -187,7 +188,8 @@ auto duel_definition(const char* id,
   scenario.suppress_ui_overlays = true;
   scenario.force_full_creature_lod = false;
   scenario.collect_animation_diagnostics = false;
-  scenario.suppress_terrain_scatter = true;
+
+  scenario.suppress_terrain_scatter = false;
   scenario.terrain_grid_extent = 128;
 
   scenario.ai_starting_resources = {
@@ -262,7 +264,7 @@ auto build_ai_duel_definitions() -> std::vector<ArenaScenarioDefinition> {
                        "fight to elimination. Scipio's aggressive doctrine must "
                        "carry the attack while Fabius' delaying doctrine holds "
                        "its own ground."),
-        1200.0F,
+        1800.0F,
         scipio,
         fabius);
     s.expectations.push_back(
@@ -297,7 +299,7 @@ auto build_ai_duel_definitions() -> std::vector<ArenaScenarioDefinition> {
         QStringLiteral("A Roman rushing doctrine against a Carthaginian economic "
                        "garrison, each developing its own corner town until one "
                        "is destroyed."),
-        1200.0F,
+        1800.0F,
         marcellus,
         hanno);
     s.expectations.push_back(
@@ -331,7 +333,7 @@ auto build_ai_duel_definitions() -> std::vector<ArenaScenarioDefinition> {
         QStringLiteral("AI Duel: Hannibal vs Hasdrubal"),
         QStringLiteral("Two Barcid doctrines, one decisive and one harassing, "
                        "fight the same battle from opposite temperaments."),
-        1200.0F,
+        1800.0F,
         hannibal,
         hasdrubal);
     s.expectations.push_back(
