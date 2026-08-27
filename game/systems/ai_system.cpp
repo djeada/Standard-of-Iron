@@ -11,6 +11,7 @@
 #include "../core/world.h"
 #include "../session/session_context.h"
 #include "ai_system/ai_command_applier.h"
+#include "ai_system/ai_doctrine_catalog.h"
 #include "ai_system/ai_snapshot_builder.h"
 #include "ai_system/ai_strategy.h"
 #include "ai_system/behaviors/assault_behavior.h"
@@ -66,6 +67,8 @@ void apply_nation_default_strategy(AI::AIContext& context,
 
 AISystem::AISystem(Services services)
     : m_services(services) {
+
+  AI::ensure_ai_doctrine_catalog_loaded();
 
   m_building_attacked_subscription =
       Engine::Core::ScopedEventSubscription<Engine::Core::BuildingAttackedEvent>(
@@ -142,6 +145,24 @@ void AISystem::set_ai_profile(int player_id, const AI::AIPlayerProfile& profile)
       break;
     }
   }
+}
+
+auto AISystem::ai_player_state(int player_id) const -> AIPlayerState {
+  for (const auto& ai : m_ai_instances) {
+    if (ai.context.player_id != player_id) {
+      continue;
+    }
+    const auto& config = ai.context.strategy_config;
+    return {.valid = true,
+            .strategy = config.strategy,
+            .posture = config.posture,
+            .state = ai.context.state,
+            .aggression_modifier = config.aggression_modifier,
+            .defense_modifier = config.defense_modifier,
+            .proactive_attack_size = config.proactive_attack_size,
+            .reactive_attack_size = config.reactive_attack_size};
+  }
+  return {};
 }
 
 void AISystem::update(Engine::Core::World* world, float delta_time) {
@@ -245,18 +266,20 @@ void AISystem::trace_progress(const Engine::Core::World& world) {
         Game::Session::session_for(world).economy().get_all(context.player_id);
     qInfo().nospace() << "SOI_AI_TRACE t=" << m_total_game_time
                       << " player=" << context.player_id
-                      << " state=" << static_cast<int>(context.state)
+                      << " state=" << static_cast<int>(context.state) << " strategy="
+                      << static_cast<int>(context.strategy_config.strategy)
+                      << " posture="
+                      << static_cast<int>(context.strategy_config.posture)
+                      << " aggr=" << context.strategy_config.aggression_modifier
+                      << " proactive=" << context.strategy_config.proactive_attack_size
                       << " units=" << context.total_units
                       << " melee=" << context.melee_count
                       << " ranged=" << context.ranged_count
                       << " builders=" << context.builder_count
                       << " buildings=" << context.buildings.size()
-                      << " primary_barracks=" << context.primary_barracks << " nation="
-                      << (context.nation != nullptr)
-                      // The army is usually bound by income rather than by the
-                      // plan, and a trace that shows only unit counts cannot
-                      // tell those apart. Manpower is what a barracks spends on
-                      // a recruit; civilians are the only thing that refills it.
+                      << " primary_barracks=" << context.primary_barracks
+                      << " nation=" << (context.nation != nullptr)
+
                       << " manpower=" << context.recruitment_manpower_available
                       << " civilians_left=" << context.home_civilians_remaining
                       << " gold=" << resources.get(ResourceType::Gold)

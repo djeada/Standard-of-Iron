@@ -30,8 +30,6 @@ Item {
     signal observe_requested(string map_path)
     signal cancelled
 
-    // Row images for the battlefield list. No map ships a thumbnail, so without
-    // this every row falls back to the same generic glyph.
     MapThumbnails {
         id: map_thumbnails
     }

@@ -92,13 +92,6 @@ public:
                                       const std::string& structure_key,
                                       float unit_radius) -> QVector3D;
 
-  // Where a worker stands to cut, quarry or mine a resource prop. A tree, a
-  // boulder and an ore seam all block the ground they sit on, so a worker sent
-  // to the prop's own centre never arrives: the footprint holds it out while
-  // the arrival check wants it within fifteen centimetres, and the task hangs
-  // there for the rest of the match. Stand it off the footprint instead, on the
-  // side it is approaching from. Returns the prop's own position when the id
-  // names nothing, which is the old behaviour and no worse.
   static auto world_prop_work_position(Game::Map::TerrainService& terrain,
                                        const QVector3D& worker_position,
                                        std::uint64_t world_prop_id,

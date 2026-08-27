@@ -29,9 +29,6 @@ struct VisionSource {
 
 constexpr float k_min_building_vision_range = 18.0F;
 
-// A nation with no economy is a garrison: the state machine never lets it
-// attack or expand, so its troops hold their own ground for the whole match.
-// Resolving that per owner once beats a registry lookup per contact.
 class GarrisonOwners {
 public:
   explicit GarrisonOwners(const Game::Systems::NationRegistry& nations)

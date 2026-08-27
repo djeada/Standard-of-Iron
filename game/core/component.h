@@ -1506,11 +1506,6 @@ public:
   float bypass_target_x{0.0F};
   float bypass_target_z{0.0F};
 
-  // How long this worker has been trying to reach its work site. The bypass
-  // walk is a straight line with no idea what is in the way, so a site behind a
-  // building pins the worker against it forever - it never arrives, never
-  // fails, and nothing retries. Past the limit the task is abandoned with a
-  // fault, which is a terminal outcome the planner and the player can both see.
   float site_approach_seconds{0.0F};
 
   EntityID structure_task_entity_id{0};

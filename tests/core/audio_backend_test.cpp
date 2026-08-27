@@ -265,12 +265,6 @@ TEST_F(AudioBackendTest, ALoopingBedWrapsWithoutAClick) {
 
 } // namespace
 
-// A looping bed asked for while its own clip is still decoding used to be
-// dropped on the floor, with nothing to ask again: the mission load requests
-// the rain the moment the map is up, the decoder is still working through
-// ninety-seven clips, and the match then runs to the end in silence. The
-// request is held and started the moment the decode lands. A one-shot is not
-// held - a combat cue that missed its moment is better lost than played late.
 TEST_F(AudioBackendTest, ALoopingBedAskedForMidDecodeStartsWhenItLands) {
   ASSERT_TRUE(m_backend.request_track(
       QStringLiteral("rain"), m_path, Mastering::Material::Ambience));
@@ -309,12 +303,6 @@ TEST_F(AudioBackendTest, AOneShotAskedForMidDecodeIsNotPlayedLate) {
   EXPECT_FALSE(m_backend.is_sound_active(QStringLiteral("clang")));
 }
 
-// Returning to the menu unloads the mission's audio, so the next match decodes
-// the same clips again - which is right, the PCM is the memory the unload was
-// for. Re-deriving the mastering analysis is not: a loudness sweep, two band
-// filters over every sample and up to sixty-four FFT windows, all producing the
-// same numbers for the same file every time. This was measured re-running twice
-// in one observed session and three times in a session with two match loads.
 TEST_F(AudioBackendTest, ReloadingAClipDoesNotAnalyseItAgain) {
   ASSERT_TRUE(m_backend.request_track(
       QStringLiteral("tone"), m_path, Mastering::Material::Effect));
@@ -331,8 +319,6 @@ TEST_F(AudioBackendTest, ReloadingAClipDoesNotAnalyseItAgain) {
   EXPECT_EQ(m_backend.mastering_analyses_computed(), after_first_load)
       << "the same clip was analysed from scratch on its second load";
 
-  // And the reloaded clip still plays, so the re-applied analysis is doing its
-  // job rather than being skipped.
   m_backend.play_sound(QStringLiteral("tone"), 1.0F, false);
   EXPECT_GT(peak_of(render(256)), 0.01F);
 }

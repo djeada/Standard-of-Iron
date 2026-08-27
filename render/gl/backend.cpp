@@ -435,9 +435,7 @@ void Backend::update_contact_shadow_uniforms() {
 }
 
 void Backend::begin_frame() {
-  // GL objects freed by a match teardown on the GUI thread are queued rather
-  // than abandoned; this is the first point each frame where a context is
-  // certainly current, so this is where they actually go.
+
   drain_deferred_gl_deletes();
 
   sync_graphics_profile();

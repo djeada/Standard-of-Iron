@@ -1,5 +1,6 @@
 #include "commander_behavior.h"
 
+#include <algorithm>
 #include <cmath>
 #include <limits>
 #include <utility>
@@ -70,6 +71,67 @@ void nearest_enemy_direction(const AISnapshot& snapshot,
   }
 }
 
+constexpr float k_rally_interval = 5.0F;
+constexpr float k_aura_interval = 20.0F;
+
+constexpr float k_shielded_offset = -6.0F;
+constexpr float k_protected_offset = -4.0F;
+constexpr float k_leading_offset = 3.0F;
+
+constexpr float k_flanking_lateral_offset = 7.0F;
+
+struct CommanderStation {
+  float along_axis{0.0F};
+  float lateral{0.0F};
+};
+
+auto station_for(const AIStrategyConfig& config) -> CommanderStation {
+  switch (config.strategy) {
+  case AIStrategy::Aggressive:
+  case AIStrategy::Rusher:
+    return {k_leading_offset, 0.0F};
+  case AIStrategy::Harasser:
+    return {0.0F, k_flanking_lateral_offset};
+  case AIStrategy::Defensive:
+  case AIStrategy::Economic:
+  case AIStrategy::SepulcherDefense:
+    return {k_shielded_offset, 0.0F};
+  case AIStrategy::Balanced:
+  case AIStrategy::Expansionist:
+    break;
+  }
+  return {k_protected_offset, 0.0F};
+}
+
+auto rally_interval_for(const AIStrategyConfig& config) -> float {
+  float const scale = std::clamp(config.defense_modifier, 0.5F, 2.0F);
+  return k_rally_interval / scale;
+}
+
+auto aura_interval_for(const AIStrategyConfig& config) -> float {
+  float const scale = std::clamp(config.aggression_modifier, 0.5F, 2.0F);
+  return k_aura_interval / scale;
+}
+
+constexpr float k_aura_engagement_radius = 16.0F;
+
+auto enemies_are_within(const AISnapshot& snapshot,
+                        float centre_x,
+                        float centre_z,
+                        float radius) -> bool {
+  float const radius_sq = radius * radius;
+  return std::any_of(snapshot.visible_enemies.begin(),
+                     snapshot.visible_enemies.end(),
+                     [&](const ContactSnapshot& enemy) {
+                       if (enemy.health <= 0) {
+                         return false;
+                       }
+                       float const dx = enemy.pos_x - centre_x;
+                       float const dz = enemy.pos_z - centre_z;
+                       return (dx * dx + dz * dz) <= radius_sq;
+                     });
+}
+
 } // namespace
 
 void CommanderBehavior::execute(const AISnapshot& snapshot,
@@ -80,7 +142,10 @@ void CommanderBehavior::execute(const AISnapshot& snapshot,
   m_rally_timer += delta_time;
   m_aura_timer += delta_time;
 
-  if (m_rally_timer >= k_rally_interval) {
+  const ArmyCentre army = compute_army_centre(snapshot);
+  const auto& config = context.strategy_config;
+
+  if (m_rally_timer >= rally_interval_for(config)) {
     m_rally_timer = 0.0F;
     for (auto commander_id : context.commander_ids) {
       AICommand rally_cmd;
@@ -90,7 +155,10 @@ void CommanderBehavior::execute(const AISnapshot& snapshot,
     }
   }
 
-  if (m_aura_timer >= k_aura_interval && !snapshot.visible_enemies.empty()) {
+  const bool fighting_is_close =
+      army.count > 0 &&
+      enemies_are_within(snapshot, army.x, army.z, k_aura_engagement_radius);
+  if (m_aura_timer >= aura_interval_for(config) && fighting_is_close) {
     m_aura_timer = 0.0F;
     for (auto commander_id : context.commander_ids) {
       AICommand aura_cmd;
@@ -104,8 +172,6 @@ void CommanderBehavior::execute(const AISnapshot& snapshot,
     return;
   }
   m_update_timer = 0.0F;
-
-  const ArmyCentre army = compute_army_centre(snapshot);
 
   float enemy_dir_x = 0.0F;
   float enemy_dir_z = 1.0F;
@@ -129,9 +195,11 @@ void CommanderBehavior::execute(const AISnapshot& snapshot,
     float target_z;
 
     if (army.count > 0) {
-
-      target_x = army.x - enemy_dir_x * k_protected_offset;
-      target_z = army.z - enemy_dir_z * k_protected_offset;
+      const CommanderStation station = station_for(config);
+      target_x =
+          army.x + enemy_dir_x * station.along_axis - enemy_dir_z * station.lateral;
+      target_z =
+          army.z + enemy_dir_z * station.along_axis + enemy_dir_x * station.lateral;
     } else if (context.has_base_anchor) {
       target_x = context.rally_x;
       target_z = context.rally_z;

@@ -93,10 +93,56 @@ auto AIStrategyFactory::parse_posture(const QString& posture_str,
   return fallback;
 }
 
+auto AIStrategyFactory::strategy_to_string(AIStrategy strategy) -> QString {
+  switch (strategy) {
+  case AIStrategy::Balanced:
+    return QStringLiteral("balanced");
+  case AIStrategy::Aggressive:
+    return QStringLiteral("aggressive");
+  case AIStrategy::Defensive:
+    return QStringLiteral("defensive");
+  case AIStrategy::Expansionist:
+    return QStringLiteral("expansionist");
+  case AIStrategy::Economic:
+    return QStringLiteral("economic");
+  case AIStrategy::Harasser:
+    return QStringLiteral("harasser");
+  case AIStrategy::Rusher:
+    return QStringLiteral("rusher");
+  case AIStrategy::SepulcherDefense:
+    return QStringLiteral("sepulcher_defense");
+  }
+  return QStringLiteral("balanced");
+}
+
+auto AIStrategyFactory::posture_to_string(AIPosture posture) -> QString {
+  return posture == AIPosture::Garrison ? QStringLiteral("garrison")
+                                        : QStringLiteral("field");
+}
+
+auto AIStrategyFactory::state_to_string(AIState state) -> QString {
+  switch (state) {
+  case AIState::Idle:
+    return QStringLiteral("idle");
+  case AIState::Gathering:
+    return QStringLiteral("gathering");
+  case AIState::Attacking:
+    return QStringLiteral("attacking");
+  case AIState::Defending:
+    return QStringLiteral("defending");
+  case AIState::Retreating:
+    return QStringLiteral("retreating");
+  case AIState::Expanding:
+    return QStringLiteral("expanding");
+  }
+  return QStringLiteral("idle");
+}
+
 auto AIStrategyFactory::create_config(const AIPlayerProfile& profile)
     -> AIStrategyConfig {
   AIStrategyConfig config = create_config(profile.strategy);
   config.posture = profile.posture;
+  config.doctrine = profile.doctrine;
   apply_personality(config,
                     profile.personality.aggression,
                     profile.personality.defense,

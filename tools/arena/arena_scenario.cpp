@@ -1,5 +1,6 @@
 #include "arena_scenario.h"
 
+#include <QDebug>
 #include <QDir>
 #include <QFile>
 #include <QHash>
@@ -350,6 +351,35 @@ auto expectation_requires_zone(ArenaExpectationKind kind) -> bool {
          kind == ArenaExpectationKind::UndeadZoneShrineDestroyed;
 }
 
+auto describe_window(const ArenaExpectation& expectation) -> QString {
+  if (expectation.start_seconds <= 0.0F && expectation.end_seconds <= 0.0F) {
+    return {};
+  }
+  return QStringLiteral(" between %1 s and %2 s")
+      .arg(expectation.start_seconds, 0, 'f', 1)
+      .arg(expectation.end_seconds > 0.0F
+               ? QString::number(expectation.end_seconds, 'f', 1)
+               : QStringLiteral("the end"));
+}
+
+auto expectation_requires_side(ArenaExpectationKind kind) -> bool {
+  switch (kind) {
+  case ArenaExpectationKind::SideSurvives:
+  case ArenaExpectationKind::SideAdvanceAtLeast:
+  case ArenaExpectationKind::SideAdvanceAtMost:
+  case ArenaExpectationKind::SideProducesReinforcements:
+  case ArenaExpectationKind::SideDoctrineIs:
+  case ArenaExpectationKind::SideCommitsToAttack:
+  case ArenaExpectationKind::SideHoldsPosition:
+  case ArenaExpectationKind::SideBuildsAtLeast:
+  case ArenaExpectationKind::SideKeepsGarrison:
+  case ArenaExpectationKind::SideFieldsArmy:
+    return true;
+  default:
+    return false;
+  }
+}
+
 } // namespace
 
 auto validate_scenario(const ArenaScenarioDefinition& definition)
@@ -486,9 +516,43 @@ auto validate_scenario(const ArenaScenarioDefinition& definition)
     }
   }
 
+  QSet<QString> battle_side_labels;
+  for (std::size_t i = 0; i < definition.battle_sides.size(); ++i) {
+    auto const& side = definition.battle_sides[i];
+    QString const field = QStringLiteral("battle_sides[%1]").arg(i);
+    if (side.label.trimmed().isEmpty()) {
+      errors.push_back({field, QStringLiteral("battle side label is empty")});
+    } else if (battle_side_labels.contains(side.label)) {
+      errors.push_back(
+          {field, QStringLiteral("duplicate battle side '%1'").arg(side.label)});
+    } else {
+      battle_side_labels.insert(side.label);
+    }
+  }
+
+  auto check_side = [&](const QString& value, const QString& field) {
+    if (value.isEmpty()) {
+      errors.push_back({field, QStringLiteral("battle side reference is required")});
+      return;
+    }
+    if (!battle_side_labels.contains(value)) {
+      errors.push_back(
+          {field, QStringLiteral("unknown battle side reference '%1'").arg(value)});
+    }
+  };
+
   for (std::size_t i = 0; i < definition.expectations.size(); ++i) {
     auto const& expectation = definition.expectations[i];
     QString const field = QStringLiteral("expectations[%1]").arg(i);
+    if (expectation_requires_side(expectation.kind)) {
+      check_side(expectation.side, field + QStringLiteral(".side"));
+    }
+    if (expectation.kind == ArenaExpectationKind::BattleReachesDecision &&
+        definition.battle_sides.size() < 2U) {
+      errors.push_back({field,
+                        QStringLiteral("BattleReachesDecision requires at least two "
+                                       "authored battle sides")});
+    }
     if (expectation_requires_zone(expectation.kind)) {
       if (expectation.zone_id.isEmpty()) {
         errors.push_back({field + QStringLiteral(".zone_id"),
@@ -510,6 +574,44 @@ auto validate_scenario(const ArenaScenarioDefinition& definition)
   return errors;
 }
 
+namespace {
+
+auto battle_summary(const ArenaBattleOutcome& battle) -> QString {
+  if (!battle.tracked || battle.sides.empty()) {
+    return {};
+  }
+  QStringList parts;
+  for (auto const& side : battle.sides) {
+    parts.push_back(
+        QStringLiteral("%1[%2] %3u/%4b peak %5 adv %6 atk %7s "
+                       "built %8 home %9 fwd %10%11")
+            .arg(side.label,
+                 side.strategy.isEmpty()
+                     ? QStringLiteral("?")
+                     : side.strategy + QStringLiteral("/") + side.posture)
+            .arg(side.living_units)
+            .arg(side.living_buildings)
+            .arg(side.peak_units)
+            .arg(side.peak_advance, 0, 'f', 2)
+            .arg(side.seconds_attacking, 0, 'f', 0)
+            .arg(side.buildings_constructed)
+            .arg(side.peak_home_units)
+            .arg(side.peak_forward_units)
+            .arg(side.eliminated_at >= 0.0F
+                     ? QStringLiteral(" dead@%1s").arg(side.eliminated_at, 0, 'f', 1)
+                     : QString()));
+  }
+  QString const verdict = battle.decided
+                              ? QStringLiteral("victor %1 at %2 s")
+                                    .arg(battle.victor_label)
+                                    .arg(battle.decided_at_seconds, 0, 'f', 1)
+                              : QStringLiteral("undecided");
+  return QStringLiteral(" | battle: %1 [%2]")
+      .arg(verdict, parts.join(QStringLiteral("; ")));
+}
+
+} // namespace
+
 auto ArenaScenarioReport::summary() const -> QString {
   if (passed()) {
     QString result = QStringLiteral("PASS %1: %2 frames, %3 s")
@@ -528,12 +630,13 @@ auto ArenaScenarioReport::summary() const -> QString {
                     .arg(peak_rigged_commands)
                     .arg(peak_rigged_instanced_instances);
     }
+    result += battle_summary(battle);
     return result;
   }
-  return QStringLiteral("FAIL %1: %2 issue(s); first: %3")
+  return QStringLiteral("FAIL %1: %2 issue(s); first: %3%4")
       .arg(scenario_id)
       .arg(issues.size())
-      .arg(issues.front().message);
+      .arg(issues.front().message, battle_summary(battle));
 }
 
 struct ArenaScenarioRunner::Impl {
@@ -687,6 +790,39 @@ struct ArenaScenarioRunner::Impl {
     float lateral_offset{std::numeric_limits<float>::infinity()};
   };
 
+  struct BattleSideState {
+    int owner_id{0};
+    QString label;
+    QVector3D home;
+    QVector3D enemy_home;
+    bool has_axis{false};
+    float separation{0.0F};
+    int living_units{0};
+    int living_buildings{0};
+    int peak_units{0};
+    int initial_units{0};
+    float peak_advance{0.0F};
+    float final_advance{0.0F};
+    bool has_advance{false};
+    std::vector<std::pair<float, float>> advance_samples;
+    QString strategy;
+    QString posture;
+    float seconds_attacking{0.0F};
+    float seconds_observed{0.0F};
+    float home_radius{16.0F};
+    QSet<Engine::Core::EntityID> initial_buildings;
+    QSet<Engine::Core::EntityID> seen_buildings;
+    QHash<QString, int> building_census;
+    int peak_buildings{0};
+    int peak_home_units{0};
+    int peak_forward_units{0};
+    double home_share_sum{0.0};
+    int home_share_samples{0};
+    float eliminated_at{-1.0F};
+    bool had_presence{false};
+    QSet<Engine::Core::EntityID> seen_units;
+  };
+
   struct UndeadZoneObservation {
     int spawned_total{0};
     int peak_alive{0};
@@ -745,6 +881,9 @@ struct ArenaScenarioRunner::Impl {
   QHash<QString, float> maximum_elevation;
   QHash<QString, bool> defensive_layout_locked;
   QHash<QString, bool> useful_bot_action;
+  std::vector<BattleSideState> battle_sides;
+  bool battle_decided{false};
+  float battle_decided_at{-1.0F};
   QHash<QString, UndeadZoneObservation> undead_zone_states;
   QHash<QString, QSet<Engine::Core::EntityID>> undead_zone_entities;
   QHash<QString, float> range_ring_max_radius;
@@ -1816,6 +1955,277 @@ struct ArenaScenarioRunner::Impl {
         wildlife_observation.min_population < 0
             ? population
             : std::min(wildlife_observation.min_population, population);
+  }
+
+  void initialize_battle_sides() {
+    battle_sides.clear();
+    if (scenario.battle_sides.size() < 2U) {
+      return;
+    }
+    for (auto const& side : scenario.battle_sides) {
+      BattleSideState state;
+      state.owner_id = side.owner_id;
+      state.home_radius = side.home_radius;
+      state.label = side.label.isEmpty() ? QStringLiteral("owner_%1").arg(side.owner_id)
+                                         : side.label;
+      state.home = world_origin + side.home;
+      battle_sides.push_back(std::move(state));
+    }
+    for (auto& state : battle_sides) {
+      QVector3D enemy_sum;
+      int enemy_count = 0;
+      for (auto const& other : battle_sides) {
+        if (other.owner_id == state.owner_id) {
+          continue;
+        }
+        enemy_sum += other.home;
+        ++enemy_count;
+      }
+      if (enemy_count == 0) {
+        continue;
+      }
+      state.enemy_home = enemy_sum / static_cast<float>(enemy_count);
+      state.separation = horizontal_distance(state.home, state.enemy_home);
+      state.has_axis = state.separation > 1.0F;
+    }
+    report.battle.tracked = !battle_sides.empty();
+    observe_battle();
+    for (auto& state : battle_sides) {
+      state.initial_units = state.living_units;
+      state.initial_buildings = state.seen_buildings;
+    }
+  }
+
+  void observe_battle() {
+    if (battle_sides.empty()) {
+      return;
+    }
+
+    struct Accumulator {
+      int units{0};
+      int buildings{0};
+      QVector3D army_sum;
+      int army_count{0};
+      int home_units{0};
+      int forward_units{0};
+    };
+    std::vector<Accumulator> accumulators(battle_sides.size());
+
+    for (auto* entity : world.collect_entities_with<Engine::Core::UnitComponent>()) {
+      auto const* unit = entity != nullptr
+                             ? entity->get_component<Engine::Core::UnitComponent>()
+                             : nullptr;
+      if (unit == nullptr || unit->health <= 0) {
+        continue;
+      }
+      std::size_t index = battle_sides.size();
+      for (std::size_t i = 0; i < battle_sides.size(); ++i) {
+        if (battle_sides[i].owner_id == unit->owner_id) {
+          index = i;
+          break;
+        }
+      }
+      if (index >= battle_sides.size()) {
+        continue;
+      }
+
+      auto& side = battle_sides[index];
+      auto& accumulator = accumulators[index];
+      if (Game::Units::is_building_spawn(unit->spawn_type)) {
+        ++accumulator.buildings;
+        if (!side.seen_buildings.contains(entity->get_id())) {
+          side.seen_buildings.insert(entity->get_id());
+          side.building_census[QString::fromStdString(
+              Game::Units::spawn_typeToString(unit->spawn_type))] += 1;
+        }
+        continue;
+      }
+
+      ++accumulator.units;
+      side.seen_units.insert(entity->get_id());
+      if (unit->spawn_type == Game::Units::SpawnType::Builder ||
+          entity->has_component<Engine::Core::CommanderComponent>()) {
+        continue;
+      }
+      auto const* transform = entity->get_component<Engine::Core::TransformComponent>();
+      if (transform != nullptr) {
+        QVector3D const position = vector_from_transform(*transform);
+        accumulator.army_sum += position;
+        ++accumulator.army_count;
+        if (horizontal_distance(position, side.home) <= side.home_radius) {
+          ++accumulator.home_units;
+        }
+        if (side.has_axis) {
+          QVector3D axis = side.enemy_home - side.home;
+          axis.setY(0.0F);
+          QVector3D offset = position - side.home;
+          offset.setY(0.0F);
+          if (QVector3D::dotProduct(offset, axis.normalized()) / side.separation >
+              0.5F) {
+            ++accumulator.forward_units;
+          }
+        }
+      }
+    }
+
+    for (std::size_t i = 0; i < battle_sides.size(); ++i) {
+      auto& side = battle_sides[i];
+      auto const& accumulator = accumulators[i];
+      if (host.sample_ai_doctrine) {
+        auto const doctrine = host.sample_ai_doctrine(side.owner_id);
+        if (doctrine.valid) {
+          side.strategy = doctrine.strategy;
+          side.posture = doctrine.posture;
+          float const step = std::max(0.0F, elapsed - side.seconds_observed);
+          side.seconds_observed = elapsed;
+          if (doctrine.state == QStringLiteral("attacking")) {
+            side.seconds_attacking += step;
+          }
+        }
+      }
+      side.living_units = accumulator.units;
+      side.living_buildings = accumulator.buildings;
+      side.peak_units = std::max(side.peak_units, accumulator.units);
+      side.peak_buildings = std::max(side.peak_buildings, accumulator.buildings);
+      side.peak_home_units = std::max(side.peak_home_units, accumulator.home_units);
+      side.peak_forward_units =
+          std::max(side.peak_forward_units, accumulator.forward_units);
+      if (accumulator.army_count > 0) {
+        side.home_share_sum += static_cast<double>(accumulator.home_units) /
+                               static_cast<double>(accumulator.army_count);
+        ++side.home_share_samples;
+      }
+      if (accumulator.units > 0 || accumulator.buildings > 0) {
+        side.had_presence = true;
+      } else if (side.had_presence && side.eliminated_at < 0.0F) {
+        side.eliminated_at = elapsed;
+      }
+
+      if (side.has_axis && accumulator.army_count > 0) {
+        QVector3D const centroid =
+            accumulator.army_sum / static_cast<float>(accumulator.army_count);
+        QVector3D axis = side.enemy_home - side.home;
+        axis.setY(0.0F);
+        QVector3D offset = centroid - side.home;
+        offset.setY(0.0F);
+        float const projected =
+            QVector3D::dotProduct(offset, axis.normalized()) / side.separation;
+        side.final_advance = projected;
+        side.peak_advance =
+            side.has_advance ? std::max(side.peak_advance, projected) : projected;
+        side.has_advance = true;
+        side.advance_samples.emplace_back(elapsed, projected);
+      }
+    }
+
+    if (!battle_decided) {
+      int survivors = 0;
+      for (auto const& side : battle_sides) {
+        if (side.eliminated_at < 0.0F) {
+          ++survivors;
+        }
+      }
+      if (survivors <= 1 && battle_sides.size() >= 2U) {
+        battle_decided = true;
+        battle_decided_at = elapsed;
+      }
+    }
+  }
+
+  [[nodiscard]] auto battle_decision_ends_scenario() const -> bool {
+    if (!battle_decided) {
+      return false;
+    }
+    constexpr float k_decision_settle_seconds = 2.0F;
+    if (elapsed < battle_decided_at + k_decision_settle_seconds) {
+      return false;
+    }
+    for (auto const& expectation : scenario.expectations) {
+      if (expectation.kind == ArenaExpectationKind::BattleReachesDecision) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  void publish_battle_outcome() {
+    if (battle_sides.empty()) {
+      return;
+    }
+    report.battle.tracked = true;
+    report.battle.decided = battle_decided;
+    report.battle.decided_at_seconds = battle_decided_at;
+    report.battle.sides.clear();
+    for (auto const& side : battle_sides) {
+      ArenaBattleSideResult result;
+      result.owner_id = side.owner_id;
+      result.label = side.label;
+      result.living_units = side.living_units;
+      result.living_buildings = side.living_buildings;
+      result.peak_units = side.peak_units;
+      result.units_produced =
+          std::max(0, static_cast<int>(side.seen_units.size()) - side.initial_units);
+      result.peak_advance = side.peak_advance;
+      result.final_advance = side.final_advance;
+      result.eliminated_at = side.eliminated_at;
+      result.strategy = side.strategy;
+      result.posture = side.posture;
+      result.buildings_constructed =
+          std::max(0,
+                   static_cast<int>(side.seen_buildings.size()) -
+                       static_cast<int>(side.initial_buildings.size()));
+      result.peak_buildings = side.peak_buildings;
+      result.peak_home_units = side.peak_home_units;
+      result.peak_forward_units = side.peak_forward_units;
+      result.mean_home_share =
+          side.home_share_samples > 0
+              ? static_cast<float>(side.home_share_sum /
+                                   static_cast<double>(side.home_share_samples))
+              : 0.0F;
+      {
+        QStringList census;
+        auto keys = side.building_census.keys();
+        std::sort(keys.begin(), keys.end());
+        for (auto const& key : keys) {
+          census.push_back(
+              QStringLiteral("%1x%2").arg(key).arg(side.building_census.value(key)));
+        }
+        result.building_census = census.join(QStringLiteral(","));
+      }
+      result.seconds_attacking = side.seconds_attacking;
+      result.seconds_observed = side.seconds_observed;
+      report.battle.sides.push_back(std::move(result));
+      if (battle_decided && side.eliminated_at < 0.0F) {
+        report.battle.victor_owner_id = side.owner_id;
+        report.battle.victor_label = side.label;
+      }
+    }
+  }
+
+  [[nodiscard]] static auto
+  windowed_peak_advance(const BattleSideState& side,
+                        const ArenaExpectation& expectation) -> std::optional<float> {
+    float const start = expectation.start_seconds;
+    float const end = expectation.end_seconds > 0.0F
+                          ? expectation.end_seconds
+                          : std::numeric_limits<float>::infinity();
+    std::optional<float> peak;
+    for (auto const& [time, advance] : side.advance_samples) {
+      if (time < start || time > end) {
+        continue;
+      }
+      peak = peak.has_value() ? std::max(*peak, advance) : advance;
+    }
+    return peak;
+  }
+
+  [[nodiscard]] auto battle_side(const QString& label) const -> const BattleSideState* {
+    for (auto const& side : battle_sides) {
+      if (side.label == label) {
+        return &side;
+      }
+    }
+    return nullptr;
   }
 
   void observe_undead_zones() {
@@ -3463,8 +3873,229 @@ struct ArenaScenarioRunner::Impl {
       return;
     }
     end_expectations_checked = true;
+    observe_battle();
+    publish_battle_outcome();
     for (auto const& expectation : scenario.expectations) {
       switch (expectation.kind) {
+      case ArenaExpectationKind::BattleReachesDecision: {
+        if (battle_sides.size() < 2U) {
+          add_issue(QStringLiteral("battle_not_tracked"),
+                    QStringLiteral("BattleReachesDecision needs at least two "
+                                   "authored battle sides"));
+          break;
+        }
+        if (!battle_decided) {
+          QStringList standing;
+          for (auto const& side : battle_sides) {
+            if (side.eliminated_at < 0.0F) {
+              standing.push_back(QStringLiteral("%1 (%2 units, %3 buildings)")
+                                     .arg(side.label)
+                                     .arg(side.living_units)
+                                     .arg(side.living_buildings));
+            }
+          }
+          add_issue(QStringLiteral("battle_undecided"),
+                    QStringLiteral("no side was eliminated within %1 s; still "
+                                   "standing: %2")
+                        .arg(elapsed, 0, 'f', 1)
+                        .arg(standing.join(QStringLiteral(", "))));
+        }
+        break;
+      }
+      case ArenaExpectationKind::SideSurvives: {
+        auto const* side = battle_side(expectation.side);
+        if (side == nullptr) {
+          add_issue(QStringLiteral("battle_side_unknown"),
+                    QStringLiteral("%1 is not an authored battle side")
+                        .arg(expectation.side));
+        } else if (side->eliminated_at >= 0.0F) {
+          add_issue(QStringLiteral("battle_side_eliminated"),
+                    QStringLiteral("%1 was wiped out at %2 s")
+                        .arg(side->label)
+                        .arg(side->eliminated_at, 0, 'f', 1));
+        }
+        break;
+      }
+      case ArenaExpectationKind::SideAdvanceAtLeast: {
+        auto const* side = battle_side(expectation.side);
+        if (side == nullptr) {
+          add_issue(QStringLiteral("battle_side_unknown"),
+                    QStringLiteral("%1 is not an authored battle side")
+                        .arg(expectation.side));
+        } else {
+          auto const peak = windowed_peak_advance(*side, expectation);
+          if (!peak.has_value()) {
+            add_issue(QStringLiteral("side_advance_unsampled"),
+                      QStringLiteral("%1 produced no army position samples in its "
+                                     "measurement window")
+                          .arg(side->label));
+          } else if (*peak < expectation.threshold) {
+            add_issue(QStringLiteral("side_advance_too_small"),
+                      QStringLiteral("%1 pushed only %2 of the way to the enemy "
+                                     "base%3, expected at least %4")
+                          .arg(side->label)
+                          .arg(*peak, 0, 'f', 3)
+                          .arg(describe_window(expectation))
+                          .arg(expectation.threshold, 0, 'f', 3));
+          }
+        }
+        break;
+      }
+      case ArenaExpectationKind::SideAdvanceAtMost: {
+        auto const* side = battle_side(expectation.side);
+        if (side == nullptr) {
+          add_issue(QStringLiteral("battle_side_unknown"),
+                    QStringLiteral("%1 is not an authored battle side")
+                        .arg(expectation.side));
+        } else {
+          auto const peak = windowed_peak_advance(*side, expectation);
+          if (peak.has_value() && *peak > expectation.threshold) {
+            add_issue(QStringLiteral("side_advance_too_large"),
+                      QStringLiteral("%1 pushed %2 of the way to the enemy base%3, "
+                                     "expected at most %4")
+                          .arg(side->label)
+                          .arg(*peak, 0, 'f', 3)
+                          .arg(describe_window(expectation))
+                          .arg(expectation.threshold, 0, 'f', 3));
+          }
+        }
+        break;
+      }
+      case ArenaExpectationKind::SideProducesReinforcements: {
+        auto const* side = battle_side(expectation.side);
+        int const required =
+            std::max(1, static_cast<int>(std::lround(expectation.threshold)));
+        if (side == nullptr) {
+          add_issue(QStringLiteral("battle_side_unknown"),
+                    QStringLiteral("%1 is not an authored battle side")
+                        .arg(expectation.side));
+        } else {
+          int const produced =
+              static_cast<int>(side->seen_units.size()) - side->initial_units;
+          if (produced < required) {
+            add_issue(QStringLiteral("side_produced_too_few"),
+                      QStringLiteral("%1 fielded %2 new units, expected at least %3")
+                          .arg(side->label)
+                          .arg(produced)
+                          .arg(required));
+          }
+        }
+        break;
+      }
+      case ArenaExpectationKind::SideBuildsAtLeast: {
+        auto const* side = battle_side(expectation.side);
+        int const required =
+            std::max(1, static_cast<int>(std::lround(expectation.threshold)));
+        if (side == nullptr) {
+          add_issue(QStringLiteral("battle_side_unknown"),
+                    QStringLiteral("%1 is not an authored battle side")
+                        .arg(expectation.side));
+        } else {
+          int const built = static_cast<int>(side->seen_buildings.size()) -
+                            static_cast<int>(side->initial_buildings.size());
+          if (built < required) {
+            add_issue(QStringLiteral("side_built_too_little"),
+                      QStringLiteral("%1 raised %2 new buildings, expected at "
+                                     "least %3")
+                          .arg(side->label)
+                          .arg(built)
+                          .arg(required));
+          }
+        }
+        break;
+      }
+      case ArenaExpectationKind::SideKeepsGarrison: {
+        auto const* side = battle_side(expectation.side);
+        if (side == nullptr) {
+          add_issue(QStringLiteral("battle_side_unknown"),
+                    QStringLiteral("%1 is not an authored battle side")
+                        .arg(expectation.side));
+        } else if (side->peak_home_units < expectation.threshold) {
+          add_issue(QStringLiteral("side_left_home_open"),
+                    QStringLiteral("%1 never held more than %2 units within %3 m of "
+                                   "its own base, expected at least %4")
+                        .arg(side->label)
+                        .arg(side->peak_home_units)
+                        .arg(side->home_radius, 0, 'f', 0)
+                        .arg(expectation.threshold, 0, 'f', 0));
+        }
+        break;
+      }
+      case ArenaExpectationKind::SideFieldsArmy: {
+        auto const* side = battle_side(expectation.side);
+        if (side == nullptr) {
+          add_issue(QStringLiteral("battle_side_unknown"),
+                    QStringLiteral("%1 is not an authored battle side")
+                        .arg(expectation.side));
+        } else if (side->peak_forward_units < expectation.threshold) {
+          add_issue(QStringLiteral("side_never_fielded_army"),
+                    QStringLiteral("%1 never pushed more than %2 units past the "
+                                   "midpoint, expected at least %3")
+                        .arg(side->label)
+                        .arg(side->peak_forward_units)
+                        .arg(expectation.threshold, 0, 'f', 0));
+        }
+        break;
+      }
+      case ArenaExpectationKind::SideDoctrineIs: {
+        auto const* side = battle_side(expectation.side);
+        if (side == nullptr) {
+          add_issue(QStringLiteral("battle_side_unknown"),
+                    QStringLiteral("%1 is not an authored battle side")
+                        .arg(expectation.side));
+          break;
+        }
+        if (side->strategy.isEmpty()) {
+          add_issue(QStringLiteral("side_doctrine_unsampled"),
+                    QStringLiteral("%1 never reported an AI strategy; the scenario "
+                                   "host did not expose one")
+                        .arg(side->label));
+          break;
+        }
+        QString const expected = expectation.counter_key;
+        QString const actual =
+            side->posture.isEmpty()
+                ? side->strategy
+                : side->strategy + QStringLiteral(":") + side->posture;
+        if (expected != side->strategy && expected != actual) {
+          add_issue(QStringLiteral("side_doctrine_mismatch"),
+                    QStringLiteral("%1 ran the %2 doctrine, expected %3")
+                        .arg(side->label, actual, expected));
+        }
+        break;
+      }
+      case ArenaExpectationKind::SideCommitsToAttack: {
+        auto const* side = battle_side(expectation.side);
+        if (side == nullptr) {
+          add_issue(QStringLiteral("battle_side_unknown"),
+                    QStringLiteral("%1 is not an authored battle side")
+                        .arg(expectation.side));
+        } else if (side->seconds_attacking < expectation.threshold) {
+          add_issue(QStringLiteral("side_never_committed"),
+                    QStringLiteral("%1 spent %2 s in an attacking state, expected "
+                                   "at least %3 s")
+                        .arg(side->label)
+                        .arg(side->seconds_attacking, 0, 'f', 1)
+                        .arg(expectation.threshold, 0, 'f', 1));
+        }
+        break;
+      }
+      case ArenaExpectationKind::SideHoldsPosition: {
+        auto const* side = battle_side(expectation.side);
+        if (side == nullptr) {
+          add_issue(QStringLiteral("battle_side_unknown"),
+                    QStringLiteral("%1 is not an authored battle side")
+                        .arg(expectation.side));
+        } else if (side->seconds_attacking > expectation.threshold) {
+          add_issue(QStringLiteral("side_did_not_hold"),
+                    QStringLiteral("%1 spent %2 s in an attacking state, expected "
+                                   "at most %3 s")
+                        .arg(side->label)
+                        .arg(side->seconds_attacking, 0, 'f', 1)
+                        .arg(expectation.threshold, 0, 'f', 1));
+        }
+        break;
+      }
       case ArenaExpectationKind::AttackAnimationObserved:
         if (!visible_attacks.value(expectation.group, false)) {
           add_issue(QStringLiteral("no_visible_attack"),
@@ -4939,8 +5570,18 @@ ArenaScenarioRunner::ArenaScenarioRunner(Engine::Core::World& world,
 ArenaScenarioRunner::~ArenaScenarioRunner() = default;
 
 auto ArenaScenarioRunner::start() -> bool {
-  if (m_impl->started || !validate_scenario(m_impl->scenario).empty() ||
-      !m_impl->host.spawn_unit) {
+  if (m_impl->started) {
+    return false;
+  }
+  auto const validation = validate_scenario(m_impl->scenario);
+  if (!validation.empty()) {
+    for (auto const& error : validation) {
+      qWarning().noquote() << QStringLiteral("Arena scenario '%1' invalid: %2 -- %3")
+                                  .arg(m_impl->scenario.id, error.field, error.message);
+    }
+    return false;
+  }
+  if (!m_impl->host.spawn_unit) {
     return false;
   }
   m_impl->started = true;
@@ -4985,6 +5626,7 @@ auto ArenaScenarioRunner::start() -> bool {
     }
   }
   m_impl->observe_undead_zones();
+  m_impl->initialize_battle_sides();
   if (m_impl->host.set_camera) {
     m_impl->host.set_camera(m_impl->all_entities(), m_impl->scenario.camera);
   }
@@ -5005,6 +5647,7 @@ void ArenaScenarioRunner::update(float simulation_dt) {
   m_impl->report.elapsed_seconds = m_impl->elapsed;
   m_impl->observe_undead_zones();
   m_impl->observe_wildlife();
+  m_impl->observe_battle();
   for (std::size_t i = 0; i < m_impl->scenario.steps.size(); ++i) {
     auto const& step = m_impl->scenario.steps[i];
     if (!m_impl->steps[i].executed && m_impl->trigger_ready(i, step)) {
@@ -5021,7 +5664,8 @@ void ArenaScenarioRunner::update(float simulation_dt) {
       m_impl->check_formation_order(expectation);
     }
   }
-  if (m_impl->elapsed + 1.0e-5F >= m_impl->duration_limit) {
+  if (m_impl->elapsed + 1.0e-5F >= m_impl->duration_limit ||
+      m_impl->battle_decision_ends_scenario()) {
     m_impl->check_end_expectations();
     m_impl->complete = true;
   }
@@ -5151,6 +5795,40 @@ auto ArenaScenarioRunner::write_artifacts(const QString& directory,
                        static_cast<qint64>(m_impl->report.rendered_frames));
   report_object.insert(QStringLiteral("rendered_soldier_samples"),
                        static_cast<qint64>(m_impl->report.rendered_soldier_samples));
+  if (m_impl->report.battle.tracked) {
+    QJsonArray sides;
+    for (auto const& side : m_impl->report.battle.sides) {
+      sides.append(QJsonObject{
+          {QStringLiteral("owner_id"), side.owner_id},
+          {QStringLiteral("label"), side.label},
+          {QStringLiteral("living_units"), side.living_units},
+          {QStringLiteral("living_buildings"), side.living_buildings},
+          {QStringLiteral("peak_units"), side.peak_units},
+          {QStringLiteral("units_produced"), side.units_produced},
+          {QStringLiteral("peak_advance"), side.peak_advance},
+          {QStringLiteral("final_advance"), side.final_advance},
+          {QStringLiteral("eliminated_at"), side.eliminated_at},
+          {QStringLiteral("strategy"), side.strategy},
+          {QStringLiteral("posture"), side.posture},
+          {QStringLiteral("seconds_attacking"), side.seconds_attacking},
+          {QStringLiteral("seconds_observed"), side.seconds_observed},
+          {QStringLiteral("buildings_constructed"), side.buildings_constructed},
+          {QStringLiteral("peak_buildings"), side.peak_buildings},
+          {QStringLiteral("building_census"), side.building_census},
+          {QStringLiteral("peak_home_units"), side.peak_home_units},
+          {QStringLiteral("peak_forward_units"), side.peak_forward_units},
+          {QStringLiteral("mean_home_share"), side.mean_home_share}});
+    }
+    report_object.insert(
+        QStringLiteral("battle"),
+        QJsonObject{
+            {QStringLiteral("decided"), m_impl->report.battle.decided},
+            {QStringLiteral("victor_owner_id"), m_impl->report.battle.victor_owner_id},
+            {QStringLiteral("victor"), m_impl->report.battle.victor_label},
+            {QStringLiteral("decided_at_seconds"),
+             m_impl->report.battle.decided_at_seconds},
+            {QStringLiteral("sides"), sides}});
+  }
   if (m_impl->report.frame_time_samples > 0U) {
     double const p95_fps = m_impl->report.frame_time_p95_ms > 0.0
                                ? 1000.0 / m_impl->report.frame_time_p95_ms

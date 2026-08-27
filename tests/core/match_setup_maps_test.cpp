@@ -157,13 +157,6 @@ TEST_F(ObserverRosterTest, AMapWithNothingToWatchIsRefused) {
       QStringLiteral("assets/maps/does_not_exist.json")));
 }
 
-// The battlefield-list rows read `path`, `name` and `thumbnail` off each
-// catalogue entry by name; QML looks roles up by name, so a renamed or missing
-// key fails silently - the row falls back to a generic glyph and nothing warns.
-// That is how the thumbnails came back empty twice, once because the fix went
-// into a component nothing instantiates and once because the delegate reached
-// for a role only reachable through `modelData`. Pin what the real catalogue
-// hands the rows.
 TEST(MatchSetupMapListTest, TheRealCatalogueCarriesTheKeysTheListRowsReadByName) {
   const auto maps = Game::Map::MapCatalog::available_maps();
   ASSERT_FALSE(maps.isEmpty()) << "the shipped battlefields did not load";

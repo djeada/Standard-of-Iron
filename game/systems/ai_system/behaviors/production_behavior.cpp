@@ -11,6 +11,7 @@
 #include "../../nation_registry.h"
 #include "../../production_service.h"
 #include "../ai_base_manager.h"
+#include "../ai_doctrine_catalog.h"
 #include "../ai_utils.h"
 #include "systems/ai_system/ai_types.h"
 #include "units/commander_catalog.h"
@@ -131,11 +132,15 @@ void ProductionBehavior::execute(const AISnapshot& snapshot,
               : 0.0F;
 
       const float target_ranged_ratio =
-          std::clamp(0.5F + (context.strategy_config.defense_modifier -
-                             context.strategy_config.aggression_modifier) *
-                                0.1F,
-                     0.25F,
-                     0.75F);
+          context.strategy_config.doctrine != nullptr
+              ? std::clamp(context.strategy_config.doctrine->recruitment.ranged_share,
+                           0.0F,
+                           1.0F)
+              : std::clamp(0.5F + (context.strategy_config.defense_modifier -
+                                   context.strategy_config.aggression_modifier) *
+                                      0.1F,
+                           0.25F,
+                           0.75F);
       produce_ranged = (ranged_ratio < target_ranged_ratio);
       if (context.assembled_unit_count < context.macro_targets.assembly_size &&
           context.strategy_config.aggression_modifier > 1.0F) {

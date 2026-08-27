@@ -44,11 +44,6 @@ auto make_keyframe(float hour,
   return {hour, value};
 }
 
-// A battle has to stay readable at every hour it can reach. Night used to sit
-// at 0.30 ambient with a 0.09 ground bounce and 0.90 exposure, which collapsed
-// terrain, roads and both armies into one blue: a player could not tell whose
-// troops were whose. The night frames keep their colour and their mood and lift
-// the floor - the sky is untouched, the ground bounce and ambient carry it.
 auto mediterranean_summer_profile() -> const std::array<LightingKeyframe, 8>& {
   static const std::array<LightingKeyframe, 8> keyframes{
       make_keyframe(0.0F,
