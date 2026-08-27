@@ -703,8 +703,7 @@ void MiniaudioBackend::play_sound(const QString& id, float volume, bool loop) {
   if (slot < 0 || m_track_table[slot].load(std::memory_order_acquire) == nullptr) {
     if (is_track_decode_pending(id)) {
       if (loop) {
-        // Hold the request and start it the moment the decode lands. A bed asked
-        // for during a load would otherwise be lost for the whole match.
+
         QMutexLocker const locker(&m_decode_mutex);
         m_deferred_loops.insert(slot, DeferredLoop{sanitize_backend_volume(volume)});
       } else {
@@ -742,7 +741,7 @@ void MiniaudioBackend::stop_sound(const QString& id) {
     return;
   }
   {
-    // A bed stopped before its decode landed must not start when it does.
+
     QMutexLocker const locker(&m_decode_mutex);
     m_deferred_loops.remove(slot);
   }

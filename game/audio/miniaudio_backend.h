@@ -71,9 +71,6 @@ public:
 
   auto is_track_ready(const QString& id) const -> bool;
 
-  // How many clips have actually had the mastering analysis run on them. It
-  // only rises when a clip is seen for the first time; a reload re-applies what
-  // is already known.
   [[nodiscard]] auto mastering_analyses_computed() const -> std::uint64_t {
     return m_analyses_computed.load(std::memory_order_relaxed);
   }
@@ -168,24 +165,11 @@ private:
   std::deque<DecodeJob> m_decode_bulk_jobs;
   QSet<int> m_pending_slots;
 
-  // A looping bed asked for while its own audio is still being decoded. The
-  // request used to be dropped on the floor, which is how a whole match could
-  // run with no weather ambience: the load asks for the rain the moment the map
-  // is up, the decoder is still working through ninety-seven clips, and nothing
-  // ever asks again. One-shots are not held - a combat cue that missed its
-  // moment is better lost than played late.
   struct DeferredLoop {
     float volume = 1.0F;
   };
   QHash<int, DeferredLoop> m_deferred_loops;
 
-  // Returning to the menu unloads the mission's audio, so the next match
-  // decodes and masters the same ninety-seven clips again from scratch. The
-  // unload is deliberate and worth keeping - the PCM is the memory it was for -
-  // but the analysis behind the mastering is not: a loudness sweep, two band
-  // filters over every sample, and up to sixty-four FFT windows, all of which
-  // produce exactly the same numbers for the same file every time. Keep those
-  // for the life of the process and re-apply them on reload.
   struct CachedAnalysis {
     std::size_t frames = 0;
     Game::Audio::Mastering::Analysis analysis;

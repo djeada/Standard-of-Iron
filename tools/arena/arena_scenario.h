@@ -140,6 +140,37 @@ struct ArenaScenarioResourcePatch {
   bool exact{false};
 };
 
+struct ArenaScenarioAIProfile {
+  int owner_id{0};
+
+  QString strategy;
+
+  QString posture;
+
+  float aggression{-1.0F};
+  float defense{-1.0F};
+  float harassment{-1.0F};
+  QString difficulty;
+};
+
+struct ArenaScenarioStartingResources {
+  int gold{150};
+  int food{150};
+  int wood{200};
+  int stone{180};
+  int iron{30};
+};
+
+struct ArenaScenarioBattleSide {
+  int owner_id{0};
+
+  QString label;
+
+  QVector3D home;
+
+  float home_radius{16.0F};
+};
+
 struct ArenaScenarioOwnerTeam {
   int owner_id{0};
   int team_id{0};
@@ -294,11 +325,24 @@ enum class ArenaExpectationKind : std::uint8_t {
   CommanderContactCountAtMost,
   CommanderCombatCounterWithin,
   CommanderLockStateWithin,
+  BattleReachesDecision,
+  SideAdvanceAtLeast,
+  SideAdvanceAtMost,
+  SideProducesReinforcements,
+  SideSurvives,
+  SideDoctrineIs,
+  SideCommitsToAttack,
+  SideHoldsPosition,
+  SideBuildsAtLeast,
+  SideKeepsGarrison,
+  SideFieldsArmy,
 };
 
 struct ArenaExpectation {
   ArenaExpectationKind kind{ArenaExpectationKind::MovementIsContinuous};
   QString group;
+
+  QString side;
   QString target_group;
   QString zone_id;
 
@@ -371,6 +415,9 @@ struct ArenaScenarioDefinition {
 
   std::vector<Game::Map::UndeadZone> undead_zones;
   std::vector<ArenaScenarioOwnerTeam> owner_teams;
+  std::vector<ArenaScenarioAIProfile> ai_profiles;
+  ArenaScenarioStartingResources ai_starting_resources;
+  std::vector<ArenaScenarioBattleSide> battle_sides;
   std::vector<ArenaScenarioGroup> groups;
   std::vector<ArenaScenarioResourcePatch> resource_patches;
   std::vector<ArenaScenarioStep> steps;
@@ -384,6 +431,41 @@ struct ArenaScenarioValidationError {
 
 [[nodiscard]] auto validate_scenario(const ArenaScenarioDefinition& definition)
     -> std::vector<ArenaScenarioValidationError>;
+
+struct ArenaBattleSideResult {
+  int owner_id{0};
+  QString label;
+  int living_units{0};
+  int living_buildings{0};
+  int peak_units{0};
+  int units_produced{0};
+  float peak_advance{0.0F};
+  float final_advance{0.0F};
+  float eliminated_at{-1.0F};
+  QString strategy;
+  QString posture;
+  float seconds_attacking{0.0F};
+  float seconds_observed{0.0F};
+
+  int buildings_constructed{0};
+  int peak_buildings{0};
+
+  QString building_census;
+
+  int peak_home_units{0};
+  int peak_forward_units{0};
+
+  float mean_home_share{0.0F};
+};
+
+struct ArenaBattleOutcome {
+  bool tracked{false};
+  bool decided{false};
+  int victor_owner_id{0};
+  QString victor_label;
+  float decided_at_seconds{-1.0F};
+  std::vector<ArenaBattleSideResult> sides;
+};
 
 struct ArenaScenarioIssue {
   QString code;
@@ -426,6 +508,7 @@ struct ArenaScenarioReport {
   std::uint64_t peak_rigged_single_draws{0};
   std::uint64_t peak_shadow_rigged_instanced_instances{0};
   std::uint64_t peak_shadow_rigged_single_draws{0};
+  ArenaBattleOutcome battle;
   std::vector<ArenaScenarioIssue> issues;
 
   [[nodiscard]] auto passed() const noexcept -> bool { return issues.empty(); }
@@ -455,6 +538,16 @@ struct ArenaEnvironmentSnapshot {
   float wetness{0.0F};
 };
 
+struct ArenaAIDoctrineSample {
+  bool valid{false};
+
+  QString strategy;
+
+  QString posture;
+
+  QString state;
+};
+
 struct ArenaScenarioHost {
   std::function<Engine::Core::EntityID(const ArenaScenarioGroup&, const QVector3D&)>
       spawn_unit;
@@ -477,6 +570,8 @@ struct ArenaScenarioHost {
   std::function<void(Engine::Core::EntityID, float)> set_rpg_view_pitch;
 
   std::function<void(Engine::Core::EntityID, const QVector3D&)> aim_rpg_view_at;
+
+  std::function<ArenaAIDoctrineSample(int)> sample_ai_doctrine;
 
   Game::Map::TerrainService* terrain = nullptr;
   Game::Systems::BuildingCollisionRegistry* building_collision = nullptr;

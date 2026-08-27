@@ -451,9 +451,6 @@ auto CommandService::world_prop_work_position(Game::Map::TerrainService& terrain
   }
   approach.normalize();
 
-  // The same radius the navigation grid stamps the prop out with, plus room for
-  // the worker's own body and a little margin, so the stand-off lands on ground
-  // the worker can actually hold.
   const float standoff =
       Game::Map::world_prop_ground_radius(found->type, found->scale) + unit_radius +
       0.25F;

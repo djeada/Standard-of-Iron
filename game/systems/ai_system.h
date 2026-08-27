@@ -58,9 +58,19 @@ public:
 
   void set_ai_profile(int player_id, const AI::AIPlayerProfile& profile);
 
-  // The plan a player is currently running. A computer stuck in Defending looks
-  // from outside exactly like one that is winning, so a harness that can only
-  // count units cannot tell the difference; this is how it can.
+  struct AIPlayerState {
+    bool valid = false;
+    AI::AIStrategy strategy = AI::AIStrategy::Balanced;
+    AI::AIPosture posture = AI::AIPosture::Field;
+    AI::AIState state = AI::AIState::Idle;
+    float aggression_modifier = 0.0F;
+    float defense_modifier = 0.0F;
+    int proactive_attack_size = 0;
+    int reactive_attack_size = 0;
+  };
+
+  [[nodiscard]] auto ai_player_state(int player_id) const -> AIPlayerState;
+
   [[nodiscard]] auto plan_for(int player_id) const -> const AI::AIContext*;
 
 private:

@@ -8,6 +8,7 @@
 #include <vector>
 
 #include "../../nation_registry.h"
+#include "../ai_attack_wave.h"
 #include "../ai_formation.h"
 #include "../ai_tactical.h"
 #include "../ai_utils.h"
@@ -62,7 +63,23 @@ void AttackBehavior::execute(const AISnapshot& snapshot,
   }
   m_attack_timer = 0.0F;
 
-  auto ready_units = collect_attack_force_units(snapshot, context);
+  auto ready_units = wave_force_units(snapshot, context);
+  if (ready_units.empty()) {
+
+    ready_units = collect_attack_force_units(snapshot, context);
+    if (!context.garrison_unit_ids.empty()) {
+      ready_units.erase(std::remove_if(ready_units.begin(),
+                                       ready_units.end(),
+                                       [&](const EntitySnapshot* entity) {
+                                         return std::find(
+                                                    context.garrison_unit_ids.begin(),
+                                                    context.garrison_unit_ids.end(),
+                                                    entity->id) !=
+                                                context.garrison_unit_ids.end();
+                                       }),
+                        ready_units.end());
+    }
+  }
 
   float group_center_x = 0.0F;
   float group_center_y = 0.0F;
@@ -219,6 +236,14 @@ void AttackBehavior::execute(const AISnapshot& snapshot,
       }
 
       const ContactSnapshot* target = closest_enemy;
+      if (context.wave.committed && context.wave.target_id != 0) {
+        for (const auto& contact : snapshot.visible_enemies) {
+          if (contact.id == context.wave.target_id && contact.health > 0) {
+            target = &contact;
+            break;
+          }
+        }
+      }
 
       if ((target != nullptr) && !ready_units.empty()) {
 
@@ -402,9 +427,17 @@ void AttackBehavior::execute(const AISnapshot& snapshot,
 auto AttackBehavior::should_execute(const AISnapshot& snapshot,
                                     const AIContext& context) const -> bool {
 
-  if (context.state == AIState::Retreating ||
-      context.strategy_config.posture == AIPosture::Garrison) {
+  if (context.state == AIState::Retreating) {
     return false;
+  }
+
+  if (context.strategy_config.posture == AIPosture::Garrison &&
+      !(context.wave.committed && context.strategy_config.doctrine != nullptr)) {
+    return false;
+  }
+
+  if (context.wave.committed && !context.wave.members.empty()) {
+    return true;
   }
 
   int ready_units = 0;

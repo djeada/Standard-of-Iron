@@ -6,12 +6,6 @@
 #include "game/map/map_loader.h"
 #include "game/map/terrain_service.h"
 
-// Iron ore is drawn with a ghost-light: cyan and violet veins, twinkling
-// crystals, an emissive pulse. That is the right look for a barrow and the
-// wrong one for a valley the map itself describes as "the plain match, with no
-// Sepulcher to distract either side" - where the ore was still the brightest
-// thing on the hillside. A battlefield says what walks on it; the ore is lit by
-// that rather than by a constant.
 namespace {
 
 auto load(const QString& file_name) -> Game::Map::MapDefinition {

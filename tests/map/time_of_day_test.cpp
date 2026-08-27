@@ -172,11 +172,6 @@ TEST(TimeOfDayTest, ScriptedTransitionSnapshotRestoresExactly) {
 
 } // namespace
 
-// A battle has to stay readable at every hour it can reach. Night used to sit
-// at 0.30 ambient with a 0.09 ground bounce and 0.90 exposure, which collapsed
-// terrain, roads and both armies into one blue - a player could not tell whose
-// troops were whose. The night keeps its colour and its mood; what it may not
-// do is go dark enough to hide the battle.
 namespace {
 
 [[nodiscard]] auto

@@ -86,6 +86,55 @@ group cap in `range_indicator_mixed_selection`.
 exists today; it comes from the scenario group's `attack_min_range_override`,
 because no shipped unit carries one yet.
 
+## AI versus AI: the commander duels
+
+```bash
+build/bin/arena_app --batch --scenario ai_duel_scipio_vs_fabius \
+  --fps 30 --watchdog-multiplier 6 --artifact-dir artifacts/arena
+```
+
+`ai_duel_*` is the scenario family that verifies commander doctrines are
+actually reaching the computer opponent. Each side starts with a commander and
+four builders in opposite corners of the map, facing each other down the
+diagonal, with wood, stone and iron in reach -- and nothing else. No starting
+army, no starting barracks: the lord anchors the settlement, the builders raise
+homes and a barracks, and every soldier either side fields has to be recruited
+out of that. They play until one side has no units and no buildings left, and
+the run stops at the decision rather than burning the rest of its duration.
+
+Between the two camps runs a river with a single bridge, and hills of several
+shapes -- crowned, ridge, elbow, arc -- sit on both approaches. An attack has to
+find the crossing rather than walk the straight line, which is where
+pathfinding, formation movement and fighting on a slope get to fail in front of
+us instead of quietly in a shipped map.
+
+Three things about this lane are not obvious.
+
+**It needs a real starting stock.** The Arena's historic grant of 30 iron sits
+below the AI's own 50-iron recruit reserve, so `recruit_reserve_shortfall`
+reports a shortfall forever, the builder takes the harvest branch every cycle
+and returns before it ever places a building -- the AI harvests for the whole
+run and never builds a thing. Scenarios that want an economy set
+`ai_starting_resources` to what a shipped map hands a player. The default is
+unchanged, so existing scenarios keep the old grant.
+
+**Owner 1 is the local player.** An AI group on owner 1 gets no AI instance at
+all: it stands where it spawned for the whole scenario and quietly looks like a
+doctrine that does not attack. Give every side an owner id of 2 or above.
+
+**The runs are not deterministic.** AI jobs are scheduled across worker threads,
+so who wins varies between runs of the same scenario, and so does anything
+derived from where the fighting ended up. Expectations that assert on doctrine
+should read the AI's own state -- `SideDoctrineIs`, `SideCommitsToAttack`,
+`SideHoldsPosition` -- rather than on unit positions. Position-derived measures
+like `SideAdvanceAtLeast` conflate doctrine with winning: whoever wins ends up
+marching on the loser's base regardless of temperament.
+
+The report and `report.json` carry, per side: what it built and a census by
+type, units produced, peak units held within its home radius versus pushed past
+the midpoint, seconds spent in an attacking state, how far it advanced, and who
+won and when.
+
 ## Local batch inspection
 
 Batch mode intentionally opens the real Arena OpenGL window. It requires a
