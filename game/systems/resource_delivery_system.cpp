@@ -131,6 +131,23 @@ void sync_stockpile_displays(Engine::Core::World* world, float delta_time) {
   }
 }
 
+auto delivery_stand_position(const Engine::Core::TransformComponent& depot,
+                             const StockpilePoint& drop,
+                             const Engine::Core::TransformComponent& hauler)
+    -> QVector3D {
+  QVector3D const wanted(drop.x, hauler.position.y, drop.z);
+  QVector3D stand = NavGrid::snap_to_walkable_ground(wanted);
+
+  float const snap_dx = stand.x() - drop.x;
+  float const snap_dz = stand.z() - drop.z;
+  if (((snap_dx * snap_dx) + (snap_dz * snap_dz)) >
+      (k_stockpile_depot_arrival_radius * k_stockpile_depot_arrival_radius)) {
+    stand = NavGrid::snap_to_walkable_ground(
+        QVector3D(depot.position.x, hauler.position.y, depot.position.z));
+  }
+  return stand;
+}
+
 auto hauler_is_free_to_walk(const Engine::Core::Entity& hauler) -> bool {
   const auto* builder =
       hauler.get_component<Engine::Core::BuilderProductionComponent>();
@@ -191,9 +208,15 @@ void ResourceDeliverySystem::update(Engine::Core::World* world, float delta_time
     carry->depot_x = drop.x;
     carry->depot_z = drop.z;
 
+    QVector3D const stand = delivery_stand_position(*depot_transform, drop, *transform);
+
     float const dx = drop.x - transform->position.x;
     float const dz = drop.z - transform->position.z;
     float const dist_sq = (dx * dx) + (dz * dz);
+
+    float const stand_dx = stand.x() - transform->position.x;
+    float const stand_dz = stand.z() - transform->position.z;
+    float const stand_dist_sq = (stand_dx * stand_dx) + (stand_dz * stand_dz);
 
     float const depot_dx = depot_transform->position.x - transform->position.x;
     float const depot_dz = depot_transform->position.z - transform->position.z;
@@ -204,6 +227,7 @@ void ResourceDeliverySystem::update(Engine::Core::World* world, float delta_time
         carry->haul_seconds >= k_stockpile_haul_patience_seconds;
 
     if (dist_sq <= k_stockpile_drop_radius * k_stockpile_drop_radius ||
+        stand_dist_sq <= k_stockpile_drop_radius * k_stockpile_drop_radius ||
         (out_of_patience && depot_dist_sq <= k_stockpile_depot_arrival_radius *
                                                  k_stockpile_depot_arrival_radius)) {
       credit_load(*world, unit->owner_id, *carry);
@@ -222,19 +246,8 @@ void ResourceDeliverySystem::update(Engine::Core::World* world, float delta_time
       continue;
     }
 
-    QVector3D target = NavGrid::snap_to_walkable_ground(
-        QVector3D(drop.x, transform->position.y, drop.z));
-
-    float const snap_dx = target.x() - drop.x;
-    float const snap_dz = target.z() - drop.z;
-    if (((snap_dx * snap_dx) + (snap_dz * snap_dz)) >
-        (k_stockpile_drop_radius * k_stockpile_drop_radius)) {
-      target = NavGrid::snap_to_walkable_ground(QVector3D(depot_transform->position.x,
-                                                          transform->position.y,
-                                                          depot_transform->position.z));
-    }
     CommandService::move_unit(
-        *world, hauler->get_id(), target, {.kind = MoveOrderKind::ScriptedMove});
+        *world, hauler->get_id(), stand, {.kind = MoveOrderKind::ScriptedMove});
     carry->haul_repath_cooldown = k_haul_repath_interval;
   }
 

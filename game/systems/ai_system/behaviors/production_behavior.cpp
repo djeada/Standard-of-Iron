@@ -56,6 +56,20 @@ constexpr float k_rally_tolerance_sq = 4.0F;
   return candidates;
 }
 
+[[nodiscard]] auto cheapest_fighting_cost(const Game::Systems::Nation& nation) -> int {
+  int cheapest = std::numeric_limits<int>::max();
+  for (const auto& troop : nation.available_troops) {
+    if (Game::Units::is_commander_troop(troop.unit_type) ||
+        troop.unit_type == Game::Units::TroopType::Builder ||
+        troop.unit_type == Game::Units::TroopType::Civilian ||
+        !is_recruitable_from(troop, Game::Units::SpawnType::Barracks)) {
+      continue;
+    }
+    cheapest = std::min(cheapest, troop.cost);
+  }
+  return cheapest == std::numeric_limits<int>::max() ? 0 : cheapest;
+}
+
 [[nodiscard]] auto affordable(const Game::Systems::TroopType& troop,
                               const ProductionSnapshot& production,
                               const Game::Systems::ResourceAmounts& stock) -> bool {
@@ -110,6 +124,16 @@ void ProductionBehavior::execute(const AISnapshot& snapshot,
   else if (context.builder_count < desired_builders &&
            (m_production_counter % BUILDER_PRODUCTION_INTERVAL == 0)) {
     should_produce_builder = true;
+  }
+
+  constexpr int k_bootstrap_builders = 2;
+  if (should_produce_builder && context.builder_count >= k_bootstrap_builders) {
+    const auto* builder_troop = nation->get_troop(Game::Units::TroopType::Builder);
+    const int soldier_cost = cheapest_fighting_cost(*nation);
+    if (builder_troop != nullptr && soldier_cost > 0 &&
+        context.recruitment_manpower_available - builder_troop->cost < soldier_cost) {
+      should_produce_builder = false;
+    }
   }
 
   const Game::Systems::TroopType* troop_type = nullptr;
@@ -317,7 +341,7 @@ void ProductionBehavior::deliver_idle_civilians(
       continue;
     }
 
-    if (entity.movement.has_component && entity.movement.has_target) {
+    if (entity.has_delivery_order) {
       continue;
     }
 

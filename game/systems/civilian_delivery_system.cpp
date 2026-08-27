@@ -22,6 +22,8 @@ auto barracks_delivery_clearance() -> float {
   return BuildingCollisionRegistry::get_grid_padding() + unit_radius + 0.75F;
 }
 
+constexpr float k_delivery_settle_radius = 9.0F;
+
 auto is_at_barracks_delivery_edge(
     const Engine::Core::TransformComponent& civilian_transform,
     const Engine::Core::TransformComponent& barracks_transform) -> bool {
@@ -81,7 +83,21 @@ void CivilianDeliverySystem::update(Engine::Core::World* world, float) {
       continue;
     }
 
-    if (!is_at_barracks_delivery_edge(*civilian_transform, *barracks_transform)) {
+    const auto* civilian_movement =
+        world->try_get<Engine::Core::MovementComponent>(civilian_id);
+    const bool walk_is_over =
+        civilian_movement == nullptr || !civilian_movement->get_has_target();
+    const float to_barracks_x =
+        civilian_transform->position.x - barracks_transform->position.x;
+    const float to_barracks_z =
+        civilian_transform->position.z - barracks_transform->position.z;
+    const bool settled_beside_it =
+        walk_is_over &&
+        ((to_barracks_x * to_barracks_x) + (to_barracks_z * to_barracks_z)) <=
+            (k_delivery_settle_radius * k_delivery_settle_radius);
+
+    if (!is_at_barracks_delivery_edge(*civilian_transform, *barracks_transform) &&
+        !settled_beside_it) {
       continue;
     }
 

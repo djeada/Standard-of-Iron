@@ -94,13 +94,22 @@ build/bin/arena_app --batch --scenario ai_duel_scipio_vs_fabius \
 ```
 
 `ai_duel_*` is the scenario family that verifies commander doctrines are
-actually reaching the computer opponent. Each side starts with a commander and
-four builders in opposite corners of the map, facing each other down the
-diagonal, with wood, stone and iron in reach -- and nothing else. No starting
-army, no starting barracks: the lord anchors the settlement, the builders raise
-homes and a barracks, and every soldier either side fields has to be recruited
+actually reaching the computer opponent. Each side starts with a commander, one
+barracks and four builders in opposite corners of the map, facing each other
+down the diagonal, with wood, stone and iron in reach -- and nothing else. No
+starting army and no homes: the builders have to raise the housing, break the
+fields that feed it, and every soldier either side fields has to be recruited
 out of that. They play until one side has no units and no buildings left, and
 the run stops at the decision rather than burning the rest of its duration.
+
+The duel runs for thirty simulated minutes because that is roughly what the
+manpower chain needs: a home raises three families, a family is worth about one
+soldier at the barracks, and a doctrine that gathers waves of six or eight has
+to build the housing for them first. Watching one of these at the renderer's
+pace costs the better part of an hour, so iterate on
+`build/bin/ai_tests --gtest_filter='AiDuelMatchTest.*'` -- the same match
+headless in seconds, with `SOI_DUEL_NARRATE=1` for a per-minute commentary --
+and come here to see it.
 
 Between the two camps runs a river with a single bridge, and hills of several
 shapes -- crowned, ridge, elbow, arc -- sit on both approaches. An attack has to
