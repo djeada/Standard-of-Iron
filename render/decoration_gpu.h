@@ -130,6 +130,10 @@ struct PropBatchParams {
 
   QVector3D light_direction = default_light_direction();
   float time = 0.0F;
+
+  // How strong this batch's supernatural glow is. Negative means "whatever this
+  // species defaults to", which is what every batch but iron ore wants.
+  float magic_strength = -1.0F;
 };
 
 } // namespace Render::GL

@@ -65,11 +65,9 @@ void RuntimeFrameOrchestrator::advance_simulation(
                       if (simulation_step) {
                         simulation_step(step);
                       }
-                      if (scene.environment_clock != nullptr) {
-                        scene.environment_clock->update(step, false);
-                      }
                     });
   }
+
   state.dropped_simulation_ticks = session.clock().consume_dropped_ticks();
 }
 
@@ -91,6 +89,15 @@ void RuntimeFrameOrchestrator::update(const AppSceneContext& scene,
   if (scene.world != nullptr && ambient_state_manager != nullptr) {
     ambient_state_manager->update(
         dt, scene.world, state.local_owner_id, entity_cache, victory_state);
+  }
+
+  // The day runs in real time, not battle time. The sun used to advance once
+  // per simulation tick, so the speed control moved it too: at 4x a full day
+  // passed every ten minutes of play, and the setting a player uses most left
+  // them fighting in the dark for half the match. Speeding up a battle speeds
+  // up the battle. A paused match holds the hour where it was.
+  if (scene.environment_clock != nullptr && time_scale > 0.0) {
+    scene.environment_clock->update(frame_seconds, false);
   }
 
   if (scene.renderer != nullptr) {

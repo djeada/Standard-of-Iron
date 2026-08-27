@@ -15,6 +15,7 @@
 #include <cstdint>
 #include <cstring>
 #include <memory>
+#include <optional>
 #include <thread>
 #include <utility>
 #include <vector>
@@ -287,11 +288,31 @@ void MiniaudioBackend::finish_job(const DecodeJob& job, bool decoded) {
     release_slot(job.track);
   }
 
-  QMutexLocker const locker(&m_decode_mutex);
-  m_pending_slots.remove(job.track);
-  --m_decode_in_flight;
-  if (m_decode_jobs.empty() && m_decode_bulk_jobs.empty() && m_decode_in_flight == 0) {
-    m_decode_idle.wakeAll();
+  std::optional<DeferredLoop> deferred;
+  {
+    QMutexLocker const locker(&m_decode_mutex);
+    m_pending_slots.remove(job.track);
+    if (const auto held = m_deferred_loops.constFind(job.track);
+        held != m_deferred_loops.constEnd()) {
+      if (decoded) {
+        deferred = held.value();
+      }
+      m_deferred_loops.remove(job.track);
+    }
+    --m_decode_in_flight;
+    if (m_decode_jobs.empty() && m_decode_bulk_jobs.empty() &&
+        m_decode_in_flight == 0) {
+      m_decode_idle.wakeAll();
+    }
+  }
+
+  if (deferred.has_value()) {
+    Game::Audio::AudioCommand command;
+    command.type = Game::Audio::AudioCommand::Type::PlaySound;
+    command.track = static_cast<std::int16_t>(job.track);
+    command.volume = deferred->volume;
+    command.loop = true;
+    submit(command);
   }
 }
 
@@ -309,6 +330,10 @@ void MiniaudioBackend::release_slot(int slot) {
   m_track_table[slot].store(nullptr, std::memory_order_release);
   m_track_storage[slot].reset();
   m_slot_taken[slot] = false;
+  {
+    QMutexLocker const decode_locker(&m_decode_mutex);
+    m_deferred_loops.remove(slot);
+  }
 }
 
 void MiniaudioBackend::wait_for_track(const QString& id) {
@@ -364,6 +389,27 @@ auto MiniaudioBackend::is_track_decode_pending(const QString& id) const -> bool 
   }
   QMutexLocker const locker(&m_decode_mutex);
   return m_pending_slots.contains(slot);
+}
+
+auto MiniaudioBackend::analysis_for(const QString& id,
+                                    const float* pcm,
+                                    std::size_t frames)
+    -> Game::Audio::Mastering::Analysis {
+  {
+    QMutexLocker const locker(&m_analysis_cache_mutex);
+    if (const auto cached = m_analysis_cache.constFind(id);
+        cached != m_analysis_cache.constEnd() && cached->frames == frames) {
+      return cached->analysis;
+    }
+  }
+
+  const Game::Audio::Mastering::Analysis analysis = Game::Audio::Mastering::analyse(
+      pcm, frames, DEFAULT_OUTPUT_CHANNELS, m_sample_rate);
+  m_analyses_computed.fetch_add(1, std::memory_order_relaxed);
+
+  QMutexLocker const locker(&m_analysis_cache_mutex);
+  m_analysis_cache.insert(id, CachedAnalysis{frames, analysis});
+  return analysis;
 }
 
 auto MiniaudioBackend::decode_into_slot(const DecodeJob& job) -> bool {
@@ -431,8 +477,8 @@ auto MiniaudioBackend::decode_into_slot(const DecodeJob& job) -> bool {
   log_resample(job.id, resampled);
 
   auto frame_count = pcm.size() / DEFAULT_OUTPUT_CHANNELS;
-  const Game::Audio::Mastering::Analysis analysis = Game::Audio::Mastering::analyse(
-      pcm.data(), frame_count, DEFAULT_OUTPUT_CHANNELS, m_sample_rate);
+  const Game::Audio::Mastering::Analysis analysis =
+      analysis_for(job.id, pcm.data(), frame_count);
   const Game::Audio::Mastering::Report report =
       Game::Audio::Mastering::apply(pcm.data(),
                                     frame_count,
@@ -656,7 +702,14 @@ void MiniaudioBackend::play_sound(const QString& id, float volume, bool loop) {
   const int slot = find_track_slot(id);
   if (slot < 0 || m_track_table[slot].load(std::memory_order_acquire) == nullptr) {
     if (is_track_decode_pending(id)) {
-      qDebug() << "MiniaudioBackend: Sound still decoding, skipping play:" << id;
+      if (loop) {
+        // Hold the request and start it the moment the decode lands. A bed asked
+        // for during a load would otherwise be lost for the whole match.
+        QMutexLocker const locker(&m_decode_mutex);
+        m_deferred_loops.insert(slot, DeferredLoop{sanitize_backend_volume(volume)});
+      } else {
+        qDebug() << "MiniaudioBackend: Sound still decoding, skipping play:" << id;
+      }
     } else {
       qWarning() << "MiniaudioBackend: Sound not ready:" << id;
     }
@@ -687,6 +740,11 @@ void MiniaudioBackend::stop_sound(const QString& id) {
   const int slot = find_track_slot(id);
   if (slot < 0) {
     return;
+  }
+  {
+    // A bed stopped before its decode landed must not start when it does.
+    QMutexLocker const locker(&m_decode_mutex);
+    m_deferred_loops.remove(slot);
   }
   Game::Audio::AudioCommand command;
   command.type = Game::Audio::AudioCommand::Type::StopSound;

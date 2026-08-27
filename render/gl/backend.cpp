@@ -47,6 +47,7 @@
 #include "decoration_gpu.h"
 #include "directional_shadow_block.h"
 #include "gl/resources.h"
+#include "gl_lifetime.h"
 #include "mesh.h"
 #include "platform_gl.h"
 #include "render/draw_queue.h"
@@ -434,6 +435,11 @@ void Backend::update_contact_shadow_uniforms() {
 }
 
 void Backend::begin_frame() {
+  // GL objects freed by a match teardown on the GUI thread are queued rather
+  // than abandoned; this is the first point each frame where a context is
+  // certainly current, so this is where they actually go.
+  drain_deferred_gl_deletes();
+
   sync_graphics_profile();
   if (m_viewport_width > 0 && m_viewport_height > 0) {
     glViewport(0, 0, m_viewport_width, m_viewport_height);
