@@ -153,12 +153,31 @@ void reset_humanoid_animation_state(
     return Animation::SwordAttackAnimation::RpgThrust;
   case Game::Systems::CombatActions::CombatActionId::RpgSwordFinisher:
     return Animation::SwordAttackAnimation::RpgFinisher;
+  case Game::Systems::CombatActions::CombatActionId::CommanderSwordSpin:
+    return Animation::SwordAttackAnimation::RpgSlashRight;
+  case Game::Systems::CombatActions::CombatActionId::CommanderSwordLauncher:
+    return Animation::SwordAttackAnimation::RpgOverhead;
+  case Game::Systems::CombatActions::CombatActionId::CommanderSwordGapCloser:
+    return Animation::SwordAttackAnimation::RpgThrust;
+  case Game::Systems::CombatActions::CombatActionId::CommanderSwordAirLight:
+    return Animation::SwordAttackAnimation::RpgSlashLeft;
+  case Game::Systems::CombatActions::CombatActionId::CommanderSwordAirReverse:
+    return Animation::SwordAttackAnimation::RpgSlashRight;
+  case Game::Systems::CombatActions::CombatActionId::CommanderSwordDive:
+    return Animation::SwordAttackAnimation::RpgFinisher;
   case Game::Systems::CombatActions::CombatActionId::MountedSwordSlash:
     return Animation::SwordAttackAnimation::RpgSlashRight;
   case Game::Systems::CombatActions::CombatActionId::RpgSpearThrust:
+  case Game::Systems::CombatActions::CombatActionId::CommanderSpearStepThrust:
   case Game::Systems::CombatActions::CombatActionId::RpgSpearSweep:
   case Game::Systems::CombatActions::CombatActionId::RpgSpearFinisher:
+  case Game::Systems::CombatActions::CombatActionId::CommanderSpearLauncher:
+  case Game::Systems::CombatActions::CombatActionId::CommanderSpearGapCloser:
+  case Game::Systems::CombatActions::CombatActionId::CommanderSpearAirThrust:
+  case Game::Systems::CombatActions::CombatActionId::CommanderSpearDive:
   case Game::Systems::CombatActions::CombatActionId::RpgBowShot:
+  case Game::Systems::CombatActions::CombatActionId::CommanderBowPowerShot:
+  case Game::Systems::CombatActions::CombatActionId::CommanderBowEvasiveShot:
   case Game::Systems::CombatActions::CombatActionId::MountedSpearThrust:
   case Game::Systems::CombatActions::CombatActionId::MountedChargeImpact:
   case Game::Systems::CombatActions::CombatActionId::RtsSpearThrust:
