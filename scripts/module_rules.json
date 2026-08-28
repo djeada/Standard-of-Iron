@@ -93,6 +93,7 @@
         "game/systems/building_collision_registry",
         "game/systems/building_line_of_sight",
         "game/systems/combat_rules",
+        "game/systems/economy_feedback",
         "game/systems/global_stats_registry",
         "game/systems/healing_colors",
         "game/systems/mission_wave_query",

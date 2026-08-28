@@ -1736,6 +1736,13 @@ Dies ist vielleicht ein Scharmützel, oder es wurden keine Ziele festgelegt.</tr
     </message>
 </context>
 <context>
+    <name>FloatingNumbers</name>
+    <message>
+        <source>POP</source>
+        <translation>BEV</translation>
+    </message>
+</context>
+<context>
     <name>FocusTarget</name>
     <message>
         <source>Barracks</source>
@@ -8079,6 +8086,14 @@ Baumeister ernten es als Nahrung, die Zivilisten rekrutiert</translation>
     <message>
         <source>Scales keyboard panning, zooming and rotation; drag and minimap movement stay unchanged.</source>
         <translation>Skaliert Schwenken, Zoomen und Drehen über die Tastatur; Ziehen und Bewegungen auf der Minimap bleiben unverändert.</translation>
+    </message>
+    <message>
+        <source>Economy numbers</source>
+        <translation>Wirtschaftszahlen</translation>
+    </message>
+    <message>
+        <source>Floats resource, trade and population changes over the building they happened at</source>
+        <translation>Zeigt Änderungen an Rohstoffen, Handel und Bevölkerung über dem Gebäude an, an dem sie geschehen sind</translation>
     </message>
 </context>
 <context>

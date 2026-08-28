@@ -636,10 +636,27 @@ void GameEngine::build_services_and_controllers() {
             if (m_world == nullptr) {
               return;
             }
-            if (!m_commander_view_model->record_rpg_hit(e)) {
-              m_activity_view_model->record_hit(e);
+            using HitRouting = App::ViewModels::CommanderViewModel::HitRouting;
+            switch (m_commander_view_model->classify_hit(e)) {
+            case HitRouting::Rts:
+              m_activity_view_model->record_hit(e, App::Core::FeedbackStyle::Tick);
+              break;
+            case HitRouting::CommanderBurst:
+              m_activity_view_model->record_hit(e, App::Core::FeedbackStyle::Burst);
+              break;
+            case HitRouting::Suppressed:
+              break;
             }
             note_minimap_combat_hit(e);
+          });
+
+  m_economy_feedback_subscription =
+      Engine::Core::ScopedEventSubscription<Engine::Core::EconomyFeedbackEvent>(
+          [this](const Engine::Core::EconomyFeedbackEvent& e) {
+            if (m_world == nullptr) {
+              return;
+            }
+            m_activity_view_model->record_economy(e);
           });
 
   m_barrack_captured_subscription =

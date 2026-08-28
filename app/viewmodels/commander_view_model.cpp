@@ -3,7 +3,6 @@
 #include <QQuickWindow>
 
 #include <algorithm>
-#include <mutex>
 #include <utility>
 #include <vector>
 
@@ -741,10 +740,6 @@ void CommanderViewModel::reset_for_new_match() {
   m_saved_rts_selection_ids.clear();
   m_rts_follow_selection_snapshot.reset();
   m_rally_preview.reset();
-  {
-    const std::lock_guard<std::mutex> damage_lock(m_damage_events_mutex);
-    m_damage_events.clear();
-  }
 }
 
 auto CommanderViewModel::status() const -> QVariantMap {
@@ -770,72 +765,15 @@ void CommanderViewModel::publish_frame() {
   m_status.publish(App::Core::build_controlled_commander_status(input));
 }
 
-auto CommanderViewModel::record_rpg_hit(const Engine::Core::CombatHitEvent& event)
-    -> bool {
-  auto* world = m_context.world;
-  if (world == nullptr || m_controlled_commander_id == 0) {
-    return false;
+auto CommanderViewModel::classify_hit(const Engine::Core::CombatHitEvent& event) const
+    -> HitRouting {
+  if (m_context.world == nullptr || m_controlled_commander_id == 0) {
+    return HitRouting::Rts;
   }
   if (event.attacker_id != m_controlled_commander_id) {
-    return true;
+    return HitRouting::Suppressed;
   }
-  auto* target = world->get_entity(event.target_id);
-  if (target == nullptr) {
-    return true;
-  }
-  const auto* transform = target->get_component<Engine::Core::TransformComponent>();
-  if (transform == nullptr) {
-    return true;
-  }
-
-  float max_health = 0.0F;
-  if (const auto* unit = target->get_component<Engine::Core::UnitComponent>();
-      unit != nullptr && unit->max_health > 0) {
-    max_health = static_cast<float>(unit->max_health);
-  }
-
-  const float damage_ratio =
-      max_health > 0.0F
-          ? std::clamp(static_cast<float>(event.damage) / max_health, 0.0F, 1.5F)
-          : 0.0F;
-  const int lane = static_cast<int>(m_damage_event_sequence % 5U) - 2;
-  ++m_damage_event_sequence;
-
-  const std::lock_guard<std::mutex> damage_lock(m_damage_events_mutex);
-  if (static_cast<int>(m_damage_events.size()) >= k_max_damage_events) {
-    m_damage_events.erase(m_damage_events.begin());
-  }
-  m_damage_events.push_back({transform->position.x,
-                             transform->position.y + 1.8F,
-                             transform->position.z,
-                             event.damage,
-                             damage_ratio,
-                             lane,
-                             event.is_killing_blow});
-  return true;
-}
-
-auto CommanderViewModel::pop_damage_events() -> QVariantList {
-  std::vector<DamageEvent> events;
-  {
-    const std::lock_guard<std::mutex> damage_lock(m_damage_events_mutex);
-    events.swap(m_damage_events);
-  }
-
-  QVariantList list;
-  list.reserve(static_cast<int>(events.size()));
-  for (const auto& event : events) {
-    QVariantMap entry;
-    entry["x"] = static_cast<double>(event.wx);
-    entry["y"] = static_cast<double>(event.wy);
-    entry["z"] = static_cast<double>(event.wz);
-    entry["damage"] = event.damage;
-    entry["damageRatio"] = static_cast<double>(event.damage_ratio);
-    entry["lane"] = event.lane;
-    entry["killingBlow"] = event.killing_blow;
-    list.append(entry);
-  }
-  return list;
+  return HitRouting::CommanderBurst;
 }
 
 } // namespace App::ViewModels

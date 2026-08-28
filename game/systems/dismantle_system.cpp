@@ -11,6 +11,7 @@
 #include "builder_product_types.h"
 #include "combat_system/damage_application.h"
 #include "construction_cost_catalog.h"
+#include "economy_feedback.h"
 #include "player_resource_registry.h"
 #include "resource_types.h"
 
@@ -104,9 +105,10 @@ void DismantleSystem::update(Engine::Core::World* world, float delta_time) {
     if (structure == nullptr || unit == nullptr) {
       continue;
     }
-    grant_resources(
-        unit->owner_id,
-        dismantle_refund(Game::Units::spawn_typeToString(unit->spawn_type)));
+    const auto refund =
+        dismantle_refund(Game::Units::spawn_typeToString(unit->spawn_type));
+    grant_resources(unit->owner_id, refund);
+    publish_resource_bundle(unit->owner_id, structure_id, refund, 1);
     release_crew(world, structure_id);
     world->remove<Engine::Core::DismantleSiteComponent>(structure_id);
     Engine::Core::EventManager::instance().publish(

@@ -1736,6 +1736,13 @@ This may be a skirmish, or objectives have not been configured.</source>
     </message>
 </context>
 <context>
+    <name>FloatingNumbers</name>
+    <message>
+        <source>POP</source>
+        <translation>سكان</translation>
+    </message>
+</context>
+<context>
     <name>FocusTarget</name>
     <message>
         <source>Barracks</source>
@@ -8091,6 +8098,14 @@ Builders reap it for the food that recruits civilians</source>
     <message>
         <source>Scales keyboard panning, zooming and rotation; drag and minimap movement stay unchanged.</source>
         <translation>يضبط التحريك والتقريب والتدوير بلوحة المفاتيح؛ يبقى السحب والحركة عبر الخريطة المصغرة دون تغيير.</translation>
+    </message>
+    <message>
+        <source>Economy numbers</source>
+        <translation>أرقام الاقتصاد</translation>
+    </message>
+    <message>
+        <source>Floats resource, trade and population changes over the building they happened at</source>
+        <translation>يعرض تغيّرات الموارد والتجارة والسكان فوق المبنى الذي حدثت فيه</translation>
     </message>
 </context>
 <context>

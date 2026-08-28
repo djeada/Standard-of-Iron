@@ -5,11 +5,12 @@
 #include <QVariantList>
 #include <QVariantMap>
 
-#include "app/world/combat_feedback.h"
+#include "app/world/world_feedback.h"
 
 namespace Engine::Core {
 class CombatHitEvent;
-}
+class EconomyFeedbackEvent;
+} // namespace Engine::Core
 
 namespace App::Core {
 struct ClientContext;
@@ -50,7 +51,7 @@ public:
                                    const QString& priority_product_type = {});
 
   Q_INVOKABLE void clear_inspect_target();
-  Q_INVOKABLE [[nodiscard]] QVariantList pop_combat_damage_events();
+  Q_INVOKABLE [[nodiscard]] QVariantList pop_feedback_ticks();
   Q_INVOKABLE [[nodiscard]] QVariantList pop_player_feedback_events();
 
   [[nodiscard]] auto inspect_target() const -> QVariantMap { return m_inspect_target; }
@@ -68,8 +69,11 @@ public:
   }
   void set_interaction_target_hint(const QVariantMap& hint);
 
-  void record_hit(const Engine::Core::CombatHitEvent& event);
+  void record_hit(const Engine::Core::CombatHitEvent& event,
+                  App::Core::FeedbackStyle style);
+  void record_economy(const Engine::Core::EconomyFeedbackEvent& event);
   void advance_feedback(float dt) { m_feedback.update(dt); }
+  void clear_feedback() { m_feedback.clear(); }
 
 signals:
   void attack_target_hint_changed();
@@ -82,7 +86,7 @@ private:
   const App::Core::ClientContext& m_context;
   App::Core::ClientHost& m_host;
 
-  App::Core::CombatFeedbackStore m_feedback;
+  App::Core::WorldFeedbackStore m_feedback;
   QVariantMap m_attack_target_hint;
   QVariantMap m_interaction_target_hint;
   QVariantMap m_inspect_target;

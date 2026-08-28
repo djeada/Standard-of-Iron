@@ -16,6 +16,7 @@
 #include "../systems/combat_rules.h"
 #include "../systems/command_service.h"
 #include "../systems/construction_cost_catalog.h"
+#include "../systems/economy_feedback.h"
 #include "../systems/food_targets.h"
 #include "../systems/gate_service.h"
 #include "../systems/marketplace_system.h"
@@ -455,6 +456,8 @@ void apply_start_construction(World& world,
   }
   if (assigned_any) {
     resources.spend(owner_id, costs);
+    Game::Systems::publish_resource_bundle_at(
+        owner_id, order.site.x(), order.site.y(), order.site.z(), costs, -1);
   }
 }
 
