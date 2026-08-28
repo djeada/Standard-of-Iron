@@ -1,38 +1,52 @@
 #include <gtest/gtest.h>
 
-#include "app/world/combat_feedback.h"
 #include "app/world/focus_target.h"
+#include "app/world/world_feedback.h"
 #include "game/core/component.h"
 #include "game/core/world.h"
 
 namespace {
 
-using App::Core::CombatFeedbackStore;
-using App::Core::CombatHitFeedback;
+using App::Core::FeedbackKind;
+using App::Core::FeedbackStyle;
+using App::Core::WorldFeedbackStore;
+using App::Core::WorldFeedbackTick;
 
 auto hit_on(Engine::Core::EntityID target,
             int damage,
             bool incoming = true,
-            bool killing = false) -> CombatHitFeedback {
-  CombatHitFeedback hit;
-  hit.target = target;
-  hit.damage = damage;
-  hit.damage_ratio = static_cast<float>(damage) / 100.0F;
+            bool killing = false) -> WorldFeedbackTick {
+  WorldFeedbackTick hit;
+  hit.anchor = target;
+  hit.kind = FeedbackKind::Damage;
+  hit.amount = damage;
+  hit.severity = static_cast<float>(damage) / 100.0F;
   hit.incoming = incoming;
   hit.outgoing = !incoming;
   hit.killing_blow = killing;
   return hit;
 }
 
-TEST(CombatFeedbackStoreTest, HitsOnTheSameTargetWithinTheWindowCoalesce) {
-  CombatFeedbackStore store;
+auto resource_on(Engine::Core::EntityID anchor,
+                 int resource,
+                 int amount) -> WorldFeedbackTick {
+  WorldFeedbackTick tick;
+  tick.anchor = anchor;
+  tick.kind = FeedbackKind::Resource;
+  tick.resource = resource;
+  tick.amount = amount;
+  return tick;
+}
+
+TEST(WorldFeedbackStoreTest, HitsOnTheSameTargetWithinTheWindowCoalesce) {
+  WorldFeedbackStore store;
   store.push(hit_on(7, 10));
   store.update(0.03F);
   store.push(hit_on(7, 15));
   store.push(hit_on(9, 5));
 
   ASSERT_EQ(store.pending().size(), 2U);
-  EXPECT_EQ(store.pending().front().damage, 25);
+  EXPECT_EQ(store.pending().front().amount, 25);
   EXPECT_EQ(store.pending().front().hits, 2);
 
   EXPECT_TRUE(store.pop_ready().empty()) << "nothing is released before the window";
@@ -42,21 +56,22 @@ TEST(CombatFeedbackStoreTest, HitsOnTheSameTargetWithinTheWindowCoalesce) {
   EXPECT_TRUE(store.pending().empty());
 }
 
-TEST(CombatFeedbackStoreTest, KillingBlowsAreReleasedImmediatelyAndAbsorbEarlierHits) {
-  CombatFeedbackStore store;
+TEST(WorldFeedbackStoreTest, KillingBlowsAreReleasedImmediatelyAndAbsorbEarlierHits) {
+  WorldFeedbackStore store;
   store.push(hit_on(7, 10));
   store.push(hit_on(7, 40, true, true));
 
   const auto ready = store.pop_ready();
   ASSERT_EQ(ready.size(), 1U);
   EXPECT_TRUE(ready.front().killing_blow);
-  EXPECT_EQ(ready.front().damage, 50);
+  EXPECT_EQ(ready.front().amount, 50);
   EXPECT_EQ(ready.front().hits, 2);
 }
 
-TEST(CombatFeedbackStoreTest, TheBudgetDropsTheLeastImportantHitFirst) {
-  CombatFeedbackStore store(
-      CombatFeedbackStore::Limits{.max_pending = 3, .coalesce_window = 0.1F});
+TEST(WorldFeedbackStoreTest, TheBudgetDropsTheLeastImportantHitFirst) {
+  WorldFeedbackStore store(WorldFeedbackStore::Limits{.max_pending_per_kind = 3,
+                                                      .damage_coalesce_window = 0.1F,
+                                                      .economy_coalesce_window = 0.4F});
   store.push(hit_on(1, 5, false));
   store.push(hit_on(2, 6, false));
   store.push(hit_on(3, 7, false));
@@ -69,8 +84,8 @@ TEST(CombatFeedbackStoreTest, TheBudgetDropsTheLeastImportantHitFirst) {
   bool kept_focused = false;
   bool kept_weakest = false;
   for (const auto& hit : store.pending()) {
-    kept_focused = kept_focused || hit.target == 4;
-    kept_weakest = kept_weakest || hit.target == 1;
+    kept_focused = kept_focused || hit.anchor == 4;
+    kept_weakest = kept_weakest || hit.anchor == 1;
   }
   EXPECT_TRUE(kept_focused) << "a hit on the focused unit outranks unfocused chatter";
   EXPECT_FALSE(kept_weakest) << "the smallest unfocused hit is the one that goes";
@@ -80,8 +95,8 @@ TEST(CombatFeedbackStoreTest, TheBudgetDropsTheLeastImportantHitFirst) {
       << "a hit weaker than everything pending is dropped";
 }
 
-TEST(CombatFeedbackStoreTest, ReadyHitsComeOutMostImportantFirst) {
-  CombatFeedbackStore store;
+TEST(WorldFeedbackStoreTest, ReadyHitsComeOutMostImportantFirst) {
+  WorldFeedbackStore store;
   store.push(hit_on(1, 5, false));
   store.push(hit_on(2, 5, true));
   store.push(hit_on(3, 90, false, true));
@@ -90,21 +105,101 @@ TEST(CombatFeedbackStoreTest, ReadyHitsComeOutMostImportantFirst) {
   ASSERT_EQ(ready.size(), 3U);
   EXPECT_TRUE(ready[0].killing_blow);
   EXPECT_TRUE(ready[1].incoming);
-  EXPECT_EQ(ready[2].target, 1U);
+  EXPECT_EQ(ready[2].anchor, 1U);
 }
 
-TEST(CombatFeedbackStoreTest, VariantCarriesTheFieldsTheOverlayReads) {
+TEST(WorldFeedbackStoreTest, VariantCarriesTheFieldsTheOverlayReads) {
   auto hit = hit_on(3, 12, true);
   hit.focused = true;
   hit.hits = 2;
-  const auto list = CombatFeedbackStore::to_variant({hit});
+  const auto list = WorldFeedbackStore::to_variant({hit});
   ASSERT_EQ(list.size(), 1);
   const auto map = list.front().toMap();
-  EXPECT_EQ(map.value("damage").toInt(), 12);
+  EXPECT_EQ(map.value("amount").toInt(), 12);
+  EXPECT_EQ(map.value("kind").toString(), QStringLiteral("damage"));
+  EXPECT_EQ(map.value("style").toString(), QStringLiteral("tick"));
   EXPECT_TRUE(map.value("incoming").toBool());
   EXPECT_TRUE(map.value("focused").toBool());
   EXPECT_EQ(map.value("hits").toInt(), 2);
   EXPECT_FALSE(map.value("killingBlow").toBool());
+}
+
+TEST(WorldFeedbackStoreTest, CommanderBurstsOutrankRtsChatterOfTheSameDamage) {
+  WorldFeedbackStore store(WorldFeedbackStore::Limits{.max_pending_per_kind = 1,
+                                                      .damage_coalesce_window = 0.1F,
+                                                      .economy_coalesce_window = 0.4F});
+  store.push(hit_on(1, 40, false));
+
+  auto burst = hit_on(2, 5, false);
+  burst.style = FeedbackStyle::Burst;
+  store.push(burst);
+
+  ASSERT_EQ(store.pending().size(), 1U);
+  EXPECT_EQ(store.pending().front().style, FeedbackStyle::Burst);
+}
+
+TEST(WorldFeedbackStoreTest, EconomyTicksNeverEvictCombatTicks) {
+  WorldFeedbackStore store(WorldFeedbackStore::Limits{.max_pending_per_kind = 2,
+                                                      .damage_coalesce_window = 0.1F,
+                                                      .economy_coalesce_window = 0.4F});
+  store.push(hit_on(1, 10));
+  store.push(hit_on(2, 10));
+  store.push(resource_on(3, 0, 8));
+  store.push(resource_on(4, 0, 8));
+
+  EXPECT_EQ(store.pending().size(), 4U)
+      << "each kind carries its own budget, so a busy economy cannot starve combat";
+}
+
+TEST(WorldFeedbackStoreTest, DepositsOnOneDepotMergeButDifferentResourcesDoNot) {
+  WorldFeedbackStore store;
+  store.push(resource_on(5, 2, 8));
+  store.push(resource_on(5, 2, 6));
+  store.push(resource_on(5, 3, 4));
+
+  const auto pending = store.pending();
+  ASSERT_EQ(pending.size(), 2U);
+  EXPECT_EQ(pending[0].amount, 14);
+  EXPECT_EQ(pending[0].hits, 2);
+  EXPECT_EQ(pending[1].amount, 4);
+}
+
+TEST(WorldFeedbackStoreTest, SpendAndGainOnOneAnchorStayApart) {
+  WorldFeedbackStore store;
+  store.push(resource_on(5, 0, -40));
+  store.push(resource_on(5, 0, 10));
+
+  const auto pending = store.pending();
+  ASSERT_EQ(pending.size(), 2U)
+      << "a refund must not silently cancel a spend into a single tick";
+}
+
+TEST(WorldFeedbackStoreTest, EconomyTicksWaitLongerThanCombatTicks) {
+  WorldFeedbackStore store;
+  store.push(hit_on(1, 10));
+  store.push(resource_on(2, 0, 5));
+
+  store.update(0.2F);
+  auto ready = store.pop_ready();
+  ASSERT_EQ(ready.size(), 1U);
+  EXPECT_EQ(ready.front().kind, FeedbackKind::Damage);
+
+  store.update(0.4F);
+  ready = store.pop_ready();
+  ASSERT_EQ(ready.size(), 1U);
+  EXPECT_EQ(ready.front().kind, FeedbackKind::Resource);
+}
+
+TEST(WorldFeedbackStoreTest, TradeVariantCarriesBothSides) {
+  auto trade = resource_on(6, 0, -40);
+  trade.paired_resource = 2;
+  trade.paired_amount = 10;
+  const auto map = WorldFeedbackStore::to_variant({trade}).front().toMap();
+  EXPECT_EQ(map.value("amount").toInt(), -40);
+  EXPECT_EQ(map.value("resource").toInt(), 0);
+  EXPECT_EQ(map.value("pairedResource").toInt(), 2);
+  EXPECT_EQ(map.value("pairedAmount").toInt(), 10);
+  EXPECT_EQ(map.value("kind").toString(), QStringLiteral("resource"));
 }
 
 class FocusTargetTest : public ::testing::Test {

@@ -35,6 +35,8 @@ class UiPreferences : public QObject {
   Q_PROPERTY(QString damageNumberMode READ damage_number_mode WRITE
                  set_damage_number_mode NOTIFY damage_number_mode_changed)
   Q_PROPERTY(QStringList damageNumberModes READ damage_number_modes CONSTANT)
+  Q_PROPERTY(bool economyNumbers READ economy_numbers WRITE set_economy_numbers NOTIFY
+                 economy_numbers_changed)
   Q_PROPERTY(bool cameraLegendSeen READ camera_legend_seen WRITE set_camera_legend_seen
                  NOTIFY camera_legend_seen_changed)
   Q_PROPERTY(bool tutorialCompleted READ tutorial_completed WRITE set_tutorial_completed
@@ -97,6 +99,7 @@ public:
     return m_camera_motion_scale;
   }
   [[nodiscard]] auto damage_numbers() const -> bool { return m_damage_numbers; }
+  [[nodiscard]] auto economy_numbers() const -> bool { return m_economy_numbers; }
   [[nodiscard]] auto damage_number_mode() const -> QString {
     return m_damage_number_mode;
   }
@@ -169,6 +172,7 @@ public:
   void set_edge_scroll_sensitivity(qreal sensitivity);
   void set_camera_motion_scale(qreal scale);
   void set_damage_numbers(bool enabled);
+  void set_economy_numbers(bool enabled);
   void set_damage_number_mode(const QString& mode);
   void set_camera_legend_seen(bool seen);
   void set_tutorial_completed(bool completed);
@@ -200,6 +204,7 @@ signals:
   void edge_scroll_sensitivity_changed();
   void camera_motion_scale_changed();
   void damage_numbers_changed();
+  void economy_numbers_changed();
   void damage_number_mode_changed();
   void camera_legend_seen_changed();
   void tutorial_completed_changed();
@@ -234,6 +239,7 @@ private:
   qreal m_commander_field_of_view_scale;
   bool m_commander_guard_is_toggle;
   bool m_damage_numbers;
+  bool m_economy_numbers;
   QString m_damage_number_mode;
   bool m_camera_legend_seen;
   bool m_tutorial_completed;

@@ -98,6 +98,7 @@ add_library(
     visuals/building_asset_key.cpp
     systems/building_collision_registry.cpp
     systems/building_line_of_sight.cpp
+    systems/economy_feedback.cpp
     systems/global_stats_registry.cpp
     systems/nation_loader.cpp
     systems/nation_registry.cpp

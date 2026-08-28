@@ -450,24 +450,33 @@ TEST(CommanderControlRegressionTest,
 TEST(CommanderControlRegressionTest, FpvCommanderHitOverlayUsesRichDamageBurstData) {
   const auto root = find_repo_root();
   const auto view_model_source = app_source(root, "commander_view_model.cpp");
+  const auto store_source = read_text(root / "app" / "world" / "world_feedback.cpp");
   const auto hud_source = read_text(root / "ui" / "qml" / "HUD.qml");
-  const auto damage_numbers_source =
-      read_text(root / "ui" / "qml" / "RpgDamageNumbers.qml");
+  const auto numbers_source = read_text(root / "ui" / "qml" / "FloatingNumbers.qml");
   ASSERT_FALSE(view_model_source.empty());
+  ASSERT_FALSE(store_source.empty());
   ASSERT_FALSE(hud_source.empty());
-  ASSERT_FALSE(damage_numbers_source.empty());
+  ASSERT_FALSE(numbers_source.empty());
+
+  EXPECT_TRUE(contains(view_model_source, "return HitRouting::CommanderBurst;"))
+      << "the commander view model classifies a hit; it no longer owns a second "
+         "damage-number buffer of its own";
+  EXPECT_FALSE(contains(view_model_source, "pop_damage_events"));
 
   EXPECT_TRUE(
-      contains(view_model_source, "entry[\"damageRatio\"] = static_cast<double>("));
-  EXPECT_TRUE(contains(view_model_source, "entry[\"lane\"] = event.lane;"));
-  EXPECT_TRUE(
-      contains(view_model_source, "entry[\"killingBlow\"] = event.killing_blow;"));
+      contains(store_source, "map[QStringLiteral(\"severity\")] = tick.severity;"));
+  EXPECT_TRUE(contains(store_source, "map[QStringLiteral(\"lane\")] = tick.lane;"));
+  EXPECT_TRUE(contains(store_source,
+                       "map[QStringLiteral(\"killingBlow\")] = tick.killing_blow;"));
+  EXPECT_TRUE(contains(store_source, "map[QStringLiteral(\"style\")]"))
+      << "one store feeds both presentations, so the style has to survive the "
+         "trip into QML";
 
   EXPECT_TRUE(contains(hud_source, "game.commander.mode_state === \"active\""));
 
-  EXPECT_TRUE(contains(damage_numbers_source, "property real ringSize"));
-  EXPECT_TRUE(contains(damage_numbers_source, "damageRatio"));
-  EXPECT_TRUE(contains(damage_numbers_source, "killingBlow"));
+  EXPECT_TRUE(contains(numbers_source, "readonly property real ringSize"));
+  EXPECT_TRUE(contains(numbers_source, "severityRatio"));
+  EXPECT_TRUE(contains(numbers_source, "killingBlow"));
 }
 
 TEST(CommanderControlRegressionTest, CommanderRpgHudUsesSingleOverlayPresentation) {
@@ -529,7 +538,7 @@ TEST(CommanderControlRegressionTest,
   const auto root = find_repo_root();
   const auto fpv_overlay_source = read_text(root / "ui" / "qml" / "RpgFpvOverlay.qml");
   const auto damage_numbers_source =
-      read_text(root / "ui" / "qml" / "RpgDamageNumbers.qml");
+      read_text(root / "ui" / "qml" / "FloatingNumbers.qml");
   ASSERT_FALSE(fpv_overlay_source.empty());
   ASSERT_FALSE(damage_numbers_source.empty());
 
@@ -557,9 +566,36 @@ TEST(CommanderControlRegressionTest,
   EXPECT_TRUE(contains(fpv_overlay_source, "\"key\": \"1\""));
   EXPECT_TRUE(contains(fpv_overlay_source, "\"key\": \"2\""));
   EXPECT_TRUE(contains(damage_numbers_source, "id: burstCore"));
-  EXPECT_TRUE(contains(damage_numbers_source, "id: effectLayer"));
+  EXPECT_TRUE(contains(damage_numbers_source, "id: burstLayer"));
+  EXPECT_TRUE(contains(damage_numbers_source, "id: tickLayer"));
   EXPECT_FALSE(contains(damage_numbers_source, "impactFlashOpacity"));
   EXPECT_FALSE(contains(damage_numbers_source, "impactFlashDecay"));
+}
+
+TEST(CommanderControlRegressionTest, WorldAnchoredOverlaysShareOneProjectionClock) {
+  const auto root = find_repo_root();
+  const auto qml = root / "ui" / "qml";
+  const auto hud_source = read_text(qml / "HUD.qml");
+  const auto projector_source = read_text(qml / "WorldProjector.qml");
+  ASSERT_FALSE(hud_source.empty());
+  ASSERT_FALSE(projector_source.empty());
+
+  EXPECT_TRUE(contains(hud_source, "id: worldProjector"));
+  EXPECT_EQ(3, occurrences(hud_source, "projector: worldProjector"))
+      << "the numbers layer, the FPV overlay and the tutorial markers all hang "
+         "off the one clock";
+
+  for (const char* overlay :
+       {"FloatingNumbers.qml", "RpgFpvOverlay.qml", "TutorialFocusOverlay.qml"}) {
+    const auto source = read_text(qml / overlay);
+    ASSERT_FALSE(source.empty()) << overlay;
+    EXPECT_FALSE(contains(source, "project_world"))
+        << overlay
+        << " must go through WorldProjector.project so one timer drives every "
+           "world-anchored overlay";
+  }
+
+  EXPECT_TRUE(contains(projector_source, "onTriggered: root.tick++"));
 }
 
 TEST(CommanderControlRegressionTest, MainWindowHidesCursorDuringFpvCommanderGameplay) {

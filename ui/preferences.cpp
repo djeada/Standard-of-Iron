@@ -53,6 +53,7 @@ UiPreferences::UiPreferences(QObject* parent)
     , m_commander_guard_is_toggle(UserSettings::load_commander_guard_is_toggle())
     , m_damage_numbers(UserSettings::load_ui_damage_numbers())
     , m_damage_number_mode(UserSettings::load_ui_damage_number_mode())
+    , m_economy_numbers(UserSettings::load_ui_economy_numbers())
     , m_camera_legend_seen(UserSettings::load_ui_camera_legend_seen())
     , m_tutorial_completed(UserSettings::load_ui_tutorial_completed())
     , m_screen_effect_intensity(UserSettings::load_ui_screen_effect_intensity())
@@ -471,6 +472,15 @@ void UiPreferences::set_damage_number_mode(const QString& mode) {
   }
 }
 
+void UiPreferences::set_economy_numbers(bool enabled) {
+  if (enabled == m_economy_numbers) {
+    return;
+  }
+  m_economy_numbers = enabled;
+  UserSettings::save_ui_economy_numbers(enabled);
+  emit economy_numbers_changed();
+}
+
 void UiPreferences::set_screen_effect_intensity(qreal intensity) {
   if (!is_finite_scale(intensity)) {
     return;
@@ -497,6 +507,7 @@ void UiPreferences::reset_to_defaults() {
   set_edge_scroll_sensitivity(UserSettings::kDefaultEdgeScrollSensitivity);
   set_camera_motion_scale(UserSettings::kDefaultCameraMotionScale);
   set_damage_number_mode(QStringLiteral("all"));
+  set_economy_numbers(true);
   set_camera_legend_seen(false);
   set_screen_effect_intensity(UserSettings::kDefaultScreenEffectIntensity);
   set_commander_look_sensitivity_x(UserSettings::kDefaultCommanderLookSensitivity);

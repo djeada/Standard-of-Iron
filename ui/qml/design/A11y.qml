@@ -20,6 +20,7 @@ QtObject {
     readonly property bool damageNumbers: Core.UiPreferences.damageNumbers
     readonly property string damageNumberMode: Core.UiPreferences.damageNumberMode
     readonly property bool importantDamageNumbersOnly: damageNumberMode === "important"
+    readonly property bool economyNumbers: Core.UiPreferences.economyNumbers
     readonly property real screenEffectIntensity: Core.UiPreferences.screenEffectIntensity
 
     readonly property bool colorVisionAdjusted: colorVisionMode !== "none"
