@@ -611,6 +611,7 @@ public:
   std::uint16_t last_hit_soldier_slot{RpgCommanderTargetComponent::k_no_soldier_slot};
   static constexpr std::size_t k_max_action_hit_targets = 8;
   std::array<EntityID, k_max_action_hit_targets> hit_target_ids{};
+  std::array<std::uint16_t, k_max_action_hit_targets> hit_target_soldier_slots{};
   std::uint8_t hit_target_count{0};
   int last_damage{0};
   int requested_damage{0};
@@ -641,7 +642,19 @@ enum class CombatIntentOutcome : std::uint8_t {
   Expired
 };
 
+enum class CommanderCombatIntentType : std::uint8_t {
+  Light = 0,
+  Heavy,
+  Jump,
+  Dodge,
+  Guard,
+  Special,
+  WeaponSwitch
+};
+
 struct CombatActionIntent {
+
+  CommanderCombatIntentType type{CommanderCombatIntentType::Light};
 
   MeleeIntent swing{};
   bool has_swing{false};
@@ -656,7 +669,7 @@ public:
 
   static constexpr std::size_t k_capacity = 3U;
 
-  static constexpr float k_intent_lifetime = 0.15F;
+  static constexpr float k_intent_lifetime = 0.30F;
 
   std::array<CombatActionIntent, k_capacity> entries{};
   std::uint8_t count{0};
@@ -1220,7 +1233,10 @@ public:
 
   bool wounded{false};
   bool fpv_controlled{false};
+  bool advanced_combat_enabled{true};
   int combo_step{0};
+  std::uint8_t combo_action_id{0U};
+  float combo_window_remaining{0.0F};
   bool power_strike_active{false};
   float shield_bash_cooldown_remaining{0.0F};
   float vanguard_rush_cooldown_remaining{0.0F};
@@ -1230,6 +1246,8 @@ public:
   bool jump_active{false};
   float jump_phase{0.0F};
   float jump_height_offset{0.0F};
+  float airborne_velocity{0.0F};
+  bool dive_attack_active{false};
   float fpv_motion_vx{0.0F};
   float fpv_motion_vz{0.0F};
   bool fpv_motion_requested{false};
@@ -1387,6 +1405,41 @@ public:
       : remaining(duration) {}
   float remaining;
   StaggerTier tier{StaggerTier::LightFlinch};
+};
+
+class PoiseComponent {
+public:
+  explicit PoiseComponent(float capacity = 100.0F)
+      : current(std::max(1.0F, capacity))
+      , maximum(std::max(1.0F, capacity)) {}
+
+  float current{100.0F};
+  float maximum{100.0F};
+  float regeneration_per_second{28.0F};
+  float regeneration_delay{0.0F};
+
+  static constexpr float k_regeneration_delay_seconds = 1.25F;
+};
+
+class CombatLaunchComponent {
+public:
+  CombatLaunchComponent() = default;
+  CombatLaunchComponent(float vertical_velocity,
+                        float horizontal_velocity_x,
+                        float horizontal_velocity_z,
+                        float landing_height)
+      : velocity_y(vertical_velocity)
+      , velocity_x(horizontal_velocity_x)
+      , velocity_z(horizontal_velocity_z)
+      , ground_y(landing_height) {}
+
+  float velocity_y{0.0F};
+  float velocity_x{0.0F};
+  float velocity_z{0.0F};
+  float ground_y{0.0F};
+
+  static constexpr float k_gravity = 18.0F;
+  static constexpr float k_horizontal_drag = 5.0F;
 };
 
 enum class FightContext : std::uint8_t {
