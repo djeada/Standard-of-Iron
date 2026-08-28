@@ -116,6 +116,7 @@ add_executable(
     systems/world_prop_navigation_test.cpp
     systems/production_system_test.cpp
     systems/construction_cost_catalog_test.cpp
+    systems/economy_feedback_test.cpp
     systems/resource_delivery_system_test.cpp
     systems/gather_loop_system_test.cpp
     systems/food_economy_test.cpp
@@ -534,7 +535,7 @@ add_executable(
     core/economy_overview_test.cpp
     core/unit_profile_test.cpp
     core/selection_query_service_test.cpp
-    core/combat_feedback_test.cpp
+    core/world_feedback_test.cpp
     core/player_defeat_watcher_test.cpp
     core/order_feedback_test.cpp
     core/rts_action_model_test.cpp

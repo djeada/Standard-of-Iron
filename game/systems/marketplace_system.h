@@ -1,5 +1,6 @@
 #pragma once
 
+#include "../core/entity_id.h"
 #include "resource_types.h"
 
 namespace Engine::Core {
@@ -32,6 +33,9 @@ public:
   static auto instance() -> MarketplaceSystem&;
 
   [[nodiscard]] auto get_rates() const -> const MarketplaceTradeRates&;
+
+  [[nodiscard]] static auto find_marketplace(const Engine::Core::World& world,
+                                             int owner_id) -> Engine::Core::EntityID;
 
   [[nodiscard]] static auto owner_has_marketplace(const Engine::Core::World& world,
                                                   int owner_id) -> bool;

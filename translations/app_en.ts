@@ -1736,6 +1736,13 @@ This may be a skirmish, or objectives have not been configured.</translation>
     </message>
 </context>
 <context>
+    <name>FloatingNumbers</name>
+    <message>
+        <source>POP</source>
+        <translation>POP</translation>
+    </message>
+</context>
+<context>
     <name>FocusTarget</name>
     <message>
         <source>Barracks</source>
@@ -8079,6 +8086,14 @@ Builders reap it for the food that recruits civilians</translation>
     <message>
         <source>Scales keyboard panning, zooming and rotation; drag and minimap movement stay unchanged.</source>
         <translation>Scales keyboard panning, zooming and rotation; drag and minimap movement stay unchanged.</translation>
+    </message>
+    <message>
+        <source>Economy numbers</source>
+        <translation>Economy numbers</translation>
+    </message>
+    <message>
+        <source>Floats resource, trade and population changes over the building they happened at</source>
+        <translation>Floats resource, trade and population changes over the building they happened at</translation>
     </message>
 </context>
 <context>

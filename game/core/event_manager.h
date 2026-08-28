@@ -3,6 +3,8 @@
 #include <QString>
 
 #include <algorithm>
+#include <cstdint>
+#include <cstdlib>
 #include <functional>
 #include <memory>
 #include <mutex>
@@ -12,6 +14,7 @@
 #include <utility>
 #include <vector>
 
+#include "../systems/resource_types.h"
 #include "../units/spawn_type.h"
 #include "entity.h"
 
@@ -340,6 +343,76 @@ public:
   bool is_killing_blow;
   [[nodiscard]] auto get_type_name() const -> const char* override {
     return "COMBAT_HIT";
+  }
+};
+
+enum class EconomyFeedbackKind : std::uint8_t {
+  Resource = 0,
+  Population,
+};
+
+class EconomyFeedbackEvent : public Event {
+public:
+  static auto make_resource(int owner_id,
+                            EntityID anchor_id,
+                            Game::Systems::ResourceType type,
+                            int amount) -> EconomyFeedbackEvent {
+    EconomyFeedbackEvent event;
+    event.owner_id = owner_id;
+    event.anchor_id = anchor_id;
+    event.kind = EconomyFeedbackKind::Resource;
+    event.resource = static_cast<int>(Game::Systems::resource_type_index(type));
+    event.amount = amount;
+    return event;
+  }
+
+  static auto make_trade(int owner_id,
+                         EntityID anchor_id,
+                         Game::Systems::ResourceType spent_type,
+                         int spent_amount,
+                         Game::Systems::ResourceType gained_type,
+                         int gained_amount) -> EconomyFeedbackEvent {
+    EconomyFeedbackEvent event =
+        make_resource(owner_id, anchor_id, spent_type, -std::abs(spent_amount));
+    event.paired_resource =
+        static_cast<int>(Game::Systems::resource_type_index(gained_type));
+    event.paired_amount = std::abs(gained_amount);
+    return event;
+  }
+
+  static auto make_population(int owner_id,
+                              EntityID anchor_id,
+                              int amount) -> EconomyFeedbackEvent {
+    EconomyFeedbackEvent event;
+    event.owner_id = owner_id;
+    event.anchor_id = anchor_id;
+    event.kind = EconomyFeedbackKind::Population;
+    event.amount = amount;
+    return event;
+  }
+
+  auto at(float world_x, float world_y, float world_z) -> EconomyFeedbackEvent& {
+    x = world_x;
+    y = world_y;
+    z = world_z;
+    has_position = true;
+    return *this;
+  }
+
+  int owner_id = 0;
+  EntityID anchor_id = 0;
+  EconomyFeedbackKind kind = EconomyFeedbackKind::Resource;
+  int resource = -1;
+  int amount = 0;
+  int paired_resource = -1;
+  int paired_amount = 0;
+  float x = 0.0F;
+  float y = 0.0F;
+  float z = 0.0F;
+  bool has_position = false;
+
+  [[nodiscard]] auto get_type_name() const -> const char* override {
+    return "ECONOMY_FEEDBACK";
   }
 };
 

@@ -695,13 +695,13 @@ add_library(
     app/persistence/save_load_coordinator.cpp
     # app/world -- world state read back as client presentation state.
     app/world/ambient_state_manager.cpp
-    app/world/combat_feedback.cpp
     app/world/focus_target.cpp
     app/world/minimap_manager.cpp
     app/world/player_defeat_watcher.cpp
     app/world/selection_query_service.cpp
     app/world/unit_queries.cpp
     app/world/visibility_coordinator.cpp
+    app/world/world_feedback.cpp
     # app/audio -- cue routing and the QML-facing audio proxy.
     app/audio/audio_coordinator.cpp
     app/audio/audio_resource_loader.cpp
@@ -837,8 +837,8 @@ if(QT_VERSION_MAJOR EQUAL 6)
             ui/qml/RecruitCard.qml
             ui/qml/RpgFpvOverlay.qml
             ui/qml/RpgMeter.qml
-            ui/qml/RpgDamageNumbers.qml
-            ui/qml/CombatDamageNumbers.qml
+            ui/qml/FloatingNumbers.qml
+            ui/qml/WorldProjector.qml
             ui/qml/FormationPanel.qml
             ui/qml/FormationShape.qml
             ui/qml/FormationReadoutCell.qml

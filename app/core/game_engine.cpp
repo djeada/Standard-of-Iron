@@ -1752,6 +1752,7 @@ void GameEngine::configure_rain_system() {
 
 void GameEngine::reset_preload_interaction_state() {
   m_commander_view_model->reset_for_new_match();
+  m_activity_view_model->clear_feedback();
   if (m_command_controller) {
     m_command_controller->reset_transient_state();
   }
@@ -1782,6 +1783,7 @@ void GameEngine::reset_preload_interaction_state() {
 
   m_camera_view_model->set_following_selection(false);
   m_commander_view_model->reset_for_new_match();
+  m_activity_view_model->clear_feedback();
   m_runtime.selection_refresh_counter = 0;
   m_runtime.minimap_unit_update_accumulator = 0.0F;
 

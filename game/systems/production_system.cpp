@@ -22,6 +22,7 @@
 #include "building_collision_registry.h"
 #include "command_service.h"
 #include "construction_cost_catalog.h"
+#include "economy_feedback.h"
 #include "food_targets.h"
 #include "harvest_yields.h"
 #include "nation_registry.h"
@@ -314,10 +315,16 @@ auto skip_invalid_wall_site(Engine::Core::World* world,
     return false;
   }
 
-  grant_resources(
-      site->owner_id,
+  const auto refund =
       construction_cost_info(Game::Units::spawn_typeToString(site->product_type))
-          .resource_costs);
+          .resource_costs;
+  grant_resources(site->owner_id, refund);
+  publish_resource_bundle_at(site->owner_id,
+                             transform->position.x,
+                             transform->position.y,
+                             transform->position.z,
+                             refund,
+                             1);
   world->destroy_entity(site_entity->get_id());
   builder->construction_site_entity_id = 0;
   builder->has_construction_site = false;

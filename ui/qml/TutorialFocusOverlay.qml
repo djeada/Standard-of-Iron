@@ -4,12 +4,12 @@ import StandardOfIron.Design 1.0 as Design
 Item {
     id: root
 
-    property var camera: null
+    property var projector: null
     property var points: []
     property real topInset: 0
     property real bottomInset: 0
 
-    readonly property bool hasCamera: root.camera !== null && !!root.camera.project_world
+    readonly property bool hasCamera: root.projector !== null && root.projector.ready
 
     anchors.fill: parent
     visible: root.hasCamera && root.points.length > 0
@@ -36,16 +36,6 @@ Item {
         }
     }
 
-    property int projectionTick: 0
-
-    Timer {
-        interval: Design.A11y.reducedMotion ? 200 : 66
-        repeat: true
-        running: root.visible
-        triggeredOnStart: true
-        onTriggered: root.projectionTick++
-    }
-
     Repeater {
         model: root.points
 
@@ -55,12 +45,12 @@ Item {
             required property var modelData
 
             readonly property var projection: {
-                root.projectionTick;
                 if (!root.hasCamera)
                     return null;
-                return root.camera.project_world(modelData.world_x || 0, 0, modelData.world_z || 0);
+                root.projector.tick;
+                return root.projector.project(modelData.world_x || 0, 0, modelData.world_z || 0);
             }
-            readonly property bool projected: !!projection && projection.valid === true
+            readonly property bool projected: projection !== null
             readonly property real screenX: projected ? projection.x : 0
             readonly property real screenY: projected ? projection.y : 0
 

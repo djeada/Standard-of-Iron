@@ -129,6 +129,11 @@ auto replay_to_triangles(const std::vector<Capture>& captures,
   return tris;
 }
 
+float g_zoom = 1.0F;
+QVector3D g_focus{0.0F, 0.0F, 0.0F};
+bool g_has_focus = false;
+int g_parts = 0;
+
 auto make_view_projection(const Bounds& bounds,
                           const std::vector<ColoredTriangle>& tris,
                           const QVector3D& eye_dir,
@@ -161,7 +166,12 @@ auto make_view_projection(const Bounds& bounds,
     ortho_w = view_w;
     ortho_h = ortho_w / std::max(aspect, 1e-6F);
   }
-  QVector3D const cc = cam.center();
+  QVector3D cc = cam.center();
+  if (g_has_focus) {
+    cc = (view_mat * QVector4D(g_focus, 1.0F)).toVector3D();
+  }
+  ortho_w /= g_zoom;
+  ortho_h /= g_zoom;
   QMatrix4x4 proj;
   float const near_plane = std::max(0.1F, -cam.max.z() - depth_pad);
   float const far_plane = std::max(near_plane + 1.0F, -cam.min.z() + depth_pad);
@@ -226,6 +236,7 @@ auto render_building(EntityRendererRegistry& registry,
 
   CapturingSubmitter sub;
   func(ctx, sub);
+  g_parts = static_cast<int>(sub.captures.size());
 
   Bounds bounds;
   std::vector<ColoredTriangle> const tris = replay_to_triangles(sub.captures, bounds);
@@ -283,6 +294,14 @@ auto main(int argc, char** argv) -> int {
       show_states = true;
     } else if (arg == "--bounds") {
       report_bounds = true;
+    } else if (arg == "--zoom" && i + 1 < argc) {
+      g_zoom = QString::fromLatin1(argv[++i]).toFloat();
+    } else if (arg == "--focus" && i + 3 < argc) {
+      float const fx = QString::fromLatin1(argv[++i]).toFloat();
+      float const fy = QString::fromLatin1(argv[++i]).toFloat();
+      float const fz = QString::fromLatin1(argv[++i]).toFloat();
+      g_focus = QVector3D(fx, fy, fz);
+      g_has_focus = true;
     } else if (arg == "--growth" && i + 1 < argc) {
       g_farm_growth = QString::fromLatin1(argv[++i]).toFloat();
     } else {
@@ -352,7 +371,8 @@ auto main(int argc, char** argv) -> int {
   }
 
   if (report_bounds) {
-    std::cout << "nation,type,min_x,max_x,min_y,max_y,min_z,max_z,span_x,span_z\n";
+    std::cout
+        << "nation,type,min_x,max_x,min_y,max_y,min_z,max_z,span_x,span_z,parts\n";
     for (const auto& nation : nations) {
       for (std::size_t i = 0; i < types.size(); ++i) {
         Bounds bounds;
@@ -374,7 +394,8 @@ auto main(int argc, char** argv) -> int {
         std::cout << nation << "," << types[i] << "," << bounds.min.x() << ","
                   << bounds.max.x() << "," << bounds.min.y() << "," << bounds.max.y()
                   << "," << bounds.min.z() << "," << bounds.max.z() << ","
-                  << bounds.span().x() << "," << bounds.span().z() << "\n";
+                  << bounds.span().x() << "," << bounds.span().z() << "," << g_parts
+                  << "\n";
       }
     }
     gl.doneCurrent();
