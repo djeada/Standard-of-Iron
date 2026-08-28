@@ -152,6 +152,11 @@ Item {
                     root.commander.primary_action_up();
                 return;
             }
+            if (candidates[i] === "commander.heavy_action") {
+                if (pressed && root.commander.heavy_action)
+                    root.commander.heavy_action();
+                return;
+            }
             if (candidates[i] === "commander.secondary_action") {
                 if (pressed && root.commander.secondary_action_down)
                     root.commander.secondary_action_down();
