@@ -7,6 +7,7 @@
 #include "../core/entity.h"
 #include "../core/world.h"
 #include "../units/spawn_type.h"
+#include "economy_feedback.h"
 #include "player_resource_registry.h"
 
 namespace Game::Systems {
@@ -19,8 +20,8 @@ auto MarketplaceSystem::get_rates() const -> const MarketplaceTradeRates& {
   return m_rates;
 }
 
-auto MarketplaceSystem::owner_has_marketplace(const Engine::Core::World& world,
-                                              int owner_id) -> bool {
+auto MarketplaceSystem::find_marketplace(const Engine::Core::World& world,
+                                         int owner_id) -> Engine::Core::EntityID {
   std::vector<Engine::Core::Entity*> buildings;
   world.resolve_entities_into(world.entities_with<Engine::Core::BuildingComponent>(),
                               buildings);
@@ -30,10 +31,15 @@ auto MarketplaceSystem::owner_has_marketplace(const Engine::Core::World& world,
         unit->spawn_type == Game::Units::SpawnType::Marketplace && unit->health > 0 &&
         !building->has_component<Engine::Core::PendingRemovalComponent>() &&
         !building->has_component<Engine::Core::DismantleSiteComponent>()) {
-      return true;
+      return building->get_id();
     }
   }
-  return false;
+  return Engine::Core::NULL_ENTITY;
+}
+
+auto MarketplaceSystem::owner_has_marketplace(const Engine::Core::World& world,
+                                              int owner_id) -> bool {
+  return find_marketplace(world, owner_id) != Engine::Core::NULL_ENTITY;
 }
 
 auto MarketplaceSystem::can_buy(const Engine::Core::World& world,
@@ -103,6 +109,12 @@ auto MarketplaceSystem::buy_resource(const Engine::Core::World& world,
   }
   PlayerResourceRegistry::instance().add(owner_id, ResourceType::Gold, -price);
   PlayerResourceRegistry::instance().add(owner_id, resource, m_rates.trade_quantity);
+  publish_trade_feedback(owner_id,
+                         find_marketplace(world, owner_id),
+                         ResourceType::Gold,
+                         price,
+                         resource,
+                         m_rates.trade_quantity);
   return true;
 }
 
@@ -131,6 +143,12 @@ auto MarketplaceSystem::sell_resource(const Engine::Core::World& world,
   }
   PlayerResourceRegistry::instance().add(owner_id, resource, -m_rates.trade_quantity);
   PlayerResourceRegistry::instance().add(owner_id, ResourceType::Gold, sell_price);
+  publish_trade_feedback(owner_id,
+                         find_marketplace(world, owner_id),
+                         resource,
+                         m_rates.trade_quantity,
+                         ResourceType::Gold,
+                         sell_price);
   return true;
 }
 

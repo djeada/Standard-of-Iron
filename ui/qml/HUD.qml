@@ -326,30 +326,31 @@ Item {
         visible: has_formation && !formationPanel.placing && !hud.commander_rpg_mode
     }
 
+    WorldProjector {
+        id: worldProjector
+
+        anchors.fill: parent
+        camera: typeof game !== 'undefined' ? game.camera : null
+        topInset: topPanel.height
+        bottomInset: bottomPanel.height
+        active: floatingNumbers.visible || rpgFpvOverlay.visible || tutorialFocusOverlay.visible
+    }
+
     RpgFpvOverlay {
         id: rpgFpvOverlay
         anchors.fill: parent
         bottomInset: bottomPanel.height
         topInset: topPanel.height
         status: hud.commander_status
-        camera: typeof game !== 'undefined' ? game.camera : null
+        projector: worldProjector
         visible: hud.commander_rpg_mode && !hud.commander_rally_overlay_blocked
-    }
-
-    RpgDamageNumbers {
-        id: rpgDamageNumbers
-        anchors.fill: parent
-        commander: typeof game !== 'undefined' ? game.commander : null
-        camera: typeof game !== 'undefined' ? game.camera : null
-
-        visible: hud.commander_rpg_mode && !hud.commander_rally_overlay_blocked && Design.A11y.damageNumbers
     }
 
     TutorialFocusOverlay {
         id: tutorialFocusOverlay
 
         anchors.fill: parent
-        camera: typeof game !== 'undefined' ? game.camera : null
+        projector: worldProjector
         points: (typeof game !== 'undefined' && game.tutorial && game.tutorial.active) ? game.tutorial.focus_points : []
         topInset: topPanel.height
         bottomInset: bottomPanel.height
@@ -357,13 +358,15 @@ Item {
         visible: !hud.commander_rpg_mode && points.length > 0
     }
 
-    CombatDamageNumbers {
-        id: combatDamageNumbers
+    FloatingNumbers {
+        id: floatingNumbers
 
         anchors.fill: parent
-        activitySource: typeof game !== 'undefined' ? game.activity : null
-        camera: typeof game !== 'undefined' ? game.camera : null
-        visible: !hud.commander_rpg_mode && Design.A11y.damageNumbers
+        source: typeof game !== 'undefined' ? game.activity : null
+        projector: worldProjector
+        combatEnabled: Design.A11y.damageNumbers
+        economyEnabled: Design.A11y.economyNumbers && !hud.commander_rpg_mode
+        visible: !hud.commander_rally_overlay_blocked
     }
 
     CommanderMessagePanel {

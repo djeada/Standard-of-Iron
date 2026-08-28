@@ -37,6 +37,7 @@ inline constexpr char kUiEdgeScrollSensitivityKey[] = "ui/edge_scroll_sensitivit
 inline constexpr char kUiCameraMotionKey[] = "ui/camera_motion_scale";
 inline constexpr char kUiDamageNumbersKey[] = "ui/damage_numbers";
 inline constexpr char kUiDamageNumberModeKey[] = "ui/damage_number_mode";
+inline constexpr char kUiEconomyNumbersKey[] = "ui/economy_numbers";
 inline constexpr char kUiScreenEffectsKey[] = "ui/screen_effect_intensity";
 inline constexpr char kUiEconomyCoachKey[] = "ui/economy_coach";
 inline constexpr char kUiCameraLegendSeenKey[] = "ui/camera_legend_seen";
@@ -515,6 +516,14 @@ inline void save_ui_damage_number_mode(const QString& mode) {
   }
   Detail::save_string(kUiDamageNumberModeKey, mode);
   Detail::save_bool(kUiDamageNumbersKey, mode != QLatin1String("off"));
+}
+
+inline auto load_ui_economy_numbers() -> bool {
+  return Detail::load_bool(kUiEconomyNumbersKey, true);
+}
+
+inline void save_ui_economy_numbers(bool enabled) {
+  Detail::save_bool(kUiEconomyNumbersKey, enabled);
 }
 
 inline auto load_ui_camera_legend_seen() -> bool {

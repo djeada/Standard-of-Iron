@@ -914,6 +914,14 @@ Item {
                                 Layout.fillWidth: true
                             }
 
+                            Design.IronCheckBox {
+                                Layout.columnSpan: 2
+                                text: qsTr("Economy numbers")
+                                description: qsTr("Floats resource, trade and population changes over the building they happened at")
+                                checked: UiPreferences.economyNumbers
+                                onToggled: UiPreferences.economyNumbers = checked
+                            }
+
                             Label {
                                 text: qsTr("Screen effects:")
                                 color: Theme.textSub

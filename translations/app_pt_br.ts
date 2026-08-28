@@ -1736,6 +1736,13 @@ Isto pode ser uma escaramuça, ou os objetivos não foram configurados.</transla
     </message>
 </context>
 <context>
+    <name>FloatingNumbers</name>
+    <message>
+        <source>POP</source>
+        <translation>POP</translation>
+    </message>
+</context>
+<context>
     <name>FocusTarget</name>
     <message>
         <source>Barracks</source>
@@ -8079,6 +8086,14 @@ Os construtores os ceifam pela comida que recruta civis</translation>
     <message>
         <source>Scales keyboard panning, zooming and rotation; drag and minimap movement stay unchanged.</source>
         <translation>Ajusta a panorâmica, o zoom e a rotação pelo teclado; arrastar e mover no minimapa permanecem inalterados.</translation>
+    </message>
+    <message>
+        <source>Economy numbers</source>
+        <translation>Números de economia</translation>
+    </message>
+    <message>
+        <source>Floats resource, trade and population changes over the building they happened at</source>
+        <translation>Mostra as mudanças de recursos, comércio e população sobre o edifício onde aconteceram</translation>
     </message>
 </context>
 <context>

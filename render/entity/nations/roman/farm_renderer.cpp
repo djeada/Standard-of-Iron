@@ -237,10 +237,25 @@ void add_ox_cart(BuildingArchetypeDesc& desc, const RomanFarmPalette& c) {
                  c.cedar_light,
                  k_building_state_mask_intact);
   }
-  desc.add_box(centre + QVector3D(0.02F, k_wheel_r + 0.11F, 0.0F),
-               QVector3D(0.14F, 0.045F, 0.11F),
-               c.grain,
-               k_building_state_mask_intact);
+  for (int sheaf = 0; sheaf < 7; ++sheaf) {
+    float const t = (static_cast<float>(sheaf) + 0.5F) / 7.0F;
+    float const along = -0.12F + t * 0.24F;
+    float const across = (decay_hash(601 + sheaf * 17) - 0.5F) * 0.14F;
+    float const rise = 0.055F - std::abs(along) * 0.16F;
+    QVector3D const butt(
+        centre.x() + 0.02F + along, k_wheel_r + 0.075F, centre.z() + across);
+    QVector3D const ear(butt.x() + (decay_hash(607 + sheaf * 13) - 0.5F) * 0.05F,
+                        butt.y() + rise + decay_hash(613 + sheaf * 11) * 0.022F,
+                        butt.z() + (decay_hash(619 + sheaf * 7) - 0.5F) * 0.09F);
+    float const tint = 0.90F + decay_hash(631 + sheaf * 5) * 0.20F;
+    desc.add_cylinder(
+        butt, ear, 0.026F, c.grain * tint * 0.88F, k_building_state_mask_intact);
+    desc.add_cone(ear,
+                  ear + (ear - butt) * 0.55F,
+                  0.022F,
+                  c.grain * tint,
+                  k_building_state_mask_intact);
+  }
   desc.add_cylinder(centre + QVector3D(-0.16F, k_wheel_r + 0.04F, 0.0F),
                     centre + QVector3D(-0.44F, 0.05F, 0.0F),
                     0.014F,
@@ -288,7 +303,7 @@ auto build_farm_archetype(BuildingState state, int stage) -> RenderArchetype {
                                .half_z = 0.62F,
                                .ground_y = 0.0F,
                                .rows = 18,
-                               .stalks_per_row = 37,
+                               .stalks_per_row = 36,
                                .seed = 7,
                                .rows_along_x = true},
                  field_palette,

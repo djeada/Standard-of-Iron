@@ -19,6 +19,7 @@
 #include "core/world.h"
 #include "game/map/terrain_service.h"
 #include "game/map/undead_shrine_placement.h"
+#include "game/systems/economy_feedback.h"
 #include "game/systems/global_stats_registry.h"
 #include "game/systems/nation_registry.h"
 #include "game/systems/owner_registry.h"
@@ -493,6 +494,7 @@ void UndeadAwakeningSystem::pay_clear_reward(Engine::Core::World& world,
       continue;
     }
     resources.add(beneficiary, type, amount);
+    publish_resource_feedback(beneficiary, zone.anchor_entity_id, type, amount);
     spoils.append(QStringLiteral("%1 %2").arg(amount).arg(
         QString::fromLatin1(resource_type_key(type))));
   }

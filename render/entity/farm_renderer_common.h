@@ -37,11 +37,13 @@ struct FarmFieldPalette {
   QVector3D leaf{0.34F, 0.58F, 0.20F};
   QVector3D leaf_dark{0.24F, 0.42F, 0.15F};
   QVector3D stalk_green{0.55F, 0.66F, 0.26F};
-  QVector3D stalk_gold{0.82F, 0.66F, 0.28F};
-  QVector3D stalk_gold_dark{0.66F, 0.50F, 0.19F};
-  QVector3D head_green{0.62F, 0.70F, 0.30F};
-  QVector3D head_gold{0.90F, 0.74F, 0.34F};
-  QVector3D head_gold_light{0.96F, 0.84F, 0.46F};
+  QVector3D stalk_gold{0.87F, 0.80F, 0.51F};
+  QVector3D stalk_gold_dark{0.65F, 0.57F, 0.32F};
+  QVector3D head_green{0.58F, 0.66F, 0.29F};
+  QVector3D head_gold{0.91F, 0.75F, 0.36F};
+  QVector3D head_gold_light{0.98F, 0.88F, 0.56F};
+  QVector3D head_gold_dark{0.69F, 0.54F, 0.26F};
+  QVector3D awn{0.94F, 0.87F, 0.62F};
   QVector3D stubble{0.74F, 0.62F, 0.34F};
   QVector3D ash{0.16F, 0.14F, 0.12F};
 };

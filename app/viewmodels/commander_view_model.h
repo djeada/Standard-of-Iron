@@ -8,7 +8,6 @@
 
 #include <cstdint>
 #include <memory>
-#include <mutex>
 #include <optional>
 #include <vector>
 
@@ -94,7 +93,6 @@ public:
   Q_INVOKABLE [[nodiscard]] QVariantMap status() const;
 
   void publish_frame();
-  Q_INVOKABLE [[nodiscard]] QVariantList pop_damage_events();
 
   [[nodiscard]] auto controlled_commander_id() const -> Engine::Core::EntityID {
     return m_controlled_commander_id;
@@ -125,7 +123,13 @@ public:
   void render_effects();
   [[nodiscard]] auto time_effect_scale(float scaled_dt, bool paused) -> float;
 
-  [[nodiscard]] auto record_rpg_hit(const Engine::Core::CombatHitEvent& event) -> bool;
+  enum class HitRouting : std::uint8_t {
+    Rts,
+    CommanderBurst,
+    Suppressed,
+  };
+  [[nodiscard]] auto
+  classify_hit(const Engine::Core::CombatHitEvent& event) const -> HitRouting;
   void reset_for_new_match();
   void notify_availability_changed() { emit available_changed(); }
 
@@ -188,23 +192,9 @@ private:
   App::Core::RtsCameraBookmark m_rts_camera_bookmark;
   std::optional<QVector3D> m_rally_preview;
 
-  struct DamageEvent {
-    float wx = 0.0F;
-    float wy = 0.0F;
-    float wz = 0.0F;
-    int damage = 0;
-    float damage_ratio = 0.0F;
-    int lane = 0;
-    bool killing_blow = false;
-  };
-  static constexpr int k_max_damage_events = 96;
   App::Core::Published<QVariantMap> m_status;
 
   bool m_status_published_empty = false;
-
-  mutable std::mutex m_damage_events_mutex;
-  std::vector<DamageEvent> m_damage_events;
-  std::uint32_t m_damage_event_sequence = 0;
 };
 
 } // namespace App::ViewModels
