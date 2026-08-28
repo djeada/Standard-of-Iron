@@ -1141,7 +1141,7 @@ Item {
 
                 Repeater {
                     model: [{
-                            "name": qsTr("BASH"),
+                            "name": qsTr("SPECIAL"),
                             "key": "F",
                             "cdKey": "shield_bash_cooldown_remaining",
                             "totalKey": "shield_bash_cooldown",

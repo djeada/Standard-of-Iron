@@ -951,6 +951,8 @@ void ArenaViewport::mousePressEvent(QMouseEvent* event) {
   if (m_rpg_interactive && m_rpg_commander_controller != nullptr) {
     if (event->button() == Qt::LeftButton) {
       m_rpg_commander_controller->primary_action_down();
+    } else if (event->button() == Qt::MiddleButton) {
+      m_rpg_commander_controller->request_heavy_action();
     } else if (event->button() == Qt::RightButton) {
       m_rpg_commander_controller->secondary_action_down();
     }
@@ -3922,6 +3924,14 @@ void ArenaViewport::load_scenario(const QString& scenario_id) {
     m_rpg_scripted_attack_ticks = k_scripted_attack_hold_ticks;
     return true;
   };
+  host.rpg_heavy_attack = [this](Engine::Core::EntityID entity_id) {
+    if (m_world == nullptr || m_rpg_commander_controller == nullptr ||
+        entity_id != m_rpg_commander_id) {
+      return false;
+    }
+    m_rpg_commander_controller->request_heavy_action();
+    return true;
+  };
   host.set_rpg_attack_held = [this](Engine::Core::EntityID entity_id, bool held) {
     if (m_rpg_commander_controller == nullptr || entity_id != m_rpg_commander_id) {
       return;
@@ -3942,6 +3952,23 @@ void ArenaViewport::load_scenario(const QString& scenario_id) {
       m_rpg_commander_controller->secondary_action_down();
     } else {
       m_rpg_commander_controller->secondary_action_up();
+    }
+  };
+  host.request_rpg_jump = [this](Engine::Core::EntityID entity_id) {
+    if (m_rpg_commander_controller != nullptr && entity_id == m_rpg_commander_id) {
+      m_rpg_commander_controller->request_jump();
+    }
+  };
+  host.request_rpg_special = [this](Engine::Core::EntityID entity_id) {
+    if (m_rpg_commander_controller != nullptr && entity_id == m_rpg_commander_id) {
+      m_rpg_commander_controller->special_action();
+    }
+  };
+  host.request_rpg_weapon_switch = [this](Engine::Core::EntityID entity_id) {
+    if (m_world != nullptr && m_rpg_commander_controller != nullptr &&
+        entity_id == m_rpg_commander_id) {
+      m_rpg_commander_controller->toggle_weapon_stance(
+          *m_world, entity_id, k_local_owner_id);
     }
   };
   host.set_rpg_move_input =
@@ -4253,6 +4280,8 @@ void ArenaViewport::configure_rpg_scenario_commander(Engine::Core::EntityID enti
   Game::Systems::CombatRules::clear_rts_combat_tracking(entity);
 
   if (auto* stamina = Game::Systems::ensure_run_stamina(*entity)) {
+    stamina->max_stamina = std::max(stamina->max_stamina, 180.0F);
+    stamina->regen_rate = std::max(stamina->regen_rate, 24.0F);
     stamina->stamina = stamina->max_stamina;
     stamina->regen_delay_remaining = 0.0F;
     stamina->is_running = false;
@@ -4558,6 +4587,12 @@ auto ArenaViewport::rpg_interactive_key_press(QKeyEvent* event) -> bool {
     return true;
   case Qt::Key_F:
     m_rpg_commander_controller->special_action();
+    return true;
+  case Qt::Key_X:
+    if (m_world != nullptr) {
+      m_rpg_commander_controller->toggle_weapon_stance(
+          *m_world, m_rpg_commander_id, k_local_owner_id);
+    }
     return true;
   case Qt::Key_V:
     m_rpg_commander_controller->request_vanguard_rush();
@@ -5438,12 +5473,14 @@ void ArenaViewport::draw_controls_overlay(QPainter& painter) {
         QStringLiteral("Mouse: look"),
         QStringLiteral("Shift: run"),
         QStringLiteral("LMB: attack (hold to chain)"),
+        QStringLiteral("MMB: heavy attack"),
         QStringLiteral("RMB: guard"),
         QStringLiteral("Space: dodge roll"),
         QStringLiteral("Ctrl: jump"),
         QStringLiteral("R: cycle lock-on"),
         QStringLiteral("C: close camera"),
-        QStringLiteral("F: shield bash"),
+        QStringLiteral("F: weapon special (guard + F: shield bash)"),
+        QStringLiteral("X: switch weapon stance"),
         QStringLiteral("V: vanguard rush"),
         QStringLiteral("G: second wind"),
         QStringLiteral("Esc / Tab: leave RPG control"),

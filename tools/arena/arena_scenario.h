@@ -79,10 +79,14 @@ enum class ScenarioCommandKind : std::uint8_t {
   SetFullCreatureLod,
   TriggerCommanderAura,
   RpgPrimaryAttack,
+  RpgHeavyAttack,
   RpgAttackHold,
   RpgAim,
   RpgGuard,
   RpgDodge,
+  RpgJump,
+  RpgSpecial,
+  RpgWeaponSwitch,
   RpgMove,
   RpgCycleLockOn,
 
@@ -558,9 +562,13 @@ struct ArenaScenarioHost {
   std::function<void(bool)> set_force_full_creature_lod;
   std::function<void(Engine::Core::EntityID)> configure_rpg_commander;
   std::function<bool(Engine::Core::EntityID)> rpg_primary_attack;
+  std::function<bool(Engine::Core::EntityID)> rpg_heavy_attack;
   std::function<void(Engine::Core::EntityID, bool)> set_rpg_attack_held;
   std::function<void(Engine::Core::EntityID, bool)> set_rpg_guard;
   std::function<void(Engine::Core::EntityID, const QVector3D&)> request_rpg_dodge;
+  std::function<void(Engine::Core::EntityID)> request_rpg_jump;
+  std::function<void(Engine::Core::EntityID)> request_rpg_special;
+  std::function<void(Engine::Core::EntityID)> request_rpg_weapon_switch;
   std::function<void(Engine::Core::EntityID)> cycle_rpg_lock_on;
   std::function<auto(Engine::Core::EntityID)->Engine::Core::EntityID> rpg_locked_target;
 
