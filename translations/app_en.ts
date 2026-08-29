@@ -3125,14 +3125,6 @@ This may be a skirmish, or objectives have not been configured.</translation>
         <translation>Recover posture and stamina, then steady yourself for the next exchange.</translation>
     </message>
     <message>
-        <source>Shield Bash</source>
-        <translation>Shield Bash</translation>
-    </message>
-    <message>
-        <source>Guard-gated stagger burst that punishes enemies crowding your front.</source>
-        <translation>Guard-gated stagger burst that punishes enemies crowding your front.</translation>
-    </message>
-    <message>
         <source>Command Aura</source>
         <translation>Command Aura</translation>
     </message>
@@ -3315,6 +3307,14 @@ This may be a skirmish, or objectives have not been configured.</translation>
     <message>
         <source>The aura is not ready yet.</source>
         <translation>The aura is not ready yet.</translation>
+    </message>
+    <message>
+        <source>Weapon Special / Shield Bash</source>
+        <translation>Weapon Special / Shield Bash</translation>
+    </message>
+    <message>
+        <source>Use your weapon technique, or hold guard for a shield-bash stagger burst.</source>
+        <translation>Use your weapon technique, or hold guard for a shield-bash stagger burst.</translation>
     </message>
 </context>
 <context>
@@ -7321,10 +7321,6 @@ Builders reap it for the food that recruits civilians</translation>
         <translation>Cycle locked target</translation>
     </message>
     <message>
-        <source>Special action</source>
-        <translation>Special action</translation>
-    </message>
-    <message>
         <source>Vanguard rush</source>
         <translation>Vanguard rush</translation>
     </message>
@@ -7456,6 +7452,22 @@ Builders reap it for the food that recruits civilians</translation>
         <source>Hauling a load - cannot be interrupted</source>
         <translation>Hauling a load - cannot be interrupted</translation>
     </message>
+    <message>
+        <source>Heavy attack</source>
+        <translation>Heavy attack</translation>
+    </message>
+    <message>
+        <source>Branches or finishes the current commander combo</source>
+        <translation>Branches or finishes the current commander combo</translation>
+    </message>
+    <message>
+        <source>Weapon special</source>
+        <translation>Weapon special</translation>
+    </message>
+    <message>
+        <source>Use while guarding to shield bash</source>
+        <translation>Use while guarding to shield bash</translation>
+    </message>
 </context>
 <context>
     <name>RpgFpvOverlay</name>
@@ -7496,10 +7508,6 @@ Builders reap it for the food that recruits civilians</translation>
         <translation>BLADE  ·  X</translation>
     </message>
     <message>
-        <source>BASH</source>
-        <translation>BASH</translation>
-    </message>
-    <message>
         <source>RUSH</source>
         <translation>RUSH</translation>
     </message>
@@ -7510,6 +7518,10 @@ Builders reap it for the food that recruits civilians</translation>
     <message>
         <source>READY</source>
         <translation>READY</translation>
+    </message>
+    <message>
+        <source>SPECIAL</source>
+        <translation>SPECIAL</translation>
     </message>
 </context>
 <context>

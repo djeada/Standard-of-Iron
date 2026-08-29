@@ -3129,14 +3129,6 @@ This may be a skirmish, or objectives have not been configured.</source>
         <translation>استعد اتزانك وجَلَدك، ثم تهيّأ للتبادل التالي.</translation>
     </message>
     <message>
-        <source>Shield Bash</source>
-        <translation>ضربة الترس</translation>
-    </message>
-    <message>
-        <source>Guard-gated stagger burst that punishes enemies crowding your front.</source>
-        <translation>دفعة إرباك مشروطة بالحراسة تعاقب الأعداء المحتشدين أمامك.</translation>
-    </message>
-    <message>
         <source>Command Aura</source>
         <translation>هالة القيادة</translation>
     </message>
@@ -3319,6 +3311,14 @@ This may be a skirmish, or objectives have not been configured.</source>
     <message>
         <source>The aura is not ready yet.</source>
         <translation>الهالة ليست جاهزة بعد.</translation>
+    </message>
+    <message>
+        <source>Weapon Special / Shield Bash</source>
+        <translation>مهارة السلاح / ضربة الترس</translation>
+    </message>
+    <message>
+        <source>Use your weapon technique, or hold guard for a shield-bash stagger burst.</source>
+        <translation>استخدم مهارة سلاحك، أو استمر في الحراسة لضربة ترس تُصيب بالدوار.</translation>
     </message>
 </context>
 <context>
@@ -7333,10 +7333,6 @@ Builders reap it for the food that recruits civilians</source>
         <translation>تبديل الهدف المقفل</translation>
     </message>
     <message>
-        <source>Special action</source>
-        <translation>فعل خاص</translation>
-    </message>
-    <message>
         <source>Vanguard rush</source>
         <translation>اندفاعة الطليعة</translation>
     </message>
@@ -7468,6 +7464,22 @@ Builders reap it for the food that recruits civilians</source>
         <source>Hauling a load - cannot be interrupted</source>
         <translation>يسحب حمولة - لا يمكن مقاطعته</translation>
     </message>
+    <message>
+        <source>Heavy attack</source>
+        <translation>هجوم ثقيل</translation>
+    </message>
+    <message>
+        <source>Branches or finishes the current commander combo</source>
+        <translation>يفرّع سلسلة القائد الحالية أو ينهيها</translation>
+    </message>
+    <message>
+        <source>Weapon special</source>
+        <translation>مهارة السلاح</translation>
+    </message>
+    <message>
+        <source>Use while guarding to shield bash</source>
+        <translation>استخدمها أثناء الحراسة لتوجيه ضربة ترس</translation>
+    </message>
 </context>
 <context>
     <name>RpgFpvOverlay</name>
@@ -7508,10 +7520,6 @@ Builders reap it for the food that recruits civilians</source>
         <translation>نصل  ·  X</translation>
     </message>
     <message>
-        <source>BASH</source>
-        <translation>ضربة ترس</translation>
-    </message>
-    <message>
         <source>RUSH</source>
         <translation>اندفاعة</translation>
     </message>
@@ -7522,6 +7530,10 @@ Builders reap it for the food that recruits civilians</source>
     <message>
         <source>READY</source>
         <translation>جاهز</translation>
+    </message>
+    <message>
+        <source>SPECIAL</source>
+        <translation>خاص</translation>
     </message>
 </context>
 <context>

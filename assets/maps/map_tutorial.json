@@ -265,8 +265,8 @@
     {
       "id": "rome_guard_archer_01",
       "type": "archer",
-      "x": 71,
-      "z": 26,
+      "x": 71.0,
+      "z": 28.76,
       "player_id": 2,
       "team_id": 2,
       "nation": "roman_republic",
@@ -394,8 +394,8 @@
     },
     {
       "type": "pine_tree",
-      "x": 15.54,
-      "z": 63.9,
+      "x": 15.19,
+      "z": 67.66,
       "scale": 1.01,
       "rotation": 5.06
     },
@@ -415,8 +415,8 @@
     },
     {
       "type": "pine_tree",
-      "x": 14.39,
-      "z": 59.23,
+      "x": 13.63,
+      "z": 56.03,
       "scale": 1.01,
       "rotation": 3.63
     },
@@ -576,8 +576,8 @@
     },
     {
       "type": "pine_tree",
-      "x": 49.86,
-      "z": 74.23,
+      "x": 50.49,
+      "z": 71.48,
       "scale": 0.9,
       "rotation": 0.94
     },

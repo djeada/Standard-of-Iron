@@ -10,7 +10,7 @@ namespace {
 
 constexpr float k_boundary_margin = 1.5F;
 
-constexpr float k_animal_body_radius = 0.0F;
+constexpr float k_animal_body_radius = 0.5F;
 
 class TerrainServiceProbe final : public ITerrainProbe {
 public:

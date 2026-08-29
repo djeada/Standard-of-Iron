@@ -2281,8 +2281,8 @@
     },
     {
       "type": "ruins",
-      "x": 150.0,
-      "z": 63.0,
+      "x": 151.7,
+      "z": 63.33,
       "scale": 1.1,
       "rotation": 0.0,
       "landmark": "north_hamlet"

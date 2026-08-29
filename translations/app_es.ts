@@ -3125,14 +3125,6 @@ Puede tratarse de una escaramuza, o los objetivos no se han configurado.</transl
         <translation>Recupera postura y aguante, luego afiánzate para el siguiente intercambio.</translation>
     </message>
     <message>
-        <source>Shield Bash</source>
-        <translation>Golpe de escudo</translation>
-    </message>
-    <message>
-        <source>Guard-gated stagger burst that punishes enemies crowding your front.</source>
-        <translation>Ráfaga de aturdimiento ligada a la guardia que castiga a los enemigos que se agolpan en tu frente.</translation>
-    </message>
-    <message>
         <source>Command Aura</source>
         <translation>Aura de mando</translation>
     </message>
@@ -3315,6 +3307,14 @@ Puede tratarse de una escaramuza, o los objetivos no se han configurado.</transl
     <message>
         <source>The aura is not ready yet.</source>
         <translation>El aura aún no está lista.</translation>
+    </message>
+    <message>
+        <source>Weapon Special / Shield Bash</source>
+        <translation>Especial de arma / Golpe de escudo</translation>
+    </message>
+    <message>
+        <source>Use your weapon technique, or hold guard for a shield-bash stagger burst.</source>
+        <translation>Usa la técnica de tu arma, o mantén la guardia para un golpe de escudo aturdidor.</translation>
     </message>
 </context>
 <context>
@@ -7321,10 +7321,6 @@ Los constructores lo siegan para la comida que recluta civiles</translation>
         <translation>Cambiar de objetivo fijado</translation>
     </message>
     <message>
-        <source>Special action</source>
-        <translation>Acción especial</translation>
-    </message>
-    <message>
         <source>Vanguard rush</source>
         <translation>Embestida de vanguardia</translation>
     </message>
@@ -7456,6 +7452,22 @@ Los constructores lo siegan para la comida que recluta civiles</translation>
         <source>Hauling a load - cannot be interrupted</source>
         <translation>Transportando una carga - sin interrupción</translation>
     </message>
+    <message>
+        <source>Heavy attack</source>
+        <translation>Ataque pesado</translation>
+    </message>
+    <message>
+        <source>Branches or finishes the current commander combo</source>
+        <translation>Ramifica o remata la combinación actual del comandante</translation>
+    </message>
+    <message>
+        <source>Weapon special</source>
+        <translation>Especial de arma</translation>
+    </message>
+    <message>
+        <source>Use while guarding to shield bash</source>
+        <translation>Úsalo mientras te proteges para dar un golpe de escudo</translation>
+    </message>
 </context>
 <context>
     <name>RpgFpvOverlay</name>
@@ -7496,10 +7508,6 @@ Los constructores lo siegan para la comida que recluta civiles</translation>
         <translation>HOJA  ·  X</translation>
     </message>
     <message>
-        <source>BASH</source>
-        <translation>GOLPE</translation>
-    </message>
-    <message>
         <source>RUSH</source>
         <translation>EMBESTIDA</translation>
     </message>
@@ -7510,6 +7518,10 @@ Los constructores lo siegan para la comida que recluta civiles</translation>
     <message>
         <source>READY</source>
         <translation>LISTO</translation>
+    </message>
+    <message>
+        <source>SPECIAL</source>
+        <translation>ESPECIAL</translation>
     </message>
 </context>
 <context>

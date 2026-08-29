@@ -1263,8 +1263,8 @@
             "max_population": -1,
             "player_id": 1,
             "type": "swordsman",
-            "x": 61.03,
-            "z": 80.31
+            "x": 59.79,
+            "z": 81.55
         },
         {
             "max_population": -1,
@@ -1305,8 +1305,8 @@
             "max_population": -1,
             "player_id": 1,
             "type": "catapult",
-            "x": 32.55,
-            "z": 67.29
+            "x": 31.84,
+            "z": 66.83
         },
         {
             "max_population": -1,
@@ -1642,8 +1642,8 @@
             "nation": "carthage",
             "player_id": 1,
             "type": "defense_tower",
-            "x": 100,
-            "z": 102
+            "x": 101.4,
+            "z": 102.98
         },
         {
             "authored": true,
@@ -1666,8 +1666,8 @@
             "nation": "carthage",
             "player_id": 1,
             "type": "defense_tower",
-            "x": 100,
-            "z": 106
+            "x": 101.31,
+            "z": 106.0
         },
         {
             "authored": true,
@@ -1690,8 +1690,8 @@
             "nation": "carthage",
             "player_id": 1,
             "type": "defense_tower",
-            "x": 84,
-            "z": 106
+            "x": 82.69,
+            "z": 106.0
         },
         {
             "authored": true,
@@ -1714,8 +1714,8 @@
             "nation": "carthage",
             "player_id": 1,
             "type": "defense_tower",
-            "x": 84,
-            "z": 102
+            "x": 82.6,
+            "z": 102.98
         },
         {
             "authored": true,
@@ -1739,8 +1739,8 @@
             "nation": "carthage",
             "player_id": 1,
             "type": "home",
-            "x": 92,
-            "z": 107.2
+            "x": 92.0,
+            "z": 109.87
         },
         {
             "authored": true,
@@ -1830,8 +1830,8 @@
             "nation": "roman_republic",
             "player_id": 2,
             "type": "defense_tower",
-            "x": 116,
-            "z": 159.22
+            "x": 116.0,
+            "z": 156.44
         },
         {
             "authored": true,
@@ -4359,8 +4359,8 @@
             "authored_camp": true,
             "scale": 1,
             "type": "supply_cart",
-            "x": 81.58,
-            "z": 108.93
+            "x": 81.3,
+            "z": 109.31
         },
         {
             "authored_camp": true,
