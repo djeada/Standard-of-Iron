@@ -272,8 +272,10 @@ auto CommanderControlController::take_input_snapshot() -> CommanderInputSnapshot
   snapshot.guard_held = m_input.secondary_action;
 
   snapshot.primary_pressed = m_primary_press_pending;
+  snapshot.heavy_pressed = m_input.heavy_action_requested;
   snapshot.dodge_pressed = m_input.dodge_requested;
   snapshot.jump_pressed = m_input.jump_requested;
+  snapshot.special_pressed = m_input.special_action_requested;
   snapshot.shield_bash_pressed = m_input.shield_bash_requested;
   snapshot.vanguard_rush_pressed = m_input.vanguard_rush_requested;
   snapshot.second_wind_pressed = m_input.second_wind_requested;
@@ -282,8 +284,10 @@ auto CommanderControlController::take_input_snapshot() -> CommanderInputSnapshot
   snapshot.dodge_direction = m_requested_dodge_direction;
 
   m_primary_press_pending = false;
+  m_input.heavy_action_requested = false;
   m_input.dodge_requested = false;
   m_input.jump_requested = false;
+  m_input.special_action_requested = false;
   m_input.shield_bash_requested = false;
   m_input.vanguard_rush_requested = false;
   m_input.second_wind_requested = false;
@@ -303,6 +307,7 @@ void CommanderControlController::discard_input_edges(CommanderInputSnapshot& sna
     ++m_edges.primary_dropped_sequence;
     snapshot.primary_pressed = false;
   }
+  snapshot.heavy_pressed = false;
   if (snapshot.dodge_pressed) {
     ++m_edges.dodge_refused_sequence;
     snapshot.dodge_pressed = false;
@@ -311,6 +316,7 @@ void CommanderControlController::discard_input_edges(CommanderInputSnapshot& sna
     ++m_edges.jump_refused_sequence;
     snapshot.jump_pressed = false;
   }
+  snapshot.special_pressed = false;
   snapshot.shield_bash_pressed = false;
   snapshot.vanguard_rush_pressed = false;
   snapshot.second_wind_pressed = false;
@@ -372,6 +378,7 @@ void CommanderControlController::reset() {
   m_dodge_fov_kick = 0.0F;
   m_jump_timer = 0.0F;
   m_jump_safe_position_valid = false;
+  m_jump_followup_pending = false;
   m_jump_last_walkable_position = QVector3D(0.0F, 0.0F, 0.0F);
   m_locked_target_id = 0;
   m_locked_target_slot = Engine::Core::RpgCommanderTargetComponent::k_no_soldier_slot;
@@ -486,6 +493,14 @@ void CommanderControlController::primary_action_up() {
     ++m_edges.primary_release_sequence;
   }
   m_input.primary_action = false;
+}
+
+void CommanderControlController::request_heavy_action() {
+  if (m_latency_probe != nullptr) {
+    m_latency_probe->note_input();
+  }
+  const std::lock_guard<std::mutex> input_guard(m_input_mutex);
+  m_input.heavy_action_requested = true;
 }
 
 void CommanderControlController::secondary_action_down() {
@@ -692,7 +707,11 @@ void CommanderControlController::request_jump() {
 
 void CommanderControlController::special_action() {
   const std::lock_guard<std::mutex> input_guard(m_input_mutex);
-  m_input.shield_bash_requested = true;
+  if (m_input.secondary_action) {
+    m_input.shield_bash_requested = true;
+  } else {
+    m_input.special_action_requested = true;
+  }
 }
 
 void CommanderControlController::request_vanguard_rush() {
@@ -721,12 +740,19 @@ void CommanderControlController::toggle_close_camera_mode(
 void CommanderControlController::toggle_weapon_stance(
     Engine::Core::World& world,
     Engine::Core::EntityID commander_id,
-    int local_owner_id) const {
+    int local_owner_id) {
   auto* commander = controlled_commander(world, commander_id, local_owner_id);
   if (commander == nullptr) {
     return;
   }
   if (Game::Systems::RpgCombat::toggle_weapon_stance(*commander)) {
+    if (auto* intents = Engine::Core::get_or_add_component<
+            Engine::Core::CombatIntentQueueComponent>(commander)) {
+      Engine::Core::CombatActionIntent transition;
+      transition.type = Engine::Core::CommanderCombatIntentType::WeaponSwitch;
+      transition.pressed_at = intents->clock;
+      intents->push(transition);
+    }
     Game::Audio::play_cue(Game::Audio::Cue::k_combat_guard_raise);
   } else {
     Game::Audio::play_cue(Game::Audio::Cue::k_combat_ability_refused);
@@ -908,6 +934,24 @@ auto body_allows_now(const Engine::Core::Entity& commander)
       *definition, action->normalized_action_time);
 }
 
+void cancel_current_attack(Engine::Core::Entity& commander) {
+  auto* action = commander.get_component<Engine::Core::RpgCommanderActionComponent>();
+  if (action != nullptr && action->action_running) {
+    action->action_running = false;
+    action->action_active = false;
+    action->weapon_trace_active = false;
+    action->action_completed = true;
+    action->phase = Engine::Core::RpgCommanderActionPhase::None;
+  }
+  if (auto* combat = commander.get_component<Engine::Core::CombatStateComponent>()) {
+    combat->animation_state = Engine::Core::CombatAnimationState::Idle;
+    combat->state_time = 0.0F;
+    combat->state_duration = 0.0F;
+    combat->is_hit_paused = false;
+    combat->hit_pause_remaining = 0.0F;
+  }
+}
+
 } // namespace
 
 void CommanderControlController::apply_strike_lunge(
@@ -928,7 +972,37 @@ void CommanderControlController::apply_strike_lunge(
   auto const* definition = Game::Systems::CombatActions::find_combat_action_definition(
       static_cast<Game::Systems::CombatActions::CombatActionId>(
           action->combat_action_id));
-  if (definition == nullptr || definition->requires_projectile_release) {
+  if (definition == nullptr) {
+    return;
+  }
+
+  if (definition->requires_projectile_release) {
+    float const movement_start = definition->movement.start_normalized;
+    float const movement_end = definition->movement.end_normalized;
+    if (std::abs(definition->movement.distance) <= 0.01F ||
+        movement_end <= movement_start ||
+        action->normalized_action_time < movement_start ||
+        action->normalized_action_time > movement_end) {
+      return;
+    }
+    float const yaw = transform.rotation.y * 0.017453292519943295F;
+    float const direction = definition->movement.distance >= 0.0F ? 1.0F : -1.0F;
+    QVector3D const forward(std::sin(yaw) * direction, 0.0F, std::cos(yaw) * direction);
+    float const movement_seconds =
+        std::max(0.05F, (movement_end - movement_start) * action->action_duration);
+    float const step =
+        (std::abs(definition->movement.distance) / movement_seconds) * dt;
+    QVector3D const from(
+        transform.position.x, transform.position.y, transform.position.z);
+    static_cast<void>(m_motor.advance(
+        Game::Session::session_for(world),
+        transform,
+        {.from = from,
+         .to = from + forward * step,
+         .source = App::Core::CommanderDisplacementSource::StrikeLunge,
+         .airborne =
+             commander.get_component<Engine::Core::CommanderComponent>()->jump_active,
+         .dt = dt}));
     return;
   }
 
@@ -962,12 +1036,26 @@ void CommanderControlController::apply_strike_lunge(
   const float to_z = target_z - transform.position.z;
   const float distance = std::hypot(to_x, to_z);
 
+  if (distance > 0.0001F && definition->target_assist.maximum_turn_degrees > 0.0F) {
+    float const target_yaw = std::atan2(to_x, to_z) * 57.29577951308232F;
+    float const yaw_delta = signed_angle_delta(target_yaw, transform.rotation.y);
+    float const turn_rate = definition->target_assist.maximum_turn_degrees /
+                            std::max(0.08F, action->action_duration * 0.45F);
+    float const correction = std::clamp(yaw_delta, -turn_rate * dt, turn_rate * dt);
+    transform.rotation.y = wrap_angle_degrees(transform.rotation.y + correction);
+    transform.desired_yaw = transform.rotation.y;
+    transform.has_desired_yaw = true;
+  }
+
   constexpr float k_lunge_contact_margin = 0.55F;
   const float contact_distance =
       std::max(k_lunge_contact_margin, definition->hit_shape.reach * 0.72F);
 
   const float gap = distance - contact_distance;
-  if (distance <= 0.0001F || gap <= 0.02F || gap > k_strike_step_reach) {
+  float const authored_distance = std::abs(definition->movement.distance);
+  float const maximum_lunge =
+      authored_distance > 0.01F ? authored_distance : k_strike_step_reach;
+  if (distance <= 0.0001F || gap <= 0.02F) {
     return;
   }
 
@@ -979,17 +1067,36 @@ void CommanderControlController::apply_strike_lunge(
       break;
     }
   }
+  float const movement_start =
+      definition->movement.end_normalized > definition->movement.start_normalized
+          ? definition->movement.start_normalized
+          : 0.0F;
+  float const movement_end = definition->movement.end_normalized > movement_start
+                                 ? definition->movement.end_normalized
+                                 : trace_end;
+  if (action->normalized_action_time < movement_start ||
+      action->normalized_action_time > movement_end) {
+    return;
+  }
   const float swing_progress =
-      trace_end > 0.0F
-          ? std::clamp(action->normalized_action_time / trace_end, 0.0F, 1.0F)
+      movement_end > movement_start
+          ? std::clamp((action->normalized_action_time - movement_start) /
+                           (movement_end - movement_start),
+                       0.0F,
+                       1.0F)
           : 1.0F;
   const float lunge_shape = std::sin(swing_progress * std::numbers::pi_v<float>);
   if (lunge_shape <= 0.01F) {
     return;
   }
 
-  constexpr float k_lunge_speed = 4.6F;
-  const float step = std::min(gap, k_lunge_speed * lunge_shape * dt);
+  float const movement_seconds =
+      std::max(0.05F, (movement_end - movement_start) * action->action_duration);
+  float const lunge_speed =
+      authored_distance > 0.01F ? authored_distance / movement_seconds : 4.6F;
+  float const remaining_authored_lunge = std::min(gap, maximum_lunge);
+  const float step =
+      std::min(remaining_authored_lunge, lunge_speed * (0.5F + lunge_shape) * dt);
   QVector3D const from(
       transform.position.x, transform.position.y, transform.position.z);
   static_cast<void>(m_motor.advance(
@@ -998,7 +1105,8 @@ void CommanderControlController::apply_strike_lunge(
       {.from = from,
        .to = from + QVector3D((to_x / distance) * step, 0.0F, (to_z / distance) * step),
        .source = App::Core::CommanderDisplacementSource::StrikeLunge,
-       .airborne = false,
+       .airborne =
+           commander.get_component<Engine::Core::CommanderComponent>()->jump_active,
        .dt = dt}));
 }
 
@@ -1301,18 +1409,27 @@ auto CommanderControlController::primary_action(Engine::Core::World& world,
   bool const shooting =
       aim != nullptr && aim->stance == Engine::Core::FpvWeaponStance::Bow;
 
+  auto const* queued =
+      commander->get_component<Engine::Core::CombatIntentQueueComponent>();
+  auto const* pending =
+      queued != nullptr && queued->count > 0U ? &queued->entries[0] : nullptr;
+
   Engine::Core::EntityID target_id = 0;
   if (shooting) {
     m_primary_target_slot =
         Engine::Core::RpgCommanderTargetComponent::k_no_soldier_slot;
   } else {
-    target_id = find_primary_target(
-        world, commander_id, local_owner_id, k_strike_acquisition_bonus);
+    float acquisition_bonus = k_strike_acquisition_bonus;
+    if (pending != nullptr &&
+        pending->type == Engine::Core::CommanderCombatIntentType::Heavy) {
+      acquisition_bonus = 3.0F;
+    } else if (pending != nullptr &&
+               pending->type == Engine::Core::CommanderCombatIntentType::Special) {
+      acquisition_bonus = 1.2F;
+    }
+    target_id =
+        find_primary_target(world, commander_id, local_owner_id, acquisition_bonus);
   }
-  auto const* queued =
-      commander->get_component<Engine::Core::CombatIntentQueueComponent>();
-  auto const* pending =
-      queued != nullptr && queued->count > 0U ? &queued->entries[0] : nullptr;
   auto const attack_result =
       Game::Systems::CombatActions::CombatActionService::request_attack(
           world,
@@ -1323,6 +1440,9 @@ auto CommanderControlController::primary_action(Engine::Core::World& world,
            .move_forward_axis = m_move_forward_axis,
            .primary_held_duration =
                pending != nullptr ? pending->held_duration : m_primary_held_duration,
+           .intent_type = pending != nullptr
+                              ? pending->type
+                              : Engine::Core::CommanderCombatIntentType::Light,
            .has_swing = pending != nullptr && pending->has_swing,
            .swing = pending != nullptr ? pending->swing : Engine::Core::MeleeIntent{}});
 
@@ -1543,17 +1663,45 @@ auto CommanderControlController::update_impl(Engine::Core::World& world,
 
   constexpr float k_fov_kick_decay = 22.0F;
   m_dodge_fov_kick = std::max(0.0F, m_dodge_fov_kick - k_fov_kick_decay * dt);
-  constexpr float k_jump_duration = 0.58F;
-  constexpr float k_jump_peak_height = 0.34F;
+  constexpr float k_jump_duration = 0.96F;
+  constexpr float k_jump_peak_height = 0.72F;
 
   const bool ability_requested = m_tick_input.shield_bash_pressed ||
                                  m_tick_input.vanguard_rush_pressed ||
                                  m_tick_input.second_wind_pressed;
+  auto const* running_action =
+      commander->get_component<Engine::Core::RpgCommanderActionComponent>();
+  auto const* current_definition =
+      running_action != nullptr && running_action->combat_action_id != 0U
+          ? Game::Systems::CombatActions::find_combat_action_definition(
+                static_cast<Game::Systems::CombatActions::CombatActionId>(
+                    running_action->combat_action_id))
+          : nullptr;
+  bool const authored_airborne_action =
+      running_action != nullptr && running_action->action_running &&
+      current_definition != nullptr &&
+      current_definition->locomotion ==
+          Game::Systems::CombatActions::ActionLocomotionRequirement::Airborne;
+  if (m_jump_timer <= 0.0F && cmd_comp != nullptr && cmd_comp->jump_active &&
+      authored_airborne_action) {
+
+    float const authored_phase =
+        std::clamp(running_action->normalized_action_time, 0.0F, 0.96F);
+    m_jump_timer = std::max(0.04F, k_jump_duration * (1.0F - authored_phase));
+    m_jump_safe_position_valid = true;
+    m_jump_last_walkable_position =
+        QVector3D(transform->position.x, transform->position.y, transform->position.z);
+  }
+
+  bool const can_jump_branch = current_definition != nullptr &&
+                               current_definition->next_jump !=
+                                   Game::Systems::CombatActions::CombatActionId::None;
   const bool jump_blocked_by_action =
       m_dodge_state != DodgeState::None || m_tick_input.primary_held ||
       m_tick_input.guard_held || ability_requested ||
       (combat_state != nullptr &&
-       combat_state->animation_state != Engine::Core::CombatAnimationState::Idle);
+       combat_state->animation_state != Engine::Core::CombatAnimationState::Idle &&
+       !can_jump_branch);
   const bool should_jump =
       m_tick_input.jump_pressed && m_jump_timer <= 0.0F && !jump_blocked_by_action;
   const bool jump_refused = m_tick_input.jump_pressed && !should_jump;
@@ -1568,6 +1716,7 @@ auto CommanderControlController::update_impl(Engine::Core::World& world,
   }
   if (should_jump) {
     m_jump_timer = k_jump_duration;
+    m_jump_followup_pending = can_jump_branch;
     Game::Audio::play_cue(Game::Audio::Cue::k_combat_jump);
     m_jump_safe_position_valid = true;
     m_jump_last_walkable_position =
@@ -1581,9 +1730,17 @@ auto CommanderControlController::update_impl(Engine::Core::World& world,
   float jump_phase = 0.0F;
   float jump_height_offset = 0.0F;
   if (m_jump_timer > 0.0F) {
+    if (cmd_comp != nullptr && cmd_comp->dive_attack_active) {
+      m_jump_timer = std::min(m_jump_timer, k_jump_duration * 0.42F);
+      m_jump_timer = std::max(0.0F, m_jump_timer - dt * 2.8F);
+    }
     m_jump_timer = std::max(0.0F, m_jump_timer - dt);
     if (m_jump_timer <= 0.0F) {
       Game::Audio::play_cue(Game::Audio::Cue::k_combat_land);
+      if (cmd_comp != nullptr) {
+        cmd_comp->dive_attack_active = false;
+        cmd_comp->airborne_velocity = 0.0F;
+      }
     }
     jump_phase = 1.0F - (m_jump_timer / k_jump_duration);
     const float normalized_phase = std::clamp(jump_phase, 0.0F, 1.0F);
@@ -1595,6 +1752,13 @@ auto CommanderControlController::update_impl(Engine::Core::World& world,
     cmd_comp->jump_active = jump_active;
     cmd_comp->jump_phase = jump_phase;
     cmd_comp->jump_height_offset = jump_height_offset;
+    if (jump_active) {
+      cmd_comp->airborne_velocity =
+          cmd_comp->dive_attack_active
+              ? -11.0F
+              : (4.0F * k_jump_peak_height / k_jump_duration) *
+                    (1.0F - 2.0F * std::clamp(jump_phase, 0.0F, 1.0F));
+    }
     cmd_comp->punish_window_remaining =
         std::max(0.0F, cmd_comp->punish_window_remaining - dt);
     cmd_comp->posture = std::max(
@@ -1641,6 +1805,7 @@ auto CommanderControlController::update_impl(Engine::Core::World& world,
   const bool dodge_refused = m_tick_input.dodge_pressed && !should_dodge;
   if (should_dodge) {
     ++m_edges.dodge_consumed_sequence;
+    cancel_current_attack(*commander);
   } else if (dodge_refused) {
     ++m_edges.dodge_refused_sequence;
   }
@@ -2011,6 +2176,7 @@ auto CommanderControlController::update_impl(Engine::Core::World& world,
         !jump_active && body_allows_now(*commander).accepts_guard) {
       guard->active = true;
       if (!m_guard_was_active) {
+        cancel_current_attack(*commander);
         guard->perfect_guard_remaining =
             Game::Systems::CombatActions::k_commander_guard_timeline
                 .perfect_window_seconds;
@@ -2098,15 +2264,59 @@ auto CommanderControlController::update_impl(Engine::Core::World& world,
   }
 
   bool const waiting_for_release = aim != nullptr && aim->relaxed_from_overhold;
-  bool const body_can_take_input = m_dodge_state != DodgeState::Rolling &&
-                                   m_jump_timer <= 0.0F && !waiting_for_release;
+  bool const body_can_take_input =
+      m_dodge_state != DodgeState::Rolling && !waiting_for_release;
 
   if (intents != nullptr && body_can_take_input) {
 
-    if (m_tick_input.primary_pressed) {
+    auto const* held_action =
+        commander->get_component<Engine::Core::RpgCommanderActionComponent>();
+    auto const* held_definition =
+        held_action != nullptr && held_action->action_running
+            ? Game::Systems::CombatActions::find_combat_action_definition(
+                  static_cast<Game::Systems::CombatActions::CombatActionId>(
+                      held_action->combat_action_id))
+            : nullptr;
+    bool const held_melee_combo =
+        m_tick_input.primary_held && !m_tick_input.primary_pressed &&
+        intents->empty() && held_definition != nullptr &&
+        (held_definition->weapon_family ==
+             Game::Systems::CombatActions::WeaponFamily::Sword ||
+         held_definition->weapon_family ==
+             Game::Systems::CombatActions::WeaponFamily::Spear) &&
+        held_action->normalized_action_time >=
+            Game::Systems::CombatActions::action_event_normalized_time(
+                *held_definition,
+                Game::Systems::CombatActions::CombatActionEventType::RecoveryStart,
+                0.75F);
+    if (held_melee_combo) {
+      auto const* body =
+          commander->get_component<Engine::Core::CommanderBodyControlComponent>();
+      Engine::Core::CombatActionIntent continuation;
+      continuation.type = Engine::Core::CommanderCombatIntentType::Light;
+      continuation.has_swing = body != nullptr;
+      if (body != nullptr) {
+        continuation.swing = body->steered_intent;
+        continuation.swing.charge = 0.0F;
+      }
+      continuation.pressed_at = intents->clock;
+      continuation.held_duration = 0.0F;
+      intents->push(continuation);
+    }
+
+    if (m_tick_input.primary_pressed || m_tick_input.heavy_pressed ||
+        m_tick_input.special_pressed || m_jump_followup_pending) {
       auto const* body =
           commander->get_component<Engine::Core::CommanderBodyControlComponent>();
       Engine::Core::CombatActionIntent intent;
+      intent.type =
+          m_jump_followup_pending
+              ? Engine::Core::CommanderCombatIntentType::Jump
+              : (m_tick_input.special_pressed
+                     ? Engine::Core::CommanderCombatIntentType::Special
+                     : (m_tick_input.heavy_pressed
+                            ? Engine::Core::CommanderCombatIntentType::Heavy
+                            : Engine::Core::CommanderCombatIntentType::Light));
       intent.has_swing = body != nullptr;
       if (body != nullptr) {
         intent.swing = body->steered_intent;
@@ -2117,6 +2327,9 @@ auto CommanderControlController::update_impl(Engine::Core::World& world,
         ++m_edges.primary_consumed_sequence;
       }
       m_tick_input.primary_pressed = false;
+      m_tick_input.heavy_pressed = false;
+      m_tick_input.special_pressed = false;
+      m_jump_followup_pending = false;
       m_primary_scan_cooldown = 0.08F;
     }
   }
@@ -2128,11 +2341,16 @@ auto CommanderControlController::update_impl(Engine::Core::World& world,
   } else {
     m_carried_primary_press = m_tick_input.primary_pressed;
   }
+  m_tick_input.heavy_pressed = false;
+  m_tick_input.special_pressed = false;
 
   if (intents != nullptr && !intents->empty() && body_can_take_input) {
     auto* pending = intents->front();
     if (pending != nullptr) {
-      pending->held_duration = m_primary_held_duration;
+      pending->held_duration =
+          pending->type == Engine::Core::CommanderCombatIntentType::Heavy
+              ? m_primary_held_duration
+              : 0.0F;
     }
     if (!primary_action(world, commander_id, local_owner_id)) {
       return false;
@@ -2179,11 +2397,26 @@ auto CommanderControlController::update_impl(Engine::Core::World& world,
       m_observed_action_hit_count = 0;
     } else if (struck->hit_target_count > m_observed_action_hit_count) {
       m_observed_action_hit_count = struck->hit_target_count;
-
-      m_camera_rig.add_impact_kick(std::clamp(
-          struck->last_contact_speed / Game::Systems::Combat::k_reference_weapon_speed,
-          0.35F,
-          1.8F));
+      float role_boost = 1.0F;
+      if (auto const* definition =
+              Game::Systems::CombatActions::find_combat_action_definition(
+                  static_cast<Game::Systems::CombatActions::CombatActionId>(
+                      struck->combat_action_id));
+          definition != nullptr) {
+        using Game::Systems::CombatActions::CommanderActionRole;
+        if (definition->role == CommanderActionRole::Dive ||
+            definition->role == CommanderActionRole::Finisher) {
+          role_boost = 1.55F;
+        } else if (definition->role == CommanderActionRole::Launcher ||
+                   definition->role == CommanderActionRole::Special) {
+          role_boost = 1.3F;
+        }
+      }
+      m_camera_rig.add_impact_kick(
+          role_boost * std::clamp(struck->last_contact_speed /
+                                      Game::Systems::Combat::k_reference_weapon_speed,
+                                  0.35F,
+                                  1.8F));
     } else if (struck->hit_target_count < m_observed_action_hit_count) {
       m_observed_action_hit_count = struck->hit_target_count;
     }

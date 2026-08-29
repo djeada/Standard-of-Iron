@@ -153,9 +153,9 @@ RowLayout {
                 "cooldownKey": "second_wind_cooldown",
                 "remainingKey": "second_wind_cooldown_remaining"
             }, {
-                "title": qsTr("Shield Bash"),
+                "title": qsTr("Weapon Special / Shield Bash"),
                 "key": "F",
-                "description": qsTr("Guard-gated stagger burst that punishes enemies crowding your front."),
+                "description": qsTr("Use your weapon technique, or hold guard for a shield-bash stagger burst."),
                 "readyKey": "shield_bash_ready",
                 "cooldownKey": "shield_bash_cooldown",
                 "remainingKey": "shield_bash_cooldown_remaining"
