@@ -24,6 +24,7 @@ using FrontMap = std::unordered_map<Engine::Core::EntityID,
                                     std::vector<Engine::Core::FormationContactFront>>;
 
 constexpr float k_target_switch_hysteresis = 0.35F;
+constexpr float k_engage_close_speed = 3.2F;
 
 constexpr float k_contact_yaw_hold_seconds = 0.6F;
 constexpr float k_disengage_turn_degrees = 120.0F;
@@ -755,6 +756,16 @@ void publish_formation_presentation(Engine::Core::World& world, float delta_time
                 contact_vector.x / contact_vector.distance * pull_distance;
             directive.local_z +=
                 contact_vector.z / contact_vector.distance * pull_distance;
+          }
+          if (previous != nullptr && previous->alive && traversal_slot == nullptr) {
+            float const step_x = directive.local_x - previous->local_x;
+            float const step_z = directive.local_z - previous->local_z;
+            float const step = std::hypot(step_x, step_z);
+            float const allowed = k_engage_close_speed * std::max(0.0F, delta_time);
+            if (step > allowed && step > 0.0001F) {
+              directive.local_x = previous->local_x + step_x / step * allowed;
+              directive.local_z = previous->local_z + step_z / step * allowed;
+            }
           }
 
           float const yaw_rad = desired_yaw * std::numbers::pi_v<float> / 180.0F;

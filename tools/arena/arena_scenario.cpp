@@ -63,6 +63,7 @@ constexpr float k_default_foot_slide = 0.08F;
 constexpr float k_boom_reversal_floor = 0.005F;
 constexpr float k_presented_yaw_allowance_degrees = 0.5F;
 constexpr float k_planted_root_step = 0.02F;
+constexpr float k_stride_fade_presence = 0.05F;
 constexpr float k_planted_foot_height = 0.05F;
 constexpr float k_default_hand_step = 0.90F;
 constexpr float k_default_pelvis_step = 70.0F;
@@ -679,6 +680,7 @@ struct ArenaScenarioRunner::Impl {
     QVector3D foot_l_world;
     QVector3D foot_r_world;
     float pelvis_yaw_degrees{0.0F};
+    float locomotion_presence{0.0F};
     bool joints_valid{false};
     float attack_pelvis_yaw_min{0.0F};
     float attack_pelvis_yaw_max{0.0F};
@@ -915,6 +917,10 @@ struct ArenaScenarioRunner::Impl {
   QHash<QString, int> rpg_action_phase_previous;
   QHash<QString, float> rpg_action_time_previous;
   QHash<QString, std::vector<float>> rpg_swing_starts;
+  QHash<QString, std::vector<float>> rpg_swing_carry;
+  QHash<QString, float> rpg_swing_carry_pending;
+  QHash<QString, QVector3D> rpg_swing_carry_origin;
+  QHash<QString, bool> rpg_swing_carry_open;
   QHash<QString, TravelObservation> rpg_travel_observations;
   QHash<QString, float> minimum_group_pair_distance;
   QHash<int, int> completed_construction_by_owner;
@@ -3166,10 +3172,31 @@ struct ArenaScenarioRunner::Impl {
       int const previous_phase = rpg_action_phase_previous.value(group, 0);
       float const previous_time = rpg_action_time_previous.value(group, 1.0F);
 
-      if (unit.rpg_action_phase == striking &&
-          (previous_phase != striking ||
-           unit.rpg_action_normalized_time < previous_time)) {
+      bool const swing_started = unit.rpg_action_phase == striking &&
+                                 (previous_phase != striking ||
+                                  unit.rpg_action_normalized_time < previous_time);
+
+      auto const bank_carry = [&]() {
+        if (rpg_swing_carry_open.value(group, false)) {
+          rpg_swing_carry[group].push_back(rpg_swing_carry_pending.value(group, 0.0F));
+          rpg_swing_carry_open[group] = false;
+        }
+      };
+      if (swing_started) {
+        bank_carry();
         rpg_swing_starts[group].push_back(frame.time_seconds);
+        rpg_swing_carry_pending[group] = 0.0F;
+        rpg_swing_carry_origin[group] = unit.position;
+        rpg_swing_carry_open[group] = true;
+      }
+      if (rpg_swing_carry_open.value(group, false)) {
+        if (unit.rpg_action_phase == striking) {
+          rpg_swing_carry_pending[group] +=
+              horizontal_distance(rpg_swing_carry_origin.value(group), unit.position);
+          rpg_swing_carry_origin[group] = unit.position;
+        } else {
+          bank_carry();
+        }
       }
       rpg_action_phase_previous[group] = unit.rpg_action_phase;
       rpg_action_time_previous[group] = unit.rpg_action_normalized_time;
@@ -3598,7 +3625,9 @@ struct ArenaScenarioRunner::Impl {
               soldier.visual_state == Render::Profiling::SoldierVisualState::Walk ||
               soldier.visual_state == Render::Profiling::SoldierVisualState::Run ||
               soldier.visual_state == Render::Profiling::SoldierVisualState::Dying ||
-              soldier.visual_state == Render::Profiling::SoldierVisualState::Dead;
+              soldier.visual_state == Render::Profiling::SoldierVisualState::Dead ||
+              std::max(soldier.locomotion_presence, previous.locomotion_presence) >
+                  k_stride_fade_presence;
           bool const root_planted = step <= k_planted_root_step;
           if (!locomoting && root_planted) {
             float const allowed =
@@ -3808,6 +3837,7 @@ struct ArenaScenarioRunner::Impl {
       previous.foot_l_world = soldier.foot_l_world;
       previous.foot_r_world = soldier.foot_r_world;
       previous.pelvis_yaw_degrees = soldier.pelvis_yaw_degrees;
+      previous.locomotion_presence = soldier.locomotion_presence;
       previous.joints_valid = soldier.joint_sample_valid;
       previous.observed_at = elapsed;
       previous.initialized = true;
@@ -4934,12 +4964,26 @@ struct ArenaScenarioRunner::Impl {
         break;
       }
       case ArenaExpectationKind::CommanderContactCountAtMost: {
-        int const allowed =
+        int const allowed_floor =
             std::max(1,
                      static_cast<int>(std::lround(
                          expectation.threshold > 0.0F ? expectation.threshold : 1.0F)));
         for (auto const* frame : commander_frames()) {
           auto const& combat = frame->commander.combat;
+          int allowed = allowed_floor;
+          for (auto const& unit : frame->units) {
+            if (unit.group != expectation.group) {
+              continue;
+            }
+            auto const* definition =
+                Game::Systems::CombatActions::find_combat_action_definition(
+                    static_cast<Game::Systems::CombatActions::CombatActionId>(
+                        unit.combat_action_id));
+            if (definition != nullptr) {
+              allowed = std::max(allowed, definition->max_targets);
+            }
+            break;
+          }
           if (combat.action_running && combat.action_hit_count > allowed) {
             add_issue(QStringLiteral("commander_contact_multiplicity"),
                       QStringLiteral("one action landed %1 contacts by %2 s, but at "
@@ -5428,6 +5472,34 @@ struct ArenaScenarioRunner::Impl {
                           .arg(gap, 0, 'f', 2)
                           .arg(starts[i], 0, 'f', 2)
                           .arg(allowed_gap, 0, 'f', 2));
+            break;
+          }
+        }
+        break;
+      }
+      case ArenaExpectationKind::RpgSwingCarriesBody: {
+        auto const& carries = rpg_swing_carry[expectation.group];
+        int const required_swings =
+            std::max(1, static_cast<int>(std::lround(expectation.distance)));
+        float const required_carry = std::max(expectation.threshold, 0.0F);
+        if (static_cast<int>(carries.size()) < required_swings) {
+          add_issue(QStringLiteral("rpg_swing_carry_too_few"),
+                    QStringLiteral("%1 swung %2 times but needed %3 to judge the "
+                                   "body carry")
+                        .arg(expectation.group)
+                        .arg(carries.size())
+                        .arg(required_swings));
+          break;
+        }
+        for (std::size_t i = 0; i < carries.size(); ++i) {
+          if (carries[i] + 1.0e-3F < required_carry) {
+            add_issue(QStringLiteral("rpg_swing_planted"),
+                      QStringLiteral("%1 swing %2 carried the body %3 m but a strike "
+                                     "has to drive it at least %4 m")
+                          .arg(expectation.group)
+                          .arg(i + 1U)
+                          .arg(carries[i], 0, 'f', 2)
+                          .arg(required_carry, 0, 'f', 2));
             break;
           }
         }

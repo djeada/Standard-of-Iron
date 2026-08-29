@@ -627,6 +627,11 @@ public:
                                 ? Pathfinding::Passability::Light
                                 : Pathfinding::Passability::Heavy;
     }
+    if (auto const* commander =
+            entity.get_component<Engine::Core::CommanderComponent>();
+        commander != nullptr && commander->fpv_controlled) {
+      profile.stops_at_building_facade = true;
+    }
     return profile;
   }
 

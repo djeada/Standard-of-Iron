@@ -398,17 +398,23 @@ TEST(WorldPropClearanceIndexTest, ASolidPropClaimsItsGroundBody) {
   tent.scale = 1.0F;
   index.rebuild({tent}, 4.0F);
 
-  const float body = world_prop_ground_radius(WorldProp::Type::Tent, 1.0F);
-  ASSERT_GT(body, 0.0F);
-  EXPECT_EQ(index.disc_count(), 1U);
+  const auto body = world_prop_ground_half_extents(WorldProp::Type::Tent, 1.0F);
+  ASSERT_GT(body.x, 0.0F);
+  EXPECT_EQ(index.body_count(), 1U);
 
   EXPECT_TRUE(index.overlaps(tent.x, tent.z, 0.0F));
-  EXPECT_TRUE(index.overlaps(tent.x + body * 0.5F, tent.z, 0.0F));
-  EXPECT_FALSE(index.overlaps(tent.x + body + 0.5F, tent.z, 0.0F));
+  EXPECT_TRUE(index.overlaps(tent.x + body.x * 0.5F, tent.z, 0.0F));
+  EXPECT_FALSE(index.overlaps(tent.x + body.x + 0.5F, tent.z, 0.0F));
 
-  EXPECT_TRUE(index.overlaps(tent.x + body + 0.3F, tent.z, 0.5F))
+  EXPECT_TRUE(index.overlaps(tent.x + body.x + 0.3F, tent.z, 0.5F))
       << "a scatter item's own footprint has to count, or a stone lands with "
          "half of itself inside the tent";
+
+  ASSERT_GT(body.z, body.x);
+  EXPECT_TRUE(index.overlaps(tent.x, tent.z + body.x + 0.2F, 0.0F))
+      << "ground under the awning is being handed back to scatter";
+  EXPECT_FALSE(index.overlaps(tent.x + body.x + 0.2F, tent.z + body.z + 0.2F, 0.0F))
+      << "the corner outside both axes is open ground";
 }
 
 TEST(WorldPropClearanceIndexTest, ATreeOnlyClaimsItsStem) {

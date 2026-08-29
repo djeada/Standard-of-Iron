@@ -15,6 +15,10 @@ namespace Game::Systems::CombatActions {
 
 namespace {
 
+constexpr float k_heavy_minimum_charge = 0.60F;
+constexpr float k_heavy_maximum_swing_speed = 0.72F;
+constexpr float k_heavy_follow_through = 0.78F;
+
 [[nodiscard]] auto should_request_ranged_action(
     const Engine::Core::AttackComponent* attack,
     const Engine::Core::RpgCommanderAimComponent* aim) -> bool {
@@ -123,6 +127,10 @@ auto CombatActionService::request_attack(
   auto* active_action =
       attacker->get_component<Engine::Core::RpgCommanderActionComponent>();
   auto* commander = attacker->get_component<Engine::Core::CommanderComponent>();
+
+  bool const chained_from_running = active_action != nullptr &&
+                                    active_action->action_running &&
+                                    active_action->combat_action_id != 0U;
 
   MeleeInterruption interruption;
   if (auto const* running = running_definition_of(*attacker); running != nullptr) {
@@ -236,6 +244,21 @@ auto CombatActionService::request_attack(
                           attack_family == Engine::Core::CombatAttackFamily::Spear,
                   });
     swing_resolved = true;
+
+    if (request.intent_type == Engine::Core::CommanderCombatIntentType::Heavy) {
+
+      swing.charge = std::max(
+          swing.charge,
+          std::clamp(request.primary_held_duration / k_melee_full_charge_seconds,
+                     k_heavy_minimum_charge,
+                     1.0F));
+      swing.swing_speed = std::min(swing.swing_speed, k_heavy_maximum_swing_speed);
+      swing.follow_through = std::max(swing.follow_through, k_heavy_follow_through);
+      Engine::Core::complete_melee_intent(swing,
+                                          attack != nullptr
+                                              ? attack->melee_range
+                                              : Engine::Core::k_melee_default_reach);
+    }
 
     if (is_mounted_unit(unit)) {
       action_id = select_melee_action(swing, attack_family, true, finisher_attack);
@@ -375,7 +398,13 @@ auto CombatActionService::request_attack(
               : authored_swing_speed;
       action->action_duration =
           definition != nullptr ? definition->duration_seconds / swing_speed : 0.0F;
-      reset_combat_action_event_runtime(*action);
+
+      float const entry_normalized =
+          chained_from_running && definition != nullptr
+              ? action_event_normalized_time(
+                    *definition, CombatActionEventType::WindupStart, 0.0F)
+              : 0.0F;
+      reset_combat_action_event_runtime(*action, entry_normalized);
 
       if (combat_state != nullptr && definition != nullptr) {
         combat_state->attack_variant = 0U;

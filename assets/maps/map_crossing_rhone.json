@@ -2509,8 +2509,8 @@
             "style": "default",
             "waypoints": [
                 [
-                    380,
-                    37
+                    381.12,
+                    36.62
                 ],
                 [
                     392,
@@ -4432,8 +4432,8 @@
             "max_population": -1,
             "player_id": 1,
             "type": "archer",
-            "x": 39,
-            "z": 168
+            "x": 38.81,
+            "z": 168.22
         },
         {
             "max_population": -1,
@@ -4460,8 +4460,8 @@
             "max_population": -1,
             "player_id": 1,
             "type": "healer",
-            "x": 32,
-            "z": 180
+            "x": 30.64,
+            "z": 182.75
         },
         {
             "behavior": "guard",
@@ -4488,7 +4488,7 @@
             "max_population": -1,
             "player_id": 2,
             "type": "swordsman",
-            "x": 402,
+            "x": 400.33,
             "z": 44
         },
         {
@@ -4751,7 +4751,7 @@
             "nation": "roman_republic",
             "player_id": 3,
             "type": "swordsman",
-            "x": 582,
+            "x": 583.67,
             "z": 542
         },
         {
@@ -4905,8 +4905,8 @@
             "max_population": -1,
             "player_id": 2,
             "type": "spearman",
-            "x": 306,
-            "z": 184
+            "x": 305.81,
+            "z": 184.15
         },
         {
             "behavior": "guard",
@@ -4914,7 +4914,7 @@
             "max_population": -1,
             "player_id": 2,
             "type": "spearman",
-            "x": 306,
+            "x": 305.36,
             "z": 180
         },
         {
@@ -4923,7 +4923,7 @@
             "max_population": -1,
             "player_id": 2,
             "type": "spearman",
-            "x": 306,
+            "x": 305.36,
             "z": 176
         },
         {
@@ -5942,8 +5942,8 @@
             "rotation": 22,
             "scale": 1,
             "type": "tent",
-            "x": 45.42,
-            "z": 185.01
+            "x": 44.71,
+            "z": 175.98
         },
         {
             "rotation": -18,
@@ -5956,22 +5956,22 @@
             "rotation": 12,
             "scale": 1,
             "type": "tent",
-            "x": 54,
-            "z": 182
+            "x": 53.65,
+            "z": 183.39
         },
         {
             "rotation": 76,
             "scale": 1,
             "type": "supply_cart",
-            "x": 43.86,
-            "z": 188.29
+            "x": 40.27,
+            "z": 189.38
         },
         {
             "rotation": 90,
             "scale": 1,
             "type": "weapon_rack",
-            "x": 36,
-            "z": 188
+            "x": 36.29,
+            "z": 188.15
         },
         {
             "rotation": 30,
@@ -6042,49 +6042,49 @@
             "rotation": 8,
             "scale": 0.9,
             "type": "tent",
-            "x": 29,
-            "z": 183
+            "x": 31.35,
+            "z": 179.64
         },
         {
             "rotation": 65,
             "scale": 1,
             "type": "supply_cart",
             "x": 52,
-            "z": 157
+            "z": 159.14
         },
         {
             "rotation": 20,
             "scale": 0.85,
             "type": "supply_cart",
             "x": 32,
-            "z": 157
+            "z": 158.69
         },
         {
             "scale": 1,
             "type": "weapon_rack",
-            "x": 9,
-            "z": 157
+            "x": 8.77,
+            "z": 156.64
         },
         {
             "rotation": 80,
             "scale": 0.9,
             "type": "weapon_rack",
             "x": 46,
-            "z": 157
+            "z": 157.76
         },
         {
             "rotation": 34,
             "scale": 1,
             "type": "supply_cart",
-            "x": 111.82,
-            "z": 92.0
+            "x": 111.54,
+            "z": 92.17
         },
         {
             "rotation": -18,
             "scale": 0.75,
             "type": "supply_cart",
-            "x": 117.77,
-            "z": 82.41
+            "x": 117.67,
+            "z": 82.8
         },
         {
             "rotation": 12,
@@ -6131,8 +6131,8 @@
             "rotation": 22,
             "scale": 1,
             "type": "ruins",
-            "x": 206,
-            "z": 299
+            "x": 206.01,
+            "z": 299.08
         },
         {
             "scale": 1,
@@ -6165,8 +6165,8 @@
             "rotation": 70,
             "scale": 1,
             "type": "supply_cart",
-            "x": 205.47,
-            "z": 398.33
+            "x": 199.62,
+            "z": 392.29
         },
         {
             "rotation": 35,
@@ -6256,8 +6256,8 @@
             "rotation": 75,
             "scale": 1,
             "type": "weapon_rack",
-            "x": 330,
-            "z": 92
+            "x": 331.82,
+            "z": 91.93
         },
         {
             "rotation": 25,
@@ -6269,8 +6269,8 @@
         {
             "scale": 1,
             "type": "ruins",
-            "x": 270.63,
-            "z": 116.75
+            "x": 272.7,
+            "z": 115.27
         },
         {
             "rotation": 44,
@@ -6550,49 +6550,49 @@
             "scale": 1,
             "type": "tent",
             "x": 398,
-            "z": 63
+            "z": 62.13
         },
         {
             "scale": 1,
             "type": "tent",
             "x": 392,
-            "z": 64
+            "z": 70.21
         },
         {
             "scale": 1,
             "type": "tent",
-            "x": 364.69,
+            "x": 365.12,
             "z": 57.61
         },
         {
             "scale": 1,
             "type": "tent",
-            "x": 370.23,
+            "x": 371.34,
             "z": 50.2
         },
         {
             "scale": 1,
             "type": "tent",
             "x": 362.23,
-            "z": 48.68
+            "z": 47.62
         },
         {
             "scale": 1,
             "type": "tent",
-            "x": 371,
-            "z": 21
+            "x": 374.53,
+            "z": 27.12
         },
         {
             "scale": 1,
             "type": "tent",
-            "x": 364,
-            "z": 21
+            "x": 367.53,
+            "z": 27.12
         },
         {
             "scale": 1,
             "type": "tent",
             "x": 359,
-            "z": 21
+            "z": 11.47
         },
         {
             "intensity": 1,
@@ -6645,7 +6645,7 @@
             "radius": 3,
             "scale": 1,
             "type": "firecamp",
-            "x": 402,
+            "x": 404.07,
             "z": 29
         },
         {
@@ -6679,14 +6679,14 @@
             "scale": 1,
             "type": "weapon_rack",
             "x": 384,
-            "z": 23
+            "z": 23.67
         },
         {
             "rotation": -10,
             "scale": 1,
             "type": "tent",
-            "x": 15,
-            "z": 159
+            "x": 12.13,
+            "z": 158.77
         },
         {
             "rotation": -10,
@@ -6764,7 +6764,7 @@
         {
             "scale": 1,
             "type": "tent",
-            "x": 537,
+            "x": 535.76,
             "z": 535
         },
         {
@@ -6782,7 +6782,7 @@
         {
             "scale": 1,
             "type": "tent",
-            "x": 536,
+            "x": 535.76,
             "z": 573
         },
         {
@@ -6914,8 +6914,8 @@
             "rotation": 90,
             "scale": 0.9,
             "type": "ruins",
-            "x": 408,
-            "z": 149
+            "x": 409.95,
+            "z": 150.86
         },
         {
             "landmark": "rhone_east_sanctuary",
@@ -6993,8 +6993,8 @@
             "rotation": 180,
             "scale": 0.9,
             "type": "dead_tree",
-            "x": 496,
-            "z": 342
+            "x": 496.17,
+            "z": 341.28
         },
         {
             "landmark": "rhone_upland_sanctuary",
@@ -7185,23 +7185,23 @@
             "rotation": 270,
             "scale": 1,
             "type": "statue",
-            "x": 327,
-            "z": 185.20000000000002
+            "x": 325.6,
+            "z": 183.33
         },
         {
             "landmark": "rhone_north_watch",
             "scale": 1,
             "type": "tent",
-            "x": 309,
-            "z": 173
+            "x": 307.12,
+            "z": 172.5
         },
         {
             "landmark": "rhone_north_watch",
             "rotation": 180,
             "scale": 1,
             "type": "tent",
-            "x": 310,
-            "z": 183
+            "x": 309.62,
+            "z": 183.62
         },
         {
             "landmark": "rhone_north_watch",
@@ -7241,8 +7241,8 @@
             "rotation": 180,
             "scale": 0.9,
             "type": "ruins",
-            "x": 332,
-            "z": 186
+            "x": 327.46,
+            "z": 186.18
         },
         {
             "landmark": "rhone_gaul_forest_shrine",
@@ -7272,15 +7272,15 @@
             "rotation": 180,
             "scale": 1,
             "type": "ruins",
-            "x": 113,
-            "z": 245
+            "x": 112.3,
+            "z": 245.25
         },
         {
             "landmark": "rhone_gaul_forest_shrine",
             "scale": 0.85,
             "type": "ruins",
-            "x": 112,
-            "z": 234
+            "x": 107.62,
+            "z": 234.36
         },
         {
             "landmark": "rhone_gaul_forest_shrine",
@@ -7394,8 +7394,8 @@
             "authored_camp": true,
             "scale": 1,
             "type": "tent",
-            "x": 356.5,
-            "z": 39.6
+            "x": 357.78,
+            "z": 39.57
         },
         {
             "authored_camp": true,

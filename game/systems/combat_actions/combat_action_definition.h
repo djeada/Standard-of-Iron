@@ -135,7 +135,8 @@ struct CombatActionDefinition {
   DamageProfile damage;
   HitShapeProfile hit_shape;
   float duration_seconds{1.8F};
-  std::uint16_t rider_clip_id{Animation::k_unmapped_clip};
+
+  std::uint16_t authored_clip_id{Animation::k_unmapped_clip};
   std::span<const CombatActionEvent> events{};
   float light_stamina_cost{
       Engine::Core::CombatStateComponent::k_stamina_cost_light_attack};
