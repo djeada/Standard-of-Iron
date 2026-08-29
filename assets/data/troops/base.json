@@ -4,8 +4,8 @@
       "id": "archer",
       "display_name": "Archer",
       "production": {
-        "cost": 20,
-        "population": 20,
+        "cost": 10,
+        "population": 10,
         "resource_costs": {
           "wood": 30,
           "iron": 10
@@ -59,8 +59,8 @@
       "id": "swordsman",
       "display_name": "Swordsman",
       "production": {
-        "cost": 15,
-        "population": 15,
+        "cost": 8,
+        "population": 8,
         "resource_costs": {
           "wood": 10,
           "iron": 30
@@ -117,8 +117,8 @@
       "id": "spearman",
       "display_name": "Spearman",
       "production": {
-        "cost": 24,
-        "population": 24,
+        "cost": 12,
+        "population": 12,
         "resource_costs": {
           "wood": 30,
           "iron": 15
@@ -175,8 +175,8 @@
       "id": "horse_swordsman",
       "display_name": "Mounted Knight",
       "production": {
-        "cost": 18,
-        "population": 18,
+        "cost": 9,
+        "population": 9,
         "resource_costs": {
           "wood": 15,
           "iron": 30,
@@ -231,8 +231,8 @@
       "id": "horse_archer",
       "display_name": "Horse Archer",
       "production": {
-        "cost": 20,
-        "population": 20,
+        "cost": 10,
+        "population": 10,
         "resource_costs": {
           "wood": 25,
           "iron": 15,
@@ -289,8 +289,8 @@
       "id": "horse_spearman",
       "display_name": "Horse Spearman",
       "production": {
-        "cost": 18,
-        "population": 18,
+        "cost": 9,
+        "population": 9,
         "resource_costs": {
           "wood": 25,
           "iron": 22,
@@ -346,8 +346,8 @@
       "id": "healer",
       "display_name": "Healer",
       "production": {
-        "cost": 4,
-        "population": 4,
+        "cost": 2,
+        "population": 2,
         "resource_costs": {
           "wood": 10,
           "stone": 10,
@@ -561,8 +561,8 @@
       "id": "catapult",
       "display_name": "Catapult",
       "production": {
-        "cost": 12,
-        "population": 12,
+        "cost": 6,
+        "population": 6,
         "resource_costs": {
           "wood": 90,
           "stone": 20,
@@ -617,8 +617,8 @@
       "id": "ballista",
       "display_name": "Ballista",
       "production": {
-        "cost": 10,
-        "population": 10,
+        "cost": 5,
+        "population": 5,
         "resource_costs": {
           "wood": 75,
           "iron": 45
@@ -672,8 +672,8 @@
       "id": "elephant",
       "display_name": "War Elephant",
       "production": {
-        "cost": 24,
-        "population": 24,
+        "cost": 12,
+        "population": 12,
         "resource_costs": {
           "wood": 40,
           "iron": 25,
@@ -729,8 +729,8 @@
       "id": "roman_legion_organizer",
       "display_name": "Quintus Fabius Maximus",
       "production": {
-        "cost": 20,
-        "population": 20,
+        "cost": 10,
+        "population": 10,
         "resource_costs": {
           "wood": 30,
           "stone": 20,
@@ -780,8 +780,8 @@
       "id": "roman_veteran_consul",
       "display_name": "Publius Cornelius Scipio",
       "production": {
-        "cost": 20,
-        "population": 20,
+        "cost": 10,
+        "population": 10,
         "resource_costs": {
           "wood": 30,
           "stone": 20,
@@ -831,8 +831,8 @@
       "id": "roman_field_commander",
       "display_name": "Marcus Claudius Marcellus",
       "production": {
-        "cost": 20,
-        "population": 20,
+        "cost": 10,
+        "population": 10,
         "resource_costs": {
           "wood": 30,
           "stone": 20,
@@ -882,8 +882,8 @@
       "id": "carthage_spear_commander",
       "display_name": "Hanno the Great",
       "production": {
-        "cost": 20,
-        "population": 20,
+        "cost": 10,
+        "population": 10,
         "resource_costs": {
           "wood": 30,
           "stone": 20,
@@ -933,8 +933,8 @@
       "id": "carthage_bow_commander",
       "display_name": "Hasdrubal Barca",
       "production": {
-        "cost": 20,
-        "population": 20,
+        "cost": 10,
+        "population": 10,
         "resource_costs": {
           "wood": 30,
           "stone": 20,
@@ -984,8 +984,8 @@
       "id": "carthage_sword_commander",
       "display_name": "Hannibal Barca",
       "production": {
-        "cost": 20,
-        "population": 20,
+        "cost": 10,
+        "population": 10,
         "resource_costs": {
           "wood": 30,
           "stone": 20,
@@ -1035,8 +1035,8 @@
       "id": "builder",
       "display_name": "Builder",
       "production": {
-        "cost": 10,
-        "population": 10,
+        "cost": 5,
+        "population": 5,
         "resource_costs": {
           "wood": 20
         },
