@@ -1624,8 +1624,8 @@
             "max_population": -1,
             "player_id": 2,
             "type": "spearman",
-            "x": 300,
-            "z": 144
+            "x": 300.2,
+            "z": 143.4
         },
         {
             "max_population": -1,
@@ -1709,7 +1709,7 @@
             "player_id": 2,
             "type": "swordsman",
             "x": 575.64,
-            "z": 153
+            "z": 153.57
         },
         {
             "max_population": -1,

@@ -246,6 +246,15 @@ constexpr std::array k_fields = std::to_array<FieldSpec>({
      DerivedRebuilt,
      "Marks an entity the cleanup system removes this tick."},
     {"StaggerComponent", DerivedRebuilt, "Stagger reaction resolved within the tick."},
+    {"PoiseComponent",
+     DerivedRebuilt,
+     "Stagger resistance. It regenerates to its maximum after "
+     "k_regeneration_delay_seconds, so a reload starting from full poise costs "
+     "the player nothing."},
+    {"CombatLaunchComponent",
+     DerivedRebuilt,
+     "Velocity of a body still in the air from a knockback. The launch resolves "
+     "when it lands, and the combat system re-adds it on the next hit."},
     {"SpearBraceComponent", DerivedRebuilt, "Brace resolved within the tick."},
     {"MountedChargeComponent", DerivedRebuilt, "Charge resolved within the tick."},
     {"ElephantKnockbackCooldownComponent",

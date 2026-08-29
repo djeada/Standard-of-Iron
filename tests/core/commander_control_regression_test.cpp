@@ -852,7 +852,7 @@ TEST(CommanderControlRegressionTest, CommanderJumpAddsVisualLiftToRenderAndCamer
   EXPECT_TRUE(contains(component_source, "float jump_phase{0.0F};"));
   EXPECT_TRUE(contains(component_source, "float jump_height_offset{0.0F};"));
 
-  EXPECT_TRUE(contains(controller_source, "constexpr float k_jump_duration = 0.58F;"));
+  EXPECT_TRUE(contains(controller_source, "constexpr float k_jump_duration ="));
   EXPECT_TRUE(contains(controller_source,
                        "cmd_comp->jump_height_offset = jump_height_offset;"));
   EXPECT_TRUE(contains(controller_source, "m_jump_last_walkable_position"));

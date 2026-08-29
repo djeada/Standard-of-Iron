@@ -49,6 +49,14 @@ protected:
     unit->owner_id = 1;
     unit->speed = 3.0F;
     unit->spawn_type = Game::Units::SpawnType::Knight;
+
+    auto* attack = entity->add_component<Engine::Core::AttackComponent>();
+    if (attack == nullptr) {
+      return nullptr;
+    }
+    attack->can_melee = true;
+    attack->preferred_mode = Engine::Core::AttackComponent::CombatMode::Melee;
+    attack->current_mode = Engine::Core::AttackComponent::CombatMode::Melee;
     commander->fpv_controlled = true;
     return entity;
   }
