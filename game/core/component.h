@@ -333,7 +333,6 @@ class MovementFactsComponent {
 public:
   RootPoseFacts previous_root;
   RouteIntentFacts route;
-  PassingCommitmentFacts passing;
   DesiredMotionFacts desired;
   SteeringFacts steering;
   MotorFacts motor;

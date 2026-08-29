@@ -8,7 +8,6 @@
 #include <vector>
 
 #include "../../core/entity.h"
-#include "../spatial_grid.h"
 
 namespace Engine::Core {
 class World;
@@ -43,7 +42,8 @@ struct CombatQueryContext {
   [[nodiscard]] auto hostile(int attacker_owner_id, int target_owner_id) const -> bool;
 
   std::vector<Engine::Core::Entity*> units;
-  Game::Systems::SpatialGrid unit_grid;
+
+  Engine::Core::World* world{nullptr};
   mutable std::vector<Engine::Core::EntityID> nearby_unit_ids;
 
 private:

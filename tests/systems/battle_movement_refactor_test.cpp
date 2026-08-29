@@ -7,6 +7,7 @@
 #include "core/component.h"
 #include "core/entity.h"
 #include "core/world.h"
+#include "systems/body_contact_system.h"
 #include "systems/cohort_system.h"
 #include "systems/combat_system/elephant_special_processor.h"
 #include "systems/engagement_slot_system.h"
@@ -36,7 +37,10 @@ TEST_F(LocalAvoidanceTest, LargeGroupProducesSteeringWithoutTeleportingUnits) {
   constexpr int k_crowded_unit_count = 256;
   for (int i = 0; i < k_crowded_unit_count; ++i) {
     auto* entity = world->create_entity();
-    entity->add_component<TransformComponent>(5.0F, 0.0F, 5.0F);
+
+    entity->add_component<TransformComponent>(5.0F + static_cast<float>(i % 16) * 0.8F,
+                                              0.0F,
+                                              5.0F + static_cast<float>(i / 16) * 0.8F);
     auto* unit = entity->add_component<UnitComponent>(100, 100, 2.0F, 12.0F);
     unit->owner_id = 1;
     auto* movement = entity->add_component<MovementComponent>();
@@ -73,15 +77,19 @@ TEST_F(LocalAvoidanceTest, LargeGroupProducesSteeringWithoutTeleportingUnits) {
   EXPECT_TRUE(std::any_of(units.begin(), units.end(), [](const Entity* entity) {
     const auto* facts = entity->get_component<MovementFactsComponent>();
     return facts != nullptr && facts->steering.valid &&
-           (std::abs(facts->steering.separation_x) > 0.001F ||
-            std::abs(facts->steering.separation_z) > 0.001F);
+           (std::abs(facts->steering.correction_x) > 0.001F ||
+            std::abs(facts->steering.correction_z) > 0.001F);
   }));
   for (const auto* entity : units) {
     const auto* facts = entity->get_component<MovementFactsComponent>();
     ASSERT_NE(facts, nullptr);
-    EXPECT_LE(std::hypot(facts->steering.separation_x, facts->steering.separation_z),
-              Game::Systems::LocalAvoidanceSystem::k_overlap_correction_speed +
-                  1.0e-3F);
+    ASSERT_TRUE(facts->steering.valid);
+    const float steered =
+        std::hypot(facts->steering.velocity_x, facts->steering.velocity_z);
+    EXPECT_GE(steered,
+              Game::Systems::LocalAvoidanceSystem::k_min_speed_fraction - 1.0e-3F)
+        << "traffic brought a body to a standstill";
+    EXPECT_LE(steered, 1.0F + 1.0e-3F) << "steering handed out free speed";
   }
   for (const auto* entity : units) {
     const auto* movement = entity->get_component<MovementComponent>();
@@ -89,8 +97,77 @@ TEST_F(LocalAvoidanceTest, LargeGroupProducesSteeringWithoutTeleportingUnits) {
     EXPECT_FLOAT_EQ(movement->get_vx(), 1.0F);
     EXPECT_FLOAT_EQ(movement->get_vz(), 0.0F);
   }
-  EXPECT_GT(system.diagnostics().overlaps_detected, 0U);
-  EXPECT_GT(system.diagnostics().average_neighbors_checked, 200U);
+  EXPECT_GE(system.diagnostics().units_processed, 1U);
+  EXPECT_GT(system.diagnostics().units_steered, 0U);
+  EXPECT_GT(system.diagnostics().average_neighbors_checked, 0U)
+      << "the shared spatial index returned no neighbours at all";
+}
+
+TEST_F(LocalAvoidanceTest, ContactPassPullsStackedBodiesApart) {
+  auto under_way = [](Entity* entity) {
+    auto* facts = entity->add_component<MovementFactsComponent>();
+    facts->desired.valid = true;
+    facts->desired.velocity_x = 1.0F;
+  };
+
+  auto* left = world->create_entity();
+  left->add_component<TransformComponent>(5.0F, 0.0F, 5.0F);
+  left->add_component<UnitComponent>(100, 100, 2.0F, 12.0F)->owner_id = 1;
+  left->add_component<MovementComponent>();
+  under_way(left);
+
+  auto* right = world->create_entity();
+  right->add_component<TransformComponent>(5.05F, 0.0F, 5.0F);
+  right->add_component<UnitComponent>(100, 100, 2.0F, 12.0F)->owner_id = 1;
+  right->add_component<MovementComponent>();
+  under_way(right);
+
+  const auto* left_transform = left->get_component<TransformComponent>();
+  const auto* right_transform = right->get_component<TransformComponent>();
+  const float before =
+      std::hypot(left_transform->position.x - right_transform->position.x,
+                 left_transform->position.z - right_transform->position.z);
+
+  BodyContactSystem contact;
+  contact.update(world.get(), 1.0F / 60.0F);
+
+  const float after =
+      std::hypot(left_transform->position.x - right_transform->position.x,
+                 left_transform->position.z - right_transform->position.z);
+
+  EXPECT_GT(after, before) << "stacked bodies were left inside one another";
+  EXPECT_GT(contact.diagnostics().pairs_resolved, 0U);
+  EXPECT_GT(contact.diagnostics().deepest_overlap, 0.0F);
+}
+
+TEST_F(LocalAvoidanceTest, ContactPassDoesNotShoveAHoldingBody) {
+  auto* holder = world->create_entity();
+  holder->add_component<TransformComponent>(8.0F, 0.0F, 8.0F);
+  holder->add_component<UnitComponent>(100, 100, 2.0F, 12.0F)->owner_id = 1;
+  holder->add_component<MovementComponent>();
+  holder->add_component<HoldModeComponent>()->active = true;
+  auto* holder_facts = holder->add_component<MovementFactsComponent>();
+  holder_facts->desired.valid = true;
+
+  auto* walker = world->create_entity();
+  walker->add_component<TransformComponent>(8.05F, 0.0F, 8.0F);
+  walker->add_component<UnitComponent>(100, 100, 2.0F, 12.0F)->owner_id = 1;
+  walker->add_component<MovementComponent>();
+  auto* walker_facts = walker->add_component<MovementFactsComponent>();
+  walker_facts->desired.valid = true;
+  walker_facts->desired.velocity_x = 1.0F;
+
+  const auto* holder_transform = holder->get_component<TransformComponent>();
+  const float holder_x = holder_transform->position.x;
+  const float holder_z = holder_transform->position.z;
+
+  BodyContactSystem contact;
+  contact.update(world.get(), 1.0F / 60.0F);
+
+  EXPECT_FLOAT_EQ(holder_transform->position.x, holder_x);
+  EXPECT_FLOAT_EQ(holder_transform->position.z, holder_z);
+  EXPECT_GT(std::abs(walker->get_component<TransformComponent>()->position.x - 8.05F),
+            0.0F);
 }
 
 TEST_F(LocalAvoidanceTest, StationaryUnitsNotDisplaced) {

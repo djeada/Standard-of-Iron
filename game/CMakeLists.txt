@@ -147,7 +147,6 @@ add_library(
     systems/pathfinding.cpp
     systems/walkability.cpp
     systems/route_corridor_planner.cpp
-    systems/spatial_grid.cpp
     systems/gate_service.cpp
     systems/wall_network_service.cpp
     systems/terrain_alignment_system.cpp
@@ -236,6 +235,7 @@ add_library(
     systems/movement_pipeline.cpp
     systems/movement_orders.cpp
     systems/local_avoidance_system.cpp
+    systems/body_contact_system.cpp
     systems/formation_move_dispatch_system.cpp
 )
 target_include_directories(soi_movement PUBLIC .)

@@ -538,8 +538,7 @@ auto RouteFollowSystem::update_progress(Engine::Core::Entity& entity,
 
   bool const yielding_to_traffic =
       facts.steering.valid &&
-      (facts.steering.result == Engine::Core::SteeringResult::Yielded ||
-       facts.steering.result == Engine::Core::SteeringResult::Separating) &&
+      facts.steering.result == Engine::Core::SteeringResult::Yielded &&
       progress.state != MovementOrderState::Recovering;
 
   progress.no_progress_seconds += delta_time;

@@ -46,6 +46,9 @@ struct MovementGateThresholds {
 
   float collision_recovery_seconds{0.50F};
 
+  float body_overlap_metres{0.15F};
+  float body_overlap_seconds{0.50F};
+
   int layout_toggle_allowance{2};
   float layout_min_dwell_seconds{0.35F};
 
@@ -91,6 +94,7 @@ enum class MovementFindingKind : std::uint8_t {
   PickingAnchorMismatch,
   MissingFinalAnchor,
   CollisionPenetration,
+  BodyOverlap,
   Starvation
 };
 

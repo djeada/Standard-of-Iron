@@ -1026,11 +1026,6 @@ void MovementSystem::move_unit(Engine::Core::Entity* entity,
   float translated_vx = movement->vx * translation_scale;
   float translated_vz = movement->vz * translation_scale;
 
-  if (facts->desired.valid && facts->steering.valid) {
-    translated_vx += facts->steering.separation_x;
-    translated_vz += facts->steering.separation_z;
-  }
-
   if (auto const* traversal =
           entity->get_component<Engine::Core::UnitTraversalLayoutStateComponent>();
       traversal != nullptr && traversal->root_motion_blocked && world != nullptr &&
