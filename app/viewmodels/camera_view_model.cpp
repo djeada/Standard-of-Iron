@@ -2,6 +2,8 @@
 
 #include <QVector3D>
 
+#include <cmath>
+
 #include "app/core/client_context.h"
 #include "app/input/input_command_handler.h"
 #include "app/input/rts_camera_controller.h"
@@ -44,6 +46,100 @@ void CameraViewModel::zoom(float delta) {
     camera->zoom(delta);
     emit distance_changed();
   }
+}
+
+namespace {
+constexpr float k_orbit_drag_yaw_degrees_per_pixel = 0.35F;
+constexpr float k_orbit_drag_pitch_degrees_per_pixel = 0.2F;
+} // namespace
+
+auto CameraViewModel::ground_under_screen(float sx,
+                                          float sy,
+                                          QVector3D& out) const -> bool {
+  const auto* camera = m_context.active_camera;
+  if (camera == nullptr || m_context.viewport == nullptr ||
+      m_context.viewport->width <= 0 || m_context.viewport->height <= 0) {
+    return false;
+  }
+  return camera->screen_to_ground(
+      sx, sy, m_context.viewport->width, m_context.viewport->height, out);
+}
+
+void CameraViewModel::zoom_at_screen(float delta, float sx, float sy) {
+  m_host.ensure_initialized();
+  const auto frame_lock = m_host.lock_frame();
+  emit moved();
+  auto* controller = m_context.camera_controller;
+  auto* camera = m_context.active_camera;
+  if (controller == nullptr) {
+    return;
+  }
+  controller->zoom(delta);
+  if (camera != nullptr && m_context.viewport != nullptr &&
+      m_context.viewport->width > 0 && m_context.viewport->height > 0) {
+    camera->set_zoom_anchor(sx / static_cast<float>(m_context.viewport->width),
+                            sy / static_cast<float>(m_context.viewport->height));
+  }
+  emit distance_changed();
+}
+
+void CameraViewModel::drag_pan_begin(float sx, float sy) {
+  m_host.ensure_initialized();
+  const auto frame_lock = m_host.lock_frame();
+  m_drag_pan_active = ground_under_screen(sx, sy, m_drag_pan_anchor);
+  if (m_drag_pan_active) {
+    set_following_selection(false);
+  }
+}
+
+void CameraViewModel::drag_pan_update(float sx, float sy) {
+  if (!m_drag_pan_active) {
+    return;
+  }
+  m_host.ensure_initialized();
+  const auto frame_lock = m_host.lock_frame();
+  auto* camera = m_context.active_camera;
+  QVector3D current;
+  if (camera == nullptr || !ground_under_screen(sx, sy, current)) {
+    return;
+  }
+  camera->translate(m_drag_pan_anchor - current);
+  emit moved();
+}
+
+void CameraViewModel::drag_pan_end() {
+  m_drag_pan_active = false;
+}
+
+void CameraViewModel::orbit_drag_begin(float sx, float sy) {
+  m_host.ensure_initialized();
+  m_orbit_drag_active = true;
+  m_orbit_drag_last_x = sx;
+  m_orbit_drag_last_y = sy;
+}
+
+void CameraViewModel::orbit_drag_update(float sx, float sy) {
+  if (!m_orbit_drag_active) {
+    return;
+  }
+  float const dx = sx - m_orbit_drag_last_x;
+  float const dy = sy - m_orbit_drag_last_y;
+  m_orbit_drag_last_x = sx;
+  m_orbit_drag_last_y = sy;
+  if (!std::isfinite(dx) || !std::isfinite(dy)) {
+    return;
+  }
+  m_host.ensure_initialized();
+  const auto frame_lock = m_host.lock_frame();
+  if (auto* camera = m_context.active_camera) {
+    camera->rotate_immediate(dx * k_orbit_drag_yaw_degrees_per_pixel,
+                             dy * k_orbit_drag_pitch_degrees_per_pixel);
+    emit moved();
+  }
+}
+
+void CameraViewModel::orbit_drag_end() {
+  m_orbit_drag_active = false;
 }
 
 void CameraViewModel::yaw(float degrees) {

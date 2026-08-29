@@ -10,6 +10,8 @@
 #include "../core/entity.h"
 #include "../core/world.h"
 #include "../game_config.h"
+#include "../map/terrain.h"
+#include "../map/terrain_service.h"
 #include "../map/visibility_service.h"
 #include "../systems/selection_system.h"
 #include "../units/spawn_type.h"
@@ -20,8 +22,10 @@
 
 namespace Game::Systems {
 
-CameraService::CameraService(const Game::Map::VisibilityService& visibility)
+CameraService::CameraService(const Game::Map::VisibilityService& visibility,
+                             const Game::Map::TerrainService& terrain)
     : m_visibility(visibility)
+    , m_terrain(terrain)
     , m_controller(std::make_unique<CameraController>())
     , m_follow_system(std::make_unique<CameraFollowSystem>()) {
 }
@@ -30,6 +34,7 @@ CameraService::~CameraService() = default;
 
 void CameraService::sync_map_bounds(Render::GL::Camera& camera) const {
   const auto& visibility = m_visibility;
+  camera.set_rts_constraints(true);
   if (!visibility.is_initialized()) {
     camera.clear_map_bounds();
     return;
@@ -37,6 +42,15 @@ void CameraService::sync_map_bounds(Render::GL::Camera& camera) const {
   camera.set_map_bounds({.tile_size = visibility.get_tile_size(),
                          .width = visibility.get_width(),
                          .height = visibility.get_height()});
+  camera.set_ground_height_sampler([terrain = &m_terrain](float x, float z) -> float {
+    const auto* height_map = terrain->get_height_map();
+    if (!terrain->is_initialized() || height_map == nullptr) {
+      return 0.0F;
+    }
+    return height_map->get_height_at(x, z);
+  });
+
+  camera.zoom_distance(0.0F);
 }
 
 void CameraService::move(Render::GL::Camera& camera, float dx, float dz) {

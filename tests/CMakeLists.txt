@@ -544,6 +544,7 @@ add_executable(
     core/game_speed_test.cpp
     core/match_setup_maps_test.cpp
     core/camera_framing_test.cpp
+    core/camera_bounds_test.cpp
     core/mission_objective_markers_test.cpp
     controllers/command_controller_test.cpp
     ui/preferences_test.cpp

@@ -100,7 +100,8 @@ void RuntimeFrameOrchestrator::update(const AppSceneContext& scene,
   }
 
   if (scene.active_camera != nullptr) {
-    scene.active_camera->update(dt);
+
+    scene.active_camera->update(frame_seconds);
   }
 
   if (scene.world != nullptr && scene.active_camera != nullptr) {

@@ -86,9 +86,9 @@ QtObject {
             "muted": false
         }, {
             "key": "drag_pan",
-            "compact": qsTr("Right-drag"),
+            "compact": qsTr("Middle-drag"),
             "name": qsTr("Drag pan"),
-            "control": qsTr("Hold right button and drag"),
+            "control": qsTr("Hold middle button and drag"),
             "detail": qsTr("Drags the ground under the cursor. Edge scroll pauses while you drag so the two never fight."),
             "state": "",
             "muted": false
@@ -105,7 +105,7 @@ QtObject {
             "compact": root.rotate_keys(),
             "name": qsTr("Rotate"),
             "control": root.rotate_keys(),
-            "detail": qsTr("Swings the view around the point you are looking at. Hold Shift to swing further."),
+            "detail": qsTr("Swings the view around the point you are looking at. Hold Shift to swing further, or hold Alt and drag with the middle button."),
             "state": "",
             "muted": false
         }, {

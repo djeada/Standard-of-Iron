@@ -362,16 +362,16 @@ This may be a skirmish, or objectives have not been configured.</source>
         <translation>التحريك بلوحة المفاتيح</translation>
     </message>
     <message>
-        <source>Right-drag</source>
-        <translation>السحب بالزر الأيمن</translation>
+        <source>Middle-drag</source>
+        <translation>السحب بالزر الأوسط</translation>
     </message>
     <message>
         <source>Drag pan</source>
         <translation>التحريك بالسحب</translation>
     </message>
     <message>
-        <source>Hold right button and drag</source>
-        <translation>اضغط الزر الأيمن واسحب</translation>
+        <source>Hold middle button and drag</source>
+        <translation>اضغط الزر الأوسط واسحب</translation>
     </message>
     <message>
         <source>Drags the ground under the cursor. Edge scroll pauses while you drag so the two never fight.</source>
@@ -386,8 +386,8 @@ This may be a skirmish, or objectives have not been configured.</source>
         <translation>التدوير</translation>
     </message>
     <message>
-        <source>Swings the view around the point you are looking at. Hold Shift to swing further.</source>
-        <translation>يدير المشهد حول النقطة التي تنظر إليها. مع Shift يدور أكثر.</translation>
+        <source>Swings the view around the point you are looking at. Hold Shift to swing further, or hold Alt and drag with the middle button.</source>
+        <translation>يدير المنظر حول النقطة التي تنظر إليها. اضغط Shift للدوران أكثر، أو اضغط Alt واسحب بالزر الأوسط.</translation>
     </message>
     <message>
         <source>Click minimap</source>

@@ -5,7 +5,7 @@
 namespace Game::Systems {
 
 void CameraController::move(Render::GL::Camera& camera, float dx, float dz) {
-  camera.pan(dx, dz);
+  camera.pan_eased(dx, dz);
   if (camera.is_follow_enabled()) {
     camera.capture_follow_offset();
   }
@@ -42,7 +42,7 @@ void CameraController::orbit(Render::GL::Camera& camera,
 }
 
 void CameraController::zoom_distance(Render::GL::Camera& camera, float delta) {
-  camera.zoom_distance(delta);
+  camera.zoom_distance_eased(delta);
   if (camera.is_follow_enabled()) {
     camera.capture_follow_offset();
   }
