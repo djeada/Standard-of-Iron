@@ -15,6 +15,8 @@ Item {
     property int bottom_panel_height: bottomPanel.height
 
     readonly property int left_stack_bottom: waveTracker.visible ? waveTracker.y + waveTracker.height : topPanel.height
+
+    readonly property int right_stack_bottom: topPanel.height + Design.Metrics.space8 + (Design.Metrics.space24 * 8) + Design.Metrics.space8 + hudTop.minimapLegendHeight
     property int selection_tick: 0
     property bool has_movable_units: false
     property bool commander_rpg_mode: typeof game !== 'undefined' && game.commander.mode_state === "active"
@@ -260,7 +262,7 @@ Item {
         anchors.right: parent.right
         anchors.rightMargin: Design.Metrics.hudZoneMargin
         anchors.top: topPanel.bottom
-        anchors.topMargin: Design.Metrics.space8 + (Design.Metrics.space24 * 8) + Design.Metrics.space8 + hudTop.minimapLegendHeight
+        anchors.topMargin: hud.right_stack_bottom - topPanel.height
 
         visible: hud.camera_legend_visible && !hud.commander_rpg_mode && !commanderMessage.showing
         onDismissed: hud.camera_legend_visible = false
@@ -375,7 +377,7 @@ Item {
         anchors.right: parent.right
         anchors.rightMargin: Design.Metrics.hudZoneMargin
         anchors.top: topPanel.bottom
-        anchors.topMargin: Design.Metrics.space8 + (Design.Metrics.space24 * 8) + Design.Metrics.space8 + hudTop.minimapLegendHeight
+        anchors.topMargin: hud.right_stack_bottom - topPanel.height
 
         z: 200
     }
