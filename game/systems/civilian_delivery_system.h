@@ -4,7 +4,7 @@
 
 namespace Game::Systems {
 
-inline constexpr int k_civilian_delivery_population_grant = 18;
+inline constexpr int k_civilian_delivery_reserve_grant = 18;
 
 class CivilianDeliverySystem : public Engine::Core::System {
 public:

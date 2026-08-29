@@ -21,7 +21,7 @@ Item {
             return qsTr("There is no road to that place. There may never have been one.");
         case "insufficient_resources":
             return qsTr("The quartermaster has checked twice. There is nothing behind the second check.");
-        case "population_cap":
+        case "manpower_cap":
             return qsTr("We have the barracks, the coin and the will. We lack the people.");
         case "unit_busy":
             return qsTr("They are carrying something heavier than your orders.");

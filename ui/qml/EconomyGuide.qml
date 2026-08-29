@@ -87,7 +87,7 @@ QtObject {
     function item_purpose(key) {
         switch (key) {
         case "home":
-            return qsTr("Raises civilians, who carry manpower to the nearest barracks. Each one costs food.");
+            return qsTr("Raises civilians, who carry reserve to the nearest barracks. Each one costs food.");
         case "farm":
             return qsTr("Grows grain in cycles. A builder reaps it for food once it ripens.");
         case "barracks":
@@ -212,11 +212,11 @@ QtObject {
                 return qsTr("Recruit a builder at a barracks, then send it to collect wood, stone or iron.");
             return qsTr("Select a builder, press Collect, and click a tree, boulder, ore deposit, ripe farm or sheep. It hauls the load to a barracks yard, then goes back for more.");
         case "build":
-            return qsTr("With a builder selected, press Build and place a Home to raise your population, or a Barracks to recruit from.");
+            return qsTr("With a builder selected, press Build and place a Home to raise your reserve, or a Barracks to recruit from.");
         case "recruit":
-            return qsTr("Select a barracks and recruit troops. Each one costs population and resources, both shown on its card.");
+            return qsTr("Select a barracks and recruit troops. Each one costs reserve and resources, both shown on its card.");
         case "army":
-            return qsTr("Keep recruiting while your builders gather. Raise Homes and Farms when population or food runs out.");
+            return qsTr("Keep recruiting while your builders gather. Raise Homes and Farms when reserve or food runs out.");
         }
         return qsTr("Gathering, building and recruiting are all under way.");
     }

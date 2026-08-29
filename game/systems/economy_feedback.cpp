@@ -70,7 +70,7 @@ void publish_population_feedback(int owner_id,
     return;
   }
   Engine::Core::EventManager::instance().publish(
-      Engine::Core::EconomyFeedbackEvent::make_population(owner_id, anchor, amount));
+      Engine::Core::EconomyFeedbackEvent::make_reserve(owner_id, anchor, amount));
 }
 
 } // namespace Game::Systems

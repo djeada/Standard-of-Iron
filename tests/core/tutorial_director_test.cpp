@@ -277,7 +277,7 @@ TEST(TutorialDirectorTest, HintsSayWhyTheOrderCannotBeGiven) {
   o.selected_barracks_count = 1;
   o.barracks_manpower = 10;
   director.advance(o, 0.2F);
-  EXPECT_TRUE(director.hint().contains(QStringLiteral("population")));
+  EXPECT_TRUE(director.hint().contains(QStringLiteral("reserve")));
 
   while (director.step() != TutorialStepId::Commander) {
     director.skip_step();

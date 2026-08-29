@@ -8,6 +8,7 @@
 #include "app/economy/production_readouts.h"
 #include "app/economy/unit_profile.h"
 #include "game/systems/default_content.h"
+#include "game/systems/nation_id.h"
 #include "game/systems/nation_registry.h"
 #include "game/systems/troop_profile_service.h"
 #include "game/units/troop_catalog_loader.h"
@@ -25,6 +26,30 @@ protected:
   }
 };
 
+TEST_F(UnitProfileTest, TheAdvertisedPriceIsWhatProductionCharges) {
+  auto& profiles = Game::Systems::TroopProfileService::instance();
+  for (const auto* nation : {"carthage", "roman_republic"}) {
+    const auto nation_id = Game::Systems::nation_id_from_string(nation);
+    ASSERT_TRUE(nation_id.has_value());
+    for (const auto* unit : {"archer", "swordsman", "spearman", "builder"}) {
+      const auto profile = App::Economy::unit_profile(
+          Game::Systems::NationRegistry::instance(), unit, nation);
+      if (!profile.value("valid").toBool()) {
+        continue;
+      }
+      const auto troop_type = Game::Units::try_parse_troop_type(unit);
+      ASSERT_TRUE(troop_type.has_value());
+      EXPECT_EQ(profile.value("cost").toInt(),
+                profiles.get_profile(*nation_id, *troop_type).production.cost)
+          << nation << " " << unit
+          << ": the card must quote the price the barracks spends from its reserve";
+      EXPECT_FALSE(profile.contains("population_cost"))
+          << nation << " " << unit
+          << ": a second price key is what let the card and the barracks drift apart";
+    }
+  }
+}
+
 TEST_F(UnitProfileTest, ARecruitableUnitCarriesStatsCostsRolesAndLore) {
   const auto profile = App::Economy::unit_profile(
       Game::Systems::NationRegistry::instance(), "spearman", "roman_republic");
@@ -39,7 +64,6 @@ TEST_F(UnitProfileTest, ARecruitableUnitCarriesStatsCostsRolesAndLore) {
   EXPECT_GT(profile.value("vision_range").toDouble(), 0.0);
   EXPECT_GT(profile.value("damage_per_second").toDouble(), 0.0);
   EXPECT_GT(profile.value("build_time").toDouble(), 0.0);
-  EXPECT_GT(profile.value("population_cost").toInt(), 0);
 
   const auto roles = profile.value("role_tags").toStringList();
   EXPECT_FALSE(roles.isEmpty())
@@ -147,7 +171,6 @@ TEST_F(UnitProfileTest, TheRecruitCardAndTheInspectPanelReadTheSameNumbers) {
 
     for (const auto* key : {"display_name",
                             "cost",
-                            "population_cost",
                             "build_time",
                             "individuals_per_unit",
                             "resource_costs",

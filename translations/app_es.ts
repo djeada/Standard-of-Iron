@@ -465,10 +465,6 @@ Puede tratarse de una escaramuza, o los objetivos no se han configurado.</transl
 <context>
     <name>CameraLegend</name>
     <message>
-        <source>Camera controls</source>
-        <translation>Controles de cámara</translation>
-    </message>
-    <message>
         <source>Moving the camera</source>
         <translation>Mover la cámara</translation>
     </message>
@@ -1346,16 +1342,12 @@ Puede tratarse de una escaramuza, o los objetivos no se han configurado.</transl
 <context>
     <name>EconomyCoach</name>
     <message>
-        <source>Economy prompts</source>
-        <translation>Avisos de economía</translation>
-    </message>
-    <message>
-        <source>Stop showing these prompts</source>
-        <translation>Dejar de mostrar estos avisos</translation>
-    </message>
-    <message>
         <source>How it works</source>
         <translation>Cómo funciona</translation>
+    </message>
+    <message>
+        <source>Hide these prompts</source>
+        <translation>Ocultar estos avisos</translation>
     </message>
 </context>
 <context>
@@ -1573,12 +1565,12 @@ Puede tratarse de una escaramuza, o los objetivos no se han configurado.</transl
         <translation>Recluta un constructor en un cuartel y envíalo a recoger madera, piedra o hierro.</translation>
     </message>
     <message>
-        <source>With a builder selected, press Build and place a Home to raise your population, or a Barracks to recruit from.</source>
-        <translation>Con un constructor seleccionado, pulsa Construir y coloca una Casa para aumentar tu población, o un Cuartel para reclutar.</translation>
+        <source>With a builder selected, press Build and place a Home to raise your reserve, or a Barracks to recruit from.</source>
+        <translation>Con un constructor seleccionado, pulsa Construir y coloca una Casa para aumentar tu reserva, o un Cuartel para reclutar.</translation>
     </message>
     <message>
-        <source>Select a barracks and recruit troops. Each one costs population and resources, both shown on its card.</source>
-        <translation>Selecciona un cuartel y recluta tropas. Cada una cuesta población y recursos, ambos indicados en su ficha.</translation>
+        <source>Select a barracks and recruit troops. Each one costs reserve and resources, both shown on its card.</source>
+        <translation>Selecciona un cuartel y recluta tropas. Cada una cuesta reserva y recursos, ambos indicados en su ficha.</translation>
     </message>
     <message>
         <source>Gathering, building and recruiting are all under way.</source>
@@ -1593,8 +1585,8 @@ Puede tratarse de una escaramuza, o los objetivos no se han configurado.</transl
         <translation>Granja</translation>
     </message>
     <message>
-        <source>Raises civilians, who carry manpower to the nearest barracks. Each one costs food.</source>
-        <translation>Cría civiles, que llevan efectivos al cuartel más cercano. Cada uno cuesta comida.</translation>
+        <source>Raises civilians, who carry reserve to the nearest barracks. Each one costs food.</source>
+        <translation>Cría civiles, que llevan reserva al cuartel más cercano. Cada uno cuesta comida.</translation>
     </message>
     <message>
         <source>Grows grain in cycles. A builder reaps it for food once it ripens.</source>
@@ -1605,8 +1597,8 @@ Puede tratarse de una escaramuza, o los objetivos no se han configurado.</transl
         <translation>Selecciona un constructor, pulsa Recolectar y haz clic en un árbol, una roca, un yacimiento, una granja madura o una oveja. Lleva la carga al patio de un cuartel y vuelve a por más.</translation>
     </message>
     <message>
-        <source>Keep recruiting while your builders gather. Raise Homes and Farms when population or food runs out.</source>
-        <translation>Sigue reclutando mientras tus constructores recolectan. Levanta casas y granjas cuando se agoten la población o la comida.</translation>
+        <source>Keep recruiting while your builders gather. Raise Homes and Farms when reserve or food runs out.</source>
+        <translation>Sigue reclutando mientras tus constructores recolectan. Levanta casas y granjas cuando se agoten la reserva o la comida.</translation>
     </message>
     <message>
         <source>Watches over a wide stretch of ground, holds a settlement together, and takes in healers.</source>
@@ -1624,8 +1616,8 @@ Puede tratarse de una escaramuza, o los objetivos no se han configurado.</transl
         <translation>Constructores: %1 (%2 inactivos). Al colocar una estructura, todos los constructores seleccionados van a la obra.</translation>
     </message>
     <message>
-        <source>Recruiting draws on the manpower held by each barracks.</source>
-        <translation>Reclutar consume los efectivos disponibles en cada cuartel.</translation>
+        <source>Recruiting draws on the reserve held by each barracks.</source>
+        <translation>El reclutamiento se nutre de la reserva de cada cuartel.</translation>
     </message>
     <message>
         <source>Needs a barracks</source>
@@ -1636,12 +1628,12 @@ Puede tratarse de una escaramuza, o los objetivos no se han configurado.</transl
         <translation>Necesita un constructor</translation>
     </message>
     <message>
-        <source>Not enough manpower at the barracks</source>
-        <translation>No hay suficientes efectivos en el cuartel</translation>
+        <source>Not enough reserve at the barracks</source>
+        <translation>No hay suficientes reserva en el cuartel</translation>
     </message>
     <message>
-        <source>Population limit reached</source>
-        <translation>Límite de población alcanzado</translation>
+        <source>Manpower limit reached</source>
+        <translation>Límite de reserva alcanzado</translation>
     </message>
     <message>
         <source>Missing %1</source>
@@ -1684,16 +1676,16 @@ Puede tratarse de una escaramuza, o los objetivos no se han configurado.</transl
         <translation>QUÉ PUEDE RECLUTAR UN CUARTEL</translation>
     </message>
     <message>
-        <source>%1 — %2 population, %3 · %4s</source>
-        <translation>%1: %2 de población, %3 · %4 s</translation>
+        <source>%1 — %2 reserve, %3 · %4s</source>
+        <translation>%1: %2 de reserva, %3 · %4 s</translation>
     </message>
     <message>
         <source>Back to the battle</source>
         <translation>Volver a la batalla</translation>
     </message>
     <message>
-        <source>Population %1 / %2. A Home raises civilians for %3 food each; walking a civilian into a barracks adds %4 manpower. Farms ripen every %5s and sheep yield %6 food.</source>
-        <translation>Población %1 / %2. Una casa cría civiles por %3 de comida cada uno; llevar un civil a un cuartel añade %4 efectivos. Las granjas maduran cada %5 s y una oveja rinde %6 de comida.</translation>
+        <source>Manpower %1 / %2. A Home raises civilians for %3 food each; walking a civilian into a barracks adds %4 reserve. Farms ripen every %5s and sheep yield %6 food.</source>
+        <translation>Efectivos %1 / %2. Una casa cría civiles por %3 de comida cada uno; llevar un civil a un cuartel añade %4 de reserva. Las granjas maduran cada %5 s y una oveja rinde %6 de comida.</translation>
     </message>
     <message>
         <source>Needs a home</source>
@@ -2257,6 +2249,14 @@ Puede tratarse de una escaramuza, o los objetivos no se han configurado.</transl
         <source>The line is filing through a narrow crossing.</source>
         <translation>La línea pasa en fila por un paso estrecho.</translation>
     </message>
+    <message>
+        <source>Formation</source>
+        <translation>Formación</translation>
+    </message>
+    <message>
+        <source>Hide this readout</source>
+        <translation>Ocultar este panel</translation>
+    </message>
 </context>
 <context>
     <name>GalleryWindow</name>
@@ -2399,12 +2399,12 @@ Puede tratarse de una escaramuza, o los objetivos no se han configurado.</transl
         <translation>%1 está acabado – %2 ha caído.</translation>
     </message>
     <message>
-        <source>Troop limit reached.</source>
-        <translation>Se alcanzó el límite de tropas.</translation>
+        <source>Manpower limit reached.</source>
+        <translation>Se alcanzó el límite de efectivos.</translation>
     </message>
     <message>
-        <source>Not enough manpower — build a home to raise more families.</source>
-        <translation>No hay suficientes efectivos — construye una casa para criar más familias.</translation>
+        <source>Not enough reserve — build a home to raise more families.</source>
+        <translation>No hay suficiente reserva — construye una casa para criar más familias.</translation>
     </message>
 </context>
 <context>
@@ -2926,8 +2926,8 @@ Puede tratarse de una escaramuza, o los objetivos no se han configurado.</transl
         <translation>Pulsa Reparar y haz clic izquierdo en el edificio dañado. Clic derecho cancela.</translation>
     </message>
     <message>
-        <source>Send civilians to a barracks to refill the population it recruits from.</source>
-        <translation>Envía civiles a un cuartel para reponer la población de la que recluta.</translation>
+        <source>Send civilians to a barracks to refill the reserve it recruits from.</source>
+        <translation>Envía civiles a un cuartel para reponer la reserva de la que recluta.</translation>
     </message>
     <message>
         <source>Press Deliver, then left-click a friendly barracks. Right-click cancels.</source>
@@ -3626,8 +3626,8 @@ Cada tropa cuesta efectivos; una escuadra de doce constructores cuesta diez. Est
         <translation>Reclutamiento</translation>
     </message>
     <message>
-        <source>Population</source>
-        <translation>Población</translation>
+        <source>Reserve</source>
+        <translation>Reserva</translation>
     </message>
     <message>
         <source>Formations and lines</source>
@@ -3750,20 +3750,31 @@ Cada tropa cuesta efectivos; una escuadra de doce constructores cuesta diez. Est
         <translation>La comida alimenta tu asentamiento: cada civil reclutado en una casa la cuesta. Una granja cultiva grano por ciclos; cuando el campo se vuelve dorado, un constructor lo siega con Recolectar, lleva el grano a casa y el campo se siembra de nuevo. Los constructores también pueden sacrificar una oveja por una carga menor. La Recolección automática en comida mantiene a un constructor trabajando las granjas.</translation>
     </message>
     <message>
-        <source>Every card - recruit or building - lists its price. A grey card means something is short; hover it to read what. Homes cost 50 wood and 15 stone, a farm 40 wood and 10 stone, a barracks 100 wood and 60 stone, a defence tower 60 wood and 80 stone; soldiers cost wood and iron plus population, and civilians cost food.</source>
-        <translation>Cada tarjeta, recluta o edificio, indica su precio. Una tarjeta gris significa que falta algo; pasa el cursor para leer qué. Las casas cuestan 50 de madera y 15 de piedra, una granja 40 de madera y 10 de piedra, un cuartel 100 de madera y 60 de piedra, una torre defensiva 60 de madera y 80 de piedra; los soldados cuestan madera y hierro más población, y los civiles cuestan comida.</translation>
+        <source>Every card - recruit or building - lists its price. A grey card means something is short; hover it to read what. Homes cost 50 wood and 15 stone, a farm 40 wood and 10 stone, a barracks 100 wood and 60 stone, a defence tower 60 wood and 80 stone; soldiers cost wood and iron plus reserve, and civilians cost food.</source>
+        <translation>Cada tarjeta, recluta o edificio, indica su precio. Una tarjeta gris significa que falta algo; pasa el cursor para leer qué. Las casas cuestan 50 de madera y 15 de piedra, una granja 40 de madera y 10 de piedra, un cuartel 100 de madera y 60 de piedra, una torre defensiva 60 de madera y 80 de piedra; los soldados cuestan madera y hierro más reserva, y los civiles cuestan comida.</translation>
     </message>
     <message>
         <source>Barracks recruit soldiers and hold your stockpile yard. Homes raise families and civilians. Farms grow grain that builders reap for food. Defence towers shoot at anything in range. Marketplaces trade. Temples strengthen morale and take in healers. Walls and gates shape the field; gates open for your own troops.</source>
         <translation>Los cuarteles reclutan soldados y albergan tu almacén. Las casas crían familias y civiles. Las granjas cultivan grano que los constructores cosechan como comida. Las torres de defensa disparan a todo lo que esté a su alcance. Los mercados comercian. Los templos fortalecen la moral y acogen a los sanadores. Muros y puertas dan forma al campo; las puertas se abren para tus propias tropas.</translation>
     </message>
     <message>
-        <source>Left-click a barracks and pick a soldier; healers take their vows at a temple instead. Recruits queue up to five deep and march out to the rally flag. Each costs population from the building&apos;s own pool as well as materials.</source>
-        <translation>Haz clic izquierdo en un cuartel y elige un soldado; los sanadores toman sus votos en un templo. Los reclutas se encolan hasta cinco y marchan hacia la bandera de reunión. Cada uno cuesta población de la reserva propia del edificio, además de materiales.</translation>
+        <source>Left-click a barracks and pick a soldier; healers take their vows at a temple instead. Recruits queue up to five deep and march out to the rally flag. Each costs reserve from the building&apos;s own pool as well as materials.</source>
+        <translation>Haz clic izquierdo en un cuartel y elige un soldado; los sanadores toman sus votos en un templo. Los reclutas se encolan hasta cinco y marchan hacia la bandera de reunión. Cada uno cuesta reserva de la reserva propia del edificio, además de materiales.</translation>
     </message>
     <message>
-        <source>A barracks or temple starts with a pool of population and spends it on every recruit. Homes refill it: each Home raises families over time, a civilian can be recruited there for food and sent to either building with Deliver, and that building&apos;s pool grows. The top bar shows your army against the map&apos;s overall cap.</source>
-        <translation>Un cuartel o un templo empieza con una reserva de población y la gasta en cada recluta. Las casas la reponen: cada Casa cría familias con el tiempo, allí puede reclutarse un civil a cambio de comida y enviarse a cualquiera de los dos edificios con Entregar, y la reserva de ese edificio crece. La barra superior muestra tu ejército frente al límite total del mapa.</translation>
+        <source>A barracks or temple starts with a reserve and spends it on every recruit; the card shows exactly what each one costs. Homes refill it: each Home raises families over time, a civilian can be recruited there for food and sent to either building with Deliver, and that building&apos;s reserve grows. A squad then stands in the field for what it cost, which is what the top bar counts against the map&apos;s manpower cap.</source>
+        <translation>Un cuartel o un templo empieza con una reserva y la gasta en cada recluta; la ficha indica exactamente lo que cuesta cada uno. Las casas la reponen: cada Casa cría familias con el tiempo, allí puede reclutarse un civil a cambio de comida y enviarse a cualquiera de los dos edificios con Entregar, y la reserva de ese edificio crece. Una unidad queda en el campo por lo que costó, y eso es lo que la barra superior cuenta frente al límite de efectivos del mapa.</translation>
+    </message>
+</context>
+<context>
+    <name>HintCard</name>
+    <message>
+        <source>Hide this</source>
+        <translation>Ocultar</translation>
+    </message>
+    <message>
+        <source>Never show this again</source>
+        <translation>No volver a mostrar</translation>
     </message>
 </context>
 <context>
@@ -6818,9 +6829,9 @@ Dispara flechas a los enemigos</translation>
     </message>
     <message>
         <source>Residential building
-Adds +50 population to nearest barracks</source>
+Adds +50 reserve to the nearest barracks</source>
         <translation>Edificio residencial
-Añade +50 de población al cuartel más cercano</translation>
+Añade +50 de reserva al cuartel más cercano</translation>
     </message>
     <message>
         <source>Marketplace</source>
@@ -6857,8 +6868,8 @@ Se abre para tus tropas y aliados</translation>
         <translation>%1 %2</translation>
     </message>
     <message>
-        <source>Not enough available population</source>
-        <translation>No hay suficiente población disponible</translation>
+        <source>Not enough reserve</source>
+        <translation>No hay suficiente reserva</translation>
     </message>
     <message>
         <source>Already building...</source>
@@ -6881,8 +6892,8 @@ Coste: %2
 Tiempo de producción: %3 s</translation>
     </message>
     <message>
-        <source>population</source>
-        <translation>población</translation>
+        <source>reserve</source>
+        <translation>reserva</translation>
     </message>
     <message>
         <source>Recruit %1
@@ -6906,11 +6917,11 @@ Exclusivo de Cartago</translation>
         <source>Recruit %1
 Cost: %2
 Build time: %3s
-Use Deliver mode, then click a friendly barracks to add 50 available population.</source>
+Use Deliver mode, then click a friendly barracks to add to its reserve.</source>
         <translation>Reclutar %1
 Coste: %2
 Tiempo de producción: %3 s
-Usa el modo Entregar y luego haz clic en un cuartel aliado para añadir 50 de población disponible.</translation>
+Usa el modo Entregar y luego haz clic en un cuartel aliado para aumentar su reserva.</translation>
     </message>
     <message>
         <source>families</source>
@@ -7195,8 +7206,8 @@ Los constructores lo siegan para la comida que recluta civiles</translation>
         <translation>TOMAR VOTOS</translation>
     </message>
     <message>
-        <source>Deliver civilians here to raise the temple&apos;s available population</source>
-        <translation>Entrega civiles aquí para aumentar la población disponible del templo</translation>
+        <source>Deliver civilians here to raise the temple&apos;s reserve</source>
+        <translation>Entrega civiles aquí para aumentar la reserva del templo</translation>
     </message>
     <message>
         <source>Barracks reserve: %1 / %2</source>
@@ -8188,8 +8199,36 @@ Los constructores lo siegan para la comida que recluta civiles</translation>
         <translation>Números de economía</translation>
     </message>
     <message>
-        <source>Floats resource, trade and population changes over the building they happened at</source>
-        <translation>Muestra los cambios de recursos, comercio y población sobre el edificio en el que ocurrieron</translation>
+        <source>Floats resource, trade and reserve changes over the building they happened at</source>
+        <translation>Muestra los cambios de recursos, comercio y reserva sobre el edificio en el que ocurrieron</translation>
+    </message>
+    <message>
+        <source>Camera legend</source>
+        <translation>Leyenda de cámara</translation>
+    </message>
+    <message>
+        <source>Economy prompts</source>
+        <translation>Avisos de economía</translation>
+    </message>
+    <message>
+        <source>Formation readout</source>
+        <translation>Panel de formación</translation>
+    </message>
+    <message>
+        <source>Lists the camera controls the first time a mission starts</source>
+        <translation>Enumera los controles de cámara la primera vez que empieza una misión</translation>
+    </message>
+    <message>
+        <source>Walks through the opening economy steps of a mission</source>
+        <translation>Guía los primeros pasos de economía de una misión</translation>
+    </message>
+    <message>
+        <source>Shows cohesion and phase after you send several units somewhere together, until the selection changes</source>
+        <translation>Muestra la cohesión y la fase después de enviar varias unidades juntas, hasta que cambie la selección</translation>
+    </message>
+    <message>
+        <source>Prompts and readouts:</source>
+        <translation>Avisos y paneles:</translation>
     </message>
 </context>
 <context>
@@ -8316,8 +8355,8 @@ Los constructores lo siegan para la comida que recluta civiles</translation>
         <translation>Los reclutas salen del cuartel. Haz clic izquierdo en tu cuartel para abrir su panel de producción a la derecha.</translation>
     </message>
     <message>
-        <source>The barracks has only %1 population left to draw on. Every recruit costs population; when it runs dry, build Homes - each Home raises families, and a civilian recruited there and sent to the barracks with Deliver refills it.</source>
-        <translation>Al cuartel solo le quedan %1 de población. Cada recluta cuesta población; cuando se agota, construye casas: cada casa cría familias, y un civil reclutado allí y enviado al cuartel con Entregar la repone.</translation>
+        <source>The barracks has only %1 reserve left to draw on. Every recruit costs reserve; when it runs dry, build Homes - each Home raises families, and a civilian recruited there and sent to the barracks with Deliver refills it.</source>
+        <translation>Al cuartel solo le quedan %1 de reserva. Cada recluta cuesta reserva; cuando se agota, construye casas: cada casa cría familias, y un civil reclutado allí y enviado al cuartel con Entregar la repone.</translation>
     </message>
     <message>
         <source>A recruit card turns grey when a resource is short: soldiers need wood for shafts and iron for blades. Send a builder to collect more.</source>
@@ -8685,8 +8724,8 @@ Los constructores lo siegan para la comida que recluta civiles</translation>
         <translation>Patrulla</translation>
     </message>
     <message>
-        <source>Population %1  ·  Build time %2s</source>
-        <translation>Población %1  ·  Tiempo de creación %2 s</translation>
+        <source>Reserve %1  ·  Build time %2s</source>
+        <translation>Reserva %1  ·  Tiempo de creación %2 s</translation>
     </message>
     <message>
         <source>Range</source>

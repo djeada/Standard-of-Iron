@@ -169,8 +169,9 @@ Everything below is data (`assets/data/troops/base.json`,
 The shape this is tuned for: a squad costs about a third of a wood trip and a third of an
 iron trip, so a player who keeps two builders on the tree line and one on the ore seam
 recruits without pause; a home's worth of civilians costs one farm cycle; and a farm pays
-for itself (40 wood) with its first harvest turned into a home's population. Nation
-variants inherit these resource costs and only tune population and build time.
+for itself (40 wood) with its first harvest turned into a home's reserve. Nation
+variants inherit these resource costs and only tune the manpower price and build
+time.
 
 ## Where the farm is wired
 

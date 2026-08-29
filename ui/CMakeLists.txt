@@ -17,6 +17,7 @@ add_library(
     STATIC
     theme.cpp
     preferences.cpp
+    hints.cpp
     input_bindings.cpp
     edge_scroll.cpp
     game_speeds.cpp

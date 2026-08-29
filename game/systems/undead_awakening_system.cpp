@@ -35,6 +35,8 @@ constexpr float k_between_wave_delay_seconds = 1.5F;
 constexpr float k_spawn_y_offset = 0.05F;
 constexpr float k_anchor_match_distance = 3.5F;
 
+constexpr const char* k_awakening_music = "music.event.skeletons_awaken";
+
 constexpr float k_golden_angle_radians = 2.3999632F;
 constexpr float k_min_spawn_ring_radius = 2.0F;
 constexpr float k_spawn_ring_fraction = 0.8F;
@@ -535,6 +537,8 @@ void UndeadAwakeningSystem::awaken_zone(Engine::Core::World& world, RuntimeZone&
   zone.current_wave_elapsed = 0.0F;
   Engine::Core::EventManager::instance().publish(
       Engine::Core::AudioCueEvent("combat.hit.generic", 0.8F));
+  Engine::Core::EventManager::instance().publish(
+      Engine::Core::MusicTriggerEvent(k_awakening_music));
 
   try_spawn_next_wave(world, zone);
 }

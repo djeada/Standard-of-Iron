@@ -844,6 +844,7 @@ if(QT_VERSION_MAJOR EQUAL 6)
             ui/qml/FormationReadoutCell.qml
             ui/qml/FormationOptionRow.qml
             ui/qml/FormationStatusBadge.qml
+            ui/qml/HintCard.qml
             ui/qml/ProductionPanel.qml
             ui/qml/SaveGamePanel.qml
             ui/qml/LoadGamePanel.qml

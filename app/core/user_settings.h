@@ -40,6 +40,7 @@ inline constexpr char kUiDamageNumberModeKey[] = "ui/damage_number_mode";
 inline constexpr char kUiEconomyNumbersKey[] = "ui/economy_numbers";
 inline constexpr char kUiScreenEffectsKey[] = "ui/screen_effect_intensity";
 inline constexpr char kUiEconomyCoachKey[] = "ui/economy_coach";
+inline constexpr char kUiFormationHintsKey[] = "ui/formation_hints";
 inline constexpr char kUiCameraLegendSeenKey[] = "ui/camera_legend_seen";
 inline constexpr char kUiTutorialCompletedKey[] = "ui/tutorial_completed";
 inline constexpr char kDisplayWindowModeKey[] = "display/window_mode";
@@ -548,6 +549,14 @@ inline auto load_ui_economy_coach() -> bool {
 
 inline void save_ui_economy_coach(bool enabled) {
   Detail::save_bool(kUiEconomyCoachKey, enabled);
+}
+
+inline auto load_ui_formation_hints() -> bool {
+  return Detail::load_bool(kUiFormationHintsKey, true);
+}
+
+inline void save_ui_formation_hints(bool enabled) {
+  Detail::save_bool(kUiFormationHintsKey, enabled);
 }
 
 inline auto load_ui_screen_effect_intensity() -> double {

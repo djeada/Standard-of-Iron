@@ -527,7 +527,7 @@ void GameEngine::build_services_and_controllers() {
           [this]() {
             Game::Audio::play_cue(Game::Audio::Cue::k_alert_population_limit);
             report_affordability_refusal(App::Core::OrderFailure::PopulationCap,
-                                         tr("Troop limit reached."));
+                                         tr("Manpower limit reached."));
           });
   connect(m_command_controller.get(),
           &App::Controllers::CommandController::insufficient_manpower,
@@ -536,7 +536,7 @@ void GameEngine::build_services_and_controllers() {
 
             report_affordability_refusal(
                 App::Core::OrderFailure::InsufficientResources,
-                tr("Not enough manpower — build a home to raise more families."));
+                tr("Not enough reserve — build a home to raise more families."));
           });
   connect(m_command_controller.get(),
           &App::Controllers::CommandController::insufficient_resources,
@@ -590,6 +590,10 @@ void GameEngine::build_services_and_controllers() {
           &App::Controllers::CommandController::formation_preview_changed,
           m_placement_view_model.get(),
           &App::ViewModels::PlacementViewModel::formation_options_changed);
+  connect(m_command_controller.get(),
+          &App::Controllers::CommandController::formation_deployed,
+          m_placement_view_model.get(),
+          &App::ViewModels::PlacementViewModel::formation_deployed);
 
   connect(
       this, SIGNAL(selected_units_changed()), m_selected_units_model, SLOT(refresh()));

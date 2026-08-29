@@ -123,6 +123,59 @@ only a real change to the view model with a queued call. It also throttles to fo
 refreshes a second — the scan walks every unit the player owns, and the HUD has nothing
 to gain from doing that at frame rate.
 
+## One advertised price
+
+`TroopProductionStats` carries two numbers and they are not interchangeable:
+
+- **`cost`** is the manpower price. `ProductionService` spends it from the building's
+  `manpower_available`, and `assets/data/nations/*.json` override it per nation — 50 for a
+  Carthaginian archer where the base catalogue says 20.
+- **`population_cost()`** is the army-cap weight, counted against `max_troops_per_player`.
+  Nation files never override `population`, so it stays at the base value.
+
+The bug this caused, twice: the app layer exported `population_cost()` as the card's price
+while `ProductionPanel.qml` gated the recruit button on it. The card asked for 20 while the
+barracks demanded 50 — the button stayed lit, the click was refused, and nothing said why. A
+Carthaginian player got two archers out of a 140 reserve and then dead clicks. It was fixed
+once on 27 Aug (`2e452a63`) on a branch that never merged, so it came back.
+
+**The app layer exports `production.cost` — the price the barracks actually charges — and
+there is no second key to pick wrongly.** `unit_profile.cpp`, `production_readouts.cpp` and
+`economy_overview.cpp` all publish `cost`; the `population_cost` key QML used to gate on is
+deleted. `economy_overview.cpp` keeps the cap weight under its own name,
+`UnitItem::army_cap_weight`, feeding only `manpower_met`, the readout that is really about
+the cap.
+
+Do **not** make the engine spend `population_cost()`. It looks like the same fix and is not:
+that value is the army-cap weight, a Carthaginian civilian is worth 70 there, and charging
+the cheaper number lets the AI flood its cap with troops instead of raising homes and farms.
+
+### Making it one number is a balance change, not a cleanup
+
+Unifying the two — weighing the cap by the nation price — was attempted and reverted. It is
+mechanically easy (delete `population`, resolve the weight per nation, rescale every map
+cap) and it destabilises the AI, because doctrines and town plans were authored against
+_flat_ cap weights (archer 20, swordsman 15, catapult 12) and real prices are not flat
+(50, 95, 260). Measured on `AiDuelMatchTest`, against a green 204/204 baseline: caps at 4x
+left the AI too rich to raise farms (`never broke ground on a field`); at 2.8x too poor to
+field an army (`nobody built an army`). No single multiplier satisfies both. It needs the
+town-plan priorities and per-map caps retuned by playtest, which is its own pass.
+
+### Two words, one meaning each
+
+- **Reserve** — the pool a barracks, temple or home holds and spends per recruit. The panel
+  line ("Barracks reserve: 100 / 140"), the card price and every refusal use this word.
+- **Manpower** — what stands in the field, counted against the map's cap. The top bar and
+  the spectator HUD use this word, and nothing else does.
+
+"Population" is not a word this game uses any more. `max_population` in map JSON keeps its
+historical name only because renaming it would break every shipped map, every save and the
+map editor; it is read as `ProductionComponent::max_units`, the ceiling of a building's
+reserve.
+
+`UnitProfileTest.TheAdvertisedPriceIsWhatProductionCharges` and
+`EconomyOverviewTest.TheHelpViewQuotesThePriceTheBarracksCharges` hold the line.
+
 ## Related
 
 - [RESOURCE_STOCKPILE.md](RESOURCE_STOCKPILE.md) — the haul the counters are describing:

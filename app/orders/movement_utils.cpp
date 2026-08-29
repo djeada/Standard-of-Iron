@@ -61,7 +61,7 @@ auto issue_civilian_delivery_command(
 
   int const free_population =
       std::max(0, target_production->max_units - target_production->manpower_available);
-  if (free_population / Game::Systems::k_civilian_delivery_population_grant <= 0) {
+  if (free_population / Game::Systems::k_civilian_delivery_reserve_grant <= 0) {
     return App::Core::rejected_order_on(
         OrderKind::Deliver, App::Core::barracks_full_reason(), target_id);
   }

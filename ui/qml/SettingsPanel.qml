@@ -24,6 +24,30 @@ Item {
         }
     }
 
+    function hint_title(id) {
+        switch (id) {
+        case "camera_legend":
+            return qsTr("Camera legend");
+        case "economy_coach":
+            return qsTr("Economy prompts");
+        case "formation_readout":
+            return qsTr("Formation readout");
+        }
+        return id;
+    }
+
+    function hint_description(id) {
+        switch (id) {
+        case "camera_legend":
+            return qsTr("Lists the camera controls the first time a mission starts");
+        case "economy_coach":
+            return qsTr("Walks through the opening economy steps of a mission");
+        case "formation_readout":
+            return qsTr("Shows cohesion and phase after you send several units somewhere together, until the selection changes");
+        }
+        return "";
+    }
+
     function damage_number_label(mode) {
         switch (mode) {
         case "off":
@@ -917,9 +941,30 @@ Item {
                             Design.IronCheckBox {
                                 Layout.columnSpan: 2
                                 text: qsTr("Economy numbers")
-                                description: qsTr("Floats resource, trade and population changes over the building they happened at")
+                                description: qsTr("Floats resource, trade and reserve changes over the building they happened at")
                                 checked: UiPreferences.economyNumbers
                                 onToggled: UiPreferences.economyNumbers = checked
+                            }
+
+                            Label {
+                                Layout.columnSpan: 2
+                                text: qsTr("Prompts and readouts:")
+                                color: Theme.textSub
+                                font.pixelSize: Design.Typography.bodyLarge
+                            }
+
+                            Repeater {
+                                model: UiHints.catalog
+
+                                delegate: Design.IronCheckBox {
+                                    required property var modelData
+
+                                    Layout.columnSpan: 2
+                                    text: root.hint_title(modelData.id)
+                                    description: root.hint_description(modelData.id)
+                                    checked: modelData.enabled
+                                    onToggled: UiHints.set_enabled(modelData.id, checked)
+                                }
                             }
 
                             Label {

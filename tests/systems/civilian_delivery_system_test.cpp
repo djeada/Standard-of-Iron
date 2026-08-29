@@ -122,7 +122,7 @@ TEST(CivilianDeliverySystemTest, CivilianEnteringBarracksTransfersManpower) {
 
   EXPECT_EQ(world.get_entity(civilian_id), nullptr);
   EXPECT_EQ(barracks_prod->manpower_available,
-            Game::Systems::k_civilian_delivery_population_grant);
+            Game::Systems::k_civilian_delivery_reserve_grant);
 }
 
 TEST(CivilianDeliverySystemTest, DeliveryTargetOutsideBarracksStillTransfersManpower) {
@@ -188,7 +188,7 @@ TEST(CivilianDeliverySystemTest, DeliveryTargetOutsideBarracksStillTransfersManp
 
   EXPECT_EQ(world.get_entity(civilian_id), nullptr);
   EXPECT_EQ(barracks_prod->manpower_available,
-            Game::Systems::k_civilian_delivery_population_grant);
+            Game::Systems::k_civilian_delivery_reserve_grant);
 
   collision_registry.clear();
 }
@@ -257,7 +257,7 @@ TEST(CivilianDeliverySystemTest,
 
   EXPECT_EQ(world.get_entity(civilian_id), nullptr);
   EXPECT_EQ(barracks_prod->manpower_available,
-            Game::Systems::k_civilian_delivery_population_grant);
+            Game::Systems::k_civilian_delivery_reserve_grant);
 
   collision_registry.clear();
 }
@@ -445,7 +445,7 @@ TEST(TempleRecruitmentTest, CivilianEnteringTheTempleTransfersManpower) {
 
   EXPECT_EQ(world.get_entity(civilian_id), nullptr);
   EXPECT_EQ(temple_prod->manpower_available,
-            Game::Systems::k_civilian_delivery_population_grant);
+            Game::Systems::k_civilian_delivery_reserve_grant);
 }
 
 TEST(CivilianDeliverySystemTest, ACivilianTakenIntoTheBarracksGivesItsPopulationBack) {

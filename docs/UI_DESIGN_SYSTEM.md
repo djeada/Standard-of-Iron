@@ -18,11 +18,12 @@ and how to build a screen on top of it.
 5. Accessibility: one preference, every surface
 6. Faction identity as a skin, never a layout
 7. The single notification queue
-8. Iconography, and why emoji are banned
-9. Reviewing a screen with a screenshot
-10. The component gallery
-11. How the system is tested
-12. How the Qt Widgets tools stay in the same product
+8. The one controller behind every coaching overlay
+9. Iconography, and why emoji are banned
+10. Reviewing a screen with a screenshot
+11. The component gallery
+12. How the system is tested
+13. How the Qt Widgets tools stay in the same product
 
 ## The aesthetic: "Iron and Ember"
 
@@ -205,6 +206,48 @@ out on `Motion.dwellFor(priority)`.
 Screens push. They do not render toasts. A single `NotificationHost` per product shell
 renders whatever is current — `Main.qml` mounts one in the top-right of the battle view.
 
+## Coaching overlays
+
+A notification is something that happened. A _hint_ is a panel that stays up while it is
+still useful: the camera legend, the economy prompts, the formation readout. Each one grew
+its own visibility rule, its own "seen" flag on `UiPreferences`, its own close button and
+its own settings entry, and the three drifted apart -- the formation readout had no way to
+be closed at all and stayed on screen for as long as a squad was selected.
+
+They now share one controller. `UiHints` (`ui/hints.cpp`) owns a registry of hint ids and,
+for each one, two pieces of state:
+
+- **enabled** -- may this hint raise itself? Persisted, and what "Never show this again"
+  turns off.
+- **armed** -- is it up right now? Session-only.
+
+```qml
+Core.UiHints.show("formation_readout")      // a trigger fired; raise it if enabled
+Core.UiHints.reveal("camera_legend")        // the player asked for it; raise it regardless
+Core.UiHints.show_once("camera_legend")     // raise it and never offer it again
+Core.UiHints.dismiss("economy_coach")       // close this showing, leave the hint enabled
+Core.UiHints.suppress("economy_coach")      // never show this again; persists
+Core.UiHints.on_selection_changed()         // close the hints scoped to a selection
+```
+
+The registry, not the call site, decides what a hint is scoped to. `selection_scoped`
+marks the hints that describe the units the player has selected, so `on_selection_changed()`
+closes the formation readout and leaves the economy prompts alone. Adding a policy means
+adding a column there, not another `visible:` clause in `HUD.qml`.
+
+Each hint also names the settings key it is stored under, so hints that predate the
+controller keep their saved value. `stores_dismissal` covers the inverted ones -- the camera
+legend persists _seen_, not _enabled_.
+
+`HintCard.qml` is the shell: the title row, the close button, the "Never show this again"
+link and the hover tooltip. A screen supplies `hintId`, `title` and its body, plus a `gate`
+for the conditions that are about the world rather than about the hint ("this formation
+still exists", "the coach has a step to show"). Nothing else decides whether the card is
+on screen.
+
+`SettingsPanel.qml` lists `UiHints.catalog`, so a new hint appears in Settings without
+touching the panel, and `reset_to_defaults()` offers every suppressed hint again.
+
 ## Attack mode targeting feedback
 
 Picking a target used to be a cursor change and nothing else: the player could not tell
@@ -305,7 +348,7 @@ What it assembles:
 - Stats and derived DPS from `TroopProfile`, with the primary attack chosen by whichever
   of melee/ranged actually does more per second, so a card never advertises a swordsman's
   vestigial bow.
-- Costs, population and build time from the same profile.
+- Costs, reserve price and build time from the same profile.
 - Role labels from `Game::Formation::role_tag_label`. The 18 `RoleTag` ids had no
   human-readable form anywhere; the label table sits next to the id table in
   `formation_roles.cpp` so a new role cannot be added without an obvious empty slot

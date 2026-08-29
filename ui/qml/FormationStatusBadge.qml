@@ -1,9 +1,10 @@
 import QtQuick 2.15
 import QtQuick.Controls 2.15
-import QtQuick.Layouts 2.15
+import QtQuick.Layouts 1.15
+import StandardOfIron.Core 1.0 as Core
 import StandardOfIron.Design 1.0 as Design
 
-Item {
+HintCard {
     id: statusBadge
 
     property var status: ({})
@@ -16,6 +17,8 @@ Item {
     readonly property int member_count: status.member_count !== undefined ? status.member_count : 0
     readonly property int blocked_slots: status.blocked_slots !== undefined ? status.blocked_slots : 0
     readonly property bool mixed_groups: status.mixed_groups === true
+
+    readonly property bool any_selected: typeof game !== 'undefined' && game.has_units_selected
 
     readonly property color phase_tone: {
         switch (phase) {
@@ -69,19 +72,31 @@ Item {
             status = game.placement.selected_formation_status;
     }
 
-    readonly property bool any_selected: typeof game !== 'undefined' && game.has_units_selected
+    hintId: "formation_readout"
+    title: status.intent_display_name !== undefined ? status.intent_display_name : qsTr("Formation")
+    closeTooltip: qsTr("Hide this readout")
+    accent: phase_tone
+    hoverTooltip: phase_hint
+    gate: has_formation && any_selected
 
-    visible: has_formation && any_selected
-    implicitWidth: card.implicitWidth
-    implicitHeight: card.implicitHeight
+    implicitWidth: content_width + Design.Metrics.space12 * 2
 
-    onAny_selectedChanged: refresh()
+    border.color: phase_tone
 
     Component.onCompleted: refresh()
+
+    onAny_selectedChanged: refresh()
 
     Connections {
         function onFormation_options_changed() {
             statusBadge.refresh();
+        }
+
+        function onFormation_deployed(unit_count) {
+            if (unit_count < 2)
+                return;
+            statusBadge.refresh();
+            Core.UiHints.show(statusBadge.hintId);
         }
 
         ignoreUnknownSignals: true
@@ -91,109 +106,68 @@ Item {
     Timer {
         interval: 350
         repeat: true
-        running: statusBadge.any_selected
+        running: statusBadge.visible
 
         onTriggered: statusBadge.refresh()
     }
 
-    Rectangle {
-        id: card
+    RowLayout {
+        Layout.fillWidth: true
+        spacing: Design.Metrics.space8
 
-        border.color: statusBadge.phase_tone
-        border.width: Design.Metrics.borderThin
-        color: Design.Theme.panelIron
-        implicitHeight: layout.implicitHeight + Design.Metrics.space8 * 2
-        implicitWidth: statusBadge.content_width + Design.Metrics.space8 * 2
-        radius: Design.Metrics.radiusMedium
-
-        ToolTip.delay: Design.Metrics.tooltipDelay
-        ToolTip.text: statusBadge.phase_hint
-        ToolTip.visible: hoverArea.containsMouse
-
-        MouseArea {
-            id: hoverArea
-
-            acceptedButtons: Qt.NoButton
-            anchors.fill: parent
-            hoverEnabled: true
+        Text {
+            Layout.fillWidth: true
+            color: Design.Theme.textSecondary
+            elide: Text.ElideRight
+            fontSizeMode: Text.HorizontalFit
+            minimumPixelSize: Math.round(Design.Typography.caption * 0.8)
+            font.family: Design.Typography.family
+            font.pixelSize: Design.Typography.caption
+            text: statusBadge.status.doctrine_display_name !== undefined ? statusBadge.status.doctrine_display_name : ""
         }
 
-        ColumnLayout {
-            id: layout
-
-            spacing: Design.Metrics.space4
-            width: statusBadge.content_width
-            x: Design.Metrics.space8
-            y: Design.Metrics.space8
-
-            RowLayout {
-                Layout.fillWidth: true
-                spacing: Design.Metrics.space8
-
-                Text {
-                    color: Design.Theme.textPrimary
-                    font.family: Design.Typography.family
-                    font.pixelSize: Design.Typography.caption
-                    font.weight: Design.Typography.medium
-                    text: statusBadge.status.intent_display_name !== undefined ? statusBadge.status.intent_display_name : ""
-                }
-
-                Text {
-                    Layout.fillWidth: true
-                    color: Design.Theme.textSecondary
-                    elide: Text.ElideRight
-
-                    fontSizeMode: Text.HorizontalFit
-                    minimumPixelSize: Math.round(Design.Typography.caption * 0.8)
-                    font.family: Design.Typography.family
-                    font.pixelSize: Design.Typography.caption
-                    text: statusBadge.status.doctrine_display_name !== undefined ? statusBadge.status.doctrine_display_name : ""
-                }
-
-                Design.IronBadge {
-                    text: statusBadge.phase_label
-                    tone: statusBadge.phase_tone
-                }
-            }
-
-            Design.IronProgressBar {
-                Layout.fillWidth: true
-                fillColor: statusBadge.phase_tone
-                from: 0
-                to: 1
-                value: statusBadge.cohesion
-            }
-
-            RowLayout {
-                Layout.fillWidth: true
-                spacing: Design.Metrics.space8
-
-                Text {
-                    color: Design.Theme.textSecondary
-                    font.family: Design.Typography.family
-                    font.pixelSize: Design.Typography.caption
-                    text: qsTr("Cohesion %1%").arg(Math.round(statusBadge.cohesion * 100))
-                }
-
-                Text {
-                    Layout.fillWidth: true
-                    color: Design.Theme.textSecondary
-                    font.family: Design.Typography.family
-                    font.pixelSize: Design.Typography.caption
-                    horizontalAlignment: Text.AlignRight
-                    text: qsTr("%1 units").arg(statusBadge.member_count)
-                }
-            }
-
-            Text {
-                Layout.fillWidth: true
-                color: Design.Theme.warning
-                font.family: Design.Typography.family
-                font.pixelSize: Design.Typography.caption
-                text: statusBadge.mixed_groups ? qsTr("Selection spans several formations.") : qsTr("%1 slot(s) blocked by terrain.").arg(statusBadge.blocked_slots)
-                visible: statusBadge.mixed_groups || statusBadge.blocked_slots > 0
-                wrapMode: Text.WordWrap
-            }
+        Design.IronBadge {
+            text: statusBadge.phase_label
+            tone: statusBadge.phase_tone
         }
+    }
+
+    Design.IronProgressBar {
+        Layout.fillWidth: true
+        fillColor: statusBadge.phase_tone
+        from: 0
+        to: 1
+        value: statusBadge.cohesion
+    }
+
+    RowLayout {
+        Layout.fillWidth: true
+        spacing: Design.Metrics.space8
+
+        Text {
+            color: Design.Theme.textSecondary
+            font.family: Design.Typography.family
+            font.pixelSize: Design.Typography.caption
+            text: qsTr("Cohesion %1%").arg(Math.round(statusBadge.cohesion * 100))
+        }
+
+        Text {
+            Layout.fillWidth: true
+            color: Design.Theme.textSecondary
+            font.family: Design.Typography.family
+            font.pixelSize: Design.Typography.caption
+            horizontalAlignment: Text.AlignRight
+            text: qsTr("%1 units").arg(statusBadge.member_count)
+        }
+    }
+
+    Text {
+        Layout.fillWidth: true
+        color: Design.Theme.warning
+        font.family: Design.Typography.family
+        font.pixelSize: Design.Typography.caption
+        text: statusBadge.mixed_groups ? qsTr("Selection spans several formations.") : qsTr("%1 slot(s) blocked by terrain.").arg(statusBadge.blocked_slots)
+        visible: statusBadge.mixed_groups || statusBadge.blocked_slots > 0
+        wrapMode: Text.WordWrap
     }
 }
