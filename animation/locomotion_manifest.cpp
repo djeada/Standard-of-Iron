@@ -39,9 +39,7 @@ constexpr float k_min_cycle_time = 0.52F;
 constexpr float k_max_cycle_time = 1.30F;
 constexpr float k_min_cadence_speed = 0.35F;
 
-constexpr float k_stance_forward_fraction = 0.42F;
-
-constexpr float k_walk_track_ratio = 0.45F;
+constexpr float k_run_bob_phase_advance = 0.07F;
 
 [[nodiscard]] auto ankle_lift_for_pitch(float pitch) noexcept -> float {
   return (pitch < 0.0F) ? (k_foot_toe_length * -std::sin(pitch))
@@ -132,6 +130,9 @@ struct LocomotionTargets {
 
 struct LocomotionPoseProfile {
   float planted_fraction{0.5F};
+  float stance_forward_fraction{0.5F};
+  float track_ratio{0.5F};
+  float swing_lift_advance{0.0F};
   float stride_length{0.0F};
   float step_height{0.0F};
   float vertical_bob{0.0F};
@@ -164,6 +165,10 @@ struct LocomotionPoseProfile {
 
   LocomotionPoseProfile out{};
   out.planted_fraction = mix(a.planted_fraction, b.planted_fraction);
+  out.stance_forward_fraction =
+      mix(a.stance_forward_fraction, b.stance_forward_fraction);
+  out.track_ratio = mix(a.track_ratio, b.track_ratio);
+  out.swing_lift_advance = mix(a.swing_lift_advance, b.swing_lift_advance);
   out.stride_length = mix(a.stride_length, b.stride_length);
   out.step_height = mix(a.step_height, b.step_height);
   out.vertical_bob = mix(a.vertical_bob, b.vertical_bob);
@@ -193,29 +198,32 @@ struct LocomotionPoseProfile {
     -> LocomotionPoseProfile {
   LocomotionPoseProfile profile{};
   profile.planted_fraction = k_walk_planted_fraction;
+  profile.stance_forward_fraction = 0.46F;
+  profile.track_ratio = 0.48F;
+  profile.swing_lift_advance = 0.28F;
   profile.stride_length = k_walk_stance_travel * inputs.walk_speed_multiplier *
                           (0.90F + 0.10F * speed_factor);
-  profile.step_height = 0.090F * (0.92F + 0.10F * speed_factor);
-  profile.vertical_bob = 0.022F * speed_factor;
-  profile.hip_sway = 0.022F * inputs.stance_width;
+  profile.step_height = 0.075F * (0.92F + 0.10F * speed_factor);
+  profile.vertical_bob = 0.020F * speed_factor;
+  profile.hip_sway = 0.024F * inputs.stance_width;
   profile.shoulder_sway = 0.013F;
-  profile.shoulder_twist = 0.034F;
-  profile.pelvis_twist = 0.030F;
-  profile.forward_lean = 0.026F + (speed_factor - 1.0F) * 0.012F;
-  profile.lateral_foot_shift = 0.010F;
-  profile.arm_swing = 0.215F * inputs.arm_swing_amplitude;
-  profile.max_arm_displacement = 0.230F;
-  profile.elbow_flex = 0.035F;
-  profile.arm_counter_shift = 0.13F;
-  profile.weight_shift = 0.012F;
-  profile.pelvis_drop = 0.016F;
-  profile.head_stabilization = 0.72F;
-  profile.contact_lift = 0.003F;
-  profile.knee_drive = 0.022F;
+  profile.shoulder_twist = 0.032F;
+  profile.pelvis_twist = 0.026F;
+  profile.forward_lean = 0.020F + (speed_factor - 1.0F) * 0.010F;
+  profile.lateral_foot_shift = 0.008F;
+  profile.arm_swing = 0.195F * inputs.arm_swing_amplitude;
+  profile.max_arm_displacement = 0.215F;
+  profile.elbow_flex = 0.025F;
+  profile.arm_counter_shift = 0.12F;
+  profile.weight_shift = 0.014F;
+  profile.pelvis_drop = 0.012F;
+  profile.head_stabilization = 0.74F;
+  profile.contact_lift = 0.002F;
+  profile.knee_drive = 0.016F;
 
-  profile.heel_strike_pitch = 0.26F;
-  profile.toe_off_pitch = -0.46F;
-  profile.swing_clearance_pitch = 0.14F;
+  profile.heel_strike_pitch = 0.28F;
+  profile.toe_off_pitch = -0.42F;
+  profile.swing_clearance_pitch = 0.12F;
   return profile;
 }
 
@@ -224,29 +232,32 @@ struct LocomotionPoseProfile {
     -> LocomotionPoseProfile {
   LocomotionPoseProfile profile{};
   profile.planted_fraction = k_run_planted_fraction;
+  profile.stance_forward_fraction = 0.38F;
+  profile.track_ratio = 0.34F;
+  profile.swing_lift_advance = 0.78F;
   profile.stride_length = k_run_stance_travel * inputs.walk_speed_multiplier *
                           (0.92F + 0.08F * speed_factor);
-  profile.step_height = 0.165F * (0.88F + 0.18F * speed_factor);
-  profile.vertical_bob = 0.038F * speed_factor;
-  profile.hip_sway = 0.014F * inputs.stance_width;
-  profile.shoulder_sway = 0.010F;
-  profile.shoulder_twist = 0.054F;
-  profile.pelvis_twist = 0.046F;
-  profile.forward_lean = 0.108F + (speed_factor - 1.0F) * 0.020F;
-  profile.lateral_foot_shift = 0.011F;
-  profile.arm_swing = 0.300F * inputs.arm_swing_amplitude;
-  profile.max_arm_displacement = 0.320F;
-  profile.elbow_flex = 0.075F;
-  profile.arm_counter_shift = 0.16F;
-  profile.weight_shift = 0.008F;
-  profile.pelvis_drop = 0.012F;
+  profile.step_height = 0.132F * (0.90F + 0.15F * speed_factor);
+  profile.vertical_bob = 0.048F * speed_factor;
+  profile.hip_sway = 0.009F * inputs.stance_width;
+  profile.shoulder_sway = 0.007F;
+  profile.shoulder_twist = 0.064F;
+  profile.pelvis_twist = 0.052F;
+  profile.forward_lean = 0.145F + (speed_factor - 1.0F) * 0.025F;
+  profile.lateral_foot_shift = 0.006F;
+  profile.arm_swing = 0.275F * inputs.arm_swing_amplitude;
+  profile.max_arm_displacement = 0.290F;
+  profile.elbow_flex = 0.240F;
+  profile.arm_counter_shift = 0.10F;
+  profile.weight_shift = 0.004F;
+  profile.pelvis_drop = 0.030F;
   profile.head_stabilization = 0.88F;
-  profile.contact_lift = 0.016F;
-  profile.knee_drive = 0.038F;
+  profile.contact_lift = 0.008F;
+  profile.knee_drive = 0.030F;
 
-  profile.heel_strike_pitch = 0.09F;
-  profile.toe_off_pitch = -0.62F;
-  profile.swing_clearance_pitch = 0.20F;
+  profile.heel_strike_pitch = 0.02F;
+  profile.toe_off_pitch = -0.54F;
+  profile.swing_clearance_pitch = 0.10F;
   return profile;
 }
 
@@ -338,7 +349,8 @@ smooth_pulse(float t, float start, float peak, float end) noexcept -> float {
     float const heel_settle = smooth_pulse(t, 0.0F, 0.08F, 0.24F);
     float const mid_stance = smooth_pulse(t, 0.18F, 0.50F, 0.82F);
     float const toe_off = smooth_pulse(t, 0.72F, 0.88F, 1.0F);
-    z_pos = foot_stride_length * (k_stance_forward_fraction - t + mid_stance * 0.03F);
+    z_pos =
+        foot_stride_length * (profile.stance_forward_fraction - t + mid_stance * 0.03F);
     foot_y += (heel_settle * 0.55F + toe_off) * profile.contact_lift * stride_scale;
     foot_y -= mid_stance * 0.0018F * stride_scale;
 
@@ -354,10 +366,10 @@ smooth_pulse(float t, float start, float peak, float end) noexcept -> float {
                                1.0F);
     float const travel = swing_travel(t, planted_fraction);
 
-    float const lift_time = t * (1.0F + 0.55F * (1.0F - t));
+    float const lift_time = t * (1.0F + profile.swing_lift_advance * (1.0F - t));
     float const lift_curve = std::sin(lift_time * std::numbers::pi_v<float>);
     float const landing_soften = smooth_pulse(t, 0.72F, 0.90F, 1.0F);
-    z_pos = -foot_stride_length * (1.0F - k_stance_forward_fraction) +
+    z_pos = -foot_stride_length * (1.0F - profile.stance_forward_fraction) +
             (foot_stride_length * 1.00F) * travel;
     foot_y +=
         lift_curve * foot_step_height +
@@ -376,7 +388,7 @@ smooth_pulse(float t, float start, float peak, float end) noexcept -> float {
   float const stance_turn_bias =
       turn_amount * lateral_sign * (0.014F + 0.006F * locomotion_blend);
 
-  float const track_x = base_foot.x * k_walk_track_ratio;
+  float const track_x = base_foot.x * profile.track_ratio;
   float const target_x =
       track_x -
       lateral_sign * std::abs(std::sin(phase * 2.0F * std::numbers::pi_v<float>)) *
@@ -787,11 +799,16 @@ auto resolve_humanoid_locomotion_pose(
                      acceleration_push * 0.04F + turn_abs * 0.04F,
                  0.34F,
                  0.74F);
-  float const bob_direction = 1.0F - 2.0F * run_blend;
   auto bob_at = [&](float phase_lag) {
-    float const lagged = cycle_radians - phase_lag * 2.0F * std::numbers::pi_v<float>;
-    return (std::abs(std::sin(lagged)) - k_abs_sine_mean) * bob_direction *
-           profile.vertical_bob * stride_scale;
+    float const phase_lag_radians = phase_lag * 2.0F * std::numbers::pi_v<float>;
+    float const walk_wave =
+        std::abs(std::sin(cycle_radians - phase_lag_radians)) - k_abs_sine_mean;
+    float const run_wave =
+        k_abs_sine_mean -
+        std::abs(std::sin(cycle_radians +
+                          k_run_bob_phase_advance * 2.0F * std::numbers::pi_v<float> -
+                          phase_lag_radians));
+    return lerp(walk_wave, run_wave, run_blend) * profile.vertical_bob * stride_scale;
   };
   float const vertical_bob = bob_at(0.0F);
   float const shoulder_bob = bob_at(k_shoulder_bob_lag_phase);
@@ -828,8 +845,11 @@ auto resolve_humanoid_locomotion_pose(
   float const right_support = support_amount(right_phase);
   float const support_shift = std::clamp(right_support - left_support, -1.0F, 1.0F);
   float const weight_shift = support_shift * profile.weight_shift * stride_scale;
-  float const pelvis_drop = std::max(1.0F - left_support, 1.0F - right_support) *
-                            profile.pelvis_drop * step_scale;
+  float const double_support = std::min(left_support, right_support);
+  float const loaded_support = std::max(left_support, right_support);
+  float const support_compression = lerp(double_support, loaded_support, run_blend);
+  float const pelvis_drop = support_compression * profile.pelvis_drop * step_scale;
+  float const torso_support_drop = pelvis_drop * lerp(0.62F, 0.86F, run_blend);
   float const head_counter_bob =
       -vertical_bob * profile.head_stabilization * (0.45F + 0.10F * run_blend);
 
@@ -891,13 +911,14 @@ auto resolve_humanoid_locomotion_pose(
 
   sample.pelvis_delta.y += vertical_bob - braking_sink - pelvis_drop - stride_hip_drop;
   sample.shoulder_l_delta.y += shoulder_bob * 0.45F - braking_sink * 0.20F -
-                               pelvis_drop * 0.15F - stride_hip_drop;
+                               torso_support_drop - stride_hip_drop;
   sample.shoulder_r_delta.y += shoulder_bob * 0.45F - braking_sink * 0.20F -
-                               pelvis_drop * 0.15F - stride_hip_drop;
-  sample.neck_delta.y += neck_bob * 0.28F + head_counter_bob * 0.55F - stride_hip_drop;
-  sample.head_delta.y += head_bob * 0.18F +
-                         acceleration_push * 0.003F * locomotion_blend +
-                         head_counter_bob - stride_hip_drop;
+                               torso_support_drop - stride_hip_drop;
+  sample.neck_delta.y += neck_bob * 0.28F + head_counter_bob * 0.55F -
+                         torso_support_drop * 0.84F - stride_hip_drop;
+  sample.head_delta.y +=
+      head_bob * 0.18F + acceleration_push * 0.003F * locomotion_blend +
+      head_counter_bob - torso_support_drop * 0.68F - stride_hip_drop;
 
   float const pelvis_lateral = hip_sway + weight_shift;
   float const torso_lateral = shoulder_sway + weight_shift * 0.45F;
