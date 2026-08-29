@@ -8,7 +8,6 @@
 #include <cmath>
 #include <cstddef>
 
-#include "game/map/render_visibility_rules.h"
 #include "game/map/visibility_service.h"
 #include "render/gl/shader.h"
 #include "render/gl/texture.h"
@@ -505,28 +504,6 @@ void TerrainRenderer::submit(Renderer& renderer, ResourceManager* resources) {
       continue;
     }
     submission_cache.was_submitted = true;
-
-    if (visibility_snapshot != nullptr) {
-      auto& cache = m_chunk_visibility_cache[chunk_index];
-      if (cache.visibility_version != visibility_snapshot->version) {
-        bool any_revealed = false;
-        for (int gz = chunk.min_z; gz <= chunk.max_z && !any_revealed; ++gz) {
-          for (int gx = chunk.min_x; gx <= chunk.max_x; ++gx) {
-            if (Game::Map::classify_static_world_cell_visibility(
-                    *visibility_snapshot, gx, gz) !=
-                Game::Map::RenderVisibilityState::Hidden) {
-              any_revealed = true;
-              break;
-            }
-          }
-        }
-        cache.any_revealed = any_revealed;
-        cache.visibility_version = visibility_snapshot->version;
-      }
-      if (!cache.any_revealed) {
-        continue;
-      }
-    }
 
     TerrainSurfaceCmd cmd;
     cmd.mesh = chunk.mesh.get();

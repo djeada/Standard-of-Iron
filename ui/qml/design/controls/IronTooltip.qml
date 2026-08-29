@@ -8,13 +8,17 @@ ToolTip {
     delay: Design.Metrics.tooltipDelay
     timeout: 8000
     padding: Design.Metrics.space8
+    implicitWidth: Math.min(tipText.implicitWidth + control.leftPadding + control.rightPadding, Design.Metrics.tooltipWidth)
+    implicitHeight: tipText.contentHeight + control.topPadding + control.bottomPadding
     contentItem: Text {
+        id: tipText
+
         text: control.text
         color: Design.Theme.textPrimary
         font.family: Design.Typography.family
         font.pixelSize: Design.Typography.caption
         wrapMode: Text.WordWrap
-        width: Math.min(implicitWidth, Design.Metrics.tooltipWidth)
+        width: control.availableWidth
     }
     background: Rectangle {
         color: Design.Theme.panelLeather

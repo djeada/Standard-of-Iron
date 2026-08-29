@@ -230,7 +230,7 @@ ApplicationWindow {
 
         anchors.top: parent.top
         anchors.right: parent.right
-        anchors.topMargin: Design.Metrics.space24 * 3
+        anchors.topMargin: hud.visible ? hud.right_stack_bottom + Design.Metrics.space8 : Design.Metrics.space24 * 3
         anchors.rightMargin: Design.Metrics.space16
         z: 12
         visible: mainWindow.game_started && !mainWindow.menu_visible
