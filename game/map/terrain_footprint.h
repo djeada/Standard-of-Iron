@@ -42,8 +42,8 @@ inline constexpr float k_hill_entry_ramp_cells = 3.0F;
 inline constexpr float k_campaign_hill_entry_ramp_cells = 7.25F;
 inline constexpr float k_hill_entry_min_half_width_cells = 1.5F;
 inline constexpr float k_hill_entry_crown_fraction = 0.62F;
-inline constexpr float k_hill_entry_base_width_scale = 1.72F;
-inline constexpr float k_hill_entry_mouth_flare_strength = 0.38F;
+inline constexpr float k_hill_entry_base_width_scale = 1.15F;
+inline constexpr float k_hill_entry_mouth_flare_strength = 0.20F;
 
 struct FootprintCells {
   float half_width = 1.0F;

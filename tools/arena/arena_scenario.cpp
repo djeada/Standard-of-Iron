@@ -37,6 +37,7 @@
 #include "game/systems/formation_combat_geometry.h"
 #include "game/systems/nav_grid.h"
 #include "game/systems/order_service.h"
+#include "game/systems/pathfinding.h"
 #include "game/systems/projectile_kind.h"
 #include "game/systems/projectile_system.h"
 #include "game/systems/rpg_combat_system/rpg_targeting.h"
@@ -889,6 +890,22 @@ struct ArenaScenarioRunner::Impl {
   QHash<QString, BridgeAlignmentObservation> bridge_alignment;
   QHash<QString, float> initial_elevation;
   QHash<QString, float> maximum_elevation;
+  struct ElevationLegState {
+    bool seeded{false};
+    float extreme{0.0F};
+    float worst_reversal{0.0F};
+    float worst_at{0.0F};
+    bool suspended{false};
+  };
+  QHash<QString, ElevationLegState> elevation_climb_legs;
+  QHash<QString, ElevationLegState> elevation_descent_legs;
+  struct OffGroundState {
+    int samples{0};
+    QVector3D worst;
+    float worst_at{0.0F};
+  };
+  QHash<QString, OffGroundState> off_walkable_ground;
+  QHash<QString, OffGroundState> off_walkable_soldiers;
   QHash<QString, bool> defensive_layout_locked;
   QHash<QString, bool> useful_bot_action;
   std::vector<BattleSideState> battle_sides;
@@ -2414,6 +2431,32 @@ struct ArenaScenarioRunner::Impl {
     return result;
   }
 
+  void track_elevation_leg(ElevationLegState& leg,
+                           float elevation,
+                           bool climbing,
+                           float ceiling) {
+    if (ceiling > 0.0F && elevation > ceiling) {
+      leg.suspended = true;
+      return;
+    }
+    if (leg.suspended) {
+      leg.suspended = false;
+      leg.extreme = elevation;
+    }
+    if (!leg.seeded) {
+      leg.seeded = true;
+      leg.extreme = elevation;
+      return;
+    }
+    float const reversal = climbing ? leg.extreme - elevation : elevation - leg.extreme;
+    if (reversal > leg.worst_reversal) {
+      leg.worst_reversal = reversal;
+      leg.worst_at = elapsed;
+    }
+    leg.extreme =
+        climbing ? std::max(leg.extreme, elevation) : std::min(leg.extreme, elevation);
+  }
+
   [[nodiscard]] auto
   expectation_active(const ArenaExpectation& expectation) const -> bool {
     if (elapsed + 1.0e-5F < expectation.start_seconds) {
@@ -2662,6 +2705,69 @@ struct ArenaScenarioRunner::Impl {
     if (host.terrain != nullptr &&
         host.terrain->is_on_bridge(position.x(), position.z())) {
       bridge_traversal_seen[group] = true;
+    }
+    for (auto const& expectation : scenario.expectations) {
+      if (expectation.group != group || !expectation_active(expectation)) {
+        continue;
+      }
+      switch (expectation.kind) {
+      case ArenaExpectationKind::ElevationClimbIsMonotonic:
+        track_elevation_leg(
+            elevation_climb_legs[group], position.y(), true, expectation.distance);
+        break;
+      case ArenaExpectationKind::ElevationDescentIsMonotonic:
+        track_elevation_leg(
+            elevation_descent_legs[group], position.y(), false, expectation.distance);
+        break;
+      case ArenaExpectationKind::UnitsStayOnWalkableGround: {
+        if (Game::Systems::NavGrid::is_world_position_walkable(position)) {
+          break;
+        }
+        auto& state = off_walkable_ground[group];
+        state.samples += 1;
+        if (state.samples == 1) {
+          state.worst = position;
+          state.worst_at = elapsed;
+        }
+        break;
+      }
+      case ArenaExpectationKind::SoldiersStayOnWalkableGround: {
+        auto const* presentation =
+            entity->get_component<Engine::Core::FormationPresentationComponent>();
+        if (presentation == nullptr) {
+          break;
+        }
+        float const yaw = transform->rotation.y * std::numbers::pi_v<float> / 180.0F;
+        float const sin_yaw = std::sin(yaw);
+        float const cos_yaw = std::cos(yaw);
+        for (auto const& soldier : presentation->soldiers) {
+          if (!soldier.alive) {
+            continue;
+          }
+          QVector3D const world(
+              position.x() + (cos_yaw * soldier.local_x) + (sin_yaw * soldier.local_z),
+              0.0F,
+              position.z() - (sin_yaw * soldier.local_x) + (cos_yaw * soldier.local_z));
+          auto* pathfinder = Game::Systems::NavGrid::get_pathfinder();
+          if (pathfinder == nullptr) {
+            continue;
+          }
+          auto const cell = pathfinder->world_to_grid(world.x(), world.z());
+          if (pathfinder->is_terrain_walkable(cell.x, cell.y)) {
+            continue;
+          }
+          auto& state = off_walkable_soldiers[group];
+          state.samples += 1;
+          if (state.samples == 1) {
+            state.worst = world;
+            state.worst_at = elapsed;
+          }
+        }
+        break;
+      }
+      default:
+        break;
+      }
     }
     auto const* target = entity->get_component<Engine::Core::AttackTargetComponent>();
     auto const* motion =
@@ -5132,6 +5238,64 @@ struct ArenaScenarioRunner::Impl {
                         .arg(expectation.group)
                         .arg(gain, 0, 'f', 2)
                         .arg(required_gain, 0, 'f', 2));
+        }
+        break;
+      }
+      case ArenaExpectationKind::ElevationClimbIsMonotonic:
+      case ArenaExpectationKind::ElevationDescentIsMonotonic: {
+        bool const climbing =
+            expectation.kind == ArenaExpectationKind::ElevationClimbIsMonotonic;
+        auto const& legs = climbing ? elevation_climb_legs : elevation_descent_legs;
+        auto const leg = legs.value(expectation.group);
+        float const tolerance =
+            expectation.threshold > 0.0F ? expectation.threshold : 0.35F;
+        if (!leg.seeded) {
+          add_issue(
+              QStringLiteral("elevation_leg_not_sampled"),
+              QStringLiteral("%1 produced no elevation sample for its %2 leg")
+                  .arg(expectation.group)
+                  .arg(climbing ? QStringLiteral("climb") : QStringLiteral("descent")));
+          break;
+        }
+        if (leg.worst_reversal > tolerance) {
+          add_issue(
+              QStringLiteral("elevation_leg_reversed"),
+              QStringLiteral("%1 reversed %2 m against its %3 at %4 s (allowed %5 m)")
+                  .arg(expectation.group)
+                  .arg(leg.worst_reversal, 0, 'f', 2)
+                  .arg(climbing ? QStringLiteral("climb") : QStringLiteral("descent"))
+                  .arg(leg.worst_at, 0, 'f', 2)
+                  .arg(tolerance, 0, 'f', 2));
+        }
+        break;
+      }
+      case ArenaExpectationKind::SoldiersStayOnWalkableGround: {
+        auto const state = off_walkable_soldiers.value(expectation.group);
+        int const allowance = static_cast<int>(std::max(0.0F, expectation.threshold));
+        if (state.samples > allowance) {
+          add_issue(QStringLiteral("soldier_stood_on_blocked_ground"),
+                    QStringLiteral("%1 drew a soldier on blocked ground %2 times "
+                                   "(allowed %3), first at %4 s near (%5, %6)")
+                        .arg(expectation.group)
+                        .arg(state.samples)
+                        .arg(allowance)
+                        .arg(state.worst_at, 0, 'f', 2)
+                        .arg(state.worst.x(), 0, 'f', 2)
+                        .arg(state.worst.z(), 0, 'f', 2));
+        }
+        break;
+      }
+      case ArenaExpectationKind::UnitsStayOnWalkableGround: {
+        auto const state = off_walkable_ground.value(expectation.group);
+        if (state.samples > 0) {
+          add_issue(QStringLiteral("unit_stood_on_blocked_ground"),
+                    QStringLiteral("%1 stood on blocked ground %2 times, first at "
+                                   "%3 s near (%4, %5)")
+                        .arg(expectation.group)
+                        .arg(state.samples)
+                        .arg(state.worst_at, 0, 'f', 2)
+                        .arg(state.worst.x(), 0, 'f', 2)
+                        .arg(state.worst.z(), 0, 'f', 2));
         }
         break;
       }

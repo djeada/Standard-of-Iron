@@ -1015,12 +1015,14 @@ void TerrainService::restore_from_serialized(
     const BiomeSettings& biome,
     const std::vector<WorldProp>& world_props,
     const std::vector<WorldProp>& authored_world_props,
-    const std::vector<Lake>& lakes) {
+    const std::vector<Lake>& lakes,
+    const HillNavigation& hills) {
   m_sealed = false;
   m_prop_surface_cache.clear();
   m_prop_surface_cache_valid = false;
   m_height_map = std::make_unique<TerrainHeightMap>(width, height, tile_size);
-  m_height_map->restore_from_data(heights, terrain_types, rivers, bridges, lakes);
+  m_height_map->restore_from_data(
+      heights, terrain_types, rivers, bridges, lakes, hills);
   m_biome_settings = biome;
   m_coord_system = CoordSystem::Grid;
 

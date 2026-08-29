@@ -158,6 +158,128 @@ void carve_hill_gap(ArenaScenarioDefinition& scenario, float gap) {
   scenario.terrain_features.push_back(hill(-offset));
 }
 
+struct HillTraversalShape {
+  const char* slug;
+  const char* prose;
+  Game::Map::HillShape shape;
+  float thickness;
+  QVector3D crown;
+};
+
+auto hill_traversal_scenario(const HillTraversalShape& profile,
+                             int entrance_count) -> ArenaScenarioDefinition {
+  constexpr float k_hill_radius = 10.0F;
+  constexpr float k_hill_height = 7.0F;
+  constexpr float k_shape_extent = 24.0F;
+  constexpr float k_climb_order = 0.6F;
+  constexpr float k_settle_seconds = 2.0F;
+  constexpr float k_leg_reversal_tolerance = 0.6F;
+  constexpr float k_slope_band_ceiling = 5.0F;
+  constexpr float k_soldier_ground_transient_samples = 24.0F;
+  constexpr float k_climb_window_start = 1.0F;
+  constexpr float k_climb_window_end = 52.0F;
+  constexpr float k_descend_order = 54.0F;
+  constexpr float k_descend_window_start = 56.0F;
+  constexpr float k_duration = 104.0F;
+
+  QVector3D const staging(-22.0F, 0.0F, 0.0F);
+
+  QString const entrances_prose =
+      entrance_count == 0
+          ? QStringLiteral("no authored entrance, so the generated one is the only "
+                           "way up")
+          : (entrance_count == 1 ? QStringLiteral("a single authored entrance")
+                                 : QStringLiteral("two authored entrances"));
+
+  auto scenario = definition(
+      QStringLiteral("nav_hill_%1_%2_entrances")
+          .arg(QString::fromLatin1(profile.slug))
+          .arg(entrance_count),
+      QStringLiteral("Navigation: Onto And Off A %1 Hill (%2)")
+          .arg(QString::fromLatin1(profile.prose))
+          .arg(entrance_count),
+      QStringLiteral("A troop climbs a %1 hill with %2, then walks back off it. "
+                     "It may only ever stand on ground it is allowed to stand on, "
+                     "and neither leg may reverse: no sliding back down the slope "
+                     "and no being dragged back up it.")
+          .arg(QString::fromLatin1(profile.prose))
+          .arg(entrances_prose),
+      k_duration,
+      {44.0F, 52.0F, 25.0F});
+  scenario.terrain_grid_extent = 120;
+  scenario.arena_floor_half_extent = 40.0F;
+  scenario.camera_focus = QVector3D(0.0F, 0.0F, 0.0F);
+
+  scenario.terrain_height_scale_override = 0.5F;
+  scenario.suppress_terrain_scatter = true;
+
+  Game::Map::TerrainFeature hill;
+  hill.type = Game::Map::TerrainType::Hill;
+  hill.center_x = 0.0F;
+  hill.center_z = 0.0F;
+  hill.radius = k_hill_radius;
+  hill.height = k_hill_height;
+  hill.shape = profile.shape;
+  if (profile.shape != Game::Map::HillShape::Blob) {
+    hill.width = k_shape_extent;
+    hill.depth = k_shape_extent;
+    hill.thickness = profile.thickness;
+  }
+  if (entrance_count >= 1) {
+    hill.entrances.push_back(QVector3D(-12.0F, 0.0F, 0.0F));
+  }
+  if (entrance_count >= 2) {
+    hill.entrances.push_back(QVector3D(12.0F, 0.0F, 0.0F));
+  }
+  scenario.terrain_features.push_back(hill);
+
+  const QString climbers = QStringLiteral("climbers");
+  scenario.groups = {
+      group(climbers, Troop::Spearman, 1, 1, staging, 8, QVector3D(0.0F, 0.0F, 3.2F))};
+  scenario.steps = {move_to(k_climb_order, climbers, profile.crown),
+                    move_to(k_descend_order, climbers, staging)};
+
+  scenario.expectations.push_back(
+      expectation(Expect::AllGroupsRespondWithin, climbers, 2.5F));
+  scenario.expectations.push_back(
+      expectation(Expect::MovementAnimationObserved, climbers));
+  scenario.expectations.push_back(expectation(Expect::NoRootTeleport, climbers));
+  scenario.expectations.push_back(expectation(Expect::GroupIsRendered, climbers));
+  scenario.expectations.push_back(
+      expectation(Expect::UnitsStayOnWalkableGround, climbers));
+  scenario.expectations.push_back(expectation(Expect::SoldiersStayOnWalkableGround,
+                                              climbers,
+                                              k_soldier_ground_transient_samples,
+                                              0.0F,
+                                              k_settle_seconds));
+
+  auto climbed = expectation(Expect::ElevationGainObserved, climbers, 4.5F);
+  scenario.expectations.push_back(std::move(climbed));
+
+  auto climb_leg = expectation(Expect::ElevationClimbIsMonotonic,
+                               climbers,
+                               k_leg_reversal_tolerance,
+                               k_slope_band_ceiling,
+                               k_climb_window_start);
+  climb_leg.end_seconds = k_climb_window_end;
+  scenario.expectations.push_back(std::move(climb_leg));
+
+  auto descent_leg = expectation(Expect::ElevationDescentIsMonotonic,
+                                 climbers,
+                                 k_leg_reversal_tolerance,
+                                 k_slope_band_ceiling,
+                                 k_descend_window_start);
+  scenario.expectations.push_back(std::move(descent_leg));
+
+  auto returned = expectation(Expect::GroupReachedDestination, climbers);
+  returned.distance = 5.0F;
+  returned.position = staging;
+  scenario.expectations.push_back(std::move(returned));
+
+  scenario.expectations.push_back(expectation(Expect::FrameBudget, {}, 33.34F));
+  return scenario;
+}
+
 auto hill_gap_scenario(const char* id,
                        const char* label,
                        const char* description,
@@ -246,6 +368,41 @@ auto build_navigation_definitions() -> std::vector<ArenaScenarioDefinition> {
       34.0F,
       52.0F,
       0.0F));
+
+  {
+    const HillTraversalShape shapes[] = {
+        {"blob",
+         "round",
+         Game::Map::HillShape::Blob,
+         0.0F,
+         QVector3D(2.0F, 0.0F, 0.0F)},
+        {"corridor",
+         "ridge",
+         Game::Map::HillShape::Corridor,
+         9.0F,
+         QVector3D(0.0F, 0.0F, 0.0F)},
+        {"arc",
+         "crescent",
+         Game::Map::HillShape::Arc,
+         9.0F,
+         QVector3D(7.0F, 0.0F, 0.0F)},
+        {"elbow",
+         "elbow",
+         Game::Map::HillShape::Elbow,
+         9.0F,
+         QVector3D(-2.0F, 0.0F, -6.0F)},
+        {"ring",
+         "ring",
+         Game::Map::HillShape::Ring,
+         7.0F,
+         QVector3D(5.0F, 0.0F, -5.0F)},
+    };
+    for (const auto& shape : shapes) {
+      for (int entrances = 0; entrances <= 2; ++entrances) {
+        result.push_back(hill_traversal_scenario(shape, entrances));
+      }
+    }
+  }
 
   {
     auto scenario = definition(
