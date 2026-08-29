@@ -29,7 +29,7 @@
       "id": "archer",
       "display_name": "Libyan Archer",
       "production": {
-        "cost": 50,
+        "cost": 25,
         "build_time": 5.0,
         "priority": 9,
         "is_melee": false
@@ -66,7 +66,7 @@
       "id": "swordsman",
       "display_name": "Citizen Infantry",
       "production": {
-        "cost": 95,
+        "cost": 48,
         "build_time": 6.8,
         "priority": 10,
         "is_melee": true
@@ -103,7 +103,7 @@
       "id": "spearman",
       "display_name": "Liby-Phoenician Spear",
       "production": {
-        "cost": 82,
+        "cost": 41,
         "build_time": 6.0,
         "priority": 11,
         "is_melee": true
@@ -140,7 +140,7 @@
       "id": "horse_swordsman",
       "display_name": "Numidian Cavalry",
       "production": {
-        "cost": 150,
+        "cost": 75,
         "build_time": 9.4,
         "priority": 16,
         "is_melee": true
@@ -176,7 +176,7 @@
       "id": "healer",
       "display_name": "Sacred Band Healer",
       "production": {
-        "cost": 70,
+        "cost": 35,
         "build_time": 6.8,
         "priority": 7,
         "is_melee": false
@@ -213,7 +213,7 @@
       "id": "horse_archer",
       "display_name": "Horse Archer",
       "production": {
-        "cost": 120,
+        "cost": 60,
         "build_time": 9.0,
         "priority": 12,
         "is_melee": false
@@ -246,7 +246,7 @@
       "id": "horse_spearman",
       "display_name": "Horse Spearman",
       "production": {
-        "cost": 140,
+        "cost": 70,
         "build_time": 9.5,
         "priority": 13,
         "is_melee": true
@@ -279,7 +279,7 @@
       "id": "elephant",
       "display_name": "African War Elephant",
       "production": {
-        "cost": 350,
+        "cost": 175,
         "build_time": 20.0,
         "priority": 2,
         "is_melee": true
@@ -316,7 +316,7 @@
       "id": "catapult",
       "display_name": "Carthaginian Catapult",
       "production": {
-        "cost": 260,
+        "cost": 130,
         "build_time": 15.0,
         "priority": 5,
         "is_melee": false
@@ -353,7 +353,7 @@
       "id": "ballista",
       "display_name": "Carthaginian Ballista",
       "production": {
-        "cost": 200,
+        "cost": 100,
         "build_time": 12.0,
         "priority": 6,
         "is_melee": false
@@ -390,7 +390,7 @@
       "id": "builder",
       "display_name": "Phoenician Craftsman",
       "production": {
-        "cost": 55,
+        "cost": 28,
         "build_time": 5.8,
         "priority": 4,
         "is_melee": true
@@ -433,7 +433,7 @@
       "id": "carthage_spear_commander",
       "display_name": "Hanno the Great",
       "production": {
-        "cost": 385,
+        "cost": 193,
         "build_time": 31.0,
         "priority": 20,
         "is_melee": true
@@ -467,7 +467,7 @@
       "id": "carthage_bow_commander",
       "display_name": "Hasdrubal Barca",
       "production": {
-        "cost": 350,
+        "cost": 175,
         "build_time": 28.0,
         "priority": 20,
         "is_melee": false
@@ -501,7 +501,7 @@
       "id": "carthage_sword_commander",
       "display_name": "Hannibal Barca",
       "production": {
-        "cost": 430,
+        "cost": 215,
         "build_time": 34.0,
         "priority": 20,
         "is_melee": true
