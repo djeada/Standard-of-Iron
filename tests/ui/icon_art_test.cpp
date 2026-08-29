@@ -68,6 +68,8 @@ TEST(IconArtTest, EveryHudOrderHasADrawing) {
                              "guard",
                              "hold",
                              "patrol",
+                             "divide",
+                             "join",
                              "formation",
                              "build",
                              "repair",

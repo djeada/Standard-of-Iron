@@ -2,14 +2,20 @@
 #include <QVariantMap>
 
 #include <algorithm>
+#include <chrono>
 #include <cmath>
 #include <cstdint>
 #include <gtest/gtest.h>
+#include <thread>
 #include <vector>
 
+#include "app/audio/audio_resource_loader.h"
 #include "app/session/skirmish_loader.h"
 #include "core/component.h"
+#include "core/event_manager.h"
 #include "core/world.h"
+#include "game/audio/audio_cues.h"
+#include "game/audio/audio_event_handler.h"
 #include "game/camera_framing.h"
 #include "game/game_config.h"
 #include "game/map/map_definition.h"
@@ -191,6 +197,113 @@ TEST_F(IronSepulcherSkirmishTest, SoloSkirmishAwakensAndIsWonByPurifyingTheShrin
 
   victory.update(world, 0.1F);
   EXPECT_EQ(victory.get_victory_state(), QStringLiteral("victory"));
+}
+
+TEST_F(IronSepulcherSkirmishTest, WakingTheSepulcherAnnouncesItselfWithSoundAndMusic) {
+  Engine::Core::World world;
+  Game::Systems::register_runtime_systems(world);
+
+  Render::GL::Renderer renderer(Render::ShaderQuality::None);
+  Render::GL::Camera camera;
+  App::Core::SkirmishLoader loader(world, renderer, camera);
+
+  int selected_player_id = k_local_player_id;
+  const auto load_result = loader.start(QString::fromLatin1(k_map_path),
+                                        solo_player_configs(),
+                                        k_local_player_id,
+                                        true,
+                                        selected_player_id);
+  ASSERT_TRUE(load_result.ok) << load_result.error_message.toStdString();
+
+  Game::Map::MapDefinition map_definition;
+  QString error;
+  ASSERT_TRUE(Game::Map::MapLoader::load_from_json_file(
+      QString::fromLatin1(k_map_path), map_definition, &error))
+      << error.toStdString();
+
+  auto* undead = world.get_system<Game::Systems::UndeadAwakeningSystem>();
+  ASSERT_NE(undead, nullptr);
+  undead->configure(map_definition);
+
+  QStringList cues;
+  QStringList music;
+  const Engine::Core::ScopedEventSubscription<Engine::Core::AudioCueEvent> cue_sub(
+      [&cues](const Engine::Core::AudioCueEvent& event) {
+        cues.append(QString::fromStdString(event.cue_id));
+      });
+  const Engine::Core::ScopedEventSubscription<Engine::Core::MusicTriggerEvent>
+      music_sub([&music](const Engine::Core::MusicTriggerEvent& event) {
+        music.append(QString::fromStdString(event.music_id));
+      });
+
+  const auto* shrine = find_zone(map_definition, QStringLiteral("shrine_sentinels"));
+  ASSERT_NE(shrine, nullptr);
+
+  undead->update(&world, 0.1F);
+  EXPECT_FALSE(cues.contains(QStringLiteral("alert.undead_awakening")))
+      << "a dormant sepulcher must stay quiet";
+
+  auto* commander = find_local_commander(world);
+  ASSERT_NE(commander, nullptr);
+  auto* transform = commander->get_component<Engine::Core::TransformComponent>();
+  ASSERT_NE(transform, nullptr);
+  const QVector3D shrine_world = zone_world_position(map_definition, *shrine);
+  transform->position.x = shrine_world.x();
+  transform->position.z = shrine_world.z();
+
+  undead->update(&world, 0.1F);
+  ASSERT_FALSE(living_guardians_of_owner(world, shrine->owner_id).empty())
+      << "the commander walking in must wake the zone";
+
+  EXPECT_TRUE(cues.contains(QStringLiteral("alert.undead_awakening")))
+      << "the dead rose in silence; cues seen: " << cues.join(", ").toStdString();
+
+  for (int tick = 0; tick < 10; ++tick) {
+    undead->update(&world, 0.1F);
+  }
+  EXPECT_TRUE(music.contains(QStringLiteral("music.event.skeletons_awaken")))
+      << "standing in a woken sepulcher played no music; music seen: "
+      << music.join(", ").toStdString();
+
+  music.clear();
+  int stops = 0;
+  const Engine::Core::ScopedEventSubscription<Engine::Core::MusicStopEvent> stop_sub(
+      [&stops](const Engine::Core::MusicStopEvent&) { ++stops; });
+  transform->position.x = shrine_world.x() + 1000.0F;
+  transform->position.z = shrine_world.z() + 1000.0F;
+  for (int tick = 0; tick < 10; ++tick) {
+    undead->update(&world, 0.1F);
+  }
+  EXPECT_GT(stops, 0) << "the awakening music followed the player out of the zone";
+
+  auto& audio = AudioSystem::get_instance();
+  audio.shutdown();
+  if (!audio.initialize()) {
+    GTEST_SKIP() << "Audio backend is unavailable in this environment";
+  }
+  audio.set_master_volume(1.0F);
+  audio.set_sound_volume(1.0F);
+  AudioResourceLoader::load_audio_resources(AudioLoadPolicy::Startup);
+  AudioResourceLoader::load_audio_resources(AudioLoadPolicy::Mission);
+  AudioResourceLoader::load_audio_cues();
+
+  Game::Audio::AudioEventHandler handler(&world);
+  ASSERT_TRUE(handler.initialize());
+
+  Engine::Core::EventManager::instance().publish(
+      Engine::Core::AudioCueEvent("alert.undead_awakening"));
+
+  bool opened = false;
+  for (int settle = 0; settle < 100 && !opened; ++settle) {
+    opened = audio.get_active_channel_count() > 0;
+    std::this_thread::sleep_for(std::chrono::milliseconds(10));
+  }
+  EXPECT_TRUE(opened)
+      << "the awakening cue was published and bound, but nothing reached the mixer";
+
+  handler.shutdown();
+  Game::Audio::CueRegistry::instance().clear();
+  audio.shutdown();
 }
 
 TEST_F(IronSepulcherSkirmishTest, EveryZoneOnTheMapOwnsAShrineBarracks) {

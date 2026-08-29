@@ -20,11 +20,11 @@ inline constexpr char k_music_volume_key[] = "audio/music_volume";
 inline constexpr char k_voice_volume_key[] = "audio/voice_volume";
 inline constexpr char k_ambience_volume_key[] = "audio/ambience_volume";
 
-inline constexpr float k_first_run_master_volume = 0.6F;
+inline constexpr float k_first_run_master_volume = 0.7F;
 inline constexpr float k_first_run_sound_volume = 1.0F;
-inline constexpr float k_first_run_music_volume = 0.5F;
+inline constexpr float k_first_run_music_volume = 0.45F;
 inline constexpr float k_first_run_voice_volume = 1.0F;
-inline constexpr float k_first_run_ambience_volume = 0.8F;
+inline constexpr float k_first_run_ambience_volume = 0.3F;
 
 struct Volumes {
   float master{k_first_run_master_volume};
@@ -103,12 +103,13 @@ inline auto load_volumes() -> Volumes {
     return defaults;
   }
 
+  const Volumes defaults = first_run_volumes();
   return {
-      .master = master.value_or(AudioConstants::DEFAULT_VOLUME),
-      .sound = sound.value_or(AudioConstants::DEFAULT_VOLUME),
-      .music = music.value_or(AudioConstants::DEFAULT_VOLUME),
-      .voice = voice.value_or(AudioConstants::DEFAULT_VOLUME),
-      .ambience = ambience.value_or(AudioConstants::DEFAULT_VOLUME),
+      .master = master.value_or(defaults.master),
+      .sound = sound.value_or(defaults.sound),
+      .music = music.value_or(defaults.music),
+      .voice = voice.value_or(defaults.voice),
+      .ambience = ambience.value_or(defaults.ambience),
   };
 }
 

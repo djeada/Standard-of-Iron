@@ -2,6 +2,7 @@
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
+#include <QMap>
 #include <QSet>
 #include <QString>
 
@@ -13,6 +14,7 @@
 
 #include "app/audio/audio_resource_loader.h"
 #include "game/audio/audio_cues.h"
+#include "game/audio/audio_settings.h"
 
 namespace {
 
@@ -176,6 +178,26 @@ TEST_F(ShippedAudioTest, TheCuesFiredHardestReachTheMixer) {
   }
 }
 
+TEST_F(ShippedAudioTest, EveryCueInTheCatalogueReachesTheMixer) {
+  auto& audio = AudioSystem::get_instance();
+  audio.set_master_volume(1.0F);
+  audio.set_sound_volume(1.0F);
+
+  std::vector<std::string> silent;
+  for (const char* cue_id : Game::Audio::Cue::k_all) {
+    if (!plays_audibly(cue_id)) {
+      silent.emplace_back(cue_id);
+    }
+  }
+
+  std::string joined;
+  for (const auto& cue_id : silent) {
+    joined += cue_id + " ";
+  }
+  EXPECT_TRUE(silent.empty()) << "bound but never audible, so silent in game: "
+                              << joined;
+}
+
 TEST_F(AudioCueRegistryTest, UnboundCueIsSilentInsteadOfFailing) {
   EXPECT_FALSE(Game::Audio::play_cue("cue.that.does.not.exist"));
   EXPECT_FALSE(
@@ -209,6 +231,28 @@ TEST_F(AudioCueRegistryTest, SilentCuesAreReportedForAuditing) {
   EXPECT_NE(std::find(silent.begin(), silent.end(), "test.cue.reported"), silent.end());
 }
 
+TEST(AudioMixTest, InformationOutranksAtmosphere) {
+  const auto defaults = Game::Audio::Settings::first_run_volumes();
+
+  EXPECT_FLOAT_EQ(defaults.voice, 1.0F) << "a commander speaking is never background";
+  EXPECT_FLOAT_EQ(defaults.sound, 1.0F) << "cues are how the game talks to the player";
+  EXPECT_LT(defaults.music, defaults.sound) << "music must not compete with a cue";
+  EXPECT_LT(defaults.ambience, defaults.music)
+      << "ambience is texture and sits under everything that carries meaning";
+  EXPECT_GT(defaults.master, 0.0F);
+}
+
+TEST(AudioMixTest, EachCategoryHasAPolyphonyCap) {
+  EXPECT_LE(AudioConstants::MAX_CONCURRENT_VOICE, 2U)
+      << "overlapping voice lines stop being intelligible";
+  EXPECT_LT(AudioConstants::MAX_CONCURRENT_VOICE,
+            AudioConstants::MAX_CONCURRENT_AMBIENCE);
+  EXPECT_LT(AudioConstants::MAX_CONCURRENT_AMBIENCE,
+            AudioConstants::MAX_CONCURRENT_SFX);
+  EXPECT_LE(AudioConstants::MAX_CONCURRENT_SFX, AudioConstants::DEFAULT_MAX_CHANNELS)
+      << "a single category may not exceed the whole mixer";
+}
+
 TEST(AudioProvenanceTest, EveryEffectDeclaresWhereItCameFrom) {
   QFile file(QStringLiteral("assets/audio/audio_manifest.json"));
   ASSERT_TRUE(file.open(QIODevice::ReadOnly)) << "assets/audio/audio_manifest.json";
@@ -216,7 +260,8 @@ TEST(AudioProvenanceTest, EveryEffectDeclaresWhereItCameFrom) {
   const QJsonArray tracks = document.object().value(QStringLiteral("tracks")).toArray();
   ASSERT_FALSE(tracks.isEmpty());
 
-  const QSet<QString> known = {QStringLiteral("synth"), QStringLiteral("field")};
+  const QSet<QString> known = {
+      QStringLiteral("synth"), QStringLiteral("field"), QStringLiteral("generated")};
   QStringList untagged;
   QStringList unknown;
   int effects = 0;
@@ -276,6 +321,37 @@ TEST(AudioImportanceTest, EveryCueDeclaresAKnownImportance) {
         << cue.value(QStringLiteral("id")).toString().toStdString()
         << " declares importance \"" << importance.toStdString() << "\"";
   }
+}
+
+TEST(AudioPacingTest, RepeatingAnnouncementsCannotMachineGun) {
+  const QJsonArray cues = load_catalog_cues();
+  ASSERT_FALSE(cues.isEmpty());
+
+  const QMap<QString, int> floor_ms = {
+      {QStringLiteral("alert.base_under_attack"), 10000},
+      {QStringLiteral("alert.unit_lost"), 4000},
+      {QStringLiteral("alert.low_resources"), 3000},
+      {QStringLiteral("alert.population_limit"), 4000},
+  };
+
+  int checked = 0;
+  for (const QJsonValue value : cues) {
+    const QJsonObject cue = value.toObject();
+    const QString id = cue.value(QStringLiteral("id")).toString();
+    const int cooldown = cue.value(QStringLiteral("cooldown_ms")).toInt();
+
+    if (floor_ms.contains(id)) {
+      ++checked;
+      EXPECT_GE(cooldown, floor_ms.value(id))
+          << id.toStdString() << " would repeat every " << cooldown
+          << " ms while its situation lasts";
+    }
+    if (id.startsWith(QStringLiteral("alert."))) {
+      EXPECT_GE(cooldown, 500)
+          << id.toStdString() << " is an announcement with almost no cooldown";
+    }
+  }
+  EXPECT_EQ(checked, floor_ms.size()) << "a paced cue was renamed or dropped";
 }
 
 TEST(AudioImportanceTest, EveryRequiredCueHasAPlayableBinding) {

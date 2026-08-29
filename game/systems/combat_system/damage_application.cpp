@@ -846,14 +846,24 @@ void spawn_blood_stain(Engine::Core::World* world,
       seed);
 }
 
+void announce_new_stagger(const Engine::Core::Entity* entity, bool was_staggered) {
+  if (entity == nullptr || was_staggered) {
+    return;
+  }
+  Engine::Core::EventManager::instance().publish(
+      Engine::Core::AudioCueEvent("combat.stagger"));
+}
+
 void add_or_extend_stagger(Engine::Core::Entity* entity, float duration) {
   if (entity == nullptr || duration <= 0.0F) {
     return;
   }
+  bool const was_staggered = entity->has_component<Engine::Core::StaggerComponent>();
   auto* stagger = Engine::Core::get_or_add_component<Engine::Core::StaggerComponent>(
       entity, duration);
   if (stagger != nullptr) {
     stagger->remaining = std::max(stagger->remaining, duration);
+    announce_new_stagger(entity, was_staggered);
   }
 }
 
@@ -863,6 +873,7 @@ void add_or_extend_stagger(Engine::Core::Entity* entity,
   if (entity == nullptr || duration <= 0.0F) {
     return;
   }
+  bool const was_staggered = entity->has_component<Engine::Core::StaggerComponent>();
   auto* stagger = Engine::Core::get_or_add_component<Engine::Core::StaggerComponent>(
       entity, duration);
   if (stagger != nullptr) {
@@ -870,6 +881,7 @@ void add_or_extend_stagger(Engine::Core::Entity* entity,
     if (static_cast<std::uint8_t>(tier) > static_cast<std::uint8_t>(stagger->tier)) {
       stagger->tier = tier;
     }
+    announce_new_stagger(entity, was_staggered);
   }
 }
 

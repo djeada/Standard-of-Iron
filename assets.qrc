@@ -192,21 +192,16 @@
         <file>assets/audio/sfx/alerts/enemy_reinforcements_warning.ogg</file>
         <file>assets/audio/sfx/alerts/enemy_spotted_horn.ogg</file>
         <file>assets/audio/sfx/alerts/low_resources_click.ogg</file>
-        <file>assets/audio/sfx/alerts/objective_complete.ogg</file>
         <file>assets/audio/sfx/alerts/objective_failed.ogg</file>
         <file>assets/audio/sfx/alerts/population_limit_horn.ogg</file>
         <file>assets/audio/sfx/alerts/reinforcements_arrived.ogg</file>
         <file>assets/audio/sfx/alerts/unit_lost.ogg</file>
+        <file>assets/audio/sfx/build/building_burning.ogg</file>
         <file>assets/audio/sfx/build/building_destroyed.ogg</file>
-        <file>assets/audio/sfx/build/construction_complete.ogg</file>
-        <file>assets/audio/sfx/build/construction_started.ogg</file>
         <file>assets/audio/sfx/build/gate_close.ogg</file>
         <file>assets/audio/sfx/build/gate_open.ogg</file>
         <file>assets/audio/sfx/build/placement_begin.ogg</file>
         <file>assets/audio/sfx/build/placement_confirmed.ogg</file>
-        <file>assets/audio/sfx/build/placement_confirmed_v2.ogg</file>
-        <file>assets/audio/sfx/build/placement_rejected.ogg</file>
-        <file>assets/audio/sfx/build/placement_rejected_v2.ogg</file>
         <file>assets/audio/sfx/build/unit_queued.ogg</file>
         <file>assets/audio/sfx/build/unit_queued_v2.ogg</file>
         <file>assets/audio/sfx/build/unit_ready_bell.ogg</file>
@@ -248,6 +243,8 @@
         <file>assets/audio/sfx/combat/dodge_roll_v2.ogg</file>
         <file>assets/audio/sfx/combat/elephant_charge_carthage.ogg</file>
         <file>assets/audio/sfx/combat/elephant_panic.ogg</file>
+        <file>assets/audio/sfx/combat/elephant_trumpet_charge.ogg</file>
+        <file>assets/audio/sfx/combat/elephant_trumpet_panic.ogg</file>
         <file>assets/audio/sfx/combat/gladius_shield_impacts_close.ogg</file>
         <file>assets/audio/sfx/combat/guard_break.ogg</file>
         <file>assets/audio/sfx/combat/guard_raise.ogg</file>
@@ -275,6 +272,7 @@
         <file>assets/audio/sfx/combat/spear_impact_01.ogg</file>
         <file>assets/audio/sfx/combat/spear_impact_02.ogg</file>
         <file>assets/audio/sfx/combat/spearmen_formation_advance.ogg</file>
+        <file>assets/audio/sfx/combat/stagger.ogg</file>
         <file>assets/audio/sfx/combat/stone_impact_01.ogg</file>
         <file>assets/audio/sfx/combat/stone_impact_02.ogg</file>
         <file>assets/audio/sfx/combat/stone_impact_03.ogg</file>
@@ -283,6 +281,7 @@
         <file>assets/audio/sfx/combat/sword_hit_03.ogg</file>
         <file>assets/audio/sfx/combat/sword_hit_04.ogg</file>
         <file>assets/audio/sfx/combat/vanguard_rush.ogg</file>
+        <file>assets/audio/sfx/economy/income_tick.ogg</file>
         <file>assets/audio/sfx/movement/footstep_grass_01.ogg</file>
         <file>assets/audio/sfx/movement/footstep_grass_02.ogg</file>
         <file>assets/audio/sfx/movement/footstep_grass_03.ogg</file>
@@ -295,21 +294,15 @@
         <file>assets/audio/sfx/movement/footstep_stone_02.ogg</file>
         <file>assets/audio/sfx/movement/footstep_stone_03.ogg</file>
         <file>assets/audio/sfx/movement/footstep_stone_04.ogg</file>
-        <file>assets/audio/sfx/wildlife/wolf_bite_snap.ogg</file>
-        <file>assets/audio/sfx/wildlife/wolf_growl_low.ogg</file>
-        <file>assets/audio/sfx/wildlife/wolf_howl_distant.ogg</file>
-        <file>assets/audio/sfx/wildlife/wolf_howl_near.ogg</file>
-        <file>assets/audio/sfx/wildlife/wolf_pack_attack.ogg</file>
-        <file>assets/audio/sfx/wildlife/wolf_snarl_bark.ogg</file>
+        <file>assets/audio/sfx/movement/hooves_gallop.ogg</file>
+        <file>assets/audio/sfx/movement/hooves_walk.ogg</file>
         <file>assets/audio/sfx/orders/attack_horn_stab.ogg</file>
         <file>assets/audio/sfx/orders/formation_pole_shift.ogg</file>
         <file>assets/audio/sfx/orders/formation_pole_shift_v2.ogg</file>
         <file>assets/audio/sfx/orders/formation_standard_planted.ogg</file>
         <file>assets/audio/sfx/orders/gate_bolt_slide.ogg</file>
         <file>assets/audio/sfx/orders/guard_spear_taps.ogg</file>
-        <file>assets/audio/sfx/orders/guard_spear_taps_v2.ogg</file>
         <file>assets/audio/sfx/orders/hold_shields_plant.ogg</file>
-        <file>assets/audio/sfx/orders/hold_shields_plant_v2.ogg</file>
         <file>assets/audio/sfx/orders/move_kit_shuffle.ogg</file>
         <file>assets/audio/sfx/orders/move_kit_shuffle_v2.ogg</file>
         <file>assets/audio/sfx/orders/move_kit_shuffle_v3.ogg</file>
@@ -318,26 +311,21 @@
         <file>assets/audio/sfx/orders/run_kit_rattle.ogg</file>
         <file>assets/audio/sfx/orders/run_kit_rattle_v2.ogg</file>
         <file>assets/audio/sfx/orders/stop_drum.ogg</file>
-        <file>assets/audio/sfx/orders/stop_drum_v2.ogg</file>
         <file>assets/audio/sfx/state/commander_enter.ogg</file>
         <file>assets/audio/sfx/state/commander_exit.ogg</file>
         <file>assets/audio/sfx/state/load_complete.ogg</file>
-        <file>assets/audio/sfx/state/pause.ogg</file>
-        <file>assets/audio/sfx/state/resume.ogg</file>
         <file>assets/audio/sfx/state/save_complete.ogg</file>
         <file>assets/audio/sfx/state/speed_notch.ogg</file>
         <file>assets/audio/sfx/ui/back_cancel.ogg</file>
-        <file>assets/audio/sfx/ui/back_cancel_v2.ogg</file>
         <file>assets/audio/sfx/ui/click_confirm.ogg</file>
-        <file>assets/audio/sfx/ui/click_confirm_v2.ogg</file>
-        <file>assets/audio/sfx/ui/click_confirm_v3.ogg</file>
+        <file>assets/audio/sfx/ui/command_accept.ogg</file>
+        <file>assets/audio/sfx/ui/command_refuse.ogg</file>
+        <file>assets/audio/sfx/ui/command_refuse_v2.ogg</file>
+        <file>assets/audio/sfx/ui/confirm_seal.ogg</file>
         <file>assets/audio/sfx/ui/deselect.ogg</file>
-        <file>assets/audio/sfx/ui/deselect_v2.ogg</file>
         <file>assets/audio/sfx/ui/error_thud.ogg</file>
         <file>assets/audio/sfx/ui/error_thud_v2.ogg</file>
         <file>assets/audio/sfx/ui/hover_brush.ogg</file>
-        <file>assets/audio/sfx/ui/hover_brush_v2.ogg</file>
-        <file>assets/audio/sfx/ui/hover_brush_v3.ogg</file>
         <file>assets/audio/sfx/ui/notification.ogg</file>
         <file>assets/audio/sfx/ui/panel_close.ogg</file>
         <file>assets/audio/sfx/ui/panel_open.ogg</file>
@@ -345,12 +333,18 @@
         <file>assets/audio/sfx/ui/select_group_v2.ogg</file>
         <file>assets/audio/sfx/ui/select_group_v3.ogg</file>
         <file>assets/audio/sfx/ui/select_unit.ogg</file>
-        <file>assets/audio/sfx/ui/select_unit_v2.ogg</file>
-        <file>assets/audio/sfx/ui/select_unit_v3.ogg</file>
         <file>assets/audio/sfx/ui/tab_slide.ogg</file>
         <file>assets/audio/sfx/ui/tab_slide_v2.ogg</file>
         <file>assets/audio/sfx/ui/toggle_latch.ogg</file>
-        <file>assets/audio/sfx/ui/toggle_latch_v2.ogg</file>
+        <file>assets/audio/sfx/undead/skeletons_rise.ogg</file>
+        <file>assets/audio/sfx/wildlife/bird_chirp.ogg</file>
+        <file>assets/audio/sfx/wildlife/sheep_bleat.ogg</file>
+        <file>assets/audio/sfx/wildlife/wolf_bite_snap.ogg</file>
+        <file>assets/audio/sfx/wildlife/wolf_growl_low.ogg</file>
+        <file>assets/audio/sfx/wildlife/wolf_howl_distant.ogg</file>
+        <file>assets/audio/sfx/wildlife/wolf_howl_near.ogg</file>
+        <file>assets/audio/sfx/wildlife/wolf_pack_attack.ogg</file>
+        <file>assets/audio/sfx/wildlife/wolf_snarl_bark.ogg</file>
         <file>assets/audio/voices/carthage/archer.ogg</file>
         <file>assets/audio/voices/carthage/baal_cultist.ogg</file>
         <file>assets/audio/voices/carthage/ballista.ogg</file>
@@ -430,19 +424,30 @@
         <file>assets/visuals/icons/wall.png</file>
         <file>assets/visuals/icons/wall_rome.png</file>
         <file>assets/visuals/icons/wall_cartaghe.png</file>
+        <file>assets/visuals/icons/wall_segment_rome.png</file>
+        <file>assets/visuals/icons/wall_segment_cartaghe.png</file>
+        <file>assets/visuals/icons/wall_gate_rome.png</file>
+        <file>assets/visuals/icons/wall_gate_cartaghe.png</file>
         <file>assets/visuals/icons/house_rome.png</file>
         <file>assets/visuals/icons/house_cartaghe.png</file>
         <file>assets/visuals/icons/barracks_rome.png</file>
         <file>assets/visuals/icons/barracks_cartaghe.png</file>
         <file>assets/visuals/icons/marketplace.png</file>
+        <file>assets/visuals/icons/marketplace_rome.png</file>
+        <file>assets/visuals/icons/marketplace_cartaghe.png</file>
+        <file>assets/visuals/icons/farm_rome.png</file>
+        <file>assets/visuals/icons/farm_cartaghe.png</file>
         <file>assets/visuals/icons/defense_tower_rome.png</file>
         <file>assets/visuals/icons/defense_tower_cartaghe.png</file>
         <file>assets/visuals/icons/temple_rome.png</file>
         <file>assets/visuals/icons/temple_cartaghe.png</file>
+        <file>assets/visuals/icons/magic_shrine_iron_sepulcher.png</file>
         <file>assets/visuals/icons/attack_mode.png</file>
         <file>assets/visuals/icons/defend_mode.png</file>
         <file>assets/visuals/icons/hold_mode.png</file>
         <file>assets/visuals/icons/patrol_mode.png</file>
+        <file>assets/visuals/icons/divide_mode.png</file>
+        <file>assets/visuals/icons/join_mode.png</file>
         <file>assets/visuals/icons/formation_mode.png</file>
         <file>assets/visuals/icons/build_mode.png</file>
         <file>assets/visuals/icons/heal_mode.png</file>

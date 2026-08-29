@@ -1,5 +1,7 @@
 #include "audio_cues.h"
 
+#include <QDebug>
+
 #include <algorithm>
 #include <mutex>
 #include <random>
@@ -100,8 +102,10 @@ auto CueRegistry::play(const std::string& cue_id, float volume_scale) -> bool {
 
     auto it = m_bindings.find(cue_id);
     if (it == m_bindings.end() || it->second.resource_ids.empty()) {
-
-      ++m_silent_requests[cue_id];
+      if (++m_silent_requests[cue_id] == 1U) {
+        qWarning() << "audio cue requested but bound to nothing:"
+                   << QString::fromStdString(cue_id);
+      }
       return false;
     }
 
@@ -122,7 +126,10 @@ auto CueRegistry::play(const std::string& cue_id, float volume_scale) -> bool {
 
     resource_id = choose_resource_locked(cue_id, binding);
     if (resource_id.empty()) {
-      ++m_silent_requests[cue_id];
+      if (++m_silent_requests[cue_id] == 1U) {
+        qWarning() << "audio cue" << QString::fromStdString(cue_id)
+                   << "has bindings but none are loaded; check its load_policy";
+      }
       return false;
     }
 

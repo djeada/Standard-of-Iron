@@ -1381,11 +1381,6 @@ void GameEngine::set_paused(bool paused) {
   }
   m_runtime.paused = paused;
   m_tutorial_notes.speed_changed = true;
-  if (m_runtime.loading) {
-    return;
-  }
-  Game::Audio::play_cue(paused ? Game::Audio::Cue::k_state_pause
-                               : Game::Audio::Cue::k_state_resume);
 }
 
 void GameEngine::set_game_speed(float speed) {
@@ -1970,6 +1965,8 @@ void GameEngine::publish_commander_message() {
   message["duration"] = cue.duration;
   message["holds_outcome"] = cue.holds_outcome;
   m_commander_message_view_model->set_message(message);
+
+  Game::Audio::play_cue(Game::Audio::Cue::k_alert_commander_message);
 
   if (!cue.voice_cue.isEmpty()) {
     Game::Audio::play_cue(cue.voice_cue.toStdString());

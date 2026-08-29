@@ -8099,20 +8099,16 @@ Builders reap it for the food that recruits civilians</translation>
         <translation>Reduces head bob and sway while leading the commander. It never limits camera movement you ask for.</translation>
     </message>
     <message>
-        <source>Music generated with Meta&apos;s AudioCraft, whose models are licensed CC BY-NC 4.0. This game is distributed free of charge, which that licence permits; it may not be sold.</source>
-        <translation>Music generated with Meta&apos;s AudioCraft, whose models are licensed CC BY-NC 4.0. This game is distributed free of charge, which that licence permits; it may not be sold.</translation>
+        <source>Music and sound effects generated with ElevenLabs under a licence that permits commercial use.</source>
+        <translation>Music and sound effects generated with ElevenLabs under a licence that permits commercial use.</translation>
     </message>
     <message>
         <source>Voice lines recorded by Adam Djellouli.</source>
         <translation>Voice lines recorded by Adam Djellouli.</translation>
     </message>
     <message>
-        <source>CC BY-NC 4.0 License</source>
-        <translation>CC BY-NC 4.0 License</translation>
-    </message>
-    <message>
-        <source>AudioCraft</source>
-        <translation>AudioCraft</translation>
+        <source>ElevenLabs</source>
+        <translation>ElevenLabs</translation>
     </message>
     <message>
         <source>Pans the camera when the cursor reaches the edge of the screen. Keyboard panning, right-drag and the minimap keep working either way.</source>

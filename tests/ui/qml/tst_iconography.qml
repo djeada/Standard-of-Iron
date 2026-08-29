@@ -1,5 +1,6 @@
 import QtQuick 2.15
 import QtTest 1.15
+import StandardOfIron.Core 1.0 as Core
 import StandardOfIron.Design 1.0
 
 TestCase {
@@ -9,14 +10,21 @@ TestCase {
 
     readonly property var shippedNations: ["roman_republic", "carthage", "iron_sepulcher"]
 
-    readonly property var hudCommands: ["attack", "guard", "hold", "patrol", "build", "heal", "collect", "rally", "deliver", "aura", "stop", "run", "gate", "auto_gather", "repair", "dismantle"]
+    readonly property var hudCommands: ["attack", "guard", "hold", "patrol", "divide", "join", "build", "heal", "collect", "rally", "deliver", "aura", "stop", "run", "gate", "auto_gather", "repair", "dismantle"]
 
     function test_every_hud_command_has_art_and_a_glyph() {
         for (var i = 0; i < hudCommands.length; ++i) {
             var id = hudCommands[i];
-            verify(Icons.command(id).toString() !== "", id + " has no artwork");
+            verify(Icons.command(id).toString() !== "" || Core.IconArt.has(id), id + " has no artwork");
             verify(Icons.commandGlyph(id).length > 0, id + " has no fallback glyph");
         }
+    }
+
+    function test_split_and_join_are_not_using_the_generic_fallback() {
+        verify(Core.IconArt.has("divide"));
+        verify(Core.IconArt.has("join"));
+        verify(Icons.commandGlyph("divide") !== Icons.objective);
+        verify(Icons.commandGlyph("join") !== Icons.objective);
     }
 
     function test_unknown_command_degrades_instead_of_breaking() {
@@ -46,6 +54,18 @@ TestCase {
         verify(Icons.unit("wall", "").toString() !== "");
         verify(Icons.unit("wall", "").toString() !== Icons.unit("wall", "carthage").toString());
         verify(Icons.unit("wall", "roman_republic").toString() !== Icons.unit("wall", "carthage").toString());
+    }
+
+    function test_faction_buildings_and_sepulcher_barracks_use_specific_art() {
+        var buildings = ["home", "barracks", "defense_tower", "farm", "marketplace", "temple", "wall", "wall_segment", "wall_gate"];
+        for (var i = 0; i < buildings.length; ++i) {
+            var typeKey = buildings[i];
+            verify(Icons.unit(typeKey, "roman_republic").toString() !== Icons.unit(typeKey, "carthage").toString(), typeKey + " is not faction-specific");
+        }
+        verify(Icons.unit("wall_segment", "roman_republic").toString() !== Icons.unit("wall_gate", "roman_republic").toString());
+        verify(Icons.unit("wall_segment", "carthage").toString() !== Icons.unit("wall_gate", "carthage").toString());
+        compare(Icons.unit("barracks", "iron_sepulcher").toString(), Icons.unit("magic_shrine", "iron_sepulcher").toString());
+        verify(Icons.unit("magic_shrine", "iron_sepulcher").toString() !== "");
     }
 
     function test_shared_art_ignores_the_nation() {
@@ -90,6 +110,11 @@ TestCase {
         verify(names.indexOf("attack_mode.png") >= 0);
         verify(names.indexOf("gold.png") >= 0);
         verify(names.indexOf("marketplace.png") >= 0);
+        verify(names.indexOf("marketplace_rome.png") >= 0);
+        verify(names.indexOf("farm_cartaghe.png") >= 0);
+        verify(names.indexOf("wall_segment_rome.png") >= 0);
+        verify(names.indexOf("wall_gate_cartaghe.png") >= 0);
+        verify(names.indexOf("magic_shrine_iron_sepulcher.png") >= 0);
         verify(names.indexOf("archer_rome.png") >= 0);
         verify(names.indexOf("archer_cartaghe.png") >= 0);
         for (var i = 0; i < names.length; ++i)

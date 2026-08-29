@@ -9,6 +9,7 @@
 
 #include "../../core/component.h"
 #include "../../core/entity.h"
+#include "../../core/event_manager.h"
 #include "../../core/world.h"
 #include "../../units/spawn_type.h"
 #include "combat_hit_resolver.h"
@@ -159,7 +160,12 @@ void begin_panic(Engine::Core::Entity* elephant, float duration) {
   auto* panic =
       Engine::Core::get_or_add_component<Engine::Core::ElephantPanicComponent>(
           elephant);
+  bool const already_panicking = panic->duration > 0.0F;
   panic->duration = duration;
+  if (!already_panicking) {
+    Engine::Core::EventManager::instance().publish(
+        Engine::Core::AudioCueEvent("combat.elephant_panic"));
+  }
 }
 
 void process_panic_mechanic(Engine::Core::Entity* elephant, float delta_time) {

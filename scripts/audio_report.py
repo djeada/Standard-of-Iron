@@ -41,6 +41,7 @@ CALL_SITE_SUFFIXES = (".cpp", ".h", ".qml", ".js")
 NOT_A_CALL_SITE = {
     REPO / "game" / "audio" / "audio_cues.h",
     REPO / "game" / "audio" / "audio_cues.cpp",
+    REPO / "game" / "audio" / "cue_ids.h",
 }
 
 

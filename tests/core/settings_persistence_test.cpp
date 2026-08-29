@@ -200,11 +200,12 @@ TEST_F(SettingsPersistenceTest, PartiallySavedVolumesAreNotTreatedAsAFirstRun) {
 
   const auto loaded = App::Core::UserSettings::load_audio_volumes();
 
+  const auto defaults = Game::Audio::Settings::first_run_volumes();
   EXPECT_FLOAT_EQ(loaded.master, 0.42F);
-  EXPECT_FLOAT_EQ(loaded.music, AudioConstants::DEFAULT_VOLUME);
-  EXPECT_FLOAT_EQ(loaded.sound, AudioConstants::DEFAULT_VOLUME);
-  EXPECT_FLOAT_EQ(loaded.voice, AudioConstants::DEFAULT_VOLUME);
-  EXPECT_FLOAT_EQ(loaded.ambience, AudioConstants::DEFAULT_VOLUME);
+  EXPECT_FLOAT_EQ(loaded.music, defaults.music);
+  EXPECT_FLOAT_EQ(loaded.sound, defaults.sound);
+  EXPECT_FLOAT_EQ(loaded.voice, defaults.voice);
+  EXPECT_FLOAT_EQ(loaded.ambience, defaults.ambience);
 }
 
 } // namespace

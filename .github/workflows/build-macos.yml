@@ -197,9 +197,8 @@ jobs:
           rsync -a assets/ "${APP_DIR}/${APP_NAME}.app/Contents/Resources/assets/"
 
       # Qt is LGPL v3, so its notice has to travel with the binary rather than
-      # living only in the source repository. The music additionally carries a
-      # non-commercial restriction, which a player can only discover if the
-      # file recording it is in the package they downloaded.
+      # living only in the source repository, and the per-asset provenance
+      # record should reach the player who downloaded the package too.
       - name: Copy licences into .app bundle
         run: |
           set -euo pipefail

@@ -2,6 +2,7 @@
 
 #include <gtest/gtest.h>
 
+#include "game/audio/cue_ids.h"
 #include "game/core/component.h"
 #include "game/core/world.h"
 #include "game/mission/mission_setup_coordinator.h"
@@ -110,7 +111,10 @@ TEST(MissionWaveDirectorTest, WarningFiresBeforeTheWaveLands) {
   director.set_elapsed(51.0F);
   const auto warned = director.advance();
   EXPECT_EQ(warned.announcements.size(), 1);
-  EXPECT_EQ(warned.audio_cues.size(), 1);
+  ASSERT_EQ(warned.audio_cues.size(), 1);
+
+  EXPECT_EQ(warned.audio_cues.front(),
+            QString::fromLatin1(Game::Audio::Cue::k_alert_enemy_reinforcements));
   EXPECT_TRUE(warned.waves_to_spawn.empty());
   EXPECT_TRUE(director.status()["warning"].toBool());
 

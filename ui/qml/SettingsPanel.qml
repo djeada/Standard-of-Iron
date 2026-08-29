@@ -1212,7 +1212,7 @@ Item {
                             }
 
                             Label {
-                                text: qsTr("Music generated with Meta's AudioCraft, whose models are licensed CC BY-NC 4.0. This game is distributed free of charge, which that licence permits; it may not be sold.")
+                                text: qsTr("Music and sound effects generated with ElevenLabs under a licence that permits commercial use.")
                                 color: Theme.textSub
                                 font.pixelSize: Design.Typography.body
                                 wrapMode: Text.WordWrap
@@ -1228,7 +1228,7 @@ Item {
                             }
 
                             Label {
-                                text: "<a href='https://creativecommons.org/licenses/by-nc/4.0/'>" + qsTr("CC BY-NC 4.0 License") + "</a> | <a href='https://github.com/facebookresearch/audiocraft'>" + qsTr("AudioCraft") + "</a>"
+                                text: "<a href='https://elevenlabs.io'>" + qsTr("ElevenLabs") + "</a>"
                                 color: Theme.textSub
                                 font.pixelSize: Design.Typography.body
                                 textFormat: Text.RichText

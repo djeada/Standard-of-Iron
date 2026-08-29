@@ -4,6 +4,7 @@
 #include <cmath>
 
 #include "../../core/component.h"
+#include "../../core/event_manager.h"
 #include "../../core/world.h"
 #include "damage_application.h"
 
@@ -103,6 +104,8 @@ auto apply_structure_incendiary_damage(Engine::Core::Entity& structure,
   if (!already_burning) {
     fire->ignition_elapsed = 0.0F;
     fire->tick_accumulator = 0.0F;
+    Engine::Core::EventManager::instance().publish(
+        Engine::Core::AudioCueEvent("build.building_burning"));
   }
   return true;
 }

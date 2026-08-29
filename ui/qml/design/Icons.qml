@@ -54,6 +54,8 @@ QtObject {
             "guard": "defend_mode.png",
             "hold": "hold_mode.png",
             "patrol": "patrol_mode.png",
+            "divide": "divide_mode.png",
+            "join": "join_mode.png",
             "formation": "formation_mode.png",
             "build": "build_mode.png",
             "heal": "heal_mode.png",
@@ -74,6 +76,8 @@ QtObject {
             "guard": root.defense,
             "hold": root.hold,
             "patrol": root.patrol,
+            "divide": "\u2194",
+            "join": "\u2295",
             "formation": root.formation,
             "build": root.build,
             "heal": root.heal,
@@ -126,15 +130,17 @@ QtObject {
             "defense_tower": "defense_tower",
             "home": "house",
             "house": "house",
+            "farm": "farm",
+            "marketplace": "marketplace",
             "temple": "temple",
             "wall": "wall",
-            "wall_segment": "wall",
-            "wall_gate": "wall"
+            "wall_segment": "wall_segment",
+            "wall_gate": "wall_gate"
         })
 
     readonly property var unitArtShared: ({
             "elephant": "elephant_cartaghe.png",
-            "marketplace": "marketplace.png",
+            "magic_shrine": "magic_shrine_iron_sepulcher.png",
             "roman_legion_organizer": "roman_legion_organizer_rome.png",
             "roman_veteran_consul": "roman_veteran_consul_rome.png",
             "roman_field_commander": "roman_field_commander_rome.png",
@@ -149,6 +155,7 @@ QtObject {
         })
 
     readonly property var unitArtNeutral: ({
+            "marketplace": "marketplace.png",
             "wall": "wall.png",
             "wall_segment": "wall.png",
             "wall_gate": "wall.png"
@@ -184,6 +191,7 @@ QtObject {
             "home": "\u2302",
             "house": "\u2302",
             "marketplace": "\u25C7",
+            "magic_shrine": "\u2620",
             "temple": "\u25B3",
             "farm": "\u2618",
             "sheep": "\u2663",
@@ -228,6 +236,8 @@ QtObject {
     function unit(unitType, nationId) {
         if (!unitType)
             return "";
+        if (unitType === "barracks" && nationId === "iron_sepulcher")
+            return root.artPath("magic_shrine_iron_sepulcher.png");
         var shared = root.unitArtShared[unitType];
         if (shared)
             return root.artPath(shared);

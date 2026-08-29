@@ -207,6 +207,10 @@ auto AudioEventHandler::initialize() -> bool {
             on_music_trigger(event);
           });
 
+  m_music_stop_sub =
+      Engine::Core::ScopedEventSubscription<Engine::Core::MusicStopEvent>(
+          [](const Engine::Core::MusicStopEvent& event) { on_music_stop(event); });
+
   m_combat_hit_sub =
       Engine::Core::ScopedEventSubscription<Engine::Core::CombatHitEvent>(
           [this](const Engine::Core::CombatHitEvent& event) { on_combat_hit(event); });
@@ -493,6 +497,10 @@ void AudioEventHandler::on_audio_trigger(const Engine::Core::AudioTriggerEvent& 
 
 void AudioEventHandler::on_audio_cue(const Engine::Core::AudioCueEvent& event) {
   play_cue(event.cue_id, event.volume_scale);
+}
+
+void AudioEventHandler::on_music_stop(const Engine::Core::MusicStopEvent&) {
+  AudioSystem::get_instance().stop_music();
 }
 
 void AudioEventHandler::on_music_trigger(const Engine::Core::MusicTriggerEvent& event) {

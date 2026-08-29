@@ -112,6 +112,9 @@ private:
                         bool captured) const;
   void refresh_capture_lock(Engine::Core::World& world, const RuntimeZone& zone) const;
   void awaken_zone(Engine::Core::World& world, RuntimeZone& zone);
+  void update_zone_music(Engine::Core::World& world, float delta_time);
+  [[nodiscard]] auto local_player_inside(Engine::Core::World& world,
+                                         const RuntimeZone& zone) const -> bool;
   void try_spawn_next_wave(Engine::Core::World& world, RuntimeZone& zone);
   void announce_wave(const RuntimeZone& zone) const;
   [[nodiscard]] auto should_awaken_zone(Engine::Core::World& world,
@@ -127,6 +130,9 @@ private:
   std::vector<RuntimeZone> m_zones;
   QHash<QString, int> m_zone_index;
   std::shared_ptr<Game::Units::UnitFactoryRegistry> m_factory_registry;
+
+  bool m_zone_music_playing = false;
+  float m_zone_music_poll = 0.0F;
   bool m_allow_mission_start_trigger = false;
 };
 

@@ -156,6 +156,8 @@ private:
   auto get_resource_config_locked(const std::string& resource_id) const
       -> AudioResourceConfig;
   void evict_lowest_priority_sound_locked();
+  [[nodiscard]] static auto category_channel_cap(AudioCategory category) -> size_t;
+  auto make_room_in_category_locked(AudioCategory category, int priority) -> bool;
   auto get_effective_volume(AudioCategory category, float event_volume) const -> float;
   void load_persisted_volumes();
 

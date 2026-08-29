@@ -8099,20 +8099,16 @@ Baumeister ernten es als Nahrung, die Zivilisten rekrutiert</translation>
         <translation>Verringert Kopfwippen und Schwanken, während Ihr den Kommandanten führt. Von Euch angeforderte Kamerabewegungen werden nie eingeschränkt.</translation>
     </message>
     <message>
-        <source>Music generated with Meta&apos;s AudioCraft, whose models are licensed CC BY-NC 4.0. This game is distributed free of charge, which that licence permits; it may not be sold.</source>
-        <translation>Musik erzeugt mit Metas AudioCraft, dessen Modelle unter CC BY-NC 4.0 lizenziert sind. Dieses Spiel wird kostenlos abgegeben, was diese Lizenz erlaubt; es darf nicht verkauft werden.</translation>
+        <source>Music and sound effects generated with ElevenLabs under a licence that permits commercial use.</source>
+        <translation>Musik und Soundeffekte wurden mit ElevenLabs unter einer Lizenz erzeugt, die die kommerzielle Nutzung gestattet.</translation>
     </message>
     <message>
         <source>Voice lines recorded by Adam Djellouli.</source>
         <translation>Sprachaufnahmen von Adam Djellouli eingesprochen.</translation>
     </message>
     <message>
-        <source>CC BY-NC 4.0 License</source>
-        <translation>Lizenz CC BY-NC 4.0</translation>
-    </message>
-    <message>
-        <source>AudioCraft</source>
-        <translation>AudioCraft</translation>
+        <source>ElevenLabs</source>
+        <translation>ElevenLabs</translation>
     </message>
     <message>
         <source>Pans the camera when the cursor reaches the edge of the screen. Keyboard panning, right-drag and the minimap keep working either way.</source>

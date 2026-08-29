@@ -324,6 +324,11 @@ public:
   bool crossfade;
 };
 
+class MusicStopEvent : public Event {
+public:
+  MusicStopEvent() = default;
+};
+
 class CombatHitEvent : public Event {
 public:
   CombatHitEvent(EntityID attacker_id,
