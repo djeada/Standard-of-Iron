@@ -3918,7 +3918,7 @@ TEST(AnimationCoreLocomotionManifest, LocomotionPoseOwnsWalkCycleDeltas) {
   EXPECT_FLOAT_EQ(first.foot_l.z, second.foot_l.z);
   EXPECT_NE(first.foot_l.z, inputs.base_foot_l.z);
   EXPECT_NE(first.foot_r.z, inputs.base_foot_r.z);
-  EXPECT_LT(first.pelvis_delta.y, 0.0F);
+  EXPECT_GT(first.pelvis_delta.y, 0.0F);
   EXPECT_NE(first.shoulder_l_delta.z, 0.0F);
   EXPECT_NE(first.hand_l_delta.z, 0.0F);
   EXPECT_LT(first.hand_l_delta.z * first.hand_r_delta.z, 0.0F);
@@ -4206,6 +4206,14 @@ auto walk_pose_inputs() -> Animation::HumanoidLocomotionPoseInputs {
   return inputs;
 }
 
+auto run_pose_inputs() -> Animation::HumanoidLocomotionPoseInputs {
+  auto inputs = walk_pose_inputs();
+  inputs.state = Animation::HumanoidMotionState::Run;
+  inputs.run_blend = 1.0F;
+  inputs.stride_distance = inputs.reference_run_speed * 0.56F;
+  return inputs;
+}
+
 auto foot_z_samples(Animation::HumanoidLocomotionPoseInputs inputs,
                     int steps) -> std::vector<float> {
   std::vector<float> samples;
@@ -4255,6 +4263,61 @@ TEST(AnimationCoreLocomotionManifest, WalkCycleClosesOnItself) {
   EXPECT_NEAR(start.foot_pitch_l, wrap.foot_pitch_l, 0.05F);
 }
 
+TEST(AnimationCoreLocomotionManifest, WalkAndRunUseDistinctSupportRhythms) {
+  auto walk = walk_pose_inputs();
+  auto run = run_pose_inputs();
+
+  walk.cycle_phase = 0.0F;
+  auto const walk_transfer = Animation::resolve_humanoid_locomotion_pose(walk);
+  walk.cycle_phase = 0.25F;
+  auto const walk_mid_stance = Animation::resolve_humanoid_locomotion_pose(walk);
+  EXPECT_GT(walk_mid_stance.pelvis_delta.y, walk_transfer.pelvis_delta.y + 0.01F);
+
+  run.cycle_phase = 0.18F;
+  auto const run_mid_stance = Animation::resolve_humanoid_locomotion_pose(run);
+  run.cycle_phase = 0.43F;
+  auto const run_flight = Animation::resolve_humanoid_locomotion_pose(run);
+  EXPECT_GT(run_flight.pelvis_delta.y, run_mid_stance.pelvis_delta.y + 0.04F);
+}
+
+TEST(AnimationCoreLocomotionManifest, RunHasACompactAirborneSilhouette) {
+  auto walk = walk_pose_inputs();
+  auto run = run_pose_inputs();
+  walk.cycle_phase = 0.43F;
+  run.cycle_phase = walk.cycle_phase;
+
+  auto const walk_pose = Animation::resolve_humanoid_locomotion_pose(walk);
+  auto const run_pose = Animation::resolve_humanoid_locomotion_pose(run);
+  float const walk_low_sole =
+      std::min(walk_pose.foot_l.y -
+                   Animation::humanoid_foot_contact_lift(walk_pose.foot_pitch_l),
+               walk_pose.foot_r.y -
+                   Animation::humanoid_foot_contact_lift(walk_pose.foot_pitch_r));
+  float const run_low_sole = std::min(
+      run_pose.foot_l.y - Animation::humanoid_foot_contact_lift(run_pose.foot_pitch_l),
+      run_pose.foot_r.y - Animation::humanoid_foot_contact_lift(run_pose.foot_pitch_r));
+  float const walk_track = std::abs(walk_pose.foot_r.x - walk_pose.foot_l.x);
+  float const run_track = std::abs(run_pose.foot_r.x - run_pose.foot_l.x);
+
+  EXPECT_GT(run_low_sole, walk_low_sole + 0.01F);
+  EXPECT_LT(run_track, walk_track - 0.02F);
+  EXPECT_GT(run_pose.hand_l_delta.y, walk_pose.hand_l_delta.y + 0.08F);
+  EXPECT_GT(run_pose.shoulder_l_delta.z, walk_pose.shoulder_l_delta.z + 0.08F);
+}
+
+TEST(AnimationCoreLocomotionManifest, WalkHeelStrikesWhileRunLandsMidfoot) {
+  auto walk = walk_pose_inputs();
+  auto run = run_pose_inputs();
+  walk.cycle_phase = 0.0F;
+  run.cycle_phase = 0.0F;
+
+  auto const walk_pose = Animation::resolve_humanoid_locomotion_pose(walk);
+  auto const run_pose = Animation::resolve_humanoid_locomotion_pose(run);
+
+  EXPECT_GT(walk_pose.foot_pitch_l, 0.20F);
+  EXPECT_LT(std::abs(run_pose.foot_pitch_l), 0.05F);
+}
+
 namespace {
 
 auto stance_retreat_per_cycle(Animation::HumanoidLocomotionPoseInputs inputs,
@@ -4296,19 +4359,20 @@ TEST(AnimationCoreLocomotionManifest, RunCadenceKeepsThePlantedFootStill) {
 }
 
 TEST(AnimationCoreLocomotionManifest, ArmSwingStaysWithinTheArmsReach) {
-  auto inputs = walk_pose_inputs();
   constexpr float k_arm_length = 0.55F;
-  inputs.arm_pendulum_length = k_arm_length;
+  for (auto inputs : {walk_pose_inputs(), run_pose_inputs()}) {
+    inputs.arm_pendulum_length = k_arm_length;
 
-  for (int step = 0; step < 64; ++step) {
-    inputs.cycle_phase = static_cast<float>(step) / 64.0F;
-    auto const pose = Animation::resolve_humanoid_locomotion_pose(inputs);
-    for (auto const& hand : {pose.hand_l_delta, pose.hand_r_delta}) {
-      float const shoulder_to_hand_y = -k_arm_length + hand.y;
-      float const reach = std::sqrt((shoulder_to_hand_y * shoulder_to_hand_y) +
-                                    (hand.z * hand.z) + (hand.x * hand.x));
-      EXPECT_LE(reach, k_arm_length)
-          << "the swing straightens the elbow at phase " << inputs.cycle_phase;
+    for (int step = 0; step < 64; ++step) {
+      inputs.cycle_phase = static_cast<float>(step) / 64.0F;
+      auto const pose = Animation::resolve_humanoid_locomotion_pose(inputs);
+      for (auto const& hand : {pose.hand_l_delta, pose.hand_r_delta}) {
+        float const shoulder_to_hand_y = -k_arm_length + hand.y;
+        float const reach = std::sqrt((shoulder_to_hand_y * shoulder_to_hand_y) +
+                                      (hand.z * hand.z) + (hand.x * hand.x));
+        EXPECT_LE(reach, k_arm_length)
+            << "the swing straightens the elbow at phase " << inputs.cycle_phase;
+      }
     }
   }
 }

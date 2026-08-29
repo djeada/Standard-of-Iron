@@ -321,6 +321,7 @@ void GameEngine::build_services_and_controllers() {
   m_renderer = std::move(rendering.renderer);
   m_rts_camera = std::move(rendering.camera);
   m_commander_camera = std::make_unique<Render::GL::Camera>(*m_rts_camera);
+  m_commander_camera->set_rts_constraints(false);
   set_active_camera(m_rts_camera.get());
   apply_game_mode_render_policy();
   m_terrain_scene = std::move(rendering.terrain_scene);
@@ -343,8 +344,8 @@ void GameEngine::build_services_and_controllers() {
                                               .economy = session.economy()});
 
   connect_save_service_signals();
-  m_camera_service =
-      std::make_unique<Game::Systems::CameraService>(m_session->visibility());
+  m_camera_service = std::make_unique<Game::Systems::CameraService>(
+      m_session->visibility(), m_session->terrain());
   m_rain_manager = std::make_unique<Game::Systems::RainManager>();
   m_weather_audio = std::make_unique<App::Core::WeatherAudio>();
   m_environment_clock = std::make_unique<Game::Map::EnvironmentClock>();

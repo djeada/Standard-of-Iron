@@ -41,8 +41,8 @@ constexpr float k_entry_lower_ramp_delay = 0.0F;
 constexpr float k_entry_mouth_flare_strength =
     Game::Map::k_hill_entry_mouth_flare_strength;
 constexpr float k_entry_mouth_soften_strength = 0.045F;
-constexpr float k_entry_floor_flatten_strength = 0.0F;
-constexpr float k_entry_shoulder_raise_strength = 0.0F;
+constexpr float k_entry_floor_flatten_strength = 0.075F;
+constexpr float k_entry_shoulder_raise_strength = 0.065F;
 
 inline auto hash_coords(int x, int z, std::uint32_t seed) -> std::uint32_t {
   std::uint32_t const ux = static_cast<std::uint32_t>(x) * 73856093U;

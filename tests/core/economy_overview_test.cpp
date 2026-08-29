@@ -319,7 +319,7 @@ TEST_F(EconomyOverviewTest, TheCoachFinishesOnceAnArmyHasBeenRaised) {
       k_owner, ResourceType::Wood, 40);
   add_unit(Game::Units::SpawnType::Home);
 
-  for (int i = 0; i < 4; ++i) {
+  for (int i = 0; i < 8; ++i) {
     add_unit(Game::Units::SpawnType::Archer);
   }
   ASSERT_GE(Game::Systems::troop_count_for(world, k_owner),
