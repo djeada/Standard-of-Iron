@@ -107,6 +107,24 @@ auto projectile_kind_from_string(const QString& value)
   return Game::Systems::ProjectileKind::Arrow;
 }
 
+auto encode_cell_flags(const std::vector<std::uint8_t>& flags) -> QString {
+  QString encoded;
+  encoded.reserve(static_cast<qsizetype>(flags.size()));
+  for (std::uint8_t const flag : flags) {
+    encoded.append(flag != 0U ? QLatin1Char('1') : QLatin1Char('0'));
+  }
+  return encoded;
+}
+
+auto decode_cell_flags(const QString& encoded) -> std::vector<std::uint8_t> {
+  std::vector<std::uint8_t> flags;
+  flags.reserve(static_cast<std::size_t>(encoded.size()));
+  for (const QChar character : encoded) {
+    flags.push_back(character == QLatin1Char('1') ? 1U : 0U);
+  }
+  return flags;
+}
+
 } // namespace
 
 auto Serialization::serialize_entity(const Entity* entity) -> QJsonObject {
@@ -1857,6 +1875,20 @@ auto Serialization::serialize_terrain(
   }
   terrain_obj["terrain_types"] = terrain_types_array;
 
+  const auto hills = height_map->hill_navigation();
+  terrain_obj["hill_walkable"] = encode_cell_flags(hills.walkable);
+  terrain_obj["hill_entrances"] = encode_cell_flags(hills.entrances);
+  QJsonArray hill_entrance_lines_array;
+  for (const auto& line : hills.entrance_centerlines) {
+    QJsonObject line_obj;
+    line_obj["startX"] = line.start.x();
+    line_obj["startZ"] = line.start.z();
+    line_obj["endX"] = line.end.x();
+    line_obj["endZ"] = line.end.z();
+    hill_entrance_lines_array.append(line_obj);
+  }
+  terrain_obj["hill_entrance_lines"] = hill_entrance_lines_array;
+
   QJsonArray rivers_array;
   const auto& rivers = height_map->get_river_segments();
   for (const auto& river : rivers) {
@@ -2141,6 +2173,25 @@ void Serialization::deserialize_terrain(
     }
   }
 
+  Game::Map::HillNavigation hills;
+  hills.walkable = decode_cell_flags(json["hill_walkable"].toString());
+  hills.entrances = decode_cell_flags(json["hill_entrances"].toString());
+  if (json.contains("hill_entrance_lines")) {
+    const auto lines_array = json["hill_entrance_lines"].toArray();
+    hills.entrance_centerlines.reserve(lines_array.size());
+    for (const auto val : lines_array) {
+      const auto line_obj = val.toObject();
+      Game::Map::HillEntranceCenterline line;
+      line.start = QVector3D(static_cast<float>(line_obj["startX"].toDouble(0.0)),
+                             0.0F,
+                             static_cast<float>(line_obj["startZ"].toDouble(0.0)));
+      line.end = QVector3D(static_cast<float>(line_obj["endX"].toDouble(0.0)),
+                           0.0F,
+                           static_cast<float>(line_obj["endZ"].toDouble(0.0)));
+      hills.entrance_centerlines.push_back(line);
+    }
+  }
+
   std::vector<Game::Map::RiverSegment> rivers;
   if (json.contains("rivers")) {
     const auto rivers_array = json["rivers"].toArray();
@@ -2286,7 +2337,7 @@ void Serialization::deserialize_terrain(
     authored_world_props = world_props;
   }
 
-  height_map->restore_from_data(heights, terrain_types, rivers, bridges, lakes);
+  height_map->restore_from_data(heights, terrain_types, rivers, bridges, lakes, hills);
 }
 
 auto Serialization::serialize_world(const World* world) -> QJsonDocument {
@@ -2385,7 +2436,8 @@ void Serialization::deserialize_world(World* world, const QJsonDocument& doc) {
                                             biome,
                                             world_props,
                                             authored_world_props,
-                                            temp_height_map->get_lakes());
+                                            temp_height_map->get_lakes(),
+                                            temp_height_map->hill_navigation());
   }
 }
 

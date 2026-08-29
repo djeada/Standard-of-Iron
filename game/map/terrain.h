@@ -637,6 +637,21 @@ inline void apply_ground_type_defaults(BiomeSettings& settings,
   }
 }
 
+struct HillEntranceCenterline {
+  QVector3D start;
+  QVector3D end;
+};
+
+struct HillNavigation {
+  std::vector<std::uint8_t> walkable;
+  std::vector<std::uint8_t> entrances;
+  std::vector<HillEntranceCenterline> entrance_centerlines;
+
+  [[nodiscard]] auto empty() const -> bool {
+    return walkable.empty() && entrances.empty();
+  }
+};
+
 struct TerrainFeature {
   TerrainType type;
   float center_x{};
@@ -1088,11 +1103,14 @@ public:
 
   void apply_biome_variation(const BiomeSettings& settings);
 
+  [[nodiscard]] auto hill_navigation() const -> HillNavigation;
+
   void restore_from_data(const std::vector<float>& heights,
                          const std::vector<TerrainType>& terrain_types,
                          const std::vector<RiverSegment>& rivers,
                          const std::vector<Bridge>& bridges,
-                         const std::vector<Lake>& lakes = {});
+                         const std::vector<Lake>& lakes = {},
+                         const HillNavigation& hills = {});
 
 private:
   int m_width;
@@ -1103,10 +1121,6 @@ private:
   std::vector<TerrainType> m_terrain_types;
   std::vector<bool> m_hill_entrances;
   std::vector<bool> m_hill_walkable;
-  struct HillEntranceCenterline {
-    QVector3D start;
-    QVector3D end;
-  };
   std::vector<HillEntranceCenterline> m_hill_entrance_centerlines;
   std::vector<RiverSegment> m_river_segments;
   std::vector<Lake> m_lakes;

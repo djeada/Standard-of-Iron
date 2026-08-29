@@ -45,6 +45,11 @@ constexpr float k_soldier_probe_reach = 0.88F;
 
 constexpr float k_minimum_presented_separation = 0.15F;
 
+constexpr int k_slot_recovery_bisections = 8;
+constexpr float k_ground_recovery_speed = 4.5F;
+constexpr float k_ground_recovery_acceleration = 18.0F;
+constexpr float k_ground_clamp_speed = 14.0F;
+
 struct WidthMeasurement {
   float available_half_width{0.0F};
   float desired_half_width{0.0F};
@@ -399,11 +404,67 @@ void update_slot_states(const Engine::Core::TransformComponent& transform,
     }
   }
 
+  auto slot_ground_is_open = [&](float local_x, float local_z) {
+    if (pathfinder == nullptr) {
+      return true;
+    }
+    float const world_x =
+        transform.position.x + (cos_yaw * local_x) + (sin_yaw * local_z);
+    float const world_z =
+        transform.position.z - (sin_yaw * local_x) + (cos_yaw * local_z);
+    auto const cell = pathfinder->world_to_grid(world_x, world_z);
+    return pathfinder->is_terrain_walkable(cell.x, cell.y);
+  };
+
+  auto onto_walkable_ground = [&](float& local_x, float& local_z) {
+    if (slot_ground_is_open(local_x, local_z)) {
+      return false;
+    }
+    float low = 0.0F;
+    float high = 1.0F;
+    for (int bisection = 0; bisection < k_slot_recovery_bisections; ++bisection) {
+      float const middle = (low + high) * 0.5F;
+      if (slot_ground_is_open(local_x * middle, local_z * middle)) {
+        low = middle;
+      } else {
+        high = middle;
+      }
+    }
+    float const corrected_x = local_x * low;
+    float const corrected_z = local_z * low;
+    float const correction = std::hypot(corrected_x - local_x, corrected_z - local_z);
+    float const budget = k_ground_clamp_speed * step;
+    if (correction > budget && correction > 0.0001F) {
+      float const share = budget / correction;
+      local_x += (corrected_x - local_x) * share;
+      local_z += (corrected_z - local_z) * share;
+      return true;
+    }
+    local_x = corrected_x;
+    local_z = corrected_z;
+    return true;
+  };
+
+  std::vector<std::uint8_t> recovering_to_ground(next.size(), 0U);
+  for (std::size_t index = 0; index < next.size(); ++index) {
+    auto& slot = next[index];
+    if (!slot.alive) {
+      continue;
+    }
+    recovering_to_ground[index] = static_cast<std::uint8_t>(
+        onto_walkable_ground(slot.target_local_x, slot.target_local_z));
+  }
+
   float const minimum_separation =
       std::max(Game::Formation::TraversalPolicy::k_minimum_soldier_separation,
                layout.body_radius * 2.0F * 1.04F);
   state.blocked_slot_count = 0U;
-  for (auto& slot : next) {
+  for (std::size_t slot_index = 0; slot_index < next.size(); ++slot_index) {
+    auto& slot = next[slot_index];
+    RelocationLimits const step_limits =
+        recovering_to_ground[slot_index] != 0U
+            ? RelocationLimits{k_ground_recovery_speed, k_ground_recovery_acceleration}
+            : limits;
     slot.previous_local_x = slot.current_local_x;
     slot.previous_local_z = slot.current_local_z;
 
@@ -415,15 +476,16 @@ void update_slot_states(const Engine::Core::TransformComponent& transform,
     float desired_vx = 0.0F;
     float desired_vz = 0.0F;
     if (distance > 0.0001F) {
-      float const stopping_speed = std::sqrt(2.0F * limits.acceleration * distance);
-      float const speed = std::min(limits.speed, stopping_speed);
+      float const stopping_speed =
+          std::sqrt(2.0F * step_limits.acceleration * distance);
+      float const speed = std::min(step_limits.speed, stopping_speed);
       desired_vx = error_x / distance * speed;
       desired_vz = error_z / distance * speed;
     }
     float delta_vx = desired_vx - slot.velocity_x;
     float delta_vz = desired_vz - slot.velocity_z;
     float const delta_speed = std::hypot(delta_vx, delta_vz);
-    float const max_delta = limits.acceleration * step;
+    float const max_delta = step_limits.acceleration * step;
     if (delta_speed > max_delta && delta_speed > 0.0001F) {
       float const scale = max_delta / delta_speed;
       delta_vx *= scale;
@@ -480,6 +542,12 @@ void update_slot_states(const Engine::Core::TransformComponent& transform,
     slot.current_local_z += next_vz * step * fraction;
     slot.velocity_x = next_vx * fraction;
     slot.velocity_z = next_vz * fraction;
+
+    if (slot.alive &&
+        onto_walkable_ground(slot.current_local_x, slot.current_local_z)) {
+      slot.velocity_x = 0.0F;
+      slot.velocity_z = 0.0F;
+    }
   }
 
   state.slot_states = std::move(next);

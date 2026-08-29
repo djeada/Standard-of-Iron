@@ -16,33 +16,33 @@ constexpr float k_deg_to_rad = std::numbers::pi_v<float> / 180.0F;
 
 constexpr int k_hill_ramp_extra_steps = 7;
 
+constexpr float k_hill_fallback_entrance_margin_cells = 2.0F;
+
 constexpr float k_hill_ramp_steepness_exponent = 0.92F;
 
-constexpr float k_width_falloff_padding = 2.50F;
+constexpr float k_width_falloff_padding = 4.00F;
 
 constexpr float k_entry_bowl_exponent = 1.30F;
 
 constexpr float k_entry_base_width_scale = Game::Map::k_hill_entry_base_width_scale;
-constexpr float k_entry_top_width_scale = 1.12F;
+constexpr float k_entry_top_width_scale = 0.95F;
 
-constexpr float k_entry_outward_steps_fraction = 1.08F;
-constexpr int k_entry_outward_steps_min = 12;
-constexpr int k_entry_outward_steps_max = 32;
+constexpr float k_entry_outward_steps_fraction = 0.90F;
+constexpr int k_entry_outward_steps_min = 8;
+constexpr int k_entry_outward_steps_max = 24;
 
-constexpr float k_entry_mid_dip_strength = 0.08F;
+constexpr float k_entry_mid_dip_strength = 0.0F;
 
-constexpr float k_entry_mid_depth_strength = 0.06F;
+constexpr float k_entry_mid_depth_strength = 0.0F;
 
 constexpr float k_entry_toe_height_fraction = 0.0F;
-
-constexpr float k_walkable_width_threshold = 0.38F;
 
 constexpr float k_entry_lower_ramp_delay = 0.0F;
 constexpr float k_entry_mouth_flare_strength =
     Game::Map::k_hill_entry_mouth_flare_strength;
 constexpr float k_entry_mouth_soften_strength = 0.045F;
-constexpr float k_entry_floor_flatten_strength = 0.075F;
-constexpr float k_entry_shoulder_raise_strength = 0.065F;
+constexpr float k_entry_floor_flatten_strength = 0.0F;
+constexpr float k_entry_shoulder_raise_strength = 0.0F;
 
 inline auto hash_coords(int x, int z, std::uint32_t seed) -> std::uint32_t {
   std::uint32_t const ux = static_cast<std::uint32_t>(x) * 73856093U;
@@ -392,31 +392,47 @@ void TerrainHeightMap::build_from_features(
                          (grid_z - grid_half_height) * m_tile_size);
       };
 
-      std::vector<QVector3D> hill_entrances = feature.entrances;
-      if (hill_entrances.empty()) {
-        if (shape_geometry.is_spine()) {
-          const auto pose = Game::Map::hill_shape_pose_at(shape_geometry, 0.5F);
-          const float reach = shape_geometry.half_thickness + 3.0F;
-          hill_entrances.push_back(
-              local_to_world(pose.position.x + pose.tangent.z * reach,
-                             pose.position.z - pose.tangent.x * reach));
-        } else if (shape_geometry.is_mask()) {
-          hill_entrances.push_back(
-              local_to_world(-shape_geometry.bound_half_x - 1.0F, 0.0F));
-        } else {
-          const float fallback_distance = slope_width * m_tile_size * 0.98F;
-          hill_entrances.emplace_back(feature.center_x - cos_a * fallback_distance,
-                                      0.0F,
-                                      feature.center_z - sin_a * fallback_distance);
-        }
-      }
-
       auto slope_distance = [&](float local_x, float local_z) {
         return Landform::sample_hill(local_x, local_z, hill_config).outer_distance;
       };
       auto crown_distance = [&](float local_x, float local_z) {
         return Landform::sample_hill(local_x, local_z, hill_config).crown_distance;
       };
+
+      auto entrance_outside_hill = [&](float local_x,
+                                       float local_z,
+                                       float dir_local_x,
+                                       float dir_local_z,
+                                       float start_reach) {
+        const float limit = std::max(slope_width, slope_depth) * 1.5F + 8.0F;
+        float reach = start_reach;
+        while (reach < limit && slope_distance(local_x + dir_local_x * reach,
+                                               local_z + dir_local_z * reach) <= 1.0F) {
+          reach += 1.0F;
+        }
+        reach += k_hill_fallback_entrance_margin_cells;
+        return local_to_world(local_x + dir_local_x * reach,
+                              local_z + dir_local_z * reach);
+      };
+
+      std::vector<QVector3D> hill_entrances = feature.entrances;
+      if (hill_entrances.empty()) {
+        if (shape_geometry.is_spine()) {
+          const auto pose = Game::Map::hill_shape_pose_at(shape_geometry, 0.5F);
+          hill_entrances.push_back(
+              entrance_outside_hill(pose.position.x,
+                                    pose.position.z,
+                                    pose.tangent.z,
+                                    -pose.tangent.x,
+                                    shape_geometry.half_thickness));
+        } else if (shape_geometry.is_mask()) {
+          hill_entrances.push_back(entrance_outside_hill(
+              0.0F, 0.0F, -1.0F, 0.0F, shape_geometry.bound_half_x));
+        } else {
+          hill_entrances.push_back(
+              entrance_outside_hill(0.0F, 0.0F, -1.0F, 0.0F, slope_width * 0.98F));
+        }
+      }
 
       for (int z = min_z; z <= max_z; ++z) {
         for (int x = min_x; x <= max_x; ++x) {
@@ -700,14 +716,15 @@ void TerrainHeightMap::build_from_features(
             if (m_terrain_types[ramp_idx] != TerrainType::Mountain) {
               float const width_factor = 1.0F - edge_t;
 
-              constexpr bool raised_apron = true;
-              if (m_terrain_types[ramp_idx] == TerrainType::Flat && raised_apron &&
-                  width_factor > 0.04F) {
+              bool const navigable =
+                  std::abs(across) <=
+                  std::max(Game::Map::k_hill_entry_min_half_width_cells, tapered_width);
+
+              if (navigable && m_terrain_types[ramp_idx] == TerrainType::Flat) {
                 m_terrain_types[ramp_idx] = TerrainType::Hill;
               }
 
-              if ((builds_apron || width_factor > k_walkable_width_threshold) &&
-                  raised_apron) {
+              if (navigable) {
                 walkable_mask[ramp_idx] = 1;
                 entrance_line_mask[ramp_idx] = 1;
                 erosion_protected[ramp_idx] = 1;
@@ -1669,11 +1686,20 @@ void TerrainHeightMap::precompute_bridge_data() {
   }
 }
 
+auto TerrainHeightMap::hill_navigation() const -> HillNavigation {
+  HillNavigation navigation;
+  navigation.walkable.assign(m_hill_walkable.begin(), m_hill_walkable.end());
+  navigation.entrances.assign(m_hill_entrances.begin(), m_hill_entrances.end());
+  navigation.entrance_centerlines = m_hill_entrance_centerlines;
+  return navigation;
+}
+
 void TerrainHeightMap::restore_from_data(const std::vector<float>& heights,
                                          const std::vector<TerrainType>& terrain_types,
                                          const std::vector<RiverSegment>& rivers,
                                          const std::vector<Bridge>& bridges,
-                                         const std::vector<Lake>& lakes) {
+                                         const std::vector<Lake>& lakes,
+                                         const HillNavigation& hills) {
 
   const auto expected_size = static_cast<size_t>(m_width * m_height);
 
@@ -1696,6 +1722,18 @@ void TerrainHeightMap::restore_from_data(const std::vector<float>& heights,
       m_hill_walkable[i] = false;
     }
   }
+
+  if (hills.walkable.size() == expected_size) {
+    for (size_t i = 0; i < expected_size; ++i) {
+      m_hill_walkable[i] = hills.walkable[i] != 0U;
+    }
+  }
+  if (hills.entrances.size() == expected_size) {
+    for (size_t i = 0; i < expected_size; ++i) {
+      m_hill_entrances[i] = hills.entrances[i] != 0U;
+    }
+  }
+  m_hill_entrance_centerlines = hills.entrance_centerlines;
 
   m_river_segments = rivers;
   m_lakes = lakes;
