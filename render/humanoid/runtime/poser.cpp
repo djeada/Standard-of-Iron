@@ -165,30 +165,38 @@ void HumanoidRendererBase::compute_locomotion_pose(uint32_t seed,
     right_axis = -right_axis;
   }
 
+  bool const is_running =
+      resolved_gait.state == HumanoidMotionState::Run || resolved_gait.run_blend > 0.5F;
   constexpr float k_walking_elbow_backset = 0.45F;
+  constexpr float k_running_elbow_backset = 0.88F;
+  float const elbow_backset_amount =
+      is_running ? k_running_elbow_backset : k_walking_elbow_backset;
   QVector3D const elbow_backset =
-      is_moving ? QVector3D(0.0F, 0.0F, -1.0F) * k_walking_elbow_backset : QVector3D();
-  QVector3D const outward_l =
-      (-right_axis * (1.0F - (is_moving ? 0.35F : 0.0F))) + elbow_backset;
-  QVector3D const outward_r =
-      (right_axis * (1.0F - (is_moving ? 0.35F : 0.0F))) + elbow_backset;
+      is_moving ? QVector3D(0.0F, 0.0F, -1.0F) * elbow_backset_amount : QVector3D();
+  float const elbow_outward_amount = is_moving ? (is_running ? 0.18F : 0.65F) : 1.0F;
+  QVector3D const outward_l = (-right_axis * elbow_outward_amount) + elbow_backset;
+  QVector3D const outward_r = (right_axis * elbow_outward_amount) + elbow_backset;
 
   float const elbow_along_bias = (variation.bulk_scale - 1.0F) * 0.05F;
+  float const elbow_lateral_l = is_running ? 0.035F : 0.10F;
+  float const elbow_lateral_r = is_running ? 0.030F : 0.08F;
+  float const elbow_height_l = is_running ? 0.04F : -0.03F;
+  float const elbow_height_r = is_running ? 0.06F : 0.0F;
   pose.elbow_l =
       Render::Humanoid::PosePrimitives::solve_elbow_ik(pose.shoulder_l,
                                                        pose.hand_l,
                                                        outward_l,
                                                        0.45F - elbow_along_bias,
-                                                       0.10F,
-                                                       -0.03F,
+                                                       elbow_lateral_l,
+                                                       elbow_height_l,
                                                        +1.0F);
   pose.elbow_r =
       Render::Humanoid::PosePrimitives::solve_elbow_ik(pose.shoulder_r,
                                                        pose.hand_r,
                                                        outward_r,
                                                        0.45F - elbow_along_bias,
-                                                       0.08F,
-                                                       0.0F,
+                                                       elbow_lateral_r,
+                                                       elbow_height_r,
                                                        +1.0F);
 }
 

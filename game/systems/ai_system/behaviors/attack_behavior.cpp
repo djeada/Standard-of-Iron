@@ -71,8 +71,7 @@ void AttackBehavior::execute(const AISnapshot& snapshot,
   m_attack_timer = 0.0F;
 
   auto ready_units = wave_force_units(snapshot, context);
-  if (ready_units.empty()) {
-
+  if (ready_units.empty() && !marches_only_in_waves(context)) {
     ready_units = collect_attack_force_units(snapshot, context);
     if (!context.garrison_unit_ids.empty()) {
       ready_units.erase(std::remove_if(ready_units.begin(),

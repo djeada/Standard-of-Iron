@@ -173,6 +173,20 @@ Key properties that keep it smooth (Phase 6):
 - **Turn (6.4):** a signed turn amount drives lean, torso twist, stride bias and
   inside/outside foot asymmetry.
 
+### Walk and run use different body mechanics
+
+The two profiles are not just amplitude variants. Walking keeps each foot planted for
+60% of its cycle, creating double support; it uses a wider track, an upright torso,
+straight relaxed arms and a pronounced heel-to-toe roll. Running cuts ground contact to
+36%, narrows the track and leaves two flight windows per cycle. It also lands near-flat,
+recovers the swing leg earlier, leans farther over the stride and keeps the elbows bent so
+the arms pump close to the body.
+
+Their centre-of-mass curves are authored separately before blending. A walker rises over
+the supporting leg and settles during double support. A runner compresses over the loaded
+leg and rises during flight. Blending the two waves, instead of merely reversing one
+amplitude, preserves vertical motion through the middle of a walk-to-run transition.
+
 ### The swing has to join the stance at the stance's own speed
 
 A planted foot slides backwards relative to the hips at `-stride / planted_fraction` per
@@ -220,8 +234,9 @@ somewhat — this is a stylised RTS gait, not a foot-locked one, and
 
 The practical consequence: raising `stride_length` _reduces_ skate, it does not cause it.
 The values shipped before the hip-drop solve (0.40 walk / 0.58 run) were small enough that
-the legs read as a stiff shuffle from the game camera; they are now 0.64 and 0.98, which is
-roughly a real walking and running step for a 1.80 m rig.
+the legs read as a stiff shuffle from the game camera; the authored stance travel is now
+0.95 m for the walk and 1.02 m for the run. The run baker samples the profile at normalized
+speed so its canonical clip keeps that skate budget instead of silently inflating it.
 
 The ceiling used to be leg reach: at a half-stride approaching `UPPER_LEG_LEN +
 LOWER_LEG_LEN` the foot could no longer reach the ground from a fixed pelvis, and

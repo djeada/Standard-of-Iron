@@ -2249,7 +2249,7 @@ void bake_humanoid_clip_frame(BakeProfile profile,
       break;
     case Render::GL::HumanoidMotionState::Run:
       gait.speed = 4.0F;
-      gait.normalized_speed = 1.6F;
+      gait.normalized_speed = 1.0F;
       break;
     case Render::GL::HumanoidMotionState::Hold:
     default:
@@ -2326,9 +2326,13 @@ void bake_humanoid_clip_frame(BakeProfile profile,
       Render::GL::HumanoidAnimationContext anim_ctx{};
       anim_ctx.gait = gait;
       anim_ctx.gait.state = clip.state;
-      anim_ctx.inputs.movement_state =
-          (gait.speed > 0.1F) ? Render::Creature::MovementAnimationState::Walk
-                              : Render::Creature::MovementAnimationState::Idle;
+      if (clip.state == Render::GL::HumanoidMotionState::Run) {
+        anim_ctx.inputs.movement_state = Render::Creature::MovementAnimationState::Run;
+      } else if (gait.speed > 0.1F) {
+        anim_ctx.inputs.movement_state = Render::Creature::MovementAnimationState::Walk;
+      } else {
+        anim_ctx.inputs.movement_state = Render::Creature::MovementAnimationState::Idle;
+      }
       Render::GL::HumanoidPoseController ctrl(pose, anim_ctx);
       apply_ground_stance_for_profile(ctrl, profile);
       if (clip.state == Render::GL::HumanoidMotionState::Idle) {
