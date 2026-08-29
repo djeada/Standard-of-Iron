@@ -45,10 +45,10 @@ TestCase {
     function test_it_does_not_keep_talking() {
         testCase.reset();
         for (var i = 0; i < 3; ++i)
-            voice.note_refusal("population_cap");
+            voice.note_refusal("manpower_cap");
         compare(testCase.spoken_lines(), 1);
-        voice.note_refusal("population_cap");
-        voice.note_refusal("population_cap");
+        voice.note_refusal("manpower_cap");
+        voice.note_refusal("manpower_cap");
         compare(testCase.spoken_lines(), 1, "it must earn the next line the same way it earned the first");
     }
 
@@ -81,7 +81,7 @@ TestCase {
     }
 
     function test_every_line_it_can_say_is_worth_saying() {
-        var kinds = ["no_selection", "unreachable", "insufficient_resources", "population_cap", "unit_busy", "out_of_range", "wrong_owner", "invalid_target"];
+        var kinds = ["no_selection", "unreachable", "insufficient_resources", "manpower_cap", "unit_busy", "out_of_range", "wrong_owner", "invalid_target"];
         for (var i = 0; i < kinds.length; ++i) {
             var line = voice.quip_for(kinds[i]);
             verify(line.length > 0, "no line for " + kinds[i]);

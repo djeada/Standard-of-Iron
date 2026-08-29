@@ -64,7 +64,7 @@ TestCase {
                 "units": [{
                         "unit_type": "archer",
                         "display_name": "Archer",
-                        "population_cost": 50,
+                        "cost": 50,
                         "resource_costs": {
                             "wood": 6
                         },
@@ -74,15 +74,15 @@ TestCase {
                         "affordable": true,
                         "prerequisite": "barracks",
                         "prerequisite_met": false,
-                        "manpower_met": true,
-                        "population_met": true
+                        "reserve_met": true,
+                        "manpower_met": true
                     }],
                 "builder_count": 2,
                 "idle_builder_count": 1,
                 "barracks_count": 0,
-                "population": 120,
-                "population_cap": 600,
-                "home_population_bonus": 50,
+                "manpower": 120,
+                "manpower_cap": 600,
+                "home_reserve_bonus": 50,
                 "civilian_delivery_grant": 50
             },
             "coach": {
@@ -206,7 +206,7 @@ TestCase {
         verify(blockedBuilding.indexOf("Stone") >= 0, blockedBuilding);
         var blockedUnit = panel.blocked_reason(panel.units[0], "unit");
         verify(blockedUnit.indexOf("barracks") >= 0, blockedUnit);
-        verify(panel.population_line().indexOf("600") >= 0, panel.population_line());
+        verify(panel.manpower_line().indexOf("600") >= 0, panel.manpower_line());
         verify(panel.builder_line().indexOf("2") >= 0, panel.builder_line());
         panel.destroy();
     }

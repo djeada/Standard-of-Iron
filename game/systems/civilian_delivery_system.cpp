@@ -102,15 +102,15 @@ void CivilianDeliverySystem::update(Engine::Core::World* world, float) {
       continue;
     }
 
-    if (barracks_prod->manpower_available + k_civilian_delivery_population_grant >
+    if (barracks_prod->manpower_available + k_civilian_delivery_reserve_grant >
         barracks_prod->max_units) {
       to_release.push_back(civilian_id);
       continue;
     }
 
-    barracks_prod->manpower_available += k_civilian_delivery_population_grant;
+    barracks_prod->manpower_available += k_civilian_delivery_reserve_grant;
     publish_population_feedback(
-        barracks_unit->owner_id, barracks_id, k_civilian_delivery_population_grant);
+        barracks_unit->owner_id, barracks_id, k_civilian_delivery_reserve_grant);
     to_remove.push_back(civilian_id);
   }
 

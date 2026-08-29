@@ -63,7 +63,7 @@ Rectangle {
         spacing: 4
 
         Repeater {
-            model: card.panel ? card.panel.cost_entries(card.panel.population_cost(card.unit_info), card.unit_info.resource_costs || {}, true) : []
+            model: card.panel ? card.panel.cost_entries(card.panel.reserve_cost(card.unit_info), card.unit_info.resource_costs || {}, true) : []
 
             delegate: Rectangle {
                 id: costPill

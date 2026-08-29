@@ -88,6 +88,10 @@ CommandController::CommandController(Engine::Core::World* world,
           this,
           &CommandController::formation_placement_ended);
   connect(&m_formation,
+          &ArmyFormationController::formation_deployed,
+          this,
+          &CommandController::formation_deployed);
+  connect(&m_formation,
           &ArmyFormationController::formation_placement_rejected,
           this,
           &CommandController::formation_placement_rejected);

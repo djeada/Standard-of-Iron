@@ -465,10 +465,6 @@ This may be a skirmish, or objectives have not been configured.</source>
 <context>
     <name>CameraLegend</name>
     <message>
-        <source>Camera controls</source>
-        <translation>تحكّم الكاميرا</translation>
-    </message>
-    <message>
         <source>Moving the camera</source>
         <translation>تحريك الكاميرا</translation>
     </message>
@@ -1346,16 +1342,12 @@ This may be a skirmish, or objectives have not been configured.</source>
 <context>
     <name>EconomyCoach</name>
     <message>
-        <source>Economy prompts</source>
-        <translation>إرشادات الاقتصاد</translation>
-    </message>
-    <message>
-        <source>Stop showing these prompts</source>
-        <translation>أوقف عرض هذه الإرشادات</translation>
-    </message>
-    <message>
         <source>How it works</source>
         <translation>كيف يعمل</translation>
+    </message>
+    <message>
+        <source>Hide these prompts</source>
+        <translation>إخفاء هذه التلميحات</translation>
     </message>
 </context>
 <context>
@@ -1573,12 +1565,12 @@ This may be a skirmish, or objectives have not been configured.</source>
         <translation>جنّد بنّاءً في ثكنة ثم أرسله ليجمع الخشب أو الحجر أو الحديد.</translation>
     </message>
     <message>
-        <source>With a builder selected, press Build and place a Home to raise your population, or a Barracks to recruit from.</source>
-        <translation>بعد اختيار بنّاء، اضغط «بناء» وضع منزلًا لرفع تعدادك، أو ثكنة للتجنيد منها.</translation>
+        <source>With a builder selected, press Build and place a Home to raise your reserve, or a Barracks to recruit from.</source>
+        <translation>بعد اختيار بنّاء، اضغط «بناء» وضع منزلًا لرفع احتياطيك، أو ثكنة للتجنيد منها.</translation>
     </message>
     <message>
-        <source>Select a barracks and recruit troops. Each one costs population and resources, both shown on its card.</source>
-        <translation>اختر ثكنة وجنّد القوات. كل وحدة تكلّف تعدادًا وموارد، وكلاهما مبيّن على بطاقتها.</translation>
+        <source>Select a barracks and recruit troops. Each one costs reserve and resources, both shown on its card.</source>
+        <translation>اختر ثكنة وجنّد القوات. كل وحدة تكلّف احتياطيًا وموارد، وكلاهما مبيّن على بطاقتها.</translation>
     </message>
     <message>
         <source>Gathering, building and recruiting are all under way.</source>
@@ -1593,8 +1585,8 @@ This may be a skirmish, or objectives have not been configured.</source>
         <translation>مزرعة</translation>
     </message>
     <message>
-        <source>Raises civilians, who carry manpower to the nearest barracks. Each one costs food.</source>
-        <translation>يربّي المدنيين الذين يحملون القوى البشرية إلى أقرب ثكنة. كل واحد يكلف طعامًا.</translation>
+        <source>Raises civilians, who carry reserve to the nearest barracks. Each one costs food.</source>
+        <translation>يربّي المدنيين الذين يحملون الاحتياطي إلى أقرب ثكنة. كل واحد يكلف طعامًا.</translation>
     </message>
     <message>
         <source>Grows grain in cycles. A builder reaps it for food once it ripens.</source>
@@ -1605,8 +1597,8 @@ This may be a skirmish, or objectives have not been configured.</source>
         <translation>اختر بنّاءً، واضغط جمع، وانقر على شجرة أو صخرة أو منجم خام أو مزرعة ناضجة أو خروف. يحمل الحمولة إلى ساحة الثكنة ثم يعود لجلب المزيد.</translation>
     </message>
     <message>
-        <source>Keep recruiting while your builders gather. Raise Homes and Farms when population or food runs out.</source>
-        <translation>واصل التجنيد بينما يجمع بنّاؤوك. ابنِ المنازل والمزارع عندما ينفد السكان أو الطعام.</translation>
+        <source>Keep recruiting while your builders gather. Raise Homes and Farms when reserve or food runs out.</source>
+        <translation>واصل التجنيد بينما يجمع بنّاؤوك. ابنِ المنازل والمزارع عندما ينفد الاحتياطي أو الطعام.</translation>
     </message>
     <message>
         <source>Watches over a wide stretch of ground, holds a settlement together, and takes in healers.</source>
@@ -1624,8 +1616,8 @@ This may be a skirmish, or objectives have not been configured.</source>
         <translation>البنّاؤون: %1 (%2 بلا عمل). عند وضع مبنى يتوجه كل بنّاء محدد إلى موقع البناء.</translation>
     </message>
     <message>
-        <source>Recruiting draws on the manpower held by each barracks.</source>
-        <translation>يستهلك التجنيد الأفراد المتاحين في كل ثكنة.</translation>
+        <source>Recruiting draws on the reserve held by each barracks.</source>
+        <translation>يعتمد التجنيد على الاحتياطي الذي تحتفظ به كل ثكنة.</translation>
     </message>
     <message>
         <source>Needs a barracks</source>
@@ -1636,12 +1628,12 @@ This may be a skirmish, or objectives have not been configured.</source>
         <translation>يتطلب بنّاءً</translation>
     </message>
     <message>
-        <source>Not enough manpower at the barracks</source>
-        <translation>لا يوجد أفراد كافون في الثكنة</translation>
+        <source>Not enough reserve at the barracks</source>
+        <translation>الاحتياطي في الثكنة لا يكفي</translation>
     </message>
     <message>
-        <source>Population limit reached</source>
-        <translation>بلغت حد التعداد</translation>
+        <source>Manpower limit reached</source>
+        <translation>بلغت حد القوى البشرية</translation>
     </message>
     <message>
         <source>Missing %1</source>
@@ -1684,16 +1676,16 @@ This may be a skirmish, or objectives have not been configured.</source>
         <translation>ما الذي تستطيع الثكنة تجنيده</translation>
     </message>
     <message>
-        <source>%1 — %2 population, %3 · %4s</source>
-        <translation>%1 — %2 من التعداد، %3 · %4 ث</translation>
+        <source>%1 — %2 reserve, %3 · %4s</source>
+        <translation>%1 — %2 من الاحتياطي، %3 · %4 ث</translation>
     </message>
     <message>
         <source>Back to the battle</source>
         <translation>عُد إلى المعركة</translation>
     </message>
     <message>
-        <source>Population %1 / %2. A Home raises civilians for %3 food each; walking a civilian into a barracks adds %4 manpower. Farms ripen every %5s and sheep yield %6 food.</source>
-        <translation>السكان %1 / %2. يربّي المنزل مدنيين مقابل %3 طعام لكل واحد؛ إدخال مدني إلى ثكنة يضيف %4 قوى بشرية. تنضج المزارع كل %5 ثانية ويعطي الخروف %6 طعام.</translation>
+        <source>Manpower %1 / %2. A Home raises civilians for %3 food each; walking a civilian into a barracks adds %4 reserve. Farms ripen every %5s and sheep yield %6 food.</source>
+        <translation>القوى البشرية %1 / %2. يربّي المنزل مدنيين مقابل %3 طعام لكل واحد؛ إدخال مدني إلى ثكنة يضيف %4 إلى الاحتياطي. تنضج المزارع كل %5 ثانية ويعطي الخروف %6 طعام.</translation>
     </message>
     <message>
         <source>Needs a home</source>
@@ -2257,6 +2249,14 @@ This may be a skirmish, or objectives have not been configured.</source>
         <source>The line is filing through a narrow crossing.</source>
         <translation>يعبر الصف في رتل ممرًا ضيقًا.</translation>
     </message>
+    <message>
+        <source>Formation</source>
+        <translation>التشكيل</translation>
+    </message>
+    <message>
+        <source>Hide this readout</source>
+        <translation>إخفاء هذه اللوحة</translation>
+    </message>
 </context>
 <context>
     <name>GalleryWindow</name>
@@ -2399,12 +2399,12 @@ This may be a skirmish, or objectives have not been configured.</source>
         <translation>انتهى أمر %1 - لقد سقط %2.</translation>
     </message>
     <message>
-        <source>Troop limit reached.</source>
-        <translation>تم بلوغ حد القوات.</translation>
+        <source>Manpower limit reached.</source>
+        <translation>تم بلوغ حد القوى البشرية.</translation>
     </message>
     <message>
-        <source>Not enough manpower — build a home to raise more families.</source>
-        <translation>القوى البشرية غير كافية — ابنِ منزلًا لتربية المزيد من الأسر.</translation>
+        <source>Not enough reserve — build a home to raise more families.</source>
+        <translation>الاحتياطي غير كافٍ — ابنِ منزلًا لتربية المزيد من الأسر.</translation>
     </message>
 </context>
 <context>
@@ -2930,8 +2930,8 @@ This may be a skirmish, or objectives have not been configured.</source>
         <translation>اضغط أصلِح، ثم انقر بالزر الأيسر على المبنى المتضرّر. النقر الأيمن يُلغي.</translation>
     </message>
     <message>
-        <source>Send civilians to a barracks to refill the population it recruits from.</source>
-        <translation>يرسل المدنيين إلى ثكنة لتجديد السكان الذين تجنّد منهم.</translation>
+        <source>Send civilians to a barracks to refill the reserve it recruits from.</source>
+        <translation>يرسل المدنيين إلى ثكنة لتجديد الاحتياطي الذي تجنّد منه.</translation>
     </message>
     <message>
         <source>Press Deliver, then left-click a friendly barracks. Right-click cancels.</source>
@@ -3630,7 +3630,7 @@ Every troop costs manpower; a squad of twelve builders costs ten. This is not a 
         <translation>التجنيد</translation>
     </message>
     <message>
-        <source>Population</source>
+        <source>Reserve</source>
         <translation>السكان</translation>
     </message>
     <message>
@@ -3754,7 +3754,7 @@ Every troop costs manpower; a squad of twelve builders costs ten. This is not a 
         <translation>الطعام يغذي مستوطنتك: كل مدني يُجنَّد في منزل يكلف طعامًا. تزرع المزرعة الحبوب في دورات؛ عندما يصفرّ الحقل يحصده بنّاء بأمر جمع ويحمل الحبوب إلى الديار، ثم يُزرع الحقل من جديد. يمكن للبنّائين أيضًا ذبح خروف مقابل حمولة أصغر. الجمع التلقائي على الطعام يُبقي بنّاءً يعمل في المزارع.</translation>
     </message>
     <message>
-        <source>Every card - recruit or building - lists its price. A grey card means something is short; hover it to read what. Homes cost 50 wood and 15 stone, a farm 40 wood and 10 stone, a barracks 100 wood and 60 stone, a defence tower 60 wood and 80 stone; soldiers cost wood and iron plus population, and civilians cost food.</source>
+        <source>Every card - recruit or building - lists its price. A grey card means something is short; hover it to read what. Homes cost 50 wood and 15 stone, a farm 40 wood and 10 stone, a barracks 100 wood and 60 stone, a defence tower 60 wood and 80 stone; soldiers cost wood and iron plus reserve, and civilians cost food.</source>
         <translation>كل بطاقة - مجنّد أو مبنى - تعرض سعرها. البطاقة الرمادية تعني نقص شيء ما؛ مرّر المؤشر فوقها لقراءة ما ينقص. تكلف المنازل 50 خشبًا و15 حجرًا، والمزرعة 40 خشبًا و10 أحجار، والثكنة 100 خشب و60 حجرًا، وبرج الدفاع 60 خشبًا و80 حجرًا؛ يكلف الجنود خشبًا وحديدًا بالإضافة إلى السكان، ويكلف المدنيون طعامًا.</translation>
     </message>
     <message>
@@ -3762,12 +3762,23 @@ Every troop costs manpower; a squad of twelve builders costs ten. This is not a 
         <translation>الثكنات تجنّد الجنود وتضم مخزنك. المنازل تربّي العائلات والمدنيين. المزارع تنمّي الحبوب التي يحصدها البناؤون طعامًا. أبراج الدفاع تطلق النار على كل ما يدخل مداها. الأسواق تتاجر. المعابد تقوّي المعنويات وتستقبل المعالجين. الأسوار والبوابات تشكّل الميدان؛ والبوابات تُفتح لقواتك أنت.</translation>
     </message>
     <message>
-        <source>Left-click a barracks and pick a soldier; healers take their vows at a temple instead. Recruits queue up to five deep and march out to the rally flag. Each costs population from the building&apos;s own pool as well as materials.</source>
-        <translation>انقر بالزر الأيسر على ثكنة واختر جنديًا؛ أما المعالجون فينذرون نذورهم في المعبد. ينتظم المجندون في طابور يصل إلى خمسة ويسيرون إلى راية التجمع. ويكلّف كل واحد منهم سكانًا من مخزون المبنى نفسه إضافةً إلى المواد.</translation>
+        <source>Left-click a barracks and pick a soldier; healers take their vows at a temple instead. Recruits queue up to five deep and march out to the rally flag. Each costs reserve from the building&apos;s own pool as well as materials.</source>
+        <translation>انقر بالزر الأيسر على ثكنة واختر جنديًا؛ أما المعالجون فينذرون نذورهم في المعبد. ينتظم المجندون في طابور يصل إلى خمسة ويسيرون إلى راية التجمع. ويكلّف كل واحد منهم احتياطيًا من مخزون المبنى نفسه إضافةً إلى المواد.</translation>
     </message>
     <message>
-        <source>A barracks or temple starts with a pool of population and spends it on every recruit. Homes refill it: each Home raises families over time, a civilian can be recruited there for food and sent to either building with Deliver, and that building&apos;s pool grows. The top bar shows your army against the map&apos;s overall cap.</source>
-        <translation>تبدأ الثكنة أو المعبد بمخزون من السكان وتنفقه على كل مجنّد. والمنازل تعيد ملأه: فكل منزل يربّي عائلات مع الوقت، ويمكن تجنيد مدني هناك مقابل الطعام وإرساله إلى أي من المبنيين بأمر التسليم، فينمو مخزون ذلك المبنى. ويعرض الشريط العلوي جيشك مقابل الحد الأقصى للخريطة.</translation>
+        <source>A barracks or temple starts with a reserve and spends it on every recruit; the card shows exactly what each one costs. Homes refill it: each Home raises families over time, a civilian can be recruited there for food and sent to either building with Deliver, and that building&apos;s reserve grows. A squad then stands in the field for what it cost, which is what the top bar counts against the map&apos;s manpower cap.</source>
+        <translation>تبدأ الثكنة أو المعبد باحتياطي وتنفقه على كل مجنّد؛ وتبيّن البطاقة كلفة كل واحد بالضبط. والمنازل تعيد ملأه: فكل منزل يربّي عائلات مع الوقت، ويمكن تجنيد مدني هناك مقابل الطعام وإرساله إلى أي من المبنيين بأمر التسليم، فينمو احتياطي ذلك المبنى. وتقف الوحدة في الميدان بقيمة ما كلّفته، وهذا ما يحسبه الشريط العلوي مقابل حد القوى البشرية للخريطة.</translation>
+    </message>
+</context>
+<context>
+    <name>HintCard</name>
+    <message>
+        <source>Hide this</source>
+        <translation>إخفاء</translation>
+    </message>
+    <message>
+        <source>Never show this again</source>
+        <translation>لا تعرض هذا مرة أخرى</translation>
     </message>
 </context>
 <context>
@@ -6416,7 +6427,7 @@ to see preview</source>
     </message>
     <message>
         <source>Formation</source>
-        <translation>تشكيل</translation>
+        <translation>التشكيل</translation>
     </message>
     <message>
         <source>You are not in command of these units.</source>
@@ -6830,9 +6841,9 @@ Shoots arrows at enemies</source>
     </message>
     <message>
         <source>Residential building
-Adds +50 population to nearest barracks</source>
+Adds +50 reserve to the nearest barracks</source>
         <translation>مبنى سكني
-يضيف 50+ إلى تعداد أقرب ثكنة</translation>
+يضيف 50+ إلى احتياطي أقرب ثكنة</translation>
     </message>
     <message>
         <source>Marketplace</source>
@@ -6869,8 +6880,8 @@ Opens for your troops and allies</source>
         <translation>%1 %2</translation>
     </message>
     <message>
-        <source>Not enough available population</source>
-        <translation>التعداد المتاح لا يكفي</translation>
+        <source>Not enough reserve</source>
+        <translation>الاحتياطي لا يكفي</translation>
     </message>
     <message>
         <source>Already building...</source>
@@ -6893,8 +6904,8 @@ Build time: %3s</source>
 زمن الإنتاج: %3 ث</translation>
     </message>
     <message>
-        <source>population</source>
-        <translation>التعداد</translation>
+        <source>reserve</source>
+        <translation>الاحتياطي</translation>
     </message>
     <message>
         <source>Recruit %1
@@ -6918,11 +6929,11 @@ Carthage exclusive</source>
         <source>Recruit %1
 Cost: %2
 Build time: %3s
-Use Deliver mode, then click a friendly barracks to add 50 available population.</source>
+Use Deliver mode, then click a friendly barracks to add to its reserve.</source>
         <translation>جنّد %1
 الكلفة: %2
 زمن الإنتاج: %3 ث
-استخدم وضع التوصيل ثم انقر على ثكنة صديقة لإضافة 50 إلى التعداد المتاح.</translation>
+استخدم وضع التوصيل ثم انقر على ثكنة صديقة لزيادة احتياطيها.</translation>
     </message>
     <message>
         <source>families</source>
@@ -7207,8 +7218,8 @@ Builders reap it for the food that recruits civilians</source>
         <translation>نذر العهد</translation>
     </message>
     <message>
-        <source>Deliver civilians here to raise the temple&apos;s available population</source>
-        <translation>سلّم المدنيين هنا لزيادة السكان المتاحين للمعبد</translation>
+        <source>Deliver civilians here to raise the temple&apos;s reserve</source>
+        <translation>سلّم المدنيين هنا لزيادة الاحتياطي للمعبد</translation>
     </message>
     <message>
         <source>Barracks reserve: %1 / %2</source>
@@ -8200,8 +8211,36 @@ Builders reap it for the food that recruits civilians</source>
         <translation>أرقام الاقتصاد</translation>
     </message>
     <message>
-        <source>Floats resource, trade and population changes over the building they happened at</source>
-        <translation>يعرض تغيّرات الموارد والتجارة والسكان فوق المبنى الذي حدثت فيه</translation>
+        <source>Floats resource, trade and reserve changes over the building they happened at</source>
+        <translation>يعرض تغيّرات الموارد والتجارة والاحتياطي فوق المبنى الذي حدثت فيه</translation>
+    </message>
+    <message>
+        <source>Camera legend</source>
+        <translation>دليل الكاميرا</translation>
+    </message>
+    <message>
+        <source>Economy prompts</source>
+        <translation>تلميحات الاقتصاد</translation>
+    </message>
+    <message>
+        <source>Formation readout</source>
+        <translation>لوحة التشكيل</translation>
+    </message>
+    <message>
+        <source>Lists the camera controls the first time a mission starts</source>
+        <translation>يعرض أدوات التحكم بالكاميرا عند بدء أول مهمة</translation>
+    </message>
+    <message>
+        <source>Walks through the opening economy steps of a mission</source>
+        <translation>يرشدك خلال خطوات الاقتصاد الأولى في المهمة</translation>
+    </message>
+    <message>
+        <source>Shows cohesion and phase after you send several units somewhere together, until the selection changes</source>
+        <translation>يعرض التماسك والمرحلة بعد إرسال عدة وحدات معًا، حتى يتغير التحديد</translation>
+    </message>
+    <message>
+        <source>Prompts and readouts:</source>
+        <translation>التلميحات واللوحات:</translation>
     </message>
 </context>
 <context>
@@ -8328,8 +8367,8 @@ Builders reap it for the food that recruits civilians</source>
         <translation>يأتي المجنّدون من الثكنة. انقر بالزر الأيسر على ثكنتك لفتح لوحة الإنتاج على اليمين.</translation>
     </message>
     <message>
-        <source>The barracks has only %1 population left to draw on. Every recruit costs population; when it runs dry, build Homes - each Home raises families, and a civilian recruited there and sent to the barracks with Deliver refills it.</source>
-        <translation>لم يتبقَّ للثكنة سوى %1 من السكان. كل مجنّد يكلف سكانًا؛ وحين ينفدون ابنِ منازل: فكل منزل يربّي عائلات، وأي مدني يُجنَّد هناك ويُرسَل إلى الثكنة بأمر التسليم يعيد ملأها.</translation>
+        <source>The barracks has only %1 reserve left to draw on. Every recruit costs reserve; when it runs dry, build Homes - each Home raises families, and a civilian recruited there and sent to the barracks with Deliver refills it.</source>
+        <translation>لم يتبقَّ للثكنة سوى %1 من الاحتياطي. كل مجنّد يكلف احتياطيًا؛ وحين ينفد ابنِ منازل: فكل منزل يربّي عائلات، وأي مدني يُجنَّد هناك ويُرسَل إلى الثكنة بأمر التسليم يعيد ملأها.</translation>
     </message>
     <message>
         <source>A recruit card turns grey when a resource is short: soldiers need wood for shafts and iron for blades. Send a builder to collect more.</source>
@@ -8697,8 +8736,8 @@ Builders reap it for the food that recruits civilians</source>
         <translation>دورية</translation>
     </message>
     <message>
-        <source>Population %1  ·  Build time %2s</source>
-        <translation>السكان %1  ·  زمن البناء %2 ث</translation>
+        <source>Reserve %1  ·  Build time %2s</source>
+        <translation>الاحتياطي %1  ·  زمن البناء %2 ث</translation>
     </message>
     <message>
         <source>Range</source>

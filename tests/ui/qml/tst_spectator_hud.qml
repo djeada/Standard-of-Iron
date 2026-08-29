@@ -23,8 +23,8 @@ TestCase {
             "color": "#c9a227",
             "is_contender": contender,
             "state": {
-                "population": id * 10,
-                "population_cap": 280
+                "manpower": id * 10,
+                "manpower_cap": 280
             }
         };
     }

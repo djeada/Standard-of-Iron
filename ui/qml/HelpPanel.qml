@@ -49,7 +49,7 @@ Item {
             "body": qsTr("Gold comes with the camp and cannot be mined. A marketplace lets you buy materials for gold and sell surplus for it; a temple costs gold to raise.")
         }, {
             "heading": qsTr("Costs"),
-            "body": qsTr("Every card - recruit or building - lists its price. A grey card means something is short; hover it to read what. Homes cost 50 wood and 15 stone, a farm 40 wood and 10 stone, a barracks 100 wood and 60 stone, a defence tower 60 wood and 80 stone; soldiers cost wood and iron plus population, and civilians cost food.")
+            "body": qsTr("Every card - recruit or building - lists its price. A grey card means something is short; hover it to read what. Homes cost 50 wood and 15 stone, a farm 40 wood and 10 stone, a barracks 100 wood and 60 stone, a defence tower 60 wood and 80 stone; soldiers cost wood and iron plus reserve, and civilians cost food.")
         }]
 
     readonly property var buildings_sections: [{
@@ -65,10 +65,10 @@ Item {
 
     readonly property var army_sections: [{
             "heading": qsTr("Recruiting"),
-            "body": qsTr("Left-click a barracks and pick a soldier; healers take their vows at a temple instead. Recruits queue up to five deep and march out to the rally flag. Each costs population from the building's own pool as well as materials.")
+            "body": qsTr("Left-click a barracks and pick a soldier; healers take their vows at a temple instead. Recruits queue up to five deep and march out to the rally flag. Each costs reserve from the building's own pool as well as materials.")
         }, {
-            "heading": qsTr("Population"),
-            "body": qsTr("A barracks or temple starts with a pool of population and spends it on every recruit. Homes refill it: each Home raises families over time, a civilian can be recruited there for food and sent to either building with Deliver, and that building's pool grows. The top bar shows your army against the map's overall cap.")
+            "heading": qsTr("Reserve"),
+            "body": qsTr("A barracks or temple starts with a reserve and spends it on every recruit; the card shows exactly what each one costs. Homes refill it: each Home raises families over time, a civilian can be recruited there for food and sent to either building with Deliver, and that building's reserve grows. A squad then stands in the field for what it cost, which is what the top bar counts against the map's manpower cap.")
         }, {
             "heading": qsTr("Formations and lines"),
             "body": qsTr("Spearmen hold a line, archers punish from behind it, cavalry breaks flanks, healers mend nearby wounded on their own. Right-click and drag with several units selected to deploy them in a formation that faces the drag; the Formation order opens the same planner where they stand. Run trades stamina for speed.")

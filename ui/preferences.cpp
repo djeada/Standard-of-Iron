@@ -13,6 +13,7 @@
 #include "../game/accessibility/team_identity.h"
 #include "../game/render_bridge/camera_speeds.h"
 #include "app/core/user_settings.h"
+#include "hints.h"
 
 namespace UserSettings = App::Core::UserSettings;
 
@@ -54,7 +55,6 @@ UiPreferences::UiPreferences(QObject* parent)
     , m_damage_numbers(UserSettings::load_ui_damage_numbers())
     , m_damage_number_mode(UserSettings::load_ui_damage_number_mode())
     , m_economy_numbers(UserSettings::load_ui_economy_numbers())
-    , m_camera_legend_seen(UserSettings::load_ui_camera_legend_seen())
     , m_tutorial_completed(UserSettings::load_ui_tutorial_completed())
     , m_screen_effect_intensity(UserSettings::load_ui_screen_effect_intensity())
     , m_display_window_mode(UserSettings::load_display_window_mode())
@@ -432,16 +432,6 @@ void UiPreferences::set_camera_motion_scale(qreal scale) {
   emit camera_motion_scale_changed();
 }
 
-void UiPreferences::set_camera_legend_seen(bool seen) {
-  if (seen == m_camera_legend_seen) {
-    return;
-  }
-
-  m_camera_legend_seen = seen;
-  UserSettings::save_ui_camera_legend_seen(seen);
-  emit camera_legend_seen_changed();
-}
-
 void UiPreferences::set_tutorial_completed(bool completed) {
   if (completed == m_tutorial_completed) {
     return;
@@ -508,7 +498,7 @@ void UiPreferences::reset_to_defaults() {
   set_camera_motion_scale(UserSettings::kDefaultCameraMotionScale);
   set_damage_number_mode(QStringLiteral("all"));
   set_economy_numbers(true);
-  set_camera_legend_seen(false);
+  UiHints::instance()->restore_all();
   set_screen_effect_intensity(UserSettings::kDefaultScreenEffectIntensity);
   set_commander_look_sensitivity_x(UserSettings::kDefaultCommanderLookSensitivity);
   set_commander_look_sensitivity_y(UserSettings::kDefaultCommanderLookSensitivity);

@@ -27,7 +27,7 @@ auto order_failure_name(OrderFailure failure) -> const char* {
   case OrderFailure::InsufficientResources:
     return "insufficient_resources";
   case OrderFailure::PopulationCap:
-    return "population_cap";
+    return "manpower_cap";
   case OrderFailure::UnitBusy:
     return "unit_busy";
   case OrderFailure::CommandUnavailable:

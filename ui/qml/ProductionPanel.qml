@@ -63,7 +63,7 @@ Rectangle {
 
     function recruit_tooltip(unitInfo, fallbackName, fallbackTime, carthageOnly) {
         var name = (unitInfo && unitInfo.display_name) || fallbackName;
-        var cost = productionPanel.format_cost_summary(productionPanel.population_cost(unitInfo), (unitInfo && unitInfo.resource_costs) || {}, qsTr("population"));
+        var cost = productionPanel.format_cost_summary(productionPanel.reserve_cost(unitInfo), (unitInfo && unitInfo.resource_costs) || {}, qsTr("reserve"));
         var time = ((unitInfo && unitInfo.build_time) || fallbackTime).toFixed(0);
         if (carthageOnly)
             return qsTr("Recruit %1\nCost: %2\nBuild time: %3s\nCarthage exclusive").arg(name).arg(cost).arg(time);
@@ -100,7 +100,7 @@ Rectangle {
         }, {
             "item_type": "home",
             "label": qsTr("Home"),
-            "description": qsTr("Residential building\nAdds +50 population to nearest barracks"),
+            "description": qsTr("Residential building\nAdds +50 reserve to the nearest barracks"),
             "fallback_emoji": Design.Icons.unitGlyph("home")
         }, {
             "item_type": "marketplace",
@@ -169,7 +169,6 @@ Rectangle {
             return productionPanel.production.unit_info(unit_type, nation_id || "");
         return {
             "cost": 50,
-            "population_cost": 50,
             "resource_costs": {},
             "build_time": 5,
             "individuals_per_unit": 1,
@@ -193,11 +192,9 @@ Rectangle {
         return {};
     }
 
-    function population_cost(info) {
+    function reserve_cost(info) {
         if (!info)
             return 0;
-        if (info.population_cost !== undefined)
-            return Math.max(0, info.population_cost || 0);
         return Math.max(0, info.cost || 0);
     }
 
@@ -227,12 +224,12 @@ Rectangle {
         return qsTr("Need %1").arg(EconomyGuide.missing_summary(missing_resource_amounts(costs)));
     }
 
-    function cost_entries(popCost, resourceCosts, includePopulation) {
+    function cost_entries(reserveCost, resourceCosts, includeReserve) {
         var entries = [];
-        if (includePopulation && popCost > 0)
+        if (includeReserve && reserveCost > 0)
             entries.push({
-                    "key": "population",
-                    "amount": popCost
+                    "key": "reserve",
+                    "amount": reserveCost
                 });
         var ordered = EconomyGuide.resourceOrder;
         for (var i = 0; i < ordered.length; ++i) {
@@ -248,15 +245,15 @@ Rectangle {
     }
 
     function cost_icon_source(key) {
-        if (key === "population")
+        if (key === "reserve")
             return StyleGuide.icon_path("troop_count.png");
         return StyleGuide.icon_path(key + ".png");
     }
 
-    function format_cost_summary(popCost, resourceCosts, populationLabel) {
+    function format_cost_summary(reserveCost, resourceCosts, reserveLabel) {
         var parts = [];
-        if (popCost > 0)
-            parts.push(qsTr("%1 %2").arg(popCost).arg(populationLabel));
+        if (reserveCost > 0)
+            parts.push(qsTr("%1 %2").arg(reserveCost).arg(reserveLabel));
         for (var i = 0; i < EconomyGuide.resourceOrder.length; ++i) {
             var key = EconomyGuide.resourceOrder[i];
             var amount = resource_amount(resourceCosts, key);
@@ -285,7 +282,7 @@ Rectangle {
     }
 
     function recruit_card_state(prod, unitInfo, queueTotal) {
-        var popCost = population_cost(unitInfo);
+        var reserveCost = reserve_cost(unitInfo);
         if (!(prod.has_barracks || prod.has_home || prod.has_temple))
             return {
                 "enabled": false,
@@ -296,10 +293,10 @@ Rectangle {
                 "enabled": false,
                 "reason": qsTr("Queue is full (5/5)")
             };
-        if ((prod.manpower_available || 0) < popCost)
+        if ((prod.manpower_available || 0) < reserveCost)
             return {
                 "enabled": false,
-                "reason": qsTr("Not enough available population")
+                "reason": qsTr("Not enough reserve")
             };
         if (!can_afford_resource_costs(unitInfo.resource_costs || {}))
             return {
@@ -659,7 +656,7 @@ Rectangle {
                         property var unit_info: productionPanel.get_unit_production_info("civilian", homeProductionContent.prod.nation_id)
                         property int committed_total: (homeProductionContent.prod.produced_count || 0) + queue_total
                         property bool has_capacity: committed_total < (homeProductionContent.prod.max_units || 0)
-                        property bool has_families: (homeProductionContent.prod.manpower_available || 0) >= productionPanel.population_cost(unit_info)
+                        property bool has_families: (homeProductionContent.prod.manpower_available || 0) >= productionPanel.reserve_cost(unit_info)
                         property var recruit_state: productionPanel.recruit_card_state(homeProductionContent.prod, unit_info, queue_total)
                         property bool is_enabled: homeProductionContent.prod.has_home === true && has_capacity && recruit_state.enabled === true
                         property bool is_hovered: civilianMouseArea.containsMouse
@@ -702,7 +699,7 @@ Rectangle {
                             spacing: 4
 
                             Repeater {
-                                model: productionPanel.cost_entries(productionPanel.population_cost(civilianCard.unit_info), civilianCard.unit_info.resource_costs || {}, true)
+                                model: productionPanel.cost_entries(productionPanel.reserve_cost(civilianCard.unit_info), civilianCard.unit_info.resource_costs || {}, true)
 
                                 delegate: Rectangle {
                                     width: civilianCostRow.implicitWidth + 8
@@ -756,7 +753,7 @@ Rectangle {
                             }
                             cursorShape: parent.is_enabled ? Qt.PointingHandCursor : Qt.ForbiddenCursor
                             ToolTip.visible: containsMouse
-                            ToolTip.text: parent.is_enabled ? qsTr("Recruit %1\nCost: %2\nBuild time: %3s\nUse Deliver mode, then click a friendly barracks to add 50 available population.").arg(parent.unit_info.display_name || "Civilian").arg(productionPanel.format_cost_summary(productionPanel.population_cost(parent.unit_info), parent.unit_info.resource_costs || {}, qsTr("families"))).arg((parent.unit_info.build_time || 5).toFixed(0)) : (!civilianCard.has_capacity ? qsTr("This home already committed its 3 civilians") : civilianCard.recruit_state.reason)
+                            ToolTip.text: parent.is_enabled ? qsTr("Recruit %1\nCost: %2\nBuild time: %3s\nUse Deliver mode, then click a friendly barracks to add to its reserve.").arg(parent.unit_info.display_name || "Civilian").arg(productionPanel.format_cost_summary(productionPanel.reserve_cost(parent.unit_info), parent.unit_info.resource_costs || {}, qsTr("families"))).arg((parent.unit_info.build_time || 5).toFixed(0)) : (!civilianCard.has_capacity ? qsTr("This home already committed its 3 civilians") : civilianCard.recruit_state.reason)
                             ToolTip.delay: 300
                         }
                     }
@@ -1139,7 +1136,7 @@ Rectangle {
                                 }
                                 cursorShape: parent.is_enabled ? Qt.PointingHandCursor : Qt.ForbiddenCursor
                                 ToolTip.visible: containsMouse
-                                ToolTip.text: parent.is_enabled ? qsTr("Build Catapult\n%1\nCost: %2\nBuild time: %3s").arg(qsTr("Long-range siege weapon\nEffective against structures")).arg(productionPanel.format_cost_summary(0, builderCatapultCard.construction_info.resource_costs || {}, qsTr("population"))).arg((builderCatapultCard.construction_info.build_time || 15).toFixed(0)) : builderCatapultCard.card_state.reason
+                                ToolTip.text: parent.is_enabled ? qsTr("Build Catapult\n%1\nCost: %2\nBuild time: %3s").arg(qsTr("Long-range siege weapon\nEffective against structures")).arg(productionPanel.format_cost_summary(0, builderCatapultCard.construction_info.resource_costs || {}, qsTr("reserve"))).arg((builderCatapultCard.construction_info.build_time || 15).toFixed(0)) : builderCatapultCard.card_state.reason
                                 ToolTip.delay: 300
                             }
 
@@ -1302,7 +1299,7 @@ Rectangle {
                                 }
                                 cursorShape: parent.is_enabled ? Qt.PointingHandCursor : Qt.ForbiddenCursor
                                 ToolTip.visible: containsMouse
-                                ToolTip.text: parent.is_enabled ? qsTr("Build Ballista\n%1\nCost: %2\nBuild time: %3s").arg(qsTr("Precision siege weapon\nEffective against units")).arg(productionPanel.format_cost_summary(0, builderBallistaCard.construction_info.resource_costs || {}, qsTr("population"))).arg((builderBallistaCard.construction_info.build_time || 12).toFixed(0)) : builderBallistaCard.card_state.reason
+                                ToolTip.text: parent.is_enabled ? qsTr("Build Ballista\n%1\nCost: %2\nBuild time: %3s").arg(qsTr("Precision siege weapon\nEffective against units")).arg(productionPanel.format_cost_summary(0, builderBallistaCard.construction_info.resource_costs || {}, qsTr("reserve"))).arg((builderBallistaCard.construction_info.build_time || 12).toFixed(0)) : builderBallistaCard.card_state.reason
                                 ToolTip.delay: 300
                             }
 
@@ -1465,7 +1462,7 @@ Rectangle {
                                 }
                                 cursorShape: parent.is_enabled ? Qt.PointingHandCursor : Qt.ForbiddenCursor
                                 ToolTip.visible: containsMouse
-                                ToolTip.text: parent.is_enabled ? qsTr("Build Defense Tower\n%1\nCost: %2\nBuild time: %3s").arg(qsTr("Stationary defense structure\nShoots arrows at enemies")).arg(productionPanel.format_cost_summary(0, builderDefenseTowerCard.construction_info.resource_costs || {}, qsTr("population"))).arg((builderDefenseTowerCard.construction_info.build_time || 20).toFixed(0)) : builderDefenseTowerCard.card_state.reason
+                                ToolTip.text: parent.is_enabled ? qsTr("Build Defense Tower\n%1\nCost: %2\nBuild time: %3s").arg(qsTr("Stationary defense structure\nShoots arrows at enemies")).arg(productionPanel.format_cost_summary(0, builderDefenseTowerCard.construction_info.resource_costs || {}, qsTr("reserve"))).arg((builderDefenseTowerCard.construction_info.build_time || 20).toFixed(0)) : builderDefenseTowerCard.card_state.reason
                                 ToolTip.delay: 300
                             }
 
@@ -1628,7 +1625,7 @@ Rectangle {
                                 }
                                 cursorShape: parent.is_enabled ? Qt.PointingHandCursor : Qt.ForbiddenCursor
                                 ToolTip.visible: containsMouse
-                                ToolTip.text: parent.is_enabled ? qsTr("Build Home\n%1\nCost: %2\nBuild time: %3s").arg(qsTr("Residential building\nAdds +50 population to nearest barracks")).arg(productionPanel.format_cost_summary(0, builderHomeCard.construction_info.resource_costs || {}, qsTr("population"))).arg((builderHomeCard.construction_info.build_time || 10).toFixed(0)) : builderHomeCard.card_state.reason
+                                ToolTip.text: parent.is_enabled ? qsTr("Build Home\n%1\nCost: %2\nBuild time: %3s").arg(qsTr("Residential building\nAdds +50 reserve to the nearest barracks")).arg(productionPanel.format_cost_summary(0, builderHomeCard.construction_info.resource_costs || {}, qsTr("reserve"))).arg((builderHomeCard.construction_info.build_time || 10).toFixed(0)) : builderHomeCard.card_state.reason
                                 ToolTip.delay: 300
                             }
 
@@ -1791,7 +1788,7 @@ Rectangle {
                                 }
                                 cursorShape: parent.is_enabled ? Qt.PointingHandCursor : Qt.ForbiddenCursor
                                 ToolTip.visible: containsMouse
-                                ToolTip.text: parent.is_enabled ? qsTr("Build Farm\n%1\nCost: %2\nBuild time: %3s").arg(qsTr("Grows grain in cycles\nBuilders reap it for the food that recruits civilians")).arg(productionPanel.format_cost_summary(0, builderFarmCard.construction_info.resource_costs || {}, qsTr("population"))).arg((builderFarmCard.construction_info.build_time || 10).toFixed(0)) : builderFarmCard.card_state.reason
+                                ToolTip.text: parent.is_enabled ? qsTr("Build Farm\n%1\nCost: %2\nBuild time: %3s").arg(qsTr("Grows grain in cycles\nBuilders reap it for the food that recruits civilians")).arg(productionPanel.format_cost_summary(0, builderFarmCard.construction_info.resource_costs || {}, qsTr("reserve"))).arg((builderFarmCard.construction_info.build_time || 10).toFixed(0)) : builderFarmCard.card_state.reason
                                 ToolTip.delay: 300
                             }
 
@@ -1954,7 +1951,7 @@ Rectangle {
                                 }
                                 cursorShape: parent.is_enabled ? Qt.PointingHandCursor : Qt.ForbiddenCursor
                                 ToolTip.visible: containsMouse
-                                ToolTip.text: parent.is_enabled ? qsTr("Build Wall Segment\n%1\nCost: %2\nBuild time: %3s").arg(qsTr("Wooden defensive wall\nBlocks enemy movement")).arg(productionPanel.format_cost_summary(0, builderWallSegmentCard.construction_info.resource_costs || {}, qsTr("population"))).arg((builderWallSegmentCard.construction_info.build_time || 8).toFixed(0)) : builderWallSegmentCard.card_state.reason
+                                ToolTip.text: parent.is_enabled ? qsTr("Build Wall Segment\n%1\nCost: %2\nBuild time: %3s").arg(qsTr("Wooden defensive wall\nBlocks enemy movement")).arg(productionPanel.format_cost_summary(0, builderWallSegmentCard.construction_info.resource_costs || {}, qsTr("reserve"))).arg((builderWallSegmentCard.construction_info.build_time || 8).toFixed(0)) : builderWallSegmentCard.card_state.reason
                                 ToolTip.delay: 300
                             }
 
@@ -2117,7 +2114,7 @@ Rectangle {
                                 }
                                 cursorShape: parent.is_enabled ? Qt.PointingHandCursor : Qt.ForbiddenCursor
                                 ToolTip.visible: containsMouse
-                                ToolTip.text: parent.is_enabled ? qsTr("Build Wall Gate\n%1\nCost: %2\nBuild time: %3s").arg(qsTr("Gated opening in a wall\nOpens for your troops and allies")).arg(productionPanel.format_cost_summary(0, builderWallGateCard.construction_info.resource_costs || {}, qsTr("population"))).arg((builderWallGateCard.construction_info.build_time || 12).toFixed(0)) : builderWallGateCard.card_state.reason
+                                ToolTip.text: parent.is_enabled ? qsTr("Build Wall Gate\n%1\nCost: %2\nBuild time: %3s").arg(qsTr("Gated opening in a wall\nOpens for your troops and allies")).arg(productionPanel.format_cost_summary(0, builderWallGateCard.construction_info.resource_costs || {}, qsTr("reserve"))).arg((builderWallGateCard.construction_info.build_time || 12).toFixed(0)) : builderWallGateCard.card_state.reason
                                 ToolTip.delay: 300
                             }
 
@@ -2280,7 +2277,7 @@ Rectangle {
                                 }
                                 cursorShape: parent.is_enabled ? Qt.PointingHandCursor : Qt.ForbiddenCursor
                                 ToolTip.visible: containsMouse
-                                ToolTip.text: parent.is_enabled ? qsTr("Build Marketplace\n%1\nCost: %2\nBuild time: %3s").arg(qsTr("Trade building\nBuy or sell resources for gold")).arg(productionPanel.format_cost_summary(0, builderMarketplaceCard.construction_info.resource_costs || {}, qsTr("population"))).arg((builderMarketplaceCard.construction_info.build_time || 10).toFixed(0)) : builderMarketplaceCard.card_state.reason
+                                ToolTip.text: parent.is_enabled ? qsTr("Build Marketplace\n%1\nCost: %2\nBuild time: %3s").arg(qsTr("Trade building\nBuy or sell resources for gold")).arg(productionPanel.format_cost_summary(0, builderMarketplaceCard.construction_info.resource_costs || {}, qsTr("reserve"))).arg((builderMarketplaceCard.construction_info.build_time || 10).toFixed(0)) : builderMarketplaceCard.card_state.reason
                                 ToolTip.delay: 300
                             }
 
@@ -2443,7 +2440,7 @@ Rectangle {
                                 }
                                 cursorShape: parent.is_enabled ? Qt.PointingHandCursor : Qt.ForbiddenCursor
                                 ToolTip.visible: containsMouse
-                                ToolTip.text: parent.is_enabled ? qsTr("Build Temple\n%1\nCost: %2\nBuild time: %3s").arg(qsTr("Sanctuary of the nation\nWide vision and a durable settlement anchor")).arg(productionPanel.format_cost_summary(0, builderTempleCard.construction_info.resource_costs || {}, qsTr("population"))).arg((builderTempleCard.construction_info.build_time || 10).toFixed(0)) : builderTempleCard.card_state.reason
+                                ToolTip.text: parent.is_enabled ? qsTr("Build Temple\n%1\nCost: %2\nBuild time: %3s").arg(qsTr("Sanctuary of the nation\nWide vision and a durable settlement anchor")).arg(productionPanel.format_cost_summary(0, builderTempleCard.construction_info.resource_costs || {}, qsTr("reserve"))).arg((builderTempleCard.construction_info.build_time || 10).toFixed(0)) : builderTempleCard.card_state.reason
                                 ToolTip.delay: 300
                             }
 
@@ -2798,7 +2795,7 @@ Rectangle {
 
                     Text {
                         anchors.horizontalCenter: parent.horizontalCenter
-                        text: qsTr("Deliver civilians here to raise the temple's available population")
+                        text: qsTr("Deliver civilians here to raise the temple's reserve")
                         color: "#8D7146"
                         font.pixelSize: Design.Typography.caption
                         wrapMode: Text.WordWrap

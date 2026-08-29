@@ -155,6 +155,7 @@ signals:
   void formation_placement_started();
   void formation_placement_updated(QVector3D position, float angle);
   void formation_placement_ended();
+  void formation_deployed(int unit_count);
   void formation_placement_rejected(const QString& reason);
   void formation_preview_changed();
 

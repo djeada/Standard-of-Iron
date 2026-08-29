@@ -27,12 +27,12 @@ Item {
         return qsTr("Builders: %1 (%2 idle). Placing a structure sends every selected builder to the site.").arg(builders).arg(root.count("idle_builder_count"));
     }
 
-    function population_line() {
-        var cap = root.count("population_cap");
-        var used = root.count("population");
+    function manpower_line() {
+        var cap = root.count("manpower_cap");
+        var used = root.count("manpower");
         if (cap <= 0)
-            return qsTr("Recruiting draws on the manpower held by each barracks.");
-        return qsTr("Population %1 / %2. A Home raises civilians for %3 food each; walking a civilian into a barracks adds %4 manpower. Farms ripen every %5s and sheep yield %6 food.").arg(used).arg(cap).arg(root.count("civilian_food_cost")).arg(root.count("civilian_delivery_grant")).arg(root.count("farm_cycle_seconds")).arg(root.count("sheep_yield"));
+            return qsTr("Recruiting draws on the reserve held by each barracks.");
+        return qsTr("Manpower %1 / %2. A Home raises civilians for %3 food each; walking a civilian into a barracks adds %4 reserve. Farms ripen every %5s and sheep yield %6 food.").arg(used).arg(cap).arg(root.count("civilian_food_cost")).arg(root.count("civilian_delivery_grant")).arg(root.count("farm_cycle_seconds")).arg(root.count("sheep_yield"));
     }
 
     function blocked_reason(entry, kind) {
@@ -43,10 +43,10 @@ Item {
                 return qsTr("Needs a home");
             return kind === "unit" ? qsTr("Needs a barracks") : qsTr("Needs a builder");
         }
+        if (kind === "unit" && entry.reserve_met === false)
+            return qsTr("Not enough reserve at the barracks");
         if (kind === "unit" && entry.manpower_met === false)
-            return qsTr("Not enough manpower at the barracks");
-        if (kind === "unit" && entry.population_met === false)
-            return qsTr("Population limit reached");
+            return qsTr("Manpower limit reached");
         if (entry.affordable === false)
             return qsTr("Missing %1").arg(EconomyGuide.missing_summary(entry.missing));
         return "";
@@ -288,7 +288,7 @@ Item {
 
                     Text {
                         Layout.fillWidth: true
-                        text: root.population_line()
+                        text: root.manpower_line()
                         color: Design.Theme.textSecondary
                         font.family: Design.Typography.family
                         font.pixelSize: Design.Typography.caption
@@ -308,7 +308,7 @@ Item {
 
                             Text {
                                 Layout.fillWidth: true
-                                text: qsTr("%1 — %2 population, %3 · %4s").arg(modelData.display_name || EconomyGuide.item_label(modelData.unit_type)).arg(modelData.population_cost || 0).arg(EconomyGuide.cost_summary(modelData.resource_costs)).arg(Math.round(modelData.build_time || 0))
+                                text: qsTr("%1 — %2 reserve, %3 · %4s").arg(modelData.display_name || EconomyGuide.item_label(modelData.unit_type)).arg(modelData.cost || 0).arg(EconomyGuide.cost_summary(modelData.resource_costs)).arg(Math.round(modelData.build_time || 0))
                                 color: modelData.affordable ? Design.Theme.textPrimary : Design.Theme.textDisabled
                                 font.family: Design.Typography.family
                                 font.pixelSize: Design.Typography.label

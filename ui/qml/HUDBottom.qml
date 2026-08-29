@@ -453,7 +453,7 @@ RowLayout {
             "label": qsTr("Deliver"),
             "needsTroops": true,
             "mode": "deliver",
-            "hint": qsTr("Send civilians to a barracks to refill the population it recruits from."),
+            "hint": qsTr("Send civilians to a barracks to refill the reserve it recruits from."),
             "details": [{
                     "term": qsTr("Give it"),
                     "text": qsTr("Press Deliver, then left-click a friendly barracks. Right-click cancels.")

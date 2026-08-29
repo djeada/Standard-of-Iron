@@ -156,6 +156,7 @@ auto opengl_version_supported(int major, int minor) -> bool {
 #include "ui/edge_scroll.h"
 #include "ui/game_speeds.h"
 #include "ui/gl_view.h"
+#include "ui/hints.h"
 #include "ui/icon_art.h"
 #include "ui/input_bindings.h"
 #include "ui/preferences.h"
@@ -984,6 +985,8 @@ auto main(int argc, char* argv[]) -> int {
   qmlRegisterSingletonType<Theme>("StandardOfIron", 1, 0, "Theme", &Theme::create);
   qmlRegisterSingletonType<UiPreferences>(
       "StandardOfIron", 1, 0, "UiPreferences", &UiPreferences::create);
+  qmlRegisterSingletonType<UiHints>(
+      "StandardOfIron", 1, 0, "UiHints", &UiHints::create);
 
   qmlRegisterSingletonType<InputBindings>(
       "StandardOfIron", 1, 0, "InputBindings", &InputBindings::create);
@@ -999,6 +1002,8 @@ auto main(int argc, char* argv[]) -> int {
   qmlRegisterSingletonType<Theme>("StandardOfIron.Core", 1, 0, "Theme", &Theme::create);
   qmlRegisterSingletonType<UiPreferences>(
       "StandardOfIron.Core", 1, 0, "UiPreferences", &UiPreferences::create);
+  qmlRegisterSingletonType<UiHints>(
+      "StandardOfIron.Core", 1, 0, "UiHints", &UiHints::create);
   qmlRegisterSingletonType<InputBindings>(
       "StandardOfIron.Core", 1, 0, "InputBindings", &InputBindings::create);
   qmlRegisterSingletonType<EdgeScroll>(
