@@ -29,7 +29,7 @@
       "id": "archer",
       "display_name": "Auxiliary Archer",
       "production": {
-        "cost": 52,
+        "cost": 26,
         "build_time": 5.2,
         "priority": 10,
         "is_melee": false
@@ -66,7 +66,7 @@
       "id": "swordsman",
       "display_name": "Legionary",
       "production": {
-        "cost": 105,
+        "cost": 53,
         "build_time": 7.0,
         "priority": 12,
         "is_melee": true
@@ -103,7 +103,7 @@
       "id": "spearman",
       "display_name": "Triarius",
       "production": {
-        "cost": 88,
+        "cost": 44,
         "build_time": 6.5,
         "priority": 9,
         "is_melee": true
@@ -140,7 +140,7 @@
       "id": "horse_swordsman",
       "display_name": "Equites",
       "production": {
-        "cost": 155,
+        "cost": 78,
         "build_time": 10.2,
         "priority": 15,
         "is_melee": true
@@ -176,7 +176,7 @@
       "id": "healer",
       "display_name": "Medicus",
       "production": {
-        "cost": 80,
+        "cost": 40,
         "build_time": 7.2,
         "priority": 8,
         "is_melee": false
@@ -213,7 +213,7 @@
       "id": "horse_archer",
       "display_name": "Horse Archer",
       "production": {
-        "cost": 125,
+        "cost": 63,
         "build_time": 9.0,
         "priority": 12,
         "is_melee": false
@@ -246,7 +246,7 @@
       "id": "horse_spearman",
       "display_name": "Horse Spearman",
       "production": {
-        "cost": 140,
+        "cost": 70,
         "build_time": 9.5,
         "priority": 13,
         "is_melee": true
@@ -279,7 +279,7 @@
       "id": "catapult",
       "display_name": "Onager",
       "production": {
-        "cost": 250,
+        "cost": 125,
         "build_time": 15.0,
         "priority": 5,
         "is_melee": false
@@ -316,7 +316,7 @@
       "id": "ballista",
       "display_name": "Ballista",
       "production": {
-        "cost": 200,
+        "cost": 100,
         "build_time": 12.0,
         "priority": 6,
         "is_melee": false
@@ -353,7 +353,7 @@
       "id": "builder",
       "display_name": "Faber",
       "production": {
-        "cost": 65,
+        "cost": 33,
         "build_time": 6.2,
         "priority": 4,
         "is_melee": true
@@ -390,7 +390,7 @@
       "id": "roman_legion_organizer",
       "display_name": "Quintus Fabius Maximus",
       "production": {
-        "cost": 340,
+        "cost": 170,
         "build_time": 30.0,
         "priority": 20,
         "is_melee": true
@@ -424,7 +424,7 @@
       "id": "roman_veteran_consul",
       "display_name": "Publius Cornelius Scipio",
       "production": {
-        "cost": 360,
+        "cost": 180,
         "build_time": 31.0,
         "priority": 20,
         "is_melee": true
@@ -458,7 +458,7 @@
       "id": "roman_field_commander",
       "display_name": "Marcus Claudius Marcellus",
       "production": {
-        "cost": 320,
+        "cost": 160,
         "build_time": 27.0,
         "priority": 20,
         "is_melee": false
