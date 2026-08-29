@@ -10,6 +10,8 @@
 namespace Render::Ground {
 
 struct LinearFeatureVisibilityOptions {
+
+  bool fog_culls_segments = true;
   int sample_count = 5;
   bool treat_out_of_bounds_as_visible = false;
   float explored_alpha = 0.82F;

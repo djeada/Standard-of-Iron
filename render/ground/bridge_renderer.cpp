@@ -60,6 +60,7 @@ auto BridgeRenderer::segment_cull_options(float longest_segment) const
     -> Ground::LinearFeatureVisibilityOptions {
 
   Ground::LinearFeatureVisibilityOptions options;
+  options.fog_culls_segments = false;
   options.sample_count = Ground::recommended_linear_feature_visibility_sample_count(
       longest_segment, m_tile_size);
 

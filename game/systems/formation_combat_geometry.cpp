@@ -126,6 +126,7 @@ auto layout_signature(const Engine::Core::Entity& entity) -> std::uint64_t {
     hash_combine(
         signature,
         static_cast<std::uint64_t>(unit->render_individuals_per_unit_override));
+    hash_combine(signature, static_cast<std::uint64_t>(unit->squad_strength));
     hash_combine(signature, unit->uses_nation_formation_profile ? 1U : 0U);
 
     hash_combine(signature, static_cast<std::uint64_t>(unit->health));
@@ -249,6 +250,9 @@ auto resolve_definition(const Engine::Core::UnitComponent& unit)
 
   if (unit.render_individuals_per_unit_override > 0) {
     definition.total_count = unit.render_individuals_per_unit_override;
+  } else if (unit.squad_strength > 0) {
+
+    definition.total_count = std::min(definition.total_count, unit.squad_strength);
   }
   definition.total_count = std::max(1, definition.total_count);
   definition.max_per_row =
@@ -268,6 +272,9 @@ auto resolve_definition(const Engine::Core::UnitComponent& unit,
       resolve_layout_id(unit, definition.doctrine, definition.layout_state);
   if (unit.render_individuals_per_unit_override > 0) {
     definition.total_count = unit.render_individuals_per_unit_override;
+  } else if (unit.squad_strength > 0) {
+
+    definition.total_count = std::min(definition.total_count, unit.squad_strength);
   }
   definition.total_count = std::max(1, definition.total_count);
   definition.max_per_row =

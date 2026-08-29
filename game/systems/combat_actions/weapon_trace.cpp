@@ -172,12 +172,6 @@ trace_window_start(const CombatActionDefinition& definition) -> float {
     case CombatActionId::RpgSwordOverhead:
     case CombatActionId::RpgSwordThrust:
     case CombatActionId::RpgSwordFinisher:
-    case CombatActionId::CommanderSwordSpin:
-    case CombatActionId::CommanderSwordLauncher:
-    case CombatActionId::CommanderSwordGapCloser:
-    case CombatActionId::CommanderSwordAirLight:
-    case CombatActionId::CommanderSwordAirReverse:
-    case CombatActionId::CommanderSwordDive:
     case CombatActionId::RtsSwordStrike:
     case CombatActionId::RtsHeavyOverhead:
       return {
@@ -193,16 +187,9 @@ trace_window_start(const CombatActionDefinition& definition) -> float {
       };
     case CombatActionId::None:
     case CombatActionId::RpgSpearThrust:
-    case CombatActionId::CommanderSpearStepThrust:
     case CombatActionId::RpgSpearSweep:
     case CombatActionId::RpgSpearFinisher:
-    case CombatActionId::CommanderSpearLauncher:
-    case CombatActionId::CommanderSpearGapCloser:
-    case CombatActionId::CommanderSpearAirThrust:
-    case CombatActionId::CommanderSpearDive:
     case CombatActionId::RpgBowShot:
-    case CombatActionId::CommanderBowPowerShot:
-    case CombatActionId::CommanderBowEvasiveShot:
     case CombatActionId::MountedSpearThrust:
     case CombatActionId::MountedChargeImpact:
     case CombatActionId::RtsSpearThrust:
@@ -216,10 +203,7 @@ trace_window_start(const CombatActionDefinition& definition) -> float {
   } else if (definition.weapon_family == WeaponFamily::Spear) {
     switch (definition.id) {
     case CombatActionId::RpgSpearThrust:
-    case CombatActionId::CommanderSpearStepThrust:
     case CombatActionId::RpgSpearFinisher:
-    case CombatActionId::CommanderSpearGapCloser:
-    case CombatActionId::CommanderSpearAirThrust:
     case CombatActionId::RtsSpearThrust:
       return {
           .valid = true,
@@ -227,8 +211,6 @@ trace_window_start(const CombatActionDefinition& definition) -> float {
           .clip_id = Animation::k_humanoid_attack_spear_a_clip,
       };
     case CombatActionId::RpgSpearSweep:
-    case CombatActionId::CommanderSpearLauncher:
-    case CombatActionId::CommanderSpearDive:
       return {
           .valid = true,
           .species_id = Render::Creature::Bpat::k_species_humanoid_spear,
@@ -246,16 +228,8 @@ trace_window_start(const CombatActionDefinition& definition) -> float {
     case CombatActionId::RpgSwordOverhead:
     case CombatActionId::RpgSwordThrust:
     case CombatActionId::RpgSwordFinisher:
-    case CombatActionId::CommanderSwordSpin:
-    case CombatActionId::CommanderSwordLauncher:
-    case CombatActionId::CommanderSwordGapCloser:
-    case CombatActionId::CommanderSwordAirLight:
-    case CombatActionId::CommanderSwordAirReverse:
-    case CombatActionId::CommanderSwordDive:
     case CombatActionId::RtsHeavyOverhead:
     case CombatActionId::RpgBowShot:
-    case CombatActionId::CommanderBowPowerShot:
-    case CombatActionId::CommanderBowEvasiveShot:
     case CombatActionId::MountedSwordSlash:
     case CombatActionId::MountedChargeImpact:
     case CombatActionId::RtsSwordStrike:
@@ -952,9 +926,7 @@ auto find_weapon_trace_contact(
     const CombatActionDefinition& definition,
     WeaponTraceTimeSpan time_span,
     Engine::Core::EntityID target_hint_id,
-    std::span<const Engine::Core::EntityID> ignored_target_ids,
-    std::span<const WeaponTraceIgnoredTarget> ignored_target_slots)
-    -> WeaponTraceContact {
+    std::span<const Engine::Core::EntityID> ignored_target_ids) -> WeaponTraceContact {
   Engine::Core::Timing::ScopedAccumulator const scope(
       Engine::Core::Timing::commander_weapon_trace());
   constexpr float k_max_trace_sample_span = 0.025F;
@@ -977,8 +949,7 @@ auto find_weapon_trace_contact(
                                     {.previous_normalized_time = sample_start,
                                      .current_normalized_time = sample_end},
                                     target_hint_id,
-                                    ignored_target_ids,
-                                    ignored_target_slots);
+                                    ignored_target_ids);
       if (contact.target_id != 0) {
         return contact;
       }
@@ -993,12 +964,8 @@ auto find_weapon_trace_contact(
                                            live_intent_of(attacker, definition),
                                            time_span);
   if (!segment.valid) {
-    return find_weapon_trace_contact(world,
-                                     attacker,
-                                     definition,
-                                     target_hint_id,
-                                     ignored_target_ids,
-                                     ignored_target_slots);
+    return find_weapon_trace_contact(
+        world, attacker, definition, target_hint_id, ignored_target_ids);
   }
 
   WeaponTraceContact contact;
@@ -1039,16 +1006,6 @@ auto find_weapon_trace_contact(
 
     for (auto const& soldier :
          Game::Systems::RpgCombat::live_soldier_targets(*candidate)) {
-      bool const ignored_slot =
-          std::any_of(ignored_target_slots.begin(),
-                      ignored_target_slots.end(),
-                      [&](auto const& ignored) {
-                        return ignored.entity_id == candidate->get_id() &&
-                               ignored.soldier_slot == soldier.soldier_slot;
-                      });
-      if (ignored_slot) {
-        continue;
-      }
       auto sample = make_local_sample(presented_attacker.frame, soldier);
       if (sample.entity == nullptr || !std::isfinite(sample.forward) ||
           !std::isfinite(sample.right) || !std::isfinite(sample.distance) ||
@@ -1094,9 +1051,7 @@ auto find_weapon_trace_contact(
     Engine::Core::Entity& attacker,
     const CombatActionDefinition& definition,
     Engine::Core::EntityID target_hint_id,
-    std::span<const Engine::Core::EntityID> ignored_target_ids,
-    std::span<const WeaponTraceIgnoredTarget> ignored_target_slots)
-    -> WeaponTraceContact {
+    std::span<const Engine::Core::EntityID> ignored_target_ids) -> WeaponTraceContact {
   Engine::Core::Timing::ScopedAccumulator const scope(
       Engine::Core::Timing::commander_weapon_trace());
   WeaponTraceContact contact;
@@ -1129,16 +1084,6 @@ auto find_weapon_trace_contact(
 
     for (auto const& soldier :
          Game::Systems::RpgCombat::live_soldier_targets(*candidate)) {
-      bool const ignored_slot =
-          std::any_of(ignored_target_slots.begin(),
-                      ignored_target_slots.end(),
-                      [&](auto const& ignored) {
-                        return ignored.entity_id == candidate->get_id() &&
-                               ignored.soldier_slot == soldier.soldier_slot;
-                      });
-      if (ignored_slot) {
-        continue;
-      }
       auto sample = make_local_sample(presented_attacker.frame, soldier);
       if (sample.entity == nullptr || !std::isfinite(sample.forward) ||
           !std::isfinite(sample.right) || !std::isfinite(sample.distance) ||

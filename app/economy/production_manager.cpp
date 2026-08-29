@@ -281,6 +281,35 @@ auto resolve_construction_pointer_hit(Engine::Core::World* world,
 
 } // namespace
 
+auto ProductionManager::ground_refusal(const QString& building_type,
+                                       float world_x,
+                                       float world_z) const -> QString {
+  if (m_world == nullptr) {
+    return {};
+  }
+  switch (Game::Systems::assess_ground(
+      *m_world, building_type.toStdString(), world_x, world_z)) {
+  case Game::Systems::GroundVerdict::Occupied:
+    return QCoreApplication::translate("ProductionManager",
+                                       "Something is already standing here.");
+  case Game::Systems::GroundVerdict::Impassable:
+    return QCoreApplication::translate("ProductionManager",
+                                       "This ground cannot be cleared to build on.");
+  case Game::Systems::GroundVerdict::Water:
+    return QCoreApplication::translate("ProductionManager",
+                                       "Nothing can be built on the water.");
+  case Game::Systems::GroundVerdict::Uneven:
+    return QCoreApplication::translate("ProductionManager",
+                                       "The ground here is too steep to build on.");
+  case Game::Systems::GroundVerdict::OffMap:
+    return QCoreApplication::translate("ProductionManager",
+                                       "That is beyond the edge of the battlefield.");
+  case Game::Systems::GroundVerdict::Clear:
+    break;
+  }
+  return {};
+}
+
 void ProductionManager::start_building_placement(const QString& building_type,
                                                  int local_owner_id) {
   if (building_type.isEmpty() || m_world == nullptr) {
@@ -670,14 +699,11 @@ void ProductionManager::on_construction_confirm() {
     return;
   }
 
-  if (!Game::Systems::StructurePlacementService::footprint_is_clear(
-          *m_world,
-          m_construction_placement_position.x(),
-          m_construction_placement_position.z(),
-          m_pending_construction_type.toStdString())) {
-
-    emit construction_placement_rejected(
-        QCoreApplication::translate("ProductionManager", "Cannot build there."));
+  if (const QString refusal = ground_refusal(m_pending_construction_type,
+                                             m_construction_placement_position.x(),
+                                             m_construction_placement_position.z());
+      !refusal.isEmpty()) {
+    emit construction_placement_rejected(refusal);
     return;
   }
 
@@ -851,13 +877,10 @@ auto ProductionManager::non_wall_preview_ruling(const QVector3D& world_position)
     return {};
   }
 
-  if (!Game::Systems::StructurePlacementService::footprint_is_clear(
-          *m_world,
-          world_position.x(),
-          world_position.z(),
-          m_pending_construction_type.toStdString())) {
-    return QCoreApplication::translate("ProductionManager",
-                                       "Something is already standing here.");
+  if (const QString refusal = ground_refusal(
+          m_pending_construction_type, world_position.x(), world_position.z());
+      !refusal.isEmpty()) {
+    return refusal;
   }
 
   const int owner_id = pending_construction_owner_id();
@@ -1265,9 +1288,25 @@ void ProductionManager::confirm_direct_building_placement() {
   const std::string building_type = m_pending_construction_type.toStdString();
   switch (Game::Systems::StructurePlacementService::ruling(
       *m_world, owner_id, building_type, m_construction_placement_position)) {
-  case Game::Systems::PlacementRuling::Blocked:
-    emit construction_placement_rejected(
-        QCoreApplication::translate("ProductionManager", "Cannot build there."));
+  case Game::Systems::PlacementRuling::BlockedByStructure:
+    emit construction_placement_rejected(QCoreApplication::translate(
+        "ProductionManager", "Something is already standing here."));
+    return;
+  case Game::Systems::PlacementRuling::BlockedByObstacle:
+    emit construction_placement_rejected(QCoreApplication::translate(
+        "ProductionManager", "This ground cannot be cleared to build on."));
+    return;
+  case Game::Systems::PlacementRuling::BlockedByWater:
+    emit construction_placement_rejected(QCoreApplication::translate(
+        "ProductionManager", "Nothing can be built on the water."));
+    return;
+  case Game::Systems::PlacementRuling::BlockedByGround:
+    emit construction_placement_rejected(QCoreApplication::translate(
+        "ProductionManager", "The ground here is too steep to build on."));
+    return;
+  case Game::Systems::PlacementRuling::OutsideBattlefield:
+    emit construction_placement_rejected(QCoreApplication::translate(
+        "ProductionManager", "That is beyond the edge of the battlefield."));
     return;
   case Game::Systems::PlacementRuling::UnknownStructure:
     emit construction_placement_rejected(QCoreApplication::translate(

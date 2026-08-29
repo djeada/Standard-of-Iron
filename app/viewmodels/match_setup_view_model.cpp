@@ -11,6 +11,7 @@
 #include <optional>
 
 #include "app/core/client_context.h"
+#include "game/game_config.h"
 #include "game/map/map_catalog.h"
 #include "game/mission/campaign_manager.h"
 #include "game/mission/mission_commander_setup.h"
@@ -290,6 +291,20 @@ auto MatchSetupViewModel::current_mission_objectives() const -> QVariantMap {
 auto MatchSetupViewModel::mission_definition(const QString& mission_id) const
     -> QVariantMap {
   return load_mission_definition_map(mission_id);
+}
+
+auto MatchSetupViewModel::starting_gold() const -> int {
+  return Game::GameConfig::instance().get_starting_gold();
+}
+
+void MatchSetupViewModel::set_starting_gold(int gold) {
+
+  const int treasury = std::clamp(gold, 0, 10000);
+  if (treasury == Game::GameConfig::instance().get_starting_gold()) {
+    return;
+  }
+  Game::GameConfig::instance().set_starting_gold(treasury);
+  emit starting_gold_changed();
 }
 
 void MatchSetupViewModel::start_skirmish(const QString& map_path,

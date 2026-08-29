@@ -147,6 +147,7 @@
 #include "game/systems/nation_id.h"
 #include "game/systems/nation_registry.h"
 #include "game/systems/nav_grid.h"
+#include "game/systems/owner_queries.h"
 #include "game/systems/owner_registry.h"
 #include "game/systems/pathfinding.h"
 #include "game/systems/patrol_system.h"
@@ -214,7 +215,7 @@ auto build_player_state_map(Game::Session::SessionContext& session,
                             int population_cap) -> QVariantMap {
   QVariantMap state;
   state["owner_id"] = owner_id;
-  state["population"] = session.troop_counts().get_troop_count(owner_id);
+  state["population"] = Game::Systems::troop_count_for(session.world(), owner_id);
   state["population_cap"] = population_cap;
   state["resources"] = build_resource_map(session, owner_id);
   return state;
@@ -1136,6 +1137,7 @@ auto accepted_order_cue(App::Core::OrderKind kind) -> const char* {
   case App::Core::OrderKind::Guard:
   case App::Core::OrderKind::Hold:
   case App::Core::OrderKind::Formation:
+  case App::Core::OrderKind::Squad:
   case App::Core::OrderKind::None:
     break;
   }

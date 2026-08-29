@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <cmath>
 #include <gtest/gtest.h>
 #include <string_view>
 
@@ -21,11 +22,13 @@
 #include "game/systems/ai_system/behaviors/attack_behavior.h"
 #include "game/systems/ai_system/behaviors/builder_behavior.h"
 #include "game/systems/ai_system/behaviors/defend_behavior.h"
+#include "game/systems/ai_system/behaviors/economy_behavior.h"
 #include "game/systems/ai_system/behaviors/expand_behavior.h"
 #include "game/systems/ai_system/behaviors/gather_behavior.h"
 #include "game/systems/ai_system/behaviors/harass_behavior.h"
 #include "game/systems/ai_system/behaviors/local_engagement_behavior.h"
 #include "game/systems/ai_system/behaviors/production_behavior.h"
+#include "game/systems/ai_system/behaviors/squad_discipline_behavior.h"
 #include "game/systems/nation_registry.h"
 #include "game/systems/owner_registry.h"
 #include "game/systems/player_resource_registry.h"
@@ -743,7 +746,14 @@ TEST_F(AISystemTest, BuilderBehaviorSkipsDuplicateExpansionConstructionWhilePend
   std::vector<Game::Systems::AI::AICommand> commands;
   behavior.execute(snapshot, context, 3.1F, commands);
 
-  EXPECT_TRUE(commands.empty());
+  for (const auto& command : commands) {
+    if (command.type != Game::Systems::AI::AICommandType::StartBuilderConstruction) {
+      continue;
+    }
+    EXPECT_FALSE(command.construction_site_x == 80.0F &&
+                 command.construction_site_z == 60.0F)
+        << "a second outpost was ordered on top of the one already being raised";
+  }
 }
 
 TEST_F(AISystemTest, SnapshotBuilderFiltersEnemiesByOwnedVision) {
@@ -2120,8 +2130,194 @@ TEST_F(AISystemTest, BuilderBehaviorFortifiesThreatenedSecondaryBase) {
   EXPECT_EQ(command.type, Game::Systems::AI::AICommandType::StartBuilderConstruction);
   ASSERT_NE(command.construction_type, nullptr);
   EXPECT_STREQ(command.construction_type, "defense_tower");
-  EXPECT_FLOAT_EQ(command.construction_site_x, 140.0F);
-  EXPECT_FLOAT_EQ(command.construction_site_z, 140.0F);
+
+  const float dx = command.construction_site_x - 140.0F;
+  const float dz = command.construction_site_z - 140.0F;
+  EXPECT_LE(std::sqrt((dx * dx) + (dz * dz)), 20.0F)
+      << "the tower must be raised beside the threatened outpost";
+  EXPECT_FALSE(command.construction_site_x == 140.0F &&
+               command.construction_site_z == 140.0F)
+      << "the tower must not be sited on top of the outpost barracks, which would "
+         "have the order refused every tick";
+}
+
+TEST_F(AISystemTest, BuilderBehaviorDividesOneWorkSquadIntoSeveralParties) {
+  Game::Systems::AI::AISnapshot snapshot;
+  snapshot.player_id = 3;
+  snapshot.game_time = 10.0F;
+
+  auto builders = make_builder(11, 40.0F, 40.0F);
+  builders.squad_strength = 12;
+  builders.squad_establishment = 12;
+  snapshot.friendly_units = {
+      make_barracks(50, 40.0F, 40.0F),
+      make_building(60, 36.0F, 42.0F, Game::Units::SpawnType::Home),
+      make_building(61, 44.0F, 38.0F, Game::Units::SpawnType::Home),
+      builders,
+  };
+
+  Game::Systems::AI::AIContext context;
+  context.player_id = 3;
+  Game::Systems::AI::AIReasoner::update_context(snapshot, context);
+
+  Game::Systems::AI::BuilderBehavior behavior;
+  std::vector<Game::Systems::AI::AICommand> commands;
+  behavior.execute(snapshot, context, 4.0F, commands);
+
+  const auto divide = std::find_if(
+      commands.begin(), commands.end(), [](const Game::Systems::AI::AICommand& cmd) {
+        return cmd.type == Game::Systems::AI::AICommandType::DivideSquads;
+      });
+  ASSERT_NE(divide, commands.end())
+      << "one twelve-strong work squad cannot cover a town's jobs at once";
+  ASSERT_EQ(divide->units.size(), 1U);
+  EXPECT_EQ(divide->units.front(), 11U);
+}
+
+TEST_F(AISystemTest, SquadDisciplineFoldsTwoDecimatedSquadsBackTogether) {
+  Game::Systems::AI::AISnapshot snapshot;
+  snapshot.player_id = 3;
+  snapshot.game_time = 10.0F;
+
+  auto left = make_unit(1, 40.0F, 40.0F);
+  left.squad_strength = 6;
+  left.squad_establishment = 24;
+  auto right = make_unit(2, 42.0F, 40.0F);
+  right.squad_strength = 7;
+  right.squad_establishment = 24;
+  auto whole = make_unit(3, 44.0F, 40.0F);
+  whole.squad_strength = 24;
+  whole.squad_establishment = 24;
+
+  snapshot.friendly_units = {make_barracks(50, 40.0F, 44.0F), left, right, whole};
+
+  Game::Systems::AI::AIContext context;
+  context.player_id = 3;
+  Game::Systems::AI::AIReasoner::update_context(snapshot, context);
+
+  Game::Systems::AI::SquadDisciplineBehavior behavior;
+  ASSERT_TRUE(behavior.should_execute(snapshot, context));
+
+  std::vector<Game::Systems::AI::AICommand> commands;
+  behavior.execute(snapshot, context, 10.0F, commands);
+
+  ASSERT_EQ(commands.size(), 1U);
+  EXPECT_EQ(commands.front().type, Game::Systems::AI::AICommandType::MergeSquads);
+  ASSERT_EQ(commands.front().units.size(), 2U);
+  EXPECT_NE(commands.front().units[0], 3U)
+      << "a squad already at full strength has nothing to take on";
+  EXPECT_NE(commands.front().units[1], 3U);
+}
+
+TEST_F(AISystemTest, ACommanderIsNeverDraftedIntoARaidingParty) {
+  Game::Systems::AI::AISnapshot snapshot;
+  snapshot.player_id = 3;
+  snapshot.game_time = 10.0F;
+
+  auto commander = make_unit(9, 90.0F, 40.0F);
+  commander.is_commander = true;
+  commander.spawn_type = Game::Units::SpawnType::RomanVeteranConsul;
+
+  snapshot.friendly_units = {make_barracks(50, 40.0F, 40.0F),
+                             commander,
+                             make_unit(1, 41.0F, 40.0F),
+                             make_unit(2, 42.0F, 40.0F)};
+  snapshot.visible_enemies = {make_enemy(200, 120.0F, 40.0F)};
+
+  Game::Systems::AI::AIContext context;
+  context.player_id = 3;
+  context.strategy_config = Game::Systems::AI::AIStrategyFactory::create_config(
+      Game::Systems::AI::AIStrategy::Harasser);
+
+  Game::Systems::AI::AIReasoner::update_context(snapshot, context);
+
+  EXPECT_EQ(std::find(context.harass_unit_ids.begin(),
+                      context.harass_unit_ids.end(),
+                      Engine::Core::EntityID{9}),
+            context.harass_unit_ids.end())
+      << "the lord is the one unit a nation cannot spend on a raid";
+}
+
+TEST_F(AISystemTest, AMarketTownBuysTheResourceItHasRunOutOf) {
+  Game::Systems::AI::AISnapshot snapshot;
+  snapshot.player_id = 3;
+  snapshot.game_time = 10.0F;
+  snapshot.friendly_units = {
+      make_barracks(50, 40.0F, 40.0F),
+      make_building(70, 44.0F, 42.0F, Game::Units::SpawnType::Marketplace),
+  };
+  snapshot.has_resource_snapshot = true;
+  snapshot.resources.set(Game::Systems::ResourceType::Gold, 900);
+  snapshot.resources.set(Game::Systems::ResourceType::Wood, 300);
+  snapshot.resources.set(Game::Systems::ResourceType::Food, 300);
+  snapshot.resources.set(Game::Systems::ResourceType::Iron, 300);
+  snapshot.resources.set(Game::Systems::ResourceType::Stone, 5);
+
+  Game::Systems::AI::AIContext context;
+  context.player_id = 3;
+  Game::Systems::AI::AIReasoner::update_context(snapshot, context);
+  ASSERT_EQ(context.marketplace_count, 1);
+
+  Game::Systems::AI::EconomyBehavior behavior;
+  ASSERT_TRUE(behavior.should_execute(snapshot, context));
+
+  std::vector<Game::Systems::AI::AICommand> commands;
+  behavior.execute(snapshot, context, 10.0F, commands);
+
+  ASSERT_FALSE(commands.empty());
+  for (const auto& command : commands) {
+    EXPECT_EQ(command.type, Game::Systems::AI::AICommandType::TradeResource);
+    EXPECT_EQ(command.trade_resource, Game::Systems::ResourceType::Stone);
+    EXPECT_TRUE(command.trade_is_purchase)
+        << "gold the town cannot spend is worth less than the stone it is short of";
+  }
+}
+
+TEST_F(AISystemTest, ATownWithAThinPurseKeepsItsGoldInsteadOfTrading) {
+  Game::Systems::AI::AISnapshot snapshot;
+  snapshot.player_id = 3;
+  snapshot.game_time = 10.0F;
+  snapshot.friendly_units = {
+      make_barracks(50, 40.0F, 40.0F),
+      make_building(70, 44.0F, 42.0F, Game::Units::SpawnType::Marketplace),
+  };
+  snapshot.has_resource_snapshot = true;
+
+  snapshot.resources.set(Game::Systems::ResourceType::Gold, 120);
+  snapshot.resources.set(Game::Systems::ResourceType::Wood, 300);
+  snapshot.resources.set(Game::Systems::ResourceType::Food, 300);
+  snapshot.resources.set(Game::Systems::ResourceType::Iron, 300);
+  snapshot.resources.set(Game::Systems::ResourceType::Stone, 5);
+
+  Game::Systems::AI::AIContext context;
+  context.player_id = 3;
+  Game::Systems::AI::AIReasoner::update_context(snapshot, context);
+
+  Game::Systems::AI::EconomyBehavior behavior;
+  std::vector<Game::Systems::AI::AICommand> commands;
+  behavior.execute(snapshot, context, 10.0F, commands);
+
+  for (const auto& command : commands) {
+    EXPECT_FALSE(command.trade_is_purchase)
+        << "a town this poor should be selling its glut, never spending its last gold";
+  }
+}
+
+TEST_F(AISystemTest, ATownWithoutAMarketNeverTrades) {
+  Game::Systems::AI::AISnapshot snapshot;
+  snapshot.player_id = 3;
+  snapshot.game_time = 10.0F;
+  snapshot.friendly_units = {make_barracks(50, 40.0F, 40.0F)};
+  snapshot.has_resource_snapshot = true;
+  snapshot.resources.set(Game::Systems::ResourceType::Gold, 500);
+  snapshot.resources.set(Game::Systems::ResourceType::Stone, 0);
+
+  Game::Systems::AI::AIContext context;
+  context.player_id = 3;
+  Game::Systems::AI::AIReasoner::update_context(snapshot, context);
+
+  Game::Systems::AI::EconomyBehavior behavior;
+  EXPECT_FALSE(behavior.should_execute(snapshot, context));
 }
 
 TEST_F(AISystemTest, ForwardPlanAbandonsOutpostSiteAfterRepeatedFailures) {

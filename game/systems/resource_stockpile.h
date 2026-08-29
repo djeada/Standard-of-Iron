@@ -18,6 +18,8 @@ inline constexpr float k_stockpile_drop_z = 0.0F;
 inline constexpr float k_stockpile_drop_radius = 2.20F;
 
 inline constexpr float k_stockpile_haul_patience_seconds = 30.0F;
+
+inline constexpr float k_stockpile_haul_abandon_seconds = 75.0F;
 inline constexpr float k_stockpile_depot_arrival_radius = 4.50F;
 
 inline constexpr int k_stockpile_wood_display_cap = 640;

@@ -312,7 +312,6 @@ void GameEngine::build_client_and_view_models() {
           &App::ViewModels::MatchSetupViewModel::start_tutorial);
 
   Game::Systems::initialize_default_content(m_session->nations());
-  m_session->troop_counts().initialize();
   m_session->stats().initialize();
 }
 

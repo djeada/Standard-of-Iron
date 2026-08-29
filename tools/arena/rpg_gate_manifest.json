@@ -37,7 +37,7 @@
       "id": "rpg_one_press_one_attack",
       "status": "required_green",
       "gate": "5",
-      "notes": "Three isolated taps each request one swing, then a held input sustains the authored sword combo at recovery boundaries and release stops the next link."
+      "notes": "Three deliberate presses and one held input. Melee auto-repeat is gone, so a press requests exactly one attack and a held button requests exactly one more."
     },
     {
       "id": "rpg_attack_buffer_window",
@@ -130,24 +130,6 @@
       "status": "required_green",
       "gate": "5",
       "notes": "Outside the first sword slice; kept green so the bow path does not rot while the sword matrix is rebuilt."
-    },
-    {
-      "id": "rpg_commander_sword_grammar",
-      "status": "required_green",
-      "gate": "5",
-      "notes": "Direct-control commander-only sword grammar: gap closer, launcher branch, radial special, aerial branch, dive, defensive cancel, and extended light chain."
-    },
-    {
-      "id": "rpg_commander_spear_grammar",
-      "status": "required_green",
-      "gate": "5",
-      "notes": "Direct-control commander-only spear grammar: long gap closer, step thrusts, launcher, crowd sweep, aerial thrust, dive, and dodge cancel."
-    },
-    {
-      "id": "rpg_commander_bow_grammar",
-      "status": "required_green",
-      "gate": "5",
-      "notes": "Direct-control commander-only bow grammar: power shot, evasive special, and authored transitions into and out of melee stance."
     },
     {
       "id": "rpg_motor_start_stop",

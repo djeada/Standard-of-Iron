@@ -18,6 +18,7 @@
 #include "../map/terrain_service.h"
 #include "../units/factory.h"
 #include "../units/troop_config.h"
+#include "build_site.h"
 #include "builder_product_types.h"
 #include "building_collision_registry.h"
 #include "command_service.h"
@@ -628,6 +629,8 @@ void ProductionSystem::update(Engine::Core::World* world, float delta_time) {
   constexpr float CONSTRUCTION_ARRIVAL_DISTANCE_SQ = 0.0225F;
 
   constexpr float k_site_approach_limit_seconds = 30.0F;
+
+  constexpr float k_orphaned_task_limit_seconds = 8.0F;
   constexpr float MAX_CONSTRUCTION_DISTANCE_SQ = 9.0F;
 
   constexpr float k_site_bypass_radius_sq = 6.25F;
@@ -775,6 +778,17 @@ void ProductionSystem::update(Engine::Core::World* world, float delta_time) {
     }
 
     if (!builder_prod->in_progress) {
+
+      if (builder_prod->has_task_target && !builder_prod->has_construction_site) {
+        builder_prod->site_approach_seconds += delta_time;
+        if (builder_prod->site_approach_seconds > k_orphaned_task_limit_seconds) {
+          clear_builder_task_target(*world, builder_prod);
+          builder_prod->site_approach_seconds = 0.0F;
+          builder_prod->report_fault(Engine::Core::BuilderTaskFault::TargetLost);
+        }
+      } else if (!builder_prod->has_construction_site) {
+        builder_prod->site_approach_seconds = 0.0F;
+      }
       continue;
     }
 
@@ -966,6 +980,37 @@ void ProductionSystem::update(Engine::Core::World* world, float delta_time) {
               builder_prod->at_construction_site = false;
               clear_builder_task_target(*world, builder_prod, false);
               continue;
+            }
+
+            if (!is_wall_network_product(builder_prod->product_type)) {
+
+              constexpr float k_finished_site_nudge = 5.0F;
+              const auto clear_site = find_clear_site(*world,
+                                                      builder_prod->product_type,
+                                                      sp.position,
+                                                      k_finished_site_nudge);
+              if (!clear_site.has_value()) {
+
+                auto& treasury = *Game::Session::services_for(*world).economy;
+                const auto refund =
+                    construction_cost_info(builder_prod->product_type).resource_costs;
+                for (const ResourceType type : k_all_resource_types) {
+                  treasury.add(u->owner_id, type, refund.get(type));
+                }
+                builder_prod->in_progress = false;
+                builder_prod->time_remaining = 0.0F;
+                builder_prod->has_construction_site = false;
+                builder_prod->at_construction_site = false;
+                clear_builder_task_target(*world, builder_prod, false);
+                builder_prod->report_fault(Engine::Core::BuilderTaskFault::Unreachable);
+                continue;
+              }
+              sp.position =
+                  QVector3D(clear_site->x(), sp.position.y(), clear_site->z());
+            }
+
+            if (!is_wall_network_product(builder_prod->product_type)) {
+              clear_ground_for(*world, builder_prod->product_type, sp.position);
             }
 
             reg->create(sp.spawn_type, *world, sp);

@@ -212,7 +212,7 @@ void main() {
   float gray = dot(lit_color, vec3(0.299, 0.587, 0.114));
   lit_color = mix(lit_color, vec3(gray * 0.85), grime);
 
-  lit_color = apply_visibility_memory(lit_color, v_world_pos.xz);
+  lit_color = apply_visibility_world_shading(lit_color, v_world_pos.xz);
 
   lit_color = apply_directional_shadow(lit_color, v_world_pos, v_normal);
   lit_color += base_color * ao * local_lighting(v_world_pos, normalize(v_normal));

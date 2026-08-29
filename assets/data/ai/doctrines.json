@@ -14,7 +14,8 @@
     "posture": "field",
     "personality": { "aggression": 0.5, "defense": 0.5, "harassment": 0.5 },
     "town_plan": "",
-    "recruitment": { "ranged_share": 0.5 },
+    "formation": "",
+    "recruitment": { "ranged_share": 0.5, "cavalry_share": 0.0, "siege_share": 0.0, "preferred": [] },
     "wave": {
       "size": 6,
       "regroup_seconds": 25.0,
@@ -30,7 +31,13 @@
       "posture": "garrison",
       "personality": { "aggression": 0.25, "defense": 0.90, "harassment": 0.20 },
       "town_plan": "roman_bulwark",
-      "recruitment": { "ranged_share": 0.45 },
+      "formation": "shield_wall",
+      "recruitment": {
+        "ranged_share": 0.45,
+        "cavalry_share": 0.0,
+        "siege_share": 0.12,
+        "preferred": ["spearman", "archer", "ballista"]
+      },
       "wave": {
         "size": 8,
         "regroup_seconds": 45.0,
@@ -45,7 +52,13 @@
       "posture": "field",
       "personality": { "aggression": 0.80, "defense": 0.40, "harassment": 0.30 },
       "town_plan": "roman_assault_camp",
-      "recruitment": { "ranged_share": 0.35 },
+      "formation": "line",
+      "recruitment": {
+        "ranged_share": 0.35,
+        "cavalry_share": 0.15,
+        "siege_share": 0.08,
+        "preferred": ["swordsman", "horse_swordsman", "catapult"]
+      },
       "wave": {
         "size": 7,
         "regroup_seconds": 25.0,
@@ -60,7 +73,13 @@
       "posture": "field",
       "personality": { "aggression": 0.90, "defense": 0.25, "harassment": 0.45 },
       "town_plan": "roman_vanguard_camp",
-      "recruitment": { "ranged_share": 0.3 },
+      "formation": "wedge",
+      "recruitment": {
+        "ranged_share": 0.3,
+        "cavalry_share": 0.3,
+        "siege_share": 0.0,
+        "preferred": ["horse_swordsman", "swordsman"]
+      },
       "wave": {
         "size": 5,
         "regroup_seconds": 18.0,
@@ -75,7 +94,13 @@
       "posture": "garrison",
       "personality": { "aggression": 0.35, "defense": 0.75, "harassment": 0.20 },
       "town_plan": "punic_trade_town",
-      "recruitment": { "ranged_share": 0.4 },
+      "formation": "shield_wall",
+      "recruitment": {
+        "ranged_share": 0.4,
+        "cavalry_share": 0.05,
+        "siege_share": 0.1,
+        "preferred": ["spearman", "archer"]
+      },
       "wave": {
         "size": 7,
         "regroup_seconds": 40.0,
@@ -90,7 +115,13 @@
       "posture": "field",
       "personality": { "aggression": 0.55, "defense": 0.30, "harassment": 0.95 },
       "town_plan": "punic_raider_camp",
-      "recruitment": { "ranged_share": 0.7 },
+      "formation": "line",
+      "recruitment": {
+        "ranged_share": 0.7,
+        "cavalry_share": 0.25,
+        "siege_share": 0.0,
+        "preferred": ["horse_archer", "archer"]
+      },
       "wave": {
         "size": 5,
         "regroup_seconds": 20.0,
@@ -105,7 +136,13 @@
       "posture": "field",
       "personality": { "aggression": 0.85, "defense": 0.50, "harassment": 0.60 },
       "town_plan": "punic_grand_camp",
-      "recruitment": { "ranged_share": 0.4 },
+      "formation": "assault",
+      "recruitment": {
+        "ranged_share": 0.4,
+        "cavalry_share": 0.2,
+        "siege_share": 0.12,
+        "preferred": ["elephant", "swordsman", "horse_swordsman", "catapult"]
+      },
       "wave": {
         "size": 6,
         "regroup_seconds": 22.0,

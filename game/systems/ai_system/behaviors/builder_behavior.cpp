@@ -31,7 +31,10 @@ constexpr const char* BUILDING_TYPE_DEFENSE_TOWER = "defense_tower";
 constexpr const char* BUILDING_TYPE_WALL_SEGMENT = "wall_segment";
 constexpr const char* BUILDING_TYPE_BARRACKS = "barracks";
 constexpr const char* BUILDING_TYPE_MARKETPLACE = "marketplace";
+
+constexpr int k_treasury_worth_a_market = 400;
 constexpr const char* BUILDING_TYPE_CATAPULT = "catapult";
+constexpr const char* BUILDING_TYPE_BALLISTA = "ballista";
 constexpr const char* BUILDING_TYPE_FARM = "farm";
 constexpr const char* HARVEST_TREE = "cut_tree";
 constexpr const char* HARVEST_STONE = "collect_stone";
@@ -42,7 +45,7 @@ constexpr int MAX_HOMES = 20;
 constexpr int MAX_DEFENSE_TOWERS = 10;
 constexpr int MAX_WALL_SEGMENTS = 12;
 constexpr int MAX_BARRACKS = 6;
-constexpr int MAX_FARMS = 6;
+constexpr int MAX_FARMS = 8;
 constexpr int MAX_MARKETPLACES = 2;
 constexpr int MAX_CATAPULTS = 5;
 
@@ -71,9 +74,9 @@ struct BuildCandidate {
   int target = 0;
 };
 
-auto best_candidate(std::initializer_list<BuildCandidate> candidates) -> const char* {
-  const char* best = nullptr;
-  float best_completion = std::numeric_limits<float>::infinity();
+auto unmet_candidates(std::initializer_list<BuildCandidate> candidates)
+    -> std::vector<const char*> {
+  std::vector<std::pair<float, const char*>> wanted;
   for (const auto& candidate : candidates) {
     if (candidate.type == nullptr || candidate.target <= candidate.current) {
       continue;
@@ -81,13 +84,18 @@ auto best_candidate(std::initializer_list<BuildCandidate> candidates) -> const c
 
     const float completion = static_cast<float>(candidate.current) /
                              static_cast<float>(std::max(1, candidate.target));
-    if (completion < best_completion) {
-      best = candidate.type;
-      best_completion = completion;
-    }
+    wanted.emplace_back(completion, candidate.type);
   }
+  std::stable_sort(wanted.begin(), wanted.end(), [](const auto& a, const auto& b) {
+    return a.first < b.first;
+  });
 
-  return best;
+  std::vector<const char*> order;
+  order.reserve(wanted.size());
+  for (const auto& entry : wanted) {
+    order.push_back(entry.second);
+  }
+  return order;
 }
 
 auto needs_outpost_construction(const AIContext& context) -> bool {
@@ -149,6 +157,36 @@ auto select_best_builder(const AISnapshot& snapshot,
   return best_id;
 }
 
+auto select_strongest_builder(
+    const AISnapshot& snapshot,
+    const std::vector<Engine::Core::EntityID>& available_builders,
+    float target_x,
+    float target_z) -> Engine::Core::EntityID {
+  Engine::Core::EntityID best_id = available_builders.front();
+  int best_strength = -1;
+  float best_distance_sq = std::numeric_limits<float>::infinity();
+
+  for (const auto builder_id : available_builders) {
+    const auto it = std::find_if(
+        snapshot.friendly_units.begin(),
+        snapshot.friendly_units.end(),
+        [builder_id](const EntitySnapshot& entity) { return entity.id == builder_id; });
+    if (it == snapshot.friendly_units.end()) {
+      continue;
+    }
+    const float distance_sq = (it->pos_x - target_x) * (it->pos_x - target_x) +
+                              (it->pos_z - target_z) * (it->pos_z - target_z);
+    if (it->squad_strength > best_strength ||
+        (it->squad_strength == best_strength && distance_sq < best_distance_sq)) {
+      best_strength = it->squad_strength;
+      best_distance_sq = distance_sq;
+      best_id = builder_id;
+    }
+  }
+
+  return best_id;
+}
+
 auto harvest_type_for_resource(ResourceType resource) -> const char* {
   switch (resource) {
   case ResourceType::Wood:
@@ -164,11 +202,39 @@ auto harvest_type_for_resource(ResourceType resource) -> const char* {
 
 constexpr int k_ai_food_reserve = 60;
 
-constexpr int k_ai_granary_target = 240;
+constexpr int k_ai_granary_target = 900;
+
+constexpr int k_ai_larder_target = 320;
+
+constexpr int k_repair_health_fraction_numerator = 9;
+constexpr int k_repair_health_fraction_denominator = 10;
+constexpr int k_max_repair_crews = 2;
+
+constexpr int k_smallest_useful_work_party = 4;
+
+auto stockpile_target(ResourceType type, int building_count) -> int {
+  const int town = std::clamp(building_count, 1, 24);
+  switch (type) {
+  case ResourceType::Wood:
+    return 240 + town * 20;
+  case ResourceType::Stone:
+    return 160 + town * 14;
+  case ResourceType::Iron:
+    return 120 + town * 10;
+  default:
+    return 0;
+  }
+}
 
 auto starved_of_food(const AISnapshot& snapshot) -> bool {
   return snapshot.has_resource_snapshot &&
          snapshot.resources.get(ResourceType::Food) < k_ai_food_reserve;
+}
+
+auto wants_repair(const EntitySnapshot& entity) -> bool {
+  return entity.is_building && entity.health > 0 && entity.max_health > 0 &&
+         entity.health * k_repair_health_fraction_denominator <
+             entity.max_health * k_repair_health_fraction_numerator;
 }
 
 auto field_is_worked(const AISnapshot& snapshot,
@@ -234,10 +300,29 @@ auto building_type_name(const std::string& name) -> const char* {
   if (name == BUILDING_TYPE_CATAPULT) {
     return BUILDING_TYPE_CATAPULT;
   }
+  if (name == BUILDING_TYPE_BALLISTA) {
+    return BUILDING_TYPE_BALLISTA;
+  }
   if (name == BUILDING_TYPE_FARM) {
     return BUILDING_TYPE_FARM;
   }
   return nullptr;
+}
+
+auto preferred_siege_engine(const AIContext& context) -> const char* {
+  const auto* doctrine = context.strategy_config.doctrine;
+  if (doctrine == nullptr) {
+    return BUILDING_TYPE_CATAPULT;
+  }
+  for (const auto& name : doctrine->recruitment.preferred) {
+    if (name == BUILDING_TYPE_BALLISTA) {
+      return BUILDING_TYPE_BALLISTA;
+    }
+    if (name == BUILDING_TYPE_CATAPULT) {
+      return BUILDING_TYPE_CATAPULT;
+    }
+  }
+  return BUILDING_TYPE_CATAPULT;
 }
 
 auto settlement_facing(const AIContext& context,
@@ -299,8 +384,45 @@ auto slot_clearance(const char* building_type,
          half_extent(Game::Units::spawn_typeToString(standing)) + k_slot_gap;
 }
 
+struct SettlementCensus {
+  int homes = 0;
+  int barracks = 0;
+  int towers = 0;
+  int walls = 0;
+  int markets = 0;
+  int farms = 0;
+};
+
+using SettlementTargets = SettlementCensus;
+
+[[nodiscard]] auto plan_step_is_already_met(const SettlementCensus& standing,
+                                            const SettlementTargets& targets,
+                                            const char* building) -> bool {
+  if (building == BUILDING_TYPE_HOME) {
+    return standing.homes >= targets.homes;
+  }
+  if (building == BUILDING_TYPE_BARRACKS) {
+    return standing.barracks >= targets.barracks;
+  }
+  if (building == BUILDING_TYPE_DEFENSE_TOWER) {
+    return standing.towers >= targets.towers;
+  }
+  if (building == BUILDING_TYPE_WALL_SEGMENT) {
+    return standing.walls >= targets.walls;
+  }
+  if (building == BUILDING_TYPE_MARKETPLACE) {
+    return standing.markets >= targets.markets;
+  }
+  if (building == BUILDING_TYPE_FARM) {
+    return standing.farms >= targets.farms;
+  }
+  return false;
+}
+
 auto authored_plan_step(const AIContext& context,
                         const AISnapshot& snapshot,
+                        const SettlementCensus& standing,
+                        const SettlementTargets& targets,
                         const char* preferred,
                         const char*& out_building,
                         QVector3D& out_offset) -> bool {
@@ -314,9 +436,32 @@ auto authored_plan_step(const AIContext& context,
 
   const QVector2D facing = settlement_facing(context, snapshot);
 
+  const char* fallback_building = nullptr;
+  QVector3D fallback_offset;
+
+  int engines_fielded = 0;
+  for (const auto& entity : snapshot.friendly_units) {
+    if (entity.spawn_type == Game::Units::SpawnType::Catapult ||
+        entity.spawn_type == Game::Units::SpawnType::Ballista) {
+      ++engines_fielded;
+    }
+  }
+  int engine_steps_seen = 0;
+
   for (const auto& step : doctrine->town_plan->steps) {
     const char* resolved = building_type_name(step.building);
     if (resolved == nullptr) {
+      continue;
+    }
+
+    if (resolved == BUILDING_TYPE_CATAPULT || resolved == BUILDING_TYPE_BALLISTA) {
+
+      ++engine_steps_seen;
+      if (engines_fielded >= engine_steps_seen) {
+        continue;
+      }
+    } else if (plan_step_is_already_met(standing, targets, resolved)) {
+
       continue;
     }
 
@@ -345,6 +490,11 @@ auto authored_plan_step(const AIContext& context,
     }
 
     if (preferred != nullptr && resolved != preferred) {
+
+      if (fallback_building == nullptr) {
+        fallback_building = resolved;
+        fallback_offset = offset;
+      }
       continue;
     }
 
@@ -353,7 +503,13 @@ auto authored_plan_step(const AIContext& context,
     return true;
   }
 
-  return false;
+  if (fallback_building == nullptr) {
+    return false;
+  }
+
+  out_building = fallback_building;
+  out_offset = fallback_offset;
+  return true;
 }
 
 auto site_is_free(const AISnapshot& snapshot,
@@ -438,11 +594,38 @@ auto planned_settlement_offset(const AIContext& context,
         construction_index - static_cast<int>(fields.size()), 6, 28.0F, 8.0F);
   }
   if (building_type == BUILDING_TYPE_MARKETPLACE) {
-
-    return carthaginian ? QVector3D{-3.0F, 0.0F, 9.0F} : QVector3D{3.0F, 0.0F, 9.0F};
+    static const std::array<QVector3D, 4> roman = {QVector3D{3.0F, 0.0F, 9.0F},
+                                                   QVector3D{-3.0F, 0.0F, 9.0F},
+                                                   QVector3D{11.0F, 0.0F, 10.0F},
+                                                   QVector3D{-11.0F, 0.0F, 10.0F}};
+    static const std::array<QVector3D, 4> punic = {QVector3D{-3.0F, 0.0F, 9.0F},
+                                                   QVector3D{3.0F, 0.0F, 9.0F},
+                                                   QVector3D{-11.0F, 0.0F, 10.0F},
+                                                   QVector3D{11.0F, 0.0F, 10.0F}};
+    const auto& offsets = carthaginian ? punic : roman;
+    if (construction_index < static_cast<int>(offsets.size())) {
+      return offsets[static_cast<std::size_t>(construction_index)];
+    }
+    return expanding_ring_offset(
+        construction_index - static_cast<int>(offsets.size()), 6, 16.0F, 5.0F);
   }
   if (building_type == BUILDING_TYPE_BARRACKS) {
-    return QVector3D{0.0F, 0.0F, carthaginian ? -7.0F : -8.0F};
+    static const std::array<QVector3D, 5> roman = {QVector3D{0.0F, 0.0F, -8.0F},
+                                                   QVector3D{-10.0F, 0.0F, -6.0F},
+                                                   QVector3D{10.0F, 0.0F, -6.0F},
+                                                   QVector3D{-16.0F, 0.0F, -12.0F},
+                                                   QVector3D{16.0F, 0.0F, -12.0F}};
+    static const std::array<QVector3D, 5> punic = {QVector3D{0.0F, 0.0F, -7.0F},
+                                                   QVector3D{-12.0F, 0.0F, -4.0F},
+                                                   QVector3D{12.0F, 0.0F, -4.0F},
+                                                   QVector3D{-16.0F, 0.0F, -11.0F},
+                                                   QVector3D{16.0F, 0.0F, -11.0F}};
+    const auto& offsets = carthaginian ? punic : roman;
+    if (construction_index < static_cast<int>(offsets.size())) {
+      return offsets[static_cast<std::size_t>(construction_index)];
+    }
+    return expanding_ring_offset(
+        construction_index - static_cast<int>(offsets.size()), 6, 20.0F, 6.0F);
   }
   if (building_type == BUILDING_TYPE_WALL_SEGMENT) {
     const int slot = construction_index % 11;
@@ -453,7 +636,371 @@ auto planned_settlement_offset(const AIContext& context,
   return {18.0F * std::cos(angle), 0.0F, 18.0F * std::sin(angle)};
 }
 
+auto entity_is_worked(const AISnapshot& snapshot,
+                      Engine::Core::EntityID target_id) -> bool {
+  for (const auto& entity : snapshot.friendly_units) {
+    if (entity.builder_production.has_component &&
+        entity.builder_production.task_target_id == target_id) {
+      return true;
+    }
+  }
+  return false;
+}
+
+template <typename TakeBuilder>
+void order_harvest(const AISnapshot& snapshot,
+                   const AIContext& context,
+                   ResourceType resource,
+                   const TakeBuilder& take_builder,
+                   std::vector<AICommand>& out_commands) {
+  const char* harvest_type = harvest_type_for_resource(resource);
+  if (harvest_type == nullptr) {
+    return;
+  }
+  const ResourceNodeSnapshot* closest = nullptr;
+  float closest_distance_sq = std::numeric_limits<float>::infinity();
+  for (const auto& node : snapshot.resource_nodes) {
+    if (node.reserved || !node_matches_resource(node, resource)) {
+      continue;
+    }
+    const float dx = node.pos_x - context.base_pos_x;
+    const float dz = node.pos_z - context.base_pos_z;
+    const float distance_sq = dx * dx + dz * dz;
+    if (distance_sq < closest_distance_sq) {
+      closest = &node;
+      closest_distance_sq = distance_sq;
+    }
+  }
+  if (closest == nullptr) {
+    return;
+  }
+  const auto builder = take_builder(closest->pos_x, closest->pos_z);
+  if (builder == 0) {
+    return;
+  }
+
+  AICommand command;
+  command.type = AICommandType::StartBuilderHarvest;
+  command.units.push_back(builder);
+  command.construction_type = harvest_type;
+  command.construction_site_x = closest->pos_x;
+  command.construction_site_z = closest->pos_z;
+  command.resource_target_id = closest->id;
+  out_commands.push_back(std::move(command));
+}
+
+template <typename TakeBuilder>
+void order_repairs(const AISnapshot& snapshot,
+                   const std::vector<Engine::Core::EntityID>& available,
+                   int reserve,
+                   const TakeBuilder& take_builder,
+                   std::vector<AICommand>& out_commands) {
+  int crews = 0;
+  for (const auto& entity : snapshot.friendly_units) {
+    if (crews >= k_max_repair_crews || static_cast<int>(available.size()) <= reserve) {
+      return;
+    }
+    if (!wants_repair(entity) || entity_is_worked(snapshot, entity.id)) {
+      continue;
+    }
+    const auto builder = take_builder(entity.pos_x, entity.pos_z);
+    if (builder == 0) {
+      return;
+    }
+    AICommand command;
+    command.type = AICommandType::StartBuilderRepair;
+    command.units.push_back(builder);
+    command.target_id = entity.id;
+    command.construction_site_x = entity.pos_x;
+    command.construction_site_z = entity.pos_z;
+    out_commands.push_back(std::move(command));
+    ++crews;
+  }
+}
+
+template <typename TakeBuilder>
+void order_field_work(const AISnapshot& snapshot,
+                      const AIContext& context,
+                      const std::vector<Engine::Core::EntityID>& available,
+                      int reserve,
+                      const TakeBuilder& take_builder,
+                      std::vector<AICommand>& out_commands) {
+  if (!granary_has_room(snapshot)) {
+    return;
+  }
+  std::vector<const EntitySnapshot*> ripe;
+  for (const auto& entity : snapshot.friendly_units) {
+    if (!entity.crop_is_ripe || field_is_worked(snapshot, entity.id)) {
+      continue;
+    }
+    ripe.push_back(&entity);
+  }
+  std::sort(ripe.begin(),
+            ripe.end(),
+            [&context](const EntitySnapshot* lhs, const EntitySnapshot* rhs) {
+              return distance_squared(lhs->pos_x,
+                                      0.0F,
+                                      lhs->pos_z,
+                                      context.base_pos_x,
+                                      0.0F,
+                                      context.base_pos_z) <
+                     distance_squared(rhs->pos_x,
+                                      0.0F,
+                                      rhs->pos_z,
+                                      context.base_pos_x,
+                                      0.0F,
+                                      context.base_pos_z);
+            });
+  for (const auto* field : ripe) {
+    if (static_cast<int>(available.size()) <= reserve) {
+      return;
+    }
+    const auto builder = take_builder(field->pos_x, field->pos_z);
+    if (builder == 0) {
+      return;
+    }
+    AICommand command;
+    command.type = AICommandType::StartBuilderHarvest;
+    command.units.push_back(builder);
+    command.construction_type = HARVEST_GRAIN;
+    command.construction_site_x = field->pos_x;
+    command.construction_site_z = field->pos_z;
+    command.resource_target_id = field->id;
+    out_commands.push_back(std::move(command));
+  }
+}
+
+auto any_node_left(const AISnapshot& snapshot, ResourceType resource) -> bool {
+  return std::any_of(snapshot.resource_nodes.begin(),
+                     snapshot.resource_nodes.end(),
+                     [resource](const ResourceNodeSnapshot& node) {
+                       return !node.reserved && node_matches_resource(node, resource);
+                     });
+}
+
+struct AffordabilityVerdict {
+
+  bool blocked = false;
+
+  ResourceType missing = ResourceType::Count;
+};
+
+auto affordability_of(const AISnapshot& snapshot,
+                      const char* building_type) -> AffordabilityVerdict {
+  AffordabilityVerdict verdict;
+  if (building_type == nullptr) {
+    verdict.blocked = true;
+    return verdict;
+  }
+  if (!snapshot.has_resource_snapshot) {
+    return verdict;
+  }
+
+  const auto costs = construction_cost_info(building_type).resource_costs;
+  int largest_deficit = 0;
+  for (const ResourceType type : k_all_resource_types) {
+    const int deficit = costs.get(type) - snapshot.resources.get(type);
+    if (deficit <= 0) {
+      continue;
+    }
+    if (harvest_type_for_resource(type) == nullptr) {
+
+      verdict.blocked = true;
+      return verdict;
+    }
+    if (!any_node_left(snapshot, type)) {
+
+      verdict.blocked = true;
+      return verdict;
+    }
+    if (deficit > largest_deficit) {
+      largest_deficit = deficit;
+      verdict.missing = type;
+    }
+  }
+  return verdict;
+}
+
+auto neediest_stockpile(const AISnapshot& snapshot, int building_count) -> const char* {
+  if (!snapshot.has_resource_snapshot) {
+    return nullptr;
+  }
+
+  const bool a_field_is_ripe =
+      std::any_of(snapshot.friendly_units.begin(),
+                  snapshot.friendly_units.end(),
+                  [](const EntitySnapshot& entity) { return entity.crop_is_ripe; });
+  if (a_field_is_ripe &&
+      snapshot.resources.get(ResourceType::Food) < k_ai_larder_target) {
+    return HARVEST_GRAIN;
+  }
+
+  const char* neediest = nullptr;
+  float worst_ratio = 1.0F;
+  for (const auto type :
+       {ResourceType::Wood, ResourceType::Stone, ResourceType::Iron}) {
+    const int target = stockpile_target(type, building_count);
+
+    if (target <= 0 || !any_node_left(snapshot, type)) {
+      continue;
+    }
+    const float ratio =
+        static_cast<float>(snapshot.resources.get(type)) / static_cast<float>(target);
+    if (ratio < worst_ratio) {
+      worst_ratio = ratio;
+      neediest = harvest_type_for_resource(type);
+    }
+  }
+  if (neediest != nullptr) {
+    return neediest;
+  }
+
+  return a_field_is_ripe ? HARVEST_GRAIN : nullptr;
+}
+
+struct ConstructionIntent {
+
+  const char* type = nullptr;
+  float x = 0.0F;
+  float z = 0.0F;
+
+  bool site_known = false;
+
+  bool expansion = false;
+};
+
+auto desired_work_parties(const AIContext& context) -> int {
+  (void)context;
+
+  return 4;
+}
+
 } // namespace
+
+auto BuilderBehavior::is_deferred(const char* building_type,
+                                  float game_time) const -> bool {
+  return building_type != nullptr && building_type == m_deferred_type &&
+         game_time < m_deferred_until;
+}
+
+void BuilderBehavior::note_construction_order(const char* building_type,
+                                              int building_total,
+                                              float game_time) {
+  constexpr int k_orders_before_giving_up = 8;
+  constexpr float k_defer_seconds = 90.0F;
+
+  if (building_type == m_last_order_type && building_total == m_last_building_total) {
+    ++m_last_order_repeats;
+  } else {
+    m_last_order_type = building_type;
+    m_last_building_total = building_total;
+    m_last_order_repeats = 1;
+  }
+
+  if (m_last_order_repeats >= k_orders_before_giving_up) {
+
+    m_deferred_type = building_type;
+    m_deferred_until = game_time + k_defer_seconds;
+    m_last_order_repeats = 0;
+  }
+}
+
+void BuilderBehavior::divide_work_parties(const AISnapshot& snapshot,
+                                          const AIContext& context,
+                                          std::vector<AICommand>& out_commands) const {
+  const int wanted = desired_work_parties(context);
+  if (context.builder_count >= wanted) {
+    return;
+  }
+
+  const EntitySnapshot* biggest = nullptr;
+  for (const auto& entity : snapshot.friendly_units) {
+    if (entity.spawn_type != Game::Units::SpawnType::Builder) {
+      continue;
+    }
+
+    if (entity.squad_strength < k_smallest_useful_work_party * 2) {
+      continue;
+    }
+    if (biggest == nullptr || entity.squad_strength > biggest->squad_strength) {
+      biggest = &entity;
+    }
+  }
+  if (biggest == nullptr) {
+    return;
+  }
+
+  AICommand command;
+  command.type = AICommandType::DivideSquads;
+  command.units.push_back(biggest->id);
+  out_commands.push_back(std::move(command));
+}
+
+void BuilderBehavior::manage_gather_crew(
+    const AISnapshot& snapshot,
+    const AIContext& context,
+    bool reclaim_one,
+    std::vector<Engine::Core::EntityID>& available_builders,
+    std::vector<AICommand>& out_commands) {
+  std::vector<Engine::Core::EntityID> gatherers;
+  int builder_total = 0;
+  for (const auto& entity : snapshot.friendly_units) {
+    if (entity.spawn_type != Game::Units::SpawnType::Builder) {
+      continue;
+    }
+    ++builder_total;
+    if (entity.builder_production.auto_gather) {
+      gatherers.push_back(entity.id);
+    }
+  }
+  if (builder_total == 0) {
+    return;
+  }
+
+  const int construction_crew = std::clamp(2 + (builder_total / 6), 2, 5);
+  const int desired_gatherers =
+      std::max(0, builder_total - construction_crew - (reclaim_one ? 1 : 0));
+  const char* priority =
+      neediest_stockpile(snapshot, static_cast<int>(context.buildings.size()));
+
+  if (static_cast<int>(gatherers.size()) > desired_gatherers) {
+    AICommand release;
+    release.type = AICommandType::SetAutoGather;
+    release.auto_gather_active = false;
+    for (int i = desired_gatherers; i < static_cast<int>(gatherers.size()); ++i) {
+      release.units.push_back(gatherers[static_cast<std::size_t>(i)]);
+    }
+    out_commands.push_back(std::move(release));
+    return;
+  }
+
+  constexpr float k_priority_hold_seconds = 45.0F;
+  const bool may_switch =
+      snapshot.game_time - m_gather_priority_time >= k_priority_hold_seconds;
+  const bool priority_changed = priority != m_gather_priority && may_switch;
+  if (priority_changed || m_gather_priority == nullptr) {
+    m_gather_priority = priority;
+    m_gather_priority_time = snapshot.game_time;
+  }
+
+  AICommand order;
+  order.type = AICommandType::SetAutoGather;
+  order.auto_gather_active = true;
+  order.construction_type = m_gather_priority;
+  if (priority_changed) {
+
+    order.units = gatherers;
+  }
+  while (static_cast<int>(gatherers.size()) + static_cast<int>(order.units.size()) <
+             desired_gatherers &&
+         !available_builders.empty()) {
+    order.units.push_back(available_builders.back());
+    available_builders.pop_back();
+  }
+  if (!order.units.empty()) {
+    out_commands.push_back(std::move(order));
+  }
+}
 
 void BuilderBehavior::execute(const AISnapshot& snapshot,
                               AIContext& context,
@@ -470,6 +1017,11 @@ void BuilderBehavior::execute(const AISnapshot& snapshot,
   m_construction_timer = 0.0F;
 
   std::vector<Engine::Core::EntityID> available_builders;
+  int busy_site = 0;
+  int busy_task = 0;
+  int busy_load = 0;
+  int busy_moving = 0;
+  int busy_other = 0;
   for (const auto& entity : snapshot.friendly_units) {
     if (entity.spawn_type != Game::Units::SpawnType::Builder) {
       continue;
@@ -479,28 +1031,95 @@ void BuilderBehavior::execute(const AISnapshot& snapshot,
         (entity.builder_production.has_construction_site ||
          entity.builder_production.has_task_target ||
          entity.builder_production.carrying_load)) {
+      busy_site += entity.builder_production.has_construction_site ? 1 : 0;
+      busy_task += entity.builder_production.has_task_target ? 1 : 0;
+      busy_load += entity.builder_production.carrying_load ? 1 : 0;
       continue;
     }
 
     if (entity.movement.has_component && !entity.movement.has_target) {
       available_builders.push_back(entity.id);
+    } else if (entity.movement.has_component) {
+      ++busy_moving;
+    } else {
+      ++busy_other;
     }
   }
 
   if (available_builders.empty()) {
     if (qEnvironmentVariableIsSet("SOI_BUILD_TRACE")) {
       qWarning() << "BUILDTRACE p" << context.player_id << "no available builders of"
-                 << context.builder_count;
+                 << context.builder_count << "site" << busy_site << "task" << busy_task
+                 << "load" << busy_load << "moving" << busy_moving << "other"
+                 << busy_other;
+      for (const auto& entity : snapshot.friendly_units) {
+        if (entity.spawn_type != Game::Units::SpawnType::Builder) {
+          continue;
+        }
+        qWarning() << "BUILDTRACE p" << context.player_id << "  builder" << entity.id
+                   << "site" << entity.builder_production.has_construction_site
+                   << "progress" << entity.builder_production.in_progress << "task"
+                   << entity.builder_production.has_task_target << "target"
+                   << entity.builder_production.task_target_id << "load"
+                   << entity.builder_production.carrying_load << "gather"
+                   << entity.builder_production.auto_gather << "moving"
+                   << entity.movement.has_target;
+      }
     }
     return;
   }
 
-  int catapult_count = 0;
+  const auto take_builder = [&available_builders,
+                             &snapshot](float x, float z) -> Engine::Core::EntityID {
+    if (available_builders.empty()) {
+      return 0;
+    }
+    const auto id = select_best_builder(snapshot, available_builders, x, z);
+    std::erase(available_builders, id);
+    return id;
+  };
+
+  const auto take_strongest_builder =
+      [&available_builders, &snapshot](float x, float z) -> Engine::Core::EntityID {
+    if (available_builders.empty()) {
+      return 0;
+    }
+    const auto id = select_strongest_builder(snapshot, available_builders, x, z);
+    std::erase(available_builders, id);
+    return id;
+  };
+
+  int siege_count = 0;
   for (const auto& entity : snapshot.friendly_units) {
-    if (entity.spawn_type == Game::Units::SpawnType::Catapult) {
-      catapult_count++;
+    if (entity.spawn_type == Game::Units::SpawnType::Catapult ||
+        entity.spawn_type == Game::Units::SpawnType::Ballista) {
+      siege_count++;
     }
   }
+
+  const char* siege_engine = preferred_siege_engine(context);
+
+  const auto raising = [&snapshot](Game::Units::SpawnType type) {
+    int count = 0;
+    for (const auto& entity : snapshot.friendly_units) {
+      if (entity.builder_production.raising_a_building &&
+          entity.builder_production.building_under_way == type) {
+        ++count;
+      }
+    }
+    return count;
+  };
+
+  const SettlementCensus standing{
+      .homes = context.home_count + raising(Game::Units::SpawnType::Home),
+      .barracks = context.barracks_count + raising(Game::Units::SpawnType::Barracks),
+      .towers =
+          context.defense_tower_count + raising(Game::Units::SpawnType::DefenseTower),
+      .walls =
+          context.wall_segment_count + raising(Game::Units::SpawnType::WallSegment),
+      .markets =
+          context.marketplace_count + raising(Game::Units::SpawnType::Marketplace),
+      .farms = context.farm_count + raising(Game::Units::SpawnType::Farm)};
 
   const auto& targets = context.macro_targets;
   const int target_homes = std::clamp(targets.home_count, 2, MAX_HOMES);
@@ -510,176 +1129,169 @@ void BuilderBehavior::execute(const AISnapshot& snapshot,
   const int target_walls = std::clamp(targets.wall_segment_count, 0, MAX_WALL_SEGMENTS);
   const int target_catapults = std::clamp(targets.catapult_count, 0, MAX_CATAPULTS);
   const int target_farms = std::clamp(targets.farm_count, 0, MAX_FARMS);
+  const int target_markets = std::clamp(targets.marketplace_count, 0, MAX_MARKETPLACES);
 
-  const char* building_to_construct = nullptr;
-  float construction_x = context.base_pos_x;
-  float construction_z = context.base_pos_z;
-  bool expansion_order = false;
+  std::vector<ConstructionIntent> intents;
 
-  if (context.state == AIState::Expanding && needs_outpost_construction(context)) {
-    if (context.expansion_construction_pending ||
-        recent_outpost_order(snapshot, context)) {
-      return;
-    }
-
+  if (context.state == AIState::Expanding && needs_outpost_construction(context) &&
+      !context.expansion_construction_pending &&
+      !recent_outpost_order(snapshot, context)) {
+    ConstructionIntent outpost;
+    outpost.expansion = true;
+    outpost.site_known = true;
     if (context.outpost_barracks_count <
         context.strategy_config.desired_outpost_barracks_count) {
-      building_to_construct = BUILDING_TYPE_BARRACKS;
-      construction_x = context.expansion_site_x;
-      construction_z = context.expansion_site_z;
+      outpost.type = BUILDING_TYPE_BARRACKS;
+      outpost.x = context.expansion_site_x;
+      outpost.z = context.expansion_site_z;
     } else {
-      building_to_construct = BUILDING_TYPE_HOME;
+      outpost.type = BUILDING_TYPE_HOME;
       const float dx = context.expansion_site_x - context.base_pos_x;
       const float dz = context.expansion_site_z - context.base_pos_z;
       const float dist = std::sqrt(std::max(0.0F, dx * dx + dz * dz));
       const float offset_scale = (dist > 0.1F) ? (8.0F / dist) : 0.0F;
-      construction_x = context.expansion_site_x - dz * offset_scale;
-      construction_z = context.expansion_site_z + dx * offset_scale;
+      outpost.x = context.expansion_site_x - dz * offset_scale;
+      outpost.z = context.expansion_site_z + dx * offset_scale;
     }
-    expansion_order = true;
-  } else if (const AIBase* exposed = exposed_secondary_base(context);
-             exposed != nullptr) {
-    building_to_construct = BUILDING_TYPE_DEFENSE_TOWER;
-    construction_x = exposed->center_x;
-    construction_z = exposed->center_z;
-  } else {
+    intents.push_back(outpost);
+  }
 
-    const char* planned_building = nullptr;
-    QVector3D planned_offset;
-
-    const bool wants_a_field =
-        context.farm_count < target_farms && starved_of_food(snapshot);
-    const char* preferred = nullptr;
-    if (wants_a_field) {
-      preferred = BUILDING_TYPE_FARM;
-    } else if (targets.raise_homes_first) {
-      preferred = BUILDING_TYPE_HOME;
+  if (const AIBase* exposed = exposed_secondary_base(context); exposed != nullptr) {
+    constexpr int k_outpost_site_attempts = 12;
+    for (int attempt = 0; attempt < k_outpost_site_attempts; ++attempt) {
+      const QVector3D offset =
+          expanding_ring_offset(m_construction_counter + attempt, 6, 9.0F, 4.0F);
+      const float candidate_x = exposed->center_x + offset.x();
+      const float candidate_z = exposed->center_z + offset.z();
+      if (!site_is_free(
+              snapshot, BUILDING_TYPE_DEFENSE_TOWER, candidate_x, candidate_z)) {
+        continue;
+      }
+      ConstructionIntent relief;
+      relief.type = BUILDING_TYPE_DEFENSE_TOWER;
+      relief.x = candidate_x;
+      relief.z = candidate_z;
+      relief.site_known = true;
+      intents.push_back(relief);
+      break;
     }
-    const bool has_plan_step =
-        context.primary_barracks != 0 &&
-        authored_plan_step(
-            context, snapshot, preferred, planned_building, planned_offset);
+  }
 
-    if (has_plan_step) {
-      building_to_construct = planned_building;
-    } else if (context.home_count < 2) {
-      building_to_construct = BUILDING_TYPE_HOME;
-    } else if (context.barracks_count == 0) {
-      building_to_construct = BUILDING_TYPE_BARRACKS;
-    } else if (context.barracks_under_threat &&
-               context.defense_tower_count < target_towers) {
-      building_to_construct = BUILDING_TYPE_DEFENSE_TOWER;
-    } else if (targets.raise_homes_first && context.home_count < MAX_HOMES) {
-      building_to_construct = BUILDING_TYPE_HOME;
-    } else if (wants_a_field) {
-      building_to_construct = BUILDING_TYPE_FARM;
-    } else if (const char* candidate = best_candidate({
-                   {BUILDING_TYPE_FARM, context.farm_count, target_farms},
-                   {BUILDING_TYPE_BARRACKS, context.barracks_count, target_barracks},
-                   {BUILDING_TYPE_DEFENSE_TOWER,
-                    context.defense_tower_count,
-                    target_towers},
-                   {BUILDING_TYPE_MARKETPLACE, context.marketplace_count, 1},
-                   {BUILDING_TYPE_WALL_SEGMENT,
-                    context.wall_segment_count,
-                    target_walls},
-                   {BUILDING_TYPE_HOME, context.home_count, target_homes},
-                   {BUILDING_TYPE_CATAPULT, catapult_count, target_catapults},
-               })) {
-      building_to_construct = candidate;
+  const char* planned_building = nullptr;
+  QVector3D planned_offset;
+
+  const bool needs_a_field = context.farm_count < target_farms;
+  const bool starving = starved_of_food(snapshot);
+  const char* preferred = nullptr;
+  if (needs_a_field && starving) {
+    preferred = BUILDING_TYPE_FARM;
+  } else if (targets.raise_homes_first) {
+    preferred = BUILDING_TYPE_HOME;
+  }
+  const SettlementTargets settlement{.homes = target_homes,
+                                     .barracks = target_barracks,
+                                     .towers = target_towers,
+                                     .walls = target_walls,
+                                     .markets = target_markets,
+                                     .farms = target_farms};
+  const bool has_plan_step =
+      context.primary_barracks != 0 && authored_plan_step(context,
+                                                          snapshot,
+                                                          standing,
+                                                          settlement,
+                                                          preferred,
+                                                          planned_building,
+                                                          planned_offset);
+
+  const auto wish = [&intents](const char* type) {
+    if (type != nullptr) {
+      ConstructionIntent intent;
+      intent.type = type;
+      intents.push_back(intent);
     }
+  };
 
-    ResourceType missing_resource = ResourceType::Count;
-    if (building_to_construct == nullptr) {
-      missing_resource = recruit_reserve_shortfall(snapshot);
+  if (has_plan_step) {
+    ConstructionIntent step;
+    step.type = planned_building;
+    step.x = context.base_pos_x + planned_offset.x();
+    step.z = context.base_pos_z + planned_offset.z();
+    step.site_known = context.has_base_anchor;
+    intents.push_back(step);
+  }
+  if (standing.homes < 2) {
+    wish(BUILDING_TYPE_HOME);
+  }
+  if (standing.barracks == 0) {
+    wish(BUILDING_TYPE_BARRACKS);
+  }
+
+  if (standing.markets < 1 && target_markets > 0 && snapshot.has_resource_snapshot &&
+      snapshot.resources.get(ResourceType::Gold) >= k_treasury_worth_a_market) {
+    wish(BUILDING_TYPE_MARKETPLACE);
+  }
+  if (context.barracks_under_threat && standing.towers < target_towers) {
+    wish(BUILDING_TYPE_DEFENSE_TOWER);
+  }
+  if (targets.raise_homes_first && standing.homes < MAX_HOMES) {
+    wish(BUILDING_TYPE_HOME);
+  }
+  if (needs_a_field && starving) {
+    wish(BUILDING_TYPE_FARM);
+  }
+  for (const char* candidate : unmet_candidates({
+           {BUILDING_TYPE_FARM, standing.farms, target_farms},
+           {BUILDING_TYPE_BARRACKS, standing.barracks, target_barracks},
+           {BUILDING_TYPE_DEFENSE_TOWER, standing.towers, target_towers},
+           {BUILDING_TYPE_MARKETPLACE, standing.markets, target_markets},
+           {BUILDING_TYPE_WALL_SEGMENT, standing.walls, target_walls},
+           {BUILDING_TYPE_HOME, standing.homes, target_homes},
+           {siege_engine, siege_count, target_catapults},
+       })) {
+    wish(candidate);
+  }
+
+  const ConstructionIntent* chosen = nullptr;
+  ResourceType missing_resource = ResourceType::Count;
+  for (const auto& intent : intents) {
+    if (is_deferred(intent.type, snapshot.game_time)) {
+      continue;
+    }
+    const auto verdict = affordability_of(snapshot, intent.type);
+    if (verdict.blocked) {
+      continue;
+    }
+    if (verdict.missing != ResourceType::Count) {
+
       if (missing_resource == ResourceType::Count) {
-        return;
+        missing_resource = verdict.missing;
       }
+      continue;
+    }
+    chosen = &intent;
+    break;
+  }
+
+  if (missing_resource != ResourceType::Count) {
+    order_harvest(snapshot, context, missing_resource, take_builder, out_commands);
+  }
+
+  const char* building_to_construct = chosen != nullptr ? chosen->type : nullptr;
+  float construction_x = context.base_pos_x;
+  float construction_z = context.base_pos_z;
+  bool expansion_order = chosen != nullptr && chosen->expansion;
+  bool site_resolved = false;
+  bool wanted_a_builder = false;
+
+  if (chosen != nullptr) {
+    if (chosen->site_known) {
+      construction_x = chosen->x;
+      construction_z = chosen->z;
+      site_resolved = true;
+    } else if (!context.has_base_anchor) {
+      site_resolved = true;
     } else {
-      const auto costs = construction_cost_info(building_to_construct).resource_costs;
-      int largest_deficit = 0;
-      if (snapshot.has_resource_snapshot) {
-        for (const ResourceType type : k_all_resource_types) {
-          const int deficit = costs.get(type) - snapshot.resources.get(type);
-          if (deficit > largest_deficit && harvest_type_for_resource(type) != nullptr) {
-            missing_resource = type;
-            largest_deficit = deficit;
-          }
-        }
-      }
-
-      if (missing_resource == ResourceType::Count && context.builder_count > 1) {
-        missing_resource = recruit_reserve_shortfall(snapshot);
-      }
-    }
-
-    if (granary_has_room(snapshot)) {
-      const EntitySnapshot* ripest = nullptr;
-      float ripest_distance_sq = std::numeric_limits<float>::infinity();
-      for (const auto& entity : snapshot.friendly_units) {
-        if (!entity.crop_is_ripe || field_is_worked(snapshot, entity.id)) {
-          continue;
-        }
-        const float dx = entity.pos_x - context.base_pos_x;
-        const float dz = entity.pos_z - context.base_pos_z;
-        const float distance_sq = dx * dx + dz * dz;
-        if (distance_sq < ripest_distance_sq) {
-          ripest_distance_sq = distance_sq;
-          ripest = &entity;
-        }
-      }
-      if (ripest != nullptr) {
-        AICommand command;
-        command.type = AICommandType::StartBuilderHarvest;
-        command.units.push_back(select_best_builder(
-            snapshot, available_builders, ripest->pos_x, ripest->pos_z));
-        command.construction_type = HARVEST_GRAIN;
-        command.construction_site_x = ripest->pos_x;
-        command.construction_site_z = ripest->pos_z;
-        command.resource_target_id = ripest->id;
-        out_commands.push_back(std::move(command));
-        return;
-      }
-    }
-
-    if (missing_resource != ResourceType::Count) {
-      const ResourceNodeSnapshot* closest = nullptr;
-      float closest_distance_sq = std::numeric_limits<float>::infinity();
-      for (const auto& node : snapshot.resource_nodes) {
-        if (node.reserved || !node_matches_resource(node, missing_resource)) {
-          continue;
-        }
-        const float dx = node.pos_x - context.base_pos_x;
-        const float dz = node.pos_z - context.base_pos_z;
-        const float distance_sq = dx * dx + dz * dz;
-        if (distance_sq < closest_distance_sq) {
-          closest = &node;
-          closest_distance_sq = distance_sq;
-        }
-      }
-      if (closest == nullptr) {
-        return;
-      }
-
-      AICommand command;
-      command.type = AICommandType::StartBuilderHarvest;
-      command.units.push_back(select_best_builder(
-          snapshot, available_builders, closest->pos_x, closest->pos_z));
-      command.construction_type = harvest_type_for_resource(missing_resource);
-      command.construction_site_x = closest->pos_x;
-      command.construction_site_z = closest->pos_z;
-      command.resource_target_id = closest->id;
-      out_commands.push_back(std::move(command));
-      return;
-    }
-
-    if (has_plan_step) {
-      construction_x = context.base_pos_x + planned_offset.x();
-      construction_z = context.base_pos_z + planned_offset.z();
-    } else if (context.has_base_anchor) {
-
       constexpr int k_site_search_attempts = 24;
-      bool found_site = false;
       for (int attempt = 0; attempt < k_site_search_attempts; ++attempt) {
         const QVector3D offset = planned_settlement_offset(
             context, building_to_construct, m_construction_counter + attempt);
@@ -691,111 +1303,66 @@ void BuilderBehavior::execute(const AISnapshot& snapshot,
         construction_x = candidate_x;
         construction_z = candidate_z;
         m_construction_counter += attempt;
-        found_site = true;
+        site_resolved = true;
         break;
       }
-      if (!found_site) {
+      if (!site_resolved) {
         m_construction_counter += k_site_search_attempts;
-        return;
+        building_to_construct = nullptr;
       }
     }
   }
 
-  clamp_to_map_bounds(snapshot, construction_x, construction_z);
+  order_field_work(
+      snapshot, context, available_builders, 1, take_builder, out_commands);
+  order_repairs(snapshot, available_builders, 1, take_builder, out_commands);
 
-  if (qEnvironmentVariableIsSet("SOI_BUILD_TRACE")) {
-    qWarning() << "BUILDTRACE p" << context.player_id << "wants"
-               << (building_to_construct != nullptr ? building_to_construct : "nothing")
-               << "at" << construction_x << construction_z << "base"
-               << context.base_pos_x << context.base_pos_z << "homes"
-               << context.home_count << "barracks" << context.barracks_count;
-  }
-  if (!available_builders.empty()) {
-    AICommand command;
-    command.type = AICommandType::StartBuilderConstruction;
-    command.units.push_back(select_best_builder(
-        snapshot, available_builders, construction_x, construction_z));
-    command.construction_type = building_to_construct;
-    command.construction_site_x = construction_x;
-    command.construction_site_z = construction_z;
-    out_commands.push_back(std::move(command));
+  if (building_to_construct != nullptr && site_resolved) {
+    clamp_to_map_bounds(snapshot, construction_x, construction_z);
 
-    if (expansion_order) {
-      AIBaseManager::note_expansion_order(
-          context, snapshot.game_time, construction_x, construction_z);
+    if (qEnvironmentVariableIsSet("SOI_BUILD_TRACE")) {
+      qWarning() << "BUILDTRACE p" << context.player_id << "wants"
+                 << building_to_construct << "at" << construction_x << construction_z
+                 << "base" << context.base_pos_x << context.base_pos_z << "homes"
+                 << context.home_count << "barracks" << context.barracks_count;
     }
-    m_construction_counter++;
+
+    const auto builder = take_strongest_builder(construction_x, construction_z);
+    if (builder == 0) {
+      wanted_a_builder = true;
+    } else {
+      AICommand command;
+      command.type = AICommandType::StartBuilderConstruction;
+      command.units.push_back(builder);
+      command.construction_type = building_to_construct;
+      command.construction_site_x = construction_x;
+      command.construction_site_z = construction_z;
+      out_commands.push_back(std::move(command));
+
+      if (expansion_order) {
+        AIBaseManager::note_expansion_order(
+            context, snapshot.game_time, construction_x, construction_z);
+      }
+      note_construction_order(building_to_construct,
+                              static_cast<int>(context.buildings.size()),
+                              snapshot.game_time);
+      m_construction_counter++;
+    }
   }
+
+  divide_work_parties(snapshot, context, out_commands);
+  manage_gather_crew(
+      snapshot, context, wanted_a_builder, available_builders, out_commands);
 }
 
 auto BuilderBehavior::should_execute(const AISnapshot& snapshot,
                                      const AIContext& context) const -> bool {
+  (void)snapshot;
   if (context.nation != nullptr && !context.nation->has_economy) {
     return false;
   }
 
-  if (context.builder_count == 0) {
-    return false;
-  }
-
-  const int catapult_count = static_cast<int>(
-      std::count_if(snapshot.friendly_units.begin(),
-                    snapshot.friendly_units.end(),
-                    [](const EntitySnapshot& entity) {
-                      return !entity.is_building &&
-                             entity.spawn_type == Game::Units::SpawnType::Catapult;
-                    }));
-
-  if (context.state == AIState::Expanding && needs_outpost_construction(context)) {
-    return true;
-  }
-
-  if (exposed_secondary_base(context) != nullptr) {
-    return true;
-  }
-
-  if (recruit_reserve_shortfall(snapshot) != ResourceType::Count) {
-    return true;
-  }
-
-  if (granary_has_room(snapshot)) {
-    for (const auto& entity : snapshot.friendly_units) {
-      if (entity.crop_is_ripe) {
-        return true;
-      }
-    }
-  }
-
-  if (context.macro_targets.raise_homes_first && context.home_count < MAX_HOMES) {
-    return true;
-  }
-
-  {
-    const char* planned_building = nullptr;
-    QVector3D planned_offset;
-    if (context.primary_barracks != 0 &&
-        authored_plan_step(
-            context, snapshot, nullptr, planned_building, planned_offset)) {
-      return true;
-    }
-  }
-
-  return context.home_count <
-             std::clamp(context.macro_targets.home_count, 2, MAX_HOMES) ||
-         context.barracks_count <
-             std::clamp(context.macro_targets.barracks_count, 1, MAX_BARRACKS) ||
-         context.marketplace_count <
-             std::clamp(context.macro_targets.marketplace_count, 0, MAX_MARKETPLACES) ||
-         context.defense_tower_count <
-             std::clamp(
-                 context.macro_targets.defense_tower_count, 0, MAX_DEFENSE_TOWERS) ||
-         context.wall_segment_count <
-             std::clamp(
-                 context.macro_targets.wall_segment_count, 0, MAX_WALL_SEGMENTS) ||
-         catapult_count <
-             std::clamp(context.macro_targets.catapult_count, 0, MAX_CATAPULTS) ||
-         context.farm_count <
-             std::clamp(context.macro_targets.farm_count, 0, MAX_FARMS);
+  return context.builder_count > 0;
 }
 
 } // namespace Game::Systems::AI

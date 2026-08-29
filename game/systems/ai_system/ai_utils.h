@@ -78,6 +78,11 @@ inline auto is_combat_role_unit(const EntitySnapshot& entity) -> bool {
          entity.spawn_type != Game::Units::SpawnType::Civilian;
 }
 
+inline auto marches_with_the_army(const EntitySnapshot& entity) -> bool {
+
+  return is_combat_role_unit(entity) && !entity.is_commander;
+}
+
 inline auto is_threatening_contact(const ContactSnapshot& contact) -> bool {
   if (contact.holds_ground) {
     return false;

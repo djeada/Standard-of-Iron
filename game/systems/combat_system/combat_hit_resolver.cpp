@@ -631,7 +631,6 @@ auto resolve_commander_action_hit(Engine::Core::World* world,
           : std::optional<std::uint16_t>(request.contact.target_soldier_slot),
       reported_contact_point(request.contact),
       result.contact.relative_speed);
-  result.queued_soldier_casualties = result.damage.queued_soldier_casualties;
   result.applied = result.damage.effective_damage > 0;
   queue_rpg_contact_presentation(
       *target, result.contact.contact_point, result.damage, result.applied);

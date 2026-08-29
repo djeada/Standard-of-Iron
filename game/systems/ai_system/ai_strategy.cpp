@@ -13,8 +13,8 @@ void clamp_style_targets(AIStrategyConfig& config) {
   int const min_barracks_count =
       (config.strategy == AIStrategy::SepulcherDefense) ? 0 : 1;
   config.target_builder_count =
-      std::clamp(config.target_builder_count, min_builder_count, 8);
-  config.base_home_target = std::clamp(config.base_home_target, min_home_target, 12);
+      std::clamp(config.target_builder_count, min_builder_count, 14);
+  config.base_home_target = std::clamp(config.base_home_target, min_home_target, 18);
   config.desired_barracks_count =
       std::clamp(config.desired_barracks_count, min_barracks_count, 6);
   config.desired_defense_tower_count =
@@ -168,7 +168,7 @@ auto AIStrategyFactory::create_config(AIStrategy strategy) -> AIStrategyConfig {
     config.retreat_threshold = 0.15F;
     config.harassment_range = 0.0F;
     config.target_builder_count = 2;
-    config.base_home_target = 2;
+    config.base_home_target = 4;
     config.desired_barracks_count = 3;
     config.desired_defense_tower_count = 1;
     config.desired_wall_segment_count = 0;
@@ -200,7 +200,7 @@ auto AIStrategyFactory::create_config(AIStrategy strategy) -> AIStrategyConfig {
     config.retreat_threshold = 0.40F;
     config.harassment_range = 0.0F;
     config.target_builder_count = 4;
-    config.base_home_target = 3;
+    config.base_home_target = 5;
     config.desired_barracks_count = 1;
     config.desired_defense_tower_count = 3;
     config.desired_wall_segment_count = 3;
@@ -265,7 +265,7 @@ auto AIStrategyFactory::create_config(AIStrategy strategy) -> AIStrategyConfig {
     config.retreat_threshold = 0.35F;
     config.harassment_range = 0.0F;
     config.target_builder_count = 5;
-    config.base_home_target = 4;
+    config.base_home_target = 6;
     config.desired_barracks_count = 2;
     config.desired_defense_tower_count = 1;
 
@@ -298,7 +298,7 @@ auto AIStrategyFactory::create_config(AIStrategy strategy) -> AIStrategyConfig {
     config.retreat_threshold = 0.50F;
     config.harassment_range = 60.0F;
     config.target_builder_count = 3;
-    config.base_home_target = 2;
+    config.base_home_target = 4;
     config.desired_barracks_count = 2;
     config.desired_defense_tower_count = 1;
     config.desired_wall_segment_count = 0;
@@ -330,7 +330,7 @@ auto AIStrategyFactory::create_config(AIStrategy strategy) -> AIStrategyConfig {
     config.retreat_threshold = 0.10F;
     config.harassment_range = 0.0F;
     config.target_builder_count = 2;
-    config.base_home_target = 2;
+    config.base_home_target = 4;
     config.desired_barracks_count = 2;
     config.desired_defense_tower_count = 0;
     config.desired_wall_segment_count = 0;
@@ -394,7 +394,7 @@ auto AIStrategyFactory::create_config(AIStrategy strategy) -> AIStrategyConfig {
     config.retreat_threshold = 0.25F;
     config.harassment_range = 0.0F;
     config.target_builder_count = 3;
-    config.base_home_target = 2;
+    config.base_home_target = 4;
     config.desired_barracks_count = 2;
     config.desired_defense_tower_count = 1;
     config.desired_wall_segment_count = 1;

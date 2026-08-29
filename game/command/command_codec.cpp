@@ -286,6 +286,12 @@ void encode(QJsonObject& o, const RepairStructure& p) {
   o["units"] = ids_to_json(p.units);
   o["structure"] = id_to_json(p.structure);
 }
+void encode(QJsonObject& o, const DivideSquads& p) {
+  o["units"] = ids_to_json(p.units);
+}
+void encode(QJsonObject& o, const MergeSquads& p) {
+  o["units"] = ids_to_json(p.units);
+}
 void encode(QJsonObject& o, const DismantleStructure& p) {
   o["units"] = ids_to_json(p.units);
   o["structure"] = id_to_json(p.structure);
@@ -429,6 +435,14 @@ auto decode<DeliverCivilians>(Reader& r) -> DeliverCivilians {
 template <>
 auto decode<RepairStructure>(Reader& r) -> RepairStructure {
   return {.units = r.ids("units"), .structure = r.id("structure")};
+}
+template <>
+auto decode<DivideSquads>(Reader& r) -> DivideSquads {
+  return {.units = r.ids("units")};
+}
+template <>
+auto decode<MergeSquads>(Reader& r) -> MergeSquads {
+  return {.units = r.ids("units")};
 }
 template <>
 auto decode<DismantleStructure>(Reader& r) -> DismantleStructure {
