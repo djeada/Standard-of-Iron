@@ -880,8 +880,6 @@ void copy_authoritative_snapshot_components(const Entity& source, Entity& destin
   copy_snapshot_component<MoraleComponent>(source, destination);
   copy_snapshot_component<BurningStatusComponent>(source, destination);
   copy_snapshot_component<StaggerComponent>(source, destination);
-  copy_snapshot_component<PoiseComponent>(source, destination);
-  copy_snapshot_component<CombatLaunchComponent>(source, destination);
   copy_snapshot_component<HitFeedbackComponent>(source, destination);
   copy_snapshot_component<WallConstructionSiteComponent>(source, destination);
   copy_snapshot_component<FirePatchComponent>(source, destination);
@@ -1010,6 +1008,7 @@ auto render_entity_signature(const Entity& entity) -> std::uint64_t {
     render_hash_combine(
         signature,
         static_cast<std::uint64_t>(unit->render_individuals_per_unit_override));
+    render_hash_combine(signature, static_cast<std::uint64_t>(unit->squad_strength));
   }
   if (auto const* farm = entity.get_component<FarmComponent>()) {
     render_hash_combine(signature, static_cast<std::uint64_t>(farm->growth_stage()));

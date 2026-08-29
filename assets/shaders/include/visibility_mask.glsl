@@ -8,6 +8,13 @@ uniform int u_has_visibility;
 
 const float k_visibility_known_cutoff = 0.30;
 
+const float k_visibility_unseen_cutoff = 0.06;
+const float k_visibility_unseen_blend_end = 0.52;
+
+const vec3 k_visibility_unseen_shade = vec3(0.22, 0.23, 0.25);
+const vec3 k_visibility_unseen_lift = vec3(0.030, 0.036, 0.048);
+const float k_visibility_unseen_chroma = 0.70;
+
 struct VisibilityMask {
   float seen_now;
   float known;
@@ -34,6 +41,22 @@ VisibilityMask sample_visibility_mask(sampler2D mask_tex,
 
 bool visibility_is_unknown(VisibilityMask mask) {
   return mask.known < k_visibility_known_cutoff;
+}
+
+bool visibility_is_unseen(VisibilityMask mask) {
+  return mask.known < k_visibility_unseen_cutoff;
+}
+
+float visibility_unseen_blend(VisibilityMask mask) {
+  return smoothstep(
+      k_visibility_unseen_cutoff, k_visibility_unseen_blend_end, mask.known);
+}
+
+vec3 unseen_surface_color(vec3 lit_color) {
+  float luminance = dot(lit_color, vec3(0.2126, 0.7152, 0.0722));
+  vec3 shaded = mix(vec3(luminance), lit_color, k_visibility_unseen_chroma);
+
+  return shaded * k_visibility_unseen_shade + k_visibility_unseen_lift;
 }
 
 float visibility_live_weight(VisibilityMask mask) {
@@ -74,6 +97,24 @@ vec3 apply_visibility_memory_mask(vec3 lit_color, VisibilityMask mask) {
   vec3 memory = remembered_surface_color(lit_color, u_explored_alpha) *
                 visibility_memory_falloff(mask);
   return mix(memory, lit_color, visibility_live_weight(mask));
+}
+
+vec3 apply_visibility_world_shading(vec3 lit_color, VisibilityMask mask) {
+  if (!visibility_mask_active()) {
+    return lit_color;
+  }
+  vec3 memory = remembered_surface_color(lit_color, u_explored_alpha) *
+                visibility_memory_falloff(mask);
+  vec3 shaded = mix(memory, lit_color, visibility_live_weight(mask));
+
+  return mix(unseen_surface_color(lit_color), shaded, visibility_unseen_blend(mask));
+}
+
+vec3 apply_visibility_world_shading(vec3 lit_color, vec2 world_xz) {
+  if (!visibility_mask_active()) {
+    return lit_color;
+  }
+  return apply_visibility_world_shading(lit_color, visibility_mask_fetch(world_xz));
 }
 
 vec3 apply_visibility_memory(vec3 lit_color, vec2 world_xz) {

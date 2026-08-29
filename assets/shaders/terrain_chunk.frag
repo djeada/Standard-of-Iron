@@ -226,11 +226,50 @@ float terrain_sky_openness(vec2 uv, float center_height) {
 const float k_soi_tactical_near = 58.0;
 const float k_soi_tactical_far = 115.0;
 
+vec3 unseen_terrain_color() {
+
+  vec3 normal = normalize(v_normal);
+  float cavity = 1.0;
+  if (u_has_field_tex == 1) {
+    vec2 height_uv = v_world_pos.xz * u_height_uv_scale + u_height_uv_offset;
+    vec4 fields = texture(u_field_tex, height_uv);
+    normal = normalize(mix(normal, normalize(vec3(fields.z, 1.0, fields.w)), 0.55));
+    cavity = mix(0.70, 1.0, smoothstep(0.30, 0.92, fields.x));
+  }
+
+  vec4 macro_field = vec4(0.5);
+  vec4 detail_field = vec4(0.5);
+  if (u_has_noise_atlas == 1) {
+    vec2 atlas_uv = v_world_pos.xz / max(u_noise_atlas_world_size, vec2(1e-4));
+    macro_field = texture(u_noise_atlas, atlas_uv);
+    detail_field = texture(u_noise_atlas_detail, atlas_uv);
+  }
+
+  float slope = 1.0 - clamp(normal.y, 0.0, 1.0);
+  float rock_threshold = clamp(u_slope_rock_threshold, 0.08, 0.88);
+
+  vec3 ground = mix(u_grass_primary, u_grass_secondary, macro_field.r);
+  ground = mix(ground, u_grass_dry, smoothstep(0.46, 0.90, macro_field.a) * 0.62);
+  ground = mix(ground, u_soil_color, smoothstep(0.60, 0.96, macro_field.g) * 0.70);
+  ground = mix(ground,
+               mix(u_rock_low, u_rock_high, detail_field.g),
+               smoothstep(rock_threshold, rock_threshold + 0.20, slope));
+  ground = mix(ground,
+               u_snow_color,
+               clamp(u_snow_coverage, 0.0, 1.0) * smoothstep(0.42, 0.86, normal.y));
+  ground *= u_tint;
+
+  return unseen_surface_color(ground * soi_surface_lighting(normal) *
+                              (u_ambient_boost * cavity));
+}
+
 void main() {
 
   VisibilityMask visibility = visibility_mask_fetch(v_world_pos.xz);
-  if (visibility_is_unknown(visibility)) {
-    discard;
+
+  if (visibility_is_unseen(visibility)) {
+    frag_color = vec4(unseen_terrain_color(), 1.0);
+    return;
   }
 
   vec3 to_camera = u_camera_pos - v_world_pos;
@@ -1018,6 +1057,12 @@ void main() {
   lit_color = apply_directional_shadow(lit_color, v_world_pos, detail_normal);
   lit_color += terrain_color * local_lighting(v_world_pos, detail_normal);
   lit_color = apply_visibility_memory_mask(lit_color, visibility);
+
+  float unseen_blend = visibility_unseen_blend(visibility);
+  if (unseen_blend < 1.0) {
+
+    lit_color = mix(unseen_terrain_color(), lit_color, unseen_blend);
+  }
 
   frag_color = vec4(lit_color, 1.0);
 }

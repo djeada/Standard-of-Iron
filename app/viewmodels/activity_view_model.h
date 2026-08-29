@@ -46,6 +46,9 @@ public:
   Q_INVOKABLE void begin_dismantle_order();
   Q_INVOKABLE void confirm_dismantle_at(qreal sx, qreal sy);
 
+  Q_INVOKABLE void divide_selected_squads();
+  Q_INVOKABLE void merge_selected_squads();
+
   Q_INVOKABLE void toggle_auto_gather(const QString& priority_product_type = {});
   Q_INVOKABLE void set_auto_gather(bool active,
                                    const QString& priority_product_type = {});

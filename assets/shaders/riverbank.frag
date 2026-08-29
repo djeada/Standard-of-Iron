@@ -119,9 +119,6 @@ float calculate_visibility() {
 
   VisibilityMask mask = sample_visibility_mask(
       u_visibility_tex, world_pos.xz, u_visibility_size, u_visibility_tile_size);
-  if (visibility_is_unknown(mask)) {
-    discard;
-  }
 
   float memory = saturate(u_explored_alpha) * visibility_memory_falloff(mask);
   return mix(memory, 1.0, visibility_live_weight(mask));
@@ -325,6 +322,11 @@ void main() {
   float segment_visibility = saturate(u_segment_visibility);
 
   color *= visibility_factor * segment_visibility;
+  if (visibility_mask_active()) {
+
+    float unseen_blend = visibility_unseen_blend(visibility_mask_fetch(world_pos.xz));
+    color = mix(unseen_surface_color(color), color, unseen_blend);
+  }
 
   float core_alpha =
       (1.0 -

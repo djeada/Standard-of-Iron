@@ -62,6 +62,7 @@ auto pair_signature(const Engine::Core::Entity& attacker,
       signature_combine(
           signature,
           static_cast<std::uint64_t>(unit->render_individuals_per_unit_override));
+      signature_combine(signature, static_cast<std::uint64_t>(unit->squad_strength));
     }
     auto const* contact =
         entity->get_component<Engine::Core::FormationContactComponent>();

@@ -1,3 +1,4 @@
+#include <cmath>
 #include <gtest/gtest.h>
 #include <vector>
 
@@ -10,6 +11,7 @@
 #include "game/map/terrain_service.h"
 #include "game/session/session_context.h"
 #include "game/systems/builder_product_types.h"
+#include "game/systems/building_collision_registry.h"
 #include "game/systems/civilian_delivery_system.h"
 #include "game/systems/owner_registry.h"
 #include "game/systems/player_resource_registry.h"
@@ -644,6 +646,85 @@ TEST(CommandPipelineTest, PlaceBuildingRefusesAUnitTypeThatIsNotAStructure) {
   EXPECT_EQ(Game::Systems::StructurePlacementService::ruling(
                 match.session.world(), 1, "archer", QVector3D(3.0F, 0.0F, 3.0F)),
             Game::Systems::PlacementRuling::UnknownStructure);
+}
+
+TEST(CommandPipelineTest, TwoHomesCannotBeRaisedOnTopOfEachOther) {
+  Match match;
+  auto& collision = match.session.building_collision();
+  const auto footprint =
+      Game::Systems::BuildingCollisionRegistry::get_building_size(std::string("home"));
+  collision.register_building(
+      match.spawn(1, 20.0F, 20.0F), std::string("home"), 20.0F, 20.0F, 1, footprint);
+
+  EXPECT_EQ(Game::Systems::assess_ground(match.session.world(), "home", 20.0F, 20.0F),
+            Game::Systems::GroundVerdict::Occupied);
+
+  EXPECT_EQ(Game::Systems::assess_ground(match.session.world(),
+                                         "home",
+                                         20.0F + footprint.width + 3.0F,
+                                         20.0F + footprint.depth + 3.0F),
+            Game::Systems::GroundVerdict::Clear)
+      << "a home clear of its neighbour's footprint is a legal site";
+}
+
+TEST(CommandPipelineTest, NothingIsBuiltOnTheRiver) {
+  Match match;
+  match.session.terrain().restore_from_serialized(
+      64,
+      64,
+      1.0F,
+      std::vector<float>(64U * 64U, 0.0F),
+      std::vector<Game::Map::TerrainType>(64U * 64U, Game::Map::TerrainType::Flat),
+      {Game::Map::RiverSegment{
+          QVector3D(-30.0F, 0.0F, 0.0F), QVector3D(30.0F, 0.0F, 0.0F), 8.0F}},
+      {},
+      {},
+      Game::Map::BiomeSettings{});
+
+  EXPECT_EQ(Game::Systems::assess_ground(match.session.world(), "home", 0.0F, 0.0F),
+            Game::Systems::GroundVerdict::Water)
+      << "the middle of a river is not a building site";
+
+  EXPECT_EQ(Game::Systems::assess_ground(match.session.world(), "home", 0.0F, 22.0F),
+            Game::Systems::GroundVerdict::Clear)
+      << "dry ground well back from the bank still is";
+}
+
+TEST(CommandPipelineTest, NothingIsRaisedOnTheFlankOfAHill) {
+  Match match;
+
+  constexpr int k_side = 64;
+  std::vector<float> heights(static_cast<std::size_t>(k_side) * k_side, 0.0F);
+  for (int gz = 0; gz < k_side; ++gz) {
+    for (int gx = 0; gx < k_side; ++gx) {
+
+      const float world_x = static_cast<float>(gx) - (k_side * 0.5F - 0.5F);
+      const float world_z = static_cast<float>(gz) - (k_side * 0.5F - 0.5F);
+      const float distance = std::hypot(world_x - 12.0F, world_z - 12.0F);
+      heights[static_cast<std::size_t>(gz * k_side + gx)] =
+          std::max(0.0F, 4.0F - (distance * 0.4F));
+    }
+  }
+
+  match.session.terrain().restore_from_serialized(
+      k_side,
+      k_side,
+      1.0F,
+      heights,
+      std::vector<Game::Map::TerrainType>(static_cast<std::size_t>(k_side) * k_side,
+                                          Game::Map::TerrainType::Flat),
+      {},
+      {},
+      {},
+      Game::Map::BiomeSettings{});
+
+  EXPECT_EQ(Game::Systems::assess_ground(match.session.world(), "home", 6.0F, 6.0F),
+            Game::Systems::GroundVerdict::Uneven)
+      << "the flank of a hill is not a building site";
+
+  EXPECT_EQ(Game::Systems::assess_ground(match.session.world(), "home", -20.0F, -20.0F),
+            Game::Systems::GroundVerdict::Clear)
+      << "the flat ground away from it still is";
 }
 
 } // namespace

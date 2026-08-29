@@ -408,13 +408,6 @@ auto make_catalog() -> QVector<InputBindings::ActionSpec> {
                   {},
                   QStringLiteral("Mouse Left"),
                   false});
-  catalog.append({QStringLiteral("commander.heavy_action"),
-                  commander,
-                  combat,
-                  QObject::tr("Heavy attack"),
-                  QObject::tr("Branches or finishes the current commander combo"),
-                  QStringLiteral("Mouse Middle"),
-                  false});
   catalog.append({QStringLiteral("commander.secondary_action"),
                   commander,
                   combat,
@@ -432,8 +425,8 @@ auto make_catalog() -> QVector<InputBindings::ActionSpec> {
   catalog.append({QStringLiteral("commander.special_action"),
                   commander,
                   combat,
-                  QObject::tr("Weapon special"),
-                  QObject::tr("Use while guarding to shield bash"),
+                  QObject::tr("Special action"),
+                  {},
                   QStringLiteral("F"),
                   false});
   catalog.append({QStringLiteral("commander.ability_vanguard_rush"),

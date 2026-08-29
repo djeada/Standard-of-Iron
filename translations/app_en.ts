@@ -3041,6 +3041,58 @@ This may be a skirmish, or objectives have not been configured.</translation>
         <source>Press again to cycle any resource, wood, stone, iron, food, then off.</source>
         <translation>Press again to cycle any resource, wood, stone, iron, food, then off.</translation>
     </message>
+    <message>
+        <source>Split</source>
+        <translation>Split</translation>
+    </message>
+    <message>
+        <source>Break the selected squad into two smaller ones so they can work or fight in two places at once.</source>
+        <translation>Break the selected squad into two smaller ones so they can work or fight in two places at once.</translation>
+    </message>
+    <message>
+        <source>Each half</source>
+        <translation>Each half</translation>
+    </message>
+    <message>
+        <source>Carries half the men, half the health and does its work at half the speed.</source>
+        <translation>Carries half the men, half the health and does its work at half the speed.</translation>
+    </message>
+    <message>
+        <source>Needs</source>
+        <translation>Needs</translation>
+    </message>
+    <message>
+        <source>A squad of at least four still standing.</source>
+        <translation>A squad of at least four still standing.</translation>
+    </message>
+    <message>
+        <source>This squad is too small to divide</source>
+        <translation>This squad is too small to divide</translation>
+    </message>
+    <message>
+        <source>Join</source>
+        <translation>Join</translation>
+    </message>
+    <message>
+        <source>Fold two understrength squads of the same kind back into one.</source>
+        <translation>Fold two understrength squads of the same kind back into one.</translation>
+    </message>
+    <message>
+        <source>Two squads of the same kind, both below full strength and standing close together.</source>
+        <translation>Two squads of the same kind, both below full strength and standing close together.</translation>
+    </message>
+    <message>
+        <source>Result</source>
+        <translation>Result</translation>
+    </message>
+    <message>
+        <source>One squad with their men and health added together, up to a full establishment.</source>
+        <translation>One squad with their men and health added together, up to a full establishment.</translation>
+    </message>
+    <message>
+        <source>Select two understrength squads of the same kind</source>
+        <translation>Select two understrength squads of the same kind</translation>
+    </message>
 </context>
 <context>
     <name>HUDBottomCommander</name>
@@ -4874,6 +4926,18 @@ to see preview</translation>
         <source>Watch the computer fight itself on this battlefield</source>
         <translation>Watch the computer fight itself on this battlefield</translation>
     </message>
+    <message>
+        <source>%1 gold</source>
+        <translation>%1 gold</translation>
+    </message>
+    <message>
+        <source>Treasury</source>
+        <translation>Treasury</translation>
+    </message>
+    <message>
+        <source>Gold every side starts with — click to change</source>
+        <translation>Gold every side starts with — click to change</translation>
+    </message>
 </context>
 <context>
     <name>MapTransformer</name>
@@ -6470,6 +6534,14 @@ to see preview</translation>
         <source>Hauling a load - it cannot be interrupted until the load is dropped off.</source>
         <translation>Hauling a load - it cannot be interrupted until the load is dropped off.</translation>
     </message>
+    <message>
+        <source>Squad</source>
+        <translation>Squad</translation>
+    </message>
+    <message>
+        <source>Only a squad of several individuals can be divided or joined.</source>
+        <translation>Only a squad of several individuals can be divided or joined.</translation>
+    </message>
 </context>
 <context>
     <name>OutcomeLayout</name>
@@ -6614,10 +6686,6 @@ to see preview</translation>
         <translation>That resource is already assigned.</translation>
     </message>
     <message>
-        <source>Cannot build there.</source>
-        <translation>Cannot build there.</translation>
-    </message>
-    <message>
         <source>No valid wall segments in that drag.</source>
         <translation>No valid wall segments in that drag.</translation>
     </message>
@@ -6648,6 +6716,22 @@ to see preview</translation>
     <message>
         <source>No part of this wall can stand there.</source>
         <translation>No part of this wall can stand there.</translation>
+    </message>
+    <message>
+        <source>This ground cannot be cleared to build on.</source>
+        <translation>This ground cannot be cleared to build on.</translation>
+    </message>
+    <message>
+        <source>Nothing can be built on the water.</source>
+        <translation>Nothing can be built on the water.</translation>
+    </message>
+    <message>
+        <source>The ground here is too steep to build on.</source>
+        <translation>The ground here is too steep to build on.</translation>
+    </message>
+    <message>
+        <source>That is beyond the edge of the battlefield.</source>
+        <translation>That is beyond the edge of the battlefield.</translation>
     </message>
 </context>
 <context>

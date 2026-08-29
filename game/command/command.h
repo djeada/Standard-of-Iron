@@ -163,6 +163,14 @@ struct RepairStructure {
   Engine::Core::EntityID structure = Engine::Core::NULL_ENTITY;
 };
 
+struct DivideSquads {
+  std::vector<Engine::Core::EntityID> units;
+};
+
+struct MergeSquads {
+  std::vector<Engine::Core::EntityID> units;
+};
+
 struct DismantleStructure {
   std::vector<Engine::Core::EntityID> units;
   Engine::Core::EntityID structure = Engine::Core::NULL_ENTITY;
@@ -196,6 +204,8 @@ using Payload = std::variant<Move,
                              DeliverCivilians,
                              RepairStructure,
                              DismantleStructure,
+                             DivideSquads,
+                             MergeSquads,
                              PlaceWallPlan,
                              PlaceBuilding>;
 

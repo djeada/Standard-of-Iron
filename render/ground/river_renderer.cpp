@@ -100,37 +100,18 @@ void WaterRenderer::submit(Renderer& renderer, ResourceManager* resources) {
   QMatrix4x4 model;
   model.setToIdentity();
 
-  Ground::LinearFeatureVisibilityOptions vis_opts;
-  vis_opts.treat_out_of_bounds_as_visible = true;
-
   for (const auto& surface : m_meshes) {
     auto* mesh = surface.mesh.get();
     if (mesh == nullptr) {
       continue;
     }
 
-    if (surface.kind == WaterSurfaceKind::River) {
-      const auto fog_mode = renderer.static_world_visibility_filter_enabled()
-                                ? SubmissionFogMode::Revealed
-                                : SubmissionFogMode::Ignore;
-      if (!renderer.submission_visibility().accepts_segment(surface.visibility_start,
-                                                            surface.visibility_end,
-                                                            m_tile_size,
-                                                            fog_mode)) {
-        continue;
-      }
-    }
-
-    if (vis_snapshot != nullptr && surface.kind == WaterSurfaceKind::River) {
-      vis_opts.sample_count =
-          Ground::recommended_linear_feature_visibility_sample_count(
-              (surface.visibility_end - surface.visibility_start).length(),
-              m_tile_size);
-      const auto vis_result = Ground::evaluate_linear_feature_visibility(
-          vis_snapshot, surface.visibility_start, surface.visibility_end, vis_opts);
-      if (!vis_result.visible) {
-        continue;
-      }
+    if (surface.kind == WaterSurfaceKind::River &&
+        !renderer.submission_visibility().accepts_segment(surface.visibility_start,
+                                                          surface.visibility_end,
+                                                          m_tile_size,
+                                                          SubmissionFogMode::Ignore)) {
+      continue;
     }
 
     TerrainFeatureCmd cmd;

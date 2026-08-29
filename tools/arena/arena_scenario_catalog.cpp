@@ -1505,13 +1505,13 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
   {
     auto s = definition(
         QString::fromLatin1(k_rpg_one_press_one_attack_id),
-        QStringLiteral("RPG Press And Hold Combo"),
+        QStringLiteral("RPG One Press One Attack"),
         QStringLiteral(
             "Three deliberate attack presses, well clear of each other, then the "
-            "attack input held down through a complete sword combo. A tap requests "
-            "one attack; a hold continues at authored recovery boundaries and "
-            "release prevents another link from starting."),
-        8.5F);
+            "attack input held down for a second. One press has to request exactly "
+            "one attack and holding must never repeat it: melee auto-repeat is not "
+            "a contract this mode offers."),
+        7.0F);
     s.rpg_mode = true;
     s.rpg_commander_group = QStringLiteral("rpg_commander");
     s.suppress_terrain_scatter = true;
@@ -1544,7 +1544,7 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
         at(2.10F, Command::RpgPrimaryAttack, QStringLiteral("rpg_commander")),
         at(3.60F, Command::RpgPrimaryAttack, QStringLiteral("rpg_commander")),
         hold_attack(5.00F, true),
-        hold_attack(7.60F, false),
+        hold_attack(6.60F, false),
     };
     add_visual_stability(
         s, {QStringLiteral("rpg_commander"), QStringLiteral("training_dummy")});
@@ -1561,15 +1561,15 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
       s.expectations.push_back(three_presses);
     }
     {
-      auto held_combo = expectation(Expect::CommanderCombatCounterWithin,
+      auto held_press = expectation(Expect::CommanderCombatCounterWithin,
                                     QStringLiteral("rpg_commander"),
                                     {},
-                                    3.0F,
+                                    1.0F,
                                     4.95F);
-      held_combo.counter_key = QStringLiteral("accepted");
-      held_combo.end_seconds = 8.5F;
-      held_combo.maximum = 4.0F;
-      s.expectations.push_back(held_combo);
+      held_press.counter_key = QStringLiteral("accepted");
+      held_press.end_seconds = 7.0F;
+      held_press.maximum = 1.0F;
+      s.expectations.push_back(held_press);
     }
     {
       auto no_expiry = expectation(Expect::CommanderCombatCounterWithin,
@@ -1578,6 +1578,10 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
       no_expiry.maximum = 0.0F;
       s.expectations.push_back(no_expiry);
     }
+    s.expectations.push_back(expectation(Expect::CommanderContactCountAtMost,
+                                         QStringLiteral("rpg_commander"),
+                                         {},
+                                         1.0F));
     s.expectations.push_back(
         expectation(Expect::AttackAnimationObserved, QStringLiteral("rpg_commander")));
     s.expectations.push_back(expectation(Expect::NoFullscreenFlash));
@@ -2226,194 +2230,6 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
         expectation(Expect::GroupHealthReduced, QStringLiteral("enemy_target")));
     s.expectations.push_back(expectation(Expect::RpgStrikeAnimationMatched,
                                          QStringLiteral("rpg_commander")));
-    s.expectations.push_back(expectation(Expect::NoFullscreenFlash));
-    result.push_back(std::move(s));
-  }
-
-  {
-    auto s = definition(
-        QString::fromLatin1(k_rpg_commander_sword_grammar_id),
-        QStringLiteral("RPG Commander Sword Grammar"),
-        QStringLiteral(
-            "A durable close formation gives the direct-control sword commander "
-            "room to demonstrate his gap closer, launcher branch, radial special, "
-            "air attack, dive, defensive cancel, and full light chain."),
-        10.0F);
-    s.rpg_mode = true;
-    s.rpg_commander_group = QStringLiteral("rpg_commander");
-    s.suppress_terrain_scatter = true;
-    s.select_spawned_units = false;
-    s.suppress_spawn_anchor = true;
-    s.suppress_ui_overlays = true;
-    auto commander = group(QStringLiteral("rpg_commander"),
-                           Troop::RomanVeteranConsul,
-                           1,
-                           1,
-                           {0.0F, 0.0F, 0.0F},
-                           1);
-    commander.facing_degrees = 0.0F;
-    auto targets = group(
-        QStringLiteral("enemy_crowd"), Troop::Swordsman, 2, 1, {0.0F, 0.0F, 3.8F}, 7);
-    targets.facing_degrees = 180.0F;
-    targets.health_override = targets.max_health_override = 12000;
-    s.groups = {commander, targets};
-    s.steps = {
-        at(0.10F,
-           Command::RpgAim,
-           QStringLiteral("rpg_commander"),
-           QStringLiteral("enemy_crowd")),
-        at(0.45F, Command::RpgHeavyAttack, QStringLiteral("rpg_commander")),
-        at(1.08F, Command::RpgPrimaryAttack, QStringLiteral("rpg_commander")),
-        at(1.66F, Command::RpgHeavyAttack, QStringLiteral("rpg_commander")),
-        at(2.75F, Command::RpgSpecial, QStringLiteral("rpg_commander")),
-        at(3.85F, Command::RpgJump, QStringLiteral("rpg_commander")),
-        at(3.94F, Command::RpgPrimaryAttack, QStringLiteral("rpg_commander")),
-        at(4.52F, Command::RpgHeavyAttack, QStringLiteral("rpg_commander")),
-        at(5.35F, Command::RpgDodge, QStringLiteral("rpg_commander")),
-        at(6.10F, Command::RpgGuard, QStringLiteral("rpg_commander")),
-        at(6.18F, Command::RpgSpecial, QStringLiteral("rpg_commander")),
-        [] {
-          auto step = at(6.55F, Command::RpgGuard, QStringLiteral("rpg_commander"));
-          step.enabled = false;
-          return step;
-        }(),
-        [] {
-          auto step =
-              at(7.05F, Command::RpgAttackHold, QStringLiteral("rpg_commander"));
-          step.enabled = true;
-          return step;
-        }(),
-        [] {
-          auto step =
-              at(9.45F, Command::RpgAttackHold, QStringLiteral("rpg_commander"));
-          step.enabled = false;
-          return step;
-        }(),
-    };
-    s.expectations.push_back(
-        expectation(Expect::AttackAnimationObserved, QStringLiteral("rpg_commander")));
-    s.expectations.push_back(
-        expectation(Expect::GroupHealthReduced, QStringLiteral("enemy_crowd")));
-    {
-      auto advance = expectation(
-          Expect::RpgTravelObserved, QStringLiteral("rpg_commander"), {}, 1.0F, 0.55F);
-      advance.end_seconds = 9.6F;
-      s.expectations.push_back(advance);
-    }
-    s.expectations.push_back(expectation(Expect::NoFullscreenFlash));
-    result.push_back(std::move(s));
-  }
-
-  {
-    auto s = definition(
-        QString::fromLatin1(k_rpg_commander_spear_grammar_id),
-        QStringLiteral("RPG Commander Spear Grammar"),
-        QStringLiteral(
-            "A direct-control spear commander demonstrates the step-thrust chain, "
-            "long gap closer, launcher, crowd sweep, aerial thrust, and diving "
-            "finisher against a durable formation."),
-        9.0F);
-    s.rpg_mode = true;
-    s.rpg_commander_group = QStringLiteral("rpg_commander");
-    s.suppress_terrain_scatter = true;
-    s.select_spawned_units = false;
-    s.suppress_spawn_anchor = true;
-    s.suppress_ui_overlays = true;
-    auto commander = group(QStringLiteral("rpg_commander"),
-                           Troop::RomanLegionOrganizer,
-                           1,
-                           1,
-                           {0.0F, 0.0F, 0.0F},
-                           1);
-    commander.facing_degrees = 0.0F;
-    auto targets = group(
-        QStringLiteral("enemy_crowd"), Troop::Swordsman, 2, 1, {0.0F, 0.0F, 4.8F}, 7);
-    targets.facing_degrees = 180.0F;
-    targets.health_override = targets.max_health_override = 12000;
-    s.groups = {commander, targets};
-    s.steps = {
-        at(0.10F,
-           Command::RpgAim,
-           QStringLiteral("rpg_commander"),
-           QStringLiteral("enemy_crowd")),
-        at(0.45F, Command::RpgHeavyAttack, QStringLiteral("rpg_commander")),
-        at(1.10F, Command::RpgPrimaryAttack, QStringLiteral("rpg_commander")),
-        at(1.68F, Command::RpgPrimaryAttack, QStringLiteral("rpg_commander")),
-        at(2.26F, Command::RpgHeavyAttack, QStringLiteral("rpg_commander")),
-        at(3.30F, Command::RpgSpecial, QStringLiteral("rpg_commander")),
-        at(4.35F, Command::RpgJump, QStringLiteral("rpg_commander")),
-        at(4.44F, Command::RpgPrimaryAttack, QStringLiteral("rpg_commander")),
-        at(5.02F, Command::RpgHeavyAttack, QStringLiteral("rpg_commander")),
-        at(5.85F, Command::RpgDodge, QStringLiteral("rpg_commander")),
-        [] {
-          auto step =
-              at(6.35F, Command::RpgAttackHold, QStringLiteral("rpg_commander"));
-          step.enabled = true;
-          return step;
-        }(),
-        [] {
-          auto step =
-              at(8.65F, Command::RpgAttackHold, QStringLiteral("rpg_commander"));
-          step.enabled = false;
-          return step;
-        }(),
-    };
-    s.expectations.push_back(
-        expectation(Expect::AttackAnimationObserved, QStringLiteral("rpg_commander")));
-    s.expectations.push_back(
-        expectation(Expect::GroupHealthReduced, QStringLiteral("enemy_crowd")));
-    {
-      auto advance = expectation(
-          Expect::RpgTravelObserved, QStringLiteral("rpg_commander"), {}, 1.1F, 0.70F);
-      advance.end_seconds = 8.6F;
-      s.expectations.push_back(advance);
-    }
-    s.expectations.push_back(expectation(Expect::NoFullscreenFlash));
-    result.push_back(std::move(s));
-  }
-
-  {
-    auto s = definition(
-        QString::fromLatin1(k_rpg_commander_bow_grammar_id),
-        QStringLiteral("RPG Commander Bow Grammar"),
-        QStringLiteral(
-            "A bow commander alternates power shots and evasive specials, then "
-            "switches into and out of his melee stance while the direct-control "
-            "camera tracks the authored movement."),
-        9.0F);
-    s.rpg_mode = true;
-    s.rpg_commander_group = QStringLiteral("rpg_commander");
-    s.suppress_terrain_scatter = true;
-    s.select_spawned_units = false;
-    s.suppress_spawn_anchor = true;
-    s.suppress_ui_overlays = true;
-    auto commander = group(QStringLiteral("rpg_commander"),
-                           Troop::RomanFieldCommander,
-                           1,
-                           1,
-                           {0.0F, 0.0F, 0.0F},
-                           1);
-    commander.facing_degrees = 0.0F;
-    auto targets = group(
-        QStringLiteral("enemy_line"), Troop::Swordsman, 2, 1, {0.0F, 0.0F, 10.0F}, 5);
-    targets.facing_degrees = 180.0F;
-    targets.health_override = targets.max_health_override = 6000;
-    s.groups = {commander, targets};
-    s.steps = {
-        at(0.10F,
-           Command::RpgAim,
-           QStringLiteral("rpg_commander"),
-           QStringLiteral("enemy_line")),
-        at(0.55F, Command::RpgHeavyAttack, QStringLiteral("rpg_commander")),
-        at(2.05F, Command::RpgSpecial, QStringLiteral("rpg_commander")),
-        at(3.20F, Command::RpgWeaponSwitch, QStringLiteral("rpg_commander")),
-        at(4.35F, Command::RpgHeavyAttack, QStringLiteral("rpg_commander")),
-        at(5.60F, Command::RpgWeaponSwitch, QStringLiteral("rpg_commander")),
-        at(6.75F, Command::RpgHeavyAttack, QStringLiteral("rpg_commander")),
-        at(8.10F, Command::RpgSpecial, QStringLiteral("rpg_commander")),
-    };
-    s.expectations.push_back(
-        expectation(Expect::AttackAnimationObserved, QStringLiteral("rpg_commander")));
     s.expectations.push_back(expectation(Expect::NoFullscreenFlash));
     result.push_back(std::move(s));
   }

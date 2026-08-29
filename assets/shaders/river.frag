@@ -168,7 +168,7 @@ void main() {
   float foam = saturate(shore_foam + crest * mix(0.010, 0.022, river_energy));
   color = mix(color, vec3(0.76, 0.86, 0.84) * water_lighting, foam);
 
-  color = apply_visibility_memory(color, world_pos.xz);
+  color = apply_visibility_world_shading(color, world_pos.xz);
   color *= u_segment_visibility;
 
   frag_color = vec4(color, 1.0);

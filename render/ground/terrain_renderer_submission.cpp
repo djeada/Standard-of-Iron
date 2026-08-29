@@ -8,8 +8,6 @@
 #include <cmath>
 #include <cstddef>
 
-#include "game/map/render_visibility_rules.h"
-#include "game/map/visibility_service.h"
 #include "render/gl/shader.h"
 #include "render/gl/texture.h"
 #include "render/scene_renderer.h"
@@ -469,18 +467,13 @@ void TerrainRenderer::submit(Renderer& renderer, ResourceManager* resources) {
 
   Q_UNUSED(resources);
 
-  const auto* visibility_snapshot = renderer.static_world_visibility_filter_enabled()
-                                        ? renderer.submission_visibility().snapshot()
-                                        : nullptr;
   TerrainSurfaceCmd::VisibilityResources visibility_resources;
   const TerrainSurfaceCmd::HeightResources height_resources = update_height_texture();
   renderer.set_terrain_height_resources(height_resources);
   renderer.set_ground_fog(m_ground_fog);
-  if (visibility_snapshot != nullptr) {
+  if (renderer.static_world_visibility_filter_enabled()) {
+
     visibility_resources = renderer.visibility_mask();
-    if (m_chunk_visibility_cache.size() != m_chunks.size()) {
-      m_chunk_visibility_cache.assign(m_chunks.size(), {});
-    }
   }
 
   for (std::size_t chunk_index = 0; chunk_index < m_chunks.size(); ++chunk_index) {
@@ -505,28 +498,6 @@ void TerrainRenderer::submit(Renderer& renderer, ResourceManager* resources) {
       continue;
     }
     submission_cache.was_submitted = true;
-
-    if (visibility_snapshot != nullptr) {
-      auto& cache = m_chunk_visibility_cache[chunk_index];
-      if (cache.visibility_version != visibility_snapshot->version) {
-        bool any_revealed = false;
-        for (int gz = chunk.min_z; gz <= chunk.max_z && !any_revealed; ++gz) {
-          for (int gx = chunk.min_x; gx <= chunk.max_x; ++gx) {
-            if (Game::Map::classify_static_world_cell_visibility(
-                    *visibility_snapshot, gx, gz) !=
-                Game::Map::RenderVisibilityState::Hidden) {
-              any_revealed = true;
-              break;
-            }
-          }
-        }
-        cache.any_revealed = any_revealed;
-        cache.visibility_version = visibility_snapshot->version;
-      }
-      if (!cache.any_revealed) {
-        continue;
-      }
-    }
 
     TerrainSurfaceCmd cmd;
     cmd.mesh = chunk.mesh.get();

@@ -87,6 +87,8 @@ auto every_payload() -> std::vector<Payload> {
   all.emplace_back(DeliverCivilians{.units = {22, 23}, .barracks = 24});
   all.emplace_back(RepairStructure{.units = {25}, .structure = 26});
   all.emplace_back(DismantleStructure{.units = {27}, .structure = 28});
+  all.emplace_back(DivideSquads{.units = {29, 30}});
+  all.emplace_back(MergeSquads{.units = {31, 32}});
   all.emplace_back(PlaceWallPlan{.units = {27},
                                  .gate = true,
                                  .anchor_x = 4,

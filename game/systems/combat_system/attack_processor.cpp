@@ -11,6 +11,7 @@
 #include "../../core/world.h"
 #include "../../units/commander_catalog.h"
 #include "../../units/spawn_type.h"
+#include "../../units/squad.h"
 #include "../../units/troop_config.h"
 #include "../../visuals/team_colors.h"
 #include "../attack_range.h"
@@ -253,8 +254,6 @@ void clear_orphaned_rts_attack_presentation(Engine::Core::Entity* attacker) {
   action->last_hit_soldier_slot =
       Engine::Core::RpgCommanderTargetComponent::k_no_soldier_slot;
   action->hit_target_ids.fill(0U);
-  action->hit_target_soldier_slots.fill(
-      Engine::Core::RpgCommanderTargetComponent::k_no_soldier_slot);
   action->hit_target_count = 0U;
   action->action_running = false;
   action->action_completed = false;
@@ -1113,109 +1112,7 @@ auto claim_commander_signature(Engine::Core::Entity* attacker, int& damage)
   return action_id;
 }
 
-auto rts_commander_action(Engine::Core::World& world,
-                          Engine::Core::Entity& attacker,
-                          Engine::Core::Entity& target,
-                          Engine::Core::CombatAttackFamily family)
-    -> Game::Systems::CombatActions::CombatActionId {
-  using Game::Systems::CombatActions::CombatActionId;
-  using Game::Systems::CombatActions::WeaponFamily;
-  auto* commander = attacker.get_component<Engine::Core::CommanderComponent>();
-  auto const* attack = attacker.get_component<Engine::Core::AttackComponent>();
-  auto const* attacker_transform =
-      attacker.get_component<Engine::Core::TransformComponent>();
-  auto const* target_transform =
-      target.get_component<Engine::Core::TransformComponent>();
-  if (commander == nullptr || !commander->advanced_combat_enabled ||
-      attacker_transform == nullptr || target_transform == nullptr) {
-    return CombatActionId::None;
-  }
-
-  WeaponFamily weapon = WeaponFamily::None;
-  switch (family) {
-  case Engine::Core::CombatAttackFamily::Sword:
-    weapon = WeaponFamily::Sword;
-    break;
-  case Engine::Core::CombatAttackFamily::Spear:
-    weapon = WeaponFamily::Spear;
-    break;
-  case Engine::Core::CombatAttackFamily::Bow:
-    weapon = WeaponFamily::Bow;
-    break;
-  case Engine::Core::CombatAttackFamily::None:
-    return CombatActionId::None;
-  }
-
-  auto const current_id = commander->combo_window_remaining > 0.0F
-                              ? static_cast<CombatActionId>(commander->combo_action_id)
-                              : CombatActionId::None;
-  auto const* current =
-      Game::Systems::CombatActions::find_combat_action_definition(current_id);
-  Engine::Core::CommanderCombatIntentType intent =
-      Engine::Core::CommanderCombatIntentType::Light;
-
-  if (current != nullptr &&
-      current->role == Game::Systems::CombatActions::CommanderActionRole::Launcher) {
-    intent = Engine::Core::CommanderCombatIntentType::Jump;
-    commander->jump_active = true;
-    commander->jump_phase = 0.0F;
-    commander->airborne_velocity = 5.8F;
-  } else if (commander->jump_active) {
-    intent = current != nullptr &&
-                     current->role ==
-                         Game::Systems::CombatActions::CommanderActionRole::Aerial
-                 ? Engine::Core::CommanderCombatIntentType::Heavy
-                 : Engine::Core::CommanderCombatIntentType::Light;
-  } else {
-    int nearby_enemies = 0;
-    constexpr float k_crowd_radius_sq = 12.25F;
-    auto const* attacker_unit = attacker.get_component<Engine::Core::UnitComponent>();
-    if (attacker_unit != nullptr) {
-      for (auto [candidate_ref, candidate_unit, candidate_transform] :
-           world.entity_view<Engine::Core::UnitComponent,
-                             Engine::Core::TransformComponent>()) {
-        if (!is_valid_enemy_unit(attacker_unit, &candidate_ref, false)) {
-          continue;
-        }
-        float const dx =
-            candidate_transform.position.x - attacker_transform->position.x;
-        float const dz =
-            candidate_transform.position.z - attacker_transform->position.z;
-        if ((dx * dx) + (dz * dz) <= k_crowd_radius_sq) {
-          ++nearby_enemies;
-        }
-      }
-    }
-
-    auto const* action =
-        attacker.get_component<Engine::Core::RpgCommanderActionComponent>();
-    std::uint8_t const sequence =
-        action != nullptr ? action->melee_attack_sequence : 0U;
-    float const distance =
-        std::hypot(target_transform->position.x - attacker_transform->position.x,
-                   target_transform->position.z - attacker_transform->position.z);
-    float const normal_reach = attack != nullptr ? attack->melee_range : 2.0F;
-    if (nearby_enemies >= 3 && (sequence % 3U) == 2U) {
-      intent = Engine::Core::CommanderCombatIntentType::Special;
-    } else if (distance > normal_reach * 1.05F || (sequence % 4U) == 3U) {
-      intent = Engine::Core::CommanderCombatIntentType::Heavy;
-    }
-  }
-
-  float const distance =
-      std::hypot(target_transform->position.x - attacker_transform->position.x,
-                 target_transform->position.z - attacker_transform->position.z);
-  float const normal_reach = attack != nullptr ? attack->melee_range : 2.0F;
-  return Game::Systems::CombatActions::resolve_commander_action(
-      current_id,
-      intent,
-      weapon,
-      commander->jump_active,
-      distance > normal_reach * 1.05F);
-}
-
-void begin_rts_melee_action(Engine::Core::World& world,
-                            Engine::Core::Entity* attacker,
+void begin_rts_melee_action(Engine::Core::Entity* attacker,
                             Engine::Core::Entity* target,
                             int damage) {
   auto* unit = attacker->get_component<Engine::Core::UnitComponent>();
@@ -1237,13 +1134,7 @@ void begin_rts_melee_action(Engine::Core::World& world,
                         ? Game::Systems::CombatActions::CombatActionId::RtsHeavyOverhead
                         : Game::Systems::CombatActions::CombatActionId::
                               RtsSwordStrike));
-  auto const commander_id = rts_commander_action(world, *attacker, *target, family);
-  auto const id =
-      signature.has_value()
-          ? *signature
-          : (commander_id != Game::Systems::CombatActions::CombatActionId::None
-                 ? commander_id
-                 : routine_id);
+  auto const id = signature.has_value() ? *signature : routine_id;
   action->phase = Engine::Core::RpgCommanderActionPhase::Strike;
   action->combat_action_id = static_cast<std::uint8_t>(id);
   action->active_target_id = target->get_id();
@@ -1257,22 +1148,8 @@ void begin_rts_melee_action(Engine::Core::World& world,
   action->melee_attack_sequence =
       static_cast<std::uint8_t>((action->melee_attack_sequence + 1U) % 250U);
 
-  auto* commander = attacker->get_component<Engine::Core::CommanderComponent>();
-  if (commander != nullptr && definition != nullptr && definition->commander_only) {
-    commander->combo_action_id = static_cast<std::uint8_t>(id);
-    commander->combo_window_remaining =
-        definition->duration_seconds +
-        Engine::Core::CommanderBodyControlComponent::k_chain_window_seconds;
-    commander->dive_attack_active =
-        definition->role == Game::Systems::CombatActions::CommanderActionRole::Dive;
-    if (commander->dive_attack_active) {
-      commander->airborne_velocity = -11.0F;
-    }
-  }
-
   bool const exchange_applies =
       !signature.has_value() &&
-      commander_id == Game::Systems::CombatActions::CombatActionId::None &&
       !attacker->has_component<Engine::Core::ElephantComponent>();
   auto const beat =
       exchange_applies
@@ -1307,8 +1184,7 @@ auto resolve_melee_swing_cadence(Engine::Core::Entity* attacker,
   return cooldown - interval - delay;
 }
 
-void begin_rts_bow_action(Engine::Core::World& world,
-                          Engine::Core::Entity* attacker,
+void begin_rts_bow_action(Engine::Core::Entity* attacker,
                           Engine::Core::Entity* target,
                           int damage,
                           float duration) {
@@ -1319,33 +1195,13 @@ void begin_rts_bow_action(Engine::Core::World& world,
     return;
   }
   action->phase = Engine::Core::RpgCommanderActionPhase::Strike;
-  auto const advanced = rts_commander_action(
-      world, *attacker, *target, Engine::Core::CombatAttackFamily::Bow);
-  int authored_damage = damage;
-  auto const signature = claim_commander_signature(attacker, authored_damage);
-  auto const id =
-      signature.has_value()
-          ? *signature
-          : (advanced != Game::Systems::CombatActions::CombatActionId::None
-                 ? advanced
-                 : Game::Systems::CombatActions::CombatActionId::RtsBowShot);
-  action->combat_action_id = static_cast<std::uint8_t>(id);
+  action->combat_action_id = static_cast<std::uint8_t>(
+      Game::Systems::CombatActions::CombatActionId::RtsBowShot);
   action->active_target_id = target->get_id();
   action->active_target_soldier_slot =
       Engine::Core::RpgCommanderTargetComponent::k_no_soldier_slot;
-  action->requested_damage = authored_damage;
-  auto const* definition =
-      Game::Systems::CombatActions::find_combat_action_definition(id);
-  action->action_duration = definition != nullptr
-                                ? std::max(0.001F, definition->duration_seconds)
-                                : std::max(0.001F, duration);
-  if (auto* commander = attacker->get_component<Engine::Core::CommanderComponent>();
-      commander != nullptr && definition != nullptr && definition->commander_only) {
-    commander->combo_action_id = static_cast<std::uint8_t>(id);
-    commander->combo_window_remaining =
-        definition->duration_seconds +
-        Engine::Core::CommanderBodyControlComponent::k_chain_window_seconds;
-  }
+  action->requested_damage = damage;
+  action->action_duration = std::max(0.001F, duration);
   Game::Systems::CombatActions::reset_combat_action_event_runtime(*action);
 }
 
@@ -1823,6 +1679,10 @@ void process_attacks(Engine::Core::World* world,
       float const tactical_multiplier = calculate_tactical_damage_multiplier(
           attacker, best_target, attacker_unit, best_target_unit);
       damage = static_cast<int>(static_cast<float>(damage) * tactical_multiplier);
+
+      damage = std::max(1,
+                        static_cast<int>(static_cast<float>(damage) *
+                                         Game::Units::squad_fraction(*attacker_unit)));
       apply_high_ground_defense_bonuses(
           attacker, best_target, best_target_unit, damage);
 
@@ -1847,13 +1707,13 @@ void process_attacks(Engine::Core::World* world,
           is_melee_attack && !fpv_commander && cooldown > 0.001F;
 
       if (use_special_projectile) {
-        begin_rts_bow_action(*world, attacker, best_target, damage, cooldown);
+        begin_rts_bow_action(attacker, best_target, damage, cooldown);
       } else if (use_rts_bow_action) {
-        begin_rts_bow_action(*world, attacker, best_target, damage, cooldown);
+        begin_rts_bow_action(attacker, best_target, damage, cooldown);
       } else if (should_show_arrow_vfx && ranged_unit && projectile_sys != nullptr) {
         spawn_rts_arrow_volley(attacker, best_target, projectile_sys, damage);
       } else if (defer_melee_strike) {
-        begin_rts_melee_action(*world, attacker, best_target, damage);
+        begin_rts_melee_action(attacker, best_target, damage);
       } else {
         if (Game::Systems::CombatRules::uses_rpg_combat_rules(best_target)) {
           Game::Systems::RpgCombat::deal_damage_to_rpg_commander(

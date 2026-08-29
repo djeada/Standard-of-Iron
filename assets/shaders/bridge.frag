@@ -123,9 +123,6 @@ void main() {
 
   vec2 reveal_sample = fog_reveal_sample(v_world_pos.xz);
   float reveal_alpha = fog_reveal_alpha(reveal_sample.x);
-  if (fog_reveal_discards(reveal_alpha)) {
-    discard;
-  }
 
   VisibilityMask vis;
   vis.seen_now = reveal_sample.y;
@@ -197,5 +194,5 @@ void main() {
     lit_color = mix(memory, lit_color, visibility_live_weight(vis));
   }
   lit_color = fog_reveal_haze(lit_color, reveal_alpha);
-  frag_color = vec4(lit_color, reveal_alpha);
+  frag_color = vec4(lit_color, 1.0);
 }

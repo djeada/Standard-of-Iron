@@ -5,11 +5,13 @@
 #include <algorithm>
 #include <cmath>
 #include <numbers>
+#include <optional>
 #include <unordered_map>
 
 #include "../../formation/army_formation_planner.h"
 #include "../../formation/unit_layout_resolver.h"
 #include "../nation_registry.h"
+#include "ai_doctrine_catalog.h"
 
 namespace Game::Systems::AI {
 
@@ -142,6 +144,45 @@ auto plan_ai_formation(const AIFormationRequest& request,
   return plan_ai_formation(request, units);
 }
 
+namespace {
+
+auto doctrine_intent(const AIContext& context)
+    -> std::optional<Game::Formation::ArmyFormationIntent> {
+  using Game::Formation::ArmyFormationIntent;
+  const auto* doctrine = context.strategy_config.doctrine;
+  if (doctrine == nullptr || doctrine->formation.empty()) {
+    return std::nullopt;
+  }
+  const auto& name = doctrine->formation;
+  if (name == "line") {
+    return ArmyFormationIntent::Line;
+  }
+  if (name == "column") {
+    return ArmyFormationIntent::Column;
+  }
+  if (name == "defensive" || name == "shield_wall") {
+    return ArmyFormationIntent::Defensive;
+  }
+  if (name == "assault" || name == "wedge") {
+    return ArmyFormationIntent::Assault;
+  }
+  if (name == "encirclement" || name == "envelop") {
+    return ArmyFormationIntent::Encirclement;
+  }
+  if (name == "siege_escort") {
+    return ArmyFormationIntent::SiegeEscort;
+  }
+  if (name == "faction_default") {
+    return ArmyFormationIntent::FactionDefault;
+  }
+  qCWarning(formation_ai_logger())
+      << "commander doctrine names unknown formation" << QString::fromStdString(name)
+      << "; using the situational choice";
+  return std::nullopt;
+}
+
+} // namespace
+
 auto select_ai_intent(const AISnapshot& snapshot,
                       const AIContext& context,
                       bool defensive_posture,
@@ -153,6 +194,9 @@ auto select_ai_intent(const AISnapshot& snapshot,
   }
   if (defensive_posture) {
     return ArmyFormationIntent::Defensive;
+  }
+  if (const auto authored = doctrine_intent(context)) {
+    return *authored;
   }
 
   auto const friendly = static_cast<int>(snapshot.friendly_units.size());

@@ -15,7 +15,6 @@
 #include "game/map/scatter/ground_utils.h"
 #include "game/map/terrain.h"
 #include "game/map/visibility_service.h"
-#include "linear_feature_visibility.h"
 #include "render/draw_commands.h"
 #include "render/gl/mesh.h"
 #include "render/gl/resources.h"
@@ -101,27 +100,11 @@ void RoadRenderer::submit(Renderer& renderer, ResourceManager* resources) {
       continue;
     }
 
-    const auto fog_mode = renderer.static_world_visibility_filter_enabled()
-                              ? SubmissionFogMode::Revealed
-                              : SubmissionFogMode::Ignore;
     if (!renderer.submission_visibility().accepts_segment(surface.visibility_start,
                                                           surface.visibility_end,
                                                           surface.visibility_width,
-                                                          fog_mode)) {
+                                                          SubmissionFogMode::Ignore)) {
       continue;
-    }
-
-    if (vis_snapshot != nullptr) {
-      Ground::LinearFeatureVisibilityOptions vis_opts;
-      vis_opts.sample_count =
-          Ground::recommended_linear_feature_visibility_sample_count(
-              (surface.visibility_end - surface.visibility_start).length(),
-              m_tile_size);
-      const auto vis_result = Ground::evaluate_linear_feature_visibility(
-          vis_snapshot, surface.visibility_start, surface.visibility_end, vis_opts);
-      if (!vis_result.visible) {
-        continue;
-      }
     }
 
     TerrainFeatureCmd cmd;

@@ -165,13 +165,35 @@ void parse_doctrine_body(const QJsonObject& object,
     }
   }
 
+  doctrine.formation = read_string(object, "formation", doctrine.formation);
+
   if (const auto recruitment = object.value(QLatin1String("recruitment"));
       recruitment.isObject()) {
+    const auto recruitment_object = recruitment.toObject();
     doctrine.recruitment.ranged_share = std::clamp(
         read_float(
-            recruitment.toObject(), "ranged_share", doctrine.recruitment.ranged_share),
+            recruitment_object, "ranged_share", doctrine.recruitment.ranged_share),
         0.0F,
         1.0F);
+    doctrine.recruitment.cavalry_share = std::clamp(
+        read_float(
+            recruitment_object, "cavalry_share", doctrine.recruitment.cavalry_share),
+        0.0F,
+        1.0F);
+    doctrine.recruitment.siege_share = std::clamp(
+        read_float(recruitment_object, "siege_share", doctrine.recruitment.siege_share),
+        0.0F,
+        1.0F);
+
+    if (const auto preferred = recruitment_object.value(QLatin1String("preferred"));
+        preferred.isArray()) {
+      doctrine.recruitment.preferred.clear();
+      for (const auto& entry : preferred.toArray()) {
+        if (entry.isString()) {
+          doctrine.recruitment.preferred.push_back(entry.toString().toStdString());
+        }
+      }
+    }
   }
 
   if (const auto wave = object.value(QLatin1String("wave")); wave.isObject()) {

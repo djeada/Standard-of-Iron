@@ -125,7 +125,6 @@ void configure_registries(Game::Session::SessionContext& session, bool use_ai) {
   nations.clear_player_assignments();
   nations.set_player_nation(k_player_owner, Game::Systems::NationID::RomanRepublic);
   nations.set_player_nation(k_enemy_owner, Game::Systems::NationID::Carthage);
-  session.troop_counts().initialize();
   Game::Systems::NavGrid::initialize(static_cast<int>(k_world_extent),
                                      static_cast<int>(k_world_extent));
 }

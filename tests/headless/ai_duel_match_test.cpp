@@ -24,6 +24,7 @@
 #include "game/systems/owner_registry.h"
 #include "game/systems/player_resource_registry.h"
 #include "game/systems/runtime_system_registry.h"
+#include "game/systems/structure_placement_service.h"
 #include "game/systems/troop_count_registry.h"
 #include "game/units/factory.h"
 #include "game/units/spawn_type.h"
@@ -49,9 +50,15 @@ struct SideReport {
   int farms = 0;
   int towers = 0;
   int walls = 0;
+  int markets = 0;
   int builders = 0;
   int civilians = 0;
   int fighters = 0;
+
+  int foot = 0;
+  int missile = 0;
+  int horse = 0;
+  int engines = 0;
   bool commander_alive = false;
 };
 
@@ -110,12 +117,11 @@ protected:
     session.terrain().initialize(map_definition);
 
     Game::Systems::register_runtime_systems(session.world());
-    session.troop_counts().initialize();
 
     for (const int owner : {k_north, k_south}) {
       auto& economy = session.economy();
       economy.ensure_owner(owner);
-      economy.set(owner, Game::Systems::ResourceType::Gold, 250);
+      economy.set(owner, Game::Systems::ResourceType::Gold, 500);
       economy.set(owner, Game::Systems::ResourceType::Food, 200);
       economy.set(owner, Game::Systems::ResourceType::Wood, 250);
       economy.set(owner, Game::Systems::ResourceType::Stone, 120);
@@ -153,12 +159,18 @@ protected:
     };
     for (int ring = 0; ring < 8; ++ring) {
       const int offset = 10 + ring * 2;
-      add(Game::Map::WorldProp::Type::OliveTree, grid_x + offset, grid_z);
-      add(Game::Map::WorldProp::Type::OliveTree, grid_x - offset, grid_z);
-      add(Game::Map::WorldProp::Type::PineTree, grid_x, grid_z + offset);
-      add(Game::Map::WorldProp::Type::PineTree, grid_x, grid_z - offset);
+      for (int lane = -2; lane <= 2; ++lane) {
+        const int shift = lane * 3;
+        add(Game::Map::WorldProp::Type::OliveTree, grid_x + offset, grid_z + shift);
+        add(Game::Map::WorldProp::Type::OliveTree, grid_x - offset, grid_z + shift);
+        add(Game::Map::WorldProp::Type::PineTree, grid_x + shift, grid_z + offset);
+        add(Game::Map::WorldProp::Type::PineTree, grid_x + shift, grid_z - offset);
+      }
       add(Game::Map::WorldProp::Type::Boulder, grid_x + offset, grid_z + 6);
+      add(Game::Map::WorldProp::Type::Boulder, grid_x + offset, grid_z + 9);
+      add(Game::Map::WorldProp::Type::Boulder, grid_x - offset, grid_z + 9);
       add(Game::Map::WorldProp::Type::IronOre, grid_x - offset, grid_z - 6);
+      add(Game::Map::WorldProp::Type::IronOre, grid_x - offset, grid_z - 9);
     }
   }
 
@@ -233,6 +245,9 @@ protected:
         case Game::Units::SpawnType::WallSegment:
           ++report.walls;
           break;
+        case Game::Units::SpawnType::Marketplace:
+          ++report.markets;
+          break;
         default:
           break;
         }
@@ -251,6 +266,24 @@ protected:
           report.commander_alive = true;
         } else {
           ++report.fighters;
+          switch (unit.spawn_type) {
+          case Game::Units::SpawnType::Archer:
+            ++report.missile;
+            break;
+          case Game::Units::SpawnType::MountedKnight:
+          case Game::Units::SpawnType::HorseArcher:
+          case Game::Units::SpawnType::HorseSpearman:
+          case Game::Units::SpawnType::Elephant:
+            ++report.horse;
+            break;
+          case Game::Units::SpawnType::Catapult:
+          case Game::Units::SpawnType::Ballista:
+            ++report.engines;
+            break;
+          default:
+            ++report.foot;
+            break;
+          }
         }
         break;
       }
@@ -348,19 +381,29 @@ protected:
       const auto report = survey(session, side.first);
       const auto* plan = ai != nullptr ? ai->plan_for(side.first) : nullptr;
       std::printf(
-          "  %-10s bar %d home %d farm %d tow %d wall %d | work %d/%d "
-          "fight %d | food %d manpower %d | left %d homesfirst %d | "
-          "wave %s(%d) %s\n",
+          "  %-10s bar %d home %d farm %d tow %d wall %d mkt %d | work %d/%d "
+          "fight %d (foot %d bow %d horse %d engine %d) | "
+          "food %d wood %d stone %d iron %d gold %d manpower %d | "
+          "left %d homesfirst %d | wave %s(%d) %s\n",
           side.second,
           report.barracks,
           report.homes,
           report.farms,
           report.towers,
           report.walls,
+          report.markets,
           report.builders,
           report.civilians,
           report.fighters,
+          report.foot,
+          report.missile,
+          report.horse,
+          report.engines,
           economy.get(side.first, Game::Systems::ResourceType::Food),
+          economy.get(side.first, Game::Systems::ResourceType::Wood),
+          economy.get(side.first, Game::Systems::ResourceType::Stone),
+          economy.get(side.first, Game::Systems::ResourceType::Iron),
+          economy.get(side.first, Game::Systems::ResourceType::Gold),
           barracks_manpower(session, side.first),
           plan != nullptr ? plan->home_civilians_remaining : -1,
           plan != nullptr && plan->macro_targets.raise_homes_first ? 1 : 0,
@@ -396,6 +439,7 @@ protected:
       observe(session, k_south, now, outcome.south);
       narrate(session, now, north_name, south_name);
     }
+    expect_the_towns_are_well_laid_out(session);
     return outcome;
   }
 
@@ -407,6 +451,48 @@ protected:
                             << " soldiers; nobody built an army";
     EXPECT_GE(best_wave, 3) << "neither side ever gathered a wave bigger than "
                             << best_wave << "; nobody attacked";
+  }
+
+  static void expect_the_towns_are_well_laid_out(SessionContext& session) {
+    struct Standing {
+      Engine::Core::EntityID id = 0;
+      std::string type;
+      float x = 0.0F;
+      float z = 0.0F;
+    };
+
+    std::vector<Standing> town;
+    for (auto [id, unit] : session.world().view<UnitComponent>()) {
+      if (unit.health <= 0 || !Game::Units::is_building_spawn(unit.spawn_type)) {
+        continue;
+      }
+      const auto* transform =
+          session.world().try_get<Engine::Core::TransformComponent>(id);
+      if (transform == nullptr) {
+        continue;
+      }
+      town.push_back(Standing{.id = id,
+                              .type = Game::Units::spawn_typeToString(unit.spawn_type),
+                              .x = transform->position.x,
+                              .z = transform->position.z});
+    }
+
+    ASSERT_GE(town.size(), 4U)
+        << "the towns were empty, so this says nothing about how they were laid out";
+
+    for (const auto& building : town) {
+      const auto verdict = Game::Systems::assess_ground(
+          session.world(), building.type, building.x, building.z, building.id);
+      EXPECT_NE(verdict, Game::Systems::GroundVerdict::Occupied)
+          << building.type << " at " << building.x << "," << building.z
+          << " overlaps another structure";
+      EXPECT_NE(verdict, Game::Systems::GroundVerdict::Water)
+          << building.type << " at " << building.x << "," << building.z
+          << " stands in the water";
+      EXPECT_NE(verdict, Game::Systems::GroundVerdict::Uneven)
+          << building.type << " at " << building.x << "," << building.z
+          << " was raised on ground too steep to build on";
+    }
   }
 
   static void expect_a_commander_played_the_match(const SideHistory& side,

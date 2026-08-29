@@ -38,6 +38,8 @@ class MatchSetupViewModel : public QObject {
   Q_PROPERTY(bool campaign_completed READ campaign_completed NOTIFY campaigns_changed)
   Q_PROPERTY(
       bool is_campaign_mission READ is_campaign_mission NOTIFY current_mission_changed)
+  Q_PROPERTY(int starting_gold READ starting_gold WRITE set_starting_gold NOTIFY
+                 starting_gold_changed)
 
 public:
   MatchSetupViewModel(const App::Core::ClientContext& context,
@@ -52,6 +54,9 @@ public:
   commanders_for_nation(const QString& nation_id) const;
   Q_INVOKABLE [[nodiscard]] QImage
   map_preview(const QString& map_path, const QVariantList& player_configs) const;
+
+  [[nodiscard]] auto starting_gold() const -> int;
+  void set_starting_gold(int gold);
 
   Q_INVOKABLE void load_campaigns();
   [[nodiscard]] auto campaigns() const -> QVariantList;
@@ -82,6 +87,7 @@ signals:
   void maps_loading_changed();
   void campaigns_changed();
   void current_mission_changed();
+  void starting_gold_changed();
 
   void launch_requested(const App::Core::MatchLaunch& launch);
 

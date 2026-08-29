@@ -92,6 +92,10 @@ public:
   void on_guard_command();
   void on_formation_command();
   void on_auto_gather_command(const QString& priority_product_type = {});
+  void divide_selected_squads();
+
+  void merge_selected_squads();
+
   void set_auto_gather(bool active, const QString& priority_product_type = {});
   void on_run_command();
   void on_guard_click(qreal sx, qreal sy, const ViewportState& viewport);

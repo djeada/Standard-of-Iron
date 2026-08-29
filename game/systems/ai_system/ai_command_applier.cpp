@@ -5,6 +5,7 @@
 #include <qvectornd.h>
 
 #include <cstddef>
+#include <string>
 #include <string_view>
 #include <vector>
 
@@ -17,6 +18,7 @@
 #include "../../map/terrain_service.h"
 #include "../../session/session_context.h"
 #include "../../units/troop_config.h"
+#include "../build_site.h"
 #include "../combat_system/combat_utils.h"
 #include "../command_service.h"
 #include "../construction_cost_catalog.h"
@@ -68,7 +70,11 @@ void trace_refused_production(int owner_id,
                               Game::Units::TroopType product,
                               ProductionResult ruling,
                               const Engine::Core::ProductionComponent& production,
-                              int cost) {
+                              int cost,
+                              int population,
+                              int population_cap,
+                              const Game::Systems::ResourceAmounts& need,
+                              const Game::Systems::ResourceAmounts& have) {
   static const bool enabled = !qEnvironmentVariableIsEmpty("SOI_AI_TRACE");
   if (!enabled) {
     return;
@@ -80,7 +86,14 @@ void trace_refused_production(int owner_id,
                     << " produced=" << production.produced_count
                     << " max_units=" << production.max_units
                     << " queue=" << production.production_queue.size()
-                    << " in_progress=" << production.in_progress;
+                    << " in_progress=" << production.in_progress
+                    << " population=" << population << "/" << population_cap;
+  for (const auto type : Game::Systems::k_all_resource_types) {
+    if (need.get(type) > 0) {
+      qInfo().nospace() << "   needs " << Game::Systems::resource_type_key(type) << " "
+                        << need.get(type) << " has " << have.get(type);
+    }
+  }
 }
 } // namespace
 
@@ -172,22 +185,23 @@ auto AICommandApplier::apply(Engine::Core::World& world,
               world, command.building_id, command.product_type);
           ruling != Game::Systems::ProductionResult::Success) {
         ++report.refused_production;
+        const auto* owner_nation =
+            Game::Session::session_for(world).nations().get_nation_for_player(
+                ai_owner_id);
+        const auto profile = Game::Systems::TroopProfileService::instance().get_profile(
+            owner_nation != nullptr ? owner_nation->id
+                                    : Game::Systems::NationID::RomanRepublic,
+            command.product_type);
         trace_refused_production(
             ai_owner_id,
             command.product_type,
             ruling,
             *production,
-            Game::Systems::TroopProfileService::instance()
-                .get_profile(
-                    Game::Session::session_for(world).nations().get_nation_for_player(
-                        ai_owner_id) != nullptr
-                        ? Game::Session::session_for(world)
-                              .nations()
-                              .get_nation_for_player(ai_owner_id)
-                              ->id
-                        : Game::Systems::NationID::RomanRepublic,
-                    command.product_type)
-                .production.cost);
+            profile.production.cost,
+            Game::Systems::troop_count_for(world, ai_owner_id),
+            Game::GameConfig::instance().get_max_troops_per_player(),
+            profile.production.resource_costs,
+            Game::Session::session_for(world).economy().get_all(ai_owner_id));
         break;
       }
       submit(world,
@@ -235,13 +249,88 @@ auto AICommandApplier::apply(Engine::Core::World& world,
       if (command.units.empty() || command.construction_type == nullptr) {
         break;
       }
+
+      constexpr float k_site_nudge_radius = 12.0F;
+      const auto site = Game::Systems::find_clear_site(
+          world,
+          command.construction_type,
+          QVector3D(command.construction_site_x, 0.0F, command.construction_site_z),
+          k_site_nudge_radius);
+      if (!site.has_value()) {
+
+        ++report.refused_construction;
+        if (qEnvironmentVariableIsSet("SOI_BUILD_TRACE")) {
+          qWarning() << "BUILDTRACE p" << ai_owner_id << "no legal site for"
+                     << command.construction_type << "near"
+                     << command.construction_site_x << command.construction_site_z
+                     << "verdict"
+                     << static_cast<int>(
+                            Game::Systems::assess_ground(world,
+                                                         command.construction_type,
+                                                         command.construction_site_x,
+                                                         command.construction_site_z));
+        }
+        break;
+      }
       submit(world,
              ai_owner_id,
-             Game::Command::StartConstruction{
+             Game::Command::StartConstruction{.units = command.units,
+                                              .construction_type =
+                                                  command.construction_type,
+                                              .site = *site});
+      break;
+    }
+
+    case AICommandType::StartBuilderRepair: {
+      if (command.units.empty() || command.target_id == 0) {
+        break;
+      }
+      submit(world,
+             ai_owner_id,
+             Game::Command::RepairStructure{.units = command.units,
+                                            .structure = command.target_id});
+      break;
+    }
+
+    case AICommandType::DivideSquads: {
+      if (command.units.empty()) {
+        break;
+      }
+      submit(world, ai_owner_id, Game::Command::DivideSquads{.units = command.units});
+      break;
+    }
+
+    case AICommandType::MergeSquads: {
+      if (command.units.size() < 2U) {
+        break;
+      }
+      submit(world, ai_owner_id, Game::Command::MergeSquads{.units = command.units});
+      break;
+    }
+
+    case AICommandType::SetAutoGather: {
+      if (command.units.empty()) {
+        break;
+      }
+      submit(world,
+             ai_owner_id,
+             Game::Command::SetAutoGather{
                  .units = command.units,
-                 .construction_type = command.construction_type,
-                 .site = QVector3D(
-                     command.construction_site_x, 0.0F, command.construction_site_z)});
+                 .active = command.auto_gather_active,
+                 .priority_product_type = command.construction_type != nullptr
+                                              ? std::string(command.construction_type)
+                                              : std::string()});
+      break;
+    }
+
+    case AICommandType::TradeResource: {
+      submit(
+          world,
+          ai_owner_id,
+          Game::Command::Trade{.resource = command.trade_resource,
+                               .direction = command.trade_is_purchase
+                                                ? Game::Command::TradeDirection::Buy
+                                                : Game::Command::TradeDirection::Sell});
       break;
     }
 

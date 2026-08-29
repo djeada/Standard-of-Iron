@@ -774,41 +774,41 @@ TEST(ShaderSource, RoadsKeepPackedEarthSeparateFromPaving) {
   EXPECT_NE(flat.find("u_alpha * edge_alpha"), std::string::npos);
 }
 
-TEST(ShaderSource, BridgesDissolveInWithTheFogInsteadOfPoppingIn) {
+TEST(ShaderSource, BridgesShadeIntoTheFogInsteadOfPoppingIn) {
   const auto root = find_repo_root();
   const auto frag = read_text(root / "assets" / "shaders" / "bridge.frag");
   ASSERT_FALSE(frag.empty());
   const auto flat = collapse_whitespace(frag);
 
   EXPECT_NE(flat.find("#include \"fog_reveal.glsl\""), std::string::npos)
-      << "bridge.frag must reveal per fragment; a bridge spans further than one "
-         "sight radius, so a whole-segment visibility test pops the span in at once";
+      << "bridge.frag must resolve the fog per fragment; a bridge spans further than "
+         "one sight radius, so a whole-segment visibility test pops the span in at "
+         "once";
   EXPECT_NE(flat.find("fog_reveal_sample(v_world_pos.xz)"), std::string::npos);
   EXPECT_NE(flat.find("fog_reveal_alpha(reveal_sample.x)"), std::string::npos);
-  EXPECT_NE(flat.find("frag_color = vec4(lit_color, reveal_alpha)"), std::string::npos)
-      << "the span must fade out across the fog frontier; discarding whole setts "
-         "instead punches holes through the deck onto the unlit inner faces";
+  EXPECT_NE(flat.find("frag_color = vec4(lit_color, 1.0)"), std::string::npos)
+      << "a bridge is a landmark, not a unit: unexplored ground darkens the deck "
+         "rather than deleting it, so the crossing never appears out of nowhere";
+  EXPECT_EQ(flat.find("discard"), std::string::npos)
+      << "fading the deck out to alpha 0 leaves a hole where the river should have a "
+         "crossing";
   EXPECT_NE(flat.find("fog_reveal_haze(lit_color, reveal_alpha)"), std::string::npos);
 }
 
-TEST(ShaderSource, FogRevealFinishesWhateverStoneItStarted) {
+TEST(ShaderSource, FogRevealShadesWhateverStoneItStarted) {
   const auto root = find_repo_root();
   const auto glsl =
       read_text(root / "assets" / "shaders" / "include" / "fog_reveal.glsl");
   ASSERT_FALSE(glsl.empty());
   const auto flat = collapse_whitespace(glsl);
 
-  const float cutoff =
-      parse_glsl_float(flat.substr(flat.find("k_fog_reveal_cutoff = ") +
-                                   std::string("k_fog_reveal_cutoff = ").size()));
-  EXPECT_GT(cutoff, 0.0F)
-      << "fragments that have faded to nothing must be discarded, not blended at "
-         "alpha 0 while still writing depth over whatever stands behind them";
-  EXPECT_LT(cutoff, 0.1F);
+  EXPECT_NE(flat.find("k_fog_reveal_lift"), std::string::npos)
+      << "the haze must lift as well as darken, or dark stone under the fog crushes "
+         "to a hole in the map instead of reading as a shaded landmark";
 
   EXPECT_NE(flat.find("smoothstep(0.04, 0.94, reveal)"), std::string::npos)
-      << "the fade must reach full opacity before the tile is completely clear, or a "
-         "settled fog frontier leaves the far end permanently see-through";
+      << "the fade must reach full brightness before the tile is completely clear, or "
+         "a settled fog frontier leaves the far end permanently dimmed";
 }
 
 TEST(ShaderSource, DirectionalShadowBlockMatchesTheUploadedStruct) {

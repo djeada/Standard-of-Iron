@@ -19,6 +19,7 @@
 #include "game/systems/default_content.h"
 #include "game/systems/nation_registry.h"
 #include "game/systems/nav_grid.h"
+#include "game/systems/owner_queries.h"
 #include "game/systems/owner_registry.h"
 #include "game/systems/pathfinding.h"
 #include "game/systems/player_resource_registry.h"
@@ -88,7 +89,6 @@ protected:
     session.terrain().initialize(map_definition);
 
     Game::Systems::register_runtime_systems(session.world());
-    session.troop_counts().initialize();
 
     for (const int owner : {k_left, k_right}) {
       auto& economy = session.economy();
@@ -201,7 +201,7 @@ protected:
         ++snapshot.fighting_troops;
       }
     }
-    snapshot.population = session.troop_counts().get_troop_count(owner);
+    snapshot.population = Game::Systems::troop_count_for(session.world(), owner);
     return snapshot;
   }
 

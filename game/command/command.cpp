@@ -60,6 +60,10 @@ auto payload_name(const Payload& payload) -> const char* {
           return "start-harvest";
         } else if constexpr (std::is_same_v<T, DeliverCivilians>) {
           return "deliver-civilians";
+        } else if constexpr (std::is_same_v<T, DivideSquads>) {
+          return "divide-squads";
+        } else if constexpr (std::is_same_v<T, MergeSquads>) {
+          return "merge-squads";
         } else if constexpr (std::is_same_v<T, RepairStructure>) {
           return "repair-structure";
         } else if constexpr (std::is_same_v<T, DismantleStructure>) {

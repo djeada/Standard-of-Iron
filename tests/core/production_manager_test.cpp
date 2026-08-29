@@ -853,4 +853,33 @@ TEST_F(ProductionManagerTest, ASelectedTempleReportsItsRecruitmentState) {
       App::Economy::selected_barracks_state(&world, 1).value("has_barracks").toBool());
 }
 
+TEST_F(ProductionManagerTest, ThePreviewNamesWhatIsInTheWay) {
+  ProductionManager manager(&world, &picking_service, &camera);
+  auto& resources = Game::Systems::PlayerResourceRegistry::instance();
+  for (const auto type : Game::Systems::k_all_resource_types) {
+    resources.set(1, type, 900);
+  }
+
+  Game::Map::TerrainService::instance().restore_from_serialized(
+      64,
+      64,
+      1.0F,
+      std::vector<float>(64U * 64U, 0.0F),
+      std::vector<Game::Map::TerrainType>(64U * 64U, Game::Map::TerrainType::Flat),
+      {Game::Map::RiverSegment{
+          QVector3D(-30.0F, 0.0F, 0.0F), QVector3D(30.0F, 0.0F, 0.0F), 8.0F}},
+      {},
+      {},
+      Game::Map::BiomeSettings{});
+
+  manager.start_building_placement(QStringLiteral("home"), 1);
+
+  const QPointF over_water = world_to_screen(QVector3D(0.0F, 0.0F, 0.0F));
+  manager.on_construction_mouse_move(over_water.x(), over_water.y(), viewport);
+  EXPECT_FALSE(manager.construction_preview_valid());
+  EXPECT_TRUE(manager.construction_preview_reason().contains(QStringLiteral("water")))
+      << "the ghost said \'" << manager.construction_preview_reason().toStdString()
+      << "\' instead of naming the river";
+}
+
 } // namespace

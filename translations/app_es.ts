@@ -3041,6 +3041,58 @@ Puede tratarse de una escaramuza, o los objetivos no se han configurado.</transl
         <source>Press again to cycle any resource, wood, stone, iron, food, then off.</source>
         <translation>Pulsa de nuevo para alternar entre cualquier recurso, madera, piedra, hierro, comida y apagado.</translation>
     </message>
+    <message>
+        <source>Split</source>
+        <translation>Dividir</translation>
+    </message>
+    <message>
+        <source>Break the selected squad into two smaller ones so they can work or fight in two places at once.</source>
+        <translation>Divide la unidad seleccionada en dos más pequeñas para que trabajen o luchen en dos sitios a la vez.</translation>
+    </message>
+    <message>
+        <source>Each half</source>
+        <translation>Cada mitad</translation>
+    </message>
+    <message>
+        <source>Carries half the men, half the health and does its work at half the speed.</source>
+        <translation>Lleva la mitad de los hombres, la mitad de la salud y trabaja a la mitad de velocidad.</translation>
+    </message>
+    <message>
+        <source>Needs</source>
+        <translation>Requiere</translation>
+    </message>
+    <message>
+        <source>A squad of at least four still standing.</source>
+        <translation>Una unidad con al menos cuatro hombres en pie.</translation>
+    </message>
+    <message>
+        <source>This squad is too small to divide</source>
+        <translation>Esta unidad es demasiado pequeña para dividirla</translation>
+    </message>
+    <message>
+        <source>Join</source>
+        <translation>Unir</translation>
+    </message>
+    <message>
+        <source>Fold two understrength squads of the same kind back into one.</source>
+        <translation>Une dos unidades mermadas del mismo tipo en una sola.</translation>
+    </message>
+    <message>
+        <source>Two squads of the same kind, both below full strength and standing close together.</source>
+        <translation>Dos unidades del mismo tipo, ambas por debajo de su fuerza completa y juntas.</translation>
+    </message>
+    <message>
+        <source>Result</source>
+        <translation>Resultado</translation>
+    </message>
+    <message>
+        <source>One squad with their men and health added together, up to a full establishment.</source>
+        <translation>Una unidad con sus hombres y su salud sumados, hasta la dotación completa.</translation>
+    </message>
+    <message>
+        <source>Select two understrength squads of the same kind</source>
+        <translation>Selecciona dos unidades mermadas del mismo tipo</translation>
+    </message>
 </context>
 <context>
     <name>HUDBottomCommander</name>
@@ -4874,6 +4926,18 @@ para ver la vista previa</translation>
         <source>Watch the computer fight itself on this battlefield</source>
         <translation>Observa cómo la máquina lucha contra sí misma en este campo de batalla</translation>
     </message>
+    <message>
+        <source>%1 gold</source>
+        <translation>%1 de oro</translation>
+    </message>
+    <message>
+        <source>Treasury</source>
+        <translation>Tesoro</translation>
+    </message>
+    <message>
+        <source>Gold every side starts with — click to change</source>
+        <translation>Oro con el que empieza cada bando: haz clic para cambiarlo</translation>
+    </message>
 </context>
 <context>
     <name>MapTransformer</name>
@@ -6470,6 +6534,14 @@ para ver la vista previa</translation>
         <source>Hauling a load - it cannot be interrupted until the load is dropped off.</source>
         <translation>Transportando una carga - no se puede interrumpir hasta entregarla.</translation>
     </message>
+    <message>
+        <source>Squad</source>
+        <translation>Unidad</translation>
+    </message>
+    <message>
+        <source>Only a squad of several individuals can be divided or joined.</source>
+        <translation>Solo una unidad de varios hombres se puede dividir o unir.</translation>
+    </message>
 </context>
 <context>
     <name>OutcomeLayout</name>
@@ -6614,10 +6686,6 @@ para ver la vista previa</translation>
         <translation>Ese recurso ya está asignado.</translation>
     </message>
     <message>
-        <source>Cannot build there.</source>
-        <translation>No se puede construir ahí.</translation>
-    </message>
-    <message>
         <source>No valid wall segments in that drag.</source>
         <translation>No hay tramos de muralla válidos en ese trazado.</translation>
     </message>
@@ -6648,6 +6716,22 @@ para ver la vista previa</translation>
     <message>
         <source>No part of this wall can stand there.</source>
         <translation>Ninguna parte de esta muralla puede alzarse ahí.</translation>
+    </message>
+    <message>
+        <source>This ground cannot be cleared to build on.</source>
+        <translation>Este terreno no se puede despejar para construir.</translation>
+    </message>
+    <message>
+        <source>Nothing can be built on the water.</source>
+        <translation>No se puede construir nada sobre el agua.</translation>
+    </message>
+    <message>
+        <source>The ground here is too steep to build on.</source>
+        <translation>El terreno es demasiado empinado para construir aquí.</translation>
+    </message>
+    <message>
+        <source>That is beyond the edge of the battlefield.</source>
+        <translation>Eso queda más allá del borde del campo de batalla.</translation>
     </message>
 </context>
 <context>

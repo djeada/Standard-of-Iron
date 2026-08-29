@@ -163,7 +163,8 @@ auto commander_marches_with_army(const AIContext& context,
     return false;
   }
   const int escort = static_cast<int>(context.wave.members.size());
-  if (escort < std::max(k_minimum_escort, wave_size_for(context) - 1)) {
+
+  if (escort < std::max(k_minimum_escort, wave_size_for(context))) {
     return false;
   }
   return context.combat_units >= escort + k_minimum_escort;
