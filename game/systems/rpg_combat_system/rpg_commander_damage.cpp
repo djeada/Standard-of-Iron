@@ -411,6 +411,7 @@ deal_commander_attack_damage(Engine::Core::World* world,
                                                                     target_soldier_slot,
                                                                     impact_speed);
   result.effective_damage = application.applied_damage;
+  result.queued_soldier_casualties = application.queued_soldier_casualties;
   result.killed = application.killed;
 
   if (application.applied_damage > 0) {
@@ -433,7 +434,7 @@ deal_commander_attack_damage(Engine::Core::World* world,
                                : Engine::Core::StaggerTier::HeavyStagger;
       Game::Systems::Combat::add_or_extend_stagger(
           target, finisher_hit ? 0.75F : 0.45F, tier);
-    } else if (application.applied_damage >= 20) {
+    } else if (application.applied_damage >= 20 && profile.posture_damage <= 0.0F) {
       Game::Systems::Combat::add_or_extend_stagger(
           target, 0.15F, Engine::Core::StaggerTier::LightFlinch);
     }

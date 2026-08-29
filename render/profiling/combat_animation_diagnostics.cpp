@@ -14,6 +14,7 @@ namespace Render::Profiling {
 namespace {
 
 constexpr float k_attack_phase_reset_epsilon = 0.02F;
+constexpr float k_sample_time_epsilon = 1.0e-5F;
 constexpr float k_churn_window_seconds = 1.0F;
 constexpr std::uint32_t k_churn_threshold = 5U;
 constexpr std::uint32_t k_extreme_churn_threshold = 8U;
@@ -264,7 +265,10 @@ void CombatAnimationDiagnostics::record_soldier_sample(
     tracker = SoldierTracker{};
   }
 
-  if (tracker.has_previous) {
+  bool const sample_time_advanced =
+      !tracker.has_previous ||
+      recorded.sample_time > tracker.last_time + k_sample_time_epsilon;
+  if (tracker.has_previous && sample_time_advanced) {
     recorded.visual_state_changed = recorded.visual_state != tracker.last_visual_state;
     recorded.movement_state_changed =
         recorded.locomotion_state != tracker.last_locomotion;
@@ -334,13 +338,15 @@ void CombatAnimationDiagnostics::record_soldier_sample(
                                     soldier_visual_state_name(recorded.visual_state)));
   }
 
-  tracker.has_previous = true;
-  tracker.last_time = recorded.sample_time;
-  tracker.last_attack_phase = recorded.attack_phase;
-  tracker.last_attack_variant = recorded.attack_variant;
-  tracker.last_locomotion = recorded.locomotion_state;
-  tracker.last_lod = recorded.lod;
-  tracker.last_visual_state = recorded.visual_state;
+  if (sample_time_advanced) {
+    tracker.has_previous = true;
+    tracker.last_time = recorded.sample_time;
+    tracker.last_attack_phase = recorded.attack_phase;
+    tracker.last_attack_variant = recorded.attack_variant;
+    tracker.last_locomotion = recorded.locomotion_state;
+    tracker.last_lod = recorded.lod;
+    tracker.last_visual_state = recorded.visual_state;
+  }
 
   auto& unit = m_units[entity_id];
   unit.unit.entity_id = entity_id;

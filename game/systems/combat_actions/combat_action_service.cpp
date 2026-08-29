@@ -1,6 +1,7 @@
 #include "combat_action_service.h"
 
 #include <algorithm>
+#include <cmath>
 
 #include "../../audio/cue_ids.h"
 #include "../../core/component.h"
@@ -30,6 +31,39 @@ namespace {
 
 [[nodiscard]] auto is_mounted_unit(const Engine::Core::UnitComponent* unit) -> bool {
   return unit != nullptr && Game::Units::is_cavalry(unit->spawn_type);
+}
+
+[[nodiscard]] auto
+weapon_family_of(Engine::Core::CombatAttackFamily family) -> WeaponFamily {
+  switch (family) {
+  case Engine::Core::CombatAttackFamily::Sword:
+    return WeaponFamily::Sword;
+  case Engine::Core::CombatAttackFamily::Spear:
+    return WeaponFamily::Spear;
+  case Engine::Core::CombatAttackFamily::Bow:
+    return WeaponFamily::Bow;
+  case Engine::Core::CombatAttackFamily::None:
+    return WeaponFamily::None;
+  }
+  return WeaponFamily::None;
+}
+
+[[nodiscard]] auto target_outside_normal_reach(Engine::Core::World& world,
+                                               const Engine::Core::Entity& attacker,
+                                               Engine::Core::EntityID target_id,
+                                               float normal_reach) -> bool {
+  auto const* attacker_transform =
+      attacker.get_component<Engine::Core::TransformComponent>();
+  auto const* target = world.get_entity(target_id);
+  auto const* target_transform =
+      target != nullptr ? target->get_component<Engine::Core::TransformComponent>()
+                        : nullptr;
+  if (attacker_transform == nullptr || target_transform == nullptr) {
+    return false;
+  }
+  float const dx = target_transform->position.x - attacker_transform->position.x;
+  float const dz = target_transform->position.z - attacker_transform->position.z;
+  return std::hypot(dx, dz) > std::max(0.1F, normal_reach);
 }
 
 } // namespace
@@ -179,7 +213,8 @@ auto CombatActionService::request_attack(
   Engine::Core::MeleeIntent swing{};
   bool swing_resolved = false;
 
-  if (commander != nullptr && attack_family != Engine::Core::CombatAttackFamily::None &&
+  if (commander != nullptr && commander->advanced_combat_enabled &&
+      attack_family != Engine::Core::CombatAttackFamily::None &&
       attack_family != Engine::Core::CombatAttackFamily::Bow) {
 
     auto const* body =
@@ -190,7 +225,11 @@ auto CombatActionService::request_attack(
                 : resolve_melee_intent({
                       .move_right_axis = request.move_right_axis,
                       .move_forward_axis = request.move_forward_axis,
-                      .held_duration = request.primary_held_duration,
+                      .held_duration =
+                          request.intent_type ==
+                                  Engine::Core::CommanderCombatIntentType::Heavy
+                              ? request.primary_held_duration
+                              : 0.0F,
                       .reach = attack != nullptr ? attack->melee_range
                                                  : Engine::Core::k_melee_default_reach,
                       .prefer_thrust =
@@ -198,12 +237,44 @@ auto CombatActionService::request_attack(
                   });
     swing_resolved = true;
 
-    action_id = select_melee_action(
-        swing, attack_family, is_mounted_unit(unit), finisher_attack);
+    if (is_mounted_unit(unit)) {
+      action_id = select_melee_action(swing, attack_family, true, finisher_attack);
+    } else {
+      auto const current_id =
+          commander->combo_window_remaining > 0.0F
+              ? static_cast<CombatActionId>(commander->combo_action_id)
+              : CombatActionId::None;
+      bool const use_authored_branch =
+          current_id != CombatActionId::None ||
+          request.intent_type != Engine::Core::CommanderCombatIntentType::Light ||
+          commander->jump_active;
+      action_id =
+          use_authored_branch
+              ? resolve_commander_action(current_id,
+                                         request.intent_type,
+                                         weapon_family_of(attack_family),
+                                         commander->jump_active,
+                                         target_outside_normal_reach(
+                                             world,
+                                             *attacker,
+                                             request.target_hint_id,
+                                             attack != nullptr
+                                                 ? attack->melee_range
+                                                 : Engine::Core::k_melee_default_reach))
+              : select_melee_action(swing, attack_family, false, finisher_attack);
+    }
     definition = find_combat_action_definition(action_id);
-  } else if (commander != nullptr &&
+  } else if (commander != nullptr && commander->advanced_combat_enabled &&
              attack_family == Engine::Core::CombatAttackFamily::Bow) {
-    action_id = CombatActionId::RpgBowShot;
+    auto const current_id =
+        commander->combo_window_remaining > 0.0F
+            ? static_cast<CombatActionId>(commander->combo_action_id)
+            : CombatActionId::None;
+    action_id = resolve_commander_action(current_id,
+                                         request.intent_type,
+                                         WeaponFamily::Bow,
+                                         commander->jump_active,
+                                         false);
     definition = find_combat_action_definition(action_id);
     if (aim != nullptr) {
       aim->draw_stage = Engine::Core::BowDrawStage::Drawing;
@@ -216,7 +287,8 @@ auto CombatActionService::request_attack(
 
   auto* stamina = attacker->get_component<Engine::Core::StaminaComponent>();
   bool const heavy_request =
-      request.primary_held_duration >= 0.4F && action_id != CombatActionId::RpgBowShot;
+      request.intent_type == Engine::Core::CommanderCombatIntentType::Heavy &&
+      action_id != CombatActionId::RpgBowShot;
   float const stamina_cost =
       definition != nullptr
           ? (heavy_request ? definition->heavy_stamina_cost
@@ -279,6 +351,12 @@ auto CombatActionService::request_attack(
     ++s_fpv_attack_seed;
   }
 
+  if (definition == nullptr || (definition->commander_only && commander == nullptr)) {
+    result.outcome = Engine::Core::CombatIntentOutcome::NoFighter;
+    record_outcome(*attacker, result.outcome);
+    return result;
+  }
+
   if (commander != nullptr) {
     if (auto* action = Engine::Core::get_or_add_component<
             Engine::Core::RpgCommanderActionComponent>(attacker)) {
@@ -287,8 +365,14 @@ auto CombatActionService::request_attack(
       action->active_target_id = request.target_hint_id;
       action->active_target_soldier_slot = request.target_soldier_slot;
 
-      float const swing_speed =
+      float const authored_swing_speed =
           swing_resolved ? std::clamp(swing.swing_speed, 0.55F, 1.85F) : 1.0F;
+
+      float const swing_speed =
+          definition != nullptr && (definition->role == CommanderActionRole::Aerial ||
+                                    definition->role == CommanderActionRole::Dive)
+              ? std::max(1.0F, authored_swing_speed)
+              : authored_swing_speed;
       action->action_duration =
           definition != nullptr ? definition->duration_seconds / swing_speed : 0.0F;
       reset_combat_action_event_runtime(*action);
@@ -300,10 +384,16 @@ auto CombatActionService::request_attack(
       }
     }
 
-    if (request.primary_held_duration >= 0.4F &&
-        action_id != CombatActionId::RpgBowShot) {
-      commander->power_strike_active = true;
-    }
+    commander->combo_action_id = static_cast<std::uint8_t>(action_id);
+    commander->combo_window_remaining = std::max(
+        commander->combo_window_remaining,
+        definition->duration_seconds +
+            Engine::Core::CommanderBodyControlComponent::k_chain_window_seconds);
+    commander->dive_attack_active = definition->role == CommanderActionRole::Dive;
+
+    commander->power_strike_active =
+        request.intent_type == Engine::Core::CommanderCombatIntentType::Heavy &&
+        action_id != CombatActionId::RpgBowShot;
   }
 
   if (stamina != nullptr) {

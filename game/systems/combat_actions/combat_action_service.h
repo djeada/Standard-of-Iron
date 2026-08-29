@@ -17,6 +17,8 @@ struct AttackRequest {
   int move_right_axis{0};
   int move_forward_axis{0};
   float primary_held_duration{0.0F};
+  Engine::Core::CommanderCombatIntentType intent_type{
+      Engine::Core::CommanderCombatIntentType::Light};
 
   bool has_swing{false};
   Engine::Core::MeleeIntent swing{};
