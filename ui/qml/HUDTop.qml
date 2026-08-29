@@ -121,19 +121,19 @@ Item {
 
     signal economy_help_requested
 
-    function population() {
-        return game_ready() && game.selected_player_state ? (game.selected_player_state.population || 0) : 0;
+    function manpower() {
+        return game_ready() && game.selected_player_state ? (game.selected_player_state.manpower || 0) : 0;
     }
 
-    function population_cap() {
-        return game_ready() && game.selected_player_state ? (game.selected_player_state.population_cap || 0) : 0;
+    function manpower_cap() {
+        return game_ready() && game.selected_player_state ? (game.selected_player_state.manpower_cap || 0) : 0;
     }
 
-    function population_status() {
-        var cap = population_cap();
+    function manpower_status() {
+        var cap = manpower_cap();
         if (cap <= 0)
             return "disabled";
-        var count = population();
+        var count = manpower();
         if (count >= cap)
             return "danger";
         if (count >= cap * 0.8)
@@ -415,10 +415,10 @@ Item {
                 Design.IronResourceCounter {
                     iconSource: Design.Icons.status("population")
                     label: qsTr("Manpower")
-                    amountText: topRoot.population() + " / " + topRoot.population_cap()
-                    status: topRoot.population_status()
+                    amountText: topRoot.manpower() + " / " + topRoot.manpower_cap()
+                    status: topRoot.manpower_status()
                     compact: topRoot.compact
-                    tooltipText: qsTr("Manpower in the field: %1 of %2.\nEvery troop costs manpower; a squad of twelve builders costs ten. This is not a headcount - the selection panel counts soldiers.").arg(topRoot.population()).arg(topRoot.population_cap())
+                    tooltipText: qsTr("Manpower in the field: %1 of %2.\nEvery troop costs manpower; a squad of twelve builders costs ten. This is not a headcount - the selection panel counts soldiers.").arg(topRoot.manpower()).arg(topRoot.manpower_cap())
                 }
 
                 Design.IronDivider {

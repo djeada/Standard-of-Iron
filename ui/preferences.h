@@ -37,8 +37,6 @@ class UiPreferences : public QObject {
   Q_PROPERTY(QStringList damageNumberModes READ damage_number_modes CONSTANT)
   Q_PROPERTY(bool economyNumbers READ economy_numbers WRITE set_economy_numbers NOTIFY
                  economy_numbers_changed)
-  Q_PROPERTY(bool cameraLegendSeen READ camera_legend_seen WRITE set_camera_legend_seen
-                 NOTIFY camera_legend_seen_changed)
   Q_PROPERTY(bool tutorialCompleted READ tutorial_completed WRITE set_tutorial_completed
                  NOTIFY tutorial_completed_changed)
   Q_PROPERTY(qreal screenEffectIntensity READ screen_effect_intensity WRITE
@@ -106,7 +104,6 @@ public:
   [[nodiscard]] static auto damage_number_modes() -> QStringList {
     return {QStringLiteral("off"), QStringLiteral("important"), QStringLiteral("all")};
   }
-  [[nodiscard]] auto camera_legend_seen() const -> bool { return m_camera_legend_seen; }
   [[nodiscard]] auto tutorial_completed() const -> bool { return m_tutorial_completed; }
   [[nodiscard]] auto screen_effect_intensity() const -> qreal {
     return m_screen_effect_intensity;
@@ -174,7 +171,6 @@ public:
   void set_damage_numbers(bool enabled);
   void set_economy_numbers(bool enabled);
   void set_damage_number_mode(const QString& mode);
-  void set_camera_legend_seen(bool seen);
   void set_tutorial_completed(bool completed);
   void set_screen_effect_intensity(qreal intensity);
   void set_commander_look_sensitivity_x(qreal scale);
@@ -206,7 +202,6 @@ signals:
   void damage_numbers_changed();
   void economy_numbers_changed();
   void damage_number_mode_changed();
-  void camera_legend_seen_changed();
   void tutorial_completed_changed();
   void screen_effect_intensity_changed();
   void commander_input_changed();
@@ -241,7 +236,6 @@ private:
   bool m_damage_numbers;
   bool m_economy_numbers;
   QString m_damage_number_mode;
-  bool m_camera_legend_seen;
   bool m_tutorial_completed;
   qreal m_screen_effect_intensity;
   QString m_display_window_mode;

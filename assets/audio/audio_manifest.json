@@ -380,8 +380,8 @@
       }
     },
     {
-      "id": "music.menu.rome_vs_carthage",
-      "path": "music/menu/main_theme_rome_vs_carthage.ogg",
+      "id": "music.menu.standard_of_iron",
+      "path": "music/menu/main_theme_standard_of_iron.ogg",
       "category": "music",
       "load_policy": "screen",
       "tags": {
@@ -390,8 +390,8 @@
       }
     },
     {
-      "id": "music.menu.ancient_mediterranean_war",
-      "path": "music/menu/main_theme_ancient_mediterranean_war.ogg",
+      "id": "music.menu.standard_of_iron_alt",
+      "path": "music/menu/main_theme_standard_of_iron_alt.ogg",
       "category": "music",
       "load_policy": "screen",
       "tags": {
@@ -400,8 +400,8 @@
       }
     },
     {
-      "id": "music.campaign.strategy_command_tent",
-      "path": "music/campaign/strategy_command_tent.ogg",
+      "id": "music.campaign.hannibals_ascent",
+      "path": "music/campaign/campaign_hannibals_ascent.ogg",
       "category": "music",
       "load_policy": "screen",
       "tags": {
@@ -410,8 +410,8 @@
       }
     },
     {
-      "id": "music.campaign.hannibal_march",
-      "path": "music/campaign/campaign_hannibal_march.ogg",
+      "id": "music.campaign.crossing_of_the_alps",
+      "path": "music/campaign/campaign_crossing_of_the_alps.ogg",
       "category": "music",
       "load_policy": "screen",
       "tags": {
@@ -420,11 +420,8 @@
       }
     },
     {
-      "id": "music.base.management_camp",
-      "aliases": [
-        "music_peaceful"
-      ],
-      "path": "music/base/base_management_camp.ogg",
+      "id": "music.base.uneasy_rest_punic_camp",
+      "path": "music/base/base_uneasy_rest_punic_camp.ogg",
       "category": "music",
       "load_policy": "mission",
       "tags": {
@@ -433,41 +430,90 @@
       }
     },
     {
-      "id": "music.base.army_camp_resting",
-      "path": "music/base/base_army_camp_resting.ogg",
+      "id": "music.base.hearth_and_harbor",
+      "path": "music/base/base_hearth_and_harbor.ogg",
       "category": "music",
       "load_policy": "mission",
+      "tags": {
+        "ambient_state": "peaceful",
+        "variant": "harbour"
+      }
+    },
+    {
+      "id": "music.base.campfire_shadows_carthage",
+      "path": "music/base/base_campfire_shadows_carthage.ogg",
+      "category": "music",
+      "load_policy": "mission",
+      "tags": {
+        "ambient_state": "peaceful",
+        "faction": "carthage",
+        "variant": "night"
+      }
+    },
+    {
+      "id": "music.base.legion_at_dusk",
+      "path": "music/base/base_legion_at_dusk.ogg",
+      "category": "music",
+      "load_policy": "lazy",
+      "tags": {
+        "ambient_state": "peaceful",
+        "faction": "roman",
+        "variant": "dusk"
+      }
+    },
+    {
+      "id": "music.base.sunlight_olive_groves",
+      "path": "music/base/base_sunlight_olive_groves.ogg",
+      "category": "music",
+      "load_policy": "lazy",
+      "tags": {
+        "ambient_state": "peaceful",
+        "variant": "pastoral"
+      }
+    },
+    {
+      "id": "music.base.uneasy_rest_punic_camp_alt",
+      "path": "music/base/base_uneasy_rest_punic_camp_alt.ogg",
+      "category": "music",
+      "load_policy": "lazy",
       "tags": {
         "ambient_state": "peaceful",
         "variant": "resting"
       }
     },
     {
-      "id": "music.base.barracks_recruitment",
-      "path": "music/base/base_barracks_recruitment.ogg",
+      "id": "music.event.skeletons_awaken",
+      "path": "music/events/skeletons_awaken.ogg",
       "category": "music",
       "load_policy": "mission",
       "tags": {
-        "ambient_state": "peaceful",
-        "variant": "barracks"
+        "event": "undead_awakening",
+        "faction": "iron_sepulcher"
       }
     },
     {
-      "id": "music.base.economy_recruitment_loop",
-      "path": "music/base/base_economy_recruitment_loop.ogg",
+      "id": "music.base.ancient_peak_fires",
+      "path": "music/base/base_ancient_peak_fires.ogg",
       "category": "music",
-      "load_policy": "mission",
+      "load_policy": "lazy",
       "tags": {
         "ambient_state": "peaceful",
-        "variant": "economy"
+        "variant": "highland_long"
       }
     },
     {
-      "id": "music.base.pre_battle_deployment",
-      "aliases": [
-        "music_tense"
-      ],
-      "path": "music/base/base_pre_battle_deployment.ogg",
+      "id": "music.base.echoes_ancient_outpost",
+      "path": "music/base/base_echoes_ancient_outpost.ogg",
+      "category": "music",
+      "load_policy": "lazy",
+      "tags": {
+        "ambient_state": "peaceful",
+        "variant": "outpost_long"
+      }
+    },
+    {
+      "id": "music.base.ancient_preparations",
+      "path": "music/base/base_ancient_preparations.ogg",
       "category": "music",
       "load_policy": "mission",
       "tags": {
@@ -476,11 +522,18 @@
       }
     },
     {
-      "id": "music.combat.battlefield_escalation",
-      "aliases": [
-        "music_combat"
-      ],
-      "path": "music/combat/combat_battlefield_escalation.ogg",
+      "id": "music.base.sentinels_of_the_peak",
+      "path": "music/base/base_sentinels_of_the_peak.ogg",
+      "category": "music",
+      "load_policy": "lazy",
+      "tags": {
+        "ambient_state": "tense",
+        "variant": "watch"
+      }
+    },
+    {
+      "id": "music.combat.dust_of_cannae",
+      "path": "music/combat/combat_dust_of_cannae.ogg",
       "category": "music",
       "load_policy": "mission",
       "tags": {
@@ -489,29 +542,29 @@
       }
     },
     {
-      "id": "music.combat.large_scale_rome_carthage",
-      "path": "music/combat/combat_large_scale_rome_carthage.ogg",
+      "id": "music.combat.dust_of_trasimene",
+      "path": "music/combat/combat_dust_of_trasimene.ogg",
       "category": "music",
       "load_policy": "lazy",
       "tags": {
         "ambient_state": "combat",
-        "variant": "high"
+        "variant": "ambush"
       }
     },
     {
-      "id": "music.combat.attack_order_carthage_cavalry",
-      "path": "music/combat/combat_attack_order_carthage_cavalry.ogg",
+      "id": "music.combat.shield_wall_at_dusk",
+      "path": "music/combat/combat_shield_wall_at_dusk.ogg",
       "category": "music",
       "load_policy": "lazy",
       "tags": {
         "ambient_state": "combat",
-        "faction": "carthage",
-        "variant": "cavalry"
+        "faction": "roman",
+        "variant": "shieldwall"
       }
     },
     {
-      "id": "music.combat.defensive_hold_roman",
-      "path": "music/combat/combat_defensive_hold_roman.ogg",
+      "id": "music.combat.last_defensive_wall",
+      "path": "music/combat/combat_last_defensive_wall.ogg",
       "category": "music",
       "load_policy": "lazy",
       "tags": {
@@ -521,54 +574,51 @@
       }
     },
     {
-      "id": "music.combat.cavalry_flank_fast",
-      "path": "music/combat/combat_cavalry_flank_fast.ogg",
+      "id": "music.combat.carthaginian_dust",
+      "path": "music/combat/combat_carthaginian_dust.ogg",
       "category": "music",
       "load_policy": "lazy",
       "tags": {
         "ambient_state": "combat",
-        "variant": "flank"
+        "faction": "carthage",
+        "variant": "primary"
       }
     },
     {
-      "id": "music.combat.infantry_clash_loop",
-      "path": "music/combat/combat_infantry_clash_loop.ogg",
+      "id": "music.combat.cavalry_of_carthage",
+      "path": "music/combat/combat_cavalry_of_carthage.ogg",
       "category": "music",
       "load_policy": "lazy",
       "tags": {
         "ambient_state": "combat",
-        "variant": "melee"
+        "faction": "carthage",
+        "variant": "cavalry"
       }
     },
     {
-      "id": "music.stinger.victory_roman",
-      "aliases": [
-        "music_victory"
-      ],
-      "path": "music/stingers/victory_roman_fanfare.ogg",
+      "id": "music.stinger.victory_fanfare",
+      "path": "music/stingers/victory_fanfare.ogg",
       "category": "music",
       "load_policy": "lazy",
       "tags": {
         "ambient_state": "victory",
-        "faction": "roman"
+        "variant": "primary"
       }
     },
     {
-      "id": "music.stinger.victory_carthage",
-      "path": "music/stingers/victory_carthage_fanfare.ogg",
+      "id": "music.stinger.victory_carthage_triumph",
+      "path": "music/stingers/victory_carthage_triumph.ogg",
       "category": "music",
       "load_policy": "lazy",
       "tags": {
         "ambient_state": "victory",
-        "faction": "carthage"
+        "faction": "carthage",
+        "variant": "triumph"
       }
     },
     {
-      "id": "music.stinger.defeat_tragic_low_brass",
-      "aliases": [
-        "music_defeat"
-      ],
-      "path": "music/stingers/defeat_tragic_low_brass.ogg",
+      "id": "music.stinger.defeat_tragic_silence",
+      "path": "music/stingers/defeat_tragic_silence_field.ogg",
       "category": "music",
       "load_policy": "lazy",
       "tags": {
@@ -577,8 +627,8 @@
       }
     },
     {
-      "id": "music.stinger.mission_failed_distant_horn",
-      "path": "music/stingers/mission_failed_distant_horn.ogg",
+      "id": "music.stinger.defeat_echo",
+      "path": "music/stingers/defeat_echo.ogg",
       "category": "music",
       "load_policy": "lazy",
       "tags": {
@@ -587,8 +637,18 @@
       }
     },
     {
-      "id": "music.stinger.retreat_tactical_low_horn",
-      "path": "music/stingers/retreat_tactical_low_horn.ogg",
+      "id": "music.stinger.defeat_quiet_field",
+      "path": "music/stingers/defeat_quiet_field.ogg",
+      "category": "music",
+      "load_policy": "lazy",
+      "tags": {
+        "ambient_state": "defeat",
+        "variant": "aftermath"
+      }
+    },
+    {
+      "id": "music.stinger.retreat_signal_into_wind",
+      "path": "music/stingers/retreat_signal_into_wind.ogg",
       "category": "music",
       "load_policy": "lazy",
       "tags": {

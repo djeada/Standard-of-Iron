@@ -406,6 +406,8 @@ void ArmyFormationController::confirm_formation_placement() {
         App::Core::OrderKind::Formation, std::move(deploy), 0, &anchor);
   }
 
+  const int deployed_count = static_cast<int>(m_formation_units.size());
+
   m_is_placing_formation = false;
   m_formation_drag_active = false;
   m_formation_facing_explicit = false;
@@ -416,6 +418,7 @@ void ArmyFormationController::confirm_formation_placement() {
   m_formation_preview = Game::Formation::ArmyFormationPlan{};
   emit formation_preview_changed();
   emit formation_placement_ended();
+  emit formation_deployed(deployed_count);
   if (!m_is_right_drag_formation) {
     emit formation_mode_changed(true);
   }

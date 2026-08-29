@@ -265,7 +265,7 @@ TEST(OrderFailureTest, EveryFailureHasAStableNameForTheUi) {
   EXPECT_STREQ(App::Core::order_failure_name(OrderFailure::InsufficientResources),
                "insufficient_resources");
   EXPECT_STREQ(App::Core::order_failure_name(OrderFailure::PopulationCap),
-               "population_cap");
+               "manpower_cap");
   EXPECT_STREQ(App::Core::order_failure_name(OrderFailure::UnitBusy), "unit_busy");
   EXPECT_STREQ(App::Core::order_failure_name(OrderFailure::CommandUnavailable),
                "command_unavailable");

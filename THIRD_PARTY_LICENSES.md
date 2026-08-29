@@ -235,48 +235,46 @@ domain through the aporee project.
 
 ### Music (`assets/audio/music/`)
 
-All twenty tracks were generated locally with **Meta's AudioCraft**, running on
-the project author's own machine. Nothing was sourced from a hosted service, so
-no provider's terms of service or subscription tier applies to the output — the
-only instrument that carries a licence here is the model itself.
+The twenty AudioCraft tracks that used to sit here have been **replaced**. The twenty-seven
+tracks now shipped were generated for this project in August 2026 under a licence the project
+author holds that permits commercial use.
 
-| Directory   | Tracks | Examples                                                              |
+> **The service and licence tier have to be named here before any paid release.** Everything
+> else in this file records a verifiable provenance; this paragraph is the one place that
+> still rests on the author's own record of where the renders came from.
+
+| Directory   | Tracks | Covers                                                                |
 | ----------- | -----: | --------------------------------------------------------------------- |
-| `menu/`     |      2 | `main_theme_rome_vs_carthage`, `main_theme_ancient_mediterranean_war` |
-| `combat/`   |      6 | `combat_infantry_clash_loop`, `combat_large_scale_rome_carthage`      |
-| `base/`     |      5 | `base_pre_battle_deployment`, `base_barracks_recruitment`             |
-| `stingers/` |      5 | `victory_roman_fanfare`, `defeat_tragic_low_brass`                    |
-| `campaign/` |      2 | `campaign_hannibal_march`, `strategy_command_tent`                    |
+| `menu/`     |      2 | the main theme and its alternate                                      |
+| `campaign/` |      2 | the campaign map                                                      |
+| `base/`     |     11 | nine peaceful beds and two tense ones, including two four-minute beds |
+| `combat/`   |      6 | two neutral, two Roman, two Carthaginian                              |
+| `stingers/` |      6 | victory, Carthaginian triumph, three defeats and a retreat signal     |
 
-AudioCraft is split across two licences, and only one of them governs generated
-audio:
+Selection is entirely tag-driven from `assets/audio/audio_manifest.json` — `screen_context`
+for the frontend, `ambient_state` in mission, `faction` to bias a nation's own music. No
+track id appears in C++ or QML, so the set can be replaced again without touching code.
 
-- the **code** in [facebookresearch/audiocraft](https://github.com/facebookresearch/audiocraft)
-  is MIT;
-- the **model weights** — MusicGen and AudioGen alike — are released under
-  [CC BY-NC 4.0](https://creativecommons.org/licenses/by-nc/4.0/), which permits
-  use for non-commercial purposes only.
+Format matches what the mixer wants and what every earlier track used: Vorbis, 32 kHz, mono,
+`-q:a 4`. Level is the part that is easy to get wrong — `game/audio/audio_mastering.cpp`
+normalises music to −15 LUFS but with only ±6 dB of authority, further capped by
+`ceiling_db − peak + MAX_LIMITING_DB`, so a −1 dBTP file gets at most 4 dB of lift. A track
+baked below about −19 LUFS plays under the rest of the library for good.
+`tools/audio_music/import_music.py` is the recipe that lands them there, and its `BATCHES`
+table records what this import renamed each master to.
 
 #### What that means for distribution
 
-> **Standard of Iron must not be sold, nor bundled into anything sold, while
-> these tracks remain in it.**
+The non-commercial restriction that the AudioCraft weights placed on the whole game is gone
+with those tracks, **provided the licence above covers commercial distribution**. Confirm
+that before relying on it: until the paragraph above names a service and a tier, treat the
+question as open rather than settled.
 
-The game is MIT-licensed and given away at no charge, so shipping these tracks
-in the release packages is consistent with the weights' non-commercial terms
-today. That is a property of how the game is distributed, not a property of the
-audio, and it stops holding the moment money changes hands — a paid release, a
-paid storefront tier, a commercial bundle, or a sponsorship that makes the
-download a paid good.
-
-If the project ever wants that option, the twenty tracks have to be replaced, or
-the weights separately licensed from Meta. Anyone doing the replacing should
-treat this section as the checklist: it is the only part of the shipped audio
-with a restriction attached.
-
-The prompts and generation settings were not kept alongside the renders, so
-these files are committed artefacts rather than reproducible ones — unlike the
-synthesised cues, there is no recipe in the tree that regenerates them.
+The prompts and generation settings were not kept alongside the renders, so these files are
+committed artefacts rather than reproducible ones — unlike the synthesised cues, there is no
+recipe in the tree that regenerates them from nothing. The 48 kHz stereo FLAC masters they
+were baked from are held outside the repository; the shipped files are 32 kHz mono, so a
+re-bake at any other rate, or in stereo, needs those masters back.
 
 ### Voices (`assets/audio/voices/`)
 
@@ -301,8 +299,8 @@ Fifty-nine cues — the alerts, the mass-battle beds, the arrow and volley
 layers, the unit stingers, the shield, guard, bow, movement and siege sets, and
 `wolf_bite_snap` — were **generated with AudioCraft and have been replaced with
 CC0 material**. They were the second half
-of the non-commercial restriction; rebuilding them leaves the music as the only
-part of the game carrying one.
+of the non-commercial restriction; the music that was the other half has since
+been replaced too, so no shipped audio depends on those weights any more.
 
 They are composed rather than extracted: a Punic-war battlefield is not
 something anyone holds a field recording of, so each cue is a stack of CC0

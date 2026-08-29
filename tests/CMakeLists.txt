@@ -547,6 +547,7 @@ add_executable(
     core/mission_objective_markers_test.cpp
     controllers/command_controller_test.cpp
     ui/preferences_test.cpp
+    ui/hints_test.cpp
     ui/input_bindings_test.cpp
     ui/edge_scroll_test.cpp
     ui/team_identity_test.cpp

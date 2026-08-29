@@ -25,17 +25,17 @@ struct EconomyOverviewRequest {
 
   int owner_id = 0;
   Game::Systems::NationID nation_id = Game::Systems::NationID::RomanRepublic;
-  int population_cap = 0;
+  int manpower_cap = 0;
   Game::Systems::ResourceAmounts objective_resources{};
 };
 
 struct EconomyCoachBaseline {
-  int troop_population = 0;
+  int troop_manpower = 0;
   int building_count = 0;
   bool captured = false;
 };
 
-inline constexpr int k_economy_coach_army_population = 80;
+inline constexpr int k_economy_coach_army_manpower = 80;
 
 [[nodiscard]] auto
 build_resource_overview(const EconomyOverviewRequest& request) -> QVariantList;

@@ -20,14 +20,16 @@
 #include "game/systems/player_resource_registry.h"
 #include "game/systems/resource_types.h"
 #include "game/systems/troop_count_registry.h"
+#include "game/systems/troop_profile_service.h"
 #include "game/units/spawn_type.h"
+#include "game/units/troop_type.h"
 
 namespace {
 
 using Game::Systems::ResourceType;
 
 constexpr int k_owner = 1;
-constexpr int k_population_cap = 600;
+constexpr int k_manpower_cap = 600;
 
 class EconomyOverviewTest : public ::testing::Test {
 protected:
@@ -51,7 +53,7 @@ protected:
             .resources = &Game::Systems::PlayerResourceRegistry::instance(),
             .owner_id = k_owner,
             .nation_id = Game::Systems::NationID::RomanRepublic,
-            .population_cap = k_population_cap};
+            .manpower_cap = k_manpower_cap};
   }
 
   auto add_unit(Game::Units::SpawnType spawn_type,
@@ -205,8 +207,27 @@ TEST_F(EconomyOverviewTest, TheHelpViewCostsEveryBuildingAndUnitTheNationCanRais
   const QVariantMap archer =
       item_for(units, QStringLiteral("unit_type"), QStringLiteral("archer"));
   ASSERT_FALSE(archer.isEmpty());
-  EXPECT_GT(archer.value(QStringLiteral("population_cost")).toInt(), 0);
+  EXPECT_GT(archer.value(QStringLiteral("cost")).toInt(), 0);
   EXPECT_FALSE(archer.value(QStringLiteral("display_name")).toString().isEmpty());
+}
+
+TEST_F(EconomyOverviewTest, TheHelpViewQuotesThePriceTheBarracksCharges) {
+  const QVariantMap help = App::Core::build_production_help(request());
+  const auto units = help.value(QStringLiteral("units")).toList();
+  ASSERT_FALSE(units.isEmpty());
+
+  auto& profiles = Game::Systems::TroopProfileService::instance();
+  for (const QVariant& value : units) {
+    const QVariantMap unit = value.toMap();
+    const auto troop_type = Game::Units::try_parse_troop_type(
+        unit.value(QStringLiteral("unit_type")).toString().toStdString());
+    ASSERT_TRUE(troop_type.has_value());
+    const auto profile =
+        profiles.get_profile(Game::Systems::NationID::RomanRepublic, *troop_type);
+    EXPECT_EQ(unit.value(QStringLiteral("cost")).toInt(), profile.production.cost)
+        << unit.value(QStringLiteral("unit_type")).toString().toStdString()
+        << ": the help view quotes a manpower price the barracks does not spend";
+  }
 }
 
 TEST_F(EconomyOverviewTest, AnUnaffordableItemReportsWhatIsMissingAndByHowMuch) {
@@ -257,14 +278,14 @@ TEST_F(EconomyOverviewTest, RecruitingReportsBarracksManpowerSeparatelyFromResou
                                 QStringLiteral("archer"));
   ASSERT_FALSE(archer.isEmpty());
   EXPECT_TRUE(archer.value(QStringLiteral("prerequisite_met")).toBool());
-  EXPECT_FALSE(archer.value(QStringLiteral("manpower_met")).toBool());
+  EXPECT_FALSE(archer.value(QStringLiteral("reserve_met")).toBool());
 
   production->manpower_available = 500;
   help = App::Core::build_production_help(request());
   archer = item_for(help.value(QStringLiteral("units")).toList(),
                     QStringLiteral("unit_type"),
                     QStringLiteral("archer"));
-  EXPECT_TRUE(archer.value(QStringLiteral("manpower_met")).toBool());
+  EXPECT_TRUE(archer.value(QStringLiteral("reserve_met")).toBool());
 }
 
 TEST_F(EconomyOverviewTest, TheCoachWalksGatherThenBuildThenRecruitThenArmy) {
@@ -302,7 +323,7 @@ TEST_F(EconomyOverviewTest, TheCoachFinishesOnceAnArmyHasBeenRaised) {
     add_unit(Game::Units::SpawnType::Archer);
   }
   ASSERT_GE(Game::Systems::troop_count_for(world, k_owner),
-            App::Core::k_economy_coach_army_population);
+            App::Core::k_economy_coach_army_manpower);
 
   const QVariantMap coach = App::Core::build_economy_coach_state(request(), baseline);
   EXPECT_TRUE(coach.value(QStringLiteral("complete")).toBool())

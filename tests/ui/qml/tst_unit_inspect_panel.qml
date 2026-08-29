@@ -34,7 +34,7 @@ TestCase {
             "health": 900,
             "speed": 2.5,
             "vision_range": 15.0,
-            "population_cost": 75,
+            "cost": 75,
             "build_time": 6.0,
             "individuals_per_unit": 24,
             "resource_costs": {

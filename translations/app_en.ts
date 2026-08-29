@@ -465,10 +465,6 @@ This may be a skirmish, or objectives have not been configured.</translation>
 <context>
     <name>CameraLegend</name>
     <message>
-        <source>Camera controls</source>
-        <translation>Camera controls</translation>
-    </message>
-    <message>
         <source>Moving the camera</source>
         <translation>Moving the camera</translation>
     </message>
@@ -1346,16 +1342,12 @@ This may be a skirmish, or objectives have not been configured.</translation>
 <context>
     <name>EconomyCoach</name>
     <message>
-        <source>Economy prompts</source>
-        <translation>Economy prompts</translation>
-    </message>
-    <message>
-        <source>Stop showing these prompts</source>
-        <translation>Stop showing these prompts</translation>
-    </message>
-    <message>
         <source>How it works</source>
         <translation>How it works</translation>
+    </message>
+    <message>
+        <source>Hide these prompts</source>
+        <translation>Hide these prompts</translation>
     </message>
 </context>
 <context>
@@ -1573,12 +1565,12 @@ This may be a skirmish, or objectives have not been configured.</translation>
         <translation>Recruit a builder at a barracks, then send it to collect wood, stone or iron.</translation>
     </message>
     <message>
-        <source>With a builder selected, press Build and place a Home to raise your population, or a Barracks to recruit from.</source>
-        <translation>With a builder selected, press Build and place a Home to raise your population, or a Barracks to recruit from.</translation>
+        <source>With a builder selected, press Build and place a Home to raise your reserve, or a Barracks to recruit from.</source>
+        <translation>With a builder selected, press Build and place a Home to raise your reserve, or a Barracks to recruit from.</translation>
     </message>
     <message>
-        <source>Select a barracks and recruit troops. Each one costs population and resources, both shown on its card.</source>
-        <translation>Select a barracks and recruit troops. Each one costs population and resources, both shown on its card.</translation>
+        <source>Select a barracks and recruit troops. Each one costs reserve and resources, both shown on its card.</source>
+        <translation>Select a barracks and recruit troops. Each one costs reserve and resources, both shown on its card.</translation>
     </message>
     <message>
         <source>Gathering, building and recruiting are all under way.</source>
@@ -1593,8 +1585,8 @@ This may be a skirmish, or objectives have not been configured.</translation>
         <translation>Farm</translation>
     </message>
     <message>
-        <source>Raises civilians, who carry manpower to the nearest barracks. Each one costs food.</source>
-        <translation>Raises civilians, who carry manpower to the nearest barracks. Each one costs food.</translation>
+        <source>Raises civilians, who carry reserve to the nearest barracks. Each one costs food.</source>
+        <translation>Raises civilians, who carry reserve to the nearest barracks. Each one costs food.</translation>
     </message>
     <message>
         <source>Grows grain in cycles. A builder reaps it for food once it ripens.</source>
@@ -1605,8 +1597,8 @@ This may be a skirmish, or objectives have not been configured.</translation>
         <translation>Select a builder, press Collect, and click a tree, boulder, ore deposit, ripe farm or sheep. It hauls the load to a barracks yard, then goes back for more.</translation>
     </message>
     <message>
-        <source>Keep recruiting while your builders gather. Raise Homes and Farms when population or food runs out.</source>
-        <translation>Keep recruiting while your builders gather. Raise Homes and Farms when population or food runs out.</translation>
+        <source>Keep recruiting while your builders gather. Raise Homes and Farms when reserve or food runs out.</source>
+        <translation>Keep recruiting while your builders gather. Raise Homes and Farms when reserve or food runs out.</translation>
     </message>
     <message>
         <source>Watches over a wide stretch of ground, holds a settlement together, and takes in healers.</source>
@@ -1624,8 +1616,8 @@ This may be a skirmish, or objectives have not been configured.</translation>
         <translation>Builders: %1 (%2 idle). Placing a structure sends every selected builder to the site.</translation>
     </message>
     <message>
-        <source>Recruiting draws on the manpower held by each barracks.</source>
-        <translation>Recruiting draws on the manpower held by each barracks.</translation>
+        <source>Recruiting draws on the reserve held by each barracks.</source>
+        <translation>Recruiting draws on the reserve held by each barracks.</translation>
     </message>
     <message>
         <source>Needs a barracks</source>
@@ -1636,12 +1628,12 @@ This may be a skirmish, or objectives have not been configured.</translation>
         <translation>Needs a builder</translation>
     </message>
     <message>
-        <source>Not enough manpower at the barracks</source>
-        <translation>Not enough manpower at the barracks</translation>
+        <source>Not enough reserve at the barracks</source>
+        <translation>Not enough reserve at the barracks</translation>
     </message>
     <message>
-        <source>Population limit reached</source>
-        <translation>Population limit reached</translation>
+        <source>Manpower limit reached</source>
+        <translation>Manpower limit reached</translation>
     </message>
     <message>
         <source>Missing %1</source>
@@ -1684,16 +1676,16 @@ This may be a skirmish, or objectives have not been configured.</translation>
         <translation>WHAT A BARRACKS CAN RECRUIT</translation>
     </message>
     <message>
-        <source>%1 — %2 population, %3 · %4s</source>
-        <translation>%1 — %2 population, %3 · %4s</translation>
+        <source>%1 — %2 reserve, %3 · %4s</source>
+        <translation>%1 — %2 reserve, %3 · %4s</translation>
     </message>
     <message>
         <source>Back to the battle</source>
         <translation>Back to the battle</translation>
     </message>
     <message>
-        <source>Population %1 / %2. A Home raises civilians for %3 food each; walking a civilian into a barracks adds %4 manpower. Farms ripen every %5s and sheep yield %6 food.</source>
-        <translation>Population %1 / %2. A Home raises civilians for %3 food each; walking a civilian into a barracks adds %4 manpower. Farms ripen every %5s and sheep yield %6 food.</translation>
+        <source>Manpower %1 / %2. A Home raises civilians for %3 food each; walking a civilian into a barracks adds %4 reserve. Farms ripen every %5s and sheep yield %6 food.</source>
+        <translation>Manpower %1 / %2. A Home raises civilians for %3 food each; walking a civilian into a barracks adds %4 reserve. Farms ripen every %5s and sheep yield %6 food.</translation>
     </message>
     <message>
         <source>Needs a home</source>
@@ -2257,6 +2249,14 @@ This may be a skirmish, or objectives have not been configured.</translation>
         <source>The line is filing through a narrow crossing.</source>
         <translation>The line is filing through a narrow crossing.</translation>
     </message>
+    <message>
+        <source>Formation</source>
+        <translation>Formation</translation>
+    </message>
+    <message>
+        <source>Hide this readout</source>
+        <translation>Hide this readout</translation>
+    </message>
 </context>
 <context>
     <name>GalleryWindow</name>
@@ -2399,12 +2399,12 @@ This may be a skirmish, or objectives have not been configured.</translation>
         <translation>%1 is finished - %2 has fallen.</translation>
     </message>
     <message>
-        <source>Troop limit reached.</source>
-        <translation>Troop limit reached.</translation>
+        <source>Manpower limit reached.</source>
+        <translation>Manpower limit reached.</translation>
     </message>
     <message>
-        <source>Not enough manpower — build a home to raise more families.</source>
-        <translation>Not enough manpower — build a home to raise more families.</translation>
+        <source>Not enough reserve — build a home to raise more families.</source>
+        <translation>Not enough reserve — build a home to raise more families.</translation>
     </message>
 </context>
 <context>
@@ -2926,8 +2926,8 @@ This may be a skirmish, or objectives have not been configured.</translation>
         <translation>Press Repair, then left-click the damaged building. Right-click cancels.</translation>
     </message>
     <message>
-        <source>Send civilians to a barracks to refill the population it recruits from.</source>
-        <translation>Send civilians to a barracks to refill the population it recruits from.</translation>
+        <source>Send civilians to a barracks to refill the reserve it recruits from.</source>
+        <translation>Send civilians to a barracks to refill the reserve it recruits from.</translation>
     </message>
     <message>
         <source>Press Deliver, then left-click a friendly barracks. Right-click cancels.</source>
@@ -3626,8 +3626,8 @@ Every troop costs manpower; a squad of twelve builders costs ten. This is not a 
         <translation>Recruiting</translation>
     </message>
     <message>
-        <source>Population</source>
-        <translation>Population</translation>
+        <source>Reserve</source>
+        <translation>Reserve</translation>
     </message>
     <message>
         <source>Formations and lines</source>
@@ -3750,20 +3750,31 @@ Every troop costs manpower; a squad of twelve builders costs ten. This is not a 
         <translation>Food feeds your settlement: every civilian recruited at a Home costs it. A Farm grows grain in cycles; when the field turns gold a builder reaps it with Collect and hauls the grain home, and the field is sown again. Builders can also slaughter a sheep for a smaller haul. Auto Gather set to food keeps a builder working the farms.</translation>
     </message>
     <message>
-        <source>Every card - recruit or building - lists its price. A grey card means something is short; hover it to read what. Homes cost 50 wood and 15 stone, a farm 40 wood and 10 stone, a barracks 100 wood and 60 stone, a defence tower 60 wood and 80 stone; soldiers cost wood and iron plus population, and civilians cost food.</source>
-        <translation>Every card - recruit or building - lists its price. A grey card means something is short; hover it to read what. Homes cost 50 wood and 15 stone, a farm 40 wood and 10 stone, a barracks 100 wood and 60 stone, a defence tower 60 wood and 80 stone; soldiers cost wood and iron plus population, and civilians cost food.</translation>
+        <source>Every card - recruit or building - lists its price. A grey card means something is short; hover it to read what. Homes cost 50 wood and 15 stone, a farm 40 wood and 10 stone, a barracks 100 wood and 60 stone, a defence tower 60 wood and 80 stone; soldiers cost wood and iron plus reserve, and civilians cost food.</source>
+        <translation>Every card - recruit or building - lists its price. A grey card means something is short; hover it to read what. Homes cost 50 wood and 15 stone, a farm 40 wood and 10 stone, a barracks 100 wood and 60 stone, a defence tower 60 wood and 80 stone; soldiers cost wood and iron plus reserve, and civilians cost food.</translation>
     </message>
     <message>
         <source>Barracks recruit soldiers and hold your stockpile yard. Homes raise families and civilians. Farms grow grain that builders reap for food. Defence towers shoot at anything in range. Marketplaces trade. Temples strengthen morale and take in healers. Walls and gates shape the field; gates open for your own troops.</source>
         <translation>Barracks recruit soldiers and hold your stockpile yard. Homes raise families and civilians. Farms grow grain that builders reap for food. Defence towers shoot at anything in range. Marketplaces trade. Temples strengthen morale and take in healers. Walls and gates shape the field; gates open for your own troops.</translation>
     </message>
     <message>
-        <source>Left-click a barracks and pick a soldier; healers take their vows at a temple instead. Recruits queue up to five deep and march out to the rally flag. Each costs population from the building&apos;s own pool as well as materials.</source>
-        <translation>Left-click a barracks and pick a soldier; healers take their vows at a temple instead. Recruits queue up to five deep and march out to the rally flag. Each costs population from the building&apos;s own pool as well as materials.</translation>
+        <source>Left-click a barracks and pick a soldier; healers take their vows at a temple instead. Recruits queue up to five deep and march out to the rally flag. Each costs reserve from the building&apos;s own pool as well as materials.</source>
+        <translation>Left-click a barracks and pick a soldier; healers take their vows at a temple instead. Recruits queue up to five deep and march out to the rally flag. Each costs reserve from the building&apos;s own pool as well as materials.</translation>
     </message>
     <message>
-        <source>A barracks or temple starts with a pool of population and spends it on every recruit. Homes refill it: each Home raises families over time, a civilian can be recruited there for food and sent to either building with Deliver, and that building&apos;s pool grows. The top bar shows your army against the map&apos;s overall cap.</source>
-        <translation>A barracks or temple starts with a pool of population and spends it on every recruit. Homes refill it: each Home raises families over time, a civilian can be recruited there for food and sent to either building with Deliver, and that building&apos;s pool grows. The top bar shows your army against the map&apos;s overall cap.</translation>
+        <source>A barracks or temple starts with a reserve and spends it on every recruit; the card shows exactly what each one costs. Homes refill it: each Home raises families over time, a civilian can be recruited there for food and sent to either building with Deliver, and that building&apos;s reserve grows. A squad then stands in the field for what it cost, which is what the top bar counts against the map&apos;s manpower cap.</source>
+        <translation>A barracks or temple starts with a reserve and spends it on every recruit; the card shows exactly what each one costs. Homes refill it: each Home raises families over time, a civilian can be recruited there for food and sent to either building with Deliver, and that building&apos;s reserve grows. A squad then stands in the field for what it cost, which is what the top bar counts against the map&apos;s manpower cap.</translation>
+    </message>
+</context>
+<context>
+    <name>HintCard</name>
+    <message>
+        <source>Hide this</source>
+        <translation>Hide this</translation>
+    </message>
+    <message>
+        <source>Never show this again</source>
+        <translation>Never show this again</translation>
     </message>
 </context>
 <context>
@@ -6818,9 +6829,9 @@ Shoots arrows at enemies</translation>
     </message>
     <message>
         <source>Residential building
-Adds +50 population to nearest barracks</source>
+Adds +50 reserve to the nearest barracks</source>
         <translation>Residential building
-Adds +50 population to nearest barracks</translation>
+Adds +50 reserve to the nearest barracks</translation>
     </message>
     <message>
         <source>Marketplace</source>
@@ -6857,8 +6868,8 @@ Opens for your troops and allies</translation>
         <translation>%1 %2</translation>
     </message>
     <message>
-        <source>Not enough available population</source>
-        <translation>Not enough available population</translation>
+        <source>Not enough reserve</source>
+        <translation>Not enough reserve</translation>
     </message>
     <message>
         <source>Already building...</source>
@@ -6881,8 +6892,8 @@ Cost: %2
 Build time: %3s</translation>
     </message>
     <message>
-        <source>population</source>
-        <translation>population</translation>
+        <source>reserve</source>
+        <translation>reserve</translation>
     </message>
     <message>
         <source>Recruit %1
@@ -6906,11 +6917,11 @@ Carthage exclusive</translation>
         <source>Recruit %1
 Cost: %2
 Build time: %3s
-Use Deliver mode, then click a friendly barracks to add 50 available population.</source>
+Use Deliver mode, then click a friendly barracks to add to its reserve.</source>
         <translation>Recruit %1
 Cost: %2
 Build time: %3s
-Use Deliver mode, then click a friendly barracks to add 50 available population.</translation>
+Use Deliver mode, then click a friendly barracks to add to its reserve.</translation>
     </message>
     <message>
         <source>families</source>
@@ -7195,8 +7206,8 @@ Builders reap it for the food that recruits civilians</translation>
         <translation>TAKE VOWS</translation>
     </message>
     <message>
-        <source>Deliver civilians here to raise the temple&apos;s available population</source>
-        <translation>Deliver civilians here to raise the temple&apos;s available population</translation>
+        <source>Deliver civilians here to raise the temple&apos;s reserve</source>
+        <translation>Deliver civilians here to raise the temple&apos;s reserve</translation>
     </message>
     <message>
         <source>Barracks reserve: %1 / %2</source>
@@ -8188,8 +8199,36 @@ Builders reap it for the food that recruits civilians</translation>
         <translation>Economy numbers</translation>
     </message>
     <message>
-        <source>Floats resource, trade and population changes over the building they happened at</source>
-        <translation>Floats resource, trade and population changes over the building they happened at</translation>
+        <source>Floats resource, trade and reserve changes over the building they happened at</source>
+        <translation>Floats resource, trade and reserve changes over the building they happened at</translation>
+    </message>
+    <message>
+        <source>Camera legend</source>
+        <translation>Camera legend</translation>
+    </message>
+    <message>
+        <source>Economy prompts</source>
+        <translation>Economy prompts</translation>
+    </message>
+    <message>
+        <source>Formation readout</source>
+        <translation>Formation readout</translation>
+    </message>
+    <message>
+        <source>Lists the camera controls the first time a mission starts</source>
+        <translation>Lists the camera controls the first time a mission starts</translation>
+    </message>
+    <message>
+        <source>Walks through the opening economy steps of a mission</source>
+        <translation>Walks through the opening economy steps of a mission</translation>
+    </message>
+    <message>
+        <source>Shows cohesion and phase after you send several units somewhere together, until the selection changes</source>
+        <translation>Shows cohesion and phase after you send several units somewhere together, until the selection changes</translation>
+    </message>
+    <message>
+        <source>Prompts and readouts:</source>
+        <translation>Prompts and readouts:</translation>
     </message>
 </context>
 <context>
@@ -8316,8 +8355,8 @@ Builders reap it for the food that recruits civilians</translation>
         <translation>Recruits come from the barracks. Left-click your barracks to open its production panel on the right.</translation>
     </message>
     <message>
-        <source>The barracks has only %1 population left to draw on. Every recruit costs population; when it runs dry, build Homes - each Home raises families, and a civilian recruited there and sent to the barracks with Deliver refills it.</source>
-        <translation>The barracks has only %1 population left to draw on. Every recruit costs population; when it runs dry, build Homes - each Home raises families, and a civilian recruited there and sent to the barracks with Deliver refills it.</translation>
+        <source>The barracks has only %1 reserve left to draw on. Every recruit costs reserve; when it runs dry, build Homes - each Home raises families, and a civilian recruited there and sent to the barracks with Deliver refills it.</source>
+        <translation>The barracks has only %1 reserve left to draw on. Every recruit costs reserve; when it runs dry, build Homes - each Home raises families, and a civilian recruited there and sent to the barracks with Deliver refills it.</translation>
     </message>
     <message>
         <source>A recruit card turns grey when a resource is short: soldiers need wood for shafts and iron for blades. Send a builder to collect more.</source>
@@ -8685,8 +8724,8 @@ Builders reap it for the food that recruits civilians</translation>
         <translation>Patrol</translation>
     </message>
     <message>
-        <source>Population %1  ·  Build time %2s</source>
-        <translation>Population %1  ·  Build time %2s</translation>
+        <source>Reserve %1  ·  Build time %2s</source>
+        <translation>Reserve %1  ·  Build time %2s</translation>
     </message>
     <message>
         <source>Range</source>

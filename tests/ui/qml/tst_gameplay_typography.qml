@@ -48,7 +48,7 @@ TestCase {
         function get_unit_production_info(unitType, nationId) {
             return {
                 "cost": 50,
-                "population_cost": 50,
+                "cost": 50,
                 "resource_costs": {
                     "food": 120,
                     "wood": 40

@@ -17,6 +17,7 @@
 #include "app/core/user_settings.h"
 #include "ui/edge_scroll.h"
 #include "ui/game_speeds.h"
+#include "ui/hints.h"
 #include "ui/icon_art.h"
 #include "ui/input_bindings.h"
 #include "ui/preferences.h"
@@ -231,6 +232,7 @@ public slots:
       qmlRegisterSingletonType<Theme>(uri, 1, 0, "Theme", &Theme::create);
       qmlRegisterSingletonType<UiPreferences>(
           uri, 1, 0, "UiPreferences", &UiPreferences::create);
+      qmlRegisterSingletonType<UiHints>(uri, 1, 0, "UiHints", &UiHints::create);
       qmlRegisterSingletonType<IconArtLibrary>(
           uri, 1, 0, "IconArt", &IconArtLibrary::create);
       qmlRegisterSingletonType<GameSpeeds>(

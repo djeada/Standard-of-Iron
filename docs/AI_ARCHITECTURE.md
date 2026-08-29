@@ -271,7 +271,7 @@ farm ripens (60s) -> worker cuts it for 60 food
                   -> barracks spends 52+ manpower on one soldier
 ```
 
-The opening barracks is seeded with the map's population cap in manpower and
+The opening barracks is seeded with the map's `max_population` as its reserve and
 that is the only bulk the AI ever gets for free. Three consequences shape the
 macro layer:
 

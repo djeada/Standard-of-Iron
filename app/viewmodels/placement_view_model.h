@@ -119,6 +119,7 @@ public:
 signals:
   void placing_formation_changed();
   void formation_options_changed();
+  void formation_deployed(int unit_count);
   void placing_construction_changed();
   void construction_preview_active_changed();
   void construction_preview_valid_changed();
