@@ -672,7 +672,7 @@ public:
 
   static constexpr std::size_t k_capacity = 3U;
 
-  static constexpr float k_intent_lifetime = 0.30F;
+  static constexpr float k_intent_lifetime = 0.22F;
 
   std::array<CombatActionIntent, k_capacity> entries{};
   std::uint8_t count{0};
@@ -950,8 +950,8 @@ public:
 
   static constexpr std::uint8_t k_attack_variant_seed_slots = 8;
 
-  static constexpr float k_stamina_cost_light_attack = 12.0F;
-  static constexpr float k_stamina_cost_heavy_attack = 25.0F;
+  static constexpr float k_stamina_cost_light_attack = 30.0F;
+  static constexpr float k_stamina_cost_heavy_attack = 50.0F;
   static constexpr float k_stamina_cost_dodge = 18.0F;
   static constexpr float k_stamina_cost_guard_per_second = 8.0F;
   static constexpr float k_stamina_cost_shield_bash = 20.0F;

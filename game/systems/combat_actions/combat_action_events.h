@@ -19,6 +19,7 @@ namespace Game::Systems::CombatActions {
     const CombatActionDefinition& definition) -> std::vector<CombatActionEvent>;
 
 void reset_combat_action_event_runtime(
-    Engine::Core::RpgCommanderActionComponent& action);
+    Engine::Core::RpgCommanderActionComponent& action,
+    float entry_normalized_time = 0.0F);
 
 } // namespace Game::Systems::CombatActions

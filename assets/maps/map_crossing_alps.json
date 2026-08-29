@@ -1263,8 +1263,8 @@
             "max_population": -1,
             "player_id": 1,
             "type": "swordsman",
-            "x": 59.79,
-            "z": 81.55
+            "x": 59.73,
+            "z": 81.91
         },
         {
             "max_population": -1,
@@ -1305,8 +1305,8 @@
             "max_population": -1,
             "player_id": 1,
             "type": "catapult",
-            "x": 31.84,
-            "z": 66.83
+            "x": 31.71,
+            "z": 66.44
         },
         {
             "max_population": -1,
@@ -1517,7 +1517,7 @@
             "max_population": -1,
             "player_id": 3,
             "type": "spearman",
-            "x": 286,
+            "x": 285.36,
             "z": 520
         },
         {
@@ -1526,7 +1526,7 @@
             "max_population": -1,
             "player_id": 3,
             "type": "spearman",
-            "x": 286,
+            "x": 285.36,
             "z": 516
         },
         {
@@ -1568,8 +1568,8 @@
             "nation": "roman_republic",
             "player_id": 3,
             "type": "roman_legion_organizer",
-            "x": 286.0,
-            "z": 520.0
+            "x": 285.36,
+            "z": 520
         },
         {
             "max_population": -1,
@@ -3031,15 +3031,15 @@
             "rotation": 1.2,
             "scale": 0.9,
             "type": "tent",
-            "x": 547.28,
-            "z": 533.96
+            "x": 547.4,
+            "z": 529.5
         },
         {
             "rotation": 4.1,
             "scale": 0.9,
             "type": "tent",
             "x": 581.86,
-            "z": 538.3
+            "z": 535.91
         },
         {
             "rotation": 2.5,
@@ -3061,8 +3061,8 @@
             "radius": 3.2,
             "scale": 0.9,
             "type": "firecamp",
-            "x": 563.29,
-            "z": 534.9300000000001
+            "x": 563.35,
+            "z": 532.63
         },
         {
             "rotation": 0.37,
@@ -3173,7 +3173,7 @@
             "rotation": 4.12,
             "scale": 1.04,
             "type": "boulder",
-            "x": 60.1,
+            "x": 60.13,
             "z": 50.26
         },
         {
@@ -3229,8 +3229,8 @@
             "rotation": 4.19,
             "scale": 1.16,
             "type": "pine_tree",
-            "x": 95.13,
-            "z": 102.08
+            "x": 95.01,
+            "z": 102.37
         },
         {
             "rotation": 5.2,
@@ -3292,8 +3292,8 @@
             "rotation": 0.7000000000000001,
             "scale": 1.19,
             "type": "boulder",
-            "x": 99.96,
-            "z": 109.75
+            "x": 102.64,
+            "z": 111.3
         },
         {
             "rotation": 1.35,
@@ -3320,8 +3320,8 @@
             "rotation": 5.41,
             "scale": 1.18,
             "type": "iron_ore",
-            "x": 80.24,
-            "z": 102.51
+            "x": 78.47,
+            "z": 99.25
         },
         {
             "rotation": 5.97,
@@ -3341,15 +3341,15 @@
             "rotation": 2.16,
             "scale": 0.93,
             "type": "iron_ore",
-            "x": 86.95,
-            "z": 107.09
+            "x": 86.53,
+            "z": 107.4
         },
         {
             "rotation": 0.73,
             "scale": 1.01,
             "type": "iron_ore",
-            "x": 81.93,
-            "z": 113.03
+            "x": 81.61,
+            "z": 113.39
         },
         {
             "rotation": 3.59,
@@ -3369,8 +3369,8 @@
             "rotation": 3.0700000000000003,
             "scale": 1.24,
             "type": "pine_tree",
-            "x": 149.59,
-            "z": 288.51
+            "x": 149.5,
+            "z": 288.87
         },
         {
             "rotation": 4.2700000000000005,
@@ -3580,8 +3580,8 @@
             "radius": 3.1,
             "scale": 1,
             "type": "firecamp",
-            "x": 103.86,
-            "z": 104.06
+            "x": 102.66,
+            "z": 99.59
         },
         {
             "rotation": 200.6,
@@ -3610,8 +3610,8 @@
             "rotation": 96.60000000000001,
             "scale": 0.93,
             "type": "tent",
-            "x": 61.11,
-            "z": 156.71
+            "x": 60.32,
+            "z": 156.82
         },
         {
             "intensity": 1.24,
@@ -4078,8 +4078,8 @@
             "rotation": 180,
             "scale": 0.9,
             "type": "ruins",
-            "x": 344,
-            "z": 613
+            "x": 340.29,
+            "z": 612.82
         },
         {
             "landmark": "alps_scree_hamlet",
@@ -4138,8 +4138,8 @@
             "landmark": "alps_descent_sanctuary",
             "scale": 0.9,
             "type": "ruins",
-            "x": 393.24,
-            "z": 558.24
+            "x": 393.3,
+            "z": 558.58
         },
         {
             "landmark": "alps_descent_sanctuary",
@@ -4188,7 +4188,7 @@
             "rotation": 90,
             "scale": 1,
             "type": "ruins",
-            "x": 325,
+            "x": 328.68,
             "z": 427
         },
         {
@@ -4204,8 +4204,8 @@
             "rotation": 90,
             "scale": 1.1500000000000001,
             "type": "ruins",
-            "x": 321,
-            "z": 433
+            "x": 317.12,
+            "z": 434.26
         },
         {
             "intensity": 1.2,
@@ -4254,8 +4254,8 @@
             "rotation": 270,
             "scale": 1.1,
             "type": "ruins",
-            "x": 317,
-            "z": 72
+            "x": 322.07,
+            "z": 73.47
         },
         {
             "landmark": "alps_frozen_hamlet",
@@ -4342,8 +4342,8 @@
             "rotation": 180,
             "scale": 0.9,
             "type": "ruins",
-            "x": 312,
-            "z": 526
+            "x": 311.05,
+            "z": 526.77
         },
         {
             "authored_camp": true,
@@ -4367,7 +4367,7 @@
             "rotation": 90,
             "scale": 1,
             "type": "weapon_rack",
-            "x": 101.8,
+            "x": 101.89,
             "z": 108.8
         },
         {
@@ -4401,14 +4401,14 @@
             "radius": 3.4,
             "scale": 1,
             "type": "firecamp",
-            "x": 209,
-            "z": 363.2
+            "x": 208.85,
+            "z": 363.65
         },
         {
             "authored_camp": true,
             "scale": 1,
             "type": "supply_cart",
-            "x": 201.41,
+            "x": 201.65,
             "z": 365.75
         },
         {

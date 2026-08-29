@@ -1,25 +1,44 @@
 #!/usr/bin/env python3
-"""Find and repair props that intersect each other in authored map JSON.
+"""Find and repair authored map objects that sit inside each other or the terrain.
 
-Two objects are treated as overlapping when their *solid* bodies intersect --
-the same bodies the engine uses to block navigation, so a canopy hanging over a
-tent is left alone while a tent standing inside a tent is not.  The radii mirror
-``world_prop_ground_radius`` in game/map/map_definition.h and the building
-bodies in game/systems/building_collision_registry.cpp; keep them in step.
+Every object on a map carries the *rectangle* it plants on the ground -- the
+same body the engine blocks navigation with, mirrored from
+``world_prop_ground_half_extents`` in game/map/map_definition.h and the building
+bodies in game/systems/building_collision_registry.cpp.  Rectangles matter: a
+ruin is a 5.5 x 4.1 m plinth and a fallen dead tree is 4.2 m of timber one metre
+wide, and a disc big enough to hold either of them reserves open ground off the
+short flank while leaving the long corners free for something else to stand in.
+Keep the tables here in step with the header; the C++ guard
+tests/render/prop_model_footprint_test.cpp measures the models and fails if the
+header drifts from them.
+
+Four kinds of defect are reported, and all four must be at zero:
+
+``overlap``   two solid bodies intersect.
+``road``      a body stands in a road or bridge corridor.  Roads are laid by
+              scripts/generate-map-roads.py, which routes around water and slope
+              but has never known that props exist, so it paves over statues.
+``water``     a body stands in a river or a lake.
+``slope``     a body straddles the edge of a hill, where the ground breaks under
+              it.  A prop wholly on the flat or wholly on the shoulder settles;
+              one lying across the rim cannot.
 
 Repairs push the *lower priority* object out along the separation axis: a tent
 that overlaps a wall moves, the wall does not.  A push is only accepted when it
-lands the object inside the map, clear of rivers, lakes and bridges, and no
+lands the object inside the map, clear of water, roads and bridges, and no
 deeper into anything else than it already was.
 
 Structures are not all equally fixed.  A wall ring is geometry -- its segments
 are *meant* to abut and must never move -- and a settlement is laid out around
 its barracks, temple and marketplace, so those are anchors too.  The homes and
-towers dropped into the space between them are fill, and a tower standing
-inside the barracks hall is a defect that moving the tower fixes.  Fill may
-therefore be nudged, on a tighter travel budget than a prop and never onto a
-road, and a fill building close enough to a wall to be part of the ring is
-re-locked before anything moves.
+towers dropped into the space between them are fill, and a tower standing inside
+the barracks hall is a defect that moving the tower fixes.
+
+An anchor building standing in a road is the one defect fixed from the other
+end.  Roads are generated to *reach* these buildings and are authored with the
+building's centre as an endpoint, so the last few metres of the route run
+through the hall.  The building is where the designer put it; the road is what
+overshoots, so the road is trimmed back to the doorway.
 """
 
 from __future__ import annotations
@@ -31,6 +50,10 @@ import math
 import sys
 from dataclasses import dataclass, field
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+
+from map_hill_shapes import hill_half_extents, hill_shape_strokes
 
 WORLD_PROP_RENDER_SCALE = {
     "firecamp": 1.0,
@@ -51,26 +74,35 @@ WORLD_PROP_RENDER_SCALE = {
     "statue": 1.05,
 }
 
-WORLD_PROP_MODEL_HALF_EXTENT = {
-    "ruins": 0.94,
-    "abandoned_home": 1.16,
-    "supply_cart": 1.42,
-    "weapon_rack": 0.88,
-    "magic_shrine": 0.86,
-    "statue": 0.55,
-    "tent": 0.55,
-    "firecamp": 0.90,
-    "pine_tree": 1.0,
-    "olive_tree": 1.0,
-    "cypress_tree": 1.0,
-    "palm_tree": 1.0,
-    "dead_tree": 1.0,
+WORLD_PROP_MODEL_HALF_EXTENTS = {
+    "ruins": (0.94, 0.70),
+    "abandoned_home": (1.16, 0.82),
+    "supply_cart": (0.90, 1.42),
+    "weapon_rack": (0.88, 0.54),
+    "magic_shrine": (0.86, 0.86),
+    "statue": (0.55, 0.55),
+    "tent": (0.69, 0.90),
+    "firecamp": (0.90, 0.90),
+    "boulder": (0.60, 0.55),
+    "iron_ore": (0.82, 0.56),
+    "dead_tree": (1.34, 0.35),
+    "pine_tree": (1.0, 1.0),
+    "olive_tree": (1.0, 1.0),
+    "cypress_tree": (1.0, 1.0),
+    "palm_tree": (1.0, 1.0),
 }
-WORLD_PROP_MODEL_HALF_EXTENT_DEFAULT = 0.55
+WORLD_PROP_MODEL_HALF_EXTENTS_DEFAULT = (0.55, 0.55)
 
-TREE_TYPES = {"pine_tree", "olive_tree", "cypress_tree", "palm_tree", "dead_tree"}
+CANOPY_TYPES = {"pine_tree", "olive_tree", "cypress_tree", "palm_tree"}
+"""Trees that block only their trunk.
+
+Grass and stones belong *under* a canopy, and blocking the full crown of a pine
+would shave a bald ring 9 m across around every trunk.  ``dead_tree`` is
+deliberately not here: it is a log lying on the ground, so all of it is
+something you walk around."""
+
 STEM_FRACTION = 0.22
-MIN_PROP_RADIUS = 0.5
+MIN_GROUND_HALF_EXTENT = 0.5
 
 
 BUILDING_BODIES = {
@@ -85,11 +117,14 @@ BUILDING_BODIES = {
 }
 BUILDING_BODY_DEFAULT = (3.0, 3.0)
 
-
 WALL_TYPES = {"wall_segment", "wall_gate"}
 
 SPAWN_BODY_RADIUS = 0.5
 """The default ``navigation_clearance`` in game/core/component.h.
+
+Troops muster on a road as often as beside one and are spread by the formation
+pass on the first tick, so a spawn is checked against solid bodies and water but
+never against roads or hill rims.
 
 A unit standing inside a tent or a tree trunk on the first frame is the same
 defect as a tent inside a tent, so authored spawns are checked against the
@@ -121,11 +156,16 @@ PRIORITY_SPAWN = 1
 WALL_LOCK_GAP = 1.0
 """A fill building this close to a wall is read as part of the ring.
 
-Measured over every map in ``assets/maps``, the nearest a free-standing home or
-tower sits to a wall body is 0.81 m and all but one clear 2 m, so this locks a
-gatehouse or a corner tower without freezing ordinary settlement fill."""
+A corner tower or a gatehouse is ring geometry even though its type says fill,
+and sliding it off the ring opens a hole no wall segment covers.  Measured over
+every map in ``assets/maps``, the nearest a free-standing home or tower sits to
+a wall body is 0.81 m and all but one clear 2 m, so this locks a gatehouse or a
+corner tower without freezing ordinary settlement fill."""
 
 DEFAULT_ROAD_WIDTH = 3.0
+DEFAULT_BRIDGE_WIDTH = 8.0
+DEFAULT_RIVER_WIDTH = 4.0
+
 PROP_PRIORITY = {
     "abandoned_home": 55,
     "ruins": 50,
@@ -146,11 +186,36 @@ PROP_PRIORITY = {
 }
 PROP_PRIORITY_DEFAULT = 25
 
+ROAD_MARGIN = 0.2
+"""How far clear of the kerb a body has to stand.
+
+Small on purpose: props are meant to line a road, and demanding a metre of
+verge would march every camp back off its own street."""
+
+SLOPE_STRADDLE_MARGIN = 0.35
+"""How far a body may hang over the rim of a hill before the ground breaks.
+
+Prop renderers settle a model on the *lowest* ground its footprint spans, so a
+body wholly on the flat or wholly on the shoulder sits flush either way.  What
+cannot be settled is a body lying across the rim, where the ground under one
+half is metres below the other."""
+
+RIM_TOLERANCE_FRACTION = 0.5
+"""The share of itself a body may hang over a rim, over and above the margin.
+
+Camps are pitched against banks on purpose and a ruin is often built into a
+shoulder, so clipping an edge is not a defect; a body whose *centre* is nearer
+the rim than half its own reach is genuinely lying across the break."""
+
 
 def axis_aligned_body(
     body: tuple[float, float], facing_degrees: float
 ) -> tuple[float, float]:
-    """The axis-aligned box a rotated building body fills, as the engine does it."""
+    """The axis-aligned box a rotated building body fills, as the engine does it.
+
+    Buildings carry *degrees* and are registered axis-aligned by
+    ``BuildingCollisionRegistry``; props carry radians and are drawn rotated.
+    The two conventions are not interchangeable -- keep them apart."""
     radians = math.radians(facing_degrees)
     cosine = abs(math.cos(radians))
     sine = abs(math.sin(radians))
@@ -160,48 +225,85 @@ def axis_aligned_body(
     )
 
 
-def prop_solid_radius(prop_type: str, scale: float) -> float:
-    render_scale = WORLD_PROP_RENDER_SCALE.get(prop_type, 1.0)
-    if prop_type in TREE_TYPES:
-        fraction = STEM_FRACTION
+def prop_ground_half_extents(prop_type: str, scale: float) -> tuple[float, float]:
+    render_scale = WORLD_PROP_RENDER_SCALE.get(prop_type, 1.0) * scale
+    if prop_type in CANOPY_TYPES:
+        model = (STEM_FRACTION, STEM_FRACTION)
     else:
-        fraction = WORLD_PROP_MODEL_HALF_EXTENT.get(
-            prop_type, WORLD_PROP_MODEL_HALF_EXTENT_DEFAULT
+        model = WORLD_PROP_MODEL_HALF_EXTENTS.get(
+            prop_type, WORLD_PROP_MODEL_HALF_EXTENTS_DEFAULT
         )
-    return max(MIN_PROP_RADIUS, render_scale * scale * fraction)
+    return (
+        max(MIN_GROUND_HALF_EXTENT, model[0] * render_scale),
+        max(MIN_GROUND_HALF_EXTENT, model[1] * render_scale),
+    )
 
 
 @dataclass
 class Placeable:
+    """One solid body on the map, as an oriented rectangle or a disc."""
+
     key: str
     kind: str
     name: str
     x: float
     z: float
-    radius: float
+    half_x: float
+    half_z: float
     priority: int
     payload: dict = field(repr=False, default_factory=dict)
 
-    half_width: float = 0.0
-    half_depth: float = 0.0
+    rotation: float = 0.0
+    """Radians, matching the prop shaders.  Buildings are pre-inflated instead."""
+
+    is_disc: bool = False
     body_type: str = ""
     x_field: str = "x"
     z_field: str = "z"
     moved: float = 0.0
     travel_budget: float = 0.0
-    avoids_roads: bool = False
+    avoids_roads: bool = True
+    avoids_slope_rims: bool = True
+
+    is_ring: bool = False
+    """Part of a defensive ring: a wall run, or a tower locked onto one."""
 
     @property
-    def is_box(self) -> bool:
-        return self.half_width > 0.0 and self.half_depth > 0.0
+    def radius(self) -> float:
+        """The disc that contains the whole body, corners included."""
+        return math.hypot(self.half_x, self.half_z)
 
-    def closest_point(self, x: float, z: float) -> tuple[float, float]:
-        if not self.is_box:
-            return self.x, self.z
-        return (
-            min(max(x, self.x - self.half_width), self.x + self.half_width),
-            min(max(z, self.z - self.half_depth), self.z + self.half_depth),
-        )
+    def support_radius(self, unit_x: float, unit_z: float) -> float:
+        """How far the body reaches from its centre along one bearing.
+
+        A dead tree reaches 2 m along its length and 0.5 m across it; judging
+        either against the disc that bounds both would call half the map a
+        defect."""
+        if self.is_disc:
+            return self.half_x
+        own_axes = self.axes()
+        return self.half_x * abs(
+            unit_x * own_axes[0][0] + unit_z * own_axes[0][1]
+        ) + self.half_z * abs(unit_x * own_axes[1][0] + unit_z * own_axes[1][1])
+
+    def axes(self) -> tuple[tuple[float, float], tuple[float, float]]:
+        cosine = math.cos(self.rotation)
+        sine = math.sin(self.rotation)
+        return (cosine, sine), (-sine, cosine)
+
+    def contains_depth(self, x: float, z: float, radius: float) -> float:
+        """How deep a disc at (x, z) sits inside this body; <= 0 when clear."""
+        cosine = math.cos(self.rotation)
+        sine = math.sin(self.rotation)
+        dx = x - self.x
+        dz = z - self.z
+        local_x = cosine * dx + sine * dz
+        local_z = -sine * dx + cosine * dz
+        gap_x = abs(local_x) - self.half_x
+        gap_z = abs(local_z) - self.half_z
+        if gap_x <= 0.0 and gap_z <= 0.0:
+            return radius - max(gap_x, gap_z)
+        return radius - math.hypot(max(gap_x, 0.0), max(gap_z, 0.0))
 
     def separation_from(
         self, other: "Placeable", clearance: float
@@ -209,127 +311,151 @@ class Placeable:
         """How deep ``self`` sits in ``other``, and the shortest way out.
 
         Depth and direction are derived together so they can never disagree.
-        The case that matters is a body whose centre is *inside* a building:
-        clamping to the box returns the point itself, which reports a shallow
-        overlap and no direction at all, so an archer standing in the middle of
-        a barracks hall looked 0.65 m deep when it was 2.75 m from the nearest
-        wall and had to be pushed out on a random bearing.  Inside the box, the
-        way out is the nearest face.
+        Two rectangles are separated by the axis theorem, which reports the real
+        minimum translation even when one body is entirely inside the other --
+        the case that used to degenerate, when an archer standing in the middle
+        of a barracks hall looked 0.65 m deep though it was 2.75 m from the
+        nearest wall, and got pushed out on a bearing taken from its own name.
         """
-        if self.is_box and other.is_box:
-            gap_x = abs(self.x - other.x) - (self.half_width + other.half_width)
-            gap_z = abs(self.z - other.z) - (self.half_depth + other.half_depth)
-            depth = clearance - max(gap_x, gap_z)
-            if gap_x >= gap_z:
-                return depth, (1.0 if self.x >= other.x else -1.0), 0.0
-            return depth, 0.0, (1.0 if self.z >= other.z else -1.0)
-
-        if not self.is_box and not other.is_box:
+        if self.is_disc and other.is_disc:
             dx = self.x - other.x
             dz = self.z - other.z
             distance = math.hypot(dx, dz)
-            depth = (self.radius + other.radius + clearance) - distance
+            depth = (self.half_x + other.half_x + clearance) - distance
             if distance < 1e-4:
                 return depth, 0.0, 0.0
             return depth, dx / distance, dz / distance
 
-        box, disc = (self, other) if self.is_box else (other, self)
-        dx = disc.x - box.x
-        dz = disc.z - box.z
-        inside_x = box.half_width - abs(dx)
-        inside_z = box.half_depth - abs(dz)
-        if inside_x > 0.0 and inside_z > 0.0:
-            if inside_x <= inside_z:
-                depth = inside_x + disc.radius + clearance
-                exit_x, exit_z = (1.0 if dx >= 0.0 else -1.0), 0.0
+        if self.is_disc or other.is_disc:
+            box, disc = (other, self) if self.is_disc else (self, other)
+            depth = box.contains_depth(disc.x, disc.z, disc.half_x + clearance)
+            cosine = math.cos(box.rotation)
+            sine = math.sin(box.rotation)
+            dx = disc.x - box.x
+            dz = disc.z - box.z
+            local_x = cosine * dx + sine * dz
+            local_z = -sine * dx + cosine * dz
+            inside_x = box.half_x - abs(local_x)
+            inside_z = box.half_z - abs(local_z)
+            if inside_x > 0.0 and inside_z > 0.0:
+                if inside_x <= inside_z:
+                    exit_local = (1.0 if local_x >= 0.0 else -1.0, 0.0)
+                else:
+                    exit_local = (0.0, 1.0 if local_z >= 0.0 else -1.0)
             else:
-                depth = inside_z + disc.radius + clearance
-                exit_x, exit_z = 0.0, (1.0 if dz >= 0.0 else -1.0)
-        else:
-            near_x, near_z = box.closest_point(disc.x, disc.z)
-            offset_x = disc.x - near_x
-            offset_z = disc.z - near_z
-            distance = math.hypot(offset_x, offset_z)
-            depth = (disc.radius + clearance) - distance
-            if distance < 1e-4:
-                exit_x, exit_z = 0.0, 0.0
-            else:
-                exit_x, exit_z = offset_x / distance, offset_z / distance
-
-        if self.is_box:
+                offset_x = local_x - min(max(local_x, -box.half_x), box.half_x)
+                offset_z = local_z - min(max(local_z, -box.half_z), box.half_z)
+                length = math.hypot(offset_x, offset_z)
+                exit_local = (
+                    (offset_x / length, offset_z / length)
+                    if length > 1e-4
+                    else (0.0, 0.0)
+                )
+            exit_x = cosine * exit_local[0] - sine * exit_local[1]
+            exit_z = sine * exit_local[0] + cosine * exit_local[1]
+            if self.is_disc:
+                return depth, exit_x, exit_z
             return depth, -exit_x, -exit_z
-        return depth, exit_x, exit_z
+
+        return self._rectangle_separation(other, clearance)
+
+    def _rectangle_separation(
+        self, other: "Placeable", clearance: float
+    ) -> tuple[float, float, float]:
+        offset_x = self.x - other.x
+        offset_z = self.z - other.z
+        own_axes = self.axes()
+        other_axes = other.axes()
+
+        best_depth = math.inf
+        best_axis = (0.0, 0.0)
+        for axis in (*own_axes, *other_axes):
+            reach_self = self.half_x * abs(
+                axis[0] * own_axes[0][0] + axis[1] * own_axes[0][1]
+            ) + self.half_z * abs(axis[0] * own_axes[1][0] + axis[1] * own_axes[1][1])
+            reach_other = other.half_x * abs(
+                axis[0] * other_axes[0][0] + axis[1] * other_axes[0][1]
+            ) + other.half_z * abs(
+                axis[0] * other_axes[1][0] + axis[1] * other_axes[1][1]
+            )
+            distance = offset_x * axis[0] + offset_z * axis[1]
+            depth = reach_self + reach_other + clearance - abs(distance)
+            if depth < best_depth:
+                best_depth = depth
+                sign = 1.0 if distance >= 0.0 else -1.0
+                best_axis = (axis[0] * sign, axis[1] * sign)
+        return best_depth, best_axis[0], best_axis[1]
 
     def overlap_with(self, other: "Placeable", clearance: float) -> float:
         """How deep the two solid bodies intersect; <= 0 when they are clear."""
         return self.separation_from(other, clearance)[0]
 
     def exempt_from(self, other: "Placeable") -> bool:
+        """Pairs that are meant to touch.
+
+        Wall panels abut by definition, and a gatehouse or corner tower is built
+        *into* the run rather than beside it -- 214 of those towers, more than
+        half of every overlapping pair on the campaign maps, are the ring doing
+        its job.  Two towers overlapping each other is still a defect, so the
+        exemption is only ever between a wall and something locked onto it.
+        """
         if self.kind == "spawn" and other.kind == "spawn":
             return True
-        return self.body_type in WALL_TYPES and other.body_type in WALL_TYPES
+        if self.body_type in WALL_TYPES and other.body_type in WALL_TYPES:
+            return True
+        wall, ring = (self, other) if self.body_type in WALL_TYPES else (other, self)
+        return wall.body_type in WALL_TYPES and ring.is_ring
 
 
-def collect(map_data: dict) -> list[Placeable]:
+def make_prop(key: str, kind: str, prop: dict, prop_type: str, default_priority: int):
+    """One world prop as the rectangle its model plants on the ground.
+
+    ``rotation`` is copied across raw.  Props store it unconverted and the prop
+    shaders read it as radians, so the ``180`` authored on a ruin is 180
+    radians, not half a turn; mirror that oddity or the body will not sit where
+    the model is drawn.
+    """
+    scale = float(prop.get("scale", 1.0) or 1.0)
+    half_x, half_z = prop_ground_half_extents(prop_type, scale)
+    return Placeable(
+        key=key,
+        kind=kind,
+        name=str(prop.get("id") or prop_type),
+        x=float(prop.get("x", 0.0)),
+        z=float(prop.get("z", 0.0)),
+        half_x=half_x,
+        half_z=half_z,
+        rotation=float(prop.get("rotation", 0.0) or 0.0),
+        priority=PROP_PRIORITY.get(prop_type, default_priority),
+        payload=prop,
+        body_type=prop_type,
+    )
+
+
+def collect(map_data: dict, path_name: str) -> list[Placeable]:
     items: list[Placeable] = []
 
     for index, prop in enumerate(map_data.get("world_props") or []):
         prop_type = str(prop.get("type", ""))
-        scale = float(prop.get("scale", 1.0) or 1.0)
         items.append(
-            Placeable(
-                key=f"world_props[{index}]",
-                kind="world_prop",
-                name=str(prop.get("id") or prop_type),
-                x=float(prop.get("x", 0.0)),
-                z=float(prop.get("z", 0.0)),
-                radius=prop_solid_radius(prop_type, scale),
-                priority=PROP_PRIORITY.get(prop_type, PROP_PRIORITY_DEFAULT),
-                payload=prop,
-                body_type=prop_type,
+            make_prop(
+                f"world_props[{index}]",
+                "world_prop",
+                prop,
+                prop_type,
+                PROP_PRIORITY_DEFAULT,
             )
         )
 
     for index, camp in enumerate(map_data.get("firecamps") or []):
         items.append(
-            Placeable(
-                key=f"firecamps[{index}]",
-                kind="firecamp",
-                name=str(camp.get("id") or "firecamp"),
-                x=float(camp.get("x", 0.0)),
-                z=float(camp.get("z", 0.0)),
-                radius=prop_solid_radius("firecamp", 1.0),
-                priority=PRIORITY_FIRECAMP,
-                payload=camp,
-                body_type="firecamp",
+            make_prop(
+                f"firecamps[{index}]", "firecamp", camp, "firecamp", PRIORITY_FIRECAMP
             )
         )
 
     for index, structure in enumerate(map_data.get("structures") or []):
-        body = BUILDING_BODIES.get(
-            str(structure.get("type", "")), BUILDING_BODY_DEFAULT
-        )
-        width, depth = axis_aligned_body(
-            body, float(structure.get("facing", structure.get("rotation", 0.0)) or 0.0)
-        )
-        items.append(
-            Placeable(
-                key=f"structures[{index}]",
-                kind="structure",
-                name=str(structure.get("id") or structure.get("type")),
-                x=float(structure.get("x", 0.0)),
-                z=float(structure.get("z", 0.0)),
-                radius=0.5 * math.hypot(width, depth),
-                priority=STRUCTURE_PRIORITY.get(
-                    str(structure.get("type", "")), STRUCTURE_PRIORITY_DEFAULT
-                ),
-                payload=structure,
-                body_type=str(structure.get("type", "")),
-                half_width=width * 0.5,
-                half_depth=depth * 0.5,
-                avoids_roads=True,
-            )
-        )
+        items.append(make_structure(f"structures[{index}]", structure, path_name))
 
     for index, spawn in enumerate(map_data.get("spawns") or []):
         items.append(
@@ -339,16 +465,94 @@ def collect(map_data: dict) -> list[Placeable]:
                 name=str(spawn.get("id") or spawn.get("type") or "spawn"),
                 x=float(spawn.get("x", 0.0)),
                 z=float(spawn.get("z", 0.0)),
-                radius=SPAWN_BODY_RADIUS,
+                half_x=SPAWN_BODY_RADIUS,
+                half_z=SPAWN_BODY_RADIUS,
+                is_disc=True,
                 priority=PRIORITY_SPAWN,
                 payload=spawn,
                 body_type=str(spawn.get("type", "")),
                 avoids_roads=False,
+                avoids_slope_rims=False,
             )
         )
 
     lock_ring_structures(items)
     return items
+
+
+class MapContentError(ValueError):
+    """A map that cannot be checked, rather than a map with a defect in it."""
+
+
+def make_structure(key: str, structure: dict, path_name: str) -> Placeable:
+    """One building, or one wall run held as the rectangle it actually fills.
+
+    A wall segment is *line* geometry -- ``start`` and ``end``, expanded by
+    ``read_structures`` in game/map/map_loader.cpp into a run of panels -- and
+    reading it as a point body silently parked 212 wall runs at the map origin,
+    where they guarded nothing and reported nothing.  There is no safe default
+    for a missing position, so a structure with neither shape is an error.
+
+    A ring is laid across whatever ground it has to hold and a gateway is a hole
+    in it for a road to run through, so walls are checked against other bodies
+    but never against roads or hill rims.
+    """
+    body_type = str(structure.get("type", ""))
+    priority = STRUCTURE_PRIORITY.get(body_type, STRUCTURE_PRIORITY_DEFAULT)
+    name = str(structure.get("id") or body_type or "structure")
+
+    start = structure.get("start")
+    end = structure.get("end")
+    if start and end:
+        start_x, start_z = float(start[0]), float(start[1])
+        end_x, end_z = float(end[0]), float(end[1])
+        run_x = end_x - start_x
+        run_z = end_z - start_z
+        length = math.hypot(run_x, run_z)
+        half_width = float(structure.get("width", 2.0)) * 0.5
+        panel = BUILDING_BODIES.get(body_type, BUILDING_BODY_DEFAULT)
+        return Placeable(
+            key=key,
+            kind="structure",
+            name=name,
+            x=0.5 * (start_x + end_x),
+            z=0.5 * (start_z + end_z),
+            half_x=max(0.5 * length, 0.5 * panel[0]),
+            half_z=max(half_width, 0.5 * panel[1]),
+            rotation=math.atan2(run_z, run_x) if length > 1e-6 else 0.0,
+            priority=PRIORITY_IMMOVABLE,
+            payload=structure,
+            body_type=body_type,
+            avoids_roads=False,
+            avoids_slope_rims=False,
+            is_ring=True,
+        )
+
+    if "x" not in structure or "z" not in structure:
+        raise MapContentError(
+            f"{path_name}: {name} ({body_type or 'no type'}) has neither x/z nor "
+            "start/end, so it has no position to check"
+        )
+
+    width, depth = axis_aligned_body(
+        BUILDING_BODIES.get(body_type, BUILDING_BODY_DEFAULT),
+        float(structure.get("facing", structure.get("rotation", 0.0)) or 0.0),
+    )
+    return Placeable(
+        key=key,
+        kind="structure",
+        name=name,
+        x=float(structure["x"]),
+        z=float(structure["z"]),
+        half_x=width * 0.5,
+        half_z=depth * 0.5,
+        priority=priority,
+        payload=structure,
+        body_type=body_type,
+        avoids_roads=body_type not in WALL_TYPES,
+        avoids_slope_rims=body_type not in WALL_TYPES,
+        is_ring=body_type in WALL_TYPES,
+    )
 
 
 def lock_ring_structures(items: list[Placeable]) -> None:
@@ -365,6 +569,10 @@ def lock_ring_structures(items: list[Placeable]) -> None:
             continue
         if any(item.overlap_with(wall, WALL_LOCK_GAP) > 0.0 for wall in walls):
             item.priority = PRIORITY_IMMOVABLE
+            item.is_ring = True
+
+            item.avoids_slope_rims = False
+            item.avoids_roads = False
 
 
 @dataclass
@@ -385,14 +593,38 @@ class Segment:
         t = max(0.0, min(1.0, t))
         return math.hypot(x - (self.x1 + dx * t), z - (self.z1 + dz * t))
 
+    def length(self) -> float:
+        return math.hypot(self.x2 - self.x1, self.z2 - self.z1)
 
-def collect_water(map_data: dict) -> list[Segment]:
-    """Rivers and bridges a prop must not be pushed into."""
+    def depth_into(self, item: Placeable, margin: float) -> float:
+        """How deep this corridor cuts into a body; <= 0 when they are clear.
+
+        The corridor is walked in half-metre steps rather than solved: a road is
+        a chain of capsules and a body is a rotated rectangle, and stepping the
+        centre line is both exact enough at these tolerances and impossible to
+        get subtly wrong."""
+        length = self.length()
+        if length <= 1e-6:
+            return item.contains_depth(self.x1, self.z1, self.half_width + margin)
+        steps = max(2, int(length / 0.5) + 1)
+        deepest = -math.inf
+        for step in range(steps + 1):
+            t = step / steps
+            depth = item.contains_depth(
+                self.x1 + (self.x2 - self.x1) * t,
+                self.z1 + (self.z2 - self.z1) * t,
+                self.half_width + margin,
+            )
+            deepest = max(deepest, depth)
+        return deepest
+
+
+def polyline_segments(entries, default_width: float) -> list[Segment]:
     segments: list[Segment] = []
-    for river in map_data.get("rivers") or []:
-        points = river.get("waypoints") or [river.get("start"), river.get("end")]
-        half_width = float(river.get("width", 4.0)) * 0.5
+    for entry in entries or []:
+        points = entry.get("waypoints") or [entry.get("start"), entry.get("end")]
         points = [point for point in points if point]
+        half_width = float(entry.get("width", default_width)) * 0.5
         for first, second in zip(points, points[1:], strict=False):
             segments.append(
                 Segment(
@@ -403,46 +635,18 @@ def collect_water(map_data: dict) -> list[Segment]:
                     half_width,
                 )
             )
-    for bridge in map_data.get("bridges") or []:
-        start = bridge.get("start")
-        end = bridge.get("end")
-        if not start or not end:
-            continue
-        segments.append(
-            Segment(
-                float(start[0]),
-                float(start[1]),
-                float(end[0]),
-                float(end[1]),
-                float(bridge.get("width", 8.0)) * 0.5,
-            )
-        )
     return segments
+
+
+def collect_water(map_data: dict) -> list[Segment]:
+    """Rivers and bridges a body must not stand in."""
+    return polyline_segments(
+        map_data.get("rivers"), DEFAULT_RIVER_WIDTH
+    ) + polyline_segments(map_data.get("bridges"), DEFAULT_BRIDGE_WIDTH)
 
 
 def collect_roads(map_data: dict) -> list[Segment]:
-    """Roads a *building* must not be nudged onto.
-
-    Props are left alone here on purpose -- a boulder or a dead tree beside a
-    road is authored that way -- but a home shifted into the middle of the road
-    it faces is a defect swapped for a worse one.
-    """
-    segments: list[Segment] = []
-    for road in map_data.get("roads") or []:
-        points = road.get("waypoints") or [road.get("start"), road.get("end")]
-        points = [point for point in points if point]
-        half_width = float(road.get("width", DEFAULT_ROAD_WIDTH)) * 0.5
-        for first, second in zip(points, points[1:], strict=False):
-            segments.append(
-                Segment(
-                    float(first[0]),
-                    float(first[1]),
-                    float(second[0]),
-                    float(second[1]),
-                    half_width,
-                )
-            )
-    return segments
+    return polyline_segments(map_data.get("roads"), DEFAULT_ROAD_WIDTH)
 
 
 def collect_lakes(map_data: dict) -> list[tuple[float, float, float]]:
@@ -456,30 +660,111 @@ def collect_lakes(map_data: dict) -> list[tuple[float, float, float]]:
     return lakes
 
 
-def is_placeable_spot(
-    item: Placeable,
-    x: float,
-    z: float,
-    width: float,
-    height: float,
-    water: list[Segment],
-    lakes: list[tuple[float, float, float]],
-    roads: list[Segment],
-    margin: float,
-) -> bool:
-    if not (margin <= x <= width - margin and margin <= z <= height - margin):
-        return False
-    for segment in water:
-        if segment.distance(x, z) < segment.half_width + item.radius:
-            return False
-    if item.avoids_roads:
-        for segment in roads:
-            if segment.distance(x, z) < segment.half_width + item.radius:
-                return False
-    for lake_x, lake_z, lake_radius in lakes:
-        if math.hypot(x - lake_x, z - lake_z) < lake_radius + item.radius:
-            return False
-    return True
+def collect_hill_rims(map_data: dict) -> list[Segment]:
+    """Every hill body, as the capsules the engine raises ground along.
+
+    ``map_hill_shapes`` is the same module the road, water and settlement
+    generators use, so a ridge authored as an arc is read here as the arc it is
+    and not as the ellipse that bounds it -- the concave pocket of a boomerang
+    is open ground a camp may stand in.  A blob has no spine at all, so its
+    ellipse is walked as a closed ring of hairline capsules that stand in for
+    its own boundary."""
+    rims: list[Segment] = []
+    for feature in map_data.get("terrain") or []:
+        if str(feature.get("type", "")).lower() not in ("hill", "mountain"):
+            continue
+        strokes, half_thickness = hill_shape_strokes(feature)
+        if strokes:
+            for (start_x, start_z), (end_x, end_z) in strokes:
+                rims.append(Segment(start_x, start_z, end_x, end_z, half_thickness))
+            continue
+        half_x, half_z = hill_half_extents(feature)
+        if half_x <= 0.0 or half_z <= 0.0:
+            continue
+
+        center_x = float(feature.get("x", 0.0))
+        center_z = float(feature.get("z", 0.0))
+        steps = 24
+        ring = [
+            (
+                center_x + half_x * math.cos(2.0 * math.pi * step / steps),
+                center_z + half_z * math.sin(2.0 * math.pi * step / steps),
+            )
+            for step in range(steps + 1)
+        ]
+        for first, second in zip(ring, ring[1:], strict=False):
+            rims.append(Segment(first[0], first[1], second[0], second[1], 0.0))
+    return rims
+
+
+def rim_bearing(item: Placeable, rim: Segment) -> tuple[float, float, float]:
+    """Distance from a body's centre to a hill boundary, and the way off it.
+
+    The raised region is everything within ``half_width`` of the spine, so its
+    boundary is the offset curve at exactly that distance -- and inside the
+    ridge the way off the rim points inward, not outward.
+    """
+    run_x = rim.x2 - rim.x1
+    run_z = rim.z2 - rim.z1
+    length_sq = run_x * run_x + run_z * run_z
+    if length_sq <= 1e-9:
+        near_x, near_z = rim.x1, rim.z1
+    else:
+        t = ((item.x - rim.x1) * run_x + (item.z - rim.z1) * run_z) / length_sq
+        t = max(0.0, min(1.0, t))
+        near_x = rim.x1 + run_x * t
+        near_z = rim.z1 + run_z * t
+    offset_x = item.x - near_x
+    offset_z = item.z - near_z
+    spine_distance = math.hypot(offset_x, offset_z)
+    if spine_distance < 1e-4:
+        unit_x, unit_z = 1.0, 0.0
+    else:
+        unit_x, unit_z = offset_x / spine_distance, offset_z / spine_distance
+
+    signed = spine_distance - rim.half_width
+    if signed < 0.0:
+        unit_x, unit_z = -unit_x, -unit_z
+    return abs(signed), unit_x, unit_z
+
+
+def straddles_rim(item: Placeable, rims: list[Segment], margin: float) -> float:
+    """How far a body hangs over the edge of a hill; <= 0 when it does not.
+
+    Distance from the *boundary*, not from the hill: a prop deep inside a ridge
+    and a prop out on the flat both stand on ground that is locally consistent,
+    and only the rim breaks under them.  The body is measured along the bearing
+    to that rim rather than by the disc that bounds it, and the tolerance grows
+    with the body, so clipping the edge of a shoulder with one corner of a
+    plinth is not read as the same defect as a tent pitched across it.
+    """
+    worst = -math.inf
+    for rim in rims:
+        distance, unit_x, unit_z = rim_bearing(item, rim)
+        reach = item.support_radius(unit_x, unit_z)
+        tolerance = max(margin, reach * RIM_TOLERANCE_FRACTION)
+        worst = max(worst, reach - tolerance - distance)
+    return worst
+
+
+@dataclass
+class Violation:
+    kind: str
+    item: Placeable
+    depth: float
+    other: Placeable | None = None
+    detail: str = ""
+
+    def describe(self) -> str:
+        if self.kind == "overlap" and self.other is not None:
+            return (
+                f"{self.item.name} ({self.item.kind}) x {self.other.name} "
+                f"({self.other.kind}) overlap {self.depth:.2f}"
+            )
+        return (
+            f"{self.item.name} ({self.item.kind}) in {self.kind}"
+            f"{' ' + self.detail if self.detail else ''} by {self.depth:.2f}"
+        )
 
 
 def find_overlaps(
@@ -496,7 +781,13 @@ def find_overlaps(
     cell = max(4.0, 2.0 * max(item.radius for item in items) + clearance)
     buckets: dict[tuple[int, int], list[Placeable]] = {}
     for item in items:
-        buckets.setdefault((int(item.x // cell), int(item.z // cell)), []).append(item)
+        min_x = int((item.x - item.radius) // cell)
+        max_x = int((item.x + item.radius) // cell)
+        min_z = int((item.z - item.radius) // cell)
+        max_z = int((item.z + item.radius) // cell)
+        for bucket_x in range(min_x, max_x + 1):
+            for bucket_z in range(min_z, max_z + 1):
+                buckets.setdefault((bucket_x, bucket_z), []).append(item)
 
     seen: set[tuple[str, str]] = set()
     pairs: list[tuple[Placeable, Placeable, float]] = []
@@ -524,6 +815,104 @@ def find_overlaps(
     return pairs
 
 
+@dataclass
+class Terrain:
+    """Everything on a map that is not a body but still occupies ground."""
+
+    width: float = 0.0
+    height: float = 0.0
+    bounded: bool = False
+    roads: list[Segment] = field(default_factory=list)
+    water: list[Segment] = field(default_factory=list)
+    lakes: list[tuple[float, float, float]] = field(default_factory=list)
+    rims: list[Segment] = field(default_factory=list)
+
+
+def read_terrain(map_data: dict) -> Terrain:
+    grid = map_data.get("grid") or {}
+    width = float(grid.get("width", 0) or 0)
+    height = float(grid.get("height", 0) or 0)
+    return Terrain(
+        width=width,
+        height=height,
+        bounded=width > 0.0 and height > 0.0,
+        roads=collect_roads(map_data),
+        water=collect_water(map_data),
+        lakes=collect_lakes(map_data),
+        rims=collect_hill_rims(map_data),
+    )
+
+
+def terrain_violations(
+    items: list[Placeable], terrain: Terrain, road_margin: float, rim_margin: float
+) -> list[Violation]:
+    found: list[Violation] = []
+    for item in items:
+        if item.avoids_roads:
+            deepest = -math.inf
+            for road in terrain.roads:
+                deepest = max(deepest, road.depth_into(item, road_margin))
+            if deepest > 1e-3:
+                found.append(Violation("road", item, deepest))
+        deepest = -math.inf
+        for stream in terrain.water:
+            deepest = max(deepest, stream.depth_into(item, 0.0))
+        for lake_x, lake_z, lake_radius in terrain.lakes:
+            deepest = max(
+                deepest,
+                item.contains_depth(lake_x, lake_z, lake_radius),
+            )
+        if deepest > 1e-3:
+            found.append(Violation("water", item, deepest))
+        if item.avoids_slope_rims and terrain.rims:
+            straddle = straddles_rim(item, terrain.rims, rim_margin)
+            if straddle > 1e-3:
+                found.append(Violation("slope", item, straddle))
+    found.sort(key=lambda entry: entry.depth, reverse=True)
+    return found
+
+
+def is_placeable_spot(
+    item: Placeable,
+    x: float,
+    z: float,
+    terrain: Terrain,
+    road_margin: float,
+    rim_margin: float,
+    margin: float,
+) -> bool:
+    if terrain.bounded and not (
+        margin <= x <= terrain.width - margin and margin <= z <= terrain.height - margin
+    ):
+        return False
+    probe = Placeable(
+        key=item.key,
+        kind=item.kind,
+        name=item.name,
+        x=x,
+        z=z,
+        half_x=item.half_x,
+        half_z=item.half_z,
+        rotation=item.rotation,
+        is_disc=item.is_disc,
+        priority=item.priority,
+    )
+    for stream in terrain.water:
+        if stream.depth_into(probe, 0.0) > 0.0:
+            return False
+    for lake_x, lake_z, lake_radius in terrain.lakes:
+        if probe.contains_depth(lake_x, lake_z, lake_radius) > 0.0:
+            return False
+    if item.avoids_roads:
+        for road in terrain.roads:
+            if road.depth_into(probe, road_margin) > 0.0:
+                return False
+    if item.avoids_slope_rims and terrain.rims:
+        if straddles_rim(probe, terrain.rims, rim_margin) > 0.0:
+            return False
+    return True
+
+
 ESCAPE_FAN_DEGREES = (
     0.0,
     18.0,
@@ -542,8 +931,11 @@ ESCAPE_FAN_DEGREES = (
     -150.0,
     180.0,
 )
-ESCAPE_MARGIN = 0.01
+ESCAPE_MARGIN = 0.02
 ESCAPE_STEP_GROWTH = 1.35
+
+POSITION_PRECISION = 2
+"""Decimals a repaired position is written with, and checked at."""
 
 
 def escape_moves(
@@ -585,31 +977,87 @@ def escape_moves(
 
 
 def travel_budget_for(item: Placeable, budgets: dict[str, float]) -> float:
+    if item.kind == "structure" and item.priority >= PRIORITY_ANCHOR:
+        return budgets["anchor"]
     return budgets.get(item.kind, budgets["world_prop"])
+
+
+def try_move(
+    mover: Placeable,
+    items: list[Placeable],
+    terrain: Terrain,
+    clearance: float,
+    budget: float,
+    overlap: float,
+    unit_x: float,
+    unit_z: float,
+    road_margin: float,
+    rim_margin: float,
+    must_clear: Placeable | None,
+) -> bool:
+    """Walk the escape ladder and keep the first push that actually works.
+
+    Candidate positions are rounded to the precision the JSON is written at
+    *before* they are checked.  A push that clears by a hair is otherwise
+    rounded straight back inside on the way to disk, and the next run reports a
+    defect of 0.00 that no further push can shift.
+    """
+    if math.hypot(unit_x, unit_z) < 1e-4:
+        angle = (hash(mover.name) % 360) * math.pi / 180.0
+        unit_x, unit_z = math.cos(angle), math.sin(angle)
+
+    depth_before = {
+        candidate.key: mover.overlap_with(candidate, clearance)
+        for candidate in items
+        if candidate.key != mover.key
+        and not mover.exempt_from(candidate)
+        and mover.overlap_with(candidate, clearance) > 1e-3
+    }
+
+    previous_x, previous_z = mover.x, mover.z
+    for unit_dx, unit_dz, reach in escape_moves(
+        overlap, unit_x, unit_z, budget - mover.moved
+    ):
+
+        new_x = round(previous_x + (unit_dx * reach), POSITION_PRECISION)
+        new_z = round(previous_z + (unit_dz * reach), POSITION_PRECISION)
+        mover.x, mover.z = new_x, new_z
+        if not is_placeable_spot(
+            mover, new_x, new_z, terrain, road_margin, rim_margin, 1.0
+        ):
+            continue
+        if must_clear is not None and mover.overlap_with(must_clear, clearance) > 1e-3:
+            continue
+        if any(
+            mover.overlap_with(candidate, clearance)
+            > max(depth_before.get(candidate.key, 0.0), 1e-3)
+            for candidate in items
+            if candidate.key != mover.key
+            and (must_clear is None or candidate.key != must_clear.key)
+            and candidate.priority >= mover.priority
+            and not mover.exempt_from(candidate)
+        ):
+            continue
+        mover.moved += reach
+        return True
+    mover.x, mover.z = previous_x, previous_z
+    return False
 
 
 def repair(
     items: list[Placeable],
-    map_data: dict,
+    terrain: Terrain,
     clearance: float,
     max_passes: int,
     budgets: dict[str, float],
-) -> tuple[int, int]:
-    grid = map_data.get("grid") or {}
-    width = float(grid.get("width", 0) or 0)
-    height = float(grid.get("height", 0) or 0)
-    water = collect_water(map_data)
-    lakes = collect_lakes(map_data)
-    roads = collect_roads(map_data)
-    bounded = width > 0.0 and height > 0.0
-
+    road_margin: float,
+    rim_margin: float,
+) -> int:
     resolved = 0
     for _ in range(max_passes):
-        pairs = find_overlaps(items, clearance)
-        if not pairs:
-            break
         progressed = False
-        for item, other, _ in pairs:
+
+        for item, other, _ in find_overlaps(items, clearance):
             if item.overlap_with(other, clearance) <= 1e-3:
                 continue
             mover, anchor = (
@@ -617,55 +1065,228 @@ def repair(
             )
             if mover.priority >= PRIORITY_ANCHOR:
                 continue
-
-            budget = travel_budget_for(mover, budgets)
             overlap, unit_x, unit_z = mover.separation_from(anchor, clearance)
-            if math.hypot(unit_x, unit_z) < 1e-4:
-                angle = (hash(mover.name) % 360) * math.pi / 180.0
-                unit_x, unit_z = math.cos(angle), math.sin(angle)
-
-            depth_before = {
-                candidate.key: mover.overlap_with(candidate, clearance)
-                for candidate in items
-                if candidate.key != mover.key
-                and not mover.exempt_from(candidate)
-                and mover.overlap_with(candidate, clearance) > 1e-3
-            }
-
-            previous_x, previous_z = mover.x, mover.z
-            for unit_dx, unit_dz, reach in escape_moves(
-                overlap, unit_x, unit_z, budget - mover.moved
+            if try_move(
+                mover,
+                items,
+                terrain,
+                clearance,
+                travel_budget_for(mover, budgets),
+                overlap,
+                unit_x,
+                unit_z,
+                road_margin,
+                rim_margin,
+                anchor,
             ):
-                new_x = previous_x + (unit_dx * reach)
-                new_z = previous_z + (unit_dz * reach)
-                if bounded and not is_placeable_spot(
-                    mover, new_x, new_z, width, height, water, lakes, roads, 1.0
-                ):
-                    continue
-                mover.x, mover.z = new_x, new_z
-                if mover.overlap_with(anchor, clearance) > 1e-3:
-                    continue
-                if any(
-                    mover.overlap_with(candidate, clearance)
-                    > max(depth_before.get(candidate.key, 0.0), 1e-3)
-                    for candidate in items
-                    if candidate.key != mover.key
-                    and candidate.key != anchor.key
-                    and candidate.priority >= mover.priority
-                    and not mover.exempt_from(candidate)
-                ):
-                    continue
-                mover.moved += reach
                 progressed = True
                 resolved += 1
-                break
-            else:
-                mover.x, mover.z = previous_x, previous_z
+
+        for violation in terrain_violations(items, terrain, road_margin, rim_margin):
+            mover = violation.item
+            if not may_step_aside(mover, violation.kind):
+                continue
+            unit_x, unit_z = escape_bearing(mover, terrain, violation.kind)
+            if try_move(
+                mover,
+                items,
+                terrain,
+                clearance,
+                travel_budget_for(mover, budgets),
+                violation.depth,
+                unit_x,
+                unit_z,
+                road_margin,
+                rim_margin,
+                None,
+            ):
+                progressed = True
+                resolved += 1
+
         if not progressed:
             break
+    return resolved
 
-    remaining = len(find_overlaps(items, clearance))
-    return resolved, remaining
+
+def may_step_aside(mover: Placeable, kind: str) -> bool:
+    """Whether this body is allowed to move to get out of the terrain.
+
+    Ring geometry never moves.  An anchor building normally never moves either,
+    but a road running *through* a hall is a defect the road cannot be trimmed
+    out of -- the route has to carry on past the building -- and a hall standing
+    in a river is worse still.  Stepping a ferry house 4.5 m off the highway it
+    serves keeps it exactly where it was placed along that road, so anchors give
+    way for a road or for water and for nothing else; a temple built into a
+    hillside is a decision, not a defect.
+    """
+    if mover.priority >= PRIORITY_IMMOVABLE:
+        return False
+    if mover.priority >= PRIORITY_ANCHOR:
+        return kind in ("road", "water")
+    return True
+
+
+def escape_bearing(item: Placeable, terrain: Terrain, kind: str) -> tuple[float, float]:
+    """Straight out from whatever the body is standing in.
+
+    For a road or a river that is the perpendicular; for a hill rim it is
+    whichever way carries the body clear of the boundary soonest, which the fan
+    then explores around."""
+    if kind == "slope":
+        best = None
+        best_distance = math.inf
+        for rim in terrain.rims:
+            distance, unit_x, unit_z = rim_bearing(item, rim)
+            if distance < best_distance:
+                best_distance = distance
+                best = (unit_x, unit_z)
+        return best if best is not None else (1.0, 0.0)
+
+    sources = terrain.roads if kind == "road" else terrain.water
+    nearest = None
+    nearest_distance = math.inf
+    for segment in sources:
+        distance = segment.distance(item.x, item.z)
+        if distance < nearest_distance:
+            nearest_distance = distance
+            nearest = segment
+    if nearest is None:
+        return 1.0, 0.0
+
+    run_x = nearest.x2 - nearest.x1
+    run_z = nearest.z2 - nearest.z1
+    length_sq = run_x * run_x + run_z * run_z
+    if length_sq <= 1e-9:
+        offset_x = item.x - nearest.x1
+        offset_z = item.z - nearest.z1
+    else:
+        t = ((item.x - nearest.x1) * run_x + (item.z - nearest.z1) * run_z) / length_sq
+        t = max(0.0, min(1.0, t))
+        offset_x = item.x - (nearest.x1 + run_x * t)
+        offset_z = item.z - (nearest.z1 + run_z * t)
+    length = math.hypot(offset_x, offset_z)
+    if length < 1e-4:
+        if length_sq <= 1e-9:
+            return 1.0, 0.0
+        return -run_z / math.sqrt(length_sq), run_x / math.sqrt(length_sq)
+    return offset_x / length, offset_z / length
+
+
+def trim_roads_out_of_anchors(
+    map_data: dict, items: list[Placeable], road_margin: float
+) -> int:
+    """Pull a road's endpoint back out of the building it was routed to.
+
+    Roads are generated to *reach* a settlement and are authored with the
+    building's own centre as an endpoint, so the last few metres of every
+    approach run through the hall it is meant to arrive at.  The building is
+    where the designer put it, so the road is what gives way: the head or tail
+    of the polyline is walked outward until it clears the body, and the vertex
+    that was inside is replaced by the crossing point.  A road that cuts through
+    an anchor *mid-route* is not trimmed -- that needs a reroute, not a trim --
+    and is left to be reported.
+    """
+    anchors = [
+        item
+        for item in items
+        if item.kind == "structure"
+        and item.priority >= PRIORITY_ANCHOR
+        and item.body_type not in WALL_TYPES
+    ]
+    if not anchors:
+        return 0
+
+    trimmed = 0
+    for road in map_data.get("roads") or []:
+        points = road.get("waypoints")
+        if not points:
+            start, end = road.get("start"), road.get("end")
+            if not start or not end:
+                continue
+            points = [list(start), list(end)]
+            explicit_pair = True
+        else:
+            points = [list(point) for point in points]
+            explicit_pair = False
+        half_width = float(road.get("width", DEFAULT_ROAD_WIDTH)) * 0.5
+
+        changed = False
+        for from_head in (True, False):
+            order = range(len(points)) if from_head else range(len(points) - 1, -1, -1)
+            inside_count = 0
+            for index in order:
+                if not any(
+                    anchor.contains_depth(
+                        points[index][0], points[index][1], half_width + road_margin
+                    )
+                    > 0.0
+                    for anchor in anchors
+                ):
+                    break
+                inside_count += 1
+            if inside_count == 0 or inside_count >= len(points) - 1:
+                continue
+
+            keep = (
+                points[inside_count]
+                if from_head
+                else points[len(points) - 1 - inside_count]
+            )
+            drop = (
+                points[inside_count - 1]
+                if from_head
+                else points[len(points) - inside_count]
+            )
+            crossing = walk_out_of_anchors(
+                keep, drop, anchors, half_width + road_margin
+            )
+            if crossing is None:
+                continue
+            if from_head:
+                points = [crossing] + points[inside_count:]
+            else:
+                points = points[: len(points) - inside_count] + [crossing]
+            changed = True
+
+        if not changed:
+            continue
+        rounded = [[tidy(point[0]), tidy(point[1])] for point in points]
+        if explicit_pair:
+            road["start"] = rounded[0]
+            road["end"] = rounded[-1]
+        else:
+            road["waypoints"] = rounded
+        trimmed += 1
+    return trimmed
+
+
+def tidy(value: float) -> float | int:
+    """A coordinate written the way the maps author them: whole where it can be."""
+    rounded = round(value, POSITION_PRECISION)
+    return int(rounded) if rounded == int(rounded) else rounded
+
+
+def walk_out_of_anchors(
+    outside: list[float],
+    inside: list[float],
+    anchors: list[Placeable],
+    reach: float,
+) -> list[float] | None:
+    """The first point on ``outside``->``inside`` that is still clear of them."""
+    steps = 64
+    for step in range(steps + 1):
+        t = step / steps
+        x = outside[0] + (inside[0] - outside[0]) * t
+        z = outside[1] + (inside[1] - outside[1]) * t
+        if any(anchor.contains_depth(x, z, reach) > 0.0 for anchor in anchors):
+            if step == 0:
+                return None
+            previous = (step - 1) / steps
+            return [
+                outside[0] + (inside[0] - outside[0]) * previous,
+                outside[1] + (inside[1] - outside[1]) * previous,
+            ]
+    return [inside[0], inside[1]]
 
 
 def detect_format(source: str, map_data: dict) -> tuple[int, bool, bool] | None:
@@ -690,10 +1311,28 @@ def apply(items: list[Placeable]) -> int:
     for item in items:
         if item.moved <= 0.0:
             continue
-        item.payload[item.x_field] = round(item.x, 2)
-        item.payload[item.z_field] = round(item.z, 2)
+        item.payload[item.x_field] = tidy(item.x)
+        item.payload[item.z_field] = tidy(item.z)
         changed += 1
     return changed
+
+
+def audit(
+    map_data: dict,
+    path_name: str,
+    clearance: float,
+    road_margin: float,
+    rim_margin: float,
+) -> tuple[list[Placeable], Terrain, list[Violation]]:
+    items = collect(map_data, path_name)
+    terrain = read_terrain(map_data)
+    found = [
+        Violation("overlap", item, depth, other)
+        for item, other, depth in find_overlaps(items, clearance)
+    ]
+    found.extend(terrain_violations(items, terrain, road_margin, rim_margin))
+    found.sort(key=lambda entry: entry.depth, reverse=True)
+    return items, terrain, found
 
 
 def main() -> int:
@@ -710,10 +1349,25 @@ def main() -> int:
         help="Extra gap demanded between two solid bodies, in world units.",
     )
     parser.add_argument(
+        "--road-margin",
+        type=float,
+        default=ROAD_MARGIN,
+        help="Verge a body must leave beyond the kerb.",
+    )
+    parser.add_argument(
+        "--rim-margin",
+        type=float,
+        default=SLOPE_STRADDLE_MARGIN,
+        help="How far a body may hang over the edge of a hill.",
+    )
+    parser.add_argument(
         "--max-travel",
         type=float,
-        default=6.0,
-        help="Furthest a prop may be nudged from where it was authored.",
+        default=10.0,
+        help="Furthest a prop may be nudged from where it was authored. The "
+        "ladder always takes the shortest push that works, so raising this "
+        "only changes the handful of props wedged in a dense camp; at 6 m "
+        "eleven of them across assets/maps had nowhere legal to go.",
     )
     parser.add_argument(
         "--max-travel-structure",
@@ -725,14 +1379,23 @@ def main() -> int:
     parser.add_argument(
         "--max-travel-spawn",
         type=float,
-        default=3.0,
-        help="Furthest a unit spawn may be nudged, so it stays with its camp.",
+        default=4.0,
+        help="Furthest a unit spawn may be nudged, so it stays with its camp. "
+        "Wide enough to step a front rank out of a river, which is the only "
+        "thing that ever needs more than a metre.",
+    )
+    parser.add_argument(
+        "--max-travel-anchor",
+        type=float,
+        default=6.0,
+        help="Furthest an anchor building may be nudged to clear a road or a "
+        "river. Anchors never move for each other; see may_step_aside.",
     )
     parser.add_argument("--max-passes", type=int, default=12)
     parser.add_argument(
         "--check",
         action="store_true",
-        help="Report overlaps and exit non-zero without writing anything.",
+        help="Report defects and exit non-zero without writing anything.",
     )
     parser.add_argument("--quiet", action="store_true")
     args = parser.parse_args()
@@ -749,38 +1412,47 @@ def main() -> int:
         "firecamp": args.max_travel,
         "structure": args.max_travel_structure,
         "spawn": args.max_travel_spawn,
+        "anchor": args.max_travel_anchor,
     }
 
     total_before = 0
     total_remaining = 0
     total_moved = 0
+    failed = False
     for path in paths:
         try:
             source = path.read_text()
             map_data = json.loads(source)
         except (OSError, json.JSONDecodeError) as error:
             print(f"{path}: cannot read ({error})", file=sys.stderr)
+            failed = True
             continue
         if not isinstance(map_data, dict) or "grid" not in map_data:
             continue
 
-        items = collect(map_data)
-        before = find_overlaps(items, args.clearance)
-        total_before += len(before)
-        if not before:
+        try:
+            items, terrain, before = audit(
+                map_data, path.name, args.clearance, args.road_margin, args.rim_margin
+            )
+        except MapContentError as error:
+            print(error, file=sys.stderr)
+            failed = True
             continue
 
+        total_before += len(before)
+
         if args.check:
-            print(f"{path.name}: {len(before)} overlapping pair(s)")
-            if not args.quiet:
-                for item, other, overlap in before[:12]:
-                    print(
-                        f"    {item.name} ({item.kind}) x {other.name} "
-                        f"({other.kind}) overlap {overlap:.2f}"
-                    )
-                if len(before) > 12:
-                    print(f"    ... {len(before) - 12} more")
-            total_remaining += len(before)
+            if before:
+                print(f"{path.name}: {len(before)} defect(s)")
+                if not args.quiet:
+                    for violation in before[:12]:
+                        print(f"    {violation.describe()}")
+                    if len(before) > 12:
+                        print(f"    ... {len(before) - 12} more")
+                total_remaining += len(before)
+            continue
+
+        if not before:
             continue
 
         style = detect_format(source, map_data)
@@ -790,10 +1462,29 @@ def main() -> int:
                 file=sys.stderr,
             )
             total_remaining += len(before)
+            failed = True
             continue
 
-        _, remaining = repair(items, map_data, args.clearance, args.max_passes, budgets)
+        trimmed = trim_roads_out_of_anchors(map_data, items, args.road_margin)
+        if trimmed:
+            terrain = read_terrain(map_data)
+
+        repair(
+            items,
+            terrain,
+            args.clearance,
+            args.max_passes,
+            budgets,
+            args.road_margin,
+            args.rim_margin,
+        )
         moved = apply(items)
+
+        remaining = len(
+            audit(
+                map_data, path.name, args.clearance, args.road_margin, args.rim_margin
+            )[2]
+        )
         total_remaining += remaining
         total_moved += moved
         indent, sort_keys, trailing_newline = style
@@ -802,19 +1493,19 @@ def main() -> int:
             + ("\n" if trailing_newline else "")
         )
         print(
-            f"{path.name}: {len(before)} overlapping pair(s) -> {remaining} left, "
-            f"{moved} object(s) nudged"
+            f"{path.name}: {len(before)} defect(s) -> {remaining} left, "
+            f"{moved} object(s) nudged, {trimmed} road(s) trimmed"
         )
 
     if args.check:
-        print(f"total: {total_before} overlapping pair(s)")
-        return 1 if total_before else 0
+        print(f"total: {total_before} defect(s)")
+        return 1 if (total_before or failed) else 0
 
     print(
-        f"total: {total_before} overlapping pair(s) -> {total_remaining} left, "
+        f"total: {total_before} defect(s) -> {total_remaining} left, "
         f"{total_moved} object(s) nudged"
     )
-    return 0
+    return 1 if failed else 0
 
 
 if __name__ == "__main__":

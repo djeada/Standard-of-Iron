@@ -302,6 +302,7 @@ enum class ArenaExpectationKind : std::uint8_t {
   RpgLocomotionAnimationMatched,
   RpgStrikeAnimationMatched,
   RpgSwingCadenceWithin,
+  RpgSwingCarriesBody,
   RpgTravelObserved,
   RpgFormationSurvivesLensGap,
   RpgApproachWithin,

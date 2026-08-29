@@ -607,9 +607,9 @@ auto sample_anim_state(const DrawContext& ctx) -> AnimationInputs {
         anim.authored_action_phase =
             std::clamp(presentation->authored_action_phase, 0.0F, 1.0F);
         anim.has_authored_action_phase = authored_timeline_is_authoritative;
-        if (definition->rider_clip_id != Animation::k_unmapped_clip) {
+        if (definition->authored_clip_id != Animation::k_unmapped_clip) {
           anim.has_authored_action_clip = true;
-          anim.authored_action_clip = definition->rider_clip_id;
+          anim.authored_action_clip = definition->authored_clip_id;
         }
       }
     }

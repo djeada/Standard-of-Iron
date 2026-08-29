@@ -118,10 +118,11 @@ auto advance_combat_action_events(Engine::Core::RpgCommanderActionComponent& act
 }
 
 void reset_combat_action_event_runtime(
-    Engine::Core::RpgCommanderActionComponent& action) {
-  action.normalized_action_time = 0.0F;
-  action.previous_normalized_action_time = 0.0F;
-  action.action_elapsed_time = 0.0F;
+    Engine::Core::RpgCommanderActionComponent& action, float entry_normalized_time) {
+  float const entry = std::clamp(entry_normalized_time, 0.0F, 0.9F);
+  action.normalized_action_time = entry;
+  action.previous_normalized_action_time = entry;
+  action.action_elapsed_time = action.action_duration * entry;
   action.next_event_index = 0U;
   action.last_event_type = 0U;
   action.last_event_valid = false;

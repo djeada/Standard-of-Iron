@@ -1082,6 +1082,11 @@ auto resolve_humanoid_spear_direction(
     return normalize(lerp(rest, spear_braced_direction(), hold_blend));
   }
   if (inputs.is_attacking && inputs.is_melee) {
+    if (inputs.authored_move != CommanderSpearMove::None) {
+      return normalize(
+          resolve_commander_spear_pose(inputs.authored_move, inputs.authored_phase)
+              .spear_dir);
+    }
     if (inputs.is_mounted) {
       return mounted_spear_direction_for_thrust(inputs.attack_phase);
     }

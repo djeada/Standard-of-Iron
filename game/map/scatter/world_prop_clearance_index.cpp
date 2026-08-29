@@ -16,34 +16,36 @@ auto WorldPropClearanceIndex::cell_key(int cell_x, int cell_z) -> std::uint64_t 
 
 void WorldPropClearanceIndex::rebuild(const std::vector<Game::Map::WorldProp>& props,
                                       float cell_size) {
-  m_discs.clear();
+  m_bodies.clear();
   m_cells.clear();
   m_max_radius = 0.0F;
   m_cell_size = std::max(cell_size, 0.5F);
 
-  m_discs.reserve(props.size());
+  m_bodies.reserve(props.size());
   for (const auto& prop : props) {
     if (!Game::Map::is_solid_world_prop_type(prop.type)) {
       continue;
     }
-    const float radius = Game::Map::world_prop_ground_radius(prop.type, prop.scale);
-    if (radius <= 0.0F) {
+    const float bounding =
+        Game::Map::world_prop_ground_bounding_radius(prop.type, prop.scale);
+    if (bounding <= 0.0F) {
       continue;
     }
-    m_discs.push_back({prop.x, prop.z, radius});
-    m_max_radius = std::max(m_max_radius, radius);
+    m_bodies.push_back(
+        {prop.type, prop.x, prop.z, prop.scale, prop.rotation, bounding});
+    m_max_radius = std::max(m_max_radius, bounding);
   }
 
-  for (std::uint32_t index = 0; index < m_discs.size(); ++index) {
-    const Disc& disc = m_discs[index];
+  for (std::uint32_t index = 0; index < m_bodies.size(); ++index) {
+    const Body& body = m_bodies[index];
     const int min_x =
-        static_cast<int>(std::floor((disc.x - disc.radius) / m_cell_size));
+        static_cast<int>(std::floor((body.x - body.bounding_radius) / m_cell_size));
     const int max_x =
-        static_cast<int>(std::floor((disc.x + disc.radius) / m_cell_size));
+        static_cast<int>(std::floor((body.x + body.bounding_radius) / m_cell_size));
     const int min_z =
-        static_cast<int>(std::floor((disc.z - disc.radius) / m_cell_size));
+        static_cast<int>(std::floor((body.z - body.bounding_radius) / m_cell_size));
     const int max_z =
-        static_cast<int>(std::floor((disc.z + disc.radius) / m_cell_size));
+        static_cast<int>(std::floor((body.z + body.bounding_radius) / m_cell_size));
     for (int cell_z = min_z; cell_z <= max_z; ++cell_z) {
       for (int cell_x = min_x; cell_x <= max_x; ++cell_x) {
         m_cells[cell_key(cell_x, cell_z)].push_back(index);
@@ -55,7 +57,7 @@ void WorldPropClearanceIndex::rebuild(const std::vector<Game::Map::WorldProp>& p
 auto WorldPropClearanceIndex::overlaps(float world_x,
                                        float world_z,
                                        float radius) const -> bool {
-  if (m_discs.empty()) {
+  if (m_bodies.empty()) {
     return false;
   }
 
@@ -72,11 +74,21 @@ auto WorldPropClearanceIndex::overlaps(float world_x,
         continue;
       }
       for (const std::uint32_t index : found->second) {
-        const Disc& disc = m_discs[index];
-        const float dx = world_x - disc.x;
-        const float dz = world_z - disc.z;
-        const float limit = disc.radius + reach;
-        if ((dx * dx) + (dz * dz) < limit * limit) {
+        const Body& body = m_bodies[index];
+        const float dx = world_x - body.x;
+        const float dz = world_z - body.z;
+        const float limit = body.bounding_radius + reach;
+        if ((dx * dx) + (dz * dz) >= limit * limit) {
+          continue;
+        }
+        if (Game::Map::world_prop_overlap_depth(body.type,
+                                                body.scale,
+                                                body.x,
+                                                body.z,
+                                                body.rotation,
+                                                world_x,
+                                                world_z,
+                                                reach) > 0.0F) {
           return true;
         }
       }

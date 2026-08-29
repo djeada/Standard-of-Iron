@@ -247,6 +247,10 @@ private:
 
   float m_combo_miss_timer = 0.0F;
   float m_primary_held_duration = 0.0F;
+
+  std::uint8_t m_strike_carry_sequence = 0xFFU;
+  float m_strike_carry_requested = 0.0F;
+  float m_strike_carry_delivered = 0.0F;
   bool m_primary_press_pending = false;
   float m_primary_scan_cooldown = 0.0F;
   bool m_carried_primary_press = false;
