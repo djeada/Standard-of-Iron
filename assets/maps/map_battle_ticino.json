@@ -2181,8 +2181,8 @@
             "max_population": -1,
             "player_id": 1,
             "type": "horse_archer",
-            "x": 125.89,
-            "z": 144.22
+            "x": 125.62,
+            "z": 142.68
         },
         {
             "max_population": -1,
@@ -2209,8 +2209,8 @@
             "max_population": -1,
             "player_id": 1,
             "type": "spearman",
-            "x": 75.97,
-            "z": 281.58
+            "x": 74.23,
+            "z": 283.1
         },
         {
             "max_population": -1,

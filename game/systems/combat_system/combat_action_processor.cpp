@@ -877,6 +877,19 @@ auto update_commander_bow_draw(
   return tick;
 }
 
+auto action_contact_event(
+    const Game::Systems::CombatActions::CombatActionDefinition& definition)
+    -> Game::Systems::CombatActions::CombatActionEventType {
+
+  for (auto const& event : definition.events) {
+    if (event.type ==
+        Game::Systems::CombatActions::CombatActionEventType::ActiveStart) {
+      return Game::Systems::CombatActions::CombatActionEventType::ActiveStart;
+    }
+  }
+  return Game::Systems::CombatActions::CombatActionEventType::WeaponTraceStart;
+}
+
 void handle_action_events(
     Engine::Core::World& world,
     Engine::Core::Entity& entity,
@@ -884,12 +897,12 @@ void handle_action_events(
     const Game::Systems::CombatActions::CombatActionDefinition& definition,
     std::span<const Game::Systems::CombatActions::CombatActionEvent> events) {
   handle_mounted_charge_action_events(entity, action, definition, events);
+  auto const contact_event = action_contact_event(definition);
   for (auto const& event : events) {
     auto const action_id = static_cast<Game::Systems::CombatActions::CombatActionId>(
         action.combat_action_id);
     bool const advanced_rts_melee = is_advanced_rts_commander_melee(entity, definition);
-    if (event.type ==
-            Game::Systems::CombatActions::CombatActionEventType::ActiveStart &&
+    if (event.type == contact_event &&
         (is_rts_melee_action(action_id) || advanced_rts_melee) &&
         action.hit_target_count == 0U) {
       if (!melee_contact_comes_from_the_sweep(world, entity, definition, action)) {
