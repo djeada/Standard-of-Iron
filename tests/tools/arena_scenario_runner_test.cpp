@@ -1079,6 +1079,37 @@ TEST(CombatAnimationDiagnosticsTest, RapidStateReversalsArePoseChurn) {
   diagnostics.set_enabled(false);
 }
 
+TEST(CombatAnimationDiagnosticsTest,
+     SameTimestampRenderPassesDoNotManufacturePoseChurn) {
+  auto& diagnostics = Render::Profiling::CombatAnimationDiagnostics::instance();
+  diagnostics.set_enabled(true);
+  diagnostics.begin_frame(3);
+  constexpr std::uint32_t entity_id = 900004U;
+
+  auto record = [&](float time, bool attacking) {
+    Render::Profiling::SoldierAnimationDebugSample sample;
+    sample.soldier_index = 0;
+    sample.sample_time = time;
+    sample.is_attacking = attacking;
+    sample.locomotion_state = Render::Creature::MovementAnimationState::Walk;
+    diagnostics.record_soldier_sample(entity_id, sample);
+  };
+
+  record(0.0F, false);
+  record(0.20F, false);
+  for (int pass = 0; pass < 8; ++pass) {
+    record(0.20F, (pass % 2) == 0);
+  }
+  record(0.21F, false);
+
+  auto const* unit = diagnostics.find_unit(entity_id);
+  ASSERT_NE(unit, nullptr);
+  ASSERT_FALSE(unit->soldiers.empty());
+  EXPECT_EQ(unit->soldiers.back().transitions_last_second, 0U);
+  EXPECT_FALSE(unit->soldiers.back().churn_flagged);
+  diagnostics.set_enabled(false);
+}
+
 TEST(CombatAnimationDiagnosticsTest, AuthoredHitInterruptsAreTracedButNotPoseChurn) {
   auto& diagnostics = Render::Profiling::CombatAnimationDiagnostics::instance();
   diagnostics.set_enabled(true);

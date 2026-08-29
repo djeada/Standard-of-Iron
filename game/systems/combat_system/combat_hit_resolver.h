@@ -18,6 +18,7 @@ struct CombatHitResult {
   CombatHitContact contact;
   Game::Systems::RpgCombat::CommanderDamageResult damage;
   int raw_damage{0};
+  int queued_soldier_casualties{0};
   bool attempted{false};
   bool applied{false};
   bool interrupted_charge{false};

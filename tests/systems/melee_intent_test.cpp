@@ -4,6 +4,7 @@
 
 #include "animation/melee_swing_manifest.h"
 #include "game/core/component.h"
+#include "game/systems/combat_actions/combat_action_definition.h"
 #include "game/systems/combat_actions/melee_intent_solver.h"
 
 namespace {
@@ -122,6 +123,156 @@ TEST(MeleeIntentTest, ActionSelectionFollowsTheSwingRatherThanACounter) {
   EXPECT_EQ(
       select_melee_action(left, Engine::Core::CombatAttackFamily::Sword, false, false),
       select_melee_action(left, Engine::Core::CombatAttackFamily::Sword, false, false));
+}
+
+TEST(MeleeIntentTest, CommanderSwordGrammarBranchesFromTheSameSemanticInputs) {
+  using Engine::Core::CommanderCombatIntentType;
+  using Game::Systems::CombatActions::CombatActionId;
+  using Game::Systems::CombatActions::resolve_commander_action;
+  using Game::Systems::CombatActions::WeaponFamily;
+
+  EXPECT_EQ(resolve_commander_action(CombatActionId::None,
+                                     CommanderCombatIntentType::Light,
+                                     WeaponFamily::Sword,
+                                     false,
+                                     false),
+            CombatActionId::RpgSwordSlashLeft);
+  EXPECT_EQ(resolve_commander_action(CombatActionId::RpgSwordSlashLeft,
+                                     CommanderCombatIntentType::Light,
+                                     WeaponFamily::Sword,
+                                     false,
+                                     false),
+            CombatActionId::RpgSwordSlashRight);
+  EXPECT_EQ(resolve_commander_action(CombatActionId::RpgSwordSlashLeft,
+                                     CommanderCombatIntentType::Heavy,
+                                     WeaponFamily::Sword,
+                                     false,
+                                     false),
+            CombatActionId::CommanderSwordLauncher);
+  EXPECT_EQ(resolve_commander_action(CombatActionId::None,
+                                     CommanderCombatIntentType::Heavy,
+                                     WeaponFamily::Sword,
+                                     false,
+                                     true),
+            CombatActionId::CommanderSwordGapCloser);
+  EXPECT_EQ(resolve_commander_action(CombatActionId::CommanderSwordAirLight,
+                                     CommanderCombatIntentType::Heavy,
+                                     WeaponFamily::Sword,
+                                     true,
+                                     false),
+            CombatActionId::CommanderSwordDive);
+}
+
+TEST(MeleeIntentTest, CommanderSpearAndBowGrammarsKeepTheirWeaponIdentity) {
+  using Engine::Core::CommanderCombatIntentType;
+  using Game::Systems::CombatActions::CombatActionId;
+  using Game::Systems::CombatActions::resolve_commander_action;
+  using Game::Systems::CombatActions::WeaponFamily;
+
+  EXPECT_EQ(resolve_commander_action(CombatActionId::RpgSpearThrust,
+                                     CommanderCombatIntentType::Light,
+                                     WeaponFamily::Spear,
+                                     false,
+                                     false),
+            CombatActionId::CommanderSpearStepThrust);
+  EXPECT_EQ(resolve_commander_action(CombatActionId::CommanderSpearStepThrust,
+                                     CommanderCombatIntentType::Heavy,
+                                     WeaponFamily::Spear,
+                                     false,
+                                     false),
+            CombatActionId::CommanderSpearLauncher);
+  EXPECT_EQ(resolve_commander_action(CombatActionId::None,
+                                     CommanderCombatIntentType::Heavy,
+                                     WeaponFamily::Bow,
+                                     false,
+                                     false),
+            CombatActionId::CommanderBowPowerShot);
+  EXPECT_EQ(resolve_commander_action(CombatActionId::None,
+                                     CommanderCombatIntentType::Special,
+                                     WeaponFamily::Bow,
+                                     false,
+                                     false),
+            CombatActionId::CommanderBowEvasiveShot);
+  EXPECT_EQ(resolve_commander_action(CombatActionId::None,
+                                     CommanderCombatIntentType::WeaponSwitch,
+                                     WeaponFamily::Sword,
+                                     false,
+                                     false),
+            CombatActionId::CommanderSwordSpin);
+  EXPECT_EQ(resolve_commander_action(CombatActionId::None,
+                                     CommanderCombatIntentType::WeaponSwitch,
+                                     WeaponFamily::Spear,
+                                     false,
+                                     false),
+            CombatActionId::RpgSpearSweep);
+  EXPECT_EQ(resolve_commander_action(CombatActionId::None,
+                                     CommanderCombatIntentType::WeaponSwitch,
+                                     WeaponFamily::Bow,
+                                     false,
+                                     false),
+            CombatActionId::CommanderBowEvasiveShot);
+}
+
+TEST(MeleeIntentTest, EveryAdvancedActionIsExplicitlyCommanderOnly) {
+  using Game::Systems::CombatActions::CombatActionId;
+  using Game::Systems::CombatActions::find_combat_action_definition;
+
+  for (auto id : {CombatActionId::CommanderSwordSpin,
+                  CombatActionId::CommanderSwordLauncher,
+                  CombatActionId::CommanderSwordGapCloser,
+                  CombatActionId::CommanderSwordAirLight,
+                  CombatActionId::CommanderSwordAirReverse,
+                  CombatActionId::CommanderSwordDive,
+                  CombatActionId::CommanderSpearStepThrust,
+                  CombatActionId::CommanderSpearLauncher,
+                  CombatActionId::CommanderSpearGapCloser,
+                  CombatActionId::CommanderSpearAirThrust,
+                  CombatActionId::CommanderSpearDive,
+                  CombatActionId::CommanderBowPowerShot,
+                  CombatActionId::CommanderBowEvasiveShot}) {
+    auto const* definition = find_combat_action_definition(id);
+    ASSERT_NE(definition, nullptr);
+    EXPECT_TRUE(definition->commander_only);
+  }
+
+  auto const* ordinary = find_combat_action_definition(CombatActionId::RtsSwordStrike);
+  ASSERT_NE(ordinary, nullptr);
+  EXPECT_FALSE(ordinary->commander_only);
+}
+
+TEST(MeleeIntentTest, GroundComboLinksAdvanceAndHeaviesCommitLonger) {
+  using Game::Systems::CombatActions::CombatActionId;
+  using Game::Systems::CombatActions::find_combat_action_definition;
+
+  for (auto id : {CombatActionId::RpgSwordSlashLeft,
+                  CombatActionId::RpgSwordSlashRight,
+                  CombatActionId::CommanderSwordSpin,
+                  CombatActionId::RpgSwordFinisher,
+                  CombatActionId::RpgSpearThrust,
+                  CombatActionId::CommanderSpearStepThrust,
+                  CombatActionId::RpgSpearSweep,
+                  CombatActionId::RpgSpearFinisher}) {
+    auto const* link = find_combat_action_definition(id);
+    ASSERT_NE(link, nullptr);
+    EXPECT_GT(link->movement.distance, 0.0F) << static_cast<int>(id);
+  }
+
+  auto const* sword_light =
+      find_combat_action_definition(CombatActionId::RpgSwordSlashLeft);
+  auto const* sword_heavy =
+      find_combat_action_definition(CombatActionId::RpgSwordOverhead);
+  auto const* spear_light =
+      find_combat_action_definition(CombatActionId::RpgSpearThrust);
+  auto const* spear_heavy =
+      find_combat_action_definition(CombatActionId::RpgSpearFinisher);
+  ASSERT_NE(sword_light, nullptr);
+  ASSERT_NE(sword_heavy, nullptr);
+  ASSERT_NE(spear_light, nullptr);
+  ASSERT_NE(spear_heavy, nullptr);
+  EXPECT_GT(sword_heavy->duration_seconds, sword_light->duration_seconds);
+  EXPECT_GT(sword_heavy->damage.base_multiplier, sword_light->damage.base_multiplier);
+  EXPECT_GT(spear_heavy->duration_seconds, spear_light->duration_seconds);
+  EXPECT_GT(spear_heavy->damage.base_multiplier, spear_light->damage.base_multiplier);
 }
 
 TEST(MeleeIntentTest, OneSwingCarriedOntoDifferentAnchorsKeepsItsDeviation) {
