@@ -454,6 +454,20 @@ void InputCommandHandler::on_auto_gather_command(const QString& priority_product
   }
 }
 
+void InputCommandHandler::divide_selected_squads() {
+  if (m_is_spectator_mode || m_command_controller == nullptr) {
+    return;
+  }
+  static_cast<void>(m_command_controller->divide_selected_squads());
+}
+
+void InputCommandHandler::merge_selected_squads() {
+  if (m_is_spectator_mode || m_command_controller == nullptr) {
+    return;
+  }
+  static_cast<void>(m_command_controller->merge_selected_squads());
+}
+
 void InputCommandHandler::set_auto_gather(bool active,
                                           const QString& priority_product_type) {
   if (m_is_spectator_mode) {

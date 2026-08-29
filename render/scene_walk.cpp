@@ -34,6 +34,7 @@
 #include "entity/building_render_common.h"
 #include "entity/carried_load_renderer.h"
 #include "entity/registry.h"
+#include "entity/unseen_submitter.h"
 #include "entity_appearance.h"
 #include "equipment/equipment_registry.h"
 #include "equipment/render_archetype_registry.h"
@@ -272,6 +273,7 @@ struct UnitRenderEntry {
   bool combat_active{false};
   bool in_frustum{true};
   bool fog_visible{true};
+  bool fog_unseen{false};
   Game::Systems::UnitActivity activity{};
   int owner_id{0};
   float indicator_height{0.0F};
@@ -280,6 +282,11 @@ struct UnitRenderEntry {
   float view_distance_sq{0.0F};
   float cull_radius{0.0F};
 };
+
+[[nodiscard]] auto is_map_landmark(const Engine::Core::UnitComponent& unit) -> bool {
+
+  return unit.spawn_type == Game::Units::SpawnType::Barracks;
+}
 
 struct RenderEntry {
   Engine::Core::Entity* entity{nullptr};
@@ -625,9 +632,10 @@ void Renderer::collect_unit_entries(Engine::Core::World& world,
                                cached.transform->position.y,
                                cached.transform->position.z);
       float const cull_radius = get_unit_cull_radius(*unit_comp);
-      const bool filter_enemy = unit_comp->owner_id != m_view.local_owner_id() &&
-                                visibility_enabled &&
-                                non_local_unit_visibility_filter_enabled();
+      const bool map_landmark = is_map_landmark(*unit_comp);
+      const bool filter_enemy =
+          !map_landmark && unit_comp->owner_id != m_view.local_owner_id() &&
+          visibility_enabled && non_local_unit_visibility_filter_enabled();
       const auto visibility_result = m_submission_visibility.evaluate_sphere(
           unit_pos,
           cull_radius,
@@ -635,6 +643,14 @@ void Renderer::collect_unit_entries(Engine::Core::World& world,
           FogExtent::Anchor);
       entry.in_frustum = visibility_result.in_frustum;
       entry.fog_visible = visibility_result.fog_visible;
+      entry.fog_unseen = map_landmark && visibility_enabled &&
+                         static_world_visibility_filter_enabled() &&
+                         !m_submission_visibility
+                              .evaluate_sphere(unit_pos,
+                                               cull_radius,
+                                               SubmissionFogMode::Revealed,
+                                               FogExtent::Anchor)
+                              .fog_visible;
 
       entry.cull_radius = cull_radius;
       if (m_camera != nullptr) {
@@ -874,9 +890,12 @@ void Renderer::submit_unit_entry(
   bool const tier_is_minimal = plan.tier_is_minimal;
   if (plan.fn != nullptr) {
     {
-      RiggedBodyProbeSubmitter probe(
-          plan.use_batching ? static_cast<ISubmitter&>(*ctx.batch_submitter)
-                            : static_cast<ISubmitter&>(*this));
+      ISubmitter& sink = plan.use_batching
+                             ? static_cast<ISubmitter&>(*ctx.batch_submitter)
+                             : static_cast<ISubmitter&>(*this);
+      UnseenSubmitter unseen(sink);
+      RiggedBodyProbeSubmitter probe(entry.fog_unseen ? static_cast<ISubmitter&>(unseen)
+                                                      : sink);
       if (prepared != nullptr) {
         Render::Creature::Pipeline::submit_preparation(*prepared, probe);
       } else {

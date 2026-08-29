@@ -32,8 +32,20 @@ constexpr float k_rally_tolerance_sq = 4.0F;
   return Game::Systems::recruiting_building_for(troop.unit_type) == building;
 }
 
+[[nodiscard]] auto
+standing_in_the_order_of_battle(const std::vector<std::string>& preferred,
+                                const Game::Systems::TroopType& troop) -> int {
+  const auto name = Game::Units::troop_typeToString(troop.unit_type);
+  const auto it = std::find(preferred.begin(), preferred.end(), name);
+  if (it == preferred.end()) {
+    return static_cast<int>(preferred.size());
+  }
+  return static_cast<int>(std::distance(preferred.begin(), it));
+}
+
 [[nodiscard]] auto recruitable_candidates(const Game::Systems::Nation& nation,
                                           const Game::Systems::TroopType* preferred,
+                                          const DoctrineRecruitment& recruitment,
                                           Game::Units::SpawnType building)
     -> std::vector<const Game::Systems::TroopType*> {
   std::vector<const Game::Systems::TroopType*> candidates;
@@ -47,12 +59,20 @@ constexpr float k_rally_tolerance_sq = 4.0F;
     }
     candidates.push_back(&troop);
   }
-  std::stable_sort(
-      candidates.begin() + (candidates.empty() ? 0 : 1),
-      candidates.end(),
-      [](const Game::Systems::TroopType* a, const Game::Systems::TroopType* b) {
-        return a->priority > b->priority;
-      });
+
+  std::stable_sort(candidates.begin() + (candidates.empty() ? 0 : 1),
+                   candidates.end(),
+                   [&recruitment](const Game::Systems::TroopType* a,
+                                  const Game::Systems::TroopType* b) {
+                     const int rank_a =
+                         standing_in_the_order_of_battle(recruitment.preferred, *a);
+                     const int rank_b =
+                         standing_in_the_order_of_battle(recruitment.preferred, *b);
+                     if (rank_a != rank_b) {
+                       return rank_a < rank_b;
+                     }
+                     return a->priority > b->priority;
+                   });
   return candidates;
 }
 
@@ -70,6 +90,25 @@ constexpr float k_rally_tolerance_sq = 4.0F;
   return cheapest == std::numeric_limits<int>::max() ? 0 : cheapest;
 }
 
+[[nodiscard]] auto
+worth_waiting_for(const Game::Systems::TroopType& wanted,
+                  const ProductionSnapshot& production,
+                  const Game::Systems::ResourceAmounts& stock) -> bool {
+
+  constexpr float k_close_enough = 0.6F;
+
+  for (const auto type : Game::Systems::k_all_resource_types) {
+    if (stock.get(type) < wanted.resource_costs.get(type)) {
+      return false;
+    }
+  }
+  if (wanted.cost <= 0) {
+    return false;
+  }
+  return static_cast<float>(production.manpower_available) >=
+         static_cast<float>(wanted.cost) * k_close_enough;
+}
+
 [[nodiscard]] auto affordable(const Game::Systems::TroopType& troop,
                               const ProductionSnapshot& production,
                               const Game::Systems::ResourceAmounts& stock) -> bool {
@@ -83,6 +122,168 @@ constexpr float k_rally_tolerance_sq = 4.0F;
   }
   return true;
 }
+
+[[nodiscard]] auto arm_of(const Game::Systems::Nation& nation,
+                          const Game::Systems::TroopType& troop) -> DoctrineArm {
+  const auto spawn = Game::Units::spawn_typeFromTroopType(troop.unit_type);
+  if (Game::Units::is_cavalry(spawn)) {
+    return DoctrineArm::Cavalry;
+  }
+  if (spawn == Game::Units::SpawnType::Catapult ||
+      spawn == Game::Units::SpawnType::Ballista) {
+    return DoctrineArm::Siege;
+  }
+  return nation.is_ranged_unit(troop.unit_type) ? DoctrineArm::Missile
+                                                : DoctrineArm::Infantry;
+}
+
+[[nodiscard]] auto share_of(const DoctrineRecruitment& recruitment,
+                            DoctrineArm arm) -> float {
+  const float cavalry = std::clamp(recruitment.cavalry_share, 0.0F, 1.0F);
+  const float siege = std::clamp(recruitment.siege_share, 0.0F, 1.0F);
+  const float foot = std::max(0.0F, 1.0F - cavalry - siege);
+  const float missile = foot * std::clamp(recruitment.ranged_share, 0.0F, 1.0F);
+  switch (arm) {
+  case DoctrineArm::Cavalry:
+    return cavalry;
+  case DoctrineArm::Siege:
+    return siege;
+  case DoctrineArm::Missile:
+    return missile;
+  case DoctrineArm::Infantry:
+    break;
+  }
+  return foot - missile;
+}
+
+[[nodiscard]] auto
+default_recruitment(const AIContext& context) -> DoctrineRecruitment {
+  DoctrineRecruitment recruitment;
+  recruitment.ranged_share =
+      std::clamp(0.5F + (context.strategy_config.defense_modifier -
+                         context.strategy_config.aggression_modifier) *
+                            0.1F,
+                 0.25F,
+                 0.75F);
+  return recruitment;
+}
+
+[[nodiscard]] auto prefers(const DoctrineRecruitment& recruitment,
+                           const Game::Systems::TroopType& troop) -> bool {
+  const auto name = Game::Units::troop_typeToString(troop.unit_type);
+  return std::find(recruitment.preferred.begin(), recruitment.preferred.end(), name) !=
+         recruitment.preferred.end();
+}
+
+[[nodiscard]] auto units_under_arms(const AIContext& context, DoctrineArm arm) -> int {
+  switch (arm) {
+  case DoctrineArm::Infantry:
+    return context.melee_count;
+  case DoctrineArm::Missile:
+    return context.ranged_count;
+  case DoctrineArm::Cavalry:
+    return context.cavalry_count;
+  case DoctrineArm::Siege:
+    return context.siege_count;
+  }
+  return 0;
+}
+
+[[nodiscard]] auto arm_is_at_establishment(const AIContext& context,
+                                           const DoctrineRecruitment& recruitment,
+                                           DoctrineArm arm) -> bool {
+  const float target = share_of(recruitment, arm);
+  if (target <= 0.0F) {
+
+    return true;
+  }
+  const int total = context.melee_count + context.ranged_count + context.cavalry_count +
+                    context.siege_count;
+
+  constexpr int k_too_small_to_shape = 4;
+  if (total < k_too_small_to_shape) {
+    return false;
+  }
+  return static_cast<float>(units_under_arms(context, arm)) /
+             static_cast<float>(total) >=
+         target;
+}
+
+[[nodiscard]] auto in_no_position_to_be_choosy(const AIContext& context) -> bool {
+  if (context.barracks_under_threat || context.state == AIState::Defending ||
+      !context.buildings_under_attack.empty()) {
+    return true;
+  }
+
+  constexpr int k_bare_garrison = 3;
+  const int fighting = context.melee_count + context.ranged_count +
+                       context.cavalry_count + context.siege_count;
+  return fighting < k_bare_garrison;
+}
+
+[[nodiscard]] auto order_of_battle(const AIContext& context) -> DoctrineRecruitment {
+  const auto* doctrine = context.strategy_config.doctrine;
+  return doctrine != nullptr ? doctrine->recruitment : default_recruitment(context);
+}
+
+[[nodiscard]] auto
+choose_recruit(const Game::Systems::Nation& nation,
+               const AIContext& context) -> const Game::Systems::TroopType* {
+  const DoctrineRecruitment recruitment = order_of_battle(context);
+
+  const auto fielded = [&context](DoctrineArm arm) {
+    return units_under_arms(context, arm);
+  };
+  const int total = context.melee_count + context.ranged_count + context.cavalry_count +
+                    context.siege_count;
+
+  DoctrineArm wanted = DoctrineArm::Infantry;
+  float worst_gap = -1.0F;
+  for (const auto arm : {DoctrineArm::Infantry,
+                         DoctrineArm::Missile,
+                         DoctrineArm::Cavalry,
+                         DoctrineArm::Siege}) {
+    const float target = share_of(recruitment, arm);
+    if (target <= 0.0F) {
+      continue;
+    }
+    const float have =
+        total > 0 ? static_cast<float>(fielded(arm)) / static_cast<float>(total) : 0.0F;
+    const float gap = target - have;
+    if (gap > worst_gap) {
+      worst_gap = gap;
+      wanted = arm;
+    }
+  }
+
+  if (context.barracks_under_threat || context.state == AIState::Defending) {
+
+    wanted = context.melee_count > context.ranged_count ? DoctrineArm::Missile
+                                                        : DoctrineArm::Infantry;
+  }
+
+  const Game::Systems::TroopType* best = nullptr;
+  const Game::Systems::TroopType* fallback = nullptr;
+  for (const auto& troop : nation.available_troops) {
+    if (!is_recruitable_from(troop, Game::Units::SpawnType::Barracks) ||
+        troop.unit_type == Game::Units::TroopType::Builder ||
+        troop.unit_type == Game::Units::TroopType::Civilian) {
+      continue;
+    }
+    if (fallback == nullptr || troop.priority > fallback->priority) {
+      fallback = &troop;
+    }
+    if (arm_of(nation, troop) != wanted) {
+      continue;
+    }
+    if (best == nullptr || prefers(recruitment, troop) ||
+        (!prefers(recruitment, *best) && troop.priority > best->priority)) {
+      best = &troop;
+    }
+  }
+  return best != nullptr ? best : fallback;
+}
+
 } // namespace
 
 void ProductionBehavior::execute(const AISnapshot& snapshot,
@@ -126,8 +327,7 @@ void ProductionBehavior::execute(const AISnapshot& snapshot,
     should_produce_builder = true;
   }
 
-  constexpr int k_bootstrap_builders = 2;
-  if (should_produce_builder && context.builder_count >= k_bootstrap_builders) {
+  if (should_produce_builder && context.builder_count >= minimum_builders) {
     const auto* builder_troop = nation->get_troop(Game::Units::TroopType::Builder);
     const int soldier_cost = cheapest_fighting_cost(*nation);
     if (builder_troop != nullptr && soldier_cost > 0 &&
@@ -144,41 +344,7 @@ void ProductionBehavior::execute(const AISnapshot& snapshot,
   }
 
   if (troop_type == nullptr) {
-    bool produce_ranged = true;
-
-    if (context.barracks_under_threat || context.state == AIState::Defending) {
-      produce_ranged = (context.melee_count > context.ranged_count);
-    } else {
-
-      float const ranged_ratio =
-          (context.total_units > 0)
-              ? static_cast<float>(context.ranged_count) / context.total_units
-              : 0.0F;
-
-      const float target_ranged_ratio =
-          context.strategy_config.doctrine != nullptr
-              ? std::clamp(context.strategy_config.doctrine->recruitment.ranged_share,
-                           0.0F,
-                           1.0F)
-              : std::clamp(0.5F + (context.strategy_config.defense_modifier -
-                                   context.strategy_config.aggression_modifier) *
-                                      0.1F,
-                           0.25F,
-                           0.75F);
-      produce_ranged = (ranged_ratio < target_ranged_ratio);
-      if (context.assembled_unit_count < context.macro_targets.assembly_size &&
-          context.strategy_config.aggression_modifier > 1.0F) {
-        produce_ranged = false;
-      }
-    }
-
-    troop_type = produce_ranged ? nation->get_best_ranged_troop()
-                                : nation->get_best_melee_troop();
-
-    if (troop_type == nullptr) {
-      troop_type = produce_ranged ? nation->get_best_melee_troop()
-                                  : nation->get_best_ranged_troop();
-    }
+    troop_type = choose_recruit(*nation, context);
   }
 
   if (troop_type == nullptr) {
@@ -249,8 +415,9 @@ void ProductionBehavior::execute(const AISnapshot& snapshot,
                      return a->id < b->id;
                    });
 
-  const auto candidates =
-      recruitable_candidates(*nation, troop_type, Game::Units::SpawnType::Barracks);
+  const DoctrineRecruitment recruitment = order_of_battle(context);
+  const auto candidates = recruitable_candidates(
+      *nation, troop_type, recruitment, Game::Units::SpawnType::Barracks);
 
   for (const auto* entity : barracks) {
     const auto& prod = entity->production;
@@ -284,12 +451,31 @@ void ProductionBehavior::execute(const AISnapshot& snapshot,
 
     const Game::Systems::TroopType* buying = nullptr;
     for (const auto* candidate : candidates) {
+      if (arm_is_at_establishment(context, recruitment, arm_of(*nation, *candidate))) {
+        continue;
+      }
       if (affordable(*candidate, prod, snapshot.resources)) {
         buying = candidate;
         break;
       }
     }
+
+    if (buying == nullptr && in_no_position_to_be_choosy(context)) {
+
+      for (const auto* candidate : candidates) {
+        if (affordable(*candidate, prod, snapshot.resources)) {
+          buying = candidate;
+          break;
+        }
+      }
+    }
+
     if (buying == nullptr) {
+      continue;
+    }
+
+    if (troop_type != nullptr && buying != troop_type &&
+        worth_waiting_for(*troop_type, prod, snapshot.resources)) {
       continue;
     }
 
@@ -409,7 +595,7 @@ auto ProductionBehavior::should_execute(const AISnapshot& snapshot,
     return false;
   }
 
-  return context.total_units < context.max_troops_per_player;
+  return context.population_headroom() > 0;
 }
 
 } // namespace Game::Systems::AI

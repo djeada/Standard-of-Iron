@@ -102,6 +102,10 @@ private:
   QVector3D calculate_builder_center_position(
       const std::vector<Engine::Core::EntityID>& builder_ids);
   void set_construction_preview_active(bool active);
+  [[nodiscard]] auto ground_refusal(const QString& building_type,
+                                    float world_x,
+                                    float world_z) const -> QString;
+
   void set_construction_preview_valid(bool valid);
   void set_construction_preview_ruling(bool valid, const QString& reason);
   void set_construction_preview_reason(const QString& reason);

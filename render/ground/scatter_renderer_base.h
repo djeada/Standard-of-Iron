@@ -105,6 +105,8 @@ public:
   }
 
 protected:
+  [[nodiscard]] virtual auto fog_culls_instances() const -> bool { return true; }
+
   void set_light_direction_common(const QVector3D& dir,
                                   const QVector3D& default_direction) {
     m_light_direction = dir.isNull() ? default_direction : dir.normalized();
@@ -122,7 +124,7 @@ protected:
     const auto visible_count = Render::Ground::Scatter::sync_filtered_state(
         m_state,
         [](const Instance& instance) -> const QVector4D& { return instance.pos_scale; },
-        renderer.static_world_visibility_filter_enabled()
+        (fog_culls_instances() && renderer.static_world_visibility_filter_enabled())
             ? renderer.submission_visibility().snapshot()
             : nullptr,
 

@@ -2,6 +2,7 @@
 
 #include <QString>
 
+#include <algorithm>
 #include <cstdint>
 #include <memory>
 #include <unordered_map>
@@ -63,6 +64,11 @@ enum class AICommandType {
   SetRallyPoint,
   StartBuilderConstruction,
   StartBuilderHarvest,
+  StartBuilderRepair,
+  DivideSquads,
+  MergeSquads,
+  SetAutoGather,
+  TradeResource,
   DeliverCivilians,
   TriggerCommanderRally,
   TriggerCommanderAura
@@ -115,8 +121,12 @@ struct BuilderProductionSnapshot {
   Engine::Core::EntityID task_target_id = 0;
 
   bool carrying_load = false;
+  bool auto_gather = false;
   float construction_site_x = 0.0F;
   float construction_site_z = 0.0F;
+
+  bool raising_a_building = false;
+  Game::Units::SpawnType building_under_way = Game::Units::SpawnType::Barracks;
 };
 
 struct EntitySnapshot {
@@ -127,6 +137,9 @@ struct EntitySnapshot {
   int max_health = 0;
   bool is_building = false;
   bool is_commander = false;
+
+  int squad_strength = 0;
+  int squad_establishment = 1;
   bool is_assault = false;
   bool engagement_resolved = false;
   bool engaged = false;
@@ -338,6 +351,8 @@ struct AIContext {
 
   int melee_count = 0;
   int ranged_count = 0;
+  int cavalry_count = 0;
+  int siege_count = 0;
   int builder_count = 0;
 
   int civilian_count = 0;
@@ -367,6 +382,13 @@ struct AIContext {
   bool any_base_under_threat = false;
 
   int max_troops_per_player = 500;
+
+  int population_used = 0;
+  int population_cap = 0;
+
+  [[nodiscard]] auto population_headroom() const -> int {
+    return population_cap > 0 ? std::max(0, population_cap - population_used) : 9999;
+  }
   bool expansion_construction_pending = false;
   float last_expansion_order_time = -1000.0F;
 
@@ -430,6 +452,10 @@ struct AICommand {
 
   float rally_x = 0.0F;
   float rally_z = 0.0F;
+
+  Game::Systems::ResourceType trade_resource = Game::Systems::ResourceType::Wood;
+  bool trade_is_purchase = true;
+  bool auto_gather_active = true;
 };
 
 struct AIResult {

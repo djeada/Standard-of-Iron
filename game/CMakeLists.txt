@@ -245,6 +245,7 @@ target_link_libraries(soi_movement PUBLIC soi_formations)
 add_library(
     soi_economy
     STATIC
+    systems/build_site.cpp
     systems/construction_cost_catalog.cpp
     systems/production_service.cpp
     systems/production_system.cpp
@@ -361,6 +362,7 @@ add_library(
     systems/default_content.cpp
     systems/dismantle_system.cpp
     systems/interaction_targeting.cpp
+    systems/squad_service.cpp
     systems/structure_placement_service.cpp
     systems/wall_plan_service.cpp
     systems/cleanup_system.cpp
@@ -507,6 +509,8 @@ add_library(
     systems/ai_system/behaviors/retreat_behavior.cpp
     systems/ai_system/behaviors/expand_behavior.cpp
     systems/ai_system/behaviors/builder_behavior.cpp
+    systems/ai_system/behaviors/economy_behavior.cpp
+    systems/ai_system/behaviors/squad_discipline_behavior.cpp
     systems/ai_system/behaviors/commander_behavior.cpp
 )
 target_include_directories(soi_ai PUBLIC .)

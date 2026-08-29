@@ -203,41 +203,23 @@ auto CommanderModeCoordinator::enter_commander_control_mode(
   effects.save_follow_selection_snapshot = true;
   effects.saved_follow_selection_enabled = context.follow_selection_enabled;
 
-  auto const* existing_action =
-      context.commander->get_component<Engine::Core::RpgCommanderActionComponent>();
-  bool const preserve_advanced_action =
-      existing_action != nullptr && existing_action->action_running;
-
   if (auto* commander_data =
           context.commander->get_component<Engine::Core::CommanderComponent>()) {
     commander_data->rally_requested = false;
     commander_data->rally_requires_manual_trigger = true;
     commander_data->fpv_controlled = true;
-    if (!preserve_advanced_action) {
-      commander_data->combo_step = 0;
-      commander_data->power_strike_active = false;
-      commander_data->just_struck_enemy = false;
-      commander_data->last_strike_combo_step = 0U;
-      commander_data->jump_active = false;
-      commander_data->jump_phase = 0.0F;
-      commander_data->jump_height_offset = 0.0F;
-    }
+    commander_data->combo_step = 0;
+    commander_data->power_strike_active = false;
+    commander_data->just_struck_enemy = false;
+    commander_data->last_strike_combo_step = 0U;
+    commander_data->jump_active = false;
+    commander_data->jump_phase = 0.0F;
+    commander_data->jump_height_offset = 0.0F;
     commander_data->posture = 0.0F;
     commander_data->punish_window_remaining = 0.0F;
     commander_data->shield_bash_cooldown_remaining = 0.0F;
     commander_data->vanguard_rush_cooldown_remaining = 0.0F;
     commander_data->second_wind_cooldown_remaining = 0.0F;
-  }
-
-  if (auto* stamina =
-          Engine::Core::get_or_add_component<Engine::Core::StaminaComponent>(
-              context.commander)) {
-    constexpr float k_commander_stamina = 180.0F;
-    constexpr float k_commander_stamina_regen = 24.0F;
-    stamina->max_stamina = std::max(stamina->max_stamina, k_commander_stamina);
-    stamina->stamina = stamina->max_stamina;
-    stamina->regen_rate = std::max(stamina->regen_rate, k_commander_stamina_regen);
-    stamina->regen_delay_remaining = 0.0F;
   }
 
   if (auto* transform =
@@ -276,9 +258,6 @@ auto CommanderModeCoordinator::enter_commander_control_mode(
   if (auto* rpg_action =
           Engine::Core::get_or_add_component<Engine::Core::RpgCommanderActionComponent>(
               context.commander)) {
-    if (preserve_advanced_action) {
-      return effects;
-    }
     rpg_action->phase = Engine::Core::RpgCommanderActionPhase::None;
     rpg_action->combat_action_id = 0U;
     rpg_action->melee_attack_sequence = 0;
@@ -289,8 +268,6 @@ auto CommanderModeCoordinator::enter_commander_control_mode(
     rpg_action->last_hit_soldier_slot =
         Engine::Core::RpgCommanderTargetComponent::k_no_soldier_slot;
     rpg_action->hit_target_ids.fill(0U);
-    rpg_action->hit_target_soldier_slots.fill(
-        Engine::Core::RpgCommanderTargetComponent::k_no_soldier_slot);
     rpg_action->hit_target_count = 0U;
     rpg_action->last_damage = 0;
     rpg_action->normalized_action_time = 0.0F;
@@ -528,24 +505,17 @@ void CommanderModeCoordinator::clear_controlled_commander_state_impl(
     return;
   }
 
-  auto const* existing_action =
-      commander->get_component<Engine::Core::RpgCommanderActionComponent>();
-  bool const preserve_advanced_action =
-      existing_action != nullptr && existing_action->action_running;
-
   if (auto* commander_data =
           commander->get_component<Engine::Core::CommanderComponent>()) {
     commander_data->rally_requested = false;
     commander_data->rally_requires_manual_trigger = true;
     commander_data->fpv_controlled = false;
-    if (!preserve_advanced_action) {
-      commander_data->power_strike_active = false;
-      commander_data->just_struck_enemy = false;
-      commander_data->last_strike_combo_step = 0U;
-      commander_data->jump_active = false;
-      commander_data->jump_phase = 0.0F;
-      commander_data->jump_height_offset = 0.0F;
-    }
+    commander_data->power_strike_active = false;
+    commander_data->just_struck_enemy = false;
+    commander_data->last_strike_combo_step = 0U;
+    commander_data->jump_active = false;
+    commander_data->jump_phase = 0.0F;
+    commander_data->jump_height_offset = 0.0F;
     commander_data->posture = 0.0F;
     commander_data->punish_window_remaining = 0.0F;
     commander_data->shield_bash_cooldown_remaining = 0.0F;
@@ -578,10 +548,6 @@ void CommanderModeCoordinator::clear_controlled_commander_state_impl(
   }
   if (auto* rpg_action =
           commander->get_component<Engine::Core::RpgCommanderActionComponent>()) {
-    if (preserve_advanced_action) {
-      Game::Systems::OrderService::reset_movement(commander);
-      return;
-    }
     rpg_action->phase = Engine::Core::RpgCommanderActionPhase::None;
     rpg_action->combat_action_id = 0U;
     rpg_action->melee_attack_sequence = 0;
@@ -592,8 +558,6 @@ void CommanderModeCoordinator::clear_controlled_commander_state_impl(
     rpg_action->last_hit_soldier_slot =
         Engine::Core::RpgCommanderTargetComponent::k_no_soldier_slot;
     rpg_action->hit_target_ids.fill(0U);
-    rpg_action->hit_target_soldier_slots.fill(
-        Engine::Core::RpgCommanderTargetComponent::k_no_soldier_slot);
     rpg_action->hit_target_count = 0U;
     rpg_action->last_damage = 0;
     rpg_action->normalized_action_time = 0.0F;

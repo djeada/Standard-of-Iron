@@ -243,9 +243,20 @@ void ResourceDeliverySystem::update(Engine::Core::World* world, float delta_time
       continue;
     }
 
+    if (carry->haul_seconds >= k_stockpile_haul_abandon_seconds) {
+
+      credit_load(*world, unit->owner_id, *carry, hauler->get_id());
+      unloaded.push_back(hauler->get_id());
+      continue;
+    }
+
     carry->haul_repath_cooldown =
         std::max(0.0F, carry->haul_repath_cooldown - delta_time);
-    if (carry->haul_repath_cooldown > 0.0F || !hauler_is_free_to_walk(*hauler)) {
+    if (carry->haul_repath_cooldown > 0.0F) {
+      continue;
+    }
+
+    if (!out_of_patience && !hauler_is_free_to_walk(*hauler)) {
       continue;
     }
 

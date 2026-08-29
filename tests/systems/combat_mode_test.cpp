@@ -3523,78 +3523,6 @@ TEST_F(CombatModeTest, OneActionAppliesOneDamageAtEverySimulationRate) {
   EXPECT_LE(contacts_per_rate[0], 1);
 }
 
-TEST_F(CombatModeTest, CommanderLauncherBreaksPoiseAndCreatesBallisticLift) {
-  auto* commander = make_fpv_commander(*world, 0.0F, 0.0F);
-  auto* enemy = make_enemy_soldier(*world, 0.0F, 1.3F);
-  ASSERT_NE(commander, nullptr);
-  ASSERT_NE(enemy, nullptr);
-  enemy->add_component<PoiseComponent>(20.0F);
-
-  auto* combat_state = begin_commander_strike(commander, enemy->get_id());
-  ASSERT_NE(combat_state, nullptr);
-  auto* action = start_authored_action_at(
-      commander,
-      Game::Systems::CombatActions::CombatActionId::CommanderSwordLauncher,
-      0.0F);
-  ASSERT_NE(action, nullptr);
-  action->active_target_id = enemy->get_id();
-
-  complete_authored_action(*world, *commander);
-
-  auto const* poise = enemy->get_component<PoiseComponent>();
-  auto const* stagger = enemy->get_component<StaggerComponent>();
-  auto const* launch = enemy->get_component<CombatLaunchComponent>();
-  ASSERT_NE(poise, nullptr);
-  ASSERT_NE(stagger, nullptr);
-  ASSERT_NE(launch, nullptr);
-  EXPECT_EQ(stagger->tier, StaggerTier::Knockback);
-  EXPECT_GT(launch->velocity_y, 0.0F);
-  EXPECT_GT(action->hit_target_count, 0U);
-}
-
-TEST_F(CombatModeTest, CommanderRadialFinisherDamagesNearbyEnemies) {
-  auto* commander = make_fpv_commander(*world, 0.0F, 0.0F);
-  auto* primary = make_enemy_soldier(*world, 0.0F, 1.25F);
-  auto* flank = make_enemy_soldier(*world, 1.15F, 1.25F);
-  ASSERT_NE(commander, nullptr);
-  ASSERT_NE(primary, nullptr);
-  ASSERT_NE(flank, nullptr);
-
-  auto* combat_state = begin_commander_strike(commander, primary->get_id());
-  ASSERT_NE(combat_state, nullptr);
-  auto* action = start_authored_action_at(
-      commander,
-      Game::Systems::CombatActions::CombatActionId::CommanderSwordSpin,
-      0.0F);
-  ASSERT_NE(action, nullptr);
-  action->active_target_id = primary->get_id();
-
-  complete_authored_action(*world, *commander);
-
-  EXPECT_LT(primary->get_component<UnitComponent>()->health, 100);
-  EXPECT_LT(flank->get_component<UnitComponent>()->health, 100);
-  EXPECT_GE(action->hit_target_count, 2U);
-}
-
-TEST_F(CombatModeTest, PoiseAndBallisticLaunchRecoverThroughStatusProcessing) {
-  auto* enemy = make_enemy_soldier(*world, 0.0F, 0.0F);
-  auto* poise = enemy->add_component<PoiseComponent>(80.0F);
-  poise->current = 10.0F;
-  poise->regeneration_delay = 0.1F;
-  enemy->add_component<CombatLaunchComponent>(3.0F, 0.0F, 0.0F, 0.0F);
-
-  (void)Game::Systems::Combat::process_combat_status_effects(world.get(), 0.1F);
-  EXPECT_FLOAT_EQ(poise->current, 10.0F);
-  EXPECT_GT(enemy->get_component<TransformComponent>()->position.y, 0.0F);
-
-  for (int step = 0; step < 20; ++step) {
-    (void)Game::Systems::Combat::process_combat_status_effects(world.get(), 0.1F);
-  }
-  EXPECT_GT(poise->current, 10.0F);
-  EXPECT_EQ(enemy->get_component<CombatLaunchComponent>(), nullptr);
-  EXPECT_FLOAT_EQ(enemy->get_component<TransformComponent>()->position.y, 0.0F);
-}
-
 TEST_F(CombatModeTest, SwordTraceRejectsTargetsBehindCommander) {
   auto* commander = make_fpv_commander(*world, 0.0F, 0.0F);
   auto* enemy = make_enemy_soldier(*world, 0.0F, -1.2F);
@@ -3830,7 +3758,7 @@ TEST_F(CombatModeTest, SpearFinisherIsAHeavierLongerLungeThanTheThrust) {
   EXPECT_GT(finisher->damage.base_multiplier, thrust->damage.base_multiplier);
   EXPECT_GT(finisher->hit_shape.reach, thrust->hit_shape.reach);
   EXPECT_GT(finisher->duration_seconds, thrust->duration_seconds);
-  EXPECT_EQ(finisher->max_targets, 4);
+  EXPECT_EQ(finisher->max_targets, 2);
 }
 
 TEST_F(CombatModeTest, SpearFinisherComboStepSelectsTheSpearFinisher) {

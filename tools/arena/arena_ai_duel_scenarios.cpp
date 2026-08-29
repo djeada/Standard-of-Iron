@@ -16,6 +16,18 @@ using Troop = Game::Units::TroopType;
 constexpr float k_corner_offset = 38.0F;
 constexpr float k_floor_half_extent = 58.0F;
 
+struct SideOpening {
+
+  int builders{4};
+  int homes{0};
+  int farms{0};
+  int markets{0};
+  int towers{0};
+
+  int infantry{0};
+  int missiles{0};
+};
+
 struct DuelSide {
   QString label;
   int owner_id{2};
@@ -25,6 +37,8 @@ struct DuelSide {
   QVector3D corner;
 
   float facing_degrees{0.0F};
+
+  SideOpening opening{};
 };
 
 auto to_world(const DuelSide& side, QVector3D local) -> QVector3D {
@@ -78,11 +92,21 @@ void add_battlefield(ArenaScenarioDefinition& scenario) {
   using Game::Map::HillShape;
   using Game::Map::TerrainType;
 
-  scenario.rivers.push_back(
-      Game::Map::RiverSegment{{-46.0F, 0.0F, 30.0F}, {40.0F, 0.0F, -34.0F}, 7.0F});
+  constexpr float k_river_overrun = k_floor_half_extent + 8.0F;
 
-  scenario.bridges.push_back(
-      Game::Map::Bridge{{-9.0F, 0.0F, -10.0F}, {3.0F, 0.0F, 6.0F}, 9.0F, 0.5F});
+  constexpr float k_river_width = 12.0F;
+
+  scenario.rivers.push_back(
+      Game::Map::RiverSegment{{-k_river_overrun, 0.0F, k_river_overrun},
+                              {k_river_overrun, 0.0F, -k_river_overrun},
+                              k_river_width});
+
+  constexpr float k_bridge_reach = 8.0F;
+
+  scenario.bridges.push_back(Game::Map::Bridge{{-k_bridge_reach, 0.0F, -k_bridge_reach},
+                                               {k_bridge_reach, 0.0F, k_bridge_reach},
+                                               Game::Map::k_min_bridge_width,
+                                               0.5F});
 
   const auto hill = [](float x,
                        float z,
@@ -121,6 +145,7 @@ void add_battlefield(ArenaScenarioDefinition& scenario) {
 
 void add_side(ArenaScenarioDefinition& scenario, const DuelSide& side) {
   const QString prefix = side.label;
+  const auto& opening = side.opening;
 
   scenario.groups.push_back(duel_building(side,
                                           prefix + QStringLiteral("_barracks"),
@@ -135,9 +160,58 @@ void add_side(ArenaScenarioDefinition& scenario, const DuelSide& side) {
   scenario.groups.push_back(duel_group(side,
                                        prefix + QStringLiteral("_builder"),
                                        Troop::Builder,
-                                       4,
+                                       opening.builders,
                                        {-6.0F, 0.0F, -4.0F},
                                        {2.4F, 0.0F, 0.0F}));
+
+  if (opening.homes > 0) {
+    scenario.groups.push_back(duel_building(side,
+                                            prefix + QStringLiteral("_homes"),
+                                            Game::Units::SpawnType::Home,
+                                            opening.homes,
+                                            {-8.0F, 0.0F, 13.0F},
+                                            {7.5F, 0.0F, 0.0F}));
+  }
+  if (opening.farms > 0) {
+    scenario.groups.push_back(duel_building(side,
+                                            prefix + QStringLiteral("_farms"),
+                                            Game::Units::SpawnType::Farm,
+                                            opening.farms,
+                                            {-20.0F, 0.0F, 20.0F},
+                                            {16.0F, 0.0F, 0.0F}));
+  }
+  if (opening.markets > 0) {
+    scenario.groups.push_back(duel_building(side,
+                                            prefix + QStringLiteral("_market"),
+                                            Game::Units::SpawnType::Marketplace,
+                                            opening.markets,
+                                            {10.0F, 0.0F, 12.0F},
+                                            {9.0F, 0.0F, 0.0F}));
+  }
+  if (opening.towers > 0) {
+    scenario.groups.push_back(duel_building(side,
+                                            prefix + QStringLiteral("_towers"),
+                                            Game::Units::SpawnType::DefenseTower,
+                                            opening.towers,
+                                            {-11.0F, 0.0F, -8.0F},
+                                            {22.0F, 0.0F, 0.0F}));
+  }
+  if (opening.infantry > 0) {
+    scenario.groups.push_back(duel_group(side,
+                                         prefix + QStringLiteral("_infantry"),
+                                         Troop::Spearman,
+                                         opening.infantry,
+                                         {-5.0F, 0.0F, -9.0F},
+                                         {3.4F, 0.0F, 0.0F}));
+  }
+  if (opening.missiles > 0) {
+    scenario.groups.push_back(duel_group(side,
+                                         prefix + QStringLiteral("_missiles"),
+                                         Troop::Archer,
+                                         opening.missiles,
+                                         {5.0F, 0.0F, -9.0F},
+                                         {3.4F, 0.0F, 0.0F}));
+  }
 
   ArenaScenarioBattleSide battle_side;
   battle_side.owner_id = side.owner_id;
@@ -193,7 +267,7 @@ auto duel_definition(const char* id,
   scenario.terrain_grid_extent = 128;
 
   scenario.ai_starting_resources = {
-      .gold = 250, .food = 200, .wood = 250, .stone = 120, .iron = 80};
+      .gold = 2000, .food = 200, .wood = 250, .stone = 120, .iron = 80};
 
   north_west.corner = QVector3D(-k_corner_offset, 0.0F, -k_corner_offset);
   north_west.facing_degrees = 45.0F;
@@ -342,6 +416,47 @@ auto build_ai_duel_definitions() -> std::vector<ArenaScenarioDefinition> {
         doctrine_expectation(QStringLiteral("hasdrubal"), "harasser:field"));
     add_economy_expectations(s, QStringLiteral("hannibal"));
     add_economy_expectations(s, QStringLiteral("hasdrubal"));
+    result.push_back(std::move(s));
+  }
+
+  {
+    DuelSide scipio;
+    scipio.label = QStringLiteral("scipio");
+    scipio.owner_id = 2;
+    scipio.nation = Nation::RomanRepublic;
+    scipio.commander = Troop::RomanVeteranConsul;
+    scipio.opening = SideOpening{.builders = 6,
+                                 .homes = 3,
+                                 .farms = 2,
+                                 .markets = 1,
+                                 .towers = 2,
+                                 .infantry = 3,
+                                 .missiles = 2};
+
+    DuelSide hannibal;
+    hannibal.label = QStringLiteral("hannibal");
+    hannibal.owner_id = 3;
+    hannibal.nation = Nation::Carthage;
+    hannibal.commander = Troop::CarthageSwordCommander;
+    hannibal.opening = scipio.opening;
+
+    auto s = duel_definition(
+        k_ai_war_of_towns_id,
+        QStringLiteral("AI War of Towns"),
+        QStringLiteral("Two established AI towns, each with homes, fields, a market "
+                       "and a watch already standing, grow their economies and fight "
+                       "over the ground between them. The scene to watch when the "
+                       "question is how the computer plays a whole match rather than "
+                       "how it opens one."),
+        1800.0F,
+        scipio,
+        hannibal);
+    s.expectations.push_back(
+        doctrine_expectation(QStringLiteral("scipio"), "aggressive:field"));
+    s.expectations.push_back(
+        doctrine_expectation(QStringLiteral("hannibal"), "aggressive:field"));
+    add_economy_expectations(s, QStringLiteral("scipio"));
+    add_economy_expectations(s, QStringLiteral("hannibal"));
     result.push_back(std::move(s));
   }
 

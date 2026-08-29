@@ -36,6 +36,7 @@
 #include "game/systems/owner_registry.h"
 #include "game/systems/production_service.h"
 #include "game/systems/selection_system.h"
+#include "game/systems/squad_service.h"
 #include "game/systems/troop_profile_service.h"
 #include "game/units/spawn_type.h"
 #include "game/util/asset_text.h"
@@ -400,6 +401,81 @@ auto CommandController::set_auto_gather(
   }
 
   return issue_auto_gather(builders, active, priority_product_type);
+}
+
+namespace {
+
+auto divisible_selection(Engine::Core::World* world,
+                         const std::vector<Engine::Core::EntityID>& selected)
+    -> std::vector<Engine::Core::EntityID> {
+  std::vector<Engine::Core::EntityID> divisible;
+  for (const auto id : selected) {
+    if (Game::Systems::SquadService::can_divide(*world, id)) {
+      divisible.push_back(id);
+    }
+  }
+  return divisible;
+}
+
+auto mergeable_selection(Engine::Core::World* world,
+                         const std::vector<Engine::Core::EntityID>& selected)
+    -> std::vector<Engine::Core::EntityID> {
+  std::vector<Engine::Core::EntityID> mergeable;
+  for (const auto id : selected) {
+    for (const auto other : selected) {
+      if (Game::Systems::SquadService::can_merge(*world, id, other)) {
+        mergeable.push_back(id);
+        break;
+      }
+    }
+  }
+  return mergeable;
+}
+
+} // namespace
+
+auto CommandController::divide_selected_squads() -> CommandResult {
+  CommandResult result;
+  if ((m_selection_system == nullptr) || (m_world == nullptr)) {
+    return result;
+  }
+  const auto selected = m_selection_system->get_selected_units();
+  const auto divisible = divisible_selection(m_world, selected);
+  if (divisible.empty()) {
+    result.order = m_orders.reject(
+        App::Core::OrderKind::Squad,
+        selected.empty()
+            ? App::Core::no_selection_reason()
+            : App::Core::no_eligible_units_reason(App::Core::OrderKind::Squad));
+    return result;
+  }
+
+  result.order = m_orders.issue(App::Core::OrderKind::Squad,
+                                Game::Command::DivideSquads{.units = divisible});
+  result.input_consumed = result.order.accepted();
+  return result;
+}
+
+auto CommandController::merge_selected_squads() -> CommandResult {
+  CommandResult result;
+  if ((m_selection_system == nullptr) || (m_world == nullptr)) {
+    return result;
+  }
+  const auto selected = m_selection_system->get_selected_units();
+  const auto mergeable = mergeable_selection(m_world, selected);
+  if (mergeable.size() < 2U) {
+    result.order = m_orders.reject(
+        App::Core::OrderKind::Squad,
+        selected.empty()
+            ? App::Core::no_selection_reason()
+            : App::Core::no_eligible_units_reason(App::Core::OrderKind::Squad));
+    return result;
+  }
+
+  result.order = m_orders.issue(App::Core::OrderKind::Squad,
+                                Game::Command::MergeSquads{.units = mergeable});
+  result.input_consumed = result.order.accepted();
+  return result;
 }
 
 auto CommandController::issue_auto_gather(

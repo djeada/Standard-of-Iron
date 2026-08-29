@@ -12,6 +12,7 @@
 #include "../../game_config.h"
 #include "../../map/terrain_service.h"
 #include "../../session/session_context.h"
+#include "../../units/squad.h"
 #include "../nation_registry.h"
 #include "../owner_queries.h"
 #include "../player_resource_registry.h"
@@ -196,6 +197,8 @@ auto AISnapshotBuilder::build(const Engine::Core::World& world,
     data.max_health = unit->max_health;
     data.is_building = entity->has_component<Engine::Core::BuildingComponent>();
     data.is_commander = entity->has_component<Engine::Core::CommanderComponent>();
+    data.squad_strength = Game::Units::squad_strength(*unit);
+    data.squad_establishment = Game::Units::squad_establishment(unit->spawn_type);
     data.is_assault = is_assault;
     data.has_delivery_order =
         world.has<Engine::Core::CivilianDeliveryComponent>(data.id);
@@ -256,8 +259,18 @@ auto AISnapshotBuilder::build(const Engine::Core::World& world,
           carry != nullptr && !carry->empty()) {
         data.builder_production.carrying_load = true;
       }
+      data.builder_production.auto_gather = builder_prod->auto_gather;
       data.builder_production.construction_site_x = builder_prod->construction_site_x;
       data.builder_production.construction_site_z = builder_prod->construction_site_z;
+
+      if (builder_prod->has_construction_site) {
+        if (const auto raising =
+                Game::Units::spawn_typeFromString(builder_prod->product_type);
+            raising.has_value() && Game::Units::is_building_spawn(*raising)) {
+          data.builder_production.raising_a_building = true;
+          data.builder_production.building_under_way = *raising;
+        }
+      }
     }
 
     snapshot.friendly_units.push_back(std::move(data));

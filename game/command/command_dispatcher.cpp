@@ -11,6 +11,7 @@
 #include "../formation/army_formation_service.h"
 #include "../map/terrain_service.h"
 #include "../session/session_context.h"
+#include "../systems/build_site.h"
 #include "../systems/builder_product_types.h"
 #include "../systems/civilian_delivery_system.h"
 #include "../systems/combat_rules.h"
@@ -23,10 +24,13 @@
 #include "../systems/order_service.h"
 #include "../systems/player_resource_registry.h"
 #include "../systems/production_service.h"
+#include "../systems/squad_service.h"
 #include "../systems/structure_placement_service.h"
+#include "../systems/troop_count_registry.h"
 #include "../systems/troop_profile_service.h"
 #include "../systems/wall_plan_service.h"
 #include "../units/spawn_type.h"
+#include "../units/squad.h"
 #include "../units/troop_type.h"
 
 namespace Game::Command {
@@ -409,13 +413,19 @@ void release_task_target(Game::Map::TerrainService& terrain,
   builder.task_target_reserved = false;
 }
 
-void begin_site_work(Engine::Core::BuilderProductionComponent& builder,
+void begin_site_work(const Engine::Core::Entity& worker,
+                     Engine::Core::BuilderProductionComponent& builder,
                      const std::string& construction_type,
                      const QVector3D& site,
                      float rotation_y) {
   builder.clear_auto_gather();
   builder.product_type = construction_type;
-  builder.build_time = Game::Systems::construction_build_time(construction_type);
+
+  const auto* unit = worker.get_component<Engine::Core::UnitComponent>();
+  const float hands =
+      unit != nullptr ? std::max(0.05F, Game::Units::squad_fraction(*unit)) : 1.0F;
+  builder.build_time =
+      Game::Systems::construction_build_time(construction_type) / hands;
   builder.time_remaining = builder.build_time;
   builder.has_construction_site = true;
   builder.construction_site_x = site.x();
@@ -441,6 +451,13 @@ void apply_start_construction(World& world,
     return;
   }
 
+  if (Game::Systems::assess_ground(
+          world, order.construction_type, order.site.x(), order.site.z()) !=
+      Game::Systems::GroundVerdict::Clear) {
+
+    return;
+  }
+
   bool assigned_any = false;
   for (const EntityID id : order.units) {
     auto [entity, builder] = builder_of(world, id, owner_id);
@@ -448,7 +465,8 @@ void apply_start_construction(World& world,
       continue;
     }
     release_task_target(session.terrain(), *builder);
-    begin_site_work(*builder, order.construction_type, order.site, order.rotation_y);
+    begin_site_work(
+        *entity, *builder, order.construction_type, order.site, order.rotation_y);
     if (auto* movement = entity->get_component<Engine::Core::MovementComponent>()) {
       movement->set_rest_position(order.site.x(), order.site.z());
     }
@@ -545,7 +563,7 @@ void apply_start_harvest(World& world, int owner_id, const StartHarvest& order) 
             worker_position_or(*entity, order.site),
             order.resource_target,
             Game::Systems::CommandService::get_unit_radius(world, id));
-    begin_site_work(*builder, order.construction_type, work_position, 0.0F);
+    begin_site_work(*entity, *builder, order.construction_type, work_position, 0.0F);
     builder->has_task_target = true;
     builder->task_target_id = order.resource_target;
     builder->task_target_x = order.site.x();
@@ -629,6 +647,41 @@ void apply_deliver_civilians(World& world,
   }
   if (!move.units.empty()) {
     apply_move(world, move);
+  }
+}
+
+auto owned_subjects(World& world,
+                    int owner_id,
+                    const std::vector<Engine::Core::EntityID>& units)
+    -> std::vector<Engine::Core::EntityID> {
+  std::vector<Engine::Core::EntityID> owned;
+  owned.reserve(units.size());
+  for (const auto id : units) {
+    auto* entity = world.get_entity(id);
+    const auto* unit = entity != nullptr
+                           ? entity->get_component<Engine::Core::UnitComponent>()
+                           : nullptr;
+    if (unit != nullptr && unit->owner_id == owner_id && unit->health > 0) {
+      owned.push_back(id);
+    }
+  }
+  return owned;
+}
+
+void apply_divide_squads(World& world, int owner_id, const DivideSquads& order) {
+  const auto divisions = Game::Systems::SquadService::divide_all(
+      world, owned_subjects(world, owner_id, order.units));
+  if (!divisions.empty()) {
+
+    Game::Session::session_for(world).troop_counts().rebuild_from_world(world);
+  }
+}
+
+void apply_merge_squads(World& world, int owner_id, const MergeSquads& order) {
+  const auto merges = Game::Systems::SquadService::merge_all(
+      world, owned_subjects(world, owner_id, order.units));
+  if (!merges.empty()) {
+    Game::Session::session_for(world).troop_counts().rebuild_from_world(world);
   }
 }
 
@@ -836,6 +889,10 @@ void dispatch(World& world, const Command& command) {
           apply_start_harvest(world, command.owner_id, payload);
         } else if constexpr (std::is_same_v<T, DeliverCivilians>) {
           apply_deliver_civilians(world, command.owner_id, payload);
+        } else if constexpr (std::is_same_v<T, DivideSquads>) {
+          apply_divide_squads(world, command.owner_id, payload);
+        } else if constexpr (std::is_same_v<T, MergeSquads>) {
+          apply_merge_squads(world, command.owner_id, payload);
         } else if constexpr (std::is_same_v<T, RepairStructure>) {
           apply_repair_structure(world, command.owner_id, payload);
         } else if constexpr (std::is_same_v<T, DismantleStructure>) {

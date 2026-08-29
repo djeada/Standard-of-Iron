@@ -66,7 +66,6 @@ public:
   Q_INVOKABLE void release_input();
   Q_INVOKABLE void primary_action_down();
   Q_INVOKABLE void primary_action_up();
-  Q_INVOKABLE void heavy_action();
   Q_INVOKABLE void secondary_action_down();
   Q_INVOKABLE void secondary_action_up();
   Q_INVOKABLE void mouse_move(qreal dx, qreal dy);

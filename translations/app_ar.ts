@@ -3045,6 +3045,58 @@ This may be a skirmish, or objectives have not been configured.</source>
         <source>Press again to cycle any resource, wood, stone, iron, food, then off.</source>
         <translation>اضغط مرة أخرى للتبديل بين أي مورد، الخشب، الحجر، الحديد، الطعام، ثم الإيقاف.</translation>
     </message>
+    <message>
+        <source>Split</source>
+        <translation>تقسيم</translation>
+    </message>
+    <message>
+        <source>Break the selected squad into two smaller ones so they can work or fight in two places at once.</source>
+        <translation>يقسّم الوحدة المختارة إلى وحدتين أصغر لتعملا أو تقاتلا في مكانين في آن واحد.</translation>
+    </message>
+    <message>
+        <source>Each half</source>
+        <translation>كل نصف</translation>
+    </message>
+    <message>
+        <source>Carries half the men, half the health and does its work at half the speed.</source>
+        <translation>يحمل نصف الرجال ونصف الصحة ويعمل بنصف السرعة.</translation>
+    </message>
+    <message>
+        <source>Needs</source>
+        <translation>يتطلب</translation>
+    </message>
+    <message>
+        <source>A squad of at least four still standing.</source>
+        <translation>وحدة لا يقل عدد رجالها الباقين عن أربعة.</translation>
+    </message>
+    <message>
+        <source>This squad is too small to divide</source>
+        <translation>هذه الوحدة أصغر من أن تُقسَّم</translation>
+    </message>
+    <message>
+        <source>Join</source>
+        <translation>دمج</translation>
+    </message>
+    <message>
+        <source>Fold two understrength squads of the same kind back into one.</source>
+        <translation>يدمج وحدتين ناقصتَي العدد من النوع نفسه في وحدة واحدة.</translation>
+    </message>
+    <message>
+        <source>Two squads of the same kind, both below full strength and standing close together.</source>
+        <translation>وحدتان من النوع نفسه، كلتاهما دون كامل القوة ومتقاربتان.</translation>
+    </message>
+    <message>
+        <source>Result</source>
+        <translation>النتيجة</translation>
+    </message>
+    <message>
+        <source>One squad with their men and health added together, up to a full establishment.</source>
+        <translation>وحدة واحدة تُجمع فيها رجالهما وصحتهما حتى القوام الكامل.</translation>
+    </message>
+    <message>
+        <source>Select two understrength squads of the same kind</source>
+        <translation>اختر وحدتين ناقصتَي العدد من النوع نفسه</translation>
+    </message>
 </context>
 <context>
     <name>HUDBottomCommander</name>
@@ -4886,6 +4938,18 @@ to see preview</source>
         <source>Watch the computer fight itself on this battlefield</source>
         <translation>شاهد الحاسوب يقاتل نفسه في هذا الميدان</translation>
     </message>
+    <message>
+        <source>%1 gold</source>
+        <translation>%1 ذهب</translation>
+    </message>
+    <message>
+        <source>Treasury</source>
+        <translation>الخزينة</translation>
+    </message>
+    <message>
+        <source>Gold every side starts with — click to change</source>
+        <translation>الذهب الذي يبدأ به كل طرف — انقر للتغيير</translation>
+    </message>
 </context>
 <context>
     <name>MapTransformer</name>
@@ -6482,6 +6546,14 @@ to see preview</source>
         <source>Hauling a load - it cannot be interrupted until the load is dropped off.</source>
         <translation>يسحب حمولة - لا يمكن مقاطعتها حتى تسليمها.</translation>
     </message>
+    <message>
+        <source>Squad</source>
+        <translation>وحدة</translation>
+    </message>
+    <message>
+        <source>Only a squad of several individuals can be divided or joined.</source>
+        <translation>لا يمكن تقسيم أو دمج إلا وحدة مكوّنة من عدة أفراد.</translation>
+    </message>
 </context>
 <context>
     <name>OutcomeLayout</name>
@@ -6626,10 +6698,6 @@ to see preview</source>
         <translation>ذلك المورد مخصَّص بالفعل.</translation>
     </message>
     <message>
-        <source>Cannot build there.</source>
-        <translation>لا يمكن البناء هناك.</translation>
-    </message>
-    <message>
         <source>No valid wall segments in that drag.</source>
         <translation>لا مقاطع سور صالحة في ذلك السحب.</translation>
     </message>
@@ -6660,6 +6728,22 @@ to see preview</source>
     <message>
         <source>No part of this wall can stand there.</source>
         <translation>لا يمكن لأي جزء من هذا السور أن يقوم هناك.</translation>
+    </message>
+    <message>
+        <source>This ground cannot be cleared to build on.</source>
+        <translation>لا يمكن تمهيد هذه الأرض للبناء.</translation>
+    </message>
+    <message>
+        <source>Nothing can be built on the water.</source>
+        <translation>لا يمكن بناء شيء على الماء.</translation>
+    </message>
+    <message>
+        <source>The ground here is too steep to build on.</source>
+        <translation>الأرض هنا شديدة الانحدار على البناء.</translation>
+    </message>
+    <message>
+        <source>That is beyond the edge of the battlefield.</source>
+        <translation>هذا خارج حدود ساحة المعركة.</translation>
     </message>
 </context>
 <context>

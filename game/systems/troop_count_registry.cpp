@@ -2,25 +2,15 @@
 
 #include "../core/ambient_session.h"
 #include "../core/component.h"
+#include "../core/entity.h"
 #include "../core/world.h"
-#include "../units/troop_config.h"
-#include "core/event_manager.h"
+#include "../units/squad.h"
 #include "units/spawn_type.h"
 
 namespace Game::Systems {
 
 auto TroopCountRegistry::instance() -> TroopCountRegistry& {
   return *Game::Session::ambient_services().troop_counts;
-}
-
-void TroopCountRegistry::initialize() {
-  m_unit_spawned_subscription =
-      Engine::Core::ScopedEventSubscription<Engine::Core::UnitSpawnedEvent>(
-          [this](const Engine::Core::UnitSpawnedEvent& e) { on_unit_spawned(e); });
-
-  m_unit_died_subscription =
-      Engine::Core::ScopedEventSubscription<Engine::Core::UnitDiedEvent>(
-          [this](const Engine::Core::UnitDiedEvent& e) { on_unit_died(e); });
 }
 
 void TroopCountRegistry::clear() {
@@ -35,46 +25,19 @@ auto TroopCountRegistry::get_troop_count(int owner_id) const -> int {
   return 0;
 }
 
-void TroopCountRegistry::on_unit_spawned(const Engine::Core::UnitSpawnedEvent& event) {
-  if (!Game::Units::is_troop_spawn(event.spawn_type)) {
-    return;
-  }
-
-  int const population_cost =
-      Game::Units::TroopConfig::instance().get_population_cost(event.spawn_type);
-  m_troop_counts[event.owner_id] += population_cost;
-}
-
-void TroopCountRegistry::on_unit_died(const Engine::Core::UnitDiedEvent& event) {
-  if (!Game::Units::is_troop_spawn(event.spawn_type)) {
-    return;
-  }
-
-  int const population_cost =
-      Game::Units::TroopConfig::instance().get_population_cost(event.spawn_type);
-  m_troop_counts[event.owner_id] -= population_cost;
-  if (m_troop_counts[event.owner_id] < 0) {
-    m_troop_counts[event.owner_id] = 0;
-  }
-}
-
-void TroopCountRegistry::rebuild_from_world(Engine::Core::World& world) {
+void TroopCountRegistry::rebuild_from_world(const Engine::Core::World& world) {
   m_troop_counts.clear();
 
-  for (auto [entity_id, unit] : world.view<Engine::Core::UnitComponent>()) {
-    (void)entity_id;
-    if (unit.health <= 0) {
-      continue;
+  world.for_each_entity([this, &world](const Engine::Core::Entity& entity) {
+    const auto* unit = world.try_get<Engine::Core::UnitComponent>(entity.get_id());
+    if (unit == nullptr || unit->health <= 0) {
+      return;
     }
-
-    if (!Game::Units::is_troop_spawn(unit.spawn_type)) {
-      continue;
+    if (!Game::Units::is_troop_spawn(unit->spawn_type)) {
+      return;
     }
-
-    int const population_cost =
-        Game::Units::TroopConfig::instance().get_population_cost(unit.spawn_type);
-    m_troop_counts[unit.owner_id] += population_cost;
-  }
+    m_troop_counts[unit->owner_id] += Game::Units::squad_population_cost(*unit);
+  });
 }
 
 } // namespace Game::Systems

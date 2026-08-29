@@ -7,6 +7,7 @@
 
 #include "../../core/ownership_constants.h"
 #include "../../game_config.h"
+#include "../../units/troop_config.h"
 #include "../nation_registry.h"
 #include "../production_service.h"
 #include "ai_attack_wave.h"
@@ -328,6 +329,8 @@ auto wants_expansion(const Game::Systems::AI::AIContext& ctx) -> bool {
 
 constexpr int k_food_reserve = 60;
 
+constexpr float k_worker_pop_share = 0.28F;
+
 auto compute_macro_targets(const Game::Systems::AI::AISnapshot& snapshot,
                            const Game::Systems::AI::AIContext& ctx,
                            int catapult_count)
@@ -348,10 +351,21 @@ auto compute_macro_targets(const Game::Systems::AI::AISnapshot& snapshot,
   }
 
   targets.builder_count = ctx.strategy_config.target_builder_count;
+
+  if (ctx.population_cap > 0) {
+    const int builder_population =
+        std::max(1,
+                 Game::Units::TroopConfig::instance().get_population_cost(
+                     Game::Units::TroopType::Builder));
+    const int worker_budget =
+        static_cast<int>(static_cast<float>(ctx.population_cap) * k_worker_pop_share);
+    targets.builder_count = std::clamp(
+        targets.builder_count, 1, std::max(1, worker_budget / builder_population));
+  }
   targets.barracks_count = ctx.strategy_config.desired_barracks_count;
   targets.marketplace_count = 1;
 
-  targets.farm_count = std::clamp(1 + (ctx.home_count / 2), 1, 6);
+  targets.farm_count = std::clamp(1 + (ctx.home_count / 2), 1, 8);
   targets.defense_tower_count = ctx.strategy_config.desired_defense_tower_count;
   targets.wall_segment_count = ctx.strategy_config.desired_wall_segment_count;
   targets.catapult_count = ctx.strategy_config.desired_catapult_count;
@@ -380,10 +394,13 @@ auto compute_macro_targets(const Game::Systems::AI::AISnapshot& snapshot,
     targets.farm_count = std::max(targets.farm_count, ctx.farm_count + 1);
   }
 
-  if (ctx.home_civilians_remaining == 0 && ctx.civilian_count == 0 &&
-      ctx.recruitment_manpower_available < cheapest_recruit_cost(ctx)) {
+  if (ctx.home_civilians_remaining == 0) {
+
     targets.home_count = std::max(targets.home_count, ctx.home_count + 2);
-    targets.raise_homes_first = true;
+    if (ctx.civilian_count == 0 &&
+        ctx.recruitment_manpower_available < cheapest_recruit_cost(ctx)) {
+      targets.raise_homes_first = true;
+    }
   }
   targets.barracks_count = std::max(targets.barracks_count, 1 + extra_barracks);
   targets.defense_tower_count =
@@ -579,7 +596,7 @@ void update_harass_unit_ids(const Game::Systems::AI::AISnapshot& snapshot,
                      snapshot.friendly_units.end(),
                      [&](const Game::Systems::AI::EntitySnapshot& entity) {
                        return entity.id == unit_id &&
-                              Game::Systems::AI::is_combat_role_unit(entity) &&
+                              Game::Systems::AI::marches_with_the_army(entity) &&
                               !Game::Systems::AI::is_reserved_unit(entity.id, ctx);
                      });
     if (it != snapshot.friendly_units.end()) {
@@ -593,7 +610,7 @@ void update_harass_unit_ids(const Game::Systems::AI::AISnapshot& snapshot,
   std::vector<const Game::Systems::AI::EntitySnapshot*> candidates;
   candidates.reserve(snapshot.friendly_units.size());
   for (const auto& entity : snapshot.friendly_units) {
-    if (!Game::Systems::AI::is_combat_role_unit(entity) ||
+    if (!Game::Systems::AI::marches_with_the_army(entity) ||
         Game::Systems::AI::is_reserved_unit(entity.id, ctx)) {
       continue;
     }
@@ -741,6 +758,8 @@ void AIReasoner::update_context(const AISnapshot& snapshot, AIContext& ctx) {
   ctx.combat_units = 0;
   ctx.melee_count = 0;
   ctx.ranged_count = 0;
+  ctx.cavalry_count = 0;
+  ctx.siege_count = 0;
   ctx.builder_count = 0;
   ctx.civilian_count = 0;
   ctx.damaged_units_count = 0;
@@ -775,6 +794,8 @@ void AIReasoner::update_context(const AISnapshot& snapshot, AIContext& ctx) {
   ctx.outpost_barracks_count = 0;
   ctx.outpost_home_count = 0;
   ctx.expansion_construction_pending = false;
+  ctx.population_used = 0;
+  ctx.population_cap = snapshot.max_troops_per_player;
   if (snapshot.max_troops_per_player > 0) {
     ctx.max_troops_per_player = snapshot.max_troops_per_player;
   }
@@ -835,6 +856,8 @@ void AIReasoner::update_context(const AISnapshot& snapshot, AIContext& ctx) {
     }
 
     ctx.total_units++;
+    ctx.population_used +=
+        Game::Units::TroopConfig::instance().get_population_cost(entity.spawn_type);
 
     if (entity.is_commander) {
       ctx.commander_ids.push_back(entity.id);
@@ -853,6 +876,11 @@ void AIReasoner::update_context(const AISnapshot& snapshot, AIContext& ctx) {
       if (troop_type_opt) {
         auto troop_type = *troop_type_opt;
         if (troop_type == Game::Units::TroopType::Builder) {
+        } else if (Game::Units::is_cavalry(entity.spawn_type)) {
+          ctx.cavalry_count++;
+        } else if (entity.spawn_type == Game::Units::SpawnType::Catapult ||
+                   entity.spawn_type == Game::Units::SpawnType::Ballista) {
+          ctx.siege_count++;
         } else if (ctx.nation->is_ranged_unit(troop_type)) {
           ctx.ranged_count++;
         } else if (ctx.nation->is_melee_unit(troop_type)) {

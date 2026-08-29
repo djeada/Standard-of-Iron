@@ -51,11 +51,9 @@ public:
     bool turn_right = false;
     bool run = false;
     bool primary_action = false;
-    bool heavy_action_requested = false;
     bool secondary_action = false;
     bool dodge_requested = false;
     bool jump_requested = false;
-    bool special_action_requested = false;
     bool shield_bash_requested = false;
     bool vanguard_rush_requested = false;
     bool second_wind_requested = false;
@@ -77,7 +75,6 @@ public:
   void key_up(int key);
   void primary_action_down();
   void primary_action_up();
-  void request_heavy_action();
   void secondary_action_down();
   void secondary_action_up();
   void mouse_move(qreal dx, qreal dy);
@@ -104,7 +101,7 @@ public:
                                 int local_owner_id) const;
   void toggle_weapon_stance(Engine::Core::World& world,
                             Engine::Core::EntityID commander_id,
-                            int local_owner_id);
+                            int local_owner_id) const;
   void cycle_lock_on_target(Engine::Core::World& world,
                             Engine::Core::EntityID commander_id,
                             int local_owner_id);
@@ -242,7 +239,6 @@ private:
   std::uint8_t m_observed_action_hit_count = 0;
   float m_jump_timer = 0.0F;
   bool m_jump_safe_position_valid = false;
-  bool m_jump_followup_pending = false;
   QVector3D m_jump_last_walkable_position{0.0F, 0.0F, 0.0F};
 
   float m_combo_miss_timer = 0.0F;
