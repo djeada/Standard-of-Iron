@@ -69,14 +69,30 @@ CAMPAIGN_MAPS = (
 
 
 BUILDING_SIZES = {
-    "barracks": (4.0, 4.0),
+    "barracks": (8.65, 4.20),
     "home": (3.0, 3.0),
     "marketplace": (3.0, 3.0),
     "defense_tower": (3.0, 3.0),
-    "temple": (3.0, 3.0),
-    "wall_segment": (2.0, 2.0),
+    "temple": (3.17, 3.0),
+    "wall_segment": (2.02, 2.0),
     "wall_gate": (6.0, 2.0),
 }
+"""The space a building actually occupies, in world units.
+
+These used to be the *navigation* footprints, which are not what a building
+looks like: a barracks navigates as 4.0 x 4.0 but renders as 8.65 x 4.20, so
+the generator cleared less than half the hall and dropped campfires, towers and
+homes inside it.  The rendered bodies are ``s_building_bodies`` in
+game/systems/building_collision_registry.cpp; keep these in step with it.
+
+Each entry is the larger of the rendered body and the clearance the generator
+already demanded, so fixing the under-measured barracks does not quietly let
+everything else pack tighter than it does today.  ``wall_gate`` stays at
+``GATE_SPAN`` on purpose -- a gateway needs a clear opening much wider than the
+2.02 x 0.76 body of the gate itself.  Every barracks in ``assets/maps`` is
+axis-aligned, so the un-rotated body is exact; a rotated one would need the
+engine's own axis-aligned expansion.
+"""
 
 
 GATE_SPAN = 6.0

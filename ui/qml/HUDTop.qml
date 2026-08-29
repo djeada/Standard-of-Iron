@@ -348,9 +348,10 @@ Item {
                     hoverEnabled: enabled
                     cursorShape: enabled ? Qt.PointingHandCursor : Qt.ArrowCursor
 
-                    ToolTip.visible: containsMouse
-                    ToolTip.delay: Design.Metrics.tooltipDelay
-                    ToolTip.text: topRoot.missionStaged ? (game.mission.active_hint !== "" ? game.mission.active_hint + "\n" + qsTr("Click to look at the objective.") : qsTr("Click to look at the objective.")) : ""
+                    Design.IronTooltip {
+                        visible: objectiveFocusArea.containsMouse
+                        text: topRoot.missionStaged ? (game.mission.active_hint !== "" ? game.mission.active_hint + "\n" + qsTr("Click to look at the objective.") : qsTr("Click to look at the objective.")) : ""
+                    }
 
                     onClicked: game.mission.focus_active_stage()
                 }
@@ -367,9 +368,10 @@ Item {
                     tone: Design.Theme.warning
                     text: Design.Icons.spectator + " " + qsTr("SPECTATOR")
 
-                    ToolTip.visible: spectatorHover.hovered
-                    ToolTip.delay: Design.Metrics.tooltipDelay
-                    ToolTip.text: qsTr("Watching a CPU-only match. You cannot issue commands.")
+                    Design.IronTooltip {
+                        visible: spectatorHover.hovered
+                        text: qsTr("Watching a CPU-only match. You cannot issue commands.")
+                    }
 
                     HoverHandler {
                         id: spectatorHover
@@ -443,9 +445,10 @@ Item {
                         compact: true
                     }
 
-                    ToolTip.visible: ownersHover.hovered
-                    ToolTip.delay: Design.Metrics.tooltipDelay
-                    ToolTip.text: topRoot.owners_tooltip()
+                    Design.IronTooltip {
+                        visible: ownersHover.hovered
+                        text: topRoot.owners_tooltip()
+                    }
 
                     HoverHandler {
                         id: ownersHover
@@ -768,9 +771,10 @@ Item {
             MouseArea {
                 id: minimapMouse
 
-                ToolTip.visible: containsMouse
-                ToolTip.delay: Design.Metrics.tooltipDelay
-                ToolTip.text: qsTr("Left click moves the camera, right click orders selected troops.\nVisible: currently scouted, enemies shown.\nExplored: seen before, terrain only.\nUnseen: never scouted.")
+                Design.IronTooltip {
+                    visible: minimapMouse.containsMouse
+                    text: qsTr("Left click moves the camera, right click orders selected troops.\nVisible: currently scouted, enemies shown.\nExplored: seen before, terrain only.\nUnseen: never scouted.")
+                }
 
                 function dispatch(button, x, y) {
                     if (!topRoot.game_ready())

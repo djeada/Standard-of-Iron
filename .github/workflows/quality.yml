@@ -95,6 +95,7 @@ jobs:
           python scripts/validate_shader_uniforms.py
           python scripts/validate_opengl_requirements.py
           python scripts/validate_qrc_resources.py
+          python scripts/fix-map-prop-overlaps.py --check --quiet
 
   # The three portability passes that need no compiler and no Qt. The fourth
   # one (Clang + libc++ over every translation unit) needs a configured build

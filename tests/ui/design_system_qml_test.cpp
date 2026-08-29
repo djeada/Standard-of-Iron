@@ -2,6 +2,8 @@
 
 #include <QFont>
 #include <QFontMetrics>
+#include <QMutex>
+#include <QMutexLocker>
 #include <QQmlEngine>
 #include <QQuickItem>
 #include <QQuickWindow>
@@ -80,6 +82,76 @@ public:
     return &probe;
   }
 };
+
+class WarningProbe : public QObject {
+  Q_OBJECT
+
+public:
+  explicit WarningProbe(QObject* parent = nullptr)
+      : QObject(parent) {}
+
+  Q_INVOKABLE void start() {
+    QMutexLocker const lock(&s_mutex);
+    s_messages.clear();
+    if (!s_recording) {
+      s_previous = qInstallMessageHandler(&WarningProbe::handle);
+      s_recording = true;
+    }
+  }
+
+  Q_INVOKABLE void stop() {
+    QMutexLocker const lock(&s_mutex);
+    if (!s_recording) {
+      return;
+    }
+    qInstallMessageHandler(s_previous);
+    s_previous = nullptr;
+    s_recording = false;
+  }
+
+  Q_INVOKABLE static QStringList messages() {
+    QMutexLocker const lock(&s_mutex);
+    return s_messages;
+  }
+
+  Q_INVOKABLE static int count() {
+    QMutexLocker const lock(&s_mutex);
+    return static_cast<int>(s_messages.size());
+  }
+
+  static void
+  handle(QtMsgType type, const QMessageLogContext& context, const QString& message) {
+    {
+      QMutexLocker const lock(&s_mutex);
+      if (s_recording && (type == QtWarningMsg || type == QtCriticalMsg)) {
+        s_messages.append(message);
+      }
+    }
+    if (s_previous != nullptr) {
+      s_previous(type, context, message);
+    }
+  }
+
+  static WarningProbe* create(QQmlEngine* engine, QJSEngine* scriptEngine) {
+    Q_UNUSED(engine)
+    Q_UNUSED(scriptEngine)
+
+    static WarningProbe probe;
+    QQmlEngine::setObjectOwnership(&probe, QQmlEngine::CppOwnership);
+    return &probe;
+  }
+
+private:
+  static QMutex s_mutex;
+  static QStringList s_messages;
+  static bool s_recording;
+  static QtMessageHandler s_previous;
+};
+
+QMutex WarningProbe::s_mutex;
+QStringList WarningProbe::s_messages;
+bool WarningProbe::s_recording = false;
+QtMessageHandler WarningProbe::s_previous = nullptr;
 
 class CommanderPortraitStub : public QQuickItem {
   Q_OBJECT
@@ -172,6 +244,8 @@ public slots:
         "StandardOfIron", 1, 0, "CommanderPortraitView");
     qmlRegisterSingletonType<GlyphProbe>(
         "StandardOfIron.TestSupport", 1, 0, "GlyphProbe", &GlyphProbe::create);
+    qmlRegisterSingletonType<WarningProbe>(
+        "StandardOfIron.TestSupport", 1, 0, "WarningProbe", &WarningProbe::create);
   }
 
   void qmlEngineAvailable(QQmlEngine* engine) {

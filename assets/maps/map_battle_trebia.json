@@ -2609,7 +2609,7 @@
             "player_id": 1,
             "type": "defense_tower",
             "x": 306.66,
-            "z": 509
+            "z": 507.33
         },
         {
             "authored": true,
@@ -2742,7 +2742,7 @@
             "player_id": 2,
             "type": "home",
             "x": 144.38,
-            "z": 41.730000000000004
+            "z": 41.52
         },
         {
             "authored": true,

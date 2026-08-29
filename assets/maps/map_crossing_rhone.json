@@ -4939,8 +4939,8 @@
             "nation": "roman_republic",
             "player_id": 3,
             "type": "roman_veteran_consul",
-            "x": 416.55,
-            "z": 601
+            "x": 415.46,
+            "z": 601.16
         }
     ],
     "starting_resources": {
@@ -5165,7 +5165,7 @@
             "player_id": 2,
             "type": "home",
             "x": 361.7,
-            "z": 58.300000000000004
+            "z": 57.33
         },
         {
             "authored": true,

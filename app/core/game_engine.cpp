@@ -1500,7 +1500,10 @@ void GameEngine::start_skirmish_internal(const QString& map_path,
   if (m_victory_service) {
     m_victory_service->reset();
   }
-  m_enemy_troops_defeated = 0;
+  if (m_enemy_troops_defeated != 0) {
+    m_enemy_troops_defeated = 0;
+    emit enemy_troops_defeated_changed();
+  }
 
   if (!m_runtime.initialized) {
     ensure_initialized();

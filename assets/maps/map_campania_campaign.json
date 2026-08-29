@@ -1903,8 +1903,8 @@
             "max_population": -1,
             "player_id": 2,
             "type": "archer",
-            "x": 255.88,
-            "z": 460.58
+            "x": 254.63,
+            "z": 460.69
         },
         {
             "max_population": -1,
@@ -1924,8 +1924,8 @@
             "max_population": -1,
             "player_id": 3,
             "type": "spearman",
-            "x": 232.62,
-            "z": 60.480000000000004
+            "x": 232.83,
+            "z": 60.4
         },
         {
             "max_population": -1,
@@ -2202,7 +2202,7 @@
             "player_id": 1,
             "type": "carthage_sword_commander",
             "x": 322.0,
-            "z": 238.0
+            "z": 239.02
         },
         {
             "max_population": -1,
@@ -2549,8 +2549,8 @@
             "nation": "roman_republic",
             "player_id": 2,
             "type": "defense_tower",
-            "x": 463.86,
-            "z": 150
+            "x": 462.16,
+            "z": 150.0
         },
         {
             "authored": true,

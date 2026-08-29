@@ -3177,14 +3177,6 @@ Dies ist vielleicht ein Scharmützel, oder es wurden keine Ziele festgelegt.</tr
         <translation>Stelle Haltung und Ausdauer wieder her und sammle dich für den nächsten Schlagabtausch.</translation>
     </message>
     <message>
-        <source>Shield Bash</source>
-        <translation>Schildstoß</translation>
-    </message>
-    <message>
-        <source>Guard-gated stagger burst that punishes enemies crowding your front.</source>
-        <translation>Deckungsgebundener Taumelstoß, der Feinde bestraft, die deine Front bedrängen.</translation>
-    </message>
-    <message>
         <source>Command Aura</source>
         <translation>Befehlsaura</translation>
     </message>
@@ -3367,6 +3359,14 @@ Dies ist vielleicht ein Scharmützel, oder es wurden keine Ziele festgelegt.</tr
     <message>
         <source>The aura is not ready yet.</source>
         <translation>Die Aura ist noch nicht bereit.</translation>
+    </message>
+    <message>
+        <source>Weapon Special / Shield Bash</source>
+        <translation>Waffentechnik / Schildstoß</translation>
+    </message>
+    <message>
+        <source>Use your weapon technique, or hold guard for a shield-bash stagger burst.</source>
+        <translation>Setze deine Waffentechnik ein oder halte die Deckung für einen betäubenden Schildstoß.</translation>
     </message>
 </context>
 <context>
@@ -7405,10 +7405,6 @@ Baumeister ernten es als Nahrung, die Zivilisten rekrutiert</translation>
         <translation>Anvisiertes Ziel wechseln</translation>
     </message>
     <message>
-        <source>Special action</source>
-        <translation>Sonderaktion</translation>
-    </message>
-    <message>
         <source>Vanguard rush</source>
         <translation>Vorhutsturm</translation>
     </message>
@@ -7540,6 +7536,22 @@ Baumeister ernten es als Nahrung, die Zivilisten rekrutiert</translation>
         <source>Hauling a load - cannot be interrupted</source>
         <translation>Zieht eine Last - kann nicht unterbrochen werden</translation>
     </message>
+    <message>
+        <source>Heavy attack</source>
+        <translation>Schwerer Angriff</translation>
+    </message>
+    <message>
+        <source>Branches or finishes the current commander combo</source>
+        <translation>Verzweigt die aktuelle Kommandanten-Combo oder schließt sie ab</translation>
+    </message>
+    <message>
+        <source>Weapon special</source>
+        <translation>Waffentechnik</translation>
+    </message>
+    <message>
+        <source>Use while guarding to shield bash</source>
+        <translation>Während der Deckung einsetzen für einen Schildstoß</translation>
+    </message>
 </context>
 <context>
     <name>RpgFpvOverlay</name>
@@ -7580,10 +7592,6 @@ Baumeister ernten es als Nahrung, die Zivilisten rekrutiert</translation>
         <translation>KLINGE  ·  X</translation>
     </message>
     <message>
-        <source>BASH</source>
-        <translation>STOSS</translation>
-    </message>
-    <message>
         <source>RUSH</source>
         <translation>ANSTURM</translation>
     </message>
@@ -7594,6 +7602,10 @@ Baumeister ernten es als Nahrung, die Zivilisten rekrutiert</translation>
     <message>
         <source>READY</source>
         <translation>BEREIT</translation>
+    </message>
+    <message>
+        <source>SPECIAL</source>
+        <translation>SPEZIAL</translation>
     </message>
 </context>
 <context>

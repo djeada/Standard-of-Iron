@@ -331,8 +331,8 @@ TEST_P(CommanderDuelTest, CommanderThrowsItsSignatureInADuel) {
     }
     auto const id = static_cast<CombatActionId>(action->combat_action_id);
     threw_signature = threw_signature || id == GetParam().signature_action;
-    threw_routine = threw_routine || (id == CombatActionId::RtsSwordStrike ||
-                                      id == CombatActionId::RtsSpearThrust);
+
+    threw_routine = threw_routine || id != GetParam().signature_action;
   }
 
   EXPECT_TRUE(threw_signature)

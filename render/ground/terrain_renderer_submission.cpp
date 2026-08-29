@@ -8,6 +8,7 @@
 #include <cmath>
 #include <cstddef>
 
+#include "game/map/visibility_service.h"
 #include "render/gl/shader.h"
 #include "render/gl/texture.h"
 #include "render/scene_renderer.h"

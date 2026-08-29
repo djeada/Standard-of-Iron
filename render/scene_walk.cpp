@@ -914,10 +914,26 @@ void Renderer::submit_unit_entry(
                         return soldier.cull_reason !=
                                Render::Profiling::SoldierCullReason::None;
                       });
+      std::size_t prepared_requests = 0;
+      std::size_t prepared_visible_requests = 0;
+      if (prepared != nullptr) {
+        auto const requests = prepared->bodies.requests();
+        prepared_requests = requests.size();
+        prepared_visible_requests = static_cast<std::size_t>(
+            std::count_if(requests.begin(), requests.end(), [](const auto& request) {
+              return request.pass !=
+                     Render::Creature::Pipeline::RenderPassIntent::Shadow;
+            }));
+      }
+
+      const bool prepared_only_casts_shadows = prepared != nullptr &&
+                                               prepared_requests > 0 &&
+                                               prepared_visible_requests == 0;
+
       if (entry.unit != nullptr && entry.unit->health > 0 &&
           probe.rigged_body_count() == 0U &&
           unit_should_emit_rigged_body(entry.unit->spawn_type) && !tier_is_minimal &&
-          !all_published_soldiers_culled) {
+          !all_published_soldiers_culled && !prepared_only_casts_shadows) {
         static std::mutex warning_mutex;
         static std::unordered_set<std::string> warned_units;
         const std::string warning_key =
@@ -932,7 +948,8 @@ void Renderer::submit_unit_entry(
               << QStringLiteral(
                      "Renderer: unit renderer emitted no rigged body; "
                      "entity=%1 renderer='%2' spawn='%3' selected=%4 hovered=%5 "
-                     "combat=%6 distance_sq=%7 batching=%8 lod_tier=%9")
+                     "combat=%6 distance_sq=%7 batching=%8 lod_tier=%9 "
+                     "prepared=%10 requests=%11 visible_requests=%12")
                      .arg(entry.entity_id)
                      .arg(QString::fromStdString(entry.renderer_key))
                      .arg(Game::Units::spawn_typeToQString(entry.unit->spawn_type))
@@ -941,7 +958,10 @@ void Renderer::submit_unit_entry(
                      .arg(static_cast<int>(entry.combat_active))
                      .arg(entry.distance_sq)
                      .arg(static_cast<int>(use_batching))
-                     .arg(plan.lod_tier);
+                     .arg(plan.lod_tier)
+                     .arg(static_cast<int>(prepared != nullptr))
+                     .arg(prepared_requests)
+                     .arg(prepared_visible_requests);
         }
       }
 
