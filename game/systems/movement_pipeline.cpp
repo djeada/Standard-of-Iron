@@ -11,6 +11,8 @@ void MovementPipeline::update(Engine::Core::World* world, float delta_time) {
   m_route_follow.update(world, delta_time);
   m_avoidance.update(world, delta_time);
   m_motor.update(world, delta_time);
+
+  m_contact.update(world, delta_time);
   m_traversal_layout.update(world, delta_time);
 }
 

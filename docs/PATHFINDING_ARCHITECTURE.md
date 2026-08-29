@@ -281,6 +281,59 @@ That is intentional. If enemy units were written into the navigation grid, a mov
 
 If we later need stronger crowd avoidance, add a separate transient occupancy or influence layer. Do not add unit IDs or enemy/friendly values to `NavigationGrid::CellValue`.
 
+## What Keeps Bodies Out Of Each Other
+
+Since the grid knows nothing about units, something beside it has to. Two stages
+do, and they are deliberately kept apart:
+
+| Stage                  | File                                      | Job                                                                                         |
+| ---------------------- | ----------------------------------------- | ------------------------------------------------------------------------------------------- |
+| `LocalAvoidanceSystem` | `game/systems/local_avoidance_system.cpp` | Traffic. Decides how fast a body may go and whether it leans aside. Moves nothing.          |
+| `BodyContactSystem`    | `game/systems/body_contact_system.cpp`    | Contact. Pulls bodies that ended up inside each other apart. The only authority on overlap. |
+
+`MovementPipeline` runs route following, then avoidance, then the motor, then
+contact, then the traversal layout — contact after the motor, because only then
+is it known where bodies actually ended up.
+
+**Avoidance is two rules and no state.** For each neighbour in front and inside
+the lane — the two body radii plus a little personal space — a body slows in
+proportion to how close the neighbour is (squared, so only imminent traffic
+really bites) and leans towards the side the neighbour is not on. Dead ahead is
+the head-on case, and there both bodies lean to their own right, which is
+opposite in world space, so they pass. There is no velocity-obstacle search, no
+candidate sampling, and nothing remembered between ticks.
+
+Three rules bound it, and each exists for a reason:
+
+- **A body is never brought to a stop by traffic.** Speed is floored at
+  `k_min_speed_fraction`. Soldiers are something to flow around, never a wall;
+  only terrain stops anyone, and that is the motor's sweep.
+- **Traffic rules apply to your own side only.** An enemy is something to fight
+  or be stopped by. Giving way to one lets a body slide through the line it was
+  meant to meet and end up deep in hostile ground.
+- **The lane is the two bodies, not their formation envelopes.** An envelope is
+  metres across for a squad; braking and leaning on that makes every body react
+  to things it was never going to touch, and fans a stalled group sideways along
+  whatever it is queued at instead of pressing.
+
+**Contact is one symmetric relaxation.** Overlapping pairs are pushed apart by
+half the overlap each, and every push is probed against `Walkability` first, so
+a crowd can never shove a body into a wall or off a bridge; a push that would
+land somewhere unstandable is dropped and the overlap survives the tick, which
+is always recoverable. Only a body that is _under way_ is pushed — a builder at
+its site, a worker at a resource, a rank holding its ground, a duellist in a
+melee lock all anchor the pair, and whoever is moving takes the whole correction
+and goes around.
+
+Neither stage keeps a spatial structure of its own. Both query
+`Engine::Core::WorldSpatialIndex`, which is the one dynamic index over units.
+
+The number to watch is `SteeringFacts::body_overlap`, which the contact pass
+records and the movement trace carries; `MovementFindingKind::BodyOverlap` fires
+when bodies are left standing inside one another, and
+`tests/headless/movement_quality_gate_test.cpp` budgets it across the eight
+capture scenarios.
+
 ## Terrain Rules
 
 Static terrain is converted into cell values by `Pathfinding::terrain_cell_value()`.

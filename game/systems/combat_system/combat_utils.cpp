@@ -21,7 +21,8 @@
 namespace Game::Systems::Combat {
 
 namespace {
-constexpr float k_combat_query_cell_size = 15.0F;
+
+constexpr float k_combat_query_stale_margin = 1.0F;
 
 constexpr int k_bypass_arc_samples = 12;
 
@@ -30,13 +31,12 @@ constexpr float k_min_bypass_standoff = 0.75F;
 constexpr float k_bypass_clearance_margin = 0.75F;
 } // namespace
 
-CombatQueryContext::CombatQueryContext()
-    : unit_grid(k_combat_query_cell_size) {
+CombatQueryContext::CombatQueryContext() {
 }
 
 void CombatQueryContext::clear() {
   units.clear();
-  unit_grid.clear();
+  world = nullptr;
   nearby_unit_ids.clear();
   m_present_owner_ids.clear();
 
@@ -175,14 +175,10 @@ void rebuild_combat_query_context(Engine::Core::World* world,
     if (building) {
       continue;
     }
-
-    auto* transform = entity.get_component<Engine::Core::TransformComponent>();
-    if (transform != nullptr) {
-      query_context.unit_grid.insert(
-          entity.get_id(), transform->position.x, transform->position.z);
-    }
   }
 
+  query_context.world = world;
+  world->spatial_index().refresh(*world);
   query_context.rebuild_hostility_table();
 }
 
@@ -582,8 +578,22 @@ auto find_nearest_enemy(Engine::Core::Entity* unit,
   Engine::Core::Entity* nearest_enemy = nullptr;
   float nearest_dist_sq = max_range * max_range;
   auto& nearby_ids = query_context.nearby_unit_ids;
-  query_context.unit_grid.get_entities_in_range(
-      unit_transform->position.x, unit_transform->position.z, max_range, nearby_ids);
+  nearby_ids.clear();
+  if (query_context.world != nullptr) {
+
+    query_context.world->spatial_index().for_each_in_radius(
+        unit_transform->position.x,
+        unit_transform->position.z,
+        max_range + k_combat_query_stale_margin,
+        [&nearby_ids](const Engine::Core::WorldSpatialIndex::Entry& entry) {
+          if (entry.is(Engine::Core::WorldSpatialIndex::k_building) ||
+              entry.is(Engine::Core::WorldSpatialIndex::k_pending_removal) ||
+              !entry.is(Engine::Core::WorldSpatialIndex::k_alive)) {
+            return;
+          }
+          nearby_ids.push_back(entry.id);
+        });
+  }
 
   const int attacker_owner_id = unit_comp->owner_id;
 

@@ -63,6 +63,7 @@ TEST_P(MovementQualityGateTest, AScenarioWalksWithoutFightingItself) {
   EXPECT_LE(static_cast<int>(analysis.findings.size()), budget.max_findings)
       << name << " produced " << analysis.findings.size()
       << " movement findings, budget " << budget.max_findings << ":\n"
+      << Engine::Core::format_movement_findings(analysis)
       << Engine::Core::format_movement_summary(analysis);
 }
 
@@ -100,6 +101,11 @@ TEST_P(MovementQualityGateTest, NobodyIsLeftPressingIntoGeometry) {
       << name << ": a body ended up inside geometry";
   EXPECT_EQ(count_of(analysis, MovementFindingKind::WaypointRegression), 0)
       << name << ": a route walked backwards through its own waypoints";
+  EXPECT_EQ(count_of(analysis, MovementFindingKind::BodyOverlap), 0)
+      << Game::BattlefieldCapture::scenario_name(GetParam().scenario)
+      << ": bodies were left standing inside one another\n"
+      << Engine::Core::format_movement_findings(analysis);
+
   EXPECT_EQ(count_of(analysis, MovementFindingKind::BlockedStepStreak), 0)
       << name << ": a body pressed into something it could not pass";
 }
@@ -108,11 +114,11 @@ INSTANTIATE_TEST_SUITE_P(
     CaptureScenarios,
     MovementQualityGateTest,
     ::testing::Values(
-        ScenarioBudget{Game::BattlefieldCapture::ScenarioId::InfantryApproach20v20, 90},
-        ScenarioBudget{Game::BattlefieldCapture::ScenarioId::ArchersVsInfantry, 90},
-        ScenarioBudget{Game::BattlefieldCapture::ScenarioId::MixedFormation, 90},
-        ScenarioBudget{Game::BattlefieldCapture::ScenarioId::CasualtyReflow, 90},
-        ScenarioBudget{Game::BattlefieldCapture::ScenarioId::CavalryCharge, 90},
-        ScenarioBudget{Game::BattlefieldCapture::ScenarioId::NarrowPassage, 90},
-        ScenarioBudget{Game::BattlefieldCapture::ScenarioId::CommanderInLine, 90},
-        ScenarioBudget{Game::BattlefieldCapture::ScenarioId::BotSkirmish, 90}));
+        ScenarioBudget{Game::BattlefieldCapture::ScenarioId::InfantryApproach20v20, 20},
+        ScenarioBudget{Game::BattlefieldCapture::ScenarioId::ArchersVsInfantry, 20},
+        ScenarioBudget{Game::BattlefieldCapture::ScenarioId::MixedFormation, 20},
+        ScenarioBudget{Game::BattlefieldCapture::ScenarioId::CasualtyReflow, 20},
+        ScenarioBudget{Game::BattlefieldCapture::ScenarioId::CavalryCharge, 20},
+        ScenarioBudget{Game::BattlefieldCapture::ScenarioId::NarrowPassage, 20},
+        ScenarioBudget{Game::BattlefieldCapture::ScenarioId::CommanderInLine, 20},
+        ScenarioBudget{Game::BattlefieldCapture::ScenarioId::BotSkirmish, 20}));

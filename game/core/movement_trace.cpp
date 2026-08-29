@@ -240,10 +240,8 @@ auto to_json(const MovementTroopSample& s) -> std::string {
   w.field("blocked_steps", s.blocked_steps);
   w.field("repaths", s.repath_count);
   w.field("repath_reason", static_cast<std::uint32_t>(s.repath_reason));
-  w.field("queue_owner", static_cast<std::uint64_t>(s.queue_owner));
   w.field("neighbors", s.neighbor_count);
-  w.field("ttc", s.nearest_time_to_collision);
-  w.field("side", static_cast<int>(s.passing_side));
+  w.field("body_overlap", s.body_overlap);
   w.field("solver", static_cast<std::uint32_t>(s.solver_result));
   w.field("envelope", s.envelope_radius);
   w.field("body_radius", s.soldier_body_radius);
@@ -389,14 +387,8 @@ auto parse_troop_sample(const std::string& line, MovementTroopSample& out) -> bo
   read_small(line, "blocked_steps", out.blocked_steps);
   read_small(line, "repaths", out.repath_count);
   read_small(line, "repath_reason", out.repath_reason);
-  std::uint64_t queue_owner = 0;
-  read_u64(line, "queue_owner", queue_owner);
-  out.queue_owner = static_cast<EntityID>(queue_owner);
   read_small(line, "neighbors", out.neighbor_count);
-  read_float(line, "ttc", out.nearest_time_to_collision);
-  int side = 0;
-  read_int(line, "side", side);
-  out.passing_side = static_cast<std::int8_t>(side);
+  read_float(line, "body_overlap", out.body_overlap);
   read_small(line, "solver", out.solver_result);
   read_float(line, "envelope", out.envelope_radius);
   read_float(line, "body_radius", out.soldier_body_radius);
