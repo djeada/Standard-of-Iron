@@ -24,8 +24,8 @@
   "spawns": [
     {
       "type": "roman_field_commander",
-      "x": 13,
-      "z": 34,
+      "x": 13.0,
+      "z": 33.24,
       "player_id": 1,
       "team_id": 1,
       "nation": "roman_republic"

@@ -62,7 +62,7 @@ protected:
     Game::Map::TerrainService::instance().clear();
   }
 
-  auto make_match() -> SessionContext& {
+  auto make_match(bool seat_opponent = true) -> SessionContext& {
     m_session = std::make_unique<SessionContext>();
     auto& session = *m_session;
     session.world().set_presentation_enabled(false);
@@ -101,7 +101,9 @@ protected:
     }
 
     seat_camp(session, k_left, 20);
-    seat_camp(session, k_right, k_map_size - 20);
+    if (seat_opponent) {
+      seat_camp(session, k_right, k_map_size - 20);
+    }
 
     if (auto* ai = session.world().get_system<Game::Systems::AISystem>()) {
       ai->reinitialize();
@@ -501,7 +503,7 @@ TEST_F(AiSkirmishOpeningTest, AWorkerThatCannotReachItsSiteGivesUpInsteadOfHangi
 }
 
 TEST_F(AiSkirmishOpeningTest, TheComputerKeepsGatheringAfterItsOpeningStockIsGone) {
-  auto& session = make_match();
+  auto& session = make_match(false);
   auto& economy = session.economy();
 
   const auto gathered = [&economy]() {

@@ -2008,8 +2008,8 @@
             "nation": "roman_republic",
             "player_id": 2,
             "type": "home",
-            "x": 531,
-            "z": 322.40000000000003
+            "x": 531.0,
+            "z": 322.53
         },
         {
             "authored": true,

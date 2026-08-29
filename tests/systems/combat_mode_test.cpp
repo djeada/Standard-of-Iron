@@ -1700,11 +1700,14 @@ TEST_F(CombatModeTest, RtsCommanderUsesTheSameAdvancedActionCatalog) {
   auto* attacker_unit = attacker->add_component<UnitComponent>(100, 100, 1.0F, 12.0F);
   attacker_unit->owner_id = 1;
   attacker_unit->spawn_type = Game::Units::SpawnType::Knight;
+
+  attacker_unit->render_individuals_per_unit_override = 1;
   auto* attack = attacker->add_component<AttackComponent>();
   attack->can_melee = true;
   attack->current_mode = AttackComponent::CombatMode::Melee;
   attack->cooldown = 0.0F;
-  attack->melee_cooldown = 0.0F;
+
+  attack->melee_cooldown = 1.0F;
   attack->time_since_last = 1.0F;
   attack->in_melee_lock = true;
   auto* commander = attacker->add_component<CommanderComponent>();
