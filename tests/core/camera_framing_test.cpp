@@ -76,7 +76,8 @@ TEST_F(CameraFramingTest, LoadingAMapMakesTheResetFollowThatMapRatherThanTheDefa
 
 TEST_F(CameraFramingTest, TiltingUpRaisesTheCameraAndTiltingDownLowersIt) {
   Game::Systems::CameraService service(
-      Game::Session::SessionContext::active().visibility());
+      Game::Session::SessionContext::active().visibility(),
+      Game::Session::SessionContext::active().terrain());
   Render::GL::Camera camera;
   camera.set_rts_view(QVector3D(0.0F, 0.0F, 0.0F), 40.0F, 48.0F, 225.0F);
   const float opening_height = height_above_target(camera);
@@ -97,7 +98,8 @@ TEST_F(CameraFramingTest, TiltingUpRaisesTheCameraAndTiltingDownLowersIt) {
 
 TEST_F(CameraFramingTest, HoldingShiftTiltsFurtherInTheSameDirection) {
   Game::Systems::CameraService service(
-      Game::Session::SessionContext::active().visibility());
+      Game::Session::SessionContext::active().visibility(),
+      Game::Session::SessionContext::active().terrain());
   Render::GL::Camera plain;
   Render::GL::Camera shifted;
   plain.set_rts_view(QVector3D(0.0F, 0.0F, 0.0F), 40.0F, 48.0F, 225.0F);

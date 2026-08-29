@@ -5,7 +5,9 @@
 #include <QVector3D>
 
 #include <array>
+#include <functional>
 #include <mutex>
+#include <utility>
 
 namespace Render::GL {
 
@@ -18,8 +20,19 @@ inline constexpr float k_default_aspect_ratio = 16.0F / 9.0F;
 inline constexpr float k_default_far_plane = 200.0F;
 inline constexpr float k_default_ortho_size = 10.0F;
 inline constexpr float k_default_pitch_min = -85.0F;
-inline constexpr float k_min_rts_distance = 1.0F;
+inline constexpr float k_default_pitch_max = -5.0F;
+inline constexpr float k_min_rts_distance = 4.0F;
 inline constexpr float k_max_rts_distance = 85.0F;
+
+inline constexpr float k_rts_pitch_max_near = -32.0F;
+inline constexpr float k_rts_pitch_max_far = -52.0F;
+
+inline constexpr float k_rts_max_distance_diagonal_ratio = 0.55F;
+inline constexpr float k_rts_min_max_distance = 30.0F;
+
+inline constexpr float k_rts_edge_view_margin_tiles = 4.0F;
+
+inline constexpr float k_rts_terrain_clearance = 2.5F;
 } // namespace CameraDefaults
 
 class Camera {
@@ -40,6 +53,20 @@ public:
 
   void set_map_bounds(const MapBounds& bounds) { m_map_bounds = bounds; }
   void clear_map_bounds() { m_map_bounds = {}; }
+
+  void set_rts_constraints(bool enabled) { m_rts_constraints = enabled; }
+  [[nodiscard]] auto rts_constraints_enabled() const noexcept -> bool {
+    return m_rts_constraints;
+  }
+  using GroundHeightSampler = std::function<float(float, float)>;
+
+  void set_ground_height_sampler(GroundHeightSampler sampler) {
+    m_ground_height_sampler = std::move(sampler);
+  }
+  [[nodiscard]] auto max_distance() const -> float;
+  [[nodiscard]] auto pitch_max_for_distance(float distance) const -> float;
+
+  [[nodiscard]] auto top_of_screen_ground_point(QVector3D& out_world) const -> bool;
   [[nodiscard]] auto map_bounds() const noexcept -> const MapBounds& {
     return m_map_bounds;
   }
@@ -67,6 +94,19 @@ public:
   void rotate(float yaw, float pitch);
 
   void pan(float right_dist, float forward_dist);
+
+  void pan_eased(float right_dist, float forward_dist);
+  void zoom_distance_eased(float delta);
+
+  void set_zoom_anchor(float nx, float ny);
+  [[nodiscard]] auto has_pending_motion() const -> bool {
+    return m_orbit_pending || m_pan_request_pending ||
+           m_pan_velocity.lengthSquared() > 0.0F || m_zoom_goal_pending;
+  }
+
+  void translate(const QVector3D& delta);
+
+  void rotate_immediate(float yaw_deg, float pitch_deg);
 
   void elevate(float dy);
   void yaw(float degrees);
@@ -118,7 +158,9 @@ public:
   [[nodiscard]] auto get_distance() const -> float;
   [[nodiscard]] auto get_pitch_deg() const -> float;
   [[nodiscard]] auto get_pitch_min_deg() const -> float { return m_pitch_min_deg; }
-  [[nodiscard]] auto get_pitch_max_deg() const -> float { return m_pitch_max_deg; }
+  [[nodiscard]] auto get_pitch_max_deg() const -> float {
+    return pitch_max_for_distance(get_distance());
+  }
   [[nodiscard]] auto get_fov() const -> float { return m_fov; }
   [[nodiscard]] auto get_aspect() const -> float { return m_aspect; }
   [[nodiscard]] auto get_near() const -> float { return m_near_plane; }
@@ -176,7 +218,19 @@ private:
   MapBounds m_map_bounds{};
 
   float m_pitch_min_deg = CameraDefaults::k_default_pitch_min;
-  float m_pitch_max_deg = -5.0F;
+  float m_pitch_max_deg = CameraDefaults::k_default_pitch_max;
+  bool m_rts_constraints = false;
+  GroundHeightSampler m_ground_height_sampler;
+
+  QVector3D m_pan_request{0, 0, 0};
+  bool m_pan_request_pending = false;
+  QVector3D m_pan_velocity{0, 0, 0};
+  bool m_zoom_goal_pending = false;
+  float m_zoom_goal_distance = 0.0F;
+  bool m_zoom_anchor_valid = false;
+  QVector3D m_zoom_anchor_world{0, 0, 0};
+  float m_zoom_anchor_nx = 0.5F;
+  float m_zoom_anchor_ny = 0.5F;
 
   bool m_orbit_pending = false;
   float m_orbit_start_yaw = 0.0F;
@@ -202,6 +256,11 @@ private:
   void rebuild_cached_geometry() const;
 
   void clamp_above_ground();
+  void clamp_view_to_map();
+  void integrate_pan(float dt);
+  void integrate_zoom(float dt);
+  void integrate_orbit(float dt);
+  void clamp_eye_above_terrain();
   static void
   compute_yaw_pitch_from_offset(const QVector3D& off, float& yaw_deg, float& pitch_deg);
 };

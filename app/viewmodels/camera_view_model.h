@@ -2,6 +2,7 @@
 
 #include <QObject>
 #include <QVariantMap>
+#include <QVector3D>
 
 #include "app/core/frame_snapshot.h"
 
@@ -27,6 +28,16 @@ public:
   Q_INVOKABLE void move(float dx, float dz);
   Q_INVOKABLE void elevate(float dy);
   Q_INVOKABLE void zoom(float delta);
+
+  Q_INVOKABLE void zoom_at_screen(float delta, float sx, float sy);
+
+  Q_INVOKABLE void drag_pan_begin(float sx, float sy);
+  Q_INVOKABLE void drag_pan_update(float sx, float sy);
+  Q_INVOKABLE void drag_pan_end();
+
+  Q_INVOKABLE void orbit_drag_begin(float sx, float sy);
+  Q_INVOKABLE void orbit_drag_update(float sx, float sy);
+  Q_INVOKABLE void orbit_drag_end();
   Q_INVOKABLE void yaw(float degrees);
   Q_INVOKABLE void orbit(float yaw_deg, float pitch_deg);
   Q_INVOKABLE void tilt(int direction, bool shift);
@@ -59,6 +70,14 @@ private:
   const App::Core::ClientContext& m_context;
   App::Core::ClientHost& m_host;
   bool m_following_selection = false;
+
+  [[nodiscard]] auto
+  ground_under_screen(float sx, float sy, QVector3D& out) const -> bool;
+  bool m_drag_pan_active = false;
+  QVector3D m_drag_pan_anchor;
+  bool m_orbit_drag_active = false;
+  float m_orbit_drag_last_x = 0.0F;
+  float m_orbit_drag_last_y = 0.0F;
 };
 
 } // namespace App::ViewModels

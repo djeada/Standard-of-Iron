@@ -18,7 +18,8 @@ using EntityID = std::uint64_t;
 
 namespace Game::Map {
 class VisibilityService;
-}
+class TerrainService;
+} // namespace Game::Map
 
 namespace Game::Systems {
 
@@ -28,7 +29,8 @@ class SelectionSystem;
 
 class CameraService {
 public:
-  explicit CameraService(const Game::Map::VisibilityService& visibility);
+  CameraService(const Game::Map::VisibilityService& visibility,
+                const Game::Map::TerrainService& terrain);
   ~CameraService();
 
   void sync_map_bounds(Render::GL::Camera& camera) const;
@@ -54,6 +56,7 @@ public:
 
 private:
   const Game::Map::VisibilityService& m_visibility;
+  const Game::Map::TerrainService& m_terrain;
   std::unique_ptr<CameraController> m_controller;
   std::unique_ptr<CameraFollowSystem> m_follow_system;
 };

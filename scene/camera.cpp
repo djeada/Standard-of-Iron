@@ -11,6 +11,8 @@
 #include <algorithm>
 #include <cmath>
 #include <cstddef>
+#include <cstdio>
+#include <cstdlib>
 #include <utility>
 
 namespace Render::GL {
@@ -66,6 +68,19 @@ constexpr double k_ndc_offset = 1.0;
 constexpr double k_ndc_half = 0.5;
 
 constexpr float k_boundary_panning_smoothness = 0.7F;
+
+constexpr float k_pan_ease_tau = 0.09F;
+
+constexpr float k_pan_input_ticks_per_second = 60.0F;
+constexpr float k_zoom_ease_tau = 0.12F;
+constexpr float k_motion_epsilon = 1e-3F;
+
+inline auto ease_fraction(float dt, float tau) -> float {
+  if (dt <= 0.0F) {
+    return 0.0F;
+  }
+  return 1.0F - std::exp(-dt / tau);
+}
 
 inline auto finite(const QVector3D& v) -> bool {
   return qIsFinite(v.x()) && qIsFinite(v.y()) && qIsFinite(v.z());
@@ -290,7 +305,125 @@ void Camera::zoom(float delta) {
 }
 
 void Camera::zoom_distance(float delta) {
-  zoom_distance(delta, k_min_dist, k_max_dist);
+  zoom_distance(delta, k_min_dist, max_distance());
+}
+
+auto Camera::max_distance() const -> float {
+  if (!m_rts_constraints || !m_map_bounds.valid()) {
+    return k_max_dist;
+  }
+  float const width = static_cast<float>(m_map_bounds.width) * m_map_bounds.tile_size;
+  float const depth = static_cast<float>(m_map_bounds.height) * m_map_bounds.tile_size;
+  float const diagonal = std::sqrt(width * width + depth * depth);
+  return std::clamp(diagonal * CameraDefaults::k_rts_max_distance_diagonal_ratio,
+                    CameraDefaults::k_rts_min_max_distance,
+                    k_max_dist);
+}
+
+auto Camera::pitch_max_for_distance(float distance) const -> float {
+  if (!m_rts_constraints) {
+    return m_pitch_max_deg;
+  }
+  float const span = std::max(max_distance() - k_min_dist, k_tiny);
+  float const t = std::clamp((distance - k_min_dist) / span, 0.0F, 1.0F);
+  float const coupled = std::lerp(
+      CameraDefaults::k_rts_pitch_max_near, CameraDefaults::k_rts_pitch_max_far, t);
+  return std::min(coupled, m_pitch_max_deg);
+}
+
+auto Camera::top_of_screen_ground_point(QVector3D& out_world) const -> bool {
+  if (!m_is_perspective) {
+    return false;
+  }
+  float const half_fov_rad = qDegreesToRadians(m_fov * 0.5F);
+  QVector3D const top_dir =
+      safe_normalize(m_front + m_up * std::tan(half_fov_rad), m_front);
+  if (top_dir.y() >= -1e-4F) {
+    return false;
+  }
+  float const t = (m_ground_y - m_position.y()) / top_dir.y();
+  if (!qIsFinite(t) || t < 0.0F) {
+    return false;
+  }
+  out_world = m_position + top_dir * t;
+  return finite(out_world);
+}
+
+void Camera::clamp_view_to_map() {
+  if (!m_rts_constraints || !m_map_bounds.valid()) {
+    return;
+  }
+  const float tile = m_map_bounds.tile_size;
+  const float half_w = (static_cast<float>(m_map_bounds.width) * 0.5F) - 0.5F;
+  const float half_h = (static_cast<float>(m_map_bounds.height) * 0.5F) - 0.5F;
+  if (half_w < 0.0F || half_h < 0.0F) {
+    return;
+  }
+  const float margin = CameraDefaults::k_rts_edge_view_margin_tiles * tile;
+  const float limit_x = half_w * tile + margin;
+  const float limit_z = half_h * tile + margin;
+
+  QVector3D top;
+  if (!top_of_screen_ground_point(top)) {
+
+    QVector3D flat = m_front;
+    flat.setY(0.0F);
+    flat = safe_normalize(flat, QVector3D(0, 0, -1));
+    top = m_position + flat * m_far_plane;
+  }
+
+  QVector3D shift(0, 0, 0);
+
+  auto const overshoot = [](float value, float limit) -> float {
+    if (value > limit) {
+      return limit - value;
+    }
+    if (value < -limit) {
+      return -limit - value;
+    }
+    return 0.0F;
+  };
+  auto const larger = [](float a, float b) -> float {
+    return std::abs(a) >= std::abs(b) ? a : b;
+  };
+  shift.setX(larger(overshoot(top.x(), limit_x), overshoot(m_position.x(), limit_x)));
+  shift.setZ(larger(overshoot(top.z(), limit_z), overshoot(m_position.z(), limit_z)));
+  if (shift.isNull() || !finite(shift)) {
+    return;
+  }
+  m_position += shift;
+  m_target += shift;
+  m_last_position = m_position;
+  invalidate_cached_geometry();
+}
+
+void Camera::clamp_eye_above_terrain() {
+  if (!m_rts_constraints || !m_ground_height_sampler) {
+    return;
+  }
+
+  for (int pass = 0; pass < 3; ++pass) {
+    float const terrain = m_ground_height_sampler(m_position.x(), m_position.z());
+    if (!qIsFinite(terrain)) {
+      return;
+    }
+    float const floor = terrain + CameraDefaults::k_rts_terrain_clearance;
+    if (m_position.y() >= floor) {
+      return;
+    }
+    QVector3D const offset = m_position - m_target;
+    float const radius = offset.length();
+    if (radius < k_tiny || offset.y() <= k_tiny) {
+      m_position.setY(floor);
+      break;
+    }
+    QVector3D const dir = offset / radius;
+    float const needed = (floor - m_target.y()) / dir.y();
+    m_position = m_target + dir * std::max(radius, needed);
+  }
+  m_last_position = m_position;
+  invalidate_cached_geometry();
+  orthonormalize((m_target - m_position), m_front, m_right, m_up);
 }
 
 void Camera::zoom_distance(float delta, float min_distance, float max_distance) {
@@ -355,6 +488,44 @@ void Camera::pan(float right_dist, float forward_dist) {
   apply_soft_boundaries(true);
 }
 
+void Camera::translate(const QVector3D& delta) {
+  if (!finite(delta)) {
+    return;
+  }
+  QVector3D const flat(delta.x(), 0.0F, delta.z());
+  m_position += flat;
+  m_target += flat;
+  apply_soft_boundaries(true);
+}
+
+void Camera::rotate_immediate(float yaw_deg, float pitch_deg) {
+  if (!finite(yaw_deg) || !finite(pitch_deg)) {
+    return;
+  }
+  QVector3D const offset = m_position - m_target;
+  float const radius = offset.length();
+  if (radius < k_tiny) {
+    return;
+  }
+  float cur_yaw = 0.0F;
+  float cur_pitch = 0.0F;
+  compute_yaw_pitch_from_offset(offset, cur_yaw, cur_pitch);
+  float const new_yaw = cur_yaw + yaw_deg;
+  float const new_pitch =
+      qBound(m_pitch_min_deg, cur_pitch + pitch_deg, pitch_max_for_distance(radius));
+  m_orbit_pending = false;
+
+  float const yaw_rad = qDegreesToRadians(new_yaw);
+  float const pitch_rad = qDegreesToRadians(new_pitch);
+  QVector3D const dir(std::sin(yaw_rad) * std::cos(pitch_rad),
+                      std::sin(pitch_rad),
+                      std::cos(yaw_rad) * std::cos(pitch_rad));
+  QVector3D const forward = safe_normalize(dir, m_front);
+  m_position = m_target - forward * radius;
+  apply_soft_boundaries();
+  orthonormalize((m_target - m_position), m_front, m_right, m_up);
+}
+
 void Camera::elevate(float dy) {
   if (!finite(dy)) {
     return;
@@ -384,17 +555,150 @@ void Camera::orbit(float yaw_deg, float pitch_deg) {
   m_orbit_start_yaw = cur_yaw;
   m_orbit_start_pitch = cur_pitch;
   m_orbit_target_yaw = cur_yaw + yaw_deg;
-  m_orbit_target_pitch =
-      qBound(m_pitch_min_deg, cur_pitch + pitch_deg, m_pitch_max_deg);
+  m_orbit_target_pitch = qBound(
+      m_pitch_min_deg, cur_pitch + pitch_deg, pitch_max_for_distance(offset.length()));
   m_orbit_time = 0.0F;
   m_orbit_pending = true;
 }
 
-void Camera::update(float dt) {
-  if (!m_orbit_pending) {
+void Camera::pan_eased(float right_dist, float forward_dist) {
+  if (!finite(right_dist) || !finite(forward_dist)) {
     return;
   }
+  QVector3D front = m_front;
+  front.setY(0.0F);
+  if (front.lengthSquared() > 0) {
+    front.normalize();
+  }
+  QVector3D const delta = m_right * right_dist + front * forward_dist;
+  if (!finite(delta)) {
+    return;
+  }
+
+  auto const larger = [](float a, float b) -> float {
+    return std::abs(a) >= std::abs(b) ? a : b;
+  };
+  m_pan_request.setX(larger(m_pan_request.x(), delta.x()));
+  m_pan_request.setZ(larger(m_pan_request.z(), delta.z()));
+  m_pan_request_pending = true;
+  m_zoom_anchor_valid = false;
+}
+
+void Camera::zoom_distance_eased(float delta) {
+  if (!finite(delta)) {
+    return;
+  }
+  float const current = m_zoom_goal_pending ? m_zoom_goal_distance : get_distance();
+  float factor = 1.0F - delta * k_zoom_distance_delta;
+  factor = std::clamp(factor, k_zoom_factor_min, k_zoom_factor_max);
+  m_zoom_goal_distance = std::clamp(current * factor, k_min_dist, max_distance());
+  m_zoom_goal_pending = true;
+}
+
+void Camera::set_zoom_anchor(float nx, float ny) {
+  if (!qIsFinite(nx) || !qIsFinite(ny)) {
+    m_zoom_anchor_valid = false;
+    return;
+  }
+  m_zoom_anchor_nx = std::clamp(nx, 0.0F, 1.0F);
+  m_zoom_anchor_ny = std::clamp(ny, 0.0F, 1.0F);
+  m_zoom_anchor_valid = screen_to_ground(
+      m_zoom_anchor_nx, m_zoom_anchor_ny, 1.0, 1.0, m_zoom_anchor_world);
+}
+
+void Camera::integrate_pan(float dt) {
+  QVector3D const desired = m_pan_request_pending
+                                ? m_pan_request * k_pan_input_ticks_per_second
+                                : QVector3D(0, 0, 0);
+  m_pan_request = QVector3D(0, 0, 0);
+  m_pan_request_pending = false;
+  if (desired.lengthSquared() <= 0.0F && m_pan_velocity.lengthSquared() <= 0.0F) {
+    return;
+  }
+  float const fraction = ease_fraction(dt, k_pan_ease_tau);
+  m_pan_velocity += (desired - m_pan_velocity) * fraction;
+  if (desired.lengthSquared() <= 0.0F && m_pan_velocity.length() < k_motion_epsilon) {
+    m_pan_velocity = QVector3D(0, 0, 0);
+    return;
+  }
+  QVector3D const step = m_pan_velocity * std::max(dt, 0.0F);
+  if (step.lengthSquared() <= 0.0F) {
+    return;
+  }
+  m_position += step;
+  m_target += step;
+  apply_soft_boundaries(true);
+}
+
+void Camera::integrate_zoom(float dt) {
+  if (!m_zoom_goal_pending) {
+    return;
+  }
+  QVector3D const offset = m_position - m_target;
+  float const r = std::max(offset.length(), k_tiny);
+  float const goal = std::clamp(m_zoom_goal_distance, k_min_dist, max_distance());
+  float new_r = r + (goal - r) * ease_fraction(dt, k_zoom_ease_tau);
+  if (std::abs(goal - new_r) < k_motion_epsilon) {
+    new_r = goal;
+    m_zoom_goal_pending = false;
+  }
+  QVector3D const dir = safe_normalize(offset, QVector3D(0, 0, 1));
+  m_position = m_target + dir * new_r;
+  apply_soft_boundaries();
+
+  if (m_zoom_anchor_valid) {
+    QVector3D now;
+    if (screen_to_ground(m_zoom_anchor_nx, m_zoom_anchor_ny, 1.0, 1.0, now)) {
+      QVector3D const shift = m_zoom_anchor_world - now;
+      m_position += QVector3D(shift.x(), 0.0F, shift.z());
+      m_target += QVector3D(shift.x(), 0.0F, shift.z());
+      apply_soft_boundaries(true);
+    }
+    if (!m_zoom_goal_pending) {
+      m_zoom_anchor_valid = false;
+    }
+  }
+  orthonormalize((m_target - m_position), m_front, m_right, m_up);
+  if (m_follow_enabled) {
+    capture_follow_offset();
+  }
+}
+
+namespace {
+auto camera_trace_enabled() -> bool {
+  static const bool enabled = std::getenv("SOI_CAMERA_TRACE") != nullptr;
+  return enabled;
+}
+} // namespace
+
+void Camera::update(float dt) {
   if (!finite(dt)) {
+    return;
+  }
+  if (camera_trace_enabled() && has_pending_motion()) {
+    std::fprintf(stderr,
+                 "[camera] dt=%.3f request=(%.2f,%.2f)%s velocity=(%.1f,%.1f) "
+                 "zoom_goal=%s%.1f dist=%.1f target=(%.1f,%.1f) orbit=%d\n",
+                 static_cast<double>(dt),
+                 static_cast<double>(m_pan_request.x()),
+                 static_cast<double>(m_pan_request.z()),
+                 m_pan_request_pending ? "*" : "",
+                 static_cast<double>(m_pan_velocity.x()),
+                 static_cast<double>(m_pan_velocity.z()),
+                 m_zoom_goal_pending ? "*" : "",
+                 static_cast<double>(m_zoom_goal_distance),
+                 static_cast<double>(get_distance()),
+                 static_cast<double>(m_target.x()),
+                 static_cast<double>(m_target.z()),
+                 int(m_orbit_pending));
+  }
+  integrate_pan(dt);
+  integrate_zoom(dt);
+  integrate_orbit(dt);
+}
+
+void Camera::integrate_orbit(float dt) {
+  if (!m_orbit_pending) {
     return;
   }
 
@@ -576,6 +880,9 @@ void Camera::set_rts_view(const QVector3D& center,
   m_target = center;
 
   distance = std::max(distance, 0.01F);
+  if (m_rts_constraints) {
+    distance = std::clamp(distance, k_min_dist, max_distance());
+  }
   float const pitch_rad = qDegreesToRadians(angle);
   float const yaw_rad = qDegreesToRadians(yaw_deg);
 
@@ -814,8 +1121,11 @@ void Camera::apply_soft_boundaries(bool is_panning) {
   }
 
   if (!target_adjustment.isNull()) {
-    m_target += target_adjustment *
-                (is_panning ? k_boundary_panning_smoothness : k_boundary_smoothness);
+    float const target_smoothness =
+        m_rts_constraints
+            ? 1.0F
+            : (is_panning ? k_boundary_panning_smoothness : k_boundary_smoothness);
+    m_target += target_adjustment * target_smoothness;
 
     if (target_to_pos_dist > k_tiny) {
       QVector3D const dir = target_to_pos.normalized();
@@ -826,6 +1136,8 @@ void Camera::apply_soft_boundaries(bool is_panning) {
   m_last_position = m_position;
 
   enforce_pitch_limits();
+  clamp_view_to_map();
+  clamp_eye_above_terrain();
 }
 
 void Camera::enforce_pitch_limits() {
@@ -838,7 +1150,8 @@ void Camera::enforce_pitch_limits() {
   float yaw_deg = 0.0F;
   float pitch_deg = 0.0F;
   compute_yaw_pitch_from_offset(offset, yaw_deg, pitch_deg);
-  float const clamped = qBound(m_pitch_min_deg, pitch_deg, m_pitch_max_deg);
+  float const clamped =
+      qBound(m_pitch_min_deg, pitch_deg, pitch_max_for_distance(radius));
   if (std::abs(clamped - pitch_deg) < 1e-4F) {
     return;
   }
