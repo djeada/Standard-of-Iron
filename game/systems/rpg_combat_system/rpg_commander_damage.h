@@ -15,6 +15,7 @@ namespace Game::Systems::RpgCombat {
 
 struct CommanderDamageResult {
   int effective_damage{0};
+  int queued_soldier_casualties{0};
   bool blocked{false};
   bool perfect_guarded{false};
   bool dodged{false};

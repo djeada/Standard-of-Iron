@@ -145,6 +145,8 @@ auto command_name(ScenarioCommandKind kind) -> QString {
     return QStringLiteral("TriggerCommanderAura");
   case ScenarioCommandKind::RpgPrimaryAttack:
     return QStringLiteral("RpgPrimaryAttack");
+  case ScenarioCommandKind::RpgHeavyAttack:
+    return QStringLiteral("RpgHeavyAttack");
   case ScenarioCommandKind::RpgAttackHold:
     return QStringLiteral("RpgAttackHold");
   case ScenarioCommandKind::RpgAim:
@@ -153,6 +155,12 @@ auto command_name(ScenarioCommandKind kind) -> QString {
     return QStringLiteral("RpgGuard");
   case ScenarioCommandKind::RpgDodge:
     return QStringLiteral("RpgDodge");
+  case ScenarioCommandKind::RpgJump:
+    return QStringLiteral("RpgJump");
+  case ScenarioCommandKind::RpgSpecial:
+    return QStringLiteral("RpgSpecial");
+  case ScenarioCommandKind::RpgWeaponSwitch:
+    return QStringLiteral("RpgWeaponSwitch");
   case ScenarioCommandKind::RepairStructure:
     return QStringLiteral("RepairStructure");
   case ScenarioCommandKind::DeliverToStructure:
@@ -1751,6 +1759,16 @@ struct ArenaScenarioRunner::Impl {
         }
       }
       break;
+    case ScenarioCommandKind::RpgHeavyAttack:
+      for (auto entity_id : ids(step.group)) {
+        if (!host.rpg_heavy_attack || !host.rpg_heavy_attack(entity_id)) {
+          add_issue(
+              QStringLiteral("rpg_heavy_attack_failed"),
+              QStringLiteral("%1 could not start an RPG heavy attack").arg(step.group),
+              entity_id);
+        }
+      }
+      break;
     case ScenarioCommandKind::RpgAttackHold:
       for (auto entity_id : ids(step.group)) {
         if (!host.set_rpg_attack_held) {
@@ -1804,6 +1822,41 @@ struct ArenaScenarioRunner::Impl {
           continue;
         }
         host.request_rpg_dodge(entity_id, step.destination);
+      }
+      break;
+    case ScenarioCommandKind::RpgJump:
+      for (auto entity_id : ids(step.group)) {
+        if (!host.request_rpg_jump) {
+          add_issue(QStringLiteral("rpg_jump_unavailable"),
+                    QStringLiteral("%1 has no RPG jump host callback").arg(step.group),
+                    entity_id);
+          continue;
+        }
+        host.request_rpg_jump(entity_id);
+      }
+      break;
+    case ScenarioCommandKind::RpgSpecial:
+      for (auto entity_id : ids(step.group)) {
+        if (!host.request_rpg_special) {
+          add_issue(
+              QStringLiteral("rpg_special_unavailable"),
+              QStringLiteral("%1 has no RPG special host callback").arg(step.group),
+              entity_id);
+          continue;
+        }
+        host.request_rpg_special(entity_id);
+      }
+      break;
+    case ScenarioCommandKind::RpgWeaponSwitch:
+      for (auto entity_id : ids(step.group)) {
+        if (!host.request_rpg_weapon_switch) {
+          add_issue(QStringLiteral("rpg_weapon_switch_unavailable"),
+                    QStringLiteral("%1 has no RPG weapon-switch host callback")
+                        .arg(step.group),
+                    entity_id);
+          continue;
+        }
+        host.request_rpg_weapon_switch(entity_id);
       }
       break;
     case ScenarioCommandKind::RpgCycleLockOn:

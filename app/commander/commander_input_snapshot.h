@@ -17,8 +17,10 @@ struct CommanderInputSnapshot {
   bool guard_held = false;
 
   bool primary_pressed = false;
+  bool heavy_pressed = false;
   bool dodge_pressed = false;
   bool jump_pressed = false;
+  bool special_pressed = false;
   bool shield_bash_pressed = false;
   bool vanguard_rush_pressed = false;
   bool second_wind_pressed = false;
@@ -29,8 +31,9 @@ struct CommanderInputSnapshot {
   std::uint64_t sequence = 0;
 
   [[nodiscard]] auto has_pending_edge() const -> bool {
-    return primary_pressed || dodge_pressed || jump_pressed || shield_bash_pressed ||
-           vanguard_rush_pressed || second_wind_pressed;
+    return primary_pressed || heavy_pressed || dodge_pressed || jump_pressed ||
+           special_pressed || shield_bash_pressed || vanguard_rush_pressed ||
+           second_wind_pressed;
   }
 
   [[nodiscard]] auto forward_axis() const -> int {

@@ -680,7 +680,9 @@ TEST_F(CommanderControlControllerTest, RpgSpearActionDefinitionsUseSpearFamily) 
   EXPECT_EQ(thrust->attack_direction, Engine::Core::AttackDirection::Thrust);
   EXPECT_GT(thrust->hit_shape.reach, sweep->hit_shape.reach);
   EXPECT_LT(thrust->hit_shape.radius, sweep->hit_shape.radius);
-  EXPECT_EQ(sweep->max_targets, 2);
+  EXPECT_EQ(sweep->max_targets, 6);
+  EXPECT_TRUE(thrust->commander_only);
+  EXPECT_TRUE(sweep->commander_only);
   EXPECT_FALSE(thrust->events.empty());
   EXPECT_FALSE(sweep->events.empty());
 }
@@ -1126,6 +1128,97 @@ TEST_F(CommanderControlControllerTest, CommanderRpgPoolStaysInPlayableBand) {
   EXPECT_LE(effective_pool, 220.0F);
 }
 
+TEST_F(CommanderControlControllerTest,
+       EnteringDirectControlAdoptsAnAirborneAuthoredAction) {
+  Engine::Core::World world;
+  auto* commander = create_commander(world, 0.0F, 0.0F);
+  ASSERT_NE(commander, nullptr);
+  auto* commander_data = commander->get_component<Engine::Core::CommanderComponent>();
+  ASSERT_NE(commander_data, nullptr);
+  commander_data->jump_active = true;
+  commander_data->jump_phase = 0.32F;
+  commander_data->jump_height_offset = 0.62F;
+
+  auto* action = commander->add_component<Engine::Core::RpgCommanderActionComponent>();
+  ASSERT_NE(action, nullptr);
+  action->combat_action_id = static_cast<std::uint8_t>(
+      Game::Systems::CombatActions::CombatActionId::CommanderSpearAirThrust);
+  action->action_running = true;
+  action->action_duration = 0.68F;
+  action->normalized_action_time = 0.32F;
+
+  CommanderControlController controller;
+  Render::GL::Camera camera;
+  App::Core::CommanderModeCoordinator coordinator;
+  auto const effects =
+      coordinator.enter_commander_control_mode({.world = &world,
+                                                .commander = commander,
+                                                .commander_camera = &camera,
+                                                .commander_control = &controller,
+                                                .local_owner_id = 1});
+  ASSERT_TRUE(effects.entered);
+  controller.reset();
+  ASSERT_TRUE(controller.update(world, commander->get_id(), 1, camera, 0.0F));
+
+  EXPECT_TRUE(action->action_running);
+  EXPECT_EQ(action->combat_action_id,
+            static_cast<std::uint8_t>(
+                Game::Systems::CombatActions::CombatActionId::CommanderSpearAirThrust));
+  EXPECT_TRUE(commander_data->fpv_controlled);
+  EXPECT_TRUE(commander_data->jump_active);
+  EXPECT_GT(commander_data->jump_height_offset, 0.0F);
+  EXPECT_GT(commander_data->airborne_velocity, 0.0F);
+
+  coordinator.clear_controlled_commander_state(
+      {.world = &world, .controlled_commander_id = commander->get_id()});
+  EXPECT_FALSE(commander_data->fpv_controlled);
+  EXPECT_TRUE(action->action_running);
+  EXPECT_TRUE(commander_data->jump_active);
+  EXPECT_GT(commander_data->airborne_velocity, 0.0F);
+}
+
+TEST_F(CommanderControlControllerTest,
+       JumpBranchesDuringThePresentationTailOfACompletedComboLink) {
+  Engine::Core::World world;
+  auto* commander = create_commander(world, 0.0F, 0.0F);
+  ASSERT_NE(commander, nullptr);
+  auto* unit = commander->get_component<Engine::Core::UnitComponent>();
+  auto* commander_data = commander->get_component<Engine::Core::CommanderComponent>();
+  ASSERT_NE(unit, nullptr);
+  ASSERT_NE(commander_data, nullptr);
+  unit->spawn_type = Game::Units::SpawnType::Spearman;
+  commander_data->fpv_controlled = true;
+  commander_data->combo_action_id = static_cast<std::uint8_t>(
+      Game::Systems::CombatActions::CombatActionId::RpgSpearSweep);
+  commander_data->combo_window_remaining = 0.5F;
+
+  auto* attack = commander->add_component<Engine::Core::AttackComponent>();
+  auto* action = commander->add_component<Engine::Core::RpgCommanderActionComponent>();
+  auto* combat_state = commander->add_component<Engine::Core::CombatStateComponent>();
+  ASSERT_NE(attack, nullptr);
+  ASSERT_NE(action, nullptr);
+  ASSERT_NE(combat_state, nullptr);
+  attack->can_melee = true;
+  attack->current_mode = Engine::Core::AttackComponent::CombatMode::Melee;
+  action->combat_action_id = static_cast<std::uint8_t>(
+      Game::Systems::CombatActions::CombatActionId::RpgSpearSweep);
+  action->action_running = false;
+  action->action_completed = true;
+  action->normalized_action_time = 1.0F;
+  combat_state->animation_state = Engine::Core::CombatAnimationState::Recover;
+
+  CommanderControlController controller;
+  controller.request_jump();
+  Render::GL::Camera camera;
+  ASSERT_TRUE(controller.update(world, commander->get_id(), 1, camera, 0.016F));
+
+  EXPECT_TRUE(commander_data->jump_active);
+  EXPECT_TRUE(action->action_running);
+  EXPECT_EQ(static_cast<Game::Systems::CombatActions::CombatActionId>(
+                action->combat_action_id),
+            Game::Systems::CombatActions::CombatActionId::CommanderSpearAirThrust);
+}
+
 TEST_F(CommanderControlControllerTest, ChaseLensStaysLevelWhileWalkingOverTerrain) {
   Game::Map::MapDefinition map_def;
   map_def.grid.width = 64;
@@ -1306,6 +1399,84 @@ TEST_F(CommanderControlControllerTest, IsolatedSwingsDoNotReplayTheSameClip) {
   ASSERT_EQ(swing_clips.size(), 3U);
   EXPECT_NE(swing_clips[0], swing_clips[1]);
   EXPECT_NE(swing_clips[1], swing_clips[2]);
+}
+
+TEST_F(CommanderControlControllerTest,
+       HoldingPrimaryChainsAtRecoveryAndReleaseStopsTheCombo) {
+  Engine::Core::World world;
+  auto* commander = create_commander(world, 0.0F, 0.0F);
+  ASSERT_NE(commander, nullptr);
+  ASSERT_NE(create_enemy(world, 0.0F, 1.6F), nullptr);
+
+  auto* commander_data = commander->get_component<Engine::Core::CommanderComponent>();
+  ASSERT_NE(commander_data, nullptr);
+  commander_data->fpv_controlled = true;
+  auto* attack = commander->add_component<Engine::Core::AttackComponent>();
+  ASSERT_NE(attack, nullptr);
+  attack->current_mode = Engine::Core::AttackComponent::CombatMode::Melee;
+
+  CommanderControlController controller;
+  controller.set_view_yaw(0.0F);
+  Render::GL::Camera camera;
+  controller.primary_action_down();
+  ASSERT_TRUE(controller.update(world, commander->get_id(), 1, camera, 0.016F));
+
+  auto* action = commander->get_component<Engine::Core::RpgCommanderActionComponent>();
+  auto* intents = commander->get_component<Engine::Core::CombatIntentQueueComponent>();
+  ASSERT_NE(action, nullptr);
+  ASSERT_NE(intents, nullptr);
+  auto const first_id = static_cast<Game::Systems::CombatActions::CombatActionId>(
+      action->combat_action_id);
+  auto const* first =
+      Game::Systems::CombatActions::find_combat_action_definition(first_id);
+  ASSERT_NE(first, nullptr);
+  ASSERT_EQ(intents->accepted_intents, 1U);
+
+  float const recovery = Game::Systems::CombatActions::action_event_normalized_time(
+      *first,
+      Game::Systems::CombatActions::CombatActionEventType::RecoveryStart,
+      0.75F);
+  (void)Game::Systems::CombatActions::advance_combat_action_events(
+      *action, action->action_duration * (recovery + 0.01F), *first);
+  ASSERT_TRUE(controller.update(world, commander->get_id(), 1, camera, 0.016F));
+
+  EXPECT_EQ(intents->accepted_intents, 2U);
+  auto const second_id = static_cast<Game::Systems::CombatActions::CombatActionId>(
+      action->combat_action_id);
+  EXPECT_EQ(second_id,
+            Game::Systems::CombatActions::resolve_commander_action(
+                first_id,
+                Engine::Core::CommanderCombatIntentType::Light,
+                Game::Systems::CombatActions::WeaponFamily::Sword,
+                false,
+                false));
+
+  controller.primary_action_up();
+  auto const* second =
+      Game::Systems::CombatActions::find_combat_action_definition(second_id);
+  ASSERT_NE(second, nullptr);
+  float const second_recovery =
+      Game::Systems::CombatActions::action_event_normalized_time(
+          *second,
+          Game::Systems::CombatActions::CombatActionEventType::RecoveryStart,
+          0.75F);
+  (void)Game::Systems::CombatActions::advance_combat_action_events(
+      *action, action->action_duration * (second_recovery + 0.01F), *second);
+  ASSERT_TRUE(controller.update(world, commander->get_id(), 1, camera, 0.016F));
+  EXPECT_EQ(intents->accepted_intents, 2U);
+}
+
+TEST_F(CommanderControlControllerTest, MiddleMouseHeavyIsLongerAndHitsHarderThanLight) {
+  using Game::Systems::CombatActions::CombatActionId;
+  auto const* light = Game::Systems::CombatActions::find_combat_action_definition(
+      CombatActionId::RpgSwordSlashLeft);
+  auto const* heavy = Game::Systems::CombatActions::find_combat_action_definition(
+      CombatActionId::RpgSwordOverhead);
+  ASSERT_NE(light, nullptr);
+  ASSERT_NE(heavy, nullptr);
+  EXPECT_GT(heavy->duration_seconds, light->duration_seconds);
+  EXPECT_GT(heavy->damage.base_multiplier, light->damage.base_multiplier);
+  EXPECT_GT(heavy->damage.posture_damage, light->damage.posture_damage);
 }
 
 TEST_F(CommanderControlControllerTest, StrikeCarriesTheCommanderIntoATargetOutOfReach) {

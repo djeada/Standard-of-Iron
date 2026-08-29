@@ -1700,13 +1700,11 @@ TEST_F(CombatModeTest, RtsCommanderUsesTheSameAdvancedActionCatalog) {
   auto* attacker_unit = attacker->add_component<UnitComponent>(100, 100, 1.0F, 12.0F);
   attacker_unit->owner_id = 1;
   attacker_unit->spawn_type = Game::Units::SpawnType::Knight;
-
   attacker_unit->render_individuals_per_unit_override = 1;
   auto* attack = attacker->add_component<AttackComponent>();
   attack->can_melee = true;
   attack->current_mode = AttackComponent::CombatMode::Melee;
   attack->cooldown = 0.0F;
-
   attack->melee_cooldown = 1.0F;
   attack->time_since_last = 1.0F;
   attack->in_melee_lock = true;
@@ -3523,6 +3521,78 @@ TEST_F(CombatModeTest, OneActionAppliesOneDamageAtEverySimulationRate) {
   EXPECT_LE(contacts_per_rate[0], 1);
 }
 
+TEST_F(CombatModeTest, CommanderLauncherBreaksPoiseAndCreatesBallisticLift) {
+  auto* commander = make_fpv_commander(*world, 0.0F, 0.0F);
+  auto* enemy = make_enemy_soldier(*world, 0.0F, 1.3F);
+  ASSERT_NE(commander, nullptr);
+  ASSERT_NE(enemy, nullptr);
+  enemy->add_component<PoiseComponent>(20.0F);
+
+  auto* combat_state = begin_commander_strike(commander, enemy->get_id());
+  ASSERT_NE(combat_state, nullptr);
+  auto* action = start_authored_action_at(
+      commander,
+      Game::Systems::CombatActions::CombatActionId::CommanderSwordLauncher,
+      0.0F);
+  ASSERT_NE(action, nullptr);
+  action->active_target_id = enemy->get_id();
+
+  complete_authored_action(*world, *commander);
+
+  auto const* poise = enemy->get_component<PoiseComponent>();
+  auto const* stagger = enemy->get_component<StaggerComponent>();
+  auto const* launch = enemy->get_component<CombatLaunchComponent>();
+  ASSERT_NE(poise, nullptr);
+  ASSERT_NE(stagger, nullptr);
+  ASSERT_NE(launch, nullptr);
+  EXPECT_EQ(stagger->tier, StaggerTier::Knockback);
+  EXPECT_GT(launch->velocity_y, 0.0F);
+  EXPECT_GT(action->hit_target_count, 0U);
+}
+
+TEST_F(CombatModeTest, CommanderRadialFinisherDamagesNearbyEnemies) {
+  auto* commander = make_fpv_commander(*world, 0.0F, 0.0F);
+  auto* primary = make_enemy_soldier(*world, 0.0F, 1.25F);
+  auto* flank = make_enemy_soldier(*world, 1.15F, 1.25F);
+  ASSERT_NE(commander, nullptr);
+  ASSERT_NE(primary, nullptr);
+  ASSERT_NE(flank, nullptr);
+
+  auto* combat_state = begin_commander_strike(commander, primary->get_id());
+  ASSERT_NE(combat_state, nullptr);
+  auto* action = start_authored_action_at(
+      commander,
+      Game::Systems::CombatActions::CombatActionId::CommanderSwordSpin,
+      0.0F);
+  ASSERT_NE(action, nullptr);
+  action->active_target_id = primary->get_id();
+
+  complete_authored_action(*world, *commander);
+
+  EXPECT_LT(primary->get_component<UnitComponent>()->health, 100);
+  EXPECT_LT(flank->get_component<UnitComponent>()->health, 100);
+  EXPECT_GE(action->hit_target_count, 2U);
+}
+
+TEST_F(CombatModeTest, PoiseAndBallisticLaunchRecoverThroughStatusProcessing) {
+  auto* enemy = make_enemy_soldier(*world, 0.0F, 0.0F);
+  auto* poise = enemy->add_component<PoiseComponent>(80.0F);
+  poise->current = 10.0F;
+  poise->regeneration_delay = 0.1F;
+  enemy->add_component<CombatLaunchComponent>(3.0F, 0.0F, 0.0F, 0.0F);
+
+  (void)Game::Systems::Combat::process_combat_status_effects(world.get(), 0.1F);
+  EXPECT_FLOAT_EQ(poise->current, 10.0F);
+  EXPECT_GT(enemy->get_component<TransformComponent>()->position.y, 0.0F);
+
+  for (int step = 0; step < 20; ++step) {
+    (void)Game::Systems::Combat::process_combat_status_effects(world.get(), 0.1F);
+  }
+  EXPECT_GT(poise->current, 10.0F);
+  EXPECT_EQ(enemy->get_component<CombatLaunchComponent>(), nullptr);
+  EXPECT_FLOAT_EQ(enemy->get_component<TransformComponent>()->position.y, 0.0F);
+}
+
 TEST_F(CombatModeTest, SwordTraceRejectsTargetsBehindCommander) {
   auto* commander = make_fpv_commander(*world, 0.0F, 0.0F);
   auto* enemy = make_enemy_soldier(*world, 0.0F, -1.2F);
@@ -3758,7 +3828,7 @@ TEST_F(CombatModeTest, SpearFinisherIsAHeavierLongerLungeThanTheThrust) {
   EXPECT_GT(finisher->damage.base_multiplier, thrust->damage.base_multiplier);
   EXPECT_GT(finisher->hit_shape.reach, thrust->hit_shape.reach);
   EXPECT_GT(finisher->duration_seconds, thrust->duration_seconds);
-  EXPECT_EQ(finisher->max_targets, 2);
+  EXPECT_EQ(finisher->max_targets, 4);
 }
 
 TEST_F(CombatModeTest, SpearFinisherComboStepSelectsTheSpearFinisher) {
@@ -3777,6 +3847,34 @@ TEST_F(CombatModeTest, SpearFinisherComboStepSelectsTheSpearFinisher) {
   EXPECT_EQ(static_cast<Game::Systems::CombatActions::CombatActionId>(
                 action->combat_action_id),
             Game::Systems::CombatActions::CombatActionId::RpgSpearFinisher);
+}
+
+TEST_F(CombatModeTest, AHeavyThatMissesDoesNotMakeTheNextLightAttackHeavy) {
+  auto* commander = make_fpv_commander(*world, 0.0F, 0.0F);
+  auto* commander_data = commander->get_component<CommanderComponent>();
+  ASSERT_NE(commander_data, nullptr);
+
+  auto const heavy = Game::Systems::CombatActions::CombatActionService::request_attack(
+      *world,
+      {.attacker_id = commander->get_id(),
+       .intent_type = Engine::Core::CommanderCombatIntentType::Heavy});
+  ASSERT_TRUE(heavy.accepted);
+  EXPECT_TRUE(commander_data->power_strike_active);
+
+  auto* action = commander->get_component<RpgCommanderActionComponent>();
+  auto* combat_state = commander->get_component<CombatStateComponent>();
+  ASSERT_NE(action, nullptr);
+  ASSERT_NE(combat_state, nullptr);
+  action->action_running = false;
+  action->action_completed = true;
+  combat_state->animation_state = CombatAnimationState::Idle;
+
+  auto const light = Game::Systems::CombatActions::CombatActionService::request_attack(
+      *world,
+      {.attacker_id = commander->get_id(),
+       .intent_type = Engine::Core::CommanderCombatIntentType::Light});
+  ASSERT_TRUE(light.accepted);
+  EXPECT_FALSE(commander_data->power_strike_active);
 }
 
 TEST_F(CombatModeTest, TimedWeaponTraceHasNoSegmentOutsideAuthoredWindow) {
