@@ -218,7 +218,8 @@ public:
                                const BiomeSettings& biome,
                                const std::vector<WorldProp>& world_props = {},
                                const std::vector<WorldProp>& authored_world_props = {},
-                               const std::vector<Lake>& lakes = {});
+                               const std::vector<Lake>& lakes = {},
+                               const HillNavigation& hills = {});
 
 private:
   void rebuild_terrain_field();

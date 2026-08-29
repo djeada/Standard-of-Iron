@@ -1699,6 +1699,7 @@ void ArenaViewport::regenerate_terrain() {
   biome.height_noise_amplitude =
       std::clamp(m_terrain_settings.height_scale * 0.05F, 0.05F, 1.25F);
 
+  Game::Map::HillNavigation hills;
   if (!m_arena_terrain_features.empty()) {
     Game::Map::TerrainHeightMap featured(
         m_terrain_grid_extent, m_terrain_grid_extent, k_terrain_tile_size);
@@ -1706,16 +1707,18 @@ void ArenaViewport::regenerate_terrain() {
     featured.build_from_features(m_arena_terrain_features);
     heights = featured.get_height_data();
     terrain_types = featured.getTerrainTypes();
+    hills = featured.hill_navigation();
   }
 
   Game::Map::TerrainHeightMap water_mask(
       m_terrain_grid_extent, m_terrain_grid_extent, k_terrain_tile_size);
-  water_mask.restore_from_data(heights, terrain_types, {}, {});
+  water_mask.restore_from_data(heights, terrain_types, {}, {}, {}, hills);
   water_mask.add_lakes(m_arena_lakes);
   water_mask.add_river_segments(m_arena_rivers);
   water_mask.add_bridges(m_arena_bridges);
   heights = water_mask.get_height_data();
   terrain_types = water_mask.getTerrainTypes();
+  hills = water_mask.hill_navigation();
   const auto runtime_rivers = water_mask.get_river_segments();
   const auto runtime_lakes = water_mask.get_lakes();
   const auto runtime_bridges = water_mask.get_bridges();
@@ -1733,7 +1736,8 @@ void ArenaViewport::regenerate_terrain() {
                                               biome,
                                               m_world_props,
                                               {},
-                                              runtime_lakes);
+                                              runtime_lakes,
+                                              hills);
   Game::Systems::NavGrid::initialize(m_terrain_grid_extent, m_terrain_grid_extent);
   apply_initial_visibility();
   sync_camera_map_bounds(m_camera.get(), m_session.visibility());
