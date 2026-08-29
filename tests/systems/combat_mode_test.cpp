@@ -4524,7 +4524,7 @@ TEST_F(CombatModeTest, MountedChargeImpactDefinitionUsesMountFamily) {
   EXPECT_GT(definition->damage.base_multiplier, 1.0F);
   EXPECT_GT(definition->max_targets, 1);
   EXPECT_FALSE(definition->events.empty());
-  EXPECT_EQ(definition->rider_clip_id, Animation::k_humanoid_riding_charge_clip);
+  EXPECT_EQ(definition->authored_clip_id, Animation::k_humanoid_riding_charge_clip);
 }
 
 TEST_F(CombatModeTest, MountedChargeBodyImpactFindsForwardContact) {
