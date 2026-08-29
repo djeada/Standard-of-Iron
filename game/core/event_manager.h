@@ -348,7 +348,7 @@ public:
 
 enum class EconomyFeedbackKind : std::uint8_t {
   Resource = 0,
-  Population,
+  Reserve,
 };
 
 class EconomyFeedbackEvent : public Event {
@@ -380,13 +380,12 @@ public:
     return event;
   }
 
-  static auto make_population(int owner_id,
-                              EntityID anchor_id,
-                              int amount) -> EconomyFeedbackEvent {
+  static auto
+  make_reserve(int owner_id, EntityID anchor_id, int amount) -> EconomyFeedbackEvent {
     EconomyFeedbackEvent event;
     event.owner_id = owner_id;
     event.anchor_id = anchor_id;
-    event.kind = EconomyFeedbackKind::Population;
+    event.kind = EconomyFeedbackKind::Reserve;
     event.amount = amount;
     return event;
   }

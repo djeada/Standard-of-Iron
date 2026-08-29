@@ -136,7 +136,7 @@ TEST_F(EconomyFeedbackTest, PopulationChangesAreTheirOwnKind) {
   Game::Systems::publish_population_feedback(1, 42, -18);
 
   ASSERT_EQ(m_events.size(), 1U);
-  EXPECT_EQ(m_events.front().kind, EconomyFeedbackKind::Population);
+  EXPECT_EQ(m_events.front().kind, EconomyFeedbackKind::Reserve);
   EXPECT_EQ(m_events.front().amount, -18);
   EXPECT_EQ(m_events.front().resource, -1)
       << "population is not a resource; it must not pick up a resource glyph";

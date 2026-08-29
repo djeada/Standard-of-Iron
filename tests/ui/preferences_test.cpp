@@ -8,6 +8,7 @@
 #include "game/accessibility/motion_settings.h"
 #include "game/accessibility/team_identity.h"
 #include "game/render_bridge/camera_speeds.h"
+#include "ui/hints.h"
 #include "ui/preferences.h"
 
 namespace {
@@ -149,20 +150,17 @@ TEST_F(UiPreferencesTest, GameplayAccessibilityOptionsRoundTripThroughSettings) 
   EXPECT_TRUE(UserSettings::load_ui_team_patterns());
 }
 
-TEST_F(UiPreferencesTest, TheCameraLegendIsShownOnceAndThenRemembered) {
+TEST_F(UiPreferencesTest, ResettingPreferencesOffersEverySuppressedHintAgain) {
   auto* prefs = UiPreferences::instance();
+  auto* hints = UiHints::instance();
 
-  EXPECT_FALSE(prefs->camera_legend_seen())
-      << "a fresh profile should be offered the camera legend";
-  EXPECT_FALSE(UserSettings::load_ui_camera_legend_seen());
-
-  prefs->set_camera_legend_seen(true);
-
-  EXPECT_TRUE(prefs->camera_legend_seen());
-  EXPECT_TRUE(UserSettings::load_ui_camera_legend_seen());
+  hints->suppress(QStringLiteral("formation_readout"));
+  ASSERT_FALSE(hints->is_enabled(QStringLiteral("formation_readout")));
 
   prefs->reset_to_defaults();
-  EXPECT_FALSE(prefs->camera_legend_seen());
+
+  EXPECT_TRUE(hints->is_enabled(QStringLiteral("formation_readout")))
+      << "a settings reset must offer the prompts again";
 }
 
 TEST_F(UiPreferencesTest, SlidersAreClampedToTheirSupportedRange) {

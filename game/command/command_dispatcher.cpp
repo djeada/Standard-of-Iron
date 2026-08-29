@@ -607,7 +607,7 @@ void apply_deliver_civilians(World& world,
 
   const int free_population =
       std::max(0, production->max_units - production->manpower_available);
-  int remaining = free_population / Game::Systems::k_civilian_delivery_population_grant;
+  int remaining = free_population / Game::Systems::k_civilian_delivery_reserve_grant;
   if (remaining <= 0) {
     return;
   }

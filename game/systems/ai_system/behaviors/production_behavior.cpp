@@ -508,14 +508,14 @@ void ProductionBehavior::deliver_idle_civilians(
       continue;
     }
     const int room = entity.production.max_units - entity.production.manpower_available;
-    if (room < Game::Systems::k_civilian_delivery_population_grant) {
+    if (room < Game::Systems::k_civilian_delivery_reserve_grant) {
       continue;
     }
     Recipient recipient;
     recipient.id = entity.id;
     recipient.x = entity.pos_x;
     recipient.z = entity.pos_z;
-    recipient.room = room / Game::Systems::k_civilian_delivery_population_grant;
+    recipient.room = room / Game::Systems::k_civilian_delivery_reserve_grant;
     recipients.push_back(recipient);
   }
   if (recipients.empty()) {

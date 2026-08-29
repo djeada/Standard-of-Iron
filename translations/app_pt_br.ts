@@ -465,10 +465,6 @@ Isto pode ser uma escaramuça, ou os objetivos não foram configurados.</transla
 <context>
     <name>CameraLegend</name>
     <message>
-        <source>Camera controls</source>
-        <translation>Controles de câmera</translation>
-    </message>
-    <message>
         <source>Moving the camera</source>
         <translation>Movendo a câmera</translation>
     </message>
@@ -1346,16 +1342,12 @@ Isto pode ser uma escaramuça, ou os objetivos não foram configurados.</transla
 <context>
     <name>EconomyCoach</name>
     <message>
-        <source>Economy prompts</source>
-        <translation>Avisos de economia</translation>
-    </message>
-    <message>
-        <source>Stop showing these prompts</source>
-        <translation>Parar de mostrar estes avisos</translation>
-    </message>
-    <message>
         <source>How it works</source>
         <translation>Como funciona</translation>
+    </message>
+    <message>
+        <source>Hide these prompts</source>
+        <translation>Ocultar estes avisos</translation>
     </message>
 </context>
 <context>
@@ -1573,12 +1565,12 @@ Isto pode ser uma escaramuça, ou os objetivos não foram configurados.</transla
         <translation>Recrute um construtor em um quartel e mande-o coletar madeira, pedra ou ferro.</translation>
     </message>
     <message>
-        <source>With a builder selected, press Build and place a Home to raise your population, or a Barracks to recruit from.</source>
-        <translation>Com um construtor selecionado, pressione Construir e posicione uma Casa para aumentar sua população, ou um Quartel para recrutar.</translation>
+        <source>With a builder selected, press Build and place a Home to raise your reserve, or a Barracks to recruit from.</source>
+        <translation>Com um construtor selecionado, pressione Construir e posicione uma Casa para aumentar sua reserva, ou um Quartel para recrutar.</translation>
     </message>
     <message>
-        <source>Select a barracks and recruit troops. Each one costs population and resources, both shown on its card.</source>
-        <translation>Selecione um quartel e recrute tropas. Cada uma custa população e recursos, ambos mostrados no cartão dela.</translation>
+        <source>Select a barracks and recruit troops. Each one costs reserve and resources, both shown on its card.</source>
+        <translation>Selecione um quartel e recrute tropas. Cada uma custa reserva e recursos, ambos mostrados no cartão dela.</translation>
     </message>
     <message>
         <source>Gathering, building and recruiting are all under way.</source>
@@ -1593,8 +1585,8 @@ Isto pode ser uma escaramuça, ou os objetivos não foram configurados.</transla
         <translation>Fazenda</translation>
     </message>
     <message>
-        <source>Raises civilians, who carry manpower to the nearest barracks. Each one costs food.</source>
-        <translation>Cria civis, que levam efetivos ao quartel mais próximo. Cada um custa comida.</translation>
+        <source>Raises civilians, who carry reserve to the nearest barracks. Each one costs food.</source>
+        <translation>Cria civis, que levam reserva ao quartel mais próximo. Cada um custa comida.</translation>
     </message>
     <message>
         <source>Grows grain in cycles. A builder reaps it for food once it ripens.</source>
@@ -1605,8 +1597,8 @@ Isto pode ser uma escaramuça, ou os objetivos não foram configurados.</transla
         <translation>Selecione um construtor, pressione Coletar e clique em uma árvore, uma rocha, um depósito de minério, uma fazenda madura ou uma ovelha. Ele leva a carga ao pátio de um quartel e volta para buscar mais.</translation>
     </message>
     <message>
-        <source>Keep recruiting while your builders gather. Raise Homes and Farms when population or food runs out.</source>
-        <translation>Continue recrutando enquanto seus construtores coletam. Erga casas e fazendas quando a população ou a comida acabarem.</translation>
+        <source>Keep recruiting while your builders gather. Raise Homes and Farms when reserve or food runs out.</source>
+        <translation>Continue recrutando enquanto seus construtores coletam. Erga casas e fazendas quando a reserva ou a comida acabarem.</translation>
     </message>
     <message>
         <source>Watches over a wide stretch of ground, holds a settlement together, and takes in healers.</source>
@@ -1624,8 +1616,8 @@ Isto pode ser uma escaramuça, ou os objetivos não foram configurados.</transla
         <translation>Construtores: %1 (%2 ociosos). Ao posicionar uma estrutura, todos os construtores selecionados vão ao canteiro.</translation>
     </message>
     <message>
-        <source>Recruiting draws on the manpower held by each barracks.</source>
-        <translation>Recrutar consome os efetivos disponíveis em cada quartel.</translation>
+        <source>Recruiting draws on the reserve held by each barracks.</source>
+        <translation>O recrutamento consome a reserva de cada quartel.</translation>
     </message>
     <message>
         <source>Needs a barracks</source>
@@ -1636,12 +1628,12 @@ Isto pode ser uma escaramuça, ou os objetivos não foram configurados.</transla
         <translation>Precisa de um construtor</translation>
     </message>
     <message>
-        <source>Not enough manpower at the barracks</source>
-        <translation>Efetivos insuficientes no quartel</translation>
+        <source>Not enough reserve at the barracks</source>
+        <translation>Reserva insuficiente no quartel</translation>
     </message>
     <message>
-        <source>Population limit reached</source>
-        <translation>Limite de população atingido</translation>
+        <source>Manpower limit reached</source>
+        <translation>Limite de reserva atingido</translation>
     </message>
     <message>
         <source>Missing %1</source>
@@ -1684,16 +1676,16 @@ Isto pode ser uma escaramuça, ou os objetivos não foram configurados.</transla
         <translation>O QUE UM QUARTEL PODE RECRUTAR</translation>
     </message>
     <message>
-        <source>%1 — %2 population, %3 · %4s</source>
-        <translation>%1 — %2 de população, %3 · %4 s</translation>
+        <source>%1 — %2 reserve, %3 · %4s</source>
+        <translation>%1 — %2 de reserva, %3 · %4 s</translation>
     </message>
     <message>
         <source>Back to the battle</source>
         <translation>Voltar à batalha</translation>
     </message>
     <message>
-        <source>Population %1 / %2. A Home raises civilians for %3 food each; walking a civilian into a barracks adds %4 manpower. Farms ripen every %5s and sheep yield %6 food.</source>
-        <translation>População %1 / %2. Uma casa cria civis por %3 de comida cada; levar um civil a um quartel adiciona %4 efetivos. As fazendas amadurecem a cada %5 s e uma ovelha rende %6 de comida.</translation>
+        <source>Manpower %1 / %2. A Home raises civilians for %3 food each; walking a civilian into a barracks adds %4 reserve. Farms ripen every %5s and sheep yield %6 food.</source>
+        <translation>Efetivos %1 / %2. Uma casa cria civis por %3 de comida cada; levar um civil a um quartel adiciona %4 de reserva. As fazendas amadurecem a cada %5 s e uma ovelha rende %6 de comida.</translation>
     </message>
     <message>
         <source>Needs a home</source>
@@ -2257,6 +2249,14 @@ Isto pode ser uma escaramuça, ou os objetivos não foram configurados.</transla
         <source>The line is filing through a narrow crossing.</source>
         <translation>A linha passa em fila por uma travessia estreita.</translation>
     </message>
+    <message>
+        <source>Formation</source>
+        <translation>Formação</translation>
+    </message>
+    <message>
+        <source>Hide this readout</source>
+        <translation>Ocultar este painel</translation>
+    </message>
 </context>
 <context>
     <name>GalleryWindow</name>
@@ -2399,12 +2399,12 @@ Isto pode ser uma escaramuça, ou os objetivos não foram configurados.</transla
         <translation>%1 está acabado – %2 caiu.</translation>
     </message>
     <message>
-        <source>Troop limit reached.</source>
-        <translation>Limite de tropas atingido.</translation>
+        <source>Manpower limit reached.</source>
+        <translation>Limite de efetivos atingido.</translation>
     </message>
     <message>
-        <source>Not enough manpower — build a home to raise more families.</source>
-        <translation>Efetivos insuficientes — construa uma casa para criar mais famílias.</translation>
+        <source>Not enough reserve — build a home to raise more families.</source>
+        <translation>Reserva insuficiente — construa uma casa para criar mais famílias.</translation>
     </message>
 </context>
 <context>
@@ -2926,8 +2926,8 @@ Isto pode ser uma escaramuça, ou os objetivos não foram configurados.</transla
         <translation>Pressione Reparar e clique com o botão esquerdo na construção danificada. Clique direito cancela.</translation>
     </message>
     <message>
-        <source>Send civilians to a barracks to refill the population it recruits from.</source>
-        <translation>Envia civis a um quartel para repor a população de onde ele recruta.</translation>
+        <source>Send civilians to a barracks to refill the reserve it recruits from.</source>
+        <translation>Envia civis a um quartel para repor a reserva de onde ele recruta.</translation>
     </message>
     <message>
         <source>Press Deliver, then left-click a friendly barracks. Right-click cancels.</source>
@@ -3626,8 +3626,8 @@ Cada tropa custa efetivos; um esquadrão de doze construtores custa dez. Isto n�
         <translation>Recrutamento</translation>
     </message>
     <message>
-        <source>Population</source>
-        <translation>População</translation>
+        <source>Reserve</source>
+        <translation>Reserva</translation>
     </message>
     <message>
         <source>Formations and lines</source>
@@ -3750,20 +3750,31 @@ Cada tropa custa efetivos; um esquadrão de doze construtores custa dez. Isto n�
         <translation>A comida alimenta seu assentamento: cada civil recrutado em uma casa a custa. Uma fazenda cultiva grãos em ciclos; quando o campo fica dourado, um construtor o ceifa com Coletar, leva os grãos para casa e o campo é semeado de novo. Os construtores também podem abater uma ovelha por uma carga menor. A Coleta automática em comida mantém um construtor trabalhando nas fazendas.</translation>
     </message>
     <message>
-        <source>Every card - recruit or building - lists its price. A grey card means something is short; hover it to read what. Homes cost 50 wood and 15 stone, a farm 40 wood and 10 stone, a barracks 100 wood and 60 stone, a defence tower 60 wood and 80 stone; soldiers cost wood and iron plus population, and civilians cost food.</source>
-        <translation>Cada carta, recruta ou edifício, mostra seu preço. Uma carta cinza significa que falta algo; passe o cursor para ler o quê. As casas custam 50 de madeira e 15 de pedra, uma fazenda 40 de madeira e 10 de pedra, um quartel 100 de madeira e 60 de pedra, uma torre de defesa 60 de madeira e 80 de pedra; os soldados custam madeira e ferro mais população, e os civis custam comida.</translation>
+        <source>Every card - recruit or building - lists its price. A grey card means something is short; hover it to read what. Homes cost 50 wood and 15 stone, a farm 40 wood and 10 stone, a barracks 100 wood and 60 stone, a defence tower 60 wood and 80 stone; soldiers cost wood and iron plus reserve, and civilians cost food.</source>
+        <translation>Cada carta, recruta ou edifício, mostra seu preço. Uma carta cinza significa que falta algo; passe o cursor para ler o quê. As casas custam 50 de madeira e 15 de pedra, uma fazenda 40 de madeira e 10 de pedra, um quartel 100 de madeira e 60 de pedra, uma torre de defesa 60 de madeira e 80 de pedra; os soldados custam madeira e ferro mais reserva, e os civis custam comida.</translation>
     </message>
     <message>
         <source>Barracks recruit soldiers and hold your stockpile yard. Homes raise families and civilians. Farms grow grain that builders reap for food. Defence towers shoot at anything in range. Marketplaces trade. Temples strengthen morale and take in healers. Walls and gates shape the field; gates open for your own troops.</source>
         <translation>Quartéis recrutam soldados e abrigam seu depósito. Casas criam famílias e civis. Fazendas cultivam grãos que construtores colhem como comida. Torres de defesa atiram em tudo ao alcance. Mercados negociam. Templos fortalecem o moral e acolhem curandeiros. Muros e portões moldam o campo; os portões se abrem para suas próprias tropas.</translation>
     </message>
     <message>
-        <source>Left-click a barracks and pick a soldier; healers take their vows at a temple instead. Recruits queue up to five deep and march out to the rally flag. Each costs population from the building&apos;s own pool as well as materials.</source>
-        <translation>Clique com o botão esquerdo em um quartel e escolha um soldado; curandeiros fazem seus votos em um templo. Os recrutas entram numa fila de até cinco e marcham até a bandeira de reunião. Cada um custa população da reserva do próprio edifício, além de materiais.</translation>
+        <source>Left-click a barracks and pick a soldier; healers take their vows at a temple instead. Recruits queue up to five deep and march out to the rally flag. Each costs reserve from the building&apos;s own pool as well as materials.</source>
+        <translation>Clique com o botão esquerdo em um quartel e escolha um soldado; curandeiros fazem seus votos em um templo. Os recrutas entram numa fila de até cinco e marcham até a bandeira de reunião. Cada um custa reserva da reserva do próprio edifício, além de materiais.</translation>
     </message>
     <message>
-        <source>A barracks or temple starts with a pool of population and spends it on every recruit. Homes refill it: each Home raises families over time, a civilian can be recruited there for food and sent to either building with Deliver, and that building&apos;s pool grows. The top bar shows your army against the map&apos;s overall cap.</source>
-        <translation>Um quartel ou templo começa com uma reserva de população e a gasta em cada recruta. As casas a reabastecem: cada Casa cria famílias com o tempo, ali um civil pode ser recrutado por comida e enviado a qualquer um dos dois edifícios com Entregar, e a reserva desse edifício cresce. A barra superior mostra seu exército em relação ao limite total do mapa.</translation>
+        <source>A barracks or temple starts with a reserve and spends it on every recruit; the card shows exactly what each one costs. Homes refill it: each Home raises families over time, a civilian can be recruited there for food and sent to either building with Deliver, and that building&apos;s reserve grows. A squad then stands in the field for what it cost, which is what the top bar counts against the map&apos;s manpower cap.</source>
+        <translation>Um quartel ou templo começa com uma reserva e a gasta em cada recruta; o cartão mostra exatamente quanto custa cada um. As casas a reabastecem: cada Casa cria famílias com o tempo, ali um civil pode ser recrutado por comida e enviado a qualquer um dos dois edifícios com Entregar, e a reserva desse edifício cresce. Uma tropa fica em campo pelo que custou, e é isso que a barra superior conta em relação ao limite de efetivos do mapa.</translation>
+    </message>
+</context>
+<context>
+    <name>HintCard</name>
+    <message>
+        <source>Hide this</source>
+        <translation>Ocultar</translation>
+    </message>
+    <message>
+        <source>Never show this again</source>
+        <translation>Nunca mostrar novamente</translation>
     </message>
 </context>
 <context>
@@ -6818,9 +6829,9 @@ Dispara flechas contra inimigos</translation>
     </message>
     <message>
         <source>Residential building
-Adds +50 population to nearest barracks</source>
+Adds +50 reserve to the nearest barracks</source>
         <translation>Edifício residencial
-Adiciona +50 de população ao quartel mais próximo</translation>
+Adiciona +50 de reserva ao quartel mais próximo</translation>
     </message>
     <message>
         <source>Marketplace</source>
@@ -6857,8 +6868,8 @@ Abre-se para suas tropas e aliados</translation>
         <translation>%1 %2</translation>
     </message>
     <message>
-        <source>Not enough available population</source>
-        <translation>População disponível insuficiente</translation>
+        <source>Not enough reserve</source>
+        <translation>Reserva insuficiente</translation>
     </message>
     <message>
         <source>Already building...</source>
@@ -6881,8 +6892,8 @@ Custo: %2
 Tempo de treino: %3s</translation>
     </message>
     <message>
-        <source>population</source>
-        <translation>população</translation>
+        <source>reserve</source>
+        <translation>reserva</translation>
     </message>
     <message>
         <source>Recruit %1
@@ -6906,11 +6917,11 @@ Exclusivo de Cartago</translation>
         <source>Recruit %1
 Cost: %2
 Build time: %3s
-Use Deliver mode, then click a friendly barracks to add 50 available population.</source>
+Use Deliver mode, then click a friendly barracks to add to its reserve.</source>
         <translation>Recrutar %1
 Custo: %2
 Tempo de treino: %3s
-Use o modo Entregar e clique em um quartel aliado para adicionar 50 de população disponível.</translation>
+Use o modo Entregar e clique em um quartel aliado para aumentar a reserva dele.</translation>
     </message>
     <message>
         <source>families</source>
@@ -7195,8 +7206,8 @@ Os construtores os ceifam pela comida que recruta civis</translation>
         <translation>FAZER VOTOS</translation>
     </message>
     <message>
-        <source>Deliver civilians here to raise the temple&apos;s available population</source>
-        <translation>Entregue civis aqui para aumentar a população disponível do templo</translation>
+        <source>Deliver civilians here to raise the temple&apos;s reserve</source>
+        <translation>Entregue civis aqui para aumentar a reserva do templo</translation>
     </message>
     <message>
         <source>Barracks reserve: %1 / %2</source>
@@ -8188,8 +8199,36 @@ Os construtores os ceifam pela comida que recruta civis</translation>
         <translation>Números de economia</translation>
     </message>
     <message>
-        <source>Floats resource, trade and population changes over the building they happened at</source>
-        <translation>Mostra as mudanças de recursos, comércio e população sobre o edifício onde aconteceram</translation>
+        <source>Floats resource, trade and reserve changes over the building they happened at</source>
+        <translation>Mostra as mudanças de recursos, comércio e reserva sobre o edifício onde aconteceram</translation>
+    </message>
+    <message>
+        <source>Camera legend</source>
+        <translation>Legenda da câmera</translation>
+    </message>
+    <message>
+        <source>Economy prompts</source>
+        <translation>Avisos de economia</translation>
+    </message>
+    <message>
+        <source>Formation readout</source>
+        <translation>Painel de formação</translation>
+    </message>
+    <message>
+        <source>Lists the camera controls the first time a mission starts</source>
+        <translation>Lista os controles de câmera na primeira vez que uma missão começa</translation>
+    </message>
+    <message>
+        <source>Walks through the opening economy steps of a mission</source>
+        <translation>Guia os primeiros passos de economia de uma missão</translation>
+    </message>
+    <message>
+        <source>Shows cohesion and phase after you send several units somewhere together, until the selection changes</source>
+        <translation>Mostra coesão e fase depois de enviar várias unidades juntas, até a seleção mudar</translation>
+    </message>
+    <message>
+        <source>Prompts and readouts:</source>
+        <translation>Avisos e painéis:</translation>
     </message>
 </context>
 <context>
@@ -8316,8 +8355,8 @@ Os construtores os ceifam pela comida que recruta civis</translation>
         <translation>Os recrutas saem do quartel. Clique com o botão esquerdo no seu quartel para abrir o painel de produção à direita.</translation>
     </message>
     <message>
-        <source>The barracks has only %1 population left to draw on. Every recruit costs population; when it runs dry, build Homes - each Home raises families, and a civilian recruited there and sent to the barracks with Deliver refills it.</source>
-        <translation>O quartel só tem %1 de população restante. Cada recruta custa população; quando ela acaba, construa casas: cada casa cria famílias, e um civil recrutado ali e enviado ao quartel com Entregar a repõe.</translation>
+        <source>The barracks has only %1 reserve left to draw on. Every recruit costs reserve; when it runs dry, build Homes - each Home raises families, and a civilian recruited there and sent to the barracks with Deliver refills it.</source>
+        <translation>O quartel só tem %1 de reserva restante. Cada recruta custa reserva; quando ela acaba, construa casas: cada casa cria famílias, e um civil recrutado ali e enviado ao quartel com Entregar a repõe.</translation>
     </message>
     <message>
         <source>A recruit card turns grey when a resource is short: soldiers need wood for shafts and iron for blades. Send a builder to collect more.</source>
@@ -8685,8 +8724,8 @@ Os construtores os ceifam pela comida que recruta civis</translation>
         <translation>Patrulha</translation>
     </message>
     <message>
-        <source>Population %1  ·  Build time %2s</source>
-        <translation>População %1  ·  Tempo de criação %2 s</translation>
+        <source>Reserve %1  ·  Build time %2s</source>
+        <translation>Reserva %1  ·  Tempo de criação %2 s</translation>
     </message>
     <message>
         <source>Range</source>

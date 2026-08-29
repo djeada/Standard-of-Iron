@@ -212,11 +212,11 @@ auto build_resource_map(Game::Session::SessionContext& session,
 
 auto build_player_state_map(Game::Session::SessionContext& session,
                             int owner_id,
-                            int population_cap) -> QVariantMap {
+                            int manpower_cap) -> QVariantMap {
   QVariantMap state;
   state["owner_id"] = owner_id;
-  state["population"] = Game::Systems::troop_count_for(session.world(), owner_id);
-  state["population_cap"] = population_cap;
+  state["manpower"] = Game::Systems::troop_count_for(session.world(), owner_id);
+  state["manpower_cap"] = manpower_cap;
   state["resources"] = build_resource_map(session, owner_id);
   return state;
 }
@@ -2690,7 +2690,7 @@ void GameEngine::sync_economy_state() {
       .resources = &m_session->economy(),
       .owner_id = owner_id,
       .nation_id = nation != nullptr ? nation->id : nations.default_nation_id(),
-      .population_cap = m_level.max_troops_per_player,
+      .manpower_cap = m_level.max_troops_per_player,
       .objective_resources = mission_objective_resources()};
 
   const bool coach_available = !m_level.is_spectator_mode &&

@@ -46,7 +46,7 @@ constexpr std::array<std::string_view, 9> k_buildable_items = {
     "ballista",
 };
 
-constexpr int k_home_population_bonus = 50;
+constexpr int k_home_reserve_bonus = 50;
 
 struct OwnerScan {
   int builder_count = 0;
@@ -65,7 +65,7 @@ struct OwnerScan {
   bool barracks_producing = false;
 };
 
-auto troop_population_of(const EconomyOverviewRequest& request) -> int {
+auto troop_manpower_of(const EconomyOverviewRequest& request) -> int {
   return request.world != nullptr
              ? Game::Systems::troop_count_for(*request.world, request.owner_id)
              : 0;
@@ -215,7 +215,8 @@ auto is_barracks_recruit(Game::Units::TroopType type) -> bool {
 
 struct UnitItem {
   CostedItem item;
-  int population_cost = 0;
+  int manpower_cost = 0;
+  int army_cap_weight = 0;
   float build_time = 0.0F;
   int individuals_per_unit = 1;
 };
@@ -229,7 +230,8 @@ auto civilian_item(Game::Systems::NationID nation_id) -> UnitItem {
   entry.item.display_name =
       Game::Util::tr_asset(Game::Util::k_units_context, profile.display_name);
   entry.item.costs = profile.production.resource_costs;
-  entry.population_cost = profile.production.population_cost();
+  entry.manpower_cost = profile.production.cost;
+  entry.army_cap_weight = profile.production.population_cost();
   entry.build_time = profile.production.build_time;
   entry.individuals_per_unit = profile.individuals_per_unit;
   return entry;
@@ -257,7 +259,8 @@ auto unit_items(const Game::Systems::NationRegistry* nations,
     entry.item.display_name =
         Game::Util::tr_asset(Game::Util::k_units_context, profile.display_name);
     entry.item.costs = profile.production.resource_costs;
-    entry.population_cost = profile.production.population_cost();
+    entry.manpower_cost = profile.production.cost;
+    entry.army_cap_weight = profile.production.population_cost();
     entry.build_time = profile.production.build_time;
     entry.individuals_per_unit = profile.individuals_per_unit;
     items.push_back(std::move(entry));
@@ -352,7 +355,7 @@ auto build_production_help(const EconomyOverviewRequest& request) -> QVariantMap
   auto& registry = *request.resources;
   const ResourceAmounts available = registry.get_all(request.owner_id);
   const OwnerScan scan = scan_owner(request.world, request.owner_id);
-  const int troop_count = troop_population_of(request);
+  const int troop_count = troop_manpower_of(request);
 
   QVariantList buildings;
   for (const auto& item : building_items()) {
@@ -374,7 +377,7 @@ auto build_production_help(const EconomyOverviewRequest& request) -> QVariantMap
     QVariantMap entry;
     entry["unit_type"] = unit.item.key;
     entry["display_name"] = unit.item.display_name;
-    entry["population_cost"] = unit.population_cost;
+    entry["cost"] = unit.manpower_cost;
     entry["resource_costs"] = costs_to_map(unit.item.costs);
     entry["build_time"] = static_cast<double>(unit.build_time);
     entry["individuals_per_unit"] = unit.individuals_per_unit;
@@ -383,10 +386,9 @@ auto build_production_help(const EconomyOverviewRequest& request) -> QVariantMap
     entry["affordable"] = missing.isEmpty();
     entry["prerequisite"] = QStringLiteral("barracks");
     entry["prerequisite_met"] = scan.barracks_count > 0;
-    entry["manpower_met"] = scan.barracks_manpower >= unit.population_cost;
-    entry["population_met"] =
-        request.population_cap <= 0 ||
-        troop_count + unit.population_cost <= request.population_cap;
+    entry["reserve_met"] = scan.barracks_manpower >= unit.manpower_cost;
+    entry["manpower_met"] = request.manpower_cap <= 0 ||
+                            troop_count + unit.army_cap_weight <= request.manpower_cap;
     units.push_back(entry);
   }
 
@@ -395,7 +397,7 @@ auto build_production_help(const EconomyOverviewRequest& request) -> QVariantMap
     QVariantMap entry;
     entry["unit_type"] = civilian.item.key;
     entry["display_name"] = civilian.item.display_name;
-    entry["population_cost"] = civilian.population_cost;
+    entry["cost"] = civilian.manpower_cost;
     entry["resource_costs"] = costs_to_map(civilian.item.costs);
     entry["build_time"] = static_cast<double>(civilian.build_time);
     entry["individuals_per_unit"] = civilian.individuals_per_unit;
@@ -404,8 +406,8 @@ auto build_production_help(const EconomyOverviewRequest& request) -> QVariantMap
     entry["affordable"] = missing.isEmpty();
     entry["prerequisite"] = QStringLiteral("home");
     entry["prerequisite_met"] = scan.home_count > 0;
+    entry["reserve_met"] = true;
     entry["manpower_met"] = true;
-    entry["population_met"] = true;
     units.push_back(entry);
   }
 
@@ -436,17 +438,17 @@ auto build_production_help(const EconomyOverviewRequest& request) -> QVariantMap
   help["civilian_food_cost"] =
       civilian_item(request.nation_id).item.costs.get(ResourceType::Food);
   help["barracks_manpower"] = scan.barracks_manpower;
-  help["population"] = troop_count;
-  help["population_cap"] = request.population_cap;
-  help["home_population_bonus"] = k_home_population_bonus;
-  help["civilian_delivery_grant"] = Game::Systems::k_civilian_delivery_population_grant;
+  help["manpower"] = troop_count;
+  help["manpower_cap"] = request.manpower_cap;
+  help["home_reserve_bonus"] = k_home_reserve_bonus;
+  help["civilian_delivery_grant"] = Game::Systems::k_civilian_delivery_reserve_grant;
   return help;
 }
 
 auto capture_economy_coach_baseline(const EconomyOverviewRequest& request)
     -> EconomyCoachBaseline {
   const OwnerScan scan = scan_owner(request.world, request.owner_id);
-  return {.troop_population = troop_population_of(request),
+  return {.troop_manpower = troop_manpower_of(request),
           .building_count = scan.building_count,
           .captured = true};
 }
@@ -454,7 +456,7 @@ auto capture_economy_coach_baseline(const EconomyOverviewRequest& request)
 auto build_economy_coach_state(const EconomyOverviewRequest& request,
                                const EconomyCoachBaseline& baseline) -> QVariantMap {
   const OwnerScan scan = scan_owner(request.world, request.owner_id);
-  const int troop_population = troop_population_of(request);
+  const int troop_manpower = troop_manpower_of(request);
   const ResourceAmounts harvested =
       request.resources != nullptr
           ? request.resources->get_harvested_all(request.owner_id)
@@ -464,9 +466,9 @@ auto build_economy_coach_state(const EconomyOverviewRequest& request,
   const bool build_done = scan.building_count > baseline.building_count ||
                           scan.constructing_builder_count > 0;
   const bool recruit_done =
-      troop_population > baseline.troop_population || scan.barracks_producing;
+      troop_manpower > baseline.troop_manpower || scan.barracks_producing;
   const bool army_done =
-      troop_population >= baseline.troop_population + k_economy_coach_army_population;
+      troop_manpower >= baseline.troop_manpower + k_economy_coach_army_manpower;
 
   const std::array<std::pair<const char*, bool>, 4> steps = {{
       {"gather", gather_done},
@@ -499,11 +501,10 @@ auto build_economy_coach_state(const EconomyOverviewRequest& request,
   state["idle_builder_count"] = scan.idle_builder_count;
   state["barracks_count"] = scan.barracks_count;
   state["home_count"] = scan.home_count;
-  state["troop_population"] = troop_population;
-  state["population_raised"] =
-      std::max(0, troop_population - baseline.troop_population);
-  state["population_target"] = k_economy_coach_army_population;
-  state["population_cap"] = request.population_cap;
+  state["troop_manpower"] = troop_manpower;
+  state["population_raised"] = std::max(0, troop_manpower - baseline.troop_manpower);
+  state["manpower_target"] = k_economy_coach_army_manpower;
+  state["manpower_cap"] = request.manpower_cap;
   state["gathering_workers"] =
       std::accumulate(scan.gathering_workers.begin(), scan.gathering_workers.end(), 0);
   return state;

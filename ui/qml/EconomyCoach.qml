@@ -2,9 +2,10 @@ import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 import StandardOfIron 1.0
+import StandardOfIron.Core 1.0 as Core
 import StandardOfIron.Design 1.0 as Design
 
-Design.IronPanel {
+HintCard {
     id: root
 
     property var economy: null
@@ -16,83 +17,69 @@ Design.IronPanel {
 
     signal help_requested
 
+    hintId: "economy_coach"
+    title: EconomyGuide.coach_title(root.step)
+    iconText: Design.Icons.objective
+    closeTooltip: qsTr("Hide these prompts")
+
     implicitWidth: Design.Metrics.space24 * 15
-    implicitHeight: layout.implicitHeight + Design.Metrics.space16
-    raised: true
-    accessibleName: qsTr("Economy prompts")
 
-    ColumnLayout {
-        id: layout
+    readonly property bool coach_ready: !!root.economy && root.economy.coach_visible === true
 
-        anchors.fill: parent
-        spacing: Design.Metrics.space4
+    function sync() {
+        if (!root.economy)
+            return;
+        root.economy.coach_enabled = Core.UiHints.enabled[root.hintId] === true;
+        if (root.coach_ready)
+            Core.UiHints.show(root.hintId);
+    }
 
-        RowLayout {
-            Layout.fillWidth: true
-            spacing: Design.Metrics.space8
+    onCoach_readyChanged: sync()
 
-            Text {
-                text: Design.Icons.objective
-                color: Design.Theme.accent
-                font.family: Design.Typography.family
-                font.pixelSize: Design.Typography.label
-            }
+    Component.onCompleted: sync()
 
-            Text {
-                Layout.fillWidth: true
-                text: EconomyGuide.coach_title(root.step)
-                color: Design.Theme.textPrimary
-                font.family: Design.Typography.family
-                font.pixelSize: Design.Typography.label
-                font.weight: Design.Typography.bold
-                elide: Text.ElideRight
-            }
+    Connections {
+        function onChanged() {
+            root.sync();
+        }
 
-            Design.IronIconButton {
-                iconText: Design.Icons.close
-                tooltip: qsTr("Stop showing these prompts")
-                onClicked: {
-                    if (root.economy && root.economy.dismiss_coach)
-                        root.economy.dismiss_coach();
-                }
+        target: Core.UiHints
+    }
+
+    Text {
+        Layout.fillWidth: true
+        text: EconomyGuide.coach_body(root.step, root.state)
+        color: Design.Theme.textSecondary
+        font.family: Design.Typography.family
+        font.pixelSize: Design.Typography.caption
+        wrapMode: Text.WordWrap
+    }
+
+    RowLayout {
+        Layout.fillWidth: true
+        spacing: Design.Metrics.space8
+
+        Repeater {
+            model: root.state.steps ? root.state.steps : []
+
+            delegate: Rectangle {
+                required property var modelData
+                required property int index
+
+                width: Design.Metrics.space8
+                height: Design.Metrics.space8
+                radius: height / 2
+                color: modelData.done ? Design.Theme.success : (index === root.stepIndex ? Design.Theme.accent : Design.Theme.borderStrong)
             }
         }
 
-        Text {
+        Item {
             Layout.fillWidth: true
-            text: EconomyGuide.coach_body(root.step, root.state)
-            color: Design.Theme.textSecondary
-            font.family: Design.Typography.family
-            font.pixelSize: Design.Typography.caption
-            wrapMode: Text.WordWrap
         }
 
-        RowLayout {
-            Layout.fillWidth: true
-            spacing: Design.Metrics.space8
-
-            Repeater {
-                model: root.state.steps ? root.state.steps : []
-
-                delegate: Rectangle {
-                    required property var modelData
-                    required property int index
-
-                    width: Design.Metrics.space8
-                    height: Design.Metrics.space8
-                    radius: height / 2
-                    color: modelData.done ? Design.Theme.success : (index === root.stepIndex ? Design.Theme.accent : Design.Theme.borderStrong)
-                }
-            }
-
-            Item {
-                Layout.fillWidth: true
-            }
-
-            Design.IronButton {
-                text: qsTr("How it works")
-                onClicked: root.help_requested()
-            }
+        Design.IronButton {
+            text: qsTr("How it works")
+            onClicked: root.help_requested()
         }
     }
 }

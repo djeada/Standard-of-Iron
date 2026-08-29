@@ -58,7 +58,7 @@ Item {
     function accent_for(ev) {
         if (ev.kind === "resource")
             return Number(ev.amount) < 0 ? "#e4a05d" : "#8fe0a8";
-        if (ev.kind === "population")
+        if (ev.kind === "reserve")
             return "#9db8ff";
         if (ev.kind === "heal")
             return "#8fe0a8";
@@ -68,7 +68,7 @@ Item {
     }
 
     function body_for(ev) {
-        if (ev.kind === "resource" || ev.kind === "population")
+        if (ev.kind === "resource" || ev.kind === "reserve")
             return root.signed(Number(ev.amount));
         var magnitude = Math.abs(Number(ev.amount));
         return (ev.incoming ? "-" : "") + magnitude.toString();
@@ -185,7 +185,7 @@ Item {
                 }
 
                 Text {
-                    visible: tick.kind === "population"
+                    visible: tick.kind === "reserve"
                     anchors.verticalCenter: parent.verticalCenter
                     text: qsTr("POP")
                     color: tick.accent

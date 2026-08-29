@@ -15,7 +15,7 @@ enum class FeedbackKind : std::uint8_t {
   Damage = 0,
   Heal,
   Resource,
-  Population,
+  Reserve,
   Count,
 };
 

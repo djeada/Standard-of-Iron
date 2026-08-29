@@ -360,12 +360,12 @@ Item {
                     Design.IronInspectorSection {
                         objectName: "unitInspectCost"
                         Layout.fillWidth: true
-                        visible: root.has_profile && root.stat("population_cost", 0) > 0
+                        visible: root.has_profile && root.stat("cost", 0) > 0
                         title: qsTr("What it costs")
 
                         Text {
                             width: parent.width
-                            text: qsTr("Population %1  ·  Build time %2s").arg(root.stat("population_cost", 0)).arg(root.number("build_time", 0))
+                            text: qsTr("Reserve %1  ·  Build time %2s").arg(root.stat("cost", 0)).arg(root.number("build_time", 0))
                             color: Design.Theme.textPrimary
                             font.family: Design.Typography.family
                             font.pixelSize: Design.Typography.label

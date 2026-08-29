@@ -308,8 +308,8 @@ void ActivityViewModel::record_economy(
 
   App::Core::WorldFeedbackTick tick;
   tick.anchor = event.anchor_id;
-  tick.kind = event.kind == Engine::Core::EconomyFeedbackKind::Population
-                  ? App::Core::FeedbackKind::Population
+  tick.kind = event.kind == Engine::Core::EconomyFeedbackKind::Reserve
+                  ? App::Core::FeedbackKind::Reserve
                   : App::Core::FeedbackKind::Resource;
   tick.style = App::Core::FeedbackStyle::Tick;
   tick.amount = event.amount;

@@ -17,8 +17,8 @@ auto feedback_kind_key(FeedbackKind kind) -> const char* {
     return "heal";
   case FeedbackKind::Resource:
     return "resource";
-  case FeedbackKind::Population:
-    return "population";
+  case FeedbackKind::Reserve:
+    return "reserve";
   case FeedbackKind::Count:
     break;
   }
@@ -59,7 +59,7 @@ auto WorldFeedbackStore::priority(const WorldFeedbackTick& tick) -> float {
       score += 0.5F;
     }
     break;
-  case FeedbackKind::Population:
+  case FeedbackKind::Reserve:
     score = 2.0F;
     break;
   case FeedbackKind::Count:
@@ -77,7 +77,7 @@ auto WorldFeedbackStore::coalesce_window(FeedbackKind kind) const -> float {
   case FeedbackKind::Heal:
     return m_limits.damage_coalesce_window;
   case FeedbackKind::Resource:
-  case FeedbackKind::Population:
+  case FeedbackKind::Reserve:
     return m_limits.economy_coalesce_window;
   case FeedbackKind::Count:
     break;

@@ -112,7 +112,7 @@ TestCase {
                     "amount": 8
                 }), "+8");
         compare(numbers.body_for({
-                    "kind": "population",
+                    "kind": "reserve",
                     "amount": -18
                 }), "-18");
     }
@@ -150,7 +150,7 @@ TestCase {
                         "kind": "resource"
                     }), false));
         verify(!numbers.accepts(tick({
-                        "kind": "population"
+                        "kind": "reserve"
                     }), false));
         numbers.combatEnabled = true;
         numbers.economyEnabled = true;
@@ -168,7 +168,7 @@ TestCase {
                         "pairedResource": 2,
                         "pairedAmount": 10
                     }), tick({
-                        "kind": "population",
+                        "kind": "reserve",
                         "amount": -18
                     })]];
         tryVerify(function () {

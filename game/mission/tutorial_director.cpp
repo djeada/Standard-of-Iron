@@ -508,8 +508,8 @@ auto TutorialDirector::hint_for(const TutorialObservation& o) const -> QString {
                 "its production panel on the right.");
     }
     if (o.barracks_manpower < 20) {
-      return tr("The barracks has only %1 population left to draw on. Every recruit "
-                "costs population; when it runs dry, build Homes - each Home raises "
+      return tr("The barracks has only %1 reserve left to draw on. Every recruit "
+                "costs reserve; when it runs dry, build Homes - each Home raises "
                 "families, and a civilian recruited there and sent to the barracks "
                 "with Deliver refills it.")
           .arg(o.barracks_manpower);

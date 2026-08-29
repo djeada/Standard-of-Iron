@@ -24,7 +24,7 @@ Item {
     readonly property var economy: typeof game !== 'undefined' && game && game.economy ? game.economy : null
     property bool commander_rally_overlay_blocked: commander_rpg_mode && typeof game !== 'undefined' && (game.cursor_mode === "place_commander_rally" || game.cursor_mode === "place_barracks_rally")
 
-    property bool camera_legend_visible: false
+    readonly property bool camera_legend_visible: Core.UiHints.showing["camera_legend"] === true
 
     function show_unit_profile(unit_type, nation, from_selection) {
         unitInspectPanel.show_availability = from_selection === true;
@@ -53,14 +53,9 @@ Item {
     onVisibleChanged: {
         if (!visible)
             return;
-        if (!Core.UiPreferences.cameraLegendSeen && !hud.commander_rpg_mode)
-            hud.camera_legend_visible = true;
+        if (!hud.commander_rpg_mode)
+            Core.UiHints.show_once("camera_legend");
         hud_became_visible();
-    }
-
-    onCamera_legend_visibleChanged: {
-        if (camera_legend_visible)
-            Core.UiPreferences.cameraLegendSeen = true;
     }
 
     Connections {
@@ -68,6 +63,7 @@ Item {
             selection_tick += 1;
             has_movable_units = typeof game !== 'undefined' && game.orders.has_commandable_selection ? game.orders.has_commandable_selection() : false;
             refresh_command_mode();
+            Core.UiHints.on_selection_changed();
         }
 
         target: (typeof game !== 'undefined') ? game : null
@@ -161,7 +157,12 @@ Item {
             onEconomy_help_requested: economyHelpPanel.visible = true
             onHelp_requested: hud.help_requested()
             camera_legend_visible: hud.camera_legend_visible
-            onCamera_legend_toggled: hud.camera_legend_visible = !hud.camera_legend_visible
+            onCamera_legend_toggled: {
+                if (hud.camera_legend_visible)
+                    Core.UiHints.dismiss("camera_legend");
+                else
+                    Core.UiHints.reveal("camera_legend");
+            }
         }
     }
 
@@ -252,7 +253,7 @@ Item {
         anchors.topMargin: Design.Metrics.space8 + (waveTracker.visible ? waveTracker.height + Design.Metrics.space8 : 0)
 
         economy: hud.economy
-        visible: !hud.commander_rpg_mode && !!hud.economy && hud.economy.coach_visible
+        gate: !hud.commander_rpg_mode && !!hud.economy && hud.economy.coach_visible
         onHelp_requested: economyHelpPanel.visible = true
     }
 
@@ -264,10 +265,9 @@ Item {
         anchors.top: topPanel.bottom
         anchors.topMargin: hud.right_stack_bottom - topPanel.height
 
-        visible: hud.camera_legend_visible && !hud.commander_rpg_mode && !commanderMessage.showing
-        onDismissed: hud.camera_legend_visible = false
+        gate: !hud.commander_rpg_mode && !commanderMessage.showing
         onOpen_settings_requested: {
-            hud.camera_legend_visible = false;
+            cameraLegend.dismiss();
             hud.camera_settings_requested();
         }
     }
@@ -325,7 +325,7 @@ Item {
         anchors.bottomMargin: 12
         anchors.left: parent.left
         anchors.leftMargin: 16
-        visible: has_formation && !formationPanel.placing && !hud.commander_rpg_mode
+        gate: has_formation && any_selected && !formationPanel.placing && !hud.commander_rpg_mode
     }
 
     WorldProjector {

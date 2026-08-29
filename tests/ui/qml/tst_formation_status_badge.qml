@@ -1,5 +1,6 @@
 import QtQuick 2.15
 import QtTest 1.15
+import StandardOfIron.Core 1.0 as Core
 import StandardOfIron.Design 1.0
 import "../../../ui/qml"
 
@@ -18,12 +19,61 @@ TestCase {
             });
     }
 
+    function init() {
+        Core.UiHints.restore_all();
+        Core.UiHints.dismiss_all();
+    }
+
     function test_no_formation_hides_the_badge() {
         var badge = makeBadge({
                 "active": false
             });
         verify(!badge.has_formation);
         verify(!badge.visible);
+        badge.destroy();
+    }
+
+    function test_the_badge_waits_for_a_deployment_before_it_appears() {
+        var badge = makeBadge({
+                "active": true,
+                "phase": "formed",
+                "cohesion": 0.9,
+                "member_count": 8
+            });
+        badge.gate = true;
+        verify(!badge.visible, "an active formation alone must not raise the readout");
+        Core.UiHints.show(badge.hintId);
+        verify(badge.visible, "deploying a multi-unit order must raise the readout");
+        Core.UiHints.on_selection_changed();
+        verify(!badge.visible, "changing the selection must close the readout");
+        badge.destroy();
+    }
+
+    function test_closing_the_badge_hides_it_without_turning_it_off() {
+        var badge = makeBadge({
+                "active": true,
+                "phase": "formed"
+            });
+        badge.gate = true;
+        Core.UiHints.show(badge.hintId);
+        verify(badge.visible);
+        badge.dismiss();
+        verify(!badge.visible);
+        verify(Core.UiHints.enabled[badge.hintId] === true);
+        badge.destroy();
+    }
+
+    function test_never_show_again_keeps_the_badge_down_for_good() {
+        var badge = makeBadge({
+                "active": true,
+                "phase": "formed"
+            });
+        badge.gate = true;
+        badge.stop_showing();
+        Core.UiHints.show(badge.hintId);
+        verify(!badge.visible, "a suppressed readout must ignore later deployments");
+        verify(Core.UiHints.enabled[badge.hintId] === false);
+        Core.UiHints.restore_all();
         badge.destroy();
     }
 
