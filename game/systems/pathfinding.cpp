@@ -791,23 +791,29 @@ void Pathfinding::rebuild_world_prop_index() {
       next[to_index(grid_x, grid_z)] = value;
     }
 
-    float const radius_cells =
-        Game::Map::world_prop_ground_radius(prop.type, prop.scale) / tile_size;
+    float const bounds_cells =
+        Game::Map::world_prop_ground_bounding_radius(prop.type, prop.scale) / tile_size;
     int const min_x =
-        std::max(0, static_cast<int>(std::floor(grid_x_value - radius_cells)));
+        std::max(0, static_cast<int>(std::floor(grid_x_value - bounds_cells)));
     int const max_x =
-        std::min(m_width - 1, static_cast<int>(std::ceil(grid_x_value + radius_cells)));
+        std::min(m_width - 1, static_cast<int>(std::ceil(grid_x_value + bounds_cells)));
     int const min_z =
-        std::max(0, static_cast<int>(std::floor(grid_z_value - radius_cells)));
+        std::max(0, static_cast<int>(std::floor(grid_z_value - bounds_cells)));
     int const max_z = std::min(
-        m_height - 1, static_cast<int>(std::ceil(grid_z_value + radius_cells)));
-    float const radius_sq = radius_cells * radius_cells;
+        m_height - 1, static_cast<int>(std::ceil(grid_z_value + bounds_cells)));
 
     for (int cell_z = min_z; cell_z <= max_z; ++cell_z) {
       for (int cell_x = min_x; cell_x <= max_x; ++cell_x) {
-        float const dx = static_cast<float>(cell_x) - grid_x_value;
-        float const dz = static_cast<float>(cell_z) - grid_z_value;
-        if (dx * dx + dz * dz > radius_sq) {
+        float const offset_x = (static_cast<float>(cell_x) - grid_x_value) * tile_size;
+        float const offset_z = (static_cast<float>(cell_z) - grid_z_value) * tile_size;
+        if (Game::Map::world_prop_overlap_depth(prop.type,
+                                                prop.scale,
+                                                0.0F,
+                                                0.0F,
+                                                prop.rotation,
+                                                offset_x,
+                                                offset_z,
+                                                0.0F) <= 0.0F) {
           continue;
         }
 

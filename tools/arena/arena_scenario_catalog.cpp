@@ -2220,6 +2220,12 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
         Expect::RpgTravelObserved, QStringLiteral("rpg_commander"), {}, 0.30F, 0.50F);
     lunge.end_seconds = 5.50F;
     s.expectations.push_back(lunge);
+
+    auto carry =
+        expectation(Expect::RpgSwingCarriesBody, QStringLiteral("rpg_commander"));
+    carry.threshold = 0.30F;
+    carry.distance = 3.0F;
+    s.expectations.push_back(carry);
     s.expectations.push_back(
         expectation(Expect::RpgDamageContactObserved, QStringLiteral("enemy_target")));
     s.expectations.push_back(
@@ -2300,6 +2306,14 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
       advance.end_seconds = 9.6F;
       s.expectations.push_back(advance);
     }
+    {
+
+      auto carry =
+          expectation(Expect::RpgSwingCarriesBody, QStringLiteral("rpg_commander"));
+      carry.threshold = 0.45F;
+      carry.distance = 4.0F;
+      s.expectations.push_back(carry);
+    }
     s.expectations.push_back(expectation(Expect::NoFullscreenFlash));
     result.push_back(std::move(s));
   }
@@ -2363,10 +2377,19 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
     s.expectations.push_back(
         expectation(Expect::GroupHealthReduced, QStringLiteral("enemy_crowd")));
     {
+
       auto advance = expectation(
           Expect::RpgTravelObserved, QStringLiteral("rpg_commander"), {}, 1.1F, 0.70F);
-      advance.end_seconds = 8.6F;
+      advance.end_seconds = 5.0F;
       s.expectations.push_back(advance);
+    }
+    {
+
+      auto carry =
+          expectation(Expect::RpgSwingCarriesBody, QStringLiteral("rpg_commander"));
+      carry.threshold = 0.45F;
+      carry.distance = 4.0F;
+      s.expectations.push_back(carry);
     }
     s.expectations.push_back(expectation(Expect::NoFullscreenFlash));
     result.push_back(std::move(s));

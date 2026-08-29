@@ -2182,7 +2182,7 @@
             "player_id": 1,
             "type": "horse_archer",
             "x": 125.62,
-            "z": 142.68
+            "z": 142.65
         },
         {
             "max_population": -1,
@@ -2209,8 +2209,8 @@
             "max_population": -1,
             "player_id": 1,
             "type": "spearman",
-            "x": 74.23,
-            "z": 283.1
+            "x": 73.94,
+            "z": 283.49
         },
         {
             "max_population": -1,
@@ -2350,7 +2350,7 @@
             "player_id": 2,
             "type": "horse_swordsman",
             "x": 399.38,
-            "z": 302.18
+            "z": 301.33
         },
         {
             "max_population": -1,
@@ -2498,8 +2498,8 @@
             "max_population": -1,
             "player_id": 2,
             "type": "spearman",
-            "x": 394,
-            "z": 400
+            "x": 394.35,
+            "z": 399.74
         },
         {
             "behavior": "guard",
@@ -2798,8 +2798,8 @@
             "nation": "roman_republic",
             "player_id": 3,
             "type": "barracks",
-            "x": 585.6,
-            "z": 154.3
+            "x": 587.97,
+            "z": 151.19
         },
         {
             "authored": true,
@@ -3435,8 +3435,8 @@
             "rotation": 0.4,
             "scale": 1,
             "type": "tent",
-            "x": 56.43,
-            "z": 254.11
+            "x": 56.72,
+            "z": 254.23
         },
         {
             "rotation": 2.2,
@@ -3449,8 +3449,8 @@
             "rotation": 4.2,
             "scale": 0.85,
             "type": "tent",
-            "x": 59.25,
-            "z": 284.74
+            "x": 59.58,
+            "z": 283.22
         },
         {
             "rotation": 1.1,
@@ -3575,8 +3575,8 @@
             "rotation": 2,
             "scale": 0.8,
             "type": "dead_tree",
-            "x": 222.91,
-            "z": 278.75
+            "x": 222.93,
+            "z": 278.53
         },
         {
             "rotation": 1.8,
@@ -3833,8 +3833,8 @@
             "radius": 2.8000000000000003,
             "scale": 1,
             "type": "firecamp",
-            "x": 83.12,
-            "z": 288.18
+            "x": 83.07,
+            "z": 287.76
         },
         {
             "intensity": 0.55,
@@ -3887,7 +3887,7 @@
             "radius": 3,
             "scale": 1,
             "type": "firecamp",
-            "x": 490.55,
+            "x": 490.34,
             "z": 336.52
         },
         {
@@ -3902,8 +3902,8 @@
         {
             "scale": 1,
             "type": "ruins",
-            "x": 196,
-            "z": 384
+            "x": 196.36,
+            "z": 382.77
         },
         {
             "rotation": 322.6,
@@ -4033,8 +4033,8 @@
             "rotation": 299.90000000000003,
             "scale": 1.05,
             "type": "weapon_rack",
-            "x": 443.35,
-            "z": 211.58
+            "x": 443.16,
+            "z": 211.49
         },
         {
             "intensity": 1.22,
@@ -4102,8 +4102,8 @@
             "rotation": 229.3,
             "scale": 0.89,
             "type": "tent",
-            "x": 516.41,
-            "z": 245.98000000000002
+            "x": 518.19,
+            "z": 247.69
         },
         {
             "rotation": 145.4,
@@ -4171,8 +4171,8 @@
             "rotation": 320.8,
             "scale": 1.18,
             "type": "tent",
-            "x": 439.47,
-            "z": 221.87
+            "x": 438.24,
+            "z": 221.68
         },
         {
             "rotation": 261.6,
@@ -4454,15 +4454,15 @@
             "rotation": 245,
             "scale": 1.03,
             "type": "abandoned_home",
-            "x": 166.43,
-            "z": 361.81
+            "x": 166.33,
+            "z": 362.41
         },
         {
             "rotation": 103.7,
             "scale": 1.01,
             "type": "abandoned_home",
-            "x": 175.54,
-            "z": 362.31
+            "x": 175.51,
+            "z": 362.88
         },
         {
             "rotation": 22.2,
@@ -4571,8 +4571,8 @@
             "rotation": 270,
             "scale": 1.1,
             "type": "ruins",
-            "x": 245,
-            "z": 41
+            "x": 247.16,
+            "z": 42.37
         },
         {
             "landmark": "ticino_north_sanctuary",
@@ -4725,8 +4725,8 @@
             "rotation": 180,
             "scale": 1,
             "type": "firecamp",
-            "x": 238.59,
-            "z": 184.59
+            "x": 236.32,
+            "z": 182.02
         },
         {
             "landmark": "ticino_river_shrine",
@@ -4755,8 +4755,8 @@
             "landmark": "ticino_river_shrine",
             "scale": 1,
             "type": "ruins",
-            "x": 327,
-            "z": 115
+            "x": 325.4,
+            "z": 112.72
         },
         {
             "landmark": "ticino_river_shrine",
@@ -4770,8 +4770,8 @@
             "landmark": "ticino_river_shrine",
             "scale": 1.1500000000000001,
             "type": "ruins",
-            "x": 333,
-            "z": 119
+            "x": 332.92,
+            "z": 121.22
         },
         {
             "intensity": 1.2,
@@ -4869,7 +4869,7 @@
             "scale": 1,
             "type": "tent",
             "x": 387,
-            "z": 396
+            "z": 395.92
         },
         {
             "landmark": "ticino_ridge_watch",
@@ -4917,14 +4917,14 @@
             "scale": 1,
             "type": "tent",
             "x": 126.8,
-            "z": 263.04
+            "z": 262.33
         },
         {
             "authored_camp": true,
             "scale": 1,
             "type": "tent",
-            "x": 135.6,
-            "z": 263.04
+            "x": 138.68,
+            "z": 262.22
         },
         {
             "authored_camp": true,
@@ -4965,8 +4965,8 @@
             "authored_camp": true,
             "scale": 1,
             "type": "tent",
-            "x": 153.20000000000002,
-            "z": 267.9
+            "x": 153.47,
+            "z": 268.21
         },
         {
             "authored_camp": true,
@@ -4992,8 +4992,8 @@
             "authored_camp": true,
             "scale": 1,
             "type": "supply_cart",
-            "x": 126,
-            "z": 285
+            "x": 126.47,
+            "z": 286.17
         },
         {
             "authored_camp": true,

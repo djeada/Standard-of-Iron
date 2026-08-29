@@ -737,7 +737,7 @@
       "style": "default",
       "waypoints": [
         [
-          56,
+          62.84,
           58
         ],
         [
@@ -831,7 +831,7 @@
           58
         ],
         [
-          244,
+          237.16,
           58
         ]
       ]
@@ -850,7 +850,7 @@
       "style": "default",
       "waypoints": [
         [
-          44,
+          50.92,
           150
         ],
         [
@@ -952,7 +952,7 @@
           150
         ],
         [
-          256,
+          249.08,
           150
         ]
       ]
@@ -971,7 +971,7 @@
       "style": "default",
       "waypoints": [
         [
-          56,
+          62.84,
           242
         ],
         [
@@ -1065,7 +1065,7 @@
           242
         ],
         [
-          244,
+          237.16,
           242
         ]
       ]
@@ -1084,8 +1084,8 @@
       "style": "default",
       "waypoints": [
         [
-          56,
-          58
+          59,
+          62.31
         ],
         [
           64,
@@ -1119,8 +1119,8 @@
       "style": "default",
       "waypoints": [
         [
-          44,
-          150
+          48.12,
+          154.31
         ],
         [
           55,
@@ -1170,8 +1170,8 @@
           230.5
         ],
         [
-          56,
-          242
+          59,
+          237.69
         ]
       ]
     },
@@ -1205,8 +1205,8 @@
           138.5
         ],
         [
-          256,
-          150
+          251.88,
+          145.69
         ]
       ]
     },
@@ -1224,8 +1224,8 @@
       "style": "default",
       "waypoints": [
         [
-          256,
-          150
+          251.88,
+          154.31
         ],
         [
           245,
@@ -1275,8 +1275,8 @@
           230.5
         ],
         [
-          244,
-          242
+          241,
+          237.69
         ]
       ]
     },
@@ -1517,8 +1517,8 @@
       "style": "default",
       "waypoints": [
         [
-          244,
-          58
+          237.77,
+          59.31
         ],
         [
           229.75,
@@ -1537,20 +1537,20 @@
           70
         ],
         [
-          175.5429,
-          83.8439
+          175.54,
+          83.84
         ],
         [
-          164.0859,
-          97.6879
+          164.09,
+          97.69
         ],
         [
           162.72,
           100.68
         ],
         [
-          162.2347,
-          103.5917
+          162.23,
+          103.59
         ],
         [
           162.28,
@@ -1561,8 +1561,8 @@
           108.6
         ],
         [
-          164.0968,
-          110.914
+          164.1,
+          110.91
         ],
         [
           169,
@@ -1573,12 +1573,12 @@
           115
         ],
         [
-          179.1369,
-          114.3284
+          179.14,
+          114.33
         ],
         [
-          195.5685,
-          109.1642
+          195.57,
+          109.16
         ],
         [
           212,
@@ -1604,15 +1604,15 @@
         ],
         [
           88,
-          88.6667
+          88.67
         ],
         [
           88,
-          73.3333
+          73.33
         ],
         [
           88,
-          58
+          62.07
         ]
       ]
     },
@@ -1857,8 +1857,8 @@
     {
       "id": "ferry_house_1_barracks",
       "type": "barracks",
-      "x": 86.0,
-      "z": 58.0,
+      "x": 86,
+      "z": 53.48,
       "player_id": 0,
       "max_population": 45,
       "description": "Neutral ferry house on the approach to a crossing."
@@ -1866,8 +1866,8 @@
     {
       "id": "ferry_house_2_barracks",
       "type": "barracks",
-      "x": 214.0,
-      "z": 58.0,
+      "x": 214,
+      "z": 53.48,
       "player_id": 0,
       "max_population": 45,
       "description": "Neutral ferry house on the approach to a crossing."
@@ -1875,8 +1875,8 @@
     {
       "id": "ferry_house_3_barracks",
       "type": "barracks",
-      "x": 86.0,
-      "z": 242.0,
+      "x": 86,
+      "z": 246.52,
       "player_id": 0,
       "max_population": 45,
       "description": "Neutral ferry house on the approach to a crossing."
@@ -1884,8 +1884,8 @@
     {
       "id": "ferry_house_4_barracks",
       "type": "barracks",
-      "x": 214.0,
-      "z": 242.0,
+      "x": 214,
+      "z": 246.52,
       "player_id": 0,
       "max_population": 45,
       "description": "Neutral ferry house on the approach to a crossing."
@@ -1909,8 +1909,8 @@
     {
       "id": "p1_builder",
       "type": "builder",
-      "x": 63.73,
-      "z": 53.64,
+      "x": 63.57,
+      "z": 53.67,
       "player_id": 1
     },
     {
@@ -1930,8 +1930,8 @@
     {
       "id": "p2_healer",
       "type": "healer",
-      "x": 53.0,
-      "z": 155.0,
+      "x": 53.29,
+      "z": 154.66,
       "player_id": 2
     },
     {
@@ -1966,7 +1966,7 @@
       "id": "p5_builder",
       "type": "builder",
       "x": 246.84,
-      "z": 155.0,
+      "z": 156.21,
       "player_id": 5
     },
     {
@@ -1979,8 +1979,8 @@
     {
       "id": "p6_builder",
       "type": "builder",
-      "x": 236.27,
-      "z": 246.36,
+      "x": 236.95,
+      "z": 246.7,
       "player_id": 6
     },
     {
@@ -1995,14 +1995,14 @@
     {
       "id": "p1_tent_a",
       "type": "tent",
-      "x": 47.0,
-      "z": 49.0
+      "x": 48.04,
+      "z": 49.38
     },
     {
       "id": "p1_tent_b",
       "type": "tent",
-      "x": 47.0,
-      "z": 67.0
+      "x": 48.04,
+      "z": 66.62
     },
     {
       "id": "p1_cart",
@@ -2020,20 +2020,20 @@
     {
       "id": "p1_statue",
       "type": "statue",
-      "x": 71.0,
-      "z": 58.0
+      "x": 71,
+      "z": 61.94
     },
     {
       "id": "p2_tent_a",
       "type": "tent",
-      "x": 35.0,
-      "z": 141.0
+      "x": 36.04,
+      "z": 141.38
     },
     {
       "id": "p2_tent_b",
       "type": "tent",
-      "x": 35.0,
-      "z": 159.0
+      "x": 36.04,
+      "z": 158.62
     },
     {
       "id": "p2_cart",
@@ -2051,20 +2051,20 @@
     {
       "id": "p2_statue",
       "type": "statue",
-      "x": 59.0,
-      "z": 150.0
+      "x": 60.21,
+      "z": 153.72
     },
     {
       "id": "p3_tent_a",
       "type": "tent",
-      "x": 47.0,
-      "z": 233.0
+      "x": 48.04,
+      "z": 233.38
     },
     {
       "id": "p3_tent_b",
       "type": "tent",
-      "x": 47.0,
-      "z": 251.0
+      "x": 48.04,
+      "z": 250.62
     },
     {
       "id": "p3_cart",
@@ -2082,21 +2082,21 @@
     {
       "id": "p3_statue",
       "type": "statue",
-      "x": 71.0,
-      "z": 242.0
+      "x": 69.78,
+      "z": 245.75
     },
     {
       "id": "p4_tent_a",
       "type": "tent",
-      "x": 253.0,
-      "z": 67.0,
+      "x": 251.81,
+      "z": 66.56,
       "rotation": 180.0
     },
     {
       "id": "p4_tent_b",
       "type": "tent",
-      "x": 253.0,
-      "z": 49.0,
+      "x": 251.82,
+      "z": 49.43,
       "rotation": 180.0
     },
     {
@@ -2116,22 +2116,22 @@
     {
       "id": "p4_statue",
       "type": "statue",
-      "x": 229.0,
-      "z": 58.0,
+      "x": 230.98,
+      "z": 54.57,
       "rotation": 180.0
     },
     {
       "id": "p5_tent_a",
       "type": "tent",
-      "x": 265.0,
-      "z": 159.0,
+      "x": 263.81,
+      "z": 158.56,
       "rotation": 180.0
     },
     {
       "id": "p5_tent_b",
       "type": "tent",
-      "x": 265.0,
-      "z": 141.0,
+      "x": 263.82,
+      "z": 141.43,
       "rotation": 180.0
     },
     {
@@ -2151,22 +2151,22 @@
     {
       "id": "p5_statue",
       "type": "statue",
-      "x": 241.0,
-      "z": 150.0,
+      "x": 241,
+      "z": 153.94,
       "rotation": 180.0
     },
     {
       "id": "p6_tent_a",
       "type": "tent",
-      "x": 253.0,
-      "z": 251.0,
+      "x": 251.81,
+      "z": 250.56,
       "rotation": 180.0
     },
     {
       "id": "p6_tent_b",
       "type": "tent",
-      "x": 253.0,
-      "z": 233.0,
+      "x": 251.82,
+      "z": 233.43,
       "rotation": 180.0
     },
     {
@@ -2186,8 +2186,8 @@
     {
       "id": "p6_statue",
       "type": "statue",
-      "x": 229.0,
-      "z": 242.0,
+      "x": 229,
+      "z": 245.96,
       "rotation": 180.0
     },
     {
@@ -2208,16 +2208,16 @@
     {
       "id": "ferry_house_2_ruin",
       "type": "ruins",
-      "x": 205.0,
-      "z": 66.0,
+      "x": 209.34,
+      "z": 70.84,
       "scale": 0.9,
       "rotation": 30.0
     },
     {
       "id": "ferry_house_2_cart",
       "type": "supply_cart",
-      "x": 222.0,
-      "z": 51.0,
+      "x": 221.55,
+      "z": 50.93,
       "rotation": 30.0
     },
     {
@@ -2267,8 +2267,8 @@
     {
       "id": "west_vein_1_2",
       "type": "iron_ore",
-      "x": 64.0,
-      "z": 104.17,
+      "x": 64.09,
+      "z": 104.22,
       "rotation": 178.38
     },
     {
@@ -2424,24 +2424,24 @@
     },
     {
       "type": "ruins",
-      "x": 58.55,
-      "z": 162.8,
+      "x": 61.47,
+      "z": 160.01,
       "scale": 1.1,
       "rotation": 180.0,
       "landmark": "west_sanctuary"
     },
     {
       "type": "ruins",
-      "x": 55.14,
-      "z": 151.21,
+      "x": 56.41,
+      "z": 155.11,
       "scale": 0.9,
       "rotation": 0.0,
       "landmark": "west_sanctuary"
     },
     {
       "type": "dead_tree",
-      "x": 53.55,
-      "z": 156.8,
+      "x": 56.97,
+      "z": 159.13,
       "scale": 1.0,
       "rotation": 180.0,
       "landmark": "west_sanctuary"
@@ -2491,24 +2491,24 @@
     },
     {
       "type": "ruins",
-      "x": 245.0,
-      "z": 149.0,
+      "x": 242.1,
+      "z": 145.01,
       "scale": 1.1,
       "rotation": 0.0,
       "landmark": "east_sanctuary"
     },
     {
       "type": "ruins",
-      "x": 245.0,
-      "z": 162.0,
+      "x": 248.76,
+      "z": 165.6,
       "scale": 0.9,
       "rotation": 180.0,
       "landmark": "east_sanctuary"
     },
     {
       "type": "dead_tree",
-      "x": 248.0,
-      "z": 155.0,
+      "x": 246.74,
+      "z": 153.79,
       "scale": 1.0,
       "rotation": 0.0,
       "landmark": "east_sanctuary"
@@ -2582,8 +2582,8 @@
     },
     {
       "type": "dead_tree",
-      "x": 72.0,
-      "z": 26.0,
+      "x": 71.55,
+      "z": 26.36,
       "scale": 0.9,
       "rotation": 90.0,
       "landmark": "north_west_hamlet"
@@ -2606,16 +2606,16 @@
     },
     {
       "type": "abandoned_home",
-      "x": 237.0,
-      "z": 32.0,
+      "x": 236.97,
+      "z": 32,
       "scale": 1.0,
       "rotation": 90.0,
       "landmark": "north_east_hamlet"
     },
     {
       "type": "abandoned_home",
-      "x": 225.0,
-      "z": 28.0,
+      "x": 225.17,
+      "z": 28.5,
       "scale": 0.9,
       "rotation": 270.0,
       "landmark": "north_east_hamlet"
@@ -2630,8 +2630,8 @@
     },
     {
       "type": "ruins",
-      "x": 243.0,
-      "z": 40.0,
+      "x": 242.67,
+      "z": 40.94,
       "scale": 0.9,
       "rotation": 90.0,
       "landmark": "north_east_hamlet"
@@ -2646,8 +2646,8 @@
     },
     {
       "type": "dead_tree",
-      "x": 234.0,
-      "z": 24.0,
+      "x": 234.08,
+      "z": 24.34,
       "scale": 0.9,
       "rotation": 90.0,
       "landmark": "north_east_hamlet"
@@ -2670,32 +2670,32 @@
     },
     {
       "type": "abandoned_home",
-      "x": 63.0,
-      "z": 268.0,
+      "x": 63.15,
+      "z": 268.01,
       "scale": 1.0,
       "rotation": 270.0,
       "landmark": "south_west_hamlet"
     },
     {
       "type": "abandoned_home",
-      "x": 75.0,
-      "z": 272.0,
+      "x": 74.72,
+      "z": 271.15,
       "scale": 0.9,
       "rotation": 90.0,
       "landmark": "south_west_hamlet"
     },
     {
       "type": "ruins",
-      "x": 73.0,
-      "z": 248.0,
+      "x": 73,
+      "z": 248.09,
       "scale": 1.1,
       "rotation": 90.0,
       "landmark": "south_west_hamlet"
     },
     {
       "type": "ruins",
-      "x": 57.0,
-      "z": 260.0,
+      "x": 57.36,
+      "z": 258.99,
       "scale": 0.9,
       "rotation": 270.0,
       "landmark": "south_west_hamlet"
@@ -2750,8 +2750,8 @@
     },
     {
       "type": "ruins",
-      "x": 233.0,
-      "z": 248.0,
+      "x": 233,
+      "z": 248.1,
       "scale": 1.1,
       "rotation": 90.0,
       "landmark": "south_east_hamlet"
@@ -2774,8 +2774,8 @@
     },
     {
       "type": "dead_tree",
-      "x": 228.0,
-      "z": 274.0,
+      "x": 228.44,
+      "z": 273.65,
       "scale": 0.9,
       "rotation": 270.0,
       "landmark": "south_east_hamlet"
@@ -2826,25 +2826,25 @@
     },
     {
       "id": "ferry_house_1_fire",
-      "x": 90,
+      "x": 90.72,
       "z": 63,
       "radius": 3.0
     },
     {
       "id": "ferry_house_2_fire",
-      "x": 218.0,
-      "z": 63,
+      "x": 214.11,
+      "z": 61.34,
       "radius": 3.0
     },
     {
       "id": "ferry_house_3_fire",
-      "x": 90,
+      "x": 91.39,
       "z": 247,
       "radius": 3.0
     },
     {
       "id": "ferry_house_4_fire",
-      "x": 218.0,
+      "x": 219.4,
       "z": 247,
       "radius": 3.0
     }

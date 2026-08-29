@@ -80,8 +80,13 @@ constexpr float k_turn_in_place_rate_degrees = 260.0F;
 constexpr float k_body_travel_turn_rate_degrees = 900.0F;
 
 constexpr float k_fov_hip = 68.0F;
-constexpr float k_strike_step_reach = 1.45F;
 constexpr float k_strike_acquisition_bonus = 0.55F;
+
+constexpr float k_strike_body_overlap_radius = 0.16F;
+
+constexpr float k_strike_recoil_share = 0.45F;
+
+constexpr float k_strike_circle_share = 0.85F;
 
 constexpr float k_footstep_min_bob_amplitude = 0.25F;
 
@@ -105,13 +110,44 @@ constexpr float k_body_separation_scan_range = 3.0F;
 
 constexpr float k_body_separation_max_push_per_second = 2.4F;
 
+[[nodiscard]] auto
+strike_body_overlap_scale(const Engine::Core::Entity& commander) -> float {
+  auto const* action =
+      commander.get_component<Engine::Core::RpgCommanderActionComponent>();
+  if (action == nullptr || !action->action_running || action->combat_action_id == 0U) {
+    return 1.0F;
+  }
+  auto const* definition = Game::Systems::CombatActions::find_combat_action_definition(
+      static_cast<Game::Systems::CombatActions::CombatActionId>(
+          action->combat_action_id));
+  if (definition == nullptr) {
+    return 1.0F;
+  }
+  using Game::Systems::CombatActions::MeleePhase;
+  switch (Game::Systems::CombatActions::melee_interruption_at(
+              *definition, action->normalized_action_time)
+              .phase) {
+  case MeleePhase::Windup:
+    return 0.72F;
+  case MeleePhase::EarlyStrike:
+  case MeleePhase::CommittedStrike:
+    return 0.0F;
+  case MeleePhase::FollowThrough:
+    return 0.80F;
+  case MeleePhase::Ready:
+    break;
+  }
+  return 1.0F;
+}
+
 void separate_commander_from_bodies(Engine::Core::World& world,
                                     Engine::Core::Entity& commander,
                                     Engine::Core::EntityID commander_id,
                                     Engine::Core::TransformComponent& transform,
                                     App::Core::CommanderMotor& motor,
-                                    float dt) {
-  if (dt <= 0.0F) {
+                                    float dt,
+                                    float overlap_scale) {
+  if (dt <= 0.0F || overlap_scale <= 0.0F) {
     return;
   }
 
@@ -147,8 +183,9 @@ void separate_commander_from_bodies(Engine::Core::World& world,
          Game::Systems::RpgCombat::live_soldier_targets(*candidate)) {
       QVector3D offset =
           origin - QVector3D(soldier.position.x(), 0.0F, soldier.position.z());
-      float const min_distance = App::Core::CommanderMotor::body_radius() +
-                                 std::max(soldier.body_radius, 0.05F);
+      float const min_distance = (App::Core::CommanderMotor::body_radius() +
+                                  std::max(soldier.body_radius, 0.05F)) *
+                                 overlap_scale;
       float const distance_sq = offset.lengthSquared();
       if (distance_sq >= min_distance * min_distance) {
         continue;
@@ -954,6 +991,108 @@ void cancel_current_attack(Engine::Core::Entity& commander) {
 
 } // namespace
 
+namespace {
+
+struct StrikeTarget {
+  bool valid{false};
+  float dir_x{0.0F};
+  float dir_z{0.0F};
+  float distance{0.0F};
+};
+
+auto resolve_strike_target(Engine::Core::World& world,
+                           const Engine::Core::RpgCommanderActionComponent& action,
+                           const Engine::Core::TransformComponent& transform)
+    -> StrikeTarget {
+  auto* target = world.get_entity(action.active_target_id);
+  auto const* unit = target != nullptr
+                         ? target->get_component<Engine::Core::UnitComponent>()
+                         : nullptr;
+  if (unit == nullptr || unit->health <= 0) {
+    return {};
+  }
+  auto const sample = Game::Systems::RpgCombat::resolve_soldier_target(
+      *target, action.active_target_soldier_slot);
+  auto const* target_transform =
+      target->get_component<Engine::Core::TransformComponent>();
+  float target_x = 0.0F;
+  float target_z = 0.0F;
+  if (sample.has_value()) {
+    target_x = sample->position.x();
+    target_z = sample->position.z();
+  } else if (target_transform != nullptr) {
+    target_x = target_transform->position.x;
+    target_z = target_transform->position.z;
+  } else {
+    return {};
+  }
+  float const to_x = target_x - transform.position.x;
+  float const to_z = target_z - transform.position.z;
+  float const distance = std::hypot(to_x, to_z);
+  if (distance <= 1.0e-4F) {
+    return {};
+  }
+  return {.valid = true,
+          .dir_x = to_x / distance,
+          .dir_z = to_z / distance,
+          .distance = distance};
+}
+
+void steer_strike_toward(
+    const Game::Systems::CombatActions::CombatActionDefinition& definition,
+    const Engine::Core::RpgCommanderActionComponent& action,
+    const StrikeTarget& target,
+    Engine::Core::TransformComponent& transform,
+    float dt) {
+  if (!target.valid || definition.target_assist.maximum_turn_degrees <= 0.0F) {
+    return;
+  }
+  float const target_yaw = std::atan2(target.dir_x, target.dir_z) * 57.29577951308232F;
+  float const yaw_delta = signed_angle_delta(target_yaw, transform.rotation.y);
+  float const turn_rate = definition.target_assist.maximum_turn_degrees /
+                          std::max(0.08F, action.action_duration * 0.45F);
+  float const correction = std::clamp(yaw_delta, -turn_rate * dt, turn_rate * dt);
+  transform.rotation.y = wrap_angle_degrees(transform.rotation.y + correction);
+  transform.desired_yaw = transform.rotation.y;
+  transform.has_desired_yaw = true;
+}
+
+struct StrikeCarryWindow {
+  float start{0.0F};
+  float end{0.0F};
+  float recovery_start{0.0F};
+  float exit_safe{0.0F};
+};
+
+auto strike_carry_window(const Game::Systems::CombatActions::CombatActionDefinition&
+                             definition) -> StrikeCarryWindow {
+  using Game::Systems::CombatActions::CombatActionEventType;
+  auto const at = [&](CombatActionEventType type, float fallback) {
+    return Game::Systems::CombatActions::action_event_normalized_time(
+        definition, type, fallback);
+  };
+  bool const authored =
+      definition.movement.end_normalized > definition.movement.start_normalized;
+  float const start = authored ? definition.movement.start_normalized
+                               : at(CombatActionEventType::WindupStart, 0.08F);
+  float const end = authored ? definition.movement.end_normalized
+                             : at(CombatActionEventType::WeaponTraceEnd, 0.60F);
+  return {.start = start,
+          .end = end,
+          .recovery_start = at(CombatActionEventType::RecoveryStart, 0.75F),
+          .exit_safe = at(CombatActionEventType::ExitSafe, 0.92F)};
+}
+
+auto span_fraction(float normalized, float start, float end) -> float {
+  return std::clamp((normalized - start) / std::max(1.0e-4F, end - start), 0.0F, 1.0F);
+}
+
+auto strike_drive(float u) -> float {
+  return u * (2.0F - u);
+}
+
+} // namespace
+
 void CommanderControlController::apply_strike_lunge(
     Engine::Core::World& world,
     Engine::Core::Entity& commander,
@@ -962,13 +1101,11 @@ void CommanderControlController::apply_strike_lunge(
   if (dt <= 0.0F || m_dodge_state != DodgeState::None) {
     return;
   }
-
   auto const* action =
       commander.get_component<Engine::Core::RpgCommanderActionComponent>();
   if (action == nullptr || !action->action_running) {
     return;
   }
-
   auto const* definition = Game::Systems::CombatActions::find_combat_action_definition(
       static_cast<Game::Systems::CombatActions::CombatActionId>(
           action->combat_action_id));
@@ -976,138 +1113,107 @@ void CommanderControlController::apply_strike_lunge(
     return;
   }
 
-  if (definition->requires_projectile_release) {
-    float const movement_start = definition->movement.start_normalized;
-    float const movement_end = definition->movement.end_normalized;
-    if (std::abs(definition->movement.distance) <= 0.01F ||
-        movement_end <= movement_start ||
-        action->normalized_action_time < movement_start ||
-        action->normalized_action_time > movement_end) {
-      return;
-    }
-    float const yaw = transform.rotation.y * 0.017453292519943295F;
-    float const direction = definition->movement.distance >= 0.0F ? 1.0F : -1.0F;
-    QVector3D const forward(std::sin(yaw) * direction, 0.0F, std::cos(yaw) * direction);
-    float const movement_seconds =
-        std::max(0.05F, (movement_end - movement_start) * action->action_duration);
-    float const step =
-        (std::abs(definition->movement.distance) / movement_seconds) * dt;
+  auto const target = resolve_strike_target(world, *action, transform);
+  steer_strike_toward(*definition, *action, target, transform, dt);
+
+  float const authored_distance = definition->movement.distance;
+  if (std::abs(authored_distance) <= 0.01F) {
+    return;
+  }
+  auto const window = strike_carry_window(*definition);
+  if (window.end <= window.start) {
+    return;
+  }
+
+  float const previous_time =
+      std::min(action->previous_normalized_action_time, action->normalized_action_time);
+  float const before =
+      strike_drive(span_fraction(previous_time, window.start, window.end));
+  float const advanced =
+      strike_drive(
+          span_fraction(action->normalized_action_time, window.start, window.end)) -
+      before;
+  float const recoil_advanced =
+      window.exit_safe > window.recovery_start
+          ? span_fraction(action->normalized_action_time,
+                          window.recovery_start,
+                          window.exit_safe) -
+                span_fraction(previous_time, window.recovery_start, window.exit_safe)
+          : 0.0F;
+  if (advanced <= 0.0F && recoil_advanced <= 0.0F) {
+    return;
+  }
+
+  if (m_strike_carry_sequence != action->melee_attack_sequence) {
+    m_strike_carry_sequence = action->melee_attack_sequence;
+    m_strike_carry_requested = 0.0F;
+    m_strike_carry_delivered = 0.0F;
+  }
+
+  auto const* commander_data =
+      commander.get_component<Engine::Core::CommanderComponent>();
+  bool const airborne = commander_data != nullptr && commander_data->jump_active;
+  auto const move_body = [&](float move_x, float move_z) {
     QVector3D const from(
         transform.position.x, transform.position.y, transform.position.z);
-    static_cast<void>(m_motor.advance(
-        Game::Session::session_for(world),
-        transform,
-        {.from = from,
-         .to = from + forward * step,
-         .source = App::Core::CommanderDisplacementSource::StrikeLunge,
-         .airborne =
-             commander.get_component<Engine::Core::CommanderComponent>()->jump_active,
-         .dt = dt}));
-    return;
-  }
+    static_cast<void>(
+        m_motor.advance(Game::Session::session_for(world),
+                        transform,
+                        {.from = from,
+                         .to = from + QVector3D(move_x, 0.0F, move_z),
+                         .source = App::Core::CommanderDisplacementSource::StrikeLunge,
+                         .airborne = airborne,
+                         .dt = dt}));
+    return std::hypot(transform.position.x - from.x(), transform.position.z - from.z());
+  };
 
-  if (Game::Systems::CombatActions::melee_interruption_at(
-          *definition, action->normalized_action_time)
-          .phase == Game::Systems::CombatActions::MeleePhase::FollowThrough) {
-    return;
-  }
+  float const forward_sign = authored_distance >= 0.0F ? 1.0F : -1.0F;
+  float const yaw = transform.rotation.y * k_degrees_to_radians;
+  float dir_x = std::sin(yaw) * forward_sign;
+  float dir_z = std::cos(yaw) * forward_sign;
 
-  auto* target = world.get_entity(action->active_target_id);
-  auto const* target_unit = target != nullptr
-                                ? target->get_component<Engine::Core::UnitComponent>()
-                                : nullptr;
-  if (target_unit == nullptr || target_unit->health <= 0) {
-    return;
-  }
-  auto const sample = Game::Systems::RpgCombat::resolve_soldier_target(
-      *target, action->active_target_soldier_slot);
-  auto const* target_transform =
-      target->get_component<Engine::Core::TransformComponent>();
-  if (!sample.has_value() && target_transform == nullptr) {
-    return;
-  }
-
-  const float target_x =
-      sample.has_value() ? sample->position.x() : target_transform->position.x;
-  const float target_z =
-      sample.has_value() ? sample->position.z() : target_transform->position.z;
-
-  const float to_x = target_x - transform.position.x;
-  const float to_z = target_z - transform.position.z;
-  const float distance = std::hypot(to_x, to_z);
-
-  if (distance > 0.0001F && definition->target_assist.maximum_turn_degrees > 0.0F) {
-    float const target_yaw = std::atan2(to_x, to_z) * 57.29577951308232F;
-    float const yaw_delta = signed_angle_delta(target_yaw, transform.rotation.y);
-    float const turn_rate = definition->target_assist.maximum_turn_degrees /
-                            std::max(0.08F, action->action_duration * 0.45F);
-    float const correction = std::clamp(yaw_delta, -turn_rate * dt, turn_rate * dt);
-    transform.rotation.y = wrap_angle_degrees(transform.rotation.y + correction);
-    transform.desired_yaw = transform.rotation.y;
-    transform.has_desired_yaw = true;
-  }
-
-  constexpr float k_lunge_contact_margin = 0.55F;
-  const float contact_distance =
-      std::max(k_lunge_contact_margin, definition->hit_shape.reach * 0.72F);
-
-  const float gap = distance - contact_distance;
-  float const authored_distance = std::abs(definition->movement.distance);
-  float const maximum_lunge =
-      authored_distance > 0.01F ? authored_distance : k_strike_step_reach;
-  if (distance <= 0.0001F || gap <= 0.02F) {
-    return;
-  }
-
-  float trace_end = 0.60F;
-  for (auto const& event : definition->events) {
-    if (event.type ==
-        Game::Systems::CombatActions::CombatActionEventType::WeaponTraceEnd) {
-      trace_end = event.normalized_time;
-      break;
+  if (advanced <= 0.0F) {
+    float const blocked =
+        std::max(0.0F, m_strike_carry_requested - m_strike_carry_delivered);
+    float const recoil_step =
+        std::min(blocked, std::abs(authored_distance) * k_strike_recoil_share) *
+        recoil_advanced;
+    if (recoil_step > 1.0e-5F) {
+      static_cast<void>(move_body(-dir_x * recoil_step, -dir_z * recoil_step));
     }
-  }
-  float const movement_start =
-      definition->movement.end_normalized > definition->movement.start_normalized
-          ? definition->movement.start_normalized
-          : 0.0F;
-  float const movement_end = definition->movement.end_normalized > movement_start
-                                 ? definition->movement.end_normalized
-                                 : trace_end;
-  if (action->normalized_action_time < movement_start ||
-      action->normalized_action_time > movement_end) {
-    return;
-  }
-  const float swing_progress =
-      movement_end > movement_start
-          ? std::clamp((action->normalized_action_time - movement_start) /
-                           (movement_end - movement_start),
-                       0.0F,
-                       1.0F)
-          : 1.0F;
-  const float lunge_shape = std::sin(swing_progress * std::numbers::pi_v<float>);
-  if (lunge_shape <= 0.01F) {
     return;
   }
 
-  float const movement_seconds =
-      std::max(0.05F, (movement_end - movement_start) * action->action_duration);
-  float const lunge_speed =
-      authored_distance > 0.01F ? authored_distance / movement_seconds : 4.6F;
-  float const remaining_authored_lunge = std::min(gap, maximum_lunge);
-  const float step =
-      std::min(remaining_authored_lunge, lunge_speed * (0.5F + lunge_shape) * dt);
-  QVector3D const from(
-      transform.position.x, transform.position.y, transform.position.z);
-  static_cast<void>(m_motor.advance(
-      Game::Session::session_for(world),
-      transform,
-      {.from = from,
-       .to = from + QVector3D((to_x / distance) * step, 0.0F, (to_z / distance) * step),
-       .source = App::Core::CommanderDisplacementSource::StrikeLunge,
-       .airborne =
-           commander.get_component<Engine::Core::CommanderComponent>()->jump_active,
-       .dt = dt}));
+  float step = std::abs(authored_distance) * advanced;
+  float lateral_step = 0.0F;
+  if (target.valid && forward_sign > 0.0F) {
+    dir_x = target.dir_x;
+    dir_z = target.dir_z;
+    float const remaining_authored = std::abs(authored_distance) * (1.0F - before);
+    float const gap = target.distance - App::Core::CommanderMotor::body_radius() -
+                      k_strike_body_overlap_radius;
+    if (gap > remaining_authored) {
+      step += (gap - remaining_authored) * advanced;
+    }
+    m_strike_carry_requested += step;
+    float const allowed = std::min(step, std::max(0.0F, gap));
+    lateral_step = (step - allowed) * k_strike_circle_share;
+    step = allowed;
+  } else {
+    m_strike_carry_requested += step;
+  }
+  if (step <= 1.0e-5F && lateral_step <= 1.0e-5F) {
+    return;
+  }
+
+  float lateral_sign = 1.0F;
+  if (auto const* combat =
+          commander.get_component<Engine::Core::CombatStateComponent>()) {
+    lateral_sign = combat->intent.strike_dir_x >= 0.0F ? 1.0F : -1.0F;
+  }
+  m_strike_carry_delivered +=
+      move_body(dir_x * step + dir_z * lateral_step * lateral_sign,
+                dir_z * step - dir_x * lateral_step * lateral_sign);
 }
 
 void CommanderControlController::update_lock_on_yaw(Engine::Core::World& world,
@@ -2027,7 +2133,8 @@ auto CommanderControlController::update_impl(Engine::Core::World& world,
     m_jump_safe_position_valid = false;
   }
 
-  if (!jump_active) {
+  {
+
     float const before_lunge_x = transform->position.x;
     float const before_lunge_z = transform->position.z;
     apply_strike_lunge(world, *commander, *transform, dt);
@@ -2036,10 +2143,17 @@ auto CommanderControlController::update_impl(Engine::Core::World& world,
     if (motor_lunge_distance > 1.0e-5F) {
       motor_source = App::Core::CommanderDisplacementSource::StrikeLunge;
     }
+  }
+  if (!jump_active) {
     float const before_push_x = transform->position.x;
     float const before_push_z = transform->position.z;
-    separate_commander_from_bodies(
-        world, *commander, commander_id, *transform, m_motor, dt);
+    separate_commander_from_bodies(world,
+                                   *commander,
+                                   commander_id,
+                                   *transform,
+                                   m_motor,
+                                   dt,
+                                   strike_body_overlap_scale(*commander));
     motor_separation_push = std::hypot(transform->position.x - before_push_x,
                                        transform->position.z - before_push_z);
     if (motor_separation_push > 1.0e-5F &&

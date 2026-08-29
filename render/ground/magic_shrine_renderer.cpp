@@ -79,8 +79,12 @@ void MagicShrineRenderer::generate_instances(
     }
     const float wx = (prop.x - half_w) * tile_size;
     const float wz = (prop.z - half_h) * tile_size;
-    const QVector3D resolved =
-        terrain_service.resolve_surface_world_position(wx, wz, 0.0F, 0.0F);
+    const QVector3D resolved = terrain_service.resolve_footprint_world_position(
+        wx,
+        wz,
+        Game::Map::world_prop_ground_bounding_radius(prop.type, prop.scale),
+        0.0F,
+        0.0F);
 
     PropInstanceGpu inst;
     inst.pos_scale =

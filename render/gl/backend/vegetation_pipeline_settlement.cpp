@@ -25,6 +25,7 @@
 #include "render/gl/backend/static_mesh_upload.h"
 #include "render/gl/backend/statue_parts.h"
 #include "render/gl/backend/supply_cart_parts.h"
+#include "render/gl/backend/tent_parts.h"
 #include "render/gl/backend/weapon_rack_parts.h"
 #include "render/gl/platform_gl.h"
 #include "render/gl/render_constants.h"
@@ -94,9 +95,9 @@ void VegetationPipeline::initialize_tent_pipeline() {
   std::vector<std::pair<QVector3D, QVector3D>> verts;
   std::vector<uint16_t> idx;
 
-  constexpr float H = 0.88F;
-  constexpr float W = 0.62F;
-  constexpr float Dp = 0.60F;
+  constexpr float H = TentParts::k_ridge_height;
+  constexpr float W = TentParts::k_half_width;
+  constexpr float Dp = TentParts::k_half_depth;
 
   const QVector3D A(-W, 0.0F, -Dp);
   const QVector3D B(W, 0.0F, -Dp);
@@ -150,7 +151,7 @@ void VegetationPipeline::initialize_tent_pipeline() {
   append_box(verts, idx, {-0.24F, 0.41F, -Dp - 0.02F}, {0.24F, 0.47F, -Dp + 0.02F});
 
   {
-    constexpr float aw_ext = 0.30F;
+    constexpr float aw_ext = TentParts::k_awning_extent;
     constexpr float aw_y = H * 0.46F;
     constexpr float inv_aw = 0.83205F;
     const QVector3D nAw(0.0F, inv_aw, -inv_aw);
@@ -187,7 +188,7 @@ void VegetationPipeline::initialize_tent_pipeline() {
                {W * 0.72F + 0.025F, aw_y, -Dp - aw_ext + 0.025F});
   }
 
-  constexpr float sk = 0.07F;
+  constexpr float sk = TentParts::k_skirt;
   append_box(verts, idx, {-W - sk, 0.00F, -Dp - sk}, {-W, 0.07F, -Dp});
   append_box(verts, idx, {W, 0.00F, -Dp - sk}, {W + sk, 0.07F, -Dp});
   append_box(verts, idx, {-W - sk, 0.00F, Dp}, {-W, 0.07F, Dp + sk});

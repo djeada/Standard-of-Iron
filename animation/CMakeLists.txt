@@ -9,6 +9,7 @@ add_library(
     ambient_pose_manifest.cpp
     clip_manifest.cpp
     combat_manifest.cpp
+    commander_spear_manifest.cpp
     combat_root_motion_manifest.cpp
     reaction_pose_manifest.cpp
     action_manifest.cpp

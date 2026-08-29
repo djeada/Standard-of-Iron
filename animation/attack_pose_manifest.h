@@ -2,6 +2,7 @@
 
 #include <cstdint>
 
+#include "commander_spear_manifest.h"
 #include "mounted_pose_manifest.h"
 
 namespace Animation {
@@ -48,6 +49,9 @@ struct HumanoidSpearDirectionInputs {
   bool is_attacking{false};
   bool is_melee{false};
   float attack_phase{0.0F};
+
+  CommanderSpearMove authored_move{CommanderSpearMove::None};
+  float authored_phase{0.0F};
 };
 
 struct HumanoidWeaponAttackPoseSample {
