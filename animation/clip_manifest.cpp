@@ -29,6 +29,44 @@ namespace {
   };
 }
 
+[[nodiscard]] constexpr auto
+rpg_spear_markers(std::uint16_t clip_id) noexcept -> ClipMarkers {
+  switch (clip_id) {
+  case k_humanoid_rpg_spear_sweep_clip:
+    return {
+        .anticipation_start = 0.12F,
+        .weapon_release = 0.40F,
+        .contact = 0.58F,
+        .recover_unlocked = 0.80F,
+        .exit_safe = 0.94F,
+    };
+  case k_humanoid_rpg_spear_launcher_clip:
+    return {
+        .anticipation_start = 0.12F,
+        .weapon_release = 0.42F,
+        .contact = 0.58F,
+        .recover_unlocked = 0.80F,
+        .exit_safe = 0.94F,
+    };
+  case k_humanoid_rpg_spear_finisher_clip:
+    return {
+        .anticipation_start = 0.08F,
+        .weapon_release = 0.48F,
+        .contact = 0.66F,
+        .recover_unlocked = 0.86F,
+        .exit_safe = 0.96F,
+    };
+  default:
+    return {
+        .anticipation_start = 0.10F,
+        .weapon_release = 0.32F,
+        .contact = 0.48F,
+        .recover_unlocked = 0.72F,
+        .exit_safe = 0.92F,
+    };
+  }
+}
+
 [[nodiscard]] constexpr auto riding_sword_markers() noexcept -> ClipMarkers {
   return {
       .anticipation_start = 0.10F,
@@ -441,6 +479,11 @@ auto authored_humanoid_clip_markers(
     return rpg_sword_markers(SwordAttackAnimation::RpgThrust);
   case k_humanoid_rpg_sword_finisher_clip:
     return rpg_sword_markers(SwordAttackAnimation::RpgFinisher);
+  case k_humanoid_rpg_spear_thrust_clip:
+  case k_humanoid_rpg_spear_sweep_clip:
+  case k_humanoid_rpg_spear_launcher_clip:
+  case k_humanoid_rpg_spear_finisher_clip:
+    return rpg_spear_markers(clip_id);
   case k_humanoid_archer_melee_clip:
     return attack_sword_markers(false);
   case k_humanoid_hold_spear_attack_clip:

@@ -1202,12 +1202,14 @@ Four behind-head scenes cover commander (FPV) control:
   wall, so `RpgApproachWithin` proves he really is pressed against the facade and
   `RpgTravelObserved` proves he keeps covering ground along it instead of
   stopping dead in front of it.
-- `rpg_combo_cadence` holds the attack input against a formation. Every swing has
-  to chain out of the previous one inside its cancel window, so
-  `RpgSwingCadenceWithin` fails both a swing count that is too low and any gap
-  between swings that is too long. `RpgStrikeAnimationMatched` additionally fails
-  the run if the renderer ever drops the swing — for a flinch, or for anything
-  else — while the simulation is still committed to it.
+- `rpg_one_press_one_attack` and `rpg_attack_buffer_window` cover the input
+  contract: a tap requests exactly one attack, a hold chains at authored recovery
+  boundaries, and a press that arrives too early is buffered or expired rather
+  than silently stored. `RpgSwingCadenceWithin` fails both a swing count that is
+  too low and any gap between swings that is too long.
+  `RpgStrikeAnimationMatched` additionally fails the run if the renderer ever
+  drops the swing — for a flinch, or for anything else — while the simulation is
+  still committed to it.
 - `rpg_pass_ranks` walks the commander the length of a friendly line and back
   through it. The chase lens hides bodies standing in the gap between it and the
   commander, and this is the contract that keeps that judgement per body: an
@@ -1219,6 +1221,23 @@ Four behind-head scenes cover commander (FPV) control:
   movement input at all. A swing has to carry the body into the target, so
   `RpgTravelObserved` fails a commander who swings from a planted stance and
   `GroupHealthReduced` fails the whiff that follows from it.
+
+`RpgSwingCarriesBody` is the contract behind that carry, and it is per swing
+rather than per scene. It measures the **path length** the commander covers
+between the start and the end of each individual action — not net displacement,
+because a strike that drives into a man and rocks back off him has moved the
+whole body even though it finishes where it started. A swing the scene cuts off
+part-way is never judged; a link that a combo chains straight out of is banked at
+the moment the next link begins. `threshold` is the metres every swing must
+cover and `distance` is how many completed swings the scene has to produce. The
+sword and spear grammars carry it at 0.45 m, `rpg_strike_lunge` at 0.30 m. The
+spear grammar also exercises the commander's own spear clips
+(`rpg_spear_thrust/sweep/launcher/finisher` from
+`animation/commander_spear_manifest.cpp`): the shaft the renderer draws comes from
+the same keys the clip was baked from, so a shaft pointing the wrong way in a
+capture means the two have drifted apart. Net
+travel alone will pass a commander who drifts once and then swings from a planted
+stance for the rest of the scene, which is exactly the defect it exists to catch.
 
 These scenes are driven by the `RpgMove` and `RpgAttackHold` scenario commands,
 which set the behind-head controller's own movement axes, view yaw, and attack

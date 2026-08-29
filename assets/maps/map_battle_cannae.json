@@ -1517,7 +1517,7 @@
             "max_population": -1,
             "player_id": 1,
             "type": "spearman",
-            "x": 130.23,
+            "x": 130.7,
             "z": 430.49
         },
         {
@@ -1601,8 +1601,8 @@
             "max_population": -1,
             "player_id": 2,
             "type": "archer",
-            "x": 432.87,
-            "z": 238.51
+            "x": 432.53,
+            "z": 238.78
         },
         {
             "max_population": -1,
@@ -1790,8 +1790,8 @@
             "max_population": -1,
             "player_id": 3,
             "type": "spearman",
-            "x": 524,
-            "z": 114
+            "x": 523.75,
+            "z": 114.49
         },
         {
             "behavior": "guard",
@@ -1799,8 +1799,8 @@
             "max_population": -1,
             "player_id": 3,
             "type": "spearman",
-            "x": 520,
-            "z": 114
+            "x": 520.17,
+            "z": 114.93
         },
         {
             "behavior": "guard",
@@ -1808,8 +1808,8 @@
             "max_population": -1,
             "player_id": 3,
             "type": "spearman",
-            "x": 516,
-            "z": 114
+            "x": 515.63,
+            "z": 114.07
         },
         {
             "behavior": "guard",
@@ -1850,8 +1850,8 @@
             "nation": "roman_republic",
             "player_id": 3,
             "type": "roman_legion_organizer",
-            "x": 520.0,
-            "z": 114.0
+            "x": 520.17,
+            "z": 114.93
         },
         {
             "max_population": -1,
@@ -1968,8 +1968,8 @@
             "nation": "roman_republic",
             "player_id": 2,
             "type": "barracks",
-            "x": 524,
-            "z": 300.8
+            "x": 524.96,
+            "z": 300.32
         },
         {
             "authored": true,
@@ -2978,8 +2978,8 @@
             "rotation": 4.1,
             "scale": 0.9,
             "type": "ruins",
-            "x": 71.63,
-            "z": 397.88
+            "x": 72.17,
+            "z": 398.62
         },
         {
             "rotation": 0.8,
@@ -3006,8 +3006,8 @@
             "rotation": 1.1,
             "scale": 1.1,
             "type": "dead_tree",
-            "x": 97.03,
-            "z": 383.1
+            "x": 97.61,
+            "z": 384.72
         },
         {
             "rotation": 3.5,
@@ -3731,8 +3731,8 @@
             "rotation": 278.6,
             "scale": 1.03,
             "type": "ruins",
-            "x": 170.02,
-            "z": 164.4
+            "x": 169.74,
+            "z": 163.65
         },
         {
             "rotation": 293.90000000000003,
@@ -3857,8 +3857,8 @@
             "rotation": 321.6,
             "scale": 1.07,
             "type": "ruins",
-            "x": 560.65,
-            "z": 561.51
+            "x": 560.52,
+            "z": 561.57
         },
         {
             "rotation": 211.20000000000002,
@@ -4021,15 +4021,15 @@
             "rotation": 180,
             "scale": 1.1,
             "type": "ruins",
-            "x": 131,
-            "z": 607
+            "x": 129.62,
+            "z": 607.17
         },
         {
             "landmark": "cannae_south_sanctuary",
             "scale": 0.9,
             "type": "ruins",
-            "x": 129,
-            "z": 594
+            "x": 128.81,
+            "z": 594.02
         },
         {
             "landmark": "cannae_south_sanctuary",
@@ -4087,8 +4087,8 @@
             "rotation": 270,
             "scale": 1.1,
             "type": "ruins",
-            "x": 217,
-            "z": 92
+            "x": 216.21,
+            "z": 91.79
         },
         {
             "landmark": "cannae_north_hamlet",
@@ -4156,8 +4156,8 @@
             "landmark": "cannae_aufidus_sanctuary",
             "scale": 0.9,
             "type": "ruins",
-            "x": 269,
-            "z": 340
+            "x": 268.95,
+            "z": 336.91
         },
         {
             "landmark": "cannae_aufidus_sanctuary",
@@ -4308,24 +4308,24 @@
             "rotation": 270,
             "scale": 1,
             "type": "tent",
-            "x": 515,
-            "z": 106
+            "x": 512.51,
+            "z": 107.71
         },
         {
             "landmark": "cannae_ridge_watch",
             "rotation": 90,
             "scale": 1,
             "type": "tent",
-            "x": 524,
-            "z": 107
+            "x": 524.57,
+            "z": 111.84
         },
         {
             "landmark": "cannae_ridge_watch",
             "rotation": 270,
             "scale": 0.9500000000000001,
             "type": "tent",
-            "x": 518,
-            "z": 112
+            "x": 517.94,
+            "z": 112.04
         },
         {
             "landmark": "cannae_ridge_watch",
@@ -4340,8 +4340,8 @@
             "rotation": 270,
             "scale": 1,
             "type": "weapon_rack",
-            "x": 512,
-            "z": 102
+            "x": 510.88,
+            "z": 104.58
         },
         {
             "intensity": 1.2,
@@ -4351,8 +4351,8 @@
             "rotation": 180,
             "scale": 1,
             "type": "firecamp",
-            "x": 520,
-            "z": 108
+            "x": 519.96,
+            "z": 108.1
         },
         {
             "landmark": "cannae_ridge_watch",
@@ -4367,28 +4367,28 @@
             "scale": 1,
             "type": "tent",
             "x": 112.12,
-            "z": 432.48
+            "z": 431.23
         },
         {
             "authored_camp": true,
             "scale": 1,
             "type": "tent",
-            "x": 120.04,
-            "z": 432.48
+            "x": 121.91,
+            "z": 431.17
         },
         {
             "authored_camp": true,
             "scale": 1,
             "type": "tent",
-            "x": 127.96000000000001,
-            "z": 432.48
+            "x": 127.96,
+            "z": 431.23
         },
         {
             "authored_camp": true,
             "scale": 1,
             "type": "tent",
             "x": 135.88,
-            "z": 432.48
+            "z": 431.23
         },
         {
             "authored_camp": true,
@@ -4470,8 +4470,8 @@
             "authored_camp": true,
             "scale": 1,
             "type": "statue",
-            "x": 524,
-            "z": 317.6
+            "x": 524.59,
+            "z": 317.94
         },
         {
             "authored_camp": true,
@@ -4497,15 +4497,15 @@
             "authored_camp": true,
             "scale": 1,
             "type": "tent",
-            "x": 405,
-            "z": 92.4
+            "x": 403.99,
+            "z": 92.73
         },
         {
             "authored_camp": true,
             "scale": 1,
             "type": "tent",
             "x": 410.72,
-            "z": 86.9
+            "z": 83.28
         },
         {
             "authored_camp": true,
@@ -4535,8 +4535,8 @@
             "authored_camp": true,
             "scale": 1,
             "type": "supply_cart",
-            "x": 432,
-            "z": 483.2
+            "x": 428.47,
+            "z": 483.36
         },
         {
             "authored_camp": true,

@@ -347,35 +347,51 @@ world_prop_type_to_string(WorldProp::Type type) -> QLatin1String {
   return 1.0F;
 }
 
+struct WorldPropHalfExtents {
+  float x{0.0F};
+  float z{0.0F};
+};
+
 [[nodiscard]] constexpr auto
-world_prop_model_half_extent(WorldProp::Type type) -> float {
+world_prop_model_half_extents(WorldProp::Type type) -> WorldPropHalfExtents {
   switch (type) {
   case WorldProp::Type::Ruins:
-    return 0.94F;
+    return {0.94F, 0.70F};
   case WorldProp::Type::AbandonedHome:
-    return 1.16F;
+    return {1.16F, 0.82F};
   case WorldProp::Type::SupplyCart:
-    return 1.42F;
+    return {0.90F, 1.42F};
   case WorldProp::Type::WeaponRack:
-    return 0.88F;
+    return {0.88F, 0.54F};
   case WorldProp::Type::MagicShrine:
-    return 0.86F;
+    return {0.86F, 0.86F};
   case WorldProp::Type::Statue:
-    return 0.55F;
+    return {0.55F, 0.55F};
   case WorldProp::Type::Tent:
-    return 0.55F;
+    return {0.69F, 0.90F};
   case WorldProp::Type::FireCamp:
-    return 0.90F;
+    return {0.90F, 0.90F};
+  case WorldProp::Type::Boulder:
+    return {0.60F, 0.55F};
+  case WorldProp::Type::IronOre:
+    return {0.82F, 0.56F};
+  case WorldProp::Type::DeadTree:
+    return {1.34F, 0.35F};
   case WorldProp::Type::PineTree:
   case WorldProp::Type::OliveTree:
   case WorldProp::Type::CypressTree:
   case WorldProp::Type::PalmTree:
-  case WorldProp::Type::DeadTree:
-    return 1.0F;
-  default:
+    return {1.0F, 1.0F};
+  case WorldProp::Type::Plant:
     break;
   }
-  return 0.55F;
+  return {0.55F, 0.55F};
+}
+
+[[nodiscard]] constexpr auto
+world_prop_model_half_extent(WorldProp::Type type) -> float {
+  const WorldPropHalfExtents extents = world_prop_model_half_extents(type);
+  return extents.x > extents.z ? extents.x : extents.z;
 }
 
 [[nodiscard]] constexpr auto
@@ -385,7 +401,6 @@ world_prop_blocks_only_its_stem(WorldProp::Type type) -> bool {
   case WorldProp::Type::OliveTree:
   case WorldProp::Type::CypressTree:
   case WorldProp::Type::PalmTree:
-  case WorldProp::Type::DeadTree:
     return true;
   default:
     break;
@@ -394,17 +409,71 @@ world_prop_blocks_only_its_stem(WorldProp::Type type) -> bool {
 }
 
 inline constexpr float k_world_prop_stem_fraction = 0.22F;
+inline constexpr float k_world_prop_min_ground_half_extent = 0.5F;
 
 [[nodiscard]] constexpr auto world_prop_ground_fraction(WorldProp::Type type) -> float {
   return world_prop_blocks_only_its_stem(type) ? k_world_prop_stem_fraction
                                                : world_prop_model_half_extent(type);
 }
 
+[[nodiscard]] constexpr auto
+world_prop_ground_half_extents(WorldProp::Type type,
+                               float authored_scale) -> WorldPropHalfExtents {
+  float const scale = world_prop_render_scale(type) * authored_scale;
+  WorldPropHalfExtents extents = world_prop_model_half_extents(type);
+  if (world_prop_blocks_only_its_stem(type)) {
+    extents = {k_world_prop_stem_fraction, k_world_prop_stem_fraction};
+  }
+  extents.x *= scale;
+  extents.z *= scale;
+  extents.x = extents.x > k_world_prop_min_ground_half_extent
+                  ? extents.x
+                  : k_world_prop_min_ground_half_extent;
+  extents.z = extents.z > k_world_prop_min_ground_half_extent
+                  ? extents.z
+                  : k_world_prop_min_ground_half_extent;
+  return extents;
+}
+
 [[nodiscard]] constexpr auto world_prop_ground_radius(WorldProp::Type type,
                                                       float authored_scale) -> float {
-  float const radius =
-      world_prop_render_scale(type) * authored_scale * world_prop_ground_fraction(type);
-  return radius > 0.5F ? radius : 0.5F;
+  const WorldPropHalfExtents extents =
+      world_prop_ground_half_extents(type, authored_scale);
+  return extents.x > extents.z ? extents.x : extents.z;
+}
+
+[[nodiscard]] inline auto
+world_prop_ground_bounding_radius(WorldProp::Type type, float authored_scale) -> float {
+  const WorldPropHalfExtents extents =
+      world_prop_ground_half_extents(type, authored_scale);
+  return std::hypot(extents.x, extents.z);
+}
+
+[[nodiscard]] inline auto world_prop_overlap_depth(WorldProp::Type type,
+                                                   float authored_scale,
+                                                   float prop_x,
+                                                   float prop_z,
+                                                   float rotation,
+                                                   float x,
+                                                   float z,
+                                                   float radius) -> float {
+  const WorldPropHalfExtents extents =
+      world_prop_ground_half_extents(type, authored_scale);
+  float const cosine = std::cos(rotation);
+  float const sine = std::sin(rotation);
+  float const dx = x - prop_x;
+  float const dz = z - prop_z;
+
+  float const local_x = (cosine * dx) + (sine * dz);
+  float const local_z = (-sine * dx) + (cosine * dz);
+  float const gap_x = std::abs(local_x) - extents.x;
+  float const gap_z = std::abs(local_z) - extents.z;
+  if (gap_x <= 0.0F && gap_z <= 0.0F) {
+    return radius - (gap_x > gap_z ? gap_x : gap_z);
+  }
+  float const outside_x = gap_x > 0.0F ? gap_x : 0.0F;
+  float const outside_z = gap_z > 0.0F ? gap_z : 0.0F;
+  return radius - std::hypot(outside_x, outside_z);
 }
 
 enum class CoordSystem {

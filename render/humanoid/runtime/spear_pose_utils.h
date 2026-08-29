@@ -15,6 +15,7 @@ inline auto spear_qvec_from_pose(const Animation::PoseVec3& value) -> QVector3D 
 
 inline auto resolve_spear_direction(const AnimationInputs& inputs,
                                     float attack_phase = 0.0F) -> QVector3D {
+  bool const authored = inputs.has_authored_action_clip && inputs.is_attacking;
   QVector3D spear_dir =
       spear_qvec_from_pose(Animation::resolve_humanoid_spear_direction({
           .hold_blend = hold_transition_amount(inputs),
@@ -22,6 +23,10 @@ inline auto resolve_spear_direction(const AnimationInputs& inputs,
           .is_attacking = inputs.is_attacking,
           .is_melee = inputs.is_melee,
           .attack_phase = attack_phase,
+          .authored_move = authored ? Animation::commander_spear_move_for_clip(
+                                          inputs.authored_action_clip)
+                                    : Animation::CommanderSpearMove::None,
+          .authored_phase = inputs.authored_action_phase,
       }));
   if (spear_dir.lengthSquared() > 1.0e-6F) {
     spear_dir.normalize();

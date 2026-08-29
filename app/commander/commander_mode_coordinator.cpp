@@ -233,7 +233,7 @@ auto CommanderModeCoordinator::enter_commander_control_mode(
           Engine::Core::get_or_add_component<Engine::Core::StaminaComponent>(
               context.commander)) {
     constexpr float k_commander_stamina = 180.0F;
-    constexpr float k_commander_stamina_regen = 24.0F;
+    constexpr float k_commander_stamina_regen = 14.0F;
     stamina->max_stamina = std::max(stamina->max_stamina, k_commander_stamina);
     stamina->stamina = stamina->max_stamina;
     stamina->regen_rate = std::max(stamina->regen_rate, k_commander_stamina_regen);

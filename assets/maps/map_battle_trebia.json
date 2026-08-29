@@ -2222,8 +2222,8 @@
             "max_population": -1,
             "player_id": 1,
             "type": "horse_swordsman",
-            "x": 395.25,
-            "z": 446.95
+            "x": 396.25,
+            "z": 446.36
         },
         {
             "max_population": -1,
@@ -2480,8 +2480,8 @@
             "max_population": -1,
             "player_id": 3,
             "type": "spearman",
-            "x": 383.6,
-            "z": 266.6
+            "x": 383.68,
+            "z": 266.92
         },
         {
             "behavior": "guard",
@@ -2507,8 +2507,8 @@
             "max_population": -1,
             "player_id": 3,
             "type": "spearman",
-            "x": 440,
-            "z": 406
+            "x": 439.51,
+            "z": 405.75
         },
         {
             "behavior": "guard",
@@ -3566,15 +3566,15 @@
             "rotation": 1.1,
             "scale": 1,
             "type": "tent",
-            "x": 244.75,
-            "z": 46.300000000000004
+            "x": 244.8,
+            "z": 47.46
         },
         {
             "rotation": 4,
             "scale": 1,
             "type": "tent",
-            "x": 282.84000000000003,
-            "z": 45
+            "x": 282.77,
+            "z": 47.01
         },
         {
             "rotation": 2.2,
@@ -3594,15 +3594,15 @@
             "rotation": 2.5,
             "scale": 1,
             "type": "ruins",
-            "x": 261.48,
-            "z": 281.05
+            "x": 261.29,
+            "z": 280.65
         },
         {
             "rotation": 4.3,
             "scale": 0.9,
             "type": "ruins",
-            "x": 255.88,
-            "z": 260.84000000000003
+            "x": 255.75,
+            "z": 260.9
         },
         {
             "rotation": 0.5,
@@ -3664,8 +3664,8 @@
             "rotation": 2.4,
             "scale": 1,
             "type": "dead_tree",
-            "x": 403.22,
-            "z": 335.96
+            "x": 402.88,
+            "z": 336.44
         },
         {
             "rotation": 5,
@@ -3679,13 +3679,13 @@
             "scale": 0.9,
             "type": "tent",
             "x": 560.61,
-            "z": 93.16
+            "z": 96.05
         },
         {
             "rotation": 4.2,
             "scale": 0.9,
             "type": "tent",
-            "x": 602.48,
+            "x": 602.5,
             "z": 93.16
         },
         {
@@ -4081,8 +4081,8 @@
             "rotation": 17.3,
             "scale": 0.92,
             "type": "supply_cart",
-            "x": 135.91,
-            "z": 107.49000000000001
+            "x": 135.96,
+            "z": 107.34
         },
         {
             "rotation": 273,
@@ -4655,8 +4655,8 @@
             "radius": 3.2,
             "scale": 1,
             "type": "firecamp",
-            "x": 300,
-            "z": 278
+            "x": 301.56,
+            "z": 274.99
         },
         {
             "landmark": "trebia_east_hamlet",
@@ -4858,23 +4858,23 @@
             "rotation": 180,
             "scale": 1,
             "type": "ruins",
-            "x": 93,
-            "z": 365
+            "x": 92.42,
+            "z": 365.87
         },
         {
             "landmark": "trebia_west_shrine",
             "scale": 0.85,
             "type": "ruins",
-            "x": 92,
-            "z": 354
+            "x": 92.39,
+            "z": 353.41
         },
         {
             "landmark": "trebia_west_shrine",
             "rotation": 180,
             "scale": 1.1500000000000001,
             "type": "ruins",
-            "x": 87,
-            "z": 361
+            "x": 86.17,
+            "z": 362.26
         },
         {
             "intensity": 1.2,
@@ -4899,8 +4899,8 @@
             "rotation": 90,
             "scale": 1,
             "type": "tent",
-            "x": 445,
-            "z": 414
+            "x": 445.06,
+            "z": 414.03
         },
         {
             "landmark": "trebia_ford_watch",
@@ -4931,8 +4931,8 @@
             "rotation": 90,
             "scale": 1,
             "type": "weapon_rack",
-            "x": 448,
-            "z": 418
+            "x": 447.68,
+            "z": 417.47
         },
         {
             "intensity": 1.2,
@@ -4949,29 +4949,29 @@
             "rotation": 270,
             "scale": 0.9,
             "type": "ruins",
-            "x": 434,
-            "z": 432
+            "x": 435.34,
+            "z": 434.23
         },
         {
             "authored_camp": true,
             "scale": 1,
             "type": "tent",
-            "x": 303.55,
-            "z": 522.59
+            "x": 304.11,
+            "z": 516.21
         },
         {
             "authored_camp": true,
             "scale": 1,
             "type": "tent",
-            "x": 309.76,
-            "z": 524.42
+            "x": 310.2,
+            "z": 524.13
         },
         {
             "authored_camp": true,
             "scale": 1,
             "type": "tent",
             "x": 314.8,
-            "z": 524.16
+            "z": 524.13
         },
         {
             "authored_camp": true,
@@ -4995,8 +4995,8 @@
             "rotation": 90,
             "scale": 1,
             "type": "weapon_rack",
-            "x": 301.92,
-            "z": 514.8
+            "x": 303.05,
+            "z": 512.58
         },
         {
             "authored_camp": true,
@@ -5005,8 +5005,8 @@
             "radius": 4,
             "scale": 1,
             "type": "firecamp",
-            "x": 140.76,
-            "z": 52.96
+            "x": 142.38,
+            "z": 55.66
         },
         {
             "authored_camp": true,
@@ -5039,8 +5039,8 @@
             "authored_camp": true,
             "scale": 1,
             "type": "statue",
-            "x": 566,
-            "z": 121.9
+            "x": 566.78,
+            "z": 122.52
         },
         {
             "authored_camp": true,
@@ -5049,8 +5049,8 @@
             "radius": 3.4,
             "scale": 1,
             "type": "firecamp",
-            "x": 546.16,
-            "z": 110.2
+            "x": 546.96,
+            "z": 107.4
         },
         {
             "authored_camp": true,
@@ -5059,8 +5059,8 @@
             "radius": 3.4,
             "scale": 1,
             "type": "firecamp",
-            "x": 585.84,
-            "z": 110.2
+            "x": 585.65,
+            "z": 109.5
         }
     ]
 }

@@ -225,7 +225,12 @@ inline constexpr std::uint8_t k_humanoid_react_clip_count = 4U;
 
 inline constexpr std::uint16_t k_humanoid_resource_carry_clip = 73U;
 
-inline constexpr std::uint16_t k_humanoid_clip_count = 74U;
+inline constexpr std::uint16_t k_humanoid_rpg_spear_thrust_clip = 74U;
+inline constexpr std::uint16_t k_humanoid_rpg_spear_sweep_clip = 75U;
+inline constexpr std::uint16_t k_humanoid_rpg_spear_launcher_clip = 76U;
+inline constexpr std::uint16_t k_humanoid_rpg_spear_finisher_clip = 77U;
+
+inline constexpr std::uint16_t k_humanoid_clip_count = 78U;
 
 inline constexpr float k_humanoid_combat_ready_cycle_time = 2.2F;
 inline constexpr std::uint32_t k_humanoid_combat_ready_frames = 48U;

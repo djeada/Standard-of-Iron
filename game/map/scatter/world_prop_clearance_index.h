@@ -15,17 +15,20 @@ public:
 
   [[nodiscard]] auto overlaps(float world_x, float world_z, float radius) const -> bool;
 
-  [[nodiscard]] auto empty() const -> bool { return m_discs.empty(); }
+  [[nodiscard]] auto empty() const -> bool { return m_bodies.empty(); }
 
-  [[nodiscard]] auto disc_count() const -> std::size_t { return m_discs.size(); }
+  [[nodiscard]] auto body_count() const -> std::size_t { return m_bodies.size(); }
 
   [[nodiscard]] auto max_radius() const -> float { return m_max_radius; }
 
 private:
-  struct Disc {
+  struct Body {
+    Game::Map::WorldProp::Type type{};
     float x = 0.0F;
     float z = 0.0F;
-    float radius = 0.0F;
+    float scale = 1.0F;
+    float rotation = 0.0F;
+    float bounding_radius = 0.0F;
   };
 
   struct CellHash {
@@ -36,7 +39,7 @@ private:
 
   [[nodiscard]] static auto cell_key(int cell_x, int cell_z) -> std::uint64_t;
 
-  std::vector<Disc> m_discs;
+  std::vector<Body> m_bodies;
   std::unordered_map<std::uint64_t, std::vector<std::uint32_t>, CellHash> m_cells;
   float m_cell_size = 4.0F;
   float m_max_radius = 0.0F;
