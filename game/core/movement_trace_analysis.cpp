@@ -120,6 +120,7 @@ struct EntityWalkState {
   OpenFinding idle_while_moving;
   OpenFinding obstruction;
   OpenFinding penetration;
+  OpenFinding body_overlap;
   OpenFinding recovery;
 
   float stall_seconds{0.0F};
@@ -133,6 +134,7 @@ struct EntityWalkState {
   float turning_seconds{0.0F};
   float recovering_seconds{0.0F};
   float penetration_seconds{0.0F};
+  float body_overlap_seconds{0.0F};
   float active_seconds{0.0F};
   int blocked_streak{0};
   int heading_flip_run{0};
@@ -220,6 +222,8 @@ auto movement_finding_name(MovementFindingKind kind) noexcept -> const char* {
     return "MissingFinalAnchor";
   case MovementFindingKind::CollisionPenetration:
     return "CollisionPenetration";
+  case MovementFindingKind::BodyOverlap:
+    return "BodyOverlap";
   case MovementFindingKind::Starvation:
     return "Starvation";
   }
@@ -473,6 +477,24 @@ void analyze_troops(const std::vector<MovementTroopSample>& troops,
       } else {
         walk.penetration_seconds = 0.0F;
         FindingSink::close(walk.penetration);
+      }
+
+      if (sample.body_overlap > thresholds.body_overlap_metres) {
+        walk.body_overlap_seconds += dt;
+        if (walk.body_overlap_seconds > thresholds.body_overlap_seconds) {
+          sink.extend(walk.body_overlap,
+                      MovementFindingKind::BodyOverlap,
+                      entity_id,
+                      0,
+                      sample.tick,
+                      sample.body_overlap,
+                      text("%.3fm inside another body for %.2fs",
+                           static_cast<double>(sample.body_overlap),
+                           static_cast<double>(walk.body_overlap_seconds)));
+        }
+      } else {
+        walk.body_overlap_seconds = 0.0F;
+        FindingSink::close(walk.body_overlap);
       }
 
       if (sample.repath_count > walk.repaths_in_order) {

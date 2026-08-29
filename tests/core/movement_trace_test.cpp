@@ -224,7 +224,7 @@ TEST(MovementTraceTest, TroopSampleSurvivesAJsonRoundTrip) {
   original.penetration_depth = 0.125F;
   original.soldier_body_radius = 0.3125F;
   original.has_contact = true;
-  original.passing_side = -1;
+  original.body_overlap = 0.0625F;
   original.direction_source = MovementDirectionSource::RouteTangent;
 
   MovementTroopSample parsed;
@@ -251,7 +251,7 @@ TEST(MovementTraceTest, TroopSampleSurvivesAJsonRoundTrip) {
   EXPECT_FLOAT_EQ(parsed.penetration_depth, original.penetration_depth);
   EXPECT_FLOAT_EQ(parsed.soldier_body_radius, original.soldier_body_radius);
   EXPECT_TRUE(parsed.has_contact);
-  EXPECT_EQ(parsed.passing_side, -1);
+  EXPECT_FLOAT_EQ(parsed.body_overlap, original.body_overlap);
   EXPECT_EQ(parsed.direction_source, original.direction_source);
 }
 

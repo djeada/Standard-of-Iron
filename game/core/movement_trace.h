@@ -74,11 +74,9 @@ struct MovementTroopSample {
   std::uint32_t blocked_steps{0};
   std::uint32_t repath_count{0};
   MovementRepathReason repath_reason{MovementRepathReason::None};
-  EntityID queue_owner{0};
 
   std::uint32_t neighbor_count{0};
-  float nearest_time_to_collision{-1.0F};
-  std::int8_t passing_side{0};
+  float body_overlap{0.0F};
   std::uint8_t solver_result{0};
 
   float envelope_radius{0.0F};

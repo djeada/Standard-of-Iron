@@ -1,5 +1,6 @@
 #include <cmath>
 #include <gtest/gtest.h>
+#include <limits>
 #include <memory>
 #include <utility>
 #include <vector>
@@ -481,7 +482,7 @@ TEST_F(MovementMotorTest, OpenGroundTravelIsUnconstrainedBesideACrowd) {
   EXPECT_NEAR(facts->steering.correction_z, 0.0F, 1.0e-4F);
 }
 
-TEST_F(MovementMotorTest, APassingSideIsHeldOnceCommitted) {
+TEST_F(MovementMotorTest, HeadOnBodiesPassEachOtherInsteadOfJamming) {
   const EntityID west = spawn(Game::Units::SpawnType::Spearman, world_of(16, 24));
   const EntityID east = spawn(Game::Units::SpawnType::Spearman, world_of(32, 24));
   ASSERT_NE(west, 0U);
@@ -490,33 +491,23 @@ TEST_F(MovementMotorTest, APassingSideIsHeldOnceCommitted) {
   CommandService::move_unit(m_session->world(), west, world_of(34, 24));
   CommandService::move_unit(m_session->world(), east, world_of(14, 24));
 
-  std::vector<std::int8_t> west_sides;
+  float closest_approach = std::numeric_limits<float>::max();
   const double step = m_session->clock().tick_seconds();
   for (double elapsed = 0.0; elapsed < 12.0; elapsed += step) {
     m_session->clock().advance(step);
     while (m_session->clock().consume_tick()) {
       m_session->world().update(static_cast<float>(step));
     }
-    if (const auto* facts = facts_of(west); facts != nullptr) {
-      west_sides.push_back(facts->steering.passing_side);
-    }
+    const QVector3D separation = position_of(west) - position_of(east);
+    closest_approach =
+        std::min(closest_approach, std::hypot(separation.x(), separation.z()));
   }
 
-  int reversals = 0;
-  std::int8_t committed = 0;
-  for (const auto side : west_sides) {
-    if (side == 0) {
-      continue;
-    }
-    if (committed != 0 && side != committed) {
-      ++reversals;
-    }
-    committed = side;
-  }
-  EXPECT_LE(reversals, 1) << "the passing side alternated " << reversals << " times";
-
-  EXPECT_GT(position_of(west).x(), world_of(30, 24).x());
-  EXPECT_LT(position_of(east).x(), world_of(18, 24).x());
+  EXPECT_GT(position_of(west).x(), world_of(30, 24).x())
+      << "the westward body never got past the one walking at it";
+  EXPECT_LT(position_of(east).x(), world_of(18, 24).x())
+      << "the eastward body never got past the one walking at it";
+  EXPECT_GT(closest_approach, 0.1F) << "the two bodies passed through the same ground";
 }
 
 TEST_F(MovementMotorTest, RepeatedRunsAgreeOnTheMovementDigest) {

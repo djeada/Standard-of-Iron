@@ -100,8 +100,7 @@ enum class SteeringResult : std::uint8_t {
   Unconstrained = 0,
   Deviated,
   Slowed,
-  Yielded,
-  Separating
+  Yielded
 };
 
 struct SteeringFacts {
@@ -110,14 +109,10 @@ struct SteeringFacts {
   float velocity_z{0.0F};
   float correction_x{0.0F};
   float correction_z{0.0F};
-
-  float separation_x{0.0F};
-  float separation_z{0.0F};
   std::uint32_t neighbor_count{0};
-  float nearest_time_to_collision{-1.0F};
-  std::int8_t passing_side{0};
+
+  float body_overlap{0.0F};
   SteeringResult result{SteeringResult::Unconstrained};
-  EntityID queue_owner{0};
 };
 
 struct MotorFacts {
@@ -152,14 +147,6 @@ struct MovementProgressFacts {
   std::uint32_t repath_count{0};
   std::uint32_t repath_attempts{0};
   MovementRepathReason repath_reason{MovementRepathReason::None};
-};
-
-struct PassingCommitmentFacts {
-  std::int8_t side{0};
-  float held_seconds{0.0F};
-
-  std::int8_t angle_index{-1};
-  float deviation_degrees{0.0F};
 };
 
 struct TraversalLayoutFacts {

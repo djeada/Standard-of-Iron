@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../core/system.h"
+#include "body_contact_system.h"
 #include "local_avoidance_system.h"
 #include "movement_system.h"
 #include "route_follow_system.h"
@@ -20,6 +21,7 @@ private:
   RouteFollowSystem m_route_follow;
   LocalAvoidanceSystem m_avoidance;
   MovementSystem m_motor;
+  BodyContactSystem m_contact;
   UnitTraversalLayoutSystem m_traversal_layout;
 };
 
