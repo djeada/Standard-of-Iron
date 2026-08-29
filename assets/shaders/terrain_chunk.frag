@@ -229,8 +229,11 @@ const float k_soi_tactical_far = 115.0;
 void main() {
 
   VisibilityMask visibility = visibility_mask_fetch(v_world_pos.xz);
-  if (visibility_is_unknown(visibility)) {
-    discard;
+  if (visibility_is_unseen(visibility)) {
+    frag_color = vec4(unseen_surface_color(u_soil_color) * u_ambient_boost *
+                          environment_exposure(),
+                      1.0);
+    return;
   }
 
   vec3 to_camera = u_camera_pos - v_world_pos;

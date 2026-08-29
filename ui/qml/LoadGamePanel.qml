@@ -185,7 +185,7 @@ Item {
                                     append({
                                             "slot_name": qsTr("No saves found"),
                                             "title": "",
-                                            "timestamp": 0,
+                                            "timestamp": "",
                                             "map_name": "",
                                             "mode": "",
                                             "kind": "",
@@ -213,7 +213,7 @@ Item {
                                     append({
                                             "slot_name": qsTr("No saves found"),
                                             "title": "",
-                                            "timestamp": 0,
+                                            "timestamp": "",
                                             "map_name": "",
                                             "mode": "",
                                             "kind": "",
@@ -450,7 +450,7 @@ Item {
                         loadListModel.append({
                                 "slot_name": qsTr("No saves found"),
                                 "title": "",
-                                "timestamp": 0,
+                                "timestamp": "",
                                 "map_name": "",
                                 "mode": "",
                                 "kind": "",

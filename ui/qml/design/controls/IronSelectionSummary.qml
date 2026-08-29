@@ -537,7 +537,7 @@ Design.IronPanel {
                             objectName: "selectionHealthBar"
                             width: parent.width
                             height: Design.Metrics.space12
-                            value: root.groups[0].health
+                            value: root.groups.length > 0 && root.groups[0].health !== undefined ? root.groups[0].health : 0
                             fillColor: root.healthColor(value)
                         }
                     }
@@ -615,12 +615,21 @@ Design.IronPanel {
                     width: Design.Metrics.space24 * 2
                     height: Design.Metrics.space24 * 2
 
-                    readonly property bool showsStrength: root.hasSoldierCount(chip.model)
-                    readonly property string strength: chip.showsStrength ? root.strengthTextCompact(chip.model) : ""
+                    readonly property var row: (chip.model !== undefined && chip.model !== null && chip.model.name !== undefined) ? chip.model : ({
+                            "name": "",
+                            "unit_type": "",
+                            "nation": "",
+                            "unit_id": "",
+                            "health_ratio": 0,
+                            "activity": "idle",
+                            "activity_state": ""
+                        })
+                    readonly property bool showsStrength: root.hasSoldierCount(chip.row)
+                    readonly property string strength: chip.showsStrength ? root.strengthTextCompact(chip.row) : ""
 
                     Accessible.role: Accessible.Button
-                    Accessible.name: chip.model.name
-                    Accessible.description: (chip.showsStrength ? chip.strength + qsTr(" soldiers — ") : Math.round(chip.model.health_ratio * 100) + "% — ") + Design.ActivityIcons.summary(chip.model.activity, chip.model.activity_state)
+                    Accessible.name: chip.row.name
+                    Accessible.description: (chip.showsStrength ? chip.strength + qsTr(" soldiers — ") : Math.round(chip.row.health_ratio * 100) + "% — ") + Design.ActivityIcons.summary(chip.row.activity, chip.row.activity_state)
 
                     Rectangle {
                         anchors.fill: parent
@@ -636,20 +645,20 @@ Design.IronPanel {
                         width: Design.Metrics.iconMedium
                         height: width
                         fillMode: Image.PreserveAspectFit
-                        source: root.iconFor(chip.model.unit_type, chip.model.nation, chip.model.name)
+                        source: root.iconFor(chip.row.unit_type, chip.row.nation, chip.row.name)
                         smooth: true
                         mipmap: true
                     }
 
                     Text {
-                        objectName: "selectionChipStrength_" + chip.model.unit_id
+                        objectName: "selectionChipStrength_" + chip.row.unit_id
 
                         anchors.horizontalCenter: parent.horizontalCenter
                         anchors.bottom: parent.bottom
                         anchors.bottomMargin: Design.Metrics.space8
                         visible: chip.showsStrength
                         text: chip.strength
-                        color: root.healthColor(chip.model.health_ratio)
+                        color: root.healthColor(chip.row.health_ratio)
                         font.family: Design.Typography.family
                         font.pixelSize: Design.Typography.caption
                         font.weight: Design.Typography.bold
@@ -663,12 +672,12 @@ Design.IronPanel {
                         height: Design.Metrics.space4
 
                         Rectangle {
-                            objectName: "selectionChipHealth_" + chip.model.unit_id
+                            objectName: "selectionChipHealth_" + chip.row.unit_id
 
-                            width: parent.width * chip.model.health_ratio
+                            width: parent.width * chip.row.health_ratio
                             height: parent.height
                             radius: height / 2
-                            color: root.healthColor(chip.model.health_ratio)
+                            color: root.healthColor(chip.row.health_ratio)
                         }
                     }
 
@@ -678,10 +687,10 @@ Design.IronPanel {
                         anchors.margins: Design.Metrics.space2
                         width: Design.Metrics.iconSmall
                         height: width
-                        visible: chip.model.activity !== undefined && chip.model.activity !== "idle"
-                        iconId: Design.ActivityIcons.iconFor(chip.model.activity)
+                        visible: chip.row.activity !== undefined && chip.row.activity !== "idle"
+                        iconId: Design.ActivityIcons.iconFor(chip.row.activity)
                         monochrome: true
-                        tint: chip.model.activity_state === "unavailable" ? Design.Theme.danger : chip.model.activity_state === "interrupted" ? Design.Theme.warning : Design.Theme.accent
+                        tint: chip.row.activity_state === "unavailable" ? Design.Theme.danger : chip.row.activity_state === "interrupted" ? Design.Theme.warning : Design.Theme.accent
                     }
 
                     MouseArea {
@@ -692,7 +701,7 @@ Design.IronPanel {
                         cursorShape: Qt.PointingHandCursor
                         onClicked: {
                             Design.UiSound.activate();
-                            root.unitActivated(chip.model.unit_id);
+                            root.unitActivated(chip.row.unit_id);
                         }
                         onContainsMouseChanged: {
                             if (containsMouse)
@@ -702,7 +711,7 @@ Design.IronPanel {
 
                     ToolTip.visible: chipMouse.containsMouse
                     ToolTip.delay: Design.Metrics.tooltipDelay
-                    ToolTip.text: chip.model.name + " — " + (chip.showsStrength ? qsTr("%1 soldiers").arg(chip.strength) : Math.round(chip.model.health_ratio * 100) + "%") + "\n" + Design.ActivityIcons.summary(chip.model.activity, chip.model.activity_state)
+                    ToolTip.text: chip.row.name + " — " + (chip.showsStrength ? qsTr("%1 soldiers").arg(chip.strength) : Math.round(chip.row.health_ratio * 100) + "%") + "\n" + Design.ActivityIcons.summary(chip.row.activity, chip.row.activity_state)
                 }
             }
         }
@@ -729,25 +738,35 @@ Design.IronPanel {
 
                     required property var modelData
 
+                    readonly property var row: (groupCard.modelData !== undefined && groupCard.modelData !== null && groupCard.modelData.typeKey !== undefined) ? groupCard.modelData : ({
+                            "typeKey": "",
+                            "name": "",
+                            "nation": "",
+                            "health": 0,
+                            "woundedCount": 0,
+                            "count": 0,
+                            "mixedActivity": false
+                        })
+
                     width: groupFlow.cardWidth
                     height: groupFlow.cardHeight
                     radius: Design.Metrics.radiusMedium
                     color: groupMouse.containsMouse ? Design.Theme.panelLeather : Design.Theme.backgroundDeep
                     border.width: groupMouse.containsMouse ? Design.Metrics.borderFocus : Design.Metrics.borderThin
-                    border.color: groupMouse.containsMouse ? Design.Theme.selection : groupCard.modelData.woundedCount > 0 ? root.healthColor(groupCard.modelData.health) : Design.Theme.borderSubtle
+                    border.color: groupMouse.containsMouse ? Design.Theme.selection : groupCard.row.woundedCount > 0 ? root.healthColor(groupCard.row.health) : Design.Theme.borderSubtle
 
-                    readonly property string activityText: Design.ActivityIcons.summary(root.groupActivity(groupCard.modelData), root.groupActivityState(groupCard.modelData)) + (groupCard.modelData.mixedActivity ? qsTr(" (mixed)") : "")
+                    readonly property string activityText: Design.ActivityIcons.summary(root.groupActivity(groupCard.row), root.groupActivityState(groupCard.row)) + (groupCard.row.mixedActivity ? qsTr(" (mixed)") : "")
 
-                    readonly property bool showsStrength: root.hasSoldierCount(groupCard.modelData)
-                    readonly property string strength: groupCard.showsStrength ? root.strengthTextCompact(groupCard.modelData) : ""
+                    readonly property bool showsStrength: root.hasSoldierCount(groupCard.row)
+                    readonly property string strength: groupCard.showsStrength ? root.strengthTextCompact(groupCard.row) : ""
 
                     Accessible.role: Accessible.Button
-                    Accessible.name: groupCard.modelData.name + " ×" + groupCard.modelData.count
-                    Accessible.description: (groupCard.showsStrength ? groupCard.strength + qsTr(" soldiers — ") : Math.round(groupCard.modelData.health * 100) + "% — ") + groupCard.activityText
+                    Accessible.name: groupCard.row.name + " ×" + groupCard.row.count
+                    Accessible.description: (groupCard.showsStrength ? groupCard.strength + qsTr(" soldiers — ") : Math.round(groupCard.row.health * 100) + "% — ") + groupCard.activityText
 
                     ToolTip.visible: groupMouse.containsMouse
                     ToolTip.delay: Design.Metrics.tooltipDelay
-                    ToolTip.text: groupCard.modelData.name + " ×" + groupCard.modelData.count + (groupCard.showsStrength ? " — " + qsTr("%1 soldiers").arg(groupCard.strength) : "") + "\n" + groupCard.activityText
+                    ToolTip.text: groupCard.row.name + " ×" + groupCard.row.count + (groupCard.showsStrength ? " — " + qsTr("%1 soldiers").arg(groupCard.strength) : "") + "\n" + groupCard.activityText
 
                     Rectangle {
                         id: portraitFrame
@@ -766,7 +785,7 @@ Design.IronPanel {
                             anchors.fill: parent
                             anchors.margins: Design.Metrics.space4
                             fillMode: Image.PreserveAspectFit
-                            source: root.iconFor(groupCard.modelData.typeKey, groupCard.modelData.nation, groupCard.modelData.name)
+                            source: root.iconFor(groupCard.row.typeKey, groupCard.row.nation, groupCard.row.name)
                             smooth: true
                             mipmap: true
                         }
@@ -787,7 +806,7 @@ Design.IronPanel {
                                 id: groupCount
 
                                 anchors.centerIn: parent
-                                text: "×" + groupCard.modelData.count
+                                text: "×" + groupCard.row.count
                                 color: Design.Theme.accent
                                 font.family: Design.Typography.family
                                 font.pixelSize: Design.Typography.caption
@@ -801,10 +820,10 @@ Design.IronPanel {
                             anchors.margins: -Design.Metrics.space2
                             width: Design.Metrics.iconSmall
                             height: width
-                            visible: root.groupActivity(groupCard.modelData) !== "idle"
-                            iconId: Design.ActivityIcons.iconFor(root.groupActivity(groupCard.modelData))
+                            visible: root.groupActivity(groupCard.row) !== "idle"
+                            iconId: Design.ActivityIcons.iconFor(root.groupActivity(groupCard.row))
                             monochrome: true
-                            tint: root.groupActivityState(groupCard.modelData) === "unavailable" ? Design.Theme.danger : root.groupActivityState(groupCard.modelData) === "interrupted" ? Design.Theme.warning : Design.Theme.accent
+                            tint: root.groupActivityState(groupCard.row) === "unavailable" ? Design.Theme.danger : root.groupActivityState(groupCard.row) === "interrupted" ? Design.Theme.warning : Design.Theme.accent
                         }
                     }
 
@@ -817,7 +836,7 @@ Design.IronPanel {
                         anchors.rightMargin: Design.Metrics.space8
                         anchors.top: parent.top
                         anchors.topMargin: Design.Metrics.space8
-                        text: groupCard.modelData.name
+                        text: groupCard.row.name
                         color: Design.Theme.textPrimary
                         font.family: Design.Typography.family
                         font.pixelSize: Design.Typography.caption
@@ -828,7 +847,7 @@ Design.IronPanel {
                     Design.IronProgressBar {
                         id: groupHealth
 
-                        objectName: "selectionGroupHealthBar_" + groupCard.modelData.typeKey
+                        objectName: "selectionGroupHealthBar_" + groupCard.row.typeKey
 
                         anchors.left: portraitFrame.right
                         anchors.leftMargin: Design.Metrics.space8
@@ -836,12 +855,12 @@ Design.IronPanel {
                         anchors.rightMargin: Design.Metrics.space8
                         anchors.bottom: parent.bottom
                         anchors.bottomMargin: Design.Metrics.space8
-                        value: groupCard.modelData.health
+                        value: groupCard.row.health
                         fillColor: root.healthColor(value)
                     }
 
                     Text {
-                        objectName: "selectionGroupStrength_" + groupCard.modelData.typeKey
+                        objectName: "selectionGroupStrength_" + groupCard.row.typeKey
 
                         anchors.left: portraitFrame.right
                         anchors.leftMargin: Design.Metrics.space8
@@ -849,9 +868,9 @@ Design.IronPanel {
                         anchors.rightMargin: Design.Metrics.space8
                         anchors.bottom: groupHealth.top
                         anchors.bottomMargin: Design.Metrics.space2
-                        visible: groupFlow.cardHeight >= Design.Metrics.space24 * 3 && (groupCard.showsStrength || groupCard.modelData.woundedCount > 0)
-                        text: groupCard.showsStrength ? groupCard.strength : qsTr("%1 wounded").arg(groupCard.modelData.woundedCount)
-                        color: groupCard.showsStrength ? root.healthColor(groupCard.modelData.health) : Design.Theme.warning
+                        visible: groupFlow.cardHeight >= Design.Metrics.space24 * 3 && (groupCard.showsStrength || groupCard.row.woundedCount > 0)
+                        text: groupCard.showsStrength ? groupCard.strength : qsTr("%1 wounded").arg(groupCard.row.woundedCount)
+                        color: groupCard.showsStrength ? root.healthColor(groupCard.row.health) : Design.Theme.warning
                         font.family: Design.Typography.family
                         font.pixelSize: Design.Typography.caption
                         font.weight: groupCard.showsStrength ? Design.Typography.bold : Design.Typography.regular
@@ -866,7 +885,7 @@ Design.IronPanel {
                         cursorShape: Qt.PointingHandCursor
                         onClicked: function (mouse) {
                             Design.UiSound.activate();
-                            root.groupActivated(groupCard.modelData.typeKey);
+                            root.groupActivated(groupCard.row.typeKey);
                             mouse.accepted = true;
                         }
                         onContainsMouseChanged: {
