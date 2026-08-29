@@ -362,16 +362,16 @@ This may be a skirmish, or objectives have not been configured.</translation>
         <translation>Keyboard pan</translation>
     </message>
     <message>
-        <source>Right-drag</source>
-        <translation>Right-drag</translation>
+        <source>Middle-drag</source>
+        <translation>Middle-drag</translation>
     </message>
     <message>
         <source>Drag pan</source>
         <translation>Drag pan</translation>
     </message>
     <message>
-        <source>Hold right button and drag</source>
-        <translation>Hold right button and drag</translation>
+        <source>Hold middle button and drag</source>
+        <translation>Hold middle button and drag</translation>
     </message>
     <message>
         <source>Drags the ground under the cursor. Edge scroll pauses while you drag so the two never fight.</source>
@@ -386,8 +386,8 @@ This may be a skirmish, or objectives have not been configured.</translation>
         <translation>Rotate</translation>
     </message>
     <message>
-        <source>Swings the view around the point you are looking at. Hold Shift to swing further.</source>
-        <translation>Swings the view around the point you are looking at. Hold Shift to swing further.</translation>
+        <source>Swings the view around the point you are looking at. Hold Shift to swing further, or hold Alt and drag with the middle button.</source>
+        <translation>Swings the view around the point you are looking at. Hold Shift to swing further, or hold Alt and drag with the middle button.</translation>
     </message>
     <message>
         <source>Click minimap</source>

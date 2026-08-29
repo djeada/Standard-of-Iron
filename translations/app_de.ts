@@ -362,16 +362,16 @@ Dies ist vielleicht ein Scharmützel, oder es wurden keine Ziele festgelegt.</tr
         <translation>Tastatur-Schwenk</translation>
     </message>
     <message>
-        <source>Right-drag</source>
-        <translation>Rechts ziehen</translation>
+        <source>Middle-drag</source>
+        <translation>Mittlere Taste ziehen</translation>
     </message>
     <message>
         <source>Drag pan</source>
         <translation>Ziehen-Schwenk</translation>
     </message>
     <message>
-        <source>Hold right button and drag</source>
-        <translation>Rechte Maustaste halten und ziehen</translation>
+        <source>Hold middle button and drag</source>
+        <translation>Mittlere Maustaste halten und ziehen</translation>
     </message>
     <message>
         <source>Drags the ground under the cursor. Edge scroll pauses while you drag so the two never fight.</source>
@@ -386,8 +386,8 @@ Dies ist vielleicht ein Scharmützel, oder es wurden keine Ziele festgelegt.</tr
         <translation>Drehen</translation>
     </message>
     <message>
-        <source>Swings the view around the point you are looking at. Hold Shift to swing further.</source>
-        <translation>Schwenkt die Ansicht um den betrachteten Punkt. Mit gehaltener Umschalttaste weiter.</translation>
+        <source>Swings the view around the point you are looking at. Hold Shift to swing further, or hold Alt and drag with the middle button.</source>
+        <translation>Schwenkt die Ansicht um den betrachteten Punkt. Mit gehaltener Umschalttaste weiter, oder mit gehaltener Alt-Taste und der mittleren Maustaste ziehen.</translation>
     </message>
     <message>
         <source>Click minimap</source>

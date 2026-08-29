@@ -452,10 +452,11 @@ Item {
             id: mouseArea
 
             property bool is_selecting: false
+            property bool middle_orbit: false
             property real start_x: 0
             property real start_y: 0
             anchors.fill: parent
-            acceptedButtons: Qt.LeftButton | Qt.RightButton
+            acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.MiddleButton
             hoverEnabled: true
             propagateComposedEvents: true
             preventStealing: true
@@ -481,7 +482,12 @@ Item {
                 } else {
                     if (typeof game !== 'undefined' && game.orders.set_hover_at_screen)
                         game.orders.set_hover_at_screen(mouse.x, mouse.y);
-                    if ((mouse.buttons & Qt.RightButton) && typeof game !== 'undefined' && game.orders.on_right_move) {
+                    if ((mouse.buttons & Qt.MiddleButton) && typeof game !== 'undefined') {
+                        if (mouseArea.middle_orbit)
+                            game.camera.orbit_drag_update(mouse.x, mouse.y);
+                        else
+                            game.camera.drag_pan_update(mouse.x, mouse.y);
+                    } else if ((mouse.buttons & Qt.RightButton) && typeof game !== 'undefined' && game.orders.on_right_move) {
                         if (!game_view.is_rally_placement())
                             game.orders.on_right_move(mouse.x, mouse.y);
                     } else if (game_view.is_placing_formation) {
@@ -512,13 +518,24 @@ Item {
                     w.accepted = true;
                     return;
                 }
-                if (dy !== 0 && typeof game !== 'undefined' && game.camera.zoom)
-                    game.camera.zoom(dy * 0.8);
+                if (dy !== 0 && typeof game !== 'undefined' && game.camera.zoom_at_screen)
+                    game.camera.zoom_at_screen(dy * 0.8, w.x, w.y);
                 w.accepted = true;
             }
             onPressed: function (mouse) {
                 game_view.forceActiveFocus();
                 cursorLayer.acknowledge();
+                if (mouse.button === Qt.MiddleButton) {
+                    if (typeof game === 'undefined')
+                        return;
+                    mouseArea.middle_orbit = (mouse.modifiers & Qt.AltModifier) !== 0;
+                    if (mouseArea.middle_orbit)
+                        game.camera.orbit_drag_begin(mouse.x, mouse.y);
+                    else
+                        game.camera.drag_pan_begin(mouse.x, mouse.y);
+                    renderArea.mouse_pan_active = true;
+                    return;
+                }
                 if (mouse.button === Qt.LeftButton) {
                     if (game_view.cursor_mode === "attack") {
                         if (typeof game !== 'undefined' && game.orders.attack_at)
@@ -629,6 +646,13 @@ Item {
                     if (game.placement.on_construction_pointer_released)
                         game.placement.on_construction_pointer_released(mouse.x, mouse.y);
                 }
+                if (mouse.button === Qt.MiddleButton) {
+                    if (typeof game !== 'undefined') {
+                        game.camera.drag_pan_end();
+                        game.camera.orbit_drag_end();
+                    }
+                    renderArea.mouse_pan_active = false;
+                }
                 if (mouse.button === Qt.RightButton) {
                     if (typeof game !== 'undefined' && game.orders.on_right_release)
                         game.orders.on_right_release(mouse.x, mouse.y);
@@ -638,6 +662,10 @@ Item {
             onCanceled: {
                 is_selecting = false;
                 selectionBox.visible = false;
+                if (typeof game !== 'undefined') {
+                    game.camera.drag_pan_end();
+                    game.camera.orbit_drag_end();
+                }
                 renderArea.mouse_pan_active = false;
             }
         }

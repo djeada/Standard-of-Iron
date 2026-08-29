@@ -362,16 +362,16 @@ Puede tratarse de una escaramuza, o los objetivos no se han configurado.</transl
         <translation>Desplazamiento con teclado</translation>
     </message>
     <message>
-        <source>Right-drag</source>
-        <translation>Arrastrar con derecho</translation>
+        <source>Middle-drag</source>
+        <translation>Arrastrar con central</translation>
     </message>
     <message>
         <source>Drag pan</source>
         <translation>Desplazamiento por arrastre</translation>
     </message>
     <message>
-        <source>Hold right button and drag</source>
-        <translation>Mantén el botón derecho y arrastra</translation>
+        <source>Hold middle button and drag</source>
+        <translation>Mantén el botón central y arrastra</translation>
     </message>
     <message>
         <source>Drags the ground under the cursor. Edge scroll pauses while you drag so the two never fight.</source>
@@ -386,8 +386,8 @@ Puede tratarse de una escaramuza, o los objetivos no se han configurado.</transl
         <translation>Rotar</translation>
     </message>
     <message>
-        <source>Swings the view around the point you are looking at. Hold Shift to swing further.</source>
-        <translation>Gira la vista alrededor del punto que miras. Con Mayús gira más.</translation>
+        <source>Swings the view around the point you are looking at. Hold Shift to swing further, or hold Alt and drag with the middle button.</source>
+        <translation>Gira la vista alrededor del punto que miras. Mantén Mayús para girar más, o mantén Alt y arrastra con el botón central.</translation>
     </message>
     <message>
         <source>Click minimap</source>
