@@ -105,6 +105,12 @@ jobs:
       - name: Translation coverage
         run: make translations-check
 
+      # A cue can be declared, bound and shipped while nothing ever fires it, which sounds
+      # exactly like having no sound at all. This checks every link from the cue catalogue
+      # to the manifest, the file on disk and a real call site in the sources.
+      - name: Audio wiring
+        run: make audio-check
+
       - name: Content validation
         run: ./build/bin/content_validator assets
 

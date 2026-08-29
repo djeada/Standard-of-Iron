@@ -405,6 +405,10 @@ void AudioSystem::process_event(const AudioEvent& event) {
         break;
       }
 
+      if (!make_room_in_category_locked(category, effective_priority)) {
+        break;
+      }
+
       if (get_active_channel_count() >= max_channels) {
         evict_lowest_priority_sound_locked();
       }
@@ -609,6 +613,60 @@ auto AudioSystem::get_resource_config_locked(const std::string& resource_id) con
     return it->second;
   }
   return {};
+}
+
+auto AudioSystem::category_channel_cap(AudioCategory category) -> size_t {
+  switch (category) {
+  case AudioCategory::VOICE:
+    return AudioConstants::MAX_CONCURRENT_VOICE;
+  case AudioCategory::AMBIENCE:
+    return AudioConstants::MAX_CONCURRENT_AMBIENCE;
+  case AudioCategory::SFX:
+    return AudioConstants::MAX_CONCURRENT_SFX;
+  default:
+    return AudioConstants::DEFAULT_MAX_CHANNELS;
+  }
+}
+
+auto AudioSystem::make_room_in_category_locked(AudioCategory category,
+                                               int priority) -> bool {
+  const size_t cap = category_channel_cap(category);
+  std::string sound_id_to_stop;
+
+  {
+    std::lock_guard<std::mutex> const active_lock(active_sounds_mutex);
+    const size_t in_category = static_cast<size_t>(std::count_if(
+        active_sounds.begin(),
+        active_sounds.end(),
+        [category](const ActiveSound& sound) { return sound.category == category; }));
+    if (in_category < cap) {
+      return true;
+    }
+
+    auto lowest_it = active_sounds.end();
+    for (auto it = active_sounds.begin(); it != active_sounds.end(); ++it) {
+      if (it->category != category) {
+        continue;
+      }
+      if (lowest_it == active_sounds.end() || it->priority < lowest_it->priority ||
+          (it->priority == lowest_it->priority &&
+           it->start_time < lowest_it->start_time)) {
+        lowest_it = it;
+      }
+    }
+    if (lowest_it == active_sounds.end() || priority <= lowest_it->priority) {
+      return false;
+    }
+    sound_id_to_stop = lowest_it->id;
+    active_sounds.erase(lowest_it);
+  }
+
+  if (!sound_id_to_stop.empty()) {
+    if (auto it = sounds.find(sound_id_to_stop); it != sounds.end()) {
+      it->second->stop();
+    }
+  }
+  return true;
 }
 
 void AudioSystem::evict_lowest_priority_sound_locked() {

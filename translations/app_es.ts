@@ -8099,20 +8099,16 @@ Los constructores lo siegan para la comida que recluta civiles</translation>
         <translation>Reduce el balanceo y el vaivén de la cabeza mientras diriges al comandante. Nunca limita el movimiento de cámara que tú pidas.</translation>
     </message>
     <message>
-        <source>Music generated with Meta&apos;s AudioCraft, whose models are licensed CC BY-NC 4.0. This game is distributed free of charge, which that licence permits; it may not be sold.</source>
-        <translation>Música generada con AudioCraft de Meta, cuyos modelos tienen licencia CC BY-NC 4.0. Este juego se distribuye de forma gratuita, lo que dicha licencia permite; no puede venderse.</translation>
+        <source>Music and sound effects generated with ElevenLabs under a licence that permits commercial use.</source>
+        <translation>Música y efectos de sonido generados con ElevenLabs bajo una licencia que permite el uso comercial.</translation>
     </message>
     <message>
         <source>Voice lines recorded by Adam Djellouli.</source>
         <translation>Voces grabadas por Adam Djellouli.</translation>
     </message>
     <message>
-        <source>CC BY-NC 4.0 License</source>
-        <translation>Licencia CC BY-NC 4.0</translation>
-    </message>
-    <message>
-        <source>AudioCraft</source>
-        <translation>AudioCraft</translation>
+        <source>ElevenLabs</source>
+        <translation>ElevenLabs</translation>
     </message>
     <message>
         <source>Pans the camera when the cursor reaches the edge of the screen. Keyboard panning, right-drag and the minimap keep working either way.</source>

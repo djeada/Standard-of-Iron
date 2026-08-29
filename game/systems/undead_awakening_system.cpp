@@ -36,6 +36,8 @@ constexpr float k_spawn_y_offset = 0.05F;
 constexpr float k_anchor_match_distance = 3.5F;
 
 constexpr const char* k_awakening_music = "music.event.skeletons_awaken";
+constexpr const char* k_awakening_cue = "alert.undead_awakening";
+constexpr float k_zone_music_poll_seconds = 0.25F;
 
 constexpr float k_golden_angle_radians = 2.3999632F;
 constexpr float k_min_spawn_ring_radius = 2.0F;
@@ -535,10 +537,6 @@ void UndeadAwakeningSystem::awaken_zone(Engine::Core::World& world, RuntimeZone&
   ensure_zone_owner_registered(zone);
   zone.announced_awakening = true;
   zone.current_wave_elapsed = 0.0F;
-  Engine::Core::EventManager::instance().publish(
-      Engine::Core::AudioCueEvent("combat.hit.generic", 0.8F));
-  Engine::Core::EventManager::instance().publish(
-      Engine::Core::MusicTriggerEvent(k_awakening_music));
 
   try_spawn_next_wave(world, zone);
 }
@@ -576,6 +574,9 @@ void UndeadAwakeningSystem::try_spawn_next_wave(Engine::Core::World& world,
   zone.next_wave_index += 1;
   zone.current_wave_elapsed = 0.0F;
   zone.respawn_delay_remaining = 0.0F;
+
+  Engine::Core::EventManager::instance().publish(
+      Engine::Core::AudioCueEvent(k_awakening_cue));
   announce_wave(zone);
 }
 
@@ -637,7 +638,70 @@ void UndeadAwakeningSystem::update(Engine::Core::World* world, float delta_time)
     }
   }
 
+  update_zone_music(*world, delta_time);
   m_allow_mission_start_trigger = false;
+}
+
+auto UndeadAwakeningSystem::local_player_inside(Engine::Core::World& world,
+                                                const RuntimeZone& zone) const -> bool {
+  const int local_owner = m_services.owners.get_local_player_id();
+  if (local_owner == 0) {
+    return false;
+  }
+  float const radius_sq = zone.definition.radius * zone.definition.radius;
+  for (auto* entity : world.collect_entities_with<Engine::Core::UnitComponent>()) {
+    if (entity == nullptr) {
+      continue;
+    }
+    auto* unit = entity->get_component<Engine::Core::UnitComponent>();
+    auto* transform = entity->get_component<Engine::Core::TransformComponent>();
+    if (unit == nullptr || transform == nullptr || unit->health <= 0 ||
+        unit->owner_id != local_owner) {
+      continue;
+    }
+    float const dx = transform->position.x - zone.center_world.x();
+    float const dz = transform->position.z - zone.center_world.z();
+    if (dx * dx + dz * dz <= radius_sq) {
+      return true;
+    }
+  }
+  return false;
+}
+
+void UndeadAwakeningSystem::update_zone_music(Engine::Core::World& world,
+                                              float delta_time) {
+
+  m_zone_music_poll += delta_time;
+  if (m_zone_music_poll < k_zone_music_poll_seconds) {
+    return;
+  }
+  m_zone_music_poll = 0.0F;
+
+  bool inside_a_woken_zone = false;
+  for (const auto& zone : m_zones) {
+    const bool cleared =
+        zone.active_spawn_ids.empty() &&
+        zone.next_wave_index >= static_cast<int>(zone.definition.waves.size());
+    if (!zone.awakened || zone.garrison_broken || cleared) {
+      continue;
+    }
+    if (local_player_inside(world, zone)) {
+      inside_a_woken_zone = true;
+      break;
+    }
+  }
+
+  if (inside_a_woken_zone == m_zone_music_playing) {
+    return;
+  }
+  m_zone_music_playing = inside_a_woken_zone;
+  if (inside_a_woken_zone) {
+    Engine::Core::EventManager::instance().publish(
+        Engine::Core::MusicTriggerEvent(k_awakening_music));
+  } else {
+
+    Engine::Core::EventManager::instance().publish(Engine::Core::MusicStopEvent());
+  }
 }
 
 auto UndeadAwakeningSystem::find_zone(const QString& zone_id) const

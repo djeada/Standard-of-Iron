@@ -118,7 +118,7 @@ def fit_level(
 ) -> tuple[list[float], float, float]:
     """Reach the target RMS under a fixed peak ceiling, by softening peaks.
 
-    A composed stack is peakier than the dense AudioCraft file it replaces, so
+    A composed stack is peakier than the dense generated file it replaces, so
     scaling it to the same RMS would put its transients through the roof, and
     scaling it to the same peak leaves it up to 15 dB quiet. Neither is a
     drop-in. Reducing the crest factor first is what lets both hold at once,

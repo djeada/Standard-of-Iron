@@ -49,6 +49,7 @@ private:
   static void on_audio_trigger(const Engine::Core::AudioTriggerEvent& event);
   static void on_audio_cue(const Engine::Core::AudioCueEvent& event);
   static void on_music_trigger(const Engine::Core::MusicTriggerEvent& event);
+  static void on_music_stop(const Engine::Core::MusicStopEvent& event);
   void on_combat_hit(const Engine::Core::CombatHitEvent& event);
 
   auto should_play_sound_group(const std::string& group_id, int cooldown_ms) -> bool;
@@ -84,6 +85,7 @@ private:
   Engine::Core::ScopedEventSubscription<Engine::Core::AudioTriggerEvent>
       m_audio_trigger_sub;
   Engine::Core::ScopedEventSubscription<Engine::Core::AudioCueEvent> m_audio_cue_sub;
+  Engine::Core::ScopedEventSubscription<Engine::Core::MusicStopEvent> m_music_stop_sub;
   Engine::Core::ScopedEventSubscription<Engine::Core::MusicTriggerEvent>
       m_music_trigger_sub;
   Engine::Core::ScopedEventSubscription<Engine::Core::CombatHitEvent> m_combat_hit_sub;

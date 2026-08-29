@@ -638,9 +638,8 @@ jobs:
           Write-Host "Build is self-contained and runtime ready."
 
       # Qt is LGPL v3, so its notice has to travel with the binary rather than
-      # living only in the source repository. The music additionally carries a
-      # non-commercial restriction, which a player can only discover if the
-      # file recording it is in the package they downloaded.
+      # living only in the source repository, and the per-asset provenance
+      # record should reach the player who downloaded the package too.
       - name: Copy licences into the payload
         shell: pwsh
         run: |

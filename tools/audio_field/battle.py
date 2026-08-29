@@ -7,7 +7,7 @@ order, a crowd. They are neither a single transient nor a loop, so they get
 their own builder (`build_battle.py`) rather than being forced into either.
 
 Why these exist at all: the thirty-two cues here were generated with Meta's
-AudioCraft, whose model weights are CC BY-NC 4.0. That made "the game may not be
+a model whose weights forbade commercial use. That made "the game may not be
 sold" a licence condition rather than a choice. Everything in this table is CC0
 or public domain, so rebuilding them removes the restriction.
 
@@ -287,7 +287,7 @@ TARGET_RMS_DB: dict[str, float] = {
     "wolf_bite_snap": -14.0,
     "wolf_snarl_bark": -16.9,
 }
-"""Measured RMS of the AudioCraft file each cue replaces, in dBFS.
+"""Measured RMS of the generated file each cue replaces, in dBFS.
 
 Effect cues are deliberately *not* loudness-normalised at runtime -- see
 docs/AUDIO_MASTERING.md, "Loudness is matched within a category, not across
@@ -309,7 +309,7 @@ which is not what a click is; reproducing it at half a second would be painful.
 It is set to sit with the other alerts instead.
 
 `arrows_overhead_ambience` measured -12.9, louder than almost everything else in
-the set, because AudioCraft produced a dense five-second wall rather than a bed.
+the set, because the generator produced a dense five-second wall rather than a bed.
 This cue exists to sit *under* a fight without drawing attention, and reaching
 -12.9 from fifteen ranked swishes needed more waveshaping than the material
 survives. It is set to the -24.4 the honest mix arrives at. This is the one cue

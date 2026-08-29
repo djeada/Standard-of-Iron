@@ -8111,20 +8111,16 @@ Builders reap it for the food that recruits civilians</source>
         <translation>يقلّل اهتزاز الرأس وتمايله أثناء قيادة القائد. ولا يحدّ أبداً من حركة الكاميرا التي تطلبها.</translation>
     </message>
     <message>
-        <source>Music generated with Meta&apos;s AudioCraft, whose models are licensed CC BY-NC 4.0. This game is distributed free of charge, which that licence permits; it may not be sold.</source>
-        <translation>أُنتجت الموسيقى بأداة AudioCraft من ميتا، ونماذجها مرخَّصة برخصة CC BY-NC 4.0. تُوزَّع هذه اللعبة مجاناً، وهو ما تجيزه تلك الرخصة؛ ولا يجوز بيعها.</translation>
+        <source>Music and sound effects generated with ElevenLabs under a licence that permits commercial use.</source>
+        <translation>تم إنشاء الموسيقى والمؤثرات الصوتية باستخدام ElevenLabs بموجب ترخيص يسمح بالاستخدام التجاري.</translation>
     </message>
     <message>
         <source>Voice lines recorded by Adam Djellouli.</source>
         <translation>سجّل الأصوات آدم جلولي.</translation>
     </message>
     <message>
-        <source>CC BY-NC 4.0 License</source>
-        <translation>رخصة CC BY-NC 4.0</translation>
-    </message>
-    <message>
-        <source>AudioCraft</source>
-        <translation>AudioCraft</translation>
+        <source>ElevenLabs</source>
+        <translation>ElevenLabs</translation>
     </message>
     <message>
         <source>Pans the camera when the cursor reaches the edge of the screen. Keyboard panning, right-drag and the minimap keep working either way.</source>

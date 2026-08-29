@@ -83,6 +83,23 @@ auto build_catalog() -> std::vector<Art> {
        line(QStringLiteral("M4.6 20.4 L19.4 20.4"), Tone::Metal, 3.0F),
        fill(QStringLiteral("M12 1.6 L14.2 3.8 L12 6 L9.8 3.8 Z"), Tone::Ember)});
 
+  add("divide",
+      {line(QStringLiteral("M11.2 12 L4.8 12"), Tone::Metal, 2.4F),
+       fill(QStringLiteral("M3 12 L8 8 L8 16 Z"), Tone::Metal),
+       line(QStringLiteral("M12.8 12 L19.2 12"), Tone::Metal, 2.4F),
+       fill(QStringLiteral("M21 12 L16 8 L16 16 Z"), Tone::Metal),
+       line(QStringLiteral("M12 4.2 L12 8"), Tone::Ember, 2.0F),
+       line(QStringLiteral("M12 16 L12 19.8"), Tone::Ember, 2.0F)});
+
+  add("join",
+      {line(QStringLiteral("M3.2 7 L9.4 12"), Tone::Metal, 2.2F),
+       line(QStringLiteral("M3.2 17 L9.4 12"), Tone::Metal, 2.2F),
+       fill(QStringLiteral("M8 8 L13.2 12 L8 16 Z"), Tone::Metal),
+       line(QStringLiteral("M20.8 7 L14.6 12"), Tone::Metal, 2.2F),
+       line(QStringLiteral("M20.8 17 L14.6 12"), Tone::Metal, 2.2F),
+       fill(QStringLiteral("M16 8 L10.8 12 L16 16 Z"), Tone::Metal),
+       fill(QStringLiteral("M10 10 L14 10 L14 14 L10 14 Z"), Tone::Ember)});
+
   add("construct",
       {line(QStringLiteral("M4 20.4 L4 8 L12 3.4 L20 8 L20 20.4"), Tone::Metal, 2.4F),
        line(QStringLiteral("M4 13.2 L20 13.2"), Tone::Metal, 2.0F),

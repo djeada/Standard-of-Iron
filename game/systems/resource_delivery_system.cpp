@@ -25,7 +25,7 @@ namespace {
 
 constexpr float k_haul_repath_interval = 1.5F;
 constexpr float k_stockpile_fill_smoothing = 3.0F;
-constexpr const char* k_deposit_cue = "build.placement_confirmed";
+constexpr const char* k_deposit_cue = "economy.income";
 
 auto is_live_depot(Engine::Core::Entity* entity, int owner_id) -> bool {
   if (entity == nullptr) {

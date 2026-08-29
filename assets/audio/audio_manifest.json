@@ -1372,7 +1372,7 @@
       "load_policy": "startup",
       "tags": {
         "alert": "population_limit",
-        "source": "field"
+        "source": "generated"
       }
     },
     {
@@ -1404,7 +1404,7 @@
       "load_policy": "startup",
       "tags": {
         "alert": "low_resources",
-        "source": "field"
+        "source": "generated"
       }
     },
     {
@@ -1417,7 +1417,7 @@
       "load_policy": "startup",
       "tags": {
         "ui": "hover",
-        "source": "synth"
+        "source": "generated"
       }
     },
     {
@@ -1430,7 +1430,7 @@
       "load_policy": "startup",
       "tags": {
         "ui": "click",
-        "source": "synth"
+        "source": "generated"
       }
     },
     {
@@ -1446,7 +1446,7 @@
       "load_policy": "startup",
       "tags": {
         "alert": "enemy_reinforcements",
-        "source": "field"
+        "source": "generated"
       }
     },
     {
@@ -1473,7 +1473,7 @@
       "cooldown_ms": 40,
       "load_policy": "startup",
       "tags": {
-        "source": "synth"
+        "source": "generated"
       }
     },
     {
@@ -1517,7 +1517,7 @@
       "cooldown_ms": 40,
       "load_policy": "startup",
       "tags": {
-        "source": "synth"
+        "source": "generated"
       }
     },
     {
@@ -1528,7 +1528,7 @@
       "cooldown_ms": 400,
       "load_policy": "startup",
       "tags": {
-        "source": "synth"
+        "source": "generated"
       }
     },
     {
@@ -1550,7 +1550,7 @@
       "cooldown_ms": 80,
       "load_policy": "startup",
       "tags": {
-        "source": "synth"
+        "source": "generated"
       }
     },
     {
@@ -1572,7 +1572,7 @@
       "cooldown_ms": 120,
       "load_policy": "startup",
       "tags": {
-        "source": "synth"
+        "source": "generated"
       }
     },
     {
@@ -1594,7 +1594,7 @@
       "cooldown_ms": 200,
       "load_policy": "startup",
       "tags": {
-        "source": "synth"
+        "source": "generated"
       }
     },
     {
@@ -1605,7 +1605,7 @@
       "cooldown_ms": 200,
       "load_policy": "startup",
       "tags": {
-        "source": "synth"
+        "source": "generated"
       }
     },
     {
@@ -1616,7 +1616,7 @@
       "cooldown_ms": 200,
       "load_policy": "startup",
       "tags": {
-        "source": "synth"
+        "source": "generated"
       }
     },
     {
@@ -1627,7 +1627,7 @@
       "cooldown_ms": 200,
       "load_policy": "startup",
       "tags": {
-        "source": "synth"
+        "source": "generated"
       }
     },
     {
@@ -1638,7 +1638,7 @@
       "cooldown_ms": 200,
       "load_policy": "startup",
       "tags": {
-        "source": "synth"
+        "source": "generated"
       }
     },
     {
@@ -1671,7 +1671,7 @@
       "cooldown_ms": 200,
       "load_policy": "startup",
       "tags": {
-        "source": "synth"
+        "source": "generated"
       }
     },
     {
@@ -1715,40 +1715,7 @@
       "cooldown_ms": 250,
       "load_policy": "startup",
       "tags": {
-        "source": "synth"
-      }
-    },
-    {
-      "id": "sfx.build.placement_rejected",
-      "path": "sfx/build/placement_rejected.ogg",
-      "category": "sfx",
-      "priority": 6,
-      "cooldown_ms": 400,
-      "load_policy": "startup",
-      "tags": {
-        "source": "synth"
-      }
-    },
-    {
-      "id": "sfx.build.construction_started",
-      "path": "sfx/build/construction_started.ogg",
-      "category": "sfx",
-      "priority": 4,
-      "cooldown_ms": 500,
-      "load_policy": "startup",
-      "tags": {
-        "source": "synth"
-      }
-    },
-    {
-      "id": "sfx.build.construction_complete",
-      "path": "sfx/build/construction_complete.ogg",
-      "category": "sfx",
-      "priority": 7,
-      "cooldown_ms": 500,
-      "load_policy": "startup",
-      "tags": {
-        "source": "synth"
+        "source": "generated"
       }
     },
     {
@@ -1770,7 +1737,7 @@
       "cooldown_ms": 400,
       "load_policy": "startup",
       "tags": {
-        "source": "synth"
+        "source": "generated"
       }
     },
     {
@@ -1807,17 +1774,6 @@
       }
     },
     {
-      "id": "sfx.alert.objective_complete",
-      "path": "sfx/alerts/objective_complete.ogg",
-      "category": "sfx",
-      "priority": 8,
-      "cooldown_ms": 1000,
-      "load_policy": "startup",
-      "tags": {
-        "source": "synth"
-      }
-    },
-    {
       "id": "sfx.alert.objective_failed",
       "path": "sfx/alerts/objective_failed.ogg",
       "category": "sfx",
@@ -1825,7 +1781,7 @@
       "cooldown_ms": 1000,
       "load_policy": "startup",
       "tags": {
-        "source": "synth"
+        "source": "generated"
       }
     },
     {
@@ -1836,7 +1792,7 @@
       "cooldown_ms": 2500,
       "load_policy": "startup",
       "tags": {
-        "source": "synth"
+        "source": "generated"
       }
     },
     {
@@ -2027,28 +1983,6 @@
       }
     },
     {
-      "id": "sfx.state.pause",
-      "path": "sfx/state/pause.ogg",
-      "category": "sfx",
-      "priority": 6,
-      "cooldown_ms": 200,
-      "load_policy": "startup",
-      "tags": {
-        "source": "synth"
-      }
-    },
-    {
-      "id": "sfx.state.resume",
-      "path": "sfx/state/resume.ogg",
-      "category": "sfx",
-      "priority": 6,
-      "cooldown_ms": 200,
-      "load_policy": "startup",
-      "tags": {
-        "source": "synth"
-      }
-    },
-    {
       "id": "sfx.state.speed_change",
       "path": "sfx/state/speed_notch.ogg",
       "category": "sfx",
@@ -2104,77 +2038,11 @@
       }
     },
     {
-      "id": "ui.hover.soft_v2",
-      "path": "sfx/ui/hover_brush_v2.ogg",
-      "category": "sfx",
-      "priority": 4,
-      "cooldown_ms": 60,
-      "load_policy": "startup",
-      "tags": {
-        "source": "synth"
-      }
-    },
-    {
-      "id": "ui.hover.soft_v3",
-      "path": "sfx/ui/hover_brush_v3.ogg",
-      "category": "sfx",
-      "priority": 4,
-      "cooldown_ms": 60,
-      "load_policy": "startup",
-      "tags": {
-        "source": "synth"
-      }
-    },
-    {
-      "id": "ui.click.primary_v2",
-      "path": "sfx/ui/click_confirm_v2.ogg",
-      "category": "sfx",
-      "priority": 5,
-      "cooldown_ms": 40,
-      "load_policy": "startup",
-      "tags": {
-        "source": "synth"
-      }
-    },
-    {
-      "id": "ui.click.primary_v3",
-      "path": "sfx/ui/click_confirm_v3.ogg",
-      "category": "sfx",
-      "priority": 5,
-      "cooldown_ms": 40,
-      "load_policy": "startup",
-      "tags": {
-        "source": "synth"
-      }
-    },
-    {
-      "id": "ui.back.synth_v2",
-      "path": "sfx/ui/back_cancel_v2.ogg",
-      "category": "sfx",
-      "priority": 5,
-      "cooldown_ms": 40,
-      "load_policy": "startup",
-      "tags": {
-        "source": "synth"
-      }
-    },
-    {
       "id": "ui.tab_switch.synth_v2",
       "path": "sfx/ui/tab_slide_v2.ogg",
       "category": "sfx",
       "priority": 4,
       "cooldown_ms": 60,
-      "load_policy": "startup",
-      "tags": {
-        "source": "synth"
-      }
-    },
-    {
-      "id": "ui.toggle.synth_v2",
-      "path": "sfx/ui/toggle_latch_v2.ogg",
-      "category": "sfx",
-      "priority": 4,
-      "cooldown_ms": 40,
       "load_policy": "startup",
       "tags": {
         "source": "synth"
@@ -2188,29 +2056,7 @@
       "cooldown_ms": 400,
       "load_policy": "startup",
       "tags": {
-        "source": "synth"
-      }
-    },
-    {
-      "id": "ui.select_unit.synth_v2",
-      "path": "sfx/ui/select_unit_v2.ogg",
-      "category": "sfx",
-      "priority": 4,
-      "cooldown_ms": 80,
-      "load_policy": "startup",
-      "tags": {
-        "source": "synth"
-      }
-    },
-    {
-      "id": "ui.select_unit.synth_v3",
-      "path": "sfx/ui/select_unit_v3.ogg",
-      "category": "sfx",
-      "priority": 4,
-      "cooldown_ms": 80,
-      "load_policy": "startup",
-      "tags": {
-        "source": "synth"
+        "source": "generated"
       }
     },
     {
@@ -2229,17 +2075,6 @@
       "path": "sfx/ui/select_group_v3.ogg",
       "category": "sfx",
       "priority": 4,
-      "cooldown_ms": 120,
-      "load_policy": "startup",
-      "tags": {
-        "source": "synth"
-      }
-    },
-    {
-      "id": "ui.deselect.synth_v2",
-      "path": "sfx/ui/deselect_v2.ogg",
-      "category": "sfx",
-      "priority": 3,
       "cooldown_ms": 120,
       "load_policy": "startup",
       "tags": {
@@ -2269,39 +2104,6 @@
       }
     },
     {
-      "id": "sfx.order.stop_v2",
-      "path": "sfx/orders/stop_drum_v2.ogg",
-      "category": "sfx",
-      "priority": 5,
-      "cooldown_ms": 200,
-      "load_policy": "startup",
-      "tags": {
-        "source": "synth"
-      }
-    },
-    {
-      "id": "sfx.order.hold_v2",
-      "path": "sfx/orders/hold_shields_plant_v2.ogg",
-      "category": "sfx",
-      "priority": 5,
-      "cooldown_ms": 200,
-      "load_policy": "startup",
-      "tags": {
-        "source": "synth"
-      }
-    },
-    {
-      "id": "sfx.order.guard_v2",
-      "path": "sfx/orders/guard_spear_taps_v2.ogg",
-      "category": "sfx",
-      "priority": 5,
-      "cooldown_ms": 200,
-      "load_policy": "startup",
-      "tags": {
-        "source": "synth"
-      }
-    },
-    {
       "id": "sfx.order.run_v2",
       "path": "sfx/orders/run_kit_rattle_v2.ogg",
       "category": "sfx",
@@ -2318,28 +2120,6 @@
       "category": "sfx",
       "priority": 5,
       "cooldown_ms": 200,
-      "load_policy": "startup",
-      "tags": {
-        "source": "synth"
-      }
-    },
-    {
-      "id": "sfx.build.placement_confirmed_v2",
-      "path": "sfx/build/placement_confirmed_v2.ogg",
-      "category": "sfx",
-      "priority": 6,
-      "cooldown_ms": 250,
-      "load_policy": "startup",
-      "tags": {
-        "source": "synth"
-      }
-    },
-    {
-      "id": "sfx.build.placement_rejected_v2",
-      "path": "sfx/build/placement_rejected_v2.ogg",
-      "category": "sfx",
-      "priority": 6,
-      "cooldown_ms": 400,
       "load_policy": "startup",
       "tags": {
         "source": "synth"
@@ -2992,7 +2772,7 @@
       "cooldown_ms": 600,
       "load_policy": "startup",
       "tags": {
-        "source": "synth"
+        "source": "generated"
       }
     },
     {
@@ -3003,18 +2783,7 @@
       "cooldown_ms": 80,
       "load_policy": "startup",
       "tags": {
-        "source": "synth"
-      }
-    },
-    {
-      "id": "ui.confirm.synth_v2",
-      "path": "sfx/ui/confirm_seal_v2.ogg",
-      "category": "sfx",
-      "priority": 5,
-      "cooldown_ms": 80,
-      "load_policy": "startup",
-      "tags": {
-        "source": "synth"
+        "source": "generated"
       }
     },
     {
@@ -3025,29 +2794,7 @@
       "cooldown_ms": 70,
       "load_policy": "startup",
       "tags": {
-        "source": "synth"
-      }
-    },
-    {
-      "id": "sfx.command.accept_v2",
-      "path": "sfx/ui/command_accept_v2.ogg",
-      "category": "sfx",
-      "priority": 5,
-      "cooldown_ms": 70,
-      "load_policy": "startup",
-      "tags": {
-        "source": "synth"
-      }
-    },
-    {
-      "id": "sfx.command.accept_v3",
-      "path": "sfx/ui/command_accept_v3.ogg",
-      "category": "sfx",
-      "priority": 5,
-      "cooldown_ms": 70,
-      "load_policy": "startup",
-      "tags": {
-        "source": "synth"
+        "source": "generated"
       }
     },
     {
@@ -3058,7 +2805,7 @@
       "cooldown_ms": 300,
       "load_policy": "startup",
       "tags": {
-        "source": "synth"
+        "source": "generated"
       }
     },
     {
@@ -3069,7 +2816,95 @@
       "cooldown_ms": 300,
       "load_policy": "startup",
       "tags": {
-        "source": "synth"
+        "source": "generated"
+      }
+    },
+    {
+      "id": "sfx.undead.skeletons_rise",
+      "path": "sfx/undead/skeletons_rise.ogg",
+      "category": "sfx",
+      "load_policy": "mission",
+      "tags": {
+        "source": "generated"
+      }
+    },
+    {
+      "id": "sfx.combat.stagger",
+      "path": "sfx/combat/stagger.ogg",
+      "category": "sfx",
+      "load_policy": "mission",
+      "tags": {
+        "source": "generated"
+      }
+    },
+    {
+      "id": "sfx.economy.income_tick",
+      "path": "sfx/economy/income_tick.ogg",
+      "category": "sfx",
+      "load_policy": "startup",
+      "tags": {
+        "source": "generated"
+      }
+    },
+    {
+      "id": "sfx.combat.elephant_trumpet_charge",
+      "path": "sfx/combat/elephant_trumpet_charge.ogg",
+      "category": "sfx",
+      "load_policy": "mission",
+      "tags": {
+        "attack_family": "elephant",
+        "source": "generated"
+      }
+    },
+    {
+      "id": "sfx.combat.elephant_trumpet_panic",
+      "path": "sfx/combat/elephant_trumpet_panic.ogg",
+      "category": "sfx",
+      "load_policy": "mission",
+      "tags": {
+        "attack_family": "elephant",
+        "variant": "panic",
+        "source": "generated"
+      }
+    },
+    {
+      "id": "sfx.movement.hooves_gallop",
+      "path": "sfx/movement/hooves_gallop.ogg",
+      "category": "sfx",
+      "load_policy": "mission",
+      "tags": {
+        "source": "generated"
+      }
+    },
+    {
+      "id": "sfx.build.building_burning",
+      "path": "sfx/build/building_burning.ogg",
+      "category": "sfx",
+      "load_policy": "mission",
+      "tags": {
+        "source": "generated"
+      }
+    },
+    {
+      "id": "sfx.wildlife.sheep_bleat",
+      "path": "sfx/wildlife/sheep_bleat.ogg",
+      "category": "sfx",
+      "load_policy": "mission",
+      "tags": {
+        "species": "sheep",
+        "state": "peaceful",
+        "source": "generated"
+      }
+    },
+    {
+      "id": "sfx.wildlife.bird_chirp",
+      "path": "sfx/wildlife/bird_chirp.ogg",
+      "category": "sfx",
+      "load_policy": "mission",
+      "tags": {
+        "species": "bird",
+        "state": "peaceful",
+        "source": "generated"
       }
     }
   ]

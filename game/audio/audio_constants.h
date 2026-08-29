@@ -11,6 +11,10 @@ constexpr float MAX_VOLUME = 1.0F;
 constexpr int DEFAULT_PRIORITY = 0;
 
 constexpr size_t DEFAULT_MAX_CHANNELS = 32;
+
+constexpr size_t MAX_CONCURRENT_SFX = 16;
+constexpr size_t MAX_CONCURRENT_AMBIENCE = 4;
+constexpr size_t MAX_CONCURRENT_VOICE = 2;
 constexpr size_t MIN_CHANNELS = 1;
 
 constexpr int DEFAULT_MUSIC_CHANNELS = 4;

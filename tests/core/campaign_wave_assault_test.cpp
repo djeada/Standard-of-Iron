@@ -8,6 +8,7 @@
 #include "app/session/skirmish_loader.h"
 #include "core/component.h"
 #include "core/world.h"
+#include "game/audio/cue_ids.h"
 #include "game/map/campaign_definition.h"
 #include "game/map/campaign_loader.h"
 #include "game/map/terrain_service.h"
@@ -15,6 +16,7 @@
 #include "game/mission/campaign_manager.h"
 #include "game/mission/mission_definition_view.h"
 #include "game/mission/mission_setup_coordinator.h"
+#include "game/mission/mission_wave_director.h"
 #include "game/mission/mission_waves.h"
 #include "game/systems/default_content.h"
 #include "game/systems/global_stats_registry.h"
@@ -308,6 +310,51 @@ TEST_F(CampaignWaveAssaultTest, FirstMissionWaveChargesThePlayerCamp) {
       << "the wave ignored the intact wall between it and the camp";
   EXPECT_LE(march.first_barrier_engagement_second, 12)
       << "the wave waited at the wall instead of committing to a breach";
+}
+
+TEST_F(CampaignWaveAssaultTest, EveryCampaignWaveAnnouncesItselfBeforeItLands) {
+  const auto ids = campaign_mission_ids();
+  ASSERT_FALSE(ids.empty()) << "the campaign must list its missions";
+
+  int announced = 0;
+  for (const auto& mission_id : ids) {
+    MissionUnderTest mission;
+    ASSERT_TRUE(mission.load(mission_id)) << mission.error().toStdString();
+    auto waves = mission.waves();
+    if (waves.empty()) {
+      continue;
+    }
+
+    Engine::Core::World world;
+    Game::Mission::MissionWaveDirector director;
+    director.bind(&waves, &world);
+
+    float earliest = std::numeric_limits<float>::max();
+    for (const auto& wave : waves) {
+      if (wave.trigger == Game::Mission::WaveTriggerMode::Time) {
+        earliest = std::min(earliest, wave.trigger_time);
+      }
+    }
+    if (earliest == std::numeric_limits<float>::max()) {
+      continue;
+    }
+
+    director.set_elapsed(earliest - waves.front().warning_seconds + 1.0F);
+    const auto warned = director.advance();
+
+    ASSERT_FALSE(warned.audio_cues.isEmpty())
+        << mission_id.toStdString() << " warns of its first wave in silence";
+    EXPECT_TRUE(warned.audio_cues.contains(
+        QString::fromLatin1(Game::Audio::Cue::k_alert_enemy_reinforcements)))
+        << mission_id.toStdString() << " announced a wave without the enemy horn";
+    EXPECT_TRUE(warned.waves_to_spawn.empty())
+        << mission_id.toStdString()
+        << " spawns the wave in the same breath as the warning, so the horn is "
+           "pointless";
+    ++announced;
+  }
+
+  EXPECT_GT(announced, 0) << "no campaign mission authors a timed wave any more";
 }
 
 TEST_F(CampaignWaveAssaultTest, EveryCampaignMissionWaveClosesOnThePlayerCamp) {
