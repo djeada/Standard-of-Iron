@@ -1066,7 +1066,6 @@ void BuilderBehavior::execute(const AISnapshot& snapshot,
                    << entity.movement.has_target;
       }
     }
-    return;
   }
 
   const auto take_builder = [&available_builders,

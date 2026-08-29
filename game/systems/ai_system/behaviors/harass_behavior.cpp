@@ -265,6 +265,9 @@ auto HarassBehavior::should_execute(const AISnapshot& snapshot,
   if (context.state == AIState::Retreating || context.state == AIState::Defending) {
     return false;
   }
+  if (context.strategy_config.doctrine != nullptr && context.home_count < 3) {
+    return false;
+  }
   if (context.barracks_under_threat || !context.buildings_under_attack.empty()) {
     return false;
   }
