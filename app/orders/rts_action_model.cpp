@@ -14,6 +14,7 @@
 #include "game/systems/owner_registry.h"
 #include "game/systems/selection_system.h"
 #include "game/units/spawn_type.h"
+#include "game/units/squad.h"
 #include "game/util/asset_text.h"
 
 namespace {
@@ -32,6 +33,8 @@ enum class ActionId {
   Repair,
   Dismantle,
   Formation,
+  Divide,
+  Join,
   Run,
   Rally,
   Gate,
@@ -65,6 +68,8 @@ constexpr ActionId k_all_actions[] = {ActionId::Attack,
                                       ActionId::Repair,
                                       ActionId::Dismantle,
                                       ActionId::Formation,
+                                      ActionId::Divide,
+                                      ActionId::Join,
                                       ActionId::Run,
                                       ActionId::Rally,
                                       ActionId::Gate,
@@ -98,6 +103,10 @@ auto action_to_string(ActionId action) -> QString {
     return QStringLiteral("dismantle");
   case ActionId::Formation:
     return QStringLiteral("formation");
+  case ActionId::Divide:
+    return QStringLiteral("divide");
+  case ActionId::Join:
+    return QStringLiteral("join");
   case ActionId::Run:
     return QStringLiteral("run");
   case ActionId::Rally:
@@ -127,6 +136,12 @@ auto action_from_string(const QString& action_id) -> ActionId {
   }
   if (action_id == QStringLiteral("heal")) {
     return ActionId::Heal;
+  }
+  if (action_id == QStringLiteral("divide")) {
+    return ActionId::Divide;
+  }
+  if (action_id == QStringLiteral("join")) {
+    return ActionId::Join;
   }
   if (action_id == QStringLiteral("stop")) {
     return ActionId::Stop;
@@ -212,6 +227,12 @@ auto unit_is_eligible_for_action(const Engine::Core::Entity& entity,
     return (unit != nullptr) && (unit->spawn_type == Game::Units::SpawnType::Builder);
   case ActionId::Formation:
     return (unit != nullptr) && Game::Units::is_troop_spawn(unit->spawn_type);
+  case ActionId::Divide:
+    return (unit != nullptr) && Game::Units::squad_can_divide(*unit);
+  case ActionId::Join:
+    return (unit != nullptr) && !Game::Units::is_building_spawn(unit->spawn_type) &&
+           Game::Units::squad_establishment(unit->spawn_type) > 1 &&
+           !Game::Units::squad_is_at_full_strength(*unit);
   case ActionId::Run:
     return (unit != nullptr) && Game::Units::can_use_run_mode(unit->spawn_type);
   case ActionId::Rally:
@@ -287,6 +308,8 @@ auto unit_is_active_for_action(const Engine::Core::Entity& entity,
   case ActionId::Collect:
   case ActionId::Build:
   case ActionId::Rally:
+  case ActionId::Divide:
+  case ActionId::Join:
   case ActionId::Unknown:
     break;
   }
@@ -610,6 +633,9 @@ auto get_mode_availability(Engine::Core::World* world) -> QVariantMap {
   result[QStringLiteral("canRally")] = get_status(context, ActionId::Rally).enabled;
   result[QStringLiteral("canGate")] = get_status(context, ActionId::Gate).enabled;
   result[QStringLiteral("canAura")] = get_status(context, ActionId::Aura).enabled;
+  result[QStringLiteral("canDivide")] = get_status(context, ActionId::Divide).enabled;
+  result[QStringLiteral("canJoin")] =
+      get_status(context, ActionId::Join).eligible_count >= 2;
   return result;
 }
 

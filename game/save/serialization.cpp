@@ -151,6 +151,7 @@ auto Serialization::serialize_entity(const Entity* entity) -> QJsonObject {
     unit_obj["uses_nation_formation_profile"] = unit->uses_nation_formation_profile;
     unit_obj["render_individuals_per_unit_override"] =
         unit->render_individuals_per_unit_override;
+    unit_obj["squad_strength"] = unit->squad_strength;
     unit_obj["render_rider"] = unit->render_rider;
     unit_obj["death_sequence_override"] =
         static_cast<int>(unit->death_sequence_override);
@@ -911,6 +912,7 @@ void Serialization::deserialize_entity(Entity* entity, const QJsonObject& json) 
             : Game::Units::spawn_typeToTroopType(unit->spawn_type).has_value();
     unit->render_individuals_per_unit_override =
         unit_obj["render_individuals_per_unit_override"].toInt(0);
+    unit->squad_strength = unit_obj["squad_strength"].toInt(0);
     unit->render_rider = unit_obj["render_rider"].toBool(true);
     unit->death_sequence_override =
         static_cast<std::uint8_t>(unit_obj["death_sequence_override"].toInt(0xFF));

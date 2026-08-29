@@ -24,6 +24,7 @@ enum class OrderKind : std::uint8_t {
   Repair,
   Rally,
   Formation,
+  Squad,
 };
 
 enum class OrderStatus : std::uint8_t {

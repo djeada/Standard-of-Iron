@@ -29,12 +29,6 @@ struct WeaponTraceContact {
   float contact_speed{0.0F};
 };
 
-struct WeaponTraceIgnoredTarget {
-  Engine::Core::EntityID entity_id{0};
-  std::uint16_t soldier_slot{
-      Engine::Core::RpgCommanderTargetComponent::k_no_soldier_slot};
-};
-
 struct WeaponTraceTimeSpan {
   float previous_normalized_time{0.0F};
   float current_normalized_time{0.0F};
@@ -67,8 +61,7 @@ struct WeaponTraceSegment {
     const CombatActionDefinition& definition,
     WeaponTraceTimeSpan time_span,
     Engine::Core::EntityID target_hint_id = 0,
-    std::span<const Engine::Core::EntityID> ignored_target_ids = {},
-    std::span<const WeaponTraceIgnoredTarget> ignored_target_slots = {})
+    std::span<const Engine::Core::EntityID> ignored_target_ids = {})
     -> WeaponTraceContact;
 
 [[nodiscard]] auto find_weapon_trace_contact(
@@ -76,8 +69,7 @@ struct WeaponTraceSegment {
     Engine::Core::Entity& attacker,
     const CombatActionDefinition& definition,
     Engine::Core::EntityID target_hint_id = 0,
-    std::span<const Engine::Core::EntityID> ignored_target_ids = {},
-    std::span<const WeaponTraceIgnoredTarget> ignored_target_slots = {})
+    std::span<const Engine::Core::EntityID> ignored_target_ids = {})
     -> WeaponTraceContact;
 
 } // namespace Game::Systems::CombatActions

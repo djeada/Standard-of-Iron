@@ -332,29 +332,6 @@ void CommanderSystem::update(Engine::Core::World* world, float delta_time) {
 
     commander->signature_cooldown_remaining =
         std::max(0.0F, commander->signature_cooldown_remaining - delta_time);
-    commander->combo_window_remaining =
-        std::max(0.0F, commander->combo_window_remaining - delta_time);
-    if (commander->combo_window_remaining <= 0.0F) {
-      commander->combo_action_id = 0U;
-      commander->combo_step = 0;
-    }
-
-    if (!commander->fpv_controlled && commander->jump_active) {
-      constexpr float k_commander_air_gravity = 15.5F;
-      commander->airborne_velocity -= k_commander_air_gravity * delta_time;
-      commander->jump_height_offset = std::max(
-          0.0F,
-          commander->jump_height_offset + commander->airborne_velocity * delta_time);
-      commander->jump_phase += delta_time;
-      if (commander->jump_height_offset <= 0.0F &&
-          commander->airborne_velocity <= 0.0F) {
-        commander->jump_active = false;
-        commander->jump_phase = 0.0F;
-        commander->jump_height_offset = 0.0F;
-        commander->airborne_velocity = 0.0F;
-        commander->dive_attack_active = false;
-      }
-    }
     if (commander->signature_strike_active &&
         commander->signature_cooldown_remaining <
             commander->signature_cooldown - k_signature_strike_grace) {

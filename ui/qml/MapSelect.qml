@@ -27,6 +27,8 @@ Item {
     property alias roster: players_model
 
     signal map_chosen(string map_path, var player_configs)
+
+    readonly property int starting_gold: (typeof game !== 'undefined' && game.setup) ? game.setup.starting_gold : 500
     signal observe_requested(string map_path)
     signal cancelled
 
@@ -486,6 +488,23 @@ Item {
         players_model.setProperty(index, "isEnabled", !p.isEnabled);
         update_validation_error();
         refresh_map_preview();
+    }
+
+    function treasury_label(gold) {
+        return qsTr("%1 gold").arg(gold);
+    }
+
+    function cycle_treasury() {
+        const tiers = [250, 500, 1000, 2000];
+        let next = tiers[0];
+        for (let i = 0; i < tiers.length; i++) {
+            if (tiers[i] === root.starting_gold) {
+                next = tiers[(i + 1) % tiers.length];
+                break;
+            }
+        }
+        if (typeof game !== 'undefined' && game.setup)
+            game.setup.starting_gold = next;
     }
 
     function get_player_configs() {
@@ -1017,6 +1036,16 @@ Item {
                                         caption: qsTr("Opposition")
                                         value: map_is_solo_playable(selected_map_data) ? qsTr("Scripted") : qsTr("Players only")
                                         tooltip_text: map_is_solo_playable(selected_map_data) ? qsTr("This battlefield brings its own enemies, so you can start alone") : qsTr("This battlefield needs at least two opposing players")
+                                    }
+
+                                    SkirmishChip {
+                                        width: 116
+                                        height: implicitHeight
+                                        caption: qsTr("Treasury")
+                                        value: root.treasury_label(root.starting_gold)
+                                        interactive: true
+                                        tooltip_text: qsTr("Gold every side starts with — click to change")
+                                        onActivated: root.cycle_treasury()
                                     }
                                 }
                             }

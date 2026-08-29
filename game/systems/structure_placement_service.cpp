@@ -1,6 +1,9 @@
 #include "structure_placement_service.h"
 
 #include <algorithm>
+#include <cmath>
+#include <limits>
+#include <vector>
 
 #include "../core/ambient_session.h"
 #include "../core/world.h"
@@ -8,6 +11,7 @@
 #include "../units/factory.h"
 #include "../units/spawn_type.h"
 #include "../units/unit.h"
+#include "build_site.h"
 #include "building_collision_registry.h"
 #include "construction_cost_catalog.h"
 #include "nation_registry.h"
@@ -22,13 +26,7 @@ auto StructurePlacementService::footprint_is_clear(const Engine::Core::World& wo
                                                    float z,
                                                    const std::string& building_type)
     -> bool {
-  const auto size = BuildingCollisionRegistry::get_building_size(building_type);
-  if (Game::Session::services_for(world)
-          .building_collision->is_circle_overlapping_building(
-              x, z, std::max(size.width, size.depth) * 0.5F, 0)) {
-    return false;
-  }
-  return NavGrid::is_grid_walkable(NavGrid::world_to_grid(x, z));
+  return assess_ground(world, building_type, x, z) == GroundVerdict::Clear;
 }
 
 auto StructurePlacementService::ruling(Engine::Core::World& world,
@@ -39,8 +37,19 @@ auto StructurePlacementService::ruling(Engine::Core::World& world,
   if (!spawn_type.has_value() || !Game::Units::is_building_spawn(*spawn_type)) {
     return PlacementRuling::UnknownStructure;
   }
-  if (!footprint_is_clear(world, position.x(), position.z(), building_type)) {
-    return PlacementRuling::Blocked;
+  switch (assess_ground(world, building_type, position.x(), position.z())) {
+  case GroundVerdict::Occupied:
+    return PlacementRuling::BlockedByStructure;
+  case GroundVerdict::Impassable:
+    return PlacementRuling::BlockedByObstacle;
+  case GroundVerdict::Water:
+    return PlacementRuling::BlockedByWater;
+  case GroundVerdict::Uneven:
+    return PlacementRuling::BlockedByGround;
+  case GroundVerdict::OffMap:
+    return PlacementRuling::OutsideBattlefield;
+  case GroundVerdict::Clear:
+    break;
   }
   const auto costs = construction_cost_info(building_type).resource_costs;
   if (!costs.empty() &&
@@ -75,6 +84,8 @@ auto StructurePlacementService::place(Engine::Core::World& world,
   params.nation_id = nation != nullptr ? nation->id : nations.default_nation_id();
   params.is_initial_spawn = false;
   params.spawn_type = *spawn_type;
+
+  clear_ground_for(world, building_type, position);
 
   auto unit = registry->create(params.spawn_type, world, params);
   if (!unit) {

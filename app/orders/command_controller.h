@@ -73,6 +73,10 @@ public:
 
   auto
   on_auto_gather_command(const QString& priority_product_type = {}) -> CommandResult;
+  [[nodiscard]] auto divide_selected_squads() -> CommandResult;
+
+  [[nodiscard]] auto merge_selected_squads() -> CommandResult;
+
   [[nodiscard]] auto
   set_auto_gather(bool active,
                   const QString& priority_product_type = {}) -> CommandResult;

@@ -19,12 +19,14 @@
 #include "ai_system/behaviors/builder_behavior.h"
 #include "ai_system/behaviors/commander_behavior.h"
 #include "ai_system/behaviors/defend_behavior.h"
+#include "ai_system/behaviors/economy_behavior.h"
 #include "ai_system/behaviors/expand_behavior.h"
 #include "ai_system/behaviors/gather_behavior.h"
 #include "ai_system/behaviors/harass_behavior.h"
 #include "ai_system/behaviors/local_engagement_behavior.h"
 #include "ai_system/behaviors/production_behavior.h"
 #include "ai_system/behaviors/retreat_behavior.h"
+#include "ai_system/behaviors/squad_discipline_behavior.h"
 #include "core/event_manager.h"
 #include "nation_registry.h"
 #include "owner_registry.h"
@@ -85,6 +87,8 @@ void AISystem::populate_behavior_registry(AI::AIBehaviorRegistry& registry) {
   registry.register_behavior(std::make_unique<AI::AssaultBehavior>());
   registry.register_behavior(std::make_unique<AI::ProductionBehavior>());
   registry.register_behavior(std::make_unique<AI::BuilderBehavior>());
+  registry.register_behavior(std::make_unique<AI::EconomyBehavior>());
+  registry.register_behavior(std::make_unique<AI::SquadDisciplineBehavior>());
   registry.register_behavior(std::make_unique<AI::CommanderBehavior>());
   registry.register_behavior(std::make_unique<AI::ExpandBehavior>());
   registry.register_behavior(std::make_unique<AI::HarassBehavior>());

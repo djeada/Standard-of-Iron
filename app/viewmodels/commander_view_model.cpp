@@ -342,11 +342,6 @@ void CommanderViewModel::primary_action_up() {
   m_control.primary_action_up();
 }
 
-void CommanderViewModel::heavy_action() {
-  const auto frame_lock = m_host.lock_frame();
-  m_control.request_heavy_action();
-}
-
 void CommanderViewModel::secondary_action_down() {
   const auto frame_lock = m_host.lock_frame();
   m_control.secondary_action_down();

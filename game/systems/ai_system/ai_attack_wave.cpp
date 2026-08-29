@@ -131,7 +131,8 @@ auto find_friendly(const AISnapshot& snapshot,
 }
 
 auto marches_with_a_wave(const EntitySnapshot& entity) -> bool {
-  return is_combat_role_unit(entity) &&
+
+  return marches_with_the_army(entity) &&
          entity.spawn_type != Game::Units::SpawnType::Civilian &&
          entity.spawn_type != Game::Units::SpawnType::Healer;
 }
@@ -161,7 +162,31 @@ auto wave_size_for(const AIContext& context) -> int {
   return std::max(1, context.strategy_config.proactive_attack_size);
 }
 
-auto garrison_target_for(const AIContext& context, int combat_unit_count) -> int {
+namespace {
+
+auto required_wave_size(const AIContext& context, float game_time) -> int {
+  const int authored = wave_size_for(context);
+
+  constexpr float k_opening_grace_seconds = 420.0F;
+  constexpr float k_patience_seconds = 300.0F;
+  constexpr float k_relent_seconds = 120.0F;
+  constexpr int k_smallest_wave = 4;
+
+  const float waited =
+      game_time - std::max(k_opening_grace_seconds, context.wave.ended_at);
+  if (waited <= k_patience_seconds) {
+    return authored;
+  }
+  const int relented =
+      static_cast<int>((waited - k_patience_seconds) / k_relent_seconds) + 1;
+  return std::max(k_smallest_wave, authored - relented);
+}
+
+} // namespace
+
+auto garrison_target_for(const AIContext& context,
+                         int combat_unit_count,
+                         int keep_free) -> int {
   const auto* doctrine = context.strategy_config.doctrine;
   int minimum = 0;
   float fraction = 0.0F;
@@ -176,15 +201,18 @@ auto garrison_target_for(const AIContext& context, int combat_unit_count) -> int
       static_cast<int>(fraction * static_cast<float>(combat_unit_count));
   const int wanted = std::max(minimum, by_fraction);
 
-  return std::clamp(wanted, 0, std::max(0, combat_unit_count - 1));
+  const int ceiling = std::max(0, combat_unit_count - std::max(1, keep_free));
+  return std::clamp(wanted, 0, ceiling);
 }
 
 void update_attack_wave(const AISnapshot& snapshot, AIContext& context) {
   auto& wave = context.wave;
   const auto candidates = committable_units(snapshot, context);
 
+  const int required = required_wave_size(context, snapshot.game_time);
+
   const int garrison_target =
-      garrison_target_for(context, static_cast<int>(candidates.size()));
+      garrison_target_for(context, static_cast<int>(candidates.size()), required);
   std::vector<const EntitySnapshot*> by_distance = candidates;
   if (context.has_base_anchor) {
     std::sort(by_distance.begin(),
@@ -277,7 +305,6 @@ void update_attack_wave(const AISnapshot& snapshot, AIContext& context) {
     available.push_back(entity);
   }
 
-  const int required = wave_size_for(context);
   if (static_cast<int>(available.size()) < required) {
     return;
   }

@@ -17,9 +17,22 @@ enum class DoctrineTarget : std::uint8_t {
   Any,
 };
 
+enum class DoctrineArm : std::uint8_t {
+  Infantry,
+  Missile,
+  Cavalry,
+  Siege,
+};
+
 struct DoctrineRecruitment {
 
   float ranged_share = 0.5F;
+
+  float cavalry_share = 0.0F;
+
+  float siege_share = 0.0F;
+
+  std::vector<std::string> preferred;
 };
 
 struct DoctrineWave {
@@ -62,6 +75,8 @@ struct AIDoctrine {
   float defense = 0.5F;
   float harassment = 0.5F;
   const TownPlan* town_plan = nullptr;
+
+  std::string formation;
   DoctrineRecruitment recruitment;
   DoctrineWave wave;
   DoctrineGarrison garrison;

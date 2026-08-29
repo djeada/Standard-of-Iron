@@ -3,9 +3,11 @@
 #include <QVector3D>
 
 #include <cstdint>
+#include <optional>
 #include <string>
 
 #include "../core/entity.h"
+#include "build_site.h"
 
 namespace Engine::Core {
 class World;
@@ -16,7 +18,16 @@ namespace Game::Systems {
 enum class PlacementRuling : std::uint8_t {
   Ok,
   UnknownStructure,
-  Blocked,
+
+  BlockedByStructure,
+
+  BlockedByObstacle,
+
+  BlockedByWater,
+
+  BlockedByGround,
+
+  OutsideBattlefield,
   Unaffordable,
   NoFactory,
   SpawnFailed,

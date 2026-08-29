@@ -15,23 +15,10 @@ enum class CombatActionId : std::uint8_t {
   RpgSwordOverhead,
   RpgSwordThrust,
   RpgSwordFinisher,
-  CommanderSwordSpin,
-  CommanderSwordLauncher,
-  CommanderSwordGapCloser,
-  CommanderSwordAirLight,
-  CommanderSwordAirReverse,
-  CommanderSwordDive,
   RpgSpearThrust,
-  CommanderSpearStepThrust,
   RpgSpearSweep,
   RpgSpearFinisher,
-  CommanderSpearLauncher,
-  CommanderSpearGapCloser,
-  CommanderSpearAirThrust,
-  CommanderSpearDive,
   RpgBowShot,
-  CommanderBowPowerShot,
-  CommanderBowEvasiveShot,
   MountedSwordSlash,
   MountedSpearThrust,
   MountedChargeImpact,
@@ -82,42 +69,6 @@ struct HitShapeProfile {
   float radius{0.35F};
 };
 
-enum class ActionLocomotionRequirement : std::uint8_t {
-  Any = 0,
-  Grounded,
-  Airborne,
-};
-
-enum class CommanderActionRole : std::uint8_t {
-  Routine = 0,
-  Finisher,
-  Launcher,
-  GapCloser,
-  Aerial,
-  Dive,
-  Special,
-};
-
-struct MovementProfile {
-  float distance{0.0F};
-  float start_normalized{0.0F};
-  float end_normalized{0.0F};
-};
-
-struct TargetAssistProfile {
-  float acquisition_range{0.0F};
-  float cone_degrees{0.0F};
-  float maximum_turn_degrees{0.0F};
-  float magnetism_distance{0.0F};
-};
-
-struct ReactionProfile {
-  Engine::Core::StaggerTier stagger_tier{Engine::Core::StaggerTier::LightFlinch};
-  float stagger_seconds{0.0F};
-  float launch_impulse{0.0F};
-  float radial_radius{0.0F};
-};
-
 struct CombatActionEvent {
   CombatActionEventType type{CombatActionEventType::WindupStart};
   float normalized_time{0.0F};
@@ -144,23 +95,7 @@ struct CombatActionDefinition {
   int max_targets{1};
   bool can_hit_same_target_once{true};
   bool requires_projectile_release{false};
-  bool commander_only{false};
-  ActionLocomotionRequirement locomotion{ActionLocomotionRequirement::Any};
-  CommanderActionRole role{CommanderActionRole::Routine};
-  CombatActionId next_light{CombatActionId::None};
-  CombatActionId next_heavy{CombatActionId::None};
-  CombatActionId next_jump{CombatActionId::None};
-  MovementProfile movement{};
-  TargetAssistProfile target_assist{};
-  ReactionProfile reaction{};
 };
-
-[[nodiscard]] auto
-resolve_commander_action(CombatActionId current_action,
-                         Engine::Core::CommanderCombatIntentType intent,
-                         WeaponFamily weapon,
-                         bool airborne,
-                         bool target_outside_normal_reach) noexcept -> CombatActionId;
 
 [[nodiscard]] auto
 all_combat_action_definitions() -> std::span<const CombatActionDefinition>;

@@ -79,11 +79,6 @@ inline constexpr char k_rpg_lock_cycle_id[] = "rpg_lock_occlusion_death_cycle";
 inline constexpr char k_rpg_pass_ranks_id[] = "rpg_pass_ranks";
 inline constexpr char k_rpg_strike_lunge_id[] = "rpg_strike_lunge";
 inline constexpr char k_rpg_bow_volley_id[] = "rpg_bow_volley";
-inline constexpr char k_rpg_commander_sword_grammar_id[] =
-    "rpg_commander_sword_grammar";
-inline constexpr char k_rpg_commander_spear_grammar_id[] =
-    "rpg_commander_spear_grammar";
-inline constexpr char k_rpg_commander_bow_grammar_id[] = "rpg_commander_bow_grammar";
 inline constexpr char k_commander_identity_lineup_id[] = "commander_identity_lineup";
 inline constexpr char k_healer_identity_lineup_id[] = "healer_identity_lineup";
 inline constexpr char k_healer_lod_probe_id[] = "healer_lod_probe";
@@ -162,6 +157,7 @@ inline constexpr char k_carthage_fortification_showcase_id[] =
 inline constexpr char k_rival_economies_id[] = "rival_economies";
 inline constexpr char k_ai_duel_scipio_vs_fabius_id[] = "ai_duel_scipio_vs_fabius";
 inline constexpr char k_ai_duel_marcellus_vs_hanno_id[] = "ai_duel_marcellus_vs_hanno";
+inline constexpr char k_ai_war_of_towns_id[] = "ai_war_of_towns";
 inline constexpr char k_ai_duel_hannibal_vs_hasdrubal_id[] =
     "ai_duel_hannibal_vs_hasdrubal";
 inline constexpr char k_seven_ai_scale_id[] = "seven_ai_scale";

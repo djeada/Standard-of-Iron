@@ -14,7 +14,6 @@
 #include <utility>
 #include <vector>
 
-#include "game/map/render_visibility_rules.h"
 #include "game/map/visibility_service.h"
 #include "linear_feature_geometry.h"
 #include "map/terrain.h"
@@ -97,42 +96,12 @@ void ShorelineRenderer::submit(Renderer& renderer, ResourceManager* resources) {
     }
 
     const auto& cull_samples = m_visibility_samples[mesh_index - 1];
-    if (!cull_samples.empty()) {
-      const auto fog_mode = renderer.static_world_visibility_filter_enabled()
-                                ? SubmissionFogMode::Revealed
-                                : SubmissionFogMode::Ignore;
-      if (!renderer.submission_visibility().accepts_segment(
-              cull_samples.front(), cull_samples.back(), m_tile_size, fog_mode)) {
-        continue;
-      }
-    }
-
-    float segment_visibility = 1.0F;
-    if (visibility_snapshot != nullptr) {
-      const auto& samples = m_visibility_samples[mesh_index - 1];
-      if (samples.empty()) {
-        segment_visibility = 1.0F;
-      } else {
-        auto state = Game::Map::RenderVisibilityState::Hidden;
-        for (const auto& sample : samples) {
-          const auto sample_state = Game::Map::classify_world_visibility(
-              *visibility_snapshot, sample.x(), sample.z());
-          if (sample_state == Game::Map::RenderVisibilityState::Visible) {
-            state = Game::Map::RenderVisibilityState::Visible;
-            break;
-          }
-          if (sample_state == Game::Map::RenderVisibilityState::Explored) {
-            state = Game::Map::RenderVisibilityState::Explored;
-          }
-        }
-
-        if (state == Game::Map::RenderVisibilityState::Hidden) {
-          continue;
-        }
-        segment_visibility = state == Game::Map::RenderVisibilityState::Visible
-                                 ? 1.0F
-                                 : m_explored_dim_factor;
-      }
+    if (!cull_samples.empty() &&
+        !renderer.submission_visibility().accepts_segment(cull_samples.front(),
+                                                          cull_samples.back(),
+                                                          m_tile_size,
+                                                          SubmissionFogMode::Ignore)) {
+      continue;
     }
 
     TerrainFeatureCmd cmd;
@@ -153,7 +122,7 @@ void ShorelineRenderer::submit(Renderer& renderer, ResourceManager* resources) {
     cmd.biome_snow_coverage = climate.snow_coverage;
     cmd.biome_ground_type = static_cast<int>(m_biome_settings.ground_type);
     cmd.ambient_boost = surface.terrain_ambient_boost * 0.95F;
-    cmd.alpha = segment_visibility;
+    cmd.alpha = 1.0F;
     cmd.visibility = visibility_resources;
     renderer.terrain_feature(cmd);
   }

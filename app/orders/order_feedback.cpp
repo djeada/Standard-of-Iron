@@ -90,6 +90,8 @@ auto order_kind_name(OrderKind kind) -> const char* {
     return "rally";
   case OrderKind::Formation:
     return "formation";
+  case OrderKind::Squad:
+    return "squad";
   }
   return "unknown";
 }
@@ -122,6 +124,8 @@ auto order_kind_display_name(OrderKind kind) -> QString {
     return QCoreApplication::translate("OrderFeedback", "Rally point");
   case OrderKind::Formation:
     return QCoreApplication::translate("OrderFeedback", "Formation");
+  case OrderKind::Squad:
+    return QCoreApplication::translate("OrderFeedback", "Squad");
   }
   return {};
 }
@@ -232,6 +236,10 @@ auto no_eligible_units_text(OrderKind kind) -> QString {
   case OrderKind::Repair:
     return QCoreApplication::translate("OrderFeedback",
                                        "Only builders can repair structures.");
+  case OrderKind::Squad:
+    return QCoreApplication::translate(
+        "OrderFeedback",
+        "Only a squad of several individuals can be divided or joined.");
   case OrderKind::Move:
   case OrderKind::Stop:
   case OrderKind::Rally:

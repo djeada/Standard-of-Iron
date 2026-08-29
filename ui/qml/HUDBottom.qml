@@ -415,6 +415,40 @@ RowLayout {
                     game.activity.begin_dismantle_order();
             }
         }, {
+            "id": "divide",
+            "label": qsTr("Split"),
+            "needsTroops": true,
+            "hint": qsTr("Break the selected squad into two smaller ones so they can work or fight in two places at once."),
+            "details": [{
+                    "term": qsTr("Each half"),
+                    "text": qsTr("Carries half the men, half the health and does its work at half the speed.")
+                }, {
+                    "term": qsTr("Needs"),
+                    "text": qsTr("A squad of at least four still standing.")
+                }],
+            "unavailable": qsTr("This squad is too small to divide"),
+            "invoke": function () {
+                if (bottomRoot.game_ready() && game.activity)
+                    game.activity.divide_selected_squads();
+            }
+        }, {
+            "id": "join",
+            "label": qsTr("Join"),
+            "needsTroops": true,
+            "hint": qsTr("Fold two understrength squads of the same kind back into one."),
+            "details": [{
+                    "term": qsTr("Needs"),
+                    "text": qsTr("Two squads of the same kind, both below full strength and standing close together.")
+                }, {
+                    "term": qsTr("Result"),
+                    "text": qsTr("One squad with their men and health added together, up to a full establishment.")
+                }],
+            "unavailable": qsTr("Select two understrength squads of the same kind"),
+            "invoke": function () {
+                if (bottomRoot.game_ready() && game.activity)
+                    game.activity.merge_selected_squads();
+            }
+        }, {
             "id": "deliver",
             "label": qsTr("Deliver"),
             "needsTroops": true,

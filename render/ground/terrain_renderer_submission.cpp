@@ -468,18 +468,13 @@ void TerrainRenderer::submit(Renderer& renderer, ResourceManager* resources) {
 
   Q_UNUSED(resources);
 
-  const auto* visibility_snapshot = renderer.static_world_visibility_filter_enabled()
-                                        ? renderer.submission_visibility().snapshot()
-                                        : nullptr;
   TerrainSurfaceCmd::VisibilityResources visibility_resources;
   const TerrainSurfaceCmd::HeightResources height_resources = update_height_texture();
   renderer.set_terrain_height_resources(height_resources);
   renderer.set_ground_fog(m_ground_fog);
-  if (visibility_snapshot != nullptr) {
+  if (renderer.static_world_visibility_filter_enabled()) {
+
     visibility_resources = renderer.visibility_mask();
-    if (m_chunk_visibility_cache.size() != m_chunks.size()) {
-      m_chunk_visibility_cache.assign(m_chunks.size(), {});
-    }
   }
 
   for (std::size_t chunk_index = 0; chunk_index < m_chunks.size(); ++chunk_index) {

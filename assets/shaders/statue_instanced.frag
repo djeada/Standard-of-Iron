@@ -104,6 +104,6 @@ void main() {
   color = apply_directional_shadow(color, v_world_pos, v_normal);
   color += stone * cavity * local_lighting(v_world_pos, normalize(v_normal));
   color /= 1.0 + max(color - vec3(0.95), vec3(0.0)) * 0.50;
-  color = apply_visibility_memory(color, v_world_pos.xz);
+  color = apply_visibility_world_shading(color, v_world_pos.xz);
   frag_color = vec4(color, 1.0);
 }

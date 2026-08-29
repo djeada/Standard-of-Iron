@@ -48,7 +48,8 @@ void submit_linear_feature_segments(
       continue;
     }
 
-    const auto fog_mode = renderer.static_world_visibility_filter_enabled()
+    const auto fog_mode = visibility_options.fog_culls_segments &&
+                                  renderer.static_world_visibility_filter_enabled()
                               ? GL::SubmissionFogMode::Revealed
                               : GL::SubmissionFogMode::Ignore;
     if (!renderer.submission_visibility().accepts_segment(
@@ -59,7 +60,7 @@ void submit_linear_feature_segments(
     float alpha = 1.0F;
     QVector3D color_multiplier(1.0F, 1.0F, 1.0F);
 
-    if (visibility_snapshot != nullptr) {
+    if (visibility_snapshot != nullptr && visibility_options.fog_culls_segments) {
       const auto visibility_result = evaluate_linear_feature_visibility(
           visibility_snapshot, segment.start, segment.end, visibility_options);
       if (!visibility_result.visible) {

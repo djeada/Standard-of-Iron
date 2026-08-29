@@ -37,7 +37,6 @@ protected:
     Game::Systems::initialize_default_content(nations);
     Game::Systems::PlayerResourceRegistry::instance().clear();
     Game::Systems::TroopCountRegistry::instance().clear();
-    Game::Systems::TroopCountRegistry::instance().initialize();
   }
 
   void TearDown() override {
@@ -300,11 +299,7 @@ TEST_F(EconomyOverviewTest, TheCoachFinishesOnceAnArmyHasBeenRaised) {
   add_unit(Game::Units::SpawnType::Home);
 
   for (int i = 0; i < 4; ++i) {
-    Engine::Core::EventManager::instance().publish(
-        Engine::Core::UnitSpawnedEvent(static_cast<Engine::Core::EntityID>(100 + i),
-                                       k_owner,
-                                       Game::Units::SpawnType::Archer,
-                                       false));
+    add_unit(Game::Units::SpawnType::Archer);
   }
   ASSERT_GE(Game::Systems::troop_count_for(world, k_owner),
             App::Core::k_economy_coach_army_population);

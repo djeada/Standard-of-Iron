@@ -3,7 +3,9 @@ uniform vec2 u_fog_mask_size;
 uniform float u_fog_mask_tile_size;
 uniform int u_has_fog_mask;
 
-const float k_fog_reveal_cutoff = 0.02;
+const vec3 k_fog_reveal_shade = vec3(0.22, 0.23, 0.25);
+const vec3 k_fog_reveal_lift = vec3(0.030, 0.036, 0.048);
+const float k_fog_reveal_chroma = 0.70;
 
 bool fog_reveal_active() {
   return u_has_fog_mask == 1 && u_fog_mask_size.x > 0.0 && u_fog_mask_size.y > 0.0;
@@ -29,12 +31,9 @@ float fog_reveal_alpha(float reveal) {
   return smoothstep(0.04, 0.94, reveal);
 }
 
-bool fog_reveal_discards(float alpha) {
-  return alpha <= k_fog_reveal_cutoff;
-}
-
 vec3 fog_reveal_haze(vec3 lit_color, float alpha) {
-  float lum = dot(lit_color, vec3(0.299, 0.587, 0.114));
-  vec3 misted = mix(vec3(lum), lit_color, 0.30) * 0.66;
+  float lum = dot(lit_color, vec3(0.2126, 0.7152, 0.0722));
+  vec3 misted = mix(vec3(lum), lit_color, k_fog_reveal_chroma) * k_fog_reveal_shade +
+                k_fog_reveal_lift;
   return mix(misted, lit_color, alpha);
 }

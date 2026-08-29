@@ -182,52 +182,6 @@ void process_stagger_recovery(Engine::Core::World* world, float delta_time) {
   }
 }
 
-void process_poise_recovery(Engine::Core::World* world, float delta_time) {
-  for (auto [entity, poise] : world->entity_view<Engine::Core::PoiseComponent>()) {
-    if (entity.has_component<Engine::Core::PendingRemovalComponent>()) {
-      continue;
-    }
-    poise.maximum = std::max(1.0F, poise.maximum);
-    poise.current = std::clamp(poise.current, 0.0F, poise.maximum);
-    if (poise.regeneration_delay > 0.0F) {
-      poise.regeneration_delay = std::max(0.0F, poise.regeneration_delay - delta_time);
-      continue;
-    }
-    poise.current = std::min(
-        poise.maximum,
-        poise.current + std::max(0.0F, poise.regeneration_per_second) * delta_time);
-  }
-}
-
-void process_combat_launches(Engine::Core::World* world, float delta_time) {
-  std::vector<Engine::Core::EntityID> landed;
-  for (auto [entity, launch, transform] :
-       world->entity_view<Engine::Core::CombatLaunchComponent,
-                          Engine::Core::TransformComponent>()) {
-    if (entity.has_component<Engine::Core::PendingRemovalComponent>()) {
-      landed.push_back(entity.get_id());
-      continue;
-    }
-
-    transform.position.x += launch.velocity_x * delta_time;
-    transform.position.z += launch.velocity_z * delta_time;
-    transform.position.y += launch.velocity_y * delta_time;
-    launch.velocity_y -= Engine::Core::CombatLaunchComponent::k_gravity * delta_time;
-    float const drag = std::max(
-        0.0F,
-        1.0F - Engine::Core::CombatLaunchComponent::k_horizontal_drag * delta_time);
-    launch.velocity_x *= drag;
-    launch.velocity_z *= drag;
-    if (transform.position.y <= launch.ground_y && launch.velocity_y <= 0.0F) {
-      transform.position.y = launch.ground_y;
-      landed.push_back(entity.get_id());
-    }
-  }
-  for (auto const entity_id : landed) {
-    world->remove<Engine::Core::CombatLaunchComponent>(entity_id);
-  }
-}
-
 void process_signature_presentations(Engine::Core::World* world, float delta_time) {
   for (auto [entity_id, presentation] :
        world->view<Engine::Core::CommanderSignaturePresentationComponent>()) {
@@ -249,8 +203,6 @@ auto process_combat_status_effects(Engine::Core::World* world,
 
   float const clamped_delta_time = std::max(0.0F, delta_time);
   process_stagger_recovery(world, clamped_delta_time);
-  process_poise_recovery(world, clamped_delta_time);
-  process_combat_launches(world, clamped_delta_time);
   process_signature_presentations(world, clamped_delta_time);
   process_cursed_statuses(world, clamped_delta_time, result);
   process_burning_statuses(world, clamped_delta_time, result);

@@ -27,6 +27,8 @@ struct GameplayConfig {
   float visibility_update_interval = 0.075F;
   float formation_spacing_default = 1.0F;
   int max_troops_per_player = 250;
+
+  int starting_gold = 500;
 };
 
 class GameConfig {
@@ -141,6 +143,12 @@ public:
   void set_max_troops_per_player(int value) noexcept {
     m_gameplay.max_troops_per_player = value;
   }
+
+  [[nodiscard]] auto get_starting_gold() const noexcept -> int {
+    return m_gameplay.starting_gold;
+  }
+
+  void set_starting_gold(int value) noexcept { m_gameplay.starting_gold = value; }
 
 private:
   GameConfig() = default;

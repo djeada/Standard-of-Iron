@@ -9,6 +9,7 @@
 #include "game/systems/civilian_delivery_system.h"
 #include "game/systems/command_service.h"
 #include "game/systems/nav_grid.h"
+#include "game/systems/owner_queries.h"
 #include "game/systems/pathfinding.h"
 #include "game/systems/player_resource_registry.h"
 #include "game/systems/production_service.h"
@@ -445,6 +446,33 @@ TEST(TempleRecruitmentTest, CivilianEnteringTheTempleTransfersManpower) {
   EXPECT_EQ(world.get_entity(civilian_id), nullptr);
   EXPECT_EQ(temple_prod->manpower_available,
             Game::Systems::k_civilian_delivery_population_grant);
+}
+
+TEST(CivilianDeliverySystemTest, ACivilianTakenIntoTheBarracksGivesItsPopulationBack) {
+  Engine::Core::World world;
+
+  const auto villager = [&world](int owner) {
+    auto* entity = world.create_entity();
+    auto* unit = entity->add_component<Engine::Core::UnitComponent>();
+    unit->spawn_type = Game::Units::SpawnType::Civilian;
+    unit->owner_id = owner;
+    unit->health = 10;
+    unit->max_health = 10;
+    return entity->get_id();
+  };
+
+  constexpr int k_owner = 1;
+  const auto first = villager(k_owner);
+  (void)villager(k_owner);
+
+  const int with_both = Game::Systems::troop_count_for(world, k_owner);
+  ASSERT_GT(with_both, 0);
+
+  world.destroy_entity(first);
+
+  EXPECT_LT(Game::Systems::troop_count_for(world, k_owner), with_both)
+      << "a civilian absorbed into a barracks leaves the field, and the population "
+         "it was costing has to come back with it";
 }
 
 } // namespace

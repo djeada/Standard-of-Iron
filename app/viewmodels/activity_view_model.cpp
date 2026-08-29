@@ -143,6 +143,24 @@ void ActivityViewModel::confirm_repair_at(qreal sx, qreal sy) {
       sx, sy, m_context.local_owner_id, *m_context.viewport);
 }
 
+void ActivityViewModel::divide_selected_squads() {
+  if (m_context.input == nullptr) {
+    return;
+  }
+  m_host.ensure_initialized();
+  const auto frame_lock = m_host.lock_frame();
+  m_context.input->divide_selected_squads();
+}
+
+void ActivityViewModel::merge_selected_squads() {
+  if (m_context.input == nullptr) {
+    return;
+  }
+  m_host.ensure_initialized();
+  const auto frame_lock = m_host.lock_frame();
+  m_context.input->merge_selected_squads();
+}
+
 void ActivityViewModel::toggle_auto_gather(const QString& priority_product_type) {
   if (m_context.input == nullptr) {
     return;

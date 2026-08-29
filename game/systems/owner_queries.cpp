@@ -46,7 +46,10 @@ auto enemy_units(const Engine::Core::World& world,
 }
 
 auto troop_count_for(const Engine::Core::World& world, int owner_id) -> int {
-  return Game::Session::services_for(world).troop_counts->get_troop_count(owner_id);
+
+  auto& counts = *Game::Session::services_for(world).troop_counts;
+  counts.rebuild_from_world(world);
+  return counts.get_troop_count(owner_id);
 }
 
 } // namespace Game::Systems
