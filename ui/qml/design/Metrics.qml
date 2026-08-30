@@ -23,9 +23,15 @@ QtObject {
 
     readonly property int controlHeight: A11y.scaled(36)
     readonly property int toolControlHeight: A11y.scaled(30)
+    readonly property int compactControlHeight: A11y.scaled(26)
     readonly property int commandButtonSize: A11y.scaled(48)
+    readonly property int orderButtonSize: A11y.scaled(40)
     readonly property int iconSmall: A11y.scaled(16)
     readonly property int iconMedium: A11y.scaled(24)
+
+    readonly property int panelPadding: A11y.scaled(12)
+    readonly property int panelPaddingCompact: A11y.scaled(8)
+    readonly property int scrollBarThickness: A11y.scaled(8)
 
     readonly property int minTouchTarget: Math.max(A11y.scaled(32), 32)
 
@@ -35,18 +41,22 @@ QtObject {
     readonly property int notificationWidth: A11y.scaled(340)
     readonly property int hudZoneMargin: A11y.scaled(12)
 
-    readonly property int rtsBottomBarMinHeight: 216
-    readonly property int rtsBottomBarMaxHeight: 380
-    readonly property real rtsBottomBarShare: 0.32
+    readonly property int rtsBottomBarMinHeight: A11y.scaled(150)
+    readonly property int rtsBottomBarMaxHeight: A11y.scaled(200)
+    readonly property real rtsBottomBarShare: 0.17
 
-    readonly property int commanderBottomBarMinHeight: 96
-    readonly property int commanderBottomBarMaxHeight: 120
+    readonly property int commanderBottomBarMinHeight: A11y.scaled(96)
+    readonly property int commanderBottomBarMaxHeight: A11y.scaled(120)
     readonly property real commanderBottomBarShare: 0.12
+
+    readonly property real bottomBarViewportCeiling: 0.28
 
     function bottomBarHeight(viewportHeight, commanderMode) {
         var height = Number(viewportHeight) || 0;
-        if (commanderMode)
-            return Math.max(root.commanderBottomBarMinHeight, Math.min(root.commanderBottomBarMaxHeight, height * root.commanderBottomBarShare));
-        return Math.max(root.rtsBottomBarMinHeight, Math.min(root.rtsBottomBarMaxHeight, height * root.rtsBottomBarShare));
+        var floor = commanderMode ? root.commanderBottomBarMinHeight : root.rtsBottomBarMinHeight;
+        var ceiling = commanderMode ? root.commanderBottomBarMaxHeight : root.rtsBottomBarMaxHeight;
+        var share = commanderMode ? root.commanderBottomBarShare : root.rtsBottomBarShare;
+        var preferred = Math.max(floor, Math.min(ceiling, height * share));
+        return Math.min(preferred, Math.max(floor, height * root.bottomBarViewportCeiling));
     }
 }

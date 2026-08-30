@@ -517,7 +517,8 @@ auto may_engage(Engine::Core::Entity* unit,
     return false;
   }
 
-  if (trigger != EngagementTrigger::Opportunity) {
+  if (trigger == EngagementTrigger::Retaliation ||
+      trigger == EngagementTrigger::SquadAlert) {
 
     return true;
   }

@@ -237,8 +237,6 @@ void FireCampRenderer::generate_firecamp_instances() {
     return;
   }
   const auto& terrain_service = world().terrain_or_empty();
-  const float half_w = static_cast<float>(m_width) * 0.5F;
-  const float half_h = static_cast<float>(m_height) * 0.5F;
 
   for (size_t i = 0; i < m_world_props.size(); ++i) {
     const auto& prop = m_world_props[i];
@@ -246,14 +244,8 @@ void FireCampRenderer::generate_firecamp_instances() {
       continue;
     }
 
-    const float world_x = (prop.x - half_w) * m_tile_size;
-    const float world_z = (prop.z - half_h) * m_tile_size;
-    const QVector3D resolved = terrain_service.resolve_footprint_world_position(
-        world_x,
-        world_z,
-        Game::Map::world_prop_ground_bounding_radius(prop.type, prop.scale),
-        0.0F,
-        0.0F);
+    const QVector3D resolved = terrain_service.world_prop_footprint_world_position(
+        prop, Game::Map::world_prop_ground_bounding_radius(prop.type, prop.scale));
 
     const float base_radius = std::max(prop.radius, 1.0F);
     const float phase = static_cast<float>(i) * 1.234567F;

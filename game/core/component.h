@@ -32,6 +32,7 @@ namespace Engine::Core {
 namespace Defaults {
 inline constexpr int k_unit_default_health = 100;
 inline constexpr float k_unit_default_vision_range = 12.0F;
+inline constexpr float k_vision_reveal_scale = 1.5F;
 
 inline constexpr float k_attack_default_range = 2.0F;
 inline constexpr int k_attack_default_damage = 10;
@@ -504,6 +505,20 @@ public:
   EntityID target_id{0};
   bool should_chase{false};
   bool is_player_command{false};
+};
+
+class ThreatAlertComponent {
+public:
+  ThreatAlertComponent() = default;
+
+  enum class Kind : std::uint8_t {
+    UnderAttack,
+    EnemySighted,
+  };
+
+  EntityID aggressor_id{0};
+  Kind kind{Kind::UnderAttack};
+  float cooldown{0.0F};
 };
 
 class RpgCommanderTargetComponent {

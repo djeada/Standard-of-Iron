@@ -35,9 +35,9 @@ auto authored_grid_to_world(float grid_coord, int grid_size, float tile_size) ->
   return (grid_coord - (static_cast<float>(grid_size) * 0.5F - 0.5F)) * safe_tile_size;
 }
 
-auto world_prop_world_xz(const TerrainHeightMap* height_map,
-                         CoordSystem coord_system,
-                         const WorldProp& prop) -> std::pair<float, float> {
+auto authored_prop_world_xz(const TerrainHeightMap* height_map,
+                            CoordSystem coord_system,
+                            const WorldProp& prop) -> std::pair<float, float> {
   if (coord_system == CoordSystem::World || height_map == nullptr) {
     return {prop.x, prop.z};
   }
@@ -63,7 +63,8 @@ auto world_prop_grid_position(const TerrainHeightMap* height_map,
 auto make_world_prop_target(const TerrainHeightMap* height_map,
                             CoordSystem coord_system,
                             const WorldProp& prop) -> WorldPropTarget {
-  auto const [world_x, world_z] = world_prop_world_xz(height_map, coord_system, prop);
+  auto const [world_x, world_z] =
+      authored_prop_world_xz(height_map, coord_system, prop);
   return WorldPropTarget{.id = prop.id, .type = prop.type, .x = world_x, .z = world_z};
 }
 
@@ -101,7 +102,7 @@ auto find_world_prop_near_world(const TerrainHeightMap* height_map,
       continue;
     }
     auto const [prop_world_x, prop_world_z] =
-        world_prop_world_xz(height_map, coord_system, prop);
+        authored_prop_world_xz(height_map, coord_system, prop);
     auto const [prop_grid_x, prop_grid_z] =
         world_prop_grid_position(height_map, coord_system, prop);
     float const dx = prop_world_x - world_x;
@@ -284,7 +285,7 @@ auto TerrainService::world_prop_world_position(const WorldProp& prop,
                                                float world_y_offset,
                                                float fallback_y) const -> QVector3D {
   auto const [world_x, world_z] =
-      world_prop_world_xz(m_height_map.get(), m_coord_system, prop);
+      authored_prop_world_xz(m_height_map.get(), m_coord_system, prop);
 
   if (m_height_map == nullptr || prop.id == 0) {
     return resolve_surface_world_position(world_x, world_z, world_y_offset, fallback_y);
@@ -916,6 +917,22 @@ auto TerrainService::resolve_footprint_world_position(float world_x,
           resolve_footprint_world_y(
               world_x, world_z, footprint_radius, world_y_offset, fallback_y),
           world_z};
+}
+
+auto TerrainService::world_prop_world_xz(const WorldProp& prop) const
+    -> std::pair<float, float> {
+  return authored_prop_world_xz(m_height_map.get(), m_coord_system, prop);
+}
+
+auto TerrainService::world_prop_footprint_world_position(const WorldProp& prop,
+                                                         float footprint_radius,
+                                                         float world_y_offset,
+                                                         float fallback_y) const
+    -> QVector3D {
+  auto const [world_x, world_z] =
+      authored_prop_world_xz(m_height_map.get(), m_coord_system, prop);
+  return resolve_footprint_world_position(
+      world_x, world_z, footprint_radius, world_y_offset, fallback_y);
 }
 
 auto TerrainService::get_terrain_height_grid(int grid_x, int grid_z) const -> float {

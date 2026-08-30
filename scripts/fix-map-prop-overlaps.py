@@ -12,9 +12,14 @@ Keep the tables here in step with the header; the C++ guard
 tests/render/prop_model_footprint_test.cpp measures the models and fails if the
 header drifts from them.
 
-Four kinds of defect are reported, and all four must be at zero:
+Five kinds of defect are reported, and all five must be at zero:
 
 ``overlap``   two solid bodies intersect.
+``canopy``    a tree's crown has swallowed something built.  A pine blocks only
+              its trunk so that a wood stays walkable, but it *draws* nine
+              metres of crown, and a crown centred on a tent is the same
+              immersion break as a tent inside a tent even though nothing
+              blocks anything.
 ``road``      a body stands in a road or bridge corridor.  Roads are laid by
               scripts/generate-map-roads.py, which routes around water and slope
               but has never known that props exist, so it paves over statues.
@@ -48,6 +53,7 @@ import itertools
 import json
 import math
 import sys
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -103,6 +109,20 @@ something you walk around."""
 
 STEM_FRACTION = 0.22
 MIN_GROUND_HALF_EXTENT = 0.5
+
+CANOPY_OVERHANG_FRACTION = 0.35
+"""How far a crown may lean over a built body, as a share of its own reach.
+
+A tree leaning over the corner of a ruin is scenery and a tree standing in the
+middle of a tent is a defect, and the line between them scales with the tree:
+a cypress may clip what a pine would swallow whole."""
+
+CANOPY_BLIND_TO = frozenset({"plant"})
+"""What a crown is allowed to stand over outright.
+
+Grass belongs under a canopy, and so does another tree -- a wood is crowns
+touching by definition -- so canopies are only ever measured against the
+built things a crown should not have grown through."""
 
 
 BUILDING_BODIES = {
@@ -239,6 +259,19 @@ def prop_ground_half_extents(prop_type: str, scale: float) -> tuple[float, float
     )
 
 
+def prop_canopy_half_extents(prop_type: str, scale: float) -> tuple[float, float]:
+    """The crown a tree draws, as opposed to the trunk it blocks.
+
+    ``prop_ground_half_extents`` shrinks a canopy to its stem so that scatter
+    and soldiers may pass under it.  Nothing may be *built* under it, so the
+    drawn crown is measured separately."""
+    render_scale = WORLD_PROP_RENDER_SCALE.get(prop_type, 1.0) * scale
+    model = WORLD_PROP_MODEL_HALF_EXTENTS.get(
+        prop_type, WORLD_PROP_MODEL_HALF_EXTENTS_DEFAULT
+    )
+    return (model[0] * render_scale, model[1] * render_scale)
+
+
 @dataclass
 class Placeable:
     """One solid body on the map, as an oriented rectangle or a disc."""
@@ -267,6 +300,26 @@ class Placeable:
 
     is_ring: bool = False
     """Part of a defensive ring: a wall run, or a tower locked onto one."""
+
+    canopy_half: tuple[float, float] | None = None
+    """The crown this body draws, when it draws one bigger than it blocks."""
+
+    def canopy_body(self) -> "Placeable | None":
+        """This tree as the crown it draws, ready to be measured like any body."""
+        if self.canopy_half is None:
+            return None
+        return Placeable(
+            key=self.key,
+            kind=self.kind,
+            name=self.name,
+            x=self.x,
+            z=self.z,
+            half_x=self.canopy_half[0],
+            half_z=self.canopy_half[1],
+            rotation=self.rotation,
+            priority=self.priority,
+            body_type=self.body_type,
+        )
 
     @property
     def radius(self) -> float:
@@ -417,6 +470,11 @@ def make_prop(key: str, kind: str, prop: dict, prop_type: str, default_priority:
     """
     scale = float(prop.get("scale", 1.0) or 1.0)
     half_x, half_z = prop_ground_half_extents(prop_type, scale)
+    canopy = (
+        prop_canopy_half_extents(prop_type, scale)
+        if prop_type in CANOPY_TYPES
+        else None
+    )
     return Placeable(
         key=key,
         kind=kind,
@@ -429,6 +487,7 @@ def make_prop(key: str, kind: str, prop: dict, prop_type: str, default_priority:
         priority=PROP_PRIORITY.get(prop_type, default_priority),
         payload=prop,
         body_type=prop_type,
+        canopy_half=canopy,
     )
 
 
@@ -761,6 +820,11 @@ class Violation:
                 f"{self.item.name} ({self.item.kind}) x {self.other.name} "
                 f"({self.other.kind}) overlap {self.depth:.2f}"
             )
+        if self.kind == "canopy" and self.other is not None:
+            return (
+                f"{self.item.name} ({self.item.kind}) crown over "
+                f"{self.other.name} ({self.other.kind}) by {self.depth:.2f}"
+            )
         return (
             f"{self.item.name} ({self.item.kind}) in {self.kind}"
             f"{' ' + self.detail if self.detail else ''} by {self.depth:.2f}"
@@ -813,6 +877,48 @@ def find_overlaps(
                     pairs.append((item, other, overlap))
     pairs.sort(key=lambda entry: entry[2], reverse=True)
     return pairs
+
+
+def canopy_intrusion(
+    tree: Placeable, other: Placeable, fraction: float
+) -> tuple[float, float, float]:
+    """How far a crown has grown *through* a body, and the way back out.
+
+    Depth alone would call every tree beside a wall a defect, so what is
+    reported is the depth beyond the lean the crown is allowed: a pine may
+    overhang a ruin by a third of its own reach along that bearing and still
+    read as a tree standing next to a ruin."""
+    crown = tree.canopy_body()
+    if crown is None:
+        return -math.inf, 0.0, 0.0
+    depth, unit_x, unit_z = crown.separation_from(other, 0.0)
+    allowance = crown.support_radius(unit_x, unit_z) * fraction
+    return depth - allowance, unit_x, unit_z
+
+
+def find_canopy_intrusions(items: list[Placeable], fraction: float) -> list[Violation]:
+    """Every crown that has swallowed something built, worst first."""
+    trees = [item for item in items if item.canopy_half is not None]
+    if not trees:
+        return []
+    built = [
+        item
+        for item in items
+        if item.kind in ("world_prop", "firecamp", "structure")
+        and item.canopy_half is None
+        and item.body_type not in CANOPY_BLIND_TO
+    ]
+
+    found: list[Violation] = []
+    for tree in trees:
+        for other in built:
+            if other.key == tree.key or tree.exempt_from(other):
+                continue
+            depth, _, _ = canopy_intrusion(tree, other, fraction)
+            if depth > 1e-3:
+                found.append(Violation("canopy", tree, depth, other))
+    found.sort(key=lambda entry: entry.depth, reverse=True)
+    return found
 
 
 @dataclass
@@ -994,6 +1100,7 @@ def try_move(
     road_margin: float,
     rim_margin: float,
     must_clear: Placeable | None,
+    accept: Callable[[], bool] | None = None,
 ) -> bool:
     """Walk the escape ladder and keep the first push that actually works.
 
@@ -1028,6 +1135,8 @@ def try_move(
             continue
         if must_clear is not None and mover.overlap_with(must_clear, clearance) > 1e-3:
             continue
+        if accept is not None and not accept():
+            continue
         if any(
             mover.overlap_with(candidate, clearance)
             > max(depth_before.get(candidate.key, 0.0), 1e-3)
@@ -1052,6 +1161,7 @@ def repair(
     budgets: dict[str, float],
     road_margin: float,
     rim_margin: float,
+    canopy_fraction: float,
 ) -> int:
     resolved = 0
     for _ in range(max_passes):
@@ -1078,6 +1188,34 @@ def repair(
                 road_margin,
                 rim_margin,
                 anchor,
+            ):
+                progressed = True
+                resolved += 1
+
+        for violation in find_canopy_intrusions(items, canopy_fraction):
+            mover = violation.item
+            other = violation.other
+            if other is None or mover.priority >= PRIORITY_ANCHOR:
+                continue
+            depth, unit_x, unit_z = canopy_intrusion(mover, other, canopy_fraction)
+            if depth <= 1e-3:
+                continue
+            if try_move(
+                mover,
+                items,
+                terrain,
+                clearance,
+                travel_budget_for(mover, budgets),
+                depth,
+                unit_x,
+                unit_z,
+                road_margin,
+                rim_margin,
+                None,
+                accept=lambda mover=mover, other=other: canopy_intrusion(
+                    mover, other, canopy_fraction
+                )[0]
+                <= 1e-3,
             ):
                 progressed = True
                 resolved += 1
@@ -1323,6 +1461,7 @@ def audit(
     clearance: float,
     road_margin: float,
     rim_margin: float,
+    canopy_fraction: float,
 ) -> tuple[list[Placeable], Terrain, list[Violation]]:
     items = collect(map_data, path_name)
     terrain = read_terrain(map_data)
@@ -1330,6 +1469,7 @@ def audit(
         Violation("overlap", item, depth, other)
         for item, other, depth in find_overlaps(items, clearance)
     ]
+    found.extend(find_canopy_intrusions(items, canopy_fraction))
     found.extend(terrain_violations(items, terrain, road_margin, rim_margin))
     found.sort(key=lambda entry: entry.depth, reverse=True)
     return items, terrain, found
@@ -1359,6 +1499,14 @@ def main() -> int:
         type=float,
         default=SLOPE_STRADDLE_MARGIN,
         help="How far a body may hang over the edge of a hill.",
+    )
+    parser.add_argument(
+        "--canopy-overhang",
+        type=float,
+        default=CANOPY_OVERHANG_FRACTION,
+        help="How far a tree's crown may lean over something built, as a share "
+        "of the crown's own reach. Raise it to let trees crowd a camp; lower "
+        "it to keep them off the tents entirely.",
     )
     parser.add_argument(
         "--max-travel",
@@ -1432,7 +1580,12 @@ def main() -> int:
 
         try:
             items, terrain, before = audit(
-                map_data, path.name, args.clearance, args.road_margin, args.rim_margin
+                map_data,
+                path.name,
+                args.clearance,
+                args.road_margin,
+                args.rim_margin,
+                args.canopy_overhang,
             )
         except MapContentError as error:
             print(error, file=sys.stderr)
@@ -1477,12 +1630,18 @@ def main() -> int:
             budgets,
             args.road_margin,
             args.rim_margin,
+            args.canopy_overhang,
         )
         moved = apply(items)
 
         remaining = len(
             audit(
-                map_data, path.name, args.clearance, args.road_margin, args.rim_margin
+                map_data,
+                path.name,
+                args.clearance,
+                args.road_margin,
+                args.rim_margin,
+                args.canopy_overhang,
             )[2]
         )
         total_remaining += remaining

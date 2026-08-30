@@ -59,8 +59,8 @@ Rectangle {
         anchors.left: parent.left
         anchors.right: parent.right
         anchors.bottom: parent.bottom
-        anchors.margins: 4
-        spacing: 4
+        anchors.margins: 3
+        spacing: 3
 
         Repeater {
             model: card.panel ? card.panel.cost_entries(card.panel.reserve_cost(card.unit_info), card.unit_info.resource_costs || {}, true) : []
@@ -70,9 +70,9 @@ Rectangle {
 
                 required property var modelData
 
-                width: costRow.implicitWidth + 8
-                height: costRow.implicitHeight + 6
-                radius: 8
+                width: costRow.implicitWidth + 6
+                height: costRow.implicitHeight + 4
+                radius: 6
                 color: card.is_enabled ? "#cc2a1d12" : "#991f150d"
                 border.color: card.is_enabled ? card.hs.bronze : "#8C6A3E"
                 border.width: 1
@@ -84,8 +84,8 @@ Rectangle {
                     spacing: 3
 
                     Image {
-                        width: Design.A11y.scaled(9)
-                        height: Design.A11y.scaled(9)
+                        width: Design.A11y.scaled(8)
+                        height: Design.A11y.scaled(8)
                         fillMode: Image.PreserveAspectFit
                         smooth: true
                         source: card.panel ? card.panel.cost_icon_source(costPill.modelData.key) : ""

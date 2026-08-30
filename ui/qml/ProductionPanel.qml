@@ -351,25 +351,34 @@ Rectangle {
     border.width: 2
     radius: 6
 
-    ScrollView {
+    Flickable {
         id: productionScroll
 
-        anchors.fill: parent
-        anchors.margins: 10
-        clip: true
-        ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
+        readonly property int gutter: Design.Metrics.scrollBarThickness + Design.Metrics.space4
 
-        ScrollBar.vertical.policy: productionScroll.contentHeight > productionScroll.height ? ScrollBar.AlwaysOn : ScrollBar.AlwaysOff
+        anchors.fill: parent
+        anchors.margins: Design.Metrics.space8
+        clip: true
+        contentWidth: width
+        contentHeight: productionColumn.implicitHeight
+        flickableDirection: Flickable.VerticalFlick
+        boundsBehavior: Flickable.StopAtBounds
+
+        ScrollBar.vertical: Design.IronScrollBar {
+            objectName: "productionScrollBar"
+        }
 
         Column {
-            width: productionPanel.width - 20
-            spacing: 8
+            id: productionColumn
+
+            width: productionScroll.width - productionScroll.gutter
+            spacing: Design.Metrics.space4
 
             Rectangle {
                 property bool has_barracks: (productionPanel.selection_tick, (productionPanel.production && productionPanel.production.has_selected_type && productionPanel.production.has_selected_type("barracks")))
 
                 width: parent.width
-                height: productionContent.height + 16
+                height: productionContent.height + 12
                 color: hs.parchmentLight
                 radius: 6
                 border.color: hs.bronzeDeep
@@ -381,118 +390,137 @@ Rectangle {
 
                     property var prod: (productionPanel.selection_tick, (productionPanel.production && productionPanel.production.selected_state) ? productionPanel.production.selected_state() : productionPanel.default_production_state())
 
+                    readonly property int queue_total: (productionContent.prod.in_progress ? 1 : 0) + (productionContent.prod.queue_size || 0)
+                    readonly property int queueSlotSize: Design.A11y.scaled(32)
+
                     anchors.horizontalCenter: parent.horizontalCenter
                     anchors.top: parent.top
-                    anchors.margins: 8
-                    spacing: 10
-                    width: parent.width - 16
+                    anchors.margins: 6
+                    spacing: 6
+                    width: parent.width - 12
 
-                    Text {
-                        anchors.horizontalCenter: parent.horizontalCenter
-                        text: qsTr("PRODUCTION QUEUE")
-                        color: hs.bronze
-                        font.pixelSize: Design.Typography.caption
-                        font.bold: true
-                    }
+                    Flow {
+                        width: parent.width
+                        spacing: 8
 
-                    Row {
-                        anchors.horizontalCenter: parent.horizontalCenter
-                        spacing: 6
+                        Row {
+                            height: productionContent.queueSlotSize
+                            spacing: 6
 
-                        Repeater {
-                            model: 5
+                            Text {
+                                anchors.verticalCenter: parent.verticalCenter
+                                text: qsTr("QUEUE")
+                                color: hs.bronze
+                                font.pixelSize: Design.Typography.caption
+                                font.bold: true
+                            }
 
-                            Rectangle {
-                                property int queue_total: (productionContent.prod.in_progress ? 1 : 0) + (productionContent.prod.queue_size || 0)
-                                property bool is_occupied: index < queue_total
-                                property bool is_producing: index === 0 && productionContent.prod.in_progress === true
-                                property string queue_unit_type: {
-                                    if (!is_occupied)
-                                        return "";
-                                    if (index === 0 && productionContent.prod.in_progress)
-                                        return productionContent.prod.product_type || "archer";
-                                    var queueIndex = productionContent.prod.in_progress ? index - 1 : index;
-                                    if (productionContent.prod.production_queue && productionContent.prod.production_queue[queueIndex])
-                                        return productionContent.prod.production_queue[queueIndex];
-                                    return "archer";
-                                }
+                            Text {
+                                anchors.verticalCenter: parent.verticalCenter
+                                text: productionContent.queue_total + " / 5"
+                                color: productionContent.queue_total >= 5 ? "#C0403B" : "#D4B57C"
+                                font.pixelSize: Design.Typography.caption
+                                font.bold: productionContent.queue_total >= 5
+                            }
+                        }
 
-                                width: Design.A11y.scaled(36)
-                                height: Design.A11y.scaled(36)
-                                radius: 6
-                                color: is_producing ? "#7F9A5F" : (is_occupied ? "#2F251D" : "#120D09")
-                                border.color: is_producing ? "#8FA46B" : (is_occupied ? "#6F8E8C" : "#3B2F24")
-                                border.width: 2
+                        Row {
+                            height: productionContent.queueSlotSize
+                            spacing: 4
 
-                                Image {
-                                    id: queueIconImage
+                            Repeater {
+                                model: 5
 
-                                    anchors.centerIn: parent
-                                    width: Design.A11y.scaled(28)
-                                    height: Design.A11y.scaled(28)
-                                    fillMode: Image.PreserveAspectFit
-                                    smooth: true
-                                    source: parent.is_occupied ? productionPanel.unit_icon_source(parent.queue_unit_type, productionContent.prod.nation_id) : ""
-                                    visible: parent.is_occupied && source !== ""
-                                }
-
-                                Text {
-                                    anchors.centerIn: parent
-                                    text: parent.is_occupied ? productionPanel.unit_icon_emoji(parent.queue_unit_type) : "·"
-                                    color: parent.is_producing ? "#F4E7C8" : (parent.is_occupied ? "#D4B57C" : "#6B5231")
-                                    font.pixelSize: parent.is_occupied ? Design.Typography.subheading : Design.Typography.heading
-                                    font.bold: parent.is_producing
-                                    visible: !queueIconImage.visible
-                                }
-
-                                Text {
-                                    anchors.right: parent.right
-                                    anchors.bottom: parent.bottom
-                                    anchors.margins: 2
-                                    text: (index + 1).toString()
-                                    color: parent.is_occupied ? "#8D7146" : "#3B2F24"
-                                    font.pixelSize: Design.Typography.caption
-                                    font.bold: true
-                                }
-
-                                SequentialAnimation on opacity  {
-                                    running: is_producing
-                                    loops: Animation.Infinite
-
-                                    NumberAnimation {
-                                        from: 0.7
-                                        to: 1
-                                        duration: 800
+                                Rectangle {
+                                    property int queue_total: (productionContent.prod.in_progress ? 1 : 0) + (productionContent.prod.queue_size || 0)
+                                    property bool is_occupied: index < queue_total
+                                    property bool is_producing: index === 0 && productionContent.prod.in_progress === true
+                                    property string queue_unit_type: {
+                                        if (!is_occupied)
+                                            return "";
+                                        if (index === 0 && productionContent.prod.in_progress)
+                                            return productionContent.prod.product_type || "archer";
+                                        var queueIndex = productionContent.prod.in_progress ? index - 1 : index;
+                                        if (productionContent.prod.production_queue && productionContent.prod.production_queue[queueIndex])
+                                            return productionContent.prod.production_queue[queueIndex];
+                                        return "archer";
                                     }
 
-                                    NumberAnimation {
-                                        from: 1
-                                        to: 0.7
-                                        duration: 800
+                                    width: Design.A11y.scaled(32)
+                                    height: Design.A11y.scaled(32)
+                                    radius: 5
+                                    color: is_producing ? "#7F9A5F" : (is_occupied ? "#2F251D" : "#120D09")
+                                    border.color: is_producing ? "#8FA46B" : (is_occupied ? "#6F8E8C" : "#3B2F24")
+                                    border.width: 2
+
+                                    Image {
+                                        id: queueIconImage
+
+                                        anchors.centerIn: parent
+                                        width: Design.A11y.scaled(25)
+                                        height: Design.A11y.scaled(25)
+                                        fillMode: Image.PreserveAspectFit
+                                        smooth: true
+                                        source: parent.is_occupied ? productionPanel.unit_icon_source(parent.queue_unit_type, productionContent.prod.nation_id) : ""
+                                        visible: parent.is_occupied && source !== ""
+                                    }
+
+                                    Text {
+                                        anchors.centerIn: parent
+                                        text: parent.is_occupied ? productionPanel.unit_icon_emoji(parent.queue_unit_type) : "·"
+                                        color: parent.is_producing ? "#F4E7C8" : (parent.is_occupied ? "#D4B57C" : "#6B5231")
+                                        font.pixelSize: Design.Typography.subheading
+                                        font.bold: parent.is_producing
+                                        visible: !queueIconImage.visible
+                                    }
+
+                                    Text {
+                                        anchors.right: parent.right
+                                        anchors.bottom: parent.bottom
+                                        anchors.margins: 2
+                                        text: (index + 1).toString()
+                                        color: parent.is_occupied ? "#8D7146" : "#3B2F24"
+                                        font.pixelSize: Design.Typography.caption
+                                        font.bold: true
+                                    }
+
+                                    SequentialAnimation on opacity  {
+                                        running: is_producing
+                                        loops: Animation.Infinite
+
+                                        NumberAnimation {
+                                            from: 0.7
+                                            to: 1
+                                            duration: 800
+                                        }
+
+                                        NumberAnimation {
+                                            from: 1
+                                            to: 0.7
+                                            duration: 800
+                                        }
                                     }
                                 }
                             }
                         }
-                    }
 
-                    Text {
-                        property int queue_total: (productionContent.prod.in_progress ? 1 : 0) + (productionContent.prod.queue_size || 0)
-
-                        anchors.horizontalCenter: parent.horizontalCenter
-                        text: queue_total + " / 5"
-                        color: queue_total >= 5 ? "#C0403B" : "#D4B57C"
-                        font.pixelSize: Design.Typography.caption
-                        font.bold: queue_total >= 5
+                        Text {
+                            objectName: "barracksReserveLabel"
+                            height: productionContent.queueSlotSize
+                            verticalAlignment: Text.AlignVCenter
+                            text: qsTr("Barracks reserve: %1 / %2").arg(productionContent.prod.manpower_available || 0).arg(productionContent.prod.max_units || 0)
+                            color: (productionContent.prod.manpower_available <= 0) ? "#C0403B" : "#D4B57C"
+                            font.pixelSize: Design.Typography.caption
+                        }
                     }
 
                     Rectangle {
-                        width: parent.width - 20
-                        height: Math.max(Design.A11y.scaled(20), Design.Typography.label + 6)
-                        anchors.horizontalCenter: parent.horizontalCenter
-                        radius: 10
+                        width: parent.width
+                        height: Math.max(Design.A11y.scaled(14), Design.Typography.caption + 2)
+                        radius: 8
                         color: "#120D09"
                         border.color: "#2F251D"
-                        border.width: 2
+                        border.width: 1
                         visible: productionContent.prod.in_progress === true
 
                         Rectangle {
@@ -537,14 +565,6 @@ Rectangle {
                             styleColor: "#120D09"
                         }
                     }
-
-                    Text {
-                        objectName: "barracksReserveLabel"
-                        anchors.horizontalCenter: parent.horizontalCenter
-                        text: qsTr("Barracks reserve: %1 / %2").arg(productionContent.prod.manpower_available || 0).arg(productionContent.prod.max_units || 0)
-                        color: (productionContent.prod.manpower_available <= 0) ? "#C0403B" : "#D4B57C"
-                        font.pixelSize: Design.Typography.caption
-                    }
                 }
             }
 
@@ -552,7 +572,7 @@ Rectangle {
                 property bool has_barracks: (productionPanel.selection_tick, (productionPanel.production && productionPanel.production.has_selected_type && productionPanel.production.has_selected_type("barracks")))
 
                 width: parent.width
-                height: unitGridContent.height + 16
+                height: unitGridContent.height + 12
                 color: hs.parchmentLight
                 radius: 6
                 border.color: hs.bronzeDeep
@@ -566,8 +586,9 @@ Rectangle {
 
                     anchors.horizontalCenter: parent.horizontalCenter
                     anchors.top: parent.top
-                    anchors.margins: 8
-                    spacing: 8
+                    anchors.margins: 6
+                    spacing: 6
+                    width: parent.width - 12
 
                     Text {
                         anchors.horizontalCenter: parent.horizontalCenter
@@ -578,16 +599,25 @@ Rectangle {
                     }
 
                     Grid {
-                        anchors.horizontalCenter: parent.horizontalCenter
-                        columns: 3
-                        columnSpacing: 8
-                        rowSpacing: 8
+                        id: recruitGrid
+
+                        readonly property int cardSpacing: 6
+                        readonly property int minCardWidth: Design.A11y.scaled(120)
+                        readonly property int cardWidth: Math.floor((width - recruitGrid.cardSpacing * (recruitGrid.columns - 1)) / recruitGrid.columns)
+
+                        width: parent.width
+                        columns: Math.max(2, Math.floor((width + recruitGrid.cardSpacing) / (recruitGrid.minCardWidth + recruitGrid.cardSpacing)))
+                        columnSpacing: recruitGrid.cardSpacing
+                        rowSpacing: recruitGrid.cardSpacing
 
                         Repeater {
                             model: productionPanel.recruit_unit_cards
 
                             delegate: RecruitCard {
                                 required property var modelData
+
+                                width: recruitGrid.cardWidth
+                                height: Design.A11y.scaled(58)
 
                                 panel: productionPanel
                                 prod: unitGridContent.prod
@@ -2930,17 +2960,19 @@ Rectangle {
 
                 visible: !has_barracks && !has_builder && !has_home && !has_marketplace && !has_temple && !has_farm
                 width: parent.width
-                height: 200
+                height: Math.max(emptyProductionHint.implicitHeight, productionScroll.height)
 
                 Column {
+                    id: emptyProductionHint
+
                     anchors.centerIn: parent
-                    spacing: 8
+                    spacing: 4
 
                     Text {
                         anchors.horizontalCenter: parent.horizontalCenter
                         text: Design.Icons.unitGlyph("defense_tower")
                         color: "#3B2F24"
-                        font.pixelSize: Design.Typography.glyph
+                        font.pixelSize: Design.Typography.glyphSmall
                     }
 
                     Text {
