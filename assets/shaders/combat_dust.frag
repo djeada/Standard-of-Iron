@@ -17,6 +17,7 @@ uniform vec3 u_center;
 uniform float u_radius;
 uniform int u_effect_type;
 uniform vec3 u_camera_pos;
+uniform float u_span;
 
 float inv_smoothstep(float edge0, float edge1, float x) {
   float lower_edge = min(edge0, edge1);
@@ -291,6 +292,35 @@ void main() {
     float tip_fade = 1.0 - smoothstep(0.72, 1.0, along);
     float spark_alpha = v_alpha * edge_fade * (0.72 + 0.28 * tip_fade);
     frag_color = vec4(color, clamp(spark_alpha, 0.0, 1.0));
+  } else if (u_effect_type == 6) {
+    float t = clamp(u_time, 0.0, 1.0);
+    float across = clamp(v_texcoord.y, 0.0, 1.0);
+    bool ring = abs(u_span) >= 0.999;
+
+    vec3 accent = max(u_dust_color, vec3(0.03));
+    vec3 white_hot = vec3(2.6, 2.4, 2.0);
+    vec3 hot_accent = accent * 2.2;
+    vec3 cool_accent = accent * 0.7;
+
+    float blade_band =
+        ring ? smoothstep(0.58, 0.74, across) * (1.0 - smoothstep(0.80, 0.94, across))
+             : smoothstep(0.58, 0.86, across) * (1.0 - smoothstep(0.92, 1.0, across));
+    float body = ring ? 0.0 : 1.0 - smoothstep(0.0, 0.75, across);
+
+    float heat = 1.0 - smoothstep(0.0, 0.7, t);
+    color = mix(hot_accent, white_hot, blade_band * heat * (ring ? 0.0 : 0.25));
+    color = mix(color, cool_accent, (1.0 - heat) * 0.5);
+
+    float grain = 0.90 + 0.10 * combined_noise;
+    color *= v_intensity * 1.6 * grain;
+    color = clamp(color, 0.0, 5.0);
+
+    float arc_alpha = v_alpha * (0.14 * body + 1.0 * blade_band) * grain;
+    if (ring) {
+      arc_alpha = v_alpha * 0.85 * blade_band * grain;
+    }
+    arc_alpha = clamp(arc_alpha, 0.0, 1.0);
+    frag_color = vec4(color * arc_alpha, arc_alpha * 0.30);
   } else {
 
     color = u_dust_color;

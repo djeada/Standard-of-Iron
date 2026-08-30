@@ -3239,6 +3239,113 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
   }
 
   {
+    struct PressScene {
+      const char* id;
+      const char* label;
+      const char* description;
+      Troop commander;
+      bool ranged;
+    };
+    constexpr std::array<PressScene, 3> press_scenes{{
+        {k_commander_press_sword_id,
+         "Commander in the Press: Scipio",
+         "A sword commander wades into a Carthaginian spear block with a "
+         "cohort at his back. The battle camera that has to show his combo "
+         "links, arcs and knockdowns among eighty bodies.",
+         Troop::RomanVeteranConsul,
+         false},
+        {k_commander_press_spear_id,
+         "Commander in the Press: Fabius",
+         "A spear commander holds the front of a spear block: thrusts, sweeps "
+         "and the phalanx sweep signature read from a zoomed-out camera.",
+         Troop::RomanLegionOrganizer,
+         false},
+        {k_commander_press_bow_id,
+         "Commander in the Press: Marcellus",
+         "A bow commander shoots over his own line into the press: commander "
+         "arrows and the point-blank volley signature.",
+         Troop::RomanFieldCommander,
+         true},
+    }};
+
+    for (auto const& scene : press_scenes) {
+      auto s = definition(QString::fromLatin1(scene.id),
+                          QString::fromLatin1(scene.label),
+                          QString::fromLatin1(scene.description),
+                          26.0F,
+                          {15.0F, 48.0F, 20.0F});
+      s.suppress_terrain_scatter = true;
+      s.select_spawned_units = false;
+      s.suppress_spawn_anchor = true;
+      s.suppress_ui_overlays = true;
+      s.camera_focus = QVector3D(-4.0F, 0.9F, 1.0F);
+
+      auto commander = group(QStringLiteral("commander"),
+                             scene.commander,
+                             1,
+                             1,
+                             {0.0F, 0.0F, scene.ranged ? -11.0F : -5.0F},
+                             1);
+      commander.health_override = commander.max_health_override = 9000;
+      auto roman_swords = group(QStringLiteral("roman_swords"),
+                                Troop::Swordsman,
+                                1,
+                                2,
+                                {-5.0F, 0.0F, -8.0F},
+                                16,
+                                {10.0F, 0.0F, 0.0F});
+      auto punic_spears = group(QStringLiteral("punic_spears"),
+                                Troop::Spearman,
+                                2,
+                                3,
+                                {-8.0F, 0.0F, 6.0F},
+                                16,
+                                {8.0F, 0.0F, 0.0F});
+      auto punic_swords = group(QStringLiteral("punic_swords"),
+                                Troop::Swordsman,
+                                2,
+                                2,
+                                {-5.0F, 0.0F, 11.0F},
+                                16,
+                                {10.0F, 0.0F, 0.0F});
+      s.groups = {commander, roman_swords, punic_spears, punic_swords};
+      s.steps = {
+          at(0.4F,
+             scene.ranged ? Command::Attack : Command::AttackMove,
+             QStringLiteral("commander"),
+             QStringLiteral("punic_spears")),
+          at(0.4F,
+             Command::AttackMove,
+             QStringLiteral("roman_swords"),
+             QStringLiteral("punic_spears")),
+          at(0.4F,
+             Command::AttackMove,
+             QStringLiteral("punic_spears"),
+             QStringLiteral("commander")),
+          at(0.4F,
+             Command::AttackMove,
+             QStringLiteral("punic_swords"),
+             QStringLiteral("roman_swords")),
+      };
+      for (auto const& name :
+           {QStringLiteral("commander"), QStringLiteral("punic_spears")}) {
+        s.expectations.push_back(expectation(Expect::NoPoseOscillation, name));
+        s.expectations.push_back(expectation(Expect::MovementIsContinuous, name));
+        s.expectations.push_back(expectation(Expect::GroupIsRendered, name));
+      }
+      s.expectations.push_back(
+          expectation(Expect::NoRootTeleport, QStringLiteral("commander")));
+      s.expectations.push_back(expectation(Expect::FrameBudget, {}, {}, 33.34F, 0.25F));
+      s.expectations.push_back(
+          expectation(Expect::GroupExists, QStringLiteral("commander")));
+      s.expectations.push_back(expectation(Expect::AttackHasVisibleContact,
+                                           QStringLiteral("commander"),
+                                           QStringLiteral("punic_spears")));
+      result.push_back(std::move(s));
+    }
+  }
+
+  {
     auto s = definition(QString::fromLatin1(k_sword_duel_id),
                         QStringLiteral("Sword Duel"),
                         QStringLiteral("Baseline reciprocal sword attack flow."),

@@ -625,8 +625,13 @@ void render_arrow_projectile(Renderer* renderer,
                      0.34F - (0.12F * static_cast<float>(trail_idx)));
     }
   } else {
-    bool const aimed = arrow.visual_style() == Game::Systems::ArrowVisualStyle::Aimed;
-    int const trail_segments = aimed ? 6 : 2;
+    bool const commander_shot =
+        arrow.visual_style() == Game::Systems::ArrowVisualStyle::Commander;
+    bool const signature_shot =
+        arrow.visual_style() == Game::Systems::ArrowVisualStyle::CommanderSignature;
+    bool const aimed = arrow.visual_style() == Game::Systems::ArrowVisualStyle::Aimed ||
+                       commander_shot || signature_shot;
+    int const trail_segments = signature_shot ? 8 : (aimed ? 6 : 2);
     float const trail_step = aimed ? 0.17F : 0.38F;
     if (arrow.trail_alpha() > 0.001F && arrow.trail_length() > 0.0F) {
       for (int segment = 1; segment <= trail_segments; ++segment) {
@@ -676,20 +681,45 @@ void render_arrow_projectile(Renderer* renderer,
       float const flight = std::clamp(arrow.get_progress(), 0.0F, 1.0F);
       float const settle = std::clamp(flight * 6.0F, 0.0F, 1.0F);
       QVector3D const glow_color = Geom::Arrow::glow_color(arrow.get_color());
+      QVector3D const head_color = signature_shot ? QVector3D(1.0F, 0.72F, 0.38F)
+                                                  : QVector3D(1.0F, 0.92F, 0.72F);
 
       renderer->metal_spark(pos,
-                            QVector3D(1.0F, 0.92F, 0.72F),
-                            0.055F * arrow.get_scale(),
-                            1.35F * settle,
+                            head_color,
+                            (signature_shot ? 0.085F : 0.055F) * arrow.get_scale(),
+                            (signature_shot ? 2.1F : 1.35F) * settle,
                             arrow.get_progress() * 0.24F,
                             delta.normalized());
+      if (signature_shot) {
+        for (int ember = 1; ember <= 3; ++ember) {
+          float const ember_t =
+              arrow.get_progress() - 0.045F * static_cast<float>(ember);
+          if (ember_t <= 0.0F) {
+            continue;
+          }
+          QVector3D ember_pos = arrow.get_start() + delta * ember_t;
+          ember_pos.setY(ember_pos.y() +
+                         arrow.get_arc_height() * 4.0F * ember_t * (1.0F - ember_t));
+          renderer->metal_spark(
+              ember_pos,
+              QVector3D(1.0F, 0.55F, 0.22F),
+              0.05F * arrow.get_scale(),
+              1.2F * settle,
+              std::fmod(arrow.get_progress() * 0.6F + static_cast<float>(ember) * 0.07F,
+                        0.26F),
+              delta.normalized());
+        }
+      }
 
       Render::LocalLight flight_light;
       flight_light.position = pos;
       flight_light.color =
-          (glow_color * 0.45F) + (QVector3D(1.0F, 0.90F, 0.66F) * 0.55F);
-      flight_light.radius = 2.6F;
-      flight_light.intensity = 0.65F * settle * arrow.brightness();
+          signature_shot
+              ? (glow_color * 0.35F) + (QVector3D(1.0F, 0.62F, 0.30F) * 0.65F)
+              : (glow_color * 0.45F) + (QVector3D(1.0F, 0.90F, 0.66F) * 0.55F);
+      flight_light.radius = signature_shot ? 3.4F : 2.6F;
+      flight_light.intensity =
+          (signature_shot ? 0.95F : 0.65F) * settle * arrow.brightness();
       renderer->local_light(flight_light);
     }
     model.rotate(arrow.roll_deg() + arrow.get_progress() * arrow.spin_rate_deg(),
@@ -713,6 +743,15 @@ void render_arrow_projectile(Renderer* renderer,
       shaft_color = QVector3D(0.42F, 0.18F, 0.58F);
       tip_color = QVector3D(0.72F, 0.32F, 0.92F);
       fletch_color = QVector3D(0.58F, 0.22F, 0.82F);
+    } else if (signature_shot) {
+      shaft_color = scaled_color(QVector3D(0.62F, 0.44F, 0.22F), brightness);
+      tip_color = scaled_color(QVector3D(1.0F, 0.86F, 0.55F), brightness);
+      fletch_color = scaled_color(QVector3D(0.92F, 0.20F, 0.16F), brightness);
+    } else if (commander_shot) {
+      shaft_color = scaled_color(QVector3D(0.58F, 0.46F, 0.30F), brightness);
+      tip_color = scaled_color(QVector3D(0.96F, 0.90F, 0.72F), brightness);
+      fletch_color =
+          scaled_color(fletch_color * 0.55F + QVector3D(0.45F, 0.38F, 0.18F), 1.0F);
     }
     renderer->mesh(arrow_shaft_mesh, model, shaft_color, nullptr, 1.0F);
     renderer->mesh(arrow_tip_mesh, model, tip_color, nullptr, 1.0F);
@@ -720,7 +759,9 @@ void render_arrow_projectile(Renderer* renderer,
     QVector3D const glow =
         arrow.get_kind() == Game::Systems::ProjectileKind::CursedArrow
             ? QVector3D(0.78F, 0.35F, 1.0F)
-            : relation_glow(Geom::Arrow::glow_color(team_color), relation);
+            : (signature_shot
+                   ? QVector3D(1.0F, 0.62F, 0.28F)
+                   : relation_glow(Geom::Arrow::glow_color(team_color), relation));
     draw_arrow_glow(renderer,
                     arrow_shaft_mesh,
                     arrow_tip_mesh,

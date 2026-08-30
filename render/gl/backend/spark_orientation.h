@@ -53,4 +53,44 @@ inline constexpr float k_min_spark_direction_length_squared = 1.0e-6F;
   return model;
 }
 
+[[nodiscard]] inline auto weapon_arc_model_matrix(const QVector3D& position,
+                                                  float radius,
+                                                  const QVector3D& direction,
+                                                  float tilt_radians) -> QMatrix4x4 {
+  QMatrix4x4 model;
+  model.setToIdentity();
+  model.translate(position);
+
+  QVector3D forward(direction.x(), 0.0F, direction.z());
+  if (forward.lengthSquared() <= k_min_spark_direction_length_squared) {
+    forward = QVector3D(0.0F, 0.0F, 1.0F);
+  }
+  forward.normalize();
+  QVector3D const up(0.0F, 1.0F, 0.0F);
+  QVector3D const side = QVector3D::crossProduct(up, forward).normalized();
+  float const cos_t = std::cos(tilt_radians);
+  float const sin_t = std::sin(tilt_radians);
+  QVector3D const across = side * cos_t + up * sin_t;
+  QVector3D const normal = up * cos_t - side * sin_t;
+
+  model *= QMatrix4x4(across.x(),
+                      normal.x(),
+                      forward.x(),
+                      0.0F,
+                      across.y(),
+                      normal.y(),
+                      forward.y(),
+                      0.0F,
+                      across.z(),
+                      normal.z(),
+                      forward.z(),
+                      0.0F,
+                      0.0F,
+                      0.0F,
+                      0.0F,
+                      1.0F);
+  model.scale(radius);
+  return model;
+}
+
 } // namespace Render::GL::BackendPipelines

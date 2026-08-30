@@ -878,6 +878,23 @@ void spawn_rts_arrow_volley(Engine::Core::Entity* attacker,
   }
   arrow_count = std::min(arrow_count, Constants::k_max_visual_arrows_per_volley);
 
+  auto arrow_style = ArrowVisualStyle::Volley;
+  float lateral_scale = 1.0F;
+  if (auto const* commander =
+          attacker->get_component<Engine::Core::CommanderComponent>();
+      commander != nullptr && !commander->fpv_controlled) {
+    bool const signature_shot = commander->signature_strike_active;
+    bool const volley_signature =
+        signature_shot &&
+        commander->signature_move ==
+            static_cast<std::uint8_t>(
+                Game::Units::CommanderSignatureMove::PointBlankVolley);
+    arrow_style = signature_shot ? ArrowVisualStyle::CommanderSignature
+                                 : ArrowVisualStyle::Commander;
+    arrow_count = volley_signature ? 3 : 1;
+    lateral_scale = 0.55F;
+  }
+
   QVector3D const perpendicular(-dir.z(), 0.0F, dir.x());
   QVector3D const up_vector(0.0F, 1.0F, 0.0F);
   int const wave_count = std::max(1, Constants::k_arrow_volley_wave_count);
@@ -902,8 +919,9 @@ void spawn_rts_arrow_volley(Engine::Core::Entity* attacker,
         static_cast<float>(rank_index) - (static_cast<float>(rank_count - 1) * 0.5F);
 
     float const base_lateral = centered_rank * Constants::k_arrow_volley_rank_spacing;
-    float const launch_lateral = base_lateral + spread_a * 0.60F;
-    float const target_lateral = (base_lateral * 0.95F) + spread_b * 0.45F;
+    float const launch_lateral = (base_lateral + spread_a * 0.60F) * lateral_scale;
+    float const target_lateral =
+        ((base_lateral * 0.95F) + spread_b * 0.45F) * lateral_scale;
     float const wave_height = (1.0F - 0.18F * std::abs(centered_wave)) *
                               Constants::k_arrow_volley_wave_height;
     float const launch_height =
@@ -948,7 +966,7 @@ void spawn_rts_arrow_volley(Engine::Core::Entity* attacker,
                                 0.0F,
                                 0.0F,
                                 false,
-                                ArrowVisualStyle::Volley,
+                                arrow_style,
                                 t_pos);
   }
 }
@@ -1215,6 +1233,28 @@ auto rts_commander_action(Engine::Core::World& world,
       distance > normal_reach * 1.05F);
 }
 
+auto commander_link_still_swinging(Engine::Core::Entity* attacker) -> bool {
+  auto const* commander = attacker->get_component<Engine::Core::CommanderComponent>();
+  auto const* action =
+      attacker->get_component<Engine::Core::RpgCommanderActionComponent>();
+  if (commander == nullptr || commander->fpv_controlled ||
+      !commander->advanced_combat_enabled || action == nullptr ||
+      !action->action_running || action->combat_action_id == 0U) {
+    return false;
+  }
+  auto const* definition = Game::Systems::CombatActions::find_combat_action_definition(
+      static_cast<Game::Systems::CombatActions::CombatActionId>(
+          action->combat_action_id));
+  if (definition == nullptr || !definition->commander_only) {
+    return false;
+  }
+  float const exit_safe = Game::Systems::CombatActions::action_event_normalized_time(
+      *definition,
+      Game::Systems::CombatActions::CombatActionEventType::ExitSafe,
+      0.92F);
+  return action->normalized_action_time < exit_safe;
+}
+
 void begin_rts_melee_action(Engine::Core::World& world,
                             Engine::Core::Entity* attacker,
                             Engine::Core::Entity* target,
@@ -1228,6 +1268,14 @@ void begin_rts_melee_action(Engine::Core::World& world,
   }
   auto const family = Engine::Core::resolve_combat_attack_family(
       unit->spawn_type, Engine::Core::AttackComponent::CombatMode::Melee);
+  bool const chaining_from_link =
+      action->action_running && action->combat_action_id != 0U && [&] {
+        auto const* running =
+            Game::Systems::CombatActions::find_combat_action_definition(
+                static_cast<Game::Systems::CombatActions::CombatActionId>(
+                    action->combat_action_id));
+        return running != nullptr && running->commander_only;
+      }();
   auto const signature = claim_commander_signature(attacker, damage);
   auto const routine_id =
       attacker->has_component<Engine::Core::ElephantComponent>()
@@ -1283,7 +1331,14 @@ void begin_rts_melee_action(Engine::Core::World& world,
                                         melee_target_can_defend(attacker, target))
           : MeleeExchangeBeat{};
   action->exchange_outcome = static_cast<std::uint8_t>(beat.outcome);
-  Game::Systems::CombatActions::reset_combat_action_event_runtime(*action);
+  float entry_time = 0.0F;
+  if (chaining_from_link && definition != nullptr && definition->commander_only) {
+    entry_time = Game::Systems::CombatActions::action_event_normalized_time(
+        *definition,
+        Game::Systems::CombatActions::CombatActionEventType::WindupStart,
+        0.0F);
+  }
+  Game::Systems::CombatActions::reset_combat_action_event_runtime(*action, entry_time);
 }
 
 auto resolve_melee_swing_cadence(Engine::Core::Entity* attacker,
@@ -1296,6 +1351,21 @@ auto resolve_melee_swing_cadence(Engine::Core::Entity* attacker,
   if (action == nullptr || attacker->has_component<Engine::Core::ElephantComponent>() ||
       !melee_target_can_defend(attacker, target)) {
     return -base_delay;
+  }
+
+  auto const* commander = attacker->get_component<Engine::Core::CommanderComponent>();
+  auto const* definition = Game::Systems::CombatActions::find_combat_action_definition(
+      static_cast<Game::Systems::CombatActions::CombatActionId>(
+          action->combat_action_id));
+  if (commander != nullptr && !commander->fpv_controlled &&
+      commander->advanced_combat_enabled && definition != nullptr &&
+      definition->commander_only) {
+    float const exit_safe = Game::Systems::CombatActions::action_event_normalized_time(
+        *definition,
+        Game::Systems::CombatActions::CombatActionEventType::ExitSafe,
+        0.92F);
+    float const link_length = std::max(0.05F, action->action_duration * exit_safe);
+    return cooldown - std::max(cooldown, link_length);
   }
 
   auto const next_beat = resolve_melee_exchange_beat(
@@ -1440,7 +1510,10 @@ void process_attacks(Engine::Core::World* world,
       t_accum = &tmp_accum;
     }
 
-    bool const attack_ready = *t_accum >= cooldown;
+    bool attack_ready = *t_accum >= cooldown;
+    if (attack_ready && commander_link_still_swinging(attacker)) {
+      attack_ready = false;
+    }
 
     if (attack_ready && should_prioritize_healing(attacker, world)) {
       continue;

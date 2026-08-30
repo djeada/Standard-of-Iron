@@ -103,6 +103,9 @@ inline constexpr char k_commander_signature_sword_vs_bow_id[] =
     "commander_signature_sword_vs_bow";
 inline constexpr char k_commander_signature_bow_vs_spear_id[] =
     "commander_signature_bow_vs_spear";
+inline constexpr char k_commander_press_sword_id[] = "commander_press_sword";
+inline constexpr char k_commander_press_spear_id[] = "commander_press_spear";
+inline constexpr char k_commander_press_bow_id[] = "commander_press_bow";
 inline constexpr char k_path_bridge_crossing_id[] = "path_bridge_crossing";
 inline constexpr char k_path_uphill_advance_id[] = "path_uphill_advance";
 inline constexpr char k_path_wall_detour_id[] = "path_wall_detour";

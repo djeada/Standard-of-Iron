@@ -11,6 +11,9 @@ enum class ArrowVisualStyle : std::uint8_t {
   Javelin,
 
   Aimed,
+
+  Commander,
+  CommanderSignature,
 };
 
 struct ArrowVisualProfile {

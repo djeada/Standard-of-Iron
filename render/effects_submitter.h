@@ -66,6 +66,15 @@ public:
                    float intensity,
                    float time,
                    const QVector3D& direction = {}) const;
+  void weapon_arc(DrawQueue* queue,
+                  const QVector3D& position,
+                  const QVector3D& color,
+                  float radius,
+                  float intensity,
+                  float time,
+                  const QVector3D& direction,
+                  float span,
+                  float tilt) const;
 };
 
 } // namespace Render::GL

@@ -7,6 +7,7 @@
 #include "core/entity.h"
 #include "core/world.h"
 #include "game/map/terrain_service.h"
+#include "game/systems/arrow_projectile.h"
 #include "game/systems/combat_actions/combat_action_definition.h"
 #include "game/systems/default_content.h"
 #include "game/systems/formation_combat_geometry.h"
@@ -14,6 +15,7 @@
 #include "game/systems/nav_grid.h"
 #include "game/systems/owner_registry.h"
 #include "game/systems/projectile_system.h"
+#include "game/systems/rpg_combat_system/rpg_targeting.h"
 #include "game/systems/runtime_system_registry.h"
 #include "units/commander_catalog.h"
 #include "units/factory.h"
@@ -493,4 +495,243 @@ TEST_F(CommanderDuelTest, SweepSignatureCatchesASecondFighter) {
 
   EXPECT_LT(bystander_unit->health, bystander_health_before)
       << "a sweeping signature has to catch the fighters crowding the commander";
+}
+
+namespace {
+
+using Engine::Core::CommanderSignaturePresentationComponent;
+using Engine::Core::CommanderStrikeCue;
+
+auto action_definition_of(const RpgCommanderActionComponent& action)
+    -> const Game::Systems::CombatActions::CombatActionDefinition* {
+  return Game::Systems::CombatActions::find_combat_action_definition(
+      static_cast<CombatActionId>(action.combat_action_id));
+}
+
+} // namespace
+
+TEST_F(CommanderDuelTest, EveryCommanderLinkLeavesASwingCueNotOnlyTheSignature) {
+  Engine::Core::World world;
+  Game::Systems::register_runtime_systems(world);
+
+  auto* commander = spawn(world,
+                          Game::Units::SpawnType::CarthageSwordCommander,
+                          1,
+                          QVector3D(-4.0F, 0.0F, 0.0F),
+                          Game::Systems::NationID::Carthage);
+  auto* rival = spawn(world,
+                      Game::Units::SpawnType::Knight,
+                      2,
+                      QVector3D(0.0F, 0.0F, 0.0F),
+                      Game::Systems::NationID::RomanRepublic);
+  ASSERT_NE(commander, nullptr);
+  ASSERT_NE(rival, nullptr);
+  order_attack(*commander, *rival);
+
+  std::set<Engine::Core::CommanderSignatureForm> swing_forms;
+  int swing_cues = 0;
+  int impact_cues = 0;
+  for (int tick = 0; tick < 800; ++tick) {
+    world.update(0.05F);
+    auto const* presentation =
+        commander->get_component<CommanderSignaturePresentationComponent>();
+    if (presentation == nullptr) {
+      continue;
+    }
+    for (auto const& entry : presentation->entries) {
+      if (entry.age > 0.0F) {
+        continue;
+      }
+      if (entry.cue == CommanderStrikeCue::Swing) {
+        ++swing_cues;
+        swing_forms.insert(entry.form);
+        EXPECT_GT(entry.reach, 1.0F);
+        EXPECT_NEAR(std::hypot(entry.dir_x, entry.dir_z), 1.0F, 0.01F);
+      } else {
+        ++impact_cues;
+      }
+    }
+  }
+
+  EXPECT_GE(swing_cues, 4) << "a commander chain left almost no swing arcs to draw";
+  EXPECT_GE(swing_forms.size(), 2U)
+      << "the chain's links all read as the same arc; the finisher and sweep "
+         "should have their own form";
+  EXPECT_GE(impact_cues, 2) << "ordinary links landed but left no impact burst";
+}
+
+TEST_F(CommanderDuelTest, CommanderPressesIntoAFormationInsteadOfBeingShovedOut) {
+  Engine::Core::World world;
+  Game::Systems::register_runtime_systems(world);
+
+  auto* commander = spawn(world,
+                          Game::Units::SpawnType::RomanVeteranConsul,
+                          1,
+                          QVector3D(-5.0F, 0.0F, 0.0F),
+                          Game::Systems::NationID::RomanRepublic);
+  auto* block = spawn(world,
+                      Game::Units::SpawnType::Spearman,
+                      2,
+                      QVector3D(0.0F, 0.0F, 0.0F),
+                      Game::Systems::NationID::Carthage);
+  ASSERT_NE(commander, nullptr);
+  ASSERT_NE(block, nullptr);
+  auto* block_unit = block->get_component<UnitComponent>();
+  ASSERT_NE(block_unit, nullptr);
+  block_unit->render_individuals_per_unit_override = 0;
+  int const block_health_at_start = block_unit->health;
+
+  order_attack(*commander, *block);
+  order_attack(*block, *commander);
+
+  auto distance_to_block = [&] {
+    auto const* a = commander->get_component<TransformComponent>();
+    float nearest = 1.0e9F;
+    for (auto const& soldier : Game::Systems::RpgCombat::live_soldier_targets(*block)) {
+      nearest = std::min(nearest,
+                         std::hypot(soldier.position.x() - a->position.x,
+                                    soldier.position.z() - a->position.z));
+    }
+    return nearest;
+  };
+
+  float closest_after_contact = 1.0e9F;
+  float farthest_after_contact = 0.0F;
+  bool contact = false;
+  for (int tick = 0; tick < 480; ++tick) {
+    world.update(0.05F);
+    auto const* attack = commander->get_component<Engine::Core::AttackComponent>();
+    if (attack != nullptr && attack->in_melee_lock) {
+      contact = true;
+    }
+    if (contact && tick >= 160) {
+      float const d = distance_to_block();
+      closest_after_contact = std::min(closest_after_contact, d);
+      farthest_after_contact = std::max(farthest_after_contact, d);
+    }
+  }
+
+  ASSERT_TRUE(contact) << "the commander never engaged the spear block";
+  EXPECT_LT(farthest_after_contact, 3.2F)
+      << "the commander was shoved out of the press by the block's flinches";
+  EXPECT_LT(closest_after_contact, 1.6F)
+      << "the commander's strikes never carried him into the block";
+  EXPECT_LT(block_unit->health, block_health_at_start)
+      << "a commander pressed into a block has to be landing blows";
+}
+
+TEST_F(CommanderDuelTest, CommanderChainLinksAreNotCutOffMidSwing) {
+  Engine::Core::World world;
+  Game::Systems::register_runtime_systems(world);
+
+  auto* commander = spawn(world,
+                          Game::Units::SpawnType::CarthageSwordCommander,
+                          1,
+                          QVector3D(-4.0F, 0.0F, 0.0F),
+                          Game::Systems::NationID::Carthage);
+  auto* rival = spawn(world,
+                      Game::Units::SpawnType::Knight,
+                      2,
+                      QVector3D(0.0F, 0.0F, 0.0F),
+                      Game::Systems::NationID::RomanRepublic);
+  ASSERT_NE(commander, nullptr);
+  ASSERT_NE(rival, nullptr);
+  order_attack(*commander, *rival);
+
+  std::uint8_t previous_id = 0U;
+  float previous_time = 0.0F;
+  bool previous_running = false;
+  bool previous_staggered = false;
+  int links = 0;
+  int cut_short = 0;
+  for (int tick = 0; tick < 800; ++tick) {
+    world.update(0.05F);
+    auto const* action = commander->get_component<RpgCommanderActionComponent>();
+    bool const staggered = commander->has_component<Engine::Core::StaggerComponent>();
+    if (action == nullptr) {
+      continue;
+    }
+    bool const restarted =
+        action->action_running && (action->combat_action_id != previous_id ||
+                                   action->normalized_action_time < previous_time);
+    if (restarted && previous_running) {
+      auto const* previous_definition =
+          Game::Systems::CombatActions::find_combat_action_definition(
+              static_cast<CombatActionId>(previous_id));
+      if (previous_definition != nullptr && previous_definition->commander_only &&
+          !staggered && !previous_staggered) {
+        ++links;
+        if (previous_time < 0.85F) {
+          ++cut_short;
+        }
+      }
+    }
+    previous_id = action->combat_action_id;
+    previous_time = action->normalized_action_time;
+    previous_running = action->action_running;
+    previous_staggered = staggered;
+  }
+
+  EXPECT_GE(links, 4) << "the commander never chained links";
+  EXPECT_EQ(cut_short, 0) << "a link was replaced before its clip reached ExitSafe";
+}
+
+TEST_F(CommanderDuelTest, CommanderArrowsCarryTheCommanderStyle) {
+  Engine::Core::World world;
+  Game::Systems::register_runtime_systems(world);
+
+  auto* commander = spawn(world,
+                          Game::Units::SpawnType::RomanFieldCommander,
+                          1,
+                          QVector3D(-7.0F, 0.0F, 0.0F),
+                          Game::Systems::NationID::RomanRepublic);
+  auto* rival = spawn(world,
+                      Game::Units::SpawnType::Knight,
+                      2,
+                      QVector3D(0.0F, 0.0F, 0.0F),
+                      Game::Systems::NationID::RomanRepublic);
+  ASSERT_NE(commander, nullptr);
+  ASSERT_NE(rival, nullptr);
+  if (auto* rival_unit = rival->get_component<UnitComponent>()) {
+    rival_unit->speed = 0.0F;
+  }
+  order_attack(*commander, *rival);
+
+  auto* projectiles = world.get_system<Game::Systems::ProjectileSystem>();
+  ASSERT_NE(projectiles, nullptr);
+
+  int routine = 0;
+  int signature = 0;
+  int other = 0;
+  std::set<const Game::Systems::Projectile*> seen;
+  for (int tick = 0; tick < 400; ++tick) {
+    world.update(0.05F);
+    for (auto const& projectile : projectiles->projectiles()) {
+      if (!seen.insert(projectile.get()).second) {
+        continue;
+      }
+      auto const* arrow =
+          dynamic_cast<const Game::Systems::ArrowProjectile*>(projectile.get());
+      if (arrow == nullptr || arrow->get_attacker_id() != commander->get_id()) {
+        continue;
+      }
+      switch (arrow->visual_style()) {
+      case Game::Systems::ArrowVisualStyle::Commander:
+        ++routine;
+        break;
+      case Game::Systems::ArrowVisualStyle::CommanderSignature:
+        ++signature;
+        EXPECT_GT(arrow->get_scale(), 1.5F);
+        break;
+      default:
+        ++other;
+        break;
+      }
+    }
+  }
+
+  EXPECT_GT(routine, 0) << "the bow commander's routine shots look like any archer's";
+  EXPECT_GE(signature, 3) << "the point-blank volley signature should loose a fan of "
+                             "three commander arrows";
+  EXPECT_EQ(other, 0) << "a commander arrow fell back to the generic style";
 }
