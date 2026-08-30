@@ -387,6 +387,14 @@ void TerrainService::initialize(const MapDefinition& map_def) {
   m_authored_world_props = map_def.world_props;
   normalize_world_props(m_authored_world_props);
   register_authored_building_obstacles(map_def);
+  // The procedural pass clears each candidate site against the *live* world
+  // props, through the shared clearance index. Publishing this map's authored
+  // props first is what the pass is meant to be measured against; leaving the
+  // previous map's in place instead measured it against a world it is not
+  // being generated for, and on a same-sized map that rejected nearly every
+  // site -- the second map loaded in a process came up with no scatter at all.
+  m_world_props = m_authored_world_props;
+  bump_world_props_revision();
   m_world_props = build_runtime_world_props(
       *m_height_map, m_biome_settings, m_coord_system, m_authored_world_props);
   normalize_world_props(m_world_props);

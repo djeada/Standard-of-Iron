@@ -742,15 +742,15 @@
         "is_melee": true
       },
       "combat": {
-        "health": 3500,
-        "max_health": 3500,
+        "health": 2600,
+        "max_health": 2600,
         "speed": 2.0,
         "vision_range": 18.0,
         "ranged_range": 1.5,
         "ranged_damage": 4,
         "ranged_cooldown": 2.0,
         "melee_range": 2.4,
-        "melee_damage": 58,
+        "melee_damage": 36,
         "melee_cooldown": 0.9,
         "can_ranged": false,
         "can_melee": true

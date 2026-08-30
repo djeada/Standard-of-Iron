@@ -3,7 +3,6 @@
 #include <algorithm>
 #include <bit>
 #include <cmath>
-#include <cstdio>
 #include <limits>
 #include <numbers>
 #include <unordered_map>
@@ -994,6 +993,9 @@ void resolve_contact(const Engine::Core::Entity& attacker,
     result.engagement_center_distance =
         std::min(result.contact_center_distance,
                  std::max(rank_spacing * 0.30F, body_radius * 0.5F));
+    result.body_contact_center_distance =
+        std::max(spatial_attacker_layout.body_radius, k_body_core_radius_floor) +
+        std::max(spatial_target_layout.body_radius, k_body_core_radius_floor);
   } else if (attacker.has_component<Engine::Core::ElephantComponent>() &&
              has_formation_slots(target)) {
 
@@ -1074,7 +1076,21 @@ auto contact_is_active(const Engine::Core::Entity& attacker,
     bool const degenerate_slot_contact =
         geometry.contact_center_distance <= k_contact_numeric_epsilon &&
         geometry.center_distance <= melee_reach(attacker) + k_contact_numeric_epsilon;
-    return deep_front_rank_overlap || locked_visible_overlap || degenerate_slot_contact;
+
+    // The two bodies are as close as they are ever going to get.
+    // `deep_front_rank_overlap` asks the centres to all but coincide, which
+    // BodyContactSystem will not allow: two even infantry blocks shove at about
+    // a metre while that threshold sits near a third of it, so neither side
+    // ever engaged and every straight infantry fight ran to the clock. A touch
+    // short of the bodies meeting is still not contact -- that is what the
+    // charge lock is for.
+    bool const bodies_are_in_contact =
+        geometry.body_contact_center_distance > k_contact_numeric_epsilon &&
+        geometry.center_distance <=
+            geometry.body_contact_center_distance + k_contact_numeric_epsilon;
+
+    return deep_front_rank_overlap || locked_visible_overlap ||
+           degenerate_slot_contact || bodies_are_in_contact;
   }
   if (attacker.has_component<Engine::Core::ElephantComponent>() &&
       has_formation_slots(target)) {
