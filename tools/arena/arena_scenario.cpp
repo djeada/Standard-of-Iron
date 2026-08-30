@@ -296,6 +296,7 @@ auto commander_trace_json(const App::Core::CommanderPresentationTrace& trace)
       {QStringLiteral("dt"), camera.dt}};
 
   QJsonObject combat_json{
+      {QStringLiteral("action_id"), combat.action_id},
       {QStringLiteral("action_phase"), combat.action_phase},
       {QStringLiteral("action_normalized_time"), combat.action_normalized_time},
       {QStringLiteral("action_running"), combat.action_running},
@@ -5102,6 +5103,50 @@ struct ArenaScenarioRunner::Impl {
         }
         break;
       }
+      case ArenaExpectationKind::CommanderActionObserved: {
+        auto const frames = commander_frames();
+        if (frames.empty()) {
+          add_issue(QStringLiteral("commander_action_not_traced"),
+                    QStringLiteral("no commander presentation trace was recorded, so "
+                                   "action %1 cannot be verified")
+                        .arg(expectation.combat_action_id));
+          break;
+        }
+        float const window_start = expectation.start_seconds;
+        float const window_end = expectation.end_seconds > 0.0F
+                                     ? expectation.end_seconds
+                                     : std::numeric_limits<float>::max();
+        bool sampled_window = false;
+        bool observed = false;
+        for (auto const* frame : frames) {
+          if (frame->time_seconds < window_start || frame->time_seconds > window_end) {
+            continue;
+          }
+          sampled_window = true;
+          if (frame->commander.combat.action_running &&
+              frame->commander.combat.action_id == expectation.combat_action_id) {
+            observed = true;
+            break;
+          }
+        }
+        if (!sampled_window) {
+          add_issue(QStringLiteral("commander_action_window_empty"),
+                    QStringLiteral("no traced frame fell inside %1 s - %2 s for "
+                                   "action %3")
+                        .arg(window_start, 0, 'f', 2)
+                        .arg(expectation.end_seconds, 0, 'f', 2)
+                        .arg(expectation.combat_action_id));
+        } else if (!observed) {
+          add_issue(QStringLiteral("commander_action_not_observed"),
+                    QStringLiteral("%1 never ran authored action %2 between %3 s and "
+                                   "%4 s")
+                        .arg(expectation.group)
+                        .arg(expectation.combat_action_id)
+                        .arg(window_start, 0, 'f', 2)
+                        .arg(expectation.end_seconds, 0, 'f', 2));
+        }
+        break;
+      }
       case ArenaExpectationKind::GroupIsRendered:
         if (rendered_by_group.value(expectation.group, 0U) == 0U) {
           add_issue(QStringLiteral("group_not_rendered"),
@@ -5891,6 +5936,24 @@ auto ArenaScenarioRunner::start() -> bool {
     Engine::Core::EntityID const commander_id = commanders.front();
     m_impl->host.configure_rpg_commander(commander_id);
     auto* commander = m_impl->world.get_entity(commander_id);
+    auto const* commander_group =
+        m_impl->group_definition(m_impl->scenario.rpg_commander_group);
+    if (commander != nullptr && commander_group != nullptr &&
+        (commander_group->stamina_override > 0.0F ||
+         commander_group->max_stamina_override > 0.0F)) {
+      auto* stamina =
+          Engine::Core::get_or_add_component<Engine::Core::StaminaComponent>(commander);
+      if (stamina != nullptr) {
+        if (commander_group->max_stamina_override > 0.0F) {
+          stamina->max_stamina = commander_group->max_stamina_override;
+        }
+        stamina->stamina =
+            commander_group->stamina_override > 0.0F
+                ? std::min(commander_group->stamina_override, stamina->max_stamina)
+                : stamina->max_stamina;
+        stamina->regen_delay_remaining = 0.0F;
+      }
+    }
     auto const* rpg = commander != nullptr
                           ? commander->get_component<Engine::Core::RpgHealthComponent>()
                           : nullptr;

@@ -3813,14 +3813,21 @@ void ArenaViewport::load_scenario(const QString& scenario_id) {
         unit->health = std::min(group.health_override, std::max(1, unit->max_health));
       }
     }
-    if (entity != nullptr && (group.attack_range_override > 0.0F ||
-                              group.attack_min_range_override > 0.0F)) {
+    if (entity != nullptr &&
+        (group.attack_range_override > 0.0F || group.attack_min_range_override > 0.0F ||
+         group.attacks_disabled)) {
       if (auto* attack = entity->get_component<Engine::Core::AttackComponent>()) {
         if (group.attack_range_override > 0.0F) {
           attack->range = group.attack_range_override;
         }
         if (group.attack_min_range_override > 0.0F) {
           attack->min_range = group.attack_min_range_override;
+        }
+        if (group.attacks_disabled) {
+          attack->can_melee = false;
+          attack->can_ranged = false;
+          attack->in_melee_lock = false;
+          attack->melee_lock_target_id = 0U;
         }
       }
     }

@@ -130,8 +130,9 @@ strike_body_overlap_scale(const Engine::Core::Entity& commander) -> float {
   case MeleePhase::Windup:
     return 0.72F;
   case MeleePhase::EarlyStrike:
+    return 0.42F;
   case MeleePhase::CommittedStrike:
-    return 0.0F;
+    return 0.28F;
   case MeleePhase::FollowThrough:
     return 0.80F;
   case MeleePhase::Ready:
@@ -1962,10 +1963,20 @@ auto CommanderControlController::update_impl(Engine::Core::World& world,
   };
   mark_jump_safe_position(transform->position.x, transform->position.z);
 
+  bool dodge_pose_active = false;
+  float dodge_pose_phase = 0.0F;
   if (m_dodge_state == DodgeState::Rolling) {
     constexpr float k_dodge_speed = 6.5F;
     const float roll_dt = std::min(dt, m_dodge_timer);
     m_dodge_timer -= dt;
+    dodge_pose_active = true;
+    dodge_pose_phase =
+        1.0F -
+        std::clamp(
+            m_dodge_timer /
+                Game::Systems::CombatActions::k_commander_dodge_timeline.roll_seconds,
+            0.0F,
+            1.0F);
 
     const float nx =
         transform->position.x + m_dodge_direction.x() * k_dodge_speed * roll_dt;
@@ -2111,6 +2122,10 @@ auto CommanderControlController::update_impl(Engine::Core::World& world,
     } else if (movement != nullptr) {
       movement->set_manual_velocity(0.0F, 0.0F);
     }
+  }
+  if (cmd_comp != nullptr) {
+    cmd_comp->dodge_active = dodge_pose_active;
+    cmd_comp->dodge_phase = dodge_pose_phase;
   }
   if (m_jump_safe_position_valid && !jump_active) {
     if (!App::Core::CommanderMotor::is_walkable_at(Game::Session::session_for(world),
@@ -2664,6 +2679,7 @@ auto CommanderControlController::update_impl(Engine::Core::World& world,
 
     m_trace.combat = App::Core::CommanderCombatTrace{};
     if (active_action != nullptr) {
+      m_trace.combat.action_id = active_action->combat_action_id;
       m_trace.combat.action_phase = static_cast<int>(active_action->phase);
       m_trace.combat.action_normalized_time = active_action->normalized_action_time;
       m_trace.combat.action_running = active_action->action_running;
@@ -2847,7 +2863,13 @@ void CommanderControlController::update_camera(Engine::Core::World& world,
   inputs.jump_height_offset = jump_height_offset;
   inputs.dodge_fov_kick = m_dodge_fov_kick;
   inputs.dodge_rolling = m_dodge_state == DodgeState::Rolling;
-  inputs.dodge_tilt_progress = 1.0F - std::clamp(m_dodge_timer / 0.22F, 0.0F, 1.0F);
+  inputs.dodge_tilt_progress =
+      1.0F -
+      std::clamp(
+          m_dodge_timer /
+              Game::Systems::CombatActions::k_commander_dodge_timeline.roll_seconds,
+          0.0F,
+          1.0F);
   inputs.dodge_direction = m_dodge_direction;
   auto const pose = advance_presentation_pose(commander, *transform, dt);
   inputs.commander_position =
