@@ -17,6 +17,7 @@
 #include "combat_status_effect_system.h"
 #include "combat_system.h"
 #include "commander_system.h"
+#include "cursed_gold_vein_system.h"
 #include "dismantle_system.h"
 #include "engagement_slot_system.h"
 #include "farm_system.h"
@@ -99,6 +100,11 @@ void register_runtime_systems(Engine::Core::World& world) {
                                                        .nations = session.nations(),
                                                        .stats = session.stats(),
                                                        .economy = session.economy()}),
+                   Engine::Core::SystemPhase::Strategy);
+  world.add_system(std::make_unique<CursedGoldVeinSystem>(
+                       CursedGoldVeinSystem::Services{.terrain = session.terrain(),
+                                                      .owners = session.owners(),
+                                                      .economy = session.economy()}),
                    Engine::Core::SystemPhase::Strategy);
   world.add_system(std::make_unique<ProductionSystem>(),
                    Engine::Core::SystemPhase::Economy);

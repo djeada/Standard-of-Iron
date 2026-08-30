@@ -75,7 +75,8 @@ enum class ScatterSpeciesId {
   IronOre,
   MagicShrine,
   AbandonedHome,
-  Statue
+  Statue,
+  CursedGoldVein
 };
 
 enum class ScatterVisibilityMode {

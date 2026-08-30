@@ -44,7 +44,7 @@ auto VegetationPipeline::initialize() -> bool {
     return false;
   }
 
-  const std::array<std::pair<GL::Shader**, const char*>, 13> shaders{{
+  const std::array<std::pair<GL::Shader**, const char*>, 14> shaders{{
       {&m_stone_shader, "stone_instanced"},
       {&m_plant_shader, "plant_instanced"},
       {&m_pine_shader, "pine_instanced"},
@@ -57,6 +57,7 @@ auto VegetationPipeline::initialize() -> bool {
       {&m_dead_tree_shader, "dead_tree_instanced"},
       {&m_iron_ore_shader, "iron_ore_instanced"},
       {&m_magic_shrine_shader, "magic_shrine_instanced"},
+      {&m_cursed_gold_vein_shader, "cursed_gold_vein_instanced"},
       {&m_statue_shader, "statue_instanced"},
   }};
 
@@ -81,6 +82,7 @@ auto VegetationPipeline::initialize() -> bool {
   initialize_dead_tree_pipeline();
   initialize_iron_ore_pipeline();
   initialize_magic_shrine_pipeline();
+  initialize_cursed_gold_vein_pipeline();
   initialize_abandoned_home_pipeline();
   initialize_statue_pipeline();
   cache_uniforms();
@@ -104,6 +106,7 @@ auto VegetationPipeline::all_meshes() -> std::array<StaticMeshBuffers*, k_mesh_c
           &m_dead_tree_mesh,
           &m_iron_ore_mesh,
           &m_magic_shrine_mesh,
+          &m_cursed_gold_vein_mesh,
           &m_abandoned_home_mesh,
           &m_statue_mesh};
 }
@@ -176,6 +179,7 @@ void VegetationPipeline::cache_uniforms() {
   cache_prop_uniforms(m_dead_tree_uniforms, m_dead_tree_shader);
   cache_prop_uniforms(m_iron_ore_uniforms, m_iron_ore_shader);
   cache_prop_uniforms(m_magic_shrine_uniforms, m_magic_shrine_shader);
+  cache_prop_uniforms(m_cursed_gold_vein_uniforms, m_cursed_gold_vein_shader);
   cache_prop_uniforms(m_statue_uniforms, m_statue_shader);
 }
 

@@ -129,6 +129,7 @@ add_executable(
     systems/victory_service_test.cpp
     systems/capture_system_test.cpp
     systems/undead_awakening_system_test.cpp
+    systems/cursed_gold_vein_system_test.cpp
     architecture/layering_test.cpp
     architecture/humanoid_layering_test.cpp
     architecture/creature_procedural_pose_test.cpp

@@ -2489,6 +2489,27 @@
       "scale": 0.9,
       "rotation": 270.0,
       "landmark": "west_hamlet"
+    },
+    {
+      "type": "cursed_gold_vein",
+      "x": 31,
+      "z": 171,
+      "scale": 1.0,
+      "rotation": 5.56
+    },
+    {
+      "type": "cursed_gold_vein",
+      "x": 207,
+      "z": 71,
+      "scale": 1.0,
+      "rotation": 4.88
+    },
+    {
+      "type": "cursed_gold_vein",
+      "x": 71,
+      "z": 31,
+      "scale": 1.0,
+      "rotation": 2.72
     }
   ],
   "firecamps": [

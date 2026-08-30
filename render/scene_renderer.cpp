@@ -544,6 +544,7 @@ void Renderer::terrain_scatter(const TerrainScatterCmd& cmd) {
   case TerrainScatterCmd::Species::MagicShrine:
   case TerrainScatterCmd::Species::AbandonedHome:
   case TerrainScatterCmd::Species::Statue:
+  case TerrainScatterCmd::Species::CursedGoldVein:
     break;
   }
   m_active_queue->submit(std::move(submitted));

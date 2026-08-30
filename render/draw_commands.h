@@ -110,7 +110,8 @@ struct TerrainScatterCmd {
     IronOre,
     MagicShrine,
     AbandonedHome,
-    Statue
+    Statue,
+    CursedGoldVein
   };
 
   Species species = Species::Grass;

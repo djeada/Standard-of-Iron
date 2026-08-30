@@ -78,6 +78,9 @@ auto toolDescription(ToolType tool) -> QString {
   case ToolType::PropStatue:
     return "Place a commemorative statue that blocks movement as an explicit "
            "world prop.";
+  case ToolType::PropCursedGoldVein:
+    return "Place a cursed gold vein: neutral until captured, then it pays gold and "
+           "bleeds its owner's nearby troops.";
   case ToolType::Barracks:
     return "Place barracks and assign them to a player.";
   case ToolType::Village:
@@ -387,6 +390,13 @@ void ToolPanel::setup_ui() {
                   "\u265F",
                   "Place a commemorative statue.",
                   ToolType::PropStatue);
+  add_tool_button(props_layout,
+                  8,
+                  0,
+                  "Cursed Gold Vein",
+                  "\u2696",
+                  "Place a capturable cursed gold vein.",
+                  ToolType::PropCursedGoldVein);
   layout->addWidget(props_group);
 
   auto* ownership_group = new QGroupBox("Ownership", this);

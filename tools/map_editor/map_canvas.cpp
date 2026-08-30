@@ -164,6 +164,8 @@ auto world_prop_type_for_tool(ToolType tool) -> QString {
     return QStringLiteral("abandoned_home");
   case ToolType::PropStatue:
     return QStringLiteral("statue");
+  case ToolType::PropCursedGoldVein:
+    return QStringLiteral("cursed_gold_vein");
   default:
     return {};
   }
@@ -1892,6 +1894,7 @@ void MapCanvas::draw_current_placement(QPainter& painter) {
   case ToolType::PropIronOre:
   case ToolType::PropAbandonedHome:
   case ToolType::PropStatue:
+  case ToolType::PropCursedGoldVein:
     type = world_prop_type_for_tool(m_current_tool);
     break;
   case ToolType::Barracks:
@@ -2013,7 +2016,7 @@ void MapCanvas::draw_element(QPainter& painter,
       type == "weapon_rack" || type == "ruins" || type == "magic_shrine" ||
       type == "dead_tree" || type == "boulder" || type == "pine_tree" ||
       type == "olive_tree" || type == "plant" || type == "iron_ore" ||
-      type == "abandoned_home" || type == "statue") {
+      type == "abandoned_home" || type == "statue" || type == "cursed_gold_vein") {
     draw_world_prop_icon(painter, type, pos, size);
   } else {
     painter.setBrush(fill_color);
@@ -2231,6 +2234,23 @@ void MapCanvas::draw_world_prop_icon(QPainter& painter,
     painter.drawRect(QRectF(-s * 0.46F, s * 0.34F, s * 0.92F, s * 0.34F));
     painter.drawRect(QRectF(-s * 0.24F, -s * 0.14F, s * 0.48F, s * 0.48F));
     painter.drawEllipse(QPointF(0, -s * 0.36F), s * 0.24F, s * 0.24F);
+  } else if (type == QStringLiteral("cursed_gold_vein")) {
+    painter.setBrush(QColor(52, 44, 38));
+    painter.setPen(Qt::NoPen);
+    painter.drawEllipse(QPointF(0, 0), s, s);
+    QPolygonF crag;
+    crag << QPointF(-s * 0.70F, s * 0.55F) << QPointF(-s * 0.30F, -s * 0.10F)
+         << QPointF(0.0F, s * 0.15F) << QPointF(s * 0.34F, -s * 0.30F)
+         << QPointF(s * 0.72F, s * 0.55F);
+    painter.setBrush(QColor(96, 84, 72));
+    painter.drawPolygon(crag);
+    QPolygonF crystal;
+    crystal << QPointF(-s * 0.12F, s * 0.30F) << QPointF(0.0F, -s * 0.62F)
+            << QPointF(s * 0.16F, s * 0.30F);
+    painter.setBrush(QColor(242, 196, 74));
+    painter.drawPolygon(crystal);
+    painter.setPen(QPen(QColor(214, 48, 32), std::max(1.2F, s * 0.12F)));
+    painter.drawLine(QPointF(-s * 0.46F, s * 0.40F), QPointF(s * 0.26F, -s * 0.06F));
   }
 
   painter.restore();

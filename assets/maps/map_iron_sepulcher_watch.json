@@ -55,6 +55,13 @@
       "x": 19,
       "z": 27,
       "scale": 1.0
+    },
+    {
+      "type": "cursed_gold_vein",
+      "x": 10,
+      "z": 12,
+      "scale": 1.0,
+      "rotation": 2.26
     }
   ],
   "undead_zones": [

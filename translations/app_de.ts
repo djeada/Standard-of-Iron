@@ -1285,6 +1285,13 @@ Dies ist vielleicht ein Scharmützel, oder es wurden keine Ziele festgelegt.</tr
     </message>
 </context>
 <context>
+    <name>CursedGoldVeinSystem</name>
+    <message>
+        <source>The cursed vein is yours. It bleeds gold - and the men who guard it.</source>
+        <translation>Die verfluchte Ader gehört nun Euch. Sie blutet Gold – und die Männer, die sie bewachen.</translation>
+    </message>
+</context>
+<context>
     <name>CursorLayer</name>
     <message>
         <source>Enemy target</source>
@@ -6748,10 +6755,6 @@ um die Vorschau zu sehen</translation>
 <context>
     <name>ProductionPanel</name>
     <message>
-        <source>PRODUCTION QUEUE</source>
-        <translation>PRODUKTIONSWARTESCHLANGE</translation>
-    </message>
-    <message>
         <source>RECRUIT UNITS</source>
         <translation>EINHEITEN AUSBILDEN</translation>
     </message>
@@ -7216,6 +7219,10 @@ Baumeister ernten es als Nahrung, die Zivilisten rekrutiert</translation>
     <message>
         <source>Temple reserve: %1 / %2</source>
         <translation>Tempelreserve: %1 / %2</translation>
+    </message>
+    <message>
+        <source>QUEUE</source>
+        <translation>WARTESCHLANGE</translation>
     </message>
 </context>
 <context>

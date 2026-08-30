@@ -4,6 +4,7 @@
 #include "game/map/map_definition.h"
 #include "game/map/terrain_service.h"
 #include "game/session/session_context.h"
+#include "render/ground/cursed_gold_vein_renderer.h"
 #include "render/ground/fog_renderer.h"
 #include "render/ground/ground_renderer.h"
 #include "render/ground/map_boundary_fog_renderer.h"
@@ -60,7 +61,7 @@ TEST(TerrainSceneProxyTest, GroupsTerrainPassesInLegacySubmissionOrder) {
 
   const auto& passes = proxy.passes();
 
-  ASSERT_EQ(passes.size(), 28U);
+  ASSERT_EQ(passes.size(), 29U);
   EXPECT_EQ(proxy.surface(), &surface);
   EXPECT_EQ(proxy.ground(), surface.ground());
   EXPECT_EQ(proxy.terrain(), surface.terrain());
@@ -109,10 +110,12 @@ TEST(TerrainSceneProxyTest, GroupsTerrainPassesInLegacySubmissionOrder) {
   for (std::size_t i = 14; i <= 23; ++i) {
     EXPECT_NE(passes[i], nullptr);
   }
-  EXPECT_EQ(passes[24], &rain);
-  EXPECT_EQ(passes[25], &fog);
-  EXPECT_EQ(passes[26], &boundary_fog);
-  EXPECT_EQ(passes[27], nullptr);
+  EXPECT_EQ(passes[24],
+            static_cast<Render::GL::IRenderPass*>(scatter.cursed_gold_vein()));
+  EXPECT_EQ(passes[25], &rain);
+  EXPECT_EQ(passes[26], &fog);
+  EXPECT_EQ(passes[27], &boundary_fog);
+  EXPECT_EQ(passes[28], nullptr);
 }
 
 TEST_F(TerrainSceneProxyServiceTest, ExposesTerrainFieldAndRoadSegments) {
@@ -172,7 +175,7 @@ TEST_F(TerrainSceneProxyServiceTest, ExposesTerrainFieldAndRoadSegments) {
   EXPECT_EQ(feature_chunks[3].geometry_count, 1U);
 
   const auto scatters = proxy.scatter_chunks();
-  ASSERT_EQ(scatters.size(), 18U);
+  ASSERT_EQ(scatters.size(), 19U);
   EXPECT_EQ(scatters[0].species, Render::GL::ScatterSpeciesId::Grass);
   EXPECT_EQ(scatters[0].visibility_mode,
             Render::GL::ScatterVisibilityMode::InstanceFiltered);
@@ -211,6 +214,8 @@ TEST_F(TerrainSceneProxyServiceTest, ExposesTerrainFieldAndRoadSegments) {
   EXPECT_TRUE(scatters[16].gpu_ready);
   EXPECT_EQ(scatters[17].species, Render::GL::ScatterSpeciesId::Statue);
   EXPECT_TRUE(scatters[17].gpu_ready);
+  EXPECT_EQ(scatters[18].species, Render::GL::ScatterSpeciesId::CursedGoldVein);
+  EXPECT_TRUE(scatters[18].gpu_ready);
   EXPECT_FALSE(scatter.last_sync_stats().did_upload_or_rebuild());
 }
 

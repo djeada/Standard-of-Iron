@@ -98,7 +98,8 @@ _above_ `environment_direct_light` in the include. Do not move them back below i
 
 Directly routed hand-rollers: `stone_instanced`, `tent_instanced`, `ruins_instanced`,
 `weapon_rack_instanced`, `supply_cart_instanced`, `statue_instanced`,
-`pine_instanced`, `olive_instanced`, `magic_shrine_instanced`, `iron_ore_instanced`,
+`pine_instanced`, `olive_instanced`, `magic_shrine_instanced`, `cursed_gold_vein_instanced`,
+`iron_ore_instanced`,
 and now `dead_tree_instanced`, `bridge`, `road`, `ground_plane`, `riverbank` and
 `banner`. `ShaderSource.WorldSurfacesTakeTheirKeyLightFromTheSharedModel` pins the list.
 

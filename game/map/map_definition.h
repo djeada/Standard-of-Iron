@@ -90,7 +90,8 @@ struct WorldProp {
     IronOre,
     MagicShrine,
     AbandonedHome,
-    Statue
+    Statue,
+    CursedGoldVein
   };
 
   std::uint64_t id = 0;
@@ -157,6 +158,11 @@ is_settlement_world_prop_type(WorldProp::Type type) -> bool {
   return type == WorldProp::Type::AbandonedHome || type == WorldProp::Type::Statue;
 }
 
+[[nodiscard]] constexpr auto
+is_cursed_gold_vein_world_prop_type(WorldProp::Type type) -> bool {
+  return type == WorldProp::Type::CursedGoldVein;
+}
+
 [[nodiscard]] constexpr auto is_tree_world_prop_type(WorldProp::Type type) -> bool {
   return type == WorldProp::Type::PineTree || type == WorldProp::Type::OliveTree ||
          type == WorldProp::Type::CypressTree || type == WorldProp::Type::PalmTree;
@@ -196,6 +202,7 @@ is_harvestable_world_prop_type(WorldProp::Type type) -> bool {
   case WorldProp::Type::MagicShrine:
   case WorldProp::Type::AbandonedHome:
   case WorldProp::Type::Statue:
+  case WorldProp::Type::CursedGoldVein:
     return true;
   }
   return true;
@@ -236,6 +243,8 @@ world_prop_type_to_string(WorldProp::Type type) -> QLatin1String {
     return QLatin1String("abandoned_home");
   case WorldProp::Type::Statue:
     return QLatin1String("statue");
+  case WorldProp::Type::CursedGoldVein:
+    return QLatin1String("cursed_gold_vein");
   }
   Q_UNREACHABLE();
 }
@@ -306,6 +315,10 @@ world_prop_type_to_string(WorldProp::Type type) -> QLatin1String {
     out = WorldProp::Type::Statue;
     return true;
   }
+  if (value == QLatin1String("cursed_gold_vein")) {
+    out = WorldProp::Type::CursedGoldVein;
+    return true;
+  }
   return false;
 }
 
@@ -343,6 +356,8 @@ world_prop_type_to_string(WorldProp::Type type) -> QLatin1String {
     return 1.90F;
   case WorldProp::Type::Statue:
     return 1.05F;
+  case WorldProp::Type::CursedGoldVein:
+    return 1.70F;
   }
   return 1.0F;
 }
@@ -365,6 +380,8 @@ world_prop_model_half_extents(WorldProp::Type type) -> WorldPropHalfExtents {
     return {0.88F, 0.54F};
   case WorldProp::Type::MagicShrine:
     return {0.86F, 0.86F};
+  case WorldProp::Type::CursedGoldVein:
+    return {0.92F, 0.92F};
   case WorldProp::Type::Statue:
     return {0.55F, 0.55F};
   case WorldProp::Type::Tent:

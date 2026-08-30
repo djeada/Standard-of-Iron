@@ -32,6 +32,7 @@ set(RENDER_GROUND_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/ground/iron_ore_renderer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/ground/abandoned_home_renderer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/ground/statue_renderer.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/ground/cursed_gold_vein_renderer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/ground/magic_shrine_renderer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/ground/rain_renderer.cpp
 )

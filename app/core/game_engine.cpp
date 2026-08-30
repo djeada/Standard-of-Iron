@@ -137,6 +137,7 @@
 #include "game/systems/cleanup_system.h"
 #include "game/systems/combat_rules.h"
 #include "game/systems/combat_system.h"
+#include "game/systems/cursed_gold_vein_system.h"
 #include "game/systems/default_content.h"
 #include "game/systems/global_stats_registry.h"
 #include "game/systems/guard_system.h"
@@ -2136,6 +2137,28 @@ void GameEngine::publish_minimap_overlays(float dt) {
         entry["state"] = shrine.cleared    ? QStringLiteral("cleared")
                          : shrine.awakened ? QStringLiteral("awakened")
                                            : QStringLiteral("dormant");
+        landmarks.append(entry);
+      }
+    }
+    if (auto* veins = m_world->get_system<Game::Systems::CursedGoldVeinSystem>()) {
+      const int local_owner =
+          m_session != nullptr ? m_session->owners().get_local_player_id() : 0;
+      for (const auto& vein : veins->vein_markers()) {
+        float nx = 0.0F;
+        float ny = 0.0F;
+        if (!m_minimap_manager->world_to_normalized(
+                vein.world_position.x(), vein.world_position.z(), nx, ny)) {
+          continue;
+        }
+        QVariantMap entry;
+        entry["nx"] = nx;
+        entry["ny"] = ny;
+        entry["kind"] = QStringLiteral("gold_vein");
+        entry["state"] = vein.destroyed ? QStringLiteral("destroyed")
+                         : Game::Core::is_neutral_owner(vein.owner_id)
+                             ? QStringLiteral("neutral")
+                         : vein.owner_id == local_owner ? QStringLiteral("owned")
+                                                        : QStringLiteral("enemy");
         landmarks.append(entry);
       }
     }

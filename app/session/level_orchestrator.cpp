@@ -15,6 +15,7 @@
 #include "game/map/terrain_service.h"
 #include "game/session/session_context.h"
 #include "game/systems/ai_system.h"
+#include "game/systems/cursed_gold_vein_system.h"
 #include "game/systems/global_stats_registry.h"
 #include "game/systems/match_snapshot.h"
 #include "game/systems/owner_registry.h"
@@ -184,6 +185,9 @@ auto LevelOrchestrator::load_skirmish(const QString& map_path,
       if (victory_service != nullptr) {
         victory_service->set_undead_zone_query(undead_system);
       }
+    }
+    if (auto* vein_system = world.get_system<Game::Systems::CursedGoldVeinSystem>()) {
+      vein_system->configure(map_def);
     }
     if (auto* wildlife_system = world.get_system<Game::Wildlife::WildlifeSystem>()) {
       wildlife_system->configure(map_def);

@@ -6,6 +6,7 @@
 #include "ballista_renderer.h"
 #include "barracks_renderer.h"
 #include "catapult_renderer.h"
+#include "cursed_gold_vein_flag_renderer.h"
 #include "defense_tower_renderer.h"
 #include "elephant_renderer.h"
 #include "farm_renderer.h"
@@ -132,6 +133,7 @@ void register_built_in_entity_renderers(EntityRendererRegistry& registry) {
   register_ballista_renderer(registry);
 
   register_barracks_renderer(registry);
+  register_cursed_gold_vein_flag_renderer(registry);
 
   register_defense_tower_renderer(registry);
 

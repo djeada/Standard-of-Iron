@@ -268,6 +268,9 @@ public:
     load(QStringLiteral("magic_shrine_instanced"),
          resolve(shader_base + QStringLiteral("magic_shrine_instanced.vert")),
          resolve(shader_base + QStringLiteral("magic_shrine_instanced.frag")));
+    load(QStringLiteral("cursed_gold_vein_instanced"),
+         resolve(shader_base + QStringLiteral("cursed_gold_vein_instanced.vert")),
+         resolve(shader_base + QStringLiteral("cursed_gold_vein_instanced.frag")));
     load(QStringLiteral("statue_instanced"),
          resolve(shader_base + QStringLiteral("statue_instanced.vert")),
          resolve(shader_base + QStringLiteral("statue_instanced.frag")));

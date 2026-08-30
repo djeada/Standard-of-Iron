@@ -1,0 +1,24 @@
+{
+  "map_amber_delta.json": [
+    [169, 179],
+    [169, 124]
+  ],
+  "map_battle_ticino.json": [[592, 292]],
+  "map_battle_trasimene.json": [
+    [92, 392],
+    [322, 352],
+    [332, 272]
+  ],
+  "map_battle_trebia.json": [[582, 422]],
+  "map_battle_zama.json": [
+    [714, 558],
+    [545, 90]
+  ],
+  "map_crossing_alps.json": [[312, 442]],
+  "map_crossing_rhone.json": [
+    [572, 92],
+    [92, 252]
+  ],
+  "map_rivers.json": [[78, 96]],
+  "map_spanish_grove.json": [[187, 79]]
+}

@@ -56,6 +56,18 @@ TestCase {
         source.destroy();
     }
 
+    function test_speech_animation_is_owned_by_the_portrait() {
+        var source = testCase.makeSource("Advance.");
+        var panel = testCase.makePanel(source);
+        var portrait = findChild(panel, "commanderPortrait");
+        verify(portrait !== null, "the commander portrait was not created");
+        compare(portrait.talking, !A11y.reducedMotion, "the portrait should animate while text arrives");
+        panel.revealed = source.text.length;
+        compare(portrait.talking, false, "the portrait should close its mouth when the line is complete");
+        panel.destroy();
+        source.destroy();
+    }
+
     Component {
         id: sourceComponent
 

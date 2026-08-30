@@ -1285,6 +1285,13 @@ This may be a skirmish, or objectives have not been configured.</source>
     </message>
 </context>
 <context>
+    <name>CursedGoldVeinSystem</name>
+    <message>
+        <source>The cursed vein is yours. It bleeds gold - and the men who guard it.</source>
+        <translation>صار العرق الملعون لك. ينزف ذهبًا — وينزف الرجال الذين يحرسونه.</translation>
+    </message>
+</context>
+<context>
     <name>CursorLayer</name>
     <message>
         <source>Enemy target</source>
@@ -6760,10 +6767,6 @@ to see preview</source>
 <context>
     <name>ProductionPanel</name>
     <message>
-        <source>PRODUCTION QUEUE</source>
-        <translation>طابور الإنتاج</translation>
-    </message>
-    <message>
         <source>RECRUIT UNITS</source>
         <translation>تجنيد الوحدات</translation>
     </message>
@@ -7228,6 +7231,10 @@ Builders reap it for the food that recruits civilians</source>
     <message>
         <source>Temple reserve: %1 / %2</source>
         <translation>احتياطي المعبد: %1 / %2</translation>
+    </message>
+    <message>
+        <source>QUEUE</source>
+        <translation>الطابور</translation>
     </message>
 </context>
 <context>

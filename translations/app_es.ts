@@ -1285,6 +1285,13 @@ Puede tratarse de una escaramuza, o los objetivos no se han configurado.</transl
     </message>
 </context>
 <context>
+    <name>CursedGoldVeinSystem</name>
+    <message>
+        <source>The cursed vein is yours. It bleeds gold - and the men who guard it.</source>
+        <translation>La veta maldita es tuya. Sangra oro, y también a los hombres que la guardan.</translation>
+    </message>
+</context>
+<context>
     <name>CursorLayer</name>
     <message>
         <source>Enemy target</source>
@@ -6748,10 +6755,6 @@ para ver la vista previa</translation>
 <context>
     <name>ProductionPanel</name>
     <message>
-        <source>PRODUCTION QUEUE</source>
-        <translation>COLA DE PRODUCCIÓN</translation>
-    </message>
-    <message>
         <source>RECRUIT UNITS</source>
         <translation>RECLUTAR UNIDADES</translation>
     </message>
@@ -7216,6 +7219,10 @@ Los constructores lo siegan para la comida que recluta civiles</translation>
     <message>
         <source>Temple reserve: %1 / %2</source>
         <translation>Reserva del templo: %1 / %2</translation>
+    </message>
+    <message>
+        <source>QUEUE</source>
+        <translation>COLA</translation>
     </message>
 </context>
 <context>

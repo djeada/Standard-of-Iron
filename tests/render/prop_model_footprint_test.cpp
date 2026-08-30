@@ -8,6 +8,7 @@
 
 #include "game/map/map_definition.h"
 #include "render/gl/backend/abandoned_home_parts.h"
+#include "render/gl/backend/cursed_gold_vein_parts.h"
 #include "render/gl/backend/dead_tree_mesh.h"
 #include "render/gl/backend/magic_shrine_parts.h"
 #include "render/gl/backend/prop_parts.h"
@@ -118,6 +119,11 @@ auto measured_props() -> std::vector<MeasuredProp> {
        model_reach(MagicShrineParts::k_magic_shrine_boxes,
                    MagicShrineParts::k_magic_shrine_prisms,
                    MagicShrineParts::k_magic_shrine_oriented_boxes)},
+      {"cursed_gold_vein",
+       WorldProp::Type::CursedGoldVein,
+       model_reach(CursedGoldVeinParts::k_cursed_gold_vein_boxes,
+                   CursedGoldVeinParts::k_cursed_gold_vein_prisms,
+                   CursedGoldVeinParts::k_cursed_gold_vein_oriented_boxes)},
       {"supply_cart",
        WorldProp::Type::SupplyCart,
        model_reach(SupplyCartParts::k_supply_cart_boxes,
@@ -213,7 +219,7 @@ TEST(PropModelFootprintTest, ARectangularPropDoesNotBlockItsShortFlank) {
 
 TEST(PropModelFootprintTest, TheGuardCoversEveryPropBuiltFromParts) {
   auto const props = measured_props();
-  EXPECT_EQ(props.size(), 8U)
+  EXPECT_EQ(props.size(), 9U)
       << "a prop was added to or removed from render/gl/backend/*_parts.h "
          "without updating this guard";
   for (auto const& prop : props) {

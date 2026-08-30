@@ -1285,6 +1285,13 @@ Isto pode ser uma escaramuça, ou os objetivos não foram configurados.</transla
     </message>
 </context>
 <context>
+    <name>CursedGoldVeinSystem</name>
+    <message>
+        <source>The cursed vein is yours. It bleeds gold - and the men who guard it.</source>
+        <translation>A veia amaldiçoada agora é sua. Ela sangra ouro — e os homens que a guardam.</translation>
+    </message>
+</context>
+<context>
     <name>CursorLayer</name>
     <message>
         <source>Enemy target</source>
@@ -6748,10 +6755,6 @@ para ver a prévia</translation>
 <context>
     <name>ProductionPanel</name>
     <message>
-        <source>PRODUCTION QUEUE</source>
-        <translation>FILA DE PRODUÇÃO</translation>
-    </message>
-    <message>
         <source>RECRUIT UNITS</source>
         <translation>RECRUTAR UNIDADES</translation>
     </message>
@@ -7216,6 +7219,10 @@ Os construtores os ceifam pela comida que recruta civis</translation>
     <message>
         <source>Temple reserve: %1 / %2</source>
         <translation>Reserva do templo: %1 / %2</translation>
+    </message>
+    <message>
+        <source>QUEUE</source>
+        <translation>FILA</translation>
     </message>
 </context>
 <context>

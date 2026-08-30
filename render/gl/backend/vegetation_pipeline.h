@@ -81,6 +81,9 @@ public:
   [[nodiscard]] auto iron_ore_shader() const -> GL::Shader* {
     return m_iron_ore_shader;
   }
+  [[nodiscard]] auto cursed_gold_vein_shader() const -> GL::Shader* {
+    return m_cursed_gold_vein_shader;
+  }
   [[nodiscard]] auto magic_shrine_shader() const -> GL::Shader* {
     return m_magic_shrine_shader;
   }
@@ -101,6 +104,7 @@ public:
   PropUniforms m_dead_tree_uniforms;
   PropUniforms m_iron_ore_uniforms;
   PropUniforms m_magic_shrine_uniforms;
+  PropUniforms m_cursed_gold_vein_uniforms;
   PropUniforms m_statue_uniforms;
 
   StaticMeshBuffers m_tent_mesh;
@@ -110,11 +114,12 @@ public:
   StaticMeshBuffers m_dead_tree_mesh;
   StaticMeshBuffers m_iron_ore_mesh;
   StaticMeshBuffers m_magic_shrine_mesh;
+  StaticMeshBuffers m_cursed_gold_vein_mesh;
   StaticMeshBuffers m_abandoned_home_mesh;
   StaticMeshBuffers m_statue_mesh;
 
 private:
-  static constexpr std::size_t k_mesh_count = 16;
+  static constexpr std::size_t k_mesh_count = 17;
 
   auto all_meshes() -> std::array<StaticMeshBuffers*, k_mesh_count>;
 
@@ -132,6 +137,7 @@ private:
   void initialize_dead_tree_pipeline();
   void initialize_iron_ore_pipeline();
   void initialize_magic_shrine_pipeline();
+  void initialize_cursed_gold_vein_pipeline();
   void initialize_abandoned_home_pipeline();
   void initialize_statue_pipeline();
 
@@ -154,6 +160,7 @@ private:
   GL::Shader* m_dead_tree_shader{nullptr};
   GL::Shader* m_iron_ore_shader{nullptr};
   GL::Shader* m_magic_shrine_shader{nullptr};
+  GL::Shader* m_cursed_gold_vein_shader{nullptr};
   GL::Shader* m_statue_shader{nullptr};
 };
 

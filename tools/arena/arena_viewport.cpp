@@ -259,6 +259,10 @@ auto world_prop_type_from_string(const QString& prop_type)
   if (normalized == QStringLiteral("statue")) {
     return Game::Map::WorldProp::Type::Statue;
   }
+  if (normalized == QStringLiteral("cursed_gold_vein") ||
+      normalized == QStringLiteral("gold_vein")) {
+    return Game::Map::WorldProp::Type::CursedGoldVein;
+  }
 
   qWarning() << "Arena: unknown world prop type" << prop_type
              << "- falling back to a fire camp";
