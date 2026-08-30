@@ -22,6 +22,8 @@ auto billboard_effect_type(EffectBatchCmd::Kind kind) -> BackendPipelines::Effec
     return BackendPipelines::EffectType::StoneImpact;
   case EffectBatchCmd::Kind::MetalSpark:
     return BackendPipelines::EffectType::MetalSpark;
+  case EffectBatchCmd::Kind::WeaponArc:
+    return BackendPipelines::EffectType::WeaponArc;
   default:
     return BackendPipelines::EffectType::Dust;
   }
@@ -36,7 +38,9 @@ auto make_dust_instance(const EffectBatchCmd& eff)
           .time = eff.time,
           .effect_type = billboard_effect_type(eff.kind),
           .overlay = false,
-          .direction = eff.direction};
+          .direction = eff.direction,
+          .span = eff.span,
+          .tilt = eff.tilt};
 }
 } // namespace
 
@@ -304,7 +308,8 @@ void Backend::execute_effects_commands(const PreparedBatch& prepared,
     case EffectBatchCmd::Kind::BurningFlame:
     case EffectBatchCmd::Kind::Fireball:
     case EffectBatchCmd::Kind::StoneImpact:
-    case EffectBatchCmd::Kind::MetalSpark: {
+    case EffectBatchCmd::Kind::MetalSpark:
+    case EffectBatchCmd::Kind::WeaponArc: {
       if (m_combat_dust_pipeline == nullptr ||
           !m_combat_dust_pipeline->is_initialized()) {
         break;

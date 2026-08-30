@@ -21,7 +21,8 @@ enum class EffectType {
   StoneImpact = 2,
   Fireball = 3,
   BurningFlame = 4,
-  MetalSpark = 5
+  MetalSpark = 5,
+  WeaponArc = 6
 };
 
 class CombatDustPipeline final : public IPipeline {
@@ -45,6 +46,8 @@ public:
     bool overlay{false};
 
     QVector3D direction{0.0F, 0.0F, 0.0F};
+    float span{0.0F};
+    float tilt{0.0F};
   };
 
   void render_dust_batch(const DustInstanceData* instances,
@@ -72,6 +75,7 @@ private:
   auto create_dust_geometry() -> bool;
   auto create_fireball_geometry() -> bool;
   auto create_metal_spark_geometry() -> bool;
+  auto create_weapon_arc_geometry() -> bool;
   auto create_blood_geometry() -> bool;
   void release_geometry();
 
@@ -82,6 +86,7 @@ private:
   StaticMeshBuffers m_dust_mesh;
   StaticMeshBuffers m_fireball_mesh;
   StaticMeshBuffers m_metal_spark_mesh;
+  StaticMeshBuffers m_weapon_arc_mesh;
   StaticMeshBuffers m_blood_mesh;
 
   struct DustUniforms {
@@ -94,6 +99,7 @@ private:
     GL::Shader::UniformHandle dust_color{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle effect_type{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle camera_pos{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle span{GL::Shader::InvalidUniform};
   };
 
   struct BloodUniforms {

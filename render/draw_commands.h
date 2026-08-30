@@ -236,7 +236,8 @@ struct EffectBatchCmd {
     Fireball,
     BloodPool,
     StoneImpact,
-    MetalSpark
+    MetalSpark,
+    WeaponArc
   };
 
   Kind kind = Kind::HealerAura;
@@ -257,6 +258,8 @@ struct EffectBatchCmd {
   float beam_width = 0.15F;
 
   QVector3D direction{0.0F, 0.0F, 0.0F};
+  float span = 0.0F;
+  float tilt = 0.0F;
 
   CommandPriority priority{CommandPriority::Normal};
 };

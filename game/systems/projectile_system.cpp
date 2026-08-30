@@ -33,8 +33,10 @@ auto launch_cue_for_kind(ProjectileKind kind,
     return "combat.siege_launch";
   default:
 
-    return style == ArrowVisualStyle::Aimed ? "combat.bow_loose_heavy"
-                                            : "combat.arrow_launch";
+    return style == ArrowVisualStyle::Aimed ||
+                   style == ArrowVisualStyle::CommanderSignature
+               ? "combat.bow_loose_heavy"
+               : "combat.arrow_launch";
   }
 }
 

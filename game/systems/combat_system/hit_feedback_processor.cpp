@@ -12,7 +12,28 @@ namespace Game::Systems::Combat {
 
 namespace {
 
-[[nodiscard]] auto knockback_moves_body(const Engine::Core::Entity& unit) -> bool {
+[[nodiscard]] auto locked_commander_holds_ground(
+    const Engine::Core::Entity& unit,
+    const Engine::Core::HitFeedbackComponent& feedback) -> bool {
+  auto const* commander = unit.get_component<Engine::Core::CommanderComponent>();
+  if (commander == nullptr || commander->fpv_controlled ||
+      !commander->advanced_combat_enabled) {
+    return false;
+  }
+  auto const* attack = unit.get_component<Engine::Core::AttackComponent>();
+  if (attack == nullptr || !attack->in_melee_lock) {
+    return false;
+  }
+  if (feedback.stagger_tier != Engine::Core::StaggerTier::LightFlinch) {
+    return false;
+  }
+  auto const* stagger = unit.get_component<Engine::Core::StaggerComponent>();
+  return stagger == nullptr || stagger->tier == Engine::Core::StaggerTier::LightFlinch;
+}
+
+[[nodiscard]] auto
+knockback_moves_body(const Engine::Core::Entity& unit,
+                     const Engine::Core::HitFeedbackComponent& feedback) -> bool {
   if (unit.has_component<Engine::Core::BuildingComponent>() ||
       unit.has_component<Engine::Core::ElephantComponent>()) {
     return false;
@@ -21,6 +42,9 @@ namespace {
     return false;
   }
   if (FormationCombat::has_formation_slots(unit)) {
+    return false;
+  }
+  if (locked_commander_holds_ground(unit, feedback)) {
     return false;
   }
   auto const* movement = unit.get_component<Engine::Core::MovementComponent>();
@@ -55,7 +79,7 @@ void apply_knockback_step(Engine::Core::Entity& unit,
   float const total_z =
       feedback.knockback_z * knockback_travel_scale(feedback.reaction_kind);
   float const total = std::hypot(total_x, total_z);
-  if (total <= 0.0005F || !knockback_moves_body(unit)) {
+  if (total <= 0.0005F || !knockback_moves_body(unit, feedback)) {
     return;
   }
   auto* transform = unit.get_component<Engine::Core::TransformComponent>();

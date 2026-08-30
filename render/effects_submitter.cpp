@@ -184,6 +184,31 @@ void EffectsSubmitter::metal_spark(DrawQueue* queue,
   }
 }
 
+void EffectsSubmitter::weapon_arc(DrawQueue* queue,
+                                  const QVector3D& position,
+                                  const QVector3D& color,
+                                  float radius,
+                                  float intensity,
+                                  float time,
+                                  const QVector3D& direction,
+                                  float span,
+                                  float tilt) const {
+  EffectBatchCmd cmd;
+  cmd.kind = EffectBatchCmd::Kind::WeaponArc;
+  cmd.position = position;
+  cmd.color = color;
+  cmd.radius = radius;
+  cmd.intensity = intensity;
+  cmd.time = time;
+  cmd.direction = direction;
+  cmd.span = span;
+  cmd.tilt = tilt;
+  cmd.priority = CommandPriority::High;
+  if (queue != nullptr) {
+    queue->submit(std::move(cmd));
+  }
+}
+
 void Renderer::healing_beam(const QVector3D& start,
                             const QVector3D& end,
                             const QVector3D& color,
@@ -303,6 +328,22 @@ void Renderer::metal_spark(const QVector3D& position,
   }
   m_effects_submitter->metal_spark(
       m_active_queue, position, color, radius, intensity, time, direction);
+}
+
+void Renderer::weapon_arc(const QVector3D& position,
+                          const QVector3D& color,
+                          float radius,
+                          float intensity,
+                          float time,
+                          const QVector3D& direction,
+                          float span,
+                          float tilt) {
+  if (!m_submission_visibility.accepts_sphere(
+          position, radius, SubmissionFogMode::VisibleOnly, FogExtent::Anchor)) {
+    return;
+  }
+  m_effects_submitter->weapon_arc(
+      m_active_queue, position, color, radius, intensity, time, direction, span, tilt);
 }
 
 } // namespace Render::GL

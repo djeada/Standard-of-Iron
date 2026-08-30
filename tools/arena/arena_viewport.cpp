@@ -372,8 +372,8 @@ ArenaViewport::ArenaViewport(Game::Session::SessionContext& session, QWidget* pa
   m_boundary_fog = std::move(rendering.boundary_fog);
   m_ambient_fog = std::move(rendering.ambient_fog);
   m_rain = std::move(rendering.rain);
-  m_camera_service =
-      std::make_unique<Game::Systems::CameraService>(m_session.visibility());
+  m_camera_service = std::make_unique<Game::Systems::CameraService>(
+      m_session.visibility(), m_session.terrain());
   m_picking_service = std::make_unique<Game::Systems::PickingService>();
   m_rpg_commander_controller = std::make_unique<CommanderControlController>();
   m_rpg_telegraphs = std::make_unique<Render::GL::RpgTelegraphRenderer>();
