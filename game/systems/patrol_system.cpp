@@ -3,6 +3,7 @@
 #include <QVector3D>
 
 #include <cmath>
+#include <cstdint>
 
 #include "../core/component.h"
 #include "../core/system_context.h"
@@ -16,11 +17,28 @@ namespace {
 
 constexpr float k_patrol_engagement_radius = 5.0F;
 
+constexpr float k_patrol_goal_epsilon_sq = 0.01F;
+
+constexpr std::uint64_t k_enemy_scan_interval_ticks = 8;
+
+auto already_walking_to(const Engine::Core::MovementComponent& movement,
+                        float target_x,
+                        float target_z) -> bool {
+  if (!movement.get_has_target() || !movement.has_waypoints() ||
+      !movement.get_has_requested_goal()) {
+    return false;
+  }
+  float const dx = movement.get_requested_goal_x() - target_x;
+  float const dz = movement.get_requested_goal_z() - target_z;
+  return (dx * dx) + (dz * dz) <= k_patrol_goal_epsilon_sq;
+}
+
 } // namespace
 
 void PatrolSystem::run(Engine::Core::SystemContext& context) {
   auto& index = context.spatial_index();
   index.refresh(context.world());
+  const std::uint64_t tick = context.world().tick_id();
 
   for (auto [entity, patrol_ref, movement_ref, transform_ref, unit_ref] :
        context.entity_view<Engine::Core::PatrolComponent,
@@ -30,7 +48,7 @@ void PatrolSystem::run(Engine::Core::SystemContext& context) {
     auto* patrol = &patrol_ref;
     const auto& transform = transform_ref;
     const auto& unit = unit_ref;
-    (void)movement_ref;
+    const auto& movement = movement_ref;
 
     if (!patrol->patrolling || patrol->waypoints.size() < 2) {
       continue;
@@ -49,27 +67,34 @@ void PatrolSystem::run(Engine::Core::SystemContext& context) {
     }
 
     Engine::Core::EntityID nearest_enemy = Engine::Core::NULL_ENTITY;
-    float nearest_dist_sq = k_patrol_engagement_radius * k_patrol_engagement_radius;
-    index.for_each_in_radius(
-        transform.position.x,
-        transform.position.z,
-        k_patrol_engagement_radius,
-        [&](const Engine::Core::WorldSpatialIndex::Entry& candidate) {
-          if (!candidate.is(Engine::Core::WorldSpatialIndex::k_alive) ||
-              candidate.is(Engine::Core::WorldSpatialIndex::k_building)) {
-            return;
-          }
-          if (candidate.owner_id == unit.owner_id) {
-            return;
-          }
-          const float dx = candidate.x - transform.position.x;
-          const float dz = candidate.z - transform.position.z;
-          const float dist_sq = dx * dx + dz * dz;
-          if (dist_sq < nearest_dist_sq) {
-            nearest_dist_sq = dist_sq;
-            nearest_enemy = candidate.id;
-          }
-        });
+
+    const bool scan_this_tick = !movement.get_has_target() ||
+                                (tick + static_cast<std::uint64_t>(entity.get_id())) %
+                                        k_enemy_scan_interval_ticks ==
+                                    0;
+    if (scan_this_tick) {
+      float nearest_dist_sq = k_patrol_engagement_radius * k_patrol_engagement_radius;
+      index.for_each_in_radius(
+          transform.position.x,
+          transform.position.z,
+          k_patrol_engagement_radius,
+          [&](const Engine::Core::WorldSpatialIndex::Entry& candidate) {
+            if (!candidate.is(Engine::Core::WorldSpatialIndex::k_alive) ||
+                candidate.is(Engine::Core::WorldSpatialIndex::k_building)) {
+              return;
+            }
+            if (candidate.owner_id == unit.owner_id) {
+              return;
+            }
+            const float dx = candidate.x - transform.position.x;
+            const float dz = candidate.z - transform.position.z;
+            const float dist_sq = dx * dx + dz * dz;
+            if (dist_sq < nearest_dist_sq) {
+              nearest_dist_sq = dist_sq;
+              nearest_enemy = candidate.id;
+            }
+          });
+    }
 
     if (nearest_enemy != Engine::Core::NULL_ENTITY) {
       if (attack_target == nullptr) {
@@ -99,6 +124,11 @@ void PatrolSystem::run(Engine::Core::SystemContext& context) {
       waypoint = patrol->waypoints[patrol->current_waypoint];
       target_x = waypoint.first;
       target_z = waypoint.second;
+    }
+
+    if (already_walking_to(movement, target_x, target_z)) {
+
+      continue;
     }
 
     Game::Systems::CommandService::MoveOptions options;

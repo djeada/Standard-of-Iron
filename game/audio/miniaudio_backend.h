@@ -81,7 +81,8 @@ public:
 
 private:
   struct DecodedTrack {
-    std::vector<float> pcm;
+
+    std::vector<std::int16_t> pcm;
     unsigned frames = 0;
     unsigned channels = DEFAULT_OUTPUT_CHANNELS;
   };

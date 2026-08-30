@@ -252,14 +252,6 @@ void ActivityViewModel::record_hit(const Engine::Core::CombatHitEvent& event,
     return;
   }
 
-  int attacker_owner = 0;
-  if (auto* attacker = world->get_entity(event.attacker_id)) {
-    if (const auto* attacker_unit =
-            attacker->get_component<Engine::Core::UnitComponent>()) {
-      attacker_owner = attacker_unit->owner_id;
-    }
-  }
-
   App::Core::WorldFeedbackTick hit;
   hit.anchor = event.target_id;
   hit.kind = App::Core::FeedbackKind::Damage;
@@ -277,9 +269,10 @@ void ActivityViewModel::record_hit(const Engine::Core::CombatHitEvent& event,
                                   1.5F)
                      : 0.0F;
   hit.killing_blow = event.is_killing_blow;
-  hit.incoming = target_unit->owner_id == owner;
-  hit.outgoing = attacker_owner == owner;
-  if (!hit.incoming && !hit.outgoing) {
+  const auto audience = m_context.audience();
+  hit.incoming = audience.is_local(target_unit->owner_id);
+  hit.outgoing = audience.is_local(event.attacker_owner_id);
+  if (!audience.involves(event.attacker_owner_id, target_unit->owner_id)) {
     return;
   }
 
@@ -299,7 +292,7 @@ void ActivityViewModel::record_economy(
   if (world == nullptr || event.amount == 0) {
     return;
   }
-  if (event.owner_id != m_context.local_owner_id) {
+  if (!m_context.audience().is_local(event.owner_id)) {
     return;
   }
   if (m_context.level != nullptr && m_context.level->is_spectator_mode) {

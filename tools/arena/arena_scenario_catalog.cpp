@@ -2256,7 +2256,7 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
             "A durable close formation gives the direct-control sword commander "
             "room to demonstrate his gap closer, launcher branch, radial special, "
             "air attack, dive, defensive cancel, and full light chain."),
-        11.2F);
+        11.8F);
     s.rpg_mode = true;
     s.rpg_commander_group = QStringLiteral("rpg_commander");
     s.suppress_terrain_scatter = true;
@@ -2288,9 +2288,12 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
         at(1.66F, Command::RpgHeavyAttack, QStringLiteral("rpg_commander")),
         at(2.75F, Command::RpgSpecial, QStringLiteral("rpg_commander")),
         at(3.85F, Command::RpgJump, QStringLiteral("rpg_commander")),
-        at(3.94F, Command::RpgPrimaryAttack, QStringLiteral("rpg_commander")),
         at(4.52F, Command::RpgHeavyAttack, QStringLiteral("rpg_commander")),
-        at(5.35F, Command::RpgDodge, QStringLiteral("rpg_commander")),
+        [] {
+          auto step = at(5.35F, Command::RpgDodge, QStringLiteral("rpg_commander"));
+          step.destination = {1.0F, 0.0F, 0.0F};
+          return step;
+        }(),
         at(6.10F, Command::RpgGuard, QStringLiteral("rpg_commander")),
         at(6.18F, Command::RpgSpecial, QStringLiteral("rpg_commander")),
         [] {
@@ -2299,9 +2302,10 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
           return step;
         }(),
         at(7.05F, Command::RpgPrimaryAttack, QStringLiteral("rpg_commander")),
-        at(7.62F, Command::RpgPrimaryAttack, QStringLiteral("rpg_commander")),
         at(8.23F, Command::RpgPrimaryAttack, QStringLiteral("rpg_commander")),
         at(8.95F, Command::RpgPrimaryAttack, QStringLiteral("rpg_commander")),
+        at(9.55F, Command::RpgPrimaryAttack, QStringLiteral("rpg_commander")),
+        at(10.18F, Command::RpgPrimaryAttack, QStringLiteral("rpg_commander")),
     };
     s.expectations.push_back(
         expectation(Expect::AttackAnimationObserved, QStringLiteral("rpg_commander")));
@@ -2336,13 +2340,13 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
     s.expectations.push_back(commander_action_expectation(
         QStringLiteral("rpg_commander"), Action::CommanderSwordDive, 4.35F, 5.75F));
     s.expectations.push_back(commander_action_expectation(
-        QStringLiteral("rpg_commander"), Action::RpgSwordSlashRight, 7.35F, 8.75F));
+        QStringLiteral("rpg_commander"), Action::RpgSwordSlashLeft, 6.95F, 10.80F));
     s.expectations.push_back(commander_action_expectation(
-        QStringLiteral("rpg_commander"), Action::CommanderSwordSpin, 7.55F, 8.35F));
+        QStringLiteral("rpg_commander"), Action::RpgSwordSlashRight, 6.95F, 10.80F));
     s.expectations.push_back(commander_action_expectation(
-        QStringLiteral("rpg_commander"), Action::RpgSwordFinisher, 8.10F, 9.10F));
+        QStringLiteral("rpg_commander"), Action::CommanderSwordSpin, 6.95F, 10.80F));
     s.expectations.push_back(commander_action_expectation(
-        QStringLiteral("rpg_commander"), Action::RpgSwordSlashLeft, 8.80F, 10.10F));
+        QStringLiteral("rpg_commander"), Action::RpgSwordFinisher, 6.95F, 10.80F));
     s.expectations.push_back(expectation(Expect::NoFullscreenFlash));
     result.push_back(std::move(s));
   }
@@ -2390,7 +2394,11 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
         at(4.35F, Command::RpgJump, QStringLiteral("rpg_commander")),
         at(4.44F, Command::RpgPrimaryAttack, QStringLiteral("rpg_commander")),
         at(5.02F, Command::RpgHeavyAttack, QStringLiteral("rpg_commander")),
-        at(5.85F, Command::RpgDodge, QStringLiteral("rpg_commander")),
+        [] {
+          auto step = at(5.85F, Command::RpgDodge, QStringLiteral("rpg_commander"));
+          step.destination = {-1.0F, 0.0F, 0.0F};
+          return step;
+        }(),
         at(6.35F, Command::RpgPrimaryAttack, QStringLiteral("rpg_commander")),
         at(6.88F, Command::RpgPrimaryAttack, QStringLiteral("rpg_commander")),
         at(7.48F, Command::RpgPrimaryAttack, QStringLiteral("rpg_commander")),
@@ -2440,16 +2448,16 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
     s.expectations.push_back(commander_action_expectation(
         QStringLiteral("rpg_commander"), Action::CommanderSpearDive, 4.85F, 6.10F));
     s.expectations.push_back(commander_action_expectation(
-        QStringLiteral("rpg_commander"), Action::RpgSpearThrust, 6.25F, 6.85F));
+        QStringLiteral("rpg_commander"), Action::RpgSpearThrust, 6.25F, 8.95F));
     s.expectations.push_back(
         commander_action_expectation(QStringLiteral("rpg_commander"),
                                      Action::CommanderSpearStepThrust,
-                                     6.75F,
-                                     7.35F));
+                                     6.25F,
+                                     8.95F));
     s.expectations.push_back(commander_action_expectation(
-        QStringLiteral("rpg_commander"), Action::RpgSpearSweep, 7.35F, 8.10F));
+        QStringLiteral("rpg_commander"), Action::RpgSpearSweep, 6.25F, 8.95F));
     s.expectations.push_back(commander_action_expectation(
-        QStringLiteral("rpg_commander"), Action::RpgSpearFinisher, 8.05F, 8.95F));
+        QStringLiteral("rpg_commander"), Action::RpgSpearFinisher, 6.25F, 8.95F));
     s.expectations.push_back(expectation(Expect::NoFullscreenFlash));
     result.push_back(std::move(s));
   }

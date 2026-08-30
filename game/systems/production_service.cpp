@@ -218,7 +218,7 @@ auto ProductionService::start_production(Engine::Core::World& world,
     p->in_progress = true;
   }
   Engine::Core::EventManager::instance().publish(
-      Engine::Core::AudioCueEvent("build.unit_queued"));
+      Engine::Core::AudioCueEvent::for_owner(owner_id, "build.unit_queued"));
   p->manpower_available -= profile.production.cost;
   publish_population_feedback(owner_id, building_id, -profile.production.cost);
   Game::Session::services_for(world).economy->spend(owner_id,

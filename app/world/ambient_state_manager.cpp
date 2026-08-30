@@ -8,43 +8,93 @@
 
 AmbientStateManager::AmbientStateManager() = default;
 
+namespace {
+
+constexpr float k_check_interval_seconds = 2.0F;
+
+constexpr float k_combat_release_seconds = 10.0F;
+
+constexpr float k_state_settle_seconds = 4.0F;
+
+} // namespace
+
+auto AmbientStateManager::settle_seconds(Engine::Core::AmbientState from,
+                                         Engine::Core::AmbientState to) -> float {
+
+  if (to == Engine::Core::AmbientState::VICTORY ||
+      to == Engine::Core::AmbientState::DEFEAT ||
+      to == Engine::Core::AmbientState::COMBAT) {
+    return 0.0F;
+  }
+  if (from == Engine::Core::AmbientState::COMBAT) {
+    return k_combat_release_seconds;
+  }
+  return k_state_settle_seconds;
+}
+
+auto AmbientStateManager::observe_state(Engine::Core::World* world,
+                                        int local_owner_id,
+                                        const EntityCache& entity_cache,
+                                        const QString& victory_state) const
+    -> Engine::Core::AmbientState {
+  if (!victory_state.isEmpty()) {
+    if (victory_state == "victory") {
+      return Engine::Core::AmbientState::VICTORY;
+    }
+    if (victory_state == "defeat") {
+      return Engine::Core::AmbientState::DEFEAT;
+    }
+  }
+  if (is_player_in_combat(world, local_owner_id)) {
+    return Engine::Core::AmbientState::COMBAT;
+  }
+  if (entity_cache.enemy_barracks_alive && entity_cache.player_barracks_alive) {
+    return Engine::Core::AmbientState::TENSE;
+  }
+  return Engine::Core::AmbientState::PEACEFUL;
+}
+
 void AmbientStateManager::update(float dt,
                                  Engine::Core::World* world,
                                  int local_owner_id,
                                  const EntityCache& entity_cache,
                                  const QString& victory_state) {
   m_ambient_check_timer += dt;
-  const float check_interval = 2.0F;
 
-  if (m_ambient_check_timer < check_interval) {
+  if (m_ambient_check_timer < k_check_interval_seconds) {
     return;
   }
+  const float elapsed = m_ambient_check_timer;
   m_ambient_check_timer = 0.0F;
 
-  Engine::Core::AmbientState new_state = Engine::Core::AmbientState::PEACEFUL;
+  const Engine::Core::AmbientState observed =
+      observe_state(world, local_owner_id, entity_cache, victory_state);
 
-  if (!victory_state.isEmpty()) {
-    if (victory_state == "victory") {
-      new_state = Engine::Core::AmbientState::VICTORY;
-    } else if (victory_state == "defeat") {
-      new_state = Engine::Core::AmbientState::DEFEAT;
-    }
-  } else if (is_player_in_combat(world, local_owner_id)) {
-    new_state = Engine::Core::AmbientState::COMBAT;
-  } else if (entity_cache.enemy_barracks_alive && entity_cache.player_barracks_alive) {
-    new_state = Engine::Core::AmbientState::TENSE;
+  if (observed == m_current_ambient_state) {
+    m_candidate_state = observed;
+    m_candidate_seconds = 0.0F;
+    return;
   }
 
-  if (new_state != m_current_ambient_state) {
-    Engine::Core::AmbientState const previous_state = m_current_ambient_state;
-    m_current_ambient_state = new_state;
-
-    Engine::Core::EventManager::instance().publish(
-        Engine::Core::AmbientStateChangedEvent(new_state, previous_state));
-
-    qInfo() << "Ambient state changed from" << static_cast<int>(previous_state) << "to"
-            << static_cast<int>(new_state);
+  if (observed != m_candidate_state) {
+    m_candidate_state = observed;
+    m_candidate_seconds = 0.0F;
   }
+  m_candidate_seconds += elapsed;
+
+  if (m_candidate_seconds < settle_seconds(m_current_ambient_state, observed)) {
+    return;
+  }
+
+  Engine::Core::AmbientState const previous_state = m_current_ambient_state;
+  m_current_ambient_state = observed;
+  m_candidate_seconds = 0.0F;
+
+  Engine::Core::EventManager::instance().publish(
+      Engine::Core::AmbientStateChangedEvent(observed, previous_state));
+
+  qInfo() << "Ambient state changed from" << static_cast<int>(previous_state) << "to"
+          << static_cast<int>(observed);
 }
 
 auto AmbientStateManager::is_player_in_combat(Engine::Core::World* world,

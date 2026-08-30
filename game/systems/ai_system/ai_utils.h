@@ -83,6 +83,12 @@ inline auto marches_with_the_army(const EntitySnapshot& entity) -> bool {
   return is_combat_role_unit(entity) && !entity.is_commander;
 }
 
+inline auto picks_its_own_fights(const EntitySnapshot& entity) -> bool {
+
+  return is_combat_role_unit(entity) &&
+         entity.spawn_type != Game::Units::SpawnType::Healer;
+}
+
 inline auto is_threatening_contact(const ContactSnapshot& contact) -> bool {
   if (contact.holds_ground) {
     return false;
@@ -148,7 +154,7 @@ inline auto collect_harass_force_units(const AISnapshot& snapshot,
   std::unordered_map<Engine::Core::EntityID, const EntitySnapshot*> by_id;
   by_id.reserve(snapshot.friendly_units.size());
   for (const auto& entity : snapshot.friendly_units) {
-    if (!is_combat_role_unit(entity) || is_reserved_unit(entity.id, context) ||
+    if (!picks_its_own_fights(entity) || is_reserved_unit(entity.id, context) ||
         entity.is_assault) {
       continue;
     }

@@ -26,6 +26,9 @@
 
 namespace {
 
+constexpr float k_pcm_scale_up = 32767.0F;
+constexpr float k_pcm_scale_down = 1.0F / 32768.0F;
+
 constexpr int COMMAND_WAIT_ATTEMPTS = 200;
 
 auto sanitize_backend_volume(float volume) -> float {
@@ -512,7 +515,13 @@ auto MiniaudioBackend::decode_into_slot(const DecodeJob& job) -> bool {
   } else {
     track->channels = DEFAULT_OUTPUT_CHANNELS;
   }
-  track->pcm = std::move(pcm);
+  track->pcm.resize(pcm.size());
+  for (std::size_t i = 0; i < pcm.size(); ++i) {
+    const float clamped = std::clamp(pcm[i], -1.0F, 1.0F);
+    track->pcm[i] = static_cast<std::int16_t>(std::lrintf(clamped * k_pcm_scale_up));
+  }
+  pcm.clear();
+  pcm.shrink_to_fit();
 
   QMutexLocker const locker(&m_registry_mutex);
   if (job.track < 0 || job.track >= MAX_TRACKS ||
@@ -934,7 +943,7 @@ void MiniaudioBackend::on_audio(float* output, unsigned frames) {
       continue;
     }
 
-    const float* const pcm = track->pcm.data();
+    const std::int16_t* const pcm = track->pcm.data();
     const unsigned stride = track->channels;
     unsigned frames_left = frames;
     unsigned position = channel.frame_pos;
@@ -948,14 +957,14 @@ void MiniaudioBackend::on_audio(float* output, unsigned frames) {
         position = 0;
       }
       const unsigned run = std::min(frames_left, track->frames - position);
-      const float* source = pcm + (static_cast<std::size_t>(position) * stride);
+      const std::int16_t* source = pcm + (static_cast<std::size_t>(position) * stride);
 
       const unsigned fading = std::min(run, channel.fade_samples);
       for (unsigned i = 0; i < fading; ++i) {
-        const float volume = channel.current_volume * master;
-        const float left = source[0] * volume;
+        const float volume = channel.current_volume * master * k_pcm_scale_down;
+        const float left = static_cast<float>(source[0]) * volume;
         destination[0] += left;
-        destination[1] += (stride == 1) ? left : source[1] * volume;
+        destination[1] += (stride == 1) ? left : static_cast<float>(source[1]) * volume;
         destination += STEREO_CHANNELS;
         source += stride;
         channel.current_volume += channel.volume_step;
@@ -965,10 +974,10 @@ void MiniaudioBackend::on_audio(float* output, unsigned frames) {
       }
       const unsigned steady = run - fading;
       if (steady > 0) {
-        const float volume = channel.current_volume * master;
+        const float volume = channel.current_volume * master * k_pcm_scale_down;
         if (stride == 1) {
           for (unsigned i = 0; i < steady; ++i) {
-            const float value = source[i] * volume;
+            const float value = static_cast<float>(source[i]) * volume;
             destination[0] += value;
             destination[1] += value;
             destination += STEREO_CHANNELS;
@@ -976,8 +985,8 @@ void MiniaudioBackend::on_audio(float* output, unsigned frames) {
           source += steady;
         } else {
           for (unsigned i = 0; i < steady; ++i) {
-            destination[0] += source[0] * volume;
-            destination[1] += source[1] * volume;
+            destination[0] += static_cast<float>(source[0]) * volume;
+            destination[1] += static_cast<float>(source[1]) * volume;
             destination += STEREO_CHANNELS;
             source += STEREO_CHANNELS;
           }
@@ -1011,7 +1020,7 @@ void MiniaudioBackend::on_audio(float* output, unsigned frames) {
       continue;
     }
 
-    const float* const pcm = track->pcm.data();
+    const std::int16_t* const pcm = track->pcm.data();
     const unsigned stride = track->channels;
     unsigned frames_left = frames;
     unsigned position = effect.frame_pos;
@@ -1026,14 +1035,14 @@ void MiniaudioBackend::on_audio(float* output, unsigned frames) {
         position = 0;
       }
       const unsigned run = std::min(frames_left, track->frames - position);
-      const float* source = pcm + (static_cast<std::size_t>(position) * stride);
+      const std::int16_t* source = pcm + (static_cast<std::size_t>(position) * stride);
 
       const unsigned fading = std::min(run, effect.fade_samples);
       for (unsigned i = 0; i < fading; ++i) {
-        const float volume = effect.volume * master;
-        const float left = source[0] * volume;
+        const float volume = effect.volume * master * k_pcm_scale_down;
+        const float left = static_cast<float>(source[0]) * volume;
         destination[0] += left;
-        destination[1] += (stride == 1) ? left : source[1] * volume;
+        destination[1] += (stride == 1) ? left : static_cast<float>(source[1]) * volume;
         destination += STEREO_CHANNELS;
         source += stride;
         effect.volume += effect.volume_step;
@@ -1043,18 +1052,18 @@ void MiniaudioBackend::on_audio(float* output, unsigned frames) {
       }
       const unsigned steady = run - fading;
       if (steady > 0) {
-        const float volume = effect.volume * master;
+        const float volume = effect.volume * master * k_pcm_scale_down;
         if (stride == 1) {
           for (unsigned i = 0; i < steady; ++i) {
-            const float value = source[i] * volume;
+            const float value = static_cast<float>(source[i]) * volume;
             destination[0] += value;
             destination[1] += value;
             destination += STEREO_CHANNELS;
           }
         } else {
           for (unsigned i = 0; i < steady; ++i) {
-            destination[0] += source[0] * volume;
-            destination[1] += source[1] * volume;
+            destination[0] += static_cast<float>(source[0]) * volume;
+            destination[1] += static_cast<float>(source[1]) * volume;
             destination += STEREO_CHANNELS;
             source += STEREO_CHANNELS;
           }

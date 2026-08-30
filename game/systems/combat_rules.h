@@ -29,6 +29,20 @@ uses_rpg_combat_rules(const Engine::Core::Entity* entity) -> bool {
 }
 
 [[nodiscard]] inline auto
+seeks_out_enemies(const Engine::Core::Entity* entity) -> bool {
+  if (entity == nullptr) {
+    return false;
+  }
+
+  auto const* unit = entity->get_component<Engine::Core::UnitComponent>();
+  if (unit == nullptr) {
+    return false;
+  }
+
+  return unit->spawn_type != Game::Units::SpawnType::Healer;
+}
+
+[[nodiscard]] inline auto
 participates_in_rts_melee_lock(const Engine::Core::Entity* entity) -> bool {
   return !uses_rpg_combat_rules(entity);
 }

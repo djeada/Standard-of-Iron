@@ -40,6 +40,8 @@ constexpr float k_focus_tau = 0.30F;
 
 constexpr float k_max_frame_seconds = 0.1F;
 
+constexpr float k_portrait_frame_interval_seconds = 1.0F / 24.0F;
+
 constexpr float k_head_radius = Render::GL::HumanProportions::HEAD_RADIUS;
 constexpr float k_cranium_rise = k_head_radius * 0.06F;
 
@@ -359,13 +361,20 @@ void CommanderPortraitView::PortraitRenderer::render() {
     delta = std::min(k_max_frame_seconds,
                      std::chrono::duration<float>(now - m_last_frame).count());
   }
-  m_last_frame = now;
 
   if (!m_speaking) {
+    m_last_frame = now;
     m_expression_time = 0.0F;
     m_mouth_open = 0.0F;
     return;
   }
+
+  if (delta > 0.0F && delta < k_portrait_frame_interval_seconds) {
+
+    update();
+    return;
+  }
+  m_last_frame = now;
 
   Render::Creature::RuntimeBakeAllowScope const allow_bakes;
 

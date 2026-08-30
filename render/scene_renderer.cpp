@@ -244,6 +244,21 @@ void Renderer::end_frame() {
       render_queue.sort_for_batching();
     }
     profile.draw_calls = static_cast<std::uint64_t>(render_queue.size());
+    static_assert(Render::GL::k_draw_cmd_type_count <=
+                      Render::Profiling::FrameProfile::k_draw_cmd_slots,
+                  "FrameProfile::draw_cmd_counts is too small for DrawCmd");
+    const auto& type_counts = render_queue.type_counts();
+    for (std::size_t i = 0; i < type_counts.size(); ++i) {
+      profile.draw_cmd_counts[i] = type_counts[i];
+    }
+    profile.snapshot_cache_bytes =
+        static_cast<std::uint64_t>(m_snapshot_mesh_cache.resident_bytes());
+    const auto& prepared = render_queue.prepared_batches();
+    profile.prepared_batches = static_cast<std::uint64_t>(prepared.size());
+    profile.instanced_batches = static_cast<std::uint64_t>(
+        std::count_if(prepared.begin(), prepared.end(), [](const auto& batch) {
+          return batch.is_instanced();
+        }));
     m_backend->set_animation_time(m_accumulated_time);
     {
       Render::Profiling::PhaseScope const play_scope(

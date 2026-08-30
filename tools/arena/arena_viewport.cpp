@@ -3981,6 +3981,9 @@ void ArenaViewport::load_scenario(const QString& scenario_id) {
         if (group.attacks_disabled) {
           attack->can_melee = false;
           attack->can_ranged = false;
+          attack->cooldown = std::numeric_limits<float>::max();
+          attack->melee_cooldown = std::numeric_limits<float>::max();
+          attack->time_since_last = 0.0F;
           attack->in_melee_lock = false;
           attack->melee_lock_target_id = 0U;
         }
