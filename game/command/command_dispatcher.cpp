@@ -462,7 +462,8 @@ void apply_start_construction(World& world,
                                                     order.site.x(),
                                                     order.site.z(),
                                                     0,
-                                                    order.rotation_y);
+                                                    order.rotation_y,
+                                                    order.units);
   if (verdict != Game::Systems::GroundVerdict::Clear) {
     if (qEnvironmentVariableIsSet("SOI_BUILD_TRACE")) {
       qWarning() << "BUILDTRACE p" << owner_id << "ground refused"
@@ -489,7 +490,8 @@ void apply_start_construction(World& world,
   }
   if (qEnvironmentVariableIsSet("SOI_BUILD_TRACE")) {
     qWarning() << "BUILDTRACE p" << owner_id << "assigned" << assigned_any
-               << order.construction_type.c_str() << "units" << order.units.size();
+               << order.construction_type.c_str() << "units" << order.units.size()
+               << "at" << order.site.x() << order.site.z() << "yaw" << order.rotation_y;
   }
   if (assigned_any) {
     resources.spend(owner_id, costs);

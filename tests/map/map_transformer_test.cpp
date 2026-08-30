@@ -1,10 +1,12 @@
 #include <algorithm>
+#include <cmath>
 #include <gtest/gtest.h>
 #include <memory>
 #include <vector>
 
 #include "core/component.h"
 #include "core/world.h"
+#include "game/core/ownership_constants.h"
 #include "game/map/map_definition.h"
 #include "game/map/map_transformer.h"
 #include "game/systems/building_collision_registry.h"
@@ -41,12 +43,14 @@ protected:
     Game::Map::MapTransformer::setFactoryRegistry(std::move(registry));
     Game::Map::MapTransformer::set_local_owner_id(1);
     Game::Map::MapTransformer::clear_player_team_overrides();
+    Game::Map::MapTransformer::clear_base_assignments();
   }
 
   void TearDown() override {
     Game::Map::MapTransformer::setFactoryRegistry(nullptr);
     Game::Map::MapTransformer::set_spectator_mode(false);
     Game::Map::MapTransformer::clear_player_team_overrides();
+    Game::Map::MapTransformer::clear_base_assignments();
     Game::Systems::BuildingCollisionRegistry::instance().clear();
     Game::Systems::OwnerRegistry::instance().clear();
     Game::Systems::NationRegistry::instance().clear();
@@ -73,7 +77,193 @@ auto two_camp_map() -> Game::Map::MapDefinition {
   return def;
 }
 
+auto contested_outpost_map() -> Game::Map::MapDefinition {
+  Game::Map::MapDefinition def;
+  def.grid.width = 16;
+  def.grid.height = 16;
+  for (int player_id : {1, 2}) {
+    def.structures.push_back({
+        .type = Game::Units::SpawnType::Barracks,
+        .geometry = Game::Map::PointStructureGeometry{QVector3D(
+            runtime_world_from_grid(4 * player_id, def.grid.width),
+            0.0F,
+            runtime_world_from_grid(4 * player_id, def.grid.height))},
+        .id = QStringLiteral("p%1_barracks").arg(player_id),
+        .player_id = player_id,
+        .max_population = 140,
+        .nation = QStringLiteral("carthage"),
+    });
+    def.spawns.push_back({
+        .type = Game::Units::SpawnType::Archer,
+        .x = static_cast<float>(4 * player_id) + 1.0F,
+        .z = static_cast<float>(4 * player_id),
+        .player_id = player_id,
+    });
+  }
+  def.structures.push_back({
+      .type = Game::Units::SpawnType::Barracks,
+      .geometry = Game::Map::PointStructureGeometry{QVector3D(
+          runtime_world_from_grid(12, def.grid.width),
+          0.0F,
+          runtime_world_from_grid(2, def.grid.height))},
+      .id = QStringLiteral("north_toll_barracks"),
+      .player_id = 0,
+      .max_population = 50,
+  });
+  return def;
+}
+
+auto barracks_owner_at(Engine::Core::World& world,
+                       float world_x,
+                       float world_z) -> int {
+  for (auto* entity : world.collect_entities_with<Engine::Core::UnitComponent>()) {
+    const auto* unit = entity->get_component<Engine::Core::UnitComponent>();
+    const auto* transform = entity->get_component<Engine::Core::TransformComponent>();
+    if (unit == nullptr || transform == nullptr ||
+        unit->spawn_type != Game::Units::SpawnType::Barracks) {
+      continue;
+    }
+    if (std::abs(transform->position.x - world_x) < 0.01F &&
+        std::abs(transform->position.z - world_z) < 0.01F) {
+      return unit->owner_id;
+    }
+  }
+  return -99;
+}
+
 } // namespace
+
+TEST_F(MapTransformerStructureTest, SeatsAPlayerAtTheBaseTheSetupScreenPicked) {
+  Engine::Core::World world;
+  Game::Map::MapTransformer::setPlayerTeamOverrides({{1, 0}, {2, 1}});
+  Game::Map::MapTransformer::set_base_assignments(
+      {{1, QStringLiteral("north_toll_barracks")}, {2, QStringLiteral("p2_barracks")}});
+
+  auto def = contested_outpost_map();
+  Game::Map::MapTransformer::apply_to_world(def, world);
+
+  EXPECT_EQ(barracks_owner_at(world,
+                              runtime_world_from_grid(12, def.grid.width),
+                              runtime_world_from_grid(2, def.grid.height)),
+            1)
+      << "the outpost the player chose did not change hands";
+  EXPECT_EQ(barracks_owner_at(world,
+                              runtime_world_from_grid(8, def.grid.width),
+                              runtime_world_from_grid(8, def.grid.height)),
+            2)
+      << "the player who kept their authored base lost it";
+  EXPECT_EQ(barracks_owner_at(world,
+                              runtime_world_from_grid(4, def.grid.width),
+                              runtime_world_from_grid(4, def.grid.height)),
+            Game::Core::NEUTRAL_OWNER_ID)
+      << "a reseated player kept a second starting barracks";
+}
+
+TEST_F(MapTransformerStructureTest, ReseatedPlayersStartingTroopsFollowTheirBase) {
+  Engine::Core::World world;
+  Game::Map::MapTransformer::setPlayerTeamOverrides({{1, 0}, {2, 1}});
+  Game::Map::MapTransformer::set_base_assignments(
+      {{1, QStringLiteral("north_toll_barracks")}, {2, QStringLiteral("p2_barracks")}});
+
+  auto def = contested_outpost_map();
+  Game::Map::MapTransformer::apply_to_world(def, world);
+
+  const Engine::Core::TransformComponent* moved = nullptr;
+  const Engine::Core::TransformComponent* stayed = nullptr;
+  for (auto* entity : world.collect_entities_with<Engine::Core::UnitComponent>()) {
+    const auto* unit = entity->get_component<Engine::Core::UnitComponent>();
+    if (unit == nullptr || unit->spawn_type != Game::Units::SpawnType::Archer) {
+      continue;
+    }
+    (unit->owner_id == 1 ? moved : stayed) =
+        entity->get_component<Engine::Core::TransformComponent>();
+  }
+
+  ASSERT_NE(moved, nullptr);
+  ASSERT_NE(stayed, nullptr);
+
+  EXPECT_FLOAT_EQ(moved->position.x, runtime_world_from_grid(13, def.grid.width));
+  EXPECT_FLOAT_EQ(moved->position.z, runtime_world_from_grid(2, def.grid.height));
+  EXPECT_FLOAT_EQ(stayed->position.x, runtime_world_from_grid(9, def.grid.width));
+  EXPECT_FLOAT_EQ(stayed->position.z, runtime_world_from_grid(8, def.grid.height));
+}
+
+TEST_F(MapTransformerStructureTest, AClaimedOutpostGetsAStartingBasesTroopCap) {
+  Engine::Core::World world;
+  Game::Map::MapTransformer::setPlayerTeamOverrides({{1, 0}, {2, 1}});
+  Game::Map::MapTransformer::set_base_assignments(
+      {{1, QStringLiteral("north_toll_barracks")}, {2, QStringLiteral("p2_barracks")}});
+
+  auto def = contested_outpost_map();
+  Game::Map::MapTransformer::apply_to_world(def, world);
+
+  const Engine::Core::ProductionComponent* claimed = nullptr;
+  for (auto* entity : world.collect_entities_with<Engine::Core::UnitComponent>()) {
+    const auto* unit = entity->get_component<Engine::Core::UnitComponent>();
+    if (unit == nullptr || unit->spawn_type != Game::Units::SpawnType::Barracks ||
+        unit->owner_id != 1) {
+      continue;
+    }
+    claimed = entity->get_component<Engine::Core::ProductionComponent>();
+  }
+
+  ASSERT_NE(claimed, nullptr);
+  EXPECT_EQ(claimed->max_units, 140)
+      << "taking an outpost as your start quietly halved the troop cap";
+}
+
+TEST_F(MapTransformerStructureTest, WithoutAnAssignmentTheMapKeepsItsAuthoredSeating) {
+  Engine::Core::World world;
+  Game::Map::MapTransformer::setPlayerTeamOverrides({{1, 0}, {2, 1}});
+
+  auto def = contested_outpost_map();
+  Game::Map::MapTransformer::apply_to_world(def, world);
+
+  EXPECT_EQ(barracks_owner_at(world,
+                              runtime_world_from_grid(4, def.grid.width),
+                              runtime_world_from_grid(4, def.grid.height)),
+            1);
+  EXPECT_EQ(barracks_owner_at(world,
+                              runtime_world_from_grid(8, def.grid.width),
+                              runtime_world_from_grid(8, def.grid.height)),
+            2);
+  EXPECT_EQ(barracks_owner_at(world,
+                              runtime_world_from_grid(12, def.grid.width),
+                              runtime_world_from_grid(2, def.grid.height)),
+            Game::Core::NEUTRAL_OWNER_ID);
+}
+
+TEST_F(MapTransformerStructureTest, AnUnknownBaseKeyLeavesTheAuthoredSeatingAlone) {
+  Engine::Core::World world;
+  Game::Map::MapTransformer::setPlayerTeamOverrides({{1, 0}, {2, 1}});
+  Game::Map::MapTransformer::set_base_assignments(
+      {{1, QStringLiteral("a_base_this_map_does_not_have")}});
+
+  auto def = contested_outpost_map();
+  Game::Map::MapTransformer::apply_to_world(def, world);
+
+  EXPECT_EQ(barracks_owner_at(world,
+                              runtime_world_from_grid(4, def.grid.width),
+                              runtime_world_from_grid(4, def.grid.height)),
+            1)
+      << "a stale base key left the player with no barracks at all";
+}
+
+TEST_F(MapTransformerStructureTest, BaseAssignmentsDoNotLeakIntoTheNextMatch) {
+  Game::Map::MapTransformer::set_base_assignments(
+      {{1, QStringLiteral("north_toll_barracks")}});
+  Game::Map::MapTransformer::clear_base_assignments();
+
+  Engine::Core::World world;
+  Game::Map::MapTransformer::setPlayerTeamOverrides({{1, 0}, {2, 1}});
+  auto def = contested_outpost_map();
+  Game::Map::MapTransformer::apply_to_world(def, world);
+
+  EXPECT_EQ(barracks_owner_at(world,
+                              runtime_world_from_grid(4, def.grid.width),
+                              runtime_world_from_grid(4, def.grid.height)),
+            1);
+}
 
 TEST_F(MapTransformerStructureTest, AnObservedMatchPutsEverySlotUnderAiControl) {
   Engine::Core::World world;

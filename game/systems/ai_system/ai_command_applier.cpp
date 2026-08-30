@@ -261,7 +261,8 @@ auto AICommandApplier::apply(Engine::Core::World& world,
           command.construction_type,
           QVector3D(command.construction_site_x, 0.0F, command.construction_site_z),
           wall_link ? k_wall_link_nudge_radius : k_site_nudge_radius,
-          command.construction_rotation_y);
+          command.construction_rotation_y,
+          command.units);
       if (!site.has_value()) {
 
         ++report.refused_construction;

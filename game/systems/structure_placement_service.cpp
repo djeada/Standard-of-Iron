@@ -1,10 +1,5 @@
 #include "structure_placement_service.h"
 
-#include <algorithm>
-#include <cmath>
-#include <limits>
-#include <vector>
-
 #include "../core/ambient_session.h"
 #include "../core/world.h"
 #include "../map/map_transformer.h"
@@ -12,32 +7,27 @@
 #include "../units/spawn_type.h"
 #include "../units/unit.h"
 #include "build_site.h"
-#include "building_collision_registry.h"
 #include "construction_cost_catalog.h"
 #include "nation_registry.h"
-#include "nav_grid.h"
 #include "player_resource_registry.h"
 #include "wall_network_service.h"
 
 namespace Game::Systems {
 
-auto StructurePlacementService::footprint_is_clear(const Engine::Core::World& world,
-                                                   float x,
-                                                   float z,
-                                                   const std::string& building_type)
-    -> bool {
-  return assess_ground(world, building_type, x, z) == GroundVerdict::Clear;
-}
-
-auto StructurePlacementService::ruling(Engine::Core::World& world,
-                                       int owner_id,
-                                       const std::string& building_type,
-                                       const QVector3D& position) -> PlacementRuling {
+auto StructurePlacementService::ground_ruling(const Engine::Core::World& world,
+                                              const std::string& building_type,
+                                              float x,
+                                              float z,
+                                              float rotation_y) -> PlacementRuling {
   const auto spawn_type = Game::Units::spawn_typeFromString(building_type);
   if (!spawn_type.has_value() || !Game::Units::is_building_spawn(*spawn_type)) {
     return PlacementRuling::UnknownStructure;
   }
-  switch (assess_ground(world, building_type, position.x(), position.z())) {
+  return ruling_for(assess_ground(world, building_type, x, z, 0, rotation_y));
+}
+
+auto StructurePlacementService::ruling_for(GroundVerdict verdict) -> PlacementRuling {
+  switch (verdict) {
   case GroundVerdict::Occupied:
     return PlacementRuling::BlockedByStructure;
   case GroundVerdict::Impassable:
@@ -50,6 +40,19 @@ auto StructurePlacementService::ruling(Engine::Core::World& world,
     return PlacementRuling::OutsideBattlefield;
   case GroundVerdict::Clear:
     break;
+  }
+  return PlacementRuling::Ok;
+}
+
+auto StructurePlacementService::ruling(Engine::Core::World& world,
+                                       int owner_id,
+                                       const std::string& building_type,
+                                       const QVector3D& position,
+                                       float rotation_y) -> PlacementRuling {
+  if (const auto ground =
+          ground_ruling(world, building_type, position.x(), position.z(), rotation_y);
+      ground != PlacementRuling::Ok) {
+    return ground;
   }
   const auto costs = construction_cost_info(building_type).resource_costs;
   if (!costs.empty() &&
@@ -67,7 +70,8 @@ auto StructurePlacementService::place(Engine::Core::World& world,
                                       const std::string& building_type,
                                       const QVector3D& position,
                                       float rotation_y) -> Engine::Core::EntityID {
-  if (ruling(world, owner_id, building_type, position) != PlacementRuling::Ok) {
+  if (ruling(world, owner_id, building_type, position, rotation_y) !=
+      PlacementRuling::Ok) {
     return Engine::Core::NULL_ENTITY;
   }
   auto registry = Game::Map::MapTransformer::get_factory_registry();
@@ -84,8 +88,6 @@ auto StructurePlacementService::place(Engine::Core::World& world,
   params.nation_id = nation != nullptr ? nation->id : nations.default_nation_id();
   params.is_initial_spawn = false;
   params.spawn_type = *spawn_type;
-
-  clear_ground_for(world, building_type, position);
 
   auto unit = registry->create(params.spawn_type, world, params);
   if (!unit) {

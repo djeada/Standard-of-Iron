@@ -232,6 +232,7 @@ void BuildingCollisionRegistry::register_building(Engine::Core::EntityID entity_
                               entity_id,
                               get_building_grid_padding(building_type));
   footprint.wall_link = is_wall_link_building_type(building_type);
+  footprint.wall_tower = is_wall_tower_building_type(building_type);
 
   m_buildings.push_back(footprint);
   m_entity_to_index[entity_id] = m_buildings.size() - 1;

@@ -7,6 +7,7 @@
 #include "../core/world.h"
 #include "../map/terrain_service.h"
 #include "../units/spawn_type.h"
+#include "build_site.h"
 #include "construction_cost_catalog.h"
 #include "economy_feedback.h"
 #include "nation_registry.h"
@@ -79,9 +80,10 @@ auto WallPlanService::plan(Engine::Core::World& world,
       segment.fault = WallSegmentFault::Occupied;
     } else if (const auto validation =
                    WallNetworkService::validate_wall_segment_placement(
-                       world, grid_pos, true);
+                       world, grid_pos, wall_ground_probe(world), true);
                !validation.valid) {
       segment.fault = WallSegmentFault::Invalid;
+      segment.verdict = validation.verdict;
       segment.failure_reason = validation.failure_reason;
     } else if (available_wood < plan.wood_per_segment) {
       segment.fault = WallSegmentFault::NotEnoughWood;
