@@ -20,6 +20,7 @@
 #include "game/session/session_context.h"
 #include "game/session/simulation_clock.h"
 #include "game/systems/ai_system.h"
+#include "game/systems/cursed_gold_vein_system.h"
 #include "game/systems/player_resource_registry.h"
 #include "game/systems/save_load_service.h"
 #include "game/systems/undead_awakening_system.h"
@@ -96,6 +97,10 @@ auto SaveLoadCoordinator::begin_save_to_slot(const SaveToSlotContext& context) c
   if (auto* undead_system =
           context.world.get_system<Game::Systems::UndeadAwakeningSystem>()) {
     metadata["undead_zones"] = undead_system->serialize_state();
+  }
+  if (auto* vein_system =
+          context.world.get_system<Game::Systems::CursedGoldVeinSystem>()) {
+    metadata["cursed_gold_veins"] = vein_system->serialize_state();
   }
   if (auto* wildlife_system =
           context.world.get_system<Game::Wildlife::WildlifeSystem>()) {
@@ -206,6 +211,11 @@ auto SaveLoadCoordinator::load_from_slot(const LoadFromSlotContext& context) con
         if (context.victory_service != nullptr) {
           context.victory_service->set_undead_zone_query(undead_system);
         }
+      }
+      if (auto* vein_system =
+              context.world.get_system<Game::Systems::CursedGoldVeinSystem>()) {
+        vein_system->configure(map_def);
+        vein_system->restore_state(metadata["cursed_gold_veins"].toArray());
       }
       if (auto* wildlife_system =
               context.world.get_system<Game::Wildlife::WildlifeSystem>()) {

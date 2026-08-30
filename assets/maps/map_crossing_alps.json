@@ -4826,6 +4826,34 @@
             "type": "iron_ore",
             "x": 188,
             "z": 294
+        },
+        {
+            "type": "cursed_gold_vein",
+            "x": 542,
+            "z": 402,
+            "scale": 1.0,
+            "rotation": 2.28
+        },
+        {
+            "type": "cursed_gold_vein",
+            "x": 52,
+            "z": 382,
+            "scale": 1.0,
+            "rotation": 3.06
+        },
+        {
+            "type": "cursed_gold_vein",
+            "x": 332,
+            "z": 582,
+            "scale": 1.0,
+            "rotation": 4.7
+        },
+        {
+            "type": "cursed_gold_vein",
+            "x": 222,
+            "z": 292,
+            "scale": 1.0,
+            "rotation": 3.26
         }
     ]
 }

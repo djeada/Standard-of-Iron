@@ -68,6 +68,11 @@ auto resolve_prop_draw(const BackendPipelines::VegetationPipeline& veg,
             &veg.m_magic_shrine_mesh,
             &veg.m_magic_shrine_uniforms,
             1.18F};
+  case S::CursedGoldVein:
+    return {veg.cursed_gold_vein_shader(),
+            &veg.m_cursed_gold_vein_mesh,
+            &veg.m_cursed_gold_vein_uniforms,
+            1.10F};
   default:
     return {};
   }
@@ -504,6 +509,7 @@ void Backend::execute_scatter_commands(const PreparedBatch& prepared,
     case TerrainScatterCmd::Species::DeadTree:
     case TerrainScatterCmd::Species::IronOre:
     case TerrainScatterCmd::Species::MagicShrine:
+    case TerrainScatterCmd::Species::CursedGoldVein:
     case TerrainScatterCmd::Species::AbandonedHome:
     case TerrainScatterCmd::Species::Statue: {
       if (!m_vegetation_pipeline) {

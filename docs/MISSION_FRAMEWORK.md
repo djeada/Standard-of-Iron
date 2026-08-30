@@ -812,68 +812,42 @@ proportion scaling, which at this distance is the difference between a portrait
 and a cropped chin. Each frame the portrait asks the renderer where the head it
 just drew ended up, then eases the camera onto it.
 
-### The painted face
+### The face belongs to the portrait
 
-The humanoid rig has a jaw and a nose and no features at all, and giving it any
-would mean re-baking every clip in every profile. So the speaking face is
-**painted over** the portrait instead: `ui/qml/CommanderFaceOverlay.qml` draws
-eyes, brows, a nose and a mouth on a small `Canvas`, and rides the head through
-an anchor the portrait publishes -- position, one head radius, screen roll, and
-how far the head is turned and tilted away from the camera. The paint squashes
-with the projection and fades out through the profile, so it never lands on the
-back of a head. The model is untouched.
+The humanoid rig has a jaw and a nose but no eyes or mouth in its baked body
+mesh. Those details are added inside `CommanderPortraitView` instead of in QML.
+For the duration of `render_world`, the portrait installs a
+`Render::Creature::Pipeline::BoneProbe`
+(`render/creature/pipeline/creature_bone_probe.h`). The creature pipeline fills
+it with the head bone's world transform from the exact baked frame it submits.
+Before `end_frame`, the portrait uses that transform to submit the eye, brow and
+mouth meshes into the same renderer queue as the commander.
 
-The anchor is measured, not re-derived. `Render::Creature::Pipeline::BoneProbe`
-(`render/creature/pipeline/creature_bone_probe.h`) is a thread-local pointer the
-portrait installs for the duration of one `render_world`; the creature pipeline
-fills it with the head bone's world transform for the instance it is submitting,
-taken from the same baked frame it skins with. Re-posing the rig on the UI side
-would have had to reproduce the per-soldier variation and the renderer's
-proportion scaling, and would drift from what was actually drawn.
+This is deliberately a 3D attachment, not a screen-space overlay. The face is
+depth-tested, lit and graded with the model; a turned head naturally carries the
+features around its surface. More importantly, there is no render-thread to GUI-
+thread landmark handoff. The old canvas face received its projected anchor
+through a queued property update and could therefore trail the animated head by
+a frame or more during a taunt. The current face and head always use one bone
+matrix from one frame.
 
-The anchor is taken on the **face plane**, not at the centre of the head:
-`k_face_plane` in `ui/commander_portrait_view.cpp` pushes the measured point
-0.70 head radii forward along the head bone's local +Z, which is where the
-cranium's front surface carries the eyes and mouth. A billboard hung at the head
-centre cannot follow a head that turns or tips, and the portrait camera is
-already off the model's axis by design, so the paint sat about 0.17 head radii
-low and slid as the taunt loop swung the spine. Measured against the rig's own
-face primitives, the drawing's mouth now lands on the jaw and its eye line falls
-between brow and nose.
+The same probe still drives the bust framing. Each completed render updates the
+next camera focus from the head position, preserving the smoothing that absorbs
+small differences between commander archetypes without re-evaluating the pose on
+the UI side.
 
-The published radius is deliberately **not** foreshortened. It is the head bone's
-own up axis -- so it carries the archetype's proportion scaling, which is about
-0.83 on a commander -- re-measured as a view-perpendicular length at the face
-plane. The overlay applies the foreshortening itself through `squashX`/`squashY`;
-publishing an already-squashed radius applied it twice and shrank the face
-whenever the head tipped.
-
-The overlay is a sibling of the portrait inside the frame, not a child of it, so
-it must read the anchor in the portrait's own coordinates -- `anchorSource.x +
-faceX * anchorSource.width`. The portrait is inset by `borderFocus`, and dropping
-that term pulled the whole face two pixels up and left, which is an eighth of a
-head radius at this size.
-
-Two things the drawing does on purpose. It is spread to about 1.3 head radii,
-because every commander is drawn wearing a helmet wider than the skull inside it
-and painting to the skull leaves a small face rattling around in a large one. And
-it sits **below** the portrait's tint and vignette, so the grade that pushes the
-portrait behind the text reaches the paint too. Drawn above them the eyes peaked
-around luminance 171 against a head whose brightest pixels were 110: the one
-thing in the panel lit by nothing, which is what read as a sticker rather than a
-face. Under the grade they peak with the head instead, and stay legible at the
-1x size the panel is actually drawn at.
-
-The mouth is tied to the panel's typewriter, so it moves for exactly as long as
-the line is still arriving and closes when it stops -- no lip track is authored.
-Blinks and eye saccades are ambient and stop under reduced motion, along with the
-mouth.
+The panel exposes whether the typewriter is still revealing the line through the
+portrait's `talking` property. The render pass turns that into a small procedural
+mouth aperture and closes it as soon as the line completes. A deterministic
+blink gives the otherwise static features a little life. Reduced motion sends
+`talking: false`, so speech animation stops while the 3D attachment remains
+locked to the head.
 
 `--screenshot-view commander` opens the panel on its own against a stand-in view
 model, which is the only way to look at this without playing a mission to a
 trigger. Note that the screenshot harness does not advance QML animations: it is
-the surface to review framing, anchoring and placement on, not motion. Motion is
-covered by `tests/ui/qml/tst_commander_face.qml`.
+the surface to review framing and placement on, not motion. The typewriter-to-
+portrait handoff is covered by `tests/ui/qml/tst_commander_message.qml`.
 
 ### The tutorial mission
 

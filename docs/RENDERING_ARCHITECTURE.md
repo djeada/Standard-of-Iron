@@ -55,7 +55,7 @@ Local lights are budgeted (`Render::k_max_local_lights`) and go through `Render:
 Two practical notes:
 
 - **Texture units are a shared, program-wide namespace.** Two samplers of different types resolving to the same unit make every draw using that program raise `GL_INVALID_OPERATION`. The units in play are listed in `Render::GL::TextureUnit` (`render/gl/render_constants.h`) -- add new long-lived samplers there rather than picking a number.
-- **Instanced emitters can't be recovered from draw commands.** Fire camps and shrines reach the GPU as instance buffers, so the backend cannot read their positions back to build local lights. They advertise themselves through `Renderer::local_light()` instead, and the backend budgets those alongside effect-driven lights.
+- **Instanced emitters can't be recovered from draw commands.** Fire camps, shrines and cursed gold veins reach the GPU as instance buffers, so the backend cannot read their positions back to build local lights. They advertise themselves through `Renderer::local_light()` instead, and the backend budgets those alongside effect-driven lights.
 
 ## Graphics presets
 
@@ -485,7 +485,7 @@ render/gl/
     ├── prop_mesh_builder.cpp/.h        # append_* geometry helpers, shared
     ├── vegetation_pipeline.cpp/.h      # plumbing: init, shutdown, uniforms, upload
     ├── vegetation_pipeline_natural.cpp     # stone, plant, pine, olive, dead tree, ore
-    ├── vegetation_pipeline_settlement.cpp  # camp, tent, cart, rack, ruins, home, statue, shrine
+    ├── vegetation_pipeline_settlement.cpp  # camp, tent, cart, rack, ruins, home, statue, shrine, gold vein
     └── ...
 ```
 

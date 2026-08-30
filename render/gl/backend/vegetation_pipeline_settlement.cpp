@@ -19,6 +19,7 @@
 #include "mesh_buffers.h"
 #include "prop_mesh_builder.h"
 #include "render/gl/backend/abandoned_home_parts.h"
+#include "render/gl/backend/cursed_gold_vein_parts.h"
 #include "render/gl/backend/magic_shrine_parts.h"
 #include "render/gl/backend/prop_parts.h"
 #include "render/gl/backend/ruins_parts.h"
@@ -759,6 +760,35 @@ void VegetationPipeline::initialize_magic_shrine_pipeline() {
   add_rune_stone({0.62F, 0.0F, -0.60F}, -0.4F);
 
   upload_prop_mesh_impl(verts, idx, m_magic_shrine_mesh);
+}
+
+void VegetationPipeline::initialize_cursed_gold_vein_pipeline() {
+  initializeOpenGLFunctions();
+  release_mesh_buffers(*this, m_cursed_gold_vein_mesh);
+
+  std::vector<std::pair<QVector3D, QVector3D>> verts;
+  std::vector<uint16_t> idx;
+
+  using namespace Render::GL::BackendPipelines::CursedGoldVeinParts;
+
+  append_parts(verts, idx, std::span{k_cursed_gold_vein_boxes});
+  append_parts(verts, idx, std::span{k_cursed_gold_vein_prisms});
+  append_parts(verts, idx, std::span{k_cursed_gold_vein_oriented_boxes});
+
+  // Loose nuggets spilled around the crag: small tilted chips of ore lying on the
+  // base slabs. They keep the silhouette busy near the ground so the vein does not
+  // read as a lone pillar at battle zoom.
+  for (int i = 0; i < 10; ++i) {
+    float const angle = static_cast<float>(i) * 0.6283185F + 0.35F;
+    float const radius = (i % 2 == 0) ? 0.62F : 0.78F;
+    float const x = std::cos(angle) * radius;
+    float const z = std::sin(angle) * radius;
+    float const lean = 0.08F + 0.03F * static_cast<float>(i % 3);
+    append_oriented_box(
+        verts, idx, {x, 0.10F, z}, {x * 0.86F, 0.22F + lean, z * 0.86F}, 0.035F, 0.03F);
+  }
+
+  upload_prop_mesh_impl(verts, idx, m_cursed_gold_vein_mesh);
 }
 
 } // namespace Render::GL::BackendPipelines

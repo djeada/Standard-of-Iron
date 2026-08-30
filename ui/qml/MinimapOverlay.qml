@@ -71,7 +71,8 @@ Item {
             required property var modelData
 
             readonly property string state_id: modelData.state || "dormant"
-            readonly property color tint: state_id === "cleared" ? Design.Theme.success : (state_id === "awakened" ? Design.Theme.danger : Design.Theme.textDisabled)
+            readonly property bool gold_vein: (modelData.kind || "") === "gold_vein"
+            readonly property color tint: gold_vein ? (state_id === "owned" ? Design.Theme.success : (state_id === "enemy" ? Design.Theme.danger : (state_id === "destroyed" ? Design.Theme.textDisabled : "#d9a83c"))) : (state_id === "cleared" ? Design.Theme.success : (state_id === "awakened" ? Design.Theme.danger : Design.Theme.textDisabled))
 
             property real pulse: 1
 

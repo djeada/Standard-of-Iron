@@ -141,6 +141,8 @@
         <file>assets/shaders/dead_tree_instanced.vert</file>
         <file>assets/shaders/iron_ore_instanced.frag</file>
         <file>assets/shaders/iron_ore_instanced.vert</file>
+        <file>assets/shaders/cursed_gold_vein_instanced.frag</file>
+        <file>assets/shaders/cursed_gold_vein_instanced.vert</file>
         <file>assets/shaders/magic_shrine_instanced.frag</file>
         <file>assets/shaders/magic_shrine_instanced.vert</file>
 

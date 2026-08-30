@@ -40,6 +40,14 @@ arithmetic.**
 built in. `shared_world_prop_clearance_index()` converts to world space on
 rebuild, because scatter queries it in world space.
 
+## Capturable props
+
+The magic shrine and the cursed gold vein are props with a capturable Barracks
+entity raised on top of them at runtime (`UndeadAwakeningSystem`,
+`CursedGoldVeinSystem`). The entity uses the barracks collision body, which is
+larger than the prop's own footprint, so leave a few metres of clear ground around
+either. See `docs/IRON_SEPULCHER.md` and `docs/CURSED_GOLD_VEIN.md`.
+
 ## Bodies
 
 A prop's ground body mirrors `world_prop_ground_half_extents()` in

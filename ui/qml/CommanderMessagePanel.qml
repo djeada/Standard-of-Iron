@@ -109,21 +109,14 @@ Item {
                     CommanderPortraitView {
                         id: portrait
 
+                        objectName: "commanderPortrait"
                         anchors.fill: parent
                         anchors.margins: Design.Metrics.borderFocus
                         troopType: messageRoot.speakerType
                         nation: messageRoot.source ? messageRoot.source.nation : ""
                         pose: messageRoot.speakerPose
                         speaking: messageRoot.showing
-                    }
-
-                    CommanderFaceOverlay {
-                        id: face
-
-                        anchorSource: portrait
-                        pose: messageRoot.speakerPose
-                        accent: messageRoot.accent
-                        talking: messageRoot.showing && messageRoot.revealed < fullText.length
+                        talking: messageRoot.showing && !Design.A11y.reducedMotion && messageRoot.revealed < fullText.length
                     }
 
                     Rectangle {

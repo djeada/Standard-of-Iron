@@ -10,6 +10,7 @@
 #include "render/ground/abandoned_home_renderer.h"
 #include "render/ground/biome_renderer.h"
 #include "render/ground/boulder_renderer.h"
+#include "render/ground/cursed_gold_vein_renderer.h"
 #include "render/ground/dead_tree_renderer.h"
 #include "render/ground/firecamp_renderer.h"
 #include "render/ground/iron_ore_renderer.h"
@@ -61,6 +62,7 @@ TerrainScatterManager::TerrainScatterManager()
     , m_boulder(std::make_unique<BoulderRenderer>())
     , m_iron_ore(std::make_unique<IronOreRenderer>())
     , m_magic_shrine(std::make_unique<MagicShrineRenderer>())
+    , m_cursed_gold_vein(std::make_unique<CursedGoldVeinRenderer>())
     , m_abandoned_home(std::make_unique<AbandonedHomeRenderer>())
     , m_statue(std::make_unique<StatueRenderer>())
     , m_scatter_passes{
@@ -85,7 +87,8 @@ TerrainScatterManager::TerrainScatterManager()
           {ScatterSpeciesId::IronOre, m_iron_ore.get()},
           {ScatterSpeciesId::MagicShrine, m_magic_shrine.get()},
           {ScatterSpeciesId::AbandonedHome, m_abandoned_home.get()},
-          {ScatterSpeciesId::Statue, m_statue.get()}} {
+          {ScatterSpeciesId::Statue, m_statue.get()},
+          {ScatterSpeciesId::CursedGoldVein, m_cursed_gold_vein.get()}} {
   m_passes.reserve(m_scatter_passes.size());
   for (const auto& entry : m_scatter_passes) {
     m_passes.push_back(entry.pass);
@@ -131,6 +134,7 @@ void TerrainScatterManager::configure(
                        m_use_world_props_exclusively);
   m_iron_ore->configure(height_map, biome_settings, runtime_world_props);
   m_magic_shrine->configure(height_map, biome_settings, runtime_world_props);
+  m_cursed_gold_vein->configure(height_map, biome_settings, runtime_world_props);
   m_abandoned_home->configure(height_map, biome_settings, runtime_world_props);
   m_statue->configure(height_map, biome_settings, runtime_world_props);
 }
@@ -160,6 +164,7 @@ void TerrainScatterManager::refresh_runtime_world_props(
   m_weapon_rack->configure(*m_height_map, m_biome_settings, runtime_world_props);
   m_ruins->configure(*m_height_map, m_biome_settings, runtime_world_props);
   m_magic_shrine->configure(*m_height_map, m_biome_settings, runtime_world_props);
+  m_cursed_gold_vein->configure(*m_height_map, m_biome_settings, runtime_world_props);
   m_abandoned_home->configure(*m_height_map, m_biome_settings, runtime_world_props);
   m_statue->configure(*m_height_map, m_biome_settings, runtime_world_props);
 }
@@ -270,6 +275,10 @@ auto TerrainScatterManager::iron_ore() const -> IronOreRenderer* {
 
 auto TerrainScatterManager::magic_shrine() const -> MagicShrineRenderer* {
   return m_magic_shrine.get();
+}
+
+auto TerrainScatterManager::cursed_gold_vein() const -> CursedGoldVeinRenderer* {
+  return m_cursed_gold_vein.get();
 }
 
 auto TerrainScatterManager::abandoned_home() const -> AbandonedHomeRenderer* {

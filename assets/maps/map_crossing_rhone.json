@@ -7403,6 +7403,34 @@
             "type": "tent",
             "x": 395.5,
             "z": 39.6
+        },
+        {
+            "type": "cursed_gold_vein",
+            "x": 472,
+            "z": 302,
+            "scale": 1.0,
+            "rotation": 3.22
+        },
+        {
+            "type": "cursed_gold_vein",
+            "x": 102,
+            "z": 52,
+            "scale": 1.0,
+            "rotation": 1.34
+        },
+        {
+            "type": "cursed_gold_vein",
+            "x": 582,
+            "z": 82,
+            "scale": 1.0,
+            "rotation": 1.16
+        },
+        {
+            "type": "cursed_gold_vein",
+            "x": 122,
+            "z": 192,
+            "scale": 1.0,
+            "rotation": 2.1
         }
     ]
 }

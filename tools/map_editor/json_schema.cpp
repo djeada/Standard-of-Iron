@@ -71,7 +71,8 @@ const QStringList k_prop_types = {"firecamp",
                                   "plant",
                                   "iron_ore",
                                   "abandoned_home",
-                                  "statue"};
+                                  "statue",
+                                  "cursed_gold_vein"};
 
 auto terrain_schema(const QString& sub_type) -> JsonSchema {
   const bool is_mountain = sub_type == QStringLiteral("mountain");

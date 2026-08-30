@@ -3772,6 +3772,27 @@
       "scale": 0.9,
       "rotation": 270.0,
       "landmark": "watch_6"
+    },
+    {
+      "type": "cursed_gold_vein",
+      "x": 229,
+      "z": 89,
+      "scale": 1.0,
+      "rotation": 2.48
+    },
+    {
+      "type": "cursed_gold_vein",
+      "x": 139,
+      "z": 49,
+      "scale": 1.0,
+      "rotation": 3.54
+    },
+    {
+      "type": "cursed_gold_vein",
+      "x": 239,
+      "z": 184,
+      "scale": 1.0,
+      "rotation": 2.97
     }
   ],
   "firecamps": [
