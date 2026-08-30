@@ -21,6 +21,7 @@ class DeadTreeRenderer;
 class FireCampRenderer;
 class IronOreRenderer;
 class MagicShrineRenderer;
+class CursedGoldVeinRenderer;
 class AbandonedHomeRenderer;
 class StatueRenderer;
 class PlantRenderer;
@@ -66,6 +67,7 @@ public:
   [[nodiscard]] auto boulder() const -> BoulderRenderer*;
   [[nodiscard]] auto iron_ore() const -> IronOreRenderer*;
   [[nodiscard]] auto magic_shrine() const -> MagicShrineRenderer*;
+  [[nodiscard]] auto cursed_gold_vein() const -> CursedGoldVeinRenderer*;
   [[nodiscard]] auto abandoned_home() const -> AbandonedHomeRenderer*;
   [[nodiscard]] auto statue() const -> StatueRenderer*;
   [[nodiscard]] auto chunks() const -> std::vector<ScatterChunk>;
@@ -100,6 +102,7 @@ private:
   std::unique_ptr<BoulderRenderer> m_boulder;
   std::unique_ptr<IronOreRenderer> m_iron_ore;
   std::unique_ptr<MagicShrineRenderer> m_magic_shrine;
+  std::unique_ptr<CursedGoldVeinRenderer> m_cursed_gold_vein;
   std::unique_ptr<AbandonedHomeRenderer> m_abandoned_home;
   std::unique_ptr<StatueRenderer> m_statue;
   std::vector<ScatterPassEntry> m_scatter_passes;

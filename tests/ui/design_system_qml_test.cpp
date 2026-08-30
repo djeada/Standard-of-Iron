@@ -160,14 +160,7 @@ class CommanderPortraitStub : public QQuickItem {
   Q_PROPERTY(QString nation READ nation WRITE set_nation NOTIFY changed)
   Q_PROPERTY(QString pose READ pose WRITE set_pose NOTIFY changed)
   Q_PROPERTY(bool speaking READ speaking WRITE set_speaking NOTIFY changed)
-  Q_PROPERTY(bool faceValid READ face_valid NOTIFY changed)
-  Q_PROPERTY(qreal faceX READ zero NOTIFY changed)
-  Q_PROPERTY(qreal faceY READ zero NOTIFY changed)
-  Q_PROPERTY(qreal faceRadius READ zero NOTIFY changed)
-  Q_PROPERTY(qreal faceRoll READ zero NOTIFY changed)
-  Q_PROPERTY(qreal faceTurn READ zero NOTIFY changed)
-  Q_PROPERTY(qreal faceTilt READ zero NOTIFY changed)
-  Q_PROPERTY(qreal faceFacing READ zero NOTIFY changed)
+  Q_PROPERTY(bool talking READ talking WRITE set_talking NOTIFY changed)
 
 public:
   explicit CommanderPortraitStub(QQuickItem* parent = nullptr)
@@ -193,8 +186,11 @@ public:
     m_speaking = value;
     emit changed();
   }
-  [[nodiscard]] static auto face_valid() -> bool { return false; }
-  [[nodiscard]] static auto zero() -> qreal { return 0.0; }
+  [[nodiscard]] auto talking() const -> bool { return m_talking; }
+  void set_talking(bool value) {
+    m_talking = value;
+    emit changed();
+  }
 
 signals:
   void changed();
@@ -204,6 +200,7 @@ private:
   QString m_nation;
   QString m_pose;
   bool m_speaking = false;
+  bool m_talking = false;
 };
 
 class DesignSystemTestSetup : public QObject {

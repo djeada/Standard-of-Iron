@@ -1110,6 +1110,9 @@ void EditorWindow::on_tool_selected(ToolType tool) {
   case ToolType::PropStatue:
     tool_name = "Statue";
     break;
+  case ToolType::PropCursedGoldVein:
+    tool_name = "Cursed Gold Vein";
+    break;
   case ToolType::Barracks:
     tool_name = "Barracks";
     break;

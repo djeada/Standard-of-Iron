@@ -179,7 +179,10 @@ private:
   static constexpr int k_heuristic_weight_denominator = 10;
 
   struct SearchBuffers;
+  static auto
+  search_buffers_by_grid() -> std::unordered_map<const Pathfinding*, SearchBuffers>&;
   static auto search_buffers_for(const Pathfinding* pathfinding) -> SearchBuffers&;
+  static void release_search_buffers(const Pathfinding* pathfinding);
   void ensure_working_buffers(SearchBuffers& buffers) const;
   static auto next_generation(SearchBuffers& buffers) -> std::uint32_t;
   static void reset_generations(SearchBuffers& buffers);

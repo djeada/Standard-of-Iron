@@ -1285,6 +1285,13 @@ Isto pode ser uma escaramuça, ou os objetivos não foram configurados.</transla
     </message>
 </context>
 <context>
+    <name>CursedGoldVeinSystem</name>
+    <message>
+        <source>The cursed vein is yours. It bleeds gold - and the men who guard it.</source>
+        <translation>A veia amaldiçoada agora é sua. Ela sangra ouro — e os homens que a guardam.</translation>
+    </message>
+</context>
+<context>
     <name>CursorLayer</name>
     <message>
         <source>Enemy target</source>

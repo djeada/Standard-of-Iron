@@ -152,6 +152,7 @@ private:
       }
       if (world_prop.type == Game::Map::WorldProp::Type::Ruins ||
           world_prop.type == Game::Map::WorldProp::Type::MagicShrine ||
+          world_prop.type == Game::Map::WorldProp::Type::CursedGoldVein ||
           Game::Map::is_settlement_world_prop_type(world_prop.type)) {
         float const render_s = Game::Map::world_prop_render_scale(world_prop.type);
         float const obs_radius = std::max(2.0F, world_prop.scale * render_s);

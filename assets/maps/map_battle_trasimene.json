@@ -4308,6 +4308,34 @@
             "type": "supply_cart",
             "x": 594,
             "z": 148.8
+        },
+        {
+            "type": "cursed_gold_vein",
+            "x": 122,
+            "z": 532,
+            "scale": 1.0,
+            "rotation": 2.34
+        },
+        {
+            "type": "cursed_gold_vein",
+            "x": 52,
+            "z": 412,
+            "scale": 1.0,
+            "rotation": 0.68
+        },
+        {
+            "type": "cursed_gold_vein",
+            "x": 332,
+            "z": 282,
+            "scale": 1.0,
+            "rotation": 3.38
+        },
+        {
+            "type": "cursed_gold_vein",
+            "x": 442,
+            "z": 592,
+            "scale": 1.0,
+            "rotation": 1.14
         }
     ]
 }

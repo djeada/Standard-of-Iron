@@ -125,7 +125,9 @@ Pathfinding::Pathfinding(int width, int height)
   m_navigation_grid_dirty.store(true, std::memory_order_release);
 }
 
-Pathfinding::~Pathfinding() = default;
+Pathfinding::~Pathfinding() {
+  release_search_buffers(this);
+}
 
 void Pathfinding::set_grid_offset(float offset_x, float offset_z) {
   m_grid_offset_x = offset_x;
@@ -1394,9 +1396,23 @@ void Pathfinding::rebuild_clearance(int min_x, int max_x, int min_z, int max_z) 
   }
 }
 
-auto Pathfinding::search_buffers_for(const Pathfinding* pathfinding) -> SearchBuffers& {
+auto Pathfinding::search_buffers_by_grid()
+    -> std::unordered_map<const Pathfinding*, SearchBuffers>& {
   thread_local std::unordered_map<const Pathfinding*, SearchBuffers> buffers_by_grid;
-  return buffers_by_grid[pathfinding];
+  return buffers_by_grid;
+}
+
+auto Pathfinding::search_buffers_for(const Pathfinding* pathfinding) -> SearchBuffers& {
+  return search_buffers_by_grid()[pathfinding];
+}
+
+// The buffers are keyed by instance address, and a grid rebuilt for the next
+// match is routinely allocated exactly where the last one stood, so a fresh
+// grid would otherwise inherit the previous one's generation counters and
+// half-finished search state. Dropping the entry with the grid keeps the two
+// apart.
+void Pathfinding::release_search_buffers(const Pathfinding* pathfinding) {
+  search_buffers_by_grid().erase(pathfinding);
 }
 
 void Pathfinding::ensure_working_buffers(SearchBuffers& buffers) const {

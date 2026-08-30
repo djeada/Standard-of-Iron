@@ -151,6 +151,10 @@ Shrines are world props, not units, so they never appear in the unit layer.
 twice a second into `MinimapViewModel.landmarks`. Dormant, awakened and cleared
 each get their own tint; an awakened shrine pulses.
 
+Cursed gold veins ride the same feed: `CursedGoldVeinSystem::vein_markers()`
+lands as landmark kind `gold_vein` with state `neutral`, `owned`, `enemy` or
+`destroyed` (gold, success, danger, disabled). See `docs/CURSED_GOLD_VEIN.md`.
+
 ## Coordinates
 
 `Game::Map::Minimap::world_to_pixel` takes **grid** coordinates — world

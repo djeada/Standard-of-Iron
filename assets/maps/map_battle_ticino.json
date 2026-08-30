@@ -5087,6 +5087,34 @@
             "type": "firecamp",
             "x": 595.2,
             "z": 152.4
+        },
+        {
+            "type": "cursed_gold_vein",
+            "x": 242,
+            "z": 452,
+            "scale": 1.0,
+            "rotation": 0.34
+        },
+        {
+            "type": "cursed_gold_vein",
+            "x": 242,
+            "z": 302,
+            "scale": 1.0,
+            "rotation": 5.96
+        },
+        {
+            "type": "cursed_gold_vein",
+            "x": 162,
+            "z": 62,
+            "scale": 1.0,
+            "rotation": 0.56
+        },
+        {
+            "type": "cursed_gold_vein",
+            "x": 582,
+            "z": 292,
+            "scale": 1.0,
+            "rotation": 3.34
         }
     ]
 }

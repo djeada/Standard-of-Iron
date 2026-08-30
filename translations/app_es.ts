@@ -1285,6 +1285,13 @@ Puede tratarse de una escaramuza, o los objetivos no se han configurado.</transl
     </message>
 </context>
 <context>
+    <name>CursedGoldVeinSystem</name>
+    <message>
+        <source>The cursed vein is yours. It bleeds gold - and the men who guard it.</source>
+        <translation>La veta maldita es tuya. Sangra oro, y también a los hombres que la guardan.</translation>
+    </message>
+</context>
+<context>
     <name>CursorLayer</name>
     <message>
         <source>Enemy target</source>

@@ -28,15 +28,7 @@ class CommanderPortraitView : public QQuickFramebufferObject {
   Q_PROPERTY(QString nation READ nation WRITE set_nation NOTIFY nation_changed)
   Q_PROPERTY(QString pose READ pose WRITE set_pose NOTIFY pose_changed)
   Q_PROPERTY(bool speaking READ speaking WRITE set_speaking NOTIFY speaking_changed)
-
-  Q_PROPERTY(bool faceValid READ face_valid NOTIFY face_anchor_changed)
-  Q_PROPERTY(qreal faceX READ face_x NOTIFY face_anchor_changed)
-  Q_PROPERTY(qreal faceY READ face_y NOTIFY face_anchor_changed)
-  Q_PROPERTY(qreal faceRadius READ face_radius NOTIFY face_anchor_changed)
-  Q_PROPERTY(qreal faceRoll READ face_roll NOTIFY face_anchor_changed)
-  Q_PROPERTY(qreal faceTurn READ face_turn NOTIFY face_anchor_changed)
-  Q_PROPERTY(qreal faceTilt READ face_tilt NOTIFY face_anchor_changed)
-  Q_PROPERTY(qreal faceFacing READ face_facing NOTIFY face_anchor_changed)
+  Q_PROPERTY(bool talking READ talking WRITE set_talking NOTIFY talking_changed)
 
 public:
   CommanderPortraitView();
@@ -56,40 +48,15 @@ public:
   [[nodiscard]] auto speaking() const -> bool { return m_speaking; }
   void set_speaking(bool value);
 
-  struct FaceAnchor {
-    bool valid{false};
-
-    qreal x{0.0};
-    qreal y{0.0};
-
-    qreal radius{0.0};
-
-    qreal roll{0.0};
-
-    qreal turn{0.0};
-
-    qreal tilt{0.0};
-
-    qreal facing{0.0};
-  };
-
-  void publish_face_anchor(const FaceAnchor& anchor);
-
-  [[nodiscard]] auto face_valid() const -> bool { return m_face.valid; }
-  [[nodiscard]] auto face_x() const -> qreal { return m_face.x; }
-  [[nodiscard]] auto face_y() const -> qreal { return m_face.y; }
-  [[nodiscard]] auto face_radius() const -> qreal { return m_face.radius; }
-  [[nodiscard]] auto face_roll() const -> qreal { return m_face.roll; }
-  [[nodiscard]] auto face_turn() const -> qreal { return m_face.turn; }
-  [[nodiscard]] auto face_tilt() const -> qreal { return m_face.tilt; }
-  [[nodiscard]] auto face_facing() const -> qreal { return m_face.facing; }
+  [[nodiscard]] auto talking() const -> bool { return m_talking; }
+  void set_talking(bool value);
 
 signals:
   void troop_type_changed();
   void nation_changed();
   void pose_changed();
   void speaking_changed();
-  void face_anchor_changed();
+  void talking_changed();
 
 private:
   class PortraitRenderer;
@@ -98,5 +65,5 @@ private:
   QString m_nation;
   QString m_pose;
   bool m_speaking = false;
-  FaceAnchor m_face{};
+  bool m_talking = false;
 };

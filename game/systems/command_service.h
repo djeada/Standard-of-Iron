@@ -8,6 +8,7 @@
 #include <vector>
 
 #include "../formation/army_formation_types.h"
+#include "formation_combat_geometry.h"
 #include "order_service.h"
 
 namespace Game::Map {
@@ -66,7 +67,8 @@ public:
   static constexpr int DIRECT_PATH_THRESHOLD = 8;
 
   static constexpr float WAYPOINT_SKIP_THRESHOLD_SQ = 0.16F;
-  static constexpr float k_unit_radius_threshold = 0.5F;
+  static constexpr float k_unit_radius_threshold =
+      FormationCombat::k_body_core_radius_floor;
 
   static auto plan_ground_move(Engine::Core::World& world,
                                const std::vector<Engine::Core::EntityID>& units,

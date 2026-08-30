@@ -374,6 +374,7 @@ add_library(
     systems/selection_system.cpp
     systems/settlement_life_system.cpp
     systems/showcase_routine_system.cpp
+    systems/cursed_gold_vein_system.cpp
     systems/undead_awakening_system.cpp
     systems/victory_service.cpp
     # Rebuilding the registries that are derived from world contents rather than

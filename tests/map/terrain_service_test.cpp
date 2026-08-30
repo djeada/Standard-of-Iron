@@ -979,6 +979,12 @@ TEST_F(TerrainServiceTest, ProceduralScatterOptOutsSuppressTheirSpecies) {
                count_type(props, Game::Map::WorldProp::Type::OliveTree);
       };
 
+  // The terrain is initialised with procedural scatter switched off, and only
+  // the returned biome carries the species flags back on. SpawnValidator's
+  // world-prop clearance check reads the live TerrainService, so a terrain that
+  // already holds this biome's generated props makes every candidate below
+  // collide with the identical prop the initialise pass put there -- the
+  // generator would be measured against its own output and place nothing.
   const auto build_height_map = [](Game::Map::GroundType ground_type,
                                    Game::Map::BiomeSettings& out_biome) {
     Game::Map::MapDefinition map_def;
@@ -991,9 +997,13 @@ TEST_F(TerrainServiceTest, ProceduralScatterOptOutsSuppressTheirSpecies) {
     map_def.biome.irregularity_amplitude =
         std::max(0.65F, map_def.biome.irregularity_amplitude);
 
+    out_biome = map_def.biome;
+    map_def.biome.procedural_boulders_enabled = false;
+    map_def.biome.procedural_iron_ore_enabled = false;
+    map_def.biome.procedural_trees_enabled = false;
+
     auto& terrain = Game::Map::TerrainService::instance();
     terrain.initialize(map_def);
-    out_biome = map_def.biome;
     return terrain.get_height_map();
   };
 

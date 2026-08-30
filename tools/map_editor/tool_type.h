@@ -29,6 +29,7 @@ enum class ToolType {
   PropIronOre,
   PropAbandonedHome,
   PropStatue,
+  PropCursedGoldVein,
   TroopArcher,
   TroopSwordsman,
   TroopSpearman,

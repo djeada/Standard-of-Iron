@@ -851,7 +851,6 @@ if(QT_VERSION_MAJOR EQUAL 6)
             ui/qml/SaveProgressOverlay.qml
             ui/qml/ObjectivesPanel.qml
             ui/qml/CommanderMessagePanel.qml
-            ui/qml/CommanderFaceOverlay.qml
             ui/qml/HelpPanel.qml
             ui/qml/TutorialOverlay.qml
             ui/qml/TutorialFocusOverlay.qml
