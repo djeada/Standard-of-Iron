@@ -8,8 +8,6 @@ namespace Render::GL {
 
 class EntityRendererRegistry;
 
-// The capture anchor a cursed gold vein spawns is a Barracks entity that draws only
-// a claim flag beside the vein prop; the game layer stamps this key on it.
 inline constexpr std::string_view k_cursed_gold_vein_flag_renderer_key =
     Game::Visuals::k_cursed_gold_vein_flag_asset_key;
 

@@ -53,6 +53,10 @@ auto parse_focus(const QJsonObject& object, QString* error) -> std::optional<Foc
     focus.mode = FocusMode::Group;
   } else if (mode == QStringLiteral("group_pair")) {
     focus.mode = FocusMode::GroupPair;
+  } else if (mode == QStringLiteral("battle")) {
+    focus.mode = FocusMode::Battle;
+  } else if (mode == QStringLiteral("army")) {
+    focus.mode = FocusMode::Army;
   } else {
     if (error != nullptr) {
       *error = QStringLiteral("unknown focus mode '%1'").arg(mode);
@@ -66,6 +70,19 @@ auto parse_focus(const QJsonObject& object, QString* error) -> std::optional<Foc
   focus.offset = parse_vector(object.value(QStringLiteral("offset")), {});
   focus.smoothing = static_cast<float>(
       object.value(QStringLiteral("smoothing")).toDouble(focus.smoothing));
+  focus.owner = object.value(QStringLiteral("owner")).toInt(focus.owner);
+  focus.engagement_radius =
+      static_cast<float>(object.value(QStringLiteral("engagement_radius"))
+                             .toDouble(focus.engagement_radius));
+  focus.home_radius = static_cast<float>(
+      object.value(QStringLiteral("home_radius")).toDouble(focus.home_radius));
+
+  if (focus.mode == FocusMode::Army && focus.owner <= 0) {
+    if (error != nullptr) {
+      *error = QStringLiteral("focus mode 'army' needs an 'owner' id");
+    }
+    return std::nullopt;
+  }
 
   if (focus.mode == FocusMode::Group && focus.group.isEmpty()) {
     if (error != nullptr) {
@@ -248,6 +265,7 @@ auto load(const QString& path, QString* error) -> std::optional<Spec> {
   spec.height = root.value(QStringLiteral("height")).toInt(spec.height);
   spec.fps = root.value(QStringLiteral("fps")).toInt(spec.fps);
   spec.supersample = root.value(QStringLiteral("supersample")).toInt(spec.supersample);
+  spec.audio = root.value(QStringLiteral("audio")).toBool(spec.audio);
 
   if (spec.id.trimmed().isEmpty()) {
     if (error != nullptr) {

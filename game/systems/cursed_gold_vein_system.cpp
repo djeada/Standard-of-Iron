@@ -129,13 +129,12 @@ void CursedGoldVeinSystem::refresh_anchor(Engine::Core::World& world,
   }
   auto* unit = world.try_get<Engine::Core::UnitComponent>(vein.anchor_entity_id);
   if (unit == nullptr || unit->health <= 0) {
-    // A razed claim is inert for the rest of the match: the gold is buried again.
+
     vein.destroyed = true;
     vein.owner_id = Game::Core::NEUTRAL_OWNER_ID;
     return;
   }
 
-  // Capture hands a barracks a production line; a vein must never train anything.
   world.remove<Engine::Core::ProductionComponent>(vein.anchor_entity_id);
 
   if (unit->owner_id != vein.owner_id) {
@@ -167,8 +166,6 @@ void CursedGoldVeinSystem::apply_tick(Engine::Core::World& world, RuntimeVein& v
                             ResourceType::Gold,
                             k_cursed_gold_vein_gold_per_tick);
 
-  // The curse: every one of the owner's troops standing near the vein loses
-  // manpower. Buildings and other owners' troops are untouched.
   std::vector<Engine::Core::EntityID> victims;
   auto& index = world.spatial_index();
   index.refresh(world);

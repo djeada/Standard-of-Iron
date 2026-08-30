@@ -1,0 +1,754 @@
+{
+  "id": "ai_war_of_towns",
+  "title": "SCIPIO  VS  HANNIBAL",
+  "subtitle": "AI VS AI  \u00b7  STANDARD OF IRON",
+  "end_card_seconds": 4.5,
+  "end_card_lines": [
+    "GITHUB.COM/DJEADA/STANDARD-OF-IRON",
+    "EVERY ORDER IN THIS MATCH CAME FROM THE GAME AI"
+  ],
+  "width": 1920,
+  "height": 1080,
+  "fps": 60,
+  "supersample": 1,
+  "transition": {
+    "type": "dissolve",
+    "duration": 0.4
+  },
+  "music": "assets/audio/music/combat/combat_dust_of_trasimene.ogg",
+  "music_start": 0.0,
+  "grade": {
+    "contrast": 1.08,
+    "saturation": 1.12,
+    "brightness": 0.03,
+    "gamma": 1.06,
+    "grain": 2,
+    "vignette": 0.1,
+    "sharpen": 0.5
+  },
+  "shots": [
+    {
+      "name": "card_open",
+      "scenario": "trailer_flame_card",
+      "start": 0.5,
+      "duration": 5.0,
+      "transition": {
+        "type": "dip",
+        "duration": 0.5
+      },
+      "act_title": "SCIPIO  VS  HANNIBAL",
+      "act_kicker": "AI VS AI  \u00b7  THE WAR OF TOWNS",
+      "flame_card": true,
+      "flame_speed": 0.85,
+      "flame_intensity": 1.0
+    },
+    {
+      "name": "field",
+      "scenario": "ai_war_of_towns",
+      "seed": 1337,
+      "start": 2.0,
+      "duration": 7.0,
+      "focus": {
+        "mode": "point",
+        "point": [0, 0.0, 0],
+        "smoothing": 0.0
+      },
+      "camera": [
+        {
+          "time": 0,
+          "distance": 150,
+          "pitch": 64,
+          "yaw": 45,
+          "fov": 40,
+          "height": 0,
+          "ease": "smooth"
+        },
+        {
+          "time": 7,
+          "distance": 122,
+          "pitch": 54,
+          "yaw": 38,
+          "fov": 40,
+          "height": 0,
+          "ease": "smooth"
+        }
+      ],
+      "caption": "ONE RIVER  \u00b7  ONE BRIDGE  \u00b7  TWO COMPUTER COMMANDERS",
+      "transition": {
+        "type": "dip",
+        "duration": 0.5
+      }
+    },
+    {
+      "name": "rome_intro",
+      "scenario": "ai_war_of_towns",
+      "seed": 1337,
+      "start": 9.5,
+      "duration": 6.0,
+      "focus": {
+        "mode": "group",
+        "group": "scipio_commander",
+        "smoothing": 0.5
+      },
+      "camera": [
+        {
+          "time": 0,
+          "distance": 22,
+          "pitch": 24,
+          "yaw": 28,
+          "fov": 40,
+          "height": 1.2,
+          "ease": "smooth"
+        },
+        {
+          "time": 6,
+          "distance": 17,
+          "pitch": 27,
+          "yaw": 48,
+          "fov": 40,
+          "height": 1.2,
+          "ease": "smooth"
+        }
+      ],
+      "caption": "NORTH BANK \u2014 SCIPIO OF THE ROMAN REPUBLIC"
+    },
+    {
+      "name": "carthage_intro",
+      "scenario": "ai_war_of_towns",
+      "seed": 1337,
+      "start": 16.0,
+      "duration": 6.0,
+      "focus": {
+        "mode": "group",
+        "group": "hannibal_commander",
+        "smoothing": 0.5
+      },
+      "camera": [
+        {
+          "time": 0,
+          "distance": 22,
+          "pitch": 24,
+          "yaw": 208,
+          "fov": 40,
+          "height": 1.2,
+          "ease": "smooth"
+        },
+        {
+          "time": 6,
+          "distance": 17,
+          "pitch": 27,
+          "yaw": 228,
+          "fov": 40,
+          "height": 1.2,
+          "ease": "smooth"
+        }
+      ],
+      "caption": "SOUTH BANK \u2014 HANNIBAL OF CARTHAGE",
+      "transition": {
+        "type": "whip",
+        "duration": 0.25
+      }
+    },
+    {
+      "name": "muster",
+      "scenario": "ai_war_of_towns",
+      "seed": 1337,
+      "start": 22.5,
+      "duration": 4.5,
+      "focus": {
+        "mode": "army",
+        "owner": 3,
+        "point": [30, 0.0, 30],
+        "smoothing": 0.8,
+        "home_radius": 24.0
+      },
+      "camera": [
+        {
+          "time": 0,
+          "distance": 30,
+          "pitch": 30,
+          "yaw": 228,
+          "fov": 40,
+          "height": 1.2,
+          "ease": "smooth"
+        },
+        {
+          "time": 4.5,
+          "distance": 27,
+          "pitch": 30,
+          "yaw": 238,
+          "fov": 40,
+          "height": 1.2,
+          "ease": "smooth"
+        }
+      ],
+      "caption": "0:20 \u2014 HANNIBAL MUSTERS FIRST"
+    },
+    {
+      "name": "bridge",
+      "scenario": "ai_war_of_towns",
+      "seed": 1337,
+      "start": 33.0,
+      "duration": 7.0,
+      "focus": {
+        "mode": "army",
+        "owner": 3,
+        "point": [0, 0.0, 0],
+        "smoothing": 0.8,
+        "home_radius": 24.0
+      },
+      "camera": [
+        {
+          "time": 0,
+          "distance": 34,
+          "pitch": 26,
+          "yaw": 214,
+          "fov": 40,
+          "height": 1.2,
+          "ease": "smooth"
+        },
+        {
+          "time": 7,
+          "distance": 27,
+          "pitch": 24,
+          "yaw": 198,
+          "fov": 40,
+          "height": 1.2,
+          "ease": "smooth"
+        }
+      ],
+      "caption": "0:35 \u2014 ACROSS THE BRIDGE"
+    },
+    {
+      "name": "raid",
+      "scenario": "ai_war_of_towns",
+      "seed": 1337,
+      "start": 50.0,
+      "duration": 8.0,
+      "focus": {
+        "mode": "battle",
+        "point": [-25, 0.0, -25],
+        "smoothing": 0.9,
+        "engagement_radius": 14.0
+      },
+      "camera": [
+        {
+          "time": 0,
+          "distance": 24,
+          "pitch": 25,
+          "yaw": 58,
+          "fov": 40,
+          "height": 1.2,
+          "ease": "smooth"
+        },
+        {
+          "time": 8,
+          "distance": 19,
+          "pitch": 23,
+          "yaw": 84,
+          "fov": 40,
+          "height": 1.2,
+          "ease": "smooth"
+        }
+      ],
+      "caption": "0:50 \u2014 THE RAID HITS THE ROMAN GATE"
+    },
+    {
+      "name": "raid_close",
+      "scenario": "ai_war_of_towns",
+      "seed": 1337,
+      "start": 60.0,
+      "duration": 6.0,
+      "focus": {
+        "mode": "battle",
+        "point": [-25, 0.0, -25],
+        "smoothing": 0.7,
+        "engagement_radius": 14.0
+      },
+      "camera": [
+        {
+          "time": 0,
+          "distance": 14,
+          "pitch": 18,
+          "yaw": 98,
+          "fov": 40,
+          "height": 1.2,
+          "ease": "smooth"
+        },
+        {
+          "time": 6,
+          "distance": 12,
+          "pitch": 17,
+          "yaw": 118,
+          "fov": 40,
+          "height": 1.2,
+          "ease": "smooth"
+        }
+      ],
+      "slow_motion": 0.65,
+      "transition": {
+        "type": "whip",
+        "duration": 0.22
+      }
+    },
+    {
+      "name": "rome_march",
+      "scenario": "ai_war_of_towns",
+      "seed": 1337,
+      "start": 112.0,
+      "duration": 7.0,
+      "focus": {
+        "mode": "army",
+        "owner": 2,
+        "point": [-8, 0.0, -8],
+        "smoothing": 0.8,
+        "home_radius": 24.0
+      },
+      "camera": [
+        {
+          "time": 0,
+          "distance": 30,
+          "pitch": 28,
+          "yaw": 44,
+          "fov": 40,
+          "height": 1.2,
+          "ease": "smooth"
+        },
+        {
+          "time": 7,
+          "distance": 26,
+          "pitch": 27,
+          "yaw": 30,
+          "fov": 40,
+          "height": 1.2,
+          "ease": "smooth"
+        }
+      ],
+      "caption": "2:00 \u2014 SCIPIO ANSWERS"
+    },
+    {
+      "name": "counter",
+      "scenario": "ai_war_of_towns",
+      "seed": 1337,
+      "start": 148.0,
+      "duration": 8.0,
+      "focus": {
+        "mode": "battle",
+        "point": [30, 0.0, 30],
+        "smoothing": 0.9,
+        "engagement_radius": 14.0
+      },
+      "camera": [
+        {
+          "time": 0,
+          "distance": 24,
+          "pitch": 24,
+          "yaw": 238,
+          "fov": 40,
+          "height": 1.2,
+          "ease": "smooth"
+        },
+        {
+          "time": 8,
+          "distance": 18,
+          "pitch": 22,
+          "yaw": 262,
+          "fov": 40,
+          "height": 1.2,
+          "ease": "smooth"
+        }
+      ],
+      "caption": "2:30 \u2014 AT THE GATES OF HANNIBAL"
+    },
+    {
+      "name": "repulsed",
+      "scenario": "ai_war_of_towns",
+      "seed": 1337,
+      "start": 168.0,
+      "duration": 6.0,
+      "focus": {
+        "mode": "battle",
+        "point": [30, 0.0, 30],
+        "smoothing": 0.7,
+        "engagement_radius": 14.0
+      },
+      "camera": [
+        {
+          "time": 0,
+          "distance": 16,
+          "pitch": 20,
+          "yaw": 262,
+          "fov": 40,
+          "height": 1.2,
+          "ease": "smooth"
+        },
+        {
+          "time": 6,
+          "distance": 14,
+          "pitch": 19,
+          "yaw": 276,
+          "fov": 40,
+          "height": 1.2,
+          "ease": "smooth"
+        }
+      ],
+      "caption": "THE LEGION IS THROWN BACK",
+      "transition": {
+        "type": "whip",
+        "duration": 0.22
+      }
+    },
+    {
+      "name": "rome_grows",
+      "scenario": "ai_war_of_towns",
+      "seed": 1337,
+      "start": 420.0,
+      "duration": 7.0,
+      "focus": {
+        "mode": "point",
+        "point": [-30, 0.0, -30],
+        "smoothing": 0.6
+      },
+      "camera": [
+        {
+          "time": 0,
+          "distance": 60,
+          "pitch": 46,
+          "yaw": 44,
+          "fov": 40,
+          "height": 0,
+          "ease": "smooth"
+        },
+        {
+          "time": 7,
+          "distance": 50,
+          "pitch": 40,
+          "yaw": 56,
+          "fov": 40,
+          "height": 0,
+          "ease": "smooth"
+        }
+      ],
+      "caption": "7:00 \u2014 BOTH TOWNS DIG IN",
+      "transition": {
+        "type": "dip",
+        "duration": 0.5
+      }
+    },
+    {
+      "name": "carthage_grows",
+      "scenario": "ai_war_of_towns",
+      "seed": 1337,
+      "start": 430.0,
+      "duration": 6.0,
+      "focus": {
+        "mode": "point",
+        "point": [30, 0.0, 30],
+        "smoothing": 0.6
+      },
+      "camera": [
+        {
+          "time": 0,
+          "distance": 56,
+          "pitch": 44,
+          "yaw": 224,
+          "fov": 40,
+          "height": 0,
+          "ease": "smooth"
+        },
+        {
+          "time": 6,
+          "distance": 50,
+          "pitch": 40,
+          "yaw": 236,
+          "fov": 40,
+          "height": 0,
+          "ease": "smooth"
+        }
+      ],
+      "caption": "HANNIBAL BUILDS WIDER"
+    },
+    {
+      "name": "wave2",
+      "scenario": "ai_war_of_towns",
+      "seed": 1337,
+      "start": 612.0,
+      "duration": 7.0,
+      "focus": {
+        "mode": "army",
+        "owner": 3,
+        "point": [-12.0, 0.0, -12.0],
+        "smoothing": 0.8,
+        "home_radius": 24.0
+      },
+      "camera": [
+        {
+          "time": 0,
+          "distance": 30,
+          "pitch": 26,
+          "yaw": 220,
+          "fov": 40,
+          "height": 1.2,
+          "ease": "smooth"
+        },
+        {
+          "time": 7,
+          "distance": 26,
+          "pitch": 24,
+          "yaw": 204,
+          "fov": 40,
+          "height": 1.2,
+          "ease": "smooth"
+        }
+      ],
+      "caption": "10:00 \u2014 SCIPIO FARMS RIGHT UP TO THE RIVER"
+    },
+    {
+      "name": "wave2_fight",
+      "scenario": "ai_war_of_towns",
+      "seed": 1337,
+      "start": 652.0,
+      "duration": 8.0,
+      "focus": {
+        "mode": "battle",
+        "point": [-25, 0.0, -25],
+        "smoothing": 0.9,
+        "engagement_radius": 14.0
+      },
+      "camera": [
+        {
+          "time": 0,
+          "distance": 20,
+          "pitch": 23,
+          "yaw": 70,
+          "fov": 40,
+          "height": 1.2,
+          "ease": "smooth"
+        },
+        {
+          "time": 8,
+          "distance": 16,
+          "pitch": 21,
+          "yaw": 96,
+          "fov": 40,
+          "height": 1.2,
+          "ease": "smooth"
+        }
+      ],
+      "caption": "10:50 \u2014 THE LEGION KEEPS TO ITS TOWN"
+    },
+    {
+      "name": "siege_fire",
+      "scenario": "ai_war_of_towns",
+      "seed": 1337,
+      "start": 1130.0,
+      "duration": 8.0,
+      "focus": {
+        "mode": "battle",
+        "point": [20.0, 0.0, 18.0],
+        "smoothing": 0.9,
+        "engagement_radius": 16.0
+      },
+      "camera": [
+        {
+          "time": 0,
+          "distance": 18,
+          "pitch": 21,
+          "yaw": 88,
+          "fov": 40,
+          "height": 1.2,
+          "ease": "smooth"
+        },
+        {
+          "time": 8,
+          "distance": 16,
+          "pitch": 20,
+          "yaw": 112,
+          "fov": 40,
+          "height": 1.2,
+          "ease": "smooth"
+        }
+      ],
+      "caption": "19:00 \u2014 HANNIBAL WALLS THE BRIDGE",
+      "transition": {
+        "type": "dip",
+        "duration": 0.5
+      }
+    },
+    {
+      "name": "siege_end",
+      "scenario": "ai_war_of_towns",
+      "seed": 1337,
+      "start": 1240.0,
+      "duration": 6.0,
+      "focus": {
+        "mode": "battle",
+        "point": [20.0, 0.0, 18.0],
+        "smoothing": 0.9,
+        "engagement_radius": 16.0
+      },
+      "camera": [
+        {
+          "time": 0,
+          "distance": 22,
+          "pitch": 24,
+          "yaw": 40,
+          "fov": 40,
+          "height": 1.2,
+          "ease": "smooth"
+        },
+        {
+          "time": 6,
+          "distance": 20,
+          "pitch": 23,
+          "yaw": 56,
+          "fov": 40,
+          "height": 1.2,
+          "ease": "smooth"
+        }
+      ],
+      "caption": "20:40 \u2014 THE SOUTH BANK IS SHUT"
+    },
+    {
+      "name": "stalemate",
+      "scenario": "ai_war_of_towns",
+      "seed": 1337,
+      "start": 1500.0,
+      "duration": 7.0,
+      "focus": {
+        "mode": "point",
+        "point": [2, 0.0, 2],
+        "smoothing": 0.0
+      },
+      "camera": [
+        {
+          "time": 0,
+          "distance": 70,
+          "pitch": 40,
+          "yaw": 224,
+          "fov": 40,
+          "height": 0,
+          "ease": "smooth"
+        },
+        {
+          "time": 7,
+          "distance": 92,
+          "pitch": 50,
+          "yaw": 236,
+          "fov": 40,
+          "height": 0,
+          "ease": "smooth"
+        }
+      ],
+      "caption": "25:00 \u2014 NOBODY CROSSES AGAIN",
+      "transition": {
+        "type": "dip",
+        "duration": 0.5
+      }
+    },
+    {
+      "name": "rome_end",
+      "scenario": "ai_war_of_towns",
+      "seed": 1337,
+      "start": 1780.0,
+      "duration": 5.0,
+      "focus": {
+        "mode": "group",
+        "group": "scipio_commander",
+        "smoothing": 0.5
+      },
+      "camera": [
+        {
+          "time": 0,
+          "distance": 20,
+          "pitch": 24,
+          "yaw": 38,
+          "fov": 40,
+          "height": 1.2,
+          "ease": "smooth"
+        },
+        {
+          "time": 5,
+          "distance": 18,
+          "pitch": 25,
+          "yaw": 54,
+          "fov": 40,
+          "height": 1.2,
+          "ease": "smooth"
+        }
+      ],
+      "caption": "30:00 \u2014 SCIPIO:  9 SOLDIERS  \u00b7  11 BUILDINGS"
+    },
+    {
+      "name": "carthage_end",
+      "scenario": "ai_war_of_towns",
+      "seed": 1337,
+      "start": 1786.0,
+      "duration": 5.0,
+      "focus": {
+        "mode": "group",
+        "group": "hannibal_commander",
+        "smoothing": 0.5
+      },
+      "camera": [
+        {
+          "time": 0,
+          "distance": 20,
+          "pitch": 24,
+          "yaw": 218,
+          "fov": 40,
+          "height": 1.2,
+          "ease": "smooth"
+        },
+        {
+          "time": 5,
+          "distance": 18,
+          "pitch": 25,
+          "yaw": 234,
+          "fov": 40,
+          "height": 1.2,
+          "ease": "smooth"
+        }
+      ],
+      "caption": "30:00 \u2014 HANNIBAL:  10 SOLDIERS  \u00b7  15 BUILDINGS"
+    },
+    {
+      "name": "verdict",
+      "scenario": "ai_war_of_towns",
+      "seed": 1337,
+      "start": 1792.0,
+      "duration": 7.0,
+      "focus": {
+        "mode": "point",
+        "point": [0, 0.0, 0],
+        "smoothing": 0.0
+      },
+      "camera": [
+        {
+          "time": 0,
+          "distance": 130,
+          "pitch": 56,
+          "yaw": 45,
+          "fov": 40,
+          "height": 0,
+          "ease": "smooth"
+        },
+        {
+          "time": 7,
+          "distance": 162,
+          "pitch": 66,
+          "yaw": 52,
+          "fov": 40,
+          "height": 0,
+          "ease": "smooth"
+        }
+      ],
+      "caption": "STALEMATE \u2014 HANNIBAL HOLDS MORE, NEITHER WINS",
+      "freeze": 2.5,
+      "transition": {
+        "type": "dip",
+        "duration": 0.5
+      }
+    }
+  ]
+}

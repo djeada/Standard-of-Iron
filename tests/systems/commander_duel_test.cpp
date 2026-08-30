@@ -502,12 +502,6 @@ namespace {
 using Engine::Core::CommanderSignaturePresentationComponent;
 using Engine::Core::CommanderStrikeCue;
 
-auto action_definition_of(const RpgCommanderActionComponent& action)
-    -> const Game::Systems::CombatActions::CombatActionDefinition* {
-  return Game::Systems::CombatActions::find_combat_action_definition(
-      static_cast<CombatActionId>(action.combat_action_id));
-}
-
 } // namespace
 
 TEST_F(CommanderDuelTest, EveryCommanderLinkLeavesASwingCueNotOnlyTheSignature) {

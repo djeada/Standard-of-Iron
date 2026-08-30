@@ -30,10 +30,6 @@ namespace {
   return seed;
 }
 
-[[nodiscard]] auto hash_float(float value) noexcept -> std::uint64_t {
-  return static_cast<std::uint64_t>(std::bit_cast<std::uint32_t>(value));
-}
-
 [[nodiscard]] auto quantize(float value, float scale) noexcept -> std::uint64_t {
   return static_cast<std::uint64_t>(
       static_cast<std::int64_t>(std::lround(value * scale)));

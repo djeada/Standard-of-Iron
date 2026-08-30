@@ -34,7 +34,7 @@ void main() {
   v_normal = normalize(vec3(rotated_normal_xz.x, a_normal.y, rotated_normal_xz.y));
 
   v_color = a_color_rot.rgb;
-  // Unscaled: the fragment shader keys rock/crystal on model-space height.
+
   v_local_pos = a_pos;
 
   v_seed = soi_hash13_1c8396(world_origin * 0.173 + vec3(rotation, scale, 0.91));

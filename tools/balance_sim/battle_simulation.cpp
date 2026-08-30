@@ -17,10 +17,12 @@
 #include "game/core/entity.h"
 #include "game/core/event_manager.h"
 #include "game/core/world.h"
+#include "game/formation/army_formation_registry.h"
 #include "game/map/map_definition.h"
 #include "game/map/terrain_service.h"
 #include "game/session/session_context.h"
 #include "game/systems/arrow_system.h"
+#include "game/systems/building_collision_registry.h"
 #include "game/systems/cleanup_system.h"
 #include "game/systems/combat_status_effect_system.h"
 #include "game/systems/combat_system.h"
@@ -28,6 +30,7 @@
 #include "game/systems/command_service.h"
 #include "game/systems/commander_system.h"
 #include "game/systems/default_content.h"
+#include "game/systems/formation_combat_geometry.h"
 #include "game/systems/healing_beam_system.h"
 #include "game/systems/healing_system.h"
 #include "game/systems/movement_pipeline.h"
@@ -412,6 +415,10 @@ auto run_battle(Game::Session::SessionContext& session,
   auto& nations = session.nations();
   nations.set_player_nation(k_side_a_owner, side_a_def.nation);
   nations.set_player_nation(k_side_b_owner, side_b_def.nation);
+
+  Game::Formation::ArmyFormationRegistry::instance().clear();
+  Game::Systems::BuildingCollisionRegistry::instance().clear();
+  Game::Systems::FormationCombat::invalidate_layout_cache();
 
   session.terrain().initialize(
       flat_map_definition(fixture.grid_width, fixture.grid_height));

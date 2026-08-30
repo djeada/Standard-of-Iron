@@ -38,6 +38,15 @@ static auto sanitize_music_volume(float volume) -> float {
   return std::clamp(volume, MiniaudioBackend::MIN_VOLUME, MiniaudioBackend::MAX_VOLUME);
 }
 
+void MusicPlayer::render_offline(float* interleaved_stereo, unsigned frames) {
+  if (!m_initialized || m_backend == nullptr) {
+    std::fill_n(interleaved_stereo, static_cast<std::size_t>(frames) * 2U, 0.0F);
+    return;
+  }
+  m_backend->wait_for_decodes();
+  m_backend->on_audio(interleaved_stereo, frames);
+}
+
 auto MusicPlayer::get_instance() -> MusicPlayer& {
   static MusicPlayer instance;
   return instance;
@@ -64,9 +73,12 @@ auto MusicPlayer::initialize(int music_channels) -> bool {
 
   m_channel_count = std::max(min_channels, music_channels);
   m_backend = new MiniaudioBackend(this);
+  const bool open_device = !qEnvironmentVariableIsSet("SOI_AUDIO_OFFLINE");
+  m_backend->set_offline_render(!open_device);
   if (!m_backend->initialize(AudioConstants::DEFAULT_SAMPLE_RATE,
                              AudioConstants::DEFAULT_OUTPUT_CHANNELS,
-                             m_channel_count)) {
+                             m_channel_count,
+                             open_device)) {
     qWarning() << "MusicPlayer: backend init failed";
     m_backend->deleteLater();
     m_backend = nullptr;
