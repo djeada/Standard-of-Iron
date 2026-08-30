@@ -11,6 +11,14 @@ Rectangle {
     property bool loading: false
     property string preview_id: ""
 
+    property var bases: []
+
+    property var base_owners: ({})
+    property string focused_base_key: ""
+    property bool bases_interactive: false
+
+    signal base_activated(string key)
+
     function refresh_preview() {
         if (!map_path || map_path === "" || !player_configs || player_configs.length === 0) {
             preview_image.source = "";
@@ -42,6 +50,13 @@ Rectangle {
         }
     }
 
+    function owner_of(key) {
+        if (!base_owners)
+            return null;
+        var entry = base_owners[String(key)];
+        return entry === undefined ? null : entry;
+    }
+
     radius: Theme.radiusSmall
     color: "#241c14"
     border.color: "#8f6d43"
@@ -61,6 +76,71 @@ Rectangle {
         visible: status === Image.Ready
     }
 
+    Item {
+        id: painted_area
+
+        x: preview_image.x + (preview_image.width - preview_image.paintedWidth) / 2
+        y: preview_image.y + (preview_image.height - preview_image.paintedHeight) / 2
+        width: preview_image.paintedWidth
+        height: preview_image.paintedHeight
+        visible: preview_image.visible && root.bases_interactive
+
+        Repeater {
+            model: root.bases
+
+            delegate: Item {
+                id: marker
+
+                readonly property var owner_entry: root.owner_of(modelData.key)
+                readonly property bool taken: owner_entry !== null
+                readonly property bool focused: root.focused_base_key === String(modelData.key)
+
+                width: Design.Metrics.space24
+                height: Design.Metrics.space24
+                x: Number(modelData.previewX) * painted_area.width - width / 2
+                y: Number(modelData.previewY) * painted_area.height - height / 2
+
+                Rectangle {
+                    anchors.centerIn: parent
+                    width: parent.width
+                    height: parent.height
+                    radius: width / 2
+                    color: "transparent"
+                    border.width: marker.focused ? 3 : 2
+                    border.color: marker.focused ? Theme.accentBright : (marker_mouse.containsMouse ? Theme.textMain : "transparent")
+                    opacity: marker.focused || marker_mouse.containsMouse ? 1 : 0
+
+                    Behavior on opacity  {
+                        NumberAnimation {
+                            duration: Theme.animFast
+                        }
+                    }
+                }
+
+                MouseArea {
+                    id: marker_mouse
+
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    cursorShape: Qt.PointingHandCursor
+                    acceptedButtons: Qt.LeftButton
+                    onClicked: {
+                        Design.UiSound.activate();
+                        root.base_activated(String(modelData.key));
+                    }
+                    onContainsMouseChanged: {
+                        if (containsMouse)
+                            Design.UiSound.hover();
+                    }
+                }
+
+                ToolTip.visible: marker_mouse.containsMouse
+                ToolTip.delay: Design.Metrics.tooltipDelay
+                ToolTip.text: marker.taken ? qsTr("%1 — held by %2").arg(String(modelData.name)).arg(String(marker.owner_entry.owner)) : qsTr("%1 — free, click to claim it").arg(String(modelData.name))
+            }
+        }
+    }
+
     Rectangle {
         anchors.left: parent.left
         anchors.right: parent.right
@@ -72,11 +152,17 @@ Rectangle {
         Text {
             id: legend_label
 
-            anchors.centerIn: parent
-            text: qsTr("Bases shown in player colours")
+            anchors.left: parent.left
+            anchors.right: parent.right
+            anchors.verticalCenter: parent.verticalCenter
+            anchors.leftMargin: Theme.spacingSmall
+            anchors.rightMargin: Theme.spacingSmall
+            text: root.bases_interactive ? qsTr("Click a base to reseat") : qsTr("Bases in player colours")
             color: Theme.textSubLite
             font.pixelSize: Design.Typography.caption
             font.italic: true
+            horizontalAlignment: Text.AlignHCenter
+            elide: Text.ElideRight
         }
     }
 

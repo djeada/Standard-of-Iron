@@ -7,6 +7,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <cstddef>
 #include <cstdlib>
 #include <memory>
 #include <optional>
@@ -14,6 +15,7 @@
 #include <string>
 #include <unordered_map>
 #include <utility>
+#include <vector>
 
 #include "../core/component.h"
 #include "../core/ownership_constants.h"
@@ -25,6 +27,7 @@
 #include "../systems/wall_network_service.h"
 #include "../units/factory.h"
 #include "../units/spawn_type.h"
+#include "base_options.h"
 #include "core/entity.h"
 #include "map/map_definition.h"
 #include "terrain_service.h"
@@ -35,7 +38,104 @@ namespace Game::Map {
 namespace {
 std::shared_ptr<Game::Units::UnitFactoryRegistry> s_registry;
 std::unordered_map<int, int> s_player_team_overrides;
+std::unordered_map<int, QString> s_base_assignments;
 bool s_spectator_mode = false;
+
+struct ResolvedBaseSeating {
+  std::unordered_map<std::size_t, int> structure_owner;
+  std::unordered_map<std::size_t, int> structure_population;
+  std::unordered_map<int, QVector3D> player_offset;
+
+  [[nodiscard]] auto owner_for(std::size_t index, int authored_player_id) const -> int {
+    const auto it = structure_owner.find(index);
+    return it == structure_owner.end() ? authored_player_id : it->second;
+  }
+
+  [[nodiscard]] auto population_for(std::size_t index,
+                                    int authored_population) const -> int {
+    const auto it = structure_population.find(index);
+    return it == structure_population.end() ? authored_population : it->second;
+  }
+
+  [[nodiscard]] auto offset_for(int player_id) const -> QVector3D {
+    const auto it = player_offset.find(player_id);
+    return it == player_offset.end() ? QVector3D() : it->second;
+  }
+};
+
+auto resolve_base_seating(const MapDefinition& def) -> ResolvedBaseSeating {
+  ResolvedBaseSeating seating;
+  if (s_base_assignments.empty()) {
+    return seating;
+  }
+
+  const std::vector<BaseOption> options = collect_base_options(def);
+  if (options.empty()) {
+    return seating;
+  }
+
+  std::unordered_map<QString, const BaseOption*> by_key;
+  by_key.reserve(options.size());
+  for (const auto& option : options) {
+    by_key.emplace(option.key, &option);
+  }
+
+  const std::unordered_map<int, QString> authored = default_base_assignments(def);
+  std::unordered_map<QString, int> claimed_by;
+  std::set<int> seated_players;
+
+  for (const auto& [player_id, key] : s_base_assignments) {
+    if (player_id <= 0) {
+      continue;
+    }
+    const auto option_it = by_key.find(key);
+    if (option_it == by_key.end()) {
+      qWarning() << "MapTransformer: player" << player_id << "was seated at base" << key
+                 << "which this map does not have; keeping the authored base";
+      continue;
+    }
+    const auto claim = claimed_by.emplace(key, player_id);
+    if (!claim.second) {
+      qWarning() << "MapTransformer: base" << key << "was handed to both player"
+                 << claim.first->second << "and player" << player_id
+                 << "; keeping the first";
+      continue;
+    }
+
+    const BaseOption& option = *option_it->second;
+    seating.structure_owner[option.structure_index] = player_id;
+    seated_players.insert(player_id);
+
+    const auto authored_it = authored.find(player_id);
+    if (authored_it == authored.end() || authored_it->second == key) {
+      continue;
+    }
+    const auto authored_option_it = by_key.find(authored_it->second);
+    if (authored_option_it == by_key.end()) {
+      continue;
+    }
+    const BaseOption& home = *authored_option_it->second;
+    seating.player_offset[player_id] = option.position - home.position;
+
+    seating.structure_population[option.structure_index] = home.max_population;
+  }
+
+  for (const auto& option : options) {
+    if (option.default_player_id <= 0) {
+      continue;
+    }
+    if (seating.structure_owner.count(option.structure_index) != 0U) {
+      continue;
+    }
+
+    if (seated_players.count(option.default_player_id) == 0U) {
+      continue;
+    }
+    seating.structure_owner[option.structure_index] = Game::Core::NEUTRAL_OWNER_ID;
+  }
+
+  return seating;
+}
 
 constexpr float k_runtime_grid_center_offset = 0.5F;
 
@@ -246,10 +346,21 @@ void MapTransformer::clear_player_team_overrides() {
   s_player_team_overrides.clear();
 }
 
+void MapTransformer::set_base_assignments(
+    const std::unordered_map<int, QString>& assignments) {
+  s_base_assignments = assignments;
+}
+
+void MapTransformer::clear_base_assignments() {
+  s_base_assignments.clear();
+}
+
 auto MapTransformer::apply_to_world(const MapDefinition& def,
                                     Engine::Core::World& world) -> MapRuntime {
   MapRuntime rt;
   rt.unit_ids.reserve(def.spawns.size());
+
+  const ResolvedBaseSeating seating = resolve_base_seating(def);
 
   auto& owner_registry = Game::Systems::OwnerRegistry::instance();
   std::set<int> unique_player_ids;
@@ -338,6 +449,10 @@ auto MapTransformer::apply_to_world(const MapDefinition& def,
       world_z = (s.z - (def.grid.height * 0.5F - 0.5F)) * tile;
     }
 
+    const QVector3D camp_offset = seating.offset_for(s.player_id);
+    world_x += camp_offset.x();
+    world_z += camp_offset.z();
+
     auto& terrain = Game::Map::TerrainService::instance();
     if (terrain.is_initialized() && terrain.is_forbidden_world(world_x, world_z)) {
       const float tile = std::max(0.0001F, def.grid.tile_size);
@@ -394,16 +509,27 @@ auto MapTransformer::apply_to_world(const MapDefinition& def,
     }
   }
 
-  for (const auto& structure : def.structures) {
+  for (std::size_t structure_index = 0; structure_index < def.structures.size();
+       ++structure_index) {
+    const auto& structure = def.structures[structure_index];
+    const int seated_player_id =
+        seating.owner_for(structure_index, structure.player_id);
+
     Game::Units::SpawnParams sp;
-    sp.player_id = effective_player_id_for_map_owner(structure.player_id);
+    sp.player_id = effective_player_id_for_map_owner(seated_player_id);
     sp.spawn_type = structure.type;
     sp.ai_controlled = !owner_registry.is_player(sp.player_id);
-    sp.max_population = structure.max_population;
+    sp.max_population =
+        seating.population_for(structure_index, structure.max_population);
     sp.nation_id = resolve_nation_id_for_map_owner(sp.player_id, structure.nation);
 
+    const QVector3D structure_offset =
+        seating.structure_owner.count(structure_index) != 0U
+            ? QVector3D()
+            : seating.offset_for(structure.player_id);
+
     if (const auto* point = std::get_if<PointStructureGeometry>(&structure.geometry)) {
-      sp.position = point->position;
+      sp.position = point->position + structure_offset;
 
       sp.rotation_y = structure.rotation;
       spawn_map_unit(sp, world);
@@ -417,16 +543,18 @@ auto MapTransformer::apply_to_world(const MapDefinition& def,
       continue;
     }
 
+    const QVector3D line_start = line->start + structure_offset;
+    const QVector3D line_end = line->end + structure_offset;
     const auto snapped_start = Game::Systems::WallGridPosition{
         .x = Game::Systems::WallNetworkService::snap_grid_coordinate(
-            runtime_world_to_grid(line->start.x(), def.grid.width)),
+            runtime_world_to_grid(line_start.x(), def.grid.width)),
         .z = Game::Systems::WallNetworkService::snap_grid_coordinate(
-            runtime_world_to_grid(line->start.z(), def.grid.height))};
+            runtime_world_to_grid(line_start.z(), def.grid.height))};
     const auto snapped_end = Game::Systems::WallGridPosition{
         .x = Game::Systems::WallNetworkService::snap_grid_coordinate(
-            runtime_world_to_grid(line->end.x(), def.grid.width)),
+            runtime_world_to_grid(line_end.x(), def.grid.width)),
         .z = Game::Systems::WallNetworkService::snap_grid_coordinate(
-            runtime_world_to_grid(line->end.z(), def.grid.height))};
+            runtime_world_to_grid(line_end.z(), def.grid.height))};
 
     for (const auto& segment :
          Game::Systems::WallNetworkService::build_axis_aligned_chain(snapped_start,

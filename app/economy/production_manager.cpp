@@ -22,6 +22,7 @@
 #include "game/map/terrain_service.h"
 #include "game/render_bridge/picking_service.h"
 #include "game/session/session_context.h"
+#include "game/systems/build_site.h"
 #include "game/systems/building_collision_registry.h"
 #include "game/systems/construction_cost_catalog.h"
 #include "game/systems/food_targets.h"
@@ -145,7 +146,11 @@ auto maybe_snap_tower_to_wall_socket(Engine::Core::World* world,
   }
 
   const auto snapped = Game::Systems::WallNetworkService::find_tower_snap_socket(
-      *world, owner_id, world_position.x(), world_position.z());
+      *world,
+      owner_id,
+      world_position.x(),
+      world_position.z(),
+      Game::Systems::wall_ground_probe(*world));
   if (!snapped.has_value()) {
     return world_position;
   }
@@ -180,7 +185,7 @@ auto maybe_snap_rotated_wall_preview(Engine::Core::World* world,
   const auto consider_candidate = [&](Game::Systems::WallGridPosition candidate) {
     const auto validation =
         Game::Systems::WallNetworkService::validate_wall_segment_placement(
-            *world, candidate, true);
+            *world, candidate, Game::Systems::wall_ground_probe(*world), true);
     if (!validation.valid) {
       return;
     }
@@ -281,33 +286,75 @@ auto resolve_construction_pointer_hit(Engine::Core::World* world,
 
 } // namespace
 
+auto ProductionManager::placement_refusal(Game::Systems::PlacementRuling ruling) const
+    -> QString {
+  switch (ruling) {
+  case Game::Systems::PlacementRuling::BlockedByStructure:
+    return QCoreApplication::translate("ProductionManager",
+                                       "Something is already standing here.");
+  case Game::Systems::PlacementRuling::BlockedByObstacle:
+    return QCoreApplication::translate("ProductionManager",
+                                       "This ground cannot be cleared to build on.");
+  case Game::Systems::PlacementRuling::BlockedByWater:
+    return QCoreApplication::translate("ProductionManager",
+                                       "Nothing can be built on the water.");
+  case Game::Systems::PlacementRuling::BlockedByGround:
+    return QCoreApplication::translate("ProductionManager",
+                                       "The ground here is too steep to build on.");
+  case Game::Systems::PlacementRuling::OutsideBattlefield:
+    return QCoreApplication::translate("ProductionManager",
+                                       "That is beyond the edge of the battlefield.");
+  case Game::Systems::PlacementRuling::UnknownStructure:
+    return QCoreApplication::translate("ProductionManager",
+                                       "That structure cannot be placed.");
+  case Game::Systems::PlacementRuling::Unaffordable:
+    return App::Economy::insufficient_resources_reason(
+        Game::Session::session_for(*m_world).economy(),
+        pending_construction_owner_id(),
+        App::Economy::construction_costs(m_pending_construction_type));
+  case Game::Systems::PlacementRuling::NoFactory:
+  case Game::Systems::PlacementRuling::SpawnFailed:
+    return QCoreApplication::translate("ProductionManager",
+                                       "Building factory unavailable.");
+  case Game::Systems::PlacementRuling::Ok:
+    break;
+  }
+  return {};
+}
+
+auto ProductionManager::wall_plan_refusal(
+    const std::vector<Game::Systems::PlannedWallSegment>& segments) const -> QString {
+  for (const auto& segment : segments) {
+    switch (segment.fault) {
+    case Game::Systems::WallSegmentFault::None:
+      continue;
+    case Game::Systems::WallSegmentFault::Occupied:
+      return QCoreApplication::translate("ProductionManager",
+                                         "A wall already stands here.");
+    case Game::Systems::WallSegmentFault::Invalid:
+      return placement_refusal(
+          Game::Systems::StructurePlacementService::ruling_for(segment.verdict));
+    case Game::Systems::WallSegmentFault::NotEnoughWood:
+      return placement_refusal(Game::Systems::PlacementRuling::Unaffordable);
+    }
+  }
+  return QCoreApplication::translate("ProductionManager",
+                                     "No part of this wall can stand there.");
+}
+
 auto ProductionManager::ground_refusal(const QString& building_type,
                                        float world_x,
                                        float world_z) const -> QString {
   if (m_world == nullptr) {
     return {};
   }
-  switch (Game::Systems::assess_ground(
-      *m_world, building_type.toStdString(), world_x, world_z)) {
-  case Game::Systems::GroundVerdict::Occupied:
-    return QCoreApplication::translate("ProductionManager",
-                                       "Something is already standing here.");
-  case Game::Systems::GroundVerdict::Impassable:
-    return QCoreApplication::translate("ProductionManager",
-                                       "This ground cannot be cleared to build on.");
-  case Game::Systems::GroundVerdict::Water:
-    return QCoreApplication::translate("ProductionManager",
-                                       "Nothing can be built on the water.");
-  case Game::Systems::GroundVerdict::Uneven:
-    return QCoreApplication::translate("ProductionManager",
-                                       "The ground here is too steep to build on.");
-  case Game::Systems::GroundVerdict::OffMap:
-    return QCoreApplication::translate("ProductionManager",
-                                       "That is beyond the edge of the battlefield.");
-  case Game::Systems::GroundVerdict::Clear:
-    break;
-  }
-  return {};
+  return placement_refusal(Game::Systems::StructurePlacementService::ground_ruling(
+      *m_world,
+      building_type.toStdString(),
+      world_x,
+      world_z,
+      item_supports_preview_rotation(building_type) ? m_construction_preview_rotation_y
+                                                    : 0.0F));
 }
 
 void ProductionManager::start_building_placement(const QString& building_type,
@@ -1192,10 +1239,8 @@ void ProductionManager::rebuild_wall_preview_plan(
   const int wood_cost = plan.wood_per_segment;
 
   set_construction_preview_active(!m_wall_preview_segments.empty());
-  set_construction_preview_ruling(
-      valid_segment_count > 0,
-      QCoreApplication::translate("ProductionManager",
-                                  "No part of this wall can stand there."));
+  set_construction_preview_ruling(valid_segment_count > 0,
+                                  wall_plan_refusal(m_wall_preview_segments));
   set_construction_preview_summary(static_cast<int>(m_wall_preview_segments.size()),
                                    valid_segment_count,
                                    valid_segment_count * wood_cost);
@@ -1286,56 +1331,28 @@ void ProductionManager::confirm_direct_building_placement() {
 
   const int owner_id = pending_construction_owner_id();
   const std::string building_type = m_pending_construction_type.toStdString();
-  switch (Game::Systems::StructurePlacementService::ruling(
-      *m_world, owner_id, building_type, m_construction_placement_position)) {
-  case Game::Systems::PlacementRuling::BlockedByStructure:
-    emit construction_placement_rejected(QCoreApplication::translate(
-        "ProductionManager", "Something is already standing here."));
+  const float rotation_y = item_supports_preview_rotation(m_pending_construction_type)
+                               ? m_construction_preview_rotation_y
+                               : 0.0F;
+  if (const QString refusal =
+          placement_refusal(Game::Systems::StructurePlacementService::ruling(
+              *m_world,
+              owner_id,
+              building_type,
+              m_construction_placement_position,
+              rotation_y));
+      !refusal.isEmpty()) {
+    emit construction_placement_rejected(refusal);
     return;
-  case Game::Systems::PlacementRuling::BlockedByObstacle:
-    emit construction_placement_rejected(QCoreApplication::translate(
-        "ProductionManager", "This ground cannot be cleared to build on."));
-    return;
-  case Game::Systems::PlacementRuling::BlockedByWater:
-    emit construction_placement_rejected(QCoreApplication::translate(
-        "ProductionManager", "Nothing can be built on the water."));
-    return;
-  case Game::Systems::PlacementRuling::BlockedByGround:
-    emit construction_placement_rejected(QCoreApplication::translate(
-        "ProductionManager", "The ground here is too steep to build on."));
-    return;
-  case Game::Systems::PlacementRuling::OutsideBattlefield:
-    emit construction_placement_rejected(QCoreApplication::translate(
-        "ProductionManager", "That is beyond the edge of the battlefield."));
-    return;
-  case Game::Systems::PlacementRuling::UnknownStructure:
-    emit construction_placement_rejected(QCoreApplication::translate(
-        "ProductionManager", "That structure cannot be placed."));
-    return;
-  case Game::Systems::PlacementRuling::Unaffordable:
-    emit construction_placement_rejected(App::Economy::insufficient_resources_reason(
-        Game::Session::session_for(*m_world).economy(),
-        owner_id,
-        App::Economy::construction_costs(m_pending_construction_type)));
-    return;
-  case Game::Systems::PlacementRuling::NoFactory:
-  case Game::Systems::PlacementRuling::SpawnFailed:
-    emit construction_placement_rejected(QCoreApplication::translate(
-        "ProductionManager", "Building factory unavailable."));
-    return;
-  case Game::Systems::PlacementRuling::Ok:
-    break;
   }
 
   {
     App::Core::OrderRequest request;
     request.kind = App::Core::OrderKind::Build;
-    request.payload = Game::Command::PlaceBuilding{
-        .building_type = building_type,
-        .position = m_construction_placement_position,
-        .rotation_y = item_supports_preview_rotation(m_pending_construction_type)
-                          ? m_construction_preview_rotation_y
-                          : 0.0F};
+    request.payload =
+        Game::Command::PlaceBuilding{.building_type = building_type,
+                                     .position = m_construction_placement_position,
+                                     .rotation_y = rotation_y};
     request.has_destination = true;
     request.destination = m_construction_placement_position;
     emit order_feedback(

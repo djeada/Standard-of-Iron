@@ -29,6 +29,7 @@
       ],
       "files": [
         "game/systems/nation_id",
+        "game/systems/ground_verdict",
         "game/systems/projectile_kind",
         "game/systems/resource_types",
         "game/systems/harvest_yields",

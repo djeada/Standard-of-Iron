@@ -31,6 +31,7 @@ struct PlannedWallSegment {
   float rotation_y = 0.0F;
   bool valid = false;
   WallSegmentFault fault = WallSegmentFault::None;
+  GroundVerdict verdict = GroundVerdict::Clear;
   std::string failure_reason;
 };
 

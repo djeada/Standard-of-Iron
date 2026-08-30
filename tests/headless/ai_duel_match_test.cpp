@@ -19,6 +19,7 @@
 #include "game/systems/ai_system.h"
 #include "game/systems/ai_system/ai_commander_doctrine.h"
 #include "game/systems/ai_system/ai_strategy.h"
+#include "game/systems/building_collision_registry.h"
 #include "game/systems/default_content.h"
 #include "game/systems/nation_registry.h"
 #include "game/systems/nav_grid.h"
@@ -33,6 +34,7 @@
 
 namespace {
 
+using Engine::Core::BuilderProductionComponent;
 using Engine::Core::EntityID;
 using Engine::Core::UnitComponent;
 using Game::Session::SessionContext;
@@ -523,6 +525,7 @@ protected:
       std::string type;
       float x = 0.0F;
       float z = 0.0F;
+      float yaw = 0.0F;
     };
 
     std::vector<Standing> town;
@@ -538,18 +541,53 @@ protected:
       town.push_back(Standing{.id = id,
                               .type = Game::Units::spawn_typeToString(unit.spawn_type),
                               .x = transform->position.x,
-                              .z = transform->position.z});
+                              .z = transform->position.z,
+                              .yaw = transform->rotation.y});
     }
 
     ASSERT_GE(town.size(), 4U)
         << "the towns were empty, so this says nothing about how they were laid out";
 
+    const auto neighbours_of = [&session](const Standing& building) {
+      std::string listed;
+      for (const auto& other : session.building_collision().get_all_buildings()) {
+        if (other.entity_id == building.id ||
+            std::hypot(other.center_x - building.x, other.center_z - building.z) >
+                12.0F) {
+          continue;
+        }
+        listed += " #" + std::to_string(other.entity_id) + "@" +
+                  std::to_string(other.center_x) + "," +
+                  std::to_string(other.center_z) + " " + std::to_string(other.width) +
+                  "x" + std::to_string(other.depth) + (other.wall_link ? " link" : "") +
+                  (other.blocks_navigation ? "" : " passable");
+      }
+      for (auto [id, builder] : session.world().view<BuilderProductionComponent>()) {
+        if (!builder.has_construction_site ||
+            std::hypot(builder.construction_site_x - building.x,
+                       builder.construction_site_z - building.z) > 12.0F) {
+          continue;
+        }
+        listed += " site(" + builder.product_type + ")@" +
+                  std::to_string(builder.construction_site_x) + "," +
+                  std::to_string(builder.construction_site_z) + " by #" +
+                  std::to_string(id) + (builder.in_progress ? " working" : " idle") +
+                  (builder.at_construction_site ? " there" : " away") + " wallsite " +
+                  std::to_string(builder.construction_site_entity_id);
+      }
+      return listed;
+    };
+
     for (const auto& building : town) {
-      const auto verdict = Game::Systems::assess_ground(
-          session.world(), building.type, building.x, building.z, building.id);
+      const auto verdict = Game::Systems::assess_ground(session.world(),
+                                                        building.type,
+                                                        building.x,
+                                                        building.z,
+                                                        building.id,
+                                                        building.yaw);
       EXPECT_NE(verdict, Game::Systems::GroundVerdict::Occupied)
           << building.type << " at " << building.x << "," << building.z
-          << " overlaps another structure";
+          << " overlaps another structure; near it:" << neighbours_of(building);
       EXPECT_NE(verdict, Game::Systems::GroundVerdict::Water)
           << building.type << " at " << building.x << "," << building.z
           << " stands in the water";

@@ -19,6 +19,7 @@ public:
   struct PlayerConfig {
     int player_id = 0;
     QColor color;
+    QString base_key;
   };
 
   MapPreviewGenerator();
@@ -26,6 +27,8 @@ public:
 
   [[nodiscard]] auto generate_preview(const QString& map_path,
                                       const QVariantList& player_configs) -> QImage;
+
+  [[nodiscard]] static auto base_markers(const QString& map_path) -> QVariantList;
 
 private:
   std::unique_ptr<MinimapGenerator> m_minimap_generator;

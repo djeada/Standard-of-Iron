@@ -11,6 +11,21 @@ may change in any release — see [Save compatibility](#save-compatibility).
 
 ### Added
 
+- **Pick where each side starts.** Skirmish setup no longer hands you whichever
+  barracks the map author stapled to your slot number. Every seat in the Order
+  of Battle gets a Base chip that cycles through the map's unclaimed barracks —
+  including the neutral outposts — and the map preview draws every base as a
+  marker you can click to give it to the highlighted seat. Claiming a base
+  another player holds swaps the two, so every side always fields exactly one
+  start. Moving a player moves their whole camp: their builder, healer and
+  anything else the map authored for them travels with the base, the opening
+  camera frames it, and the camp they left behind stays on the map as a
+  capturable prize. Taking a small neutral outpost as your start carries the
+  troop cap of the base you gave up, so the choice costs position rather than
+  army size. Maps name their bases the way players do — an authored place keeps
+  its name ("East Lodge", "North Toll") and a plain slot barracks is named by
+  its bearing on the map ("South-West"). See `docs/SKIRMISH_BASES.md`.
+
 - **Every AI commander raises a differently shaped town.** Town plan steps
   take an optional `rotation` (degrees in the settlement's own frame), the AI
   passes it through to construction, and a wall link that lands off a quarter

@@ -13,6 +13,8 @@ Item {
     property var selected_map_data: null
     property string selected_map_path: ""
     property var map_slots: []
+    property var map_bases: []
+    property int focused_player_index: 0
     property string validation_error: ""
     property var available_nations: []
     property int roster_revision: 0
@@ -141,6 +143,8 @@ Item {
         let enabledCount = enabled_player_count();
         if (enabledCount < 1)
             return false;
+        if (map_bases.length > 0 && !every_seat_has_a_base())
+            return false;
         if (enabledCount < 2)
             return map_is_solo_playable(selected_map_data);
         return has_minimum_distinct_teams();
@@ -157,6 +161,10 @@ Item {
             validation_error = qsTr("Need at least 2 enabled players to start");
         else if (enabledCount >= 2 && !has_minimum_distinct_teams())
             validation_error = qsTr("At least two teams must be selected to start a match");
+        else if (map_bases.length > 0 && enabledCount > map_bases.length)
+            validation_error = qsTr("This battlefield only has %1 starting bases").arg(map_bases.length);
+        else if (map_bases.length > 0 && !every_seat_has_a_base())
+            validation_error = qsTr("Every player in play needs a starting base");
         else
             validation_error = "";
     }
@@ -232,6 +240,180 @@ Item {
         return ids;
     }
 
+    function refresh_map_bases() {
+        if (selected_map_path !== "" && typeof game !== "undefined" && game.setup && game.setup.map_bases)
+            map_bases = variant_list_to_array(game.setup.map_bases(selected_map_path));
+        else
+            map_bases = [];
+    }
+
+    function base_entry(key) {
+        let wanted = String(key || "");
+        if (wanted === "")
+            return null;
+        for (let i = 0; i < map_bases.length; i++) {
+            if (String(map_bases[i].key) === wanted)
+                return map_bases[i];
+        }
+        return null;
+    }
+
+    function base_name_for(key) {
+        let entry = base_entry(key);
+        return entry ? String(entry.name) : "";
+    }
+
+    function roster_index_for_base(key, exceptIndex) {
+        let wanted = String(key || "");
+        if (wanted === "")
+            return -1;
+        for (let i = 0; i < players_model.count; i++) {
+            if (i === exceptIndex)
+                continue;
+            if (String(players_model.get(i).baseKey || "") === wanted)
+                return i;
+        }
+        return -1;
+    }
+
+    function free_base_for(playerId, exceptIndex) {
+        for (let i = 0; i < map_bases.length; i++) {
+            let candidate = map_bases[i];
+            if (Number(candidate.defaultPlayerId) === Number(playerId) && roster_index_for_base(candidate.key, exceptIndex) === -1)
+                return String(candidate.key);
+        }
+        for (let j = 0; j < map_bases.length; j++) {
+            if (roster_index_for_base(map_bases[j].key, exceptIndex) === -1)
+                return String(map_bases[j].key);
+        }
+        return "";
+    }
+
+    function apply_base(index, key) {
+        players_model.setProperty(index, "baseKey", String(key || ""));
+        players_model.setProperty(index, "baseName", base_name_for(key));
+    }
+
+    function set_player_base(index, key) {
+        if (index < 0 || index >= players_model.count)
+            return;
+        let wanted = String(key || "");
+        if (base_entry(wanted) === null)
+            return;
+        let previous = String(players_model.get(index).baseKey || "");
+        if (wanted === previous)
+            return;
+        let holder = roster_index_for_base(wanted, index);
+        apply_base(index, wanted);
+        if (holder >= 0)
+            apply_base(holder, previous);
+        update_validation_error();
+        refresh_map_preview();
+    }
+
+    function cycle_player_base(index) {
+        if (index < 0 || index >= players_model.count || map_bases.length === 0)
+            return;
+        let current = String(players_model.get(index).baseKey || "");
+        let start = 0;
+        for (let i = 0; i < map_bases.length; i++) {
+            if (String(map_bases[i].key) === current) {
+                start = i;
+                break;
+            }
+        }
+        for (let step = 1; step <= map_bases.length; step++) {
+            let candidate = map_bases[(start + step) % map_bases.length];
+            if (roster_index_for_base(candidate.key, index) === -1) {
+                set_player_base(index, String(candidate.key));
+                return;
+            }
+        }
+    }
+
+    function reseat_bases() {
+        let claimed = [];
+        for (let i = 0; i < players_model.count; i++) {
+            let key = String(players_model.get(i).baseKey || "");
+            if (key !== "" && base_entry(key) !== null && claimed.indexOf(key) === -1) {
+                claimed.push(key);
+                players_model.setProperty(i, "baseName", base_name_for(key));
+                continue;
+            }
+            apply_base(i, "");
+        }
+        for (let j = 0; j < players_model.count; j++) {
+            if (String(players_model.get(j).baseKey || "") !== "")
+                continue;
+            apply_base(j, free_base_for(players_model.get(j).player_id, j));
+        }
+    }
+
+    function base_owner_map() {
+        let owners = {};
+        for (let i = 0; i < players_model.count; i++) {
+            let p = players_model.get(i);
+            let key = String(p.baseKey || "");
+            if (key === "" || !p.isEnabled)
+                continue;
+            owners[key] = {
+                "colorHex": p.colorHex,
+                "owner": p.playerName
+            };
+        }
+        return owners;
+    }
+
+    function focused_seat_base() {
+        if (focused_player_index < 0 || focused_player_index >= players_model.count)
+            return "";
+        let seat = players_model.get(focused_player_index);
+        if (!seat.isEnabled)
+            return "";
+        return String(seat.baseKey || "");
+    }
+
+    function focus_player(index) {
+        if (index < 0 || index >= players_model.count)
+            return;
+        if (!players_model.get(index).isEnabled)
+            return;
+        focused_player_index = index;
+        roster_revision++;
+    }
+
+    function first_enabled_seat() {
+        for (let i = 0; i < players_model.count; i++) {
+            if (players_model.get(i).isEnabled)
+                return i;
+        }
+        return -1;
+    }
+
+    function ensure_focus_is_seated() {
+        if (focused_player_index >= 0 && focused_player_index < players_model.count && players_model.get(focused_player_index).isEnabled)
+            return;
+        focused_player_index = Math.max(0, first_enabled_seat());
+    }
+
+    function claim_base(key) {
+        ensure_focus_is_seated();
+        if (focused_player_index < 0 || focused_player_index >= players_model.count)
+            return;
+        if (!players_model.get(focused_player_index).isEnabled)
+            return;
+        set_player_base(focused_player_index, key);
+    }
+
+    function every_seat_has_a_base() {
+        for (let i = 0; i < players_model.count; i++) {
+            let p = players_model.get(i);
+            if (p.isEnabled && String(p.baseKey || "") === "")
+                return false;
+        }
+        return true;
+    }
+
     function refresh_map_preview() {
         Qt.callLater(function () {
                 if (map_preview && map_preview.refresh_preview) {
@@ -247,6 +429,7 @@ Item {
             selected_map_data = null;
             selected_map_path = "";
             map_slots = [];
+            map_bases = [];
             players_model.clear();
             update_validation_error();
             return;
@@ -255,11 +438,13 @@ Item {
         selected_map_data = get_map_data(index);
         selected_map_path = selected_map_data ? (selected_map_data.path || selected_map_data.file || "") : "";
         map_slots = player_ids_for_map(selected_map_data);
+        refresh_map_bases();
         initialize_players(selected_map_data);
     }
 
     function initialize_players(mapData) {
         players_model.clear();
+        focused_player_index = 0;
         let playerIds = map_slots;
         if (!mapData || playerIds.length === 0) {
             update_validation_error();
@@ -287,10 +472,13 @@ Item {
                 "commanderAura": commander_field(defaultCommander, "passive_aura"),
                 "commanderRally": commander_field(defaultCommander, "rally_ability"),
                 "isHuman": true,
-                "isEnabled": true
+                "isEnabled": true,
+                "baseKey": "",
+                "baseName": ""
             });
         if (playerIds.length > 1)
             add_cpu();
+        reseat_bases();
         update_validation_error();
         refresh_map_preview();
     }
@@ -342,8 +530,11 @@ Item {
                 "commanderAura": commander_field(defaultCommander, "passive_aura"),
                 "commanderRally": commander_field(defaultCommander, "rally_ability"),
                 "isHuman": false,
-                "isEnabled": true
+                "isEnabled": true,
+                "baseKey": "",
+                "baseName": ""
             });
+        reseat_bases();
         update_validation_error();
         refresh_map_preview();
     }
@@ -355,6 +546,8 @@ Item {
         if (p.isHuman)
             return;
         players_model.remove(index);
+        ensure_focus_is_seated();
+        reseat_bases();
         update_validation_error();
         refresh_map_preview();
     }
@@ -380,6 +573,7 @@ Item {
         players_model.setProperty(index, "colorIndex", newIdx);
         players_model.setProperty(index, "colorHex", Theme.playerColors[newIdx].hex);
         players_model.setProperty(index, "colorName", Theme.playerColors[newIdx].name);
+        roster_revision++;
         refresh_map_preview();
     }
 
@@ -471,8 +665,12 @@ Item {
             }
         }
         if (occupantIndex >= 0) {
+            let humanBase = String(players_model.get(humanIndex).baseKey || "");
+            let occupantBase = String(players_model.get(occupantIndex).baseKey || "");
             players_model.setProperty(occupantIndex, "player_id", humanId);
             players_model.setProperty(occupantIndex, "playerName", qsTr("CPU %1").arg(Design.Numerals.roman(humanId)));
+            apply_base(occupantIndex, humanBase);
+            apply_base(humanIndex, occupantBase);
         }
         players_model.setProperty(humanIndex, "player_id", nextId);
         if (typeof game !== "undefined")
@@ -486,6 +684,7 @@ Item {
             return;
         let p = players_model.get(index);
         players_model.setProperty(index, "isEnabled", !p.isEnabled);
+        ensure_focus_is_seated();
         update_validation_error();
         refresh_map_preview();
     }
@@ -519,7 +718,8 @@ Item {
                     "team_id": p.team_id,
                     "nationId": p.nationId,
                     "commanderTroop": p.commanderTroop,
-                    "isHuman": p.isHuman
+                    "isHuman": p.isHuman,
+                    "baseKey": p.baseKey || ""
                 });
         }
         return configs;
@@ -969,6 +1169,11 @@ Item {
                                 Layout.fillHeight: true
                                 map_path: selected_map_path
                                 player_configs: get_player_configs()
+                                bases: root.map_bases
+                                bases_interactive: root.map_bases.length > 1
+                                base_owners: roster_revision >= 0 ? root.base_owner_map() : ({})
+                                focused_base_key: roster_revision >= 0 ? root.focused_seat_base() : ""
+                                onBase_activated: key => root.claim_base(key)
                             }
 
                             ColumnLayout {
@@ -1112,7 +1317,7 @@ Item {
                                 }
 
                                 Label {
-                                    text: qsTr("Click any chip to change it")
+                                    text: root.map_bases.length > 1 ? qsTr("Click any chip to change it • pick a base on the map for the highlighted seat") : qsTr("Click any chip to change it")
                                     color: Theme.textSubLite
                                     font.pixelSize: Design.Typography.caption
                                     font.italic: true
@@ -1153,15 +1358,23 @@ Item {
                                 delegate: Rectangle {
                                     id: player_card
 
+                                    readonly property bool focused: (roster_revision >= 0) && root.focused_player_index === index && model.isEnabled
+
                                     objectName: "rosterSeatCard"
                                     width: players_list.width - (players_list.ScrollBar.vertical.visible ? Theme.spacingMedium : 0)
                                     height: 68
                                     radius: Theme.radiusSmall
-                                    color: model.isHuman ? "#33261a" : "#2c231a"
-                                    border.color: model.isEnabled ? (model.isHuman ? Theme.accent : Theme.thumbBr) : Theme.thumbBr
-                                    border.width: (model.isHuman && model.isEnabled) ? 2 : 1
+                                    color: player_card.focused ? "#4a3726" : (model.isHuman ? "#33261a" : "#2c231a")
+                                    border.color: player_card.focused ? Theme.accentBright : (model.isEnabled ? (model.isHuman ? Theme.accent : Theme.thumbBr) : Theme.thumbBr)
+                                    border.width: (player_card.focused || (model.isHuman && model.isEnabled)) ? 2 : 1
                                     opacity: model.isEnabled ? 1 : 0.55
                                     enabled: true
+
+                                    MouseArea {
+                                        anchors.fill: parent
+                                        acceptedButtons: Qt.LeftButton
+                                        onClicked: root.focus_player(index)
+                                    }
 
                                     RowLayout {
                                         anchors.fill: parent
@@ -1183,9 +1396,20 @@ Item {
                                             color: model.colorHex || Theme.textDim
                                         }
 
+                                        Label {
+                                            Layout.preferredWidth: Theme.spacingMedium
+                                            text: player_card.focused ? "▸" : ""
+                                            color: Theme.accentBright
+                                            font.pixelSize: Design.Typography.body
+                                            font.bold: true
+                                            visible: root.map_bases.length > 1
+                                            horizontalAlignment: Text.AlignHCenter
+                                        }
+
                                         ColumnLayout {
                                             Layout.fillWidth: true
-                                            Layout.minimumWidth: 96
+                                            Layout.preferredWidth: 120
+                                            Layout.minimumWidth: 72
                                             spacing: 0
 
                                             Label {
@@ -1218,7 +1442,9 @@ Item {
                                         }
 
                                         SkirmishChip {
+                                            Layout.fillWidth: true
                                             Layout.preferredWidth: 104
+                                            Layout.minimumWidth: 68
                                             caption: qsTr("Colour")
                                             value: model.colorName || qsTr("Colour")
                                             value_color: model.colorHex || Theme.textMain
@@ -1229,7 +1455,26 @@ Item {
                                         }
 
                                         SkirmishChip {
-                                            Layout.preferredWidth: 192
+                                            Layout.fillWidth: true
+                                            Layout.preferredWidth: 148
+                                            Layout.minimumWidth: 76
+                                            caption: qsTr("Base")
+                                            value: model.baseName || qsTr("None")
+                                            value_color: model.baseName ? Theme.textMain : Theme.removeColor
+                                            outline: player_card.focused ? Theme.accentBright : Theme.thumbBr
+                                            interactive: root.map_bases.length > 1
+                                            visible: root.map_bases.length > 0
+                                            tooltip_text: qsTr("Starting base — click for the next free one, or pick it on the map")
+                                            onActivated: {
+                                                root.focus_player(index);
+                                                cycle_player_base(index);
+                                            }
+                                        }
+
+                                        SkirmishChip {
+                                            Layout.fillWidth: true
+                                            Layout.preferredWidth: 170
+                                            Layout.minimumWidth: 80
                                             caption: qsTr("Nation")
                                             value: model.nationName || qsTr("Nation")
                                             emblem_source: root.nation_emblem_for(model.nationId)
@@ -1239,7 +1484,9 @@ Item {
                                         }
 
                                         SkirmishChip {
-                                            Layout.preferredWidth: 190
+                                            Layout.fillWidth: true
+                                            Layout.preferredWidth: 170
+                                            Layout.minimumWidth: 80
                                             caption: qsTr("Commander")
                                             value: model.commanderName || qsTr("Commander")
                                             interactive: true
@@ -1248,7 +1495,9 @@ Item {
                                         }
 
                                         SkirmishChip {
+                                            Layout.fillWidth: true
                                             Layout.preferredWidth: 92
+                                            Layout.minimumWidth: 68
                                             caption: model.teamIcon || Theme.teamIcons[1]
                                             value: qsTr("Team %1").arg(Design.Numerals.roman(model.team_id + 1))
                                             interactive: true
