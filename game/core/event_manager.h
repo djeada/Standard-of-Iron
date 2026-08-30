@@ -23,6 +23,11 @@ namespace Engine::Core {
 
 class Event {
 public:
+  Event() = default;
+  Event(const Event&) = default;
+  Event(Event&&) = default;
+  auto operator=(const Event&) -> Event& = default;
+  auto operator=(Event&&) -> Event& = default;
   virtual ~Event() = default;
   [[nodiscard]] virtual auto get_type_name() const -> const char* { return "Event"; }
 };

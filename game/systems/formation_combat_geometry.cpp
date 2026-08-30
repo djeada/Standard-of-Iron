@@ -1210,4 +1210,10 @@ auto select_damage_engagement_pair(
   return std::nullopt;
 }
 
+void invalidate_layout_cache() {
+  g_layout_cache.clear();
+  ++g_layout_cache_generation;
+  g_spatial_layout_cache.clear();
+}
+
 } // namespace Game::Systems::FormationCombat

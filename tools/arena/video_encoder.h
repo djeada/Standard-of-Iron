@@ -29,6 +29,8 @@ public:
   [[nodiscard]] auto write_frame(const QImage& frame, QString* error) -> bool;
   [[nodiscard]] auto close(QString* error) -> bool;
   [[nodiscard]] auto frames_written() const noexcept -> int;
+  [[nodiscard]] auto pending_bytes() const -> qint64;
+  [[nodiscard]] static auto max_pending_frames() noexcept -> int;
 
 private:
   struct Impl;

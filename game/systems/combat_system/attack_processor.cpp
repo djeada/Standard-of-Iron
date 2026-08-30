@@ -1375,6 +1375,7 @@ auto resolve_melee_swing_cadence(Engine::Core::Entity* attacker,
   auto const* definition = Game::Systems::CombatActions::find_combat_action_definition(
       static_cast<Game::Systems::CombatActions::CombatActionId>(
           action->combat_action_id));
+  float link_length = 0.0F;
   if (commander != nullptr && !commander->fpv_controlled &&
       commander->advanced_combat_enabled && definition != nullptr &&
       definition->commander_only) {
@@ -1382,8 +1383,7 @@ auto resolve_melee_swing_cadence(Engine::Core::Entity* attacker,
         *definition,
         Game::Systems::CombatActions::CombatActionEventType::ExitSafe,
         0.92F);
-    float const link_length = std::max(0.05F, action->action_duration * exit_safe);
-    return cooldown - std::max(cooldown, link_length);
+    link_length = std::max(0.05F, action->action_duration * exit_safe);
   }
 
   auto const next_beat = resolve_melee_exchange_beat(
@@ -1393,7 +1393,7 @@ auto resolve_melee_swing_cadence(Engine::Core::Entity* attacker,
       true);
   float const interval = cooldown * next_beat.interval_weight;
   float const delay = base_delay * next_beat.delay_weight;
-  return cooldown - interval - delay;
+  return cooldown - std::max(interval + delay, link_length);
 }
 
 void begin_rts_bow_action(Engine::Core::World& world,

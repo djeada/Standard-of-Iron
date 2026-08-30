@@ -23,7 +23,21 @@ struct ContactBody {
   float radius{0.0F};
   BodyProfile profile;
   bool movable{false};
+  Engine::Core::EntityID melee_intent{0};
 };
+
+auto melee_intent_of(const Engine::Core::Entity& entity) -> Engine::Core::EntityID {
+  const auto* attack = entity.get_component<Engine::Core::AttackComponent>();
+  if (attack == nullptr ||
+      attack->current_mode != Engine::Core::AttackComponent::CombatMode::Melee) {
+    return 0;
+  }
+  if (attack->in_melee_lock && attack->melee_lock_target_id != 0) {
+    return attack->melee_lock_target_id;
+  }
+  const auto* target = entity.get_component<Engine::Core::AttackTargetComponent>();
+  return target != nullptr ? target->target_id : 0;
+}
 
 auto body_is_movable(const Engine::Core::Entity& entity,
                      const Engine::Core::MovementFactsComponent* facts) -> bool {
@@ -108,6 +122,7 @@ void BodyContactSystem::run(Engine::Core::SystemContext& context) {
     body.radius = CommandService::get_unit_radii(world, entry.id).core;
     body.profile = profile_for(*entity);
     body.movable = body_is_movable(*entity, body.facts);
+    body.melee_intent = melee_intent_of(*entity);
     widest_radius = std::max(widest_radius, body.radius);
   }
 
@@ -148,6 +163,10 @@ void BodyContactSystem::run(Engine::Core::SystemContext& context) {
           float pz = me.transform->position.z - them.transform->position.z;
           float distance = std::hypot(px, pz);
           if (distance >= combined) {
+            return;
+          }
+          const Engine::Core::EntityID them_id = other.id;
+          if (me.melee_intent == them_id || them.melee_intent == me_id) {
             return;
           }
 
@@ -196,6 +215,7 @@ auto BodyContactSystem::access() const -> Engine::Core::SystemAccess {
   return SystemAccess::declare(Reads<UnitComponent,
                                      BuildingComponent,
                                      AttackComponent,
+                                     AttackTargetComponent,
                                      HoldModeComponent,
                                      MovementComponent,
                                      PendingRemovalComponent>{},

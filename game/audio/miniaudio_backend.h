@@ -77,6 +77,7 @@ public:
   auto is_track_decode_pending(const QString& id) const -> bool;
 
   void on_audio(float* output, unsigned frames);
+  void set_offline_render(bool enabled) { m_offline_render = enabled; }
 
 private:
   struct DecodedTrack {
@@ -177,6 +178,7 @@ private:
   };
   mutable QMutex m_analysis_cache_mutex;
   QHash<QString, CachedAnalysis> m_analysis_cache;
+  bool m_offline_render{false};
   std::atomic<std::uint64_t> m_analyses_computed{0};
 
   std::thread m_decode_thread;

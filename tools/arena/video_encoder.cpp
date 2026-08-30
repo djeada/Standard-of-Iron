@@ -9,6 +9,7 @@
 namespace Arena::Promo {
 namespace {
 
+constexpr qint64 k_max_buffered_frames = 4;
 constexpr int k_pipe_timeout_ms = 30'000;
 
 } // namespace
@@ -152,8 +153,26 @@ auto VideoEncoder::write_frame(const QImage& frame, QString* error) -> bool {
       }
     }
   }
+  const qint64 frame_bytes = static_cast<qint64>(rgba.width()) * rgba.height() * 4;
+  while (m_impl->process.bytesToWrite() > frame_bytes * k_max_buffered_frames) {
+    if (!m_impl->process.waitForBytesWritten(k_pipe_timeout_ms)) {
+      if (error != nullptr) {
+        *error = QStringLiteral("ffmpeg fell behind and stopped draining frames: %1")
+                     .arg(m_impl->process.errorString());
+      }
+      return false;
+    }
+  }
   ++m_impl->frames;
   return true;
+}
+
+auto VideoEncoder::pending_bytes() const -> qint64 {
+  return m_impl->open ? m_impl->process.bytesToWrite() : 0;
+}
+
+auto VideoEncoder::max_pending_frames() noexcept -> int {
+  return static_cast<int>(k_max_buffered_frames);
 }
 
 auto VideoEncoder::close(QString* error) -> bool {

@@ -45,7 +45,6 @@ void World::set_entity_destroyed_hook(EntityDestroyedHook hook) {
 
 namespace {
 
-constexpr float k_motion_displacement_epsilon_sq = 1.0e-6F;
 constexpr float k_motion_velocity_epsilon_sq = 1.0e-4F;
 constexpr float k_motion_stall_speed = 0.15F;
 

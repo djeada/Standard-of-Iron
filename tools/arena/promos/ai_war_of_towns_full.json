@@ -1,0 +1,71 @@
+{
+  "id": "ai_war_of_towns_full",
+  "title": "SCIPIO  VS  HANNIBAL",
+  "subtitle": "AI VS AI  \u00b7  STANDARD OF IRON",
+  "width": 1920,
+  "height": 1080,
+  "fps": 60,
+  "supersample": 1,
+  "shots": [
+    {
+      "name": "full_match",
+      "scenario": "ai_war_of_towns",
+      "seed": 1337,
+      "start": 0.5,
+      "duration": 1799.0,
+      "focus": {
+        "mode": "point",
+        "point": [0.0, 0.0, 0.0],
+        "smoothing": 0.0
+      },
+      "camera": [
+        {
+          "time": 0,
+          "distance": 130,
+          "pitch": 47,
+          "yaw": 315,
+          "fov": 40,
+          "height": 0,
+          "ease": "smooth"
+        },
+        {
+          "time": 450,
+          "distance": 134,
+          "pitch": 46,
+          "yaw": 318,
+          "fov": 40,
+          "height": 0,
+          "ease": "smooth"
+        },
+        {
+          "time": 900,
+          "distance": 131,
+          "pitch": 47,
+          "yaw": 315,
+          "fov": 40,
+          "height": 0,
+          "ease": "smooth"
+        },
+        {
+          "time": 1350,
+          "distance": 134,
+          "pitch": 46,
+          "yaw": 312,
+          "fov": 40,
+          "height": 0,
+          "ease": "smooth"
+        },
+        {
+          "time": 1799,
+          "distance": 130,
+          "pitch": 47,
+          "yaw": 315,
+          "fov": 40,
+          "height": 0,
+          "ease": "smooth"
+        }
+      ]
+    }
+  ],
+  "audio": true
+}

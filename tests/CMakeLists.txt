@@ -613,6 +613,7 @@ add_executable(
     tools/arena_unit_spawn_options_test.cpp
     tools/arena_terrain_alignment_test.cpp
     tools/arena_promo_spec_test.cpp
+    tools/arena_video_encoder_test.cpp
     tools/settlement_layout_test.cpp
     tools/sacred_mountain_slope_test.cpp
     test_main.cpp

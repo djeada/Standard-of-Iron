@@ -5,6 +5,7 @@
 #include <utility>
 
 #include "arena_scenarios.h"
+#include "game/wildlife/wildlife_config.h"
 
 namespace Arena::Scenarios {
 namespace {
@@ -268,6 +269,24 @@ void add_side(ArenaScenarioDefinition& scenario, const DuelSide& side) {
       patch("iron_ore", 5, {34.0F, 0.0F, 13.74F}, {1.2F, 0.0F, 0.0F}, 1.0F));
 }
 
+auto war_of_towns_wildlife() -> Game::Wildlife::WildlifeSettings {
+  Game::Wildlife::WildlifeSettings settings = Game::Wildlife::default_settings();
+  settings.enabled = true;
+  settings.seed = 4133U;
+  settings.wolves.enabled = false;
+  settings.wolves.group_count = 0;
+
+  settings.sheep.enabled = true;
+  settings.sheep.group_count = 2;
+  settings.sheep.group_size_min = 8;
+  settings.sheep.group_size_max = 10;
+  settings.sheep.roam_radius = 9.0F;
+  settings.sheep.spawn_areas = {{-24.0F, 2.0F, 3.0F}, {24.0F, -2.0F, 3.0F}};
+
+  settings.birds = Game::Wildlife::default_bird_config();
+  return settings;
+}
+
 auto duel_definition(const char* id,
                      QString label,
                      QString description,
@@ -482,6 +501,7 @@ auto build_ai_duel_definitions() -> std::vector<ArenaScenarioDefinition> {
         doctrine_expectation(QStringLiteral("hannibal"), "aggressive:field"));
     add_economy_expectations(s, QStringLiteral("scipio"));
     add_economy_expectations(s, QStringLiteral("hannibal"));
+    s.wildlife = war_of_towns_wildlife();
     result.push_back(std::move(s));
   }
 

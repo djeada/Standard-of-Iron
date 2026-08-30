@@ -122,6 +122,7 @@ public:
 
   void set_max_channels(size_t max_channels);
   auto get_active_channel_count() const -> size_t;
+  void render_offline(float* interleaved_stereo, unsigned frames);
 
   auto get_master_volume() const -> float { return master_volume; }
   auto get_sound_volume() const -> float { return sound_volume; }
