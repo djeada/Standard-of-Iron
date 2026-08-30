@@ -136,7 +136,8 @@ void HealingSystem::process_healing(Engine::Core::SystemContext& context) {
                        healer_comp->healing_amount,
                        HealingRules::maximum_recoverable_health(*target));
         Engine::Core::EventManager::instance().publish(
-            Engine::Core::AudioCueEvent("combat.heal"));
+            Engine::Core::AudioCueEvent::for_owner(healer_unit->owner_id,
+                                                   "combat.heal"));
 
         healer_comp->healing_target_x = target_transform->position.x;
         healer_comp->healing_target_z = target_transform->position.z;

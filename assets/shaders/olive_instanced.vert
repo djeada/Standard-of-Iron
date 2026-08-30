@@ -45,9 +45,14 @@ void main() {
   float branch_id = floor(angle / TWO_PI * 4.0 + silhouette_seed * 4.0);
 
   if (trunk_mask > 0.0) {
-    float twist = sin(a_tex_coord.y * 22.0 + bark_seed * TWO_PI) * 0.028;
-    model_pos.x += twist * trunk_mask;
-    model_pos.z += twist * 0.7 * trunk_mask;
+    float twist = sin(a_tex_coord.y * 22.0 + bark_seed * TWO_PI) * 0.034;
+    float writhe = sin(a_tex_coord.y * 9.0 - bark_seed * TWO_PI * 1.7) * 0.022;
+    model_pos.x += (twist + writhe * 0.6) * trunk_mask;
+    model_pos.z += (twist * 0.7 - writhe) * trunk_mask;
+    float ang_t = a_tex_coord.x * TWO_PI;
+    float bulge = 1.0 + sin(ang_t * 3.0 + a_tex_coord.y * 14.0 + bark_seed * TWO_PI) *
+                            0.10 * trunk_mask;
+    model_pos.xz *= bulge;
   }
 
   float height_norm = clamp(a_pos.y / 1.10, 0.0, 1.0);
@@ -58,12 +63,12 @@ void main() {
 
   if (foliage_mask > 0.1) {
     float ang = atan(model_pos.z, model_pos.x);
-    float lump_base = sin(ang * 2.6 + silhouette_seed * TWO_PI) * 0.07;
-    float lump_fine = sin(ang * 5.4 + leaf_seed * TWO_PI * 1.9) * 0.035;
+    float lump_base = sin(ang * 2.6 + silhouette_seed * TWO_PI) * 0.085;
+    float lump_fine = sin(ang * 5.4 + leaf_seed * TWO_PI * 1.9) * 0.042;
     float lump_ragged =
-        sin(ang * 5.0 + a_pos.y * 16.0 + leaf_seed * TWO_PI * 3.1) * 0.034;
+        sin(ang * 5.0 + a_pos.y * 16.0 + leaf_seed * TWO_PI * 3.1) * 0.040;
     float lump_tuft =
-        sin(ang * 3.0 - a_pos.y * 23.0 + silhouette_seed * TWO_PI * 2.3) * 0.024;
+        sin(ang * 3.0 - a_pos.y * 23.0 + silhouette_seed * TWO_PI * 2.3) * 0.030;
     float lump_mag = (lump_base + lump_fine + lump_ragged + lump_tuft) * foliage_mask;
     model_pos.xz *= (1.0 + lump_mag);
     model_pos.y += (lump_ragged + lump_tuft) * 0.55 * foliage_mask;
@@ -79,8 +84,11 @@ void main() {
     model_pos.y += canopy_height * (0.05 + leaf_seed * 0.08) -
                    radial * radial * (0.03 + 0.02 * canopy_height);
 
-    float stretch = mix(1.08, 1.34, leaf_seed);
+    float stretch = mix(1.02, 1.30, leaf_seed);
     model_pos.y *= mix(1.0, stretch, foliage_mask);
+
+    float spread = mix(0.96, 1.14, fract(silhouette_seed * 7.31 + leaf_seed * 3.17));
+    model_pos.xz *= mix(1.0, spread, foliage_mask);
   }
 
   vec3 local_pos = model_pos * scale;

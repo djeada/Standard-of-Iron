@@ -13,6 +13,7 @@
 #include "game/core/entity.h"
 #include "game/core/world.h"
 #include "game/formation/unit_layout_state_system.h"
+#include "game/systems/combat_actions/combat_action_definition.h"
 #include "game/systems/formation_combat_geometry.h"
 #include "game/units/spawn_type.h"
 #include "render/creature/animation_core_bridge.h"
@@ -804,6 +805,7 @@ void append_prepared_soldier(const HumanoidUnitSnapshot& s,
     sample.attack_variant = resolved_anim.attack_variant;
     sample.is_attacking = resolved_anim.is_attacking;
     sample.is_hit_reacting = resolved_anim.is_hit_reacting;
+    sample.hit_reaction_kind = resolved_anim.hit_reaction_kind;
     sample.is_swing_recoiling = swing_recoil_active;
     sample.is_in_melee_lock = resolved_anim.is_in_melee_lock;
     sample.transient_recovery_override = transient_recovery_override;
@@ -1492,6 +1494,45 @@ void append_prepared_soldier(const HumanoidUnitSnapshot& s,
     RCP::set_model_world_y(inst_ctx.model,
                            RCP::model_world_origin(inst_ctx.model).y() +
                                commander_jump.height_offset);
+  }
+  if (creature_presentation != nullptr && creature_presentation->dodge_active) {
+    float const phase = std::clamp(creature_presentation->dodge_phase, 0.0F, 1.0F);
+    float const eased = phase * phase * (3.0F - 2.0F * phase);
+    QVector3D const root = RCP::model_world_origin(inst_ctx.model);
+    QVector3D const pivot = root + QVector3D(0.0F, 0.68F, 0.0F);
+    QMatrix4x4 roll;
+    roll.translate(pivot);
+    roll.rotate(-360.0F * eased, right);
+    roll.translate(-pivot);
+    inst_ctx.model = roll * inst_ctx.model;
+
+    QVector3D const rolled_root = RCP::model_world_origin(inst_ctx.model);
+    QMatrix4x4 anchor_correction;
+    anchor_correction.translate(
+        root.x() - rolled_root.x(), 0.0F, root.z() - rolled_root.z());
+    inst_ctx.model = anchor_correction * inst_ctx.model;
+  } else if (commander_jump.active) {
+    float const air = std::sin(std::clamp(commander_jump.phase, 0.0F, 1.0F) *
+                               std::numbers::pi_v<float>);
+    auto const* action_definition =
+        creature_presentation != nullptr &&
+                creature_presentation->authored_action_id != 0U
+            ? Game::Systems::CombatActions::find_combat_action_definition(
+                  static_cast<Game::Systems::CombatActions::CombatActionId>(
+                      creature_presentation->authored_action_id))
+            : nullptr;
+    bool const diving = action_definition != nullptr &&
+                        action_definition->role ==
+                            Game::Systems::CombatActions::CommanderActionRole::Dive;
+    float const pitch = (diving ? 34.0F : -10.0F) * air;
+    if (std::abs(pitch) > 0.01F) {
+      QVector3D const pivot = RCP::model_world_origin(inst_ctx.model);
+      QMatrix4x4 tilt;
+      tilt.translate(pivot);
+      tilt.rotate(pitch, right);
+      tilt.translate(-pivot);
+      inst_ctx.model = tilt * inst_ctx.model;
+    }
   }
   if (casualty_offset_y > 0.0F) {
     RCP::set_model_world_y(inst_ctx.model,

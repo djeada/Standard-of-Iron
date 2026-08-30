@@ -7,6 +7,7 @@
 #include "../core/entity.h"
 #include "../formation/army_formation_registry.h"
 #include "../units/spawn_type.h"
+#include "../util/planar_math.h"
 #include "builder_product_types.h"
 #include "combat_rules.h"
 #include "command_service.h"
@@ -72,9 +73,9 @@ route_stops_short_of_the_order(const Engine::Core::MovementComponent& movement,
     return false;
   }
 
-  float const to_requested =
-      std::hypot(movement.get_requested_goal_x() - transform.position.x,
-                 movement.get_requested_goal_z() - transform.position.z);
+  float const to_requested = Game::Systems::planar_length(
+      movement.get_requested_goal_x() - transform.position.x,
+      movement.get_requested_goal_z() - transform.position.z);
   return to_requested > arrive_radius + k_short_route_slack;
 }
 
@@ -193,17 +194,17 @@ auto RouteFollowSystem::remaining_route_length(
     return 0.0F;
   }
   if (!movement.has_waypoints()) {
-    return std::hypot(movement.get_target_x() - position_x,
-                      movement.get_target_y() - position_z);
+    return Game::Systems::planar_length(movement.get_target_x() - position_x,
+                                        movement.get_target_y() - position_z);
   }
 
   auto const& path = movement.get_path();
   std::size_t const index = movement.get_path_index();
-  float total =
-      std::hypot(path[index].first - position_x, path[index].second - position_z);
+  float total = Game::Systems::planar_length(path[index].first - position_x,
+                                             path[index].second - position_z);
   for (std::size_t step = index + 1U; step < path.size(); ++step) {
-    total += std::hypot(path[step].first - path[step - 1U].first,
-                        path[step].second - path[step - 1U].second);
+    total += Game::Systems::planar_length(path[step].first - path[step - 1U].first,
+                                          path[step].second - path[step - 1U].second);
   }
   return total;
 }
@@ -361,7 +362,8 @@ void RouteFollowSystem::follow(Engine::Core::Entity& entity,
 
     auto const& last = movement->get_path().back();
     auto const [final_x, final_z] = route.final_point();
-    if (std::hypot(last.first - final_x, last.second - final_z) > 1.0e-4F) {
+    if (Game::Systems::planar_length(last.first - final_x, last.second - final_z) >
+        1.0e-4F) {
       route.update_final_point(last.first, last.second);
     }
   }
@@ -416,8 +418,9 @@ void RouteFollowSystem::follow(Engine::Core::Entity& entity,
         max_speed * k_lookahead_speed_seconds, k_lookahead_min, k_lookahead_max);
     float aim_s = std::min(s + lookahead, route.next_vertex_s(s));
     auto aim = route.point_at(aim_s);
-    if (std::hypot(aim.first - transform->position.x,
-                   aim.second - transform->position.z) < k_degenerate_aim_distance) {
+    if (Game::Systems::planar_length(aim.first - transform->position.x,
+                                     aim.second - transform->position.z) <
+        k_degenerate_aim_distance) {
       aim_s = std::min(route.length(), route.next_vertex_s(aim_s));
       aim = route.point_at(aim_s);
     }
@@ -429,8 +432,8 @@ void RouteFollowSystem::follow(Engine::Core::Entity& entity,
     tangent_z = tangent.second;
   } else {
 
-    remaining = std::hypot(endpoint_x - transform->position.x,
-                           endpoint_z - transform->position.z);
+    remaining = Game::Systems::planar_length(endpoint_x - transform->position.x,
+                                             endpoint_z - transform->position.z);
     facts->progress.lateral_route_error = 0.0F;
   }
 
@@ -445,8 +448,8 @@ void RouteFollowSystem::follow(Engine::Core::Entity& entity,
     return;
   }
 
-  float const endpoint_distance = std::hypot(endpoint_x - transform->position.x,
-                                             endpoint_z - transform->position.z);
+  float const endpoint_distance = Game::Systems::planar_length(
+      endpoint_x - transform->position.x, endpoint_z - transform->position.z);
   if (remaining <= arrive_radius && endpoint_distance <= arrive_radius) {
 
     if (route_stops_short_of_the_order(*movement, *transform, arrive_radius)) {
@@ -474,7 +477,7 @@ void RouteFollowSystem::follow(Engine::Core::Entity& entity,
 
   float const dx = aim_x - transform->position.x;
   float const dz = aim_z - transform->position.z;
-  float const distance = std::hypot(dx, dz);
+  float const distance = Game::Systems::planar_length(dx, dz);
   float const nx = dx / std::max(0.0001F, distance);
   float const nz = dz / std::max(0.0001F, distance);
   if (tangent_x == 0.0F && tangent_z == 0.0F) {

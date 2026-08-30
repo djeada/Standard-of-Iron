@@ -13,6 +13,7 @@
 #include "../core/system_context.h"
 #include "../core/world.h"
 #include "../map/terrain_service.h"
+#include "../util/planar_math.h"
 #include "building_collision_registry.h"
 #include "command_service.h"
 #include "nav_grid.h"
@@ -164,7 +165,7 @@ void LocalAvoidanceSystem::run(Engine::Core::SystemContext& context) {
 
     const float desired_vx = facts->desired.velocity_x;
     const float desired_vz = facts->desired.velocity_z;
-    const float desired_speed = std::hypot(desired_vx, desired_vz);
+    const float desired_speed = Game::Systems::planar_length(desired_vx, desired_vz);
 
     facts->steering = {};
     facts->steering.valid = true;
@@ -266,7 +267,8 @@ void LocalAvoidanceSystem::run(Engine::Core::SystemContext& context) {
 
     speed_scale = std::clamp(speed_scale, k_min_speed_fraction, 1.0F);
 
-    if (const float leaned = std::hypot(lean_x, lean_z); leaned > k_lean_gain) {
+    if (const float leaned = Game::Systems::planar_length(lean_x, lean_z);
+        leaned > k_lean_gain) {
       const float trim = k_lean_gain / leaned;
       lean_x *= trim;
       lean_z *= trim;
@@ -277,7 +279,7 @@ void LocalAvoidanceSystem::run(Engine::Core::SystemContext& context) {
                     !terrain.is_hill_entrance(own_cell.x, own_cell.y) &&
                     !point_is_in_navigation_passage(buildings, entry.x, entry.z);
 
-    float lean_magnitude = std::hypot(lean_x, lean_z);
+    float lean_magnitude = Game::Systems::planar_length(lean_x, lean_z);
     if (has_room && lean_magnitude > 1.0e-4F) {
 
       BodyProfile profile;
@@ -301,7 +303,8 @@ void LocalAvoidanceSystem::run(Engine::Core::SystemContext& context) {
     float steered_vx = (desired_vx * speed_scale) + (lean_x * desired_speed);
     float steered_vz = (desired_vz * speed_scale) + (lean_z * desired_speed);
 
-    if (const float steered_speed = std::hypot(steered_vx, steered_vz);
+    if (const float steered_speed =
+            Game::Systems::planar_length(steered_vx, steered_vz);
         steered_speed > desired_speed && steered_speed > 1.0e-4F) {
       const float trim = desired_speed / steered_speed;
       steered_vx *= trim;
@@ -313,8 +316,8 @@ void LocalAvoidanceSystem::run(Engine::Core::SystemContext& context) {
     facts->steering.correction_x = steered_vx - desired_vx;
     facts->steering.correction_z = steered_vz - desired_vz;
 
-    if (std::hypot(facts->steering.correction_x, facts->steering.correction_z) >
-        1.0e-4F) {
+    if (Game::Systems::planar_length(facts->steering.correction_x,
+                                     facts->steering.correction_z) > 1.0e-4F) {
       ++units_steered;
       facts->steering.result =
           speed_scale < k_yield_speed_fraction

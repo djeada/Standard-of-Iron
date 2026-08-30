@@ -44,14 +44,13 @@ void draw_commander_swing(
     const Engine::Core::CommanderSignaturePresentationComponent::Entry& entry,
     const QVector3D& contact,
     const QVector3D& forward,
-    const QVector3D& across,
     const QVector3D& accent,
     float progress) {
   constexpr float k_cut_tilt = 0.62F;
   constexpr float k_slam_tilt = 1.02F;
   float const reach = std::max(1.2F, entry.reach);
-  float const arc_alpha = entry.intensity * 1.4F;
-  QVector3D const hot = accent * 0.8F + QVector3D(0.2F, 0.2F, 0.2F);
+  float const arc_alpha = entry.intensity * 0.85F;
+  QVector3D const hot = accent * 0.22F + QVector3D(0.70F, 0.72F, 0.74F);
 
   switch (entry.form) {
   case Engine::Core::CommanderSignatureForm::Cut: {
@@ -111,11 +110,11 @@ void draw_commander_swing(
     float const drive = std::clamp(progress * 1.6F, 0.0F, 1.0F);
     QVector3D const tip = contact + forward * (reach * (0.15F + 0.55F * drive));
     renderer->metal_spark(
-        tip, hot, 0.26F, 2.6F * arc_alpha, std::max(0.0F, entry.age), forward);
+        tip, hot, 0.12F, 1.4F * arc_alpha, std::max(0.0F, entry.age), forward);
     renderer->metal_spark(contact + forward * (reach * 0.25F * drive),
                           accent,
-                          0.20F,
-                          1.8F * arc_alpha,
+                          0.09F,
+                          0.9F * arc_alpha,
                           std::max(0.0F, entry.age - 0.04F),
                           forward);
     break;
@@ -126,10 +125,10 @@ void draw_commander_swing(
 
   Render::LocalLight swing_light;
   swing_light.position = contact + forward * (reach * 0.3F);
-  swing_light.color = accent * 0.6F + QVector3D(0.4F, 0.35F, 0.25F);
-  swing_light.radius = 2.2F + reach * 0.6F;
+  swing_light.color = accent * 0.25F + QVector3D(0.48F, 0.50F, 0.52F);
+  swing_light.radius = 1.4F + reach * 0.35F;
   swing_light.intensity =
-      0.55F * arc_alpha * (1.0F - progress) * std::clamp(progress * 4.0F, 0.0F, 1.0F);
+      0.22F * arc_alpha * (1.0F - progress) * std::clamp(progress * 4.0F, 0.0F, 1.0F);
   renderer->local_light(swing_light);
 }
 
@@ -532,20 +531,24 @@ void render_combat_dust(Renderer* renderer,
           !visibility.is_entity_visible(contact.x, contact.z, 2.0F)) {
         continue;
       }
-      QVector3D color(0.96F, 0.22F, 0.08F);
-      float radius = 0.34F;
+      QVector3D color(0.86F, 0.16F, 0.08F);
+      float radius = 0.22F;
+      float intensity_scale = 0.58F;
       switch (contact.outcome) {
       case Engine::Core::RpgContactOutcome::Block:
-        color = {0.95F, 0.72F, 0.20F};
-        radius = 0.42F;
+        color = {0.96F, 0.74F, 0.28F};
+        radius = 0.30F;
+        intensity_scale = 0.80F;
         break;
       case Engine::Core::RpgContactOutcome::PerfectGuard:
-        color = {0.72F, 0.94F, 1.0F};
-        radius = 0.55F;
+        color = {0.82F, 0.96F, 1.0F};
+        radius = 0.42F;
+        intensity_scale = 1.05F;
         break;
       case Engine::Core::RpgContactOutcome::Dodge:
-        color = {0.22F, 0.85F, 1.0F};
-        radius = 0.28F;
+        color = {0.34F, 0.78F, 0.92F};
+        radius = 0.18F;
+        intensity_scale = 0.48F;
         break;
       case Engine::Core::RpgContactOutcome::Damage:
         break;
@@ -553,7 +556,7 @@ void render_combat_dust(Renderer* renderer,
       renderer->metal_spark(QVector3D(contact.x, contact.y, contact.z),
                             color,
                             radius,
-                            contact.intensity,
+                            contact.intensity * intensity_scale,
                             contact.age);
     }
   }
@@ -653,8 +656,7 @@ void render_combat_dust(Renderer* renderer,
       QVector3D const across(-entry.dir_z, 0.0F, entry.dir_x);
 
       if (entry.cue == Engine::Core::CommanderStrikeCue::Swing) {
-        draw_commander_swing(
-            renderer, entry, contact, forward, across, accent, progress);
+        draw_commander_swing(renderer, entry, contact, forward, accent, progress);
         continue;
       }
 
@@ -666,83 +668,83 @@ void render_combat_dust(Renderer* renderer,
       switch (entry.form) {
       case Engine::Core::CommanderSignatureForm::Thrust: {
 
-        for (int step = 0; step < 3; ++step) {
-          float const along = -0.16F + 0.16F * static_cast<float>(step);
+        for (int step = 0; step < 2; ++step) {
+          float const along = -0.10F + 0.20F * static_cast<float>(step);
           renderer->metal_spark(
               contact + forward * (along + progress * 0.22F) +
                   QVector3D(0.0F, 0.05F * static_cast<float>(step % 2) - 0.03F, 0.0F),
               QVector3D(0.86F, 0.92F, 1.0F),
-              0.135F * (0.8F + 0.2F * entry.intensity),
-              2.8F * entry.intensity,
+              0.10F * (0.8F + 0.2F * entry.intensity),
+              1.65F * entry.intensity,
               spark_age(0.025F * static_cast<float>(step)),
               forward);
         }
         renderer->metal_spark(contact + forward * 0.06F,
                               QVector3D(1.0F, 0.95F, 0.82F),
-                              0.175F,
-                              3.2F * entry.intensity,
+                              0.13F,
+                              2.2F * entry.intensity,
                               spark_age(0.0F),
                               forward);
         break;
       }
       case Engine::Core::CommanderSignatureForm::Cut: {
 
-        for (int step = 0; step < 5; ++step) {
-          float const offset = -0.40F + 0.20F * static_cast<float>(step);
+        for (int step = 0; step < 3; ++step) {
+          float const offset = -0.32F + 0.32F * static_cast<float>(step);
           float const arc = 0.10F - 0.30F * offset * offset;
           renderer->metal_spark(contact + across * offset * (1.0F + progress * 0.4F) +
                                     forward * arc +
                                     QVector3D(0.0F, 0.20F * offset, 0.0F),
                                 spark_tint,
-                                0.115F * (0.8F + 0.2F * entry.intensity),
-                                2.4F * entry.intensity,
+                                0.09F * (0.8F + 0.2F * entry.intensity),
+                                1.55F * entry.intensity,
                                 spark_age(0.035F * static_cast<float>(step)),
                                 across);
         }
         renderer->combat_dust(QVector3D(entry.x, entry.y - 0.55F, entry.z),
                               QVector3D(0.52F, 0.44F, 0.34F),
-                              0.8F + 0.6F * progress,
-                              0.45F * fade,
+                              0.65F + 0.45F * progress,
+                              0.30F * fade,
                               animation_time);
         break;
       }
       case Engine::Core::CommanderSignatureForm::Sweep: {
 
-        for (int step = 0; step < 7; ++step) {
+        for (int step = 0; step < 4; ++step) {
           float const angle =
-              (-0.9F + 0.3F * static_cast<float>(step)) * (1.0F + progress * 0.35F);
+              (-0.75F + 0.50F * static_cast<float>(step)) * (1.0F + progress * 0.35F);
           QVector3D const ray = forward * std::cos(angle) + across * std::sin(angle);
           renderer->metal_spark(contact + ray * (0.25F + 0.30F * progress) +
                                     QVector3D(0.0F, -0.15F, 0.0F),
                                 spark_tint,
-                                0.125F,
-                                2.3F * entry.intensity,
+                                0.095F,
+                                1.5F * entry.intensity,
                                 spark_age(0.02F * static_cast<float>(step)),
                                 ray);
         }
         renderer->combat_dust(QVector3D(entry.x, entry.y - 0.55F, entry.z),
                               QVector3D(0.50F, 0.43F, 0.34F),
-                              1.1F + 0.9F * progress,
-                              0.55F * fade,
+                              0.85F + 0.65F * progress,
+                              0.36F * fade,
                               animation_time);
         break;
       }
       case Engine::Core::CommanderSignatureForm::Slam: {
 
-        for (int step = 0; step < 6; ++step) {
-          float const angle = static_cast<float>(step) * 1.047F + progress * 0.6F;
+        for (int step = 0; step < 4; ++step) {
+          float const angle = static_cast<float>(step) * 1.571F + progress * 0.6F;
           QVector3D const ray = forward * std::cos(angle) + across * std::sin(angle);
           renderer->metal_spark(contact + ray * 0.18F + QVector3D(0.0F, -0.35F, 0.0F),
                                 QVector3D(1.0F, 0.90F, 0.70F),
-                                0.145F,
-                                2.6F * entry.intensity,
+                                0.115F,
+                                1.9F * entry.intensity,
                                 spark_age(0.02F * static_cast<float>(step)),
                                 ray + QVector3D(0.0F, 0.35F, 0.0F));
         }
         renderer->stone_impact(QVector3D(entry.x, entry.y - 0.58F, entry.z),
                                QVector3D(0.55F, 0.47F, 0.36F),
-                               0.95F * entry.intensity,
-                               1.1F * entry.intensity,
+                               0.78F * entry.intensity,
+                               0.85F * entry.intensity,
                                entry.age);
         break;
       }
@@ -773,8 +775,8 @@ void render_combat_dust(Renderer* renderer,
       strike_light.color = entry.form == Engine::Core::CommanderSignatureForm::Thrust
                                ? QVector3D(0.72F, 0.84F, 1.0F)
                                : accent * 0.55F + QVector3D(0.45F, 0.35F, 0.20F);
-      strike_light.radius = 2.6F + 0.8F * entry.intensity;
-      strike_light.intensity = 0.7F * fade;
+      strike_light.radius = 1.8F + 0.5F * entry.intensity;
+      strike_light.intensity = 0.35F * fade;
       renderer->local_light(strike_light);
     }
   }

@@ -23,9 +23,11 @@
 #include <utility>
 #include <vector>
 
+#include "arena_audio_recorder.h"
 #include "arena_scenario.h"
 #include "arena_typography.h"
 #include "arena_viewport.h"
+#include "game/session/session_context.h"
 #include "render/humanoid/runtime/runtime_stats.h"
 #include "video_encoder.h"
 
@@ -34,6 +36,8 @@ namespace {
 
 constexpr float k_scenario_tail_seconds = 2.0F;
 constexpr int k_pass_watchdog_ms = 1'800'000;
+constexpr float k_pass_watchdog_scale = 10.0F;
+constexpr float k_fast_forward_margin_seconds = 3.0F;
 constexpr int k_pass_warmup_frames = 3;
 constexpr int k_first_frame_min_peak = 8;
 constexpr int k_max_black_frames_skipped = 45;
@@ -295,10 +299,20 @@ private:
     m_pass_frames = 0;
     m_viewport.set_terrain_seed(pass.seed);
     m_viewport.set_batch_fixed_step(idle_step());
+    m_viewport.set_batch_render_suppressed(false);
     m_viewport.set_scenario_duration_override(last_end + k_scenario_tail_seconds);
     m_viewport.set_capture_active(false);
     m_viewport.clear_cinematic_view();
     m_viewport.load_scenario(pass.scenario);
+    if (m_spec.audio) {
+      m_audio = std::make_unique<AudioRecorder>();
+      if (!m_audio->start(m_viewport.world(), m_viewport.session().nations())) {
+        qWarning().noquote() << QStringLiteral(
+                                    "Promo pass over '%1' runs without audio")
+                                    .arg(pass.scenario);
+        m_audio.reset();
+      }
+    }
 
     qInfo().noquote() << QStringLiteral("Promo pass %1/%2: %3, %4 shot(s) across "
                                         "%5 s of scenario")
@@ -309,7 +323,10 @@ private:
                              .arg(QString::number(last_end, 'f', 1));
 
     const std::size_t guarded_pass = m_pass_index;
-    QTimer::singleShot(k_pass_watchdog_ms, [this, guarded_pass]() {
+    const int watchdog_ms =
+        std::max(k_pass_watchdog_ms,
+                 static_cast<int>(last_end * 1000.0F * k_pass_watchdog_scale));
+    QTimer::singleShot(watchdog_ms, [this, guarded_pass]() {
       if (m_pass_active && m_pass_index == guarded_pass) {
         qCritical().noquote() << QStringLiteral("Promo pass over scenario '%1' "
                                                 "exceeded its watchdog")
@@ -378,6 +395,27 @@ private:
 
   void on_tick(float scenario_time) {
     ++m_pass_frames;
+    static const bool log_progress =
+        !qEnvironmentVariableIsEmpty("SOI_PROMO_LOG_SIDES");
+    if (log_progress) {
+      const int bucket = static_cast<int>(scenario_time / 15.0F);
+      if (bucket != m_logged_bucket) {
+        m_logged_bucket = bucket;
+        const auto describe = [](const std::optional<QVector3D>& point) {
+          return point.has_value() ? QStringLiteral("(%1, %2)")
+                                         .arg(QString::number(point->x(), 'f', 1),
+                                              QString::number(point->z(), 'f', 1))
+                                   : QStringLiteral("none");
+        };
+        qInfo().noquote()
+            << QStringLiteral("  sides at %1 s: %2 battle %3 army2 %4 army3 %5")
+                   .arg(QString::number(scenario_time, 'f', 1))
+                   .arg(m_viewport.ai_activity_summary())
+                   .arg(describe(m_viewport.scenario_battle_center(0, 30.0F)))
+                   .arg(describe(m_viewport.scenario_army_center(2, 24.0F)))
+                   .arg(describe(m_viewport.scenario_army_center(3, 24.0F)));
+      }
+    }
     if (!m_shot_active) {
       return;
     }
@@ -401,17 +439,33 @@ private:
 
     const bool in_window =
         scenario_time >= shot.start_seconds && m_pass_frames > k_pass_warmup_frames;
+    const bool far_from_window =
+        !in_window && m_pass_frames > k_pass_warmup_frames &&
+        shot.start_seconds - scenario_time > k_fast_forward_margin_seconds;
+    static const bool fast_forward_enabled =
+        qEnvironmentVariableIsEmpty("SOI_PROMO_NO_FASTFORWARD");
+    m_viewport.set_batch_render_suppressed(fast_forward_enabled && far_from_window);
     if (in_window && !m_shot_armed) {
       m_shot_armed = true;
       m_viewport.set_batch_fixed_step(m_step_seconds);
       m_viewport.set_capture_active(false);
+      if (m_audio != nullptr) {
+        m_audio->advance(idle_step(), false);
+        m_audio->begin_clip();
+      }
       return;
     }
     const bool recording = in_window && m_frames_written < m_target_frames;
     m_viewport.set_capture_active(recording);
+    if (m_audio != nullptr) {
+      m_audio->advance(m_shot_armed ? m_step_seconds : idle_step(), recording);
+    }
 
     if (recording && !m_logged_framing) {
       m_logged_framing = true;
+      qInfo().noquote() << QStringLiteral("  at %1 s: %2")
+                               .arg(QString::number(scenario_time, 'f', 1))
+                               .arg(m_viewport.ai_activity_summary());
       const auto& stats = Render::GL::get_humanoid_render_stats();
       qInfo().noquote() << QStringLiteral(
                                "  focus (%1, %2, %3) %4; soldiers %5/%6 drawn, culled "
@@ -516,6 +570,19 @@ private:
     case FocusMode::AllUnits:
       raw = m_viewport.scenario_center_of_mass();
       break;
+    case FocusMode::Battle:
+      raw = m_viewport.scenario_battle_center(shot.focus.owner,
+                                              shot.focus.engagement_radius);
+      if (!raw.has_value() && !m_focus_valid) {
+        raw = shot.focus.point;
+      }
+      break;
+    case FocusMode::Army:
+      raw = m_viewport.scenario_army_center(shot.focus.owner, shot.focus.home_radius);
+      if (!raw.has_value() && !m_focus_valid) {
+        raw = shot.focus.point;
+      }
+      break;
     }
 
     if (!raw.has_value()) {
@@ -551,6 +618,24 @@ private:
     }
     m_encoder.reset();
 
+    if (m_audio != nullptr && m_frames_written > 0) {
+      const QString wav_path = m_clip_path + QStringLiteral(".wav");
+      QString audio_error;
+      if (!m_audio->write_clip(wav_path)) {
+        qWarning().noquote() << QStringLiteral(
+                                    "Promo shot '%1': audio track not written")
+                                    .arg(shot.name);
+      } else if (!AudioRecorder::mux(m_clip_path, wav_path, &audio_error)) {
+        qWarning().noquote()
+            << QStringLiteral("Promo shot '%1': %2").arg(shot.name, audio_error);
+      } else {
+        qInfo().noquote() << QStringLiteral("  muxed %1 s of game audio into %2")
+                                 .arg(QString::number(m_audio->clip_seconds(), 'f', 2))
+                                 .arg(QFileInfo(m_clip_path).fileName());
+      }
+      m_audio->begin_clip();
+    }
+
     ShotResult result;
     result.name = shot.name;
     result.scenario = shot.scenario;
@@ -585,6 +670,7 @@ private:
       return;
     }
     m_pass_active = false;
+    m_audio.reset();
     ++m_pass_index;
     QTimer::singleShot(0, [this]() { begin_next_pass(); });
   }
@@ -592,6 +678,7 @@ private:
   void finish_run() {
     m_viewport.set_capture_sink(nullptr);
     m_viewport.set_frame_hook(nullptr);
+    m_viewport.set_batch_render_suppressed(false);
     write_manifest();
     qInfo().noquote() << QStringLiteral("Promo capture complete: %1 shot(s) in %2")
                              .arg(recorded_count())
@@ -656,6 +743,8 @@ private:
   bool m_shot_armed{false};
   bool m_focus_valid{false};
   bool m_logged_framing{false};
+  std::unique_ptr<AudioRecorder> m_audio;
+  int m_logged_bucket{-1};
   bool m_failed{false};
 };
 

@@ -326,3 +326,25 @@ TEST(ArenaCommanderMetricsTest, OneActionMayLandOnlyItsAuthoredNumberOfContacts)
                      });
   EXPECT_TRUE(has_code(doubled, QStringLiteral("commander_contact_multiplicity")));
 }
+
+TEST(ArenaCommanderMetricsTest, ExactCommanderActionMustRunInsideItsAuthoredWindow) {
+  auto expected = metric(Expect::CommanderActionObserved);
+  expected.combat_action_id = 8;
+  expected.start_seconds = 0.20F;
+  expected.end_seconds = 0.60F;
+
+  auto const observed = run_with_trace(
+      {expected}, [](int frame, App::Core::CommanderPresentationTrace& trace) {
+        trace.combat.action_running = frame >= 20 && frame <= 24;
+        trace.combat.action_id = frame >= 20 && frame <= 24 ? 8 : 0;
+      });
+  EXPECT_FALSE(has_code(observed, QStringLiteral("commander_action_not_observed")));
+
+  auto const skipped = run_with_trace(
+      {expected}, [](int frame, App::Core::CommanderPresentationTrace& trace) {
+        trace.combat.action_running = frame >= 20 && frame <= 24;
+        trace.combat.action_id = frame >= 20 && frame <= 24 ? 7 : 0;
+      });
+  EXPECT_TRUE(has_code(skipped, QStringLiteral("commander_action_not_observed")))
+      << "a generic attack cannot satisfy an authored move requirement";
+}

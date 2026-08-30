@@ -20,6 +20,7 @@
 #include "../../units/troop_config.h"
 #include "../build_site.h"
 #include "../building_collision_registry.h"
+#include "../combat_rules.h"
 #include "../combat_system/combat_utils.h"
 #include "../command_service.h"
 #include "../construction_cost_catalog.h"
@@ -153,8 +154,9 @@ auto AICommandApplier::apply(Engine::Core::World& world,
       std::vector<Engine::Core::EntityID> attackers;
       attackers.reserve(command.units.size());
       for (const auto unit_id : command.units) {
-        if (!Game::Systems::Combat::melee_walled_off_from(world.get_entity(unit_id),
-                                                          target)) {
+        auto* attacker = world.get_entity(unit_id);
+        if (Game::Systems::CombatRules::seeks_out_enemies(attacker) &&
+            !Game::Systems::Combat::melee_walled_off_from(attacker, target)) {
           attackers.push_back(unit_id);
         }
       }

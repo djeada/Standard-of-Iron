@@ -14,6 +14,8 @@ enum class FocusMode : std::uint8_t {
   Group,
   GroupPair,
   AllUnits,
+  Battle,
+  Army,
 };
 
 enum class Ease : std::uint8_t {
@@ -29,6 +31,10 @@ struct Focus {
   QString group;
   QString second_group;
   QVector3D offset;
+
+  int owner{0};
+  float engagement_radius{14.0F};
+  float home_radius{26.0F};
 
   float smoothing{0.25F};
 };
@@ -83,6 +89,7 @@ struct Spec {
   int height{1920};
   int fps{60};
   int supersample{1};
+  bool audio{false};
   std::vector<Shot> shots;
 };
 

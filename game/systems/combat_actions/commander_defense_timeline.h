@@ -12,9 +12,9 @@ struct GuardTimeline {
 struct DodgeTimeline {
   float startup_seconds{0.0F};
   float invulnerable_start_seconds{0.0F};
-  float invulnerable_end_seconds{0.12F};
-  float roll_seconds{0.22F};
-  float recovery_seconds{0.18F};
+  float invulnerable_end_seconds{0.20F};
+  float roll_seconds{0.36F};
+  float recovery_seconds{0.16F};
 
   [[nodiscard]] constexpr auto invulnerable_seconds() const noexcept -> float {
     return invulnerable_end_seconds - invulnerable_start_seconds;

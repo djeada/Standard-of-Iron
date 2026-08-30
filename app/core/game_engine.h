@@ -381,6 +381,8 @@ private:
   void report_affordability_refusal(App::Core::OrderFailure failure,
                                     const QString& message);
 
+  void announce_player_warning(const char* cue_id);
+
 public:
   [[nodiscard]] auto player_feedback() -> App::Core::PlayerFeedbackBus& {
     return m_player_feedback;

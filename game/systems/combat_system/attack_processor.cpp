@@ -651,8 +651,26 @@ void sync_melee_lock_target(Engine::Core::Entity* attacker,
     }
     attack_target->target_id = attack_comp->melee_lock_target_id;
 
-    attack_target->should_chase = true;
+    attack_target->should_chase =
+        attack_target->is_player_command ||
+        Game::Systems::CombatRules::seeks_out_enemies(attacker);
   }
+}
+
+void drop_target_left_by_a_finished_lock(
+    Engine::Core::Entity* attacker, const Engine::Core::AttackComponent* attack_comp) {
+  if (Game::Systems::CombatRules::seeks_out_enemies(attacker) ||
+      ((attack_comp != nullptr) && attack_comp->in_melee_lock)) {
+    return;
+  }
+
+  auto const* attack_target =
+      attacker->get_component<Engine::Core::AttackTargetComponent>();
+  if ((attack_target == nullptr) || attack_target->is_player_command) {
+    return;
+  }
+
+  attacker->remove_component<Engine::Core::AttackTargetComponent>();
 }
 
 void apply_health_bonus(Engine::Core::UnitComponent* unit_comp) {
@@ -1357,6 +1375,7 @@ auto resolve_melee_swing_cadence(Engine::Core::Entity* attacker,
   auto const* definition = Game::Systems::CombatActions::find_combat_action_definition(
       static_cast<Game::Systems::CombatActions::CombatActionId>(
           action->combat_action_id));
+  float link_length = 0.0F;
   if (commander != nullptr && !commander->fpv_controlled &&
       commander->advanced_combat_enabled && definition != nullptr &&
       definition->commander_only) {
@@ -1364,8 +1383,7 @@ auto resolve_melee_swing_cadence(Engine::Core::Entity* attacker,
         *definition,
         Game::Systems::CombatActions::CombatActionEventType::ExitSafe,
         0.92F);
-    float const link_length = std::max(0.05F, action->action_duration * exit_safe);
-    return cooldown - std::max(cooldown, link_length);
+    link_length = std::max(0.05F, action->action_duration * exit_safe);
   }
 
   auto const next_beat = resolve_melee_exchange_beat(
@@ -1375,7 +1393,7 @@ auto resolve_melee_swing_cadence(Engine::Core::Entity* attacker,
       true);
   float const interval = cooldown * next_beat.interval_weight;
   float const delay = base_delay * next_beat.delay_weight;
-  return cooldown - interval - delay;
+  return cooldown - std::max(interval + delay, link_length);
 }
 
 void begin_rts_bow_action(Engine::Core::World& world,
@@ -1487,6 +1505,7 @@ void process_attacks(Engine::Core::World* world,
       process_melee_lock(attacker, attacker_atk, world, delta_time);
     }
     sync_melee_lock_target(attacker, attacker_atk);
+    drop_target_left_by_a_finished_lock(attacker, attacker_atk);
 
     float range = 2.0F;
     int damage = 10;

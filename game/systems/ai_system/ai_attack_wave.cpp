@@ -202,7 +202,9 @@ auto garrison_target_for(const AIContext& context,
   const int wanted = std::max(minimum, by_fraction);
 
   const int ceiling = std::max(0, combat_unit_count - std::max(1, keep_free));
-  return std::clamp(wanted, 0, ceiling);
+
+  const int floor_units = std::min(minimum, std::max(0, combat_unit_count - 1));
+  return std::clamp(wanted, 0, std::max(ceiling, floor_units));
 }
 
 void update_attack_wave(const AISnapshot& snapshot, AIContext& context) {

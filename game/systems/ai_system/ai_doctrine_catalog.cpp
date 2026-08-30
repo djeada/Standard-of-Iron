@@ -113,7 +113,7 @@ void parse_town_plans(const QJsonObject& root,
       qCWarning(logger) << "town plan" << it.key() << "has no 'steps' array; skipped";
       continue;
     }
-    for (const auto& step_value : steps.toArray()) {
+    for (const auto step_value : steps.toArray()) {
       if (!step_value.isObject()) {
         continue;
       }
@@ -189,7 +189,7 @@ void parse_doctrine_body(const QJsonObject& object,
     if (const auto preferred = recruitment_object.value(QLatin1String("preferred"));
         preferred.isArray()) {
       doctrine.recruitment.preferred.clear();
-      for (const auto& entry : preferred.toArray()) {
+      for (const auto entry : preferred.toArray()) {
         if (entry.isString()) {
           doctrine.recruitment.preferred.push_back(entry.toString().toStdString());
         }
@@ -213,7 +213,7 @@ void parse_doctrine_body(const QJsonObject& object,
     if (const auto priority = wave_object.value(QLatin1String("target_priority"));
         priority.isArray()) {
       std::vector<DoctrineTarget> parsed;
-      for (const auto& entry : priority.toArray()) {
+      for (const auto entry : priority.toArray()) {
         DoctrineTarget target{};
         if (entry.isString() && parse_target(entry.toString(), target)) {
           parsed.push_back(target);

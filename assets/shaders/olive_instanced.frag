@@ -55,11 +55,11 @@ void main() {
   float canopy_edge = smoothstep(0.10, 0.32, canopy_radius);
   float canopy_core = 1.0 - smoothstep(0.14, 0.40, canopy_radius);
 
-  vec3 leaf_dark_green = vec3(0.072, 0.128, 0.092);
-  vec3 leaf_mid_green = vec3(0.208, 0.278, 0.162);
-  vec3 leaf_light_green = vec3(0.388, 0.462, 0.248);
-  vec3 leaf_silver = vec3(0.545, 0.575, 0.500);
-  vec3 leaf_sun = vec3(0.500, 0.565, 0.330);
+  vec3 leaf_dark_green = vec3(0.090, 0.132, 0.096);
+  vec3 leaf_mid_green = vec3(0.236, 0.296, 0.196);
+  vec3 leaf_light_green = vec3(0.400, 0.470, 0.290);
+  vec3 leaf_silver = vec3(0.640, 0.672, 0.590);
+  vec3 leaf_sun = vec3(0.560, 0.610, 0.350);
 
   float color_choice =
       clamp(leaf_clump * 0.90 + (leaf_fine - 0.5) * 0.26 + 0.10, 0.0, 1.0);
@@ -67,12 +67,13 @@ void main() {
   leaf_color =
       mix(leaf_color, leaf_light_green, smoothstep(0.40, 0.90, leaf_mass) * 0.62);
 
-  leaf_color = mix(leaf_color, v_color, 0.40);
+  leaf_color = mix(leaf_color, v_color, 0.28);
 
   vec3 n = geometric_normal;
   vec3 shading_normal =
       normalize(mix(n, n + vec3(0.0, 1.2, 0.0), v_foliage_mask * 0.50));
 
+  float underside = 1.0 - smoothstep(-0.35, 0.05, geometric_normal.y);
   float ndl = dot(shading_normal, l);
   float diffuse = max(ndl, 0.0);
   float wrap = clamp((ndl + 0.24) / 1.24, 0.0, 1.0);
@@ -87,60 +88,66 @@ void main() {
 
   float silver_show =
       smoothstep(0.22, 0.75, 1.0 - diffuse) * smoothstep(0.30, 0.80, leaf_clump);
-  silver_show = max(silver_show, smoothstep(0.62, 0.95, leaf_fine) * 0.55);
-  leaf_color =
-      mix(leaf_color, leaf_silver, silver_show * mix(0.16, 0.30, canopy_height));
+  silver_show = max(silver_show, smoothstep(0.58, 0.95, leaf_fine) * 0.70);
+  silver_show = max(silver_show, underside * smoothstep(0.35, 0.75, leaf_clump) * 0.80);
+  silver_show += canopy_edge * smoothstep(0.45, 0.85, leaf_fine) * 0.35;
+  leaf_color = mix(leaf_color,
+                   leaf_silver,
+                   clamp(silver_show, 0.0, 1.0) * mix(0.22, 0.42, canopy_height));
 
   float sun_catch = smoothstep(0.43, 1.00, wrap) * mix(0.20, 0.62, leaf_clump);
   leaf_color = mix(leaf_color, leaf_sun, sun_catch * v_foliage_mask);
 
-  float underside = 1.0 - smoothstep(-0.35, 0.05, geometric_normal.y);
   float hemi = clamp(geometric_normal.y * 0.5 + 0.5, 0.0, 1.0);
-  float canopy_shape = mix(0.86, 1.06, canopy_edge) * mix(0.92, 1.08, canopy_height);
-  float canopy_occlusion =
-      clamp(canopy_shape * mix(1.0, 0.80, canopy_core) * mix(1.0, 0.88, underside),
-            0.42,
-            1.12);
+  float clump_shadow = 1.0 - smoothstep(0.30, 0.70, leaf_mass) * 0.22;
+  float canopy_shape = mix(0.82, 1.08, canopy_edge) * mix(0.90, 1.10, canopy_height);
+  float canopy_occlusion = clamp(canopy_shape * mix(1.0, 0.72, canopy_core) *
+                                     mix(1.0, 0.84, underside) * clump_shadow,
+                                 0.38,
+                                 1.14);
   float ao = mix(1.0, canopy_occlusion, v_foliage_mask) * mix(0.72, 1.0, hemi);
 
   float bark_u = v_tex_coord.x * TWO_PI;
   float bark_v = v_tex_coord.y;
 
-  float furrows = pow(abs(sin(bark_u * 5.0 + v_bark_seed * TWO_PI)), 0.4);
+  float furrow_wave = bark_u * 5.0 + bark_v * 6.0 + v_bark_seed * TWO_PI;
+  float furrows = pow(abs(sin(furrow_wave)), 0.55);
+  float deep_furrow = smoothstep(0.86, 1.0, abs(sin(furrow_wave * 0.5 + 1.3)));
   float vertical_grain =
       noise2_d(vec2(bark_u * 3.0, bark_v * 25.0 + v_bark_seed * 7.0));
   float bark_noise = noise2_d(vec2(bark_u * 8.0, bark_v * 15.0)) * 0.3;
   float bark_knots = noise2_d(vec2(bark_u * 2.6 + v_leaf_seed * 4.0, bark_v * 9.0));
   float bark_texture =
       furrows * 0.46 + vertical_grain * 0.32 + bark_noise + bark_knots * 0.18;
+  bark_texture = mix(bark_texture, 0.0, deep_furrow * 0.55);
 
-  vec3 bark_dark = vec3(0.29, 0.26, 0.22);
-  vec3 bark_mid = vec3(0.44, 0.40, 0.34);
-  vec3 bark_light = vec3(0.52, 0.49, 0.42);
-  vec3 bark_lichen = vec3(0.30, 0.33, 0.27);
+  vec3 bark_dark = vec3(0.24, 0.21, 0.18);
+  vec3 bark_mid = vec3(0.46, 0.43, 0.38);
+  vec3 bark_light = vec3(0.60, 0.58, 0.52);
+  vec3 bark_lichen = vec3(0.34, 0.38, 0.30);
 
   vec3 bark_color = mix(bark_dark, bark_mid, bark_texture);
   float bark_highlight =
       smoothstep(0.72, 0.95, soi_hash_15a407(vec2(bark_v * 15.0, bark_u * 3.0)));
-  bark_color = mix(bark_color, bark_light, bark_highlight * 0.38);
+  bark_color = mix(bark_color, bark_light, bark_highlight * 0.48);
   bark_color = mix(bark_color, bark_lichen, smoothstep(0.72, 0.96, bark_knots) * 0.14);
   float basal_lichen = (1.0 - smoothstep(0.04, 0.30, v_local_pos.y)) *
                        smoothstep(0.50, 0.84, vertical_grain);
-  bark_color = mix(bark_color, bark_lichen, basal_lichen * 0.42);
+  bark_color = mix(bark_color, bark_lichen, basal_lichen * 0.50);
   bark_color *= mix(0.72, 1.0, smoothstep(0.0, 0.14, v_local_pos.y));
 
   vec3 base_color = mix(bark_color, leaf_color, v_foliage_mask);
   vec3 color = base_color * illumination * ao * environment_exposure();
 
   float translucency =
-      backlight * backlight * v_foliage_mask * (0.14 + canopy_edge * 0.26);
-  color += leaf_color * vec3(0.42, 0.50, 0.22) * translucency * sun;
+      backlight * backlight * v_foliage_mask * (0.16 + canopy_edge * 0.34);
+  color += leaf_color * vec3(0.48, 0.56, 0.26) * translucency * sun;
 
   vec3 half_dir = normalize(l + view_dir);
   float leaf_spec =
       pow(max(dot(shading_normal, half_dir), 0.0), 16.0) * v_foliage_mask * 0.060;
   float rim = pow(1.0 - max(dot(geometric_normal, view_dir), 0.0), 4.0) *
-              mix(0.055, 0.085, v_foliage_mask);
+              mix(0.055, 0.110, v_foliage_mask);
   color += sun * leaf_spec;
   color += sky * rim;
 

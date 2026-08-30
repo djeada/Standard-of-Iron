@@ -224,6 +224,14 @@ void BuildingArchetypeDesc::add_palette_cylinder(const QVector3D& start,
   m_parts.push_back(std::move(part));
 }
 
+void BuildingArchetypeDesc::scale_uniformly(float factor) {
+  for (auto& part : m_parts) {
+    part.point_a *= factor;
+    part.point_b *= factor;
+    part.radius *= factor;
+  }
+}
+
 auto build_building_archetype(const BuildingArchetypeDesc& desc,
                               BuildingState state) -> RenderArchetype {
   RenderArchetypeBuilder builder(desc.name());

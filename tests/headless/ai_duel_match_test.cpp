@@ -10,7 +10,9 @@
 #include <vector>
 
 #include "game/core/component.h"
+#include "game/core/event_manager.h"
 #include "game/core/world.h"
+#include "game/formation/army_formation_registry.h"
 #include "game/map/map_definition.h"
 #include "game/map/map_transformer.h"
 #include "game/map/terrain_service.h"
@@ -21,6 +23,7 @@
 #include "game/systems/ai_system/ai_strategy.h"
 #include "game/systems/building_collision_registry.h"
 #include "game/systems/default_content.h"
+#include "game/systems/formation_combat_geometry.h"
 #include "game/systems/nation_registry.h"
 #include "game/systems/nav_grid.h"
 #include "game/systems/owner_registry.h"
@@ -79,17 +82,28 @@ struct SideHistory {
 class AiDuelMatchTest : public ::testing::Test {
 protected:
   void SetUp() override {
+    reset_shared_world_state();
     Game::Systems::NavGrid::initialize(k_map_size, k_map_size);
     m_factory = std::make_shared<Game::Units::UnitFactoryRegistry>();
     Game::Units::register_built_in_units(*m_factory);
     Game::Map::MapTransformer::setFactoryRegistry(m_factory);
   }
 
+  static void reset_shared_world_state() {
+    Engine::Core::EventManager::instance().clear_all_subscriptions();
+    Game::Map::TerrainService::instance().clear();
+    Game::Formation::ArmyFormationRegistry::instance().clear();
+    Game::Systems::BuildingCollisionRegistry::instance().clear();
+    Game::Systems::TroopCountRegistry::instance().clear();
+    Game::Systems::PlayerResourceRegistry::instance().clear();
+    Game::Systems::FormationCombat::invalidate_layout_cache();
+  }
+
   void TearDown() override {
     m_scope.reset();
     m_session.reset();
     Game::Map::MapTransformer::setFactoryRegistry(nullptr);
-    Game::Map::TerrainService::instance().clear();
+    reset_shared_world_state();
   }
 
   auto make_duel(Game::Units::SpawnType north_commander,

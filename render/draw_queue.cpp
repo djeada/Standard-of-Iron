@@ -22,6 +22,7 @@ void DrawQueue::clear() {
   m_submission_bucket_spans.clear();
   m_submission_bucket_ordered = true;
   m_local_lights.clear();
+  m_type_counts.fill(0);
 }
 
 void DrawQueue::submit_local_light(const LocalLight& light) {

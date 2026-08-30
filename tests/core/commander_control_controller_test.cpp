@@ -186,6 +186,8 @@ TEST_F(CommanderControlControllerTest, ScriptedDodgeUsesRequestedWorldDirection)
   ASSERT_NE(commander, nullptr);
   auto* transform = commander->get_component<Engine::Core::TransformComponent>();
   ASSERT_NE(transform, nullptr);
+  auto* commander_data = commander->get_component<Engine::Core::CommanderComponent>();
+  ASSERT_NE(commander_data, nullptr);
   auto* rpg = commander->add_component<Engine::Core::RpgHealthComponent>();
   ASSERT_NE(rpg, nullptr);
   rpg->active = true;
@@ -200,6 +202,9 @@ TEST_F(CommanderControlControllerTest, ScriptedDodgeUsesRequestedWorldDirection)
   EXPECT_NEAR(transform->position.x, 0.0F, 0.0001F);
   EXPECT_LT(transform->position.z, -0.60F);
   EXPECT_TRUE(controller.is_dodge_rolling());
+  EXPECT_TRUE(commander_data->dodge_active);
+  EXPECT_GT(commander_data->dodge_phase, 0.0F);
+  EXPECT_LT(commander_data->dodge_phase, 1.0F);
 
   EXPECT_GT(rpg->dodge_grace_remaining, 0.0F);
   EXPECT_LT(rpg->dodge_dir_z, -0.5F);

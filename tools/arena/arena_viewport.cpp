@@ -565,6 +565,14 @@ void ArenaViewport::paintGL() {
   Arena::ArenaRenderedFrameTimings timings;
   timings.simulation_ms = elapsed_phase_ms();
 
+  if (m_batch_render_suppressed && sampled_frame && !m_capture_active) {
+    m_renderer->update_animation_time(simulation_dt);
+    if (m_scenario_runner != nullptr) {
+      publish_animation_clock();
+    }
+    return;
+  }
+
   bool const capture_frame = m_capture_active && sampled_frame &&
                              static_cast<bool>(m_capture_sink) &&
                              ensure_capture_target();
@@ -2845,6 +2853,48 @@ void ArenaViewport::update_fog_of_war(float dt) {
       snapshot.width, snapshot.height, snapshot.tile_size, snapshot.cells);
 }
 
+auto ArenaViewport::ai_activity_summary() const -> QString {
+  auto* ai_system =
+      m_world != nullptr ? m_world->get_system<Game::Systems::AISystem>() : nullptr;
+  if (ai_system == nullptr) {
+    return QStringLiteral("no AI system");
+  }
+  QString sides;
+  for (int owner : {2, 3}) {
+    int units = 0;
+    int buildings = 0;
+    for (const auto entity_id : m_world->entities_with<Engine::Core::UnitComponent>()) {
+      auto* entity = m_world->get_entity(entity_id);
+      auto* component = entity != nullptr
+                            ? entity->get_component<Engine::Core::UnitComponent>()
+                            : nullptr;
+      if (component == nullptr || component->owner_id != owner ||
+          component->health <= 0) {
+        continue;
+      }
+      if (entity->get_component<Engine::Core::BuildingComponent>() != nullptr) {
+        ++buildings;
+      } else {
+        ++units;
+      }
+    }
+    sides += QStringLiteral(" owner %1: %2 units %3 buildings;")
+                 .arg(owner)
+                 .arg(units)
+                 .arg(buildings);
+  }
+  return QStringLiteral("ai players %1, decisions %2, commands %3, refused %4;%5")
+      .arg(ai_system->ai_player_count())
+      .arg(ai_system->completed_decision_count())
+      .arg(ai_system->applied_command_count())
+      .arg(ai_system->refused_command_count())
+      .arg(sides);
+}
+
+void ArenaViewport::set_batch_render_suppressed(bool suppressed) {
+  m_batch_render_suppressed = suppressed;
+}
+
 void ArenaViewport::set_batch_fixed_step(float seconds) {
   m_batch_fixed_step = std::max(0.0F, seconds);
 
@@ -3227,6 +3277,107 @@ auto ArenaViewport::scenario_group_center(const QString& group) const
     return std::nullopt;
   }
   return scenario_center(m_world.get(), entities);
+}
+
+namespace {
+
+struct LivingCombatant {
+  int owner{0};
+  bool building{false};
+  QVector3D position;
+};
+
+auto collect_living_combatants(Engine::Core::World& world,
+                               bool include_buildings) -> std::vector<LivingCombatant> {
+  std::vector<LivingCombatant> result;
+  for (const auto entity_id : world.entities_with<Engine::Core::UnitComponent>()) {
+    auto* entity = world.get_entity(entity_id);
+    auto* unit = entity != nullptr
+                     ? entity->get_component<Engine::Core::UnitComponent>()
+                     : nullptr;
+    auto* transform = entity != nullptr
+                          ? entity->get_component<Engine::Core::TransformComponent>()
+                          : nullptr;
+    if (unit == nullptr || transform == nullptr || unit->health <= 0 ||
+        unit->owner_id <= 0) {
+      continue;
+    }
+    const bool building = entity->has_component<Engine::Core::BuildingComponent>();
+    if (building ? !include_buildings
+                 : !Game::Units::can_use_attack_mode(unit->spawn_type)) {
+      continue;
+    }
+    result.push_back({unit->owner_id,
+                      building,
+                      QVector3D(transform->position.x,
+                                transform->position.y,
+                                transform->position.z)});
+  }
+  return result;
+}
+
+auto centroid(const std::vector<QVector3D>& points) -> std::optional<QVector3D> {
+  if (points.empty()) {
+    return std::nullopt;
+  }
+  QVector3D sum;
+  for (const auto& point : points) {
+    sum += point;
+  }
+  return sum / static_cast<float>(points.size());
+}
+
+} // namespace
+
+auto ArenaViewport::scenario_battle_center(
+    int owner_filter, float engagement_radius) const -> std::optional<QVector3D> {
+  if (m_world == nullptr) {
+    return std::nullopt;
+  }
+  const auto combatants = collect_living_combatants(*m_world, true);
+  const float radius_sq = engagement_radius * engagement_radius;
+  std::vector<QVector3D> engaged;
+  for (const auto& unit : combatants) {
+    if (unit.building || (owner_filter > 0 && unit.owner != owner_filter)) {
+      continue;
+    }
+    for (const auto& other : combatants) {
+      if (other.owner == unit.owner) {
+        continue;
+      }
+      if ((other.position - unit.position).lengthSquared() <= radius_sq) {
+        engaged.push_back(unit.position);
+        break;
+      }
+    }
+  }
+  return centroid(engaged);
+}
+
+auto ArenaViewport::scenario_army_center(int owner, float home_radius) const
+    -> std::optional<QVector3D> {
+  if (m_world == nullptr || m_scenario_runner == nullptr) {
+    return std::nullopt;
+  }
+  std::optional<QVector3D> home;
+  for (const auto& side : m_scenario_runner->definition().battle_sides) {
+    if (side.owner_id == owner) {
+      home = side.home;
+      break;
+    }
+  }
+  const float radius_sq = home_radius * home_radius;
+  std::vector<QVector3D> afield;
+  for (const auto& unit : collect_living_combatants(*m_world, false)) {
+    if (unit.owner != owner) {
+      continue;
+    }
+    if (home.has_value() && (unit.position - *home).lengthSquared() < radius_sq) {
+      continue;
+    }
+    afield.push_back(unit.position);
+  }
+  return centroid(afield);
 }
 
 auto ArenaViewport::scenario_center_of_mass() const -> std::optional<QVector3D> {
@@ -3817,14 +3968,24 @@ void ArenaViewport::load_scenario(const QString& scenario_id) {
         unit->health = std::min(group.health_override, std::max(1, unit->max_health));
       }
     }
-    if (entity != nullptr && (group.attack_range_override > 0.0F ||
-                              group.attack_min_range_override > 0.0F)) {
+    if (entity != nullptr &&
+        (group.attack_range_override > 0.0F || group.attack_min_range_override > 0.0F ||
+         group.attacks_disabled)) {
       if (auto* attack = entity->get_component<Engine::Core::AttackComponent>()) {
         if (group.attack_range_override > 0.0F) {
           attack->range = group.attack_range_override;
         }
         if (group.attack_min_range_override > 0.0F) {
           attack->min_range = group.attack_min_range_override;
+        }
+        if (group.attacks_disabled) {
+          attack->can_melee = false;
+          attack->can_ranged = false;
+          attack->cooldown = std::numeric_limits<float>::max();
+          attack->melee_cooldown = std::numeric_limits<float>::max();
+          attack->time_since_last = 0.0F;
+          attack->in_melee_lock = false;
+          attack->melee_lock_target_id = 0U;
         }
       }
     }

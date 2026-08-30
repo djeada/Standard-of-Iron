@@ -721,11 +721,11 @@ void spawn_blood_stain(Engine::Core::World* world,
                                  std::abs(transform->position.z) * 131.0F);
   float const scale = blood_stain_scale(unit);
   float const radius = Engine::Core::Defaults::k_blood_stain_default_radius * scale *
-                       (0.85F + hash01(id_seed * 17U + position_seed) * 0.45F);
+                       (0.78F + hash01(id_seed * 17U + position_seed) * 0.46F);
   float const rotation =
       hash01(id_seed * 97U + position_seed * 3U) * std::numbers::pi_v<float> * 2.0F;
   float const aspect_ratio =
-      0.72F + hash01(id_seed * 53U + position_seed * 11U) * 0.62F;
+      0.58F + hash01(id_seed * 53U + position_seed * 11U) * 0.72F;
   float const seed = hash01(id_seed * 193U + position_seed * 29U);
 
   float const offset_angle =
@@ -749,8 +749,8 @@ void announce_new_stagger(const Engine::Core::Entity* entity, bool was_staggered
   if (entity == nullptr || was_staggered) {
     return;
   }
-  Engine::Core::EventManager::instance().publish(
-      Engine::Core::AudioCueEvent("combat.stagger"));
+  Engine::Core::EventManager::instance().publish(Engine::Core::AudioCueEvent::for_owner(
+      Engine::Core::owner_id_of(entity), "combat.stagger"));
 }
 
 void add_or_extend_stagger(Engine::Core::Entity* entity, float duration) {
@@ -918,8 +918,14 @@ apply_unit_damage(Engine::Core::World* world,
 
   Game::Units::SpawnType const attacker_type =
       attacker_type_opt.value_or(Game::Units::SpawnType::Knight);
-  Engine::Core::EventManager::instance().publish(Engine::Core::CombatHitEvent(
-      attacker_id, target->get_id(), effective_damage, attacker_type, is_killing_blow));
+  Engine::Core::EventManager::instance().publish(
+      Engine::Core::CombatHitEvent(attacker_id,
+                                   target->get_id(),
+                                   effective_damage,
+                                   attacker_type,
+                                   is_killing_blow,
+                                   attacker_owner_id,
+                                   unit->owner_id));
 
   if (structure) {
     queue_structure_impact(*target, attacker, contact_point);

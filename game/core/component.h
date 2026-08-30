@@ -52,7 +52,7 @@ inline constexpr float k_guard_exit_duration = 1.4F;
 
 inline constexpr float k_guard_default_radius = 10.0F;
 inline constexpr float k_guard_return_threshold = 1.0F;
-inline constexpr float k_blood_stain_default_radius = 0.6F;
+inline constexpr float k_blood_stain_default_radius = 0.46F;
 inline constexpr float k_blood_stain_default_aspect_ratio = 1.0F;
 inline constexpr float k_blood_stain_default_lifetime = 8.0F;
 inline constexpr int k_blood_stain_max_active = 10;
@@ -1275,6 +1275,8 @@ public:
   float jump_phase{0.0F};
   float jump_height_offset{0.0F};
   float airborne_velocity{0.0F};
+  bool dodge_active{false};
+  float dodge_phase{0.0F};
   bool dive_attack_active{false};
   float fpv_motion_vx{0.0F};
   float fpv_motion_vz{0.0F};
@@ -2666,6 +2668,8 @@ public:
   bool jump_active{false};
   float jump_phase{0.0F};
   float jump_height_offset{0.0F};
+  bool dodge_active{false};
+  float dodge_phase{0.0F};
   bool flag_rally_planting{false};
   float flag_rally_animation_timer{0.0F};
   float flag_rally_cost{0.0F};
@@ -2758,5 +2762,15 @@ public:
     cooldowns.push_back({victim, k_knockback_cooldown});
   }
 };
+
+[[nodiscard]] inline auto owner_id_of(const Entity* entity) -> int {
+  const auto* unit =
+      entity != nullptr ? entity->get_component<UnitComponent>() : nullptr;
+  return unit != nullptr ? unit->owner_id : 0;
+}
+
+[[nodiscard]] inline auto owner_id_of(const Entity& entity) -> int {
+  return owner_id_of(&entity);
+}
 
 } // namespace Engine::Core

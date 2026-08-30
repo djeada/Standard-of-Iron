@@ -72,6 +72,44 @@ constexpr std::size_t ModeIndicatorCmdIndex = cmd_index_of<ModeIndicatorCmd>;
 constexpr std::size_t DrawPartCmdIndex = cmd_index_of<DrawPartCmd>;
 constexpr std::size_t RiggedCreatureCmdIndex = cmd_index_of<RiggedCreatureCmd>;
 
+[[nodiscard]] inline constexpr auto
+draw_cmd_type_name(std::size_t index) noexcept -> const char* {
+  switch (index) {
+  case GridCmdIndex:
+    return "grid";
+  case GroundMarkerCmdIndex:
+    return "ground_marker";
+  case SelectionSmokeCmdIndex:
+    return "selection_smoke";
+  case CylinderCmdIndex:
+    return "cylinder";
+  case MeshCmdIndex:
+    return "mesh";
+  case FogBatchCmdIndex:
+    return "fog_batch";
+  case TerrainScatterCmdIndex:
+    return "terrain_scatter";
+  case RainBatchCmdIndex:
+    return "rain_batch";
+  case TerrainSurfaceCmdIndex:
+    return "terrain_surface";
+  case TerrainFeatureCmdIndex:
+    return "terrain_feature";
+  case PrimitiveBatchCmdIndex:
+    return "primitive_batch";
+  case EffectBatchCmdIndex:
+    return "effect_batch";
+  case ModeIndicatorCmdIndex:
+    return "mode_indicator";
+  case DrawPartCmdIndex:
+    return "draw_part";
+  case RiggedCreatureCmdIndex:
+    return "rigged_creature";
+  default:
+    return "unknown";
+  }
+}
+
 enum class RenderPassOrder : std::uint8_t {
   TerrainSurface = 0,
   TerrainFeature = 1,

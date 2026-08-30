@@ -82,6 +82,12 @@ public:
   }
 
 private:
+  struct PendingLaunchCue {
+    const char* cue_id{nullptr};
+    Engine::Core::EntityID attacker_id{0};
+    bool counts_toward_volley{false};
+  };
+
   struct ImpactResolution {
     bool hit_target{false};
     bool damage_applied{false};
@@ -96,6 +102,8 @@ private:
                                     Engine::Core::EntityID attacker_id,
                                     const Engine::Core::Entity& target);
 
+  void flush_launch_cues(Engine::Core::World* world);
+
   void record_spent_projectile(Engine::Core::World* world,
                                const Projectile& projectile,
                                const QVector3D& incoming_direction,
@@ -106,10 +114,10 @@ private:
   std::vector<ProjectilePtr> m_projectiles;
   std::vector<ProjectileImpactEvent> m_impacts;
   std::vector<SpentProjectile> m_spent;
+  std::vector<PendingLaunchCue> m_pending_launch_cues;
   ArrowConfig m_arrow_config;
   std::uint32_t m_arrow_spawn_sequence{0};
   std::uint64_t m_impact_sequence{0};
-  int m_arrows_launched_this_tick{0};
 };
 
 } // namespace Game::Systems

@@ -182,6 +182,7 @@ add_executable(
     systems/formation_combat_geometry_test.cpp
     systems/defensive_unit_layout_test.cpp
     systems/structure_combat_test.cpp
+    systems/event_audience_test.cpp
     systems/structure_fire_test.cpp
     systems/guard_system_test.cpp
     systems/stamina_system_test.cpp
@@ -504,6 +505,7 @@ add_executable(
     app_tests
     ${SOI_TRANSLATIONS_QRC}
     core/audio_system_test.cpp
+    world/ambient_state_hysteresis_test.cpp
     core/audio_cues_test.cpp
     core/audio_mastering_test.cpp
     core/loop_seam_test.cpp
@@ -611,6 +613,7 @@ add_executable(
     tools/arena_unit_spawn_options_test.cpp
     tools/arena_terrain_alignment_test.cpp
     tools/arena_promo_spec_test.cpp
+    tools/arena_video_encoder_test.cpp
     tools/settlement_layout_test.cpp
     tools/sacred_mountain_slope_test.cpp
     test_main.cpp

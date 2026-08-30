@@ -16,6 +16,7 @@
 #include "arena_showcase_scenarios.h"
 #include "arena_trailer_scenarios.h"
 #include "arena_wildlife_scenarios.h"
+#include "game/systems/combat_actions/combat_action_definition.h"
 #include "game/wildlife/wildlife_config.h"
 
 namespace Arena::Scenarios {
@@ -142,6 +143,17 @@ auto expectation(Expect kind,
   result.threshold = threshold;
   result.start_seconds = start;
   result.distance = distance;
+  return result;
+}
+
+auto commander_action_expectation(QString group_name,
+                                  Game::Systems::CombatActions::CombatActionId action,
+                                  float start,
+                                  float end) -> ArenaExpectation {
+  auto result = expectation(Expect::CommanderActionObserved, std::move(group_name));
+  result.combat_action_id = static_cast<int>(action);
+  result.start_seconds = start;
+  result.end_seconds = end;
   return result;
 }
 
@@ -2244,7 +2256,7 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
             "A durable close formation gives the direct-control sword commander "
             "room to demonstrate his gap closer, launcher branch, radial special, "
             "air attack, dive, defensive cancel, and full light chain."),
-        10.0F);
+        11.8F);
     s.rpg_mode = true;
     s.rpg_commander_group = QStringLiteral("rpg_commander");
     s.suppress_terrain_scatter = true;
@@ -2258,10 +2270,13 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
                            {0.0F, 0.0F, 0.0F},
                            1);
     commander.facing_degrees = 0.0F;
+    commander.stamina_override = 600.0F;
+    commander.max_stamina_override = 600.0F;
     auto targets = group(
-        QStringLiteral("enemy_crowd"), Troop::Swordsman, 2, 1, {0.0F, 0.0F, 3.8F}, 7);
+        QStringLiteral("enemy_crowd"), Troop::Swordsman, 2, 1, {0.0F, 0.0F, 3.8F}, 5);
     targets.facing_degrees = 180.0F;
     targets.health_override = targets.max_health_override = 12000;
+    targets.attacks_disabled = true;
     s.groups = {commander, targets};
     s.steps = {
         at(0.10F,
@@ -2273,9 +2288,12 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
         at(1.66F, Command::RpgHeavyAttack, QStringLiteral("rpg_commander")),
         at(2.75F, Command::RpgSpecial, QStringLiteral("rpg_commander")),
         at(3.85F, Command::RpgJump, QStringLiteral("rpg_commander")),
-        at(3.94F, Command::RpgPrimaryAttack, QStringLiteral("rpg_commander")),
         at(4.52F, Command::RpgHeavyAttack, QStringLiteral("rpg_commander")),
-        at(5.35F, Command::RpgDodge, QStringLiteral("rpg_commander")),
+        [] {
+          auto step = at(5.35F, Command::RpgDodge, QStringLiteral("rpg_commander"));
+          step.destination = {1.0F, 0.0F, 0.0F};
+          return step;
+        }(),
         at(6.10F, Command::RpgGuard, QStringLiteral("rpg_commander")),
         at(6.18F, Command::RpgSpecial, QStringLiteral("rpg_commander")),
         [] {
@@ -2283,18 +2301,11 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
           step.enabled = false;
           return step;
         }(),
-        [] {
-          auto step =
-              at(7.05F, Command::RpgAttackHold, QStringLiteral("rpg_commander"));
-          step.enabled = true;
-          return step;
-        }(),
-        [] {
-          auto step =
-              at(9.45F, Command::RpgAttackHold, QStringLiteral("rpg_commander"));
-          step.enabled = false;
-          return step;
-        }(),
+        at(7.05F, Command::RpgPrimaryAttack, QStringLiteral("rpg_commander")),
+        at(8.23F, Command::RpgPrimaryAttack, QStringLiteral("rpg_commander")),
+        at(8.95F, Command::RpgPrimaryAttack, QStringLiteral("rpg_commander")),
+        at(9.55F, Command::RpgPrimaryAttack, QStringLiteral("rpg_commander")),
+        at(10.18F, Command::RpgPrimaryAttack, QStringLiteral("rpg_commander")),
     };
     s.expectations.push_back(
         expectation(Expect::AttackAnimationObserved, QStringLiteral("rpg_commander")));
@@ -2314,6 +2325,28 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
       carry.distance = 4.0F;
       s.expectations.push_back(carry);
     }
+    using Action = Game::Systems::CombatActions::CombatActionId;
+    s.expectations.push_back(
+        commander_action_expectation(QStringLiteral("rpg_commander"),
+                                     Action::CommanderSwordGapCloser,
+                                     0.35F,
+                                     1.35F));
+    s.expectations.push_back(commander_action_expectation(
+        QStringLiteral("rpg_commander"), Action::CommanderSwordLauncher, 1.45F, 2.80F));
+    s.expectations.push_back(commander_action_expectation(
+        QStringLiteral("rpg_commander"), Action::CommanderSwordSpin, 2.60F, 3.85F));
+    s.expectations.push_back(commander_action_expectation(
+        QStringLiteral("rpg_commander"), Action::CommanderSwordAirLight, 3.80F, 4.75F));
+    s.expectations.push_back(commander_action_expectation(
+        QStringLiteral("rpg_commander"), Action::CommanderSwordDive, 4.35F, 5.75F));
+    s.expectations.push_back(commander_action_expectation(
+        QStringLiteral("rpg_commander"), Action::RpgSwordSlashLeft, 6.95F, 10.80F));
+    s.expectations.push_back(commander_action_expectation(
+        QStringLiteral("rpg_commander"), Action::RpgSwordSlashRight, 6.95F, 10.80F));
+    s.expectations.push_back(commander_action_expectation(
+        QStringLiteral("rpg_commander"), Action::CommanderSwordSpin, 6.95F, 10.80F));
+    s.expectations.push_back(commander_action_expectation(
+        QStringLiteral("rpg_commander"), Action::RpgSwordFinisher, 6.95F, 10.80F));
     s.expectations.push_back(expectation(Expect::NoFullscreenFlash));
     result.push_back(std::move(s));
   }
@@ -2326,7 +2359,7 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
             "A direct-control spear commander demonstrates the step-thrust chain, "
             "long gap closer, launcher, crowd sweep, aerial thrust, and diving "
             "finisher against a durable formation."),
-        9.0F);
+        10.8F);
     s.rpg_mode = true;
     s.rpg_commander_group = QStringLiteral("rpg_commander");
     s.suppress_terrain_scatter = true;
@@ -2340,10 +2373,13 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
                            {0.0F, 0.0F, 0.0F},
                            1);
     commander.facing_degrees = 0.0F;
+    commander.stamina_override = 600.0F;
+    commander.max_stamina_override = 600.0F;
     auto targets = group(
-        QStringLiteral("enemy_crowd"), Troop::Swordsman, 2, 1, {0.0F, 0.0F, 4.8F}, 7);
+        QStringLiteral("enemy_crowd"), Troop::Swordsman, 2, 1, {0.0F, 0.0F, 4.8F}, 5);
     targets.facing_degrees = 180.0F;
     targets.health_override = targets.max_health_override = 12000;
+    targets.attacks_disabled = true;
     s.groups = {commander, targets};
     s.steps = {
         at(0.10F,
@@ -2358,19 +2394,15 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
         at(4.35F, Command::RpgJump, QStringLiteral("rpg_commander")),
         at(4.44F, Command::RpgPrimaryAttack, QStringLiteral("rpg_commander")),
         at(5.02F, Command::RpgHeavyAttack, QStringLiteral("rpg_commander")),
-        at(5.85F, Command::RpgDodge, QStringLiteral("rpg_commander")),
         [] {
-          auto step =
-              at(6.35F, Command::RpgAttackHold, QStringLiteral("rpg_commander"));
-          step.enabled = true;
+          auto step = at(5.85F, Command::RpgDodge, QStringLiteral("rpg_commander"));
+          step.destination = {-1.0F, 0.0F, 0.0F};
           return step;
         }(),
-        [] {
-          auto step =
-              at(8.65F, Command::RpgAttackHold, QStringLiteral("rpg_commander"));
-          step.enabled = false;
-          return step;
-        }(),
+        at(6.35F, Command::RpgPrimaryAttack, QStringLiteral("rpg_commander")),
+        at(6.88F, Command::RpgPrimaryAttack, QStringLiteral("rpg_commander")),
+        at(7.48F, Command::RpgPrimaryAttack, QStringLiteral("rpg_commander")),
+        at(8.18F, Command::RpgPrimaryAttack, QStringLiteral("rpg_commander")),
     };
     s.expectations.push_back(
         expectation(Expect::AttackAnimationObserved, QStringLiteral("rpg_commander")));
@@ -2391,6 +2423,41 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
       carry.distance = 4.0F;
       s.expectations.push_back(carry);
     }
+    using Action = Game::Systems::CombatActions::CombatActionId;
+    s.expectations.push_back(
+        commander_action_expectation(QStringLiteral("rpg_commander"),
+                                     Action::CommanderSpearGapCloser,
+                                     0.35F,
+                                     1.40F));
+    s.expectations.push_back(commander_action_expectation(
+        QStringLiteral("rpg_commander"), Action::RpgSpearThrust, 0.95F, 1.90F));
+    s.expectations.push_back(
+        commander_action_expectation(QStringLiteral("rpg_commander"),
+                                     Action::CommanderSpearStepThrust,
+                                     1.45F,
+                                     2.45F));
+    s.expectations.push_back(commander_action_expectation(
+        QStringLiteral("rpg_commander"), Action::CommanderSpearLauncher, 2.05F, 3.25F));
+    s.expectations.push_back(commander_action_expectation(
+        QStringLiteral("rpg_commander"), Action::RpgSpearSweep, 3.10F, 4.30F));
+    s.expectations.push_back(
+        commander_action_expectation(QStringLiteral("rpg_commander"),
+                                     Action::CommanderSpearAirThrust,
+                                     4.25F,
+                                     5.20F));
+    s.expectations.push_back(commander_action_expectation(
+        QStringLiteral("rpg_commander"), Action::CommanderSpearDive, 4.85F, 6.10F));
+    s.expectations.push_back(commander_action_expectation(
+        QStringLiteral("rpg_commander"), Action::RpgSpearThrust, 6.25F, 8.95F));
+    s.expectations.push_back(
+        commander_action_expectation(QStringLiteral("rpg_commander"),
+                                     Action::CommanderSpearStepThrust,
+                                     6.25F,
+                                     8.95F));
+    s.expectations.push_back(commander_action_expectation(
+        QStringLiteral("rpg_commander"), Action::RpgSpearSweep, 6.25F, 8.95F));
+    s.expectations.push_back(commander_action_expectation(
+        QStringLiteral("rpg_commander"), Action::RpgSpearFinisher, 6.25F, 8.95F));
     s.expectations.push_back(expectation(Expect::NoFullscreenFlash));
     result.push_back(std::move(s));
   }

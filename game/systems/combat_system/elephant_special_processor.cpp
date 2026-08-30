@@ -164,7 +164,8 @@ void begin_panic(Engine::Core::Entity* elephant, float duration) {
   panic->duration = duration;
   if (!already_panicking) {
     Engine::Core::EventManager::instance().publish(
-        Engine::Core::AudioCueEvent("combat.elephant_panic"));
+        Engine::Core::AudioCueEvent::for_owner(Engine::Core::owner_id_of(elephant),
+                                               "combat.elephant_panic"));
   }
 }
 

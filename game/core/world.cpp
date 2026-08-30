@@ -45,7 +45,6 @@ void World::set_entity_destroyed_hook(EntityDestroyedHook hook) {
 
 namespace {
 
-constexpr float k_motion_displacement_epsilon_sq = 1.0e-6F;
 constexpr float k_motion_velocity_epsilon_sq = 1.0e-4F;
 constexpr float k_motion_stall_speed = 0.15F;
 
@@ -741,9 +740,19 @@ auto publish_creature_presentation_entity(Entity* entity, World* world)
     next.jump_active = commander->jump_active;
     next.jump_phase = commander->jump_phase;
     next.jump_height_offset = commander->jump_height_offset;
+    next.dodge_active = commander->dodge_active;
+    next.dodge_phase = commander->dodge_phase;
     next.flag_rally_planting = commander->is_flag_rally_planting();
     next.flag_rally_animation_timer = commander->flag_rally_animation_timer;
     next.flag_rally_cost = commander->flag_rally_cost;
+    if (next.dodge_active && !next.is_dying && !next.is_dead) {
+      next.is_attacking = false;
+      next.is_hit_reacting = true;
+      next.hit_reaction_intensity = 1.0F;
+      next.hit_reaction_progress = std::clamp(next.dodge_phase, 0.0F, 1.0F);
+      next.hit_reaction_kind = HitReactionKind::Evade;
+      next.allow_full_body_hit_reaction = true;
+    }
   }
   auto const* commander_guard = entity->get_component<CommanderGuardComponent>();
   auto const* formation_mode = entity->get_component<FormationModeComponent>();
@@ -809,6 +818,8 @@ auto publish_creature_presentation_entity(Entity* entity, World* world)
       presentation->guard_requested != next.guard_requested ||
       presentation->defensive_layout_locked != next.defensive_layout_locked ||
       presentation->hold_requested != next.hold_requested ||
+      presentation->dodge_active != next.dodge_active ||
+      presentation->dodge_phase != next.dodge_phase ||
       presentation->showcase_active != next.showcase_active ||
       presentation->showcase_move != next.showcase_move ||
       presentation->showcase_phase != next.showcase_phase;

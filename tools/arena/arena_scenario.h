@@ -118,8 +118,12 @@ struct ArenaScenarioGroup {
   int health_override{0};
   int max_health_override{0};
 
+  float stamina_override{0.0F};
+  float max_stamina_override{0.0F};
+
   float attack_range_override{0.0F};
   float attack_min_range_override{0.0F};
+  bool attacks_disabled{false};
 
   std::optional<Game::Units::SpawnType> spawn_type;
 
@@ -332,6 +336,7 @@ enum class ArenaExpectationKind : std::uint8_t {
   CommanderSpeedIsContinuous,
   CommanderInputEdgesAllConsumed,
   CommanderContactCountAtMost,
+  CommanderActionObserved,
   CommanderCombatCounterWithin,
   CommanderLockStateWithin,
   BattleReachesDecision,
@@ -356,6 +361,7 @@ struct ArenaExpectation {
   QString zone_id;
 
   QString counter_key;
+  int combat_action_id{0};
   float maximum{-1.0F};
   float start_seconds{0.0F};
   float end_seconds{0.0F};

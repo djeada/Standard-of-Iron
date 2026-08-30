@@ -80,7 +80,7 @@ void LoadingTips::load_from_json(const QByteArray& payload) {
 
   const auto entries = document.object().value(QStringLiteral("tips")).toArray();
   m_sources.reserve(static_cast<std::size_t>(entries.size()));
-  for (const auto& entry : entries) {
+  for (const auto entry : entries) {
     const QString text =
         entry.toObject().value(QStringLiteral("text")).toString().trimmed();
     if (!text.isEmpty()) {

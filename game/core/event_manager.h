@@ -17,11 +17,17 @@
 #include "../systems/resource_types.h"
 #include "../units/spawn_type.h"
 #include "entity.h"
+#include "local_audience.h"
 
 namespace Engine::Core {
 
 class Event {
 public:
+  Event() = default;
+  Event(const Event&) = default;
+  Event(Event&&) = default;
+  auto operator=(const Event&) -> Event& = default;
+  auto operator=(Event&&) -> Event& = default;
   virtual ~Event() = default;
   [[nodiscard]] virtual auto get_type_name() const -> const char* { return "Event"; }
 };
@@ -280,24 +286,40 @@ public:
   AudioTriggerEvent(std::string sound_id,
                     float volume = 1.0F,
                     bool loop = false,
-                    int priority = 0)
+                    int priority = 0,
+                    int owner_id = k_owner_everyone)
       : sound_id(std::move(sound_id))
       , volume(volume)
       , loop(loop)
-      , priority(priority) {}
+      , priority(priority)
+      , owner_id(owner_id) {}
   std::string sound_id;
   float volume;
   bool loop;
   int priority;
+
+  int owner_id;
 };
 
 class AudioCueEvent : public Event {
 public:
-  explicit AudioCueEvent(std::string cue_id, float volume_scale = 1.0F)
+  explicit AudioCueEvent(std::string cue_id,
+                         float volume_scale = 1.0F,
+                         int owner_id = k_owner_everyone)
       : cue_id(std::move(cue_id))
-      , volume_scale(volume_scale) {}
+      , volume_scale(volume_scale)
+      , owner_id(owner_id) {}
+
+  static auto for_owner(int owner_id,
+                        std::string cue_id,
+                        float volume_scale = 1.0F) -> AudioCueEvent {
+    return AudioCueEvent(std::move(cue_id), volume_scale, owner_id);
+  }
+
   std::string cue_id;
   float volume_scale;
+
+  int owner_id;
   [[nodiscard]] auto get_type_name() const -> const char* override {
     return "AUDIO_CUE";
   }
@@ -305,9 +327,17 @@ public:
 
 class MissionAnnouncementEvent : public Event {
 public:
-  explicit MissionAnnouncementEvent(QString text)
-      : text(std::move(text)) {}
+  explicit MissionAnnouncementEvent(QString text, int owner_id = k_owner_everyone)
+      : text(std::move(text))
+      , owner_id(owner_id) {}
+
+  static auto for_owner(int owner_id, QString text) -> MissionAnnouncementEvent {
+    return MissionAnnouncementEvent(std::move(text), owner_id);
+  }
+
   QString text;
+
+  int owner_id;
   [[nodiscard]] auto get_type_name() const -> const char* override {
     return "MISSION_ANNOUNCEMENT";
   }
@@ -335,17 +365,23 @@ public:
                  EntityID target_id,
                  int damage,
                  Game::Units::SpawnType attacker_type,
-                 bool is_killing_blow)
+                 bool is_killing_blow,
+                 int attacker_owner_id = 0,
+                 int target_owner_id = 0)
       : attacker_id(attacker_id)
       , target_id(target_id)
       , damage(damage)
       , attacker_type(attacker_type)
-      , is_killing_blow(is_killing_blow) {}
+      , is_killing_blow(is_killing_blow)
+      , attacker_owner_id(attacker_owner_id)
+      , target_owner_id(target_owner_id) {}
   EntityID attacker_id;
   EntityID target_id;
   int damage;
   Game::Units::SpawnType attacker_type;
   bool is_killing_blow;
+  int attacker_owner_id;
+  int target_owner_id;
   [[nodiscard]] auto get_type_name() const -> const char* override {
     return "COMBAT_HIT";
   }

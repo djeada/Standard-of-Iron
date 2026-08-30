@@ -55,6 +55,7 @@
         "game/systems/unit_activity",
         "game/util/asset_text",
         "game/util/json_vec_utils",
+        "game/util/planar_math",
         "game/session/simulation_clock",
         "game/session/deterministic_rng",
         "game/core/ambient_session"

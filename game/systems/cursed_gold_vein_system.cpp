@@ -6,6 +6,7 @@
 
 #include <cmath>
 
+#include "../audio/cue_ids.h"
 #include "core/component.h"
 #include "core/entity.h"
 #include "core/event_manager.h"
@@ -147,13 +148,14 @@ void CursedGoldVeinSystem::refresh_anchor(Engine::Core::World& world,
 }
 
 void CursedGoldVeinSystem::announce_claim(const RuntimeVein& vein) const {
-  if (vein.owner_id != m_services.owners.get_local_player_id()) {
-    return;
-  }
   Engine::Core::EventManager::instance().publish(
-      Engine::Core::MissionAnnouncementEvent(QCoreApplication::translate(
-          "CursedGoldVeinSystem",
-          "The cursed vein is yours. It bleeds gold - and the men who guard it.")));
+      Engine::Core::MissionAnnouncementEvent::for_owner(
+          vein.owner_id,
+          QCoreApplication::translate(
+              "CursedGoldVeinSystem",
+              "The cursed vein is yours. It bleeds gold - and the men who guard it.")));
+  Engine::Core::EventManager::instance().publish(Engine::Core::AudioCueEvent::for_owner(
+      vein.owner_id, Game::Audio::Cue::k_alert_objective_complete));
 }
 
 void CursedGoldVeinSystem::apply_tick(Engine::Core::World& world, RuntimeVein& vein) {

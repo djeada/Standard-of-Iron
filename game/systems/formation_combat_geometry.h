@@ -165,4 +165,6 @@ engaged_soldiers(const Engine::Core::Entity& attacker,
 
 [[nodiscard]] auto max_contact_extent() -> float;
 
+void invalidate_layout_cache();
+
 } // namespace Game::Systems::FormationCombat

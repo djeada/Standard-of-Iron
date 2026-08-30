@@ -990,6 +990,11 @@ TEST_F(TerrainServiceTest, ProceduralScatterOptOutsSuppressTheirSpecies) {
     map_def.biome.ground_irregularity_enabled = true;
     map_def.biome.irregularity_amplitude =
         std::max(0.65F, map_def.biome.irregularity_amplitude);
+    out_biome = map_def.biome;
+
+    map_def.biome.procedural_boulders_enabled = false;
+    map_def.biome.procedural_iron_ore_enabled = false;
+    map_def.biome.procedural_trees_enabled = false;
 
     out_biome = map_def.biome;
     map_def.biome.procedural_boulders_enabled = false;

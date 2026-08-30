@@ -70,7 +70,14 @@ public:
   void submit(CmdT&& cmd) {
     DrawCmd draw_cmd(std::forward<CmdT>(cmd));
     record_submission_bucket(draw_cmd);
+    ++m_type_counts[draw_cmd.index()];
     m_items.emplace_back(std::move(draw_cmd));
+  }
+
+  using TypeCounts = std::array<std::uint32_t, k_draw_cmd_type_count>;
+
+  [[nodiscard]] auto type_counts() const noexcept -> const TypeCounts& {
+    return m_type_counts;
   }
 
   [[nodiscard]] auto empty() const -> bool { return m_items.empty(); }
@@ -218,6 +225,7 @@ private:
   std::size_t m_submission_bucket_high_water = 0;
   std::size_t m_local_light_high_water = 0;
   std::vector<LocalLight> m_local_lights;
+  TypeCounts m_type_counts{};
 };
 
 } // namespace Render::GL

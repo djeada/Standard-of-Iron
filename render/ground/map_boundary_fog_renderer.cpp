@@ -46,6 +46,17 @@ inline auto smoothstep(float edge0, float edge1, float value) -> float {
   return t * t * (3.0F - 2.0F * t);
 }
 
+constexpr float k_card_camera_clearance = 12.0F;
+
+auto card_engulfs_camera(const QVector3D& card_center,
+                         float card_width,
+                         const QVector3D& camera_position) -> bool {
+  const float dx = camera_position.x() - card_center.x();
+  const float dz = camera_position.z() - card_center.z();
+  const float clearance = card_width * 0.5F + k_card_camera_clearance;
+  return dx * dx + dz * dz < clearance * clearance;
+}
+
 auto boundary_height_at(const Game::Map::TerrainService& terrain_service,
                         float world_x,
                         float world_z) -> float {
@@ -547,7 +558,14 @@ void MapBoundaryFogRenderer::submit(Renderer& renderer, ResourceManager* resourc
     renderer.set_current_shader(gas_shader);
   }
 
+  const Camera* camera = renderer.camera();
+  const QVector3D camera_position =
+      camera != nullptr ? camera->get_position() : QVector3D(0.0F, 0.0F, 0.0F);
+
   for (const BoundaryCard& card : m_cards) {
+    if (card_engulfs_camera(card.center, card.size.x(), camera_position)) {
+      continue;
+    }
     QMatrix4x4 model;
     model.translate(card.center);
     model.rotate(card.yaw_degrees, 0.0F, 1.0F, 0.0F);
