@@ -3,6 +3,8 @@
 #include <algorithm>
 #include <cmath>
 
+#include "../util/planar_math.h"
+
 namespace Game::Systems {
 
 namespace {
@@ -51,7 +53,7 @@ auto MovementRoute::build(std::uint64_t route_revision,
     float const x = waypoints[index].first;
     float const z = waypoints[index].second;
     auto const& previous = m_points.back();
-    float const step = std::hypot(x - previous.x, z - previous.z);
+    float const step = Game::Systems::planar_length(x - previous.x, z - previous.z);
     if (step <= 1.0e-4F) {
       continue;
     }
@@ -60,7 +62,8 @@ auto MovementRoute::build(std::uint64_t route_revision,
   }
 
   if (m_points.size() < 2U) {
-    float const step = std::hypot(fallback_x - origin_x, fallback_z - origin_z);
+    float const step =
+        Game::Systems::planar_length(fallback_x - origin_x, fallback_z - origin_z);
     if (step <= 1.0e-4F) {
       m_points.clear();
       m_length = 0.0F;
@@ -87,7 +90,7 @@ void MovementRoute::update_final_point(float x, float z) {
     return;
   }
   auto const& previous = m_points[m_points.size() - 2U];
-  float const step = std::hypot(x - previous.x, z - previous.z);
+  float const step = Game::Systems::planar_length(x - previous.x, z - previous.z);
   m_points.back() = {x, z, previous.cumulative + step};
   m_length = m_points.back().cumulative;
   m_travelled = std::min(m_travelled, m_length);
@@ -123,7 +126,7 @@ auto MovementRoute::project(float x, float z, float window) const -> Projection 
     best.s = low;
     best.segment = waypoint_index_at(low);
     auto const [px, pz] = point_at(low);
-    best.lateral = std::hypot(x - px, z - pz);
+    best.lateral = Game::Systems::planar_length(x - px, z - pz);
     return best;
   }
 
@@ -166,7 +169,7 @@ auto MovementRoute::tangent_at(float s) const -> std::pair<float, float> {
     }
     float const dx = b.x - a.x;
     float const dz = b.z - a.z;
-    float const length = std::hypot(dx, dz);
+    float const length = Game::Systems::planar_length(dx, dz);
     if (length <= 1.0e-6F) {
       continue;
     }

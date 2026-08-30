@@ -81,6 +81,11 @@ private:
     std::vector<double> m_benchmark_wall_interval_ms;
     std::uint64_t m_benchmark_draw_calls = 0;
     std::uint64_t m_benchmark_visible_soldiers = 0;
+    std::array<std::uint64_t, Render::Profiling::FrameProfile::k_draw_cmd_slots>
+        m_benchmark_draw_cmd_counts{};
+    std::uint64_t m_benchmark_snapshot_cache_bytes = 0;
+    std::uint64_t m_benchmark_prepared_batches = 0;
+    std::uint64_t m_benchmark_instanced_batches = 0;
     std::array<std::uint64_t,
                static_cast<std::size_t>(Render::Profiling::Phase::_Count)>
         m_benchmark_phase_us{};

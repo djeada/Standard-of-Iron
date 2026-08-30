@@ -238,7 +238,7 @@ void ResourceDeliverySystem::update(Engine::Core::World* world, float delta_time
         stockpile->deposit_flash = k_stockpile_deposit_flash_seconds;
       }
       Engine::Core::EventManager::instance().publish(
-          Engine::Core::AudioCueEvent(k_deposit_cue));
+          Engine::Core::AudioCueEvent::for_owner(unit->owner_id, k_deposit_cue));
       unloaded.push_back(hauler->get_id());
       continue;
     }

@@ -2763,4 +2763,14 @@ public:
   }
 };
 
+[[nodiscard]] inline auto owner_id_of(const Entity* entity) -> int {
+  const auto* unit =
+      entity != nullptr ? entity->get_component<UnitComponent>() : nullptr;
+  return unit != nullptr ? unit->owner_id : 0;
+}
+
+[[nodiscard]] inline auto owner_id_of(const Entity& entity) -> int {
+  return owner_id_of(&entity);
+}
+
 } // namespace Engine::Core

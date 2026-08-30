@@ -140,6 +140,8 @@ auto ambient_sfx_group_key(Engine::Core::AmbientState state) -> std::string {
   return "ambient.sfx.peaceful";
 }
 
+constexpr const char* k_spawn_voice_group = "voice.unit_spawned";
+
 auto hit_cue_for_attacker(Game::Units::SpawnType type) -> const char* {
   switch (type) {
   case Game::Units::SpawnType::Knight:
@@ -194,12 +196,12 @@ auto AudioEventHandler::initialize() -> bool {
 
   m_audio_trigger_sub =
       Engine::Core::ScopedEventSubscription<Engine::Core::AudioTriggerEvent>(
-          [](const Engine::Core::AudioTriggerEvent& event) {
+          [this](const Engine::Core::AudioTriggerEvent& event) {
             on_audio_trigger(event);
           });
 
   m_audio_cue_sub = Engine::Core::ScopedEventSubscription<Engine::Core::AudioCueEvent>(
-      [](const Engine::Core::AudioCueEvent& event) { on_audio_cue(event); });
+      [this](const Engine::Core::AudioCueEvent& event) { on_audio_cue(event); });
 
   m_music_trigger_sub =
       Engine::Core::ScopedEventSubscription<Engine::Core::MusicTriggerEvent>(
@@ -249,6 +251,7 @@ void AudioEventHandler::shutdown() {
   m_ambient_changed_sub.unsubscribe();
   m_audio_trigger_sub.unsubscribe();
   m_audio_cue_sub.unsubscribe();
+  m_music_stop_sub.unsubscribe();
   m_music_trigger_sub.unsubscribe();
   m_combat_hit_sub.unsubscribe();
   m_unit_spawned_sub.unsubscribe();
@@ -261,6 +264,7 @@ void AudioEventHandler::shutdown() {
   m_ambient_state_sfx_map.clear();
   m_last_sound_group_time.clear();
   m_last_sound_group_id.clear();
+  m_current_music_id.clear();
 
   m_initialized = false;
 }
@@ -320,7 +324,7 @@ void AudioEventHandler::set_voice_sound_category(bool use_voice_category) {
 }
 
 void AudioEventHandler::set_local_owner_id(int owner_id) {
-  m_local_owner_id = owner_id;
+  m_audience.set_local_owner_id(owner_id);
 }
 
 void AudioEventHandler::on_unit_selected(const Engine::Core::UnitSelectedEvent& event) {
@@ -348,8 +352,10 @@ void AudioEventHandler::on_unit_selected(const Engine::Core::UnitSelectedEvent& 
                                      now - m_last_selection_sound_time)
                                      .count();
 
-    bool const should_play = (time_since_last_sound >= SELECTION_SOUND_COOLDOWN_MS) ||
-                             (sound_id != m_last_selection_sound_id);
+    bool const repeats_last_line = sound_id == m_last_selection_sound_id;
+    bool const should_play =
+        time_since_last_sound >=
+        (repeats_last_line ? SELECTION_SOUND_COOLDOWN_MS : SELECTION_VOICE_FLOOR_MS);
 
     if (should_play) {
       AudioCategory const category =
@@ -368,6 +374,10 @@ void AudioEventHandler::on_unit_spawned(const Engine::Core::UnitSpawnedEvent& ev
     return;
   }
 
+  if (!m_audience.includes(event.owner_id)) {
+    return;
+  }
+
   auto* entity = m_world->get_entity(event.unit_id);
   auto* unit_component = entity != nullptr
                              ? entity->get_component<Engine::Core::UnitComponent>()
@@ -383,12 +393,21 @@ void AudioEventHandler::on_unit_spawned(const Engine::Core::UnitSpawnedEvent& ev
     return;
   }
 
+  if (!should_play_sound_group(k_spawn_voice_group, SPAWN_VOICE_COOLDOWN_MS)) {
+    return;
+  }
+
   AudioCategory const category =
       m_use_voice_category ? AudioCategory::VOICE : AudioCategory::SFX;
   AudioSystem::get_instance().play_sound(sound_id, 0.85F, false, 4, category);
+  mark_sound_group_played(k_spawn_voice_group);
 }
 
 void AudioEventHandler::on_unit_died(const Engine::Core::UnitDiedEvent& event) {
+  if (!m_audience.involves(event.owner_id, event.killer_owner_id)) {
+    return;
+  }
+
   if (Game::Units::is_building_spawn(event.spawn_type)) {
     play_cue(Cue::k_build_building_destroyed);
     return;
@@ -396,7 +415,7 @@ void AudioEventHandler::on_unit_died(const Engine::Core::UnitDiedEvent& event) {
 
   play_cue(Cue::k_combat_death);
 
-  if (m_local_owner_id != 0 && event.owner_id == m_local_owner_id) {
+  if (m_audience.is_local(event.owner_id)) {
     play_cue(Cue::k_alert_unit_lost);
   }
 }
@@ -408,9 +427,11 @@ void AudioEventHandler::on_ambient_state_changed(
     const std::string group_key = ambient_music_group_key(event.new_state);
     const std::string last_id = m_last_sound_group_id[group_key];
     const std::string music_id = choose_loaded_variant(it->second, last_id);
-    if (!music_id.empty()) {
+
+    if (!music_id.empty() && music_id != m_current_music_id) {
       AudioSystem::get_instance().play_music(music_id);
       m_last_sound_group_id[group_key] = music_id;
+      m_current_music_id = music_id;
     }
   }
 
@@ -472,7 +493,7 @@ void AudioEventHandler::play_sound_group(const std::string& group_id,
 
 void AudioEventHandler::on_building_attacked(
     const Engine::Core::BuildingAttackedEvent& event) {
-  if (m_local_owner_id != 0 && event.owner_id != m_local_owner_id) {
+  if (!m_audience.is_local(event.owner_id) && !m_audience.is_spectating()) {
     return;
   }
   play_cue(Cue::k_alert_base_under_attack);
@@ -480,22 +501,28 @@ void AudioEventHandler::on_building_attacked(
 
 void AudioEventHandler::on_barrack_captured(
     const Engine::Core::BarrackCapturedEvent& event) {
-  if (m_local_owner_id == 0 || event.new_owner_id == m_local_owner_id) {
+  if (m_audience.is_spectating() || event.new_owner_id == m_audience.local_owner_id()) {
     play_cue(Cue::k_alert_reinforcements);
     return;
   }
 
-  if (event.previous_owner_id == m_local_owner_id) {
+  if (event.previous_owner_id == m_audience.local_owner_id()) {
     play_cue(Cue::k_alert_enemy_reinforcements);
   }
 }
 
 void AudioEventHandler::on_audio_trigger(const Engine::Core::AudioTriggerEvent& event) {
+  if (!m_audience.includes(event.owner_id)) {
+    return;
+  }
   AudioSystem::get_instance().play_sound(
       event.sound_id, event.volume, event.loop, event.priority);
 }
 
 void AudioEventHandler::on_audio_cue(const Engine::Core::AudioCueEvent& event) {
+  if (!m_audience.includes(event.owner_id)) {
+    return;
+  }
   play_cue(event.cue_id, event.volume_scale);
 }
 
@@ -512,6 +539,10 @@ void AudioEventHandler::on_music_trigger(const Engine::Core::MusicTriggerEvent& 
 }
 
 void AudioEventHandler::on_combat_hit(const Engine::Core::CombatHitEvent& event) {
+  if (!m_audience.involves(event.attacker_owner_id, event.target_owner_id)) {
+    return;
+  }
+
   float const volume = COMBAT_HIT_VOLUME * get_volume_variation();
   play_cue(hit_cue_for_attacker(event.attacker_type), volume);
 

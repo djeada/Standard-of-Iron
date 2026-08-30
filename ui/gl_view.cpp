@@ -36,6 +36,7 @@
 #include <unordered_map>
 #include <utility>
 
+#include "../render/draw_cmd_traits.h"
 #include "../render/graphics_settings.h"
 #include "../render/i_render_backend.h"
 #include "../render/profiling/combat_animation_diagnostics.h"
@@ -442,7 +443,7 @@ void GLView::GLRenderer::observe_runtime_benchmark(
     double render_ms,
     double thread_cpu_ms) {
   if (m_benchmark_seconds <= 0.0 || m_benchmark_complete || m_engine == nullptr ||
-      !m_engine->match_setup()->is_campaign_mission()) {
+      !m_engine->simulation_thread_running()) {
     return;
   }
 
@@ -459,6 +460,10 @@ void GLView::GLRenderer::observe_runtime_benchmark(
     m_benchmark_phase_us.fill(0);
     m_benchmark_draw_calls = 0;
     m_benchmark_visible_soldiers = 0;
+    m_benchmark_draw_cmd_counts.fill(0);
+    m_benchmark_snapshot_cache_bytes = 0;
+    m_benchmark_prepared_batches = 0;
+    m_benchmark_instanced_batches = 0;
     m_benchmark_world_us = 0;
     m_benchmark_visibility_us = 0;
     m_benchmark_minimap_us = 0;
@@ -494,6 +499,13 @@ void GLView::GLRenderer::observe_runtime_benchmark(
   auto const& profile = Render::Profiling::global_profile();
   m_benchmark_draw_calls += profile.draw_calls;
   m_benchmark_visible_soldiers += profile.visible_soldiers;
+  for (std::size_t i = 0; i < profile.draw_cmd_counts.size(); ++i) {
+    m_benchmark_draw_cmd_counts[i] += profile.draw_cmd_counts[i];
+  }
+  m_benchmark_snapshot_cache_bytes =
+      std::max(m_benchmark_snapshot_cache_bytes, profile.snapshot_cache_bytes);
+  m_benchmark_prepared_batches += profile.prepared_batches;
+  m_benchmark_instanced_batches += profile.instanced_batches;
   m_benchmark_gpu_shadow_ms.push_back(profile.gpu_shadow_ms);
   m_benchmark_gpu_color_ms.push_back(profile.gpu_color_ms);
   m_benchmark_gpu_wait_ms.push_back(profile.gpu_wait_ms);
@@ -576,7 +588,30 @@ void GLView::GLRenderer::finish_runtime_benchmark() {
       {QStringLiteral("visible_soldiers_average"),
        sample_count > 0.0
            ? static_cast<double>(m_benchmark_visible_soldiers) / sample_count
+           : 0.0},
+      {QStringLiteral("snapshot_cache_bytes_peak"),
+       static_cast<qint64>(m_benchmark_snapshot_cache_bytes)},
+      {QStringLiteral("prepared_batches_average"),
+       sample_count > 0.0
+           ? static_cast<double>(m_benchmark_prepared_batches) / sample_count
+           : 0.0},
+      {QStringLiteral("instanced_batches_average"),
+       sample_count > 0.0
+           ? static_cast<double>(m_benchmark_instanced_batches) / sample_count
            : 0.0}};
+
+  QJsonObject draw_cmd_average;
+  for (std::size_t i = 0; i < m_benchmark_draw_cmd_counts.size(); ++i) {
+    if (m_benchmark_draw_cmd_counts[i] == 0) {
+      continue;
+    }
+    draw_cmd_average.insert(QString::fromLatin1(Render::GL::draw_cmd_type_name(i)),
+                            sample_count > 0.0
+                                ? static_cast<double>(m_benchmark_draw_cmd_counts[i]) /
+                                      sample_count
+                                : 0.0);
+  }
+  report.insert(QStringLiteral("draw_commands_average_by_type"), draw_cmd_average);
 
   auto stage_ms = [sample_count](std::uint64_t total_us) {
     return sample_count > 0.0 ? static_cast<double>(total_us) / sample_count / 1000.0

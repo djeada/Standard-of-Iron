@@ -98,6 +98,7 @@
 #include "game/command/command_queue.h"
 #include "game/core/component.h"
 #include "game/core/event_manager.h"
+#include "game/core/local_audience.h"
 #include "game/core/system.h"
 #include "game/core/world.h"
 #include "game/formation/army_formation_registry.h"
@@ -455,7 +456,7 @@ void GameEngine::build_services_and_controllers() {
           &ProductionManager::construction_placement_rejected,
           this,
           [this](const QString& reason) {
-            Game::Audio::play_cue(Game::Audio::Cue::k_build_placement_rejected);
+            announce_player_warning(Game::Audio::Cue::k_build_placement_rejected);
             if (reason.isEmpty()) {
               return;
             }
@@ -526,14 +527,14 @@ void GameEngine::build_services_and_controllers() {
   connect(m_command_controller.get(),
           &App::Controllers::CommandController::troop_limit_reached,
           [this]() {
-            Game::Audio::play_cue(Game::Audio::Cue::k_alert_population_limit);
+            announce_player_warning(Game::Audio::Cue::k_alert_population_limit);
             report_affordability_refusal(App::Core::OrderFailure::PopulationCap,
                                          tr("Manpower limit reached."));
           });
   connect(m_command_controller.get(),
           &App::Controllers::CommandController::insufficient_manpower,
           [this]() {
-            Game::Audio::play_cue(Game::Audio::Cue::k_alert_low_resources);
+            announce_player_warning(Game::Audio::Cue::k_alert_low_resources);
 
             report_affordability_refusal(
                 App::Core::OrderFailure::InsufficientResources,
@@ -542,7 +543,7 @@ void GameEngine::build_services_and_controllers() {
   connect(m_command_controller.get(),
           &App::Controllers::CommandController::insufficient_resources,
           [this](const QString& message) {
-            Game::Audio::play_cue(Game::Audio::Cue::k_alert_low_resources);
+            announce_player_warning(Game::Audio::Cue::k_alert_low_resources);
             report_affordability_refusal(App::Core::OrderFailure::InsufficientResources,
                                          message);
           });
@@ -550,7 +551,7 @@ void GameEngine::build_services_and_controllers() {
           &App::Controllers::CommandController::formation_placement_rejected,
           this,
           [this](const QString& reason) {
-            Game::Audio::play_cue(Game::Audio::Cue::k_ui_error);
+            announce_player_warning(Game::Audio::Cue::k_ui_error);
             if (!reason.isEmpty()) {
               set_error(reason);
             }
@@ -629,9 +630,12 @@ void GameEngine::build_services_and_controllers() {
   m_mission_announcement_subscription =
       Engine::Core::ScopedEventSubscription<Engine::Core::MissionAnnouncementEvent>(
           [this](const Engine::Core::MissionAnnouncementEvent& e) {
-            if (!e.text.isEmpty()) {
-              emit mission_announcement(e.text);
+            if (e.text.isEmpty() ||
+                !Engine::Core::LocalAudience{m_runtime.local_owner_id}.includes(
+                    e.owner_id)) {
+              return;
             }
+            emit mission_announcement(e.text);
           });
 
   m_combat_hit_subscription =

@@ -106,6 +106,8 @@ struct SoldierAnimationDebugSample {
   std::uint8_t attack_variant{0U};
   bool is_attacking{false};
   bool is_hit_reacting{false};
+  Engine::Core::HitReactionKind hit_reaction_kind{
+      Engine::Core::HitReactionKind::Flinch};
 
   bool is_swing_recoiling{false};
   bool is_in_melee_lock{false};

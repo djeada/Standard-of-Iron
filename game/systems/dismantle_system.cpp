@@ -112,7 +112,8 @@ void DismantleSystem::update(Engine::Core::World* world, float delta_time) {
     release_crew(world, structure_id);
     world->remove<Engine::Core::DismantleSiteComponent>(structure_id);
     Engine::Core::EventManager::instance().publish(
-        Engine::Core::AudioCueEvent("build.construction_complete"));
+        Engine::Core::AudioCueEvent::for_owner(unit->owner_id,
+                                               "build.construction_complete"));
     Combat::apply_unit_damage(world, structure, unit->max_health);
   }
 }

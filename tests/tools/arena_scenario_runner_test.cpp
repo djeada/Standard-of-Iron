@@ -628,6 +628,35 @@ TEST(ArenaScenarioRunnerTest, RenderProbeRejectsAliveSoldierWithFallenSubmittedB
   diagnostics.set_enabled(false);
 }
 
+TEST(ArenaScenarioRunnerTest, RenderProbeAllowsAuthoredEvadeRollToTurnBodyOver) {
+  Engine::Core::World world;
+  auto scenario = minimal_definition();
+  scenario.groups.resize(1);
+  scenario.steps.clear();
+  scenario.expectations = {
+      {Arena::ArenaExpectationKind::NoUnexpectedFallPose, QStringLiteral("blue")}};
+  Arena::ArenaScenarioRunner runner(world, make_entity_host(world), scenario);
+  ASSERT_TRUE(runner.start());
+
+  auto const entity_id = runner.group_entities(QStringLiteral("blue")).front();
+  auto& diagnostics = Render::Profiling::CombatAnimationDiagnostics::instance();
+  diagnostics.set_enabled(true);
+  diagnostics.begin_frame(1);
+  Render::Profiling::SoldierAnimationDebugSample sample;
+  sample.soldier_index = 0;
+  sample.root_position = QVector3D(-2.0F, 0.0F, 0.0F);
+  sample.root_up_y = -0.5F;
+  sample.visual_state = Render::Profiling::SoldierVisualState::HitReaction;
+  sample.is_hit_reacting = true;
+  sample.hit_reaction_kind = Engine::Core::HitReactionKind::Evade;
+  diagnostics.record_soldier_sample(entity_id, sample);
+  diagnostics.record_submitted_body_pose(entity_id, 0U, -0.5F, 0.55F);
+  runner.observe_rendered_frame(4.0);
+
+  EXPECT_TRUE(runner.report().passed());
+  diagnostics.set_enabled(false);
+}
+
 TEST(ArenaScenarioRunnerTest, RenderProbeRejectsOverextendedAliveSoldierArm) {
   Engine::Core::World world;
   auto scenario = minimal_definition();

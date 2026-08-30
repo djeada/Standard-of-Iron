@@ -4,6 +4,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <map>
 
 #include "../core/ambient_session.h"
 #include "../core/component.h"
@@ -243,12 +244,13 @@ void ProjectileSystem::spawn_arrow(const QVector3D& start,
                                         visual_profile,
                                         target_origin_at_launch.value_or(end)));
 
-  if (!is_ballista_bolt && kind != ProjectileKind::Stone &&
-      kind != ProjectileKind::FlamingStone) {
-    ++m_arrows_launched_this_tick;
-  }
-  Engine::Core::EventManager::instance().publish(Engine::Core::AudioCueEvent(
-      launch_cue_for_kind(kind, is_ballista_bolt, visual_style)));
+  bool const counts_toward_volley = !is_ballista_bolt &&
+                                    kind != ProjectileKind::Stone &&
+                                    kind != ProjectileKind::FlamingStone;
+  m_pending_launch_cues.push_back(
+      {.cue_id = launch_cue_for_kind(kind, is_ballista_bolt, visual_style),
+       .attacker_id = attacker_id,
+       .counts_toward_volley = counts_toward_volley});
 }
 
 void ProjectileSystem::spawn_stone(const QVector3D& start,
@@ -287,16 +289,38 @@ void ProjectileSystem::spawn_stone(const QVector3D& start,
                                         target_origin_at_launch.value_or(end),
                                         kind));
 
-  Engine::Core::EventManager::instance().publish(
-      Engine::Core::AudioCueEvent(launch_cue_for_kind(kind, false)));
+  m_pending_launch_cues.push_back({.cue_id = launch_cue_for_kind(kind, false),
+                                   .attacker_id = attacker_id,
+                                   .counts_toward_volley = false});
+}
+
+void ProjectileSystem::flush_launch_cues(Engine::Core::World* world) {
+
+  std::map<int, int> arrows_launched_by_owner;
+  for (const auto& pending : m_pending_launch_cues) {
+    const auto* attacker =
+        world != nullptr
+            ? world->try_get<Engine::Core::UnitComponent>(pending.attacker_id)
+            : nullptr;
+    int const owner_id = attacker != nullptr ? attacker->owner_id : 0;
+    Engine::Core::EventManager::instance().publish(
+        Engine::Core::AudioCueEvent::for_owner(owner_id, pending.cue_id));
+    if (pending.counts_toward_volley) {
+      ++arrows_launched_by_owner[owner_id];
+    }
+  }
+  m_pending_launch_cues.clear();
+
+  for (const auto& [owner_id, launched] : arrows_launched_by_owner) {
+    if (launched >= k_volley_arrow_threshold) {
+      Engine::Core::EventManager::instance().publish(
+          Engine::Core::AudioCueEvent::for_owner(owner_id, "combat.arrow_volley"));
+    }
+  }
 }
 
 void ProjectileSystem::update(Engine::Core::World* world, float delta_time) {
-  if (m_arrows_launched_this_tick >= k_volley_arrow_threshold) {
-    Engine::Core::EventManager::instance().publish(
-        Engine::Core::AudioCueEvent("combat.arrow_volley"));
-  }
-  m_arrows_launched_this_tick = 0;
+  flush_launch_cues(world);
 
   for (auto& impact : m_impacts) {
     impact.age += std::max(0.0F, delta_time);
@@ -437,7 +461,20 @@ void ProjectileSystem::publish_impact(Engine::Core::World* world,
       .target_id = projectile.get_target_id(),
   });
 
-  Engine::Core::EventManager::instance().publish(Engine::Core::AudioCueEvent(
+  const auto* impact_attacker =
+      world != nullptr
+          ? world->try_get<Engine::Core::UnitComponent>(projectile.get_attacker_id())
+          : nullptr;
+  const auto* impact_target =
+      world != nullptr
+          ? world->try_get<Engine::Core::UnitComponent>(projectile.get_target_id())
+          : nullptr;
+  int const impact_owner_id =
+      impact_attacker != nullptr
+          ? impact_attacker->owner_id
+          : (impact_target != nullptr ? impact_target->owner_id : 0);
+  Engine::Core::EventManager::instance().publish(Engine::Core::AudioCueEvent::for_owner(
+      impact_owner_id,
       (aimed_shot && resolution.hit_target)
           ? "combat.hit.arrow"
           : impact_cue_for_kind(projectile.get_kind(), ballista_bolt)));

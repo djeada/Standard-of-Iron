@@ -2051,6 +2051,11 @@ void GameEngine::publish_mission_stages() {
   m_mission_view_model->set_stages(stages);
 }
 
+void GameEngine::announce_player_warning(const char* cue_id) {
+  Engine::Core::EventManager::instance().publish(
+      Engine::Core::AudioCueEvent::for_owner(m_runtime.local_owner_id, cue_id));
+}
+
 void GameEngine::note_minimap_combat_hit(const Engine::Core::CombatHitEvent& event) {
   if (!m_minimap_view_model || m_world == nullptr || m_minimap_manager == nullptr ||
       !m_minimap_manager->has_minimap()) {
@@ -2068,12 +2073,6 @@ void GameEngine::note_minimap_combat_hit(const Engine::Core::CombatHitEvent& eve
     return;
   }
 
-  int attacker_owner_id = 0;
-  if (const auto* attacker_unit =
-          m_world->try_get<Engine::Core::UnitComponent>(event.attacker_id)) {
-    attacker_owner_id = attacker_unit->owner_id;
-  }
-
   const bool is_building = Game::Units::is_building_spawn(unit->spawn_type);
   m_minimap_view_model->note_alert(
       is_building ? App::ViewModels::MinimapAlert::StructureAttacked
@@ -2081,7 +2080,7 @@ void GameEngine::note_minimap_combat_hit(const Engine::Core::CombatHitEvent& eve
       transform->position.x,
       transform->position.z,
       unit->owner_id,
-      attacker_owner_id);
+      event.attacker_owner_id);
 }
 
 void GameEngine::publish_minimap_overlays(float dt) {

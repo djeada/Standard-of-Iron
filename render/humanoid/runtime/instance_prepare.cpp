@@ -805,6 +805,7 @@ void append_prepared_soldier(const HumanoidUnitSnapshot& s,
     sample.attack_variant = resolved_anim.attack_variant;
     sample.is_attacking = resolved_anim.is_attacking;
     sample.is_hit_reacting = resolved_anim.is_hit_reacting;
+    sample.hit_reaction_kind = resolved_anim.hit_reaction_kind;
     sample.is_swing_recoiling = swing_recoil_active;
     sample.is_in_melee_lock = resolved_anim.is_in_melee_lock;
     sample.transient_recovery_override = transient_recovery_override;
@@ -1497,15 +1498,19 @@ void append_prepared_soldier(const HumanoidUnitSnapshot& s,
   if (creature_presentation != nullptr && creature_presentation->dodge_active) {
     float const phase = std::clamp(creature_presentation->dodge_phase, 0.0F, 1.0F);
     float const eased = phase * phase * (3.0F - 2.0F * phase);
-    float const tuck = std::sin(phase * std::numbers::pi_v<float>);
-    RCP::set_model_world_y(inst_ctx.model,
-                           RCP::model_world_origin(inst_ctx.model).y() + 0.08F * tuck);
-    QVector3D const pivot = RCP::model_world_origin(inst_ctx.model);
+    QVector3D const root = RCP::model_world_origin(inst_ctx.model);
+    QVector3D const pivot = root + QVector3D(0.0F, 0.68F, 0.0F);
     QMatrix4x4 roll;
     roll.translate(pivot);
-    roll.rotate(-105.0F * std::sin(eased * std::numbers::pi_v<float>), right);
+    roll.rotate(-360.0F * eased, right);
     roll.translate(-pivot);
     inst_ctx.model = roll * inst_ctx.model;
+
+    QVector3D const rolled_root = RCP::model_world_origin(inst_ctx.model);
+    QMatrix4x4 anchor_correction;
+    anchor_correction.translate(
+        root.x() - rolled_root.x(), 0.0F, root.z() - rolled_root.z());
+    inst_ctx.model = anchor_correction * inst_ctx.model;
   } else if (commander_jump.active) {
     float const air = std::sin(std::clamp(commander_jump.phase, 0.0F, 1.0F) *
                                std::numbers::pi_v<float>);

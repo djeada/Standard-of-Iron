@@ -170,6 +170,11 @@ TEST(ReactionPose, ReactionsStartAndEndAtRest) {
        .phase = 0.22F,
        .weapon = Animation::HumanoidReadyWeapon::SwordAndShield});
   EXPECT_GT(block.shield_raise, 0.9F) << "a shielded block raises the shield";
+  auto const evade = Animation::resolve_humanoid_reaction_pose(
+      {.kind = Animation::HumanoidReactionKind::Evade,
+       .phase = 0.30F,
+       .weapon = Animation::HumanoidReadyWeapon::Spear});
+  EXPECT_GT(evade.crouch, 0.32F) << "a roll needs a compact silhouette, not a fall";
 }
 
 } // namespace

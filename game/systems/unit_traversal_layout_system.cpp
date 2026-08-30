@@ -15,6 +15,7 @@
 #include "../core/world.h"
 #include "../formation/traversal_layout_policy.h"
 #include "../formation/unit_layout.h"
+#include "../util/planar_math.h"
 #include "formation_combat_geometry.h"
 #include "nav_grid.h"
 #include "pathfinding.h"
@@ -44,6 +45,9 @@ constexpr float k_minimum_squeeze_scale = 0.12F;
 constexpr float k_soldier_probe_reach = 0.88F;
 
 constexpr float k_minimum_presented_separation = 0.15F;
+
+constexpr std::uint64_t k_moving_width_measure_ticks = 4;
+constexpr std::uint64_t k_resting_width_measure_ticks = 16;
 
 constexpr int k_slot_recovery_bisections = 8;
 constexpr float k_ground_recovery_speed = 4.5F;
@@ -159,11 +163,11 @@ auto measure_width(const Engine::Core::Entity& entity,
                                : Pathfinding::Passability::Heavy;
   float tangent_x = facts.desired.tangent_x;
   float tangent_z = facts.desired.tangent_z;
-  float tangent_length = std::hypot(tangent_x, tangent_z);
+  float tangent_length = Game::Systems::planar_length(tangent_x, tangent_z);
   if (!facts.desired.valid || tangent_length < 0.001F) {
     tangent_x = facts.motor.accepted_vx;
     tangent_z = facts.motor.accepted_vz;
-    tangent_length = std::hypot(tangent_x, tangent_z);
+    tangent_length = Game::Systems::planar_length(tangent_x, tangent_z);
   }
   if (tangent_length < 0.001F) {
     float const yaw = transform.rotation.y * std::numbers::pi_v<float> / 180.0F;
@@ -180,7 +184,7 @@ auto measure_width(const Engine::Core::Entity& entity,
         std::max(longitudinal_half_extent, std::abs(slot.local_z) + layout.body_radius);
   }
   float const accepted_speed =
-      std::hypot(facts.motor.accepted_vx, facts.motor.accepted_vz);
+      Game::Systems::planar_length(facts.motor.accepted_vx, facts.motor.accepted_vz);
 
   float const maximum_column_half_depth =
       0.5F *
@@ -221,30 +225,38 @@ auto measure_width(const Engine::Core::Entity& entity,
 
   float const envelope_start = -longitudinal_half_extent;
   float const envelope_end = longitudinal_half_extent + lookahead;
+  auto const& path = movement.get_path();
+  bool const has_route = movement.has_waypoints();
+
+  std::size_t walk_index = movement.get_path_index();
+  QVector3D walk_cursor = root;
+  QVector3D walk_direction = forward;
+  float walk_consumed = 0.0F;
+
   auto route_sample = [&](float distance) {
-    if (distance <= 0.0F || !movement.has_waypoints()) {
+    if (distance <= 0.0F || !has_route) {
       return std::pair(root + forward * distance, forward);
     }
-    QVector3D cursor = root;
-    QVector3D direction = forward;
-    float remaining = distance;
-    auto const& path = movement.get_path();
-    for (std::size_t index = movement.get_path_index(); index < path.size(); ++index) {
-      QVector3D const waypoint(path[index].first, 0.0F, path[index].second);
-      QVector3D const segment = waypoint - cursor;
+    float remaining = distance - walk_consumed;
+    while (walk_index < path.size()) {
+      QVector3D const waypoint(path[walk_index].first, 0.0F, path[walk_index].second);
+      QVector3D const segment = waypoint - walk_cursor;
       float const length = segment.length();
       if (length < 0.001F) {
-        cursor = waypoint;
+        walk_cursor = waypoint;
+        ++walk_index;
         continue;
       }
-      direction = segment / length;
+      walk_direction = segment / length;
       if (remaining <= length) {
-        return std::pair(cursor + direction * remaining, direction);
+        return std::pair(walk_cursor + walk_direction * remaining, walk_direction);
       }
       remaining -= length;
-      cursor = waypoint;
+      walk_consumed += length;
+      walk_cursor = waypoint;
+      ++walk_index;
     }
-    return std::pair(cursor + direction * remaining, direction);
+    return std::pair(walk_cursor + walk_direction * remaining, walk_direction);
   };
   int const samples = std::max(
       1,
@@ -432,7 +444,8 @@ void update_slot_states(const Engine::Core::TransformComponent& transform,
     }
     float const corrected_x = local_x * low;
     float const corrected_z = local_z * low;
-    float const correction = std::hypot(corrected_x - local_x, corrected_z - local_z);
+    float const correction =
+        Game::Systems::planar_length(corrected_x - local_x, corrected_z - local_z);
     float const budget = k_ground_clamp_speed * step;
     if (correction > budget && correction > 0.0001F) {
       float const share = budget / correction;
@@ -472,7 +485,7 @@ void update_slot_states(const Engine::Core::TransformComponent& transform,
     float const waypoint_z = slot.target_local_z;
     float const error_x = waypoint_x - slot.current_local_x;
     float const error_z = waypoint_z - slot.current_local_z;
-    float const distance = std::hypot(error_x, error_z);
+    float const distance = Game::Systems::planar_length(error_x, error_z);
     float desired_vx = 0.0F;
     float desired_vz = 0.0F;
     if (distance > 0.0001F) {
@@ -484,7 +497,7 @@ void update_slot_states(const Engine::Core::TransformComponent& transform,
     }
     float delta_vx = desired_vx - slot.velocity_x;
     float delta_vz = desired_vz - slot.velocity_z;
-    float const delta_speed = std::hypot(delta_vx, delta_vz);
+    float const delta_speed = Game::Systems::planar_length(delta_vx, delta_vz);
     float const max_delta = step_limits.acceleration * step;
     if (delta_speed > max_delta && delta_speed > 0.0001F) {
       float const scale = max_delta / delta_speed;
@@ -511,9 +524,9 @@ void update_slot_states(const Engine::Core::TransformComponent& transform,
           return true;
         }
         float const previous_distance =
-            std::hypot(slot.current_local_x - other.current_local_x,
-                       slot.current_local_z - other.current_local_z);
-        float const candidate_distance = std::hypot(
+            Game::Systems::planar_length(slot.current_local_x - other.current_local_x,
+                                         slot.current_local_z - other.current_local_z);
+        float const candidate_distance = Game::Systems::planar_length(
             candidate_x - other.current_local_x, candidate_z - other.current_local_z);
         return candidate_distance + 0.00001F >= minimum_separation ||
                candidate_distance + 0.000001F >= previous_distance;
@@ -556,10 +569,12 @@ void update_slot_states(const Engine::Core::TransformComponent& transform,
   state.transition_total_distance = 0.0F;
   state.transition_remaining_distance = 0.0F;
   for (auto const& slot : state.slot_states) {
-    float const total = std::hypot(slot.target_local_x - slot.start_local_x,
-                                   slot.target_local_z - slot.start_local_z);
-    float const remaining = std::hypot(slot.target_local_x - slot.current_local_x,
-                                       slot.target_local_z - slot.current_local_z);
+    float const total =
+        Game::Systems::planar_length(slot.target_local_x - slot.start_local_x,
+                                     slot.target_local_z - slot.start_local_z);
+    float const remaining =
+        Game::Systems::planar_length(slot.target_local_x - slot.current_local_x,
+                                     slot.target_local_z - slot.current_local_z);
     state.transition_total_distance += total;
     state.transition_remaining_distance += remaining;
     if (total > 0.001F) {
@@ -579,7 +594,8 @@ void UnitTraversalLayoutSystem::update(Engine::Core::World* world, float delta_t
     return;
   }
   float const step = std::max(0.0F, delta_time);
-  world->for_each_entity([step](Engine::Core::Entity& entity) {
+  std::uint64_t const tick = world->tick_id();
+  world->for_each_entity([step, tick](Engine::Core::Entity& entity) {
     auto const* unit = entity.get_component<Engine::Core::UnitComponent>();
     auto const* transform = entity.get_component<Engine::Core::TransformComponent>();
     auto const* movement = entity.get_component<Engine::Core::MovementComponent>();
@@ -595,51 +611,64 @@ void UnitTraversalLayoutSystem::update(Engine::Core::World* world, float delta_t
     }
 
     auto const layout = FormationCombat::resolve_layout(entity);
-    rebuild_stable_mapping(layout, *state);
     state->route_id = movement->get_route_id();
+    std::uint16_t layout_id = 0xFFFFU;
     if (auto const* normal =
             entity.get_component<Engine::Core::UnitLayoutStateComponent>()) {
-      state->normal_layout_id = normal->layout_id;
+      layout_id = normal->layout_id;
     }
-    state->normal_files = normal_file_count(layout);
+
+    bool const layout_shape_changed =
+        state->normal_layout_id != layout_id ||
+        state->stable_slot_mapping.size() != layout.all_slots.size();
+    state->normal_layout_id = layout_id;
+
+    if (layout_shape_changed) {
+
+      rebuild_stable_mapping(layout, *state);
+      state->normal_files = normal_file_count(layout);
+    }
     state->soldier_body_radius = layout.body_radius;
     float const body_diameter = layout.body_radius * 2.0F;
     state->file_spacing = Game::Formation::TraversalPolicy::compact_spacing(
         layout.body_radius, layout.spacing);
     state->rank_spacing = state->file_spacing;
-    state->minimum_lateral_scale =
-        Game::Formation::TraversalPolicy::k_formation_spacing_scale;
     float layout_half_width = 0.0F;
     for (auto const& slot : layout.all_slots) {
       layout_half_width = std::max(layout_half_width, std::abs(slot.local_x));
     }
-    float authored_spacing = std::numeric_limits<float>::infinity();
-    for (std::size_t first = 0; first < layout.all_slots.size(); ++first) {
-      for (std::size_t second = first + 1; second < layout.all_slots.size(); ++second) {
-        if (layout.all_slots[first].row != layout.all_slots[second].row) {
-          continue;
-        }
-        float const separation = std::abs(layout.all_slots[first].local_x -
-                                          layout.all_slots[second].local_x);
-        if (separation > 0.01F) {
-          authored_spacing = std::min(authored_spacing, separation);
+    if (layout_shape_changed) {
+      state->minimum_lateral_scale =
+          Game::Formation::TraversalPolicy::k_formation_spacing_scale;
+      float authored_spacing = std::numeric_limits<float>::infinity();
+      for (std::size_t first = 0; first < layout.all_slots.size(); ++first) {
+        for (std::size_t second = first + 1; second < layout.all_slots.size();
+             ++second) {
+          if (layout.all_slots[first].row != layout.all_slots[second].row) {
+            continue;
+          }
+          float const separation = std::abs(layout.all_slots[first].local_x -
+                                            layout.all_slots[second].local_x);
+          if (separation > 0.01F) {
+            authored_spacing = std::min(authored_spacing, separation);
+          }
         }
       }
-    }
-    if (std::isfinite(authored_spacing)) {
+      if (std::isfinite(authored_spacing)) {
 
-      state->minimum_lateral_scale = std::clamp(
-          body_diameter * Game::Formation::TraversalPolicy::k_body_spacing_scale /
-              authored_spacing,
-          k_minimum_squeeze_scale,
-          1.0F);
+        state->minimum_lateral_scale = std::clamp(
+            body_diameter * Game::Formation::TraversalPolicy::k_body_spacing_scale /
+                authored_spacing,
+            k_minimum_squeeze_scale,
+            1.0F);
+      }
     }
 
-    bool const moving =
-        movement->get_has_target() || movement->has_waypoints() ||
-        std::hypot(facts->motor.accepted_vx, facts->motor.accepted_vz) > 0.05F;
-    float const route_tangent_length =
-        std::hypot(facts->desired.tangent_x, facts->desired.tangent_z);
+    bool const moving = movement->get_has_target() || movement->has_waypoints() ||
+                        Game::Systems::planar_length(facts->motor.accepted_vx,
+                                                     facts->motor.accepted_vz) > 0.05F;
+    float const route_tangent_length = Game::Systems::planar_length(
+        facts->desired.tangent_x, facts->desired.tangent_z);
     float const yaw = transform->rotation.y * std::numbers::pi_v<float> / 180.0F;
     float const route_alignment = route_tangent_length > 0.001F
                                       ? (std::sin(yaw) * facts->desired.tangent_x +
@@ -647,9 +676,24 @@ void UnitTraversalLayoutSystem::update(Engine::Core::World* world, float delta_t
                                             route_tangent_length
                                       : 1.0F;
     bool const entry_frame_aligned = route_alignment >= k_entry_alignment_cosine;
-    auto const width = measure_width(entity, *transform, *movement, *facts, layout);
-    state->available_half_width = width.available_half_width;
-    state->desired_half_width = width.desired_half_width;
+    std::uint64_t const measure_interval =
+        moving ? k_moving_width_measure_ticks : k_resting_width_measure_ticks;
+    bool const measure_now =
+        state->desired_half_width <= k_width_epsilon ||
+        ((tick + static_cast<std::uint64_t>(entity.get_id())) % measure_interval) == 0U;
+
+    WidthMeasurement width;
+    if (measure_now) {
+      width = measure_width(entity, *transform, *movement, *facts, layout);
+      state->available_half_width = width.available_half_width;
+      state->desired_half_width = width.desired_half_width;
+    } else {
+
+      width.available_half_width = state->available_half_width;
+      width.desired_half_width = state->desired_half_width;
+      width.constrained =
+          width.available_half_width + k_width_epsilon < width.desired_half_width;
+    }
 
     std::uint32_t const target_files = state->normal_files;
 

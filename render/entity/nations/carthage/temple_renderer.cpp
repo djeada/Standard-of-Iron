@@ -22,6 +22,8 @@ struct CarthageTemplePalette {
   QVector3D sandstone{0.82F, 0.70F, 0.52F};
   QVector3D sandstone_light{0.92F, 0.84F, 0.68F};
   QVector3D sandstone_dark{0.55F, 0.44F, 0.31F};
+  QVector3D rubble{0.79F, 0.67F, 0.50F};
+  QVector3D screed{0.77F, 0.71F, 0.59F};
   QVector3D mortar{0.63F, 0.55F, 0.42F};
   QVector3D basalt{0.22F, 0.21F, 0.22F};
   QVector3D basalt_light{0.34F, 0.33F, 0.34F};
@@ -39,6 +41,46 @@ struct CarthageTemplePalette {
 
 constexpr std::uint8_t k_temple_team_slot = 1;
 
+constexpr float k_shrine_x = 0.47F;
+constexpr float k_shrine_half_x = 0.77F;
+constexpr float k_shrine_half_z = 0.92F;
+constexpr float k_wall_batter = 0.052F;
+
+auto wall_half_x_at(float t) -> float {
+  return k_shrine_half_x - (k_wall_batter * t);
+}
+
+auto wall_half_z_at(float t) -> float {
+  return k_shrine_half_z - (k_wall_batter * t);
+}
+
+void add_stepped_merlon(BuildingArchetypeDesc& desc,
+                        const CarthageTemplePalette& c,
+                        const QVector3D& base,
+                        float half_along,
+                        float half_across,
+                        bool along_x) {
+  QVector3D const lower = along_x ? QVector3D(half_along, 0.030F, half_across)
+                                  : QVector3D(half_across, 0.030F, half_along);
+  QVector3D const mid = along_x ? QVector3D(half_along * 0.70F, 0.028F, half_across)
+                                : QVector3D(half_across, 0.028F, half_along * 0.70F);
+  QVector3D const top = along_x ? QVector3D(half_along * 0.40F, 0.026F, half_across)
+                                : QVector3D(half_across, 0.026F, half_along * 0.40F);
+
+  desc.add_box(base + QVector3D(0.0F, 0.030F, 0.0F),
+               lower,
+               c.sandstone,
+               k_building_state_mask_intact);
+  desc.add_box(base + QVector3D(0.0F, 0.088F, 0.0F),
+               mid,
+               c.sandstone_light,
+               k_building_state_mask_intact);
+  desc.add_box(base + QVector3D(0.0F, 0.142F, 0.0F),
+               top,
+               c.sandstone,
+               k_building_state_mask_intact);
+}
+
 void add_votive_pillar(BuildingArchetypeDesc& desc,
                        const CarthageTemplePalette& c,
                        float x,
@@ -46,39 +88,54 @@ void add_votive_pillar(BuildingArchetypeDesc& desc,
                        float base_y,
                        float height) {
   desc.add_box(
-      QVector3D(x, base_y + 0.030F, z), QVector3D(0.105F, 0.030F, 0.105F), c.basalt);
-  desc.add_box(QVector3D(x, base_y + 0.075F, z),
-               QVector3D(0.086F, 0.020F, 0.086F),
+      QVector3D(x, base_y + 0.026F, z), QVector3D(0.128F, 0.026F, 0.128F), c.basalt);
+  desc.add_box(QVector3D(x, base_y + 0.068F, z),
+               QVector3D(0.106F, 0.020F, 0.106F),
                c.basalt_light,
                k_building_state_mask_intact);
+  desc.add_box(QVector3D(x, base_y + 0.100F, z),
+               QVector3D(0.088F, 0.014F, 0.088F),
+               c.sandstone_dark,
+               k_building_state_mask_intact);
 
-  desc.add_cylinder(QVector3D(x, base_y + 0.090F, z),
-                    QVector3D(x, base_y + height - 0.10F, z),
-                    0.079F,
-                    c.sandstone);
+  constexpr int k_drums = 4;
+  float const shaft_bottom = base_y + 0.112F;
+  float const shaft_top = base_y + height - 0.120F;
+  float const shaft_span = std::max(shaft_top - shaft_bottom, 0.04F);
+  for (int drum = 0; drum < k_drums; ++drum) {
+    float const t0 = static_cast<float>(drum) / k_drums;
+    float const t1 = static_cast<float>(drum + 1) / k_drums;
+    desc.add_cylinder(QVector3D(x, shaft_bottom + (shaft_span * t0), z),
+                      QVector3D(x, shaft_bottom + (shaft_span * t1) + 0.004F, z),
+                      0.082F - (0.014F * (t0 + t1) * 0.5F),
+                      c.sandstone);
+  }
 
   for (int band = 1; band < 4; ++band) {
-    float const band_y =
-        base_y + 0.090F + (height - 0.19F) * static_cast<float>(band) / 4.0F;
+    float const band_y = shaft_bottom + (shaft_span * static_cast<float>(band) / 4.0F);
     desc.add_cylinder(QVector3D(x, band_y, z),
                       QVector3D(x, band_y + 0.020F, z),
-                      0.070F,
+                      0.080F,
                       c.bronze,
                       k_building_state_mask_intact);
   }
 
-  desc.add_cylinder(QVector3D(x, base_y + height - 0.11F, z),
-                    QVector3D(x, base_y + height - 0.055F, z),
-                    0.082F,
+  desc.add_cylinder(QVector3D(x, shaft_top, z),
+                    QVector3D(x, shaft_top + 0.030F, z),
+                    0.086F,
                     c.sandstone_light,
                     k_building_state_mask_intact);
-  desc.add_box(QVector3D(x, base_y + height - 0.030F, z),
-               QVector3D(0.095F, 0.028F, 0.095F),
+  desc.add_box(QVector3D(x, shaft_top + 0.052F, z),
+               QVector3D(0.100F, 0.022F, 0.100F),
                c.basalt,
                k_building_state_mask_intact);
+  desc.add_box(QVector3D(x, shaft_top + 0.082F, z),
+               QVector3D(0.082F, 0.014F, 0.082F),
+               c.basalt_light,
+               k_building_state_mask_intact);
   desc.add_cone(QVector3D(x, base_y + height, z),
-                QVector3D(x, base_y + height + 0.135F, z),
-                0.070F,
+                QVector3D(x, base_y + height + 0.150F, z),
+                0.074F,
                 c.gold,
                 BuildingStateMask::Normal);
 }
@@ -115,37 +172,251 @@ void add_incense_brazier(BuildingArchetypeDesc& desc,
                 BuildingStateMask::Normal);
 }
 
+void add_opus_africanum(BuildingArchetypeDesc& desc,
+                        const CarthageTemplePalette& c,
+                        float podium_y,
+                        float wall_h) {
+  constexpr std::array<float, 5> k_pier_x{-0.24F, 0.13F, 0.50F, 0.87F, 1.19F};
+  constexpr std::array<float, 5> k_pier_z{-0.86F, -0.43F, 0.0F, 0.43F, 0.86F};
+
+  auto pier_face = [&](float t) {
+    return wall_half_z_at(t) + 0.014F;
+  };
+
+  for (float const px : k_pier_x) {
+    for (float const side : {-1.0F, 1.0F}) {
+      for (int block = 0; block < 5; ++block) {
+        float const t0 = static_cast<float>(block) / 5.0F;
+        float const t1 = static_cast<float>(block + 1) / 5.0F;
+        float const mid = (t0 + t1) * 0.5F;
+        desc.add_box(QVector3D(px, podium_y + (wall_h * mid), side * pier_face(mid)),
+                     QVector3D(0.062F, wall_h * 0.092F, 0.016F),
+                     (block % 2 == 0) ? c.sandstone_light : c.sandstone,
+                     k_building_state_mask_intact);
+      }
+    }
+  }
+
+  for (float const pz : k_pier_z) {
+    for (int block = 0; block < 5; ++block) {
+      float const t0 = static_cast<float>(block) / 5.0F;
+      float const t1 = static_cast<float>(block + 1) / 5.0F;
+      float const mid = (t0 + t1) * 0.5F;
+      desc.add_box(QVector3D(k_shrine_x + wall_half_x_at(mid) + 0.014F,
+                             podium_y + (wall_h * mid),
+                             pz),
+                   QVector3D(0.016F, wall_h * 0.092F, 0.062F),
+                   (block % 2 == 0) ? c.sandstone_light : c.sandstone,
+                   k_building_state_mask_intact);
+    }
+  }
+
+  for (int course = 1; course < 8; ++course) {
+    float const t = static_cast<float>(course) / 8.0F;
+    for (float const side : {-1.0F, 1.0F}) {
+      desc.add_box(QVector3D(k_shrine_x,
+                             podium_y + (wall_h * t),
+                             side * (wall_half_z_at(t) + 0.006F)),
+                   QVector3D(wall_half_x_at(t) * 0.97F, 0.007F, 0.006F),
+                   c.mortar,
+                   k_building_state_mask_intact);
+    }
+    desc.add_box(QVector3D(k_shrine_x + wall_half_x_at(t) + 0.006F,
+                           podium_y + (wall_h * t),
+                           0.0F),
+                 QVector3D(0.006F, 0.007F, wall_half_z_at(t) * 0.97F),
+                 c.mortar,
+                 k_building_state_mask_intact);
+  }
+}
+
+void add_cavetto_cornice(BuildingArchetypeDesc& desc,
+                         const CarthageTemplePalette& c,
+                         float cornice_y) {
+  desc.add_cylinder(
+      QVector3D(k_shrine_x - k_shrine_half_x - 0.020F, cornice_y + 0.026F, 0.0F),
+      QVector3D(k_shrine_x + k_shrine_half_x + 0.020F, cornice_y + 0.026F, 0.0F),
+      0.030F,
+      c.sandstone_dark,
+      k_building_state_mask_intact);
+  for (float const side : {-1.0F, 1.0F}) {
+    desc.add_cylinder(QVector3D(k_shrine_x - k_shrine_half_x - 0.020F,
+                                cornice_y + 0.026F,
+                                side * (k_shrine_half_z + 0.006F)),
+                      QVector3D(k_shrine_x + k_shrine_half_x + 0.020F,
+                                cornice_y + 0.026F,
+                                side * (k_shrine_half_z + 0.006F)),
+                      0.030F,
+                      c.sandstone_dark,
+                      k_building_state_mask_intact);
+  }
+  desc.add_cylinder(QVector3D(k_shrine_x + k_shrine_half_x + 0.006F,
+                              cornice_y + 0.026F,
+                              -k_shrine_half_z - 0.020F),
+                    QVector3D(k_shrine_x + k_shrine_half_x + 0.006F,
+                              cornice_y + 0.026F,
+                              k_shrine_half_z + 0.020F),
+                    0.030F,
+                    c.sandstone_dark,
+                    k_building_state_mask_intact);
+
+  constexpr int k_flares = 4;
+  for (int flare = 0; flare < k_flares; ++flare) {
+    float const t = static_cast<float>(flare) / (k_flares - 1);
+    float const grow = 0.030F + (0.098F * t * t);
+    desc.add_box(QVector3D(k_shrine_x,
+                           cornice_y + 0.072F + (0.040F * static_cast<float>(flare)),
+                           0.0F),
+                 QVector3D(k_shrine_half_x + grow, 0.021F, k_shrine_half_z + grow),
+                 (flare % 2 == 0) ? c.sandstone : c.sandstone_light,
+                 k_building_state_mask_intact);
+  }
+
+  desc.add_box(QVector3D(k_shrine_x, cornice_y + 0.242F, 0.0F),
+               QVector3D(k_shrine_half_x + 0.150F, 0.020F, k_shrine_half_z + 0.150F),
+               c.basalt,
+               k_building_state_mask_intact);
+  desc.add_box(QVector3D(k_shrine_x, cornice_y + 0.276F, 0.0F),
+               QVector3D(k_shrine_half_x + 0.120F, 0.016F, k_shrine_half_z + 0.120F),
+               c.sandstone_light,
+               k_building_state_mask_intact);
+  desc.add_box(QVector3D(k_shrine_x, cornice_y + 0.298F, 0.0F),
+               QVector3D(k_shrine_half_x + 0.100F, 0.008F, k_shrine_half_z + 0.100F),
+               c.screed,
+               k_building_state_mask_intact);
+  for (float const side : {-1.0F, 1.0F}) {
+    desc.add_box(
+        QVector3D(k_shrine_x, cornice_y + 0.302F, side * (k_shrine_half_z + 0.086F)),
+        QVector3D(k_shrine_half_x + 0.100F, 0.006F, 0.018F),
+        c.verdigris,
+        k_building_state_mask_intact);
+  }
+  desc.add_box(
+      QVector3D(k_shrine_x + k_shrine_half_x + 0.086F, cornice_y + 0.302F, 0.0F),
+      QVector3D(0.018F, 0.006F, k_shrine_half_z + 0.100F),
+      c.verdigris,
+      k_building_state_mask_intact);
+  desc.add_box(
+      QVector3D(k_shrine_x - k_shrine_half_x - 0.086F, cornice_y + 0.302F, 0.0F),
+      QVector3D(0.018F, 0.006F, k_shrine_half_z + 0.100F),
+      c.verdigris,
+      k_building_state_mask_intact);
+}
+
+void add_roof_parapet(BuildingArchetypeDesc& desc,
+                      const CarthageTemplePalette& c,
+                      float roof_y) {
+  float const half_x = k_shrine_half_x + 0.086F;
+  float const half_z = k_shrine_half_z + 0.086F;
+
+  constexpr int k_along_x = 7;
+  for (int merlon = 0; merlon < k_along_x; ++merlon) {
+    float const t = static_cast<float>(merlon) / (k_along_x - 1);
+    float const px = k_shrine_x - half_x + 0.09F + ((half_x - 0.09F) * 2.0F * t);
+    for (float const side : {-1.0F, 1.0F}) {
+      add_stepped_merlon(
+          desc, c, QVector3D(px, roof_y, side * half_z), 0.086F, 0.040F, true);
+    }
+  }
+
+  constexpr int k_along_z = 7;
+  for (int merlon = 1; merlon < k_along_z - 1; ++merlon) {
+    float const t = static_cast<float>(merlon) / (k_along_z - 1);
+    float const pz = -half_z + (half_z * 2.0F * t);
+    add_stepped_merlon(
+        desc, c, QVector3D(k_shrine_x + half_x, roof_y, pz), 0.086F, 0.040F, false);
+  }
+}
+
+void add_pylon_doorway(BuildingArchetypeDesc& desc,
+                       const CarthageTemplePalette& c,
+                       float podium_y,
+                       float wall_h) {
+  float const jamb_h = wall_h * 0.35F;
+
+  desc.add_box(QVector3D(-0.282F, podium_y + jamb_h, 0.0F),
+               QVector3D(0.030F, jamb_h + 0.024F, 0.372F),
+               c.sandstone_light,
+               k_building_state_mask_intact);
+  desc.add_box(QVector3D(-0.300F, podium_y + jamb_h, 0.0F),
+               QVector3D(0.018F, jamb_h + 0.006F, 0.340F),
+               c.sandstone_dark,
+               k_building_state_mask_intact);
+  desc.add_box(QVector3D(-0.290F, podium_y + (jamb_h * 2.0F) + 0.048F, 0.0F),
+               QVector3D(0.040F, 0.026F, 0.412F),
+               c.basalt,
+               k_building_state_mask_intact);
+  desc.add_cylinder(QVector3D(-0.312F, podium_y + (jamb_h * 2.0F) + 0.086F, -0.392F),
+                    QVector3D(-0.312F, podium_y + (jamb_h * 2.0F) + 0.086F, 0.392F),
+                    0.026F,
+                    c.sandstone_dark,
+                    k_building_state_mask_intact);
+
+  desc.add_box(QVector3D(-0.286F, podium_y + (jamb_h * 0.96F), 0.0F),
+               QVector3D(0.026F, jamb_h * 0.96F, 0.300F),
+               c.soot,
+               k_building_state_mask_intact);
+  desc.add_box(QVector3D(-0.302F, podium_y + (jamb_h * 0.92F), 0.0F),
+               QVector3D(0.024F, jamb_h * 0.92F, 0.272F),
+               c.cedar,
+               k_building_state_mask_intact);
+  for (int stud = 0; stud < 4; ++stud) {
+    float const stud_y =
+        podium_y + (jamb_h * (0.28F + (0.44F * static_cast<float>(stud))));
+    desc.add_box(QVector3D(-0.330F, stud_y, 0.0F),
+                 QVector3D(0.008F, 0.016F, 0.252F),
+                 c.bronze,
+                 k_building_state_mask_intact);
+  }
+  for (float const leaf : {-1.0F, 1.0F}) {
+    desc.add_box(QVector3D(-0.332F, podium_y + (jamb_h * 0.92F), leaf * 0.024F),
+                 QVector3D(0.008F, jamb_h * 0.88F, 0.012F),
+                 c.bronze,
+                 k_building_state_mask_intact);
+  }
+
+  for (int step = 0; step < 2; ++step) {
+    float const t = static_cast<float>(step);
+    desc.add_box(QVector3D(-0.340F - (0.056F * t),
+                           podium_y + 0.012F + (0.026F * (1.0F - t)),
+                           0.0F),
+                 QVector3D(0.056F, 0.014F, 0.340F + (0.024F * t)),
+                 c.sandstone_light,
+                 k_building_state_mask_intact);
+  }
+}
+
 void add_carthage_temple_ruin(BuildingArchetypeDesc& desc,
                               const CarthageTemplePalette& c,
                               float podium_y,
                               float wall_h) {
   constexpr auto k_ruin = BuildingStateMask::Destroyed;
   float const wall_top = podium_y + wall_h;
-  QVector3D const ash = c.soot * 0.45F + c.sandstone * 0.55F;
-  QVector3D const ash_dark = c.soot * 0.70F + c.sandstone * 0.30F;
+  QVector3D const ash = (c.soot * 0.45F) + (c.sandstone * 0.55F);
+  QVector3D const ash_dark = (c.soot * 0.70F) + (c.sandstone * 0.30F);
 
   constexpr std::array<float, 6> k_rise{0.14F, 0.05F, 0.20F, 0.08F, 0.16F, 0.03F};
   for (int i = 0; i < 9; ++i) {
-    float const px = -0.26F + 0.19F * static_cast<float>(i);
+    float const px = -0.26F + (0.19F * static_cast<float>(i));
     for (float const side : {-1.0F, 1.0F}) {
       float const rise =
           k_rise[static_cast<std::size_t>(i + (side > 0 ? 2 : 0)) % k_rise.size()];
       if (rise < 0.04F) {
         continue;
       }
-      desc.add_box(QVector3D(px, wall_top + rise * 0.5F, side * 0.86F),
+      desc.add_box(QVector3D(px, wall_top + (rise * 0.5F), side * 0.86F),
                    QVector3D(0.088F, rise * 0.5F, 0.062F),
                    c.sandstone,
                    k_ruin);
     }
   }
   for (int i = 0; i < 7; ++i) {
-    float const pz = -0.78F + 0.26F * static_cast<float>(i);
+    float const pz = -0.78F + (0.26F * static_cast<float>(i));
     float const rise = k_rise[static_cast<std::size_t>(i + 3) % k_rise.size()];
     if (rise < 0.04F) {
       continue;
     }
-    desc.add_box(QVector3D(1.18F, wall_top + rise * 0.5F, pz),
+    desc.add_box(QVector3D(1.18F, wall_top + (rise * 0.5F), pz),
                  QVector3D(0.062F, rise * 0.5F, 0.088F),
                  c.sandstone,
                  k_ruin);
@@ -225,51 +496,85 @@ auto build_temple_archetype(BuildingState state) -> RenderArchetype {
   desc.add_box(
       QVector3D(0.0F, 0.345F, 0.0F), QVector3D(1.29F, 0.065F, 1.07F), c.sandstone_dark);
   desc.add_box(
-      QVector3D(0.0F, 0.435F, 0.0F), QVector3D(1.25F, 0.035F, 1.03F), c.sandstone);
-  desc.add_box(QVector3D(0.0F, 0.475F, 0.0F),
-               QVector3D(1.27F, 0.010F, 1.05F),
+      QVector3D(0.0F, 0.428F, 0.0F), QVector3D(1.25F, 0.030F, 1.03F), c.sandstone);
+  desc.add_box(QVector3D(0.0F, 0.464F, 0.0F),
+               QVector3D(1.30F, 0.014F, 1.08F),
+               c.sandstone_light);
+  desc.add_box(QVector3D(0.0F, 0.482F, 0.0F),
+               QVector3D(1.27F, 0.008F, 1.05F),
                c.sandstone_light);
 
-  float const podium_y = 0.485F;
+  float const podium_y = 0.490F;
 
   for (float const joint_x : {-0.84F, -0.24F, 0.36F, 0.96F}) {
     desc.add_box(QVector3D(joint_x, 0.165F, 0.0F),
                  QVector3D(0.008F, 0.052F, 1.095F),
                  c.mortar,
                  k_building_state_mask_intact);
+    desc.add_box(QVector3D(joint_x, 0.290F, 0.0F),
+                 QVector3D(0.008F, 0.046F, 1.075F),
+                 c.mortar,
+                 k_building_state_mask_intact);
   }
-  desc.add_box(QVector3D(0.0F, 0.212F, 1.095F),
-               QVector3D(1.30F, 0.006F, 0.006F),
-               c.mortar,
-               k_building_state_mask_intact);
+  for (int course = 0; course < 3; ++course) {
+    float const course_y = 0.130F + (0.086F * static_cast<float>(course));
+    for (float const side : {-1.0F, 1.0F}) {
+      desc.add_box(QVector3D(0.0F, course_y, side * 1.095F),
+                   QVector3D(1.30F, 0.006F, 0.006F),
+                   c.mortar,
+                   k_building_state_mask_intact);
+    }
+    for (float const face : {-1.315F, 1.315F}) {
+      desc.add_box(QVector3D(face, course_y, 0.0F),
+                   QVector3D(0.006F, 0.006F, 1.08F),
+                   c.mortar,
+                   k_building_state_mask_intact);
+    }
+  }
 
   for (int step = 0; step < 6; ++step) {
     float const step_index = static_cast<float>(step);
-    float const top = 0.081F * (step_index + 1.0F);
-    desc.add_box(QVector3D(-1.700F + 0.078F * step_index, top * 0.5F, 0.0F),
-                 QVector3D(0.041F, top * 0.5F, 0.62F),
+    float const top = 0.082F * (step_index + 1.0F);
+    desc.add_box(QVector3D(-1.700F + (0.078F * step_index), top * 0.5F, 0.0F),
+                 QVector3D(0.041F, top * 0.5F, 0.66F),
                  (step % 2 == 0) ? c.sandstone_dark : c.sandstone,
+                 k_building_state_mask_intact);
+    desc.add_box(QVector3D(-1.700F + (0.078F * step_index), top - 0.006F, 0.0F),
+                 QVector3D(0.043F, 0.006F, 0.665F),
+                 c.sandstone_light,
                  k_building_state_mask_intact);
   }
   for (float const cheek : {-1.0F, 1.0F}) {
-    desc.add_box(QVector3D(-1.50F, 0.24F, cheek * 0.675F),
+    desc.add_box(QVector3D(-1.50F, 0.24F, cheek * 0.715F),
                  QVector3D(0.25F, 0.24F, 0.055F),
                  c.basalt,
+                 k_building_state_mask_intact);
+    desc.add_box(QVector3D(-1.50F, 0.492F, cheek * 0.715F),
+                 QVector3D(0.26F, 0.012F, 0.062F),
+                 c.sandstone_light,
                  k_building_state_mask_intact);
   }
 
   float const wall_h = 1.12F * height_multiplier;
-  float const wall_y = podium_y + wall_h * 0.5F;
 
-  desc.add_box(QVector3D(0.47F, wall_y, 0.0F),
-               QVector3D(0.77F, wall_h * 0.5F, 0.92F),
-               c.sandstone);
+  constexpr int k_wall_courses = 6;
+  for (int course = 0; course < k_wall_courses; ++course) {
+    float const t0 = static_cast<float>(course) / k_wall_courses;
+    float const t1 = static_cast<float>(course + 1) / k_wall_courses;
+    float const mid = (t0 + t1) * 0.5F;
+    desc.add_box(
+        QVector3D(k_shrine_x, podium_y + (wall_h * mid), 0.0F),
+        QVector3D(wall_half_x_at(mid), wall_h * (t1 - t0) * 0.5F, wall_half_z_at(mid)),
+        (course % 2 == 0) ? c.sandstone : c.rubble);
+  }
+
+  add_opus_africanum(desc, c, podium_y, wall_h);
 
   for (float const side : {-1.0F, 1.0F}) {
-    desc.add_box(QVector3D(-0.58F, wall_y, side * 0.80F),
+    desc.add_box(QVector3D(-0.58F, podium_y + (wall_h * 0.5F), side * 0.80F),
                  QVector3D(0.30F, wall_h * 0.5F, 0.12F),
                  c.sandstone);
-    desc.add_box(QVector3D(-0.86F, wall_y, side * 0.80F),
+    desc.add_box(QVector3D(-0.86F, podium_y + (wall_h * 0.5F), side * 0.80F),
                  QVector3D(0.026F, wall_h * 0.5F, 0.14F),
                  c.sandstone_dark,
                  k_building_state_mask_intact);
@@ -279,34 +584,43 @@ auto build_temple_archetype(BuildingState state) -> RenderArchetype {
                  k_building_state_mask_intact);
   }
 
-  desc.add_box(QVector3D(-0.58F, podium_y + wall_h * 0.74F, 0.0F),
+  desc.add_box(QVector3D(-0.58F, podium_y + (wall_h * 0.74F), 0.0F),
                QVector3D(0.30F, wall_h * 0.055F, 0.70F),
                c.cedar,
                k_building_state_mask_intact);
-  desc.add_box(QVector3D(-0.58F, podium_y + wall_h * 0.83F, 0.0F),
+  desc.add_box(QVector3D(-0.58F, podium_y + (wall_h * 0.83F), 0.0F),
                QVector3D(0.32F, wall_h * 0.040F, 0.72F),
                c.sandstone,
                k_building_state_mask_intact);
-  desc.add_box(QVector3D(-0.58F, podium_y + wall_h * 0.90F, 0.0F),
+  desc.add_box(QVector3D(-0.58F, podium_y + (wall_h * 0.90F), 0.0F),
                QVector3D(0.34F, wall_h * 0.030F, 0.74F),
                c.sandstone_light,
                k_building_state_mask_intact);
-  desc.add_box(QVector3D(-0.895F, podium_y + wall_h * 0.86F, 0.0F),
+  desc.add_box(QVector3D(-0.895F, podium_y + (wall_h * 0.86F), 0.0F),
                QVector3D(0.014F, wall_h * 0.070F, 0.74F),
                c.basalt,
                k_building_state_mask_intact);
   for (float const side : {-1.0F, 1.0F}) {
-    desc.add_box(QVector3D(-0.58F, podium_y + wall_h * 0.86F, side * 0.752F),
+    desc.add_box(QVector3D(-0.58F, podium_y + (wall_h * 0.86F), side * 0.752F),
                  QVector3D(0.34F, wall_h * 0.070F, 0.014F),
                  c.basalt,
                  k_building_state_mask_intact);
   }
   for (int rafter = 0; rafter < 5; ++rafter) {
-    float const z = -0.56F + 0.28F * static_cast<float>(rafter);
-    desc.add_box(QVector3D(-0.58F, podium_y + wall_h * 0.70F, z),
+    float const z = -0.56F + (0.28F * static_cast<float>(rafter));
+    desc.add_box(QVector3D(-0.58F, podium_y + (wall_h * 0.70F), z),
                  QVector3D(0.30F, wall_h * 0.022F, 0.030F),
                  c.cedar_light,
                  k_building_state_mask_intact);
+  }
+  for (int merlon = 0; merlon < 5; ++merlon) {
+    float const pz = -0.68F + (0.34F * static_cast<float>(merlon));
+    add_stepped_merlon(desc,
+                       c,
+                       QVector3D(-0.58F, podium_y + wall_h + 0.060F, pz),
+                       0.070F,
+                       0.140F,
+                       false);
   }
 
   for (float const cz : {-0.34F, 0.34F}) {
@@ -314,15 +628,15 @@ auto build_temple_archetype(BuildingState state) -> RenderArchetype {
                  QVector3D(0.10F, 0.030F, 0.10F),
                  c.basalt);
     desc.add_cylinder(QVector3D(-0.66F, podium_y + 0.055F, cz),
-                      QVector3D(-0.66F, podium_y + wall_h * 0.60F, cz),
+                      QVector3D(-0.66F, podium_y + (wall_h * 0.60F), cz),
                       0.070F,
                       c.basalt_light);
-    desc.add_cylinder(QVector3D(-0.66F, podium_y + wall_h * 0.60F, cz),
-                      QVector3D(-0.66F, podium_y + wall_h * 0.64F, cz),
+    desc.add_cylinder(QVector3D(-0.66F, podium_y + (wall_h * 0.60F), cz),
+                      QVector3D(-0.66F, podium_y + (wall_h * 0.64F), cz),
                       0.086F,
                       c.bronze,
                       k_building_state_mask_intact);
-    desc.add_box(QVector3D(-0.66F, podium_y + wall_h * 0.67F, cz),
+    desc.add_box(QVector3D(-0.66F, podium_y + (wall_h * 0.67F), cz),
                  QVector3D(0.098F, wall_h * 0.032F, 0.098F),
                  c.basalt,
                  k_building_state_mask_intact);
@@ -333,160 +647,109 @@ auto build_temple_archetype(BuildingState state) -> RenderArchetype {
                        float proud,
                        const QVector3D& color,
                        BuildingStateMask states) {
+    float const t = (band_y - podium_y) / std::max(wall_h, 0.001F);
+    float const half_x = wall_half_x_at(t);
+    float const half_z = wall_half_z_at(t);
     for (float const side : {-1.0F, 1.0F}) {
-      desc.add_box(QVector3D(0.47F, band_y, side * (0.92F + proud * 0.5F)),
-                   QVector3D(0.74F + proud, half_h, proud * 0.5F + 0.004F),
+      desc.add_box(QVector3D(k_shrine_x, band_y, side * (half_z + (proud * 0.5F))),
+                   QVector3D(half_x + proud, half_h, (proud * 0.5F) + 0.004F),
                    color,
                    states);
     }
-    desc.add_box(QVector3D(1.24F + proud * 0.5F, band_y, 0.0F),
-                 QVector3D(proud * 0.5F + 0.004F, half_h, 0.90F + proud),
+    desc.add_box(QVector3D(k_shrine_x + half_x + (proud * 0.5F), band_y, 0.0F),
+                 QVector3D((proud * 0.5F) + 0.004F, half_h, half_z + proud),
                  color,
                  states);
   };
 
-  constexpr float k_pilaster_proud = 0.020F;
-
-  float const pilaster_base = podium_y + wall_h * 0.170F;
-  float const pilaster_half_h = (podium_y + wall_h * 0.680F - pilaster_base) * 0.5F;
-  auto add_pilaster = [&](const QVector3D& center, bool along_z) {
-    QVector3D const shaft = along_z
-                                ? QVector3D(0.058F, pilaster_half_h, k_pilaster_proud)
-                                : QVector3D(k_pilaster_proud, pilaster_half_h, 0.058F);
-    QVector3D const cap = along_z ? QVector3D(0.076F, 0.026F, k_pilaster_proud * 1.5F)
-                                  : QVector3D(k_pilaster_proud * 1.5F, 0.026F, 0.076F);
-    desc.add_box(center, shaft, c.sandstone_light, k_building_state_mask_intact);
-    desc.add_box(center + QVector3D(0.0F, pilaster_half_h - 0.026F, 0.0F),
-                 cap,
-                 c.sandstone_dark,
-                 k_building_state_mask_intact);
-  };
-
-  float const pilaster_y = pilaster_base + pilaster_half_h;
-  for (float const px : {-0.24F, 0.13F, 0.50F, 0.87F, 1.20F}) {
-    for (float const side : {-1.0F, 1.0F}) {
-      add_pilaster(QVector3D(px, pilaster_y, side * (0.92F + k_pilaster_proud)), true);
-    }
-  }
-  for (float const pz : {-0.86F, -0.43F, 0.0F, 0.43F, 0.86F}) {
-    add_pilaster(QVector3D(1.24F + k_pilaster_proud, pilaster_y, pz), false);
-  }
-
-  float const register_y = podium_y + wall_h * 0.845F;
+  float const register_y = podium_y + (wall_h * 0.845F);
   float const register_half_h = wall_h * 0.082F;
-  wrap_band(register_y, register_half_h, 0.008F, c.indigo, BuildingStateMask::Normal);
-  wrap_band(register_y - register_half_h * 0.52F,
+  wrap_band(register_y, register_half_h, 0.026F, c.indigo, BuildingStateMask::Normal);
+  wrap_band(register_y - (register_half_h * 0.52F),
             wall_h * 0.020F,
-            0.016F,
+            0.034F,
             c.oxblood,
             BuildingStateMask::Normal);
   for (float const edge : {-1.0F, 1.0F}) {
-    wrap_band(register_y + edge * (register_half_h + wall_h * 0.024F),
+    wrap_band(register_y + (edge * (register_half_h + (wall_h * 0.024F))),
               wall_h * 0.024F,
-              0.030F,
+              0.044F,
               c.sandstone_light,
               k_building_state_mask_intact);
   }
-  wrap_band(podium_y + wall_h * 0.085F,
+  wrap_band(podium_y + (wall_h * 0.085F),
             wall_h * 0.085F,
-            0.010F,
+            0.030F,
             c.sandstone_dark,
             k_building_state_mask_intact);
 
-  for (int course = 1; course < 7; ++course) {
-    float const course_y = podium_y + wall_h * static_cast<float>(course) / 7.0F;
-    desc.add_box(QVector3D(0.47F, course_y, 0.926F),
-                 QVector3D(0.75F, 0.007F, 0.006F),
-                 c.mortar,
-                 k_building_state_mask_intact);
-    desc.add_box(QVector3D(1.246F, course_y, 0.0F),
-                 QVector3D(0.006F, 0.007F, 0.90F),
-                 c.mortar,
-                 k_building_state_mask_intact);
-  }
-
-  desc.add_box(QVector3D(-0.28F, podium_y + wall_h * 0.34F, 0.0F),
-               QVector3D(0.034F, wall_h * 0.34F, 0.32F),
-               c.soot,
-               k_building_state_mask_intact);
-  desc.add_box(QVector3D(-0.30F, podium_y + wall_h * 0.31F, 0.0F),
-               QVector3D(0.028F, wall_h * 0.31F, 0.27F),
-               c.cedar,
-               k_building_state_mask_intact);
-  for (int stud = 0; stud < 4; ++stud) {
-    float const stud_y = podium_y + wall_h * (0.10F + 0.14F * static_cast<float>(stud));
-    desc.add_box(QVector3D(-0.332F, stud_y, 0.0F),
-                 QVector3D(0.008F, 0.016F, 0.25F),
-                 c.bronze,
-                 k_building_state_mask_intact);
-  }
-  desc.add_box(QVector3D(-0.28F, podium_y + wall_h * 0.70F, 0.0F),
-               QVector3D(0.052F, 0.040F, 0.40F),
-               c.basalt,
-               k_building_state_mask_intact);
+  add_pylon_doorway(desc, c, podium_y, wall_h);
 
   float const cornice_y = podium_y + wall_h;
-  desc.add_box(QVector3D(0.47F, cornice_y + 0.026F, 0.0F),
-               QVector3D(0.81F, 0.026F, 0.96F),
-               c.sandstone_dark,
-               k_building_state_mask_intact);
-  desc.add_box(QVector3D(0.47F, cornice_y + 0.066F, 0.0F),
-               QVector3D(0.87F, 0.024F, 1.02F),
-               c.sandstone_light,
-               k_building_state_mask_intact);
-  desc.add_box(QVector3D(0.47F, cornice_y + 0.098F, 0.0F),
-               QVector3D(0.84F, 0.014F, 0.99F),
-               c.basalt,
-               k_building_state_mask_intact);
-  desc.add_box(QVector3D(0.47F, cornice_y + 0.124F, 0.0F),
-               QVector3D(0.82F, 0.016F, 0.97F),
-               c.sandstone,
-               k_building_state_mask_intact);
+  add_cavetto_cornice(desc, c, cornice_y);
+  add_roof_parapet(desc, c, cornice_y + 0.306F);
 
-  for (int course = 0; course < 3; ++course) {
-    float const t = static_cast<float>(course);
-    desc.add_box(QVector3D(0.47F, cornice_y + 0.156F + 0.042F * t, 0.0F),
-                 QVector3D(0.86F + 0.035F * t, 0.021F, 1.01F + 0.035F * t),
-                 (course % 2 == 0) ? c.sandstone_light : c.sandstone,
+  for (float const joint_z : {-0.62F, 0.0F, 0.62F}) {
+    desc.add_box(QVector3D(k_shrine_x, cornice_y + 0.308F, joint_z),
+                 QVector3D(k_shrine_half_x + 0.080F, 0.004F, 0.007F),
+                 c.sandstone_dark,
                  k_building_state_mask_intact);
   }
-  desc.add_box(QVector3D(0.47F, cornice_y + 0.290F, 0.0F),
-               QVector3D(0.94F, 0.020F, 1.09F),
-               c.verdigris,
-               k_building_state_mask_intact);
-
-  desc.add_box(QVector3D(0.47F, cornice_y + 0.312F, 0.0F),
-               QVector3D(0.88F, 0.014F, 1.03F),
-               c.sandstone_light,
-               k_building_state_mask_intact);
-  for (float const side : {-1.0F, 1.0F}) {
-    desc.add_box(QVector3D(0.47F, cornice_y + 0.326F, side * 1.015F),
-                 QVector3D(0.88F, 0.010F, 0.020F),
-                 c.gold,
-                 BuildingStateMask::Normal);
+  for (float const joint_x : {-0.10F, 0.47F, 1.04F}) {
+    desc.add_box(QVector3D(joint_x, cornice_y + 0.308F, 0.0F),
+                 QVector3D(0.007F, 0.004F, k_shrine_half_z + 0.080F),
+                 c.sandstone_dark,
+                 k_building_state_mask_intact);
   }
-  desc.add_box(QVector3D(1.335F, cornice_y + 0.326F, 0.0F),
-               QVector3D(0.020F, 0.010F, 1.03F),
-               c.gold,
-               BuildingStateMask::Normal);
 
-  desc.add_box(QVector3D(0.62F, cornice_y + 0.230F, 0.0F),
-               QVector3D(0.44F, 0.108F, 0.48F),
-               c.sandstone_dark,
+  desc.add_box(QVector3D(0.62F, cornice_y + 0.326F, 0.0F),
+               QVector3D(0.500F, 0.020F, 0.540F),
+               c.basalt,
+               k_building_state_mask_intact);
+  desc.add_box(QVector3D(0.62F, cornice_y + 0.436F, 0.0F),
+               QVector3D(0.440F, 0.090F, 0.480F),
+               c.sandstone,
                k_building_state_mask_intact);
   for (int band = 1; band < 3; ++band) {
-    float const band_y = cornice_y + 0.122F + 0.072F * static_cast<float>(band);
+    float const band_y = cornice_y + 0.346F + (0.060F * static_cast<float>(band));
     desc.add_box(QVector3D(0.62F, band_y, 0.485F),
-                 QVector3D(0.42F, 0.007F, 0.006F),
+                 QVector3D(0.435F, 0.007F, 0.006F),
+                 c.mortar,
+                 k_building_state_mask_intact);
+    desc.add_box(QVector3D(1.062F, band_y, 0.0F),
+                 QVector3D(0.006F, 0.007F, 0.475F),
                  c.mortar,
                  k_building_state_mask_intact);
   }
-  desc.add_box(QVector3D(0.62F, cornice_y + 0.354F, 0.0F),
-               QVector3D(0.48F, 0.022F, 0.52F),
+  desc.add_box(QVector3D(0.178F, cornice_y + 0.420F, 0.0F),
+               QVector3D(0.014F, 0.062F, 0.140F),
+               c.soot,
+               k_building_state_mask_intact);
+  desc.add_box(QVector3D(0.172F, cornice_y + 0.420F, 0.0F),
+               QVector3D(0.010F, 0.056F, 0.118F),
+               c.cedar,
+               k_building_state_mask_intact);
+
+  for (int flare = 0; flare < 3; ++flare) {
+    float const t = static_cast<float>(flare) / 2.0F;
+    float const grow = 0.014F + (0.062F * t * t);
+    desc.add_box(QVector3D(0.62F,
+                           cornice_y + 0.542F + (0.030F * static_cast<float>(flare)),
+                           0.0F),
+                 QVector3D(0.440F + grow, 0.016F, 0.480F + grow),
+                 (flare % 2 == 0) ? c.sandstone_light : c.sandstone,
+                 k_building_state_mask_intact);
+  }
+  desc.add_box(QVector3D(0.62F, cornice_y + 0.622F, 0.0F),
+               QVector3D(0.520F, 0.014F, 0.560F),
+               c.basalt,
+               k_building_state_mask_intact);
+  desc.add_box(QVector3D(0.62F, cornice_y + 0.646F, 0.0F),
+               QVector3D(0.480F, 0.012F, 0.520F),
                c.sandstone_light,
                k_building_state_mask_intact);
-  desc.add_box(QVector3D(0.62F, cornice_y + 0.318F, 0.0F),
-               QVector3D(0.45F, 0.012F, 0.49F),
+  desc.add_box(QVector3D(0.62F, cornice_y + 0.662F, 0.0F),
+               QVector3D(0.190F, 0.008F, 0.210F),
                c.indigo,
                BuildingStateMask::Normal);
 
@@ -510,58 +773,53 @@ auto build_temple_archetype(BuildingState state) -> RenderArchetype {
   add_incense_brazier(desc, c, QVector3D(-1.42F, 0.30F, 0.94F));
   add_incense_brazier(desc, c, QVector3D(-1.42F, 0.30F, -0.94F));
 
-  for (float const side : {-1.0F, 1.0F}) {
-    desc.add_box(QVector3D(1.18F, podium_y + wall_h * 0.52F, side * 0.60F),
-                 QVector3D(0.078F, wall_h * 0.44F, 0.078F),
-                 c.sandstone_dark,
-                 k_building_state_mask_intact);
-    desc.add_box(QVector3D(1.18F, podium_y + wall_h * 0.99F, side * 0.60F),
-                 QVector3D(0.094F, wall_h * 0.030F, 0.094F),
-                 c.basalt,
-                 k_building_state_mask_intact);
-  }
-
-  desc.add_palette_box(QVector3D(-0.332F, podium_y + wall_h * 0.76F, 0.0F),
+  desc.add_palette_box(QVector3D(-0.334F, podium_y + (wall_h * 0.74F), 0.0F),
                        QVector3D(0.014F, 0.042F, 0.30F),
                        k_temple_team_slot,
                        BuildingStateMask::Normal | BuildingStateMask::Damaged);
 
-  desc.add_box(QVector3D(1.252F, podium_y + wall_h * 0.735F, 0.0F),
+  desc.add_box(QVector3D(k_shrine_x + wall_half_x_at(0.735F) + 0.028F,
+                         podium_y + (wall_h * 0.735F),
+                         0.0F),
                QVector3D(0.016F, 0.020F, 0.30F),
                c.bronze,
                k_building_state_mask_intact);
-  desc.add_palette_box(QVector3D(1.254F, podium_y + wall_h * 0.575F, 0.0F),
+  desc.add_palette_box(QVector3D(k_shrine_x + wall_half_x_at(0.575F) + 0.030F,
+                                 podium_y + (wall_h * 0.575F),
+                                 0.0F),
                        QVector3D(0.012F, wall_h * 0.145F, 0.255F),
                        k_temple_team_slot,
                        BuildingStateMask::Normal | BuildingStateMask::Damaged);
-  desc.add_box(QVector3D(1.256F, podium_y + wall_h * 0.428F, 0.0F),
+  desc.add_box(QVector3D(k_shrine_x + wall_half_x_at(0.428F) + 0.032F,
+                         podium_y + (wall_h * 0.428F),
+                         0.0F),
                QVector3D(0.012F, 0.014F, 0.255F),
                c.gold,
                BuildingStateMask::Normal);
   for (float const side : {-1.0F, 1.0F}) {
-    desc.add_box(QVector3D(-0.58F, podium_y + wall_h * 0.62F, side * 0.930F),
+    desc.add_box(QVector3D(-0.58F, podium_y + (wall_h * 0.62F), side * 0.930F),
                  QVector3D(0.16F, 0.020F, 0.010F),
                  c.bronze,
                  k_building_state_mask_intact);
-    desc.add_palette_box(QVector3D(-0.58F, podium_y + wall_h * 0.44F, side * 0.936F),
+    desc.add_palette_box(QVector3D(-0.58F, podium_y + (wall_h * 0.44F), side * 0.936F),
                          QVector3D(0.13F, 0.17F, 0.010F),
                          k_temple_team_slot,
                          BuildingStateMask::Normal | BuildingStateMask::Damaged);
-    desc.add_box(QVector3D(-0.58F, podium_y + wall_h * 0.26F, side * 0.938F),
+    desc.add_box(QVector3D(-0.58F, podium_y + (wall_h * 0.26F), side * 0.938F),
                  QVector3D(0.13F, 0.014F, 0.010F),
                  c.gold,
                  BuildingStateMask::Normal);
   }
 
   add_punic_tanit_relief(desc,
-                         QVector3D(-0.352F, podium_y + wall_h * 0.46F, 0.0F),
+                         QVector3D(-0.356F, podium_y + (wall_h * 0.44F), 0.0F),
                          BuildingFacadePlane::ZY,
                          0.40F,
                          c.gold,
                          c.basalt);
 
   add_punic_horned_crown(desc,
-                         QVector3D(0.62F, cornice_y + 0.376F, 0.0F),
+                         QVector3D(0.62F, cornice_y + 0.664F, 0.0F),
                          0.66F,
                          c.basalt,
                          c.gold,
@@ -580,6 +838,8 @@ auto build_temple_archetype(BuildingState state) -> RenderArchetype {
                                  .scale = 1.15F,
                                  .seed = 311});
 
+  desc.scale_uniformly(k_temple_mesh_scale);
+
   return build_building_archetype(desc, state);
 }
 
@@ -596,7 +856,7 @@ void register_temple_renderer(EntityRendererRegistry& registry) {
       registry,
       TempleRendererConfig{.nation_slug = "carthage",
                            .archetype = &temple_archetype,
-                           .selection = BuildingSelectionStyle{1.9F, 1.9F}});
+                           .selection = BuildingSelectionStyle{3.8F, 3.8F}});
 }
 
 } // namespace Render::GL::Carthage
