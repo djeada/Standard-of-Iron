@@ -728,3 +728,35 @@ TEST(CommandPipelineTest, NothingIsRaisedOnTheFlankOfAHill) {
 }
 
 } // namespace
+
+TEST(CommandPipelineTest, WallLinksChainTwoMetresApartAlongAnyBearing) {
+  Match match;
+  auto& collision = match.session.building_collision();
+  constexpr float k_yaw = 45.0F;
+  collision.register_building(match.spawn(1, 20.0F, 20.0F),
+                              std::string("wall_segment"),
+                              20.0F,
+                              20.0F,
+                              1,
+                              k_yaw);
+
+  const float along = Game::Systems::k_wall_link_spacing * 0.70710678F;
+  EXPECT_EQ(Game::Systems::assess_ground(match.session.world(),
+                                         "wall_segment",
+                                         20.0F + along,
+                                         20.0F - along,
+                                         0,
+                                         k_yaw),
+            Game::Systems::GroundVerdict::Clear)
+      << "the next link of a diagonal wall stands one link spacing away";
+
+  EXPECT_EQ(Game::Systems::assess_ground(
+                match.session.world(), "wall_segment", 20.5F, 20.0F, 0, k_yaw),
+            Game::Systems::GroundVerdict::Occupied)
+      << "a link cannot be raised on top of another";
+
+  EXPECT_EQ(Game::Systems::assess_ground(
+                match.session.world(), "home", 20.0F + along, 20.0F - along),
+            Game::Systems::GroundVerdict::Occupied)
+      << "other structures still respect the wall's footprint";
+}

@@ -5,8 +5,10 @@
 #include <QTemporaryDir>
 #include <QTextStream>
 
+#include <cmath>
 #include <gtest/gtest.h>
 #include <set>
+#include <string>
 
 #include "game/systems/ai_system/ai_attack_wave.h"
 #include "game/systems/ai_system/ai_commander_doctrine.h"
@@ -194,3 +196,51 @@ TEST(AIAttackWave, WaveSizeFallsBackToTheStrategyWithoutADoctrine) {
 }
 
 } // namespace
+
+TEST_F(AIDoctrineCatalogTest, TownPlanStepsCarryAnOptionalRotation) {
+  reset_ai_doctrine_catalog();
+  const QDir dir(m_dir.path());
+  const QString plans = write_file(dir, "town_plans.json", QStringLiteral(R"({
+    "plans": {
+      "ring": {
+        "steps": [
+          { "building": "wall_segment", "x": 0.0, "z": -12.0, "rotation": 30.0 },
+          { "building": "wall_gate", "x": 4.0, "z": -12.0 },
+          { "building": "home", "x": 0.0, "z": 12.0 }
+        ]
+      }
+    }
+  })"));
+  ASSERT_FALSE(plans.isEmpty());
+  const QString doctrines = write_file(dir, "doctrines.json", QStringLiteral(R"({
+    "commanders": { "roman_veteran_consul": { "town_plan": "ring" } }
+  })"));
+  ASSERT_TRUE(load_ai_doctrine_catalog(doctrines, plans));
+
+  const auto* plan = authored_town_plan("ring");
+  ASSERT_NE(plan, nullptr);
+  ASSERT_EQ(plan->steps.size(), 3U);
+  EXPECT_FLOAT_EQ(plan->steps[0].rotation, 30.0F);
+  EXPECT_FLOAT_EQ(plan->steps[1].rotation, 0.0F) << "rotation defaults to 0";
+  EXPECT_EQ(plan->wall_step_count(), 2);
+}
+
+TEST_F(AIDoctrineCatalogTest, ShippedTownPlansKeepClearOfTheBaseAnchor) {
+  reset_ai_doctrine_catalog();
+  ASSERT_TRUE(load_default_ai_doctrine_catalog());
+
+  int walled_plans = 0;
+  for (const auto& definition : Game::Units::all_commander_definitions()) {
+    const auto* doctrine = authored_doctrine(definition.id);
+    ASSERT_NE(doctrine, nullptr);
+    ASSERT_NE(doctrine->town_plan, nullptr);
+    if (doctrine->town_plan->wall_step_count() > 0) {
+      ++walled_plans;
+    }
+    for (const auto& step : doctrine->town_plan->steps) {
+      EXPECT_GE(std::hypot(step.x, step.z), 9.0F)
+          << definition.id << " places " << step.building << " inside the base anchor";
+    }
+  }
+  EXPECT_GE(walled_plans, 3) << "square, star and ring towns all need walls";
+}

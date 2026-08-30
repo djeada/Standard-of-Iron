@@ -278,6 +278,12 @@ Item {
                 return false;
             game.orders.select_all_troops();
             return true;
+        case "rts.build_rotate_left":
+        case "rts.build_rotate_right":
+            if (!game.placement.construction_preview_rotatable || !game.placement.construction_preview_rotatable())
+                return false;
+            game.placement.on_construction_scroll(actionId === "rts.build_rotate_left" ? -1 : 1);
+            return true;
         }
         return false;
     }

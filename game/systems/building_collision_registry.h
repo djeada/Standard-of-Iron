@@ -16,6 +16,13 @@ namespace Game::Systems {
 inline constexpr float k_default_building_grid_padding = 1.0F;
 inline constexpr float k_wall_segment_grid_padding = 0.0F;
 
+inline constexpr float k_wall_link_spacing = 2.0F;
+
+[[nodiscard]] inline auto
+is_wall_link_building_type(const std::string& building_type) -> bool {
+  return building_type == "wall_segment" || building_type == "wall_gate";
+}
+
 struct BuildingFootprint {
   float center_x;
   float center_z;
@@ -26,6 +33,8 @@ struct BuildingFootprint {
 
   float grid_padding{k_default_building_grid_padding};
   bool blocks_navigation{true};
+
+  bool wall_link{false};
 
   float body_center_x{0.0F};
   float body_center_z{0.0F};

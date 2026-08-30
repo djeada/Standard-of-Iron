@@ -54,9 +54,16 @@ void WallSegment::init(const SpawnParams& params) {
       m_t->position.x, m_t->position.z);
   wall->grid_x = snapped.x;
   wall->grid_z = snapped.z;
+  wall->freeform =
+      Engine::Core::WallSegmentComponent::is_freeform_rotation(params.rotation_y);
 
   Game::Systems::BuildingCollisionRegistry::instance().register_building(
-      m_id, m_type_string, m_t->position.x, m_t->position.z, m_u->owner_id);
+      m_id,
+      m_type_string,
+      m_t->position.x,
+      m_t->position.z,
+      m_u->owner_id,
+      params.rotation_y);
   Game::Systems::WallNetworkService::refresh_world(*m_world);
 
   Engine::Core::EventManager::instance().publish(Engine::Core::UnitSpawnedEvent(

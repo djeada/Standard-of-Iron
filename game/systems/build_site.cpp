@@ -69,24 +69,79 @@ touches_water(const Game::Map::TerrainHeightMap& terrain, float x, float z) -> b
   return false;
 }
 
+constexpr float k_wall_link_min_spacing = 0.75F * k_wall_link_spacing;
+
+[[nodiscard]] auto
+wall_link_site_occupied(const BuildingCollisionRegistry& collision,
+                        float x,
+                        float z,
+                        float half_width,
+                        float half_depth,
+                        Engine::Core::EntityID ignore_entity_id) -> bool {
+  const float reach = std::max(half_width, half_depth);
+  bool occupied = false;
+  collision.for_each_building_in_region(
+      x - reach, x + reach, z - reach, z + reach, [&](const BuildingFootprint& other) {
+        if (occupied || !other.blocks_navigation ||
+            (ignore_entity_id != 0 && other.entity_id == ignore_entity_id)) {
+          return;
+        }
+        if (other.wall_link) {
+
+          const float dx = other.center_x - x;
+          const float dz = other.center_z - z;
+          occupied =
+              (dx * dx) + (dz * dz) < k_wall_link_min_spacing * k_wall_link_min_spacing;
+          return;
+        }
+        const float other_half_width = other.width * 0.5F;
+        const float other_half_depth = other.depth * 0.5F;
+        occupied = other.center_x - other_half_width < x + half_width &&
+                   other.center_x + other_half_width > x - half_width &&
+                   other.center_z - other_half_depth < z + half_depth &&
+                   other.center_z + other_half_depth > z - half_depth;
+      });
+  if (occupied) {
+    return true;
+  }
+  return std::any_of(
+      collision.authored_obstacles().begin(),
+      collision.authored_obstacles().end(),
+      [&](const BuildingFootprint& obstacle) {
+        const float obstacle_half_width = obstacle.width * 0.5F;
+        const float obstacle_half_depth = obstacle.depth * 0.5F;
+        return obstacle.center_x - obstacle_half_width < x + half_width &&
+               obstacle.center_x + obstacle_half_width > x - half_width &&
+               obstacle.center_z - obstacle_half_depth < z + half_depth &&
+               obstacle.center_z + obstacle_half_depth > z - half_depth;
+      });
+}
+
 } // namespace
 
 auto assess_ground(const Engine::Core::World& world,
                    const std::string& building_type,
                    float x,
                    float z,
-                   Engine::Core::EntityID ignore_entity_id) -> GroundVerdict {
-  const auto size = BuildingCollisionRegistry::get_building_size(building_type);
+                   Engine::Core::EntityID ignore_entity_id,
+                   float facing_degrees) -> GroundVerdict {
+  const auto size = BuildingCollisionRegistry::axis_aligned_size(
+      BuildingCollisionRegistry::get_building_size(building_type), facing_degrees);
   const float half_width = (size.width * 0.5F) + k_site_margin;
   const float half_depth = (size.depth * 0.5F) + k_site_margin;
 
-  if (Game::Session::services_for(world)
-          .building_collision->is_rect_overlapping_blocking_building(
-              x - half_width,
-              x + half_width,
-              z - half_depth,
-              z + half_depth,
-              ignore_entity_id)) {
+  const auto& collision = *Game::Session::services_for(world).building_collision;
+  if (is_wall_link_building_type(building_type)) {
+
+    if (wall_link_site_occupied(
+            collision, x, z, half_width, half_depth, ignore_entity_id)) {
+      return GroundVerdict::Occupied;
+    }
+  } else if (collision.is_rect_overlapping_blocking_building(x - half_width,
+                                                             x + half_width,
+                                                             z - half_depth,
+                                                             z + half_depth,
+                                                             ignore_entity_id)) {
     return GroundVerdict::Occupied;
   }
 
@@ -164,8 +219,9 @@ void clear_ground_for(Engine::Core::World& world,
 auto find_clear_site(const Engine::Core::World& world,
                      const std::string& building_type,
                      const QVector3D& wanted,
-                     float search_radius) -> std::optional<QVector3D> {
-  if (assess_ground(world, building_type, wanted.x(), wanted.z()) ==
+                     float search_radius,
+                     float facing_degrees) -> std::optional<QVector3D> {
+  if (assess_ground(world, building_type, wanted.x(), wanted.z(), 0, facing_degrees) ==
       GroundVerdict::Clear) {
     return wanted;
   }
@@ -185,7 +241,8 @@ auto find_clear_site(const Engine::Core::World& world,
       const QVector3D candidate(wanted.x() + (radius * std::cos(angle)),
                                 wanted.y(),
                                 wanted.z() + (radius * std::sin(angle)));
-      if (assess_ground(world, building_type, candidate.x(), candidate.z()) ==
+      if (assess_ground(
+              world, building_type, candidate.x(), candidate.z(), 0, facing_degrees) ==
           GroundVerdict::Clear) {
         return candidate;
       }

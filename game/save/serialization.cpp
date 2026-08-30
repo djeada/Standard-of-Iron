@@ -682,6 +682,7 @@ auto Serialization::serialize_entity(const Entity* entity) -> QJsonObject {
     QJsonObject wall_obj;
     wall_obj["grid_x"] = wall->grid_x;
     wall_obj["grid_z"] = wall->grid_z;
+    wall_obj["freeform"] = wall->freeform;
     entity_obj["wall_segment"] = wall_obj;
   }
 
@@ -1619,6 +1620,7 @@ void Serialization::deserialize_entity(Entity* entity, const QJsonObject& json) 
     auto* wall = entity->add_component<WallSegmentComponent>();
     wall->grid_x = wall_obj["grid_x"].toInt(0);
     wall->grid_z = wall_obj["grid_z"].toInt(0);
+    wall->freeform = wall_obj["freeform"].toBool(false);
   }
 
   if (json.contains("wall_construction_site")) {
