@@ -4704,6 +4704,45 @@ Diese Aktion kann nicht rückgängig gemacht werden.</translation>
     </message>
 </context>
 <context>
+    <name>MapBases</name>
+    <message>
+        <source>Centre</source>
+        <translation>Mitte</translation>
+    </message>
+    <message>
+        <source>East</source>
+        <translation>Osten</translation>
+    </message>
+    <message>
+        <source>North-East</source>
+        <translation>Nordosten</translation>
+    </message>
+    <message>
+        <source>North</source>
+        <translation>Norden</translation>
+    </message>
+    <message>
+        <source>North-West</source>
+        <translation>Nordwesten</translation>
+    </message>
+    <message>
+        <source>West</source>
+        <translation>Westen</translation>
+    </message>
+    <message>
+        <source>South-West</source>
+        <translation>Südwesten</translation>
+    </message>
+    <message>
+        <source>South</source>
+        <translation>Süden</translation>
+    </message>
+    <message>
+        <source>South-East</source>
+        <translation>Südosten</translation>
+    </message>
+</context>
+<context>
     <name>MapListPanel</name>
     <message>
         <source>Maps</source>
@@ -4727,8 +4766,20 @@ um die Vorschau zu sehen</translation>
         <translation>Keine Vorschau verfügbar</translation>
     </message>
     <message>
-        <source>Bases shown in player colours</source>
-        <translation>Basen in Spielerfarben dargestellt</translation>
+        <source>%1 — held by %2</source>
+        <translation>%1 — gehalten von %2</translation>
+    </message>
+    <message>
+        <source>%1 — free, click to claim it</source>
+        <translation>%1 — frei, zum Beanspruchen klicken</translation>
+    </message>
+    <message>
+        <source>Click a base to reseat</source>
+        <translation>Basis anklicken zum Umsetzen</translation>
+    </message>
+    <message>
+        <source>Bases in player colours</source>
+        <translation>Basen in Spielerfarben</translation>
     </message>
 </context>
 <context>
@@ -4948,6 +4999,30 @@ um die Vorschau zu sehen</translation>
     <message>
         <source>Gold every side starts with — click to change</source>
         <translation>Gold, mit dem jede Seite beginnt – zum Ändern klicken</translation>
+    </message>
+    <message>
+        <source>This battlefield only has %1 starting bases</source>
+        <translation>Dieses Schlachtfeld hat nur %1 Startbasen</translation>
+    </message>
+    <message>
+        <source>Every player in play needs a starting base</source>
+        <translation>Jeder Spieler im Spiel braucht eine Startbasis</translation>
+    </message>
+    <message>
+        <source>Click any chip to change it • pick a base on the map for the highlighted seat</source>
+        <translation>Auf ein Feld klicken zum Ändern • Basis auf der Karte für den markierten Platz wählen</translation>
+    </message>
+    <message>
+        <source>Base</source>
+        <translation>Basis</translation>
+    </message>
+    <message>
+        <source>None</source>
+        <translation>Keine</translation>
+    </message>
+    <message>
+        <source>Starting base — click for the next free one, or pick it on the map</source>
+        <translation>Startbasis — klicken für die nächste freie oder auf der Karte wählen</translation>
     </message>
 </context>
 <context>
@@ -6744,13 +6819,13 @@ um die Vorschau zu sehen</translation>
         <source>That is beyond the edge of the battlefield.</source>
         <translation>Das liegt jenseits des Schlachtfeldrandes.</translation>
     </message>
+    <message>
+        <source>A wall already stands here.</source>
+        <translation>Hier steht bereits eine Mauer.</translation>
+    </message>
 </context>
 <context>
     <name>ProductionPanel</name>
-    <message>
-        <source>PRODUCTION QUEUE</source>
-        <translation>PRODUKTIONSWARTESCHLANGE</translation>
-    </message>
     <message>
         <source>RECRUIT UNITS</source>
         <translation>EINHEITEN AUSBILDEN</translation>
@@ -7216,6 +7291,10 @@ Baumeister ernten es als Nahrung, die Zivilisten rekrutiert</translation>
     <message>
         <source>Temple reserve: %1 / %2</source>
         <translation>Tempelreserve: %1 / %2</translation>
+    </message>
+    <message>
+        <source>QUEUE</source>
+        <translation>WARTELISTE</translation>
     </message>
 </context>
 <context>

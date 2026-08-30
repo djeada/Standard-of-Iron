@@ -1307,6 +1307,7 @@ auto read_structures(const QJsonArray& arr,
       }
       return false;
     }
+    entry.id = obj.value("id").toString();
     entry.player_id = obj.value("player_id").toInt(0);
     entry.team_id = obj.value(TEAM_ID).toInt(0);
     entry.max_population = obj.value(MAX_POPULATION).toInt(60);

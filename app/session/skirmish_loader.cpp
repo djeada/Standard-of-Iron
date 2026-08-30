@@ -9,6 +9,7 @@
 #include <QJsonObject>
 #include <QJsonParseError>
 #include <QSet>
+#include <QString>
 #include <qdir.h>
 #include <qfiledevice.h>
 #include <qglobal.h>
@@ -228,6 +229,7 @@ void SkirmishLoader::reset_game_state() {
   session.owners().clear();
 
   Game::Map::MapTransformer::clear_player_team_overrides();
+  Game::Map::MapTransformer::clear_base_assignments();
 
   session.visibility().reset();
 
@@ -323,6 +325,7 @@ auto SkirmishLoader::start(const QString& map_path,
 
   std::unordered_map<int, int> team_overrides;
   std::unordered_map<int, Game::Systems::NationID> nation_overrides;
+  std::unordered_map<int, QString> base_assignments;
   QVariantList saved_player_configs;
   std::set<int> processed_player_ids;
   bool is_spectator_mode = false;
@@ -337,6 +340,7 @@ auto SkirmishLoader::start(const QString& map_path,
       const QString color_hex = config.value("colorHex", "#FFFFFF").toString();
       const bool is_human = config.value("isHuman", false).toBool();
       const QString nation_id_str = config.value("nationId").toString();
+      const QString base_key = config.value("baseKey").toString();
 
       if (is_human) {
         has_human_player = true;
@@ -362,6 +366,9 @@ auto SkirmishLoader::start(const QString& map_path,
           chosen_nation = session.nations().default_nation_id();
         }
         nation_overrides[player_id] = chosen_nation;
+        if (!base_key.isEmpty()) {
+          base_assignments[player_id] = base_key;
+        }
 
         QVariantMap updated_config = config;
         updated_config["player_id"] = player_id;
@@ -391,6 +398,7 @@ auto SkirmishLoader::start(const QString& map_path,
   Game::Map::MapTransformer::set_local_owner_id(player_owner_id);
   Game::Map::MapTransformer::set_spectator_mode(is_spectator_mode);
   Game::Map::MapTransformer::setPlayerTeamOverrides(team_overrides);
+  Game::Map::MapTransformer::set_base_assignments(base_assignments);
 
   auto& nation_registry = session.nations();
 

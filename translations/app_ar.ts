@@ -4716,6 +4716,45 @@ This action cannot be undone.</source>
     </message>
 </context>
 <context>
+    <name>MapBases</name>
+    <message>
+        <source>Centre</source>
+        <translation>الوسط</translation>
+    </message>
+    <message>
+        <source>East</source>
+        <translation>الشرق</translation>
+    </message>
+    <message>
+        <source>North-East</source>
+        <translation>الشمال الشرقي</translation>
+    </message>
+    <message>
+        <source>North</source>
+        <translation>الشمال</translation>
+    </message>
+    <message>
+        <source>North-West</source>
+        <translation>الشمال الغربي</translation>
+    </message>
+    <message>
+        <source>West</source>
+        <translation>الغرب</translation>
+    </message>
+    <message>
+        <source>South-West</source>
+        <translation>الجنوب الغربي</translation>
+    </message>
+    <message>
+        <source>South</source>
+        <translation>الجنوب</translation>
+    </message>
+    <message>
+        <source>South-East</source>
+        <translation>الجنوب الشرقي</translation>
+    </message>
+</context>
+<context>
     <name>MapListPanel</name>
     <message>
         <source>Maps</source>
@@ -4739,8 +4778,20 @@ to see preview</source>
         <translation>لا تتوفر معاينة</translation>
     </message>
     <message>
-        <source>Bases shown in player colours</source>
-        <translation>تظهر القواعد بألوان اللاعبين</translation>
+        <source>%1 — held by %2</source>
+        <translation>%1 — بحوزة %2</translation>
+    </message>
+    <message>
+        <source>%1 — free, click to claim it</source>
+        <translation>%1 — خالية، انقر للاستيلاء عليها</translation>
+    </message>
+    <message>
+        <source>Click a base to reseat</source>
+        <translation>انقر على قاعدة لإعادة التمركز</translation>
+    </message>
+    <message>
+        <source>Bases in player colours</source>
+        <translation>القواعد بألوان اللاعبين</translation>
     </message>
 </context>
 <context>
@@ -4960,6 +5011,30 @@ to see preview</source>
     <message>
         <source>Gold every side starts with — click to change</source>
         <translation>الذهب الذي يبدأ به كل طرف — انقر للتغيير</translation>
+    </message>
+    <message>
+        <source>This battlefield only has %1 starting bases</source>
+        <translation>هذه الساحة بها %1 قواعد بداية فقط</translation>
+    </message>
+    <message>
+        <source>Every player in play needs a starting base</source>
+        <translation>كل لاعب مشارك يحتاج قاعدة بداية</translation>
+    </message>
+    <message>
+        <source>Click any chip to change it • pick a base on the map for the highlighted seat</source>
+        <translation>انقر على أي بطاقة لتغييرها • اختر قاعدة على الخريطة للمقعد المحدد</translation>
+    </message>
+    <message>
+        <source>Base</source>
+        <translation>القاعدة</translation>
+    </message>
+    <message>
+        <source>None</source>
+        <translation>لا شيء</translation>
+    </message>
+    <message>
+        <source>Starting base — click for the next free one, or pick it on the map</source>
+        <translation>قاعدة البداية — انقر للتالية الخالية، أو اخترها على الخريطة</translation>
     </message>
 </context>
 <context>
@@ -6756,13 +6831,13 @@ to see preview</source>
         <source>That is beyond the edge of the battlefield.</source>
         <translation>هذا خارج حدود ساحة المعركة.</translation>
     </message>
+    <message>
+        <source>A wall already stands here.</source>
+        <translation>يوجد سور هنا بالفعل.</translation>
+    </message>
 </context>
 <context>
     <name>ProductionPanel</name>
-    <message>
-        <source>PRODUCTION QUEUE</source>
-        <translation>طابور الإنتاج</translation>
-    </message>
     <message>
         <source>RECRUIT UNITS</source>
         <translation>تجنيد الوحدات</translation>
@@ -7228,6 +7303,10 @@ Builders reap it for the food that recruits civilians</source>
     <message>
         <source>Temple reserve: %1 / %2</source>
         <translation>احتياطي المعبد: %1 / %2</translation>
+    </message>
+    <message>
+        <source>QUEUE</source>
+        <translation>الطابور</translation>
     </message>
 </context>
 <context>

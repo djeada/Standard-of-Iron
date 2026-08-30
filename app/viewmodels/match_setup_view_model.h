@@ -55,6 +55,8 @@ public:
   Q_INVOKABLE [[nodiscard]] QImage
   map_preview(const QString& map_path, const QVariantList& player_configs) const;
 
+  Q_INVOKABLE [[nodiscard]] QVariantList map_bases(const QString& map_path) const;
+
   [[nodiscard]] auto starting_gold() const -> int;
   void set_starting_gold(int gold);
 

@@ -11,6 +11,7 @@
 
 #include "app/orders/order_feedback.h"
 #include "game/systems/nation_id.h"
+#include "game/systems/structure_placement_service.h"
 #include "game/systems/wall_plan_service.h"
 
 namespace Engine::Core {
@@ -102,6 +103,10 @@ private:
   QVector3D calculate_builder_center_position(
       const std::vector<Engine::Core::EntityID>& builder_ids);
   void set_construction_preview_active(bool active);
+  [[nodiscard]] auto wall_plan_refusal(
+      const std::vector<Game::Systems::PlannedWallSegment>& segments) const -> QString;
+  [[nodiscard]] auto
+  placement_refusal(Game::Systems::PlacementRuling ruling) const -> QString;
   [[nodiscard]] auto ground_refusal(const QString& building_type,
                                     float world_x,
                                     float world_z) const -> QString;
