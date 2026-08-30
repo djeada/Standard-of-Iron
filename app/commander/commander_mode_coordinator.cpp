@@ -221,6 +221,8 @@ auto CommanderModeCoordinator::enter_commander_control_mode(
       commander_data->jump_active = false;
       commander_data->jump_phase = 0.0F;
       commander_data->jump_height_offset = 0.0F;
+      commander_data->dodge_active = false;
+      commander_data->dodge_phase = 0.0F;
     }
     commander_data->posture = 0.0F;
     commander_data->punish_window_remaining = 0.0F;
@@ -545,6 +547,8 @@ void CommanderModeCoordinator::clear_controlled_commander_state_impl(
       commander_data->jump_active = false;
       commander_data->jump_phase = 0.0F;
       commander_data->jump_height_offset = 0.0F;
+      commander_data->dodge_active = false;
+      commander_data->dodge_phase = 0.0F;
     }
     commander_data->posture = 0.0F;
     commander_data->punish_window_remaining = 0.0F;

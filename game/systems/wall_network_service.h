@@ -32,12 +32,6 @@ struct WallAppearance {
   std::uint8_t connection_mask{0};
 };
 
-// Whether a wall or tower may stand on a patch of ground is a build-site
-// question, and build_site lives in economy, which is allowed to use
-// navigation and not the other way round. So the caller hands the answer in:
-// the wall network knows where its sockets are, economy knows what may be
-// built on them. Game::Systems::wall_ground_probe() in build_site.h is the
-// implementation every production caller passes.
 using GroundProbe =
     std::function<GroundVerdict(float world_x,
                                 float world_z,

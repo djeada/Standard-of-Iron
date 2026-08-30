@@ -13,6 +13,7 @@
 #include "game/core/entity.h"
 #include "game/core/world.h"
 #include "game/formation/unit_layout_state_system.h"
+#include "game/systems/combat_actions/combat_action_definition.h"
 #include "game/systems/formation_combat_geometry.h"
 #include "game/units/spawn_type.h"
 #include "render/creature/animation_core_bridge.h"
@@ -1492,6 +1493,41 @@ void append_prepared_soldier(const HumanoidUnitSnapshot& s,
     RCP::set_model_world_y(inst_ctx.model,
                            RCP::model_world_origin(inst_ctx.model).y() +
                                commander_jump.height_offset);
+  }
+  if (creature_presentation != nullptr && creature_presentation->dodge_active) {
+    float const phase = std::clamp(creature_presentation->dodge_phase, 0.0F, 1.0F);
+    float const eased = phase * phase * (3.0F - 2.0F * phase);
+    float const tuck = std::sin(phase * std::numbers::pi_v<float>);
+    RCP::set_model_world_y(inst_ctx.model,
+                           RCP::model_world_origin(inst_ctx.model).y() + 0.08F * tuck);
+    QVector3D const pivot = RCP::model_world_origin(inst_ctx.model);
+    QMatrix4x4 roll;
+    roll.translate(pivot);
+    roll.rotate(-105.0F * std::sin(eased * std::numbers::pi_v<float>), right);
+    roll.translate(-pivot);
+    inst_ctx.model = roll * inst_ctx.model;
+  } else if (commander_jump.active) {
+    float const air = std::sin(std::clamp(commander_jump.phase, 0.0F, 1.0F) *
+                               std::numbers::pi_v<float>);
+    auto const* action_definition =
+        creature_presentation != nullptr &&
+                creature_presentation->authored_action_id != 0U
+            ? Game::Systems::CombatActions::find_combat_action_definition(
+                  static_cast<Game::Systems::CombatActions::CombatActionId>(
+                      creature_presentation->authored_action_id))
+            : nullptr;
+    bool const diving = action_definition != nullptr &&
+                        action_definition->role ==
+                            Game::Systems::CombatActions::CommanderActionRole::Dive;
+    float const pitch = (diving ? 34.0F : -10.0F) * air;
+    if (std::abs(pitch) > 0.01F) {
+      QVector3D const pivot = RCP::model_world_origin(inst_ctx.model);
+      QMatrix4x4 tilt;
+      tilt.translate(pivot);
+      tilt.rotate(pitch, right);
+      tilt.translate(-pivot);
+      inst_ctx.model = tilt * inst_ctx.model;
+    }
   }
   if (casualty_offset_y > 0.0F) {
     RCP::set_model_world_y(inst_ctx.model,
