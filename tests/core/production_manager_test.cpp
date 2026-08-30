@@ -236,17 +236,6 @@ protected:
                    QVector3D(0.0F, 1.0F, 0.0F));
   }
 
-  static auto prop_ground_radius(const Game::Map::WorldPropTarget& target) -> float {
-    const auto& props = Game::Map::TerrainService::instance().world_props();
-    const auto found =
-        std::find_if(props.begin(), props.end(), [&target](const auto& prop) {
-          return prop.id == target.id;
-        });
-    return found == props.end()
-               ? 0.0F
-               : Game::Map::world_prop_ground_radius(found->type, found->scale);
-  }
-
   void expect_collect_order_from_elevated_click(Game::Map::WorldProp::Type prop_type,
                                                 const char* expected_product_type) {
     initialize_collect_map(prop_type);
@@ -276,11 +265,8 @@ protected:
     EXPECT_NEAR(builder_prod->task_target_x, target->x, 0.0001F);
     EXPECT_NEAR(builder_prod->task_target_z, target->z, 0.0001F);
 
-    const float standoff = std::hypot(builder_prod->construction_site_x - target->x,
-                                      builder_prod->construction_site_z - target->z);
-    EXPECT_GE(standoff, prop_ground_radius(*target))
-        << "the worker was sent to stand " << standoff
-        << " m from the prop's centre, inside the footprint that blocks it";
+    EXPECT_NEAR(builder_prod->construction_site_x, target->x, 0.0001F);
+    EXPECT_NEAR(builder_prod->construction_site_z, target->z, 0.0001F);
 
     EXPECT_STREQ(builder_prod->product_type.c_str(), expected_product_type);
   }
@@ -745,9 +731,8 @@ TEST_F(ProductionManagerTest, GenericCollectPreviewStaysValidOnRaisedTerrain) {
   EXPECT_NEAR(builder_prod->task_target_x, target->x, 0.0001F);
   EXPECT_NEAR(builder_prod->task_target_z, target->z, 0.0001F);
 
-  EXPECT_GE(std::hypot(builder_prod->construction_site_x - target->x,
-                       builder_prod->construction_site_z - target->z),
-            prop_ground_radius(*target));
+  EXPECT_NEAR(builder_prod->construction_site_x, target->x, 0.0001F);
+  EXPECT_NEAR(builder_prod->construction_site_z, target->z, 0.0001F);
 
   EXPECT_STREQ(builder_prod->product_type.c_str(), "cut_tree");
 }

@@ -25,13 +25,13 @@
 #include "building_collision_registry.h"
 #include "command_service.h"
 #include "construction_cost_catalog.h"
-#include "economy_feedback.h"
 #include "food_targets.h"
 #include "harvest_yields.h"
 #include "nation_registry.h"
 #include "nav_grid.h"
 #include "owner_queries.h"
 #include "pathfinding.h"
+#include "player_feedback.h"
 #include "player_resource_registry.h"
 #include "troop_profile_service.h"
 #include "units/spawn_type.h"
@@ -155,6 +155,18 @@ auto find_guaranteed_valid_exit(float exit_x,
   return NavGrid::grid_to_world(exit_grid);
 }
 
+constexpr float k_site_bypass_reach = 2.5F;
+constexpr float k_site_route_goal_tolerance_sq = 0.25F;
+
+auto site_bypass_radius_sq(const Engine::Core::BuilderProductionComponent& builder,
+                           const Engine::Core::MovementComponent* movement) -> float {
+  float radius = k_site_bypass_reach;
+  if (movement != nullptr && is_gather_builder_product(builder.product_type)) {
+    radius += std::max(0.0F, movement->get_navigation_clearance());
+  }
+  return radius * radius;
+}
+
 void activate_bypass_movement(Engine::Core::BuilderProductionComponent* builder,
                               float target_x,
                               float target_z) {
@@ -179,8 +191,11 @@ auto walking_to_site(const Engine::Core::BuilderProductionComponent& builder,
                            : movement.get_goal_y();
   const float dx = goal_x - builder.construction_site_x;
   const float dz = goal_z - builder.construction_site_z;
-  constexpr float k_route_goal_tolerance_sq = 0.25F;
-  return (dx * dx + dz * dz) <= k_route_goal_tolerance_sq;
+
+  float const tolerance_sq = is_gather_builder_product(builder.product_type)
+                                 ? site_bypass_radius_sq(builder, &movement)
+                                 : k_site_route_goal_tolerance_sq;
+  return (dx * dx + dz * dz) <= tolerance_sq;
 }
 
 void abandon_site_route(const Engine::Core::BuilderProductionComponent& builder,
@@ -325,13 +340,11 @@ auto skip_invalid_wall_site(Engine::Core::World* world,
   const auto refund =
       construction_cost_info(Game::Units::spawn_typeToString(site->product_type))
           .resource_costs;
-  grant_resources(site->owner_id, refund);
-  publish_resource_bundle_at(site->owner_id,
-                             transform->position.x,
-                             transform->position.y,
-                             transform->position.z,
-                             refund,
-                             1);
+  grant_resources_at(site->owner_id,
+                     transform->position.x,
+                     transform->position.y,
+                     transform->position.z,
+                     refund);
   world->destroy_entity(site_entity->get_id());
   builder->construction_site_entity_id = 0;
   builder->has_construction_site = false;
@@ -381,10 +394,11 @@ auto apply_structure_repair_tick(Engine::Core::World* world,
   }
 
   auto* unit = structure->get_component<Engine::Core::UnitComponent>();
-  const int restored = std::max(k_repair_minimum_per_tick,
+  const int per_tick = std::max(k_repair_minimum_per_tick,
                                 static_cast<int>(static_cast<float>(unit->max_health) *
                                                  k_repair_fraction_per_tick));
-  unit->health = std::min(unit->max_health, unit->health + restored);
+  restore_health(
+      unit->owner_id, structure->get_id(), *unit, per_tick, unit->max_health);
 
   if (unit->health >= unit->max_health) {
     if (auto* fire = structure->get_component<Engine::Core::StructureFireComponent>()) {
@@ -640,8 +654,6 @@ void ProductionSystem::update(Engine::Core::World* world, float delta_time) {
   constexpr float k_orphaned_task_limit_seconds = 8.0F;
   constexpr float MAX_CONSTRUCTION_DISTANCE_SQ = 9.0F;
 
-  constexpr float k_site_bypass_radius_sq = 6.25F;
-
   for (auto [entity_ref, builder_prod_ref] :
        world->entity_view<Engine::Core::BuilderProductionComponent>()) {
     Engine::Core::Entity* e = &entity_ref;
@@ -693,10 +705,13 @@ void ProductionSystem::update(Engine::Core::World* world, float delta_time) {
           float const dz = sheep_position->z() - transform->position.z;
           float const dist_sq = dx * dx + dz * dz;
           if (dist_sq <= k_sheep_work_reach * k_sheep_work_reach) {
+
             hold_sheep_still(world, builder_prod);
             if (!builder_prod->at_construction_site) {
-              builder_prod->construction_site_x = transform->position.x;
-              builder_prod->construction_site_z = transform->position.z;
+              builder_prod->construction_site_x = sheep_position->x();
+              builder_prod->construction_site_z = sheep_position->z();
+              builder_prod->task_target_x = sheep_position->x();
+              builder_prod->task_target_z = sheep_position->z();
             }
           } else {
             QVector3D const work_position = food_work_position(
@@ -755,7 +770,7 @@ void ProductionSystem::update(Engine::Core::World* world, float delta_time) {
         } else {
           builder_prod->site_approach_seconds += delta_time;
 
-          if (dist_sq > k_site_bypass_radius_sq) {
+          if (dist_sq > site_bypass_radius_sq(*builder_prod, movement)) {
             builder_prod->bypass_movement_active = false;
             if (needs_site_route(*builder_prod, movement)) {
               CommandService::move_unit(
@@ -1025,12 +1040,12 @@ void ProductionSystem::update(Engine::Core::World* world, float delta_time) {
                                                   finishing_crew));
                 }
 
-                auto& treasury = *Game::Session::services_for(*world).economy;
-                const auto refund =
-                    construction_cost_info(builder_prod->product_type).resource_costs;
-                for (const ResourceType type : k_all_resource_types) {
-                  treasury.add(u->owner_id, type, refund.get(type));
-                }
+                grant_resources_at(
+                    u->owner_id,
+                    sp.position.x(),
+                    sp.position.y(),
+                    sp.position.z(),
+                    construction_cost_info(builder_prod->product_type).resource_costs);
                 builder_prod->in_progress = false;
                 builder_prod->time_remaining = 0.0F;
                 builder_prod->has_construction_site = false;

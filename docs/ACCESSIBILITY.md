@@ -178,9 +178,10 @@ by tone alone.
   limits movement the player asked for, so control is unaffected.
 - **Screen effects** (0–100%) scales the full-screen tints: the damage vignette,
   the low-health pulse, the guard glow. At zero they are gone rather than dimmed.
-- **Damage numbers** toggles the floating damage readout. The layer keeps
-  draining the engine's event queue while hidden, so turning it off costs
-  nothing and never lets a backlog build.
+- **Damage numbers** toggles the floating combat readout -- the damage taken and
+  dealt, and the health a healer, a commander's aura or a repair crew puts back.
+  The layer keeps draining the engine's event queue while hidden, so turning it
+  off costs nothing and never lets a backlog build.
 
 ## Camera control
 

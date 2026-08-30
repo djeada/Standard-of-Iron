@@ -14,8 +14,8 @@
 #include "core/world_spatial_index.h"
 #include "game/map/terrain_service.h"
 #include "game/systems/combat_system/damage_processor.h"
-#include "game/systems/economy_feedback.h"
 #include "game/systems/owner_registry.h"
+#include "game/systems/player_feedback.h"
 #include "game/systems/player_resource_registry.h"
 #include "game/systems/resource_types.h"
 #include "game/visuals/building_asset_key.h"
@@ -161,12 +161,10 @@ void CursedGoldVeinSystem::announce_claim(const RuntimeVein& vein) const {
 void CursedGoldVeinSystem::apply_tick(Engine::Core::World& world, RuntimeVein& vein) {
   ++vein.ticks_paid;
 
-  m_services.economy.add(
-      vein.owner_id, ResourceType::Gold, k_cursed_gold_vein_gold_per_tick);
-  publish_resource_feedback(vein.owner_id,
-                            vein.anchor_entity_id,
-                            ResourceType::Gold,
-                            k_cursed_gold_vein_gold_per_tick);
+  grant_resource(vein.owner_id,
+                 vein.anchor_entity_id,
+                 ResourceType::Gold,
+                 k_cursed_gold_vein_gold_per_tick);
 
   std::vector<Engine::Core::EntityID> victims;
   auto& index = world.spatial_index();

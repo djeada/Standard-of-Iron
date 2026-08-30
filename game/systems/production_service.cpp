@@ -7,8 +7,8 @@
 #include "../core/event_manager.h"
 #include "../core/world.h"
 #include "../game_config.h"
-#include "../systems/economy_feedback.h"
 #include "../systems/nation_registry.h"
+#include "../systems/player_feedback.h"
 #include "../systems/player_resource_registry.h"
 #include "../systems/troop_profile_service.h"
 #include "../units/commander_catalog.h"
@@ -219,11 +219,8 @@ auto ProductionService::start_production(Engine::Core::World& world,
   }
   Engine::Core::EventManager::instance().publish(
       Engine::Core::AudioCueEvent::for_owner(owner_id, "build.unit_queued"));
-  p->manpower_available -= profile.production.cost;
-  publish_population_feedback(owner_id, building_id, -profile.production.cost);
-  Game::Session::services_for(world).economy->spend(owner_id,
-                                                    profile.production.resource_costs);
-  publish_resource_bundle(owner_id, building_id, profile.production.resource_costs, -1);
+  spend_manpower(owner_id, building_id, *p, profile.production.cost);
+  spend_resources(owner_id, building_id, profile.production.resource_costs);
   return ProductionResult::Success;
 }
 

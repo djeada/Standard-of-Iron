@@ -9,7 +9,7 @@
 
 namespace Engine::Core {
 class CombatHitEvent;
-class EconomyFeedbackEvent;
+class WorldFeedbackEvent;
 } // namespace Engine::Core
 
 namespace App::Core {
@@ -74,7 +74,7 @@ public:
 
   void record_hit(const Engine::Core::CombatHitEvent& event,
                   App::Core::FeedbackStyle style);
-  void record_economy(const Engine::Core::EconomyFeedbackEvent& event);
+  void record_world_feedback(const Engine::Core::WorldFeedbackEvent& event);
   void advance_feedback(float dt) { m_feedback.update(dt); }
   void clear_feedback() { m_feedback.clear(); }
 

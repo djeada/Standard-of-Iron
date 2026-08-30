@@ -140,6 +140,4 @@ private:
   OwnerAmounts m_harvested_by_owner;
 };
 
-void grant_resources(int owner_id, const ResourceAmounts& amounts);
-
 } // namespace Game::Systems

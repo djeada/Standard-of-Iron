@@ -37,6 +37,18 @@ auto activity_to_variant(const Game::Systems::UnitActivity& activity) -> QVarian
   return result;
 }
 
+auto feedback_kind_of(Engine::Core::WorldFeedbackKind kind) -> App::Core::FeedbackKind {
+  switch (kind) {
+  case Engine::Core::WorldFeedbackKind::Reserve:
+    return App::Core::FeedbackKind::Reserve;
+  case Engine::Core::WorldFeedbackKind::Heal:
+    return App::Core::FeedbackKind::Heal;
+  case Engine::Core::WorldFeedbackKind::Resource:
+    break;
+  }
+  return App::Core::FeedbackKind::Resource;
+}
+
 } // namespace
 
 ActivityViewModel::ActivityViewModel(const App::Core::ClientContext& context,
@@ -286,8 +298,8 @@ void ActivityViewModel::record_hit(const Engine::Core::CombatHitEvent& event,
   m_feedback.push(hit);
 }
 
-void ActivityViewModel::record_economy(
-    const Engine::Core::EconomyFeedbackEvent& event) {
+void ActivityViewModel::record_world_feedback(
+    const Engine::Core::WorldFeedbackEvent& event) {
   auto* world = m_context.world;
   if (world == nullptr || event.amount == 0) {
     return;
@@ -301,11 +313,10 @@ void ActivityViewModel::record_economy(
 
   App::Core::WorldFeedbackTick tick;
   tick.anchor = event.anchor_id;
-  tick.kind = event.kind == Engine::Core::EconomyFeedbackKind::Reserve
-                  ? App::Core::FeedbackKind::Reserve
-                  : App::Core::FeedbackKind::Resource;
+  tick.kind = feedback_kind_of(event.kind);
   tick.style = App::Core::FeedbackStyle::Tick;
   tick.amount = event.amount;
+  tick.severity = event.severity;
   tick.resource = event.resource;
   tick.paired_resource = event.paired_resource;
   tick.paired_amount = event.paired_amount;

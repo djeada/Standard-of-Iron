@@ -7,7 +7,7 @@
 #include "../core/entity.h"
 #include "../core/world.h"
 #include "../units/spawn_type.h"
-#include "economy_feedback.h"
+#include "player_feedback.h"
 #include "player_resource_registry.h"
 
 namespace Game::Systems {
@@ -107,14 +107,12 @@ auto MarketplaceSystem::buy_resource(const Engine::Core::World& world,
   default:
     return false;
   }
-  PlayerResourceRegistry::instance().add(owner_id, ResourceType::Gold, -price);
-  PlayerResourceRegistry::instance().add(owner_id, resource, m_rates.trade_quantity);
-  publish_trade_feedback(owner_id,
-                         find_marketplace(world, owner_id),
-                         ResourceType::Gold,
-                         price,
-                         resource,
-                         m_rates.trade_quantity);
+  trade_resources(owner_id,
+                  find_marketplace(world, owner_id),
+                  ResourceType::Gold,
+                  price,
+                  resource,
+                  m_rates.trade_quantity);
   return true;
 }
 
@@ -141,14 +139,12 @@ auto MarketplaceSystem::sell_resource(const Engine::Core::World& world,
   default:
     return false;
   }
-  PlayerResourceRegistry::instance().add(owner_id, resource, -m_rates.trade_quantity);
-  PlayerResourceRegistry::instance().add(owner_id, ResourceType::Gold, sell_price);
-  publish_trade_feedback(owner_id,
-                         find_marketplace(world, owner_id),
-                         resource,
-                         m_rates.trade_quantity,
-                         ResourceType::Gold,
-                         sell_price);
+  trade_resources(owner_id,
+                  find_marketplace(world, owner_id),
+                  resource,
+                  m_rates.trade_quantity,
+                  ResourceType::Gold,
+                  sell_price);
   return true;
 }
 

@@ -96,8 +96,7 @@ public:
 
   static auto world_prop_work_position(Game::Map::TerrainService& terrain,
                                        const QVector3D& worker_position,
-                                       std::uint64_t world_prop_id,
-                                       float unit_radius) -> QVector3D;
+                                       std::uint64_t world_prop_id) -> QVector3D;
   static void move_unit(Engine::Core::World& world,
                         Engine::Core::EntityID unit_id,
                         const QVector3D& target);

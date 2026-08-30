@@ -7,6 +7,7 @@
 #include "../core/component.h"
 #include "../core/world.h"
 #include "../units/spawn_type.h"
+#include "player_feedback.h"
 
 namespace Game::Systems {
 
@@ -81,9 +82,17 @@ void HomeSystem::update(Engine::Core::World* world, float delta_time) {
     if ((home_prod != nullptr) && (home_comp->family_generation_interval > 0.0F) &&
         (home_comp->family_manpower_value > 0) &&
         (home_comp->family_generation_cooldown <= 0.0F)) {
-      home_prod->manpower_available =
-          std::min(home_manpower_capacity(home_prod),
-                   home_prod->manpower_available + home_comp->family_manpower_value);
+
+      int const capacity = home_manpower_capacity(home_prod);
+      if (home_prod->manpower_available > capacity) {
+        home_prod->manpower_available = capacity;
+      } else {
+        grant_manpower(home_unit->owner_id,
+                       home_id,
+                       *home_prod,
+                       home_comp->family_manpower_value,
+                       capacity);
+      }
       home_comp->family_generation_cooldown = home_comp->family_generation_interval;
     }
   }
