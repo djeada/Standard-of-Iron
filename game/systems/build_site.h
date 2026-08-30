@@ -33,13 +33,6 @@ assess_ground(const Engine::Core::World& world,
                                    std::span<const Engine::Core::EntityID> crew = {})
     -> std::optional<QVector3D>;
 
-// The ground probe the wall network asks its placement questions through.
-// WallNetworkService lives in navigation and may not reach up into economy for
-// assess_ground, so economy supplies the answer instead; every production
-// caller of validate_wall_segment_placement() and find_tower_snap_socket()
-// passes this, and nothing else needs to know the shape of the callback.
-// The returned probe holds `world` by reference and is meant to be built at
-// the call site and handed straight in, not stored.
 [[nodiscard]] auto wall_ground_probe(const Engine::Core::World& world) -> GroundProbe;
 
 } // namespace Game::Systems

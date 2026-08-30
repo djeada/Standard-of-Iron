@@ -721,11 +721,11 @@ void spawn_blood_stain(Engine::Core::World* world,
                                  std::abs(transform->position.z) * 131.0F);
   float const scale = blood_stain_scale(unit);
   float const radius = Engine::Core::Defaults::k_blood_stain_default_radius * scale *
-                       (0.85F + hash01(id_seed * 17U + position_seed) * 0.45F);
+                       (0.78F + hash01(id_seed * 17U + position_seed) * 0.46F);
   float const rotation =
       hash01(id_seed * 97U + position_seed * 3U) * std::numbers::pi_v<float> * 2.0F;
   float const aspect_ratio =
-      0.72F + hash01(id_seed * 53U + position_seed * 11U) * 0.62F;
+      0.58F + hash01(id_seed * 53U + position_seed * 11U) * 0.72F;
   float const seed = hash01(id_seed * 193U + position_seed * 29U);
 
   float const offset_angle =

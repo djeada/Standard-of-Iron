@@ -95,6 +95,7 @@ struct CommanderMotorTrace {
 };
 
 struct CommanderCombatTrace {
+  int action_id{0};
   int action_phase{0};
   float action_normalized_time{0.0F};
   int queued_intents{0};

@@ -114,11 +114,11 @@ auto resolve_humanoid_reaction_pose(const HumanoidReactionPoseInputs& inputs) no
   case HumanoidReactionKind::Evade: {
     float const env = reaction_out_and_back(q, 0.36F);
     sample.envelope = env;
-    sample.crouch = 0.11F * env;
-    sample.torso_forward = -0.10F * env;
-    sample.head_back = 0.05F * env;
-    sample.hand_l_delta = scaled({0.00F, 0.06F, -0.08F}, env);
-    sample.hand_r_delta = scaled({0.04F, -0.02F, -0.08F}, env);
+    sample.crouch = 0.24F * env;
+    sample.torso_forward = 0.22F * env;
+    sample.head_back = 0.02F * env;
+    sample.hand_l_delta = scaled({0.00F, -0.10F, 0.16F}, env);
+    sample.hand_r_delta = scaled({0.04F, -0.14F, 0.12F}, env);
     break;
   }
   case HumanoidReactionKind::Stagger: {
