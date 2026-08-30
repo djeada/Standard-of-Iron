@@ -982,13 +982,19 @@ void ProductionSystem::update(Engine::Core::World* world, float delta_time) {
               continue;
             }
 
-            if (!is_wall_network_product(builder_prod->product_type)) {
+            const bool free_standing_wall =
+                is_wall_network_product(builder_prod->product_type) &&
+                wall_site_entity == nullptr;
+            if (!is_wall_network_product(builder_prod->product_type) ||
+                free_standing_wall) {
 
               constexpr float k_finished_site_nudge = 5.0F;
-              const auto clear_site = find_clear_site(*world,
-                                                      builder_prod->product_type,
-                                                      sp.position,
-                                                      k_finished_site_nudge);
+              const auto clear_site =
+                  find_clear_site(*world,
+                                  builder_prod->product_type,
+                                  sp.position,
+                                  free_standing_wall ? 0.0F : k_finished_site_nudge,
+                                  construction_rotation_y);
               if (!clear_site.has_value()) {
 
                 auto& treasury = *Game::Session::services_for(*world).economy;

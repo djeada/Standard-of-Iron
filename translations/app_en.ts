@@ -2894,10 +2894,6 @@ This may be a skirmish, or objectives have not been configured.</translation>
         <translation>Open the builder&apos;s structure list and place one.</translation>
     </message>
     <message>
-        <source>Pick a structure, move the outline onto flat clear ground, scroll to rotate, left-click to confirm. Right-click cancels.</source>
-        <translation>Pick a structure, move the outline onto flat clear ground, scroll to rotate, left-click to confirm. Right-click cancels.</translation>
-    </message>
-    <message>
         <source>Builders only.</source>
         <translation>Builders only.</translation>
     </message>
@@ -3092,6 +3088,10 @@ This may be a skirmish, or objectives have not been configured.</translation>
     <message>
         <source>Select two understrength squads of the same kind</source>
         <translation>Select two understrength squads of the same kind</translation>
+    </message>
+    <message>
+        <source>Pick a structure, move the outline onto flat clear ground, scroll or press [ and ] to rotate, left-click to confirm. Right-click cancels.</source>
+        <translation>Pick a structure, move the outline onto flat clear ground, scroll or press [ and ] to rotate, left-click to confirm. Right-click cancels.</translation>
     </message>
 </context>
 <context>
@@ -7562,6 +7562,22 @@ Builders reap it for the food that recruits civilians</translation>
     <message>
         <source>Use while guarding to shield bash</source>
         <translation>Use while guarding to shield bash</translation>
+    </message>
+    <message>
+        <source>Rotate structure outline left</source>
+        <translation>Rotate structure outline left</translation>
+    </message>
+    <message>
+        <source>Turns the structure or wall you are placing anticlockwise. The mouse wheel does the same.</source>
+        <translation>Turns the structure or wall you are placing anticlockwise. The mouse wheel does the same.</translation>
+    </message>
+    <message>
+        <source>Rotate structure outline right</source>
+        <translation>Rotate structure outline right</translation>
+    </message>
+    <message>
+        <source>Turns the structure or wall you are placing clockwise. The mouse wheel does the same.</source>
+        <translation>Turns the structure or wall you are placing clockwise. The mouse wheel does the same.</translation>
     </message>
 </context>
 <context>

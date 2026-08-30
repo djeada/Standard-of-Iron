@@ -577,3 +577,25 @@ TEST(AIWallContextTest, MacroTargetsHasWallSegmentCount) {
   targets.wall_segment_count = 3;
   EXPECT_EQ(targets.wall_segment_count, 3);
 }
+
+TEST_F(WallMechanicsTest, FreeformWallsKeepTheirBearingAndStayOutOfTheNetwork) {
+  Engine::Core::World world;
+
+  auto* angled = make_wall(world, 0.0F, 0.0F, 0.0F, 1);
+  auto* angled_transform = angled->get_component<TransformComponent>();
+  ASSERT_NE(angled_transform, nullptr);
+  angled_transform->rotation.y = 37.0F;
+  angled->get_component<WallSegmentComponent>()->freeform = true;
+
+  auto* neighbour = make_wall(world, 2.0F, 0.0F, 0.0F, 1);
+
+  WallNetworkService::refresh_world(world);
+
+  EXPECT_FLOAT_EQ(angled_transform->rotation.y, 37.0F)
+      << "a refresh must not snap a freeform wall back onto a quarter turn";
+  EXPECT_EQ(angled->get_component<WallSegmentComponent>()->connection_mask, 0U);
+  EXPECT_EQ(neighbour->get_component<WallSegmentComponent>()->connection_mask, 0U)
+      << "an angled link is not a network neighbour of an axis-aligned one";
+  EXPECT_TRUE(WallSegmentComponent::is_freeform_rotation(37.0F));
+  EXPECT_FALSE(WallSegmentComponent::is_freeform_rotation(270.0F));
+}

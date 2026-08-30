@@ -1597,6 +1597,17 @@ public:
   int grid_x{0};
   int grid_z{0};
   std::uint8_t connection_mask{0};
+
+  bool freeform{false};
+
+  [[nodiscard]] static auto is_freeform_rotation(float rotation_y) -> bool {
+    float angle = std::fmod(rotation_y, 90.0F);
+    if (angle < 0.0F) {
+      angle += 90.0F;
+    }
+    constexpr float k_quarter_turn_tolerance = 0.5F;
+    return angle > k_quarter_turn_tolerance && angle < 90.0F - k_quarter_turn_tolerance;
+  }
 };
 
 class WallConstructionSiteComponent {

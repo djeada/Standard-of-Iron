@@ -2894,10 +2894,6 @@ Dies ist vielleicht ein Scharmützel, oder es wurden keine Ziele festgelegt.</tr
         <translation>Öffnet die Bauliste des Baumeisters und setzt ein Bauwerk.</translation>
     </message>
     <message>
-        <source>Pick a structure, move the outline onto flat clear ground, scroll to rotate, left-click to confirm. Right-click cancels.</source>
-        <translation>Ein Bauwerk wählen, den Umriss auf ebenen freien Boden schieben, zum Drehen scrollen, mit Linksklick bestätigen. Rechtsklick bricht ab.</translation>
-    </message>
-    <message>
         <source>Builders only.</source>
         <translation>Nur Baumeister.</translation>
     </message>
@@ -3092,6 +3088,10 @@ Dies ist vielleicht ein Scharmützel, oder es wurden keine Ziele festgelegt.</tr
     <message>
         <source>Select two understrength squads of the same kind</source>
         <translation>Wähle zwei geschwächte Einheiten derselben Art</translation>
+    </message>
+    <message>
+        <source>Pick a structure, move the outline onto flat clear ground, scroll or press [ and ] to rotate, left-click to confirm. Right-click cancels.</source>
+        <translation>Ein Bauwerk wählen, den Umriss auf ebenen freien Boden schieben, zum Drehen scrollen oder [ und ] drücken, mit Linksklick bestätigen. Rechtsklick bricht ab.</translation>
     </message>
 </context>
 <context>
@@ -7562,6 +7562,22 @@ Baumeister ernten es als Nahrung, die Zivilisten rekrutiert</translation>
     <message>
         <source>Use while guarding to shield bash</source>
         <translation>Während der Deckung einsetzen für einen Schildstoß</translation>
+    </message>
+    <message>
+        <source>Rotate structure outline left</source>
+        <translation>Bauumriss nach links drehen</translation>
+    </message>
+    <message>
+        <source>Turns the structure or wall you are placing anticlockwise. The mouse wheel does the same.</source>
+        <translation>Dreht das Bauwerk oder die Mauer, die du gerade platzierst, gegen den Uhrzeigersinn. Das Mausrad tut dasselbe.</translation>
+    </message>
+    <message>
+        <source>Rotate structure outline right</source>
+        <translation>Bauumriss nach rechts drehen</translation>
+    </message>
+    <message>
+        <source>Turns the structure or wall you are placing clockwise. The mouse wheel does the same.</source>
+        <translation>Dreht das Bauwerk oder die Mauer, die du gerade platzierst, im Uhrzeigersinn. Das Mausrad tut dasselbe.</translation>
     </message>
 </context>
 <context>

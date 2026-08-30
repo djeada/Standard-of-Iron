@@ -389,13 +389,20 @@ void update_wall_entity_visuals(Engine::Core::World& world,
     is_gate = site->product_type == Game::Units::SpawnType::WallGate;
   }
 
+  if (wall->freeform && !is_gate) {
+
+    connection_mask = 0U;
+  }
   const auto appearance =
       is_gate ? WallNetworkService::resolve_gate_appearance(
                     nation_id, connection_mask, transform->rotation.y)
               : WallNetworkService::resolve_appearance(nation_id, connection_mask);
-  transform->rotation.y = (connection_mask == 0U && !is_gate)
-                              ? preserved_isolated_rotation(transform->rotation.y)
-                              : appearance.rotation_y;
+  const bool keeps_authored_yaw = wall->freeform && !is_gate;
+  if (!keeps_authored_yaw) {
+    transform->rotation.y = (connection_mask == 0U && !is_gate)
+                                ? preserved_isolated_rotation(transform->rotation.y)
+                                : appearance.rotation_y;
+  }
   renderable->renderer_id = appearance.renderer_id;
   wall->connection_mask = connection_mask;
 
@@ -499,6 +506,10 @@ void WallNetworkService::build_connection_occupancy(Engine::Core::World& world,
         snap_world_position(transform->position.x, transform->position.z);
     wall->grid_x = snapped.x;
     wall->grid_z = snapped.z;
+    if (wall->freeform) {
+
+      continue;
+    }
     for (const auto& cell : wall_network_cells(&entity, snapped)) {
       add_owner_occupancy(out, *owner_id, cell.x, cell.z);
     }

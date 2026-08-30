@@ -1,5 +1,7 @@
 #pragma once
 
+#include <vector>
+
 #include "../ai_behavior.h"
 
 namespace Game::Systems::AI {
@@ -36,7 +38,8 @@ private:
 
   void note_construction_order(const char* building_type,
                                int building_total,
-                               float game_time);
+                               float game_time,
+                               int plan_slot = -1);
 
   float m_construction_timer = 0.0F;
   int m_construction_counter = 0;
@@ -48,6 +51,10 @@ private:
   float m_deferred_until = -1000.0F;
   const char* m_gather_priority = nullptr;
   float m_gather_priority_time = -1000.0F;
+
+  int m_last_plan_slot = -1;
+  int m_last_plan_slot_repeats = 0;
+  std::vector<int> m_blocked_plan_slots;
 };
 
 } // namespace Game::Systems::AI

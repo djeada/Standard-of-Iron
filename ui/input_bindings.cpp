@@ -337,6 +337,22 @@ auto make_catalog() -> QVector<InputBindings::ActionSpec> {
                               "rally can be placed"),
                   QStringLiteral("R"),
                   true});
+  catalog.append({QStringLiteral("rts.build_rotate_left"),
+                  rts,
+                  orders,
+                  QObject::tr("Rotate structure outline left"),
+                  QObject::tr("Turns the structure or wall you are placing "
+                              "anticlockwise. The mouse wheel does the same."),
+                  QStringLiteral("["),
+                  true});
+  catalog.append({QStringLiteral("rts.build_rotate_right"),
+                  rts,
+                  orders,
+                  QObject::tr("Rotate structure outline right"),
+                  QObject::tr("Turns the structure or wall you are placing "
+                              "clockwise. The mouse wheel does the same."),
+                  QStringLiteral("]"),
+                  true});
 
   catalog.append({QStringLiteral("commander.move_forward"),
                   commander,

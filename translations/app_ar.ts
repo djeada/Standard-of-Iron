@@ -2898,10 +2898,6 @@ This may be a skirmish, or objectives have not been configured.</source>
         <translation>يفتح قائمة مباني البنّاء ويضع واحداً.</translation>
     </message>
     <message>
-        <source>Pick a structure, move the outline onto flat clear ground, scroll to rotate, left-click to confirm. Right-click cancels.</source>
-        <translation>اختر مبنى، وحرّك المخطط إلى أرض مستوية خالية، ومرّر للتدوير، وانقر بالزر الأيسر للتأكيد. النقر الأيمن يُلغي.</translation>
-    </message>
-    <message>
         <source>Builders only.</source>
         <translation>البناؤون فقط.</translation>
     </message>
@@ -3096,6 +3092,10 @@ This may be a skirmish, or objectives have not been configured.</source>
     <message>
         <source>Select two understrength squads of the same kind</source>
         <translation>اختر وحدتين ناقصتَي العدد من النوع نفسه</translation>
+    </message>
+    <message>
+        <source>Pick a structure, move the outline onto flat clear ground, scroll or press [ and ] to rotate, left-click to confirm. Right-click cancels.</source>
+        <translation>اختر مبنى، وحرّك المخطط إلى أرض مستوية خالية، ومرّر أو اضغط [ و ] للتدوير، وانقر بالزر الأيسر للتأكيد. النقر الأيمن يُلغي.</translation>
     </message>
 </context>
 <context>
@@ -7574,6 +7574,22 @@ Builders reap it for the food that recruits civilians</source>
     <message>
         <source>Use while guarding to shield bash</source>
         <translation>استخدمها أثناء الحراسة لتوجيه ضربة ترس</translation>
+    </message>
+    <message>
+        <source>Rotate structure outline left</source>
+        <translation>تدوير مخطط المبنى يساراً</translation>
+    </message>
+    <message>
+        <source>Turns the structure or wall you are placing anticlockwise. The mouse wheel does the same.</source>
+        <translation>يدير المبنى أو السور الذي تضعه عكس اتجاه عقارب الساعة. عجلة الفأرة تفعل الشيء نفسه.</translation>
+    </message>
+    <message>
+        <source>Rotate structure outline right</source>
+        <translation>تدوير مخطط المبنى يميناً</translation>
+    </message>
+    <message>
+        <source>Turns the structure or wall you are placing clockwise. The mouse wheel does the same.</source>
+        <translation>يدير المبنى أو السور الذي تضعه في اتجاه عقارب الساعة. عجلة الفأرة تفعل الشيء نفسه.</translation>
     </message>
 </context>
 <context>

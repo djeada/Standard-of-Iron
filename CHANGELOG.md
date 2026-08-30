@@ -11,6 +11,25 @@ may change in any release — see [Save compatibility](#save-compatibility).
 
 ### Added
 
+- **Every AI commander raises a differently shaped town.** Town plan steps
+  take an optional `rotation` (degrees in the settlement's own frame), the AI
+  passes it through to construction, and a wall link that lands off a quarter
+  turn keeps its angle as a freeform wall instead of being snapped back onto
+  the axis-aligned wall network. The shipped plans use it: Fabius closes a
+  square castrum with corner towers and a gate gap on every side, Scipio
+  throws up a five-pointed star with towers on the tips, Marcellus a forward
+  chevron, Hanno a ring of towers with the wall closing arc by arc, Hasdrubal a
+  loose triangle with no wall, and Hannibal a hexagon. Walls wait for the first
+  field and two homes, so a poor commander still eats before it fortifies, and
+  the settlement's facing is locked on the first plan step so a town does not
+  twist as the enemy moves. Wall links chain two metres apart along any
+  bearing; ground assessment and the AI's slot check both know that, and a slot
+  another builder is already raising counts as taken.
+
+- **Rotate the outline from the keyboard.** `[` and `]` turn the structure or
+  wall you are placing (5° steps for buildings, quarter turns for walls),
+  alongside the mouse wheel; both are rebindable under Orders.
+
 - **Display and camera speed settings.** The settings panel gains a Display
   section: window mode (fullscreen, borderless or windowed, applied the moment
   you pick one instead of always forcing fullscreen), a VSync toggle that is
