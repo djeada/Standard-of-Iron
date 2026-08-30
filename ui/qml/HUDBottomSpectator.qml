@@ -150,6 +150,10 @@ Item {
                 model: spectatorRoot.board
                 boundsBehavior: Flickable.StopAtBounds
 
+                ScrollBar.vertical: Design.IronScrollBar {
+                    objectName: "spectatorBoardScrollBar"
+                }
+
                 delegate: Rectangle {
                     objectName: "spectatorArmyRow"
 

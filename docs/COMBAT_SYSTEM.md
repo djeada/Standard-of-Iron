@@ -353,6 +353,99 @@ A unit is not considered freely idle when it has:
 - an active patrol;
 - an active attack target.
 
+## Calling For Help
+
+Auto-engagement only reaches as far as a unit can see for itself. On its own that
+loses fights the player never saw start: two swordsmen standing a few metres
+apart in a village are killed one after the other because the second one never
+had the attacker inside its own vision cone. The same hole let a player walk into
+an AI settlement, kill a guard, and find the rest of the garrison asleep.
+
+`threat_alert.cpp` closes it. One entity raises an alert, its neighbours answer,
+and both sides of the match go through the same code -- there is no separate
+player path and no separate AI path.
+
+An alert is raised from two places:
+
+- `assign_retaliation_target_if_needed`, when anything takes damage. Buildings
+  raise alerts too, which is how an attacked barracks pulls its garrison; they
+  never answer one, because `may_engage` refuses a building.
+- `AutoEngagement`, the moment a unit acquires an enemy on its own. This is the
+  "enemy in sight" half, and it costs nothing extra -- the scan has already
+  happened.
+
+The two are not equally loud, and that difference is what keeps the mechanism
+from fighting the orders above it:
+
+| Raised by         | Trigger      | Who answers                                                                                                                    |
+| ----------------- | ------------ | ------------------------------------------------------------------------------------------------------------------------------ |
+| Taking damage     | `SquadAlert` | Anyone eligible, including a unit under a move order. A man being cut down beside you outranks your marching orders.           |
+| Sighting an enemy | `SightAlert` | Only genuinely idle units -- the same gate as `Opportunity` -- and only those who cannot already see the enemy for themselves. |
+
+### The budget is per aggressor, not per alert
+
+This is the part that keeps a skirmish from emptying a town. An alert does not
+recruit _n_ more men every time it fires; it tops the response up to a fixed
+number of defenders **per attacker**, counting the men already fighting that
+attacker, including the victim itself:
+
+| Trigger        | Defenders per attacker |
+| -------------- | ---------------------- |
+| `UnderAttack`  | 3                      |
+| `EnemySighted` | 1                      |
+
+So one enemy under sustained fire draws three defenders and no more, however long
+the fight lasts, while a ten-man assault can pull thirty. The response scales with
+the size of the threat rather than with the duration of the fight, which mirrors
+`LocalEngagementBehavior::k_responders_per_threat` on the AI side. Candidates are
+sorted by distance to the attacker, so the nearest men answer.
+
+Three kinds of unit never answer an alert at all:
+
+- **Commanders.** A lord is not dragged into a skirmish by a shout; where the
+  commander goes is `CommanderBehavior`'s decision.
+- **Builders and civilians.** Pulling a worker off a half-built farm is how an AI
+  nation starves.
+- **Anyone already fighting.** `has_active_engagement` drops them.
+
+Every one of these restrictions was forced by a test that already existed.
+Without the per-aggressor budget,
+`MissionWaveAssaultTest.GarrisonAnswersAScoutWithAFewUnitsAndHoldsTheRest` fails --
+one enemy builder walking past mobilises an entire eight-man garrison. Without
+the commander and worker exclusions,
+`AiDuelMatchTest.ScipioAndFabiusBothPlayTheirDoctrine` fails, in one run because
+Scipio threw its lord away 55 m from home and in another because Fabius never
+broke ground on a field and starved.
+
+Responders get `is_player_command = false`, so the next explicit order from the
+player or from `AICommandApplier` takes the unit straight back. Nothing here
+duplicates `LocalEngagementBehavior`, which remains the AI's own budgeted answer
+to a visible threat cluster.
+
+### Radius, and why it is the fog radius
+
+`threat_alert_radius` is `max(vision_range, k_unit_default_vision_range) *
+k_vision_reveal_scale` -- the same expression `VisibilityService` uses to decide
+how much fog a unit lifts. Both read the constants from
+`Engine::Core::Defaults`, so they cannot drift apart. The rule the player can
+learn is one sentence: if a man is close enough that you can see through his
+eyes, he is close enough to hear a fight.
+
+### Cost
+
+The radius scan is the expensive part, so it is rate-limited rather than run per
+hit. `ThreatAlertComponent::cooldown` lets one entity raise at most one alert per
+`k_threat_alert_interval` (one second); `tick_threat_alerts` decays it once per
+frame over the entities that actually hold the component. Under sustained fire
+this is cheaper than what it replaced, which rescanned on every landed hit. A
+sighting that arrives inside another entity's cooldown is dropped, but a hit
+escalates past a sighting raised in the same second -- being attacked is never
+muted by having looked at something.
+
+The alert itself is synchronous -- `note_threat` broadcasts and returns the
+number of responders -- so there is no frame of latency between a hit landing and
+the neighbours turning around.
+
 ## Combat State and Visual Feedback
 
 Combat animation state is stored in:

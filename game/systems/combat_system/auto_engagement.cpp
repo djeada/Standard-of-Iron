@@ -6,6 +6,7 @@
 #include "../../core/world.h"
 #include "combat_types.h"
 #include "combat_utils.h"
+#include "threat_alert.h"
 
 namespace Game::Systems::Combat {
 
@@ -32,7 +33,7 @@ auto besieging_structure(Engine::Core::Entity* unit,
 
 } // namespace
 
-void AutoEngagement::process(Engine::Core::World*,
+void AutoEngagement::process(Engine::Core::World* world,
                              const CombatQueryContext& query_context,
                              float delta_time) {
   for (auto it = m_engagement_cooldowns.begin(); it != m_engagement_cooldowns.end();) {
@@ -114,6 +115,10 @@ void AutoEngagement::process(Engine::Core::World*,
         attack_target->should_chase = !shoots_without_closing;
 
         m_engagement_cooldowns[unit->get_id()] = Constants::k_engagement_cooldown;
+        note_threat(world,
+                    unit,
+                    nearest_enemy,
+                    Engine::Core::ThreatAlertComponent::Kind::EnemySighted);
       }
     }
   }

@@ -14,7 +14,8 @@ RowLayout {
     property var selection_groups: []
     property int selection_count: 0
 
-    readonly property int orderGridHeight: Math.max(Design.Metrics.commandButtonSize, bottomRoot.height - Design.Metrics.controlHeight - Design.Metrics.space8)
+    readonly property int orderCell: Design.Metrics.orderButtonSize + Design.Metrics.space4
+    readonly property int orderRows: Math.max(1, Math.min(3, Math.floor((orderFlick.height + Design.Metrics.space4) / bottomRoot.orderCell)))
 
     signal command_mode_changed(string mode)
     signal recruit_unit(string unit_type)
@@ -513,6 +514,38 @@ RowLayout {
             }
         }]
 
+    readonly property var commandGroups: [{
+            "key": "battle",
+            "ids": ["attack", "guard", "patrol", "hold", "stop"]
+        }, {
+            "key": "squad",
+            "ids": ["divide", "join", "deliver", "heal"]
+        }, {
+            "key": "work",
+            "ids": ["build", "collect", "auto_gather", "repair", "dismantle"]
+        }, {
+            "key": "command",
+            "ids": ["rally", "aura", "gate"]
+        }]
+
+    function command_by_id(actionId) {
+        for (var i = 0; i < bottomRoot.commands.length; ++i) {
+            if (bottomRoot.commands[i].id === actionId)
+                return bottomRoot.commands[i];
+        }
+        return null;
+    }
+
+    function commands_of(group) {
+        var out = [];
+        for (var i = 0; i < group.ids.length; ++i) {
+            var entry = bottomRoot.command_by_id(group.ids[i]);
+            if (entry)
+                out.push(entry);
+        }
+        return out;
+    }
+
     function hotkey_for(entry) {
         if (!entry.binding)
             return "";
@@ -540,8 +573,11 @@ RowLayout {
     }
 
     anchors.fill: parent
-    anchors.margins: Design.Metrics.space8
-    spacing: Design.Metrics.space12
+    anchors.leftMargin: Design.Metrics.hudZoneMargin
+    anchors.rightMargin: Design.Metrics.hudZoneMargin
+    anchors.topMargin: Design.Metrics.space4
+    anchors.bottomMargin: Design.Metrics.space8
+    spacing: Design.Metrics.space8
 
     Connections {
         function onCursor_mode_changed() {
@@ -576,9 +612,9 @@ RowLayout {
 
     Design.IronSelectionSummary {
         Layout.fillWidth: true
-        Layout.preferredWidth: Math.max(240, bottomRoot.width * 0.28)
         Layout.fillHeight: true
-        Layout.alignment: Qt.AlignTop
+        Layout.preferredWidth: Math.max(Design.A11y.scaled(220), bottomRoot.width * 0.26)
+        Layout.minimumWidth: Design.A11y.scaled(180)
 
         model: bottomRoot.game_ready() ? game.selected_units_model : null
         groups: bottomRoot.selection_groups
@@ -599,11 +635,12 @@ RowLayout {
     }
 
     ColumnLayout {
-        Layout.fillWidth: true
-        Layout.preferredWidth: Math.max(340, bottomRoot.width * 0.4)
+        Layout.fillWidth: false
         Layout.fillHeight: true
-        Layout.alignment: Qt.AlignTop
-        spacing: Design.Metrics.space8
+        Layout.preferredWidth: orderStrip.implicitWidth + Design.Metrics.space8
+        Layout.maximumWidth: Math.max(Design.A11y.scaled(300), bottomRoot.width * 0.34)
+        Layout.minimumWidth: Design.A11y.scaled(200)
+        spacing: Design.Metrics.space4
 
         Design.IronPanel {
             id: commandBanner
@@ -612,26 +649,33 @@ RowLayout {
             readonly property bool showTarget: bottomRoot.selection_count > 0 && bottomRoot.current_command_mode === "normal" && !!target && target.valid === true
 
             Layout.fillWidth: true
-            Layout.preferredHeight: Design.Metrics.controlHeight
+            Layout.preferredHeight: Design.Metrics.compactControlHeight
+            contentPadding: 0
             raised: bottomRoot.current_command_mode !== "normal"
             border.color: showTarget ? Design.Theme.danger : bottomRoot.banner_tone()
             opacity: bottomRoot.has_movable_units || commandBanner.showTarget ? 1 : 0.6
 
             Text {
-                anchors.centerIn: parent
+                anchors.verticalCenter: parent.verticalCenter
+                anchors.left: parent.left
+                anchors.right: parent.right
+                anchors.leftMargin: Design.Metrics.space8
+                anchors.rightMargin: Design.Metrics.space8
+                horizontalAlignment: Text.AlignHCenter
                 visible: !commandBanner.showTarget
                 text: bottomRoot.command_banner_text()
                 color: bottomRoot.has_movable_units ? Design.Theme.textPrimary : Design.Theme.textDisabled
                 font.family: Design.Typography.family
-                font.pixelSize: Design.Typography.label
+                font.pixelSize: Design.Typography.caption
                 font.weight: bottomRoot.current_command_mode === "normal" ? Design.Typography.medium : Design.Typography.bold
+                elide: Text.ElideRight
             }
 
             RowLayout {
                 objectName: "commandBannerTarget"
                 anchors.fill: parent
-                anchors.leftMargin: Design.Metrics.space12
-                anchors.rightMargin: Design.Metrics.space12
+                anchors.leftMargin: Design.Metrics.space8
+                anchors.rightMargin: Design.Metrics.space8
                 visible: commandBanner.showTarget
                 spacing: Design.Metrics.space8
 
@@ -649,7 +693,7 @@ RowLayout {
                     text: commandBanner.showTarget ? commandBanner.target.name : ""
                     color: Design.Theme.textPrimary
                     font.family: Design.Typography.family
-                    font.pixelSize: Design.Typography.label
+                    font.pixelSize: Design.Typography.caption
                     font.weight: Design.Typography.bold
                     elide: Text.ElideRight
                 }
@@ -663,8 +707,8 @@ RowLayout {
                 }
 
                 Design.IronProgressBar {
-                    Layout.preferredWidth: Math.max(72, commandBanner.width * 0.22)
-                    Layout.preferredHeight: Design.Metrics.space8
+                    Layout.preferredWidth: Math.max(Design.A11y.scaled(56), commandBanner.width * 0.2)
+                    Layout.preferredHeight: Design.Metrics.space4
                     value: commandBanner.showTarget ? commandBanner.target.healthRatio : 0
                     fillColor: Design.Theme.danger
                 }
@@ -679,54 +723,107 @@ RowLayout {
             }
         }
 
-        GridLayout {
-            id: orderGrid
+        Item {
+            id: orderArea
 
             Layout.fillWidth: true
+            Layout.fillHeight: true
 
-            readonly property int rowHeight: Design.Metrics.commandButtonSize + rowSpacing
-            readonly property int maxRows: Math.max(1, Math.floor((bottomRoot.orderGridHeight + rowSpacing) / rowHeight))
+            Flickable {
+                id: orderFlick
 
-            columns: Math.max(3, Math.ceil(bottomRoot.commands.length / maxRows))
-            rowSpacing: Design.Metrics.space4
-            columnSpacing: Design.Metrics.space4
+                objectName: "orderScrollView"
 
-            Repeater {
-                model: bottomRoot.commands
+                anchors.fill: parent
+                anchors.bottomMargin: Design.Metrics.scrollBarThickness
+                contentWidth: orderStrip.implicitWidth
+                contentHeight: height
+                clip: true
+                flickableDirection: Flickable.HorizontalFlick
+                boundsBehavior: Flickable.StopAtBounds
 
-                delegate: Design.IronCommandButton {
-                    id: commandButton
+                ScrollBar.horizontal: Design.IronScrollBar {
+                    objectName: "orderScrollBar"
+                }
 
-                    required property var modelData
+                Row {
+                    id: orderStrip
 
-                    readonly property var state: bottomRoot.action_state(modelData.id)
+                    height: orderFlick.height
+                    spacing: Design.Metrics.space8
 
-                    Layout.fillWidth: true
+                    Repeater {
+                        model: bottomRoot.commandGroups
 
-                    Layout.preferredWidth: Design.Metrics.commandButtonSize
-                    Layout.preferredHeight: Design.Metrics.commandButtonSize
+                        delegate: Row {
+                            id: groupRow
 
-                    actionId: modelData.id
-                    label: modelData.label
-                    shortLabel: modelData.shortLabel || ""
-                    iconOnly: true
-                    hotkey: bottomRoot.hotkey_for(modelData)
-                    hint: modelData.hint || ""
-                    details: bottomRoot.command_details(modelData, state)
-                    statusText: bottomRoot.command_status(modelData, state)
-                    cooldown: bottomRoot.command_cooldown(modelData, state)
-                    disabledReason: bottomRoot.unavailable_reason(modelData, state)
+                            required property var modelData
+                            required property int index
 
-                    blocked: (modelData.needsTroops && !bottomRoot.has_movable_units) || (!modelData.ignoreActionState && !state.enabled)
-                    active: modelData.activeFromPlacing ? state.placing : (modelData.mode ? (bottomRoot.current_command_mode === modelData.mode && bottomRoot.has_movable_units) : state.active)
-                    mixed: state.mixed
-                    placing: state.placing
-                    eligibleCount: state.eligibleCount
-                    activeCount: state.activeCount
+                            readonly property var entries: bottomRoot.commands_of(groupRow.modelData)
 
-                    spotlit: bottomRoot.tutorial_spotlights(modelData.id)
+                            height: orderStrip.height
+                            spacing: Design.Metrics.space8
 
-                    onClicked: bottomRoot.invoke_command(modelData)
+                            Rectangle {
+                                anchors.verticalCenter: parent.verticalCenter
+                                visible: groupRow.index > 0
+                                width: Design.Metrics.borderThin
+                                height: Math.max(Design.Metrics.space16, orderGrid.height - Design.Metrics.space8)
+                                color: Design.Theme.borderSubtle
+                                opacity: 0.75
+                            }
+
+                            Grid {
+                                id: orderGrid
+
+                                anchors.verticalCenter: parent.verticalCenter
+                                rows: bottomRoot.orderRows
+                                flow: Grid.TopToBottom
+                                rowSpacing: Design.Metrics.space4
+                                columnSpacing: Design.Metrics.space4
+
+                                Repeater {
+                                    model: groupRow.entries
+
+                                    delegate: Design.IronCommandButton {
+                                        id: commandButton
+
+                                        required property var modelData
+
+                                        readonly property var state: bottomRoot.action_state(commandButton.modelData.id)
+
+                                        tile: true
+                                        iconOnly: true
+                                        width: Design.Metrics.orderButtonSize
+                                        height: Design.Metrics.orderButtonSize
+
+                                        actionId: commandButton.modelData.id
+                                        label: commandButton.modelData.label
+                                        shortLabel: commandButton.modelData.shortLabel || ""
+                                        hotkey: bottomRoot.hotkey_for(commandButton.modelData)
+                                        hint: commandButton.modelData.hint || ""
+                                        details: bottomRoot.command_details(commandButton.modelData, commandButton.state)
+                                        statusText: bottomRoot.command_status(commandButton.modelData, commandButton.state)
+                                        cooldown: bottomRoot.command_cooldown(commandButton.modelData, commandButton.state)
+                                        disabledReason: bottomRoot.unavailable_reason(commandButton.modelData, commandButton.state)
+
+                                        blocked: (commandButton.modelData.needsTroops && !bottomRoot.has_movable_units) || (!commandButton.modelData.ignoreActionState && !commandButton.state.enabled)
+                                        active: commandButton.modelData.activeFromPlacing ? commandButton.state.placing : (commandButton.modelData.mode ? (bottomRoot.current_command_mode === commandButton.modelData.mode && bottomRoot.has_movable_units) : commandButton.state.active)
+                                        mixed: commandButton.state.mixed
+                                        placing: commandButton.state.placing
+                                        eligibleCount: commandButton.state.eligibleCount
+                                        activeCount: commandButton.state.activeCount
+
+                                        spotlit: bottomRoot.tutorial_spotlights(commandButton.modelData.id)
+
+                                        onClicked: bottomRoot.invoke_command(commandButton.modelData)
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -734,9 +831,9 @@ RowLayout {
 
     ProductionPanel {
         Layout.fillWidth: true
-        Layout.preferredWidth: Math.max(280, bottomRoot.width * 0.32)
         Layout.fillHeight: true
-        Layout.alignment: Qt.AlignTop
+        Layout.preferredWidth: Math.max(Design.A11y.scaled(280), bottomRoot.width * 0.32)
+        Layout.minimumWidth: Design.A11y.scaled(220)
 
         Design.IronSpotlight {
             active: bottomRoot.tutorialFocusRegion === "production"

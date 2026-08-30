@@ -81,16 +81,13 @@ void PlantRenderer::generate_plant_instances() {
   plant_instances.clear();
 
   {
-    const float half_w = static_cast<float>(m_width) * 0.5F;
-    const float half_h = static_cast<float>(m_height) * 0.5F;
     const auto& terrain_service = world().terrain_or_empty();
     const auto prop_profile = Game::Map::make_scatter_profile(m_biome_settings);
     for (const auto& prop : m_world_props) {
       if (prop.type != Game::Map::WorldProp::Type::Plant) {
         continue;
       }
-      const float wx = (prop.x - half_w) * m_tile_size;
-      const float wz = (prop.z - half_h) * m_tile_size;
+      const auto [wx, wz] = terrain_service.world_prop_world_xz(prop);
       const QVector3D pos =
           terrain_service.resolve_surface_world_position(wx, wz, 0.0F, 0.0F);
 

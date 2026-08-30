@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <cmath>
 #include <mutex>
+#include <vector>
 
 #include "game/map/terrain_service.h"
 
@@ -110,7 +111,14 @@ auto shared_world_prop_clearance_index() -> const WorldPropClearanceIndex& {
   if (!built || revision != cached_revision) {
     const auto* height_map = terrain_service.get_height_map();
     const float tile_size = height_map != nullptr ? height_map->get_tile_size() : 1.0F;
-    index.rebuild(terrain_service.world_props(), std::max(4.0F * tile_size, 4.0F));
+
+    std::vector<Game::Map::WorldProp> in_world_space = terrain_service.world_props();
+    for (auto& prop : in_world_space) {
+      const auto [world_x, world_z] = terrain_service.world_prop_world_xz(prop);
+      prop.x = world_x;
+      prop.z = world_z;
+    }
+    index.rebuild(in_world_space, std::max(4.0F * tile_size, 4.0F));
     cached_revision = revision;
     built = true;
   }

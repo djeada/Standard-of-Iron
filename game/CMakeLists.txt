@@ -273,6 +273,7 @@ add_library(
     systems/combat_system/combat_mode_processor.cpp
     systems/combat_system/formation_contact_processor.cpp
     systems/combat_system/auto_engagement.cpp
+    systems/combat_system/threat_alert.cpp
     systems/combat_system/hit_feedback_processor.cpp
     systems/combat_system/combat_hit_resolver.cpp
     systems/combat_system/combat_action_processor.cpp

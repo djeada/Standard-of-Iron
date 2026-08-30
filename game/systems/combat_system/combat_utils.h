@@ -127,6 +127,7 @@ enum class EngagementTrigger : std::uint8_t {
   Opportunity,
   Retaliation,
   SquadAlert,
+  SightAlert,
 };
 
 auto may_engage(Engine::Core::Entity* unit,

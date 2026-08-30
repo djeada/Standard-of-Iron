@@ -150,151 +150,168 @@ Design.IronPanel {
     }
 
     implicitWidth: Design.Metrics.space24 * 10
-    implicitHeight: body.implicitHeight + Design.Metrics.space24
+    implicitHeight: body.implicitHeight + root.contentPadding * 2
 
-    Column {
-        id: body
+    contentPadding: Design.Metrics.panelPaddingCompact
 
-        anchors.left: parent.left
-        anchors.right: parent.right
-        anchors.top: parent.top
-        spacing: Design.Metrics.space12
+    Flickable {
+        id: bodyView
 
-        Item {
-            width: parent.width
-            height: Math.max(headerBlock.implicitHeight, selectionCountBadge.implicitHeight)
+        objectName: "selectionScrollView"
 
-            Column {
-                id: headerBlock
+        anchors.fill: parent
+        contentWidth: width
+        contentHeight: body.implicitHeight
+        clip: true
+        flickableDirection: Flickable.VerticalFlick
+        boundsBehavior: Flickable.StopAtBounds
 
-                anchors.left: parent.left
-                anchors.verticalCenter: parent.verticalCenter
-                spacing: 0
-
-                Text {
-                    id: header
-
-                    text: root.inspecting ? root.inspectHeader() : root.empty ? qsTr("SELECTION") : root.singleUnit ? qsTr("SELECTED UNIT") : qsTr("SELECTED FORCE")
-                    color: Design.Theme.textSecondary
-                    font.family: Design.Typography.family
-                    font.pixelSize: Design.Typography.caption
-                    font.weight: Design.Typography.bold
-                    font.letterSpacing: Design.Typography.trackingWide
-                }
-
-                Text {
-                    visible: !root.empty || root.inspecting
-                    objectName: "selectionSubtitle"
-                    text: root.inspecting ? root.inspected.name : root.singleUnit && root.groups.length > 0 ? root.groups[0].name : qsTr("%1 soldiers ready").arg(root.soldierMax > 0 ? root.soldierCount : root.unitCount)
-                    color: Design.Theme.textPrimary
-                    font.family: Design.Typography.displayFamily
-                    font.pixelSize: Design.Typography.label
-                    font.weight: Design.Typography.bold
-                }
-            }
-
-            Design.IronIconButton {
-                id: profileButton
-
-                objectName: "selectionProfileButton"
-                anchors.right: parent.right
-                anchors.verticalCenter: parent.verticalCenter
-                visible: root.canShowProfile
-                iconText: Design.Icons.capture
-                tooltip: qsTr("Show what this unit is for")
-                accessibleName: qsTr("Unit details")
-                onClicked: root.profileRequested(root.focusTypeKey, root.focusNation)
-            }
-
-            Design.IronBadge {
-                id: selectionCountBadge
-
-                anchors.right: profileButton.visible ? profileButton.left : parent.right
-                anchors.rightMargin: profileButton.visible ? Design.Metrics.space8 : 0
-                anchors.verticalCenter: parent.verticalCenter
-                visible: !root.empty || root.inspecting
-                tone: root.inspecting ? root.focusTone(root.inspected) : Design.Theme.accent
-                text: root.inspecting ? (root.inspected.isEnemy ? qsTr("Enemy") : root.inspected.isOwn ? qsTr("Yours") : qsTr("Neutral")) : root.singleUnit ? qsTr("1 unit") : root.groups.length === 1 ? qsTr("%1 units").arg(root.unitCount) : qsTr("%1 units  ·  %2 types").arg(root.unitCount).arg(root.groups.length)
-            }
+        ScrollBar.vertical: Design.IronScrollBar {
+            objectName: "selectionScrollBar"
         }
 
-        Loader {
-            width: parent.width
-            active: root.empty && !root.inspecting
-            visible: active
-            sourceComponent: emptyView
-        }
+        Column {
+            id: body
 
-        Loader {
-            width: parent.width
-            active: root.inspecting
-            visible: active
-            sourceComponent: inspectView
-        }
+            width: bodyView.width - Design.Metrics.scrollBarThickness - Design.Metrics.space4
+            spacing: Design.Metrics.space8
 
-        Loader {
-            width: parent.width
-            active: root.singleUnit && root.groups.length > 0
-            visible: active
-            sourceComponent: singleUnitView
-        }
+            Item {
+                width: parent.width
+                height: Math.max(headerBlock.implicitHeight, selectionCountBadge.implicitHeight)
 
-        Loader {
-            width: parent.width
-            active: root.squad && !root.groupedSquad
-            visible: active
-            sourceComponent: chipView
-        }
+                Column {
+                    id: headerBlock
 
-        Loader {
-            width: parent.width
-            active: root.army || root.groupedSquad
-            visible: active
-            sourceComponent: rosterView
-        }
-
-        Row {
-            id: statStrip
-
-            objectName: "selectionStatStrip"
-            width: parent.width
-            spacing: Design.Metrics.space12
-            visible: root.canShowProfile && (!root.empty || root.inspecting)
-
-            Repeater {
-                model: root.canShowProfile ? [{
-                        "label": qsTr("ATK"),
-                        "value": String(root.focusProfile.attack_damage)
-                    }, {
-                        "label": qsTr("RNG"),
-                        "value": Number(root.focusProfile.attack_range).toFixed(1)
-                    }, {
-                        "label": qsTr("SPD"),
-                        "value": Number(root.focusProfile.speed).toFixed(1)
-                    }] : []
-
-                delegate: Row {
-                    required property var modelData
-
-                    spacing: Design.Metrics.space4
+                    anchors.left: parent.left
+                    anchors.verticalCenter: parent.verticalCenter
+                    spacing: 0
 
                     Text {
-                        anchors.verticalCenter: parent.verticalCenter
-                        text: parent.modelData.label
-                        color: Design.Theme.textDisabled
+                        id: header
+
+                        text: root.inspecting ? root.inspectHeader() : root.empty ? qsTr("SELECTION") : root.singleUnit ? qsTr("SELECTED UNIT") : qsTr("SELECTED FORCE")
+                        color: Design.Theme.textSecondary
                         font.family: Design.Typography.family
                         font.pixelSize: Design.Typography.caption
-                        font.weight: Design.Typography.medium
+                        font.weight: Design.Typography.bold
                         font.letterSpacing: Design.Typography.trackingWide
                     }
 
                     Text {
-                        anchors.verticalCenter: parent.verticalCenter
-                        text: parent.modelData.value
+                        visible: !root.empty || root.inspecting
+                        objectName: "selectionSubtitle"
+                        text: root.inspecting ? root.inspected.name : root.singleUnit && root.groups.length > 0 ? root.groups[0].name : qsTr("%1 soldiers ready").arg(root.soldierMax > 0 ? root.soldierCount : root.unitCount)
                         color: Design.Theme.textPrimary
-                        font.family: Design.Typography.family
-                        font.pixelSize: Design.Typography.caption
+                        font.family: Design.Typography.displayFamily
+                        font.pixelSize: Design.Typography.label
                         font.weight: Design.Typography.bold
+                    }
+                }
+
+                Design.IronIconButton {
+                    id: profileButton
+
+                    objectName: "selectionProfileButton"
+                    anchors.right: parent.right
+                    anchors.verticalCenter: parent.verticalCenter
+                    visible: root.canShowProfile
+                    iconText: Design.Icons.capture
+                    tooltip: qsTr("Show what this unit is for")
+                    accessibleName: qsTr("Unit details")
+                    onClicked: root.profileRequested(root.focusTypeKey, root.focusNation)
+                }
+
+                Design.IronBadge {
+                    id: selectionCountBadge
+
+                    anchors.right: profileButton.visible ? profileButton.left : parent.right
+                    anchors.rightMargin: profileButton.visible ? Design.Metrics.space8 : 0
+                    anchors.verticalCenter: parent.verticalCenter
+                    visible: !root.empty || root.inspecting
+                    tone: root.inspecting ? root.focusTone(root.inspected) : Design.Theme.accent
+                    text: root.inspecting ? (root.inspected.isEnemy ? qsTr("Enemy") : root.inspected.isOwn ? qsTr("Yours") : qsTr("Neutral")) : root.singleUnit ? qsTr("1 unit") : root.groups.length === 1 ? qsTr("%1 units").arg(root.unitCount) : qsTr("%1 units  ·  %2 types").arg(root.unitCount).arg(root.groups.length)
+                }
+            }
+
+            Loader {
+                width: parent.width
+                active: root.empty && !root.inspecting
+                visible: active
+                sourceComponent: emptyView
+            }
+
+            Loader {
+                width: parent.width
+                active: root.inspecting
+                visible: active
+                sourceComponent: inspectView
+            }
+
+            Loader {
+                width: parent.width
+                active: root.singleUnit && root.groups.length > 0
+                visible: active
+                sourceComponent: singleUnitView
+            }
+
+            Loader {
+                width: parent.width
+                active: root.squad && !root.groupedSquad
+                visible: active
+                sourceComponent: chipView
+            }
+
+            Loader {
+                width: parent.width
+                active: root.army || root.groupedSquad
+                visible: active
+                sourceComponent: rosterView
+            }
+
+            Row {
+                id: statStrip
+
+                objectName: "selectionStatStrip"
+                width: parent.width
+                spacing: Design.Metrics.space12
+                visible: root.canShowProfile && (!root.empty || root.inspecting)
+
+                Repeater {
+                    model: root.canShowProfile ? [{
+                            "label": qsTr("ATK"),
+                            "value": String(root.focusProfile.attack_damage)
+                        }, {
+                            "label": qsTr("RNG"),
+                            "value": Number(root.focusProfile.attack_range).toFixed(1)
+                        }, {
+                            "label": qsTr("SPD"),
+                            "value": Number(root.focusProfile.speed).toFixed(1)
+                        }] : []
+
+                    delegate: Row {
+                        required property var modelData
+
+                        spacing: Design.Metrics.space4
+
+                        Text {
+                            anchors.verticalCenter: parent.verticalCenter
+                            text: parent.modelData.label
+                            color: Design.Theme.textDisabled
+                            font.family: Design.Typography.family
+                            font.pixelSize: Design.Typography.caption
+                            font.weight: Design.Typography.medium
+                            font.letterSpacing: Design.Typography.trackingWide
+                        }
+
+                        Text {
+                            anchors.verticalCenter: parent.verticalCenter
+                            text: parent.modelData.value
+                            color: Design.Theme.textPrimary
+                            font.family: Design.Typography.family
+                            font.pixelSize: Design.Typography.caption
+                            font.weight: Design.Typography.bold
+                        }
                     }
                 }
             }
@@ -422,23 +439,37 @@ Design.IronPanel {
     Component {
         id: emptyView
 
-        Row {
-            spacing: Design.Metrics.space8
+        Item {
+            id: emptyRow
+
+            width: parent.width
+            height: Math.max(emptyGlyph.implicitHeight, emptyHint.implicitHeight)
 
             Text {
+                id: emptyGlyph
+
+                anchors.left: parent.left
                 anchors.verticalCenter: parent.verticalCenter
                 text: Design.Icons.commander
                 color: Design.Theme.textDisabled
                 font.family: Design.Typography.family
-                font.pixelSize: Design.Typography.heading
+                font.pixelSize: Design.Typography.subheading
             }
 
             Text {
+                id: emptyHint
+
+                anchors.left: emptyGlyph.right
+                anchors.leftMargin: Design.Metrics.space8
+                anchors.right: parent.right
                 anchors.verticalCenter: parent.verticalCenter
                 text: qsTr("Drag a box over your troops, or click a unit")
                 color: Design.Theme.textDisabled
                 font.family: Design.Typography.family
                 font.pixelSize: Design.Typography.caption
+                wrapMode: Text.WordWrap
+                maximumLineCount: 2
+                elide: Text.ElideRight
             }
         }
     }
@@ -450,7 +481,7 @@ Design.IronPanel {
             id: singleUnitCard
 
             width: parent.width
-            height: Design.Metrics.space24 * (root.groupCanRun(root.groups[0]) ? 5 : 4)
+            height: Design.Metrics.space24 * (root.groupCanRun(root.groups[0]) ? 4 : 3) + Design.Metrics.space8
             radius: Design.Metrics.radiusMedium
             color: Design.Theme.backgroundDeep
             border.width: Design.Metrics.borderThin
@@ -498,11 +529,11 @@ Design.IronPanel {
 
                 Column {
                     width: parent.width
-                    spacing: Design.Metrics.space4
+                    spacing: Design.Metrics.space2
 
                     Column {
                         width: parent.width
-                        spacing: 2
+                        spacing: 1
 
                         RowLayout {
                             width: parent.width
@@ -536,7 +567,7 @@ Design.IronPanel {
 
                             objectName: "selectionHealthBar"
                             width: parent.width
-                            height: Design.Metrics.space12
+                            height: Design.Metrics.space8
                             value: root.groups.length > 0 && root.groups[0].health !== undefined ? root.groups[0].health : 0
                             fillColor: root.healthColor(value)
                         }
@@ -545,7 +576,7 @@ Design.IronPanel {
                     Column {
                         objectName: "selectionStaminaSection"
                         width: parent.width
-                        spacing: 2
+                        spacing: 1
                         opacity: 0.7
                         visible: root.groupCanRun(root.groups[0])
 
@@ -579,7 +610,7 @@ Design.IronPanel {
 
                             objectName: "selectionStaminaBar"
                             width: parent.width
-                            height: Design.Metrics.space8
+                            height: Design.Metrics.space4
                             value: root.groups[0].stamina !== undefined ? root.groups[0].stamina : 1.0
                             fillColor: Design.Theme.success
                         }
@@ -726,9 +757,12 @@ Design.IronPanel {
             width: parent.width
             spacing: Design.Metrics.space8
 
-            readonly property int columnCount: root.groups.length > 8 ? 4 : Math.min(4, Math.max(1, root.groups.length))
+            readonly property int minCardWidth: Design.Metrics.space24 * 3 + Design.Metrics.space8
+            readonly property int fitColumns: Math.max(1, Math.floor((width + spacing) / (minCardWidth + spacing)))
+            readonly property int columnCount: Math.max(1, Math.min(fitColumns, root.groups.length))
             readonly property real cardWidth: Math.floor((width - spacing * (columnCount - 1)) / columnCount)
-            readonly property real cardHeight: root.groups.length > 8 ? Design.Metrics.space24 * 2 : Design.Metrics.space24 * 3
+            readonly property bool compactCards: cardWidth < Design.Metrics.space24 * 5
+            readonly property real cardHeight: compactCards ? Design.Metrics.space24 * 2 + Design.Metrics.space8 : Design.Metrics.space24 * 3
 
             Repeater {
                 model: root.groups
@@ -772,9 +806,10 @@ Design.IronPanel {
                         id: portraitFrame
 
                         anchors.left: parent.left
-                        anchors.leftMargin: Design.Metrics.space8
-                        anchors.verticalCenter: parent.verticalCenter
-                        width: Math.min(Design.Metrics.space24 * 2, parent.height - Design.Metrics.space12)
+                        anchors.leftMargin: groupFlow.compactCards ? Math.round((groupFlow.cardWidth - portraitFrame.width) / 2) : Design.Metrics.space8
+                        anchors.top: parent.top
+                        anchors.topMargin: groupFlow.compactCards ? Design.Metrics.space4 : Math.round((groupFlow.cardHeight - portraitFrame.height) / 2)
+                        width: Math.min(Design.Metrics.space24 * 2, groupFlow.cardHeight - Design.Metrics.space12)
                         height: width
                         radius: Design.Metrics.radiusSmall
                         color: Design.Theme.panelLeather
@@ -836,6 +871,7 @@ Design.IronPanel {
                         anchors.rightMargin: Design.Metrics.space8
                         anchors.top: parent.top
                         anchors.topMargin: Design.Metrics.space8
+                        visible: !groupFlow.compactCards
                         text: groupCard.row.name
                         color: Design.Theme.textPrimary
                         font.family: Design.Typography.family
@@ -849,12 +885,12 @@ Design.IronPanel {
 
                         objectName: "selectionGroupHealthBar_" + groupCard.row.typeKey
 
-                        anchors.left: portraitFrame.right
-                        anchors.leftMargin: Design.Metrics.space8
+                        anchors.left: groupFlow.compactCards ? parent.left : portraitFrame.right
+                        anchors.leftMargin: groupFlow.compactCards ? Design.Metrics.space8 : Design.Metrics.space8
                         anchors.right: parent.right
                         anchors.rightMargin: Design.Metrics.space8
                         anchors.bottom: parent.bottom
-                        anchors.bottomMargin: Design.Metrics.space8
+                        anchors.bottomMargin: groupFlow.compactCards ? Design.Metrics.space4 : Design.Metrics.space8
                         value: groupCard.row.health
                         fillColor: root.healthColor(value)
                     }
@@ -868,7 +904,7 @@ Design.IronPanel {
                         anchors.rightMargin: Design.Metrics.space8
                         anchors.bottom: groupHealth.top
                         anchors.bottomMargin: Design.Metrics.space2
-                        visible: groupFlow.cardHeight >= Design.Metrics.space24 * 3 && (groupCard.showsStrength || groupCard.row.woundedCount > 0)
+                        visible: !groupFlow.compactCards && groupFlow.cardHeight >= Design.Metrics.space24 * 3 && (groupCard.showsStrength || groupCard.row.woundedCount > 0)
                         text: groupCard.showsStrength ? groupCard.strength : qsTr("%1 wounded").arg(groupCard.row.woundedCount)
                         color: groupCard.showsStrength ? root.healthColor(groupCard.row.health) : Design.Theme.warning
                         font.family: Design.Typography.family

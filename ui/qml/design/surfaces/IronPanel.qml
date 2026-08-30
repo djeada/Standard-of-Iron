@@ -8,6 +8,7 @@ Rectangle {
     property string accessibleName: ""
 
     property bool translucent: false
+    property int contentPadding: Design.Metrics.panelPadding
     default property alias content: contentHost.data
 
     color: raised ? Design.Theme.panelLeather : Design.Theme.panelIron
@@ -33,6 +34,6 @@ Rectangle {
         id: contentHost
 
         anchors.fill: parent
-        anchors.margins: Design.Metrics.space12
+        anchors.margins: root.contentPadding
     }
 }

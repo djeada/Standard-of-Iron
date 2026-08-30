@@ -8,6 +8,7 @@
 #include <optional>
 #include <unordered_map>
 #include <unordered_set>
+#include <utility>
 #include <vector>
 
 #include "map_definition.h"
@@ -147,6 +148,15 @@ public:
   world_prop_world_position(const WorldProp& prop,
                             float world_y_offset = 0.0F,
                             float fallback_y = 0.0F) const -> QVector3D;
+
+  [[nodiscard]] auto
+  world_prop_world_xz(const WorldProp& prop) const -> std::pair<float, float>;
+
+  [[nodiscard]] auto
+  world_prop_footprint_world_position(const WorldProp& prop,
+                                      float footprint_radius,
+                                      float world_y_offset = 0.0F,
+                                      float fallback_y = 0.0F) const -> QVector3D;
   [[nodiscard]] auto find_tree_near_world(float world_x,
                                           float world_z,
                                           float max_world_distance = 2.5F) const

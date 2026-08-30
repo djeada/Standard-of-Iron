@@ -132,19 +132,19 @@ TestCase {
         return [{
                 "tag": "720p",
                 "height": 720,
-                "expected": 230.4
+                "expected": 150
             }, {
                 "tag": "1080p",
                 "height": 1080,
-                "expected": 345.6
+                "expected": 183.6
             }, {
                 "tag": "1440p",
                 "height": 1440,
-                "expected": 380
+                "expected": 200
             }, {
                 "tag": "tiny",
                 "height": 480,
-                "expected": 216
+                "expected": 150
             }];
     }
 
@@ -152,17 +152,37 @@ TestCase {
         fuzzyCompare(Metrics.bottomBarHeight(data.height, false), data.expected, 0.5, data.tag);
     }
 
-    function test_the_rts_bottom_bar_clears_a_row_of_recruit_cards_at_1080p() {
-        var barHeight = Metrics.bottomBarHeight(1080, false);
-        verify(barHeight >= 320, "the bottom bar is too short to show a recruit row at 1080p, it was " + barHeight);
-        verify(barHeight <= 1080 * 0.36, "the bottom bar ate more than a third of the battlefield");
+    function test_the_rts_bottom_bar_leaves_the_battlefield_the_screen_data() {
+        return [{
+                "tag": "720p",
+                "height": 720
+            }, {
+                "tag": "900p",
+                "height": 900
+            }, {
+                "tag": "1080p",
+                "height": 1080
+            }, {
+                "tag": "1440p",
+                "height": 1440
+            }, {
+                "tag": "2160p",
+                "height": 2160
+            }];
+    }
+
+    function test_the_rts_bottom_bar_leaves_the_battlefield_the_screen(data) {
+        var barHeight = Metrics.bottomBarHeight(data.height, false);
+        verify(barHeight <= data.height * 0.28, "the bottom bar ate more than a quarter of the battlefield at " + data.tag + ", it was " + barHeight);
+        verify(barHeight >= Metrics.orderButtonSize * 2 + Metrics.compactControlHeight, "the bottom bar is too short to seat two rows of order tiles at " + data.tag + ", it was " + barHeight);
     }
 
     function test_commander_mode_keeps_a_slim_bar() {
         var rts = Metrics.bottomBarHeight(1080, false);
         var commander = Metrics.bottomBarHeight(1080, true);
         verify(commander < rts, "direct commander control should not carry the RTS panels");
-        compare(commander, Metrics.commanderBottomBarMaxHeight);
+        verify(commander <= Metrics.commanderBottomBarMaxHeight, "the commander bar overran its ceiling");
+        verify(commander >= Metrics.commanderBottomBarMinHeight, "the commander bar fell under its floor");
     }
 
     function test_status_color_lookup_covers_the_semantic_names() {

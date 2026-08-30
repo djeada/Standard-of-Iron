@@ -1,6 +1,7 @@
 #include <algorithm>
 #include <cmath>
 #include <gtest/gtest.h>
+#include <limits>
 #include <map>
 #include <set>
 #include <string>
@@ -8,6 +9,7 @@
 #include <vector>
 
 #include "game/map/map_definition.h"
+#include "game/map/terrain.h"
 #include "game/systems/wall_network_service.h"
 #include "game/units/spawn_type.h"
 #include "tools/arena/arena_scenario.h"
@@ -992,5 +994,256 @@ TEST(ArenaScenariosTest, FormationPromoScenariosDriveTheArmyFormationLayer) {
     }
     EXPECT_GE(intents.size(), 3U)
         << id << " shows too little of the formation vocabulary";
+  }
+}
+
+namespace {
+
+struct DuelFootprint {
+  QString name;
+  float x = 0.0F;
+  float z = 0.0F;
+  float half = 0.0F;
+};
+
+[[nodiscard]] auto building_half_extent(Game::Units::SpawnType type) -> float {
+  switch (type) {
+  case Game::Units::SpawnType::Farm:
+    return 6.8F;
+  case Game::Units::SpawnType::Barracks:
+    return 4.33F;
+  case Game::Units::SpawnType::Marketplace:
+    return 2.75F;
+  case Game::Units::SpawnType::Home:
+    return 2.25F;
+  case Game::Units::SpawnType::DefenseTower:
+    return 1.3F;
+  default:
+    return 2.0F;
+  }
+}
+
+[[nodiscard]] auto hill_reach(const Game::Map::TerrainFeature& feature) -> float {
+  constexpr float k_campaign_widening = 1.18F;
+  constexpr float k_organic_spread_margin = 1.5F;
+  const float widened = feature.shape == Game::Map::HillShape::Blob
+                            ? feature.radius * k_campaign_widening
+                            : feature.radius;
+  return widened + k_organic_spread_margin;
+}
+
+[[nodiscard]] auto duel_building_footprints(const Arena::ArenaScenarioDefinition& scene)
+    -> std::vector<DuelFootprint> {
+  std::vector<DuelFootprint> out;
+  for (auto const& group : scene.groups) {
+    if (!group.spawn_type.has_value() ||
+        !Game::Units::is_building_spawn(*group.spawn_type)) {
+      continue;
+    }
+    const float center = (static_cast<float>(group.count) - 1.0F) * 0.5F;
+    for (int index = 0; index < group.count; ++index) {
+      const auto offset = group.spacing * (static_cast<float>(index) - center);
+      out.push_back(DuelFootprint{group.name,
+                                  group.origin.x() + offset.x(),
+                                  group.origin.z() + offset.z(),
+                                  building_half_extent(*group.spawn_type)});
+    }
+  }
+  return out;
+}
+
+} // namespace
+
+TEST(ArenaScenariosTest, DuelTownsAreNeverRaisedOnTheBattlefieldHills) {
+  for (auto const* id : {Arena::Scenarios::k_ai_duel_scipio_vs_fabius_id,
+                         Arena::Scenarios::k_ai_duel_marcellus_vs_hanno_id,
+                         Arena::Scenarios::k_ai_duel_hannibal_vs_hasdrubal_id,
+                         Arena::Scenarios::k_ai_war_of_towns_id}) {
+    auto const* scene = Arena::Scenarios::find_definition(QString::fromLatin1(id));
+    ASSERT_NE(scene, nullptr) << id;
+
+    auto const footprints = duel_building_footprints(*scene);
+    ASSERT_FALSE(footprints.empty()) << id << " places no buildings at all";
+
+    for (auto const& building : footprints) {
+      for (auto const& feature : scene->terrain_features) {
+        if (feature.type != Game::Map::TerrainType::Hill) {
+          continue;
+        }
+        const float dx = building.x - feature.center_x;
+        const float dz = building.z - feature.center_z;
+        const float distance = std::hypot(dx, dz);
+        const float clearance = hill_reach(feature) + building.half;
+        EXPECT_GE(distance, clearance)
+            << id << ": " << building.name.toStdString() << " at " << building.x << ","
+            << building.z << " stands " << distance << "m from a hill centred at "
+            << feature.center_x << "," << feature.center_z << " that reaches "
+            << clearance << "m";
+      }
+    }
+  }
+}
+
+TEST(ArenaScenariosTest, DuelBridgeLandingsClearTheBattlefieldHills) {
+  constexpr float k_deck_landing_run = 5.06F;
+  constexpr float k_deck_half_width = 4.0F;
+
+  for (auto const* id : {Arena::Scenarios::k_ai_duel_scipio_vs_fabius_id,
+                         Arena::Scenarios::k_ai_war_of_towns_id}) {
+    auto const* scene = Arena::Scenarios::find_definition(QString::fromLatin1(id));
+    ASSERT_NE(scene, nullptr) << id;
+    ASSERT_FALSE(scene->bridges.empty()) << id << " has no crossing";
+
+    for (auto const& bridge : scene->bridges) {
+      auto direction = bridge.end - bridge.start;
+      const float length = std::hypot(direction.x(), direction.z());
+      ASSERT_GT(length, 0.01F) << id << " has a degenerate bridge";
+      direction /= length;
+
+      for (const auto& landing : {bridge.start - direction * k_deck_landing_run,
+                                  bridge.end + direction * k_deck_landing_run}) {
+        for (auto const& feature : scene->terrain_features) {
+          if (feature.type != Game::Map::TerrainType::Hill) {
+            continue;
+          }
+          const float dx = landing.x() - feature.center_x;
+          const float dz = landing.z() - feature.center_z;
+          const float distance = std::hypot(dx, dz);
+          const float clearance = hill_reach(feature) + k_deck_half_width;
+          EXPECT_GE(distance, clearance)
+              << id << ": a bridge landing at " << landing.x() << "," << landing.z()
+              << " sits " << distance << "m from a hill centred at " << feature.center_x
+              << "," << feature.center_z << ", so terrain rises through the deck";
+        }
+      }
+    }
+  }
+}
+
+namespace {
+
+constexpr float k_duel_tile = 1.0F;
+
+[[nodiscard]] auto duel_terrain(const Arena::ArenaScenarioDefinition& scene)
+    -> Game::Map::TerrainHeightMap {
+  const int cells = scene.terrain_grid_extent;
+  Game::Map::TerrainHeightMap terrain(cells, cells, k_duel_tile);
+  terrain.build_from_features(scene.terrain_features);
+  terrain.add_river_segments(scene.rivers);
+  terrain.add_bridges(scene.bridges);
+  return terrain;
+}
+
+[[nodiscard]] auto to_cell(float world, int cells) -> int {
+  return static_cast<int>(
+      std::lround((world / k_duel_tile) + (static_cast<float>(cells) * 0.5F - 0.5F)));
+}
+
+[[nodiscard]] auto reachable_cells(const Game::Map::TerrainHeightMap& terrain,
+                                   int cells,
+                                   int start_x,
+                                   int start_z) -> std::vector<bool> {
+  std::vector<bool> seen(static_cast<std::size_t>(cells) * cells, false);
+  if (!terrain.is_walkable(start_x, start_z)) {
+    return seen;
+  }
+  std::vector<std::pair<int, int>> stack{{start_x, start_z}};
+  seen[static_cast<std::size_t>(start_z) * cells + start_x] = true;
+  while (!stack.empty()) {
+    const auto [x, z] = stack.back();
+    stack.pop_back();
+    for (const auto& step :
+         {std::pair{1, 0}, std::pair{-1, 0}, std::pair{0, 1}, std::pair{0, -1}}) {
+      const int nx = x + step.first;
+      const int nz = z + step.second;
+      if (nx < 0 || nz < 0 || nx >= cells || nz >= cells) {
+        continue;
+      }
+      const auto index = static_cast<std::size_t>(nz) * cells + nx;
+      if (seen[index] || !terrain.is_walkable(nx, nz)) {
+        continue;
+      }
+      seen[index] = true;
+      stack.emplace_back(nx, nz);
+    }
+  }
+  return seen;
+}
+
+} // namespace
+
+TEST(ArenaScenariosTest, DuelArmiesCanMarchFromOneTownToTheOther) {
+  for (auto const* id : {Arena::Scenarios::k_ai_duel_scipio_vs_fabius_id,
+                         Arena::Scenarios::k_ai_war_of_towns_id}) {
+    auto const* scene = Arena::Scenarios::find_definition(QString::fromLatin1(id));
+    ASSERT_NE(scene, nullptr) << id;
+    ASSERT_EQ(scene->battle_sides.size(), 2U) << id;
+
+    const int cells = scene->terrain_grid_extent;
+    const auto terrain = duel_terrain(*scene);
+
+    const auto& north = scene->battle_sides.front().home;
+    const auto& south = scene->battle_sides.back().home;
+    const int start_x = to_cell(north.x(), cells);
+    const int start_z = to_cell(north.z(), cells);
+    const int goal_x = to_cell(south.x(), cells);
+    const int goal_z = to_cell(south.z(), cells);
+
+    ASSERT_TRUE(terrain.is_walkable(start_x, start_z))
+        << id << ": the north base does not stand on walkable ground";
+    ASSERT_TRUE(terrain.is_walkable(goal_x, goal_z))
+        << id << ": the south base does not stand on walkable ground";
+
+    const auto seen = reachable_cells(terrain, cells, start_x, start_z);
+    EXPECT_TRUE(seen[static_cast<std::size_t>(goal_z) * cells + goal_x])
+        << id
+        << ": no walkable route joins the two bases, so neither army can ever "
+           "reach the other";
+  }
+}
+
+TEST(ArenaScenariosTest, DuelCrossingIsWideEnoughForAColumn) {
+  constexpr int k_min_lane_cells = 4;
+
+  for (auto const* id : {Arena::Scenarios::k_ai_duel_scipio_vs_fabius_id,
+                         Arena::Scenarios::k_ai_war_of_towns_id}) {
+    auto const* scene = Arena::Scenarios::find_definition(QString::fromLatin1(id));
+    ASSERT_NE(scene, nullptr) << id;
+    ASSERT_FALSE(scene->bridges.empty()) << id;
+
+    const int cells = scene->terrain_grid_extent;
+    const auto terrain = duel_terrain(*scene);
+    const auto& bridge = terrain.get_bridges().front();
+
+    auto span = bridge.end - bridge.start;
+    const float length = std::hypot(span.x(), span.z());
+    ASSERT_GT(length, 0.01F) << id;
+    const QVector3D along(span.x() / length, 0.0F, span.z() / length);
+    const QVector3D across(-along.z(), 0.0F, along.x());
+
+    int narrowest = std::numeric_limits<int>::max();
+    float narrowest_at = 0.0F;
+    for (float travelled = 0.0F; travelled <= length; travelled += k_duel_tile) {
+      const QVector3D centre = bridge.start + along * travelled;
+      int lane = 0;
+      for (float offset = -bridge.width; offset <= bridge.width;
+           offset += k_duel_tile) {
+        const QVector3D probe = centre + across * offset;
+        const int cell_x = to_cell(probe.x(), cells);
+        const int cell_z = to_cell(probe.z(), cells);
+        if (cell_x < 0 || cell_z < 0 || cell_x >= cells || cell_z >= cells) {
+          continue;
+        }
+        lane += terrain.is_walkable(cell_x, cell_z) ? 1 : 0;
+      }
+      if (lane < narrowest) {
+        narrowest = lane;
+        narrowest_at = travelled;
+      }
+    }
+
+    EXPECT_GE(narrowest, k_min_lane_cells)
+        << id << ": the crossing pinches to " << narrowest << " walkable cells "
+        << narrowest_at << "m along the deck, so an army has to file over it";
   }
 }
