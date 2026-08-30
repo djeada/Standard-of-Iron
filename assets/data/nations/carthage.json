@@ -433,7 +433,7 @@
       "id": "carthage_spear_commander",
       "display_name": "Hanno the Great",
       "production": {
-        "cost": 193,
+        "cost": 241,
         "build_time": 31.0,
         "priority": 20,
         "is_melee": true
@@ -467,7 +467,7 @@
       "id": "carthage_bow_commander",
       "display_name": "Hasdrubal Barca",
       "production": {
-        "cost": 175,
+        "cost": 219,
         "build_time": 28.0,
         "priority": 20,
         "is_melee": false
@@ -501,7 +501,7 @@
       "id": "carthage_sword_commander",
       "display_name": "Hannibal Barca",
       "production": {
-        "cost": 215,
+        "cost": 268,
         "build_time": 34.0,
         "priority": 20,
         "is_melee": true

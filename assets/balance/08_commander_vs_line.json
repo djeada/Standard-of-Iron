@@ -9,13 +9,23 @@
     "label": "Commander",
     "nation": "roman_republic",
     "stance": "attack",
-    "groups": [{ "troop": "roman_legion_organizer", "count": 1 }]
+    "groups": [
+      {
+        "troop": "roman_legion_organizer",
+        "count": 1
+      }
+    ]
   },
   "side_b": {
     "label": "Legionaries",
     "nation": "roman_republic",
     "stance": "attack",
-    "groups": [{ "troop": "swordsman", "count": 3 }]
+    "groups": [
+      {
+        "troop": "swordsman",
+        "count": 4
+      }
+    ]
   },
   "expect": {
     "max_timeout_rate": 0.35

@@ -72,6 +72,14 @@ auto AudioSystem::initialize() -> bool {
   return true;
 }
 
+void AudioSystem::render_offline(float* interleaved_stereo, unsigned frames) {
+  if (m_music_player == nullptr) {
+    std::fill_n(interleaved_stereo, static_cast<std::size_t>(frames) * 2U, 0.0F);
+    return;
+  }
+  m_music_player->render_offline(interleaved_stereo, frames);
+}
+
 void AudioSystem::shutdown() {
   if (!is_running) {
     return;

@@ -699,6 +699,9 @@ auto MiniaudioBackend::channel_playing(int channel) const -> bool {
 }
 
 void MiniaudioBackend::play_sound(const QString& id, float volume, bool loop) {
+  if (m_offline_render && is_track_decode_pending(id)) {
+    wait_for_track(id);
+  }
   const int slot = find_track_slot(id);
   if (slot < 0 || m_track_table[slot].load(std::memory_order_acquire) == nullptr) {
     if (is_track_decode_pending(id)) {

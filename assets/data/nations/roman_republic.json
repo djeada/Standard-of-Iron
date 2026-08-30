@@ -390,7 +390,7 @@
       "id": "roman_legion_organizer",
       "display_name": "Quintus Fabius Maximus",
       "production": {
-        "cost": 170,
+        "cost": 212,
         "build_time": 30.0,
         "priority": 20,
         "is_melee": true
@@ -424,7 +424,7 @@
       "id": "roman_veteran_consul",
       "display_name": "Publius Cornelius Scipio",
       "production": {
-        "cost": 180,
+        "cost": 225,
         "build_time": 31.0,
         "priority": 20,
         "is_melee": true
@@ -458,7 +458,7 @@
       "id": "roman_field_commander",
       "display_name": "Marcus Claudius Marcellus",
       "production": {
-        "cost": 160,
+        "cost": 200,
         "build_time": 27.0,
         "priority": 20,
         "is_melee": false

@@ -34,8 +34,6 @@ void draw_claim_flag(const DrawContext& p,
   const VeinFlagPalette palette;
   const QVector3D team_trim = team * 0.5F + palette.tarnished_gold * 0.5F;
 
-  // A mine-claim marker: a crooked pit-prop pole with a narrow pennon, capped by
-  // a nugget of ore. It stands off the crag so the crystals stay readable.
   BarracksFlagRenderer::draw_hanging_banner(
       p,
       out,

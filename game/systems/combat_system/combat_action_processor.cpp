@@ -390,6 +390,7 @@ auto commander_strike_intensity(
   case CommanderActionRole::Aerial:
     return 0.85F;
   case CommanderActionRole::Routine:
+  case CommanderActionRole::Special:
     return 0.70F;
   }
   return 0.70F;

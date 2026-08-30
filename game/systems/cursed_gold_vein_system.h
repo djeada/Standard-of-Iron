@@ -31,18 +31,11 @@ namespace Game::Systems {
 class OwnerRegistry;
 class PlayerResourceRegistry;
 
-// Tuning for the cursed gold vein. Every vein ticks on the same cadence: each tick
-// pays its owner gold and bleeds every one of the owner's troops standing near it.
 inline constexpr float k_cursed_gold_vein_tick_seconds = 6.0F;
 inline constexpr int k_cursed_gold_vein_gold_per_tick = 25;
 inline constexpr int k_cursed_gold_vein_curse_damage = 10;
 inline constexpr float k_cursed_gold_vein_curse_radius = 9.0F;
 
-// A cursed gold vein is an authored `cursed_gold_vein` world prop. At level start the
-// system raises a neutral, non-producing Barracks anchor on the prop so the ordinary
-// capture rules (and the claim flag) apply. A neutral vein does nothing. Once a
-// player holds it, the vein pays gold every tick and, in the same tick, damages the
-// owner's troops within `k_cursed_gold_vein_curse_radius` of it.
 class CursedGoldVeinSystem : public Engine::Core::System {
 public:
   struct Services {

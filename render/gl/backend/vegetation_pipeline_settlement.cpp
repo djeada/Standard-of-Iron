@@ -775,9 +775,6 @@ void VegetationPipeline::initialize_cursed_gold_vein_pipeline() {
   append_parts(verts, idx, std::span{k_cursed_gold_vein_prisms});
   append_parts(verts, idx, std::span{k_cursed_gold_vein_oriented_boxes});
 
-  // Loose nuggets spilled around the crag: small tilted chips of ore lying on the
-  // base slabs. They keep the silhouette busy near the ground so the vein does not
-  // read as a lone pillar at battle zoom.
   for (int i = 0; i < 10; ++i) {
     float const angle = static_cast<float>(i) * 0.6283185F + 0.35F;
     float const radius = (i % 2 == 0) ? 0.62F : 0.78F;

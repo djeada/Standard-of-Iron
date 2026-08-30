@@ -209,6 +209,10 @@ public:
   void set_capture_resolution(int width, int height);
   void set_capture_sink(std::function<void(const QImage&)> sink);
   void set_capture_active(bool active);
+  void set_batch_render_suppressed(bool suppressed);
+  [[nodiscard]] auto ai_activity_summary() const -> QString;
+  [[nodiscard]] auto world() const -> Engine::Core::World* { return m_world.get(); }
+  [[nodiscard]] auto session() -> Game::Session::SessionContext& { return m_session; }
   void set_frame_hook(std::function<void(float)> hook);
 
   void set_flame_card(bool enabled, float speed = 1.0F, float intensity = 1.0F);
@@ -224,6 +228,11 @@ public:
   [[nodiscard]] auto
   scenario_group_center(const QString& group) const -> std::optional<QVector3D>;
   [[nodiscard]] auto scenario_center_of_mass() const -> std::optional<QVector3D>;
+  [[nodiscard]] auto
+  scenario_battle_center(int owner_filter,
+                         float engagement_radius) const -> std::optional<QVector3D>;
+  [[nodiscard]] auto
+  scenario_army_center(int owner, float home_radius) const -> std::optional<QVector3D>;
 
   struct RpgBowHudState {
     bool valid{false};
@@ -505,6 +514,7 @@ private:
   QVector3D m_capture_orbit_center;
   Arena::ArenaCameraView m_capture_orbit_view;
   bool m_batch_frame_in_progress = false;
+  bool m_batch_render_suppressed = false;
   bool m_pan_up_pressed = false;
   bool m_pan_down_pressed = false;
   bool m_pan_left_pressed = false;

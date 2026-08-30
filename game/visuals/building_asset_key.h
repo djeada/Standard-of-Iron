@@ -7,9 +7,6 @@
 
 namespace Game::Visuals {
 
-// Renderer key stamped on the capture anchor a cursed gold vein raises. The anchor
-// is a Barracks entity, but it must draw only a claim flag beside the vein prop, so
-// it bypasses the nation-variant barracks renderers.
 inline constexpr std::string_view k_cursed_gold_vein_flag_asset_key =
     "troops/cursed_gold_vein/barracks";
 

@@ -55,6 +55,7 @@ public:
   auto is_playing(int channel) const -> bool;
 
   auto get_backend() -> MiniaudioBackend* { return m_backend.data(); }
+  void render_offline(float* interleaved_stereo, unsigned frames);
 
 private:
   explicit MusicPlayer();

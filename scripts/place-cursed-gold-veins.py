@@ -25,9 +25,7 @@ from pathlib import Path
 
 REPO = Path(__file__).resolve().parent.parent
 MAPS = REPO / "assets" / "maps"
-SKIPPED = {
-    "map_tutorial.json"
-}  # scripted stages; a neutral capture point would derail them
+SKIPPED = {"map_tutorial.json"}
 
 
 def seg_dist(px, pz, ax, az, bx, bz):
@@ -70,7 +68,7 @@ def vein_count(size):
 
 
 def blockers(d):
-    b = []  # (fn(px,pz)->clearance)
+    b = []
     for r in d.get("rivers", []):
         b.append(
             lambda px, pz, r=r: polyline_dist(px, pz, r) - r.get("width", 6) * 0.5 - 7

@@ -53,9 +53,7 @@ constexpr QColor ROAD_HIGHLIGHT{166, 132, 82};
 constexpr QColor STRUCTURE_STONE{110, 95, 75};
 constexpr QColor STRUCTURE_SHADOW{62, 44, 28};
 
-constexpr QColor TEAM_BLUE{42, 88, 205};
 constexpr QColor TEAM_BLUE_DARK{18, 45, 122};
-constexpr QColor TEAM_RED{218, 38, 28};
 constexpr QColor TEAM_RED_DARK{130, 16, 12};
 
 } // namespace Palette

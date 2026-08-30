@@ -16,6 +16,10 @@ add_library(
     # the harness rather than only inside arena_app -- which is what forced
     # tools_tests to compile promo_spec.cpp a second time to reach it.
     promo_spec.cpp
+    # The ffmpeg pipe writer, here for the same reason: arena_tests asserts on
+    # its backpressure, and a second compiled copy could pass while the object
+    # the arena ships is broken.
+    video_encoder.cpp
 )
 target_include_directories(arena_scenario_harness PUBLIC "${CMAKE_SOURCE_DIR}")
 # game_sim, not game_systems: every scenario is scripted, so the harness spawns
@@ -54,7 +58,7 @@ set(ARENA_APP_SOURCES
     terrain_panel.cpp
     prop_panel.cpp
     promo_runner.cpp
-    video_encoder.cpp
+    arena_audio_recorder.cpp
 )
 
 if(QT_VERSION_MAJOR EQUAL 6)

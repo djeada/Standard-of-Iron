@@ -134,6 +134,12 @@ auto CueRegistry::play(const std::string& cue_id, float volume_scale) -> bool {
     }
 
     m_last_played[cue_id] = now;
+    static const bool trace = !qEnvironmentVariableIsEmpty("SOI_AUDIO_TRACE");
+    if (trace) {
+      qInfo().noquote() << QStringLiteral("audio cue %1 -> %2")
+                               .arg(QString::fromStdString(cue_id),
+                                    QString::fromStdString(resource_id));
+    }
     m_last_resource[cue_id] = resource_id;
   }
 
