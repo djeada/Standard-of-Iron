@@ -144,6 +144,11 @@ auto CombatDustPipeline::initialize() -> bool {
     return false;
   }
 
+  if (!create_weapon_arc_geometry()) {
+    qWarning() << "CombatDustPipeline: Failed to create weapon arc geometry";
+    return false;
+  }
+
   if (m_blood_shader != nullptr && !create_blood_geometry()) {
     qWarning() << "CombatDustPipeline: Blood pools disabled; failed to create "
                   "blood geometry";
@@ -167,8 +172,11 @@ void CombatDustPipeline::release_geometry() {
     initializeOpenGLFunctions();
     clear_gl_errors();
   }
-  for (StaticMeshBuffers* mesh :
-       {&m_dust_mesh, &m_fireball_mesh, &m_metal_spark_mesh, &m_blood_mesh}) {
+  for (StaticMeshBuffers* mesh : {&m_dust_mesh,
+                                  &m_fireball_mesh,
+                                  &m_metal_spark_mesh,
+                                  &m_weapon_arc_mesh,
+                                  &m_blood_mesh}) {
     release_mesh_buffers(*this, *mesh);
   }
 }
@@ -187,6 +195,7 @@ void CombatDustPipeline::cache_uniforms() {
     m_uniforms.dust_color = m_dust_shader->uniform_handle("u_dust_color");
     m_uniforms.effect_type = m_dust_shader->uniform_handle("u_effect_type");
     m_uniforms.camera_pos = m_dust_shader->uniform_handle("u_camera_pos");
+    m_uniforms.span = m_dust_shader->optional_uniform_handle("u_span");
   }
 
   if (m_blood_shader != nullptr) {
@@ -203,7 +212,8 @@ auto CombatDustPipeline::is_initialized() const -> bool {
   return m_dust_shader != nullptr && m_dust_mesh.vao != 0 &&
          m_dust_mesh.index_count > 0 && m_fireball_mesh.vao != 0 &&
          m_fireball_mesh.index_count > 0 && m_metal_spark_mesh.vao != 0 &&
-         m_metal_spark_mesh.index_count > 0;
+         m_metal_spark_mesh.index_count > 0 && m_weapon_arc_mesh.vao != 0 &&
+         m_weapon_arc_mesh.index_count > 0;
 }
 
 struct DustVertex {
@@ -418,6 +428,55 @@ auto CombatDustPipeline::create_metal_spark_geometry() -> bool {
   return upload_dust_mesh(*this, m_metal_spark_mesh, "metal spark", vertices, indices);
 }
 
+auto CombatDustPipeline::create_weapon_arc_geometry() -> bool {
+  initializeOpenGLFunctions();
+  release_mesh_buffers(*this, m_weapon_arc_mesh);
+  clear_gl_errors();
+
+  std::vector<DustVertex> vertices;
+  std::vector<unsigned int> indices;
+
+  constexpr int segment_count = 64;
+  constexpr int band_count = 3;
+  constexpr float pi = std::numbers::pi_v<float>;
+  constexpr float inner_radius = 0.50F;
+  vertices.reserve(static_cast<std::size_t>((segment_count + 1) * (band_count + 1)));
+  indices.reserve(static_cast<std::size_t>(segment_count * band_count * 6));
+
+  for (int segment = 0; segment <= segment_count; ++segment) {
+    float const along = static_cast<float>(segment) / static_cast<float>(segment_count);
+    float const angle = (along - 0.5F) * 2.0F * pi;
+    float const sin_a = std::sin(angle);
+    float const cos_a = std::cos(angle);
+    for (int band = 0; band <= band_count; ++band) {
+      float const across = static_cast<float>(band) / static_cast<float>(band_count);
+      float const ring = inner_radius + (1.0F - inner_radius) * across;
+      DustVertex vertex{};
+      vertex.position[0] = sin_a * ring;
+      vertex.position[1] = 0.0F;
+      vertex.position[2] = cos_a * ring;
+      vertex.normal[0] = 0.0F;
+      vertex.normal[1] = 1.0F;
+      vertex.normal[2] = 0.0F;
+      vertex.tex_coord[0] = along;
+      vertex.tex_coord[1] = across;
+      vertices.push_back(vertex);
+    }
+  }
+
+  auto const stride = static_cast<unsigned int>(band_count + 1);
+  for (int segment = 0; segment < segment_count; ++segment) {
+    for (int band = 0; band < band_count; ++band) {
+      unsigned int const a =
+          static_cast<unsigned int>(segment) * stride + static_cast<unsigned int>(band);
+      unsigned int const b = a + stride;
+      indices.insert(indices.end(), {a, b, a + 1U, a + 1U, b, b + 1U});
+    }
+  }
+
+  return upload_dust_mesh(*this, m_weapon_arc_mesh, "weapon arc", vertices, indices);
+}
+
 auto CombatDustPipeline::create_blood_geometry() -> bool {
   initializeOpenGLFunctions();
   release_mesh_buffers(*this, m_blood_mesh);
@@ -498,8 +557,10 @@ void CombatDustPipeline::render_dust_batch(const DustInstanceData* instances,
     }
 
     bool const use_fireball_geometry = inst.effect_type == EffectType::Fireball;
-    bool const use_additive_blending =
-        use_fireball_geometry || inst.effect_type == EffectType::MetalSpark;
+    bool const use_weapon_arc_geometry = inst.effect_type == EffectType::WeaponArc;
+    bool const use_additive_blending = use_fireball_geometry ||
+                                       inst.effect_type == EffectType::MetalSpark ||
+                                       use_weapon_arc_geometry;
     EffectStateMode const target_state =
         use_additive_blending ? EffectStateMode::Additive
                               : (inst.overlay ? EffectStateMode::AlphaOverlay
@@ -517,15 +578,14 @@ void CombatDustPipeline::render_dust_batch(const DustInstanceData* instances,
     }
 
     bool const use_metal_spark_geometry = inst.effect_type == EffectType::MetalSpark;
-    GLuint const target_vao =
+    StaticMeshBuffers const& target_mesh =
         use_fireball_geometry
-            ? m_fireball_mesh.vao
-            : (use_metal_spark_geometry ? m_metal_spark_mesh.vao : m_dust_mesh.vao);
-    GLsizei const target_index_count =
-        use_fireball_geometry
-            ? m_fireball_mesh.index_count
-            : (use_metal_spark_geometry ? m_metal_spark_mesh.index_count
-                                        : m_dust_mesh.index_count);
+            ? m_fireball_mesh
+            : (use_metal_spark_geometry
+                   ? m_metal_spark_mesh
+                   : (use_weapon_arc_geometry ? m_weapon_arc_mesh : m_dust_mesh));
+    GLuint const target_vao = target_mesh.vao;
+    GLsizei const target_index_count = target_mesh.index_count;
     if (target_vao == 0 || target_index_count <= 0) {
       continue;
     }
@@ -538,6 +598,9 @@ void CombatDustPipeline::render_dust_batch(const DustInstanceData* instances,
     QMatrix4x4 model;
     if (use_metal_spark_geometry) {
       model = spark_model_matrix(inst.position, inst.radius, inst.direction);
+    } else if (use_weapon_arc_geometry) {
+      model = weapon_arc_model_matrix(
+          inst.position, inst.radius, inst.direction, inst.tilt);
     } else {
       model.setToIdentity();
       model.translate(inst.position);
@@ -556,6 +619,9 @@ void CombatDustPipeline::render_dust_batch(const DustInstanceData* instances,
     m_dust_shader->set_uniform(m_uniforms.effect_type,
                                static_cast<int>(inst.effect_type));
     m_dust_shader->set_uniform(m_uniforms.camera_pos, m_view_position);
+    if (m_uniforms.span != GL::Shader::InvalidUniform) {
+      m_dust_shader->set_uniform(m_uniforms.span, inst.span);
+    }
 
     glDrawElements(GL_TRIANGLES, current_index_count, GL_UNSIGNED_INT, nullptr);
   }

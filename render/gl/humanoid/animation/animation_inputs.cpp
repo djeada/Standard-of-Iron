@@ -185,9 +185,10 @@ void reset_humanoid_animation_state(
   case Game::Systems::CombatActions::CombatActionId::RtsElephantStomp:
   case Game::Systems::CombatActions::CombatActionId::None:
   case Game::Systems::CombatActions::CombatActionId::RtsCommanderThrust:
-  case Game::Systems::CombatActions::CombatActionId::RtsCommanderCut:
   case Game::Systems::CombatActions::CombatActionId::RtsCommanderShot:
     break;
+  case Game::Systems::CombatActions::CombatActionId::RtsCommanderCut:
+    return Animation::SwordAttackAnimation::RpgOverhead;
   case Game::Systems::CombatActions::CombatActionId::RtsHeavyOverhead:
     return Animation::SwordAttackAnimation::RpgOverhead;
   case Game::Systems::CombatActions::CombatActionId::RtsSwordStrike:
@@ -583,8 +584,21 @@ auto sample_anim_state(const DrawContext& ctx) -> AnimationInputs {
 
     anim.simulation_owns_root_motion = presentation->fpv_controlled;
 
-    bool const has_authored_action =
-        presentation->fpv_controlled && presentation->authored_action_id != 0U;
+    auto const* authored_definition =
+        presentation->authored_action_id != 0U
+            ? Game::Systems::CombatActions::find_combat_action_definition(
+                  static_cast<Game::Systems::CombatActions::CombatActionId>(
+                      presentation->authored_action_id))
+            : nullptr;
+    bool const commander_link =
+        authored_definition != nullptr &&
+        (authored_definition->commander_only ||
+         authored_definition->id ==
+             Game::Systems::CombatActions::CombatActionId::RtsCommanderCut ||
+         authored_definition->id ==
+             Game::Systems::CombatActions::CombatActionId::RtsCommanderThrust);
+    bool const has_authored_action = presentation->authored_action_id != 0U &&
+                                     (presentation->fpv_controlled || commander_link);
 
     bool const authored_timeline_is_authoritative =
         has_authored_action &&

@@ -375,6 +375,14 @@ public:
                    float intensity,
                    float time,
                    const QVector3D& direction = {});
+  void weapon_arc(const QVector3D& position,
+                  const QVector3D& color,
+                  float radius,
+                  float intensity,
+                  float time,
+                  const QVector3D& direction,
+                  float span,
+                  float tilt = 0.0F);
   void mode_indicator(const QMatrix4x4& model,
                       int mode_type,
                       const QVector3D& color,

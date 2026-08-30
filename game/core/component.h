@@ -771,6 +771,13 @@ enum class CommanderSignatureForm : std::uint8_t {
   Thrust = 0,
   Cut,
   Shot,
+  Sweep,
+  Slam,
+};
+
+enum class CommanderStrikeCue : std::uint8_t {
+  Impact = 0,
+  Swing,
 };
 
 class CommanderSignaturePresentationComponent {
@@ -785,10 +792,14 @@ public:
     float age{0.0F};
     float lifetime{0.34F};
     float intensity{1.0F};
+    float reach{1.8F};
+    float span{0.55F};
     CommanderSignatureForm form{CommanderSignatureForm::Cut};
+    CommanderStrikeCue cue{CommanderStrikeCue::Impact};
   };
 
-  static constexpr std::size_t k_max_entries = 4U;
+  static constexpr std::size_t k_max_entries = 6U;
+  static constexpr float k_swing_lifetime = 0.46F;
   std::vector<Entry> entries;
 };
 
