@@ -128,13 +128,13 @@ strike_body_overlap_scale(const Engine::Core::Entity& commander) -> float {
               *definition, action->normalized_action_time)
               .phase) {
   case MeleePhase::Windup:
-    return 0.72F;
+    return 0.92F;
   case MeleePhase::EarlyStrike:
-    return 0.42F;
+    return 0.82F;
   case MeleePhase::CommittedStrike:
-    return 0.28F;
+    return 0.72F;
   case MeleePhase::FollowThrough:
-    return 0.80F;
+    return 0.92F;
   case MeleePhase::Ready:
     break;
   }

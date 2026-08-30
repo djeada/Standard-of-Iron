@@ -332,7 +332,9 @@ auto CombatActionService::request_attack(
       record_outcome(*attacker, result.outcome);
       if (!already_refused) {
         Engine::Core::EventManager::instance().publish(
-            Engine::Core::AudioCueEvent(Game::Audio::Cue::k_combat_ability_refused));
+            Engine::Core::AudioCueEvent::for_owner(
+                Engine::Core::owner_id_of(attacker),
+                Game::Audio::Cue::k_combat_ability_refused));
       }
       return result;
     }

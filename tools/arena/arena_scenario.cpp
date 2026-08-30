@@ -3688,7 +3688,10 @@ struct ArenaScenarioRunner::Impl {
                                                                 : k_default_fall_up_y;
           bool const legitimate_fall =
               soldier.visual_state == Render::Profiling::SoldierVisualState::Dying ||
-              soldier.visual_state == Render::Profiling::SoldierVisualState::Dead;
+              soldier.visual_state == Render::Profiling::SoldierVisualState::Dead ||
+              (soldier.visual_state ==
+                   Render::Profiling::SoldierVisualState::HitReaction &&
+               soldier.hit_reaction_kind == Engine::Core::HitReactionKind::Evade);
           float const observed_up = soldier.submitted_body_pose_valid
                                         ? soldier.submitted_body_up_y
                                         : soldier.root_up_y;

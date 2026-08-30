@@ -492,6 +492,9 @@ auto may_engage(Engine::Core::Entity* unit,
   if (unit_comp->spawn_type == Game::Units::SpawnType::Civilian) {
     return false;
   }
+  if (!Game::Systems::CombatRules::seeks_out_enemies(unit)) {
+    return false;
+  }
   auto* attack_comp = unit->get_component<Engine::Core::AttackComponent>();
   if (attack_comp == nullptr) {
     return false;

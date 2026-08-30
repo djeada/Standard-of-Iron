@@ -2,10 +2,13 @@
 
 #include <QVector3D>
 #include <QVector4D>
+#include <QtGlobal>
 
+#include <algorithm>
 #include <array>
 #include <limits>
 #include <sstream>
+#include <utility>
 
 #include "bone_palette_arena.h"
 #include "creature/runtime_bake_guard.h"
@@ -64,7 +67,70 @@ auto describe_snapshot_key(const SnapshotMeshCache::Key& key,
   return out.str();
 }
 
+auto mesh_bytes(const RiggedMesh* mesh) -> std::size_t {
+  if (mesh == nullptr) {
+    return 0;
+  }
+
+  const std::size_t cpu = (mesh->get_vertices().size() * sizeof(RiggedVertex)) +
+                          (mesh->get_indices().size() * sizeof(std::uint32_t));
+
+  return cpu * 2U;
+}
+
 } // namespace
+
+auto SnapshotMeshCache::budget_bytes() noexcept -> std::size_t {
+  static const std::size_t budget = [] {
+    constexpr std::size_t k_default_megabytes = 384;
+    const int override_mb = qEnvironmentVariableIntValue("SOI_SNAPSHOT_CACHE_MB");
+    const std::size_t megabytes =
+        override_mb > 0 ? static_cast<std::size_t>(override_mb) : k_default_megabytes;
+    return megabytes * 1024U * 1024U;
+  }();
+  return budget;
+}
+
+auto SnapshotMeshCache::note_insertion(SnapshotMeshEntry& entry) -> void {
+  entry.bytes = mesh_bytes(entry.mesh.get());
+  for (const auto& attachment : entry.attachment_meshes) {
+    entry.bytes += mesh_bytes(attachment.get());
+  }
+  entry.last_used_frame = m_frame_index;
+  m_resident_bytes += entry.bytes;
+}
+
+void SnapshotMeshCache::trim_to_budget() {
+  const std::size_t budget = budget_bytes();
+  if (m_resident_bytes <= budget) {
+    return;
+  }
+
+  std::vector<std::pair<std::uint64_t, const Key*>> candidates;
+  candidates.reserve(m_entries.size());
+  for (const auto& [key, entry] : m_entries) {
+    if (entry.last_used_frame + k_eviction_grace_frames > m_frame_index) {
+      continue;
+    }
+    candidates.emplace_back(entry.last_used_frame, &key);
+  }
+  std::sort(candidates.begin(), candidates.end(), [](const auto& lhs, const auto& rhs) {
+    return lhs.first < rhs.first;
+  });
+
+  for (const auto& [frame, key] : candidates) {
+    if (m_resident_bytes <= budget) {
+      break;
+    }
+    auto it = m_entries.find(*key);
+    if (it == m_entries.end()) {
+      continue;
+    }
+    m_resident_bytes -= std::min(m_resident_bytes, it->second.bytes);
+    m_entries.erase(it);
+    ++m_frame_stats.evictions;
+  }
+}
 
 auto SnapshotMeshCache::get_or_bake(const Key& key,
                                     const RiggedMeshEntry& source,
@@ -72,6 +138,7 @@ auto SnapshotMeshCache::get_or_bake(const Key& key,
     -> const SnapshotMeshEntry* {
   if (auto it = m_entries.find(key); it != m_entries.end()) {
     ++m_frame_stats.hits;
+    it->second.last_used_frame = m_frame_index;
     return &it->second;
   }
   if (Render::Creature::runtime_bake_forbidden()) {
@@ -118,6 +185,7 @@ auto SnapshotMeshCache::get_or_bake(const Key& key,
   }
 
   auto [it, _ok] = m_entries.emplace(key, std::move(entry));
+  note_insertion(it->second);
   ++m_frame_stats.bakes;
   return &it->second;
 }
@@ -128,6 +196,7 @@ auto SnapshotMeshCache::get_or_load(
     std::uint32_t global_frame) -> const SnapshotMeshEntry* {
   if (auto it = m_entries.find(key); it != m_entries.end()) {
     ++m_frame_stats.hits;
+    it->second.last_used_frame = m_frame_index;
     return &it->second;
   }
 
@@ -140,6 +209,7 @@ auto SnapshotMeshCache::get_or_load(
 
   SnapshotMeshEntry entry = build_entry(vertices, indices);
   auto [it, _ok] = m_entries.emplace(key, std::move(entry));
+  note_insertion(it->second);
   ++m_frame_stats.loads;
   return &it->second;
 }

@@ -749,8 +749,8 @@ void announce_new_stagger(const Engine::Core::Entity* entity, bool was_staggered
   if (entity == nullptr || was_staggered) {
     return;
   }
-  Engine::Core::EventManager::instance().publish(
-      Engine::Core::AudioCueEvent("combat.stagger"));
+  Engine::Core::EventManager::instance().publish(Engine::Core::AudioCueEvent::for_owner(
+      Engine::Core::owner_id_of(entity), "combat.stagger"));
 }
 
 void add_or_extend_stagger(Engine::Core::Entity* entity, float duration) {
@@ -918,8 +918,14 @@ apply_unit_damage(Engine::Core::World* world,
 
   Game::Units::SpawnType const attacker_type =
       attacker_type_opt.value_or(Game::Units::SpawnType::Knight);
-  Engine::Core::EventManager::instance().publish(Engine::Core::CombatHitEvent(
-      attacker_id, target->get_id(), effective_damage, attacker_type, is_killing_blow));
+  Engine::Core::EventManager::instance().publish(
+      Engine::Core::CombatHitEvent(attacker_id,
+                                   target->get_id(),
+                                   effective_damage,
+                                   attacker_type,
+                                   is_killing_blow,
+                                   attacker_owner_id,
+                                   unit->owner_id));
 
   if (structure) {
     queue_structure_impact(*target, attacker, contact_point);

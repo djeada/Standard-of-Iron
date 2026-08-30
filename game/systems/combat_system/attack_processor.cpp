@@ -651,8 +651,26 @@ void sync_melee_lock_target(Engine::Core::Entity* attacker,
     }
     attack_target->target_id = attack_comp->melee_lock_target_id;
 
-    attack_target->should_chase = true;
+    attack_target->should_chase =
+        attack_target->is_player_command ||
+        Game::Systems::CombatRules::seeks_out_enemies(attacker);
   }
+}
+
+void drop_target_left_by_a_finished_lock(
+    Engine::Core::Entity* attacker, const Engine::Core::AttackComponent* attack_comp) {
+  if (Game::Systems::CombatRules::seeks_out_enemies(attacker) ||
+      ((attack_comp != nullptr) && attack_comp->in_melee_lock)) {
+    return;
+  }
+
+  auto const* attack_target =
+      attacker->get_component<Engine::Core::AttackTargetComponent>();
+  if ((attack_target == nullptr) || attack_target->is_player_command) {
+    return;
+  }
+
+  attacker->remove_component<Engine::Core::AttackTargetComponent>();
 }
 
 void apply_health_bonus(Engine::Core::UnitComponent* unit_comp) {
@@ -1487,6 +1505,7 @@ void process_attacks(Engine::Core::World* world,
       process_melee_lock(attacker, attacker_atk, world, delta_time);
     }
     sync_melee_lock_target(attacker, attacker_atk);
+    drop_target_left_by_a_finished_lock(attacker, attacker_atk);
 
     float range = 2.0F;
     int damage = 10;

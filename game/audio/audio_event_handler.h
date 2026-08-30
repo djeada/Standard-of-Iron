@@ -46,8 +46,8 @@ private:
   void on_ambient_state_changed(const Engine::Core::AmbientStateChangedEvent& event);
   void on_building_attacked(const Engine::Core::BuildingAttackedEvent& event);
   void on_barrack_captured(const Engine::Core::BarrackCapturedEvent& event);
-  static void on_audio_trigger(const Engine::Core::AudioTriggerEvent& event);
-  static void on_audio_cue(const Engine::Core::AudioCueEvent& event);
+  void on_audio_trigger(const Engine::Core::AudioTriggerEvent& event);
+  void on_audio_cue(const Engine::Core::AudioCueEvent& event);
   static void on_music_trigger(const Engine::Core::MusicTriggerEvent& event);
   static void on_music_stop(const Engine::Core::MusicStopEvent& event);
   void on_combat_hit(const Engine::Core::CombatHitEvent& event);
@@ -62,7 +62,7 @@ private:
                         int cooldown_ms = 0);
 
   Engine::Core::World* m_world;
-  int m_local_owner_id{0};
+  Engine::Core::LocalAudience m_audience;
   std::unordered_map<std::string, std::string> m_unit_voice_map;
   std::unordered_map<Engine::Core::AmbientState, std::vector<std::string>>
       m_ambient_music_map;
@@ -76,7 +76,11 @@ private:
 
   std::chrono::steady_clock::time_point m_last_selection_sound_time;
   std::string m_last_selection_sound_id;
+  std::string m_current_music_id;
   static constexpr int SELECTION_SOUND_COOLDOWN_MS = 300;
+
+  static constexpr int SELECTION_VOICE_FLOOR_MS = 120;
+  static constexpr int SPAWN_VOICE_COOLDOWN_MS = 1500;
 
   Engine::Core::ScopedEventSubscription<Engine::Core::UnitSelectedEvent>
       m_unit_selected_sub;

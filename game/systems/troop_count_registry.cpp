@@ -15,6 +15,7 @@ auto TroopCountRegistry::instance() -> TroopCountRegistry& {
 
 void TroopCountRegistry::clear() {
   m_troop_counts.clear();
+  m_valid = false;
 }
 
 auto TroopCountRegistry::get_troop_count(int owner_id) const -> int {
@@ -38,6 +39,20 @@ void TroopCountRegistry::rebuild_from_world(const Engine::Core::World& world) {
     }
     m_troop_counts[unit->owner_id] += Game::Units::squad_population_cost(*unit);
   });
+
+  m_source_instance_id = world.instance_id();
+  m_source_tick_id = world.tick_id();
+  m_source_entity_count = world.entity_count();
+  m_valid = true;
+}
+
+void TroopCountRegistry::refresh_from_world(const Engine::Core::World& world) {
+  if (m_valid && m_source_instance_id == world.instance_id() &&
+      m_source_tick_id == world.tick_id() &&
+      m_source_entity_count == world.entity_count()) {
+    return;
+  }
+  rebuild_from_world(world);
 }
 
 } // namespace Game::Systems

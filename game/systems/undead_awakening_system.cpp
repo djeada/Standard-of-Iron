@@ -15,6 +15,7 @@
 #include "core/component.h"
 #include "core/entity.h"
 #include "core/event_manager.h"
+#include "core/local_audience.h"
 #include "core/ownership_constants.h"
 #include "core/world.h"
 #include "game/map/terrain_service.h"
@@ -43,6 +44,18 @@ constexpr float k_golden_angle_radians = 2.3999632F;
 constexpr float k_min_spawn_ring_radius = 2.0F;
 constexpr float k_spawn_ring_fraction = 0.8F;
 constexpr int k_spawn_placement_attempts = 12;
+
+auto anchor_owner(Engine::Core::World& world,
+                  Engine::Core::EntityID anchor_entity_id) -> int {
+  if (anchor_entity_id == 0) {
+    return Engine::Core::k_owner_everyone;
+  }
+  const auto* unit = world.try_get<Engine::Core::UnitComponent>(anchor_entity_id);
+  if (unit == nullptr || Game::Core::is_neutral_owner(unit->owner_id)) {
+    return Engine::Core::k_owner_everyone;
+  }
+  return unit->owner_id;
+}
 
 auto should_trigger_on_mission_start(const QString& trigger) -> bool {
   return trigger == QStringLiteral("mission_start") ||
@@ -457,8 +470,12 @@ void UndeadAwakeningSystem::break_garrison(Engine::Core::World& world,
 
   if (!zone.announced_defeat) {
     zone.announced_defeat = true;
+
+    int const victor = captured ? anchor_owner(world, zone.anchor_entity_id)
+                                : Engine::Core::k_owner_everyone;
     Engine::Core::EventManager::instance().publish(
-        Engine::Core::MissionAnnouncementEvent(
+        Engine::Core::MissionAnnouncementEvent::for_owner(
+            victor,
             captured ? QCoreApplication::translate(
                            "UndeadAwakeningSystem",
                            "The shrine answers to you now. Its dead fall still.")
@@ -466,7 +483,7 @@ void UndeadAwakeningSystem::break_garrison(Engine::Core::World& world,
                            "UndeadAwakeningSystem",
                            "The shrine is broken. Every risen guardian crumbles.")));
     Engine::Core::EventManager::instance().publish(
-        Engine::Core::AudioCueEvent("alert.objective_complete"));
+        Engine::Core::AudioCueEvent::for_owner(victor, "alert.objective_complete"));
   }
 
   pay_clear_reward(world, zone, captured);
@@ -480,13 +497,10 @@ void UndeadAwakeningSystem::pay_clear_reward(Engine::Core::World& world,
   }
 
   int beneficiary = m_services.owners.get_local_player_id();
-  if (captured && zone.anchor_entity_id != 0) {
-    auto* anchor = world.get_entity(zone.anchor_entity_id);
-    auto* unit = anchor != nullptr
-                     ? anchor->get_component<Engine::Core::UnitComponent>()
-                     : nullptr;
-    if (unit != nullptr && !Game::Core::is_neutral_owner(unit->owner_id)) {
-      beneficiary = unit->owner_id;
+  if (captured) {
+    if (int const captor = anchor_owner(world, zone.anchor_entity_id);
+        captor != Engine::Core::k_owner_everyone) {
+      beneficiary = captor;
     }
   }
 
@@ -503,14 +517,16 @@ void UndeadAwakeningSystem::pay_clear_reward(Engine::Core::World& world,
         QString::fromLatin1(resource_type_key(type))));
   }
 
-  if (spoils.isEmpty() || beneficiary != m_services.owners.get_local_player_id()) {
+  if (spoils.isEmpty()) {
     return;
   }
 
-  Engine::Core::EventManager::instance().publish(Engine::Core::MissionAnnouncementEvent(
-      QCoreApplication::translate("UndeadAwakeningSystem",
-                                  "The barrow gives up its hoard: %1.")
-          .arg(spoils.join(QStringLiteral(", ")))));
+  Engine::Core::EventManager::instance().publish(
+      Engine::Core::MissionAnnouncementEvent::for_owner(
+          beneficiary,
+          QCoreApplication::translate("UndeadAwakeningSystem",
+                                      "The barrow gives up its hoard: %1.")
+              .arg(spoils.join(QStringLiteral(", ")))));
 }
 
 void UndeadAwakeningSystem::refresh_capture_lock(Engine::Core::World& world,

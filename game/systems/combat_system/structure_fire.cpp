@@ -105,7 +105,8 @@ auto apply_structure_incendiary_damage(Engine::Core::Entity& structure,
     fire->ignition_elapsed = 0.0F;
     fire->tick_accumulator = 0.0F;
     Engine::Core::EventManager::instance().publish(
-        Engine::Core::AudioCueEvent("build.building_burning"));
+        Engine::Core::AudioCueEvent::for_owner(unit->owner_id,
+                                               "build.building_burning"));
   }
   return true;
 }

@@ -182,6 +182,7 @@ add_executable(
     systems/formation_combat_geometry_test.cpp
     systems/defensive_unit_layout_test.cpp
     systems/structure_combat_test.cpp
+    systems/event_audience_test.cpp
     systems/structure_fire_test.cpp
     systems/guard_system_test.cpp
     systems/stamina_system_test.cpp
@@ -504,6 +505,7 @@ add_executable(
     app_tests
     ${SOI_TRANSLATIONS_QRC}
     core/audio_system_test.cpp
+    world/ambient_state_hysteresis_test.cpp
     core/audio_cues_test.cpp
     core/audio_mastering_test.cpp
     core/loop_seam_test.cpp

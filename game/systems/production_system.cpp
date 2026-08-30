@@ -612,7 +612,8 @@ void ProductionSystem::update(Engine::Core::World* world, float delta_time) {
           }
           if (unit) {
             Engine::Core::EventManager::instance().publish(
-                Engine::Core::AudioCueEvent("build.unit_ready"));
+                Engine::Core::AudioCueEvent::for_owner(u->owner_id,
+                                                       "build.unit_ready"));
           }
         }
 
@@ -655,6 +656,9 @@ void ProductionSystem::update(Engine::Core::World* world, float delta_time) {
 
     auto* transform = e->get_component<Engine::Core::TransformComponent>();
     auto* movement = e->get_component<Engine::Core::MovementComponent>();
+
+    const auto* builder_unit = world->try_get<Engine::Core::UnitComponent>(e->get_id());
+    const int builder_owner_id = (builder_unit != nullptr) ? builder_unit->owner_id : 0;
 
     if (is_wall_network_product(builder_prod->product_type) &&
         builder_prod->construction_site_entity_id != 0 &&
@@ -734,7 +738,8 @@ void ProductionSystem::update(Engine::Core::World* world, float delta_time) {
           builder_prod->bypass_movement_active = false;
           builder_prod->clear_fault();
           Engine::Core::EventManager::instance().publish(
-              Engine::Core::AudioCueEvent("build.construction_started"));
+              Engine::Core::AudioCueEvent::for_owner(builder_owner_id,
+                                                     "build.construction_started"));
 
           transform->position.x = builder_prod->construction_site_x;
           transform->position.z = builder_prod->construction_site_z;
@@ -857,7 +862,8 @@ void ProductionSystem::update(Engine::Core::World* world, float delta_time) {
         builder_prod->report_fault(Engine::Core::BuilderTaskFault::TargetLost);
       } else {
         Engine::Core::EventManager::instance().publish(
-            Engine::Core::AudioCueEvent("build.construction_complete"));
+            Engine::Core::AudioCueEvent::for_owner(builder_owner_id,
+                                                   "build.construction_complete"));
       }
       builder_prod->in_progress = false;
       builder_prod->time_remaining = 0.0F;
@@ -1078,7 +1084,8 @@ void ProductionSystem::update(Engine::Core::World* world, float delta_time) {
       builder_prod->time_remaining = 0.0F;
       builder_prod->construction_complete = true;
       Engine::Core::EventManager::instance().publish(
-          Engine::Core::AudioCueEvent("build.construction_complete"));
+          Engine::Core::AudioCueEvent::for_owner(builder_owner_id,
+                                                 "build.construction_complete"));
       builder_prod->has_construction_site = false;
       builder_prod->at_construction_site = false;
       builder_prod->construction_site_entity_id = 0;

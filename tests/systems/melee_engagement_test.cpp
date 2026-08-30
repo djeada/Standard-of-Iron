@@ -298,6 +298,124 @@ INSTANTIATE_TEST_SUITE_P(
       return sanitized_case_name(info.param.name);
     });
 
+TEST_F(MeleeEngagementTest, AHealerNeverPicksItsOwnFight) {
+  Engine::Core::World world;
+  Game::Systems::register_runtime_systems(world);
+
+  auto* healer = spawn(world,
+                       Game::Units::SpawnType::Healer,
+                       1,
+                       QVector3D(0.0F, 0.0F, 0.0F),
+                       Game::Systems::NationID::RomanRepublic);
+  auto* bystander = spawn(world,
+                          Game::Units::SpawnType::Civilian,
+                          2,
+                          QVector3D(4.0F, 0.0F, 0.0F),
+                          Game::Systems::NationID::Carthage);
+  ASSERT_NE(healer, nullptr);
+  ASSERT_NE(bystander, nullptr);
+
+  auto* bystander_unit = bystander->get_component<UnitComponent>();
+  ASSERT_NE(bystander_unit, nullptr);
+  const int bystander_health_before = bystander_unit->health;
+
+  for (int tick = 0; tick < 200; ++tick) {
+    world.update(0.05F);
+    const auto* target = healer->get_component<Engine::Core::AttackTargetComponent>();
+    ASSERT_TRUE(target == nullptr || target->target_id == 0)
+        << "the healer went hunting on its own at tick " << tick;
+  }
+
+  EXPECT_EQ(bystander_unit->health, bystander_health_before)
+      << "the healer attacked an enemy nobody told it to attack";
+  EXPECT_GT(separation(*healer, *bystander), 3.0F)
+      << "the healer closed on an enemy it was never ordered to fight";
+}
+
+TEST_F(MeleeEngagementTest, AHealerDoesNotRetaliateWhenStruck) {
+  Engine::Core::World world;
+  Game::Systems::register_runtime_systems(world);
+
+  auto* healer = spawn(world,
+                       Game::Units::SpawnType::Healer,
+                       1,
+                       QVector3D(0.0F, 0.0F, 0.0F),
+                       Game::Systems::NationID::RomanRepublic);
+  auto* archer = spawn(world,
+                       Game::Units::SpawnType::Archer,
+                       2,
+                       QVector3D(6.0F, 0.0F, 0.0F),
+                       Game::Systems::NationID::Carthage);
+  ASSERT_NE(healer, nullptr);
+  ASSERT_NE(archer, nullptr);
+
+  auto* healer_unit = healer->get_component<UnitComponent>();
+  ASSERT_NE(healer_unit, nullptr);
+  healer_unit->health = healer_unit->max_health = 100000;
+
+  order_attack(*archer, *healer);
+
+  bool was_hit = false;
+  for (int tick = 0; tick < 400; ++tick) {
+    world.update(0.05F);
+    was_hit = was_hit || healer_unit->health < healer_unit->max_health;
+    const auto* target = healer->get_component<Engine::Core::AttackTargetComponent>();
+    ASSERT_TRUE(target == nullptr || target->target_id == 0)
+        << "the healer answered fire with fire at tick " << tick;
+  }
+
+  EXPECT_TRUE(was_hit) << "the archer never landed a shot, so nothing was proven";
+}
+
+TEST_F(MeleeEngagementTest, AHealerStopsFightingWhenTheMeleeLetsGo) {
+  Engine::Core::World world;
+  Game::Systems::register_runtime_systems(world);
+
+  auto* healer = spawn(world,
+                       Game::Units::SpawnType::Healer,
+                       1,
+                       QVector3D(0.0F, 0.0F, 0.0F),
+                       Game::Systems::NationID::RomanRepublic);
+  auto* swordsman = spawn(world,
+                          Game::Units::SpawnType::Knight,
+                          2,
+                          QVector3D(-2.0F, 0.0F, 0.0F),
+                          Game::Systems::NationID::Carthage);
+  ASSERT_NE(healer, nullptr);
+  ASSERT_NE(swordsman, nullptr);
+
+  auto* healer_unit = healer->get_component<UnitComponent>();
+  auto* swordsman_unit = swordsman->get_component<UnitComponent>();
+  ASSERT_NE(healer_unit, nullptr);
+  ASSERT_NE(swordsman_unit, nullptr);
+  healer_unit->health = healer_unit->max_health = 100000;
+  swordsman_unit->health = swordsman_unit->max_health = 100000;
+  const int swordsman_health_before = swordsman_unit->health;
+
+  order_attack(*swordsman, *healer);
+
+  bool locked = false;
+  for (int tick = 0; tick < 400; ++tick) {
+    world.update(0.05F);
+    const auto* attack = healer->get_component<AttackComponent>();
+    locked = locked || ((attack != nullptr) && attack->in_melee_lock);
+  }
+  ASSERT_TRUE(locked) << "the healer was never dragged into the melee";
+  EXPECT_LT(swordsman_unit->health, swordsman_health_before)
+      << "the healer refused to defend itself in a melee it could not leave";
+
+  swordsman->add_component<Engine::Core::PendingRemovalComponent>();
+  for (int tick = 0; tick < 200; ++tick) {
+    world.update(0.05F);
+  }
+
+  const auto* attack = healer->get_component<AttackComponent>();
+  EXPECT_TRUE(attack == nullptr || !attack->in_melee_lock);
+  const auto* target = healer->get_component<Engine::Core::AttackTargetComponent>();
+  EXPECT_TRUE(target == nullptr || target->target_id == 0)
+      << "the healer kept the target the melee left behind";
+}
+
 TEST_F(MeleeEngagementTest, SiegingUnitDropsTheWallForAnEnemySoldierInReach) {
   Engine::Core::World world;
   Game::Systems::register_runtime_systems(world);

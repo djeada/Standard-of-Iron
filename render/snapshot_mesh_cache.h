@@ -31,6 +31,9 @@ struct SnapshotMeshEntry {
   std::unique_ptr<RiggedMesh> mesh;
 
   std::vector<std::unique_ptr<RiggedMesh>> attachment_meshes;
+
+  std::size_t bytes{0};
+  std::uint64_t last_used_frame{0};
 };
 
 class SnapshotMeshCache {
@@ -81,15 +84,25 @@ public:
     std::uint32_t loads{0};
     std::uint32_t bakes{0};
     std::uint32_t misses{0};
+    std::uint32_t evictions{0};
   };
 
-  void reset_frame_stats() noexcept { m_frame_stats = {}; }
+  void reset_frame_stats() noexcept {
+    m_frame_stats = {};
+    ++m_frame_index;
+  }
   [[nodiscard]] auto frame_stats() const noexcept -> const FrameStats& {
     return m_frame_stats;
   }
   void reserve_for_frame(std::size_t expected_entries) {
     m_entries.reserve(m_entries.size() + expected_entries);
+    trim_to_budget();
   }
+
+  [[nodiscard]] auto resident_bytes() const noexcept -> std::size_t {
+    return m_resident_bytes;
+  }
+  [[nodiscard]] static auto budget_bytes() noexcept -> std::size_t;
 
   auto get_or_bake(const Key& key,
                    const RiggedMeshEntry& source,
@@ -98,15 +111,25 @@ public:
                    const Render::Creature::Snapshot::SnapshotMeshBlob& source,
                    std::uint32_t global_frame) -> const SnapshotMeshEntry*;
 
-  void clear() { m_entries.clear(); }
+  void clear() {
+    m_entries.clear();
+    m_resident_bytes = 0;
+  }
 
   [[nodiscard]] auto size() const noexcept -> std::size_t { return m_entries.size(); }
 
   [[nodiscard]] static auto identity_palette() noexcept -> const QMatrix4x4*;
 
 private:
+  static constexpr std::uint64_t k_eviction_grace_frames = 3;
+
+  auto note_insertion(SnapshotMeshEntry& entry) -> void;
+  void trim_to_budget();
+
   std::unordered_map<Key, SnapshotMeshEntry, KeyHash> m_entries;
   FrameStats m_frame_stats;
+  std::size_t m_resident_bytes{0};
+  std::uint64_t m_frame_index{0};
 };
 
 } // namespace Render::GL

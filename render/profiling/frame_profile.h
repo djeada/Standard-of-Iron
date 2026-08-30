@@ -77,6 +77,14 @@ struct FrameProfile {
   std::uint64_t triangles{0};
   std::uint64_t instances{0};
 
+  static constexpr std::size_t k_draw_cmd_slots = 16;
+  std::array<std::uint32_t, k_draw_cmd_slots> draw_cmd_counts{};
+
+  std::uint64_t snapshot_cache_bytes{0};
+
+  std::uint64_t prepared_batches{0};
+  std::uint64_t instanced_batches{0};
+
   double gpu_shadow_ms{0.0};
   double gpu_color_ms{0.0};
   double gpu_wait_ms{0.0};
@@ -127,6 +135,10 @@ struct FrameProfile {
     draw_calls = 0;
     triangles = 0;
     instances = 0;
+    draw_cmd_counts.fill(0);
+    snapshot_cache_bytes = 0;
+    prepared_batches = 0;
+    instanced_batches = 0;
     gpu_shadow_ms = 0.0;
     gpu_color_ms = 0.0;
     gpu_wait_ms = 0.0;

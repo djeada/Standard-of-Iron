@@ -86,6 +86,8 @@ public:
                             std::uint8_t palette_slot,
                             BuildingStateMask states = BuildingStateMask::All);
 
+  void scale_uniformly(float factor);
+
   [[nodiscard]] auto name() const -> const std::string& { return m_name; }
   [[nodiscard]] auto parts() const -> const std::vector<BuildingPartDesc>& {
     return m_parts;

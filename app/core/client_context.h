@@ -7,6 +7,7 @@
 
 #include "app/core/player_feedback.h"
 #include "app/input/cursor_mode.h"
+#include "game/core/local_audience.h"
 
 class CampaignManager;
 class CursorManager;
@@ -53,6 +54,10 @@ struct ClientContext {
   Engine::Core::World* world = nullptr;
   const Game::Systems::LevelSnapshot* level = nullptr;
   int local_owner_id = 1;
+
+  [[nodiscard]] auto audience() const -> Engine::Core::LocalAudience {
+    return Engine::Core::LocalAudience{local_owner_id};
+  }
 
   Render::GL::Renderer* renderer = nullptr;
   Render::GL::Camera* active_camera = nullptr;

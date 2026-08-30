@@ -163,7 +163,7 @@ TEST_F(BuildingCollisionRegistryTest, FootprintsCoverTheDrawnMesh) {
 
   for (const auto& drawn : {Drawn{"home", 4.25F, 4.36F},
                             Drawn{"marketplace", 5.46F, 5.46F},
-                            Drawn{"temple", 6.12F, 4.29F}}) {
+                            Drawn{"temple", 12.28F, 9.05F}}) {
     const auto size = BuildingCollisionRegistry::get_building_size(drawn.type);
     EXPECT_GE(size.width, drawn.width) << drawn.type;
     EXPECT_GE(size.depth, drawn.depth) << drawn.type;
@@ -191,6 +191,6 @@ TEST_F(BuildingCollisionRegistryTest, ARotatedTempleBlocksWhereItIsDrawn) {
 
   registry.register_building(1, "temple", 0.0F, 0.0F, 0, 90.0F);
 
-  EXPECT_TRUE(registry.is_circle_overlapping_building(0.0F, 2.9F, 0.1F));
-  EXPECT_FALSE(registry.is_circle_overlapping_building(0.0F, 3.2F, 0.1F));
+  EXPECT_TRUE(registry.is_circle_overlapping_building(0.0F, 5.8F, 0.1F));
+  EXPECT_FALSE(registry.is_circle_overlapping_building(0.0F, 6.4F, 0.1F));
 }
