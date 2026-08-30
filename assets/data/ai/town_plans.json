@@ -8,126 +8,1199 @@
     "Offsets are metres in the settlement's own frame, relative to its base",
     "anchor: negative z faces the enemy, positive z is the rear. Nothing may sit",
     "within 9m of the anchor, which the base itself occupies.",
+    "A step's optional 'rotation' is degrees in that same frame: 0 runs a wall",
+    "along x (parallel to the front), 90 runs it along z. Wall links stand 2m",
+    "apart along their line; a wall off a quarter turn keeps its angle and",
+    "never joins the axis-aligned wall network. Every shape leaves gaps so the",
+    "garrison can march out.",
     "An unknown building name is skipped with a warning; an unknown plan name",
     "falls back to the built-in layout table."
   ],
   "plans": {
     "roman_bulwark": {
       "display_name": "Fabian Bulwark",
-      "description": "A closed square: a tower on every corner, a walled front, and the homes sheltering behind the line.",
+      "description": "A closed square castrum: a tower on every corner, a gate gap in the middle of every side, the homes sheltering inside.",
       "steps": [
-        { "building": "defense_tower", "x": -11.0, "z": -11.0 },
-        { "building": "defense_tower", "x": 11.0, "z": -11.0 },
-        { "building": "home", "x": -7.0, "z": 11.0 },
-        { "building": "home", "x": 7.0, "z": 11.0 },
-        { "building": "wall_segment", "x": -8.0, "z": -16.0 },
-        { "building": "wall_segment", "x": -4.0, "z": -16.0 },
-        { "building": "wall_segment", "x": 0.0, "z": -16.0 },
-        { "building": "wall_segment", "x": 4.0, "z": -16.0 },
-        { "building": "wall_segment", "x": 8.0, "z": -16.0 },
-        { "building": "marketplace", "x": 12.0, "z": 4.0 },
-        { "building": "defense_tower", "x": -11.0, "z": 11.0 },
-        { "building": "defense_tower", "x": 11.0, "z": 11.0 },
-        { "building": "home", "x": -13.0, "z": 5.0 },
-        { "building": "home", "x": 13.0, "z": -3.0 },
-        { "building": "barracks", "x": 0.0, "z": -10.0 },
-        { "building": "home", "x": -13.0, "z": -3.0 },
-        { "building": "ballista", "x": -5.0, "z": -13.0 },
-        { "building": "ballista", "x": 5.0, "z": -13.0 }
+        {
+          "building": "barracks",
+          "x": 0,
+          "z": -10
+        },
+        {
+          "building": "home",
+          "x": -7,
+          "z": 9.4
+        },
+        {
+          "building": "home",
+          "x": 7,
+          "z": 9.4
+        },
+        {
+          "building": "defense_tower",
+          "x": -13.0,
+          "z": -13.0
+        },
+        {
+          "building": "defense_tower",
+          "x": 13.0,
+          "z": -13.0
+        },
+        {
+          "building": "wall_segment",
+          "x": -10.0,
+          "z": -13.0,
+          "rotation": 0.0
+        },
+        {
+          "building": "wall_segment",
+          "x": -8.0,
+          "z": -13.0,
+          "rotation": 0.0
+        },
+        {
+          "building": "wall_segment",
+          "x": -6.0,
+          "z": -13.0,
+          "rotation": 0.0
+        },
+        {
+          "building": "wall_segment",
+          "x": -4.0,
+          "z": -13.0,
+          "rotation": 0.0
+        },
+        {
+          "building": "wall_segment",
+          "x": 4.0,
+          "z": -13.0,
+          "rotation": 0.0
+        },
+        {
+          "building": "wall_segment",
+          "x": 6.0,
+          "z": -13.0,
+          "rotation": 0.0
+        },
+        {
+          "building": "wall_segment",
+          "x": 8.0,
+          "z": -13.0,
+          "rotation": 0.0
+        },
+        {
+          "building": "wall_segment",
+          "x": 10.0,
+          "z": -13.0,
+          "rotation": 0.0
+        },
+        {
+          "building": "marketplace",
+          "x": 0,
+          "z": 9.6
+        },
+        {
+          "building": "home",
+          "x": -10,
+          "z": 0
+        },
+        {
+          "building": "home",
+          "x": 10,
+          "z": 0
+        },
+        {
+          "building": "wall_segment",
+          "x": -13.0,
+          "z": -10.0,
+          "rotation": 270.0
+        },
+        {
+          "building": "wall_segment",
+          "x": -13.0,
+          "z": -8.0,
+          "rotation": 270.0
+        },
+        {
+          "building": "wall_segment",
+          "x": -13.0,
+          "z": -6.0,
+          "rotation": 270.0
+        },
+        {
+          "building": "wall_segment",
+          "x": -13.0,
+          "z": -4.0,
+          "rotation": 270.0
+        },
+        {
+          "building": "wall_segment",
+          "x": -13.0,
+          "z": 4.0,
+          "rotation": 270.0
+        },
+        {
+          "building": "wall_segment",
+          "x": -13.0,
+          "z": 6.0,
+          "rotation": 270.0
+        },
+        {
+          "building": "wall_segment",
+          "x": -13.0,
+          "z": 8.0,
+          "rotation": 270.0
+        },
+        {
+          "building": "wall_segment",
+          "x": -13.0,
+          "z": 10.0,
+          "rotation": 270.0
+        },
+        {
+          "building": "wall_segment",
+          "x": 13.0,
+          "z": -10.0,
+          "rotation": 270.0
+        },
+        {
+          "building": "wall_segment",
+          "x": 13.0,
+          "z": -8.0,
+          "rotation": 270.0
+        },
+        {
+          "building": "wall_segment",
+          "x": 13.0,
+          "z": -6.0,
+          "rotation": 270.0
+        },
+        {
+          "building": "wall_segment",
+          "x": 13.0,
+          "z": -4.0,
+          "rotation": 270.0
+        },
+        {
+          "building": "wall_segment",
+          "x": 13.0,
+          "z": 4.0,
+          "rotation": 270.0
+        },
+        {
+          "building": "wall_segment",
+          "x": 13.0,
+          "z": 6.0,
+          "rotation": 270.0
+        },
+        {
+          "building": "wall_segment",
+          "x": 13.0,
+          "z": 8.0,
+          "rotation": 270.0
+        },
+        {
+          "building": "wall_segment",
+          "x": 13.0,
+          "z": 10.0,
+          "rotation": 270.0
+        },
+        {
+          "building": "defense_tower",
+          "x": -13.0,
+          "z": 13.0
+        },
+        {
+          "building": "defense_tower",
+          "x": 13.0,
+          "z": 13.0
+        },
+        {
+          "building": "wall_segment",
+          "x": -10.0,
+          "z": 13.0,
+          "rotation": 0.0
+        },
+        {
+          "building": "wall_segment",
+          "x": -8.0,
+          "z": 13.0,
+          "rotation": 0.0
+        },
+        {
+          "building": "wall_segment",
+          "x": -6.0,
+          "z": 13.0,
+          "rotation": 0.0
+        },
+        {
+          "building": "wall_segment",
+          "x": -4.0,
+          "z": 13.0,
+          "rotation": 0.0
+        },
+        {
+          "building": "wall_segment",
+          "x": 4.0,
+          "z": 13.0,
+          "rotation": 0.0
+        },
+        {
+          "building": "wall_segment",
+          "x": 6.0,
+          "z": 13.0,
+          "rotation": 0.0
+        },
+        {
+          "building": "wall_segment",
+          "x": 8.0,
+          "z": 13.0,
+          "rotation": 0.0
+        },
+        {
+          "building": "wall_segment",
+          "x": 10.0,
+          "z": 13.0,
+          "rotation": 0.0
+        },
+        {
+          "building": "ballista",
+          "x": -5,
+          "z": -13
+        },
+        {
+          "building": "ballista",
+          "x": 5,
+          "z": -13
+        }
       ]
     },
     "roman_assault_camp": {
-      "display_name": "Consular Assault Camp",
-      "description": "Three barracks abreast on the front rank, a siege line behind them, and only as many homes as the manpower needs.",
+      "display_name": "Consular Star Camp",
+      "description": "A five-pointed star with a tower on every tip: the walled points face the enemy, the rear points stay open for the columns to march out.",
       "steps": [
-        { "building": "barracks", "x": 0.0, "z": -11.0 },
-        { "building": "home", "x": -8.0, "z": 10.0 },
-        { "building": "barracks", "x": -13.0, "z": -8.0 },
-        { "building": "home", "x": 8.0, "z": 10.0 },
-        { "building": "barracks", "x": 13.0, "z": -8.0 },
-        { "building": "marketplace", "x": 0.0, "z": 12.0 },
-        { "building": "defense_tower", "x": 0.0, "z": -17.0 },
-        { "building": "catapult", "x": -6.0, "z": -15.0 },
-        { "building": "home", "x": -14.0, "z": 4.0 },
-        { "building": "catapult", "x": 6.0, "z": -15.0 },
-        { "building": "home", "x": 14.0, "z": 4.0 },
-        { "building": "home", "x": -4.0, "z": 14.0 },
-        { "building": "home", "x": 4.0, "z": 14.0 }
+        {
+          "building": "barracks",
+          "x": 0,
+          "z": -10
+        },
+        {
+          "building": "home",
+          "x": 0,
+          "z": 10.5
+        },
+        {
+          "building": "home",
+          "x": -10,
+          "z": 3
+        },
+        {
+          "building": "home",
+          "x": 10,
+          "z": 3
+        },
+        {
+          "building": "defense_tower",
+          "x": 0.0,
+          "z": -19.0
+        },
+        {
+          "building": "wall_segment",
+          "x": -1.66,
+          "z": -16.61,
+          "rotation": 235.1
+        },
+        {
+          "building": "wall_segment",
+          "x": -2.81,
+          "z": -14.97,
+          "rotation": 235.1
+        },
+        {
+          "building": "wall_segment",
+          "x": -3.95,
+          "z": -13.33,
+          "rotation": 235.1
+        },
+        {
+          "building": "wall_segment",
+          "x": -5.1,
+          "z": -11.69,
+          "rotation": 235.1
+        },
+        {
+          "building": "wall_segment",
+          "x": 1.66,
+          "z": -16.61,
+          "rotation": 304.9
+        },
+        {
+          "building": "wall_segment",
+          "x": 2.81,
+          "z": -14.97,
+          "rotation": 304.9
+        },
+        {
+          "building": "wall_segment",
+          "x": 3.95,
+          "z": -13.33,
+          "rotation": 304.9
+        },
+        {
+          "building": "wall_segment",
+          "x": 5.1,
+          "z": -11.69,
+          "rotation": 304.9
+        },
+        {
+          "building": "defense_tower",
+          "x": 18.07,
+          "z": -5.87
+        },
+        {
+          "building": "defense_tower",
+          "x": -18.07,
+          "z": -5.87
+        },
+        {
+          "building": "marketplace",
+          "x": -6,
+          "z": 9
+        },
+        {
+          "building": "wall_segment",
+          "x": 15.29,
+          "z": -6.72,
+          "rotation": 163.1
+        },
+        {
+          "building": "wall_segment",
+          "x": 13.37,
+          "z": -7.3,
+          "rotation": 163.1
+        },
+        {
+          "building": "wall_segment",
+          "x": 11.46,
+          "z": -7.88,
+          "rotation": 163.1
+        },
+        {
+          "building": "wall_segment",
+          "x": 9.54,
+          "z": -8.46,
+          "rotation": 163.1
+        },
+        {
+          "building": "wall_segment",
+          "x": -15.29,
+          "z": -6.72,
+          "rotation": 16.9
+        },
+        {
+          "building": "wall_segment",
+          "x": -13.37,
+          "z": -7.3,
+          "rotation": 16.9
+        },
+        {
+          "building": "wall_segment",
+          "x": -11.46,
+          "z": -7.88,
+          "rotation": 16.9
+        },
+        {
+          "building": "wall_segment",
+          "x": -9.54,
+          "z": -8.46,
+          "rotation": 16.9
+        },
+        {
+          "building": "home",
+          "x": 6,
+          "z": 9
+        },
+        {
+          "building": "catapult",
+          "x": -5,
+          "z": -14
+        },
+        {
+          "building": "catapult",
+          "x": 5,
+          "z": -14
+        },
+        {
+          "building": "wall_segment",
+          "x": 16.31,
+          "z": -3.55,
+          "rotation": 232.9
+        },
+        {
+          "building": "wall_segment",
+          "x": 15.11,
+          "z": -1.96,
+          "rotation": 232.9
+        },
+        {
+          "building": "wall_segment",
+          "x": 13.9,
+          "z": -0.36,
+          "rotation": 232.9
+        },
+        {
+          "building": "wall_segment",
+          "x": 12.69,
+          "z": 1.23,
+          "rotation": 232.9
+        },
+        {
+          "building": "wall_segment",
+          "x": -16.31,
+          "z": -3.55,
+          "rotation": 307.1
+        },
+        {
+          "building": "wall_segment",
+          "x": -15.11,
+          "z": -1.96,
+          "rotation": 307.1
+        },
+        {
+          "building": "wall_segment",
+          "x": -13.9,
+          "z": -0.36,
+          "rotation": 307.1
+        },
+        {
+          "building": "wall_segment",
+          "x": -12.69,
+          "z": 1.23,
+          "rotation": 307.1
+        },
+        {
+          "building": "defense_tower",
+          "x": 11.17,
+          "z": 15.37
+        },
+        {
+          "building": "defense_tower",
+          "x": -11.17,
+          "z": 15.37
+        },
+        {
+          "building": "barracks",
+          "x": -13,
+          "z": -6
+        },
+        {
+          "building": "barracks",
+          "x": 13,
+          "z": -6
+        }
       ]
     },
     "roman_vanguard_camp": {
-      "display_name": "Vanguard Marching Camp",
-      "description": "Almost no fortification: two barracks thrown forward, everything else strung out behind them, and nothing that does not feed a push.",
+      "display_name": "Vanguard Chevron",
+      "description": "Almost no fortification: one arrowhead of wall pointing at the enemy, barracks behind its point, and nothing that does not feed a push.",
       "steps": [
-        { "building": "barracks", "x": -6.0, "z": -10.0 },
-        { "building": "barracks", "x": 6.0, "z": -10.0 },
-        { "building": "home", "x": -10.0, "z": 8.0 },
-        { "building": "home", "x": 10.0, "z": 8.0 },
-        { "building": "barracks", "x": 0.0, "z": -15.0 },
-        { "building": "marketplace", "x": 0.0, "z": 13.0 },
-        { "building": "home", "x": -15.0, "z": 2.0 },
-        { "building": "home", "x": 15.0, "z": 2.0 },
-        { "building": "defense_tower", "x": 0.0, "z": -19.0 },
-        { "building": "home", "x": -6.0, "z": 15.0 },
-        { "building": "home", "x": 6.0, "z": 15.0 }
+        {
+          "building": "barracks",
+          "x": -6,
+          "z": -10
+        },
+        {
+          "building": "barracks",
+          "x": 6,
+          "z": -10
+        },
+        {
+          "building": "home",
+          "x": -10,
+          "z": 8
+        },
+        {
+          "building": "home",
+          "x": 10,
+          "z": 8
+        },
+        {
+          "building": "defense_tower",
+          "x": 0,
+          "z": -19
+        },
+        {
+          "building": "wall_segment",
+          "x": -2.4,
+          "z": -17.2,
+          "rotation": 216.9
+        },
+        {
+          "building": "wall_segment",
+          "x": -4.0,
+          "z": -16.0,
+          "rotation": 216.9
+        },
+        {
+          "building": "wall_segment",
+          "x": -5.6,
+          "z": -14.8,
+          "rotation": 216.9
+        },
+        {
+          "building": "wall_segment",
+          "x": -7.2,
+          "z": -13.6,
+          "rotation": 216.9
+        },
+        {
+          "building": "wall_segment",
+          "x": -8.8,
+          "z": -12.4,
+          "rotation": 216.9
+        },
+        {
+          "building": "wall_segment",
+          "x": -10.4,
+          "z": -11.2,
+          "rotation": 216.9
+        },
+        {
+          "building": "wall_segment",
+          "x": -12.0,
+          "z": -10.0,
+          "rotation": 216.9
+        },
+        {
+          "building": "wall_segment",
+          "x": -13.6,
+          "z": -8.8,
+          "rotation": 216.9
+        },
+        {
+          "building": "wall_segment",
+          "x": 2.4,
+          "z": -17.2,
+          "rotation": 323.1
+        },
+        {
+          "building": "wall_segment",
+          "x": 4.0,
+          "z": -16.0,
+          "rotation": 323.1
+        },
+        {
+          "building": "wall_segment",
+          "x": 5.6,
+          "z": -14.8,
+          "rotation": 323.1
+        },
+        {
+          "building": "wall_segment",
+          "x": 7.2,
+          "z": -13.6,
+          "rotation": 323.1
+        },
+        {
+          "building": "wall_segment",
+          "x": 8.8,
+          "z": -12.4,
+          "rotation": 323.1
+        },
+        {
+          "building": "wall_segment",
+          "x": 10.4,
+          "z": -11.2,
+          "rotation": 323.1
+        },
+        {
+          "building": "wall_segment",
+          "x": 12.0,
+          "z": -10.0,
+          "rotation": 323.1
+        },
+        {
+          "building": "wall_segment",
+          "x": 13.6,
+          "z": -8.8,
+          "rotation": 323.1
+        },
+        {
+          "building": "barracks",
+          "x": 0,
+          "z": -15
+        },
+        {
+          "building": "marketplace",
+          "x": 0,
+          "z": 13
+        },
+        {
+          "building": "home",
+          "x": -15,
+          "z": 2
+        },
+        {
+          "building": "home",
+          "x": 15,
+          "z": 2
+        },
+        {
+          "building": "home",
+          "x": -6,
+          "z": 15
+        },
+        {
+          "building": "home",
+          "x": 6,
+          "z": 15
+        }
       ]
     },
     "punic_trade_town": {
-      "display_name": "Punic Trade Town",
-      "description": "The market goes up before the barracks. Homes ring it two deep, and the towers stand only where the roads come in.",
+      "display_name": "Punic Ring Town",
+      "description": "A circle: the market at the heart, homes around it, and eight towers on a ring with the wall closing arc by arc from the front, the rear arc left open as the road.",
       "steps": [
-        { "building": "marketplace", "x": 0.0, "z": 11.0 },
-        { "building": "home", "x": -10.0, "z": 7.0 },
-        { "building": "home", "x": 10.0, "z": 7.0 },
-        { "building": "home", "x": -12.0, "z": -2.0 },
-        { "building": "home", "x": 12.0, "z": -2.0 },
-        { "building": "defense_tower", "x": -12.0, "z": -12.0 },
-        { "building": "defense_tower", "x": 12.0, "z": -12.0 },
-        { "building": "barracks", "x": 0.0, "z": -11.0 },
-        { "building": "wall_segment", "x": -6.0, "z": -17.0 },
-        { "building": "wall_segment", "x": 0.0, "z": -17.0 },
-        { "building": "wall_segment", "x": 6.0, "z": -17.0 },
-        { "building": "home", "x": -6.0, "z": 16.0 },
-        { "building": "home", "x": 6.0, "z": 16.0 },
-        { "building": "home", "x": -16.0, "z": 6.0 },
-        { "building": "home", "x": 16.0, "z": 6.0 }
+        {
+          "building": "marketplace",
+          "x": 0,
+          "z": 11
+        },
+        {
+          "building": "home",
+          "x": -10,
+          "z": 6
+        },
+        {
+          "building": "home",
+          "x": 10,
+          "z": 6
+        },
+        {
+          "building": "barracks",
+          "x": 0,
+          "z": -10.5
+        },
+        {
+          "building": "defense_tower",
+          "x": 0.0,
+          "z": -16.0
+        },
+        {
+          "building": "defense_tower",
+          "x": 11.31,
+          "z": -11.31
+        },
+        {
+          "building": "defense_tower",
+          "x": -11.31,
+          "z": -11.31
+        },
+        {
+          "building": "wall_segment",
+          "x": 2.89,
+          "z": -14.8,
+          "rotation": 337.5
+        },
+        {
+          "building": "wall_segment",
+          "x": 4.73,
+          "z": -14.04,
+          "rotation": 337.5
+        },
+        {
+          "building": "wall_segment",
+          "x": 6.58,
+          "z": -13.27,
+          "rotation": 337.5
+        },
+        {
+          "building": "wall_segment",
+          "x": 8.43,
+          "z": -12.51,
+          "rotation": 337.5
+        },
+        {
+          "building": "wall_segment",
+          "x": -8.43,
+          "z": -12.51,
+          "rotation": 22.5
+        },
+        {
+          "building": "wall_segment",
+          "x": -6.58,
+          "z": -13.27,
+          "rotation": 22.5
+        },
+        {
+          "building": "wall_segment",
+          "x": -4.73,
+          "z": -14.04,
+          "rotation": 22.5
+        },
+        {
+          "building": "wall_segment",
+          "x": -2.89,
+          "z": -14.8,
+          "rotation": 22.5
+        },
+        {
+          "building": "home",
+          "x": -12,
+          "z": -2
+        },
+        {
+          "building": "home",
+          "x": 12,
+          "z": -2
+        },
+        {
+          "building": "defense_tower",
+          "x": 16.0,
+          "z": 0.0
+        },
+        {
+          "building": "defense_tower",
+          "x": -16.0,
+          "z": 0.0
+        },
+        {
+          "building": "wall_segment",
+          "x": 12.51,
+          "z": -8.43,
+          "rotation": 292.5
+        },
+        {
+          "building": "wall_segment",
+          "x": 13.27,
+          "z": -6.58,
+          "rotation": 292.5
+        },
+        {
+          "building": "wall_segment",
+          "x": 14.04,
+          "z": -4.73,
+          "rotation": 292.5
+        },
+        {
+          "building": "wall_segment",
+          "x": 14.8,
+          "z": -2.89,
+          "rotation": 292.5
+        },
+        {
+          "building": "wall_segment",
+          "x": -14.8,
+          "z": -2.89,
+          "rotation": 67.5
+        },
+        {
+          "building": "wall_segment",
+          "x": -14.04,
+          "z": -4.73,
+          "rotation": 67.5
+        },
+        {
+          "building": "wall_segment",
+          "x": -13.27,
+          "z": -6.58,
+          "rotation": 67.5
+        },
+        {
+          "building": "wall_segment",
+          "x": -12.51,
+          "z": -8.43,
+          "rotation": 67.5
+        },
+        {
+          "building": "home",
+          "x": -6,
+          "z": 12
+        },
+        {
+          "building": "home",
+          "x": 6,
+          "z": 12
+        },
+        {
+          "building": "home",
+          "x": -13,
+          "z": 6
+        },
+        {
+          "building": "home",
+          "x": 13,
+          "z": 6
+        },
+        {
+          "building": "defense_tower",
+          "x": 11.31,
+          "z": 11.31
+        },
+        {
+          "building": "defense_tower",
+          "x": -11.31,
+          "z": 11.31
+        },
+        {
+          "building": "wall_segment",
+          "x": 14.8,
+          "z": 2.89,
+          "rotation": 247.5
+        },
+        {
+          "building": "wall_segment",
+          "x": 14.04,
+          "z": 4.73,
+          "rotation": 247.5
+        },
+        {
+          "building": "wall_segment",
+          "x": 13.27,
+          "z": 6.58,
+          "rotation": 247.5
+        },
+        {
+          "building": "wall_segment",
+          "x": 12.51,
+          "z": 8.43,
+          "rotation": 247.5
+        },
+        {
+          "building": "wall_segment",
+          "x": -12.51,
+          "z": 8.43,
+          "rotation": 112.5
+        },
+        {
+          "building": "wall_segment",
+          "x": -13.27,
+          "z": 6.58,
+          "rotation": 112.5
+        },
+        {
+          "building": "wall_segment",
+          "x": -14.04,
+          "z": 4.73,
+          "rotation": 112.5
+        },
+        {
+          "building": "wall_segment",
+          "x": -14.8,
+          "z": 2.89,
+          "rotation": 112.5
+        }
       ]
     },
     "punic_raider_camp": {
-      "display_name": "Barcid Raider Camp",
-      "description": "A loose camp built to launch riders from, not to be besieged in: wide gaps, a market to keep the horses paid, and no wall anywhere.",
+      "display_name": "Barcid Triangle Camp",
+      "description": "A loose triangle built to launch riders from, not to be besieged in: a tower on each point, barracks on the rear corners, and no wall anywhere.",
       "steps": [
-        { "building": "barracks", "x": 0.0, "z": -10.0 },
-        { "building": "marketplace", "x": 0.0, "z": 12.0 },
-        { "building": "home", "x": -13.0, "z": 6.0 },
-        { "building": "home", "x": 13.0, "z": 6.0 },
-        { "building": "barracks", "x": -16.0, "z": -6.0 },
-        { "building": "home", "x": -16.0, "z": 9.0 },
-        { "building": "barracks", "x": 16.0, "z": -6.0 },
-        { "building": "home", "x": 16.0, "z": 9.0 },
-        { "building": "defense_tower", "x": 0.0, "z": -16.0 },
-        { "building": "home", "x": -8.0, "z": 15.0 },
-        { "building": "home", "x": 8.0, "z": 15.0 }
+        {
+          "building": "barracks",
+          "x": 0,
+          "z": -10
+        },
+        {
+          "building": "marketplace",
+          "x": 0,
+          "z": 11
+        },
+        {
+          "building": "home",
+          "x": -11,
+          "z": 7
+        },
+        {
+          "building": "home",
+          "x": 11,
+          "z": 7
+        },
+        {
+          "building": "defense_tower",
+          "x": 0.0,
+          "z": -17.0
+        },
+        {
+          "building": "barracks",
+          "x": 11.69,
+          "z": 6.75
+        },
+        {
+          "building": "barracks",
+          "x": -11.69,
+          "z": 6.75
+        },
+        {
+          "building": "home",
+          "x": 12.12,
+          "z": -7.0
+        },
+        {
+          "building": "home",
+          "x": -12.12,
+          "z": -7.0
+        },
+        {
+          "building": "defense_tower",
+          "x": 14.72,
+          "z": 8.5
+        },
+        {
+          "building": "defense_tower",
+          "x": -14.72,
+          "z": 8.5
+        },
+        {
+          "building": "home",
+          "x": -6,
+          "z": 15
+        },
+        {
+          "building": "home",
+          "x": 6,
+          "z": 15
+        }
       ]
     },
     "punic_grand_camp": {
-      "display_name": "Hannibalic Grand Camp",
-      "description": "A working town that can also field a siege train: market at the heart, two barracks on the shoulders, and engines lined up on the approach.",
+      "display_name": "Hannibalic Hexagon",
+      "description": "A six-sided camp: market at the heart, two barracks on the shoulders, engines lined up on the approach, and the wall closing side by side from the front with the rear side open.",
       "steps": [
-        { "building": "barracks", "x": 0.0, "z": -11.0 },
-        { "building": "marketplace", "x": 0.0, "z": 11.0 },
-        { "building": "home", "x": -9.0, "z": 9.0 },
-        { "building": "home", "x": 9.0, "z": 9.0 },
-        { "building": "barracks", "x": -13.0, "z": -8.0 },
-        { "building": "barracks", "x": 13.0, "z": -8.0 },
-        { "building": "catapult", "x": -6.0, "z": -15.0 },
-        { "building": "catapult", "x": 6.0, "z": -15.0 },
-        { "building": "defense_tower", "x": -12.0, "z": -12.0 },
-        { "building": "defense_tower", "x": 12.0, "z": -12.0 },
-        { "building": "home", "x": -14.0, "z": 3.0 },
-        { "building": "home", "x": 14.0, "z": 3.0 },
-        { "building": "home", "x": -6.0, "z": 15.0 },
-        { "building": "home", "x": 6.0, "z": 15.0 }
+        {
+          "building": "barracks",
+          "x": 0,
+          "z": -11
+        },
+        {
+          "building": "marketplace",
+          "x": 0,
+          "z": 11
+        },
+        {
+          "building": "home",
+          "x": -9,
+          "z": 8
+        },
+        {
+          "building": "home",
+          "x": 9,
+          "z": 8
+        },
+        {
+          "building": "defense_tower",
+          "x": 0.0,
+          "z": -16.0
+        },
+        {
+          "building": "defense_tower",
+          "x": 13.86,
+          "z": -8.0
+        },
+        {
+          "building": "defense_tower",
+          "x": -13.86,
+          "z": -8.0
+        },
+        {
+          "building": "wall_segment",
+          "x": 2.6,
+          "z": -14.5,
+          "rotation": 330.0
+        },
+        {
+          "building": "wall_segment",
+          "x": 4.33,
+          "z": -13.5,
+          "rotation": 330.0
+        },
+        {
+          "building": "wall_segment",
+          "x": 6.06,
+          "z": -12.5,
+          "rotation": 330.0
+        },
+        {
+          "building": "wall_segment",
+          "x": 7.79,
+          "z": -11.5,
+          "rotation": 330.0
+        },
+        {
+          "building": "wall_segment",
+          "x": 9.53,
+          "z": -10.5,
+          "rotation": 330.0
+        },
+        {
+          "building": "wall_segment",
+          "x": 11.26,
+          "z": -9.5,
+          "rotation": 330.0
+        },
+        {
+          "building": "wall_segment",
+          "x": -11.26,
+          "z": -9.5,
+          "rotation": 30.0
+        },
+        {
+          "building": "wall_segment",
+          "x": -9.53,
+          "z": -10.5,
+          "rotation": 30.0
+        },
+        {
+          "building": "wall_segment",
+          "x": -7.79,
+          "z": -11.5,
+          "rotation": 30.0
+        },
+        {
+          "building": "wall_segment",
+          "x": -6.06,
+          "z": -12.5,
+          "rotation": 30.0
+        },
+        {
+          "building": "wall_segment",
+          "x": -4.33,
+          "z": -13.5,
+          "rotation": 30.0
+        },
+        {
+          "building": "wall_segment",
+          "x": -2.6,
+          "z": -14.5,
+          "rotation": 30.0
+        },
+        {
+          "building": "catapult",
+          "x": -6,
+          "z": -15
+        },
+        {
+          "building": "catapult",
+          "x": 6,
+          "z": -15
+        },
+        {
+          "building": "barracks",
+          "x": -13,
+          "z": -5
+        },
+        {
+          "building": "barracks",
+          "x": 13,
+          "z": -5
+        },
+        {
+          "building": "defense_tower",
+          "x": 13.86,
+          "z": 8.0
+        },
+        {
+          "building": "defense_tower",
+          "x": -13.86,
+          "z": 8.0
+        },
+        {
+          "building": "wall_segment",
+          "x": 13.86,
+          "z": -5.0,
+          "rotation": 270.0
+        },
+        {
+          "building": "wall_segment",
+          "x": 13.86,
+          "z": -3.0,
+          "rotation": 270.0
+        },
+        {
+          "building": "wall_segment",
+          "x": 13.86,
+          "z": -1.0,
+          "rotation": 270.0
+        },
+        {
+          "building": "wall_segment",
+          "x": 13.86,
+          "z": 1.0,
+          "rotation": 270.0
+        },
+        {
+          "building": "wall_segment",
+          "x": 13.86,
+          "z": 3.0,
+          "rotation": 270.0
+        },
+        {
+          "building": "wall_segment",
+          "x": 13.86,
+          "z": 5.0,
+          "rotation": 270.0
+        },
+        {
+          "building": "wall_segment",
+          "x": -13.86,
+          "z": 5.0,
+          "rotation": 90.0
+        },
+        {
+          "building": "wall_segment",
+          "x": -13.86,
+          "z": 3.0,
+          "rotation": 90.0
+        },
+        {
+          "building": "wall_segment",
+          "x": -13.86,
+          "z": 1.0,
+          "rotation": 90.0
+        },
+        {
+          "building": "wall_segment",
+          "x": -13.86,
+          "z": -1.0,
+          "rotation": 90.0
+        },
+        {
+          "building": "wall_segment",
+          "x": -13.86,
+          "z": -3.0,
+          "rotation": 90.0
+        },
+        {
+          "building": "wall_segment",
+          "x": -13.86,
+          "z": -5.0,
+          "rotation": 90.0
+        },
+        {
+          "building": "home",
+          "x": -13,
+          "z": 4
+        },
+        {
+          "building": "home",
+          "x": 13,
+          "z": 4
+        },
+        {
+          "building": "home",
+          "x": -6,
+          "z": 15
+        },
+        {
+          "building": "home",
+          "x": 6,
+          "z": 15
+        },
+        {
+          "building": "defense_tower",
+          "x": 0.0,
+          "z": 16.0
+        }
       ]
     }
   }

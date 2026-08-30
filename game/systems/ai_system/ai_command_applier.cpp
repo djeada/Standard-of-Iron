@@ -19,6 +19,7 @@
 #include "../../session/session_context.h"
 #include "../../units/troop_config.h"
 #include "../build_site.h"
+#include "../building_collision_registry.h"
 #include "../combat_system/combat_utils.h"
 #include "../command_service.h"
 #include "../construction_cost_catalog.h"
@@ -251,11 +252,16 @@ auto AICommandApplier::apply(Engine::Core::World& world,
       }
 
       constexpr float k_site_nudge_radius = 12.0F;
+
+      constexpr float k_wall_link_nudge_radius = 1.0F;
+      const bool wall_link =
+          Game::Systems::is_wall_link_building_type(command.construction_type);
       const auto site = Game::Systems::find_clear_site(
           world,
           command.construction_type,
           QVector3D(command.construction_site_x, 0.0F, command.construction_site_z),
-          k_site_nudge_radius);
+          wall_link ? k_wall_link_nudge_radius : k_site_nudge_radius,
+          command.construction_rotation_y);
       if (!site.has_value()) {
 
         ++report.refused_construction;
@@ -272,12 +278,17 @@ auto AICommandApplier::apply(Engine::Core::World& world,
         }
         break;
       }
+      if (qEnvironmentVariableIsSet("SOI_BUILD_TRACE")) {
+        qWarning() << "BUILDTRACE p" << ai_owner_id << "submits"
+                   << command.construction_type << "at" << site->x() << site->z();
+      }
       submit(world,
              ai_owner_id,
-             Game::Command::StartConstruction{.units = command.units,
-                                              .construction_type =
-                                                  command.construction_type,
-                                              .site = *site});
+             Game::Command::StartConstruction{
+                 .units = command.units,
+                 .construction_type = command.construction_type,
+                 .site = *site,
+                 .rotation_y = command.construction_rotation_y});
       break;
     }
 

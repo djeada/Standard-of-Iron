@@ -305,7 +305,7 @@ RowLayout {
             "hint": qsTr("Open the builder's structure list and place one."),
             "details": [{
                     "term": qsTr("Give it"),
-                    "text": qsTr("Pick a structure, move the outline onto flat clear ground, scroll to rotate, left-click to confirm. Right-click cancels.")
+                    "text": qsTr("Pick a structure, move the outline onto flat clear ground, scroll or press [ and ] to rotate, left-click to confirm. Right-click cancels.")
                 }, {
                     "term": qsTr("Troops"),
                     "text": qsTr("Builders only.")

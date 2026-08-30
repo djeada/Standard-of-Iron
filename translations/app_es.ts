@@ -2894,10 +2894,6 @@ Puede tratarse de una escaramuza, o los objetivos no se han configurado.</transl
         <translation>Abre la lista de estructuras del constructor y coloca una.</translation>
     </message>
     <message>
-        <source>Pick a structure, move the outline onto flat clear ground, scroll to rotate, left-click to confirm. Right-click cancels.</source>
-        <translation>Elige una estructura, lleva el contorno a suelo llano y despejado, usa la rueda para girar y confirma con clic izquierdo. Clic derecho cancela.</translation>
-    </message>
-    <message>
         <source>Builders only.</source>
         <translation>Solo constructores.</translation>
     </message>
@@ -3092,6 +3088,10 @@ Puede tratarse de una escaramuza, o los objetivos no se han configurado.</transl
     <message>
         <source>Select two understrength squads of the same kind</source>
         <translation>Selecciona dos unidades mermadas del mismo tipo</translation>
+    </message>
+    <message>
+        <source>Pick a structure, move the outline onto flat clear ground, scroll or press [ and ] to rotate, left-click to confirm. Right-click cancels.</source>
+        <translation>Elige una estructura, lleva el contorno a suelo llano y despejado, usa la rueda o pulsa [ y ] para girar y confirma con clic izquierdo. Clic derecho cancela.</translation>
     </message>
 </context>
 <context>
@@ -7562,6 +7562,22 @@ Los constructores lo siegan para la comida que recluta civiles</translation>
     <message>
         <source>Use while guarding to shield bash</source>
         <translation>Úsalo mientras te proteges para dar un golpe de escudo</translation>
+    </message>
+    <message>
+        <source>Rotate structure outline left</source>
+        <translation>Girar el contorno a la izquierda</translation>
+    </message>
+    <message>
+        <source>Turns the structure or wall you are placing anticlockwise. The mouse wheel does the same.</source>
+        <translation>Gira en sentido antihorario la estructura o muralla que estás colocando. La rueda del ratón hace lo mismo.</translation>
+    </message>
+    <message>
+        <source>Rotate structure outline right</source>
+        <translation>Girar el contorno a la derecha</translation>
+    </message>
+    <message>
+        <source>Turns the structure or wall you are placing clockwise. The mouse wheel does the same.</source>
+        <translation>Gira en sentido horario la estructura o muralla que estás colocando. La rueda del ratón hace lo mismo.</translation>
     </message>
 </context>
 <context>

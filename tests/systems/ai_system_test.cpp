@@ -13,6 +13,7 @@
 #include "game/systems/ai_system/ai_behavior_registry.h"
 #include "game/systems/ai_system/ai_command_applier.h"
 #include "game/systems/ai_system/ai_command_filter.h"
+#include "game/systems/ai_system/ai_doctrine_catalog.h"
 #include "game/systems/ai_system/ai_executor.h"
 #include "game/systems/ai_system/ai_reasoner.h"
 #include "game/systems/ai_system/ai_snapshot_builder.h"
@@ -3321,3 +3322,50 @@ TEST_F(AISystemTest, DeactivatedAssaultComponentReturnsAUnitToTheStandingArmy) {
 }
 
 } // namespace
+
+TEST_F(AISystemTest, BuilderBehaviorTurnsPlannedWallsIntoTheSettlementFrame) {
+  Game::Systems::AI::TownPlan plan;
+  plan.id = "test_ring";
+  plan.steps.push_back(
+      {.building = "wall_segment", .x = 0.0F, .z = -12.0F, .rotation = 30.0F});
+  Game::Systems::AI::AIDoctrine doctrine;
+  doctrine.town_plan = &plan;
+
+  Game::Systems::AI::BuilderBehavior behavior;
+
+  Game::Systems::AI::AISnapshot snapshot;
+  snapshot.game_time = 5.0F;
+  snapshot.friendly_units = {make_builder(11, 18.0F, 12.0F),
+                             make_barracks(5, 40.0F, 55.0F)};
+  snapshot.visible_enemies = {make_enemy_building(90, 140.0F, 55.0F)};
+
+  Game::Systems::AI::AIContext context;
+  context.player_id = 3;
+  context.builder_count = 1;
+  context.home_count = 2;
+  context.farm_count = 2;
+  context.barracks_count = 1;
+  context.primary_barracks = 5;
+  context.base_pos_x = 40.0F;
+  context.base_pos_z = 55.0F;
+  context.has_base_anchor = true;
+  context.strategy_config.doctrine = &doctrine;
+
+  std::vector<Game::Systems::AI::AICommand> commands;
+  behavior.execute(snapshot, context, 3.1F, commands);
+
+  ASSERT_FALSE(commands.empty());
+  const auto& command = commands.front();
+  ASSERT_EQ(command.type, Game::Systems::AI::AICommandType::StartBuilderConstruction);
+  EXPECT_STREQ(command.construction_type, "wall_segment");
+
+  EXPECT_NEAR(command.construction_site_x, 40.0F + 12.0F, 0.01F)
+      << "negative plan z faces the enemy, which stands in +x";
+  EXPECT_NEAR(command.construction_site_z, 55.0F, 0.01F);
+
+  EXPECT_NEAR(command.construction_rotation_y, 270.0F + 30.0F, 0.01F)
+      << "a wall along the front runs along z here (yaw 270), plus the step's own turn";
+  EXPECT_TRUE(context.settlement_facing_locked);
+  EXPECT_NEAR(context.settlement_facing_x, -1.0F, 0.001F);
+  EXPECT_NEAR(context.settlement_facing_z, 0.0F, 0.001F);
+}

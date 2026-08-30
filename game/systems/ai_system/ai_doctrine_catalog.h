@@ -59,12 +59,16 @@ struct TownPlanStep {
   std::string building;
   float x = 0.0F;
   float z = 0.0F;
+
+  float rotation = 0.0F;
 };
 
 struct TownPlan {
   std::string id;
   std::string display_name;
   std::vector<TownPlanStep> steps;
+
+  [[nodiscard]] auto wall_step_count() const -> int;
 };
 
 struct AIDoctrine {

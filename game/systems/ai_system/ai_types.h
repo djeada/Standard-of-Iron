@@ -328,6 +328,10 @@ struct AIContext {
   float base_pos_y = 0.0F;
   float base_pos_z = 0.0F;
   bool has_base_anchor = false;
+
+  float settlement_facing_x = 0.0F;
+  float settlement_facing_z = -1.0F;
+  bool settlement_facing_locked = false;
   bool anchor_is_structural = false;
   bool has_expansion_site = false;
   float expansion_site_x = 0.0F;
@@ -448,6 +452,7 @@ struct AICommand {
   const char* construction_type = nullptr;
   float construction_site_x = 0.0F;
   float construction_site_z = 0.0F;
+  float construction_rotation_y = 0.0F;
   std::uint64_t resource_target_id = 0;
 
   float rally_x = 0.0F;

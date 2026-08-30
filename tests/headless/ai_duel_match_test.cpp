@@ -5,6 +5,7 @@
 #include <cstdio>
 #include <gtest/gtest.h>
 #include <memory>
+#include <string>
 #include <utility>
 #include <vector>
 
@@ -380,6 +381,69 @@ protected:
     for (const auto& side : sides) {
       const auto report = survey(session, side.first);
       const auto* plan = ai != nullptr ? ai->plan_for(side.first) : nullptr;
+      if (qEnvironmentVariableIsSet("SOI_DUEL_BUILDERS")) {
+        for (auto [id, unit, transform, movement] :
+             session.world()
+                 .view<UnitComponent,
+                       Engine::Core::TransformComponent,
+                       Engine::Core::MovementComponent>()) {
+          if (unit.owner_id != side.first ||
+              unit.spawn_type != Game::Units::SpawnType::Builder) {
+            continue;
+          }
+          const auto goal = Game::Systems::NavGrid::world_to_grid(
+              movement.get_goal_x(), movement.get_goal_y());
+          const auto here = Game::Systems::NavGrid::world_to_grid(transform.position.x,
+                                                                  transform.position.z);
+          std::printf(
+              "    builder %llu at %.1f,%.1f (walk %d) -> goal %.1f,%.1f (walk %d) "
+              "target %d path %zu/%zu\n",
+              static_cast<unsigned long long>(id),
+              transform.position.x,
+              transform.position.z,
+              Game::Systems::NavGrid::is_grid_walkable(here) ? 1 : 0,
+              movement.get_goal_x(),
+              movement.get_goal_y(),
+              Game::Systems::NavGrid::is_grid_walkable(goal) ? 1 : 0,
+              movement.get_has_target() ? 1 : 0,
+              movement.get_path_index(),
+              movement.get_path().size());
+          if (const auto* b =
+                  session.world().try_get<Engine::Core::BuilderProductionComponent>(
+                      id)) {
+            const auto* carry =
+                session.world().try_get<Engine::Core::ResourceCarryComponent>(id);
+            std::printf("      gather %d auto %d prod '%s' site %d(%.1f,%.1f rot %.0f) "
+                        "prog %d task %d/%llu carry %d depot %d\n",
+                        b->has_gather_order ? 1 : 0,
+                        b->auto_gather ? 1 : 0,
+                        b->product_type.c_str(),
+                        b->has_construction_site ? 1 : 0,
+                        b->construction_site_x,
+                        b->construction_site_z,
+                        b->construction_site_rotation_y,
+                        b->in_progress ? 1 : 0,
+                        b->has_task_target ? 1 : 0,
+                        static_cast<unsigned long long>(b->task_target_id),
+                        carry != nullptr ? 1 : 0,
+                        carry != nullptr && carry->has_depot ? 1 : 0);
+          }
+        }
+        for (auto [id, unit, transform] :
+             session.world().view<UnitComponent, Engine::Core::TransformComponent>()) {
+          if (unit.owner_id != side.first ||
+              !Game::Units::is_building_spawn(unit.spawn_type)) {
+            continue;
+          }
+          const std::string type = Game::Units::spawn_typeToString(unit.spawn_type);
+          std::printf("    %s %llu at %.1f,%.1f rot %.0f\n",
+                      type.c_str(),
+                      static_cast<unsigned long long>(id),
+                      transform.position.x,
+                      transform.position.z,
+                      transform.rotation.y);
+        }
+      }
       std::printf(
           "  %-10s bar %d home %d farm %d tow %d wall %d mkt %d | work %d/%d "
           "fight %d (foot %d bow %d horse %d engine %d) | "

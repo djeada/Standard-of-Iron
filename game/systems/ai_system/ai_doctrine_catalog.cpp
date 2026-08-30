@@ -126,6 +126,7 @@ void parse_town_plans(const QJsonObject& root,
       }
       step.x = read_float(step_object, "x", 0.0F);
       step.z = read_float(step_object, "z", 0.0F);
+      step.rotation = read_float(step_object, "rotation", 0.0F);
       plan.steps.push_back(std::move(step));
     }
     if (plan.steps.empty()) {
@@ -335,6 +336,16 @@ auto authored_doctrine(std::string_view commander_id) -> const AIDoctrine* {
   }
   const auto found = value.doctrines.find(std::string(commander_id));
   return found == value.doctrines.end() ? nullptr : &found->second;
+}
+
+auto TownPlan::wall_step_count() const -> int {
+  int count = 0;
+  for (const auto& step : steps) {
+    if (step.building == "wall_segment" || step.building == "wall_gate") {
+      ++count;
+    }
+  }
+  return count;
 }
 
 auto authored_town_plan(std::string_view plan_id) -> const TownPlan* {
