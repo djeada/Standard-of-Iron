@@ -8,6 +8,7 @@
 #include "combat_system/formation_contact_processor.h"
 #include "combat_system/hit_feedback_processor.h"
 #include "combat_system/siege_special_processor.h"
+#include "combat_system/threat_alert.h"
 
 namespace Game::Systems {
 
@@ -22,6 +23,7 @@ void CombatSystem::update(Engine::Core::World* world, float delta_time) {
   Combat::process_siege_specials(world, m_query_context, delta_time);
   Combat::process_elephant_specials(world, m_query_context, delta_time);
   m_auto_engagement.process(world, m_query_context, delta_time);
+  Combat::tick_threat_alerts(world, delta_time);
   m_target_commitment.update(world, 0.0F);
 }
 

@@ -74,24 +74,13 @@ void StatueRenderer::generate_instances(
     const Game::Map::TerrainHeightMap& height_map) {
 
   const auto& terrain_service = world().terrain_or_empty();
-  const float tile_size = height_map.get_tile_size();
-  const int width = height_map.get_width();
-  const int map_height = height_map.get_height();
-  const float half_w = static_cast<float>(width) * 0.5F;
-  const float half_h = static_cast<float>(map_height) * 0.5F;
 
   for (const auto& prop : world_props) {
     if (prop.type != Game::Map::WorldProp::Type::Statue) {
       continue;
     }
-    const float wx = (prop.x - half_w) * tile_size;
-    const float wz = (prop.z - half_h) * tile_size;
-    const QVector3D resolved = terrain_service.resolve_footprint_world_position(
-        wx,
-        wz,
-        Game::Map::world_prop_ground_bounding_radius(prop.type, prop.scale),
-        0.0F,
-        0.0F);
+    const QVector3D resolved = terrain_service.world_prop_footprint_world_position(
+        prop, Game::Map::world_prop_ground_bounding_radius(prop.type, prop.scale));
 
     uint32_t state = hash_coords(static_cast<int>(prop.x),
                                  static_cast<int>(prop.z),

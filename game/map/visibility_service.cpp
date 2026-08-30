@@ -25,8 +25,9 @@ auto VisibilityService::instance() -> VisibilityService& {
 
 namespace {
 
-constexpr float k_default_vision_range = 12.0F;
-constexpr float k_fog_reveal_scale = 1.5F;
+constexpr float k_default_vision_range =
+    Engine::Core::Defaults::k_unit_default_vision_range;
+constexpr float k_fog_reveal_scale = Engine::Core::Defaults::k_vision_reveal_scale;
 constexpr float k_half_cell_offset = 0.5F;
 constexpr float k_min_tile_size = 0.0001F;
 constexpr std::chrono::milliseconds k_min_job_interval{50};

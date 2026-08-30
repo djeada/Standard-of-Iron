@@ -201,6 +201,7 @@ add_executable(
     systems/spent_projectile_test.cpp
     systems/elephant_special_processor_test.cpp
     systems/siege_special_processor_test.cpp
+    systems/squad_alert_test.cpp
     systems/gate_system_test.cpp
     systems/battle_movement_refactor_test.cpp
     systems/battlefield_capture_test.cpp

@@ -90,6 +90,11 @@ constexpr std::array k_fields = std::to_array<FieldSpec>({
     {"AttackTargetComponent",
      AuthoritativeSerialized,
      "Current target and chase flag."},
+    {"ThreatAlertComponent",
+     DerivedRebuilt,
+     "A one-second throttle on calling for help, plus the aggressor waiting to "
+     "be broadcast. A restored match re-raises the alert on the next hit or "
+     "sighting."},
     {"CombatStateComponent",
      AuthoritativeSerialized,
      "Combat phase, timers and the swing being executed."},

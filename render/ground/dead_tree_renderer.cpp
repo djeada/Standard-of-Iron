@@ -78,22 +78,13 @@ void DeadTreeRenderer::submit(Renderer& renderer, ResourceManager* resources) {
 
 void DeadTreeRenderer::append_world_prop_dead_trees() {
   const auto& terrain_service = world().terrain_or_empty();
-  const float half_w = static_cast<float>(m_width) * 0.5F;
-  const float half_h = static_cast<float>(m_height) * 0.5F;
-  const float tile_size = m_tile_size;
 
   for (const auto& prop : m_runtime_world_props) {
     if (prop.type != Game::Map::WorldProp::Type::DeadTree) {
       continue;
     }
-    const float wx = (prop.x - half_w) * tile_size;
-    const float wz = (prop.z - half_h) * tile_size;
-    const QVector3D resolved = terrain_service.resolve_footprint_world_position(
-        wx,
-        wz,
-        Game::Map::world_prop_ground_bounding_radius(prop.type, prop.scale),
-        0.0F,
-        0.0F);
+    const QVector3D resolved = terrain_service.world_prop_footprint_world_position(
+        prop, Game::Map::world_prop_ground_bounding_radius(prop.type, prop.scale));
 
     uint32_t state = hash_coords(static_cast<int>(prop.x),
                                  static_cast<int>(prop.z),

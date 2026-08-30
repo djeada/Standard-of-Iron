@@ -836,9 +836,13 @@ bridge_walkable_half_width(float bridge_width) -> float {
   return std::max((bridge_width * 0.5F) - k_water_bank_clearance, bridge_width * 0.25F);
 }
 
+inline constexpr float k_bridge_min_bank_landing = 2.0F;
+
 [[nodiscard]] inline constexpr auto bridge_bank_landing(float bridge_width,
                                                         float river_width) -> float {
-  return std::clamp(std::max(bridge_width * 0.12F, river_width * 0.05F), 0.9F, 3.0F);
+  return std::clamp(std::max(bridge_width * 0.12F, river_width * 0.05F),
+                    k_bridge_min_bank_landing,
+                    3.0F);
 }
 
 [[nodiscard]] inline auto closest_point_on_segment(const QVector3D& point,
@@ -984,7 +988,7 @@ inline constexpr float k_river_bank_max_blend_cells = 26.0F;
 
 inline constexpr float k_bridge_deck_visual_lift = 0.12F;
 
-inline constexpr float k_bridge_landing_grade = 0.28F;
+inline constexpr float k_bridge_landing_grade = 0.50F;
 
 inline constexpr float k_bridge_landing_thickness = 0.06F;
 

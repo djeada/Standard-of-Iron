@@ -29,6 +29,7 @@
 #include "combat_types.h"
 #include "combat_utils.h"
 #include "structure_combat.h"
+#include "threat_alert.h"
 
 namespace Game::Systems::Combat {
 
@@ -556,14 +557,6 @@ auto blood_stain_scale(const Engine::Core::UnitComponent* unit) -> float {
   return 1.0F;
 }
 
-auto retaliation_should_chase(Engine::Core::Entity* entity) -> bool {
-  if (Game::Systems::DefensiveUnitLayoutService::holds_position(*entity)) {
-    return false;
-  }
-  auto* hold_mode = entity->get_component<Engine::Core::HoldModeComponent>();
-  return (hold_mode == nullptr) || !hold_mode->active;
-}
-
 auto is_valid_retaliation_attacker(Engine::Core::Entity* attacker) -> bool {
   if (attacker == nullptr) {
     return false;
@@ -578,21 +571,6 @@ auto is_valid_retaliation_attacker(Engine::Core::Entity* attacker) -> bool {
   return true;
 }
 
-auto has_active_engagement(Engine::Core::World* world,
-                           Engine::Core::Entity* entity,
-                           const Engine::Core::UnitComponent* unit) -> bool {
-  auto* attack = entity->get_component<Engine::Core::AttackComponent>();
-  if ((attack != nullptr) && attack->in_melee_lock) {
-    return true;
-  }
-  auto* attack_target = entity->get_component<Engine::Core::AttackTargetComponent>();
-  if ((attack_target == nullptr) || attack_target->target_id == 0) {
-    return false;
-  }
-  auto* current = world->get_entity(attack_target->target_id);
-  return is_valid_enemy_unit(unit, current, true);
-}
-
 auto note_wildlife_aggressor(Engine::Core::Entity* target,
                              Engine::Core::EntityID attacker_id) -> bool {
   auto* wildlife = target->get_component<Engine::Core::WildlifeComponent>();
@@ -603,84 +581,6 @@ auto note_wildlife_aggressor(Engine::Core::Entity* target,
   wildlife->hostile_timer = Game::Wildlife::k_hostility_duration;
   wildlife->think_cooldown = 0.0F;
   return true;
-}
-
-void engage_retaliation_target(Engine::Core::Entity* entity,
-                               Engine::Core::EntityID attacker_id) {
-  auto* attack_target =
-      Engine::Core::get_or_add_component<Engine::Core::AttackTargetComponent>(entity);
-  if (attack_target == nullptr) {
-    return;
-  }
-  attack_target->target_id = attacker_id;
-  attack_target->should_chase = retaliation_should_chase(entity);
-  attack_target->is_player_command = false;
-
-  if (auto* intent =
-          entity->get_component<Engine::Core::PlayerOrderIntentComponent>()) {
-    intent->suppress_opportunistic_combat = false;
-    intent->kind = Engine::Core::PlayerOrderIntentKind::None;
-  }
-}
-
-void alert_nearby_allies(Engine::Core::World* world,
-                         Engine::Core::Entity* defender,
-                         Engine::Core::Entity* attacker) {
-  if (world == nullptr) {
-    return;
-  }
-  auto* defender_unit = defender->get_component<Engine::Core::UnitComponent>();
-  auto* defender_transform =
-      defender->get_component<Engine::Core::TransformComponent>();
-  auto* attacker_transform =
-      attacker->get_component<Engine::Core::TransformComponent>();
-  if ((defender_unit == nullptr) || (defender_transform == nullptr) ||
-      (attacker_transform == nullptr)) {
-    return;
-  }
-
-  float const radius_sq =
-      Constants::k_squad_alert_radius * Constants::k_squad_alert_radius;
-  int alerted = 0;
-
-  static thread_local std::vector<Engine::Core::EntityID> nearby;
-  collect_unit_ids_near(*world,
-                        defender_transform->position.x,
-                        defender_transform->position.z,
-                        Constants::k_squad_alert_radius,
-                        nearby);
-  for (const Engine::Core::EntityID ally_id : nearby) {
-    if (alerted >= Constants::k_max_squad_alert_allies) {
-      break;
-    }
-    auto* ally = world->get_entity(ally_id);
-    if ((ally == defender) || (ally == nullptr) ||
-        ally->has_component<Engine::Core::PendingRemovalComponent>()) {
-      continue;
-    }
-    auto* ally_unit = ally->get_component<Engine::Core::UnitComponent>();
-    if ((ally_unit == nullptr) || ally_unit->health <= 0 ||
-        ally_unit->owner_id != defender_unit->owner_id) {
-      continue;
-    }
-    auto* ally_transform = ally->get_component<Engine::Core::TransformComponent>();
-    if (ally_transform == nullptr) {
-      continue;
-    }
-    float const dx = ally_transform->position.x - defender_transform->position.x;
-    float const dz = ally_transform->position.z - defender_transform->position.z;
-    if (dx * dx + dz * dz > radius_sq) {
-      continue;
-    }
-    if (!may_engage(ally, attacker, EngagementTrigger::SquadAlert)) {
-      continue;
-    }
-    if (has_active_engagement(world, ally, ally_unit)) {
-      continue;
-    }
-    engage_retaliation_target(ally, attacker->get_id());
-    ++alerted;
-  }
 }
 
 void assign_retaliation_target_if_needed(Engine::Core::World* world,
@@ -699,14 +599,13 @@ void assign_retaliation_target_if_needed(Engine::Core::World* world,
   }
 
   auto* unit = target->get_component<Engine::Core::UnitComponent>();
-  if (has_active_engagement(world, target, unit)) {
-    return;
+  if (!has_active_engagement(world, target, unit) &&
+      may_engage(target, attacker, EngagementTrigger::Retaliation)) {
+    engage_threat_target(target, attacker->get_id());
   }
 
-  if (may_engage(target, attacker, EngagementTrigger::Retaliation)) {
-    engage_retaliation_target(target, attacker->get_id());
-  }
-  alert_nearby_allies(world, target, attacker);
+  note_threat(
+      world, target, attacker, Engine::Core::ThreatAlertComponent::Kind::UnderAttack);
 }
 
 void queue_structure_impact(Engine::Core::Entity& target,

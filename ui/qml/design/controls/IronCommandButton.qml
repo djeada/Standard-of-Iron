@@ -38,6 +38,8 @@ AbstractButton {
     property string shortLabel: ""
     property bool iconOnly: false
 
+    property bool tile: false
+
     readonly property bool compact: control.iconOnly || (width > 0 && width < minimumShortWidth)
 
     readonly property bool showsShortLabel: !control.iconOnly && control.shortLabel !== "" && width < minimumLabelledWidth
@@ -86,8 +88,8 @@ AbstractButton {
 
     readonly property string coverageText: (eligibleCount > 0 && activeCount > 0 && activeCount < eligibleCount) ? qsTr("%1 of %2").arg(activeCount).arg(eligibleCount) : ""
 
-    implicitHeight: Math.max(Design.Metrics.commandButtonSize, Design.Metrics.minTouchTarget)
-    implicitWidth: compact ? Design.Metrics.commandButtonSize + Design.Metrics.space24 : Design.Metrics.commandButtonSize * 3
+    implicitHeight: control.tile ? Math.max(Design.Metrics.orderButtonSize, Design.Metrics.minTouchTarget) : Math.max(Design.Metrics.commandButtonSize, Design.Metrics.minTouchTarget)
+    implicitWidth: control.tile ? control.implicitHeight : compact ? Design.Metrics.commandButtonSize + Design.Metrics.space24 : Design.Metrics.commandButtonSize * 3
     hoverEnabled: true
 
     focusPolicy: Qt.TabFocus
@@ -153,7 +155,7 @@ AbstractButton {
             anchors.top: parent.top
             anchors.bottom: parent.bottom
             anchors.margins: Design.Metrics.borderThin
-            width: control.highlighted ? Design.Metrics.space4 : 0
+            width: control.highlighted ? (control.tile ? Design.Metrics.space2 : Design.Metrics.space4) : 0
             radius: Design.Metrics.radiusSmall
             color: control.stateColor
             visible: width > 0
@@ -174,16 +176,17 @@ AbstractButton {
     }
 
     contentItem: Item {
-        implicitWidth: control.compact ? Design.Metrics.iconMedium + control.hotkeyWidth + Design.Metrics.space16 : Design.Metrics.iconMedium + textColumn.implicitWidth + Design.Metrics.space24
+        implicitWidth: control.tile ? control.implicitHeight : control.compact ? Design.Metrics.iconMedium + control.hotkeyWidth + Design.Metrics.space16 : Design.Metrics.iconMedium + textColumn.implicitWidth + Design.Metrics.space24
 
         Item {
             id: iconSlot
 
             anchors.left: parent.left
-            anchors.leftMargin: control.compact ? Math.max(Design.Metrics.space4, (parent.width - width - hotkeyLabel.width) / 2) : Design.Metrics.space8
+            anchors.leftMargin: control.tile ? Math.max(0, (parent.width - iconSlot.width) / 2) : control.compact ? Math.max(Design.Metrics.space4, (parent.width - width - hotkeyLabel.width) / 2) : Design.Metrics.space8
             anchors.verticalCenter: parent.verticalCenter
+            anchors.verticalCenterOffset: control.tile && tileHotkey.visible ? -Design.Metrics.space2 : 0
 
-            width: control.compact ? Math.round(Design.Metrics.iconMedium * 1.35) : Design.Metrics.iconMedium
+            width: control.tile ? Math.round(Design.Metrics.iconMedium * 1.1) : control.compact ? Math.round(Design.Metrics.iconMedium * 1.35) : Design.Metrics.iconMedium
             height: width
             opacity: control.interactive ? 1 : 0.45
 
@@ -257,8 +260,36 @@ AbstractButton {
             anchors.right: parent.right
             anchors.rightMargin: Design.Metrics.space4
             anchors.verticalCenter: parent.verticalCenter
-            visible: control.hotkey !== ""
+            visible: !control.tile && control.hotkey !== ""
             text: control.hotkey
+        }
+
+        Text {
+            id: tileHotkey
+
+            anchors.right: parent.right
+            anchors.bottom: parent.bottom
+            anchors.rightMargin: Design.Metrics.space2
+            anchors.bottomMargin: 1
+            visible: control.tile && control.hotkey !== ""
+            text: control.hotkey
+            color: control.interactive ? Design.Theme.textSecondary : Design.Theme.textDisabled
+            font.family: "monospace"
+            font.pixelSize: Math.max(9, Math.round(Design.Typography.caption * 0.72))
+            opacity: 0.85
+        }
+
+        Rectangle {
+            id: tileStateDot
+
+            anchors.left: parent.left
+            anchors.bottom: parent.bottom
+            anchors.margins: Design.Metrics.space4
+            width: Design.Metrics.space4
+            height: width
+            radius: width / 2
+            visible: control.tile && (control.highlighted || control.mixed)
+            color: control.stateColor
         }
 
         Rectangle {

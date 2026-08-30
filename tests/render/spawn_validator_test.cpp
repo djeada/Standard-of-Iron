@@ -457,3 +457,78 @@ TEST(WorldPropClearanceIndexTest, PropsFurtherApartThanOneBucketStillRegister) {
   }
   EXPECT_FALSE(index.overlaps(5000.0F, 5000.0F, 0.0F));
 }
+
+TEST_F(SpawnValidatorTest, ScatterRefusesTheGroundAnAuthoredPropStandsOn) {
+
+  width = 40;
+  height = 40;
+  height_data.assign(static_cast<std::size_t>(width * height), 0.0F);
+  terrain_types.assign(static_cast<std::size_t>(width * height), TerrainType::Flat);
+  build_cache();
+
+  Game::Map::MapDefinition map_def;
+  map_def.grid.width = width;
+  map_def.grid.height = height;
+  map_def.grid.tile_size = tile_size;
+
+  WorldProp ruin;
+  ruin.type = WorldProp::Type::Ruins;
+  ruin.x = 28.0F;
+  ruin.z = 12.0F;
+  ruin.scale = 1.0F;
+  map_def.world_props.push_back(ruin);
+  Game::Map::TerrainService::instance().initialize(map_def);
+
+  const QVector3D drawn =
+      Game::Map::TerrainService::instance().world_prop_world_position(ruin);
+
+  SpawnValidationConfig config = make_stone_spawn_config();
+  config.grid_width = width;
+  config.grid_height = height;
+  config.tile_size = tile_size;
+  config.edge_padding = 0.0F;
+  config.check_roads = false;
+  config.check_bridges = false;
+  config.check_river_margin = false;
+  config.river_clearance = 0.0F;
+  config.building_clearance = 0.0F;
+  config.check_buildings = false;
+
+  SpawnValidator const validator(terrain_cache, config);
+
+  EXPECT_FALSE(validator.can_spawn_at_world(drawn.x(), drawn.z()))
+      << "a stone is being scattered onto the middle of a ruin: the clearance "
+         "index and the scatter query are not in the same coordinate space";
+}
+
+TEST(WorldPropClearanceIndexTest, TheIndexAnswersInTheSpaceScatterAsksIn) {
+
+  Game::Map::TerrainService::instance().clear();
+
+  Game::Map::MapDefinition map_def;
+  map_def.grid.width = 40;
+  map_def.grid.height = 40;
+  map_def.grid.tile_size = 1.0F;
+
+  WorldProp tent;
+  tent.type = WorldProp::Type::Tent;
+  tent.x = 31.0F;
+  tent.z = 9.0F;
+  tent.scale = 1.0F;
+  map_def.world_props.push_back(tent);
+  Game::Map::TerrainService::instance().initialize(map_def);
+
+  const QVector3D drawn =
+      Game::Map::TerrainService::instance().world_prop_world_position(tent);
+
+  const auto& index = shared_world_prop_clearance_index();
+  ASSERT_FALSE(index.empty());
+
+  EXPECT_TRUE(index.overlaps(drawn.x(), drawn.z(), 0.0F))
+      << "the index does not claim the ground the tent is drawn on";
+  EXPECT_FALSE(index.overlaps(tent.x, tent.z, 0.0F))
+      << "the index is still holding authored grid coordinates as if they were "
+         "world coordinates";
+
+  Game::Map::TerrainService::instance().clear();
+}

@@ -41,13 +41,17 @@ struct DuelSide {
   SideOpening opening{};
 };
 
-auto to_world(const DuelSide& side, QVector3D local) -> QVector3D {
+auto to_world_direction(const DuelSide& side, QVector3D local) -> QVector3D {
   const float radians = side.facing_degrees * std::numbers::pi_v<float> / 180.0F;
   const float sin_yaw = std::sin(radians);
   const float cos_yaw = std::cos(radians);
-  return side.corner + QVector3D(local.z() * sin_yaw + local.x() * cos_yaw,
-                                 0.0F,
-                                 local.z() * cos_yaw - local.x() * sin_yaw);
+  return {local.z() * sin_yaw + local.x() * cos_yaw,
+          0.0F,
+          local.z() * cos_yaw - local.x() * sin_yaw};
+}
+
+auto to_world(const DuelSide& side, QVector3D local) -> QVector3D {
+  return side.corner + to_world_direction(side, local);
 }
 
 auto duel_group(const DuelSide& side,
@@ -63,7 +67,7 @@ auto duel_group(const DuelSide& side,
   result.owner_id = side.owner_id;
   result.count = count;
   result.origin = to_world(side, local_offset);
-  result.spacing = spacing;
+  result.spacing = to_world_direction(side, spacing);
   result.facing_degrees = side.facing_degrees;
   result.ai_controlled = true;
   return result;
@@ -82,7 +86,7 @@ auto duel_building(const DuelSide& side,
   result.owner_id = side.owner_id;
   result.count = count;
   result.origin = to_world(side, local_offset);
-  result.spacing = spacing;
+  result.spacing = to_world_direction(side, spacing);
   result.facing_degrees = side.facing_degrees;
   result.ai_controlled = true;
   return result;
@@ -92,20 +96,28 @@ void add_battlefield(ArenaScenarioDefinition& scenario) {
   using Game::Map::HillShape;
   using Game::Map::TerrainType;
 
-  constexpr float k_river_overrun = k_floor_half_extent + 8.0F;
-
-  constexpr float k_river_width = 12.0F;
+  const auto reach = [](float x, float z) {
+    return QVector3D{x, 0.0F, z};
+  };
 
   scenario.rivers.push_back(
-      Game::Map::RiverSegment{{-k_river_overrun, 0.0F, k_river_overrun},
-                              {k_river_overrun, 0.0F, -k_river_overrun},
-                              k_river_width});
+      Game::Map::RiverSegment{reach(-60.10F, 67.18F), reach(-31.47F, 27.93F), 12.0F});
+  scenario.rivers.push_back(
+      Game::Map::RiverSegment{reach(-31.47F, 27.93F), reach(-9.90F, 9.90F), 11.0F});
+  scenario.rivers.push_back(
+      Game::Map::RiverSegment{reach(-9.90F, 9.90F), reach(9.90F, -9.90F), 10.0F});
+  scenario.rivers.push_back(
+      Game::Map::RiverSegment{reach(9.90F, -9.90F), reach(27.93F, -31.47F), 11.0F});
+  scenario.rivers.push_back(
+      Game::Map::RiverSegment{reach(27.93F, -31.47F), reach(67.18F, -60.10F), 12.0F});
 
-  constexpr float k_bridge_reach = 8.0F;
+  constexpr float k_bridge_reach = 5.7F;
+
+  constexpr float k_bridge_deck_width = 10.0F;
 
   scenario.bridges.push_back(Game::Map::Bridge{{-k_bridge_reach, 0.0F, -k_bridge_reach},
                                                {k_bridge_reach, 0.0F, k_bridge_reach},
-                                               Game::Map::k_min_bridge_width,
+                                               k_bridge_deck_width,
                                                0.5F});
 
   const auto hill = [](float x,
@@ -127,20 +139,29 @@ void add_battlefield(ArenaScenarioDefinition& scenario) {
     return feature;
   };
 
-  scenario.terrain_features.push_back(
-      hill(-13.0F, -15.0F, 12.0F, 2.8F, HillShape::Corridor, 5.0F, 127.0F));
-  scenario.terrain_features.push_back(
-      hill(7.0F, 11.0F, 12.0F, 2.8F, HillShape::Corridor, 5.0F, 127.0F));
+  constexpr float k_bank_ridge_rotation = -45.0F;
+
+  scenario.terrain_features.push_back(hill(
+      1.41F, -28.28F, 12.0F, 3.6F, HillShape::Corridor, 5.0F, k_bank_ridge_rotation));
+  scenario.terrain_features.push_back(hill(
+      -1.41F, 28.28F, 12.0F, 3.6F, HillShape::Corridor, 5.0F, k_bank_ridge_rotation));
 
   scenario.terrain_features.push_back(
-      hill(-38.0F, -6.0F, 11.0F, 3.2F, HillShape::Blob, 7.0F, 0.0F));
+      hill(-43.84F, 2.83F, 11.0F, 4.0F, HillShape::Blob, 7.0F, 0.0F));
   scenario.terrain_features.push_back(
-      hill(38.0F, 6.0F, 11.0F, 3.2F, HillShape::Blob, 7.0F, 0.0F));
+      hill(43.84F, -2.83F, 11.0F, 4.0F, HillShape::Blob, 7.0F, 0.0F));
 
   scenario.terrain_features.push_back(
-      hill(-22.0F, -22.0F, 11.0F, 3.0F, HillShape::Elbow, 5.5F, 110.0F));
+      hill(-38.89F, -6.36F, 11.0F, 3.6F, HillShape::Elbow, 5.5F, 135.0F));
   scenario.terrain_features.push_back(
-      hill(20.0F, 20.0F, 11.0F, 2.6F, HillShape::Arc, 5.0F, -60.0F));
+      hill(38.89F, 6.36F, 11.0F, 3.6F, HillShape::Arc, 5.0F, -45.0F));
+
+  constexpr float k_road_width = 4.0F;
+
+  scenario.roads.push_back(Game::Map::RoadSegment{
+      {-28.28F, 0.0F, -28.28F}, {-12.02F, 0.0F, -12.02F}, k_road_width});
+  scenario.roads.push_back(Game::Map::RoadSegment{
+      {28.28F, 0.0F, 28.28F}, {12.02F, 0.0F, 12.02F}, k_road_width});
 }
 
 void add_side(ArenaScenarioDefinition& scenario, const DuelSide& side) {
@@ -151,17 +172,17 @@ void add_side(ArenaScenarioDefinition& scenario, const DuelSide& side) {
                                           prefix + QStringLiteral("_barracks"),
                                           Game::Units::SpawnType::Barracks,
                                           1,
-                                          {0.0F, 0.0F, 5.0F}));
+                                          {0.0F, 0.0F, 5.74F}));
   scenario.groups.push_back(duel_group(side,
                                        prefix + QStringLiteral("_commander"),
                                        side.commander,
                                        1,
-                                       {0.0F, 0.0F, -2.0F}));
+                                       {0.0F, 0.0F, 2.74F}));
   scenario.groups.push_back(duel_group(side,
                                        prefix + QStringLiteral("_builder"),
                                        Troop::Builder,
                                        opening.builders,
-                                       {-6.0F, 0.0F, -4.0F},
+                                       {-10.0F, 0.0F, -7.26F},
                                        {2.4F, 0.0F, 0.0F}));
 
   if (opening.homes > 0) {
@@ -169,23 +190,23 @@ void add_side(ArenaScenarioDefinition& scenario, const DuelSide& side) {
                                             prefix + QStringLiteral("_homes"),
                                             Game::Units::SpawnType::Home,
                                             opening.homes,
-                                            {-8.0F, 0.0F, 13.0F},
-                                            {7.5F, 0.0F, 0.0F}));
+                                            {-6.0F, 0.0F, -3.26F},
+                                            {7.0F, 0.0F, 0.0F}));
   }
   if (opening.farms > 0) {
     scenario.groups.push_back(duel_building(side,
                                             prefix + QStringLiteral("_farms"),
                                             Game::Units::SpawnType::Farm,
                                             opening.farms,
-                                            {-20.0F, 0.0F, 20.0F},
-                                            {16.0F, 0.0F, 0.0F}));
+                                            {18.5F, 0.0F, 2.74F},
+                                            {-11.0F, 0.0F, -14.0F}));
   }
   if (opening.markets > 0) {
     scenario.groups.push_back(duel_building(side,
                                             prefix + QStringLiteral("_market"),
                                             Game::Units::SpawnType::Marketplace,
                                             opening.markets,
-                                            {10.0F, 0.0F, 12.0F},
+                                            {-21.0F, 0.0F, -1.26F},
                                             {9.0F, 0.0F, 0.0F}));
   }
   if (opening.towers > 0) {
@@ -193,7 +214,7 @@ void add_side(ArenaScenarioDefinition& scenario, const DuelSide& side) {
                                             prefix + QStringLiteral("_towers"),
                                             Game::Units::SpawnType::DefenseTower,
                                             opening.towers,
-                                            {-11.0F, 0.0F, -8.0F},
+                                            {0.0F, 0.0F, 13.74F},
                                             {22.0F, 0.0F, 0.0F}));
   }
   if (opening.infantry > 0) {
@@ -201,7 +222,7 @@ void add_side(ArenaScenarioDefinition& scenario, const DuelSide& side) {
                                          prefix + QStringLiteral("_infantry"),
                                          Troop::Spearman,
                                          opening.infantry,
-                                         {-5.0F, 0.0F, -9.0F},
+                                         {-1.6F, 0.0F, 9.74F},
                                          {3.4F, 0.0F, 0.0F}));
   }
   if (opening.missiles > 0) {
@@ -209,7 +230,7 @@ void add_side(ArenaScenarioDefinition& scenario, const DuelSide& side) {
                                          prefix + QStringLiteral("_missiles"),
                                          Troop::Archer,
                                          opening.missiles,
-                                         {5.0F, 0.0F, -9.0F},
+                                         {6.7F, 0.0F, 9.74F},
                                          {3.4F, 0.0F, 0.0F}));
   }
 
@@ -225,22 +246,26 @@ void add_side(ArenaScenarioDefinition& scenario, const DuelSide& side) {
                          QVector3D local,
                          QVector3D spacing,
                          float scale) -> ArenaScenarioResourcePatch {
-    return {QString::fromLatin1(type), count, to_world(side, local), spacing, scale};
+    return {QString::fromLatin1(type),
+            count,
+            to_world(side, local),
+            to_world_direction(side, spacing),
+            scale};
   };
   scenario.resource_patches.push_back(
-      patch("olive_tree", 12, {-19.0F, 0.0F, -8.0F}, {0.0F, 0.0F, 2.6F}, 1.1F));
+      patch("olive_tree", 12, {-11.0F, 0.0F, -12.26F}, {1.9F, 0.0F, 0.0F}, 1.1F));
   scenario.resource_patches.push_back(
-      patch("olive_tree", 12, {17.0F, 0.0F, -12.0F}, {0.0F, 0.0F, 2.6F}, 1.1F));
+      patch("olive_tree", 12, {30.0F, 0.0F, 23.74F}, {1.6F, 0.0F, 0.0F}, 1.1F));
   scenario.resource_patches.push_back(
-      patch("olive_tree", 10, {-6.0F, 0.0F, -20.0F}, {2.6F, 0.0F, 0.0F}, 1.05F));
+      patch("olive_tree", 10, {-32.0F, 0.0F, 9.74F}, {1.8F, 0.0F, 0.0F}, 1.05F));
   scenario.resource_patches.push_back(
-      patch("boulder", 10, {-17.0F, 0.0F, 6.0F}, {0.0F, 0.0F, 2.5F}, 1.05F));
+      patch("boulder", 10, {-34.0F, 0.0F, 23.74F}, {1.6F, 0.0F, 0.0F}, 1.05F));
   scenario.resource_patches.push_back(
-      patch("boulder", 8, {14.0F, 0.0F, 8.0F}, {0.0F, 0.0F, 2.5F}, 1.05F));
+      patch("boulder", 8, {-14.0F, 0.0F, 37.74F}, {-1.8F, 0.0F, 0.0F}, 1.05F));
   scenario.resource_patches.push_back(
-      patch("iron_ore", 6, {8.0F, 0.0F, -18.0F}, {2.5F, 0.0F, 0.0F}, 1.0F));
+      patch("iron_ore", 6, {24.0F, 0.0F, 29.74F}, {1.6F, 0.0F, 0.0F}, 1.0F));
   scenario.resource_patches.push_back(
-      patch("iron_ore", 5, {-11.0F, 0.0F, 14.0F}, {2.5F, 0.0F, 0.0F}, 1.0F));
+      patch("iron_ore", 5, {34.0F, 0.0F, 13.74F}, {1.2F, 0.0F, 0.0F}, 1.0F));
 }
 
 auto duel_definition(const char* id,
@@ -254,13 +279,13 @@ auto duel_definition(const char* id,
   scenario.label = std::move(label);
   scenario.description = std::move(description);
   scenario.duration_seconds = duration;
-  scenario.camera = {205.0F, 60.0F, 45.0F};
+  scenario.camera = {88.0F, 50.0F, 45.0F};
   scenario.camera_focus = QVector3D(0.0F, 0.0F, 0.0F);
   scenario.arena_floor_half_extent = k_floor_half_extent;
   scenario.select_spawned_units = false;
   scenario.suppress_spawn_anchor = true;
   scenario.suppress_ui_overlays = true;
-  scenario.force_full_creature_lod = false;
+  scenario.force_full_creature_lod = true;
   scenario.collect_animation_diagnostics = false;
 
   scenario.suppress_terrain_scatter = false;
