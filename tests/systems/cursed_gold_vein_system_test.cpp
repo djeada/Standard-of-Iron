@@ -277,8 +277,6 @@ TEST_F(CursedGoldVeinSystemTest, EveryShippedVeinStandsOnClearGround) {
         dir.absoluteFilePath(file_name), map_definition, &error))
         << file_name.toStdString() << ": " << error.toStdString();
 
-    // The clearance check treats every solid prop as a blocker, the vein itself
-    // included, so judge each site against the map with the veins lifted out.
     std::vector<Game::Map::WorldProp> veins;
     Game::Map::MapDefinition without_veins = map_definition;
     without_veins.world_props.clear();

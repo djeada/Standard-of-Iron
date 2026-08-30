@@ -1077,13 +1077,6 @@ auto contact_is_active(const Engine::Core::Entity& attacker,
         geometry.contact_center_distance <= k_contact_numeric_epsilon &&
         geometry.center_distance <= melee_reach(attacker) + k_contact_numeric_epsilon;
 
-    // The two bodies are as close as they are ever going to get.
-    // `deep_front_rank_overlap` asks the centres to all but coincide, which
-    // BodyContactSystem will not allow: two even infantry blocks shove at about
-    // a metre while that threshold sits near a third of it, so neither side
-    // ever engaged and every straight infantry fight ran to the clock. A touch
-    // short of the bodies meeting is still not contact -- that is what the
-    // charge lock is for.
     bool const bodies_are_in_contact =
         geometry.body_contact_center_distance > k_contact_numeric_epsilon &&
         geometry.center_distance <=
@@ -1215,6 +1208,12 @@ auto select_damage_engagement_pair(
     --selected_index;
   }
   return std::nullopt;
+}
+
+void invalidate_layout_cache() {
+  g_layout_cache.clear();
+  ++g_layout_cache_generation;
+  g_spatial_layout_cache.clear();
 }
 
 } // namespace Game::Systems::FormationCombat

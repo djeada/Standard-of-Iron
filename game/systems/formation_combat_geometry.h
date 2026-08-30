@@ -14,9 +14,6 @@ struct TroopProfile;
 
 namespace Game::Systems::FormationCombat {
 
-// Floor on a unit body's core radius. BodyContactSystem separates unit cores,
-// so twice this is the closest two blocks will ever stand; CommandService reads
-// the same number when it answers for a unit's radii.
 inline constexpr float k_body_core_radius_floor = 0.5F;
 
 struct SoldierSlot {
@@ -79,10 +76,7 @@ struct ContactGeometry {
   float contact_center_distance{0.0F};
 
   float engagement_center_distance{0.0F};
-  // Centre separation at which the two unit bodies touch, which is as close as
-  // BodyContactSystem will ever let them stand. `engagement_center_distance`
-  // asks the centres to all but coincide, and two bodies cannot reach that, so
-  // on its own it leaves blocks shoving in front of one another forever.
+
   float body_contact_center_distance{0.0F};
   float contact_tolerance{0.0F};
   bool uses_formation_slots{false};
@@ -170,5 +164,7 @@ engaged_soldiers(const Engine::Core::Entity& attacker,
 [[nodiscard]] auto has_formation_slots(const Engine::Core::Entity& entity) -> bool;
 
 [[nodiscard]] auto max_contact_extent() -> float;
+
+void invalidate_layout_cache();
 
 } // namespace Game::Systems::FormationCombat

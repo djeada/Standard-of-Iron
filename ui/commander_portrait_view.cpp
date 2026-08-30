@@ -43,9 +43,6 @@ constexpr float k_max_frame_seconds = 0.1F;
 constexpr float k_head_radius = Render::GL::HumanProportions::HEAD_RADIUS;
 constexpr float k_cranium_rise = k_head_radius * 0.06F;
 
-// The baked cranium is an ellipsoid whose front reaches just under two local head
-// radii. Keep the portrait features a hair above it so depth testing seats them on
-// the skin instead of swallowing most of each small mesh.
 constexpr float k_face_surface = k_head_radius * 2.02F;
 constexpr float k_mouth_surface = k_head_radius * 2.20F;
 

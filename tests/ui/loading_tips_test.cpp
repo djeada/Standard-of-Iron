@@ -41,7 +41,7 @@ TEST(LoadingTipsTest, ShipsEveryTipTheAssetDeclares) {
 }
 
 TEST(LoadingTipsTest, EveryAuthoredTipDeclaresAKnownTone) {
-  for (const auto& entry : tips_from_disk()) {
+  for (const auto entry : tips_from_disk()) {
     const QJsonObject tip = entry.toObject();
     const QString tone = tip.value(QStringLiteral("tone")).toString();
     EXPECT_TRUE(tone == QStringLiteral("plain") || tone == QStringLiteral("wry"))

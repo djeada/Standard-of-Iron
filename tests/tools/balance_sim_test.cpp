@@ -125,7 +125,7 @@ TEST_F(BalanceSimTest, BracedSpearsBeatAFrontalCavalryCharge) {
 }
 
 TEST_F(BalanceSimTest, CavalryOverrunsExposedArchers) {
-  const auto summary = run(load(QStringLiteral("cavalry_vs_exposed_archers")), 2);
+  const auto summary = run(load(QStringLiteral("cavalry_vs_exposed_archers")), 6);
   EXPECT_GE(summary.a_win_rate, 0.6);
 }
 
