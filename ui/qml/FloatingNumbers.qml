@@ -71,6 +71,8 @@ Item {
         if (ev.kind === "resource" || ev.kind === "reserve")
             return root.signed(Number(ev.amount));
         var magnitude = Math.abs(Number(ev.amount));
+        if (ev.kind === "heal")
+            return "+" + magnitude.toString();
         return (ev.incoming ? "-" : "") + magnitude.toString();
     }
 

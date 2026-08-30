@@ -19,11 +19,11 @@
 #include "../systems/combat_rules.h"
 #include "../systems/command_service.h"
 #include "../systems/construction_cost_catalog.h"
-#include "../systems/economy_feedback.h"
 #include "../systems/food_targets.h"
 #include "../systems/gate_service.h"
 #include "../systems/marketplace_system.h"
 #include "../systems/order_service.h"
+#include "../systems/player_feedback.h"
 #include "../systems/player_resource_registry.h"
 #include "../systems/production_service.h"
 #include "../systems/squad_service.h"
@@ -494,9 +494,8 @@ void apply_start_construction(World& world,
                << "at" << order.site.x() << order.site.z() << "yaw" << order.rotation_y;
   }
   if (assigned_any) {
-    resources.spend(owner_id, costs);
-    Game::Systems::publish_resource_bundle_at(
-        owner_id, order.site.x(), order.site.y(), order.site.z(), costs, -1);
+    Game::Systems::spend_resources_at(
+        owner_id, order.site.x(), order.site.y(), order.site.z(), costs);
   }
 }
 
@@ -580,10 +579,7 @@ void apply_start_harvest(World& world, int owner_id, const StartHarvest& order) 
 
     const QVector3D work_position =
         Game::Systems::CommandService::world_prop_work_position(
-            terrain,
-            worker_position_or(*entity, order.site),
-            order.resource_target,
-            Game::Systems::CommandService::get_unit_radius(world, id));
+            terrain, worker_position_or(*entity, order.site), order.resource_target);
     begin_site_work(*entity, *builder, order.construction_type, work_position, 0.0F);
     builder->has_task_target = true;
     builder->task_target_id = order.resource_target;

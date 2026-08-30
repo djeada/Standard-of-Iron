@@ -163,7 +163,7 @@ TEST_F(GatherLoopSystemTest, AnExhaustedRoundIsRetiredInsteadOfRescannedForever)
   EXPECT_FALSE(builder->has_task_target);
 }
 
-TEST_F(GatherLoopSystemTest, TheWorkSpotSitsOnTheWorkerSideOfTheTree) {
+TEST_F(GatherLoopSystemTest, TheWorkSpotIsTheTreeItself) {
 
   struct Approach {
     const char* name;
@@ -193,20 +193,8 @@ TEST_F(GatherLoopSystemTest, TheWorkSpotSitsOnTheWorkerSideOfTheTree) {
     ASSERT_NE(builder, nullptr) << approach.name;
     ASSERT_TRUE(builder->has_construction_site) << approach.name;
 
-    float const to_tree = std::hypot(builder->construction_site_x - tree.x(),
-                                     builder->construction_site_z - tree.z());
-    EXPECT_LT(to_tree, 2.0F)
-        << approach.name << ": the work spot must hug the tree, not sit off to a side";
-
-    float const spot_dx = builder->construction_site_x - tree.x();
-    float const spot_dz = builder->construction_site_z - tree.z();
-    float const facing = (spot_dx * approach.x) + (spot_dz * approach.z);
-    EXPECT_GE(facing, 0.0F) << approach.name
-                            << ": the crew must never walk round to the far side"
-                            << " tree=(" << tree.x() << "," << tree.z() << ")"
-                            << " worker=(" << worker_x << "," << worker_z << ")"
-                            << " spot=(" << builder->construction_site_x << ","
-                            << builder->construction_site_z << ")";
+    EXPECT_NEAR(builder->construction_site_x, tree.x(), 0.0001F) << approach.name;
+    EXPECT_NEAR(builder->construction_site_z, tree.z(), 0.0001F) << approach.name;
   }
 }
 

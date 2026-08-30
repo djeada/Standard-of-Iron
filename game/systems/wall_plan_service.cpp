@@ -9,10 +9,10 @@
 #include "../units/spawn_type.h"
 #include "build_site.h"
 #include "construction_cost_catalog.h"
-#include "economy_feedback.h"
 #include "nation_registry.h"
 #include "nav_grid.h"
 #include "order_service.h"
+#include "player_feedback.h"
 #include "player_resource_registry.h"
 #include "resource_types.h"
 
@@ -144,8 +144,6 @@ auto WallPlanService::commit(Engine::Core::World& world,
   if (!resources.has_at_least(request.owner_id, total_cost)) {
     return site_ids;
   }
-  resources.spend(request.owner_id, total_cost);
-
   QVector3D plan_centroid;
   for (const auto& segment : plan.segments) {
     if (segment.valid) {
@@ -153,12 +151,11 @@ auto WallPlanService::commit(Engine::Core::World& world,
     }
   }
   plan_centroid /= static_cast<float>(plan.valid_count);
-  publish_resource_bundle_at(request.owner_id,
-                             plan_centroid.x(),
-                             plan_centroid.y(),
-                             plan_centroid.z(),
-                             total_cost,
-                             -1);
+  spend_resources_at(request.owner_id,
+                     plan_centroid.x(),
+                     plan_centroid.y(),
+                     plan_centroid.z(),
+                     total_cost);
 
   const auto nation_id = nation_of(world, request.owner_id);
   const std::string product = item_type(request);

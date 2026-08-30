@@ -14,6 +14,7 @@
 #include "healing_rules.h"
 #include "nation_collapse_service.h"
 #include "owner_registry.h"
+#include "player_feedback.h"
 #include "troop_profile_service.h"
 #include "units/spawn_type.h"
 
@@ -516,10 +517,11 @@ void CommanderSystem::update(Engine::Core::World* world, float delta_time) {
             const int restored =
                 static_cast<int>(std::floor(buff->health_regen_accumulator));
             if (restored > 0) {
-
-              candidate_unit->health =
-                  std::min(HealingRules::maximum_recoverable_health(*candidate),
-                           candidate_unit->health + restored);
+              restore_health(candidate_unit->owner_id,
+                             candidate->get_id(),
+                             *candidate_unit,
+                             restored,
+                             HealingRules::maximum_recoverable_health(*candidate));
               buff->health_regen_accumulator -= static_cast<float>(restored);
             }
           }

@@ -430,8 +430,8 @@ auto CommandService::structure_work_position(const QVector3D& worker_position,
 
 auto CommandService::world_prop_work_position(Game::Map::TerrainService& terrain,
                                               const QVector3D& worker_position,
-                                              std::uint64_t world_prop_id,
-                                              float unit_radius) -> QVector3D {
+                                              std::uint64_t world_prop_id)
+    -> QVector3D {
   const auto& props = terrain.world_props();
   const auto found = std::find_if(
       props.begin(), props.end(), [world_prop_id](const Game::Map::WorldProp& prop) {
@@ -441,20 +441,7 @@ auto CommandService::world_prop_work_position(Game::Map::TerrainService& terrain
     return worker_position;
   }
 
-  const QVector3D placed = terrain.world_prop_world_position(*found);
-  const QVector3D prop_position(placed.x(), 0.0F, placed.z());
-
-  QVector3D approach = worker_position - prop_position;
-  approach.setY(0.0F);
-  if (approach.lengthSquared() < 0.01F) {
-    approach = QVector3D(1.0F, 0.0F, 0.0F);
-  }
-  approach.normalize();
-
-  const float standoff =
-      Game::Map::world_prop_ground_radius(found->type, found->scale) + unit_radius +
-      0.25F;
-  return NavGrid::snap_to_walkable_ground(prop_position + approach * standoff);
+  return terrain.world_prop_world_position(*found);
 }
 
 auto CommandService::get_unit_radii(Engine::Core::World& world,

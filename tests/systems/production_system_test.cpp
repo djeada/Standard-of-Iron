@@ -3,9 +3,11 @@
 
 #include "core/component.h"
 #include "core/world.h"
+#include "game/command/command_dispatcher.h"
 #include "game/map/map_definition.h"
 #include "game/map/map_transformer.h"
 #include "game/map/terrain_service.h"
+#include "game/systems/builder_product_types.h"
 #include "game/systems/building_collision_registry.h"
 #include "game/systems/marketplace_system.h"
 #include "game/systems/movement_pipeline.h"
@@ -578,6 +580,89 @@ TEST_F(ProductionSystemTest, ABuiltTempleCanRecruitHealersAndFillsFromDelivery) 
 
   EXPECT_EQ(temple_production->manpower_available, 0);
   EXPECT_GT(temple_production->max_units, 0);
+}
+
+TEST_F(ProductionSystemTest, ACollectOrderStandsTheCrewOnTheNodeAndLeavesItThere) {
+
+  Game::Map::MapDefinition map_def;
+  map_def.grid.width = 16;
+  map_def.grid.height = 16;
+  map_def.grid.tile_size = 1.0F;
+  map_def.world_props.push_back(
+      {.type = Game::Map::WorldProp::Type::PineTree, .x = 8.0F, .z = 8.0F});
+
+  Game::Systems::NavGrid::initialize(16, 16);
+  auto& terrain = Game::Map::TerrainService::instance();
+  terrain.initialize(map_def);
+  ASSERT_EQ(terrain.world_props().size(), 1U);
+
+  auto* pathfinder = Game::Systems::NavGrid::get_pathfinder();
+  ASSERT_NE(pathfinder, nullptr);
+  pathfinder->update_navigation_grid();
+
+  const QVector3D tree =
+      terrain.world_prop_world_position(terrain.world_props().front());
+  const auto tree_grid = Game::Systems::NavGrid::world_to_grid(tree.x(), tree.z());
+  ASSERT_FALSE(pathfinder->is_walkable(tree_grid.x, tree_grid.y))
+      << "the fixture is pointless unless the node blocks the ground it stands on";
+
+  Engine::Core::World world;
+  auto* builder = world.create_entity();
+  ASSERT_NE(builder, nullptr);
+  auto* transform = builder->add_component<Engine::Core::TransformComponent>(
+      tree.x() - 5.0F, 0.0F, tree.z());
+  builder->add_component<Engine::Core::MovementComponent>();
+  auto* unit = builder->add_component<Engine::Core::UnitComponent>();
+  unit->owner_id = 1;
+  unit->spawn_type = Game::Units::SpawnType::Builder;
+  unit->health = 720;
+  unit->max_health = 720;
+  unit->speed = 2.0F;
+  builder->add_component<Engine::Core::BuilderProductionComponent>();
+
+  Game::Command::dispatch(
+      world,
+      Game::Command::Command{.source = Game::Command::Source::Script,
+                             .owner_id = 1,
+                             .payload = Game::Command::StartHarvest{
+                                 .units = {builder->get_id()},
+                                 .construction_type = std::string(
+                                     Game::Systems::k_builder_product_cut_tree),
+                                 .resource_target = terrain.world_props().front().id,
+                                 .site = tree}});
+
+  auto* production = builder->get_component<Engine::Core::BuilderProductionComponent>();
+  ASSERT_NE(production, nullptr);
+  ASSERT_TRUE(production->has_construction_site);
+  EXPECT_NEAR(production->construction_site_x, tree.x(), 0.0001F);
+  EXPECT_NEAR(production->construction_site_z, tree.z(), 0.0001F);
+
+  production->build_time = 1000.0F;
+  production->time_remaining = production->build_time;
+
+  Game::Systems::MovementPipeline movement;
+  Game::Systems::ProductionSystem production_system;
+  bool arrived = false;
+  for (int step = 0; step < 400 && !arrived; ++step) {
+    movement.update(&world, 0.05F);
+    production_system.update(&world, 0.05F);
+    arrived = production->at_construction_site;
+  }
+
+  ASSERT_TRUE(arrived) << "the crew never reached the node it was sent to work";
+  EXPECT_NEAR(transform->position.x, tree.x(), 0.05F);
+  EXPECT_NEAR(transform->position.z, tree.z(), 0.05F);
+
+  for (int step = 0; step < 100; ++step) {
+    movement.update(&world, 0.05F);
+    production_system.update(&world, 0.05F);
+  }
+
+  EXPECT_TRUE(production->in_progress);
+  EXPECT_NEAR(transform->position.x, tree.x(), 0.05F)
+      << "the working crew was pushed off the node";
+  EXPECT_NEAR(transform->position.z, tree.z(), 0.05F)
+      << "the working crew was pushed off the node";
 }
 
 } // namespace

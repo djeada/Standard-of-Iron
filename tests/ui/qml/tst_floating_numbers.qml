@@ -102,6 +102,43 @@ TestCase {
                 }), "24");
     }
 
+    function test_health_put_back_always_reads_as_a_gain() {
+        compare(numbers.body_for({
+                    "kind": "heal",
+                    "amount": 14,
+                    "incoming": true
+                }), "+14");
+        compare(numbers.body_for({
+                    "kind": "heal",
+                    "amount": 14,
+                    "incoming": false
+                }), "+14", "a heal is a gain whichever body it lands on");
+        var hurt = numbers.accent_for({
+                "kind": "damage",
+                "amount": 14,
+                "incoming": true
+            });
+        var mended = numbers.accent_for({
+                "kind": "heal",
+                "amount": 14,
+                "incoming": true
+            });
+        verify(!Qt.colorEqual(hurt, mended), "mending must not look like a wound");
+    }
+
+    function test_a_heal_reaches_the_tick_layer() {
+        testCase.pendingBatches = [[tick({
+                        "kind": "heal",
+                        "amount": 9,
+                        "severity": 0.09,
+                        "incoming": true,
+                        "outgoing": false
+                    })]];
+        tryVerify(function () {
+                return numbers.activeTicks === 1;
+            }, 3000, "the healer's number never arrived");
+    }
+
     function test_economy_amounts_keep_their_sign() {
         compare(numbers.body_for({
                     "kind": "resource",

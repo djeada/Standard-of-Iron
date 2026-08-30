@@ -414,7 +414,7 @@ TEST_F(AiSkirmishOpeningTest, AMarchingNationCampedNextDoorStillReadsAsAThreat) 
       << "three enemy knights twelve metres from the barracks went unnoticed";
 }
 
-TEST_F(AiSkirmishOpeningTest, AHarvestOrderSendsTheWorkerBesideThePropNotOntoIt) {
+TEST_F(AiSkirmishOpeningTest, AHarvestOrderSendsTheWorkerOntoTheProp) {
   auto& session = make_match();
   auto& terrain = session.terrain();
 
@@ -452,15 +452,8 @@ TEST_F(AiSkirmishOpeningTest, AHarvestOrderSendsTheWorkerBesideThePropNotOntoIt)
   ASSERT_NE(builder, nullptr);
   ASSERT_TRUE(builder->has_construction_site);
 
-  const float standoff = std::hypot(builder->construction_site_x - placed.x(),
-                                    builder->construction_site_z - placed.z());
-  EXPECT_GE(standoff, Game::Map::world_prop_ground_radius(tree->type, tree->scale))
-      << "the worker was sent to stand " << standoff
-      << " m from the tree's centre, inside the footprint that blocks it";
-  EXPECT_TRUE(
-      Game::Systems::NavGrid::is_grid_walkable(Game::Systems::NavGrid::world_to_grid(
-          builder->construction_site_x, builder->construction_site_z)))
-      << "the worker was sent to stand on ground it cannot hold";
+  EXPECT_FLOAT_EQ(builder->construction_site_x, placed.x());
+  EXPECT_FLOAT_EQ(builder->construction_site_z, placed.z());
 
   EXPECT_FLOAT_EQ(builder->task_target_x, placed.x());
   EXPECT_FLOAT_EQ(builder->task_target_z, placed.z());

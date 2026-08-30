@@ -18,6 +18,7 @@
 #include "healing_colors.h"
 #include "healing_rules.h"
 #include "nation_id.h"
+#include "player_feedback.h"
 
 namespace Game::Systems {
 
@@ -129,9 +130,11 @@ void HealingSystem::process_healing(Engine::Core::SystemContext& context) {
       float const dist = std::sqrt(dx * dx + dz * dz);
 
       if (dist <= healer_comp->healing_range) {
-        target_unit->health =
-            std::min(target_unit->health + healer_comp->healing_amount,
-                     HealingRules::maximum_recoverable_health(*target));
+        restore_health(target_unit->owner_id,
+                       candidate_id,
+                       *target_unit,
+                       healer_comp->healing_amount,
+                       HealingRules::maximum_recoverable_health(*target));
         Engine::Core::EventManager::instance().publish(
             Engine::Core::AudioCueEvent::for_owner(healer_unit->owner_id,
                                                    "combat.heal"));
