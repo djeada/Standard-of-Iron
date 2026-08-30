@@ -1,8 +1,10 @@
 #include "production_system.h"
 
+#include <QDebug>
 #include <qvectornd.h>
 
 #include <algorithm>
+#include <array>
 #include <cmath>
 #include <limits>
 #include <numbers>
@@ -311,7 +313,11 @@ auto skip_invalid_wall_site(Engine::Core::World* world,
                             transform->position.x, transform->position.z);
   const auto validation =
       Game::Systems::WallNetworkService::validate_wall_segment_placement(
-          *world, position, true, site_entity->get_id());
+          *world,
+          position,
+          Game::Systems::wall_ground_probe(*world),
+          true,
+          site_entity->get_id());
   if (validation.valid) {
     return false;
   }
@@ -989,13 +995,29 @@ void ProductionSystem::update(Engine::Core::World* world, float delta_time) {
                 free_standing_wall) {
 
               constexpr float k_finished_site_nudge = 5.0F;
+              const std::array<Engine::Core::EntityID, 1> finishing_crew{e->get_id()};
               const auto clear_site =
                   find_clear_site(*world,
                                   builder_prod->product_type,
                                   sp.position,
                                   free_standing_wall ? 0.0F : k_finished_site_nudge,
-                                  construction_rotation_y);
+                                  construction_rotation_y,
+                                  finishing_crew);
               if (!clear_site.has_value()) {
+                if (qEnvironmentVariableIsSet("SOI_BUILD_TRACE")) {
+                  qWarning() << "BUILDTRACE p" << u->owner_id << "finished site refused"
+                             << builder_prod->product_type.c_str() << "at"
+                             << sp.position.x() << sp.position.z() << "yaw"
+                             << construction_rotation_y << "verdict"
+                             << static_cast<int>(
+                                    assess_ground(*world,
+                                                  builder_prod->product_type,
+                                                  sp.position.x(),
+                                                  sp.position.z(),
+                                                  0,
+                                                  construction_rotation_y,
+                                                  finishing_crew));
+                }
 
                 auto& treasury = *Game::Session::services_for(*world).economy;
                 const auto refund =
@@ -1015,10 +1037,12 @@ void ProductionSystem::update(Engine::Core::World* world, float delta_time) {
                   QVector3D(clear_site->x(), sp.position.y(), clear_site->z());
             }
 
-            if (!is_wall_network_product(builder_prod->product_type)) {
-              clear_ground_for(*world, builder_prod->product_type, sp.position);
+            if (qEnvironmentVariableIsSet("SOI_BUILD_TRACE")) {
+              qWarning() << "BUILDTRACE p" << u->owner_id << "raised"
+                         << builder_prod->product_type.c_str() << "at"
+                         << sp.position.x() << sp.position.z() << "yaw"
+                         << sp.rotation_y;
             }
-
             reg->create(sp.spawn_type, *world, sp);
 
             if (is_wall_network_product(builder_prod->product_type) &&

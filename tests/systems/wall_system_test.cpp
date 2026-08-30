@@ -15,6 +15,7 @@
 #include "map/terrain_service.h"
 #include "systems/ai_system/ai_strategy.h"
 #include "systems/ai_system/ai_types.h"
+#include "systems/build_site.h"
 #include "systems/building_collision_registry.h"
 #include "systems/combat_system/damage_processor.h"
 #include "systems/nation_id.h"
@@ -129,8 +130,8 @@ TEST_F(WallMechanicsTest, PlacementAllowsSegmentBetweenAdjacentWalls) {
   make_wall(world, right.x(), 0.0F, right.z(), 1);
 
   const auto snapped = WallGridPosition{4, 4};
-  const auto validation =
-      WallNetworkService::validate_wall_segment_placement(world, snapped, true);
+  const auto validation = WallNetworkService::validate_wall_segment_placement(
+      world, snapped, wall_ground_probe(world), true);
 
   EXPECT_TRUE(validation.valid);
   EXPECT_TRUE(validation.failure_reason.empty());
@@ -143,8 +144,8 @@ TEST_F(WallMechanicsTest, PlacementAllowsWallTouchingTowerSocket) {
   make_tower(world, tower.x(), tower.z(), 1);
 
   const auto snapped = WallGridPosition{4, 4};
-  const auto validation =
-      WallNetworkService::validate_wall_segment_placement(world, snapped, true);
+  const auto validation = WallNetworkService::validate_wall_segment_placement(
+      world, snapped, wall_ground_probe(world), true);
 
   EXPECT_TRUE(validation.valid);
   EXPECT_TRUE(validation.failure_reason.empty());
@@ -407,8 +408,12 @@ TEST_F(WallMechanicsTest, TowerSnapSocketFindsNearestFriendlyWallEndpoint) {
   const auto endpoint_world = NavGrid::grid_to_world(Game::Systems::Point{
       wall_grid.x + WallNetworkService::k_segment_spacing, wall_grid.z});
 
-  const auto snapped = WallNetworkService::find_tower_snap_socket(
-      world, 1, endpoint_world.x() + 0.1F, endpoint_world.z() + 0.1F);
+  const auto snapped =
+      WallNetworkService::find_tower_snap_socket(world,
+                                                 1,
+                                                 endpoint_world.x() + 0.1F,
+                                                 endpoint_world.z() + 0.1F,
+                                                 wall_ground_probe(world));
 
   ASSERT_TRUE(snapped.has_value());
   EXPECT_EQ(snapped->x, wall_grid.x + WallNetworkService::k_segment_spacing);
@@ -424,8 +429,12 @@ TEST_F(WallMechanicsTest, TowerSnapSocketRejectsOccupiedEndpoint) {
   const auto endpoint_world = NavGrid::grid_to_world(Game::Systems::Point{
       wall_grid.x + WallNetworkService::k_segment_spacing, wall_grid.z});
 
-  const auto snapped = WallNetworkService::find_tower_snap_socket(
-      world, 1, endpoint_world.x() + 0.1F, endpoint_world.z() + 0.1F);
+  const auto snapped =
+      WallNetworkService::find_tower_snap_socket(world,
+                                                 1,
+                                                 endpoint_world.x() + 0.1F,
+                                                 endpoint_world.z() + 0.1F,
+                                                 wall_ground_probe(world));
 
   EXPECT_FALSE(snapped.has_value());
 }

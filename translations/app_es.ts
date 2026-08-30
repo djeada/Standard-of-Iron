@@ -4711,6 +4711,45 @@ Esta acción no se puede deshacer.</translation>
     </message>
 </context>
 <context>
+    <name>MapBases</name>
+    <message>
+        <source>Centre</source>
+        <translation>Centro</translation>
+    </message>
+    <message>
+        <source>East</source>
+        <translation>Este</translation>
+    </message>
+    <message>
+        <source>North-East</source>
+        <translation>Noreste</translation>
+    </message>
+    <message>
+        <source>North</source>
+        <translation>Norte</translation>
+    </message>
+    <message>
+        <source>North-West</source>
+        <translation>Noroeste</translation>
+    </message>
+    <message>
+        <source>West</source>
+        <translation>Oeste</translation>
+    </message>
+    <message>
+        <source>South-West</source>
+        <translation>Suroeste</translation>
+    </message>
+    <message>
+        <source>South</source>
+        <translation>Sur</translation>
+    </message>
+    <message>
+        <source>South-East</source>
+        <translation>Sureste</translation>
+    </message>
+</context>
+<context>
     <name>MapListPanel</name>
     <message>
         <source>Maps</source>
@@ -4734,8 +4773,20 @@ para ver la vista previa</translation>
         <translation>No hay vista previa disponible</translation>
     </message>
     <message>
-        <source>Bases shown in player colours</source>
-        <translation>Las bases se muestran en los colores de cada jugador</translation>
+        <source>%1 — held by %2</source>
+        <translation>%1 — en manos de %2</translation>
+    </message>
+    <message>
+        <source>%1 — free, click to claim it</source>
+        <translation>%1 — libre, haz clic para reclamarla</translation>
+    </message>
+    <message>
+        <source>Click a base to reseat</source>
+        <translation>Haz clic en una base para reubicar</translation>
+    </message>
+    <message>
+        <source>Bases in player colours</source>
+        <translation>Bases en colores de jugador</translation>
     </message>
 </context>
 <context>
@@ -4955,6 +5006,30 @@ para ver la vista previa</translation>
     <message>
         <source>Gold every side starts with — click to change</source>
         <translation>Oro con el que empieza cada bando: haz clic para cambiarlo</translation>
+    </message>
+    <message>
+        <source>This battlefield only has %1 starting bases</source>
+        <translation>Este campo de batalla solo tiene %1 bases iniciales</translation>
+    </message>
+    <message>
+        <source>Every player in play needs a starting base</source>
+        <translation>Cada jugador en juego necesita una base inicial</translation>
+    </message>
+    <message>
+        <source>Click any chip to change it • pick a base on the map for the highlighted seat</source>
+        <translation>Haz clic en cualquier ficha para cambiarla • elige una base en el mapa para el puesto resaltado</translation>
+    </message>
+    <message>
+        <source>Base</source>
+        <translation>Base</translation>
+    </message>
+    <message>
+        <source>None</source>
+        <translation>Ninguna</translation>
+    </message>
+    <message>
+        <source>Starting base — click for the next free one, or pick it on the map</source>
+        <translation>Base inicial — haz clic para la siguiente libre, o elígela en el mapa</translation>
     </message>
 </context>
 <context>
@@ -6750,6 +6825,10 @@ para ver la vista previa</translation>
     <message>
         <source>That is beyond the edge of the battlefield.</source>
         <translation>Eso queda más allá del borde del campo de batalla.</translation>
+    </message>
+    <message>
+        <source>A wall already stands here.</source>
+        <translation>Aquí ya se alza una muralla.</translation>
     </message>
 </context>
 <context>

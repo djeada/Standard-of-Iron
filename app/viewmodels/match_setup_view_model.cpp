@@ -211,6 +211,11 @@ auto MatchSetupViewModel::map_preview(
   return generator.generate_preview(map_path, player_configs);
 }
 
+auto MatchSetupViewModel::map_bases(const QString& map_path) const -> QVariantList {
+  return Game::Map::Minimap::MapPreviewGenerator::base_markers(
+      Utils::Resources::resolve_resource_path(map_path));
+}
+
 void MatchSetupViewModel::load_campaigns() {
   auto* saves = m_context.saves;
   auto* campaign = m_context.campaign;

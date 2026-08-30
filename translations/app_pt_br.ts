@@ -4711,6 +4711,45 @@ Esta ação não pode ser desfeita.</translation>
     </message>
 </context>
 <context>
+    <name>MapBases</name>
+    <message>
+        <source>Centre</source>
+        <translation>Centro</translation>
+    </message>
+    <message>
+        <source>East</source>
+        <translation>Leste</translation>
+    </message>
+    <message>
+        <source>North-East</source>
+        <translation>Nordeste</translation>
+    </message>
+    <message>
+        <source>North</source>
+        <translation>Norte</translation>
+    </message>
+    <message>
+        <source>North-West</source>
+        <translation>Noroeste</translation>
+    </message>
+    <message>
+        <source>West</source>
+        <translation>Oeste</translation>
+    </message>
+    <message>
+        <source>South-West</source>
+        <translation>Sudoeste</translation>
+    </message>
+    <message>
+        <source>South</source>
+        <translation>Sul</translation>
+    </message>
+    <message>
+        <source>South-East</source>
+        <translation>Sudeste</translation>
+    </message>
+</context>
+<context>
     <name>MapListPanel</name>
     <message>
         <source>Maps</source>
@@ -4734,8 +4773,20 @@ para ver a prévia</translation>
         <translation>Nenhuma prévia disponível</translation>
     </message>
     <message>
-        <source>Bases shown in player colours</source>
-        <translation>As bases aparecem nas cores dos jogadores</translation>
+        <source>%1 — held by %2</source>
+        <translation>%1 — sob controle de %2</translation>
+    </message>
+    <message>
+        <source>%1 — free, click to claim it</source>
+        <translation>%1 — livre, clique para tomá-la</translation>
+    </message>
+    <message>
+        <source>Click a base to reseat</source>
+        <translation>Clique em uma base para realocar</translation>
+    </message>
+    <message>
+        <source>Bases in player colours</source>
+        <translation>Bases nas cores dos jogadores</translation>
     </message>
 </context>
 <context>
@@ -4955,6 +5006,30 @@ para ver a prévia</translation>
     <message>
         <source>Gold every side starts with — click to change</source>
         <translation>Ouro com que cada lado começa — clique para alterar</translation>
+    </message>
+    <message>
+        <source>This battlefield only has %1 starting bases</source>
+        <translation>Este campo de batalha tem apenas %1 bases iniciais</translation>
+    </message>
+    <message>
+        <source>Every player in play needs a starting base</source>
+        <translation>Cada jogador em campo precisa de uma base inicial</translation>
+    </message>
+    <message>
+        <source>Click any chip to change it • pick a base on the map for the highlighted seat</source>
+        <translation>Clique em qualquer ficha para alterá-la • escolha uma base no mapa para o posto destacado</translation>
+    </message>
+    <message>
+        <source>Base</source>
+        <translation>Base</translation>
+    </message>
+    <message>
+        <source>None</source>
+        <translation>Nenhuma</translation>
+    </message>
+    <message>
+        <source>Starting base — click for the next free one, or pick it on the map</source>
+        <translation>Base inicial — clique para a próxima livre, ou escolha-a no mapa</translation>
     </message>
 </context>
 <context>
@@ -6750,6 +6825,10 @@ para ver a prévia</translation>
     <message>
         <source>That is beyond the edge of the battlefield.</source>
         <translation>Isso está além da borda do campo de batalha.</translation>
+    </message>
+    <message>
+        <source>A wall already stands here.</source>
+        <translation>Já há uma muralha aqui.</translation>
     </message>
 </context>
 <context>

@@ -4711,6 +4711,45 @@ This action cannot be undone.</translation>
     </message>
 </context>
 <context>
+    <name>MapBases</name>
+    <message>
+        <source>Centre</source>
+        <translation>Centre</translation>
+    </message>
+    <message>
+        <source>East</source>
+        <translation>East</translation>
+    </message>
+    <message>
+        <source>North-East</source>
+        <translation>North-East</translation>
+    </message>
+    <message>
+        <source>North</source>
+        <translation>North</translation>
+    </message>
+    <message>
+        <source>North-West</source>
+        <translation>North-West</translation>
+    </message>
+    <message>
+        <source>West</source>
+        <translation>West</translation>
+    </message>
+    <message>
+        <source>South-West</source>
+        <translation>South-West</translation>
+    </message>
+    <message>
+        <source>South</source>
+        <translation>South</translation>
+    </message>
+    <message>
+        <source>South-East</source>
+        <translation>South-East</translation>
+    </message>
+</context>
+<context>
     <name>MapListPanel</name>
     <message>
         <source>Maps</source>
@@ -4734,8 +4773,20 @@ to see preview</translation>
         <translation>No preview available</translation>
     </message>
     <message>
-        <source>Bases shown in player colours</source>
-        <translation>Bases shown in player colours</translation>
+        <source>%1 — held by %2</source>
+        <translation>%1 — held by %2</translation>
+    </message>
+    <message>
+        <source>%1 — free, click to claim it</source>
+        <translation>%1 — free, click to claim it</translation>
+    </message>
+    <message>
+        <source>Click a base to reseat</source>
+        <translation>Click a base to reseat</translation>
+    </message>
+    <message>
+        <source>Bases in player colours</source>
+        <translation>Bases in player colours</translation>
     </message>
 </context>
 <context>
@@ -4955,6 +5006,30 @@ to see preview</translation>
     <message>
         <source>Gold every side starts with — click to change</source>
         <translation>Gold every side starts with — click to change</translation>
+    </message>
+    <message>
+        <source>This battlefield only has %1 starting bases</source>
+        <translation>This battlefield only has %1 starting bases</translation>
+    </message>
+    <message>
+        <source>Every player in play needs a starting base</source>
+        <translation>Every player in play needs a starting base</translation>
+    </message>
+    <message>
+        <source>Click any chip to change it • pick a base on the map for the highlighted seat</source>
+        <translation>Click any chip to change it • pick a base on the map for the highlighted seat</translation>
+    </message>
+    <message>
+        <source>Base</source>
+        <translation>Base</translation>
+    </message>
+    <message>
+        <source>None</source>
+        <translation>None</translation>
+    </message>
+    <message>
+        <source>Starting base — click for the next free one, or pick it on the map</source>
+        <translation>Starting base — click for the next free one, or pick it on the map</translation>
     </message>
 </context>
 <context>
@@ -6750,6 +6825,10 @@ to see preview</translation>
     <message>
         <source>That is beyond the edge of the battlefield.</source>
         <translation>That is beyond the edge of the battlefield.</translation>
+    </message>
+    <message>
+        <source>A wall already stands here.</source>
+        <translation>A wall already stands here.</translation>
     </message>
 </context>
 <context>

@@ -8,6 +8,7 @@
 #include "game/command/command_validator.h"
 #include "game/core/component.h"
 #include "game/core/world.h"
+#include "game/map/map_definition.h"
 #include "game/map/terrain_service.h"
 #include "game/session/session_context.h"
 #include "game/systems/builder_product_types.h"
@@ -29,6 +30,14 @@ using Game::Command::Rejection;
 using Game::Command::Source;
 using Game::Session::ScopedSession;
 using Game::Session::SessionContext;
+
+auto bare_biome() -> Game::Map::BiomeSettings {
+  Game::Map::BiomeSettings biome;
+  biome.procedural_trees_enabled = false;
+  biome.procedural_boulders_enabled = false;
+  biome.procedural_iron_ore_enabled = false;
+  return biome;
+}
 
 struct Match {
   Match() {
@@ -679,7 +688,7 @@ TEST(CommandPipelineTest, NothingIsBuiltOnTheRiver) {
           QVector3D(-30.0F, 0.0F, 0.0F), QVector3D(30.0F, 0.0F, 0.0F), 8.0F}},
       {},
       {},
-      Game::Map::BiomeSettings{});
+      bare_biome());
 
   EXPECT_EQ(Game::Systems::assess_ground(match.session.world(), "home", 0.0F, 0.0F),
             Game::Systems::GroundVerdict::Water)
@@ -716,7 +725,7 @@ TEST(CommandPipelineTest, NothingIsRaisedOnTheFlankOfAHill) {
       {},
       {},
       {},
-      Game::Map::BiomeSettings{});
+      bare_biome());
 
   EXPECT_EQ(Game::Systems::assess_ground(match.session.world(), "home", 6.0F, 6.0F),
             Game::Systems::GroundVerdict::Uneven)
@@ -725,6 +734,149 @@ TEST(CommandPipelineTest, NothingIsRaisedOnTheFlankOfAHill) {
   EXPECT_EQ(Game::Systems::assess_ground(match.session.world(), "home", -20.0F, -20.0F),
             Game::Systems::GroundVerdict::Clear)
       << "the flat ground away from it still is";
+}
+
+TEST(CommandPipelineTest, NothingIsRaisedOnTopOfATree) {
+  Match match;
+  auto& terrain = match.session.terrain();
+  terrain.restore_from_serialized(
+      64,
+      64,
+      1.0F,
+      std::vector<float>(64U * 64U, 0.0F),
+      std::vector<Game::Map::TerrainType>(64U * 64U, Game::Map::TerrainType::Flat),
+      {},
+      {},
+      {},
+      bare_biome());
+  Game::Map::WorldProp tree;
+  tree.type = Game::Map::WorldProp::Type::PineTree;
+  tree.scale = 1.0F;
+  terrain.add_world_prop_at_world(tree, 10.0F, 10.0F);
+  Game::Map::WorldProp boulder;
+  boulder.type = Game::Map::WorldProp::Type::Boulder;
+  boulder.scale = 1.0F;
+  terrain.add_world_prop_at_world(boulder, -10.0F, -10.0F);
+
+  EXPECT_EQ(Game::Systems::assess_ground(match.session.world(), "home", 10.0F, 10.0F),
+            Game::Systems::GroundVerdict::Impassable)
+      << "a tree is not felled to make room for a home";
+  EXPECT_EQ(Game::Systems::assess_ground(match.session.world(), "home", -10.0F, -10.0F),
+            Game::Systems::GroundVerdict::Impassable)
+      << "a boulder is in the way just the same";
+  EXPECT_EQ(Game::Systems::assess_ground(match.session.world(), "home", 10.0F, -10.0F),
+            Game::Systems::GroundVerdict::Clear);
+}
+
+TEST(CommandPipelineTest, HillSlopesRefuseBuildingsButTheCrownDoesNot) {
+  Match match;
+
+  constexpr int k_side = 64;
+  const auto index = [](int gx, int gz) {
+    return static_cast<std::size_t>(gz * k_side + gx);
+  };
+  std::vector<float> heights(static_cast<std::size_t>(k_side) * k_side, 0.0F);
+  std::vector<Game::Map::TerrainType> types(heights.size(),
+                                            Game::Map::TerrainType::Flat);
+  Game::Map::HillNavigation hills;
+  hills.walkable.assign(heights.size(), 1U);
+  hills.entrances.assign(heights.size(), 0U);
+  constexpr int k_centre = k_side / 2;
+  for (int gz = 0; gz < k_side; ++gz) {
+    for (int gx = 0; gx < k_side; ++gx) {
+      const int ring = std::max(std::abs(gx - k_centre), std::abs(gz - k_centre));
+      if (ring > 12) {
+        continue;
+      }
+      types[index(gx, gz)] = Game::Map::TerrainType::Hill;
+      heights[index(gx, gz)] = 3.0F;
+
+      hills.walkable[index(gx, gz)] = ring <= 8 ? 1U : 0U;
+    }
+  }
+  match.session.terrain().restore_from_serialized(k_side,
+                                                  k_side,
+                                                  1.0F,
+                                                  heights,
+                                                  types,
+                                                  {},
+                                                  {},
+                                                  {},
+                                                  bare_biome(),
+                                                  {},
+                                                  {},
+                                                  {},
+                                                  hills);
+
+  EXPECT_EQ(Game::Systems::assess_ground(match.session.world(), "home", 0.0F, 0.0F),
+            Game::Systems::GroundVerdict::Clear)
+      << "the level crown of a hill is a building site";
+  EXPECT_EQ(Game::Systems::assess_ground(match.session.world(), "home", 10.0F, 0.0F),
+            Game::Systems::GroundVerdict::Uneven)
+      << "its slope is not, however level the heights look";
+  EXPECT_EQ(Game::Systems::assess_ground(match.session.world(), "home", 24.0F, 24.0F),
+            Game::Systems::GroundVerdict::Clear);
+}
+
+TEST(CommandPipelineTest, PlacementRulingHonoursTheFacing) {
+  Match match;
+  auto& collision = match.session.building_collision();
+  const auto footprint = Game::Systems::BuildingCollisionRegistry::get_building_size(
+      std::string("temple"));
+  ASSERT_GT(footprint.width, footprint.depth + 1.0F)
+      << "this test needs an oblong footprint to tell the facings apart";
+
+  const float wall_z = 20.0F + (footprint.depth * 0.5F) + 1.5F;
+  collision.register_building(match.spawn(1, 20.0F, wall_z),
+                              std::string("wall_segment"),
+                              20.0F,
+                              wall_z,
+                              1,
+                              0.0F);
+
+  EXPECT_EQ(Game::Systems::StructurePlacementService::ground_ruling(
+                match.session.world(), "temple", 20.0F, 20.0F, 0.0F),
+            Game::Systems::PlacementRuling::Ok)
+      << "facing along x the short side stays clear of the wall";
+  EXPECT_EQ(Game::Systems::StructurePlacementService::ground_ruling(
+                match.session.world(), "temple", 20.0F, 20.0F, 90.0F),
+            Game::Systems::PlacementRuling::BlockedByStructure)
+      << "turned a quarter, the long side runs into it";
+}
+
+TEST(CommandPipelineTest, TowersAndWallsChainButDoNotStack) {
+  Match match;
+  auto& collision = match.session.building_collision();
+  collision.register_building(
+      match.spawn(1, 20.0F, 20.0F), std::string("wall_segment"), 20.0F, 20.0F, 1, 0.0F);
+
+  EXPECT_EQ(Game::Systems::assess_ground(match.session.world(),
+                                         "defense_tower",
+                                         20.0F + Game::Systems::k_wall_link_spacing,
+                                         20.0F),
+            Game::Systems::GroundVerdict::Clear)
+      << "a tower on the next socket joins the wall";
+  EXPECT_EQ(Game::Systems::assess_ground(
+                match.session.world(), "defense_tower", 20.5F, 20.0F),
+            Game::Systems::GroundVerdict::Occupied)
+      << "a tower cannot be raised on the link itself";
+
+  collision.register_building(match.spawn(1, 40.0F, 40.0F),
+                              std::string("defense_tower"),
+                              40.0F,
+                              40.0F,
+                              1,
+                              0.0F);
+  EXPECT_EQ(Game::Systems::assess_ground(match.session.world(),
+                                         "wall_segment",
+                                         40.0F + Game::Systems::k_wall_link_spacing,
+                                         40.0F),
+            Game::Systems::GroundVerdict::Clear)
+      << "a wall link on the next socket joins the tower";
+  EXPECT_EQ(Game::Systems::assess_ground(
+                match.session.world(), "defense_tower", 41.0F, 40.0F),
+            Game::Systems::GroundVerdict::Occupied)
+      << "two towers still cannot share ground";
 }
 
 } // namespace

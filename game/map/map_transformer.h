@@ -1,5 +1,7 @@
 #pragma once
 
+#include <QString>
+
 #include <cstdint>
 #include <memory>
 #include <unordered_map>
@@ -38,6 +40,9 @@ public:
 
   static void setPlayerTeamOverrides(const std::unordered_map<int, int>& overrides);
   static void clear_player_team_overrides();
+
+  static void set_base_assignments(const std::unordered_map<int, QString>& assignments);
+  static void clear_base_assignments();
 };
 
 } // namespace Game::Map

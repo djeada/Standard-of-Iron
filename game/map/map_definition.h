@@ -66,6 +66,7 @@ using StructureGeometry = std::variant<PointStructureGeometry, LineStructureGeom
 struct StructureEntry {
   Game::Units::SpawnType type = Game::Units::SpawnType::Barracks;
   StructureGeometry geometry = PointStructureGeometry{};
+  QString id;
   int player_id = 0;
   int team_id = 0;
   int max_population = 60;

@@ -108,6 +108,7 @@ add_library(
     systems/run_stamina.cpp
     systems/troop_count_registry.cpp
     systems/troop_profile_service.cpp
+    map/base_options.cpp
     map/environment_lighting.cpp
     map/explored_mask_codec.cpp
     map/map_loader.cpp

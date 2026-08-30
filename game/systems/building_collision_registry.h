@@ -23,6 +23,11 @@ is_wall_link_building_type(const std::string& building_type) -> bool {
   return building_type == "wall_segment" || building_type == "wall_gate";
 }
 
+[[nodiscard]] inline auto
+is_wall_tower_building_type(const std::string& building_type) -> bool {
+  return building_type == "defense_tower";
+}
+
 struct BuildingFootprint {
   float center_x;
   float center_z;
@@ -35,6 +40,8 @@ struct BuildingFootprint {
   bool blocks_navigation{true};
 
   bool wall_link{false};
+
+  bool wall_tower{false};
 
   float body_center_x{0.0F};
   float body_center_z{0.0F};

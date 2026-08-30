@@ -561,10 +561,12 @@ add_executable(
     ui/icon_resources_test.cpp
     ui/widget_theme_test.cpp
     ui/brand_fonts_test.cpp
+    map/base_options_test.cpp
     map/minimap_generator_test.cpp
     map/minimap_utils_test.cpp
     map/terrain_service_test.cpp
     map/iron_sepulcher_skirmish_test.cpp
+    map/skirmish_base_choice_test.cpp
     systems/civilian_delivery_system_test.cpp
     systems/building_obstruction_lifecycle_test.cpp
     systems/command_service_test.cpp
