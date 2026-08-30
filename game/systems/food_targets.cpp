@@ -177,23 +177,16 @@ auto food_work_position(Engine::Core::World& world,
                         Engine::Core::EntityID worker_id,
                         const QVector3D& worker_position,
                         const FoodTarget& target) -> QVector3D {
-  QVector3D const target_position(target.x, 0.0F, target.z);
   if (target.product_type == k_builder_product_harvest_grain) {
+
     return CommandService::structure_work_position(
         worker_position,
-        target_position,
+        QVector3D(target.x, 0.0F, target.z),
         "farm",
         CommandService::get_unit_radius(world, worker_id));
   }
 
-  QVector3D approach = worker_position - target_position;
-  approach.setY(0.0F);
-  if (approach.lengthSquared() < 0.01F) {
-    approach = QVector3D(1.0F, 0.0F, 0.0F);
-  }
-  approach.normalize();
-  return NavGrid::snap_to_walkable_ground(target_position +
-                                          approach * k_sheep_work_standoff);
+  return {target.x, 0.0F, target.z};
 }
 
 void assign_food_task(Engine::Core::BuilderProductionComponent& builder,

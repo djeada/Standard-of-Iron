@@ -1291,12 +1291,6 @@ void BuilderBehavior::execute(const AISnapshot& snapshot,
     }
   };
 
-  // A camp with no field and nothing left to eat breaks ground on one before it
-  // lays the next authored step. A town plan is a camp layout and no shipped
-  // plan carries a field -- a farm's own footprint is wider than the camp -- so
-  // while the plan still had a tower or a wall to offer, that step outranked the
-  // field every tick and the barracks starved. Housing still comes first: homes
-  // are the manpower the field is there to feed.
   const bool field_before_plan =
       needs_a_field && starving &&
       (!has_plan_step || (planned.building != BUILDING_TYPE_FARM &&

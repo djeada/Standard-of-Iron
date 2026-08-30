@@ -654,13 +654,13 @@ void GameEngine::build_services_and_controllers() {
             note_minimap_combat_hit(e);
           });
 
-  m_economy_feedback_subscription =
-      Engine::Core::ScopedEventSubscription<Engine::Core::EconomyFeedbackEvent>(
-          [this](const Engine::Core::EconomyFeedbackEvent& e) {
+  m_world_feedback_subscription =
+      Engine::Core::ScopedEventSubscription<Engine::Core::WorldFeedbackEvent>(
+          [this](const Engine::Core::WorldFeedbackEvent& e) {
             if (m_world == nullptr) {
               return;
             }
-            m_activity_view_model->record_economy(e);
+            m_activity_view_model->record_world_feedback(e);
           });
 
   m_barrack_captured_subscription =

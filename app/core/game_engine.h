@@ -604,8 +604,8 @@ private:
       m_unit_spawned_subscription;
   Engine::Core::ScopedEventSubscription<Engine::Core::CombatHitEvent>
       m_combat_hit_subscription;
-  Engine::Core::ScopedEventSubscription<Engine::Core::EconomyFeedbackEvent>
-      m_economy_feedback_subscription;
+  Engine::Core::ScopedEventSubscription<Engine::Core::WorldFeedbackEvent>
+      m_world_feedback_subscription;
   Engine::Core::ScopedEventSubscription<Engine::Core::BarrackCapturedEvent>
       m_barrack_captured_subscription;
   Engine::Core::ScopedEventSubscription<Engine::Core::MissionAnnouncementEvent>

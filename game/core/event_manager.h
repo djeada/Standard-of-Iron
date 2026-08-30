@@ -351,21 +351,22 @@ public:
   }
 };
 
-enum class EconomyFeedbackKind : std::uint8_t {
+enum class WorldFeedbackKind : std::uint8_t {
   Resource = 0,
   Reserve,
+  Heal,
 };
 
-class EconomyFeedbackEvent : public Event {
+class WorldFeedbackEvent : public Event {
 public:
   static auto make_resource(int owner_id,
                             EntityID anchor_id,
                             Game::Systems::ResourceType type,
-                            int amount) -> EconomyFeedbackEvent {
-    EconomyFeedbackEvent event;
+                            int amount) -> WorldFeedbackEvent {
+    WorldFeedbackEvent event;
     event.owner_id = owner_id;
     event.anchor_id = anchor_id;
-    event.kind = EconomyFeedbackKind::Resource;
+    event.kind = WorldFeedbackKind::Resource;
     event.resource = static_cast<int>(Game::Systems::resource_type_index(type));
     event.amount = amount;
     return event;
@@ -376,8 +377,8 @@ public:
                          Game::Systems::ResourceType spent_type,
                          int spent_amount,
                          Game::Systems::ResourceType gained_type,
-                         int gained_amount) -> EconomyFeedbackEvent {
-    EconomyFeedbackEvent event =
+                         int gained_amount) -> WorldFeedbackEvent {
+    WorldFeedbackEvent event =
         make_resource(owner_id, anchor_id, spent_type, -std::abs(spent_amount));
     event.paired_resource =
         static_cast<int>(Game::Systems::resource_type_index(gained_type));
@@ -386,16 +387,29 @@ public:
   }
 
   static auto
-  make_reserve(int owner_id, EntityID anchor_id, int amount) -> EconomyFeedbackEvent {
-    EconomyFeedbackEvent event;
+  make_reserve(int owner_id, EntityID anchor_id, int amount) -> WorldFeedbackEvent {
+    WorldFeedbackEvent event;
     event.owner_id = owner_id;
     event.anchor_id = anchor_id;
-    event.kind = EconomyFeedbackKind::Reserve;
+    event.kind = WorldFeedbackKind::Reserve;
     event.amount = amount;
     return event;
   }
 
-  auto at(float world_x, float world_y, float world_z) -> EconomyFeedbackEvent& {
+  static auto make_heal(int owner_id,
+                        EntityID anchor_id,
+                        int amount,
+                        float severity) -> WorldFeedbackEvent {
+    WorldFeedbackEvent event;
+    event.owner_id = owner_id;
+    event.anchor_id = anchor_id;
+    event.kind = WorldFeedbackKind::Heal;
+    event.amount = std::abs(amount);
+    event.severity = severity;
+    return event;
+  }
+
+  auto at(float world_x, float world_y, float world_z) -> WorldFeedbackEvent& {
     x = world_x;
     y = world_y;
     z = world_z;
@@ -405,18 +419,19 @@ public:
 
   int owner_id = 0;
   EntityID anchor_id = 0;
-  EconomyFeedbackKind kind = EconomyFeedbackKind::Resource;
+  WorldFeedbackKind kind = WorldFeedbackKind::Resource;
   int resource = -1;
   int amount = 0;
   int paired_resource = -1;
   int paired_amount = 0;
+  float severity = 0.0F;
   float x = 0.0F;
   float y = 0.0F;
   float z = 0.0F;
   bool has_position = false;
 
   [[nodiscard]] auto get_type_name() const -> const char* override {
-    return "ECONOMY_FEEDBACK";
+    return "WORLD_FEEDBACK";
   }
 };
 

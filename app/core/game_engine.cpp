@@ -152,6 +152,7 @@
 #include "game/systems/owner_registry.h"
 #include "game/systems/pathfinding.h"
 #include "game/systems/patrol_system.h"
+#include "game/systems/player_feedback.h"
 #include "game/systems/player_resource_registry.h"
 #include "game/systems/production_service.h"
 #include "game/systems/production_system.h"
@@ -199,6 +200,20 @@ namespace {
 constexpr float k_mission_stage_poll_seconds = 0.25F;
 constexpr float k_minimap_landmark_poll_interval = 0.5F;
 constexpr float k_interaction_targeting_interval = 0.1F;
+
+auto treasury_anchor(Engine::Core::World& world,
+                     int owner_id) -> Engine::Core::EntityID {
+  for (auto [id, building, unit] :
+       world.view<Engine::Core::BuildingComponent, Engine::Core::UnitComponent>()) {
+    (void)building;
+    if (unit.owner_id == owner_id &&
+        unit.spawn_type == Game::Units::SpawnType::Barracks && unit.health > 0 &&
+        !world.has<Engine::Core::PendingRemovalComponent>(id)) {
+      return id;
+    }
+  }
+  return Engine::Core::NULL_ENTITY;
+}
 
 auto build_resource_map(Game::Session::SessionContext& session,
                         int owner_id) -> QVariantMap {
@@ -1844,13 +1859,9 @@ void GameEngine::update_mission_waves(float dt) {
     Game::Audio::play_cue(cue.toStdString());
   }
   if (effects.reward_granted) {
-    auto& resources = m_session->economy();
-    for (const auto type : Game::Systems::k_all_resource_types) {
-      const int amount = effects.reward.get(type);
-      if (amount > 0) {
-        resources.add(m_runtime.local_owner_id, type, amount);
-      }
-    }
+    Game::Systems::grant_resources(m_runtime.local_owner_id,
+                                   treasury_anchor(*m_world, m_runtime.local_owner_id),
+                                   effects.reward);
     sync_selected_player_state();
   }
   if (effects.wave_status_changed) {

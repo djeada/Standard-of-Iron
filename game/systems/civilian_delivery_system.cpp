@@ -8,7 +8,7 @@
 #include "../core/world.h"
 #include "../units/troop_config.h"
 #include "building_collision_registry.h"
-#include "economy_feedback.h"
+#include "player_feedback.h"
 #include "units/spawn_type.h"
 
 namespace Game::Systems {
@@ -108,9 +108,11 @@ void CivilianDeliverySystem::update(Engine::Core::World* world, float) {
       continue;
     }
 
-    barracks_prod->manpower_available += k_civilian_delivery_reserve_grant;
-    publish_population_feedback(
-        barracks_unit->owner_id, barracks_id, k_civilian_delivery_reserve_grant);
+    grant_manpower(barracks_unit->owner_id,
+                   barracks_id,
+                   *barracks_prod,
+                   k_civilian_delivery_reserve_grant,
+                   barracks_prod->max_units);
     to_remove.push_back(civilian_id);
   }
 

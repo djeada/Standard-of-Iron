@@ -19,11 +19,10 @@
 #include "core/world.h"
 #include "game/map/terrain_service.h"
 #include "game/map/undead_shrine_placement.h"
-#include "game/systems/economy_feedback.h"
 #include "game/systems/global_stats_registry.h"
 #include "game/systems/nation_registry.h"
 #include "game/systems/owner_registry.h"
-#include "game/systems/player_resource_registry.h"
+#include "game/systems/player_feedback.h"
 #include "units/factory.h"
 #include "units/unit.h"
 
@@ -490,15 +489,13 @@ void UndeadAwakeningSystem::pay_clear_reward(Engine::Core::World& world,
     }
   }
 
-  auto& resources = m_services.economy;
   QStringList spoils;
   for (ResourceType const type : k_all_resource_types) {
     int const amount = zone.definition.clear_reward.get(type);
     if (amount <= 0) {
       continue;
     }
-    resources.add(beneficiary, type, amount);
-    publish_resource_feedback(beneficiary, zone.anchor_entity_id, type, amount);
+    grant_resource(beneficiary, zone.anchor_entity_id, type, amount);
     spoils.append(QStringLiteral("%1 %2").arg(amount).arg(
         QString::fromLatin1(resource_type_key(type))));
   }

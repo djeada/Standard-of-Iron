@@ -15,7 +15,6 @@ class MovementComponent;
 
 namespace Game::Systems {
 
-inline constexpr float k_sheep_work_standoff = 1.15F;
 inline constexpr float k_sheep_work_reach = 2.4F;
 
 struct FoodTarget {

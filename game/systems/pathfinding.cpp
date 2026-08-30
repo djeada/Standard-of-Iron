@@ -1406,11 +1406,6 @@ auto Pathfinding::search_buffers_for(const Pathfinding* pathfinding) -> SearchBu
   return search_buffers_by_grid()[pathfinding];
 }
 
-// The buffers are keyed by instance address, and a grid rebuilt for the next
-// match is routinely allocated exactly where the last one stood, so a fresh
-// grid would otherwise inherit the previous one's generation counters and
-// half-finished search state. Dropping the entry with the grid keeps the two
-// apart.
 void Pathfinding::release_search_buffers(const Pathfinding* pathfinding) {
   search_buffers_by_grid().erase(pathfinding);
 }

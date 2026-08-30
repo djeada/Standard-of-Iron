@@ -116,7 +116,7 @@ add_executable(
     systems/world_prop_navigation_test.cpp
     systems/production_system_test.cpp
     systems/construction_cost_catalog_test.cpp
-    systems/economy_feedback_test.cpp
+    systems/player_feedback_test.cpp
     systems/resource_delivery_system_test.cpp
     systems/gather_loop_system_test.cpp
     systems/food_economy_test.cpp

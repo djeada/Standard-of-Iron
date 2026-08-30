@@ -190,6 +190,40 @@ TEST(WorldFeedbackStoreTest, EconomyTicksWaitLongerThanCombatTicks) {
   EXPECT_EQ(ready.front().kind, FeedbackKind::Resource);
 }
 
+TEST(WorldFeedbackStoreTest, HealsOnOneTargetMergeAndStayApartFromItsDamage) {
+  WorldFeedbackStore store;
+  WorldFeedbackTick heal;
+  heal.anchor = 7;
+  heal.kind = FeedbackKind::Heal;
+  heal.amount = 6;
+  heal.incoming = true;
+
+  store.push(heal);
+  store.push(heal);
+  store.push(hit_on(7, 12));
+
+  const auto pending = store.pending();
+  ASSERT_EQ(pending.size(), 2U) << "a heal and a hit on one body are two numbers";
+  EXPECT_EQ(pending.front().kind, FeedbackKind::Heal);
+  EXPECT_EQ(pending.front().amount, 12) << "two ticks of the same beam read as one";
+}
+
+TEST(WorldFeedbackStoreTest, HealVariantIsLabelledForTheOverlay) {
+  WorldFeedbackTick heal;
+  heal.anchor = 3;
+  heal.kind = FeedbackKind::Heal;
+  heal.amount = 9;
+  heal.severity = 0.09F;
+
+  const auto list = WorldFeedbackStore::to_variant({heal});
+  ASSERT_EQ(list.size(), 1);
+  const auto map = list.front().toMap();
+  EXPECT_EQ(map.value(QStringLiteral("kind")).toString(), QStringLiteral("heal"));
+  EXPECT_EQ(map.value(QStringLiteral("amount")).toInt(), 9);
+  EXPECT_EQ(map.value(QStringLiteral("resource")).toInt(), -1)
+      << "health is not a resource; it must not pick up a resource glyph";
+}
+
 TEST(WorldFeedbackStoreTest, TradeVariantCarriesBothSides) {
   auto trade = resource_on(6, 0, -40);
   trade.paired_resource = 2;

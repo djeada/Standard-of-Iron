@@ -1,5 +1,6 @@
 #include <QVector3D>
 
+#include <cmath>
 #include <gtest/gtest.h>
 #include <memory>
 
@@ -18,6 +19,7 @@
 #include "game/systems/gather_loop_system.h"
 #include "game/systems/harvest_yields.h"
 #include "game/systems/interaction_targeting.h"
+#include "game/systems/movement_pipeline.h"
 #include "game/systems/nav_grid.h"
 #include "game/systems/owner_registry.h"
 #include "game/systems/pathfinding.h"
@@ -376,6 +378,10 @@ TEST_F(FoodEconomyTest, TheStartHarvestOrderSendsABuilderToAFarmOrASheep) {
             Game::Systems::k_builder_product_harvest_grain);
   EXPECT_EQ(reaper_builder->structure_task_entity_id, farm_entity->get_id());
   EXPECT_TRUE(reaper_builder->has_construction_site);
+
+  EXPECT_GT(std::hypot(reaper_builder->construction_site_x - 12.0F,
+                       reaper_builder->construction_site_z - 12.0F),
+            1.0F);
   EXPECT_EQ(Game::Systems::activity_for_builder_product(reaper_builder->product_type),
             Game::Systems::ActivityKind::HarvestGrain);
 
@@ -386,6 +392,50 @@ TEST_F(FoodEconomyTest, TheStartHarvestOrderSendsABuilderToAFarmOrASheep) {
   EXPECT_EQ(butcher_builder->structure_task_entity_id, sheep->get_id());
   EXPECT_EQ(Game::Systems::activity_for_builder_product(butcher_builder->product_type),
             Game::Systems::ActivityKind::SlaughterSheep);
+
+  EXPECT_NEAR(butcher_builder->construction_site_x, 4.0F, 0.0001F);
+  EXPECT_NEAR(butcher_builder->construction_site_z, 12.0F, 0.0001F);
+}
+
+TEST_F(FoodEconomyTest, TheButchersWalkOntoTheSheepTheyTake) {
+
+  Engine::Core::World world;
+  auto* sheep = add_sheep(world, 12.0F, 12.0F);
+  auto* butcher = add_builder(world, 4.0F, 12.0F);
+  auto* transform = butcher->get_component<Engine::Core::TransformComponent>();
+  butcher->get_component<Engine::Core::UnitComponent>()->speed = 2.0F;
+
+  Game::Command::dispatch(
+      world,
+      Game::Command::Command{.source = Game::Command::Source::LocalPlayer,
+                             .owner_id = k_owner,
+                             .payload = Game::Command::StartHarvest{
+                                 .units = {butcher->get_id()},
+                                 .construction_type = std::string(
+                                     Game::Systems::k_builder_product_slaughter_sheep),
+                                 .resource_target = sheep->get_id(),
+                                 .site = QVector3D(12.0F, 0.0F, 12.0F)}});
+
+  auto* builder = butcher->get_component<Engine::Core::BuilderProductionComponent>();
+  ASSERT_NE(builder, nullptr);
+  ASSERT_TRUE(builder->has_construction_site);
+  builder->build_time = 1000.0F;
+  builder->time_remaining = builder->build_time;
+
+  Game::Systems::MovementPipeline movement;
+  Game::Systems::ProductionSystem production;
+  bool arrived = false;
+  for (int step = 0; step < 600 && !arrived; ++step) {
+    movement.update(&world, 0.05F);
+    production.update(&world, 0.05F);
+    arrived = builder->at_construction_site;
+  }
+
+  ASSERT_TRUE(arrived) << "the butchers never closed on the animal";
+
+  const auto* grazing = sheep->get_component<Engine::Core::TransformComponent>();
+  EXPECT_NEAR(transform->position.x, grazing->position.x, 0.15F);
+  EXPECT_NEAR(transform->position.z, grazing->position.z, 0.15F);
 }
 
 TEST_F(FoodEconomyTest, AnUnripeFarmRefusesTheHarvestOrder) {

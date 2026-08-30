@@ -13,8 +13,8 @@
 #include "../core/ownership_constants.h"
 #include "../core/world.h"
 #include "command_service.h"
-#include "economy_feedback.h"
 #include "nav_grid.h"
+#include "player_feedback.h"
 #include "player_resource_registry.h"
 #include "resource_stockpile.h"
 #include "resource_types.h"
@@ -74,16 +74,13 @@ auto drop_point_for(const Engine::Core::TransformComponent& depot) -> StockpileP
   return stockpile_drop_point(depot.position.x, depot.position.z, depot.rotation.y);
 }
 
-void credit_load(Engine::Core::World& world,
-                 int owner_id,
+void credit_load(int owner_id,
                  const Engine::Core::ResourceCarryComponent& carry,
                  Engine::Core::EntityID anchor) {
-  auto& resources = *Game::Session::services_for(world).economy;
   for (ResourceType const type : k_all_resource_types) {
     int const amount = carry.amounts.get(type);
     if (amount > 0) {
-      resources.add_harvested(owner_id, type, amount);
-      publish_resource_feedback(owner_id, anchor, type, amount);
+      grant_harvested_resource(owner_id, anchor, type, amount);
     }
   }
 }
@@ -196,7 +193,7 @@ void ResourceDeliverySystem::update(Engine::Core::World* world, float delta_time
           world, unit->owner_id, transform->position.x, transform->position.z);
       if (depot == nullptr) {
 
-        credit_load(*world, unit->owner_id, *carry, hauler->get_id());
+        credit_load(unit->owner_id, *carry, hauler->get_id());
         unloaded.push_back(hauler->get_id());
         continue;
       }
@@ -233,7 +230,7 @@ void ResourceDeliverySystem::update(Engine::Core::World* world, float delta_time
         stand_dist_sq <= k_stockpile_drop_radius * k_stockpile_drop_radius ||
         (out_of_patience && depot_dist_sq <= k_stockpile_depot_arrival_radius *
                                                  k_stockpile_depot_arrival_radius)) {
-      credit_load(*world, unit->owner_id, *carry, depot->get_id());
+      credit_load(unit->owner_id, *carry, depot->get_id());
       if (auto* stockpile = depot->get_component<Engine::Core::StockpileComponent>()) {
         stockpile->deposit_flash = k_stockpile_deposit_flash_seconds;
       }
@@ -245,7 +242,7 @@ void ResourceDeliverySystem::update(Engine::Core::World* world, float delta_time
 
     if (carry->haul_seconds >= k_stockpile_haul_abandon_seconds) {
 
-      credit_load(*world, unit->owner_id, *carry, hauler->get_id());
+      credit_load(unit->owner_id, *carry, hauler->get_id());
       unloaded.push_back(hauler->get_id());
       continue;
     }

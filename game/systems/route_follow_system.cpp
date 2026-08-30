@@ -7,6 +7,7 @@
 #include "../core/entity.h"
 #include "../formation/army_formation_registry.h"
 #include "../units/spawn_type.h"
+#include "builder_product_types.h"
 #include "combat_rules.h"
 #include "command_service.h"
 #include "defensive_unit_layout_service.h"
@@ -81,11 +82,12 @@ route_stops_short_of_the_order(const Engine::Core::MovementComponent& movement,
 
 auto is_movement_point_allowed(const QVector3D& pos,
                                const Engine::Core::Entity& entity) -> bool {
+
   if (auto const* builder_prod =
           entity.get_component<Engine::Core::BuilderProductionComponent>();
-      builder_prod != nullptr && builder_prod->in_progress &&
-      builder_prod->at_construction_site && builder_prod->has_task_target &&
-      builder_prod->task_target_id != 0) {
+      builder_prod != nullptr &&
+      (builder_prod->has_construction_site || builder_prod->in_progress) &&
+      is_gather_builder_product(builder_prod->product_type)) {
     Point const position_grid = NavGrid::world_to_grid(pos.x(), pos.z());
     Point const target_grid = NavGrid::world_to_grid(builder_prod->task_target_x,
                                                      builder_prod->task_target_z);

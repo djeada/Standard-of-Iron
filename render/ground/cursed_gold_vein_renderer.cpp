@@ -16,7 +16,6 @@ namespace {
 
 using namespace Render::Ground;
 
-// Dark, iron-stained rock. The gold and the curse glow come from the shader.
 constexpr float k_base_color_r = 0.24F;
 constexpr float k_base_color_g = 0.21F;
 constexpr float k_base_color_b = 0.18F;
@@ -49,8 +48,6 @@ void CursedGoldVeinRenderer::submit(Renderer& renderer, ResourceManager* resourc
     return;
   }
 
-  // A low, warm ore-light with a slow uneasy flicker: the vein is lit from within,
-  // unlike the shrine's cool steady votive glow.
   for (const auto& inst : m_state.visible_instances) {
     const QVector3D vein_pos = inst.pos_scale.toVector3D();
     const float scale = std::max(inst.pos_scale.w(), 0.1F);

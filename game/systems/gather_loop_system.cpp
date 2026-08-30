@@ -22,8 +22,6 @@
 namespace Game::Systems {
 namespace {
 
-constexpr float k_work_standoff = 1.8F;
-
 constexpr int k_work_position_search_radius = 4;
 
 auto find_next_node(const Engine::Core::World& world,
@@ -55,28 +53,9 @@ auto harvest_product_for(Game::Map::WorldProp::Type type) -> std::string_view {
   return k_builder_product_collect_iron_ore;
 }
 
-auto work_position_beside(const Game::Map::WorldPropTarget& node,
-                          float worker_x,
-                          float worker_z) -> QVector3D {
-
-  Point const node_grid = NavGrid::world_to_grid(node.x, node.z);
-  if (auto const cell = NavGrid::find_nearest_walkable_grid_facing(
-          node_grid,
-          QVector3D(worker_x, 0.0F, worker_z),
-          k_work_position_search_radius)) {
-    return NavGrid::snap_to_walkable_ground(NavGrid::grid_to_world(*cell));
-  }
-
-  QVector3D approach(worker_x - node.x, 0.0F, worker_z - node.z);
-  if (approach.lengthSquared() < 0.01F) {
-    approach = QVector3D(1.0F, 0.0F, 0.0F);
-  }
-  approach.normalize();
-
-  return NavGrid::snap_to_walkable_ground(
-      QVector3D(node.x + (approach.x() * k_work_standoff),
-                0.0F,
-                node.z + (approach.z() * k_work_standoff)));
+auto work_position_on(const Game::Map::TerrainService& terrain,
+                      const Game::Map::WorldPropTarget& node) -> QVector3D {
+  return {node.x, terrain.resolve_surface_world_y(node.x, node.z, 0.0F, 0.0F), node.z};
 }
 
 auto is_free_for_the_next_load(const Engine::Core::Entity& worker,
@@ -292,8 +271,7 @@ auto claim_from(Engine::Core::World& world,
       continue;
     }
 
-    QVector3D const work_position = work_position_beside(
-        candidate.target, transform.position.x, transform.position.z);
+    QVector3D const work_position = work_position_on(terrain, candidate.target);
 
     if (!terrain.reserve_world_prop(candidate.target.id)) {
       continue;
@@ -427,8 +405,7 @@ void GatherLoopSystem::update(Engine::Core::World* world, float delta_time) {
       continue;
     }
 
-    QVector3D const work_position =
-        work_position_beside(*next, transform->position.x, transform->position.z);
+    QVector3D const work_position = work_position_on(terrain, *next);
 
     assign_node(
         *builder, *movement, builder->gather_product_type, *next, work_position);
