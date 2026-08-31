@@ -30,6 +30,7 @@
 #include "core/entity.h"
 #include "core/system.h"
 #include "movement_trace.h"
+#include "nav_profile.h"
 
 namespace Engine::Core {
 
@@ -1335,6 +1336,7 @@ void World::update(float delta_time) {
   }
 
   const bool profiling = m_system_profiler.enabled();
+  const NavTickScope nav_tick;
   const auto tick_started = std::chrono::steady_clock::now();
   if (profiling) {
     m_system_profiler.begin_tick(m_tick_id, m_registry.entity_count());

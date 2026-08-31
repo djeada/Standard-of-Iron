@@ -740,15 +740,12 @@ TEST(CreaturePreparationResult, ClearEmptiesBothContainers) {
   Render::GL::HumanoidAnimationContext const anim{};
 
   result.bodies.add_humanoid(output, pose, variant, anim);
-  result.add_post_body_draw(RenderPassIntent::Main, PostBodyDrawRequest::Kind::None);
 
   EXPECT_EQ(result.bodies.size(), 1U);
-  EXPECT_EQ(result.post_body_draws.size(), 1U);
 
   result.clear();
 
   EXPECT_TRUE(result.bodies.empty());
-  EXPECT_TRUE(result.post_body_draws.empty());
   EXPECT_TRUE(result.shadow_batch.empty());
 }
 

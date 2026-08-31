@@ -1,4 +1,6 @@
 #include <QApplication>
+#include <QSettings>
+#include <QTemporaryDir>
 
 #include <filesystem>
 #include <gtest/gtest.h>
@@ -11,6 +13,14 @@
 int main(int argc, char** argv) {
   qputenv("QT_QPA_PLATFORM", "offscreen");
   QApplication app(argc, argv);
+
+  QTemporaryDir settings_sandbox;
+  if (!settings_sandbox.isValid()) {
+    qCritical("could not create a throwaway settings profile for the tests");
+    return 1;
+  }
+  QSettings::setPath(
+      QSettings::IniFormat, QSettings::UserScope, settings_sandbox.path());
 
   namespace fs = std::filesystem;
   const fs::path app_dir = fs::path(app.applicationDirPath().toStdString());

@@ -4,6 +4,7 @@ import QtQuick.Layouts 1.15
 import StandardOfIron 1.0
 import StandardOfIron.Design 1.0 as Design
 import "ui_audio.js" as UiAudio
+import StandardOfIron.Core 1.0
 
 Rectangle {
     id: root

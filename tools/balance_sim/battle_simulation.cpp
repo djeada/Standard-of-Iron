@@ -417,7 +417,7 @@ auto run_battle(Game::Session::SessionContext& session,
   nations.set_player_nation(k_side_b_owner, side_b_def.nation);
 
   Game::Formation::ArmyFormationRegistry::instance().clear();
-  Game::Systems::BuildingCollisionRegistry::instance().clear();
+  session.building_collision().clear();
   Game::Systems::FormationCombat::invalidate_layout_cache();
 
   session.terrain().initialize(

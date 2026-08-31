@@ -1,0 +1,422 @@
+{
+  "name": "Pinewater Cut",
+  "description": "A timber detail's cut above the Pinewater, for one. The near stand beside the camp is already half felled, so the levy is only filled out of the deep pines a long haul north-east, past the spine of rock the haul road has to swing around. The scree that gives up the stone lies the other way entirely, and the crew is not big enough to work both without splitting it.",
+  "theme": "Axes in the pines, and something moving between them.",
+  "coord_system": "grid",
+  "max_troops_per_player": 160,
+  "grid": {
+    "width": 64,
+    "height": 64,
+    "tile_size": 1.0
+  },
+  "camera": {
+    "center": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "distance": 26.0,
+    "tilt_deg": 48.0,
+    "yaw": 225.0,
+    "fov_y": 45.0,
+    "near": 1.0,
+    "far": 260.0
+  },
+  "time_of_day": "morning",
+  "environment": {
+    "start_time": 8.0,
+    "time_mode": "continuous",
+    "day_length_seconds": 2400.0,
+    "lighting_profile": "mediterranean_summer"
+  },
+  "biome": {
+    "ground_type": "forest_mud",
+    "seed": 20873,
+    "patch_density": 3.4,
+    "patch_jitter": 0.9,
+    "plant_density": 0.78,
+    "moisture_level": 0.8,
+    "ground_irregularity_enabled": true,
+    "irregularity_scale": 0.13,
+    "irregularity_amplitude": 0.07,
+    "procedural_boulders_enabled": true
+  },
+  "rain": {
+    "enabled": true,
+    "type": "rain",
+    "intensity": "light",
+    "cycle_duration": 300.0,
+    "active_duration": 90.0,
+    "fade_duration": 12.0,
+    "wind_strength": 0.18,
+    "wind_direction": 240.0
+  },
+  "terrain": [
+    {
+      "id": "camp_floor",
+      "type": "flat",
+      "x": 15.0,
+      "z": 47.0,
+      "width": 22.0,
+      "depth": 18.0,
+      "description": "The detail's camp floor."
+    },
+    {
+      "id": "scree_floor",
+      "type": "flat",
+      "x": 21.0,
+      "z": 24.0,
+      "width": 18.0,
+      "depth": 16.0,
+      "description": "The scree apron below the north shoulder."
+    },
+    {
+      "id": "deep_floor",
+      "type": "flat",
+      "x": 46.0,
+      "z": 20.0,
+      "width": 26.0,
+      "depth": 22.0,
+      "description": "Flat working ground under the deep pines."
+    },
+    {
+      "id": "the_spine",
+      "type": "hill",
+      "x": 37.0,
+      "z": 39.0,
+      "radius": 8.0,
+      "height": 3.1,
+      "description": "The rock spine between the camp and the deep pines; the haul road swings around it."
+    },
+    {
+      "id": "north_shoulder",
+      "type": "hill",
+      "x": 24.0,
+      "z": 11.0,
+      "radius": 9.0,
+      "height": 3.6,
+      "description": "The shoulder the scree falls off."
+    }
+  ],
+  "forests": [
+    {
+      "id": "near_stand",
+      "x": 25.0,
+      "z": 39.0,
+      "radius": 5.0
+    },
+    {
+      "id": "deep_pines",
+      "x": 46.0,
+      "z": 19.0,
+      "radius": 11.0
+    },
+    {
+      "id": "east_screen",
+      "x": 57.0,
+      "z": 44.0,
+      "radius": 7.0
+    }
+  ],
+  "roads": [
+    {
+      "id": "haul_road",
+      "start": [
+        16.0,
+        46.0
+      ],
+      "end": [
+        43.0,
+        21.0
+      ],
+      "width": 3.2,
+      "style": "default",
+      "waypoints": [
+        [
+          16.0,
+          46.0
+        ],
+        [
+          23.0,
+          40.0
+        ],
+        [
+          29.0,
+          31.0
+        ],
+        [
+          36.0,
+          25.0
+        ],
+        [
+          43.0,
+          21.0
+        ]
+      ]
+    },
+    {
+      "id": "scree_track",
+      "start": [
+        16.0,
+        44.0
+      ],
+      "end": [
+        21.0,
+        27.0
+      ],
+      "width": 2.6,
+      "style": "default",
+      "waypoints": [
+        [
+          16.0,
+          44.0
+        ],
+        [
+          17.0,
+          37.0
+        ],
+        [
+          19.0,
+          31.0
+        ],
+        [
+          21.0,
+          27.0
+        ]
+      ]
+    }
+  ],
+  "rivers": [],
+  "lakes": [],
+  "bridges": [],
+  "spawns": [
+    {
+      "id": "p1_commander",
+      "type": "roman_field_commander",
+      "x": 19.0,
+      "z": 43.0,
+      "player_id": 1,
+      "team_id": 1,
+      "nation": "roman_republic"
+    }
+  ],
+  "structures": [
+    {
+      "id": "p1_barracks",
+      "type": "barracks",
+      "x": 14.0,
+      "z": 48.0,
+      "player_id": 1,
+      "team_id": 1,
+      "nation": "roman_republic",
+      "max_population": 80,
+      "description": "The timber detail's camp."
+    }
+  ],
+  "firecamps": [
+    {
+      "id": "camp_fire",
+      "x": 19.0,
+      "z": 50.0,
+      "intensity": 1.0,
+      "radius": 3.2
+    }
+  ],
+  "world_props": [
+    {
+      "id": "camp_tent_a",
+      "type": "tent",
+      "x": 9.0,
+      "z": 43.0,
+      "rotation": 30.0
+    },
+    {
+      "id": "camp_tent_b",
+      "type": "tent",
+      "x": 22.0,
+      "z": 53.0,
+      "rotation": 300.0
+    },
+    {
+      "id": "camp_cart",
+      "type": "supply_cart",
+      "x": 11.0,
+      "z": 54.0,
+      "rotation": 95.0
+    },
+    {
+      "id": "camp_rack",
+      "type": "weapon_rack",
+      "x": 23.0,
+      "z": 47.0,
+      "rotation": 200.0
+    },
+    {
+      "id": "scree_a",
+      "type": "boulder",
+      "x": 17.0,
+      "z": 27.0,
+      "scale": 1.15
+    },
+    {
+      "id": "scree_b",
+      "type": "boulder",
+      "x": 21.0,
+      "z": 25.0,
+      "scale": 1.0
+    },
+    {
+      "id": "scree_c",
+      "type": "boulder",
+      "x": 24.0,
+      "z": 28.0,
+      "scale": 1.2
+    },
+    {
+      "id": "scree_d",
+      "type": "boulder",
+      "x": 19.0,
+      "z": 22.0,
+      "scale": 0.95
+    },
+    {
+      "id": "scree_e",
+      "type": "boulder",
+      "x": 25.0,
+      "z": 23.0,
+      "scale": 1.1
+    },
+    {
+      "id": "scree_f",
+      "type": "boulder",
+      "x": 15.0,
+      "z": 23.0,
+      "scale": 1.05
+    },
+    {
+      "id": "scree_g",
+      "type": "boulder",
+      "x": 29.0,
+      "z": 20.0,
+      "scale": 1.0
+    },
+    {
+      "id": "scree_h",
+      "type": "boulder",
+      "x": 28.0,
+      "z": 25.0,
+      "scale": 1.15
+    },
+    {
+      "id": "deep_deadfall_a",
+      "type": "dead_tree",
+      "x": 38.0,
+      "z": 15.0,
+      "scale": 1.1
+    },
+    {
+      "id": "deep_deadfall_b",
+      "type": "dead_tree",
+      "x": 54.0,
+      "z": 26.0,
+      "scale": 1.05
+    },
+    {
+      "id": "deep_boulder",
+      "type": "boulder",
+      "x": 50.0,
+      "z": 31.0,
+      "scale": 1.2
+    },
+    {
+      "id": "ridge_boulder",
+      "type": "boulder",
+      "x": 44.0,
+      "z": 47.0,
+      "scale": 1.1
+    },
+    {
+      "id": "east_iron",
+      "type": "iron_ore",
+      "x": 55.0,
+      "z": 35.0,
+      "scale": 1.0
+    }
+  ],
+  "landmarks": [
+    {
+      "id": "the_pinewater_altar",
+      "kind": "sanctuary",
+      "x": 34.0,
+      "z": 53.0,
+      "facing": "north"
+    }
+  ],
+  "undead_zones": [],
+  "wildlife": {
+    "enabled": true,
+    "seed": 20873,
+    "near_simulation_radius": 46.0,
+    "far_simulation_radius": 90.0,
+    "sheep": {
+      "enabled": true,
+      "groups": 1,
+      "group_size_min": 4,
+      "group_size_max": 6,
+      "roam_radius": 9.0,
+      "respawn": true,
+      "respawn_delay": 150.0,
+      "spawn_areas": [
+        {
+          "x": 32.0,
+          "z": 56.0,
+          "radius": 8.0
+        }
+      ],
+      "alert_radius": 10.0
+    },
+    "wolves": {
+      "enabled": true,
+      "groups": 1,
+      "group_size_min": 3,
+      "group_size_max": 4,
+      "roam_radius": 16.0,
+      "respawn": true,
+      "respawn_delay": 200.0,
+      "spawn_areas": [
+        {
+          "x": 47.0,
+          "z": 16.0,
+          "radius": 10.0
+        }
+      ],
+      "aggression": 0.5
+    },
+    "birds": {
+      "enabled": true,
+      "groups": 1,
+      "group_size_min": 3,
+      "group_size_max": 6,
+      "flight_height": 8.0,
+      "flyover_interval_min": 22.0,
+      "flyover_interval_max": 50.0
+    }
+  },
+  "starting_resources": {
+    "gold": 200,
+    "food": 120,
+    "wood": 0,
+    "stone": 0,
+    "iron": 0
+  },
+  "victory": {
+    "type": "elimination",
+    "key_structures": [
+      "barracks"
+    ],
+    "defeat_conditions": [
+      "no_commander",
+      "only_commander_remaining"
+    ]
+  }
+}

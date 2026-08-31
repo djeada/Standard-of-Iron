@@ -1,5 +1,3 @@
-
-
 #pragma once
 
 #include <algorithm>
@@ -11,6 +9,7 @@
 #include <string>
 
 #include "game/core/simulation_timing.h"
+#include "utils/percentile.h"
 
 namespace Render::Profiling {
 
@@ -91,7 +90,9 @@ struct FrameProfile {
 
   double budget_headroom_ms{16.67};
   double average_frame_ms{0.0};
+  double p50_frame_ms{0.0};
   double p95_frame_ms{0.0};
+  double p99_frame_ms{0.0};
 
   std::uint64_t frame_index{0};
 
@@ -164,36 +165,16 @@ struct FrameProfile {
     if (!enabled) {
       return;
     }
-    constexpr std::size_t k_history_size = 120U;
-    recent_total_us[recent_cursor] = total_us();
-    recent_cursor = (recent_cursor + 1U) % k_history_size;
-    recent_count = std::min<std::size_t>(recent_count + 1U, k_history_size);
-
-    if (recent_count == 0U) {
-      average_frame_ms = 0.0;
-      p95_frame_ms = 0.0;
-      return;
-    }
-
-    std::array<std::uint64_t, k_history_size> sorted{};
-    std::uint64_t sum = 0U;
-    for (std::size_t i = 0; i < recent_count; ++i) {
-      sorted[i] = recent_total_us[i];
-      sum += recent_total_us[i];
-    }
-    std::sort(sorted.begin(), sorted.begin() + recent_count);
-
-    average_frame_ms =
-        static_cast<double>(sum) / static_cast<double>(recent_count) / 1000.0;
-    std::size_t const p95_index = std::min<std::size_t>(
-        recent_count - 1U, ((recent_count * 95U) + 99U) / 100U - 1U);
-    p95_frame_ms = static_cast<double>(sorted[p95_index]) / 1000.0;
+    m_recent_ms.push(static_cast<double>(total_us()) / 1000.0);
+    const Utils::Stats::Distribution spread = m_recent_ms.distribution();
+    average_frame_ms = spread.average;
+    p50_frame_ms = spread.p50;
+    p95_frame_ms = spread.p95;
+    p99_frame_ms = spread.p99;
   }
 
 private:
-  std::array<std::uint64_t, 120> recent_total_us{};
-  std::size_t recent_cursor{0U};
-  std::size_t recent_count{0U};
+  Utils::Stats::SampleWindow<120> m_recent_ms;
 };
 
 [[nodiscard]] auto global_profile() -> FrameProfile&;

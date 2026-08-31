@@ -794,3 +794,76 @@ TEST_F(MeleeEngagementTest, GridOnlyObstaclePreventsMeleeThroughIt) {
                                                                    defender_position));
   EXPECT_FALSE(Game::Systems::Combat::is_in_range(attacker, defender, 100.0F));
 }
+
+namespace {
+
+struct StructureCase {
+  Game::Units::SpawnType type;
+  const char* name;
+};
+
+class MeleeAgainstStructureTest : public MeleeEngagementTest,
+                                  public ::testing::WithParamInterface<StructureCase> {
+};
+
+} // namespace
+
+TEST_P(MeleeAgainstStructureTest, SwordsmenLandBlowsOnEveryStructureTheyAreSentAt) {
+  Engine::Core::World world;
+  Game::Systems::register_runtime_systems(world);
+
+  auto* structure = spawn(world,
+                          GetParam().type,
+                          2,
+                          QVector3D(0.0F, 0.0F, 0.0F),
+                          Game::Systems::NationID::Carthage);
+  ASSERT_NE(structure, nullptr) << GetParam().name << " could not be spawned";
+  auto* attacker = spawn(world,
+                         Game::Units::SpawnType::Knight,
+                         1,
+                         QVector3D(-6.0F, 0.0F, 0.0F),
+                         Game::Systems::NationID::RomanRepublic);
+  ASSERT_NE(attacker, nullptr);
+
+  auto* structure_unit = structure->get_component<UnitComponent>();
+  ASSERT_NE(structure_unit, nullptr);
+  int const start_health = structure_unit->health;
+
+  order_attack(*attacker, *structure);
+  for (int tick = 0; tick < 400; ++tick) {
+    world.update(0.05F);
+  }
+
+  EXPECT_LT(structure_unit->health, start_health)
+      << GetParam().name
+      << " never took a blow; the men swing at it forever and the player sees no "
+         "damage numbers";
+
+  auto const* attacker_transform = attacker->get_component<TransformComponent>();
+  auto const* structure_transform = structure->get_component<TransformComponent>();
+  ASSERT_NE(attacker_transform, nullptr);
+  ASSERT_NE(structure_transform, nullptr);
+  float const dx = structure_transform->position.x - attacker_transform->position.x;
+  float const dz = structure_transform->position.z - attacker_transform->position.z;
+  float const distance = std::max(0.0001F, std::hypot(dx, dz));
+  float const yaw = attacker_transform->rotation.y * 3.14159265F / 180.0F;
+  float const facing = ((std::sin(yaw) * dx) + (std::cos(yaw) * dz)) / distance;
+  EXPECT_GT(facing, std::cos(80.0F * 3.14159265F / 180.0F))
+      << GetParam().name << ": the attacker stands with its back to what it is hitting";
+}
+
+INSTANTIATE_TEST_SUITE_P(
+    Structures,
+    MeleeAgainstStructureTest,
+    ::testing::Values(StructureCase{Game::Units::SpawnType::Barracks, "Barracks"},
+                      StructureCase{Game::Units::SpawnType::Home, "Home"},
+                      StructureCase{Game::Units::SpawnType::Farm, "Farm"},
+                      StructureCase{Game::Units::SpawnType::Temple, "Temple"},
+                      StructureCase{Game::Units::SpawnType::Marketplace, "Marketplace"},
+                      StructureCase{Game::Units::SpawnType::WallSegment, "WallSegment"},
+                      StructureCase{Game::Units::SpawnType::WallGate, "WallGate"},
+                      StructureCase{Game::Units::SpawnType::DefenseTower,
+                                    "DefenseTower"}),
+    [](const testing::TestParamInfo<StructureCase>& info) {
+      return std::string(info.param.name);
+    });

@@ -6,6 +6,12 @@ the complete indexed mesh in both the color and directional-shadow passes.
 There are no billboards, reduced meshes, dropped attachments, reduced shadow
 silhouettes, or animation approximations in the results below.
 
+Counters, budget verdicts, and the reproducible runner these scenarios are measured
+with are described in
+[PERFORMANCE_INSTRUMENTATION.md](PERFORMANCE_INSTRUMENTATION.md). Every `report.json`
+below now carries `asset_counters`, `navigation`, `simulation_systems`, and a `budget`
+verdict that fails when the run was not actually Ultra, Full LOD, and GPU-timed.
+
 ## Benchmark scenarios
 
 | Scenario             | Soldiers per side | Rendered soldiers |

@@ -1,0 +1,452 @@
+{
+  "name": "Sallow Ford",
+  "description": "A redoubt above a dry ford, for one. A spur of rock runs the length of the approach and the two shoulders close the flanks, so everything coming down from the north is committed to one of two lanes -- the cart gate in the west, the goat path in the east -- and they do not meet again until the ground in front of the camp. One line cannot hold both mouths, so holding here is a question of which lane you stand in and when you leave it.",
+  "theme": "Two mouths, five columns, and the light going.",
+  "coord_system": "grid",
+  "max_troops_per_player": 280,
+  "grid": {
+    "width": 72,
+    "height": 72,
+    "tile_size": 1.0
+  },
+  "camera": {
+    "center": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "distance": 30.0,
+    "tilt_deg": 48.0,
+    "yaw": 225.0,
+    "fov_y": 45.0,
+    "near": 1.0,
+    "far": 280.0
+  },
+  "time_of_day": "afternoon",
+  "environment": {
+    "start_time": 18.0,
+    "time_mode": "continuous",
+    "day_length_seconds": 2400.0,
+    "lighting_profile": "mediterranean_summer"
+  },
+  "biome": {
+    "ground_type": "grass_dry",
+    "seed": 40912,
+    "patch_density": 3.0,
+    "patch_jitter": 0.85,
+    "plant_density": 0.5,
+    "moisture_level": 0.2,
+    "ground_irregularity_enabled": true,
+    "irregularity_scale": 0.14,
+    "irregularity_amplitude": 0.08,
+    "procedural_boulders_enabled": true
+  },
+  "rain": {
+    "enabled": false,
+    "type": "rain",
+    "intensity": 0.0
+  },
+  "terrain": [
+    {
+      "id": "redoubt_floor",
+      "type": "flat",
+      "x": 36.0,
+      "z": 62.0,
+      "width": 34.0,
+      "depth": 16.0,
+      "description": "The redoubt's floor."
+    },
+    {
+      "id": "ford_bed",
+      "type": "flat",
+      "x": 36.0,
+      "z": 50.0,
+      "width": 30.0,
+      "depth": 12.0,
+      "description": "The dry bed where the two lanes finally meet."
+    },
+    {
+      "id": "west_mouth",
+      "type": "flat",
+      "x": 25.0,
+      "z": 10.0,
+      "width": 14.0,
+      "depth": 14.0,
+      "description": "Open ground at the head of the cart gate."
+    },
+    {
+      "id": "east_mouth",
+      "type": "flat",
+      "x": 47.0,
+      "z": 10.0,
+      "width": 14.0,
+      "depth": 14.0,
+      "description": "Open ground at the head of the goat path."
+    },
+    {
+      "id": "the_spur",
+      "type": "hill",
+      "x": 36.0,
+      "z": 26.0,
+      "width": 42.0,
+      "depth": 14.0,
+      "height": 4.2,
+      "shape": "corridor",
+      "thickness": 11.0,
+      "rotation": 90.0,
+      "description": "The spur that keeps the two lanes apart the whole way down."
+    },
+    {
+      "id": "west_shoulder",
+      "type": "hill",
+      "x": 13.0,
+      "z": 30.0,
+      "width": 50.0,
+      "depth": 14.0,
+      "height": 3.6,
+      "shape": "corridor",
+      "thickness": 11.0,
+      "rotation": 90.0,
+      "description": "The shoulder that closes the west flank."
+    },
+    {
+      "id": "east_shoulder",
+      "type": "hill",
+      "x": 59.0,
+      "z": 30.0,
+      "width": 50.0,
+      "depth": 14.0,
+      "height": 3.6,
+      "shape": "corridor",
+      "thickness": 11.0,
+      "rotation": 90.0,
+      "description": "The shoulder that closes the east flank."
+    }
+  ],
+  "forests": [
+    {
+      "id": "west_sallows",
+      "x": 11.0,
+      "z": 62.0,
+      "radius": 7.0
+    },
+    {
+      "id": "east_sallows",
+      "x": 61.0,
+      "z": 62.0,
+      "radius": 7.0
+    },
+    {
+      "id": "spur_scrub",
+      "x": 36.0,
+      "z": 52.0,
+      "radius": 4.0
+    }
+  ],
+  "roads": [
+    {
+      "id": "cart_gate",
+      "start": [
+        25.0,
+        4.0
+      ],
+      "end": [
+        33.0,
+        58.0
+      ],
+      "width": 3.6,
+      "style": "default",
+      "waypoints": [
+        [
+          25.0,
+          4.0
+        ],
+        [
+          25.0,
+          20.0
+        ],
+        [
+          25.0,
+          40.0
+        ],
+        [
+          28.0,
+          50.0
+        ],
+        [
+          33.0,
+          58.0
+        ]
+      ]
+    },
+    {
+      "id": "goat_path",
+      "start": [
+        47.0,
+        4.0
+      ],
+      "end": [
+        39.0,
+        58.0
+      ],
+      "width": 2.4,
+      "style": "default",
+      "waypoints": [
+        [
+          47.0,
+          4.0
+        ],
+        [
+          47.0,
+          20.0
+        ],
+        [
+          47.0,
+          40.0
+        ],
+        [
+          44.0,
+          50.0
+        ],
+        [
+          39.0,
+          58.0
+        ]
+      ]
+    }
+  ],
+  "rivers": [],
+  "lakes": [],
+  "bridges": [],
+  "spawns": [
+    {
+      "id": "p1_commander",
+      "type": "roman_field_commander",
+      "x": 36.0,
+      "z": 56.0,
+      "player_id": 1,
+      "team_id": 1,
+      "nation": "roman_republic"
+    }
+  ],
+  "structures": [
+    {
+      "id": "p1_barracks",
+      "type": "barracks",
+      "x": 36.0,
+      "z": 63.0,
+      "player_id": 1,
+      "team_id": 1,
+      "nation": "roman_republic",
+      "max_population": 160,
+      "description": "The redoubt."
+    },
+    {
+      "id": "p1_tower_west",
+      "type": "defense_tower",
+      "x": 27.0,
+      "z": 55.0,
+      "player_id": 1,
+      "team_id": 1,
+      "nation": "roman_republic",
+      "description": "The tower that watches the cart gate."
+    },
+    {
+      "id": "p1_tower_east",
+      "type": "defense_tower",
+      "x": 45.0,
+      "z": 55.0,
+      "player_id": 1,
+      "team_id": 1,
+      "nation": "roman_republic",
+      "description": "The tower that watches the goat path."
+    }
+  ],
+  "firecamps": [
+    {
+      "id": "redoubt_fire",
+      "x": 36.0,
+      "z": 60.0,
+      "intensity": 1.1,
+      "radius": 3.6
+    },
+    {
+      "id": "west_picket_fire",
+      "x": 22.0,
+      "z": 60.0,
+      "intensity": 0.8,
+      "radius": 2.6
+    },
+    {
+      "id": "east_picket_fire",
+      "x": 50.0,
+      "z": 60.0,
+      "intensity": 0.8,
+      "radius": 2.6
+    }
+  ],
+  "world_props": [
+    {
+      "id": "redoubt_tent_a",
+      "type": "tent",
+      "x": 30.0,
+      "z": 67.0,
+      "rotation": 15.0
+    },
+    {
+      "id": "redoubt_tent_b",
+      "type": "tent",
+      "x": 42.0,
+      "z": 67.0,
+      "rotation": 340.0
+    },
+    {
+      "id": "redoubt_cart",
+      "type": "supply_cart",
+      "x": 36.0,
+      "z": 68.0,
+      "rotation": 90.0
+    },
+    {
+      "id": "redoubt_rack_west",
+      "type": "weapon_rack",
+      "x": 24.0,
+      "z": 64.0,
+      "rotation": 210.0
+    },
+    {
+      "id": "redoubt_rack_east",
+      "type": "weapon_rack",
+      "x": 48.0,
+      "z": 64.0,
+      "rotation": 150.0
+    },
+    {
+      "id": "cart_gate_stone_west",
+      "type": "boulder",
+      "x": 21.0,
+      "z": 45.0,
+      "scale": 1.25
+    },
+    {
+      "id": "cart_gate_stone_east",
+      "type": "boulder",
+      "x": 30.0,
+      "z": 45.0,
+      "scale": 1.1
+    },
+    {
+      "id": "goat_path_stone_west",
+      "type": "boulder",
+      "x": 42.0,
+      "z": 45.0,
+      "scale": 1.05
+    },
+    {
+      "id": "goat_path_stone_east",
+      "type": "boulder",
+      "x": 51.0,
+      "z": 45.0,
+      "scale": 1.2
+    },
+    {
+      "id": "ford_deadfall",
+      "type": "dead_tree",
+      "x": 36.0,
+      "z": 46.0,
+      "scale": 1.1
+    },
+    {
+      "id": "west_ruin",
+      "type": "ruins",
+      "x": 20.0,
+      "z": 17.0,
+      "scale": 1.0
+    },
+    {
+      "id": "west_iron",
+      "type": "iron_ore",
+      "x": 15.0,
+      "z": 68.0,
+      "scale": 1.0
+    },
+    {
+      "id": "east_iron",
+      "type": "iron_ore",
+      "x": 57.0,
+      "z": 68.0,
+      "scale": 1.0
+    },
+    {
+      "id": "mouth_statue",
+      "type": "statue",
+      "x": 51.0,
+      "z": 15.0,
+      "scale": 1.0
+    }
+  ],
+  "landmarks": [
+    {
+      "id": "the_sallow_altar",
+      "kind": "sanctuary",
+      "x": 18.0,
+      "z": 68.0,
+      "facing": "east"
+    }
+  ],
+  "undead_zones": [],
+  "wildlife": {
+    "enabled": true,
+    "seed": 40912,
+    "near_simulation_radius": 46.0,
+    "far_simulation_radius": 90.0,
+    "sheep": {
+      "enabled": true,
+      "groups": 1,
+      "group_size_min": 4,
+      "group_size_max": 7,
+      "roam_radius": 10.0,
+      "respawn": true,
+      "respawn_delay": 180.0,
+      "spawn_areas": [
+        {
+          "x": 60.0,
+          "z": 66.0,
+          "radius": 7.0
+        }
+      ],
+      "alert_radius": 11.0
+    },
+    "wolves": {
+      "enabled": false,
+      "groups": 0
+    },
+    "birds": {
+      "enabled": true,
+      "groups": 1,
+      "group_size_min": 4,
+      "group_size_max": 7,
+      "flight_height": 10.0,
+      "flyover_interval_min": 20.0,
+      "flyover_interval_max": 44.0
+    }
+  },
+  "starting_resources": {
+    "gold": 400,
+    "food": 260,
+    "wood": 200,
+    "stone": 150,
+    "iron": 100
+  },
+  "victory": {
+    "type": "elimination",
+    "key_structures": [
+      "barracks"
+    ],
+    "defeat_conditions": [
+      "no_key_structures",
+      "no_commander",
+      "only_commander_remaining"
+    ]
+  }
+}

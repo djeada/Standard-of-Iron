@@ -406,7 +406,7 @@ TEST(TemplatePrewarmRegression, PreparedBodyStateCarriesPassIntent) {
   ASSERT_EQ(batch.requests().size(), 1U);
 
   EXPECT_EQ(batch.requests().front().pass, RenderPassIntent::Shadow);
-  EXPECT_FALSE(pass_intent_for(state.graph).emits_post_body_draws);
+  EXPECT_TRUE(pass_intent_for(state.graph).emits_body);
 }
 
 TEST(TemplatePrewarmRegression, PreparedAnimationStateHonorsOverride) {

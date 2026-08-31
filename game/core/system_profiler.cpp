@@ -34,6 +34,7 @@ void SystemProfiler::record_system(std::size_t slot,
   record.last_us = elapsed_us;
   record.total_us += elapsed_us;
   record.peak_us = std::max(record.peak_us, elapsed_us);
+  record.samples.push(static_cast<double>(elapsed_us));
   ++record.calls;
 
   record.last_views = delta.views;
@@ -56,6 +57,7 @@ void SystemProfiler::end_tick(std::uint64_t total_us) {
     return;
   }
   m_last_tick.total_us = total_us;
+  m_tick_us.push(static_cast<double>(total_us));
   ++m_ticks;
 }
 
@@ -85,6 +87,7 @@ void SystemProfiler::clear() {
   m_systems.clear();
   m_collect_call_sites.clear();
   m_last_tick = {};
+  m_tick_us.clear();
   m_ticks = 0;
 }
 
@@ -105,29 +108,33 @@ auto SystemProfiler::format_report() const -> std::string {
 
   std::snprintf(line,
                 sizeof(line),
-                "%-34s %10s %10s %8s %10s %10s\n",
+                "%-30s %9s %9s %9s %9s %9s %8s %9s\n",
                 "system",
                 "avg us",
+                "p50 us",
+                "p95 us",
+                "p99 us",
                 "peak us",
                 "queries",
-                "candidates",
                 "collected");
   out += line;
-  out += std::string(88, '-');
+  out += std::string(100, '-');
   out += '\n';
 
   for (const SystemRecord* record : ordered) {
+    const Utils::Stats::Distribution spread = record->distribution_us();
     std::snprintf(line,
                   sizeof(line),
-                  "%-34s %10.1f %10llu %8llu %10llu %10llu\n",
+                  "%-30s %9.1f %9.1f %9.1f %9.1f %9llu %8llu %9llu\n",
                   record->name.c_str(),
                   record->average_us(),
+                  spread.p50,
+                  spread.p95,
+                  spread.p99,
                   static_cast<unsigned long long>(record->peak_us),
                   static_cast<unsigned long long>(record->last_views +
                                                   record->last_collects +
                                                   record->last_spatial_queries),
-                  static_cast<unsigned long long>(record->last_view_candidates +
-                                                  record->last_spatial_candidates),
                   static_cast<unsigned long long>(record->last_collected_entities));
     out += line;
   }
@@ -160,6 +167,17 @@ auto SystemProfiler::format_report() const -> std::string {
       queries.spatial_queries == 0 ? 0.0
                                    : static_cast<double>(queries.spatial_candidates) /
                                          static_cast<double>(queries.spatial_queries);
+  const Utils::Stats::Distribution tick_spread = tick_time_us();
+  std::snprintf(line,
+                sizeof(line),
+                "\ntick total us: avg %.1f  p50 %.1f  p95 %.1f  p99 %.1f  max %.1f\n",
+                tick_spread.average,
+                tick_spread.p50,
+                tick_spread.p95,
+                tick_spread.p99,
+                tick_spread.maximum);
+  out += line;
+
   std::snprintf(line,
                 sizeof(line),
                 "\nlast tick %llu: %llu entities, %llu us total\n"

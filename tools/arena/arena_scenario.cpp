@@ -46,7 +46,9 @@
 #include "game/units/unit.h"
 #include "game/wildlife/bird_flock.h"
 #include "game/wildlife/wildlife_species.h"
+#include "render/graphics_settings.h"
 #include "render/profiling/combat_animation_diagnostics.h"
+#include "render/profiling/performance_report.h"
 
 namespace Arena {
 namespace {
@@ -87,10 +89,7 @@ auto vector_from_transform(const Engine::Core::TransformComponent& transform)
 }
 
 auto owner_of(Engine::Core::World& world, Engine::Core::EntityID entity_id) -> int {
-  auto* entity = world.get_entity(entity_id);
-  auto const* unit = entity != nullptr
-                         ? entity->get_component<Engine::Core::UnitComponent>()
-                         : nullptr;
+  auto const* unit = world.try_get<Engine::Core::UnitComponent>(entity_id);
   return unit != nullptr ? unit->owner_id : 0;
 }
 
@@ -1006,21 +1005,15 @@ struct ArenaScenarioRunner::Impl {
   }
 
   [[nodiscard]] auto entity_alive(Engine::Core::EntityID entity_id) const -> bool {
-    auto* entity = world.get_entity(entity_id);
-    auto const* unit = entity != nullptr
-                           ? entity->get_component<Engine::Core::UnitComponent>()
-                           : nullptr;
+    auto const* unit = world.try_get<Engine::Core::UnitComponent>(entity_id);
     return unit != nullptr && unit->health > 0 &&
-           !entity->has_component<Engine::Core::PendingRemovalComponent>();
+           !world.has<Engine::Core::PendingRemovalComponent>(entity_id);
   }
 
   [[nodiscard]] auto group_health(const QString& group) const -> int {
     int total = 0;
     for (auto entity_id : ids(group)) {
-      auto* entity = world.get_entity(entity_id);
-      auto const* unit = entity != nullptr
-                             ? entity->get_component<Engine::Core::UnitComponent>()
-                             : nullptr;
+      auto const* unit = world.try_get<Engine::Core::UnitComponent>(entity_id);
       if (unit != nullptr) {
         total += std::max(0, unit->health);
       }
@@ -1051,10 +1044,8 @@ struct ArenaScenarioRunner::Impl {
     QVector3D total;
     int count = 0;
     for (auto const entity_id : ids(group)) {
-      auto* entity = world.get_entity(entity_id);
       auto const* transform =
-          entity != nullptr ? entity->get_component<Engine::Core::TransformComponent>()
-                            : nullptr;
+          world.try_get<Engine::Core::TransformComponent>(entity_id);
       if (transform == nullptr || !entity_alive(entity_id)) {
         continue;
       }
@@ -1113,20 +1104,14 @@ struct ArenaScenarioRunner::Impl {
                                      const QString& rhs) const -> float {
     float closest = std::numeric_limits<float>::max();
     for (auto const lhs_id : ids(lhs)) {
-      auto* lhs_entity = world.get_entity(lhs_id);
       auto const* lhs_transform =
-          lhs_entity != nullptr
-              ? lhs_entity->get_component<Engine::Core::TransformComponent>()
-              : nullptr;
+          world.try_get<Engine::Core::TransformComponent>(lhs_id);
       if (lhs_transform == nullptr || !entity_alive(lhs_id)) {
         continue;
       }
       for (auto const rhs_id : ids(rhs)) {
-        auto* rhs_entity = world.get_entity(rhs_id);
         auto const* rhs_transform =
-            rhs_entity != nullptr
-                ? rhs_entity->get_component<Engine::Core::TransformComponent>()
-                : nullptr;
+            world.try_get<Engine::Core::TransformComponent>(rhs_id);
         if (rhs_transform == nullptr || !entity_alive(rhs_id)) {
           continue;
         }
@@ -1171,16 +1156,12 @@ struct ArenaScenarioRunner::Impl {
       }
       spawned.push_back(entity_id);
       entity_groups.insert(entity_id, group.name);
-      auto* entity = world.get_entity(entity_id);
-      auto const* unit = entity != nullptr
-                             ? entity->get_component<Engine::Core::UnitComponent>()
-                             : nullptr;
+      auto const* unit = world.try_get<Engine::Core::UnitComponent>(entity_id);
       if (unit != nullptr) {
         initial_health_by_group[group.name] += unit->health;
       }
       auto const* transform =
-          entity != nullptr ? entity->get_component<Engine::Core::TransformComponent>()
-                            : nullptr;
+          world.try_get<Engine::Core::TransformComponent>(entity_id);
       if (transform != nullptr) {
         entity_states[entity_id] = {
             vector_from_transform(*transform), elapsed, 0, 1.0F};
@@ -1194,10 +1175,8 @@ struct ArenaScenarioRunner::Impl {
     axis.normalize();
     auto& projections = initial_formation_projection[group.name];
     for (auto entity_id : spawned) {
-      auto* entity = world.get_entity(entity_id);
       auto const* transform =
-          entity != nullptr ? entity->get_component<Engine::Core::TransformComponent>()
-                            : nullptr;
+          world.try_get<Engine::Core::TransformComponent>(entity_id);
       projections.push_back(
           transform != nullptr
               ? QVector3D::dotProduct(vector_from_transform(*transform), axis)
@@ -1248,10 +1227,8 @@ struct ArenaScenarioRunner::Impl {
       return;
     }
     for (auto entity_id : ids(group)) {
-      auto* entity = world.get_entity(entity_id);
       auto const* transform =
-          entity != nullptr ? entity->get_component<Engine::Core::TransformComponent>()
-                            : nullptr;
+          world.try_get<Engine::Core::TransformComponent>(entity_id);
       responses[entity_id] = {elapsed,
                               elapsed + threshold,
                               transform != nullptr ? vector_from_transform(*transform)
@@ -1989,18 +1966,13 @@ struct ArenaScenarioRunner::Impl {
 
   void observe_wildlife() {
     int population = 0;
-    for (auto* entity :
-         world.collect_entities_with<Engine::Core::WildlifeComponent>()) {
-      if (entity == nullptr) {
-        continue;
-      }
-      auto const* unit = entity->get_component<Engine::Core::UnitComponent>();
-      auto const* wildlife = entity->get_component<Engine::Core::WildlifeComponent>();
-      if (unit == nullptr || wildlife == nullptr || unit->health <= 0) {
+    for (auto [id, unit, wildlife] :
+         world.view<Engine::Core::UnitComponent, Engine::Core::WildlifeComponent>()) {
+      if (unit.health <= 0) {
         continue;
       }
       ++population;
-      switch (wildlife->behavior) {
+      switch (wildlife.behavior) {
       case Game::Wildlife::Behavior::Graze:
         wildlife_observation.grazing_seen = true;
         break;
@@ -2555,13 +2527,8 @@ struct ArenaScenarioRunner::Impl {
     if (!wanted) {
       return;
     }
-    auto* entity = world.get_entity(entity_id);
-    auto const* transform =
-        entity != nullptr ? entity->get_component<Engine::Core::TransformComponent>()
-                          : nullptr;
-    auto const* unit = entity != nullptr
-                           ? entity->get_component<Engine::Core::UnitComponent>()
-                           : nullptr;
+    auto const* transform = world.try_get<Engine::Core::TransformComponent>(entity_id);
+    auto const* unit = world.try_get<Engine::Core::UnitComponent>(entity_id);
     if (transform == nullptr || unit == nullptr || unit->health <= 0) {
       return;
     }
@@ -2599,25 +2566,24 @@ struct ArenaScenarioRunner::Impl {
   void observe_entity(Engine::Core::EntityID entity_id,
                       const QString& group,
                       TraceFrame& frame) {
-    auto* entity = world.get_entity(entity_id);
-    auto const* transform =
-        entity != nullptr ? entity->get_component<Engine::Core::TransformComponent>()
-                          : nullptr;
-    auto const* unit = entity != nullptr
-                           ? entity->get_component<Engine::Core::UnitComponent>()
-                           : nullptr;
+    auto const* transform = world.try_get<Engine::Core::TransformComponent>(entity_id);
+    auto const* unit = world.try_get<Engine::Core::UnitComponent>(entity_id);
     if (transform == nullptr || unit == nullptr) {
       return;
     }
-    if (auto const* gate = entity->get_component<Engine::Core::GateComponent>()) {
+    auto* entity = world.get_entity(entity_id);
+    if (entity == nullptr) {
+      return;
+    }
+    if (auto const* gate = world.try_get<Engine::Core::GateComponent>(entity_id)) {
       gate_seen[group] = true;
       if (gate->open_amount >= Engine::Core::GateComponent::k_passable_open_amount) {
         gate_opened_seen[group] = true;
       }
     }
-    if (auto const* rpg = entity->get_component<Engine::Core::RpgHealthComponent>();
+    if (auto const* rpg = world.try_get<Engine::Core::RpgHealthComponent>(entity_id);
         rpg != nullptr && rpg->active) {
-      auto const* rpg_unit = entity->get_component<Engine::Core::UnitComponent>();
+      auto const* rpg_unit = world.try_get<Engine::Core::UnitComponent>(entity_id);
       int const health = rpg_unit != nullptr ? rpg_unit->health : 0;
       if (!initial_rpg_health_by_group.contains(group)) {
         initial_rpg_health_by_group[group] = health;
@@ -2632,7 +2598,7 @@ struct ArenaScenarioRunner::Impl {
       }
     }
     if (auto const* targets =
-            entity->get_component<Engine::Core::RpgCommanderTargetComponent>();
+            world.try_get<Engine::Core::RpgCommanderTargetComponent>(entity_id);
         targets != nullptr && targets->aim_candidate_in_range &&
         targets->aim_candidate_id != 0) {
       auto* target = world.get_entity(targets->aim_candidate_id);
@@ -2650,7 +2616,7 @@ struct ArenaScenarioRunner::Impl {
       }
     }
     if (auto const* contacts =
-            entity->get_component<Engine::Core::RpgContactPresentationComponent>()) {
+            world.try_get<Engine::Core::RpgContactPresentationComponent>(entity_id)) {
       for (auto const& contact : contacts->entries) {
         switch (contact.outcome) {
         case Engine::Core::RpgContactOutcome::Damage:
@@ -2667,7 +2633,8 @@ struct ArenaScenarioRunner::Impl {
       }
     }
     if (auto const* structure_damage =
-            entity->get_component<Engine::Core::StructureDamagePresentationComponent>();
+            world.try_get<Engine::Core::StructureDamagePresentationComponent>(
+                entity_id);
         structure_damage != nullptr && !structure_damage->impacts.empty()) {
       structure_damage_cues[group] = true;
     }
@@ -2734,7 +2701,7 @@ struct ArenaScenarioRunner::Impl {
       }
       case ArenaExpectationKind::SoldiersStayOnWalkableGround: {
         auto const* presentation =
-            entity->get_component<Engine::Core::FormationPresentationComponent>();
+            world.try_get<Engine::Core::FormationPresentationComponent>(entity_id);
         if (presentation == nullptr) {
           break;
         }
@@ -2770,19 +2737,19 @@ struct ArenaScenarioRunner::Impl {
         break;
       }
     }
-    auto const* target = entity->get_component<Engine::Core::AttackTargetComponent>();
+    auto const* target = world.try_get<Engine::Core::AttackTargetComponent>(entity_id);
     auto const* motion =
-        entity->get_component<Engine::Core::MotionPresentationComponent>();
+        world.try_get<Engine::Core::MotionPresentationComponent>(entity_id);
     auto const* formation_contact =
-        entity->get_component<Engine::Core::FormationContactComponent>();
-    auto const* attack = entity->get_component<Engine::Core::AttackComponent>();
-    auto const* movement = entity->get_component<Engine::Core::MovementComponent>();
+        world.try_get<Engine::Core::FormationContactComponent>(entity_id);
+    auto const* attack = world.try_get<Engine::Core::AttackComponent>(entity_id);
+    auto const* movement = world.try_get<Engine::Core::MovementComponent>(entity_id);
     auto const* mounted_charge =
-        entity->get_component<Engine::Core::MountedChargeComponent>();
+        world.try_get<Engine::Core::MountedChargeComponent>(entity_id);
     auto const* combat_action =
-        entity->get_component<Engine::Core::RpgCommanderActionComponent>();
+        world.try_get<Engine::Core::RpgCommanderActionComponent>(entity_id);
     if (auto const* casualties =
-            entity->get_component<Engine::Core::SoldierCasualtyAnimationComponent>();
+            world.try_get<Engine::Core::SoldierCasualtyAnimationComponent>(entity_id);
         casualties != nullptr &&
         std::any_of(casualties->entries.begin(),
                     casualties->entries.end(),
@@ -2790,7 +2757,7 @@ struct ArenaScenarioRunner::Impl {
       launched_casualties[group] = true;
     }
     auto const* builder =
-        entity->get_component<Engine::Core::BuilderProductionComponent>();
+        world.try_get<Engine::Core::BuilderProductionComponent>(entity_id);
     if (builder != nullptr && builder->construction_complete &&
         !latched_builder_completions.contains(entity_id)) {
       if (Game::Systems::is_gather_builder_product(builder->product_type)) {
@@ -2874,39 +2841,39 @@ struct ArenaScenarioRunner::Impl {
          builder != nullptr ? builder->time_remaining : 0.0F,
          [&]() {
            auto const* commander =
-               entity->get_component<Engine::Core::CommanderComponent>();
+               world.try_get<Engine::Core::CommanderComponent>(entity_id);
            return commander != nullptr && commander->aura_ability_active;
          }(),
          [&]() {
            auto const* buff =
-               entity->get_component<Engine::Core::CommanderAuraBuffComponent>();
+               world.try_get<Engine::Core::CommanderAuraBuffComponent>(entity_id);
            return buff != nullptr && buff->active;
          }(),
          [&]() {
-           auto const* rpg = entity->get_component<Engine::Core::RpgHealthComponent>();
-           auto const* rpg_unit = entity->get_component<Engine::Core::UnitComponent>();
+           auto const* rpg = world.try_get<Engine::Core::RpgHealthComponent>(entity_id);
+           auto const* rpg_unit = world.try_get<Engine::Core::UnitComponent>(entity_id);
            return rpg != nullptr && rpg->active && rpg_unit != nullptr
                       ? rpg_unit->health
                       : -1;
          }(),
          [&]() {
            auto const* guard =
-               entity->get_component<Engine::Core::CommanderGuardComponent>();
+               world.try_get<Engine::Core::CommanderGuardComponent>(entity_id);
            return guard != nullptr && guard->active;
          }(),
          [&]() {
-           auto const* rpg = entity->get_component<Engine::Core::RpgHealthComponent>();
+           auto const* rpg = world.try_get<Engine::Core::RpgHealthComponent>(entity_id);
            return rpg != nullptr && rpg->active && rpg->dodge_grace_remaining > 0.0F;
          }(),
          [&]() {
            auto const* targets =
-               entity->get_component<Engine::Core::RpgCommanderTargetComponent>();
+               world.try_get<Engine::Core::RpgCommanderTargetComponent>(entity_id);
            return targets != nullptr ? targets->aim_candidate_id
                                      : Engine::Core::EntityID{0};
          }(),
          [&]() {
            auto const* targets =
-               entity->get_component<Engine::Core::RpgCommanderTargetComponent>();
+               world.try_get<Engine::Core::RpgCommanderTargetComponent>(entity_id);
            if (targets == nullptr ||
                targets->aim_candidate_soldier_slot ==
                    Engine::Core::RpgCommanderTargetComponent::k_no_soldier_slot) {
@@ -2916,12 +2883,12 @@ struct ArenaScenarioRunner::Impl {
          }(),
          [&]() {
            auto const* action =
-               entity->get_component<Engine::Core::RpgCommanderActionComponent>();
+               world.try_get<Engine::Core::RpgCommanderActionComponent>(entity_id);
            return action != nullptr ? static_cast<int>(action->phase) : 0;
          }(),
          [&]() {
            auto const* action =
-               entity->get_component<Engine::Core::RpgCommanderActionComponent>();
+               world.try_get<Engine::Core::RpgCommanderActionComponent>(entity_id);
            return action != nullptr ? action->normalized_action_time : 0.0F;
          }()});
 
@@ -3023,7 +2990,7 @@ struct ArenaScenarioRunner::Impl {
         continue;
       }
       auto const* formation =
-          entity->get_component<Engine::Core::FormationPresentationComponent>();
+          world.try_get<Engine::Core::FormationPresentationComponent>(entity_id);
       std::size_t const living =
           formation != nullptr ? static_cast<std::size_t>(std::count_if(
                                      formation->soldiers.begin(),
@@ -3066,11 +3033,11 @@ struct ArenaScenarioRunner::Impl {
       bool const moved =
           horizontal_distance(position, response->initial_position) > 0.03F;
       bool const visually_active = motion != nullptr && motion->has_locomotion();
-      auto const* combat = entity->get_component<Engine::Core::CombatStateComponent>();
+      auto const* combat = world.try_get<Engine::Core::CombatStateComponent>(entity_id);
       bool const combat_active =
           combat != nullptr &&
           combat->animation_state != Engine::Core::CombatAnimationState::Idle;
-      auto const* hold = entity->get_component<Engine::Core::HoldModeComponent>();
+      auto const* hold = world.try_get<Engine::Core::HoldModeComponent>(entity_id);
       bool const stance_exit_accepted =
           response->command == QStringLiteral("ReleaseReserve") && hold != nullptr &&
           !hold->active;
@@ -3136,10 +3103,8 @@ struct ArenaScenarioRunner::Impl {
     QVector3D centroid;
     int living = 0;
     for (auto entity_id : ids(group)) {
-      auto* entity = world.get_entity(entity_id);
       auto const* transform =
-          entity != nullptr ? entity->get_component<Engine::Core::TransformComponent>()
-                            : nullptr;
+          world.try_get<Engine::Core::TransformComponent>(entity_id);
       if (transform == nullptr || !entity_alive(entity_id)) {
         continue;
       }
@@ -3373,11 +3338,8 @@ struct ArenaScenarioRunner::Impl {
   void observe_soldiers(Engine::Core::EntityID entity_id,
                         const QString& group,
                         TraceFrame& frame) {
-    auto* entity = world.get_entity(entity_id);
     auto const* presentation =
-        entity != nullptr
-            ? entity->get_component<Engine::Core::FormationPresentationComponent>()
-            : nullptr;
+        world.try_get<Engine::Core::FormationPresentationComponent>(entity_id);
     auto const* debug =
         Render::Profiling::CombatAnimationDiagnostics::instance().find_unit(entity_id);
     const bool verify_render_continuity = std::any_of(
@@ -3431,12 +3393,12 @@ struct ArenaScenarioRunner::Impl {
       }
       return;
     }
-    if (entity->has_component<Engine::Core::ElephantComponent>() &&
+    if (world.has<Engine::Core::ElephantComponent>(entity_id) &&
         debug->unit.is_attacking) {
       visible_attacks[group] = true;
       useful_bot_action[group] = true;
       auto const* contact =
-          entity->get_component<Engine::Core::FormationContactComponent>();
+          world.try_get<Engine::Core::FormationContactComponent>(entity_id);
       if (contact != nullptr &&
           std::any_of(contact->fronts.begin(),
                       contact->fronts.end(),
@@ -3893,7 +3855,7 @@ struct ArenaScenarioRunner::Impl {
           }
         }
         if (expectation.kind == ArenaExpectationKind::HoldPoseMaintained && !culled) {
-          auto const* hold = entity->get_component<Engine::Core::HoldModeComponent>();
+          auto const* hold = world.try_get<Engine::Core::HoldModeComponent>(entity_id);
           if (hold != nullptr && hold->active && hold->kneel_entry_progress >= 0.999F &&
               soldier.animation_state != Render::Creature::AnimationStateId::Hold) {
             add_issue(
@@ -4041,10 +4003,8 @@ struct ArenaScenarioRunner::Impl {
         expectation.threshold > 0.0F ? expectation.threshold : 0.75F;
     float previous_projection = -std::numeric_limits<float>::max();
     for (auto entity_id : group_ids) {
-      auto* entity = world.get_entity(entity_id);
       auto const* transform =
-          entity != nullptr ? entity->get_component<Engine::Core::TransformComponent>()
-                            : nullptr;
+          world.try_get<Engine::Core::TransformComponent>(entity_id);
       if (transform == nullptr || !entity_alive(entity_id)) {
         continue;
       }
@@ -4588,11 +4548,8 @@ struct ArenaScenarioRunner::Impl {
         bool retaken = false;
         auto const& valid_targets = ids(expectation.target_group);
         for (auto entity_id : ids(expectation.group)) {
-          auto* entity = world.get_entity(entity_id);
           auto const* target =
-              entity != nullptr
-                  ? entity->get_component<Engine::Core::AttackTargetComponent>()
-                  : nullptr;
+              world.try_get<Engine::Core::AttackTargetComponent>(entity_id);
           retaken = retaken || (target != nullptr &&
                                 std::find(valid_targets.begin(),
                                           valid_targets.end(),
@@ -5175,11 +5132,8 @@ struct ArenaScenarioRunner::Impl {
         QVector3D centroid;
         int living = 0;
         for (auto entity_id : ids(expectation.group)) {
-          auto* entity = world.get_entity(entity_id);
           auto const* transform =
-              entity != nullptr
-                  ? entity->get_component<Engine::Core::TransformComponent>()
-                  : nullptr;
+              world.try_get<Engine::Core::TransformComponent>(entity_id);
           if (transform != nullptr && entity_alive(entity_id)) {
             centroid += vector_from_transform(*transform);
             ++living;
@@ -5201,11 +5155,8 @@ struct ArenaScenarioRunner::Impl {
         QVector3D centroid;
         int living = 0;
         for (auto entity_id : ids(expectation.group)) {
-          auto* entity = world.get_entity(entity_id);
           auto const* transform =
-              entity != nullptr
-                  ? entity->get_component<Engine::Core::TransformComponent>()
-                  : nullptr;
+              world.try_get<Engine::Core::TransformComponent>(entity_id);
           if (transform != nullptr && entity_alive(entity_id)) {
             centroid += vector_from_transform(*transform);
             ++living;
@@ -6243,6 +6194,33 @@ auto ArenaScenarioRunner::write_artifacts(const QString& directory,
                     {QStringLiteral("soldier_index"), issue.soldier_index}});
   }
   report_object.insert(QStringLiteral("issues"), issues);
+
+  report_object.insert(QStringLiteral("asset_counters"),
+                       Render::Profiling::asset_counters_json());
+  report_object.insert(QStringLiteral("navigation"),
+                       Render::Profiling::navigation_counters_json());
+  report_object.insert(
+      QStringLiteral("simulation_systems"),
+      Render::Profiling::system_profiler_json(m_impl->world.system_profiler()));
+  if (m_impl->report.frame_time_samples > 0U) {
+    Render::Profiling::PerformanceMeasurement measurement;
+    measurement.frames = m_impl->report.frame_time_samples;
+    measurement.frame_p50_ms = m_impl->report.frame_time_p50_ms;
+    measurement.frame_p95_ms = m_impl->report.frame_time_p95_ms;
+    measurement.frame_p99_ms = m_impl->report.frame_time_p99_ms;
+    measurement.frame_max_ms = m_impl->report.frame_time_max_ms;
+    measurement.update_p95_ms = m_impl->report.simulation_p95_ms;
+    measurement.update_average_ms = m_impl->report.simulation_p95_ms;
+    measurement.gpu_timed = m_impl->report.gpu_timed_frames > 0U;
+    const auto& graphics = Render::GraphicsSettings::instance();
+    measurement.ultra_preset = graphics.quality() == Render::GraphicsQuality::Ultra;
+    measurement.full_creature_lod = !graphics.creature_lod_enabled();
+    report_object.insert(QStringLiteral("budget"),
+                         Render::Profiling::budget_verdict_json(
+                             Render::Profiling::PerformanceBudget::scale_gate(
+                                 m_impl->report.frame_budget_ms),
+                             measurement));
+  }
 
   if (const auto& env = m_impl->environment_snapshot; env.valid) {
     const auto vec3 = [](const QVector3D& value) {

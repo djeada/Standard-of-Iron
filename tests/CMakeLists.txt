@@ -82,6 +82,8 @@ add_executable(
     core/component_storage_test.cpp
     core/world_spatial_index_test.cpp
     core/system_schedule_test.cpp
+    core/percentile_test.cpp
+    core/nav_profile_test.cpp
     core/movement_trace_test.cpp
     core/ground_type_test.cpp
     core/building_spawn_setup_test.cpp
@@ -103,6 +105,7 @@ add_executable(
     map/terrain_footprint_test.cpp
     map/undead_shrine_placement_test.cpp
     map/time_of_day_test.cpp
+    systems/nav_grid_geometry_test.cpp
     systems/rain_manager_test.cpp
     wildlife/wildlife_system_test.cpp
     wildlife/bird_flock_test.cpp
@@ -287,6 +290,8 @@ add_executable(
     map/mission_victory_rules_test.cpp
     map/wave_archetype_catalog_test.cpp
     map/map_catalog_test.cpp
+    map/mission_catalog_test.cpp
+    map/mission_map_reachability_test.cpp
     map/campaign_loader_test.cpp
     map/campaign_roster_test.cpp
     map/campaign_content_integration_test.cpp
@@ -351,6 +356,7 @@ add_executable(
     ${CMAKE_CURRENT_SOURCE_DIR}/test_assets.qrc
     render/prop_model_footprint_test.cpp
     render/gl_deferred_delete_test.cpp
+    render/asset_counters_test.cpp
     render/unit_primitive_convention_test.cpp
     render/instance_draw_guard_test.cpp
     render/pose_controller_test.cpp
@@ -722,7 +728,10 @@ endif()
 # test module is unavailable so a minimal Qt install still builds the suite.
 find_package(Qt${QT_VERSION_MAJOR} QUIET COMPONENTS QuickTest)
 if(TARGET Qt${QT_VERSION_MAJOR}::QuickTest)
-    add_executable(
+    # qt_add_executable, not add_executable: it runs the finalizer that imports
+    # the static QML plugins the app modules ship, which is what lets this binary
+    # resolve StandardOfIron.Core, .Game and .Views the way the game does.
+    qt_add_executable(
         design_system_qml_tests
         ui/design_system_qml_test.cpp
         ${CMAKE_SOURCE_DIR}/design_resources.qrc
@@ -736,7 +745,12 @@ if(TARGET Qt${QT_VERSION_MAJOR}::QuickTest)
             Qt${QT_VERSION_MAJOR}::Qml
             Qt${QT_VERSION_MAJOR}::Quick
             Qt${QT_VERSION_MAJOR}::QuickTest
+            # The app QML this binary instantiates -- the spectator HUD, the
+            # inspector, the commander message panel -- imports
+            # StandardOfIron.Core and StandardOfIron.Views, so the libraries
+            # backing those modules have to be here for the import to resolve.
             ui_shell
+            $<$<TARGET_EXISTS:soi_qml_views>:soi_qml_views>
     )
     target_include_directories(design_system_qml_tests PRIVATE ${CMAKE_SOURCE_DIR})
     set_target_properties(

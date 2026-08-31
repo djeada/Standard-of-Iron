@@ -17,6 +17,7 @@
 #include "gl/mesh.h"
 #include "gl/primitives.h"
 #include "horse/horse_spec.h"
+#include "render/profiling/asset_counters.h"
 #include "render_archetype.h"
 
 namespace Render::Creature {
@@ -441,6 +442,7 @@ void append_static_attachment(const StaticAttachmentSpec& spec,
 } // namespace
 
 auto bake_rigged_mesh_cpu(const BakeInput& in) -> BakedRiggedMeshCpu {
+  Render::Profiling::count_asset(Render::Profiling::AssetCounter::RiggedMeshBake);
   BakedRiggedMeshCpu out;
   if (in.graph != nullptr) {
     for (PrimitiveInstance const& prim : in.graph->primitives) {

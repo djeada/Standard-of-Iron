@@ -1291,7 +1291,7 @@
       "gain": 0.5
     },
     {
-      "file": "assets/audio/sfx/combat/roman_cavalry_charge.ogg",
+      "file": "assets/audio/sfx/combat/horse_gallop_close_pass.ogg",
       "at": 84.83,
       "gain": 0.85
     },
@@ -1311,12 +1311,12 @@
       "gain": 0.88
     },
     {
-      "file": "assets/audio/sfx/combat/sword_hit_03.ogg",
+      "file": "assets/audio/sfx/combat/blade_clash_02.ogg",
       "at": 95.28,
       "gain": 0.82
     },
     {
-      "file": "assets/audio/sfx/combat/blade_clash_04.ogg",
+      "file": "assets/audio/sfx/combat/blade_clash_03.ogg",
       "at": 96.78,
       "gain": 0.85
     },

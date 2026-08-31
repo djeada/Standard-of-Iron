@@ -176,6 +176,16 @@ endif()
 #
 # Anything suppressed here is suppressed because it is noise, never because a
 # real finding was inconvenient.
+option(
+    SOI_PROFILE_ALLOCATIONS
+    "Replace global operator new/delete to count render-thread allocations"
+    OFF
+)
+if(SOI_PROFILE_ALLOCATIONS)
+    add_compile_definitions(SOI_PROFILE_ALLOCATIONS=1)
+    message(STATUS "Render-thread allocation counting enabled (SOI_PROFILE_ALLOCATIONS)")
+endif()
+
 option(SOI_STRICT_WARNINGS "Compile with the cross-platform portability warning set" OFF)
 if(SOI_STRICT_WARNINGS)
     if(MSVC)
@@ -769,12 +779,12 @@ add_library(soi_app ALIAS app_core)
 # ---- Executable ----
 qt6_add_executable(standard_of_iron
     main.cpp
-    ui/campaign_map_view.cpp
-    ui/commander_portrait_scenes.cpp
-    ui/commander_portrait_view.cpp
-    ui/gl_view.cpp
     ${SOI_ASSET_STRINGS_CPP}
 )
+
+# The QML type registrations qmltyperegistrar generates include the view
+# headers by their bare file name, so ui/ has to be on the include path.
+target_include_directories(standard_of_iron PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/ui)
 
 # ---- QML module ----
 if(QT_VERSION_MAJOR EQUAL 6)
@@ -814,6 +824,8 @@ if(QT_VERSION_MAJOR EQUAL 6)
             ui/qml/MapThumbnails.qml
             ui/qml/PlayerListItem.qml
             ui/qml/PlayerConfigPanel.qml
+            ui/qml/MissionsScreen.qml
+            ui/qml/MissionOrderList.qml
             ui/qml/CampaignScreen.qml
             ui/qml/MissionListItem.qml
             ui/qml/MissionDetailPanel.qml
@@ -956,6 +968,13 @@ target_link_libraries(
         audio_system
         app_core
         ui_shell
+        # ui_shell is a static QML module (StandardOfIron.Core). Its plugin
+        # carries the type registrations, so anything that loads QML importing
+        # that module has to link it or the import fails at runtime.
+        # Static QML modules keep their type registrations in a plugin; linking
+        # the plugin is what puts StandardOfIron.Core, .Game and .Views into the
+        # type system.
+        $<$<TARGET_EXISTS:soi_qml_views>:soi_qml_views>
 )
 
 add_dependencies(

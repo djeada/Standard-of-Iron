@@ -1,0 +1,329 @@
+{
+  "id": "hold_the_sallow_ford",
+  "menu_order": 20,
+  "title": "Hold the Sallow Ford",
+  "summary": "One redoubt, two mouths, five columns. Break every assault that comes down the cart gate and the goat path, and still be standing when the fifth is spent.",
+  "map_path": ":/assets/maps/map_sallow_ford.json",
+  "player_setup": {
+    "nation": "roman_republic",
+    "faction": "roman",
+    "color": "red",
+    "starting_units": [
+      {
+        "type": "spearman",
+        "count": 5,
+        "position": {
+          "x": 29.0,
+          "z": 58.0
+        }
+      },
+      {
+        "type": "swordsman",
+        "count": 4,
+        "position": {
+          "x": 43.0,
+          "z": 58.0
+        }
+      },
+      {
+        "type": "archer",
+        "count": 4,
+        "position": {
+          "x": 36.0,
+          "z": 59.0
+        }
+      },
+      {
+        "type": "builder",
+        "count": 2,
+        "position": {
+          "x": 30.0,
+          "z": 66.0
+        }
+      }
+    ],
+    "starting_buildings": [],
+    "starting_resources": {
+      "gold": 450,
+      "food": 300,
+      "wood": 220,
+      "stone": 160
+    }
+  },
+  "ai_setups": [
+    {
+      "id": "carthaginian_night_column",
+      "nation": "carthage",
+      "faction": "carthaginian",
+      "color": "brown",
+      "team_id": 1,
+      "difficulty": "medium",
+      "strategy": "aggressive",
+      "personality": {
+        "aggression": 0.8,
+        "defense": 0.3,
+        "harassment": 0.45
+      },
+      "starting_units": [],
+      "starting_buildings": [],
+      "wave_escalation": 0.1,
+      "waves": [
+        {
+          "timing": 75.0,
+          "composition": [
+            {
+              "type": "spearman",
+              "count": 5
+            },
+            {
+              "type": "archer",
+              "count": 2
+            }
+          ],
+          "entry_point": {
+            "x": 25.0,
+            "z": 4.0
+          },
+          "phase": 1,
+          "warning_seconds": 18.0,
+          "label": "The first column"
+        },
+        {
+          "timing": 0.0,
+          "composition": [
+            {
+              "type": "swordsman",
+              "count": 6
+            },
+            {
+              "type": "archer",
+              "count": 3
+            }
+          ],
+          "entry_point": {
+            "x": 47.0,
+            "z": 4.0
+          },
+          "phase": 2,
+          "warning_seconds": 18.0,
+          "label": "The second column",
+          "trigger": "after_previous_cleared",
+          "grace_seconds": 40.0,
+          "clear_reward": {
+            "gold": 120,
+            "food": 80
+          }
+        },
+        {
+          "timing": 0.0,
+          "composition": [
+            {
+              "type": "spearman",
+              "count": 6
+            },
+            {
+              "type": "swordsman",
+              "count": 5
+            },
+            {
+              "type": "archer",
+              "count": 3
+            }
+          ],
+          "entry_point": {
+            "x": 25.0,
+            "z": 4.0
+          },
+          "phase": 3,
+          "warning_seconds": 18.0,
+          "label": "The third column",
+          "entry_points": [
+            {
+              "x": 25.0,
+              "z": 4.0
+            },
+            {
+              "x": 47.0,
+              "z": 4.0
+            }
+          ],
+          "trigger": "after_previous_cleared",
+          "grace_seconds": 40.0,
+          "clear_reward": {
+            "gold": 160,
+            "food": 100,
+            "wood": 80
+          }
+        },
+        {
+          "timing": 0.0,
+          "composition": [
+            {
+              "type": "swordsman",
+              "count": 7
+            },
+            {
+              "type": "spearman",
+              "count": 6
+            },
+            {
+              "type": "horse_swordsman",
+              "count": 3
+            }
+          ],
+          "entry_point": {
+            "x": 47.0,
+            "z": 4.0
+          },
+          "phase": 4,
+          "warning_seconds": 18.0,
+          "label": "The fourth column",
+          "entry_points": [
+            {
+              "x": 47.0,
+              "z": 4.0
+            },
+            {
+              "x": 25.0,
+              "z": 4.0
+            }
+          ],
+          "trigger": "after_previous_cleared",
+          "grace_seconds": 40.0,
+          "clear_reward": {
+            "gold": 200,
+            "food": 120,
+            "wood": 100
+          }
+        },
+        {
+          "timing": 0.0,
+          "composition": [
+            {
+              "type": "spearman",
+              "count": 8
+            },
+            {
+              "type": "swordsman",
+              "count": 8
+            },
+            {
+              "type": "archer",
+              "count": 4
+            },
+            {
+              "type": "horse_swordsman",
+              "count": 4
+            },
+            {
+              "type": "swordsman",
+              "count": 3,
+              "elite": true,
+              "title": "The Sacred Band detachment"
+            }
+          ],
+          "entry_point": {
+            "x": 25.0,
+            "z": 4.0
+          },
+          "phase": 5,
+          "warning_seconds": 18.0,
+          "label": "The last column",
+          "entry_points": [
+            {
+              "x": 25.0,
+              "z": 4.0
+            },
+            {
+              "x": 47.0,
+              "z": 4.0
+            }
+          ],
+          "trigger": "after_previous_cleared",
+          "grace_seconds": 40.0,
+          "clear_reward": {
+            "gold": 300,
+            "food": 180,
+            "wood": 140
+          }
+        }
+      ]
+    }
+  ],
+  "victory_mode": "all",
+  "victory_conditions": [
+    {
+      "type": "survive_waves",
+      "wave_count": 5,
+      "description": "Break all five columns. The ford is held when the last of them is dead in front of it, and not one column sooner."
+    }
+  ],
+  "optional_objectives": [
+    {
+      "type": "control_structures",
+      "structure_types": [
+        "defense_tower"
+      ],
+      "min_count": 2,
+      "description": "Keep both towers standing. Lose one and the lane it watches is yours to walk yourself."
+    }
+  ],
+  "defeat_conditions": [
+    {
+      "type": "lose_structure",
+      "structure_type": "barracks",
+      "description": "Lose the redoubt and there is nothing behind it for forty miles."
+    },
+    {
+      "type": "lose_commander",
+      "description": "The commander falls and the line behind him is just men standing in a dry riverbed."
+    },
+    {
+      "type": "only_commander_remaining",
+      "description": "One officer, no line. The next column will not even slow down."
+    }
+  ],
+  "events": [],
+  "commander_messages": [
+    {
+      "id": "ford_open",
+      "speaker": "roman_legion_organizer",
+      "pose": "dismissive",
+      "trigger": {
+        "type": "mission_start",
+        "delay": 2.0
+      },
+      "text": "The spur splits them for us, which is the only kindness this ground offers. Cart gate west, goat path east, and they only meet where we are standing. You cannot hold both mouths. Pick one, hold it, and move when the horns tell you to.",
+      "voice_cue": "alert.commander_message",
+      "duration": 9.0,
+      "priority": 100
+    },
+    {
+      "id": "ford_victory",
+      "speaker": "roman_legion_organizer",
+      "pose": "cynical",
+      "trigger": {
+        "type": "mission_victory",
+        "delay": 1.0
+      },
+      "text": "Five columns and the ford still ours. Count the men twice and do not write the number down until morning; it is always worse in the dark and always worse again in daylight.",
+      "voice_cue": "alert.commander_message",
+      "duration": 9.0,
+      "priority": 120
+    },
+    {
+      "id": "ford_defeat",
+      "speaker": "roman_legion_organizer",
+      "pose": "dismissive",
+      "trigger": {
+        "type": "mission_defeat",
+        "delay": 1.0
+      },
+      "text": "The redoubt is gone. Go south, keep the spur on your left, and do not stop to look at the ford. There is nothing there now that is worth a second of your life.",
+      "voice_cue": "alert.commander_message",
+      "duration": 9.0,
+      "priority": 120
+    }
+  ],
+  "theme": "The ground does half the work. The other half is knowing when to leave the lane you are winning."
+}

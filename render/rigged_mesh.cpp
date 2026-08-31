@@ -11,6 +11,7 @@
 
 #include "gl/gl_lifetime.h"
 #include "gl/platform_gl.h"
+#include "render/profiling/asset_counters.h"
 
 namespace Render::GL {
 
@@ -23,6 +24,11 @@ RiggedMesh::RiggedMesh(std::vector<RiggedVertex> vertices,
                        std::vector<std::uint32_t> indices)
     : m_vertices(std::move(vertices))
     , m_indices(std::move(indices)) {
+  Render::Profiling::count_asset(
+      Render::Profiling::AssetCounter::RiggedMeshConstructed);
+  Render::Profiling::count_asset(Render::Profiling::AssetCounter::RiggedMeshVertexBytes,
+                                 (m_vertices.size() * sizeof(RiggedVertex)) +
+                                     (m_indices.size() * sizeof(std::uint32_t)));
   const auto vertex_is_rigid = [this](std::uint32_t index) {
     if (index >= m_vertices.size()) {
       return false;

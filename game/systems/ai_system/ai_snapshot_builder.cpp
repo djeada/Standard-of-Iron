@@ -157,32 +157,34 @@ auto AISnapshotBuilder::build(const Engine::Core::World& world,
   snapshot.friendly_units.reserve(friendlies.size());
 
   for (auto* entity : friendlies) {
-    if (!entity->has_component<Engine::Core::AIControlledComponent>()) {
+    if (!world.has<Engine::Core::AIControlledComponent>(entity->get_id())) {
       continue;
     }
 
-    const auto* guard_mode = entity->get_component<Engine::Core::GuardModeComponent>();
+    const auto* guard_mode =
+        world.try_get<Engine::Core::GuardModeComponent>(entity->get_id());
     if ((guard_mode != nullptr) && guard_mode->active && guard_mode->has_guard_target) {
       continue;
     }
 
-    const auto* patrol = entity->get_component<Engine::Core::PatrolComponent>();
+    const auto* patrol = world.try_get<Engine::Core::PatrolComponent>(entity->get_id());
     if ((patrol != nullptr) && patrol->patrolling) {
       continue;
     }
 
-    const auto* hold_mode = entity->get_component<Engine::Core::HoldModeComponent>();
+    const auto* hold_mode =
+        world.try_get<Engine::Core::HoldModeComponent>(entity->get_id());
     if ((hold_mode != nullptr) && hold_mode->active) {
       continue;
     }
 
-    auto* unit = entity->get_component<Engine::Core::UnitComponent>();
+    auto* unit = world.try_get<Engine::Core::UnitComponent>(entity->get_id());
     if (unit == nullptr) {
       continue;
     }
 
     const auto* assault_wave =
-        entity->get_component<Engine::Core::AssaultWaveComponent>();
+        world.try_get<Engine::Core::AssaultWaveComponent>(entity->get_id());
     const bool is_assault = (assault_wave != nullptr) && assault_wave->active;
 
     if (unit->health <= 0) {
@@ -195,8 +197,8 @@ auto AISnapshotBuilder::build(const Engine::Core::World& world,
     data.owner_id = unit->owner_id;
     data.health = unit->health;
     data.max_health = unit->max_health;
-    data.is_building = entity->has_component<Engine::Core::BuildingComponent>();
-    data.is_commander = entity->has_component<Engine::Core::CommanderComponent>();
+    data.is_building = world.has<Engine::Core::BuildingComponent>(entity->get_id());
+    data.is_commander = world.has<Engine::Core::CommanderComponent>(entity->get_id());
     data.squad_strength = Game::Units::squad_strength(*unit);
     data.squad_establishment = Game::Units::squad_establishment(unit->spawn_type);
     data.is_assault = is_assault;
@@ -213,17 +215,20 @@ auto AISnapshotBuilder::build(const Engine::Core::World& world,
       data.march_target_z = assault_wave->march_target_z;
     }
 
-    if (auto* transform = entity->get_component<Engine::Core::TransformComponent>()) {
+    if (auto* transform =
+            world.try_get<Engine::Core::TransformComponent>(entity->get_id())) {
       data.pos_x = transform->position.x;
       data.pos_y = 0.0F;
       data.pos_z = transform->position.z;
     }
 
-    if (auto* movement = entity->get_component<Engine::Core::MovementComponent>()) {
+    if (auto* movement =
+            world.try_get<Engine::Core::MovementComponent>(entity->get_id())) {
       data.movement = MovementSnapshot{true, movement->get_has_target()};
     }
 
-    if (auto* production = entity->get_component<Engine::Core::ProductionComponent>()) {
+    if (auto* production =
+            world.try_get<Engine::Core::ProductionComponent>(entity->get_id())) {
       data.production.has_component = true;
       data.production.in_progress = production->in_progress;
       data.production.build_time = production->build_time;
@@ -240,7 +245,7 @@ auto AISnapshotBuilder::build(const Engine::Core::World& world,
     }
 
     if (auto* builder_prod =
-            entity->get_component<Engine::Core::BuilderProductionComponent>()) {
+            world.try_get<Engine::Core::BuilderProductionComponent>(entity->get_id())) {
       data.builder_production.has_component = true;
       data.builder_production.has_construction_site =
           builder_prod->has_construction_site;

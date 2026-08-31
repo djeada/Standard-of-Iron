@@ -38,7 +38,9 @@ Item {
                 visible: root.title !== ""
 
                 Text {
-                    width: Design.Metrics.iconMedium
+                    id: factionGlyph
+
+                    width: Math.max(Design.Metrics.iconMedium, implicitWidth)
                     anchors.verticalCenter: parent.verticalCenter
                     text: Design.FactionTheme.glyphFor(root.factionId)
                     color: Design.FactionTheme.accentFor(root.factionId)
@@ -47,7 +49,7 @@ Item {
                 }
 
                 Column {
-                    width: parent.width - Design.Metrics.iconMedium - Design.Metrics.space12
+                    width: parent.width - factionGlyph.width - Design.Metrics.space12
                     spacing: Design.Metrics.space4
 
                     Text {

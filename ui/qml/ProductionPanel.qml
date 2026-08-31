@@ -3,6 +3,7 @@ import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 import StandardOfIron 1.0
 import StandardOfIron.Design 1.0 as Design
+import StandardOfIron.Core 1.0
 
 Rectangle {
     id: productionPanel
@@ -845,14 +846,14 @@ Rectangle {
                         ToolTip.delay: 500
 
                         background: Rectangle {
-                            color: rallyButton.allowed ? (parent.down ? hs.bronzeDeep : (parent.hovered ? hs.bronze : hs.parchmentDark)) : Theme.bgShade
+                            color: rallyButton.allowed ? (rallyButton.down ? hs.bronzeDeep : (rallyButton.hovered ? hs.bronze : hs.parchmentDark)) : Theme.bgShade
                             radius: 6
                             border.color: rallyContent.placing_barracks_rally ? hs.bronze : hs.bronzeDeep
                             border.width: 2
                         }
 
                         contentItem: Text {
-                            text: parent.text
+                            text: rallyButton.text
                             font.pixelSize: Design.Typography.caption
                             font.bold: true
                             color: rallyButton.allowed ? "#F4E7C8" : "#6B5231"

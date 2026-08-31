@@ -37,7 +37,6 @@ IronUnitCard 1.0 controls/IronUnitCard.qml
 IronCommandButton 1.0 controls/IronCommandButton.qml
 IronVectorIcon 1.0 controls/IronVectorIcon.qml
 IronActivityIcon 1.0 controls/IronActivityIcon.qml
-IronActivityMarkerLayer 1.0 controls/IronActivityMarkerLayer.qml
 IronOutcomeOverlay 1.0 controls/IronOutcomeOverlay.qml
 IronObjectiveRow 1.0 controls/IronObjectiveRow.qml
 IronResourceCounter 1.0 controls/IronResourceCounter.qml

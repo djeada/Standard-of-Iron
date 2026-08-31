@@ -3,6 +3,7 @@
 class QOpenGLDebugLogger;
 
 #include <QPointer>
+#include <QQmlEngine>
 #include <QQuickFramebufferObject>
 #include <QString>
 #include <QStringList>
@@ -20,6 +21,7 @@ class GameEngine;
 
 class GLView : public QQuickFramebufferObject {
   Q_OBJECT
+  QML_ELEMENT
 public:
   GLView();
 
@@ -64,14 +66,14 @@ private:
     std::chrono::steady_clock::time_point m_last_frame_time{};
     std::chrono::steady_clock::time_point m_last_render_end{};
     struct RuntimeContinuityProbe;
+    std::chrono::steady_clock::time_point m_benchmark_created_time{};
     std::chrono::steady_clock::time_point m_benchmark_ready_time{};
     std::chrono::steady_clock::time_point m_benchmark_previous_frame_time{};
     double m_benchmark_seconds = 0.0;
     QString m_benchmark_output;
     bool m_benchmark_complete = false;
-    std::vector<double> m_benchmark_frame_work_ms;
-    std::vector<double> m_benchmark_update_ms;
     std::vector<double> m_benchmark_render_ms;
+    std::vector<double> m_benchmark_update_ms;
     std::vector<double> m_benchmark_thread_cpu_ms;
     std::unique_ptr<QOpenGLDebugLogger> m_gl_debug_logger;
     bool m_gl_debug_checked = false;
@@ -95,7 +97,16 @@ private:
     std::uint64_t m_benchmark_weather_us = 0;
     std::uint64_t m_benchmark_victory_us = 0;
     std::uint64_t m_benchmark_view_model_us = 0;
+    double m_benchmark_loading_seconds = 0.0;
+    std::uint64_t m_benchmark_render_allocations = 0;
+    std::uint64_t m_benchmark_render_allocated_bytes = 0;
+    std::uint64_t m_benchmark_post_load_work_seen = 0;
+    std::uint64_t m_benchmark_frames_with_post_load_work = 0;
+    std::int64_t m_benchmark_first_post_load_frame = -1;
+    std::int64_t m_benchmark_last_post_load_frame = -1;
     std::unique_ptr<RuntimeContinuityProbe> m_continuity_probe;
+
+    void reset_runtime_benchmark_samples();
 
     void warm_commander_portraits();
     void observe_runtime_continuity();

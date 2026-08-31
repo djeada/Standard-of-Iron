@@ -106,7 +106,8 @@ bool CampaignManager::start_mission_file(const QString& file_path,
   m_current_campaign_id.clear();
   m_current_mission_id = mission.id;
   m_current_mission_definition = mission;
-  m_current_mission_context.mode = QStringLiteral("campaign");
+
+  m_current_mission_context.mode = QStringLiteral("mission");
   m_current_mission_context.campaign_id.clear();
   m_current_mission_context.mission_id = mission.id;
   m_current_mission_context.difficulty = QStringLiteral("normal");
@@ -116,8 +117,8 @@ bool CampaignManager::start_mission_file(const QString& file_path,
 }
 
 void CampaignManager::mark_current_mission_completed() {
-  if (m_current_campaign_id.isEmpty() || m_current_mission_id.isEmpty()) {
-    qWarning() << "No active campaign mission to mark as completed";
+  if (m_current_mission_id.isEmpty() || !m_current_mission_context.has_mission()) {
+    qWarning() << "No active mission to mark as completed";
     return;
   }
 
@@ -178,7 +179,7 @@ void CampaignManager::set_skirmish_context(const QString& map_path) {
 
 void CampaignManager::configure_mission_victory_conditions(
     Game::Systems::VictoryService* victory_service, int local_owner_id) {
-  if ((victory_service == nullptr) || !m_current_mission_context.is_campaign() ||
+  if ((victory_service == nullptr) || !m_current_mission_context.has_mission() ||
       !m_current_mission_definition.has_value()) {
     return;
   }

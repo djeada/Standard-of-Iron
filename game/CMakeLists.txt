@@ -42,6 +42,7 @@ add_library(
     core/world.cpp
     core/world_spatial_index.cpp
     core/system_profiler.cpp
+    core/nav_profile.cpp
     core/system_schedule.cpp
     core/deferred_mutations.cpp
     core/ambient_session.cpp
@@ -450,6 +451,7 @@ add_library(
     map/mission_victory_rules.cpp
     map/wave_archetype_catalog.cpp
     map/map_catalog.cpp
+    map/mission_catalog.cpp
     mission/mission_commander_setup.cpp
     mission/mission_definition_view.cpp
     mission/tutorial_director.cpp

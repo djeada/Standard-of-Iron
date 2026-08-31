@@ -9,6 +9,7 @@
 
 #include "gl_lifetime.h"
 #include "platform_gl.h"
+#include "render/profiling/asset_counters.h"
 
 namespace Render::GL {
 
@@ -31,6 +32,7 @@ void Buffer::bind() {
   if (m_buffer == 0U) {
     initializeOpenGLFunctions();
     glGenBuffers(1, &m_buffer);
+    Render::Profiling::count_asset(Render::Profiling::AssetCounter::GlBufferCreated);
   }
   glBindBuffer(get_gl_type(), m_buffer);
 }
@@ -42,6 +44,7 @@ void Buffer::unbind() {
 void Buffer::set_data(const void* data, size_t size, Usage usage) {
   bind();
   glBufferData(get_gl_type(), static_cast<GLsizeiptr>(size), data, get_gl_usage(usage));
+  Render::Profiling::count_asset(Render::Profiling::AssetCounter::GlUploadBytes, size);
   m_size_bytes = size;
 }
 
@@ -90,6 +93,8 @@ void VertexArray::bind() {
     }
 #endif
     glGenVertexArrays(1, &m_vao);
+    Render::Profiling::count_asset(
+        Render::Profiling::AssetCounter::GlVertexArrayCreated);
 #ifndef NDEBUG
     GLenum gen_err = glGetError();
     if (gen_err != GL_NO_ERROR) {

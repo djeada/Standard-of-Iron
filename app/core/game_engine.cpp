@@ -304,7 +304,7 @@ void GameEngine::cleanup_opengl_resources() {
 
 bool GameEngine::release_self_test_mission_ready() const {
   return m_runtime.initialized && !is_loading() &&
-         m_match_setup_view_model->is_campaign_mission() && m_world != nullptr &&
+         m_match_setup_view_model->is_mission_match() && m_world != nullptr &&
          m_world->entity_count() > 0U && m_runtime.last_error.isEmpty();
 }
 
@@ -337,8 +337,8 @@ QString GameEngine::release_self_test_pending_reason() const {
                             ? QStringLiteral("yes")
                             : QStringLiteral("no"));
   }
-  if (!m_match_setup_view_model->is_campaign_mission()) {
-    pending << QStringLiteral("mission context is not a campaign mission");
+  if (!m_match_setup_view_model->is_mission_match()) {
+    pending << QStringLiteral("mission context is not an authored mission");
   }
   if (m_world == nullptr) {
     pending << QStringLiteral("no world");
@@ -1557,7 +1557,7 @@ void GameEngine::start_skirmish_internal(const QString& map_path,
 
     const bool allow_default_player_barracks =
         !m_campaign_manager ||
-        !m_campaign_manager->current_mission_context().is_campaign();
+        !m_campaign_manager->current_mission_context().has_mission();
     const auto load_effects =
         m_skirmish_runtime->perform_load({*m_world,
                                           m_level,
@@ -1599,11 +1599,11 @@ void GameEngine::start_skirmish_internal(const QString& map_path,
         m_campaign_manager->current_mission_definition().has_value()) {
       mission_def = &*m_campaign_manager->current_mission_definition();
     }
-    const Game::Mission::MissionDefinition* campaign_mission_def = nullptr;
+    const Game::Mission::MissionDefinition* authored_mission_def = nullptr;
     if (m_campaign_manager &&
-        m_campaign_manager->current_mission_context().is_campaign() &&
+        m_campaign_manager->current_mission_context().has_mission() &&
         m_campaign_manager->current_mission_definition().has_value()) {
-      campaign_mission_def = &*m_campaign_manager->current_mission_definition();
+      authored_mission_def = &*m_campaign_manager->current_mission_definition();
     }
     m_audio_coordinator->apply_mission_ambience(
         mission_def, map_path, m_runtime.local_owner_id);
@@ -1611,7 +1611,7 @@ void GameEngine::start_skirmish_internal(const QString& map_path,
     apply_skirmish_commander_setup(player_configs);
     apply_mission_setup();
     m_skirmish_runtime->initialize_player_resources(
-        {*m_session, m_level, m_runtime.local_owner_id, campaign_mission_def});
+        {*m_session, m_level, m_runtime.local_owner_id, authored_mission_def});
     configure_mission_victory_conditions();
     configure_rain_system();
     if (m_environment_clock) {
@@ -1626,7 +1626,7 @@ void GameEngine::start_skirmish_internal(const QString& map_path,
          m_loading_overlay_timer,
          m_finalize_progress_after_overlay,
          m_show_objectives_after_loading,
-         m_match_setup_view_model->is_campaign_mission()});
+         m_match_setup_view_model->is_mission_match()});
 
     if (finalize_effects.emit_is_loading_changed) {
       emit is_loading_changed();
@@ -1729,7 +1729,8 @@ void GameEngine::configure_mission_victory_conditions() {
         m_commander_message_director.notify_defeat();
       }
 
-      if (state == "victory" && !m_campaign_manager->current_campaign_id().isEmpty()) {
+      if (state == "victory" &&
+          m_campaign_manager->current_mission_context().has_mission()) {
         m_match_setup_view_model->mark_current_mission_completed();
       }
     }
@@ -2724,7 +2725,7 @@ void GameEngine::sync_economy_state() {
       .objective_resources = mission_objective_resources()};
 
   const bool coach_available = !m_level.is_spectator_mode &&
-                               !m_match_setup_view_model->is_campaign_mission() &&
+                               !m_match_setup_view_model->is_mission_match() &&
                                owner_id == m_runtime.local_owner_id &&
                                (nation == nullptr || nation->has_economy);
   if (coach_available && !m_economy_coach_baseline.captured) {

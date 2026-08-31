@@ -17,7 +17,7 @@ camera work they belong to::
       "grade": {"contrast": 1.12, "saturation": 1.14},
       "transition": {"type": "dissolve", "duration": 0.35},
       "sfx": [
-        {"file": "assets/audio/sfx/combat/roman_cavalry_charge.ogg",
+        {"file": "assets/audio/sfx/combat/horse_gallop_close_pass.ogg",
          "at": 12.4, "gain": 0.9}
       ],
       "shots": [

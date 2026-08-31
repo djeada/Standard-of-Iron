@@ -44,6 +44,11 @@
 #include "../render/profiling/frame_profile.h"
 #include "app/core/game_engine.h"
 #include "commander_portrait_scenes.h"
+#include "game/core/nav_profile.h"
+#include "render/profiling/allocation_tracker.h"
+#include "render/profiling/asset_counters.h"
+#include "render/profiling/performance_report.h"
+#include "utils/percentile.h"
 
 namespace {
 constexpr double k_runtime_benchmark_warmup_seconds = 2.0;
@@ -51,24 +56,17 @@ constexpr std::size_t k_runtime_benchmark_min_frames = 30;
 constexpr std::uint64_t k_visibility_churn_window_frames = 120U;
 constexpr std::uint32_t k_visibility_churn_threshold = 4U;
 
-auto percentile_ms(std::vector<double> samples, double percentile) -> double {
-  if (samples.empty()) {
-    return 0.0;
-  }
-  std::sort(samples.begin(), samples.end());
-  const auto index = static_cast<std::size_t>(
-      std::clamp(percentile * static_cast<double>(samples.size() - 1U),
-                 0.0,
-                 static_cast<double>(samples.size() - 1U)));
-  return samples[index];
+auto average_ms(const std::vector<double>& samples) -> double {
+  return Utils::Stats::mean(samples);
 }
 
-auto average_ms(const std::vector<double>& samples) -> double {
-  if (samples.empty()) {
-    return 0.0;
-  }
-  return std::accumulate(samples.begin(), samples.end(), 0.0) /
-         static_cast<double>(samples.size());
+auto distribution_json(const std::vector<double>& samples) -> QJsonObject {
+  const Utils::Stats::Distribution spread = Utils::Stats::distribution_of(samples);
+  return QJsonObject{{QStringLiteral("average_ms"), spread.average},
+                     {QStringLiteral("p50_ms"), spread.p50},
+                     {QStringLiteral("p95_ms"), spread.p95},
+                     {QStringLiteral("p99_ms"), spread.p99},
+                     {QStringLiteral("max_ms"), spread.maximum}};
 }
 } // namespace
 
@@ -184,6 +182,8 @@ GLView::GLRenderer::GLRenderer(QPointer<GLView> view, QPointer<GameEngine> engin
   m_benchmark_output = qEnvironmentVariable("SOI_RUNTIME_BENCHMARK_OUTPUT");
   if (m_benchmark_seconds > 0.0) {
     Render::Profiling::global_profile().enabled = true;
+    Engine::Core::nav_profile().set_enabled(true);
+    m_benchmark_created_time = std::chrono::steady_clock::now();
   }
   UI::CommanderPortraitScenes::instance().add_reference();
   if (qEnvironmentVariableIntValue("SOI_RUNTIME_CONTINUITY") != 0) {
@@ -333,7 +333,7 @@ void GLView::GLRenderer::warm_commander_portraits() {
 
 void GLView::GLRenderer::observe_runtime_continuity() {
   if (m_continuity_probe == nullptr || m_engine == nullptr || m_engine->is_loading() ||
-      !m_engine->match_setup()->is_campaign_mission() || m_size.isEmpty()) {
+      !m_engine->match_setup()->is_mission_match() || m_size.isEmpty()) {
     return;
   }
 
@@ -437,6 +437,37 @@ void GLView::GLRenderer::observe_runtime_continuity() {
   }
 }
 
+void GLView::GLRenderer::reset_runtime_benchmark_samples() {
+  m_benchmark_ready_time = {};
+  m_benchmark_render_ms.clear();
+  m_benchmark_update_ms.clear();
+  m_benchmark_thread_cpu_ms.clear();
+  m_benchmark_wall_interval_ms.clear();
+  m_benchmark_gpu_shadow_ms.clear();
+  m_benchmark_gpu_color_ms.clear();
+  m_benchmark_gpu_wait_ms.clear();
+  m_benchmark_phase_us.fill(0);
+  m_benchmark_draw_calls = 0;
+  m_benchmark_visible_soldiers = 0;
+  m_benchmark_draw_cmd_counts.fill(0);
+  m_benchmark_snapshot_cache_bytes = 0;
+  m_benchmark_prepared_batches = 0;
+  m_benchmark_instanced_batches = 0;
+  m_benchmark_world_us = 0;
+  m_benchmark_visibility_us = 0;
+  m_benchmark_minimap_us = 0;
+  m_benchmark_weather_us = 0;
+  m_benchmark_victory_us = 0;
+  m_benchmark_view_model_us = 0;
+  m_benchmark_loading_seconds = 0.0;
+  m_benchmark_render_allocations = 0;
+  m_benchmark_render_allocated_bytes = 0;
+  m_benchmark_post_load_work_seen = 0;
+  m_benchmark_frames_with_post_load_work = 0;
+  m_benchmark_first_post_load_frame = -1;
+  m_benchmark_last_post_load_frame = -1;
+}
+
 void GLView::GLRenderer::observe_runtime_benchmark(
     std::chrono::steady_clock::time_point frame_start,
     double update_ms,
@@ -448,34 +479,19 @@ void GLView::GLRenderer::observe_runtime_benchmark(
   }
 
   if (m_engine->is_loading()) {
-    m_benchmark_ready_time = {};
-    m_benchmark_frame_work_ms.clear();
-    m_benchmark_update_ms.clear();
-    m_benchmark_render_ms.clear();
-    m_benchmark_thread_cpu_ms.clear();
-    m_benchmark_wall_interval_ms.clear();
-    m_benchmark_gpu_shadow_ms.clear();
-    m_benchmark_gpu_color_ms.clear();
-    m_benchmark_gpu_wait_ms.clear();
-    m_benchmark_phase_us.fill(0);
-    m_benchmark_draw_calls = 0;
-    m_benchmark_visible_soldiers = 0;
-    m_benchmark_draw_cmd_counts.fill(0);
-    m_benchmark_snapshot_cache_bytes = 0;
-    m_benchmark_prepared_batches = 0;
-    m_benchmark_instanced_batches = 0;
-    m_benchmark_world_us = 0;
-    m_benchmark_visibility_us = 0;
-    m_benchmark_minimap_us = 0;
-    m_benchmark_weather_us = 0;
-    m_benchmark_victory_us = 0;
-    m_benchmark_view_model_us = 0;
+    reset_runtime_benchmark_samples();
     return;
   }
 
   if (m_benchmark_ready_time.time_since_epoch().count() == 0) {
     m_benchmark_ready_time = frame_start;
     m_benchmark_previous_frame_time = frame_start;
+    m_benchmark_loading_seconds =
+        m_benchmark_created_time.time_since_epoch().count() == 0
+            ? 0.0
+            : std::chrono::duration<double>(frame_start - m_benchmark_created_time)
+                  .count();
+    Render::Profiling::reset_thread_allocations();
     return;
   }
 
@@ -486,10 +502,23 @@ void GLView::GLRenderer::observe_runtime_benchmark(
     return;
   }
 
-  m_benchmark_frame_work_ms.push_back(render_ms);
-  m_benchmark_update_ms.push_back(update_ms);
   m_benchmark_render_ms.push_back(render_ms);
+  m_benchmark_update_ms.push_back(update_ms);
   m_benchmark_thread_cpu_ms.push_back(thread_cpu_ms);
+  m_benchmark_render_allocations = Render::Profiling::thread_allocation_count();
+  m_benchmark_render_allocated_bytes = Render::Profiling::thread_allocated_bytes();
+
+  const std::uint64_t post_load_work =
+      Render::Profiling::asset_counters().post_barrier_asset_work();
+  if (post_load_work > m_benchmark_post_load_work_seen) {
+    m_benchmark_post_load_work_seen = post_load_work;
+    const auto frame = static_cast<std::int64_t>(m_benchmark_render_ms.size()) - 1;
+    if (m_benchmark_first_post_load_frame < 0) {
+      m_benchmark_first_post_load_frame = frame;
+    }
+    m_benchmark_last_post_load_frame = frame;
+    ++m_benchmark_frames_with_post_load_work;
+  }
   m_benchmark_wall_interval_ms.push_back(
       std::chrono::duration<double, std::milli>(frame_start -
                                                 m_benchmark_previous_frame_time)
@@ -532,7 +561,7 @@ void GLView::GLRenderer::finish_runtime_benchmark() {
 
   const QString preset = QString::fromLatin1(
       Render::graphics_quality_key(Render::GraphicsSettings::instance().quality()));
-  const std::size_t frame_count = m_benchmark_frame_work_ms.size();
+  const std::size_t frame_count = m_benchmark_render_ms.size();
   if (frame_count < k_runtime_benchmark_min_frames) {
     QJsonObject const refusal{
         {QStringLiteral("valid"), false},
@@ -558,30 +587,30 @@ void GLView::GLRenderer::finish_runtime_benchmark() {
     return;
   }
 
-  const double average_work = average_ms(m_benchmark_frame_work_ms);
+  const Utils::Stats::Distribution render_spread =
+      Utils::Stats::distribution_of(m_benchmark_render_ms);
   const double average_wall = average_ms(m_benchmark_wall_interval_ms);
   const double sample_count = static_cast<double>(frame_count);
   QJsonObject report{
       {QStringLiteral("valid"), true},
       {QStringLiteral("graphics_preset"), preset},
       {QStringLiteral("measured_seconds"), m_benchmark_seconds},
+      {QStringLiteral("warmup_seconds"), k_runtime_benchmark_warmup_seconds},
+      {QStringLiteral("renderer_to_first_playable_frame_seconds"),
+       m_benchmark_loading_seconds},
       {QStringLiteral("frames"), static_cast<qint64>(frame_count)},
-      {QStringLiteral("cpu_work_ms_average"), average_work},
-      {QStringLiteral("cpu_work_ms_p95"),
-       percentile_ms(m_benchmark_frame_work_ms, 0.95)},
+      {QStringLiteral("render_ms"), distribution_json(m_benchmark_render_ms)},
+      {QStringLiteral("update_ms"), distribution_json(m_benchmark_update_ms)},
+      {QStringLiteral("thread_cpu_ms"), distribution_json(m_benchmark_thread_cpu_ms)},
+      {QStringLiteral("wall_interval_ms"),
+       distribution_json(m_benchmark_wall_interval_ms)},
+      {QStringLiteral("gpu_shadow_ms"), distribution_json(m_benchmark_gpu_shadow_ms)},
+      {QStringLiteral("gpu_color_ms"), distribution_json(m_benchmark_gpu_color_ms)},
+      {QStringLiteral("gpu_wait_ms"), distribution_json(m_benchmark_gpu_wait_ms)},
       {QStringLiteral("cpu_work_fps"),
-       average_work > 0.0 ? 1000.0 / average_work : 0.0},
-      {QStringLiteral("wall_interval_ms_average"), average_wall},
+       render_spread.average > 0.0 ? 1000.0 / render_spread.average : 0.0},
       {QStringLiteral("presented_fps"),
        average_wall > 0.0 ? 1000.0 / average_wall : 0.0},
-      {QStringLiteral("update_ms_average"), average_ms(m_benchmark_update_ms)},
-      {QStringLiteral("thread_cpu_ms_average"), average_ms(m_benchmark_thread_cpu_ms)},
-      {QStringLiteral("thread_cpu_ms_p95"),
-       percentile_ms(m_benchmark_thread_cpu_ms, 0.95)},
-      {QStringLiteral("render_ms_average"), average_ms(m_benchmark_render_ms)},
-      {QStringLiteral("gpu_shadow_ms_average"), average_ms(m_benchmark_gpu_shadow_ms)},
-      {QStringLiteral("gpu_color_ms_average"), average_ms(m_benchmark_gpu_color_ms)},
-      {QStringLiteral("gpu_wait_ms_average"), average_ms(m_benchmark_gpu_wait_ms)},
       {QStringLiteral("draw_calls_average"),
        sample_count > 0.0 ? static_cast<double>(m_benchmark_draw_calls) / sample_count
                           : 0.0},
@@ -633,6 +662,55 @@ void GLView::GLRenderer::finish_runtime_benchmark() {
         stage_ms(m_benchmark_phase_us[i]));
   }
   report.insert(QStringLiteral("render_thread_stages"), render_thread_stages);
+
+  Render::Profiling::count_asset(
+      Render::Profiling::AssetCounter::RenderThreadAllocations,
+      m_benchmark_render_allocations);
+  Render::Profiling::count_asset(
+      Render::Profiling::AssetCounter::RenderThreadAllocatedBytes,
+      m_benchmark_render_allocated_bytes);
+  report.insert(QStringLiteral("render_thread_allocations"),
+                QJsonObject{{QStringLiteral("tracked"),
+                             Render::Profiling::allocation_tracking_available()},
+                            {QStringLiteral("count_after_loading"),
+                             static_cast<qint64>(m_benchmark_render_allocations)},
+                            {QStringLiteral("bytes_after_loading"),
+                             static_cast<qint64>(m_benchmark_render_allocated_bytes)}});
+  report.insert(
+      QStringLiteral("post_load_asset_work_timing"),
+      QJsonObject{{QStringLiteral("measured_frames"), static_cast<qint64>(frame_count)},
+                  {QStringLiteral("frames_with_work"),
+                   static_cast<qint64>(m_benchmark_frames_with_post_load_work)},
+                  {QStringLiteral("first_frame"),
+                   static_cast<qint64>(m_benchmark_first_post_load_frame)},
+                  {QStringLiteral("last_frame"),
+                   static_cast<qint64>(m_benchmark_last_post_load_frame)}});
+  report.insert(QStringLiteral("asset_counters"),
+                Render::Profiling::asset_counters_json());
+  report.insert(QStringLiteral("navigation"),
+                Render::Profiling::navigation_counters_json());
+  const auto& graphics = Render::GraphicsSettings::instance();
+  Render::Profiling::PerformanceMeasurement measurement;
+  measurement.frames = frame_count;
+  measurement.frame_p50_ms = render_spread.p50;
+  measurement.frame_p95_ms = render_spread.p95;
+  measurement.frame_p99_ms = render_spread.p99;
+  measurement.frame_max_ms = render_spread.maximum;
+  const auto update_spread = Utils::Stats::distribution_of(m_benchmark_update_ms);
+  measurement.update_average_ms = update_spread.average;
+  measurement.update_p95_ms = update_spread.p95;
+  measurement.render_submit_p95_ms =
+      Utils::Stats::distribution_of(m_benchmark_thread_cpu_ms).p95;
+  const auto shadow_spread = Utils::Stats::distribution_of(m_benchmark_gpu_shadow_ms);
+  const auto color_spread = Utils::Stats::distribution_of(m_benchmark_gpu_color_ms);
+  measurement.gpu_shadow_p95_ms = shadow_spread.p95;
+  measurement.gpu_color_p95_ms = color_spread.p95;
+  measurement.gpu_timed = shadow_spread.maximum > 0.0 || color_spread.maximum > 0.0;
+  measurement.ultra_preset = graphics.quality() == Render::GraphicsQuality::Ultra;
+  measurement.full_creature_lod = !graphics.creature_lod_enabled();
+  report.insert(QStringLiteral("budget"),
+                Render::Profiling::budget_verdict_json(
+                    Render::Profiling::PerformanceBudget::release_gate(), measurement));
 
   if (m_continuity_probe != nullptr) {
     QJsonArray continuity_issues;

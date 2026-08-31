@@ -11,6 +11,24 @@ may change in any release — see [Save compatibility](#save-compatibility).
 
 ### Added
 
+- **Missions: a third mode beside Skirmish and Campaign.** Small authored maps
+  built around one order — cut a timber levy, hold a ford through five assaults,
+  take the cursed shrine — never fitted the skirmish model, which assumes two
+  armies and a field worth fighting over. They now have their own screen and
+  their own roster. A mission file that no campaign claims is a standalone
+  mission: `Game::Map::MissionCatalog` indexes `assets/missions/`, subtracts what
+  the campaigns own and the tutorial, and orders the rest by an authored
+  `menu_order`. The briefing names the field, the orders that win, what is worth
+  doing anyway, the force you are handed and what loses; beating one records its
+  own result and unlocks nothing. Three ship: **The Timber Levy** on the new
+  Pinewater Cut (64×64, split your crew between the deep pines and the scree, and
+  keep the wolves off the far one), **Hold the Sallow Ford** on the new Sallow
+  Ford (72×72, a spur keeps two lanes apart until they meet in front of the camp,
+  and one line cannot hold both mouths), and **Iron Sepulcher Watch**, which was
+  a demo sitting in the skirmish list. The skirmish roster now subtracts every map
+  any mission names, so a board with nothing to do can no longer be started as a
+  free-play match. See `docs/MISSION_FRAMEWORK.md`.
+
 - **Pick where each side starts.** Skirmish setup no longer hands you whichever
   barracks the map author stapled to your slot number. Every seat in the Order
   of Battle gets a Base chip that cycles through the map's unclaimed barracks —
@@ -94,6 +112,43 @@ tools/font/build_standard_iron.py`, then `tools/font/proof.py` to look at it).
   `Ui::BrandFonts`, and `scripts/promo-edit.py` resolves them repo-relative.
 
 ### Fixed
+
+- **The UI's C++ types are declared to QML instead of registered by hand.**
+  `Theme`, the persisted preferences, the input bindings and the three
+  `QQuickFramebufferObject` views reached QML through `qmlRegisterType` calls in
+  `main.cpp`. That works at runtime and is invisible to everything else: to any
+  tool reading the QML, `StandardOfIron` was a module with no types in it, so
+  `Theme.spacingSmall` was an unqualified access to an unknown name — about
+  seven hundred warnings saying the same thing. `ui_shell` now declares
+  `StandardOfIron.Core` and a new `soi_qml_views` library declares
+  `StandardOfIron.Views`, both with `QML_ELEMENT`/`QML_SINGLETON`, so the
+  registrations are generated at build time and the type information ships with
+  them. qmllint's unique warning count drops from 1808 to 1060 and the game
+  loads its QML with no runtime warnings at all. The modules are separate from
+  the app module on purpose: `StandardOfIron.Design` reads these tokens and the
+  app imports Design, so putting them together would close a cycle.
+
+- **A control deleted eighteen months of commits ago was still listed in the
+  design system's qmldir.** `IronActivityMarkerLayer` went in #1179 and its
+  `ui/qml/design/qmldir` line stayed, so every `import StandardOfIron.Design`
+  reported a missing component and resolved the module's types only partly.
+
+- **Five QML defects the type information turned up.** A rule inside a
+  `ColumnLayout` sized itself with `height` instead of `Layout.preferredHeight`;
+  a `Repeater` delegate measured itself against `parent.spacing` and
+  `parent.columns`, which belong to the grid it lands in and not to the
+  `Repeater` the tooling sees; three Control `background`/`contentItem` blocks
+  read `parent.pressed` and `parent.text`, which is the control only once it is
+  running; `BattleSummary`'s two `var` callbacks became signals, so a second
+  listener no longer silently replaces the first; and the overwrite dialog in
+  `SaveGamePanel` no longer measures a wrapped label to size the parent that
+  gives the label its width, which Qt reported as a binding loop on every open.
+
+- **The mission briefing's faction glyph no longer paints over the summary.**
+  `BriefingLayout` gave the glyph an icon-sized slot, and a `Text` too narrow for
+  its content overflows rather than eliding — so Rome's "SPQR" printed straight
+  across the first line of every Roman briefing. The glyph now takes its natural
+  width and the text column is measured against it.
 
 - **The tooling gates no longer disagree with the working tree.**
   `make translations` passed `-disable-heuristic number` to lupdate, so

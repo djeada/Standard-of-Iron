@@ -255,7 +255,7 @@ auto SaveLoadCoordinator::load_from_slot(const LoadFromSlotContext& context) con
 
   if (context.victory_service != nullptr) {
     if (context.campaign_manager != nullptr &&
-        context.campaign_manager->current_mission_context().is_campaign()) {
+        context.campaign_manager->current_mission_context().has_mission()) {
       context.campaign_manager->configure_mission_victory_conditions(
           context.victory_service, context.runtime_snapshot.local_owner_id);
     } else {

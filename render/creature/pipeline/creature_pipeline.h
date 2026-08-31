@@ -32,6 +32,7 @@ struct SubmitStats {
   std::uint32_t snapshot_loads{0};
   std::uint32_t snapshot_bakes{0};
   std::uint32_t snapshot_misses{0};
+  std::uint32_t snapshot_evictions{0};
   std::uint32_t full_body_blend_requests{0};
   std::uint32_t upper_body_overlay_requests{0};
   std::uint32_t dominant_snapshot_collapses{0};
@@ -53,6 +54,7 @@ struct SubmitStats {
     snapshot_loads += other.snapshot_loads;
     snapshot_bakes += other.snapshot_bakes;
     snapshot_misses += other.snapshot_misses;
+    snapshot_evictions += other.snapshot_evictions;
     full_body_blend_requests += other.full_body_blend_requests;
     upper_body_overlay_requests += other.upper_body_overlay_requests;
     dominant_snapshot_collapses += other.dominant_snapshot_collapses;
