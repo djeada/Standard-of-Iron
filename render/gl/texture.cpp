@@ -7,6 +7,7 @@
 #include <qimage.h>
 
 #include "platform_gl.h"
+#include "render/profiling/asset_counters.h"
 
 namespace Render::GL {
 
@@ -95,6 +96,7 @@ void Texture::bind(int unit) {
   initializeOpenGLFunctions();
   if (m_texture == 0U) {
     glGenTextures(1, &m_texture);
+    Render::Profiling::count_asset(Render::Profiling::AssetCounter::GlTextureCreated);
   }
   glActiveTexture(GL_TEXTURE0 + unit);
   glBindTexture(GL_TEXTURE_2D, m_texture);

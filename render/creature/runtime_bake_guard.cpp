@@ -7,6 +7,8 @@
 #include <string>
 #include <unordered_set>
 
+#include "render/profiling/asset_counters.h"
+
 namespace Render::Creature {
 
 namespace {
@@ -14,7 +16,16 @@ std::atomic_bool g_runtime_bake_forbidden{false};
 }
 
 void set_runtime_bake_forbidden(bool forbidden) noexcept {
-  g_runtime_bake_forbidden.store(forbidden, std::memory_order_release);
+  const bool previous =
+      g_runtime_bake_forbidden.exchange(forbidden, std::memory_order_acq_rel);
+  if (forbidden == previous) {
+    return;
+  }
+  if (forbidden) {
+    Render::Profiling::asset_counters().mark_load_barrier();
+  } else {
+    Render::Profiling::asset_counters().clear_load_barrier();
+  }
 }
 
 auto runtime_bake_forbidden() noexcept -> bool {
@@ -22,12 +33,11 @@ auto runtime_bake_forbidden() noexcept -> bool {
 }
 
 RuntimeBakeAllowScope::RuntimeBakeAllowScope() noexcept
-    : m_previous(runtime_bake_forbidden()) {
-  set_runtime_bake_forbidden(false);
+    : m_previous(g_runtime_bake_forbidden.exchange(false, std::memory_order_acq_rel)) {
 }
 
 RuntimeBakeAllowScope::~RuntimeBakeAllowScope() {
-  set_runtime_bake_forbidden(m_previous);
+  g_runtime_bake_forbidden.store(m_previous, std::memory_order_release);
 }
 
 auto runtime_bake_operation_name(RuntimeBakeOperation operation) -> std::string_view {
@@ -50,6 +60,7 @@ void report_runtime_bake_violation(RuntimeBakeOperation operation,
                                    std::string_view detail) {
   static std::mutex mutex;
   static std::unordered_set<std::string> reported;
+  Render::Profiling::count_asset(Render::Profiling::AssetCounter::ForbiddenBake);
   const std::string key =
       std::string(runtime_bake_operation_name(operation)) + ":" + std::string(detail);
   std::lock_guard<std::mutex> const lock(mutex);
@@ -62,6 +73,8 @@ void report_runtime_bake_violation(RuntimeBakeOperation operation,
 void report_missing_preloaded_asset(std::string_view detail) {
   static std::mutex mutex;
   static std::unordered_set<std::string> reported;
+  Render::Profiling::count_asset(
+      Render::Profiling::AssetCounter::MissingPreloadedAsset);
   const std::string key(detail);
   {
     std::lock_guard<std::mutex> const lock(mutex);

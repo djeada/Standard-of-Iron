@@ -7,6 +7,7 @@
 
 #include <cstdint>
 #include <memory>
+#include <optional>
 #include <vector>
 
 #include "game/core/system.h"
@@ -88,6 +89,7 @@ private:
     Engine::Core::EntityID anchor_entity_id = 0;
     bool anchor_pending = false;
     bool awakened = false;
+    int awakened_by_owner_id = 0;
     bool garrison_broken = false;
     bool announced_awakening = false;
     bool announced_defeat = false;
@@ -111,14 +113,15 @@ private:
                         const RuntimeZone& zone,
                         bool captured) const;
   void refresh_capture_lock(Engine::Core::World& world, const RuntimeZone& zone) const;
-  void awaken_zone(Engine::Core::World& world, RuntimeZone& zone);
+  void awaken_zone(Engine::Core::World& world, RuntimeZone& zone, int woken_by);
   void update_zone_music(Engine::Core::World& world, float delta_time);
   [[nodiscard]] auto local_player_inside(Engine::Core::World& world,
                                          const RuntimeZone& zone) const -> bool;
   void try_spawn_next_wave(Engine::Core::World& world, RuntimeZone& zone);
   void announce_wave(const RuntimeZone& zone) const;
-  [[nodiscard]] auto should_awaken_zone(Engine::Core::World& world,
-                                        const RuntimeZone& zone) const -> bool;
+  [[nodiscard]] auto
+  should_awaken_zone(Engine::Core::World& world,
+                     const RuntimeZone& zone) const -> std::optional<int>;
   [[nodiscard]] auto can_spawn_wave(const RuntimeZone& zone) const -> bool;
   [[nodiscard]] auto spawn_position_for_index(const RuntimeZone& zone,
                                               int spawn_index,

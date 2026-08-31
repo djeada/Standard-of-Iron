@@ -19,6 +19,7 @@
 #include "core/component.h"
 #include "defensive_unit_layout_service.h"
 #include "formation_combat_geometry.h"
+#include "game/core/nav_profile.h"
 #include "nav_grid.h"
 #include "order_service.h"
 #include "pathfinding.h"
@@ -163,6 +164,40 @@ void apply_desired_yaw(Engine::Core::TransformComponent* transform,
     transform->rotation.y = target_yaw;
     transform->has_desired_yaw = false;
   }
+}
+
+auto face_locked_structure(Engine::Core::World* world,
+                           Engine::Core::TransformComponent& transform,
+                           const Engine::Core::AttackComponent& attack,
+                           const Engine::Core::UnitComponent* unit,
+                           float delta_time) -> bool {
+  if (world == nullptr || attack.melee_lock_target_id == 0) {
+    return false;
+  }
+  auto* structure = world->get_entity(attack.melee_lock_target_id);
+  if (structure == nullptr ||
+      !structure->has_component<Engine::Core::BuildingComponent>()) {
+    return false;
+  }
+  auto const* structure_transform =
+      structure->get_component<Engine::Core::TransformComponent>();
+  if (structure_transform == nullptr) {
+    return false;
+  }
+
+  float const dx = structure_transform->position.x - transform.position.x;
+  float const dz = structure_transform->position.z - transform.position.z;
+  if ((dx * dx) + (dz * dz) < 0.000001F) {
+    return false;
+  }
+
+  transform.desired_yaw = std::atan2(dx, dz) * 180.0F / std::numbers::pi_v<float>;
+  transform.has_desired_yaw = true;
+  apply_desired_yaw(&transform,
+                    delta_time,
+                    unit != nullptr ? body_turn_speed_degrees(unit->spawn_type)
+                                    : desired_yaw_turn_speed_degrees);
+  return true;
 }
 
 } // namespace
@@ -314,8 +349,10 @@ auto MovementSystem::enqueue_pending_path_request(Engine::Core::EntityID entity_
     -> bool {
   cancel_pending_path_request(entity_id);
   if (m_pending_path_requests.size() >= k_max_pending_path_requests) {
+    Engine::Core::count_nav(Engine::Core::NavCounter::RequestsDropped);
     return false;
   }
+  Engine::Core::count_nav(Engine::Core::NavCounter::RequestsQueued);
   m_pending_path_requests.push_back(
       {entity_id, target, navigation_revision, order_sequence, precise_arrival});
   return true;
@@ -916,7 +953,8 @@ void MovementSystem::move_unit(Engine::Core::Entity* entity,
     movement->clear_path();
     facts->progress.state = Engine::Core::MovementOrderState::Idle;
     if (atk != nullptr &&
-        !apply_duel_footwork(entity, world, *transform, *atk, delta_time)) {
+        !apply_duel_footwork(entity, world, *transform, *atk, delta_time) &&
+        !face_locked_structure(world, *transform, *atk, unit, delta_time)) {
       transform->desired_yaw = transform->rotation.y;
       transform->has_desired_yaw = false;
     }

@@ -176,6 +176,16 @@ endif()
 #
 # Anything suppressed here is suppressed because it is noise, never because a
 # real finding was inconvenient.
+option(
+    SOI_PROFILE_ALLOCATIONS
+    "Replace global operator new/delete to count render-thread allocations"
+    OFF
+)
+if(SOI_PROFILE_ALLOCATIONS)
+    add_compile_definitions(SOI_PROFILE_ALLOCATIONS=1)
+    message(STATUS "Render-thread allocation counting enabled (SOI_PROFILE_ALLOCATIONS)")
+endif()
+
 option(SOI_STRICT_WARNINGS "Compile with the cross-platform portability warning set" OFF)
 if(SOI_STRICT_WARNINGS)
     if(MSVC)

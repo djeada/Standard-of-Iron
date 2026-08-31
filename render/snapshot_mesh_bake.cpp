@@ -3,11 +3,14 @@
 #include <QVector3D>
 #include <QVector4D>
 
+#include "render/profiling/asset_counters.h"
+
 namespace Render::GL {
 
 auto bake_snapshot_vertices(std::span<const RiggedVertex> source_vertices,
                             std::span<const QMatrix4x4> frame_palette)
     -> std::vector<RiggedVertex> {
+  Render::Profiling::count_asset(Render::Profiling::AssetCounter::SnapshotMeshBake);
   std::vector<RiggedVertex> baked(source_vertices.size());
 
   for (std::size_t vi = 0; vi < source_vertices.size(); ++vi) {

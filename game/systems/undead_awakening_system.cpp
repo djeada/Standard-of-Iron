@@ -18,6 +18,7 @@
 #include "core/local_audience.h"
 #include "core/ownership_constants.h"
 #include "core/world.h"
+#include "core/world_spatial_index.h"
 #include "game/map/terrain_service.h"
 #include "game/map/undead_shrine_placement.h"
 #include "game/systems/global_stats_registry.h"
@@ -272,10 +273,10 @@ void UndeadAwakeningSystem::refresh_active_spawns(Engine::Core::World& world,
                      zone.active_spawn_ids.end(),
                      [&world](Engine::Core::EntityID id) {
                        auto* entity = world.get_entity(id);
-                       auto* unit =
-                           entity != nullptr
-                               ? entity->get_component<Engine::Core::UnitComponent>()
-                               : nullptr;
+                       auto* unit = entity != nullptr
+                                        ? world.try_get<Engine::Core::UnitComponent>(
+                                              entity->get_id())
+                                        : nullptr;
                        return unit == nullptr || unit->health <= 0;
                      }),
       zone.active_spawn_ids.end());
@@ -287,15 +288,15 @@ void UndeadAwakeningSystem::refresh_active_spawns(Engine::Core::World& world,
   }
 }
 
-auto UndeadAwakeningSystem::should_awaken_zone(Engine::Core::World& world,
-                                               const RuntimeZone& zone) const -> bool {
+auto UndeadAwakeningSystem::should_awaken_zone(
+    Engine::Core::World& world, const RuntimeZone& zone) const -> std::optional<int> {
   auto const& owners = m_services.owners;
 
   for (const auto& raw_trigger : zone.definition.awaken_on) {
     QString const trigger = raw_trigger.trimmed().toLower();
     if (should_trigger_on_mission_start(trigger)) {
       if (m_allow_mission_start_trigger) {
-        return true;
+        return 0;
       }
       continue;
     }
@@ -304,33 +305,29 @@ auto UndeadAwakeningSystem::should_awaken_zone(Engine::Core::World& world,
       continue;
     }
 
-    float const radius_sq = zone.definition.radius * zone.definition.radius;
-    for (auto* entity : world.collect_entities_with<Engine::Core::UnitComponent>()) {
-      if (entity == nullptr) {
-        continue;
-      }
-      auto* unit = entity->get_component<Engine::Core::UnitComponent>();
-      auto* transform = entity->get_component<Engine::Core::TransformComponent>();
-      if (unit == nullptr || transform == nullptr || unit->health <= 0) {
-        continue;
-      }
-      if (unit->owner_id == zone.definition.owner_id ||
-          !owners.are_enemies(zone.definition.owner_id, unit->owner_id)) {
-        continue;
-      }
-      if (!Game::Units::is_troop_spawn(unit->spawn_type)) {
-        continue;
-      }
-
-      float const dx = transform->position.x - zone.center_world.x();
-      float const dz = transform->position.z - zone.center_world.z();
-      if (dx * dx + dz * dz <= radius_sq) {
-        return true;
-      }
+    std::optional<int> entered;
+    world.spatial_index().for_each_in_radius(
+        zone.center_world.x(),
+        zone.center_world.z(),
+        zone.definition.radius,
+        [&](const Engine::Core::WorldSpatialIndex::Entry& entry) {
+          if (entered.has_value() || entry.health <= 0 ||
+              entry.owner_id == zone.definition.owner_id ||
+              !owners.are_enemies(zone.definition.owner_id, entry.owner_id)) {
+            return;
+          }
+          const auto* unit = world.try_get<Engine::Core::UnitComponent>(entry.id);
+          if (unit == nullptr || !Game::Units::is_troop_spawn(unit->spawn_type)) {
+            return;
+          }
+          entered = entry.owner_id;
+        });
+    if (entered.has_value()) {
+      return entered;
     }
   }
 
-  return false;
+  return std::nullopt;
 }
 
 auto UndeadAwakeningSystem::can_spawn_wave(const RuntimeZone& zone) const -> bool {
@@ -432,8 +429,9 @@ void UndeadAwakeningSystem::refresh_anchor_structure(Engine::Core::World& world,
   }
 
   auto* entity = world.get_entity(zone.anchor_entity_id);
-  auto* unit = entity != nullptr ? entity->get_component<Engine::Core::UnitComponent>()
-                                 : nullptr;
+  auto* unit = entity != nullptr
+                   ? world.try_get<Engine::Core::UnitComponent>(entity->get_id())
+                   : nullptr;
 
   if (unit == nullptr || unit->health <= 0) {
     break_garrison(world, zone, false);
@@ -455,7 +453,7 @@ void UndeadAwakeningSystem::break_garrison(Engine::Core::World& world,
   for (Engine::Core::EntityID const spawn_id : zone.active_spawn_ids) {
     auto* entity = world.get_entity(spawn_id);
     auto* unit = entity != nullptr
-                     ? entity->get_component<Engine::Core::UnitComponent>()
+                     ? world.try_get<Engine::Core::UnitComponent>(entity->get_id())
                      : nullptr;
     if (unit == nullptr || unit->health <= 0) {
       continue;
@@ -544,8 +542,11 @@ void UndeadAwakeningSystem::refresh_capture_lock(Engine::Core::World& world,
   capture->capture_blocked = !zone.garrison_broken && !zone.active_spawn_ids.empty();
 }
 
-void UndeadAwakeningSystem::awaken_zone(Engine::Core::World& world, RuntimeZone& zone) {
+void UndeadAwakeningSystem::awaken_zone(Engine::Core::World& world,
+                                        RuntimeZone& zone,
+                                        int woken_by) {
   zone.awakened = true;
+  zone.awakened_by_owner_id = woken_by;
   zone.respawn_delay_remaining = 0.0F;
   ensure_zone_owner_registered(zone);
   zone.announced_awakening = true;
@@ -588,8 +589,14 @@ void UndeadAwakeningSystem::try_spawn_next_wave(Engine::Core::World& world,
   zone.current_wave_elapsed = 0.0F;
   zone.respawn_delay_remaining = 0.0F;
 
-  Engine::Core::EventManager::instance().publish(
-      Engine::Core::AudioCueEvent(k_awakening_cue));
+  if (zone.awakened_by_owner_id == 0) {
+    Engine::Core::EventManager::instance().publish(
+        Engine::Core::AudioCueEvent(k_awakening_cue));
+  } else {
+    Engine::Core::EventManager::instance().publish(
+        Engine::Core::AudioCueEvent::for_owner(zone.awakened_by_owner_id,
+                                               k_awakening_cue));
+  }
   announce_wave(zone);
 }
 
@@ -618,13 +625,19 @@ void UndeadAwakeningSystem::update(Engine::Core::World* world, float delta_time)
     return;
   }
 
+  if (!m_zones.empty()) {
+    world->spatial_index().refresh(*world);
+  }
+
   for (auto& zone : m_zones) {
     ensure_anchor_structure(*world, zone);
     refresh_anchor_structure(*world, zone);
     refresh_active_spawns(*world, zone);
 
-    if (!zone.garrison_broken && !zone.awakened && should_awaken_zone(*world, zone)) {
-      awaken_zone(*world, zone);
+    if (!zone.garrison_broken && !zone.awakened) {
+      if (auto const woken_by = should_awaken_zone(*world, zone)) {
+        awaken_zone(*world, zone, *woken_by);
+      }
     }
 
     if (zone.respawn_delay_remaining > 0.0F) {
@@ -661,24 +674,17 @@ auto UndeadAwakeningSystem::local_player_inside(Engine::Core::World& world,
   if (local_owner == 0) {
     return false;
   }
-  float const radius_sq = zone.definition.radius * zone.definition.radius;
-  for (auto* entity : world.collect_entities_with<Engine::Core::UnitComponent>()) {
-    if (entity == nullptr) {
-      continue;
-    }
-    auto* unit = entity->get_component<Engine::Core::UnitComponent>();
-    auto* transform = entity->get_component<Engine::Core::TransformComponent>();
-    if (unit == nullptr || transform == nullptr || unit->health <= 0 ||
-        unit->owner_id != local_owner) {
-      continue;
-    }
-    float const dx = transform->position.x - zone.center_world.x();
-    float const dz = transform->position.z - zone.center_world.z();
-    if (dx * dx + dz * dz <= radius_sq) {
-      return true;
-    }
-  }
-  return false;
+  bool inside = false;
+  world.spatial_index().for_each_in_radius(
+      zone.center_world.x(),
+      zone.center_world.z(),
+      zone.definition.radius,
+      [&](const Engine::Core::WorldSpatialIndex::Entry& entry) {
+        if (entry.health > 0 && entry.owner_id == local_owner) {
+          inside = true;
+        }
+      });
+  return inside;
 }
 
 void UndeadAwakeningSystem::update_zone_music(Engine::Core::World& world,
@@ -696,6 +702,10 @@ void UndeadAwakeningSystem::update_zone_music(Engine::Core::World& world,
         zone.active_spawn_ids.empty() &&
         zone.next_wave_index >= static_cast<int>(zone.definition.waves.size());
     if (!zone.awakened || zone.garrison_broken || cleared) {
+      continue;
+    }
+    const int local_owner = m_services.owners.get_local_player_id();
+    if (zone.awakened_by_owner_id != 0 && zone.awakened_by_owner_id != local_owner) {
       continue;
     }
     if (local_player_inside(world, zone)) {

@@ -322,12 +322,13 @@ void GatherLoopSystem::update(Engine::Core::World* world, float delta_time) {
 
   for (auto* entity :
        world->collect_entities_with<Engine::Core::BuilderProductionComponent>()) {
-    auto* builder = entity->get_component<Engine::Core::BuilderProductionComponent>();
+    auto* builder =
+        world->try_get<Engine::Core::BuilderProductionComponent>(entity->get_id());
     if (builder == nullptr || (!builder->has_gather_order && !builder->auto_gather)) {
       continue;
     }
 
-    auto const* unit = entity->get_component<Engine::Core::UnitComponent>();
+    auto const* unit = world->try_get<Engine::Core::UnitComponent>(entity->get_id());
     if (unit == nullptr || unit->health <= 0) {
       builder->clear_gather_order();
       builder->clear_auto_gather();
@@ -346,8 +347,9 @@ void GatherLoopSystem::update(Engine::Core::World* world, float delta_time) {
       continue;
     }
 
-    auto* transform = entity->get_component<Engine::Core::TransformComponent>();
-    auto* movement = entity->get_component<Engine::Core::MovementComponent>();
+    auto* transform =
+        world->try_get<Engine::Core::TransformComponent>(entity->get_id());
+    auto* movement = world->try_get<Engine::Core::MovementComponent>(entity->get_id());
     if (transform == nullptr || movement == nullptr) {
       continue;
     }

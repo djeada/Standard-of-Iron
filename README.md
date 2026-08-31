@@ -339,6 +339,7 @@ documented in [CHANGELOG.md](CHANGELOG.md#save-compatibility).
 | Campaign/data | [Mission roster](docs/CAMPAIGN_MISSIONS.md), [mission framework](docs/MISSION_FRAMEWORK.md), [hill shapes](docs/HILL_SHAPES.md)                                                                      |
 | Persistence   | [Save/load system](docs/SAVE_LOAD_SYSTEM.md)                                                                                                                                                         |
 | Presentation  | [UI design system](docs/UI_DESIGN_SYSTEM.md), [typography](docs/TYPOGRAPHY.md), [accessibility](docs/ACCESSIBILITY.md), [audio](docs/AUDIO_MASTERING.md)                                             |
+| Performance   | [Instrumentation and budgets](docs/PERFORMANCE_INSTRUMENTATION.md), [massed battles](docs/MASSED_BATTLE_PERFORMANCE.md), [pathfinding](docs/PATHFINDING_ARCHITECTURE.md)                             |
 | Development   | [Contributing](CONTRIBUTING.md), [tests](tests/README.md), [arena](tools/arena/README.md)                                                                                                            |
 
 ## Contributing

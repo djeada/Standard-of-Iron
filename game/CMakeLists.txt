@@ -42,6 +42,7 @@ add_library(
     core/world.cpp
     core/world_spatial_index.cpp
     core/system_profiler.cpp
+    core/nav_profile.cpp
     core/system_schedule.cpp
     core/deferred_mutations.cpp
     core/ambient_session.cpp

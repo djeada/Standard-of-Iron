@@ -972,68 +972,6 @@
       }
     },
     {
-      "id": "sfx.combat.arrows_impact_shields_dirt",
-      "aliases": [
-        "combat_hit_arrow"
-      ],
-      "path": "sfx/combat/arrows_impact_shields_dirt.ogg",
-      "category": "sfx",
-      "volume": 0.85,
-      "priority": 3,
-      "cooldown_ms": 120,
-      "max_instances": 4,
-      "load_policy": "mission",
-      "tags": {
-        "role": "volley",
-        "source": "field"
-      }
-    },
-    {
-      "id": "sfx.combat.archer_volley_many",
-      "path": "sfx/combat/archer_volley_many.ogg",
-      "category": "sfx",
-      "volume": 0.82,
-      "priority": 3,
-      "cooldown_ms": 120,
-      "max_instances": 3,
-      "load_policy": "mission",
-      "tags": {
-        "role": "volley",
-        "variant": "volley",
-        "source": "field"
-      }
-    },
-    {
-      "id": "sfx.combat.archers_shooting_close",
-      "path": "sfx/combat/archers_shooting_close.ogg",
-      "category": "sfx",
-      "volume": 0.84,
-      "priority": 3,
-      "cooldown_ms": 120,
-      "max_instances": 3,
-      "load_policy": "mission",
-      "tags": {
-        "role": "volley",
-        "variant": "close",
-        "source": "field"
-      }
-    },
-    {
-      "id": "sfx.combat.arrows_whistle_snap_impact",
-      "path": "sfx/combat/arrows_whistle_snap_impact.ogg",
-      "category": "sfx",
-      "volume": 0.88,
-      "priority": 3,
-      "cooldown_ms": 120,
-      "max_instances": 4,
-      "load_policy": "mission",
-      "tags": {
-        "role": "volley",
-        "variant": "snap",
-        "source": "field"
-      }
-    },
-    {
       "id": "sfx.combat.battlefield_crowd_chaos",
       "aliases": [
         "combat_hit_siege"
@@ -1083,24 +1021,10 @@
       }
     },
     {
-      "id": "sfx.combat.roman_cavalry_charge",
+      "id": "sfx.combat.horse_gallop_close_pass",
       "aliases": [
         "combat_hit_cavalry"
       ],
-      "path": "sfx/combat/roman_cavalry_charge.ogg",
-      "category": "sfx",
-      "volume": 0.95,
-      "priority": 4,
-      "cooldown_ms": 220,
-      "max_instances": 2,
-      "load_policy": "mission",
-      "tags": {
-        "attack_family": "cavalry",
-        "source": "field"
-      }
-    },
-    {
-      "id": "sfx.combat.horse_gallop_close_pass",
       "path": "sfx/combat/horse_gallop_close_pass.ogg",
       "category": "sfx",
       "volume": 0.9,
@@ -1111,22 +1035,6 @@
       "tags": {
         "attack_family": "cavalry",
         "variant": "gallop",
-        "source": "field"
-      }
-    },
-    {
-      "id": "sfx.combat.numidian_cavalry_chase",
-      "path": "sfx/combat/numidian_cavalry_chase.ogg",
-      "category": "sfx",
-      "volume": 0.92,
-      "priority": 4,
-      "cooldown_ms": 220,
-      "max_instances": 2,
-      "load_policy": "mission",
-      "tags": {
-        "attack_family": "cavalry",
-        "faction": "carthage",
-        "variant": "numidian",
         "source": "field"
       }
     },
@@ -1177,6 +1085,36 @@
       "tags": {
         "attack_family": "death",
         "source": "field"
+      }
+    },
+    {
+      "id": "sfx.combat.human_death_cry_v2",
+      "path": "sfx/combat/human_death_cry_v2.ogg",
+      "category": "sfx",
+      "volume": 0.8,
+      "priority": 4,
+      "cooldown_ms": 160,
+      "max_instances": 2,
+      "load_policy": "mission",
+      "tags": {
+        "attack_family": "death",
+        "variant": "gentle",
+        "source": "generated"
+      }
+    },
+    {
+      "id": "sfx.combat.human_death_cry_v3",
+      "path": "sfx/combat/human_death_cry_v3.ogg",
+      "category": "sfx",
+      "volume": 0.8,
+      "priority": 4,
+      "cooldown_ms": 160,
+      "max_instances": 2,
+      "load_policy": "mission",
+      "tags": {
+        "attack_family": "death",
+        "variant": "stronger",
+        "source": "generated"
       }
     },
     {
@@ -1300,21 +1238,6 @@
       }
     },
     {
-      "id": "sfx.combat.arrows_fast_flybys_lr",
-      "path": "sfx/combat/arrows_fast_flybys_lr.ogg",
-      "category": "sfx",
-      "volume": 0.6,
-      "priority": 2,
-      "cooldown_ms": 900,
-      "max_instances": 1,
-      "load_policy": "mission",
-      "tags": {
-        "attack_family": "arrow",
-        "variant": "flyby",
-        "source": "field"
-      }
-    },
-    {
       "id": "sfx.combat.arrows_many_overhead",
       "path": "sfx/combat/arrows_many_overhead.ogg",
       "category": "sfx",
@@ -1326,21 +1249,6 @@
       "tags": {
         "attack_family": "arrow",
         "variant": "overhead",
-        "source": "field"
-      }
-    },
-    {
-      "id": "sfx.combat.arrows_overhead_ambience",
-      "path": "sfx/combat/arrows_overhead_ambience.ogg",
-      "category": "sfx",
-      "volume": 0.7,
-      "priority": 4,
-      "cooldown_ms": 2500,
-      "max_instances": 1,
-      "load_policy": "mission",
-      "tags": {
-        "attack_family": "arrow",
-        "variant": "overhead_soft",
         "source": "field"
       }
     },
@@ -2137,28 +2045,6 @@
       }
     },
     {
-      "id": "sfx.combat.arrow_launch_v2",
-      "path": "sfx/combat/bow_release_single_v2.ogg",
-      "category": "sfx",
-      "priority": 2,
-      "cooldown_ms": 110,
-      "load_policy": "startup",
-      "tags": {
-        "source": "field"
-      }
-    },
-    {
-      "id": "sfx.combat.block_v2",
-      "path": "sfx/combat/shield_block_v2.ogg",
-      "category": "sfx",
-      "priority": 6,
-      "cooldown_ms": 90,
-      "load_policy": "startup",
-      "tags": {
-        "source": "field"
-      }
-    },
-    {
       "id": "sfx.combat.dodge_v2",
       "path": "sfx/combat/dodge_roll_v2.ogg",
       "category": "sfx",
@@ -2225,72 +2111,8 @@
       }
     },
     {
-      "id": "sfx.combat.bow_loose_heavy",
-      "path": "sfx/combat/bow_loose_heavy.ogg",
-      "category": "sfx",
-      "priority": 4,
-      "cooldown_ms": 90,
-      "load_policy": "startup",
-      "tags": {
-        "source": "field"
-      }
-    },
-    {
-      "id": "sfx.combat.bow_loose_heavy_v2",
-      "path": "sfx/combat/bow_loose_heavy_v2.ogg",
-      "category": "sfx",
-      "priority": 4,
-      "cooldown_ms": 90,
-      "load_policy": "startup",
-      "tags": {
-        "source": "field"
-      }
-    },
-    {
       "id": "sfx.combat.sword_hit_01",
       "path": "sfx/combat/sword_hit_01.ogg",
-      "category": "sfx",
-      "volume": 0.85,
-      "priority": 4,
-      "cooldown_ms": 90,
-      "max_instances": 4,
-      "load_policy": "startup",
-      "tags": {
-        "attack_family": "sword",
-        "source": "field"
-      }
-    },
-    {
-      "id": "sfx.combat.sword_hit_02",
-      "path": "sfx/combat/sword_hit_02.ogg",
-      "category": "sfx",
-      "volume": 0.85,
-      "priority": 4,
-      "cooldown_ms": 90,
-      "max_instances": 4,
-      "load_policy": "startup",
-      "tags": {
-        "attack_family": "sword",
-        "source": "field"
-      }
-    },
-    {
-      "id": "sfx.combat.sword_hit_03",
-      "path": "sfx/combat/sword_hit_03.ogg",
-      "category": "sfx",
-      "volume": 0.85,
-      "priority": 4,
-      "cooldown_ms": 90,
-      "max_instances": 4,
-      "load_policy": "startup",
-      "tags": {
-        "attack_family": "sword",
-        "source": "field"
-      }
-    },
-    {
-      "id": "sfx.combat.sword_hit_04",
-      "path": "sfx/combat/sword_hit_04.ogg",
       "category": "sfx",
       "volume": 0.85,
       "priority": 4,
@@ -2345,20 +2167,6 @@
       }
     },
     {
-      "id": "sfx.combat.blade_clash_04",
-      "path": "sfx/combat/blade_clash_04.ogg",
-      "category": "sfx",
-      "volume": 0.85,
-      "priority": 4,
-      "cooldown_ms": 90,
-      "max_instances": 4,
-      "load_policy": "startup",
-      "tags": {
-        "attack_family": "spear",
-        "source": "field"
-      }
-    },
-    {
       "id": "sfx.combat.spear_impact_01",
       "path": "sfx/combat/spear_impact_01.ogg",
       "category": "sfx",
@@ -2388,35 +2196,10 @@
     },
     {
       "id": "sfx.combat.arrow_impact_01",
+      "aliases": [
+        "combat_hit_arrow"
+      ],
       "path": "sfx/combat/arrow_impact_01.ogg",
-      "category": "sfx",
-      "volume": 0.85,
-      "priority": 4,
-      "cooldown_ms": 90,
-      "max_instances": 4,
-      "load_policy": "startup",
-      "tags": {
-        "attack_family": "arrow",
-        "source": "field"
-      }
-    },
-    {
-      "id": "sfx.combat.arrow_impact_02",
-      "path": "sfx/combat/arrow_impact_02.ogg",
-      "category": "sfx",
-      "volume": 0.85,
-      "priority": 4,
-      "cooldown_ms": 90,
-      "max_instances": 4,
-      "load_policy": "startup",
-      "tags": {
-        "attack_family": "arrow",
-        "source": "field"
-      }
-    },
-    {
-      "id": "sfx.combat.arrow_impact_03",
-      "path": "sfx/combat/arrow_impact_03.ogg",
       "category": "sfx",
       "volume": 0.85,
       "priority": 4,

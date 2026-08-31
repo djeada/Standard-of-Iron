@@ -304,7 +304,7 @@ void publish_contacts(Engine::Core::World& world, FrontMap fronts_by_entity) {
     }
 
     auto const* target_ref =
-        entity->get_component<Engine::Core::AttackTargetComponent>();
+        world.try_get<Engine::Core::AttackTargetComponent>(entity->get_id());
     Engine::Core::EntityID const outgoing_target =
         target_ref != nullptr ? target_ref->target_id : 0U;
     auto const primary = std::find_if(
@@ -563,13 +563,14 @@ void publish_formation_presentation(Engine::Core::World& world, float delta_time
       continue;
     }
 
-    auto const* attack = entity->get_component<Engine::Core::AttackComponent>();
+    auto const* attack = world.try_get<Engine::Core::AttackComponent>(entity->get_id());
     auto const* target_ref =
-        entity->get_component<Engine::Core::AttackTargetComponent>();
+        world.try_get<Engine::Core::AttackTargetComponent>(entity->get_id());
     auto const* contact =
-        entity->get_component<Engine::Core::FormationContactComponent>();
+        world.try_get<Engine::Core::FormationContactComponent>(entity->get_id());
     auto const* traversal =
-        entity->get_component<Engine::Core::UnitTraversalLayoutStateComponent>();
+        world.try_get<Engine::Core::UnitTraversalLayoutStateComponent>(
+            entity->get_id());
     Engine::Core::EntityID const outgoing_target =
         target_ref != nullptr ? target_ref->target_id : 0U;
     bool const outgoing_melee =
@@ -599,7 +600,7 @@ void publish_formation_presentation(Engine::Core::World& world, float delta_time
                       : presentation->combat_motion_time;
 
     auto const* actor_transform =
-        entity->get_component<Engine::Core::TransformComponent>();
+        world.try_get<Engine::Core::TransformComponent>(entity->get_id());
     auto* display_opponent = world.get_entity(display_target);
     bool const attacks_structure =
         outgoing_melee && display_opponent != nullptr && is_building(display_opponent);
@@ -725,7 +726,7 @@ void publish_formation_presentation(Engine::Core::World& world, float delta_time
         auto const* target_slot = find_live_slot(opponent_layout, retained.slot);
         auto const* opponent_transform =
             opponent != nullptr
-                ? opponent->get_component<Engine::Core::TransformComponent>()
+                ? world.try_get<Engine::Core::TransformComponent>(opponent->get_id())
                 : nullptr;
         if (actor_transform != nullptr && opponent_transform != nullptr) {
           float const target_x = target_slot != nullptr
