@@ -18,6 +18,17 @@ auto cue_rng() -> std::mt19937& {
   return rng;
 }
 
+void trace_cue_drop(const std::string& cue_id, const char* reason) {
+  static const bool trace = !qEnvironmentVariableIsEmpty("SOI_AUDIO_TRACE");
+  if (!trace) {
+    return;
+  }
+
+  qInfo().noquote() << QStringLiteral("audio cue %1: dropped:%2")
+                           .arg(QString::fromStdString(cue_id),
+                                QString::fromLatin1(reason));
+}
+
 } // namespace
 
 auto CueRegistry::instance() -> CueRegistry& {
@@ -102,6 +113,7 @@ auto CueRegistry::play(const std::string& cue_id, float volume_scale) -> bool {
 
     auto it = m_bindings.find(cue_id);
     if (it == m_bindings.end() || it->second.resource_ids.empty()) {
+      trace_cue_drop(cue_id, "unbound");
       if (++m_silent_requests[cue_id] == 1U) {
         qWarning() << "audio cue requested but bound to nothing:"
                    << QString::fromStdString(cue_id);
@@ -119,6 +131,7 @@ auto CueRegistry::play(const std::string& cue_id, float volume_scale) -> bool {
             std::chrono::duration_cast<std::chrono::milliseconds>(now - last_it->second)
                 .count();
         if (elapsed < binding.cooldown_ms) {
+          trace_cue_drop(cue_id, "cue_cooldown");
           return false;
         }
       }
@@ -126,6 +139,7 @@ auto CueRegistry::play(const std::string& cue_id, float volume_scale) -> bool {
 
     resource_id = choose_resource_locked(cue_id, binding);
     if (resource_id.empty()) {
+      trace_cue_drop(cue_id, "no_loaded_resource");
       if (++m_silent_requests[cue_id] == 1U) {
         qWarning() << "audio cue" << QString::fromStdString(cue_id)
                    << "has bindings but none are loaded; check its load_policy";
@@ -134,12 +148,6 @@ auto CueRegistry::play(const std::string& cue_id, float volume_scale) -> bool {
     }
 
     m_last_played[cue_id] = now;
-    static const bool trace = !qEnvironmentVariableIsEmpty("SOI_AUDIO_TRACE");
-    if (trace) {
-      qInfo().noquote() << QStringLiteral("audio cue %1 -> %2")
-                               .arg(QString::fromStdString(cue_id),
-                                    QString::fromStdString(resource_id));
-    }
     m_last_resource[cue_id] = resource_id;
   }
 
@@ -147,7 +155,8 @@ auto CueRegistry::play(const std::string& cue_id, float volume_scale) -> bool {
                                          binding.volume * volume_scale,
                                          binding.loop,
                                          binding.priority,
-                                         binding.category);
+                                         binding.category,
+                                         cue_id);
   return true;
 }
 

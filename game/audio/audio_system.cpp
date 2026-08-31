@@ -32,6 +32,24 @@ auto is_effectively_muted(float volume) -> bool {
   return volume <= MUTED_EPSILON;
 }
 
+auto audio_trace_enabled() -> bool {
+  static const bool enabled = !qEnvironmentVariableIsEmpty("SOI_AUDIO_TRACE");
+  return enabled;
+}
+
+void trace_cue_result(const std::string& cue_id,
+                      const std::string& resource_id,
+                      const char* result) {
+  if (!audio_trace_enabled() || cue_id.empty()) {
+    return;
+  }
+
+  qInfo().noquote() << QStringLiteral("audio cue %1 -> %2: %3")
+                           .arg(QString::fromStdString(cue_id),
+                                QString::fromStdString(resource_id),
+                                QString::fromLatin1(result));
+}
+
 } // namespace
 
 AudioSystem::AudioSystem()
@@ -127,9 +145,21 @@ void AudioSystem::play_sound(const std::string& sound_id,
                              float volume,
                              bool loop,
                              int priority,
-                             AudioCategory category) {
-  enqueue(AudioEvent(
-      AudioEventType::PLAY_SOUND, sound_id, volume, loop, priority, category));
+                             AudioCategory category,
+                             std::string cue_id) {
+  if (!is_running) {
+    trace_cue_result(cue_id, sound_id, "dropped:audio_system_stopped");
+    return;
+  }
+
+  enqueue(AudioEvent(AudioEventType::PLAY_SOUND,
+                     sound_id,
+                     volume,
+                     loop,
+                     priority,
+                     category,
+                     false,
+                     std::move(cue_id)));
 }
 
 void AudioSystem::play_music(const std::string& music_id,
@@ -402,18 +432,22 @@ void AudioSystem::process_event(const AudioEvent& event) {
 
       if (config.max_instances > 0 &&
           get_active_instance_count_locked(resource_id) >= config.max_instances) {
+        trace_cue_result(event.cue_id, resource_id, "dropped:instance_limit");
         break;
       }
 
       if (is_sound_on_cooldown_locked(resource_id, config.cooldown_ms, now)) {
+        trace_cue_result(event.cue_id, resource_id, "dropped:resource_cooldown");
         break;
       }
 
       if (!should_accept_sound_locked(effective_priority)) {
+        trace_cue_result(event.cue_id, resource_id, "dropped:global_priority");
         break;
       }
 
       if (!make_room_in_category_locked(category, effective_priority)) {
+        trace_cue_result(event.cue_id, resource_id, "dropped:category_priority");
         break;
       }
 
@@ -423,16 +457,20 @@ void AudioSystem::process_event(const AudioEvent& event) {
 
       float const effective_vol = get_effective_volume(category, requested_volume);
       if (is_effectively_muted(effective_vol)) {
+        trace_cue_result(event.cue_id, resource_id, "dropped:muted");
         break;
       }
       it->second->play(effective_vol, event.loop);
       mark_sound_played_locked(resource_id, now);
+      trace_cue_result(event.cue_id, resource_id, "accepted");
 
       {
         std::lock_guard<std::mutex> const active_lock(active_sounds_mutex);
         active_sounds.push_back(
             {resource_id, effective_priority, event.loop, category, now});
       }
+    } else {
+      trace_cue_result(event.cue_id, resource_id, "dropped:resource_not_loaded");
     }
     break;
   }
