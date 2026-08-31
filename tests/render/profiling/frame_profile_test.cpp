@@ -90,7 +90,7 @@ TEST(FrameProfileTest, FormatOverlayIncludesAllPhases) {
   EXPECT_NE(s.find("draws=123"), std::string::npos);
   EXPECT_NE(s.find("tris=4567"), std::string::npos);
   EXPECT_NE(s.find("inst=890"), std::string::npos);
-  EXPECT_NE(s.find("avg/p95"), std::string::npos);
+  EXPECT_NE(s.find("avg/p50/p95/p99"), std::string::npos);
   EXPECT_NE(s.find("soldiers=64"), std::string::npos);
   EXPECT_NE(s.find("cache h/m=120/8"), std::string::npos);
   EXPECT_NE(s.find("combat"), std::string::npos);
@@ -122,7 +122,7 @@ TEST(FrameProfileTest, ProfilingIsOffUntilSomethingAsksForIt) {
   EXPECT_FALSE(p.enabled);
 }
 
-TEST(FrameProfileTest, FinishFrameSampleComputesRollingAverageAndP95) {
+TEST(FrameProfileTest, FinishFrameSampleComputesRollingAverageAndPercentiles) {
   FrameProfile p;
   p.enabled = true;
   p.add_phase_us(Phase::Collection, 1000);
@@ -135,7 +135,25 @@ TEST(FrameProfileTest, FinishFrameSampleComputesRollingAverageAndP95) {
   p.finish_frame_sample();
 
   EXPECT_NEAR(p.average_frame_ms, 3.0, 0.01);
+  EXPECT_NEAR(p.p50_frame_ms, 3.0, 0.01);
   EXPECT_NEAR(p.p95_frame_ms, 5.0, 0.01);
+  EXPECT_NEAR(p.p99_frame_ms, 5.0, 0.01);
+}
+
+TEST(FrameProfileTest, RollingStatsDescribeTheRecentWindowOnly) {
+  FrameProfile p;
+  p.enabled = true;
+
+  p.add_phase_us(Phase::Collection, 100000);
+  p.finish_frame_sample();
+  for (int frame = 0; frame < 200; ++frame) {
+    p.reset();
+    p.add_phase_us(Phase::Collection, 1000);
+    p.finish_frame_sample();
+  }
+
+  EXPECT_NEAR(p.average_frame_ms, 1.0, 0.01);
+  EXPECT_NEAR(p.p99_frame_ms, 1.0, 0.01);
 }
 
 TEST(FrameProfileTest, PhaseNameMatchesEnum) {

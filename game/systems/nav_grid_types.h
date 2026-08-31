@@ -1,5 +1,8 @@
 #pragma once
 
+#include <algorithm>
+#include <cmath>
+
 namespace Game::Systems {
 
 struct Point {
@@ -42,5 +45,61 @@ struct WorldRect {
   float min_z{0.0F};
   float max_z{0.0F};
 };
+
+[[nodiscard]] inline auto body_cell_range(float center_u,
+                                          float center_v,
+                                          float radius,
+                                          float half_cell) noexcept -> CellRange {
+  return {.min_x = static_cast<int>(std::floor(center_u - radius - half_cell)),
+          .max_x = static_cast<int>(std::ceil(center_u + radius + half_cell)),
+          .min_z = static_cast<int>(std::floor(center_v - radius - half_cell)),
+          .max_z = static_cast<int>(std::ceil(center_v + radius + half_cell))};
+}
+
+struct CellGap {
+  float u{0.0F};
+  float v{0.0F};
+
+  [[nodiscard]] auto squared() const noexcept -> float { return (u * u) + (v * v); }
+
+  [[nodiscard]] auto length() const noexcept -> float { return std::hypot(u, v); }
+};
+
+[[nodiscard]] inline auto cell_gap(float center_u,
+                                   float center_v,
+                                   int cell_x,
+                                   int cell_z,
+                                   float half_cell) noexcept -> CellGap {
+  return {
+      .u = std::max(0.0F, std::abs(center_u - static_cast<float>(cell_x)) - half_cell),
+      .v = std::max(0.0F, std::abs(center_v - static_cast<float>(cell_z)) - half_cell)};
+}
+
+template <typename Visit>
+void for_each_ring_cell(int ring, Visit&& visit) {
+  if (ring <= 0) {
+    visit(0, 0);
+    return;
+  }
+  for (int dz = -ring; dz <= ring; ++dz) {
+    if (dz == -ring || dz == ring) {
+      for (int dx = -ring; dx <= ring; ++dx) {
+        visit(dx, dz);
+      }
+      continue;
+    }
+    visit(-ring, dz);
+    visit(ring, dz);
+  }
+}
+
+[[nodiscard]] inline auto cell_count(const CellRange& range) noexcept -> long long {
+  const long long span_x = range.max_x - range.min_x + 1;
+  const long long span_z = range.max_z - range.min_z + 1;
+  if (span_x <= 0 || span_z <= 0) {
+    return 0;
+  }
+  return span_x * span_z;
+}
 
 } // namespace Game::Systems

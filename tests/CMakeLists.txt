@@ -82,6 +82,8 @@ add_executable(
     core/component_storage_test.cpp
     core/world_spatial_index_test.cpp
     core/system_schedule_test.cpp
+    core/percentile_test.cpp
+    core/nav_profile_test.cpp
     core/movement_trace_test.cpp
     core/ground_type_test.cpp
     core/building_spawn_setup_test.cpp
@@ -103,6 +105,7 @@ add_executable(
     map/terrain_footprint_test.cpp
     map/undead_shrine_placement_test.cpp
     map/time_of_day_test.cpp
+    systems/nav_grid_geometry_test.cpp
     systems/rain_manager_test.cpp
     wildlife/wildlife_system_test.cpp
     wildlife/bird_flock_test.cpp
@@ -350,6 +353,7 @@ add_executable(
     ${CMAKE_CURRENT_SOURCE_DIR}/test_assets.qrc
     render/prop_model_footprint_test.cpp
     render/gl_deferred_delete_test.cpp
+    render/asset_counters_test.cpp
     render/unit_primitive_convention_test.cpp
     render/instance_draw_guard_test.cpp
     render/pose_controller_test.cpp

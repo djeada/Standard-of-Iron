@@ -1143,7 +1143,6 @@ TEST(HumanoidPrepare, FacialHairUsesBakedArchetypeWithoutPostBodyDraw) {
       renderer, ctx, anim, test_runtime(0U), prep);
 
   ASSERT_EQ(prep.bodies.requests().size(), 1U);
-  EXPECT_TRUE(prep.post_body_draws.empty());
 
   auto const& req = prep.bodies.requests().front();
   EXPECT_NE(req.archetype, Render::Creature::ArchetypeRegistry::k_humanoid_base);

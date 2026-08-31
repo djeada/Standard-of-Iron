@@ -111,14 +111,14 @@ void BodyContactSystem::run(Engine::Core::SystemContext& context) {
     if (entity == nullptr) {
       continue;
     }
-    auto* transform = entity->get_component<Engine::Core::TransformComponent>();
+    auto* transform = world.try_get<Engine::Core::TransformComponent>(entity->get_id());
     if (transform == nullptr) {
       continue;
     }
 
     ContactBody& body = bodies[slot];
     body.transform = transform;
-    body.facts = entity->get_component<Engine::Core::MovementFactsComponent>();
+    body.facts = world.try_get<Engine::Core::MovementFactsComponent>(entity->get_id());
     body.radius = CommandService::get_unit_radii(world, entry.id).core;
     body.profile = profile_for(*entity);
     body.movable = body_is_movable(*entity, body.facts);

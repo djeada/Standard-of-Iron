@@ -203,7 +203,7 @@ void ResourceDeliverySystem::update(Engine::Core::World* world, float delta_time
     }
 
     const auto* depot_transform =
-        depot->get_component<Engine::Core::TransformComponent>();
+        world->try_get<Engine::Core::TransformComponent>(depot->get_id());
     auto const drop = drop_point_for(*depot_transform);
     carry->depot_x = drop.x;
     carry->depot_z = drop.z;
@@ -231,7 +231,8 @@ void ResourceDeliverySystem::update(Engine::Core::World* world, float delta_time
         (out_of_patience && depot_dist_sq <= k_stockpile_depot_arrival_radius *
                                                  k_stockpile_depot_arrival_radius)) {
       credit_load(unit->owner_id, *carry, depot->get_id());
-      if (auto* stockpile = depot->get_component<Engine::Core::StockpileComponent>()) {
+      if (auto* stockpile =
+              world->try_get<Engine::Core::StockpileComponent>(depot->get_id())) {
         stockpile->deposit_flash = k_stockpile_deposit_flash_seconds;
       }
       Engine::Core::EventManager::instance().publish(

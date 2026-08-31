@@ -6,16 +6,22 @@
 #include <string>
 #include <vector>
 
+#include "utils/percentile.h"
+
 namespace Engine::Core {
 
 class SystemProfiler {
 public:
+  static constexpr std::size_t k_sample_window = 600U;
+
   struct SystemRecord {
     std::string name;
     std::uint64_t last_us{0};
     std::uint64_t total_us{0};
     std::uint64_t peak_us{0};
     std::uint64_t calls{0};
+
+    Utils::Stats::SampleWindow<k_sample_window> samples;
 
     std::uint64_t last_views{0};
     std::uint64_t last_view_candidates{0};
@@ -27,6 +33,10 @@ public:
     [[nodiscard]] auto average_us() const -> double {
       return calls == 0 ? 0.0
                         : static_cast<double>(total_us) / static_cast<double>(calls);
+    }
+
+    [[nodiscard]] auto distribution_us() const -> Utils::Stats::Distribution {
+      return samples.distribution();
     }
   };
 
@@ -61,6 +71,10 @@ public:
     QueryCounters queries;
   };
 
+  [[nodiscard]] auto tick_time_us() const -> Utils::Stats::Distribution {
+    return m_tick_us.distribution();
+  }
+
   void set_enabled(bool enabled) noexcept { m_enabled = enabled; }
   [[nodiscard]] auto enabled() const noexcept -> bool { return m_enabled; }
 
@@ -94,6 +108,7 @@ private:
   std::vector<SystemRecord> m_systems;
   std::map<std::string, CallSite> m_collect_call_sites;
   TickSummary m_last_tick;
+  Utils::Stats::SampleWindow<k_sample_window> m_tick_us;
 };
 
 } // namespace Engine::Core

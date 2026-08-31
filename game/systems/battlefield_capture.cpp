@@ -292,8 +292,9 @@ void add_overlays(CaptureResult& out, std::uint64_t tick, Engine::Core::World& w
     double z = 0.0;
     int count = 0;
     for (auto* entity : world.get_units_owned_by(owner)) {
-      auto const* unit = entity->get_component<Engine::Core::UnitComponent>();
-      auto const* transform = entity->get_component<Engine::Core::TransformComponent>();
+      auto const* unit = world.try_get<Engine::Core::UnitComponent>(entity->get_id());
+      auto const* transform =
+          world.try_get<Engine::Core::TransformComponent>(entity->get_id());
       if (unit == nullptr || transform == nullptr || unit->health <= 0) {
         continue;
       }
@@ -311,7 +312,8 @@ void add_overlays(CaptureResult& out, std::uint64_t tick, Engine::Core::World& w
   }
   for (auto* entity :
        world.collect_entities_with<Engine::Core::FormationModeComponent>()) {
-    auto const* mode = entity->get_component<Engine::Core::FormationModeComponent>();
+    auto const* mode =
+        world.try_get<Engine::Core::FormationModeComponent>(entity->get_id());
     if (mode == nullptr || !mode->active) {
       continue;
     }

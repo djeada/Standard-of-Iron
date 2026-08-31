@@ -13,6 +13,10 @@
 
 #include "nav_grid_types.h"
 
+namespace Game::Map {
+class TerrainService;
+}
+
 namespace Game::Systems {
 
 class BuildingCollisionRegistry;
@@ -40,11 +44,15 @@ public:
     NavigationGrid() = default;
     NavigationGrid(int width, int height);
 
-    void resize(int width, int height);
     void fill(CellValue value);
     [[nodiscard]] auto in_bounds(int x, int y) const -> bool;
     [[nodiscard]] auto get(int x, int y) const -> CellValue;
     void set(int x, int y, CellValue value);
+
+    [[nodiscard]] auto at_unchecked(int x, int y) const noexcept -> CellValue {
+      return static_cast<CellValue>(
+          m_cells[static_cast<std::size_t>((y * m_width) + x)]);
+    }
 
   private:
     int m_width{0};
@@ -191,6 +199,14 @@ private:
   auto to_index(const Point& p) const -> int { return to_index(p.x, p.y); }
   auto to_point(int index) const -> Point { return {index % m_width, index / m_width}; }
 
+  [[nodiscard]] auto in_bounds(int x, int y) const noexcept -> bool {
+    return x >= 0 && x < m_width && y >= 0 && y < m_height;
+  }
+
+  [[nodiscard]] auto cell_is(int x, int y, CellValue value) const noexcept -> bool {
+    return in_bounds(x, y) && m_navigation_grid.at_unchecked(x, y) == value;
+  }
+
   static auto
   is_closed(const SearchBuffers& buffers, int index, std::uint32_t generation) -> bool;
   static void set_closed(SearchBuffers& buffers, int index, std::uint32_t generation);
@@ -281,6 +297,8 @@ private:
 
   int m_width, m_height;
   NavigationGrid m_navigation_grid;
+  Game::Map::TerrainService* m_terrain{nullptr};
+
   float m_grid_cell_size{1.0F};
   float m_grid_offset_x{0.0F}, m_grid_offset_z{0.0F};
   std::atomic<bool> m_navigation_grid_dirty;

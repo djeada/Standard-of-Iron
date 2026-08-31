@@ -2,6 +2,33 @@
 
 Pathfinding in Standard of Iron is deliberately simple at the core: the game keeps one flat 2D navigation grid, and A* searches that grid. The grid is not a physics simulation, not a unit occupancy map, and not a navmesh. It is a compact answer to one question:
 
+Per-tick navigation counters -- position tests, standability tests and the cells they
+scan, nearest-standable searches, group and individual routes, cache hits, cells
+expanded, heap operations and dirty cells rebuilt -- are described in
+[PERFORMANCE_INSTRUMENTATION.md](PERFORMANCE_INSTRUMENTATION.md). Enable them with
+`arena --profile`, `sim_benchmark`, or a runtime benchmark run before claiming any
+navigation cost has changed.
+
+A gate opening or closing used to rebuild the **whole** navigation grid.
+`GateService::publish_navigation_blocker_change` called `mark_navigation_grid_dirty()`,
+which sets `m_full_update_required`, and `process_dirty_regions` then filled the grid and
+re-derived terrain, forest, resource, building, gate and clearance for every cell. On
+Zama's 800x800 map that is 640,000 cells inside one simulation tick -- a measured 934 ms
+frame, with `update_ms` at 922 ms in the same frame, four times in a ten-minute run.
+`GateBlocker` already carries exact world bounds, so the publisher now marks only the
+regions the blockers vacated and the ones they occupy.
+
+The shared grid geometry those queries are built from lives in
+`game/systems/nav_grid_types.h`: `body_cell_range` and `cell_gap` give the cell box and
+edge distance for a body circle (`Walkability::can_stand` and
+`Pathfinding::is_world_position_walkable` had separate copies of that arithmetic), and
+`for_each_ring_cell` walks the perimeter of a square ring. Both expanding searches --
+`Walkability::nearest_standable` and `Pathfinding::resolve_walkable_endpoint` -- used to
+scan the whole `(2r+1)^2` square per ring and discard the interior, which made an
+r-ring search O(r^3) instead of O(r^2). `for_each_ring_cell` visits the perimeter in the
+same row-major order the discarding scan produced, so tie-breaking between equal-score
+candidates is unchanged; `tests/systems/nav_grid_geometry_test.cpp` pins that order.
+
 > Is this grid cell free to pass, or is it blocked?
 
 Terrain, buildings, bridges, hills, and resources feed into that answer. Unit radius is not part of path search. Formations, combat locks, and invalid-position recovery sit around the grid without adding extra public navigation concepts. Keeping that separation is what makes the system fast enough to use during normal RTS play without constantly revalidating every unit.

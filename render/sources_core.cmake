@@ -54,8 +54,11 @@ set(RENDER_CORE_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/camera_visibility.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/unit_render_cache.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/software_backend.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/profiling/allocation_tracker.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/profiling/asset_counters.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/profiling/combat_animation_diagnostics.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/profiling/frame_continuity_analyzer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/profiling/frame_profile.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/profiling/performance_report.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/profiling/profiling_hud.cpp
 )

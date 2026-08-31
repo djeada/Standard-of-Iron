@@ -9,18 +9,6 @@
 #include "shadow_batch.h"
 
 namespace Render::Creature::Pipeline {
-namespace {
-
-void submit_post_body_request(const PostBodyDrawRequest& request,
-                              Render::GL::ISubmitter& out) noexcept {
-  (void)out;
-  switch (request.kind) {
-  case PostBodyDrawRequest::Kind::None:
-    break;
-  }
-}
-
-} // namespace
 
 auto submit_preparation(CreaturePreparationResult& prep,
                         Render::GL::ISubmitter& out) noexcept -> SubmitStats {
@@ -45,13 +33,6 @@ auto submit_preparation(CreaturePreparationResult& prep,
     if (!visible_requests.empty()) {
       stats = pipeline.submit_requests(visible_requests, out);
     }
-  }
-
-  for (const auto& request : prep.post_body_draws) {
-    if (request.pass_intent == RenderPassIntent::Shadow) {
-      continue;
-    }
-    submit_post_body_request(request, out);
   }
 
   flush_shadow_batch(prep.shadow_batch, out);

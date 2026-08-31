@@ -262,12 +262,12 @@ auto assign_next_wall_site(Engine::Core::World* world,
     auto* site_entity = world->get_entity(site_id);
     auto* site_transform =
         site_entity != nullptr
-            ? site_entity->get_component<Engine::Core::TransformComponent>()
+            ? world->try_get<Engine::Core::TransformComponent>(site_entity->get_id())
             : nullptr;
-    auto* site =
-        site_entity != nullptr
-            ? site_entity->get_component<Engine::Core::WallConstructionSiteComponent>()
-            : nullptr;
+    auto* site = site_entity != nullptr
+                     ? world->try_get<Engine::Core::WallConstructionSiteComponent>(
+                           site_entity->get_id())
+                     : nullptr;
     if (site_transform == nullptr || site == nullptr) {
       continue;
     }
@@ -284,7 +284,7 @@ auto assign_next_wall_site(Engine::Core::World* world,
     builder->bypass_movement_active = false;
 
     if (auto* movement =
-            builder_entity->get_component<Engine::Core::MovementComponent>()) {
+            world->try_get<Engine::Core::MovementComponent>(builder_entity->get_id())) {
       movement->set_rest_position(builder->construction_site_x,
                                   builder->construction_site_z);
     }
@@ -308,16 +308,18 @@ auto skip_invalid_wall_site(Engine::Core::World* world,
   }
 
   auto* site_entity = world->get_entity(builder->construction_site_entity_id);
-  auto* site =
-      site_entity != nullptr
-          ? site_entity->get_component<Engine::Core::WallConstructionSiteComponent>()
-          : nullptr;
-  auto* transform = site_entity != nullptr
-                        ? site_entity->get_component<Engine::Core::TransformComponent>()
-                        : nullptr;
-  auto* wall = site_entity != nullptr
-                   ? site_entity->get_component<Engine::Core::WallSegmentComponent>()
+  auto* site = site_entity != nullptr
+                   ? world->try_get<Engine::Core::WallConstructionSiteComponent>(
+                         site_entity->get_id())
                    : nullptr;
+  auto* transform =
+      site_entity != nullptr
+          ? world->try_get<Engine::Core::TransformComponent>(site_entity->get_id())
+          : nullptr;
+  auto* wall =
+      site_entity != nullptr
+          ? world->try_get<Engine::Core::WallSegmentComponent>(site_entity->get_id())
+          : nullptr;
   if (site_entity == nullptr || site == nullptr || transform == nullptr) {
     return false;
   }
@@ -420,8 +422,9 @@ auto food_target_position(Engine::Core::World* world,
   }
   auto* target = world->get_entity(builder->structure_task_entity_id);
   const auto* transform =
-      target != nullptr ? target->get_component<Engine::Core::TransformComponent>()
-                        : nullptr;
+      target != nullptr
+          ? world->try_get<Engine::Core::TransformComponent>(target->get_id())
+          : nullptr;
   if (transform == nullptr) {
     return std::nullopt;
   }
@@ -440,7 +443,7 @@ auto food_target_still_valid(Engine::Core::World* world,
     return false;
   }
   if (builder->product_type == k_builder_product_harvest_grain) {
-    const auto* unit = worker->get_component<Engine::Core::UnitComponent>();
+    const auto* unit = world->try_get<Engine::Core::UnitComponent>(worker->get_id());
     return unit != nullptr && farm_is_harvestable(*target, unit->owner_id);
   }
   return sheep_is_slaughterable(*target);
@@ -466,10 +469,12 @@ void hold_sheep_still(Engine::Core::World* world,
   if (sheep == nullptr) {
     return;
   }
-  if (auto* wildlife = sheep->get_component<Engine::Core::WildlifeComponent>()) {
+  if (auto* wildlife =
+          world->try_get<Engine::Core::WildlifeComponent>(sheep->get_id())) {
     wildlife->held_timer = std::max(wildlife->held_timer, 0.75F);
   }
-  if (auto* movement = sheep->get_component<Engine::Core::MovementComponent>()) {
+  if (auto* movement =
+          world->try_get<Engine::Core::MovementComponent>(sheep->get_id())) {
     if (movement->get_has_target()) {
       movement->stop();
     }
@@ -480,13 +485,15 @@ void slaughter_sheep(Engine::Core::World* world,
                      Engine::Core::Entity* worker,
                      Engine::Core::EntityID sheep_id) {
   auto* sheep = world->get_entity(sheep_id);
-  auto* unit =
-      sheep != nullptr ? sheep->get_component<Engine::Core::UnitComponent>() : nullptr;
+  auto* unit = sheep != nullptr
+                   ? world->try_get<Engine::Core::UnitComponent>(sheep->get_id())
+                   : nullptr;
   if (unit == nullptr) {
     return;
   }
   unit->health = 0;
-  if (auto* movement = sheep->get_component<Engine::Core::MovementComponent>()) {
+  if (auto* movement =
+          world->try_get<Engine::Core::MovementComponent>(sheep->get_id())) {
     movement->stop();
   }
   auto* death =
@@ -499,9 +506,9 @@ void slaughter_sheep(Engine::Core::World* world,
     death->dead_hold_duration = 1.0F;
     death->sequence_variant = 0U;
   }
-  const auto* worker_unit = worker != nullptr
-                                ? worker->get_component<Engine::Core::UnitComponent>()
-                                : nullptr;
+  const auto* worker_unit =
+      worker != nullptr ? world->try_get<Engine::Core::UnitComponent>(worker->get_id())
+                        : nullptr;
   Engine::Core::EventManager::instance().publish(
       Engine::Core::UnitDiedEvent(sheep_id,
                                   unit->owner_id,
@@ -520,7 +527,7 @@ auto complete_food_harvest(Engine::Core::World* world,
   int reward = 0;
   auto form = Engine::Core::CarriedFoodForm::Grain;
   if (builder->product_type == k_builder_product_harvest_grain) {
-    auto* crop = target->get_component<Engine::Core::FarmComponent>();
+    auto* crop = world->try_get<Engine::Core::FarmComponent>(target->get_id());
     if (crop == nullptr) {
       return false;
     }
@@ -548,11 +555,11 @@ void ProductionSystem::update(Engine::Core::World* world, float delta_time) {
     Engine::Core::Entity* e = &entity_ref;
     auto* prod = &prod_ref;
 
-    if (e->has_component<Engine::Core::DismantleSiteComponent>()) {
+    if (world->has<Engine::Core::DismantleSiteComponent>(e->get_id())) {
       continue;
     }
 
-    auto* unit_comp = e->get_component<Engine::Core::UnitComponent>();
+    auto* unit_comp = world->try_get<Engine::Core::UnitComponent>(e->get_id());
     if ((unit_comp != nullptr) && Game::Core::is_neutral_owner(unit_comp->owner_id)) {
       continue;
     }
@@ -578,8 +585,8 @@ void ProductionSystem::update(Engine::Core::World* world, float delta_time) {
     prod->time_remaining -= delta_time;
     if (prod->time_remaining <= 0.0F) {
 
-      auto* t = e->get_component<Engine::Core::TransformComponent>();
-      auto* u = e->get_component<Engine::Core::UnitComponent>();
+      auto* t = world->try_get<Engine::Core::TransformComponent>(e->get_id());
+      auto* u = world->try_get<Engine::Core::UnitComponent>(e->get_id());
       if ((t != nullptr) && (u != nullptr)) {
 
         int const current_troops = Game::Systems::troop_count_for(*world, u->owner_id);
@@ -603,7 +610,8 @@ void ProductionSystem::update(Engine::Core::World* world, float delta_time) {
           Game::Units::SpawnParams sp;
           sp.player_id = u->owner_id;
           sp.spawn_type = Game::Units::spawn_typeFromTroopType(prod->product_type);
-          sp.ai_controlled = e->has_component<Engine::Core::AIControlledComponent>();
+          sp.ai_controlled =
+              world->has<Engine::Core::AIControlledComponent>(e->get_id());
           sp.nation_id = nation_id;
           sp.is_initial_spawn = false;
 
@@ -666,8 +674,8 @@ void ProductionSystem::update(Engine::Core::World* world, float delta_time) {
       }
     }
 
-    auto* transform = e->get_component<Engine::Core::TransformComponent>();
-    auto* movement = e->get_component<Engine::Core::MovementComponent>();
+    auto* transform = world->try_get<Engine::Core::TransformComponent>(e->get_id());
+    auto* movement = world->try_get<Engine::Core::MovementComponent>(e->get_id());
 
     const auto* builder_unit = world->try_get<Engine::Core::UnitComponent>(e->get_id());
     const int builder_owner_id = (builder_unit != nullptr) ? builder_unit->owner_id : 0;
@@ -892,14 +900,14 @@ void ProductionSystem::update(Engine::Core::World* world, float delta_time) {
 
     if (builder_prod->time_remaining <= 0.0F) {
 
-      auto* t = e->get_component<Engine::Core::TransformComponent>();
-      auto* u = e->get_component<Engine::Core::UnitComponent>();
+      auto* t = world->try_get<Engine::Core::TransformComponent>(e->get_id());
+      auto* u = world->try_get<Engine::Core::UnitComponent>(e->get_id());
       if ((t != nullptr) && (u != nullptr)) {
         if (is_food_builder_product(builder_prod->product_type)) {
           float const anchor_x = builder_prod->task_target_x;
           float const anchor_z = builder_prod->task_target_z;
           if (complete_food_harvest(world, e, builder_prod)) {
-            if (!e->has_component<Engine::Core::AIControlledComponent>()) {
+            if (!world->has<Engine::Core::AIControlledComponent>(e->get_id())) {
               builder_prod->has_gather_order = true;
               builder_prod->gather_product_type = builder_prod->product_type;
               builder_prod->gather_anchor_x = anchor_x;
@@ -926,7 +934,7 @@ void ProductionSystem::update(Engine::Core::World* world, float delta_time) {
             }
             load_onto_hauler(e, resource_type, reward_amount);
 
-            if (!e->has_component<Engine::Core::AIControlledComponent>()) {
+            if (!world->has<Engine::Core::AIControlledComponent>(e->get_id())) {
               builder_prod->has_gather_order = true;
               builder_prod->gather_product_type = builder_prod->product_type;
               builder_prod->gather_anchor_x = builder_prod->task_target_x;
@@ -977,7 +985,8 @@ void ProductionSystem::update(Engine::Core::World* world, float delta_time) {
               }
             }
             sp.player_id = u->owner_id;
-            sp.ai_controlled = e->has_component<Engine::Core::AIControlledComponent>();
+            sp.ai_controlled =
+                world->has<Engine::Core::AIControlledComponent>(e->get_id());
             sp.nation_id = u->nation_id;
             sp.is_initial_spawn = false;
             sp.rotation_y = construction_rotation_y;

@@ -75,11 +75,7 @@ so playback starts or ends on a step. Fix with a 2–5 ms fade at the affected e
 | ------------------------------------ | ------------------------ |
 | `sfx/build/unit_queued.ogg`          | head -27 dB, tail -25 dB |
 | `sfx/build/unit_queued_v2.ogg`       | head -33 dB              |
-| `sfx/combat/arrow_impact_02.ogg`     | head -37 dB              |
 | `sfx/combat/shield_bash_v2.ogg`      | head -28 dB              |
-| `sfx/combat/sword_hit_02.ogg`        | head -39 dB              |
-| `sfx/combat/sword_hit_03.ogg`        | head -40 dB              |
-| `sfx/combat/sword_hit_04.ogg`        | head -14 dB, tail -35 dB |
 | `sfx/movement/footstep_grass_01.ogg` | head -40 dB              |
 | `sfx/movement/footstep_grass_03.ogg` | head -38 dB              |
 | `sfx/movement/footstep_run_01.ogg`   | head -29 dB              |
@@ -104,18 +100,15 @@ the player feels as the game reacting late. Trim to the onset.
 
 | File                                         | Silence before onset |
 | -------------------------------------------- | -------------------- |
-| `sfx/combat/arrows_overhead_ambience.ogg`    | **1290 ms**          |
 | `sfx/combat/spearmen_formation_advance.ogg`  | **660 ms**           |
 | `sfx/combat/aftermath_battlefield.ogg`       | **460 ms**           |
 | `sfx/combat/battlefield_distant_mass_01.ogg` | **340 ms**           |
 | `sfx/combat/arrows_overhead_dark.ogg`        | **300 ms**           |
 | `sfx/build/gate_open.ogg`                    | **230 ms**           |
 | `sfx/build/gate_close.ogg`                   | **210 ms**           |
-| `sfx/combat/roman_cavalry_charge.ogg`        | **210 ms**           |
 | `sfx/combat/battlefield_crowd_chaos.ogg`     | **170 ms**           |
 | `sfx/combat/battlefield_distant_mass_02.ogg` | **170 ms**           |
 | `sfx/combat/army_march_dirt_mass.ogg`        | **140 ms**           |
-| `sfx/combat/bow_loose_heavy_v2.ogg`          | **90 ms**            |
 | `sfx/wildlife/wolf_pack_attack.ogg`          | **70 ms**            |
 
 ## Method

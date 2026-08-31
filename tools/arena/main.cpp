@@ -23,6 +23,7 @@
 #include "arena_scenarios.h"
 #include "arena_viewport.h"
 #include "arena_window.h"
+#include "game/core/nav_profile.h"
 #include "game/map/campaign_loader.h"
 #include "game/map/mission_loader.h"
 #include "game/map/terrain_topology_audit.h"
@@ -594,6 +595,7 @@ auto main(int argc, char** argv) -> int {
   }
   bool const detailed_profiling = parser.isSet(profile_option);
   Render::Profiling::global_profile().enabled = detailed_profiling;
+  Engine::Core::nav_profile().set_enabled(detailed_profiling);
 
   const bool review_single_map = parser.isSet(terrain_map_option);
   const bool review_campaign_maps = parser.isSet(campaign_terrain_option);
