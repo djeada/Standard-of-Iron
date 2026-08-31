@@ -14,6 +14,21 @@ namespace Game::Systems::AI {
 
 inline constexpr float k_assignment_stale_timeout = 4.5F;
 
+inline constexpr float k_attack_initiation_aggression = 0.40F;
+
+inline auto commander_may_attack(const AIStrategyConfig& strategy) -> bool {
+
+  return strategy.aggression_modifier >= k_attack_initiation_aggression;
+}
+
+inline auto marches_with_the_wave(Engine::Core::EntityID unit_id,
+                                  const AIContext& context) -> bool {
+
+  return context.wave.committed &&
+         std::find(context.wave.members.begin(), context.wave.members.end(), unit_id) !=
+             context.wave.members.end();
+}
+
 inline void replicate_last_target_if_needed(const std::vector<float>& from_x,
                                             const std::vector<float>& from_y,
                                             const std::vector<float>& from_z,

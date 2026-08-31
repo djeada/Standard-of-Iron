@@ -906,8 +906,9 @@ void Renderer::submit_unit_entry(
       auto const* animation_debug =
           Render::Profiling::CombatAnimationDiagnostics::instance().find_unit(
               entry.entity_id);
+      bool const soldier_visibility_is_known = animation_debug != nullptr;
       bool const all_published_soldiers_culled =
-          animation_debug != nullptr && !animation_debug->soldiers.empty() &&
+          soldier_visibility_is_known && !animation_debug->soldiers.empty() &&
           std::all_of(animation_debug->soldiers.begin(),
                       animation_debug->soldiers.end(),
                       [](auto const& soldier) {
@@ -931,7 +932,7 @@ void Renderer::submit_unit_entry(
                                                prepared_visible_requests == 0;
 
       if (entry.unit != nullptr && entry.unit->health > 0 &&
-          probe.rigged_body_count() == 0U &&
+          probe.rigged_body_count() == 0U && soldier_visibility_is_known &&
           unit_should_emit_rigged_body(entry.unit->spawn_type) && !tier_is_minimal &&
           !all_published_soldiers_culled && !prepared_only_casts_shadows) {
         static std::mutex warning_mutex;

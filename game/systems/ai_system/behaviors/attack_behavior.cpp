@@ -27,11 +27,33 @@ auto can_advance_from_gathering(const AIContext& context, int ready_units) -> bo
   if (marches_only_in_waves(context)) {
     return false;
   }
+
+  if (context.wave.committed) {
+    return true;
+  }
   return context.state == AIState::Attacking ||
          (context.state == AIState::Gathering &&
           ready_units >= context.strategy_config.reactive_attack_size &&
           context.strategy_config.aggression_modifier >=
               k_gathering_advance_aggression_threshold);
+}
+
+constexpr float k_siege_superiority_ratio = 1.5F;
+
+auto wave_objective_in_reach(const AIContext& context,
+                             const std::vector<const ContactSnapshot*>& nearby)
+    -> const ContactSnapshot* {
+
+  if (!context.wave.committed || context.wave.target_id == 0) {
+    return nullptr;
+  }
+  for (const auto* contact : nearby) {
+    if (contact->id == context.wave.target_id && contact->is_building &&
+        contact->health > 0) {
+      return contact;
+    }
+  }
+  return nullptr;
 }
 
 auto select_strategic_objective(const AISnapshot& snapshot,
@@ -109,7 +131,8 @@ void AttackBehavior::execute(const AISnapshot& snapshot,
   if (snapshot.visible_enemies.empty()) {
 
     constexpr int MIN_UNITS_FOR_SCOUTING = 3;
-    if (context.state == AIState::Attacking && !marches_only_in_waves(context) &&
+    if ((context.state == AIState::Attacking || context.wave.committed) &&
+        !marches_only_in_waves(context) &&
         static_cast<int>(ready_units.size()) >=
             std::max(MIN_UNITS_FOR_SCOUTING,
                      context.strategy_config.reactive_attack_size)) {
@@ -353,6 +376,12 @@ void AttackBehavior::execute(const AISnapshot& snapshot,
                                                              group_center_z,
                                                              context,
                                                              m_last_target);
+
+  if (const auto* objective = wave_objective_in_reach(context, nearby_enemies);
+      objective != nullptr && assessment.force_ratio >= k_siege_superiority_ratio) {
+
+    target_info.target_id = objective->id;
+  }
 
   if (target_info.target_id == 0) {
     return;

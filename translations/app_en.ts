@@ -7323,16 +7323,20 @@ Builders reap it for the food that recruits civilians</translation>
         <translation>Select your marketplace to trade.</translation>
     </message>
     <message>
-        <source>Marketplace can trade only wood, stone, or iron.</source>
-        <translation>Marketplace can trade only wood, stone, or iron.</translation>
-    </message>
-    <message>
         <source>Not enough gold to buy %1.</source>
         <translation>Not enough gold to buy %1.</translation>
     </message>
     <message>
         <source>Not enough %1 to sell.</source>
         <translation>Not enough %1 to sell.</translation>
+    </message>
+    <message>
+        <source>food</source>
+        <translation>food</translation>
+    </message>
+    <message>
+        <source>The marketplace does not trade that.</source>
+        <translation>The marketplace does not trade that.</translation>
     </message>
 </context>
 <context>

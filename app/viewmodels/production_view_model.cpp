@@ -26,6 +26,9 @@ namespace {
 
 auto trade_resource_from_key(QStringView key)
     -> std::optional<Game::Systems::ResourceType> {
+  if (key == QLatin1String("food")) {
+    return Game::Systems::ResourceType::Food;
+  }
   if (key == QLatin1String("wood")) {
     return Game::Systems::ResourceType::Wood;
   }
@@ -39,6 +42,9 @@ auto trade_resource_from_key(QStringView key)
 }
 
 auto trade_resource_label(QStringView key) -> QString {
+  if (key == QLatin1String("food")) {
+    return QCoreApplication::translate("ProductionViewModel", "food");
+  }
   if (key == QLatin1String("wood")) {
     return QCoreApplication::translate("ProductionViewModel", "wood");
   }
@@ -162,7 +168,7 @@ auto ProductionViewModel::trade(const QString& resource_key,
 
   const auto resource_type = trade_resource_from_key(resource_key);
   if (!resource_type.has_value()) {
-    emit refused(tr("Marketplace can trade only wood, stone, or iron."));
+    emit refused(tr("The marketplace does not trade that."));
     return false;
   }
 

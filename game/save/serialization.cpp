@@ -375,6 +375,7 @@ auto Serialization::serialize_entity(const Entity* entity) -> QJsonObject {
     production_obj["time_remaining"] = production->time_remaining;
     production_obj["produced_count"] = production->produced_count;
     production_obj["max_units"] = production->max_units;
+    production_obj["manpower_ceiling"] = production->manpower_ceiling;
     production_obj["product_type"] = QString::fromStdString(
         Game::Units::troop_typeToString(production->product_type));
     production_obj["rally_x"] = production->rally_x;
@@ -1216,6 +1217,7 @@ void Serialization::deserialize_entity(Entity* entity, const QJsonObject& json) 
         static_cast<float>(production_obj["time_remaining"].toDouble());
     production->produced_count = production_obj["produced_count"].toInt(0);
     production->max_units = production_obj["max_units"].toInt(0);
+    production->manpower_ceiling = production_obj["manpower_ceiling"].toInt(0);
     production->product_type = Game::Units::troop_typeFromString(
         production_obj["product_type"].toString().toStdString());
     production->rally_x = static_cast<float>(production_obj["rally_x"].toDouble());

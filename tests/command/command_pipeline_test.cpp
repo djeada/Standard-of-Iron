@@ -676,6 +676,33 @@ TEST(CommandPipelineTest, TwoHomesCannotBeRaisedOnTopOfEachOther) {
       << "a home clear of its neighbour's footprint is a legal site";
 }
 
+TEST(CommandPipelineTest, AWoodcutterDoesNotReserveGroundForABuilding) {
+  Match match;
+  auto [woodcutter, cutting] = spawn_builder(match, 1);
+  static_cast<void>(woodcutter);
+  cutting->product_type = std::string(Game::Systems::k_builder_product_cut_tree);
+  cutting->has_construction_site = true;
+  cutting->construction_site_x = 10.0F;
+  cutting->construction_site_z = 10.0F;
+  cutting->has_task_target = true;
+  cutting->task_target_id = 77U;
+
+  EXPECT_EQ(Game::Systems::assess_ground(match.session.world(), "home", 10.0F, 10.0F),
+            Game::Systems::GroundVerdict::Clear)
+      << "a worker cutting a tree is not a building site standing in the way";
+
+  auto [mason, raising] = spawn_builder(match, 1);
+  static_cast<void>(mason);
+  raising->product_type = std::string("home");
+  raising->has_construction_site = true;
+  raising->construction_site_x = 30.0F;
+  raising->construction_site_z = 30.0F;
+
+  EXPECT_EQ(Game::Systems::assess_ground(match.session.world(), "home", 32.0F, 30.0F),
+            Game::Systems::GroundVerdict::Occupied)
+      << "a home already going up next door still holds its ground";
+}
+
 TEST(CommandPipelineTest, NothingIsBuiltOnTheRiver) {
   Match match;
   match.session.terrain().restore_from_serialized(

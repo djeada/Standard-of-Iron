@@ -702,6 +702,7 @@ add_library(
     app/world/unit_queries.cpp
     app/world/visibility_coordinator.cpp
     app/world/world_feedback.cpp
+    app/world/world_feedback_events.cpp
     # app/audio -- cue routing and the QML-facing audio proxy.
     app/audio/audio_coordinator.cpp
     app/audio/audio_resource_loader.cpp

@@ -100,6 +100,11 @@ void DefendBehavior::execute(const AISnapshot& snapshot,
       continue;
     }
 
+    if (entity.is_commander) {
+
+      continue;
+    }
+
     if (entity.is_assault) {
       continue;
     }

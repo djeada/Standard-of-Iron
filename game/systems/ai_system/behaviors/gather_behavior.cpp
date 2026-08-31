@@ -56,6 +56,10 @@ void GatherBehavior::execute(const AISnapshot& snapshot,
   }
 
   for (const auto* entity : collect_attack_force_units(snapshot, context)) {
+    if (marches_with_the_wave(entity->id, context)) {
+
+      continue;
+    }
     GatherGroup* group = &gather_groups.front();
     if (garrison_per_base) {
       float best_distance_sq = std::numeric_limits<float>::infinity();

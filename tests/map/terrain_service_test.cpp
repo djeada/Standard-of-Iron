@@ -996,11 +996,6 @@ TEST_F(TerrainServiceTest, ProceduralScatterOptOutsSuppressTheirSpecies) {
     map_def.biome.procedural_iron_ore_enabled = false;
     map_def.biome.procedural_trees_enabled = false;
 
-    out_biome = map_def.biome;
-    map_def.biome.procedural_boulders_enabled = false;
-    map_def.biome.procedural_iron_ore_enabled = false;
-    map_def.biome.procedural_trees_enabled = false;
-
     auto& terrain = Game::Map::TerrainService::instance();
     terrain.initialize(map_def);
     return terrain.get_height_map();

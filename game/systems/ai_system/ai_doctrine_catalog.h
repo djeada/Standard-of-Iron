@@ -69,6 +69,10 @@ struct TownPlan {
   std::vector<TownPlanStep> steps;
 
   [[nodiscard]] auto wall_step_count() const -> int;
+
+  [[nodiscard]] auto step_count(std::string_view building) const -> int;
+
+  [[nodiscard]] auto engine_step_count() const -> int;
 };
 
 struct AIDoctrine {

@@ -7323,16 +7323,20 @@ Baumeister ernten es als Nahrung, die Zivilisten rekrutiert</translation>
         <translation>Wähle deinen Marktplatz aus, um zu handeln.</translation>
     </message>
     <message>
-        <source>Marketplace can trade only wood, stone, or iron.</source>
-        <translation>Der Marktplatz handelt nur mit Holz, Stein oder Eisen.</translation>
-    </message>
-    <message>
         <source>Not enough gold to buy %1.</source>
         <translation>Nicht genug Gold, um %1 zu kaufen.</translation>
     </message>
     <message>
         <source>Not enough %1 to sell.</source>
         <translation>Nicht genug %1 zum Verkaufen.</translation>
+    </message>
+    <message>
+        <source>food</source>
+        <translation>Nahrung</translation>
+    </message>
+    <message>
+        <source>The marketplace does not trade that.</source>
+        <translation>Der Marktplatz handelt damit nicht.</translation>
     </message>
 </context>
 <context>

@@ -389,6 +389,23 @@ auto compute_macro_targets(const Game::Systems::AI::AISnapshot& snapshot,
                                 std::max(0, ctx.strategy_config.reserve_units);
   targets.home_count = std::max(targets.home_count, 2 + army_the_doctrine_wants);
 
+  if (const auto* plan = doctrine != nullptr ? doctrine->town_plan : nullptr;
+      plan != nullptr) {
+
+    targets.home_count = std::max(targets.home_count, plan->step_count("home"));
+    targets.barracks_count =
+        std::max(targets.barracks_count, plan->step_count("barracks"));
+    targets.defense_tower_count =
+        std::max(targets.defense_tower_count, plan->step_count("defense_tower"));
+    targets.wall_segment_count =
+        std::max(targets.wall_segment_count, plan->wall_step_count());
+    targets.marketplace_count =
+        std::max(targets.marketplace_count, plan->step_count("marketplace"));
+    targets.farm_count = std::max(targets.farm_count, plan->step_count("farm"));
+    targets.catapult_count =
+        std::max(targets.catapult_count, plan->engine_step_count());
+  }
+
   if (snapshot.has_resource_snapshot &&
       snapshot.resources.get(Game::Systems::ResourceType::Food) < k_food_reserve) {
     targets.farm_count = std::max(targets.farm_count, ctx.farm_count + 1);
@@ -397,8 +414,8 @@ auto compute_macro_targets(const Game::Systems::AI::AISnapshot& snapshot,
   if (ctx.home_civilians_remaining == 0) {
 
     targets.home_count = std::max(targets.home_count, ctx.home_count + 2);
-    if (ctx.civilian_count == 0 &&
-        ctx.recruitment_manpower_available < cheapest_recruit_cost(ctx)) {
+
+    if (ctx.recruitment_manpower_available < cheapest_recruit_cost(ctx)) {
       targets.raise_homes_first = true;
     }
   }

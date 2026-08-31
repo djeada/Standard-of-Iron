@@ -1,5 +1,6 @@
 #include "barracks.h"
 
+#include <algorithm>
 #include <memory>
 
 #include "../core/component.h"
@@ -7,6 +8,9 @@
 #include "../core/ownership_constants.h"
 #include "../core/world.h"
 #include "../systems/building_collision_registry.h"
+#include "../systems/civilian_delivery_system.h"
+#include "../systems/nation_registry.h"
+#include "../systems/production_service.h"
 #include "../systems/troop_profile_service.h"
 #include "building_spawn_setup.h"
 #include "troop_config.h"
@@ -14,6 +18,28 @@
 #include "units/unit.h"
 
 namespace Game::Units {
+
+namespace {
+
+auto manpower_ceiling_for(Game::Systems::NationID nation_id, int authored) -> int {
+
+  const auto* nation = Game::Systems::NationRegistry::instance().get_nation(nation_id);
+  if (nation == nullptr) {
+    return authored;
+  }
+  int dearest = 0;
+  for (const auto& troop : nation->available_troops) {
+    if (is_commander_troop(troop.unit_type) ||
+        Game::Systems::recruiting_building_for(troop.unit_type) !=
+            SpawnType::Barracks) {
+      continue;
+    }
+    dearest = std::max(dearest, troop.cost);
+  }
+  return std::max(authored, dearest + Game::Systems::k_civilian_delivery_reserve_grant);
+}
+
+} // namespace
 
 Barracks::Barracks(Engine::Core::World& world)
     : Unit(world, "barracks") {
@@ -65,6 +91,7 @@ void Barracks::init(const SpawnParams& params) {
       prod->product_type = TroopType::Archer;
       prod->build_time = 10.0F;
       prod->max_units = params.max_population;
+      prod->manpower_ceiling = manpower_ceiling_for(nation_id, params.max_population);
       prod->manpower_available = params.is_initial_spawn ? params.max_population : 0;
       prod->in_progress = false;
       prod->time_remaining = 0.0F;

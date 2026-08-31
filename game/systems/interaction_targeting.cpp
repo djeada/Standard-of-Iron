@@ -91,7 +91,7 @@ auto building_action(const InteractionTargetingRequest& request,
   if (request.has_civilians && Game::Units::is_recruitment_building(unit.spawn_type)) {
     const auto* production = entity.get_component<Engine::Core::ProductionComponent>();
     if (production != nullptr &&
-        production->manpower_available < production->max_units) {
+        production->manpower_available < production->manpower_limit()) {
       return InteractionAction::Deliver;
     }
   }

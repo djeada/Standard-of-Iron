@@ -481,17 +481,20 @@ TEST_F(ProductionManagerTest,
   EXPECT_TRUE(state.value("has_marketplace").toBool());
   EXPECT_EQ(state.value("trade_quantity").toInt(), 10);
   EXPECT_EQ(state.value("nation_id").toString(), QStringLiteral("roman_republic"));
+  EXPECT_EQ(buy_prices.value("food").toInt(), 10);
   EXPECT_EQ(buy_prices.value("wood").toInt(), 12);
   EXPECT_EQ(buy_prices.value("stone").toInt(), 15);
   EXPECT_EQ(buy_prices.value("iron").toInt(), 20);
+  EXPECT_EQ(sell_prices.value("food").toInt(), 5);
   EXPECT_EQ(sell_prices.value("wood").toInt(), 6);
   EXPECT_EQ(sell_prices.value("stone").toInt(), 8);
   EXPECT_EQ(sell_prices.value("iron").toInt(), 12);
 }
 
-TEST_F(ProductionManagerTest, MarketplaceSystemTradesWoodStoneAndIronForGold) {
+TEST_F(ProductionManagerTest, MarketplaceSystemTradesEveryResourceForGold) {
   auto& resources = Game::Systems::PlayerResourceRegistry::instance();
   resources.set(1, Game::Systems::ResourceType::Gold, 100);
+  resources.set(1, Game::Systems::ResourceType::Food, 5);
   resources.set(1, Game::Systems::ResourceType::Wood, 15);
   resources.set(1, Game::Systems::ResourceType::Stone, 20);
   resources.set(1, Game::Systems::ResourceType::Iron, 25);
@@ -519,6 +522,15 @@ TEST_F(ProductionManagerTest, MarketplaceSystemTradesWoodStoneAndIronForGold) {
   EXPECT_TRUE(marketplace.sell_resource(world, 1, Game::Systems::ResourceType::Iron));
   EXPECT_EQ(resources.get(1, Game::Systems::ResourceType::Gold), 108);
   EXPECT_EQ(resources.get(1, Game::Systems::ResourceType::Iron), 15);
+
+  EXPECT_TRUE(marketplace.buy_resource(world, 1, Game::Systems::ResourceType::Food))
+      << "gold buys bread as readily as it buys iron";
+  EXPECT_EQ(resources.get(1, Game::Systems::ResourceType::Gold), 98);
+  EXPECT_EQ(resources.get(1, Game::Systems::ResourceType::Food), 15);
+
+  EXPECT_TRUE(marketplace.sell_resource(world, 1, Game::Systems::ResourceType::Food));
+  EXPECT_EQ(resources.get(1, Game::Systems::ResourceType::Gold), 103);
+  EXPECT_EQ(resources.get(1, Game::Systems::ResourceType::Food), 5);
 }
 
 TEST_F(ProductionManagerTest, BuilderConstructionPreviewRotationCarriesIntoQueuedSite) {

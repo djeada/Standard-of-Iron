@@ -338,6 +338,20 @@ auto authored_doctrine(std::string_view commander_id) -> const AIDoctrine* {
   return found == value.doctrines.end() ? nullptr : &found->second;
 }
 
+auto TownPlan::step_count(std::string_view building) const -> int {
+  int count = 0;
+  for (const auto& step : steps) {
+    if (step.building == building) {
+      ++count;
+    }
+  }
+  return count;
+}
+
+auto TownPlan::engine_step_count() const -> int {
+  return step_count("catapult") + step_count("ballista");
+}
+
 auto TownPlan::wall_step_count() const -> int {
   int count = 0;
   for (const auto& step : steps) {

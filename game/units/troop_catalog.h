@@ -45,7 +45,7 @@ struct TroopCombatStats {
   bool can_ranged = false;
   bool can_melee = true;
 
-  float max_stamina = 100.0F;
+  float max_stamina = 200.0F;
   float stamina_regen_rate = 10.0F;
   float stamina_depletion_rate = 20.0F;
 };

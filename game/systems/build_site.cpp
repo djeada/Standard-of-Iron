@@ -11,6 +11,7 @@
 #include "../map/terrain.h"
 #include "../map/terrain_service.h"
 #include "../units/spawn_type.h"
+#include "builder_product_types.h"
 #include "building_collision_registry.h"
 
 namespace Game::Systems {
@@ -134,6 +135,13 @@ reserved_footprint(const std::string& building_type,
          std::abs(site.center_z - z) < k_same_site_epsilon;
 }
 
+[[nodiscard]] auto reserves_ground(const std::string& product_type) -> bool {
+
+  return !is_gather_builder_product(product_type) &&
+         product_type != k_builder_product_repair &&
+         product_type != k_builder_product_dismantle;
+}
+
 [[nodiscard]] auto pending_sites(const Engine::Core::World& world,
                                  std::span<const Engine::Core::EntityID> crew)
     -> std::vector<BuildingFootprint> {
@@ -146,7 +154,7 @@ reserved_footprint(const std::string& building_type,
     const auto* builder = world.try_get<Engine::Core::BuilderProductionComponent>(id);
     if (builder == nullptr || !builder->has_construction_site ||
         builder->construction_site_entity_id != 0 || builder->product_type.empty() ||
-        is_crew(id)) {
+        !reserves_ground(builder->product_type) || is_crew(id)) {
       continue;
     }
     sites.push_back(reserved_footprint(builder->product_type,
