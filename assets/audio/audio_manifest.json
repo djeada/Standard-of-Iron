@@ -1627,6 +1627,39 @@
       }
     },
     {
+      "id": "sfx.build.placement_rejected",
+      "path": "sfx/build/placement_rejected.ogg",
+      "category": "sfx",
+      "priority": 6,
+      "cooldown_ms": 400,
+      "load_policy": "startup",
+      "tags": {
+        "source": "generated"
+      }
+    },
+    {
+      "id": "sfx.build.construction_started",
+      "path": "sfx/build/construction_started.ogg",
+      "category": "sfx",
+      "priority": 4,
+      "cooldown_ms": 500,
+      "load_policy": "startup",
+      "tags": {
+        "source": "generated"
+      }
+    },
+    {
+      "id": "sfx.build.construction_complete",
+      "path": "sfx/build/construction_complete.ogg",
+      "category": "sfx",
+      "priority": 7,
+      "cooldown_ms": 500,
+      "load_policy": "startup",
+      "tags": {
+        "source": "generated"
+      }
+    },
+    {
       "id": "sfx.build.unit_queued",
       "path": "sfx/build/unit_queued.ogg",
       "category": "sfx",
@@ -1679,6 +1712,17 @@
       "load_policy": "startup",
       "tags": {
         "source": "synth"
+      }
+    },
+    {
+      "id": "sfx.alert.objective_complete",
+      "path": "sfx/alerts/objective_complete.ogg",
+      "category": "sfx",
+      "priority": 8,
+      "cooldown_ms": 1000,
+      "load_policy": "startup",
+      "tags": {
+        "source": "generated"
       }
     },
     {

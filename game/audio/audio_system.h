@@ -59,6 +59,7 @@ struct AudioEvent {
   int priority = AudioConstants::DEFAULT_PRIORITY;
   AudioCategory category = AudioCategory::SFX;
   bool crossfade = false;
+  std::string cue_id;
   std::uint64_t load_serial = 0;
 
   AudioEvent(AudioEventType t,
@@ -67,14 +68,16 @@ struct AudioEvent {
              bool l = false,
              int p = AudioConstants::DEFAULT_PRIORITY,
              AudioCategory cat = AudioCategory::SFX,
-             bool cf = false)
+             bool cf = false,
+             std::string cue = {})
       : type(t)
       , resource_id(std::move(id))
       , volume(vol)
       , loop(l)
       , priority(p)
       , category(cat)
-      , crossfade(cf) {}
+      , crossfade(cf)
+      , cue_id(std::move(cue)) {}
 };
 
 class AudioSystem {
@@ -88,7 +91,8 @@ public:
                   float volume = AudioConstants::DEFAULT_VOLUME,
                   bool loop = false,
                   int priority = AudioConstants::DEFAULT_PRIORITY,
-                  AudioCategory category = AudioCategory::SFX);
+                  AudioCategory category = AudioCategory::SFX,
+                  std::string cue_id = {});
   void play_music(const std::string& music_id,
                   float volume = AudioConstants::DEFAULT_VOLUME,
                   Game::Audio::MusicTransition transition =
