@@ -9,6 +9,8 @@
 
 class Theme : public QObject {
   Q_OBJECT
+  QML_ELEMENT
+  QML_SINGLETON
 
   Q_PROPERTY(QColor bg READ bg CONSTANT)
   Q_PROPERTY(QColor bgShade READ bgShade CONSTANT)

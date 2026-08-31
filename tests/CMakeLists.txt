@@ -289,6 +289,8 @@ add_executable(
     map/mission_victory_rules_test.cpp
     map/wave_archetype_catalog_test.cpp
     map/map_catalog_test.cpp
+    map/mission_catalog_test.cpp
+    map/mission_map_reachability_test.cpp
     map/campaign_loader_test.cpp
     map/campaign_roster_test.cpp
     map/campaign_content_integration_test.cpp
@@ -723,7 +725,10 @@ endif()
 # test module is unavailable so a minimal Qt install still builds the suite.
 find_package(Qt${QT_VERSION_MAJOR} QUIET COMPONENTS QuickTest)
 if(TARGET Qt${QT_VERSION_MAJOR}::QuickTest)
-    add_executable(
+    # qt_add_executable, not add_executable: it runs the finalizer that imports
+    # the static QML plugins the app modules ship, which is what lets this binary
+    # resolve StandardOfIron.Core, .Game and .Views the way the game does.
+    qt_add_executable(
         design_system_qml_tests
         ui/design_system_qml_test.cpp
         ${CMAKE_SOURCE_DIR}/design_resources.qrc
@@ -737,7 +742,12 @@ if(TARGET Qt${QT_VERSION_MAJOR}::QuickTest)
             Qt${QT_VERSION_MAJOR}::Qml
             Qt${QT_VERSION_MAJOR}::Quick
             Qt${QT_VERSION_MAJOR}::QuickTest
+            # The app QML this binary instantiates -- the spectator HUD, the
+            # inspector, the commander message panel -- imports
+            # StandardOfIron.Core and StandardOfIron.Views, so the libraries
+            # backing those modules have to be here for the import to resolve.
             ui_shell
+            $<$<TARGET_EXISTS:soi_qml_views>:soi_qml_views>
     )
     target_include_directories(design_system_qml_tests PRIVATE ${CMAKE_SOURCE_DIR})
     set_target_properties(

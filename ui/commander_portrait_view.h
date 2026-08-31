@@ -1,5 +1,6 @@
 #pragma once
 
+#include <QQmlEngine>
 #include <QQuickFramebufferObject>
 #include <QString>
 
@@ -22,6 +23,7 @@ class Unit;
 
 class CommanderPortraitView : public QQuickFramebufferObject {
   Q_OBJECT
+  QML_ELEMENT
 
   Q_PROPERTY(
       QString troopType READ troop_type WRITE set_troop_type NOTIFY troop_type_changed)

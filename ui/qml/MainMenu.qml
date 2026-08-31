@@ -5,6 +5,7 @@ import StandardOfIron 1.0
 import StandardOfIron.Core 1.0 as Core
 import StandardOfIron.Design 1.0 as Design
 import "ui_audio.js" as UiAudio
+import StandardOfIron.Core 1.0
 
 Item {
     id: root
@@ -23,6 +24,7 @@ Item {
     readonly property color bronze: hs.bronze
 
     signal open_skirmish
+    signal open_missions
     signal open_campaign
     signal open_tutorial
     signal open_help
@@ -43,6 +45,8 @@ Item {
             return;
         if (m.idStr === "skirmish")
             root.open_skirmish();
+        else if (m.idStr === "missions")
+            root.open_missions();
         else if (m.idStr === "campaign")
             root.open_campaign();
         else if (m.idStr === "tutorial")
@@ -104,6 +108,15 @@ Item {
         }
 
         ListElement {
+            idStr: "missions"
+            title: QT_TR_NOOP("Missions")
+            subtitle: QT_TR_NOOP("One small field, one order to carry out")
+            detail: QT_TR_NOOP("Detail")
+            requiresGame: false
+            accent: "#7C5F8F"
+        }
+
+        ListElement {
             idStr: "campaign"
             title: QT_TR_NOOP("Campaign")
             subtitle: QT_TR_NOOP("March through the Second Punic War")
@@ -132,7 +145,7 @@ Item {
 
         ListElement {
             idStr: "save"
-            title: QT_TR_NOOP("Save Game")
+            title: QT_TR_NOOP("Save game")
             subtitle: QT_TR_NOOP("Record the current campaign state")
             detail: QT_TR_NOOP("Archive")
             requiresGame: true
@@ -141,7 +154,7 @@ Item {
 
         ListElement {
             idStr: "load"
-            title: QT_TR_NOOP("Load Game")
+            title: QT_TR_NOOP("Load game")
             subtitle: QT_TR_NOOP("Return to a saved command")
             detail: QT_TR_NOOP("Return")
             requiresGame: false

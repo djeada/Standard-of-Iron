@@ -3,6 +3,7 @@
 class QOpenGLDebugLogger;
 
 #include <QPointer>
+#include <QQmlEngine>
 #include <QQuickFramebufferObject>
 #include <QString>
 #include <QStringList>
@@ -20,6 +21,7 @@ class GameEngine;
 
 class GLView : public QQuickFramebufferObject {
   Q_OBJECT
+  QML_ELEMENT
 public:
   GLView();
 

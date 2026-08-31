@@ -139,7 +139,7 @@ auto SkirmishRuntimeCoordinator::finalize_load(
   ctx.loading_overlay_min_duration_ms = 1000;
   ctx.loading_overlay_timer.restart();
   ctx.finalize_progress_after_overlay = true;
-  ctx.show_objectives_after_loading = ctx.is_campaign_mission;
+  ctx.show_objectives_after_loading = ctx.is_mission_match;
   return {};
 }
 

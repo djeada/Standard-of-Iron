@@ -1,6 +1,6 @@
 import QtQuick 2.15
 import QtTest 1.15
-import StandardOfIron 1.0 as Core
+import StandardOfIron.Core 1.0 as Core
 import StandardOfIron.Design 1.0
 import "../../../ui/qml"
 

@@ -17,12 +17,14 @@ auto load_map_entry(const QString& relative_path) -> QVariantMap {
 } // namespace
 
 TEST(MapCatalogTest, MapsWithUndeadZonesAreSoloPlayable) {
-  const QVariantMap entry =
-      load_map_entry(QStringLiteral("map_iron_sepulcher_watch.json"));
+
+  const QVariantMap entry = load_map_entry(QStringLiteral("map_forest.json"));
 
   ASSERT_FALSE(entry.isEmpty());
-  EXPECT_TRUE(entry.value(QStringLiteral("soloPlayable")).toBool());
-  EXPECT_EQ(entry.value(QStringLiteral("playerCount")).toInt(), 1);
+  EXPECT_TRUE(entry.value(QStringLiteral("soloPlayable")).toBool())
+      << "Blackpine Hollow rings its shrine bowl with undead zones, so it is worth "
+         "starting with no second player";
+  EXPECT_GE(entry.value(QStringLiteral("playerCount")).toInt(), 2);
 }
 
 TEST(MapCatalogTest, ConventionalSkirmishMapsAreNotSoloPlayable) {

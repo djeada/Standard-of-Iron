@@ -15,8 +15,9 @@ Item {
     property string missionName: ""
     property string durationText: ""
     property var armies: []
-    property var on_close: null
-    property var on_return_to_main_menu: null
+
+    signal closed
+    signal return_to_main_menu_requested
 
     function show() {
         visible = true;
@@ -26,13 +27,11 @@ Item {
 
     function hide() {
         visible = false;
-        if (on_close)
-            on_close();
+        summaryOverlay.closed();
     }
 
     function return_to_main_menu() {
-        if (on_return_to_main_menu)
-            on_return_to_main_menu();
+        summaryOverlay.return_to_main_menu_requested();
     }
 
     function spectator_winning_team(roster) {
@@ -120,7 +119,7 @@ Item {
 
     function current_mission_name() {
         var setup = summaryOverlay.engine !== null ? summaryOverlay.engine.setup : null;
-        if (!setup || !setup.is_campaign_mission || !setup.current_mission_objectives)
+        if (!setup || !setup.is_mission_match || !setup.current_mission_objectives)
             return "";
         var objectives = setup.current_mission_objectives();
         return objectives && objectives.title ? objectives.title : "";

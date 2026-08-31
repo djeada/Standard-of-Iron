@@ -2,6 +2,7 @@ import QtQuick 2.15
 import QtQuick.Controls 2.15
 import StandardOfIron 1.0
 import StandardOfIron.Design 1.0 as Design
+import StandardOfIron.Core 1.0
 
 Rectangle {
     id: root
@@ -16,6 +17,8 @@ Rectangle {
     property var base_owners: ({})
     property string focused_base_key: ""
     property bool bases_interactive: false
+
+    property string legend_text: bases_interactive ? qsTr("Click a base to reseat") : qsTr("Bases in player colours")
 
     signal base_activated(string key)
 
@@ -147,7 +150,7 @@ Rectangle {
         anchors.bottom: parent.bottom
         height: legend_label.implicitHeight + Theme.spacingSmall
         color: "#cc140f0b"
-        visible: preview_image.visible
+        visible: preview_image.visible && root.legend_text.length > 0
 
         Text {
             id: legend_label
@@ -157,7 +160,7 @@ Rectangle {
             anchors.verticalCenter: parent.verticalCenter
             anchors.leftMargin: Theme.spacingSmall
             anchors.rightMargin: Theme.spacingSmall
-            text: root.bases_interactive ? qsTr("Click a base to reseat") : qsTr("Bases in player colours")
+            text: root.legend_text
             color: Theme.textSubLite
             font.pixelSize: Design.Typography.caption
             font.italic: true

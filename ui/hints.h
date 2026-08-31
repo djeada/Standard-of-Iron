@@ -11,6 +11,8 @@
 
 class UiHints : public QObject {
   Q_OBJECT
+  QML_ELEMENT
+  QML_SINGLETON
 
   Q_PROPERTY(QVariantMap showing READ showing_map NOTIFY changed)
   Q_PROPERTY(QVariantMap enabled READ enabled_map NOTIFY changed)

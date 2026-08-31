@@ -4,6 +4,7 @@ import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.3
 import StandardOfIron 1.0
 import StandardOfIron.Design 1.0 as Design
+import StandardOfIron.Core 1.0
 
 Item {
     id: root
@@ -1151,7 +1152,7 @@ Item {
                             spacing: Theme.spacingSmall
 
                             Label {
-                                text: qsTr("Standard of Iron - RTS Game")
+                                text: qsTr("Standard of Iron - RTS game")
                                 color: Theme.textMain
                                 font.pixelSize: Design.Typography.bodyLarge
                                 font.bold: true

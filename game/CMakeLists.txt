@@ -451,6 +451,7 @@ add_library(
     map/mission_victory_rules.cpp
     map/wave_archetype_catalog.cpp
     map/map_catalog.cpp
+    map/mission_catalog.cpp
     mission/mission_commander_setup.cpp
     mission/mission_definition_view.cpp
     mission/tutorial_director.cpp

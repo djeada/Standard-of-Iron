@@ -762,8 +762,8 @@ auto main(int argc, char* argv[]) -> int {
         "screenshot", "Render one frame, write a PNG to this path, then exit.", "path");
     QCommandLineOption const screenshot_view_opt(
         "screenshot-view",
-        "Surface to capture: menu | skirmish | campaign | settings | load | save "
-        "| briefing | hud | rpg | commander | tutorial.",
+        "Surface to capture: menu | skirmish | missions | campaign | settings | load "
+        "| save | briefing | hud | rpg | commander | tutorial.",
         "view",
         "menu");
     QCommandLineOption const screenshot_delay_opt(
@@ -977,41 +977,9 @@ auto main(int argc, char* argv[]) -> int {
   engine->addImportPath("qrc:/StandardOfIron/ui/qml");
   engine->addImportPath("qrc:/");
   qInfo() << "Registering QML types...";
-  qmlRegisterType<GLView>("StandardOfIron", 1, 0, "GLView");
-  qmlRegisterType<CommanderPortraitView>(
-      "StandardOfIron", 1, 0, "CommanderPortraitView");
-  qmlRegisterType<CampaignMapView>("StandardOfIron", 1, 0, "CampaignMapView");
 
-  qmlRegisterSingletonType<Theme>("StandardOfIron", 1, 0, "Theme", &Theme::create);
-  qmlRegisterSingletonType<UiPreferences>(
-      "StandardOfIron", 1, 0, "UiPreferences", &UiPreferences::create);
-  qmlRegisterSingletonType<UiHints>(
-      "StandardOfIron", 1, 0, "UiHints", &UiHints::create);
-
-  qmlRegisterSingletonType<InputBindings>(
-      "StandardOfIron", 1, 0, "InputBindings", &InputBindings::create);
-  qmlRegisterSingletonType<EdgeScroll>(
-      "StandardOfIron", 1, 0, "EdgeScroll", &EdgeScroll::create);
-  qmlRegisterSingletonType<GameSpeeds>(
-      "StandardOfIron", 1, 0, "GameSpeeds", &GameSpeeds::create);
-  qmlRegisterSingletonType<IconArtLibrary>(
-      "StandardOfIron", 1, 0, "IconArt", &IconArtLibrary::create);
   qmlRegisterSingletonType<LoadingTips>(
       "StandardOfIron", 1, 0, "LoadingTips", &LoadingTips::create);
-
-  qmlRegisterSingletonType<Theme>("StandardOfIron.Core", 1, 0, "Theme", &Theme::create);
-  qmlRegisterSingletonType<UiPreferences>(
-      "StandardOfIron.Core", 1, 0, "UiPreferences", &UiPreferences::create);
-  qmlRegisterSingletonType<UiHints>(
-      "StandardOfIron.Core", 1, 0, "UiHints", &UiHints::create);
-  qmlRegisterSingletonType<InputBindings>(
-      "StandardOfIron.Core", 1, 0, "InputBindings", &InputBindings::create);
-  qmlRegisterSingletonType<EdgeScroll>(
-      "StandardOfIron.Core", 1, 0, "EdgeScroll", &EdgeScroll::create);
-  qmlRegisterSingletonType<GameSpeeds>(
-      "StandardOfIron.Core", 1, 0, "GameSpeeds", &GameSpeeds::create);
-  qmlRegisterSingletonType<IconArtLibrary>(
-      "StandardOfIron.Core", 1, 0, "IconArt", &IconArtLibrary::create);
 
   qmlRegisterSingletonType(QUrl("qrc:/StandardOfIron/ui/qml/StyleGuide.qml"),
                            "StandardOfIron",

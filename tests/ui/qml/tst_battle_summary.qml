@@ -183,9 +183,9 @@ TestCase {
         var engine = testCase.standardMatch("victory");
         var host = testCase.makeSummary(engine);
         var closed = 0;
-        host.summary.on_close = function () {
-            closed += 1;
-        };
+        host.summary.closed.connect(function () {
+                closed += 1;
+            });
         var report = findChild(host.summary, "battleReport");
         report.dismissed();
         compare(closed, 1);
@@ -198,9 +198,9 @@ TestCase {
         var engine = testCase.standardMatch("victory");
         var host = testCase.makeSummary(engine);
         var asked = 0;
-        host.summary.on_return_to_main_menu = function () {
-            asked += 1;
-        };
+        host.summary.return_to_main_menu_requested.connect(function () {
+                asked += 1;
+            });
         var report = findChild(host.summary, "battleReport");
         report.menuRequested();
         compare(asked, 1);
@@ -217,7 +217,7 @@ TestCase {
             property var stats_by_owner: ({})
             property string mission_title: ""
             property QtObject setup: QtObject {
-                readonly property bool is_campaign_mission: mission_title !== ""
+                readonly property bool is_mission_match: mission_title !== ""
 
                 function current_mission_objectives() {
                     return {

@@ -1,0 +1,120 @@
+{
+  "id": "the_timber_levy",
+  "menu_order": 10,
+  "title": "The Timber Levy",
+  "summary": "Fill the levy out of the Pinewater cut: four hundred of timber and two hundred and ten of stone, cut and carried home before the column comes back through.",
+  "map_path": ":/assets/maps/map_pinewater_cut.json",
+  "player_setup": {
+    "nation": "roman_republic",
+    "faction": "roman",
+    "color": "red",
+    "starting_units": [
+      {
+        "type": "builder",
+        "count": 4,
+        "position": {
+          "x": 19.0,
+          "z": 50.0
+        }
+      },
+      {
+        "type": "swordsman",
+        "count": 3,
+        "position": {
+          "x": 24.0,
+          "z": 44.0
+        }
+      },
+      {
+        "type": "archer",
+        "count": 2,
+        "position": {
+          "x": 17.0,
+          "z": 43.0
+        }
+      }
+    ],
+    "starting_buildings": [],
+    "starting_resources": {
+      "gold": 260,
+      "food": 140,
+      "wood": 0,
+      "stone": 0
+    }
+  },
+  "ai_setups": [],
+  "victory_mode": "all",
+  "victory_conditions": [
+    {
+      "type": "accumulate_resources",
+      "resources": {
+        "wood": 400,
+        "stone": 210
+      },
+      "description": "Cut and carry home four hundred of timber and two hundred and ten of stone. The near stand will not cover it; the deep pines will."
+    }
+  ],
+  "optional_objectives": [
+    {
+      "type": "accumulate_resources",
+      "resources": {
+        "wood": 640,
+        "stone": 315
+      },
+      "description": "Overcut the levy. A surplus is the only thing a quartermaster has ever thanked anyone for."
+    }
+  ],
+  "defeat_conditions": [
+    {
+      "type": "lose_commander",
+      "description": "The officer of the detail falls. Nobody else here can sign for the levy."
+    },
+    {
+      "type": "only_commander_remaining",
+      "description": "The crew is gone and the officer is standing in a clearing with an axe. That is not a work party."
+    }
+  ],
+  "events": [],
+  "commander_messages": [
+    {
+      "id": "timber_open",
+      "speaker": "roman_legion_organizer",
+      "pose": "dismissive",
+      "trigger": {
+        "type": "mission_start",
+        "delay": 2.0
+      },
+      "text": "Four hundred of timber and two hundred of stone, and the near stand was stripped by the last detail. That means the deep pines, which means the long road, which means whatever is living in the deep pines gets a look at us. Split the crew. Escort the far one.",
+      "voice_cue": "alert.commander_message",
+      "duration": 9.0,
+      "priority": 100
+    },
+    {
+      "id": "timber_victory",
+      "speaker": "roman_legion_organizer",
+      "pose": "cynical",
+      "trigger": {
+        "type": "mission_victory",
+        "delay": 1.0
+      },
+      "text": "Levy filled. Stack it by the road and let the carts argue about it. We cut a wood down to feed a siege that has not started yet — remember that the next time somebody calls this the quiet posting.",
+      "voice_cue": "alert.commander_message",
+      "duration": 9.0,
+      "priority": 120
+    },
+    {
+      "id": "timber_defeat",
+      "speaker": "roman_legion_organizer",
+      "pose": "dismissive",
+      "trigger": {
+        "type": "mission_defeat",
+        "delay": 1.0
+      },
+      "text": "Leave the axes. Leave the carts. A detail that cannot walk out of its own cut does not get to carry anything.",
+      "voice_cue": "alert.commander_message",
+      "duration": 9.0,
+      "priority": 120
+    }
+  ],
+  "theme": "The wood is worth more than the men who cut it. Somebody decided that in a tent, far from here."
+}
