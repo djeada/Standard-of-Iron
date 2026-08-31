@@ -71,6 +71,10 @@ auto is_local_engagement_assignment(const EntitySnapshot& entity,
 
 auto is_local_responder(const EntitySnapshot& entity,
                         const AIContext& context) -> bool {
+
+  if (entity.is_commander) {
+    return false;
+  }
   if (!picks_its_own_fights(entity) || entity.is_assault ||
       is_harass_unit(entity.id, context)) {
     return false;

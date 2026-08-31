@@ -13,11 +13,11 @@ enum class HumanoidMotionState {
 };
 
 inline constexpr float k_humanoid_walk_cycle_distance = 1.5833F;
-inline constexpr float k_humanoid_run_cycle_distance = 2.8333F;
+inline constexpr float k_humanoid_run_cycle_distance = 3.0F;
 
 struct HumanoidLocomotionTuning {
   float reference_walk_speed{2.2F};
-  float reference_run_speed{4.8F};
+  float reference_run_speed{4.7F};
   float walk_speed_multiplier{1.0F};
   float idle_cycle_time{1.6F};
   float locomotion_blend_tau{0.12F};
@@ -181,7 +181,7 @@ struct HumanoidLocomotionPoseInputs {
   float stance_width{1.0F};
   float arm_swing_amplitude{1.0F};
   float reference_walk_speed{2.35F};
-  float reference_run_speed{5.10F};
+  float reference_run_speed{4.70F};
   float ground_y{0.0F};
   float foot_y_offset{0.0F};
   PoseVec3 base_foot_l{};

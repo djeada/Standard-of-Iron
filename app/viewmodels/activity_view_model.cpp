@@ -13,6 +13,7 @@
 #include "app/world/focus_target.h"
 #include "app/world/unit_queries.h"
 #include "app/world/visibility_coordinator.h"
+#include "app/world/world_feedback_events.h"
 #include "game/core/component.h"
 #include "game/core/event_manager.h"
 #include "game/core/world.h"
@@ -35,18 +36,6 @@ auto activity_to_variant(const Game::Systems::UnitActivity& activity) -> QVarian
       QString::fromUtf8(state.data(), static_cast<int>(state.size()));
   result[QStringLiteral("queued")] = activity.queued_orders;
   return result;
-}
-
-auto feedback_kind_of(Engine::Core::WorldFeedbackKind kind) -> App::Core::FeedbackKind {
-  switch (kind) {
-  case Engine::Core::WorldFeedbackKind::Reserve:
-    return App::Core::FeedbackKind::Reserve;
-  case Engine::Core::WorldFeedbackKind::Heal:
-    return App::Core::FeedbackKind::Heal;
-  case Engine::Core::WorldFeedbackKind::Resource:
-    break;
-  }
-  return App::Core::FeedbackKind::Resource;
 }
 
 } // namespace
@@ -264,23 +253,11 @@ void ActivityViewModel::record_hit(const Engine::Core::CombatHitEvent& event,
     return;
   }
 
-  App::Core::WorldFeedbackTick hit;
-  hit.anchor = event.target_id;
-  hit.kind = App::Core::FeedbackKind::Damage;
-  hit.style = style;
-  const bool is_building = target->has_component<Engine::Core::BuildingComponent>();
-  hit.x = transform->position.x;
-  hit.y = transform->position.y +
-          (is_building ? std::max(2.4F, transform->scale.y * 0.9F) : 1.8F);
-  hit.z = transform->position.z;
-  hit.amount = event.damage;
-  hit.severity = target_unit->max_health > 0
-                     ? std::clamp(static_cast<float>(event.damage) /
-                                      static_cast<float>(target_unit->max_health),
-                                  0.0F,
-                                  1.5F)
-                     : 0.0F;
-  hit.killing_blow = event.is_killing_blow;
+  auto mapped = App::Core::combat_feedback_tick(*world, event, style);
+  if (!mapped.has_value()) {
+    return;
+  }
+  App::Core::WorldFeedbackTick hit = *mapped;
   const auto audience = m_context.audience();
   hit.incoming = audience.is_local(target_unit->owner_id);
   hit.outgoing = audience.is_local(event.attacker_owner_id);
@@ -311,42 +288,11 @@ void ActivityViewModel::record_world_feedback(
     return;
   }
 
-  App::Core::WorldFeedbackTick tick;
-  tick.anchor = event.anchor_id;
-  tick.kind = feedback_kind_of(event.kind);
-  tick.style = App::Core::FeedbackStyle::Tick;
-  tick.amount = event.amount;
-  tick.severity = event.severity;
-  tick.resource = event.resource;
-  tick.paired_resource = event.paired_resource;
-  tick.paired_amount = event.paired_amount;
-  tick.outgoing = event.amount < 0;
-  tick.incoming = event.amount > 0;
-
-  bool positioned = false;
-  if (event.anchor_id != Engine::Core::NULL_ENTITY) {
-    if (auto* anchor = world->get_entity(event.anchor_id)) {
-      if (const auto* transform =
-              anchor->get_component<Engine::Core::TransformComponent>()) {
-        const bool is_building =
-            anchor->has_component<Engine::Core::BuildingComponent>();
-        tick.x = transform->position.x;
-        tick.y = transform->position.y +
-                 (is_building ? std::max(2.4F, transform->scale.y * 0.9F) : 1.8F);
-        tick.z = transform->position.z;
-        positioned = true;
-      }
-    }
+  auto mapped = App::Core::world_feedback_tick(*world, event);
+  if (!mapped.has_value()) {
+    return;
   }
-  if (!positioned) {
-    if (!event.has_position) {
-      return;
-    }
-    tick.anchor = Engine::Core::NULL_ENTITY;
-    tick.x = event.x;
-    tick.y = event.y + 1.8F;
-    tick.z = event.z;
-  }
+  App::Core::WorldFeedbackTick tick = *mapped;
 
   if (auto* selection_system = world->get_system<Game::Systems::SelectionSystem>();
       selection_system != nullptr && tick.anchor != Engine::Core::NULL_ENTITY) {

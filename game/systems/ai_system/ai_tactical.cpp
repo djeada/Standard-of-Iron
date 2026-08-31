@@ -14,6 +14,22 @@
 
 namespace Game::Systems::AI {
 
+namespace {
+
+auto threat_weight_of(const ContactSnapshot& contact) -> float {
+  if (!contact.is_building) {
+    return 1.0F;
+  }
+
+  if (contact.spawn_type == Game::Units::SpawnType::DefenseTower) {
+    return 1.5F;
+  }
+
+  return 0.1F;
+}
+
+} // namespace
+
 auto TacticalUtils::assess_engagement(
     const std::vector<const EntitySnapshot*>& friendlies,
     const std::vector<const ContactSnapshot*>& enemies,
@@ -31,6 +47,7 @@ auto TacticalUtils::assess_engagement(
 
   float total_friendly_health = 0.0F;
   float total_enemy_health = 0.0F;
+  float weighted_enemy_health = 0.0F;
   int valid_friendlies = 0;
   int valid_enemies = 0;
 
@@ -44,8 +61,10 @@ auto TacticalUtils::assess_engagement(
 
   for (const auto* enemy : enemies) {
     if (enemy->max_health > 0) {
-      total_enemy_health +=
+      const float health_ratio =
           static_cast<float>(enemy->health) / static_cast<float>(enemy->max_health);
+      total_enemy_health += health_ratio;
+      weighted_enemy_health += threat_weight_of(*enemy) * health_ratio;
       ++valid_enemies;
     }
   }
@@ -57,8 +76,7 @@ auto TacticalUtils::assess_engagement(
 
   float const friendly_strength =
       static_cast<float>(result.friendly_count) * result.avg_friendly_health;
-  float const enemy_strength =
-      static_cast<float>(result.enemy_count) * result.avg_enemy_health;
+  float const enemy_strength = weighted_enemy_health;
 
   if (enemy_strength < 0.01F) {
     result.force_ratio = 10.0F;

@@ -1,5 +1,7 @@
 #include "production_behavior.h"
 
+#include <QDebug>
+
 #include <algorithm>
 #include <limits>
 #include <unordered_map>
@@ -468,6 +470,40 @@ void ProductionBehavior::execute(const AISnapshot& snapshot,
           break;
         }
       }
+    }
+
+    static const bool trace_recruiting = qEnvironmentVariableIsSet("SOI_RECRUIT_TRACE");
+    if (trace_recruiting) {
+      QString shortlist;
+      for (const auto* candidate : candidates) {
+        shortlist += QStringLiteral(" %1[%2%3]")
+                         .arg(QString::fromStdString(
+                             Game::Units::troop_typeToString(candidate->unit_type)))
+                         .arg(arm_is_at_establishment(
+                                  context, recruitment, arm_of(*nation, *candidate))
+                                  ? QStringLiteral("full")
+                                  : QStringLiteral("open"))
+                         .arg(affordable(*candidate, prod, snapshot.resources)
+                                  ? QStringLiteral(",afford")
+                                  : QStringLiteral(",poor"));
+      }
+      qInfo().nospace() << "SOI_RECRUIT_TRACE p" << context.player_id << " barracks "
+                        << entity->id << " wants "
+                        << QString::fromStdString(troop_type != nullptr
+                                                      ? Game::Units::troop_typeToString(
+                                                            troop_type->unit_type)
+                                                      : std::string("none"))
+                        << " buying "
+                        << QString::fromStdString(
+                               buying != nullptr
+                                   ? Game::Units::troop_typeToString(buying->unit_type)
+                                   : std::string("none"))
+                        << " manpower " << prod.manpower_available << " purse food "
+                        << snapshot.resources.get(ResourceType::Food) << " wood "
+                        << snapshot.resources.get(ResourceType::Wood) << " stone "
+                        << snapshot.resources.get(ResourceType::Stone) << " iron "
+                        << snapshot.resources.get(ResourceType::Iron) << " candidates"
+                        << shortlist;
     }
 
     if (buying == nullptr) {

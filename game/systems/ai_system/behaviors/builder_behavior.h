@@ -1,5 +1,8 @@
 #pragma once
 
+#include <cstdint>
+#include <unordered_map>
+#include <unordered_set>
 #include <vector>
 
 #include "../ai_behavior.h"
@@ -33,6 +36,8 @@ private:
                           std::vector<Engine::Core::EntityID>& available_builders,
                           std::vector<AICommand>& out_commands);
 
+  void review_stalled_workers(const AISnapshot& snapshot, float now);
+
   [[nodiscard]] auto is_deferred(const char* building_type,
                                  float game_time) const -> bool;
 
@@ -55,6 +60,19 @@ private:
   int m_last_plan_slot = -1;
   int m_last_plan_slot_repeats = 0;
   std::vector<int> m_blocked_plan_slots;
+
+  struct WorkerWatch {
+    std::uint64_t task_target_id = 0;
+    float site_x = 0.0F;
+    float site_z = 0.0F;
+    float since = 0.0F;
+  };
+
+  std::unordered_map<Engine::Core::EntityID, WorkerWatch> m_worker_watch;
+
+  std::unordered_map<std::uint64_t, float> m_sour_nodes;
+
+  std::unordered_set<Engine::Core::EntityID> m_stalled_builders;
 };
 
 } // namespace Game::Systems::AI
