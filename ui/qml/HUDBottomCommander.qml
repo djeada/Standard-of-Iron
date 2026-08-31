@@ -3,6 +3,7 @@ import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 import StandardOfIron 1.0
 import StandardOfIron.Design 1.0 as Design
+import StandardOfIron.Core 1.0
 
 RowLayout {
     id: bottomRoot
@@ -524,14 +525,14 @@ RowLayout {
                             }
 
                             background: Rectangle {
-                                color: rallyButton.allowed ? (parent.pressed ? hs.waxDark : (parent.hovered ? hs.waxHover : hs.wax)) : hs.parchmentDark
+                                color: rallyButton.allowed ? (rallyButton.pressed ? hs.waxDark : (rallyButton.hovered ? hs.waxHover : hs.wax)) : hs.parchmentDark
                                 radius: 6
                                 border.color: rallyButton.allowed ? hs.bronze : hs.bronzeDeep
                                 border.width: 2
                             }
 
                             contentItem: Text {
-                                text: parent.text
+                                text: rallyButton.text
                                 color: rallyButton.allowed ? Theme.textMain : Theme.textDim
                                 font.pixelSize: bottomRoot.fpv_mode ? Design.Typography.caption : Design.Typography.label
                                 font.bold: true
@@ -563,14 +564,14 @@ RowLayout {
                             }
 
                             background: Rectangle {
-                                color: bottomRoot.status_value("aura_active", false) ? hs.wax : (auraButton.allowed ? (parent.pressed ? hs.waxDark : (parent.hovered ? hs.waxHover : hs.parchmentLight)) : hs.parchmentDark)
+                                color: bottomRoot.status_value("aura_active", false) ? hs.wax : (auraButton.allowed ? (auraButton.pressed ? hs.waxDark : (auraButton.hovered ? hs.waxHover : hs.parchmentLight)) : hs.parchmentDark)
                                 radius: 6
                                 border.color: bottomRoot.status_value("aura_active", false) ? Theme.accent : (auraButton.allowed ? hs.bronze : hs.bronzeDeep)
                                 border.width: 2
                             }
 
                             contentItem: Text {
-                                text: parent.text
+                                text: auraButton.text
                                 color: auraButton.allowed || bottomRoot.status_value("aura_active", false) ? Theme.textMain : Theme.textDim
                                 font.pixelSize: bottomRoot.fpv_mode ? Design.Typography.caption : Design.Typography.label
                                 font.bold: true

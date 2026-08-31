@@ -7,6 +7,7 @@
 #include <QObject>
 #include <QPoint>
 #include <QPointF>
+#include <QQmlEngine>
 #include <QStringList>
 #include <QThread>
 #include <QTimer>

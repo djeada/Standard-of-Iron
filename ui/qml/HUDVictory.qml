@@ -28,7 +28,7 @@ Design.IronOutcomeOverlay {
     held: victoryOverlay.game_ready() && game.commander_message && game.commander_message.holds_outcome
     victoryState: victoryOverlay.victory_state()
     isTutorial: victoryOverlay.game_ready() && !!game.tutorial && game.tutorial.finished
-    isCampaignMission: victoryOverlay.game_ready() && game.setup.is_campaign_mission
+    isCampaignMission: victoryOverlay.game_ready() && game.setup.is_mission_match
     campaignCompleted: victoryOverlay.game_ready() && game.setup.campaign_completed === true
     factionId: victoryOverlay.game_ready() ? game.local_player_nation : ""
 
@@ -54,10 +54,10 @@ Design.IronOutcomeOverlay {
         factionId: victoryOverlay.factionId
         headline: victoryOverlay.headline
         subtitle: victoryOverlay.subtitle
-        on_close: function () {
+        onClosed: {
             victoryOverlay.showingSummary = false;
         }
-        on_return_to_main_menu: function () {
+        onReturn_to_main_menu_requested: {
             victoryOverlay.reset();
             victoryOverlay.return_to_main_menu_requested();
         }

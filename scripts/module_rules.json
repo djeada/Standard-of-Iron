@@ -403,7 +403,8 @@
         "game/map/mission_stage_tracker",
         "game/map/mission_victory_rules",
         "game/map/wave_archetype_catalog",
-        "game/map/map_catalog"
+        "game/map/map_catalog",
+        "game/map/mission_catalog"
       ],
       "may_use": [
         "domain_types",

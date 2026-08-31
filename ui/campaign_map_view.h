@@ -2,6 +2,7 @@
 
 #include <QHash>
 #include <QPointF>
+#include <QQmlEngine>
 #include <QQuickFramebufferObject>
 #include <QString>
 #include <QVariantList>
@@ -13,6 +14,7 @@
 
 class CampaignMapView : public QQuickFramebufferObject {
   Q_OBJECT
+  QML_ELEMENT
   Q_PROPERTY(
       float orbit_yaw READ orbit_yaw WRITE set_orbit_yaw NOTIFY orbit_yaw_changed)
   Q_PROPERTY(float orbit_pitch READ orbit_pitch WRITE set_orbit_pitch NOTIFY

@@ -3,6 +3,7 @@ import QtTest 1.15
 import StandardOfIron 1.0
 import StandardOfIron.Design 1.0
 import "../../../ui/qml"
+import StandardOfIron.Core 1.0
 
 TestCase {
     id: testCase

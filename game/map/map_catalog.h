@@ -27,12 +27,12 @@ signals:
 
 private:
   void load_next_map();
-  void ensure_campaign_map_paths_loaded();
+  void ensure_mission_map_paths_loaded();
 
   QStringList m_pending_files;
   QVariantList m_maps;
-  QSet<QString> m_campaign_map_paths;
-  bool m_campaign_map_paths_loaded = false;
+  QSet<QString> m_mission_map_paths;
+  bool m_mission_map_paths_loaded = false;
   bool m_loading = false;
 };
 

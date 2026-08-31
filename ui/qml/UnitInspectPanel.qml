@@ -238,6 +238,8 @@ Item {
                         title: qsTr("In the field")
 
                         Grid {
+                            id: combatStatGrid
+
                             width: parent.width
                             columns: width > Design.Metrics.space24 * 16 ? 3 : 2
                             spacing: Design.Metrics.space8
@@ -266,7 +268,7 @@ Item {
                                 delegate: Column {
                                     required property var modelData
 
-                                    width: (parent.width - parent.spacing * (parent.columns - 1)) / parent.columns
+                                    width: (combatStatGrid.width - combatStatGrid.spacing * (combatStatGrid.columns - 1)) / combatStatGrid.columns
                                     spacing: Design.Metrics.space2
 
                                     Text {

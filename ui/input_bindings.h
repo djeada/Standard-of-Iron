@@ -11,6 +11,8 @@
 
 class InputBindings : public QObject {
   Q_OBJECT
+  QML_ELEMENT
+  QML_SINGLETON
 
   Q_PROPERTY(QVariantList actions READ actions NOTIFY bindings_changed)
   Q_PROPERTY(bool hasConflicts READ has_conflicts NOTIFY bindings_changed)

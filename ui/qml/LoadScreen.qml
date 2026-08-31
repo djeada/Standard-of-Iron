@@ -2,6 +2,7 @@ import QtQuick 2.15
 import QtQuick.Controls 2.15
 import StandardOfIron 1.0
 import StandardOfIron.Design 1.0 as Design
+import StandardOfIron.Core 1.0
 
 Rectangle {
     id: load_screen

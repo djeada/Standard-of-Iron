@@ -10,6 +10,8 @@
 
 class UiPreferences : public QObject {
   Q_OBJECT
+  QML_ELEMENT
+  QML_SINGLETON
 
   Q_PROPERTY(qreal uiScale READ ui_scale WRITE set_ui_scale NOTIFY ui_scale_changed)
   Q_PROPERTY(bool reducedMotion READ reduced_motion WRITE set_reduced_motion NOTIFY

@@ -4,6 +4,7 @@ import QtQuick.Window 2.15
 import StandardOfIron 1.0
 import StandardOfIron.Core 1.0 as Core
 import StandardOfIron.Design 1.0 as Design
+import StandardOfIron.Core 1.0
 
 ApplicationWindow {
     id: mainWindow
@@ -16,7 +17,7 @@ ApplicationWindow {
 
     property bool suppress_modals: false
 
-    readonly property bool overlay_active: mainWindow.menu_visible || mapSelect.visible || campaign_screen.visible || save_game_panel.visible || load_game_panel.visible || settingsPanel.visible || objectivesPanel.visible || help_panel.visible || commander_preview.visible
+    readonly property bool overlay_active: mainWindow.menu_visible || mapSelect.visible || missions_screen.visible || campaign_screen.visible || save_game_panel.visible || load_game_panel.visible || settingsPanel.visible || objectivesPanel.visible || help_panel.visible || commander_preview.visible
 
     property bool capture_view_ready: false
     property bool capture_view_settled: false
@@ -29,6 +30,7 @@ ApplicationWindow {
         error_dialog.close();
         mainWindow.menu_visible = (name === "menu");
         mapSelect.visible = (name === "skirmish");
+        missions_screen.visible = (name === "missions");
         campaign_screen.visible = (name === "campaign");
         settingsPanel.visible = (name === "settings");
         load_game_panel.visible = (name === "load");
@@ -96,7 +98,7 @@ ApplicationWindow {
             return;
         if (campaign_screen.visible) {
             game.set_audio_frontend_context("campaign");
-        } else if (mainWindow.menu_visible || mapSelect.visible || (!mainWindow.game_started && (save_game_panel.visible || load_game_panel.visible || settingsPanel.visible || objectivesPanel.visible || help_panel.visible))) {
+        } else if (mainWindow.menu_visible || mapSelect.visible || missions_screen.visible || (!mainWindow.game_started && (save_game_panel.visible || load_game_panel.visible || settingsPanel.visible || objectivesPanel.visible || help_panel.visible))) {
             game.set_audio_frontend_context("menu");
         } else {
             game.set_audio_frontend_context("battle");
@@ -117,7 +119,7 @@ ApplicationWindow {
     visible: true
     LayoutMirroring.enabled: Qt.application.layoutDirection === Qt.RightToLeft
     LayoutMirroring.childrenInherit: true
-    title: qsTr("Standard of Iron - RTS Game")
+    title: qsTr("Standard of Iron - RTS game")
     color: Theme.bg
     Component.onCompleted: {
         Design.UiSound.audioSystem = (typeof game !== 'undefined') ? game.audio_system : null;
@@ -196,7 +198,7 @@ ApplicationWindow {
 
         anchors.fill: parent
         z: 11
-        visible: game_started && !mainWindow.menu_visible && typeof game !== 'undefined' && game.commander.mode_state === "active" && game.cursor_mode !== "place_commander_rally" && game.cursor_mode !== "place_barracks_rally" && !mapSelect.visible && !campaign_screen.visible && !save_game_panel.visible && !load_game_panel.visible && !settingsPanel.visible && !objectivesPanel.visible && !error_dialog.visible
+        visible: game_started && !mainWindow.menu_visible && typeof game !== 'undefined' && game.commander.mode_state === "active" && game.cursor_mode !== "place_commander_rally" && game.cursor_mode !== "place_barracks_rally" && !mapSelect.visible && !missions_screen.visible && !campaign_screen.visible && !save_game_panel.visible && !load_game_panel.visible && !settingsPanel.visible && !objectivesPanel.visible && !error_dialog.visible
         enabled: visible
         acceptedButtons: Qt.NoButton
         hoverEnabled: true
@@ -320,6 +322,10 @@ ApplicationWindow {
             mapSelect.visible = true;
             mainWindow.menu_visible = false;
         }
+        onOpen_missions: function () {
+            missions_screen.visible = true;
+            mainWindow.menu_visible = false;
+        }
         onOpen_campaign: function () {
             campaign_screen.visible = true;
             mainWindow.menu_visible = false;
@@ -431,6 +437,38 @@ ApplicationWindow {
         }
     }
 
+    MissionsScreen {
+        id: missions_screen
+
+        anchors.fill: parent
+        z: 21
+        visible: false
+        onVisibleChanged: {
+            if (visible) {
+                missions_screen.forceActiveFocus();
+                Design.UiSound.panelOpen();
+            } else {
+                Design.UiSound.panelClose();
+            }
+            mainWindow.sync_audio_context();
+        }
+        onMission_chosen: function (file_path) {
+            if (typeof game === 'undefined' || !game.setup.start_mission_file)
+                return;
+            game.setup.start_mission_file(file_path);
+            missions_screen.visible = false;
+            mainWindow.menu_visible = false;
+            mainWindow.game_started = true;
+            mainWindow.game_paused = false;
+            gameViewItem.forceActiveFocus();
+        }
+        onCancelled: function () {
+            Design.UiSound.back();
+            missions_screen.visible = false;
+            mainWindow.menu_visible = true;
+        }
+    }
+
     SaveGamePanel {
         id: save_game_panel
 
@@ -533,7 +571,7 @@ ApplicationWindow {
         onClose_requested: function () {
             Design.UiSound.back();
             objectivesPanel.visible = false;
-            if (typeof game !== 'undefined' && typeof game.setup.is_campaign_mission !== 'undefined' && game.setup.is_campaign_mission && mainWindow.game_started) {
+            if (typeof game !== 'undefined' && typeof game.setup.is_mission_match !== 'undefined' && game.setup.is_mission_match && mainWindow.game_started) {
                 mainWindow.game_paused = false;
                 gameViewItem.set_paused(false);
                 gameViewItem.forceActiveFocus();
@@ -648,7 +686,7 @@ ApplicationWindow {
 
         anchors.fill: parent
         z: 0.5
-        visible: !mainWindow.menu_visible && !mapSelect.visible
+        visible: !mainWindow.menu_visible && !mapSelect.visible && !missions_screen.visible
         enabled: visible
 
         MouseArea {
@@ -776,7 +814,7 @@ ApplicationWindow {
         function onCurrent_mission_changed() {
             if (mainWindow.suppress_modals)
                 return;
-            if (typeof game !== 'undefined' && typeof game.setup.is_campaign_mission !== 'undefined' && game.setup.is_campaign_mission && !game.is_loading) {
+            if (typeof game !== 'undefined' && typeof game.setup.is_mission_match !== 'undefined' && game.setup.is_mission_match && !game.is_loading) {
                 mainWindow.game_paused = true;
                 gameViewItem.set_paused(true);
                 objectivesPanel.visible = true;

@@ -9,6 +9,8 @@
 
 class GameSpeeds : public QObject {
   Q_OBJECT
+  QML_ELEMENT
+  QML_SINGLETON
 
   Q_PROPERTY(QVariantList options READ options CONSTANT)
   Q_PROPERTY(qreal minimum READ minimum CONSTANT)
