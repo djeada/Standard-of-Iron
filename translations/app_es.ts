@@ -7323,16 +7323,20 @@ Los constructores lo siegan para la comida que recluta civiles</translation>
         <translation>Selecciona tu mercado para comerciar.</translation>
     </message>
     <message>
-        <source>Marketplace can trade only wood, stone, or iron.</source>
-        <translation>El mercado solo puede comerciar con madera, piedra o hierro.</translation>
-    </message>
-    <message>
         <source>Not enough gold to buy %1.</source>
         <translation>No hay suficiente oro para comprar %1.</translation>
     </message>
     <message>
         <source>Not enough %1 to sell.</source>
         <translation>No hay suficiente %1 para vender.</translation>
+    </message>
+    <message>
+        <source>food</source>
+        <translation>comida</translation>
+    </message>
+    <message>
+        <source>The marketplace does not trade that.</source>
+        <translation>El mercado no comercia con eso.</translation>
     </message>
 </context>
 <context>

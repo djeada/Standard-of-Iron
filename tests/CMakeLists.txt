@@ -250,6 +250,7 @@ add_executable(
     headless/mission_wave_assault_test.cpp
     headless/ai_skirmish_opening_test.cpp
     headless/ai_duel_match_test.cpp
+    headless/ai_town_plan_test.cpp
     headless/movement_quality_gate_test.cpp
     simulation_main.cpp
 )
@@ -616,6 +617,7 @@ add_executable(
     tools/arena_scenario_runner_test.cpp
     tools/arena_frame_continuity_test.cpp
     tools/arena_panel_population_test.cpp
+    tools/arena_feedback_test.cpp
     tools/arena_unit_spawn_options_test.cpp
     tools/arena_terrain_alignment_test.cpp
     tools/arena_promo_spec_test.cpp
@@ -637,6 +639,7 @@ target_link_libraries(
         game_sim
         arena_scenario_harness
         arena_panels
+        arena_feedback
 )
 soi_register_test_binary(arena_tests)
 if(TARGET bake_creature_assets)

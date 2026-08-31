@@ -30,6 +30,7 @@
 #include "game/systems/ai_system/behaviors/local_engagement_behavior.h"
 #include "game/systems/ai_system/behaviors/production_behavior.h"
 #include "game/systems/ai_system/behaviors/squad_discipline_behavior.h"
+#include "game/systems/default_content.h"
 #include "game/systems/nation_registry.h"
 #include "game/systems/owner_registry.h"
 #include "game/systems/player_resource_registry.h"
@@ -598,6 +599,26 @@ TEST_F(AISystemTest, CommandFilterKeepsNonDuplicateUnitsInMultiUnitMoveCommands)
   ASSERT_EQ(second_pass.front().move_target_x.size(), 1U);
   EXPECT_FLOAT_EQ(second_pass.front().move_target_x.front(), 35.0F);
   EXPECT_FLOAT_EQ(second_pass.front().move_target_z.front(), 35.0F);
+}
+
+TEST_F(AISystemTest, CommandFilterForwardsOrdersThatCarryNoUnits) {
+  Game::Systems::AI::AICommandFilter filter;
+
+  Game::Systems::AI::AICommand trade;
+  trade.type = Game::Systems::AI::AICommandType::TradeResource;
+  trade.trade_resource = Game::Systems::ResourceType::Iron;
+  trade.trade_is_purchase = true;
+
+  auto forwarded = filter.filter({trade}, 0.0F);
+
+  ASSERT_EQ(forwarded.size(), 1U)
+      << "a marketplace order names no unit, so the duplicate filter must let it "
+         "through instead of dropping the town's whole gold trade";
+  EXPECT_EQ(forwarded.front().type, Game::Systems::AI::AICommandType::TradeResource);
+  EXPECT_EQ(forwarded.front().trade_resource, Game::Systems::ResourceType::Iron);
+
+  auto again = filter.filter({trade}, 0.1F);
+  EXPECT_EQ(again.size(), 1U) << "a second lot at the same market is not a duplicate";
 }
 
 TEST_F(AISystemTest, BuilderBehaviorRequestsBarracksWhenNoneExist) {
@@ -3322,6 +3343,135 @@ TEST_F(AISystemTest, DeactivatedAssaultComponentReturnsAUnitToTheStandingArmy) {
 }
 
 } // namespace
+
+TEST_F(AISystemTest, ADoctrineThatWantsHorseRecruitsHorse) {
+  Game::Systems::initialize_default_content(Game::Systems::NationRegistry::instance());
+  Game::Systems::NationRegistry::instance().set_player_nation(
+      3, Game::Systems::NationID::RomanRepublic);
+  Game::Systems::AI::AIDoctrine doctrine;
+  doctrine.recruitment.cavalry_share = 0.5F;
+  doctrine.recruitment.ranged_share = 0.2F;
+  doctrine.recruitment.siege_share = 0.0F;
+  doctrine.recruitment.preferred = {"horse_swordsman"};
+
+  Game::Systems::AI::ProductionBehavior behavior;
+
+  Game::Systems::AI::AISnapshot snapshot;
+  snapshot.player_id = 3;
+  snapshot.game_time = 60.0F;
+  snapshot.friendly_units = {make_barracks(50, 40.0F, 40.0F),
+                             make_builder(11, 38.0F, 40.0F),
+                             make_builder(12, 39.0F, 41.0F),
+                             make_builder(13, 41.0F, 41.0F),
+                             make_builder(14, 42.0F, 41.0F),
+                             make_builder(15, 43.0F, 41.0F),
+                             make_builder(16, 44.0F, 41.0F)};
+  snapshot.has_resource_snapshot = true;
+  snapshot.resources.set(Game::Systems::ResourceType::Food, 400);
+  snapshot.resources.set(Game::Systems::ResourceType::Wood, 400);
+  snapshot.resources.set(Game::Systems::ResourceType::Stone, 400);
+  snapshot.resources.set(Game::Systems::ResourceType::Iron, 400);
+
+  Game::Systems::AI::AIContext context;
+  context.player_id = 3;
+  context.max_troops_per_player = 500;
+  context.strategy_config.doctrine = &doctrine;
+  context.strategy_config.target_builder_count = 0;
+
+  Game::Systems::AI::AISnapshotBuilder::attach_nation(
+      snapshot, context.player_id, Game::Systems::NationRegistry::instance());
+  Game::Systems::AI::AIReasoner::update_context(snapshot, context);
+  context.strategy_config.doctrine = &doctrine;
+  context.strategy_config.target_builder_count = 0;
+
+  std::vector<Game::Systems::AI::AICommand> commands;
+  behavior.execute(snapshot, context, 5.0F, commands);
+
+  bool asked_for_horse = false;
+  std::string asked;
+  for (const auto& command : commands) {
+    if (command.type != Game::Systems::AI::AICommandType::StartProduction) {
+      continue;
+    }
+    asked += Game::Units::troop_typeToString(command.product_type) + " ";
+    asked_for_horse = asked_for_horse ||
+                      Game::Units::is_cavalry(
+                          Game::Units::spawn_typeFromTroopType(command.product_type));
+  }
+  EXPECT_TRUE(asked_for_horse)
+      << "a doctrine that asks for half its army on horseback must recruit horse; it "
+         "asked for: "
+      << (asked.empty() ? std::string("nothing") : asked);
+}
+
+TEST_F(AISystemTest, AHorseDoctrineStillRecruitsHorseOnceTheTownIsGrown) {
+  Game::Systems::initialize_default_content(Game::Systems::NationRegistry::instance());
+  Game::Systems::NationRegistry::instance().set_player_nation(
+      3, Game::Systems::NationID::RomanRepublic);
+
+  Game::Systems::AI::AIDoctrine doctrine;
+  doctrine.recruitment.cavalry_share = 0.30F;
+  doctrine.recruitment.ranged_share = 0.30F;
+  doctrine.recruitment.siege_share = 0.0F;
+  doctrine.recruitment.preferred = {"horse_swordsman", "swordsman"};
+
+  Game::Systems::AI::ProductionBehavior behavior;
+
+  Game::Systems::AI::AISnapshot snapshot;
+  snapshot.player_id = 3;
+  snapshot.game_time = 900.0F;
+  snapshot.friendly_units = {make_barracks(50, 40.0F, 40.0F)};
+  for (Engine::Core::EntityID id = 11; id <= 20; ++id) {
+    snapshot.friendly_units.push_back(
+        make_builder(id, 38.0F + static_cast<float>(id % 4), 41.0F));
+  }
+  for (Engine::Core::EntityID id = 30; id <= 31; ++id) {
+    snapshot.friendly_units.push_back(make_unit(id, 42.0F, 42.0F));
+  }
+  for (Engine::Core::EntityID id = 40; id <= 42; ++id) {
+    auto archer = make_unit(id, 43.0F, 43.0F);
+    archer.spawn_type = Game::Units::SpawnType::Archer;
+    snapshot.friendly_units.push_back(archer);
+  }
+  for (Engine::Core::EntityID id = 50; id <= 53; ++id) {
+    auto engine = make_unit(id, 44.0F, 44.0F);
+    engine.spawn_type = Game::Units::SpawnType::Catapult;
+    snapshot.friendly_units.push_back(engine);
+  }
+  snapshot.has_resource_snapshot = true;
+  snapshot.resources.set(Game::Systems::ResourceType::Food, 330);
+  snapshot.resources.set(Game::Systems::ResourceType::Wood, 300);
+  snapshot.resources.set(Game::Systems::ResourceType::Stone, 200);
+  snapshot.resources.set(Game::Systems::ResourceType::Iron, 180);
+
+  Game::Systems::AI::AIContext context;
+  context.player_id = 3;
+  context.max_troops_per_player = 500;
+
+  Game::Systems::AI::AISnapshotBuilder::attach_nation(
+      snapshot, context.player_id, Game::Systems::NationRegistry::instance());
+  Game::Systems::AI::AIReasoner::update_context(snapshot, context);
+  context.strategy_config.doctrine = &doctrine;
+
+  std::vector<Game::Systems::AI::AICommand> commands;
+  behavior.execute(snapshot, context, 5.0F, commands);
+
+  std::string asked;
+  bool asked_for_horse = false;
+  for (const auto& command : commands) {
+    if (command.type != Game::Systems::AI::AICommandType::StartProduction) {
+      continue;
+    }
+    asked += Game::Units::troop_typeToString(command.product_type) + " ";
+    asked_for_horse = asked_for_horse ||
+                      Game::Units::is_cavalry(
+                          Game::Units::spawn_typeFromTroopType(command.product_type));
+  }
+  EXPECT_TRUE(asked_for_horse)
+      << "a grown town whose doctrine wants a third of its army mounted must recruit "
+         "horse; it asked for: "
+      << (asked.empty() ? std::string("nothing") : asked);
+}
 
 TEST_F(AISystemTest, BuilderBehaviorTurnsPlannedWallsIntoTheSettlementFrame) {
   Game::Systems::AI::TownPlan plan;

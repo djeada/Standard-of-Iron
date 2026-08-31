@@ -121,6 +121,10 @@ constexpr float k_commander_march_health = 0.6F;
 constexpr float k_home_ground_radius = AIBaseManager::k_base_defend_radius;
 constexpr float k_home_ground_radius_sq = k_home_ground_radius * k_home_ground_radius;
 
+constexpr float k_commander_campaign_radius = 35.0F;
+constexpr float k_commander_campaign_radius_sq =
+    k_commander_campaign_radius * k_commander_campaign_radius;
+
 auto leads_from_the_front(const AIStrategyConfig& config) -> bool {
   switch (config.strategy) {
   case AIStrategy::Aggressive:
@@ -155,11 +159,17 @@ auto commander_marches_with_army(const AIContext& context,
 
   const float dx = army.x - context.base_pos_x;
   const float dz = army.z - context.base_pos_z;
-  if ((dx * dx + dz * dz) <= k_home_ground_radius_sq) {
+  const float from_home_sq = (dx * dx) + (dz * dz);
+  if (from_home_sq <= k_home_ground_radius_sq) {
     return true;
   }
 
   if (!leads_from_the_front(context.strategy_config) || !context.wave.committed) {
+    return false;
+  }
+
+  if (from_home_sq > k_commander_campaign_radius_sq) {
+
     return false;
   }
   const int escort = static_cast<int>(context.wave.members.size());

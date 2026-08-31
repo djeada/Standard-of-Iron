@@ -1101,7 +1101,14 @@ public:
   bool rally_set{false};
   int villager_cost{1};
   int manpower_available{0};
+
+  int manpower_ceiling{0};
   std::vector<Game::Units::TroopType> production_queue;
+
+  [[nodiscard]] auto manpower_limit() const -> int {
+
+    return manpower_ceiling > 0 ? manpower_ceiling : max_units;
+  }
 };
 
 class MoraleComponent {
@@ -2080,9 +2087,9 @@ public:
 
 class StaminaComponent {
 public:
-  static constexpr float k_run_speed_multiplier = 1.5F;
+  static constexpr float k_run_speed_multiplier = 2.0F;
   static constexpr float k_min_stamina_to_start_run = 10.0F;
-  static constexpr float k_default_max_stamina = 100.0F;
+  static constexpr float k_default_max_stamina = 200.0F;
   static constexpr float k_default_regen_rate = 10.0F;
   static constexpr float k_default_depletion_rate = 20.0F;
 

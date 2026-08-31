@@ -103,7 +103,7 @@ void CivilianDeliverySystem::update(Engine::Core::World* world, float) {
     }
 
     if (barracks_prod->manpower_available + k_civilian_delivery_reserve_grant >
-        barracks_prod->max_units) {
+        barracks_prod->manpower_limit()) {
       to_release.push_back(civilian_id);
       continue;
     }
@@ -112,7 +112,7 @@ void CivilianDeliverySystem::update(Engine::Core::World* world, float) {
                    barracks_id,
                    *barracks_prod,
                    k_civilian_delivery_reserve_grant,
-                   barracks_prod->max_units);
+                   barracks_prod->manpower_limit());
     to_remove.push_back(civilian_id);
   }
 

@@ -164,13 +164,14 @@ auto wave_size_for(const AIContext& context) -> int {
 
 namespace {
 
+constexpr float k_opening_grace_seconds = 420.0F;
+
 auto required_wave_size(const AIContext& context, float game_time) -> int {
   const int authored = wave_size_for(context);
 
-  constexpr float k_opening_grace_seconds = 420.0F;
-  constexpr float k_patience_seconds = 300.0F;
-  constexpr float k_relent_seconds = 120.0F;
-  constexpr int k_smallest_wave = 4;
+  constexpr float k_patience_seconds = 210.0F;
+  constexpr float k_relent_seconds = 90.0F;
+  constexpr int k_smallest_wave = 3;
 
   const float waited =
       game_time - std::max(k_opening_grace_seconds, context.wave.ended_at);
@@ -180,6 +181,16 @@ auto required_wave_size(const AIContext& context, float game_time) -> int {
   const int relented =
       static_cast<int>((waited - k_patience_seconds) / k_relent_seconds) + 1;
   return std::max(k_smallest_wave, authored - relented);
+}
+
+} // namespace
+
+namespace {
+
+auto wave_capacity_for(const AIContext& context, int required) -> int {
+
+  constexpr int k_column_multiple = 2;
+  return std::max(required, wave_size_for(context)) * k_column_multiple;
 }
 
 } // namespace
@@ -199,7 +210,10 @@ auto garrison_target_for(const AIContext& context,
 
   const int by_fraction =
       static_cast<int>(fraction * static_cast<float>(combat_unit_count));
-  const int wanted = std::max(minimum, by_fraction);
+
+  const int half_the_army = combat_unit_count / 2;
+  const int wanted =
+      std::max(minimum, std::min(by_fraction, std::max(minimum, half_the_army)));
 
   const int ceiling = std::max(0, combat_unit_count - std::max(1, keep_free));
 
@@ -213,8 +227,17 @@ void update_attack_wave(const AISnapshot& snapshot, AIContext& context) {
 
   const int required = required_wave_size(context, snapshot.game_time);
 
-  const int garrison_target =
+  int garrison_target =
       garrison_target_for(context, static_cast<int>(candidates.size()), required);
+
+  constexpr float k_drought_seconds = 600.0F;
+  const float without_a_wave =
+      snapshot.game_time - std::max(k_opening_grace_seconds, context.wave.ended_at);
+  if (!context.wave.committed && without_a_wave > k_drought_seconds) {
+
+    garrison_target =
+        std::min(garrison_target, std::max(1, static_cast<int>(candidates.size()) / 3));
+  }
   std::vector<const EntitySnapshot*> by_distance = candidates;
   if (context.has_base_anchor) {
     std::sort(by_distance.begin(),
@@ -258,6 +281,22 @@ void update_attack_wave(const AISnapshot& snapshot, AIContext& context) {
       centre_z += entity->pos_z;
     }
     wave.members = std::move(survivors);
+
+    const std::unordered_set<Engine::Core::EntityID> marching(wave.members.begin(),
+                                                              wave.members.end());
+    const int wave_capacity = wave_capacity_for(context, required);
+    for (const auto* entity : candidates) {
+
+      if (static_cast<int>(wave.members.size()) >= wave_capacity) {
+        break;
+      }
+      if (marching.contains(entity->id) || garrison.contains(entity->id)) {
+        continue;
+      }
+      wave.members.push_back(entity->id);
+      centre_x += entity->pos_x;
+      centre_z += entity->pos_z;
+    }
 
     const int remaining = static_cast<int>(wave.members.size());
 
@@ -307,7 +346,8 @@ void update_attack_wave(const AISnapshot& snapshot, AIContext& context) {
     available.push_back(entity);
   }
 
-  if (static_cast<int>(available.size()) < required) {
+  if (static_cast<int>(available.size()) < required ||
+      !commander_may_attack(context.strategy_config)) {
     return;
   }
 
@@ -326,9 +366,13 @@ void update_attack_wave(const AISnapshot& snapshot, AIContext& context) {
     return;
   }
 
+  const int wave_capacity = wave_capacity_for(context, required);
   wave.members.clear();
   wave.members.reserve(available.size());
   for (const auto* entity : available) {
+    if (static_cast<int>(wave.members.size()) >= wave_capacity) {
+      break;
+    }
     wave.members.push_back(entity->id);
   }
   wave.initial_size = static_cast<int>(wave.members.size());

@@ -9,6 +9,7 @@
 #include <initializer_list>
 #include <limits>
 #include <string>
+#include <unordered_map>
 #include <utility>
 #include <vector>
 
@@ -32,7 +33,7 @@ constexpr const char* BUILDING_TYPE_WALL_SEGMENT = "wall_segment";
 constexpr const char* BUILDING_TYPE_BARRACKS = "barracks";
 constexpr const char* BUILDING_TYPE_MARKETPLACE = "marketplace";
 
-constexpr int k_treasury_worth_a_market = 400;
+constexpr int k_treasury_worth_a_market = 120;
 constexpr const char* BUILDING_TYPE_CATAPULT = "catapult";
 constexpr const char* BUILDING_TYPE_BALLISTA = "ballista";
 constexpr const char* BUILDING_TYPE_FARM = "farm";
@@ -695,6 +696,13 @@ auto planned_settlement_offset(const AIContext& context,
   return {18.0F * std::cos(angle), 0.0F, 18.0F * std::sin(angle)};
 }
 
+using SourNodes = std::unordered_map<std::uint64_t, float>;
+
+auto node_is_sour(const SourNodes& sour, std::uint64_t node_id, float now) -> bool {
+  const auto it = sour.find(node_id);
+  return it != sour.end() && now < it->second;
+}
+
 auto entity_is_worked(const AISnapshot& snapshot,
                       Engine::Core::EntityID target_id) -> bool {
   for (const auto& entity : snapshot.friendly_units) {
@@ -710,6 +718,7 @@ template <typename TakeBuilder>
 void order_harvest(const AISnapshot& snapshot,
                    const AIContext& context,
                    ResourceType resource,
+                   const SourNodes& sour,
                    const TakeBuilder& take_builder,
                    std::vector<AICommand>& out_commands) {
   const char* harvest_type = harvest_type_for_resource(resource);
@@ -719,7 +728,8 @@ void order_harvest(const AISnapshot& snapshot,
   const ResourceNodeSnapshot* closest = nullptr;
   float closest_distance_sq = std::numeric_limits<float>::infinity();
   for (const auto& node : snapshot.resource_nodes) {
-    if (node.reserved || !node_matches_resource(node, resource)) {
+    if (node.reserved || !node_matches_resource(node, resource) ||
+        node_is_sour(sour, node.id, snapshot.game_time)) {
       continue;
     }
     const float dx = node.pos_x - context.base_pos_x;
@@ -982,6 +992,59 @@ void BuilderBehavior::note_construction_order(const char* building_type,
   }
 }
 
+void BuilderBehavior::review_stalled_workers(const AISnapshot& snapshot, float now) {
+
+  constexpr float k_stall_seconds = 40.0F;
+
+  constexpr float k_sour_seconds = 240.0F;
+
+  m_stalled_builders.clear();
+  std::erase_if(m_sour_nodes, [now](const auto& entry) { return now >= entry.second; });
+
+  std::unordered_map<Engine::Core::EntityID, WorkerWatch> surviving;
+  surviving.reserve(m_worker_watch.size());
+
+  for (const auto& entity : snapshot.friendly_units) {
+    if (entity.spawn_type != Game::Units::SpawnType::Builder ||
+        !entity.builder_production.has_component) {
+      continue;
+    }
+    const auto& work = entity.builder_production;
+
+    const bool holds_a_task = work.has_construction_site || work.has_task_target;
+    const bool making_progress =
+        work.in_progress || work.at_construction_site || work.carrying_load;
+    if (!holds_a_task || making_progress) {
+      continue;
+    }
+
+    WorkerWatch watch{.task_target_id = work.task_target_id,
+                      .site_x = work.construction_site_x,
+                      .site_z = work.construction_site_z,
+                      .since = now};
+    if (const auto previous = m_worker_watch.find(entity.id);
+        previous != m_worker_watch.end() &&
+        previous->second.task_target_id == watch.task_target_id &&
+        std::abs(previous->second.site_x - watch.site_x) < 0.5F &&
+        std::abs(previous->second.site_z - watch.site_z) < 0.5F) {
+      watch.since = previous->second.since;
+    }
+    surviving.emplace(entity.id, watch);
+
+    if (now - watch.since < k_stall_seconds) {
+      continue;
+    }
+
+    m_stalled_builders.insert(entity.id);
+    if (watch.task_target_id != 0) {
+
+      m_sour_nodes[watch.task_target_id] = now + k_sour_seconds;
+    }
+  }
+
+  m_worker_watch = std::move(surviving);
+}
+
 void BuilderBehavior::divide_work_parties(const AISnapshot& snapshot,
                                           const AIContext& context,
                                           std::vector<AICommand>& out_commands) const {
@@ -1093,6 +1156,8 @@ void BuilderBehavior::execute(const AISnapshot& snapshot,
   }
   m_construction_timer = 0.0F;
 
+  review_stalled_workers(snapshot, snapshot.game_time);
+
   std::vector<Engine::Core::EntityID> available_builders;
   int busy_site = 0;
   int busy_task = 0;
@@ -1104,13 +1169,20 @@ void BuilderBehavior::execute(const AISnapshot& snapshot,
       continue;
     }
 
-    if (entity.builder_production.has_component &&
+    const bool stalled = m_stalled_builders.contains(entity.id);
+    if (!stalled && entity.builder_production.has_component &&
         (entity.builder_production.has_construction_site ||
          entity.builder_production.has_task_target ||
          entity.builder_production.carrying_load)) {
       busy_site += entity.builder_production.has_construction_site ? 1 : 0;
       busy_task += entity.builder_production.has_task_target ? 1 : 0;
       busy_load += entity.builder_production.carrying_load ? 1 : 0;
+      continue;
+    }
+
+    if (stalled) {
+
+      available_builders.push_back(entity.id);
       continue;
     }
 
@@ -1260,7 +1332,7 @@ void BuilderBehavior::execute(const AISnapshot& snapshot,
 
   PlanStepChoice planned;
 
-  const bool needs_a_field = context.farm_count < target_farms;
+  const bool needs_a_field = standing.farms < target_farms;
   const bool starving = starved_of_food(snapshot);
   const char* preferred = nullptr;
   if (needs_a_field && starving) {
@@ -1291,12 +1363,28 @@ void BuilderBehavior::execute(const AISnapshot& snapshot,
     }
   };
 
+  constexpr int k_roofs_before_the_frame = 2;
+
+  constexpr int k_fields_before_the_frame = 2;
+
+  if (standing.barracks == 0) {
+    wish(BUILDING_TYPE_BARRACKS);
+  }
+  if (standing.homes < k_roofs_before_the_frame) {
+    wish(BUILDING_TYPE_HOME);
+  }
   const bool field_before_plan =
-      needs_a_field && starving &&
-      (!has_plan_step || (planned.building != BUILDING_TYPE_FARM &&
-                          planned.building != BUILDING_TYPE_HOME));
+      needs_a_field && (starving || standing.farms < k_fields_before_the_frame);
   if (field_before_plan) {
     wish(BUILDING_TYPE_FARM);
+  }
+  if (standing.markets < 1 && target_markets > 0 && snapshot.has_resource_snapshot &&
+      snapshot.resources.get(ResourceType::Gold) >= k_treasury_worth_a_market) {
+    wish(BUILDING_TYPE_MARKETPLACE);
+  }
+  if (targets.raise_homes_first && standing.homes < MAX_HOMES) {
+
+    wish(BUILDING_TYPE_HOME);
   }
 
   if (has_plan_step) {
@@ -1309,26 +1397,11 @@ void BuilderBehavior::execute(const AISnapshot& snapshot,
     step.plan_slot = planned.slot;
     intents.push_back(step);
   }
-  if (standing.homes < 2) {
-    wish(BUILDING_TYPE_HOME);
-  }
-  if (standing.barracks == 0) {
-    wish(BUILDING_TYPE_BARRACKS);
-  }
 
-  if (standing.markets < 1 && target_markets > 0 && snapshot.has_resource_snapshot &&
-      snapshot.resources.get(ResourceType::Gold) >= k_treasury_worth_a_market) {
-    wish(BUILDING_TYPE_MARKETPLACE);
-  }
   if (context.barracks_under_threat && standing.towers < target_towers) {
     wish(BUILDING_TYPE_DEFENSE_TOWER);
   }
-  if (targets.raise_homes_first && standing.homes < MAX_HOMES) {
-    wish(BUILDING_TYPE_HOME);
-  }
-  if (needs_a_field && starving && !field_before_plan) {
-    wish(BUILDING_TYPE_FARM);
-  }
+
   for (const char* candidate : unmet_candidates({
            {BUILDING_TYPE_FARM, standing.farms, target_farms},
            {BUILDING_TYPE_BARRACKS, standing.barracks, target_barracks},
@@ -1363,7 +1436,8 @@ void BuilderBehavior::execute(const AISnapshot& snapshot,
   }
 
   if (missing_resource != ResourceType::Count) {
-    order_harvest(snapshot, context, missing_resource, take_builder, out_commands);
+    order_harvest(
+        snapshot, context, missing_resource, m_sour_nodes, take_builder, out_commands);
   }
 
   const char* building_to_construct = chosen != nullptr ? chosen->type : nullptr;

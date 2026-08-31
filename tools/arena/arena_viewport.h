@@ -15,6 +15,7 @@
 #include <optional>
 #include <vector>
 
+#include "arena_feedback.h"
 #include "arena_scenario.h"
 #include "game/core/component.h"
 #include "game/map/map_definition.h"
@@ -374,6 +375,7 @@ private:
   void clear_forced_animation_state(const std::vector<Engine::Core::EntityID>& ids);
   void spawn_terrain_review_structures();
   void draw_debug_overlay(QPainter& painter);
+  void draw_floating_numbers(QPainter& painter);
   void draw_spawn_anchor_marker(QPainter& painter);
   void draw_selection_marquee(QPainter& painter);
   void draw_terrain_normals(QPainter& painter);
@@ -416,6 +418,7 @@ private:
   std::unique_ptr<Render::GL::Renderer> m_renderer;
   bool m_prewarm_unit_templates{false};
   std::unique_ptr<Render::GL::Camera> m_camera;
+  ArenaFeedback m_feedback;
   std::unique_ptr<Render::GL::TerrainSceneProxy> m_terrain_scene;
   std::unique_ptr<Render::GL::TerrainSurfaceManager> m_surface;
   std::unique_ptr<Render::GL::TerrainFeatureManager> m_features;

@@ -7335,16 +7335,20 @@ Builders reap it for the food that recruits civilians</source>
         <translation>اختر سوقك للتجارة.</translation>
     </message>
     <message>
-        <source>Marketplace can trade only wood, stone, or iron.</source>
-        <translation>السوق لا يتاجر إلا بالخشب أو الحجر أو الحديد.</translation>
-    </message>
-    <message>
         <source>Not enough gold to buy %1.</source>
         <translation>لا يكفي الذهب لشراء %1.</translation>
     </message>
     <message>
         <source>Not enough %1 to sell.</source>
         <translation>لا يكفي %1 للبيع.</translation>
+    </message>
+    <message>
+        <source>food</source>
+        <translation>طعام</translation>
+    </message>
+    <message>
+        <source>The marketplace does not trade that.</source>
+        <translation>السوق لا يتاجر بهذا.</translation>
     </message>
 </context>
 <context>

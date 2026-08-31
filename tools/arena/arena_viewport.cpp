@@ -366,6 +366,7 @@ ArenaViewport::ArenaViewport(Game::Session::SessionContext& session, QWidget* pa
 
   auto rendering = RendererBootstrap::initialize_rendering();
   m_world = std::make_unique<Engine::Core::World>();
+  m_feedback.set_world(m_world.get());
   m_renderer = std::move(rendering.renderer);
   m_camera = std::move(rendering.camera);
   m_terrain_scene = std::move(rendering.terrain_scene);
@@ -555,6 +556,7 @@ void ArenaViewport::paintGL() {
     update_rpg_scenario_controller(simulation_dt);
     m_world->update(simulation_dt);
   }
+  m_feedback.advance(simulation_dt);
 
   std::erase_if(m_units, [this](const std::unique_ptr<Game::Units::Unit>& unit) {
     return unit == nullptr || m_world->get_entity(unit->id()) == nullptr;
@@ -3813,6 +3815,7 @@ void ArenaViewport::load_scenario(const QString& scenario_id) {
     m_renderer->set_clear_color(0.70F, 0.73F, 0.80F, 1.0F);
   }
   reset_arena();
+  m_feedback.clear();
   Render::GraphicsSettings::instance().set_quality(
       m_graphics_quality_override.value_or(definition->graphics_quality));
   m_environment_definition = definition->environment;
@@ -5146,6 +5149,18 @@ void ArenaViewport::draw_debug_overlay(QPainter& painter) {
   if (m_combat_debug_overlay_enabled) {
     draw_combat_animation_overlay(painter);
   }
+  if (!m_clean_capture) {
+    draw_floating_numbers(painter);
+  }
+}
+
+void ArenaViewport::draw_floating_numbers(QPainter& painter) {
+  if (m_camera == nullptr || width() <= 0 || height() <= 0) {
+    return;
+  }
+  m_feedback.draw(painter, [this](float x, float y, float z, QPointF& out) {
+    return m_camera->world_to_screen(QVector3D(x, y, z), width(), height(), out);
+  });
 }
 
 void ArenaViewport::draw_spawn_anchor_marker(QPainter& painter) {

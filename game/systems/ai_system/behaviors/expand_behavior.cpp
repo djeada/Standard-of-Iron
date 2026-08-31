@@ -71,6 +71,10 @@ void ExpandBehavior::execute(const AISnapshot& snapshot,
     available_units = collect_attack_force_units(snapshot, context);
   }
 
+  std::erase_if(available_units, [&context](const EntitySnapshot* entity) {
+    return marches_with_the_wave(entity->id, context);
+  });
+
   if (available_units.empty()) {
     return;
   }

@@ -30,6 +30,19 @@ target_link_libraries(
     PUBLIC Qt${QT_VERSION_MAJOR}::Core Qt${QT_VERSION_MAJOR}::Gui engine_core render_gl game_sim
 )
 
+# The floating combat and economy numbers. They live in their own library for
+# the same reason the panels do: arena_tests asserts on the ticks the arena
+# actually paints, not on a second compiled copy of them.
+add_library(arena_feedback STATIC arena_feedback.cpp)
+target_include_directories(
+    arena_feedback
+    PUBLIC "${CMAKE_SOURCE_DIR}" "${CMAKE_CURRENT_SOURCE_DIR}"
+)
+target_link_libraries(
+    arena_feedback
+    PUBLIC Qt${QT_VERSION_MAJOR}::Core Qt${QT_VERSION_MAJOR}::Gui engine_core app_core
+)
+
 # The two panels whose population rules the tests assert. Same reasoning as
 # map_editor_core: the test links the panel the arena ships, not a second copy
 # of its source.
@@ -88,6 +101,7 @@ target_link_libraries(
         app_core
         arena_scenario_harness
         arena_panels
+        arena_feedback
 )
 
 set_target_properties(

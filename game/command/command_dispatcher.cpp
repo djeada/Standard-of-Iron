@@ -210,7 +210,7 @@ void apply_run_mode(World& world, const SetRunMode& run) {
 }
 
 void apply_auto_gather(World& world, const SetAutoGather& order) {
-  for_each_subject(world, order.units, [&order](Entity& entity) {
+  for_each_subject(world, order.units, [&world, &order](Entity& entity) {
     const auto* unit = entity.get_component<Engine::Core::UnitComponent>();
     if (unit == nullptr || unit->spawn_type != Game::Units::SpawnType::Builder) {
       return;
@@ -231,6 +231,12 @@ void apply_auto_gather(World& world, const SetAutoGather& order) {
         Game::Systems::is_gather_builder_product(order.priority_product_type)
             ? order.priority_product_type
             : std::string{};
+
+    if (Game::Systems::is_gather_builder_product(builder->product_type) &&
+        !builder->in_progress) {
+
+      Game::Systems::OrderService::clear_builder_task(world, &entity);
+    }
 
     builder->clear_gather_order();
     builder->clear_fault();
