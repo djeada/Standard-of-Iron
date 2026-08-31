@@ -382,10 +382,8 @@
       "priority": 6,
       "cooldown_ms": 400,
       "resources": [
-        "sfx.command.refuse_v2",
-        "sfx.alert.low_resources_click"
-      ],
-      "wanted": "Dry refusal thunk, shared family with ui.error but shorter."
+        "sfx.build.placement_rejected"
+      ]
     },
     {
       "id": "build.construction_started",
@@ -396,9 +394,8 @@
       "priority": 4,
       "cooldown_ms": 500,
       "resources": [
-        "sfx.build.placement_confirmed"
-      ],
-      "wanted": "Mallet on stake, saw start, brief crowd of work sounds. ~1 s."
+        "sfx.build.construction_started"
+      ]
     },
     {
       "id": "build.construction_complete",
@@ -409,9 +406,8 @@
       "priority": 7,
       "cooldown_ms": 500,
       "resources": [
-        "sfx.build.unit_ready"
-      ],
-      "wanted": "Timber settling into place plus a two-second warm confirmation phrase."
+        "sfx.build.construction_complete"
+      ]
     },
     {
       "id": "build.unit_queued",
@@ -549,9 +545,8 @@
       "priority": 8,
       "cooldown_ms": 1000,
       "resources": [
-        "sfx.build.unit_ready"
-      ],
-      "wanted": "Short rising three-note brass figure, confident, ~1.5 s."
+        "sfx.alert.objective_complete"
+      ]
     },
     {
       "id": "alert.objective_failed",
