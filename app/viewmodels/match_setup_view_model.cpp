@@ -13,6 +13,7 @@
 #include "app/core/client_context.h"
 #include "game/game_config.h"
 #include "game/map/map_catalog.h"
+#include "game/map/mission_catalog.h"
 #include "game/mission/campaign_manager.h"
 #include "game/mission/mission_commander_setup.h"
 #include "game/mission/mission_definition_view.h"
@@ -232,6 +233,38 @@ void MatchSetupViewModel::load_campaigns() {
   campaign->set_available_campaigns(campaigns);
 }
 
+void MatchSetupViewModel::load_missions() {
+  QVariantList missions = Game::Map::MissionCatalog::standalone_missions();
+
+  if (auto* saves = m_context.saves) {
+    for (QVariant& entry : missions) {
+      QVariantMap mission = entry.toMap();
+      QString error;
+      const QVariantMap progress = saves->get_mission_progress(
+          mission.value(QStringLiteral("mission_id")).toString(), &error);
+      if (!error.isEmpty()) {
+        qWarning() << "Failed to read mission progress:" << error;
+        continue;
+      }
+      mission[QStringLiteral("completed")] =
+          progress.value(QStringLiteral("completed")).toBool();
+      mission[QStringLiteral("completed_at")] =
+          progress.value(QStringLiteral("completed_at")).toString();
+      entry = mission;
+    }
+  }
+
+  if (m_missions == missions) {
+    return;
+  }
+  m_missions = missions;
+  emit missions_changed();
+}
+
+auto MatchSetupViewModel::missions() const -> QVariantList {
+  return m_missions;
+}
+
 auto MatchSetupViewModel::campaigns() const -> QVariantList {
   return m_context.campaign != nullptr ? m_context.campaign->available_campaigns()
                                        : QVariantList{};
@@ -259,9 +292,9 @@ auto MatchSetupViewModel::campaign_completed() const -> bool {
   return false;
 }
 
-auto MatchSetupViewModel::is_campaign_mission() const -> bool {
+auto MatchSetupViewModel::is_mission_match() const -> bool {
   return m_context.campaign != nullptr &&
-         m_context.campaign->current_mission_context().is_campaign();
+         m_context.campaign->current_mission_context().has_mission();
 }
 
 void MatchSetupViewModel::mark_current_mission_completed() {
@@ -269,8 +302,8 @@ void MatchSetupViewModel::mark_current_mission_completed() {
   if (campaign == nullptr) {
     return;
   }
-  if (campaign->current_campaign_id().isEmpty()) {
-    qWarning() << "No active campaign mission to mark as completed";
+  if (!campaign->current_mission_context().has_mission()) {
+    qWarning() << "No active mission to mark as completed";
     return;
   }
   if (m_context.saves == nullptr) {

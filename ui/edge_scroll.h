@@ -32,6 +32,8 @@ struct Vector {
 
 class EdgeScroll : public QObject {
   Q_OBJECT
+  QML_ELEMENT
+  QML_SINGLETON
 
   Q_PROPERTY(qreal baseHorizontalZone READ base_horizontal_zone CONSTANT)
   Q_PROPERTY(qreal baseVerticalZone READ base_vertical_zone CONSTANT)

@@ -1,40 +1,21 @@
 #include "game/mission/mission_definition_view.h"
 
-#include <QFileInfo>
 #include <QStringList>
 #include <QVariantList>
 
 #include <algorithm>
 
+#include "game/map/mission_catalog.h"
 #include "game/map/mission_loader.h"
 #include "game/mission/mission_commander_setup.h"
 #include "game/units/commander_catalog.h"
 #include "game/units/troop_type.h"
 #include "game/util/asset_text.h"
-#include "utils/resource_utils.h"
 
 namespace {
 
 constexpr int k_local_owner_id = 1;
 constexpr int k_first_ai_owner_id = 2;
-
-auto resolve_mission_file_path(const QString& mission_id) -> QString {
-  const QStringList search_paths = {QStringLiteral("assets/missions/%1.json"),
-                                    QStringLiteral("../assets/missions/%1.json"),
-                                    QStringLiteral("../../assets/missions/%1.json"),
-                                    QStringLiteral(":/assets/missions/%1.json"),
-                                    QStringLiteral("/assets/missions/%1.json"),
-                                    QStringLiteral("/../assets/missions/%1.json")};
-
-  for (const auto& pattern : search_paths) {
-    QString candidate = pattern.arg(mission_id);
-    candidate = Utils::Resources::resolve_resource_path(candidate);
-    if (QFileInfo::exists(candidate)) {
-      return candidate;
-    }
-  }
-  return {};
-}
 
 auto titleize(const QString& value) -> QString {
   QStringList parts = value.split('_', Qt::SkipEmptyParts);
@@ -400,7 +381,8 @@ auto load_mission_definition_map(const QString& mission_id) -> QVariantMap {
     return result;
   }
 
-  const QString mission_path = resolve_mission_file_path(mission_id);
+  const QString mission_path =
+      Game::Map::MissionCatalog::resolve_mission_file(mission_id);
   if (mission_path.isEmpty()) {
     qWarning() << "Mission definition not found for" << mission_id;
     return result;

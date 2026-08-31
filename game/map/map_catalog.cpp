@@ -17,7 +17,6 @@
 #include <qjsonarray.h>
 #include <qjsondocument.h>
 #include <qjsonobject.h>
-#include <qjsonvalue.h>
 #include <qlist.h>
 #include <qobject.h>
 #include <qset.h>
@@ -28,10 +27,9 @@
 
 #include <algorithm>
 
-#include "campaign_loader.h"
 #include "game/util/asset_text.h"
 #include "json_keys.h"
-#include "mission_loader.h"
+#include "mission_catalog.h"
 #include "utils/resource_utils.h"
 
 namespace Game::Map {
@@ -39,93 +37,6 @@ namespace Game::Map {
 using namespace JsonKeys;
 
 namespace {
-
-auto resolve_mission_file_path(const QString& mission_id) -> QString {
-  const QStringList search_paths = {QStringLiteral("assets/missions/%1.json"),
-                                    QStringLiteral("../assets/missions/%1.json"),
-                                    QStringLiteral("../../assets/missions/%1.json"),
-                                    QStringLiteral(":/assets/missions/%1.json"),
-                                    QStringLiteral("/assets/missions/%1.json"),
-                                    QStringLiteral("/../assets/missions/%1.json")};
-
-  for (const auto& pattern : search_paths) {
-    QString candidate = pattern.arg(mission_id);
-    candidate = Utils::Resources::resolve_resource_path(candidate);
-    if (QFileInfo::exists(candidate)) {
-      return candidate;
-    }
-  }
-  return {};
-}
-
-auto collect_campaign_files() -> QStringList {
-  const QStringList search_paths = {QStringLiteral("assets/campaigns"),
-                                    QStringLiteral("../assets/campaigns"),
-                                    QStringLiteral("../../assets/campaigns"),
-                                    QStringLiteral(":/assets/campaigns"),
-                                    QStringLiteral("/assets/campaigns"),
-                                    QStringLiteral("/../assets/campaigns")};
-
-  QStringList files;
-  QSet<QString> seen;
-  for (const auto& path : search_paths) {
-    const QString resolved = Utils::Resources::resolve_resource_path(path);
-    QDir const campaigns_dir(resolved);
-    if (!campaigns_dir.exists()) {
-      continue;
-    }
-    const QStringList entries =
-        campaigns_dir.entryList(QStringList() << "*.json", QDir::Files, QDir::Name);
-    for (const auto& entry : entries) {
-      const QString campaign_path = campaigns_dir.filePath(entry);
-      if (!seen.contains(campaign_path)) {
-        seen.insert(campaign_path);
-        files.append(campaign_path);
-      }
-    }
-  }
-  return files;
-}
-
-auto load_campaign_map_paths() -> QSet<QString> {
-  QSet<QString> map_paths;
-  const QStringList campaign_files = collect_campaign_files();
-  for (const auto& campaign_path : campaign_files) {
-    Game::Campaign::CampaignDefinition campaign;
-    QString error;
-    if (!Game::Campaign::CampaignLoader::load_from_json_file(
-            campaign_path, campaign, &error)) {
-      qWarning() << "Failed to load campaign for map filtering:" << campaign_path
-                 << error;
-      continue;
-    }
-
-    for (const auto& mission : campaign.missions) {
-      const QString mission_file = resolve_mission_file_path(mission.mission_id);
-      if (mission_file.isEmpty()) {
-        qWarning() << "Missing mission file for campaign map filtering:"
-                   << mission.mission_id;
-        continue;
-      }
-
-      Game::Mission::MissionDefinition mission_def;
-      if (!Game::Mission::MissionLoader::load_from_json_file(
-              mission_file, mission_def, &error)) {
-        qWarning() << "Failed to load mission for map filtering:" << mission_file
-                   << error;
-        continue;
-      }
-
-      const QString map_path =
-          Utils::Resources::resolve_resource_path(mission_def.map_path);
-      if (!map_path.isEmpty()) {
-        map_paths.insert(map_path);
-      }
-    }
-  }
-
-  return map_paths;
-}
 
 auto is_hidden_from_skirmish(const QJsonObject& map_object) -> bool {
   return map_object.value(SKIRMISH_HIDDEN).toBool(false);
@@ -137,6 +48,10 @@ auto has_scripted_opposition(const QJsonObject& map_object) -> bool {
          !map_object.value(UNDEAD_ZONES).toArray().isEmpty();
 }
 
+auto maps_dir() -> QDir {
+  return QDir(Utils::Resources::resolve_resource_path(QStringLiteral(":/assets/maps")));
+}
+
 } // namespace
 
 MapCatalog::MapCatalog(QObject* parent)
@@ -145,106 +60,23 @@ MapCatalog::MapCatalog(QObject* parent)
 
 auto MapCatalog::available_maps() -> QVariantList {
   QVariantList list;
-  const QSet<QString> campaign_map_paths = load_campaign_map_paths();
-  const QString maps_root =
-      Utils::Resources::resolve_resource_path(QStringLiteral(":/assets/maps"));
-  QDir const maps_dir(maps_root);
-  if (!maps_dir.exists()) {
+  const QSet<QString> mission_map_paths = MissionCatalog::mission_map_paths();
+  QDir const dir = maps_dir();
+  if (!dir.exists()) {
     return list;
   }
 
-  QStringList const files =
-      maps_dir.entryList(QStringList() << "*.json", QDir::Files, QDir::Name);
-  for (const QString& f : files) {
-    QString const path = Utils::Resources::resolve_resource_path(maps_dir.filePath(f));
-    if (campaign_map_paths.contains(path)) {
+  for (const QString& file_name :
+       dir.entryList(QStringList() << "*.json", QDir::Files, QDir::Name)) {
+    QString const path =
+        Utils::Resources::resolve_resource_path(dir.filePath(file_name));
+    if (mission_map_paths.contains(path)) {
       continue;
     }
-    QFile file(path);
-    QString name = f;
-    QString desc;
-    QSet<int> player_ids;
-    bool solo_playable = false;
-    bool hidden = false;
-    if (file.open(QIODevice::ReadOnly)) {
-      QByteArray const data = file.readAll();
-      file.close();
-      QJsonParseError err;
-      QJsonDocument const doc = QJsonDocument::fromJson(data, &err);
-      if (err.error == QJsonParseError::NoError && doc.isObject()) {
-        QJsonObject obj = doc.object();
-        hidden = is_hidden_from_skirmish(obj);
-        if (obj.contains(NAME) && obj[NAME].isString()) {
-          name = obj[NAME].toString();
-        }
-        if (obj.contains(DESCRIPTION) && obj[DESCRIPTION].isString()) {
-          desc = obj[DESCRIPTION].toString();
-        }
-        solo_playable = has_scripted_opposition(obj);
-
-        for (const char* collection : {SPAWNS, STRUCTURES}) {
-          if (obj.contains(collection) && obj[collection].isArray()) {
-            QJsonArray const entries = obj[collection].toArray();
-            for (const QJsonValue entry_val : entries) {
-              if (entry_val.isObject()) {
-                QJsonObject entry = entry_val.toObject();
-                if (entry.contains(PLAYER_ID)) {
-                  int const player_id = entry[PLAYER_ID].toInt();
-                  if (player_id > 0) {
-                    player_ids.insert(player_id);
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
+    QVariantMap const entry = load_single_map(path);
+    if (!entry.isEmpty()) {
+      list.append(entry);
     }
-    if (hidden) {
-      continue;
-    }
-    QVariantMap entry;
-    entry[NAME] = Util::tr_asset(Util::k_maps_context, name);
-    entry[DESCRIPTION] = Util::tr_asset(Util::k_maps_context, desc);
-    entry["path"] = path;
-    entry["playerCount"] = player_ids.size();
-    entry["soloPlayable"] = solo_playable;
-    QVariantList player_id_list;
-    QList<int> sorted_ids = player_ids.values();
-    std::sort(sorted_ids.begin(), sorted_ids.end());
-    for (int const id : sorted_ids) {
-      player_id_list.append(id);
-    }
-    entry["player_ids"] = player_id_list;
-
-    QString thumbnail;
-    if (file.open(QIODevice::ReadOnly)) {
-      QByteArray const data = file.readAll();
-      file.close();
-      QJsonParseError err;
-      QJsonDocument const doc = QJsonDocument::fromJson(data, &err);
-      if (err.error == QJsonParseError::NoError && doc.isObject()) {
-        QJsonObject obj = doc.object();
-        if (obj.contains(THUMBNAIL) && obj[THUMBNAIL].isString()) {
-          thumbnail = obj[THUMBNAIL].toString();
-        }
-      }
-    }
-
-    if (thumbnail.isEmpty()) {
-      QString const base_name = QFileInfo(f).baseName();
-      QString const thumb_candidate = Utils::Resources::resolve_resource_path(
-          QString(":/assets/maps/%1_thumb.png").arg(base_name));
-
-      if (QFileInfo::exists(thumb_candidate)) {
-        thumbnail = thumb_candidate;
-      } else {
-        thumbnail = "";
-      }
-    }
-    entry["thumbnail"] = thumbnail;
-
-    list.append(entry);
   }
   return list;
 }
@@ -256,22 +88,19 @@ void MapCatalog::load_maps_async() {
 
   m_maps.clear();
   m_pending_files.clear();
-  ensure_campaign_map_paths_loaded();
+  ensure_mission_map_paths_loaded();
   m_loading = true;
   emit loading_changed(true);
 
-  const QString maps_root =
-      Utils::Resources::resolve_resource_path(QStringLiteral(":/assets/maps"));
-  QDir const maps_dir(maps_root);
-  if (!maps_dir.exists()) {
+  QDir const dir = maps_dir();
+  if (!dir.exists()) {
     m_loading = false;
     emit loading_changed(false);
     emit all_maps_loaded();
     return;
   }
 
-  m_pending_files =
-      maps_dir.entryList(QStringList() << "*.json", QDir::Files, QDir::Name);
+  m_pending_files = dir.entryList(QStringList() << "*.json", QDir::Files, QDir::Name);
 
   if (m_pending_files.isEmpty()) {
     m_loading = false;
@@ -292,13 +121,10 @@ void MapCatalog::load_next_map() {
   }
 
   QString const file_name = m_pending_files.takeFirst();
-  const QString maps_root =
-      Utils::Resources::resolve_resource_path(QStringLiteral(":/assets/maps"));
-  QDir const maps_dir(maps_root);
   QString const path =
-      Utils::Resources::resolve_resource_path(maps_dir.filePath(file_name));
+      Utils::Resources::resolve_resource_path(maps_dir().filePath(file_name));
 
-  if (!m_campaign_map_paths.contains(path)) {
+  if (!m_mission_map_paths.contains(path)) {
     QVariantMap const entry = load_single_map(path);
     if (!entry.isEmpty()) {
       m_maps.append(entry);
@@ -322,6 +148,7 @@ auto MapCatalog::load_single_map(const QString& path) -> QVariantMap {
   QString desc;
   QSet<int> player_ids;
   bool solo_playable = false;
+  QString thumbnail;
 
   if (file.open(QIODevice::ReadOnly)) {
     QByteArray const data = file.readAll();
@@ -338,6 +165,9 @@ auto MapCatalog::load_single_map(const QString& path) -> QVariantMap {
       }
       if (obj.contains(DESCRIPTION) && obj[DESCRIPTION].isString()) {
         desc = obj[DESCRIPTION].toString();
+      }
+      if (obj.contains(THUMBNAIL) && obj[THUMBNAIL].isString()) {
+        thumbnail = obj[THUMBNAIL].toString();
       }
       solo_playable = has_scripted_opposition(obj);
 
@@ -375,28 +205,12 @@ auto MapCatalog::load_single_map(const QString& path) -> QVariantMap {
   }
   entry["player_ids"] = player_id_list;
 
-  QString thumbnail;
-  if (file.open(QIODevice::ReadOnly)) {
-    QByteArray const data = file.readAll();
-    file.close();
-    QJsonParseError err;
-    QJsonDocument const doc = QJsonDocument::fromJson(data, &err);
-    if (err.error == QJsonParseError::NoError && doc.isObject()) {
-      QJsonObject obj = doc.object();
-      if (obj.contains(THUMBNAIL) && obj[THUMBNAIL].isString()) {
-        thumbnail = obj[THUMBNAIL].toString();
-      }
-    }
-  }
   if (thumbnail.isEmpty()) {
     QString const base_name = QFileInfo(resolved_path).baseName();
     QString const thumb_candidate = Utils::Resources::resolve_resource_path(
         QString(":/assets/maps/%1_thumb.png").arg(base_name));
-
     if (QFileInfo::exists(thumb_candidate)) {
       thumbnail = thumb_candidate;
-    } else {
-      thumbnail = "";
     }
   }
   entry["thumbnail"] = thumbnail;
@@ -404,13 +218,12 @@ auto MapCatalog::load_single_map(const QString& path) -> QVariantMap {
   return entry;
 }
 
-void MapCatalog::ensure_campaign_map_paths_loaded() {
-  if (m_campaign_map_paths_loaded) {
+void MapCatalog::ensure_mission_map_paths_loaded() {
+  if (m_mission_map_paths_loaded) {
     return;
   }
-
-  m_campaign_map_paths = load_campaign_map_paths();
-  m_campaign_map_paths_loaded = true;
+  m_mission_map_paths = MissionCatalog::mission_map_paths();
+  m_mission_map_paths_loaded = true;
 }
 
 } // namespace Game::Map

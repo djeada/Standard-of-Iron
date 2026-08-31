@@ -78,7 +78,7 @@ struct FinalizeSkirmishLoadContext {
                               QElapsedTimer& loading_overlay_timer,
                               bool& finalize_progress_after_overlay,
                               bool& show_objectives_after_loading,
-                              bool is_campaign_mission)
+                              bool is_mission_match)
       : runtime_loading(runtime_loading)
       , loading_overlay_wait_for_first_frame(loading_overlay_wait_for_first_frame)
       , loading_overlay_frames_remaining(loading_overlay_frames_remaining)
@@ -86,7 +86,7 @@ struct FinalizeSkirmishLoadContext {
       , loading_overlay_timer(loading_overlay_timer)
       , finalize_progress_after_overlay(finalize_progress_after_overlay)
       , show_objectives_after_loading(show_objectives_after_loading)
-      , is_campaign_mission(is_campaign_mission) {}
+      , is_mission_match(is_mission_match) {}
 
   bool& runtime_loading;
   std::atomic_bool& loading_overlay_wait_for_first_frame;
@@ -95,7 +95,7 @@ struct FinalizeSkirmishLoadContext {
   QElapsedTimer& loading_overlay_timer;
   bool& finalize_progress_after_overlay;
   bool& show_objectives_after_loading;
-  bool is_campaign_mission = false;
+  bool is_mission_match = false;
 };
 
 struct FinalizeSkirmishLoadEffects {

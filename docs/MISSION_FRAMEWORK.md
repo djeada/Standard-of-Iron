@@ -13,11 +13,15 @@ assets/
   │   ├── map_mountain.json
   │   └── map_rivers.json
   ├── missions/      # Gameplay rules that reference maps
-  │   ├── defend_outpost.json
-  │   └── forest_ambush.json
+  │   ├── the_timber_levy.json      # standalone: listed under Missions
+  │   └── battle_of_cannae.json     # claimed by a campaign
   └── campaigns/     # Ordered mission collections
       └── second_punic_war.json
 ```
+
+A mission belongs to a campaign or to no campaign; the second kind is a
+standalone mission and is what the Missions menu lists. See
+[Standalone Missions](#standalone-missions).
 
 ### Components
 
@@ -910,6 +914,73 @@ switches to the Collect button and the nearest pines once one is. A completed st
 publishes an empty focus, and changing target drops the stale world points so
 rings never outlive the step that placed them.
 
+## Standalone Missions
+
+A mission file that no campaign names is a **standalone mission**: one small map,
+one authored objective, and nothing to unlock. They are the third mode beside
+Skirmish and Campaign, listed on their own screen (`ui/qml/MissionsScreen.qml`)
+and started with `MatchSetupViewModel::start_mission_file`.
+
+The split is decided by `Game::Map::MissionCatalog`, which reads
+`assets/missions/` and subtracts two sets:
+
+- every `mission_id` any campaign in `assets/campaigns/` claims, and
+- the tutorial, which has its own menu entry.
+
+What is left is `MissionCatalog::standalone_missions()` -- the Missions roster.
+The catalogue reads no save database, so the record of what has been beaten is
+merged in by `MatchSetupViewModel::load_missions()` from
+`SaveLoadService::get_mission_progress`.
+
+### Authoring one
+
+Nothing about the mission format changes. A standalone mission is an ordinary
+mission file that no campaign lists, with two conventions:
+
+```json
+{
+    "id": "the_timber_levy",
+    "menu_order": 10,
+    "title": "The Timber Levy",
+    "summary": "Fill the levy out of the Pinewater cut...",
+    "map_path": ":/assets/maps/map_pinewater_cut.json"
+}
+```
+
+- `menu_order` orders the roster; missions without it sort last, then by title.
+- `summary` and every condition `description` are what the briefing shows, so
+  they have to say what the player is being asked to do, not just set a mood.
+
+The objective vocabulary is the same one campaign missions use --
+`accumulate_resources`, `survive_waves`, `capture_structures`,
+`control_structures`, `clear_undead_zone`, `purify_shrine`,
+`survive_undead_wave`, `survive_duration`, `destroy_all_enemies`,
+`eliminate_commanders`.
+
+### The map is not a skirmish field
+
+`MapCatalog::available_maps()` subtracts every map any mission names, campaign
+and standalone alike. A map built around one authored objective has nothing to
+offer a free-play match: adding a mission that points at a map therefore removes
+that map from the skirmish roster, and there is nothing else to update.
+
+Two gates hold the mode together, both in `campaign_tests`:
+
+- `MissionCatalogTest` -- the roster excludes campaign missions and the tutorial,
+  carries what the menu needs, and no mission map is offered as a skirmish field.
+- `MissionMapReachabilityTest` -- every place a mission's objective sends you
+  (harvestables, forests, undead zones, its own wave entry points, its own
+  starting-unit positions) is walkable from the camp, and the map is small enough
+  to read at once.
+
+### Mission mode versus campaign mode
+
+`MissionContext::mode` is `"mission"` for a standalone mission and `"campaign"`
+for a campaign link. Everything that reads a mission definition -- setup, victory
+rules, the objectives panel, the battle summary -- asks `has_mission()`, which is
+true for both. Only campaign advancement asks `is_campaign()`: a standalone
+mission records its own result through `save_mission_result` and unlocks nothing.
+
 ## Campaign Configuration
 
 For the shipped Second Punic War campaign specifically -- opponents, wave
@@ -1050,6 +1121,15 @@ void GameEngine::start_campaign_mission(const QString &mission_path) {
 ```
 
 ## UI Integration
+
+### Mission Selection
+
+The Missions screen lists standalone missions with the field they are fought on,
+the orders that win, what is worth doing anyway, the force the player is handed
+and what loses. Selecting one and taking the field calls
+`game.setup.start_mission_file(file_path)` with the path the catalogue reported.
+
+`--screenshot-view missions` captures the screen offscreen for review.
 
 ### Campaign Selection
 

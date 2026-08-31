@@ -82,6 +82,8 @@ void paint(QPainter& painter,
 
 class IconArtLibrary : public QObject {
   Q_OBJECT
+  QML_NAMED_ELEMENT(IconArt)
+  QML_SINGLETON
 
 public:
   explicit IconArtLibrary(QObject* parent = nullptr);

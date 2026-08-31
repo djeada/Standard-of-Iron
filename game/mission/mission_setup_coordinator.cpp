@@ -103,7 +103,7 @@ auto make_mission_position_to_world(const Game::Systems::LevelSnapshot& level)
 auto MissionSetupCoordinator::apply_mission_setup(
     const MissionSetupApplyContext& ctx) const -> MissionSetupEffects {
   MissionSetupEffects effects;
-  if (!ctx.campaign.current_mission_context().is_campaign()) {
+  if (!ctx.campaign.current_mission_context().has_mission()) {
     return effects;
   }
 
@@ -558,7 +558,7 @@ auto MissionSetupCoordinator::apply_skirmish_commander_setup(
     return effects;
   }
   if (ctx.campaign != nullptr &&
-      ctx.campaign->current_mission_context().is_campaign()) {
+      ctx.campaign->current_mission_context().has_mission()) {
     return effects;
   }
 

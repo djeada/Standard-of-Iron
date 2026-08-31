@@ -5,6 +5,7 @@ import QtQuick.Layouts 1.3
 import StandardOfIron 1.0
 import StandardOfIron.Design 1.0 as Design
 import "ui_audio.js" as UiAudio
+import StandardOfIron.Core 1.0
 
 Item {
     id: root
@@ -136,7 +137,7 @@ Item {
                 spacing: Theme.spacingMedium
 
                 Label {
-                    text: qsTr("Load Game")
+                    text: qsTr("Load game")
                     color: Theme.textMain
                     font.pixelSize: Design.Typography.hero
                     font.bold: true

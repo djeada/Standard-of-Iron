@@ -1,7 +1,8 @@
 {
   "id": "iron_sepulcher_watch",
+  "menu_order": 30,
   "title": "Iron Sepulcher Watch",
-  "summary": "Investigate the cursed shrine, survive the awakening, and clear the ruins.",
+  "summary": "Take the cursed shrine above the sepulcher ruins and hold what you take: clear the guardians out of the ruins, then drive the dead off the shrine itself.",
   "map_path": ":/assets/maps/map_iron_sepulcher_watch.json",
   "player_setup": {
     "nation": "roman_republic",
@@ -40,11 +41,11 @@
   "defeat_conditions": [
     {
       "type": "lose_commander",
-      "description": "The commander falls \u2014 the vigil ends. And the dead keep walking."
+      "description": "The commander falls — the vigil ends. And the dead keep walking."
     },
     {
       "type": "only_commander_remaining",
-      "description": "Stand your ground. The last soldier alone is not a force \u2014 he is a sacrifice."
+      "description": "Stand your ground. The last soldier alone is not a force — he is a sacrifice."
     }
   ],
   "events": [],

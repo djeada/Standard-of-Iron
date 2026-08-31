@@ -5,6 +5,7 @@ import QtQuick.Layouts 1.3
 import StandardOfIron 1.0
 import StandardOfIron.Design 1.0 as Design
 import "ui_audio.js" as UiAudio
+import StandardOfIron.Core 1.0
 
 Item {
     id: root
@@ -75,7 +76,7 @@ Item {
                 spacing: Theme.spacingMedium
 
                 Label {
-                    text: qsTr("Save Game")
+                    text: qsTr("Save game")
                     color: Theme.textMain
                     font.pixelSize: Design.Typography.hero
                     font.bold: true
@@ -328,10 +329,15 @@ Item {
 
         contentItem: Rectangle {
             color: Theme.cardBase
-            implicitHeight: warningText.implicitHeight + 40
+
+            implicitHeight: confirmOverwriteBody.implicitHeight + Theme.spacingMedium * 2
 
             ColumnLayout {
-                anchors.fill: parent
+                id: confirmOverwriteBody
+
+                anchors.left: parent.left
+                anchors.right: parent.right
+                anchors.top: parent.top
                 anchors.margins: Theme.spacingMedium
                 spacing: Theme.spacingMedium
 

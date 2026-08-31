@@ -2,6 +2,7 @@ import QtQuick 2.15
 import QtQuick.Layouts 1.15
 import StandardOfIron 1.0
 import StandardOfIron.Design 1.0 as Design
+import StandardOfIron.Views 1.0
 
 Item {
     id: messageRoot
@@ -216,7 +217,7 @@ Item {
                 Rectangle {
                     Layout.fillWidth: true
                     Layout.topMargin: Design.Metrics.space4
-                    height: Design.Metrics.borderThin
+                    Layout.preferredHeight: Design.Metrics.borderThin
                     color: messageRoot.accent
                     opacity: 0.45
                 }

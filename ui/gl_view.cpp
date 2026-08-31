@@ -333,7 +333,7 @@ void GLView::GLRenderer::warm_commander_portraits() {
 
 void GLView::GLRenderer::observe_runtime_continuity() {
   if (m_continuity_probe == nullptr || m_engine == nullptr || m_engine->is_loading() ||
-      !m_engine->match_setup()->is_campaign_mission() || m_size.isEmpty()) {
+      !m_engine->match_setup()->is_mission_match() || m_size.isEmpty()) {
     return;
   }
 

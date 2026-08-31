@@ -225,22 +225,9 @@ public slots:
     }
     App::Core::UserSettings::clear();
 
-    for (const char* uri : {"StandardOfIron", "StandardOfIron.Core"}) {
-      qmlRegisterSingletonType<Theme>(uri, 1, 0, "Theme", &Theme::create);
-      qmlRegisterSingletonType<UiPreferences>(
-          uri, 1, 0, "UiPreferences", &UiPreferences::create);
-      qmlRegisterSingletonType<UiHints>(uri, 1, 0, "UiHints", &UiHints::create);
-      qmlRegisterSingletonType<IconArtLibrary>(
-          uri, 1, 0, "IconArt", &IconArtLibrary::create);
-      qmlRegisterSingletonType<GameSpeeds>(
-          uri, 1, 0, "GameSpeeds", &GameSpeeds::create);
-      qmlRegisterSingletonType<EdgeScroll>(
-          uri, 1, 0, "EdgeScroll", &EdgeScroll::create);
-      qmlRegisterSingletonType<InputBindings>(
-          uri, 1, 0, "InputBindings", &InputBindings::create);
-    }
+    qmlRegisterModule("StandardOfIron", 1, 0);
     qmlRegisterType<CommanderPortraitStub>(
-        "StandardOfIron", 1, 0, "CommanderPortraitView");
+        "StandardOfIron", 1, 0, "CommanderPortraitViewStub");
     qmlRegisterSingletonType<GlyphProbe>(
         "StandardOfIron.TestSupport", 1, 0, "GlyphProbe", &GlyphProbe::create);
     qmlRegisterSingletonType<WarningProbe>(
