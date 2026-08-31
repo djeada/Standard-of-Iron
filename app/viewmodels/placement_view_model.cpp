@@ -119,6 +119,12 @@ auto PlacementViewModel::any_selected_in_formation_mode() const -> bool {
 }
 
 auto PlacementViewModel::is_placing_formation() const -> bool {
+
+  const auto frame_lock = m_host.lock_frame();
+  auto* commands = m_context.commands;
+  if (commands != nullptr) {
+    return commands->formation().is_placing_formation();
+  }
   const auto readout = m_readout.read();
   return readout ? readout->placing_formation : false;
 }

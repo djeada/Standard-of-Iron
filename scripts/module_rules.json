@@ -36,6 +36,7 @@
         "game/systems/builder_product_types",
         "game/systems/harvest_yields",
         "game/units/spawn_type",
+        "game/units/combat_role",
         "game/units/troop_type",
         "game/wildlife/wildlife_species",
         "game/formation/unit_layout_state",

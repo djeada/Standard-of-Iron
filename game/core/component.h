@@ -350,7 +350,8 @@ public:
 
 enum class PlayerOrderIntentKind : std::uint8_t {
   None,
-  ManualMove
+  ManualMove,
+  AttackMove
 };
 
 class PlayerOrderIntentComponent {

@@ -19,6 +19,25 @@ ApplicationWindow {
 
     readonly property bool overlay_active: mainWindow.menu_visible || mapSelect.visible || missions_screen.visible || campaign_screen.visible || save_game_panel.visible || load_game_panel.visible || settingsPanel.visible || objectivesPanel.visible || help_panel.visible || commander_preview.visible
 
+    readonly property bool overlay_pause_wanted: mainWindow.game_started && mainWindow.overlay_active
+    property bool overlay_paused_game: false
+
+    onOverlay_pause_wantedChanged: {
+        if (overlay_pause_wanted) {
+            if (!mainWindow.game_paused) {
+                mainWindow.game_paused = true;
+                hud.game_is_paused = true;
+                gameViewItem.set_paused(true);
+                mainWindow.overlay_paused_game = true;
+            }
+        } else if (mainWindow.overlay_paused_game) {
+            mainWindow.overlay_paused_game = false;
+            mainWindow.game_paused = false;
+            hud.game_is_paused = false;
+            gameViewItem.set_paused(false);
+        }
+    }
+
     property bool capture_view_ready: false
     property bool capture_view_settled: false
     property bool capture_tutorial_requested: false
@@ -243,7 +262,7 @@ ApplicationWindow {
 
         anchors.fill: parent
         z: 10
-        visible: mainWindow.game_paused && game_started
+        visible: mainWindow.game_paused && game_started && !mainWindow.overlay_active
         color: Qt.rgba(8 / 255, 6 / 255, 4 / 255, 0.72)
 
         Rectangle {

@@ -354,6 +354,7 @@ void InputCommandHandler::on_right_drag_orient(qreal sx,
 
 void InputCommandHandler::on_attack_click(qreal sx,
                                           qreal sy,
+                                          int local_owner_id,
                                           const ViewportState& viewport) {
   if (m_is_spectator_mode) {
     return;
@@ -363,7 +364,7 @@ void InputCommandHandler::on_attack_click(qreal sx,
   }
 
   auto result = m_command_controller->on_attack_click(
-      sx, sy, viewport.width, viewport.height, m_camera);
+      sx, sy, viewport.width, viewport.height, m_camera, local_owner_id);
 
   if (result.reset_cursor_to_normal) {
     m_cursor_manager->set_mode(CursorMode::Normal);

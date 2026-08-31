@@ -234,7 +234,8 @@ auto is_hauling_a_load(const Engine::Core::World& world,
 auto submit_ground_move(Engine::Core::World& world,
                         const std::vector<Engine::Core::EntityID>& units,
                         const QVector3D& destination,
-                        int owner_id) -> App::Core::OrderOutcome {
+                        int owner_id,
+                        Game::Systems::MoveOrderKind kind) -> App::Core::OrderOutcome {
   using App::Core::OrderKind;
   if (units.empty()) {
     return App::Core::rejected_order_at(
@@ -282,7 +283,7 @@ auto submit_ground_move(Engine::Core::World& world,
   move.units = orderable;
   move.targets = plan.target_positions();
   move.facing_angles = plan.facing_angles();
-  move.kind = Game::Systems::MoveOrderKind::FormationMove;
+  move.kind = kind;
   move.preserve_formation_mode = plan.preserve_formation_mode;
 
   App::Core::OrderRequest request;

@@ -5,6 +5,7 @@
 #include <QVector4D>
 
 #include <array>
+#include <charconv>
 #include <cmath>
 #include <cstdint>
 #include <cstdlib>
@@ -12,6 +13,7 @@
 #include <gtest/gtest.h>
 #include <sstream>
 #include <string>
+#include <system_error>
 #include <vector>
 
 #include "animation/rig/horse_gait.h"
@@ -661,12 +663,16 @@ TEST(QuadrupedGoldenParity, PipelineMatchesRecordedGolden) {
       if (want == got) {
         continue;
       }
-      char* want_end = nullptr;
-      char* got_end = nullptr;
-      const double want_value = std::strtod(want.c_str(), &want_end);
-      const double got_value = std::strtod(got.c_str(), &got_end);
-      const bool numeric = want_end != want.c_str() && *want_end == '\0' &&
-                           got_end != got.c_str() && *got_end == '\0';
+
+      double want_value = 0.0;
+      double got_value = 0.0;
+      const auto want_parse =
+          std::from_chars(want.data(), want.data() + want.size(), want_value);
+      const auto got_parse =
+          std::from_chars(got.data(), got.data() + got.size(), got_value);
+      const bool numeric =
+          want_parse.ec == std::errc{} && want_parse.ptr == want.data() + want.size() &&
+          got_parse.ec == std::errc{} && got_parse.ptr == got.data() + got.size();
       ASSERT_TRUE(numeric) << "line " << i << " token " << t << ": expected '" << want
                            << "' got '" << got << "'";
       EXPECT_NEAR(want_value, got_value, tolerance)

@@ -441,6 +441,18 @@ void SettlementLifeSystem::update(Engine::Core::World* world, float delta_time) 
       resident->work_elapsed = 0.0F;
 
       resident->hearth_assigned = false;
+
+      if (alarm_due) {
+        auto const danger = nearest_danger(*world,
+                                           m_armed_units,
+                                           unit->owner_id,
+                                           transform->position.x,
+                                           transform->position.z,
+                                           k_alarm_radius);
+        if (danger.has_value()) {
+          run_from(*world, *entity, *transform, *resident, *danger);
+        }
+      }
       continue;
     }
 

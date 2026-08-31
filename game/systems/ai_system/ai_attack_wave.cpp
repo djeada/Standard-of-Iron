@@ -75,6 +75,9 @@ auto nearest_matching(const std::vector<ContactSnapshot>& contacts,
     if (contact.health <= 0 || !matches_target(contact, target_kind)) {
       continue;
     }
+    if (!is_war_contact(contact)) {
+      continue;
+    }
     const float distance_sq =
         distance_squared(contact.pos_x, 0.0F, contact.pos_z, from_x, 0.0F, from_z);
     if (distance_sq < best_distance_sq) {
@@ -132,9 +135,7 @@ auto find_friendly(const AISnapshot& snapshot,
 
 auto marches_with_a_wave(const EntitySnapshot& entity) -> bool {
 
-  return marches_with_the_army(entity) &&
-         entity.spawn_type != Game::Units::SpawnType::Civilian &&
-         entity.spawn_type != Game::Units::SpawnType::Healer;
+  return !entity.is_commander && picks_its_own_fights(entity);
 }
 
 auto committable_units(const AISnapshot& snapshot,

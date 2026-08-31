@@ -1817,7 +1817,8 @@ void process_attacks(Engine::Core::World* world,
         attacker->has_component<Engine::Core::AttackTargetComponent>();
     if ((best_target == nullptr) && !has_attack_target &&
         !suppress_opportunistic_combat) {
-      if (Game::Systems::CombatRules::participates_in_rts_melee_lock(attacker)) {
+
+      if (auto_acquires_targets(attacker)) {
         best_target = find_nearest_enemy(attacker, query_context, range);
         if (best_target != nullptr && !is_ranged_mode(attacker_atk) &&
             structure_separates_combatants(attacker, best_target)) {
