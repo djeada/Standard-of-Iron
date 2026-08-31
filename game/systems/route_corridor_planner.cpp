@@ -6,6 +6,7 @@
 #include <limits>
 #include <utility>
 
+#include "game/core/nav_profile.h"
 #include "nav_grid.h"
 
 namespace Game::Systems {
@@ -201,6 +202,7 @@ auto RouteCorridorPlanner::plan(Pathfinding& pathfinder,
                                 const QVector3D& destination,
                                 Pathfinding::Passability passability,
                                 float clearance) -> RouteCorridorPlan {
+  Engine::Core::NavScope const scope(Engine::Core::NavCounter::GroupRoutes);
   RouteCorridorPlan result;
   pathfinder.update_navigation_grid();
   result.centerline =

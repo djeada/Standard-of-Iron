@@ -68,6 +68,7 @@
 #include "primitive_batch.h"
 #include "profiling/combat_animation_diagnostics.h"
 #include "profiling/frame_profile.h"
+#include "render/profiling/asset_counters.h"
 #include "render_backend_factory.h"
 #include "scene/camera.h"
 #include "scene_renderer.h"
@@ -368,6 +369,8 @@ void Renderer::process_async_template_prewarm() {
     if (item.profile_index < state->profiles.size()) {
       run_template_prewarm_item(state->profiles[item.profile_index], item);
     }
+    Render::Profiling::count_asset(
+        Render::Profiling::AssetCounter::PrewarmItemsProcessed);
     ++processed;
 
     const auto elapsed = std::chrono::steady_clock::now() - start_time;
@@ -386,10 +389,13 @@ void Renderer::process_async_template_prewarm() {
 
 void Renderer::prewarm_unit_templates(
     Engine::Core::World* world, TemplatePrewarmProgressCallback progress_callback) {
+  Render::Profiling::count_asset(Render::Profiling::AssetCounter::PrewarmInvocations);
   cancel_async_template_prewarm();
   Render::Creature::set_runtime_bake_forbidden(false);
   m_async_prewarm.clear_forbid_runtime_bake();
   if (!m_entity_registry) {
+    Render::Profiling::count_asset(
+        Render::Profiling::AssetCounter::PrewarmSkippedNoRegistry);
     return;
   }
   const bool full_lod_only =
@@ -887,6 +893,8 @@ void Renderer::prewarm_unit_templates(
     auto async_state = std::make_shared<AsyncTemplatePrewarm::Work>();
     async_state->profiles = profiles;
     async_state->work_items = extended_work_items;
+    Render::Profiling::count_asset(Render::Profiling::AssetCounter::PrewarmItemsQueued,
+                                   extended_work_items.size());
     m_async_prewarm.start(std::move(async_state), true);
   } else {
     Render::Creature::set_runtime_bake_forbidden(true);

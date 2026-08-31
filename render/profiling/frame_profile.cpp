@@ -49,9 +49,12 @@ auto format_overlay(const FrameProfile& profile) -> std::string {
 
   std::snprintf(line,
                 sizeof(line),
-                "avg/p95 %5.2f/%5.2f ms  soldiers=%llu  cache h/m=%llu/%llu\n",
+                "avg/p50/p95/p99 %5.2f/%5.2f/%5.2f/%5.2f ms  soldiers=%llu  "
+                "cache h/m=%llu/%llu\n",
                 profile.average_frame_ms,
+                profile.p50_frame_ms,
                 profile.p95_frame_ms,
+                profile.p99_frame_ms,
                 static_cast<unsigned long long>(profile.visible_soldiers),
                 static_cast<unsigned long long>(profile.render_asset_cache_hits),
                 static_cast<unsigned long long>(profile.render_asset_cache_misses));

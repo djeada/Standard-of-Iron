@@ -5,6 +5,7 @@
 #include <limits>
 
 #include "building_collision_registry.h"
+#include "game/core/nav_profile.h"
 #include "gate_service.h"
 #include "nav_grid.h"
 
@@ -112,13 +113,12 @@ void sweep_body_circle(const Pathfinding& pathfinder,
   float const center_u = position.x() - pathfinder.get_grid_offset_x();
   float const center_v = position.z() - pathfinder.get_grid_offset_z();
 
-  int const min_x = static_cast<int>(std::floor(center_u - radius - half_cell));
-  int const max_x = static_cast<int>(std::ceil(center_u + radius + half_cell));
-  int const min_z = static_cast<int>(std::floor(center_v - radius - half_cell));
-  int const max_z = static_cast<int>(std::ceil(center_v + radius + half_cell));
+  CellRange const box = body_cell_range(center_u, center_v, radius, half_cell);
+  Engine::Core::count_nav(Engine::Core::NavCounter::StandabilityCellsScanned,
+                          static_cast<std::uint64_t>(cell_count(box)));
 
-  for (int cell_z = min_z; cell_z <= max_z; ++cell_z) {
-    for (int cell_x = min_x; cell_x <= max_x; ++cell_x) {
+  for (int cell_z = box.min_z; cell_z <= box.max_z; ++cell_z) {
+    for (int cell_x = box.min_x; cell_x <= box.max_x; ++cell_x) {
       if (cell_is_open(pathfinder, cell_x, cell_z, profile)) {
         continue;
       }
@@ -129,11 +129,8 @@ void sweep_body_circle(const Pathfinding& pathfinder,
         }
         continue;
       }
-      float const gap_x =
-          std::max(0.0F, std::abs(center_u - static_cast<float>(cell_x)) - half_cell);
-      float const gap_z =
-          std::max(0.0F, std::abs(center_v - static_cast<float>(cell_z)) - half_cell);
-      float const gap = std::hypot(gap_x, gap_z);
+      float const gap =
+          cell_gap(center_u, center_v, cell_x, cell_z, half_cell).length();
       if (gap >= radius) {
         continue;
       }
@@ -155,6 +152,7 @@ auto current_pathfinder() -> Pathfinding* {
 auto can_stand_on(Pathfinding* pathfinder,
                   const QVector3D& position,
                   const BodyProfile& profile) -> bool {
+  Engine::Core::NavScope const scope(Engine::Core::NavCounter::StandabilityTests);
   if (pathfinder == nullptr) {
 
     return building_body_penetration(position.x(), position.z(), profile.radius) <=
@@ -210,6 +208,7 @@ auto penetration(const QVector3D& position, const BodyProfile& profile) -> float
 auto can_traverse(const QVector3D& from,
                   const QVector3D& to,
                   const BodyProfile& profile) -> bool {
+  Engine::Core::count_nav(Engine::Core::NavCounter::SegmentTests);
   if (GateService::blocks_move(from, to)) {
     return false;
   }
@@ -236,6 +235,8 @@ auto nearest_standable(const QVector3D& position,
                        float max_search_radius,
                        const std::optional<QVector3D>& approach_from)
     -> std::optional<QVector3D> {
+  Engine::Core::NavScope const scope(
+      Engine::Core::NavCounter::NearestStandableSearches);
   auto* pathfinder = current_pathfinder();
   if (can_stand_on(pathfinder, position, profile)) {
     return position;
@@ -253,27 +254,23 @@ auto nearest_standable(const QVector3D& position,
   for (int ring = 1; ring <= max_rings; ++ring) {
     std::optional<QVector3D> best;
     float best_score = std::numeric_limits<float>::max();
-    for (int dz = -ring; dz <= ring; ++dz) {
-      for (int dx = -ring; dx <= ring; ++dx) {
-        if (std::abs(dx) != ring && std::abs(dz) != ring) {
-          continue;
-        }
-        Point const cell{origin.x + dx, origin.y + dz};
-        QVector3D const candidate = pathfinder->grid_to_world(cell);
-        if (!can_stand_on(pathfinder, candidate, profile)) {
-          continue;
-        }
-        float score = (candidate - position).lengthSquared();
-        if (approach_from.has_value()) {
-
-          score += (candidate - *approach_from).lengthSquared() * 0.25F;
-        }
-        if (score < best_score) {
-          best_score = score;
-          best = candidate;
-        }
+    for_each_ring_cell(ring, [&](int dx, int dz) {
+      Point const cell{origin.x + dx, origin.y + dz};
+      Engine::Core::count_nav(Engine::Core::NavCounter::NearestStandableCellsScanned);
+      QVector3D const candidate = pathfinder->grid_to_world(cell);
+      if (!can_stand_on(pathfinder, candidate, profile)) {
+        return;
       }
-    }
+      float score = (candidate - position).lengthSquared();
+      if (approach_from.has_value()) {
+
+        score += (candidate - *approach_from).lengthSquared() * 0.25F;
+      }
+      if (score < best_score) {
+        best_score = score;
+        best = candidate;
+      }
+    });
     if (best.has_value()) {
       return best;
     }

@@ -83,6 +83,7 @@ def to_fin(scn, allow_quiet=False):
 
 WILD = "assets/audio/sfx/wildlife/"
 COMBAT = "assets/audio/sfx/combat/"
+MOVEMENT = "assets/audio/sfx/movement/"
 ORDERS = "assets/audio/sfx/orders/"
 cues = []
 
@@ -126,10 +127,10 @@ for name, f, _ss, _dur, _slow in shots:
         add(ORDERS + "attack_horn_stab.ogg", f + 0.05, 2.20)
         add(ORDERS + "run_kit_rattle.ogg", f + 0.35, 1.20)
     if name == "the_charge":
-        add(COMBAT + "roman_cavalry_charge.ogg", f - 0.10, 1.55)
+        add(COMBAT + "horse_gallop_close_pass.ogg", f - 0.10, 1.55)
         add(COMBAT + "horse_gallop_close_pass.ogg", f + 0.90, 1.50)
     if name == "run_them_down":
-        add(COMBAT + "numidian_cavalry_chase.ogg", f, 1.20)
+        add(MOVEMENT + "hooves_gallop.ogg", f, 1.20)
     if name == "after":
         add(COMBAT + "soldiers_victory_cheer.ogg", f + 0.60, 1.10)
 

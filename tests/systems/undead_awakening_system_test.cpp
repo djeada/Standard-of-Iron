@@ -218,6 +218,50 @@ TEST_F(UndeadAwakeningSystemTest, SpawnsOnlyAfterEnemyUnitEntersZone) {
   }
 }
 
+TEST_F(UndeadAwakeningSystemTest, AwakeningCueBelongsToThePlayerWhoWokeTheZone) {
+  auto& owners = Game::Systems::OwnerRegistry::instance();
+  owners.register_owner_with_id(2, Game::Systems::OwnerType::AI, "Rival");
+  owners.set_owner_team(2, 2);
+
+  std::vector<int> cue_owners;
+  auto subscription =
+      Engine::Core::ScopedEventSubscription<Engine::Core::AudioCueEvent>(
+          [&cue_owners](const Engine::Core::AudioCueEvent& event) {
+            if (event.cue_id == "alert.undead_awakening") {
+              cue_owners.push_back(event.owner_id);
+            }
+          });
+
+  Engine::Core::World world;
+  Game::Systems::UndeadAwakeningSystem system(undead_services());
+
+  const Game::Map::MapDefinition map_definition = make_test_map();
+  Game::Map::TerrainService::instance().initialize(map_definition);
+  system.configure(map_definition);
+  system.update(&world, 0.1F);
+  ASSERT_TRUE(cue_owners.empty());
+
+  auto* rival = world.create_entity();
+  ASSERT_NE(rival, nullptr);
+  auto* transform = rival->add_component<Engine::Core::TransformComponent>();
+  auto* unit = rival->add_component<Engine::Core::UnitComponent>();
+  ASSERT_NE(transform, nullptr);
+  ASSERT_NE(unit, nullptr);
+  transform->position = {0.5F, 0.0F, 0.5F};
+  unit->owner_id = 2;
+  unit->nation_id = Game::Systems::NationID::RomanRepublic;
+  unit->spawn_type = Game::Units::SpawnType::Knight;
+  unit->health = 100;
+  unit->max_health = 100;
+
+  system.update(&world, 0.1F);
+
+  ASSERT_EQ(cue_owners.size(), 1U);
+  EXPECT_EQ(cue_owners.front(), 2)
+      << "the sepulcher woke for owner 2, so only owner 2 should hear it; "
+         "owner 0 would broadcast it to every player";
+}
+
 TEST_F(UndeadAwakeningSystemTest, RestoredStateDoesNotRespawnActiveWave) {
   Engine::Core::World world;
   const Game::Map::MapDefinition map_definition = make_test_map();

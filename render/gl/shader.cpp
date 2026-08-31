@@ -25,6 +25,7 @@
 #include <vector>
 
 #include "platform_gl.h"
+#include "render/profiling/asset_counters.h"
 #include "render_constants.h"
 #include "ubo_bindings.h"
 #include "utils/resource_utils.h"
@@ -371,8 +372,10 @@ auto Shader::load_compute_from_source(const QString& compute_source) -> bool {
 auto Shader::link_compute_program(GLuint compute_shader) -> GLuint {
   initializeOpenGLFunctions();
   const GLuint program = glCreateProgram();
+  Render::Profiling::count_asset(Render::Profiling::AssetCounter::GlProgramCreated);
   glAttachShader(program, compute_shader);
   glLinkProgram(program);
+  Render::Profiling::count_asset(Render::Profiling::AssetCounter::ProgramLinked);
 
   GLint linked = 0;
   glGetProgramiv(program, GL_LINK_STATUS, &linked);
@@ -709,6 +712,7 @@ auto Shader::compile_shader(const QString& source, GLenum type) -> GLuint {
   const char* source_ptr = source_bytes.constData();
   glShaderSource(shader, 1, &source_ptr, nullptr);
   glCompileShader(shader);
+  Render::Profiling::count_asset(Render::Profiling::AssetCounter::ShaderCompiled);
 
   GLint success = 0;
   glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
@@ -726,9 +730,11 @@ auto Shader::compile_shader(const QString& source, GLenum type) -> GLuint {
 auto Shader::link_program(GLuint vertex_shader, GLuint fragment_shader) -> GLuint {
   initializeOpenGLFunctions();
   const GLuint program = glCreateProgram();
+  Render::Profiling::count_asset(Render::Profiling::AssetCounter::GlProgramCreated);
   glAttachShader(program, vertex_shader);
   glAttachShader(program, fragment_shader);
   glLinkProgram(program);
+  Render::Profiling::count_asset(Render::Profiling::AssetCounter::ProgramLinked);
 
   GLint success = 0;
   glGetProgramiv(program, GL_LINK_STATUS, &success);

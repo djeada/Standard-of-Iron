@@ -107,7 +107,7 @@ add(COMBAT + "roman_war_horns_orders.ogg", to_finished(aura), 1.70)
 add(COMBAT + "charge_roar.ogg", after_shot("behind_him", 0.1), 1.85)
 add(ORDERS + "run_kit_rattle.ogg", after_shot("behind_him", 0.5), 1.15)
 
-add(COMBAT + "roman_cavalry_charge.ogg", after_shot("the_charge", 0.05), 1.65)
+add(COMBAT + "horse_gallop_close_pass.ogg", after_shot("the_charge", 0.05), 1.65)
 add(COMBAT + "horse_gallop_close_pass.ogg", after_shot("the_charge", 1.2), 1.45)
 add(COMBAT + "roman_shield_wall_impact.ogg", after_shot("the_charge", 2.3), 1.90)
 add(COMBAT + "vanguard_rush.ogg", after_shot("they_break", 0.2), 1.25)
@@ -120,8 +120,8 @@ for index, at in enumerate(signatures):
     if finished_at is None or finished_at - last < 0.30:
         continue
     last = finished_at
-    add(COMBAT + f"blade_clash_0{(index % 4) + 1}.ogg", finished_at, 2.20)
-    add(COMBAT + f"sword_hit_0{(index % 4) + 1}.ogg", finished_at + 0.06, 1.60)
+    add(COMBAT + f"blade_clash_0{(index % 3) + 1}.ogg", finished_at, 2.20)
+    add(COMBAT + "sword_hit_01.ogg", finished_at + 0.06, 1.60)
 
 
 last = -9.0

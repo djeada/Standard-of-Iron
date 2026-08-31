@@ -170,32 +170,12 @@ private:
   std::shared_ptr<const Render::RoleColorPalette> cached_humanoid_role_colors_{};
 };
 
-struct PostBodyDrawRequest {
-  enum class Kind : std::uint8_t {
-    None,
-  };
-
-  RenderPassIntent pass_intent{RenderPassIntent::Main};
-  Kind kind{Kind::None};
-};
-
 struct CreaturePreparationResult {
   CreatureRenderBatch bodies;
-  std::vector<PostBodyDrawRequest> post_body_draws;
   HumanoidShadowBatch shadow_batch;
-
-  void add_post_body_draw(PostBodyDrawRequest request) {
-    post_body_draws.push_back(request);
-  }
-
-  void add_post_body_draw(RenderPassIntent pass_intent,
-                          PostBodyDrawRequest::Kind kind) {
-    post_body_draws.push_back(PostBodyDrawRequest{pass_intent, kind});
-  }
 
   void clear() noexcept {
     bodies.clear();
-    post_body_draws.clear();
     shadow_batch.clear();
   }
 };

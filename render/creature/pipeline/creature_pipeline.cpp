@@ -33,6 +33,7 @@
 #include "render/entity/registry.h"
 #include "render/horse/horse_spec.h"
 #include "render/humanoid/runtime/frame_control.h"
+#include "render/profiling/asset_counters.h"
 #include "render/profiling/combat_animation_diagnostics.h"
 #include "render/profiling/frame_profile.h"
 #include "render/rigged_mesh_cache.h"
@@ -920,6 +921,20 @@ void bump_lod_counters(CreatureLOD lod, SubmitStats& stats) {
   }
 }
 
+void publish_submit_stats(const SubmitStats& stats) noexcept {
+  using Render::Profiling::AssetCounter;
+  using Render::Profiling::count_asset;
+  count_asset(AssetCounter::RiggedCacheHit, stats.rigged_cache_hits);
+  count_asset(AssetCounter::RiggedCacheMiss, stats.rigged_cache_misses);
+  count_asset(AssetCounter::SnapshotCacheHit, stats.snapshot_cache_hits);
+  count_asset(AssetCounter::SnapshotCacheMiss, stats.snapshot_misses);
+  count_asset(AssetCounter::SnapshotLoad, stats.snapshot_loads);
+  count_asset(AssetCounter::SnapshotEviction, stats.snapshot_evictions);
+  count_asset(AssetCounter::SkinAtlasBuild, stats.skin_atlas_builds);
+  count_asset(AssetCounter::SkinUboUpload, stats.skin_ubo_uploads);
+  count_asset(AssetCounter::SkinUboBytes, stats.skin_ubo_bytes_uploaded);
+}
+
 } // namespace
 
 auto CreaturePipeline::submit_requests(
@@ -1125,6 +1140,8 @@ auto CreaturePipeline::submit_requests(
     stats.snapshot_loads = ss.loads;
     stats.snapshot_bakes = ss.bakes;
     stats.snapshot_misses = ss.misses;
+    stats.snapshot_evictions = ss.evictions;
+    publish_submit_stats(stats);
   }
 
   return stats;

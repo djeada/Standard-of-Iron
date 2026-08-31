@@ -90,15 +90,16 @@ auto alert_nearby_allies(Engine::Core::World* world,
   for (const Engine::Core::EntityID ally_id : nearby) {
     auto* ally = world->get_entity(ally_id);
     if ((ally == origin) || (ally == nullptr) ||
-        ally->has_component<Engine::Core::PendingRemovalComponent>()) {
+        world->has<Engine::Core::PendingRemovalComponent>(ally->get_id())) {
       continue;
     }
-    auto* ally_unit = ally->get_component<Engine::Core::UnitComponent>();
+    auto* ally_unit = world->try_get<Engine::Core::UnitComponent>(ally->get_id());
     if ((ally_unit == nullptr) || ally_unit->health <= 0 ||
         ally_unit->owner_id != origin_unit->owner_id) {
       continue;
     }
-    auto* ally_transform = ally->get_component<Engine::Core::TransformComponent>();
+    auto* ally_transform =
+        world->try_get<Engine::Core::TransformComponent>(ally->get_id());
     if (ally_transform == nullptr) {
       continue;
     }

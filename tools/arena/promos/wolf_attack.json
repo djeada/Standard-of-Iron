@@ -522,7 +522,7 @@
       "gain": 1.85
     },
     {
-      "file": "assets/audio/sfx/combat/roman_cavalry_charge.ogg",
+      "file": "assets/audio/sfx/combat/horse_gallop_close_pass.ogg",
       "at": 15.85,
       "gain": 1.55
     },
@@ -552,7 +552,7 @@
       "gain": 1.7
     },
     {
-      "file": "assets/audio/sfx/combat/numidian_cavalry_chase.ogg",
+      "file": "assets/audio/sfx/movement/hooves_gallop.ogg",
       "at": 24.37,
       "gain": 1.2
     },

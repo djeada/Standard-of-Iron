@@ -602,9 +602,9 @@
       "cooldown_ms": 90,
       "resources": [
         "sfx.combat.sword_hit_01",
-        "sfx.combat.sword_hit_02",
-        "sfx.combat.sword_hit_03",
-        "sfx.combat.sword_hit_04"
+        "sfx.combat.blade_clash_01",
+        "sfx.combat.blade_clash_02",
+        "sfx.combat.blade_clash_03"
       ]
     },
     {
@@ -617,11 +617,7 @@
       "cooldown_ms": 100,
       "resources": [
         "sfx.combat.spear_impact_01",
-        "sfx.combat.spear_impact_02",
-        "sfx.combat.blade_clash_01",
-        "sfx.combat.blade_clash_02",
-        "sfx.combat.blade_clash_03",
-        "sfx.combat.blade_clash_04"
+        "sfx.combat.spear_impact_02"
       ]
     },
     {
@@ -633,9 +629,7 @@
       "priority": 3,
       "cooldown_ms": 120,
       "resources": [
-        "sfx.combat.arrow_impact_01",
-        "sfx.combat.arrow_impact_02",
-        "sfx.combat.arrow_impact_03"
+        "sfx.combat.arrow_impact_01"
       ]
     },
     {
@@ -647,9 +641,8 @@
       "priority": 3,
       "cooldown_ms": 220,
       "resources": [
-        "sfx.combat.roman_cavalry_charge",
         "sfx.combat.horse_gallop_close_pass",
-        "sfx.combat.numidian_cavalry_chase"
+        "sfx.movement.hooves_gallop"
       ]
     },
     {
@@ -702,7 +695,9 @@
       "priority": 6,
       "cooldown_ms": 160,
       "resources": [
-        "sfx.combat.human_death_cry"
+        "sfx.combat.human_death_cry",
+        "sfx.combat.human_death_cry_v2",
+        "sfx.combat.human_death_cry_v3"
       ]
     },
     {
@@ -714,8 +709,7 @@
       "priority": 2,
       "cooldown_ms": 110,
       "resources": [
-        "sfx.combat.arrow_launch",
-        "sfx.combat.arrow_launch_v2"
+        "sfx.combat.arrow_launch"
       ],
       "wanted": "A single dry bow release, isolated. The current clip is a group recording."
     },
@@ -767,8 +761,7 @@
       "priority": 4,
       "cooldown_ms": 90,
       "resources": [
-        "sfx.combat.bow_loose_heavy",
-        "sfx.combat.bow_loose_heavy_v2"
+        "sfx.combat.arrow_launch"
       ],
       "wanted": "The heavy cousin of combat.arrow_launch: deeper limb thump, harder string snap, and the shaft audible in the air for longer. It has to read as one man shooting, not a rank of archers."
     },
@@ -781,9 +774,8 @@
       "priority": 2,
       "cooldown_ms": 900,
       "resources": [
-        "sfx.combat.arrows_fast_flybys_lr",
         "sfx.combat.arrows_many_overhead",
-        "sfx.combat.arrows_overhead_ambience"
+        "sfx.combat.arrows_overhead_dark"
       ]
     },
     {
@@ -795,11 +787,10 @@
       "priority": 4,
       "cooldown_ms": 2500,
       "resources": [
+        "sfx.combat.arrow_launch",
+        "sfx.combat.arrows_many_overhead",
         "sfx.combat.arrows_overhead_dark",
-        "sfx.combat.archer_volley_many",
-        "sfx.combat.archers_shooting_close",
-        "sfx.combat.arrows_impact_shields_dirt",
-        "sfx.combat.arrows_whistle_snap_impact"
+        "sfx.combat.arrow_impact_01"
       ]
     },
     {
@@ -878,8 +869,7 @@
       "priority": 6,
       "cooldown_ms": 90,
       "resources": [
-        "sfx.combat.block",
-        "sfx.combat.block_v2"
+        "sfx.combat.block"
       ],
       "wanted": "Blade on shield boss, heavy and damped, no ring-out. Distinct from combat.hit.sword, which lands on flesh."
     },

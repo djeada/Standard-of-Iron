@@ -68,7 +68,6 @@ struct PreparedWildlifeBodyState {
 struct PreparedRenderPassIntent {
   RenderPassIntent pass{RenderPassIntent::Main};
   bool emits_body{true};
-  bool emits_post_body_draws{false};
 };
 
 struct PreparedAnimationState {
@@ -134,7 +133,6 @@ pass_intent_for(const CreatureGraphOutput& graph) noexcept -> PreparedRenderPass
   PreparedRenderPassIntent intent;
   intent.pass = graph.pass_intent;
   intent.emits_body = !graph.culled;
-  intent.emits_post_body_draws = graph.pass_intent == RenderPassIntent::Main;
   return intent;
 }
 

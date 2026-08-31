@@ -2,7 +2,9 @@
 
 #include <algorithm>
 #include <cmath>
+#include <span>
 #include <utility>
+#include <vector>
 
 #include "../core/ambient_session.h"
 #include "../core/entity.h"
@@ -32,12 +34,27 @@ auto same_blocker(const GateBlocker& lhs, const GateBlocker& rhs) -> bool {
          lhs.entity_id == rhs.entity_id;
 }
 
-void publish_navigation_blocker_change(bool obstruction_released) {
+void publish_navigation_blocker_change(std::span<const GateBlocker> previous,
+                                       std::span<const GateBlocker> current,
+                                       bool obstruction_released) {
   auto* pathfinder = NavGrid::get_pathfinder();
   if (pathfinder == nullptr) {
     return;
   }
-  pathfinder->mark_navigation_grid_dirty();
+  const auto mark = [pathfinder](const GateBlocker& blocker) {
+    const float center_x = (blocker.min_x + blocker.max_x) * 0.5F;
+    const float center_z = (blocker.min_z + blocker.max_z) * 0.5F;
+    pathfinder->mark_building_region_dirty(center_x,
+                                           center_z,
+                                           blocker.max_x - blocker.min_x,
+                                           blocker.max_z - blocker.min_z);
+  };
+  for (const auto& blocker : previous) {
+    mark(blocker);
+  }
+  for (const auto& blocker : current) {
+    mark(blocker);
+  }
   if (obstruction_released) {
     pathfinder->mark_obstruction_released();
   }
@@ -178,8 +195,9 @@ void GateService::refresh_blockers(Engine::Core::World& world) {
               return same_blocker(previous, current);
             });
       });
+  const std::vector<GateBlocker> previous = std::move(storage);
   storage = std::move(refreshed);
-  publish_navigation_blocker_change(obstruction_released);
+  publish_navigation_blocker_change(previous, storage, obstruction_released);
 }
 
 void GateService::clear_blockers() {
@@ -187,8 +205,9 @@ void GateService::clear_blockers() {
   if (storage.empty()) {
     return;
   }
+  const std::vector<GateBlocker> previous = std::move(storage);
   storage.clear();
-  publish_navigation_blocker_change(true);
+  publish_navigation_blocker_change(previous, {}, true);
 }
 
 auto GateService::blockers() -> const std::vector<GateBlocker>& {
