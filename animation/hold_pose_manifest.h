@@ -27,6 +27,7 @@ struct HumanoidHeldPoseInputs {
   HumanoidHeldPoseKind kind{HumanoidHeldPoseKind::BowReady};
   float shoulder_y{0.0F};
   bool moving{false};
+  bool running{false};
   float sample_time{0.0F};
 };
 

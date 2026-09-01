@@ -229,6 +229,10 @@ TEST_F(MissionWaveAssaultTest, WaveUnitsAttackTheRampartInTheirWay) {
   auto& session = make_match();
 
   build_camp_ring(session);
+  const std::size_t rampart_at_start =
+      session.world()
+          .collect_entities_with<Engine::Core::WallSegmentComponent>()
+          .size();
 
   const QVector3D camp = world_of(k_camp_grid_x, k_gate_grid_z);
   spawn(session, Game::Units::SpawnType::Barracks, k_player, camp);
@@ -268,9 +272,16 @@ TEST_F(MissionWaveAssaultTest, WaveUnitsAttackTheRampartInTheirWay) {
     }
   }
 
+  const auto rampart_left = barriers.size();
+  const int rampart_broken =
+      static_cast<int>(rampart_at_start) - static_cast<int>(rampart_left);
+
   EXPECT_GT(attacking_the_rampart, 0)
       << "no wave unit was working on the rampart between it and the camp";
-  EXPECT_GT(damage_dealt, 0) << "the wave stood at the wall without ever striking it";
+  EXPECT_GT(damage_dealt + rampart_broken, 0)
+      << "the wave stood at the wall without ever striking it: " << damage_dealt
+      << " damage on " << rampart_left << " standing segments, " << rampart_broken
+      << " broken through";
 }
 
 TEST_F(MissionWaveAssaultTest, WaveWalksPastNeutralPropertyOnTheWayIn) {

@@ -37,8 +37,15 @@ RATE, QUALITY, TARGET_LUFS, CEILING_DBTP = 32000, 4, -14.1, -1.0
 
 RUNTIME_FLOOR_LUFS, LIMIT_HEADROOM_DB, LIMITER_CEILING = -19.0, 3.0, 0.871
 
+SOURCE_SUFFIXES = (".flac", ".wav", ".mp3")
+
 
 BATCHES = {
+    "2026-09-iron": {
+        "Iron_Kingdom_2026-09-01T083636": "menu/main_theme_iron_kingdom",
+        "March_of_the_Old_Gods_2026-09-01T083738": "base/base_march_of_the_old_gods",
+        "Siege_at_Dawn_2026-09-01T083842": "combat/combat_siege_at_dawn",
+    },
     "2026-08-punic": {
         "Standard_of_Iron_Main_Theme_2026-08-28T210251": "menu/main_theme_standard_of_iron",
         "Standard_of_Iron_Main_Theme_ALT": "menu/main_theme_standard_of_iron_alt",
@@ -101,7 +108,7 @@ def main() -> int:
         "--source",
         required=True,
         type=pathlib.Path,
-        help="directory of master renders (FLAC/WAV)",
+        help="directory of master renders (FLAC/WAV/MP3)",
     )
     ap.add_argument(
         "--out",
@@ -132,7 +139,7 @@ def main() -> int:
     args.work.mkdir(parents=True, exist_ok=True)
     rows = []
     for src in sorted(args.source.iterdir()):
-        if src.is_dir() or src.suffix.lower() not in (".flac", ".wav"):
+        if src.is_dir() or src.suffix.lower() not in SOURCE_SUFFIXES:
             continue
         dest_stem = name_map.get(src.stem)
         if dest_stem is None:

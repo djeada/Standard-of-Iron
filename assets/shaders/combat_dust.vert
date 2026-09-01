@@ -49,20 +49,30 @@ void main() {
   float normalized_dist = dist / max(u_radius, 0.001);
 
   if (u_effect_type == 0) {
-    float swirl_angle = u_time * 1.5 + normalized_dist * 3.14159;
-    float swirl_strength = 0.15 * (1.0 - normalized_dist);
-    pos.x += sin(swirl_angle) * swirl_strength;
-    pos.z += cos(swirl_angle) * swirl_strength;
+    float height_t = clamp(a_texcoord.y, 0.0, 1.0);
+    float angle_t = a_texcoord.x;
+    float angle = angle_t * 6.28318;
 
-    float bob = sin(u_time * 2.0 + pos.x * 3.0) * 0.05;
-    pos.y += bob + 0.1 * sin(u_time * 1.5 + pos.z * 2.0);
+    vec2 ring = vec2(cos(angle), sin(angle));
+    float body_noise = soi_fbm_23e5ab(
+        ring * 1.9 + vec2(u_time * 0.13, height_t * 2.4 - u_time * 0.21));
+    float curl_noise =
+        soi_fbm_23e5ab(ring * 3.7 + vec2(7.0 - u_time * 0.09, height_t * 4.6 + 3.0));
 
-    float rise = max(0.0, sin(u_time * 0.5 + normalized_dist * 2.0)) * 0.3;
-    pos.y += rise;
+    float swirl = u_time * 0.32 + height_t * 1.35;
+    vec2 dir = vec2(cos(angle + swirl), sin(angle + swirl));
 
-    float edge_fade = inv_smoothstep(0.7, 1.0, normalized_dist);
-    float time_pulse = 0.7 + 0.3 * sin(u_time * 1.5);
-    v_alpha = edge_fade * time_pulse * u_intensity;
+    float dome = 0.26 + 0.74 * sqrt(max(0.0, 1.0 - height_t * height_t));
+    float lobe = 0.88 + 0.17 * body_noise + 0.08 * curl_noise;
+    pos.xz = dir * dome * lobe;
+
+    pos.y = height_t * 0.78 * (0.86 + 0.24 * body_noise);
+    pos.y += 0.03 * sin(u_time * 0.9 + angle * 2.0);
+
+    float mound = smoothstep(0.0, 0.30, height_t) *
+                  (1.0 - 0.62 * smoothstep(0.58, 1.0, height_t));
+    float breathe = 0.86 + 0.14 * sin(u_time * 0.8 + body_noise * 3.1);
+    v_alpha = clamp(mound * breathe * u_intensity * 0.92, 0.0, 1.05);
   } else if (u_effect_type == 1 || u_effect_type == 4) {
     bool unit_flame = (u_effect_type == 4);
     float height = clamp(a_texcoord.y, 0.0, 1.0);

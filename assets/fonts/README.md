@@ -15,7 +15,7 @@ nothing in the output saying which face it got.
 | File | Role |
 | --- | --- |
 | `EBGaramond12-Bold.ttf` | The text and fallback face. Covers lowercase, accents and everything the display face has no glyph for. OFL-1.1, Georg Duffner. |
-| `StandardIronDisplay-Bold.ttf` | The brand face: titles, headings, outcome screens, big numbers, reel captions. **Caps, digits, punctuation and Latin-1 accented capitals only — no lowercase.** Generated; see below. |
+| `StandardIronDisplay-Bold.ttf` | The brand face: titles, headings, outcome screens, big numbers, reel captions. **Caps, digits, punctuation, Latin-1 accented capitals and the Turkish `Ğ İ Ş` only — no lowercase.** Generated; see below. |
 
 `OFL-EBGaramond.txt` is the license the bundled EB Garamond is redistributed
 under; it has to travel with the file.

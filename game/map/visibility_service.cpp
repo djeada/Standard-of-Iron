@@ -74,6 +74,25 @@ void VisibilityService::initialize(int width, int height, float tile_size) {
   publish_snapshot_locked(next_version);
 }
 
+void VisibilityService::shutdown() {
+  if (!m_initialized) {
+    return;
+  }
+  reset_worker_state();
+  std::unique_lock<std::shared_mutex> const lock(m_cells_mutex);
+  m_cells.clear();
+  m_width = 0;
+  m_height = 0;
+  m_half_width = 0.0F;
+  m_half_height = 0.0F;
+  m_last_positions.clear();
+  m_force_full_update = true;
+  m_initialized = false;
+  reset_throttle();
+  const auto next_version = m_version.fetch_add(1, std::memory_order_release) + 1ULL;
+  publish_snapshot_locked(next_version);
+}
+
 void VisibilityService::reset() {
   if (!m_initialized) {
     return;

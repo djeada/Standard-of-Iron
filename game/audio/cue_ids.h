@@ -33,6 +33,7 @@ inline constexpr const char* k_order_formation = "order.formation";
 inline constexpr const char* k_order_formation_placed = "order.formation_placed";
 inline constexpr const char* k_order_gate_mode = "order.gate_mode";
 inline constexpr const char* k_order_rally_set = "order.rally_set";
+inline constexpr const char* k_order_commander_rally = "order.commander_rally";
 
 inline constexpr const char* k_build_placement_begin = "build.placement_begin";
 inline constexpr const char* k_build_placement_confirmed = "build.placement_confirmed";
@@ -113,7 +114,7 @@ inline constexpr const char* k_state_load_complete = "state.load_complete";
 inline constexpr const char* k_state_commander_enter = "state.commander_enter";
 inline constexpr const char* k_state_commander_exit = "state.commander_exit";
 
-inline constexpr std::array<const char*, 95> k_all = {
+inline constexpr std::array<const char*, 96> k_all = {
     k_ui_hover,
     k_ui_click,
     k_ui_back,
@@ -140,6 +141,7 @@ inline constexpr std::array<const char*, 95> k_all = {
     k_order_formation_placed,
     k_order_gate_mode,
     k_order_rally_set,
+    k_order_commander_rally,
     k_build_placement_begin,
     k_build_placement_confirmed,
     k_build_placement_rejected,

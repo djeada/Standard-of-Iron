@@ -43,10 +43,12 @@ vec3 apply_zoom_readability(vec3 color, float zoom) {
   return clamp(saturated, 0.0, 1.0);
 }
 
+const int k_humanoid_role_cloth = 1;
 const int k_humanoid_role_skin = 2;
 const int k_humanoid_role_leather = 3;
 const int k_humanoid_role_leather_dark = 4;
 const int k_humanoid_role_metal = 6;
+const int k_humanoid_role_cloth_dark = 7;
 
 vec3 shade_readable_character(vec3 base,
                               vec3 surface_normal,
@@ -117,6 +119,17 @@ vec3 shade_readable_character(vec3 base,
 
     color += base * vec3(0.16, 0.05, 0.02) * shadow_side * readable_ambient;
     color += sun_color * environment_primary_intensity() * pow(n_dot_h, 18.0) * 0.05;
+    float skin_transmission =
+        pow(clamp(dot(-surface_normal, light_dir), 0.0, 1.0), 2.0) *
+        pow(1.0 - max(dot(surface_normal, view_dir), 0.0), 2.0);
+    color += base * vec3(0.14, 0.045, 0.018) * skin_transmission *
+             environment_primary_intensity();
+  } else if (material_id == 0 && (color_role == k_humanoid_role_cloth ||
+                                  color_role == k_humanoid_role_cloth_dark)) {
+
+    float cloth_sheen = pow(n_dot_h, 6.0);
+    color +=
+        base * mix(sky_color, sun_color, 0.45) * cloth_sheen * mix(0.025, 0.045, zoom);
   } else if (wetness > 0.0) {
 
     bool coat = false;

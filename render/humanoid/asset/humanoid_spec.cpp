@@ -44,7 +44,7 @@ void fill_humanoid_role_colors_impl(
   out[LeatherDark - 1] = v.palette.leather_dark;
   out[Wood - 1] = v.palette.wood;
   out[Metal - 1] = v.palette.metal;
-  out[ClothDark - 1] = v.palette.cloth * 0.92F;
+  out[ClothDark - 1] = v.palette.cloth * 0.84F;
 }
 
 constexpr auto bone(HumanoidBone b) noexcept -> Creature::BoneIndex {
@@ -59,8 +59,8 @@ constexpr auto make_full_chest() noexcept -> Creature::PrimitiveInstance {
   p.params.anchor_bone = bone(HumanoidBone::Chest);
   p.params.tail_bone = bone(HumanoidBone::Chest);
   p.params.tail_offset = QVector3D(0.0F, -0.17F, 0.0F);
-  p.params.radius = HP::TORSO_TOP_R * 0.78F;
-  p.params.depth_radius = HP::TORSO_TOP_R * 0.58F;
+  p.params.radius = HP::TORSO_TOP_R * 0.86F;
+  p.params.depth_radius = HP::TORSO_TOP_R * 0.62F;
   p.color_role = Cloth;
   p.lod_mask = Creature::k_lod_full;
   return p;
@@ -100,8 +100,8 @@ constexpr auto make_full_abdomen() noexcept -> Creature::PrimitiveInstance {
   p.shape = Creature::PrimitiveShape::OrientedCylinder;
   p.params.anchor_bone = bone(HumanoidBone::Spine);
   p.params.tail_bone = bone(HumanoidBone::Chest);
-  p.params.radius = HP::TORSO_BOT_R * 0.72F;
-  p.params.depth_radius = HP::TORSO_BOT_R * 0.50F;
+  p.params.radius = HP::TORSO_BOT_R * 0.78F;
+  p.params.depth_radius = HP::TORSO_BOT_R * 0.55F;
   p.color_role = Cloth;
   p.lod_mask = Creature::k_lod_full;
   return p;
@@ -261,7 +261,7 @@ constexpr auto make_full_hand(bool left) noexcept -> Creature::PrimitiveInstance
   p.params.head_offset = QVector3D(0.0F, HP::HAND_RADIUS * 0.65F, 0.0F);
   p.params.half_extents = QVector3D(
       HP::HAND_RADIUS * 1.18F, HP::HAND_RADIUS * 1.38F, HP::HAND_RADIUS * 0.56F);
-  p.color_role = LeatherDark;
+  p.color_role = Skin;
   p.lod_mask = Creature::k_lod_full;
   return p;
 }
@@ -300,7 +300,7 @@ constexpr auto make_full_jaw() noexcept -> Creature::PrimitiveInstance {
   p.params.head_offset =
       QVector3D(0.0F, -HP::HEAD_RADIUS * 0.40F, HP::HEAD_RADIUS * 0.22F);
   p.params.half_extents = QVector3D(
-      HP::HEAD_RADIUS * 0.42F, HP::HEAD_RADIUS * 0.24F, HP::HEAD_RADIUS * 0.34F);
+      HP::HEAD_RADIUS * 0.56F, HP::HEAD_RADIUS * 0.30F, HP::HEAD_RADIUS * 0.38F);
   p.color_role = Skin;
   p.lod_mask = Creature::k_lod_full;
   return p;

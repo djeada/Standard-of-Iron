@@ -6,12 +6,20 @@
 #include "../core/component.h"
 #include "../core/world.h"
 #include "../session/simulation_clock.h"
-#include "../units/troop_config.h"
 #include "core/event_manager.h"
 #include "owner_registry.h"
 #include "units/spawn_type.h"
 
 namespace Game::Systems {
+namespace {
+
+auto counts_as_troop(Game::Units::SpawnType spawn_type) -> bool {
+  return spawn_type != Game::Units::SpawnType::Barracks &&
+         spawn_type != Game::Units::SpawnType::DefenseTower &&
+         spawn_type != Game::Units::SpawnType::Home;
+}
+
+} // namespace
 
 auto GlobalStatsRegistry::instance() -> GlobalStatsRegistry& {
   return *Game::Session::ambient_services().stats;
@@ -74,11 +82,6 @@ void GlobalStatsRegistry::mark_game_end(int owner_id) {
 void GlobalStatsRegistry::on_unit_spawned(const Engine::Core::UnitSpawnedEvent& event) {
 
   if (event.is_initial_spawn) {
-
-    if (event.spawn_type == Game::Units::SpawnType::Barracks) {
-      auto& stats = m_player_stats[event.owner_id];
-      stats.barracks_owned++;
-    }
     return;
   }
 
@@ -86,25 +89,17 @@ void GlobalStatsRegistry::on_unit_spawned(const Engine::Core::UnitSpawnedEvent& 
 
   if (event.spawn_type == Game::Units::SpawnType::Barracks) {
     stats.barracks_owned++;
-  } else if (event.spawn_type != Game::Units::SpawnType::DefenseTower &&
-             event.spawn_type != Game::Units::SpawnType::Home) {
-
-    int const production_cost =
-        Game::Units::TroopConfig::instance().get_production_cost(event.spawn_type);
-    stats.troops_recruited += production_cost;
+  } else if (counts_as_troop(event.spawn_type)) {
+    stats.troops_recruited++;
   }
 }
 
 void GlobalStatsRegistry::on_unit_died(const Engine::Core::UnitDiedEvent& event) {
 
-  if (event.spawn_type != Game::Units::SpawnType::Barracks &&
-      event.spawn_type != Game::Units::SpawnType::DefenseTower &&
-      event.spawn_type != Game::Units::SpawnType::Home) {
+  if (counts_as_troop(event.spawn_type)) {
     auto it = m_player_stats.find(event.owner_id);
     if (it != m_player_stats.end()) {
-      int const production_cost =
-          Game::Units::TroopConfig::instance().get_production_cost(event.spawn_type);
-      it->second.losses += production_cost;
+      it->second.losses++;
     }
   }
 
@@ -125,12 +120,8 @@ void GlobalStatsRegistry::on_unit_died(const Engine::Core::UnitDiedEvent& event)
     if (owner_registry.are_enemies(event.killer_owner_id, event.owner_id)) {
       auto& stats = m_player_stats[event.killer_owner_id];
 
-      if (event.spawn_type != Game::Units::SpawnType::Barracks &&
-          event.spawn_type != Game::Units::SpawnType::DefenseTower &&
-          event.spawn_type != Game::Units::SpawnType::Home) {
-        int const production_cost =
-            Game::Units::TroopConfig::instance().get_production_cost(event.spawn_type);
-        stats.enemies_killed += production_cost;
+      if (counts_as_troop(event.spawn_type)) {
+        stats.enemies_killed++;
       }
     }
   }
