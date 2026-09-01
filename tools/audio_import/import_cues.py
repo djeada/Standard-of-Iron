@@ -9,7 +9,9 @@ they are shippable.
 
 **Trim.** The sound is located from the loudest transient outward, not from the first
 non-silent sample, because these renders often open with room tone seconds before the hit.
-A cue that starts with silence reads in game as the game reacting late.
+A cue that starts with silence reads in game as the game reacting late. A plan entry can
+opt out with `"whole"` in its second slot, which imports the render exactly as delivered --
+for a sustained wash rather than a hit, the padding *is* the sound.
 
 **Level.** Effect cues are deliberately *not* loudness-normalised at runtime -- the level in
 the file is the design decision (docs/AUDIO_MASTERING.md). So each import is matched to the
@@ -41,6 +43,16 @@ FADE_OUT_S = 0.030
 
 
 PLAN = {
+    "Magical_Healing_Sounds": (
+        "sfx/combat/heal_magic_shimmer.ogg",
+        "whole",
+        "sfx/combat/heal_bind_wound.ogg",
+    ),
+    "The_Commanders_Rally": (
+        "sfx/orders/commander_rally.ogg",
+        "whole",
+        "sfx/orders/attack_horn_stab.ogg",
+    ),
     "Stiff_Leather_Tap": ("sfx/ui/click_confirm.ogg", None, None),
     "Fingertip_and_Parchment": ("sfx/ui/hover_brush.ogg", None, None),
     "Shield_Boss_Knock": ("sfx/ui/select_unit.ogg", None, None),
@@ -276,7 +288,7 @@ def main() -> int:
             by_stem[stem] = p
 
     rows, missing = [], []
-    for stem, (dest_rel, _cap, ref_rel) in PLAN.items():
+    for stem, (dest_rel, trim, ref_rel) in PLAN.items():
         if args.only and stem != args.only:
             continue
         src = by_stem.get(stem)
@@ -284,7 +296,7 @@ def main() -> int:
             missing.append(stem)
             continue
         x = decode(src)
-        s, e = locate(x)
+        s, e = (0, len(x)) if trim == "whole" else locate(x)
         y = shape(x[s:e])
         ref = AUDIO / (ref_rel if ref_rel else dest_rel)
         y, note = level_to(y, ref)

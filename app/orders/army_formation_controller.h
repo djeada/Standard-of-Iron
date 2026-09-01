@@ -30,6 +30,11 @@ struct CommandResult;
 class ArmyFormationController : public QObject {
   Q_OBJECT
 public:
+  enum class FormationTeardown : std::uint8_t {
+    Cancel,
+    Reset
+  };
+
   ArmyFormationController(Engine::Core::World* world,
                           Game::Systems::SelectionSystem* selection_system,
                           App::Orders::OrderIssuer::FeedbackSink feedback,
@@ -126,6 +131,7 @@ private:
   void set_formation_facing(float degrees, bool explicit_choice);
   void follow_auto_formation_facing();
   void reset_formation_facing();
+  void end_formation_placement(FormationTeardown teardown);
   void apply_formation_option_change();
   void invalidate_formation_layout();
 

@@ -42,6 +42,89 @@ auto normalize_structure_types(const Condition& condition,
   return normalized;
 }
 
+void append_victory_condition(const Condition& condition,
+                              Game::Systems::VictoryRuleSet& rules) {
+  QString const type = condition.type.trimmed().toLower();
+  if (type == "destroy_all_enemies") {
+    rules.victory_rules.emplace_back(
+        Game::Systems::EliminationVictoryRule{{QStringLiteral("barracks")}});
+    return;
+  }
+
+  if (type == "survive_duration") {
+    if (!condition.duration.has_value()) {
+      qWarning() << "Mission victory condition survive_duration is missing duration";
+      return;
+    }
+    rules.victory_rules.emplace_back(
+        Game::Systems::SurviveTimeVictoryRule{std::max(0.0F, *condition.duration)});
+    return;
+  }
+
+  if (type == "control_structures" || type == "capture_structures") {
+    Game::Systems::StructureRequirement const target{
+        normalize_structure_types(condition), condition.min_count.value_or(1)};
+    if (type == "control_structures") {
+      rules.victory_rules.emplace_back(
+          Game::Systems::ControlStructuresVictoryRule{target});
+    } else {
+      rules.victory_rules.emplace_back(
+          Game::Systems::CaptureStructuresVictoryRule{target});
+    }
+    return;
+  }
+
+  if (type == "clear_undead_zone" || type == "purify_shrine") {
+    if (!condition.zone_id.has_value() || condition.zone_id->isEmpty()) {
+      qWarning() << "Mission victory condition" << condition.type
+                 << "is missing zone_id";
+      return;
+    }
+    if (type == "clear_undead_zone") {
+      rules.victory_rules.emplace_back(
+          Game::Systems::ClearUndeadZoneVictoryRule{*condition.zone_id});
+    } else {
+      rules.victory_rules.emplace_back(
+          Game::Systems::PurifyShrineVictoryRule{*condition.zone_id});
+    }
+    return;
+  }
+
+  if (type == "survive_undead_wave") {
+    if (!condition.zone_id.has_value() || condition.zone_id->isEmpty()) {
+      qWarning() << "Mission victory condition survive_undead_wave is missing zone_id";
+      return;
+    }
+    rules.victory_rules.emplace_back(Game::Systems::SurviveUndeadWaveVictoryRule{
+        *condition.zone_id, std::max(1, condition.wave_count.value_or(1))});
+    return;
+  }
+
+  if (type == "survive_waves") {
+    rules.victory_rules.emplace_back(Game::Systems::SurviveWavesVictoryRule{
+        std::max(1, condition.wave_count.value_or(1))});
+    return;
+  }
+
+  if (type == "accumulate_resources") {
+    if (!condition.resources.has_value() || condition.resources->empty()) {
+      qWarning() << "Mission victory condition accumulate_resources declares no "
+                    "positive resource amounts";
+      return;
+    }
+    rules.victory_rules.emplace_back(
+        Game::Systems::AccumulateResourcesVictoryRule{*condition.resources});
+    return;
+  }
+
+  if (type == "eliminate_commanders") {
+    rules.victory_rules.emplace_back(Game::Systems::EliminateCommandersVictoryRule{});
+    return;
+  }
+
+  qWarning() << "Unsupported mission victory condition type" << condition.type;
+}
+
 } // namespace
 
 auto build_victory_rules(const MissionDefinition& mission)
@@ -58,86 +141,13 @@ auto build_victory_rules(const MissionDefinition& mission)
   }
 
   for (const auto& condition : mission.victory_conditions) {
-    QString const type = condition.type.trimmed().toLower();
-    if (type == "destroy_all_enemies") {
-      rules.victory_rules.emplace_back(
-          Game::Systems::EliminationVictoryRule{{QStringLiteral("barracks")}});
-      continue;
+    const std::size_t before = rules.victory_rules.size();
+    append_victory_condition(condition, rules);
+    for (std::size_t index = before; index < rules.victory_rules.size(); ++index) {
+      rules.victory_rules[index].id =
+          condition.zone_id.value_or(condition.type.trimmed().toLower());
+      rules.victory_rules[index].description = condition.description;
     }
-
-    if (type == "survive_duration") {
-      if (!condition.duration.has_value()) {
-        qWarning() << "Mission victory condition survive_duration is missing duration";
-        continue;
-      }
-      rules.victory_rules.emplace_back(
-          Game::Systems::SurviveTimeVictoryRule{std::max(0.0F, *condition.duration)});
-      continue;
-    }
-
-    if (type == "control_structures" || type == "capture_structures") {
-      Game::Systems::StructureRequirement const target{
-          normalize_structure_types(condition), condition.min_count.value_or(1)};
-      if (type == "control_structures") {
-        rules.victory_rules.emplace_back(
-            Game::Systems::ControlStructuresVictoryRule{target});
-      } else {
-        rules.victory_rules.emplace_back(
-            Game::Systems::CaptureStructuresVictoryRule{target});
-      }
-      continue;
-    }
-
-    if (type == "clear_undead_zone" || type == "purify_shrine") {
-      if (!condition.zone_id.has_value() || condition.zone_id->isEmpty()) {
-        qWarning() << "Mission victory condition" << condition.type
-                   << "is missing zone_id";
-        continue;
-      }
-      if (type == "clear_undead_zone") {
-        rules.victory_rules.emplace_back(
-            Game::Systems::ClearUndeadZoneVictoryRule{*condition.zone_id});
-      } else {
-        rules.victory_rules.emplace_back(
-            Game::Systems::PurifyShrineVictoryRule{*condition.zone_id});
-      }
-      continue;
-    }
-
-    if (type == "survive_undead_wave") {
-      if (!condition.zone_id.has_value() || condition.zone_id->isEmpty()) {
-        qWarning()
-            << "Mission victory condition survive_undead_wave is missing zone_id";
-        continue;
-      }
-      rules.victory_rules.emplace_back(Game::Systems::SurviveUndeadWaveVictoryRule{
-          *condition.zone_id, std::max(1, condition.wave_count.value_or(1))});
-      continue;
-    }
-
-    if (type == "survive_waves") {
-      rules.victory_rules.emplace_back(Game::Systems::SurviveWavesVictoryRule{
-          std::max(1, condition.wave_count.value_or(1))});
-      continue;
-    }
-
-    if (type == "accumulate_resources") {
-      if (!condition.resources.has_value() || condition.resources->empty()) {
-        qWarning() << "Mission victory condition accumulate_resources declares no "
-                      "positive resource amounts";
-        continue;
-      }
-      rules.victory_rules.emplace_back(
-          Game::Systems::AccumulateResourcesVictoryRule{*condition.resources});
-      continue;
-    }
-
-    if (type == "eliminate_commanders") {
-      rules.victory_rules.emplace_back(Game::Systems::EliminateCommandersVictoryRule{});
-      continue;
-    }
-
-    qWarning() << "Unsupported mission victory condition type" << condition.type;
   }
 
   if (rules.victory_rules.empty()) {

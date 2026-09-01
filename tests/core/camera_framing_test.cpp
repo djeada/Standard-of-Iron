@@ -20,7 +20,12 @@ auto height_above_target(const Render::GL::Camera& camera) -> float {
 
 class CameraFramingTest : public ::testing::Test {
 protected:
-  void TearDown() override { Game::GameConfig::instance().clear_authored_camera(); }
+  void SetUp() override { Game::Session::SessionContext::active().reset(); }
+
+  void TearDown() override {
+    Game::GameConfig::instance().clear_authored_camera();
+    Game::Session::SessionContext::active().reset();
+  }
 };
 
 TEST_F(CameraFramingTest, AResetPullsTheAuthoredViewInWithoutLosingTheScale) {

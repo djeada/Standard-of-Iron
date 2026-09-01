@@ -67,20 +67,22 @@ void append_undead_objectives(const Game::Map::VictoryConfig& config,
     if (objective.zone_id.isEmpty()) {
       continue;
     }
+    const std::size_t before = rules.victory_rules.size();
     if (objective.type == "clear_undead_zone") {
       rules.victory_rules.emplace_back(ClearUndeadZoneVictoryRule{objective.zone_id});
-      continue;
-    }
-    if (objective.type == "purify_shrine") {
+    } else if (objective.type == "purify_shrine") {
       rules.victory_rules.emplace_back(PurifyShrineVictoryRule{objective.zone_id});
-      continue;
-    }
-    if (objective.type == "survive_undead_wave") {
+    } else if (objective.type == "survive_undead_wave") {
       rules.victory_rules.emplace_back(SurviveUndeadWaveVictoryRule{
           objective.zone_id, std::max(1, objective.wave_count)});
+    } else {
+      qWarning() << "Unknown undead victory objective" << objective.type
+                 << "- ignoring";
       continue;
     }
-    qWarning() << "Unknown undead victory objective" << objective.type << "- ignoring";
+    for (std::size_t index = before; index < rules.victory_rules.size(); ++index) {
+      rules.victory_rules[index].id = objective.zone_id;
+    }
   }
 }
 
@@ -158,12 +160,12 @@ auto build_rule_set_from_config(const Game::Map::VictoryConfig& config)
     rules.defeat_rules.emplace_back(NoCommanderDefeatRule{});
   }
 
-  bool const already_wins_on_commanders =
-      std::any_of(rules.victory_rules.begin(),
-                  rules.victory_rules.end(),
-                  [](const VictoryRule& rule) {
-                    return std::holds_alternative<EliminateCommandersVictoryRule>(rule);
-                  });
+  bool const already_wins_on_commanders = std::any_of(
+      rules.victory_rules.begin(),
+      rules.victory_rules.end(),
+      [](const VictoryObjective& objective) {
+        return std::holds_alternative<EliminateCommandersVictoryRule>(objective.rule);
+      });
   if (!already_wins_on_commanders) {
     rules.victory_rules.emplace_back(EliminateCommandersVictoryRule{});
   }
@@ -223,6 +225,7 @@ void VictoryService::reset() {
   m_spectator_poll_timer = 0.0F;
   m_last_world_summary = {};
   m_has_world_summary = false;
+  m_objective_complete.clear();
   m_local_owner_id = 1;
   m_victory_state.clear();
   m_world_ptr = nullptr;
@@ -352,7 +355,7 @@ void VictoryService::refresh_rule_metadata() {
   m_has_eliminate_commanders_rule = false;
   m_only_commander_structure_types.clear();
 
-  for (const auto& rule : m_rule_set.victory_rules) {
+  for (const auto& objective : m_rule_set.victory_rules) {
     std::visit(
         Overloaded{
             [this](const EliminationVictoryRule& elimination_rule) {
@@ -390,7 +393,7 @@ void VictoryService::refresh_rule_metadata() {
               m_has_world_based_rules = true;
               m_has_eliminate_commanders_rule = true;
             }},
-        rule);
+        objective.rule);
   }
 
   for (const auto& rule : m_rule_set.defeat_rules) {
@@ -458,21 +461,30 @@ void VictoryService::evaluate_rules(const WorldSummary& summary) {
   }
 
   if (!m_rule_set.victory_rules.empty()) {
-    bool victory_satisfied = m_rule_set.require_all_victory_rules;
-    for (const auto& rule : m_rule_set.victory_rules) {
-      const bool satisfied = check_victory_rule(rule, summary);
-      if (m_rule_set.require_all_victory_rules) {
-        if (!satisfied) {
-          victory_satisfied = false;
-          break;
-        }
-      } else if (satisfied) {
-        victory_satisfied = true;
-        break;
-      }
+    bool objectives_changed = false;
+    if (m_objective_complete.size() != m_rule_set.victory_rules.size()) {
+      m_objective_complete.assign(m_rule_set.victory_rules.size(), false);
+      objectives_changed = true;
     }
 
-    if (victory_satisfied) {
+    bool all_satisfied = true;
+    bool any_satisfied = false;
+    for (std::size_t index = 0; index < m_rule_set.victory_rules.size(); ++index) {
+      const bool satisfied =
+          check_victory_rule(m_rule_set.victory_rules[index].rule, summary);
+      if (m_objective_complete[index] != satisfied) {
+        m_objective_complete[index] = satisfied;
+        objectives_changed = true;
+      }
+      all_satisfied = all_satisfied && satisfied;
+      any_satisfied = any_satisfied || satisfied;
+    }
+
+    if (objectives_changed && m_objectives_changed_callback) {
+      m_objectives_changed_callback();
+    }
+
+    if (m_rule_set.require_all_victory_rules ? all_satisfied : any_satisfied) {
       finalize_game(QStringLiteral("victory"));
       return;
     }
@@ -621,6 +633,55 @@ auto VictoryService::summarize_world(Engine::Core::World& world) const -> WorldS
   }
 
   return summary;
+}
+
+auto VictoryService::objectives() const -> std::vector<ObjectiveStatus> {
+  std::vector<ObjectiveStatus> out;
+  out.reserve(m_rule_set.victory_rules.size());
+  for (std::size_t index = 0; index < m_rule_set.victory_rules.size(); ++index) {
+    const auto& objective = m_rule_set.victory_rules[index];
+    const bool complete =
+        index < m_objective_complete.size() && m_objective_complete[index];
+
+    ObjectiveStatus status{.id = objective.id,
+                           .description = objective.description,
+                           .progress = complete ? 1 : 0,
+                           .required = 1,
+                           .complete = complete};
+
+    std::visit(
+        Overloaded{[](const auto&) {},
+                   [this, &status](const SurviveUndeadWaveVictoryRule& rule) {
+                     status.required = std::max(1, rule.required_wave_count);
+                     status.progress =
+                         m_undead_zone_query != nullptr
+                             ? m_undead_zone_query->completed_wave_count(rule.zone_id)
+                             : 0;
+                   },
+                   [this, &status](const SurviveWavesVictoryRule& rule) {
+                     status.required = std::max(1, rule.required_wave_count);
+                     status.progress = m_mission_wave_query != nullptr
+                                           ? m_mission_wave_query->cleared_wave_count()
+                                           : 0;
+                   },
+                   [this, &status](const ControlStructuresVictoryRule& rule) {
+                     status.required = std::max(1, rule.target.required_count);
+                     status.progress = count_matching_structures(
+                         m_last_world_summary.local_owned_structure_counts,
+                         rule.target.structure_types);
+                   },
+                   [this, &status](const CaptureStructuresVictoryRule& rule) {
+                     status.required = std::max(1, rule.target.required_count);
+                     status.progress = count_matching_structures(
+                         m_last_world_summary.local_captured_structure_counts,
+                         rule.target.structure_types);
+                   }},
+        objective.rule);
+
+    status.progress = std::clamp(status.progress, 0, status.required);
+    out.push_back(std::move(status));
+  }
+  return out;
 }
 
 auto VictoryService::check_victory_rule(const VictoryRule& rule,

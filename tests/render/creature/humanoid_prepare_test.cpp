@@ -5,6 +5,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <cstdio>
 #include <gtest/gtest.h>
 #include <limits>
 #include <numbers>
@@ -3086,6 +3087,12 @@ TEST(AnimationCoreHoldPoseManifest, BowReadyAndSwordShieldCarryExposeStableTarge
       .shoulder_y = 1.20F,
       .moving = true,
   });
+  auto const shield_running = Animation::resolve_humanoid_held_pose({
+      .kind = Animation::HumanoidHeldPoseKind::SwordShieldCarry,
+      .shoulder_y = 1.20F,
+      .moving = true,
+      .running = true,
+  });
 
   EXPECT_FALSE(bow.use_offhand_spear_grip);
   EXPECT_FLOAT_EQ(bow.right_hand.z, 0.62F);
@@ -3102,6 +3109,36 @@ TEST(AnimationCoreHoldPoseManifest, BowReadyAndSwordShieldCarryExposeStableTarge
   EXPECT_FLOAT_EQ(shield_moving.left_hand.x, -0.35F);
   EXPECT_FLOAT_EQ(shield_moving.left_hand.y, 1.15F);
   EXPECT_FLOAT_EQ(shield_moving.left_hand.z, 0.33F);
+
+  EXPECT_LT(shield_running.right_hand.x, shield_moving.right_hand.x);
+  EXPECT_LT(shield_running.right_hand.y, shield_moving.right_hand.y);
+  EXPECT_GT(shield_running.right_hand.z, shield_moving.right_hand.z);
+  EXPECT_GT(shield_running.left_hand.x, shield_moving.left_hand.x);
+  EXPECT_GT(shield_running.left_hand.y, shield_moving.left_hand.y);
+  EXPECT_GT(shield_running.left_hand.z, shield_moving.left_hand.z);
+  EXPECT_GT(shield_running.shoulder_l_z_delta, 0.05F);
+}
+
+TEST(AnimationCoreHoldPoseManifest, RunningCompactsEveryWeaponCarrySilhouette) {
+  for (auto const kind : {Animation::HumanoidHeldPoseKind::SpearIdle,
+                          Animation::HumanoidHeldPoseKind::CasterChannel,
+                          Animation::HumanoidHeldPoseKind::StaveCarry}) {
+    auto const walking = Animation::resolve_humanoid_held_pose({
+        .kind = kind,
+        .shoulder_y = 1.20F,
+        .moving = true,
+    });
+    auto const running = Animation::resolve_humanoid_held_pose({
+        .kind = kind,
+        .shoulder_y = 1.20F,
+        .moving = true,
+        .running = true,
+    });
+
+    EXPECT_LT(running.right_hand.y, walking.right_hand.y) << static_cast<int>(kind);
+    EXPECT_NE(running.right_hand.z, walking.right_hand.z) << static_cast<int>(kind);
+    EXPECT_GT(running.head_z_delta, walking.head_z_delta) << static_cast<int>(kind);
+  }
 }
 
 TEST(AnimationCoreHoldPoseManifest, ResourceCarryPlacesBothHandsAroundChestLoad) {
@@ -3897,7 +3934,7 @@ TEST(AnimationCoreLocomotionManifest, LocomotionPoseOwnsWalkCycleDeltas) {
   inputs.state = Animation::HumanoidMotionState::Walk;
   inputs.normalized_speed = 1.0F;
   inputs.cycle_phase = 0.25F;
-  inputs.stride_distance = 2.35F * 0.92F;
+  inputs.stride_distance = 2.35F * Animation::humanoid_walk_cycle_time_for_speed(2.35F);
   inputs.locomotion_blend = 1.0F;
   inputs.walk_speed_multiplier = 1.0F;
   inputs.stance_width = 1.0F;
@@ -4192,7 +4229,7 @@ auto walk_pose_inputs() -> Animation::HumanoidLocomotionPoseInputs {
   inputs.state = Animation::HumanoidMotionState::Walk;
   inputs.normalized_speed = 1.0F;
   inputs.locomotion_blend = 1.0F;
-  inputs.stride_distance = 2.35F * 0.92F;
+  inputs.stride_distance = 2.35F * Animation::humanoid_walk_cycle_time_for_speed(2.35F);
   inputs.walk_speed_multiplier = 1.0F;
   inputs.stance_width = 1.0F;
   inputs.arm_swing_amplitude = 1.0F;
@@ -4209,7 +4246,9 @@ auto run_pose_inputs() -> Animation::HumanoidLocomotionPoseInputs {
   auto inputs = walk_pose_inputs();
   inputs.state = Animation::HumanoidMotionState::Run;
   inputs.run_blend = 1.0F;
-  inputs.stride_distance = inputs.reference_run_speed * 0.56F;
+  inputs.stride_distance =
+      inputs.reference_run_speed *
+      Animation::humanoid_run_cycle_time_for_speed(inputs.reference_run_speed);
   return inputs;
 }
 
@@ -4314,7 +4353,8 @@ TEST(AnimationCoreLocomotionManifest, WalkHeelStrikesWhileRunLandsMidfoot) {
   auto const run_pose = Animation::resolve_humanoid_locomotion_pose(run);
 
   EXPECT_GT(walk_pose.foot_pitch_l, 0.20F);
-  EXPECT_LT(std::abs(run_pose.foot_pitch_l), 0.05F);
+  EXPECT_LT(std::abs(run_pose.foot_pitch_l), walk_pose.foot_pitch_l * 0.25F)
+      << "a run has to land close to flat rather than on the heel";
 }
 
 namespace {

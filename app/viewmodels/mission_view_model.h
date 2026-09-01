@@ -26,6 +26,8 @@ class MissionViewModel : public QObject {
   Q_PROPERTY(bool active_has_target READ active_has_target NOTIFY stages_changed)
   Q_PROPERTY(int completed_count READ completed_count NOTIFY stages_changed)
   Q_PROPERTY(QVariantList markers READ markers NOTIFY stages_changed)
+  Q_PROPERTY(bool stages_mirror_victory_conditions READ stages_mirror_victory_conditions
+                 NOTIFY stages_changed)
 
 public:
   MissionViewModel(const App::Core::ClientContext& context,
@@ -33,7 +35,7 @@ public:
                    CameraViewModel& camera,
                    QObject* parent = nullptr);
 
-  void set_stages(const QVariantList& stages);
+  void set_stages(const QVariantList& stages, bool mirrors_victory_conditions = false);
   void clear();
 
   [[nodiscard]] auto staged() const -> bool { return !m_stages.isEmpty(); }
@@ -46,6 +48,9 @@ public:
   [[nodiscard]] auto active_has_target() const -> bool;
   [[nodiscard]] auto completed_count() const -> int;
   [[nodiscard]] auto markers() const -> QVariantList { return m_markers; }
+  [[nodiscard]] auto stages_mirror_victory_conditions() const -> bool {
+    return m_stages_mirror_victory_conditions;
+  }
 
   Q_INVOKABLE void focus_active_stage();
 
@@ -62,6 +67,7 @@ private:
   QVariantList m_stages;
   QVariantList m_markers;
   int m_active_index = -1;
+  bool m_stages_mirror_victory_conditions = false;
 };
 
 } // namespace App::ViewModels

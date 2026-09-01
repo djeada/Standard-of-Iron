@@ -6,6 +6,7 @@
 #include <vector>
 
 #include "arena_scenarios.h"
+#include "game/systems/building_collision_registry.h"
 #include "game/wildlife/wildlife_config.h"
 
 namespace Arena::Scenarios {
@@ -212,7 +213,7 @@ constexpr float k_valley_street_z = -14.0F;
 constexpr float k_roman_town_x = -26.0F;
 constexpr float k_roman_hamlet_x = 10.0F;
 constexpr float k_punic_town_x = 26.0F;
-constexpr float k_punic_town_z = 32.0F;
+constexpr float k_punic_town_z = 34.0F;
 constexpr float k_punic_camp_x = -8.0F;
 constexpr float k_punic_camp_z = 47.5F;
 constexpr float k_roman_camp_x = -40.0F;
@@ -400,6 +401,12 @@ constexpr float k_col_pitch = 6.4F;
   return k_street_half_width + k_plot_margin + k_max_building_half;
 }
 
+[[nodiscard]] auto temple_keep_out_half() -> float {
+  const auto size =
+      Game::Systems::BuildingCollisionRegistry::get_building_size("temple");
+  return std::min(size.width, size.depth) * 0.5F;
+}
+
 struct SettlementShape {
   int columns{4};
   int rows{1};
@@ -486,8 +493,9 @@ void add_settlement(ArenaScenarioDefinition& scenario, const SettlementPlan& pla
                                   {plan.center.x() + half_width, 0.0F, plan.center.z()},
                                   k_street_half_width * 2.0F));
 
-  const float lane_reach =
-      first_row_offset() + (static_cast<float>(shape.rows) * k_row_pitch);
+  const float lane_reach = first_row_offset() +
+                           (static_cast<float>(shape.rows - 1) * k_row_pitch) +
+                           k_max_building_half;
   if (shape.cross_streets > 0) {
     scenario.roads.push_back(
         street({plan.center.x(), 0.0F, plan.center.z() - lane_reach},
@@ -519,7 +527,7 @@ void add_settlement(ArenaScenarioDefinition& scenario, const SettlementPlan& pla
   if (shape.has_temple) {
     if (plan.acropolis) {
       const float reach =
-          first_row_offset() + (static_cast<float>(shape.rows) * k_row_pitch) + 4.0F;
+          lane_reach + k_cross_half_width + temple_keep_out_half() + k_plot_margin;
       const QVector3D crown = plan.center + QVector3D(0.0F, 0.0F, -reach);
       scenario.elevation_patches.push_back({crown, 11.0F, 4.6F});
       place(QStringLiteral("_temple"), Game::Units::SpawnType::Temple, crown, 180.0F);
@@ -561,10 +569,10 @@ void add_settlement(ArenaScenarioDefinition& scenario, const SettlementPlan& pla
     const float plot_reach_z = first_row_offset() +
                                (static_cast<float>(shape.rows - 1) * k_row_pitch) +
                                k_max_building_half;
-    const float acropolis_reach =
-        plan.acropolis
-            ? first_row_offset() + (static_cast<float>(shape.rows) * k_row_pitch) + 6.0F
-            : 0.0F;
+    const float acropolis_reach = plan.acropolis ? plot_reach_z + k_cross_half_width +
+                                                       (temple_keep_out_half() * 2.0F) +
+                                                       k_plot_margin
+                                                 : 0.0F;
     auto to_even = [](float value) {
       return std::ceil(value / 2.0F) * 2.0F;
     };

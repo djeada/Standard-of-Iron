@@ -657,6 +657,48 @@
       }
     },
     {
+      "id": "music.menu.iron_kingdom",
+      "path": "music/menu/main_theme_iron_kingdom.ogg",
+      "category": "music",
+      "load_policy": "screen",
+      "tags": {
+        "screen_context": "menu",
+        "variant": "iron_kingdom"
+      },
+      "provenance": {
+        "origin": "ElevenLabs render, imported by tools/audio_import/import_music.py (batch 2026-09-iron)",
+        "licence": "Generated for this project under a licence held by the project author that permits commercial use"
+      }
+    },
+    {
+      "id": "music.base.march_of_the_old_gods",
+      "path": "music/base/base_march_of_the_old_gods.ogg",
+      "category": "music",
+      "load_policy": "lazy",
+      "tags": {
+        "ambient_state": "tense",
+        "variant": "old_gods"
+      },
+      "provenance": {
+        "origin": "ElevenLabs render, imported by tools/audio_import/import_music.py (batch 2026-09-iron)",
+        "licence": "Generated for this project under a licence held by the project author that permits commercial use"
+      }
+    },
+    {
+      "id": "music.combat.siege_at_dawn",
+      "path": "music/combat/combat_siege_at_dawn.ogg",
+      "category": "music",
+      "load_policy": "lazy",
+      "tags": {
+        "ambient_state": "combat",
+        "variant": "siege"
+      },
+      "provenance": {
+        "origin": "ElevenLabs render, imported by tools/audio_import/import_music.py (batch 2026-09-iron)",
+        "licence": "Generated for this project under a licence held by the project author that permits commercial use"
+      }
+    },
+    {
       "id": "ambient.alpine_mountain_pass",
       "path": "ambience/alpine_mountain_pass.ogg",
       "category": "ambience",
@@ -1760,6 +1802,22 @@
       }
     },
     {
+      "id": "sfx.order.commander_rally",
+      "path": "sfx/orders/commander_rally.ogg",
+      "category": "sfx",
+      "priority": 6,
+      "cooldown_ms": 2000,
+      "load_policy": "startup",
+      "tags": {
+        "source": "generated"
+      },
+      "provenance": {
+        "origin": "ElevenLabs render, imported by tools/audio_import/import_cues.py",
+        "licence": "Generated for this project under a licence held by the project author that permits commercial use",
+        "notes": "imported at its delivered length; no trim"
+      }
+    },
+    {
       "id": "sfx.build.placement_begin",
       "path": "sfx/build/placement_begin.ogg",
       "category": "sfx",
@@ -1993,18 +2051,18 @@
     },
     {
       "id": "sfx.combat.heal",
-      "path": "sfx/combat/heal_bind_wound.ogg",
+      "path": "sfx/combat/heal_magic_shimmer.ogg",
       "category": "sfx",
       "priority": 3,
       "cooldown_ms": 500,
       "load_policy": "startup",
       "tags": {
-        "source": "field"
+        "source": "generated"
       },
       "provenance": {
-        "origin": "tools/audio_field",
-        "licence": "See THIRD_PARTY_LICENSES.md",
-        "notes": "cut from a catalogued recording by tools/audio_field"
+        "origin": "ElevenLabs render, imported by tools/audio_import/import_cues.py",
+        "licence": "Generated for this project under a licence held by the project author that permits commercial use",
+        "notes": "imported at its delivered length; no trim"
       }
     },
     {

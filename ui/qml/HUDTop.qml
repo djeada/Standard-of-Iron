@@ -43,47 +43,28 @@ Item {
         return GameSpeeds.labels();
     }
 
-    property string primaryObjective: ""
-    property bool primaryObjectiveCountsWaves: false
-
     readonly property bool missionStaged: game_ready() && game.mission && game.mission.staged
 
     readonly property string primaryObjectiveText: {
-        if (missionStaged) {
-            if (game.mission.active_index < 0)
-                return qsTr("All objectives complete");
-            var staged = game.mission.active_title;
-            if (game.mission.active_required > 1)
-                staged += qsTr(" (%1/%2)").arg(game.mission.active_progress).arg(game.mission.active_required);
-            return staged;
-        }
-        if (primaryObjective === "")
+        if (!missionStaged)
             return "";
-        if (!primaryObjectiveCountsWaves || !game_ready() || !game.waves || !game.waves.active)
-            return primaryObjective;
-        return primaryObjective + qsTr(" (%1/%2)").arg(game.waves.cleared_phases).arg(game.waves.total_phases);
+        if (game.mission.active_index < 0)
+            return qsTr("All objectives complete");
+        var staged = game.mission.active_title;
+        if (game.mission.active_required > 1)
+            staged += qsTr(" (%1/%2)").arg(game.mission.active_progress).arg(game.mission.active_required);
+        return staged;
     }
 
-    function refresh_primary_objective() {
-        if (!game_ready() || !game.setup.current_mission_objectives) {
-            primaryObjective = "";
-            primaryObjectiveCountsWaves = false;
-            return;
-        }
-        var objectives = game.setup.current_mission_objectives();
-        var conditions = objectives && objectives.victory_conditions ? objectives.victory_conditions : [];
-        primaryObjective = conditions.length > 0 ? (conditions[0].description || "") : "";
-        primaryObjectiveCountsWaves = conditions.length > 0 && conditions[0].type === "survive_waves";
-    }
-
-    Component.onCompleted: refresh_primary_objective()
-
-    Connections {
-        function onCurrent_mission_changed() {
-            topRoot.refresh_primary_objective();
-        }
-
-        target: topRoot.game_ready() ? game.setup : null
+    function objective_tooltip(canFocusTarget) {
+        var lines = [];
+        if (topRoot.primaryObjectiveText !== "")
+            lines.push(topRoot.primaryObjectiveText);
+        if (topRoot.missionStaged && game.mission.active_hint !== "")
+            lines.push(game.mission.active_hint);
+        if (canFocusTarget)
+            lines.push(qsTr("Click to look at the objective."));
+        return lines.join("\n");
     }
 
     function resource_amount(kind) {
@@ -344,17 +325,22 @@ Item {
                 MouseArea {
                     id: objectiveFocusArea
 
+                    readonly property bool canFocusTarget: topRoot.missionStaged && topRoot.game_ready() && game.mission.active_has_target
+
                     anchors.fill: objectiveRow
-                    enabled: objectiveRow.visible && topRoot.missionStaged && topRoot.game_ready() && game.mission.active_has_target
+                    enabled: objectiveRow.visible
                     hoverEnabled: enabled
-                    cursorShape: enabled ? Qt.PointingHandCursor : Qt.ArrowCursor
+                    cursorShape: objectiveFocusArea.canFocusTarget ? Qt.PointingHandCursor : Qt.ArrowCursor
 
                     Design.IronTooltip {
-                        visible: objectiveFocusArea.containsMouse
-                        text: topRoot.missionStaged ? (game.mission.active_hint !== "" ? game.mission.active_hint + "\n" + qsTr("Click to look at the objective.") : qsTr("Click to look at the objective.")) : ""
+                        visible: objectiveFocusArea.containsMouse && text !== ""
+                        text: topRoot.objective_tooltip(objectiveFocusArea.canFocusTarget)
                     }
 
-                    onClicked: game.mission.focus_active_stage()
+                    onClicked: {
+                        if (objectiveFocusArea.canFocusTarget)
+                            game.mission.focus_active_stage();
+                    }
                 }
 
                 Design.IronSpotlight {

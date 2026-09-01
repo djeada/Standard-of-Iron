@@ -556,7 +556,7 @@ format-strip-comments: strip-comments
 
 LUPDATE ?= $(shell command -v lupdate 2>/dev/null || echo /usr/lib/qt6/bin/lupdate)
 TS_FILES := translations/app_en.ts translations/app_de.ts translations/app_es.ts \
-	translations/app_pt_br.ts translations/app_ar.ts
+	translations/app_pt_br.ts translations/app_ar.ts translations/app_tr.ts
 TS_SOURCE_DIRS := ui app game scene render main.cpp
 # lupdate only parses code, so player-visible text authored in assets/ (mission
 # briefings, objective lines, map and unit names) is mirrored into a generated

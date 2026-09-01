@@ -440,6 +440,7 @@ private:
   void update_commander_messages(float delta_time);
   void publish_commander_message();
   void publish_mission_stages();
+  void publish_victory_objectives();
   void publish_minimap_overlays(float dt);
   void note_minimap_combat_hit(const Engine::Core::CombatHitEvent& event);
   void update_mission_stages(float delta_time);

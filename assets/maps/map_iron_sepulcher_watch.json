@@ -23,7 +23,7 @@
   },
   "spawns": [
     {
-      "type": "roman_field_commander",
+      "type": "roman_legion_organizer",
       "x": 13.0,
       "z": 33.24,
       "player_id": 1,

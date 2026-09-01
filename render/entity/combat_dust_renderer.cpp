@@ -134,9 +134,9 @@ void draw_commander_swing(
 
 constexpr float k_degrees_to_radians = 0.017453292519943295F;
 constexpr float k_dust_y_offset = 0.05F;
-constexpr float k_dust_color_r = 0.6F;
-constexpr float k_dust_color_g = 0.55F;
-constexpr float k_dust_color_b = 0.45F;
+constexpr float k_dust_color_r = 0.64F;
+constexpr float k_dust_color_g = 0.54F;
+constexpr float k_dust_color_b = 0.39F;
 constexpr float k_visibility_check_radius = 3.0F;
 
 constexpr float k_flame_radius = 3.0F;
@@ -305,6 +305,81 @@ void render_blood_stains(Renderer* renderer,
   }
 }
 
+struct GroundDustCluster {
+  float sum_x{0.0F};
+  float sum_z{0.0F};
+  float weight{0.0F};
+  int cell_x{0};
+  int cell_z{0};
+};
+
+auto dust_cell_of(float world_value) -> int {
+  return static_cast<int>(
+      std::floor(world_value / Render::CombatDustDefaults::k_cluster_cell));
+}
+
+auto dust_cell_phase(int cell_x, int cell_z) -> float {
+  auto const mixed = static_cast<unsigned int>(cell_x * 73856093 ^ cell_z * 19349663);
+  return static_cast<float>(mixed % 1024U) * (1.0F / 1024.0F) * 12.0F;
+}
+
+void accumulate_ground_dust(std::vector<GroundDustCluster>& clusters,
+                            float world_x,
+                            float world_z) {
+  int const cell_x = dust_cell_of(world_x);
+  int const cell_z = dust_cell_of(world_z);
+  for (auto& cluster : clusters) {
+    if (cluster.cell_x == cell_x && cluster.cell_z == cell_z) {
+      cluster.sum_x += world_x;
+      cluster.sum_z += world_z;
+      cluster.weight += 1.0F;
+      return;
+    }
+  }
+  clusters.push_back({world_x, world_z, 1.0F, cell_x, cell_z});
+}
+
+void emit_ground_dust(Renderer* renderer,
+                      std::vector<GroundDustCluster>& clusters,
+                      float animation_time) {
+  namespace Defaults = Render::CombatDustDefaults;
+
+  std::sort(clusters.begin(),
+            clusters.end(),
+            [](const GroundDustCluster& lhs, const GroundDustCluster& rhs) {
+              if (lhs.weight != rhs.weight) {
+                return lhs.weight > rhs.weight;
+              }
+              if (lhs.cell_x != rhs.cell_x) {
+                return lhs.cell_x < rhs.cell_x;
+              }
+              return lhs.cell_z < rhs.cell_z;
+            });
+
+  auto const kept = std::min<std::size_t>(clusters.size(), Defaults::k_max_clusters);
+  for (std::size_t index = 0; index < kept; ++index) {
+    const GroundDustCluster& cluster = clusters[index];
+    float const crowd = std::sqrt(std::max(0.0F, cluster.weight - 1.0F));
+    float const radius =
+        std::min(Defaults::k_cluster_radius_max,
+                 Defaults::k_radius + Defaults::k_cluster_radius_growth * crowd);
+    float const intensity =
+        std::min(Defaults::k_cluster_intensity_max,
+                 Defaults::k_intensity + Defaults::k_cluster_intensity_growth * crowd);
+
+    QVector3D const position(cluster.sum_x / cluster.weight,
+                             k_dust_y_offset,
+                             cluster.sum_z / cluster.weight);
+    QVector3D const color(k_dust_color_r, k_dust_color_g, k_dust_color_b);
+    renderer->combat_dust(position,
+                          color,
+                          radius,
+                          intensity,
+                          animation_time +
+                              dust_cell_phase(cluster.cell_x, cluster.cell_z));
+  }
+}
+
 void render_combat_dust(Renderer* renderer,
                         ResourceManager*,
                         Engine::Core::World* world) {
@@ -321,6 +396,8 @@ void render_combat_dust(Renderer* renderer,
     return fog_snapshot == nullptr ||
            Game::Map::should_render_combat_effect(*fog_snapshot, world_x, world_z);
   };
+
+  std::vector<GroundDustCluster> ground_dust;
 
   auto units = world->collect_entities_with<Engine::Core::AttackComponent>();
 
@@ -355,15 +432,7 @@ void render_combat_dust(Renderer* renderer,
       continue;
     }
 
-    QVector3D const position(
-        transform->position.x, k_dust_y_offset, transform->position.z);
-    QVector3D const color(k_dust_color_r, k_dust_color_g, k_dust_color_b);
-
-    renderer->combat_dust(position,
-                          color,
-                          CombatDustDefaults::k_radius,
-                          CombatDustDefaults::k_intensity,
-                          animation_time);
+    accumulate_ground_dust(ground_dust, transform->position.x, transform->position.z);
   }
 
   auto builders =
@@ -400,16 +469,10 @@ void render_combat_dust(Renderer* renderer,
       continue;
     }
 
-    QVector3D const position(
-        transform->position.x, k_dust_y_offset, transform->position.z);
-    QVector3D const color(k_dust_color_r, k_dust_color_g, k_dust_color_b);
-
-    renderer->combat_dust(position,
-                          color,
-                          CombatDustDefaults::k_radius,
-                          CombatDustDefaults::k_intensity,
-                          animation_time);
+    accumulate_ground_dust(ground_dust, transform->position.x, transform->position.z);
   }
+
+  emit_ground_dust(renderer, ground_dust, animation_time);
 
   auto burning_structures =
       world->collect_entities_with<Engine::Core::StructureFireComponent>();

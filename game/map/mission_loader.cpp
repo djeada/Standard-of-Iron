@@ -7,6 +7,8 @@
 #include <QJsonObject>
 #include <QJsonValue>
 
+#include "../systems/resource_json.h"
+
 namespace Game::Mission {
 
 auto MissionLoader::parse_position(const QJsonObject& obj) -> Position {
@@ -55,9 +57,7 @@ auto MissionLoader::parse_building_setup(const QJsonObject& obj) -> BuildingSetu
 
 auto MissionLoader::parse_resources(const QJsonObject& obj) -> Resources {
   Resources res;
-  for (Game::Systems::ResourceType const type : Game::Systems::k_all_resource_types) {
-    res.set(type, obj[Game::Systems::resource_type_key(type)].toInt(0));
-  }
+  Game::Systems::read_resource_overlay(obj).apply_to(res);
   return res;
 }
 
@@ -89,9 +89,8 @@ auto MissionLoader::parse_player_setup(const QJsonObject& obj) -> PlayerSetup {
     setup.starting_buildings.push_back(parse_building_setup(building_val.toObject()));
   }
 
-  if (obj.contains("starting_resources")) {
-    setup.starting_resources = parse_resources(obj["starting_resources"].toObject());
-  }
+  setup.starting_resources =
+      Game::Systems::read_resource_overlay(obj["starting_resources"].toObject());
 
   return setup;
 }

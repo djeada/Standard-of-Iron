@@ -1,9 +1,9 @@
 # RPG Playability
 
-This is the permanent contract for direct commander control. `todo.md` holds the
-live checklist of gates and work packages; this document holds the parts that do
-not change as items are ticked off: what "playable" means here, how the gate is
-run, and how its verdicts are decided.
+This is the permanent contract for direct commander control: what "playable"
+means here, how the gate is run, and how its verdicts are decided. The live
+checklist of gates and work packages it used to sit beside has been retired;
+the scenario manifest below is the running record.
 
 The target is not "an RTS camera that can get close to a commander". It is the
 control, camera, movement, collision, animation, and combat reliability expected
@@ -98,7 +98,7 @@ Each entry carries:
 | -------------- | ------------------------------------------------------------- |
 | `id`           | the registered scenario id                                    |
 | `status`       | `required_green` or `expected_red`                            |
-| `gate`         | which gate in `todo.md` owns it                               |
+| `gate`         | which playability gate owns it                                |
 | `notes`        | what it proves, or why it is red                              |
 | `issue_codes`  | required on `expected_red`: the codes it currently fails with |
 | `repeats`      | how many identical runs decide the verdict (default 1)        |
@@ -1133,7 +1133,6 @@ stashing the change and re-running.
 
 ## Related
 
-- `todo.md` -- the live gate checklist and work packages.
 - `docs/CAMERA_CONTROLS.md` -- the RTS camera this mode borrows from.
 - `docs/COMBAT_SYSTEM.md` -- the combat systems the RPG slice drives.
 - `tools/arena/README.md` -- the Arena harness, scenario schema, and artifacts.

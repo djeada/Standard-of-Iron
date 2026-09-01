@@ -1749,8 +1749,8 @@
             "max_population": -1,
             "player_id": 1,
             "type": "swordsman",
-            "x": 237.27,
-            "z": 265.18
+            "x": 236.57,
+            "z": 264.8
         },
         {
             "max_population": -1,
@@ -3952,22 +3952,22 @@
             "rotation": 0.5,
             "scale": 1,
             "type": "tent",
-            "x": 234.94,
-            "z": 269.84000000000003
+            "x": 239.34,
+            "z": 265.44
         },
         {
             "rotation": 2.6,
             "scale": 1,
             "type": "tent",
-            "x": 276.81,
-            "z": 269.84000000000003
+            "x": 266.81,
+            "z": 269.84
         },
         {
             "rotation": 1.2,
             "scale": 1,
             "type": "supply_cart",
-            "x": 255.88,
-            "z": 234.94
+            "x": 257.83,
+            "z": 231.56
         },
         {
             "rotation": 3.5,
@@ -3980,8 +3980,8 @@
             "rotation": 0.7000000000000001,
             "scale": 1,
             "type": "supply_cart",
-            "x": 127.94,
-            "z": 276.81
+            "x": 133.27,
+            "z": 271.48
         },
         {
             "rotation": 2.1,
@@ -3994,15 +3994,15 @@
             "rotation": 1.1,
             "scale": 1.1,
             "type": "ruins",
-            "x": 111.66,
-            "z": 297.75
+            "x": 111.7,
+            "z": 297.64
         },
         {
             "rotation": 4.2,
             "scale": 1.1,
             "type": "ruins",
-            "x": 400.1,
-            "z": 297.75
+            "x": 392.52,
+            "z": 302.12
         },
         {
             "rotation": 0.8,
@@ -4168,8 +4168,8 @@
             "radius": 3,
             "scale": 1,
             "type": "firecamp",
-            "x": 120.96000000000001,
-            "z": 288.44
+            "x": 121.88,
+            "z": 290.07
         },
         {
             "intensity": 1,
@@ -4186,8 +4186,8 @@
             "radius": 2.8000000000000003,
             "scale": 1,
             "type": "firecamp",
-            "x": 255.88,
-            "z": 386.14
+            "x": 256.68,
+            "z": 383.16
         },
         {
             "intensity": 0.9500000000000001,
@@ -4246,8 +4246,8 @@
         {
             "scale": 1,
             "type": "ruins",
-            "x": 128,
-            "z": 256
+            "x": 133.87,
+            "z": 256.66
         },
         {
             "rotation": 162.5,
@@ -4267,8 +4267,8 @@
             "rotation": 84.7,
             "scale": 1.1400000000000001,
             "type": "dead_tree",
-            "x": 138.24,
-            "z": 254.63
+            "x": 139.14,
+            "z": 254.52
         },
         {
             "rotation": 61.300000000000004,
@@ -4318,8 +4318,8 @@
             "rotation": 92.7,
             "scale": 1.11,
             "type": "tent",
-            "x": 231.71,
-            "z": 257.83
+            "x": 237.69,
+            "z": 258.78
         },
         {
             "rotation": 173.70000000000002,
@@ -4362,22 +4362,22 @@
             "rotation": 51.5,
             "scale": 0.9,
             "type": "supply_cart",
-            "x": 252.78,
-            "z": 300.94
+            "x": 251.72,
+            "z": 303.31
         },
         {
             "rotation": 21.5,
             "scale": 1.07,
             "type": "tent",
-            "x": 35.77,
+            "x": 38.27,
             "z": 45.21
         },
         {
             "rotation": 204.20000000000002,
             "scale": 1.08,
             "type": "tent",
-            "x": 426.11,
-            "z": 194.98
+            "x": 426.22,
+            "z": 197.02
         },
         {
             "intensity": 1.23,
@@ -4415,8 +4415,8 @@
             "rotation": 264.7,
             "scale": 1.03,
             "type": "tent",
-            "x": 170.73,
-            "z": 65.8
+            "x": 169.98,
+            "z": 64.96
         },
         {
             "rotation": 272.4,
@@ -4503,8 +4503,8 @@
             "rotation": 38.5,
             "scale": 1.04,
             "type": "tent",
-            "x": 160.49,
-            "z": 53.69
+            "x": 168.34,
+            "z": 59.27
         },
         {
             "intensity": 1.22,
@@ -4544,8 +4544,8 @@
             "rotation": 9.6,
             "scale": 1.11,
             "type": "supply_cart",
-            "x": 297.21,
-            "z": 157.74
+            "x": 299.1,
+            "z": 156.12
         },
         {
             "rotation": 292.2,
@@ -4778,8 +4778,8 @@
             "rotation": 233.1,
             "scale": 1.17,
             "type": "ruins",
-            "x": 117.22,
-            "z": 219.20000000000002
+            "x": 121.76,
+            "z": 228.11
         },
         {
             "rotation": 341.6,
@@ -4792,8 +4792,8 @@
             "rotation": 304.3,
             "scale": 0.87,
             "type": "ruins",
-            "x": 120.65,
-            "z": 211.71
+            "x": 122.49,
+            "z": 204.84
         },
         {
             "rotation": 44.7,
@@ -4995,15 +4995,15 @@
             "rotation": 137.4,
             "scale": 1.09,
             "type": "abandoned_home",
-            "x": 97.39,
-            "z": 252.91
+            "x": 92.19,
+            "z": 251.52
         },
         {
             "rotation": 257,
             "scale": 0.9,
             "type": "abandoned_home",
-            "x": 110.92,
-            "z": 218.4
+            "x": 117.93,
+            "z": 224.8
         },
         {
             "rotation": 140.20000000000002,
@@ -5140,8 +5140,8 @@
             "landmark": "campania_west_hamlet",
             "scale": 1,
             "type": "abandoned_home",
-            "x": 47,
-            "z": 215
+            "x": 37.61,
+            "z": 217
         },
         {
             "landmark": "campania_west_hamlet",
@@ -5163,8 +5163,8 @@
             "rotation": 180,
             "scale": 1.1,
             "type": "ruins",
-            "x": 52,
-            "z": 223
+            "x": 49.29,
+            "z": 224.34
         },
         {
             "landmark": "campania_west_hamlet",
@@ -5230,16 +5230,16 @@
             "landmark": "campania_appian_sanctuary",
             "scale": 0.9,
             "type": "ruins",
-            "x": 126.17,
-            "z": 211.17000000000002
+            "x": 126.54,
+            "z": 211.33
         },
         {
             "landmark": "campania_appian_sanctuary",
             "rotation": 180,
             "scale": 1,
             "type": "dead_tree",
-            "x": 123.17,
-            "z": 218.17000000000002
+            "x": 125.48,
+            "z": 219.5
         },
         {
             "intensity": 1.2,
@@ -5256,8 +5256,8 @@
             "landmark": "campania_vesuvian_shrine",
             "scale": 1.1,
             "type": "statue",
-            "x": 205.8,
-            "z": 361.55
+            "x": 196.14,
+            "z": 358.96
         },
         {
             "landmark": "campania_vesuvian_shrine",
@@ -5288,16 +5288,16 @@
             "rotation": 270,
             "scale": 0.85,
             "type": "ruins",
-            "x": 194,
-            "z": 368
+            "x": 192.9,
+            "z": 366.1
         },
         {
             "landmark": "campania_vesuvian_shrine",
             "rotation": 90,
             "scale": 1.1500000000000001,
             "type": "ruins",
-            "x": 201,
-            "z": 373
+            "x": 191.94,
+            "z": 377.23
         },
         {
             "intensity": 1.2,

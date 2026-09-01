@@ -45,7 +45,7 @@ struct PlayerSetup {
   QString color;
   std::vector<UnitSetup> starting_units;
   std::vector<BuildingSetup> starting_buildings;
-  Resources starting_resources;
+  Game::Systems::ResourceOverlay starting_resources;
 };
 
 struct AIPersonality {

@@ -43,6 +43,8 @@ private:
   void render_rivers(QImage& image, const MapDefinition& map_def);
   void render_roads(QImage& image, const MapDefinition& map_def);
   void render_bridges(QImage& image, const MapDefinition& map_def);
+  void render_undead_zones(QImage& image, const MapDefinition& map_def);
+  void render_world_props(QImage& image, const MapDefinition& map_def);
   void render_structures(QImage& image, const MapDefinition& map_def);
   void apply_historical_styling(QImage& image);
 

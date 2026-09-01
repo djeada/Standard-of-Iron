@@ -781,7 +781,9 @@ void GameEngine::simulate(float dt) {
 
   update_mission_waves(dt * simulation_time_scale);
   update_mission_stages(dt * simulation_time_scale);
-  update_commander_messages(dt * simulation_time_scale);
+
+  update_commander_messages(
+      m_runtime.victory_state.isEmpty() ? dt * simulation_time_scale : dt);
 
   RuntimeFrameState frame_state{.simulation_time_scale = simulation_time_scale};
   m_frame_orchestrator.advance_simulation(
@@ -1732,6 +1734,9 @@ void GameEngine::configure_mission_victory_conditions() {
 
   m_victory_service->set_spectator_mode(m_level.is_spectator_mode);
 
+  m_victory_service->set_objectives_changed_callback(
+      [this]() { publish_mission_stages(); });
+
   m_victory_service->set_victory_callback([this](const QString& state) {
     if (m_runtime.victory_state != state) {
       m_audio_coordinator->ensure_result_audio_ready(state, m_runtime.local_owner_id);
@@ -1817,8 +1822,6 @@ void GameEngine::reset_preload_interaction_state() {
   }
 
   m_camera_view_model->set_following_selection(false);
-  m_commander_view_model->reset_for_new_match();
-  m_activity_view_model->clear_feedback();
   m_runtime.selection_refresh_counter = 0;
   m_runtime.minimap_unit_update_accumulator = 0.0F;
 
@@ -2038,7 +2041,7 @@ void GameEngine::publish_mission_stages() {
     return;
   }
   if (!m_mission_stage_tracker.has_stages()) {
-    m_mission_view_model->clear();
+    publish_victory_objectives();
     return;
   }
 
@@ -2083,6 +2086,49 @@ void GameEngine::publish_mission_stages() {
   }
 
   m_mission_view_model->set_stages(stages);
+}
+
+void GameEngine::publish_victory_objectives() {
+  if (!m_mission_view_model) {
+    return;
+  }
+  if (!m_victory_service) {
+    m_mission_view_model->clear();
+    return;
+  }
+
+  const auto objectives = m_victory_service->objectives();
+  QVariantList stages;
+  int index = 0;
+  for (const auto& objective : objectives) {
+    if (objective.description.isEmpty()) {
+      ++index;
+      continue;
+    }
+    QVariantMap entry;
+    entry["id"] = objective.id;
+    entry["index"] = index;
+    entry["type"] = QStringLiteral("victory_condition");
+    entry["title"] =
+        Game::Util::tr_asset(Game::Util::k_missions_context, objective.description);
+    entry["description"] = entry["title"];
+    entry["hint"] = QString();
+    entry["progress"] = objective.progress;
+    entry["required"] = objective.required;
+    entry["complete"] = objective.complete;
+    entry["has_target"] = false;
+    entry["target_structure_present"] = false;
+    entry["target_structure_is_local"] = false;
+    stages.append(entry);
+    ++index;
+  }
+
+  if (stages.isEmpty()) {
+    m_mission_view_model->clear();
+    return;
+  }
+
+  m_mission_view_model->set_stages(stages, true);
 }
 
 void GameEngine::announce_player_warning(const char* cue_id) {

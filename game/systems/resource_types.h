@@ -91,6 +91,37 @@ struct ResourceAmounts {
   std::array<int, k_resource_type_count> values{};
 };
 
+using ResourceTypeMask = std::array<bool, k_resource_type_count>;
+
+struct ResourceOverlay {
+  [[nodiscard]] auto has(ResourceType type) const -> bool {
+    return specified[resource_type_index(type)];
+  }
+
+  [[nodiscard]] auto get(ResourceType type) const -> int { return amounts.get(type); }
+
+  void set(ResourceType type, int amount) {
+    amounts.set(type, amount);
+    specified[resource_type_index(type)] = true;
+  }
+
+  [[nodiscard]] auto empty() const -> bool {
+    return std::none_of(
+        specified.begin(), specified.end(), [](bool declared) { return declared; });
+  }
+
+  void apply_to(ResourceAmounts& target) const {
+    for (ResourceType const type : k_all_resource_types) {
+      if (has(type)) {
+        target.set(type, amounts.get(type));
+      }
+    }
+  }
+
+  ResourceAmounts amounts;
+  ResourceTypeMask specified{};
+};
+
 struct OwnerResourceState {
   int owner_id = 0;
   ResourceAmounts amounts;

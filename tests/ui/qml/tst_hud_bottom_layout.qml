@@ -68,14 +68,32 @@ TestCase {
         };
     }
 
-    function test_orders_are_the_dominant_zone_at_720p() {
+    function test_the_three_zones_are_equally_wide_at_720p() {
         var selection = named("selectionZone");
         var commands = named("commandDeck");
         var production = named("productionZone");
-        verify(commands.width > selection.width, "orders must be wider than selection: " + commands.width + " <= " + selection.width);
-        verify(commands.width > production.width, "orders must be wider than an empty production context: " + commands.width + " <= " + production.width);
-        verify(commands.width >= panel.width * 0.45, "orders received less than 45% of the HUD: " + commands.width);
-        verify(production.width <= panel.width * 0.20, "the empty production context remained visually dominant: " + production.width);
+        var expected = (panel.width - panel.spacing * 2) / 3;
+        var zones = [selection, commands, production];
+        for (var i = 0; i < zones.length; ++i)
+            verify(Math.abs(zones[i].width - expected) <= 1, zones[i].objectName + " is not an equal third: " + zones[i].width + " != " + expected);
+    }
+
+    function test_every_command_card_has_the_same_dimensions() {
+        panel.action_states = {
+            "build": state(1),
+            "collect": state(1),
+            "auto_gather": state(1)
+        };
+        wait(1);
+        var cards = collect(panel, function (item) {
+                var name = String(item.objectName);
+                return name.indexOf("primaryCommand_") === 0 || name.indexOf("contextCommand_") === 0;
+            });
+        compare(cards.length, 8, "expected the five primary orders plus three builder actions");
+        for (var i = 1; i < cards.length; ++i) {
+            compare(cards[i].width, cards[0].width, cards[i].objectName + " is a different width from " + cards[0].objectName);
+            compare(cards[i].height, cards[0].height, cards[i].objectName + " is a different height from " + cards[0].objectName);
+        }
     }
 
     function test_primary_orders_are_labelled_full_size_and_never_scrolled() {
