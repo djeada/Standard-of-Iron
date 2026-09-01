@@ -17,6 +17,7 @@
 
 #include "audio_constants.h"
 #include "music_transition.h"
+#include "spatial.h"
 
 class Sound;
 
@@ -30,8 +31,6 @@ enum class AudioEventType {
   STOP_SOUND,
   SET_SOUND_LEVEL,
   STOP_MUSIC,
-  PAUSE,
-  RESUME,
   SHUTDOWN,
   UNLOAD_RESOURCE
 };
@@ -60,6 +59,9 @@ struct AudioEvent {
   AudioCategory category = AudioCategory::SFX;
   bool crossfade = false;
   std::string cue_id;
+  std::string cue_source;
+  Game::Audio::WorldPoint position;
+  bool positioned = false;
   std::uint64_t load_serial = 0;
 
   AudioEvent(AudioEventType t,
@@ -69,7 +71,8 @@ struct AudioEvent {
              int p = AudioConstants::DEFAULT_PRIORITY,
              AudioCategory cat = AudioCategory::SFX,
              bool cf = false,
-             std::string cue = {})
+             std::string cue = {},
+             std::string source = {})
       : type(t)
       , resource_id(std::move(id))
       , volume(vol)
@@ -77,7 +80,8 @@ struct AudioEvent {
       , priority(p)
       , category(cat)
       , crossfade(cf)
-      , cue_id(std::move(cue)) {}
+      , cue_id(std::move(cue))
+      , cue_source(std::move(source)) {}
 };
 
 class AudioSystem {
@@ -92,7 +96,9 @@ public:
                   bool loop = false,
                   int priority = AudioConstants::DEFAULT_PRIORITY,
                   AudioCategory category = AudioCategory::SFX,
-                  std::string cue_id = {});
+                  std::string cue_id = {},
+                  std::string cue_source = {},
+                  const Game::Audio::WorldPoint* position = nullptr);
   void play_music(const std::string& music_id,
                   float volume = AudioConstants::DEFAULT_VOLUME,
                   Game::Audio::MusicTransition transition =
@@ -108,9 +114,6 @@ public:
   void set_music_volume(float volume);
   void set_voice_volume(float volume);
   void set_ambience_volume(float volume);
-  void pause_all();
-  void resume_all();
-
   auto load_sound(const std::string& sound_id,
                   const std::string& file_path,
                   const AudioResourceConfig& config = {}) -> bool;
@@ -119,12 +122,13 @@ public:
                   const AudioResourceConfig& config = {}) -> bool;
   void register_alias(const std::string& alias_id, const std::string& resource_id);
   auto has_resource(const std::string& resource_id) const -> bool;
+  [[nodiscard]] auto is_resource_ready(const std::string& resource_id) const -> bool;
+  [[nodiscard]] auto resource_cooldown_ms(const std::string& resource_id) const -> int;
   void unload_sound(const std::string& sound_id);
   void unload_music(const std::string& music_id);
-  void unload_all_sounds();
-  void unload_all_music();
+  void set_listener(const Game::Audio::AudioListener& listener);
+  [[nodiscard]] auto listener() const -> Game::Audio::AudioListener;
 
-  void set_max_channels(size_t max_channels);
   auto get_active_channel_count() const -> size_t;
   void render_offline(float* interleaved_stereo, unsigned frames);
 
@@ -190,7 +194,10 @@ private:
   std::atomic<float> voice_volume;
   std::atomic<float> ambience_volume;
 
-  size_t max_channels{AudioConstants::DEFAULT_MAX_CHANNELS};
+  static constexpr size_t max_channels = AudioConstants::DEFAULT_MAX_CHANNELS;
+
+  Game::Audio::AudioListener m_listener;
+  mutable std::mutex listener_mutex;
 
   static constexpr std::chrono::milliseconds k_loop_start_grace{500};
 

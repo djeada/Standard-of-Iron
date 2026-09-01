@@ -13,10 +13,20 @@ checks every link in that chain and writes the result to
 docs/AUDIO_WISHLIST.md, so "what audio do we still need" is a command
 rather than a memory exercise.
 
+The report is the wiring matrix for the whole catalogue.  Four states are
+tracked separately, because a cue can pass three of them and still be silent
+in a real game: declared (it is in the catalogue), called by code (a call site
+fires it), resource loaded (its pool resolves to files that exist), and heard
+in gameplay.  The last one cannot be read out of the source tree at all -- it
+comes from a mission summary written by a real run
+(SOI_AUDIO_TRACE_SUMMARY, see docs/AUDIO_RUNTIME_TRACE.md) and from the
+scenario tests that drive production gameplay paths.
+
 Usage:
     python3 scripts/audio_report.py             # rewrite docs/AUDIO_WISHLIST.md
     python3 scripts/audio_report.py --stdout    # print instead of writing
     python3 scripts/audio_report.py --check     # exit 1 on a broken link
+    python3 scripts/audio_report.py --runtime artifacts/audio/mission.json
 """
 
 from __future__ import annotations
@@ -37,6 +47,7 @@ REPORT = REPO / "docs" / "AUDIO_WISHLIST.md"
 
 
 CALL_SITE_ROOTS = ("app", "game", "render", "scene", "ui", "tools", "main.cpp")
+VERIFICATION_ROOTS = ("tests",)
 CALL_SITE_SUFFIXES = (".cpp", ".h", ".qml", ".js")
 NOT_A_CALL_SITE = {
     REPO / "game" / "audio" / "audio_cues.h",
@@ -58,6 +69,20 @@ CONSTANT_RE = re.compile(
 IMPORTANCE_LEVELS = ("required", "optional", "ambient")
 
 
+PACING_BUCKETS = (
+    (250, "continuous"),
+    (1000, "frequent"),
+    (5000, "occasional"),
+)
+
+
+def pacing(cooldown_ms: int) -> str:
+    for ceiling, name in PACING_BUCKETS:
+        if cooldown_ms < ceiling:
+            return name
+    return "rare"
+
+
 @dataclass
 class Findings:
     missing_files: list[str] = field(default_factory=list)
@@ -69,6 +94,8 @@ class Findings:
     placeholder_cues: list[dict] = field(default_factory=list)
     unwired_cues: list[str] = field(default_factory=list)
     cue_call_sites: dict[str, list[str]] = field(default_factory=dict)
+    cue_verification: dict[str, list[str]] = field(default_factory=dict)
+    cue_audience: dict[str, str] = field(default_factory=dict)
     orphan_resources: list[str] = field(default_factory=list)
     silent_required_cues: list[str] = field(default_factory=list)
     unwired_required_cues: list[str] = field(default_factory=list)
@@ -114,9 +141,9 @@ def header_cue_ids() -> dict[str, str]:
     return {cue_id: name for name, cue_id in CONSTANT_RE.findall(text)}
 
 
-def call_site_files() -> list[tuple[Path, str]]:
+def source_files(roots: tuple[str, ...]) -> list[tuple[Path, str]]:
     files = []
-    for root in CALL_SITE_ROOTS:
+    for root in roots:
         target = REPO / root
         sources = [target] if target.is_file() else sorted(target.rglob("*"))
         for source in sources:
@@ -128,8 +155,59 @@ def call_site_files() -> list[tuple[Path, str]]:
     return files
 
 
+def call_site_files() -> list[tuple[Path, str]]:
+    return source_files(CALL_SITE_ROOTS)
+
+
 def call_site_text() -> str:
     return "\n".join(text for _path, text in call_site_files())
+
+
+def audience_of(
+    cue_id: str, constant: str | None, files: list[tuple[Path, str]]
+) -> str:
+    """Who the cue is played to, read off the call site that fires it.
+
+    `AudioCueEvent::for_owner` scopes a cue to one player; anything else
+    reaches whoever is listening. The distinction is the difference between a
+    correct silence and a wiring bug, so the matrix has to state it.
+    """
+    needles = [f'"{cue_id}"']
+    if constant:
+        needles.append(constant)
+
+    scoped = False
+    unscoped = False
+    for _path, text in files:
+        lines = text.splitlines()
+        for index, line in enumerate(lines):
+            if not any(needle in line for needle in needles):
+                continue
+            window = "\n".join(lines[max(0, index - 2) : index + 3])
+            if "for_owner" in window:
+                scoped = True
+            else:
+                unscoped = True
+    if scoped and unscoped:
+        return "mixed"
+    if scoped:
+        return "owner"
+    return "everyone" if unscoped else "-"
+
+
+def load_runtime_summaries(paths: list[str]) -> dict[str, dict]:
+    """Merge mission summaries written by SOI_AUDIO_TRACE_SUMMARY."""
+    merged: dict[str, dict] = {}
+    for raw in paths:
+        path = Path(raw)
+        if not path.is_absolute():
+            path = REPO / path
+        data = json.loads(path.read_text(encoding="utf-8"))
+        for cue in data.get("cues", []):
+            entry = merged.setdefault(cue["cue"], {"requests": 0, "accepted": 0})
+            entry["requests"] += int(cue.get("requests", 0))
+            entry["accepted"] += int(cue.get("accepted", 0))
+    return merged
 
 
 def where_fired(
@@ -147,6 +225,10 @@ def where_fired(
         patterns.append(rf"\b{re.escape(constant)}\b")
     needle = re.compile("|".join(patterns))
     return [str(path.relative_to(REPO)) for path, text in files if needle.search(text)]
+
+
+def source_files_for_verification() -> list[tuple[Path, str]]:
+    return source_files(VERIFICATION_ROOTS)
 
 
 def collect() -> tuple[Findings, list[dict], list[dict]]:
@@ -171,6 +253,7 @@ def collect() -> tuple[Findings, list[dict], list[dict]]:
     found.catalog_only_cues = sorted(catalog_ids - set(header))
 
     source_files = call_site_files()
+    test_files = source_files_for_verification()
     referenced_resources: set[str] = set()
 
     for cue in cues:
@@ -198,6 +281,8 @@ def collect() -> tuple[Findings, list[dict], list[dict]]:
         constant = header.get(cue_id)
         sites = where_fired(cue_id, constant, source_files)
         found.cue_call_sites[cue_id] = sites
+        found.cue_audience[cue_id] = audience_of(cue_id, constant, source_files)
+        found.cue_verification[cue_id] = where_fired(cue_id, constant, test_files)
         if not sites:
             found.unwired_cues.append(cue_id)
             if importance == "required":
@@ -224,7 +309,12 @@ def bullet(lines: list[str], items: list[str], empty: str) -> None:
     lines.extend(f"- `{item}`" for item in items)
 
 
-def render(found: Findings, manifest: list[dict], cues: list[dict]) -> str:
+def render(
+    found: Findings,
+    manifest: list[dict],
+    cues: list[dict],
+    runtime: dict[str, dict] | None = None,
+) -> str:
     covered = len(cues) - len(found.silent_cues)
     lines: list[str] = []
     add = lines.append
@@ -243,6 +333,17 @@ def render(found: Findings, manifest: list[dict], cues: list[dict]) -> str:
     add(f"- Cues that can play something today: **{covered}**")
     add(f"- Cues waiting on an asset: **{len(found.silent_cues)}**")
     add(f"- Cues playing a stand-in: **{len(found.placeholder_cues)}**")
+    unverified = [
+        cue["id"] for cue in cues if not found.cue_verification.get(cue["id"])
+    ]
+    add(f"- Cues no test fires through gameplay: **{len(unverified)}**")
+    if runtime:
+        never = [
+            cue["id"]
+            for cue in cues
+            if cue["id"] in runtime and runtime[cue["id"]]["accepted"] == 0
+        ]
+        add(f"- Cues measured as requested but never heard: **{len(never)}**")
     add("")
 
     add("## Sounds we should have but do not")
@@ -294,20 +395,54 @@ def render(found: Findings, manifest: list[dict], cues: list[dict]) -> str:
     bullet(lines, found.unmanifested_files, "None.")
     add("")
 
-    add("## Where each cue is fired")
+    add("## Wiring matrix")
     add("")
     add(
-        "A cue can be bound to a good asset and still never play, which sounds "
-        "exactly like having no asset at all. This is the audit trail from the "
-        "catalogue back to the code."
+        "One row per cue, from the gameplay action down to whether a player has "
+        "actually heard it. A cue can be declared, called and fully loaded and "
+        "still be silent in a real match, so the last two columns are kept apart "
+        "from the first three."
     )
     add("")
-    add("| Cue | Fired from |")
-    add("| --- | ---------- |")
+    add(
+        "**Audience** is read off the call site: `owner` means the cue is scoped "
+        "to one player with `AudioCueEvent::for_owner` and is *meant* to be silent "
+        "for everyone else. **Pacing** is the cue cooldown bucketed: continuous "
+        "(<0.25 s), frequent (<1 s), occasional (<5 s), rare. **Verified by** lists "
+        "the tests that fire the cue through a production path. **Heard** is filled "
+        "in from mission summaries passed with `--runtime`; without one it reads "
+        "`not measured`, which is not the same as silent."
+    )
+    add("")
+    add(
+        "| Cue | Fires when | Fired from | Audience | Pacing | Pool | Verified by | Heard |"
+    )
+    add(
+        "| --- | ---------- | ---------- | -------- | ------ | ---- | ----------- | ----- |"
+    )
     for cue in cues:
-        sites = found.cue_call_sites.get(cue["id"], [])
+        cue_id = cue["id"]
+        sites = found.cue_call_sites.get(cue_id, [])
         where = ", ".join(f"`{site}`" for site in sites) if sites else "**nothing**"
-        add(f"| `{cue['id']}` | {where} |")
+        checks = found.cue_verification.get(cue_id, [])
+        verified = (
+            ", ".join(f"`{site}`" for site in checks) if checks else "**nothing**"
+        )
+        pool = len(cue.get("resources", []))
+        heard = "not measured"
+        if runtime:
+            measured = runtime.get(cue_id)
+            if measured is None:
+                heard = "never requested"
+            elif measured["accepted"] == 0:
+                heard = f"**0 of {measured['requests']}**"
+            else:
+                heard = f"{measured['accepted']} of {measured['requests']}"
+        add(
+            f"| `{cue_id}` | {cue.get('description', '-')} | {where} | "
+            f"{found.cue_audience.get(cue_id, '-')} | "
+            f"{pacing(int(cue.get('cooldown_ms', 0)))} | {pool} | {verified} | {heard} |"
+        )
     add("")
 
     problems = found.structural_problems()
@@ -327,10 +462,18 @@ def main() -> int:
     parser.add_argument(
         "--check", action="store_true", help="exit non-zero on a broken link"
     )
+    parser.add_argument(
+        "--runtime",
+        action="append",
+        default=[],
+        metavar="SUMMARY.json",
+        help="mission summary from SOI_AUDIO_TRACE_SUMMARY; repeatable",
+    )
     args = parser.parse_args()
 
     found, manifest, cues = collect()
-    report = render(found, manifest, cues)
+    runtime = load_runtime_summaries(args.runtime) if args.runtime else None
+    report = render(found, manifest, cues, runtime)
 
     if args.stdout:
         print(report, end="")
@@ -342,7 +485,9 @@ def main() -> int:
         f"{len(cues)} cues: {len(cues) - len(found.silent_cues)} covered, "
         f"{len(found.silent_cues)} awaiting assets, "
         f"{len(found.placeholder_cues)} on stand-ins, "
-        f"{len(found.unwired_cues)} unwired.",
+        f"{len(found.unwired_cues)} unwired, "
+        f"{sum(1 for cue in cues if not found.cue_verification.get(cue['id']))} "
+        f"unverified.",
         file=sys.stderr,
     )
 

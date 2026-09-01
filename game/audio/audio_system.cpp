@@ -14,6 +14,7 @@
 #include <vector>
 
 #include "audio_settings.h"
+#include "cue_trace.h"
 #include "miniaudio_backend.h"
 #include "music_player.h"
 #include "sound.h"
@@ -32,22 +33,11 @@ auto is_effectively_muted(float volume) -> bool {
   return volume <= MUTED_EPSILON;
 }
 
-auto audio_trace_enabled() -> bool {
-  static const bool enabled = !qEnvironmentVariableIsEmpty("SOI_AUDIO_TRACE");
-  return enabled;
-}
-
 void trace_cue_result(const std::string& cue_id,
                       const std::string& resource_id,
-                      const char* result) {
-  if (!audio_trace_enabled() || cue_id.empty()) {
-    return;
-  }
-
-  qInfo().noquote() << QStringLiteral("audio cue %1 -> %2: %3")
-                           .arg(QString::fromStdString(cue_id),
-                                QString::fromStdString(resource_id),
-                                QString::fromLatin1(result));
+                      Game::Audio::CueOutcome outcome,
+                      const std::string& source) {
+  Game::Audio::CueTrace::instance().record(cue_id, resource_id, outcome, source);
 }
 
 } // namespace
@@ -99,6 +89,8 @@ void AudioSystem::render_offline(float* interleaved_stereo, unsigned frames) {
 }
 
 void AudioSystem::shutdown() {
+  Game::Audio::CueTrace::instance().write_requested_summary();
+
   if (!is_running) {
     return;
   }
@@ -146,20 +138,39 @@ void AudioSystem::play_sound(const std::string& sound_id,
                              bool loop,
                              int priority,
                              AudioCategory category,
-                             std::string cue_id) {
+                             std::string cue_id,
+                             std::string cue_source,
+                             const Game::Audio::WorldPoint* position) {
   if (!is_running) {
-    trace_cue_result(cue_id, sound_id, "dropped:audio_system_stopped");
+    trace_cue_result(
+        cue_id, sound_id, Game::Audio::CueOutcome::SystemStopped, cue_source);
     return;
   }
 
-  enqueue(AudioEvent(AudioEventType::PLAY_SOUND,
-                     sound_id,
-                     volume,
-                     loop,
-                     priority,
-                     category,
-                     false,
-                     std::move(cue_id)));
+  AudioEvent event(AudioEventType::PLAY_SOUND,
+                   sound_id,
+                   volume,
+                   loop,
+                   priority,
+                   category,
+                   false,
+                   std::move(cue_id),
+                   std::move(cue_source));
+  if (position != nullptr) {
+    event.position = *position;
+    event.positioned = true;
+  }
+  enqueue(std::move(event));
+}
+
+void AudioSystem::set_listener(const Game::Audio::AudioListener& incoming) {
+  std::lock_guard<std::mutex> const lock(listener_mutex);
+  m_listener = incoming;
+}
+
+auto AudioSystem::listener() const -> Game::Audio::AudioListener {
+  std::lock_guard<std::mutex> const lock(listener_mutex);
+  return m_listener;
 }
 
 void AudioSystem::play_music(const std::string& music_id,
@@ -232,14 +243,6 @@ void AudioSystem::load_persisted_volumes() {
   music_volume = volumes.music;
   voice_volume = volumes.voice;
   ambience_volume = volumes.ambience;
-}
-
-void AudioSystem::pause_all() {
-  enqueue(AudioEvent(AudioEventType::PAUSE));
-}
-
-void AudioSystem::resume_all() {
-  enqueue(AudioEvent(AudioEventType::RESUME));
 }
 
 namespace {
@@ -325,6 +328,28 @@ auto AudioSystem::has_resource(const std::string& resource_id) const -> bool {
          resource_configs.find(resolved_id) != resource_configs.end();
 }
 
+auto AudioSystem::is_resource_ready(const std::string& resource_id) const -> bool {
+  std::lock_guard<std::mutex> const lock(resource_mutex);
+  const std::string resolved_id = resolve_resource_id_locked(resource_id);
+  if (sounds.find(resolved_id) == sounds.end()) {
+    return false;
+  }
+
+  const AudioResourceConfig config = get_resource_config_locked(resolved_id);
+  const auto now = std::chrono::steady_clock::now();
+  if (is_sound_on_cooldown_locked(resolved_id, config.cooldown_ms, now)) {
+    return false;
+  }
+  return config.max_instances == 0 ||
+         get_active_instance_count_locked(resolved_id) < config.max_instances;
+}
+
+auto AudioSystem::resource_cooldown_ms(const std::string& resource_id) const -> int {
+  std::lock_guard<std::mutex> const lock(resource_mutex);
+  return get_resource_config_locked(resolve_resource_id_locked(resource_id))
+      .cooldown_ms;
+}
+
 void AudioSystem::unload_sound(const std::string& sound_id) {
   enqueue_unload(sound_id);
 }
@@ -352,41 +377,6 @@ auto AudioSystem::current_load_serial_locked(const std::string& resource_id) con
     -> std::uint64_t {
   const auto it = resource_load_serials.find(resolve_resource_id_locked(resource_id));
   return it == resource_load_serials.end() ? 0U : it->second;
-}
-
-void AudioSystem::unload_all_sounds() {
-  std::vector<std::string> sound_resources;
-  {
-    std::lock_guard<std::mutex> const resource_lock(resource_mutex);
-    sound_resources.reserve(sounds.size());
-    for (const auto& sound : sounds) {
-      sound_resources.push_back(sound.first);
-    }
-  }
-
-  for (const auto& sound_id : sound_resources) {
-    enqueue_unload(sound_id);
-  }
-}
-
-void AudioSystem::unload_all_music() {
-  std::vector<std::string> music_resources;
-  {
-    std::lock_guard<std::mutex> const lock(resource_mutex);
-    for (const auto& [resource_id, config] : resource_configs) {
-      if (config.category == AudioCategory::MUSIC) {
-        music_resources.push_back(resource_id);
-      }
-    }
-  }
-
-  for (const auto& music_id : music_resources) {
-    enqueue_unload(music_id);
-  }
-}
-
-void AudioSystem::set_max_channels(size_t channels) {
-  max_channels = std::max(AudioConstants::MIN_CHANNELS, channels);
 }
 
 auto AudioSystem::get_active_channel_count() const -> size_t {
@@ -432,22 +422,34 @@ void AudioSystem::process_event(const AudioEvent& event) {
 
       if (config.max_instances > 0 &&
           get_active_instance_count_locked(resource_id) >= config.max_instances) {
-        trace_cue_result(event.cue_id, resource_id, "dropped:instance_limit");
+        trace_cue_result(event.cue_id,
+                         resource_id,
+                         Game::Audio::CueOutcome::InstanceLimit,
+                         event.cue_source);
         break;
       }
 
       if (is_sound_on_cooldown_locked(resource_id, config.cooldown_ms, now)) {
-        trace_cue_result(event.cue_id, resource_id, "dropped:resource_cooldown");
+        trace_cue_result(event.cue_id,
+                         resource_id,
+                         Game::Audio::CueOutcome::ResourceCooldown,
+                         event.cue_source);
         break;
       }
 
       if (!should_accept_sound_locked(effective_priority)) {
-        trace_cue_result(event.cue_id, resource_id, "dropped:global_priority");
+        trace_cue_result(event.cue_id,
+                         resource_id,
+                         Game::Audio::CueOutcome::GlobalPriority,
+                         event.cue_source);
         break;
       }
 
       if (!make_room_in_category_locked(category, effective_priority)) {
-        trace_cue_result(event.cue_id, resource_id, "dropped:category_priority");
+        trace_cue_result(event.cue_id,
+                         resource_id,
+                         Game::Audio::CueOutcome::CategoryPriority,
+                         event.cue_source);
         break;
       }
 
@@ -455,14 +457,26 @@ void AudioSystem::process_event(const AudioEvent& event) {
         evict_lowest_priority_sound_locked();
       }
 
-      float const effective_vol = get_effective_volume(category, requested_volume);
+      Game::Audio::SpatialGain spatial;
+      if (event.positioned) {
+        spatial = Game::Audio::spatialize(listener(), event.position);
+      }
+
+      float const effective_vol =
+          get_effective_volume(category, requested_volume) * spatial.volume_scale;
       if (is_effectively_muted(effective_vol)) {
-        trace_cue_result(event.cue_id, resource_id, "dropped:muted");
+        trace_cue_result(event.cue_id,
+                         resource_id,
+                         Game::Audio::CueOutcome::Muted,
+                         event.cue_source);
         break;
       }
-      it->second->play(effective_vol, event.loop);
+      it->second->play(effective_vol, event.loop, spatial.pan);
       mark_sound_played_locked(resource_id, now);
-      trace_cue_result(event.cue_id, resource_id, "accepted");
+      trace_cue_result(event.cue_id,
+                       resource_id,
+                       Game::Audio::CueOutcome::Accepted,
+                       event.cue_source);
 
       {
         std::lock_guard<std::mutex> const active_lock(active_sounds_mutex);
@@ -470,7 +484,10 @@ void AudioSystem::process_event(const AudioEvent& event) {
             {resource_id, effective_priority, event.loop, category, now});
       }
     } else {
-      trace_cue_result(event.cue_id, resource_id, "dropped:resource_not_loaded");
+      trace_cue_result(event.cue_id,
+                       resource_id,
+                       Game::Audio::CueOutcome::ResourceNotLoaded,
+                       event.cue_source);
     }
     break;
   }
@@ -529,20 +546,6 @@ void AudioSystem::process_event(const AudioEvent& event) {
     std::lock_guard<std::mutex> const lock(resource_mutex);
     if (m_music_player != nullptr) {
       m_music_player->stop_all(AudioConstants::NO_FADE_MS);
-    }
-    break;
-  }
-  case AudioEventType::PAUSE: {
-    std::lock_guard<std::mutex> const lock(resource_mutex);
-    if (m_music_player != nullptr) {
-      m_music_player->pause();
-    }
-    break;
-  }
-  case AudioEventType::RESUME: {
-    std::lock_guard<std::mutex> const lock(resource_mutex);
-    if (m_music_player != nullptr) {
-      m_music_player->resume();
     }
     break;
   }

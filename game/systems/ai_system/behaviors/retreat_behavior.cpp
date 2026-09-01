@@ -41,7 +41,7 @@ void RetreatBehavior::execute(const AISnapshot& snapshot,
       continue;
     }
 
-    if (!is_combat_role_unit(entity)) {
+    if (entity.spawn_type == Game::Units::SpawnType::Builder) {
       continue;
     }
 

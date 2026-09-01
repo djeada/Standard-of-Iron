@@ -62,8 +62,6 @@ public:
                               float screen_width,
                               float screen_height);
 
-  void invalidate_camera_viewport();
-
   [[nodiscard]] bool consume_dirty_flag();
 
   [[nodiscard]] bool

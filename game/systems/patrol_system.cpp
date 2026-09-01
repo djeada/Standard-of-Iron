@@ -9,7 +9,6 @@
 #include "../core/system_context.h"
 #include "../core/world.h"
 #include "../core/world_spatial_index.h"
-#include "combat_system/combat_utils.h"
 #include "command_service.h"
 
 namespace Game::Systems {
@@ -69,11 +68,10 @@ void PatrolSystem::run(Engine::Core::SystemContext& context) {
 
     Engine::Core::EntityID nearest_enemy = Engine::Core::NULL_ENTITY;
 
-    const bool scan_this_tick = Combat::auto_acquires_targets(&entity) &&
-                                (!movement.get_has_target() ||
-                                 (tick + static_cast<std::uint64_t>(entity.get_id())) %
-                                         k_enemy_scan_interval_ticks ==
-                                     0);
+    const bool scan_this_tick = !movement.get_has_target() ||
+                                (tick + static_cast<std::uint64_t>(entity.get_id())) %
+                                        k_enemy_scan_interval_ticks ==
+                                    0;
     if (scan_this_tick) {
       float nearest_dist_sq = k_patrol_engagement_radius * k_patrol_engagement_radius;
       index.for_each_in_radius(
@@ -85,19 +83,16 @@ void PatrolSystem::run(Engine::Core::SystemContext& context) {
                 candidate.is(Engine::Core::WorldSpatialIndex::k_building)) {
               return;
             }
+            if (candidate.owner_id == unit.owner_id) {
+              return;
+            }
             const float dx = candidate.x - transform.position.x;
             const float dz = candidate.z - transform.position.z;
             const float dist_sq = dx * dx + dz * dz;
-            if (dist_sq >= nearest_dist_sq) {
-              return;
+            if (dist_sq < nearest_dist_sq) {
+              nearest_dist_sq = dist_sq;
+              nearest_enemy = candidate.id;
             }
-            auto* target = context.world().get_entity(candidate.id);
-            if (!Combat::is_auto_acquirable_enemy_of_owner(
-                    unit.owner_id, target, false)) {
-              return;
-            }
-            nearest_dist_sq = dist_sq;
-            nearest_enemy = candidate.id;
           });
     }
 

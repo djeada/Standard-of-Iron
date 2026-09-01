@@ -66,14 +66,14 @@ auto Sound::is_playing() const -> bool {
   return m_backend->is_sound_active(m_track_id);
 }
 
-void Sound::play(float volume, bool loop) {
+void Sound::play(float volume, bool loop, float pan) {
   if ((m_backend == nullptr) || !m_registered) {
     qWarning() << "Sound: Cannot play - backend unavailable or asset not registered";
     return;
   }
 
   m_volume = volume;
-  m_backend->play_sound(m_track_id, volume, loop);
+  m_backend->play_sound(m_track_id, volume, loop, pan);
 }
 
 void Sound::stop() {

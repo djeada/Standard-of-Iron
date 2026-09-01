@@ -428,11 +428,6 @@ void MinimapManager::collect_capture_alerts(const std::vector<CaptureWatch>& cur
   m_capture_watch.assign(current.begin(), current.end());
 }
 
-void MinimapManager::invalidate_camera_viewport() {
-  m_camera_viewport_valid = false;
-  m_viewport_composite_dirty = true;
-}
-
 void MinimapManager::update_camera_viewport(const Render::GL::Camera* camera,
                                             float screen_width,
                                             float screen_height) {
@@ -450,18 +445,11 @@ void MinimapManager::update_camera_viewport(const Render::GL::Camera* camera,
   const float viewport_half_height = distance * std::tan(fov_rad * 0.5F);
   const float viewport_half_width = viewport_half_height * aspect;
 
-  const float tile_size =
-      std::max(m_tile_size, Game::Map::Minimap::Constants::k_min_tile_size);
-  const float viewport_width = viewport_half_width * 2.0F / tile_size;
-  const float viewport_height = viewport_half_height * 2.0F / tile_size;
+  const float viewport_width = viewport_half_width * 2.0F / m_tile_size;
+  const float viewport_height = viewport_half_height * 2.0F / m_tile_size;
 
-  const float camera_x = target.x() / tile_size;
-  const float camera_z = target.z() / tile_size;
-
-  if (!std::isfinite(camera_x) || !std::isfinite(camera_z) ||
-      !std::isfinite(viewport_width) || !std::isfinite(viewport_height)) {
-    return;
-  }
+  const float camera_x = target.x() / m_tile_size;
+  const float camera_z = target.z() / m_tile_size;
 
   constexpr float EPSILON = 0.01F;
   const bool camera_changed = !m_camera_viewport_valid ||
@@ -474,10 +462,6 @@ void MinimapManager::update_camera_viewport(const Render::GL::Camera* camera,
   }
 
   if (camera_changed) {
-
-    if (viewport_width <= 0.0F || viewport_height <= 0.0F) {
-      return;
-    }
     m_last_camera_x = camera_x;
     m_last_camera_z = camera_z;
     m_last_viewport_w = viewport_width;

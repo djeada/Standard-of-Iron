@@ -925,7 +925,8 @@ apply_unit_damage(Engine::Core::World* world,
                                    attacker_type,
                                    is_killing_blow,
                                    attacker_owner_id,
-                                   unit->owner_id));
+                                   unit->owner_id,
+                                   structure));
 
   if (structure) {
     queue_structure_impact(*target, attacker, contact_point);

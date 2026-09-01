@@ -79,6 +79,8 @@ help:
 	@echo "  $(GREEN)audio-preview$(RESET) - Render before/after WAVs of the decode-time mastering"
 	@echo "  $(GREEN)audio-report$(RESET)  - List missing/placeholder sounds into docs/AUDIO_WISHLIST.md"
 	@echo "  $(GREEN)audio-check$(RESET)   - Fail when cues, manifest and audio files disagree"
+	@echo "  $(GREEN)audio-scan$(RESET)    - Report leading silence and boundary clicks (never edits)"
+	@echo "  $(GREEN)audio-import$(RESET)  - Propose an import for files dropped in \"new sfx/\""
 	@echo "  $(GREEN)audio-field-ambience$(RESET) - Rebuild recorded ambience beds from their sources"
 	@echo "  $(GREEN)audio-battle$(RESET)  - Rebuild composed battle cues from their CC0 sources"
 	@echo "  $(GREEN)translations$(RESET)  - Refresh .ts/.qm catalogues and translator CSVs"
@@ -403,7 +405,23 @@ audio-report:
 audio-check:
 	@echo "$(BOLD)$(BLUE)Checking game audio wiring...$(RESET)"
 	@$(PYTHON) scripts/audio_report.py --stdout --check > /dev/null
+	@$(PYTHON) scripts/audio_validate.py
+	@$(PYTHON) scripts/audio_provenance.py --check
 	@echo "$(GREEN)✓ Audio cue, manifest and asset links are consistent$(RESET)"
+
+## Propose an import for anything dropped in "new sfx/". Writes nothing.
+# Pass AUDIO_IMPORT_ARGS=--apply once the printed proposal is what you want.
+.PHONY: audio-import
+audio-import:
+	@echo "$(BOLD)$(BLUE)Reading new sound effects...$(RESET)"
+	@$(PYTHON) scripts/audio_import.py $(AUDIO_IMPORT_ARGS)
+
+## Decode every shipped clip and report leading silence and boundary clicks.
+# Reports only: an asset is never rewritten by a script.
+.PHONY: audio-scan
+audio-scan:
+	@echo "$(BOLD)$(BLUE)Scanning shipped audio for silence and clicks...$(RESET)"
+	@$(PYTHON) scripts/audio_validate.py --scan
 
 # Validate mission and campaign content
 .PHONY: validate-content

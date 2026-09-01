@@ -16,12 +16,11 @@ auto should_record_player_move_intent(MoveOrderKind kind) -> bool {
 
 auto should_clear_attack_target(MoveOrderKind kind) -> bool {
   return kind == MoveOrderKind::PlayerMove || kind == MoveOrderKind::FormationMove ||
-         kind == MoveOrderKind::AttackMove || kind == MoveOrderKind::PlannerMove;
+         kind == MoveOrderKind::PlannerMove;
 }
 
 auto should_clear_auxiliary_orders(MoveOrderKind kind) -> bool {
-  return kind == MoveOrderKind::PlayerMove || kind == MoveOrderKind::FormationMove ||
-         kind == MoveOrderKind::AttackMove;
+  return kind == MoveOrderKind::PlayerMove || kind == MoveOrderKind::FormationMove;
 }
 
 auto should_exit_hold_mode(MoveOrderKind kind) -> bool {
@@ -30,8 +29,8 @@ auto should_exit_hold_mode(MoveOrderKind kind) -> bool {
 
 auto should_disable_guard_mode(MoveOrderKind kind) -> bool {
   return kind == MoveOrderKind::PlayerMove || kind == MoveOrderKind::FormationMove ||
-         kind == MoveOrderKind::AttackMove || kind == MoveOrderKind::AttackChase ||
-         kind == MoveOrderKind::ScriptedMove || kind == MoveOrderKind::PlannerMove;
+         kind == MoveOrderKind::AttackChase || kind == MoveOrderKind::ScriptedMove ||
+         kind == MoveOrderKind::PlannerMove;
 }
 
 auto should_touch_formation_mode(MoveOrderKind kind) -> bool {
@@ -52,22 +51,6 @@ void set_player_move_intent(Engine::Core::Entity* entity) {
 
   intent->kind = Engine::Core::PlayerOrderIntentKind::ManualMove;
   intent->suppress_opportunistic_combat = true;
-}
-
-void set_attack_move_intent(Engine::Core::Entity* entity) {
-  if (entity == nullptr) {
-    return;
-  }
-
-  auto* intent =
-      Engine::Core::get_or_add_component<Engine::Core::PlayerOrderIntentComponent>(
-          entity);
-  if (intent == nullptr) {
-    return;
-  }
-
-  intent->kind = Engine::Core::PlayerOrderIntentKind::AttackMove;
-  intent->suppress_opportunistic_combat = false;
 }
 
 } // namespace
@@ -280,8 +263,6 @@ void OrderService::prepare_for_move(Engine::Core::Entity* entity,
 
   if (should_record_player_move_intent(kind)) {
     set_player_move_intent(entity);
-  } else if (kind == MoveOrderKind::AttackMove) {
-    set_attack_move_intent(entity);
   } else if (kind != MoveOrderKind::RecoveryMove) {
     clear_player_order_intent(entity);
   }
@@ -321,8 +302,6 @@ auto move_order_kind_name(MoveOrderKind kind) -> const char* {
     return "player";
   case MoveOrderKind::FormationMove:
     return "formation";
-  case MoveOrderKind::AttackMove:
-    return "attack-move";
   case MoveOrderKind::AttackChase:
     return "attack-chase";
   case MoveOrderKind::GuardReturn:

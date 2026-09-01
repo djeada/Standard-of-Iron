@@ -11,6 +11,7 @@ add_library(
     STATIC
     audio_system.cpp
     audio_cues.cpp
+    cue_trace.cpp
     loop_seam.cpp
     resampler.cpp
     sound.cpp

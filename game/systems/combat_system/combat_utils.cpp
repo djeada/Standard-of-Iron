@@ -485,9 +485,24 @@ auto may_engage(Engine::Core::Entity* unit,
     return false;
   }
 
-  if (!auto_acquires_targets(unit)) {
+  if (unit->has_component<Engine::Core::BuildingComponent>() ||
+      unit->has_component<Engine::Core::WildlifeComponent>()) {
     return false;
   }
+  if (unit_comp->spawn_type == Game::Units::SpawnType::Civilian) {
+    return false;
+  }
+  if (!Game::Systems::CombatRules::seeks_out_enemies(unit)) {
+    return false;
+  }
+  auto* attack_comp = unit->get_component<Engine::Core::AttackComponent>();
+  if (attack_comp == nullptr) {
+    return false;
+  }
+  if (!Game::Systems::CombatRules::participates_in_rts_melee_lock(unit)) {
+    return false;
+  }
+
   if (!is_auto_acquirable_enemy(unit_comp, enemy, true)) {
     return false;
   }
@@ -495,8 +510,7 @@ auto may_engage(Engine::Core::Entity* unit,
     return false;
   }
 
-  auto const* attack_comp = unit->get_component<Engine::Core::AttackComponent>();
-  if (attack_comp != nullptr && attack_comp->in_melee_lock) {
+  if (attack_comp->in_melee_lock) {
     return false;
   }
 
@@ -558,8 +572,7 @@ auto is_unit_idle(Engine::Core::Entity* unit) -> bool {
 auto find_nearest_enemy(Engine::Core::Entity* unit,
                         const CombatQueryContext& query_context,
                         float max_range,
-                        std::uint64_t* scan_iterations,
-                        const TargetFilter& accept) -> Engine::Core::Entity* {
+                        std::uint64_t* scan_iterations) -> Engine::Core::Entity* {
   auto* unit_comp = unit->get_component<Engine::Core::UnitComponent>();
   auto* unit_transform = unit->get_component<Engine::Core::TransformComponent>();
   if ((unit_comp == nullptr) || (unit_transform == nullptr)) {
@@ -626,80 +639,69 @@ auto find_nearest_enemy(Engine::Core::Entity* unit,
     float const dz = target_transform->position.z - unit_transform->position.z;
     float const dist_sq = dx * dx + dz * dz;
 
-    if (dist_sq >= nearest_dist_sq) {
-      continue;
+    if (dist_sq < nearest_dist_sq) {
+      nearest_dist_sq = dist_sq;
+      nearest_enemy = target;
     }
-    if (accept && !accept(target)) {
-      continue;
-    }
-
-    nearest_dist_sq = dist_sq;
-    nearest_enemy = target;
   }
 
   return nearest_enemy;
 }
 
-auto combat_role_of(const Engine::Core::Entity* entity) -> Game::Units::CombatRole {
-  if (entity == nullptr) {
-    return Game::Units::CombatRole::Noncombatant;
-  }
-
-  auto const* unit = entity->get_component<Engine::Core::UnitComponent>();
+auto should_auto_engage_melee(Engine::Core::Entity* unit) -> bool {
   if (unit == nullptr) {
-    return Game::Units::CombatRole::Noncombatant;
-  }
-  return Game::Units::combat_role(unit->spawn_type);
-}
-
-auto auto_acquires_targets(Engine::Core::Entity* entity) -> bool {
-  if (!Game::Units::acquires_targets(combat_role_of(entity))) {
-    return false;
-  }
-  if (entity->get_component<Engine::Core::AttackComponent>() == nullptr) {
     return false;
   }
 
-  return Game::Systems::CombatRules::participates_in_rts_melee_lock(entity);
-}
-
-auto answers_threat_alerts(Engine::Core::Entity* entity) -> bool {
-  if (!Game::Units::answers_threat_alerts(combat_role_of(entity))) {
+  if (!Game::Systems::CombatRules::participates_in_rts_melee_lock(unit)) {
     return false;
   }
 
-  if (entity->has_component<Engine::Core::CommanderComponent>()) {
+  auto* unit_comp = unit->get_component<Engine::Core::UnitComponent>();
+  if (unit_comp == nullptr) {
     return false;
   }
 
-  return auto_acquires_targets(entity);
-}
+  switch (unit_comp->spawn_type) {
+  case Game::Units::SpawnType::Archer:
+  case Game::Units::SpawnType::SkeletonArcher:
+  case Game::Units::SpawnType::GravePriest:
+  case Game::Units::SpawnType::HorseArcher:
+  case Game::Units::SpawnType::Healer:
+  case Game::Units::SpawnType::Catapult:
+  case Game::Units::SpawnType::Ballista:
+    return false;
 
-auto pursues_targets(const Engine::Core::Entity* entity) -> bool {
-  return Game::Units::pursues_targets(combat_role_of(entity));
-}
+  case Game::Units::SpawnType::Knight:
+  case Game::Units::SpawnType::Spearman:
+  case Game::Units::SpawnType::SkeletonSwordsman:
+  case Game::Units::SpawnType::MountedKnight:
+  case Game::Units::SpawnType::HorseSpearman:
+    return true;
 
-auto opens_fire_without_closing(const Engine::Core::Entity* entity) -> bool {
-  if (entity == nullptr) {
+  case Game::Units::SpawnType::Barracks:
+  case Game::Units::SpawnType::Elephant:
+  case Game::Units::SpawnType::RomanLegionOrganizer:
+  case Game::Units::SpawnType::RomanVeteranConsul:
+  case Game::Units::SpawnType::RomanFieldCommander:
+  case Game::Units::SpawnType::CarthageSpearCommander:
+  case Game::Units::SpawnType::CarthageBowCommander:
+  case Game::Units::SpawnType::CarthageSwordCommander:
+  case Game::Units::SpawnType::Civilian:
+  case Game::Units::SpawnType::Builder:
+  case Game::Units::SpawnType::DefenseTower:
+  case Game::Units::SpawnType::Home:
+  case Game::Units::SpawnType::WallSegment:
+  case Game::Units::SpawnType::WallGate:
+  case Game::Units::SpawnType::Marketplace:
+  case Game::Units::SpawnType::Temple:
+  case Game::Units::SpawnType::Farm:
+  case Game::Units::SpawnType::Sheep:
+  case Game::Units::SpawnType::Wolf:
     return false;
   }
-  auto const* attack = entity->get_component<Engine::Core::AttackComponent>();
-  return attack != nullptr && attack->can_ranged &&
-         attack->preferred_mode != Engine::Core::AttackComponent::CombatMode::Melee;
-}
 
-auto acquisition_range(Engine::Core::Entity* entity) -> float {
-  auto const* attack = entity->get_component<Engine::Core::AttackComponent>();
-  auto const* unit = entity->get_component<Engine::Core::UnitComponent>();
-  if (attack == nullptr) {
-    return unit != nullptr ? unit->vision_range : 0.0F;
-  }
-
-  if (opens_fire_without_closing(entity) || !pursues_targets(entity)) {
-    return attack->range;
-  }
-
-  return unit != nullptr ? std::max(unit->vision_range, attack->range) : attack->range;
+  return false;
 }
 
 } // namespace Game::Systems::Combat

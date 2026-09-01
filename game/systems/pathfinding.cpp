@@ -320,15 +320,9 @@ auto Pathfinding::is_world_segment_walkable(const QVector3D& from,
   float const stride_z =
       step_z == 0 ? std::numeric_limits<float>::infinity() : 1.0F / std::abs(delta_v);
 
-  constexpr float k_segment_end = 1.0F;
-
   int const max_steps = std::abs(end_x - cell_x) + std::abs(end_z - cell_z) + 2;
   for (int taken = 0; taken < max_steps; ++taken) {
     if (cell_x == end_x && cell_z == end_z) {
-      return true;
-    }
-
-    if (std::min(travel_x, travel_z) >= k_segment_end - k_boundary_epsilon) {
       return true;
     }
 

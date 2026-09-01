@@ -105,8 +105,7 @@ auto CommandController::on_attack_click(qreal sx,
                                         qreal sy,
                                         int viewport_width,
                                         int viewport_height,
-                                        void* camera,
-                                        int local_owner_id) -> CommandResult {
+                                        void* camera) -> CommandResult {
   using App::Core::OrderKind;
   CommandResult result;
   result.reset_cursor_to_normal = true;
@@ -134,23 +133,10 @@ auto CommandController::on_attack_click(qreal sx,
     QVector3D hit;
     if (Game::Systems::PickingService::screen_to_ground(
             QPointF(sx, sy), *cam, viewport_width, viewport_height, hit)) {
-
-      auto const attackers = App::Core::filter_selected_units_for_action(
-          m_world, selected, QStringLiteral("attack"));
-      if (attackers.empty()) {
-        result.order =
-            m_orders.reject_at(OrderKind::Attack,
-                               App::Core::no_eligible_units_reason(OrderKind::Attack),
-                               hit);
-        return result;
-      }
-      result.order = m_orders.publish(
-          App::Utils::submit_ground_move(*m_world,
-                                         attackers,
-                                         hit,
-                                         local_owner_id,
-                                         Game::Systems::MoveOrderKind::AttackMove));
-      result.input_consumed = result.order.accepted();
+      result.order = m_orders.reject_at(
+          OrderKind::Attack,
+          App::Core::no_target_under_cursor_reason(OrderKind::Attack),
+          hit);
     } else {
       result.order =
           m_orders.reject(OrderKind::Attack,

@@ -8,6 +8,7 @@
 
 #include "../core/event_manager.h"
 #include "audio_system.h"
+#include "spatial.h"
 
 namespace Engine::Core {
 class World;
@@ -52,6 +53,8 @@ private:
   static void on_music_stop(const Engine::Core::MusicStopEvent& event);
   void on_combat_hit(const Engine::Core::CombatHitEvent& event);
 
+  void note_distant_impact(const Game::Audio::WorldPoint& where);
+
   auto should_play_sound_group(const std::string& group_id, int cooldown_ms) -> bool;
   void mark_sound_group_played(const std::string& group_id);
   void play_sound_group(const std::string& group_id,
@@ -73,6 +76,10 @@ private:
   std::unordered_map<std::string, std::string> m_last_sound_group_id;
 
   bool m_use_voice_category{true};
+
+  static constexpr int k_distant_impacts_for_a_battle = 6;
+  static constexpr std::chrono::seconds k_distant_battle_window{3};
+  std::vector<std::chrono::steady_clock::time_point> m_distant_impacts;
 
   std::chrono::steady_clock::time_point m_last_selection_sound_time;
   std::string m_last_selection_sound_id;

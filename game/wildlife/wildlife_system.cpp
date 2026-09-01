@@ -560,8 +560,10 @@ auto WildlifeSystem::begin_bite(Engine::Core::Entity& entity,
   wildlife.bite_target_id = prey.id;
   wildlife.bite_impact_pending = true;
   m_stats.bites += 1U;
-  Engine::Core::EventManager::instance().publish(Engine::Core::AudioCueEvent::for_owner(
-      Engine::Core::owner_id_of(prey.entity), Game::Audio::Cue::k_wildlife_wolf_bite));
+  auto bite = Engine::Core::AudioCueEvent::for_owner(
+      Engine::Core::owner_id_of(prey.entity), Game::Audio::Cue::k_wildlife_wolf_bite);
+  bite.at(prey.x, 0.0F, prey.z);
+  Engine::Core::EventManager::instance().publish(bite);
 
   auto* transform = entity.get_component<Engine::Core::TransformComponent>();
   if (transform != nullptr) {

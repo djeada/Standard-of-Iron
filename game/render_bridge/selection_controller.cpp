@@ -61,7 +61,6 @@ void SelectionController::on_click_select(qreal sx,
   }
 
   auto* cam = static_cast<Render::GL::Camera*>(camera);
-
   Engine::Core::EntityID const picked =
       Game::Systems::PickingService::pick_single(float(sx),
                                                  float(sy),
@@ -70,7 +69,7 @@ void SelectionController::on_click_select(qreal sx,
                                                  viewport_width,
                                                  viewport_height,
                                                  local_owner_id,
-                                                 false);
+                                                 true);
 
   if (picked != 0U) {
 
@@ -85,15 +84,8 @@ void SelectionController::on_click_select(qreal sx,
   }
 
   if (!additive) {
-    Engine::Core::EntityID const foreign =
-        Game::Systems::PickingService::pick_single(float(sx),
-                                                   float(sy),
-                                                   *m_world,
-                                                   *cam,
-                                                   viewport_width,
-                                                   viewport_height,
-                                                   0,
-                                                   false);
+    Engine::Core::EntityID const foreign = Game::Systems::PickingService::pick_single(
+        float(sx), float(sy), *m_world, *cam, viewport_width, viewport_height, 0, true);
     if (foreign != 0U && can_inspect(foreign, local_owner_id)) {
       const bool changed = m_selection_system->inspected_entity() != foreign ||
                            !m_selection_system->get_selected_units().empty();

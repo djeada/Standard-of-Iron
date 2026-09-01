@@ -41,9 +41,9 @@ QtObject {
     readonly property int notificationWidth: A11y.scaled(340)
     readonly property int hudZoneMargin: A11y.scaled(12)
 
-    readonly property int rtsBottomBarMinHeight: A11y.scaled(150)
-    readonly property int rtsBottomBarMaxHeight: A11y.scaled(200)
-    readonly property real rtsBottomBarShare: 0.17
+    readonly property int rtsBottomBarMinHeight: A11y.scaled(184)
+    readonly property int rtsBottomBarMaxHeight: A11y.scaled(224)
+    readonly property real rtsBottomBarShare: 0.21
 
     readonly property int commanderBottomBarMinHeight: A11y.scaled(96)
     readonly property int commanderBottomBarMaxHeight: A11y.scaled(120)

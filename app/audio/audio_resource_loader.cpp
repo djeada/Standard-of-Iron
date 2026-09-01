@@ -431,11 +431,20 @@ void AudioResourceLoader::load_audio_cues() {
     binding.cooldown_ms =
         std::max(0, cue_object.value(QStringLiteral("cooldown_ms")).toInt(0));
     binding.loop = cue_object.value(QStringLiteral("loop")).toBool(false);
+    binding.spatial = cue_object.value(QStringLiteral("spatial")).toBool(false);
 
     const QJsonArray resources =
         cue_object.value(QStringLiteral("resources")).toArray();
-    for (const QJsonValue resource_value : resources) {
-      const QString resource_id = resource_value.toString().trimmed();
+    const QJsonArray weights = cue_object.value(QStringLiteral("weights")).toArray();
+    if (!weights.isEmpty() && weights.size() != resources.size()) {
+      qWarning() << "Audio cue" << cue_id << "declares" << weights.size()
+                 << "weights for" << resources.size()
+                 << "resources; falling back to equal weights";
+    }
+    const bool use_weights = !weights.isEmpty() && weights.size() == resources.size();
+
+    for (int index = 0; index < resources.size(); ++index) {
+      const QString resource_id = resources.at(index).toString().trimmed();
       if (resource_id.isEmpty()) {
         continue;
       }
@@ -445,6 +454,10 @@ void AudioResourceLoader::load_audio_cues() {
         continue;
       }
       binding.resource_ids.push_back(resource_id.toStdString());
+      if (use_weights) {
+        binding.weights.push_back(
+            std::max(0.0F, float(weights.at(index).toDouble(1.0))));
+      }
     }
 
     if (binding.resource_ids.empty()) {

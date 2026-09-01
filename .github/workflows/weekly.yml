@@ -218,13 +218,8 @@ jobs:
       # budget. The script runs each suite once instead, and treats a suite
       # missing from the build as an error rather than -- as --no-tests=ignore
       # did -- a reason to report success.
-      # SOI_SKIP_SOAK drops ai_soak_tests. Those suites step tens of simulated
-      # minutes, which the Soak job below covers in an optimised build; run here
-      # they put a sanitizer's 2-20x on top of an unoptimised one, and both
-      # matrix legs hit the 120-minute cap without ever finishing.
       - name: Run tests under ${{ matrix.sanitizer }}Sanitizer
         env:
-          SOI_SKIP_SOAK: "1"
           ASAN_OPTIONS: detect_leaks=1:abort_on_error=0:strict_string_checks=1
           # D-Bus, the GL driver and the QML engine each keep process-lifetime
           # allocations that LeakSanitizer counts. tools/lsan-suppressions.txt
@@ -277,14 +272,9 @@ jobs:
       - name: Build the test binaries
         run: cmake --build build --parallel --target soi_test_binaries
 
-      # The soak suites are skipped for the same reason as under the
-      # sanitizers: an instrumented Debug build cannot step tens of simulated
-      # minutes inside the cap. They add coverage of the AI planner that the
-      # rest of ai_tests already walks, so the report loses very little.
       - name: Run tests
         env:
           QT_QPA_PLATFORM: offscreen
-          SOI_SKIP_SOAK: "1"
         run: bash scripts/run-tests.sh build --gtest_brief=1
 
       # Steps run under `bash -e` but not `-o pipefail`, so without this a
@@ -320,77 +310,6 @@ jobs:
             coverage.xml
             coverage-summary.txt
           retention-days: 30
-
-  # ---------------------------------------------------------------------
-  # The soak tier: the AI suites measured in simulated minutes rather than
-  # seconds - six commanders raising a town from an empty field, and three
-  # AI-versus-AI matches played out minute by minute.
-  #
-  # This is the one place they run in CI. They used to run in the pull-request
-  # lane, in a Debug build, where they were 72 of that job's 78 test minutes and
-  # were pushing it into its 120-minute cap; the same suites under a sanitizer
-  # never finished at all. Here they get an optimised build, which is what makes
-  # half a million world updates a single-digit-minute job, and a weekly cadence,
-  # which is the right rate for a behaviour soak.
-  #
-  # It builds ai_soak_tests alone rather than soi_test_binaries: nothing else in
-  # this job runs, and the rest of the suite is already covered three times over
-  # by the lanes above.
-  # ---------------------------------------------------------------------
-  soak:
-    name: Soak (AI behaviour)
-    runs-on: ubuntu-24.04
-    # An optimised build of this tree is around 25 minutes from a cold ccache
-    # and the suites themselves are single-digit minutes; the rest is headroom
-    # for the week the cache is evicted.
-    timeout-minutes: 90
-    env:
-      CMAKE_CXX_COMPILER_LAUNCHER: ccache
-    steps:
-      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
-        with:
-          persist-credentials: false
-
-      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
-        with:
-          python-version: "3.12"
-
-      - uses: jurplel/install-qt-action@48d3ad6db93f3627c8ee7a0454bc6f3744f7e730 # v4.3.1
-        with:
-          version: ${{ env.QT_VERSION }}
-          host: linux
-          cache: true
-          modules: qt5compat qtmultimedia
-
-      - name: Install build dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y --no-install-recommends \
-            ninja-build libgl1-mesa-dev libegl1 ffmpeg
-
-      - name: ccache
-        uses: hendrikmuhs/ccache-action@d62db5f07c26379fc4b4e0916f098a92573c3b03 # v1.2.23
-        with:
-          key: weekly-soak
-          max-size: 2G
-
-      # Release, not Debug. The soaks are behaviour assertions over a long run
-      # of the simulation, and the simulation is ten times slower unoptimised;
-      # what they measure - what the AI builds and fields - does not change.
-      - name: Configure
-        run: |
-          cmake -S . -B build -G Ninja \
-            -DCMAKE_BUILD_TYPE=Release \
-            -DDEFAULT_LANG=en \
-            -DENABLE_GENERATED_CAMPAIGN_MAP_ASSETS=OFF
-
-      - name: Build the soak binary
-        run: cmake --build build --parallel --target ai_soak_tests
-
-      - name: Soak tests
-        env:
-          QT_QPA_PLATFORM: offscreen
-        run: ./build/bin/ai_soak_tests
 
   # ---------------------------------------------------------------------
   # Full build, renderer self-test and packaging dry run on every supported

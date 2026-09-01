@@ -196,13 +196,14 @@ void GateSystem::update(Engine::Core::World* world, float delta_time) {
     gate.state = derive_state(gate, gate.open_amount >= previous);
 
     if (gate.state != previous_state) {
-      if (gate.state == GateComponent::State::Opening) {
-        Engine::Core::EventManager::instance().publish(
-            Engine::Core::AudioCueEvent::for_owner(record.owner_id, "build.gate_open"));
-      } else if (gate.state == GateComponent::State::Closing) {
-        Engine::Core::EventManager::instance().publish(
-            Engine::Core::AudioCueEvent::for_owner(record.owner_id,
-                                                   "build.gate_close"));
+      const char* const cue_id =
+          gate.state == GateComponent::State::Opening   ? "build.gate_open"
+          : gate.state == GateComponent::State::Closing ? "build.gate_close"
+                                                        : nullptr;
+      if (cue_id != nullptr) {
+        auto cue = Engine::Core::AudioCueEvent::for_owner(record.owner_id, cue_id);
+        cue.at(record.center_x, 0.0F, record.center_z);
+        Engine::Core::EventManager::instance().publish(cue);
       }
     }
   }

@@ -395,7 +395,8 @@
       "cooldown_ms": 500,
       "resources": [
         "sfx.build.construction_started"
-      ]
+      ],
+      "spatial": true
     },
     {
       "id": "build.construction_complete",
@@ -407,7 +408,8 @@
       "cooldown_ms": 500,
       "resources": [
         "sfx.build.construction_complete"
-      ]
+      ],
+      "spatial": true
     },
     {
       "id": "build.unit_queued",
@@ -447,7 +449,8 @@
       "resources": [
         "sfx.build.building_destroyed"
       ],
-      "wanted": "Timber and masonry collapse with a rubble tail, ~2.5 s."
+      "wanted": "Timber and masonry collapse with a rubble tail, ~2.5 s.",
+      "spatial": true
     },
     {
       "id": "build.gate_open",
@@ -460,7 +463,8 @@
       "resources": [
         "sfx.build.gate_open"
       ],
-      "wanted": "Heavy wooden gate on iron hinges, opening, ~1.5 s."
+      "wanted": "Heavy wooden gate on iron hinges, opening, ~1.5 s.",
+      "spatial": true
     },
     {
       "id": "build.gate_close",
@@ -473,7 +477,8 @@
       "resources": [
         "sfx.build.gate_close"
       ],
-      "wanted": "Gate shutting plus bar drop. Pairs with build.gate_open."
+      "wanted": "Gate shutting plus bar drop. Pairs with build.gate_open.",
+      "spatial": true
     },
     {
       "id": "alert.low_resources",
@@ -599,8 +604,10 @@
         "sfx.combat.sword_hit_01",
         "sfx.combat.blade_clash_01",
         "sfx.combat.blade_clash_02",
-        "sfx.combat.blade_clash_03"
-      ]
+        "sfx.combat.blade_clash_03",
+        "sfx.combat.gladius_shield_impacts_close"
+      ],
+      "spatial": true
     },
     {
       "id": "combat.hit.spear",
@@ -613,7 +620,8 @@
       "resources": [
         "sfx.combat.spear_impact_01",
         "sfx.combat.spear_impact_02"
-      ]
+      ],
+      "spatial": true
     },
     {
       "id": "combat.hit.arrow",
@@ -625,7 +633,8 @@
       "cooldown_ms": 120,
       "resources": [
         "sfx.combat.arrow_impact_01"
-      ]
+      ],
+      "spatial": true
     },
     {
       "id": "combat.hit.cavalry",
@@ -638,7 +647,8 @@
       "resources": [
         "sfx.combat.horse_gallop_close_pass",
         "sfx.movement.hooves_gallop"
-      ]
+      ],
+      "spatial": true
     },
     {
       "id": "combat.hit.elephant",
@@ -651,7 +661,8 @@
       "resources": [
         "sfx.combat.elephant_charge_carthage",
         "sfx.combat.elephant_panic"
-      ]
+      ],
+      "spatial": true
     },
     {
       "id": "combat.hit.siege",
@@ -665,7 +676,8 @@
         "sfx.combat.stone_impact_01",
         "sfx.combat.stone_impact_02",
         "sfx.combat.stone_impact_03"
-      ]
+      ],
+      "spatial": true
     },
     {
       "id": "combat.hit.generic",
@@ -679,6 +691,35 @@
         "sfx.combat.armour_hit_01",
         "sfx.combat.armour_hit_02",
         "sfx.combat.armour_hit_03"
+      ],
+      "spatial": true
+    },
+    {
+      "id": "combat.hit.structure",
+      "description": "A blow lands on a wall, gate or building rather than on a man.",
+      "category": "sfx",
+      "importance": "optional",
+      "volume": 0.55,
+      "priority": 3,
+      "cooldown_ms": 110,
+      "resources": [
+        "sfx.combat.stone_impact_01",
+        "sfx.combat.stone_impact_02",
+        "sfx.combat.stone_impact_03"
+      ],
+      "spatial": true
+    },
+    {
+      "id": "combat.distant_battle",
+      "description": "Fighting the player cannot hear individually, because it is too far away, carried as one distant mass instead.",
+      "category": "sfx",
+      "importance": "ambient",
+      "volume": 0.35,
+      "priority": 2,
+      "cooldown_ms": 9000,
+      "resources": [
+        "sfx.combat.battlefield_distant_mass_01",
+        "sfx.combat.battlefield_distant_mass_02"
       ]
     },
     {
@@ -693,7 +734,8 @@
         "sfx.combat.human_death_cry",
         "sfx.combat.human_death_cry_v2",
         "sfx.combat.human_death_cry_v3"
-      ]
+      ],
+      "spatial": true
     },
     {
       "id": "combat.arrow_launch",
@@ -706,7 +748,8 @@
       "resources": [
         "sfx.combat.arrow_launch"
       ],
-      "wanted": "A single dry bow release, isolated. The current clip is a group recording."
+      "wanted": "A single dry bow release, isolated. The current clip is a group recording.",
+      "spatial": true
     },
     {
       "id": "combat.bow_draw",
@@ -771,7 +814,8 @@
       "resources": [
         "sfx.combat.arrows_many_overhead",
         "sfx.combat.arrows_overhead_dark"
-      ]
+      ],
+      "spatial": true
     },
     {
       "id": "combat.arrow_volley",
@@ -786,7 +830,8 @@
         "sfx.combat.arrows_many_overhead",
         "sfx.combat.arrows_overhead_dark",
         "sfx.combat.arrow_impact_01"
-      ]
+      ],
+      "spatial": true
     },
     {
       "id": "combat.siege_launch",
@@ -799,7 +844,8 @@
       "resources": [
         "sfx.combat.siege_launch"
       ],
-      "wanted": "Torsion release: rope creak, wooden arm slam against the stop, ~1 s."
+      "wanted": "Torsion release: rope creak, wooden arm slam against the stop, ~1 s.",
+      "spatial": true
     },
     {
       "id": "combat.siege_impact",
@@ -812,7 +858,8 @@
       "resources": [
         "sfx.combat.siege_impact"
       ],
-      "wanted": "Stone striking earth or timber with a debris tail, ~1.5 s."
+      "wanted": "Stone striking earth or timber with a debris tail, ~1.5 s.",
+      "spatial": true
     },
     {
       "id": "combat.charge",
@@ -827,7 +874,8 @@
         "sfx.combat.elephant_trumpet_charge",
         "sfx.movement.hooves_gallop"
       ],
-      "wanted": "A dedicated charge roar layered with running feet, faction-neutral."
+      "wanted": "A dedicated charge roar layered with running feet, faction-neutral.",
+      "spatial": true
     },
     {
       "id": "combat.heal",
@@ -840,7 +888,8 @@
       "resources": [
         "sfx.combat.heal"
       ],
-      "wanted": "Warm, quiet, non-magical: water poured, cloth binding, a soft exhale."
+      "wanted": "Warm, quiet, non-magical: water poured, cloth binding, a soft exhale.",
+      "spatial": true
     },
     {
       "id": "combat.guard_raise",
@@ -1060,7 +1109,8 @@
         "sfx.wildlife.wolf_howl_near",
         "sfx.wildlife.wolf_growl_low",
         "sfx.wildlife.wolf_snarl_bark"
-      ]
+      ],
+      "spatial": true
     },
     {
       "id": "wildlife.wolf_bite",
@@ -1073,7 +1123,8 @@
       "resources": [
         "sfx.wildlife.wolf_bite_snap",
         "sfx.wildlife.wolf_pack_attack"
-      ]
+      ],
+      "spatial": true
     },
     {
       "id": "state.victory",
@@ -1201,7 +1252,8 @@
       "resources": [
         "sfx.build.building_burning"
       ],
-      "wanted": "Timber fire taking hold, no ignition whoosh."
+      "wanted": "Timber fire taking hold, no ignition whoosh.",
+      "spatial": true
     },
     {
       "id": "combat.elephant_panic",
