@@ -101,6 +101,7 @@ add_executable(
     map/terrain_topology_audit_test.cpp
     map/map_transformer_test.cpp
     map/hill_crown_geometry_test.cpp
+    map/hill_navigation_test.cpp
     map/hill_shape_test.cpp
     map/terrain_footprint_test.cpp
     map/undead_shrine_placement_test.cpp
@@ -214,6 +215,7 @@ add_executable(
     headless/gate_traversal_test.cpp
     headless/wall_siege_test.cpp
     headless/tight_gap_navigation_test.cpp
+    headless/hill_traversal_test.cpp
     headless/playable_ground_test.cpp
     headless/battle_speed_load_test.cpp
     headless/selected_unit_readout_test.cpp

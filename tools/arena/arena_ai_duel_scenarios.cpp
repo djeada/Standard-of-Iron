@@ -464,6 +464,40 @@ auto build_ai_duel_definitions() -> std::vector<ArenaScenarioDefinition> {
   }
 
   {
+    DuelSide north;
+    north.label = QStringLiteral("hannibal_north");
+    north.owner_id = 2;
+    north.nation = Nation::Carthage;
+    north.commander = Troop::CarthageSwordCommander;
+
+    DuelSide south;
+    south.label = QStringLiteral("hannibal_south");
+    south.owner_id = 3;
+    south.nation = Nation::Carthage;
+    south.commander = Troop::CarthageSwordCommander;
+
+    auto s = duel_definition(
+        k_ai_duel_hannibal_vs_hannibal_id,
+        QStringLiteral("AI Duel: Hannibal vs Hannibal"),
+        QStringLiteral("The mirror match: the same decisive Barcid doctrine on "
+                       "both corners, a war chest of 3000 gold apiece, and "
+                       "nothing standing but each side's barracks. Whatever "
+                       "separates the towns they raise and the armies they "
+                       "field is the doctrine meeting itself."),
+        1800.0F,
+        north,
+        south);
+    s.ai_starting_resources.gold = 3000;
+    s.expectations.push_back(
+        doctrine_expectation(QStringLiteral("hannibal_north"), "aggressive:field"));
+    s.expectations.push_back(
+        doctrine_expectation(QStringLiteral("hannibal_south"), "aggressive:field"));
+    add_economy_expectations(s, QStringLiteral("hannibal_north"));
+    add_economy_expectations(s, QStringLiteral("hannibal_south"));
+    result.push_back(std::move(s));
+  }
+
+  {
     DuelSide scipio;
     scipio.label = QStringLiteral("scipio");
     scipio.owner_id = 2;
