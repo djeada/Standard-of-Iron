@@ -10,6 +10,14 @@ on:
   pull_request:
     branches: [main, develop]
   merge_group:
+  # GitHub scopes an Actions cache to the branch that wrote it, plus the default
+  # branch, which every branch can read. Nothing here ran on main, so no branch
+  # ever inherited a warm ccache: the run of 2026-08-31 compiled 1262 of 1262
+  # translation units and hit the cache 3 times, and the build step alone took
+  # 25 of the job's 105 minutes. Running on main is what seeds the cache the
+  # pull requests then restore.
+  push:
+    branches: [main]
 
 # Least privilege by default; no job here needs more.
 permissions:
@@ -72,7 +80,11 @@ jobs:
         uses: hendrikmuhs/ccache-action@d62db5f07c26379fc4b4e0916f098a92573c3b03 # v1.2.23
         with:
           key: pr-ubuntu-24.04-${{ env.BUILD_TYPE }}
-          max-size: 1G
+          # A debug object for this tree is roughly three quarters of a megabyte
+          # once ccache has compressed it, and there are over 1200 of them, so a
+          # 1G ceiling evicted the front of the run to make room for the back and
+          # nothing survived to the next one.
+          max-size: 3G
 
       - name: Cache CMake FetchContent dependencies
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
@@ -93,9 +105,14 @@ jobs:
           cmake --build build --parallel \
             --target soi_test_binaries content_validator
 
+      # SOI_SKIP_SOAK drops ai_soak_tests, which is measured in simulated
+      # minutes: it was 72 of the 78 minutes this step used to spend, in a job
+      # capped at 120. The Soak job in weekly.yml runs it in an optimised build,
+      # where the same work takes single-digit minutes.
       - name: Unit tests
         env:
           QT_QPA_PLATFORM: offscreen
+          SOI_SKIP_SOAK: "1"
         run: bash scripts/run-tests.sh build --gtest_brief=1
 
       # The catalogues are tracked, so they drift the moment someone adds a

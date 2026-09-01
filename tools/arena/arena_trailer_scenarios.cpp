@@ -6,6 +6,7 @@
 #include <vector>
 
 #include "arena_scenarios.h"
+#include "game/systems/building_collision_registry.h"
 #include "game/wildlife/wildlife_config.h"
 
 namespace Arena::Scenarios {
@@ -212,7 +213,8 @@ constexpr float k_valley_street_z = -14.0F;
 constexpr float k_roman_town_x = -26.0F;
 constexpr float k_roman_hamlet_x = 10.0F;
 constexpr float k_punic_town_x = 26.0F;
-constexpr float k_punic_town_z = 32.0F;
+
+constexpr float k_punic_town_z = 38.0F;
 constexpr float k_punic_camp_x = -8.0F;
 constexpr float k_punic_camp_z = 47.5F;
 constexpr float k_roman_camp_x = -40.0F;
@@ -396,6 +398,17 @@ constexpr float k_plot_margin = 1.2F;
 constexpr float k_max_building_half = 2.0F;
 constexpr float k_row_pitch = 6.4F;
 constexpr float k_col_pitch = 6.4F;
+
+[[nodiscard]] auto temple_clearance() -> float {
+  const auto size =
+      Game::Systems::BuildingCollisionRegistry::get_building_size("temple");
+  return std::min(size.width, size.depth) * 0.5F;
+}
+
+[[nodiscard]] auto acropolis_crown_gap() -> float {
+  return k_cross_half_width + temple_clearance() + 0.6F;
+}
+
 [[nodiscard]] auto first_row_offset() -> float {
   return k_street_half_width + k_plot_margin + k_max_building_half;
 }
@@ -518,8 +531,9 @@ void add_settlement(ArenaScenarioDefinition& scenario, const SettlementPlan& pla
   }
   if (shape.has_temple) {
     if (plan.acropolis) {
-      const float reach =
-          first_row_offset() + (static_cast<float>(shape.rows) * k_row_pitch) + 4.0F;
+      const float reach = first_row_offset() +
+                          (static_cast<float>(shape.rows) * k_row_pitch) +
+                          acropolis_crown_gap();
       const QVector3D crown = plan.center + QVector3D(0.0F, 0.0F, -reach);
       scenario.elevation_patches.push_back({crown, 11.0F, 4.6F});
       place(QStringLiteral("_temple"), Game::Units::SpawnType::Temple, crown, 180.0F);
@@ -561,9 +575,11 @@ void add_settlement(ArenaScenarioDefinition& scenario, const SettlementPlan& pla
     const float plot_reach_z = first_row_offset() +
                                (static_cast<float>(shape.rows - 1) * k_row_pitch) +
                                k_max_building_half;
+
     const float acropolis_reach =
         plan.acropolis
-            ? first_row_offset() + (static_cast<float>(shape.rows) * k_row_pitch) + 6.0F
+            ? first_row_offset() + (static_cast<float>(shape.rows) * k_row_pitch) +
+                  acropolis_crown_gap() + temple_clearance() + 1.1F
             : 0.0F;
     auto to_even = [](float value) {
       return std::ceil(value / 2.0F) * 2.0F;
@@ -600,6 +616,8 @@ struct ValleyOptions {
 
 void dress_valley(ArenaScenarioDefinition& scenario, const ValleyOptions& options) {
   scenario.arena_floor_half_extent = 56.0F;
+
+  scenario.terrain_grid_extent = 160;
 
   scenario.rivers.push_back(Game::Map::RiverSegment{
       {-45.0F, 0.0F, k_river_z}, {4.0F, 0.0F, k_river_z}, k_river_width});

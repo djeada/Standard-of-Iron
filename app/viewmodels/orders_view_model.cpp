@@ -340,7 +340,8 @@ void OrdersViewModel::attack_at(qreal sx, qreal sy) {
   m_host.ensure_initialized();
   const auto frame_lock = m_host.lock_frame();
   if (m_context.input != nullptr) {
-    m_context.input->on_attack_click(sx, sy, *m_context.viewport);
+    m_context.input->on_attack_click(
+        sx, sy, m_context.local_owner_id, *m_context.viewport);
   }
 }
 

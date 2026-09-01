@@ -13,6 +13,10 @@
 #                      combat, formations and the headless battles that drive
 #                      the real system registry. Adds soi_runtime; still no AI.
 #   ai_tests           the computer opponent. Adds soi_ai.
+#   ai_soak_tests      the same link line, holding the AI suites that are
+#                      measured in simulated minutes rather than seconds.
+#                      Split by cost, not by boundary -- the only such
+#                      split here, and the comment on the target says why.
 #   campaign_tests     mission and campaign content, and the runtime that
 #                      applies it: what the shipped files say, whether the
 #                      loaders agree, and whether setting a mission up in a live
@@ -41,7 +45,9 @@
 #    into a binary that was supposed to prove it did not need them.
 #  - no test is quarantined out of the default path, and no test source is
 #    listed behind an `if(EXISTS)`. If a test cannot build or cannot pass, it is
-#    fixed or it is deleted with an issue, not omitted.
+#    fixed or it is deleted with an issue, not omitted. ai_soak_tests is not an
+#    exception: scripts/run-tests.sh runs it by default and a caller that cannot
+#    afford it has to say so out loud, in a workflow, with SOI_SKIP_SOAK.
 
 # Registers a binary with CTest and parks it beside the other executables.
 function(soi_register_test_binary target)
@@ -240,6 +246,11 @@ soi_register_test_binary(combat_balance_tests)
 # ---- ai_tests ----------------------------------------------------------
 # The computer opponent, and the two scenarios that need one to be meaningful:
 # a wall assault it has to path around, and a mission wave it has to press.
+#
+# Everything here is bounded: the longest test steps a few simulated minutes.
+# The soaks that step tens of simulated minutes live in ai_soak_tests below,
+# and the split is the whole reason that target exists -- see the comment there
+# before moving a file across.
 add_executable(
     ai_tests
     systems/ai_system_test.cpp
@@ -248,9 +259,8 @@ add_executable(
     systems/squad_service_test.cpp
     systems/wall_system_test.cpp
     headless/mission_wave_assault_test.cpp
+    headless/sepulcher_guard_response_test.cpp
     headless/ai_skirmish_opening_test.cpp
-    headless/ai_duel_match_test.cpp
-    headless/ai_town_plan_test.cpp
     headless/movement_quality_gate_test.cpp
     simulation_main.cpp
 )
@@ -266,6 +276,45 @@ target_link_libraries(
         soi_runtime
 )
 soi_register_test_binary(ai_tests)
+
+# ---- ai_soak_tests -----------------------------------------------------
+# The two AI suites that are soaks rather than unit tests: they raise a town
+# from an empty field and play whole AI-versus-AI matches, and they are measured
+# in *simulated minutes* -- ai_town_plan_test runs six commanders for 26 minutes
+# each, ai_duel_match_test plays three matches minute by minute. That is over
+# half a million world updates per binary run.
+#
+# They lived in ai_tests until 2026-08-31, when the numbers came in from the
+# pull-request lane: ai_tests took 72 of the 78 minutes the unit-test step
+# spent, these two suites were 95% of it, and the job was tripping its
+# 120-minute cap. The weekly sanitizer and coverage jobs, which run the same
+# script with a 2-20x interpreter on top, never finished at all.
+#
+# The split is a *tier*, not a quarantine. scripts/run-tests.sh runs this binary
+# by default, so a local `make test` still covers it; only the callers that
+# cannot afford it -- the pull-request lane, and the sanitizer and coverage jobs
+# -- set SOI_SKIP_SOAK, and .github/workflows/weekly.yml has a job that exists
+# to run it in a build fast enough to finish.
+#
+# Anything that steps more than about a minute of simulated time belongs here.
+add_executable(
+    ai_soak_tests
+    headless/ai_duel_match_test.cpp
+    headless/ai_town_plan_test.cpp
+    simulation_main.cpp
+)
+target_link_libraries(
+    ai_soak_tests
+    PRIVATE
+        GTest::gtest
+        GTest::gmock
+        Qt${QT_VERSION_MAJOR}::Core
+        engine_core
+        game_sim
+        soi_ai
+        soi_runtime
+)
+soi_register_test_binary(ai_soak_tests)
 
 # ---- campaign_tests ----------------------------------------------------
 # Mission and campaign content -- what the shipped files say, and whether the
@@ -773,6 +822,7 @@ add_custom_target(
         simulation_tests
         combat_balance_tests
         ai_tests
+        ai_soak_tests
         campaign_tests
         persistence_tests
         render_tests

@@ -95,8 +95,7 @@ void DefendBehavior::execute(const AISnapshot& snapshot,
       continue;
     }
 
-    if (entity.spawn_type == Game::Units::SpawnType::Builder ||
-        entity.spawn_type == Game::Units::SpawnType::Healer) {
+    if (!picks_its_own_fights(entity)) {
       continue;
     }
 
@@ -208,6 +207,9 @@ void DefendBehavior::execute(const AISnapshot& snapshot,
     const float defend_radius_sq = defend_radius * defend_radius;
 
     for (const auto& enemy : snapshot.visible_enemies) {
+      if (!is_war_contact(enemy)) {
+        continue;
+      }
       float const dist_sq = distance_squared(enemy.pos_x,
                                              enemy.pos_y,
                                              enemy.pos_z,
@@ -286,6 +288,9 @@ void DefendBehavior::execute(const AISnapshot& snapshot,
       float closest_dist_sq = std::numeric_limits<float>::max();
 
       for (const auto& enemy : snapshot.visible_enemies) {
+        if (!is_war_contact(enemy)) {
+          continue;
+        }
         float const dist_sq = distance_squared(enemy.pos_x,
                                                enemy.pos_y,
                                                enemy.pos_z,

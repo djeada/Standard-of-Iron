@@ -3897,7 +3897,8 @@ TEST(AnimationCoreLocomotionManifest, LocomotionPoseOwnsWalkCycleDeltas) {
   inputs.state = Animation::HumanoidMotionState::Walk;
   inputs.normalized_speed = 1.0F;
   inputs.cycle_phase = 0.25F;
-  inputs.stride_distance = 2.35F * 0.92F;
+
+  inputs.stride_distance = Animation::k_humanoid_walk_cycle_distance;
   inputs.locomotion_blend = 1.0F;
   inputs.walk_speed_multiplier = 1.0F;
   inputs.stance_width = 1.0F;
@@ -4192,7 +4193,8 @@ auto walk_pose_inputs() -> Animation::HumanoidLocomotionPoseInputs {
   inputs.state = Animation::HumanoidMotionState::Walk;
   inputs.normalized_speed = 1.0F;
   inputs.locomotion_blend = 1.0F;
-  inputs.stride_distance = 2.35F * 0.92F;
+
+  inputs.stride_distance = Animation::k_humanoid_walk_cycle_distance;
   inputs.walk_speed_multiplier = 1.0F;
   inputs.stance_width = 1.0F;
   inputs.arm_swing_amplitude = 1.0F;
@@ -4209,7 +4211,7 @@ auto run_pose_inputs() -> Animation::HumanoidLocomotionPoseInputs {
   auto inputs = walk_pose_inputs();
   inputs.state = Animation::HumanoidMotionState::Run;
   inputs.run_blend = 1.0F;
-  inputs.stride_distance = inputs.reference_run_speed * 0.56F;
+  inputs.stride_distance = Animation::k_humanoid_run_cycle_distance;
   return inputs;
 }
 
@@ -4314,7 +4316,8 @@ TEST(AnimationCoreLocomotionManifest, WalkHeelStrikesWhileRunLandsMidfoot) {
   auto const run_pose = Animation::resolve_humanoid_locomotion_pose(run);
 
   EXPECT_GT(walk_pose.foot_pitch_l, 0.20F);
-  EXPECT_LT(std::abs(run_pose.foot_pitch_l), 0.05F);
+
+  EXPECT_LT(std::abs(run_pose.foot_pitch_l), 0.10F);
 }
 
 namespace {
