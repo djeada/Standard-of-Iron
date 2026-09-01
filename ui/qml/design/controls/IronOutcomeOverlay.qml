@@ -55,7 +55,7 @@ Item {
         case "training":
             return qsTr("You can run an army now. The Barcid Road is waiting.");
         case "victory":
-            return qsTr("Enemy command has fallen.");
+            return root.isCampaignMission ? qsTr("Every order carried out.") : qsTr("Enemy command has fallen.");
         }
         return qsTr("Your command has collapsed.");
     }

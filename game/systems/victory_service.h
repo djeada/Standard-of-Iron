@@ -6,6 +6,7 @@
 
 #include <functional>
 #include <memory>
+#include <type_traits>
 #include <utility>
 #include <variant>
 #include <vector>
@@ -107,8 +108,37 @@ using DefeatRule = std::variant<NoUnitsDefeatRule,
                                 OnlyCommanderRemainingDefeatRule,
                                 TimeLimitDefeatRule>;
 
+struct VictoryObjective {
+  VictoryObjective() = default;
+
+  template <
+      typename T,
+      typename = std::enable_if_t<std::is_constructible_v<VictoryRule, T&&> &&
+                                  !std::is_same_v<std::decay_t<T>, VictoryObjective>>>
+
+  VictoryObjective(T&& authored_rule)
+      : rule(std::forward<T>(authored_rule)) {}
+
+  VictoryObjective(VictoryRule authored_rule, QString authored_id, QString text)
+      : rule(std::move(authored_rule))
+      , id(std::move(authored_id))
+      , description(std::move(text)) {}
+
+  VictoryRule rule;
+  QString id;
+  QString description;
+};
+
+struct ObjectiveStatus {
+  QString id;
+  QString description;
+  int progress = 0;
+  int required = 1;
+  bool complete = false;
+};
+
 struct VictoryRuleSet {
-  std::vector<VictoryRule> victory_rules;
+  std::vector<VictoryObjective> victory_rules;
   std::vector<DefeatRule> defeat_rules;
   bool include_ambient_undead = false;
   bool require_all_victory_rules = false;
@@ -154,6 +184,13 @@ public:
   void set_victory_callback(VictoryCallback callback) {
     m_victory_callback = std::move(callback);
   }
+
+  using ObjectivesChangedCallback = std::function<void()>;
+  void set_objectives_changed_callback(ObjectivesChangedCallback callback) {
+    m_objectives_changed_callback = std::move(callback);
+  }
+
+  [[nodiscard]] auto objectives() const -> std::vector<ObjectiveStatus>;
 
 private:
   struct WorldSummary {
@@ -212,6 +249,8 @@ private:
   QString m_victory_state;
 
   VictoryCallback m_victory_callback;
+  ObjectivesChangedCallback m_objectives_changed_callback;
+  std::vector<bool> m_objective_complete;
 
   Engine::Core::ScopedEventSubscription<Engine::Core::UnitSpawnedEvent>
       m_unit_spawned_subscription;

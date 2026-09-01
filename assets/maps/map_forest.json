@@ -974,7 +974,7 @@
     {
       "id": "p1_tent_a",
       "type": "tent",
-      "x": 31.6,
+      "x": 33.89,
       "z": 132.85,
       "rotation": 315.0
     },
@@ -1002,15 +1002,15 @@
     {
       "id": "p1_statue",
       "type": "statue",
-      "x": 53.31,
-      "z": 122.69,
+      "x": 52.71,
+      "z": 119.86,
       "rotation": 315.0
     },
     {
       "id": "p2_tent_a",
       "type": "tent",
-      "x": 144.66,
-      "z": 43.07,
+      "x": 144.2,
+      "z": 43.27,
       "rotation": 135.0
     },
     {
@@ -1024,7 +1024,7 @@
       "id": "p2_cart",
       "type": "supply_cart",
       "x": 125.52,
-      "z": 32.09,
+      "z": 35.63,
       "rotation": 225.0
     },
     {
@@ -1052,15 +1052,15 @@
     {
       "id": "east_lodge_rack",
       "type": "weapon_rack",
-      "x": 141.3,
-      "z": 126.3,
+      "x": 140.55,
+      "z": 127.05,
       "rotation": 200.0
     },
     {
       "id": "west_lodge_ruin",
       "type": "ruins",
-      "x": 32.7,
-      "z": 51.7,
+      "x": 35.52,
+      "z": 45.36,
       "scale": 0.9,
       "rotation": 25.0
     },
@@ -1074,29 +1074,29 @@
     {
       "id": "p1_vein_0",
       "type": "iron_ore",
-      "x": 48.53,
-      "z": 162.18,
+      "x": 48.94,
+      "z": 162.36,
       "rotation": 34.38
     },
     {
       "id": "p1_vein_1",
       "type": "iron_ore",
-      "x": 41.81,
-      "z": 164.96,
+      "x": 35.06,
+      "z": 161.07,
       "rotation": 106.38
     },
     {
       "id": "p1_vein_2",
       "type": "iron_ore",
-      "x": 37.59,
-      "z": 159.29,
+      "x": 35.9,
+      "z": 162.61,
       "rotation": 178.38
     },
     {
       "id": "p1_vein_3",
       "type": "iron_ore",
-      "x": 41.35,
-      "z": 153.66,
+      "x": 43.2,
+      "z": 154.73,
       "rotation": 250.38
     },
     {
@@ -1109,8 +1109,8 @@
     {
       "id": "p2_vein_0",
       "type": "iron_ore",
-      "x": 137.67,
-      "z": 20.17,
+      "x": 138.81,
+      "z": 22.15,
       "rotation": 34.38
     },
     {
@@ -1123,22 +1123,22 @@
     {
       "id": "p2_vein_2",
       "type": "iron_ore",
-      "x": 126.5,
-      "z": 16.97,
+      "x": 125.76,
+      "z": 16.15,
       "rotation": 178.38
     },
     {
       "id": "p2_vein_3",
       "type": "iron_ore",
-      "x": 130.49,
-      "z": 11.15,
+      "x": 125.2,
+      "z": 12.57,
       "rotation": 250.38
     },
     {
       "id": "p2_vein_4",
       "type": "iron_ore",
-      "x": 137.25,
-      "z": 13.14,
+      "x": 141.82,
+      "z": 13.95,
       "rotation": 322.38
     },
     {
@@ -1260,8 +1260,8 @@
     },
     {
       "type": "abandoned_home",
-      "x": 83.0,
-      "z": 157.0,
+      "x": 83.83,
+      "z": 155.13,
       "scale": 1.0,
       "rotation": 270.0,
       "landmark": "south_hamlet"
@@ -1269,7 +1269,7 @@
     {
       "type": "abandoned_home",
       "x": 83.11,
-      "z": 166.02,
+      "z": 171.17,
       "scale": 1.0,
       "rotation": 270.0,
       "landmark": "south_hamlet"
@@ -1332,8 +1332,8 @@
     },
     {
       "type": "abandoned_home",
-      "x": 93.0,
-      "z": 10.0,
+      "x": 92.35,
+      "z": 9.58,
       "scale": 1.0,
       "rotation": 90.0,
       "landmark": "north_hamlet"

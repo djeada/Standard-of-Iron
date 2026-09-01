@@ -379,6 +379,22 @@ auto MissionSetupCoordinator::apply_mission_setup(
                << owner_id << ") failed to spawn";
   };
 
+  auto verify_message_speakers = [&](int owner_id) {
+    const auto commander_it = map_commanders.find(owner_id);
+    if (commander_it == map_commanders.end() || commander_it->second.isEmpty()) {
+      return;
+    }
+    for (const auto& message : mission.commander_messages) {
+      if (message.speaker.isEmpty() || message.speaker == commander_it->second) {
+        continue;
+      }
+      qWarning() << "Mission setup: commander message" << message.id << "is spoken by"
+                 << message.speaker << "but the map fields" << commander_it->second
+                 << "for owner" << owner_id
+                 << "- the player will be told orders by someone they do not command";
+    }
+  };
+
   auto spawn_buildings_for_owner =
       [&](int owner_id,
           const Game::Systems::NationID nation_id,
@@ -428,6 +444,7 @@ auto MissionSetupCoordinator::apply_mission_setup(
   apply_owner_color(local_owner_id, mission.player_setup.color);
 
   verify_owner_commander(local_owner_id, QStringLiteral("the player"));
+  verify_message_speakers(local_owner_id);
   spawn_units_for_owner(
       local_owner_id, player_nation_id, mission.player_setup.starting_units);
   spawn_buildings_for_owner(

@@ -2,7 +2,7 @@
 
 This directory contains campaign map resources for the Mediterranean strategic map.
 
-## Rendering Improvements (TODO.md Implementation)
+## Rendering Improvements
 
 ### Visual Enhancements
 

@@ -244,8 +244,8 @@
     {
       "id": "p1_tower_west",
       "type": "defense_tower",
-      "x": 27.0,
-      "z": 55.0,
+      "x": 26.74,
+      "z": 55.16,
       "player_id": 1,
       "team_id": 1,
       "nation": "roman_republic",
@@ -265,8 +265,8 @@
   "firecamps": [
     {
       "id": "redoubt_fire",
-      "x": 36.0,
-      "z": 60.0,
+      "x": 36,
+      "z": 59.83,
       "intensity": 1.1,
       "radius": 3.6
     },
@@ -352,15 +352,15 @@
     {
       "id": "ford_deadfall",
       "type": "dead_tree",
-      "x": 36.0,
-      "z": 46.0,
+      "x": 37.96,
+      "z": 47.96,
       "scale": 1.1
     },
     {
       "id": "west_ruin",
       "type": "ruins",
-      "x": 20.0,
-      "z": 17.0,
+      "x": 13.86,
+      "z": 17,
       "scale": 1.0
     },
     {

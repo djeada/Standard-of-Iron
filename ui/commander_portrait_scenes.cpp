@@ -44,10 +44,6 @@ auto portrait_lighting() -> Render::EnvironmentLightingState {
 
 void seed_showcase_routine(Engine::Core::ShowcaseRoutineComponent& routine) {
   routine.steps.clear();
-  routine.steps.push_back({.move = static_cast<std::uint8_t>(
-                               Animation::HumanoidShowcaseMove::TauntDismissive),
-                           .duration = 0.0F,
-                           .hold_after = 0.0F});
   routine.steps.push_back(
       {.move = static_cast<std::uint8_t>(Animation::HumanoidShowcaseMove::TauntCynical),
        .duration = 0.0F,
@@ -58,7 +54,7 @@ void seed_showcase_routine(Engine::Core::ShowcaseRoutineComponent& routine) {
   routine.finished = false;
   routine.active = true;
   routine.loop = true;
-  routine.loop_from = routine.steps.size() - 1U;
+  routine.loop_from = 0U;
 }
 
 } // namespace

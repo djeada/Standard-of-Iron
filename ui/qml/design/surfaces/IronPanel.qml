@@ -6,6 +6,7 @@ Rectangle {
 
     property bool raised: false
     property string accessibleName: ""
+    property bool shieldsBackground: true
 
     property bool translucent: false
     property int contentPadding: Design.Metrics.panelPadding
@@ -28,6 +29,19 @@ Rectangle {
         height: Design.Metrics.borderThin
         color: root.border.color
         opacity: 0.45
+    }
+
+    MouseArea {
+        id: backgroundShield
+
+        anchors.fill: parent
+        enabled: root.shieldsBackground
+        visible: enabled
+        acceptedButtons: Qt.AllButtons
+        hoverEnabled: enabled
+        onWheel: function (wheel) {
+            wheel.accepted = true;
+        }
     }
 
     Item {

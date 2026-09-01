@@ -33,6 +33,11 @@ TestCase {
         compare(missing.join(", "), "", "characters missing from the title face");
     }
 
+    function test_the_title_face_covers_the_capitals_the_localisations_need() {
+        var missing = missingTitleCharacters("\u00c1\u00c4\u00c7\u00c9\u00cd\u00d1\u00d3\u00d6\u00da\u00dc\u011e\u0130\u015e");
+        compare(missing.join(", "), "", "an uppercased title would fall out of the brand face mid-word");
+    }
+
     function test_every_interface_glyph_exists_in_the_ui_font() {
         var broken = [];
         for (var i = 0; i < glyphNames.length; ++i) {

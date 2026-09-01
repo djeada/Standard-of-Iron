@@ -1,4 +1,5 @@
 #include <QCoreApplication>
+#include <QGuiApplication>
 #include <QSettings>
 #include <QTemporaryDir>
 
@@ -83,9 +84,30 @@ TEST_F(SettingsPersistenceTest, CompiledCatalogueIsEmbeddedAndTranslates) {
   EXPECT_EQ(QCoreApplication::translate("Units", "War Elephant"),
             QString::fromUtf8("Elefante de guerra"));
 
+  language_manager.set_language(QStringLiteral("tr"));
+  ASSERT_EQ(language_manager.current_language(), QStringLiteral("tr"));
+
+  EXPECT_EQ(QCoreApplication::translate("Units", "War Elephant"),
+            QString::fromUtf8("Savaş Fili"));
+
   language_manager.set_language(QStringLiteral("en"));
   EXPECT_EQ(QCoreApplication::translate("Units", "War Elephant"),
             QStringLiteral("War Elephant"));
+}
+
+TEST_F(SettingsPersistenceTest, TurkishIsOfferedAndLaidOutLeftToRight) {
+  LanguageManager language_manager;
+
+  EXPECT_TRUE(language_manager.available_languages().contains(QStringLiteral("tr")))
+      << "the Turkish catalogue ships but the language cannot be chosen";
+  EXPECT_EQ(LanguageManager::language_display_name(QStringLiteral("tr")),
+            QString::fromUtf8("Türkçe (Turkish)"));
+
+  language_manager.set_language(QStringLiteral("tr"));
+  EXPECT_EQ(QGuiApplication::layoutDirection(), Qt::LeftToRight)
+      << "Turkish is not a right-to-left script";
+
+  language_manager.set_language(QStringLiteral("en"));
 }
 
 TEST_F(SettingsPersistenceTest, LanguageChangesArePersisted) {

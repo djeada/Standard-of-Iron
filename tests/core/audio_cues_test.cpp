@@ -95,6 +95,50 @@ TEST(AudioCueCatalogTest, EveryCueResolvesToAManifestTrackThatExists) {
              .toStdString();
 }
 
+TEST(AudioCueCatalogTest, EveryMusicTrackIsReachableByTheTagsThatSelectMusic) {
+  QFile file(QStringLiteral("assets/audio/audio_manifest.json"));
+  ASSERT_TRUE(file.open(QIODevice::ReadOnly));
+  const QJsonArray tracks = QJsonDocument::fromJson(file.readAll())
+                                .object()
+                                .value(QStringLiteral("tracks"))
+                                .toArray();
+  ASSERT_FALSE(tracks.isEmpty());
+
+  AudioResourceLoader::load_audio_resources(AudioLoadPolicy::All);
+
+  for (const QJsonValue value : tracks) {
+    const QJsonObject track = value.toObject();
+    if (track.value(QStringLiteral("category")).toString() != QStringLiteral("music")) {
+      continue;
+    }
+    const QString track_id = track.value(QStringLiteral("id")).toString();
+    const QJsonObject tags = track.value(QStringLiteral("tags")).toObject();
+
+    QMap<QString, QString> query;
+    for (const QString& key : {QStringLiteral("ambient_state"),
+                               QStringLiteral("screen_context"),
+                               QStringLiteral("event")}) {
+      if (tags.contains(key)) {
+        query.insert(key, tags.value(key).toString());
+        break;
+      }
+    }
+    ASSERT_FALSE(query.isEmpty())
+        << track_id.toStdString()
+        << " carries no ambient_state, screen_context or event tag, so no state "
+           "and no screen can ever select it";
+
+    if (query.contains(QStringLiteral("event"))) {
+      continue;
+    }
+    EXPECT_TRUE(AudioResourceLoader::find_resource_ids(AudioCategory::MUSIC, query)
+                    .contains(track_id))
+        << track_id.toStdString()
+        << " is not returned by the query the audio "
+           "coordinator runs for its own tags";
+  }
+}
+
 class ShippedAudioTest : public ::testing::Test {
 protected:
   void SetUp() override {

@@ -49,8 +49,9 @@ Item {
 
     function perform_action(actionId, event) {
         if (actionId === "global.menu") {
-            if (typeof root.mainWindowRef !== 'undefined' && !root.mainWindowRef.menu_visible)
-                root.mainWindowRef.menu_visible = true;
+            if (typeof root.mainWindowRef === 'undefined')
+                return true;
+            root.mainWindowRef.request_menu_toggle();
             return true;
         }
         if (actionId === "global.toggle_control_mode") {

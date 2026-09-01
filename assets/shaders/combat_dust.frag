@@ -67,14 +67,26 @@ void main() {
   vec3 color = u_dust_color;
 
   if (u_effect_type == 0) {
+    float height_t = clamp(v_texcoord.y, 0.0, 1.0);
 
-    color = u_dust_color;
-    color = mix(color, color * 0.8, noise1 * 0.3);
+    float axis_radius = length(v_local_pos.xz);
+    vec2 plan = v_local_pos.xz * 3.1;
+    float grain =
+        soi_fbm_23e5ab(plan + vec2(u_time * 0.17, height_t * 2.2 - u_time * 0.2));
+    float fine =
+        soi_fbm_23e5ab(plan * 2.3 + vec2(11.0 - u_time * 0.11, height_t * 6.0 + 5.0));
+    float puff = clamp(((grain * 0.68 + fine * 0.32) - 0.22) * 2.4, 0.0, 1.0);
+    float soft_edge = inv_smoothstep(0.46, 1.02, axis_radius);
+    float ground_kiss = smoothstep(0.0, 0.10, height_t);
+    float carve = 0.18 + 0.82 * puff;
 
-    float scatter = max(0.0, v_normal.y) * 0.2;
-    color += vec3(scatter);
+    vec3 lit = u_dust_color * 1.16 + vec3(0.05, 0.04, 0.02);
+    vec3 shade = u_dust_color * 0.42;
+    color = mix(shade, lit, smoothstep(0.10, 0.90, height_t) * (0.50 + 0.50 * puff));
+    color *= 0.86 + 0.28 * fine;
 
-    frag_color = vec4(color, final_alpha * 0.6);
+    float dust_alpha = v_alpha * soft_edge * ground_kiss * carve;
+    frag_color = vec4(color, clamp(dust_alpha, 0.0, 0.70));
   } else if (u_effect_type == 1 || u_effect_type == 4) {
     bool unit_flame = (u_effect_type == 4);
     float flame_height = clamp(v_texcoord.y, 0.0, 1.0);

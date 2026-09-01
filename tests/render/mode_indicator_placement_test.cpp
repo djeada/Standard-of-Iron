@@ -254,6 +254,57 @@ TEST_F(SceneRendererEffects, CombatDustUsesStrongerDefaultsForMeleeLockUnits) {
   EXPECT_FLOAT_EQ(cmd.intensity, Render::CombatDustDefaults::k_intensity);
 }
 
+TEST_F(SceneRendererEffects, CombatDustMergesNeighbouringFightersIntoOneCloud) {
+  Render::GL::Renderer renderer;
+  Engine::Core::World world;
+
+  for (int index = 0; index < 4; ++index) {
+    auto* unit = world.create_entity();
+    unit->add_component<Engine::Core::TransformComponent>(
+        static_cast<float>(index) * 0.5F, 1.25F, 0.0F);
+    unit->add_component<Engine::Core::UnitComponent>(100, 100, 1.0F, 6.0F);
+    unit->add_component<Engine::Core::AttackComponent>()->in_melee_lock = true;
+  }
+
+  Render::GL::render_combat_dust(&renderer, nullptr, &world);
+
+  ASSERT_NE(renderer.m_active_queue, nullptr);
+  auto const& items = renderer.m_active_queue->items();
+  ASSERT_EQ(items.size(), 1U) << "one press of fighters must read as one cloud";
+
+  auto const& cmd = std::get<Render::GL::EffectBatchCmd>(items.front());
+  EXPECT_FLOAT_EQ(cmd.position.x(), 0.75F) << "the cloud sits on the centroid";
+  EXPECT_GT(cmd.radius, Render::CombatDustDefaults::k_radius)
+      << "a crowd must raise more dust than one pair";
+  EXPECT_GT(cmd.intensity, Render::CombatDustDefaults::k_intensity);
+  EXPECT_LE(cmd.radius, Render::CombatDustDefaults::k_cluster_radius_max);
+  EXPECT_LE(cmd.intensity, Render::CombatDustDefaults::k_cluster_intensity_max);
+}
+
+TEST_F(SceneRendererEffects, CombatDustIsCappedNoMatterHowManyFightsAreOnScreen) {
+  Render::GL::Renderer renderer;
+  Engine::Core::World world;
+
+  constexpr int k_fights = 24;
+  for (int index = 0; index < k_fights; ++index) {
+    auto* unit = world.create_entity();
+    unit->add_component<Engine::Core::TransformComponent>(
+        static_cast<float>(index % 6) * 5.0F,
+        1.25F,
+        static_cast<float>(index / 6) * 5.0F);
+    unit->add_component<Engine::Core::UnitComponent>(100, 100, 1.0F, 6.0F);
+    unit->add_component<Engine::Core::AttackComponent>()->in_melee_lock = true;
+  }
+
+  Render::GL::render_combat_dust(&renderer, nullptr, &world);
+
+  ASSERT_NE(renderer.m_active_queue, nullptr);
+  EXPECT_EQ(renderer.m_active_queue->items().size(),
+            static_cast<std::size_t>(Render::CombatDustDefaults::k_max_clusters))
+      << k_fights << " separate fights must still cost at most "
+      << Render::CombatDustDefaults::k_max_clusters << " dust draws";
+}
+
 TEST_F(SceneRendererEffects, BurningUnitsEnqueueVisibleFlames) {
   Render::GL::Renderer renderer;
   Engine::Core::World world;

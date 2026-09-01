@@ -18,6 +18,7 @@ ApplicationWindow {
     property bool suppress_modals: false
 
     readonly property bool overlay_active: mainWindow.menu_visible || mapSelect.visible || missions_screen.visible || campaign_screen.visible || save_game_panel.visible || load_game_panel.visible || settingsPanel.visible || objectivesPanel.visible || help_panel.visible || commander_preview.visible
+    readonly property bool simulation_suspended: mainWindow.game_started && (mainWindow.game_paused || mainWindow.overlay_active)
 
     property bool capture_view_ready: false
     property bool capture_view_settled: false
@@ -54,7 +55,6 @@ ApplicationWindow {
         }
         if (name === "rpg") {
             mainWindow.game_paused = false;
-            gameViewItem.set_paused(false);
             if (typeof game !== 'undefined' && game.commander.mode_state !== "active" && game.commander.toggle_mode)
                 game.commander.toggle_mode();
             mainWindow.capture_view_ready = typeof game !== 'undefined' && game.commander.mode_state === "active";
@@ -77,15 +77,35 @@ ApplicationWindow {
 
     function open_help(from_menu) {
         help_panel.from_menu = from_menu;
-        help_panel.paused_game_on_open = false;
-        if (!from_menu && mainWindow.game_started && !mainWindow.game_paused) {
-            mainWindow.game_paused = true;
-            gameViewItem.set_paused(true);
-            help_panel.paused_game_on_open = true;
-        }
         help_panel.visible = true;
         if (from_menu)
             mainWindow.menu_visible = false;
+    }
+
+    function request_menu_toggle() {
+        if (typeof game !== 'undefined' && game.placement) {
+            if (game.placement.is_placing_construction && game.placement.on_construction_cancel) {
+                game.placement.on_construction_cancel();
+                return true;
+            }
+            if (game.placement.is_placing_formation && game.placement.on_formation_cancel) {
+                game.placement.on_formation_cancel();
+                return true;
+            }
+        }
+        if (gameViewItem.is_rally_placement && gameViewItem.is_rally_placement()) {
+            gameViewItem.cancel_rally_placement();
+            return true;
+        }
+        if (mainWindow.menu_visible) {
+            if (mainWindow.game_started)
+                mainWindow.menu_visible = false;
+            return true;
+        }
+        if (mainWindow.overlay_active)
+            return false;
+        mainWindow.menu_visible = true;
+        return true;
     }
 
     function note_objectives_opened() {
@@ -131,6 +151,10 @@ ApplicationWindow {
             Design.Notifications.clear();
     }
 
+    onSimulation_suspendedChanged: {
+        gameViewItem.set_paused(mainWindow.simulation_suspended);
+    }
+
     Design.GameShell {
         anchors.fill: parent
         z: -10
@@ -159,7 +183,6 @@ ApplicationWindow {
         }
         onPause_toggled: {
             mainWindow.game_paused = !mainWindow.game_paused;
-            gameViewItem.set_paused(mainWindow.game_paused);
             gameViewItem.forceActiveFocus();
         }
         onSpeed_changed: function (speed) {
@@ -221,7 +244,6 @@ ApplicationWindow {
         onPause_requested: {
             mainWindow.game_paused = !mainWindow.game_paused;
             hud.game_is_paused = mainWindow.game_paused;
-            gameViewItem.set_paused(mainWindow.game_paused);
             gameViewItem.forceActiveFocus();
         }
         onHelp_requested: mainWindow.open_help(false)
@@ -573,7 +595,6 @@ ApplicationWindow {
             objectivesPanel.visible = false;
             if (typeof game !== 'undefined' && typeof game.setup.is_mission_match !== 'undefined' && game.setup.is_mission_match && mainWindow.game_started) {
                 mainWindow.game_paused = false;
-                gameViewItem.set_paused(false);
                 gameViewItem.forceActiveFocus();
             } else {
                 mainWindow.menu_visible = true;
@@ -583,8 +604,6 @@ ApplicationWindow {
 
     HelpPanel {
         id: help_panel
-
-        property bool paused_game_on_open: false
 
         anchors.fill: parent
         z: 22
@@ -606,11 +625,6 @@ ApplicationWindow {
                 mainWindow.menu_visible = true;
                 return;
             }
-            if (help_panel.paused_game_on_open) {
-                mainWindow.game_paused = false;
-                gameViewItem.set_paused(false);
-            }
-            help_panel.paused_game_on_open = false;
             gameViewItem.forceActiveFocus();
         }
     }
@@ -653,7 +667,11 @@ ApplicationWindow {
     SaveProgressOverlay {
         id: save_progress_overlay
 
-        anchors.fill: parent
+        anchors.left: parent.left
+        anchors.right: parent.right
+        anchors.top: parent.top
+        anchors.bottom: parent.bottom
+        anchors.bottomMargin: hud.visible ? hud.bottom_panel_height : 0
         z: 30
     }
 
@@ -816,7 +834,6 @@ ApplicationWindow {
                 return;
             if (typeof game !== 'undefined' && typeof game.setup.is_mission_match !== 'undefined' && game.setup.is_mission_match && !game.is_loading) {
                 mainWindow.game_paused = true;
-                gameViewItem.set_paused(true);
                 objectivesPanel.visible = true;
             }
         }

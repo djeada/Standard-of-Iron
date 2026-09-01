@@ -37,14 +37,14 @@ TEST(MissionVictoryRulesTest, BuildsIndependentVictoryAndDefeatRules) {
 
   ASSERT_EQ(rules.victory_rules.size(), 2);
   auto const* capture_rule = std::get_if<Game::Systems::CaptureStructuresVictoryRule>(
-      rules.victory_rules.data());
+      &rules.victory_rules.front().rule);
   ASSERT_NE(capture_rule, nullptr);
   ASSERT_EQ(capture_rule->target.structure_types.size(), 1);
   EXPECT_EQ(capture_rule->target.structure_types[0], QStringLiteral("barracks"));
   EXPECT_EQ(capture_rule->target.required_count, 2);
 
   auto const* survive_rule =
-      std::get_if<Game::Systems::SurviveTimeVictoryRule>(&rules.victory_rules[1]);
+      std::get_if<Game::Systems::SurviveTimeVictoryRule>(&rules.victory_rules[1].rule);
   ASSERT_NE(survive_rule, nullptr);
   EXPECT_FLOAT_EQ(survive_rule->duration, 180.0F);
 
@@ -133,12 +133,12 @@ TEST(MissionVictoryRulesTest, BuildsUndeadObjectiveRulesAndAmbientFlag) {
   EXPECT_TRUE(rules.include_ambient_undead);
   ASSERT_EQ(rules.victory_rules.size(), 2);
   auto const* clear_rule = std::get_if<Game::Systems::ClearUndeadZoneVictoryRule>(
-      rules.victory_rules.data());
+      &rules.victory_rules.front().rule);
   ASSERT_NE(clear_rule, nullptr);
   EXPECT_EQ(clear_rule->zone_id, QStringLiteral("sepulcher_ruin"));
 
-  auto const* wave_rule =
-      std::get_if<Game::Systems::SurviveUndeadWaveVictoryRule>(&rules.victory_rules[1]);
+  auto const* wave_rule = std::get_if<Game::Systems::SurviveUndeadWaveVictoryRule>(
+      &rules.victory_rules[1].rule);
   ASSERT_NE(wave_rule, nullptr);
   EXPECT_EQ(wave_rule->zone_id, QStringLiteral("sepulcher_ruin"));
   EXPECT_EQ(wave_rule->required_wave_count, 2);
@@ -161,7 +161,7 @@ TEST(MissionVictoryRulesTest, BuildsAccumulateResourcesRuleFromDeclaredAmounts) 
   ASSERT_EQ(rules.victory_rules.size(), 1);
   auto const* resource_rule =
       std::get_if<Game::Systems::AccumulateResourcesVictoryRule>(
-          rules.victory_rules.data());
+          &rules.victory_rules.front().rule);
   ASSERT_NE(resource_rule, nullptr);
   EXPECT_EQ(resource_rule->required.get(Game::Systems::ResourceType::Wood), 600);
   EXPECT_EQ(resource_rule->required.get(Game::Systems::ResourceType::Iron), 300);
@@ -181,7 +181,7 @@ TEST(MissionVictoryRulesTest, DropsAccumulateResourcesRuleWithNoPositiveAmounts)
 
   ASSERT_EQ(rules.victory_rules.size(), 1);
   EXPECT_TRUE(std::holds_alternative<Game::Systems::EliminationVictoryRule>(
-      rules.victory_rules[0]));
+      rules.victory_rules[0].rule));
 }
 
 TEST(MissionVictoryRulesTest, BuildsSurviveWavesAndTimeLimitRules) {
@@ -201,8 +201,8 @@ TEST(MissionVictoryRulesTest, BuildsSurviveWavesAndTimeLimitRules) {
   const auto rules = Game::Mission::build_victory_rules(mission);
 
   ASSERT_EQ(rules.victory_rules.size(), 1);
-  auto const* wave_rule =
-      std::get_if<Game::Systems::SurviveWavesVictoryRule>(rules.victory_rules.data());
+  auto const* wave_rule = std::get_if<Game::Systems::SurviveWavesVictoryRule>(
+      &rules.victory_rules.front().rule);
   ASSERT_NE(wave_rule, nullptr);
   EXPECT_EQ(wave_rule->required_wave_count, 3);
 

@@ -348,6 +348,19 @@
       "wanted": "Small banner flap plus a peg driven into soil."
     },
     {
+      "id": "order.commander_rally",
+      "description": "The commander plants his standard and rallies nearby troops to it.",
+      "category": "sfx",
+      "importance": "required",
+      "volume": 0.9,
+      "priority": 6,
+      "cooldown_ms": 2000,
+      "resources": [
+        "sfx.order.commander_rally"
+      ],
+      "wanted": "A war horn and a shouted rallying call, close and dry."
+    },
+    {
       "id": "build.placement_begin",
       "description": "Building placement mode is entered and the ghost appears.",
       "category": "sfx",
@@ -888,7 +901,7 @@
       "resources": [
         "sfx.combat.heal"
       ],
-      "wanted": "Warm, quiet, non-magical: water poured, cloth binding, a soft exhale.",
+      "wanted": "A bright, unmistakable restorative shimmer; the healer's work should read across a battle line.",
       "spatial": true
     },
     {

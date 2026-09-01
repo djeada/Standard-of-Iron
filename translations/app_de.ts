@@ -216,6 +216,49 @@
     </message>
 </context>
 <context>
+    <name>BarracksProductionView</name>
+    <message>
+        <source>Barracks production queue</source>
+        <translation>Kasernen-Ausbildungsliste</translation>
+    </message>
+    <message>
+        <source>BARRACKS</source>
+        <translation>KASERNE</translation>
+    </message>
+    <message>
+        <source>Reserve %1 / %2</source>
+        <translation>Reserve %1 / %2</translation>
+    </message>
+    <message>
+        <source>Recruiting now</source>
+        <translation>Bildet gerade aus</translation>
+    </message>
+    <message>
+        <source>Queued unit %1</source>
+        <translation>Einheit %1 in der Warteschlange</translation>
+    </message>
+    <message>
+        <source>Set where newly recruited units will gather</source>
+        <translation>Festlegen, wo neu ausgebildete Einheiten sammeln</translation>
+    </message>
+    <message>
+        <source>Set barracks rally point</source>
+        <translation>Sammelpunkt der Kaserne festlegen</translation>
+    </message>
+    <message>
+        <source>Select a barracks before setting a rally point</source>
+        <translation>Wähle eine Kaserne, bevor du einen Sammelpunkt setzt</translation>
+    </message>
+    <message>
+        <source>RECRUIT UNITS</source>
+        <translation>EINHEITEN AUSBILDEN</translation>
+    </message>
+    <message>
+        <source>Scroll for more</source>
+        <translation>Weiterscrollen</translation>
+    </message>
+</context>
+<context>
     <name>BattleReportLayout</name>
     <message>
         <source>Return to Menu</source>
@@ -238,8 +281,8 @@
         <translation>Ausgebildet</translation>
     </message>
     <message>
-        <source>Villages</source>
-        <translation>Dörfer</translation>
+        <source>Barracks</source>
+        <translation>Kaserne</translation>
     </message>
     <message>
         <source>Held the Field</source>
@@ -3100,6 +3143,26 @@ Dies ist vielleicht ein Scharmützel, oder es wurden keine Ziele festgelegt.</tr
         <source>Pick a structure, move the outline onto flat clear ground, scroll or press [ and ] to rotate, left-click to confirm. Right-click cancels.</source>
         <translation>Ein Bauwerk wählen, den Umriss auf ebenen freien Boden schieben, zum Drehen scrollen oder [ und ] drücken, mit Linksklick bestätigen. Rechtsklick bricht ab.</translation>
     </message>
+    <message>
+        <source>ORDERS</source>
+        <translation>BEFEHLE</translation>
+    </message>
+    <message>
+        <source>Right-click to cancel</source>
+        <translation>Rechtsklick zum Abbrechen</translation>
+    </message>
+    <message>
+        <source>Automatic</source>
+        <translation>Automatisch</translation>
+    </message>
+    <message>
+        <source>No specialist actions for this selection</source>
+        <translation>Für diese Auswahl gibt es keine Spezialaktionen</translation>
+    </message>
+    <message>
+        <source>Select troops to reveal their specialist actions</source>
+        <translation>Wähle Truppen, um ihre Spezialaktionen zu sehen</translation>
+    </message>
 </context>
 <context>
     <name>HUDBottomCommander</name>
@@ -3860,6 +3923,10 @@ Jede Truppe kostet Truppenstärke; ein Trupp von zwölf Bauleuten kostet zehn. D
         <translation>Jede Mission ist Eurem Feldzeichen erlegen.</translation>
     </message>
     <message>
+        <source>Every order carried out.</source>
+        <translation>Jeder Befehl ausgeführt.</translation>
+    </message>
+    <message>
         <source>Enemy command has fallen.</source>
         <translation>Die feindliche Führung ist gefallen.</translation>
     </message>
@@ -4077,10 +4144,6 @@ Jede Truppe kostet Truppenstärke; ein Trupp von zwölf Bauleuten kostet zehn. D
 <context>
     <name>LoadGamePanel</name>
     <message>
-        <source>Load Game</source>
-        <translation>Spiel laden</translation>
-    </message>
-    <message>
         <source>Cancel</source>
         <translation>Abbrechen</translation>
     </message>
@@ -4225,6 +4288,10 @@ Diese Aktion kann nicht rückgängig gemacht werden.</translation>
     <message>
         <source>Pick a saved game first.</source>
         <translation>Wählt zuerst einen Spielstand.</translation>
+    </message>
+    <message>
+        <source>Load game</source>
+        <translation>Spiel laden</translation>
     </message>
 </context>
 <context>
@@ -4519,10 +4586,6 @@ Diese Aktion kann nicht rückgängig gemacht werden.</translation>
         <translation>Ein neues Feldzeichen im Tal, und niemand darunter, der schon mehr als zweimal einen Speer gehalten hat.</translation>
     </message>
     <message>
-        <source>Standard of Iron - RTS Game</source>
-        <translation>Standard of Iron – Echtzeit-Strategiespiel</translation>
-    </message>
-    <message>
         <source>PAUSED</source>
         <translation>PAUSIERT</translation>
     </message>
@@ -4534,20 +4597,16 @@ Diese Aktion kann nicht rückgängig gemacht werden.</translation>
         <source>Error</source>
         <translation>Fehler</translation>
     </message>
+    <message>
+        <source>Standard of Iron - RTS game</source>
+        <translation>Standard of Iron - Echtzeitstrategie</translation>
+    </message>
 </context>
 <context>
     <name>MainMenu</name>
     <message>
         <source>STANDARD OF IRON</source>
         <translation>STANDARD OF IRON</translation>
-    </message>
-    <message>
-        <source>Save Game</source>
-        <translation>Spiel speichern</translation>
-    </message>
-    <message>
-        <source>Load Game</source>
-        <translation>Spiel laden</translation>
     </message>
     <message>
         <source>Settings</source>
@@ -4708,6 +4767,26 @@ Diese Aktion kann nicht rückgängig gemacht werden.</translation>
     <message>
         <source>Help</source>
         <translation>Hilfe</translation>
+    </message>
+    <message>
+        <source>Missions</source>
+        <translation>Einsätze</translation>
+    </message>
+    <message>
+        <source>One small field, one order to carry out</source>
+        <translation>Ein kleines Feld, ein Befehl</translation>
+    </message>
+    <message>
+        <source>Detail</source>
+        <translation>Details</translation>
+    </message>
+    <message>
+        <source>Save game</source>
+        <translation>Spiel speichern</translation>
+    </message>
+    <message>
+        <source>Load game</source>
+        <translation>Spiel laden</translation>
     </message>
 </context>
 <context>
@@ -5144,6 +5223,22 @@ um die Vorschau zu sehen</translation>
     <message>
         <source>Three camps a side along one broad channel. The Amber runs the whole map and only three ferry crossings span it, so a bank is a front line: the highway behind each bank links its three camps, and every attack has to buy a bridge first.</source>
         <translation>Drei Lager je Seite an einem breiten Strom. Der Bernstein durchzieht die ganze Karte, und nur drei Fährquerungen überspannen ihn, sodass ein Ufer eine Frontlinie ist: Die Fernstraße hinter jedem Ufer verbindet seine drei Lager, und jeder Angriff muss sich zuerst eine Brücke erkaufen.</translation>
+    </message>
+    <message>
+        <source>Sallow Ford</source>
+        <translation>Weidenfurt</translation>
+    </message>
+    <message>
+        <source>A redoubt above a dry ford, for one. A spur of rock runs the length of the approach and the two shoulders close the flanks, so everything coming down from the north is committed to one of two lanes -- the cart gate in the west, the goat path in the east -- and they do not meet again until the ground in front of the camp. One line cannot hold both mouths, so holding here is a question of which lane you stand in and when you leave it.</source>
+        <translation>Eine Schanze über einer trockenen Furt zum Beispiel. Ein Felssporn zieht sich über die ganze Anmarschlinie, und die beiden Schultern schließen die Flanken, sodass alles, was von Norden herunterkommt, auf eine von zwei Gassen festgelegt ist -- das Karrentor im Westen, der Ziegenpfad im Osten -- und sie treffen erst vor dem Lager wieder aufeinander. Eine Linie kann nicht beide Mündungen halten; hier zu halten ist also die Frage, in welcher Gasse du stehst und wann du sie verlässt.</translation>
+    </message>
+    <message>
+        <source>Pinewater Cut</source>
+        <translation>Kiefernwasser-Schlag</translation>
+    </message>
+    <message>
+        <source>A timber detail&apos;s cut above the Pinewater, for one. The near stand beside the camp is already half felled, so the levy is only filled out of the deep pines a long haul north-east, past the spine of rock the haul road has to swing around. The scree that gives up the stone lies the other way entirely, and the crew is not big enough to work both without splitting it.</source>
+        <translation>Ein Holzkommando oberhalb des Kiefernwassers zum Beispiel. Der nahe Bestand neben dem Lager ist schon halb gefällt, also wird das Soll nur aus den tiefen Kiefern weit im Nordosten gedeckt, hinter dem Felsrücken, um den die Rückegasse herumschwenken muss. Das Geröll, das den Stein hergibt, liegt genau in der anderen Richtung, und der Trupp ist zu klein, um beides ohne Teilung zu schaffen.</translation>
     </message>
 </context>
 <context>
@@ -5730,10 +5825,6 @@ um die Vorschau zu sehen</translation>
     <message>
         <source>If the central camp falls, the Campanian alliance dies with it.</source>
         <translation>Fällt das zentrale Lager, stirbt das kampanische Bündnis mit ihm.</translation>
-    </message>
-    <message>
-        <source>Investigate the cursed shrine, survive the awakening, and clear the ruins.</source>
-        <translation>Erkundet den verfluchten Schrein, übersteht das Erwachen und säubert die Ruinen.</translation>
     </message>
     <message>
         <source>Iron Sepulcher Watch</source>
@@ -6391,6 +6482,161 @@ um die Vorschau zu sehen</translation>
         <source>With the river camp taken there is nowhere left for the legions to reform.</source>
         <translation>Ist das Flusslager genommen, bleibt den Legionen kein Ort mehr, sich neu zu ordnen.</translation>
     </message>
+    <message>
+        <source>Break all five columns. The ford is held when the last of them is dead in front of it, and not one column sooner.</source>
+        <translation>Brich alle fünf Kolonnen. Die Furt ist gehalten, wenn die letzte von ihnen davor liegt, und keine Kolonne früher.</translation>
+    </message>
+    <message>
+        <source>Cut and carry home four hundred of timber and two hundred and ten of stone. The near stand will not cover it; the deep pines will.</source>
+        <translation>Schlage und schaffe vierhundert Holz und zweihundertzehn Stein heim. Der nahe Bestand deckt das nicht; die tiefen Kiefern schon.</translation>
+    </message>
+    <message>
+        <source>Fill the levy out of the Pinewater cut: four hundred of timber and two hundred and ten of stone, cut and carried home before the column comes back through.</source>
+        <translation>Erfülle das Soll aus dem Kiefernwasser-Schlag: vierhundert Holz und zweihundertzehn Stein, geschlagen und heimgeschafft, bevor die Kolonne wieder durchzieht.</translation>
+    </message>
+    <message>
+        <source>Five columns and the ford still ours. Count the men twice and do not write the number down until morning; it is always worse in the dark and always worse again in daylight.</source>
+        <translation>Fünf Kolonnen, und die Furt ist noch unsere. Zähl die Männer zweimal und schreib die Zahl erst am Morgen auf; im Dunkeln ist sie immer schlimmer und bei Tageslicht noch einmal schlimmer.</translation>
+    </message>
+    <message>
+        <source>Four hundred of timber and two hundred of stone, and the near stand was stripped by the last detail. That means the deep pines, which means the long road, which means whatever is living in the deep pines gets a look at us. Split the crew. Escort the far one.</source>
+        <translation>Vierhundert Holz und zweihundert Stein, und der nahe Bestand wurde vom letzten Kommando abgeräumt. Das heißt die tiefen Kiefern, das heißt der lange Weg, das heißt, was auch immer in den tiefen Kiefern lebt, bekommt uns zu sehen. Teile den Trupp. Gib dem entfernten Geleit.</translation>
+    </message>
+    <message>
+        <source>Hold the Sallow Ford</source>
+        <translation>Halte die Weidenfurt</translation>
+    </message>
+    <message>
+        <source>Keep both towers standing. Lose one and the lane it watches is yours to walk yourself.</source>
+        <translation>Halte beide Türme aufrecht. Verlierst du einen, gehört die Gasse, die er bewacht, dir zum Selbstablaufen.</translation>
+    </message>
+    <message>
+        <source>Leave the axes. Leave the carts. A detail that cannot walk out of its own cut does not get to carry anything.</source>
+        <translation>Lass die Äxte. Lass die Karren. Ein Kommando, das nicht aus dem eigenen Schlag herauskommt, trägt gar nichts mehr.</translation>
+    </message>
+    <message>
+        <source>Levy filled. Stack it by the road and let the carts argue about it. We cut a wood down to feed a siege that has not started yet — remember that the next time somebody calls this the quiet posting.</source>
+        <translation>Soll erfüllt. Stapelt es an der Straße und lasst die Karren darüber streiten. Wir haben einen Wald gefällt für eine Belagerung, die noch nicht begonnen hat — denk daran, wenn das nächste Mal jemand das hier den ruhigen Posten nennt.</translation>
+    </message>
+    <message>
+        <source>Lose the redoubt and there is nothing behind it for forty miles.</source>
+        <translation>Verliere die Schanze, und dahinter ist auf vierzig Meilen nichts mehr.</translation>
+    </message>
+    <message>
+        <source>One officer, no line. The next column will not even slow down.</source>
+        <translation>Ein Offizier, keine Linie. Die nächste Kolonne wird nicht einmal langsamer.</translation>
+    </message>
+    <message>
+        <source>One redoubt, two mouths, five columns. Break every assault that comes down the cart gate and the goat path, and still be standing when the fifth is spent.</source>
+        <translation>Eine Schanze, zwei Mündungen, fünf Kolonnen. Brich jeden Angriff, der durch das Karrentor und den Ziegenpfad herunterkommt, und steh noch, wenn der fünfte verbraucht ist.</translation>
+    </message>
+    <message>
+        <source>Overcut the levy. A surplus is the only thing a quartermaster has ever thanked anyone for.</source>
+        <translation>Schlag über das Soll hinaus. Ein Überschuss ist das Einzige, wofür ein Quartiermeister je jemandem gedankt hat.</translation>
+    </message>
+    <message>
+        <source>Take the cursed shrine above the sepulcher ruins and hold what you take: clear the guardians out of the ruins, then drive the dead off the shrine itself.</source>
+        <translation>Nimm den verfluchten Schrein über den Grabruinen und halte, was du nimmst: räume die Wächter aus den Ruinen und treibe dann die Toten vom Schrein selbst.</translation>
+    </message>
+    <message>
+        <source>The Timber Levy</source>
+        <translation>Das Holzsoll</translation>
+    </message>
+    <message>
+        <source>The commander falls and the line behind him is just men standing in a dry riverbed.</source>
+        <translation>Der Kommandant fällt, und die Linie hinter ihm sind nur Männer, die in einem trockenen Flussbett stehen.</translation>
+    </message>
+    <message>
+        <source>The crew is gone and the officer is standing in a clearing with an axe. That is not a work party.</source>
+        <translation>Der Trupp ist fort, und der Offizier steht mit einer Axt auf einer Lichtung. Das ist kein Arbeitskommando.</translation>
+    </message>
+    <message>
+        <source>The officer of the detail falls. Nobody else here can sign for the levy.</source>
+        <translation>Der Offizier des Kommandos fällt. Sonst kann hier niemand das Soll abzeichnen.</translation>
+    </message>
+    <message>
+        <source>The redoubt is gone. Go south, keep the spur on your left, and do not stop to look at the ford. There is nothing there now that is worth a second of your life.</source>
+        <translation>Die Schanze ist verloren. Geht nach Süden, haltet den Sporn zur Linken und bleibt nicht stehen, um zur Furt zu schauen. Dort ist jetzt nichts mehr, was eine Sekunde eures Lebens wert wäre.</translation>
+    </message>
+    <message>
+        <source>The spur splits them for us, which is the only kindness this ground offers. Cart gate west, goat path east, and they only meet where we are standing. You cannot hold both mouths. Pick one, hold it, and move when the horns tell you to.</source>
+        <translation>Der Sporn teilt sie für uns, und das ist die einzige Freundlichkeit, die dieser Boden bietet. Karrentor im Westen, Ziegenpfad im Osten, und sie treffen sich nur dort, wo wir stehen. Du kannst nicht beide Mündungen halten. Wähl eine, halte sie, und rühr dich, wenn die Hörner es sagen.</translation>
+    </message>
+</context>
+<context>
+    <name>MissionsScreen</name>
+    <message>
+        <source>%1 × %2</source>
+        <translation>%1 × %2</translation>
+    </message>
+    <message>
+        <source>Orders</source>
+        <translation>Befehle</translation>
+    </message>
+    <message>
+        <source>Orders — any one of these ends it</source>
+        <translation>Befehle — einer davon beendet es</translation>
+    </message>
+    <message>
+        <source>Orders — all of them, or none</source>
+        <translation>Befehle — alle oder keiner</translation>
+    </message>
+    <message>
+        <source>You</source>
+        <translation>Du</translation>
+    </message>
+    <message>
+        <source>Missions</source>
+        <translation>Einsätze</translation>
+    </message>
+    <message>
+        <source>One small field, one order to carry out. No campaign to lose, no second army to worry about.</source>
+        <translation>Ein kleines Feld, ein Befehl. Kein Feldzug zu verlieren, keine zweite Armee im Nacken.</translation>
+    </message>
+    <message>
+        <source>carried out</source>
+        <translation>ausgeführt</translation>
+    </message>
+    <message>
+        <source>← Back</source>
+        <translation>← Zurück</translation>
+    </message>
+    <message>
+        <source>No missions are installed.</source>
+        <translation>Es sind keine Einsätze installiert.</translation>
+    </message>
+    <message>
+        <source>Carried out</source>
+        <translation>Ausgeführt</translation>
+    </message>
+    <message>
+        <source>Worth doing as well</source>
+        <translation>Auch lohnend</translation>
+    </message>
+    <message>
+        <source>You bring</source>
+        <translation>Du bringst mit</translation>
+    </message>
+    <message>
+        <source>It ends badly if</source>
+        <translation>Es endet übel, wenn</translation>
+    </message>
+    <message>
+        <source>You have carried this one out before.</source>
+        <translation>Diesen hast du schon einmal ausgeführt.</translation>
+    </message>
+    <message>
+        <source>Take it again</source>
+        <translation>Noch einmal antreten</translation>
+    </message>
+    <message>
+        <source>Take the field</source>
+        <translation>Ins Feld ziehen</translation>
+    </message>
+    <message>
+        <source>Pick a mission.</source>
+        <translation>Wähle einen Einsatz.</translation>
+    </message>
 </context>
 <context>
     <name>Nations</name>
@@ -6856,8 +7102,8 @@ Rechtsklick zum Abbrechen.</translation>
         <translation>Rechtsklick zum Abbrechen</translation>
     </message>
     <message>
-        <source>No Barracks Selected</source>
-        <translation>Keine Kaserne ausgewählt</translation>
+        <source>No Barracks</source>
+        <translation>Keine Kaserne</translation>
     </message>
     <message>
         <source>Select a barracks to recruit units</source>
@@ -7671,6 +7917,17 @@ Baumeister ernten es als Nahrung, die Zivilisten rekrutiert</translation>
     </message>
 </context>
 <context>
+    <name>RecruitCard</name>
+    <message>
+        <source>Recruit %1</source>
+        <translation>%1 ausbilden</translation>
+    </message>
+    <message>
+        <source>Show unit details</source>
+        <translation>Einheitendetails anzeigen</translation>
+    </message>
+</context>
+<context>
     <name>RpgFpvOverlay</name>
     <message>
         <source>GUARD BROKEN</source>
@@ -7783,10 +8040,6 @@ Baumeister ernten es als Nahrung, die Zivilisten rekrutiert</translation>
 <context>
     <name>SaveGamePanel</name>
     <message>
-        <source>Save Game</source>
-        <translation>Spiel speichern</translation>
-    </message>
-    <message>
         <source>Cancel</source>
         <translation>Abbrechen</translation>
     </message>
@@ -7855,6 +8108,10 @@ Baumeister ernten es als Nahrung, die Zivilisten rekrutiert</translation>
     <message>
         <source>Name the save first.</source>
         <translation>Benennt den Spielstand zuerst.</translation>
+    </message>
+    <message>
+        <source>Save game</source>
+        <translation>Spiel speichern</translation>
     </message>
 </context>
 <context>
@@ -8145,8 +8402,8 @@ Baumeister ernten es als Nahrung, die Zivilisten rekrutiert</translation>
         <translation>Über</translation>
     </message>
     <message>
-        <source>Standard of Iron - RTS Game</source>
-        <translation>Standard of Iron – Echtzeit-Strategiespiel</translation>
+        <source>Standard of Iron - RTS game</source>
+        <translation>Standard of Iron - Echtzeitstrategie</translation>
     </message>
     <message>
         <source>Version %1</source>

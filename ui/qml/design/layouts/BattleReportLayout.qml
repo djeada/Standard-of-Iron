@@ -37,8 +37,8 @@ FocusScope {
             "essential": false,
             "grim": false
         }, {
-            "key": "villages",
-            "label": qsTr("Villages"),
+            "key": "barracks",
+            "label": qsTr("Barracks"),
             "glyph": Design.Icons.capture,
             "essential": false,
             "grim": false

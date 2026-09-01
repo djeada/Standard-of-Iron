@@ -434,6 +434,9 @@ void CommanderSystem::update(Engine::Core::World* world, float delta_time) {
 
     if (commander->flag_rally_issue_commands) {
       commander->flag_rally_issue_commands = false;
+      Engine::Core::EventManager::instance().publish(
+          Engine::Core::AudioCueEvent::for_owner(unit->owner_id,
+                                                 "order.commander_rally"));
       const QVector3D rally_pos(
           commander->flag_rally_flag_x, 0.0F, commander->flag_rally_flag_z);
       std::vector<Engine::Core::EntityID> rallied_units;

@@ -67,10 +67,9 @@ Item {
                 root.game.commander.toggle_mode();
             return true;
         case "global.menu":
-            if (typeof root.mainWindowRef === 'undefined' || root.mainWindowRef.menu_visible)
+            if (typeof root.mainWindowRef === 'undefined')
                 return false;
-            root.mainWindowRef.menu_visible = true;
-            return true;
+            return root.mainWindowRef.request_menu_toggle();
         case "global.quicksave":
             if (!root.game.saves.quicksave)
                 return false;
@@ -85,7 +84,6 @@ Item {
             if (typeof root.mainWindowRef === 'undefined')
                 return false;
             root.mainWindowRef.game_paused = !root.mainWindowRef.game_paused;
-            root.gameView.set_paused(root.mainWindowRef.game_paused);
             return true;
         case "rts.speed_up":
             if (!root.game.set_game_speed)

@@ -24,6 +24,7 @@
 #include "game/systems/builder_product_types.h"
 #include "game/systems/building_collision_registry.h"
 #include "game/systems/combat_system/damage_application.h"
+#include "game/systems/commander_system.h"
 #include "game/systems/default_content.h"
 #include "game/systems/gate_service.h"
 #include "game/systems/gate_system.h"
@@ -516,6 +517,23 @@ TEST_F(AudioGameplayScenarioTest, AHealerMendingASoldierIsHeard) {
 
   ASSERT_GT(wounded_unit->health, 40) << "nothing was healed, so nothing to hear";
   EXPECT_TRUE(heard(Game::Audio::Cue::k_combat_heal));
+}
+
+TEST_F(AudioGameplayScenarioTest, PlantingTheCommandersStandardSoundsTheRally) {
+  auto* commander_entity = m_world.create_entity();
+  commander_entity->add_component<Engine::Core::TransformComponent>(4.0F, 0.0F, 4.0F);
+  auto* commander_unit = commander_entity->add_component<Engine::Core::UnitComponent>(
+      200, 200, 1.0F, 12.0F);
+  commander_unit->owner_id = k_local_owner;
+  auto* commander = commander_entity->add_component<Engine::Core::CommanderComponent>();
+  commander->begin_flag_rally(4.0F, 4.0F, true);
+
+  Game::Systems::CommanderSystem system;
+  system.update(&m_world, commander->flag_rally_cost + 0.1F);
+
+  ASSERT_TRUE(commander->flag_rally_flag_active)
+      << "the standard was never planted, so there is no rally to hear";
+  EXPECT_TRUE(heard(Game::Audio::Cue::k_order_commander_rally));
 }
 
 TEST_F(AudioGameplayScenarioTest, QueueingATroopAcknowledgesTheOrder) {

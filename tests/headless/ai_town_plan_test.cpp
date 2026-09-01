@@ -83,6 +83,9 @@ class AiTownPlanTest : public ::testing::Test {
 protected:
   void SetUp() override {
     reset_shared_world_state();
+
+    ASSERT_TRUE(Game::Systems::AI::load_default_ai_doctrine_catalog())
+        << "the shipped assets/data/ai files did not load";
     Game::Systems::NavGrid::initialize(k_map_size, k_map_size);
     m_factory = std::make_shared<Game::Units::UnitFactoryRegistry>();
     Game::Units::register_built_in_units(*m_factory);

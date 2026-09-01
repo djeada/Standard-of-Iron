@@ -104,24 +104,20 @@ void SkirmishRuntimeCoordinator::initialize_player_resources(
     resources.ensure_owner(owner.owner_id);
   }
 
-  if (ctx.mission_definition != nullptr) {
-    const auto& mission_resources =
-        ctx.mission_definition->player_setup.starting_resources;
-    for (Game::Systems::ResourceType const type : Game::Systems::k_all_resource_types) {
-      resources.set(ctx.local_owner_id, type, mission_resources.get(type));
-    }
-    return;
+  const bool is_mission = ctx.mission_definition != nullptr;
+
+  Game::Systems::ResourceAmounts stock = ctx.level.starting_resources;
+  if (is_mission) {
+    ctx.mission_definition->player_setup.starting_resources.apply_to(stock);
+  } else {
+    stock.set(Game::Systems::ResourceType::Gold,
+              Game::GameConfig::instance().get_starting_gold());
   }
 
-  const auto& map_resources = ctx.level.starting_resources;
-
-  const int treasury = Game::GameConfig::instance().get_starting_gold();
   const auto endow = [&](int owner_id) {
     for (Game::Systems::ResourceType const type : Game::Systems::k_all_resource_types) {
-      resources.set(owner_id, type, map_resources.get(type));
+      resources.set(owner_id, type, stock.get(type));
     }
-
-    resources.set(owner_id, Game::Systems::ResourceType::Gold, treasury);
   };
   for (const auto& owner_id : owner_registry.get_player_owner_ids()) {
     endow(owner_id);

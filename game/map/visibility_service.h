@@ -58,6 +58,7 @@ public:
 
   void initialize(int width, int height, float tile_size);
   void reset();
+  void shutdown();
   auto update(Engine::Core::World& world, int player_id) -> bool;
   void compute_immediate(Engine::Core::World& world, int player_id);
 

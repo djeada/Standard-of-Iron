@@ -90,36 +90,41 @@ ArmyFormationController::ArmyFormationController(
     , m_orders(world, std::move(feedback)) {
 }
 
-void ArmyFormationController::reset_transient_state() {
-  if (!m_is_placing_formation) {
-    m_formation_placement_position = QVector3D();
-    m_formation_facing_degrees = 0.0F;
-    m_formation_facing_explicit = false;
-    m_formation_aim_distance = 0.0F;
-    m_formation_units.clear();
-    invalidate_formation_layout();
-    return;
-  }
+void ArmyFormationController::end_formation_placement(FormationTeardown teardown) {
+  const bool was_right_drag = m_is_right_drag_formation;
 
   if (m_world != nullptr && !m_formation_units.empty()) {
-    submit(
-        m_world,
-        Game::Command::SetFormationMode{.units = m_formation_units, .active = false});
+    if (teardown == FormationTeardown::Cancel) {
+      submit(m_world, Game::Command::ReleaseFormation{.units = m_formation_units});
+    } else {
+      submit(
+          m_world,
+          Game::Command::SetFormationMode{.units = m_formation_units, .active = false});
+    }
   }
 
   m_is_placing_formation = false;
   m_formation_drag_active = false;
+  m_is_right_drag_formation = false;
   m_formation_placement_position = QVector3D();
   m_formation_facing_degrees = 0.0F;
   m_formation_facing_explicit = false;
   m_formation_aim_distance = 0.0F;
   m_formation_frontage = 0.0F;
   m_formation_units.clear();
+  m_formation_members.clear();
   m_formation_preview = Game::Formation::ArmyFormationPlan{};
   invalidate_formation_layout();
+
   emit formation_preview_changed();
   emit formation_placement_ended();
-  emit formation_mode_changed(false);
+  if (teardown == FormationTeardown::Reset || !was_right_drag) {
+    emit formation_mode_changed(false);
+  }
+}
+
+void ArmyFormationController::reset_transient_state() {
+  end_formation_placement(FormationTeardown::Reset);
 }
 
 auto ArmyFormationController::on_formation_command() -> CommandResult {
@@ -429,24 +434,7 @@ void ArmyFormationController::cancel_formation_placement() {
   if (!m_is_placing_formation) {
     return;
   }
-
-  submit(m_world, Game::Command::ReleaseFormation{.units = m_formation_units});
-
-  m_is_placing_formation = false;
-  m_formation_drag_active = false;
-  m_formation_facing_explicit = false;
-  m_formation_aim_distance = 0.0F;
-  m_formation_frontage = 0.0F;
-  m_formation_units.clear();
-  m_formation_members.clear();
-  invalidate_formation_layout();
-  m_formation_preview = Game::Formation::ArmyFormationPlan{};
-  emit formation_preview_changed();
-  emit formation_placement_ended();
-  if (!m_is_right_drag_formation) {
-    emit formation_mode_changed(false);
-  }
-  m_is_right_drag_formation = false;
+  end_formation_placement(FormationTeardown::Cancel);
 }
 
 void ArmyFormationController::set_formation_intent(const QString& intent_id) {

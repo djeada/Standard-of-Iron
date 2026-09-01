@@ -1069,22 +1069,22 @@
     {
       "id": "p1_tent_a",
       "type": "tent",
-      "x": 23.95,
-      "z": 121.61,
+      "x": 25.25,
+      "z": 121.19,
       "rotation": 325.3
     },
     {
       "id": "p1_tent_b",
       "type": "tent",
-      "x": 33.92,
-      "z": 136.22,
+      "x": 43.58,
+      "z": 133.63,
       "rotation": 325.3
     },
     {
       "id": "p1_cart",
       "type": "supply_cart",
-      "x": 41.76,
-      "z": 135.83,
+      "x": 42.42,
+      "z": 137.89,
       "rotation": 415.3
     },
     {
@@ -1111,15 +1111,15 @@
     {
       "id": "p2_tent_b",
       "type": "tent",
-      "x": 142.07,
-      "z": 39.79,
+      "x": 134.22,
+      "z": 45.61,
       "rotation": 145.3
     },
     {
       "id": "p2_cart",
       "type": "supply_cart",
-      "x": 134.24,
-      "z": 40.17,
+      "x": 133.96,
+      "z": 40.33,
       "rotation": 235.3
     },
     {
@@ -1176,15 +1176,15 @@
     {
       "id": "p1_vein_1",
       "type": "iron_ore",
-      "x": 50.31,
-      "z": 145.76,
+      "x": 48.94,
+      "z": 146.13,
       "rotation": 106.38
     },
     {
       "id": "p1_vein_2",
       "type": "iron_ore",
-      "x": 46.05,
-      "z": 140.03,
+      "x": 46.03,
+      "z": 139.95,
       "rotation": 178.38
     },
     {
@@ -1225,15 +1225,15 @@
     {
       "id": "p2_vein_3",
       "type": "iron_ore",
-      "x": 122.37,
+      "x": 118.06,
       "z": 30.26,
       "rotation": 250.38
     },
     {
       "id": "p2_vein_4",
       "type": "iron_ore",
-      "x": 128.75,
-      "z": 32.34,
+      "x": 130.43,
+      "z": 29.43,
       "rotation": 322.38
     },
     {
@@ -1444,8 +1444,8 @@
     },
     {
       "type": "abandoned_home",
-      "x": 18.42,
-      "z": 53.07,
+      "x": 18.93,
+      "z": 53.33,
       "scale": 1.0,
       "rotation": 0.0,
       "landmark": "west_hamlet"
@@ -1484,8 +1484,8 @@
     },
     {
       "type": "dead_tree",
-      "x": 12.55,
-      "z": 60.26,
+      "x": 12.84,
+      "z": 61.33,
       "scale": 0.9,
       "rotation": 0.0,
       "landmark": "west_hamlet"
@@ -1548,8 +1548,8 @@
     },
     {
       "type": "dead_tree",
-      "x": 163.59,
-      "z": 116.04,
+      "x": 160.93,
+      "z": 115.18,
       "scale": 0.9,
       "rotation": 180.0,
       "landmark": "east_hamlet"

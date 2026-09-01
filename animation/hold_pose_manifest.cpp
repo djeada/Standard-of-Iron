@@ -9,26 +9,38 @@ namespace Animation {
 auto resolve_humanoid_held_pose(const HumanoidHeldPoseInputs& inputs) noexcept
     -> HumanoidHeldPoseSample {
   float const shoulder_y = inputs.shoulder_y;
+  float const run_mix = inputs.running ? 1.0F : 0.0F;
   float const hold_cycle =
       std::sin(inputs.sample_time * (2.0F * std::numbers::pi_v<float>) / 1.8F);
   HumanoidHeldPoseSample sample{};
 
   switch (inputs.kind) {
   case HumanoidHeldPoseKind::SpearIdle:
-    sample.right_hand = {0.34F, shoulder_y - 0.02F, 0.30F};
+    sample.right_hand = {
+        0.34F - 0.05F * run_mix,
+        shoulder_y - 0.02F - 0.11F * run_mix,
+        0.30F + 0.16F * run_mix,
+    };
     sample.use_offhand_spear_grip = true;
-    sample.offhand_spear_direction = {0.0493264F, 0.542590F, 0.838548F};
-    sample.offhand_along_offset = 0.46F;
-    sample.offhand_y_drop = -0.03F;
-    sample.offhand_lateral_offset = -0.08F;
+    sample.offhand_spear_direction = inputs.running
+                                         ? PoseVec3{0.035F, 0.350F, 0.936F}
+                                         : PoseVec3{0.0493264F, 0.542590F, 0.838548F};
+    sample.offhand_along_offset = 0.46F - 0.10F * run_mix;
+    sample.offhand_y_drop = -0.03F - 0.02F * run_mix;
+    sample.offhand_lateral_offset = -0.08F + 0.02F * run_mix;
     sample.clamp_left_hand_x_min = true;
     sample.left_hand_x_min = 0.10F;
     sample.clamp_left_hand_y_max = true;
     sample.left_hand_y_max = shoulder_y + 0.12F;
     sample.shoulder_r_x_delta = 0.025F;
     sample.shoulder_l_x_delta = 0.015F;
-    sample.shoulder_r_z_delta = 0.025F;
-    sample.shoulder_l_z_delta = 0.020F;
+    sample.shoulder_r_y_delta = -0.025F * run_mix;
+    sample.shoulder_l_y_delta = -0.015F * run_mix;
+    sample.shoulder_r_z_delta = 0.025F + 0.045F * run_mix;
+    sample.shoulder_l_z_delta = 0.020F + 0.040F * run_mix;
+    sample.neck_z_delta = 0.035F * run_mix;
+    sample.head_y_delta = -0.010F * run_mix;
+    sample.head_z_delta = 0.030F * run_mix;
     break;
   case HumanoidHeldPoseKind::SpearBrace:
     sample.right_hand = {
@@ -63,38 +75,63 @@ auto resolve_humanoid_held_pose(const HumanoidHeldPoseInputs& inputs) noexcept
   case HumanoidHeldPoseKind::CasterChannel: {
 
     float const bob = 0.014F * hold_cycle;
-    sample.right_hand = {0.145F, shoulder_y - 0.095F + bob, 0.52F};
-    sample.left_hand = {-0.145F, shoulder_y - 0.095F - bob, 0.52F};
-    sample.shoulder_r_z_delta = 0.09F;
-    sample.shoulder_l_z_delta = 0.09F;
-    sample.shoulder_r_y_delta = -0.01F;
-    sample.shoulder_l_y_delta = -0.01F;
-    sample.neck_z_delta = 0.02F;
-    sample.head_z_delta = 0.015F;
-    sample.head_y_delta = -0.012F;
+    sample.right_hand = {
+        0.145F - 0.015F * run_mix,
+        shoulder_y - 0.095F - 0.085F * run_mix + bob,
+        0.52F - 0.12F * run_mix,
+    };
+    sample.left_hand = {
+        -0.145F + 0.015F * run_mix,
+        shoulder_y - 0.095F - 0.085F * run_mix - bob,
+        0.52F - 0.12F * run_mix,
+    };
+    sample.shoulder_r_z_delta = 0.09F - 0.025F * run_mix;
+    sample.shoulder_l_z_delta = 0.09F - 0.025F * run_mix;
+    sample.shoulder_r_y_delta = -0.01F - 0.020F * run_mix;
+    sample.shoulder_l_y_delta = -0.01F - 0.020F * run_mix;
+    sample.neck_z_delta = 0.02F + 0.025F * run_mix;
+    sample.head_z_delta = 0.015F + 0.020F * run_mix;
+    sample.head_y_delta = -0.012F - 0.008F * run_mix;
     break;
   }
   case HumanoidHeldPoseKind::StaveCarry: {
 
     float const bob = 0.012F * hold_cycle;
-    sample.right_hand = {0.31F, shoulder_y - 0.13F, 0.28F};
-    sample.left_hand = {-0.16F, shoulder_y + 0.055F + bob, 0.44F};
+    sample.right_hand = {
+        0.31F - 0.035F * run_mix,
+        shoulder_y - 0.13F - 0.07F * run_mix,
+        0.28F + 0.12F * run_mix,
+    };
+    sample.left_hand = {
+        -0.16F + 0.025F * run_mix,
+        shoulder_y + 0.055F - 0.075F * run_mix + bob,
+        0.44F + 0.08F * run_mix,
+    };
     sample.shoulder_r_x_delta = 0.02F;
-    sample.shoulder_r_z_delta = 0.03F;
-    sample.shoulder_l_z_delta = 0.07F;
-    sample.shoulder_l_y_delta = 0.01F;
-    sample.neck_z_delta = 0.02F;
-    sample.head_z_delta = 0.015F;
+    sample.shoulder_r_z_delta = 0.03F + 0.035F * run_mix;
+    sample.shoulder_l_z_delta = 0.07F + 0.025F * run_mix;
+    sample.shoulder_l_y_delta = 0.01F - 0.025F * run_mix;
+    sample.shoulder_r_y_delta = -0.020F * run_mix;
+    sample.neck_z_delta = 0.02F + 0.025F * run_mix;
+    sample.head_z_delta = 0.015F + 0.020F * run_mix;
+    sample.head_y_delta = -0.010F * run_mix;
     break;
   }
   case HumanoidHeldPoseKind::SwordShieldCarry: {
     float const moving_mix = inputs.moving ? 1.0F : 0.0F;
-    sample.right_hand = {0.34F + moving_mix * 0.03F,
-                         shoulder_y - 0.06F - moving_mix * 0.05F,
-                         0.44F + moving_mix * 0.06F};
-    sample.left_hand = {-0.32F - moving_mix * 0.03F,
-                        shoulder_y - 0.02F - moving_mix * 0.03F,
-                        0.28F + moving_mix * 0.05F};
+    sample.right_hand = {0.34F + moving_mix * 0.03F - run_mix * 0.09F,
+                         shoulder_y - 0.06F - moving_mix * 0.05F - run_mix * 0.07F,
+                         0.44F + moving_mix * 0.06F + run_mix * 0.09F};
+    sample.left_hand = {-0.32F - moving_mix * 0.03F + run_mix * 0.07F,
+                        shoulder_y - 0.02F - moving_mix * 0.03F + run_mix * 0.03F,
+                        0.28F + moving_mix * 0.05F + run_mix * 0.13F};
+    sample.shoulder_r_y_delta = -0.020F * run_mix;
+    sample.shoulder_l_y_delta = -0.010F * run_mix;
+    sample.shoulder_r_z_delta = 0.045F * run_mix;
+    sample.shoulder_l_z_delta = 0.055F * run_mix;
+    sample.neck_z_delta = 0.035F * run_mix;
+    sample.head_y_delta = -0.010F * run_mix;
+    sample.head_z_delta = 0.030F * run_mix;
     break;
   }
   case HumanoidHeldPoseKind::ResourceCarry: {

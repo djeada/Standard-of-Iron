@@ -49,10 +49,13 @@ constexpr float k_face_surface = k_head_radius * 2.02F;
 constexpr float k_mouth_surface = k_head_radius * 2.20F;
 constexpr float k_face_drop = k_head_radius * 0.80F;
 
-constexpr QVector3D k_eye_white{0.72F, 0.66F, 0.54F};
-constexpr QVector3D k_roman_iris{0.30F, 0.18F, 0.075F};
-constexpr QVector3D k_carthage_iris{0.20F, 0.25F, 0.18F};
+constexpr float k_eye_shell_bias = k_head_radius * 0.035F;
+
+constexpr QVector3D k_eye_white{0.92F, 0.89F, 0.82F};
+constexpr QVector3D k_roman_iris{0.36F, 0.21F, 0.085F};
+constexpr QVector3D k_carthage_iris{0.24F, 0.30F, 0.21F};
 constexpr QVector3D k_pupil{0.025F, 0.018F, 0.012F};
+constexpr QVector3D k_catchlight{1.0F, 0.97F, 0.90F};
 constexpr QVector3D k_brow{0.13F, 0.075F, 0.035F};
 constexpr QVector3D k_mouth{0.16F, 0.055F, 0.035F};
 constexpr QVector3D k_lip{0.38F, 0.16F, 0.11F};
@@ -72,6 +75,54 @@ auto face_feature_model(const QMatrix4x4& head_world,
     model.rotate(roll_degrees, 0.0F, 0.0F, 1.0F);
   }
   model.scale(radii.x(), radii.y(), radii.z());
+  return model;
+}
+
+auto face_surface_frame(const QMatrix4x4& head_world,
+                        const QVector3D& anchor) -> QMatrix4x4 {
+  QVector3D forward = anchor;
+  if (forward.lengthSquared() < 1.0e-8F) {
+    forward = QVector3D(0.0F, 0.0F, 1.0F);
+  }
+  forward.normalize();
+  QVector3D right = QVector3D::crossProduct(QVector3D(0.0F, 1.0F, 0.0F), forward);
+  if (right.lengthSquared() < 1.0e-6F) {
+    right = QVector3D(1.0F, 0.0F, 0.0F);
+  }
+  right.normalize();
+  const QVector3D up = QVector3D::crossProduct(forward, right);
+
+  QMatrix4x4 frame;
+  frame.setColumn(0, QVector4D(right, 0.0F));
+  frame.setColumn(1, QVector4D(up, 0.0F));
+  frame.setColumn(2, QVector4D(forward, 0.0F));
+  QMatrix4x4 model = head_world;
+  model.translate(anchor);
+  return model * frame;
+}
+
+auto face_surface_model(const QMatrix4x4& surface_frame,
+                        const QVector3D& offset,
+                        const QVector3D& radii,
+                        float roll_degrees = 0.0F) -> QMatrix4x4 {
+  QMatrix4x4 model = surface_frame;
+  model.translate(offset);
+  if (std::abs(roll_degrees) > 1.0e-4F) {
+    model.rotate(roll_degrees, 0.0F, 0.0F, 1.0F);
+  }
+  model.scale(radii.x(), radii.y(), radii.z());
+  return model;
+}
+
+auto face_disc_model(const QMatrix4x4& surface_frame,
+                     const QVector3D& offset,
+                     float radius_x,
+                     float radius_y,
+                     float thickness) -> QMatrix4x4 {
+  QMatrix4x4 model = surface_frame;
+  model.translate(offset);
+  model.rotate(90.0F, 1.0F, 0.0F, 0.0F);
+  model.scale(radius_x, thickness, radius_y);
   return model;
 }
 
@@ -232,15 +283,8 @@ void CommanderPortraitView::PortraitRenderer::apply_pose() {
   const auto move = move_for_pose(m_pose);
   routine->steps.clear();
 
-  if (move != Animation::HumanoidShowcaseMove::TauntCynical) {
-    routine->steps.push_back({.move = static_cast<std::uint8_t>(move),
-                              .duration = 0.0F,
-                              .hold_after = 0.0F});
-  }
   routine->steps.push_back(
-      {.move = static_cast<std::uint8_t>(Animation::HumanoidShowcaseMove::TauntCynical),
-       .duration = 0.0F,
-       .hold_after = 0.0F});
+      {.move = static_cast<std::uint8_t>(move), .duration = 0.0F, .hold_after = 0.0F});
 
   routine->index = 0;
   routine->elapsed = 0.0F;
@@ -248,8 +292,10 @@ void CommanderPortraitView::PortraitRenderer::apply_pose() {
   routine->finished = false;
   routine->active = true;
   routine->loop = true;
-  routine->loop_from = routine->steps.size() - 1U;
+  routine->loop_from = 0U;
   m_pose_dirty = false;
+
+  m_world->update(k_portrait_frame_interval_seconds);
 }
 
 void CommanderPortraitView::PortraitRenderer::submit_face(const QMatrix4x4& head_world,
@@ -271,10 +317,10 @@ void CommanderPortraitView::PortraitRenderer::submit_face(const QMatrix4x4& head
 
   float blink = 0.0F;
   const float blink_phase = std::fmod(m_expression_time, 3.7F);
-  if (blink_phase > 3.52F) {
-    blink = std::sin((blink_phase - 3.52F) / 0.18F * 3.14159265F);
+  if (blink_phase > 3.44F) {
+    blink = std::sin((blink_phase - 3.44F) / 0.26F * 3.14159265F);
   }
-  const float lid_scale = std::max(0.12F, 1.0F - blink * 0.88F);
+  const float lid_scale = std::max(0.18F, 1.0F - blink * 0.82F);
 
   auto* sphere = Render::GL::get_unit_sphere();
   if (sphere == nullptr) {
@@ -283,47 +329,67 @@ void CommanderPortraitView::PortraitRenderer::submit_face(const QMatrix4x4& head
 
   const QVector3D iris =
       m_nation == QStringLiteral("carthage") ? k_carthage_iris : k_roman_iris;
-  const float eye_y = (k_head_radius * 0.15F) - k_face_drop;
-  const float brow_y = (k_head_radius * 0.43F) - k_face_drop;
+  const float eye_y = (k_head_radius * 0.12F) - k_face_drop;
+  const float brow_y = (k_head_radius * 0.47F) - k_face_drop;
   const float eye_z = face_shell_z(k_face_surface, eye_y);
   const float brow_z = face_shell_z(k_face_surface, brow_y);
+  auto* disc = Render::GL::get_unit_cylinder();
+  if (disc == nullptr) {
+    disc = sphere;
+  }
   for (float side : {-1.0F, 1.0F}) {
     const float eye_x = side * k_head_radius * 0.48F;
-    m_renderer->mesh(sphere,
-                     face_feature_model(head_world,
-                                        QVector3D(eye_x, eye_y, eye_z),
-                                        QVector3D(k_head_radius * 0.27F,
-                                                  k_head_radius * 0.15F * lid_scale,
-                                                  k_head_radius * 0.045F)),
+
+    const QMatrix4x4 eye_frame =
+        face_surface_frame(head_world, QVector3D(eye_x, eye_y, eye_z));
+    m_renderer->mesh(disc,
+                     face_disc_model(eye_frame,
+                                     QVector3D(0.0F, 0.0F, k_eye_shell_bias),
+                                     k_head_radius * 0.33F,
+                                     k_head_radius * 0.27F * lid_scale,
+                                     k_head_radius * 0.012F),
                      k_eye_white);
     m_renderer->mesh(
-        sphere,
-        face_feature_model(head_world,
-                           QVector3D(eye_x, eye_y, eye_z + (k_head_radius * 0.045F)),
-                           QVector3D(k_head_radius * 0.105F,
-                                     k_head_radius * 0.12F * lid_scale,
-                                     k_head_radius * 0.024F)),
+        disc,
+        face_disc_model(
+            eye_frame,
+            QVector3D(0.0F, 0.0F, k_eye_shell_bias + (k_head_radius * 0.010F)),
+            k_head_radius * 0.155F,
+            k_head_radius * 0.165F * lid_scale,
+            k_head_radius * 0.010F),
         iris);
     m_renderer->mesh(
-        sphere,
-        face_feature_model(head_world,
-                           QVector3D(eye_x, eye_y, eye_z + (k_head_radius * 0.070F)),
-                           QVector3D(k_head_radius * 0.045F,
-                                     k_head_radius * 0.060F * lid_scale,
-                                     k_head_radius * 0.014F)),
+        disc,
+        face_disc_model(
+            eye_frame,
+            QVector3D(0.0F, 0.0F, k_eye_shell_bias + (k_head_radius * 0.018F)),
+            k_head_radius * 0.075F,
+            k_head_radius * 0.090F * lid_scale,
+            k_head_radius * 0.008F),
         k_pupil);
+    m_renderer->mesh(
+        disc,
+        face_disc_model(eye_frame,
+                        QVector3D(k_head_radius * 0.080F,
+                                  k_head_radius * 0.082F * lid_scale,
+                                  k_eye_shell_bias + (k_head_radius * 0.026F)),
+                        k_head_radius * 0.038F,
+                        k_head_radius * 0.038F * lid_scale,
+                        k_head_radius * 0.008F),
+        k_catchlight);
 
     const float brow_roll =
-        side * (m_pose == QStringLiteral("dismissive") ? 8.0F : -5.0F);
-    m_renderer->mesh(
-        sphere,
-        face_feature_model(head_world,
-                           QVector3D(eye_x, brow_y, brow_z + (k_head_radius * 0.015F)),
-                           QVector3D(k_head_radius * 0.31F,
-                                     k_head_radius * 0.055F,
-                                     k_head_radius * 0.032F),
-                           brow_roll),
-        k_brow);
+        side * (m_pose == QStringLiteral("dismissive") ? 5.0F : -3.0F);
+    const QMatrix4x4 brow_frame =
+        face_surface_frame(head_world, QVector3D(eye_x, brow_y, brow_z));
+    m_renderer->mesh(sphere,
+                     face_surface_model(brow_frame,
+                                        QVector3D(0.0F, 0.0F, k_head_radius * 0.015F),
+                                        QVector3D(k_head_radius * 0.28F,
+                                                  k_head_radius * 0.045F,
+                                                  k_head_radius * 0.032F),
+                                        brow_roll),
+                     k_brow);
   }
 
   const float mouth_height =

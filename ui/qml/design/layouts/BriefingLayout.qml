@@ -12,11 +12,19 @@ Item {
     property var defeatConditions: []
     property var optionalObjectives: []
     property var stages: []
+    property bool stagesAreVictoryConditions: false
     property string victoryMode: "any"
 
     readonly property bool hasObjectives: stages.length > 0 || victoryConditions.length > 0 || defeatConditions.length > 0 || optionalObjectives.length > 0
     readonly property bool requiresAllVictoryConditions: victoryMode === "all"
-    readonly property string victoryHeading: victoryConditions.length > 1 ? (requiresAllVictoryConditions ? qsTr("Victory Conditions — complete all") : qsTr("Victory Conditions — complete any")) : qsTr("Victory Conditions")
+    readonly property string victoryHeading: root.headingForVictoryCount(victoryConditions.length)
+    readonly property string stagesHeading: root.stagesAreVictoryConditions ? root.headingForVictoryCount(stages.length) : qsTr("Mission Steps — in order")
+
+    function headingForVictoryCount(count) {
+        if (count <= 1)
+            return qsTr("Victory Conditions");
+        return root.requiresAllVictoryConditions ? qsTr("Victory Conditions — complete all") : qsTr("Victory Conditions — complete any");
+    }
 
     implicitWidth: Design.Metrics.space24 * 20
     implicitHeight: Design.Metrics.space24 * 16
@@ -85,7 +93,7 @@ Item {
                 visible: root.stages.length > 0
 
                 Text {
-                    text: qsTr("Mission Steps — in order")
+                    text: root.stagesHeading
                     color: Design.Theme.textSecondary
                     font.family: Design.Typography.family
                     font.pixelSize: Design.Typography.caption
@@ -121,14 +129,14 @@ Item {
 
             Design.IronDivider {
                 width: parent.width
-                visible: root.stages.length > 0 && (root.victoryConditions.length > 0 || root.defeatConditions.length > 0)
+                visible: root.stages.length > 0 && ((!root.stagesAreVictoryConditions && root.victoryConditions.length > 0) || root.defeatConditions.length > 0)
             }
 
             Repeater {
                 model: [{
                         "heading": root.victoryHeading,
                         "state": "active",
-                        "entries": root.victoryConditions,
+                        "entries": root.stagesAreVictoryConditions ? [] : root.victoryConditions,
                         "fallback": qsTr("Complete the objective")
                     }, {
                         "heading": qsTr("Defeat Conditions"),
