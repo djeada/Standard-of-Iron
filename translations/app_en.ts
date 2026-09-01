@@ -4077,10 +4077,6 @@ Every troop costs manpower; a squad of twelve builders costs ten. This is not a 
 <context>
     <name>LoadGamePanel</name>
     <message>
-        <source>Load Game</source>
-        <translation>Load Game</translation>
-    </message>
-    <message>
         <source>Cancel</source>
         <translation>Cancel</translation>
     </message>
@@ -4225,6 +4221,10 @@ This action cannot be undone.</translation>
     <message>
         <source>Pick a saved game first.</source>
         <translation>Pick a saved game first.</translation>
+    </message>
+    <message>
+        <source>Load game</source>
+        <translation>Load game</translation>
     </message>
 </context>
 <context>
@@ -4519,10 +4519,6 @@ This action cannot be undone.</translation>
         <translation>A new standard in the valley, and nobody under it who has held a spear more than twice.</translation>
     </message>
     <message>
-        <source>Standard of Iron - RTS Game</source>
-        <translation>Standard of Iron - RTS Game</translation>
-    </message>
-    <message>
         <source>PAUSED</source>
         <translation>PAUSED</translation>
     </message>
@@ -4534,20 +4530,16 @@ This action cannot be undone.</translation>
         <source>Error</source>
         <translation>Error</translation>
     </message>
+    <message>
+        <source>Standard of Iron - RTS game</source>
+        <translation>Standard of Iron - RTS game</translation>
+    </message>
 </context>
 <context>
     <name>MainMenu</name>
     <message>
         <source>STANDARD OF IRON</source>
         <translation>STANDARD OF IRON</translation>
-    </message>
-    <message>
-        <source>Save Game</source>
-        <translation>Save Game</translation>
-    </message>
-    <message>
-        <source>Load Game</source>
-        <translation>Load Game</translation>
     </message>
     <message>
         <source>Settings</source>
@@ -4708,6 +4700,26 @@ This action cannot be undone.</translation>
     <message>
         <source>Help</source>
         <translation>Help</translation>
+    </message>
+    <message>
+        <source>Missions</source>
+        <translation>Missions</translation>
+    </message>
+    <message>
+        <source>One small field, one order to carry out</source>
+        <translation>One small field, one order to carry out</translation>
+    </message>
+    <message>
+        <source>Detail</source>
+        <translation>Detail</translation>
+    </message>
+    <message>
+        <source>Save game</source>
+        <translation>Save game</translation>
+    </message>
+    <message>
+        <source>Load game</source>
+        <translation>Load game</translation>
     </message>
 </context>
 <context>
@@ -5144,6 +5156,22 @@ to see preview</translation>
     <message>
         <source>Three camps a side along one broad channel. The Amber runs the whole map and only three ferry crossings span it, so a bank is a front line: the highway behind each bank links its three camps, and every attack has to buy a bridge first.</source>
         <translation>Three camps a side along one broad channel. The Amber runs the whole map and only three ferry crossings span it, so a bank is a front line: the highway behind each bank links its three camps, and every attack has to buy a bridge first.</translation>
+    </message>
+    <message>
+        <source>A redoubt above a dry ford, for one. A spur of rock runs the length of the approach and the two shoulders close the flanks, so everything coming down from the north is committed to one of two lanes -- the cart gate in the west, the goat path in the east -- and they do not meet again until the ground in front of the camp. One line cannot hold both mouths, so holding here is a question of which lane you stand in and when you leave it.</source>
+        <translation>A redoubt above a dry ford, for one. A spur of rock runs the length of the approach and the two shoulders close the flanks, so everything coming down from the north is committed to one of two lanes -- the cart gate in the west, the goat path in the east -- and they do not meet again until the ground in front of the camp. One line cannot hold both mouths, so holding here is a question of which lane you stand in and when you leave it.</translation>
+    </message>
+    <message>
+        <source>A timber detail&apos;s cut above the Pinewater, for one. The near stand beside the camp is already half felled, so the levy is only filled out of the deep pines a long haul north-east, past the spine of rock the haul road has to swing around. The scree that gives up the stone lies the other way entirely, and the crew is not big enough to work both without splitting it.</source>
+        <translation>A timber detail&apos;s cut above the Pinewater, for one. The near stand beside the camp is already half felled, so the levy is only filled out of the deep pines a long haul north-east, past the spine of rock the haul road has to swing around. The scree that gives up the stone lies the other way entirely, and the crew is not big enough to work both without splitting it.</translation>
+    </message>
+    <message>
+        <source>Pinewater Cut</source>
+        <translation>Pinewater Cut</translation>
+    </message>
+    <message>
+        <source>Sallow Ford</source>
+        <translation>Sallow Ford</translation>
     </message>
 </context>
 <context>
@@ -5730,10 +5758,6 @@ to see preview</translation>
     <message>
         <source>If the central camp falls, the Campanian alliance dies with it.</source>
         <translation>If the central camp falls, the Campanian alliance dies with it.</translation>
-    </message>
-    <message>
-        <source>Investigate the cursed shrine, survive the awakening, and clear the ruins.</source>
-        <translation>Investigate the cursed shrine, survive the awakening, and clear the ruins.</translation>
     </message>
     <message>
         <source>Iron Sepulcher Watch</source>
@@ -6390,6 +6414,161 @@ to see preview</translation>
     <message>
         <source>With the river camp taken there is nowhere left for the legions to reform.</source>
         <translation>With the river camp taken there is nowhere left for the legions to reform.</translation>
+    </message>
+    <message>
+        <source>Break all five columns. The ford is held when the last of them is dead in front of it, and not one column sooner.</source>
+        <translation>Break all five columns. The ford is held when the last of them is dead in front of it, and not one column sooner.</translation>
+    </message>
+    <message>
+        <source>Cut and carry home four hundred of timber and two hundred and ten of stone. The near stand will not cover it; the deep pines will.</source>
+        <translation>Cut and carry home four hundred of timber and two hundred and ten of stone. The near stand will not cover it; the deep pines will.</translation>
+    </message>
+    <message>
+        <source>Fill the levy out of the Pinewater cut: four hundred of timber and two hundred and ten of stone, cut and carried home before the column comes back through.</source>
+        <translation>Fill the levy out of the Pinewater cut: four hundred of timber and two hundred and ten of stone, cut and carried home before the column comes back through.</translation>
+    </message>
+    <message>
+        <source>Five columns and the ford still ours. Count the men twice and do not write the number down until morning; it is always worse in the dark and always worse again in daylight.</source>
+        <translation>Five columns and the ford still ours. Count the men twice and do not write the number down until morning; it is always worse in the dark and always worse again in daylight.</translation>
+    </message>
+    <message>
+        <source>Four hundred of timber and two hundred of stone, and the near stand was stripped by the last detail. That means the deep pines, which means the long road, which means whatever is living in the deep pines gets a look at us. Split the crew. Escort the far one.</source>
+        <translation>Four hundred of timber and two hundred of stone, and the near stand was stripped by the last detail. That means the deep pines, which means the long road, which means whatever is living in the deep pines gets a look at us. Split the crew. Escort the far one.</translation>
+    </message>
+    <message>
+        <source>Hold the Sallow Ford</source>
+        <translation>Hold the Sallow Ford</translation>
+    </message>
+    <message>
+        <source>Keep both towers standing. Lose one and the lane it watches is yours to walk yourself.</source>
+        <translation>Keep both towers standing. Lose one and the lane it watches is yours to walk yourself.</translation>
+    </message>
+    <message>
+        <source>Leave the axes. Leave the carts. A detail that cannot walk out of its own cut does not get to carry anything.</source>
+        <translation>Leave the axes. Leave the carts. A detail that cannot walk out of its own cut does not get to carry anything.</translation>
+    </message>
+    <message>
+        <source>Levy filled. Stack it by the road and let the carts argue about it. We cut a wood down to feed a siege that has not started yet — remember that the next time somebody calls this the quiet posting.</source>
+        <translation>Levy filled. Stack it by the road and let the carts argue about it. We cut a wood down to feed a siege that has not started yet — remember that the next time somebody calls this the quiet posting.</translation>
+    </message>
+    <message>
+        <source>Lose the redoubt and there is nothing behind it for forty miles.</source>
+        <translation>Lose the redoubt and there is nothing behind it for forty miles.</translation>
+    </message>
+    <message>
+        <source>One officer, no line. The next column will not even slow down.</source>
+        <translation>One officer, no line. The next column will not even slow down.</translation>
+    </message>
+    <message>
+        <source>One redoubt, two mouths, five columns. Break every assault that comes down the cart gate and the goat path, and still be standing when the fifth is spent.</source>
+        <translation>One redoubt, two mouths, five columns. Break every assault that comes down the cart gate and the goat path, and still be standing when the fifth is spent.</translation>
+    </message>
+    <message>
+        <source>Overcut the levy. A surplus is the only thing a quartermaster has ever thanked anyone for.</source>
+        <translation>Overcut the levy. A surplus is the only thing a quartermaster has ever thanked anyone for.</translation>
+    </message>
+    <message>
+        <source>Take the cursed shrine above the sepulcher ruins and hold what you take: clear the guardians out of the ruins, then drive the dead off the shrine itself.</source>
+        <translation>Take the cursed shrine above the sepulcher ruins and hold what you take: clear the guardians out of the ruins, then drive the dead off the shrine itself.</translation>
+    </message>
+    <message>
+        <source>The Timber Levy</source>
+        <translation>The Timber Levy</translation>
+    </message>
+    <message>
+        <source>The commander falls and the line behind him is just men standing in a dry riverbed.</source>
+        <translation>The commander falls and the line behind him is just men standing in a dry riverbed.</translation>
+    </message>
+    <message>
+        <source>The crew is gone and the officer is standing in a clearing with an axe. That is not a work party.</source>
+        <translation>The crew is gone and the officer is standing in a clearing with an axe. That is not a work party.</translation>
+    </message>
+    <message>
+        <source>The officer of the detail falls. Nobody else here can sign for the levy.</source>
+        <translation>The officer of the detail falls. Nobody else here can sign for the levy.</translation>
+    </message>
+    <message>
+        <source>The redoubt is gone. Go south, keep the spur on your left, and do not stop to look at the ford. There is nothing there now that is worth a second of your life.</source>
+        <translation>The redoubt is gone. Go south, keep the spur on your left, and do not stop to look at the ford. There is nothing there now that is worth a second of your life.</translation>
+    </message>
+    <message>
+        <source>The spur splits them for us, which is the only kindness this ground offers. Cart gate west, goat path east, and they only meet where we are standing. You cannot hold both mouths. Pick one, hold it, and move when the horns tell you to.</source>
+        <translation>The spur splits them for us, which is the only kindness this ground offers. Cart gate west, goat path east, and they only meet where we are standing. You cannot hold both mouths. Pick one, hold it, and move when the horns tell you to.</translation>
+    </message>
+</context>
+<context>
+    <name>MissionsScreen</name>
+    <message>
+        <source>%1 × %2</source>
+        <translation>%1 × %2</translation>
+    </message>
+    <message>
+        <source>Orders</source>
+        <translation>Orders</translation>
+    </message>
+    <message>
+        <source>Orders — any one of these ends it</source>
+        <translation>Orders — any one of these ends it</translation>
+    </message>
+    <message>
+        <source>Orders — all of them, or none</source>
+        <translation>Orders — all of them, or none</translation>
+    </message>
+    <message>
+        <source>You</source>
+        <translation>You</translation>
+    </message>
+    <message>
+        <source>Missions</source>
+        <translation>Missions</translation>
+    </message>
+    <message>
+        <source>One small field, one order to carry out. No campaign to lose, no second army to worry about.</source>
+        <translation>One small field, one order to carry out. No campaign to lose, no second army to worry about.</translation>
+    </message>
+    <message>
+        <source>carried out</source>
+        <translation>carried out</translation>
+    </message>
+    <message>
+        <source>← Back</source>
+        <translation>← Back</translation>
+    </message>
+    <message>
+        <source>No missions are installed.</source>
+        <translation>No missions are installed.</translation>
+    </message>
+    <message>
+        <source>Carried out</source>
+        <translation>Carried out</translation>
+    </message>
+    <message>
+        <source>Worth doing as well</source>
+        <translation>Worth doing as well</translation>
+    </message>
+    <message>
+        <source>You bring</source>
+        <translation>You bring</translation>
+    </message>
+    <message>
+        <source>It ends badly if</source>
+        <translation>It ends badly if</translation>
+    </message>
+    <message>
+        <source>You have carried this one out before.</source>
+        <translation>You have carried this one out before.</translation>
+    </message>
+    <message>
+        <source>Take it again</source>
+        <translation>Take it again</translation>
+    </message>
+    <message>
+        <source>Take the field</source>
+        <translation>Take the field</translation>
+    </message>
+    <message>
+        <source>Pick a mission.</source>
+        <translation>Pick a mission.</translation>
     </message>
 </context>
 <context>
@@ -7783,10 +7962,6 @@ Builders reap it for the food that recruits civilians</translation>
 <context>
     <name>SaveGamePanel</name>
     <message>
-        <source>Save Game</source>
-        <translation>Save Game</translation>
-    </message>
-    <message>
         <source>Cancel</source>
         <translation>Cancel</translation>
     </message>
@@ -7855,6 +8030,10 @@ Builders reap it for the food that recruits civilians</translation>
     <message>
         <source>Name the save first.</source>
         <translation>Name the save first.</translation>
+    </message>
+    <message>
+        <source>Save game</source>
+        <translation>Save game</translation>
     </message>
 </context>
 <context>
@@ -8145,10 +8324,6 @@ Builders reap it for the food that recruits civilians</translation>
         <translation>About</translation>
     </message>
     <message>
-        <source>Standard of Iron - RTS Game</source>
-        <translation>Standard of Iron - RTS Game</translation>
-    </message>
-    <message>
         <source>Version %1</source>
         <translation>Version %1</translation>
     </message>
@@ -8331,6 +8506,10 @@ Builders reap it for the food that recruits civilians</translation>
     <message>
         <source>Prompts and readouts:</source>
         <translation>Prompts and readouts:</translation>
+    </message>
+    <message>
+        <source>Standard of Iron - RTS game</source>
+        <translation>Standard of Iron - RTS game</translation>
     </message>
 </context>
 <context>

@@ -14,6 +14,7 @@
 #include "core/ownership_constants.h"
 #include "core/world.h"
 #include "systems/arrow_projectile.h"
+#include "systems/building_collision_registry.h"
 #include "systems/cleanup_system.h"
 #include "systems/combat_actions/body_impact.h"
 #include "systems/combat_actions/combat_action_definition.h"
@@ -178,26 +179,38 @@ TEST_F(CombatModeTest, UndeadHelpersMapCombatFamiliesAndAutoEngageRoles) {
                                          AttackComponent::CombatMode::Ranged),
             CombatAttackFamily::Bow);
 
-  auto* skeleton_swordsman = world->create_entity();
-  auto* swordsman_unit =
-      skeleton_swordsman->add_component<UnitComponent>(100, 100, 1.0F, 12.0F);
-  ASSERT_NE(swordsman_unit, nullptr);
-  swordsman_unit->spawn_type = Game::Units::SpawnType::SkeletonSwordsman;
+  auto const make_undead = [this](Game::Units::SpawnType type, bool ranged) {
+    auto* entity = world->create_entity();
+    auto* unit = entity->add_component<UnitComponent>(100, 100, 1.0F, 12.0F);
+    EXPECT_NE(unit, nullptr);
+    unit->spawn_type = type;
+    auto* attack = entity->add_component<AttackComponent>();
+    EXPECT_NE(attack, nullptr);
+    attack->can_melee = true;
+    attack->can_ranged = ranged;
+    attack->range = ranged ? 9.0F : 1.2F;
+    attack->preferred_mode = ranged ? AttackComponent::CombatMode::Ranged
+                                    : AttackComponent::CombatMode::Melee;
+    attack->current_mode = attack->preferred_mode;
+    return entity;
+  };
 
-  auto* skeleton_archer = world->create_entity();
-  auto* archer_unit =
-      skeleton_archer->add_component<UnitComponent>(100, 100, 1.0F, 12.0F);
-  ASSERT_NE(archer_unit, nullptr);
-  archer_unit->spawn_type = Game::Units::SpawnType::SkeletonArcher;
+  auto* skeleton_swordsman =
+      make_undead(Game::Units::SpawnType::SkeletonSwordsman, false);
+  auto* skeleton_archer = make_undead(Game::Units::SpawnType::SkeletonArcher, true);
+  auto* grave_priest = make_undead(Game::Units::SpawnType::GravePriest, true);
 
-  auto* grave_priest = world->create_entity();
-  auto* priest_unit = grave_priest->add_component<UnitComponent>(100, 100, 1.0F, 12.0F);
-  ASSERT_NE(priest_unit, nullptr);
-  priest_unit->spawn_type = Game::Units::SpawnType::GravePriest;
+  for (auto* undead : {skeleton_swordsman, skeleton_archer, grave_priest}) {
+    EXPECT_TRUE(Game::Systems::Combat::auto_acquires_targets(undead))
+        << "an undead soldier waited to be told to fight";
+  }
 
-  EXPECT_TRUE(Game::Systems::Combat::should_auto_engage_melee(skeleton_swordsman));
-  EXPECT_FALSE(Game::Systems::Combat::should_auto_engage_melee(skeleton_archer));
-  EXPECT_FALSE(Game::Systems::Combat::should_auto_engage_melee(grave_priest));
+  EXPECT_FALSE(Game::Systems::Combat::opens_fire_without_closing(skeleton_swordsman));
+  EXPECT_TRUE(Game::Systems::Combat::opens_fire_without_closing(skeleton_archer));
+  EXPECT_TRUE(Game::Systems::Combat::opens_fire_without_closing(grave_priest));
+
+  EXPECT_FLOAT_EQ(Game::Systems::Combat::acquisition_range(skeleton_swordsman), 12.0F);
+  EXPECT_FLOAT_EQ(Game::Systems::Combat::acquisition_range(skeleton_archer), 9.0F);
 }
 
 TEST_F(CombatModeTest, MoveCommandScalesHoldExitToCurrentKneelDepth) {
@@ -1015,6 +1028,155 @@ TEST_F(CombatModeTest, AutoEngagementIgnoresCloserBuildingAndTargetsEnemyUnit) {
   ASSERT_NE(attack_target, nullptr);
   EXPECT_EQ(attack_target->target_id, enemy->get_id());
   EXPECT_TRUE(attack_target->should_chase);
+}
+
+TEST_F(CombatModeTest, ACommanderFightsWhatIsOnTopOfHim) {
+  auto* commander = world->create_entity();
+  commander->add_component<TransformComponent>(0.0F, 0.0F, 0.0F);
+  auto* commander_unit = commander->add_component<UnitComponent>(300, 300, 1.0F, 14.0F);
+  commander_unit->owner_id = 1;
+  commander_unit->spawn_type = Game::Units::SpawnType::RomanFieldCommander;
+  commander->add_component<CommanderComponent>();
+  auto* attack = commander->add_component<AttackComponent>();
+  attack->can_melee = true;
+  attack->can_ranged = false;
+  attack->range = 1.6F;
+  attack->preferred_mode = AttackComponent::CombatMode::Melee;
+  attack->current_mode = AttackComponent::CombatMode::Melee;
+
+  auto* wolf = world->create_entity();
+  wolf->add_component<TransformComponent>(3.0F, 0.0F, 0.0F);
+  auto* wolf_unit = wolf->add_component<UnitComponent>(40, 40, 1.0F, 8.0F);
+  wolf_unit->owner_id = Game::Core::NEUTRAL_OWNER_ID;
+  wolf_unit->spawn_type = Game::Units::SpawnType::Wolf;
+  auto* wildlife = wolf->add_component<WildlifeComponent>();
+  wildlife->species = Game::Wildlife::Species::Wolf;
+  wildlife->hostile_timer = 30.0F;
+
+  auto const query_context =
+      Game::Systems::Combat::build_combat_query_context(world.get());
+  Game::Systems::Combat::AutoEngagement auto_engagement;
+  auto_engagement.process(world.get(), query_context, 0.016F);
+
+  auto* attack_target = commander->get_component<AttackTargetComponent>();
+  ASSERT_NE(attack_target, nullptr) << "the lord watched the wolves work";
+  EXPECT_EQ(attack_target->target_id, wolf->get_id());
+  EXPECT_TRUE(attack_target->should_chase);
+}
+
+TEST_F(CombatModeTest, ACommanderIsNotWalkedOffByADistantEnemy) {
+  auto* commander = world->create_entity();
+  commander->add_component<TransformComponent>(0.0F, 0.0F, 0.0F);
+  auto* commander_unit = commander->add_component<UnitComponent>(300, 300, 1.0F, 20.0F);
+  commander_unit->owner_id = 1;
+  commander_unit->spawn_type = Game::Units::SpawnType::RomanFieldCommander;
+  commander->add_component<CommanderComponent>();
+  auto* attack = commander->add_component<AttackComponent>();
+  attack->can_melee = true;
+  attack->can_ranged = false;
+  attack->range = 1.6F;
+  attack->preferred_mode = AttackComponent::CombatMode::Melee;
+  attack->current_mode = AttackComponent::CombatMode::Melee;
+
+  auto* enemy = world->create_entity();
+  enemy->add_component<TransformComponent>(15.0F, 0.0F, 0.0F);
+  auto* enemy_unit = enemy->add_component<UnitComponent>(100, 100, 1.0F, 12.0F);
+  enemy_unit->owner_id = 2;
+  enemy_unit->spawn_type = Game::Units::SpawnType::Knight;
+
+  auto const query_context =
+      Game::Systems::Combat::build_combat_query_context(world.get());
+  Game::Systems::Combat::AutoEngagement auto_engagement;
+  auto_engagement.process(world.get(), query_context, 0.016F);
+
+  EXPECT_EQ(commander->get_component<AttackTargetComponent>(), nullptr)
+      << "an enemy at the edge of sight marched the lord off his rally point";
+}
+
+TEST_F(CombatModeTest, SupportAndWorkersNeverStartAFight) {
+  struct Bystander {
+    Game::Units::SpawnType spawn_type;
+    const char* complaint;
+  };
+
+  for (auto const& bystander :
+       {Bystander{Game::Units::SpawnType::Healer, "a healer went hunting"},
+        Bystander{Game::Units::SpawnType::Builder, "a builder dropped its hammer"},
+        Bystander{Game::Units::SpawnType::Civilian, "a civilian charged"}}) {
+    World scratch;
+    auto* bystander_entity = scratch.create_entity();
+    bystander_entity->add_component<TransformComponent>(0.0F, 0.0F, 0.0F);
+    auto* unit = bystander_entity->add_component<UnitComponent>(60, 60, 1.0F, 12.0F);
+    unit->owner_id = 1;
+    unit->spawn_type = bystander.spawn_type;
+    auto* attack = bystander_entity->add_component<AttackComponent>();
+    attack->can_melee = true;
+    attack->range = 2.0F;
+    attack->preferred_mode = AttackComponent::CombatMode::Melee;
+    attack->current_mode = AttackComponent::CombatMode::Melee;
+
+    auto* enemy = scratch.create_entity();
+    enemy->add_component<TransformComponent>(2.0F, 0.0F, 0.0F);
+    auto* enemy_unit = enemy->add_component<UnitComponent>(100, 100, 1.0F, 12.0F);
+    enemy_unit->owner_id = 2;
+    enemy_unit->spawn_type = Game::Units::SpawnType::Knight;
+
+    auto const query_context =
+        Game::Systems::Combat::build_combat_query_context(&scratch);
+    Game::Systems::Combat::AutoEngagement auto_engagement;
+    auto_engagement.process(&scratch, query_context, 0.016F);
+
+    EXPECT_EQ(bystander_entity->get_component<AttackTargetComponent>(), nullptr)
+        << bystander.complaint;
+  }
+}
+
+TEST_F(CombatModeTest, AutoEngagementSkipsAWalledOffEnemyForAReachableOne) {
+  auto* attacker = world->create_entity();
+  attacker->add_component<TransformComponent>(0.0F, 0.0F, 0.0F);
+  auto* attacker_unit = attacker->add_component<UnitComponent>(100, 100, 1.0F, 12.0F);
+  attacker_unit->owner_id = 1;
+  attacker_unit->spawn_type = Game::Units::SpawnType::Spearman;
+  auto* attack = attacker->add_component<AttackComponent>();
+  attack->can_melee = true;
+  attack->can_ranged = false;
+  attack->range = 1.5F;
+  attack->preferred_mode = AttackComponent::CombatMode::Melee;
+  attack->current_mode = AttackComponent::CombatMode::Melee;
+
+  auto& collision = Game::Systems::BuildingCollisionRegistry::instance();
+  collision.clear();
+  auto* wall = world->create_entity();
+  wall->add_component<TransformComponent>(4.0F, 0.0F, 0.0F);
+  auto* wall_unit = wall->add_component<UnitComponent>(500, 500, 0.0F, 0.0F);
+  wall_unit->owner_id = 2;
+  wall_unit->spawn_type = Game::Units::SpawnType::Barracks;
+  wall->add_component<BuildingComponent>();
+  collision.register_building(wall->get_id(), "barracks", 4.0F, 0.0F, 2);
+
+  auto* behind_the_wall = world->create_entity();
+  behind_the_wall->add_component<TransformComponent>(8.0F, 0.0F, 0.0F);
+  auto* behind_unit =
+      behind_the_wall->add_component<UnitComponent>(100, 100, 1.0F, 12.0F);
+  behind_unit->owner_id = 2;
+  behind_unit->spawn_type = Game::Units::SpawnType::Knight;
+
+  auto* in_the_open = world->create_entity();
+  in_the_open->add_component<TransformComponent>(-9.0F, 0.0F, 0.0F);
+  auto* open_unit = in_the_open->add_component<UnitComponent>(100, 100, 1.0F, 12.0F);
+  open_unit->owner_id = 2;
+  open_unit->spawn_type = Game::Units::SpawnType::Knight;
+
+  auto const query_context =
+      Game::Systems::Combat::build_combat_query_context(world.get());
+  Game::Systems::Combat::AutoEngagement auto_engagement;
+  auto_engagement.process(world.get(), query_context, 0.016F);
+
+  auto* attack_target = attacker->get_component<AttackTargetComponent>();
+  collision.clear();
+  ASSERT_NE(attack_target, nullptr)
+      << "a wall in front of the nearest enemy cancelled the whole acquisition";
+  EXPECT_EQ(attack_target->target_id, in_the_open->get_id());
 }
 
 TEST_F(CombatModeTest, ChasingUnitDoesNotRequestNewPathEveryFrame) {

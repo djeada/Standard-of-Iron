@@ -16,8 +16,8 @@ if [ $# -gt 0 ]; then
 fi
 bin_dir="${build_dir}/bin"
 
-# Keep in step with soi_test_binaries in tests/CMakeLists.txt.
-# tests/architecture/module_boundary_test.cpp fails if the two lists drift.
+# Keep both lists in step with soi_test_binaries in tests/CMakeLists.txt.
+# tests/architecture/module_boundary_test.cpp fails if they drift.
 suites=(
   simulation_tests
   combat_balance_tests
@@ -28,6 +28,15 @@ suites=(
   app_tests
   arena_tests
   tools_tests
+)
+
+# The soak tier: suites measured in simulated minutes rather than seconds. They
+# run here by default, so `make test` on a workstation still covers them, and a
+# caller that genuinely cannot afford them sets SOI_SKIP_SOAK=1 and gets told
+# so in the output. See the ai_soak_tests comment in tests/CMakeLists.txt for
+# what belongs in this list and what it cost to leave them in the fast tier.
+soak_suites=(
+  ai_soak_tests
 )
 
 export QT_QPA_PLATFORM=${QT_QPA_PLATFORM:-offscreen}
@@ -43,13 +52,16 @@ resolve() {
 status=0
 failed=()
 
-for suite in "${suites[@]}"; do
+run_suite() {
+  local suite=$1
+  shift
+  local binary
   binary=$(resolve "${suite}")
   if [ -z "${binary}" ]; then
     echo "error: ${bin_dir}/${suite} not built. Run 'make test-build' first." >&2
     status=1
     failed+=("${suite} (not built)")
-    continue
+    return
   fi
 
   echo "--- ${suite} ---"
@@ -57,6 +69,19 @@ for suite in "${suites[@]}"; do
     status=1
     failed+=("${suite}")
   fi
+}
+
+for suite in "${suites[@]}"; do
+  run_suite "${suite}" "$@"
+done
+
+for suite in "${soak_suites[@]}"; do
+  if [ -n "${SOI_SKIP_SOAK:-}" ]; then
+    echo "--- ${suite} skipped: SOI_SKIP_SOAK is set." \
+      "The Soak job in .github/workflows/weekly.yml runs it ---"
+    continue
+  fi
+  run_suite "${suite}" "$@"
 done
 
 # The QML design-system suite needs Qt QuickTest, which a minimal Qt install may

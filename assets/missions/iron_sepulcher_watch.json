@@ -13,7 +13,8 @@
     "starting_resources": {
       "gold": 250,
       "food": 100,
-      "wood": 60
+      "wood": 60,
+      "iron": 45
     }
   },
   "ai_setups": [],

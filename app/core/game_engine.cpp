@@ -371,6 +371,9 @@ void GameEngine::set_active_camera(Render::GL::Camera* camera) {
   m_camera = camera;
   publish_client_context();
   sync_render_camera();
+  if (m_minimap_manager) {
+    m_minimap_manager->invalidate_camera_viewport();
+  }
   if (m_renderer != nullptr) {
     m_renderer->set_camera(&m_render_camera);
     if (m_viewport.width > 0 && m_viewport.height > 0) {

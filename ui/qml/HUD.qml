@@ -141,6 +141,15 @@ Item {
         anchors.right: parent.right
         height: Math.max(50, parent.height * 0.08)
 
+        MouseArea {
+
+            anchors.fill: parent
+            acceptedButtons: Qt.AllButtons
+            onWheel: function (wheel) {
+                wheel.accepted = true;
+            }
+        }
+
         HUDTop {
             id: hudTop
 
@@ -175,6 +184,15 @@ Item {
 
         height: Design.Metrics.bottomBarHeight(parent.height, hud.commander_rpg_mode)
         clip: true
+
+        MouseArea {
+
+            anchors.fill: parent
+            acceptedButtons: Qt.AllButtons
+            onWheel: function (wheel) {
+                wheel.accepted = true;
+            }
+        }
 
         Loader {
             id: bottomPanelLoader

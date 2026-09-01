@@ -38,14 +38,18 @@ auto select_visible_harass_target(const AISnapshot& snapshot,
                             reference_z) <= harassment_range_sq;
   };
 
-  const bool troops_in_sight =
-      std::any_of(snapshot.visible_enemies.begin(),
-                  snapshot.visible_enemies.end(),
-                  [&](const ContactSnapshot& contact) {
-                    return !contact.is_building && in_harassment_range(contact);
-                  });
+  const bool troops_in_sight = std::any_of(snapshot.visible_enemies.begin(),
+                                           snapshot.visible_enemies.end(),
+                                           [&](const ContactSnapshot& contact) {
+                                             return !contact.is_building &&
+                                                    is_war_contact(contact) &&
+                                                    in_harassment_range(contact);
+                                           });
 
   for (const auto& candidate : snapshot.visible_enemies) {
+    if (!is_war_contact(candidate)) {
+      continue;
+    }
     const float dist_sq = distance_squared(candidate.pos_x,
                                            candidate.pos_y,
                                            candidate.pos_z,
