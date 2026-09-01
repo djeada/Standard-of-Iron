@@ -3,6 +3,8 @@
 #include <utility>
 
 #include "arena_scenarios.h"
+#include "game/core/ownership_constants.h"
+#include "game/visuals/building_asset_key.h"
 
 namespace Arena::Scenarios {
 namespace {
@@ -396,6 +398,68 @@ auto build_showcase_definitions() -> std::vector<ArenaScenarioDefinition> {
     };
 
     out.push_back(std::move(activity));
+  }
+
+  {
+
+    ArenaScenarioDefinition veins;
+    veins.id = QStringLiteral("cursed_gold_vein_showcase");
+    veins.label = QStringLiteral("Showcase: Cursed Gold Veins");
+    veins.description = QStringLiteral(
+        "Three cursed gold veins under a locked noon sun, each with the claim "
+        "flag the capture system reads: one still unclaimed, one taken, and a "
+        "player barracks beside them so the two banners can be compared.");
+    veins.duration_seconds = 12.0F;
+    veins.camera = {22.0F, 32.0F, 24.0F};
+    veins.camera_focus = QVector3D(0.0F, 0.0F, 1.0F);
+    veins.arena_floor_half_extent = 30.0F;
+    veins.suppress_spawn_anchor = true;
+    veins.suppress_ui_overlays = true;
+    veins.select_spawned_units = false;
+    veins.graphics_quality = Render::GraphicsQuality::Ultra;
+    veins.environment.start_time = 12.0F;
+    veins.environment.time_mode = Game::Map::TimeMode::Locked;
+
+    auto seam = [](QVector3D origin, float scale) {
+      auto patch = prop(QStringLiteral("cursed_gold_vein"), origin, scale);
+
+      patch.exact = true;
+      return patch;
+    };
+
+    veins.resource_patches = {
+        seam({-9.0F, 0.0F, 0.0F}, 1.0F),
+        seam({1.0F, 0.0F, 0.0F}, 1.15F),
+        seam({10.0F, 0.0F, 4.0F}, 0.85F),
+    };
+
+    auto claim_flag = [](QString name, QVector3D origin, int owner_id) {
+      auto group = structure(std::move(name), Game::Units::SpawnType::Barracks, origin);
+      group.owner_id = owner_id;
+      group.renderer_override = QString::fromLatin1(
+          Game::Visuals::k_cursed_gold_vein_flag_asset_key.data(),
+          static_cast<int>(Game::Visuals::k_cursed_gold_vein_flag_asset_key.size()));
+      return group;
+    };
+
+    veins.groups = {
+        claim_flag(QStringLiteral("unclaimed_vein_flag"),
+                   {-9.0F, 0.0F, 0.0F},
+                   Game::Core::NEUTRAL_OWNER_ID),
+        claim_flag(QStringLiteral("claimed_vein_flag"), {1.0F, 0.0F, 0.0F}, 1),
+        structure(QStringLiteral("reference_barracks"),
+                  Game::Units::SpawnType::Barracks,
+                  {14.0F, 0.0F, -10.0F},
+                  180.0F),
+    };
+
+    veins.expectations = {
+        expect(Expect::GroupExists, QStringLiteral("unclaimed_vein_flag")),
+        expect(Expect::GroupExists, QStringLiteral("claimed_vein_flag")),
+        expect(Expect::FrameBudget, {}, 33.34F, 0.5F),
+    };
+
+    out.push_back(std::move(veins));
   }
 
   return out;
