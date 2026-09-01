@@ -169,8 +169,14 @@ private:
 
   static auto calculate_heuristic(const Point& a, const Point& b) -> int;
 
+  [[nodiscard]] auto
+  clamp_to_grid(int& min_x, int& max_x, int& min_z, int& max_z) const -> bool;
+
   [[nodiscard]] auto clearance_penalty(int x, int y) const -> int;
   void rebuild_clearance(int min_x, int max_x, int min_z, int max_z);
+
+  void rebuild_elevation(int min_x, int max_x, int min_z, int max_z);
+  [[nodiscard]] auto climb_penalty(int from_index, int to_index) const -> int;
 
   static constexpr int k_straight_step_cost = 10;
   static constexpr int k_diagonal_step_cost = 14;
@@ -182,6 +188,10 @@ private:
   static constexpr int k_clearance_ring_penalty = 4;
   static constexpr int k_clearance_avoid_weight = 6;
   static constexpr int k_turn_penalty = 1;
+
+  static constexpr float k_climb_noise_floor_metres = 0.05F;
+  static constexpr int k_climb_cost_per_metre = 40;
+  static constexpr int k_max_climb_penalty = 400;
 
   static constexpr int k_heuristic_weight_numerator = 12;
   static constexpr int k_heuristic_weight_denominator = 10;
@@ -317,6 +327,7 @@ private:
   std::unordered_map<int, CellValue> m_world_prop_cells;
   std::vector<bool> m_forest_cells;
   std::vector<std::uint8_t> m_clearance_penalty;
+  std::vector<float> m_cell_height;
   std::atomic<std::uint64_t> m_navigation_revision{1};
   std::uint64_t m_path_cache_revision{0};
   std::unordered_map<PathCacheKey, std::vector<Point>, PathCacheKeyHash> m_path_cache;

@@ -328,6 +328,11 @@ auto load(const QString& path, QString* error) -> std::optional<Spec> {
         static_cast<float>(shot_object.value(QStringLiteral("flame_intensity"))
                                .toDouble(shot.flame_intensity));
     shot.rpg_hud = shot_object.value(QStringLiteral("rpg_hud")).toBool(shot.rpg_hud);
+    shot.report_card_seconds =
+        std::clamp(static_cast<float>(shot_object.value(QStringLiteral("report_card"))
+                                          .toDouble(shot.report_card_seconds)),
+                   0.0F,
+                   30.0F);
 
     if (shot.scenario.isEmpty()) {
       if (error != nullptr) {
