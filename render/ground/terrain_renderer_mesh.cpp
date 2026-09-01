@@ -250,8 +250,24 @@ auto TerrainRenderer::make_chunk_params(
     const Game::Map::ClimateProfile& climate_profile,
     Game::Map::TerrainType chunk_type,
     float tint) const -> TerrainChunkParams {
+  return make_terrain_chunk_params(m_biome_settings,
+                                   surface_profile,
+                                   climate_profile,
+                                   m_tile_size,
+                                   m_noise_seed,
+                                   chunk_type,
+                                   tint);
+}
+
+auto make_terrain_chunk_params(const Game::Map::BiomeSettings& biome_settings,
+                               const Game::Map::TerrainSurfaceProfile& surface_profile,
+                               const Game::Map::ClimateProfile& climate_profile,
+                               float tile_size,
+                               std::uint32_t noise_seed,
+                               Game::Map::TerrainType chunk_type,
+                               float tint) -> TerrainChunkParams {
   TerrainChunkParams params;
-  params.ground_type = static_cast<int>(m_biome_settings.ground_type);
+  params.ground_type = static_cast<int>(biome_settings.ground_type);
   params.terrain_type = static_cast<int>(chunk_type);
   auto tint_color = [&](const QVector3D& base) {
     return clamp01(apply_tint(base, tint));
@@ -263,7 +279,7 @@ auto TerrainRenderer::make_chunk_params(
   params.rock_low = tint_color(surface_profile.rock_low);
   params.rock_high = tint_color(surface_profile.rock_high);
 
-  params.tile_size = std::max(0.001F, m_tile_size);
+  params.tile_size = std::max(0.001F, tile_size);
 
   params.macro_noise_scale = surface_profile.terrain_macro_noise_scale;
   params.detail_noise_scale = surface_profile.terrain_detail_noise_scale;
@@ -274,8 +290,8 @@ auto TerrainRenderer::make_chunk_params(
   params.soil_blend_sharpness = std::max(0.75F, surface_profile.terrain_soil_sharpness);
 
   constexpr float k_noise_offset_scale = 256.0F;
-  const uint32_t noise_key_a = hash_coords(0, 0, m_noise_seed ^ 0xB5297A4DU);
-  const uint32_t noise_key_b = hash_coords(0, 0, m_noise_seed ^ 0x68E31DA4U);
+  const uint32_t noise_key_a = hash_coords(0, 0, noise_seed ^ 0xB5297A4DU);
+  const uint32_t noise_key_b = hash_coords(0, 0, noise_seed ^ 0x68E31DA4U);
   params.noise_offset = QVector2D(hash_to_01(noise_key_a) * k_noise_offset_scale,
                                   hash_to_01(noise_key_b) * k_noise_offset_scale);
 

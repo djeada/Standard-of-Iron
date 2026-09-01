@@ -7,10 +7,13 @@
 #include <cmath>
 #include <cstddef>
 #include <cstdint>
+#include <unordered_map>
 
+#include "game/map/terrain.h"
 #include "game/map/terrain_noise.h"
 #include "game/map/terrain_service.h"
 #include "render/scene_renderer.h"
+#include "terrain_renderer.h"
 
 namespace Render::GL {
 
@@ -22,21 +25,23 @@ constexpr int k_clear_outside_tiles = 2;
 constexpr int k_band_outside = 16;
 constexpr int k_cards_per_side = 3;
 constexpr int k_curtain_rings = 2;
-constexpr int k_mountain_depth_segments = 22;
 
-constexpr std::array<float, k_curtain_rings> k_ring_offset_scale = {0.52F, 1.06F};
-constexpr std::array<float, k_curtain_rings> k_ring_height_scale = {2.55F, 3.35F};
-constexpr std::array<float, k_curtain_rings> k_ring_alpha = {0.34F, 0.20F};
+constexpr std::array<float, k_curtain_rings> k_ring_offset_scale = {0.78F, 1.36F};
+constexpr std::array<float, k_curtain_rings> k_ring_height_scale = {1.70F, 2.30F};
+constexpr std::array<float, k_curtain_rings> k_ring_alpha = {0.30F, 0.20F};
 constexpr std::array<float, k_curtain_rings> k_ring_width_scale = {1.18F, 1.42F};
 
 constexpr float k_fog_r = 0.55F;
 constexpr float k_fog_g = 0.58F;
 constexpr float k_fog_b = 0.56F;
 
-constexpr float k_mountain_inner_tiles = 0.45F;
-constexpr float k_mountain_outer_tiles = 13.80F;
-constexpr float k_mountain_peak_tiles = 18.50F;
-constexpr float k_mountain_base_lift = 0.025F;
+constexpr float k_foothill_tiles = 4.5F;
+constexpr float k_mountain_outer_tiles = 28.0F;
+constexpr float k_mountain_peak_tiles = 21.0F;
+constexpr float k_mountain_edge_step_tiles = 0.75F;
+constexpr int k_mountain_depth_segments = 40;
+constexpr int k_mountain_min_side_segments = 12;
+constexpr int k_mountain_max_side_segments = 768;
 
 inline auto smoothstep(float edge0, float edge1, float value) -> float {
   if (edge0 == edge1) {
@@ -44,6 +49,12 @@ inline auto smoothstep(float edge0, float edge1, float value) -> float {
   }
   const float t = std::clamp((value - edge0) / (edge1 - edge0), 0.0F, 1.0F);
   return t * t * (3.0F - 2.0F * t);
+}
+
+inline auto ridge_bump(float t, float centre, float width) -> float {
+  const float tent =
+      std::clamp(1.0F - std::abs(t - centre) / std::max(width, 0.001F), 0.0F, 1.0F);
+  return std::pow(tent, 1.25F);
 }
 
 constexpr float k_card_camera_clearance = 12.0F;
@@ -57,14 +68,42 @@ auto card_engulfs_camera(const QVector3D& card_center,
   return dx * dx + dz * dz < clearance * clearance;
 }
 
-auto boundary_height_at(const Game::Map::TerrainService& terrain_service,
-                        float world_x,
-                        float world_z) -> float {
-  const auto* height_map = terrain_service.get_height_map();
-  if (!terrain_service.is_initialized() || height_map == nullptr) {
+auto edge_height_at(const Game::Map::TerrainHeightMap* height_map,
+                    float world_x,
+                    float world_z) -> float {
+  if (height_map == nullptr) {
     return 0.0F;
   }
-  return std::max(0.0F, height_map->get_height_at(world_x, world_z));
+  const int width = height_map->get_width();
+  const int height = height_map->get_height();
+  const auto& data = height_map->get_height_data();
+  if (width <= 0 || height <= 0 ||
+      data.size() <
+          static_cast<std::size_t>(width) * static_cast<std::size_t>(height)) {
+    return 0.0F;
+  }
+  const float tile = std::max(height_map->get_tile_size(), 0.0001F);
+  const float gx =
+      std::clamp(world_x / tile + (static_cast<float>(width) * 0.5F - 0.5F),
+                 0.0F,
+                 static_cast<float>(width - 1));
+  const float gz =
+      std::clamp(world_z / tile + (static_cast<float>(height) * 0.5F - 0.5F),
+                 0.0F,
+                 static_cast<float>(height - 1));
+  const int x0 = std::min(static_cast<int>(std::floor(gx)), width - 1);
+  const int z0 = std::min(static_cast<int>(std::floor(gz)), height - 1);
+  const int x1 = std::min(x0 + 1, width - 1);
+  const int z1 = std::min(z0 + 1, height - 1);
+  const float tx = gx - static_cast<float>(x0);
+  const float tz = gz - static_cast<float>(z0);
+  const auto at = [&](int x, int z) {
+    return data[static_cast<std::size_t>(z) * static_cast<std::size_t>(width) +
+                static_cast<std::size_t>(x)];
+  };
+  const float h0 = at(x0, z0) * (1.0F - tx) + at(x1, z0) * tx;
+  const float h1 = at(x0, z1) * (1.0F - tx) + at(x1, z1) * tx;
+  return h0 * (1.0F - tz) + h1 * tz;
 }
 
 struct MountainPatchConfig {
@@ -73,24 +112,26 @@ struct MountainPatchConfig {
   QVector3D axis_v{0.0F, 0.0F, 1.0F};
   int u_segments = 1;
   int v_segments = 1;
+
+  bool seam_row = false;
 };
 
 struct BoundaryMountainConfig {
-  float half_width = 0.0F;
-  float half_height = 0.0F;
-  float inner_offset = 0.0F;
-  float mountain_band = 0.0F;
+  float edge_half_width = 0.0F;
+  float edge_half_height = 0.0F;
+  float foothill = 0.0F;
+  float band = 0.0F;
   float tile_size = 1.0F;
-  float max_relief_height = 0.0F;
-  Game::Map::MountainNoiseSettings noise_settings{};
+  float peak = 0.0F;
 
-  const Game::Map::TerrainService* terrain = nullptr;
+  float detail_frequency_cap = 1.0F;
+  Game::Map::MountainNoiseSettings noise_settings{};
+  const Game::Map::TerrainHeightMap* height_map = nullptr;
 };
 
 struct BoundaryMountainSample {
   float height = 0.0F;
-  float presence = 0.0F;
-  float relief = 0.0F;
+  float foot = 0.0F;
 };
 
 auto resolve_mountain_noise_settings(const Game::Map::TerrainService& terrain_service,
@@ -112,142 +153,90 @@ auto sample_boundary_mountain(float world_x,
                               float world_z,
                               const BoundaryMountainConfig& config)
     -> BoundaryMountainSample {
-  const float outside_x = std::max(0.0F, std::abs(world_x) - config.half_width);
-  const float outside_z = std::max(0.0F, std::abs(world_z) - config.half_height);
-  const float outside_distance =
-      std::sqrt(outside_x * outside_x + outside_z * outside_z);
-  const float depth_hint = std::clamp((outside_distance - config.inner_offset) /
-                                          std::max(config.mountain_band, 0.001F),
-                                      0.0F,
-                                      1.0F);
+  const float tile = config.tile_size;
+  const float outside_x = std::max(0.0F, std::abs(world_x) - config.edge_half_width);
+  const float outside_z = std::max(0.0F, std::abs(world_z) - config.edge_half_height);
+  const float distance = std::sqrt(outside_x * outside_x + outside_z * outside_z);
+  const float band = std::max(config.band, 0.001F);
+  const float t = std::clamp(distance / band, 0.0F, 1.0F);
+  const float rise = smoothstep(config.foothill, band * 0.82F, distance);
 
-  const float warp_frequency =
-      std::clamp(config.noise_settings.frequency * 0.55F, 0.01F, 1.25F);
-  const int warp_octaves =
-      std::max(2, Game::Map::clamp_noise_octaves(config.noise_settings.octaves) - 1);
-  const float warp_strength = config.tile_size * (1.15F + depth_hint * 1.35F);
+  const auto& noise = config.noise_settings;
+  const int octaves = Game::Map::clamp_noise_octaves(noise.octaves);
+
+  const float warp_frequency = std::clamp(noise.frequency * 0.55F, 0.01F, 1.25F);
+  const float warp_strength = tile * (0.9F + 1.6F * t);
   const float warp_x = Game::Map::fbm_noise(world_x * warp_frequency,
                                             world_z * warp_frequency,
-                                            config.noise_settings.seed ^ 0x4B1D5A37U,
-                                            warp_octaves);
+                                            noise.seed ^ 0x4B1D5A37U,
+                                            std::max(2, octaves - 1));
   const float warp_z = Game::Map::fbm_noise(world_x * warp_frequency,
                                             world_z * warp_frequency,
-                                            config.noise_settings.seed ^ 0x91E10DA5U,
-                                            warp_octaves);
-  const float sample_x = world_x + (warp_x - 0.5F) * 2.0F * warp_strength;
-  const float sample_z = world_z + (warp_z - 0.5F) * 2.0F * warp_strength;
+                                            noise.seed ^ 0x91E10DA5U,
+                                            std::max(2, octaves - 1));
+  const float sx = world_x + (warp_x - 0.5F) * 2.0F * warp_strength;
+  const float sz = world_z + (warp_z - 0.5F) * 2.0F * warp_strength;
 
-  Game::Map::MountainNoiseSettings spread_settings = config.noise_settings;
-  spread_settings.frequency =
-      std::clamp(config.noise_settings.frequency * 0.36F, 0.01F, 0.45F);
-  spread_settings.octaves =
-      std::max(2, Game::Map::clamp_noise_octaves(config.noise_settings.octaves) - 1);
-  const float spread_noise =
-      Game::Map::sample_mountain_region(sample_x, sample_z, spread_settings);
-  const float band_noise = Game::Map::fbm_noise(
-      sample_x * std::clamp(spread_settings.frequency * 1.4F, 0.01F, 0.7F),
-      sample_z * std::clamp(spread_settings.frequency * 1.4F, 0.01F, 0.7F),
-      config.noise_settings.seed ^ 0x71A9C13DU,
-      3);
-  const float cluster_noise = Game::Map::fbm_noise(
-      sample_x * std::clamp(spread_settings.frequency * 0.9F, 0.01F, 0.4F),
-      sample_z * std::clamp(spread_settings.frequency * 0.9F, 0.01F, 0.4F),
-      config.noise_settings.seed ^ 0x18D42F7BU,
-      2);
-  Game::Map::MountainNoiseSettings chain_settings = config.noise_settings;
-  chain_settings.frequency =
-      std::clamp(config.noise_settings.frequency * 0.16F, 0.006F, 0.12F);
+  Game::Map::MountainNoiseSettings chain_settings = noise;
+  chain_settings.frequency = std::clamp(noise.frequency * 0.16F, 0.006F, 0.12F);
   chain_settings.octaves = 3;
-  const float chain_noise =
-      Game::Map::sample_mountain_region(sample_x, sample_z, chain_settings);
-  const float gap_noise = Game::Map::fbm_noise(
-      sample_x * std::clamp(chain_settings.frequency * 2.2F, 0.01F, 0.22F),
-      sample_z * std::clamp(chain_settings.frequency * 2.2F, 0.01F, 0.22F),
-      config.noise_settings.seed ^ 0x5D8E123FU,
-      2);
-  const float cluster =
-      smoothstep(0.34F, 0.68F, spread_noise * 0.58F + cluster_noise * 0.42F);
-  const float chain_presence = smoothstep(
-      0.46F, 0.70F, chain_noise * 0.72F + spread_noise * 0.20F + cluster_noise * 0.08F);
-  const float gap_presence =
-      1.0F - smoothstep(0.58F, 0.84F, gap_noise * 0.78F + band_noise * 0.22F);
-  const float sparsity =
-      std::clamp(std::pow(chain_presence, 1.20F) * gap_presence, 0.0F, 1.0F);
-  const float local_inner =
-      std::clamp(config.inner_offset + (0.5F - spread_noise) * config.tile_size * 4.6F +
-                     (0.5F - cluster_noise) * config.tile_size * 2.2F +
-                     (1.0F - sparsity) * config.mountain_band * 0.18F,
-                 0.0F,
-                 config.inner_offset + config.mountain_band * 0.55F);
-  const float local_band =
-      config.mountain_band *
-      std::clamp(0.72F + sparsity * 0.40F + band_noise * 0.38F, 0.58F, 1.55F);
-  const float depth_t = std::clamp(
-      (outside_distance - local_inner) / std::max(local_band, 0.001F), 0.0F, 1.0F);
-
-  const float region =
-      Game::Map::sample_mountain_region(sample_x, sample_z, config.noise_settings);
-  const float macro_frequency =
-      std::clamp(config.noise_settings.frequency * 0.42F, 0.01F, 0.5F);
-  const float macro = Game::Map::fbm_noise(sample_x * macro_frequency,
-                                           sample_z * macro_frequency,
-                                           config.noise_settings.seed ^ 0x2C9F51E3U,
-                                           3);
-  const float shape = std::clamp(region * 0.72F + macro * 0.28F, 0.0F, 1.0F);
+  const float chain = Game::Map::sample_mountain_region(sx, sz, chain_settings);
+  const float pass_frequency =
+      std::clamp(chain_settings.frequency * 2.2F, 0.01F, 0.22F);
+  const float pass_noise = Game::Map::fbm_noise(
+      sx * pass_frequency, sz * pass_frequency, noise.seed ^ 0x5D8E123FU, 2);
+  const float pass = smoothstep(0.60F, 0.86F, pass_noise);
+  const float cluster_frequency = std::clamp(noise.frequency * 0.32F, 0.01F, 0.4F);
+  const float cluster = Game::Map::fbm_noise(
+      sx * cluster_frequency, sz * cluster_frequency, noise.seed ^ 0x18D42F7BU, 2);
+  const float crag_frequency = std::min(std::clamp(noise.frequency * 2.6F, 0.05F, 0.9F),
+                                        config.detail_frequency_cap * 0.6F);
   const float crag = Game::Map::fbm_noise(
-      sample_x * std::clamp(config.noise_settings.frequency * 4.2F, 0.08F, 1.4F),
-      sample_z * std::clamp(config.noise_settings.frequency * 4.2F, 0.08F, 1.4F),
-      config.noise_settings.seed ^ 0xA4215F71U,
-      4);
+      sx * crag_frequency, sz * crag_frequency, noise.seed ^ 0xA4215F71U, 4);
+  const float tooth_frequency = std::min(
+      std::clamp(noise.frequency * 5.0F, 0.10F, 1.6F), config.detail_frequency_cap);
   const float tooth = Game::Map::fbm_noise(
-      sample_x * std::clamp(config.noise_settings.frequency * 9.0F, 0.14F, 2.4F),
-      sample_z * std::clamp(config.noise_settings.frequency * 9.0F, 0.14F, 2.4F),
-      config.noise_settings.seed ^ 0xD1B54A32U,
-      2);
-  const float jaggedness =
-      std::clamp(0.62F + crag * 0.42F + (tooth - 0.5F) * 0.36F, 0.42F, 1.35F);
+      sx * tooth_frequency, sz * tooth_frequency, noise.seed ^ 0xD1B54A32U, 2);
+  const float roll_frequency = std::clamp(noise.frequency * 1.6F, 0.02F, 0.6F);
+  const float roll = Game::Map::fbm_noise(
+      sx * roll_frequency, sz * roll_frequency, noise.seed ^ 0x2C9F51E3U, 3);
 
-  const float ridge_center =
-      std::clamp(0.20F + shape * 0.34F + (band_noise - 0.5F) * 0.14F, 0.12F, 0.70F);
-  const float ridge_width = 0.16F + (1.0F - shape) * 0.10F + (1.0F - sparsity) * 0.04F;
-  const float primary_ridge =
-      smoothstep(0.02F, ridge_center, depth_t) *
-      (1.0F - smoothstep(ridge_center + ridge_width, 0.96F, depth_t));
-  const float secondary_center =
-      std::clamp(ridge_center + 0.20F + (cluster_noise - 0.5F) * 0.10F, 0.28F, 0.88F);
-  const float secondary_width = 0.11F + (1.0F - shape) * 0.05F;
-  const float secondary_ridge =
-      smoothstep(0.10F, secondary_center, depth_t) *
-      (1.0F - smoothstep(secondary_center + secondary_width, 1.0F, depth_t));
-  const float inner_escarpment =
-      smoothstep(0.01F, 0.17F, depth_t) *
-      (1.0F - smoothstep(0.26F + shape * 0.10F, 0.58F, depth_t));
-  const float shoulder_profile =
-      smoothstep(0.0F, 0.14F, depth_t) * (1.0F - smoothstep(0.84F, 1.0F, depth_t));
-  const float relief_mask = std::clamp(
-      (primary_ridge * (0.58F + 0.48F * shape) +
-       secondary_ridge * (0.18F + 0.18F * cluster) +
-       inner_escarpment * (0.26F + 0.22F * crag) + shoulder_profile * 0.16F) *
-          std::clamp(0.62F + sparsity * 0.45F, 0.0F, 1.15F) *
-          std::clamp(0.42F + cluster * 0.85F, 0.0F, 1.15F) * jaggedness,
-      0.0F,
-      1.0F);
+  const float edge_height = edge_height_at(config.height_map, world_x, world_z);
+  const float carry = 1.0F - smoothstep(0.0F, config.foothill * 1.6F, distance);
+  float height = edge_height * carry;
 
-  const float boundary_blend = std::pow(std::max(0.0F, 1.0F - depth_t), 2.1F);
-  const float base_height =
-      (config.terrain != nullptr ? boundary_height_at(*config.terrain, world_x, world_z)
-                                 : 0.0F) *
-          boundary_blend +
-      config.tile_size * k_mountain_base_lift;
-  const float height_scale = std::clamp(
-      0.72F + sparsity * 0.34F + cluster * 0.16F + (crag - 0.5F) * 0.24F, 0.48F, 1.28F);
-  const float relief = config.max_relief_height * height_scale * relief_mask;
-  const float presence =
-      std::clamp((0.42F + sparsity * 0.58F) * (0.42F + 0.58F * cluster) *
-                     smoothstep(0.025F, 0.13F, relief_mask),
-                 0.0F,
-                 1.0F);
-  return {base_height + relief, presence, relief};
+  const float seam = smoothstep(0.0F, tile * 0.9F, distance);
+  const float foothill_t = smoothstep(0.0F, config.foothill, distance);
+  height += (roll - 0.5F) * 2.0F * tile * (0.30F + 1.10F * foothill_t) * seam *
+            (1.0F - 0.6F * rise);
+
+  const float massif = 0.55F + 0.45F * chain;
+  const float climb = smoothstep(tile * 0.5F, band * 0.5F, distance);
+  const float floor_height =
+      config.peak *
+      (0.12F * climb + 0.48F * std::pow(rise, 1.3F) * massif * (1.0F - 0.35F * pass));
+
+  const float front_centre = std::clamp(0.40F + (cluster - 0.5F) * 0.16F, 0.30F, 0.52F);
+  const float front_width = 0.17F + 0.06F * (1.0F - chain);
+  const float front = ridge_bump(t, front_centre, front_width) * config.peak * 0.55F *
+                      (0.50F + 0.50F * chain) * (1.0F - 0.55F * pass);
+  const float back_centre = std::clamp(0.76F + (cluster - 0.5F) * 0.10F, 0.66F, 0.86F);
+  const float back = ridge_bump(t, back_centre, 0.20F) * config.peak * 0.70F *
+                     (0.62F + 0.38F * chain) * (1.0F - 0.40F * pass);
+  const float wall = smoothstep(0.86F, 1.0F, t) * config.peak * 0.40F;
+  const float relief = floor_height + front + back + wall;
+
+  const float crag_amp =
+      config.peak * 0.12F *
+      smoothstep(0.05F, 0.45F, relief / std::max(config.peak, 0.001F));
+  const float detail =
+      ((crag - 0.5F) * 0.70F + (tooth - 0.5F) * 0.30F) * 2.0F * crag_amp;
+
+  height += relief + detail;
+
+  const float foot =
+      1.0F - smoothstep(config.foothill * 0.4F, config.foothill * 2.6F, distance);
+  return {height, std::clamp(foot, 0.0F, 1.0F)};
 }
 
 inline auto clamp01(const QVector3D& color) -> QVector3D {
@@ -257,101 +246,57 @@ inline auto clamp01(const QVector3D& color) -> QVector3D {
 }
 
 auto build_boundary_mountain_params(const Game::Map::TerrainService& terrain_service,
-                                    float tile_size,
-                                    int width,
-                                    int height) -> TerrainChunkParams {
-  TerrainChunkParams params;
+                                    float tile_size) -> TerrainChunkParams {
   Game::Map::BiomeSettings biome;
   if (terrain_service.is_initialized()) {
     biome = terrain_service.biome_settings();
   }
-
   const auto profiles = Game::Map::make_biome_profiles(biome);
-  const auto& surface_profile = profiles.surface;
-  const auto& climate_profile = profiles.climate;
-  params.ground_type = static_cast<int>(biome.ground_type);
-
-  params.grass_primary = clamp01(surface_profile.grass_primary * 0.97F);
-  params.grass_secondary = clamp01(surface_profile.grass_secondary * 0.93F);
-  params.grass_dry = clamp01(surface_profile.grass_dry * 0.90F);
-  params.soil_color = clamp01(surface_profile.soil_color * 0.82F);
-  params.rock_low = clamp01(surface_profile.rock_low);
-  params.rock_high = clamp01(surface_profile.rock_high);
-
-  params.tint = QVector3D(0.96F, 0.98F, 0.96F);
-  params.tile_size = std::max(0.25F, tile_size);
-  params.macro_noise_scale =
-      std::max(0.012F, surface_profile.terrain_macro_noise_scale * 0.95F);
-  params.detail_noise_scale =
-      std::max(0.045F, surface_profile.terrain_detail_noise_scale * 1.15F);
-  params.slope_rock_threshold =
-      std::clamp(surface_profile.terrain_rock_threshold + 0.30F, 0.40F, 0.90F);
-  params.slope_rock_sharpness =
-      std::clamp(surface_profile.terrain_rock_sharpness + 1.5F, 2.0F, 6.0F);
-  params.soil_blend_height = surface_profile.terrain_soil_height - 1.25F;
-  params.soil_blend_sharpness =
-      std::clamp(surface_profile.terrain_soil_sharpness * 0.75F, 1.5F, 5.0F);
-
-  constexpr float k_non_playable_margin_tiles = 48.0F;
-  const float margin = k_non_playable_margin_tiles * params.tile_size;
-  const float span_x =
-      width > 0 ? static_cast<float>(width) * params.tile_size + margin * 2.0F
-                : params.tile_size;
-  const float span_z =
-      height > 0 ? static_cast<float>(height) * params.tile_size + margin * 2.0F
-                 : params.tile_size;
-  const auto seed = static_cast<float>(biome.seed % 1024U);
-  params.noise_offset =
-      QVector2D(span_x * 0.37F + seed * 0.21F, span_z * 0.43F + seed * 0.17F);
-  params.noise_angle = std::fmod(seed * 0.6180339887F, 1.0F) * 6.28318530718F;
-
-  if (surface_profile.ground_irregularity_enabled) {
-    params.height_noise_strength =
-        std::clamp(surface_profile.irregularity_amplitude * 0.85F, 0.15F, 0.70F);
-    params.height_noise_frequency =
-        std::max(0.45F, surface_profile.irregularity_scale * 2.5F);
-  } else {
-    params.height_noise_strength =
-        std::clamp(surface_profile.height_noise_amplitude * 0.22F, 0.10F, 0.20F);
-    params.height_noise_frequency =
-        std::max(0.6F, surface_profile.height_noise_frequency * 1.05F);
-  }
-  params.ambient_boost = surface_profile.terrain_ambient_boost * 0.95F;
-  params.rock_detail_strength = surface_profile.terrain_rock_detail_strength * 0.42F;
-  params.light_direction = QVector3D(0.35F, 0.85F, 0.42F).normalized();
-  params.is_ground_plane = true;
-  params.snow_coverage = std::clamp(climate_profile.snow_coverage, 0.0F, 1.0F);
-  params.moisture_level = std::clamp(climate_profile.moisture_level, 0.0F, 1.0F);
-  params.crack_intensity = std::clamp(climate_profile.crack_intensity, 0.0F, 1.0F);
-  params.rock_exposure = std::clamp(climate_profile.rock_exposure * 0.72F +
-                                        climate_profile.crack_intensity * 0.18F +
-                                        (1.0F - climate_profile.moisture_level) * 0.08F,
-                                    0.04F,
-                                    0.82F);
-  params.grass_saturation = std::clamp(climate_profile.grass_saturation, 0.0F, 1.5F);
-  params.soil_roughness = std::clamp(climate_profile.soil_roughness, 0.0F, 1.0F);
-  params.micro_bump_amp = std::clamp(0.070F + climate_profile.soil_roughness * 0.085F +
-                                         params.rock_exposure * 0.055F,
-                                     0.07F,
-                                     0.22F);
-  params.micro_bump_freq = std::clamp(2.4F + climate_profile.soil_roughness * 2.3F +
-                                          climate_profile.crack_intensity * 1.1F,
-                                      2.2F,
-                                      6.2F);
-  params.micro_normal_weight = std::clamp(0.68F + params.rock_exposure * 0.20F +
-                                              climate_profile.moisture_level * 0.08F,
-                                          0.68F,
-                                          0.94F);
-  params.albedo_jitter = std::clamp(0.070F + climate_profile.soil_roughness * 0.060F +
-                                        climate_profile.crack_intensity * 0.035F,
-                                    0.06F,
-                                    0.18F);
-  params.snow_color = clamp01(climate_profile.snow_color);
+  TerrainChunkParams params =
+      make_terrain_chunk_params(biome,
+                                profiles.surface,
+                                profiles.climate,
+                                tile_size,
+                                biome.seed,
+                                Game::Map::TerrainType::Mountain,
+                                1.0F);
+  params.tint = clamp01(params.tint);
+  params.is_ground_plane = false;
   return params;
 }
 
+struct PositionKey {
+  std::int64_t x;
+  std::int64_t y;
+  std::int64_t z;
+  auto operator==(const PositionKey& other) const -> bool {
+    return x == other.x && y == other.y && z == other.z;
+  }
+};
+
+struct PositionKeyHash {
+  auto operator()(const PositionKey& key) const -> std::size_t {
+    std::uint64_t h = 1469598103934665603ULL;
+    for (const std::int64_t v : {key.x, key.y, key.z}) {
+      h ^= static_cast<std::uint64_t>(v);
+      h *= 1099511628211ULL;
+    }
+    return static_cast<std::size_t>(h);
+  }
+};
+
+auto position_key(const std::array<float, 3>& position) -> PositionKey {
+  const auto quantize = [](float value) -> std::int64_t {
+    return static_cast<std::int64_t>(std::llround(value * 1000.0));
+  };
+  return {quantize(position[0]), quantize(position[1]), quantize(position[2])};
+}
+
+using NormalAccumulator = std::unordered_map<PositionKey, QVector3D, PositionKeyHash>;
+
 void append_patch_mesh(std::vector<Vertex>& vertices,
                        std::vector<unsigned int>& indices,
+                       NormalAccumulator& extra_normals,
                        const MountainPatchConfig& config,
                        const BoundaryMountainConfig& mountain_config) {
   if (config.u_segments <= 0 || config.v_segments <= 0) {
@@ -362,11 +307,6 @@ void append_patch_mesh(std::vector<Vertex>& vertices,
   const int rows = config.v_segments + 1;
   const std::size_t base_index = vertices.size();
   vertices.resize(base_index + static_cast<std::size_t>(columns * rows));
-  std::vector<float> cell_presence(static_cast<std::size_t>(columns * rows), 0.0F);
-  std::vector<float> cell_relief(static_cast<std::size_t>(columns * rows), 0.0F);
-
-  const QVector3D flat_normal(0.0F, 1.0F, 0.0F);
-  const float tex_scale = 0.16F / std::max(mountain_config.tile_size, 0.25F);
 
   for (int v = 0; v <= config.v_segments; ++v) {
     const float fv = static_cast<float>(v) / static_cast<float>(config.v_segments);
@@ -379,14 +319,12 @@ void append_patch_mesh(std::vector<Vertex>& vertices,
 
       Vertex vertex{};
       vertex.position = {position.x(), position.y(), position.z()};
-      vertex.normal = {flat_normal.x(), flat_normal.y(), flat_normal.z()};
-      vertex.tex_coord = {position.x() * tex_scale, position.z() * tex_scale};
+      vertex.normal = {0.0F, 1.0F, 0.0F};
+
+      vertex.tex_coord = {sample.foot, 0.0F};
 
       const std::size_t local_index = static_cast<std::size_t>(v * columns + u);
-      const std::size_t vertex_index = base_index + local_index;
-      vertices[vertex_index] = vertex;
-      cell_presence[local_index] = sample.presence;
-      cell_relief[local_index] = sample.relief;
+      vertices[base_index + local_index] = vertex;
     }
   }
 
@@ -395,55 +333,62 @@ void append_patch_mesh(std::vector<Vertex>& vertices,
 
   for (int v = 0; v < config.v_segments; ++v) {
     for (int u = 0; u < config.u_segments; ++u) {
-      const std::size_t local_a = static_cast<std::size_t>(v * columns + u);
-      const std::size_t local_b = local_a + 1U;
-      const std::size_t local_c = local_a + static_cast<std::size_t>(columns);
-      const std::size_t local_d = local_c + 1U;
-      const float avg_presence = (cell_presence[local_a] + cell_presence[local_b] +
-                                  cell_presence[local_c] + cell_presence[local_d]) *
-                                 0.25F;
-      const float max_presence =
-          std::max(std::max(cell_presence[local_a], cell_presence[local_b]),
-                   std::max(cell_presence[local_c], cell_presence[local_d]));
-      const float max_relief =
-          std::max(std::max(cell_relief[local_a], cell_relief[local_b]),
-                   std::max(cell_relief[local_c], cell_relief[local_d]));
-      const float avg_relief = (cell_relief[local_a] + cell_relief[local_b] +
-                                cell_relief[local_c] + cell_relief[local_d]) *
-                               0.25F;
-      if ((max_presence < 0.035F) && (avg_presence < 0.02F) &&
-          (max_relief < mountain_config.tile_size * 0.35F) &&
-          (avg_relief < mountain_config.tile_size * 0.18F)) {
-        continue;
-      }
-
-      const unsigned int a = static_cast<unsigned int>(base_index + local_a);
+      const auto a = static_cast<unsigned int>(
+          base_index + static_cast<std::size_t>(v * columns + u));
       const unsigned int b = a + 1U;
       const unsigned int c = a + static_cast<unsigned int>(columns);
       const unsigned int d = c + 1U;
 
       if (flip_winding) {
-        indices.push_back(a);
-        indices.push_back(b);
-        indices.push_back(c);
-        indices.push_back(b);
-        indices.push_back(d);
-        indices.push_back(c);
+        indices.insert(indices.end(), {a, b, c, b, d, c});
       } else {
-        indices.push_back(a);
-        indices.push_back(c);
-        indices.push_back(b);
-        indices.push_back(b);
-        indices.push_back(c);
-        indices.push_back(d);
+        indices.insert(indices.end(), {a, c, b, b, c, d});
       }
+    }
+  }
+
+  if (!config.seam_row) {
+    return;
+  }
+
+  const QVector3D inward =
+      -config.axis_v / static_cast<float>(std::max(config.v_segments, 1));
+  std::vector<QVector3D> inner(static_cast<std::size_t>(columns));
+  for (int u = 0; u <= config.u_segments; ++u) {
+    const float fu = static_cast<float>(u) / static_cast<float>(config.u_segments);
+    QVector3D position = config.origin + config.axis_u * fu + inward;
+    position.setY(
+        edge_height_at(mountain_config.height_map, position.x(), position.z()));
+    inner[static_cast<std::size_t>(u)] = position;
+  }
+  const auto seam_position = [&](int u) {
+    const Vertex& vertex = vertices[base_index + static_cast<std::size_t>(u)];
+    return QVector3D(vertex.position[0], vertex.position[1], vertex.position[2]);
+  };
+  for (int u = 0; u < config.u_segments; ++u) {
+    const QVector3D s0 = seam_position(u);
+    const QVector3D s1 = seam_position(u + 1);
+    const QVector3D i0 = inner[static_cast<std::size_t>(u)];
+    const QVector3D i1 = inner[static_cast<std::size_t>(u + 1)];
+    QVector3D n0 = QVector3D::crossProduct(s1 - s0, i0 - s0);
+    QVector3D n1 = QVector3D::crossProduct(i0 - s1, i1 - s1);
+    if (n0.y() < 0.0F) {
+      n0 = -n0;
+    }
+    if (n1.y() < 0.0F) {
+      n1 = -n1;
+    }
+    for (const QVector3D& corner : {s0, s1}) {
+      extra_normals[position_key({corner.x(), corner.y(), corner.z()})] += n0 + n1;
     }
   }
 }
 
 void compute_vertex_normals(std::vector<Vertex>& vertices,
-                            const std::vector<unsigned int>& indices) {
-  std::vector<QVector3D> accumulated(vertices.size(), QVector3D(0.0F, 0.0F, 0.0F));
+                            const std::vector<unsigned int>& indices,
+                            const NormalAccumulator& extra_normals) {
+  NormalAccumulator accumulated = extra_normals;
+  accumulated.reserve(vertices.size());
 
   for (std::size_t i = 0; i + 2 < indices.size(); i += 3) {
     const unsigned int ia = indices[i];
@@ -459,23 +404,25 @@ void compute_vertex_normals(std::vector<Vertex>& vertices,
         vertices[ib].position[0], vertices[ib].position[1], vertices[ib].position[2]);
     const QVector3D c(
         vertices[ic].position[0], vertices[ic].position[1], vertices[ic].position[2]);
-    const QVector3D normal = QVector3D::crossProduct(b - a, c - a);
+    QVector3D normal = QVector3D::crossProduct(b - a, c - a);
     if (normal.lengthSquared() <= 0.0F) {
       continue;
     }
-    accumulated[ia] += normal;
-    accumulated[ib] += normal;
-    accumulated[ic] += normal;
+    if (normal.y() < 0.0F) {
+      normal = -normal;
+    }
+    for (const unsigned int index : {ia, ib, ic}) {
+      accumulated[position_key(vertices[index].position)] += normal;
+    }
   }
 
-  for (std::size_t i = 0; i < vertices.size(); ++i) {
-    QVector3D normal = accumulated[i];
-    if (normal.lengthSquared() <= 0.0F) {
-      normal = QVector3D(0.0F, 1.0F, 0.0F);
-    } else {
-      normal.normalize();
+  for (Vertex& vertex : vertices) {
+    QVector3D normal(0.0F, 1.0F, 0.0F);
+    const auto found = accumulated.find(position_key(vertex.position));
+    if (found != accumulated.end() && found->second.lengthSquared() > 0.0F) {
+      normal = found->second.normalized();
     }
-    vertices[i].normal = {normal.x(), normal.y(), normal.z()};
+    vertex.normal = {normal.x(), normal.y(), normal.z()};
   }
 }
 
@@ -484,20 +431,11 @@ auto compute_geometry_signature(const std::vector<Vertex>& vertices) -> std::uin
   constexpr std::uint64_t k_prime = 1099511628211ULL;
 
   for (const Vertex& vertex : vertices) {
-    const auto quantize = [](float value) -> std::int64_t {
-      return static_cast<std::int64_t>(std::llround(value * 1000.0));
-    };
-
-    const std::uint64_t px = static_cast<std::uint64_t>(quantize(vertex.position[0]));
-    const std::uint64_t py = static_cast<std::uint64_t>(quantize(vertex.position[1]));
-    const std::uint64_t pz = static_cast<std::uint64_t>(quantize(vertex.position[2]));
-
-    signature ^= px;
-    signature *= k_prime;
-    signature ^= py;
-    signature *= k_prime;
-    signature ^= pz;
-    signature *= k_prime;
+    const PositionKey key = position_key(vertex.position);
+    for (const std::int64_t v : {key.x, key.y, key.z}) {
+      signature ^= static_cast<std::uint64_t>(v);
+      signature *= k_prime;
+    }
   }
 
   return signature;
@@ -527,8 +465,8 @@ void MapBoundaryFogRenderer::submit(Renderer& renderer, ResourceManager* resourc
       TerrainSurfaceCmd cmd;
       cmd.mesh = m_mountain_mesh.get();
       cmd.model = k_identity_matrix;
-      cmd.params = build_boundary_mountain_params(
-          world().terrain_or_empty(), m_tile_size, m_width, m_height);
+      cmd.params =
+          build_boundary_mountain_params(world().terrain_or_empty(), m_tile_size);
       cmd.sort_key = 0x0080U;
       cmd.depth_write = true;
       cmd.horizon_dressing = true;
@@ -687,112 +625,97 @@ void MapBoundaryFogRenderer::build_mountains() {
     return;
   }
 
-  const float width_world = static_cast<float>(m_width) * m_tile_size;
-  const float height_world = static_cast<float>(m_height) * m_tile_size;
-  const float half_w = width_world * 0.5F;
-  const float half_h = height_world * 0.5F;
-  const float inner_offset = k_mountain_inner_tiles * m_tile_size;
-  const float outer_offset = k_mountain_outer_tiles * m_tile_size;
-  const float mountain_band = std::max(m_tile_size, outer_offset - inner_offset);
-  const float max_relief_height = k_mountain_peak_tiles * m_tile_size;
-  const float extended_width_world = width_world + inner_offset * 2.0F;
-  const float extended_height_world = height_world + inner_offset * 2.0F;
+  const float edge_half_w = (static_cast<float>(m_width) * 0.5F - 0.5F) * m_tile_size;
+  const float edge_half_h = (static_cast<float>(m_height) * 0.5F - 0.5F) * m_tile_size;
+  const float edge_width_world = edge_half_w * 2.0F;
+  const float edge_height_world = edge_half_h * 2.0F;
+  const float band = k_mountain_outer_tiles * m_tile_size;
+  const float foothill = k_foothill_tiles * m_tile_size;
+  const float peak = k_mountain_peak_tiles * m_tile_size;
 
+  const float edge_step = m_tile_size * k_mountain_edge_step_tiles;
   const int side_x_segments = std::clamp(
-      static_cast<int>(std::ceil(extended_width_world / (m_tile_size * 1.25F))),
-      12,
-      96);
+      static_cast<int>(std::ceil(std::max(edge_width_world, edge_step) / edge_step)),
+      k_mountain_min_side_segments,
+      k_mountain_max_side_segments);
   const int side_z_segments = std::clamp(
-      static_cast<int>(std::ceil(extended_height_world / (m_tile_size * 1.25F))),
-      12,
-      96);
-  const int corner_segments = std::clamp(k_mountain_depth_segments + 2, 8, 24);
+      static_cast<int>(std::ceil(std::max(edge_height_world, edge_step) / edge_step)),
+      k_mountain_min_side_segments,
+      k_mountain_max_side_segments);
+  const int depth_segments = k_mountain_depth_segments;
 
+  const auto& terrain = world().terrain_or_empty();
   const BoundaryMountainConfig mountain_config{
-      half_w,
-      half_h,
-      inner_offset,
-      mountain_band,
+      edge_half_w,
+      edge_half_h,
+      foothill,
+      band,
       m_tile_size,
-      max_relief_height,
-      resolve_mountain_noise_settings(world().terrain_or_empty(), m_width, m_height),
-      &world().terrain_or_empty()};
+      peak,
+      1.0F / (4.0F * std::max(edge_step, band / static_cast<float>(depth_segments))),
+      resolve_mountain_noise_settings(terrain, m_width, m_height),
+      terrain.is_initialized() ? terrain.get_height_map() : nullptr};
+
+  NormalAccumulator extra_normals;
 
   append_patch_mesh(m_mountain_vertices,
                     m_mountain_indices,
-                    MountainPatchConfig{
-                        QVector3D(-half_w - inner_offset, 0.0F, -half_h - inner_offset),
-                        QVector3D(extended_width_world, 0.0F, 0.0F),
-                        QVector3D(0.0F, 0.0F, -mountain_band),
-                        side_x_segments,
-                        k_mountain_depth_segments},
+                    extra_normals,
+                    MountainPatchConfig{QVector3D(-edge_half_w, 0.0F, -edge_half_h),
+                                        QVector3D(edge_width_world, 0.0F, 0.0F),
+                                        QVector3D(0.0F, 0.0F, -band),
+                                        side_x_segments,
+                                        depth_segments,
+                                        true},
                     mountain_config);
   append_patch_mesh(m_mountain_vertices,
                     m_mountain_indices,
-                    MountainPatchConfig{
-                        QVector3D(-half_w - inner_offset, 0.0F, half_h + inner_offset),
-                        QVector3D(extended_width_world, 0.0F, 0.0F),
-                        QVector3D(0.0F, 0.0F, mountain_band),
-                        side_x_segments,
-                        k_mountain_depth_segments},
+                    extra_normals,
+                    MountainPatchConfig{QVector3D(-edge_half_w, 0.0F, edge_half_h),
+                                        QVector3D(edge_width_world, 0.0F, 0.0F),
+                                        QVector3D(0.0F, 0.0F, band),
+                                        side_x_segments,
+                                        depth_segments,
+                                        true},
                     mountain_config);
   append_patch_mesh(m_mountain_vertices,
                     m_mountain_indices,
-                    MountainPatchConfig{
-                        QVector3D(-half_w - inner_offset, 0.0F, -half_h - inner_offset),
-                        QVector3D(0.0F, 0.0F, extended_height_world),
-                        QVector3D(-mountain_band, 0.0F, 0.0F),
-                        side_z_segments,
-                        k_mountain_depth_segments},
+                    extra_normals,
+                    MountainPatchConfig{QVector3D(-edge_half_w, 0.0F, -edge_half_h),
+                                        QVector3D(0.0F, 0.0F, edge_height_world),
+                                        QVector3D(-band, 0.0F, 0.0F),
+                                        side_z_segments,
+                                        depth_segments,
+                                        true},
                     mountain_config);
   append_patch_mesh(m_mountain_vertices,
                     m_mountain_indices,
-                    MountainPatchConfig{
-                        QVector3D(half_w + inner_offset, 0.0F, -half_h - inner_offset),
-                        QVector3D(0.0F, 0.0F, extended_height_world),
-                        QVector3D(mountain_band, 0.0F, 0.0F),
-                        side_z_segments,
-                        k_mountain_depth_segments},
+                    extra_normals,
+                    MountainPatchConfig{QVector3D(edge_half_w, 0.0F, -edge_half_h),
+                                        QVector3D(0.0F, 0.0F, edge_height_world),
+                                        QVector3D(band, 0.0F, 0.0F),
+                                        side_z_segments,
+                                        depth_segments,
+                                        true},
                     mountain_config);
 
-  append_patch_mesh(m_mountain_vertices,
-                    m_mountain_indices,
-                    MountainPatchConfig{
-                        QVector3D(-half_w - outer_offset, 0.0F, -half_h - outer_offset),
-                        QVector3D(mountain_band, 0.0F, 0.0F),
-                        QVector3D(0.0F, 0.0F, mountain_band),
-                        corner_segments,
-                        corner_segments},
-                    mountain_config);
-  append_patch_mesh(m_mountain_vertices,
-                    m_mountain_indices,
-                    MountainPatchConfig{
-                        QVector3D(half_w + outer_offset, 0.0F, -half_h - outer_offset),
-                        QVector3D(-mountain_band, 0.0F, 0.0F),
-                        QVector3D(0.0F, 0.0F, mountain_band),
-                        corner_segments,
-                        corner_segments},
-                    mountain_config);
-  append_patch_mesh(m_mountain_vertices,
-                    m_mountain_indices,
-                    MountainPatchConfig{
-                        QVector3D(-half_w - outer_offset, 0.0F, half_h + outer_offset),
-                        QVector3D(mountain_band, 0.0F, 0.0F),
-                        QVector3D(0.0F, 0.0F, -mountain_band),
-                        corner_segments,
-                        corner_segments},
-                    mountain_config);
-  append_patch_mesh(
-      m_mountain_vertices,
-      m_mountain_indices,
-      MountainPatchConfig{QVector3D(half_w + outer_offset, 0.0F, half_h + outer_offset),
-                          QVector3D(-mountain_band, 0.0F, 0.0F),
-                          QVector3D(0.0F, 0.0F, -mountain_band),
-                          corner_segments,
-                          corner_segments},
-      mountain_config);
+  for (const float sign_x : {-1.0F, 1.0F}) {
+    for (const float sign_z : {-1.0F, 1.0F}) {
+      append_patch_mesh(m_mountain_vertices,
+                        m_mountain_indices,
+                        extra_normals,
+                        MountainPatchConfig{
+                            QVector3D(sign_x * edge_half_w, 0.0F, sign_z * edge_half_h),
+                            QVector3D(sign_x * band, 0.0F, 0.0F),
+                            QVector3D(0.0F, 0.0F, sign_z * band),
+                            depth_segments,
+                            depth_segments,
+                            false},
+                        mountain_config);
+    }
+  }
 
-  compute_vertex_normals(m_mountain_vertices, m_mountain_indices);
+  compute_vertex_normals(m_mountain_vertices, m_mountain_indices, extra_normals);
   if (!m_mountain_vertices.empty()) {
     m_mountain_min_height = m_mountain_vertices.front().position[1];
     m_mountain_max_height = m_mountain_min_height;

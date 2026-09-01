@@ -59,7 +59,8 @@ auto build_tower_archetype(BuildingState state) -> RenderArchetype {
 
   const bool damaged = state == BuildingState::Damaged;
   const bool destroyed = state == BuildingState::Destroyed;
-  const float shaft_top = destroyed ? 1.56F : (damaged ? 2.04F : 2.30F);
+
+  const float shaft_top = destroyed ? 1.56F : (damaged ? 2.50F : 2.90F);
   const float shaft_radius = destroyed ? 0.76F : (damaged ? 0.84F : 0.90F);
   const float belt_radius = (damaged ? 0.86F : 0.93F);
   const float platform_radius = damaged ? 0.96F : 1.06F;
@@ -67,6 +68,7 @@ auto build_tower_archetype(BuildingState state) -> RenderArchetype {
   const float battlement_half_extent = damaged ? 0.13F : 0.15F;
   const float deck_y = destroyed ? 0.0F : shaft_top + 0.12F;
   const float battlement_y = destroyed ? 0.0F : shaft_top + (damaged ? 0.28F : 0.34F);
+  const QVector3D merlon_cap = c.limestone_dark * 0.62F;
 
   desc.add_box(
       QVector3D(0.0F, 0.04F, 0.0F), QVector3D(1.30F, 0.04F, 1.30F), c.limestone_dark);
@@ -81,7 +83,7 @@ auto build_tower_archetype(BuildingState state) -> RenderArchetype {
       if (std::fabs(x) > 0.32F || std::fabs(z) > 0.32F) {
         desc.add_box(QVector3D(x, 0.31F, z),
                      QVector3D(0.18F, 0.01F, 0.18F),
-                     c.terracotta,
+                     c.sandstone_base,
                      BuildingStateMask::All);
       }
     }
@@ -90,24 +92,26 @@ auto build_tower_archetype(BuildingState state) -> RenderArchetype {
   desc.add_box(
       QVector3D(0.0F, 0.44F, 0.0F), QVector3D(0.94F, 0.12F, 0.94F), c.sandstone_light);
 
-  const float shaft_mid = 0.52F + (shaft_top - 0.52F) * 0.55F;
-  desc.add_cylinder(QVector3D(0.0F, 0.52F, 0.0F),
-                    QVector3D(0.0F, shaft_mid, 0.0F),
-                    shaft_radius,
-                    c.limestone);
-  desc.add_cylinder(QVector3D(0.0F, shaft_mid - 0.02F, 0.0F),
-                    QVector3D(0.0F, shaft_top, 0.0F),
-                    shaft_radius * 0.92F,
-                    c.limestone);
+  constexpr int k_courses = 6;
+  const float course_height = (shaft_top - 0.52F) / static_cast<float>(k_courses);
+  for (int i = 0; i < k_courses; ++i) {
+    const float y0 = 0.52F + course_height * static_cast<float>(i);
+    const bool even = (i % 2) == 0;
+    desc.add_cylinder(QVector3D(0.0F, y0, 0.0F),
+                      QVector3D(0.0F, y0 + course_height + 0.005F, 0.0F),
+                      even ? shaft_radius : shaft_radius * 0.985F,
+                      even ? c.limestone : c.limestone_shade);
+  }
 
   if (!destroyed) {
-    desc.add_cylinder(QVector3D(0.0F, damaged ? 1.18F : 1.38F, 0.0F),
-                      QVector3D(0.0F, damaged ? 1.24F : 1.44F, 0.0F),
+    const float belt_low = 0.52F + (shaft_top - 0.52F) * 0.40F;
+    const float belt_high = 0.52F + (shaft_top - 0.52F) * 0.72F;
+    desc.add_cylinder(QVector3D(0.0F, belt_low, 0.0F),
+                      QVector3D(0.0F, belt_low + 0.06F, 0.0F),
                       belt_radius,
                       c.marble);
-
-    desc.add_cylinder(QVector3D(0.0F, damaged ? 1.58F : 1.82F, 0.0F),
-                      QVector3D(0.0F, damaged ? 1.62F : 1.86F, 0.0F),
+    desc.add_cylinder(QVector3D(0.0F, belt_high, 0.0F),
+                      QVector3D(0.0F, belt_high + 0.04F, 0.0F),
                       belt_radius * 0.98F,
                       c.limestone_shade);
 
@@ -115,18 +119,18 @@ auto build_tower_archetype(BuildingState state) -> RenderArchetype {
         [&desc](const QVector3D& centre, const QVector3D& half, const QVector3D& col) {
           desc.add_box(centre, half, col, BuildingStateMask::All);
         },
-        damaged ? 1.02F : 1.14F,
+        belt_low - 0.28F,
         shaft_radius * 0.94F,
         QVector3D(0.045F, 0.17F, 0.05F),
-        c.limestone_dark * 0.55F);
+        c.limestone_dark * 0.45F);
     add_embrasures(
         [&desc](const QVector3D& centre, const QVector3D& half, const QVector3D& col) {
           desc.add_box(centre, half, col, BuildingStateMask::All);
         },
-        damaged ? 1.64F : 1.94F,
+        belt_high + 0.26F,
         shaft_radius * 0.90F,
         QVector3D(0.04F, 0.13F, 0.05F),
-        c.limestone_dark * 0.55F);
+        c.limestone_dark * 0.45F);
   }
 
   const std::array<int, 4> corner_indices =
@@ -152,28 +156,9 @@ auto build_tower_archetype(BuildingState state) -> RenderArchetype {
                  QVector3D(0.15F, 0.10F, 0.15F),
                  c.marble,
                  BuildingStateMask::All);
-
-    if (!damaged) {
-      desc.add_box(QVector3D(ox, column_top + 0.14F, oz),
-                   QVector3D(0.08F, 0.05F, 0.08F),
-                   c.gold,
-                   BuildingStateMask::All);
-    }
   }
 
   if (!destroyed) {
-    const int spoke_count = damaged ? 2 : 4;
-    for (int i = 0; i < spoke_count; ++i) {
-      const float angle =
-          static_cast<float>(i) * (damaged ? std::numbers::pi_v<float> : 1.57F);
-      const float ox = std::sin(angle) * (shaft_radius + 0.06F);
-      const float oz = std::cos(angle) * (shaft_radius + 0.06F);
-      desc.add_box(QVector3D(ox, damaged ? 1.00F : 1.24F, oz),
-                   QVector3D(0.04F, damaged ? 0.18F : 0.24F, 0.04F),
-                   c.sandstone_dark,
-                   BuildingStateMask::All);
-    }
-
     desc.add_cylinder(QVector3D(0.0F, shaft_top + 0.02F, 0.0F),
                       QVector3D(0.0F, shaft_top + 0.08F, 0.0F),
                       damaged ? 0.90F : 0.96F,
@@ -204,35 +189,60 @@ auto build_tower_archetype(BuildingState state) -> RenderArchetype {
         damaged ? 3 : 4,
         QVector3D(
             battlement_half_extent, damaged ? 0.20F : 0.24F, battlement_half_extent),
-        c.terracotta,
+        c.limestone,
+        11);
+    add_square_parapet(
+        [&desc,
+         merlon_cap](const QVector3D& centre, const QVector3D& half, const QVector3D&) {
+          desc.add_box(centre, half, merlon_cap, BuildingStateMask::All);
+        },
+        battlement_y + (damaged ? 0.21F : 0.25F),
+        battlement_radius,
+        damaged ? 3 : 4,
+        QVector3D(
+            battlement_half_extent + 0.015F, 0.03F, battlement_half_extent + 0.015F),
+        merlon_cap,
         11);
 
-    desc.add_box(QVector3D(0.0F, battlement_y + 0.14F, 0.0F),
-                 QVector3D(damaged ? 0.98F : 1.10F, 0.04F, damaged ? 0.98F : 1.10F),
-                 c.limestone);
-
     if (!damaged) {
-      for (float const x : {-1.02F, 1.02F}) {
-        for (float const z : {-1.02F, 1.02F}) {
-          desc.add_box(QVector3D(x, battlement_y + 0.22F, z),
-                       QVector3D(0.07F, 0.08F, 0.07F),
-                       c.blue_accent,
-                       BuildingStateMask::All);
+
+      const float roof_y = battlement_y + 0.62F;
+      const float post_offset = battlement_radius - 0.30F;
+      for (const float px : {-post_offset, post_offset}) {
+        for (const float pz : {-post_offset, post_offset}) {
+          desc.add_box(QVector3D(px, (deck_y + roof_y) * 0.5F, pz),
+                       QVector3D(0.05F, (roof_y - deck_y) * 0.5F, 0.05F),
+                       c.cedar_dark,
+                       BuildingStateMask::Normal);
         }
       }
+      desc.add_box(QVector3D(0.0F, roof_y - 0.03F, 0.0F),
+                   QVector3D(1.10F, 0.025F, 1.10F),
+                   c.cedar_dark,
+                   BuildingStateMask::Normal);
 
-      desc.add_box(QVector3D(0.0F, battlement_y + 0.24F, 0.0F),
-                   QVector3D(0.10F, 0.10F, 0.10F),
-                   c.gold,
+      constexpr int k_roof_steps = 6;
+      const QVector3D tile = c.terracotta * 0.94F;
+      for (int i = 0; i < k_roof_steps; ++i) {
+        const float t = static_cast<float>(i) / static_cast<float>(k_roof_steps);
+        const float half = 1.14F - (1.14F - 0.26F) * t;
+        desc.add_box(QVector3D(0.0F, roof_y + 0.056F * static_cast<float>(i), 0.0F),
+                     QVector3D(half, 0.032F, half),
+                     (i % 2 == 0) ? tile : tile * 0.93F,
+                     BuildingStateMask::Normal);
+      }
+      desc.add_box(QVector3D(0.0F, roof_y + 0.34F, 0.0F),
+                   QVector3D(0.14F, 0.04F, 0.14F),
+                   c.terracotta_dark,
                    BuildingStateMask::Normal);
     }
   }
 
   if (damaged) {
-    desc.add_box(QVector3D(0.48F, 1.82F, 0.24F),
+    desc.add_box(QVector3D(0.48F, 2.22F, 0.24F),
                  QVector3D(0.18F, 0.12F, 0.14F),
                  c.sandstone_dark);
-    desc.add_box(QVector3D(-0.40F, 1.68F, -0.44F),
+    desc.add_box(QVector3D(-0.40F, 2.08F, -0.44F),
                  QVector3D(0.16F, 0.14F, 0.18F),
                  c.limestone_dark);
   }
@@ -255,16 +265,11 @@ auto build_tower_archetype(BuildingState state) -> RenderArchetype {
   if (!destroyed) {
     add_roman_aquila_relief(
         desc,
-        QVector3D(0.0F, damaged ? 1.43F : 1.62F, shaft_radius + 0.02F),
+        QVector3D(0.0F, damaged ? 1.62F : 1.86F, shaft_radius + 0.02F),
         BuildingFacadePlane::XY,
         damaged ? 0.54F : 0.68F,
         c.gold,
         c.terracotta_dark);
-    add_roman_roof_standard(desc,
-                            QVector3D(0.0F, battlement_y + 0.20F, 0.0F),
-                            damaged ? 0.48F : 0.66F,
-                            c.gold,
-                            c.terracotta_dark);
   }
 
   add_broken_rim(desc,
@@ -298,7 +303,7 @@ auto tower_archetype(BuildingState state) -> const RenderArchetype& {
 auto tower_banner_style(BuildingState state)
     -> BarracksFlagRenderer::HangingBannerStyle {
   if (state == BuildingState::Damaged) {
-    return {.pole_base = QVector3D(0.0F, 2.42F, 0.0F),
+    return {.pole_base = QVector3D(0.0F, 2.90F, 0.0F),
             .pole_height = 0.92F,
             .pole_radius = 0.042F,
             .banner_width = 0.52F,
@@ -322,7 +327,7 @@ auto tower_banner_style(BuildingState state)
             .ring_color = QVector3D()};
   }
 
-  return {.pole_base = QVector3D(0.0F, 2.74F, 0.0F),
+  return {.pole_base = QVector3D(0.0F, 4.24F, 0.0F),
           .pole_height = 1.18F,
           .pole_radius = 0.044F,
           .banner_width = 0.68F,
@@ -392,7 +397,9 @@ void register_defense_tower_renderer(Render::GL::EntityRendererRegistry& registr
       DefenseTowerRendererConfig{.nation_slug = "roman",
                                  .archetype = &tower_archetype,
                                  .draw_banner = &draw_tower_banner_for_team,
-                                 .selection = BuildingSelectionStyle{1.6F, 1.6F}});
+                                 .selection = BuildingSelectionStyle{1.6F, 1.6F},
+                                 .night_brazier_deck_y = 3.20F,
+                                 .night_brazier_offset = 0.62F});
 }
 
 } // namespace Render::GL::Roman

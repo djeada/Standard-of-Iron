@@ -93,8 +93,8 @@ void main() {
   float bough_edge = smoothstep(0.30, 0.95, v_bough) * (1.0 - underside);
   float canopy_height = clamp(v_tex_coord.y, 0.0, 1.12);
 
-  float shelf = mix(1.0, 0.46, clamp(shelf_ao, 0.0, 1.0));
-  float core = mix(1.0, 0.74, canopy_core * 0.85);
+  float shelf = mix(1.0, 0.60, clamp(shelf_ao, 0.0, 1.0));
+  float core = mix(1.0, 0.80, canopy_core * 0.85);
   float tier = mix(0.84, 1.12, smoothstep(0.34, 1.06, canopy_height));
   float bough_lift = mix(1.0, 1.12, bough_edge);
   float hemi = clamp(geometric_normal.y * 0.5 + 0.5, 0.0, 1.0);

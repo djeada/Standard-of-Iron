@@ -315,15 +315,22 @@ auto main(int argc, char** argv) -> int {
 
   Render::GL::ResourceManager resources;
 
-  std::vector<std::string> types = {
-      "home", "farm", "barracks", "defense_tower", "marketplace", "temple", "wall"};
+  std::vector<std::string> types = {"home",
+                                    "farm",
+                                    "barracks",
+                                    "defense_tower",
+                                    "marketplace",
+                                    "temple",
+                                    "wall",
+                                    "gate"};
   std::vector<std::string> keys = {"home",
                                    "farm",
                                    "barracks",
                                    "defense_tower",
                                    "marketplace",
                                    "temple",
-                                   "wall_segment_straight"};
+                                   "wall_segment_straight",
+                                   "wall_gate"};
   if (!filter.empty()) {
     std::vector<std::string> f_types;
     std::vector<std::string> f_keys;
