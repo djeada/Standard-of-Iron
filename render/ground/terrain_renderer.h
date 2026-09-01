@@ -27,6 +27,15 @@ class Mesh;
 class Texture;
 class Shader;
 
+[[nodiscard]] auto
+make_terrain_chunk_params(const Game::Map::BiomeSettings& biome_settings,
+                          const Game::Map::TerrainSurfaceProfile& surface_profile,
+                          const Game::Map::ClimateProfile& climate_profile,
+                          float tile_size,
+                          std::uint32_t noise_seed,
+                          Game::Map::TerrainType chunk_type,
+                          float tint) -> TerrainChunkParams;
+
 class TerrainRenderer : public IRenderPass {
 public:
   TerrainRenderer();

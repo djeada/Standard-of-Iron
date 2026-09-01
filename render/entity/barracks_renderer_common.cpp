@@ -1,5 +1,7 @@
 #include "barracks_renderer_common.h"
 
+#include <array>
+
 #include "../entity_appearance.h"
 #include "game/core/component.h"
 #include "render/gl/backend.h"
@@ -38,8 +40,12 @@ void register_barracks_renderer_variant(EntityRendererRegistry& registry,
           cloth.banner_shader = ctx.backend->banner_shader();
         }
 
+        const std::array<QVector3D, 1> palette{team};
         submit_building_instance(
-            out, ctx, config.archetype(resolve_building_state(ctx), unit, white));
+            out,
+            ctx,
+            config.archetype(resolve_building_state(ctx), unit, white),
+            palette);
         config.draw_ornaments(ctx, out, unit, white, team, &cloth);
         draw_building_selection_overlay(out, ctx, config.selection);
       });

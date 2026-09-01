@@ -257,9 +257,9 @@ void VegetationPipeline::initialize_pine_pipeline() {
     QVector3D normal;
   };
 
-  constexpr int k_segments = 20;
+  constexpr int k_segments = 24;
   RingLoftBuilder loft(k_segments);
-  loft.reserve(32);
+  loft.reserve(44);
 
   const int trunk_bottom = loft.add_ring({0.088F, -0.01F, -0.08F, 0.00F, 0.0F});
   const int trunk_kink =
@@ -267,19 +267,21 @@ void VegetationPipeline::initialize_pine_pipeline() {
   const int trunk_mid =
       loft.add_ring({0.054F, 0.32F, 0.03F, 0.16F, 0.0F, QVector2D(0.022F, 0.012F)});
   const int trunk_top =
-      loft.add_ring({0.046F, 0.48F, 0.08F, 0.26F, 0.0F, QVector2D(0.020F, 0.014F)});
+      loft.add_ring({0.046F, 0.46F, 0.08F, 0.26F, 0.0F, QVector2D(0.020F, 0.014F)});
 
   struct TierPlan {
     float base_y;
     float outer_r;
     QVector2D offset;
   };
-  constexpr std::array<TierPlan, 5> k_tiers{{
-      {0.52F, 0.330F, QVector2D(-0.030F, 0.044F)},
-      {0.70F, 0.280F, QVector2D(0.036F, -0.024F)},
-      {0.86F, 0.230F, QVector2D(-0.020F, -0.030F)},
-      {1.00F, 0.180F, QVector2D(0.024F, 0.018F)},
-      {1.12F, 0.132F, QVector2D(-0.014F, 0.022F)},
+  constexpr std::array<TierPlan, 7> k_tiers{{
+      {0.50F, 0.345F, QVector2D(-0.030F, 0.044F)},
+      {0.61F, 0.308F, QVector2D(0.036F, -0.024F)},
+      {0.72F, 0.270F, QVector2D(-0.020F, -0.030F)},
+      {0.83F, 0.232F, QVector2D(0.026F, 0.018F)},
+      {0.94F, 0.194F, QVector2D(-0.016F, 0.024F)},
+      {1.05F, 0.156F, QVector2D(0.018F, -0.014F)},
+      {1.15F, 0.116F, QVector2D(-0.010F, 0.012F)},
   }};
 
   std::vector<int> chain{trunk_bottom, trunk_kink, trunk_mid, trunk_top};
@@ -287,20 +289,21 @@ void VegetationPipeline::initialize_pine_pipeline() {
     const TierPlan& tier = k_tiers[t];
     float const r = tier.outer_r;
     float const y = tier.base_y;
-    float const v0 = 0.34F + (0.145F * static_cast<float>(t));
+    float const v0 = 0.34F + (0.104F * static_cast<float>(t));
     const QVector2D& o = tier.offset;
 
-    chain.push_back(loft.add_ring({r * 0.36F, y, 0.14F, v0, 0.00F, o * 0.12F}));
     chain.push_back(
-        loft.add_ring({r * 0.76F, y + 0.028F, 0.28F, v0 + 0.035F, 0.60F, o * 0.42F}));
-    chain.push_back(loft.add_ring({r, y + 0.050F, 0.42F, v0 + 0.062F, 1.00F, o}));
+        loft.add_ring({r * 0.34F, y + 0.020F, 0.10F, v0, 0.00F, o * 0.12F}));
     chain.push_back(
-        loft.add_ring({r * 0.78F, y + 0.096F, 0.62F, v0 + 0.092F, 0.74F, o * 0.55F}));
+        loft.add_ring({r * 0.72F, y + 0.036F, 0.22F, v0 + 0.028F, 0.60F, o * 0.42F}));
+    chain.push_back(loft.add_ring({r, y + 0.012F, 0.36F, v0 + 0.050F, 1.00F, o}));
     chain.push_back(
-        loft.add_ring({r * 0.44F, y + 0.138F, 0.80F, v0 + 0.118F, 0.30F, o * 0.22F}));
+        loft.add_ring({r * 0.78F, y + 0.064F, 0.62F, v0 + 0.072F, 0.74F, o * 0.55F}));
+    chain.push_back(
+        loft.add_ring({r * 0.44F, y + 0.106F, 0.80F, v0 + 0.092F, 0.30F, o * 0.22F}));
   }
 
-  const int tip_ring = loft.add_ring({0.024F, 1.32F, 0.95F, 1.10F, 0.20F});
+  const int tip_ring = loft.add_ring({0.022F, 1.31F, 0.95F, 1.10F, 0.20F});
   chain.push_back(tip_ring);
 
   for (std::size_t i = 1; i < chain.size(); ++i) {
@@ -359,11 +362,11 @@ void VegetationPipeline::initialize_olive_pipeline() {
     loft.cap(ring, cap_y, offset, v);
   };
 
-  int const t0 = add_ring(0.19F, -0.015F, -0.30F, 0.00F, QVector2D(-0.018F, 0.004F));
-  int const t1 = add_ring(0.14F, 0.09F, -0.05F, 0.07F, QVector2D(0.012F, -0.014F));
-  int const t2 = add_ring(0.105F, 0.18F, 0.08F, 0.14F, QVector2D(0.030F, 0.006F));
-  int const t3 = add_ring(0.080F, 0.28F, 0.20F, 0.22F, QVector2D(0.012F, 0.030F));
-  int const t4 = add_ring(0.065F, 0.36F, 0.34F, 0.29F, QVector2D(0.006F, 0.038F));
+  int const t0 = add_ring(0.215F, -0.015F, -0.30F, 0.00F, QVector2D(-0.022F, 0.006F));
+  int const t1 = add_ring(0.165F, 0.09F, -0.05F, 0.07F, QVector2D(0.018F, -0.020F));
+  int const t2 = add_ring(0.125F, 0.18F, 0.08F, 0.14F, QVector2D(0.038F, 0.008F));
+  int const t3 = add_ring(0.092F, 0.27F, 0.20F, 0.22F, QVector2D(0.016F, 0.036F));
+  int const t4 = add_ring(0.072F, 0.34F, 0.34F, 0.29F, QVector2D(0.008F, 0.044F));
   connect_rings(t0, t1);
   connect_rings(t1, t2);
   connect_rings(t2, t3);
@@ -382,6 +385,10 @@ void VegetationPipeline::initialize_olive_pipeline() {
     float const len = std::sqrt(dir_x * dir_x + dir_z * dir_z);
     dir_x /= len;
     dir_z /= len;
+
+    length *= 1.28F;
+    rise *= 0.88F;
+    leaf_r *= 1.12F;
 
     QVector2D const dir(dir_x, dir_z);
     QVector2D const ortho(-dir_z, dir_x);
@@ -607,9 +614,9 @@ void VegetationPipeline::initialize_cypress_pipeline() {
       {0.042F, 0.28F, 0.06F, 0.22F, 0.0F, QVector2D(0.016F, 0.009F)},
       {0.078F, 0.32F, -0.42F, 0.36F, 0.35F, QVector2D(0.014F, 0.008F)},
       {0.132F, 0.46F, -0.16F, 0.44F, 0.70F, QVector2D(0.010F, -0.006F)},
-      {0.158F, 0.64F, 0.02F, 0.53F, 1.00F, QVector2D(-0.008F, 0.010F)},
-      {0.162F, 0.84F, 0.04F, 0.62F, 1.00F, QVector2D(0.012F, 0.006F)},
-      {0.150F, 1.04F, 0.08F, 0.70F, 1.00F, QVector2D(-0.010F, -0.008F)},
+      {0.170F, 0.64F, 0.02F, 0.53F, 1.00F, QVector2D(-0.008F, 0.010F)},
+      {0.176F, 0.84F, 0.04F, 0.62F, 1.00F, QVector2D(0.012F, 0.006F)},
+      {0.162F, 1.04F, 0.08F, 0.70F, 1.00F, QVector2D(-0.010F, -0.008F)},
       {0.128F, 1.22F, 0.14F, 0.78F, 0.95F, QVector2D(0.008F, 0.012F)},
       {0.098F, 1.38F, 0.24F, 0.85F, 0.85F, QVector2D(-0.006F, 0.006F)},
       {0.062F, 1.52F, 0.42F, 0.92F, 0.70F, QVector2D(0.004F, -0.004F)},
@@ -663,11 +670,15 @@ void VegetationPipeline::initialize_palm_pipeline() {
   constexpr int k_trunk_segments = olive_tree_segments;
   constexpr float k_pi = 3.14159265F;
   constexpr float k_two_pi = 6.28318530718F;
-  constexpr int k_frond_count = 11;
-  constexpr int k_frond_stations = 7;
+  constexpr int k_frond_count = 14;
+  constexpr int k_frond_stations = 9;
+  constexpr int k_dead_frond_count = 7;
+
+  constexpr float k_leaf_v = 0.60F;
+  constexpr float k_dead_v = 0.30F;
 
   RingLoftBuilder loft(k_trunk_segments);
-  loft.reserve(10);
+  loft.reserve(16);
 
   struct TrunkRing {
     float radius;
@@ -676,15 +687,16 @@ void VegetationPipeline::initialize_palm_pipeline() {
     float v;
     QVector2D offset;
   };
-  constexpr std::array<TrunkRing, 8> k_trunk{{
-      {0.088F, -0.015F, -0.34F, 0.04F, QVector2D(0.0F, 0.0F)},
-      {0.086F, 0.20F, -0.04F, 0.11F, QVector2D(0.010F, 0.004F)},
-      {0.072F, 0.42F, 0.02F, 0.19F, QVector2D(0.024F, 0.010F)},
-      {0.062F, 0.62F, 0.06F, 0.27F, QVector2D(0.040F, 0.016F)},
-      {0.055F, 0.76F, 0.10F, 0.36F, QVector2D(0.050F, 0.019F)},
-      {0.050F, 0.84F, 0.14F, 0.45F, QVector2D(0.055F, 0.021F)},
-      {0.046F, 0.90F, 0.18F, 0.52F, QVector2D(0.058F, 0.022F)},
-      {0.042F, 0.95F, 0.26F, 0.58F, QVector2D(0.060F, 0.022F)},
+  constexpr std::array<TrunkRing, 9> k_trunk{{
+      {0.092F, -0.015F, -0.34F, 0.04F, QVector2D(0.0F, 0.0F)},
+      {0.088F, 0.22F, -0.04F, 0.10F, QVector2D(0.010F, 0.004F)},
+      {0.076F, 0.46F, 0.02F, 0.16F, QVector2D(0.026F, 0.011F)},
+      {0.066F, 0.68F, 0.06F, 0.22F, QVector2D(0.044F, 0.018F)},
+      {0.058F, 0.86F, 0.10F, 0.28F, QVector2D(0.058F, 0.023F)},
+      {0.052F, 0.98F, 0.14F, 0.34F, QVector2D(0.066F, 0.026F)},
+      {0.048F, 1.06F, 0.18F, 0.40F, QVector2D(0.070F, 0.027F)},
+      {0.044F, 1.12F, 0.26F, 0.46F, QVector2D(0.072F, 0.028F)},
+      {0.040F, 1.16F, 0.34F, 0.50F, QVector2D(0.073F, 0.028F)},
   }};
   std::vector<int> trunk_chain;
   trunk_chain.reserve(k_trunk.size());
@@ -697,41 +709,72 @@ void VegetationPipeline::initialize_palm_pipeline() {
   }
   loft.cap(trunk_chain.front(), -0.04F, QVector2D(0.0F, 0.0F), 0.0F, 0.0F, false);
 
+  const QVector3D crown(
+      k_trunk.back().offset.x(), k_trunk.back().y, k_trunk.back().offset.y());
+
+  {
+    const QVector2D cc(crown.x(), crown.z());
+    const int h0 =
+        loft.add_ring({0.070F, crown.y() - 0.02F, -0.20F, k_leaf_v, 0.0F, cc});
+    const int h1 =
+        loft.add_ring({0.105F, crown.y() + 0.06F, 0.10F, k_leaf_v + 0.06F, 0.0F, cc});
+    const int h2 =
+        loft.add_ring({0.080F, crown.y() + 0.15F, 0.55F, k_leaf_v + 0.12F, 0.0F, cc});
+    loft.connect(trunk_chain.back(), h0);
+    loft.connect(h0, h1);
+    loft.connect(h1, h2);
+    loft.cap(h2, crown.y() + 0.24F, cc, k_leaf_v + 0.18F, 0.0F, true);
+  }
+
+  for (const float yaw : {0.9F, 3.6F}) {
+    const QVector2D cc(crown.x() + std::cos(yaw) * 0.12F,
+                       crown.z() + std::sin(yaw) * 0.12F);
+    const int d0 =
+        loft.add_ring({0.030F, crown.y() - 0.30F, -0.60F, k_dead_v, 0.0F, cc});
+    const int d1 =
+        loft.add_ring({0.060F, crown.y() - 0.20F, -0.10F, k_dead_v, 0.0F, cc});
+    const int d2 =
+        loft.add_ring({0.045F, crown.y() - 0.08F, 0.40F, k_dead_v, 0.0F, cc});
+    loft.connect(d0, d1);
+    loft.connect(d1, d2);
+    loft.cap(d0, crown.y() - 0.35F, cc, k_dead_v, 0.0F, false);
+    loft.cap(d2, crown.y() - 0.02F, cc, k_dead_v, 0.0F, true);
+  }
+
   std::vector<PalmVertex> vertices;
   vertices.reserve(loft.vertices().size() +
-                   static_cast<std::size_t>(k_frond_count * k_frond_stations * 4));
+                   static_cast<std::size_t>((k_frond_count + k_dead_frond_count) *
+                                            k_frond_stations * 4));
   for (const auto& vertex : loft.vertices()) {
     vertices.push_back({vertex.position, QVector2D(vertex.u, vertex.v), vertex.normal});
   }
   std::vector<std::uint16_t> indices = loft.indices();
 
-  const QVector3D crown(
-      k_trunk.back().offset.x(), k_trunk.back().y, k_trunk.back().offset.y());
   const auto first_frond_vertex = static_cast<std::uint16_t>(vertices.size());
 
-  for (int f = 0; f < k_frond_count; ++f) {
-    const float frond_u = static_cast<float>(f) / static_cast<float>(k_frond_count);
-    const float wobble = std::sin(static_cast<float>(f) * 2.399963F);
-    const float yaw = frond_u * k_two_pi + wobble * 0.12F;
-    const float length = 0.66F + wobble * 0.08F;
-    const float rise = 0.26F + wobble * 0.05F;
-    const float droop = 0.62F + wobble * 0.10F;
+  auto add_frond = [&](float yaw,
+                       float length,
+                       float rise,
+                       float droop,
+                       float width,
+                       float base_lift,
+                       float v_base,
+                       float v_span,
+                       float frond_u) {
     const QVector3D dir(std::cos(yaw), 0.0F, std::sin(yaw));
     const QVector3D side(-std::sin(yaw), 0.0F, std::cos(yaw));
-
     const auto base = static_cast<std::uint16_t>(vertices.size());
     for (int station = 0; station < k_frond_stations; ++station) {
       const float t =
           static_cast<float>(station) / static_cast<float>(k_frond_stations - 1);
-      const float lift = rise * std::sin(t * 1.7278F) - droop * t * t * t;
-
-      const float pinnate = (station % 2 == 0) ? 1.0F : 0.64F;
+      const float lift = base_lift + rise * std::sin(t * 1.9F) - droop * t * t * t;
+      const float pinnate = (station % 2 == 0) ? 1.0F : 0.60F;
       const float half_width =
-          0.104F * pinnate * std::sin(std::clamp(t * 0.86F + 0.10F, 0.0F, 1.0F) * k_pi);
-      const float fold = -half_width * 1.15F;
+          width * pinnate * std::sin(std::clamp(t * 0.90F + 0.08F, 0.0F, 1.0F) * k_pi);
+      const float fold = -half_width * (0.9F + 0.5F * t);
 
       const QVector3D spine = crown + dir * (length * t) + QVector3D(0.0F, lift, 0.0F);
-      const QVector2D uv(frond_u, 0.60F + t * 0.34F);
+      const QVector2D uv(frond_u, v_base + t * v_span);
       const QVector3D up(0.0F, 1.0F, 0.0F);
       const QVector3D droop_edge(0.0F, fold, 0.0F);
 
@@ -740,7 +783,6 @@ void VegetationPipeline::initialize_palm_pipeline() {
       vertices.push_back({spine, uv, up});
       vertices.push_back({spine - side * half_width + droop_edge, uv, up});
     }
-
     for (int station = 0; station + 1 < k_frond_stations; ++station) {
       const auto lower = static_cast<std::uint16_t>(base + station * 4);
       const auto upper = static_cast<std::uint16_t>(lower + 4);
@@ -752,6 +794,36 @@ void VegetationPipeline::initialize_palm_pipeline() {
         indices.insert(indices.end(), {a0, b0, b1, a0, b1, a1});
       }
     }
+  };
+
+  for (int f = 0; f < k_frond_count; ++f) {
+    const float frond_u = static_cast<float>(f) / static_cast<float>(k_frond_count);
+    const float wobble = std::sin(static_cast<float>(f) * 2.399963F);
+    const float ring = (f % 2 == 0) ? 1.0F : 0.0F;
+    const float yaw = frond_u * k_two_pi + wobble * 0.14F;
+    add_frond(yaw,
+              0.70F + wobble * 0.07F - ring * 0.08F,
+              0.30F + wobble * 0.04F + ring * 0.08F,
+              0.52F + wobble * 0.08F,
+              0.118F,
+              0.08F + ring * 0.05F,
+              k_leaf_v,
+              0.34F,
+              frond_u);
+  }
+  for (int f = 0; f < k_dead_frond_count; ++f) {
+    const float frond_u =
+        (static_cast<float>(f) + 0.5F) / static_cast<float>(k_dead_frond_count);
+    const float wobble = std::sin(static_cast<float>(f) * 1.7F + 0.6F);
+    add_frond(frond_u * k_two_pi + wobble * 0.2F,
+              0.30F + wobble * 0.04F,
+              0.0F,
+              0.62F,
+              0.070F,
+              -0.03F,
+              k_dead_v,
+              0.0F,
+              frond_u);
   }
 
   for (std::size_t i = first_frond_vertex; i < vertices.size(); ++i) {

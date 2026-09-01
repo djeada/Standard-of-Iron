@@ -330,6 +330,38 @@ void draw_fortress_walls(const DrawContext& p,
   if (state != BuildingState::Destroyed) {
     float const lower_band_y = wall_height * 0.25F * height_multiplier + 0.26F;
     float const upper_band_y = wall_height * 0.70F * height_multiplier + 0.26F;
+
+    for (float const course_t : {0.40F, 0.55F, 0.85F}) {
+      float const course_y = wall_height * course_t * height_multiplier + 0.26F;
+      draw_box(out,
+               unit,
+               white,
+               p.model,
+               QVector3D(0.0F, course_y, -1.33F),
+               QVector3D(1.55F, 0.008F, 0.15F),
+               c.stone_base * 0.90F);
+      draw_box(out,
+               unit,
+               white,
+               p.model,
+               QVector3D(0.0F, course_y, 1.33F),
+               QVector3D(1.55F, 0.008F, 0.15F),
+               c.stone_base * 0.90F);
+      draw_box(out,
+               unit,
+               white,
+               p.model,
+               QVector3D(-1.63F, course_y, 0.0F),
+               QVector3D(0.15F, 0.008F, 1.23F),
+               c.stone_base * 0.90F);
+      draw_box(out,
+               unit,
+               white,
+               p.model,
+               QVector3D(1.63F, course_y, 0.0F),
+               QVector3D(0.15F, 0.008F, 1.23F),
+               c.stone_base * 0.90F);
+    }
     for (float const band_y : {lower_band_y, upper_band_y}) {
       draw_box(out,
                unit,
@@ -394,51 +426,51 @@ void draw_fortress_walls(const DrawContext& p,
   if (state != BuildingState::Destroyed) {
     float const merlon_top = wall_height * height_multiplier + 0.32F;
     const int front_merlons = (state == BuildingState::Damaged) ? 5 : 7;
-    add_merlon_strip_x(
+
+    auto merlon_box =
         [&](const QVector3D& center, const QVector3D& size, const QVector3D& color) {
           draw_box(out, unit, white, p.model, center, size, color);
-        },
-        merlon_top,
-        -1.28F,
-        (state == BuildingState::Damaged) ? -0.80F : -1.22F,
-        0.42F,
-        front_merlons,
-        QVector3D(0.16F, 0.06F, 0.06F),
-        c.brick);
+          draw_box(out,
+                   unit,
+                   white,
+                   p.model,
+                   center + QVector3D(0.0F, size.y() + 0.02F, 0.0F),
+                   QVector3D(size.x() + 0.012F, 0.02F, size.z() + 0.012F),
+                   c.brick_dark);
+        };
+    add_merlon_strip_x(merlon_box,
+                       merlon_top,
+                       -1.28F,
+                       (state == BuildingState::Damaged) ? -0.80F : -1.22F,
+                       0.42F,
+                       front_merlons,
+                       QVector3D(0.16F, 0.06F, 0.06F),
+                       c.stone_light);
     if (detailed && state == BuildingState::Normal) {
-      add_merlon_strip_x(
-          [&](const QVector3D& center, const QVector3D& size, const QVector3D& color) {
-            draw_box(out, unit, white, p.model, center, size, color);
-          },
-          merlon_top,
-          1.28F,
-          -1.22F,
-          0.42F,
-          7,
-          QVector3D(0.16F, 0.06F, 0.06F),
-          c.brick);
-      add_merlon_strip_z(
-          [&](const QVector3D& center, const QVector3D& size, const QVector3D& color) {
-            draw_box(out, unit, white, p.model, center, size, color);
-          },
-          -1.58F,
-          merlon_top,
-          -1.0F,
-          0.40F,
-          6,
-          QVector3D(0.06F, 0.06F, 0.16F),
-          c.brick_dark);
-      add_merlon_strip_z(
-          [&](const QVector3D& center, const QVector3D& size, const QVector3D& color) {
-            draw_box(out, unit, white, p.model, center, size, color);
-          },
-          1.58F,
-          merlon_top,
-          -1.0F,
-          0.40F,
-          6,
-          QVector3D(0.06F, 0.06F, 0.16F),
-          c.brick_dark);
+      add_merlon_strip_x(merlon_box,
+                         merlon_top,
+                         1.28F,
+                         -1.22F,
+                         0.42F,
+                         7,
+                         QVector3D(0.16F, 0.06F, 0.06F),
+                         c.stone_light);
+      add_merlon_strip_z(merlon_box,
+                         -1.58F,
+                         merlon_top,
+                         -1.0F,
+                         0.40F,
+                         6,
+                         QVector3D(0.06F, 0.06F, 0.16F),
+                         c.stone_base);
+      add_merlon_strip_z(merlon_box,
+                         1.58F,
+                         merlon_top,
+                         -1.0F,
+                         0.40F,
+                         6,
+                         QVector3D(0.06F, 0.06F, 0.16F),
+                         c.stone_base);
     }
   }
 
@@ -633,7 +665,7 @@ void draw_courtyard(const DrawContext& p,
              p.model,
              QVector3D(-1.52F, 0.80F, 0.0F),
              QVector3D(0.02F, 0.22F, 0.32F),
-             c.ember);
+             c.tile_red);
 
     if (detailed) {
 

@@ -21,6 +21,11 @@ constexpr float k_jamb_offset = Engine::Core::GateComponent::k_passage_half_widt
 constexpr float k_structure_half_span =
     Engine::Core::GateComponent::k_structure_half_span;
 constexpr float k_jamb_depth = 0.30F;
+
+constexpr float k_tower_center_x = k_jamb_offset + 0.50F;
+constexpr float k_tower_half_x = 0.46F;
+constexpr float k_tower_half_z = 0.44F;
+constexpr float k_tower_rise = 0.90F;
 constexpr float k_leaf_thickness = 0.075F;
 constexpr float k_leaf_swing_degrees = 100.0F;
 constexpr float k_leaf_height_ratio = 0.82F;
@@ -34,6 +39,131 @@ auto leaf_height(const WallGeometry& geometry) -> float {
 
 auto lintel_height(const WallGeometry& geometry) -> float {
   return leaf_height(geometry) + 0.24F;
+}
+
+auto tower_top(const WallGeometry& geometry) -> float {
+  return geometry.stake_height + geometry.post_extra_height + k_tower_rise;
+}
+
+void add_gate_tower(BuildingArchetypeDesc& desc,
+                    const WallPalette& palette,
+                    const WallGeometry& geometry,
+                    float side) {
+  const float cx = side * k_tower_center_x;
+  const float bottom = geometry.earthwork_base ? geometry.berm_height * 0.5F : 0.02F;
+  const float top = tower_top(geometry);
+  const float half_height = (top - bottom) * 0.5F;
+  const QVector3D plank = palette.wood_mid * 0.96F;
+  const QVector3D seam = palette.wood_dark * 0.62F;
+
+  desc.add_box(QVector3D(cx, bottom + half_height, 0.0F),
+               QVector3D(k_tower_half_x, half_height, k_tower_half_z),
+               plank,
+               k_mask_intact);
+  desc.add_box(QVector3D(cx, bottom + half_height * 0.32F, 0.0F),
+               QVector3D(k_tower_half_x, half_height * 0.32F, k_tower_half_z),
+               palette.wood_dark * 0.7F,
+               BuildingStateMask::Destroyed);
+
+  for (const float t : {0.30F, 0.55F, 0.80F}) {
+    desc.add_box(QVector3D(cx, bottom + (top - bottom) * t, 0.0F),
+                 QVector3D(k_tower_half_x + 0.012F, 0.012F, k_tower_half_z + 0.012F),
+                 seam,
+                 k_mask_intact);
+  }
+
+  for (const float pz : {-1.0F, 1.0F}) {
+    desc.add_box(
+        QVector3D(cx, bottom + (top - bottom) * 0.62F, pz * (k_tower_half_z + 0.01F)),
+        QVector3D(0.03F, 0.14F, 0.02F),
+        palette.wood_dark * 0.35F,
+        BuildingStateMask::Normal);
+  }
+
+  const float post_radius = geometry.post_radius * 0.40F;
+  for (const float px : {-1.0F, 1.0F}) {
+    for (const float pz : {-1.0F, 1.0F}) {
+      const QVector3D foot(cx + px * k_tower_half_x, 0.02F, pz * k_tower_half_z);
+      desc.add_cylinder(foot,
+                        QVector3D(foot.x(), top + 0.34F, foot.z()),
+                        post_radius,
+                        palette.wood_dark,
+                        k_mask_intact);
+      desc.add_cone(
+          QVector3D(foot.x(), top + 0.33F, foot.z()),
+          QVector3D(foot.x(), top + 0.34F + geometry.tip_height * 0.7F, foot.z()),
+          post_radius * 1.02F,
+          palette.wood_dark,
+          BuildingStateMask::Normal);
+      desc.add_cylinder(foot,
+                        QVector3D(foot.x() + px * 0.05F, top * 0.30F, foot.z()),
+                        post_radius,
+                        palette.wood_dark,
+                        BuildingStateMask::Destroyed);
+    }
+  }
+
+  desc.add_box(QVector3D(cx, top + 0.03F, 0.0F),
+               QVector3D(k_tower_half_x + 0.08F, 0.035F, k_tower_half_z + 0.08F),
+               palette.wood_light,
+               k_mask_intact);
+  const float parapet_y = top + 0.21F;
+  desc.add_box(QVector3D(cx, parapet_y, 0.0F),
+               QVector3D(k_tower_half_x + 0.08F, 0.15F, 0.025F),
+               plank,
+               BuildingStateMask::Normal);
+  for (const float pz : {-1.0F, 1.0F}) {
+    desc.add_box(QVector3D(cx, parapet_y, pz * (k_tower_half_z + 0.06F)),
+                 QVector3D(k_tower_half_x + 0.08F, 0.15F, 0.025F),
+                 plank,
+                 BuildingStateMask::Normal);
+  }
+  for (const float px : {-1.0F, 1.0F}) {
+    desc.add_box(QVector3D(cx + px * (k_tower_half_x + 0.06F), parapet_y, 0.0F),
+                 QVector3D(0.025F, 0.15F, k_tower_half_z + 0.08F),
+                 plank,
+                 BuildingStateMask::Normal);
+  }
+}
+
+void add_gate_bridge(BuildingArchetypeDesc& desc,
+                     const WallPalette& palette,
+                     const WallGeometry& geometry) {
+  const float y = tower_top(geometry) - 0.30F;
+  const float half_length = k_tower_center_x - k_tower_half_x;
+  const float half_depth = 0.40F;
+
+  desc.add_box(QVector3D(0.0F, y, 0.0F),
+               QVector3D(half_length, 0.05F, half_depth),
+               palette.wood_light,
+               k_mask_intact);
+  for (const float pz : {-1.0F, 1.0F}) {
+    desc.add_box(QVector3D(0.0F, y - 0.09F, pz * (half_depth - 0.08F)),
+                 QVector3D(half_length, 0.05F, 0.05F),
+                 palette.wood_dark,
+                 k_mask_intact);
+    desc.add_box(QVector3D(0.0F, y + 0.21F, pz * half_depth),
+                 QVector3D(half_length, 0.16F, 0.025F),
+                 palette.wood_mid,
+                 BuildingStateMask::Normal);
+    desc.add_box(QVector3D(0.0F, y + 0.50F, pz * half_depth),
+                 QVector3D(half_length, 0.02F, 0.02F),
+                 palette.wood_dark,
+                 BuildingStateMask::Normal);
+    for (float px = -2.4F; px <= 2.41F; px += 0.8F) {
+      desc.add_box(QVector3D(px, y + 0.27F, pz * half_depth),
+                   QVector3D(0.035F, 0.26F, 0.035F),
+                   palette.wood_dark,
+                   BuildingStateMask::Normal);
+    }
+  }
+
+  for (float px = -2.4F; px <= 2.41F; px += 0.6F) {
+    desc.add_box(QVector3D(px, y + 0.052F, 0.0F),
+                 QVector3D(0.008F, 0.004F, half_depth),
+                 palette.wood_dark * 0.7F,
+                 k_mask_intact);
+  }
 }
 
 void add_jamb(BuildingArchetypeDesc& desc,
@@ -81,8 +211,8 @@ void add_jamb(BuildingArchetypeDesc& desc,
 void add_piers(BuildingArchetypeDesc& desc,
                const WallPalette& palette,
                const WallGeometry& geometry) {
-  constexpr int k_stakes_per_pier = 5;
-  const float pier_inner = k_jamb_offset + 0.16F;
+  constexpr int k_stakes_per_pier = 2;
+  const float pier_inner = k_tower_center_x + k_tower_half_x + 0.02F;
   const float pier_outer = k_structure_half_span;
   const float span = pier_outer - pier_inner;
   const float spacing = span / static_cast<float>(k_stakes_per_pier);
@@ -172,17 +302,10 @@ auto build_wall_gate_archetype(std::string_view name_prefix,
                  k_mask_intact);
   }
 
-  desc.add_box(QVector3D(0.0F, lintel_y + 0.26F, 0.0F),
-               QVector3D(k_jamb_offset + 0.26F, 0.085F, k_jamb_depth + 0.14F),
-               palette.wood_light,
-               BuildingStateMask::Normal);
-
-  for (int i = -2; i <= 2; ++i) {
-    desc.add_box(QVector3D(static_cast<float>(i) * 0.74F, lintel_y + 0.40F, 0.0F),
-                 QVector3D(0.22F, 0.06F, k_jamb_depth + 0.07F),
-                 (i % 2 == 0) ? palette.wood_mid : palette.wood_light,
-                 BuildingStateMask::Normal);
+  for (const float side : {-1.0F, 1.0F}) {
+    add_gate_tower(desc, palette, geometry, side);
   }
+  add_gate_bridge(desc, palette, geometry);
 
   desc.add_rotated_box(QVector3D(0.35F, 0.10F, k_jamb_depth * 1.6F),
                        QVector3D(k_jamb_offset * 0.9F, 0.075F, 0.16F),
@@ -283,6 +406,17 @@ void submit_wall_gate(ISubmitter& out,
 
       if (!detailed) {
         continue;
+      }
+
+      for (const float seam_ratio : {0.2F, 0.4F, 0.6F, 0.8F}) {
+        submit_building_box(
+            out,
+            mesh,
+            white,
+            hinge,
+            QVector3D(-side * length * seam_ratio, (height * 0.5F) + 0.03F, 0.0F),
+            QVector3D(0.010F, (height * 0.5F) - 0.02F, k_leaf_thickness + 0.004F),
+            decayed_color(palette.wood_dark * 0.55F, state, 11));
       }
 
       for (const float band_ratio : {0.28F, 0.72F}) {

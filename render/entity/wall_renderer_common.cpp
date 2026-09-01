@@ -1,5 +1,6 @@
 #include "wall_renderer_common.h"
 
+#include <algorithm>
 #include <array>
 #include <cmath>
 #include <cstddef>
@@ -395,29 +396,61 @@ void add_rails(BuildingArchetypeDesc& desc,
   }
 }
 
+void add_span_backing(BuildingArchetypeDesc& desc,
+                      const WallPalette& palette,
+                      const WallGeometry& geometry,
+                      std::size_t dir,
+                      float reach) {
+  const float bottom = geometry.earthwork_base ? geometry.berm_height * 0.5F : 0.02F;
+  const float top = geometry.upper_rail_y + 0.16F;
+  const float half_height = (top - bottom) * 0.5F;
+  const float along_half = reach * 0.5F;
+  const float lateral_half = geometry.stake_radius * 0.62F;
+  const QVector3D plank = palette.wood_dark * 0.92F;
+  desc.add_box(point_at(dir, along_half, 0.0F, bottom + half_height),
+               extents_at(dir, along_half, half_height, lateral_half),
+               plank,
+               k_mask_intact);
+
+  for (const float seam_y :
+       {bottom + (top - bottom) * 0.36F, bottom + (top - bottom) * 0.68F}) {
+    desc.add_box(point_at(dir, along_half, 0.0F, seam_y),
+                 extents_at(dir, along_half, 0.012F, lateral_half + 0.006F),
+                 palette.wood_dark * 0.62F,
+                 k_mask_intact);
+  }
+}
+
 void add_span_braces(BuildingArchetypeDesc& desc,
                      const WallPalette& palette,
                      const WallGeometry& geometry,
                      std::size_t dir,
                      float length) {
-  const float lateral = rail_offset(geometry) * 1.24F;
-  const float radius = geometry.rail_radius * 0.82F;
-  const float near_end = length * 0.16F;
-  const float far_end = length * 0.86F;
+  const float radius = geometry.rail_radius * 0.90F;
+  const float foot_lateral = std::min(geometry.berm_half_width * 1.30F - 0.06F, 0.33F);
+  const float head_lateral = rail_offset(geometry) + (geometry.rail_radius * 0.6F);
+  const float foot_y = geometry.earthwork_base ? geometry.berm_height * 0.55F : 0.02F;
+  const float head_y = geometry.upper_rail_y - 0.04F;
 
-  for (int side = -1; side <= 1; side += 2) {
-    const float offset = static_cast<float>(side) * lateral;
-    desc.add_cylinder(point_at(dir, near_end, offset, 0.32F),
-                      point_at(dir, far_end, offset, geometry.upper_rail_y),
-                      radius,
-                      palette.wood_dark,
-                      k_mask_intact);
-    if (geometry.cross_braced) {
-      desc.add_cylinder(point_at(dir, far_end, offset, 0.32F),
-                        point_at(dir, near_end, offset, geometry.upper_rail_y),
+  const std::array<float, 2> k_strut_t = geometry.cross_braced
+                                             ? std::array<float, 2>{0.30F, 0.72F}
+                                             : std::array<float, 2>{0.52F, -1.0F};
+  for (const float t : k_strut_t) {
+    if (t < 0.0F) {
+      continue;
+    }
+    const float along = length * t;
+    for (int side = -1; side <= 1; side += 2) {
+      const float s = static_cast<float>(side);
+      desc.add_cylinder(point_at(dir, along, s * foot_lateral, foot_y),
+                        point_at(dir, along, s * head_lateral, head_y),
                         radius,
-                        palette.wood_mid,
-                        BuildingStateMask::Normal);
+                        palette.wood_dark,
+                        k_mask_intact);
+      desc.add_box(point_at(dir, along, s * foot_lateral, foot_y + 0.03F),
+                   extents_at(dir, radius * 1.3F, 0.035F, 0.05F),
+                   palette.wood_dark * 0.7F,
+                   k_mask_intact);
     }
   }
 }
@@ -457,13 +490,25 @@ void add_earth_berm(BuildingArchetypeDesc& desc,
                     const WallGeometry& geometry,
                     const WallLayout& layout) {
   constexpr float k_sink = 0.03F;
+
+  constexpr float k_bank_spread = 1.30F;
+  constexpr float k_bank_height_ratio = 0.55F;
   const float half_height = (geometry.berm_height + k_sink) * 0.5F;
   const float center_y = (geometry.berm_height - k_sink) * 0.5F;
   const float half_width = geometry.berm_half_width;
+  const float bank_half_width = half_width * k_bank_spread;
+  const float bank_half_height =
+      ((geometry.berm_height * k_bank_height_ratio) + k_sink) * 0.5F;
+  const float bank_center_y =
+      ((geometry.berm_height * k_bank_height_ratio) - k_sink) * 0.5F;
+  const QVector3D bank_color = palette.earth_light * 0.92F + palette.earth_dark * 0.08F;
 
   desc.add_box(QVector3D(0.0F, center_y, 0.0F),
                QVector3D(half_width, half_height, half_width),
                palette.earth_light);
+  desc.add_box(QVector3D(0.0F, bank_center_y, 0.0F),
+               QVector3D(bank_half_width, bank_half_height, bank_half_width),
+               bank_color);
 
   constexpr std::array<float, 2> k_rubble_t{0.34F, 0.72F};
   for (std::size_t dir = 0; dir < k_dir_count; ++dir) {
@@ -481,10 +526,18 @@ void add_earth_berm(BuildingArchetypeDesc& desc,
     desc.add_box(point_at(dir, along_center, 0.0F, center_y),
                  extents_at(dir, along_half, half_height, half_width),
                  palette.earth_light);
+    const float bank_along_half = (length - bank_half_width) * 0.5F;
+    if (bank_along_half > 0.02F) {
+      desc.add_box(
+          point_at(dir, bank_half_width + bank_along_half, 0.0F, bank_center_y),
+          extents_at(dir, bank_along_half, bank_half_height, bank_half_width),
+          bank_color);
+    }
 
     for (std::size_t i = 0; i < k_rubble_t.size(); ++i) {
       const float along = half_width + ((length - half_width) * k_rubble_t[i]);
-      const float lateral = (i % 2 == 0) ? half_width : -half_width;
+      const float lateral =
+          (i % 2 == 0) ? bank_half_width - 0.08F : -(bank_half_width - 0.08F);
       const float size = 0.055F + (0.015F * static_cast<float>((dir + i) % 3U));
       desc.add_box(point_at(dir, along, lateral, size * 0.7F),
                    QVector3D(size, size * 0.7F, size),
@@ -589,6 +642,7 @@ void add_palisade(BuildingArchetypeDesc& desc,
     const float length = span_length(layout, dir, geometry);
     add_span_stakes(
         desc, palette, geometry, dir, length, layout[dir] == SpanKind::Open);
+    add_span_backing(desc, palette, geometry, dir, rail_reach(layout, dir, geometry));
     add_span_braces(desc, palette, geometry, dir, rail_reach(layout, dir, geometry));
     add_span_debris(desc, palette, dir, length, rail_offset(geometry) * 1.6F);
   }
