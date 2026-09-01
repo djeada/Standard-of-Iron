@@ -4089,6 +4089,10 @@ Every troop costs manpower; a squad of twelve builders costs ten. This is not a 
 <context>
     <name>LoadGamePanel</name>
     <message>
+        <source>Load Game</source>
+        <translation>تحميل لعبة</translation>
+    </message>
+    <message>
         <source>Cancel</source>
         <translation>إلغاء</translation>
     </message>
@@ -4233,10 +4237,6 @@ This action cannot be undone.</source>
     <message>
         <source>Pick a saved game first.</source>
         <translation>اختر لعبة محفوظة أولاً.</translation>
-    </message>
-    <message>
-        <source>Load game</source>
-        <translation>تحميل لعبة</translation>
     </message>
 </context>
 <context>
@@ -4531,6 +4531,10 @@ This action cannot be undone.</source>
         <translation>رايةٌ جديدة في الوادي، وليس تحتها أحد حمل رمحًا أكثر من مرتين.</translation>
     </message>
     <message>
+        <source>Standard of Iron - RTS Game</source>
+        <translation>Standard of Iron - لعبة استراتيجية آنية</translation>
+    </message>
+    <message>
         <source>PAUSED</source>
         <translation>متوقفة مؤقتاً</translation>
     </message>
@@ -4542,16 +4546,20 @@ This action cannot be undone.</source>
         <source>Error</source>
         <translation>خطأ</translation>
     </message>
-    <message>
-        <source>Standard of Iron - RTS game</source>
-        <translation>Standard of Iron - لعبة استراتيجية آنية</translation>
-    </message>
 </context>
 <context>
     <name>MainMenu</name>
     <message>
         <source>STANDARD OF IRON</source>
         <translation>STANDARD OF IRON</translation>
+    </message>
+    <message>
+        <source>Save Game</source>
+        <translation>حفظ اللعبة</translation>
+    </message>
+    <message>
+        <source>Load Game</source>
+        <translation>تحميل لعبة</translation>
     </message>
     <message>
         <source>Settings</source>
@@ -4712,26 +4720,6 @@ This action cannot be undone.</source>
     <message>
         <source>Help</source>
         <translation>مساعدة</translation>
-    </message>
-    <message>
-        <source>Missions</source>
-        <translation>المهام</translation>
-    </message>
-    <message>
-        <source>One small field, one order to carry out</source>
-        <translation>ميدان صغير واحد، وأمر واحد يُنفَّذ</translation>
-    </message>
-    <message>
-        <source>Detail</source>
-        <translation>مفرزة</translation>
-    </message>
-    <message>
-        <source>Save game</source>
-        <translation>حفظ اللعبة</translation>
-    </message>
-    <message>
-        <source>Load game</source>
-        <translation>تحميل لعبة</translation>
     </message>
 </context>
 <context>
@@ -5168,22 +5156,6 @@ to see preview</source>
     <message>
         <source>Three camps a side along one broad channel. The Amber runs the whole map and only three ferry crossings span it, so a bank is a front line: the highway behind each bank links its three camps, and every attack has to buy a bridge first.</source>
         <translation>ثلاثة معسكرات على كل ضفة بمحاذاة مجرى عريض. يجري نهر العنبر عبر الخريطة كلها ولا يعبره سوى ثلاثة معابر عبّارات، فالضفة خط جبهة: الطريق السريع خلف كل ضفة يربط معسكراتها الثلاثة، وكل هجوم عليه أن يشتري جسرًا أولًا.</translation>
-    </message>
-    <message>
-        <source>A redoubt above a dry ford, for one. A spur of rock runs the length of the approach and the two shoulders close the flanks, so everything coming down from the north is committed to one of two lanes -- the cart gate in the west, the goat path in the east -- and they do not meet again until the ground in front of the camp. One line cannot hold both mouths, so holding here is a question of which lane you stand in and when you leave it.</source>
-        <translation>معقل فوق مخاضة جافة، مثلًا. يمتد نتوء صخري بطول طريق الاقتراب كله، ويسد المنحدران الجانبين، فكل ما ينزل من الشمال محكوم بأحد ممرين — بوابة العربات في الغرب، ودرب الماعز في الشرق — ولا يلتقيان ثانية إلا في الأرض الممتدة أمام المعسكر. لا يستطيع خط واحد أن يسد الفمين معًا، فالصمود هنا مسألة أي ممر تقف فيه ومتى تغادره.</translation>
-    </message>
-    <message>
-        <source>A timber detail&apos;s cut above the Pinewater, for one. The near stand beside the camp is already half felled, so the levy is only filled out of the deep pines a long haul north-east, past the spine of rock the haul road has to swing around. The scree that gives up the stone lies the other way entirely, and the crew is not big enough to work both without splitting it.</source>
-        <translation>مقطع أخشاب لمفرزة حطّابين فوق نهر باينووتر، مثلًا. الأجمة القريبة بجوار المعسكر قُطع نصفها بالفعل، فلا تكتمل الجباية إلا من الصنوبر العميق بعد نقل طويل نحو الشمال الشرقي، خلف عرف الصخر الذي يضطر طريق الجرّ إلى الالتفاف حوله. أما الحصى الذي يعطي الحجر فيقع في الاتجاه المعاكس تمامًا، والطاقم أصغر من أن يعمل في الموضعين دون أن ينقسم.</translation>
-    </message>
-    <message>
-        <source>Pinewater Cut</source>
-        <translation>مقطع باينووتر</translation>
-    </message>
-    <message>
-        <source>Sallow Ford</source>
-        <translation>مخاضة الصفصاف</translation>
     </message>
 </context>
 <context>
@@ -5770,6 +5742,10 @@ to see preview</source>
     <message>
         <source>If the central camp falls, the Campanian alliance dies with it.</source>
         <translation>إن سقط المعسكر الأوسط، مات معه الحلف الكامباني.</translation>
+    </message>
+    <message>
+        <source>Investigate the cursed shrine, survive the awakening, and clear the ruins.</source>
+        <translation>تحرَّ المزار الملعون، وانجُ من الصحوة، وطهّر الأطلال.</translation>
     </message>
     <message>
         <source>Iron Sepulcher Watch</source>
@@ -6426,161 +6402,6 @@ to see preview</source>
     <message>
         <source>With the river camp taken there is nowhere left for the legions to reform.</source>
         <translation>بأخذ معسكر النهر لا يبقى للفيالق موضع تعيد فيه ترتيب صفوفها.</translation>
-    </message>
-    <message>
-        <source>Break all five columns. The ford is held when the last of them is dead in front of it, and not one column sooner.</source>
-        <translation>اكسر الأرتال الخمسة كلها. لا تُعدّ المخاضة محفوظة إلا حين يسقط آخرها صريعًا أمامها، ولا رتلًا واحدًا قبل ذلك.</translation>
-    </message>
-    <message>
-        <source>Cut and carry home four hundred of timber and two hundred and ten of stone. The near stand will not cover it; the deep pines will.</source>
-        <translation>اقطع واحمل إلى الديار أربعمائة من الخشب ومائتين وعشرة من الحجر. الأجمة القريبة لن تكفي؛ أما الصنوبر العميق فسيكفي.</translation>
-    </message>
-    <message>
-        <source>Fill the levy out of the Pinewater cut: four hundred of timber and two hundred and ten of stone, cut and carried home before the column comes back through.</source>
-        <translation>أوفِ الجباية من مقطع باينووتر: أربعمائة من الخشب ومائتان وعشرة من الحجر، تُقطع وتُحمل إلى الديار قبل أن يعود الرتل من هنا.</translation>
-    </message>
-    <message>
-        <source>Five columns and the ford still ours. Count the men twice and do not write the number down until morning; it is always worse in the dark and always worse again in daylight.</source>
-        <translation>خمسة أرتال والمخاضة ما زالت لنا. عُدّ الرجال مرتين ولا تدوّن العدد حتى الصباح؛ فهو في العتمة أسوأ دائمًا، وفي ضوء النهار أسوأ من ذلك.</translation>
-    </message>
-    <message>
-        <source>Four hundred of timber and two hundred of stone, and the near stand was stripped by the last detail. That means the deep pines, which means the long road, which means whatever is living in the deep pines gets a look at us. Split the crew. Escort the far one.</source>
-        <translation>أربعمائة من الخشب ومائتان من الحجر، والأجمة القريبة جرّدتها المفرزة السابقة. هذا يعني الصنوبر العميق، وهذا يعني الطريق الطويل، وهذا يعني أن ما يسكن الصنوبر العميق سيرانا. اقسم الطاقم، وأرسل حراسة مع البعيد منهما.</translation>
-    </message>
-    <message>
-        <source>Hold the Sallow Ford</source>
-        <translation>اصمد عند مخاضة الصفصاف</translation>
-    </message>
-    <message>
-        <source>Keep both towers standing. Lose one and the lane it watches is yours to walk yourself.</source>
-        <translation>أبقِ البرجين قائمين. إن خسرت أحدهما فالممر الذي يحرسه صار عليك أن تمشيه بنفسك.</translation>
-    </message>
-    <message>
-        <source>Leave the axes. Leave the carts. A detail that cannot walk out of its own cut does not get to carry anything.</source>
-        <translation>اترك الفؤوس. اترك العربات. المفرزة التي لا تقدر على الخروج من مقطعها بأقدامها لا تحمل شيئًا.</translation>
-    </message>
-    <message>
-        <source>Levy filled. Stack it by the road and let the carts argue about it. We cut a wood down to feed a siege that has not started yet — remember that the next time somebody calls this the quiet posting.</source>
-        <translation>اكتملت الجباية. كوّمها على جانب الطريق ودع العربات تتنازع عليها. لقد أسقطنا غابة لنُطعم حصارًا لم يبدأ بعد — تذكّر ذلك حين يسمّي أحدهم هذا الموقع الهادئ في المرة القادمة.</translation>
-    </message>
-    <message>
-        <source>Lose the redoubt and there is nothing behind it for forty miles.</source>
-        <translation>إن سقط المعقل فليس خلفه شيء على مدى أربعين ميلًا.</translation>
-    </message>
-    <message>
-        <source>One officer, no line. The next column will not even slow down.</source>
-        <translation>ضابط واحد بلا خط. الرتل التالي لن يبطئ خطوه أصلًا.</translation>
-    </message>
-    <message>
-        <source>One redoubt, two mouths, five columns. Break every assault that comes down the cart gate and the goat path, and still be standing when the fifth is spent.</source>
-        <translation>معقل واحد، وفمان، وخمسة أرتال. اكسر كل هجوم ينزل من بوابة العربات ودرب الماعز، وابقَ واقفًا حين يفنى الخامس.</translation>
-    </message>
-    <message>
-        <source>Overcut the levy. A surplus is the only thing a quartermaster has ever thanked anyone for.</source>
-        <translation>اقطع فوق الجباية. الفائض هو الشيء الوحيد الذي شكر عليه ضابط التموين أحدًا يومًا.</translation>
-    </message>
-    <message>
-        <source>Take the cursed shrine above the sepulcher ruins and hold what you take: clear the guardians out of the ruins, then drive the dead off the shrine itself.</source>
-        <translation>استولِ على المزار الملعون فوق أطلال الضريح واحتفظ بما تأخذ: طهّر الأطلال من الحرّاس، ثم اطرد الموتى عن المزار نفسه.</translation>
-    </message>
-    <message>
-        <source>The Timber Levy</source>
-        <translation>جباية الخشب</translation>
-    </message>
-    <message>
-        <source>The commander falls and the line behind him is just men standing in a dry riverbed.</source>
-        <translation>يسقط القائد فلا يبقى خلفه سوى رجال واقفين في مجرى نهر جاف.</translation>
-    </message>
-    <message>
-        <source>The crew is gone and the officer is standing in a clearing with an axe. That is not a work party.</source>
-        <translation>فني الطاقم وبقي الضابط واقفًا في فسحة يحمل فأسًا. هذه ليست فرقة عمل.</translation>
-    </message>
-    <message>
-        <source>The officer of the detail falls. Nobody else here can sign for the levy.</source>
-        <translation>يسقط ضابط المفرزة. ولا أحد آخر هنا يستطيع التوقيع على الجباية.</translation>
-    </message>
-    <message>
-        <source>The redoubt is gone. Go south, keep the spur on your left, and do not stop to look at the ford. There is nothing there now that is worth a second of your life.</source>
-        <translation>ذهب المعقل. اتجه جنوبًا، وأبقِ النتوء عن يسارك، ولا تقف لتنظر إلى المخاضة. لم يبقَ هناك ما يستحق ثانية واحدة من عمرك.</translation>
-    </message>
-    <message>
-        <source>The spur splits them for us, which is the only kindness this ground offers. Cart gate west, goat path east, and they only meet where we are standing. You cannot hold both mouths. Pick one, hold it, and move when the horns tell you to.</source>
-        <translation>النتوء يشقّهم عنّا، وهذا هو الكرم الوحيد الذي تجود به هذه الأرض. بوابة العربات غربًا، ودرب الماعز شرقًا، ولا يلتقيان إلا حيث نقف. لا تستطيع سدّ الفمين معًا. اختر واحدًا واصمد فيه، وتحرّك حين تأمرك الأبواق.</translation>
-    </message>
-</context>
-<context>
-    <name>MissionsScreen</name>
-    <message>
-        <source>%1 × %2</source>
-        <translation>%1 × %2</translation>
-    </message>
-    <message>
-        <source>Orders</source>
-        <translation>الأوامر</translation>
-    </message>
-    <message>
-        <source>Orders — any one of these ends it</source>
-        <translation>الأوامر — أيٌّ منها يُنهي الأمر</translation>
-    </message>
-    <message>
-        <source>Orders — all of them, or none</source>
-        <translation>الأوامر — كلها أو لا شيء</translation>
-    </message>
-    <message>
-        <source>You</source>
-        <translation>أنت</translation>
-    </message>
-    <message>
-        <source>Missions</source>
-        <translation>المهام</translation>
-    </message>
-    <message>
-        <source>One small field, one order to carry out. No campaign to lose, no second army to worry about.</source>
-        <translation>ميدان صغير واحد، وأمر واحد يُنفَّذ. لا حملة تُخسر، ولا جيش ثانٍ يشغل بالك.</translation>
-    </message>
-    <message>
-        <source>carried out</source>
-        <translation>مُنفَّذة</translation>
-    </message>
-    <message>
-        <source>← Back</source>
-        <translation>← رجوع</translation>
-    </message>
-    <message>
-        <source>No missions are installed.</source>
-        <translation>لا توجد مهام مثبَّتة.</translation>
-    </message>
-    <message>
-        <source>Carried out</source>
-        <translation>مُنفَّذة</translation>
-    </message>
-    <message>
-        <source>Worth doing as well</source>
-        <translation>يُستحسن كذلك</translation>
-    </message>
-    <message>
-        <source>You bring</source>
-        <translation>تصطحب معك</translation>
-    </message>
-    <message>
-        <source>It ends badly if</source>
-        <translation>تنتهي بالسوء إذا</translation>
-    </message>
-    <message>
-        <source>You have carried this one out before.</source>
-        <translation>سبق أن نفّذت هذه المهمة.</translation>
-    </message>
-    <message>
-        <source>Take it again</source>
-        <translation>نفّذها مرة أخرى</translation>
-    </message>
-    <message>
-        <source>Take the field</source>
-        <translation>انزل إلى الميدان</translation>
-    </message>
-    <message>
-        <source>Pick a mission.</source>
-        <translation>اختر مهمة.</translation>
     </message>
 </context>
 <context>
@@ -7974,6 +7795,10 @@ Builders reap it for the food that recruits civilians</source>
 <context>
     <name>SaveGamePanel</name>
     <message>
+        <source>Save Game</source>
+        <translation>حفظ اللعبة</translation>
+    </message>
+    <message>
         <source>Cancel</source>
         <translation>إلغاء</translation>
     </message>
@@ -8042,10 +7867,6 @@ Builders reap it for the food that recruits civilians</source>
     <message>
         <source>Name the save first.</source>
         <translation>سمِّ الحفظ أولاً.</translation>
-    </message>
-    <message>
-        <source>Save game</source>
-        <translation>حفظ اللعبة</translation>
     </message>
 </context>
 <context>
@@ -8336,6 +8157,10 @@ Builders reap it for the food that recruits civilians</source>
         <translation>عن اللعبة</translation>
     </message>
     <message>
+        <source>Standard of Iron - RTS Game</source>
+        <translation>Standard of Iron - لعبة استراتيجية آنية</translation>
+    </message>
+    <message>
         <source>Version %1</source>
         <translation>الإصدار %1</translation>
     </message>
@@ -8518,10 +8343,6 @@ Builders reap it for the food that recruits civilians</source>
     <message>
         <source>Prompts and readouts:</source>
         <translation>التلميحات واللوحات:</translation>
-    </message>
-    <message>
-        <source>Standard of Iron - RTS game</source>
-        <translation>Standard of Iron - لعبة استراتيجية آنية</translation>
     </message>
 </context>
 <context>

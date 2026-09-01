@@ -64,7 +64,7 @@ public:
   auto any_channel_playing() const -> bool;
   auto channel_playing(int channel) const -> bool;
 
-  void play_sound(const QString& id, float volume, bool loop = false);
+  void play_sound(const QString& id, float volume, bool loop = false, float pan = 0.0F);
   void stop_sound(const QString& id);
   void set_sound_volume(const QString& id, float volume, int fade_ms);
   auto is_sound_active(const QString& id) const -> bool;
@@ -105,6 +105,8 @@ private:
     float volume = DEFAULT_VOLUME;
     float target_volume = DEFAULT_VOLUME;
     float volume_step = 0.0F;
+    float gain_left = DEFAULT_VOLUME;
+    float gain_right = DEFAULT_VOLUME;
     unsigned fade_samples = 0;
     bool looping = false;
     bool active = false;

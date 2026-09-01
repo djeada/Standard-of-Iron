@@ -8,8 +8,6 @@
 #include <unordered_set>
 #include <vector>
 
-#include "../../core/ownership_constants.h"
-#include "../../units/combat_role.h"
 #include "ai_types.h"
 
 namespace Game::Systems::AI {
@@ -91,8 +89,8 @@ inline auto is_entity_engaged(const EntitySnapshot& entity,
 
 inline auto is_combat_role_unit(const EntitySnapshot& entity) -> bool {
 
-  return !entity.is_building && Game::Units::combat_role(entity.spawn_type) !=
-                                    Game::Units::CombatRole::Noncombatant;
+  return !entity.is_building && entity.spawn_type != Game::Units::SpawnType::Builder &&
+         entity.spawn_type != Game::Units::SpawnType::Civilian;
 }
 
 inline auto marches_with_the_army(const EntitySnapshot& entity) -> bool {
@@ -102,19 +100,12 @@ inline auto marches_with_the_army(const EntitySnapshot& entity) -> bool {
 
 inline auto picks_its_own_fights(const EntitySnapshot& entity) -> bool {
 
-  return !entity.is_building && Game::Units::pursues_targets(entity.spawn_type);
-}
-
-inline auto is_war_contact(const ContactSnapshot& contact) -> bool {
-  return !Game::Units::is_wildlife_spawn(contact.spawn_type) &&
-         !Game::Core::is_neutral_owner(contact.owner_id);
+  return is_combat_role_unit(entity) &&
+         entity.spawn_type != Game::Units::SpawnType::Healer;
 }
 
 inline auto is_threatening_contact(const ContactSnapshot& contact) -> bool {
   if (contact.holds_ground) {
-    return false;
-  }
-  if (!is_war_contact(contact)) {
     return false;
   }
   return !contact.is_building ||

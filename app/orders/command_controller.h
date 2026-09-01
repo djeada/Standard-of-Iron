@@ -47,8 +47,7 @@ public:
                        qreal sy,
                        int viewport_width,
                        int viewport_height,
-                       void* camera,
-                       int local_owner_id) -> CommandResult;
+                       void* camera) -> CommandResult;
 
   auto on_attack_press(qreal sx,
                        qreal sy,

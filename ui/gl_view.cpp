@@ -36,6 +36,16 @@
 #include <unordered_map>
 #include <utility>
 
+#if defined(_WIN32)
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
+#endif
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
+#include <windows.h>
+#endif
+
 #include "../render/draw_cmd_traits.h"
 #include "../render/graphics_settings.h"
 #include "../render/i_render_backend.h"
@@ -160,12 +170,27 @@ struct FrameGate {
 };
 
 auto render_thread_cpu_ms() -> double {
+#if defined(_WIN32)
+  FILETIME creation{};
+  FILETIME exit{};
+  FILETIME kernel{};
+  FILETIME user{};
+  if (GetThreadTimes(GetCurrentThread(), &creation, &exit, &kernel, &user) == 0) {
+    return 0.0;
+  }
+  auto hundred_ns = [](const FILETIME& value) -> std::uint64_t {
+    return (static_cast<std::uint64_t>(value.dwHighDateTime) << 32U) |
+           static_cast<std::uint64_t>(value.dwLowDateTime);
+  };
+  return static_cast<double>(hundred_ns(kernel) + hundred_ns(user)) / 1.0e4;
+#else
   timespec now{};
   if (clock_gettime(CLOCK_THREAD_CPUTIME_ID, &now) != 0) {
     return 0.0;
   }
   return static_cast<double>(now.tv_sec) * 1000.0 +
          static_cast<double>(now.tv_nsec) / 1.0e6;
+#endif
 }
 
 } // namespace

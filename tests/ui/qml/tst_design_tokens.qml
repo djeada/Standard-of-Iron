@@ -132,19 +132,19 @@ TestCase {
         return [{
                 "tag": "720p",
                 "height": 720,
-                "expected": 150
+                "expected": 184
             }, {
                 "tag": "1080p",
                 "height": 1080,
-                "expected": 183.6
+                "expected": 224
             }, {
                 "tag": "1440p",
                 "height": 1440,
-                "expected": 200
+                "expected": 224
             }, {
                 "tag": "tiny",
                 "height": 480,
-                "expected": 150
+                "expected": 184
             }];
     }
 
@@ -174,7 +174,7 @@ TestCase {
     function test_the_rts_bottom_bar_leaves_the_battlefield_the_screen(data) {
         var barHeight = Metrics.bottomBarHeight(data.height, false);
         verify(barHeight <= data.height * 0.28, "the bottom bar ate more than a quarter of the battlefield at " + data.tag + ", it was " + barHeight);
-        verify(barHeight >= Metrics.orderButtonSize * 2 + Metrics.compactControlHeight, "the bottom bar is too short to seat two rows of order tiles at " + data.tag + ", it was " + barHeight);
+        verify(barHeight >= Metrics.commandButtonSize * 2 + Metrics.controlHeight, "the bottom bar is too short to seat two labelled command rows and their mode banner at " + data.tag + ", it was " + barHeight);
     }
 
     function test_commander_mode_keeps_a_slim_bar() {

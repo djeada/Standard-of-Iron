@@ -99,6 +99,7 @@
 #include "game/audio/audio_cues.h"
 #include "game/audio/audio_event_handler.h"
 #include "game/audio/audio_system.h"
+#include "game/audio/cue_trace.h"
 #include "game/command/command_queue.h"
 #include "game/core/component.h"
 #include "game/core/event_manager.h"
@@ -261,6 +262,8 @@ GameEngine::~GameEngine() {
   if (m_audio_event_handler) {
     m_audio_event_handler->shutdown();
   }
+  Game::Audio::CueTrace::instance().write_requested_summary(
+      m_level.map_path.toStdString());
   AudioSystem::get_instance().shutdown();
   qInfo() << "AudioSystem shut down";
 }
@@ -371,9 +374,6 @@ void GameEngine::set_active_camera(Render::GL::Camera* camera) {
   m_camera = camera;
   publish_client_context();
   sync_render_camera();
-  if (m_minimap_manager) {
-    m_minimap_manager->invalidate_camera_viewport();
-  }
   if (m_renderer != nullptr) {
     m_renderer->set_camera(&m_render_camera);
     if (m_viewport.width > 0 && m_viewport.height > 0) {
@@ -388,6 +388,21 @@ void GameEngine::sync_render_camera() {
     return;
   }
   m_render_camera = *m_camera;
+
+  const QVector3D listener_position = m_camera->get_position();
+  Game::Audio::CueTrace::instance().set_listener(
+      {.x = listener_position.x(),
+       .y = listener_position.y(),
+       .z = listener_position.z(),
+       .mode = m_commander_view_model->active() ? "commander" : "rts"});
+
+  const QVector3D listener_right = m_camera->get_right_vector();
+  AudioSystem::get_instance().set_listener({.position = {listener_position.x(),
+                                                         listener_position.y(),
+                                                         listener_position.z()},
+                                            .right_x = listener_right.x(),
+                                            .right_z = listener_right.z(),
+                                            .valid = true});
 }
 
 void GameEngine::capture_render_selection() {
@@ -1844,6 +1859,10 @@ void GameEngine::reset_mission_runtime_state() {
   AudioSystem::get_instance().stop_music();
   AudioResourceLoader::unload_audio_resources(AudioLoadPolicy::Mission);
   AudioResourceLoader::unload_audio_resources(AudioLoadPolicy::Lazy);
+
+  Game::Audio::CueTrace::instance().write_requested_summary(
+      m_level.map_path.toStdString());
+  Game::Audio::CueTrace::instance().reset();
 }
 
 void GameEngine::update_mission_waves(float dt) {

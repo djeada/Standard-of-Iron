@@ -24,7 +24,7 @@ public:
   [[nodiscard]] auto track_id() const -> const QString& { return m_track_id; }
   [[nodiscard]] auto is_registered() const -> bool;
   [[nodiscard]] auto is_playing() const -> bool;
-  void play(float volume = DEFAULT_VOLUME, bool loop = false);
+  void play(float volume = DEFAULT_VOLUME, bool loop = false, float pan = 0.0F);
   void stop();
   void set_volume(float volume);
   void set_playing_volume(float volume, int fade_ms);

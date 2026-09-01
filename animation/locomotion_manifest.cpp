@@ -35,11 +35,6 @@ constexpr float k_run_cycle_distance = k_run_stance_travel / k_run_planted_fract
 static_assert(k_run_cycle_distance > k_humanoid_run_cycle_distance - 0.001F &&
               k_run_cycle_distance < k_humanoid_run_cycle_distance + 0.001F);
 
-constexpr float k_min_planted_fraction = k_run_planted_fraction;
-constexpr float k_max_planted_fraction = 0.74F;
-static_assert(k_min_planted_fraction <= k_run_planted_fraction &&
-              k_min_planted_fraction <= k_walk_planted_fraction);
-
 constexpr float k_min_cycle_time = 0.52F;
 constexpr float k_max_cycle_time = 1.30F;
 constexpr float k_min_cadence_speed = 0.35F;
@@ -811,8 +806,8 @@ auto resolve_humanoid_locomotion_pose(
   float const planted_fraction =
       std::clamp(profile.planted_fraction + braking * 0.06F -
                      acceleration_push * 0.04F + turn_abs * 0.04F,
-                 k_min_planted_fraction,
-                 k_max_planted_fraction);
+                 0.34F,
+                 0.74F);
   auto bob_at = [&](float phase_lag) {
     float const phase_lag_radians = phase_lag * 2.0F * std::numbers::pi_v<float>;
     float const walk_wave =

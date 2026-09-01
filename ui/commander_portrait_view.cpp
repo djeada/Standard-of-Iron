@@ -47,6 +47,7 @@ constexpr float k_cranium_rise = k_head_radius * 0.06F;
 
 constexpr float k_face_surface = k_head_radius * 2.02F;
 constexpr float k_mouth_surface = k_head_radius * 2.20F;
+constexpr float k_face_drop = k_head_radius * 0.80F;
 
 constexpr QVector3D k_eye_white{0.72F, 0.66F, 0.54F};
 constexpr QVector3D k_roman_iris{0.30F, 0.18F, 0.075F};
@@ -55,6 +56,11 @@ constexpr QVector3D k_pupil{0.025F, 0.018F, 0.012F};
 constexpr QVector3D k_brow{0.13F, 0.075F, 0.035F};
 constexpr QVector3D k_mouth{0.16F, 0.055F, 0.035F};
 constexpr QVector3D k_lip{0.38F, 0.16F, 0.11F};
+
+auto face_shell_z(float shell_radius, float feature_y) -> float {
+  const float inner = (shell_radius * shell_radius) - (feature_y * feature_y);
+  return inner > 0.0F ? std::sqrt(inner) : 0.0F;
+}
 
 auto face_feature_model(const QMatrix4x4& head_world,
                         const QVector3D& centre,
@@ -277,22 +283,23 @@ void CommanderPortraitView::PortraitRenderer::submit_face(const QMatrix4x4& head
 
   const QVector3D iris =
       m_nation == QStringLiteral("carthage") ? k_carthage_iris : k_roman_iris;
+  const float eye_y = (k_head_radius * 0.15F) - k_face_drop;
+  const float brow_y = (k_head_radius * 0.43F) - k_face_drop;
+  const float eye_z = face_shell_z(k_face_surface, eye_y);
+  const float brow_z = face_shell_z(k_face_surface, brow_y);
   for (float side : {-1.0F, 1.0F}) {
     const float eye_x = side * k_head_radius * 0.48F;
+    m_renderer->mesh(sphere,
+                     face_feature_model(head_world,
+                                        QVector3D(eye_x, eye_y, eye_z),
+                                        QVector3D(k_head_radius * 0.27F,
+                                                  k_head_radius * 0.15F * lid_scale,
+                                                  k_head_radius * 0.045F)),
+                     k_eye_white);
     m_renderer->mesh(
         sphere,
         face_feature_model(head_world,
-                           QVector3D(eye_x, k_head_radius * 0.15F, k_face_surface),
-                           QVector3D(k_head_radius * 0.27F,
-                                     k_head_radius * 0.15F * lid_scale,
-                                     k_head_radius * 0.045F)),
-        k_eye_white);
-    m_renderer->mesh(
-        sphere,
-        face_feature_model(head_world,
-                           QVector3D(eye_x,
-                                     k_head_radius * 0.15F,
-                                     k_face_surface + k_head_radius * 0.045F),
+                           QVector3D(eye_x, eye_y, eye_z + (k_head_radius * 0.045F)),
                            QVector3D(k_head_radius * 0.105F,
                                      k_head_radius * 0.12F * lid_scale,
                                      k_head_radius * 0.024F)),
@@ -300,9 +307,7 @@ void CommanderPortraitView::PortraitRenderer::submit_face(const QMatrix4x4& head
     m_renderer->mesh(
         sphere,
         face_feature_model(head_world,
-                           QVector3D(eye_x,
-                                     k_head_radius * 0.15F,
-                                     k_face_surface + k_head_radius * 0.070F),
+                           QVector3D(eye_x, eye_y, eye_z + (k_head_radius * 0.070F)),
                            QVector3D(k_head_radius * 0.045F,
                                      k_head_radius * 0.060F * lid_scale,
                                      k_head_radius * 0.014F)),
@@ -312,34 +317,35 @@ void CommanderPortraitView::PortraitRenderer::submit_face(const QMatrix4x4& head
         side * (m_pose == QStringLiteral("dismissive") ? 8.0F : -5.0F);
     m_renderer->mesh(
         sphere,
-        face_feature_model(
-            head_world,
-            QVector3D(
-                eye_x, k_head_radius * 0.43F, k_face_surface + k_head_radius * 0.015F),
-            QVector3D(
-                k_head_radius * 0.31F, k_head_radius * 0.055F, k_head_radius * 0.032F),
-            brow_roll),
+        face_feature_model(head_world,
+                           QVector3D(eye_x, brow_y, brow_z + (k_head_radius * 0.015F)),
+                           QVector3D(k_head_radius * 0.31F,
+                                     k_head_radius * 0.055F,
+                                     k_head_radius * 0.032F),
+                           brow_roll),
         k_brow);
   }
 
   const float mouth_height =
       k_head_radius * (0.025F + 0.14F * std::clamp(m_mouth_open, 0.0F, 1.0F));
+  const float mouth_y = (-k_head_radius * 0.43F) - k_face_drop;
+  const float lip_y = (-k_head_radius * (0.46F + 0.10F * m_mouth_open)) - k_face_drop;
   m_renderer->mesh(
       sphere,
       face_feature_model(
           head_world,
-          QVector3D(0.0F, -k_head_radius * 0.43F, k_mouth_surface),
+          QVector3D(0.0F, mouth_y, face_shell_z(k_mouth_surface, mouth_y)),
           QVector3D(k_head_radius * 0.39F, mouth_height, k_head_radius * 0.035F)),
       k_mouth);
   m_renderer->mesh(
       sphere,
-      face_feature_model(head_world,
-                         QVector3D(0.0F,
-                                   -k_head_radius * (0.46F + 0.10F * m_mouth_open),
-                                   k_mouth_surface + k_head_radius * 0.040F),
-                         QVector3D(k_head_radius * 0.34F,
-                                   k_head_radius * 0.035F,
-                                   k_head_radius * 0.020F)),
+      face_feature_model(
+          head_world,
+          QVector3D(0.0F,
+                    lip_y,
+                    face_shell_z(k_mouth_surface, lip_y) + (k_head_radius * 0.040F)),
+          QVector3D(
+              k_head_radius * 0.34F, k_head_radius * 0.035F, k_head_radius * 0.020F)),
       k_lip);
 }
 

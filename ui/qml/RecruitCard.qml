@@ -10,6 +10,7 @@ Rectangle {
     property var panel: null
     property var prod: ({})
     property string unit_type: ""
+    property string fallback_name: ""
     property int fallback_build_time: 5
     property string tooltip_text: ""
 
@@ -23,80 +24,136 @@ Rectangle {
         })
     readonly property bool is_enabled: card.card_state.enabled
     readonly property bool is_hovered: recruitMouseArea.containsMouse
+    readonly property string display_name: (card.unit_info && card.unit_info.display_name) || card.fallback_name || card.unit_type
 
     signal recruit_requested(string unit_type)
     signal details_requested(string unit_type, string nation)
 
     width: 110
     height: 80
-    radius: 6
+    radius: Design.Metrics.radiusMedium
+    clip: true
     color: card.panel ? card.panel.recruit_card_color(card.is_enabled, card.is_hovered) : "transparent"
     border.color: card.panel ? card.panel.recruit_card_border(card.is_enabled, card.is_hovered) : "transparent"
     border.width: card.is_hovered && card.is_enabled ? 2 : 1
     opacity: card.is_enabled ? 1 : 0.5
-    scale: card.is_hovered && card.is_enabled ? 1.025 : 1
+    scale: card.is_hovered && card.is_enabled ? 1.015 : 1
 
-    Image {
-        id: recruitIcon
+    Accessible.role: Accessible.Button
+    Accessible.name: qsTr("Recruit %1").arg(card.display_name)
+    Accessible.description: card.is_enabled ? card.tooltip_text : card.card_state.reason
 
-        anchors.fill: parent
-        fillMode: Image.PreserveAspectCrop
-        smooth: true
-        source: card.panel ? card.panel.unit_icon_source(card.unit_type, card.prod.nation_id) : ""
-        visible: source !== ""
-        opacity: card.is_enabled ? 1 : 0.35
-    }
+    Rectangle {
+        id: portraitFrame
 
-    Text {
-        anchors.centerIn: parent
-        visible: !recruitIcon.visible
-        text: card.panel ? card.panel.unit_icon_emoji(card.unit_type) : ""
-        color: card.is_enabled ? "#F4E7C8" : "#6B5231"
-        font.pixelSize: Design.Typography.glyphLarge
-        opacity: card.is_enabled ? 0.9 : 0.4
-    }
-
-    Flow {
+        objectName: "recruitPortrait"
         anchors.left: parent.left
-        anchors.right: parent.right
+        anchors.top: parent.top
         anchors.bottom: parent.bottom
-        anchors.margins: 3
-        spacing: 3
+        anchors.margins: Design.Metrics.space4
+        width: height
+        radius: Design.Metrics.radiusSmall
+        color: Design.Theme.backgroundDeep
+        border.width: Design.Metrics.borderThin
+        border.color: card.is_enabled ? card.hs.bronzeDeep : Design.Theme.borderSubtle
 
-        Repeater {
-            model: card.panel ? card.panel.cost_entries(card.panel.reserve_cost(card.unit_info), card.unit_info.resource_costs || {}, true) : []
+        Image {
+            id: recruitIcon
 
-            delegate: Rectangle {
-                id: costPill
+            objectName: "recruitPortraitImage"
+            anchors.fill: parent
+            anchors.margins: Design.Metrics.space2
+            fillMode: Image.PreserveAspectFit
+            smooth: true
+            mipmap: true
+            source: card.panel ? card.panel.unit_icon_source(card.unit_type, card.prod.nation_id) : ""
+            visible: status === Image.Ready
+            opacity: card.is_enabled ? 1 : 0.45
+        }
 
-                required property var modelData
+        Text {
+            anchors.centerIn: parent
+            visible: !recruitIcon.visible
+            text: card.panel ? card.panel.unit_icon_emoji(card.unit_type) : ""
+            color: card.is_enabled ? Design.Theme.textPrimary : Design.Theme.textDisabled
+            font.pixelSize: Design.Typography.glyphSmall
+            opacity: card.is_enabled ? 0.9 : 0.4
+        }
+    }
 
-                width: costRow.implicitWidth + 6
-                height: costRow.implicitHeight + 4
-                radius: 6
-                color: card.is_enabled ? "#cc2a1d12" : "#991f150d"
-                border.color: card.is_enabled ? card.hs.bronze : "#8C6A3E"
-                border.width: 1
+    Item {
+        id: cardBody
 
-                Row {
-                    id: costRow
+        anchors.left: portraitFrame.right
+        anchors.leftMargin: Design.Metrics.space4
+        anchors.right: parent.right
+        anchors.rightMargin: Design.Metrics.space4
+        anchors.top: parent.top
+        anchors.topMargin: Design.Metrics.space4
+        anchors.bottom: parent.bottom
+        anchors.bottomMargin: Design.Metrics.space4
 
-                    anchors.centerIn: parent
-                    spacing: 3
+        Text {
+            id: unitName
 
-                    Image {
-                        width: Design.A11y.scaled(8)
-                        height: Design.A11y.scaled(8)
-                        fillMode: Image.PreserveAspectFit
-                        smooth: true
-                        source: card.panel ? card.panel.cost_icon_source(costPill.modelData.key) : ""
-                    }
+            anchors.left: parent.left
+            anchors.right: parent.right
+            anchors.rightMargin: detailsBadge.width + Design.Metrics.space2
+            anchors.top: parent.top
+            text: card.display_name
+            color: card.is_enabled ? Design.Theme.textPrimary : Design.Theme.textDisabled
+            font.family: Design.Typography.family
+            font.pixelSize: Design.Typography.caption
+            font.weight: Design.Typography.bold
+            elide: Text.ElideRight
+        }
 
-                    Text {
-                        text: costPill.modelData.amount
-                        color: card.is_enabled ? Theme.textMain : Theme.textDim
-                        font.pixelSize: Design.Typography.caption
-                        font.bold: true
+        Flow {
+            id: costFlow
+
+            anchors.left: parent.left
+            anchors.right: parent.right
+            anchors.top: unitName.bottom
+            anchors.topMargin: Design.Metrics.space2
+            height: Math.min(implicitHeight, parent.height - unitName.height - Design.Metrics.space2)
+            clip: true
+            spacing: Design.Metrics.space2
+
+            Repeater {
+                model: card.panel ? card.panel.cost_entries(card.panel.reserve_cost(card.unit_info), card.unit_info.resource_costs || {}, true) : []
+
+                delegate: Rectangle {
+                    id: costPill
+
+                    required property var modelData
+
+                    width: costRow.implicitWidth + Design.Metrics.space4
+                    height: costRow.implicitHeight + Design.Metrics.space2
+                    radius: height / 2
+                    color: card.is_enabled ? "#cc2a1d12" : "#991f150d"
+                    border.color: card.is_enabled ? card.hs.bronze : Design.Theme.borderSubtle
+                    border.width: Design.Metrics.borderThin
+
+                    Row {
+                        id: costRow
+
+                        anchors.centerIn: parent
+                        spacing: Design.Metrics.space2
+
+                        Image {
+                            width: Design.A11y.scaled(9)
+                            height: Design.A11y.scaled(9)
+                            fillMode: Image.PreserveAspectFit
+                            smooth: true
+                            source: card.panel ? card.panel.cost_icon_source(costPill.modelData.key) : ""
+                        }
+
+                        Text {
+                            text: costPill.modelData.amount
+                            color: card.is_enabled ? Theme.textMain : Theme.textDim
+                            font.pixelSize: Design.Typography.caption
+                            font.bold: true
+                        }
                     }
                 }
             }
@@ -130,6 +187,46 @@ Rectangle {
         ToolTip.visible: containsMouse
         ToolTip.text: card.is_enabled ? card.tooltip_text : card.card_state.reason
         ToolTip.delay: 300
+    }
+
+    Rectangle {
+        id: detailsBadge
+
+        anchors.right: parent.right
+        anchors.top: parent.top
+        anchors.margins: Design.Metrics.space4
+        width: Math.max(Design.A11y.scaled(18), detailsLabel.implicitHeight + Design.Metrics.space2)
+        height: width
+        radius: width / 2
+        color: detailsMouse.containsMouse ? Design.Theme.panelLeather : Design.Theme.panelIron
+        border.width: Design.Metrics.borderThin
+        border.color: detailsMouse.containsMouse ? Design.Theme.accent : Design.Theme.borderStrong
+
+        Text {
+            id: detailsLabel
+
+            anchors.centerIn: parent
+            text: "i"
+            color: Design.Theme.textSecondary
+            font.family: Design.Typography.family
+            font.pixelSize: Design.Typography.caption
+            font.bold: true
+        }
+
+        MouseArea {
+            id: detailsMouse
+
+            anchors.fill: parent
+            hoverEnabled: true
+            cursorShape: Qt.PointingHandCursor
+            onClicked: {
+                Design.UiSound.activate();
+                card.details_requested(card.unit_type, card.prod.nation_id || "");
+            }
+            ToolTip.visible: containsMouse
+            ToolTip.text: qsTr("Show unit details")
+            ToolTip.delay: Design.Metrics.tooltipDelay
+        }
     }
 
     Rectangle {

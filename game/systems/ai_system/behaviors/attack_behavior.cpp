@@ -7,7 +7,6 @@
 #include <utility>
 #include <vector>
 
-#include "../../../core/ownership_constants.h"
 #include "../../nation_registry.h"
 #include "../ai_attack_wave.h"
 #include "../ai_formation.h"
@@ -62,26 +61,13 @@ auto select_strategic_objective(const AISnapshot& snapshot,
                                 float reference_z) -> const ContactSnapshot* {
   const ContactSnapshot* best_objective = nullptr;
   float best_score = std::numeric_limits<float>::infinity();
-  const ContactSnapshot* best_neutral = nullptr;
-  float best_neutral_score = std::numeric_limits<float>::infinity();
 
   for (const auto& objective : snapshot.strategic_objectives) {
-    if (Game::Units::is_wildlife_spawn(objective.spawn_type)) {
-      continue;
-    }
     const float dx = objective.pos_x - reference_x;
     const float dz = objective.pos_z - reference_z;
     float score = dx * dx + dz * dz;
     if (!objective.is_building) {
       score += 400.0F;
-    }
-
-    if (Game::Core::is_neutral_owner(objective.owner_id)) {
-      if (score < best_neutral_score) {
-        best_neutral_score = score;
-        best_neutral = &objective;
-      }
-      continue;
     }
 
     if (score < best_score) {
@@ -90,7 +76,7 @@ auto select_strategic_objective(const AISnapshot& snapshot,
     }
   }
 
-  return best_objective != nullptr ? best_objective : best_neutral;
+  return best_objective;
 }
 } // namespace
 

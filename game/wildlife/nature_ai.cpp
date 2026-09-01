@@ -499,14 +499,6 @@ public:
     if (ctx.config->aggression <= 0.0F) {
       return false;
     }
-
-    float const home_dx = ctx.x - ctx.wildlife->home_x;
-    float const home_dz = ctx.z - ctx.wildlife->home_z;
-    float const leash = ctx.config->roam_radius * k_wolf_defend_leash_multiplier;
-    if ((home_dx * home_dx) + (home_dz * home_dz) > leash * leash) {
-      return false;
-    }
-
     float const detect_radius = ctx.config->roam_radius * k_wolf_detect_multiplier;
     PreyRef const prey = pick_prey(ctx, actions, detect_radius);
     if (!prey.valid()) {

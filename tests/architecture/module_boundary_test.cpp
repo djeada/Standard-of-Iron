@@ -67,33 +67,20 @@ auto declared_libraries(const QString& lists) -> std::set<QString> {
   return names;
 }
 
-auto shell_array(const QString& script, const QString& name) -> QStringList {
-
-  const QString text = QStringLiteral("\n") + script;
-  const QString opener = QStringLiteral("\n") + name + QStringLiteral("=(");
-  const auto start = text.indexOf(opener);
+auto shell_suite_list(const QString& script) -> QStringList {
+  const auto start = script.indexOf("suites=(");
   if (start < 0) {
     return {};
   }
-  const auto end = text.indexOf(u')', start);
+  const auto end = script.indexOf(')', start);
   if (end < 0) {
     return {};
   }
-  const auto from = start + opener.size();
+  const auto body = script.mid(start + 8, end - start - 8);
   QStringList suites;
-  for (const auto& token : text.mid(from, end - from)
-                               .split(QRegularExpression("\\s+"), Qt::SkipEmptyParts)) {
+  for (const auto& token : body.split(QRegularExpression("\\s+"), Qt::SkipEmptyParts)) {
     suites.push_back(token.trimmed());
   }
-  return suites;
-}
-
-auto shell_suite_list(const QString& script) -> QStringList {
-  auto suites = shell_array(script, "suites");
-  if (suites.isEmpty()) {
-    return {};
-  }
-  suites += shell_array(script, "soak_suites");
   suites.sort();
   return suites;
 }
@@ -229,7 +216,7 @@ TEST(ModuleBoundaries, TheSuiteListsCiRunsAndCmakeBuildsAgree) {
   const auto from_cmake = cmake_suite_list(lists);
 
   ASSERT_FALSE(from_shell.isEmpty())
-      << "could not parse the suites=() and soak_suites=() arrays in run-tests.sh";
+      << "could not parse the suites=() array in run-tests.sh";
   ASSERT_FALSE(from_cmake.isEmpty())
       << "could not parse soi_test_binaries in tests/CMakeLists.txt";
 

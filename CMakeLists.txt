@@ -716,6 +716,7 @@ add_library(
     # app/audio -- cue routing and the QML-facing audio proxy.
     app/audio/audio_coordinator.cpp
     app/audio/audio_resource_loader.cpp
+    app/audio/audio_status_hud.cpp
     app/audio/audio_system_proxy.cpp
     app/audio/weather_audio.cpp
     # app/viewmodels -- the QML API, one coherent slice per model.
@@ -847,6 +848,7 @@ if(QT_VERSION_MAJOR EQUAL 6)
             ui/qml/HUDBottomCommander.qml
             ui/qml/HUDBottomSpectator.qml
             ui/qml/UnitInspectPanel.qml
+            ui/qml/BarracksProductionView.qml
             ui/qml/RecruitCard.qml
             ui/qml/RpgFpvOverlay.qml
             ui/qml/RpgMeter.qml

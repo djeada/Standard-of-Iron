@@ -2,7 +2,6 @@
 
 #include "../core/component.h"
 #include "../core/entity.h"
-#include "../units/combat_role.h"
 
 namespace Game::Systems::CombatRules {
 
@@ -40,7 +39,7 @@ seeks_out_enemies(const Engine::Core::Entity* entity) -> bool {
     return false;
   }
 
-  return Game::Units::pursues_targets(unit->spawn_type);
+  return unit->spawn_type != Game::Units::SpawnType::Healer;
 }
 
 [[nodiscard]] inline auto

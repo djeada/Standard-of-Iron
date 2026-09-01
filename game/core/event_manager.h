@@ -8,6 +8,7 @@
 #include <functional>
 #include <memory>
 #include <mutex>
+#include <source_location>
 #include <type_traits>
 #include <typeindex>
 #include <unordered_map>
@@ -303,23 +304,42 @@ public:
 
 class AudioCueEvent : public Event {
 public:
-  explicit AudioCueEvent(std::string cue_id,
-                         float volume_scale = 1.0F,
-                         int owner_id = k_owner_everyone)
+  explicit AudioCueEvent(
+      std::string cue_id,
+      float volume_scale = 1.0F,
+      int owner_id = k_owner_everyone,
+      const std::source_location& location = std::source_location::current())
       : cue_id(std::move(cue_id))
       , volume_scale(volume_scale)
-      , owner_id(owner_id) {}
+      , owner_id(owner_id)
+      , source_file(location.file_name())
+      , source_line(location.line()) {}
 
   static auto for_owner(int owner_id,
                         std::string cue_id,
-                        float volume_scale = 1.0F) -> AudioCueEvent {
-    return AudioCueEvent(std::move(cue_id), volume_scale, owner_id);
+                        float volume_scale = 1.0F,
+                        const std::source_location& location =
+                            std::source_location::current()) -> AudioCueEvent {
+    return AudioCueEvent(std::move(cue_id), volume_scale, owner_id, location);
+  }
+
+  void at(float world_x, float world_y, float world_z) {
+    x = world_x;
+    y = world_y;
+    z = world_z;
+    positioned = true;
   }
 
   std::string cue_id;
   float volume_scale;
 
   int owner_id;
+  const char* source_file;
+  unsigned source_line;
+  float x{0.0F};
+  float y{0.0F};
+  float z{0.0F};
+  bool positioned{false};
   [[nodiscard]] auto get_type_name() const -> const char* override {
     return "AUDIO_CUE";
   }
@@ -367,14 +387,16 @@ public:
                  Game::Units::SpawnType attacker_type,
                  bool is_killing_blow,
                  int attacker_owner_id = 0,
-                 int target_owner_id = 0)
+                 int target_owner_id = 0,
+                 bool target_is_structure = false)
       : attacker_id(attacker_id)
       , target_id(target_id)
       , damage(damage)
       , attacker_type(attacker_type)
       , is_killing_blow(is_killing_blow)
       , attacker_owner_id(attacker_owner_id)
-      , target_owner_id(target_owner_id) {}
+      , target_owner_id(target_owner_id)
+      , target_is_structure(target_is_structure) {}
   EntityID attacker_id;
   EntityID target_id;
   int damage;
@@ -382,6 +404,7 @@ public:
   bool is_killing_blow;
   int attacker_owner_id;
   int target_owner_id;
+  bool target_is_structure;
   [[nodiscard]] auto get_type_name() const -> const char* override {
     return "COMBAT_HIT";
   }

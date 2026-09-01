@@ -8,6 +8,7 @@
 #include "../../squad_service.h"
 #include "../ai_utils.h"
 #include "systems/ai_system/ai_types.h"
+#include "units/spawn_type.h"
 
 namespace Game::Systems::AI {
 
@@ -24,7 +25,8 @@ auto is_mergeable(const EntitySnapshot& entity, const AIContext& context) -> boo
   if (entity.is_building || entity.is_commander || entity.health <= 0) {
     return false;
   }
-  if (!is_combat_role_unit(entity)) {
+  if (entity.spawn_type == Game::Units::SpawnType::Builder ||
+      entity.spawn_type == Game::Units::SpawnType::Civilian) {
     return false;
   }
   if (entity.is_assault || is_harass_unit(entity.id, context)) {
