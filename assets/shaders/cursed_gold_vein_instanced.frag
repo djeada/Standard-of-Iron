@@ -17,6 +17,8 @@ uniform float u_magic_strength;
 
 out vec4 frag_color;
 
+const float k_rock_crown = 0.26;
+
 float fbm(vec3 p) {
   float v = 0.0;
   float a = 0.5;
@@ -40,12 +42,12 @@ void main() {
   float rock_grain = fbm(p * 8.2 + vec3(1.0, 9.0, 3.0));
   float rust = fbm(p * 3.1 + vec3(v_seed * 5.0, 0.0, 2.0));
 
-  vec3 slate = v_color * vec3(0.70, 0.74, 0.84);
-  vec3 umber = v_color * vec3(1.05, 0.82, 0.58);
-  vec3 soot = vec3(0.09, 0.08, 0.08);
+  vec3 slate = v_color * vec3(0.98, 0.94, 0.94);
+  vec3 umber = v_color * vec3(1.40, 1.06, 0.70);
+  vec3 soot = vec3(0.07, 0.065, 0.07);
   vec3 rock_color = mix(slate, umber, rust * 0.7);
-  rock_color *= mix(0.70, 1.12, rock_grain);
-  rock_color = mix(rock_color, soot, rock_large * 0.22);
+  rock_color *= mix(0.66, 1.20, rock_grain);
+  rock_color = mix(rock_color, soot, rock_large * 0.26);
 
   float side_face = 1.0 - abs(N.y);
   float crack_a = 1.0 - smoothstep(0.0, 0.05, abs(fract(v_local_pos.y * 3.4) - 0.5));
@@ -56,23 +58,33 @@ void main() {
   float cracks = max(crack_a, crack_b) * side_face;
   rock_color *= 1.0 - cracks * 0.22;
 
+  float fleck = smoothstep(0.74, 0.86, fbm(p * 12.0 + vec3(3.0, v_seed * 7.0, 8.0)));
+  rock_color = mix(rock_color, vec3(0.58, 0.42, 0.14), fleck * 0.45);
+
   float seam_field = fbm(p * 2.6 + vec3(v_seed * 3.0, 1.0, 7.0));
   float seam = 1.0 - smoothstep(0.0, 0.03, abs(seam_field - 0.5));
   float fine_vein =
       1.0 - smoothstep(0.0, 0.02, abs(fbm(p * 6.0 + vec3(4.0, v_seed, 2.0)) - 0.5));
   float ore = max(seam, fine_vein * 0.5) * smoothstep(0.02, 0.20, v_local_pos.y);
 
-  float crystal = smoothstep(0.62, 0.72, v_local_pos.y);
-  float outlying = smoothstep(0.26, 0.32, v_local_pos.y) *
-                   smoothstep(0.66, 0.72, length(v_local_pos.xz));
-  crystal = max(crystal, outlying);
+  float crown = k_rock_crown + 0.05 * (rock_large - 0.5);
+  float crystal = smoothstep(crown, crown + 0.10, v_local_pos.y);
 
-  vec3 gold_deep = vec3(0.62, 0.40, 0.08);
-  vec3 gold_bright = vec3(1.08, 0.82, 0.30);
+  float shard_height = clamp((v_local_pos.y - k_rock_crown) / 0.95, 0.0, 1.0);
   float facet = fbm(p * 4.0 + vec3(9.0, v_seed * 2.0, 5.0));
-  vec3 gold = mix(gold_deep, gold_bright, facet);
 
-  vec3 base_color = mix(rock_color, gold, max(crystal, ore * 0.45));
+  float facet_key = soi_hash13_1c8396(floor(N * 5.0) + vec3(v_seed, 0.0, 0.0));
+
+  vec3 gold_root = vec3(0.38, 0.22, 0.05);
+  vec3 gold_body = vec3(0.86, 0.62, 0.20);
+  vec3 gold_tip = vec3(1.24, 1.02, 0.60);
+  vec3 gold =
+      mix(gold_root, gold_body, smoothstep(0.0, 0.62, shard_height + (facet * 0.30)));
+  gold =
+      mix(gold, gold_tip, smoothstep(0.62, 1.05, (shard_height * 0.8) + (facet * 0.4)));
+  gold *= 0.78 + 0.40 * facet_key;
+
+  vec3 base_color = mix(rock_color, gold, max(crystal, ore * 0.42));
 
   vec3 sun_color = environment_primary_color() * environment_primary_intensity();
   vec3 sky_color = environment_sky_color();
@@ -81,29 +93,32 @@ void main() {
   vec3 ambient = environment_ambient_light(N);
   vec3 direct = soi_key_light(N) * 0.80;
 
-  float metal = max(crystal, ore);
-  float spec_power = mix(22.0, 96.0, metal);
-  float spec_gain = mix(0.08, 0.55, metal);
+  float metal = max(crystal, ore * 0.6);
+  float spec_power = mix(24.0, 140.0, metal);
+  float spec_gain = mix(0.07, 0.85, metal);
   float specular = pow(max(dot(N, H), 0.0), spec_power) * spec_gain;
+  float glint = pow(max(dot(N, H), 0.0), 420.0) * crystal * (0.35 + 0.65 * facet_key);
   float fresnel = pow(1.0 - max(dot(N, V), 0.0), 3.0);
 
   vec3 color = base_color * (ambient + direct) * ao * environment_exposure();
-  color += soi_rim_light(N, V) * mix(0.6, 1.4, metal);
-  color += sun_color * specular * ao * mix(vec3(1.0), gold_bright, metal);
+  color += soi_rim_light(N, V) * mix(0.6, 1.5, metal);
+  color += sun_color * specular * ao * mix(vec3(1.0), gold_tip, metal);
+  color += sun_color * glint * 1.4;
   color += sky_color * fresnel * 0.08;
 
   float strength = max(u_magic_strength, 0.0);
   float pulse = 0.55 + 0.45 * sin(u_time * 1.6 + v_seed * 6.28318 +
                                   fbm(p * 1.3 + vec3(u_time * 0.22)) * 5.2);
-  vec3 curse = vec3(0.92, 0.14, 0.06);
+  vec3 curse = vec3(0.86, 0.16, 0.07);
   vec3 ember = vec3(1.10, 0.62, 0.16);
   float core = (1.0 - smoothstep(0.10, 0.36, length(v_local_pos.xz))) *
                smoothstep(0.50, 0.80, v_local_pos.y);
-  color += mix(ember, curse, pulse) * strength *
-           (ore * (0.30 + 0.30 * pulse) + core * 0.30 * pulse);
+  float seam_glow = seam * (1.0 - crystal) * smoothstep(0.02, 0.20, v_local_pos.y);
+  color += mix(ember, curse, pulse * 0.8) * strength *
+           ((seam_glow * (0.18 + 0.20 * pulse)) + (core * 0.22 * pulse));
 
-  color += gold * crystal * (0.22 + 0.06 * pulse);
-  color += gold_bright * strength * crystal * (0.10 + 0.10 * pulse) * fresnel;
+  color += gold * crystal * (0.08 + 0.14 * shard_height + 0.04 * pulse);
+  color += gold_tip * strength * crystal * (0.10 + 0.10 * pulse) * fresnel;
 
   color = apply_directional_shadow(color, v_world_pos, v_normal);
   color += base_color * ao * local_lighting(v_world_pos, normalize(v_normal));
