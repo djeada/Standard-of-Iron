@@ -23,6 +23,15 @@ namespace Game::Systems {
 
 namespace {
 
+auto hill_entrance_opens_cell(const Game::Map::TerrainHeightMap& height_map,
+                              Game::Map::TerrainType terrain_type,
+                              int x,
+                              int z) -> bool {
+  return height_map.isHillEntrance(x, z) &&
+         terrain_type != Game::Map::TerrainType::Mountain &&
+         !Game::Map::is_water_terrain(terrain_type);
+}
+
 auto terrain_cell_value(const Game::Map::TerrainService& terrain_service,
                         const Game::Map::TerrainHeightMap* height_map,
                         int x,
@@ -37,7 +46,8 @@ auto terrain_cell_value(const Game::Map::TerrainService& terrain_service,
     return Pathfinding::CellValue::Blocked;
   }
 
-  if (height_map->isBridgeCell(x, z) || height_map->isHillEntrance(x, z)) {
+  if (height_map->isBridgeCell(x, z) ||
+      hill_entrance_opens_cell(*height_map, terrain_type, x, z)) {
     return Pathfinding::CellValue::Walkable;
   }
 
@@ -371,12 +381,7 @@ void Pathfinding::mark_navigation_grid_dirty() {
 
 void Pathfinding::mark_region_dirty(int min_x, int max_x, int min_z, int max_z) {
 
-  min_x = std::max(0, min_x);
-  max_x = std::min(m_width - 1, max_x);
-  min_z = std::max(0, min_z);
-  max_z = std::min(m_height - 1, max_z);
-
-  if (min_x > max_x || min_z > max_z) {
+  if (!clamp_to_grid(min_x, max_x, min_z, max_z)) {
     return;
   }
 
@@ -502,15 +507,12 @@ void Pathfinding::update_region(int min_x, int max_x, int min_z, int max_z) {
   force_map_passage_cells_walkable(min_x, max_x, min_z, max_z);
   apply_gate_blocker_cells(min_x, max_x, min_z, max_z);
 
+  rebuild_elevation(min_x - 1, max_x + 1, min_z - 1, max_z + 1);
   rebuild_clearance(min_x - 1, max_x + 1, min_z - 1, max_z + 1);
 }
 
 void Pathfinding::apply_gate_blocker_cells(int min_x, int max_x, int min_z, int max_z) {
-  min_x = std::max(0, min_x);
-  max_x = std::min(m_width - 1, max_x);
-  min_z = std::max(0, min_z);
-  max_z = std::min(m_height - 1, max_z);
-  if (min_x > max_x || min_z > max_z) {
+  if (!clamp_to_grid(min_x, max_x, min_z, max_z)) {
     return;
   }
   for (auto const& blocker : GateService::blockers()) {
@@ -535,11 +537,7 @@ void Pathfinding::force_navigation_passages_walkable(int min_x,
                                                      int max_x,
                                                      int min_z,
                                                      int max_z) {
-  min_x = std::max(0, min_x);
-  max_x = std::min(m_width - 1, max_x);
-  min_z = std::max(0, min_z);
-  max_z = std::min(m_height - 1, max_z);
-  if (min_x > max_x || min_z > max_z) {
+  if (!clamp_to_grid(min_x, max_x, min_z, max_z)) {
     return;
   }
 
@@ -621,11 +619,7 @@ void Pathfinding::force_map_passage_cells_walkable(int min_x,
     return;
   }
 
-  min_x = std::max(0, min_x);
-  max_x = std::min(m_width - 1, max_x);
-  min_z = std::max(0, min_z);
-  max_z = std::min(m_height - 1, max_z);
-  if (min_x > max_x || min_z > max_z) {
+  if (!clamp_to_grid(min_x, max_x, min_z, max_z)) {
     return;
   }
 
@@ -638,7 +632,8 @@ void Pathfinding::force_map_passage_cells_walkable(int min_x,
         continue;
       }
       if (!height_map->isBridgeCell(x, z) && !height_map->isBridgeCenterline(x, z) &&
-          !height_map->isHillEntrance(x, z)) {
+          !hill_entrance_opens_cell(
+              *height_map, terrain_service.get_terrain_type(x, z), x, z)) {
         continue;
       }
 
@@ -1170,7 +1165,7 @@ auto Pathfinding::find_path_internal(const Point& start,
           current.g_cost +
           ((step_x != 0 && step_z != 0) ? k_diagonal_step_cost : k_straight_step_cost) +
           (clearance_penalty(neighbor.x, neighbor.y) * clearance_weight) +
-          (turns ? k_turn_penalty : 0);
+          climb_penalty(current.index, neighbor_idx) + (turns ? k_turn_penalty : 0);
       if (tentative_gcost >= get_g_cost(buffers, neighbor_idx, generation)) {
         continue;
       }
@@ -1280,12 +1275,64 @@ auto Pathfinding::calculate_heuristic(const Point& a, const Point& b) -> int {
   return octile * k_heuristic_weight_numerator / k_heuristic_weight_denominator;
 }
 
+auto Pathfinding::clamp_to_grid(int& min_x,
+                                int& max_x,
+                                int& min_z,
+                                int& max_z) const -> bool {
+  min_x = std::max(0, min_x);
+  max_x = std::min(m_width - 1, max_x);
+  min_z = std::max(0, min_z);
+  max_z = std::min(m_height - 1, max_z);
+  return min_x <= max_x && min_z <= max_z;
+}
+
 auto Pathfinding::clearance_penalty(int x, int y) const -> int {
   auto const index = static_cast<std::size_t>(to_index(x, y));
   if (index >= m_clearance_penalty.size()) {
     return 0;
   }
   return m_clearance_penalty[index];
+}
+
+void Pathfinding::rebuild_elevation(int min_x, int max_x, int min_z, int max_z) {
+  auto const total =
+      static_cast<std::size_t>(m_width) * static_cast<std::size_t>(m_height);
+  if (m_cell_height.size() != total) {
+    m_cell_height.assign(total, 0.0F);
+  }
+
+  auto& terrain_service = *m_terrain;
+  const auto* height_map =
+      terrain_service.is_initialized() ? terrain_service.get_height_map() : nullptr;
+  if (height_map == nullptr) {
+    return;
+  }
+
+  if (!clamp_to_grid(min_x, max_x, min_z, max_z)) {
+    return;
+  }
+
+  for (int z = min_z; z <= max_z; ++z) {
+    for (int x = min_x; x <= max_x; ++x) {
+      m_cell_height[static_cast<std::size_t>(to_index(x, z))] =
+          height_map->get_height_at_grid(x, z);
+    }
+  }
+}
+
+auto Pathfinding::climb_penalty(int from_index, int to_index) const -> int {
+  auto const from = static_cast<std::size_t>(from_index);
+  auto const to = static_cast<std::size_t>(to_index);
+  if (from >= m_cell_height.size() || to >= m_cell_height.size()) {
+    return 0;
+  }
+  float const rise = std::abs(m_cell_height[to] - m_cell_height[from]);
+  if (rise < k_climb_noise_floor_metres * m_grid_cell_size) {
+    return 0;
+  }
+  return std::min(
+      k_max_climb_penalty,
+      static_cast<int>(std::lround(rise * static_cast<float>(k_climb_cost_per_metre))));
 }
 
 void Pathfinding::rebuild_clearance(int min_x, int max_x, int min_z, int max_z) {
@@ -1295,11 +1342,7 @@ void Pathfinding::rebuild_clearance(int min_x, int max_x, int min_z, int max_z) 
     m_clearance_penalty.assign(total, 0);
   }
 
-  min_x = std::max(0, min_x);
-  max_x = std::min(m_width - 1, max_x);
-  min_z = std::max(0, min_z);
-  max_z = std::min(m_height - 1, max_z);
-  if (min_x > max_x || min_z > max_z) {
+  if (!clamp_to_grid(min_x, max_x, min_z, max_z)) {
     return;
   }
 

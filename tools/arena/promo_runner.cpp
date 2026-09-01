@@ -203,6 +203,197 @@ void paint_rpg_bow_hud(QImage& frame, const ArenaViewport::RpgBowHudState& state
   painter.drawText(counter, Qt::AlignRight | Qt::AlignVCenter, takedowns);
 }
 
+auto format_clock(float seconds) -> QString {
+  const int total = std::max(0, static_cast<int>(std::lround(seconds)));
+  return QStringLiteral("%1:%2")
+      .arg(total / 60)
+      .arg(total % 60, 2, 10, QLatin1Char('0'));
+}
+
+auto side_display_name(QString label) -> QString {
+  return label.replace(QLatin1Char('_'), QLatin1Char(' ')).toUpper();
+}
+
+auto census_display(const QString& census) -> QString {
+  QStringList parts;
+  for (const QString& entry : census.split(QLatin1Char(','), Qt::SkipEmptyParts)) {
+    const qsizetype split = entry.lastIndexOf(QLatin1Char('x'));
+    if (split <= 0) {
+      parts.push_back(entry.toUpper());
+      continue;
+    }
+    parts.push_back(QStringLiteral("%1 × %2").arg(
+        entry.mid(split + 1),
+        entry.left(split).replace(QLatin1Char('_'), QLatin1Char(' ')).toUpper()));
+  }
+  return parts.join(QStringLiteral("   "));
+}
+
+auto card_font(double ui, double pixels) -> QFont {
+  QFont font = Arena::Typography::small_label(1.0);
+  font.setPixelSize(static_cast<int>(std::lround(pixels * ui)));
+  return font;
+}
+
+auto paint_report_card(const Spec& spec,
+                       const Arena::ArenaScenarioReport* report) -> QImage {
+  QImage card(spec.width, spec.height, QImage::Format_RGB32);
+  card.fill(QColor(11, 10, 8));
+
+  const double width = card.width();
+  const double height = card.height();
+  const double ui = std::clamp(height / 1080.0, 0.4, 2.4);
+
+  const QColor parchment(238, 232, 218);
+  const QColor faded(168, 158, 138);
+  const QColor gold(214, 186, 116);
+  const QColor blood(206, 74, 56);
+  const QColor laurel(122, 178, 112);
+
+  QPainter painter(&card);
+  painter.setRenderHint(QPainter::Antialiasing, true);
+  painter.setRenderHint(QPainter::TextAntialiasing, true);
+
+  const auto line = [&](double y, const QColor& color) {
+    painter.setPen(QPen(color, std::max(1.0, 2.0 * ui)));
+    painter.drawLine(QPointF(width * 0.14, y), QPointF(width * 0.86, y));
+  };
+  const auto text = [&](double y,
+                        double pixels,
+                        const QColor& color,
+                        const QString& value,
+                        double left = 0.0,
+                        double right = 1.0) {
+    painter.setFont(card_font(ui, pixels));
+    painter.setPen(color);
+    painter.drawText(QRectF(width * left, y, width * (right - left), pixels * ui * 1.6),
+                     Qt::AlignHCenter | Qt::AlignVCenter,
+                     value);
+    return y + (pixels * ui * 1.6);
+  };
+
+  double y = height * 0.16;
+  y = text(y, 20.0, faded, spec.title);
+  y += 6.0 * ui;
+  y = text(y, 46.0, parchment, QStringLiteral("BATTLE REPORT"));
+  y += 14.0 * ui;
+  line(y, QColor(gold.red(), gold.green(), gold.blue(), 140));
+  y += 26.0 * ui;
+
+  const bool tracked =
+      report != nullptr && report->battle.tracked && !report->battle.sides.empty();
+
+  QString verdict = QStringLiteral("SCENARIO COMPLETE");
+  QString clock_line;
+  QColor verdict_color = parchment;
+  if (tracked) {
+    const auto& battle = report->battle;
+    if (battle.decided && !battle.victor_label.isEmpty()) {
+      verdict = QStringLiteral("%1 WINS").arg(side_display_name(battle.victor_label));
+      verdict_color = gold;
+      clock_line =
+          QStringLiteral("DECIDED AT %1").arg(format_clock(battle.decided_at_seconds));
+    } else if (battle.decided) {
+      verdict = QStringLiteral("MUTUAL DESTRUCTION");
+      verdict_color = blood;
+      clock_line =
+          QStringLiteral("DECIDED AT %1").arg(format_clock(battle.decided_at_seconds));
+    } else {
+      verdict = QStringLiteral("STALEMATE");
+      clock_line = QStringLiteral("NO DECISION AFTER %1")
+                       .arg(format_clock(report->elapsed_seconds));
+    }
+  }
+  y = text(y, 52.0, verdict_color, verdict);
+  if (!clock_line.isEmpty()) {
+    y += 4.0 * ui;
+    y = text(y, 20.0, faded, clock_line);
+  }
+  y += 24.0 * ui;
+
+  if (!tracked) {
+    return card;
+  }
+
+  const std::size_t columns = std::min<std::size_t>(report->battle.sides.size(), 2U);
+  const double column_top = y;
+  double column_bottom = y;
+  for (std::size_t index = 0; index < columns; ++index) {
+    const auto& side = report->battle.sides[index];
+    const double left = index == 0 ? 0.10 : 0.52;
+    const double right = index == 0 ? 0.48 : 0.90;
+
+    double row = column_top;
+    row = text(row, 30.0, parchment, side_display_name(side.label), left, right);
+    row += 4.0 * ui;
+    const QString doctrine =
+        QStringLiteral("%1 · %2").arg(side.strategy.toUpper(), side.posture.toUpper());
+    row = text(row, 17.0, gold, doctrine.trimmed(), left, right);
+    row += 14.0 * ui;
+    row = text(row,
+               19.0,
+               parchment,
+               QStringLiteral("UNITS RAISED %1  ·  PEAK ARMY %2")
+                   .arg(side.units_produced)
+                   .arg(side.peak_units),
+               left,
+               right);
+    row = text(row,
+               19.0,
+               parchment,
+               QStringLiteral("BUILDINGS RAISED %1").arg(side.buildings_constructed),
+               left,
+               right);
+    if (!side.building_census.isEmpty()) {
+      painter.setFont(card_font(ui, 14.0));
+      painter.setPen(faded);
+      const QRectF census_rect(
+          width * left, row, width * (right - left), 14.0 * ui * 4.0);
+      const int census_flags = Qt::AlignHCenter | Qt::AlignTop | Qt::TextWordWrap;
+      const QString census = census_display(side.building_census);
+      painter.drawText(census_rect, census_flags, census);
+      row +=
+          painter.boundingRect(census_rect, census_flags, census).height() + (6.0 * ui);
+    }
+    row += 10.0 * ui;
+    row = text(row,
+               19.0,
+               parchment,
+               QStringLiteral("STANDING %1 UNITS  ·  %2 BUILDINGS")
+                   .arg(side.living_units)
+                   .arg(side.living_buildings),
+               left,
+               right);
+    row = text(row,
+               19.0,
+               parchment,
+               QStringLiteral("TIME ON THE ATTACK %1")
+                   .arg(format_clock(side.seconds_attacking)),
+               left,
+               right);
+    row += 12.0 * ui;
+    if (side.eliminated_at >= 0.0F) {
+      row = text(row,
+                 21.0,
+                 blood,
+                 QStringLiteral("FELL AT %1").arg(format_clock(side.eliminated_at)),
+                 left,
+                 right);
+    } else {
+      row = text(row, 21.0, laurel, QStringLiteral("STANDS AT THE END"), left, right);
+    }
+    column_bottom = std::max(column_bottom, row);
+  }
+
+  painter.setPen(QPen(QColor(faded.red(), faded.green(), faded.blue(), 90),
+                      std::max(1.0, 2.0 * ui)));
+  painter.drawLine(QPointF(width * 0.5, column_top + (6.0 * ui)),
+                   QPointF(width * 0.5, column_bottom));
+
+  line(column_bottom + (26.0 * ui), QColor(gold.red(), gold.green(), gold.blue(), 140));
+  return card;
+}
+
 auto brightest_sample(const QImage& frame) -> int {
   if (frame.isNull()) {
     return 0;
@@ -379,6 +570,10 @@ private:
     m_logged_framing = false;
     m_shot_active = true;
     m_shot_armed = false;
+    m_card_active = false;
+    m_card_frames_written = 0;
+    m_card_frames_target = 0;
+    m_card_image.reset();
     m_last_frame.reset();
     m_viewport.set_batch_fixed_step(idle_step());
     m_viewport.set_flame_card(shot.flame_card, shot.flame_speed, shot.flame_intensity);
@@ -417,6 +612,10 @@ private:
       }
     }
     if (!m_shot_active) {
+      return;
+    }
+    if (m_card_active) {
+      tick_report_card();
       return;
     }
     const Shot& shot = current_shot();
@@ -483,6 +682,9 @@ private:
     }
 
     if (!recording && m_frames_written >= m_target_frames) {
+      if (begin_report_card()) {
+        return;
+      }
       end_shot();
       advance_within_pass();
       return;
@@ -494,6 +696,59 @@ private:
                                   .arg(shot.name)
                                   .arg(m_frames_written)
                                   .arg(m_target_frames);
+      if (begin_report_card()) {
+        return;
+      }
+      end_shot();
+      end_pass();
+    }
+  }
+
+  [[nodiscard]] auto begin_report_card() -> bool {
+    if (m_card_active || m_encoder == nullptr || m_frames_written == 0 ||
+        current_shot().report_card_seconds <= 0.0F) {
+      return false;
+    }
+    m_card_active = true;
+    m_card_frames_written = 0;
+    m_card_frames_target =
+        std::max(1,
+                 static_cast<int>(std::lround(current_shot().report_card_seconds *
+                                              static_cast<float>(m_spec.fps))));
+    m_viewport.set_capture_active(false);
+    m_viewport.set_batch_render_suppressed(true);
+    qInfo().noquote() << QStringLiteral("  closing on the battle report (%1 s)")
+                             .arg(QString::number(
+                                 current_shot().report_card_seconds, 'f', 1));
+    return true;
+  }
+
+  void tick_report_card() {
+    m_viewport.set_capture_active(false);
+    if (!m_viewport.active_scenario_finished()) {
+
+      return;
+    }
+    if (!m_card_image.has_value()) {
+      m_card_image = paint_report_card(m_spec, m_viewport.active_scenario_report());
+      m_last_frame = m_card_image;
+    }
+    QString error;
+    if (!m_encoder->write_frame(*m_card_image, &error)) {
+      qCritical().noquote() << QStringLiteral("Promo encode failed: %1").arg(error);
+      m_failed = true;
+      m_card_active = false;
+      end_shot();
+      end_pass();
+      return;
+    }
+    ++m_frames_written;
+    ++m_card_frames_written;
+    if (m_audio != nullptr) {
+      m_audio->advance(idle_step(), true);
+    }
+    if (m_card_frames_written >= m_card_frames_target) {
+      m_card_active = false;
       end_shot();
       end_pass();
     }
@@ -729,6 +984,10 @@ private:
   std::unique_ptr<VideoEncoder> m_encoder;
   std::vector<ShotResult> m_results;
   std::optional<QImage> m_last_frame;
+  std::optional<QImage> m_card_image;
+  int m_card_frames_written{0};
+  int m_card_frames_target{0};
+  bool m_card_active{false};
   QString m_clip_path;
   QVector3D m_smoothed_focus;
   std::size_t m_pass_index{0};

@@ -168,6 +168,8 @@ inline constexpr char k_ai_duel_marcellus_vs_hanno_id[] = "ai_duel_marcellus_vs_
 inline constexpr char k_ai_war_of_towns_id[] = "ai_war_of_towns";
 inline constexpr char k_ai_duel_hannibal_vs_hasdrubal_id[] =
     "ai_duel_hannibal_vs_hasdrubal";
+inline constexpr char k_ai_duel_hannibal_vs_hannibal_id[] =
+    "ai_duel_hannibal_vs_hannibal";
 inline constexpr char k_seven_ai_scale_id[] = "seven_ai_scale";
 inline constexpr char k_village_harvest_cycle_id[] = "village_harvest_cycle";
 inline constexpr char k_village_day_life_id[] = "village_day_life";

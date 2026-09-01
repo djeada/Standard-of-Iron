@@ -67,6 +67,8 @@ struct Shot {
   float flame_intensity{1.0F};
 
   bool rpg_hud{false};
+
+  float report_card_seconds{0.0F};
   Focus focus;
   std::vector<CameraKey> keys;
 };

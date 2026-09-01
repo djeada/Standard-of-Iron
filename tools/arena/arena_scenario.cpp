@@ -899,6 +899,13 @@ struct ArenaScenarioRunner::Impl {
   };
   QHash<QString, ElevationLegState> elevation_climb_legs;
   QHash<QString, ElevationLegState> elevation_descent_legs;
+  struct ElevationFloorState {
+    bool seeded{false};
+    float lowest{0.0F};
+    float lowest_at{0.0F};
+    QVector3D lowest_where;
+  };
+  QHash<QString, ElevationFloorState> elevation_floors;
   struct OffGroundState {
     int samples{0};
     QVector3D worst;
@@ -2687,6 +2694,16 @@ struct ArenaScenarioRunner::Impl {
         track_elevation_leg(
             elevation_descent_legs[group], position.y(), false, expectation.distance);
         break;
+      case ArenaExpectationKind::ElevationHeldAbove: {
+        auto& floor = elevation_floors[group];
+        if (!floor.seeded || position.y() < floor.lowest) {
+          floor.seeded = true;
+          floor.lowest = position.y();
+          floor.lowest_at = elapsed;
+          floor.lowest_where = position;
+        }
+        break;
+      }
       case ArenaExpectationKind::UnitsStayOnWalkableGround: {
         if (Game::Systems::NavGrid::is_world_position_walkable(position)) {
           break;
@@ -5265,6 +5282,28 @@ struct ArenaScenarioRunner::Impl {
                   .arg(climbing ? QStringLiteral("climb") : QStringLiteral("descent"))
                   .arg(leg.worst_at, 0, 'f', 2)
                   .arg(tolerance, 0, 'f', 2));
+        }
+        break;
+      }
+      case ArenaExpectationKind::ElevationHeldAbove: {
+        auto const floor = elevation_floors.value(expectation.group);
+        if (!floor.seeded) {
+          add_issue(QStringLiteral("elevation_floor_not_sampled"),
+                    QStringLiteral("%1 produced no elevation sample while it was "
+                                   "meant to be holding the high ground")
+                        .arg(expectation.group));
+          break;
+        }
+        if (floor.lowest < expectation.threshold) {
+          add_issue(QStringLiteral("elevation_floor_broken"),
+                    QStringLiteral("%1 dropped to %2 m at %3 s near (%4, %5); it "
+                                   "was meant to stay above %6 m")
+                        .arg(expectation.group)
+                        .arg(floor.lowest, 0, 'f', 2)
+                        .arg(floor.lowest_at, 0, 'f', 2)
+                        .arg(floor.lowest_where.x(), 0, 'f', 2)
+                        .arg(floor.lowest_where.z(), 0, 'f', 2)
+                        .arg(expectation.threshold, 0, 'f', 2));
         }
         break;
       }

@@ -290,6 +290,7 @@ enum class ArenaExpectationKind : std::uint8_t {
   ElevationGainObserved,
   ElevationClimbIsMonotonic,
   ElevationDescentIsMonotonic,
+  ElevationHeldAbove,
   UnitsStayOnWalkableGround,
   SoldiersStayOnWalkableGround,
   OwnerCompletesConstruction,

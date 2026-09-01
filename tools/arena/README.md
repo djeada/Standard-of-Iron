@@ -488,6 +488,16 @@ Shot fields:
   chase camera. A gameplay shot needs no `focus` or `camera` block, and any it
   declares is ignored.
 
+- `report_card` closes the shot with the scenario's battle report held on screen
+  for that many seconds: the victor (or STALEMATE, or MUTUAL DESTRUCTION), the
+  decision time, and each side's doctrine, units raised, peak army, building
+  census, survivors and time spent attacking. It waits for the scenario to
+  finish so the outcome is final — with a `BattleReachesDecision` scenario the
+  shot ends at the decision and the card follows immediately, so the clip is
+  exactly as long as the match needed. Painted from
+  `ArenaViewport::active_scenario_report`, encoded with the audio kept in step,
+  and the shot's poster becomes the card. `ai_duel_hannibal_mirror.json` records
+  a whole `ai_duel_hannibal_vs_hannibal` match this way.
 - `rpg_hud` paints the commander's bow HUD onto the captured frame: the spread
   reticle projected through the live vertical FOV, the draw ring, the hit
   confirm, HP and stamina, the renock meter, and a takedown counter. It is drawn
@@ -1290,6 +1300,33 @@ unit regardless of how large that unit is drawn.
 The path scenes suppress incidental scatter and use a fixed feature-centered
 camera so the route, obstacle, and formation motion remain readable in batch
 captures.
+
+## Hill contracts
+
+A hill is a wall with gates cut into it. Two things follow, and each has its own
+family of scenarios.
+
+`nav_hill_{blob,corridor,arc,elbow,ring}_{0,1,2}_entrances` cover getting on and
+off one: a troop climbs a 10-cell, 7 m hill from `(-22, 0, 0)` and is then sent
+back to where it started. They assert the troop and its rendered soldiers only
+ever stand on ground they are allowed to stand on, that at least 4.5 m of
+elevation is gained, and that neither leg reverses. See the notes on
+`k_leg_reversal_tolerance` in the source: a curved crown legitimately dips about
+a metre as a troop follows it, so the tolerance is not arbitrary.
+
+`nav_hill_crown_{blob,corridor,arc,elbow,ring}` cover being on one. A troop that
+already stands on the crown is sent to another spot on the same crown and then
+back. Nothing is being climbed, so the whole run has to hold above
+`ElevationHeldAbove`. This is the family that catches a route which leaves by
+one ramp and climbs back up another -- which is what a two-dimensional search
+does whenever that is the shorter way in plan view, and was the behaviour
+`Pathfinding::climb_penalty` was added to stop. The two crown spots per shape are
+measured from the generated hill, not guessed; if the hill generator changes
+shape, re-measure them rather than loosening the floor.
+
+A full sweep of both families is about 25 minutes. Run them one at a time while
+iterating, and never relink `arena_app` mid-sweep -- the remaining scenarios die
+without a PASS/FAIL line.
 
 ## Road and bridge surface contracts
 
