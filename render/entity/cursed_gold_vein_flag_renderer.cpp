@@ -22,7 +22,7 @@ struct VeinFlagPalette {
   QVector3D pit_timber{0.23F, 0.17F, 0.11F};
   QVector3D pit_timber_light{0.38F, 0.29F, 0.18F};
   QVector3D tarnished_gold{0.72F, 0.56F, 0.22F};
-  QVector3D unclaimed_cloth{0.46F, 0.42F, 0.36F};
+  QVector3D unclaimed_cloth{0.62F, 0.58F, 0.50F};
 };
 
 void draw_claim_flag(const DrawContext& p,
@@ -41,24 +41,23 @@ void draw_claim_flag(const DrawContext& p,
       white,
       team,
       team_trim,
-      {.pole_base = QVector3D(1.85F, 0.0F, -1.55F),
-       .pole_height = 2.9F,
-       .pole_radius = 0.05F,
-       .banner_width = 0.78F,
-       .banner_height = 0.98F,
-       .connector_drop_ratio = 0.45F,
+      {.pole_base = QVector3D(1.53F, 0.0F, -1.28F),
+       .pole_height = 3.0F,
+       .pole_radius = 0.045F,
+       .banner_width = 0.9F,
+       .banner_height = 0.6F,
        .pole_color = palette.pit_timber,
        .beam_color = palette.pit_timber_light,
        .connector_color = palette.tarnished_gold,
 
-       .ornament_offset = QVector3D(0.0F, 3.02F, 0.0F),
-       .ornament_size = QVector3D(0.12F, 0.12F, 0.12F),
+       .ornament_offset = QVector3D(0.25F, 3.15F, 0.03F),
+       .ornament_size = QVector3D(0.35F, 0.03F, 0.015F),
        .ornament_color = palette.tarnished_gold,
-       .ring_count = 2,
-       .ring_y_start = 0.5F,
-       .ring_spacing = 0.9F,
-       .ring_height = 0.03F,
-       .ring_radius_scale = 1.6F,
+       .ring_count = 4,
+       .ring_y_start = 0.4F,
+       .ring_spacing = 0.5F,
+       .ring_height = 0.025F,
+       .ring_radius_scale = 2.0F,
        .ring_color = palette.tarnished_gold},
       cloth);
 }

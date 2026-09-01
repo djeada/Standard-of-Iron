@@ -771,19 +771,9 @@ void VegetationPipeline::initialize_cursed_gold_vein_pipeline() {
 
   using namespace Render::GL::BackendPipelines::CursedGoldVeinParts;
 
-  append_parts(verts, idx, std::span{k_cursed_gold_vein_boxes});
-  append_parts(verts, idx, std::span{k_cursed_gold_vein_prisms});
-  append_parts(verts, idx, std::span{k_cursed_gold_vein_oriented_boxes});
-
-  for (int i = 0; i < 10; ++i) {
-    float const angle = static_cast<float>(i) * 0.6283185F + 0.35F;
-    float const radius = (i % 2 == 0) ? 0.62F : 0.78F;
-    float const x = std::cos(angle) * radius;
-    float const z = std::sin(angle) * radius;
-    float const lean = 0.08F + 0.03F * static_cast<float>(i % 3);
-    append_oriented_box(
-        verts, idx, {x, 0.10F, z}, {x * 0.86F, 0.22F + lean, z * 0.86F}, 0.035F, 0.03F);
-  }
+  append_parts(verts, idx, std::span{k_cursed_gold_vein_mounds});
+  append_parts(verts, idx, std::span{k_cursed_gold_vein_rubble});
+  append_parts(verts, idx, std::span{k_cursed_gold_vein_shards});
 
   upload_prop_mesh_impl(verts, idx, m_cursed_gold_vein_mesh);
 }
