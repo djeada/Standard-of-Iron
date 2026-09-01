@@ -10,6 +10,7 @@
 #include "../ai_base_manager.h"
 #include "../ai_utils.h"
 #include "systems/ai_system/ai_types.h"
+#include "units/spawn_type.h"
 
 namespace Game::Systems::AI {
 
@@ -24,7 +25,10 @@ struct ArmyCentre {
 auto compute_army_centre(const AISnapshot& snapshot) -> ArmyCentre {
   ArmyCentre centre;
   for (const auto& entity : snapshot.friendly_units) {
-    if (!marches_with_the_army(entity)) {
+    if (entity.is_building || entity.is_commander) {
+      continue;
+    }
+    if (entity.spawn_type == Game::Units::SpawnType::Builder) {
       continue;
     }
     centre.x += entity.pos_x;
@@ -49,7 +53,7 @@ void nearest_enemy_direction(const AISnapshot& snapshot,
 
   float nearest_sq = std::numeric_limits<float>::infinity();
   for (const auto& enemy : snapshot.visible_enemies) {
-    if (enemy.is_building || enemy.health <= 0 || !is_war_contact(enemy)) {
+    if (enemy.is_building) {
       continue;
     }
     const float dx = enemy.pos_x - army_x;
@@ -184,38 +188,13 @@ auto enemies_are_within(const AISnapshot& snapshot,
   return std::any_of(snapshot.visible_enemies.begin(),
                      snapshot.visible_enemies.end(),
                      [&](const ContactSnapshot& enemy) {
-                       if (enemy.health <= 0 || !is_war_contact(enemy)) {
+                       if (enemy.health <= 0) {
                          return false;
                        }
                        float const dx = enemy.pos_x - centre_x;
                        float const dz = enemy.pos_z - centre_z;
                        return (dx * dx + dz * dz) <= radius_sq;
                      });
-}
-
-constexpr float k_commander_danger_radius = 15.0F;
-constexpr float k_commander_danger_radius_sq =
-    k_commander_danger_radius * k_commander_danger_radius;
-constexpr float k_commander_retreat_step = 12.0F;
-
-auto nearest_threat_to(const AISnapshot& snapshot,
-                       float pos_x,
-                       float pos_z) -> const ContactSnapshot* {
-  const ContactSnapshot* nearest = nullptr;
-  float nearest_sq = k_commander_danger_radius_sq;
-  for (const auto& enemy : snapshot.visible_enemies) {
-    if (enemy.health <= 0 || enemy.is_building || !is_war_contact(enemy)) {
-      continue;
-    }
-    const float dx = enemy.pos_x - pos_x;
-    const float dz = enemy.pos_z - pos_z;
-    const float dist_sq = dx * dx + dz * dz;
-    if (dist_sq < nearest_sq) {
-      nearest_sq = dist_sq;
-      nearest = &enemy;
-    }
-  }
-  return nearest;
 }
 
 } // namespace
@@ -286,25 +265,6 @@ void CommanderBehavior::execute(const AISnapshot& snapshot,
           army.x + enemy_dir_x * station.along_axis - enemy_dir_z * station.lateral;
       target_z =
           army.z + enemy_dir_z * station.along_axis + enemy_dir_x * station.lateral;
-    } else if (const ContactSnapshot* threat =
-                   nearest_threat_to(snapshot, snap->pos_x, snap->pos_z)) {
-
-      float away_x = snap->pos_x - threat->pos_x;
-      float away_z = snap->pos_z - threat->pos_z;
-      const float away_len = std::sqrt(away_x * away_x + away_z * away_z);
-      if (away_len > 0.1F) {
-        away_x /= away_len;
-        away_z /= away_len;
-      } else {
-        away_x = 0.0F;
-        away_z = 1.0F;
-      }
-      target_x = snap->pos_x + away_x * k_commander_retreat_step;
-      target_z = snap->pos_z + away_z * k_commander_retreat_step;
-      if (army.count >= k_minimum_escort) {
-        target_x = (target_x + army.x) * 0.5F;
-        target_z = (target_z + army.z) * 0.5F;
-      }
     } else if (context.has_base_anchor) {
       target_x = context.rally_x;
       target_z = context.rally_z;

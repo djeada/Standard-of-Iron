@@ -28,6 +28,7 @@ struct AudioCommand {
   std::int16_t channel = -1;
   std::int16_t track = -1;
   float volume = 0.0F;
+  float pan = 0.0F;
   std::uint32_t fade_samples = 0;
 };
 

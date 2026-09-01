@@ -1,8 +1,10 @@
 #include "audio_event_handler.h"
 
+#include <algorithm>
 #include <chrono>
 #include <random>
 #include <string>
+#include <utility>
 
 #include "../core/component.h"
 #include "../core/entity.h"
@@ -142,6 +144,11 @@ auto ambient_sfx_group_key(Engine::Core::AmbientState state) -> std::string {
 
 constexpr const char* k_spawn_voice_group = "voice.unit_spawned";
 
+auto is_siege_engine(Game::Units::SpawnType type) -> bool {
+  return type == Game::Units::SpawnType::Catapult ||
+         type == Game::Units::SpawnType::Ballista;
+}
+
 auto hit_cue_for_attacker(Game::Units::SpawnType type) -> const char* {
   switch (type) {
   case Game::Units::SpawnType::Knight:
@@ -165,6 +172,29 @@ auto hit_cue_for_attacker(Game::Units::SpawnType type) -> const char* {
   default:
     return Cue::k_combat_hit_generic;
   }
+}
+
+auto impact_cue_for(Game::Units::SpawnType attacker_type,
+                    bool target_is_structure) -> const char* {
+  if (target_is_structure && !is_siege_engine(attacker_type)) {
+    return Cue::k_combat_hit_structure;
+  }
+  return hit_cue_for_attacker(attacker_type);
+}
+
+auto entity_point(const Engine::Core::World* world,
+                  Engine::Core::EntityID id,
+                  WorldPoint& out) -> bool {
+  if (world == nullptr || id == 0) {
+    return false;
+  }
+  const auto* transform = const_cast<Engine::Core::World*>(world)
+                              ->try_get<Engine::Core::TransformComponent>(id);
+  if (transform == nullptr) {
+    return false;
+  }
+  out = {transform->position.x, transform->position.y, transform->position.z};
+  return true;
 }
 
 } // namespace
@@ -499,6 +529,34 @@ void AudioEventHandler::on_building_attacked(
   play_cue(Cue::k_alert_base_under_attack);
 }
 
+void AudioEventHandler::note_distant_impact(const Game::Audio::WorldPoint& where) {
+  const auto listener = AudioSystem::get_instance().listener();
+  if (!listener.valid) {
+    return;
+  }
+  if (Game::Audio::spatialize(listener, where).volume_scale > 0.0F) {
+    m_distant_impacts.clear();
+    return;
+  }
+
+  const auto now = std::chrono::steady_clock::now();
+  const auto cutoff = now - k_distant_battle_window;
+  m_distant_impacts.erase(
+      std::remove_if(m_distant_impacts.begin(),
+                     m_distant_impacts.end(),
+                     [cutoff](const auto& stamp) { return stamp < cutoff; }),
+      m_distant_impacts.end());
+  m_distant_impacts.push_back(now);
+
+  if (m_distant_impacts.size() <
+      static_cast<std::size_t>(k_distant_impacts_for_a_battle)) {
+    return;
+  }
+
+  m_distant_impacts.clear();
+  play_cue(Cue::k_combat_distant_battle);
+}
+
 void AudioEventHandler::on_barrack_captured(
     const Engine::Core::BarrackCapturedEvent& event) {
   if (m_audience.is_spectating() || event.new_owner_id == m_audience.local_owner_id()) {
@@ -520,10 +578,17 @@ void AudioEventHandler::on_audio_trigger(const Engine::Core::AudioTriggerEvent& 
 }
 
 void AudioEventHandler::on_audio_cue(const Engine::Core::AudioCueEvent& event) {
+  std::string source = cue_source(event.source_file, event.source_line);
   if (!m_audience.includes(event.owner_id)) {
+    CueTrace::instance().record(event.cue_id, {}, CueOutcome::AudienceFiltered, source);
     return;
   }
-  play_cue(event.cue_id, event.volume_scale);
+  if (event.positioned) {
+    const WorldPoint position{event.x, event.y, event.z};
+    play_cue_from(event.cue_id, event.volume_scale, std::move(source), &position);
+    return;
+  }
+  play_cue_from(event.cue_id, event.volume_scale, std::move(source));
 }
 
 void AudioEventHandler::on_music_stop(const Engine::Core::MusicStopEvent&) {
@@ -544,10 +609,24 @@ void AudioEventHandler::on_combat_hit(const Engine::Core::CombatHitEvent& event)
   }
 
   float const volume = COMBAT_HIT_VOLUME * get_volume_variation();
-  play_cue(hit_cue_for_attacker(event.attacker_type), volume);
+  const char* const impact =
+      impact_cue_for(event.attacker_type, event.target_is_structure);
 
-  if (event.is_killing_blow) {
-    play_cue(Cue::k_combat_death, get_volume_variation());
+  WorldPoint where;
+  const bool located = entity_point(m_world, event.target_id, where);
+  if (located) {
+    play_cue_at(impact, where, volume);
+    note_distant_impact(where);
+  } else {
+    play_cue(impact, volume);
+  }
+
+  if (event.is_killing_blow && !event.target_is_structure) {
+    if (located) {
+      play_cue_at(Cue::k_combat_death, where, get_volume_variation());
+    } else {
+      play_cue(Cue::k_combat_death, get_volume_variation());
+    }
   }
 }
 

@@ -4,9 +4,8 @@
 
 #include "game/camera_framing.h"
 #include "game/game_config.h"
-#include "game/map/terrain_service.h"
-#include "game/map/visibility_service.h"
 #include "game/render_bridge/camera_service.h"
+#include "game/session/session_context.h"
 #include "scene/camera.h"
 
 namespace {
@@ -22,9 +21,6 @@ auto height_above_target(const Render::GL::Camera& camera) -> float {
 class CameraFramingTest : public ::testing::Test {
 protected:
   void TearDown() override { Game::GameConfig::instance().clear_authored_camera(); }
-
-  Game::Map::VisibilityService m_visibility;
-  Game::Map::TerrainService m_terrain;
 };
 
 TEST_F(CameraFramingTest, AResetPullsTheAuthoredViewInWithoutLosingTheScale) {
@@ -79,7 +75,9 @@ TEST_F(CameraFramingTest, LoadingAMapMakesTheResetFollowThatMapRatherThanTheDefa
 }
 
 TEST_F(CameraFramingTest, TiltingUpRaisesTheCameraAndTiltingDownLowersIt) {
-  Game::Systems::CameraService service(m_visibility, m_terrain);
+  Game::Systems::CameraService service(
+      Game::Session::SessionContext::active().visibility(),
+      Game::Session::SessionContext::active().terrain());
   Render::GL::Camera camera;
   camera.set_rts_view(QVector3D(0.0F, 0.0F, 0.0F), 40.0F, 48.0F, 225.0F);
   const float opening_height = height_above_target(camera);
@@ -99,7 +97,9 @@ TEST_F(CameraFramingTest, TiltingUpRaisesTheCameraAndTiltingDownLowersIt) {
 }
 
 TEST_F(CameraFramingTest, HoldingShiftTiltsFurtherInTheSameDirection) {
-  Game::Systems::CameraService service(m_visibility, m_terrain);
+  Game::Systems::CameraService service(
+      Game::Session::SessionContext::active().visibility(),
+      Game::Session::SessionContext::active().terrain());
   Render::GL::Camera plain;
   Render::GL::Camera shifted;
   plain.set_rts_view(QVector3D(0.0F, 0.0F, 0.0F), 40.0F, 48.0F, 225.0F);

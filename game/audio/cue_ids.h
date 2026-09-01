@@ -65,6 +65,8 @@ inline constexpr const char* k_combat_hit_cavalry = "combat.hit.cavalry";
 inline constexpr const char* k_combat_hit_elephant = "combat.hit.elephant";
 inline constexpr const char* k_combat_hit_siege = "combat.hit.siege";
 inline constexpr const char* k_combat_hit_generic = "combat.hit.generic";
+inline constexpr const char* k_combat_hit_structure = "combat.hit.structure";
+inline constexpr const char* k_combat_distant_battle = "combat.distant_battle";
 inline constexpr const char* k_combat_death = "combat.death";
 inline constexpr const char* k_combat_arrow_launch = "combat.arrow_launch";
 inline constexpr const char* k_combat_bow_draw = "combat.bow_draw";
@@ -111,7 +113,7 @@ inline constexpr const char* k_state_load_complete = "state.load_complete";
 inline constexpr const char* k_state_commander_enter = "state.commander_enter";
 inline constexpr const char* k_state_commander_exit = "state.commander_exit";
 
-inline constexpr std::array<const char*, 93> k_all = {
+inline constexpr std::array<const char*, 95> k_all = {
     k_ui_hover,
     k_ui_click,
     k_ui_back,
@@ -164,6 +166,8 @@ inline constexpr std::array<const char*, 93> k_all = {
     k_combat_hit_elephant,
     k_combat_hit_siege,
     k_combat_hit_generic,
+    k_combat_hit_structure,
+    k_combat_distant_battle,
     k_combat_death,
     k_combat_arrow_launch,
     k_combat_bow_draw,

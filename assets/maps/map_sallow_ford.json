@@ -244,8 +244,8 @@
     {
       "id": "p1_tower_west",
       "type": "defense_tower",
-      "x": 26.74,
-      "z": 55.16,
+      "x": 27.0,
+      "z": 55.0,
       "player_id": 1,
       "team_id": 1,
       "nation": "roman_republic",
@@ -265,8 +265,8 @@
   "firecamps": [
     {
       "id": "redoubt_fire",
-      "x": 36,
-      "z": 59.83,
+      "x": 36.0,
+      "z": 60.0,
       "intensity": 1.1,
       "radius": 3.6
     },

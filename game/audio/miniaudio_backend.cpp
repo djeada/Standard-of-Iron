@@ -23,6 +23,7 @@
 #include "audio_mastering.h"
 #include "loop_seam.h"
 #include "resampler.h"
+#include "spatial.h"
 
 namespace {
 
@@ -707,7 +708,10 @@ auto MiniaudioBackend::channel_playing(int channel) const -> bool {
   return (mask & (1U << static_cast<unsigned>(channel))) != 0U;
 }
 
-void MiniaudioBackend::play_sound(const QString& id, float volume, bool loop) {
+void MiniaudioBackend::play_sound(const QString& id,
+                                  float volume,
+                                  bool loop,
+                                  float pan) {
   if (m_offline_render && is_track_decode_pending(id)) {
     wait_for_track(id);
   }
@@ -730,6 +734,7 @@ void MiniaudioBackend::play_sound(const QString& id, float volume, bool loop) {
   command.type = Game::Audio::AudioCommand::Type::PlaySound;
   command.track = static_cast<std::int16_t>(slot);
   command.volume = sanitize_backend_volume(volume);
+  command.pan = std::clamp(pan, -1.0F, 1.0F);
   command.loop = loop;
   submit(command);
 }
@@ -857,6 +862,9 @@ void MiniaudioBackend::apply_command(const Game::Audio::AudioCommand& command) {
       effect.volume = command.volume;
       effect.target_volume = command.volume;
       effect.volume_step = 0.0F;
+      const auto gains = Game::Audio::pan_gains(command.pan);
+      effect.gain_left = gains.first;
+      effect.gain_right = gains.second;
       effect.fade_samples = 0;
       effect.looping = command.loop;
       effect.active = true;
@@ -1041,8 +1049,10 @@ void MiniaudioBackend::on_audio(float* output, unsigned frames) {
       for (unsigned i = 0; i < fading; ++i) {
         const float volume = effect.volume * master * k_pcm_scale_down;
         const float left = static_cast<float>(source[0]) * volume;
-        destination[0] += left;
-        destination[1] += (stride == 1) ? left : static_cast<float>(source[1]) * volume;
+        destination[0] += left * effect.gain_left;
+        destination[1] +=
+            ((stride == 1) ? left : static_cast<float>(source[1]) * volume) *
+            effect.gain_right;
         destination += STEREO_CHANNELS;
         source += stride;
         effect.volume += effect.volume_step;
@@ -1056,14 +1066,15 @@ void MiniaudioBackend::on_audio(float* output, unsigned frames) {
         if (stride == 1) {
           for (unsigned i = 0; i < steady; ++i) {
             const float value = static_cast<float>(source[i]) * volume;
-            destination[0] += value;
-            destination[1] += value;
+            destination[0] += value * effect.gain_left;
+            destination[1] += value * effect.gain_right;
             destination += STEREO_CHANNELS;
           }
         } else {
           for (unsigned i = 0; i < steady; ++i) {
-            destination[0] += static_cast<float>(source[0]) * volume;
-            destination[1] += static_cast<float>(source[1]) * volume;
+            destination[0] += static_cast<float>(source[0]) * volume * effect.gain_left;
+            destination[1] +=
+                static_cast<float>(source[1]) * volume * effect.gain_right;
             destination += STEREO_CHANNELS;
             source += STEREO_CHANNELS;
           }

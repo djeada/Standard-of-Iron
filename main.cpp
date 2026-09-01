@@ -136,6 +136,7 @@ auto opengl_version_supported(int major, int minor) -> bool {
 #endif
 
 #include "app/audio/audio_resource_loader.h"
+#include "app/audio/audio_status_hud.h"
 #include "app/core/game_engine.h"
 #include "app/core/game_speed.h"
 #include "app/core/language_manager.h"
@@ -956,6 +957,9 @@ auto main(int argc, char* argv[]) -> int {
 
   auto profiling_hud = std::make_unique<Render::Profiling::ProfilingHud>();
   engine->rootContext()->setContextProperty("profiling_hud", profiling_hud.get());
+
+  auto audio_hud = std::make_unique<App::Audio::AudioStatusHud>();
+  engine->rootContext()->setContextProperty("audio_hud", audio_hud.get());
 
   auto* minimap_view_model = qobject_cast<App::ViewModels::MinimapViewModel*>(
       game_engine->minimap_view_model());

@@ -13,11 +13,17 @@ Rectangle {
     property var placement: null
     property var player_state: null
     readonly property var hs: StyleGuide.historical
+    readonly property bool has_barracks_selection: (productionPanel.selection_tick, productionPanel.has_selected_type("barracks"))
+    readonly property var barracks_state: (productionPanel.selection_tick, (productionPanel.production && productionPanel.production.selected_state) ? productionPanel.production.selected_state() : productionPanel.default_production_state())
 
     signal recruit_unit(string unit_type)
     signal rally_mode_toggled
     signal build_tower
     signal builder_construction(string item_type)
+
+    function has_selected_type(type) {
+        return !!(productionPanel.production && productionPanel.production.has_selected_type && productionPanel.production.has_selected_type(type));
+    }
 
     readonly property var recruit_unit_cards: [{
             "unit_type": "archer",
@@ -351,6 +357,26 @@ Rectangle {
     border.color: hs.bronze
     border.width: 2
     radius: 6
+    clip: true
+
+    BarracksProductionView {
+        id: barracksView
+
+        objectName: "barracksProductionView"
+        anchors.fill: parent
+        anchors.margins: Design.Metrics.space8
+        visible: productionPanel.has_barracks_selection
+        panel: productionPanel
+        prod: productionPanel.barracks_state
+
+        onRecruit_requested: function (unitType) {
+            productionPanel.recruit_unit(unitType);
+        }
+        onDetails_requested: function (unitType, nation) {
+            productionPanel.unit_details_requested(unitType, nation);
+        }
+        onRally_requested: productionPanel.rally_mode_toggled()
+    }
 
     Flickable {
         id: productionScroll
@@ -359,6 +385,8 @@ Rectangle {
 
         anchors.fill: parent
         anchors.margins: Design.Metrics.space8
+        visible: !productionPanel.has_barracks_selection
+        enabled: visible
         clip: true
         contentWidth: width
         contentHeight: productionColumn.implicitHeight
@@ -374,75 +402,6 @@ Rectangle {
 
             width: productionScroll.width - productionScroll.gutter
             spacing: Design.Metrics.space4
-
-            Rectangle {
-                property bool has_barracks: (productionPanel.selection_tick, (productionPanel.production && productionPanel.production.has_selected_type && productionPanel.production.has_selected_type("barracks")))
-
-                width: parent.width
-                height: unitGridContent.height + 12
-                color: hs.parchmentLight
-                radius: 6
-                border.color: hs.bronzeDeep
-                border.width: 1
-                visible: has_barracks
-
-                Column {
-                    id: unitGridContent
-
-                    property var prod: (productionPanel.selection_tick, (productionPanel.production && productionPanel.production.selected_state) ? productionPanel.production.selected_state() : productionPanel.default_production_state())
-
-                    anchors.horizontalCenter: parent.horizontalCenter
-                    anchors.top: parent.top
-                    anchors.margins: 6
-                    spacing: 6
-                    width: parent.width - 12
-
-                    Text {
-                        anchors.horizontalCenter: parent.horizontalCenter
-                        text: qsTr("RECRUIT UNITS")
-                        color: hs.bronze
-                        font.pixelSize: Design.Typography.caption
-                        font.bold: true
-                    }
-
-                    Grid {
-                        id: recruitGrid
-
-                        readonly property int cardSpacing: 6
-                        readonly property int minCardWidth: Design.A11y.scaled(120)
-                        readonly property int cardWidth: Math.floor((width - recruitGrid.cardSpacing * (recruitGrid.columns - 1)) / recruitGrid.columns)
-
-                        width: parent.width
-                        columns: Math.max(2, Math.floor((width + recruitGrid.cardSpacing) / (recruitGrid.minCardWidth + recruitGrid.cardSpacing)))
-                        columnSpacing: recruitGrid.cardSpacing
-                        rowSpacing: recruitGrid.cardSpacing
-
-                        Repeater {
-                            model: productionPanel.recruit_unit_cards
-
-                            delegate: RecruitCard {
-                                required property var modelData
-
-                                width: recruitGrid.cardWidth
-                                height: Design.A11y.scaled(58)
-
-                                panel: productionPanel
-                                prod: unitGridContent.prod
-                                unit_type: modelData.unit_type
-                                fallback_build_time: modelData.build_time
-                                tooltip_text: panel ? panel.recruit_tooltip(unit_info, modelData.fallback_name, modelData.build_time, modelData.carthage_only === true) : ""
-                                visible: modelData.carthage_only !== true || unitGridContent.prod.nation_id === "carthage"
-                                onRecruit_requested: function (unitType) {
-                                    productionPanel.recruit_unit(unitType);
-                                }
-                                onDetails_requested: function (unitType, nation) {
-                                    productionPanel.unit_details_requested(unitType, nation);
-                                }
-                            }
-                        }
-                    }
-                }
-            }
 
             Rectangle {
                 property bool has_barracks: (productionPanel.selection_tick, (productionPanel.production && productionPanel.production.has_selected_type && productionPanel.production.has_selected_type("barracks")))
@@ -633,6 +592,76 @@ Rectangle {
                             font.bold: true
                             style: Text.Outline
                             styleColor: "#120D09"
+                        }
+                    }
+                }
+            }
+
+            Rectangle {
+                property bool has_barracks: (productionPanel.selection_tick, (productionPanel.production && productionPanel.production.has_selected_type && productionPanel.production.has_selected_type("barracks")))
+
+                width: parent.width
+                height: unitGridContent.height + 12
+                color: hs.parchmentLight
+                radius: 6
+                border.color: hs.bronzeDeep
+                border.width: 1
+                visible: has_barracks
+
+                Column {
+                    id: unitGridContent
+
+                    property var prod: (productionPanel.selection_tick, (productionPanel.production && productionPanel.production.selected_state) ? productionPanel.production.selected_state() : productionPanel.default_production_state())
+
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    anchors.top: parent.top
+                    anchors.margins: 6
+                    spacing: 6
+                    width: parent.width - 12
+
+                    Text {
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        text: qsTr("RECRUIT UNITS")
+                        color: hs.bronze
+                        font.pixelSize: Design.Typography.caption
+                        font.bold: true
+                    }
+
+                    Grid {
+                        id: recruitGrid
+
+                        readonly property int cardSpacing: 6
+                        readonly property int minCardWidth: Design.A11y.scaled(120)
+                        readonly property int cardWidth: Math.floor((width - recruitGrid.cardSpacing * (recruitGrid.columns - 1)) / recruitGrid.columns)
+
+                        width: parent.width
+                        columns: Math.max(2, Math.floor((width + recruitGrid.cardSpacing) / (recruitGrid.minCardWidth + recruitGrid.cardSpacing)))
+                        columnSpacing: recruitGrid.cardSpacing
+                        rowSpacing: recruitGrid.cardSpacing
+
+                        Repeater {
+                            model: productionPanel.recruit_unit_cards
+
+                            delegate: RecruitCard {
+                                required property var modelData
+
+                                width: recruitGrid.cardWidth
+                                height: Design.A11y.scaled(58)
+
+                                panel: productionPanel
+                                prod: unitGridContent.prod
+                                unit_type: modelData.unit_type
+                                fallback_name: modelData.fallback_name
+                                fallback_build_time: modelData.build_time
+                                tooltip_text: panel ? panel.recruit_tooltip(unit_info, modelData.fallback_name, modelData.build_time, modelData.carthage_only === true) : ""
+                                visible: modelData.carthage_only !== true || unitGridContent.prod.nation_id === "carthage"
+                                onRecruit_requested: function (unitType) {
+                                    productionPanel.recruit_unit(unitType);
+                                }
+                                onDetails_requested: function (unitType, nation) {
+                                    productionPanel.unit_details_requested(unitType, nation);
+                                }
+                            }
                         }
                     }
                 }
@@ -2804,6 +2833,7 @@ Rectangle {
                                 panel: productionPanel
                                 prod: templeContent.prod
                                 unit_type: modelData.unit_type
+                                fallback_name: modelData.fallback_name
                                 fallback_build_time: modelData.build_time
                                 tooltip_text: panel ? panel.recruit_tooltip(unit_info, modelData.fallback_name, modelData.build_time, false) : ""
                                 onRecruit_requested: function (unitType) {
@@ -2967,28 +2997,34 @@ Rectangle {
                     id: emptyProductionHint
 
                     anchors.centerIn: parent
+                    width: Math.max(0, parent.width - Design.Metrics.space16)
                     spacing: 4
 
                     Text {
-                        anchors.horizontalCenter: parent.horizontalCenter
+                        width: parent.width
                         text: Design.Icons.unitGlyph("defense_tower")
                         color: "#3B2F24"
                         font.pixelSize: Design.Typography.glyphSmall
+                        horizontalAlignment: Text.AlignHCenter
                     }
 
                     Text {
-                        anchors.horizontalCenter: parent.horizontalCenter
-                        text: qsTr("No Barracks Selected")
+                        width: parent.width
+                        text: qsTr("No Barracks")
                         color: "#8D7146"
                         font.pixelSize: Design.Typography.label
                         font.bold: true
+                        horizontalAlignment: Text.AlignHCenter
+                        elide: Text.ElideRight
                     }
 
                     Text {
-                        anchors.horizontalCenter: parent.horizontalCenter
+                        width: parent.width
                         text: qsTr("Select a barracks to recruit units")
                         color: Theme.textSubLite
                         font.pixelSize: Design.Typography.caption
+                        horizontalAlignment: Text.AlignHCenter
+                        wrapMode: Text.WordWrap
                     }
                 }
             }

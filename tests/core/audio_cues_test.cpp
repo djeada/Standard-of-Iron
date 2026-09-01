@@ -8,13 +8,17 @@
 
 #include <algorithm>
 #include <chrono>
+#include <cstddef>
+#include <cstdint>
 #include <gtest/gtest.h>
 #include <string>
 #include <thread>
+#include <vector>
 
 #include "app/audio/audio_resource_loader.h"
 #include "game/audio/audio_cues.h"
 #include "game/audio/audio_settings.h"
+#include "game/audio/cue_trace.h"
 
 namespace {
 
@@ -196,6 +200,149 @@ TEST_F(ShippedAudioTest, EveryCueInTheCatalogueReachesTheMixer) {
   }
   EXPECT_TRUE(silent.empty()) << "bound but never audible, so silent in game: "
                               << joined;
+}
+
+namespace {
+
+auto sword_pool() -> std::vector<std::string> {
+  return {"sfx.combat.sword_hit_01",
+          "sfx.combat.blade_clash_01",
+          "sfx.combat.blade_clash_02",
+          "sfx.combat.blade_clash_03"};
+}
+
+auto play_and_collect(const char* cue_id,
+                      int times,
+                      int pace_ms = 0) -> std::vector<std::string> {
+  std::vector<std::string> chosen;
+  for (int attempt = 0; attempt < times; ++attempt) {
+    if (pace_ms > 0 && attempt > 0) {
+      std::this_thread::sleep_for(std::chrono::milliseconds(pace_ms));
+    }
+    if (!Game::Audio::play_cue(cue_id)) {
+      continue;
+    }
+    chosen.push_back(Game::Audio::CueRegistry::instance().last_variant(cue_id));
+  }
+  return chosen;
+}
+
+} // namespace
+
+TEST_F(ShippedAudioTest, ARepeatedCueWalksItsWholePoolInsteadOfFavouringOne) {
+  Game::Audio::CueBinding binding;
+  binding.resource_ids = sword_pool();
+  for (const auto& resource_id : binding.resource_ids) {
+    ASSERT_TRUE(AudioSystem::get_instance().has_resource(resource_id))
+        << resource_id << " is not loaded, so this test cannot judge selection";
+  }
+  Game::Audio::CueRegistry::instance().bind("test.cue.pool", binding);
+  Game::Audio::CueTrace::instance().reset();
+
+  const std::vector<std::string> chosen = play_and_collect("test.cue.pool", 24);
+  ASSERT_GE(chosen.size(), 20U);
+
+  const QSet<QString> distinct = [&] {
+    QSet<QString> ids;
+    for (const auto& id : chosen) {
+      ids.insert(QString::fromStdString(id));
+    }
+    return ids;
+  }();
+  EXPECT_EQ(distinct.size(), 4) << "part of the pool was never reached";
+
+  const std::size_t window =
+      Game::Audio::CueRegistry::shuffle_history_size(binding.resource_ids.size());
+  ASSERT_EQ(window, 2U);
+  for (std::size_t index = window; index < chosen.size(); ++index) {
+    for (std::size_t back = 1; back <= window; ++back) {
+      EXPECT_NE(chosen[index], chosen[index - back])
+          << "variant " << chosen[index] << " repeated within " << window
+          << " plays at position " << index;
+    }
+  }
+}
+
+TEST_F(ShippedAudioTest, AZeroWeightVariantIsNeverChosen) {
+  Game::Audio::CueBinding binding;
+  binding.resource_ids = {"sfx.combat.sword_hit_01", "sfx.combat.blade_clash_01"};
+  binding.weights = {1.0F, 0.0F};
+  Game::Audio::CueRegistry::instance().bind("test.cue.weighted", binding);
+  Game::Audio::CueTrace::instance().reset();
+
+  const std::vector<std::string> chosen = play_and_collect("test.cue.weighted", 12);
+  ASSERT_FALSE(chosen.empty());
+
+  for (const auto& id : chosen) {
+    EXPECT_EQ(id, "sfx.combat.sword_hit_01")
+        << "a variant weighted to zero was played anyway";
+  }
+}
+
+TEST_F(ShippedAudioTest, VariantPlayCountsAreReportedForTuning) {
+  Game::Audio::CueBinding binding;
+  binding.resource_ids = sword_pool();
+  Game::Audio::CueRegistry::instance().bind("test.cue.counted_pool", binding);
+  Game::Audio::CueTrace::instance().reset();
+
+  play_and_collect("test.cue.counted_pool", 8, 120);
+  for (int settle = 0; settle < 100; ++settle) {
+    if (Game::Audio::CueTrace::instance().record_for("test.cue.counted_pool").accepted >
+        0U) {
+      break;
+    }
+    std::this_thread::sleep_for(std::chrono::milliseconds(5));
+  }
+
+  const auto record =
+      Game::Audio::CueTrace::instance().record_for("test.cue.counted_pool");
+  EXPECT_FALSE(record.resource_plays.empty())
+      << "the trace cannot say which variants a pool actually used";
+
+  const auto pool = sword_pool();
+  std::uint64_t total = 0;
+  for (const auto& [resource, plays] : record.resource_plays) {
+    EXPECT_NE(std::find(pool.begin(), pool.end(), resource), pool.end())
+        << "the trace credited a play to " << resource << ", which is not in the pool";
+    total += plays;
+  }
+  EXPECT_EQ(total, record.accepted)
+      << "the per-variant counts do not add up to what was actually played";
+}
+
+TEST_F(ShippedAudioTest, ABurstOfImpactsKeepsSoundingInsteadOfGoingQuiet) {
+  Game::Audio::CueBinding binding;
+  binding.resource_ids = sword_pool();
+  Game::Audio::CueRegistry::instance().bind("test.cue.burst", binding);
+  Game::Audio::CueTrace::instance().reset();
+
+  for (int strike = 0; strike < 4; ++strike) {
+    Game::Audio::play_cue("test.cue.burst");
+  }
+
+  for (int settle = 0; settle < 100; ++settle) {
+    if (Game::Audio::CueTrace::instance().record_for("test.cue.burst").requests >= 4U) {
+      break;
+    }
+    std::this_thread::sleep_for(std::chrono::milliseconds(5));
+  }
+
+  const auto record = Game::Audio::CueTrace::instance().record_for("test.cue.burst");
+  EXPECT_EQ(record.outcomes.at(
+                static_cast<std::size_t>(Game::Audio::CueOutcome::ResourceCooldown)),
+            0U)
+      << "blows landed in a burst and the pool sent them to a variant that was still "
+         "on cooldown while other variants were free";
+  EXPECT_GE(record.accepted, 4U);
+}
+
+TEST(AudioVariantSelectionTest, OnlyPoolsBigEnoughToBenefitKeepAHistory) {
+  EXPECT_EQ(Game::Audio::CueRegistry::shuffle_history_size(1), 0U)
+      << "a single-asset cue has nothing to avoid repeating";
+  EXPECT_EQ(Game::Audio::CueRegistry::shuffle_history_size(2), 1U);
+  EXPECT_EQ(Game::Audio::CueRegistry::shuffle_history_size(3), 1U);
+  EXPECT_EQ(Game::Audio::CueRegistry::shuffle_history_size(4), 2U)
+      << "half the pool is the widest window that still leaves a real choice";
 }
 
 TEST_F(AudioCueRegistryTest, UnboundCueIsSilentInsteadOfFailing) {
@@ -399,5 +546,70 @@ TEST(AudioImportanceTest, TheCriticalPlayerFeedbackCuesAreRequired) {
                              "state.commander_exit"}) {
     EXPECT_TRUE(required.contains(QString::fromLatin1(cue_id)))
         << cue_id << " lost its required classification";
+  }
+}
+
+TEST(AudioProvenanceTest, NoTrackShipsWithUnknownRightsUnlessItIsOnTheBaseline) {
+  QFile manifest_file(QStringLiteral("assets/audio/audio_manifest.json"));
+  ASSERT_TRUE(manifest_file.open(QIODevice::ReadOnly));
+  const QJsonArray tracks = QJsonDocument::fromJson(manifest_file.readAll())
+                                .object()
+                                .value(QStringLiteral("tracks"))
+                                .toArray();
+  ASSERT_FALSE(tracks.isEmpty());
+
+  QFile baseline_file(QStringLiteral("assets/audio/audio_provenance_baseline.json"));
+  ASSERT_TRUE(baseline_file.open(QIODevice::ReadOnly))
+      << "the provenance baseline is missing, so nothing records which files "
+         "still need their rights written down";
+  QSet<QString> baseline;
+  for (const QJsonValue value : QJsonDocument::fromJson(baseline_file.readAll())
+                                    .object()
+                                    .value(QStringLiteral("rights_not_yet_recorded"))
+                                    .toArray()) {
+    baseline.insert(value.toString());
+  }
+
+  QStringList unknown;
+  int recorded = 0;
+  for (const QJsonValue value : tracks) {
+    const QJsonObject track = value.toObject();
+    const QJsonObject provenance = track.value(QStringLiteral("provenance")).toObject();
+    const bool stated =
+        !provenance.value(QStringLiteral("origin")).toString().isEmpty() &&
+        !provenance.value(QStringLiteral("licence")).toString().isEmpty();
+    if (stated) {
+      ++recorded;
+      continue;
+    }
+    const QString id = track.value(QStringLiteral("id")).toString();
+    if (!baseline.contains(id)) {
+      unknown.append(id);
+    }
+  }
+
+  EXPECT_GT(recorded, 0);
+  EXPECT_TRUE(unknown.isEmpty()) << "audio shipping with unknown usage rights: "
+                                 << unknown.join(QStringLiteral(", ")).toStdString();
+}
+
+TEST(AudioCueCatalogTest, DeclaredWeightsMatchTheirResourceList) {
+  const QJsonArray cues = load_catalog_cues();
+  ASSERT_FALSE(cues.isEmpty());
+
+  for (const QJsonValue value : cues) {
+    const QJsonObject cue = value.toObject();
+    const QJsonArray weights = cue.value(QStringLiteral("weights")).toArray();
+    if (weights.isEmpty()) {
+      continue;
+    }
+    EXPECT_EQ(weights.size(), cue.value(QStringLiteral("resources")).toArray().size())
+        << cue.value(QStringLiteral("id")).toString().toStdString()
+        << " weights one set of variants and plays another";
+    for (const QJsonValue weight : weights) {
+      EXPECT_GE(weight.toDouble(-1.0), 0.0)
+          << cue.value(QStringLiteral("id")).toString().toStdString()
+          << " declares a negative weight";
+    }
   }
 }

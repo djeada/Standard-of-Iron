@@ -101,6 +101,14 @@ deployment project is also MIT licensed:
 
 ## Audio Assets
 
+Every entry in `assets/audio/audio_manifest.json` carries a `provenance` block
+naming its origin and licence, so the question "may we ship this" is answerable
+per file without reading the prose below. The prose stays authoritative for the
+exact wording an attribution needs. `assets/audio/audio_provenance_baseline.json`
+lists the files whose rights are not written down yet;
+`scripts/audio_provenance.py --check`, which `make audio-check` runs, fails when
+a file arrives that is on neither list.
+
 ### Synthesised cue sounds
 
 The 66 sound effects listed with `"source": "synth"` in
