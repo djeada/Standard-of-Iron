@@ -205,7 +205,7 @@ void SessionContext::reset() {
   m_state->replay_recorder.reset();
   set_replay_player(nullptr);
   m_state->commands.clear();
-  m_state->visibility.reset();
+  m_state->visibility.shutdown();
   m_state->world.clear();
   m_state->terrain.clear();
   m_state->owners.clear();

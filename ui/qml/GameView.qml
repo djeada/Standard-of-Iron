@@ -20,6 +20,7 @@ Item {
     property var pan_axis: ({})
 
     readonly property bool camera_pan_active: renderArea.key_pan_count > 0 || renderArea.mouse_pan_active
+    readonly property bool command_input_suspended: (typeof mainWindow !== 'undefined' && mainWindow.simulation_suspended) || (typeof game !== 'undefined' && game.victory_state !== "")
 
     onConstruction_preview_activeChanged: {
         if (cursorLayer)
@@ -156,17 +157,9 @@ Item {
                 game.commander.toggle_mode();
             return true;
         case "global.menu":
-            if (game.placement.is_placing_construction && game.placement.on_construction_cancel)
-                game.placement.on_construction_cancel();
-            else if (game.placement.is_placing_formation && game.placement.on_formation_cancel)
-                game.placement.on_formation_cancel();
-            else if (game_view.is_rally_placement())
-                game_view.cancel_rally_placement();
-            else if (typeof mainWindow !== 'undefined' && mainWindow.menu_visible)
-                mainWindow.menu_visible = false;
-            else if (typeof mainWindow !== 'undefined' && !mainWindow.overlay_active)
-                mainWindow.menu_visible = true;
-            return true;
+            if (typeof mainWindow === 'undefined')
+                return false;
+            return mainWindow.request_menu_toggle();
         case "global.quicksave":
             if (game.saves.quicksave)
                 game.saves.quicksave();
@@ -189,7 +182,6 @@ Item {
             if (typeof mainWindow === 'undefined')
                 return false;
             mainWindow.game_paused = !mainWindow.game_paused;
-            game_view.set_paused(mainWindow.game_paused);
             return true;
         case "rts.order_stop":
             if (!game.has_units_selected)
@@ -759,6 +751,7 @@ Item {
         id: cursorLayer
 
         anchors.fill: parent
+        visible: !game_view.command_input_suspended
         mode: game_view.cursor_mode
         rallyPlacement: game_view.is_rally_placement()
         placingConstruction: game_view.is_placing_construction

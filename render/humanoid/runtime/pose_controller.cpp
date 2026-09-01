@@ -43,6 +43,13 @@ auto to_pose_vec(const QVector3D& value) -> Animation::PoseVec3 {
   return {value.x(), value.y(), value.z()};
 }
 
+[[nodiscard]] auto
+is_running_locomotion(const HumanoidAnimationContext& anim_ctx) noexcept -> bool {
+  return Render::Creature::is_running_animation(anim_ctx.inputs.movement_state) ||
+         anim_ctx.gait.state == HumanoidMotionState::Run ||
+         anim_ctx.gait.run_blend > 0.5F;
+}
+
 void apply_weapon_attack_body_deltas(
     HumanoidPose& pose, const Animation::HumanoidWeaponAttackPoseSample& sample) {
   pose.shoulder_l.setX(pose.shoulder_l.x() + sample.shoulder_l_x_delta);
@@ -688,6 +695,7 @@ void HumanoidPoseController::hold_spear_idle() {
   auto const sample = Animation::resolve_humanoid_held_pose({
       .kind = Animation::HumanoidHeldPoseKind::SpearIdle,
       .shoulder_y = HP::SHOULDER_Y,
+      .running = is_running_locomotion(m_anim_ctx),
       .sample_time = m_anim_ctx.inputs.time,
   });
   apply_held_pose_sample(*this, m_pose, sample);
@@ -699,6 +707,7 @@ void HumanoidPoseController::channel_spell_idle() {
   auto const sample = Animation::resolve_humanoid_held_pose({
       .kind = Animation::HumanoidHeldPoseKind::CasterChannel,
       .shoulder_y = HP::SHOULDER_Y,
+      .running = is_running_locomotion(m_anim_ctx),
       .sample_time = m_anim_ctx.inputs.time,
   });
   apply_held_pose_sample(*this, m_pose, sample);
@@ -710,6 +719,7 @@ void HumanoidPoseController::carry_stave() {
   auto const sample = Animation::resolve_humanoid_held_pose({
       .kind = Animation::HumanoidHeldPoseKind::StaveCarry,
       .shoulder_y = HP::SHOULDER_Y,
+      .running = is_running_locomotion(m_anim_ctx),
       .sample_time = m_anim_ctx.inputs.time,
   });
   apply_held_pose_sample(*this, m_pose, sample);
@@ -791,6 +801,7 @@ void HumanoidPoseController::carry_sword_and_shield() {
       .moving =
           Render::Creature::is_moving_animation(m_anim_ctx.inputs.movement_state) ||
           m_anim_ctx.gait.speed > 0.1F,
+      .running = is_running_locomotion(m_anim_ctx),
   });
   apply_held_pose_sample(*this, m_pose, sample);
 }

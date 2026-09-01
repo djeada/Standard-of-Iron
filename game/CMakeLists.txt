@@ -106,6 +106,7 @@ add_library(
     systems/owner_queries.cpp
     systems/owner_registry.cpp
     systems/player_resource_registry.cpp
+    systems/resource_json.cpp
     systems/run_stamina.cpp
     systems/troop_count_registry.cpp
     systems/troop_profile_service.cpp

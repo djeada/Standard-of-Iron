@@ -243,17 +243,17 @@ domain through the aporee project.
 
 ### Music (`assets/audio/music/`)
 
-The twenty tracks that used to sit here have been **replaced**. The twenty-seven tracks now
-shipped were generated for this project in August 2026 with **ElevenLabs**, under a licence
-held by the project author that permits commercial use.
+The twenty tracks that used to sit here have been **replaced**. The thirty tracks now
+shipped were generated for this project in August and September 2026 with **ElevenLabs**,
+under a licence held by the project author that permits commercial use.
 
-| Directory   | Tracks | Covers                                                                |
-| ----------- | -----: | --------------------------------------------------------------------- |
-| `menu/`     |      2 | the main theme and its alternate                                      |
-| `campaign/` |      2 | the campaign map                                                      |
-| `base/`     |     11 | nine peaceful beds and two tense ones, including two four-minute beds |
-| `combat/`   |      6 | two neutral, two Roman, two Carthaginian                              |
-| `stingers/` |      6 | victory, Carthaginian triumph, three defeats and a retreat signal     |
+| Directory   | Tracks | Covers                                                                  |
+| ----------- | -----: | ----------------------------------------------------------------------- |
+| `menu/`     |      3 | the main theme, its alternate and the Iron Kingdom anthem               |
+| `campaign/` |      2 | the campaign map                                                        |
+| `base/`     |     12 | nine peaceful beds and three tense ones, including two four-minute beds |
+| `combat/`   |      7 | three neutral, two Roman, two Carthaginian                              |
+| `stingers/` |      6 | victory, Carthaginian triumph, three defeats and a retreat signal       |
 
 Selection is entirely tag-driven from `assets/audio/audio_manifest.json` — `screen_context`
 for the frontend, `ambient_state` in mission, `faction` to bias a nation's own music. No
@@ -265,7 +265,9 @@ normalises music to −15 LUFS but with only ±6 dB of authority, further capped
 `ceiling_db − peak + MAX_LIMITING_DB`, so a −1 dBTP file gets at most 4 dB of lift. A track
 baked below about −19 LUFS plays under the rest of the library for good.
 `tools/audio_import/import_music.py` is the recipe that lands them there, and its `BATCHES`
-table records what this import renamed each master to.
+table records what each import renamed each master to. The September 2026 batch
+(`2026-09-iron`) added three: the `menu/` anthem, a third tense base bed and a third neutral
+combat track.
 
 #### What that means for distribution
 
@@ -280,7 +282,7 @@ re-bake at any other rate, or in stereo, needs those masters back.
 
 ### Generated cues (`assets/audio/sfx/`, `source: generated`)
 
-Thirty-eight one-shots were regenerated in August 2026 with **ElevenLabs**, under a licence
+Forty one-shots were regenerated in August and September 2026 with **ElevenLabs**, under a licence
 held by the project author that permits commercial use, replacing the synthesised cues that measured as oscillators rather
 than recordings (spectral flatness 0.024 against 0.336 for the recorded material, and almost
 no energy above 6 kHz). They carry `"source": "generated"` in
@@ -290,6 +292,9 @@ no energy above 6 kHz). They carry `"source": "generated"` in
 It trims each render from its loudest transient outward — these arrive padded to a round
 duration with the sound somewhere inside — matches the RMS of the file it replaces so the
 existing mix is unchanged, ceilings at −1.9 dBFS, and encodes to 48 kHz mono Vorbis `-q:a 4`.
+A plan entry can ask for `"whole"` instead of the trim, which imports the render at its
+delivered length; `combat.heal` and `order.commander_rally` are both sustained pieces where
+the approach and the decay are the sound, so both are imported whole.
 
 Twenty-two files were deleted rather than replaced: surplus variants whose cue now uses one
 good recording, and the cues that were folded into a shared sound. One refusal now answers

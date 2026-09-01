@@ -87,7 +87,8 @@ TEST(BrandFontsTest, TheDisplayFaceCoversCapsFiguresAndAccents) {
                      "\u00c1\u00c0\u00c2\u00c3\u00c4\u00c5\u00c7\u00c9\u00c8"
                      "\u00ca\u00cb\u00cd\u00cc\u00ce\u00cf\u00d1\u00d3\u00d2"
                      "\u00d4\u00d5\u00d6\u00da\u00d9\u00db\u00dc\u00dd"
-                     "\u00bf\u00a1\u00d7"));
+                     "\u00bf\u00a1\u00d7"
+                     "\u011e\u0130\u015e"));
   EXPECT_EQ(missing, QString()) << "characters missing from the display face";
 }
 

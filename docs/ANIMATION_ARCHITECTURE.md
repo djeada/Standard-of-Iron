@@ -177,10 +177,11 @@ Key properties that keep it smooth (Phase 6):
 
 The two profiles are not just amplitude variants. Walking keeps each foot planted for
 60% of its cycle, creating double support; it uses a wider track, an upright torso,
-straight relaxed arms and a pronounced heel-to-toe roll. Running cuts ground contact to
-36%, narrows the track and leaves two flight windows per cycle. It also lands near-flat,
-recovers the swing leg earlier, leans farther over the stride and keeps the elbows bent so
-the arms pump close to the body.
+relaxed arms with a slight elbow bend and a pronounced heel-to-toe roll. Running cuts
+ground contact to 32%, narrows the track and leaves two flight windows per cycle. It also
+lands near-flat, recovers the swing leg earlier and leans farther over the stride. Free
+arms use a compact bent-elbow pump; weapon-ready profiles lower and draw their carry
+inward so running does not reuse the walking guard silhouette.
 
 Their centre-of-mass curves are authored separately before blending. A walker rises over
 the supporting leg and settles during double support. A runner compresses over the loaded
@@ -235,7 +236,7 @@ somewhat — this is a stylised RTS gait, not a foot-locked one, and
 The practical consequence: raising `stride_length` _reduces_ skate, it does not cause it.
 The values shipped before the hip-drop solve (0.40 walk / 0.58 run) were small enough that
 the legs read as a stiff shuffle from the game camera; the authored stance travel is now
-0.95 m for the walk and 1.02 m for the run. The run baker samples the profile at normalized
+0.95 m for the walk and 0.96 m for the run. The run baker samples the profile at normalized
 speed so its canonical clip keeps that skate budget instead of silently inflating it.
 
 The ceiling used to be leg reach: at a half-stride approaching `UPPER_LEG_LEN +

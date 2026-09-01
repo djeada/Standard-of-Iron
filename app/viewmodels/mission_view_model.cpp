@@ -28,8 +28,10 @@ MissionViewModel::MissionViewModel(const App::Core::ClientContext& context,
     , m_camera(camera) {
 }
 
-void MissionViewModel::set_stages(const QVariantList& stages) {
+void MissionViewModel::set_stages(const QVariantList& stages,
+                                  bool mirrors_victory_conditions) {
   m_stages = stages;
+  m_stages_mirror_victory_conditions = mirrors_victory_conditions;
   m_markers.clear();
   m_active_index = -1;
 
@@ -79,6 +81,7 @@ void MissionViewModel::clear() {
   m_stages.clear();
   m_markers.clear();
   m_active_index = -1;
+  m_stages_mirror_victory_conditions = false;
   emit stages_changed();
 }
 

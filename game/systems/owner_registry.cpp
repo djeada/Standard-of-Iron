@@ -14,6 +14,7 @@
 
 #include "../accessibility/team_identity.h"
 #include "../core/ambient_session.h"
+#include "game/core/ownership_constants.h"
 
 namespace {
 
@@ -231,6 +232,11 @@ auto OwnerRegistry::are_allies(int owner_id1, int owner_id2) const -> bool {
 auto OwnerRegistry::are_enemies(int owner_id1, int owner_id2) const -> bool {
 
   if (owner_id1 == owner_id2) {
+    return false;
+  }
+
+  if (Game::Core::is_neutral_owner(owner_id1) ||
+      Game::Core::is_neutral_owner(owner_id2)) {
     return false;
   }
 

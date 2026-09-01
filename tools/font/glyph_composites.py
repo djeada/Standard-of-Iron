@@ -1,9 +1,9 @@
 """Diacritical marks, and the accented capitals built from them.
 
-The game ships German, Spanish and Brazilian Portuguese alongside English, and
-a title face that drops out from under an accented capital is worse than one
-that was never used: Qt falls back per glyph, so a single missing Ó turns
-CAMPAÑA into two typefaces in one word.
+The game ships German, Spanish, Brazilian Portuguese and Turkish alongside
+English, and a title face that drops out from under an accented capital is
+worse than one that was never used: Qt falls back per glyph, so a single
+missing Ó turns CAMPAÑA into two typefaces in one word.
 
 The accented forms are composite glyphs -- a reference to the base capital and
 a reference to the mark -- rather than redrawn outlines. Correcting O then
@@ -113,6 +113,50 @@ def ring() -> Glyph:
     )
 
 
+def breve() -> Glyph:
+    """The cup over Turkish G. Cut as a chiselled arc rather than a curve so it
+    reads at title size next to the circumflex, whose angle it answers."""
+    span, depth, weight = MARK_REACH * 1.62, 108.0, MARK_WEIGHT * 0.62
+    top = MARK_Y + 104
+    return Glyph(
+        contours=[
+            cw(
+                [
+                    (0, top),
+                    (0, top - depth * 0.55),
+                    (span * 0.32, top - depth),
+                    (span * 0.68, top - depth),
+                    (span, top - depth * 0.55),
+                    (span, top),
+                    (span - weight, top),
+                    (span - weight, top - depth * 0.48),
+                    (span * 0.66, top - depth + weight),
+                    (span * 0.34, top - depth + weight),
+                    (weight, top - depth * 0.48),
+                    (weight, top),
+                ]
+            )
+        ]
+    )
+
+
+def dotaccent() -> Glyph:
+    """One half of the dieresis, for Turkish dotted capital I."""
+    size = MARK_WEIGHT
+    return Glyph(
+        contours=[
+            cw(
+                [
+                    (0, MARK_Y),
+                    (0, MARK_Y + size),
+                    (size, MARK_Y + size),
+                    (size, MARK_Y),
+                ]
+            )
+        ]
+    )
+
+
 def cedilla() -> Glyph:
     """Hangs below the baseline off the C. Drawn as a chiselled hook -- a stub
     down and a foot to the left -- rather than a comma borrowed from a text
@@ -145,6 +189,8 @@ MARKS = {
     "dieresis": dieresis,
     "ring": ring,
     "cedilla": cedilla,
+    "breve": breve,
+    "dotaccent": dotaccent,
 }
 
 
@@ -175,4 +221,7 @@ ACCENTED = {
     "Û": ("U", "circumflex", 0.50, 0.0),
     "Ü": ("U", "dieresis", 0.50, 0.0),
     "Ý": ("Y", "acute", 0.50, 0.0),
+    "Ğ": ("G", "breve", 0.50, 0.0),
+    "İ": ("I", "dotaccent", 0.50, 0.0),
+    "Ş": ("S", "cedilla", 0.46, 0.0),
 }

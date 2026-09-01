@@ -23,7 +23,7 @@ LanguageManager::LanguageManager(QObject* parent)
     : QObject(parent)
     , m_current_language("en")
     , m_translator(new QTranslator(this)) {
-  m_available_languages << "en" << "de" << "es" << "pt_br" << "ar";
+  m_available_languages << "en" << "de" << "es" << "pt_br" << "ar" << "tr";
 
 #ifndef DEFAULT_LANG
 #define DEFAULT_LANG "en"
@@ -94,6 +94,9 @@ auto LanguageManager::language_display_name(const QString& language) -> QString 
   }
   if (language == "ar") {
     return "العربية (Arabic)";
+  }
+  if (language == "tr") {
+    return "Türkçe (Turkish)";
   }
   return language;
 }

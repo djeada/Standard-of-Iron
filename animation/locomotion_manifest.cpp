@@ -35,13 +35,17 @@ constexpr float k_run_cycle_distance = k_run_stance_travel / k_run_planted_fract
 static_assert(k_run_cycle_distance > k_humanoid_run_cycle_distance - 0.001F &&
               k_run_cycle_distance < k_humanoid_run_cycle_distance + 0.001F);
 
+constexpr float k_min_planted_fraction = k_run_planted_fraction;
+constexpr float k_max_planted_fraction = 0.74F;
+static_assert(k_min_planted_fraction <= k_walk_planted_fraction);
+
 constexpr float k_min_cycle_time = 0.52F;
 constexpr float k_max_cycle_time = 1.30F;
 constexpr float k_min_cadence_speed = 0.35F;
 
 constexpr float k_run_bob_phase_advance = 0.07F;
 
-constexpr float k_run_flight_lift = 0.030F;
+constexpr float k_run_flight_lift = 0.032F;
 constexpr float k_run_locomotion_blend_floor = 0.92F;
 constexpr float k_run_blend_base = 0.80F;
 
@@ -217,9 +221,9 @@ struct LocomotionPoseProfile {
   profile.lateral_foot_shift = 0.008F;
   profile.arm_swing = 0.195F * inputs.arm_swing_amplitude;
   profile.max_arm_displacement = 0.215F;
-  profile.elbow_flex = 0.025F;
+  profile.elbow_flex = 0.060F;
   profile.arm_counter_shift = 0.12F;
-  profile.weight_shift = 0.014F;
+  profile.weight_shift = 0.010F;
   profile.pelvis_drop = 0.012F;
   profile.head_stabilization = 0.74F;
   profile.contact_lift = 0.002F;
@@ -238,30 +242,30 @@ struct LocomotionPoseProfile {
   profile.planted_fraction = k_run_planted_fraction;
   profile.stance_forward_fraction = 0.36F;
   profile.track_ratio = 0.30F;
-  profile.swing_lift_advance = 0.90F;
+  profile.swing_lift_advance = 0.78F;
   profile.stride_length = k_run_stance_travel * inputs.walk_speed_multiplier *
                           (0.90F + 0.10F * speed_factor);
-  profile.step_height = 0.205F * (0.88F + 0.18F * speed_factor);
-  profile.vertical_bob = 0.062F * speed_factor;
+  profile.step_height = 0.170F * (0.90F + 0.15F * speed_factor);
+  profile.vertical_bob = 0.058F * speed_factor;
   profile.hip_sway = 0.007F * inputs.stance_width;
   profile.shoulder_sway = 0.005F;
-  profile.shoulder_twist = 0.098F;
-  profile.pelvis_twist = 0.078F;
-  profile.forward_lean = 0.200F + (speed_factor - 1.0F) * 0.040F;
+  profile.shoulder_twist = 0.100F;
+  profile.pelvis_twist = 0.074F;
+  profile.forward_lean = 0.215F + (speed_factor - 1.0F) * 0.040F;
   profile.lateral_foot_shift = 0.004F;
-  profile.arm_swing = 0.340F * inputs.arm_swing_amplitude;
-  profile.max_arm_displacement = 0.360F;
-  profile.elbow_flex = 0.460F;
-  profile.arm_counter_shift = 0.16F;
+  profile.arm_swing = 0.320F * inputs.arm_swing_amplitude;
+  profile.max_arm_displacement = 0.340F;
+  profile.elbow_flex = 0.340F;
+  profile.arm_counter_shift = 0.18F;
   profile.weight_shift = 0.003F;
   profile.pelvis_drop = 0.040F;
   profile.head_stabilization = 0.90F;
   profile.contact_lift = 0.010F;
-  profile.knee_drive = 0.070F;
+  profile.knee_drive = 0.065F;
 
   profile.heel_strike_pitch = -0.06F;
-  profile.toe_off_pitch = -0.70F;
-  profile.swing_clearance_pitch = 0.30F;
+  profile.toe_off_pitch = -0.66F;
+  profile.swing_clearance_pitch = 0.23F;
   return profile;
 }
 
@@ -806,8 +810,8 @@ auto resolve_humanoid_locomotion_pose(
   float const planted_fraction =
       std::clamp(profile.planted_fraction + braking * 0.06F -
                      acceleration_push * 0.04F + turn_abs * 0.04F,
-                 0.34F,
-                 0.74F);
+                 k_min_planted_fraction,
+                 k_max_planted_fraction);
   auto bob_at = [&](float phase_lag) {
     float const phase_lag_radians = phase_lag * 2.0F * std::numbers::pi_v<float>;
     float const walk_wave =

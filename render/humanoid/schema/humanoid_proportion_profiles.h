@@ -46,10 +46,10 @@ inline constexpr ProportionProfile k_ranged_infantry_proportion_profile =
     make_proportion_profile(0.98F, 1.08F, 0.97F);
 
 inline constexpr ProportionProfile k_sword_infantry_proportion_profile =
-    make_proportion_profile(0.90F, 1.01F, 0.55F, 0.72F);
+    make_proportion_profile(0.90F, 1.01F, 0.68F, 0.78F);
 
 inline constexpr ProportionProfile k_polearm_infantry_proportion_profile =
-    make_proportion_profile(0.74F, 1.01F, 0.74F, 0.69F);
+    make_proportion_profile(0.80F, 1.01F, 0.80F, 0.74F);
 
 inline constexpr ProportionProfile k_support_proportion_profile =
     make_proportion_profile(0.87F, 0.99F, 0.90F);

@@ -62,21 +62,80 @@ soldiers belong under that crown. Nothing built does.
 
 ## `scripts/fix-map-prop-overlaps.py`
 
-Audits and repairs authored placement. Five defect kinds, all of which must be
+Audits and repairs authored placement. Six defect kinds, all of which must be
 at zero:
 
-| Kind      | Meaning                                                     |
-| --------- | ----------------------------------------------------------- |
-| `overlap` | two solid bodies intersect                                  |
-| `canopy`  | a tree's crown has swallowed something built                |
-| `road`    | a body stands in a road or bridge corridor                  |
-| `water`   | a body stands in a river or a lake                          |
-| `slope`   | a body straddles the rim of a hill, where the ground breaks |
+| Kind      | Meaning                                                   |
+| --------- | --------------------------------------------------------- |
+| `overlap` | two solid bodies intersect                                |
+| `canopy`  | a tree's crown has swallowed something built              |
+| `road`    | a body stands in a road or bridge corridor                |
+| `water`   | a body stands in a river or a lake                        |
+| `slope`   | the ground breaks under a body, so its high corner floats |
+| `ramp`    | a body stands in a hill entrance                          |
 
 ```sh
 python3 scripts/fix-map-prop-overlaps.py --check     # report, exit non-zero
 python3 scripts/fix-map-prop-overlaps.py             # repair in place
 ```
+
+### The ground is measured, not modelled
+
+`slope` and `ramp` are the two kinds that cannot be derived from the map JSON,
+and for a long time the script tried anyway. It rastered each hill as the
+ellipse it was authored as and asked whether a body straddled that boundary.
+The engine builds something else:
+
+- `Landform::sample_hill` warps the boundary with fbm and roughens it by up to
+  `+-roughness` of the radius — 34% on a campaign-scale map — then smooth-unions
+  an off-centre lobe into it. Two hills with the same authored radius break the
+  ground in different places.
+- At campaign scale (`is_campaign_landform_scale`, grid >= 128, which is every
+  shipped map but three) a round hill is widened by `k_campaign_hill_width_scale`
+  and rotated by a hash of its own grid position.
+- A mountain's footprint is not its radius at all: `mountain_footprint_cells`
+  makes it `max(1.38r, r + 6)` cells along the ridge and `max(0.55r, 5)` across.
+- Every hill is then cut open by ramp corridors. `hill_entry_half_width_cells`
+  starts at 7.25 cells of half width on a campaign map, the mouth flares wider
+  still, and the corridor runs from the crown out past the foot of the hill —
+  ground that is re-graded, is the only walkable way up, and appears nowhere in
+  the JSON.
+
+The authored-ellipse model saw none of that and reported **zero** slope defects
+across `assets/maps` while the built terrain carried 451, including a tent with
+8.2 m of ground break under its own footprint and 144 bodies standing in a hill
+gateway.
+
+So the audit asks the engine instead. `tools/terrain_probe` loads a map, builds
+the heightfield with the same calls `TerrainService::initialize` makes, and
+dumps the height plane and the hill-entrance mask; `scripts/map_surface_field.py`
+reads them back and measures each body's own footprint against them.
+
+```sh
+cmake --build build --target terrain_probe -j4
+python3 scripts/fix-map-prop-overlaps.py --check --surface require
+```
+
+`--surface require` fails if the probe is missing. The default, `auto`, warns
+and falls back to the ellipse model so a checkout with no build directory still
+runs the other four checks — but a run that has fallen back is not a slope
+check, and the warning says so. `--surface off` skips the probe entirely.
+
+`--ground-relief` (default 0.35 m) is how far the ground may break under one
+body. A model settles on the lowest ground its footprint spans, so it is also
+how far the high corner floats. Across the shipped maps relief is a continuum up
+to about a quarter of a metre — ordinary gentle ground — and then flattens into
+a separate population that barely thins between 0.30 m and 0.50 m; 0.35 sits in
+the gap. `--ramp-coverage` (default 0.15) is the share of a footprint that may
+stand in a gateway; a tent beside a ramp with one corner over it is scenery, a
+tent with a sixth of itself on the ramp is in the way.
+
+A canopy tree is measured across its trunk, not its crown. A pine on a hillside
+is scenery; the `canopy` check is what keeps crowns off the tents.
+
+Probe dumps are cached under the system temporary directory, keyed by map name
+and invalidated by the mtime of either the map or the probe binary. `--surface-cache`
+puts them somewhere else.
 
 Repairs push the _lower priority_ object out: a tent that overlaps a wall moves,
 the wall does not. Wall runs and anchor buildings (barracks, temple,
@@ -97,3 +156,8 @@ It audits authored JSON only. Procedural scatter — stones, grass, plants and t
 trees that fill a `forests` entry — is generated at load and never written back,
 so it is kept clear of authored props by `SpawnValidator` at runtime, not by this
 script. A stone standing in a ruin is a scatter-clearance bug, not a map bug.
+
+It also cannot move what a designer pinned. An anchor building steps aside for a
+road or for water and for nothing else (`may_step_aside`), so a marketplace built
+into a hillside is reported and left alone: a hall on broken ground is a decision
+to revisit by hand, not something to nudge four metres across its own plaza.

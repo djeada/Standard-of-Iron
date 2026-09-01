@@ -251,8 +251,8 @@ auto CombatDustPipeline::create_dust_geometry() -> bool {
 
   constexpr float pi = std::numbers::pi_v<float>;
 
-  constexpr int height_levels = 8;
-  constexpr int angle_segments = 12;
+  constexpr int height_levels = 12;
+  constexpr int angle_segments = 24;
   constexpr float max_height = 1.0F;
 
   vertices.reserve(static_cast<size_t>((height_levels + 1) * (angle_segments + 1)));

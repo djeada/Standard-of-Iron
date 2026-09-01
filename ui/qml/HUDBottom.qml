@@ -15,11 +15,8 @@ RowLayout {
     property var selection_groups: []
     property int selection_count: 0
 
-    readonly property var productionContextTypes: ["barracks", "builder", "home", "marketplace", "temple", "farm"]
-    readonly property bool hasProductionContext: (bottomRoot.selection_tick, bottomRoot.production_context_active())
-    readonly property bool narrowLayout: bottomRoot.width / Math.max(0.01, Design.A11y.uiScale) < 1100
-    readonly property int selectionZoneWidth: Math.round(bottomRoot.width * (bottomRoot.narrowLayout ? 0.20 : 0.22))
-    readonly property int productionZoneWidth: Math.round(bottomRoot.width * (bottomRoot.hasProductionContext ? (bottomRoot.narrowLayout ? 0.28 : 0.27) : (bottomRoot.narrowLayout ? 0.12 : 0.16)))
+    readonly property int zoneMinimumWidth: Design.A11y.scaled(170)
+    readonly property int zoneWidth: Math.max(bottomRoot.zoneMinimumWidth, Math.floor((bottomRoot.width - bottomRoot.spacing * 2) / 3))
 
     signal command_mode_changed(string mode)
     signal recruit_unit(string unit_type)
@@ -27,16 +24,6 @@ RowLayout {
 
     function game_ready() {
         return typeof game !== 'undefined' && game !== null;
-    }
-
-    function production_context_active() {
-        if (!bottomRoot.game_ready() || !game.production || !game.production.has_selected_type)
-            return false;
-        for (var i = 0; i < bottomRoot.productionContextTypes.length; ++i) {
-            if (game.production.has_selected_type(bottomRoot.productionContextTypes[i]))
-                return true;
-        }
-        return false;
     }
 
     function update_action_states() {
@@ -634,9 +621,8 @@ RowLayout {
 
         Layout.fillWidth: true
         Layout.fillHeight: true
-        Layout.preferredWidth: Math.max(Design.A11y.scaled(210), bottomRoot.selectionZoneWidth)
-        Layout.minimumWidth: Design.A11y.scaled(170)
-        Layout.maximumWidth: Math.max(Design.A11y.scaled(300), bottomRoot.width * 0.24)
+        Layout.preferredWidth: bottomRoot.zoneWidth
+        Layout.minimumWidth: bottomRoot.zoneMinimumWidth
 
         model: bottomRoot.game_ready() ? game.selected_units_model : null
         groups: bottomRoot.selection_groups
@@ -657,12 +643,17 @@ RowLayout {
     }
 
     ColumnLayout {
+        id: commandDeck
+
+        readonly property int commandColumns: Math.max(bottomRoot.primaryCommands.length, bottomRoot.contextualCommands.length)
+        readonly property int commandCardWidth: Math.max(Design.A11y.scaled(24), Math.floor((bottomRoot.zoneWidth - Design.Metrics.space4 * (commandDeck.commandColumns - 1)) / commandDeck.commandColumns))
+
         objectName: "commandDeck"
 
         Layout.fillWidth: true
         Layout.fillHeight: true
-        Layout.preferredWidth: Math.max(Design.A11y.scaled(500), bottomRoot.width - bottomRoot.selectionZoneWidth - bottomRoot.productionZoneWidth - bottomRoot.spacing * 2)
-        Layout.minimumWidth: Design.A11y.scaled(420)
+        Layout.preferredWidth: bottomRoot.zoneWidth
+        Layout.minimumWidth: bottomRoot.zoneMinimumWidth
         spacing: Design.Metrics.space4
 
         Design.IronPanel {
@@ -798,7 +789,7 @@ RowLayout {
             }
         }
 
-        RowLayout {
+        Row {
             id: primaryCommandRow
 
             objectName: "primaryCommandRow"
@@ -816,9 +807,8 @@ RowLayout {
                     readonly property var state: bottomRoot.action_state(primaryCommandButton.modelData.id)
 
                     objectName: "primaryCommand_" + primaryCommandButton.modelData.id
-                    Layout.fillWidth: true
-                    Layout.minimumWidth: Design.A11y.scaled(68)
-                    Layout.preferredHeight: Design.Metrics.commandButtonSize
+                    width: commandDeck.commandCardWidth
+                    height: Design.Metrics.commandButtonSize
                     iconOnly: false
 
                     actionId: primaryCommandButton.modelData.id
@@ -852,11 +842,14 @@ RowLayout {
             Layout.fillHeight: true
             Layout.minimumHeight: Design.Metrics.commandButtonSize
 
-            RowLayout {
+            Row {
                 id: contextualCommandRow
 
                 objectName: "contextualCommandRow"
-                anchors.fill: parent
+                anchors.left: parent.left
+                anchors.right: parent.right
+                anchors.verticalCenter: parent.verticalCenter
+                height: Design.Metrics.commandButtonSize
                 spacing: Design.Metrics.space4
                 visible: bottomRoot.contextualCommands.length > 0
 
@@ -870,10 +863,8 @@ RowLayout {
                         readonly property var state: bottomRoot.action_state(contextualCommandButton.modelData.id)
 
                         objectName: "contextCommand_" + contextualCommandButton.modelData.id
-                        Layout.fillWidth: true
-                        Layout.minimumWidth: Design.A11y.scaled(62)
-                        Layout.maximumWidth: Design.A11y.scaled(132)
-                        Layout.preferredHeight: Design.Metrics.commandButtonSize
+                        width: commandDeck.commandCardWidth
+                        height: Design.Metrics.commandButtonSize
                         iconOnly: false
 
                         actionId: contextualCommandButton.modelData.id
@@ -897,11 +888,6 @@ RowLayout {
                         onClicked: bottomRoot.invoke_command(contextualCommandButton.modelData)
                     }
                 }
-
-                Item {
-                    Layout.fillWidth: true
-                    visible: bottomRoot.contextualCommands.length < 5
-                }
             }
 
             Text {
@@ -918,11 +904,10 @@ RowLayout {
     ProductionPanel {
         objectName: "productionZone"
 
-        Layout.fillWidth: false
+        Layout.fillWidth: true
         Layout.fillHeight: true
-        Layout.preferredWidth: Math.max(bottomRoot.hasProductionContext ? Design.A11y.scaled(280) : Design.A11y.scaled(150), bottomRoot.productionZoneWidth)
-        Layout.minimumWidth: bottomRoot.hasProductionContext ? Design.A11y.scaled(240) : Design.A11y.scaled(130)
-        Layout.maximumWidth: Math.max(bottomRoot.hasProductionContext ? Design.A11y.scaled(420) : Design.A11y.scaled(240), bottomRoot.width * (bottomRoot.hasProductionContext ? 0.30 : 0.18))
+        Layout.preferredWidth: bottomRoot.zoneWidth
+        Layout.minimumWidth: bottomRoot.zoneMinimumWidth
 
         Design.IronSpotlight {
             active: bottomRoot.tutorialFocusRegion === "production"

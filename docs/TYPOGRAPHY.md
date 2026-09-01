@@ -133,10 +133,12 @@ collides once tracking is applied.
 reach Qt, because a shaper that ignored them would cost nothing visible except
 a hole in the middle of SURVIVE.
 
-Coverage is A–Z, 0–9, punctuation, and the Latin-1 accented capitals German,
-Spanish and Brazilian Portuguese need. Accented forms are composites (base +
-mark), so correcting `O` corrects `Ó Ò Ô Õ Ö` at once. Arabic is not covered and
-is not meant to be; it falls to the bundled text face.
+Coverage is A–Z, 0–9, punctuation, the Latin-1 accented capitals German,
+Spanish and Brazilian Portuguese need, and `Ğ İ Ş` for Turkish — which are
+outside Latin-1, so the breve and the dot above are drawn here rather than
+borrowed. Accented forms are composites (base + mark), so correcting `O`
+corrects `Ó Ò Ô Õ Ö` at once. Arabic is not covered and is not meant to be; it
+falls to the bundled text face.
 
 ## Licensing
 

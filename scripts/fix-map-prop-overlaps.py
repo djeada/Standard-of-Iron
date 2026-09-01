@@ -24,9 +24,20 @@ Five kinds of defect are reported, and all five must be at zero:
               scripts/generate-map-roads.py, which routes around water and slope
               but has never known that props exist, so it paves over statues.
 ``water``     a body stands in a river or a lake.
-``slope``     a body straddles the edge of a hill, where the ground breaks under
-              it.  A prop wholly on the flat or wholly on the shoulder settles;
-              one lying across the rim cannot.
+``slope``     the ground breaks under the body.  A prop wholly on the flat or
+              wholly on the shoulder settles; one lying across a break cannot,
+              and the high corner of its model floats.
+``ramp``      a body stands in a hill entrance.  The engine cuts a ramp corridor
+              from the crown out past the foot of every hill, and it is both the
+              only way up and re-graded ground the map JSON never mentions.
+
+``slope`` and ``ramp`` are measured against the heightfield the engine actually
+builds, read back from ``tools/terrain_probe``.  They cannot be derived from the
+map JSON: a hill is authored as a centre and a radius, but `Landform::sample_hill`
+warps that boundary with fbm, roughens it by up to +-34% of the radius, unions in
+an off-centre lobe, widens and hash-rotates the footprint at campaign scale, and
+then cuts the ramps.  The audit used to model the authored ellipse instead and
+reported zero slope defects on maps carrying 300 of them.
 
 Repairs push the *lower priority* object out along the separation axis: a tent
 that overlaps a wall moves, the wall does not.  A push is only accepted when it
@@ -60,6 +71,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from map_hill_shapes import hill_half_extents, hill_shape_strokes
+from map_surface_field import ProbeUnavailable, SurfaceField, find_probe, load_surface
 
 WORLD_PROP_RENDER_SCALE = {
     "firecamp": 1.0,
@@ -225,7 +237,27 @@ RIM_TOLERANCE_FRACTION = 0.5
 
 Camps are pitched against banks on purpose and a ruin is often built into a
 shoulder, so clipping an edge is not a defect; a body whose *centre* is nearer
-the rim than half its own reach is genuinely lying across the break."""
+the rim than half its own reach is genuinely lying across the break.
+
+Only used when there is no terrain probe to measure the real ground with."""
+
+GROUND_RELIEF_TOLERANCE = 0.35
+"""How far the ground may break under one body, in metres.
+
+A model is settled on the lowest ground its footprint spans, so this is also how
+far its high corner floats.  Measured over every shipped map, relief is a
+continuum up to about a quarter of a metre -- ordinary gentle ground, 599 bodies
+above 0.10 m thinning to 357 above 0.25 -- and then flattens into a separate
+population that barely moves between 0.30 m and 0.50 m.  Those are the bodies
+lying across a real break, and 0.35 sits in the gap between the two."""
+
+RAMP_COVERAGE_TOLERANCE = 0.15
+"""The share of a footprint that may stand in a hill entrance.
+
+Not zero: the corridor is wide -- `k_campaign_hill_entry_ramp_cells` alone is
+7.25 cells of half width before the mouth flare -- and a tent pitched beside a
+ramp with one corner over the edge of it is scenery.  A body with a sixth of
+itself on the ramp is in the gateway."""
 
 
 def axis_aligned_body(
@@ -325,6 +357,20 @@ class Placeable:
     def radius(self) -> float:
         """The disc that contains the whole body, corners included."""
         return math.hypot(self.half_x, self.half_z)
+
+    def ground_footprint(self, surface: SurfaceField) -> list[tuple[float, float]]:
+        """The patch of ground this body has to stand on, as sample points.
+
+        A canopy tree is measured across its trunk.  Its crown hangs over
+        whatever it likes -- that is what the ``canopy`` check is for -- but only
+        the stem is planted, and judging a pine by the nine metres of ground
+        under its crown would call every tree on a hillside a defect."""
+        half_x, half_z = self.half_x, self.half_z
+        if self.canopy_half is not None:
+            half_x = half_z = max(half_x, half_z) * STEM_FRACTION
+        return surface.footprint_samples(
+            self.x, self.z, half_x, half_z, self.rotation, self.is_disc
+        )
 
     def support_radius(self, unit_x: float, unit_z: float) -> float:
         """How far the body reaches from its centre along one bearing.
@@ -825,6 +871,12 @@ class Violation:
                 f"{self.item.name} ({self.item.kind}) crown over "
                 f"{self.other.name} ({self.other.kind}) by {self.depth:.2f}"
             )
+        if self.kind in ("slope", "ramp"):
+            return (
+                f"{self.item.name} ({self.item.kind}) on "
+                f"{'broken ground' if self.kind == 'slope' else 'a hill entrance'}"
+                f"{', ' + self.detail if self.detail else ''}"
+            )
         return (
             f"{self.item.name} ({self.item.kind}) in {self.kind}"
             f"{' ' + self.detail if self.detail else ''} by {self.depth:.2f}"
@@ -933,8 +985,17 @@ class Terrain:
     lakes: list[tuple[float, float, float]] = field(default_factory=list)
     rims: list[Segment] = field(default_factory=list)
 
+    surface: SurfaceField | None = None
+    """The heightfield the engine builds, when there is a probe to build it.
 
-def read_terrain(map_data: dict) -> Terrain:
+    Present or absent, this decides how ``slope`` is measured: against the real
+    ground, or against the authored ellipses in ``rims`` as a fallback."""
+
+    relief_tolerance: float = GROUND_RELIEF_TOLERANCE
+    ramp_coverage: float = RAMP_COVERAGE_TOLERANCE
+
+
+def read_terrain(map_data: dict, surface: SurfaceField | None = None) -> Terrain:
     grid = map_data.get("grid") or {}
     width = float(grid.get("width", 0) or 0)
     height = float(grid.get("height", 0) or 0)
@@ -946,6 +1007,24 @@ def read_terrain(map_data: dict) -> Terrain:
         water=collect_water(map_data),
         lakes=collect_lakes(map_data),
         rims=collect_hill_rims(map_data),
+        surface=surface,
+    )
+
+
+def ground_defects(item: Placeable, terrain: Terrain) -> tuple[float, float]:
+    """How far the ground breaks under a body, and how much of it is on a ramp.
+
+    Both are measured on the surface the engine builds, so a hill that grew,
+    rotated or opened a gateway somewhere the JSON never said is measured where
+    it actually landed.  Returns ``(0.0, 0.0)`` for a body that is not judged
+    against the ground at all -- a wall run is laid across whatever it has to
+    hold, and a spawn is spread by the formation pass on the first tick."""
+    if terrain.surface is None or not item.avoids_slope_rims:
+        return 0.0, 0.0
+    points = item.ground_footprint(terrain.surface)
+    return (
+        terrain.surface.relief(points),
+        terrain.surface.entrance_coverage(points),
     )
 
 
@@ -970,7 +1049,27 @@ def terrain_violations(
             )
         if deepest > 1e-3:
             found.append(Violation("water", item, deepest))
-        if item.avoids_slope_rims and terrain.rims:
+        if terrain.surface is not None:
+            relief, on_ramp = ground_defects(item, terrain)
+            if relief > terrain.relief_tolerance:
+                found.append(
+                    Violation(
+                        "slope",
+                        item,
+                        relief - terrain.relief_tolerance,
+                        detail=f"relief {relief:.2f} m",
+                    )
+                )
+            if on_ramp > terrain.ramp_coverage:
+                found.append(
+                    Violation(
+                        "ramp",
+                        item,
+                        on_ramp - terrain.ramp_coverage,
+                        detail=f"{on_ramp * 100:.0f}% of footprint",
+                    )
+                )
+        elif item.avoids_slope_rims and terrain.rims:
             straddle = straddles_rim(item, terrain.rims, rim_margin)
             if straddle > 1e-3:
                 found.append(Violation("slope", item, straddle))
@@ -1002,6 +1101,9 @@ def is_placeable_spot(
         rotation=item.rotation,
         is_disc=item.is_disc,
         priority=item.priority,
+        body_type=item.body_type,
+        avoids_slope_rims=item.avoids_slope_rims,
+        canopy_half=item.canopy_half,
     )
     for stream in terrain.water:
         if stream.depth_into(probe, 0.0) > 0.0:
@@ -1013,7 +1115,11 @@ def is_placeable_spot(
         for road in terrain.roads:
             if road.depth_into(probe, road_margin) > 0.0:
                 return False
-    if item.avoids_slope_rims and terrain.rims:
+    if terrain.surface is not None:
+        relief, on_ramp = ground_defects(probe, terrain)
+        if relief > terrain.relief_tolerance or on_ramp > terrain.ramp_coverage:
+            return False
+    elif item.avoids_slope_rims and terrain.rims:
         if straddles_rim(probe, terrain.rims, rim_margin) > 0.0:
             return False
     return True
@@ -1270,6 +1376,11 @@ def escape_bearing(item: Placeable, terrain: Terrain, kind: str) -> tuple[float,
     For a road or a river that is the perpendicular; for a hill rim it is
     whichever way carries the body clear of the boundary soonest, which the fan
     then explores around."""
+    if kind in ("slope", "ramp") and terrain.surface is not None:
+        return terrain.surface.settled_bearing(
+            item.x, item.z, item.radius + 2.0, prefer_off_ramp=kind == "ramp"
+        )
+
     if kind == "slope":
         best = None
         best_distance = math.inf
@@ -1462,9 +1573,14 @@ def audit(
     road_margin: float,
     rim_margin: float,
     canopy_fraction: float,
+    surface: SurfaceField | None = None,
+    relief_tolerance: float = GROUND_RELIEF_TOLERANCE,
+    ramp_coverage: float = RAMP_COVERAGE_TOLERANCE,
 ) -> tuple[list[Placeable], Terrain, list[Violation]]:
     items = collect(map_data, path_name)
-    terrain = read_terrain(map_data)
+    terrain = read_terrain(map_data, surface)
+    terrain.relief_tolerance = relief_tolerance
+    terrain.ramp_coverage = ramp_coverage
     found = [
         Violation("overlap", item, depth, other)
         for item, other, depth in find_overlaps(items, clearance)
@@ -1473,6 +1589,26 @@ def audit(
     found.extend(terrain_violations(items, terrain, road_margin, rim_margin))
     found.sort(key=lambda entry: entry.depth, reverse=True)
     return items, terrain, found
+
+
+def audit_map(
+    args: argparse.Namespace,
+    path_name: str,
+    map_data: dict,
+    surface: SurfaceField | None,
+) -> tuple[list[Placeable], Terrain, list[Violation]]:
+    """One map audited with the tolerances the command line asked for."""
+    return audit(
+        map_data,
+        path_name,
+        args.clearance,
+        args.road_margin,
+        args.rim_margin,
+        args.canopy_overhang,
+        surface,
+        args.ground_relief,
+        args.ramp_coverage,
+    )
 
 
 def main() -> int:
@@ -1541,6 +1677,38 @@ def main() -> int:
     )
     parser.add_argument("--max-passes", type=int, default=12)
     parser.add_argument(
+        "--ground-relief",
+        type=float,
+        default=GROUND_RELIEF_TOLERANCE,
+        help="How far the ground may break under one body, in metres, before "
+        "the model is read as floating.",
+    )
+    parser.add_argument(
+        "--ramp-coverage",
+        type=float,
+        default=RAMP_COVERAGE_TOLERANCE,
+        help="The share of a footprint that may stand in a hill entrance.",
+    )
+    parser.add_argument(
+        "--terrain-probe",
+        help="Path to the terrain_probe binary. Found in build*/bin by default.",
+    )
+    parser.add_argument(
+        "--surface",
+        choices=("require", "auto", "off"),
+        default="auto",
+        help="Whether to measure the ground the engine actually builds. "
+        "'require' fails if terrain_probe is missing, 'auto' warns and falls "
+        "back to the authored hill ellipses, 'off' never runs the probe. Use "
+        "'require' in a gate: the fallback cannot see a grown, rotated or "
+        "gateway-cut hill and reports zero defects on maps that have hundreds.",
+    )
+    parser.add_argument(
+        "--surface-cache",
+        help="Directory for probe dumps (default: a terrain-probe directory "
+        "under the system temporary directory).",
+    )
+    parser.add_argument(
         "--check",
         action="store_true",
         help="Report defects and exit non-zero without writing anything.",
@@ -1563,6 +1731,22 @@ def main() -> int:
         "anchor": args.max_travel_anchor,
     }
 
+    probe = None
+    if args.surface != "off":
+        try:
+            probe = find_probe(args.terrain_probe)
+        except ProbeUnavailable as error:
+            if args.surface == "require":
+                print(f"{error}", file=sys.stderr)
+                return 1
+            print(
+                f"warning: {error}; slope is measured against the authored hill "
+                f"ellipses, which cannot see a grown, rotated or gateway-cut "
+                f"hill",
+                file=sys.stderr,
+            )
+    cache_dir = Path(args.surface_cache) if args.surface_cache else None
+
     total_before = 0
     total_remaining = 0
     total_moved = 0
@@ -1578,15 +1762,17 @@ def main() -> int:
         if not isinstance(map_data, dict) or "grid" not in map_data:
             continue
 
+        surface = None
+        if probe is not None:
+            try:
+                surface = load_surface(path, probe, cache_dir)
+            except ProbeUnavailable as error:
+                print(f"{path.name}: {error}", file=sys.stderr)
+                failed = True
+                continue
+
         try:
-            items, terrain, before = audit(
-                map_data,
-                path.name,
-                args.clearance,
-                args.road_margin,
-                args.rim_margin,
-                args.canopy_overhang,
-            )
+            items, terrain, before = audit_map(args, path.name, map_data, surface)
         except MapContentError as error:
             print(error, file=sys.stderr)
             failed = True
@@ -1620,7 +1806,9 @@ def main() -> int:
 
         trimmed = trim_roads_out_of_anchors(map_data, items, args.road_margin)
         if trimmed:
-            terrain = read_terrain(map_data)
+            terrain = read_terrain(map_data, surface)
+            terrain.relief_tolerance = args.ground_relief
+            terrain.ramp_coverage = args.ramp_coverage
 
         repair(
             items,
@@ -1634,16 +1822,7 @@ def main() -> int:
         )
         moved = apply(items)
 
-        remaining = len(
-            audit(
-                map_data,
-                path.name,
-                args.clearance,
-                args.road_margin,
-                args.rim_margin,
-                args.canopy_overhang,
-            )[2]
-        )
+        remaining = len(audit_map(args, path.name, map_data, surface)[2])
         total_remaining += remaining
         total_moved += moved
         indent, sort_keys, trailing_newline = style

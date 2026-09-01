@@ -4,6 +4,7 @@
 #include <QDir>
 #include <QFile>
 #include <QFileInfo>
+#include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QJsonParseError>
@@ -83,24 +84,59 @@ auto build_objective_list(const std::vector<Game::Mission::Condition>& condition
   return list;
 }
 
-auto build_starting_force(const std::vector<Game::Mission::UnitSetup>& units)
-    -> QVariantList {
-  QVariantList list;
-  for (const auto& unit : units) {
-    QVariantMap entry;
-    entry[QStringLiteral("type")] = unit.type;
-    entry[QStringLiteral("count")] = std::max(1, unit.count);
-    list.append(entry);
+constexpr int k_local_player_id = 1;
+
+void add_to_force(QVariantList& force, const QString& type, int count) {
+  if (type.isEmpty() || count <= 0) {
+    return;
   }
-  return list;
+  for (auto& value : force) {
+    QVariantMap entry = value.toMap();
+    if (entry.value(QStringLiteral("type")).toString() == type) {
+      entry[QStringLiteral("count")] =
+          entry.value(QStringLiteral("count")).toInt() + count;
+      value = entry;
+      return;
+    }
+  }
+  QVariantMap entry;
+  entry[QStringLiteral("type")] = type;
+  entry[QStringLiteral("count")] = count;
+  force.append(entry);
 }
 
-auto build_map_summary(const QString& map_path) -> QVariantMap {
+void add_authored_map_force(const QJsonObject& map_object, QVariantList& force) {
+  for (const char* key : {SPAWNS, STRUCTURES}) {
+    for (const auto value : map_object.value(QLatin1String(key)).toArray()) {
+      const QJsonObject entry = value.toObject();
+      if (entry.value(QLatin1String(PLAYER_ID)).toInt(k_local_player_id) !=
+          k_local_player_id) {
+        continue;
+      }
+      add_to_force(force, entry.value(QLatin1String(TYPE)).toString(), 1);
+    }
+  }
+}
+
+auto build_starting_force(const QJsonObject& map_object,
+                          const std::vector<Game::Mission::UnitSetup>& units)
+    -> QVariantList {
+  QVariantList force;
+  add_authored_map_force(map_object, force);
+  for (const auto& unit : units) {
+    add_to_force(force, unit.type, std::max(1, unit.count));
+  }
+  return force;
+}
+
+auto build_map_summary(const QString& map_path,
+                       QJsonObject& out_map_object) -> QVariantMap {
   QVariantMap summary;
   const QString resolved = Utils::Resources::resolve_resource_path(map_path);
   summary[QStringLiteral("map_path")] = resolved;
 
   const QJsonObject map_object = read_json_object(resolved);
+  out_map_object = map_object;
   if (map_object.isEmpty()) {
     return summary;
   }
@@ -204,7 +240,8 @@ auto MissionCatalog::standalone_missions() -> QVariantList {
       continue;
     }
 
-    QVariantMap entry = build_map_summary(mission.map_path);
+    QJsonObject map_object;
+    QVariantMap entry = build_map_summary(mission.map_path, map_object);
     entry[QStringLiteral("mission_id")] = mission.id;
     entry[QStringLiteral("file_path")] = path;
     entry[QStringLiteral("title")] =
@@ -213,7 +250,7 @@ auto MissionCatalog::standalone_missions() -> QVariantList {
         Util::tr_asset(Util::k_missions_context, mission.summary);
     entry[QStringLiteral("victory_mode")] = mission.victory_mode;
     entry[QStringLiteral("starting_force")] =
-        build_starting_force(mission.player_setup.starting_units);
+        build_starting_force(map_object, mission.player_setup.starting_units);
     entry[QStringLiteral("objectives")] =
         build_objective_list(mission.victory_conditions);
     entry[QStringLiteral("optional_objectives")] =

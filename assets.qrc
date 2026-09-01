@@ -247,6 +247,7 @@
         <file>assets/audio/sfx/combat/guard_break.ogg</file>
         <file>assets/audio/sfx/combat/guard_raise.ogg</file>
         <file>assets/audio/sfx/combat/heal_bind_wound.ogg</file>
+        <file>assets/audio/sfx/combat/heal_magic_shimmer.ogg</file>
         <file>assets/audio/sfx/combat/horse_gallop_close_pass.ogg</file>
         <file>assets/audio/sfx/combat/human_death_cry.ogg</file>
         <file>assets/audio/sfx/combat/human_death_cry_v2.ogg</file>
@@ -291,6 +292,7 @@
         <file>assets/audio/sfx/movement/hooves_gallop.ogg</file>
         <file>assets/audio/sfx/movement/hooves_walk.ogg</file>
         <file>assets/audio/sfx/orders/attack_horn_stab.ogg</file>
+        <file>assets/audio/sfx/orders/commander_rally.ogg</file>
         <file>assets/audio/sfx/orders/formation_pole_shift.ogg</file>
         <file>assets/audio/sfx/orders/formation_pole_shift_v2.ogg</file>
         <file>assets/audio/sfx/orders/formation_standard_planted.ogg</file>

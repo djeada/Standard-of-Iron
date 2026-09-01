@@ -1995,20 +1995,20 @@
     {
       "id": "p1_tent_a",
       "type": "tent",
-      "x": 48.04,
-      "z": 49.38
+      "x": 48.21,
+      "z": 49.5
     },
     {
       "id": "p1_tent_b",
       "type": "tent",
-      "x": 48.04,
-      "z": 66.62
+      "x": 47.27,
+      "z": 57.54
     },
     {
       "id": "p1_cart",
       "type": "supply_cart",
-      "x": 54.0,
-      "z": 71.0,
+      "x": 55.13,
+      "z": 71.3,
       "rotation": 90.0
     },
     {
@@ -2026,20 +2026,20 @@
     {
       "id": "p2_tent_a",
       "type": "tent",
-      "x": 36.04,
+      "x": 37.69,
       "z": 141.38
     },
     {
       "id": "p2_tent_b",
       "type": "tent",
-      "x": 36.04,
-      "z": 158.62
+      "x": 35.4,
+      "z": 150.98
     },
     {
       "id": "p2_cart",
       "type": "supply_cart",
-      "x": 42.0,
-      "z": 163.0,
+      "x": 43.16,
+      "z": 163.31,
       "rotation": 90.0
     },
     {
@@ -2057,20 +2057,20 @@
     {
       "id": "p3_tent_a",
       "type": "tent",
-      "x": 48.04,
-      "z": 233.38
+      "x": 50.09,
+      "z": 234.05
     },
     {
       "id": "p3_tent_b",
       "type": "tent",
-      "x": 48.04,
-      "z": 250.62
+      "x": 47.25,
+      "z": 241.4
     },
     {
       "id": "p3_cart",
       "type": "supply_cart",
-      "x": 54.0,
-      "z": 255.0,
+      "x": 55.12,
+      "z": 255.3,
       "rotation": 90.0
     },
     {
@@ -2088,22 +2088,22 @@
     {
       "id": "p4_tent_a",
       "type": "tent",
-      "x": 251.81,
-      "z": 66.56,
+      "x": 249.2,
+      "z": 65.4,
       "rotation": 180.0
     },
     {
       "id": "p4_tent_b",
       "type": "tent",
-      "x": 251.82,
-      "z": 49.43,
+      "x": 243.73,
+      "z": 47.77,
       "rotation": 180.0
     },
     {
       "id": "p4_cart",
       "type": "supply_cart",
-      "x": 246.0,
-      "z": 45.0,
+      "x": 239.93,
+      "z": 45.08,
       "rotation": 270.0
     },
     {
@@ -2137,15 +2137,15 @@
     {
       "id": "p5_cart",
       "type": "supply_cart",
-      "x": 258.0,
-      "z": 137.0,
+      "x": 248.48,
+      "z": 134.77,
       "rotation": 270.0
     },
     {
       "id": "p5_rack",
       "type": "weapon_rack",
-      "x": 253.0,
-      "z": 162.0,
+      "x": 250.91,
+      "z": 161.55,
       "rotation": 180.0
     },
     {
@@ -2165,15 +2165,15 @@
     {
       "id": "p6_tent_b",
       "type": "tent",
-      "x": 251.82,
-      "z": 233.43,
+      "x": 243.44,
+      "z": 232.03,
       "rotation": 180.0
     },
     {
       "id": "p6_cart",
       "type": "supply_cart",
-      "x": 246.0,
-      "z": 229.0,
+      "x": 244.61,
+      "z": 226.69,
       "rotation": 270.0
     },
     {
@@ -2253,22 +2253,22 @@
     {
       "id": "west_vein_1_0",
       "type": "iron_ore",
-      "x": 74.95,
-      "z": 107.39,
+      "x": 71.74,
+      "z": 109.03,
       "rotation": 34.38
     },
     {
       "id": "west_vein_1_1",
       "type": "iron_ore",
-      "x": 68.31,
-      "z": 109.76,
+      "x": 73.51,
+      "z": 110.31,
       "rotation": 106.38
     },
     {
       "id": "west_vein_1_2",
       "type": "iron_ore",
-      "x": 64.09,
-      "z": 104.22,
+      "x": 63.69,
+      "z": 103.82,
       "rotation": 178.38
     },
     {
@@ -2288,8 +2288,8 @@
     {
       "id": "east_vein_1_0",
       "type": "iron_ore",
-      "x": 234.95,
-      "z": 107.39,
+      "x": 234.93,
+      "z": 107.42,
       "rotation": 34.38
     },
     {
@@ -2302,8 +2302,8 @@
     {
       "id": "east_vein_1_2",
       "type": "iron_ore",
-      "x": 224.0,
-      "z": 104.17,
+      "x": 222.41,
+      "z": 105.76,
       "rotation": 178.38
     },
     {
@@ -2316,7 +2316,7 @@
     {
       "id": "east_vein_1_4",
       "type": "iron_ore",
-      "x": 234.75,
+      "x": 230.18,
       "z": 100.34,
       "rotation": 322.38
     },
@@ -2499,8 +2499,8 @@
     },
     {
       "type": "ruins",
-      "x": 248.76,
-      "z": 165.6,
+      "x": 246.54,
+      "z": 167.15,
       "scale": 0.9,
       "rotation": 180.0,
       "landmark": "east_sanctuary"
@@ -2582,8 +2582,8 @@
     },
     {
       "type": "dead_tree",
-      "x": 71.55,
-      "z": 26.36,
+      "x": 70.97,
+      "z": 27.36,
       "scale": 0.9,
       "rotation": 90.0,
       "landmark": "north_west_hamlet"
@@ -2615,7 +2615,7 @@
     {
       "type": "abandoned_home",
       "x": 225.17,
-      "z": 28.5,
+      "z": 28.79,
       "scale": 0.9,
       "rotation": 270.0,
       "landmark": "north_east_hamlet"
@@ -2646,8 +2646,8 @@
     },
     {
       "type": "dead_tree",
-      "x": 234.08,
-      "z": 24.34,
+      "x": 233.91,
+      "z": 24.7,
       "scale": 0.9,
       "rotation": 90.0,
       "landmark": "north_east_hamlet"
@@ -2678,8 +2678,8 @@
     },
     {
       "type": "abandoned_home",
-      "x": 74.72,
-      "z": 271.15,
+      "x": 74.35,
+      "z": 270.13,
       "scale": 0.9,
       "rotation": 90.0,
       "landmark": "south_west_hamlet"

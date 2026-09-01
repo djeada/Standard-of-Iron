@@ -31,7 +31,7 @@ TestCase {
             "kills": 0,
             "losses": 0,
             "trained": 0,
-            "villages": 0,
+            "barracks": 0,
             "score": 0
         };
         for (var key in values)
@@ -46,13 +46,13 @@ TestCase {
                     "kills": 148,
                     "losses": 62,
                     "trained": 96,
-                    "villages": 7,
+                    "barracks": 7,
                     "score": 19260
                 }), testCase.army("Hasdrubal", {
                     "kills": 62,
                     "losses": 148,
                     "trained": 71,
-                    "villages": 2,
+                    "barracks": 2,
                     "score": 7910
                 })];
     }

@@ -39,7 +39,7 @@ Item {
         var bestScore = -1;
         for (var i = 0; i < roster.length; ++i) {
             var entry = roster[i];
-            var weight = entry.villages * 1000000 + entry.score;
+            var weight = entry.barracks * 1000000 + entry.score;
             if (weight > bestScore) {
                 bestScore = weight;
                 best = entry.teamId;
@@ -100,7 +100,7 @@ Item {
                     "kills": stats.enemiesKilled,
                     "losses": stats.losses,
                     "trained": stats.troopsRecruited,
-                    "villages": stats.barracksOwned,
+                    "barracks": stats.barracksOwned,
                     "score": calculate_score(stats)
                 });
         }

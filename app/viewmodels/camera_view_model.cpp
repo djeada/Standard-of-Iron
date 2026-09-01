@@ -172,6 +172,7 @@ void CameraViewModel::tilt(int direction, bool shift) {
 void CameraViewModel::reset() {
   m_host.ensure_initialized();
   const auto frame_lock = m_host.lock_frame();
+  set_following_selection(false);
   emit moved();
   auto* camera = m_context.camera_controller;
   if (camera == nullptr || m_context.level == nullptr) {

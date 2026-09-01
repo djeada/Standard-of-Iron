@@ -51,6 +51,8 @@ constexpr QColor ROAD_SHADOW{69, 49, 27};
 constexpr QColor ROAD_HIGHLIGHT{166, 132, 82};
 
 constexpr QColor STRUCTURE_STONE{110, 95, 75};
+constexpr QColor LANDMARK_FILL{132, 118, 96};
+constexpr QColor UNDEAD_ZONE{92, 62, 112};
 constexpr QColor STRUCTURE_SHADOW{62, 44, 28};
 
 constexpr QColor TEAM_BLUE_DARK{18, 45, 122};
@@ -344,6 +346,8 @@ auto MinimapGenerator::generate(const MapDefinition& map_def) -> QImage {
   render_rivers(image, map_def);
   render_terrain_features(image, map_def);
   render_bridges(image, map_def);
+  render_undead_zones(image, map_def);
+  render_world_props(image, map_def);
   render_structures(image, map_def);
   apply_historical_styling(image);
 
@@ -806,6 +810,80 @@ void MinimapGenerator::render_bridges(QImage& image, const MapDefinition& map_de
                          QPointF(plank_x + perp_x, plank_y + perp_y));
       }
     }
+  }
+}
+
+namespace {
+
+auto authored_to_world(float authored_x,
+                       float authored_z,
+                       const MapDefinition& map_def) -> std::pair<float, float> {
+  if (map_def.coordSystem == CoordSystem::World) {
+    return {authored_x, authored_z};
+  }
+  constexpr float grid_center_offset = 0.5F;
+  const float tile = std::max(0.0001F, map_def.grid.tile_size);
+  return {
+      (authored_x - (map_def.grid.width * grid_center_offset - grid_center_offset)) *
+          tile,
+      (authored_z - (map_def.grid.height * grid_center_offset - grid_center_offset)) *
+          tile};
+}
+
+} // namespace
+
+void MinimapGenerator::render_undead_zones(QImage& image,
+                                           const MapDefinition& map_def) {
+  if (map_def.undead_zones.empty()) {
+    return;
+  }
+
+  QPainter painter(&image);
+  painter.setRenderHint(QPainter::Antialiasing, true);
+
+  for (const auto& zone : map_def.undead_zones) {
+    const auto [world_x, world_z] = authored_to_world(zone.x, zone.z, map_def);
+    const auto [px, py] = world_to_pixel(world_x, world_z, map_def.grid);
+    const float radius =
+        std::max(3.0F, world_to_pixel_size(zone.radius * 2.0F, map_def.grid) * 0.5F);
+
+    QColor wash = Palette::UNDEAD_ZONE;
+    wash.setAlpha(64);
+    QColor edge = Palette::UNDEAD_ZONE;
+    edge.setAlpha(170);
+
+    painter.setBrush(wash);
+    painter.setPen(QPen(edge, 0.9F, Qt::DashLine));
+    painter.drawEllipse(QPointF(px, py), radius, radius);
+  }
+}
+
+void MinimapGenerator::render_world_props(QImage& image, const MapDefinition& map_def) {
+  if (map_def.world_props.empty()) {
+    return;
+  }
+
+  QPainter painter(&image);
+  painter.setRenderHint(QPainter::Antialiasing, true);
+
+  for (const auto& prop : map_def.world_props) {
+    if (!is_solid_world_prop_type(prop.type)) {
+      continue;
+    }
+    if (is_tree_world_prop_type(prop.type)) {
+      continue;
+    }
+
+    const auto [world_x, world_z] = authored_to_world(prop.x, prop.z, map_def);
+    const auto [px, py] = world_to_pixel(world_x, world_z, map_def.grid);
+    const float radius = std::max(
+        1.6F,
+        world_to_pixel_size(world_prop_ground_bounding_radius(prop.type, prop.scale),
+                            map_def.grid));
+
+    painter.setBrush(Palette::LANDMARK_FILL);
+    painter.setPen(QPen(Palette::STRUCTURE_SHADOW, 0.8F));
+    painter.drawEllipse(QPointF(px, py), radius, radius);
   }
 }
 

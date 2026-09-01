@@ -23,6 +23,7 @@
 #include "json_keys.h"
 #include "map/map_definition.h"
 #include "map/terrain.h"
+#include "systems/resource_json.h"
 #include "systems/resource_types.h"
 #include "units/spawn_type.h"
 #include "wildlife/wildlife_placement.h"
@@ -609,9 +610,6 @@ void append_undead_wave_units_from_object(const QJsonObject& obj, UndeadWave& ou
   }
 }
 
-void read_starting_resources(const QJsonObject& obj,
-                             Game::Systems::ResourceAmounts& out);
-
 void read_forests(const QJsonArray& arr, std::vector<Forest>& out) {
   out.clear();
   out.reserve(arr.size());
@@ -705,7 +703,8 @@ void read_undead_zones(const QJsonArray& arr, std::vector<UndeadZone>& out) {
     }
 
     if (obj.contains(CLEAR_REWARD) && obj.value(CLEAR_REWARD).isObject()) {
-      read_starting_resources(obj.value(CLEAR_REWARD).toObject(), zone.clear_reward);
+      Game::Systems::read_resource_overlay(obj.value(CLEAR_REWARD).toObject())
+          .apply_to(zone.clear_reward);
     }
 
     if (obj.contains(WAVES) && obj.value(WAVES).isArray()) {
@@ -1261,15 +1260,6 @@ void read_bridges(const QJsonArray& arr,
   }
 }
 
-void read_starting_resources(const QJsonObject& obj,
-                             Game::Systems::ResourceAmounts& out) {
-  for (Game::Systems::ResourceType const type : Game::Systems::k_all_resource_types) {
-    const int value =
-        obj.value(QLatin1String(Game::Systems::resource_type_key(type))).toInt(0);
-    out.set(type, value);
-  }
-}
-
 auto authored_position(float raw_x,
                        float raw_z,
                        const GridDefinition& grid,
@@ -1636,8 +1626,8 @@ auto MapLoader::load_from_json_file(const QString& path,
   }
 
   if (root.contains(STARTING_RESOURCES) && root.value(STARTING_RESOURCES).isObject()) {
-    read_starting_resources(root.value(STARTING_RESOURCES).toObject(),
-                            out_map.starting_resources);
+    Game::Systems::read_resource_overlay(root.value(STARTING_RESOURCES).toObject())
+        .apply_to(out_map.starting_resources);
   }
 
   if (!wildlife_authored) {

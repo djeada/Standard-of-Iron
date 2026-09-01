@@ -25,6 +25,8 @@ Item {
 
     readonly property var stage_list: (game_ready() && game.mission && game.mission.staged) ? game.mission.stages : objective_list("stages")
 
+    readonly property bool stages_are_victory_conditions: game_ready() && game.mission && game.mission.staged && game.mission.stages_mirror_victory_conditions
+
     anchors.fill: parent
     z: 10
     focus: true
@@ -109,6 +111,7 @@ Item {
                 defeatConditions: root.objective_list("defeat_conditions")
                 optionalObjectives: root.objective_list("optional_objectives")
                 stages: root.stage_list
+                stagesAreVictoryConditions: root.stages_are_victory_conditions
                 victoryMode: root.mission_objectives && root.mission_objectives.victory_mode ? root.mission_objectives.victory_mode : "any"
             }
 

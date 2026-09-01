@@ -52,7 +52,7 @@ developer tools.
 | Command      | Top-down RTS control and direct commander combat in the same battle                                  |
 | Forces       | Infantry, archers, cavalry, healers, builders, commanders, siege engines, and war elephants          |
 | Formations   | Three nation doctrines and 29 authored unit layouts, including shield walls and cavalry wedges       |
-| Languages    | English, German, Spanish, Brazilian Portuguese, and Arabic with right-to-left layout                 |
+| Languages    | English, German, Spanish, Brazilian Portuguese, Turkish, and Arabic with right-to-left layout        |
 | Platforms    | Linux, macOS, and Windows                                                                            |
 
 ## Gameplay

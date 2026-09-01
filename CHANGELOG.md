@@ -105,6 +105,62 @@ tools/font/build_standard_iron.py`, then `tools/font/proof.py` to look at it).
   and defeat headlines, the battle report headline and its tallies. Released
   under the SIL Open Font License 1.1.
 
+- **Three reds cleared out of the suite.** The trailer settlements placed their
+  acropolis temple from a magic offset that predated the temple's real
+  footprint, so the crown stood on the cross street and, at the Punic city, in
+  the river; the crown and the wall now derive their reach from
+  `BuildingCollisionRegistry`, the cross street stops at the last building row
+  rather than a row beyond it, and the Punic city sits 2 m further from the
+  water. `walk_pose_inputs` fed the locomotion resolver a stride distance of
+  `speed x 0.92` where the runtime feeds `speed x cycle_time`, which pinned the
+  stride-distance scale at its 1.28 ceiling and made the planted foot slide 28%
+  per cycle in the test and nowhere else. The run's midfoot landing was retuned
+  to -0.06 rad in #1365 without updating the test that allowed 0.05, so that
+  assertion now reads against the walk's heel strike instead of an absolute that
+  drifts with tuning. The creature goldens are regenerated for the sword and
+  polearm proportion changes. The root `TODO.md` and `todo.md` differed only by
+  case, which no macOS or Windows checkout can hold at once; the audio one is
+  now [docs/AUDIO_TODO.md](docs/AUDIO_TODO.md).
+
+- **Turkish.** `translations/app_tr.ts` ships all 2,335 strings translated — the
+  UI, the field manual, every mission briefing and commander dispatch — and
+  `tr` joins the language list, the `.qm` build and the translator CSVs. The
+  blocker was the brand face: it carried the Latin-1 accented capitals German,
+  Spanish and Portuguese need, but `Ğ`, `İ` and `Ş` are outside Latin-1, so an
+  uppercased Turkish title would have dropped into a fallback font mid-word.
+  `tools/font/glyph_composites.py` gained a chiselled breve and a dot above to
+  build them from `G`, `I` and `S`, and the `.ttf` is rebuilt.
+  `BrandFontsTest.TheDisplayFaceCoversCapsFiguresAndAccents` and a new QML
+  glyph-coverage case now assert every capital the localisations need.
+
+- **Battle and work dust reads as dust again, and cannot flood the screen.**
+  `combat_dust_defaults.h` had been cut to radius 1.35 / intensity 0.6 while
+  framing a close-up duel promo, which left the melee and builder dust invisible
+  at gameplay distance. It is now authored for the RTS camera: warmer grains, a
+  capped dome instead of an open cylinder wall (the old shell read as a flat ring
+  from above and tore into spokes at its apex), fbm carving sampled in the puff's
+  own ground plane so there is no seam and no radial streaking, and a soft radial
+  falloff so the cloud has an edge rather than a contour. The dust mesh went from
+  12x8 to 24x12 segments so the silhouette noise no longer facets it. Emission is
+  no longer one puff per fighter: melee-locked units and working builders are
+  binned into 3 m cells, and the **ten** largest clusters are drawn, each sized
+  and darkened by how many bodies feed it. A hundred-man press costs ten draws
+  instead of a hundred, and one duel still raises exactly one puff.
+
+- **Three tracks, a healer's shimmer and the commander's rally.** The
+  September 2026 audio batch: `menu/main_theme_iron_kingdom`, a third tense base
+  bed (`base/base_march_of_the_old_gods`) and a third neutral combat track
+  (`combat/combat_siege_at_dawn`), all baked by
+  `tools/audio_import/import_music.py --batch 2026-09-iron` to the house format —
+  32 kHz mono Vorbis `-q:a 4`, landing at −15.0 to −15.2 LUFS in game. Music
+  selection is tag-driven, so the three joined the menu rotation and the tense and
+  combat states with no code change. `combat.heal` trades its bind-wound recording
+  for a sustained restorative shimmer, and the commander planting his standard now
+  sounds a war horn through the new `order.commander_rally` cue, fired from
+  `game/systems/commander_system.cpp` where the rally issues its orders. Both
+  effects are imported at their delivered length: `import_cues.py` gained a
+  `"whole"` plan mode for renders where the approach and the decay are the sound.
+
 - **Typography ships with the game instead of being borrowed from the host.**
   Both bundled faces live in [assets/fonts/](assets/fonts/) — the display face
   and EB Garamond, which backs it up for everything it has no glyph for. QML
