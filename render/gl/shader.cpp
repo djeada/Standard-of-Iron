@@ -22,6 +22,7 @@
 #include <algorithm>
 #include <mutex>
 #include <type_traits>
+#include <unordered_map>
 #include <vector>
 
 #include "platform_gl.h"
@@ -400,6 +401,9 @@ void Shader::adopt_program(GLuint program) {
     m_uniform_locations[i] =
         glGetUniformLocation(m_program, m_uniform_names[i].c_str());
   }
+
+  std::erase_if(m_uniform_cache,
+                [](const auto& entry) { return entry.second == InvalidUniform; });
   bind_standard_blocks();
   for (const auto& [block, binding] : m_block_bindings) {
     const GLuint idx = glGetUniformBlockIndex(m_program, block.c_str());
@@ -473,7 +477,9 @@ void Shader::replay_uniform_state() {
         },
         value);
   }
-  glUseProgram(static_cast<GLuint>(previous_program));
+
+  const auto previous = static_cast<GLuint>(previous_program);
+  glUseProgram(glIsProgram(previous) == GL_TRUE ? previous : 0);
 }
 
 auto Shader::location_for(UniformHandle handle) const noexcept -> GLint {

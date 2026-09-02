@@ -14,6 +14,7 @@
 #include "render/elephant/runtime/gait_state.h"
 #include "render/gl/humanoid/humanoid_types.h"
 #include "render/horse/dimensions.h"
+#include "render/humanoid/runtime/combat_root_smoothing.h"
 #include "render_request.h"
 
 namespace Render::Creature {
@@ -30,6 +31,7 @@ struct HumanoidAnimationStateComponent {
   Animation::HumanoidAmbientRuntimeState ambient_idle{};
   Animation::HumanoidConstructionTransitionState construction_transition{};
   CombatVisualPersistentState combat_visual{};
+  Render::Humanoid::CombatRootSmoothingState combat_root{};
 };
 
 struct HorseAnimationStateComponent {

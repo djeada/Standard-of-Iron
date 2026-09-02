@@ -1539,16 +1539,20 @@ void append_prepared_soldier(const HumanoidUnitSnapshot& s,
                            RCP::model_world_origin(inst_ctx.model).y() +
                                casualty_offset_y);
   }
-  if (!soldier_is_casualty_body && !is_mounted_spawn &&
-      !soldier_render_anim.has_authored_action_phase &&
-      !soldier_render_anim.is_in_hold_mode && !soldier_render_anim.is_constructing) {
+
+  bool const combat_root_eligible = !soldier_is_casualty_body && !is_mounted_spawn &&
+                                    !soldier_render_anim.has_authored_action_phase &&
+                                    !soldier_render_anim.is_in_hold_mode &&
+                                    !soldier_render_anim.is_constructing;
+  Animation::CombatRootMotionSample root_motion{};
+  if (combat_root_eligible) {
     float recoil_dir_x = soldier_render_anim.hit_recoil_x;
     float recoil_dir_z = soldier_render_anim.hit_recoil_z;
     if (std::abs(recoil_dir_x) < 1.0e-5F && std::abs(recoil_dir_z) < 1.0e-5F) {
       recoil_dir_x = -forward.x();
       recoil_dir_z = -forward.z();
     }
-    auto const root_motion = Animation::resolve_combat_root_motion({
+    root_motion = Animation::resolve_combat_root_motion({
         .attacking = soldier_render_anim.combat_visual.active &&
                      soldier_render_anim.is_attacking,
         .melee = soldier_render_anim.combat_visual.is_melee,
@@ -1572,27 +1576,48 @@ void append_prepared_soldier(const HumanoidUnitSnapshot& s,
         .simulation_owns_lunge = soldier_render_anim.simulation_owns_root_motion,
         .seed = inst_seed,
     });
+  }
+  {
+    CombatRootSmoothingTarget root_target{};
+    root_target.time = anim.time;
+    if (root_motion.active && !soldier_render_anim.simulation_owns_root_motion) {
+      root_target.offset_x =
+          root_motion.world_offset_x + forward.x() * root_motion.forward_offset;
+      root_target.offset_z =
+          root_motion.world_offset_z + forward.z() * root_motion.forward_offset;
+    }
     if (root_motion.active) {
+      root_target.pitch_degrees = root_motion.pitch_degrees;
+      root_target.roll_degrees = root_motion.roll_degrees;
+    }
+
+    CombatRootSmoothingTarget root_applied = root_target;
+    if (locomotion_persistent_state != nullptr) {
+      if (allow_animation_persistence) {
+        root_applied =
+            smooth_combat_root(locomotion_persistent_state->combat_root, root_target);
+      } else {
+        CombatRootSmoothingState scratch = locomotion_persistent_state->combat_root;
+        root_applied = smooth_combat_root(scratch, root_target);
+      }
+    }
+    bool const root_active = std::abs(root_applied.offset_x) > 1.0e-4F ||
+                             std::abs(root_applied.offset_z) > 1.0e-4F ||
+                             std::abs(root_applied.pitch_degrees) > 0.01F ||
+                             std::abs(root_applied.roll_degrees) > 0.01F ||
+                             (root_motion.active && root_motion.squash > 0.001F);
+    if (root_active) {
       QVector3D const root_origin = inst_ctx.model.map(QVector3D(0.0F, 0.0F, 0.0F));
       QMatrix4x4 root;
-
-      float const root_offset_x =
-          soldier_render_anim.simulation_owns_root_motion
-              ? 0.0F
-              : root_motion.world_offset_x + forward.x() * root_motion.forward_offset;
-      float const root_offset_z =
-          soldier_render_anim.simulation_owns_root_motion
-              ? 0.0F
-              : root_motion.world_offset_z + forward.z() * root_motion.forward_offset;
-      root.translate(root_offset_x, 0.0F, root_offset_z);
+      root.translate(root_applied.offset_x, 0.0F, root_applied.offset_z);
       root.translate(root_origin);
-      if (std::abs(root_motion.pitch_degrees) > 0.01F) {
-        root.rotate(root_motion.pitch_degrees, right);
+      if (std::abs(root_applied.pitch_degrees) > 0.01F) {
+        root.rotate(root_applied.pitch_degrees, right);
       }
-      if (std::abs(root_motion.roll_degrees) > 0.01F) {
-        root.rotate(root_motion.roll_degrees, forward);
+      if (std::abs(root_applied.roll_degrees) > 0.01F) {
+        root.rotate(root_applied.roll_degrees, forward);
       }
-      if (root_motion.squash > 0.001F) {
+      if (root_motion.active && root_motion.squash > 0.001F) {
         root.scale(1.0F, 1.0F - root_motion.squash, 1.0F);
       }
       root.translate(-root_origin);

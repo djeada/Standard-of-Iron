@@ -143,6 +143,9 @@ public:
     m_view.set_force_full_creature_lod(enabled);
   }
 
+  void set_order_marker_all_owners(bool enabled) {
+    m_view.set_order_marker_all_owners(enabled);
+  }
   void set_cinematic_mode(bool enabled) { m_view.set_cinematic_mode(enabled); }
   [[nodiscard]] auto cinematic_mode() const noexcept -> bool {
     return m_view.cinematic_mode();

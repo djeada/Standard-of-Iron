@@ -23,8 +23,11 @@ namespace {
 using FrontMap = std::unordered_map<Engine::Core::EntityID,
                                     std::vector<Engine::Core::FormationContactFront>>;
 
-constexpr float k_target_switch_hysteresis = 0.35F;
+constexpr float k_target_switch_hysteresis = 0.60F;
+constexpr float k_target_hold_seconds = 1.2F;
+constexpr float k_target_hold_slack = 1.5F;
 constexpr float k_engage_close_speed = 3.2F;
+constexpr float k_contact_turn_degrees = 180.0F;
 
 constexpr float k_contact_yaw_hold_seconds = 0.6F;
 constexpr float k_disengage_turn_degrees = 120.0F;
@@ -473,7 +476,12 @@ auto retained_target_slot(const FormationCombat::FormationLayout& opponent_layou
   }
   float const held_distance = std::hypot(held->world_x - attacker_slot->world_x,
                                          held->world_z - attacker_slot->world_z);
-  if (held_distance <= result.root_distance + spacing * k_target_switch_hysteresis) {
+  bool const within_hysteresis =
+      held_distance <= result.root_distance + spacing * k_target_switch_hysteresis;
+  bool const still_holding =
+      previous->target_held_seconds < k_target_hold_seconds &&
+      held_distance <= result.root_distance + spacing * k_target_hold_slack;
+  if (within_hysteresis || still_holding) {
     return {previous->target_slot, held_distance};
   }
   return result;
@@ -695,6 +703,9 @@ void publish_formation_presentation(Engine::Core::World& world, float delta_time
         directive.local_x += structure_shift_local_x;
         directive.local_z += structure_shift_local_z;
       }
+
+      float const anchor_local_x = directive.local_x;
+      float const anchor_local_z = directive.local_z;
       directive.local_yaw =
           live_slot != nullptr ? live_slot->local_yaw : original_slot.local_yaw;
       directive.alive = live_slot != nullptr;
@@ -717,6 +728,14 @@ void publish_formation_presentation(Engine::Core::World& world, float delta_time
 
         directive.opponent_id = assignment.front->opponent_id;
         directive.target_slot = retained.slot;
+        bool const same_target = previous != nullptr &&
+                                 previous->opponent_id == directive.opponent_id &&
+                                 previous->target_slot == directive.target_slot;
+        directive.target_held_seconds =
+            same_target
+                ? std::min(previous->target_held_seconds + std::max(0.0F, delta_time),
+                           k_target_hold_seconds + 1.0F)
+                : 0.0F;
         directive.engagement_surface_gap =
             assignment.pair->surface_gap +
             (retained.root_distance - assignment.pair->root_distance);
@@ -744,7 +763,7 @@ void publish_formation_presentation(Engine::Core::World& world, float delta_time
           float const prior_yaw =
               previous != nullptr ? previous->local_yaw : directive.local_yaw;
           float const yaw_delta = std::remainder(desired_yaw - prior_yaw, 360.0F);
-          float const max_turn = 300.0F * std::max(0.0F, delta_time);
+          float const max_turn = k_contact_turn_degrees * std::max(0.0F, delta_time);
           directive.local_yaw = prior_yaw + std::clamp(yaw_delta, -max_turn, max_turn);
 
           constexpr float k_weapon_contact_distance = 0.72F;
@@ -757,16 +776,6 @@ void publish_formation_presentation(Engine::Core::World& world, float delta_time
                 contact_vector.x / contact_vector.distance * pull_distance;
             directive.local_z +=
                 contact_vector.z / contact_vector.distance * pull_distance;
-          }
-          if (previous != nullptr && previous->alive && traversal_slot == nullptr) {
-            float const step_x = directive.local_x - previous->local_x;
-            float const step_z = directive.local_z - previous->local_z;
-            float const step = std::hypot(step_x, step_z);
-            float const allowed = k_engage_close_speed * std::max(0.0F, delta_time);
-            if (step > allowed && step > 0.0001F) {
-              directive.local_x = previous->local_x + step_x / step * allowed;
-              directive.local_z = previous->local_z + step_z / step * allowed;
-            }
           }
 
           float const yaw_rad = desired_yaw * std::numbers::pi_v<float> / 180.0F;
@@ -847,7 +856,7 @@ void publish_formation_presentation(Engine::Core::World& world, float delta_time
                 previous != nullptr ? previous->local_yaw : directive.local_yaw;
             float const yaw_delta =
                 std::remainder(contact_vector.yaw - prior_yaw, 360.0F);
-            float const max_turn = 300.0F * std::max(0.0F, delta_time);
+            float const max_turn = k_contact_turn_degrees * std::max(0.0F, delta_time);
             directive.local_yaw =
                 prior_yaw + std::clamp(yaw_delta, -max_turn, max_turn);
 
@@ -890,6 +899,38 @@ void publish_formation_presentation(Engine::Core::World& world, float delta_time
           directive.local_yaw =
               previous->local_yaw + std::clamp(yaw_delta, -max_turn, max_turn);
         }
+      }
+
+      if (!directive.alive && previous != nullptr &&
+          (previous->alive || previous->contact_offset_x != 0.0F ||
+           previous->contact_offset_z != 0.0F)) {
+
+        directive.contact_offset_x = previous->contact_offset_x;
+        directive.contact_offset_z = previous->contact_offset_z;
+        directive.local_x = anchor_local_x + previous->contact_offset_x;
+        directive.local_z = anchor_local_z + previous->contact_offset_z;
+        directive.local_yaw = previous->local_yaw;
+      }
+      if (directive.alive) {
+        float const desired_offset_x = directive.local_x - anchor_local_x;
+        float const desired_offset_z = directive.local_z - anchor_local_z;
+        bool const continues = previous != nullptr && previous->alive;
+        float const prior_offset_x = continues ? previous->contact_offset_x : 0.0F;
+        float const prior_offset_z = continues ? previous->contact_offset_z : 0.0F;
+        float const step_x = desired_offset_x - prior_offset_x;
+        float const step_z = desired_offset_z - prior_offset_z;
+        float const step = std::hypot(step_x, step_z);
+        float const allowed = k_engage_close_speed * std::max(0.0F, delta_time);
+        float offset_x = desired_offset_x;
+        float offset_z = desired_offset_z;
+        if (step > allowed && step > 0.0001F) {
+          offset_x = prior_offset_x + step_x / step * allowed;
+          offset_z = prior_offset_z + step_z / step * allowed;
+        }
+        directive.contact_offset_x = offset_x;
+        directive.contact_offset_z = offset_z;
+        directive.local_x = anchor_local_x + offset_x;
+        directive.local_z = anchor_local_z + offset_z;
       }
 
       if (traversal_slot == nullptr && previous != nullptr && directive.alive) {

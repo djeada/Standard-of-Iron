@@ -618,10 +618,12 @@ void ArenaViewport::paintGL() {
   m_renderer->set_local_owner_id(k_local_owner_id);
   m_renderer->update_animation_time(simulation_dt);
 
+  m_renderer->set_order_marker_all_owners(m_capture_gameplay_ui_all_owners);
   m_renderer->set_cinematic_mode(
-      m_clean_capture || m_promo_mode ||
-      (m_scenario_runner != nullptr &&
-       m_scenario_runner->definition().suppress_ui_overlays));
+      !m_capture_gameplay_ui &&
+      (m_clean_capture || m_promo_mode ||
+       (m_scenario_runner != nullptr &&
+        m_scenario_runner->definition().suppress_ui_overlays)));
 
   m_renderer->set_world_view(Render::WorldView::of(m_session));
   m_renderer->begin_frame();
@@ -2910,6 +2912,33 @@ void ArenaViewport::set_batch_fixed_step(float seconds) {
                             static_cast<int>(std::lround(m_batch_fixed_step * 1000.0F)))
                  : k_interactive_frame_interval_ms);
   m_frame_timer.setInterval(interval_ms);
+}
+
+void ArenaViewport::set_capture_gameplay_ui(bool enabled, bool all_owners) {
+  m_capture_gameplay_ui = enabled;
+  m_capture_gameplay_ui_all_owners = enabled && all_owners;
+}
+
+void ArenaViewport::paint_capture_gameplay_ui(QImage& frame) const {
+  if (!m_capture_gameplay_ui || m_camera == nullptr || frame.isNull() ||
+      frame.width() <= 0 || frame.height() <= 0) {
+    return;
+  }
+  const qreal frame_width = frame.width();
+  const qreal frame_height = frame.height();
+  const float ui_scale =
+      static_cast<float>(std::clamp(frame_height / 1080.0, 0.6, 2.4));
+
+  QPainter painter(&frame);
+  painter.setRenderHint(QPainter::Antialiasing, true);
+  painter.setRenderHint(QPainter::TextAntialiasing, true);
+  m_feedback.draw(
+      painter,
+      [this, frame_width, frame_height](float x, float y, float z, QPointF& out) {
+        return m_camera->world_to_screen(
+            QVector3D(x, y, z), frame_width, frame_height, out);
+      },
+      ui_scale);
 }
 
 void ArenaViewport::set_promo_mode(bool enabled) {

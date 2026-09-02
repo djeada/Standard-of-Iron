@@ -20,6 +20,9 @@ add_library(
     # its backpressure, and a second compiled copy could pass while the object
     # the arena ships is broken.
     video_encoder.cpp
+    # The matchup short generator: it turns "20 swordsman vs 20 archer" into a
+    # scenario and a promo spec, so it needs both and no GL.
+    matchup_short.cpp
 )
 target_include_directories(arena_scenario_harness PUBLIC "${CMAKE_SOURCE_DIR}")
 # game_sim, not game_systems: every scenario is scripted, so the harness spawns

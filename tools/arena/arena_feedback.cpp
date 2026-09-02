@@ -172,10 +172,14 @@ void ArenaFeedback::clear() {
   m_floaters.clear();
 }
 
-void ArenaFeedback::draw(QPainter& painter, const Projector& project) const {
+void ArenaFeedback::draw(QPainter& painter,
+                         const Projector& project,
+                         float ui_scale) const {
   if (m_floaters.empty() || !project) {
     return;
   }
+
+  const qreal ui = std::clamp(static_cast<qreal>(ui_scale), 0.5, 4.0);
 
   painter.save();
   painter.setRenderHint(QPainter::Antialiasing, true);
@@ -198,19 +202,22 @@ void ArenaFeedback::draw(QPainter& painter, const Projector& project) const {
             : std::max(0.0F, 1.0F - ((progress - k_fade_starts_at) / 0.45F));
 
     QFont font = painter.font();
-    font.setPixelSize(static_cast<int>(std::lround(
-        14.0F + (floater.tick.killing_blow ? 4.0F : 0.0F) + (weight * 3.0F))));
+    font.setPixelSize(std::max(
+        8,
+        static_cast<int>(std::lround(
+            (14.0 + (floater.tick.killing_blow ? 4.0 : 0.0) + (weight * 3.0)) * ui))));
     font.setBold(true);
     painter.setFont(font);
 
     const QString text = label_for(floater.tick);
     const QFontMetrics metrics(font);
     const QRectF text_bounds = metrics.boundingRect(text);
-    const qreal pill_width = text_bounds.width() + 14.0;
-    const qreal pill_height = text_bounds.height() + 6.0;
+    const qreal pill_width = text_bounds.width() + (14.0 * ui);
+    const qreal pill_height = text_bounds.height() + (6.0 * ui);
 
-    const QPointF centre(anchor.x() + static_cast<qreal>(drift * progress),
-                         anchor.y() - 18.0 - static_cast<qreal>(rise * progress));
+    const QPointF centre(anchor.x() + (static_cast<qreal>(drift * progress) * ui),
+                         anchor.y() - (18.0 * ui) -
+                             (static_cast<qreal>(rise * progress) * ui));
     const QRectF pill(centre.x() - (pill_width * 0.5),
                       centre.y() - (pill_height * 0.5),
                       pill_width,
@@ -223,7 +230,7 @@ void ArenaFeedback::draw(QPainter& painter, const Projector& project) const {
         floater.tick.killing_blow ? QColor(0x20, 0x0A, 0x04) : QColor(0x10, 0x0C, 0x08);
     fill.setAlpha(floater.tick.killing_blow ? 224 : 200);
     painter.setBrush(fill);
-    painter.setPen(QPen(accent, floater.tick.killing_blow ? 2.0 : 1.0));
+    painter.setPen(QPen(accent, (floater.tick.killing_blow ? 2.0 : 1.0) * ui));
     painter.drawRoundedRect(pill, pill_height * 0.5, pill_height * 0.5);
 
     const QColor body =
@@ -231,7 +238,7 @@ void ArenaFeedback::draw(QPainter& painter, const Projector& project) const {
             ? QColor(QStringLiteral("#ffe6df"))
             : QColor(QStringLiteral("#fff6d6"));
     painter.setPen(accent);
-    painter.drawText(pill.translated(0.0, 1.0), Qt::AlignCenter, text);
+    painter.drawText(pill.translated(0.0, 1.0 * ui), Qt::AlignCenter, text);
     painter.setPen(body);
     painter.drawText(pill, Qt::AlignCenter, text);
   }

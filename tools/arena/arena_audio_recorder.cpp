@@ -73,6 +73,29 @@ auto AudioRecorder::start(Engine::Core::World* world,
   return true;
 }
 
+void AudioRecorder::play_music_bed(const QString& track_id, float volume) {
+  if (!m_running || track_id.isEmpty() || volume <= 0.0F) {
+    return;
+  }
+  AudioResourceLoader::ensure_audio_resource_loaded(track_id);
+
+  AudioSystem::get_instance().play_sound(
+      track_id.toStdString(), volume, true, 1, AudioCategory::MUSIC);
+  qInfo().noquote() << QStringLiteral("AudioRecorder: score bed %1 at %2")
+                           .arg(track_id, QString::number(volume, 'f', 2));
+}
+
+void AudioRecorder::play_one_shot(const QString& track_id, float volume) {
+  if (!m_running || track_id.isEmpty() || volume <= 0.0F) {
+    return;
+  }
+  AudioResourceLoader::ensure_audio_resource_loaded(track_id);
+  AudioSystem::get_instance().play_sound(
+      track_id.toStdString(), volume, false, 1, AudioCategory::MUSIC);
+  qInfo().noquote() << QStringLiteral("AudioRecorder: report sound %1 at %2")
+                           .arg(track_id, QString::number(volume, 'f', 2));
+}
+
 void AudioRecorder::advance(float seconds, bool record) {
   if (!m_running || seconds <= 0.0F) {
     return;
