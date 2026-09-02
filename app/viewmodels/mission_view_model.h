@@ -21,6 +21,7 @@ class MissionViewModel : public QObject {
   Q_PROPERTY(int active_index READ active_index NOTIFY stages_changed)
   Q_PROPERTY(QString active_title READ active_title NOTIFY stages_changed)
   Q_PROPERTY(QString active_hint READ active_hint NOTIFY stages_changed)
+  Q_PROPERTY(QString active_detail READ active_detail NOTIFY stages_changed)
   Q_PROPERTY(int active_progress READ active_progress NOTIFY stages_changed)
   Q_PROPERTY(int active_required READ active_required NOTIFY stages_changed)
   Q_PROPERTY(bool active_has_target READ active_has_target NOTIFY stages_changed)
@@ -43,6 +44,7 @@ public:
   [[nodiscard]] auto active_index() const -> int { return m_active_index; }
   [[nodiscard]] auto active_title() const -> QString;
   [[nodiscard]] auto active_hint() const -> QString;
+  [[nodiscard]] auto active_detail() const -> QString;
   [[nodiscard]] auto active_progress() const -> int;
   [[nodiscard]] auto active_required() const -> int;
   [[nodiscard]] auto active_has_target() const -> bool;

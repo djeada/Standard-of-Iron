@@ -30,6 +30,7 @@ from fontTools.pens.ttGlyphPen import TTGlyphPen
 from fontTools.ttLib import newTable
 from fontTools.ttLib.tables import _k_e_r_n
 from glyph_composites import ACCENTED, MARKS
+from glyph_cyrillic import ALIASES, CYRILLIC, CYRILLIC_DIAGONAL, CYRILLIC_ROUND
 from glyph_geometry import ASCENDER, CAP, DESCENDER, SIDEBEARING, UPM
 from glyph_kerning import pairs as kerning_pairs
 from glyph_punctuation import PUNCTUATION
@@ -59,8 +60,8 @@ GASP_SYMMETRIC_SMOOTHING = 0x0008
 BUILD_EPOCH = 3850070400
 
 
-ROUND = set("OQCGDSU0368")
-DIAGONAL = set("AVWXYTJ7")
+ROUND = set("OQCGDSU0368") | CYRILLIC_ROUND
+DIAGONAL = set("AVWXYTJ7") | CYRILLIC_DIAGONAL
 
 
 GLYPH_NAMES = {
@@ -265,8 +266,15 @@ def build_rasterization_preferences(builder) -> None:
 
 
 def build() -> Path:
+    """Assemble the font.
+
+    The Cyrillic capitals shared with Latin carry no outline of their own: the
+    alias pass below gives the Latin glyph a second code point, so О and O
+    cannot drift apart under an edit.
+    """
     sources: dict = {}
     sources.update(LETTERS)
+    sources.update(CYRILLIC)
     sources.update(PUNCTUATION)
 
     glyph_order = [".notdef", "space"]
@@ -302,6 +310,9 @@ def build() -> Path:
         placement[name] = (side, ink_width)
         cmap[ord(character)] = name
         glyph_order.append(name)
+
+    for character, latin in ALIASES.items():
+        cmap[ord(character)] = glyph_name_for(latin)
 
     for mark_name, factory in MARKS.items():
         pen = record(factory())

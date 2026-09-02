@@ -125,6 +125,11 @@ void OrdersViewModel::refresh_context_intent(qreal sx, qreal sy) {
     return;
   }
 
+  if (sx < 0.0 || sy < 0.0) {
+    clear_context_intent();
+    return;
+  }
+
   const QPointF mapped = viewport->map_input(sx, sy);
 
   App::Core::ContextIntentRequest request;

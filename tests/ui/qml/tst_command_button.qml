@@ -202,6 +202,34 @@ TestCase {
         button.destroy();
     }
 
+    function test_a_button_built_outside_a_window_still_opens_its_tooltip_once_shown() {
+        var detachedHost = detachedItemComponent.createObject(null);
+        verify(detachedHost !== null);
+        var button = buttonComponent.createObject(detachedHost, {
+                "actionId": "collect",
+                "label": "Collect",
+                "hint": "Send a builder to fell a tree.",
+                "focus": true,
+                "width": 200,
+                "height": 48
+            });
+        verify(button !== null);
+        verify(button.Window.window === null, "the button should start with no window");
+        verify(!button.attachedToWindow, "a windowless button must not arm its tooltip popup");
+        verify(!button.tooltip.visible, "a windowless button must not try to open a popup");
+        detachedHost.parent = testCase;
+        requireActiveWindow();
+        tryVerify(function () {
+                return button.attachedToWindow;
+            }, 4000, "the button never joined a window");
+        button.forceActiveFocus(Qt.TabFocusReason);
+        tryVerify(function () {
+                return button.tooltip.visible;
+            }, 4000, "the tooltip never opened after the button joined a window");
+        compare(button.tooltip.title, "Collect");
+        detachedHost.destroy();
+    }
+
     function test_an_order_the_selection_cannot_take_says_so_in_the_tooltip() {
         var button = makeButton({
                 "actionId": "hold",
@@ -241,6 +269,15 @@ TestCase {
         compare(button.Accessible.name, "Hold");
         verify(button.Accessible.checked);
         button.destroy();
+    }
+
+    Component {
+        id: detachedItemComponent
+
+        FocusScope {
+            width: 400
+            height: 200
+        }
     }
 
     Component {

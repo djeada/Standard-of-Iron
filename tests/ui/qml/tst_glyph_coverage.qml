@@ -34,8 +34,13 @@ TestCase {
     }
 
     function test_the_title_face_covers_the_capitals_the_localisations_need() {
-        var missing = missingTitleCharacters("\u00c1\u00c4\u00c7\u00c9\u00cd\u00d1\u00d3\u00d6\u00da\u00dc\u011e\u0130\u015e");
+        var missing = missingTitleCharacters("\u00c1\u00c4\u00c7\u00c9\u00cd\u00d1\u00d3\u00d6\u00da\u00dc\u011e\u0130\u015e\u0104\u0106\u0118\u0141\u0143\u015a\u0179\u017b");
         compare(missing.join(", "), "", "an uppercased title would fall out of the brand face mid-word");
+    }
+
+    function test_the_title_face_covers_the_russian_capitals() {
+        var missing = missingTitleCharacters("\u0410\u0411\u0412\u0413\u0414\u0415\u0401\u0416\u0417\u0418\u0419\u041a\u041b\u041c\u041d\u041e\u041f\u0420\u0421\u0422\u0423\u0424\u0425\u0426\u0427\u0428\u0429\u042a\u042b\u042c\u042d\u042e\u042f");
+        compare(missing.join(", "), "", "a Russian title would leave the brand face entirely");
     }
 
     function test_every_interface_glyph_exists_in_the_ui_font() {

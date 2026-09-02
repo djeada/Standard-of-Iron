@@ -15,7 +15,7 @@ nothing in the output saying which face it got.
 | File | Role |
 | --- | --- |
 | `EBGaramond12-Bold.ttf` | The text and fallback face. Covers lowercase, accents and everything the display face has no glyph for. OFL-1.1, Georg Duffner. |
-| `StandardIronDisplay-Bold.ttf` | The brand face: titles, headings, outcome screens, big numbers, reel captions. **Caps, digits, punctuation, Latin-1 accented capitals and the Turkish `Ğ İ Ş` only — no lowercase.** Generated; see below. |
+| `StandardIronDisplay-Bold.ttf` | The brand face: titles, headings, outcome screens, big numbers, reel captions. **Caps, digits, punctuation, Latin-1 accented capitals, the Turkish `Ğ İ Ş`, the Polish `Ą Ć Ę Ł Ń Ś Ź Ż` and the Russian `А–Я` only — no lowercase.** Generated; see below. |
 
 `OFL-EBGaramond.txt` is the license the bundled EB Garamond is redistributed
 under; it has to travel with the file.
@@ -49,7 +49,12 @@ python3 tools/font/build_standard_iron.py     # rebuild the .ttf
 python3 tools/font/proof.py proof.png         # look at it
 ```
 
-Fix letters in `tools/font/glyph_shapes.py` and rebuild. Editing the binary in
+Fix letters in `tools/font/glyph_shapes.py` (Latin), `glyph_composites.py`
+(accents, and the accented capitals built from them) or `glyph_cyrillic.py`
+(the Russian capitals) and rebuild. Eleven Cyrillic capitals -- `А В Е К М Н О
+Р С Т Х` -- carry no outline of their own: `ALIASES` in `glyph_cyrillic.py`
+points their code points at the Latin glyph, so fixing `O` fixes `О` too and
+the pair cannot drift apart. Editing the binary in
 a font editor loses the change the next time anyone regenerates.
 
 It has **no lowercase**, and Qt falls back per glyph, so binding

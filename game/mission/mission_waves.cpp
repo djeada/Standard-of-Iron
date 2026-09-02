@@ -251,6 +251,10 @@ auto wave_cleared_announcement(const PendingMissionWave& wave) -> QString {
 }
 
 auto all_waves_cleared_announcement(const PendingMissionWave& wave) -> QString {
+  if (wave.phase_count <= 1) {
+    return QCoreApplication::translate(
+        "MissionSetupCoordinator", "The assault is broken. Nothing else is coming.");
+  }
   return QCoreApplication::translate(
              "MissionSetupCoordinator",
              "All %1 assault phases broken. Nothing else is coming.")

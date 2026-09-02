@@ -1,199 +1,199 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE TS>
-<TS version="2.1" language="tr_TR">
+<TS version="2.1" language="pl_PL">
 <context>
     <name>ActivityIcons</name>
     <message>
         <source>Idle</source>
-        <translation>Beklemede</translation>
+        <translation>Bezczynny</translation>
     </message>
     <message>
         <source>Standing by and awaiting orders.</source>
-        <translation>Emir bekleyerek hazırda duruyor.</translation>
+        <translation>W gotowości, czeka na rozkazy.</translation>
     </message>
     <message>
         <source>Moving</source>
-        <translation>Hareket ediyor</translation>
+        <translation>W ruchu</translation>
     </message>
     <message>
         <source>Marching to the ordered position.</source>
-        <translation>Verilen mevziye yürüyor.</translation>
+        <translation>Maszeruje na wyznaczoną pozycję.</translation>
     </message>
     <message>
         <source>Attacking</source>
-        <translation>Saldırıyor</translation>
+        <translation>Atakuje</translation>
     </message>
     <message>
         <source>Engaging the assigned target.</source>
-        <translation>Belirlenen hedefle çarpışıyor.</translation>
+        <translation>Naciera na wyznaczony cel.</translation>
     </message>
     <message>
         <source>Patrolling</source>
-        <translation>Devriye geziyor</translation>
+        <translation>Patroluje</translation>
     </message>
     <message>
         <source>Walking the patrol route between its waypoints.</source>
-        <translation>Ara noktaları arasındaki devriye yolunu yürüyor.</translation>
+        <translation>Obchodzi trasę patrolu między punktami.</translation>
     </message>
     <message>
         <source>Guarding</source>
-        <translation>Nöbette</translation>
+        <translation>Strzeże</translation>
     </message>
     <message>
         <source>Holding a guard post and answering threats near it.</source>
-        <translation>Bir nöbet noktasını tutuyor ve yakınındaki tehditlere karşılık veriyor.</translation>
+        <translation>Trzyma posterunek i odpowiada na zagrożenia w pobliżu.</translation>
     </message>
     <message>
         <source>Holding position</source>
-        <translation>Mevziyi tutuyor</translation>
+        <translation>Trzyma pozycję</translation>
     </message>
     <message>
         <source>Rooted in place; it will not pursue.</source>
-        <translation>Yerine çakılı; takibe geçmeyecek.</translation>
+        <translation>Zakorzeniony w miejscu; nie ruszy w pościg.</translation>
     </message>
     <message>
         <source>Building</source>
-        <translation>İnşa ediyor</translation>
+        <translation>Buduje</translation>
     </message>
     <message>
         <source>Raising a structure on the marked site.</source>
-        <translation>İşaretli alanda bir yapı yükseltiyor.</translation>
+        <translation>Wznosi budowlę na oznaczonym placu.</translation>
     </message>
     <message>
         <source>Repairing</source>
-        <translation>Onarıyor</translation>
+        <translation>Naprawia</translation>
     </message>
     <message>
         <source>Mending a damaged structure.</source>
-        <translation>Hasarlı bir yapıyı onarıyor.</translation>
+        <translation>Naprawia uszkodzoną budowlę.</translation>
     </message>
     <message>
         <source>Dismantling</source>
-        <translation>Söküyor</translation>
+        <translation>Rozbiera</translation>
     </message>
     <message>
         <source>Taking a structure apart.</source>
-        <translation>Bir yapıyı parçalarına ayırıyor.</translation>
+        <translation>Rozbiera budowlę na części.</translation>
     </message>
     <message>
         <source>Cutting timber</source>
-        <translation>Kereste kesiyor</translation>
+        <translation>Ścina drewno</translation>
     </message>
     <message>
         <source>Felling a tree for wood.</source>
-        <translation>Odun için ağaç deviriyor.</translation>
+        <translation>Ścina drzewo na drewno.</translation>
     </message>
     <message>
         <source>Quarrying stone</source>
-        <translation>Taş ocağında</translation>
+        <translation>Łamie kamień</translation>
     </message>
     <message>
         <source>Breaking a boulder for stone.</source>
-        <translation>Taş için kaya kırıyor.</translation>
+        <translation>Rozbija głaz na kamień.</translation>
     </message>
     <message>
         <source>Mining iron</source>
-        <translation>Demir çıkarıyor</translation>
+        <translation>Wydobywa żelazo</translation>
     </message>
     <message>
         <source>Working an ore deposit for iron.</source>
-        <translation>Demir için cevher yatağı işliyor.</translation>
+        <translation>Pracuje przy złożu rudy, wydobywając żelazo.</translation>
     </message>
     <message>
         <source>Harvesting grain</source>
-        <translation>Tahıl biçiyor</translation>
+        <translation>Zbiera zboże</translation>
     </message>
     <message>
         <source>Reaping a ripe farm for food.</source>
-        <translation>Yiyecek için olgunlaşmış tarlayı hasat ediyor.</translation>
+        <translation>Zżyna dojrzałe pole na żywność.</translation>
     </message>
     <message>
         <source>Butchering</source>
-        <translation>Kesim yapıyor</translation>
+        <translation>Ubija zwierzęta</translation>
     </message>
     <message>
         <source>Slaughtering a sheep for food.</source>
-        <translation>Yiyecek için koyun kesiyor.</translation>
+        <translation>Ubija owcę na żywność.</translation>
     </message>
     <message>
         <source>Auto gathering</source>
-        <translation>Otomatik topluyor</translation>
+        <translation>Zbiera automatycznie</translation>
     </message>
     <message>
         <source>Standing order: seek out the nearest resource and keep collecting.</source>
-        <translation>Sürekli emir: en yakın kaynağı bulup toplamayı sürdür.</translation>
+        <translation>Rozkaz stały: znajdź najbliższy surowiec i zbieraj bez przerwy.</translation>
     </message>
     <message>
         <source>Delivering</source>
-        <translation>Teslim ediyor</translation>
+        <translation>Dostarcza</translation>
     </message>
     <message>
         <source>Carrying its load to the barracks; it cannot be interrupted until the load is dropped off.</source>
-        <translation>Yükünü kışlaya taşıyor; yük bırakılana kadar bölünemez.</translation>
+        <translation>Niesie ładunek do koszar; nie można mu przerwać, dopóki go nie odda.</translation>
     </message>
     <message>
         <source>Healing</source>
-        <translation>İyileştiriyor</translation>
+        <translation>Leczy</translation>
     </message>
     <message>
         <source>Tending wounded allies nearby.</source>
-        <translation>Yakındaki yaralı müttefikleri tedavi ediyor.</translation>
+        <translation>Opatruje rannych sojuszników w pobliżu.</translation>
     </message>
     <message>
         <source>Training</source>
-        <translation>Eğitiyor</translation>
+        <translation>Szkolenie</translation>
     </message>
     <message>
         <source>Producing the next unit in the queue.</source>
-        <translation>Sıradaki bir sonraki birimi üretiyor.</translation>
+        <translation>Wytwarza kolejną jednostkę z kolejki.</translation>
     </message>
     <message>
         <source>Blocked</source>
-        <translation>Engellendi</translation>
+        <translation>Zablokowany</translation>
     </message>
     <message>
         <source>Waiting: the way is blocked or the target is gone.</source>
-        <translation>Bekliyor: yol kapalı ya da hedef ortadan kalktı.</translation>
+        <translation>Czeka: droga jest zablokowana albo cel zniknął.</translation>
     </message>
     <message>
         <source>Active</source>
-        <translation>Etkin</translation>
+        <translation>Aktywne</translation>
     </message>
     <message>
         <source>Work is under way.</source>
-        <translation>Çalışma sürüyor.</translation>
+        <translation>Praca trwa.</translation>
     </message>
     <message>
         <source>Queued</source>
-        <translation>Sırada</translation>
+        <translation>W kolejce</translation>
     </message>
     <message>
         <source>Ordered, but the unit is still on its way.</source>
-        <translation>Emir verildi, ama birim hâlâ yolda.</translation>
+        <translation>Rozkaz wydany, ale jednostka jest jeszcze w drodze.</translation>
     </message>
     <message>
         <source>Unavailable</source>
-        <translation>Kullanılamaz</translation>
+        <translation>Niedostępne</translation>
     </message>
     <message>
         <source>The target cannot be worked; give a new order.</source>
-        <translation>Hedef üzerinde çalışılamıyor; yeni bir emir ver.</translation>
+        <translation>Przy tym celu nie da się pracować; wydaj nowy rozkaz.</translation>
     </message>
     <message>
         <source>Interrupted</source>
-        <translation>Yarıda kesildi</translation>
+        <translation>Przerwane</translation>
     </message>
     <message>
         <source>Work stopped part-way; re-issue the order to resume.</source>
-        <translation>Çalışma yarıda kaldı; sürdürmek için emri yeniden ver.</translation>
+        <translation>Praca przerwana w połowie; wydaj rozkaz ponownie, aby ją wznowić.</translation>
     </message>
     <message>
         <source>Cannot be interrupted</source>
-        <translation>Bölünemez</translation>
+        <translation>Nie można przerwać</translation>
     </message>
     <message>
         <source>Hauling a load to the barracks. New orders wait until the load is dropped off.</source>
-        <translation>Kışlaya yük taşıyor. Yük bırakılana kadar yeni emirler bekler.</translation>
+        <translation>Wiezie ładunek do koszar. Nowe rozkazy poczekają, aż go odda.</translation>
     </message>
     <message>
         <source>%1 — %2</source>
@@ -201,327 +201,327 @@
     </message>
     <message>
         <source>%1 (%2 units)</source>
-        <translation>%1 (%2 birim)</translation>
+        <translation>%1 (jednostki: %2)</translation>
     </message>
 </context>
 <context>
     <name>ArmyFormationController</name>
     <message>
         <source>Automatic</source>
-        <translation>Otomatik</translation>
+        <translation>Automatycznie</translation>
     </message>
     <message>
         <source>%1 of %2 positions do not fit on this ground.</source>
-        <translation>%1 / %2 mevzi bu zemine sığmıyor.</translation>
+        <translation>%1 z %2 pozycji nie mieści się na tym terenie.</translation>
     </message>
 </context>
 <context>
     <name>BarracksProductionView</name>
     <message>
         <source>Barracks production queue</source>
-        <translation>Kışla üretim sırası</translation>
+        <translation>Kolejka produkcji koszar</translation>
     </message>
     <message>
         <source>BARRACKS</source>
-        <translation>KIŞLA</translation>
+        <translation>KOSZARY</translation>
     </message>
     <message>
         <source>Reserve %1 / %2</source>
-        <translation>Yedek %1 / %2</translation>
-    </message>
-    <message>
-        <source>Recruiting now</source>
-        <translation>Şimdi devşiriliyor</translation>
-    </message>
-    <message>
-        <source>Queued unit %1</source>
-        <translation>Sıradaki birim %1</translation>
-    </message>
-    <message>
-        <source>Set where newly recruited units will gather</source>
-        <translation>Yeni devşirilen birimlerin toplanacağı yeri belirle</translation>
-    </message>
-    <message>
-        <source>Set barracks rally point</source>
-        <translation>Kışla toplanma noktasını belirle</translation>
-    </message>
-    <message>
-        <source>Select a barracks before setting a rally point</source>
-        <translation>Toplanma noktası belirlemeden önce bir kışla seç</translation>
-    </message>
-    <message>
-        <source>RECRUIT UNITS</source>
-        <translation>BİRİM DEVŞİR</translation>
-    </message>
-    <message>
-        <source>Scroll for more</source>
-        <translation>Devamı için kaydır</translation>
+        <translation>Rezerwa %1 / %2</translation>
     </message>
     <message>
         <source>Manpower this barracks still holds. Every recruit spends some; civilians raised at a Home deliver more.</source>
-        <translation>Bu kışlanın hâlâ elinde tuttuğu insan gücü. Her asker alımı bundan harcar; Evde yetiştirilen siviller daha fazlasını getirir.</translation>
+        <translation>Zapas ludzi, jaki wciąż mają te koszary. Każdy rekrut go zużywa; cywile wychowani w Domu dostarczają nowych.</translation>
+    </message>
+    <message>
+        <source>Recruiting now</source>
+        <translation>Rekrutacja w toku</translation>
+    </message>
+    <message>
+        <source>Queued unit %1</source>
+        <translation>Jednostka w kolejce: %1</translation>
+    </message>
+    <message>
+        <source>Set where newly recruited units will gather</source>
+        <translation>Wyznacz miejsce zbiórki nowo rekrutowanych jednostek</translation>
+    </message>
+    <message>
+        <source>Set barracks rally point</source>
+        <translation>Wyznacz punkt zbiórki koszar</translation>
+    </message>
+    <message>
+        <source>Select a barracks before setting a rally point</source>
+        <translation>Zaznacz koszary, zanim wyznaczysz punkt zbiórki</translation>
+    </message>
+    <message>
+        <source>RECRUIT UNITS</source>
+        <translation>REKRUTUJ JEDNOSTKI</translation>
+    </message>
+    <message>
+        <source>Scroll for more</source>
+        <translation>Przewiń, by zobaczyć więcej</translation>
     </message>
 </context>
 <context>
     <name>BattleReportLayout</name>
     <message>
         <source>Return to Menu</source>
-        <translation>Menüye Dön</translation>
+        <translation>Powrót do menu</translation>
     </message>
     <message>
         <source>Close Report</source>
-        <translation>Raporu Kapat</translation>
+        <translation>Zamknij raport</translation>
     </message>
     <message>
         <source>Kills</source>
-        <translation>Öldürülen</translation>
+        <translation>Zabici wrogowie</translation>
     </message>
     <message>
         <source>Losses</source>
-        <translation>Kayıplar</translation>
+        <translation>Straty</translation>
     </message>
     <message>
         <source>Trained</source>
-        <translation>Eğitilen</translation>
+        <translation>Wyszkoleni</translation>
     </message>
     <message>
         <source>Barracks</source>
-        <translation>Kışla</translation>
+        <translation>Koszary</translation>
     </message>
     <message>
         <source>Held the Field</source>
-        <translation>Meydanı Tuttu</translation>
+        <translation>Utrzymał pole</translation>
     </message>
     <message>
         <source>Routed</source>
-        <translation>Bozguna Uğradı</translation>
+        <translation>Rozbity</translation>
     </message>
     <message>
         <source>Score</source>
-        <translation>Puan</translation>
+        <translation>Wynik</translation>
     </message>
     <message>
         <source>YOUR COMMAND</source>
-        <translation>KOMUTAN</translation>
+        <translation>TWOJE DOWÓDZTWO</translation>
     </message>
     <message>
         <source>ARMIES OF THE FIELD</source>
-        <translation>MEYDANDAKİ ORDULAR</translation>
+        <translation>ARMIE NA POLU BITWY</translation>
     </message>
     <message>
         <source>Army</source>
-        <translation>Ordu</translation>
+        <translation>Armia</translation>
     </message>
     <message>
         <source>YOU</source>
-        <translation>SEN</translation>
+        <translation>TY</translation>
     </message>
     <message>
         <source>Esc closes the report</source>
-        <translation>Esc raporu kapatır</translation>
+        <translation>Esc zamyka raport</translation>
     </message>
 </context>
 <context>
     <name>BriefingLayout</name>
     <message>
-        <source>Victory Conditions — complete all</source>
-        <translation>Zafer Koşulları — hepsini tamamla</translation>
-    </message>
-    <message>
-        <source>Victory Conditions — complete any</source>
-        <translation>Zafer Koşulları — herhangi birini tamamla</translation>
+        <source>Mission Steps — in order</source>
+        <translation>Kroki misji — po kolei</translation>
     </message>
     <message>
         <source>Victory Conditions</source>
-        <translation>Zafer Koşulları</translation>
+        <translation>Warunki zwycięstwa</translation>
     </message>
     <message>
-        <source>Mission Steps — in order</source>
-        <translation>Görev Adımları — sırayla</translation>
+        <source>Victory Conditions — complete all</source>
+        <translation>Warunki zwycięstwa — spełnij wszystkie</translation>
+    </message>
+    <message>
+        <source>Victory Conditions — complete any</source>
+        <translation>Warunki zwycięstwa — spełnij dowolny</translation>
     </message>
     <message>
         <source>Next step</source>
-        <translation>Sonraki adım</translation>
+        <translation>Następny krok</translation>
     </message>
     <message>
         <source>%1 of %2</source>
-        <translation>%1 / %2</translation>
+        <translation>%1 z %2</translation>
     </message>
     <message>
         <source>Complete the objective</source>
-        <translation>Hedefi tamamla</translation>
+        <translation>Wykonaj cel</translation>
     </message>
     <message>
         <source>Defeat Conditions</source>
-        <translation>Yenilgi Koşulları</translation>
+        <translation>Warunki porażki</translation>
     </message>
     <message>
         <source>Avoid this condition</source>
-        <translation>Bu koşuldan kaçın</translation>
+        <translation>Nie dopuść do tego</translation>
     </message>
     <message>
         <source>Optional Objectives</source>
-        <translation>İsteğe Bağlı Hedefler</translation>
+        <translation>Cele opcjonalne</translation>
     </message>
     <message>
         <source>Optional objective</source>
-        <translation>İsteğe bağlı hedef</translation>
+        <translation>Cel opcjonalny</translation>
     </message>
     <message>
         <source>No mission objectives available.
 This may be a skirmish, or objectives have not been configured.</source>
-        <translation>Görev hedefi bulunmuyor.
-Bu bir çatışma olabilir ya da hedefler tanımlanmamıştır.</translation>
+        <translation>Brak celów misji.
+To może być potyczka albo cele nie zostały skonfigurowane.</translation>
     </message>
 </context>
 <context>
     <name>CameraGuide</name>
     <message>
         <source>unbound</source>
-        <translation>atanmamış</translation>
+        <translation>nieprzypisane</translation>
     </message>
     <message>
         <source>%1 or %2</source>
-        <translation>%1 ya da %2</translation>
+        <translation>%1 lub %2</translation>
     </message>
     <message>
         <source>on, %1 px</source>
-        <translation>açık, %1 px</translation>
+        <translation>wł., %1 px</translation>
     </message>
     <message>
         <source>off</source>
-        <translation>kapalı</translation>
+        <translation>wył.</translation>
     </message>
     <message>
         <source>Screen edge</source>
-        <translation>Ekran kenarı</translation>
+        <translation>Krawędź ekranu</translation>
     </message>
     <message>
         <source>Edge scroll</source>
-        <translation>Kenardan kaydırma</translation>
+        <translation>Przewijanie przy krawędzi</translation>
     </message>
     <message>
         <source>Cursor to a screen edge</source>
-        <translation>İmleci bir ekran kenarına götür</translation>
+        <translation>Kursor na krawędź ekranu</translation>
     </message>
     <message>
         <source>Push the pointer into any edge of the screen and the camera follows. Turn it off or change how wide the band is under Settings › Accessibility.</source>
-        <translation>İşaretçiyi ekranın herhangi bir kenarına götür, kamera izlesin. Ayarlar › Erişilebilirlik altından kapatabilir ya da şeridin genişliğini değiştirebilirsin.</translation>
+        <translation>Dosuń wskaźnik do dowolnej krawędzi ekranu, a kamera podąży za nim. Wyłącz to lub zmień szerokość pasa w Ustawieniach › Ułatwienia dostępu.</translation>
     </message>
     <message>
         <source>Keyboard pan</source>
-        <translation>Klavyeyle kaydırma</translation>
+        <translation>Ruch klawiaturą</translation>
     </message>
     <message>
         <source>Slides the view over the battlefield and keeps going while held. Either the arrows or WASD; hold Shift to cover twice the ground per step.</source>
-        <translation>Görüşü savaş alanı üzerinde kaydırır ve basılı tuttuğun sürece sürdürür. Ok tuşları ya da WASD; her adımda iki kat yol almak için Shift&apos;i basılı tut.</translation>
+        <translation>Przesuwa widok nad polem bitwy i jedzie dalej, dopóki trzymasz klawisz. Strzałki albo WASD; przytrzymaj Shift, by na krok pokonać dwa razy więcej terenu.</translation>
     </message>
     <message>
         <source>Middle-drag</source>
-        <translation>Orta tuşla sürükleme</translation>
+        <translation>Przeciąganie środkowym</translation>
     </message>
     <message>
         <source>Drag pan</source>
-        <translation>Sürükleyerek kaydırma</translation>
+        <translation>Przesuwanie przeciąganiem</translation>
     </message>
     <message>
         <source>Hold middle button and drag</source>
-        <translation>Orta tuşu basılı tutup sürükle</translation>
+        <translation>Przytrzymaj środkowy przycisk i przeciągnij</translation>
     </message>
     <message>
         <source>Drags the ground under the cursor. Edge scroll pauses while you drag so the two never fight.</source>
-        <translation>İmlecin altındaki zemini sürükler. Sürüklerken kenardan kaydırma durur, böylece ikisi çakışmaz.</translation>
+        <translation>Ciągnie ziemię pod kursorem. Przewijanie przy krawędzi zamiera na czas przeciągania, żeby jedno nie walczyło z drugim.</translation>
     </message>
     <message>
         <source>Wheel or %1</source>
-        <translation>Tekerlek ya da %1</translation>
+        <translation>Kółko lub %1</translation>
     </message>
     <message>
         <source>Zoom</source>
-        <translation>Yakınlaştırma</translation>
+        <translation>Przybliżenie</translation>
     </message>
     <message>
         <source>Mouse wheel, or %1</source>
-        <translation>Fare tekerleği ya da %1</translation>
+        <translation>Kółko myszy lub %1</translation>
     </message>
     <message>
         <source>Moves the camera closer to and further from the battle.</source>
-        <translation>Kamerayı savaşa yaklaştırır ve uzaklaştırır.</translation>
+        <translation>Przysuwa kamerę do bitwy i odsuwa ją od niej.</translation>
     </message>
     <message>
         <source>Rotate</source>
-        <translation>Döndürme</translation>
+        <translation>Obrót</translation>
     </message>
     <message>
         <source>Swings the view around the point you are looking at. Hold Shift to swing further, or hold Alt and drag with the middle button.</source>
-        <translation>Görüşü baktığın nokta çevresinde çevirir. Daha çok çevirmek için Shift&apos;i basılı tut ya da Alt&apos;ı basılı tutup orta tuşla sürükle.</translation>
+        <translation>Obraca widok wokół punktu, na który patrzysz. Przytrzymaj Shift, by obrócić dalej, albo przytrzymaj Alt i przeciągnij środkowym przyciskiem.</translation>
     </message>
     <message>
         <source>Tilt</source>
-        <translation>Eğme</translation>
+        <translation>Pochylenie</translation>
     </message>
     <message>
         <source>Raises the camera towards an overhead view or lowers it towards the horizon. Hold Shift to tilt further.</source>
-        <translation>Kamerayı tepeden görünüme yükseltir ya da ufka doğru alçaltır. Daha çok eğmek için Shift&apos;i basılı tut.</translation>
+        <translation>Podnosi kamerę ku widokowi z góry albo opuszcza ją ku horyzontowi. Przytrzymaj Shift, by pochylić dalej.</translation>
     </message>
     <message>
         <source>Click minimap</source>
-        <translation>Mini haritaya tıkla</translation>
+        <translation>Kliknięcie minimapy</translation>
     </message>
     <message>
         <source>Minimap jump</source>
-        <translation>Mini haritayla atlama</translation>
+        <translation>Skok po minimapie</translation>
     </message>
     <message>
         <source>Click or drag the minimap</source>
-        <translation>Mini haritaya tıkla ya da sürükle</translation>
+        <translation>Kliknij lub przeciągnij minimapę</translation>
     </message>
     <message>
         <source>Left-click jumps the camera there; right-click sends the selection there.</source>
-        <translation>Sol tık kamerayı oraya taşır; sağ tık seçimi oraya yollar.</translation>
+        <translation>Lewy przycisk przenosi tam kamerę; prawy wysyła tam zaznaczone jednostki.</translation>
     </message>
     <message>
         <source>Top bar button</source>
-        <translation>Üst çubuk düğmesi</translation>
+        <translation>Przycisk na górnym pasku</translation>
     </message>
     <message>
         <source>Follow selection</source>
-        <translation>Seçimi izle</translation>
+        <translation>Śledź zaznaczenie</translation>
     </message>
     <message>
         <source>Follow button, top bar</source>
-        <translation>İzle düğmesi, üst çubuk</translation>
+        <translation>Przycisk śledzenia na górnym pasku</translation>
     </message>
     <message>
         <source>Keeps the camera on whatever you have selected until you switch it off.</source>
-        <translation>Kamerayı, sen kapatana kadar seçtiğin şeyin üzerinde tutar.</translation>
+        <translation>Trzyma kamerę na tym, co masz zaznaczone, dopóki tego nie wyłączysz.</translation>
     </message>
     <message>
         <source>Reset camera</source>
-        <translation>Kamerayı sıfırla</translation>
+        <translation>Zresetuj kamerę</translation>
     </message>
     <message>
         <source>%1, or the Reset button in the top bar</source>
-        <translation>%1 ya da üst çubuktaki Sıfırla düğmesi</translation>
+        <translation>%1 albo przycisk Resetuj na górnym pasku</translation>
     </message>
     <message>
         <source>Returns the view to your own camp, framed the way the battle opened.</source>
-        <translation>Görüşü, savaşın açıldığı çerçeveyle kendi kampına döndürür.</translation>
+        <translation>Przywraca widok do twojego obozu, ustawiony tak jak na początku bitwy.</translation>
     </message>
 </context>
 <context>
     <name>CameraLegend</name>
     <message>
         <source>Moving the camera</source>
-        <translation>Kamerayı hareket ettirme</translation>
+        <translation>Poruszanie kamerą</translation>
     </message>
     <message>
         <source>Hide the camera legend</source>
-        <translation>Kamera açıklamasını gizle</translation>
+        <translation>Ukryj legendę kamery</translation>
     </message>
     <message>
         <source>Camera settings</source>
-        <translation>Kamera ayarları</translation>
+        <translation>Ustawienia kamery</translation>
     </message>
 </context>
 <context>
@@ -536,7 +536,7 @@ Bu bir çatışma olabilir ya da hedefler tanımlanmamıştır.</translation>
     </message>
     <message>
         <source>Capua</source>
-        <translation>Capua</translation>
+        <translation>Kapua</translation>
     </message>
     <message>
         <source>Caralis</source>
@@ -544,15 +544,15 @@ Bu bir çatışma olabilir ya da hedefler tanımlanmamıştır.</translation>
     </message>
     <message>
         <source>Carthage</source>
-        <translation>Kartaca</translation>
+        <translation>Kartagina</translation>
     </message>
     <message>
         <source>Carthage Core</source>
-        <translation>Kartaca Çekirdeği</translation>
+        <translation>Rdzeń Kartaginy</translation>
     </message>
     <message>
         <source>Carthaginian Iberia</source>
-        <translation>Kartaca İberyası</translation>
+        <translation>Iberia kartagińska</translation>
     </message>
     <message>
         <source>Cirta</source>
@@ -560,11 +560,11 @@ Bu bir çatışma olabilir ya da hedefler tanımlanmamıştır.</translation>
     </message>
     <message>
         <source>Cisalpine Gaul</source>
-        <translation>Cisalpin Galya</translation>
+        <translation>Galia Przedalpejska</translation>
     </message>
     <message>
         <source>Corsica</source>
-        <translation>Korsika</translation>
+        <translation>Korsyka</translation>
     </message>
     <message>
         <source>Emporiae</source>
@@ -576,15 +576,15 @@ Bu bir çatışma olabilir ya da hedefler tanımlanmamıştır.</translation>
     </message>
     <message>
         <source>Iberian Interior</source>
-        <translation>İberya İç Bölgesi</translation>
+        <translation>Wnętrze Iberii</translation>
     </message>
     <message>
         <source>Illyrian Coast</source>
-        <translation>İllirya Kıyısı</translation>
+        <translation>Wybrzeże iliryjskie</translation>
     </message>
     <message>
         <source>Illyrian Interior</source>
-        <translation>İllirya İç Bölgesi</translation>
+        <translation>Wnętrze Ilirii</translation>
     </message>
     <message>
         <source>Leptis</source>
@@ -592,7 +592,7 @@ Bu bir çatışma olabilir ya da hedefler tanımlanmamıştır.</translation>
     </message>
     <message>
         <source>Libya</source>
-        <translation>Libya</translation>
+        <translation>Libia</translation>
     </message>
     <message>
         <source>Lilybaeum</source>
@@ -608,15 +608,15 @@ Bu bir çatışma olabilir ya da hedefler tanımlanmamıştır.</translation>
     </message>
     <message>
         <source>New Carthage</source>
-        <translation>Yeni Kartaca</translation>
+        <translation>Nowa Kartagina</translation>
     </message>
     <message>
         <source>Numantia</source>
-        <translation>Numantia</translation>
+        <translation>Numancja</translation>
     </message>
     <message>
         <source>Numidia</source>
-        <translation>Numidya</translation>
+        <translation>Numidia</translation>
     </message>
     <message>
         <source>Placentia</source>
@@ -624,15 +624,15 @@ Bu bir çatışma olabilir ya da hedefler tanımlanmamıştır.</translation>
     </message>
     <message>
         <source>Roman Core</source>
-        <translation>Roma Çekirdeği</translation>
+        <translation>Rdzeń rzymski</translation>
     </message>
     <message>
         <source>Rome</source>
-        <translation>Roma</translation>
+        <translation>Rzym</translation>
     </message>
     <message>
         <source>Saguntum</source>
-        <translation>Saguntum</translation>
+        <translation>Sagunt</translation>
     </message>
     <message>
         <source>Salona</source>
@@ -640,23 +640,23 @@ Bu bir çatışma olabilir ya da hedefler tanımlanmamıştır.</translation>
     </message>
     <message>
         <source>Sardinia</source>
-        <translation>Sardinya</translation>
+        <translation>Sardynia</translation>
     </message>
     <message>
         <source>Sicily</source>
-        <translation>Sicilya</translation>
+        <translation>Sycylia</translation>
     </message>
     <message>
         <source>Southern Italy</source>
-        <translation>Güney İtalya</translation>
+        <translation>Italia południowa</translation>
     </message>
     <message>
         <source>Syracuse</source>
-        <translation>Syracusa</translation>
+        <translation>Syrakuzy</translation>
     </message>
     <message>
         <source>Tarentum</source>
-        <translation>Tarentum</translation>
+        <translation>Tarent</translation>
     </message>
     <message>
         <source>Tarraco</source>
@@ -668,819 +668,819 @@ Bu bir çatışma olabilir ya da hedefler tanımlanmamıştır.</translation>
     </message>
     <message>
         <source>Transalpine Gaul</source>
-        <translation>Transalpin Galya</translation>
+        <translation>Galia Zaalpejska</translation>
     </message>
     <message>
         <source>Veii</source>
-        <translation>Veii</translation>
+        <translation>Weje</translation>
     </message>
 </context>
 <context>
     <name>CampaignScreen</name>
     <message>
         <source>Campaign War Table • Mediterranean Theater</source>
-        <translation>Sefer Harp Masası • Akdeniz Cephesi</translation>
+        <translation>Stół wojenny kampanii • teatr śródziemnomorski</translation>
     </message>
     <message>
         <source>Campaign</source>
-        <translation>Sefer</translation>
+        <translation>Kampania</translation>
     </message>
     <message>
         <source>Campaign Chronicle • </source>
-        <translation>Sefer Vakayinamesi • </translation>
+        <translation>Kronika kampanii • </translation>
     </message>
     <message>
         <source>← Back</source>
-        <translation>← Geri</translation>
+        <translation>← Wstecz</translation>
     </message>
     <message>
         <source>Campaign Chronicle</source>
-        <translation>Sefer Vakayinamesi</translation>
+        <translation>Kronika kampanii</translation>
     </message>
     <message>
         <source>Campaign Progress:</source>
-        <translation>Sefer İlerlemesi:</translation>
+        <translation>Postęp kampanii:</translation>
     </message>
 </context>
 <context>
     <name>Campaigns</name>
     <message>
         <source>202 BC: recalled to Africa, Hannibal faces Scipio and Masinissa on the plain near Zama. The elephant lanes are prepared, the Roman camps are fortified, and the Iron Sepulcher no longer waits at the edge of history. Take all four camps and break both risings of the dead — nothing less ends this war.</source>
-        <translation>MÖ 202: Afrika&apos;ya geri çağrılan Hannibal, Zama yakınlarındaki ovada Scipio ve Masinissa ile karşı karşıya gelir. Fil koridorları hazırlanmış, Roma kampları tahkim edilmiş, Demir Kabir ise artık tarihin kıyısında beklemiyor. Dört kampı da al ve ölülerin iki kalkışını da kır — bundan azı bu savaşı bitirmez.</translation>
+        <translation>202 p.n.e.: odwołany do Afryki Hannibal staje naprzeciw Scypiona i Masynissy na równinie pod Zamą. Korytarze dla słoni są przygotowane, obozy rzymskie ufortyfikowane, a Żelazny Grobowiec nie czeka już na skraju historii. Zdobądź wszystkie cztery obozy i złam oba powstania zmarłych — nic mniejszego nie zakończy tej wojny.</translation>
     </message>
     <message>
         <source>215-212 BC: Capua and the Campanian allies sustain Hannibal while Rome avoids another Cannae and attacks roads, farms, and loyalties. Fortify the Punic supply quarter and break all three coordinated assaults — the quarter is not held until the last consular column lies dead in the streets.</source>
-        <translation>MÖ 215-212: Capua ve Campania müttefikleri Hannibal&apos;ı ayakta tutarken Roma yeni bir Cannae&apos;den kaçınır ve yollara, tarlalara ve sadakatlere saldırır. Pön ikmal mahallesini tahkim et ve üç eşgüdümlü saldırıyı da kır — son konsül kolu sokaklarda ölü yatmadan mahalle tutulmuş sayılmaz.</translation>
+        <translation>215-212 p.n.e.: Kapua i sprzymierzeńcy z Kampanii żywią Hannibala, a Rzym unika drugich Kann i uderza w drogi, gospodarstwa i lojalność. Ufortyfikuj punicką dzielnicę zaopatrzeniową i złam wszystkie trzy zgrane natarcia — dzielnica nie jest utrzymana, dopóki ostatnia kolumna konsularna nie legnie na ulicach.</translation>
     </message>
     <message>
         <source>216 BC: the consuls mass Rome&apos;s greatest field army beside the Aufidus. Yield the Punic center by design, win both cavalry wings, close the double envelopment, then take the principal camp, the reserve camp, and the allied camp across the river road.</source>
-        <translation>MÖ 216: konsüller Roma&apos;nın en büyük sahra ordusunu Aufidus kıyısında toplar. Pön merkezini bilerek geri ver, iki süvari kanadını da kazan, çifte kuşatmayı kapat, sonra ana kampı, yedek kampı ve nehir yolunun karşısındaki müttefik kampı al.</translation>
+        <translation>216 p.n.e.: konsulowie gromadzą nad Aufidusem największą armię polową Rzymu. Ustąp punickim środkiem zgodnie z planem, wygraj oba skrzydła jazdy, zamknij podwójne okrążenie, a potem zdobądź obóz główny, obóz odwodowy i obóz sprzymierzeńców przy drodze za rzeką.</translation>
     </message>
     <message>
         <source>217 BC: Flaminius pursues along the northern shore of Lake Trasimene. Mist closes the road between lake and wooded height — and it will not hold for long. Strike the length of the column and seize both field posts within twenty minutes, before the air clears and a cohort carries word out of the basin.</source>
-        <translation>MÖ 217: Flaminius, Trasimene Gölü&apos;nün kuzey kıyısı boyunca takibe geçer. Sis, göl ile ormanlık yükselti arasındaki yolu kapatır — ve uzun sürmeyecektir. Kolun boyunca vur ve iki sahra karakolunu da yirmi dakika içinde ele geçir; hava açılıp bir kohort havzadan haber çıkarmadan önce.</translation>
+        <translation>217 p.n.e.: Flaminiusz idzie w pościg wzdłuż północnego brzegu Jeziora Trazymeńskiego. Mgła zamyka drogę między jeziorem a zalesionym wzgórzem — i nie utrzyma się długo. Uderz na całą długość kolumny i zajmij oba posterunki polowe w ciągu dwudziestu minut, zanim powietrze się przejaśni i kohorta wyniesie wieść z kotliny.</translation>
     </message>
     <message>
         <source>218 BC, winter: Sempronius Longus accepts the bait and drives his hungry army through the freezing Trebia. Hold the southern line and break all three crossings. You need not take his camp — you need only be standing when the river has finished with him.</source>
-        <translation>MÖ 218, kış: Sempronius Longus yemi yutar ve aç ordusunu buz gibi Trebia&apos;dan geçirir. Güney hattını tut ve üç geçidi de kır. Kampını almana gerek yok — nehir onunla işini bitirdiğinde ayakta duruyor olman yeter.</translation>
+        <translation>218 p.n.e., zima: Semproniusz Longus łyka przynętę i pędzi swą głodną armię przez lodowatą Trebię. Utrzymaj południową linię i złam wszystkie trzy przeprawy. Nie musisz zdobywać jego obozu — musisz tylko stać, gdy rzeka skończy z nim swoje.</translation>
     </message>
     <message>
         <source>218 BC: Hannibal turns from the Rhône into the Alps with soldiers, cavalry, baggage animals, and elephants. The pass cannot be taken by the sword alone — it must be paid for in timber, stone and iron. Set your builders to the slopes while the mountain peoples contest every switchback; do not follow the grave-lights into the snow.</source>
-        <translation>MÖ 218: Hannibal, Rhône&apos;dan askerleri, süvarileri, yük hayvanları ve filleriyle Alpler&apos;e döner. Geçit yalnızca kılıçla alınamaz — bedeli kereste, taş ve demirle ödenmelidir. Dağ halkları her viraja itiraz ederken inşaatçılarını yamaçlara sür; mezar ışıklarının ardından kara girme.</translation>
+        <translation>218 p.n.e.: Hannibal skręca znad Rodanu w Alpy z piechotą, jazdą, jucznymi zwierzętami i słoniami. Przełęczy nie zdobędzie sam miecz — trzeba za nią zapłacić drewnem, kamieniem i żelazem. Poślij budowniczych na stoki, gdy górskie ludy bronią każdego zakrętu; nie idź za grobowymi światłami w śnieg.</translation>
     </message>
     <message>
         <source>218 BC: near the Ticinus, Scipio&apos;s reconnaissance force tests Hannibal&apos;s cavalry. Win the mounted engagement, cut the bridge road, and overrun both Roman camps before their scouts carry a clean account back to the consul.</source>
-        <translation>MÖ 218: Ticinus yakınlarında Scipio&apos;nun keşif kuvveti Hannibal&apos;ın süvarisini yoklar. Atlı çarpışmayı kazan, köprü yolunu kes ve izcileri konsüle temiz bir rapor götürmeden iki Roma kampını da ez.</translation>
+        <translation>218 p.n.e.: nad Ticinusem siły rozpoznawcze Scypiona wystawiają na próbę jazdę Hannibala. Wygraj starcie konne, przetnij drogę mostową i rozbij oba obozy rzymskie, zanim ich zwiadowcy zaniosą konsulowi rzetelną relację.</translation>
     </message>
     <message>
         <source>218 BC: the Rhône must be secured faster than Publius Cornelius Scipio can bring his army from Massalia. In this altered campaign, Roman advance posts hold the eastern approaches. Cross by ford, pontoon, or wooded detour and seize their river camps.</source>
-        <translation>MÖ 218: Rhône, Publius Cornelius Scipio ordusunu Massalia&apos;dan getirebilmeden önce güvenceye alınmalı. Bu değiştirilmiş seferde Roma ileri karakolları doğu yaklaşımlarını tutuyor. Sığ geçitten, dubalı köprüden ya da ormanlık bir dolambaçtan geç ve nehir kamplarını ele geçir.</translation>
+        <translation>218 p.n.e.: Rodan trzeba opanować szybciej, niż Publiusz Korneliusz Scypion zdoła sprowadzić armię z Massalii. W tej odmienionej kampanii rzymskie posterunki przednie trzymają wschodnie podejścia. Przepraw się brodem, po pontonach albo leśnym obejściem i zajmij ich obozy nad rzeką.</translation>
     </message>
     <message>
         <source>At dawn the market still stands and the consular roads are choked with Roman shields. Campania has bought the army another season, though every ally now understands how long Rome is willing to bleed.</source>
-        <translation>Şafakta pazar hâlâ ayakta ve konsül yolları Roma kalkanlarıyla tıkalı. Campania orduya bir mevsim daha kazandırdı; gerçi artık her müttefik Roma&apos;nın ne kadar kanamaya razı olduğunu anlıyor.</translation>
+        <translation>O świcie targ wciąż stoi, a drogi konsularne są zapchane rzymskimi tarczami. Kampania kupiła armii kolejny sezon, choć każdy sprzymierzeniec rozumie już, jak długo Rzym gotów jest krwawić.</translation>
     </message>
     <message>
         <source>Command Hannibal&apos;s Carthaginian army from the Alpine invasion of 218 BC to Zama in 202 BC. Break Roman camps, take fortified towns, preserve allied economies, and survive the Republic&apos;s answering legions while the Iron Sepulcher watches from roads older than either empire.</source>
-        <translation>Hannibal&apos;ın Kartaca ordusunu MÖ 218&apos;deki Alp istilasından MÖ 202&apos;deki Zama&apos;ya kadar komuta et. Roma kamplarını kır, tahkimli kasabaları al, müttefik ekonomileri koru ve Demir Kabir her iki imparatorluktan da eski yollardan izlerken Cumhuriyet&apos;in karşılık veren lejyonlarına karşı ayakta kal.</translation>
+        <translation>Dowodź armią kartagińską Hannibala od inwazji alpejskiej w 218 p.n.e. po Zamę w 202 p.n.e. Rozbijaj rzymskie obozy, zdobywaj ufortyfikowane miasta, chroń gospodarki sprzymierzeńców i przetrwaj odpowiedź legionów Republiki, gdy Żelazny Grobowiec patrzy z dróg starszych niż oba imperia.</translation>
     </message>
     <message>
         <source>Flaminius and much of his army are lost beside the lake. Rome names Fabius dictator. In the drowned reeds, an Iron Sepulcher altar has fed well without choosing a side.</source>
-        <translation>Flaminius ve ordusunun büyük bölümü gölün kıyısında yitirildi. Roma, Fabius&apos;u diktatör ilan eder. Suya gömülü sazlıklarda, taraf tutmayan bir Demir Kabir sunağı iyi beslendi.</translation>
+        <translation>Flaminiusz i większość jego armii giną nad jeziorem. Rzym mianuje Fabiusza dyktatorem. W zatopionych trzcinach ołtarz Żelaznego Grobowca najadł się do syta, nie wybierając strony.</translation>
     </message>
     <message>
         <source>The Barcid Road</source>
-        <translation>Barka Yolu</translation>
+        <translation>Droga Barkidów</translation>
     </message>
     <message>
         <source>The Roman army is destroyed and the camps are taken, yet Rome refuses negotiation. So many dead lie on the plain that the Sepulcher&apos;s iron bells sound beneath the earth for seven nights.</source>
-        <translation>Roma ordusu yok edildi ve kamplar alındı, yine de Roma görüşmeyi reddediyor. Ovada o kadar çok ölü yatıyor ki Kabir&apos;in demir çanları yedi gece boyunca toprağın altından çınlıyor.</translation>
+        <translation>Armia rzymska jest zniszczona, obozy zdobyte, a jednak Rzym odmawia rokowań. Na równinie leży tylu zabitych, że żelazne dzwony Grobowca biją pod ziemią przez siedem nocy.</translation>
     </message>
     <message>
         <source>The Roman screen breaks and Scipio is carried from the field wounded. The Insubres see that Carthage can defeat Rome on Italian ground—but pale riders still haunt the abandoned ford.</source>
-        <translation>Roma perdesi yarılır ve Scipio yaralı olarak meydandan taşınır. İnsubreler Kartaca&apos;nın Roma&apos;yı İtalyan toprağında yenebileceğini görür — ama solgun atlılar hâlâ terk edilmiş geçidi arşınlıyor.</translation>
+        <translation>Rzymska zasłona pęka, a rannego Scypiona wynoszą z pola. Insubrowie widzą, że Kartagina potrafi pokonać Rzym na italskiej ziemi — lecz przy opuszczonym brodzie wciąż straszą bladzi jeźdźcy.</translation>
     </message>
     <message>
         <source>The column reaches the plain of the Po diminished but unbroken. Italy lies below, and fires answer from Gallic settlements. Behind you, the sealed shrine in the pass begins counting the dead.</source>
-        <translation>Kol, Po ovasına eksilmiş ama kırılmamış olarak ulaşır. İtalya aşağıda uzanır ve Galya yerleşimlerinden ateşler karşılık verir. Arkanda, geçitteki mühürlü mabet ölüleri saymaya başlar.</translation>
+        <translation>Kolumna schodzi na równinę Padu przerzedzona, lecz niezłamana. Italia leży niżej, a z osad galijskich odpowiadają ogniska. Za tobą zapieczętowana kaplica na przełęczy zaczyna liczyć zmarłych.</translation>
     </message>
     <message>
         <source>The ferries and supply road belong to Carthage. Scipio finds abandoned standards and cold cooking fires; Hannibal is already turning toward the mountains.</source>
-        <translation>Sallar ve ikmal yolu Kartaca&apos;nın. Scipio terk edilmiş sancaklarla sönmüş ocaklar bulur; Hannibal çoktan dağlara dönmüştür.</translation>
+        <translation>Promy i droga zaopatrzeniowa należą do Kartaginy. Scypion zastaje porzucone znaki i wystygłe ogniska; Hannibal już zwraca się ku górom.</translation>
     </message>
     <message>
         <source>The last standards fall under an African sky. Rome and Carthage will remember the field differently; the Iron Sepulcher remembers only that both armies finally entered its reach.</source>
-        <translation>Son sancaklar bir Afrika göğü altında düşer. Roma ile Kartaca meydanı farklı hatırlayacak; Demir Kabir yalnızca iki ordunun da sonunda erimine girdiğini hatırlıyor.</translation>
+        <translation>Ostatnie znaki padają pod afrykańskim niebem. Rzym i Kartagina zapamiętają to pole inaczej; Żelazny Grobowiec pamięta tylko tyle, że obie armie w końcu weszły w jego zasięg.</translation>
     </message>
     <message>
         <source>The survivors flee toward Placentia through sleet and mud. Roman tents, grain, and weapons are captured; bodies beneath the ice rise only when nobody is watching.</source>
-        <translation>Sağ kalanlar sulusepken ve çamurun içinden Placentia&apos;ya kaçar. Roma çadırları, tahılı ve silahları ele geçirilir; buzun altındaki bedenler ise yalnızca kimse bakmazken kalkar.</translation>
+        <translation>Ocaleni uciekają ku Placentii przez deszcz ze śniegiem i błoto. Rzymskie namioty, zboże i broń zostają zdobyte; ciała pod lodem podnoszą się tylko wtedy, gdy nikt nie patrzy.</translation>
     </message>
 </context>
 <context>
     <name>CommandController</name>
     <message>
         <source>Not enough wood, stone, or iron to recruit this unit.</source>
-        <translation>Bu birimi devşirmek için yeterli odun, taş ya da demir yok.</translation>
+        <translation>Za mało drewna, kamienia lub żelaza, by rekrutować tę jednostkę.</translation>
     </message>
 </context>
 <context>
     <name>CommanderMessagePanel</name>
     <message>
         <source>Click to dismiss</source>
-        <translation>Kapatmak için tıkla</translation>
+        <translation>Kliknij, aby zamknąć</translation>
     </message>
 </context>
 <context>
     <name>CommanderSystem</name>
     <message>
         <source>Their commander is dead. The host breaks and its camps stand empty.</source>
-        <translation>Komutanları öldü. Ordu dağılıyor ve kampları boş kalıyor.</translation>
+        <translation>Ich dowódca nie żyje. Zastęp pierzcha, a jego obozy stoją puste.</translation>
     </message>
     <message>
         <source>%1 has lost its commander. The host breaks and its camps stand empty.</source>
-        <translation>%1 komutanını yitirdi. Ordu dağılıyor ve kampları boş kalıyor.</translation>
+        <translation>%1 stracił dowódcę. Zastęp pierzcha, a jego obozy stoją puste.</translation>
     </message>
 </context>
 <context>
     <name>Commanders</name>
     <message>
         <source>Quintus Fabius Maximus</source>
-        <translation>Quintus Fabius Maximus</translation>
+        <translation>Kwintus Fabiusz Maksymus</translation>
     </message>
     <message>
         <source>Rome&apos;s delaying strategist who preserves armies through discipline and staying power.</source>
-        <translation>Orduları disiplin ve dayanma gücüyle ayakta tutan, Roma&apos;nın oyalama stratejisti.</translation>
+        <translation>Rzymski strateg zwłoki, który ocala armie dyscypliną i wytrwałością.</translation>
     </message>
     <message>
         <source>A campaign and scenario commander; never produced from a barracks.</source>
-        <translation>Sefer ve senaryo komutanı; kışlada asla üretilmez.</translation>
+        <translation>Dowódca kampanii i scenariuszy; nigdy nie powstaje w koszarach.</translation>
     </message>
     <message>
         <source>Heavy spear commander who anchors a disciplined battle line.</source>
-        <translation>Disiplinli bir savaş hattını çapalayan ağır mızrak komutanı.</translation>
+        <translation>Dowódca ciężkiej włóczni, który spina zdyscyplinowaną linię bojową.</translation>
     </message>
     <message>
         <source>Boosts nearby troop endurance and slows collapse in grind fights.</source>
-        <translation>Yakındaki birliklerin dayanıklılığını artırır ve yıpratma çarpışmalarında çöküşü yavaşlatır.</translation>
+        <translation>Zwiększa wytrzymałość pobliskich oddziałów i spowalnia załamanie w walkach na wyniszczenie.</translation>
     </message>
     <message>
         <source>Lower offensive pressure and weaker pursuit potential.</source>
-        <translation>Daha düşük saldırı baskısı ve daha zayıf takip gücü.</translation>
+        <translation>Mniejszy napór ofensywny i słabszy potencjał pościgu.</translation>
     </message>
     <message>
         <source>Fabian Endurance keeps nearby cohorts in line for prolonged fighting.</source>
-        <translation>Fabius Dayanıklılığı, yakındaki kohortları uzun süren çarpışmalarda hatta tutar.</translation>
+        <translation>Fabiańska Wytrwałość utrzymuje pobliskie kohorty w szyku podczas długiej walki.</translation>
     </message>
     <message>
         <source>Nearby allied spearmen regenerate health fastest inside the aura.</source>
-        <translation>Aura içindeki yakın müttefik mızrakçılar en hızlı can yeniler.</translation>
+        <translation>Pobliscy sojuszniczy włócznicy najszybciej odzyskują zdrowie w zasięgu aury.</translation>
     </message>
     <message>
         <source>Rally of Patience stabilizes wavering lines during attritional combat.</source>
-        <translation>Sabır Toplanması, yıpratma çarpışmasında sendeleyen hatları dengeler.</translation>
+        <translation>Zbiórka Cierpliwości stabilizuje chwiejące się linie w walce na wyniszczenie.</translation>
     </message>
     <message>
         <source>If killed or wounded, nearby allies lose confidence and the aura shuts off.</source>
-        <translation>Öldürülür ya da yaralanırsa yakındaki müttefikler güvenini yitirir ve aura kapanır.</translation>
+        <translation>Gdy zginie lub odniesie rany, pobliscy sojusznicy tracą pewność, a aura gaśnie.</translation>
     </message>
     <message>
         <source>Bracing Thrust</source>
-        <translation>Payandalı Hamle</translation>
+        <translation>Podparte pchnięcie</translation>
     </message>
     <message>
         <source>Publius Cornelius Scipio</source>
-        <translation>Publius Cornelius Scipio</translation>
+        <translation>Publiusz Korneliusz Scypion</translation>
     </message>
     <message>
         <source>Aggressive Roman consul focused on decisive strikes and tactical initiative.</source>
-        <translation>Kesin darbelere ve taktik inisiyatife odaklanan saldırgan Roma konsülü.</translation>
+        <translation>Zaczepny konsul rzymski nastawiony na rozstrzygające uderzenia i inicjatywę taktyczną.</translation>
     </message>
     <message>
         <source>Sword-and-shield infantry commander who leads close behind the main assault line.</source>
-        <translation>Ana taarruz hattının hemen ardından yöneten kılıç-kalkan piyade komutanı.</translation>
+        <translation>Dowódca piechoty z mieczem i tarczą, który idzie tuż za główną linią natarcia.</translation>
     </message>
     <message>
         <source>Improves nearby offensive output and enables sharper counter-pushes.</source>
-        <translation>Yakındaki saldırı gücünü artırır ve daha keskin karşı hamlelere olanak verir.</translation>
+        <translation>Zwiększa siłę ognia pobliskich oddziałów i umożliwia ostrzejsze kontrnatarcia.</translation>
     </message>
     <message>
         <source>More vulnerable if isolated away from supporting infantry.</source>
-        <translation>Destek piyadesinden ayrı kalırsa daha kırılgandır.</translation>
+        <translation>Bardziej narażony, gdy odetnie się go od wspierającej piechoty.</translation>
     </message>
     <message>
         <source>Consular Assault boosts nearby legion attack tempo.</source>
-        <translation>Konsül Taarruzu yakındaki lejyonun saldırı temposunu yükseltir.</translation>
+        <translation>Szturm Konsularny przyspiesza tempo ataku pobliskiego legionu.</translation>
     </message>
     <message>
         <source>Nearby allied swordsmen gain the most bonus damage in aura range.</source>
-        <translation>Aura menzilindeki yakın müttefik kılıççılar en çok ek hasarı alır.</translation>
+        <translation>Pobliscy sojuszniczy miecznicy zyskują w zasięgu aury najwięcej dodatkowych obrażeń.</translation>
     </message>
     <message>
         <source>Consular Rally rapidly restores morale to wavering assault cohorts.</source>
-        <translation>Konsül Toplanması sendeleyen taarruz kohortlarının moralini hızla onarır.</translation>
+        <translation>Zbiórka Konsularna szybko przywraca morale chwiejącym się kohortom szturmowym.</translation>
     </message>
     <message>
         <source>Death of the consul causes a severe morale shock to nearby Romans.</source>
-        <translation>Konsülün ölümü yakındaki Romalılarda ağır bir moral şoku yaratır.</translation>
+        <translation>Śmierć konsula wywołuje ciężki wstrząs morale u pobliskich Rzymian.</translation>
     </message>
     <message>
         <source>Consular Riposte</source>
-        <translation>Konsül Karşılığı</translation>
+        <translation>Riposta konsularna</translation>
     </message>
     <message>
         <source>Marcus Claudius Marcellus</source>
-        <translation>Marcus Claudius Marcellus</translation>
+        <translation>Marek Klaudiusz Marcellus</translation>
     </message>
     <message>
         <source>Roman field commander known for fast shock actions and relentless pressure.</source>
-        <translation>Hızlı şok hareketleri ve bitmeyen baskısıyla tanınan Roma sahra komutanı.</translation>
+        <translation>Rzymski dowódca polowy znany z szybkich uderzeń i nieustępliwego naporu.</translation>
     </message>
     <message>
         <source>Lightly armored bow commander who supports aggressive vanguard action.</source>
-        <translation>Saldırgan öncü harekâtı destekleyen hafif zırhlı yay komutanı.</translation>
+        <translation>Lekko opancerzony dowódca łuczników, który wspiera zaczepne działania straży przedniej.</translation>
     </message>
     <message>
         <source>Raises maneuver speed for nearby troops, enabling faster local redeployment.</source>
-        <translation>Yakındaki birliklerin manevra hızını artırarak yerel konuşlanmayı hızlandırır.</translation>
+        <translation>Podnosi szybkość manewru pobliskich oddziałów, ułatwiając szybkie przegrupowania.</translation>
     </message>
     <message>
         <source>Lower staying power than other Roman commanders.</source>
-        <translation>Diğer Roma komutanlarından daha az dayanıklıdır.</translation>
+        <translation>Mniejsza odporność niż u innych rzymskich dowódców.</translation>
     </message>
     <message>
         <source>Vanguard Tempo accelerates nearby infantry movement and line repositioning.</source>
-        <translation>Öncü Temposu yakındaki piyadenin hareketini ve hat değişimini hızlandırır.</translation>
+        <translation>Tempo Straży Przedniej przyspiesza ruch pobliskiej piechoty i przestawianie linii.</translation>
     </message>
     <message>
         <source>Nearby allied archers move fastest while in aura range.</source>
-        <translation>Aura menzilindeki yakın müttefik okçular en hızlı hareket eder.</translation>
+        <translation>Pobliscy sojuszniczy łucznicy poruszają się najszybciej w zasięgu aury.</translation>
     </message>
     <message>
         <source>Vanguard Rally snaps wavering attackers back into coherent motion.</source>
-        <translation>Öncü Toplanması sendeleyen saldırganları düzenli harekete geri döndürür.</translation>
+        <translation>Zbiórka Straży Przedniej z powrotem wprowadza chwiejących się napastników w zwarty ruch.</translation>
     </message>
     <message>
         <source>If Marcellus falls, nearby attackers suffer immediate morale drop.</source>
-        <translation>Marcellus düşerse yakındaki saldırganların morali anında düşer.</translation>
+        <translation>Gdy Marcellus padnie, pobliscy napastnicy natychmiast tracą morale.</translation>
     </message>
     <message>
         <source>Point-blank Volley</source>
-        <translation>Bitişik Mesafeden Yaylım</translation>
+        <translation>Salwa z bliska</translation>
     </message>
     <message>
         <source>Hanno the Great</source>
-        <translation>Büyük Hanno</translation>
+        <translation>Hannon Wielki</translation>
     </message>
     <message>
         <source>Carthaginian phalanx commander who holds ground with hired spear levies.</source>
-        <translation>Kiralık mızrak levhalarıyla mevzi tutan Kartacalı falanks komutanı.</translation>
+        <translation>Kartagiński dowódca falangi, który trzyma teren najemnym pospolitym ruszeniem włóczników.</translation>
     </message>
     <message>
         <source>Bronze-spear commander coordinating disciplined mercenary infantry.</source>
-        <translation>Disiplinli paralı piyadeyi yöneten tunç mızrak komutanı.</translation>
+        <translation>Dowódca spiżowej włóczni, który zgrywa zdyscyplinowaną piechotę najemną.</translation>
     </message>
     <message>
         <source>Keeps a braced spear line standing far longer than it should.</source>
-        <translation>Payandalı bir mızrak hattını olması gerekenden çok daha uzun ayakta tutar.</translation>
+        <translation>Utrzymuje podpartą linię włóczni na nogach o wiele dłużej, niż powinna wytrzymać.</translation>
     </message>
     <message>
         <source>Mediocre direct combat impact and risky if exposed.</source>
-        <translation>Doğrudan çarpışma etkisi vasat, açıkta kalırsa risklidir.</translation>
+        <translation>Przeciętny wpływ na walkę wręcz i ryzykowny, gdy się odsłoni.</translation>
     </message>
     <message>
         <source>Contract Discipline knits nearby spear levies into an unbroken hedge.</source>
-        <translation>Sözleşme Disiplini yakındaki mızrak levhalarını kırılmaz bir çite dokur.</translation>
+        <translation>Kontraktowa Dyscyplina zbija pobliskie oddziały włóczników w nieprzerwany żywopłot.</translation>
     </message>
     <message>
         <source>Nearby allied spearmen recover health fastest inside the aura.</source>
-        <translation>Aura içindeki yakın müttefik mızrakçılar en hızlı can yeniler.</translation>
+        <translation>Pobliscy sojuszniczy włócznicy najszybciej odzyskują zdrowie w zasięgu aury.</translation>
     </message>
     <message>
         <source>Treasury Rally restores wavering troops and keeps formations from breaking.</source>
-        <translation>Hazine Toplanması sendeleyen birlikleri onarır ve düzenlerin bozulmasını önler.</translation>
+        <translation>Zbiórka Skarbca podnosi chwiejące się oddziały i nie pozwala szykom pęknąć.</translation>
     </message>
     <message>
         <source>Death triggers contract panic, reducing confidence in nearby troops.</source>
-        <translation>Ölümü sözleşme paniği tetikler ve yakındaki birliklerin güvenini düşürür.</translation>
+        <translation>Jego śmierć wywołuje kontraktową panikę, obniżając pewność pobliskich oddziałów.</translation>
     </message>
     <message>
         <source>Phalanx Sweep</source>
-        <translation>Falanks Süpürmesi</translation>
+        <translation>Zamiatanie falangi</translation>
     </message>
     <message>
         <source>Hasdrubal Barca</source>
-        <translation>Hasdrubal Barka</translation>
+        <translation>Hazdrubal Barkas</translation>
     </message>
     <message>
         <source>Mobile Carthaginian field commander built around decisive flanking momentum.</source>
-        <translation>Kesin kanat momentumu üzerine kurulu hareketli Kartaca sahra komutanı.</translation>
+        <translation>Ruchliwy kartagiński dowódca polowy zbudowany wokół rozstrzygającego rozpędu na skrzydle.</translation>
     </message>
     <message>
         <source>Fast bow commander built around flanking pressure and withdrawal.</source>
-        <translation>Kanat baskısı ve geri çekilme üzerine kurulu hızlı yay komutanı.</translation>
+        <translation>Szybki dowódca łuczników nastawiony na napór ze skrzydła i odskok.</translation>
     </message>
     <message>
         <source>Increases nearby unit speed for coordinated flanks and withdrawals.</source>
-        <translation>Eşgüdümlü kanat hareketleri ve çekilmeler için yakındaki birim hızını artırır.</translation>
+        <translation>Zwiększa szybkość pobliskich jednostek dla zgranych oskrzydleń i odwrotów.</translation>
     </message>
     <message>
         <source>Less resilient in prolonged frontal attrition.</source>
-        <translation>Uzun süren cepheden yıpratmada daha az dirençlidir.</translation>
+        <translation>Mniej odporny w długiej walce czołowej na wyniszczenie.</translation>
     </message>
     <message>
         <source>Barcid Maneuver grants nearby troops superior movement control.</source>
-        <translation>Barka Manevrası yakındaki birliklere üstün hareket denetimi verir.</translation>
+        <translation>Manewr Barkidów daje pobliskim oddziałom lepszą kontrolę ruchu.</translation>
     </message>
     <message>
         <source>Nearby allied archers gain the most movement speed in aura range.</source>
-        <translation>Aura menzilindeki yakın müttefik okçular en çok hareket hızı kazanır.</translation>
+        <translation>Pobliscy sojuszniczy łucznicy zyskują w zasięgu aury najwięcej szybkości.</translation>
     </message>
     <message>
         <source>Flank Rally rapidly restores wavering units preparing to maneuver.</source>
-        <translation>Kanat Toplanması manevraya hazırlanan sendelemiş birimleri hızla onarır.</translation>
+        <translation>Zbiórka Skrzydłowa szybko podnosi chwiejące się jednostki szykujące się do manewru.</translation>
     </message>
     <message>
         <source>Loss of Hasdrubal sharply drops morale among nearby mobile forces.</source>
-        <translation>Hasdrubal&apos;ın kaybı yakındaki hareketli kuvvetlerin moralini sert biçimde düşürür.</translation>
+        <translation>Utrata Hazdrubala gwałtownie obniża morale pobliskich sił ruchomych.</translation>
     </message>
     <message>
         <source>Hunting Shot</source>
-        <translation>Av Atışı</translation>
+        <translation>Strzał myśliwski</translation>
     </message>
     <message>
         <source>Hannibal Barca</source>
-        <translation>Hannibal Barka</translation>
+        <translation>Hannibal Barkas</translation>
     </message>
     <message>
         <source>Carthage&apos;s premier battlefield commander from the Hannibal campaign.</source>
-        <translation>Hannibal seferinden, Kartaca&apos;nın en önde gelen savaş meydanı komutanı.</translation>
+        <translation>Główny dowódca polowy Kartaginy z kampanii Hannibala.</translation>
     </message>
     <message>
         <source>Elite sword commander with an iconic standard and sacred-band armor.</source>
-        <translation>İkonik sancağı ve kutsal birlik zırhıyla seçkin kılıç komutanı.</translation>
+        <translation>Elitarny dowódca miecza z rozpoznawalnym znakiem i zbroją świętego zastępu.</translation>
     </message>
     <message>
         <source>Delivers a strong nearby attack bonus and elite crisis rally response.</source>
-        <translation>Yakında güçlü bir saldırı desteği ve kriz anında seçkin bir toplanma sağlar.</translation>
+        <translation>Daje silną premię do ataku w pobliżu i elitarną zbiórkę w chwili kryzysu.</translation>
     </message>
     <message>
         <source>High-value target; losing him causes severe local collapse.</source>
-        <translation>Yüksek değerli hedef; yitirilmesi yerel çöküşe yol açar.</translation>
+        <translation>Cel wysokiej wartości; jego utrata powoduje ciężkie miejscowe załamanie.</translation>
     </message>
     <message>
         <source>Hannibalic Offensive amplifies nearby attack power before decisive engagements.</source>
-        <translation>Hannibal Taarruzu, kesin çarpışmalar öncesinde yakındaki saldırı gücünü büyütür.</translation>
+        <translation>Ofensywa Hannibalska wzmacnia siłę ataku w pobliżu przed rozstrzygającym starciem.</translation>
     </message>
     <message>
         <source>Nearby allied swordsmen gain substantial attack damage in aura range.</source>
-        <translation>Aura menzilindeki yakın müttefik kılıççılar kayda değer saldırı hasarı kazanır.</translation>
+        <translation>Pobliscy sojuszniczy miecznicy zyskują w zasięgu aury znaczne obrażenia ataku.</translation>
     </message>
     <message>
         <source>Supreme Rally restores routing or wavering units to fighting order.</source>
-        <translation>Yüce Toplanma, bozulan ya da sendeleyen birimleri savaş düzenine döndürür.</translation>
+        <translation>Zbiórka Najwyższa przywraca uciekające lub chwiejące się jednostki do porządku bojowego.</translation>
     </message>
     <message>
         <source>If Hannibal is killed or wounded, nearby allied morale takes a heavy shock and aura ends.</source>
-        <translation>Hannibal öldürülür ya da yaralanırsa yakındaki müttefik morali ağır bir şok alır ve aura sona erer.</translation>
+        <translation>Gdy Hannibal zginie lub odniesie rany, morale pobliskich sojuszników mocno leci w dół, a aura gaśnie.</translation>
     </message>
     <message>
         <source>Encircling Cut</source>
-        <translation>Kuşatan Kesik</translation>
+        <translation>Cięcie okrążające</translation>
     </message>
 </context>
 <context>
     <name>ComponentGallery</name>
     <message>
         <source>Iron and Ember</source>
-        <translation>Demir ve Kor</translation>
+        <translation>Żelazo i żar</translation>
     </message>
     <message>
         <source>Scale %1×  ·  %2  ·  colour vision: %3</source>
-        <translation>Ölçek %1×  ·  %2  ·  renk görüşü: %3</translation>
+        <translation>Skala %1×  ·  %2  ·  widzenie barw: %3</translation>
     </message>
     <message>
         <source>reduced motion</source>
-        <translation>azaltılmış hareket</translation>
+        <translation>ograniczony ruch</translation>
     </message>
     <message>
         <source>full motion</source>
-        <translation>tam hareket</translation>
+        <translation>pełny ruch</translation>
     </message>
     <message>
         <source>Typefaces</source>
-        <translation>Yazı Tipleri</translation>
+        <translation>Kroje pisma</translation>
     </message>
     <message>
         <source>Display: the quick brown fox</source>
-        <translation>Başlık: kırmızı tilki tembel köpeğin</translation>
+        <translation>Nagłówkowy: zażółć gęślą jaźń</translation>
     </message>
     <message>
         <source>Body: the quick brown fox jumps over the lazy dog</source>
-        <translation>Metin: kırmızı tilki tembel köpeğin üstünden atlar</translation>
+        <translation>Tekstowy: pchnąć w tę łódź jeża lub ośm skrzyń fig</translation>
     </message>
     <message>
         <source>Buttons</source>
-        <translation>Düğmeler</translation>
+        <translation>Przyciski</translation>
     </message>
     <message>
         <source>Primary</source>
-        <translation>Birincil</translation>
+        <translation>Główny</translation>
     </message>
     <message>
         <source>Secondary</source>
-        <translation>İkincil</translation>
+        <translation>Drugorzędny</translation>
     </message>
     <message>
         <source>Destructive</source>
-        <translation>Yıkıcı</translation>
+        <translation>Niszczący</translation>
     </message>
     <message>
         <source>Disabled</source>
-        <translation>Devre dışı</translation>
+        <translation>Wyłączony</translation>
     </message>
     <message>
         <source>Unavailable in this state</source>
-        <translation>Bu durumda kullanılamaz</translation>
+        <translation>Niedostępne w tym stanie</translation>
     </message>
     <message>
         <source>Search</source>
-        <translation>Ara</translation>
+        <translation>Szukaj</translation>
     </message>
     <message>
         <source>Selected</source>
-        <translation>Seçili</translation>
+        <translation>Zaznaczony</translation>
     </message>
     <message>
         <source>Orders</source>
-        <translation>Emirler</translation>
+        <translation>Rozkazy</translation>
     </message>
     <message>
         <source>Attack</source>
-        <translation>Saldır</translation>
+        <translation>Atakuj</translation>
     </message>
     <message>
         <source>Guard</source>
-        <translation>Nöbet</translation>
+        <translation>Strzeż</translation>
     </message>
     <message>
         <source>Anchor troops to a spot. They step out to meet what comes near, then walk back.</source>
-        <translation>Birlikleri bir noktaya bağlar. Yaklaşanı karşılamak için çıkar, sonra geri dönerler.</translation>
+        <translation>Zakotwicz oddziały w punkcie. Wychodzą naprzeciw temu, co się zbliży, i wracają.</translation>
     </message>
     <message>
         <source>Holding a spot</source>
-        <translation>Bir noktayı tutma</translation>
+        <translation>Trzyma punkt</translation>
     </message>
     <message>
         <source>Reach</source>
-        <translation>Erim</translation>
+        <translation>Zasięg</translation>
     </message>
     <message>
         <source>They fight what comes within 10 m of that spot, and drop a target that leaves it.</source>
-        <translation>O noktanın 10 m yakınına gireni vururlar ve oradan ayrılan hedefi bırakırlar.</translation>
+        <translation>Biją się z tym, co wejdzie w 10 m od punktu, i porzucają cel, który go opuści.</translation>
     </message>
     <message>
         <source>Release</source>
-        <translation>Bırakma</translation>
+        <translation>Zwolnij</translation>
     </message>
     <message>
         <source>Press Guard again, or order a move or attack.</source>
-        <translation>Yeniden Nöbet&apos;e bas ya da hareket veya saldırı emri ver.</translation>
+        <translation>Naciśnij Strzeż ponownie albo wydaj rozkaz ruchu lub ataku.</translation>
     </message>
     <message>
         <source>Patrol</source>
-        <translation>Devriye</translation>
+        <translation>Patroluj</translation>
     </message>
     <message>
         <source>Rally</source>
-        <translation>Toplan</translation>
+        <translation>Zbiórka</translation>
     </message>
     <message>
         <source>Build</source>
-        <translation>İnşa</translation>
+        <translation>Buduj</translation>
     </message>
     <message>
         <source>Build is only available to builders</source>
-        <translation>İnşa yalnızca inşaatçılarda kullanılabilir</translation>
+        <translation>Budowanie jest dostępne tylko dla budowniczych</translation>
     </message>
     <message>
         <source>Unit activities</source>
-        <translation>Birim etkinlikleri</translation>
+        <translation>Zajęcia jednostek</translation>
     </message>
     <message>
         <source>Faction skins</source>
-        <translation>Taraf görünümleri</translation>
+        <translation>Skórki frakcji</translation>
     </message>
     <message>
         <source>Selection</source>
-        <translation>Seçim</translation>
+        <translation>Zaznaczenie</translation>
     </message>
     <message>
         <source>Roman Spearmen ×24</source>
-        <translation>Roma Mızrakçıları ×24</translation>
+        <translation>Włócznicy rzymscy ×24</translation>
     </message>
     <message>
         <source>Defense formation</source>
-        <translation>Savunma düzeni</translation>
+        <translation>Szyk obronny</translation>
     </message>
     <message>
         <source>In the field</source>
-        <translation>Sahada</translation>
+        <translation>W polu</translation>
     </message>
     <message>
         <source>A collapsible block of detail. The unit panel stacks one per topic.</source>
-        <translation>Katlanabilir bir ayrıntı bloğu. Birim paneli her konu için bir tane yığar.</translation>
+        <translation>Zwijany blok szczegółów. Panel jednostki układa po jednym na temat.</translation>
     </message>
     <message>
         <source>Spearmen</source>
-        <translation>Mızrakçılar</translation>
+        <translation>Włócznicy</translation>
     </message>
     <message>
         <source>Archers</source>
-        <translation>Okçular</translation>
+        <translation>Łucznicy</translation>
     </message>
     <message>
         <source>Inputs</source>
-        <translation>Girdiler</translation>
+        <translation>Pola wprowadzania</translation>
     </message>
     <message>
         <source>Balanced</source>
-        <translation>Dengeli</translation>
+        <translation>Zrównoważony</translation>
     </message>
     <message>
         <source>Aggressive</source>
-        <translation>Saldırgan</translation>
+        <translation>Agresywny</translation>
     </message>
     <message>
         <source>Defensive</source>
-        <translation>Savunmacı</translation>
+        <translation>Obronny</translation>
     </message>
     <message>
         <source>Reduced motion</source>
-        <translation>Azaltılmış hareket</translation>
+        <translation>Ograniczony ruch</translation>
     </message>
     <message>
         <source>Collapses transitions to an instant state change</source>
-        <translation>Geçişleri anlık durum değişimine indirger</translation>
+        <translation>Zwija przejścia do natychmiastowej zmiany stanu</translation>
     </message>
     <message>
         <source>Objectives</source>
-        <translation>Hedefler</translation>
+        <translation>Cele</translation>
     </message>
     <message>
         <source>Capture the eastern barracks</source>
-        <translation>Doğudaki kışlayı ele geçir</translation>
+        <translation>Zdobądź wschodnie koszary</translation>
     </message>
     <message>
         <source>Hold the ford until dusk</source>
-        <translation>Geçidi akşama kadar tut</translation>
+        <translation>Utrzymaj bród do zmierzchu</translation>
     </message>
     <message>
         <source>Do not lose the commander</source>
-        <translation>Komutanı yitirme</translation>
+        <translation>Nie strać dowódcy</translation>
     </message>
     <message>
         <source>Take no losses</source>
-        <translation>Hiç kayıp verme</translation>
+        <translation>Nie ponieś strat</translation>
     </message>
     <message>
         <source>Notification priorities</source>
-        <translation>Bildirim öncelikleri</translation>
+        <translation>Priorytety powiadomień</translation>
     </message>
     <message>
         <source>Commander under attack</source>
-        <translation>Komutan saldırı altında</translation>
+        <translation>Dowódca atakowany</translation>
     </message>
     <message>
         <source>Eastern approach, 3 hostiles</source>
-        <translation>Doğu yaklaşımı, 3 düşman</translation>
+        <translation>Wschodnie podejście, 3 wrogów</translation>
     </message>
     <message>
         <source>Barracks destroyed</source>
-        <translation>Kışla yıkıldı</translation>
+        <translation>Koszary zniszczone</translation>
     </message>
     <message>
         <source>Spearmen ready</source>
-        <translation>Mızrakçılar hazır</translation>
+        <translation>Włócznicy gotowi</translation>
     </message>
     <message>
         <source>Supply route restored</source>
-        <translation>İkmal yolu yeniden açıldı</translation>
+        <translation>Szlak zaopatrzenia przywrócony</translation>
     </message>
 </context>
 <context>
     <name>ControlsBindingList</name>
     <message>
         <source>Press a key or click a mouse button. Backspace clears it, Esc cancels.</source>
-        <translation>Bir tuşa bas ya da fare düğmesine tıkla. Backspace temizler, Esc iptal eder.</translation>
+        <translation>Naciśnij klawisz lub kliknij przycisk myszy. Backspace czyści, Esc anuluje.</translation>
     </message>
     <message>
         <source>Select a command to rebind it. Each one takes two keys, so the camera can answer to the arrows and to WASD at once.</source>
-        <translation>Yeniden atamak için bir komut seç. Her biri iki tuş alır, böylece kamera hem ok tuşlarına hem WASD&apos;ye aynı anda yanıt verebilir.</translation>
+        <translation>Wybierz polecenie, aby zmienić jego przypisanie. Każde przyjmuje dwa klawisze, więc kamera może słuchać naraz strzałek i WASD.</translation>
     </message>
     <message>
         <source>Reset all</source>
-        <translation>Hepsini sıfırla</translation>
+        <translation>Przywróć wszystkie</translation>
     </message>
     <message>
         <source>Every binding is already at its default.</source>
-        <translation>Her atama zaten varsayılan değerinde.</translation>
+        <translation>Wszystkie przypisania są już domyślne.</translation>
     </message>
     <message>
         <source>%1 is already used by %2.</source>
-        <translation>%1 zaten %2 tarafından kullanılıyor.</translation>
+        <translation>%1 jest już używane przez %2.</translation>
     </message>
     <message>
         <source>Use it here anyway</source>
-        <translation>Yine de burada kullan</translation>
+        <translation>Użyj tutaj mimo to</translation>
     </message>
     <message>
         <source>Keep as it is</source>
-        <translation>Olduğu gibi bırak</translation>
+        <translation>Zostaw bez zmian</translation>
     </message>
     <message>
         <source>Taking it leaves the other command unbound.</source>
-        <translation>Bunu almak diğer komutu atamasız bırakır.</translation>
+        <translation>Zabranie go zostawi tamto polecenie bez przypisania.</translation>
     </message>
     <message>
         <source>Conflicts with %1</source>
-        <translation>%1 ile çakışıyor</translation>
+        <translation>Konflikt z %1</translation>
     </message>
     <message>
         <source>Press a key…</source>
-        <translation>Bir tuşa bas…</translation>
+        <translation>Naciśnij klawisz…</translation>
     </message>
     <message>
         <source>Unbound</source>
-        <translation>Atanmamış</translation>
+        <translation>Nieprzypisane</translation>
     </message>
     <message>
         <source>Add a second key for %1</source>
-        <translation>%1 için ikinci bir tuş ekle</translation>
+        <translation>Dodaj drugi klawisz dla %1</translation>
     </message>
     <message>
         <source>Second key for %1</source>
-        <translation>%1 için ikinci tuş</translation>
+        <translation>Drugi klawisz dla %1</translation>
     </message>
     <message>
         <source>Default</source>
-        <translation>Varsayılan</translation>
+        <translation>Domyślne</translation>
     </message>
     <message>
         <source>This binding is already the default.</source>
-        <translation>Bu atama zaten varsayılan.</translation>
+        <translation>To przypisanie jest już domyślne.</translation>
     </message>
 </context>
 <context>
     <name>CursedGoldVeinSystem</name>
     <message>
         <source>The cursed vein is yours. It bleeds gold - and the men who guard it.</source>
-        <translation>Lanetli damar senin. Altın akıtıyor - bir de onu bekleyen adamları.</translation>
+        <translation>Przeklęta żyła jest twoja. Broczy złotem — i ludźmi, którzy jej strzegą.</translation>
     </message>
 </context>
 <context>
     <name>CursorLayer</name>
     <message>
         <source>Enemy target</source>
-        <translation>Düşman hedef</translation>
+        <translation>Cel wrogi</translation>
     </message>
     <message>
         <source>Cannot attack ally</source>
-        <translation>Müttefike saldırılamaz</translation>
+        <translation>Nie można zaatakować sojusznika</translation>
     </message>
     <message>
         <source>Cannot attack this target</source>
-        <translation>Bu hedefe saldırılamaz</translation>
+        <translation>Nie można zaatakować tego celu</translation>
     </message>
     <message>
         <source>Selection cannot attack</source>
-        <translation>Seçim saldıramaz</translation>
+        <translation>Zaznaczone jednostki nie mogą atakować</translation>
     </message>
     <message>
         <source>In range</source>
-        <translation>Menzilde</translation>
+        <translation>W zasięgu</translation>
     </message>
     <message>
         <source>Too close</source>
-        <translation>Fazla yakın</translation>
+        <translation>Za blisko</translation>
     </message>
     <message>
         <source>Out of range</source>
-        <translation>Menzil dışı</translation>
+        <translation>Poza zasięgiem</translation>
     </message>
     <message>
         <source>No firing line</source>
-        <translation>Atış hattı yok</translation>
+        <translation>Brak linii strzału</translation>
     </message>
     <message>
         <source>Collect</source>
-        <translation>Topla</translation>
+        <translation>Zbieraj</translation>
     </message>
     <message>
         <source>Deliver civilians</source>
-        <translation>Sivilleri götür</translation>
+        <translation>Odstaw cywilów</translation>
     </message>
     <message>
         <source>Repair</source>
-        <translation>Onar</translation>
+        <translation>Napraw</translation>
     </message>
     <message>
         <source>Harvest grain</source>
-        <translation>Tahıl biç</translation>
+        <translation>Zbierz zboże</translation>
     </message>
     <message>
         <source>Slaughter sheep</source>
-        <translation>Koyun kes</translation>
+        <translation>Ubij owcę</translation>
     </message>
 </context>
 <context>
     <name>EconomyCoach</name>
     <message>
         <source>Hide these prompts</source>
-        <translation>Bu ipuçlarını gizle</translation>
+        <translation>Ukryj te podpowiedzi</translation>
     </message>
     <message>
         <source>How it works</source>
-        <translation>Nasıl işler</translation>
+        <translation>Jak to działa</translation>
     </message>
 </context>
 <context>
     <name>EconomyGuide</name>
     <message>
         <source>Gold</source>
-        <translation>Altın</translation>
+        <translation>Złoto</translation>
     </message>
     <message>
         <source>Food</source>
-        <translation>Yiyecek</translation>
+        <translation>Żywność</translation>
     </message>
     <message>
         <source>Wood</source>
-        <translation>Odun</translation>
+        <translation>Drewno</translation>
     </message>
     <message>
         <source>Stone</source>
-        <translation>Taş</translation>
+        <translation>Kamień</translation>
     </message>
     <message>
         <source>Iron</source>
-        <translation>Demir</translation>
+        <translation>Żelazo</translation>
     </message>
     <message>
         <source>Comes from your starting treasury, mission rewards, and selling goods at a marketplace.</source>
-        <translation>Başlangıç hazinenden, görev ödüllerinden ve pazarda mal satmaktan gelir.</translation>
+        <translation>Pochodzi ze skarbca początkowego, nagród za misje i sprzedaży towarów na targowisku.</translation>
     </message>
     <message>
         <source>Send a builder to reap a ripe farm or slaughter a sheep with Collect, or leave Auto Gather running. Recruiting a civilian at a home spends it.</source>
-        <translation>Bir inşaatçıyı Topla ile olgun bir tarlayı biçmeye ya da koyun kesmeye yolla, veya Otomatik Toplama&apos;yı açık bırak. Evde sivil devşirmek bundan harcar.</translation>
+        <translation>Wyślij budowniczego, by rozkazem Zbieraj zżął dojrzałe pole albo ubił owcę, lub zostaw włączone auto-zbieranie. Rekrutacja cywila w domu ją zużywa.</translation>
     </message>
     <message>
         <source>Send a builder to chop a tree with Collect, or leave Auto Gather running.</source>
-        <translation>Bir inşaatçıyı Topla ile ağaç kesmeye yolla ya da Otomatik Toplama&apos;yı açık bırak.</translation>
+        <translation>Wyślij budowniczego, by rozkazem Zbieraj ściął drzewo, lub zostaw włączone auto-zbieranie.</translation>
     </message>
     <message>
         <source>Send a builder to a boulder with Collect, or leave Auto Gather running.</source>
-        <translation>Bir inşaatçıyı Topla ile bir kayaya yolla ya da Otomatik Toplama&apos;yı açık bırak.</translation>
+        <translation>Wyślij budowniczego rozkazem Zbieraj do głazu lub zostaw włączone auto-zbieranie.</translation>
     </message>
     <message>
         <source>Send a builder to an iron ore deposit with Collect, or leave Auto Gather running.</source>
-        <translation>Bir inşaatçıyı Topla ile bir demir cevheri yatağına yolla ya da Otomatik Toplama&apos;yı açık bırak.</translation>
+        <translation>Wyślij budowniczego rozkazem Zbieraj do złoża rudy żelaza lub zostaw włączone auto-zbieranie.</translation>
     </message>
     <message>
         <source>Home</source>
-        <translation>Ev</translation>
+        <translation>Dom</translation>
     </message>
     <message>
         <source>Farm</source>
-        <translation>Tarla</translation>
+        <translation>Farma</translation>
     </message>
     <message>
         <source>Barracks</source>
-        <translation>Kışla</translation>
+        <translation>Koszary</translation>
     </message>
     <message>
         <source>Defense Tower</source>
-        <translation>Savunma Kulesi</translation>
+        <translation>Wieża obronna</translation>
     </message>
     <message>
         <source>Marketplace</source>
-        <translation>Pazar</translation>
+        <translation>Targowisko</translation>
     </message>
     <message>
         <source>Temple</source>
-        <translation>Tapınak</translation>
+        <translation>Świątynia</translation>
     </message>
     <message>
         <source>Wall Segment</source>
-        <translation>Sur Parçası</translation>
+        <translation>Odcinek muru</translation>
     </message>
     <message>
         <source>Wall Gate</source>
-        <translation>Sur Kapısı</translation>
+        <translation>Brama w murze</translation>
     </message>
     <message>
         <source>Catapult</source>
-        <translation>Mancınık</translation>
+        <translation>Katapulta</translation>
     </message>
     <message>
         <source>Ballista</source>
@@ -1488,87 +1488,87 @@ Bu bir çatışma olabilir ya da hedefler tanımlanmamıştır.</translation>
     </message>
     <message>
         <source>Archer</source>
-        <translation>Okçu</translation>
+        <translation>Łucznik</translation>
     </message>
     <message>
         <source>Swordsman</source>
-        <translation>Kılıççı</translation>
+        <translation>Miecznik</translation>
     </message>
     <message>
         <source>Spearman</source>
-        <translation>Mızrakçı</translation>
+        <translation>Włócznik</translation>
     </message>
     <message>
         <source>Horse Swordsman</source>
-        <translation>Atlı Kılıççı</translation>
+        <translation>Miecznik konny</translation>
     </message>
     <message>
         <source>Horse Archer</source>
-        <translation>Atlı Okçu</translation>
+        <translation>Łucznik konny</translation>
     </message>
     <message>
         <source>Horse Spearman</source>
-        <translation>Atlı Mızrakçı</translation>
+        <translation>Włócznik konny</translation>
     </message>
     <message>
         <source>Healer</source>
-        <translation>Şifacı</translation>
+        <translation>Uzdrowiciel</translation>
     </message>
     <message>
         <source>Builder</source>
-        <translation>İnşaatçı</translation>
+        <translation>Budowniczy</translation>
     </message>
     <message>
         <source>Civilian</source>
-        <translation>Sivil</translation>
+        <translation>Cywil</translation>
     </message>
     <message>
         <source>Elephant</source>
-        <translation>Fil</translation>
+        <translation>Słoń</translation>
     </message>
     <message>
         <source>Raises civilians, who carry reserve to the nearest barracks. Each one costs food.</source>
-        <translation>En yakın kışlaya yedek taşıyan siviller yetiştirir. Her biri yiyecek harcar.</translation>
+        <translation>Wychowuje cywilów, którzy niosą rezerwę do najbliższych koszar. Każdy kosztuje żywność.</translation>
     </message>
     <message>
         <source>Grows grain in cycles. A builder reaps it for food once it ripens.</source>
-        <translation>Dönemler hâlinde tahıl yetiştirir. Olgunlaştığında bir inşaatçı yiyecek için biçer.</translation>
+        <translation>Uprawia zboże w cyklach. Gdy dojrzeje, budowniczy zżyna je na żywność.</translation>
     </message>
     <message>
         <source>Recruits troops and receives everything your builders gather.</source>
-        <translation>Birlik devşirir ve inşaatçılarının topladığı her şeyi alır.</translation>
+        <translation>Rekrutuje wojsko i przyjmuje wszystko, co zbiorą twoi budowniczowie.</translation>
     </message>
     <message>
         <source>Shoots at enemies that come near it.</source>
-        <translation>Yaklaşan düşmanlara ateş eder.</translation>
+        <translation>Strzela do wrogów, którzy podejdą blisko.</translation>
     </message>
     <message>
         <source>Buys and sells resources for gold.</source>
-        <translation>Altın karşılığında kaynak alıp satar.</translation>
+        <translation>Kupuje i sprzedaje surowce za złoto.</translation>
     </message>
     <message>
         <source>Watches over a wide stretch of ground, holds a settlement together, and takes in healers.</source>
-        <translation>Geniş bir araziyi gözetler, yerleşimi bir arada tutar ve şifacıları barındırır.</translation>
+        <translation>Czuwa nad szerokim pasem terenu, spaja osadę i przyjmuje uzdrowicieli.</translation>
     </message>
     <message>
         <source>Blocks enemy movement.</source>
-        <translation>Düşman hareketini engeller.</translation>
+        <translation>Blokuje ruch wroga.</translation>
     </message>
     <message>
         <source>Opens for your troops and allies, shut to everyone else.</source>
-        <translation>Birliklerine ve müttefiklerine açılır, herkese kapalıdır.</translation>
+        <translation>Otwiera się przed twoimi oddziałami i sojusznikami, zamknięta dla reszty.</translation>
     </message>
     <message>
         <source>Long-range siege engine, best against structures.</source>
-        <translation>Uzun menzilli kuşatma makinesi, yapılara karşı en etkilidir.</translation>
+        <translation>Machina oblężnicza dalekiego zasięgu, najlepsza przeciw budowlom.</translation>
     </message>
     <message>
         <source>Precise siege engine, best against units.</source>
-        <translation>İsabetli kuşatma makinesi, birimlere karşı en etkilidir.</translation>
+        <translation>Celna machina oblężnicza, najlepsza przeciw jednostkom.</translation>
     </message>
     <message>
         <source>, and %1 more</source>
-        <translation>, ve %1 tane daha</translation>
+        <translation>, i %1 więcej</translation>
     </message>
     <message>
         <source>%1 %2</source>
@@ -1576,189 +1576,189 @@ Bu bir çatışma olabilir ya da hedefler tanımlanmamıştır.</translation>
     </message>
     <message>
         <source>No resource cost</source>
-        <translation>Kaynak bedeli yok</translation>
+        <translation>Bez kosztu surowcowego</translation>
     </message>
     <message>
         <source>%1 more %2</source>
-        <translation>%1 %2 daha</translation>
+        <translation>jeszcze %1 %2</translation>
     </message>
     <message>
         <source>Nobody is gathering it right now.</source>
-        <translation>Şu anda kimse toplamıyor.</translation>
+        <translation>Nikt tego teraz nie zbiera.</translation>
     </message>
     <message>
         <source>Builders gathering it: %1</source>
-        <translation>Toplayan inşaatçılar: %1</translation>
+        <translation>Budowniczowie przy zbiórce: %1</translation>
     </message>
     <message>
         <source>%1 being hauled to a barracks</source>
-        <translation>%1 kışlaya taşınıyor</translation>
+        <translation>%1 w drodze do koszar</translation>
     </message>
     <message>
         <source>Held in your treasury; no storage limit.</source>
-        <translation>Hazinende tutulur; depolama sınırı yoktur.</translation>
+        <translation>Trzymane w skarbcu; bez limitu magazynu.</translation>
     </message>
     <message>
         <source>Hauled to a barracks yard before it is credited. The yard looks full at %1.</source>
-        <translation>Hesaba geçmeden önce bir kışla avlusuna taşınır. Avlu %1 değerinde dolu görünür.</translation>
+        <translation>Zwożone na dziedziniec koszar, zanim zostanie zapisane. Dziedziniec wygląda na pełny przy %1.</translation>
     </message>
     <message>
         <source>Short %1 for a %2.</source>
-        <translation>%2 için %1 eksik.</translation>
+        <translation>Brakuje %1 na %2.</translation>
     </message>
     <message>
         <source>%1 in store: %2</source>
-        <translation>Depodaki %1: %2</translation>
+        <translation>%1 w zapasie: %2</translation>
     </message>
     <message>
         <source>Spent on: %1</source>
-        <translation>Harcandığı yer: %1</translation>
+        <translation>Wydawane na: %1</translation>
     </message>
     <message>
         <source>Step 1 — Gather</source>
-        <translation>1. Adım — Topla</translation>
+        <translation>Krok 1 — Zbieraj</translation>
     </message>
     <message>
         <source>Step 2 — Build</source>
-        <translation>2. Adım — İnşa et</translation>
+        <translation>Krok 2 — Buduj</translation>
     </message>
     <message>
         <source>Step 3 — Recruit</source>
-        <translation>3. Adım — Devşir</translation>
+        <translation>Krok 3 — Rekrutuj</translation>
     </message>
     <message>
         <source>Step 4 — Keep an army</source>
-        <translation>4. Adım — Ordu tut</translation>
+        <translation>Krok 4 — Utrzymaj armię</translation>
     </message>
     <message>
         <source>Your settlement runs itself</source>
-        <translation>Yerleşimin kendi kendini çeviriyor</translation>
+        <translation>Twoja osada działa sama</translation>
     </message>
     <message>
         <source>Recruit a builder at a barracks, then send it to collect wood, stone or iron.</source>
-        <translation>Bir kışlada inşaatçı devşir, sonra onu odun, taş ya da demir toplamaya yolla.</translation>
+        <translation>Zrekrutuj budowniczego w koszarach, a potem wyślij go po drewno, kamień lub żelazo.</translation>
     </message>
     <message>
         <source>Select a builder, press Collect, and click a tree, boulder, ore deposit, ripe farm or sheep. It hauls the load to a barracks yard, then goes back for more.</source>
-        <translation>Bir inşaatçı seç, Topla&apos;ya bas ve bir ağaca, kayaya, cevher yatağına, olgun tarlaya ya da koyuna tıkla. Yükü bir kışla avlusuna taşır, sonra yenisi için geri döner.</translation>
+        <translation>Zaznacz budowniczego, naciśnij Zbieraj i kliknij drzewo, głaz, złoże rudy, dojrzałe pole albo owcę. Zawiezie ładunek na dziedziniec koszar i wróci po następny.</translation>
     </message>
     <message>
         <source>With a builder selected, press Build and place a Home to raise your reserve, or a Barracks to recruit from.</source>
-        <translation>Bir inşaatçı seçiliyken İnşa&apos;ya bas ve yedeğini büyütmek için bir Ev ya da devşirme yapmak için bir Kışla yerleştir.</translation>
+        <translation>Mając zaznaczonego budowniczego, naciśnij Buduj i postaw Dom, by podnieść rezerwę, albo Koszary, by z nich rekrutować.</translation>
     </message>
     <message>
         <source>Select a barracks and recruit troops. Each one costs reserve and resources, both shown on its card.</source>
-        <translation>Bir kışla seç ve birlik devşir. Her biri yedek ve kaynak harcar; ikisi de kartında yazılıdır.</translation>
+        <translation>Zaznacz koszary i rekrutuj wojsko. Każda jednostka kosztuje rezerwę i surowce — jedno i drugie widnieje na jej karcie.</translation>
     </message>
     <message>
         <source>Keep recruiting while your builders gather. Raise Homes and Farms when reserve or food runs out.</source>
-        <translation>İnşaatçıların toplarken devşirmeyi sürdür. Yedek ya da yiyecek bittiğinde Ev ve Tarla yükselt.</translation>
+        <translation>Rekrutuj dalej, gdy twoi budowniczowie zbierają. Gdy skończy się rezerwa lub żywność, stawiaj Domy i Farmy.</translation>
     </message>
     <message>
         <source>Gathering, building and recruiting are all under way.</source>
-        <translation>Toplama, inşa ve devşirme birlikte sürüyor.</translation>
+        <translation>Zbieranie, budowanie i rekrutacja idą pełną parą.</translation>
     </message>
 </context>
 <context>
     <name>EconomyHelpPanel</name>
     <message>
         <source>You have no builders. Recruit one at a barracks before you can gather or build.</source>
-        <translation>Hiç inşaatçın yok. Toplayabilmek ya da inşa edebilmek için bir kışlada devşir.</translation>
+        <translation>Nie masz budowniczych. Zrekrutuj jednego w koszarach, zanim zaczniesz zbierać lub budować.</translation>
     </message>
     <message>
         <source>Builders: %1 (%2 idle). Placing a structure sends every selected builder to the site.</source>
-        <translation>İnşaatçılar: %1 (%2 boşta). Bir yapı yerleştirmek seçili her inşaatçıyı alana yollar.</translation>
+        <translation>Budowniczowie: %1 (bezczynni: %2). Postawienie budowli wysyła na plac wszystkich zaznaczonych budowniczych.</translation>
     </message>
     <message>
         <source>Recruiting draws on the reserve held by each barracks.</source>
-        <translation>Devşirme, her kışlanın tuttuğu yedekten harcar.</translation>
+        <translation>Rekrutacja czerpie z rezerwy trzymanej przez każde koszary.</translation>
     </message>
     <message>
         <source>Manpower %1 / %2. A Home raises civilians for %3 food each; walking a civilian into a barracks adds %4 reserve. Farms ripen every %5s and sheep yield %6 food.</source>
-        <translation>İnsan gücü %1 / %2. Bir Ev her biri %3 yiyecek karşılığında sivil yetiştirir; bir sivili kışlaya yürütmek %4 yedek ekler. Tarlalar %5sn&apos;de bir olgunlaşır, koyunlar %6 yiyecek verir.</translation>
+        <translation>Zapas ludzi %1 / %2. Dom wychowuje cywilów po %3 żywności każdy; wprowadzenie cywila do koszar dodaje %4 rezerwy. Farmy dojrzewają co %5 s, a owce dają %6 żywności.</translation>
     </message>
     <message>
         <source>Needs a home</source>
-        <translation>Bir ev gerekiyor</translation>
+        <translation>Potrzebny dom</translation>
     </message>
     <message>
         <source>Needs a barracks</source>
-        <translation>Bir kışla gerekiyor</translation>
+        <translation>Potrzebne koszary</translation>
     </message>
     <message>
         <source>Needs a builder</source>
-        <translation>Bir inşaatçı gerekiyor</translation>
+        <translation>Potrzebny budowniczy</translation>
     </message>
     <message>
         <source>Not enough reserve at the barracks</source>
-        <translation>Kışlada yeterli yedek yok</translation>
+        <translation>Za mało rezerwy w koszarach</translation>
     </message>
     <message>
         <source>Manpower limit reached</source>
-        <translation>İnsan gücü sınırına ulaşıldı</translation>
+        <translation>Osiągnięto limit ludzi</translation>
     </message>
     <message>
         <source>Missing %1</source>
-        <translation>%1 eksik</translation>
+        <translation>Brakuje: %1</translation>
     </message>
     <message>
         <source>Economy guide</source>
-        <translation>Ekonomi rehberi</translation>
+        <translation>Przewodnik po gospodarce</translation>
     </message>
     <message>
         <source>Resources and Building</source>
-        <translation>Kaynaklar ve İnşa</translation>
+        <translation>Surowce i budowanie</translation>
     </message>
     <message>
         <source>Close the economy guide</source>
-        <translation>Ekonomi rehberini kapat</translation>
+        <translation>Zamknij przewodnik po gospodarce</translation>
     </message>
     <message>
         <source>Gather with builders, spend what they bring on structures, recruit from a barracks, and keep both running.</source>
-        <translation>İnşaatçılarla topla, getirdiklerini yapılara harca, kışladan devşir ve ikisini de sürdür.</translation>
+        <translation>Zbieraj budowniczymi, wydawaj to, co przyniosą, na budowle, rekrutuj w koszarach i pilnuj, by jedno i drugie szło bez przerwy.</translation>
     </message>
     <message>
         <source>WHAT EACH RESOURCE IS FOR</source>
-        <translation>HER KAYNAK NE İŞE YARAR</translation>
+        <translation>DO CZEGO SŁUŻY KAŻDY SUROWIEC</translation>
     </message>
     <message>
         <source>Spent on: %1</source>
-        <translation>Harcandığı yer: %1</translation>
+        <translation>Wydawane na: %1</translation>
     </message>
     <message>
         <source>WHAT A BUILDER CAN RAISE</source>
-        <translation>BİR İNŞAATÇI NE YÜKSELTEBİLİR</translation>
+        <translation>CO MOŻE WZNIEŚĆ BUDOWNICZY</translation>
     </message>
     <message>
         <source>%1 — %2 · %3s</source>
-        <translation>%1 — %2 · %3sn</translation>
+        <translation>%1 — %2 · %3 s</translation>
     </message>
     <message>
         <source>WHAT A BARRACKS CAN RECRUIT</source>
-        <translation>BİR KIŞLA NE DEVŞİREBİLİR</translation>
+        <translation>KOGO MOGĄ REKRUTOWAĆ KOSZARY</translation>
     </message>
     <message>
         <source>%1 — %2 reserve, %3 · %4s</source>
-        <translation>%1 — %2 yedek, %3 · %4sn</translation>
+        <translation>%1 — %2 rezerwy, %3 · %4 s</translation>
     </message>
     <message>
         <source>Back to the battle</source>
-        <translation>Savaşa dön</translation>
+        <translation>Wróć do bitwy</translation>
     </message>
 </context>
 <context>
     <name>FactionTheme</name>
     <message>
         <source>Standard</source>
-        <translation>Standart</translation>
+        <translation>Standardowy</translation>
     </message>
     <message>
         <source>Iron and Ember</source>
-        <translation>Demir ve Kor</translation>
+        <translation>Żelazo i żar</translation>
     </message>
     <message>
         <source>Roman Republic</source>
-        <translation>Roma Cumhuriyeti</translation>
+        <translation>Republika Rzymska</translation>
     </message>
     <message>
         <source>Senatus Populusque Romanus</source>
@@ -1766,7 +1766,7 @@ Bu bir çatışma olabilir ya da hedefler tanımlanmamıştır.</translation>
     </message>
     <message>
         <source>Carthage</source>
-        <translation>Kartaca</translation>
+        <translation>Kartagina</translation>
     </message>
     <message>
         <source>Qart-Ḥadašt</source>
@@ -1774,160 +1774,160 @@ Bu bir çatışma olabilir ya da hedefler tanımlanmamıştır.</translation>
     </message>
     <message>
         <source>Iron Sepulcher</source>
-        <translation>Demir Kabir</translation>
+        <translation>Żelazny Grobowiec</translation>
     </message>
     <message>
         <source>The watch does not sleep</source>
-        <translation>Nöbet uyumaz</translation>
+        <translation>Straż nie śpi</translation>
     </message>
 </context>
 <context>
     <name>FloatingNumbers</name>
     <message>
         <source>POP</source>
-        <translation>NÜF</translation>
+        <translation>LUDNOŚĆ</translation>
     </message>
 </context>
 <context>
     <name>FocusTarget</name>
     <message>
         <source>Barracks</source>
-        <translation>Kışla</translation>
+        <translation>Koszary</translation>
     </message>
     <message>
         <source>Defense tower</source>
-        <translation>Savunma kulesi</translation>
+        <translation>Wieża obronna</translation>
     </message>
     <message>
         <source>Home</source>
-        <translation>Ev</translation>
+        <translation>Dom</translation>
     </message>
     <message>
         <source>Wall</source>
-        <translation>Sur</translation>
+        <translation>Mur</translation>
     </message>
     <message>
         <source>Gate</source>
-        <translation>Kapı</translation>
+        <translation>Brama</translation>
     </message>
     <message>
         <source>Marketplace</source>
-        <translation>Pazar</translation>
+        <translation>Targowisko</translation>
     </message>
     <message>
         <source>Temple</source>
-        <translation>Tapınak</translation>
+        <translation>Świątynia</translation>
     </message>
     <message>
         <source>Farm</source>
-        <translation>Tarla</translation>
+        <translation>Farma</translation>
     </message>
 </context>
 <context>
     <name>Formation</name>
     <message>
         <source>No units selected.</source>
-        <translation>Hiçbir birim seçilmedi.</translation>
+        <translation>Nie zaznaczono jednostek.</translation>
     </message>
     <message>
         <source>No units eligible for formation placement.</source>
-        <translation>Düzen yerleştirmeye uygun birim yok.</translation>
+        <translation>Żadna jednostka nie nadaje się do ustawienia w szyku.</translation>
     </message>
     <message>
         <source>This doctrine has no template for the chosen formation.</source>
-        <translation>Bu doktrinin seçilen düzen için şablonu yok.</translation>
+        <translation>Ta doktryna nie ma wzoru dla wybranego szyku.</translation>
     </message>
     <message>
         <source>No part of this formation fits on the chosen ground.</source>
-        <translation>Bu düzenin hiçbir parçası seçilen zemine sığmıyor.</translation>
+        <translation>Żadna część tego szyku nie mieści się na wybranym terenie.</translation>
     </message>
     <message>
         <source>Faction Default</source>
-        <translation>Taraf Varsayılanı</translation>
+        <translation>Domyślny dla frakcji</translation>
     </message>
     <message>
         <source>Line</source>
-        <translation>Hat</translation>
+        <translation>Linia</translation>
     </message>
     <message>
         <source>Column</source>
-        <translation>Kol</translation>
+        <translation>Kolumna</translation>
     </message>
     <message>
         <source>Defensive</source>
-        <translation>Savunmacı</translation>
+        <translation>Obronny</translation>
     </message>
     <message>
         <source>Assault</source>
-        <translation>Taarruz</translation>
+        <translation>Szturm</translation>
     </message>
     <message>
         <source>Encirclement</source>
-        <translation>Kuşatma</translation>
+        <translation>Okrążenie</translation>
     </message>
     <message>
         <source>Siege Escort</source>
-        <translation>Kuşatma Muhafızı</translation>
+        <translation>Osłona machin</translation>
     </message>
     <message>
         <source>Reforming</source>
-        <translation>Yeniden diziliyor</translation>
+        <translation>Przeformowanie</translation>
     </message>
     <message>
         <source>Formed</source>
-        <translation>Dizildi</translation>
+        <translation>Uformowany</translation>
     </message>
     <message>
         <source>Disrupted</source>
-        <translation>Bozuldu</translation>
+        <translation>Rozbity</translation>
     </message>
     <message>
         <source>Opening</source>
-        <translation>Açılıyor</translation>
+        <translation>Rozwijanie</translation>
     </message>
     <message>
         <source>Traversing</source>
-        <translation>Geçiyor</translation>
+        <translation>Przemarsz</translation>
     </message>
     <message>
         <source>Arrived</source>
-        <translation>Vardı</translation>
+        <translation>Na miejscu</translation>
     </message>
     <message>
         <source>Neutral</source>
-        <translation>Tarafsız</translation>
+        <translation>Neutralny</translation>
     </message>
     <message>
         <source>Roman Republic</source>
-        <translation>Roma Cumhuriyeti</translation>
+        <translation>Republika Rzymska</translation>
     </message>
     <message>
         <source>Requires at least one siege engine in the selection.</source>
-        <translation>Seçimde en az bir kuşatma makinesi gerekiyor.</translation>
+        <translation>Wymaga co najmniej jednej machiny oblężniczej w zaznaczeniu.</translation>
     </message>
     <message>
         <source>Requires cavalry or mounted troops to close the encirclement.</source>
-        <translation>Kuşatmayı kapatmak için süvari ya da atlı birlik gerekiyor.</translation>
+        <translation>Do zamknięcia okrążenia potrzebna jest jazda lub oddziały konne.</translation>
     </message>
     <message>
         <source>Carthage</source>
-        <translation>Kartaca</translation>
+        <translation>Kartagina</translation>
     </message>
     <message>
         <source>The Iron Sepulcher</source>
-        <translation>Demir Kabir</translation>
+        <translation>Żelazny Grobowiec</translation>
     </message>
     <message>
         <source>%1 has no template for this intent.</source>
-        <translation>%1 için bu amaca uygun şablon yok.</translation>
+        <translation>%1 nie ma wzoru dla tego zamiaru.</translation>
     </message>
     <message>
         <source>The selection lacks the troop types this formation needs.</source>
-        <translation>Seçimde bu düzenin ihtiyaç duyduğu birlik türleri yok.</translation>
+        <translation>W zaznaczeniu brakuje rodzajów wojsk, których wymaga ten szyk.</translation>
     </message>
     <message>
         <source>Encirclement needs at least three units.</source>
-        <translation>Kuşatma en az üç birim ister.</translation>
+        <translation>Okrążenie wymaga co najmniej trzech jednostek.</translation>
     </message>
 </context>
 <context>
@@ -1938,63 +1938,63 @@ Bu bir çatışma olabilir ya da hedefler tanımlanmamıştır.</translation>
     </message>
     <message>
         <source>Drag to face the unit · Release to move it</source>
-        <translation>Birimi yöneltmek için sürükle · Taşımak için bırak</translation>
+        <translation>Przeciągnij, by obrócić jednostkę · Puść, by ją przesunąć</translation>
     </message>
     <message>
         <source>Wheel to turn · Esc to cancel</source>
-        <translation>Döndürmek için tekerlek · İptal için Esc</translation>
+        <translation>Kółko obraca · Esc anuluje</translation>
     </message>
     <message>
         <source>Drag to face the formation · Release to deploy</source>
-        <translation>Düzeni yöneltmek için sürükle · Yerleştirmek için bırak</translation>
+        <translation>Przeciągnij, by obrócić szyk · Puść, by go rozstawić</translation>
     </message>
     <message>
         <source>Wheel to turn · Ctrl+wheel for depth · Esc to cancel</source>
-        <translation>Döndürmek için tekerlek · Derinlik için Ctrl+tekerlek · İptal için Esc</translation>
+        <translation>Kółko obraca · Ctrl+kółko zmienia głębokość · Esc anuluje</translation>
     </message>
     <message>
         <source>Drag on the ground to set facing · Click to move</source>
-        <translation>Yönü belirlemek için zeminde sürükle · Taşımak için tıkla</translation>
+        <translation>Przeciągnij po ziemi, by ustawić kierunek · Kliknij, by przesunąć</translation>
     </message>
     <message>
         <source>Wheel to turn · Right-click or Esc to cancel</source>
-        <translation>Döndürmek için tekerlek · İptal için sağ tık ya da Esc</translation>
+        <translation>Kółko obraca · Prawy przycisk lub Esc anuluje</translation>
     </message>
     <message>
         <source>Drag on the ground to set width and facing.</source>
-        <translation>Genişliği ve yönü belirlemek için zeminde sürükle.</translation>
+        <translation>Przeciągnij po ziemi, by ustawić szerokość i kierunek.</translation>
     </message>
     <message>
         <source>Click to deploy · Wheel to turn · Ctrl+wheel for depth · Right-click or Esc to cancel</source>
-        <translation>Yerleştirmek için tıkla · Döndürmek için tekerlek · Derinlik için Ctrl+tekerlek · İptal için sağ tık ya da Esc</translation>
+        <translation>Kliknij, by rozstawić · Kółko obraca · Ctrl+kółko zmienia głębokość · Prawy przycisk lub Esc anuluje</translation>
     </message>
     <message>
         <source>The deployment this faction fights in by default. No setup needed.</source>
-        <translation>Bu tarafın varsayılan savaş düzeni. Ayar gerektirmez.</translation>
+        <translation>Szyk, w którym ta frakcja walczy domyślnie. Nic nie trzeba ustawiać.</translation>
     </message>
     <message>
         <source>Widest frontage. Best for meeting an advance head on.</source>
-        <translation>En geniş cephe. Bir ilerleyişi cepheden karşılamak için en iyisi.</translation>
+        <translation>Najszerszy front. Najlepszy do przyjęcia natarcia od czoła.</translation>
     </message>
     <message>
         <source>Narrow and deep. Best for moving through gates and passes.</source>
-        <translation>Dar ve derin. Kapılardan ve geçitlerden geçmek için en iyisi.</translation>
+        <translation>Wąska i głęboka. Najlepsza do przechodzenia przez bramy i przełęcze.</translation>
     </message>
     <message>
         <source>Compressed frontage with reserves. Best for holding ground.</source>
-        <translation>Yedekli, sıkıştırılmış cephe. Mevzi tutmak için en iyisi.</translation>
+        <translation>Ściśnięty front z odwodami. Najlepszy do utrzymania terenu.</translation>
     </message>
     <message>
         <source>Weighted front with skirmishers ahead. Best for breaking a line.</source>
-        <translation>Önde avcılarla ağırlıklı cephe. Bir hattı kırmak için en iyisi.</translation>
+        <translation>Wzmocnione czoło z harcownikami przed nim. Najlepsze do przełamania linii.</translation>
     </message>
     <message>
         <source>Wide flanks that close around a target. Needs cavalry.</source>
-        <translation>Hedefin çevresini saran geniş kanatlar. Süvari ister.</translation>
+        <translation>Szerokie skrzydła, które zamykają się wokół celu. Wymaga jazdy.</translation>
     </message>
     <message>
         <source>Engines protected behind infantry. Needs a siege engine.</source>
-        <translation>Piyadenin ardında korunan makineler. Kuşatma makinesi ister.</translation>
+        <translation>Machiny osłonięte za piechotą. Wymaga machiny oblężniczej.</translation>
     </message>
     <message>
         <source>%1 m</source>
@@ -2002,23 +2002,23 @@ Bu bir çatışma olabilir ya da hedefler tanımlanmamıştır.</translation>
     </message>
     <message>
         <source>Position %1</source>
-        <translation>%1 mevzisi</translation>
+        <translation>Pozycja %1</translation>
     </message>
     <message>
         <source>Position unit</source>
-        <translation>Birimi yerleştir</translation>
+        <translation>Ustaw jednostkę</translation>
     </message>
     <message>
         <source>Choose a formation</source>
-        <translation>Bir düzen seç</translation>
+        <translation>Wybierz szyk</translation>
     </message>
     <message>
         <source>%1 · %2 units</source>
-        <translation>%1 · %2 birim</translation>
+        <translation>%1 · jednostki: %2</translation>
     </message>
     <message>
         <source>Shape</source>
-        <translation>Biçim</translation>
+        <translation>Kształt</translation>
     </message>
     <message>
         <source>%1 × %2</source>
@@ -2026,461 +2026,461 @@ Bu bir çatışma olabilir ya da hedefler tanımlanmamıştır.</translation>
     </message>
     <message>
         <source>Frontage</source>
-        <translation>Cephe</translation>
+        <translation>Szerokość frontu</translation>
     </message>
     <message>
         <source>Depth</source>
-        <translation>Derinlik</translation>
+        <translation>Głębokość</translation>
     </message>
     <message>
         <source>Facing</source>
-        <translation>Yön</translation>
+        <translation>Kierunek</translation>
     </message>
     <message>
         <source>Facing (auto)</source>
-        <translation>Yön (otomatik)</translation>
+        <translation>Kierunek (auto)</translation>
     </message>
     <message>
         <source>In place</source>
-        <translation>Yerinde</translation>
+        <translation>Na miejscu</translation>
     </message>
     <message>
         <source>%1 position(s) nudged to fit the ground.</source>
-        <translation>%1 mevzi zemine uyması için kaydırıldı.</translation>
+        <translation>Pozycje przesunięte, by zmieściły się na terenie: %1.</translation>
     </message>
     <message>
         <source>Hide fine tuning</source>
-        <translation>İnce ayarı gizle</translation>
+        <translation>Ukryj dostrajanie</translation>
     </message>
     <message>
         <source>Fine tuning</source>
-        <translation>İnce ayar</translation>
+        <translation>Dostrajanie</translation>
     </message>
     <message>
         <source>How wide the deployment spreads before it starts adding ranks behind.</source>
-        <translation>Düzen, arkaya saf eklemeye başlamadan önce ne kadar genişler.</translation>
+        <translation>Jak szeroko rozciąga się szyk, zanim zacznie dokładać szeregi z tyłu.</translation>
     </message>
     <message>
         <source>Narrow</source>
-        <translation>Dar</translation>
+        <translation>Wąsko</translation>
     </message>
     <message>
         <source>Balanced</source>
-        <translation>Dengeli</translation>
+        <translation>Zrównoważony</translation>
     </message>
     <message>
         <source>Wide</source>
-        <translation>Geniş</translation>
+        <translation>Szeroko</translation>
     </message>
     <message>
         <source>How many ranks stand behind the front. Deeper hits harder but covers less ground.</source>
-        <translation>Cephenin arkasında kaç saf durur. Derin olan daha sert vurur ama daha az alan kaplar.</translation>
+        <translation>Ile szeregów stoi za czołem. Głębszy uderza mocniej, ale zajmuje mniej terenu.</translation>
     </message>
     <message>
         <source>Shallow</source>
-        <translation>Sığ</translation>
+        <translation>Płytko</translation>
     </message>
     <message>
         <source>Deep</source>
-        <translation>Derin</translation>
+        <translation>Głęboko</translation>
     </message>
     <message>
         <source>The gap between units. Tight holds shape better; loose loses less to area attacks.</source>
-        <translation>Birimler arasındaki aralık. Sıkı olan biçimi daha iyi korur; gevşek olan alan saldırılarında daha az kaybeder.</translation>
+        <translation>Odstęp między jednostkami. Ciasny lepiej trzyma kształt; luźny mniej traci od ataków obszarowych.</translation>
     </message>
     <message>
         <source>Spacing</source>
-        <translation>Aralık</translation>
+        <translation>Odstęp</translation>
     </message>
     <message>
         <source>Tight</source>
-        <translation>Sıkı</translation>
+        <translation>Ciasno</translation>
     </message>
     <message>
         <source>Normal</source>
-        <translation>Normal</translation>
+        <translation>Zwykły</translation>
     </message>
     <message>
         <source>Loose</source>
-        <translation>Gevşek</translation>
+        <translation>Luźno</translation>
     </message>
     <message>
         <source>Which wing the cavalry weights. Split puts an equal body on each wing.</source>
-        <translation>Süvarinin hangi kanadı ağırlıklandırdığı. Bölünmüş, her kanada eşit bir kütle koyar.</translation>
+        <translation>Na którym skrzydle stoi jazda. Podział daje równy oddział na każde skrzydło.</translation>
     </message>
     <message>
         <source>Cavalry wing</source>
-        <translation>Süvari kanadı</translation>
+        <translation>Skrzydło jazdy</translation>
     </message>
     <message>
         <source>Left</source>
-        <translation>Sol</translation>
+        <translation>Lewe</translation>
     </message>
     <message>
         <source>Right</source>
-        <translation>Sağ</translation>
+        <translation>Prawe</translation>
     </message>
     <message>
         <source>Split</source>
-        <translation>Bölünmüş</translation>
+        <translation>Podziel</translation>
     </message>
     <message>
         <source>Where archers and slingers stand. Skirmish sends them out ahead and pulls them back on contact.</source>
-        <translation>Okçular ve sapancıların nerede duracağı. Avcı düzeni onları öne yollar ve temasta geri çeker.</translation>
+        <translation>Gdzie stoją łucznicy i procarze. Harce wysyłają ich przodem i cofają przy kontakcie.</translation>
     </message>
     <message>
         <source>Missile troops</source>
-        <translation>Atıcı birlikler</translation>
+        <translation>Wojska strzelcze</translation>
     </message>
     <message>
         <source>In front</source>
-        <translation>Önde</translation>
+        <translation>Z przodu</translation>
     </message>
     <message>
         <source>Behind</source>
-        <translation>Arkada</translation>
+        <translation>Z tyłu</translation>
     </message>
     <message>
         <source>Skirmish ahead</source>
-        <translation>Önde avcı</translation>
+        <translation>Harce przodem</translation>
     </message>
     <message>
         <source>Rows held back from the fighting line to plug gaps.</source>
-        <translation>Boşlukları kapatmak için savaş hattından geride tutulan saflar.</translation>
+        <translation>Szeregi wstrzymane za linią walki, by zatykać wyrwy.</translation>
     </message>
     <message>
         <source>Reserve rows</source>
-        <translation>Yedek saflar</translation>
+        <translation>Szeregi odwodu</translation>
     </message>
     <message>
         <source>Doctrine decides</source>
-        <translation>Doktrin karar versin</translation>
+        <translation>Decyduje doktryna</translation>
     </message>
     <message>
         <source>None</source>
-        <translation>Yok</translation>
+        <translation>Brak</translation>
     </message>
     <message>
         <source>One row</source>
-        <translation>Bir saf</translation>
+        <translation>Jeden szereg</translation>
     </message>
     <message>
         <source>Two rows</source>
-        <translation>İki saf</translation>
+        <translation>Dwa szeregi</translation>
     </message>
     <message>
         <source>Reform is faster and copes with chokepoints. Maintain keeps the shape on the march but moves slower.</source>
-        <translation>Yeniden dizilme daha hızlıdır ve dar geçitlerle baş eder. Koruma yürüyüşte biçimi korur ama daha yavaş ilerler.</translation>
+        <translation>Przeformowanie jest szybsze i radzi sobie z wąskimi gardłami. Utrzymanie zachowuje kształt w marszu, ale idzie wolniej.</translation>
     </message>
     <message>
         <source>On the march</source>
-        <translation>Yürüyüşte</translation>
+        <translation>W marszu</translation>
     </message>
     <message>
         <source>Reform on arrival</source>
-        <translation>Varışta yeniden diz</translation>
+        <translation>Przeformuj po dojściu</translation>
     </message>
     <message>
         <source>Hold the shape</source>
-        <translation>Biçimi koru</translation>
+        <translation>Zachowaj kształt</translation>
     </message>
     <message>
         <source>How a selection drawn from several factions is arranged.</source>
-        <translation>Birkaç taraftan derlenen bir seçimin nasıl dizileceği.</translation>
+        <translation>Jak układa się zaznaczenie złożone z kilku frakcji.</translation>
     </message>
     <message>
         <source>Mixed armies</source>
-        <translation>Karma ordular</translation>
+        <translation>Armie mieszane</translation>
     </message>
     <message>
         <source>By role</source>
-        <translation>Göreve göre</translation>
+        <translation>Według roli</translation>
     </message>
     <message>
         <source>Separate contingents</source>
-        <translation>Ayrı birlikler</translation>
+        <translation>Osobne kontyngenty</translation>
     </message>
     <message>
         <source>Follow the commander</source>
-        <translation>Komutanı izle</translation>
+        <translation>Za dowódcą</translation>
     </message>
     <message>
         <source>Follow the majority</source>
-        <translation>Çoğunluğu izle</translation>
+        <translation>Za większością</translation>
     </message>
     <message>
         <source>Sorting groups the same troop types together. Keeping the order leaves each unit where it already stands in the line.</source>
-        <translation>Sıralama aynı birlik türlerini bir araya toplar. Sırayı korumak her birimi hatta zaten durduğu yerde bırakır.</translation>
+        <translation>Sortowanie grupuje te same rodzaje wojsk razem. Zachowanie kolejności zostawia każdą jednostkę tam, gdzie już stoi w linii.</translation>
     </message>
     <message>
         <source>Slot order</source>
-        <translation>Yuva sırası</translation>
+        <translation>Kolejność miejsc</translation>
     </message>
     <message>
         <source>Sort by type</source>
-        <translation>Türe göre sırala</translation>
+        <translation>Sortuj według typu</translation>
     </message>
     <message>
         <source>Keep current order</source>
-        <translation>Şimdiki sırayı koru</translation>
+        <translation>Zachowaj obecną kolejność</translation>
     </message>
     <message>
         <source>Which drill book shapes the deployment. Automatic follows the troops you selected.</source>
-        <translation>Düzeni hangi talim kitabının biçimlendireceği. Otomatik, seçtiğin birlikleri izler.</translation>
+        <translation>Który regulamin kształtuje rozstawienie. Automatyczny idzie za zaznaczonymi wojskami.</translation>
     </message>
     <message>
         <source>Doctrine</source>
-        <translation>Doktrin</translation>
+        <translation>Doktryna</translation>
     </message>
     <message>
         <source>Reset to faction default</source>
-        <translation>Taraf varsayılanına sıfırla</translation>
+        <translation>Przywróć domyślny dla frakcji</translation>
     </message>
 </context>
 <context>
     <name>FormationStatusBadge</name>
     <message>
         <source>Formed</source>
-        <translation>Dizildi</translation>
+        <translation>Uformowany</translation>
     </message>
     <message>
         <source>In position</source>
-        <translation>Mevzide</translation>
+        <translation>Na pozycji</translation>
     </message>
     <message>
         <source>Disrupted</source>
-        <translation>Bozuldu</translation>
+        <translation>Rozbity</translation>
     </message>
     <message>
         <source>Opening ranks</source>
-        <translation>Saflar açılıyor</translation>
+        <translation>Rozwiera szeregi</translation>
     </message>
     <message>
         <source>Filing through</source>
-        <translation>Sırayla geçiyor</translation>
+        <translation>Przechodzi gęsiego</translation>
     </message>
     <message>
         <source>Forming up</source>
-        <translation>Diziliyor</translation>
+        <translation>Formuje się</translation>
     </message>
     <message>
         <source>The line is holding its shape and takes reduced damage.</source>
-        <translation>Hat biçimini koruyor ve daha az hasar alıyor.</translation>
+        <translation>Linia trzyma kształt i przyjmuje mniej obrażeń.</translation>
     </message>
     <message>
         <source>The line has reached its ground and is holding it.</source>
-        <translation>Hat zeminine ulaştı ve orayı tutuyor.</translation>
+        <translation>Linia doszła na swój teren i go trzyma.</translation>
     </message>
     <message>
         <source>The line has come apart and is taking extra damage. Re-issue the formation order to reform.</source>
-        <translation>Hat dağıldı ve fazladan hasar alıyor. Yeniden dizmek için düzen emrini tekrar ver.</translation>
+        <translation>Linia się rozpadła i przyjmuje dodatkowe obrażenia. Wydaj rozkaz szyku ponownie, by ją przeformować.</translation>
     </message>
     <message>
         <source>The ranks are opening to let the line through.</source>
-        <translation>Saflar, hattın geçmesi için açılıyor.</translation>
+        <translation>Szeregi rozwierają się, by przepuścić linię.</translation>
     </message>
     <message>
         <source>The line is filing through a narrow crossing.</source>
-        <translation>Hat dar bir geçitten sırayla geçiyor.</translation>
+        <translation>Linia przechodzi przez wąską przeprawę.</translation>
     </message>
     <message>
         <source>Units are still moving into their slots.</source>
-        <translation>Birimler hâlâ yuvalarına yürüyor.</translation>
+        <translation>Jednostki wciąż zajmują swoje miejsca.</translation>
     </message>
     <message>
         <source>Formation</source>
-        <translation>Düzen</translation>
+        <translation>Szyk</translation>
     </message>
     <message>
         <source>Hide this readout</source>
-        <translation>Bu göstergeyi gizle</translation>
+        <translation>Ukryj ten odczyt</translation>
     </message>
     <message>
         <source>Cohesion %1%</source>
-        <translation>Bütünlük %%1</translation>
+        <translation>Spójność %1%</translation>
     </message>
     <message>
         <source>%1 units</source>
-        <translation>%1 birim</translation>
+        <translation>jednostki: %1</translation>
     </message>
     <message>
         <source>Selection spans several formations.</source>
-        <translation>Seçim birkaç düzene yayılıyor.</translation>
+        <translation>Zaznaczenie obejmuje kilka szyków.</translation>
     </message>
     <message>
         <source>%1 slot(s) blocked by terrain.</source>
-        <translation>%1 yuva arazi yüzünden kapalı.</translation>
+        <translation>Miejsca zablokowane przez teren: %1.</translation>
     </message>
 </context>
 <context>
     <name>GalleryWindow</name>
     <message>
         <source>Standard of Iron — Iron and Ember Gallery</source>
-        <translation>Standard of Iron — Demir ve Kor Galerisi</translation>
+        <translation>Standard of Iron — galeria Żelaza i Żaru</translation>
     </message>
     <message>
         <source>Scale</source>
-        <translation>Ölçek</translation>
+        <translation>Skala</translation>
     </message>
     <message>
         <source>Reduce motion</source>
-        <translation>Hareketi azalt</translation>
+        <translation>Ogranicz ruch</translation>
     </message>
     <message>
         <source>High contrast</source>
-        <translation>Yüksek karşıtlık</translation>
+        <translation>Wysoki kontrast</translation>
     </message>
     <message>
         <source>Reset</source>
-        <translation>Sıfırla</translation>
+        <translation>Resetuj</translation>
     </message>
     <message>
         <source>Iron and Ember — every control the product may use</source>
-        <translation>Demir ve Kor — ürünün kullanabileceği her denetim</translation>
+        <translation>Żelazo i żar — każdy element sterowania, jakiego produkt może użyć</translation>
     </message>
 </context>
 <context>
     <name>Game::Systems::SaveLoadService</name>
     <message>
         <source>Cannot save: empty slot name</source>
-        <translation>Kaydedilemiyor: yuva adı boş</translation>
+        <translation>Nie można zapisać: pusta nazwa slotu</translation>
     </message>
     <message>
         <source>Save service is shutting down</source>
-        <translation>Kaydetme hizmeti kapanıyor</translation>
+        <translation>Usługa zapisu jest zamykana</translation>
     </message>
     <message>
         <source>Queued</source>
-        <translation>Sırada</translation>
+        <translation>W kolejce</translation>
     </message>
     <message>
         <source>Serializing world</source>
-        <translation>Dünya diziliyor</translation>
+        <translation>Serializowanie świata</translation>
     </message>
     <message>
         <source>Compressing</source>
-        <translation>Sıkıştırılıyor</translation>
+        <translation>Kompresja</translation>
     </message>
     <message>
         <source>Writing</source>
-        <translation>Yazılıyor</translation>
+        <translation>Zapisywanie</translation>
     </message>
     <message>
         <source>Exception while saving: %1</source>
-        <translation>Kaydederken hata: %1</translation>
+        <translation>Wyjątek podczas zapisu: %1</translation>
     </message>
     <message>
         <source>Save cancelled</source>
-        <translation>Kaydetme iptal edildi</translation>
+        <translation>Zapis anulowany</translation>
     </message>
     <message>
         <source>Done</source>
-        <translation>Bitti</translation>
+        <translation>Gotowe</translation>
     </message>
     <message>
         <source>Save storage unavailable</source>
-        <translation>Kaydetme deposu kullanılamıyor</translation>
+        <translation>Magazyn zapisów niedostępny</translation>
     </message>
     <message>
         <source>Save slot &apos;%1&apos; is corrupted: %2</source>
-        <translation>&apos;%1&apos; kayıt yuvası bozuk: %2</translation>
+        <translation>Slot zapisu „%1” jest uszkodzony: %2</translation>
     </message>
     <message>
         <source>Exception while loading save &apos;%1&apos;: %2</source>
-        <translation>&apos;%1&apos; kaydı yüklenirken hata: %2</translation>
+        <translation>Wyjątek podczas wczytywania zapisu „%1”: %2</translation>
     </message>
     <message>
         <source>Cannot write &apos;%1&apos;: %2</source>
-        <translation>&apos;%1&apos; yazılamıyor: %2</translation>
+        <translation>Nie można zapisać „%1”: %2</translation>
     </message>
     <message>
         <source>Failed to write &apos;%1&apos;: %2</source>
-        <translation>&apos;%1&apos; yazılamadı: %2</translation>
+        <translation>Zapis „%1” nie powiódł się: %2</translation>
     </message>
     <message>
         <source>Cannot read &apos;%1&apos;: %2</source>
-        <translation>&apos;%1&apos; okunamıyor: %2</translation>
+        <translation>Nie można odczytać „%1”: %2</translation>
     </message>
 </context>
 <context>
     <name>GameEngine</name>
     <message>
         <source>Our ally %1 has been defeated.</source>
-        <translation>Müttefikimiz %1 yenildi.</translation>
+        <translation>Nasz sojusznik %1 został pokonany.</translation>
     </message>
     <message>
         <source>%1 has been defeated.</source>
-        <translation>%1 yenildi.</translation>
+        <translation>%1 został pokonany.</translation>
     </message>
     <message>
         <source>Our ally %1 is finished - %2 has fallen.</source>
-        <translation>Müttefikimiz %1 bitti - %2 düştü.</translation>
+        <translation>Z naszym sojusznikiem %1 koniec — %2 padł.</translation>
     </message>
     <message>
         <source>%1 is finished - %2 has fallen.</source>
-        <translation>%1 bitti - %2 düştü.</translation>
+        <translation>Z %1 koniec — %2 padł.</translation>
     </message>
     <message>
         <source>Cannot play replay: %1</source>
-        <translation>Tekrar oynatılamıyor: %1</translation>
+        <translation>Nie można odtworzyć powtórki: %1</translation>
     </message>
     <message>
         <source>Cannot play replay: unknown launch kind &apos;%1&apos;</source>
-        <translation>Tekrar oynatılamıyor: bilinmeyen başlatma türü &apos;%1&apos;</translation>
+        <translation>Nie można odtworzyć powtórki: nieznany rodzaj uruchomienia „%1”</translation>
     </message>
     <message>
         <source>Cannot start skirmish: renderer not initialized</source>
-        <translation>Çatışma başlatılamıyor: görüntüleyici hazırlanmadı</translation>
+        <translation>Nie można rozpocząć potyczki: renderer nie został zainicjowany</translation>
     </message>
     <message>
         <source>Save: not initialized</source>
-        <translation>Kaydetme: hazırlanmadı</translation>
+        <translation>Zapis: nie zainicjowano</translation>
     </message>
     <message>
         <source>A save is already in progress</source>
-        <translation>Zaten süren bir kaydetme var</translation>
+        <translation>Zapis już trwa</translation>
     </message>
     <message>
         <source>Queued</source>
-        <translation>Sırada</translation>
+        <translation>W kolejce</translation>
     </message>
     <message>
         <source>Cancelling...</source>
-        <translation>İptal ediliyor...</translation>
+        <translation>Anulowanie...</translation>
     </message>
     <message>
         <source>Load: not initialized</source>
-        <translation>Yükleme: hazırlanmadı</translation>
+        <translation>Wczytywanie: nie zainicjowano</translation>
     </message>
     <message>
         <source>Manpower limit reached.</source>
-        <translation>İnsan gücü sınırına ulaşıldı.</translation>
+        <translation>Osiągnięto limit ludzi.</translation>
     </message>
     <message>
         <source>Not enough reserve — build a home to raise more families.</source>
-        <translation>Yeterli yedek yok — daha çok aile yetiştirmek için bir ev inşa et.</translation>
+        <translation>Za mało rezerwy — zbuduj dom, by przybyło rodzin.</translation>
     </message>
 </context>
 <context>
     <name>GameView</name>
     <message>
         <source>%1/%2 walls  •  %3 wood</source>
-        <translation>%1/%2 sur  •  %3 odun</translation>
+        <translation>mury %1/%2  •  drewno %3</translation>
     </message>
 </context>
 <context>
     <name>GraphicsSettingsProxy</name>
     <message>
         <source>Low</source>
-        <translation>Düşük</translation>
+        <translation>Niska</translation>
     </message>
     <message>
         <source>Medium</source>
-        <translation>Orta</translation>
+        <translation>Średnia</translation>
     </message>
     <message>
         <source>High</source>
-        <translation>Yüksek</translation>
+        <translation>Wysoka</translation>
     </message>
     <message>
         <source>Ultra</source>
@@ -2488,26 +2488,26 @@ Bu bir çatışma olabilir ya da hedefler tanımlanmamıştır.</translation>
     </message>
     <message>
         <source>Playable on weak hardware: no cast shadows or post-processing, sparse grass, reduced detail beyond a few metres.</source>
-        <translation>Zayıf donanımda oynanır: gölge ve son işleme yok, seyrek çimen, birkaç metreden sonra düşük ayrıntı.</translation>
+        <translation>Grywalne na słabym sprzęcie: bez rzucanych cieni i efektów końcowych, rzadka trawa, mniej szczegółów dalej niż kilka metrów.</translation>
     </message>
     <message>
         <source>Small cast shadows, lighter shaders, reduced detail at distance. For integrated graphics.</source>
-        <translation>Küçük gölgeler, hafif gölgelendiriciler, uzakta düşük ayrıntı. Tümleşik ekran kartları için.</translation>
+        <translation>Małe rzucane cienie, lżejsze shadery, mniej szczegółów w oddali. Dla grafiki zintegrowanej.</translation>
     </message>
     <message>
         <source>Everything as designed: full detail everywhere, full shadows and post-processing. Recommended.</source>
-        <translation>Tasarlandığı gibi her şey: her yerde tam ayrıntı, tam gölge ve son işleme. Önerilir.</translation>
+        <translation>Wszystko tak, jak zaprojektowano: pełne szczegóły wszędzie, pełne cienie i efekty końcowe. Zalecane.</translation>
     </message>
     <message>
         <source>High plus contact-hardening shadows, foliage translucency, extra terrain detail and 8x anti-aliasing. Needs a strong GPU.</source>
-        <translation>Yüksek ayarların üstüne temas sertleşmeli gölgeler, yaprak saydamlığı, ek arazi ayrıntısı ve 8x kenar yumuşatma. Güçlü bir ekran kartı ister.</translation>
+        <translation>Wysoka plus cienie twardniejące przy kontakcie, prześwitujące liście, dodatkowe szczegóły terenu i wygładzanie 8x. Wymaga mocnej karty graficznej.</translation>
     </message>
 </context>
 <context>
     <name>HUD</name>
     <message>
         <source>%1 FPS</source>
-        <translation>%1 FPS</translation>
+        <translation>%1 kl./s</translation>
     </message>
 </context>
 <context>
@@ -2518,607 +2518,607 @@ Bu bir çatışma olabilir ya da hedefler tanımlanmamıştır.</translation>
     </message>
     <message>
         <source>%1s</source>
-        <translation>%1sn</translation>
+        <translation>%1 s</translation>
     </message>
     <message>
         <source>Give it</source>
-        <translation>Ver gitsin</translation>
+        <translation>Wydanie</translation>
     </message>
     <message>
         <source>Press Guard, then click the ground to hold. Right-click cancels.</source>
-        <translation>Nöbet&apos;e bas, sonra tutulacak zemine tıkla. Sağ tık iptal eder.</translation>
+        <translation>Naciśnij Strzeż, a potem kliknij ziemię, której mają pilnować. Prawy przycisk anuluje.</translation>
     </message>
     <message>
         <source>Reach</source>
-        <translation>Erim</translation>
+        <translation>Zasięg</translation>
     </message>
     <message>
         <source>They fight what comes within %1 of that spot, and drop a target that leaves it.</source>
-        <translation>O noktanın %1 yakınına gireni vururlar ve oradan ayrılan hedefi bırakırlar.</translation>
+        <translation>Biją się z tym, co wejdzie w %1 od punktu, i porzucają cel, który go opuści.</translation>
     </message>
     <message>
         <source>After</source>
-        <translation>Sonrasında</translation>
+        <translation>Potem</translation>
     </message>
     <message>
         <source>They walk back to the spot when the fight ends.</source>
-        <translation>Çarpışma bitince noktaya geri yürürler.</translation>
+        <translation>Po walce wracają na swój punkt.</translation>
     </message>
     <message>
         <source>Release</source>
-        <translation>Bırakma</translation>
+        <translation>Zwolnij</translation>
     </message>
     <message>
         <source>Press Guard again, or order a move or attack. Stop does not lift it.</source>
-        <translation>Yeniden Nöbet&apos;e bas ya da hareket veya saldırı emri ver. Dur bunu kaldırmaz.</translation>
+        <translation>Naciśnij Strzeż ponownie albo wydaj rozkaz ruchu lub ataku. Stój tego nie zdejmuje.</translation>
     </message>
     <message>
         <source>Troops</source>
-        <translation>Birlikler</translation>
+        <translation>Oddziały</translation>
     </message>
     <message>
         <source>Any soldier, and the commander.</source>
-        <translation>Her asker ve komutan.</translation>
+        <translation>Każdy żołnierz oraz dowódca.</translation>
     </message>
     <message>
         <source>vs Hold</source>
-        <translation>Mevzi ile farkı</translation>
+        <translation>a Trzymaj</translation>
     </message>
     <message>
         <source>Guards step out to meet the enemy; Hold never moves.</source>
-        <translation>Nöbetçiler düşmanı karşılamaya çıkar; Mevzi hiç kımıldamaz.</translation>
+        <translation>Strzegący wychodzą naprzeciw wrogowi; Trzymaj nigdy nie rusza się z miejsca.</translation>
     </message>
     <message>
         <source>Press Hold. There is nothing to click.</source>
-        <translation>Mevzi&apos;ye bas. Tıklanacak bir şey yok.</translation>
+        <translation>Naciśnij Trzymaj. Nie ma w co klikać.</translation>
     </message>
     <message>
         <source>Stance</source>
-        <translation>Duruş</translation>
+        <translation>Postawa</translation>
     </message>
     <message>
         <source>They kneel, strike whatever reaches them, and never pursue.</source>
-        <translation>Diz çöker, kendilerine ulaşana vurur ve asla takibe geçmezler.</translation>
+        <translation>Klękają, biją to, co do nich dojdzie, i nigdy nie ruszają w pościg.</translation>
     </message>
     <message>
         <source>Dug in</source>
-        <translation>Siperde</translation>
+        <translation>Okopani</translation>
     </message>
     <message>
         <source>Archers reach %1% further and spearmen %2%; both hit %3% harder, take %4% more punishment, and braced spears break a charge.</source>
-        <translation>Okçular %%1 daha uzağa erişir, mızrakçılar %%2; ikisi de %%3 daha sert vurur, %%4 daha çok dayanır ve payandalı mızraklar bir hücumu kırar.</translation>
+        <translation>Łucznicy sięgają o %1% dalej, a włócznicy o %2%; jedni i drudzy biją o %3% mocniej, wytrzymują o %4% więcej, a podparte włócznie łamią szarżę.</translation>
     </message>
     <message>
         <source>Press Hold again, or order a move, attack or Stop. Standing up takes a moment.</source>
-        <translation>Yeniden Mevzi&apos;ye bas ya da hareket, saldırı veya Dur emri ver. Ayağa kalkmak biraz sürer.</translation>
+        <translation>Naciśnij Trzymaj ponownie albo wydaj rozkaz ruchu, ataku lub Stój. Powstanie zajmuje chwilę.</translation>
     </message>
     <message>
         <source>Archers and spearmen only.</source>
-        <translation>Yalnızca okçular ve mızrakçılar.</translation>
+        <translation>Tylko łucznicy i włócznicy.</translation>
     </message>
     <message>
         <source>vs Guard</source>
-        <translation>Nöbet ile farkı</translation>
+        <translation>a Strzeż</translation>
     </message>
     <message>
         <source>Guard would chase; Hold trades that for reach and staying power.</source>
-        <translation>Nöbet takibe geçerdi; Mevzi bunu erim ve dayanıklılıkla takas eder.</translation>
+        <translation>Strzeż ruszy w pościg; Trzymaj oddaje to za zasięg i wytrwałość.</translation>
     </message>
     <message>
         <source>Press Patrol, left-click the first waypoint, then left-click the second. Right-click cancels.</source>
-        <translation>Devriye&apos;ye bas, ilk ara noktaya sol tıkla, sonra ikincisine sol tıkla. Sağ tık iptal eder.</translation>
+        <translation>Naciśnij Patroluj, kliknij lewym pierwszy punkt, potem lewym drugi. Prawy przycisk anuluje.</translation>
     </message>
     <message>
         <source>Route</source>
-        <translation>Güzergâh</translation>
+        <translation>Trasa</translation>
     </message>
     <message>
         <source>They march between the two points for good, attacking whatever crosses the line.</source>
-        <translation>İki nokta arasında sürekli yürür, hattı geçen her şeye saldırırlar.</translation>
+        <translation>Maszerują między dwoma punktami bez końca, atakując wszystko, co przetnie linię.</translation>
     </message>
     <message>
         <source>Any other order, or Stop, clears the route.</source>
-        <translation>Başka herhangi bir emir ya da Dur güzergâhı siler.</translation>
+        <translation>Każdy inny rozkaz albo Stój kasuje trasę.</translation>
     </message>
     <message>
         <source>Every soldier and the commander.</source>
-        <translation>Her asker ve komutan.</translation>
+        <translation>Każdy żołnierz i dowódca.</translation>
     </message>
     <message>
         <source>Effect</source>
-        <translation>Etki</translation>
+        <translation>Skutek</translation>
     </message>
     <message>
         <source>Nearby troops fight with steadier morale and the commander&apos;s own bonus.</source>
-        <translation>Yakındaki birlikler daha sağlam morille ve komutanın kendi desteğiyle çarpışır.</translation>
+        <translation>Pobliskie oddziały walczą z pewniejszym morale i z premią samego dowódcy.</translation>
     </message>
     <message>
         <source>%1 around the commander, and it moves with him.</source>
-        <translation>Komutanın çevresinde %1 ve onunla birlikte hareket eder.</translation>
+        <translation>%1 wokół dowódcy — i przesuwa się razem z nim.</translation>
     </message>
     <message>
         <source>Lasts</source>
-        <translation>Süre</translation>
+        <translation>Trwa</translation>
     </message>
     <message>
         <source>Recharge</source>
-        <translation>Yenilenme</translation>
+        <translation>Odnowienie</translation>
     </message>
     <message>
         <source>%1 once it fades. A wounded commander cannot call it.</source>
-        <translation>Sona erdiğinde %1. Yaralı bir komutan bunu çağıramaz.</translation>
+        <translation>%1 od chwili wygaśnięcia. Ranny dowódca nie może jej wezwać.</translation>
     </message>
     <message>
         <source>Your own living troops inside the ring; a glow marks each one.</source>
-        <translation>Halkanın içindeki kendi canlı birliklerin; her birini bir parıltı işaretler.</translation>
+        <translation>Twoje żywe oddziały wewnątrz kręgu; każdy znaczy poświata.</translation>
     </message>
     <message>
         <source>Wood only</source>
-        <translation>Yalnızca odun</translation>
+        <translation>Tylko drewno</translation>
     </message>
     <message>
         <source>Stone only</source>
-        <translation>Yalnızca taş</translation>
+        <translation>Tylko kamień</translation>
     </message>
     <message>
         <source>Iron only</source>
-        <translation>Yalnızca demir</translation>
+        <translation>Tylko żelazo</translation>
     </message>
     <message>
         <source>Food first</source>
-        <translation>Önce yiyecek</translation>
+        <translation>Najpierw żywność</translation>
     </message>
     <message>
         <source>Any resource</source>
-        <translation>Her kaynak</translation>
+        <translation>Dowolny surowiec</translation>
     </message>
     <message>
         <source>Click waypoint 1</source>
-        <translation>1. ara noktaya tıkla</translation>
+        <translation>Kliknij punkt 1</translation>
     </message>
     <message>
         <source>Click waypoint 2</source>
-        <translation>2. ara noktaya tıkla</translation>
+        <translation>Kliknij punkt 2</translation>
     </message>
     <message>
         <source>On patrol</source>
-        <translation>Devriyede</translation>
+        <translation>Na patrolu</translation>
     </message>
     <message>
         <source>Active %1</source>
-        <translation>Etkin %1</translation>
+        <translation>Aktywna %1</translation>
     </message>
     <message>
         <source>Ready in %1</source>
-        <translation>%1 içinde hazır</translation>
+        <translation>Gotowa za %1</translation>
     </message>
     <message>
         <source>Ready</source>
-        <translation>Hazır</translation>
+        <translation>Gotowe</translation>
     </message>
     <message>
         <source>Holding a spot</source>
-        <translation>Bir noktayı tutma</translation>
+        <translation>Trzyma punkt</translation>
     </message>
     <message>
         <source>Select troops first</source>
-        <translation>Önce birlik seç</translation>
+        <translation>Najpierw zaznacz oddziały</translation>
     </message>
     <message>
         <source>No troops selected</source>
-        <translation>Hiç birlik seçilmedi</translation>
+        <translation>Nie zaznaczono oddziałów</translation>
     </message>
     <message>
         <source>Orders ready</source>
-        <translation>Emirler hazır</translation>
+        <translation>Rozkazy gotowe</translation>
     </message>
     <message>
         <source>Patrol: click the second waypoint</source>
-        <translation>Devriye: ikinci ara noktaya tıkla</translation>
+        <translation>Patrol: kliknij drugi punkt</translation>
     </message>
     <message>
         <source>Patrol: click the first waypoint</source>
-        <translation>Devriye: ilk ara noktaya tıkla</translation>
+        <translation>Patrol: kliknij pierwszy punkt</translation>
     </message>
     <message>
         <source>Guard: click the spot to hold</source>
-        <translation>Nöbet: tutulacak noktaya tıkla</translation>
+        <translation>Straż: kliknij punkt do pilnowania</translation>
     </message>
     <message>
         <source>Guarding a spot</source>
-        <translation>Bir noktayı tutuyor</translation>
+        <translation>Pilnuje punktu</translation>
     </message>
     <message>
         <source>Attack order</source>
-        <translation>Saldırı emri</translation>
+        <translation>Rozkaz ataku</translation>
     </message>
     <message>
         <source>Medic order</source>
-        <translation>Şifacı emri</translation>
+        <translation>Rozkaz medyczny</translation>
     </message>
     <message>
         <source>Engineer order</source>
-        <translation>İstihkâm emri</translation>
+        <translation>Rozkaz inżynieryjny</translation>
     </message>
     <message>
         <source>Repair order</source>
-        <translation>Onarım emri</translation>
+        <translation>Rozkaz naprawy</translation>
     </message>
     <message>
         <source>Dismantle order</source>
-        <translation>Sökme emri</translation>
+        <translation>Rozkaz rozbiórki</translation>
     </message>
     <message>
         <source>Collection order</source>
-        <translation>Toplama emri</translation>
+        <translation>Rozkaz zbierania</translation>
     </message>
     <message>
         <source>Barracks delivery</source>
-        <translation>Kışlaya teslim</translation>
+        <translation>Dostawa do koszar</translation>
     </message>
     <message>
         <source>Formation order</source>
-        <translation>Düzen emri</translation>
+        <translation>Rozkaz szyku</translation>
     </message>
     <message>
         <source>Rally order</source>
-        <translation>Toplanma emri</translation>
+        <translation>Rozkaz zbiórki</translation>
     </message>
     <message>
         <source>Stop command</source>
-        <translation>Dur komutu</translation>
+        <translation>Komenda Stój</translation>
     </message>
     <message>
         <source>Attack</source>
-        <translation>Saldır</translation>
+        <translation>Atakuj</translation>
     </message>
     <message>
         <source>Send the selected troops at one enemy unit or building.</source>
-        <translation>Seçili birlikleri tek bir düşman birime ya da yapısına sür.</translation>
+        <translation>Poślij zaznaczone oddziały na jedną wrogą jednostkę lub budowlę.</translation>
     </message>
     <message>
         <source>Press Attack, then left-click the target. Right-click cancels. A right-click on an enemy does the same thing.</source>
-        <translation>Saldır&apos;a bas, sonra hedefe sol tıkla. Sağ tık iptal eder. Bir düşmana sağ tıklamak da aynı işi görür.</translation>
+        <translation>Naciśnij Atakuj, potem kliknij cel lewym przyciskiem. Prawy anuluje. Prawy przycisk na wrogu robi to samo.</translation>
     </message>
     <message>
         <source>Scope</source>
-        <translation>Kapsam</translation>
+        <translation>Zakres</translation>
     </message>
     <message>
         <source>They chase the target until it dies or you order otherwise.</source>
-        <translation>Hedef ölene ya da sen başka emir verene kadar peşini bırakmazlar.</translation>
+        <translation>Ścigają cel, dopóki nie zginie albo nie rozkażesz inaczej.</translation>
     </message>
     <message>
         <source>Every fighting unit; healers and builders sit it out.</source>
-        <translation>Her çarpışan birim; şifacılar ve inşaatçılar bunun dışında kalır.</translation>
+        <translation>Każda jednostka bojowa; uzdrowiciele i budowniczowie stoją z boku.</translation>
     </message>
     <message>
         <source>Attack is not available for the current selection</source>
-        <translation>Şimdiki seçim için Saldır kullanılamaz</translation>
+        <translation>Atak nie jest dostępny dla obecnego zaznaczenia</translation>
     </message>
     <message>
         <source>Guard</source>
-        <translation>Nöbet</translation>
+        <translation>Strzeż</translation>
     </message>
     <message>
         <source>Anchor troops to a spot. They step out to meet what comes near, then walk back.</source>
-        <translation>Birlikleri bir noktaya bağlar. Yaklaşanı karşılamak için çıkar, sonra geri dönerler.</translation>
+        <translation>Zakotwicz oddziały w punkcie. Wychodzą naprzeciw temu, co się zbliży, i wracają.</translation>
     </message>
     <message>
         <source>Guard is not available for the current selection</source>
-        <translation>Şimdiki seçim için Nöbet kullanılamaz</translation>
+        <translation>Straż nie jest dostępna dla obecnego zaznaczenia</translation>
     </message>
     <message>
         <source>Patrol</source>
-        <translation>Devriye</translation>
+        <translation>Patroluj</translation>
     </message>
     <message>
         <source>March a beat between two points and fight whatever crosses it.</source>
-        <translation>İki nokta arasında mekik dokur ve arasından geçen her şeyle çarpışır.</translation>
+        <translation>Maszeruj tam i z powrotem między dwoma punktami i bij wszystko, co je przetnie.</translation>
     </message>
     <message>
         <source>Patrol is not available for the current selection</source>
-        <translation>Şimdiki seçim için Devriye kullanılamaz</translation>
+        <translation>Patrol nie jest dostępny dla obecnego zaznaczenia</translation>
     </message>
     <message>
         <source>Medic</source>
-        <translation>Şifacı</translation>
+        <translation>Medyk</translation>
     </message>
     <message>
         <source>Healers tend the wounded around them on their own.</source>
-        <translation>Şifacılar çevrelerindeki yaralılara kendiliğinden bakar.</translation>
+        <translation>Uzdrowiciele sami opatrują rannych wokół siebie.</translation>
     </message>
     <message>
         <source>Passive</source>
-        <translation>Edilgen</translation>
+        <translation>Bierne</translation>
     </message>
     <message>
         <source>There is nothing to press: a healer mends nearby allies whenever they are hurt.</source>
-        <translation>Basılacak bir şey yok: bir şifacı, yakındaki müttefikler yaralandıkça onları iyileştirir.</translation>
+        <translation>Nie ma nic do naciśnięcia: uzdrowiciel leczy pobliskich sojuszników, gdy tylko są ranni.</translation>
     </message>
     <message>
         <source>Healers only. Keep them behind the line and they will work.</source>
-        <translation>Yalnızca şifacılar. Onları hattın gerisinde tut, işlerini görürler.</translation>
+        <translation>Tylko uzdrowiciele. Trzymaj ich za linią, a będą pracować.</translation>
     </message>
     <message>
         <source>Healers automatically heal nearby allies. This is passive, not a manual order.</source>
-        <translation>Şifacılar yakındaki müttefikleri kendiliğinden iyileştirir. Bu edilgen bir davranıştır, elle verilen bir emir değil.</translation>
+        <translation>Uzdrowiciele leczą pobliskich sojuszników automatycznie. To dzieje się samo, nie jest rozkazem.</translation>
     </message>
     <message>
         <source>Select healer units</source>
-        <translation>Şifacı birimleri seç</translation>
+        <translation>Zaznacz uzdrowicieli</translation>
     </message>
     <message>
         <source>Stop</source>
-        <translation>Dur</translation>
+        <translation>Stój</translation>
     </message>
     <message>
         <source>Drop everything the selected troops are doing and stand still.</source>
-        <translation>Seçili birliklerin yaptığı her şeyi bıraktır ve onları oldukları yerde durdur.</translation>
+        <translation>Porzuć wszystko, co robią zaznaczone oddziały, i stój w miejscu.</translation>
     </message>
     <message>
         <source>Clears</source>
-        <translation>Temizler</translation>
+        <translation>Kasuje</translation>
     </message>
     <message>
         <source>Movement, the current target, Patrol, Hold, formation and gathering orders.</source>
-        <translation>Hareketi, şimdiki hedefi, Devriye&apos;yi, Mevzi&apos;yi, düzeni ve toplama emirlerini.</translation>
+        <translation>Ruch, obecny cel, patrol, trzymanie pozycji, szyk i rozkazy zbierania.</translation>
     </message>
     <message>
         <source>Keeps</source>
-        <translation>Korur</translation>
+        <translation>Zostawia</translation>
     </message>
     <message>
         <source>Guard: press Guard again to release troops from their anchor.</source>
-        <translation>Nöbet: birlikleri bağlı oldukları noktadan çözmek için yeniden Nöbet&apos;e bas.</translation>
+        <translation>Straż: naciśnij Strzeż ponownie, by zwolnić oddziały z kotwicy.</translation>
     </message>
     <message>
         <source>Hold</source>
-        <translation>Mevzi</translation>
+        <translation>Trzymaj</translation>
     </message>
     <message>
         <source>Stand fast. Troops dig in where they are, hit harder and further, and never pursue.</source>
-        <translation>Sıkı dur. Birlikler bulundukları yerde siper kazar, daha sert ve daha uzağa vurur, asla takibe geçmezler.</translation>
+        <translation>Ani kroku wstecz. Oddziały okopują się tam, gdzie stoją, biją mocniej i dalej, i nigdy nie ruszają w pościg.</translation>
     </message>
     <message>
         <source>Hold is only available to archers and spearmen</source>
-        <translation>Mevzi yalnızca okçularda ve mızrakçılarda kullanılabilir</translation>
+        <translation>Trzymaj jest dostępne tylko dla łuczników i włóczników</translation>
     </message>
     <message>
         <source>Build</source>
-        <translation>İnşa</translation>
+        <translation>Buduj</translation>
     </message>
     <message>
         <source>Open the builder&apos;s structure list and place one.</source>
-        <translation>İnşaatçının yapı listesini aç ve bir tane yerleştir.</translation>
+        <translation>Otwórz listę budowli budowniczego i postaw jedną z nich.</translation>
     </message>
     <message>
         <source>Pick a structure, move the outline onto flat clear ground, scroll or press [ and ] to rotate, left-click to confirm. Right-click cancels.</source>
-        <translation>Bir yapı seç, taslağı düz ve boş bir zemine taşı, döndürmek için tekerleği çevir ya da [ ve ] tuşlarına bas, onaylamak için sol tıkla. Sağ tık iptal eder.</translation>
+        <translation>Wybierz budowlę, przesuń obrys na płaski, wolny grunt, obróć kółkiem albo klawiszami [ i ], a potem zatwierdź lewym przyciskiem. Prawy anuluje.</translation>
     </message>
     <message>
         <source>Builders only.</source>
-        <translation>Yalnızca inşaatçılar.</translation>
+        <translation>Tylko budowniczowie.</translation>
     </message>
     <message>
         <source>Build is only available to builders</source>
-        <translation>İnşa yalnızca inşaatçılarda kullanılabilir</translation>
+        <translation>Budowanie jest dostępne tylko dla budowniczych</translation>
     </message>
     <message>
         <source>Collect</source>
-        <translation>Topla</translation>
+        <translation>Zbieraj</translation>
     </message>
     <message>
         <source>Send a builder to fell a tree, break a boulder, work an ore seam, reap a ripe farm or slaughter a sheep.</source>
-        <translation>Bir inşaatçıyı ağaç devirmeye, kaya kırmaya, cevher damarı işlemeye, olgun tarla biçmeye ya da koyun kesmeye yolla.</translation>
+        <translation>Wyślij budowniczego, by ściął drzewo, rozbił głaz, wybrał żyłę rudy, zżął dojrzałe pole albo ubił owcę.</translation>
     </message>
     <message>
         <source>Press Collect, then left-click the node. Right-click cancels.</source>
-        <translation>Topla&apos;ya bas, sonra kaynağa sol tıkla. Sağ tık iptal eder.</translation>
+        <translation>Naciśnij Zbieraj, potem kliknij źródło lewym przyciskiem. Prawy anuluje.</translation>
     </message>
     <message>
         <source>The load only counts once it is dropped at the yard beside a barracks.</source>
-        <translation>Yük ancak kışlanın yanındaki avluya bırakılınca sayılır.</translation>
+        <translation>Ładunek liczy się dopiero po odstawieniu go na dziedziniec przy koszarach.</translation>
     </message>
     <message>
         <source>Collect is only available to builders</source>
-        <translation>Topla yalnızca inşaatçılarda kullanılabilir</translation>
+        <translation>Zbieranie jest dostępne tylko dla budowniczych</translation>
     </message>
     <message>
         <source>Auto Gather</source>
-        <translation>Otomatik Topla</translation>
+        <translation>Auto-zbieranie</translation>
     </message>
     <message>
         <source>Auto</source>
-        <translation>Otomatik</translation>
+        <translation>Auto</translation>
     </message>
     <message>
         <source>Builders keep finding and working the nearest resource on their own.</source>
-        <translation>İnşaatçılar en yakın kaynağı kendiliğinden bulup işlemeyi sürdürür.</translation>
+        <translation>Budowniczowie sami znajdują najbliższy surowiec i przy nim pracują.</translation>
     </message>
     <message>
         <source>Runs until you stop it; any new order cancels it.</source>
-        <translation>Sen durdurana kadar sürer; her yeni emir iptal eder.</translation>
+        <translation>Trwa, dopóki tego nie przerwiesz; każdy nowy rozkaz je anuluje.</translation>
     </message>
     <message>
         <source>Pick a resource</source>
-        <translation>Bir kaynak seç</translation>
+        <translation>Wybierz surowiec</translation>
     </message>
     <message>
         <source>Press again to cycle any resource, wood, stone, iron, food, then off.</source>
-        <translation>Her kaynak, odun, taş, demir, yiyecek ve kapalı arasında geçmek için yeniden bas.</translation>
+        <translation>Naciskaj, by przełączać: dowolny surowiec, drewno, kamień, żelazo, żywność, a potem wyłączone.</translation>
     </message>
     <message>
         <source>Auto Gather is only available to builders</source>
-        <translation>Otomatik Topla yalnızca inşaatçılarda kullanılabilir</translation>
+        <translation>Auto-zbieranie jest dostępne tylko dla budowniczych</translation>
     </message>
     <message>
         <source>Repair</source>
-        <translation>Onar</translation>
+        <translation>Napraw</translation>
     </message>
     <message>
         <source>Send a builder to mend one of your damaged buildings.</source>
-        <translation>Bir inşaatçıyı hasarlı yapılarından birini onarmaya yolla.</translation>
+        <translation>Wyślij budowniczego, by naprawił jedną z twoich uszkodzonych budowli.</translation>
     </message>
     <message>
         <source>Press Repair, then left-click the damaged building. Right-click cancels.</source>
-        <translation>Onar&apos;a bas, sonra hasarlı yapıya sol tıkla. Sağ tık iptal eder.</translation>
+        <translation>Naciśnij Napraw, potem kliknij uszkodzoną budowlę lewym przyciskiem. Prawy anuluje.</translation>
     </message>
     <message>
         <source>Repair is only available to builders</source>
-        <translation>Onar yalnızca inşaatçılarda kullanılabilir</translation>
+        <translation>Naprawa jest dostępna tylko dla budowniczych</translation>
     </message>
     <message>
         <source>Dismantle</source>
-        <translation>Sök</translation>
+        <translation>Rozbierz</translation>
     </message>
     <message>
         <source>Scrap</source>
-        <translation>Hurdaya ayır</translation>
+        <translation>Złom</translation>
     </message>
     <message>
         <source>Send builders to take one of your own buildings apart and get part of its cost back.</source>
-        <translation>İnşaatçıları kendi yapılarından birini sökmeye yolla ve bedelinin bir kısmını geri al.</translation>
+        <translation>Wyślij budowniczych, by rozebrali jedną z twoich budowli i odzyskali część jej kosztu.</translation>
     </message>
     <message>
         <source>Press Dismantle, then left-click your building. Right-click cancels.</source>
-        <translation>Sök&apos;e bas, sonra yapına sol tıkla. Sağ tık iptal eder.</translation>
+        <translation>Naciśnij Rozbierz, potem kliknij swoją budowlę lewym przyciskiem. Prawy anuluje.</translation>
     </message>
     <message>
         <source>Pays back</source>
-        <translation>Geri ödemesi</translation>
+        <translation>Zwraca</translation>
     </message>
     <message>
         <source>Part of what it cost, once the work finishes. Calling the crew off pays nothing.</source>
-        <translation>İş bittiğinde bedelinin bir kısmı. Ekibi geri çağırmak hiçbir şey ödemez.</translation>
+        <translation>Część tego, co kosztowała, po ukończeniu pracy. Odwołanie ekipy nie daje nic.</translation>
     </message>
     <message>
         <source>Crew</source>
-        <translation>Ekip</translation>
+        <translation>Ekipa</translation>
     </message>
     <message>
         <source>Builders only; up to three of them speed it up.</source>
-        <translation>Yalnızca inşaatçılar; en çok üç tanesi işi hızlandırır.</translation>
+        <translation>Tylko budowniczowie; do trzech przyspiesza pracę.</translation>
     </message>
     <message>
         <source>Dismantle is only available to builders</source>
-        <translation>Sök yalnızca inşaatçılarda kullanılabilir</translation>
+        <translation>Rozbiórka jest dostępna tylko dla budowniczych</translation>
     </message>
     <message>
         <source>Split</source>
-        <translation>Bölünmüş</translation>
+        <translation>Podziel</translation>
     </message>
     <message>
         <source>Break the selected squad into two smaller ones so they can work or fight in two places at once.</source>
-        <translation>Seçili müfrezeyi iki küçük müfrezeye böl, böylece aynı anda iki yerde çalışabilir ya da çarpışabilirler.</translation>
+        <translation>Podziel zaznaczony oddział na dwa mniejsze, by pracowały lub walczyły w dwóch miejscach naraz.</translation>
     </message>
     <message>
         <source>Each half</source>
-        <translation>Her yarısı</translation>
+        <translation>Każda połowa</translation>
     </message>
     <message>
         <source>Carries half the men, half the health and does its work at half the speed.</source>
-        <translation>Adamların yarısını, canın yarısını taşır ve işini yarı hızda görür.</translation>
+        <translation>Bierze połowę ludzi, połowę zdrowia i pracuje o połowę wolniej.</translation>
     </message>
     <message>
         <source>Needs</source>
-        <translation>Gerekenler</translation>
+        <translation>Wymaga</translation>
     </message>
     <message>
         <source>A squad of at least four still standing.</source>
-        <translation>Ayakta en az dört kişilik bir müfreze.</translation>
+        <translation>Oddziału, w którym stoi jeszcze co najmniej czterech.</translation>
     </message>
     <message>
         <source>This squad is too small to divide</source>
-        <translation>Bu müfreze bölünemeyecek kadar küçük</translation>
+        <translation>Ten oddział jest za mały, by go dzielić</translation>
     </message>
     <message>
         <source>Join</source>
-        <translation>Birleştir</translation>
+        <translation>Połącz</translation>
     </message>
     <message>
         <source>Fold two understrength squads of the same kind back into one.</source>
-        <translation>Aynı türden eksik iki müfrezeyi tekrar tek bir müfrezede topla.</translation>
+        <translation>Złóż z powrotem w jedno dwa niepełne oddziały tego samego rodzaju.</translation>
     </message>
     <message>
         <source>Two squads of the same kind, both below full strength and standing close together.</source>
-        <translation>Aynı türden, ikisi de tam mevcudun altında ve birbirine yakın duran iki müfreze.</translation>
+        <translation>Dwóch oddziałów tego samego rodzaju, obu poniżej pełnego stanu i stojących blisko siebie.</translation>
     </message>
     <message>
         <source>Result</source>
-        <translation>Sonuç</translation>
+        <translation>Wynik</translation>
     </message>
     <message>
         <source>One squad with their men and health added together, up to a full establishment.</source>
-        <translation>Adamları ve canları toplanmış, tam mevcuda kadar tek bir müfreze.</translation>
+        <translation>Jeden oddział z sumą ludzi i zdrowia, do pełnego etatu.</translation>
     </message>
     <message>
         <source>Select two understrength squads of the same kind</source>
-        <translation>Aynı türden eksik iki müfreze seç</translation>
+        <translation>Zaznacz dwa niepełne oddziały tego samego rodzaju</translation>
     </message>
     <message>
         <source>Deliver</source>
-        <translation>Teslim et</translation>
+        <translation>Odstaw</translation>
     </message>
     <message>
         <source>Send civilians to a barracks to refill the reserve it recruits from.</source>
-        <translation>Devşirme yaptığı yedeği tazelemek için sivilleri bir kışlaya yolla.</translation>
+        <translation>Wyślij cywilów do koszar, by uzupełnili rezerwę, z której rekrutują.</translation>
     </message>
     <message>
         <source>Press Deliver, then left-click a friendly barracks. Right-click cancels.</source>
-        <translation>Teslim et&apos;e bas, sonra dost bir kışlaya sol tıkla. Sağ tık iptal eder.</translation>
+        <translation>Naciśnij Odstaw, potem kliknij przyjazne koszary lewym przyciskiem. Prawy anuluje.</translation>
     </message>
     <message>
         <source>Civilians only; other selected units ignore it.</source>
-        <translation>Yalnızca siviller; seçili diğer birimler bunu yok sayar.</translation>
+        <translation>Tylko cywile; pozostałe zaznaczone jednostki to zignorują.</translation>
     </message>
     <message>
         <source>Deliver is only available to civilians</source>
-        <translation>Teslim et yalnızca sivillerde kullanılabilir</translation>
+        <translation>Odstawianie jest dostępne tylko dla cywilów</translation>
     </message>
     <message>
         <source>Rally</source>
-        <translation>Toplan</translation>
+        <translation>Zbiórka</translation>
     </message>
     <message>
         <source>The commander plants a flag and the army marches to it.</source>
-        <translation>Komutan bir sancak diker ve ordu ona doğru yürür.</translation>
+        <translation>Dowódca wbija sztandar, a armia maszeruje do niego.</translation>
     </message>
     <message>
         <source>Press Rally, then left-click where the flag should stand. He walks there and plants it.</source>
-        <translation>Toplan&apos;a bas, sonra sancağın dikileceği yere sol tıkla. Oraya yürür ve sancağı diker.</translation>
+        <translation>Naciśnij Zbiórka, potem kliknij lewym miejsce, gdzie ma stanąć sztandar. Dowódca podejdzie tam i go wbije.</translation>
     </message>
     <message>
         <source>Troops near the flag march in; it also steadies wavering men.</source>
-        <translation>Sancağın yakınındaki birlikler ona yürür; ayrıca sendeleyen adamları da toparlar.</translation>
+        <translation>Oddziały w pobliżu sztandaru nadciągają; podnosi też chwiejących się ludzi.</translation>
     </message>
     <message>
         <source>Needs your commander selected.</source>
-        <translation>Komutanının seçili olmasını ister.</translation>
+        <translation>Wymaga zaznaczonego dowódcy.</translation>
     </message>
     <message>
         <source>Select a commander to use rally</source>
-        <translation>Toplanmayı kullanmak için bir komutan seç</translation>
+        <translation>Zaznacz dowódcę, by użyć zbiórki</translation>
     </message>
     <message>
         <source>Gate</source>
-        <translation>Kapı</translation>
+        <translation>Brama</translation>
     </message>
     <message>
         <source>Cycle the selected gates: automatic, held open, held shut.</source>
-        <translation>Seçili kapıları sırayla değiştir: otomatik, açık tutulan, kapalı tutulan.</translation>
+        <translation>Przełącz zaznaczone bramy: automatyczne, trzymane otwarte, trzymane zamknięte.</translation>
     </message>
     <message>
         <source>Automatic gates open for your own troops and shut behind them.</source>
-        <translation>Otomatik kapılar kendi birliklerine açılır ve arkalarından kapanır.</translation>
+        <translation>Automatyczne bramy otwierają się przed twoimi oddziałami i zamykają za nimi.</translation>
     </message>
     <message>
         <source>Select one of your own gates.</source>
-        <translation>Kendi kapılarından birini seç.</translation>
+        <translation>Zaznacz jedną ze swoich bram.</translation>
     </message>
     <message>
         <source>Select one of your gates to control it</source>
-        <translation>Denetlemek için kapılarından birini seç</translation>
+        <translation>Zaznacz swoją bramę, by nią sterować</translation>
     </message>
     <message>
         <source>Aura</source>
@@ -3126,212 +3126,214 @@ Bu bir çatışma olabilir ya da hedefler tanımlanmamıştır.</translation>
     </message>
     <message>
         <source>The commander empowers the troops around him for a while, then must recharge.</source>
-        <translation>Komutan bir süre çevresindeki birlikleri güçlendirir, sonra yenilenmesi gerekir.</translation>
+        <translation>Dowódca na jakiś czas wzmacnia otaczające go oddziały, a potem musi odzyskać siły.</translation>
     </message>
     <message>
         <source>Select a ready commander to activate the aura</source>
-        <translation>Aurayı etkinleştirmek için hazır bir komutan seç</translation>
+        <translation>Zaznacz gotowego dowódcę, by włączyć aurę</translation>
     </message>
     <message>
         <source>ORDERS</source>
-        <translation>EMİRLER</translation>
+        <translation>ROZKAZY</translation>
     </message>
     <message>
         <source>Right-click to cancel</source>
-        <translation>İptal için sağ tık</translation>
+        <translation>Prawy przycisk anuluje</translation>
     </message>
     <message>
         <source>TARGET</source>
-        <translation>HEDEF</translation>
+        <translation>CEL</translation>
     </message>
     <message numerus="yes">
         <source>%n attacking</source>
         <translation>
-            <numerusform>%n saldırıyor</numerusform>
+            <numerusform>%n atakuje</numerusform>
+            <numerusform>%n atakują</numerusform>
+            <numerusform>%n atakuje</numerusform>
         </translation>
     </message>
     <message>
         <source>%1%</source>
-        <translation>%%1</translation>
+        <translation>%1%</translation>
     </message>
     <message>
         <source>Automatic</source>
-        <translation>Otomatik</translation>
+        <translation>Automatycznie</translation>
     </message>
     <message>
         <source>No specialist actions for this selection</source>
-        <translation>Bu seçim için uzmanlık eylemi yok</translation>
+        <translation>Brak działań specjalnych dla tego zaznaczenia</translation>
     </message>
     <message>
         <source>Select troops to reveal their specialist actions</source>
-        <translation>Uzmanlık eylemlerini görmek için birlik seç</translation>
+        <translation>Zaznacz oddziały, by pokazać ich działania specjalne</translation>
     </message>
 </context>
 <context>
     <name>HUDBottomCommander</name>
     <message>
         <source>Commander</source>
-        <translation>Komutan</translation>
+        <translation>Dowódca</translation>
     </message>
     <message>
         <source>Commander unavailable</source>
-        <translation>Komutan kullanılamıyor</translation>
+        <translation>Dowódca niedostępny</translation>
     </message>
     <message>
         <source>Choose destination</source>
-        <translation>Varış noktası seç</translation>
+        <translation>Wybierz cel</translation>
     </message>
     <message>
         <source>Planting flag</source>
-        <translation>Sancak dikiliyor</translation>
+        <translation>Wbija sztandar</translation>
     </message>
     <message>
         <source>Moving commander</source>
-        <translation>Komutan yürüyor</translation>
+        <translation>Dowódca w drodze</translation>
     </message>
     <message>
         <source>Flag active</source>
-        <translation>Sancak etkin</translation>
+        <translation>Sztandar wbity</translation>
     </message>
     <message>
         <source>Ready</source>
-        <translation>Hazır</translation>
+        <translation>Gotowe</translation>
     </message>
     <message>
         <source>Left-click a destination to confirm the rally flag.</source>
-        <translation>Toplanma sancağını onaylamak için bir varış noktasına sol tıkla.</translation>
+        <translation>Kliknij lewym miejsce, by zatwierdzić sztandar zbiórki.</translation>
     </message>
     <message>
         <source>The commander is planting the flag. Interruptions will cancel the rally.</source>
-        <translation>Komutan sancağı dikiyor. Bölünmeler toplanmayı iptal eder.</translation>
+        <translation>Dowódca wbija sztandar. Przerwanie anuluje zbiórkę.</translation>
     </message>
     <message>
         <source>The commander is marching to the chosen point before planting the flag.</source>
-        <translation>Komutan, sancağı dikmeden önce seçilen noktaya yürüyor.</translation>
+        <translation>Dowódca maszeruje do wybranego punktu, zanim wbije sztandar.</translation>
     </message>
     <message>
         <source>Troops have already received a normal move order to this rally flag.</source>
-        <translation>Birliklere bu toplanma sancağına zaten olağan bir hareket emri verildi.</translation>
+        <translation>Oddziały dostały już zwykły rozkaz ruchu do tego sztandaru zbiórki.</translation>
     </message>
     <message>
         <source>Choose a destination, march there, plant the flag, then order all controllable troops there.</source>
-        <translation>Bir varış noktası seç, oraya yürü, sancağı dik, sonra denetleyebildiğin bütün birliklere oraya emir ver.</translation>
+        <translation>Wybierz miejsce, dojdź tam, wbij sztandar, a potem poślij tam wszystkie oddziały pod twoją kontrolą.</translation>
     </message>
     <message>
         <source>Cancel Rally Placement</source>
-        <translation>Toplanma Yerleştirmesini İptal Et</translation>
+        <translation>Anuluj ustawianie zbiórki</translation>
     </message>
     <message>
         <source>Rally In Progress</source>
-        <translation>Toplanma Sürüyor</translation>
+        <translation>Zbiórka w toku</translation>
     </message>
     <message>
         <source>Reposition Rally [R]</source>
-        <translation>Toplanmayı Taşı [R]</translation>
+        <translation>Przestaw zbiórkę [R]</translation>
     </message>
     <message>
         <source>Place Rally [R]</source>
-        <translation>Toplanma Yerleştir [R]</translation>
+        <translation>Ustaw zbiórkę [R]</translation>
     </message>
     <message>
         <source>Vanguard Rush</source>
-        <translation>Öncü Hamlesi</translation>
+        <translation>Skok straży przedniej</translation>
     </message>
     <message>
         <source>Explode forward into the focused enemy and open a punish.</source>
-        <translation>Odaklanılan düşmana doğru patlayarak atıl ve bir ceza penceresi aç.</translation>
+        <translation>Wybuchnij naprzód na wskazanego wroga i otwórz okno kary.</translation>
     </message>
     <message>
         <source>Second Wind</source>
-        <translation>İkinci Nefes</translation>
+        <translation>Drugi oddech</translation>
     </message>
     <message>
         <source>Recover posture and stamina, then steady yourself for the next exchange.</source>
-        <translation>Duruşunu ve dayanıklılığını topla, sonra bir sonraki alışveriş için kendini sağlama al.</translation>
+        <translation>Odzyskaj postawę i wytrzymałość, a potem zbierz się przed kolejną wymianą.</translation>
     </message>
     <message>
         <source>Weapon Special / Shield Bash</source>
-        <translation>Silah Özel / Kalkan Vuruşu</translation>
+        <translation>Sztuka broni / Uderzenie tarczą</translation>
     </message>
     <message>
         <source>Use your weapon technique, or hold guard for a shield-bash stagger burst.</source>
-        <translation>Silah tekniğini kullan ya da kalkan vuruşuyla sersemletme için siperi basılı tut.</translation>
+        <translation>Użyj techniki broni albo przytrzymaj gardę, by uderzeniem tarczy wytrącić wroga z równowagi.</translation>
     </message>
     <message>
         <source>Command Aura</source>
-        <translation>Komuta Aurası</translation>
+        <translation>Aura dowodzenia</translation>
     </message>
     <message>
         <source>Temporarily empower nearby troops. A glow marks every affected soldier.</source>
-        <translation>Yakındaki birlikleri geçici olarak güçlendirir. Etkilenen her askeri bir parıltı işaretler.</translation>
+        <translation>Tymczasowo wzmacnia pobliskie oddziały. Poświata znaczy każdego objętego żołnierza.</translation>
     </message>
     <message>
         <source>Disconnected</source>
-        <translation>Bağlantı koptu</translation>
+        <translation>Rozerwany dystans</translation>
     </message>
     <message>
         <source>Guard broken</source>
-        <translation>Siper kırıldı</translation>
+        <translation>Garda złamana</translation>
     </message>
     <message>
         <source>Punish window</source>
-        <translation>Ceza penceresi</translation>
+        <translation>Okno kary</translation>
     </message>
     <message>
         <source>Sprinting</source>
-        <translation>Koşuyor</translation>
+        <translation>Sprint</translation>
     </message>
     <message>
         <source>Steady</source>
-        <translation>Sağlam</translation>
+        <translation>Pewna postawa</translation>
     </message>
     <message>
         <source>COMMANDER</source>
-        <translation>KOMUTAN</translation>
+        <translation>DOWÓDCA</translation>
     </message>
     <message>
         <source>Frontline command</source>
-        <translation>Cephe komutası</translation>
+        <translation>Dowodzenie z pierwszej linii</translation>
     </message>
     <message>
         <source>Aura active</source>
-        <translation>Aura etkin</translation>
+        <translation>Aura aktywna</translation>
     </message>
     <message>
         <source>Aura ready</source>
-        <translation>Aura hazır</translation>
+        <translation>Aura gotowa</translation>
     </message>
     <message>
         <source>Aura cooling</source>
-        <translation>Aura yenileniyor</translation>
+        <translation>Aura stygnie</translation>
     </message>
     <message>
         <source>HP %1/%2</source>
-        <translation>CAN %1/%2</translation>
+        <translation>PŻ %1/%2</translation>
     </message>
     <message>
         <source>STM %1%</source>
-        <translation>DYN %%1</translation>
+        <translation>WYT %1%</translation>
     </message>
     <message>
         <source>Stable</source>
-        <translation>Dengeli</translation>
+        <translation>Stabilnie</translation>
     </message>
     <message>
         <source>Posture</source>
-        <translation>Duruş</translation>
+        <translation>Postawa</translation>
     </message>
     <message>
         <source>State: %1</source>
-        <translation>Durum: %1</translation>
+        <translation>Stan: %1</translation>
     </message>
     <message>
         <source>Perfect guard live</source>
-        <translation>Kusursuz siper açık</translation>
+        <translation>Idealna parada aktywna</translation>
     </message>
     <message>
         <source>Finisher primed</source>
-        <translation>Bitirici hazır</translation>
+        <translation>Wykończenie gotowe</translation>
     </message>
     <message>
         <source>Aura %1</source>
@@ -3339,11 +3341,11 @@ Bu bir çatışma olabilir ya da hedefler tanımlanmamıştır.</translation>
     </message>
     <message>
         <source>empowers nearby troops</source>
-        <translation>yakındaki birlikleri güçlendiriyor</translation>
+        <translation>wzmacnia pobliskie oddziały</translation>
     </message>
     <message>
         <source>is recovering</source>
-        <translation>yenileniyor</translation>
+        <translation>odzyskuje siły</translation>
     </message>
     <message>
         <source>Camera: %1</source>
@@ -3351,43 +3353,43 @@ Bu bir çatışma olabilir ya da hedefler tanımlanmamıştır.</translation>
     </message>
     <message>
         <source>Chase</source>
-        <translation>Takip</translation>
+        <translation>Pościg</translation>
     </message>
     <message>
         <source>ORDERS</source>
-        <translation>EMİRLER</translation>
+        <translation>ROZKAZY</translation>
     </message>
     <message>
         <source>ABILITIES</source>
-        <translation>YETENEKLER</translation>
+        <translation>ZDOLNOŚCI</translation>
     </message>
     <message>
         <source>Rally</source>
-        <translation>Toplan</translation>
+        <translation>Zbiórka</translation>
     </message>
     <message>
         <source>Command Aura Active · %1s</source>
-        <translation>Komuta Aurası Etkin · %1sn</translation>
+        <translation>Aura dowodzenia aktywna · %1 s</translation>
     </message>
     <message>
         <source>Activate Command Aura [3]</source>
-        <translation>Komuta Aurasını Etkinleştir [3]</translation>
+        <translation>Włącz aurę dowodzenia [3]</translation>
     </message>
     <message>
         <source>Command Aura · %1s cooldown</source>
-        <translation>Komuta Aurası · %1sn bekleme</translation>
+        <translation>Aura dowodzenia · %1 s odnowienia</translation>
     </message>
     <message>
         <source>Temporarily empower nearby troops. Every affected soldier receives a visible glow.</source>
-        <translation>Yakındaki birlikleri geçici olarak güçlendirir. Etkilenen her asker görünür bir parıltı alır.</translation>
+        <translation>Tymczasowo wzmacnia pobliskie oddziały. Każdy objęty żołnierz dostaje widoczną poświatę.</translation>
     </message>
     <message>
         <source>The aura is not ready yet.</source>
-        <translation>Aura henüz hazır değil.</translation>
+        <translation>Aura jeszcze nie jest gotowa.</translation>
     </message>
     <message>
         <source>Combo</source>
-        <translation>Kombo</translation>
+        <translation>Kombinacja</translation>
     </message>
     <message>
         <source>%1 [%2]</source>
@@ -3395,97 +3397,97 @@ Bu bir çatışma olabilir ya da hedefler tanımlanmamıştır.</translation>
     </message>
     <message>
         <source>COMBAT CONTROLS</source>
-        <translation>ÇARPIŞMA DENETİMLERİ</translation>
+        <translation>STEROWANIE W WALCE</translation>
     </message>
     <message>
         <source>[LMB] Strike  [RMB] Guard</source>
-        <translation>[Sol tık] Vur  [Sağ tık] Siper</translation>
+        <translation>[LPM] Cios  [PPM] Garda</translation>
     </message>
     <message>
         <source>[Space] Dodge  [Alt] Jump</source>
-        <translation>[Boşluk] Sıyrıl  [Alt] Sıçra</translation>
+        <translation>[Spacja] Unik  [Alt] Skok</translation>
     </message>
     <message>
         <source>[WASD] Move  [Shift] Sprint</source>
-        <translation>[WASD] Hareket  [Shift] Koş</translation>
+        <translation>[WASD] Ruch  [Shift] Sprint</translation>
     </message>
     <message>
         <source>[Tab] Cycle Target  [3] Aura  [C] Camera</source>
-        <translation>[Tab] Hedef Değiştir  [3] Aura  [C] Kamera</translation>
+        <translation>[Tab] Zmiana celu  [3] Aura  [C] Kamera</translation>
     </message>
     <message>
         <source>[R] Rally Orders  [Enter] Return to RTS</source>
-        <translation>[R] Toplanma Emirleri  [Enter] RTS&apos;ye Dön</translation>
+        <translation>[R] Rozkazy zbiórki  [Enter] Powrót do RTS</translation>
     </message>
     <message>
         <source>[F] Bash  [1] Rush  [2] Second Wind</source>
-        <translation>[F] Vuruş  [1] Hamle  [2] İkinci Nefes</translation>
+        <translation>[F] Tarcza  [1] Skok  [2] Drugi oddech</translation>
     </message>
     <message>
         <source>[Tab] Target  [1] Rush  [2] Second Wind  [3] Aura  [F] Bash</source>
-        <translation>[Tab] Hedef  [1] Hamle  [2] İkinci Nefes  [3] Aura  [F] Vuruş</translation>
+        <translation>[Tab] Cel  [1] Skok  [2] Drugi oddech  [3] Aura  [F] Tarcza</translation>
     </message>
     <message>
         <source>[R] Place Rally  [C] Camera  [Enter] Return to RTS</source>
-        <translation>[R] Toplanma Yerleştir  [C] Kamera  [Enter] RTS&apos;ye Dön</translation>
+        <translation>[R] Ustaw zbiórkę  [C] Kamera  [Enter] Powrót do RTS</translation>
     </message>
     <message>
         <source>Rally autopilot engaged until the flag is planted</source>
-        <translation>Sancak dikilene kadar toplanma otomatik sürüşte</translation>
+        <translation>Autopilot zbiórki włączony do chwili wbicia sztandaru</translation>
     </message>
     <message>
         <source>Combat HUD synced for close-quarters command</source>
-        <translation>Çarpışma arayüzü yakın muharebe komutası için eşitlendi</translation>
+        <translation>HUD walki zestrojony do dowodzenia z bliska</translation>
     </message>
     <message>
         <source>First-person command engaged</source>
-        <translation>Birinci şahıs komuta etkin</translation>
+        <translation>Dowodzenie z perspektywy pierwszej osoby włączone</translation>
     </message>
 </context>
 <context>
     <name>HUDBottomSpectator</name>
     <message>
         <source>Armies of the field</source>
-        <translation>Meydandaki ordular</translation>
+        <translation>Armie na polu bitwy</translation>
     </message>
     <message>
         <source>Following: %1</source>
-        <translation>İzlenen: %1</translation>
+        <translation>Śledzisz: %1</translation>
     </message>
     <message>
         <source>Follow the previous army</source>
-        <translation>Önceki orduyu izle</translation>
+        <translation>Śledź poprzednią armię</translation>
     </message>
     <message>
         <source>Follow the next army</source>
-        <translation>Sonraki orduyu izle</translation>
+        <translation>Śledź następną armię</translation>
     </message>
     <message>
         <source>Manpower %1/%2</source>
-        <translation>İnsan gücü %1/%2</translation>
+        <translation>Ludzie %1/%2</translation>
     </message>
     <message>
         <source>Holdings %1</source>
-        <translation>Mülkler %1</translation>
+        <translation>Posiadłości %1</translation>
     </message>
     <message>
         <source>Trained %1</source>
-        <translation>Eğitilen %1</translation>
+        <translation>Wyszkolonych %1</translation>
     </message>
     <message>
         <source>Kills %1  Losses %2</source>
-        <translation>Öldürülen %1  Kayıplar %2</translation>
+        <translation>Zabitych %1  Strat %2</translation>
     </message>
     <message>
         <source>the whole field</source>
-        <translation>bütün meydan</translation>
+        <translation>całe pole</translation>
     </message>
 </context>
 <context>
     <name>HUDTop</name>
     <message>
         <source>All objectives complete</source>
-        <translation>Bütün hedefler tamamlandı</translation>
+        <translation>Wszystkie cele wykonane</translation>
     </message>
     <message>
         <source> (%1/%2)</source>
@@ -3493,138 +3495,138 @@ Bu bir çatışma olabilir ya da hedefler tanımlanmamıştır.</translation>
     </message>
     <message>
         <source>Click to look at the objective.</source>
-        <translation>Hedefe bakmak için tıkla.</translation>
+        <translation>Kliknij, by spojrzeć na cel.</translation>
     </message>
     <message>
         <source> [You]</source>
-        <translation> [Sen]</translation>
+        <translation> [Ty]</translation>
     </message>
     <message>
         <source>Resume</source>
-        <translation>Sürdür</translation>
+        <translation>Wznów</translation>
     </message>
     <message>
         <source>Pause</source>
-        <translation>Duraklat</translation>
+        <translation>Pauza</translation>
     </message>
     <message>
         <source>Battle speed %1</source>
-        <translation>Savaş hızı %1</translation>
+        <translation>Tempo bitwy %1</translation>
     </message>
     <message>
         <source>Battle speed</source>
-        <translation>Savaş hızı</translation>
+        <translation>Tempo bitwy</translation>
     </message>
     <message>
         <source>Follow the selection with the camera</source>
-        <translation>Kamerayla seçimi izle</translation>
+        <translation>Śledź zaznaczenie kamerą</translation>
     </message>
     <message>
         <source>Return the camera to your camp (%1)</source>
-        <translation>Kamerayı kampına döndür (%1)</translation>
+        <translation>Wróć kamerą do obozu (%1)</translation>
     </message>
     <message>
         <source>Hide the camera controls</source>
-        <translation>Kamera denetimlerini gizle</translation>
+        <translation>Ukryj sterowanie kamerą</translation>
     </message>
     <message>
         <source>Show how to move the camera</source>
-        <translation>Kameranın nasıl hareket ettirileceğini göster</translation>
+        <translation>Pokaż, jak poruszać kamerą</translation>
     </message>
     <message>
         <source>Camera controls</source>
-        <translation>Kamera denetimleri</translation>
+        <translation>Sterowanie kamerą</translation>
     </message>
     <message>
         <source>Open the field manual (help)</source>
-        <translation>Sahra kılavuzunu aç (yardım)</translation>
+        <translation>Otwórz podręcznik polowy (pomoc)</translation>
     </message>
     <message>
         <source>SPECTATOR</source>
-        <translation>İZLEYİCİ</translation>
+        <translation>OBSERWATOR</translation>
     </message>
     <message>
         <source>Watching a CPU-only match. You cannot issue commands.</source>
-        <translation>Yalnızca bilgisayarların oynadığı bir maçı izliyorsun. Emir veremezsin.</translation>
+        <translation>Oglądasz mecz samych komputerów. Nie możesz wydawać rozkazów.</translation>
     </message>
     <message>
         <source>Resource and building guide</source>
-        <translation>Kaynak ve yapı rehberi</translation>
+        <translation>Przewodnik po surowcach i budowlach</translation>
     </message>
     <message>
         <source>Manpower</source>
-        <translation>İnsan gücü</translation>
+        <translation>Ludzie</translation>
     </message>
     <message>
         <source>Manpower in the field: %1 of %2.
 Every troop costs manpower; a squad of twelve builders costs ten. This is not a headcount - the selection panel counts soldiers.</source>
-        <translation>Sahadaki insan gücü: %2 üzerinden %1.
-Her birlik insan gücü harcar; on iki kişilik bir inşaatçı müfrezesi on harcar. Bu bir kişi sayımı değildir - seçim paneli askerleri sayar.</translation>
+        <translation>Ludzie w polu: %1 z %2.
+Każdy oddział kosztuje ludzi; oddział dwunastu budowniczych kosztuje dziesięciu. To nie jest liczba głów — panel zaznaczenia liczy żołnierzy.</translation>
     </message>
     <message>
         <source>Human players</source>
-        <translation>İnsan oyuncular</translation>
+        <translation>Gracze ludzcy</translation>
     </message>
     <message>
         <source>AI players</source>
-        <translation>Bilgisayar oyuncuları</translation>
+        <translation>Gracze komputerowi</translation>
     </message>
     <message>
         <source>Enemies defeated</source>
-        <translation>Yenilen düşmanlar</translation>
+        <translation>Wrogowie pokonani</translation>
     </message>
     <message>
         <source>Minimap</source>
-        <translation>Mini harita</translation>
+        <translation>Minimapa</translation>
     </message>
     <message>
         <source>MINIMAP</source>
-        <translation>MİNİ HARİTA</translation>
+        <translation>MINIMAPA</translation>
     </message>
     <message>
         <source>Left click moves the camera, right click orders selected troops.
 Visible: currently scouted, enemies shown.
 Explored: seen before, terrain only.
 Unseen: never scouted.</source>
-        <translation>Sol tık kamerayı taşır, sağ tık seçili birliklere emir verir.
-Görünür: şu anda gözetleniyor, düşmanlar gösterilir.
-Keşfedilmiş: daha önce görüldü, yalnızca arazi.
-Görülmemiş: hiç gözetlenmedi.</translation>
+        <translation>Lewy przycisk przesuwa kamerę, prawy wydaje rozkaz zaznaczonym oddziałom.
+Widoczne: właśnie rozpoznane, wrogowie są pokazani.
+Zbadane: widziane wcześniej, sam teren.
+Nieznane: nigdy nie rozpoznane.</translation>
     </message>
     <message>
         <source>Visible</source>
-        <translation>Görünür</translation>
+        <translation>Widoczne</translation>
     </message>
     <message>
         <source>Explored</source>
-        <translation>Keşfedilmiş</translation>
+        <translation>Zbadane</translation>
     </message>
     <message>
         <source>Unseen</source>
-        <translation>Görülmemiş</translation>
+        <translation>Nieznane</translation>
     </message>
 </context>
 <context>
     <name>HelpPanel</name>
     <message>
         <source>Basics</source>
-        <translation>Temeller</translation>
+        <translation>Podstawy</translation>
     </message>
     <message>
         <source>Economy</source>
-        <translation>Ekonomi</translation>
+        <translation>Gospodarka</translation>
     </message>
     <message>
         <source>Buildings</source>
-        <translation>Yapılar</translation>
+        <translation>Budowle</translation>
     </message>
     <message>
         <source>Army</source>
-        <translation>Ordu</translation>
+        <translation>Armia</translation>
     </message>
     <message>
         <source>Commander</source>
-        <translation>Komutan</translation>
+        <translation>Dowódca</translation>
     </message>
     <message>
         <source>Camera</source>
@@ -3632,191 +3634,191 @@ Görülmemiş: hiç gözetlenmedi.</translation>
     </message>
     <message>
         <source>Controls</source>
-        <translation>Denetimler</translation>
+        <translation>Sterowanie</translation>
     </message>
     <message>
         <source>Tutorial</source>
-        <translation>Eğitim</translation>
+        <translation>Samouczek</translation>
     </message>
     <message>
         <source>Selecting</source>
-        <translation>Seçme</translation>
+        <translation>Zaznaczanie</translation>
     </message>
     <message>
         <source>Left-click a unit to select it, or hold the left button and drag a box around several. Hold Ctrl to add to the selection. Selected units show a ring at their feet, and the panel at the bottom lists them by type - click a type to keep only those.</source>
-        <translation>Bir birimi seçmek için sol tıkla ya da sol tuşu basılı tutup birkaçının çevresine kutu çiz. Seçime eklemek için Ctrl&apos;ü basılı tut. Seçili birimlerin ayaklarında bir halka belirir ve alttaki panel onları türlerine göre sıralar - yalnızca birini tutmak için bir türe tıkla.</translation>
+        <translation>Kliknij jednostkę lewym przyciskiem, by ją zaznaczyć, albo przytrzymaj lewy i zakreśl ramką kilka. Przytrzymaj Ctrl, by dodać do zaznaczenia. Zaznaczone jednostki mają pierścień u stóp, a panel na dole wypisuje je według typu — kliknij typ, by zostawić tylko te.</translation>
     </message>
     <message>
         <source>Giving orders</source>
-        <translation>Emir verme</translation>
+        <translation>Wydawanie rozkazów</translation>
     </message>
     <message>
         <source>Right-click the ground to move, right-click an enemy to attack. Hold the right button and drag before releasing to choose the way the troops will face: one unit turns to face where you drag, several units are placed in formation facing it. The command grid offers Attack, Guard, Patrol, Hold, Stop and the builder and commander orders. A marker shows where troops are going and the banner above the grid confirms each order - or explains why it was refused.</source>
-        <translation>Hareket için zemine sağ tıkla, saldırı için düşmana sağ tıkla. Birliklerin hangi yöne bakacağını seçmek için sağ tuşu basılı tutup bırakmadan sürükle: tek birim sürüklediğin yöne döner, birkaç birim ise o yöne bakan bir düzene yerleşir. Komut ızgarası Saldır, Nöbet, Devriye, Mevzi, Dur ile inşaatçı ve komutan emirlerini sunar. Bir işaret birliklerin nereye gittiğini gösterir ve ızgaranın üstündeki şerit her emri onaylar - ya da neden geri çevrildiğini açıklar.</translation>
+        <translation>Kliknij ziemię prawym przyciskiem, by iść, kliknij wroga prawym, by go zaatakować. Przytrzymaj prawy i przeciągnij przed puszczeniem, by wybrać kierunek, w którym staną oddziały: jedna jednostka obraca się tam, gdzie przeciągasz, kilka ustawia się w szyku zwróconym w tę stronę. Siatka poleceń oferuje Atakuj, Strzeż, Patroluj, Trzymaj, Stój oraz rozkazy budowniczego i dowódcy. Znacznik pokazuje, dokąd idą oddziały, a baner nad siatką potwierdza każdy rozkaz — albo tłumaczy, czemu został odrzucony.</translation>
     </message>
     <message>
         <source>Guard - hold a spot</source>
-        <translation>Nöbet - bir noktayı tutma</translation>
+        <translation>Strzeż — pilnuj punktu</translation>
     </message>
     <message>
         <source>Press Guard, then left-click the ground the troops should hold. They fight anything that comes within about 10 m of that spot, let go of anything that runs past it, and walk back once the fight is over. Press Guard again, or give a move or attack order, to release them; Stop alone will not lift it. Any soldier can guard.</source>
-        <translation>Nöbet&apos;e bas, sonra birliklerin tutacağı zemine sol tıkla. O noktanın yaklaşık 10 m yakınına gelen her şeyle çarpışır, yanından koşup geçeni bırakır ve çarpışma bitince geri yürürler. Onları çözmek için yeniden Nöbet&apos;e bas ya da hareket veya saldırı emri ver; tek başına Dur bunu kaldırmaz. Her asker nöbet tutabilir.</translation>
+        <translation>Naciśnij Strzeż, potem kliknij lewym ziemię, której oddziały mają pilnować. Biją się ze wszystkim, co wejdzie mniej więcej na 10 m od punktu, puszczają to, co przebiegnie dalej, i wracają po walce. Naciśnij Strzeż ponownie albo wydaj rozkaz ruchu lub ataku, by je zwolnić; samo Stój tego nie zdejmie. Strzec może każdy żołnierz.</translation>
     </message>
     <message>
         <source>Hold - stand fast</source>
-        <translation>Mevzi - sıkı durma</translation>
+        <translation>Trzymaj — ani kroku wstecz</translation>
     </message>
     <message>
         <source>Press Hold and the troops kneel where they stand. They never take a step, but they reach further, hit harder and take more punishment than they would on the move, and braced spears gut a cavalry charge. That is the trade: pursuit for staying power. Press Hold again, or give a move, attack or Stop order, to stand them up. Only archers and spearmen can hold.</source>
-        <translation>Mevzi&apos;ye bas, birlikler durdukları yerde diz çöker. Bir adım bile atmazlar, ama hareket hâlindekinden daha uzağa erişir, daha sert vurur ve daha çok dayanırlar; payandalı mızraklar da bir süvari hücumunu deşer. Takas budur: takip yerine dayanıklılık. Onları ayağa kaldırmak için yeniden Mevzi&apos;ye bas ya da hareket, saldırı veya Dur emri ver. Yalnızca okçular ve mızrakçılar mevzi tutabilir.</translation>
+        <translation>Naciśnij Trzymaj, a oddziały przyklękną tam, gdzie stoją. Nie zrobią ani kroku, ale sięgają dalej, biją mocniej i wytrzymują więcej niż w ruchu, a podparte włócznie wypruwają szarżę jazdy. Taka jest wymiana: pościg za wytrwałość. Naciśnij Trzymaj ponownie albo wydaj rozkaz ruchu, ataku lub Stój, by je postawić. Trzymać mogą tylko łucznicy i włócznicy.</translation>
     </message>
     <message>
         <source>Patrol - walk a beat</source>
-        <translation>Devriye - mekik dokuma</translation>
+        <translation>Patroluj — chodź swoją trasą</translation>
     </message>
     <message>
         <source>Press Patrol, left-click the first waypoint, then left-click the second. The troops march between the two points for good and attack whatever crosses the line - useful for watching a flank while you look elsewhere. Right-click cancels while you are setting it; any other order, or Stop, clears the route.</source>
-        <translation>Devriye&apos;ye bas, ilk ara noktaya sol tıkla, sonra ikincisine sol tıkla. Birlikler iki nokta arasında sürekli yürür ve hattı geçen her şeye saldırır - sen başka yere bakarken bir kanadı gözetlemek için elverişlidir. Ayarlarken sağ tık iptal eder; başka herhangi bir emir ya da Dur güzergâhı siler.</translation>
+        <translation>Naciśnij Patroluj, kliknij lewym pierwszy punkt, potem lewym drugi. Oddziały maszerują między nimi bez końca i atakują wszystko, co przetnie linię — przydatne, gdy pilnujesz skrzydła, patrząc gdzie indziej. Prawy przycisk anuluje w trakcie ustawiania; każdy inny rozkaz albo Stój kasuje trasę.</translation>
     </message>
     <message>
         <source>Winning and losing</source>
-        <translation>Kazanmak ve kaybetmek</translation>
+        <translation>Zwycięstwo i porażka</translation>
     </message>
     <message>
         <source>Each mission states its own victory and defeat conditions in the Objectives screen (Escape, then Objectives). In every battle your commander must survive: a nation dies with the man who leads it, and a lone commander is already lost.</source>
-        <translation>Her görev kendi zafer ve yenilgi koşullarını Hedefler ekranında belirtir (Escape, sonra Hedefler). Her savaşta komutanın hayatta kalmalıdır: bir ulus, kendisini yöneten adamla birlikte ölür ve yalnız kalmış bir komutan çoktan yitirilmiştir.</translation>
+        <translation>Każda misja podaje własne warunki zwycięstwa i porażki na ekranie Celów (Escape, potem Cele). W każdej bitwie twój dowódca musi przeżyć: naród umiera wraz z człowiekiem, który go prowadzi, a samotny dowódca jest już przegrany.</translation>
     </message>
     <message>
         <source>The three materials</source>
-        <translation>Üç hammadde</translation>
+        <translation>Trzy surowce</translation>
     </message>
     <message>
         <source>Wood comes from pine trees, stone from boulders and iron from ore seams. A builder harvests a node with Collect (or Auto Gather), then carries the load to the stone yard beside a friendly barracks. Only when it is dropped there does the counter in the top bar rise. The yard&apos;s piles grow and shrink with your stores.</source>
-        <translation>Odun çam ağaçlarından, taş kayalardan, demir cevher damarlarından gelir. Bir inşaatçı bir kaynağı Topla (ya da Otomatik Topla) ile işler, sonra yükü dost bir kışlanın yanındaki taş avlusuna taşır. Sayaç üst çubukta ancak yük oraya bırakılınca yükselir. Avlunun yığınları depona göre büyür ve küçülür.</translation>
+        <translation>Drewno pochodzi z sosen, kamień z głazów, a żelazo z żył rudy. Budowniczy obrabia źródło rozkazem Zbieraj (albo auto-zbieraniem), a potem niesie ładunek na skład przy przyjaznych koszarach. Dopiero po jego złożeniu licznik na górnym pasku rośnie. Stosy na składzie rosną i maleją razem z twoimi zapasami.</translation>
     </message>
     <message>
         <source>Food</source>
-        <translation>Yiyecek</translation>
+        <translation>Żywność</translation>
     </message>
     <message>
         <source>Food feeds your settlement: every civilian recruited at a Home costs it. A Farm grows grain in cycles; when the field turns gold a builder reaps it with Collect and hauls the grain home, and the field is sown again. Builders can also slaughter a sheep for a smaller haul. Auto Gather set to food keeps a builder working the farms.</source>
-        <translation>Yiyecek yerleşimini besler: Ev&apos;de devşirilen her sivil ondan harcar. Tarla dönemler hâlinde tahıl yetiştirir; tarla altın rengine döndüğünde bir inşaatçı onu Topla ile biçer ve tahılı eve taşır, sonra tarla yeniden ekilir. İnşaatçılar daha küçük bir yük için koyun da kesebilir. Yiyeceğe ayarlı Otomatik Topla, bir inşaatçıyı tarlalarda çalıştırmayı sürdürür.</translation>
+        <translation>Żywność karmi twoją osadę: kosztuje jej każdy cywil zrekrutowany w Domu. Farma uprawia zboże w cyklach; gdy pole złocieje, budowniczy zżyna je rozkazem Zbieraj i zwozi ziarno, po czym pole jest obsiewane na nowo. Budowniczowie mogą też ubić owcę dla mniejszego łupu. Auto-zbieranie ustawione na żywność każe budowniczemu pracować przy farmach.</translation>
     </message>
     <message>
         <source>Gold and trade</source>
-        <translation>Altın ve ticaret</translation>
+        <translation>Złoto i handel</translation>
     </message>
     <message>
         <source>Gold comes with the camp and cannot be mined. A marketplace lets you buy materials for gold and sell surplus for it; a temple costs gold to raise.</source>
-        <translation>Altın kampla birlikte gelir ve çıkarılamaz. Bir pazar, altın karşılığı hammadde almanı ve fazlanı satmanı sağlar; bir tapınak yükseltmek altına mal olur.</translation>
+        <translation>Złoto przychodzi razem z obozem i nie da się go wydobyć. Targowisko pozwala kupować za nie materiały i sprzedawać nadmiar; świątynia kosztuje złoto.</translation>
     </message>
     <message>
         <source>Costs</source>
-        <translation>Bedeller</translation>
+        <translation>Koszty</translation>
     </message>
     <message>
         <source>Every card - recruit or building - lists its price. A grey card means something is short; hover it to read what. Homes cost 50 wood and 15 stone, a farm 40 wood and 10 stone, a barracks 100 wood and 60 stone, a defence tower 60 wood and 80 stone; soldiers cost wood and iron plus reserve, and civilians cost food.</source>
-        <translation>Her kart - devşirme ya da yapı - fiyatını yazar. Gri bir kart bir şeyin eksik olduğunu gösterir; neyin eksik olduğunu okumak için üzerine gel. Evler 50 odun ve 15 taş, tarla 40 odun ve 10 taş, kışla 100 odun ve 60 taş, savunma kulesi 60 odun ve 80 taş tutar; askerler odun ve demirin yanında yedek, siviller ise yiyecek harcar.</translation>
+        <translation>Każda karta — rekruta czy budowli — podaje swoją cenę. Szara karta znaczy, że czegoś brakuje; najedź na nią, by przeczytać czego. Domy kosztują 50 drewna i 15 kamienia, farma 40 drewna i 10 kamienia, koszary 100 drewna i 60 kamienia, wieża obronna 60 drewna i 80 kamienia; żołnierze kosztują drewno i żelazo oraz rezerwę, a cywile żywność.</translation>
     </message>
     <message>
         <source>Placing a structure</source>
-        <translation>Bir yapı yerleştirme</translation>
+        <translation>Stawianie budowli</translation>
     </message>
     <message>
         <source>Select a builder and press Build to open the structure list. Move the outline over the ground: green means flat, clear ground; red means it is blocked by another building, water or a slope. Scroll to rotate, left-click to confirm, right-click to cancel. The builder walks over and works until it stands.</source>
-        <translation>Bir inşaatçı seç ve yapı listesini açmak için İnşa&apos;ya bas. Taslağı zemin üzerinde gezdir: yeşil düz ve boş zemin demektir; kırmızı başka bir yapı, su ya da bir eğim yüzünden kapalı demektir. Döndürmek için tekerleği çevir, onaylamak için sol tıkla, iptal için sağ tıkla. İnşaatçı oraya yürür ve yapı dikilene kadar çalışır.</translation>
+        <translation>Zaznacz budowniczego i naciśnij Buduj, by otworzyć listę budowli. Przesuń obrys nad ziemią: zielony znaczy płaski, wolny grunt; czerwony — że blokuje go inna budowla, woda albo stok. Kółko obraca, lewy przycisk zatwierdza, prawy anuluje. Budowniczy podchodzi i pracuje, aż budowla stanie.</translation>
     </message>
     <message>
         <source>What each building does</source>
-        <translation>Her yapı ne işe yarar</translation>
+        <translation>Co robi każda budowla</translation>
     </message>
     <message>
         <source>Barracks recruit soldiers and hold your stockpile yard. Homes raise families and civilians. Farms grow grain that builders reap for food. Defence towers shoot at anything in range. Marketplaces trade. Temples strengthen morale and take in healers. Walls and gates shape the field; gates open for your own troops.</source>
-        <translation>Kışlalar asker devşirir ve depo avlunu barındırır. Evler aileler ve siviller yetiştirir. Tarlalar, inşaatçıların yiyecek için biçtiği tahılı büyütür. Savunma kuleleri menzillerine gireni vurur. Pazarlar ticaret yapar. Tapınaklar morali güçlendirir ve şifacıları barındırır. Surlar ve kapılar meydanı biçimlendirir; kapılar kendi birliklerine açılır.</translation>
+        <translation>Koszary rekrutują żołnierzy i mieszczą twój skład. Domy wychowują rodziny i cywilów. Farmy uprawiają zboże, które budowniczowie zżynają na żywność. Wieże obronne strzelają do wszystkiego w zasięgu. Targowiska handlują. Świątynie umacniają morale i przyjmują uzdrowicieli. Mury i bramy kształtują pole; bramy otwierają się przed twoimi oddziałami.</translation>
     </message>
     <message>
         <source>Repair and dismantle</source>
-        <translation>Onarım ve sökme</translation>
+        <translation>Naprawa i rozbiórka</translation>
     </message>
     <message>
         <source>A damaged building can be repaired by a builder with the Repair order. A building you no longer need can be taken down with the Dismantle order: pick your builders, press Dismantle and click the building. Part of what it cost comes back once the work is done, and calling the crew off before then pays nothing.</source>
-        <translation>Hasarlı bir yapı, Onar emriyle bir inşaatçı tarafından onarılabilir. Artık gerek duymadığın bir yapı Sök emriyle indirilebilir: inşaatçılarını seç, Sök&apos;e bas ve yapıya tıkla. İş bittiğinde bedelinin bir kısmı geri gelir; ekibi ondan önce geri çağırmak hiçbir şey ödemez.</translation>
+        <translation>Uszkodzoną budowlę może naprawić budowniczy rozkazem Napraw. Budowlę, która nie jest już potrzebna, można zdjąć rozkazem Rozbierz: wybierz budowniczych, naciśnij Rozbierz i kliknij budowlę. Po ukończeniu pracy wraca część jej kosztu, a odwołanie ekipy wcześniej nie daje nic.</translation>
     </message>
     <message>
         <source>Recruiting</source>
-        <translation>Devşirme</translation>
+        <translation>Rekrutacja</translation>
     </message>
     <message>
         <source>Left-click a barracks and pick a soldier; healers take their vows at a temple instead. Recruits queue up to five deep and march out to the rally flag. Each costs reserve from the building&apos;s own pool as well as materials.</source>
-        <translation>Bir kışlaya sol tıkla ve bir asker seç; şifacılar yeminlerini bunun yerine bir tapınakta eder. Devşirilenler en çok beş derinliğinde sıraya girer ve toplanma sancağına yürür. Her biri hammaddenin yanında yapının kendi havuzundan da yedek harcar.</translation>
+        <translation>Kliknij koszary lewym przyciskiem i wybierz żołnierza; uzdrowiciele składają śluby w świątyni. Rekruci ustawiają się w kolejce po pięciu i wychodzą do sztandaru zbiórki. Każdy kosztuje rezerwę z własnej puli budowli oraz materiały.</translation>
     </message>
     <message>
         <source>Reserve</source>
-        <translation>Yedek</translation>
+        <translation>Rezerwa</translation>
     </message>
     <message>
         <source>A barracks or temple starts with a reserve and spends it on every recruit; the card shows exactly what each one costs. Homes refill it: each Home raises families over time, a civilian can be recruited there for food and sent to either building with Deliver, and that building&apos;s reserve grows. A squad then stands in the field for what it cost, which is what the top bar counts against the map&apos;s manpower cap.</source>
-        <translation>Bir kışla ya da tapınak bir yedekle başlar ve her devşirmede ondan harcar; kart her birinin tam olarak neye mal olduğunu gösterir. Evler onu tazeler: her Ev zamanla aile yetiştirir, orada yiyecek karşılığı bir sivil devşirilip Teslim et ile iki yapıdan birine yollanabilir ve o yapının yedeği büyür. Böylece bir müfreze sahada mal olduğu kadar durur; üst çubuğun haritanın insan gücü sınırına karşı saydığı da budur.</translation>
+        <translation>Koszary lub świątynia zaczynają z rezerwą i wydają ją na każdego rekruta; karta pokazuje dokładnie, ile kosztuje każdy z nich. Domy ją uzupełniają: każdy Dom z czasem wychowuje rodziny, można tam za żywność zrekrutować cywila i posłać go rozkazem Odstaw do jednej z tych budowli, a jej rezerwa rośnie. Oddział stoi potem w polu za to, co kosztował — i właśnie to górny pasek zestawia z limitem ludzi na mapie.</translation>
     </message>
     <message>
         <source>Formations and lines</source>
-        <translation>Düzenler ve hatlar</translation>
+        <translation>Szyki i linie</translation>
     </message>
     <message>
         <source>Spearmen hold a line, archers punish from behind it, cavalry breaks flanks, healers mend nearby wounded on their own. Right-click and drag with several units selected to deploy them in a formation that faces the drag; the Formation order opens the same planner where they stand. Run trades stamina for speed.</source>
-        <translation>Mızrakçılar bir hat tutar, okçular arkasından cezalandırır, süvari kanatları kırar, şifacılar yakındaki yaralılara kendiliğinden bakar. Birkaç birim seçiliyken sağ tıklayıp sürükle ve onları sürüklediğin yöne bakan bir düzende yerleştir; Düzen emri aynı planlayıcıyı durdukları yerde açar. Koşmak dayanıklılığı hıza takas eder.</translation>
+        <translation>Włócznicy trzymają linię, łucznicy karzą zza niej, jazda łamie skrzydła, a uzdrowiciele sami opatrują rannych w pobliżu. Kliknij prawym i przeciągnij, mając zaznaczonych kilka jednostek, by rozstawić je w szyku zwróconym zgodnie z przeciągnięciem; rozkaz Szyk otwiera ten sam planer tam, gdzie stoją. Bieg oddaje wytrzymałość za szybkość.</translation>
     </message>
     <message>
         <source>The standard</source>
-        <translation>Sancak</translation>
+        <translation>Sztandar</translation>
     </message>
     <message>
         <source>Your commander carries the standard. Troops close to him fight with higher morale, and morale decides who breaks first. Keep him behind the spears: if he falls the mission is lost.</source>
-        <translation>Sancağı komutanın taşır. Ona yakın birlikler daha yüksek morille çarpışır ve önce kimin dağılacağına moral karar verir. Onu mızrakların gerisinde tut: düşerse görev kaybedilir.</translation>
+        <translation>Twój dowódca niesie sztandar. Oddziały blisko niego walczą z wyższym morale, a morale rozstrzyga, kto pierwszy pęknie. Trzymaj go za włóczniami: jeśli padnie, misja jest przegrana.</translation>
     </message>
     <message>
         <source>Aura and Rally</source>
-        <translation>Aura ve Toplanma</translation>
+        <translation>Aura i zbiórka</translation>
     </message>
     <message>
         <source>With the commander selected, Aura empowers his troops for a stretch and then has to recharge - each commander brings his own bonus, radius and timings, and the button prints them along with the time left. A glow marks every soldier inside the ring, the ring travels with him, and a wounded commander cannot call it. Rally plants a flag that your army marches to - useful for pulling a scattered force back into a line.</source>
-        <translation>Komutan seçiliyken Aura, birliklerini bir süre güçlendirir ve sonra yenilenmesi gerekir - her komutan kendi desteğini, yarıçapını ve sürelerini getirir ve düğme bunları kalan süreyle birlikte yazar. Halkanın içindeki her askeri bir parıltı işaretler, halka onunla birlikte gezer ve yaralı bir komutan bunu çağıramaz. Toplanma, ordunun yürüdüğü bir sancak diker - dağılmış bir kuvveti tekrar hatta çekmek için elverişlidir.</translation>
+        <translation>Gdy dowódca jest zaznaczony, Aura wzmacnia jego oddziały na jakiś czas i potem musi się odnowić — każdy dowódca wnosi własną premię, promień i czasy, a przycisk je wypisuje razem z pozostałym czasem. Poświata znaczy każdego żołnierza wewnątrz kręgu, krąg wędruje razem z nim, a ranny dowódca nie może jej wezwać. Zbiórka wbija sztandar, do którego maszeruje twoja armia — przydatne, by ściągnąć rozproszone siły z powrotem w linię.</translation>
     </message>
     <message>
         <source>Taking direct control</source>
-        <translation>Doğrudan denetimi alma</translation>
+        <translation>Przejęcie bezpośredniego dowodzenia</translation>
     </message>
     <message>
         <source>Where the mission allows it, you can step into the commander&apos;s boots and lead from the field. The controls for that mode are listed under Controls.</source>
-        <translation>Görevin izin verdiği yerde komutanın yerine geçip meydandan yönetebilirsin. O kipin denetimleri Denetimler altında sıralanmıştır.</translation>
+        <translation>Tam, gdzie misja na to pozwala, możesz wejść w buty dowódcy i poprowadzić bitwę z pola. Sterowanie w tym trybie wypisano w zakładce Sterowanie.</translation>
     </message>
     <message>
         <source>Pace and view</source>
-        <translation>Tempo ve görüş</translation>
+        <translation>Tempo i widok</translation>
     </message>
     <message>
         <source>The top-left buttons pause the battle and set the speed, from half up to quadruple; Space pauses too, and + and - step through the speeds. The active speed stays lit while paused and can be changed there. Move the camera with the arrow keys or WASD, or push the mouse to the screen edge; scroll or PgUp and PgDown to zoom, Q and E to rotate, Ctrl with the up and down arrows to tilt; Home returns to your camp and Follow keeps the camera on your selection. Every one of these can be rebound under Settings › Controls, where each camera command says what it does.</source>
-        <translation>Sol üstteki düğmeler savaşı duraklatır ve hızı yarımdan dört katına kadar ayarlar; Boşluk da duraklatır, + ve - hızlar arasında ilerletir. Etkin hız duraklatılmışken de yanık kalır ve oradan değiştirilebilir. Kamerayı ok tuşları ya da WASD ile hareket ettir veya fareyi ekran kenarına it; yakınlaştırmak için tekerleği çevir ya da PgUp ile PgDown&apos;a bas, döndürmek için Q ve E, eğmek için Ctrl ile yukarı ve aşağı okları kullan; Home kampına döndürür ve İzle kamerayı seçiminin üzerinde tutar. Bunların hepsi Ayarlar › Denetimler altından yeniden atanabilir; orada her kamera komutu ne yaptığını söyler.</translation>
+        <translation>Przyciski w lewym górnym rogu wstrzymują bitwę i ustawiają tempo, od połowy po poczwórne; Spacja też wstrzymuje, a + i - przechodzą przez tempa. Wybrane tempo pozostaje podświetlone w pauzie i można je tam zmienić. Kamerą ruszasz strzałkami albo WASD, lub dosuwając mysz do krawędzi ekranu; kółko albo PgUp i PgDown przybliżają, Q i E obracają, Ctrl ze strzałkami góra-dół pochyla; Home wraca do obozu, a Śledzenie trzyma kamerę na zaznaczeniu. Każde z nich można przypisać na nowo w Ustawieniach › Sterowanie, gdzie przy każdym poleceniu kamery napisano, co robi.</translation>
     </message>
     <message>
         <source>Field manual</source>
-        <translation>Sahra kılavuzu</translation>
+        <translation>Podręcznik polowy</translation>
     </message>
     <message>
         <source>Field Manual</source>
-        <translation>Sahra Kılavuzu</translation>
+        <translation>Podręcznik polowy</translation>
     </message>
     <message>
         <source>Close the field manual</source>
-        <translation>Sahra kılavuzunu kapat</translation>
+        <translation>Zamknij podręcznik polowy</translation>
     </message>
     <message>
         <source>unbound</source>
-        <translation>atanmamış</translation>
+        <translation>nieprzypisane</translation>
     </message>
     <message>
         <source>The tutorial is a guided first battle on a small meadow. Each step names one goal, tells you when it is done, and explains why an order is refused. It also points: the button a step is talking about lights up in the command bar, and what you are meant to act on is ringed on the field and pinned on the minimap - press Show me to swing the camera onto it. Steps can be paused, skipped and replayed at any time.</source>
-        <translation>Eğitim, küçük bir çayırda yol gösterilen ilk savaştır. Her adım tek bir amaç belirtir, ne zaman tamamlandığını söyler ve bir emrin neden geri çevrildiğini açıklar. Ayrıca gösterir: bir adımın söz ettiği düğme komut çubuğunda yanar ve üzerinde iş görmen gereken şey sahada halkalanır ve mini haritaya iğnelenir - kamerayı ona çevirmek için Bana göster&apos;e bas. Adımlar her an duraklatılabilir, atlanabilir ve yeniden oynatılabilir.</translation>
+        <translation>Samouczek to prowadzona pierwsza bitwa na małej łące. Każdy krok nazywa jeden cel, mówi, kiedy jest wykonany, i tłumaczy, czemu rozkaz został odrzucony. Podpowiada też: przycisk, o którym mówi krok, zapala się na pasku poleceń, a to, na co masz zadziałać, dostaje pierścień na polu i pinezkę na minimapie — naciśnij Pokaż mi, by obrócić tam kamerę. Kroki można w każdej chwili wstrzymać, pominąć i powtórzyć.</translation>
     </message>
     <message>
         <source>%1. %2</source>
@@ -3824,144 +3826,144 @@ Görülmemiş: hiç gözetlenmedi.</translation>
     </message>
     <message>
         <source>Start the tutorial</source>
-        <translation>Eğitimi başlat</translation>
+        <translation>Rozpocznij samouczek</translation>
     </message>
     <message>
         <source>Show tutorial card</source>
-        <translation>Eğitim kartını göster</translation>
+        <translation>Pokaż kartę samouczka</translation>
     </message>
     <message>
         <source>Restart the steps</source>
-        <translation>Adımları yeniden başlat</translation>
+        <translation>Zacznij kroki od nowa</translation>
     </message>
     <message>
         <source>Close</source>
-        <translation>Kapat</translation>
+        <translation>Zamknij</translation>
     </message>
 </context>
 <context>
     <name>HintCard</name>
     <message>
         <source>Hide this</source>
-        <translation>Bunu gizle</translation>
+        <translation>Ukryj to</translation>
     </message>
     <message>
         <source>Never show this again</source>
-        <translation>Bunu bir daha gösterme</translation>
+        <translation>Nie pokazuj tego więcej</translation>
     </message>
 </context>
 <context>
     <name>InputBindings</name>
     <message>
         <source>Mouse Left</source>
-        <translation>Fare Sol</translation>
+        <translation>Lewy przycisk myszy</translation>
     </message>
     <message>
         <source>Mouse Right</source>
-        <translation>Fare Sağ</translation>
+        <translation>Prawy przycisk myszy</translation>
     </message>
     <message>
         <source>Mouse Middle</source>
-        <translation>Fare Orta</translation>
+        <translation>Środkowy przycisk myszy</translation>
     </message>
     <message>
         <source>Mouse Back</source>
-        <translation>Fare Geri</translation>
+        <translation>Przycisk myszy wstecz</translation>
     </message>
     <message>
         <source>Mouse Forward</source>
-        <translation>Fare İleri</translation>
+        <translation>Przycisk myszy naprzód</translation>
     </message>
     <message>
         <source>Unbound</source>
-        <translation>Atanmamış</translation>
+        <translation>Nieprzypisane</translation>
     </message>
 </context>
 <context>
     <name>IronCommandButton</name>
     <message>
         <source>%1 of %2</source>
-        <translation>%1 / %2</translation>
+        <translation>%1 z %2</translation>
     </message>
     <message>
         <source>Pick a target</source>
-        <translation>Bir hedef seç</translation>
+        <translation>Wskaż cel</translation>
     </message>
 </context>
 <context>
     <name>IronDialog</name>
     <message>
         <source>OK</source>
-        <translation>Tamam</translation>
+        <translation>OK</translation>
     </message>
 </context>
 <context>
     <name>IronOutcomeOverlay</name>
     <message>
         <source>Battle Report</source>
-        <translation>Savaş Raporu</translation>
+        <translation>Raport z bitwy</translation>
     </message>
     <message>
         <source>Battle Decided</source>
-        <translation>Savaş Karara Bağlandı</translation>
+        <translation>Bitwa rozstrzygnięta</translation>
     </message>
     <message>
         <source>The Campaign is Won</source>
-        <translation>Sefer Kazanıldı</translation>
+        <translation>Kampania wygrana</translation>
     </message>
     <message>
         <source>Training Complete</source>
-        <translation>Eğitim Tamamlandı</translation>
+        <translation>Samouczek ukończony</translation>
     </message>
     <message>
         <source>Victory Secured</source>
-        <translation>Zafer Güvenceye Alındı</translation>
+        <translation>Zwycięstwo zapewnione</translation>
     </message>
     <message>
         <source>Army Broken</source>
-        <translation>Ordu Kırıldı</translation>
+        <translation>Armia rozbita</translation>
     </message>
     <message>
         <source>One side is left holding the field.</source>
-        <translation>Meydanı tutan bir taraf kaldı.</translation>
+        <translation>Jedna strona zostaje na placu boju.</translation>
     </message>
     <message>
         <source>Every mission has fallen to your standard.</source>
-        <translation>Her görev sancağının önünde düştü.</translation>
+        <translation>Każda misja padła przed twoim sztandarem.</translation>
     </message>
     <message>
         <source>You can run an army now. The Barcid Road is waiting.</source>
-        <translation>Artık bir ordu yönetebilirsin. Barka Yolu seni bekliyor.</translation>
+        <translation>Umiesz już poprowadzić armię. Droga Barkidów czeka.</translation>
     </message>
     <message>
         <source>Every order carried out.</source>
-        <translation>Her emir yerine getirildi.</translation>
+        <translation>Każdy rozkaz wykonany.</translation>
     </message>
     <message>
         <source>Enemy command has fallen.</source>
-        <translation>Düşman komutası düştü.</translation>
+        <translation>Dowództwo wroga padło.</translation>
     </message>
     <message>
         <source>Your command has collapsed.</source>
-        <translation>Komutan çöktü.</translation>
+        <translation>Twoje dowództwo się załamało.</translation>
     </message>
     <message>
         <source>March the Campaign</source>
-        <translation>Sefere Çık</translation>
+        <translation>Wyrusz na kampanię</translation>
     </message>
 </context>
 <context>
     <name>IronSearchField</name>
     <message>
         <source>Search</source>
-        <translation>Ara</translation>
+        <translation>Szukaj</translation>
     </message>
 </context>
 <context>
     <name>IronSelectionSummary</name>
     <message>
         <source>Selected units</source>
-        <translation>Seçili birimler</translation>
+        <translation>Zaznaczone jednostki</translation>
     </message>
     <message>
         <source>%1 / %2</source>
@@ -3973,224 +3975,228 @@ Görülmemiş: hiç gözetlenmedi.</translation>
     </message>
     <message>
         <source>YOUR BUILDING</source>
-        <translation>YAPIN</translation>
+        <translation>TWOJA BUDOWLA</translation>
     </message>
     <message>
         <source>YOUR UNIT</source>
-        <translation>BİRİMİN</translation>
+        <translation>TWOJA JEDNOSTKA</translation>
     </message>
     <message>
         <source>ENEMY BUILDING</source>
-        <translation>DÜŞMAN YAPISI</translation>
+        <translation>BUDOWLA WROGA</translation>
     </message>
     <message>
         <source>ENEMY UNIT</source>
-        <translation>DÜŞMAN BİRİMİ</translation>
+        <translation>JEDNOSTKA WROGA</translation>
     </message>
     <message>
         <source>BUILDING</source>
-        <translation>YAPI</translation>
+        <translation>BUDOWLA</translation>
     </message>
     <message>
         <source>UNIT</source>
-        <translation>BİRİM</translation>
+        <translation>JEDNOSTKA</translation>
     </message>
     <message numerus="yes">
         <source>Under attack by %n of your units</source>
         <translation>
-            <numerusform>Senin %n biriminin saldırısı altında</numerusform>
+            <numerusform>Atakuje ją %n twoja jednostka</numerusform>
+            <numerusform>Atakują ją %n twoje jednostki</numerusform>
+            <numerusform>Atakuje ją %n twoich jednostek</numerusform>
         </translation>
     </message>
     <message>
         <source>Not engaged by your army</source>
-        <translation>Ordun tarafından çarpışmaya sokulmadı</translation>
+        <translation>Nie jest atakowany przez twoją armię</translation>
     </message>
     <message numerus="yes">
         <source>Under attack by %n enemies</source>
         <translation>
-            <numerusform>%n düşmanın saldırısı altında</numerusform>
+            <numerusform>Atakuje go %n wróg</numerusform>
+            <numerusform>Atakuje go %n wrogów</numerusform>
+            <numerusform>Atakuje go %n wrogów</numerusform>
         </translation>
     </message>
     <message>
         <source>Not under attack</source>
-        <translation>Saldırı altında değil</translation>
+        <translation>Nie jest atakowany</translation>
     </message>
     <message>
         <source>SELECTION</source>
-        <translation>SEÇİM</translation>
+        <translation>ZAZNACZENIE</translation>
     </message>
     <message>
         <source>SELECTED UNIT</source>
-        <translation>SEÇİLİ BİRİM</translation>
+        <translation>ZAZNACZONA JEDNOSTKA</translation>
     </message>
     <message>
         <source>SELECTED FORCE</source>
-        <translation>SEÇİLİ KUVVET</translation>
+        <translation>ZAZNACZONE SIŁY</translation>
     </message>
     <message>
         <source>%1 soldiers ready</source>
-        <translation>%1 asker hazır</translation>
+        <translation>Gotowych żołnierzy: %1</translation>
     </message>
     <message>
         <source>Show what this unit is for</source>
-        <translation>Bu birimin ne işe yaradığını göster</translation>
+        <translation>Pokaż, do czego służy ta jednostka</translation>
     </message>
     <message>
         <source>Unit details</source>
-        <translation>Birim ayrıntıları</translation>
+        <translation>Szczegóły jednostki</translation>
     </message>
     <message>
         <source>Enemy</source>
-        <translation>Düşman</translation>
+        <translation>Wróg</translation>
     </message>
     <message>
         <source>Yours</source>
-        <translation>Senin</translation>
+        <translation>Twoje</translation>
     </message>
     <message>
         <source>Neutral</source>
-        <translation>Tarafsız</translation>
+        <translation>Neutralny</translation>
     </message>
     <message>
         <source>1 unit</source>
-        <translation>1 birim</translation>
+        <translation>1 jednostka</translation>
     </message>
     <message>
         <source>%1 units</source>
-        <translation>%1 birim</translation>
+        <translation>jednostki: %1</translation>
     </message>
     <message>
         <source>%1 units  ·  %2 types</source>
-        <translation>%1 birim  ·  %2 tür</translation>
+        <translation>jednostki: %1  ·  typy: %2</translation>
     </message>
     <message>
         <source>ATK</source>
-        <translation>SLD</translation>
+        <translation>ATK</translation>
     </message>
     <message>
         <source>RNG</source>
-        <translation>MNZ</translation>
+        <translation>ZAS</translation>
     </message>
     <message>
         <source>SPD</source>
-        <translation>HIZ</translation>
+        <translation>SZYB</translation>
     </message>
     <message>
         <source>HEALTH</source>
-        <translation>CAN</translation>
+        <translation>ZDROWIE</translation>
     </message>
     <message>
         <source>%1 soldiers</source>
-        <translation>%1 asker</translation>
+        <translation>żołnierzy: %1</translation>
     </message>
     <message>
         <source>Drag a box over your troops, or click a unit</source>
-        <translation>Birliklerinin üzerine bir kutu çiz ya da bir birime tıkla</translation>
+        <translation>Zakreśl ramką swoje oddziały albo kliknij jednostkę</translation>
     </message>
     <message>
         <source>SOLDIERS</source>
-        <translation>ASKERLER</translation>
+        <translation>ŻOŁNIERZE</translation>
     </message>
     <message>
         <source>%1%</source>
-        <translation>%%1</translation>
+        <translation>%1%</translation>
     </message>
     <message>
         <source>STAMINA</source>
-        <translation>DAYANIKLILIK</translation>
+        <translation>WYTRZYMAŁOŚĆ</translation>
     </message>
     <message>
         <source> soldiers — </source>
-        <translation> asker — </translation>
+        <translation> żołnierzy — </translation>
     </message>
     <message>
         <source> (mixed)</source>
-        <translation> (karma)</translation>
+        <translation> (mieszane)</translation>
     </message>
     <message>
         <source>%1 wounded</source>
-        <translation>%1 yaralı</translation>
+        <translation>rannych: %1</translation>
     </message>
 </context>
 <context>
     <name>LevelLoader</name>
     <message>
         <source>Map load failed: %1</source>
-        <translation>Harita yüklenemedi: %1</translation>
+        <translation>Wczytanie mapy nie powiodło się: %1</translation>
     </message>
 </context>
 <context>
     <name>LevelOrchestrator</name>
     <message>
         <source>Prewarming templates: scanning unit profiles...</source>
-        <translation>Şablonlar ön ısıtılıyor: birim profilleri taranıyor...</translation>
+        <translation>Rozgrzewanie szablonów: przeglądanie profili jednostek...</translation>
     </message>
     <message>
         <source>Prewarming templates: %1 / %2</source>
-        <translation>Şablonlar ön ısıtılıyor: %1 / %2</translation>
+        <translation>Rozgrzewanie szablonów: %1 / %2</translation>
     </message>
     <message>
         <source>Queued deferred template warmup (%1 additional)</source>
-        <translation>Ertelenmiş şablon ısıtması sıraya alındı (%1 ek)</translation>
+        <translation>Odroczone rozgrzewanie szablonów w kolejce (dodatkowo %1)</translation>
     </message>
     <message>
         <source>Template warmup complete (%1 core, %2 total)</source>
-        <translation>Şablon ısıtması tamamlandı (%1 çekirdek, %2 toplam)</translation>
+        <translation>Rozgrzewanie szablonów zakończone (%1 podstawowych, %2 łącznie)</translation>
     </message>
     <message>
         <source>Template warmup cancelled</source>
-        <translation>Şablon ısıtması iptal edildi</translation>
+        <translation>Rozgrzewanie szablonów anulowane</translation>
     </message>
 </context>
 <context>
     <name>LoadGamePanel</name>
     <message>
         <source>%1h %2m</source>
-        <translation>%1sa %2dk</translation>
+        <translation>%1 h %2 min</translation>
     </message>
     <message>
         <source>%1m</source>
-        <translation>%1dk</translation>
+        <translation>%1 min</translation>
     </message>
     <message>
         <source>Campaign</source>
-        <translation>Sefer</translation>
+        <translation>Kampania</translation>
     </message>
     <message>
         <source>Skirmish</source>
-        <translation>Çatışma</translation>
+        <translation>Potyczka</translation>
     </message>
     <message>
         <source>%1 - autosave</source>
-        <translation>%1 - otomatik kayıt</translation>
+        <translation>%1 — autozapis</translation>
     </message>
     <message>
         <source>%1 - quicksave</source>
-        <translation>%1 - hızlı kayıt</translation>
+        <translation>%1 — szybki zapis</translation>
     </message>
     <message>
         <source>Load game</source>
-        <translation>Oyun yükle</translation>
+        <translation>Wczytaj grę</translation>
     </message>
     <message>
         <source>Cancel</source>
-        <translation>İptal</translation>
+        <translation>Anuluj</translation>
     </message>
     <message>
         <source>No saves found</source>
-        <translation>Kayıt bulunamadı</translation>
+        <translation>Nie znaleziono zapisów</translation>
     </message>
     <message>
         <source>Untitled Save</source>
-        <translation>Adsız Kayıt</translation>
+        <translation>Zapis bez nazwy</translation>
     </message>
     <message>
         <source>Unknown Map</source>
-        <translation>Bilinmeyen Harita</translation>
+        <translation>Nieznana mapa</translation>
     </message>
     <message>
         <source>No Preview</source>
-        <translation>Önizleme Yok</translation>
+        <translation>Brak podglądu</translation>
     </message>
     <message>
         <source>%1 · %2</source>
@@ -4198,532 +4204,532 @@ Görülmemiş: hiç gözetlenmedi.</translation>
     </message>
     <message>
         <source>Saved %1</source>
-        <translation>Kaydedildi %1</translation>
+        <translation>Zapisano %1</translation>
     </message>
     <message>
         <source>Played %1</source>
-        <translation>Oynandı %1</translation>
+        <translation>Grano %1</translation>
     </message>
     <message>
         <source>Export</source>
-        <translation>Dışa aktar</translation>
+        <translation>Eksportuj</translation>
     </message>
     <message>
         <source>Exported to %1</source>
-        <translation>%1 konumuna aktarıldı</translation>
+        <translation>Wyeksportowano do %1</translation>
     </message>
     <message>
         <source>Export failed</source>
-        <translation>Dışa aktarma başarısız</translation>
+        <translation>Eksport nie powiódł się</translation>
     </message>
     <message>
         <source>Verify</source>
-        <translation>Doğrula</translation>
+        <translation>Sprawdź</translation>
     </message>
     <message>
         <source>Verification Passed</source>
-        <translation>Doğrulama Başarılı</translation>
+        <translation>Sprawdzenie zaliczone</translation>
     </message>
     <message>
         <source>Verification Failed</source>
-        <translation>Doğrulama Başarısız</translation>
+        <translation>Sprawdzenie nieudane</translation>
     </message>
     <message>
         <source>&quot;%1&quot; is intact. The save file has not been corrupted.</source>
-        <translation>&quot;%1&quot; sağlam. Kayıt dosyası bozulmamış.</translation>
+        <translation>„%1” jest nienaruszony. Plik zapisu nie został uszkodzony.</translation>
     </message>
     <message>
         <source>&quot;%1&quot; is corrupted and cannot be loaded. The save failed its integrity check.</source>
-        <translation>&quot;%1&quot; bozuk ve yüklenemiyor. Kayıt bütünlük denetiminden geçemedi.</translation>
+        <translation>„%1” jest uszkodzony i nie da się go wczytać. Zapis nie przeszedł kontroli spójności.</translation>
     </message>
     <message>
         <source>Delete</source>
-        <translation>Sil</translation>
+        <translation>Usuń</translation>
     </message>
     <message>
         <source>Import...</source>
-        <translation>İçe aktar...</translation>
+        <translation>Importuj...</translation>
     </message>
     <message>
         <source>Load</source>
-        <translation>Yükle</translation>
+        <translation>Wczytaj</translation>
     </message>
     <message>
         <source>Pick a saved game first.</source>
-        <translation>Önce kayıtlı bir oyun seç.</translation>
+        <translation>Najpierw wybierz zapisaną grę.</translation>
     </message>
     <message>
         <source>Confirm Delete</source>
-        <translation>Silmeyi Onayla</translation>
+        <translation>Potwierdź usunięcie</translation>
     </message>
     <message>
         <source>Are you sure you want to delete the save:
 &quot;%1&quot;?
 
 This action cannot be undone.</source>
-        <translation>Şu kaydı silmek istediğine emin misin:
-&quot;%1&quot;?
+        <translation>Czy na pewno chcesz usunąć zapis:
+„%1”?
 
-Bu işlem geri alınamaz.</translation>
+Tej czynności nie da się cofnąć.</translation>
     </message>
     <message>
         <source>Save Verification</source>
-        <translation>Kayıt Doğrulaması</translation>
+        <translation>Sprawdzanie zapisu</translation>
     </message>
     <message>
         <source>Import Save</source>
-        <translation>Kayıt İçe Aktar</translation>
+        <translation>Import zapisu</translation>
     </message>
     <message>
         <source>Save files found in the exports folder:</source>
-        <translation>Dışa aktarma klasöründe bulunan kayıt dosyaları:</translation>
+        <translation>Pliki zapisu znalezione w folderze eksportu:</translation>
     </message>
     <message>
         <source>Import</source>
-        <translation>İçe aktar</translation>
+        <translation>Importuj</translation>
     </message>
     <message>
         <source>Imported as &quot;%1&quot;</source>
-        <translation>&quot;%1&quot; olarak içe aktarıldı</translation>
+        <translation>Zaimportowano jako „%1”</translation>
     </message>
     <message>
         <source>Import failed</source>
-        <translation>İçe aktarma başarısız</translation>
+        <translation>Import nie powiódł się</translation>
     </message>
     <message>
         <source>No importable save files were found.</source>
-        <translation>İçe aktarılabilir kayıt dosyası bulunamadı.</translation>
+        <translation>Nie znaleziono plików zapisu do zaimportowania.</translation>
     </message>
 </context>
 <context>
     <name>LoadScreen</name>
     <message>
         <source>Loading...</source>
-        <translation>Yükleniyor...</translation>
+        <translation>Wczytywanie...</translation>
     </message>
 </context>
 <context>
     <name>LoadingProgressTracker</name>
     <message>
         <source>Not Started</source>
-        <translation>Başlamadı</translation>
+        <translation>Nie rozpoczęto</translation>
     </message>
     <message>
         <source>Initializing...</source>
-        <translation>Hazırlanıyor...</translation>
+        <translation>Inicjowanie...</translation>
     </message>
     <message>
         <source>Loading Map Data...</source>
-        <translation>Harita Verisi Yükleniyor...</translation>
+        <translation>Wczytywanie danych mapy...</translation>
     </message>
     <message>
         <source>Loading Terrain...</source>
-        <translation>Arazi Yükleniyor...</translation>
+        <translation>Wczytywanie terenu...</translation>
     </message>
     <message>
         <source>Loading Biome...</source>
-        <translation>Biyom Yükleniyor...</translation>
+        <translation>Wczytywanie biomu...</translation>
     </message>
     <message>
         <source>Loading Water Features...</source>
-        <translation>Su Öğeleri Yükleniyor...</translation>
+        <translation>Wczytywanie wód...</translation>
     </message>
     <message>
         <source>Loading Roads...</source>
-        <translation>Yollar Yükleniyor...</translation>
+        <translation>Wczytywanie dróg...</translation>
     </message>
     <message>
         <source>Loading Environment...</source>
-        <translation>Çevre Yükleniyor...</translation>
+        <translation>Wczytywanie otoczenia...</translation>
     </message>
     <message>
         <source>Loading Fog...</source>
-        <translation>Sis Yükleniyor...</translation>
+        <translation>Wczytywanie mgły...</translation>
     </message>
     <message>
         <source>Loading Units &amp; Buildings...</source>
-        <translation>Birimler ve Yapılar Yükleniyor...</translation>
+        <translation>Wczytywanie jednostek i budowli...</translation>
     </message>
     <message>
         <source>Loading Audio...</source>
-        <translation>Ses Yükleniyor...</translation>
+        <translation>Wczytywanie dźwięku...</translation>
     </message>
     <message>
         <source>Generating Minimap...</source>
-        <translation>Mini Harita Oluşturuluyor...</translation>
+        <translation>Generowanie minimapy...</translation>
     </message>
     <message>
         <source>Initializing Game Systems...</source>
-        <translation>Oyun Sistemleri Hazırlanıyor...</translation>
+        <translation>Uruchamianie systemów gry...</translation>
     </message>
     <message>
         <source>Finalizing...</source>
-        <translation>Tamamlanıyor...</translation>
+        <translation>Kończenie...</translation>
     </message>
     <message>
         <source>Complete</source>
-        <translation>Tamam</translation>
+        <translation>Ukończono</translation>
     </message>
     <message>
         <source>Failed</source>
-        <translation>Başarısız</translation>
+        <translation>Niepowodzenie</translation>
     </message>
     <message>
         <source>Unknown</source>
-        <translation>Bilinmiyor</translation>
+        <translation>Nieznane</translation>
     </message>
 </context>
 <context>
     <name>LoadingTips</name>
     <message>
         <source>A commander who personally investigates every problem soon becomes one of them.</source>
-        <translation>Her sorunu bizzat inceleyen bir komutan, kısa sürede sorunlardan biri olur.</translation>
+        <translation>Dowódca, który osobiście bada każdy problem, wkrótce staje się jednym z nich.</translation>
     </message>
     <message>
         <source>A formation that becomes scattered is easier to surround and destroy.</source>
-        <translation>Dağılan bir düzeni kuşatmak ve yok etmek daha kolaydır.</translation>
+        <translation>Rozproszony szyk łatwiej otoczyć i zniszczyć.</translation>
     </message>
     <message>
         <source>A narrow front can prevent a numerically superior enemy from using all of its troops at once.</source>
-        <translation>Dar bir cephe, sayıca üstün bir düşmanın bütün birliklerini aynı anda kullanmasını engelleyebilir.</translation>
+        <translation>Wąski front może uniemożliwić liczniejszemu wrogowi użycie wszystkich oddziałów naraz.</translation>
     </message>
     <message>
         <source>A retreat made early can preserve an army. A retreat made late can become a rout.</source>
-        <translation>Erken yapılan bir çekilme orduyu kurtarabilir. Geç yapılan bir çekilme bozguna dönüşebilir.</translation>
+        <translation>Odwrót w porę ocala armię. Odwrót spóźniony zmienia się w pogrom.</translation>
     </message>
     <message>
         <source>A strong economy cannot help you if the enemy cuts the road between it and your army.</source>
-        <translation>Düşman, ekonominle ordunun arasındaki yolu keserse güçlü bir ekonomi seni kurtaramaz.</translation>
+        <translation>Silna gospodarka nic ci nie da, jeśli wróg przetnie drogę między nią a twoją armią.</translation>
     </message>
     <message>
         <source>A unit surrounded on several sides will struggle even if it began the fight at full strength.</source>
-        <translation>Birkaç yandan kuşatılan bir birim, çarpışmaya tam güçle girmiş olsa bile zorlanır.</translation>
+        <translation>Jednostka otoczona z kilku stron będzie w tarapatach, nawet jeśli zaczęła walkę w pełnej sile.</translation>
     </message>
     <message>
         <source>A well-defended position is one the enemy has not yet discovered a ridiculous way around.</source>
-        <translation>İyi savunulan bir mevzi, düşmanın etrafından dolaşmanın gülünç bir yolunu henüz bulamadığı mevzidir.</translation>
+        <translation>Dobrze broniona pozycja to taka, wokół której wróg nie znalazł jeszcze absurdalnego obejścia.</translation>
     </message>
     <message>
         <source>An army marches on its stomach. The stomach, regrettably, also requires a supply line.</source>
-        <translation>Ordu midesiyle yürür. Ne yazık ki mide de bir ikmal hattı ister.</translation>
+        <translation>Armia maszeruje na żołądku. Żołądek, niestety, potrzebuje też linii zaopatrzenia.</translation>
     </message>
     <message>
         <source>Archers perform best when protected from direct melee combat.</source>
-        <translation>Okçular doğrudan göğüs göğüse çarpışmadan korunduklarında en iyi iş görür.</translation>
+        <translation>Łucznicy spisują się najlepiej, gdy chroni się ich przed walką wręcz.</translation>
     </message>
     <message>
         <source>Avoid sending cavalry directly into prepared infantry formations.</source>
-        <translation>Süvariyi doğrudan hazırlanmış piyade düzenlerinin üstüne sürmekten kaçın.</translation>
+        <translation>Nie posyłaj jazdy wprost na przygotowane szyki piechoty.</translation>
     </message>
     <message>
         <source>Battles are often decided before contact through positioning, preparation, and logistics.</source>
-        <translation>Savaşlar çoğu kez temastan önce mevzilenme, hazırlık ve lojistikle karara bağlanır.</translation>
+        <translation>Bitwy często rozstrzygają się przed kontaktem — przez ustawienie, przygotowanie i zaopatrzenie.</translation>
     </message>
     <message>
         <source>Building near resources can reduce the amount of time workers spend carrying supplies.</source>
-        <translation>Kaynakların yakınına inşa etmek işçilerin yük taşımakla geçirdiği süreyi kısaltabilir.</translation>
+        <translation>Budowanie blisko surowców skraca czas, który robotnicy tracą na noszenie.</translation>
     </message>
     <message>
         <source>Capturing useful infrastructure can be more valuable than destroying it.</source>
-        <translation>İşe yarar bir altyapıyı ele geçirmek onu yıkmaktan daha değerli olabilir.</translation>
+        <translation>Zdobycie użytecznej infrastruktury bywa cenniejsze niż jej zniszczenie.</translation>
     </message>
     <message>
         <source>Cavalry can arrive quickly. Whether they should have arrived there is another question.</source>
-        <translation>Süvari hızla varabilir. Oraya varmalı mıydı, o başka bir soru.</translation>
+        <translation>Jazda potrafi przybyć szybko. Czy powinna była przybyć akurat tam, to inna sprawa.</translation>
     </message>
     <message>
         <source>Cavalry is most effective when attacking exposed flanks or isolated units.</source>
-        <translation>Süvari, açıkta kalmış kanatlara ya da yalnız kalmış birimlere saldırırken en etkilidir.</translation>
+        <translation>Jazda jest najskuteczniejsza, gdy uderza w odsłonięte skrzydła albo osamotnione jednostki.</translation>
     </message>
     <message>
         <source>Clearing a dangerous area is not the same as securing it. Check what remains nearby.</source>
-        <translation>Tehlikeli bir bölgeyi temizlemek onu güvenceye almakla aynı şey değildir. Yakında ne kaldığına bak.</translation>
+        <translation>Oczyszczenie niebezpiecznego terenu to nie to samo, co jego opanowanie. Sprawdź, co zostało w pobliżu.</translation>
     </message>
     <message>
         <source>Concentrating your forces can overwhelm a stronger enemy fighting in separate groups.</source>
-        <translation>Kuvvetlerini toplamak, ayrı gruplar hâlinde çarpışan daha güçlü bir düşmanı ezebilir.</translation>
+        <translation>Skupienie sił pozwala zmiażdżyć silniejszego wroga, który walczy w osobnych grupach.</translation>
     </message>
     <message>
         <source>Destroying an enemy army is useful. Preventing it from fighting effectively is often enough.</source>
-        <translation>Bir düşman ordusunu yok etmek işe yarar. Onun etkili biçimde çarpışmasını engellemek çoğu kez yeter.</translation>
+        <translation>Zniszczenie armii wroga jest użyteczne. Często wystarczy uniemożliwić jej skuteczną walkę.</translation>
     </message>
     <message>
         <source>Direct commander control can help turn a critical fight, but exposes your commander to greater danger.</source>
-        <translation>Komutanı doğrudan yönetmek kritik bir çarpışmayı çevirebilir, ama komutanını daha büyük tehlikeye atar.</translation>
+        <translation>Bezpośrednie dowodzenie potrafi odwrócić losy kluczowej walki, ale wystawia dowódcę na większe niebezpieczeństwo.</translation>
     </message>
     <message>
         <source>Do not chase fleeing enemies so far that your own formation collapses.</source>
-        <translation>Kaçan düşmanı kendi düzenin dağılacak kadar uzağa kovalama.</translation>
+        <translation>Nie goń uciekających wrogów tak daleko, by rozpadł się twój własny szyk.</translation>
     </message>
     <message>
         <source>Enemy reinforcements are much less dangerous when they never reach the battlefield.</source>
-        <translation>Düşman takviyeleri savaş alanına hiç ulaşmadıklarında çok daha az tehlikelidir.</translation>
+        <translation>Posiłki wroga są o wiele mniej groźne, gdy nigdy nie docierają na pole bitwy.</translation>
     </message>
     <message>
         <source>Every commander has a plan until a sheep joins the formation.</source>
-        <translation>Her komutanın bir planı vardır, düzene bir koyun katılana kadar.</translation>
+        <translation>Każdy dowódca ma plan, dopóki do szyku nie dołączy owca.</translation>
     </message>
     <message>
         <source>Every supply shortage begins with someone saying, “We probably have enough.”</source>
-        <translation>Her ikmal sıkıntısı birinin “herhâlde yeter” demesiyle başlar.</translation>
+        <translation>Każdy niedobór zaopatrzenia zaczyna się od czyjegoś „chyba wystarczy”.</translation>
     </message>
     <message>
         <source>Exhausted troops are less effective. Allow units time to recover when possible.</source>
-        <translation>Bitkin birlikler daha az etkilidir. Mümkün olduğunda birimlere toparlanma süresi tanı.</translation>
+        <translation>Wyczerpane oddziały są mniej skuteczne. Gdy się da, daj jednostkom czas na odpoczynek.</translation>
     </message>
     <message>
         <source>Formations are strongest when their flanks are protected.</source>
-        <translation>Düzenler kanatları korunduğunda en güçlüdür.</translation>
+        <translation>Szyki są najmocniejsze, gdy ich skrzydła są osłonięte.</translation>
     </message>
     <message>
         <source>High ground improves your ability to control an engagement.</source>
-        <translation>Yüksek zemin bir çarpışmayı denetleme yeteneğini artırır.</translation>
+        <translation>Wyżej położony teren ułatwia panowanie nad starciem.</translation>
     </message>
     <message>
         <source>History remembers the victorious general. The quartermaster remembers who forgot to bring food.</source>
-        <translation>Tarih muzaffer generali hatırlar. Levazımcı ise yiyecek getirmeyi kimin unuttuğunu hatırlar.</translation>
+        <translation>Historia pamięta zwycięskiego wodza. Kwatermistrz pamięta, kto zapomniał wziąć jedzenie.</translation>
     </message>
     <message>
         <source>If your formation looks impressive from a distance, you are at least halfway to military competence.</source>
-        <translation>Düzenin uzaktan etkileyici görünüyorsa askerî yeterliliğin en az yarısına gelmişsin demektir.</translation>
+        <translation>Jeśli twój szyk robi wrażenie z daleka, jesteś już co najmniej w połowie drogi do wojskowej biegłości.</translation>
     </message>
     <message>
         <source>Infantry can hold ground that faster units may struggle to defend.</source>
-        <translation>Piyade, daha hızlı birimlerin savunmakta zorlanacağı bir araziyi tutabilir.</translation>
+        <translation>Piechota utrzyma teren, którego szybsze jednostki mogą nie obronić.</translation>
     </message>
     <message>
         <source>Keep an escape route available when fighting near rivers, cliffs, or narrow passages.</source>
-        <translation>Nehirlerin, uçurumların ya da dar geçitlerin yakınında çarpışırken bir kaçış yolunu açık tut.</translation>
+        <translation>Walcząc przy rzekach, urwiskach lub wąskich przejściach, zostaw sobie drogę odwrotu.</translation>
     </message>
     <message>
         <source>Keep ranged troops away from routes enemy cavalry can reach quickly.</source>
-        <translation>Menzilli birlikleri düşman süvarisinin hızla ulaşabileceği yollardan uzak tut.</translation>
+        <translation>Trzymaj oddziały strzeleckie z dala od tras, do których szybko dosięgnie jazda wroga.</translation>
     </message>
     <message>
         <source>Keep reserve troops behind the main line to respond to breakthroughs.</source>
-        <translation>Yarmalara karşılık verebilmek için ana hattın gerisinde yedek birlikler bulundur.</translation>
+        <translation>Trzymaj odwody za główną linią, by odpowiedzieć na wyłomy.</translation>
     </message>
     <message>
         <source>Never underestimate the tactical value of looking busy while someone else carries the stone.</source>
-        <translation>Taşı başkası taşırken meşgul görünmenin taktik değerini asla küçümseme.</translation>
+        <translation>Nigdy nie lekceważ taktycznej wartości wyglądania na zajętego, gdy kamień niesie ktoś inny.</translation>
     </message>
     <message>
         <source>Protect your commander. Losing leadership at the wrong moment can decide a battle.</source>
-        <translation>Komutanını koru. Yanlış anda önderliği yitirmek bir savaşı belirleyebilir.</translation>
+        <translation>Chroń dowódcę. Utrata przywództwa w złej chwili potrafi rozstrzygnąć bitwę.</translation>
     </message>
     <message>
         <source>Repairing damaged defenses before the next attack is usually cheaper than rebuilding them afterward.</source>
-        <translation>Hasarlı savunmaları bir sonraki saldırıdan önce onarmak, sonradan yeniden inşa etmekten genellikle ucuzdur.</translation>
+        <translation>Naprawa uszkodzonych umocnień przed kolejnym atakiem zwykle kosztuje mniej niż odbudowa po nim.</translation>
     </message>
     <message>
         <source>Scout unfamiliar terrain before committing your main force.</source>
-        <translation>Ana kuvvetini sürmeden önce tanımadığın araziyi gözetle.</translation>
+        <translation>Rozpoznaj nieznany teren, zanim rzucisz w niego główne siły.</translation>
     </message>
     <message>
         <source>Stockpiles shorten resource delivery routes and improve economic efficiency.</source>
-        <translation>Depolar kaynak taşıma yollarını kısaltır ve ekonomik verimi artırır.</translation>
+        <translation>Składy skracają trasy dostaw i podnoszą sprawność gospodarki.</translation>
     </message>
     <message>
         <source>Terrain can be as important as numbers. Use forests, hills, and narrow passages to your advantage.</source>
-        <translation>Arazi sayı kadar önemli olabilir. Ormanları, tepeleri ve dar geçitleri lehine kullan.</translation>
+        <translation>Teren bywa równie ważny jak liczby. Wykorzystuj lasy, wzgórza i wąskie przejścia.</translation>
     </message>
     <message>
         <source>The Iron Sepulcher is best approached with troops prepared for an unexpected engagement.</source>
-        <translation>Demir Kabir&apos;e, beklenmedik bir çarpışmaya hazırlanmış birliklerle yaklaşmak en iyisidir.</translation>
+        <translation>Do Żelaznego Grobowca najlepiej podchodzić z oddziałami gotowymi na niespodziewane starcie.</translation>
     </message>
     <message>
         <source>The enemy cannot predict your strategy if you have forgotten it yourself.</source>
-        <translation>Stratejini kendin unuttuysan düşman da onu kestiremez.</translation>
+        <translation>Wróg nie przewidzi twojej strategii, jeśli sam już jej nie pamiętasz.</translation>
     </message>
     <message>
         <source>The shortest path between two points is rarely the route selected by an army.</source>
-        <translation>İki nokta arasındaki en kısa yol, nadiren bir ordunun seçtiği güzergâhtır.</translation>
+        <translation>Najkrótsza droga między dwoma punktami rzadko bywa trasą wybraną przez armię.</translation>
     </message>
     <message>
         <source>Use patrol orders to secure roads, settlements, and vulnerable resource routes.</source>
-        <translation>Yolları, yerleşimleri ve korunmasız kaynak güzergâhlarını güvenceye almak için devriye emirlerini kullan.</translation>
+        <translation>Rozkazami patrolu zabezpieczaj drogi, osady i wrażliwe szlaki surowcowe.</translation>
     </message>
     <message>
         <source>Walls are excellent defenses until someone remembers gates exist.</source>
-        <translation>Surlar, biri kapıların varlığını hatırlayana kadar mükemmel savunmalardır.</translation>
+        <translation>Mury są znakomitą obroną, dopóki ktoś nie przypomni sobie, że istnieją bramy.</translation>
     </message>
     <message>
         <source>War elephants are powerful, disciplined weapons of war, right up until they have an opinion.</source>
-        <translation>Savaş filleri güçlü, disiplinli savaş silahlarıdır - ta ki bir fikirleri olana kadar.</translation>
+        <translation>Słonie bojowe to potężna, karna broń wojenna — dokładnie do chwili, gdy nabiorą własnego zdania.</translation>
     </message>
     <message>
         <source>War elephants can disrupt formations, but unsupported elephants can quickly become isolated.</source>
-        <translation>Savaş filleri düzenleri bozabilir, ama desteksiz filler çabucak yalnız kalabilir.</translation>
+        <translation>Słonie bojowe potrafią rozbić szyki, ale bez wsparcia szybko zostają same.</translation>
     </message>
     <message>
         <source>Watch your supply routes when advancing deep into hostile territory.</source>
-        <translation>Düşman toprağının derinlerine ilerlerken ikmal yollarını gözet.</translation>
+        <translation>Pilnuj szlaków zaopatrzenia, gdy wchodzisz głęboko na wrogie ziemie.</translation>
     </message>
     <message>
         <source>When attacking, look for weak points rather than spreading damage evenly across the enemy line.</source>
-        <translation>Saldırırken hasarı düşman hattına eşit yaymak yerine zayıf noktalar ara.</translation>
+        <translation>Atakując, szukaj słabych punktów, zamiast rozkładać obrażenia równo po całej linii wroga.</translation>
     </message>
     <message>
         <source>When defending, force the enemy to come to you under unfavorable conditions.</source>
-        <translation>Savunurken düşmanı elverişsiz koşullarda sana gelmeye zorla.</translation>
+        <translation>Broniąc się, zmuś wroga, by przyszedł do ciebie w niekorzystnych warunkach.</translation>
     </message>
     <message>
         <source>Wildlife may react unpredictably to nearby troops and fighting.</source>
-        <translation>Yabani hayvanlar yakındaki birliklere ve çarpışmaya beklenmedik tepkiler verebilir.</translation>
+        <translation>Dzikie zwierzęta mogą zareagować nieprzewidywalnie na pobliskie oddziały i walkę.</translation>
     </message>
     <message>
         <source>Wolves are considerably less impressed by military rank than your soldiers are.</source>
-        <translation>Kurtlar, askerlerinin olduğu kadar askerî rütbeden etkilenmez.</translation>
+        <translation>Wilki są znacznie mniej przejęte stopniem wojskowym niż twoi żołnierze.</translation>
     </message>
     <message>
         <source>Workers are valuable strategic assets. Do not leave them exposed near the front.</source>
-        <translation>İşçiler değerli stratejik varlıklardır. Onları cephenin yakınında açıkta bırakma.</translation>
+        <translation>Robotnicy to cenny zasób strategiczny. Nie zostawiaj ich odsłoniętych przy froncie.</translation>
     </message>
 </context>
 <context>
     <name>Main</name>
     <message>
         <source>Standard of Iron - RTS game</source>
-        <translation>Standard of Iron - RTS oyunu</translation>
+        <translation>Standard of Iron — gra RTS</translation>
     </message>
     <message>
         <source>PAUSED</source>
-        <translation>DURAKLATILDI</translation>
+        <translation>PAUZA</translation>
     </message>
     <message>
-        <source>Press %1 to resume</source>
-        <translation>Sürdürmek için %1&apos;a bas</translation>
+        <source>Press Space to resume</source>
+        <translation>Naciśnij spację, by wznowić</translation>
     </message>
     <message>
         <source>A new standard in the valley, and nobody under it who has held a spear more than twice.</source>
-        <translation>Vadide yeni bir sancak ve altında elinde iki kereden fazla mızrak tutmuş kimse yok.</translation>
+        <translation>Nowy sztandar w dolinie, a pod nim nikt, kto trzymał włócznię więcej niż dwa razy.</translation>
     </message>
     <message>
         <source>Error</source>
-        <translation>Hata</translation>
+        <translation>Błąd</translation>
     </message>
 </context>
 <context>
     <name>MainMenu</name>
     <message>
         <source>Play Skirmish</source>
-        <translation>Çatışma Oyna</translation>
+        <translation>Zagraj potyczkę</translation>
     </message>
     <message>
         <source>Choose the field and deploy armies</source>
-        <translation>Meydanı seç ve orduları yerleştir</translation>
+        <translation>Wybierz pole i rozstaw armie</translation>
     </message>
     <message>
         <source>Battle</source>
-        <translation>Savaş</translation>
+        <translation>Bitwa</translation>
     </message>
     <message>
         <source>Missions</source>
-        <translation>Görevler</translation>
+        <translation>Misje</translation>
     </message>
     <message>
         <source>One small field, one order to carry out</source>
-        <translation>Küçük bir meydan, yerine getirilecek tek bir emir</translation>
+        <translation>Jedno małe pole, jeden rozkaz do wykonania</translation>
     </message>
     <message>
         <source>Detail</source>
-        <translation>Ayrıntı</translation>
+        <translation>Szczegół</translation>
     </message>
     <message>
         <source>Campaign</source>
-        <translation>Sefer</translation>
+        <translation>Kampania</translation>
     </message>
     <message>
         <source>March through the Second Punic War</source>
-        <translation>İkinci Pön Savaşı boyunca yürü</translation>
+        <translation>Przemaszeruj przez drugą wojnę punicką</translation>
     </message>
     <message>
         <source>War Map</source>
-        <translation>Harp Haritası</translation>
+        <translation>Mapa wojny</translation>
     </message>
     <message>
         <source>Tutorial</source>
-        <translation>Eğitim</translation>
+        <translation>Samouczek</translation>
     </message>
     <message>
         <source>Learn to command in a guided first battle</source>
-        <translation>Yol gösterilen bir ilk savaşta komuta etmeyi öğren</translation>
+        <translation>Naucz się dowodzić w pierwszej bitwie</translation>
     </message>
     <message>
         <source>Training</source>
-        <translation>Eğitiyor</translation>
+        <translation>Szkolenie</translation>
     </message>
     <message>
         <source>Objectives</source>
-        <translation>Hedefler</translation>
+        <translation>Cele</translation>
     </message>
     <message>
         <source>Review active orders</source>
-        <translation>Etkin emirleri gözden geçir</translation>
+        <translation>Przejrzyj obowiązujące rozkazy</translation>
     </message>
     <message>
         <source>Orders</source>
-        <translation>Emirler</translation>
+        <translation>Rozkazy</translation>
     </message>
     <message>
         <source>Save game</source>
-        <translation>Oyunu kaydet</translation>
+        <translation>Zapisz grę</translation>
     </message>
     <message>
         <source>Record the current campaign state</source>
-        <translation>Şimdiki sefer durumunu kaydet</translation>
+        <translation>Zapisz obecny stan kampanii</translation>
     </message>
     <message>
         <source>Archive</source>
-        <translation>Arşiv</translation>
+        <translation>Archiwum</translation>
     </message>
     <message>
         <source>Load game</source>
-        <translation>Oyun yükle</translation>
+        <translation>Wczytaj grę</translation>
     </message>
     <message>
         <source>Return to a saved command</source>
-        <translation>Kayıtlı bir komutaya dön</translation>
+        <translation>Wróć do zapisanego dowodzenia</translation>
     </message>
     <message>
         <source>Return</source>
-        <translation>Dön</translation>
+        <translation>Powrót</translation>
     </message>
     <message>
         <source>Settings</source>
-        <translation>Ayarlar</translation>
+        <translation>Ustawienia</translation>
     </message>
     <message>
         <source>Display, audio, and controls</source>
-        <translation>Görüntü, ses ve denetimler</translation>
+        <translation>Obraz, dźwięk i sterowanie</translation>
     </message>
     <message>
         <source>Options</source>
-        <translation>Seçenekler</translation>
+        <translation>Opcje</translation>
     </message>
     <message>
         <source>Field Manual</source>
-        <translation>Sahra Kılavuzu</translation>
+        <translation>Podręcznik polowy</translation>
     </message>
     <message>
         <source>How selection, economy, buildings and armies work</source>
-        <translation>Seçim, ekonomi, yapılar ve orduların nasıl işlediği</translation>
+        <translation>Jak działa zaznaczanie, gospodarka, budowle i armie</translation>
     </message>
     <message>
         <source>Help</source>
-        <translation>Yardım</translation>
+        <translation>Pomoc</translation>
     </message>
     <message>
         <source>Exit</source>
-        <translation>Çık</translation>
+        <translation>Wyjście</translation>
     </message>
     <message>
         <source>Leave the war table</source>
-        <translation>Harp masasından ayrıl</translation>
+        <translation>Odejdź od stołu wojennego</translation>
     </message>
     <message>
         <source>Retire</source>
-        <translation>Çekil</translation>
+        <translation>Dymisja</translation>
     </message>
     <message>
         <source>SPQR</source>
@@ -4731,7 +4737,7 @@ Bu işlem geri alınamaz.</translation>
     </message>
     <message>
         <source>QART-HADAST</source>
-        <translation>QART-HADAŞT</translation>
+        <translation>QART-HADAST</translation>
     </message>
     <message>
         <source>STANDARD OF IRON</source>
@@ -4739,11 +4745,11 @@ Bu işlem geri alınamaz.</translation>
     </message>
     <message>
         <source>Rome and Carthage at the edge of empire</source>
-        <translation>İmparatorluğun kıyısında Roma ve Kartaca</translation>
+        <translation>Rzym i Kartagina na krańcu imperium</translation>
     </message>
     <message>
         <source>Start here</source>
-        <translation>Buradan başla</translation>
+        <translation>Zacznij tutaj</translation>
     </message>
     <message>
         <source>Enter</source>
@@ -4755,545 +4761,545 @@ Bu işlem geri alınamaz.</translation>
     </message>
     <message>
         <source>Navigate</source>
-        <translation>Gezin</translation>
+        <translation>Poruszanie</translation>
     </message>
     <message>
         <source>Confirm</source>
-        <translation>Onayla</translation>
+        <translation>Zatwierdź</translation>
     </message>
     <message>
         <source>Resume battle</source>
-        <translation>Savaşa dön</translation>
+        <translation>Wznów bitwę</translation>
     </message>
     <message>
         <source>SECOND PUNIC WAR</source>
-        <translation>İKİNCİ PÖN SAVAŞI</translation>
+        <translation>DRUGA WOJNA PUNICKA</translation>
     </message>
     <message>
         <source>Legions, fleets, elephants, and contested supply lines</source>
-        <translation>Lejyonlar, donanmalar, filler ve çekişmeli ikmal hatları</translation>
+        <translation>Legiony, floty, słonie i sporne linie zaopatrzenia</translation>
     </message>
     <message>
         <source>Hannibal Barca</source>
-        <translation>Hannibal Barka</translation>
+        <translation>Hannibal Barkas</translation>
     </message>
     <message>
         <source>Scipio Africanus</source>
-        <translation>Scipio Africanus</translation>
+        <translation>Scypion Afrykański</translation>
     </message>
     <message>
         <source>CARTHAGE</source>
-        <translation>KARTACA</translation>
+        <translation>KARTAGINA</translation>
     </message>
     <message>
         <source>ROME</source>
-        <translation>ROMA</translation>
+        <translation>RZYM</translation>
     </message>
 </context>
 <context>
     <name>MapBases</name>
     <message>
         <source>Centre</source>
-        <translation>Merkez</translation>
+        <translation>Środek</translation>
     </message>
     <message>
         <source>East</source>
-        <translation>Doğu</translation>
+        <translation>Wschód</translation>
     </message>
     <message>
         <source>North-East</source>
-        <translation>Kuzeydoğu</translation>
+        <translation>Północny wschód</translation>
     </message>
     <message>
         <source>North</source>
-        <translation>Kuzey</translation>
+        <translation>Północ</translation>
     </message>
     <message>
         <source>North-West</source>
-        <translation>Kuzeybatı</translation>
+        <translation>Północny zachód</translation>
     </message>
     <message>
         <source>West</source>
-        <translation>Batı</translation>
+        <translation>Zachód</translation>
     </message>
     <message>
         <source>South-West</source>
-        <translation>Güneybatı</translation>
+        <translation>Południowy zachód</translation>
     </message>
     <message>
         <source>South</source>
-        <translation>Güney</translation>
+        <translation>Południe</translation>
     </message>
     <message>
         <source>South-East</source>
-        <translation>Güneydoğu</translation>
+        <translation>Południowy wschód</translation>
     </message>
 </context>
 <context>
     <name>MapListPanel</name>
     <message>
         <source>Maps</source>
-        <translation>Haritalar</translation>
+        <translation>Mapy</translation>
     </message>
     <message>
         <source>No maps available</source>
-        <translation>Harita yok</translation>
+        <translation>Brak dostępnych map</translation>
     </message>
 </context>
 <context>
     <name>MapPreview</name>
     <message>
         <source>Click a base to reseat</source>
-        <translation>Yerini değiştirmek için bir üsse tıkla</translation>
+        <translation>Kliknij bazę, by ją przenieść</translation>
     </message>
     <message>
         <source>Bases in player colours</source>
-        <translation>Üsler oyuncu renklerinde</translation>
+        <translation>Bazy w barwach graczy</translation>
     </message>
     <message>
         <source>%1 — held by %2</source>
-        <translation>%1 — %2 tarafından tutuluyor</translation>
+        <translation>%1 — zajęta przez %2</translation>
     </message>
     <message>
         <source>%1 — free, click to claim it</source>
-        <translation>%1 — boş, sahiplenmek için tıkla</translation>
+        <translation>%1 — wolna, kliknij, by ją zająć</translation>
     </message>
     <message>
         <source>Select a map
 to see preview</source>
-        <translation>Önizlemeyi görmek için
-bir harita seç</translation>
+        <translation>Wybierz mapę,
+by zobaczyć podgląd</translation>
     </message>
     <message>
         <source>No preview available</source>
-        <translation>Önizleme yok</translation>
+        <translation>Podgląd niedostępny</translation>
     </message>
 </context>
 <context>
     <name>MapSelect</name>
     <message>
         <source>Roman Republic</source>
-        <translation>Roma Cumhuriyeti</translation>
+        <translation>Republika Rzymska</translation>
     </message>
     <message>
         <source>Commander</source>
-        <translation>Komutan</translation>
+        <translation>Dowódca</translation>
     </message>
     <message>
         <source>Need at least 1 enabled player to start</source>
-        <translation>Başlamak için en az 1 etkin oyuncu gerekiyor</translation>
+        <translation>Do startu potrzeba co najmniej 1 włączonego gracza</translation>
     </message>
     <message>
         <source>Need at least 2 enabled players to start</source>
-        <translation>Başlamak için en az 2 etkin oyuncu gerekiyor</translation>
+        <translation>Do startu potrzeba co najmniej 2 włączonych graczy</translation>
     </message>
     <message>
         <source>At least two teams must be selected to start a match</source>
-        <translation>Bir maç başlatmak için en az iki takım seçilmeli</translation>
+        <translation>Do rozpoczęcia meczu trzeba wybrać co najmniej dwie drużyny</translation>
     </message>
     <message>
         <source>This battlefield only has %1 starting bases</source>
-        <translation>Bu savaş alanında yalnızca %1 başlangıç üssü var</translation>
+        <translation>To pole bitwy ma tylko %1 baz startowych</translation>
     </message>
     <message>
         <source>Every player in play needs a starting base</source>
-        <translation>Oyundaki her oyuncunun bir başlangıç üssü olmalı</translation>
+        <translation>Każdy grający gracz potrzebuje bazy startowej</translation>
     </message>
     <message>
         <source>You</source>
-        <translation>Sen</translation>
+        <translation>Ty</translation>
     </message>
     <message>
         <source>CPU %1</source>
-        <translation>CPU %1</translation>
+        <translation>Komputer %1</translation>
     </message>
     <message>
         <source>%1 gold</source>
-        <translation>%1 altın</translation>
+        <translation>%1 złota</translation>
     </message>
     <message>
         <source>Skirmish</source>
-        <translation>Çatışma</translation>
+        <translation>Potyczka</translation>
     </message>
     <message>
         <source>Pick a battlefield, then set the colours, nations and commanders that take the field.</source>
-        <translation>Bir savaş alanı seç, sonra meydana çıkacak renkleri, ulusları ve komutanları belirle.</translation>
+        <translation>Wybierz pole bitwy, a potem ustal barwy, narody i dowódców, którzy staną w polu.</translation>
     </message>
     <message>
         <source>← Back</source>
-        <translation>← Geri</translation>
+        <translation>← Wstecz</translation>
     </message>
     <message>
         <source>Battlefields</source>
-        <translation>Savaş alanları</translation>
+        <translation>Pola bitew</translation>
     </message>
     <message>
         <source>Loading maps...</source>
-        <translation>Haritalar yükleniyor...</translation>
+        <translation>Wczytywanie map...</translation>
     </message>
     <message>
         <source>No maps available</source>
-        <translation>Harita yok</translation>
+        <translation>Brak dostępnych map</translation>
     </message>
     <message>
         <source>Slots</source>
-        <translation>Yuvalar</translation>
+        <translation>Miejsca</translation>
     </message>
     <message>
         <source>Player slots this battlefield was authored for</source>
-        <translation>Bu savaş alanının tasarlandığı oyuncu yuvaları</translation>
+        <translation>Miejsca graczy, na jakie napisano to pole bitwy</translation>
     </message>
     <message>
         <source>In play</source>
-        <translation>Oyunda</translation>
+        <translation>W grze</translation>
     </message>
     <message>
         <source>Players that will take the field</source>
-        <translation>Meydana çıkacak oyuncular</translation>
+        <translation>Gracze, którzy staną w polu</translation>
     </message>
     <message>
         <source>Sides</source>
-        <translation>Taraflar</translation>
+        <translation>Strony</translation>
     </message>
     <message>
         <source>Distinct teams among the players in play</source>
-        <translation>Oyundaki oyuncular arasındaki ayrı takımlar</translation>
+        <translation>Osobne drużyny wśród grających</translation>
     </message>
     <message>
         <source>Opposition</source>
-        <translation>Muhalefet</translation>
+        <translation>Przeciwnicy</translation>
     </message>
     <message>
         <source>Scripted</source>
-        <translation>Betikli</translation>
+        <translation>Skryptowani</translation>
     </message>
     <message>
         <source>Players only</source>
-        <translation>Yalnızca oyuncular</translation>
+        <translation>Tylko gracze</translation>
     </message>
     <message>
         <source>This battlefield brings its own enemies, so you can start alone</source>
-        <translation>Bu savaş alanı kendi düşmanlarını getirir, bu yüzden yalnız başlayabilirsin</translation>
+        <translation>To pole bitwy przynosi własnych wrogów, więc możesz zacząć sam</translation>
     </message>
     <message>
         <source>This battlefield needs at least two opposing players</source>
-        <translation>Bu savaş alanı en az iki karşıt oyuncu ister</translation>
+        <translation>To pole bitwy wymaga co najmniej dwóch przeciwnych graczy</translation>
     </message>
     <message>
         <source>Treasury</source>
-        <translation>Hazine</translation>
+        <translation>Skarbiec</translation>
     </message>
     <message>
         <source>Gold every side starts with — click to change</source>
-        <translation>Her tarafın başladığı altın — değiştirmek için tıkla</translation>
+        <translation>Złoto, z jakim zaczyna każda strona — kliknij, by zmienić</translation>
     </message>
     <message>
         <source>Select a battlefield to continue</source>
-        <translation>Sürdürmek için bir savaş alanı seç</translation>
+        <translation>Wybierz pole bitwy, by przejść dalej</translation>
     </message>
     <message>
         <source>Order of Battle</source>
-        <translation>Muharebe Düzeni</translation>
+        <translation>Ordre de bataille</translation>
     </message>
     <message>
         <source>Click any chip to change it • pick a base on the map for the highlighted seat</source>
-        <translation>Değiştirmek için herhangi bir çipe tıkla • vurgulanan koltuk için haritada bir üs seç</translation>
+        <translation>Kliknij dowolny znacznik, by go zmienić • wybierz bazę na mapie dla podświetlonego miejsca</translation>
     </message>
     <message>
         <source>Click any chip to change it</source>
-        <translation>Değiştirmek için herhangi bir çipe tıkla</translation>
+        <translation>Kliknij dowolny znacznik, by go zmienić</translation>
     </message>
     <message>
         <source>+ Add CPU</source>
-        <translation>+ CPU Ekle</translation>
+        <translation>+ Dodaj komputer</translation>
     </message>
     <message>
         <source>Every slot on this battlefield is taken</source>
-        <translation>Bu savaş alanındaki her yuva dolu</translation>
+        <translation>Każde miejsce na tym polu bitwy jest zajęte</translation>
     </message>
     <message>
         <source>Add an AI opponent</source>
-        <translation>Bir yapay zekâ rakip ekle</translation>
+        <translation>Dodaj przeciwnika komputerowego</translation>
     </message>
     <message>
         <source>Leave this slot empty</source>
-        <translation>Bu yuvayı boş bırak</translation>
+        <translation>Zostaw to miejsce puste</translation>
     </message>
     <message>
         <source>Bring this slot into the battle</source>
-        <translation>Bu yuvayı savaşa kat</translation>
+        <translation>Wprowadź to miejsce do bitwy</translation>
     </message>
     <message>
         <source>Slot %1 • click to move seat</source>
-        <translation>Yuva %1 • koltuğu taşımak için tıkla</translation>
+        <translation>Miejsce %1 • kliknij, by przenieść</translation>
     </message>
     <message>
         <source>Slot %1 • AI</source>
-        <translation>Yuva %1 • YZ</translation>
+        <translation>Miejsce %1 • komputer</translation>
     </message>
     <message>
         <source>Colour</source>
-        <translation>Renk</translation>
+        <translation>Barwa</translation>
     </message>
     <message>
         <source>Player colour — click to change</source>
-        <translation>Oyuncu rengi — değiştirmek için tıkla</translation>
+        <translation>Barwa gracza — kliknij, by zmienić</translation>
     </message>
     <message>
         <source>Base</source>
-        <translation>Üs</translation>
+        <translation>Baza</translation>
     </message>
     <message>
         <source>None</source>
-        <translation>Yok</translation>
+        <translation>Brak</translation>
     </message>
     <message>
         <source>Starting base — click for the next free one, or pick it on the map</source>
-        <translation>Başlangıç üssü — bir sonraki boş üs için tıkla ya da haritada seç</translation>
+        <translation>Baza startowa — kliknij, by wziąć następną wolną, albo wskaż ją na mapie</translation>
     </message>
     <message>
         <source>Nation</source>
-        <translation>Ulus</translation>
+        <translation>Naród</translation>
     </message>
     <message>
         <source>Nation — click to change</source>
-        <translation>Ulus — değiştirmek için tıkla</translation>
+        <translation>Naród — kliknij, by zmienić</translation>
     </message>
     <message>
         <source>%1 — click to change commander</source>
-        <translation>%1 — komutanı değiştirmek için tıkla</translation>
+        <translation>%1 — kliknij, by zmienić dowódcę</translation>
     </message>
     <message>
         <source>Commander — click to change</source>
-        <translation>Komutan — değiştirmek için tıkla</translation>
+        <translation>Dowódca — kliknij, by zmienić</translation>
     </message>
     <message>
         <source>Team %1</source>
-        <translation>Takım %1</translation>
+        <translation>Drużyna %1</translation>
     </message>
     <message>
         <source>Team — click to change sides</source>
-        <translation>Takım — taraf değiştirmek için tıkla</translation>
+        <translation>Drużyna — kliknij, by zmienić stronę</translation>
     </message>
     <message>
         <source>Remove this opponent</source>
-        <translation>Bu rakibi çıkar</translation>
+        <translation>Usuń tego przeciwnika</translation>
     </message>
     <message>
         <source>↑ ↓ Choose</source>
-        <translation>↑ ↓ Seç</translation>
+        <translation>↑ ↓ Wybór</translation>
     </message>
     <message>
         <source>Enter Start</source>
-        <translation>Enter Başlat</translation>
+        <translation>Enter Rozpocznij</translation>
     </message>
     <message>
         <source>Esc Back</source>
-        <translation>Esc Geri</translation>
+        <translation>Esc Wstecz</translation>
     </message>
     <message>
         <source>Observe</source>
-        <translation>İzle</translation>
+        <translation>Obserwuj</translation>
     </message>
     <message>
         <source>Pick a battlefield with at least two camps to watch</source>
-        <translation>İzlemek için en az iki kampı olan bir savaş alanı seç</translation>
+        <translation>Wybierz pole bitwy z co najmniej dwoma obozami do oglądania</translation>
     </message>
     <message>
         <source>Watch the computer fight itself on this battlefield</source>
-        <translation>Bu savaş alanında bilgisayarın kendisiyle çarpışmasını izle</translation>
+        <translation>Popatrz, jak komputer walczy sam ze sobą na tym polu bitwy</translation>
     </message>
     <message>
         <source>Play ▶</source>
-        <translation>Oyna ▶</translation>
+        <translation>Graj ▶</translation>
     </message>
     <message>
         <source>Start the battle (Enter)</source>
-        <translation>Savaşı başlat (Enter)</translation>
+        <translation>Rozpocznij bitwę (Enter)</translation>
     </message>
 </context>
 <context>
     <name>MapTransformer</name>
     <message>
         <source>Player %1</source>
-        <translation>Oyuncu %1</translation>
+        <translation>Gracz %1</translation>
     </message>
     <message>
         <source>AI Player %1</source>
-        <translation>YZ Oyuncusu %1</translation>
+        <translation>Gracz komputerowy %1</translation>
     </message>
 </context>
 <context>
     <name>Maps</name>
     <message>
         <source>Unnamed Map</source>
-        <translation>Adsız Harita</translation>
+        <translation>Mapa bez nazwy</translation>
     </message>
     <message>
         <source>A fertile valley for two. One channel runs the whole map north to south and only two fords cross it. A cross spur on each bank means you either hug the water or swing wide to reach them, and the boomerang ridge cupping each start makes the back door terrain rather than a wall. Nothing haunts this valley: it is the plain match, with no Sepulcher to distract either side.</source>
-        <translation>İki kişilik bereketli bir vadi. Tek bir kanal haritanın kuzeyinden güneyine uzanır ve onu yalnızca iki sığ geçit aşar. Her iki kıyıdaki çapraz mahmuz yüzünden ya suya yapışırsın ya da onlara ulaşmak için geniş bir kavis çizersin; her başlangıcı kucaklayan bumerang sırt ise arka kapıyı duvar değil arazi yapar. Bu vadide hiçbir hayalet yok: bu, iki tarafın da dikkatini dağıtacak bir Kabir&apos;i olmayan düz bir maç.</translation>
+        <translation>Żyzna dolina dla dwóch. Jedno koryto biegnie przez całą mapę z północy na południe i przecinają je tylko dwa brody. Poprzeczna ostroga na każdym brzegu sprawia, że albo trzymasz się wody, albo nadkładasz drogi, by do nich dojść, a bumerangowy grzbiet obejmujący każdy start czyni tylne wejście terenem, a nie murem. Nic nie nawiedza tej doliny: to zwykły mecz, bez Grobowca odciągającego uwagę którejkolwiek ze stron.</translation>
     </message>
     <message>
         <source>A quiet meadow between a Carthaginian camp and a Roman outpost, laid out for the tutorial: timber, stone and ore within a short walk of the barracks, a scouting party to practise on, and a small enemy camp to take once the army is ready.</source>
-        <translation>Bir Kartaca kampı ile bir Roma karakolu arasında, eğitim için düzenlenmiş sakin bir çayır: kışladan kısa yürüme mesafesinde kereste, taş ve cevher, üzerinde alıştırma yapılacak bir keşif kolu ve ordu hazır olunca alınacak küçük bir düşman kampı.</translation>
+        <translation>Cicha łąka między obozem kartagińskim a rzymską strażnicą, ułożona pod samouczek: drewno, kamień i ruda o krótki spacer od koszar, oddział zwiadowczy do ćwiczeń i mały obóz wroga do zdobycia, gdy armia będzie gotowa.</translation>
     </message>
     <message>
         <source>A redoubt above a dry ford, for one. A spur of rock runs the length of the approach and the two shoulders close the flanks, so everything coming down from the north is committed to one of two lanes -- the cart gate in the west, the goat path in the east -- and they do not meet again until the ground in front of the camp. One line cannot hold both mouths, so holding here is a question of which lane you stand in and when you leave it.</source>
-        <translation>Tek kişilik, kuru bir geçidin üstünde bir tabya. Yaklaşım boyunca bir kaya mahmuzu uzanır ve iki omuz kanatları kapatır, böylece kuzeyden inen her şey iki koridordan birine bağlanır -- batıdaki araba kapısı ya da doğudaki keçi yolu -- ve bunlar kampın önündeki zemine kadar bir daha kesişmez. Tek bir hat iki ağzı birden tutamaz, bu yüzden burayı tutmak hangi koridorda durduğun ve oradan ne zaman ayrıldığın meselesidir.</translation>
+        <translation>Reduta nad suchym brodem, dla jednego. Skalna ostroga biegnie wzdłuż całego podejścia, a dwa ramiona zamykają skrzydła, więc wszystko, co schodzi z północy, musi wejść w jeden z dwóch korytarzy — bramę dla wozów na zachodzie albo kozią ścieżkę na wschodzie — i nie spotykają się one ponownie aż do gruntu przed obozem. Jedna linia nie utrzyma obu wylotów, więc obrona sprowadza się tu do tego, w którym korytarzu stoisz i kiedy z niego wyjdziesz.</translation>
     </message>
     <message>
         <source>A timber detail&apos;s cut above the Pinewater, for one. The near stand beside the camp is already half felled, so the levy is only filled out of the deep pines a long haul north-east, past the spine of rock the haul road has to swing around. The scree that gives up the stone lies the other way entirely, and the crew is not big enough to work both without splitting it.</source>
-        <translation>Tek kişilik, Çampınar&apos;ın üstünde bir kereste ekibinin kesim alanı. Kampın yanındaki yakın koru zaten yarı yarıya devrilmiş, bu yüzden levha ancak kuzeydoğuda, taşıma yolunun dolanmak zorunda kaldığı kaya omurgasının ötesindeki derin çamlıklardan tamamlanır. Taşı veren moloz yamaç ise tam ters yönde ve ekip, bölünmeden ikisini birden işleyecek kadar büyük değil.</translation>
+        <translation>Poręba drwali nad Sosnową Wodą, dla jednego. Bliski drzewostan przy obozie jest już do połowy wycięty, więc pobór uzupełnia się tylko z gęstych sosen o długi kurs na północny wschód, za skalnym grzbietem, który droga zwózki musi obejść. Piarg oddający kamień leży w zupełnie inną stronę, a ekipa nie jest dość liczna, by pracować przy obu, nie dzieląc się.</translation>
     </message>
     <message>
         <source>Amber Delta</source>
-        <translation>Kehribar Deltası</translation>
+        <translation>Bursztynowa delta</translation>
     </message>
     <message>
         <source>Battle of Cannae</source>
-        <translation>Cannae Muharebesi</translation>
+        <translation>Bitwa pod Kannami</translation>
     </message>
     <message>
         <source>Battle of Lake Trasimene</source>
-        <translation>Trasimene Gölü Muharebesi</translation>
+        <translation>Bitwa nad Jeziorem Trazymeńskim</translation>
     </message>
     <message>
         <source>Battle of Ticino</source>
-        <translation>Ticino Muharebesi</translation>
+        <translation>Bitwa nad Ticinusem</translation>
     </message>
     <message>
         <source>Battle of Trebia</source>
-        <translation>Trebia Muharebesi</translation>
+        <translation>Bitwa nad Trebią</translation>
     </message>
     <message>
         <source>Battle of Zama</source>
-        <translation>Zama Muharebesi</translation>
+        <translation>Bitwa pod Zamą</translation>
     </message>
     <message>
         <source>Blackpine Hollow</source>
-        <translation>Karaçam Çukuru</translation>
+        <translation>Czarnososnowa Kotlina</translation>
     </message>
     <message>
         <source>Campania Campaign</source>
-        <translation>Campania Seferi</translation>
+        <translation>Kampania kampańska</translation>
     </message>
     <message>
         <source>Copper Canyons</source>
-        <translation>Bakır Kanyonlar</translation>
+        <translation>Miedziane Kaniony</translation>
     </message>
     <message>
         <source>Crossing the Alps</source>
-        <translation>Alpler&apos;i Geçiş</translation>
+        <translation>Przejście przez Alpy</translation>
     </message>
     <message>
         <source>Crossing the Rhone - Polished Maze Version</source>
-        <translation>Rhône&apos;u Geçiş - Cilalı Labirent Sürümü</translation>
+        <translation>Przeprawa przez Rodan — wersja dopracowanego labiryntu</translation>
     </message>
     <message>
         <source>Deep wet pine forest for two. A crater wall rings the shrine bowl at the centre and no road enters it - the gates cut through its rim are the only way in, so the middle belongs to whoever will fight for it on foot. Everything else is one ring road and the trees.</source>
-        <translation>İki kişilik derin ve nemli çam ormanı. Ortadaki mabet çanağını bir krater duvarı çevreler ve içine hiçbir yol girmez - kenarında açılmış kapılar tek giriştir, bu yüzden orta, uğruna yaya çarpışmayı göze alanındır. Geri kalan her şey tek bir çevre yolu ve ağaçlardır.</translation>
+        <translation>Głęboki, wilgotny bór sosnowy dla dwóch. Ściana krateru otacza kotlinę ze świątynią pośrodku i nie wchodzi w nią żadna droga — jedyne wejście to bramy przecięte w jej krawędzi, więc środek należy do tego, kto stoczy o niego walkę pieszo. Cała reszta to jedna droga okrężna i drzewa.</translation>
     </message>
     <message>
         <source>Four camps in a snowed-in basin. Two melt races cross at its centre and cut the ground into quarters, so every neighbour is a bridge away: an inner crossing in the open, or a longer one out under the rim ranges. Four corner tarns and four barrow cairns fill the rest.</source>
-        <translation>Karla kaplı bir çanakta dört kamp. İki eriyik deresi ortada kesişir ve zemini dörde böler, böylece her komşu bir köprü uzağındadır: ya açıktaki iç geçit ya da kenar sıradağların altındaki daha uzun olanı. Kalanı dört köşe gölcüğü ve dört kurgan taşı doldurur.</translation>
+        <translation>Cztery obozy w zaśnieżonej kotlinie. Dwa potoki roztopowe krzyżują się pośrodku i tną grunt na ćwiartki, więc każdy sąsiad jest o most dalej: wewnętrzna przeprawa w otwartym polu albo dłuższa pod pasmami krawędzi. Resztę wypełniają cztery narożne jeziorka i cztery kurhany.</translation>
     </message>
     <message>
         <source>Four camps on a dry Iberian hillside. No river runs here - the terraces are the map. Each camp looks out through a horned terrace wall with a gate at either horn, and the old press mound in the middle is high ground four worn tracks climb.</source>
-        <translation>Kurak bir İberya yamacında dört kamp. Burada nehir akmaz - haritayı taraçalar oluşturur. Her kamp, iki ucunda birer kapı bulunan boynuzlu bir taraça duvarından dışarı bakar ve ortadaki eski cendere höyüğü, dört aşınmış patikanın tırmandığı yüksek zemindir.</translation>
+        <translation>Cztery obozy na suchym iberyjskim zboczu. Nie płynie tu żadna rzeka — mapą są tarasy. Każdy obóz patrzy przez rogaty mur tarasu z bramą przy każdym rogu, a stary kopiec tłoczni pośrodku to wzniesienie, na które wspinają się cztery wydeptane ścieżki.</translation>
     </message>
     <message>
         <source>Frostmere Basin</source>
-        <translation>Buzlugöl Çanağı</translation>
+        <translation>Kotlina Mroźnego Jeziora</translation>
     </message>
     <message>
         <source>Iron Sepulcher Watch</source>
-        <translation>Demir Kabir Nöbeti</translation>
+        <translation>Straż Żelaznego Grobowca</translation>
     </message>
     <message>
         <source>Pinewater Cut</source>
-        <translation>Çampınar Kesimi</translation>
+        <translation>Poręba nad Sosnową Wodą</translation>
     </message>
     <message>
         <source>Sallow Ford</source>
-        <translation>Solgun Geçit</translation>
+        <translation>Wierzbowy Bród</translation>
     </message>
     <message>
         <source>Six camps in a banded rock desert. Three races cross at the middle and cut the ground into six wedges, so every neighbour is two crossings away: one under the junction knaps, one out at the rim stacks. A mesa lies across each wedge, and the lane past it is where the sector is won.</source>
-        <translation>Katmanlı kayalık bir çölde altı kamp. Üç dere ortada kesişir ve zemini altı dilime böler, böylece her komşu iki geçit uzağındadır: biri kavşak çakıllarının altında, biri kenar yığınlarının dışında. Her dilimin karşısında bir mesa uzanır ve bölge, onun yanındaki koridorda kazanılır.</translation>
+        <translation>Sześć obozów w pasiastej skalnej pustyni. Trzy koryta krzyżują się pośrodku i tną grunt na sześć klinów, więc każdy sąsiad jest o dwie przeprawy dalej: jedna pod skalnymi progami skrzyżowania, druga przy kominach na krawędzi. W poprzek każdego klina leży stołowa góra, a o sektor rozstrzyga korytarz obok niej.</translation>
     </message>
     <message>
         <source>Small authored scenario that demonstrates ruins, a shrine, and undead awakening zones.</source>
-        <translation>Harabeleri, bir mabedi ve ölülerin uyanış bölgelerini gösteren küçük, elle yazılmış senaryo.</translation>
+        <translation>Mały autorski scenariusz pokazujący ruiny, świątynię i strefy przebudzenia umarłych.</translation>
     </message>
     <message>
         <source>Sunbaked Terraces</source>
-        <translation>Güneş Kavurmuş Taraçalar</translation>
+        <translation>Spieczone Tarasy</translation>
     </message>
     <message>
         <source>The Two Fords</source>
-        <translation>İki Geçit</translation>
+        <translation>Dwa Brody</translation>
     </message>
     <message>
         <source>Three camps a side along one broad channel. The Amber runs the whole map and only three ferry crossings span it, so a bank is a front line: the highway behind each bank links its three camps, and every attack has to buy a bridge first.</source>
-        <translation>Tek geniş bir kanal boyunca her tarafta üç kamp. Kehribar haritanın tamamı boyunca akar ve onu yalnızca üç sal geçidi aşar, bu yüzden bir kıyı cephe hattıdır: her kıyının gerisindeki ana yol o kıyının üç kampını birbirine bağlar ve her saldırı önce bir köprü satın almak zorundadır.</translation>
+        <translation>Po trzy obozy na stronę wzdłuż jednego szerokiego koryta. Bursztyn płynie przez całą mapę i przecinają go tylko trzy przeprawy promowe, więc brzeg jest linią frontu: gościniec za każdym brzegiem łączy jego trzy obozy, a każde natarcie musi najpierw kupić sobie przeprawę.</translation>
     </message>
     <message>
         <source>Training Meadow</source>
-        <translation>Talim Çayırı</translation>
+        <translation>Łąka ćwiczebna</translation>
     </message>
 </context>
 <context>
     <name>MatchSetupViewModel</name>
     <message>
         <source>CPU %1</source>
-        <translation>CPU %1</translation>
+        <translation>Komputer %1</translation>
     </message>
     <message>
         <source>This battlefield has fewer than two slots to observe</source>
-        <translation>Bu savaş alanında izlenecek ikiden az yuva var</translation>
+        <translation>To pole bitwy ma mniej niż dwa miejsca do obserwacji</translation>
     </message>
     <message>
         <source>Campaign manager not initialized</source>
-        <translation>Sefer yöneticisi hazırlanmadı</translation>
+        <translation>Menedżer kampanii nie został zainicjowany</translation>
     </message>
     <message>
         <source>Failed to load mission</source>
-        <translation>Görev yüklenemedi</translation>
+        <translation>Nie udało się wczytać misji</translation>
     </message>
     <message>
         <source>Failed to load mission preview: %1</source>
-        <translation>Görev önizlemesi yüklenemedi: %1</translation>
+        <translation>Nie udało się wczytać podglądu misji: %1</translation>
     </message>
 </context>
 <context>
     <name>MediterraneanMapPanel</name>
     <message>
         <source>Rhône</source>
-        <translation>Rhône</translation>
+        <translation>Rodan</translation>
     </message>
     <message>
         <source>The Alps</source>
-        <translation>Alpler</translation>
+        <translation>Alpy</translation>
     </message>
     <message>
         <source>N. Italy</source>
-        <translation>K. İtalya</translation>
+        <translation>Płn. Italia</translation>
     </message>
     <message>
         <source>Trasimene</source>
-        <translation>Trasimene</translation>
+        <translation>Trazymen</translation>
     </message>
     <message>
         <source>Cannae</source>
-        <translation>Cannae</translation>
+        <translation>Kanny</translation>
     </message>
     <message>
         <source>Campania</source>
-        <translation>Campania</translation>
+        <translation>Kampania</translation>
     </message>
     <message>
         <source>S. Italy</source>
-        <translation>G. İtalya</translation>
+        <translation>Płd. Italia</translation>
     </message>
     <message>
         <source>Zama</source>
@@ -5301,1271 +5307,1271 @@ bir harita seç</translation>
     </message>
     <message>
         <source>Mission Region</source>
-        <translation>Görev Bölgesi</translation>
+        <translation>Region misji</translation>
     </message>
     <message>
         <source>Rome</source>
-        <translation>Roma</translation>
+        <translation>Rzym</translation>
     </message>
     <message>
         <source>Carthage</source>
-        <translation>Kartaca</translation>
+        <translation>Kartagina</translation>
     </message>
     <message>
         <source>Neutral</source>
-        <translation>Tarafsız</translation>
+        <translation>Neutralny</translation>
     </message>
     <message>
         <source>Loading map…</source>
-        <translation>Harita yükleniyor…</translation>
+        <translation>Wczytywanie mapy…</translation>
     </message>
     <message>
         <source>Tilt -</source>
-        <translation>Eğim -</translation>
+        <translation>Pochyl -</translation>
     </message>
     <message>
         <source>Tilt +</source>
-        <translation>Eğim +</translation>
+        <translation>Pochyl +</translation>
     </message>
     <message>
         <source>Reset view</source>
-        <translation>Görüşü sıfırla</translation>
+        <translation>Zresetuj widok</translation>
     </message>
     <message>
         <source>Control: </source>
-        <translation>Denetim: </translation>
+        <translation>Kontrola: </translation>
     </message>
     <message>
         <source>Legend</source>
-        <translation>Açıklama</translation>
+        <translation>Legenda</translation>
     </message>
     <message>
         <source>Arrows pan  ·  Drag to rotate  ·  Scroll or +/- to zoom  ·  Home resets</source>
-        <translation>Oklar kaydırır  ·  Döndürmek için sürükle  ·  Yakınlaştırmak için tekerlek ya da +/-  ·  Home sıfırlar</translation>
+        <translation>Strzałki przesuwają  ·  Przeciągnij, by obrócić  ·  Kółko albo +/- przybliża  ·  Home resetuje</translation>
     </message>
 </context>
 <context>
     <name>MissionDetailPanel</name>
     <message>
         <source>Suffete Command</source>
-        <translation>Sufet Komutası</translation>
+        <translation>Dowództwo sufetów</translation>
     </message>
     <message>
         <source>Consular Command</source>
-        <translation>Konsül Komutası</translation>
+        <translation>Dowództwo konsularne</translation>
     </message>
     <message>
         <source>Carthaginian High Command</source>
-        <translation>Kartaca Başkomutanlığı</translation>
+        <translation>Naczelne dowództwo Kartaginy</translation>
     </message>
     <message>
         <source>Roman High Command</source>
-        <translation>Roma Başkomutanlığı</translation>
+        <translation>Naczelne dowództwo Rzymu</translation>
     </message>
     <message>
         <source>its shortcut</source>
-        <translation>kısayolu</translation>
+        <translation>jego skrót</translation>
     </message>
     <message>
         <source>Apulian river plain</source>
-        <translation>Apulia nehir ovası</translation>
+        <translation>Apulijska równina rzeczna</translation>
     </message>
     <message>
         <source>Campanian plain</source>
-        <translation>Campania ovası</translation>
+        <translation>Równina kampańska</translation>
     </message>
     <message>
         <source>Lakeside hill country</source>
-        <translation>Göl kıyısı tepelik arazi</translation>
+        <translation>Pagórkowaty kraj nad jeziorem</translation>
     </message>
     <message>
         <source>Mountain</source>
-        <translation>Dağ</translation>
+        <translation>Góry</translation>
     </message>
     <message>
         <source>North African plain</source>
-        <translation>Kuzey Afrika ovası</translation>
+        <translation>Równina północnoafrykańska</translation>
     </message>
     <message>
         <source>Po valley river plain</source>
-        <translation>Po vadisi nehir ovası</translation>
+        <translation>Równina rzeczna doliny Padu</translation>
     </message>
     <message>
         <source>River valley</source>
-        <translation>Nehir vadisi</translation>
+        <translation>Dolina rzeczna</translation>
     </message>
     <message>
         <source>Winter river plain</source>
-        <translation>Kış nehir ovası</translation>
+        <translation>Zimowa równina rzeczna</translation>
     </message>
     <message>
         <source>Unknown</source>
-        <translation>Bilinmiyor</translation>
+        <translation>Nieznane</translation>
     </message>
     <message>
         <source>Sealed</source>
-        <translation>Mühürlü</translation>
+        <translation>Zapieczętowane</translation>
     </message>
     <message>
         <source>In Progress</source>
-        <translation>Sürüyor</translation>
+        <translation>W toku</translation>
     </message>
     <message>
         <source>Rewards: Sealed until prior victories</source>
-        <translation>Ödüller: Önceki zaferlere kadar mühürlü</translation>
+        <translation>Nagrody: zapieczętowane do czasu wcześniejszych zwycięstw</translation>
     </message>
     <message>
         <source>Rewards: Laurels Inscribed • Veteran Honors Claimed</source>
-        <translation>Ödüller: Defne Yazıtı • Kıdemli Onurları Alındı</translation>
+        <translation>Nagrody: laury wyryte • honory weteranów odebrane</translation>
     </message>
     <message>
         <source>Rewards: Bronze Standard • Veteran Cohort</source>
-        <translation>Ödüller: Tunç Sancak • Kıdemli Kohort</translation>
+        <translation>Nagrody: spiżowy sztandar • kohorta weteranów</translation>
     </message>
     <message>
         <source>Dispatch: </source>
-        <translation>Emir: </translation>
+        <translation>Depesza: </translation>
     </message>
     <message>
         <source>Campaign Objectives (complete all):</source>
-        <translation>Sefer Hedefleri (hepsini tamamla):</translation>
+        <translation>Cele kampanii (wykonaj wszystkie):</translation>
     </message>
     <message>
         <source>Campaign Objectives (complete any):</source>
-        <translation>Sefer Hedefleri (herhangi birini tamamla):</translation>
+        <translation>Cele kampanii (wykonaj dowolny):</translation>
     </message>
     <message>
         <source>Campaign Objectives:</source>
-        <translation>Sefer Hedefleri:</translation>
+        <translation>Cele kampanii:</translation>
     </message>
     <message>
         <source>Complete mission objective</source>
-        <translation>Görev hedefini tamamla</translation>
+        <translation>Wykonaj cel misji</translation>
     </message>
     <message>
         <source>Optional:</source>
-        <translation>İsteğe bağlı:</translation>
+        <translation>Opcjonalne:</translation>
     </message>
     <message>
         <source>Complete optional objective</source>
-        <translation>İsteğe bağlı hedefi tamamla</translation>
+        <translation>Wykonaj cel opcjonalny</translation>
     </message>
     <message>
         <source>Failure:</source>
-        <translation>Başarısızlık:</translation>
+        <translation>Porażka:</translation>
     </message>
     <message>
         <source>Avoid mission failure</source>
-        <translation>Görev başarısızlığından kaçın</translation>
+        <translation>Unikaj porażki misji</translation>
     </message>
     <message>
         <source>• Complete the mission successfully</source>
-        <translation>• Görevi başarıyla tamamla</translation>
+        <translation>• Ukończ misję pomyślnie</translation>
     </message>
     <message>
         <source>Army Composition:</source>
-        <translation>Ordu Bileşimi:</translation>
+        <translation>Skład armii:</translation>
     </message>
     <message>
         <source>Historical Ledger:</source>
-        <translation>Tarihsel Kayıt:</translation>
+        <translation>Zapis historyczny:</translation>
     </message>
     <message>
         <source>Casualties Forecast: </source>
-        <translation>Kayıp Öngörüsü: </translation>
+        <translation>Prognoza strat: </translation>
     </message>
     <message>
         <source>Tactical Rating: </source>
-        <translation>Taktik Değerlendirme: </translation>
+        <translation>Ocena taktyczna: </translation>
     </message>
     <message>
         <source>Campaign Success: </source>
-        <translation>Sefer Başarısı: </translation>
+        <translation>Powodzenie kampanii: </translation>
     </message>
     <message>
         <source>Opposition Command</source>
-        <translation>Karşı Komuta</translation>
+        <translation>Dowództwo przeciwnika</translation>
     </message>
     <message>
         <source>Field Command Pending</source>
-        <translation>Sahra Komutası Bekleniyor</translation>
+        <translation>Dowództwo polowe w toku ustalania</translation>
     </message>
     <message>
         <source>No named commander assigned to this force.</source>
-        <translation>Bu kuvvete adlandırılmış bir komutan atanmadı.</translation>
+        <translation>Do tych sił nie przypisano dowódcy z nazwiska.</translation>
     </message>
     <message>
         <source>Orders sealed until prior victories are secured.</source>
-        <translation>Emirler, önceki zaferler güvenceye alınana kadar mühürlü.</translation>
+        <translation>Rozkazy zapieczętowane do czasu wcześniejszych zwycięstw.</translation>
     </message>
     <message>
         <source>Victory recorded. You may replay this engagement at will.</source>
-        <translation>Zafer kaydedildi. Bu çarpışmayı dilediğin zaman yeniden oynayabilirsin.</translation>
+        <translation>Zwycięstwo zapisane. Możesz powtórzyć to starcie, kiedy zechcesz.</translation>
     </message>
     <message>
         <source>Orders issued. Deploy when ready.</source>
-        <translation>Emirler verildi. Hazır olduğunda yerleş.</translation>
+        <translation>Rozkazy wydane. Rozstaw wojsko, gdy będziesz gotów.</translation>
     </message>
     <message>
         <source>Battle tempo: the speed buttons sit on the top bar beside pause, from %1 up to %2. Press %3 or %4 to change speed without leaving the field.</source>
-        <translation>Savaş temposu: hız düğmeleri üst çubukta duraklatmanın yanında durur, %1&apos;den %2&apos;ye kadar. Meydandan ayrılmadan hızı değiştirmek için %3 ya da %4 tuşuna bas.</translation>
+        <translation>Tempo bitwy: przyciski szybkości są na górnym pasku obok pauzy, od %1 do %2. Naciśnij %3 albo %4, by zmienić tempo bez opuszczania pola.</translation>
     </message>
     <message>
         <source>Replay Mission</source>
-        <translation>Görevi Yeniden Oyna</translation>
+        <translation>Powtórz misję</translation>
     </message>
     <message>
         <source>Start Mission</source>
-        <translation>Görevi Başlat</translation>
+        <translation>Rozpocznij misję</translation>
     </message>
     <message>
         <source>Complete previous missions to unlock</source>
-        <translation>Kilidi açmak için önceki görevleri tamamla</translation>
+        <translation>Ukończ poprzednie misje, by odblokować</translation>
     </message>
     <message>
         <source>Locked</source>
-        <translation>Kilitli</translation>
+        <translation>Zablokowane</translation>
     </message>
     <message>
         <source>✓ Completed</source>
-        <translation>✓ Tamamlandı</translation>
+        <translation>✓ Ukończone</translation>
     </message>
 </context>
 <context>
     <name>MissionListItem</name>
     <message>
         <source>✓ Archived</source>
-        <translation>✓ Arşivlendi</translation>
+        <translation>✓ Zarchiwizowane</translation>
     </message>
     <message>
         <source>Sealed</source>
-        <translation>Mühürlü</translation>
+        <translation>Zapieczętowane</translation>
     </message>
     <message>
         <source>Open Order</source>
-        <translation>Emri Aç</translation>
+        <translation>Otwórz rozkaz</translation>
     </message>
     <message>
         <source>Difficulty:</source>
-        <translation>Zorluk:</translation>
+        <translation>Trudność:</translation>
     </message>
 </context>
 <context>
     <name>MissionSetupCoordinator</name>
     <message>
         <source>Player %1</source>
-        <translation>Oyuncu %1</translation>
+        <translation>Gracz %1</translation>
     </message>
     <message>
         <source>AI Player %1</source>
-        <translation>YZ Oyuncusu %1</translation>
+        <translation>Gracz komputerowy %1</translation>
     </message>
     <message>
         <source>east</source>
-        <translation>doğu</translation>
+        <translation>wschodu</translation>
     </message>
     <message>
         <source>west</source>
-        <translation>batı</translation>
+        <translation>zachodu</translation>
     </message>
     <message>
         <source>south</source>
-        <translation>güney</translation>
+        <translation>południa</translation>
     </message>
     <message>
         <source>north</source>
-        <translation>kuzey</translation>
+        <translation>północy</translation>
     </message>
     <message>
         <source>southeast</source>
-        <translation>güneydoğu</translation>
+        <translation>południowego wschodu</translation>
     </message>
     <message>
         <source>northeast</source>
-        <translation>kuzeydoğu</translation>
+        <translation>północnego wschodu</translation>
     </message>
     <message>
         <source>southwest</source>
-        <translation>güneybatı</translation>
+        <translation>południowego zachodu</translation>
     </message>
     <message>
         <source>northwest</source>
-        <translation>kuzeybatı</translation>
+        <translation>północnego zachodu</translation>
     </message>
     <message>
         <source>Enemy</source>
-        <translation>Düşman</translation>
+        <translation>Wróg</translation>
     </message>
     <message>
         <source>Wave %1/%2 forming to the %3: %4, roughly %5 troops. Brace.</source>
-        <translation>%3 yönünde %1/%2 dalgası toplanıyor: %4, kabaca %5 birlik. Hazır ol.</translation>
+        <translation>Fala %1/%2 formuje się od %3: %4, mniej więcej %5 oddziałów. Trzymaj się.</translation>
     </message>
     <message>
         <source>Wave %1/%2 broken. The line holds.</source>
-        <translation>%1/%2 dalgası kırıldı. Hat tutuyor.</translation>
-    </message>
-    <message>
-        <source>All %1 assault phases broken. Nothing else is coming.</source>
-        <translation>%1 taarruz evresinin hepsi kırıldı. Başka bir şey gelmiyor.</translation>
-    </message>
-    <message>
-        <source>AI Wave %1</source>
-        <translation>YZ Dalgası %1</translation>
-    </message>
-    <message>
-        <source>Assault phase %1/%2: %3 from the %4 (%5 units)</source>
-        <translation>Taarruz evresi %1/%2: %4 yönünden %3 (%5 birim)</translation>
+        <translation>Fala %1/%2 złamana. Linia trzyma.</translation>
     </message>
     <message>
         <source>The assault is broken. Nothing else is coming.</source>
-        <translation>Saldırı kırıldı. Başka bir şey gelmiyor.</translation>
+        <translation>Natarcie jest złamane. Nic więcej nie nadejdzie.</translation>
+    </message>
+    <message>
+        <source>All %1 assault phases broken. Nothing else is coming.</source>
+        <translation>Wszystkie fazy natarcia (%1) złamane. Nic więcej nie nadejdzie.</translation>
+    </message>
+    <message>
+        <source>AI Wave %1</source>
+        <translation>Fala komputera %1</translation>
+    </message>
+    <message>
+        <source>Assault phase %1/%2: %3 from the %4 (%5 units)</source>
+        <translation>Faza natarcia %1/%2: %3 od %4 (jednostki: %5)</translation>
     </message>
 </context>
 <context>
     <name>Missions</name>
     <message>
         <source>202 BC: Scipio arranged lanes through his infantry to blunt Hannibal&apos;s elephants, while Masinissa and Laelius commanded superior allied cavalry. The returning cavalry helped decide the battle. The Sepulcher intervention is the campaign&apos;s deliberate dark-fantasy break from history.</source>
-        <translation>MÖ 202: Scipio, Hannibal&apos;ın fillerini etkisizleştirmek için piyadesinin arasında koridorlar açtı; Masinissa ile Laelius ise üstün müttefik süvarisini yönetti. Geri dönen süvari savaşın kaderini belirledi. Kabir&apos;in müdahalesi, seferin tarihten bilinçli olarak kopan kara fantezi hamlesidir.</translation>
+        <translation>202 p.n.e.: Scypion ułożył w swojej piechocie korytarze, by stępić słonie Hannibala, a Masynissa i Leliusz dowodzili silniejszą jazdą sprzymierzonych. Powracająca jazda pomogła rozstrzygnąć bitwę. Interwencja Grobowca to celowe, mroczno-fantastyczne odejście kampanii od historii.</translation>
     </message>
     <message>
         <source>215-212 BC: Hannibal campaigned across Campania while Capua served as his principal Italian ally and winter base. This dark-fantasy composite condenses several Roman attempts to contain and isolate the Carthaginian army.</source>
-        <translation>MÖ 215-212: Capua onun başlıca İtalyan müttefiki ve kışlık üssü olarak iş görürken Hannibal Campania boyunca sefer yürüttü. Bu kara fantezi bileşimi, Roma&apos;nın Kartaca ordusunu çevreleme ve yalıtma girişimlerinden birkaçını tek bir görevde yoğunlaştırır.</translation>
+        <translation>215-212 p.n.e.: Hannibal prowadził kampanię po Kampanii, a Kapua była jego głównym italskim sprzymierzeńcem i zimową bazą. Ta mroczno-fantastyczna kompilacja skraca kilka rzymskich prób powstrzymania i odizolowania armii kartagińskiej.</translation>
     </message>
     <message>
         <source>216 BC: beside the Aufidus, Hannibal&apos;s deliberately yielding center drew a much larger Roman infantry mass forward while African infantry attacked its flanks and Carthaginian cavalry closed the rear. Two Roman camps supported the army.</source>
-        <translation>MÖ 216: Aufidus kıyısında Hannibal&apos;ın bilerek geri verdiği merkez, çok daha büyük bir Roma piyade kütlesini öne çekerken Afrikalı piyade kanatlarına saldırdı ve Kartaca süvarisi arkasını kapattı. Orduyu iki Roma kampı destekliyordu.</translation>
+        <translation>216 p.n.e.: nad Aufidusem celowo ustępujący środek Hannibala wciągnął naprzód znacznie większą masę piechoty rzymskiej, gdy piechota afrykańska uderzyła na jej skrzydła, a jazda kartagińska zamknęła tyły. Armię wspierały dwa obozy rzymskie.</translation>
     </message>
     <message>
         <source>217 BC: Hannibal drew Gaius Flaminius along the narrow northern shore of Lake Trasimene and attacked from concealed high ground in morning mist. The Roman marching column had little room to deploy and Flaminius was killed.</source>
-        <translation>MÖ 217: Hannibal, Gaius Flaminius&apos;u Trasimene Gölü&apos;nün dar kuzey kıyısı boyunca çekti ve sabah sisinde gizlenmiş yüksek zeminden saldırdı. Roma yürüyüş kolunun yerleşecek yeri neredeyse yoktu ve Flaminius öldürüldü.</translation>
+        <translation>217 p.n.e.: Hannibal wciągnął Gajusza Flaminiusza wzdłuż wąskiego północnego brzegu Jeziora Trazymeńskiego i uderzył z ukrytych wzgórz w porannej mgle. Rzymska kolumna marszowa miała mało miejsca na rozwinięcie, a Flaminiusz zginął.</translation>
     </message>
     <message>
         <source>218 BC: Hannibal crossed the Alps with a multinational army, cavalry, baggage train, and surviving elephants. Ancient sources disagree on the route; this scenario combines contested passes and local attacks into one dark-fantasy ascent.</source>
-        <translation>MÖ 218: Hannibal Alpler&apos;i çok uluslu bir orduyla, süvariyle, ağırlık katarıyla ve sağ kalan filleriyle aştı. Antik kaynaklar güzergâh konusunda anlaşamaz; bu senaryo çekişmeli geçitleri ve yerel saldırıları tek bir kara fantezi tırmanışında birleştirir.</translation>
+        <translation>218 p.n.e.: Hannibal przeszedł Alpy z wielonarodową armią, jazdą, taborem i ocalałymi słoniami. Źródła antyczne nie są zgodne co do trasy; ten scenariusz łączy sporne przełęcze i miejscowe ataki w jedno mroczno-fantastyczne podejście.</translation>
     </message>
     <message>
         <source>218 BC: Hannibal crossed the Rhône upstream from its mouth using boats, rafts, and a detached force sent across to turn local opposition. Scipio arrived too late; this altered history places Roman advance camps on the far-bank road to create the opening Carthage-versus-Rome engagement.</source>
-        <translation>MÖ 218: Hannibal Rhône&apos;u ağzından yukarıda kayıklar, sallar ve yerel direnci arkadan çevirmek için karşıya geçirilen ayrı bir kuvvetle aştı. Scipio çok geç geldi; bu değiştirilmiş tarih, açılış Kartaca-Roma çarpışmasını yaratmak için karşı kıyı yoluna Roma ileri kampları yerleştirir.</translation>
+        <translation>218 p.n.e.: Hannibal przeprawił się przez Rodan powyżej ujścia, używając łodzi, tratw i wydzielonego oddziału posłanego na drugi brzeg, by obejść miejscowy opór. Scypion przybył za późno; ta zmieniona historia stawia rzymskie obozy przednie na drodze za rzeką, tworząc pierwsze starcie Kartaginy z Rzymem.</translation>
     </message>
     <message>
         <source>218 BC: the Ticinus was primarily a cavalry engagement between reconnaissance forces. Roman consul Publius Cornelius Scipio was wounded and rescued during the retreat; the camp assault is a plausible dark-fantasy extension of that pursuit.</source>
-        <translation>MÖ 218: Ticinus esas olarak keşif kuvvetleri arasında bir süvari çarpışmasıydı. Roma konsülü Publius Cornelius Scipio yaralandı ve çekilme sırasında kurtarıldı; kamp taarruzu bu takibin akla yatkın bir kara fantezi uzantısıdır.</translation>
+        <translation>218 p.n.e.: Ticinus był przede wszystkim starciem jazdy sił rozpoznawczych. Rzymski konsul Publiusz Korneliusz Scypion został ranny i uratowany w odwrocie; szturm na obóz to prawdopodobne, mroczno-fantastyczne przedłużenie tego pościgu.</translation>
     </message>
     <message>
         <source>A broad river operation with ferries, wooded detours, bridgeheads, and fortified supply quarters; the Iron Sepulcher occupies an avoidable ruin on the southern flank.</source>
-        <translation>Sallar, ormanlık dolambaçlar, köprübaşları ve tahkimli ikmal mahalleleriyle geniş bir nehir harekâtı; Demir Kabir güney kanadında kaçınılabilir bir harabeyi tutuyor.</translation>
+        <translation>Szeroka operacja rzeczna z promami, leśnymi obejściami, przyczółkami i ufortyfikowanymi dzielnicami zaopatrzenia; Żelazny Grobowiec zajmuje ruinę na południowym skrzydle, którą można ominąć.</translation>
     </message>
     <message>
         <source>A camp is taken by holding its yard, not by levelling it.</source>
-        <translation>Bir kamp, yerle bir edilerek değil, avlusu tutularak alınır.</translation>
+        <translation>Obóz zdobywa się, trzymając jego dziedziniec, a nie równając go z ziemią.</translation>
     </message>
     <message>
         <source>A camp is taken by standing in it, not by levelling it. Nine men cannot kill thirty-eight, but they can hold two gate yards long enough to claim them - and a Roman column without its commander stops being a column.</source>
-        <translation>Bir kamp, yerle bir edilerek değil, içinde durularak alınır. Dokuz adam otuz sekizini öldüremez, ama iki kapı avlusunu sahiplenecek kadar tutabilir - ve komutansız bir Roma kolu artık kol olmaktan çıkar.</translation>
+        <translation>Obóz zdobywa się, stojąc w nim, a nie równając go z ziemią. Dziewięciu nie zabije trzydziestu ośmiu, ale zdołają utrzymać dwa dziedzińce bramne dość długo, by je zająć — a rzymska kolumna bez dowódcy przestaje być kolumną.</translation>
     </message>
     <message>
         <source>A camp, and nobody left standing in it. Get up. There is no shame in it. The shame would be in doing it a second time in the same valley.</source>
-        <translation>Bir kamp ve içinde ayakta kalan kimse yok. Kalk. Bunda utanılacak bir şey yok. Utanılacak olan, aynı vadide bunu ikinci kez yapmak olurdu.</translation>
+        <translation>Obóz, i nikogo w nim na nogach. Wstawaj. Nie ma w tym wstydu. Wstyd byłby zrobić to drugi raz w tej samej dolinie.</translation>
     </message>
     <message>
         <source>A column without its commander stops being a column.</source>
-        <translation>Komutansız bir kol artık kol değildir.</translation>
+        <translation>Kolumna bez dowódcy przestaje być kolumną.</translation>
     </message>
     <message>
         <source>A commander alone cannot defend a city quarter.</source>
-        <translation>Bir komutan tek başına bir şehir mahallesini savunamaz.</translation>
+        <translation>Sam dowódca nie obroni dzielnicy miasta.</translation>
     </message>
     <message>
         <source>A general alone on a dead field is just the last corpse standing.</source>
-        <translation>Ölü bir meydanda yalnız kalan general, yalnızca ayakta duran son cesettir.</translation>
+        <translation>Wódz sam na martwym polu to tylko ostatni stojący trup.</translation>
     </message>
     <message>
         <source>A guided first field, paced by the player rather than the clock: the Roman raid waits until the recruit&apos;s army stands, and the enemy camp is small enough to fall to a first attack.</source>
-        <translation>Saatle değil oyuncuyla ilerleyen, yol gösterilen bir ilk meydan: Roma baskını, acemi komutanın ordusu ayağa kalkana kadar bekler ve düşman kampı ilk saldırıda düşecek kadar küçüktür.</translation>
+        <translation>Prowadzone pierwsze pole, w tempie gracza, nie zegara: rzymski najazd czeka, aż armia rekruta stanie, a obóz wroga jest dość mały, by paść w pierwszym ataku.</translation>
     </message>
     <message>
         <source>A nation stands on its commander. Kill him and the camps go quiet and unclaimed - which, against a twenty-minute clock, is the only version of this battle that finishes in time.</source>
-        <translation>Bir ulus komutanının üstünde durur. Onu öldür, kamplar sessizleşir ve sahipsiz kalır - yirmi dakikalık bir saate karşı bu savaşın zamanında biten tek sürümü de budur.</translation>
+        <translation>Naród stoi swoim dowódcą. Zabij go, a obozy ucichną i pozostaną niczyje — co przy dwudziestominutowym zegarze jest jedyną wersją tej bitwy, która kończy się na czas.</translation>
     </message>
     <message>
         <source>A new standard in the valley, and nobody under it who has held a spear more than twice. My outpost has orders to go and look at you. Try to still be standing when they arrive; it makes the report worth writing.</source>
-        <translation>Vadide yeni bir sancak ve altında elinde iki kereden fazla mızrak tutmuş kimse yok. Karakolumun sizi görmeye gitme emri var. Vardıklarında hâlâ ayakta olmaya çalışın; raporu yazmaya değsin.</translation>
+        <translation>Nowy sztandar w dolinie, a pod nim nikt, kto trzymał włócznię więcej niż dwa razy. Moja strażnica ma rozkaz pójść i ci się przyjrzeć. Postaraj się jeszcze stać, gdy dotrą; wtedy raport będzie wart pisania.</translation>
     </message>
     <message>
         <source>ASSAULT I: infantry from north and south; cavalry raiders and engineers on the eastern consular road.</source>
-        <translation>TAARRUZ I: kuzeyden ve güneyden piyade; doğudaki konsül yolunda süvari akıncıları ve istihkâmcılar.</translation>
+        <translation>NATARCIE I: piechota z północy i południa; jazda łupieżcza i saperzy na wschodniej drodze konsularnej.</translation>
     </message>
     <message>
         <source>ASSAULT II: the Roman horns answer one another. Rotate the reserve before all three roads close.</source>
-        <translation>TAARRUZ II: Roma boynuzları birbirine karşılık veriyor. Üç yol da kapanmadan yedeği döndür.</translation>
+        <translation>NATARCIE II: rzymskie rogi odpowiadają sobie nawzajem. Przerzuć odwód, zanim zamkną się wszystkie trzy drogi.</translation>
     </message>
     <message>
         <source>ASSAULT III: siege engines and veteran cohorts. Hold every gate until the twentieth minute.</source>
-        <translation>TAARRUZ III: kuşatma makineleri ve kıdemli kohortlar. Yirminci dakikaya kadar her kapıyı tut.</translation>
+        <translation>NATARCIE III: machiny oblężnicze i kohorty weteranów. Utrzymaj każdą bramę do dwudziestej minuty.</translation>
     </message>
     <message>
         <source>Africa, then, and the two of us, and no river to stand behind. I have the measure of your elephants and I have your Numidians. Whatever you mean to do, do it where I can see it. I have waited sixteen years to stand in the same field as you.</source>
-        <translation>Demek Afrika, ikimiz ve arkasına sığınacak bir nehir yok. Fillerinin ölçüsünü aldım ve Numidyalıların bende. Ne yapmayı düşünüyorsan, görebileceğim bir yerde yap. Seninle aynı meydanda durmayı on altı yıldır bekliyorum.</translation>
+        <translation>A więc Afryka, i my dwaj, i żadnej rzeki, za którą można stanąć. Zmierzyłem twoje słonie i mam twoich Numidyjczyków. Cokolwiek zamierzasz, zrób to tam, gdzie to zobaczę. Czekałem szesnaście lat, by stanąć z tobą na jednym polu.</translation>
     </message>
     <message>
         <source>After Cannae, Rome refuses the battle Hannibal wants. The Republic instead presses every road, ally, granary, and walled town. Beneath the orchards, Iron Sepulcher graves make even a successful defense feel temporary.</source>
-        <translation>Cannae&apos;den sonra Roma, Hannibal&apos;ın istediği savaşı reddeder. Cumhuriyet bunun yerine her yola, müttefike, tahıl ambarına ve surlu kasabaya yüklenir. Meyve bahçelerinin altında Demir Kabir mezarları, başarılı bir savunmayı bile geçici hissettirir.</translation>
+        <translation>Po Kannach Rzym odmawia bitwy, jakiej chce Hannibal. Republika naciska zamiast tego na każdą drogę, sprzymierzeńca, spichlerz i miasto w murach. Pod sadami groby Żelaznego Grobowca sprawiają, że nawet udana obrona wydaje się tymczasowa.</translation>
     </message>
     <message>
         <source>An assault walks toward your camp but turns for whatever it can see. Bait it with something visible and it will take the ground you chose instead of the ground it wanted.</source>
-        <translation>Bir taarruz kampına doğru yürür ama görebildiği her şeye döner. Görünür bir şeyle yemle, istediği zemini değil senin seçtiğin zemini alacaktır.</translation>
+        <translation>Natarcie idzie ku twojemu obozowi, ale skręca ku wszystkiemu, co zobaczy. Zwab je czymś widocznym, a zajmie grunt, który wybrałeś, zamiast tego, którego chciało.</translation>
     </message>
     <message>
         <source>Another Roman wave is flanking from the southeast. Rotate quickly.</source>
-        <translation>Bir başka Roma dalgası güneydoğudan kanat yapıyor. Hızla döndür.</translation>
+        <translation>Kolejna rzymska fala obchodzi od południowego wschodu. Przerzuć siły szybko.</translation>
     </message>
     <message>
         <source>Battle of Cannae</source>
-        <translation>Cannae Muharebesi</translation>
+        <translation>Bitwa pod Kannami</translation>
     </message>
     <message>
         <source>Battle of Lake Trasimene</source>
-        <translation>Trasimene Gölü Muharebesi</translation>
+        <translation>Bitwa nad Jeziorem Trazymeńskim</translation>
     </message>
     <message>
         <source>Battle of Ticino</source>
-        <translation>Ticino Muharebesi</translation>
+        <translation>Bitwa nad Ticinusem</translation>
     </message>
     <message>
         <source>Battle of Trebia</source>
-        <translation>Trebia Muharebesi</translation>
+        <translation>Bitwa nad Trebią</translation>
     </message>
     <message>
         <source>Battle of Zama</source>
-        <translation>Zama Muharebesi</translation>
+        <translation>Bitwa pod Zamą</translation>
     </message>
     <message>
         <source>Between assaults, seize the eastern Roman siege camp.</source>
-        <translation>Taarruzlar arasında doğudaki Roma kuşatma kampını ele geçir.</translation>
+        <translation>Między natarciami zdobądź wschodni rzymski obóz oblężniczy.</translation>
     </message>
     <message>
         <source>Break all five columns. The ford is held when the last of them is dead in front of it, and not one column sooner.</source>
-        <translation>Beş kolu da kır. Geçit, sonuncusu da önünde ölü yattığında tutulmuş olur, bir kol öncesinde değil.</translation>
+        <translation>Złam wszystkie pięć kolumn. Bród jest utrzymany, gdy ostatnia z nich leży przed nim martwa, i ani o kolumnę wcześniej.</translation>
     </message>
     <message>
         <source>Break all three Roman assault phases. The quarter holds when the last consular column is dead in the streets.</source>
-        <translation>Üç Roma taarruz evresini de kır. Mahalle, son konsül kolu sokaklarda öldüğünde tutulmuş olur.</translation>
+        <translation>Złam wszystkie trzy rzymskie fazy natarcia. Dzielnica trzyma, gdy ostatnia kolumna konsularna legnie martwa na ulicach.</translation>
     </message>
     <message>
         <source>Break both Iron Sepulcher attacks. At Zama, the dead no longer remain outside the battle.</source>
-        <translation>Demir Kabir&apos;in iki saldırısını da kır. Zama&apos;da ölüler artık savaşın dışında kalmıyor.</translation>
+        <translation>Złam oba ataki Żelaznego Grobowca. Pod Zamą umarli nie zostają już poza bitwą.</translation>
     </message>
     <message>
         <source>Break the chiefs contesting the descent.</source>
-        <translation>İnişe itiraz eden reisleri kır.</translation>
+        <translation>Złam wodzów broniących zejścia.</translation>
     </message>
     <message>
         <source>Break the consular line at its centre.</source>
-        <translation>Konsül hattını merkezinden kır.</translation>
+        <translation>Przełam linię konsularną w jej środku.</translation>
     </message>
     <message>
         <source>Break the siege camp once the assaults are spent.</source>
-        <translation>Taarruzlar tükendiğinde kuşatma kampını kır.</translation>
+        <translation>Rozbij obóz oblężniczy, gdy natarcia się wyczerpią.</translation>
     </message>
     <message>
         <source>Break the three assault phases</source>
-        <translation>Üç taarruz evresini kır</translation>
+        <translation>Złam trzy fazy natarcia</translation>
     </message>
     <message>
         <source>Break the three crossings</source>
-        <translation>Üç geçidi kır</translation>
+        <translation>Złam trzy przeprawy</translation>
     </message>
     <message>
         <source>Break three Roman columns before the survivors find the ford again.</source>
-        <translation>Sağ kalanlar geçidi yeniden bulmadan üç Roma kolunu kır.</translation>
+        <translation>Złam trzy rzymskie kolumny, zanim ocaleni znów znajdą bród.</translation>
     </message>
     <message>
         <source>Bring the column to the first pass</source>
-        <translation>Kolu ilk geçide ulaştır</translation>
+        <translation>Doprowadź kolumnę do pierwszej przełęczy</translation>
     </message>
     <message>
         <source>Bring the column to the pontoon bridge on the near bank.</source>
-        <translation>Kolu yakın kıyıdaki dubalı köprüye ulaştır.</translation>
+        <translation>Doprowadź kolumnę do mostu pontonowego na bliskim brzegu.</translation>
     </message>
     <message>
         <source>Burn every cursed guardian from the sepulcher ruins. Kill what cannot die.</source>
-        <translation>Kabir harabelerindeki lanetli bekçilerin hepsini yak. Ölemeyeni öldür.</translation>
+        <translation>Wypal każdego przeklętego strażnika z ruin grobowca. Zabij to, co nie może umrzeć.</translation>
     </message>
     <message>
         <source>Cavalry reaches it first; hold the yard until the standard changes.</source>
-        <translation>Oraya önce süvari varır; sancak değişene kadar avluyu tut.</translation>
+        <translation>Jazda dociera tam pierwsza; utrzymaj dziedziniec, aż zmieni się sztandar.</translation>
     </message>
     <message>
         <source>Clear the pass before the mountain closes it. Every hour lost is more men fed to the cold.</source>
-        <translation>Dağ geçidi kapatmadan önce onu temizle. Yitirilen her saat soğuğa verilen birkaç adam demektir.</translation>
+        <translation>Oczyść przełęcz, zanim góra ją zamknie. Każda stracona godzina to kolejni ludzie skarmieni mrozowi.</translation>
     </message>
     <message>
         <source>Close the encirclement on the Aufidus camp to the north.</source>
-        <translation>Kuzeydeki Aufidus kampında kuşatmayı kapat.</translation>
+        <translation>Zamknij okrążenie na obozie nad Aufidusem na północy.</translation>
     </message>
     <message>
         <source>Close the trap on the column town</source>
-        <translation>Kol kasabasında tuzağı kapat</translation>
+        <translation>Zamknij pułapkę na mieście kolumny</translation>
     </message>
     <message>
         <source>Cold water and an early start, and my colleague is very pleased with both. He has the men in the river before their porridge. I said what I thought and was overruled, so I shall stand here and watch your ambush do its arithmetic.</source>
-        <translation>Soğuk su ve erken bir başlangıç; meslektaşım ikisinden de pek memnun. Adamları çorbalarını içmeden nehre soktu. Düşündüğümü söyledim ama dinlenmedim, bu yüzden burada durup pusunun hesabını yapmasını izleyeceğim.</translation>
+        <translation>Zimna woda i wczesna pobudka, a mój kolega jest zachwycony jednym i drugim. Ma ludzi w rzece, zanim zjedli owsiankę. Powiedziałem, co myślę, i mnie przegłosowano, więc będę tu stał i patrzył, jak twoja zasadzka odrabia swoje rachunki.</translation>
     </message>
     <message>
         <source>Counterattack now. Break them while they are split by the river.</source>
-        <translation>Şimdi karşı saldırıya geç. Nehir onları bölmüşken kır.</translation>
+        <translation>Kontratakuj teraz. Złam ich, póki rozdziela ich rzeka.</translation>
     </message>
     <message>
         <source>Cross before the Roman runners reach their garrison. Every second spent waiting feeds the blade.</source>
-        <translation>Roma ulakları garnizonlarına ulaşmadan geç. Beklemeyle geçen her saniye kılıcı besler.</translation>
+        <translation>Przepraw się, zanim rzymscy gońcy dotrą do swojej załogi. Każda sekunda czekania karmi ostrze.</translation>
     </message>
     <message>
         <source>Cross the Rhône by one of several prepared routes, sever the eastern supply road, and capture two Roman advance camps before Scipio reaches the river.</source>
-        <translation>Rhône&apos;u hazırlanmış birkaç güzergâhtan biriyle aş, doğudaki ikmal yolunu kes ve Scipio nehre varmadan iki Roma ileri kampını ele geçir.</translation>
+        <translation>Przepraw się przez Rodan jedną z kilku przygotowanych tras, przetnij wschodnią drogę zaopatrzeniową i zdobądź dwa rzymskie obozy przednie, zanim Scypion dotrze do rzeki.</translation>
     </message>
     <message>
         <source>Crossing the Alps</source>
-        <translation>Alpler&apos;i Geçiş</translation>
+        <translation>Przejście przez Alpy</translation>
     </message>
     <message>
         <source>Crossing the Rhône</source>
-        <translation>Rhône&apos;u Geçiş</translation>
+        <translation>Przeprawa przez Rodan</translation>
     </message>
     <message>
         <source>Crush all three Roman camps and seal the iron tomb shut. No escape.</source>
-        <translation>Üç Roma kampını da ez ve demir mezarı mühürle. Kaçış yok.</translation>
+        <translation>Zmiażdż wszystkie trzy obozy rzymskie i zapieczętuj żelazny grobowiec. Bez ucieczki.</translation>
     </message>
     <message>
         <source>Crush both Roman breakout columns before they claw through the hillside.</source>
-        <translation>İki Roma yarma kolunu da yamacı tırmalayarak geçmeden ez.</translation>
+        <translation>Zmiażdż obie rzymskie kolumny przebijające się, zanim wydrapią się przez zbocze.</translation>
     </message>
     <message>
         <source>Cut and carry home four hundred of timber and two hundred and ten of stone. The near stand will not cover it; the deep pines will.</source>
-        <translation>Dört yüz kereste ve iki yüz on taş kes ve eve taşı. Yakın koru bunu karşılamaz; derin çamlıklar karşılar.</translation>
+        <translation>Zetnij i przywieź do domu czterysta drewna i dwieście dziesięć kamienia. Bliski drzewostan tego nie pokryje; gęste sosny — tak.</translation>
     </message>
     <message>
         <source>Cut the stores for the road</source>
-        <translation>Yol için erzağı kes</translation>
+        <translation>Wytnij zapasy na drogę</translation>
     </message>
     <message>
         <source>Cut timber for the sledges, break stone for the road, and draw iron for the shoes and axles. The column crosses on what your builders can carry.</source>
-        <translation>Kızaklar için kereste kes, yol için taş kır ve nal ile dingiller için demir çıkar. Kol, inşaatçılarının taşıyabildiğiyle geçer.</translation>
+        <translation>Zetnij drewno na sanie, rozbij kamień na drogę i wytop żelazo na okucia i osie. Kolumna przejdzie na tym, co udźwigną twoi budowniczowie.</translation>
     </message>
     <message>
         <source>December 218 BC: Hannibal provoked Tiberius Sempronius Longus into crossing the cold Trebia before breakfast. Carthaginian infantry, cavalry, elephants, and Mago&apos;s hidden detachment struck the exhausted Roman army from front, flanks, and rear.</source>
-        <translation>MÖ 218 Aralık: Hannibal, Tiberius Sempronius Longus&apos;u kahvaltıdan önce soğuk Trebia&apos;yı geçmeye kışkırttı. Kartaca piyadesi, süvarisi, filleri ve Mago&apos;nun gizli müfrezesi bitkin Roma ordusuna cepheden, kanatlardan ve arkadan vurdu.</translation>
+        <translation>Grudzień 218 p.n.e.: Hannibal sprowokował Tyberiusza Semproniusza Longusa do przejścia zimnej Trebii przed śniadaniem. Piechota kartagińska, jazda, słonie i ukryty oddział Magona uderzyły na wyczerpaną armię rzymską od czoła, ze skrzydeł i z tyłu.</translation>
     </message>
     <message>
         <source>Defend Hannibal&apos;s fortified Campanian supply town and break all three coordinated Roman assaults arriving from separate consular roads.</source>
-        <translation>Hannibal&apos;ın tahkimli Campania ikmal kasabasını savun ve ayrı konsül yollarından gelen üç eşgüdümlü Roma taarruzunu da kır.</translation>
+        <translation>Broń ufortyfikowanego kampańskiego miasta zaopatrzeniowego Hannibala i złam wszystkie trzy zgrane natarcia rzymskie nadchodzące osobnymi drogami konsularnymi.</translation>
     </message>
     <message>
         <source>Drive the dead from the shrine. Salt the earth where they stood.</source>
-        <translation>Ölüleri mabetten sür. Durdukları toprağa tuz ek.</translation>
+        <translation>Wypędź umarłych ze świątyni. Zasol ziemię tam, gdzie stali.</translation>
     </message>
     <message>
         <source>Eighty thousand. I would rather you heard the number than saw it, because seeing it takes most of a morning. Varro has the command today, and Varro believes in going forward. Stand wherever you like.</source>
-        <translation>Seksen bin. Bu sayıyı görmeden duymanı yeğlerim, çünkü görmek neredeyse bütün bir sabah alıyor. Bugün komuta Varro&apos;da ve Varro ileri gitmeye inanır. Nerede istersen orada dur.</translation>
+        <translation>Osiemdziesiąt tysięcy. Wolę, żebyś tę liczbę usłyszał, niż zobaczył, bo oglądanie jej zajmuje pół poranka. Dziś dowodzi Warron, a Warron wierzy w marsz naprzód. Stań sobie, gdzie chcesz.</translation>
     </message>
     <message>
         <source>End the war with the men who lead it.</source>
-        <translation>Savaşı, onu yönetenlerle birlikte bitir.</translation>
+        <translation>Zakończ wojnę razem z ludźmi, którzy ją prowadzą.</translation>
     </message>
     <message>
         <source>Endure both waves from the depths. Do not flinch when the ground tears open.</source>
-        <translation>Derinlerden gelen iki dalgaya da dayan. Toprak yarıldığında irkilme.</translation>
+        <translation>Przetrwaj obie fale z głębin. Nie drgnij, gdy ziemia się rozerwie.</translation>
     </message>
     <message>
         <source>Enemy camps fall neutral once their commander is dead.</source>
-        <translation>Düşman kampları komutanları öldüğünde tarafsız kalır.</translation>
+        <translation>Obozy wroga stają się neutralne, gdy zginie ich dowódca.</translation>
     </message>
     <message>
         <source>Every soldier lost is counted by the enemy tonight.</source>
-        <translation>Yitirilen her asker bu gece düşman tarafından sayılıyor.</translation>
+        <translation>Każdy stracony żołnierz zostanie dziś w nocy policzony przez wroga.</translation>
     </message>
     <message>
         <source>Every system a first match asks for, in the order a new commander meets them: selection and orders, the resource loop from tree to yard, construction cost and placement, recruitment and the population that limits it, stances, the commander&apos;s aura and rally, camera, speed and objectives - then one small assault to put it all together.</source>
-        <translation>Bir ilk maçın istediği her sistem, yeni bir komutanın onlarla karşılaştığı sırayla: seçim ve emirler, ağaçtan avluya kaynak döngüsü, inşa bedeli ve yerleştirme, devşirme ve onu sınırlayan nüfus, duruşlar, komutanın aurası ve toplanması, kamera, hız ve hedefler - sonra hepsini birleştiren küçük bir taarruz.</translation>
+        <translation>Każdy system, jakiego wymaga pierwszy mecz, w kolejności, w jakiej nowy dowódca je poznaje: zaznaczanie i rozkazy, pętla surowcowa od drzewa do składu, koszt i stawianie budowli, rekrutacja i ograniczająca ją ludność, postawy, aura i zbiórka dowódcy, kamera, tempo i cele — a potem jedno małe natarcie, by to wszystko złożyć.</translation>
     </message>
     <message>
         <source>Execute the encirclement, then seize all three Roman camps before their reserves can restore the line.</source>
-        <translation>Kuşatmayı uygula, sonra yedekleri hattı onaramadan üç Roma kampını da ele geçir.</translation>
+        <translation>Wykonaj okrążenie, a potem zajmij wszystkie trzy obozy rzymskie, zanim ich odwody zdołają odbudować linię.</translation>
     </message>
     <message>
         <source>Field Training</source>
-        <translation>Sahra Talimi</translation>
+        <translation>Szkolenie polowe</translation>
     </message>
     <message>
         <source>Fifteen thousand in the shallows, and the augurs will say the sacred chickens warned us. Kill a consul and Rome elects another by market day. That is the trick of us: we are not a man.</source>
-        <translation>Sığlıkta on beş bin ve kâhinler kutsal tavukların bizi uyardığını söyleyecek. Bir konsül öldür, Roma pazar gününe kalmadan bir yenisini seçer. Bizim hilemiz budur: biz bir adam değiliz.</translation>
+        <translation>Piętnaście tysięcy na mieliznach, a wróżbici powiedzą, że święte kury nas ostrzegały. Zabij konsula, a Rzym wybierze następnego do dnia targowego. Na tym polega nasza sztuczka: nie jesteśmy jednym człowiekiem.</translation>
     </message>
     <message>
         <source>Fill the levy out of the Pinewater cut: four hundred of timber and two hundred and ten of stone, cut and carried home before the column comes back through.</source>
-        <translation>Levhayı Çampınar kesiminden tamamla: dört yüz kereste ve iki yüz on taş; kol geri dönmeden kesilip eve taşınmalı.</translation>
+        <translation>Uzupełnij pobór z poręby nad Sosnową Wodą: czterysta drewna i dwieście dziesięć kamienia, zetnij i przywieź do domu, zanim kolumna wróci tędy z powrotem.</translation>
     </message>
     <message>
         <source>Final battle in Africa: blunt Scipio&apos;s line, survive the Numidian cavalry, and seize all four Roman camps while breaking both risings of the dead.</source>
-        <translation>Afrika&apos;daki son savaş: Scipio&apos;nun hattını körelt, Numidya süvarisine dayan ve ölülerin iki kalkışını da kırarken dört Roma kampını da ele geçir.</translation>
+        <translation>Ostatnia bitwa w Afryce: stęp linię Scypiona, przetrwaj jazdę numidyjską i zajmij wszystkie cztery obozy rzymskie, łamiąc przy tym oba powstania umarłych.</translation>
     </message>
     <message>
         <source>Final ridge ahead. Break the last camp to open the descent.</source>
-        <translation>İleride son sırt. İnişi açmak için son kampı kır.</translation>
+        <translation>Ostatni grzbiet przed tobą. Rozbij ostatni obóz, by otworzyć zejście.</translation>
     </message>
     <message>
         <source>Fine. Sempronius rides to Rome to explain his morning. Half a legion walked out of that water and kept walking, and they will meet you again in the spring with dry feet and long memories.</source>
-        <translation>Pekâlâ. Sempronius sabahını açıklamak için Roma&apos;ya at sürüyor. O sudan yarım lejyon çıkıp yürümeye devam etti ve ilkbaharda kuru ayaklar ve uzun bir hafızayla seninle yeniden karşılaşacaklar.</translation>
+        <translation>Dobrze. Semproniusz jedzie do Rzymu tłumaczyć swój poranek. Pół legionu wyszło z tej wody i szło dalej, i spotkają cię znowu na wiosnę, z suchymi stopami i długą pamięcią.</translation>
     </message>
     <message>
         <source>Finish the consular officers on the field.</source>
-        <translation>Meydandaki konsül subaylarını bitir.</translation>
+        <translation>Dobij oficerów konsularnych na polu.</translation>
     </message>
     <message>
         <source>Finish the officers inside the ring.</source>
-        <translation>Halkanın içindeki subayları bitir.</translation>
+        <translation>Dobij oficerów wewnątrz pierścienia.</translation>
     </message>
     <message>
         <source>First battle on Italian soil. Win the cavalry duel, then seize the Roman reserve camp before fresh reinforcements regroup.</source>
-        <translation>İtalyan toprağındaki ilk savaş. Süvari düellosunu kazan, sonra taze takviyeler toparlanmadan Roma yedek kampını ele geçir.</translation>
+        <translation>Pierwsza bitwa na italskiej ziemi. Wygraj pojedynek jazdy, a potem zajmij rzymski obóz odwodowy, zanim świeże posiłki się przegrupują.</translation>
     </message>
     <message>
         <source>Five columns and the ford still ours. Count the men twice and do not write the number down until morning; it is always worse in the dark and always worse again in daylight.</source>
-        <translation>Beş kol ve geçit hâlâ bizim. Adamları iki kez say ve sayıyı sabaha kadar yazma; karanlıkta hep daha kötüdür, gün ışığında ise yine daha kötü.</translation>
+        <translation>Pięć kolumn, a bród wciąż nasz. Przelicz ludzi dwa razy i nie zapisuj liczby do rana; po ciemku zawsze wychodzi gorzej, a przy świetle jeszcze gorzej.</translation>
     </message>
     <message>
         <source>Fix the Roman center in place. Keep both cavalry wings active.</source>
-        <translation>Roma merkezini yerine çivile. İki süvari kanadını da etkin tut.</translation>
+        <translation>Przykuj środek rzymski do miejsca. Utrzymaj oba skrzydła jazdy w ruchu.</translation>
     </message>
     <message>
         <source>Flaminius must not leave the shore.</source>
-        <translation>Flaminius kıyıdan ayrılmamalı.</translation>
+        <translation>Flaminiusz nie może opuścić brzegu.</translation>
     </message>
     <message>
         <source>Follow the valley floor east; the mountain peoples hold the switchbacks above.</source>
-        <translation>Vadi tabanını doğuya izle; dağ halkları yukarıdaki virajları tutuyor.</translation>
+        <translation>Idź dnem doliny na wschód; ludy gór trzymają serpentyny powyżej.</translation>
     </message>
     <message>
         <source>Four hundred of timber and two hundred of stone, and the near stand was stripped by the last detail. That means the deep pines, which means the long road, which means whatever is living in the deep pines gets a look at us. Split the crew. Escort the far one.</source>
-        <translation>Dört yüz kereste ve iki yüz taş; yakın koruyu da son ekip soymuş. Bu, derin çamlıklar demek, o da uzun yol demek, o da derin çamlıklarda yaşayan her neyse bizi bir görecek demek. Ekibi böl. Uzaktakine muhafız ver.</translation>
+        <translation>Czterysta drewna i dwieście kamienia, a bliski drzewostan ogołociła poprzednia ekipa. To znaczy gęste sosny, co znaczy długa droga, co znaczy, że to, co żyje w gęstych sosnach, dobrze się nam przyjrzy. Podziel ekipę. Tę dalszą odeskortuj.</translation>
     </message>
     <message>
         <source>Grave-lights move among the western orchards. The Iron Sepulcher is watching, but the legions remain the greater danger.</source>
-        <translation>Batıdaki meyve bahçelerinde mezar ışıkları geziyor. Demir Kabir izliyor, ama lejyonlar hâlâ daha büyük tehlike.</translation>
+        <translation>Grobowe światła krążą wśród zachodnich sadów. Żelazny Grobowiec patrzy, ale legiony są większym zagrożeniem.</translation>
     </message>
     <message>
         <source>Hannibal falls, and the allied towns abandon the field.</source>
-        <translation>Hannibal düşer ve müttefik kasabalar meydanı terk eder.</translation>
+        <translation>Hannibal pada, a sprzymierzone miasta opuszczają pole.</translation>
     </message>
     <message>
         <source>Hannibal&apos;s first Italian victory is a test of tempo and cavalry control. Ford-shades complicate the flanks but do not replace the Roman enemy.</source>
-        <translation>Hannibal&apos;ın İtalya&apos;daki ilk zaferi, tempo ve süvari denetimi sınavıdır. Geçit gölgeleri kanatları zorlaştırır ama Roma düşmanının yerini almaz.</translation>
+        <translation>Pierwsze italskie zwycięstwo Hannibala to próba tempa i panowania nad jazdą. Cienie brodu komplikują skrzydła, ale nie zastępują rzymskiego wroga.</translation>
     </message>
     <message>
         <source>Hannibal&apos;s masterpiece becomes a prolonged operational battle, not a single frontal collision.</source>
-        <translation>Hannibal&apos;ın başyapıtı, tek bir cepheden çarpışma değil, uzun süreli bir harekât savaşına dönüşür.</translation>
+        <translation>Arcydzieło Hannibala staje się przedłużoną bitwą operacyjną, a nie pojedynczym zderzeniem czołowym.</translation>
     </message>
     <message>
         <source>High ground doubles a bowman and hardens him against what shoots back. The ridge over the Roman camp is worth more than the extra squadron you would have spent the same minutes recruiting.</source>
-        <translation>Yüksek zemin bir okçuyu ikiye katlar ve karşılık verene karşı onu sertleştirir. Roma kampına bakan sırt, aynı dakikalarda devşirebileceğin fazladan bölükten daha değerlidir.</translation>
+        <translation>Wyżej położony teren podwaja łucznika i utwardza go na to, co strzela w odpowiedzi. Grzbiet nad rzymskim obozem jest wart więcej niż dodatkowy szwadron, na który zeszłyby te same minuty.</translation>
     </message>
     <message>
         <source>Hold discipline. Let the Romans commit at the ford.</source>
-        <translation>Disiplini koru. Bırak Romalılar geçitte kendilerini adasın.</translation>
+        <translation>Trzymaj dyscyplinę. Niech Rzymianie zaangażują się przy brodzie.</translation>
     </message>
     <message>
         <source>Hold the Punic quarter through every consular column.</source>
-        <translation>Pön mahallesini her konsül koluna karşı tut.</translation>
+        <translation>Utrzymaj dzielnicę punicką przez każdą kolumnę konsularną.</translation>
     </message>
     <message>
         <source>Hold the Sallow Ford</source>
-        <translation>Solgun Geçidi Tut</translation>
+        <translation>Utrzymaj Wierzbowy Bród</translation>
     </message>
     <message>
         <source>Hold the field, then. My horse is dead, my son is dragging me off it by the arm, and I find I can still count. You have won a ford. Italy is nine hundred miles long.</source>
-        <translation>Öyleyse meydanı tut. Atım öldü, oğlum beni kolumdan çekip çıkarıyor ve hâlâ sayabildiğimi görüyorum. Bir geçit kazandın. İtalya dokuz yüz mil uzunluğunda.</translation>
+        <translation>Więc trzymaj pole. Mój koń nie żyje, syn ciągnie mnie z niego za ramię, a ja wciąż potrafię liczyć. Wygrałeś bród. Italia ma dziewięćset mil długości.</translation>
     </message>
     <message>
         <source>Hold the gate yard of Scipio&apos;s forward town.</source>
-        <translation>Scipio&apos;nun ileri kasabasının kapı avlusunu tut.</translation>
+        <translation>Utrzymaj dziedziniec bramny wysuniętego miasta Scypiona.</translation>
     </message>
     <message>
         <source>Hold the river line and break all three Roman crossings. Let the cold and the water do the work Sempronius will not.</source>
-        <translation>Nehir hattını tut ve üç Roma geçidini de kır. Sempronius&apos;un yapmayacağı işi soğuk ve su yapsın.</translation>
+        <translation>Utrzymaj linię rzeki i złam wszystkie trzy przeprawy rzymskie. Niech mróz i woda zrobią robotę, której Semproniusz nie zrobi.</translation>
     </message>
     <message>
         <source>Hold the ruins. Force the Romans to fight on two grounds at once.</source>
-        <translation>Harabeleri tut. Romalıları aynı anda iki zeminde çarpışmaya zorla.</translation>
+        <translation>Utrzymaj ruiny. Zmuś Rzymian do walki na dwóch gruntach naraz.</translation>
     </message>
     <message>
         <source>Hold the southern bank through all three crossings. Sempronius spends his army on the ice; you have only to still be standing.</source>
-        <translation>Güney kıyısını üç geçiş boyunca tut. Sempronius ordusunu buzda harcıyor; senin tek yapman gereken hâlâ ayakta olmak.</translation>
+        <translation>Utrzymaj południowy brzeg przez wszystkie trzy przeprawy. Semproniusz przepuszcza armię na lodzie; tobie wystarczy jeszcze stać.</translation>
     </message>
     <message>
         <source>Hold the southern bank through every Roman assault phase.</source>
-        <translation>Güney kıyısını her Roma taarruz evresi boyunca tut.</translation>
+        <translation>Utrzymaj południowy brzeg przez każdą rzymską fazę natarcia.</translation>
     </message>
     <message>
         <source>If the central camp falls, the Campanian alliance dies with it.</source>
-        <translation>Merkez kamp düşerse Campania ittifakı onunla birlikte ölür.</translation>
+        <translation>Jeśli padnie środkowy obóz, razem z nim umiera przymierze kampańskie.</translation>
     </message>
     <message>
         <source>Iron Sepulcher Watch</source>
-        <translation>Demir Kabir Nöbeti</translation>
+        <translation>Straż Żelaznego Grobowca</translation>
     </message>
     <message>
         <source>Iron bells answer beneath the south-western crossing. The Sepulcher is advancing on Carthage as well as Rome.</source>
-        <translation>Güneybatı geçidinin altından demir çanlar karşılık veriyor. Kabir yalnızca Roma&apos;ya değil Kartaca&apos;ya da ilerliyor.</translation>
+        <translation>Żelazne dzwony odpowiadają pod południowo-zachodnią przeprawą. Grobowiec nadciąga i na Kartaginę, i na Rzym.</translation>
     </message>
     <message>
         <source>It is finished. Carthage will have terms, and the terms will be her fleet burned in her own harbour where she can watch it. You were the better general. It has not turned out to matter.</source>
-        <translation>Bitti. Kartaca şartları alacak ve şartlar, donanmasının kendi limanında, izleyebileceği bir yerde yakılması olacak. Daha iyi general sendin. Bunun bir önemi kalmadı.</translation>
+        <translation>Skończone. Kartagina dostanie warunki, a warunkiem będzie jej flota spalona we własnym porcie, tak by mogła na to patrzeć. Byłeś lepszym wodzem. Okazało się, że to nie ma znaczenia.</translation>
     </message>
     <message>
         <source>It is the closest camp to your hill; take it before the wings close.</source>
-        <translation>Tepenle arasındaki en yakın kamp; kanatlar kapanmadan al.</translation>
+        <translation>To najbliższy obóz od twojego wzgórza; zdobądź go, zanim zamkną się skrzydła.</translation>
     </message>
     <message>
         <source>It is the closest of the four camps to your line.</source>
-        <translation>Dört kamptan hattına en yakın olanı.</translation>
+        <translation>To najbliższy twojej linii z czterech obozów.</translation>
     </message>
     <message>
         <source>Keep Capua, then. I shall come back after the harvest, and after the one following it. I have buried three consuls who were in a hurry. Patience is cheaper, and it does not require a triumph.</source>
-        <translation>Öyleyse Capua sende kalsın. Hasattan sonra döneceğim, ondan sonraki hasattan sonra da. Acelesi olan üç konsül gömdüm. Sabır daha ucuzdur ve zafer alayı gerektirmez.</translation>
+        <translation>A więc zatrzymaj Kapuę. Wrócę po żniwach, a potem po następnych. Pochowałem trzech konsulów, którym się śpieszyło. Cierpliwość jest tańsza i nie wymaga triumfu.</translation>
     </message>
     <message>
         <source>Keep both towers standing. Lose one and the lane it watches is yours to walk yourself.</source>
-        <translation>İki kuleyi de ayakta tut. Birini yitirirsen gözettiği koridoru kendin yürümek zorunda kalırsın.</translation>
+        <translation>Utrzymaj obie wieże. Strać jedną, a korytarz, którego pilnowała, będziesz musiał obchodzić sam.</translation>
     </message>
     <message>
         <source>Kill Sempronius and his officers</source>
-        <translation>Sempronius&apos;u ve subaylarını öldür</translation>
+        <translation>Zabij Semproniusza i jego oficerów</translation>
     </message>
     <message>
         <source>Kill every enemy commander. A nation dies with the man who leads it: its camps fall neutral, its works come down and its troops leave the field.</source>
-        <translation>Her düşman komutanını öldür. Bir ulus, kendisini yöneten adamla birlikte ölür: kampları tarafsızlaşır, yapıları yıkılır ve birlikleri meydanı terk eder.</translation>
+        <translation>Zabij każdego dowódcę wroga. Naród umiera wraz z człowiekiem, który go prowadzi: jego obozy stają się neutralne, jego umocnienia padają, a wojska schodzą z pola.</translation>
     </message>
     <message>
         <source>Kill the Roman commander and take the outpost. A nation dies with the man who leads it.</source>
-        <translation>Roma komutanını öldür ve karakolu al. Bir ulus, kendisini yöneten adamla birlikte ölür.</translation>
+        <translation>Zabij rzymskiego dowódcę i zdobądź strażnicę. Naród umiera wraz z człowiekiem, który go prowadzi.</translation>
     </message>
     <message>
         <source>Kill the Roman commanders</source>
-        <translation>Roma komutanlarını öldür</translation>
+        <translation>Zabij dowódców rzymskich</translation>
     </message>
     <message>
         <source>Kill the consular commanders</source>
-        <translation>Konsül komutanlarını öldür</translation>
+        <translation>Zabij dowódców konsularnych</translation>
     </message>
     <message>
         <source>Kill the mountain commanders</source>
-        <translation>Dağ komutanlarını öldür</translation>
+        <translation>Zabij dowódców górskich</translation>
     </message>
     <message>
         <source>Learn to command before Rome comes looking for you: select and move troops, drive off a scouting party, put builders to work on timber, stone and ore, raise a Home, recruit an army, break a Roman raid, and take the enemy camp.</source>
-        <translation>Roma seni aramaya gelmeden komuta etmeyi öğren: birlikleri seç ve hareket ettir, bir keşif kolunu püskürt, inşaatçıları kereste, taş ve cevhere koş, bir Ev yükselt, bir ordu devşir, bir Roma baskınını kır ve düşman kampını al.</translation>
+        <translation>Naucz się dowodzić, zanim Rzym zacznie cię szukać: zaznaczaj i ruszaj oddziałami, odpędź patrol zwiadowczy, poślij budowniczych po drewno, kamień i rudę, postaw Dom, zrekrutuj armię, złam rzymski najazd i zdobądź obóz wroga.</translation>
     </message>
     <message>
         <source>Leave the axes. Leave the carts. A detail that cannot walk out of its own cut does not get to carry anything.</source>
-        <translation>Baltaları bırak. Arabaları bırak. Kendi kesim alanından yürüyerek çıkamayan bir ekip hiçbir şey taşıyamaz.</translation>
+        <translation>Zostaw siekiery. Zostaw wozy. Ekipa, która nie potrafi wyjść z własnej poręby, niczego nie poniesie.</translation>
     </message>
     <message>
         <source>Levy filled. Stack it by the road and let the carts argue about it. We cut a wood down to feed a siege that has not started yet — remember that the next time somebody calls this the quiet posting.</source>
-        <translation>Levha tamamlandı. Yolun kenarına yığ, bırak arabalar tartışsın. Daha başlamamış bir kuşatmayı beslemek için bir ormanı kestik — biri buraya sakin görev dediğinde bunu hatırla.</translation>
+        <translation>Pobór wypełniony. Ułóż to przy drodze i niech wozy się o to kłócą. Wycięliśmy las, by wykarmić oblężenie, które jeszcze się nie zaczęło — pamiętaj o tym, gdy ktoś następnym razem nazwie tę służbę spokojną.</translation>
     </message>
     <message>
         <source>Lose the redoubt and there is nothing behind it for forty miles.</source>
-        <translation>Tabyayı yitirirsen arkasında kırk mil boyunca hiçbir şey yok.</translation>
+        <translation>Strać redutę, a za nią przez czterdzieści mil nie ma nic.</translation>
     </message>
     <message>
         <source>Lose the river camp and the cold takes what the Romans couldn&apos;t.</source>
-        <translation>Nehir kampını yitirirsen Romalıların alamadığını soğuk alır.</translation>
+        <translation>Strać obóz nad rzeką, a mróz zabierze to, czego nie zdołali Rzymianie.</translation>
     </message>
     <message>
         <source>Lose the supply camp and the army starves before it reaches the snow line.</source>
-        <translation>İkmal kampını yitirirsen ordu kar hattına varmadan açlıktan kırılır.</translation>
+        <translation>Strać obóz zaopatrzeniowy, a armia zagłodzi się, zanim dojdzie do linii śniegu.</translation>
     </message>
     <message>
         <source>Lose your camp and the tempo dies with it.</source>
-        <translation>Kampını yitirirsen tempo da onunla ölür.</translation>
+        <translation>Strać obóz, a razem z nim umiera tempo.</translation>
     </message>
     <message>
         <source>Masinissa&apos;s Numidian horse is entering from the north-eastern road.</source>
-        <translation>Masinissa&apos;nın Numidya atlıları kuzeydoğu yolundan giriyor.</translation>
+        <translation>Numidyjska jazda Masynissy wchodzi od drogi północno-wschodniej.</translation>
     </message>
     <message>
         <source>Mist on a lake road. Flaminius holds that a column moves faster than an ambush can close, and he is a consul, so he must be right. Do enjoy the next hour. I shall be the one writing the account of it.</source>
-        <translation>Göl yolunda sis. Flaminius bir kolun, bir pusunun kapanabileceğinden daha hızlı ilerlediğini savunuyor ve o bir konsül, demek ki haklı olmalı. Önümüzdeki saatin tadını çıkar. Hesabını yazan ben olacağım.</translation>
+        <translation>Mgła na drodze nad jeziorem. Flaminiusz twierdzi, że kolumna porusza się szybciej, niż zasadzka zdoła się zamknąć, a jest konsulem, więc musi mieć rację. Baw się dobrze przez najbliższą godzinę. To ja będę pisał o niej relację.</translation>
     </message>
     <message>
         <source>Move the army up to the lower pass camp before the snow closes it.</source>
-        <translation>Kar kapatmadan orduyu alt geçit kampına çıkar.</translation>
+        <translation>Podprowadź armię do niższego obozu na przełęczy, zanim zamknie ją śnieg.</translation>
     </message>
     <message>
         <source>Navigate through the maze of hills and valleys. Watch for enemy patrols!</source>
-        <translation>Tepeler ve vadiler labirentinde yol bul. Düşman devriyelerine dikkat et!</translation>
+        <translation>Przejdź przez labirynt wzgórz i dolin. Uważaj na patrole wroga!</translation>
     </message>
     <message>
         <source>No living formation remains to hold the gates.</source>
-        <translation>Kapıları tutacak canlı bir düzen kalmadı.</translation>
+        <translation>Nie został żaden żywy szyk, który utrzymałby bramy.</translation>
     </message>
     <message>
         <source>Nothing new is taught here. The ridge, the bait and the beheading are all things you already know; Cannae only asks whether you can run three of them at once against four times your number.</source>
-        <translation>Burada yeni bir şey öğretilmiyor. Sırt, yem ve başı kesmek zaten bildiğin şeyler; Cannae yalnızca üçünü aynı anda, kendi sayının dört katına karşı çevirebilir misin diye soruyor.</translation>
+        <translation>Niczego nowego się tu nie uczy. Grzbiet, przynęta i ścięcie dowództwa to rzeczy, które już znasz; Kanny pytają tylko, czy potrafisz przeprowadzić trzy naraz przeciw czterokrotnej przewadze.</translation>
     </message>
     <message>
         <source>Nothing on the shore road survives once both ends are held.</source>
-        <translation>İki uç da tutulduğunda kıyı yolunda hiçbir şey sağ kalmaz.</translation>
+        <translation>Nic na nadbrzeżnej drodze nie przeżyje, gdy oba jej końce są w twoich rękach.</translation>
     </message>
     <message>
         <source>One minute. Spend the reserve; save the camp.</source>
-        <translation>Bir dakika. Yedeği harca; kampı kurtar.</translation>
+        <translation>Jedna minuta. Wydaj odwód; ocal obóz.</translation>
     </message>
     <message>
         <source>One officer, no line. The next column will not even slow down.</source>
-        <translation>Tek bir subay, hat yok. Sıradaki kol yavaşlamayacak bile.</translation>
+        <translation>Jeden oficer, żadnej linii. Następna kolumna nawet nie zwolni.</translation>
     </message>
     <message>
         <source>One redoubt, two mouths, five columns. Break every assault that comes down the cart gate and the goat path, and still be standing when the fifth is spent.</source>
-        <translation>Bir tabya, iki ağız, beş kol. Araba kapısından ve keçi yolundan inen her taarruzu kır ve beşincisi tükendiğinde hâlâ ayakta ol.</translation>
+        <translation>Jedna reduta, dwa wyloty, pięć kolumn. Złam każde natarcie schodzące bramą dla wozów i kozią ścieżką i wciąż stój, gdy piąte się wyczerpie.</translation>
     </message>
     <message>
         <source>Overcut the levy. A surplus is the only thing a quartermaster has ever thanked anyone for.</source>
-        <translation>Levhayı fazlasıyla kes. Bir levazımcının bugüne dek birine teşekkür ettiği tek şey fazlalıktır.</translation>
+        <translation>Wytnij ponad pobór. Nadmiar to jedyna rzecz, za jaką kwatermistrz kiedykolwiek komuś podziękował.</translation>
     </message>
     <message>
         <source>Preserve the market and four homes: Campania is being defended for its people and supplies, not merely its walls.</source>
-        <translation>Pazarı ve dört evi koru: Campania yalnızca surları için değil, halkı ve erzağı için savunuluyor.</translation>
+        <translation>Ocal targ i cztery domy: Kampanii broni się dla jej ludzi i zapasów, nie tylko dla murów.</translation>
     </message>
     <message>
         <source>Provision the column for the descent: harvest timber, stone and iron from the pass while the mountain tribes contest every switchback.</source>
-        <translation>Kolu iniş için donat: dağ kabileleri her viraja itiraz ederken geçitten kereste, taş ve demir topla.</translation>
+        <translation>Zaopatrz kolumnę na zejście: pozyskaj z przełęczy drewno, kamień i żelazo, gdy górskie plemiona bronią każdego zakrętu.</translation>
     </message>
     <message>
         <source>Raze every Roman post. Leave Scipio nothing to rally behind.</source>
-        <translation>Her Roma karakolunu yerle bir et. Scipio&apos;ya arkasında toplanacak hiçbir şey bırakma.</translation>
+        <translation>Zrównaj z ziemią każdy posterunek rzymski. Nie zostaw Scypionowi niczego, wokół czego mógłby się zebrać.</translation>
     </message>
     <message>
         <source>Reach the Rhone crossing</source>
-        <translation>Rhône geçidine ulaş</translation>
+        <translation>Dotrzyj do przeprawy na Rodanie</translation>
     </message>
     <message>
         <source>Rear guard deployment detected across the southern wadi. This is the final phase.</source>
-        <translation>Güneydeki kuru dere boyunca artçı yerleşimi saptandı. Bu son evre.</translation>
+        <translation>Wykryto rozwinięcie straży tylnej po drugiej stronie południowego wadi. To ostatnia faza.</translation>
     </message>
     <message>
         <source>Ride down the commanders once the crossings break.</source>
-        <translation>Geçitler kırıldığında komutanları atla ez.</translation>
+        <translation>Stratuj dowódców, gdy przeprawy się załamią.</translation>
     </message>
     <message>
         <source>Roman cavalry is attempting a breakout from the south. Intercept them.</source>
-        <translation>Roma süvarisi güneyden bir yarma deniyor. Onları karşıla.</translation>
+        <translation>Jazda rzymska próbuje przebić się od południa. Przechwyć ją.</translation>
     </message>
     <message>
         <source>Roman cavalry screens the field. Punch through before reserves arrive.</source>
-        <translation>Roma süvarisi meydanı perdeliyor. Yedekler gelmeden yar.</translation>
+        <translation>Jazda rzymska osłania pole. Przebij się, zanim nadejdą odwody.</translation>
     </message>
     <message>
         <source>Roman cavalry waves intensify. Collapse one flank before the rear guard arrives.</source>
-        <translation>Roma süvari dalgaları yoğunlaşıyor. Artçı gelmeden bir kanadı çökert.</translation>
+        <translation>Fale jazdy rzymskiej się nasilają. Zawal jedno skrzydło, zanim przybędzie straż tylna.</translation>
     </message>
     <message>
         <source>Roman reinforcements are approaching from the eastern road.</source>
-        <translation>Roma takviyeleri doğu yolundan yaklaşıyor.</translation>
+        <translation>Posiłki rzymskie zbliżają się drogą od wschodu.</translation>
     </message>
     <message>
         <source>Roman reserves are entering from the northern camp. Close the pocket faster.</source>
-        <translation>Roma yedekleri kuzey kampından giriyor. Cebi daha hızlı kapat.</translation>
+        <translation>Odwody rzymskie wchodzą z obozu północnego. Zamykaj kocioł szybciej.</translation>
     </message>
     <message>
         <source>Roman reserves are moving from the western bank.</source>
-        <translation>Roma yedekleri batı kıyısından geliyor.</translation>
+        <translation>Odwody rzymskie ruszają z zachodniego brzegu.</translation>
     </message>
     <message>
         <source>Scipio extends the line. Keep your center steady and protect elephants from isolation.</source>
-        <translation>Scipio hattı genişletiyor. Merkezini sağlam tut ve fillerin yalnız kalmasını önle.</translation>
+        <translation>Scypion rozciąga linię. Trzymaj środek pewnie i nie daj słoniom zostać samym.</translation>
     </message>
     <message>
         <source>Scipio inherits any crossing you leave behind.</source>
-        <translation>Arkanda bıraktığın her geçit Scipio&apos;ya kalır.</translation>
+        <translation>Scypion odziedziczy każdą przeprawę, którą zostawisz.</translation>
     </message>
     <message>
         <source>Seal the road. Let no scout cross the Ticino alive.</source>
-        <translation>Yolu mühürle. Hiçbir izci Ticino&apos;yu sağ geçmesin.</translation>
+        <translation>Zapieczętuj drogę. Niech żaden zwiadowca nie przejdzie Ticinusa żywy.</translation>
     </message>
     <message>
         <source>Second pass defenders are reinforcing. Keep the column moving.</source>
-        <translation>İkinci geçit savunucuları takviye alıyor. Kolu yürütmeyi sürdür.</translation>
+        <translation>Obrońcy drugiej przełęczy dostają wsparcie. Nie zatrzymuj kolumny.</translation>
     </message>
     <message>
         <source>Second-wave Roman cavalry is maneuvering for your rear. Rebalance your flanks.</source>
-        <translation>İkinci dalga Roma süvarisi arkana manevra yapıyor. Kanatlarını yeniden dengele.</translation>
+        <translation>Jazda rzymska drugiej fali manewruje na twoje tyły. Wyrównaj skrzydła.</translation>
     </message>
     <message>
         <source>Seize Masinissa&apos;s camp to finish the four.</source>
-        <translation>Dördü tamamlamak için Masinissa&apos;nın kampını ele geçir.</translation>
+        <translation>Zajmij obóz Masynissy, by dopełnić czwórkę.</translation>
     </message>
     <message>
         <source>Seize Varro&apos;s town at the centre of the Roman line.</source>
-        <translation>Roma hattının merkezindeki Varro&apos;nun kasabasını ele geçir.</translation>
+        <translation>Zajmij miasto Warrona w środku linii rzymskiej.</translation>
     </message>
     <message>
         <source>Seize all four Roman camps — the consular line, Masinissa&apos;s Numidians, the rear guard, and the northern camp — before the cavalry closes your rear.</source>
-        <translation>Süvari arkanı kapatmadan dört Roma kampını da — konsül hattı, Masinissa&apos;nın Numidyalıları, artçı ve kuzey kampı — ele geçir.</translation>
+        <translation>Zajmij wszystkie cztery obozy rzymskie — linię konsularną, Numidyjczyków Masynissy, straż tylną i obóz północny — zanim jazda zamknie ci tyły.</translation>
     </message>
     <message>
         <source>Seize both Roman camps. The ambush is not finished until their flags come down.</source>
-        <translation>İki Roma kampını da ele geçir. Pusu, sancakları inmeden bitmiş olmaz.</translation>
+        <translation>Zajmij oba obozy rzymskie. Zasadzka nie jest skończona, dopóki nie opadną ich sztandary.</translation>
     </message>
     <message>
         <source>Seize the Roman hill fort</source>
-        <translation>Roma tepe kalesini ele geçir</translation>
+        <translation>Zajmij rzymski gród na wzgórzu</translation>
     </message>
     <message>
         <source>Seize the camp guarding Scipio&apos;s rear.</source>
-        <translation>Scipio&apos;nun arkasını koruyan kampı ele geçir.</translation>
+        <translation>Zajmij obóz osłaniający tyły Scypiona.</translation>
     </message>
     <message>
         <source>Seize the river town</source>
-        <translation>Nehir kasabasını ele geçir</translation>
+        <translation>Zajmij miasto nad rzeką</translation>
     </message>
     <message>
         <source>Seize the second Roman camp on the north-east road.</source>
-        <translation>Kuzeydoğu yolundaki ikinci Roma kampını ele geçir.</translation>
+        <translation>Zajmij drugi obóz rzymski przy drodze północno-wschodniej.</translation>
     </message>
     <message>
         <source>Seize the second camp at the eastern end of the lake.</source>
-        <translation>Gölün doğu ucundaki ikinci kampı ele geçir.</translation>
+        <translation>Zajmij drugi obóz na wschodnim krańcu jeziora.</translation>
     </message>
     <message>
         <source>Seize the two river forts. Leave no crossing for Scipio&apos;s army to inherit.</source>
-        <translation>İki nehir kalesini de ele geçir. Scipio&apos;nun ordusuna miras kalacak hiçbir geçit bırakma.</translation>
+        <translation>Zajmij oba forty nad rzeką. Nie zostaw armii Scypiona żadnej przeprawy w spadku.</translation>
     </message>
     <message>
         <source>Sempronius spends his army on the ice; you only have to still be standing.</source>
-        <translation>Sempronius ordusunu buzda harcıyor; senin tek yapman gereken hâlâ ayakta olmak.</translation>
+        <translation>Semproniusz przepuszcza armię na lodzie; tobie wystarczy jeszcze stać.</translation>
     </message>
     <message>
         <source>Set builders on the slopes; the pass is paid for in materials, not blood.</source>
-        <translation>İnşaatçıları yamaçlara koş; geçidin bedeli kanla değil malzemeyle ödenir.</translation>
+        <translation>Poślij budowniczych na stoki; za przełęcz płaci się materiałami, nie krwią.</translation>
     </message>
     <message>
         <source>Sixty men and a shrine the local people will not walk past after dark. My orders say investigate. I would sooner burn it and write that we investigated, but the Senate reads.</source>
-        <translation>Altmış adam ve yerlilerin karanlıktan sonra yanından geçmediği bir mabet. Emrim araştırmak diyor. Onu yakıp araştırdık diye yazmayı yeğlerdim, ama Senato okuyor.</translation>
+        <translation>Sześćdziesięciu ludzi i świątynia, obok której miejscowi po zmroku nie przechodzą. Rozkazy mówią: zbadać. Wolałbym ją spalić i napisać, że zbadaliśmy, ale Senat czyta.</translation>
     </message>
     <message>
         <source>So the centre gave and the wings did not. That was well done, and I say so, and I was inside it. Rome has lost an army and a ring for every knight in it. Rome has not yet lost anything that matters.</source>
-        <translation>Demek merkez verdi, kanatlar vermedi. İyi yapılmıştı, bunu söylüyorum ve içindeydim. Roma bir ordu ve içindeki her şövalye için bir yüzük yitirdi. Roma henüz önemli olan bir şey yitirmedi.</translation>
+        <translation>A więc środek ustąpił, a skrzydła nie. To było dobrze zrobione, mówię to ja, a byłem w środku tego. Rzym stracił armię i pierścień za każdego jeźdźca w niej. Rzym nie stracił jeszcze niczego, co się liczy.</translation>
     </message>
     <message>
         <source>So you came down the far side. Fewer, and on foot, and I am told you left the baggage up in the snow along with the men who were carrying it. Italy is waiting. Italy is not empty.</source>
-        <translation>Demek öbür yamaçtan indin. Daha az sayıda, yaya ve duyduğuma göre ağırlıkları, onları taşıyan adamlarla birlikte karda bırakmışsın. İtalya bekliyor. İtalya boş değil.</translation>
+        <translation>A więc zszedłeś drugą stroną. Mniej was, i pieszo, i mówią mi, że zostawiłeś tabor w śniegu razem z ludźmi, którzy go nieśli. Italia czeka. Italia nie jest pusta.</translation>
     </message>
     <message>
         <source>So you have come down out of the rocks after all. Fewer than the count they gave me, and greyer. Well. The Ticinus is shallow, the ground beyond it is ours, and I have a great deal of time in which to be wrong about you.</source>
-        <translation>Demek sonunda kayalardan indin. Bana verilen sayıdan az ve daha kır saçlı. Peki. Ticinus sığ, ötesindeki toprak bizim ve senin hakkında yanılmak için bir hayli zamanım var.</translation>
+        <translation>A więc jednak zszedłeś ze skał. Mniej was, niż podawał rachunek, i bardziej siwi. No cóż. Ticinus jest płytki, ziemia za nim jest nasza, a ja mam mnóstwo czasu, by się co do ciebie mylić.</translation>
     </message>
     <message>
         <source>So. The Barcid crawls down to the Rhone. Cross where you like - the river is not particular about whose bones it keeps, and Rome has a great deal of patience and a very great many shovels. My surveyors are already pacing out your grave. They tell me the ground here drinks well.</source>
-        <translation>Demek. Barka, Rhône&apos;a doğru sürünüyor. İstediğin yerden geç - nehir kimin kemiklerini tuttuğuna aldırmaz ve Roma&apos;nın bir hayli sabrı ve pek çok küreği vardır. Ölçücülerim şimdiden mezarını adımlıyor. Buranın toprağı iyi içermiş, diyorlar.</translation>
+        <translation>A więc Barkida schodzi do Rodanu. Przepraw się, gdzie chcesz — rzeka nie wybrzydza, czyje kości zatrzymuje, a Rzym ma mnóstwo cierpliwości i bardzo, bardzo wiele łopat. Moi mierniczy już wymierzają twój grób. Mówią, że ziemia tutaj dobrze pije.</translation>
     </message>
     <message>
         <source>Spring the ambush and capture both Roman field camps within twenty minutes, before the mist lifts and a cohort escapes the basin.</source>
-        <translation>Pusuyu kur ve sis kalkıp bir kohort havzadan kaçmadan yirmi dakika içinde iki Roma sahra kampını da ele geçir.</translation>
+        <translation>Odpal zasadzkę i zdobądź oba rzymskie obozy polowe w ciągu dwudziestu minut, zanim mgła się podniesie i kohorta ucieknie z kotliny.</translation>
     </message>
     <message>
         <source>Stand in the gate yard of the northern advance camp until it falls to Carthage.</source>
-        <translation>Kuzeydeki ileri kampın kapı avlusunda, orası Kartaca&apos;ya düşene kadar dur.</translation>
+        <translation>Stój na dziedzińcu bramnym północnego obozu przedniego, aż przypadnie Kartaginie.</translation>
     </message>
     <message>
         <source>Stand your ground. The last soldier alone is not a force — he is a sacrifice.</source>
-        <translation>Yerinde dur. Tek başına kalan son asker bir kuvvet değildir — bir kurbandır.</translation>
+        <translation>Trzymaj się. Ostatni żołnierz w pojedynkę nie jest siłą — jest ofiarą.</translation>
     </message>
     <message>
         <source>Strike now. Close the western route and split their line.</source>
-        <translation>Şimdi vur. Batı güzergâhını kapat ve hatlarını böl.</translation>
+        <translation>Uderz teraz. Zamknij zachodnią trasę i rozłam ich linię.</translation>
     </message>
     <message>
         <source>Supply is a target - and it cuts both ways. Your market and your homes are what the Romans are actually marching at, and their siege camp keeps its own stockpile within reach of a raid.</source>
-        <translation>İkmal bir hedeftir - ve bu iki taraf için de geçerlidir. Romalıların aslında üzerine yürüdüğü şey senin pazarın ve evlerin; onların kuşatma kampı da kendi deposunu bir baskının erişebileceği yerde tutuyor.</translation>
+        <translation>Zaopatrzenie jest celem — i tnie w obie strony. To twój targ i twoje domy są tym, na co naprawdę maszerują Rzymianie, a ich obóz oblężniczy trzyma własny skład w zasięgu wypadu.</translation>
     </message>
     <message>
         <source>Take Scipio&apos;s town</source>
-        <translation>Scipio&apos;nun kasabasını al</translation>
+        <translation>Zdobądź miasto Scypiona</translation>
     </message>
     <message>
         <source>Take the Numidian camp</source>
-        <translation>Numidya kampını al</translation>
+        <translation>Zdobądź obóz numidyjski</translation>
     </message>
     <message>
         <source>Take the Roman marching town at the head of the lakeside road.</source>
-        <translation>Göl kıyısı yolunun başındaki Roma yürüyüş kasabasını al.</translation>
+        <translation>Zdobądź rzymskie miasto marszowe u wylotu drogi nad jeziorem.</translation>
     </message>
     <message>
         <source>Take the allied camp</source>
-        <translation>Müttefik kampı al</translation>
+        <translation>Zdobądź obóz sprzymierzeńców</translation>
     </message>
     <message>
         <source>Take the bridge camp and the eastern reserve quarter before the Roman scouts vanish into the fog.</source>
-        <translation>Roma izcileri sise karışmadan köprü kampını ve doğudaki yedek mahalleyi al.</translation>
+        <translation>Zdobądź obóz mostowy i wschodnią dzielnicę odwodów, zanim rzymscy zwiadowcy znikną we mgle.</translation>
     </message>
     <message>
         <source>Take the consular town</source>
-        <translation>Konsül kasabasını al</translation>
+        <translation>Zdobądź miasto konsularne</translation>
     </message>
     <message>
         <source>Take the crossings, then. Take the whole cold length of the road north and every stone laid on it. Rome does not lose provinces - she lends them, at interest, and I am told the collectors on this road wear no faces at all.</source>
-        <translation>Öyleyse geçitleri al. Kuzeye giden yolun bütün soğuk uzunluğunu ve üzerine döşenmiş her taşı al. Roma eyalet yitirmez - onları faizle ödünç verir ve duyduğuma göre bu yoldaki tahsildarların hiç yüzü yokmuş.</translation>
+        <translation>A więc bierz przeprawy. Bierz całą zimną długość drogi na północ i każdy kamień na niej położony. Rzym nie traci prowincji — pożycza je, na procent, a mówią mi, że poborcy na tej drodze nie mają twarzy w ogóle.</translation>
     </message>
     <message>
         <source>Take the cursed shrine above the sepulcher ruins and hold what you take: clear the guardians out of the ruins, then drive the dead off the shrine itself.</source>
-        <translation>Kabir harabelerinin üstündeki lanetli mabedi al ve aldığını tut: bekçileri harabelerden temizle, sonra ölüleri mabedin kendisinden sür.</translation>
+        <translation>Zdobądź przeklętą świątynię nad ruinami grobowca i utrzymaj, co zdobyłeś: wyczyść strażników z ruin, a potem wypędź umarłych z samej świątyni.</translation>
     </message>
     <message>
         <source>Take the first pass quickly before the next ambush line assembles.</source>
-        <translation>Bir sonraki pusu hattı toplanmadan ilk geçidi hızla al.</translation>
+        <translation>Zdobądź pierwszą przełęcz szybko, zanim uformuje się kolejna linia zasadzki.</translation>
     </message>
     <message>
         <source>Take the northern camp</source>
-        <translation>Kuzey kampını al</translation>
+        <translation>Zdobądź obóz północny</translation>
     </message>
     <message>
         <source>Take the rearguard camp</source>
-        <translation>Artçı kampını al</translation>
+        <translation>Zdobądź obóz straży tylnej</translation>
     </message>
     <message>
         <source>Take the reserve camp</source>
-        <translation>Yedek kampı al</translation>
+        <translation>Zdobądź obóz odwodowy</translation>
     </message>
     <message>
         <source>Take the river camp</source>
-        <translation>Nehir kampını al</translation>
+        <translation>Zdobądź obóz nad rzeką</translation>
     </message>
     <message>
         <source>Take the second camp on the southern supply road.</source>
-        <translation>Güney ikmal yolundaki ikinci kampı al.</translation>
+        <translation>Zdobądź drugi obóz przy południowej drodze zaopatrzeniowej.</translation>
     </message>
     <message>
         <source>Take the shore camp</source>
-        <translation>Kıyı kampını al</translation>
+        <translation>Zdobądź obóz nadbrzeżny</translation>
     </message>
     <message>
         <source>Taking the rear first denies the cavalry a place to rally.</source>
-        <translation>Önce arkayı almak süvariye toplanacak bir yer bırakmaz.</translation>
+        <translation>Zdobycie tyłów najpierw odbiera jeździe miejsce zbiórki.</translation>
     </message>
     <message>
         <source>The Campanian Vigil</source>
-        <translation>Campania Nöbeti</translation>
+        <translation>Kampańska warta</translation>
     </message>
     <message>
         <source>The Roman column enters the corridor. Wait for full commitment.</source>
-        <translation>Roma kolu koridora giriyor. Tam olarak girmesini bekle.</translation>
+        <translation>Rzymska kolumna wchodzi w korytarz. Poczekaj, aż wejdzie cała.</translation>
     </message>
     <message>
         <source>The Roman column walks into a geographical trap and is destroyed by converging attacks while the lakeside Sepulcher altar remains an optional horror.</source>
-        <translation>Roma kolu coğrafi bir tuzağa yürür ve birleşen saldırılarla yok edilir; göl kıyısındaki Kabir sunağı isteğe bağlı bir dehşet olarak kalır.</translation>
+        <translation>Rzymska kolumna wchodzi w pułapkę terenu i zostaje zniszczona zbieżnymi uderzeniami, a ołtarz Grobowca nad jeziorem pozostaje opcjonalną grozą.</translation>
     </message>
     <message>
         <source>The Roman villages are heavily defended. Coordinate your attacks!</source>
-        <translation>Roma köyleri sıkı savunuluyor. Saldırılarını eşgüdümle!</translation>
+        <translation>Wioski rzymskie są mocno bronione. Zgraj swoje uderzenia!</translation>
     </message>
     <message>
         <source>The Romans are baited into the winter river and punished by Mago&apos;s concealed force, then the defense becomes an assault on a complete winter camp.</source>
-        <translation>Romalılar kış nehrine çekilip Mago&apos;nun gizli kuvvetiyle cezalandırılır, sonra savunma eksiksiz bir kış kampına taarruza dönüşür.</translation>
+        <translation>Rzymianie zostają zwabieni w zimową rzekę i ukarani przez ukryte siły Magona, a potem obrona zmienia się w szturm na kompletny obóz zimowy.</translation>
     </message>
     <message>
         <source>The Timber Levy</source>
-        <translation>Kereste Levhası</translation>
+        <translation>Pobór drewna</translation>
     </message>
     <message>
         <source>The centre gives way once the wings are wrapped around it.</source>
-        <translation>Kanatlar çevresine dolandığında merkez çöker.</translation>
+        <translation>Środek ustępuje, gdy skrzydła się wokół niego zamkną.</translation>
     </message>
     <message>
         <source>The centre is the strongest camp; bring the elephants up first.</source>
-        <translation>Merkez en güçlü kamptır; önce filleri çıkar.</translation>
+        <translation>Środek to najsilniejszy obóz; podprowadź najpierw słonie.</translation>
     </message>
     <message>
         <source>The commander falls and the line behind him is just men standing in a dry riverbed.</source>
-        <translation>Komutan düşer ve arkasındaki hat, kuru bir dere yatağında duran adamlardan ibaret kalır.</translation>
+        <translation>Dowódca pada, a linia za nim to już tylko ludzie stojący w wyschniętym korycie.</translation>
     </message>
     <message>
         <source>The commander falls — and every line collapses behind him.</source>
-        <translation>Komutan düşer — ve arkasındaki her hat çöker.</translation>
+        <translation>Dowódca pada — i każda linia za nim się zawala.</translation>
     </message>
     <message>
         <source>The commander falls — the vigil ends. And the dead keep walking.</source>
-        <translation>Komutan düşer — nöbet biter. Ve ölüler yürümeyi sürdürür.</translation>
+        <translation>Dowódca pada — warta się kończy. A umarli idą dalej.</translation>
     </message>
     <message>
         <source>The crew is gone and the officer is standing in a clearing with an axe. That is not a work party.</source>
-        <translation>Ekip yok oldu ve subay bir açıklıkta elinde baltayla duruyor. Bu bir çalışma kolu değil.</translation>
+        <translation>Ekipy nie ma, a oficer stoi na polanie z siekierą. To już nie jest oddział roboczy.</translation>
     </message>
     <message>
         <source>The crossing is a running battle against terrain, local resistance, and Roman influence. Sepulcher grave-lights remain a dangerous side path rather than the campaign&apos;s main enemy.</source>
-        <translation>Geçiş; arazi, yerel direniş ve Roma nüfuzuna karşı süren bir savaştır. Kabir&apos;in mezar ışıkları, seferin ana düşmanı değil, tehlikeli bir yan yol olarak kalır.</translation>
+        <translation>Przeprawa to ruchoma walka z terenem, miejscowym oporem i wpływami Rzymu. Grobowe światła pozostają niebezpieczną ścieżką poboczną, a nie głównym wrogiem kampanii.</translation>
     </message>
     <message>
         <source>The dead of the Iron Sepulcher still contest the field; keep a reserve.</source>
-        <translation>Demir Kabir&apos;in ölüleri meydana hâlâ itiraz ediyor; bir yedek tut.</translation>
+        <translation>Umarli z Żelaznego Grobowca wciąż walczą o pole; trzymaj odwód.</translation>
     </message>
     <message>
         <source>The final confrontation is Carthage against three coordinated Roman commands, until an Iron Sepulcher host attacks from the battlefield&apos;s neglected flank.</source>
-        <translation>Son karşılaşma, savaş alanının ihmal edilmiş kanadından bir Demir Kabir ordusu saldırana kadar Kartaca&apos;ya karşı üç eşgüdümlü Roma komutasıdır.</translation>
+        <translation>Ostateczne starcie to Kartagina przeciw trzem zgranym dowództwom rzymskim — dopóki zastęp Żelaznego Grobowca nie uderzy z zaniedbanego skrzydła pola bitwy.</translation>
     </message>
     <message>
         <source>The last camp lies to the north-east, beyond the consular line.</source>
-        <translation>Son kamp kuzeydoğuda, konsül hattının ötesinde.</translation>
+        <translation>Ostatni obóz leży na północnym wschodzie, za linią konsularną.</translation>
     </message>
     <message>
         <source>The lights are out and the ground is quiet. Count them twice and burn what will burn. Whatever was in there stood here before Rome and will stand here after it. Tonight it simply has other business.</source>
-        <translation>Işıklar söndü ve toprak sessiz. İki kez say ve yanacak olanı yak. İçeride her ne varsa Roma&apos;dan önce burada duruyordu ve ondan sonra da duracak. Bu gece yalnızca başka işleri var.</translation>
+        <translation>Światła zgasły, a ziemia jest cicha. Przelicz ich dwa razy i spal, co się da spalić. Cokolwiek tam było, stało tu przed Rzymem i będzie stało po nim. Dziś w nocy ma po prostu inne sprawy.</translation>
     </message>
     <message>
         <source>The mist lifted a little early for you. It happens. The lake will keep what it has been given, and the thing beneath the altar on the shore is not particular about whose it is.</source>
-        <translation>Sis senin için biraz erken kalktı. Olur böyle. Göl kendisine verileni tutar ve kıyıdaki sunağın altındaki şey kimin olduğuna aldırmaz.</translation>
+        <translation>Mgła podniosła się dla ciebie odrobinę za wcześnie. Bywa. Jezioro zatrzyma to, co mu dano, a to, co jest pod ołtarzem na brzegu, nie wybrzydza, czyje to.</translation>
     </message>
     <message>
         <source>The officer of the detail falls. Nobody else here can sign for the levy.</source>
-        <translation>Ekibin subayı düşer. Burada levhayı imzalayabilecek başka kimse yok.</translation>
+        <translation>Oficer oddziału pada. Nikt inny nie podpisze tu odbioru poboru.</translation>
     </message>
     <message>
         <source>The pass keeps them, then. A word of advice to whoever reads this: do not follow the lights on the snowfield. Whatever carries a lantern at that height stopped being a shepherd a long time ago.</source>
-        <translation>Öyleyse geçit onları alıkoyar. Bunu okuyana bir öğüt: kar tarlasındaki ışıkların ardından gitme. O yükseklikte fener taşıyan her neyse, çoban olmayalı çok oldu.</translation>
+        <translation>A więc przełęcz ich zatrzyma. Rada dla tego, kto to przeczyta: nie idź za światłami na śnieżnym polu. Cokolwiek nosi latarnię na tej wysokości, dawno przestało być pasterzem.</translation>
     </message>
     <message>
         <source>The quarter holds when the last column is dead in the streets.</source>
-        <translation>Mahalle, son kol sokaklarda öldüğünde tutulmuş olur.</translation>
+        <translation>Dzielnica trzyma, gdy ostatnia kolumna legnie martwa na ulicach.</translation>
     </message>
     <message>
         <source>The redoubt is gone. Go south, keep the spur on your left, and do not stop to look at the ford. There is nothing there now that is worth a second of your life.</source>
-        <translation>Tabya gitti. Güneye git, mahmuzu solunda tut ve geçide bakmak için durma. Orada artık hayatının bir saniyesine değecek hiçbir şey yok.</translation>
+        <translation>Reduty nie ma. Idź na południe, trzymaj ostrogę po lewej i nie zatrzymuj się, by spojrzeć na bród. Nie ma tam teraz nic wartego sekundy twojego życia.</translation>
     </message>
     <message>
         <source>The reserve feeds the consular line; cut it and the line thins.</source>
-        <translation>Yedek konsül hattını besler; onu kes, hat incelir.</translation>
+        <translation>Odwód karmi linię konsularną; przetnij go, a linia się przerzedzi.</translation>
     </message>
     <message>
         <source>The river keeps whatever it is given. Your elephants went in and not all of them came out, and the Trebia is not a large river. Rome has never needed a large one.</source>
-        <translation>Nehir kendisine verileni tutar. Fillerin girdi ve hepsi çıkmadı; Trebia da büyük bir nehir değil. Roma&apos;nın hiçbir zaman büyüğüne ihtiyacı olmadı.</translation>
+        <translation>Rzeka zatrzymuje wszystko, co jej dano. Twoje słonie weszły i nie wszystkie wyszły, a Trebia nie jest wielką rzeką. Rzym nigdy nie potrzebował wielkiej.</translation>
     </message>
     <message>
         <source>The river runs north to south across the middle of the valley; the nearest crossing is due east of camp.</source>
-        <translation>Nehir vadinin ortasından kuzeyden güneye akar; en yakın geçit kampın tam doğusunda.</translation>
+        <translation>Rzeka płynie z północy na południe przez środek doliny; najbliższa przeprawa leży dokładnie na wschód od obozu.</translation>
     </message>
     <message>
         <source>The road runs north-west along the shore; strike the head of the column first.</source>
-        <translation>Yol kıyı boyunca kuzeybatıya uzanır; önce kolun başına vur.</translation>
+        <translation>Droga biegnie na północny zachód wzdłuż brzegu; uderz najpierw w czoło kolumny.</translation>
     </message>
     <message>
         <source>The scouts are not coming back, then. Well - everyone begins somewhere, and you have begun by killing eleven men who were expecting their lunch. Rome will send someone who counts next time.</source>
-        <translation>Demek izciler geri dönmüyor. Peki - herkes bir yerden başlar ve sen öğle yemeğini bekleyen on bir adamı öldürerek başladın. Roma bir dahakine sayabilen birini yollar.</translation>
+        <translation>A więc zwiadowcy nie wracają. Cóż — każdy gdzieś zaczyna, a ty zacząłeś od zabicia jedenastu ludzi, którzy spodziewali się obiadu. Następnym razem Rzym przyśle kogoś, kto liczy.</translation>
     </message>
     <message>
         <source>The shrines you have walked past all campaign were never scenery. Zama reads back over every map behind it - and the Sepulcher has no commander to kill, so the one rule that has served you since Trasimene is the one rule that will not work here.</source>
-        <translation>Bütün sefer boyunca yanından geçtiğin mabetler hiçbir zaman dekor değildi. Zama, arkasındaki her haritayı yeniden okur - ve Kabir&apos;in öldürülecek bir komutanı yoktur, yani Trasimene&apos;den beri işine yarayan tek kural, burada işe yaramayacak olan kuraldır.</translation>
+        <translation>Świątynie, obok których przechodziłeś przez całą kampanię, nigdy nie były dekoracją. Zama czyta wstecz każdą mapę za sobą — a Grobowiec nie ma dowódcy do zabicia, więc jedyna zasada, która służyła ci od Trazymenu, jest tą jedną, która tu nie zadziała.</translation>
     </message>
     <message>
         <source>The siege works stand to the east of the quarter.</source>
-        <translation>Kuşatma işleri mahallenin doğusunda duruyor.</translation>
+        <translation>Prace oblężnicze stoją na wschód od dzielnicy.</translation>
     </message>
     <message>
         <source>The spur splits them for us, which is the only kindness this ground offers. Cart gate west, goat path east, and they only meet where we are standing. You cannot hold both mouths. Pick one, hold it, and move when the horns tell you to.</source>
-        <translation>Mahmuz onları bizim için ayırıyor; bu zeminin sunduğu tek iyilik de bu. Batıda araba kapısı, doğuda keçi yolu ve yalnızca bizim durduğumuz yerde birleşiyorlar. İki ağzı birden tutamazsın. Birini seç, onu tut ve borular söylediğinde yer değiştir.</translation>
+        <translation>Ostroga dzieli ich za nas i to jedyna łaskawość tego gruntu. Brama dla wozów na zachodzie, kozia ścieżka na wschodzie, a spotykają się dopiero tam, gdzie stoimy. Nie utrzymasz obu wylotów. Wybierz jeden, trzymaj go i ruszaj, gdy zagrają rogi.</translation>
     </message>
     <message>
         <source>The winter camp lies north across the river.</source>
-        <translation>Kış kampı nehrin kuzeyinde.</translation>
+        <translation>Obóz zimowy leży na północy, za rzeką.</translation>
     </message>
     <message>
         <source>Their camps fall neutral once their commander is dead.</source>
-        <translation>Kampları, komutanları öldüğünde tarafsız kalır.</translation>
+        <translation>Ich obozy stają się neutralne, gdy zginie ich dowódca.</translation>
     </message>
     <message>
         <source>Their troops leave the field with them.</source>
-        <translation>Birlikleri de onlarla birlikte meydanı terk eder.</translation>
+        <translation>Ich wojska schodzą z pola razem z nimi.</translation>
     </message>
     <message>
         <source>Then it holds a little longer. Go home to your Senate and tell them what a Roman looks like from close to. I shall be here in the spring, and the spring after that, and I am younger than you.</source>
-        <translation>O zaman biraz daha dayanır. Senatona dön ve onlara bir Romalının yakından nasıl göründüğünü anlat. İlkbaharda burada olacağım, ondan sonraki ilkbaharda da; üstelik senden gencim.</translation>
+        <translation>To znaczy, że utrzyma się jeszcze trochę. Wracaj do swojego Senatu i powiedz im, jak wygląda Rzymianin z bliska. Będę tu na wiosnę i na następną wiosnę, a jestem młodszy od ciebie.</translation>
     </message>
     <message>
         <source>There. No battle, no glory, no monument: a town with nothing left in it and a road with my army standing on it. They will call me the Delayer. Let them. Your dead will not care what I am called.</source>
-        <translation>İşte. Savaş yok, şan yok, anıt yok: içinde hiçbir şey kalmamış bir kasaba ve üstünde ordumun durduğu bir yol. Bana Oyalayıcı diyecekler. Desinler. Senin ölülerin bana ne dendiğini umursamayacak.</translation>
+        <translation>Proszę. Żadnej bitwy, żadnej chwały, żadnego pomnika: miasto, w którym nic nie zostało, i droga, na której stoi moja armia. Nazwą mnie Zwlekaczem. Niech nazywają. Twoim zmarłym będzie wszystko jedno, jak mnie nazywają.</translation>
     </message>
     <message>
         <source>There. Sit down in the mud with the others. They tell me the men who die on this road do not stay where they are put - that they rise about the third watch and go on marching north without their officers. Do continue. You are expected.</source>
-        <translation>İşte. Ötekilerle birlikte çamura otur. Bu yolda ölen adamların konuldukları yerde kalmadığını söylüyorlar - üçüncü nöbette kalkıp subaylarısız kuzeye yürümeyi sürdürdüklerini. Buyur, devam et. Bekleniyorsun.</translation>
+        <translation>Proszę. Siadaj w błocie razem z resztą. Mówią mi, że ludzie, którzy giną na tej drodze, nie zostają tam, gdzie ich położono — że wstają koło trzeciej straży i maszerują dalej na północ bez oficerów. Kontynuuj śmiało. Czekają na ciebie.</translation>
     </message>
     <message>
         <source>There. That is what the river was for. Have your surgeons work quickly, and tell whatever is left of your baggage train that the road home goes back up the mountain.</source>
-        <translation>İşte. Nehir bunun içindi. Bırak cerrahların hızlı çalışsın ve ağırlık katarından geriye ne kaldıysa söyle ki eve giden yol dağdan geri çıkıyor.</translation>
+        <translation>Proszę. Po to właśnie była ta rzeka. Niech twoi lekarze pracują szybko i powiedz temu, co zostało z twojego taboru, że droga do domu prowadzi z powrotem w górę.</translation>
     </message>
     <message>
         <source>They are getting up again. Do not look at the faces; you will know some of them. Fall back to the road, keep walking, and do not stop to bury anything. It does not stay buried here.</source>
-        <translation>Yine kalkıyorlar. Yüzlerine bakma; bazılarını tanıyacaksın. Yola çekil, yürümeyi sürdür ve hiçbir şeyi gömmek için durma. Burada gömülü kalmıyor.</translation>
+        <translation>Znowu wstają. Nie patrz im w twarze; niektóre rozpoznasz. Cofnij się na drogę, idź dalej i nie zatrzymuj się, by cokolwiek pogrzebać. Tu nic nie zostaje pogrzebane.</translation>
     </message>
     <message>
         <source>They tell me you have taken an army into the Alps in October, with elephants. I have stopped chasing you. The mountain is a more thorough officer than I am and it does not require pay.</source>
-        <translation>Ekim ayında, fillerle birlikte Alpler&apos;e bir ordu soktuğunu söylüyorlar. Seni kovalamayı bıraktım. Dağ benden daha titiz bir subaydır ve maaş istemez.</translation>
+        <translation>Mówią mi, że wprowadziłeś armię w Alpy w październiku, ze słoniami. Przestałem cię ścigać. Góra jest sumienniejszym oficerem niż ja i nie żąda żołdu.</translation>
     </message>
     <message>
         <source>Three Roman columns have entered the consular roads. The first coordinated assault arrives at 17:00.</source>
-        <translation>Üç Roma kolu konsül yollarına girdi. İlk eşgüdümlü taarruz 17:00&apos;de geliyor.</translation>
+        <translation>Trzy rzymskie kolumny weszły na drogi konsularne. Pierwsze zgrane natarcie nadejdzie o 17:00.</translation>
     </message>
     <message>
         <source>Timber for the sledges, stone for the roadbed, iron for shoes and axles.</source>
-        <translation>Kızaklar için kereste, yol yatağı için taş, nal ve dingiller için demir.</translation>
+        <translation>Drewno na sanie, kamień na podkład drogi, żelazo na okucia i osie.</translation>
     </message>
     <message>
         <source>Timber only counts once a builder unloads it at the camp. The richest stands are the furthest from the stockpile, so the mission is won on the length of the walk, not the swing of the axe.</source>
-        <translation>Kereste, ancak bir inşaatçı onu kampta indirdiğinde sayılır. En zengin korular depodan en uzakta olanlardır, yani görev baltanın savruluşuyla değil yolun uzunluğuyla kazanılır.</translation>
+        <translation>Drewno liczy się dopiero wtedy, gdy budowniczy złoży je w obozie. Najbogatsze drzewostany są najdalej od składu, więc misję wygrywa długość drogi, a nie zamach siekiery.</translation>
     </message>
     <message>
         <source>Turn the nearest Roman allied camp south of the field.</source>
-        <translation>Meydanın güneyindeki en yakın Roma müttefik kampını çevir.</translation>
+        <translation>Przeciągnij na swoją stronę najbliższy obóz sprzymierzeńców Rzymu na południe od pola.</translation>
     </message>
     <message>
         <source>Turn the nearest Roman camp before the cavalry returns.</source>
-        <translation>Süvari dönmeden en yakın Roma kampını çevir.</translation>
+        <translation>Przeciągnij na swoją stronę najbliższy obóz rzymski, zanim wróci jazda.</translation>
     </message>
     <message>
         <source>Twenty minutes before the mist lifts. If a cohort clears the basin, Rome learns the shape of the trap.</source>
-        <translation>Sis kalkmadan yirmi dakika. Bir kohort havzadan çıkarsa Roma tuzağın biçimini öğrenir.</translation>
+        <translation>Dwadzieścia minut, zanim mgła się podniesie. Jeśli kohorta wyjdzie z kotliny, Rzym pozna kształt pułapki.</translation>
     </message>
     <message>
         <source>Two bridges cross the Rhône. Choose your path wisely - you may need both routes!</source>
-        <translation>Rhône&apos;u iki köprü aşar. Yolunu akıllıca seç - iki güzergâha da gerek duyabilirsin!</translation>
+        <translation>Rodan przecinają dwa mosty. Wybierz drogę mądrze — możesz potrzebować obu tras!</translation>
     </message>
     <message>
         <source>With the river camp taken there is nowhere left for the legions to reform.</source>
-        <translation>Nehir kampı alındığında lejyonların yeniden dizileceği hiçbir yer kalmaz.</translation>
+        <translation>Gdy obóz nad rzeką padnie, legionom nie zostanie już gdzie się przeformować.</translation>
     </message>
     <message>
         <source>You bent us and we did not break, and that is the only sentence anyone will need. Gather your dead off the Aufidus. The river runs slow here; they will be a long time going by.</source>
-        <translation>Bizi büktün ama kırılmadık; kimsenin ihtiyaç duyacağı tek cümle budur. Ölülerini Aufidus&apos;tan topla. Nehir burada yavaş akar; geçip gitmeleri uzun sürecek.</translation>
+        <translation>Nagiąłeś nas, a myśmy nie pękli, i to jedyne zdanie, jakiego ktokolwiek będzie potrzebował. Zbierz swoich zmarłych znad Aufidusa. Rzeka płynie tu wolno; długo będą przepływać.</translation>
     </message>
     <message>
         <source>You have a walled town, an orchard, and a very great many mouths. I have the roads. I am not going to fight you. I am going to stand between you and every granary in Campania until winter explains my position better than I can.</source>
-        <translation>Surlu bir kasaban, bir meyve bahçen ve pek çok boğazın var. Yollar bende. Seninle çarpışmayacağım. Kış benim durumumu benden daha iyi açıklayana kadar seninle Campania&apos;daki her tahıl ambarının arasında duracağım.</translation>
+        <translation>Masz miasto w murach, sad i bardzo, bardzo wiele gęb. Ja mam drogi. Nie zamierzam z tobą walczyć. Zamierzam stać między tobą a każdym spichlerzem w Kampanii, dopóki zima nie wyjaśni mojego stanowiska lepiej, niż potrafię ja.</translation>
     </message>
     <message>
         <source>You have the river town. My congratulations - you now own three hundred mouths, two wells, and a temple whose god has lately been asking after Carthage by name. Feed them. I shall come back in the spring and count what is left.</source>
-        <translation>Nehir kasabası sende. Tebrikler - artık üç yüz boğazın, iki kuyun ve tanrısı son zamanlarda Kartaca&apos;yı adıyla soran bir tapınağın var. Onları doyur. İlkbaharda dönüp geriye ne kaldığını sayacağım.</translation>
+        <translation>Masz miasto nad rzeką. Gratuluję — jesteś teraz właścicielem trzystu gęb, dwóch studni i świątyni, której bóg ostatnio dopytuje o Kartaginę po imieniu. Nakarm ich. Wrócę na wiosnę i policzę, co zostało.</translation>
     </message>
     <message>
         <source>You killed a consul. Good. Rome keeps forty more in cupboards in the city, and I promise you the ones still in the cupboards are worse. He will be missed - briefly, and only by his creditors.</source>
-        <translation>Bir konsül öldürdün. Güzel. Roma şehirdeki dolaplarda kırk tane daha tutuyor ve sana söz veriyorum, dolapta kalanlar daha kötüdür. Ardından ağlanacak - kısa bir süre ve yalnızca alacaklıları tarafından.</translation>
+        <translation>Zabiłeś konsula. Dobrze. Rzym trzyma w mieście czterdziestu następnych w szafach i zapewniam cię, że ci wciąż w szafach są gorsi. Będzie mu brakowało — krótko i tylko jego wierzycielom.</translation>
     </message>
     <message>
         <source>Your camp falls — the field goes with it.</source>
-        <translation>Kampın düşer — meydan da onunla gider.</translation>
+        <translation>Twój obóz pada — a razem z nim pole.</translation>
     </message>
     <message>
         <source>Your command falls — and the wings fold inward.</source>
-        <translation>Komutan düşer — ve kanatlar içeri kapanır.</translation>
+        <translation>Twoje dowództwo pada — i skrzydła zwijają się do środka.</translation>
     </message>
     <message>
         <source>Your commander falls - and every line collapses behind him.</source>
-        <translation>Komutanın düşer - ve arkasındaki her hat çöker.</translation>
+        <translation>Twój dowódca pada — i każda linia za nim się zawala.</translation>
     </message>
 </context>
 <context>
@@ -6576,577 +6582,577 @@ bir harita seç</translation>
     </message>
     <message>
         <source>Orders</source>
-        <translation>Emirler</translation>
+        <translation>Rozkazy</translation>
     </message>
     <message>
         <source>Orders — any one of these ends it</source>
-        <translation>Emirler — bunlardan herhangi biri bitirir</translation>
+        <translation>Rozkazy — wystarczy dowolny z nich</translation>
     </message>
     <message>
         <source>Orders — all of them, or none</source>
-        <translation>Emirler — hepsi ya da hiçbiri</translation>
+        <translation>Rozkazy — wszystkie albo żaden</translation>
     </message>
     <message>
         <source>You</source>
-        <translation>Sen</translation>
+        <translation>Ty</translation>
     </message>
     <message>
         <source>Missions</source>
-        <translation>Görevler</translation>
+        <translation>Misje</translation>
     </message>
     <message>
         <source>One small field, one order to carry out. No campaign to lose, no second army to worry about.</source>
-        <translation>Küçük bir meydan, yerine getirilecek tek bir emir. Yitirilecek bir sefer yok, kaygılanılacak ikinci bir ordu yok.</translation>
+        <translation>Jedno małe pole, jeden rozkaz do wykonania. Żadnej kampanii do przegrania, żadnej drugiej armii do pilnowania.</translation>
     </message>
     <message>
         <source>carried out</source>
-        <translation>yerine getirildi</translation>
+        <translation>wykonano</translation>
     </message>
     <message>
         <source>← Back</source>
-        <translation>← Geri</translation>
+        <translation>← Wstecz</translation>
     </message>
     <message>
         <source>No missions are installed.</source>
-        <translation>Yüklü görev yok.</translation>
+        <translation>Nie zainstalowano żadnych misji.</translation>
     </message>
     <message>
         <source>Carried out</source>
-        <translation>Yerine getirildi</translation>
+        <translation>Wykonano</translation>
     </message>
     <message>
         <source>Worth doing as well</source>
-        <translation>Yapılmaya değer</translation>
+        <translation>Warto też zrobić</translation>
     </message>
     <message>
         <source>You bring</source>
-        <translation>Getirdiklerin</translation>
+        <translation>Przyprowadzasz</translation>
     </message>
     <message>
         <source>It ends badly if</source>
-        <translation>Şu durumda kötü biter</translation>
+        <translation>Kończy się źle, jeśli</translation>
     </message>
     <message>
         <source>You have carried this one out before.</source>
-        <translation>Bunu daha önce yerine getirdin.</translation>
+        <translation>Wykonałeś już ten rozkaz.</translation>
     </message>
     <message>
         <source>Take it again</source>
-        <translation>Yeniden üstlen</translation>
+        <translation>Wykonaj ponownie</translation>
     </message>
     <message>
         <source>Take the field</source>
-        <translation>Meydana çık</translation>
+        <translation>Wyrusz w pole</translation>
     </message>
     <message>
         <source>Pick a mission.</source>
-        <translation>Bir görev seç.</translation>
+        <translation>Wybierz misję.</translation>
     </message>
 </context>
 <context>
     <name>Nations</name>
     <message>
         <source>Roman Republic</source>
-        <translation>Roma Cumhuriyeti</translation>
+        <translation>Republika Rzymska</translation>
     </message>
     <message>
         <source>Carthaginian Empire</source>
-        <translation>Kartaca İmparatorluğu</translation>
+        <translation>Imperium kartagińskie</translation>
     </message>
     <message>
         <source>Shield Wall</source>
-        <translation>Kalkan Duvarı</translation>
+        <translation>Ściana tarcz</translation>
     </message>
     <message>
         <source>Testudo</source>
-        <translation>Testudo</translation>
+        <translation>Żółw</translation>
     </message>
     <message>
         <source>The Iron Sepulcher</source>
-        <translation>Demir Kabir</translation>
+        <translation>Żelazny Grobowiec</translation>
     </message>
 </context>
 <context>
     <name>Numerals</name>
     <message>
         <source>%1h %2m</source>
-        <translation>%1sa %2dk</translation>
+        <translation>%1 h %2 min</translation>
     </message>
     <message>
         <source>%1m %2s</source>
-        <translation>%1dk %2sn</translation>
+        <translation>%1 min %2 s</translation>
     </message>
     <message>
         <source>%1s</source>
-        <translation>%1sn</translation>
+        <translation>%1 s</translation>
     </message>
 </context>
 <context>
     <name>ObjectivesPanel</name>
     <message>
         <source>Mission briefing</source>
-        <translation>Görev brifingi</translation>
+        <translation>Odprawa przed misją</translation>
     </message>
     <message>
         <source>Mission Briefing</source>
-        <translation>Görev Brifingi</translation>
+        <translation>Odprawa przed misją</translation>
     </message>
     <message>
         <source>Close the briefing</source>
-        <translation>Brifingi kapat</translation>
+        <translation>Zamknij odprawę</translation>
     </message>
     <message>
         <source>To Battle</source>
-        <translation>Savaşa</translation>
+        <translation>Do boju</translation>
     </message>
 </context>
 <context>
     <name>OrderFeedback</name>
     <message>
         <source>Move</source>
-        <translation>Hareket</translation>
+        <translation>Ruch</translation>
     </message>
     <message>
         <source>Attack</source>
-        <translation>Saldır</translation>
+        <translation>Atakuj</translation>
     </message>
     <message>
         <source>Guard</source>
-        <translation>Nöbet</translation>
+        <translation>Strzeż</translation>
     </message>
     <message>
         <source>Patrol</source>
-        <translation>Devriye</translation>
+        <translation>Patroluj</translation>
     </message>
     <message>
         <source>Hold position</source>
-        <translation>Mevziyi tut</translation>
+        <translation>Trzymaj pozycję</translation>
     </message>
     <message>
         <source>Stop</source>
-        <translation>Dur</translation>
+        <translation>Stój</translation>
     </message>
     <message>
         <source>Build</source>
-        <translation>İnşa</translation>
+        <translation>Buduj</translation>
     </message>
     <message>
         <source>Gather</source>
-        <translation>Topla</translation>
+        <translation>Zbieraj</translation>
     </message>
     <message>
         <source>Deliver</source>
-        <translation>Teslim et</translation>
+        <translation>Odstaw</translation>
     </message>
     <message>
         <source>Repair</source>
-        <translation>Onar</translation>
+        <translation>Napraw</translation>
     </message>
     <message>
         <source>Rally point</source>
-        <translation>Toplanma noktası</translation>
+        <translation>Punkt zbiórki</translation>
     </message>
     <message>
         <source>Formation</source>
-        <translation>Düzen</translation>
+        <translation>Szyk</translation>
     </message>
     <message>
         <source>Squad</source>
-        <translation>Müfreze</translation>
+        <translation>Oddział</translation>
     </message>
     <message>
         <source>You are not in command of these units.</source>
-        <translation>Bu birimlerin komutası sende değil.</translation>
+        <translation>Nie dowodzisz tymi jednostkami.</translation>
     </message>
     <message>
         <source>That target is already gone.</source>
-        <translation>O hedef çoktan yok oldu.</translation>
+        <translation>Tego celu już nie ma.</translation>
     </message>
     <message>
         <source>Cannot attack a friendly or neutral target.</source>
-        <translation>Dost ya da tarafsız bir hedefe saldırılamaz.</translation>
+        <translation>Nie można zaatakować celu sojuszniczego ani neutralnego.</translation>
     </message>
     <message>
         <source>That building no longer exists.</source>
-        <translation>O yapı artık yok.</translation>
+        <translation>Ta budowla już nie istnieje.</translation>
     </message>
     <message>
         <source>That building is not yours.</source>
-        <translation>O yapı senin değil.</translation>
+        <translation>Ta budowla nie jest twoja.</translation>
     </message>
     <message>
         <source>That order is not available here.</source>
-        <translation>O emir burada kullanılamaz.</translation>
+        <translation>Ten rozkaz nie jest tutaj dostępny.</translation>
     </message>
     <message>
         <source>That order could not be carried out.</source>
-        <translation>O emir yerine getirilemedi.</translation>
+        <translation>Nie udało się wykonać tego rozkazu.</translation>
     </message>
     <message>
         <source>%1: %2 units</source>
-        <translation>%1: %2 birim</translation>
+        <translation>%1: jednostki: %2</translation>
     </message>
     <message>
         <source>No units selected.</source>
-        <translation>Hiçbir birim seçilmedi.</translation>
+        <translation>Nie zaznaczono jednostek.</translation>
     </message>
     <message>
         <source>Cannot reach that spot.</source>
-        <translation>O noktaya ulaşılamıyor.</translation>
+        <translation>Nie można dotrzeć w to miejsce.</translation>
     </message>
     <message>
         <source>That target is out of range.</source>
-        <translation>O hedef menzil dışında.</translation>
+        <translation>Ten cel jest poza zasięgiem.</translation>
     </message>
     <message>
         <source>Those units are busy with another order.</source>
-        <translation>O birimler başka bir emirle meşgul.</translation>
+        <translation>Te jednostki są zajęte innym rozkazem.</translation>
     </message>
     <message>
         <source>Hauling a load - it cannot be interrupted until the load is dropped off.</source>
-        <translation>Yük taşıyor - yük bırakılana kadar bölünemez.</translation>
+        <translation>Wiozą ładunek — nie można im przerwać, dopóki go nie oddadzą.</translation>
     </message>
     <message>
         <source>Not enough resources.</source>
-        <translation>Yeterli kaynak yok.</translation>
+        <translation>Za mało surowców.</translation>
     </message>
     <message>
         <source>The selected units cannot attack.</source>
-        <translation>Seçili birimler saldıramaz.</translation>
+        <translation>Zaznaczone jednostki nie mogą atakować.</translation>
     </message>
     <message>
         <source>The selected units cannot guard.</source>
-        <translation>Seçili birimler nöbet tutamaz.</translation>
+        <translation>Zaznaczone jednostki nie mogą strzec.</translation>
     </message>
     <message>
         <source>The selected units cannot patrol.</source>
-        <translation>Seçili birimler devriye gezemez.</translation>
+        <translation>Zaznaczone jednostki nie mogą patrolować.</translation>
     </message>
     <message>
         <source>The selected units cannot hold position.</source>
-        <translation>Seçili birimler mevzi tutamaz.</translation>
+        <translation>Zaznaczone jednostki nie mogą trzymać pozycji.</translation>
     </message>
     <message>
         <source>The selected units cannot build.</source>
-        <translation>Seçili birimler inşa edemez.</translation>
+        <translation>Zaznaczone jednostki nie mogą budować.</translation>
     </message>
     <message>
         <source>The selected units cannot gather.</source>
-        <translation>Seçili birimler toplayamaz.</translation>
+        <translation>Zaznaczone jednostki nie mogą zbierać.</translation>
     </message>
     <message>
         <source>Only civilians can be delivered to a barracks.</source>
-        <translation>Kışlaya yalnızca siviller teslim edilebilir.</translation>
+        <translation>Do koszar można odstawić tylko cywilów.</translation>
     </message>
     <message>
         <source>Only builders can repair structures.</source>
-        <translation>Yapıları yalnızca inşaatçılar onarabilir.</translation>
+        <translation>Budowle naprawiają tylko budowniczowie.</translation>
     </message>
     <message>
         <source>Only a squad of several individuals can be divided or joined.</source>
-        <translation>Yalnızca birkaç kişiden oluşan bir müfreze bölünebilir ya da birleştirilebilir.</translation>
+        <translation>Dzielić i łączyć można tylko oddział złożony z kilku ludzi.</translation>
     </message>
     <message>
         <source>The selected units cannot take that order.</source>
-        <translation>Seçili birimler o emri alamaz.</translation>
+        <translation>Zaznaczone jednostki nie przyjmą tego rozkazu.</translation>
     </message>
     <message>
         <source>No enemy under the cursor.</source>
-        <translation>İmlecin altında düşman yok.</translation>
+        <translation>Pod kursorem nie ma wroga.</translation>
     </message>
     <message>
         <source>Select a friendly barracks with room for more people.</source>
-        <translation>Daha fazla insan alabilecek dost bir kışla seç.</translation>
+        <translation>Wskaż przyjazne koszary, w których jest jeszcze miejsce dla ludzi.</translation>
     </message>
     <message>
         <source>Select a damaged friendly building to repair.</source>
-        <translation>Onarmak için hasarlı bir dost yapı seç.</translation>
+        <translation>Wskaż uszkodzoną przyjazną budowlę do naprawy.</translation>
     </message>
     <message>
         <source>Nothing to target there.</source>
-        <translation>Orada hedeflenecek bir şey yok.</translation>
+        <translation>Nie ma tam czego brać na cel.</translation>
     </message>
     <message>
         <source>Choose a spot on the map.</source>
-        <translation>Haritada bir nokta seç.</translation>
+        <translation>Wybierz miejsce na mapie.</translation>
     </message>
     <message>
         <source>That barracks has no room for more people.</source>
-        <translation>O kışlada daha fazla insan için yer yok.</translation>
+        <translation>W tych koszarach nie ma już miejsca dla ludzi.</translation>
     </message>
     <message>
         <source>That building does not need repairs.</source>
-        <translation>O yapının onarıma ihtiyacı yok.</translation>
+        <translation>Ta budowla nie wymaga naprawy.</translation>
     </message>
     <message>
         <source>Your builders only take down your own buildings.</source>
-        <translation>İnşaatçıların yalnızca kendi yapılarını indirir.</translation>
+        <translation>Twoi budowniczowie rozbierają tylko twoje własne budowle.</translation>
     </message>
     <message>
         <source>That building cannot be taken down.</source>
-        <translation>O yapı indirilemez.</translation>
+        <translation>Tej budowli nie da się rozebrać.</translation>
     </message>
 </context>
 <context>
     <name>OutcomeLayout</name>
     <message>
         <source>Continue</source>
-        <translation>Sürdür</translation>
+        <translation>Dalej</translation>
     </message>
 </context>
 <context>
     <name>PlayerConfigPanel</name>
     <message>
         <source>Select a map</source>
-        <translation>Bir harita seç</translation>
+        <translation>Wybierz mapę</translation>
     </message>
     <message>
         <source>Players (%1)</source>
-        <translation>Oyuncular (%1)</translation>
+        <translation>Gracze (%1)</translation>
     </message>
     <message>
         <source>Click color/team to cycle</source>
-        <translation>Değiştirmek için renge/takıma tıkla</translation>
+        <translation>Kliknij barwę/drużynę, by przełączyć</translation>
     </message>
     <message>
         <source>Select a map to configure players</source>
-        <translation>Oyuncuları ayarlamak için bir harita seç</translation>
+        <translation>Wybierz mapę, by ustawić graczy</translation>
     </message>
     <message>
         <source>+ Add CPU</source>
-        <translation>+ CPU Ekle</translation>
+        <translation>+ Dodaj komputer</translation>
     </message>
     <message>
         <source>Add AI player to the game</source>
-        <translation>Oyuna YZ oyuncusu ekle</translation>
+        <translation>Dodaj do gry gracza komputerowego</translation>
     </message>
     <message>
         <source>Every slot on this map is taken</source>
-        <translation>Bu haritadaki her yuva dolu</translation>
+        <translation>Każde miejsce na tej mapie jest zajęte</translation>
     </message>
     <message>
         <source>Max players reached</source>
-        <translation>En çok oyuncu sayısına ulaşıldı</translation>
+        <translation>Osiągnięto maksimum graczy</translation>
     </message>
     <message>
         <source>%1 slot available</source>
-        <translation>%1 yuva boş</translation>
+        <translation>Wolne miejsca: %1</translation>
     </message>
     <message>
         <source>%1 slots available</source>
-        <translation>%1 yuva boş</translation>
+        <translation>Wolne miejsca: %1</translation>
     </message>
     <message>
         <source>(map preview)</source>
-        <translation>(harita önizlemesi)</translation>
+        <translation>(podgląd mapy)</translation>
     </message>
 </context>
 <context>
     <name>PlayerDefeatWatcher</name>
     <message>
         <source>Player %1</source>
-        <translation>Oyuncu %1</translation>
+        <translation>Gracz %1</translation>
     </message>
 </context>
 <context>
     <name>PlayerListItem</name>
     <message>
         <source>Color</source>
-        <translation>Renk</translation>
+        <translation>Barwa</translation>
     </message>
     <message>
         <source>Click to change color</source>
-        <translation>Rengi değiştirmek için tıkla</translation>
+        <translation>Kliknij, by zmienić barwę</translation>
     </message>
     <message>
         <source>Click to change team</source>
-        <translation>Takımı değiştirmek için tıkla</translation>
+        <translation>Kliknij, by zmienić drużynę</translation>
     </message>
     <message>
         <source>Remove player</source>
-        <translation>Oyuncuyu çıkar</translation>
+        <translation>Usuń gracza</translation>
     </message>
 </context>
 <context>
     <name>ProductionManager</name>
     <message>
         <source>Select a tree to chop.</source>
-        <translation>Kesmek için bir ağaç seç.</translation>
+        <translation>Wskaż drzewo do ścięcia.</translation>
     </message>
     <message>
         <source>Select a boulder to collect.</source>
-        <translation>Toplamak için bir kaya seç.</translation>
+        <translation>Wskaż głaz do zebrania.</translation>
     </message>
     <message>
         <source>Select iron ore to collect.</source>
-        <translation>Toplamak için demir cevheri seç.</translation>
+        <translation>Wskaż rudę żelaza do zebrania.</translation>
     </message>
     <message>
         <source>No available builder can chop that tree.</source>
-        <translation>O ağacı kesebilecek boş bir inşaatçı yok.</translation>
+        <translation>Żaden wolny budowniczy nie może ściąć tego drzewa.</translation>
     </message>
     <message>
         <source>No available builder can collect that boulder.</source>
-        <translation>O kayayı toplayabilecek boş bir inşaatçı yok.</translation>
+        <translation>Żaden wolny budowniczy nie może zebrać tego głazu.</translation>
     </message>
     <message>
         <source>No available builder can collect that iron ore.</source>
-        <translation>O demir cevherini toplayabilecek boş bir inşaatçı yok.</translation>
+        <translation>Żaden wolny budowniczy nie może zebrać tej rudy żelaza.</translation>
     </message>
     <message>
         <source>No available builder can collect that resource.</source>
-        <translation>O kaynağı toplayabilecek boş bir inşaatçı yok.</translation>
+        <translation>Żaden wolny budowniczy nie może zebrać tego surowca.</translation>
     </message>
     <message>
         <source>No walkable spot near that tree.</source>
-        <translation>O ağacın yakınında yürünebilir yer yok.</translation>
+        <translation>Brak miejsca do stania przy tym drzewie.</translation>
     </message>
     <message>
         <source>No walkable spot near that boulder.</source>
-        <translation>O kayanın yakınında yürünebilir yer yok.</translation>
+        <translation>Brak miejsca do stania przy tym głazie.</translation>
     </message>
     <message>
         <source>No walkable spot near that iron ore.</source>
-        <translation>O demir cevherinin yakınında yürünebilir yer yok.</translation>
+        <translation>Brak miejsca do stania przy tej rudzie żelaza.</translation>
     </message>
     <message>
         <source>No walkable spot near that resource.</source>
-        <translation>O kaynağın yakınında yürünebilir yer yok.</translation>
+        <translation>Brak miejsca do stania przy tym surowcu.</translation>
     </message>
     <message>
         <source>Select a tree, boulder, ore deposit, ripe farm or sheep.</source>
-        <translation>Bir ağaç, kaya, cevher yatağı, olgun tarla ya da koyun seç.</translation>
+        <translation>Wskaż drzewo, głaz, złoże rudy, dojrzałe pole albo owcę.</translation>
     </message>
     <message>
         <source>Something is already standing here.</source>
-        <translation>Burada zaten bir şey duruyor.</translation>
+        <translation>Coś już tu stoi.</translation>
     </message>
     <message>
         <source>This ground cannot be cleared to build on.</source>
-        <translation>Bu zemin inşa için temizlenemez.</translation>
+        <translation>Tego gruntu nie da się oczyścić pod budowę.</translation>
     </message>
     <message>
         <source>Nothing can be built on the water.</source>
-        <translation>Suyun üstüne hiçbir şey inşa edilemez.</translation>
+        <translation>Na wodzie nie da się nic zbudować.</translation>
     </message>
     <message>
         <source>The ground here is too steep to build on.</source>
-        <translation>Buradaki zemin inşa için fazla dik.</translation>
+        <translation>Grunt jest tu zbyt stromy, by budować.</translation>
     </message>
     <message>
         <source>That is beyond the edge of the battlefield.</source>
-        <translation>Orası savaş alanının sınırının ötesinde.</translation>
+        <translation>To jest poza krawędzią pola bitwy.</translation>
     </message>
     <message>
         <source>That structure cannot be placed.</source>
-        <translation>O yapı yerleştirilemez.</translation>
+        <translation>Tej budowli nie da się tu postawić.</translation>
     </message>
     <message>
         <source>Building factory unavailable.</source>
-        <translation>Yapı üretimi kullanılamıyor.</translation>
+        <translation>Fabryka budowli niedostępna.</translation>
     </message>
     <message>
         <source>A wall already stands here.</source>
-        <translation>Burada zaten bir sur duruyor.</translation>
+        <translation>Tu już stoi mur.</translation>
     </message>
     <message>
         <source>No part of this wall can stand there.</source>
-        <translation>Bu surun hiçbir parçası oraya sığmıyor.</translation>
+        <translation>Żadna część tego muru nie może tam stanąć.</translation>
     </message>
     <message>
         <source>Drag out a wall line first.</source>
-        <translation>Önce bir sur hattı sürükle.</translation>
+        <translation>Najpierw wyciągnij linię muru.</translation>
     </message>
     <message>
         <source>Choose a build location.</source>
-        <translation>Bir inşa yeri seç.</translation>
+        <translation>Wybierz miejsce budowy.</translation>
     </message>
     <message>
         <source>That resource is already assigned.</source>
-        <translation>O kaynak zaten atanmış.</translation>
+        <translation>Ten surowiec jest już przydzielony.</translation>
     </message>
     <message>
         <source>Nothing here is worth harvesting.</source>
-        <translation>Burada toplanmaya değer bir şey yok.</translation>
+        <translation>Nie ma tu nic wartego zbierania.</translation>
     </message>
     <message>
         <source>No resource here to work.</source>
-        <translation>Burada işlenecek kaynak yok.</translation>
+        <translation>Nie ma tu surowca do pracy.</translation>
     </message>
     <message>
         <source>No valid wall segments in that drag.</source>
-        <translation>O sürüklemede geçerli sur parçası yok.</translation>
+        <translation>W tym przeciągnięciu nie ma poprawnych odcinków muru.</translation>
     </message>
     <message>
         <source>No available builder.</source>
-        <translation>Boş inşaatçı yok.</translation>
+        <translation>Brak wolnego budowniczego.</translation>
     </message>
 </context>
 <context>
     <name>ProductionPanel</name>
     <message>
         <source>Mounted Knight</source>
-        <translation>Atlı Şövalye</translation>
+        <translation>Rycerz konny</translation>
     </message>
     <message>
         <source>Horse Archer</source>
-        <translation>Atlı Okçu</translation>
+        <translation>Łucznik konny</translation>
     </message>
     <message>
         <source>Horse Spearman</source>
-        <translation>Atlı Mızrakçı</translation>
+        <translation>Włócznik konny</translation>
     </message>
     <message>
         <source>War Elephant</source>
-        <translation>Savaş Fili</translation>
+        <translation>Słoń bojowy</translation>
     </message>
     <message>
         <source>reserve</source>
-        <translation>yedek</translation>
+        <translation>rezerwy</translation>
     </message>
     <message>
         <source>Recruit %1
 Cost: %2
 Build time: %3s
 Carthage exclusive</source>
-        <translation>%1 devşir
-Bedel: %2
-İnşa süresi: %3sn
-Kartaca&apos;ya özel</translation>
+        <translation>Rekrutuj: %1
+Koszt: %2
+Czas budowy: %3 s
+Tylko dla Kartaginy</translation>
     </message>
     <message>
         <source>Recruit %1
 Cost: %2
 Build time: %3s</source>
-        <translation>%1 devşir
-Bedel: %2
-İnşa süresi: %3sn</translation>
+        <translation>Rekrutuj: %1
+Koszt: %2
+Czas budowy: %3 s</translation>
     </message>
     <message>
         <source>Food</source>
-        <translation>Yiyecek</translation>
+        <translation>Żywność</translation>
     </message>
     <message>
         <source>Wood</source>
-        <translation>Odun</translation>
+        <translation>Drewno</translation>
     </message>
     <message>
         <source>Stone</source>
-        <translation>Taş</translation>
+        <translation>Kamień</translation>
     </message>
     <message>
         <source>Iron</source>
-        <translation>Demir</translation>
+        <translation>Żelazo</translation>
     </message>
     <message>
         <source>Catapult</source>
-        <translation>Mancınık</translation>
+        <translation>Katapulta</translation>
     </message>
     <message>
         <source>Long-range siege weapon
 Effective against structures</source>
-        <translation>Uzun menzilli kuşatma silahı
-Yapılara karşı etkili</translation>
+        <translation>Machina oblężnicza dalekiego zasięgu
+Skuteczna przeciw budowlom</translation>
     </message>
     <message>
         <source>Ballista</source>
@@ -7155,62 +7161,62 @@ Yapılara karşı etkili</translation>
     <message>
         <source>Precision siege weapon
 Effective against units</source>
-        <translation>İsabetli kuşatma silahı
-Birimlere karşı etkili</translation>
+        <translation>Celna machina oblężnicza
+Skuteczna przeciw jednostkom</translation>
     </message>
     <message>
         <source>Defense Tower</source>
-        <translation>Savunma Kulesi</translation>
+        <translation>Wieża obronna</translation>
     </message>
     <message>
         <source>Stationary defense structure
 Shoots arrows at enemies</source>
-        <translation>Sabit savunma yapısı
-Düşmanlara ok atar</translation>
+        <translation>Nieruchoma budowla obronna
+Strzela do wrogów z łuku</translation>
     </message>
     <message>
         <source>Home</source>
-        <translation>Ev</translation>
+        <translation>Dom</translation>
     </message>
     <message>
         <source>Residential building
 Adds +50 reserve to the nearest barracks</source>
-        <translation>Konut yapısı
-En yakın kışlaya +50 yedek ekler</translation>
+        <translation>Budynek mieszkalny
+Dodaje +50 rezerwy do najbliższych koszar</translation>
     </message>
     <message>
         <source>Marketplace</source>
-        <translation>Pazar</translation>
+        <translation>Targowisko</translation>
     </message>
     <message>
         <source>Trade building
 Buy or sell resources for gold</source>
-        <translation>Ticaret yapısı
-Altın karşılığı kaynak al ya da sat</translation>
+        <translation>Budynek handlowy
+Kupuj i sprzedawaj surowce za złoto</translation>
     </message>
     <message>
         <source>Wall Segment</source>
-        <translation>Sur Parçası</translation>
+        <translation>Odcinek muru</translation>
     </message>
     <message>
         <source>Wooden defensive wall
 Blocks enemy movement</source>
-        <translation>Ahşap savunma duvarı
-Düşman hareketini engeller</translation>
+        <translation>Drewniany mur obronny
+Blokuje ruch wroga</translation>
     </message>
     <message>
         <source>Wall Gate</source>
-        <translation>Sur Kapısı</translation>
+        <translation>Brama w murze</translation>
     </message>
     <message>
         <source>Gated opening in a wall
 Opens for your troops and allies</source>
-        <translation>Bir surdaki kapılı açıklık
-Birliklerine ve müttefiklerine açılır</translation>
+        <translation>Przejście z bramą w murze
+Otwiera się przed twoimi oddziałami i sojusznikami</translation>
     </message>
     <message>
         <source>Need %1</source>
-        <translation>%1 gerekiyor</translation>
+        <translation>Brakuje: %1</translation>
     </message>
     <message>
         <source>%1 %2</source>
@@ -7218,383 +7224,383 @@ Birliklerine ve müttefiklerine açılır</translation>
     </message>
     <message>
         <source>Cannot recruit</source>
-        <translation>Devşirilemiyor</translation>
+        <translation>Nie można rekrutować</translation>
     </message>
     <message>
         <source>Queue is full (5/5)</source>
-        <translation>Sıra dolu (5/5)</translation>
+        <translation>Kolejka jest pełna (5/5)</translation>
     </message>
     <message>
         <source>Not enough reserve</source>
-        <translation>Yeterli yedek yok</translation>
+        <translation>Za mało rezerwy</translation>
     </message>
     <message>
         <source>Already building...</source>
-        <translation>Zaten inşa ediliyor...</translation>
+        <translation>Już buduje...</translation>
     </message>
     <message>
         <source>QUEUE</source>
-        <translation>SIRA</translation>
+        <translation>KOLEJKA</translation>
     </message>
     <message>
         <source>Barracks reserve: %1 / %2</source>
-        <translation>Kışla yedeği: %1 / %2</translation>
+        <translation>Rezerwa koszar: %1 / %2</translation>
     </message>
     <message>
         <source>%1s</source>
-        <translation>%1sn</translation>
+        <translation>%1 s</translation>
     </message>
     <message>
         <source>Idle</source>
-        <translation>Beklemede</translation>
+        <translation>Bezczynny</translation>
     </message>
     <message>
         <source>RECRUIT UNITS</source>
-        <translation>BİRİM DEVŞİR</translation>
+        <translation>REKRUTUJ JEDNOSTKI</translation>
     </message>
     <message>
         <source>HOME RECRUITMENT</source>
-        <translation>EVDE DEVŞİRME</translation>
+        <translation>REKRUTACJA W DOMU</translation>
     </message>
     <message>
         <source>Available civilians: %1 / %2</source>
-        <translation>Elverişli siviller: %1 / %2</translation>
+        <translation>Dostępni cywile: %1 / %2</translation>
     </message>
     <message>
         <source>Recruit %1
 Cost: %2
 Build time: %3s
 Use Deliver mode, then click a friendly barracks to add to its reserve.</source>
-        <translation>%1 devşir
-Bedel: %2
-İnşa süresi: %3sn
-Teslim et kipini kullan, sonra yedeğine eklemek için dost bir kışlaya tıkla.</translation>
+        <translation>Rekrutuj: %1
+Koszt: %2
+Czas budowy: %3 s
+Użyj trybu Odstaw, a potem kliknij przyjazne koszary, by dodać do ich rezerwy.</translation>
     </message>
     <message>
         <source>families</source>
-        <translation>aile</translation>
+        <translation>rodziny</translation>
     </message>
     <message>
         <source>This home already committed its 3 civilians</source>
-        <translation>Bu ev 3 sivilini çoktan verdi</translation>
+        <translation>Ten dom oddał już swoich 3 cywilów</translation>
     </message>
     <message>
         <source>Click Map to Set Rally</source>
-        <translation>Toplanmayı Belirlemek İçin Haritaya Tıkla</translation>
+        <translation>Kliknij mapę, by ustawić zbiórkę</translation>
     </message>
     <message>
         <source>Set Rally Point</source>
-        <translation>Toplanma Noktasını Belirle</translation>
+        <translation>Ustaw punkt zbiórki</translation>
     </message>
     <message>
         <source>Set where newly recruited units will gather.
 Right-click to cancel.</source>
-        <translation>Yeni devşirilen birimlerin toplanacağı yeri belirle.
-İptal için sağ tıkla.</translation>
+        <translation>Wyznacz miejsce zbiórki nowo rekrutowanych jednostek.
+Prawy przycisk anuluje.</translation>
     </message>
     <message>
         <source>Select a barracks or temple before setting a rally point.</source>
-        <translation>Toplanma noktası belirlemeden önce bir kışla ya da tapınak seç.</translation>
+        <translation>Zaznacz koszary albo świątynię, zanim wyznaczysz punkt zbiórki.</translation>
     </message>
     <message>
         <source>Right-click to cancel</source>
-        <translation>İptal için sağ tık</translation>
+        <translation>Prawy przycisk anuluje</translation>
     </message>
     <message>
         <source>BUILDER CONSTRUCTION</source>
-        <translation>İNŞAATÇI YAPIMI</translation>
+        <translation>BUDOWA</translation>
     </message>
     <message>
         <source>Build siege weapons, structures, and gather wood, stone, iron, and food</source>
-        <translation>Kuşatma silahları ve yapılar inşa et, odun, taş, demir ve yiyecek topla</translation>
+        <translation>Buduj machiny oblężnicze i budowle oraz zbieraj drewno, kamień, żelazo i żywność</translation>
     </message>
     <message>
         <source>Select a structure to build</source>
-        <translation>İnşa edilecek bir yapı seç</translation>
+        <translation>Wybierz budowlę do postawienia</translation>
     </message>
     <message>
         <source>Cut Tree</source>
-        <translation>Ağaç Kes</translation>
+        <translation>Zetnij drzewo</translation>
     </message>
     <message>
         <source>Collect Stone</source>
-        <translation>Taş Topla</translation>
+        <translation>Zbierz kamień</translation>
     </message>
     <message>
         <source>Collect Iron Ore</source>
-        <translation>Demir Cevheri Topla</translation>
+        <translation>Zbierz rudę żelaza</translation>
     </message>
     <message>
         <source>Harvest Grain</source>
-        <translation>Tahıl Biç</translation>
+        <translation>Zbierz zboże</translation>
     </message>
     <message>
         <source>Slaughter Sheep</source>
-        <translation>Koyun Kes</translation>
+        <translation>Ubij owcę</translation>
     </message>
     <message>
         <source>Farm</source>
-        <translation>Tarla</translation>
+        <translation>Farma</translation>
     </message>
     <message>
         <source>Task: %1</source>
-        <translation>Görev: %1</translation>
+        <translation>Zadanie: %1</translation>
     </message>
     <message>
         <source>Building: %1</source>
-        <translation>İnşa: %1</translation>
+        <translation>Buduje: %1</translation>
     </message>
     <message>
         <source>Build Catapult
 %1
 Cost: %2
 Build time: %3s</source>
-        <translation>Mancınık İnşa Et
+        <translation>Zbuduj katapultę
 %1
-Bedel: %2
-İnşa süresi: %3sn</translation>
+Koszt: %2
+Czas budowy: %3 s</translation>
     </message>
     <message>
         <source>Build Ballista
 %1
 Cost: %2
 Build time: %3s</source>
-        <translation>Balista İnşa Et
+        <translation>Zbuduj balistę
 %1
-Bedel: %2
-İnşa süresi: %3sn</translation>
+Koszt: %2
+Czas budowy: %3 s</translation>
     </message>
     <message>
         <source>Build Defense Tower
 %1
 Cost: %2
 Build time: %3s</source>
-        <translation>Savunma Kulesi İnşa Et
+        <translation>Zbuduj wieżę obronną
 %1
-Bedel: %2
-İnşa süresi: %3sn</translation>
+Koszt: %2
+Czas budowy: %3 s</translation>
     </message>
     <message>
         <source>Build Home
 %1
 Cost: %2
 Build time: %3s</source>
-        <translation>Ev İnşa Et
+        <translation>Zbuduj dom
 %1
-Bedel: %2
-İnşa süresi: %3sn</translation>
+Koszt: %2
+Czas budowy: %3 s</translation>
     </message>
     <message>
         <source>Build Farm
 %1
 Cost: %2
 Build time: %3s</source>
-        <translation>Tarla İnşa Et
+        <translation>Zbuduj farmę
 %1
-Bedel: %2
-İnşa süresi: %3sn</translation>
+Koszt: %2
+Czas budowy: %3 s</translation>
     </message>
     <message>
         <source>Grows grain in cycles
 Builders reap it for the food that recruits civilians</source>
-        <translation>Dönemler hâlinde tahıl yetiştirir
-İnşaatçılar sivil devşiren yiyecek için onu biçer</translation>
+        <translation>Uprawia zboże w cyklach
+Budowniczowie zżynają je na żywność, za którą rekrutuje się cywilów</translation>
     </message>
     <message>
         <source>Build Wall Segment
 %1
 Cost: %2
 Build time: %3s</source>
-        <translation>Sur Parçası İnşa Et
+        <translation>Zbuduj odcinek muru
 %1
-Bedel: %2
-İnşa süresi: %3sn</translation>
+Koszt: %2
+Czas budowy: %3 s</translation>
     </message>
     <message>
         <source>Build Wall Gate
 %1
 Cost: %2
 Build time: %3s</source>
-        <translation>Sur Kapısı İnşa Et
+        <translation>Zbuduj bramę w murze
 %1
-Bedel: %2
-İnşa süresi: %3sn</translation>
+Koszt: %2
+Czas budowy: %3 s</translation>
     </message>
     <message>
         <source>Build Marketplace
 %1
 Cost: %2
 Build time: %3s</source>
-        <translation>Pazar İnşa Et
+        <translation>Zbuduj targowisko
 %1
-Bedel: %2
-İnşa süresi: %3sn</translation>
+Koszt: %2
+Czas budowy: %3 s</translation>
     </message>
     <message>
         <source>Temple</source>
-        <translation>Tapınak</translation>
+        <translation>Świątynia</translation>
     </message>
     <message>
         <source>Build Temple
 %1
 Cost: %2
 Build time: %3s</source>
-        <translation>Tapınak İnşa Et
+        <translation>Zbuduj świątynię
 %1
-Bedel: %2
-İnşa süresi: %3sn</translation>
+Koszt: %2
+Czas budowy: %3 s</translation>
     </message>
     <message>
         <source>Sanctuary of the nation
 Wide vision and a durable settlement anchor</source>
-        <translation>Ulusun kutsal yeri
-Geniş görüş ve dayanıklı bir yerleşim çapası</translation>
+        <translation>Sanktuarium narodu
+Szerokie pole widzenia i trwała kotwica osady</translation>
     </message>
     <message>
         <source>MARKETPLACE</source>
-        <translation>PAZAR</translation>
+        <translation>TARGOWISKO</translation>
     </message>
     <message>
         <source>Trade resources for gold at fixed exchange rates</source>
-        <translation>Sabit kurlarla altın karşılığı kaynak ticareti yap</translation>
+        <translation>Wymieniaj surowce na złoto po stałym kursie</translation>
     </message>
     <message>
         <source>Select your marketplace to trade</source>
-        <translation>Ticaret yapmak için pazarını seç</translation>
+        <translation>Zaznacz swoje targowisko, by handlować</translation>
     </message>
     <message>
         <source>Gold: %1    Trade size: %2</source>
-        <translation>Altın: %1    Ticaret büyüklüğü: %2</translation>
+        <translation>Złoto: %1    Wielkość transakcji: %2</translation>
     </message>
     <message>
         <source>Trading is available only for your own marketplace.</source>
-        <translation>Ticaret yalnızca kendi pazarında yapılabilir.</translation>
+        <translation>Handel jest dostępny tylko na twoim własnym targowisku.</translation>
     </message>
     <message>
         <source>You have %1</source>
-        <translation>Elinde %1 var</translation>
+        <translation>Masz %1</translation>
     </message>
     <message>
         <source>Buy %1 (%2g)</source>
-        <translation>%1 al (%2a)</translation>
+        <translation>Kup %1 (%2 zł)</translation>
     </message>
     <message>
         <source>Spend %1 gold to buy %2 %3</source>
-        <translation>%2 %3 almak için %1 altın harca</translation>
+        <translation>Wydaj %1 złota, by kupić %2 %3</translation>
     </message>
     <message>
         <source>Sell %1 (+%2g)</source>
-        <translation>%1 sat (+%2a)</translation>
+        <translation>Sprzedaj %1 (+%2 zł)</translation>
     </message>
     <message>
         <source>Sell %1 %2 for %3 gold</source>
-        <translation>%1 %2 karşılığında %3 altın al</translation>
+        <translation>Sprzedaj %1 %2 za %3 złota</translation>
     </message>
     <message>
         <source>TEMPLE</source>
-        <translation>TAPINAK</translation>
+        <translation>ŚWIĄTYNIA</translation>
     </message>
     <message>
         <source>The sanctuary of your nation, raised in its own architectural style</source>
-        <translation>Ulusunun kendi mimari üslubunda yükseltilmiş kutsal yeri</translation>
+        <translation>Sanktuarium twojego narodu, wzniesione w jego własnym stylu</translation>
     </message>
     <message>
         <source>Watches over a wide stretch of ground and holds a settlement together</source>
-        <translation>Geniş bir araziyi gözetler ve yerleşimi bir arada tutar</translation>
+        <translation>Czuwa nad szerokim pasem terenu i spaja osadę</translation>
     </message>
     <message>
         <source>TAKE VOWS</source>
-        <translation>YEMİN ETTİR</translation>
+        <translation>ZŁÓŻ ŚLUBY</translation>
     </message>
     <message>
         <source>Temple reserve: %1 / %2</source>
-        <translation>Tapınak yedeği: %1 / %2</translation>
+        <translation>Rezerwa świątyni: %1 / %2</translation>
     </message>
     <message>
         <source>Deliver civilians here to raise the temple&apos;s reserve</source>
-        <translation>Tapınağın yedeğini artırmak için buraya sivil teslim et</translation>
+        <translation>Odstawiaj tu cywilów, by podnieść rezerwę świątyni</translation>
     </message>
     <message>
         <source>FARM</source>
-        <translation>TARLA</translation>
+        <translation>FARMA</translation>
     </message>
     <message>
         <source>Grain ripens every %1s and a builder reaps %2 food from it</source>
-        <translation>Tahıl her %1sn&apos;de bir olgunlaşır ve bir inşaatçı ondan %2 yiyecek biçer</translation>
+        <translation>Zboże dojrzewa co %1 s, a budowniczy zbiera z niego %2 żywności</translation>
     </message>
     <message>
         <source>Ripe</source>
-        <translation>Olgun</translation>
+        <translation>Dojrzałe</translation>
     </message>
     <message>
         <source>%1% grown · %2s</source>
-        <translation>%%1 büyüdü · %2sn</translation>
+        <translation>wzrost %1% · %2 s</translation>
     </message>
     <message>
         <source>Select your farm to see its crop.</source>
-        <translation>Ekinini görmek için tarlanı seç.</translation>
+        <translation>Zaznacz swoją farmę, by zobaczyć jej zbiory.</translation>
     </message>
     <message>
         <source>A builder is on its way to harvest.</source>
-        <translation>Bir inşaatçı hasat için yolda.</translation>
+        <translation>Budowniczy jest już w drodze na żniwa.</translation>
     </message>
     <message>
         <source>Send a builder with Collect, or leave Auto Gather running.</source>
-        <translation>Topla ile bir inşaatçı yolla ya da Otomatik Topla&apos;yı açık bırak.</translation>
+        <translation>Wyślij budowniczego rozkazem Zbieraj albo zostaw włączone auto-zbieranie.</translation>
     </message>
     <message>
         <source>Harvested %1 times so far.</source>
-        <translation>Şimdiye dek %1 kez hasat edildi.</translation>
+        <translation>Zbiorów do tej pory: %1.</translation>
     </message>
     <message>
         <source>No Barracks</source>
-        <translation>Kışla Yok</translation>
+        <translation>Brak koszar</translation>
     </message>
     <message>
         <source>Select a barracks to recruit units</source>
-        <translation>Birim devşirmek için bir kışla seç</translation>
+        <translation>Zaznacz koszary, by rekrutować jednostki</translation>
     </message>
 </context>
 <context>
     <name>ProductionViewModel</name>
     <message>
         <source>food</source>
-        <translation>yiyecek</translation>
+        <translation>żywności</translation>
     </message>
     <message>
         <source>wood</source>
-        <translation>odun</translation>
+        <translation>drewna</translation>
     </message>
     <message>
         <source>stone</source>
-        <translation>taş</translation>
+        <translation>kamienia</translation>
     </message>
     <message>
         <source>iron</source>
-        <translation>demir</translation>
+        <translation>żelaza</translation>
     </message>
     <message>
         <source>Select your marketplace to trade.</source>
-        <translation>Ticaret yapmak için pazarını seç.</translation>
+        <translation>Zaznacz swoje targowisko, by handlować.</translation>
     </message>
     <message>
         <source>The marketplace does not trade that.</source>
-        <translation>Pazar bunun ticaretini yapmıyor.</translation>
+        <translation>Targowisko tym nie handluje.</translation>
     </message>
     <message>
         <source>Not enough gold to buy %1.</source>
-        <translation>%1 almak için yeterli altın yok.</translation>
+        <translation>Za mało złota, by kupić %1.</translation>
     </message>
     <message>
         <source>Not enough %1 to sell.</source>
-        <translation>Satmak için yeterli %1 yok.</translation>
+        <translation>Za mało %1 na sprzedaż.</translation>
     </message>
 </context>
 <context>
     <name>QObject</name>
     <message>
         <source>System</source>
-        <translation>Sistem</translation>
+        <translation>System</translation>
     </message>
     <message>
         <source>Camera</source>
@@ -7602,357 +7608,357 @@ Geniş görüş ve dayanıklı bir yerleşim çapası</translation>
     </message>
     <message>
         <source>Selection</source>
-        <translation>Seçim</translation>
+        <translation>Zaznaczenie</translation>
     </message>
     <message>
         <source>Orders</source>
-        <translation>Emirler</translation>
+        <translation>Rozkazy</translation>
     </message>
     <message>
         <source>Commander movement</source>
-        <translation>Komutan hareketi</translation>
+        <translation>Ruch dowódcy</translation>
     </message>
     <message>
         <source>Commander combat</source>
-        <translation>Komutan çarpışması</translation>
+        <translation>Walka dowódcy</translation>
     </message>
     <message>
         <source>Open menu</source>
-        <translation>Menüyü aç</translation>
+        <translation>Otwórz menu</translation>
     </message>
     <message>
         <source>Also cancels a placement or rally in progress</source>
-        <translation>Süren bir yerleştirmeyi ya da toplanmayı da iptal eder</translation>
+        <translation>Anuluje też trwające stawianie budowli lub zbiórkę</translation>
     </message>
     <message>
         <source>Switch between army and commander</source>
-        <translation>Ordu ile komutan arasında geç</translation>
+        <translation>Przełączaj między armią a dowódcą</translation>
     </message>
     <message>
         <source>Quick save</source>
-        <translation>Hızlı kaydet</translation>
+        <translation>Szybki zapis</translation>
     </message>
     <message>
         <source>Quick load</source>
-        <translation>Hızlı yükle</translation>
+        <translation>Szybkie wczytanie</translation>
     </message>
     <message>
         <source>Pause</source>
-        <translation>Duraklat</translation>
+        <translation>Pauza</translation>
     </message>
     <message>
         <source>Speed up the battle</source>
-        <translation>Savaşı hızlandır</translation>
+        <translation>Przyspiesz bitwę</translation>
     </message>
     <message>
         <source>Steps through the speeds shown on the top bar</source>
-        <translation>Üst çubukta gösterilen hızlar arasında ilerletir</translation>
+        <translation>Przechodzi przez tempa pokazane na górnym pasku</translation>
     </message>
     <message>
         <source>Slow down the battle</source>
-        <translation>Savaşı yavaşlat</translation>
+        <translation>Spowolnij bitwę</translation>
     </message>
     <message>
         <source>Pan camera up</source>
-        <translation>Kamerayı yukarı kaydır</translation>
+        <translation>Przesuń kamerę w górę</translation>
     </message>
     <message>
         <source>Slides the view north over the battlefield. Hold Shift to cover twice the ground per step.</source>
-        <translation>Görüşü savaş alanı üzerinde kuzeye kaydırır. Her adımda iki kat yol almak için Shift&apos;i basılı tut.</translation>
+        <translation>Przesuwa widok na północ nad polem bitwy. Przytrzymaj Shift, by na krok pokonać dwa razy więcej terenu.</translation>
     </message>
     <message>
         <source>Pan camera down</source>
-        <translation>Kamerayı aşağı kaydır</translation>
+        <translation>Przesuń kamerę w dół</translation>
     </message>
     <message>
         <source>Slides the view south. Hold Shift to move faster.</source>
-        <translation>Görüşü güneye kaydırır. Daha hızlı gitmek için Shift&apos;i basılı tut.</translation>
+        <translation>Przesuwa widok na południe. Przytrzymaj Shift, by iść szybciej.</translation>
     </message>
     <message>
         <source>Pan camera left</source>
-        <translation>Kamerayı sola kaydır</translation>
+        <translation>Przesuń kamerę w lewo</translation>
     </message>
     <message>
         <source>Slides the view west. Hold Shift to move faster.</source>
-        <translation>Görüşü batıya kaydırır. Daha hızlı gitmek için Shift&apos;i basılı tut.</translation>
+        <translation>Przesuwa widok na zachód. Przytrzymaj Shift, by iść szybciej.</translation>
     </message>
     <message>
         <source>Pan camera right</source>
-        <translation>Kamerayı sağa kaydır</translation>
+        <translation>Przesuń kamerę w prawo</translation>
     </message>
     <message>
         <source>Slides the view east. Hold Shift to move faster.</source>
-        <translation>Görüşü doğuya kaydırır. Daha hızlı gitmek için Shift&apos;i basılı tut.</translation>
+        <translation>Przesuwa widok na wschód. Przytrzymaj Shift, by iść szybciej.</translation>
     </message>
     <message>
         <source>Rotate camera left</source>
-        <translation>Kamerayı sola döndür</translation>
+        <translation>Obróć kamerę w lewo</translation>
     </message>
     <message>
         <source>Swings the view anticlockwise around the point you are looking at. Hold Shift to swing further.</source>
-        <translation>Görüşü baktığın noktanın çevresinde saat yönünün tersine çevirir. Daha çok çevirmek için Shift&apos;i basılı tut.</translation>
+        <translation>Obraca widok przeciwnie do ruchu wskazówek zegara wokół punktu, na który patrzysz. Przytrzymaj Shift, by obrócić dalej.</translation>
     </message>
     <message>
         <source>Rotate camera right</source>
-        <translation>Kamerayı sağa döndür</translation>
+        <translation>Obróć kamerę w prawo</translation>
     </message>
     <message>
         <source>Swings the view clockwise around the point you are looking at. Hold Shift to swing further.</source>
-        <translation>Görüşü baktığın noktanın çevresinde saat yönünde çevirir. Daha çok çevirmek için Shift&apos;i basılı tut.</translation>
+        <translation>Obraca widok zgodnie z ruchem wskazówek zegara wokół punktu, na który patrzysz. Przytrzymaj Shift, by obrócić dalej.</translation>
     </message>
     <message>
         <source>Tilt camera up</source>
-        <translation>Kamerayı yukarı eğ</translation>
+        <translation>Pochyl kamerę w górę</translation>
     </message>
     <message>
         <source>Raises the camera towards an overhead view. Hold Shift to tilt further.</source>
-        <translation>Kamerayı tepeden görünüme yükseltir. Daha çok eğmek için Shift&apos;i basılı tut.</translation>
+        <translation>Podnosi kamerę ku widokowi z góry. Przytrzymaj Shift, by pochylić dalej.</translation>
     </message>
     <message>
         <source>Tilt camera down</source>
-        <translation>Kamerayı aşağı eğ</translation>
+        <translation>Pochyl kamerę w dół</translation>
     </message>
     <message>
         <source>Lowers the camera towards the horizon. Hold Shift to tilt further.</source>
-        <translation>Kamerayı ufka doğru alçaltır. Daha çok eğmek için Shift&apos;i basılı tut.</translation>
+        <translation>Opuszcza kamerę ku horyzontowi. Przytrzymaj Shift, by pochylić dalej.</translation>
     </message>
     <message>
         <source>Zoom in</source>
-        <translation>Yakınlaştır</translation>
+        <translation>Przybliż</translation>
     </message>
     <message>
         <source>Moves the camera closer. The mouse wheel does the same.</source>
-        <translation>Kamerayı yaklaştırır. Fare tekerleği de aynı işi görür.</translation>
+        <translation>Przysuwa kamerę bliżej. Kółko myszy robi to samo.</translation>
     </message>
     <message>
         <source>Zoom out</source>
-        <translation>Uzaklaştır</translation>
+        <translation>Oddal</translation>
     </message>
     <message>
         <source>Pulls the camera back. The mouse wheel does the same.</source>
-        <translation>Kamerayı geri çeker. Fare tekerleği de aynı işi görür.</translation>
+        <translation>Odciąga kamerę. Kółko myszy robi to samo.</translation>
     </message>
     <message>
         <source>Reset camera</source>
-        <translation>Kamerayı sıfırla</translation>
+        <translation>Zresetuj kamerę</translation>
     </message>
     <message>
         <source>Returns to your own camp at the framing the mission opened with. The top bar has the same button.</source>
-        <translation>Görevin açıldığı çerçeveyle kendi kampına döner. Üst çubukta da aynı düğme var.</translation>
+        <translation>Wraca do twojego obozu w kadrze, którym zaczęła się misja. Ten sam przycisk jest na górnym pasku.</translation>
     </message>
     <message>
         <source>Select unit or drag a selection box</source>
-        <translation>Birim seç ya da bir seçim kutusu sürükle</translation>
+        <translation>Zaznacz jednostkę albo zakreśl ramkę zaznaczenia</translation>
     </message>
     <message>
         <source>Select all troops</source>
-        <translation>Bütün birlikleri seç</translation>
+        <translation>Zaznacz wszystkie oddziały</translation>
     </message>
     <message>
         <source>Move or attack-move to the cursor</source>
-        <translation>İmlece hareket et ya da saldırarak ilerle</translation>
+        <translation>Idź lub atakuj w ruchu ku kursorowi</translation>
     </message>
     <message>
         <source>Stop</source>
-        <translation>Dur</translation>
+        <translation>Stój</translation>
     </message>
     <message>
         <source>Attack</source>
-        <translation>Saldır</translation>
+        <translation>Atakuj</translation>
     </message>
     <message>
         <source>Move</source>
-        <translation>Hareket</translation>
+        <translation>Ruch</translation>
     </message>
     <message>
         <source>Patrol</source>
-        <translation>Devriye</translation>
+        <translation>Patroluj</translation>
     </message>
     <message>
         <source>Guard</source>
-        <translation>Nöbet</translation>
+        <translation>Strzeż</translation>
     </message>
     <message>
         <source>Hold position</source>
-        <translation>Mevziyi tut</translation>
+        <translation>Trzymaj pozycję</translation>
     </message>
     <message>
         <source>Deploy the selection in a formation</source>
-        <translation>Seçimi bir düzende yerleştir</translation>
+        <translation>Rozstaw zaznaczenie w szyku</translation>
     </message>
     <message>
         <source>Opens the formation planner for the selected troops</source>
-        <translation>Seçili birlikler için düzen planlayıcısını açar</translation>
+        <translation>Otwiera planer szyku dla zaznaczonych oddziałów</translation>
     </message>
     <message>
         <source>Place commander rally flag</source>
-        <translation>Komutan toplanma sancağını yerleştir</translation>
+        <translation>Ustaw sztandar zbiórki dowódcy</translation>
     </message>
     <message>
         <source>Takes priority over anything else on its key while a rally can be placed</source>
-        <translation>Bir toplanma yerleştirilebilirken kendi tuşundaki her şeyin önüne geçer</translation>
+        <translation>Ma pierwszeństwo przed wszystkim innym na tym klawiszu, dopóki można ustawić zbiórkę</translation>
     </message>
     <message>
         <source>Rotate structure outline left</source>
-        <translation>Yapı taslağını sola döndür</translation>
+        <translation>Obróć obrys budowli w lewo</translation>
     </message>
     <message>
         <source>Turns the structure or wall you are placing anticlockwise. The mouse wheel does the same.</source>
-        <translation>Yerleştirdiğin yapıyı ya da suru saat yönünün tersine çevirir. Fare tekerleği de aynı işi görür.</translation>
+        <translation>Obraca stawianą budowlę lub mur przeciwnie do ruchu wskazówek zegara. Kółko myszy robi to samo.</translation>
     </message>
     <message>
         <source>Rotate structure outline right</source>
-        <translation>Yapı taslağını sağa döndür</translation>
+        <translation>Obróć obrys budowli w prawo</translation>
     </message>
     <message>
         <source>Turns the structure or wall you are placing clockwise. The mouse wheel does the same.</source>
-        <translation>Yerleştirdiğin yapıyı ya da suru saat yönünde çevirir. Fare tekerleği de aynı işi görür.</translation>
+        <translation>Obraca stawianą budowlę lub mur zgodnie z ruchem wskazówek zegara. Kółko myszy robi to samo.</translation>
     </message>
     <message>
         <source>Move forward</source>
-        <translation>İleri git</translation>
+        <translation>Idź naprzód</translation>
     </message>
     <message>
         <source>Move back</source>
-        <translation>Geri git</translation>
+        <translation>Cofnij się</translation>
     </message>
     <message>
         <source>Strafe left</source>
-        <translation>Sola yanlamasına git</translation>
+        <translation>Krok w lewo</translation>
     </message>
     <message>
         <source>Strafe right</source>
-        <translation>Sağa yanlamasına git</translation>
+        <translation>Krok w prawo</translation>
     </message>
     <message>
         <source>Turn left</source>
-        <translation>Sola dön</translation>
+        <translation>Obróć w lewo</translation>
     </message>
     <message>
         <source>Turn right</source>
-        <translation>Sağa dön</translation>
+        <translation>Obróć w prawo</translation>
     </message>
     <message>
         <source>Sprint</source>
-        <translation>Koş</translation>
+        <translation>Sprint</translation>
     </message>
     <message>
         <source>Dodge</source>
-        <translation>Sıyrıl</translation>
+        <translation>Unik</translation>
     </message>
     <message>
         <source>Jump</source>
-        <translation>Sıçra</translation>
+        <translation>Skok</translation>
     </message>
     <message>
         <source>Heavy attack</source>
-        <translation>Ağır saldırı</translation>
+        <translation>Cios ciężki</translation>
     </message>
     <message>
         <source>Branches or finishes the current commander combo</source>
-        <translation>Şimdiki komutan kombosunu dallandırır ya da bitirir</translation>
+        <translation>Rozgałęzia lub kończy obecną kombinację dowódcy</translation>
     </message>
     <message>
         <source>Block</source>
-        <translation>Siper al</translation>
+        <translation>Blok</translation>
     </message>
     <message>
         <source>Cycle locked target</source>
-        <translation>Kilitli hedefi değiştir</translation>
+        <translation>Zmień namierzony cel</translation>
     </message>
     <message>
         <source>Weapon special</source>
-        <translation>Silah özel</translation>
+        <translation>Sztuka broni</translation>
     </message>
     <message>
         <source>Use while guarding to shield bash</source>
-        <translation>Kalkan vuruşu için siper alırken kullan</translation>
+        <translation>Użyj w gardzie, by uderzyć tarczą</translation>
     </message>
     <message>
         <source>Vanguard rush</source>
-        <translation>Öncü hamlesi</translation>
+        <translation>Skok straży przedniej</translation>
     </message>
     <message>
         <source>Second wind</source>
-        <translation>İkinci nefes</translation>
+        <translation>Drugi oddech</translation>
     </message>
     <message>
         <source>Commanding aura</source>
-        <translation>Komuta aurası</translation>
+        <translation>Aura dowodzenia</translation>
     </message>
     <message>
         <source>Rally nearby troops</source>
-        <translation>Yakındaki birlikleri topla</translation>
+        <translation>Zbierz pobliskie oddziały</translation>
     </message>
     <message>
         <source>Switch between melee weapon and bow</source>
-        <translation>Yakın dövüş silahı ile yay arasında geç</translation>
+        <translation>Przełącz między bronią białą a łukiem</translation>
     </message>
     <message>
         <source>Toggle first and third person</source>
-        <translation>Birinci ve üçüncü şahıs arasında geç</translation>
+        <translation>Przełącz pierwszą i trzecią osobę</translation>
     </message>
     <message>
         <source>No ground under the cursor</source>
-        <translation>İmlecin altında zemin yok</translation>
+        <translation>Pod kursorem nie ma gruntu</translation>
     </message>
     <message>
         <source>Cannot reach</source>
-        <translation>Ulaşılamıyor</translation>
+        <translation>Nie można dotrzeć</translation>
     </message>
     <message>
         <source>Hauling a load - cannot be interrupted</source>
-        <translation>Yük taşıyor - bölünemez</translation>
+        <translation>Wiezie ładunek — nie można przerwać</translation>
     </message>
     <message>
         <source>No match is running</source>
-        <translation>Süren bir maç yok</translation>
+        <translation>Żaden mecz nie trwa</translation>
     </message>
     <message>
         <source>Spectating</source>
-        <translation>İzleniyor</translation>
+        <translation>Obserwowanie</translation>
     </message>
     <message>
         <source>Nothing selected</source>
-        <translation>Hiçbir şey seçilmedi</translation>
+        <translation>Nic nie zaznaczono</translation>
     </message>
     <message>
         <source>No target under the cursor</source>
-        <translation>İmlecin altında hedef yok</translation>
+        <translation>Pod kursorem nie ma celu</translation>
     </message>
 </context>
 <context>
     <name>RecruitCard</name>
     <message>
         <source>Recruit %1</source>
-        <translation>%1 devşir</translation>
+        <translation>Rekrutuj: %1</translation>
     </message>
     <message>
         <source>Show unit details</source>
-        <translation>Birim ayrıntılarını göster</translation>
+        <translation>Pokaż szczegóły jednostki</translation>
     </message>
 </context>
 <context>
     <name>Resources</name>
     <message>
         <source>Gold</source>
-        <translation>Altın</translation>
+        <translation>Złoto</translation>
     </message>
     <message>
         <source>Food</source>
-        <translation>Yiyecek</translation>
+        <translation>Żywność</translation>
     </message>
     <message>
         <source>Timber</source>
-        <translation>Kereste</translation>
+        <translation>Drewno</translation>
     </message>
     <message>
         <source>Stone</source>
-        <translation>Taş</translation>
+        <translation>Kamień</translation>
     </message>
     <message>
         <source>Iron</source>
-        <translation>Demir</translation>
+        <translation>Żelazo</translation>
     </message>
     <message>
         <source>%1 %2/%3</source>
@@ -7963,659 +7969,659 @@ Geniş görüş ve dayanıklı bir yerleşim çapası</translation>
     <name>RpgFpvOverlay</name>
     <message>
         <source>GUARD BROKEN</source>
-        <translation>SİPER KIRILDI</translation>
+        <translation>GARDA ZŁAMANA</translation>
     </message>
     <message>
         <source>PUNISH</source>
-        <translation>KUSURSUZ</translation>
+        <translation>KARA</translation>
     </message>
     <message>
         <source>FINISHER</source>
-        <translation>BİTİRİCİ</translation>
+        <translation>WYKOŃCZENIE</translation>
     </message>
     <message>
         <source>HP %1/%2</source>
-        <translation>CAN %1/%2</translation>
+        <translation>PŻ %1/%2</translation>
     </message>
     <message>
         <source>TARGET</source>
-        <translation>HEDEF</translation>
+        <translation>CEL</translation>
     </message>
     <message>
         <source>%1%</source>
-        <translation>%%1</translation>
+        <translation>%1%</translation>
     </message>
     <message>
         <source>STAGGERED</source>
-        <translation>SERSEMLEDİ</translation>
+        <translation>ZACHWIANY</translation>
     </message>
     <message>
         <source>BOW  ·  X</source>
-        <translation>YAY  ·  X</translation>
+        <translation>ŁUK  ·  X</translation>
     </message>
     <message>
         <source>BLADE  ·  X</source>
-        <translation>KILIÇ  ·  X</translation>
+        <translation>OSTRZE  ·  X</translation>
     </message>
     <message>
         <source>SPECIAL</source>
-        <translation>ÖZEL</translation>
+        <translation>SZTUKA</translation>
     </message>
     <message>
         <source>RUSH</source>
-        <translation>HAMLE</translation>
+        <translation>SKOK</translation>
     </message>
     <message>
         <source>WIND</source>
-        <translation>NEFES</translation>
+        <translation>ODDECH</translation>
     </message>
     <message>
         <source>READY</source>
-        <translation>HAZIR</translation>
+        <translation>GOTOWE</translation>
     </message>
 </context>
 <context>
     <name>SaveFile</name>
     <message>
         <source>Save payload has no checksum</source>
-        <translation>Kayıt verisinde sağlama toplamı yok</translation>
+        <translation>Ładunek zapisu nie ma sumy kontrolnej</translation>
     </message>
     <message>
         <source>Save payload is corrupted (stored checksum mismatch)</source>
-        <translation>Kayıt verisi bozuk (saklanan sağlama toplamı uyuşmuyor)</translation>
+        <translation>Ładunek zapisu jest uszkodzony (niezgodna zapisana suma kontrolna)</translation>
     </message>
     <message>
         <source>Save payload is corrupted (decompression failed)</source>
-        <translation>Kayıt verisi bozuk (açma başarısız)</translation>
+        <translation>Ładunek zapisu jest uszkodzony (dekompresja nie powiodła się)</translation>
     </message>
     <message>
         <source>Save payload is corrupted (expected %1 bytes, got %2)</source>
-        <translation>Kayıt verisi bozuk (%1 bayt bekleniyordu, %2 alındı)</translation>
+        <translation>Ładunek zapisu jest uszkodzony (oczekiwano %1 bajtów, otrzymano %2)</translation>
     </message>
     <message>
         <source>Save payload is corrupted (content checksum mismatch)</source>
-        <translation>Kayıt verisi bozuk (içerik sağlama toplamı uyuşmuyor)</translation>
+        <translation>Ładunek zapisu jest uszkodzony (niezgodna suma kontrolna treści)</translation>
     </message>
     <message>
         <source>Not a Standard of Iron save file</source>
-        <translation>Bu bir Standard of Iron kayıt dosyası değil</translation>
+        <translation>To nie jest plik zapisu Standard of Iron</translation>
     </message>
     <message>
         <source>Unsupported save file version %1 (expected %2)</source>
-        <translation>Desteklenmeyen kayıt dosyası sürümü %1 (%2 bekleniyordu)</translation>
+        <translation>Nieobsługiwana wersja pliku zapisu %1 (oczekiwano %2)</translation>
     </message>
     <message>
         <source>Save file header is truncated</source>
-        <translation>Kayıt dosyası başlığı eksik</translation>
+        <translation>Nagłówek pliku zapisu jest ucięty</translation>
     </message>
     <message>
         <source>Save file header is corrupted: %1</source>
-        <translation>Kayıt dosyası başlığı bozuk: %1</translation>
+        <translation>Nagłówek pliku zapisu jest uszkodzony: %1</translation>
     </message>
     <message>
         <source>Save file uses an unknown compression format</source>
-        <translation>Kayıt dosyası bilinmeyen bir sıkıştırma biçimi kullanıyor</translation>
+        <translation>Plik zapisu używa nieznanego formatu kompresji</translation>
     </message>
     <message>
         <source>Save file declares implausible sizes</source>
-        <translation>Kayıt dosyası akla yatkın olmayan boyutlar bildiriyor</translation>
+        <translation>Plik zapisu podaje nieprawdopodobne rozmiary</translation>
     </message>
     <message>
         <source>Save file body is truncated</source>
-        <translation>Kayıt dosyası gövdesi eksik</translation>
+        <translation>Treść pliku zapisu jest ucięta</translation>
     </message>
     <message>
         <source>Save file preview image is corrupted</source>
-        <translation>Kayıt dosyası önizleme görüntüsü bozuk</translation>
+        <translation>Obrazek podglądu w pliku zapisu jest uszkodzony</translation>
     </message>
 </context>
 <context>
     <name>SaveGamePanel</name>
     <message>
         <source>Save game</source>
-        <translation>Oyunu kaydet</translation>
+        <translation>Zapisz grę</translation>
     </message>
     <message>
         <source>Cancel</source>
-        <translation>İptal</translation>
+        <translation>Anuluj</translation>
     </message>
     <message>
         <source>Save Name:</source>
-        <translation>Kayıt Adı:</translation>
+        <translation>Nazwa zapisu:</translation>
     </message>
     <message>
         <source>Enter save name...</source>
-        <translation>Kayıt adını gir...</translation>
+        <translation>Wpisz nazwę zapisu...</translation>
     </message>
     <message>
         <source>Save</source>
-        <translation>Kaydet</translation>
+        <translation>Zapisz</translation>
     </message>
     <message>
         <source>Name the save first.</source>
-        <translation>Önce kayda bir ad ver.</translation>
+        <translation>Najpierw nazwij zapis.</translation>
     </message>
     <message>
         <source>Existing Saves</source>
-        <translation>Var Olan Kayıtlar</translation>
+        <translation>Istniejące zapisy</translation>
     </message>
     <message>
         <source>Untitled Save</source>
-        <translation>Adsız Kayıt</translation>
+        <translation>Zapis bez nazwy</translation>
     </message>
     <message>
         <source>Unknown Map</source>
-        <translation>Bilinmeyen Harita</translation>
+        <translation>Nieznana mapa</translation>
     </message>
     <message>
         <source>No Preview</source>
-        <translation>Önizleme Yok</translation>
+        <translation>Brak podglądu</translation>
     </message>
     <message>
         <source>Slot: %1</source>
-        <translation>Yuva: %1</translation>
+        <translation>Slot: %1</translation>
     </message>
     <message>
         <source>%1 - %2 (%3 KB on disk)</source>
-        <translation>%1 - %2 (diskte %3 KB)</translation>
+        <translation>%1 — %2 (%3 KB na dysku)</translation>
     </message>
     <message>
         <source>Campaign</source>
-        <translation>Sefer</translation>
+        <translation>Kampania</translation>
     </message>
     <message>
         <source>Skirmish</source>
-        <translation>Çatışma</translation>
+        <translation>Potyczka</translation>
     </message>
     <message>
         <source>Last saved: %1</source>
-        <translation>Son kayıt: %1</translation>
+        <translation>Ostatni zapis: %1</translation>
     </message>
     <message>
         <source>Overwrite</source>
-        <translation>Üzerine yaz</translation>
+        <translation>Nadpisz</translation>
     </message>
     <message>
         <source>Confirm Overwrite</source>
-        <translation>Üzerine Yazmayı Onayla</translation>
+        <translation>Potwierdź nadpisanie</translation>
     </message>
     <message>
         <source>Are you sure you want to overwrite the save:
 &quot;%1&quot;?</source>
-        <translation>Şu kaydın üzerine yazmak istediğine emin misin:
-&quot;%1&quot;?</translation>
+        <translation>Czy na pewno chcesz nadpisać zapis:
+„%1”?</translation>
     </message>
 </context>
 <context>
     <name>SaveProgressOverlay</name>
     <message>
         <source>Save failed</source>
-        <translation>Kaydetme başarısız</translation>
+        <translation>Zapis nie powiódł się</translation>
     </message>
     <message>
         <source>Saving &quot;%1&quot;</source>
-        <translation>&quot;%1&quot; kaydediliyor</translation>
+        <translation>Zapisywanie „%1”</translation>
     </message>
     <message>
         <source>Cancel</source>
-        <translation>İptal</translation>
+        <translation>Anuluj</translation>
     </message>
 </context>
 <context>
     <name>SaveSlotsViewModel</name>
     <message>
         <source>Cannot export a save with an empty name</source>
-        <translation>Adı boş bir kayıt dışa aktarılamaz</translation>
+        <translation>Nie można wyeksportować zapisu z pustą nazwą</translation>
     </message>
 </context>
 <context>
     <name>SaveStorage</name>
     <message>
         <source>Failed to begin transaction</source>
-        <translation>İşlem başlatılamadı</translation>
+        <translation>Nie udało się rozpocząć transakcji</translation>
     </message>
     <message>
         <source>Failed to commit transaction</source>
-        <translation>İşlem tamamlanamadı</translation>
+        <translation>Nie udało się zatwierdzić transakcji</translation>
     </message>
     <message>
         <source>Failed to open save database</source>
-        <translation>Kayıt veritabanı açılamadı</translation>
+        <translation>Nie udało się otworzyć bazy zapisów</translation>
     </message>
     <message>
         <source>Failed to read schema version</source>
-        <translation>Şema sürümü okunamadı</translation>
+        <translation>Nie udało się odczytać wersji schematu</translation>
     </message>
     <message>
         <source>Failed to record schema version</source>
-        <translation>Şema sürümü kaydedilemedi</translation>
+        <translation>Nie udało się zapisać wersji schematu</translation>
     </message>
     <message>
         <source>Failed to drop table %1</source>
-        <translation>%1 tablosu silinemedi</translation>
+        <translation>Nie udało się usunąć tabeli %1</translation>
     </message>
     <message>
         <source>Failed to create save schema</source>
-        <translation>Kayıt şeması oluşturulamadı</translation>
+        <translation>Nie udało się utworzyć schematu zapisów</translation>
     </message>
     <message>
         <source>Failed to prepare save query</source>
-        <translation>Kayıt sorgusu hazırlanamadı</translation>
+        <translation>Nie udało się przygotować zapytania zapisu</translation>
     </message>
     <message>
         <source>Failed to persist save slot</source>
-        <translation>Kayıt yuvası saklanamadı</translation>
+        <translation>Nie udało się utrwalić slotu zapisu</translation>
     </message>
     <message>
         <source>Failed to read save slot</source>
-        <translation>Kayıt yuvası okunamadı</translation>
+        <translation>Nie udało się odczytać slotu zapisu</translation>
     </message>
     <message>
         <source>Save slot &apos;%1&apos; not found</source>
-        <translation>&apos;%1&apos; kayıt yuvası bulunamadı</translation>
+        <translation>Nie znaleziono slotu zapisu „%1”</translation>
     </message>
     <message>
         <source>Save slot &apos;%1&apos; uses unsupported format version %2</source>
-        <translation>&apos;%1&apos; kayıt yuvası desteklenmeyen %2 biçim sürümünü kullanıyor</translation>
+        <translation>Slot zapisu „%1” używa nieobsługiwanej wersji formatu %2</translation>
     </message>
     <message>
         <source>Save slot &apos;%1&apos; uses an unknown compression format</source>
-        <translation>&apos;%1&apos; kayıt yuvası bilinmeyen bir sıkıştırma biçimi kullanıyor</translation>
+        <translation>Slot zapisu „%1” używa nieznanego formatu kompresji</translation>
     </message>
     <message>
         <source>Failed to enumerate save slots</source>
-        <translation>Kayıt yuvaları listelenemedi</translation>
+        <translation>Nie udało się wyliczyć slotów zapisu</translation>
     </message>
     <message>
         <source>Failed to look up save slot</source>
-        <translation>Kayıt yuvası aranamadı</translation>
+        <translation>Nie udało się odnaleźć slotu zapisu</translation>
     </message>
     <message>
         <source>Failed to store save preview</source>
-        <translation>Kayıt önizlemesi saklanamadı</translation>
+        <translation>Nie udało się zapisać podglądu</translation>
     </message>
     <message>
         <source>Failed to delete save slot</source>
-        <translation>Kayıt yuvası silinemedi</translation>
+        <translation>Nie udało się usunąć slotu zapisu</translation>
     </message>
     <message>
         <source>Failed to get campaign progress</source>
-        <translation>Sefer ilerlemesi alınamadı</translation>
+        <translation>Nie udało się pobrać postępu kampanii</translation>
     </message>
     <message>
         <source>Failed to mark campaign as completed</source>
-        <translation>Sefer tamamlandı olarak işaretlenemedi</translation>
+        <translation>Nie udało się oznaczyć kampanii jako ukończonej</translation>
     </message>
     <message>
         <source>Failed to prepare mission result insert</source>
-        <translation>Görev sonucu ekleme sorgusu hazırlanamadı</translation>
+        <translation>Nie udało się przygotować wstawienia wyniku misji</translation>
     </message>
     <message>
         <source>Failed to save mission result</source>
-        <translation>Görev sonucu kaydedilemedi</translation>
+        <translation>Nie udało się zapisać wyniku misji</translation>
     </message>
     <message>
         <source>Failed to get mission progress</source>
-        <translation>Görev ilerlemesi alınamadı</translation>
+        <translation>Nie udało się pobrać postępu misji</translation>
     </message>
     <message>
         <source>Failed to get campaign mission progress</source>
-        <translation>Sefer görevi ilerlemesi alınamadı</translation>
+        <translation>Nie udało się pobrać postępu misji kampanii</translation>
     </message>
     <message>
         <source>Failed to register campaign mission</source>
-        <translation>Sefer görevi kaydedilemedi</translation>
+        <translation>Nie udało się zarejestrować misji kampanii</translation>
     </message>
     <message>
         <source>Failed to prune removed campaign missions</source>
-        <translation>Kaldırılmış sefer görevleri temizlenemedi</translation>
+        <translation>Nie udało się usunąć skasowanych misji kampanii</translation>
     </message>
     <message>
         <source>Failed to look up the completed mission</source>
-        <translation>Tamamlanan görev bulunamadı</translation>
+        <translation>Nie udało się odnaleźć ukończonej misji</translation>
     </message>
     <message>
         <source>Mission %1 is not part of campaign %2</source>
-        <translation>%1 görevi %2 seferinin parçası değil</translation>
+        <translation>Misja %1 nie należy do kampanii %2</translation>
     </message>
     <message>
         <source>Failed to mark mission as completed</source>
-        <translation>Görev tamamlandı olarak işaretlenemedi</translation>
+        <translation>Nie udało się oznaczyć misji jako ukończonej</translation>
     </message>
     <message>
         <source>Failed to find the next mission</source>
-        <translation>Sonraki görev bulunamadı</translation>
+        <translation>Nie udało się znaleźć następnej misji</translation>
     </message>
     <message>
         <source>Failed to unlock next mission</source>
-        <translation>Sonraki görevin kilidi açılamadı</translation>
+        <translation>Nie udało się odblokować następnej misji</translation>
     </message>
     <message>
         <source>Failed to count remaining missions</source>
-        <translation>Kalan görevler sayılamadı</translation>
+        <translation>Nie udało się policzyć pozostałych misji</translation>
     </message>
 </context>
 <context>
     <name>SettingsPanel</name>
     <message>
         <source>Protanopia (red-blind)</source>
-        <translation>Protanopi (kırmızı körlüğü)</translation>
+        <translation>Protanopia (ślepota na czerwień)</translation>
     </message>
     <message>
         <source>Deuteranopia (green-blind)</source>
-        <translation>Döteranopi (yeşil körlüğü)</translation>
+        <translation>Deuteranopia (ślepota na zieleń)</translation>
     </message>
     <message>
         <source>Tritanopia (blue-blind)</source>
-        <translation>Tritanopi (mavi körlüğü)</translation>
+        <translation>Tritanopia (ślepota na błękit)</translation>
     </message>
     <message>
         <source>Standard</source>
-        <translation>Standart</translation>
+        <translation>Standardowy</translation>
     </message>
     <message>
         <source>Camera legend</source>
-        <translation>Kamera açıklaması</translation>
+        <translation>Legenda kamery</translation>
     </message>
     <message>
         <source>Economy prompts</source>
-        <translation>Ekonomi ipuçları</translation>
+        <translation>Podpowiedzi gospodarcze</translation>
     </message>
     <message>
         <source>Formation readout</source>
-        <translation>Düzen göstergesi</translation>
+        <translation>Odczyt szyku</translation>
     </message>
     <message>
         <source>Lists the camera controls the first time a mission starts</source>
-        <translation>Bir görev ilk kez başladığında kamera denetimlerini sıralar</translation>
+        <translation>Wypisuje sterowanie kamerą, gdy misja zaczyna się po raz pierwszy</translation>
     </message>
     <message>
         <source>Walks through the opening economy steps of a mission</source>
-        <translation>Bir görevin açılış ekonomi adımlarını adım adım anlatır</translation>
+        <translation>Prowadzi przez początkowe kroki gospodarcze misji</translation>
     </message>
     <message>
         <source>Shows cohesion and phase after you send several units somewhere together, until the selection changes</source>
-        <translation>Birkaç birimi birlikte bir yere yolladıktan sonra, seçim değişene kadar bütünlüğü ve evreyi gösterir</translation>
+        <translation>Pokazuje spójność i fazę, gdy wyślesz kilka jednostek razem w jedno miejsce, aż zmieni się zaznaczenie</translation>
     </message>
     <message>
         <source>Off</source>
-        <translation>Kapalı</translation>
+        <translation>Wyłączone</translation>
     </message>
     <message>
         <source>Important only</source>
-        <translation>Yalnızca önemliler</translation>
+        <translation>Tylko ważne</translation>
     </message>
     <message>
         <source>All hits</source>
-        <translation>Bütün vuruşlar</translation>
+        <translation>Wszystkie trafienia</translation>
     </message>
     <message>
         <source>Borderless</source>
-        <translation>Kenarlıksız</translation>
+        <translation>Bez ramki</translation>
     </message>
     <message>
         <source>Windowed</source>
-        <translation>Pencereli</translation>
+        <translation>W oknie</translation>
     </message>
     <message>
         <source>Fullscreen</source>
-        <translation>Tam ekran</translation>
+        <translation>Pełny ekran</translation>
     </message>
     <message>
         <source>Settings</source>
-        <translation>Ayarlar</translation>
+        <translation>Ustawienia</translation>
     </message>
     <message>
         <source>Close</source>
-        <translation>Kapat</translation>
+        <translation>Zamknij</translation>
     </message>
     <message>
         <source>Audio Settings</source>
-        <translation>Ses Ayarları</translation>
+        <translation>Ustawienia dźwięku</translation>
     </message>
     <message>
         <source>Master Volume:</source>
-        <translation>Ana Ses:</translation>
+        <translation>Głośność główna:</translation>
     </message>
     <message>
         <source>Music Volume:</source>
-        <translation>Müzik Sesi:</translation>
+        <translation>Głośność muzyki:</translation>
     </message>
     <message>
         <source>SFX Volume:</source>
-        <translation>Efekt Sesi:</translation>
+        <translation>Głośność efektów:</translation>
     </message>
     <message>
         <source>Voice Volume:</source>
-        <translation>Konuşma Sesi:</translation>
+        <translation>Głośność głosów:</translation>
     </message>
     <message>
         <source>Ambience Volume:</source>
-        <translation>Ortam Sesi:</translation>
+        <translation>Głośność otoczenia:</translation>
     </message>
     <message>
         <source>Display Settings</source>
-        <translation>Görüntü Ayarları</translation>
+        <translation>Ustawienia obrazu</translation>
     </message>
     <message>
         <source>Window Mode:</source>
-        <translation>Pencere Kipi:</translation>
+        <translation>Tryb okna:</translation>
     </message>
     <message>
         <source>VSync</source>
-        <translation>VSync</translation>
+        <translation>Synchronizacja pionowa</translation>
     </message>
     <message>
         <source>Synchronises frames with your display to remove tearing. Toggling it takes effect the next time the game starts.</source>
-        <translation>Yırtılmayı gidermek için kareleri ekranınla eşitler. Değiştirmek, oyun bir sonraki başlayışında etkili olur.</translation>
+        <translation>Zgrywa klatki z twoim wyświetlaczem, by usunąć rozrywanie obrazu. Przełączenie działa od następnego uruchomienia gry.</translation>
     </message>
     <message>
         <source>Show FPS counter</source>
-        <translation>FPS sayacını göster</translation>
+        <translation>Pokaż licznik klatek</translation>
     </message>
     <message>
         <source>Displays a small frame-rate readout during battle</source>
-        <translation>Savaş sırasında küçük bir kare hızı göstergesi gösterir</translation>
+        <translation>Wyświetla mały odczyt liczby klatek podczas bitwy</translation>
     </message>
     <message>
         <source>Graphics Settings</source>
-        <translation>Grafik Ayarları</translation>
+        <translation>Ustawienia grafiki</translation>
     </message>
     <message>
         <source>Graphics Quality:</source>
-        <translation>Grafik Kalitesi:</translation>
+        <translation>Jakość grafiki:</translation>
     </message>
     <message>
         <source>Controls</source>
-        <translation>Denetimler</translation>
+        <translation>Sterowanie</translation>
     </message>
     <message>
         <source>Edge scrolling</source>
-        <translation>Kenardan kaydırma</translation>
+        <translation>Przewijanie przy krawędzi</translation>
     </message>
     <message>
         <source>Pans the camera when the cursor reaches the edge of the screen. Keyboard panning, right-drag and the minimap keep working either way.</source>
-        <translation>İmleç ekranın kenarına vardığında kamerayı kaydırır. Klavyeyle kaydırma, sağ tuşla sürükleme ve mini harita her durumda çalışmayı sürdürür.</translation>
+        <translation>Przesuwa kamerę, gdy kursor dojdzie do krawędzi ekranu. Przesuwanie klawiaturą, przeciąganie prawym przyciskiem i minimapa działają tak czy inaczej.</translation>
     </message>
     <message>
         <source>Edge scroll strength:</source>
-        <translation>Kenardan kaydırma gücü:</translation>
+        <translation>Siła przewijania przy krawędzi:</translation>
     </message>
     <message>
         <source>Sets both how far in from the edge the band reaches and how fast the camera moves inside it. At this setting the band is %1 px along the sides and %2 px along the top and bottom, measured at your interface scale.</source>
-        <translation>Hem şeridin kenardan ne kadar içeri uzandığını hem de kameranın içinde ne hızda hareket ettiğini belirler. Bu ayarda şerit yanlarda %1 px, üstte ve altta %2 px&apos;tir; arayüz ölçeğine göre ölçülmüştür.</translation>
+        <translation>Ustala zarazem, jak daleko od krawędzi sięga pas, i jak szybko porusza się w nim kamera. Przy tym ustawieniu pas ma %1 px po bokach i %2 px u góry i u dołu, mierzone w twojej skali interfejsu.</translation>
     </message>
     <message>
         <source>Camera pan speed:</source>
-        <translation>Kamera kaydırma hızı:</translation>
+        <translation>Szybkość przesuwania kamery:</translation>
     </message>
     <message>
         <source>Camera zoom speed:</source>
-        <translation>Kamera yakınlaştırma hızı:</translation>
+        <translation>Szybkość przybliżania kamery:</translation>
     </message>
     <message>
         <source>Camera rotation speed:</source>
-        <translation>Kamera döndürme hızı:</translation>
+        <translation>Szybkość obrotu kamery:</translation>
     </message>
     <message>
         <source>Scales keyboard panning, zooming and rotation; drag and minimap movement stay unchanged.</source>
-        <translation>Klavyeyle kaydırmayı, yakınlaştırmayı ve döndürmeyi ölçekler; sürükleme ve mini harita hareketi değişmez.</translation>
+        <translation>Skaluje przesuwanie, przybliżanie i obrót z klawiatury; ruch przeciąganiem i minimapą pozostaje bez zmian.</translation>
     </message>
     <message>
         <source>Autosave</source>
-        <translation>Otomatik kayıt</translation>
+        <translation>Autozapis</translation>
     </message>
     <message>
         <source>Autosaves to keep:</source>
-        <translation>Tutulacak otomatik kayıt:</translation>
+        <translation>Ile autozapisów zachować:</translation>
     </message>
     <message>
         <source>Autosave every:</source>
-        <translation>Otomatik kayıt sıklığı:</translation>
+        <translation>Autozapis co:</translation>
     </message>
     <message>
         <source>%1 min</source>
-        <translation>%1 dk</translation>
+        <translation>%1 min</translation>
     </message>
     <message>
         <source>Older autosaves beyond this count are deleted automatically.</source>
-        <translation>Bu sayının ötesindeki eski otomatik kayıtlar kendiliğinden silinir.</translation>
+        <translation>Starsze autozapisy ponad tę liczbę są usuwane automatycznie.</translation>
     </message>
     <message>
         <source>Accessibility</source>
-        <translation>Erişilebilirlik</translation>
+        <translation>Ułatwienia dostępu</translation>
     </message>
     <message>
         <source>Interface Scale:</source>
-        <translation>Arayüz Ölçeği:</translation>
+        <translation>Skala interfejsu:</translation>
     </message>
     <message>
         <source>Colour Vision:</source>
-        <translation>Renk Görüşü:</translation>
+        <translation>Widzenie barw:</translation>
     </message>
     <message>
         <source>Reduce motion</source>
-        <translation>Hareketi azalt</translation>
+        <translation>Ogranicz ruch</translation>
     </message>
     <message>
         <source>Removes transitions and idle animations across every screen</source>
-        <translation>Her ekrandaki geçişleri ve boşta duran canlandırmaları kaldırır</translation>
+        <translation>Usuwa przejścia i animacje bezczynności na wszystkich ekranach</translation>
     </message>
     <message>
         <source>High contrast</source>
-        <translation>Yüksek karşıtlık</translation>
+        <translation>Wysoki kontrast</translation>
     </message>
     <message>
         <source>Raises panel and text contrast for low vision</source>
-        <translation>Az gören için panel ve metin karşıtlığını artırır</translation>
+        <translation>Podnosi kontrast paneli i tekstu dla słabego wzroku</translation>
     </message>
     <message>
         <source>Always show keyboard focus</source>
-        <translation>Klavye odağını her zaman göster</translation>
+        <translation>Zawsze pokazuj fokus klawiatury</translation>
     </message>
     <message>
         <source>Keeps the focus outline visible even after clicking</source>
-        <translation>Tıkladıktan sonra bile odak çerçevesini görünür tutar</translation>
+        <translation>Zostawia obrys fokusu widoczny nawet po kliknięciu</translation>
     </message>
     <message>
         <source>Team ring patterns</source>
-        <translation>Takım halkası desenleri</translation>
+        <translation>Wzory pierścieni drużyn</translation>
     </message>
     <message>
         <source>On automatically while a colour vision mode is selected</source>
-        <translation>Bir renk görüşü kipi seçiliyken kendiliğinden açık olur</translation>
+        <translation>Włączone automatycznie, gdy wybrany jest tryb widzenia barw</translation>
     </message>
     <message>
         <source>Marks each side with its own selection ring shape as well as its colour</source>
-        <translation>Her tarafı renginin yanı sıra kendi seçim halkası biçimiyle de işaretler</translation>
+        <translation>Oznacza każdą stronę własnym kształtem pierścienia zaznaczenia, nie tylko barwą</translation>
     </message>
     <message>
         <source>Damage numbers:</source>
-        <translation>Hasar sayıları:</translation>
+        <translation>Liczby obrażeń:</translation>
     </message>
     <message>
         <source>Numbers are a readout, not the feedback. Combat stays readable from motion, sound and hit reactions with them off.</source>
-        <translation>Sayılar bir göstergedir, geri bildirim değil. Onlar kapalıyken de çarpışma harekete, sese ve vuruş tepkilerine bakılarak okunabilir.</translation>
+        <translation>Liczby to odczyt, nie sprzężenie zwrotne. Nawet wyłączone, walka pozostaje czytelna dzięki ruchowi, dźwiękowi i reakcjom na trafienia.</translation>
     </message>
     <message>
         <source>Economy numbers</source>
-        <translation>Ekonomi sayıları</translation>
+        <translation>Liczby gospodarcze</translation>
     </message>
     <message>
         <source>Floats resource, trade and reserve changes over the building they happened at</source>
-        <translation>Kaynak, ticaret ve yedek değişimlerini gerçekleştikleri yapının üstünde uçurur</translation>
+        <translation>Wyświetla zmiany surowców, handlu i rezerwy nad budowlą, w której zaszły</translation>
     </message>
     <message>
         <source>Prompts and readouts:</source>
-        <translation>İpuçları ve göstergeler:</translation>
+        <translation>Podpowiedzi i odczyty:</translation>
     </message>
     <message>
         <source>Screen effects:</source>
-        <translation>Ekran etkileri:</translation>
+        <translation>Efekty ekranowe:</translation>
     </message>
     <message>
         <source>Camera motion:</source>
-        <translation>Kamera hareketi:</translation>
+        <translation>Ruch kamery:</translation>
     </message>
     <message>
         <source>Reduces head bob and sway while leading the commander. It never limits camera movement you ask for.</source>
-        <translation>Komutanı yönetirken baş sallanmasını ve savrulmayı azaltır. Senin istediğin kamera hareketini asla sınırlamaz.</translation>
+        <translation>Ogranicza kołysanie i chwianie głowy, gdy prowadzisz dowódcę. Nigdy nie ogranicza ruchu kamery, o który sam prosisz.</translation>
     </message>
     <message>
         <source>These settings apply to the campaign, skirmish and editor tools alike.</source>
-        <translation>Bu ayarlar sefer, çatışma ve düzenleyici araçlarının hepsinde geçerlidir.</translation>
+        <translation>Te ustawienia dotyczą tak samo kampanii, potyczki i narzędzi edytora.</translation>
     </message>
     <message>
         <source>Language</source>
-        <translation>Dil</translation>
+        <translation>Język</translation>
     </message>
     <message>
         <source>Select Language:</source>
-        <translation>Dil Seç:</translation>
+        <translation>Wybierz język:</translation>
     </message>
     <message>
         <source>Language changes apply immediately</source>
-        <translation>Dil değişiklikleri anında uygulanır</translation>
+        <translation>Zmiana języka działa natychmiast</translation>
     </message>
     <message>
         <source>About</source>
-        <translation>Hakkında</translation>
+        <translation>O grze</translation>
     </message>
     <message>
         <source>Standard of Iron - RTS game</source>
-        <translation>Standard of Iron - RTS oyunu</translation>
+        <translation>Standard of Iron — gra RTS</translation>
     </message>
     <message>
         <source>Version %1</source>
-        <translation>Sürüm %1</translation>
+        <translation>Wersja %1</translation>
     </message>
     <message>
         <source>Third-Party Software</source>
-        <translation>Üçüncü Taraf Yazılımlar</translation>
+        <translation>Oprogramowanie zewnętrzne</translation>
     </message>
     <message>
         <source>This game uses the Qt framework, licensed under the GNU Lesser General Public License v3 (LGPL v3).</source>
-        <translation>Bu oyun, GNU Lesser General Public License v3 (LGPL v3) altında lisanslanan Qt çatısını kullanır.</translation>
+        <translation>Ta gra używa frameworka Qt na licencji GNU Lesser General Public License v3 (LGPL v3).</translation>
     </message>
     <message>
         <source>Qt is dynamically linked, allowing you to replace Qt libraries with your own versions.</source>
-        <translation>Qt devingen olarak bağlanır, böylece Qt kitaplıklarını kendi sürümlerinle değiştirebilirsin.</translation>
+        <translation>Qt jest linkowane dynamicznie, więc możesz zastąpić biblioteki Qt własnymi wersjami.</translation>
     </message>
     <message>
         <source>LGPL v3 License</source>
-        <translation>LGPL v3 Lisansı</translation>
+        <translation>Licencja LGPL v3</translation>
     </message>
     <message>
         <source>Qt Website</source>
-        <translation>Qt Web Sitesi</translation>
+        <translation>Strona Qt</translation>
     </message>
     <message>
         <source>Music and sound effects generated with ElevenLabs under a licence that permits commercial use.</source>
-        <translation>Müzik ve ses efektleri, ticari kullanıma izin veren bir lisans altında ElevenLabs ile üretildi.</translation>
+        <translation>Muzyka i efekty dźwiękowe wygenerowane w ElevenLabs na licencji zezwalającej na użytek komercyjny.</translation>
     </message>
     <message>
         <source>Voice lines recorded by Adam Djellouli.</source>
-        <translation>Konuşmalar Adam Djellouli tarafından kaydedildi.</translation>
+        <translation>Kwestie głosowe nagrał Adam Djellouli.</translation>
     </message>
     <message>
         <source>ElevenLabs</source>
@@ -8626,196 +8632,196 @@ Geniş görüş ve dayanıklı bir yerleşim çapası</translation>
     <name>SkirmishLoader</name>
     <message>
         <source>Invalid team configuration: At least two teams must be selected to start a match.</source>
-        <translation>Geçersiz takım ayarı: Bir maç başlatmak için en az iki takım seçilmeli.</translation>
+        <translation>Niepoprawna konfiguracja drużyn: do rozpoczęcia meczu trzeba wybrać co najmniej dwie drużyny.</translation>
     </message>
 </context>
 <context>
     <name>SystemVoice</name>
     <message>
         <source>The order was excellent. It was given to nobody.</source>
-        <translation>Emir kusursuzdu. Kimseye verilmedi.</translation>
+        <translation>Rozkaz był znakomity. Wydano go nikomu.</translation>
     </message>
     <message>
         <source>There is no road to that place. There may never have been one.</source>
-        <translation>O yere giden bir yol yok. Belki hiç olmadı.</translation>
+        <translation>Do tego miejsca nie ma drogi. Może nigdy jej nie było.</translation>
     </message>
     <message>
         <source>The quartermaster has checked twice. There is nothing behind the second check.</source>
-        <translation>Levazımcı iki kez baktı. İkinci bakışın ardında hiçbir şey yok.</translation>
+        <translation>Kwatermistrz sprawdził dwa razy. Za drugim sprawdzeniem nic nie ma.</translation>
     </message>
     <message>
         <source>We have the barracks, the coin and the will. We lack the people.</source>
-        <translation>Kışlamız, paramız ve irademiz var. İnsanımız yok.</translation>
+        <translation>Mamy koszary, mamy monetę i wolę. Brakuje nam ludzi.</translation>
     </message>
     <message>
         <source>They are carrying something heavier than your orders.</source>
-        <translation>Emirlerinden daha ağır bir şey taşıyorlar.</translation>
+        <translation>Niosą coś cięższego niż twoje rozkazy.</translation>
     </message>
     <message>
         <source>Willing, sir. Simply not that willing, and not from here.</source>
-        <translation>İstekliyiz efendim. Yalnızca o kadar değil ve buradan değil.</translation>
+        <translation>Chętni, panie. Po prostu nie aż tak chętni i nie stąd.</translation>
     </message>
     <message>
         <source>Those are not ours to command. They have been very clear about it.</source>
-        <translation>Onlar bizim emrimizde değil. Bunu gayet açık belirttiler.</translation>
+        <translation>Nie nam nimi rozkazywać. Wyrazili się w tej sprawie bardzo jasno.</translation>
     </message>
     <message>
         <source>Nothing there answers to that order. We checked.</source>
-        <translation>Orada o emre yanıt veren bir şey yok. Baktık.</translation>
+        <translation>Nic tam nie odpowiada na ten rozkaz. Sprawdziliśmy.</translation>
     </message>
 </context>
 <context>
     <name>Theme</name>
     <message>
         <source>Red</source>
-        <translation>Kırmızı</translation>
+        <translation>Czerwony</translation>
     </message>
     <message>
         <source>Blue</source>
-        <translation>Mavi</translation>
+        <translation>Niebieski</translation>
     </message>
     <message>
         <source>Brown</source>
-        <translation>Kahverengi</translation>
+        <translation>Brązowy</translation>
     </message>
     <message>
         <source>Green</source>
-        <translation>Yeşil</translation>
+        <translation>Zielony</translation>
     </message>
     <message>
         <source>Yellow</source>
-        <translation>Sarı</translation>
+        <translation>Żółty</translation>
     </message>
     <message>
         <source>Orange</source>
-        <translation>Turuncu</translation>
+        <translation>Pomarańczowy</translation>
     </message>
     <message>
         <source>Purple</source>
-        <translation>Mor</translation>
+        <translation>Fioletowy</translation>
     </message>
     <message>
         <source>Cyan</source>
-        <translation>Camgöbeği</translation>
+        <translation>Turkusowy</translation>
     </message>
     <message>
         <source>Pink</source>
-        <translation>Pembe</translation>
+        <translation>Różowy</translation>
     </message>
 </context>
 <context>
     <name>TutorialDirector</name>
     <message>
         <source>stone %1 / %2 · iron %3 / %4</source>
-        <translation>taş %1 / %2 · demir %3 / %4</translation>
+        <translation>kamień %1 / %2 · żelazo %3 / %4</translation>
     </message>
     <message>
         <source>Builders cannot fight. This order needs soldiers - select the spearmen, archers or swordsmen near your camp.</source>
-        <translation>İnşaatçılar çarpışamaz. Bu emir asker ister - kampının yakınındaki mızrakçıları, okçuları ya da kılıççıları seç.</translation>
+        <translation>Budowniczowie nie walczą. Ten rozkaz potrzebuje żołnierzy — zaznacz włóczników, łuczników albo mieczników przy swoim obozie.</translation>
     </message>
     <message>
         <source>That is a building. Orders in this step need soldiers - left-click one of the troops standing near your camp.</source>
-        <translation>O bir yapı. Bu adımdaki emirler asker ister - kampının yakınında duran birliklerden birine sol tıkla.</translation>
+        <translation>To jest budowla. Rozkazy w tym kroku potrzebują żołnierzy — kliknij lewym jednego z oddziałów stojących przy obozie.</translation>
     </message>
     <message>
         <source>Nothing is selected, so there is nobody to receive the order. Left-click a soldier or drag a box around several.</source>
-        <translation>Hiçbir şey seçili değil, yani emri alacak kimse yok. Bir askere sol tıkla ya da birkaçının çevresine kutu çiz.</translation>
+        <translation>Nic nie jest zaznaczone, więc nie ma komu przyjąć rozkazu. Kliknij lewym żołnierza albo zakreśl ramką kilku.</translation>
     </message>
     <message>
         <source>Collect and Build are only available to builders - soldiers and buildings cannot do this work. Select a builder (the worker with the hammer) first.</source>
-        <translation>Topla ve İnşa yalnızca inşaatçılarda kullanılabilir - askerler ve yapılar bu işi yapamaz. Önce bir inşaatçı (çekiçli işçi) seç.</translation>
+        <translation>Zbieraj i Buduj są dostępne tylko dla budowniczych — żołnierze i budowle nie wykonają tej pracy. Najpierw zaznacz budowniczego (robotnika z młotem).</translation>
     </message>
     <message>
         <source>No builder is selected. Left-click one of the builders standing by your barracks.</source>
-        <translation>Hiçbir inşaatçı seçili değil. Kışlanın yanında duran inşaatçılardan birine sol tıkla.</translation>
+        <translation>Nie zaznaczono budowniczego. Kliknij lewym jednego z budowniczych stojących przy koszarach.</translation>
     </message>
     <message>
         <source>That is a building. Left-click one of the soldiers standing near your camp instead.</source>
-        <translation>O bir yapı. Bunun yerine kampının yakınında duran askerlerden birine sol tıkla.</translation>
+        <translation>To jest budowla. Kliknij lewym raczej jednego z żołnierzy stojących przy obozie.</translation>
     </message>
     <message>
         <source>A Home costs %1 wood and %2 stone; you have %3 wood and %4 stone. The Build card stays grey until the yard holds enough - send a builder to collect the difference.</source>
-        <translation>Bir Ev %1 odun ve %2 taş tutar; sende %3 odun ve %4 taş var. Avlu yetecek kadar tutana dek İnşa kartı gri kalır - farkı toplaması için bir inşaatçı yolla.</translation>
+        <translation>Dom kosztuje %1 drewna i %2 kamienia; masz %3 drewna i %4 kamienia. Karta budowy zostaje szara, dopóki na składzie nie będzie dość — poślij budowniczego, by dozbierał różnicę.</translation>
     </message>
     <message>
         <source>A red outline means the site is blocked: too close to another building, on water or on a slope. Move it onto flat, open ground and left-click to confirm. Right-click cancels.</source>
-        <translation>Kırmızı taslak alanın kapalı olduğunu gösterir: başka bir yapıya fazla yakın, suyun üstünde ya da eğimde. Onu düz ve açık zemine taşı ve onaylamak için sol tıkla. Sağ tık iptal eder.</translation>
+        <translation>Czerwony obrys znaczy, że plac jest zablokowany: za blisko innej budowli, na wodzie albo na stoku. Przesuń go na płaski, otwarty grunt i zatwierdź lewym przyciskiem. Prawy anuluje.</translation>
     </message>
     <message>
         <source>Recruits come from the barracks. Left-click your barracks to open its production panel on the right.</source>
-        <translation>Devşirilenler kışladan gelir. Sağdaki üretim panelini açmak için kışlana sol tıkla.</translation>
+        <translation>Rekruci pochodzą z koszar. Kliknij lewym swoje koszary, by otworzyć po prawej ich panel produkcji.</translation>
     </message>
     <message>
         <source>The barracks has only %1 reserve left to draw on. Every recruit costs reserve; when it runs dry, build Homes - each Home raises families, and a civilian recruited there and sent to the barracks with Deliver refills it.</source>
-        <translation>Kışlanın çekebileceği yalnızca %1 yedek kaldı. Her devşirme yedek harcar; tükendiğinde Ev inşa et - her Ev aile yetiştirir ve orada devşirilip Teslim et ile kışlaya yollanan bir sivil yedeği tazeler.</translation>
+        <translation>Koszary mają już tylko %1 rezerwy do wykorzystania. Każdy rekrut kosztuje rezerwę; gdy się wyczerpie, buduj Domy — każdy Dom wychowuje rodziny, a cywil zrekrutowany tam i posłany do koszar rozkazem Odstaw ją uzupełnia.</translation>
     </message>
     <message>
         <source>A recruit card turns grey when a resource is short: soldiers need wood for shafts and iron for blades. Send a builder to collect more.</source>
-        <translation>Bir kaynak eksildiğinde devşirme kartı grileşir: askerler saplar için odun, ağızlar için demir ister. Daha fazlasını toplaması için bir inşaatçı yolla.</translation>
+        <translation>Karta rekruta szarzeje, gdy brakuje surowca: żołnierze potrzebują drewna na drzewce i żelaza na groty. Poślij budowniczego po więcej.</translation>
     </message>
     <message>
         <source>The raiders are here. Keep your soldiers together near the barracks: spearmen in front, archers behind, and the commander close so his aura reaches them.</source>
-        <translation>Akıncılar burada. Askerlerini kışlanın yakınında bir arada tut: önde mızrakçılar, arkada okçular ve aurası onlara erişsin diye komutan yakında.</translation>
+        <translation>Najeźdźcy są tutaj. Trzymaj żołnierzy razem przy koszarach: włócznicy z przodu, łucznicy z tyłu, a dowódca blisko, by jego aura ich obejmowała.</translation>
     </message>
     <message>
         <source>The Roman raid is on its way. The wave tracker under the top bar counts it down and the minimap marks where it will enter.</source>
-        <translation>Roma baskını yolda. Üst çubuğun altındaki dalga takipçisi geri sayar ve mini harita nereden gireceğini işaretler.</translation>
+        <translation>Rzymski najazd jest w drodze. Licznik fal pod górnym paskiem go odlicza, a minimapa znaczy, gdzie wejdzie.</translation>
     </message>
     <message>
         <source>The Aura command only appears when your commander is selected. He is the standard-bearer with the crown badge, near the barracks.</source>
-        <translation>Aura komutu yalnızca komutanın seçiliyken görünür. O, kışlanın yakınındaki taçlı nişanı taşıyan sancaktardır.</translation>
+        <translation>Rozkaz Aura pojawia się tylko wtedy, gdy zaznaczony jest twój dowódca. To chorąży z odznaką korony, obok koszar.</translation>
     </message>
     <message>
         <source>The aura is recharging or the commander is wounded; the button lights up again when it is ready.</source>
-        <translation>Aura yenileniyor ya da komutan yaralı; hazır olduğunda düğme yeniden yanar.</translation>
+        <translation>Aura się odnawia albo dowódca jest ranny; przycisk zapali się znowu, gdy będzie gotowa.</translation>
     </message>
     <message>
         <source>The Roman commander is still alive. A nation dies with the man who leads it - kill him and the camp falls.</source>
-        <translation>Roma komutanı hâlâ yaşıyor. Bir ulus, kendisini yöneten adamla birlikte ölür - onu öldür, kamp düşer.</translation>
+        <translation>Rzymski dowódca wciąż żyje. Naród umiera wraz z człowiekiem, który go prowadzi — zabij go, a obóz padnie.</translation>
     </message>
     <message>
         <source>Select your troops</source>
-        <translation>Birliklerini seç</translation>
+        <translation>Zaznacz swoje oddziały</translation>
     </message>
     <message>
         <source>Move, and read the feedback</source>
-        <translation>Hareket et ve geri bildirimi oku</translation>
+        <translation>Ruszaj i czytaj informacje zwrotne</translation>
     </message>
     <message>
         <source>Attack the Roman scouts</source>
-        <translation>Roma izcilerine saldır</translation>
+        <translation>Zaatakuj rzymskich zwiadowców</translation>
     </message>
     <message>
         <source>Fell timber</source>
-        <translation>Kereste devir</translation>
+        <translation>Zetnij drewno</translation>
     </message>
     <message>
         <source>Quarry stone, mine iron</source>
-        <translation>Taş kır, demir çıkar</translation>
+        <translation>Łam kamień, wydobywaj żelazo</translation>
     </message>
     <message>
         <source>Raise a Home</source>
-        <translation>Bir Ev yükselt</translation>
+        <translation>Postaw Dom</translation>
     </message>
     <message>
         <source>Recruit a soldier</source>
-        <translation>Bir asker devşir</translation>
+        <translation>Zrekrutuj żołnierza</translation>
     </message>
     <message>
         <source>Assemble an army</source>
-        <translation>Bir ordu topla</translation>
+        <translation>Zbierz armię</translation>
     </message>
     <message>
         <source>Defend the camp</source>
-        <translation>Kampı savun</translation>
+        <translation>Broń obozu</translation>
     </message>
     <message>
         <source>Guard, Hold and Patrol</source>
-        <translation>Nöbet, Mevzi ve Devriye</translation>
+        <translation>Strzeż, Trzymaj i Patroluj</translation>
     </message>
     <message>
         <source>Your commander</source>
-        <translation>Komutanın</translation>
+        <translation>Twój dowódca</translation>
     </message>
     <message>
         <source>The camera</source>
@@ -8823,457 +8829,459 @@ Geniş görüş ve dayanıklı bir yerleşim çapası</translation>
     </message>
     <message>
         <source>Pause and game speed</source>
-        <translation>Duraklatma ve oyun hızı</translation>
+        <translation>Pauza i tempo gry</translation>
     </message>
     <message>
         <source>Objectives</source>
-        <translation>Hedefler</translation>
+        <translation>Cele</translation>
     </message>
     <message>
         <source>Take the Roman camp</source>
-        <translation>Roma kampını al</translation>
+        <translation>Zdobądź rzymski obóz</translation>
     </message>
     <message>
         <source>Everything starts with a selection. Left-click a soldier to select it, or hold the left button and drag a box around several. Selected troops show a ring at their feet, and the panel at the bottom lists who is under your command.</source>
-        <translation>Her şey bir seçimle başlar. Bir askeri seçmek için sol tıkla ya da sol tuşu basılı tutup birkaçının çevresine kutu çiz. Seçili birliklerin ayaklarında bir halka belirir ve alttaki panel emrindeki kişileri sıralar.</translation>
+        <translation>Wszystko zaczyna się od zaznaczenia. Kliknij żołnierza lewym przyciskiem, by go zaznaczyć, albo przytrzymaj lewy i zakreśl ramką kilku. Zaznaczone oddziały mają pierścień u stóp, a panel na dole wypisuje, kto jest pod twoim dowództwem.</translation>
     </message>
     <message>
         <source>With troops selected, right-click on the ground to march there. A marker appears where they are headed and the banner above the command grid confirms the order. A rejected order says why it could not be carried out - read the banner when nothing happens.</source>
-        <translation>Birlikler seçiliyken oraya yürümeleri için zemine sağ tıkla. Gittikleri yerde bir işaret belirir ve komut ızgarasının üstündeki şerit emri onaylar. Geri çevrilen bir emir neden yerine getirilemediğini söyler - hiçbir şey olmadığında şeridi oku.</translation>
+        <translation>Mając zaznaczone oddziały, kliknij prawym przyciskiem ziemię, by tam pomaszerowały. Tam, dokąd idą, pojawia się znacznik, a baner nad siatką poleceń potwierdza rozkaz. Odrzucony rozkaz mówi, czemu nie dało się go wykonać — czytaj baner, gdy nic się nie dzieje.</translation>
     </message>
     <message>
         <source>A Roman scouting party stands just beyond your tents; the minimap marks enemies in red. Right-click an enemy to attack it, or press Attack and click the target. While your troops fight, the target panel above the command grid tracks the enemy&apos;s health.</source>
-        <translation>Çadırlarının hemen ötesinde bir Roma keşif kolu duruyor; mini harita düşmanları kırmızıyla işaretler. Saldırmak için bir düşmana sağ tıkla ya da Saldır&apos;a basıp hedefe tıkla. Birliklerin çarpışırken komut ızgarasının üstündeki hedef paneli düşmanın canını izler.</translation>
+        <translation>Rzymski patrol zwiadowczy stoi tuż za twoimi namiotami; minimapa znaczy wrogów na czerwono. Kliknij wroga prawym przyciskiem, by go zaatakować, albo naciśnij Atakuj i kliknij cel. Gdy twoje oddziały walczą, panel celu nad siatką poleceń śledzi zdrowie wroga.</translation>
     </message>
     <message>
         <source>Wood pays for nearly everything. Select a builder, press Collect and click a pine tree. The builder fells it, carries the logs to the stone yard beside your barracks, and only when the load is dropped there does the wood counter in the top bar rise. Auto Gather keeps a builder working the nearest nodes on its own.</source>
-        <translation>Neredeyse her şeyin bedelini odun öder. Bir inşaatçı seç, Topla&apos;ya bas ve bir çam ağacına tıkla. İnşaatçı onu devirir, kütükleri kışlanın yanındaki taş avlusuna taşır ve odun sayacı üst çubukta ancak yük oraya bırakılınca yükselir. Otomatik Topla, bir inşaatçıyı en yakın kaynaklarda kendiliğinden çalıştırır.</translation>
+        <translation>Drewnem płaci się niemal za wszystko. Zaznacz budowniczego, naciśnij Zbieraj i kliknij sosnę. Budowniczy ją ścina, niesie kłody na skład przy koszarach — i dopiero gdy tam złoży ładunek, licznik drewna na górnym pasku rośnie. Auto-zbieranie każe budowniczemu samodzielnie pracować przy najbliższych źródłach.</translation>
     </message>
     <message>
         <source>Boulders yield stone for buildings and towers; ore seams yield iron for blades and armour. Both are hauled to the same barracks yard, which fills up as your stores grow. Gold comes with the camp and from trade at a marketplace. Set one builder on the boulders and another on the ore.</source>
-        <translation>Kayalar yapılar ve kuleler için taş verir; cevher damarları kılıçlar ve zırhlar için demir verir. İkisi de aynı kışla avlusuna taşınır ve avlu deposun büyüdükçe dolar. Altın kampla birlikte gelir ve pazardaki ticaretten kazanılır. Bir inşaatçıyı kayalara, bir başkasını cevhere koş.</translation>
+        <translation>Głazy dają kamień na budowle i wieże; żyły rudy dają żelazo na ostrza i zbroje. Jedno i drugie wozi się na ten sam dziedziniec koszar, który zapełnia się w miarę wzrostu zapasów. Złoto przychodzi razem z obozem i z handlu na targowisku. Poślij jednego budowniczego do głazów, a drugiego do rudy.</translation>
     </message>
     <message>
         <source>Select a builder and press Build to open the structure list. Each card shows its cost in wood, stone and gold; a grey card means you cannot afford it yet. Choose Home, then move the outline: green means the ground is flat and clear, red means it is blocked. Scroll to rotate, left-click to confirm. Homes raise the families your barracks will later recruit from.</source>
-        <translation>Bir inşaatçı seç ve yapı listesini açmak için İnşa&apos;ya bas. Her kart bedelini odun, taş ve altın olarak gösterir; gri bir kart henüz gücünün yetmediği anlamına gelir. Ev&apos;i seç, sonra taslağı gezdir: yeşil zeminin düz ve boş olduğunu, kırmızı ise kapalı olduğunu gösterir. Döndürmek için tekerleği çevir, onaylamak için sol tıkla. Evler, kışlanın sonradan devşireceği aileleri yetiştirir.</translation>
+        <translation>Zaznacz budowniczego i naciśnij Buduj, by otworzyć listę budowli. Każda karta pokazuje koszt w drewnie, kamieniu i złocie; szara karta znaczy, że jeszcze cię na nią nie stać. Wybierz Dom, a potem przesuń obrys: zielony znaczy, że grunt jest płaski i wolny, czerwony — że zablokowany. Kółko obraca, lewy przycisk zatwierdza. Domy wychowują rodziny, z których później rekrutują twoje koszary.</translation>
     </message>
     <message>
         <source>Left-click your barracks and pick a soldier from the production panel. Every recruit costs population and resources: the population comes from the barracks&apos; own pool, shown on the card, and refills when civilians from your Homes are delivered to it. The bar in the top panel shows your army against the map&apos;s population cap.</source>
-        <translation>Kışlana sol tıkla ve üretim panelinden bir asker seç. Her devşirme nüfus ve kaynak harcar: nüfus, kartta gösterilen kışlanın kendi havuzundan gelir ve Evlerinden gelen siviller oraya teslim edildikçe tazelenir. Üst paneldeki çubuk, ordunu haritanın nüfus sınırına karşı gösterir.</translation>
+        <translation>Kliknij lewym swoje koszary i wybierz żołnierza z panelu produkcji. Każdy rekrut kosztuje ludność i surowce: ludność bierze się z własnej puli koszar, pokazanej na karcie, i uzupełnia się, gdy odstawisz do nich cywilów ze swoich Domów. Pasek w górnym panelu pokazuje twoją armię wobec limitu ludności mapy.</translation>
     </message>
     <message>
         <source>One soldier is not an army. Keep recruiting until you field eight - mix spearmen to hold a line with archers to punish whatever charges it. If a card turns grey, the tutorial hint tells you what ran short. New recruits gather at the barracks&apos; rally flag; set one from the production panel.</source>
-        <translation>Bir asker ordu değildir. Sekiz kişilik bir kuvvet çıkarana kadar devşirmeyi sürdür - hattı tutacak mızrakçıları, üzerine hücum edeni cezalandıracak okçularla karıştır. Bir kart grileşirse eğitim ipucu neyin eksildiğini söyler. Yeni devşirilenler kışlanın toplanma sancağında toplanır; üretim panelinden bir tane belirle.</translation>
+        <translation>Jeden żołnierz to nie armia. Rekrutuj, aż wystawisz ośmiu — mieszaj włóczników, którzy trzymają linię, z łucznikami, którzy karzą tego, kto na nią uderzy. Gdy karta zszarzeje, podpowiedź samouczka powie, czego zabrakło. Nowi rekruci zbierają się przy sztandarze zbiórki koszar; ustaw go w panelu produkcji.</translation>
     </message>
     <message>
         <source>A Roman raid is coming. The wave tracker counts it down and the minimap marks its entry point. Form up near your barracks: spearmen in front, archers behind, and the commander close so his aura reaches them. Break the raid to continue.</source>
-        <translation>Bir Roma baskını geliyor. Dalga takipçisi geri sayar ve mini harita giriş noktasını işaretler. Kışlanın yakınında diz: önde mızrakçılar, arkada okçular ve aurası onlara erişsin diye komutan yakında. Sürdürmek için baskını kır.</translation>
+        <translation>Nadchodzi rzymski najazd. Licznik fal go odlicza, a minimapa znaczy miejsce wejścia. Uformuj się przy koszarach: włócznicy z przodu, łucznicy z tyłu, a dowódca blisko, by jego aura ich obejmowała. Złam najazd, by przejść dalej.</translation>
     </message>
     <message>
         <source>Soldiers can be told how to behave, and the three orders are not the same. Guard: click a spot; they meet anything that comes near it, then walk back to it. Hold: they never take a step, but they reach further, hit harder and brace against a charge - archers and spearmen only. Patrol: click two waypoints and they march the beat between them, fighting whatever crosses it. Hover any of the three to read the full rules, then give one of them to your soldiers.</source>
-        <translation>Askerlere nasıl davranacakları söylenebilir ve bu üç emir aynı şey değildir. Nöbet: bir noktaya tıkla; yakınına gelen her şeyi karşılar, sonra oraya geri yürürler. Mevzi: bir adım bile atmazlar, ama daha uzağa erişir, daha sert vurur ve bir hücuma karşı payanda alırlar - yalnızca okçular ve mızrakçılar. Devriye: iki ara noktaya tıkla, aralarında mekik dokur ve hattı geçen her şeyle çarpışırlar. Kuralların tamamını okumak için üçünden birinin üzerine gel, sonra askerlerine birini ver.</translation>
+        <translation>Żołnierzom można powiedzieć, jak mają się zachowywać, a te trzy rozkazy nie są tym samym. Strzeż: kliknij punkt; wychodzą naprzeciw temu, co się zbliży, i wracają. Trzymaj: nie robią ani kroku, ale sięgają dalej, biją mocniej i podpierają się przed szarżą — tylko łucznicy i włócznicy. Patroluj: kliknij dwa punkty, a będą chodzić między nimi, bijąc wszystko, co przetnie trasę. Najedź na dowolny z trzech, by przeczytać pełne zasady, a potem wydaj jeden ze swoim żołnierzom.</translation>
     </message>
     <message>
         <source>Your commander carries the standard. Troops near him fight with higher morale, and while he is selected two commands appear: Aura empowers every soldier in a ring around him for a stretch and then recharges - the button prints the radius, how long it lasts and how long until it returns - and Rally plants a flag that the army marches to. If he dies, your lines break and the mission is lost - keep him behind the spears. Trigger the Aura now.</source>
-        <translation>Sancağı komutanın taşır. Ona yakın birlikler daha yüksek morille çarpışır ve o seçiliyken iki komut belirir: Aura, çevresindeki halkadaki her askeri bir süre güçlendirir ve sonra yenilenir - düğme yarıçapı, ne kadar sürdüğünü ve dönmesine ne kadar kaldığını yazar - Toplanma ise ordunun yürüdüğü bir sancak diker. Ölürse hatların dağılır ve görev kaybedilir - onu mızrakların gerisinde tut. Şimdi Aurayı tetikle.</translation>
+        <translation>Twój dowódca niesie sztandar. Oddziały przy nim walczą z wyższym morale, a gdy jest zaznaczony, pojawiają się dwa polecenia: Aura wzmacnia na jakiś czas każdego żołnierza w kręgu wokół niego, a potem się odnawia — przycisk wypisuje promień, czas trwania i czas do powrotu — a Zbiórka wbija sztandar, do którego maszeruje armia. Jeśli zginie, twoje linie pękają i misja jest przegrana — trzymaj go za włóczniami. Odpal teraz Aurę.</translation>
     </message>
     <message>
         <source>Move the view with the arrow keys or WASD, or push the mouse to the screen edge. Scroll to zoom, Q and E rotate, Ctrl with the up and down arrows tilts, and Home returns to your camp. Follow keeps the camera on your selection. Move the camera now.</source>
-        <translation>Görüşü ok tuşları ya da WASD ile hareket ettir veya fareyi ekran kenarına it. Yakınlaştırmak için tekerleği çevir, döndürmek için Q ve E, eğmek için Ctrl ile yukarı ve aşağı oklar ve kampına dönmek için Home. İzle, kamerayı seçiminin üzerinde tutar. Şimdi kamerayı hareket ettir.</translation>
+        <translation>Ruszaj widokiem strzałkami albo WASD, lub dosuwając mysz do krawędzi ekranu. Kółko przybliża, Q i E obracają, Ctrl ze strzałkami góra-dół pochyla, a Home wraca do obozu. Śledzenie trzyma kamerę na zaznaczeniu. Rusz teraz kamerą.</translation>
     </message>
     <message>
         <source>The top-left buttons pause the battle and set the speed, from half up to quadruple. Space pauses too, and + and - step through the speeds without reaching for the bar. The active speed stays lit while paused, and you can change it there. Change the speed or pause and resume now.</source>
-        <translation>Sol üstteki düğmeler savaşı duraklatır ve hızı yarımdan dört katına kadar ayarlar. Boşluk da duraklatır ve + ile -, çubuğa uzanmadan hızlar arasında ilerletir. Etkin hız duraklatılmışken de yanık kalır ve oradan değiştirilebilir. Şimdi hızı değiştir ya da duraklatıp sürdür.</translation>
+        <translation>Przyciski w lewym górnym rogu wstrzymują bitwę i ustawiają tempo, od połowy po poczwórne. Spacja też wstrzymuje, a + i - przechodzą przez tempa bez sięgania na pasek. Wybrane tempo pozostaje podświetlone w pauzie i tam też można je zmienić. Zmień teraz tempo albo wstrzymaj i wznów.</translation>
     </message>
     <message>
         <source>The star in the top bar shows your current objective. Press Escape and choose Objectives to read the full briefing: what wins the mission, what loses it, and any optional goals. Open it now, then return to the battle.</source>
-        <translation>Üst çubuktaki yıldız şimdiki hedefini gösterir. Brifingin tamamını okumak için Escape&apos;e bas ve Hedefler&apos;i seç: görevi ne kazandırır, ne kaybettirir ve isteğe bağlı amaçlar nelerdir. Şimdi aç, sonra savaşa dön.</translation>
+        <translation>Gwiazdka na górnym pasku pokazuje twój obecny cel. Naciśnij Escape i wybierz Cele, by przeczytać pełną odprawę: co wygrywa misję, co ją przegrywa i jakie są cele opcjonalne. Otwórz je teraz, a potem wróć do bitwy.</translation>
     </message>
     <message>
         <source>You know everything the field will ask of you. The Roman camp lies across the meadow. Gather your army, keep the commander behind the line, and take the camp: kill the Roman commander and the mission is won.</source>
-        <translation>Meydanın senden isteyeceği her şeyi biliyorsun. Roma kampı çayırın karşısında. Ordunu topla, komutanı hattın gerisinde tut ve kampı al: Roma komutanını öldür, görev kazanılır.</translation>
+        <translation>Wiesz już wszystko, o co poprosi cię pole. Rzymski obóz leży po drugiej stronie łąki. Zbierz armię, trzymaj dowódcę za linią i zdobądź obóz: zabij rzymskiego dowódcę, a misja jest wygrana.</translation>
     </message>
     <message>
         <source>Select at least one of your soldiers</source>
-        <translation>Askerlerinden en az birini seç</translation>
+        <translation>Zaznacz co najmniej jednego ze swoich żołnierzy</translation>
     </message>
     <message>
         <source>Right-click the ground to move your selected troops</source>
-        <translation>Seçili birliklerini hareket ettirmek için zemine sağ tıkla</translation>
+        <translation>Kliknij ziemię prawym przyciskiem, by ruszyć zaznaczone oddziały</translation>
     </message>
     <message>
         <source>Destroy the Roman scouting party (%1 soldiers)</source>
-        <translation>Roma keşif kolunu yok et (%1 asker)</translation>
+        <translation>Zniszcz rzymski patrol zwiadowczy (żołnierzy: %1)</translation>
     </message>
     <message>
         <source>Deliver %1 wood to your barracks yard</source>
-        <translation>Kışla avluna %1 odun teslim et</translation>
+        <translation>Dostarcz %1 drewna na dziedziniec koszar</translation>
     </message>
     <message>
         <source>Deliver %1 stone and %2 iron</source>
-        <translation>%1 taş ve %2 demir teslim et</translation>
+        <translation>Dostarcz %1 kamienia i %2 żelaza</translation>
     </message>
     <message>
         <source>Build a Home with a builder</source>
-        <translation>Bir inşaatçıyla Ev inşa et</translation>
+        <translation>Zbuduj Dom budowniczym</translation>
     </message>
     <message>
         <source>Recruit a soldier at the barracks and wait for it to march out</source>
-        <translation>Kışlada bir asker devşir ve dışarı çıkmasını bekle</translation>
+        <translation>Zrekrutuj żołnierza w koszarach i poczekaj, aż wymaszeruje</translation>
     </message>
     <message>
         <source>Field at least %1 soldiers</source>
-        <translation>En az %1 asker çıkar</translation>
+        <translation>Wystaw co najmniej %1 żołnierzy</translation>
     </message>
     <message>
         <source>Break the Roman raid</source>
-        <translation>Roma baskınını kır</translation>
+        <translation>Złam rzymski najazd</translation>
     </message>
     <message>
         <source>Give a Guard, Hold or Patrol order</source>
-        <translation>Bir Nöbet, Mevzi ya da Devriye emri ver</translation>
+        <translation>Wydaj rozkaz Strzeż, Trzymaj albo Patroluj</translation>
     </message>
     <message>
         <source>Select your commander and trigger the Aura</source>
-        <translation>Komutanını seç ve Aurayı tetikle</translation>
+        <translation>Zaznacz dowódcę i odpal Aurę</translation>
     </message>
     <message>
         <source>Move, zoom or rotate the camera</source>
-        <translation>Kamerayı hareket ettir, yakınlaştır ya da döndür</translation>
+        <translation>Przesuń, przybliż albo obróć kamerę</translation>
     </message>
     <message>
         <source>Change the game speed or pause and resume</source>
-        <translation>Oyun hızını değiştir ya da duraklatıp sürdür</translation>
+        <translation>Zmień tempo gry albo wstrzymaj i wznów</translation>
     </message>
     <message>
         <source>Open the Objectives screen</source>
-        <translation>Hedefler ekranını aç</translation>
+        <translation>Otwórz ekran Celów</translation>
     </message>
     <message>
         <source>Kill the Roman commander and take the camp</source>
-        <translation>Roma komutanını öldür ve kampı al</translation>
+        <translation>Zabij rzymskiego dowódcę i zdobądź obóz</translation>
     </message>
 </context>
 <context>
     <name>TutorialOverlay</name>
     <message>
         <source>Tutorial</source>
-        <translation>Eğitim</translation>
+        <translation>Samouczek</translation>
     </message>
     <message>
         <source>Tutorial %1/%2 · %3</source>
-        <translation>Eğitim %1/%2 · %3</translation>
+        <translation>Samouczek %1/%2 · %3</translation>
     </message>
     <message>
         <source>Show</source>
-        <translation>Göster</translation>
+        <translation>Pokaż</translation>
     </message>
     <message>
         <source>Tutorial step</source>
-        <translation>Eğitim adımı</translation>
+        <translation>Krok samouczka</translation>
     </message>
     <message>
         <source>TUTORIAL · STEP %1 OF %2</source>
-        <translation>EĞİTİM · ADIM %1 / %2</translation>
+        <translation>SAMOUCZEK · KROK %1 Z %2</translation>
     </message>
     <message>
         <source>Open the help screen</source>
-        <translation>Yardım ekranını aç</translation>
+        <translation>Otwórz ekran pomocy</translation>
     </message>
     <message>
         <source>Hide the tutorial card (it can be shown again)</source>
-        <translation>Eğitim kartını gizle (yeniden gösterilebilir)</translation>
+        <translation>Ukryj kartę samouczka (można ją pokazać ponownie)</translation>
     </message>
     <message>
         <source>Well done - the tutorial is complete.</source>
-        <translation>Aferin - eğitim tamamlandı.</translation>
+        <translation>Dobra robota — samouczek ukończony.</translation>
     </message>
     <message>
         <source>Well done. The next step follows in a moment, or press Continue.</source>
-        <translation>Aferin. Sonraki adım birazdan gelir ya da Sürdür&apos;e bas.</translation>
+        <translation>Dobra robota. Kolejny krok za chwilę albo naciśnij Dalej.</translation>
     </message>
     <message>
         <source>Resume</source>
-        <translation>Sürdür</translation>
+        <translation>Wznów</translation>
     </message>
     <message>
         <source>Pause</source>
-        <translation>Duraklat</translation>
+        <translation>Pauza</translation>
     </message>
     <message>
         <source>Show me</source>
-        <translation>Bana göster</translation>
+        <translation>Pokaż mi</translation>
     </message>
     <message>
         <source>Replay step</source>
-        <translation>Adımı yeniden oynat</translation>
+        <translation>Powtórz krok</translation>
     </message>
     <message>
         <source>Skip step</source>
-        <translation>Adımı atla</translation>
+        <translation>Pomiń krok</translation>
     </message>
     <message>
         <source>Continue</source>
-        <translation>Sürdür</translation>
+        <translation>Dalej</translation>
     </message>
     <message>
         <source>End tutorial</source>
-        <translation>Eğitimi bitir</translation>
+        <translation>Zakończ samouczek</translation>
     </message>
 </context>
 <context>
     <name>UndeadAwakeningSystem</name>
     <message>
         <source>Iron Sepulcher %1</source>
-        <translation>Demir Kabir %1</translation>
+        <translation>Żelazny Grobowiec %1</translation>
     </message>
     <message>
         <source>The shrine answers to you now. Its dead fall still.</source>
-        <translation>Mabet artık sana yanıt veriyor. Ölüleri kımıldamadan yatıyor.</translation>
+        <translation>Świątynia słucha teraz ciebie. Jej umarli padają nieruchomo.</translation>
     </message>
     <message>
         <source>The shrine is broken. Every risen guardian crumbles.</source>
-        <translation>Mabet kırıldı. Kalkmış her bekçi ufalanıyor.</translation>
+        <translation>Świątynia jest złamana. Każdy powstały strażnik rozsypuje się w proch.</translation>
     </message>
     <message>
         <source>The barrow gives up its hoard: %1.</source>
-        <translation>Kurgan hazinesini veriyor: %1.</translation>
+        <translation>Kurhan oddaje swój skarb: %1.</translation>
     </message>
     <message>
         <source>Wave %1/%2</source>
-        <translation>Dalga %1/%2</translation>
+        <translation>Fala %1/%2</translation>
     </message>
     <message>
         <source>The Iron Sepulcher wakes. %1 rises to meet you.</source>
-        <translation>Demir Kabir uyanıyor. %1 seni karşılamak için kalkıyor.</translation>
+        <translation>Żelazny Grobowiec się budzi. %1 powstaje ci naprzeciw.</translation>
     </message>
     <message>
         <source>%1 claws out of the ground.</source>
-        <translation>%1 topraktan tırmalayarak çıkıyor.</translation>
+        <translation>%1 wygrzebuje się z ziemi.</translation>
     </message>
     <message>
         <source>The risen guardians are put down. The ground is quiet.</source>
-        <translation>Kalkmış bekçiler yatırıldı. Toprak sessiz.</translation>
+        <translation>Powstali strażnicy zostali położeni. Ziemia jest cicha.</translation>
     </message>
 </context>
 <context>
     <name>UnitInspectPanel</name>
     <message>
         <source>Attack</source>
-        <translation>Saldır</translation>
+        <translation>Atakuj</translation>
     </message>
     <message>
         <source>Guard</source>
-        <translation>Nöbet</translation>
+        <translation>Strzeż</translation>
     </message>
     <message>
         <source>Hold</source>
-        <translation>Mevzi</translation>
+        <translation>Trzymaj</translation>
     </message>
     <message>
         <source>Patrol</source>
-        <translation>Devriye</translation>
+        <translation>Patroluj</translation>
     </message>
     <message>
         <source>Medic</source>
-        <translation>Şifacı</translation>
+        <translation>Medyk</translation>
     </message>
     <message>
         <source>Build</source>
-        <translation>İnşa</translation>
+        <translation>Buduj</translation>
     </message>
     <message>
         <source>Collect</source>
-        <translation>Topla</translation>
+        <translation>Zbieraj</translation>
     </message>
     <message>
         <source>Repair</source>
-        <translation>Onar</translation>
+        <translation>Napraw</translation>
     </message>
     <message>
         <source>Unit details</source>
-        <translation>Birim ayrıntıları</translation>
+        <translation>Szczegóły jednostki</translation>
     </message>
     <message>
         <source>Close the unit details</source>
-        <translation>Birim ayrıntılarını kapat</translation>
+        <translation>Zamknij szczegóły jednostki</translation>
     </message>
     <message>
         <source>No details are available for this unit.</source>
-        <translation>Bu birim için ayrıntı yok.</translation>
+        <translation>Brak szczegółów dla tej jednostki.</translation>
     </message>
     <message>
         <source>In the field</source>
-        <translation>Sahada</translation>
+        <translation>W polu</translation>
     </message>
     <message>
         <source>Damage per second</source>
-        <translation>Saniyedeki hasar</translation>
+        <translation>Obrażenia na sekundę</translation>
     </message>
     <message>
         <source>Range</source>
-        <translation>Menzil</translation>
+        <translation>Zasięg</translation>
     </message>
     <message>
         <source>Health</source>
-        <translation>Can</translation>
+        <translation>Zdrowie</translation>
     </message>
     <message>
         <source>Speed</source>
-        <translation>Hız</translation>
+        <translation>Szybkość</translation>
     </message>
     <message>
         <source>Sight</source>
-        <translation>Görüş</translation>
+        <translation>Pole widzenia</translation>
     </message>
     <message>
         <source>What it can do</source>
-        <translation>Neler yapabilir</translation>
+        <translation>Co potrafi</translation>
     </message>
     <message>
         <source>Highlighted orders are the ones this selection can carry out right now.</source>
-        <translation>Vurgulanan emirler bu seçimin şu anda yerine getirebileceği emirlerdir.</translation>
+        <translation>Podświetlone rozkazy to te, które to zaznaczenie może teraz wykonać.</translation>
     </message>
     <message>
         <source>What it costs</source>
-        <translation>Neye mal olur</translation>
+        <translation>Ile kosztuje</translation>
     </message>
     <message>
         <source>Reserve %1  ·  Build time %2s</source>
-        <translation>Yedek %1  ·  İnşa süresi %2sn</translation>
+        <translation>Rezerwa %1  ·  Czas budowy %2 s</translation>
     </message>
     <message numerus="yes">
         <source>Fields %n soldier(s) in one squad.</source>
         <translation>
-            <numerusform>Tek bir müfrezede %n asker çıkarır.</numerusform>
+            <numerusform>Wystawia %n żołnierza w jednym oddziale.</numerusform>
+            <numerusform>Wystawia %n żołnierzy w jednym oddziale.</numerusform>
+            <numerusform>Wystawia %n żołnierzy w jednym oddziale.</numerusform>
         </translation>
     </message>
     <message>
         <source>Strengths and weaknesses</source>
-        <translation>Güçlü ve zayıf yanlar</translation>
+        <translation>Mocne i słabe strony</translation>
     </message>
     <message>
         <source>History</source>
-        <translation>Tarih</translation>
+        <translation>Historia</translation>
     </message>
 </context>
 <context>
     <name>Units</name>
     <message>
         <source>Line infantry</source>
-        <translation>Hat piyadesi</translation>
+        <translation>Piechota liniowa</translation>
     </message>
     <message>
         <source>Heavy infantry</source>
-        <translation>Ağır piyade</translation>
+        <translation>Piechota ciężka</translation>
     </message>
     <message>
         <source>Spear infantry</source>
-        <translation>Mızrak piyadesi</translation>
+        <translation>Piechota włócznicza</translation>
     </message>
     <message>
         <source>Ranged</source>
-        <translation>Menzilli</translation>
+        <translation>Dystansowa</translation>
     </message>
     <message>
         <source>Skirmisher</source>
-        <translation>Avcı</translation>
+        <translation>Harcownik</translation>
     </message>
     <message>
         <source>Cavalry</source>
-        <translation>Süvari</translation>
+        <translation>Jazda</translation>
     </message>
     <message>
         <source>War beast</source>
-        <translation>Savaş hayvanı</translation>
+        <translation>Bestia bojowa</translation>
     </message>
     <message>
         <source>Siege</source>
-        <translation>Kuşatma</translation>
+        <translation>Oblężnicza</translation>
     </message>
     <message>
         <source>Command</source>
-        <translation>Komuta</translation>
+        <translation>Dowodzenie</translation>
     </message>
     <message>
         <source>Support</source>
-        <translation>Destek</translation>
+        <translation>Wsparcie</translation>
     </message>
     <message>
         <source>Worker</source>
-        <translation>İşçi</translation>
+        <translation>Robotnik</translation>
     </message>
     <message>
         <source>Civilian</source>
-        <translation>Sivil</translation>
+        <translation>Cywil</translation>
     </message>
     <message>
         <source>Caster</source>
-        <translation>Büyücü</translation>
+        <translation>Czarownik</translation>
     </message>
     <message>
         <source>Shielded</source>
-        <translation>Kalkanlı</translation>
+        <translation>Tarczownik</translation>
     </message>
     <message>
         <source>Mounted</source>
-        <translation>Atlı</translation>
+        <translation>Konny</translation>
     </message>
     <message>
         <source>Expendable</source>
-        <translation>Gözden çıkarılabilir</translation>
+        <translation>Na stracenie</translation>
     </message>
     <message>
         <source>Awakened</source>
-        <translation>Uyanmış</translation>
+        <translation>Przebudzony</translation>
     </message>
     <message>
         <source>Elite</source>
-        <translation>Seçkin</translation>
+        <translation>Elitarny</translation>
     </message>
     <message>
         <source>Archer</source>
-        <translation>Okçu</translation>
+        <translation>Łucznik</translation>
     </message>
     <message>
         <source>Swordsman</source>
-        <translation>Kılıççı</translation>
+        <translation>Miecznik</translation>
     </message>
     <message>
         <source>Spearman</source>
-        <translation>Mızrakçı</translation>
+        <translation>Włócznik</translation>
     </message>
     <message>
         <source>Mounted Knight</source>
-        <translation>Atlı Şövalye</translation>
+        <translation>Rycerz konny</translation>
     </message>
     <message>
         <source>Horse Archer</source>
-        <translation>Atlı Okçu</translation>
+        <translation>Łucznik konny</translation>
     </message>
     <message>
         <source>Horse Spearman</source>
-        <translation>Atlı Mızrakçı</translation>
+        <translation>Włócznik konny</translation>
     </message>
     <message>
         <source>Healer</source>
-        <translation>Şifacı</translation>
+        <translation>Uzdrowiciel</translation>
     </message>
     <message>
         <source>Skeleton Swordsman</source>
-        <translation>İskelet Kılıççı</translation>
+        <translation>Szkieletowy miecznik</translation>
     </message>
     <message>
         <source>Skeleton Archer</source>
-        <translation>İskelet Okçu</translation>
+        <translation>Szkieletowy łucznik</translation>
     </message>
     <message>
         <source>Grave Priest</source>
-        <translation>Mezar Rahibi</translation>
+        <translation>Grobowy kapłan</translation>
     </message>
     <message>
         <source>Catapult</source>
-        <translation>Mancınık</translation>
+        <translation>Katapulta</translation>
     </message>
     <message>
         <source>Ballista</source>
@@ -9281,171 +9289,171 @@ Geniş görüş ve dayanıklı bir yerleşim çapası</translation>
     </message>
     <message>
         <source>War Elephant</source>
-        <translation>Savaş Fili</translation>
+        <translation>Słoń bojowy</translation>
     </message>
     <message>
         <source>Quintus Fabius Maximus</source>
-        <translation>Quintus Fabius Maximus</translation>
+        <translation>Kwintus Fabiusz Maksymus</translation>
     </message>
     <message>
         <source>Publius Cornelius Scipio</source>
-        <translation>Publius Cornelius Scipio</translation>
+        <translation>Publiusz Korneliusz Scypion</translation>
     </message>
     <message>
         <source>Marcus Claudius Marcellus</source>
-        <translation>Marcus Claudius Marcellus</translation>
+        <translation>Marek Klaudiusz Marcellus</translation>
     </message>
     <message>
         <source>Hanno the Great</source>
-        <translation>Büyük Hanno</translation>
+        <translation>Hannon Wielki</translation>
     </message>
     <message>
         <source>Hasdrubal Barca</source>
-        <translation>Hasdrubal Barka</translation>
+        <translation>Hazdrubal Barkas</translation>
     </message>
     <message>
         <source>Hannibal Barca</source>
-        <translation>Hannibal Barka</translation>
+        <translation>Hannibal Barkas</translation>
     </message>
     <message>
         <source>Builder</source>
-        <translation>İnşaatçı</translation>
+        <translation>Budowniczy</translation>
     </message>
     <message>
         <source>Sheep</source>
-        <translation>Koyun</translation>
+        <translation>Owca</translation>
     </message>
     <message>
         <source>Wolf</source>
-        <translation>Kurt</translation>
+        <translation>Wilk</translation>
     </message>
     <message>
         <source>Unknown Troop</source>
-        <translation>Bilinmeyen Birlik</translation>
+        <translation>Nieznany oddział</translation>
     </message>
     <message>
         <source>African War Elephant</source>
-        <translation>Afrika Savaş Fili</translation>
+        <translation>Afrykański słoń bojowy</translation>
     </message>
     <message>
         <source>An ancient army marched with its own carpenters and masons, raising and fortifying a camp every night.</source>
-        <translation>Antik bir ordu kendi marangozları ve taşçılarıyla yürür, her gece bir kamp kurup tahkim ederdi.</translation>
+        <translation>Antyczna armia maszerowała z własnymi cieślami i murarzami, wznosząc i fortyfikując obóz każdej nocy.</translation>
     </message>
     <message>
         <source>Ancient armies kept surgeons close to the line; the wounded who walked away were the difference between a campaign and a rout.</source>
-        <translation>Antik ordular cerrahlarını hattın yakınında tutardı; yürüyerek uzaklaşan yaralılar, bir seferle bozgun arasındaki farktı.</translation>
+        <translation>Antyczne armie trzymały lekarzy blisko linii; ranni, którzy odeszli o własnych siłach, stanowili różnicę między kampanią a pogromem.</translation>
     </message>
     <message>
         <source>Anti-cavalry spear line</source>
-        <translation>Süvari karşıtı mızrak hattı</translation>
+        <translation>Linia włóczni przeciw jeździe</translation>
     </message>
     <message>
         <source>Archers are the answer to it, and massed bows bring it down before it closes.</source>
-        <translation>Yanıtı okçulardır ve toplu yaylar onu yaklaşmadan indirir.</translation>
+        <translation>Odpowiedzią na to są łucznicy, a masa łuków kładzie to, zanim zdąży dojść.</translation>
     </message>
     <message>
         <source>As brittle as any archer, and it withers as soon as the line in front of it fails.</source>
-        <translation>Herhangi bir okçu kadar kırılgandır ve önündeki hat çöker çökmez erir.</translation>
+        <translation>Kruchy jak każdy łucznik i więdnie, gdy tylko linia przed nim pęknie.</translation>
     </message>
     <message>
         <source>Auxiliary Archer</source>
-        <translation>Yardımcı Okçu</translation>
+        <translation>Łucznik posiłkowy</translation>
     </message>
     <message>
         <source>Battle caster</source>
-        <translation>Savaş büyücüsü</translation>
+        <translation>Czarownik bojowy</translation>
     </message>
     <message>
         <source>Behind every field army stood the farms and quarries that fed it, and the people who worked them.</source>
-        <translation>Her sahra ordusunun ardında onu besleyen tarlalar ve taş ocakları ile orada çalışan insanlar dururdu.</translation>
+        <translation>Za każdą armią polową stały gospodarstwa i kamieniołomy, które ją żywiły, oraz ludzie, którzy w nich pracowali.</translation>
     </message>
     <message>
         <source>Bows decided few ancient battles outright, but a volley loosed before contact could break a formation&apos;s nerve.</source>
-        <translation>Yaylar antik savaşların pek azını tek başına belirledi, ama temastan önce salınan bir yaylım bir düzenin sinirini bozabilirdi.</translation>
+        <translation>Łuki rzadko rozstrzygały antyczne bitwy wprost, ale salwa puszczona przed zwarciem potrafiła złamać nerwy szyku.</translation>
     </message>
     <message>
         <source>Breaks on a braced spear line, which cuts mounted troops down at more than twice the usual rate.</source>
-        <translation>Payandalı bir mızrak hattında kırılır; o hat atlı birlikleri olağanın iki katından fazla bir hızla biçer.</translation>
+        <translation>Rozbija się o podpartą linię włóczni, która tnie konnych ponad dwukrotnie szybciej niż zwykle.</translation>
     </message>
     <message>
         <source>Cannot fight. Left unguarded it dies to anything that reaches it.</source>
-        <translation>Çarpışamaz. Korumasız bırakılırsa kendisine ulaşan her şeye yem olur.</translation>
+        <translation>Nie potrafi walczyć. Bez ochrony ginie od wszystkiego, co do niego dojdzie.</translation>
     </message>
     <message>
         <source>Carries more health than any squad on the field, and its reach breaks a line that stands to receive it.</source>
-        <translation>Meydandaki her müfrezeden çok can taşır ve erimi, onu karşılamak için duran bir hattı kırar.</translation>
+        <translation>Ma więcej zdrowia niż jakikolwiek oddział na polu, a jego zasięg łamie linię, która stanie, by go przyjąć.</translation>
     </message>
     <message>
         <source>Carthage bought its archers from Libya and the islands, paying in silver what Rome demanded of its citizens.</source>
-        <translation>Kartaca okçularını Libya&apos;dan ve adalardan satın aldı; Roma&apos;nın yurttaşlarından istediğini gümüşle ödedi.</translation>
+        <translation>Kartagina kupowała łuczników w Libii i na wyspach, płacąc srebrem to, czego Rzym żądał od swoich obywateli.</translation>
     </message>
     <message>
         <source>Carthage sent its own citizens into the line only when the city itself was threatened. The rest of the army was hired.</source>
-        <translation>Kartaca kendi yurttaşlarını hatta ancak şehrin kendisi tehdit altındayken sürdü. Ordunun geri kalanı kiralıktı.</translation>
+        <translation>Kartagina posyłała własnych obywateli do szyku dopiero wtedy, gdy zagrożone było samo miasto. Reszta armii była najemna.</translation>
     </message>
     <message>
         <source>Carthage took its elephants from the forests south of the Atlas, smaller than the Indian beasts but the terror of Italy.</source>
-        <translation>Kartaca fillerini Atlas&apos;ın güneyindeki ormanlardan aldı; Hint devlerinden küçük ama İtalya&apos;nın kâbusuydular.</translation>
+        <translation>Kartagina brała słonie z lasów na południe od Atlasu — mniejsze niż zwierzęta indyjskie, ale będące postrachem Italii.</translation>
     </message>
     <message>
         <source>Carthaginian Ballista</source>
-        <translation>Kartaca Balistası</translation>
+        <translation>Balista kartagińska</translation>
     </message>
     <message>
         <source>Carthaginian Catapult</source>
-        <translation>Kartaca Mancınığı</translation>
+        <translation>Katapulta kartagińska</translation>
     </message>
     <message>
         <source>Carthaginian engineers learned artillery from the Greek cities of Sicily, and then improved on it.</source>
-        <translation>Kartaca istihkâmcıları topçuluğu Sicilya&apos;nın Yunan şehirlerinden öğrendi, sonra da onu geliştirdi.</translation>
+        <translation>Kartagińscy inżynierowie nauczyli się artylerii od greckich miast Sycylii, a potem ją ulepszyli.</translation>
     </message>
     <message>
         <source>Cavalry rarely charged an unbroken line. It waited for a flank to open and then finished the day.</source>
-        <translation>Süvari kırılmamış bir hatta nadiren hücum ederdi. Bir kanadın açılmasını bekler, sonra günü bitirirdi.</translation>
+        <translation>Jazda rzadko szarżowała na nienaruszoną linię. Czekała, aż odsłoni się skrzydło, i wtedy kończyła dzień.</translation>
     </message>
     <message>
         <source>Citizen Infantry</source>
-        <translation>Yurttaş Piyadesi</translation>
+        <translation>Piechota obywatelska</translation>
     </message>
     <message>
         <source>Close-order swordsmen were the expensive core of a Mediterranean army, drilled to hold a line rather than to duel.</source>
-        <translation>Sıkı düzen kılıççıları, düello için değil hat tutmak için talim ettirilmiş, Akdeniz ordusunun pahalı çekirdeğiydi.</translation>
+        <translation>Miecznicy w zwartym szyku byli drogim rdzeniem armii śródziemnomorskiej, wyszkolonym raczej do trzymania linii niż do pojedynków.</translation>
     </message>
     <message>
         <source>Costs nothing to raise and never breaks, so it buys time no living troop would.</source>
-        <translation>Yetiştirmesi hiçbir şeye mal olmaz ve asla dağılmaz, bu yüzden hiçbir canlı birliğin satın alamayacağı zamanı kazandırır.</translation>
+        <translation>Nic nie kosztuje jego wystawienie i nigdy nie pęka, więc kupuje czas, jakiego nie kupi żaden żywy oddział.</translation>
     </message>
     <message>
         <source>Cursed Arrow Volley</source>
-        <translation>Lanetli Ok Yaylımı</translation>
+        <translation>Salwa przeklętych strzał</translation>
     </message>
     <message>
         <source>Cursed missile line</source>
-        <translation>Lanetli atış hattı</translation>
+        <translation>Przeklęta linia strzelecka</translation>
     </message>
     <message>
         <source>Defenceless at close quarters. Infantry that reaches it kills it in a few seconds.</source>
-        <translation>Yakın mesafede savunmasızdır. Ona ulaşan piyade onu birkaç saniyede öldürür.</translation>
+        <translation>Bezbronny w zwarciu. Piechota, która do niego dojdzie, zabija go w kilka sekund.</translation>
     </message>
     <message>
         <source>Denies ground nothing else can reach, at well over twice an archer&apos;s range.</source>
-        <translation>Bir okçunun menzilinin iki katından fazlasıyla, başka hiçbir şeyin erişemediği araziyi kapatır.</translation>
+        <translation>Odbiera grunt, do którego nic innego nie sięga, na ponad dwukrotnym zasięgu łucznika.</translation>
     </message>
     <message>
         <source>Engineer and labourer</source>
-        <translation>İstihkâmcı ve işçi</translation>
+        <translation>Inżynier i robotnik</translation>
     </message>
     <message>
         <source>Equites</source>
-        <translation>Equites</translation>
+        <translation>Ekwici</translation>
     </message>
     <message>
         <source>Every arrow that lands leaves a curse on its target, draining the will of the formation it struck.</source>
-        <translation>İsabet eden her ok hedefinde bir lanet bırakır ve vurduğu düzenin iradesini emer.</translation>
+        <translation>Każda strzała, która trafi, zostawia na celu klątwę wysysającą wolę szyku, w który uderzyła.</translation>
     </message>
     <message>
         <source>Expendable line infantry</source>
-        <translation>Gözden çıkarılabilir hat piyadesi</translation>
+        <translation>Piechota liniowa na stracenie</translation>
     </message>
     <message>
         <source>Faber</source>
@@ -9453,79 +9461,79 @@ Geniş görüş ve dayanıklı bir yerleşim çapası</translation>
     </message>
     <message>
         <source>Faction-defining heavy beast</source>
-        <translation>Tarafı tanımlayan ağır hayvan</translation>
+        <translation>Ciężka bestia określająca frakcję</translation>
     </message>
     <message>
         <source>Fast enough to choose its own fight, and it rides down archers left without a screen.</source>
-        <translation>Kendi çarpışmasını seçecek kadar hızlıdır ve perdesiz bırakılan okçuları ezer.</translation>
+        <translation>Dość szybki, by sam wybierał sobie walkę, i tratuje łuczników zostawionych bez osłony.</translation>
     </message>
     <message>
         <source>Field surgeon</source>
-        <translation>Sahra cerrahı</translation>
+        <translation>Lekarz polowy</translation>
     </message>
     <message>
         <source>Fireball</source>
-        <translation>Ateş Topu</translation>
+        <translation>Kula ognia</translation>
     </message>
     <message>
         <source>Fragile once contacted. Cavalry overruns it whenever it has no melee screen.</source>
-        <translation>Temas ettiğinde kırılgandır. Yakın dövüş perdesi olmadığında süvari onu her seferinde ezip geçer.</translation>
+        <translation>Kruchy, gdy dojdzie do zwarcia. Jazda go tratuje, kiedy tylko nie ma osłony w walce wręcz.</translation>
     </message>
     <message>
         <source>Gathers and delivers the resources every other unit is paid for with.</source>
-        <translation>Diğer her birimin bedelinin ödendiği kaynakları toplar ve taşır.</translation>
+        <translation>Zbiera i dostarcza surowce, którymi płaci się za każdą inną jednostkę.</translation>
     </message>
     <message>
         <source>Has no melee worth the name, and spears punish it the moment it is caught.</source>
-        <translation>Adına layık bir yakın dövüşü yoktur ve yakalandığı anda mızraklar onu cezalandırır.</translation>
+        <translation>Nie ma walki wręcz z prawdziwego zdarzenia, a włócznie karzą go w chwili, gdy zostanie dopadnięty.</translation>
     </message>
     <message>
         <source>Heavy line infantry</source>
-        <translation>Ağır hat piyadesi</translation>
+        <translation>Ciężka piechota liniowa</translation>
     </message>
     <message>
         <source>Horse archers came from the steppe and the desert margins, and Mediterranean armies hired them rather than raised them.</source>
-        <translation>Atlı okçular bozkırdan ve çöl kıyılarından geldi; Akdeniz orduları onları yetiştirmek yerine kiraladı.</translation>
+        <translation>Łucznicy konni przybywali ze stepu i skrajów pustyni, a armie śródziemnomorskie raczej ich najmowały, niż wystawiały własnych.</translation>
     </message>
     <message>
         <source>Hurls fire that bursts across a formation and clings to the ground where it lands.</source>
-        <translation>Bir düzenin üzerine patlayan ve düştüğü zemine yapışan ateş fırlatır.</translation>
+        <translation>Ciska ogniem, który wybucha nad szykiem i lgnie do ziemi tam, gdzie spadnie.</translation>
     </message>
     <message>
         <source>Hurls fire that bursts across a formation and leaves the ground burning where it lands.</source>
-        <translation>Bir düzenin üzerine patlayan ve düştüğü zemini yanar bırakan ateş fırlatır.</translation>
+        <translation>Ciska ogniem, który wybucha nad szykiem i zostawia ziemię płonącą tam, gdzie spadnie.</translation>
     </message>
     <message>
         <source>Its arrows carry a curse that drains the will of everything they strike.</source>
-        <translation>Okları, vurdukları her şeyin iradesini emen bir lanet taşır.</translation>
+        <translation>Jego strzały niosą klątwę, która wysysa wolę ze wszystkiego, co trafią.</translation>
     </message>
     <message>
         <source>Its quiver was buried with it, and the curse worked into the shafts outlasted the hand that drew the bow.</source>
-        <translation>Sadağı onunla birlikte gömüldü ve oklara işlenmiş lanet, yayı geren eli aşıp yaşadı.</translation>
+        <translation>Kołczan pochowano razem z nim, a klątwa wpleciona w drzewce przetrwała rękę, która napinała łuk.</translation>
     </message>
     <message>
         <source>Lancer cavalry</source>
-        <translation>Mızraklı süvari</translation>
+        <translation>Jazda kopijnicza</translation>
     </message>
     <message>
         <source>Legionary</source>
-        <translation>Lejyoner</translation>
+        <translation>Legionista</translation>
     </message>
     <message>
         <source>Liby-Phoenician Spear</source>
-        <translation>Libya-Fenike Mızrağı</translation>
+        <translation>Włócznia libijsko-fenicka</translation>
     </message>
     <message>
         <source>Libyan Archer</source>
-        <translation>Libyalı Okçu</translation>
+        <translation>Łucznik libijski</translation>
     </message>
     <message>
         <source>Loses the straight infantry fight to swords, and caught in the open it is only a slower line.</source>
-        <translation>Düz piyade çarpışmasını kılıçlara kaptırır ve açıkta yakalandığında yalnızca daha yavaş bir hattır.</translation>
+        <translation>Przegrywa prostą walkę piechoty z mieczami, a złapany w otwartym polu jest tylko wolniejszą linią.</translation>
     </message>
     <message>
         <source>Massed missile line</source>
-        <translation>Toplu atış hattı</translation>
+        <translation>Zwarta linia strzelecka</translation>
     </message>
     <message>
         <source>Medicus</source>
@@ -9533,19 +9541,19 @@ Geniş görüş ve dayanıklı bir yerleşim çapası</translation>
     </message>
     <message>
         <source>Mends nearby wounded without being told to, so a line that holds keeps its strength.</source>
-        <translation>Söylenmeden yakındaki yaralıları iyileştirir, böylece tutunan bir hat gücünü korur.</translation>
+        <translation>Sam z siebie opatruje rannych w pobliżu, więc linia, która trzyma, zachowuje siłę.</translation>
     </message>
     <message>
         <source>Mounted skirmisher</source>
-        <translation>Atlı avcı</translation>
+        <translation>Konny harcownik</translation>
     </message>
     <message>
         <source>Not a soldier. It cannot hold ground and should never be the last thing guarding a camp.</source>
-        <translation>Asker değildir. Arazi tutamaz ve bir kampı koruyan son şey asla olmamalıdır.</translation>
+        <translation>To nie żołnierz. Nie utrzyma terenu i nigdy nie powinien być ostatnim, co pilnuje obozu.</translation>
     </message>
     <message>
         <source>Numidian Cavalry</source>
-        <translation>Numidya Süvarisi</translation>
+        <translation>Jazda numidyjska</translation>
     </message>
     <message>
         <source>Onager</source>
@@ -9553,151 +9561,151 @@ Geniş görüş ve dayanıklı bir yerleşim çapası</translation>
     </message>
     <message>
         <source>One slow body, helpless in melee, and it needs the awakened dead between it and the enemy.</source>
-        <translation>Yakın dövüşte çaresiz, tek ve yavaş bir bedendir; kendisiyle düşman arasında uyanmış ölülere ihtiyaç duyar.</translation>
+        <translation>Jedno powolne ciało, bezradne w zwarciu, i potrzebuje przebudzonych umarłych między sobą a wrogiem.</translation>
     </message>
     <message>
         <source>Out-trades everything at range, and massed bows are the answer to a war elephant.</source>
-        <translation>Menzilde her şeyi geçer ve bir savaş filinin yanıtı toplu yaylardır.</translation>
+        <translation>Wygrywa każdą wymianę na dystans, a masa łuków to odpowiedź na słonia bojowego.</translation>
     </message>
     <message>
         <source>Outranges troops on foot and can withdraw from any fight it cannot win.</source>
-        <translation>Yaya birliklerden daha uzağa erişir ve kazanamayacağı her çarpışmadan çekilebilir.</translation>
+        <translation>Sięga dalej niż piechota i może się wycofać z każdej walki, której nie wygra.</translation>
     </message>
     <message>
         <source>Overrun in seconds by any infantry that reaches it, and far too slow to withdraw.</source>
-        <translation>Kendisine ulaşan her piyade tarafından saniyeler içinde ezilir ve çekilemeyecek kadar yavaştır.</translation>
+        <translation>Stratowany w kilka sekund przez każdą piechotę, która do niego dojdzie, i o wiele za wolny, by się wycofać.</translation>
     </message>
     <message>
         <source>Phoenician Craftsman</source>
-        <translation>Fenikeli Zanaatkâr</translation>
+        <translation>Rzemieślnik fenicki</translation>
     </message>
     <message>
         <source>Phoenician craftsmen raised the harbours and walls that made Carthage the richest city in the western sea.</source>
-        <translation>Fenikeli zanaatkârlar, Kartaca&apos;yı batı denizinin en zengin şehri yapan limanları ve surları yükseltti.</translation>
+        <translation>Fenickie rzemiosło wzniosło porty i mury, które uczyniły Kartaginę najbogatszym miastem zachodniego morza.</translation>
     </message>
     <message>
         <source>Raised from the burial ranks of an army that was interred still holding its shields.</source>
-        <translation>Kalkanlarını hâlâ tutar hâlde gömülmüş bir ordunun mezar saflarından kaldırıldı.</translation>
+        <translation>Podniesiony z pochowanych szeregów armii, którą złożono w ziemi wciąż trzymającą tarcze.</translation>
     </message>
     <message>
         <source>Raises every building an army needs and repairs what the enemy breaks.</source>
-        <translation>Bir ordunun ihtiyaç duyduğu her yapıyı yükseltir ve düşmanın kırdığını onarır.</translation>
+        <translation>Wznosi każdą budowlę potrzebną armii i naprawia to, co zniszczy wróg.</translation>
     </message>
     <message>
         <source>Repays its cost against cavalry, and braced on high ground it holds against far heavier attacks.</source>
-        <translation>Süvariye karşı bedelini geri öder ve yüksek zeminde payanda aldığında çok daha ağır saldırılara dayanır.</translation>
+        <translation>Zwraca swój koszt przeciw jeździe, a podparty na wzniesieniu trzyma przeciw dużo cięższym uderzeniom.</translation>
     </message>
     <message>
         <source>Rome raised few archers of its own and drew them from Crete and the eastern allies instead.</source>
-        <translation>Roma kendi okçularından azını yetiştirdi; onları bunun yerine Girit&apos;ten ve doğulu müttefiklerden aldı.</translation>
+        <translation>Rzym wystawiał niewielu własnych łuczników i ściągał ich raczej z Krety i od sprzymierzeńców ze wschodu.</translation>
     </message>
     <message>
         <source>Rome standardised the bolt thrower until every legion carried its own, mounted on carts and served by trained crews.</source>
-        <translation>Roma ok atarını her lejyon kendi taşıyana dek standartlaştırdı; arabalara bindirilmiş ve eğitimli ekiplerce kullanılırdı.</translation>
+        <translation>Rzym ujednolicił miotacz bełtów tak dalece, że każdy legion woził własne, na wozach i z wyszkoloną obsługą.</translation>
     </message>
     <message>
         <source>Sacred Band Healer</source>
-        <translation>Kutsal Birlik Şifacısı</translation>
+        <translation>Uzdrowiciel Świętego Zastępu</translation>
     </message>
     <message>
         <source>Settlement population</source>
-        <translation>Yerleşim nüfusu</translation>
+        <translation>Ludność osady</translation>
     </message>
     <message>
         <source>Shock cavalry</source>
-        <translation>Şok süvarisi</translation>
+        <translation>Jazda uderzeniowa</translation>
     </message>
     <message>
         <source>Siege artillery</source>
-        <translation>Kuşatma topçusu</translation>
+        <translation>Artyleria oblężnicza</translation>
     </message>
     <message>
         <source>Siege bolt thrower</source>
-        <translation>Kuşatma ok atarı</translation>
+        <translation>Oblężniczy miotacz bełtów</translation>
     </message>
     <message>
         <source>Slower and weaker than the living line it imitates, and nothing in the field can mend it.</source>
-        <translation>Taklit ettiği canlı hattan daha yavaş ve daha zayıftır ve sahada onu onarabilecek hiçbir şey yoktur.</translation>
+        <translation>Wolniejszy i słabszy niż żywa linia, którą naśladuje, a w polu nic go nie naprawi.</translation>
     </message>
     <message>
         <source>Still cavalry. A braced spear line stops it, and it cannot trade with archers at range.</source>
-        <translation>Yine de süvaridir. Payandalı bir mızrak hattı onu durdurur ve menzilde okçularla alışveriş edemez.</translation>
+        <translation>Wciąż jazda. Podparta linia włóczni ją zatrzymuje, a z łucznikami nie wymieni się na dystans.</translation>
     </message>
     <message>
         <source>The Liby-Phoenician spear was the steady centre that a mercenary army could be built around.</source>
-        <translation>Libya-Fenike mızrağı, bir paralı ordunun çevresine kurulabileceği sağlam merkezdi.</translation>
+        <translation>Włócznia libijsko-fenicka była pewnym środkiem, wokół którego dało się zbudować armię najemną.</translation>
     </message>
     <message>
         <source>The Numidians rode without bridles and were the finest light horse in the Mediterranean. Rome&apos;s worst day, at Cannae, was their work.</source>
-        <translation>Numidyalılar dizginsiz binerdi ve Akdeniz&apos;in en iyi hafif süvarisiydi. Roma&apos;nın en kötü günü olan Cannae onların işiydi.</translation>
+        <translation>Numidyjczycy jeździli bez uzdy i byli najlepszą lekką jazdą Morza Śródziemnego. Najgorszy dzień Rzymu, pod Kannami, był ich dziełem.</translation>
     </message>
     <message>
         <source>The Sacred Band kept physicians of its own, an honour reserved for the citizen elite.</source>
-        <translation>Kutsal Birlik kendi hekimlerini tutardı; bu, yurttaş seçkinlerine ayrılmış bir onurdu.</translation>
+        <translation>Święty Zastęp miał własnych medyków — zaszczyt zastrzeżony dla obywatelskiej elity.</translation>
     </message>
     <message>
         <source>The bolt thrower was the accurate half of a siege train, used against men and gates alike.</source>
-        <translation>Ok atar, bir kuşatma katarının isabetli yarısıydı; hem insanlara hem kapılara karşı kullanılırdı.</translation>
+        <translation>Miotacz bełtów był celną połową taboru oblężniczego, używaną tak samo przeciw ludziom, jak przeciw bramom.</translation>
     </message>
     <message>
         <source>The bolt throwers of Carthage were built in the same yards as its fleet, by the same shipwrights.</source>
-        <translation>Kartaca&apos;nın ok atarları donanmasıyla aynı tersanelerde, aynı gemi ustalarınca yapılırdı.</translation>
+        <translation>Miotacze bełtów Kartaginy budowano w tych samych warsztatach co jej flotę i tymi samymi rękami szkutników.</translation>
     </message>
     <message>
         <source>The equites were drawn from the wealthiest citizens, and Rome&apos;s cavalry was never the equal of its infantry.</source>
-        <translation>Equites en varlıklı yurttaşlardan derlenirdi ve Roma&apos;nın süvarisi hiçbir zaman piyadesinin dengi olmadı.</translation>
+        <translation>Ekwitów brano spośród najbogatszych obywateli, a jazda Rzymu nigdy nie dorównała jego piechocie.</translation>
     </message>
     <message>
         <source>The fabri built the roads, the bridges and the fortified camp that went up every single night of a march.</source>
-        <translation>Fabri, bir yürüyüşün her gecesi kurulan yolları, köprüleri ve tahkimli kampı inşa ederdi.</translation>
+        <translation>Fabri budowali drogi, mosty i ufortyfikowany obóz, który powstawał każdej jednej nocy marszu.</translation>
     </message>
     <message>
         <source>The legionary&apos;s short sword and heavy javelin were built for one thing: closing the last twenty paces and winning there.</source>
-        <translation>Lejyonerin kısa kılıcı ve ağır ciridi tek bir iş için yapılmıştı: son yirmi adımı kapatmak ve orada kazanmak.</translation>
+        <translation>Krótki miecz i ciężki oszczep legionisty stworzono do jednego: przejścia ostatnich dwudziestu kroków i wygrania tam.</translation>
     </message>
     <message>
         <source>The longest reach in any army, and quick enough to loose again before its target closes.</source>
-        <translation>Herhangi bir ordudaki en uzun erim ve hedefi yaklaşmadan bir kez daha salacak kadar hızlı.</translation>
+        <translation>Najdłuższy zasięg w całej armii, i dość szybki, by wypuścić kolejną salwę, zanim cel się zbliży.</translation>
     </message>
     <message>
         <source>The longest reach of any mounted troop, striking before the enemy line can answer.</source>
-        <translation>Atlı birliklerin en uzun erimi; düşman hattı karşılık veremeden vurur.</translation>
+        <translation>Najdłuższy zasięg wśród wojsk konnych — uderza, zanim linia wroga zdąży odpowiedzieć.</translation>
     </message>
     <message>
         <source>The medicus marched with the legion, and Roman field medicine was the best organised in the ancient world.</source>
-        <translation>Medicus lejyonla birlikte yürürdü ve Roma sahra hekimliği antik dünyanın en iyi örgütlenmiş olanıydı.</translation>
+        <translation>Medicus maszerował razem z legionem, a rzymska medycyna polowa była najlepiej zorganizowaną w świecie starożytnym.</translation>
     </message>
     <message>
         <source>The mounted lance traded the sword&apos;s flexibility for reach, striking before an enemy could bring a weapon to bear.</source>
-        <translation>Atlı mızrak, kılıcın esnekliğini erimle takas etti; düşman silahını kullanacak duruma gelmeden vururdu.</translation>
+        <translation>Kopia jeźdźca zamieniła giętkość miecza na zasięg, uderzając, zanim wróg zdołał użyć broni.</translation>
     </message>
     <message>
         <source>The onager kicked like the wild ass it was named for, and was Rome&apos;s answer to a wall that would not fall.</source>
-        <translation>Onager, adını aldığı yaban eşeği gibi çifte atardı ve Roma&apos;nın yıkılmayan bir sura verdiği yanıttı.</translation>
+        <translation>Onager kopał jak dziki osioł, po którym go nazwano, i był odpowiedzią Rzymu na mur, który nie chciał paść.</translation>
     </message>
     <message>
         <source>The priests who sealed the tombs learned to open them, and now walk ahead of what they woke.</source>
-        <translation>Mezarları mühürleyen rahipler onları açmayı öğrendi ve şimdi uyandırdıklarının önünde yürüyorlar.</translation>
+        <translation>Kapłani, którzy pieczętowali grobowce, nauczyli się je otwierać — i teraz kroczą przed tym, co obudzili.</translation>
     </message>
     <message>
         <source>The slowest troops in the line, and they take losses crossing open ground under archery.</source>
-        <translation>Hattaki en yavaş birliklerdir ve ok yağmuru altında açık araziyi geçerken kayıp verirler.</translation>
+        <translation>Najwolniejsze wojska w linii, i ponoszą straty, przechodząc otwarty teren pod ostrzałem łuczników.</translation>
     </message>
     <message>
         <source>The spear was the cheapest way to make a horse refuse a charge, and every ancient army kept a wall of them.</source>
-        <translation>Mızrak, bir atı hücumdan caydırmanın en ucuz yoluydu ve her antik ordu bunlardan bir duvar tutardı.</translation>
+        <translation>Włócznia była najtańszym sposobem, by koń odmówił szarży, i każda antyczna armia trzymała ich ścianę.</translation>
     </message>
     <message>
         <source>The triarii were the oldest and steadiest men in the legion, knelt behind the line and committed only when the day was in doubt.</source>
-        <translation>Triarii, lejyonun en yaşlı ve en sağlam adamlarıydı; hattın gerisinde diz çöker ve ancak günün kaderi belirsizken sürülürlerdi.</translation>
+        <translation>Triarii byli najstarszymi i najpewniejszymi ludźmi w legionie, klęczeli za linią i wchodzili do walki dopiero wtedy, gdy dzień stawał się niepewny.</translation>
     </message>
     <message>
         <source>The weakest body on the field. Anything that finds it kills it.</source>
-        <translation>Meydandaki en zayıf beden. Onu bulan her şey onu öldürür.</translation>
+        <translation>Najsłabsze ciało na polu. Cokolwiek go znajdzie, zabije go.</translation>
     </message>
     <message>
         <source>Torsion artillery was built on the spot from local timber and abandoned when the army moved on.</source>
-        <translation>Burma topçusu yerinde, yerel keresteden yapılır ve ordu ilerlediğinde bırakılırdı.</translation>
+        <translation>Artylerię torsyjną budowano na miejscu z miejscowego drewna i porzucano, gdy armia szła dalej.</translation>
     </message>
     <message>
         <source>Triarius</source>
@@ -9705,83 +9713,83 @@ Geniş görüş ve dayanıklı bir yerleşim çapası</translation>
     </message>
     <message>
         <source>War elephants terrified armies that had never met them, and were nearly useless against those that had.</source>
-        <translation>Savaş filleri onlarla hiç karşılaşmamış orduları dehşete düşürürdü ve karşılaşmış olanlara karşı neredeyse yararsızdı.</translation>
+        <translation>Słonie bojowe przerażały armie, które nigdy ich nie widziały, i były niemal bezużyteczne przeciw tym, które już je znały.</translation>
     </message>
     <message>
         <source>Wins the straight infantry fight against spears, and overruns unescorted siege in seconds.</source>
-        <translation>Mızraklara karşı düz piyade çarpışmasını kazanır ve muhafızsız kuşatmayı saniyeler içinde ezer.</translation>
+        <translation>Wygrywa prostą walkę piechoty z włóczniami i tratuje nieosłonięte machiny oblężnicze w kilka sekund.</translation>
     </message>
 </context>
 <context>
     <name>WallNetworkService</name>
     <message>
         <source>Blocked by an existing wall.</source>
-        <translation>Var olan bir sur engelliyor.</translation>
+        <translation>Zablokowane przez istniejący mur.</translation>
     </message>
     <message>
         <source>Cannot build there.</source>
-        <translation>Oraya inşa edilemez.</translation>
+        <translation>Nie można tam budować.</translation>
     </message>
 </context>
 <context>
     <name>WaveArchetype</name>
     <message>
         <source>Probing column</source>
-        <translation>Yoklama kolu</translation>
+        <translation>Kolumna rozpoznawcza</translation>
     </message>
     <message>
         <source>Assault line</source>
-        <translation>Taarruz hattı</translation>
+        <translation>Linia szturmowa</translation>
     </message>
     <message>
         <source>Cavalry flank</source>
-        <translation>Süvari kanadı</translation>
+        <translation>Skrzydło jazdy</translation>
     </message>
     <message>
         <source>Skirmish screen</source>
-        <translation>Avcı perdesi</translation>
+        <translation>Zasłona harcowników</translation>
     </message>
     <message>
         <source>Siege column</source>
-        <translation>Kuşatma kolu</translation>
+        <translation>Kolumna oblężnicza</translation>
     </message>
     <message>
         <source>Elite guard</source>
-        <translation>Seçkin muhafız</translation>
+        <translation>Straż elitarna</translation>
     </message>
 </context>
 <context>
     <name>WaveTracker</name>
     <message>
         <source>All waves broken</source>
-        <translation>Bütün dalgalar kırıldı</translation>
+        <translation>Wszystkie fale złamane</translation>
     </message>
     <message>
         <source>Incoming</source>
-        <translation>Geliyor</translation>
+        <translation>Nadciąga</translation>
     </message>
     <message>
         <source>Engaged</source>
-        <translation>Çarpışıyor</translation>
+        <translation>W walce</translation>
     </message>
     <message>
         <source>Next wave</source>
-        <translation>Sonraki dalga</translation>
+        <translation>Następna fala</translation>
     </message>
     <message>
         <source>Wave %1 / %2</source>
-        <translation>Dalga %1 / %2</translation>
+        <translation>Fala %1 / %2</translation>
     </message>
     <message>
         <source>%1 left</source>
-        <translation>%1 kaldı</translation>
+        <translation>Pozostało: %1</translation>
     </message>
 </context>
 <context>
     <name>WildlifeSystem</name>
     <message>
         <source>Wolves are moving on the valley.</source>
-        <translation>Kurtlar vadiye iniyor.</translation>
+        <translation>Wilki ruszają na dolinę.</translation>
     </message>
 </context>
 <context>
@@ -9798,17 +9806,17 @@ To fix:
 - Run run_debug_softwaregl.cmd or set QT_OPENGL=software
 - Update graphics drivers
 - On VMs: Enable 3D acceleration in VM settings</source>
-        <translation>OpenGL görüntüleyici hazırlanamadı.
+        <translation>Nie udało się zainicjować renderera OpenGL.
 
-Bu genellikle şu anlama gelir:
-1. Ekran kartı sürücüleri gereken OpenGL 3.3 Core Profile&apos;ı desteklemiyor
-2. OpenGL desteği eksik bir sanal makinede çalışılıyor
-3. Qt yazılım OpenGL yedeği yok ya da hazırlanamadı
+Zwykle oznacza to, że:
+1. Sterowniki graficzne nie obsługują wymaganego profilu OpenGL 3.3 Core
+2. Gra działa w maszynie wirtualnej z niepełną obsługą OpenGL
+3. Programowa awaryjna obsługa OpenGL w Qt jest niedostępna lub nie wystartowała
 
-Çözüm için:
-- run_debug_softwaregl.cmd dosyasını çalıştır ya da QT_OPENGL=software ayarla
-- Ekran kartı sürücülerini güncelle
-- Sanal makinelerde: VM ayarlarından 3D hızlandırmayı aç</translation>
+Jak to naprawić:
+- Uruchom run_debug_softwaregl.cmd albo ustaw QT_OPENGL=software
+- Zaktualizuj sterowniki graficzne
+- W maszynach wirtualnych: włącz akcelerację 3D w ustawieniach maszyny</translation>
     </message>
 </context>
 </TS>

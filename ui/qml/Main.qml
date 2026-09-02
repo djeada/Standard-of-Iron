@@ -182,6 +182,7 @@ ApplicationWindow {
         anchors.fill: parent
         z: 1
         visible: !mainWindow.menu_visible && game_started
+        overlay_active: mainWindow.overlay_active
         onActiveFocusChanged: {
             if (activeFocus)
                 gameViewItem.forceActiveFocus();
@@ -244,7 +245,7 @@ ApplicationWindow {
         anchors.leftMargin: Design.Metrics.hudZoneMargin
         max_height: Math.max(Design.Metrics.space24 * 6, hud.height - hud.bottom_panel_height - anchors.topMargin - Design.Metrics.space12)
         z: 10.5
-        visible: active && mainWindow.game_started && !mainWindow.menu_visible && !hud.commander_rpg_mode
+        visible: active && mainWindow.game_started && !mainWindow.overlay_active && !hud.commander_rpg_mode
         game_is_paused: mainWindow.game_paused
         onPause_requested: {
             mainWindow.game_paused = !mainWindow.game_paused;
@@ -696,15 +697,7 @@ ApplicationWindow {
         property real y_pos: -1
 
         function in_hud_zone(x, y) {
-            if (!hud.visible)
-                return false;
-            var topH = hud.top_panel_height;
-            var bottomH = hud.bottom_panel_height;
-            if (y < topH)
-                return true;
-            if (y > (height - bottomH))
-                return true;
-            return false;
+            return hud.blocks_world_pointer(x, y);
         }
 
         anchors.fill: parent

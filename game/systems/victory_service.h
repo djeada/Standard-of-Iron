@@ -132,6 +132,8 @@ struct VictoryObjective {
 struct ObjectiveStatus {
   QString id;
   QString description;
+
+  QString detail;
   int progress = 0;
   int required = 1;
   bool complete = false;

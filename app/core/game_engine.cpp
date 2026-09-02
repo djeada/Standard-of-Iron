@@ -1710,7 +1710,7 @@ void GameEngine::apply_mission_setup() {
   m_mission_waves.bind_after_setup(
       mission_wave_binding(), std::move(waves), std::move(events));
   configure_mission_stages();
-  m_commander_message_director.notify_mission_start();
+  m_mission_start_cue_pending = m_commander_message_director.has_messages();
   if (effects.rebuild_entity_cache) {
     GameStateRestorer::rebuild_entity_cache(
         m_world, m_entity_cache, m_runtime.local_owner_id);
@@ -1848,6 +1848,7 @@ void GameEngine::reset_mission_runtime_state() {
   m_mission_waves.reset();
   m_mission_stage_tracker.clear();
   m_mission_stage_poll_accumulator = 0.0F;
+  m_mission_start_cue_pending = false;
   m_commander_message_director.clear();
   m_interaction_targeting = {};
   m_interaction_targeting_accumulator = 0.0F;
@@ -1945,6 +1946,7 @@ void GameEngine::configure_mission_stages() {
 }
 
 void GameEngine::configure_commander_messages() {
+  m_mission_start_cue_pending = false;
   m_commander_message_director.clear();
   publish_commander_message();
 
@@ -1977,10 +1979,23 @@ void GameEngine::configure_commander_messages() {
       });
 }
 
+void GameEngine::release_pending_mission_start_cue() {
+  if (!m_mission_start_cue_pending) {
+    return;
+  }
+
+  if (is_loading() || m_runtime.paused || !m_runtime.initialized) {
+    return;
+  }
+  m_mission_start_cue_pending = false;
+  m_commander_message_director.notify_mission_start();
+}
+
 void GameEngine::update_commander_messages(float delta_time) {
   if (!m_commander_message_director.has_messages()) {
     return;
   }
+  release_pending_mission_start_cue();
   if (m_commander_message_director.update(delta_time)) {
     publish_commander_message();
   }
@@ -2066,6 +2081,7 @@ void GameEngine::publish_mission_stages() {
     entry["description"] =
         Game::Util::tr_asset(Game::Util::k_missions_context, status.description);
     entry["hint"] = Game::Util::tr_asset(Game::Util::k_missions_context, status.hint);
+    entry["detail"] = status.detail;
     entry["progress"] = status.progress;
     entry["required"] = status.required;
     entry["complete"] = status.complete;
@@ -2119,6 +2135,7 @@ void GameEngine::publish_victory_objectives() {
         Game::Util::tr_asset(Game::Util::k_missions_context, objective.description);
     entry["description"] = entry["title"];
     entry["hint"] = QString();
+    entry["detail"] = objective.detail;
     entry["progress"] = objective.progress;
     entry["required"] = objective.required;
     entry["complete"] = objective.complete;
