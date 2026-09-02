@@ -68,9 +68,11 @@ Rules the generator enforces, and the reasons behind them:
 - No building stands on unwalkable ground. Hill slopes, mountains, lakes and
   river channels are all blocked, and terrain wins over the street grid: a
   housing block simply stops where a slope starts.
-- **Towns are never placed on hills.** A hill's flat crown is only about a fifth
-  of its authored width, so a town on one shrinks until it is a camp. Put the
-  town on the flat and leave the height as the position overlooking it.
+- **Towns are not placed on hills unless a map says so.** A hill's flat crown
+  is only about a fifth of its authored width, so a town on one shrinks until it
+  is a camp. Put the town on the flat and leave the height as the position
+  overlooking it - or author `"on_hill": true` where a small hilltop fort is
+  the point of the place, and accept the size that comes with it.
 - A hill carrying a settlement may be widened to fit its crown, but never past
   2.4x its authored size, never into a river or lake, and never without keeping
   at least two approaches. A hill that doubles in size stops being terrain and
@@ -84,7 +86,10 @@ A settlement marked `"authored": true` is laid out by hand in `structures` and
 `generate-map-settlements.py` leaves both it and its buildings alone - it carries
 through anything tagged `"authored": true` exactly as it already carries landmark
 pieces. The intent entry stays in `settlements` so the map still says what the
-place is; only the generation is skipped.
+place is; only the generation is skipped. Generated structures are tagged with
+their `settlement` id and `"authored": true` as well: the tag is what lets a
+rerun replace exactly its own output, and the flag keeps them under
+`EveryAuthoredSettlementStandsOnGroundItCanHold`.
 
 Author one when the template is the wrong answer, and the clearest case is a
 settlement on a hill. A hill's flat crown is an ellipse, and a rectangle inscribed
@@ -94,13 +99,99 @@ generator's response to that is to shove the town off the hill; authoring the
 settlement instead lets the hill stay the point of the place. `Crossing the
 Rhone`'s Roman citadel is the worked example.
 
-Every campaign settlement is authored now - all 30 of them. Each one is laid out
-for what the place is rather than from one template: a winter camp is hut rows
-with a fire between each pair, a supply depot is a cart yard round its market, a
-Numidian camp is a stepped stockade with no straight street in it, a pass fort
-doubles the towers on the walls the road runs between, a colonia gets one street
-and two housing blocks. The ring itself is fitted to the ground that is free at
-that site, so no two are the same size or shape either.
+The player's camps and a handful of enemy ones are authored by hand. The rest
+of the enemy settlements carry a `plan` (below) and are generated: the plan is
+the intent, and the generator stamps it, so their layout is regenerable and
+checked rather than frozen.
+
+### Plans
+
+`tier` says how much a place is; `plan` says what shape its wall circuit is.
+They are separate axes: a marching camp can be a circle and a town a star. The
+rectangle is the Roman default and every other plan exists to make an enemy
+read as a different kind of enemy at overview distance.
+
+- **rect** - the four-sided ring, as before. The default.
+- **stepped** - a rectangle with its corners cut back: the Polybian playing
+  card. `chamfer` sets the cut.
+- **circle** - an oval ring on the lattice: a native contour fort, a colonia, a
+  Numidian kraal (`gate_count: 1`). `towers` spaces towers evenly round it.
+- **star** - a bastioned trace: a curtain polygon with a triangular bastion at
+  every corner and a tower behind each. `size` is the curtain's half-extent,
+  `bastion` how far the points reach, `flank` how wide the shoulders are.
+- **twin** - two lobes and a walled neck between them, one circuit. `offset` is
+  the vector between lobe centres; the neck is kept clear of buildings so the
+  lobes stay connected. The barracks goes in one lobe, the market in the other.
+- **terraced** - two concentric rings; the upper ward holds the barracks, its
+  gate faces the settlement's `facing`, the lower ward holds the rest.
+- **curtain** - not a ring: an open wall along `path`, for a pass plug or a
+  siege line. It holds a band of ground `depth` behind it and a camp at the
+  settlement's centre. Author its `gates` explicitly, on the roads it crosses.
+
+Every plan is built the same way. The circuit is defined by the ground it
+encloses, the wall cells are the lattice cells inside that ground that touch a
+cell outside it, and diagonal steps are closed with an L so the wall renderer
+sees a wall rather than a dotted line of posts. Gates are cut into the straight
+span of wall nearest where a road actually crosses the enclosed ground - for a
+curve the crossing of the bounding box can be a wall's length off - and the
+usual flood-fill proves the ring is sealed. Buildings keep off the roads that
+run through the ring (`ROAD_VERGE`), which the old rectangular layout did not.
+
+A plan on a hill: `on_hill: true` keeps a town on its hill instead of shoving it
+off, and `grow_hill: false` keeps the hill the size it was authored. A round
+ring fits its hill when its half-extents fit the crown's; a square one only when
+its corner does, so a circle on a hill is bigger than a square on the same hill.
+Either way a hill's usable crown defaults to about 38% of its authored
+half-extent at campaign scale, so a 150x130 hill carries a ring of at most about
+50x44 - a hill fort is a small fort, and the hill is the point. A hill authored
+with `crown` (a fraction of its half-extent, at most 0.9) keeps that much of
+itself flat instead: `crown: 0.6` on a 150x88 hill is a mesa with a 45x26 top and
+short steep flanks, `crown: 0.85` a broad table. The loader, the engine's
+`hill_crown_profile` and the generator's `hill_crown_extent` all read that one
+number, so a ring fitted by the generator stands where the engine's crown is.
+
+A `rect` plan's `size` is its half-extents like every other plan's, and
+`citadel: false` drops the town tier's inner ring from a rect town too shallow to
+hold one - Trasimene's column town is 92x28 against the foot of a plateau.
+
+### Raising a hill under a settlement
+
+A new hill breaks the roads that ran through the site, and regenerating the
+whole road network is not a neutral operation on the campaign maps (roads the
+generator cannot route are dropped; a bridge approach it cannot complete aborts
+the write). The pipeline is:
+
+1. Author the hill, centred on the settlement (the generator recentres the
+   settlement on its hill).
+2. `generate-map-settlements.py MAP --write` - fits the ring to the crown and
+   writes the hill's entrances.
+3. `reroute-map-roads.py MAP --hill X,Z --write` - re-routes only the roads the
+   hill broke; endpoints under the hill move to its nearest entrance, roads that
+   lay entirely under it are dropped.
+4. `generate-map-settlements.py MAP --write` again, so gates follow the roads.
+5. `reroute-map-roads.py MAP --to-gates ID --write` bends a road that ends
+   inside a ring so it ends at the nearest gate, then run step 4 once more.
+6. `fix-map-prop-overlaps.py MAP --max-travel-structure 0 --max-travel-anchor 0`
+   nudges the old dressing out of the new walls; dressing that ended up on the
+   hill's slope is deleted, not nudged.
+
+The old hand-laid structures of a settlement being handed to the generator have
+to be deleted in the same edit, or the generator's output lands on top of them.
+
+**A hill on a hill.** A `terraced` plan on a hill that has a second, smaller
+hill authored at the same centre is a real terrace fort: the lower ward on the
+outer crown, the keep on the inner one. Hill heights compose as
+`max(base + height)`, so the inner hill's `height` is absolute, not stacked on
+the outer crown - Zama's north camp is a 150x130 hill of height 2.6 with
+`crown: 0.85` under a 56x48 hill of height 10.5 with `crown: 0.6`, a six-metre
+keep above the terrace. The engine used to carve the inner hill's entrance
+ramps down to ground level straight through the outer crown, which left the
+lower ward's homes in a trench; since 2 Sep 2026 a ramp never digs below the
+ground that stood before its own hill
+(`HillCrownGeometryTest.AHillRaisedOnAnotherHillNeverCarvesBelowTheOuterCrown`).
+The generator writes the inner hill one entrance on the settlement's `facing`,
+the side the keep's gate is cut on, keeps that corridor free of buildings, and
+knows a terrace hill's ramp inside the outer ring is not a breach.
 
 Three rules an authored ring has to earn back, because it gives up the
 generator's checks:
@@ -143,6 +234,14 @@ costs the player no structures and still reads as an army camped for the night.
 - A gate opening is exactly the gate's own span. Anything wider leaves walkable
   ground beside it. Gates open for their owner and allies only, so a walled town
   is a siege.
+- Wall cells keep `WALL_WATER_CLEARANCE` (1.5 m) off a river or lake, so a
+  curtain that crosses a river stops on the bank instead of standing in the
+  water; the channel is the wall there. Buildings keep their own, larger,
+  terrain clearance.
+- A raised `flat` (a plateau with a `height`) is blended in over the outer fifth
+  of its ellipse, and nothing is placed on that rim: a barracks straddling a
+  three-metre step is on broken ground. A town at the foot of a plateau builds
+  below the step.
 
 ## Landmarks
 
@@ -290,6 +389,14 @@ a range-sized click target swallows everything standing inside it.
 - A lake must remove a flank, constrain a road, protect an objective, or form a
   sector boundary. A lake in otherwise open ground is decorative and should be
   removed or integrated into the route graph.
+- A ring river - `{"shape": "ring", "x", "z", "radius", "width"}` with optional
+  `radius_z` and `segments` (12..256, default 48) - is a closed channel: a moat,
+  an oxbow, the water round the Rhone river town. The loader expands it in
+  `game/map/river_geometry.h`, the map editor draws it as a loop and writes it
+  back as a ring, and every map script reads it through
+  `scripts/map_water_geometry.py`, the one Python mirror of that expansion. A
+  ring is exempt from the edge-to-edge rule and is a barrier with no way round,
+  so it carries at least two bridges.
 
 ## Height and fantasy
 

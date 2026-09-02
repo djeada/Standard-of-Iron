@@ -56,6 +56,7 @@ struct TownCensus {
   int farms = 0;
   int towers = 0;
   int walls = 0;
+  int gates = 0;
   int markets = 0;
   int engines = 0;
 
@@ -246,6 +247,9 @@ protected:
         ++census.towers;
       } else if (building.type == "wall_segment" || building.type == "wall_gate") {
         ++census.walls;
+        if (building.type == "wall_gate") {
+          ++census.gates;
+        }
       } else if (building.type == "marketplace") {
         ++census.markets;
       } else if (building.type == "catapult" || building.type == "ballista") {
@@ -471,6 +475,46 @@ TEST_F(AiTownPlanTest, EveryCommanderRaisesItsOwnTownFromAnEmptyField) {
       << "the Hannibalic hexagon is authored with a tower on every corner";
   EXPECT_GE(towns.at("marcellus").census.barracks, 2)
       << "the vanguard chevron is authored around three barracks";
+}
+
+TEST_F(AiTownPlanTest, AWalledCommanderClosesItsCircuitGivenTime) {
+  struct Castle {
+    const char* name;
+    Game::Units::SpawnType commander;
+    Game::Systems::NationID nation;
+    const char* plan;
+  };
+  const Castle castles[] = {
+      {"hannibal",
+       Game::Units::SpawnType::CarthageSwordCommander,
+       Game::Systems::NationID::Carthage,
+       "punic_grand_camp"},
+      {"fabius",
+       Game::Units::SpawnType::RomanLegionOrganizer,
+       Game::Systems::NationID::RomanRepublic,
+       "roman_bulwark"},
+      {"scipio",
+       Game::Units::SpawnType::RomanVeteranConsul,
+       Game::Systems::NationID::RomanRepublic,
+       "roman_assault_camp"},
+  };
+  for (const auto& castle : castles) {
+    const auto* plan = Game::Systems::AI::authored_town_plan(castle.plan);
+    ASSERT_NE(plan, nullptr) << castle.plan;
+    const int planned = plan->step_count("wall_segment");
+    const auto settlement =
+        raise_town(castle.name, castle.commander, castle.nation, 50.0);
+    EXPECT_GE(settlement.census.walls * 100, planned * 15)
+        << castle.name << " raised " << settlement.census.walls << " of the " << planned
+        << " wall links in its blueprint after fifty minutes; a castle "
+           "the economy cannot afford is a wish, not a plan";
+    EXPECT_GE(settlement.census.towers, 3)
+        << castle.name << " has no towers to speak of";
+    EXPECT_GE(settlement.census.gates, 1)
+        << castle.name << " closed its ring without a gate to march out of";
+    TearDown();
+    SetUp();
+  }
 }
 
 TEST_F(AiTownPlanTest, ACommanderThatWantsHorseFieldsHorse) {

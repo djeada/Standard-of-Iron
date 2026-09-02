@@ -45,9 +45,9 @@ QtObject {
     readonly property int rtsBottomBarMaxHeight: A11y.scaled(224)
     readonly property real rtsBottomBarShare: 0.21
 
-    readonly property int commanderBottomBarMinHeight: A11y.scaled(96)
-    readonly property int commanderBottomBarMaxHeight: A11y.scaled(120)
-    readonly property real commanderBottomBarShare: 0.12
+    readonly property int commanderBottomBarMinHeight: A11y.scaled(148)
+    readonly property int commanderBottomBarMaxHeight: A11y.scaled(176)
+    readonly property real commanderBottomBarShare: 0.17
 
     readonly property real bottomBarViewportCeiling: 0.28
 

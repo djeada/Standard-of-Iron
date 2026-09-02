@@ -119,7 +119,8 @@ void OrdersViewModel::refresh_context_intent(qreal sx, qreal sy) {
   auto* world = m_context.world;
   auto* camera = m_context.active_camera;
   const auto* viewport = m_context.viewport;
-  if (world == nullptr || camera == nullptr || viewport == nullptr) {
+  if (world == nullptr || camera == nullptr || viewport == nullptr ||
+      m_commander.active()) {
     clear_context_intent();
     return;
   }

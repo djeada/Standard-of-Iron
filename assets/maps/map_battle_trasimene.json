@@ -1492,22 +1492,42 @@
             "z": 552
         },
         {
-            "authored": true,
+            "citadel": false,
             "facing": "east",
+            "homes": 14,
             "id": "trasimene_column_town",
             "max_population": 190,
             "nation": "roman_republic",
+            "palisade": false,
+            "plan": "rect",
+            "plan_options": {
+                "barracks": [
+                    72,
+                    204
+                ],
+                "size": [
+                    46,
+                    30
+                ]
+            },
             "player_id": 2,
             "tier": "town",
             "x": 72,
             "z": 186
         },
         {
-            "authored": true,
             "facing": "west",
             "id": "trasimene_shore_camp",
             "max_population": 160,
             "nation": "roman_republic",
+            "plan": "circle",
+            "plan_options": {
+                "size": [
+                    30,
+                    26
+                ],
+                "towers": 4
+            },
             "player_id": 3,
             "tier": "fortified_camp",
             "x": 600,
@@ -1547,8 +1567,8 @@
             "max_population": -1,
             "player_id": 2,
             "type": "archer",
-            "x": 67.43,
-            "z": 151.5
+            "x": 67.62,
+            "z": 151.72
         },
         {
             "max_population": -1,
@@ -1851,6 +1871,442 @@
     },
     "structures": [
         {
+            "authored": true,
+            "max_population": 190,
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "trasimene_column_town",
+            "type": "barracks",
+            "x": 72.0,
+            "z": 204.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "trasimene_column_town",
+            "type": "marketplace",
+            "x": 72.0,
+            "z": 192.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "trasimene_column_town",
+            "type": "temple",
+            "x": 63.0,
+            "z": 186.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "trasimene_column_town",
+            "type": "home",
+            "x": 66.0,
+            "z": 198.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "trasimene_column_town",
+            "type": "home",
+            "x": 78.0,
+            "z": 198.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "trasimene_column_town",
+            "type": "home",
+            "x": 66.0,
+            "z": 168.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "trasimene_column_town",
+            "type": "home",
+            "x": 60.0,
+            "z": 198.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "trasimene_column_town",
+            "type": "home",
+            "x": 84.0,
+            "z": 198.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "trasimene_column_town",
+            "type": "home",
+            "x": 60.0,
+            "z": 168.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "trasimene_column_town",
+            "type": "home",
+            "x": 90.0,
+            "z": 198.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "trasimene_column_town",
+            "type": "home",
+            "x": 60.0,
+            "z": 204.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "trasimene_column_town",
+            "type": "home",
+            "x": 84.0,
+            "z": 204.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "trasimene_column_town",
+            "type": "home",
+            "x": 54.0,
+            "z": 168.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "trasimene_column_town",
+            "type": "home",
+            "x": 54.0,
+            "z": 204.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "trasimene_column_town",
+            "type": "home",
+            "x": 90.0,
+            "z": 204.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "trasimene_column_town",
+            "type": "home",
+            "x": 102.0,
+            "z": 174.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "trasimene_column_town",
+            "type": "home",
+            "x": 102.0,
+            "z": 198.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "trasimene_column_town",
+            "type": "defense_tower",
+            "x": 32.0,
+            "z": 159.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "trasimene_column_town",
+            "type": "defense_tower",
+            "x": 115.0,
+            "z": 159.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "trasimene_column_town",
+            "type": "defense_tower",
+            "x": 29.0,
+            "z": 213.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "trasimene_column_town",
+            "type": "defense_tower",
+            "x": 115.0,
+            "z": 213.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "rotation": 90.0,
+            "settlement": "trasimene_shore_camp",
+            "type": "wall_gate",
+            "x": 572.0,
+            "z": 142.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "rotation": 90.0,
+            "settlement": "trasimene_shore_camp",
+            "type": "wall_gate",
+            "x": 628.0,
+            "z": 134.0
+        },
+        {
+            "authored": true,
+            "max_population": 160,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "trasimene_shore_camp",
+            "type": "barracks",
+            "x": 597.88,
+            "z": 129.88
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "trasimene_shore_camp",
+            "type": "marketplace",
+            "x": 600.0,
+            "z": 144.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "trasimene_shore_camp",
+            "type": "home",
+            "x": 606.0,
+            "z": 126.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "trasimene_shore_camp",
+            "type": "home",
+            "x": 588.0,
+            "z": 132.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "trasimene_shore_camp",
+            "type": "home",
+            "x": 612.0,
+            "z": 144.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "trasimene_shore_camp",
+            "type": "home",
+            "x": 594.0,
+            "z": 150.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "trasimene_shore_camp",
+            "type": "home",
+            "x": 606.0,
+            "z": 150.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "trasimene_shore_camp",
+            "type": "home",
+            "x": 594.0,
+            "z": 120.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "trasimene_shore_camp",
+            "type": "home",
+            "x": 606.0,
+            "z": 120.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "trasimene_shore_camp",
+            "type": "home",
+            "x": 588.0,
+            "z": 126.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "trasimene_shore_camp",
+            "type": "home",
+            "x": 612.0,
+            "z": 126.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "trasimene_shore_camp",
+            "type": "home",
+            "x": 582.0,
+            "z": 132.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "trasimene_shore_camp",
+            "type": "home",
+            "x": 618.0,
+            "z": 144.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "trasimene_shore_camp",
+            "type": "home",
+            "x": 588.0,
+            "z": 150.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "trasimene_shore_camp",
+            "type": "home",
+            "x": 612.0,
+            "z": 150.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "trasimene_shore_camp",
+            "type": "home",
+            "x": 594.0,
+            "z": 156.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "trasimene_shore_camp",
+            "type": "home",
+            "x": 606.0,
+            "z": 156.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "trasimene_shore_camp",
+            "type": "home",
+            "x": 582.0,
+            "z": 126.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "trasimene_shore_camp",
+            "type": "home",
+            "x": 618.0,
+            "z": 126.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "trasimene_shore_camp",
+            "type": "home",
+            "x": 582.0,
+            "z": 150.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "trasimene_shore_camp",
+            "type": "home",
+            "x": 618.0,
+            "z": 150.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "trasimene_shore_camp",
+            "type": "defense_tower",
+            "x": 612.13,
+            "z": 155.15
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "trasimene_shore_camp",
+            "type": "defense_tower",
+            "x": 587.87,
+            "z": 155.15
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "trasimene_shore_camp",
+            "type": "defense_tower",
+            "x": 587.87,
+            "z": 120.85
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "trasimene_shore_camp",
+            "type": "defense_tower",
+            "x": 612.13,
+            "z": 120.85
+        },
+        {
             "landmark": "trasimene_ridge_sanctuary",
             "nation": "carthage",
             "type": "temple",
@@ -1960,222 +2416,563 @@
         },
         {
             "authored": true,
-            "nation": "roman_republic",
-            "player_id": 2,
-            "rotation": 90,
-            "type": "wall_gate",
-            "x": 104,
-            "z": 184
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 2,
-            "rotation": 90,
-            "type": "wall_gate",
-            "x": 40,
-            "z": 202
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 2,
-            "type": "defense_tower",
-            "x": 40,
-            "z": 158
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 2,
-            "type": "defense_tower",
-            "x": 104,
-            "z": 158
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 2,
-            "type": "defense_tower",
-            "x": 96,
-            "z": 200.14000000000001
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 2,
-            "type": "defense_tower",
-            "x": 40,
-            "z": 214
-        },
-        {
-            "authored": true,
-            "max_population": 70,
-            "nation": "roman_republic",
-            "player_id": 2,
-            "type": "barracks",
-            "x": 72,
-            "z": 193
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 2,
-            "type": "marketplace",
-            "x": 56,
-            "z": 177.6
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 2,
-            "type": "temple",
-            "x": 88,
-            "z": 177.6
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 2,
-            "type": "home",
-            "x": 52.800000000000004,
-            "z": 204.20000000000002
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 2,
-            "type": "home",
-            "x": 65.6,
-            "z": 204.20000000000002
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 2,
-            "type": "home",
-            "x": 78.4,
-            "z": 204.20000000000002
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 2,
-            "type": "home",
-            "x": 91.2,
-            "z": 210.20000000000002
-        },
-        {
-            "authored": true,
+            "end": [
+                610.0,
+                114.0
+            ],
             "nation": "roman_republic",
             "player_id": 3,
-            "rotation": 90,
-            "type": "wall_gate",
-            "x": 630,
-            "z": 126
+            "settlement": "trasimene_shore_camp",
+            "start": [
+                590.0,
+                114.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
         },
         {
             "authored": true,
+            "end": [
+                590.0,
+                116.0
+            ],
             "nation": "roman_republic",
             "player_id": 3,
-            "rotation": 0,
-            "type": "wall_gate",
-            "x": 578,
-            "z": 162
+            "settlement": "trasimene_shore_camp",
+            "start": [
+                586.0,
+                116.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
         },
         {
             "authored": true,
+            "end": [
+                614.0,
+                116.0
+            ],
             "nation": "roman_republic",
             "player_id": 3,
-            "rotation": 90,
-            "type": "wall_gate",
-            "x": 570,
-            "z": 142
+            "settlement": "trasimene_shore_camp",
+            "start": [
+                610.0,
+                116.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
         },
         {
             "authored": true,
+            "end": [
+                586.0,
+                118.0
+            ],
             "nation": "roman_republic",
             "player_id": 3,
-            "type": "defense_tower",
-            "x": 570,
-            "z": 114
+            "settlement": "trasimene_shore_camp",
+            "start": [
+                582.0,
+                118.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
         },
         {
             "authored": true,
+            "end": [
+                618.0,
+                118.0
+            ],
             "nation": "roman_republic",
             "player_id": 3,
-            "type": "defense_tower",
-            "x": 630,
-            "z": 114
+            "settlement": "trasimene_shore_camp",
+            "start": [
+                614.0,
+                118.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
         },
         {
             "authored": true,
+            "end": [
+                582.0,
+                120.0
+            ],
             "nation": "roman_republic",
             "player_id": 3,
-            "type": "defense_tower",
-            "x": 630,
-            "z": 162
+            "settlement": "trasimene_shore_camp",
+            "start": [
+                580.0,
+                120.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
         },
         {
             "authored": true,
+            "end": [
+                620.0,
+                120.0
+            ],
             "nation": "roman_republic",
             "player_id": 3,
-            "type": "defense_tower",
-            "x": 576,
-            "z": 151.61
+            "settlement": "trasimene_shore_camp",
+            "start": [
+                618.0,
+                120.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
         },
         {
             "authored": true,
-            "max_population": 60,
+            "end": [
+                580.0,
+                122.0
+            ],
             "nation": "roman_republic",
             "player_id": 3,
-            "type": "barracks",
-            "x": 600,
-            "z": 128.4
+            "settlement": "trasimene_shore_camp",
+            "start": [
+                578.0,
+                122.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
         },
         {
             "authored": true,
+            "end": [
+                622.0,
+                122.0
+            ],
             "nation": "roman_republic",
             "player_id": 3,
-            "type": "marketplace",
-            "x": 581.77,
-            "z": 134.6
+            "settlement": "trasimene_shore_camp",
+            "start": [
+                620.0,
+                122.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
         },
         {
             "authored": true,
+            "end": [
+                578.0,
+                124.0
+            ],
             "nation": "roman_republic",
             "player_id": 3,
-            "type": "home",
-            "x": 585,
-            "z": 120.72
+            "settlement": "trasimene_shore_camp",
+            "start": [
+                576.0,
+                124.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
         },
         {
             "authored": true,
+            "end": [
+                624.0,
+                124.0
+            ],
             "nation": "roman_republic",
             "player_id": 3,
-            "type": "home",
-            "x": 600,
-            "z": 120.72
+            "settlement": "trasimene_shore_camp",
+            "start": [
+                622.0,
+                124.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
         },
         {
             "authored": true,
+            "end": [
+                574.0,
+                130.0
+            ],
             "nation": "roman_republic",
             "player_id": 3,
-            "type": "home",
-            "x": 615,
-            "z": 120.72
+            "settlement": "trasimene_shore_camp",
+            "start": [
+                574.0,
+                126.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
         },
         {
-            "max_population": 50,
-            "type": "barracks",
-            "x": 344,
-            "z": 357
+            "authored": true,
+            "end": [
+                576.0,
+                126.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "trasimene_shore_camp",
+            "start": [
+                576.0,
+                126.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
         },
         {
-            "max_population": 50,
-            "type": "barracks",
-            "x": 550,
-            "z": 363
+            "authored": true,
+            "end": [
+                626.0,
+                126.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "trasimene_shore_camp",
+            "start": [
+                624.0,
+                126.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                626.0,
+                130.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "trasimene_shore_camp",
+            "start": [
+                626.0,
+                128.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                570.0,
+                138.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "trasimene_shore_camp",
+            "start": [
+                570.0,
+                138.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                574.0,
+                150.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "trasimene_shore_camp",
+            "start": [
+                574.0,
+                146.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                626.0,
+                150.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "trasimene_shore_camp",
+            "start": [
+                626.0,
+                146.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                576.0,
+                152.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "trasimene_shore_camp",
+            "start": [
+                576.0,
+                150.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                624.0,
+                152.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "trasimene_shore_camp",
+            "start": [
+                624.0,
+                150.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                578.0,
+                154.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "trasimene_shore_camp",
+            "start": [
+                578.0,
+                152.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                622.0,
+                154.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "trasimene_shore_camp",
+            "start": [
+                622.0,
+                152.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                580.0,
+                156.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "trasimene_shore_camp",
+            "start": [
+                580.0,
+                154.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                620.0,
+                156.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "trasimene_shore_camp",
+            "start": [
+                620.0,
+                154.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                582.0,
+                158.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "trasimene_shore_camp",
+            "start": [
+                582.0,
+                156.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                618.0,
+                158.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "trasimene_shore_camp",
+            "start": [
+                618.0,
+                156.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                586.0,
+                158.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "trasimene_shore_camp",
+            "start": [
+                584.0,
+                158.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                616.0,
+                158.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "trasimene_shore_camp",
+            "start": [
+                614.0,
+                158.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                590.0,
+                160.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "trasimene_shore_camp",
+            "start": [
+                586.0,
+                160.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                614.0,
+                160.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "trasimene_shore_camp",
+            "start": [
+                610.0,
+                160.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                610.0,
+                162.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "trasimene_shore_camp",
+            "start": [
+                590.0,
+                162.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                572.0,
+                138.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "trasimene_shore_camp",
+            "start": [
+                572.0,
+                130.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                572.0,
+                146.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "trasimene_shore_camp",
+            "start": [
+                572.0,
+                146.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                628.0,
+                130.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "trasimene_shore_camp",
+            "start": [
+                628.0,
+                130.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                628.0,
+                146.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "trasimene_shore_camp",
+            "start": [
+                628.0,
+                138.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
         },
         {
             "authored": true,
@@ -2293,201 +3090,6 @@
             "start": [
                 262,
                 546
-            ],
-            "type": "wall_segment",
-            "width": 2
-        },
-        {
-            "authored": true,
-            "end": [
-                104,
-                158
-            ],
-            "nation": "roman_republic",
-            "player_id": 2,
-            "start": [
-                40,
-                158
-            ],
-            "type": "wall_segment",
-            "width": 2
-        },
-        {
-            "authored": true,
-            "end": [
-                104,
-                180
-            ],
-            "nation": "roman_republic",
-            "player_id": 2,
-            "start": [
-                104,
-                158
-            ],
-            "type": "wall_segment",
-            "width": 2
-        },
-        {
-            "authored": true,
-            "end": [
-                104,
-                214
-            ],
-            "nation": "roman_republic",
-            "player_id": 2,
-            "start": [
-                104,
-                188
-            ],
-            "type": "wall_segment",
-            "width": 2
-        },
-        {
-            "authored": true,
-            "end": [
-                104,
-                214
-            ],
-            "nation": "roman_republic",
-            "player_id": 2,
-            "start": [
-                40,
-                214
-            ],
-            "type": "wall_segment",
-            "width": 2
-        },
-        {
-            "authored": true,
-            "end": [
-                40,
-                198
-            ],
-            "nation": "roman_republic",
-            "player_id": 2,
-            "start": [
-                40,
-                158
-            ],
-            "type": "wall_segment",
-            "width": 2
-        },
-        {
-            "authored": true,
-            "end": [
-                40,
-                214
-            ],
-            "nation": "roman_republic",
-            "player_id": 2,
-            "start": [
-                40,
-                206
-            ],
-            "type": "wall_segment",
-            "width": 2
-        },
-        {
-            "authored": true,
-            "end": [
-                630,
-                114
-            ],
-            "nation": "roman_republic",
-            "player_id": 3,
-            "start": [
-                570,
-                114
-            ],
-            "type": "wall_segment",
-            "width": 2
-        },
-        {
-            "authored": true,
-            "end": [
-                630,
-                122
-            ],
-            "nation": "roman_republic",
-            "player_id": 3,
-            "start": [
-                630,
-                114
-            ],
-            "type": "wall_segment",
-            "width": 2
-        },
-        {
-            "authored": true,
-            "end": [
-                630,
-                162
-            ],
-            "nation": "roman_republic",
-            "player_id": 3,
-            "start": [
-                630,
-                130
-            ],
-            "type": "wall_segment",
-            "width": 2
-        },
-        {
-            "authored": true,
-            "end": [
-                574,
-                162
-            ],
-            "nation": "roman_republic",
-            "player_id": 3,
-            "start": [
-                570,
-                162
-            ],
-            "type": "wall_segment",
-            "width": 2
-        },
-        {
-            "authored": true,
-            "end": [
-                630,
-                162
-            ],
-            "nation": "roman_republic",
-            "player_id": 3,
-            "start": [
-                582,
-                162
-            ],
-            "type": "wall_segment",
-            "width": 2
-        },
-        {
-            "authored": true,
-            "end": [
-                570,
-                138
-            ],
-            "nation": "roman_republic",
-            "player_id": 3,
-            "start": [
-                570,
-                114
-            ],
-            "type": "wall_segment",
-            "width": 2
-        },
-        {
-            "authored": true,
-            "end": [
-                570,
-                162
-            ],
-            "nation": "roman_republic",
-            "player_id": 3,
-            "start": [
-                570,
-                146
             ],
             "type": "wall_segment",
             "width": 2
@@ -2799,14 +3401,14 @@
             "rotation": 3.1,
             "scale": 1,
             "type": "weapon_rack",
-            "x": 64.54,
+            "x": 65.37,
             "z": 186.17
         },
         {
             "rotation": 2.6,
             "scale": 1,
             "type": "supply_cart",
-            "x": 603,
+            "x": 602.73,
             "z": 154
         },
         {
@@ -2917,15 +3519,6 @@
             "type": "firecamp",
             "x": 337,
             "z": 576
-        },
-        {
-            "intensity": 0.7000000000000001,
-            "persistent": true,
-            "radius": 2.5,
-            "scale": 1,
-            "type": "firecamp",
-            "x": 55,
-            "z": 170
         },
         {
             "intensity": 0.65,
@@ -4276,14 +4869,14 @@
             "scale": 1,
             "type": "firecamp",
             "x": 64,
-            "z": 184.6
+            "z": 183.77
         },
         {
             "authored_camp": true,
             "scale": 1,
             "type": "tent",
-            "x": 615,
-            "z": 142.8
+            "x": 616.97,
+            "z": 139.92
         },
         {
             "authored_camp": true,
@@ -4307,35 +4900,35 @@
             "scale": 1,
             "type": "supply_cart",
             "x": 594,
-            "z": 148.8
+            "z": 146.8
         },
         {
+            "rotation": 2.34,
+            "scale": 1.0,
             "type": "cursed_gold_vein",
             "x": 122,
-            "z": 532,
-            "scale": 1.0,
-            "rotation": 2.34
+            "z": 532
         },
         {
+            "rotation": 0.68,
+            "scale": 1.0,
             "type": "cursed_gold_vein",
             "x": 52,
-            "z": 412,
-            "scale": 1.0,
-            "rotation": 0.68
+            "z": 412
         },
         {
+            "rotation": 3.38,
+            "scale": 1.0,
             "type": "cursed_gold_vein",
             "x": 332,
-            "z": 282,
-            "scale": 1.0,
-            "rotation": 3.38
+            "z": 282
         },
         {
+            "rotation": 1.14,
+            "scale": 1.0,
             "type": "cursed_gold_vein",
             "x": 442,
-            "z": 592,
-            "scale": 1.0,
-            "rotation": 1.14
+            "z": 592
         }
     ]
 }
