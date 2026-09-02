@@ -28,6 +28,7 @@
 #include "game/map/mission_loader.h"
 #include "game/map/terrain_topology_audit.h"
 #include "game/session/session_context.h"
+#include "matchup_short.h"
 #include "promo_runner.h"
 #include "promo_spec.h"
 #include "render/gl/bootstrap.h"
@@ -382,6 +383,27 @@ auto main(int argc, char** argv) -> int {
       QStringLiteral("Run the match's fog of war instead of revealing the whole "
                      "arena, so reviews can check remembered terrain and the "
                      "fog over unexplored ground."));
+  QCommandLineOption const matchup_option(
+      QStringList{QStringLiteral("matchup")},
+      QStringLiteral("Record a vertical matchup short, e.g. \"20 swordsman vs 20 "
+                     "archer\"; writes a Shorts-shaped clip that closes on the "
+                     "battle report."),
+      QStringLiteral("a vs b"));
+  QCommandLineOption const matchup_seconds_option(
+      QStringList{QStringLiteral("matchup-seconds")},
+      QStringLiteral("Ceiling on the fighting in a matchup short before the "
+                     "report; the short ends earlier if one side is wiped out."),
+      QStringLiteral("seconds"),
+      QStringLiteral("45"));
+  QCommandLineOption const matchup_report_option(
+      QStringList{QStringLiteral("matchup-report-seconds")},
+      QStringLiteral("Seconds the closing battle report is held on screen."),
+      QStringLiteral("seconds"),
+      QStringLiteral("4"));
+  QCommandLineOption const matchup_preview_option(
+      QStringList{QStringLiteral("matchup-preview")},
+      QStringLiteral("Render a matchup short at quarter size for a few seconds, "
+                     "without audio, to check its framing quickly."));
   QCommandLineOption const list_option(QStringList{QStringLiteral("list-scenarios")},
                                        QStringLiteral("List scenario ids and exit."));
   QCommandLineOption const promo_spec_option(
@@ -420,6 +442,10 @@ auto main(int argc, char** argv) -> int {
                      fog_of_war_option,
                      promo_spec_option,
                      promo_out_option,
+                     matchup_option,
+                     matchup_seconds_option,
+                     matchup_report_option,
+                     matchup_preview_option,
                      list_option});
   parser.process(app);
 
@@ -498,6 +524,44 @@ auto main(int argc, char** argv) -> int {
   window.viewport()->set_capture_orbit_speed(
       parser.value(capture_orbit_option).toFloat());
   window.viewport()->set_fog_of_war_enabled(parser.isSet(fog_of_war_option));
+
+  if (parser.isSet(matchup_option)) {
+    if (parser.isSet(batch_option) || parser.isSet(promo_spec_option) ||
+        parser.isSet(campaign_terrain_option) || parser.isSet(terrain_map_option)) {
+      qCritical() << "--matchup cannot be combined with --batch, --promo-spec, "
+                     "--campaign-terrain, or --terrain-map";
+      return 2;
+    }
+    QString matchup_error;
+    auto matchup =
+        Arena::Matchup::parse(parser.value(matchup_option).trimmed(), &matchup_error);
+    if (!matchup.has_value()) {
+      qCritical().noquote() << matchup_error;
+      return 2;
+    }
+    matchup->seed = parser.value(seed_option).toInt();
+    matchup->fight_seconds =
+        std::clamp(parser.value(matchup_seconds_option).toFloat(), 4.0F, 170.0F);
+    matchup->report_seconds =
+        std::clamp(parser.value(matchup_report_option).toFloat(), 0.0F, 10.0F);
+    matchup->preview = parser.isSet(matchup_preview_option);
+
+    Arena::Scenarios::register_runtime_definition(
+        Arena::Matchup::build_scenario(*matchup));
+    const auto spec = Arena::Matchup::build_spec(*matchup);
+
+    Arena::Promo::RunOptions matchup_options;
+    matchup_options.output_directory =
+        QDir(QDir::cleanPath(parser.value(promo_out_option))).filePath(spec.id);
+    qInfo().noquote() << QStringLiteral("Recording matchup short: %1")
+                             .arg(Arena::Matchup::title(*matchup));
+    const int matchup_status =
+        Arena::Promo::run(*window.viewport(), spec, matchup_options, &matchup_error);
+    if (matchup_status == 2 && !matchup_error.isEmpty()) {
+      qCritical().noquote() << matchup_error;
+    }
+    return matchup_status;
+  }
 
   if (parser.isSet(promo_spec_option)) {
     if (parser.isSet(batch_option) || parser.isSet(campaign_terrain_option) ||

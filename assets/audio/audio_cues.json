@@ -686,9 +686,7 @@
       "priority": 3,
       "cooldown_ms": 250,
       "resources": [
-        "sfx.combat.stone_impact_01",
-        "sfx.combat.stone_impact_02",
-        "sfx.combat.stone_impact_03"
+        "sfx.combat.stone_impact_01"
       ],
       "spatial": true
     },
@@ -716,9 +714,7 @@
       "priority": 3,
       "cooldown_ms": 110,
       "resources": [
-        "sfx.combat.stone_impact_01",
-        "sfx.combat.stone_impact_02",
-        "sfx.combat.stone_impact_03"
+        "sfx.combat.stone_impact_01"
       ],
       "spatial": true
     },
@@ -731,8 +727,7 @@
       "priority": 2,
       "cooldown_ms": 9000,
       "resources": [
-        "sfx.combat.battlefield_distant_mass_01",
-        "sfx.combat.battlefield_distant_mass_02"
+        "sfx.combat.battlefield_distant_mass_01"
       ]
     },
     {
@@ -869,7 +864,7 @@
       "priority": 5,
       "cooldown_ms": 300,
       "resources": [
-        "sfx.combat.siege_impact"
+        "sfx.combat.stone_impact_01"
       ],
       "wanted": "Stone striking earth or timber with a debris tail, ~1.5 s.",
       "spatial": true
@@ -965,8 +960,7 @@
       "priority": 5,
       "cooldown_ms": 200,
       "resources": [
-        "sfx.combat.dodge",
-        "sfx.combat.dodge_v2"
+        "sfx.combat.dodge"
       ],
       "wanted": "Body roll on dirt with a fast cloth whoosh and a short exhale, ~500 ms."
     },

@@ -1162,3 +1162,119 @@ TEST(FormationCombatGeometry, CasualtyFreezesAtItsTraversalAnchor) {
   EXPECT_FLOAT_EQ(casualties->entries.front().local_x, -0.75F);
   EXPECT_FLOAT_EQ(casualties->entries.front().local_z, 3.5F);
 }
+
+namespace {
+
+[[nodiscard]] auto largest_presented_step(
+    const std::vector<Engine::Core::FormationSoldierPresentation>& previous,
+    const std::vector<Engine::Core::FormationSoldierPresentation>& current) -> float {
+  float largest = 0.0F;
+  for (std::size_t i = 0; i < current.size() && i < previous.size(); ++i) {
+    if (!current[i].alive || !previous[i].alive) {
+      continue;
+    }
+    largest = std::max(largest,
+                       std::hypot(current[i].local_x - previous[i].local_x,
+                                  current[i].local_z - previous[i].local_z));
+  }
+  return largest;
+}
+
+} // namespace
+
+TEST(FormationCombatGeometry, SoldiersWalkIntoContactInsteadOfSnapping) {
+  Engine::Core::World world;
+  auto* attacker = add_spearmen(world, 1, 0.0F, 0.0F);
+  auto* target = add_spearmen(world, 2, 6.0F, 180.0F);
+  auto* target_ref = attacker->add_component<Engine::Core::AttackTargetComponent>();
+  target_ref->target_id = target->get_id();
+  constexpr float k_dt = 1.0F / 60.0F;
+  constexpr float k_engage_close_speed = 3.2F;
+
+  Game::Systems::Combat::update_formation_contacts(&world, k_dt);
+  auto const* presentation =
+      attacker->get_component<Engine::Core::FormationPresentationComponent>();
+  ASSERT_NE(presentation, nullptr);
+  ASSERT_EQ(presentation->soldiers.size(), 12U);
+  auto previous = presentation->soldiers;
+
+  auto const geometry =
+      Game::Systems::FormationCombat::contact_geometry(*attacker, *target);
+  target->get_component<Engine::Core::TransformComponent>()->position.z =
+      geometry.engagement_center_distance;
+
+  float largest_step = 0.0F;
+  for (int tick = 0; tick < 90; ++tick) {
+    Game::Systems::Combat::update_formation_contacts(&world, k_dt);
+    largest_step = std::max(largest_step,
+                            largest_presented_step(previous, presentation->soldiers));
+    previous = presentation->soldiers;
+  }
+  EXPECT_LE(largest_step, k_engage_close_speed * k_dt + 1.0e-3F)
+      << "a soldier walks to its contact point; it is never moved faster than "
+         "the engage close speed in one tick";
+
+  auto const* contact =
+      attacker->get_component<Engine::Core::FormationContactComponent>();
+  ASSERT_NE(contact, nullptr);
+  EXPECT_TRUE(contact->in_contact);
+  float furthest_offset = 0.0F;
+  for (auto const& soldier : presentation->soldiers) {
+    furthest_offset =
+        std::max(furthest_offset,
+                 std::hypot(soldier.contact_offset_x, soldier.contact_offset_z));
+  }
+  EXPECT_GT(furthest_offset, 0.05F)
+      << "the rate limit slows the step into contact; it must not cancel it";
+}
+
+TEST(FormationCombatGeometry, ACasualtyFallsWhereItFought) {
+  Engine::Core::World world;
+  auto* attacker = add_spearmen(world, 1, 0.0F, 0.0F);
+  auto* target = add_spearmen(world, 2, 3.0F, 180.0F);
+  auto* target_ref = attacker->add_component<Engine::Core::AttackTargetComponent>();
+  target_ref->target_id = target->get_id();
+  auto const geometry =
+      Game::Systems::FormationCombat::contact_geometry(*attacker, *target);
+  target->get_component<Engine::Core::TransformComponent>()->position.z =
+      geometry.engagement_center_distance;
+  constexpr float k_dt = 1.0F / 60.0F;
+  for (int tick = 0; tick < 120; ++tick) {
+    Game::Systems::Combat::update_formation_contacts(&world, k_dt);
+  }
+  auto const* presentation =
+      attacker->get_component<Engine::Core::FormationPresentationComponent>();
+  ASSERT_NE(presentation, nullptr);
+  ASSERT_EQ(presentation->soldiers.size(), 12U);
+
+  std::size_t victim = presentation->soldiers.size();
+  float victim_offset = 0.0F;
+  for (std::size_t i = 0; i < presentation->soldiers.size(); ++i) {
+    auto const& soldier = presentation->soldiers[i];
+    float const offset = std::hypot(soldier.contact_offset_x, soldier.contact_offset_z);
+    if (soldier.alive && offset > victim_offset) {
+      victim = i;
+      victim_offset = offset;
+    }
+  }
+  ASSERT_LT(victim, presentation->soldiers.size());
+  ASSERT_GT(victim_offset, 0.05F) << "the test needs a soldier standing off its slot";
+  auto const before = presentation->soldiers[victim];
+
+  auto* roster = Engine::Core::get_or_add_component<
+      Engine::Core::FormationRosterPresentationComponent>(attacker);
+  ASSERT_NE(roster, nullptr);
+  roster->total_count = 12;
+  roster->alive.assign(12, 1U);
+  roster->alive[victim] = 0U;
+  roster->live_count = 11;
+  ++roster->revision;
+  Game::Systems::Combat::update_formation_contacts(&world, k_dt);
+
+  auto const& after = presentation->soldiers[victim];
+  EXPECT_FALSE(after.alive);
+  EXPECT_NEAR(after.local_x, before.local_x, 1.0e-3F)
+      << "the body must not snap back to its formation slot on death";
+  EXPECT_NEAR(after.local_z, before.local_z, 1.0e-3F);
+  EXPECT_NEAR(after.local_yaw, before.local_yaw, 1.0e-3F);
+}

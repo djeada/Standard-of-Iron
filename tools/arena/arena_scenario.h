@@ -78,6 +78,8 @@ enum class ScenarioCommandKind : std::uint8_t {
   MeleeLock,
   SetFullCreatureLod,
   TriggerCommanderAura,
+
+  TriggerFlagRally,
   RpgPrimaryAttack,
   RpgHeavyAttack,
   RpgAttackHold,
@@ -452,6 +454,9 @@ struct ArenaBattleSideResult {
   int owner_id{0};
   QString label;
   int living_units{0};
+
+  int living_soldiers{0};
+  int peak_soldiers{0};
   int living_buildings{0};
   int peak_units{0};
   int units_produced{0};
@@ -669,6 +674,10 @@ namespace Scenarios {
 [[nodiscard]] auto definitions() -> const std::vector<ArenaScenarioDefinition>&;
 [[nodiscard]] auto
 find_definition(const QString& scenario_id) -> const ArenaScenarioDefinition*;
+
+void register_runtime_definition(ArenaScenarioDefinition definition);
+
+void clear_runtime_definitions();
 
 } // namespace Scenarios
 

@@ -348,16 +348,47 @@ has_authored_orientation(const Engine::Core::Entity* entity) -> bool {
   return entity != nullptr && entity->has_component<Engine::Core::BuildingComponent>();
 }
 
+constexpr float k_lock_facing_turn_degrees_per_second = 360.0F;
+constexpr float k_lock_facing_turn_elephant_degrees_per_second = 110.0F;
+constexpr float k_lock_facing_turn_siege_degrees_per_second = 100.0F;
+constexpr float k_lock_facing_turn_cavalry_degrees_per_second = 300.0F;
+
+[[nodiscard]] auto lock_facing_turn_rate(const Engine::Core::Entity* actor) -> float {
+  auto const* unit =
+      actor != nullptr ? actor->get_component<Engine::Core::UnitComponent>() : nullptr;
+  if (unit == nullptr) {
+    return k_lock_facing_turn_degrees_per_second;
+  }
+  switch (unit->spawn_type) {
+  case Game::Units::SpawnType::Elephant:
+    return k_lock_facing_turn_elephant_degrees_per_second;
+  case Game::Units::SpawnType::Catapult:
+  case Game::Units::SpawnType::Ballista:
+    return k_lock_facing_turn_siege_degrees_per_second;
+  case Game::Units::SpawnType::MountedKnight:
+  case Game::Units::SpawnType::HorseArcher:
+  case Game::Units::SpawnType::HorseSpearman:
+    return k_lock_facing_turn_cavalry_degrees_per_second;
+  default:
+    return k_lock_facing_turn_degrees_per_second;
+  }
+}
+
 void lock_facing(Engine::Core::TransformComponent* actor_transform,
-                 Engine::Core::TransformComponent* target_transform) {
+                 Engine::Core::TransformComponent* target_transform,
+                 float turn_rate_degrees,
+                 float delta_time) {
   if (actor_transform == nullptr || target_transform == nullptr) {
     return;
   }
   float const dx = target_transform->position.x - actor_transform->position.x;
   float const dz = target_transform->position.z - actor_transform->position.z;
   if (dx * dx + dz * dz > 0.000001F) {
-    actor_transform->rotation.y =
-        std::atan2(dx, dz) * 180.0F / std::numbers::pi_v<float>;
+    float const target_yaw = std::atan2(dx, dz) * 180.0F / std::numbers::pi_v<float>;
+    float const diff =
+        std::fmod(target_yaw - actor_transform->rotation.y + 540.0F, 360.0F) - 180.0F;
+    float const max_step = turn_rate_degrees * std::max(0.0F, delta_time);
+    actor_transform->rotation.y += std::clamp(diff, -max_step, max_step);
   }
   actor_transform->desired_yaw = actor_transform->rotation.y;
   actor_transform->has_desired_yaw = false;
@@ -374,7 +405,8 @@ void lock_facing(Engine::Core::TransformComponent* actor_transform,
 
 void lock_combatant_facing(Engine::Core::Entity* actor,
                            Engine::Core::TransformComponent* actor_transform,
-                           Engine::Core::TransformComponent* target_transform) {
+                           Engine::Core::TransformComponent* target_transform,
+                           float delta_time) {
   if (has_authored_orientation(actor)) {
     return;
   }
@@ -384,7 +416,8 @@ void lock_combatant_facing(Engine::Core::Entity* actor,
     actor_transform->has_desired_yaw = false;
     return;
   }
-  lock_facing(actor_transform, target_transform);
+  lock_facing(
+      actor_transform, target_transform, lock_facing_turn_rate(actor), delta_time);
 }
 
 auto chase_spread_angle(Engine::Core::EntityID attacker_id) -> float {
@@ -566,12 +599,13 @@ void process_melee_lock(Engine::Core::Entity* attacker,
     return;
   }
 
-  lock_combatant_facing(attacker, att_t, tgt_t);
+  lock_combatant_facing(attacker, att_t, tgt_t, delta_time);
   bool const reciprocal_lock =
       (lock_target_atk != nullptr) && lock_target_atk->in_melee_lock &&
       lock_target_atk->melee_lock_target_id == attacker->get_id();
-  if (reciprocal_lock || !has_valid_melee_lock(lock_target, world)) {
-    lock_combatant_facing(lock_target, tgt_t, att_t);
+
+  if (!reciprocal_lock && !has_valid_melee_lock(lock_target, world)) {
+    lock_combatant_facing(lock_target, tgt_t, att_t, delta_time);
   }
 
   if (is_in_range(attacker,
@@ -992,7 +1026,8 @@ void spawn_rts_arrow_volley(Engine::Core::Entity* attacker,
 void initiate_melee_combat(Engine::Core::Entity* attacker,
                            Engine::Core::Entity* target,
                            Engine::Core::AttackComponent* attack_comp,
-                           Engine::Core::World* world) {
+                           Engine::Core::World* world,
+                           float delta_time) {
   if ((attacker == nullptr) || (target == nullptr) || (attack_comp == nullptr)) {
     return;
   }
@@ -1053,9 +1088,7 @@ void initiate_melee_combat(Engine::Core::Entity* attacker,
         target_atk->melee_lock_target_id = attacker->get_id();
       }
     }
-    if (att_t != nullptr && tgt_t != nullptr) {
-      lock_combatant_facing(attacker, att_t, tgt_t);
-    }
+
     return;
   }
 
@@ -1078,13 +1111,13 @@ void initiate_melee_combat(Engine::Core::Entity* attacker,
   }
 
   if ((att_t != nullptr) && (tgt_t != nullptr)) {
-    lock_combatant_facing(attacker, att_t, tgt_t);
+    lock_combatant_facing(attacker, att_t, tgt_t, delta_time);
     auto* target_atk_after = target->get_component<Engine::Core::AttackComponent>();
     bool const reciprocal_lock =
         (target_atk_after != nullptr) && target_atk_after->in_melee_lock &&
         target_atk_after->melee_lock_target_id == attacker->get_id();
     if (reciprocal_lock || !has_valid_melee_lock(target, world)) {
-      lock_combatant_facing(target, tgt_t, att_t);
+      lock_combatant_facing(target, tgt_t, att_t, delta_time);
     }
   }
 }
@@ -1910,7 +1943,7 @@ void process_attacks(Engine::Core::World* world,
           continue;
         }
 
-        initiate_melee_combat(attacker, best_target, attacker_atk, world);
+        initiate_melee_combat(attacker, best_target, attacker_atk, world, delta_time);
       }
 
       float const tactical_multiplier = calculate_tactical_damage_multiplier(

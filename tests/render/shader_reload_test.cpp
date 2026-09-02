@@ -59,7 +59,71 @@ void main() {
 }
 )";
 
+const char* k_tier_gated_sampler_fragment = R"(#version 330 core
+#ifndef SOI_QUALITY_TIER
+#define SOI_QUALITY_TIER 2
+#endif
+uniform sampler2D u_texture;
+uniform sampler2DArray u_tier_only;
+out vec4 frag_color;
+void main() {
+  vec4 base = texture(u_texture, vec2(0.5));
+#if SOI_QUALITY_TIER >= 3
+  base += texture(u_tier_only, vec3(0.5, 0.5, 0.0));
+#endif
+  frag_color = base;
+}
+)";
+
 } // namespace
+
+TEST(ShaderReload, ASamplerThatOnlyExistsAtAHigherTierResolvesAfterTheReload) {
+  OffscreenGl gl;
+  if (!gl.ready) {
+    GTEST_SKIP() << "No OpenGL 3.3 context available in this environment";
+  }
+  QOpenGLFunctions_3_3_Core fn;
+  fn.initializeOpenGLFunctions();
+
+  Render::GL::Shader::set_global_defines(
+      QStringLiteral("#define SOI_QUALITY_TIER 2\n"));
+  Render::GL::Shader shader;
+  shader.set_debug_name(QStringLiteral("tier_gated_sampler"));
+  ASSERT_TRUE(
+      shader.load_from_source(QString::fromLatin1(k_vertex),
+                              QString::fromLatin1(k_tier_gated_sampler_fragment)));
+
+  const auto texture = shader.uniform_handle("u_texture");
+  ASSERT_NE(texture, Render::GL::Shader::InvalidUniform);
+  shader.use();
+  shader.set_uniform(texture, 0);
+  shader.release();
+  ASSERT_EQ(shader.optional_uniform_handle("u_tier_only"),
+            Render::GL::Shader::InvalidUniform)
+      << "the gated sampler should be absent at tier 2";
+
+  Render::GL::Shader::set_global_defines(
+      QStringLiteral("#define SOI_QUALITY_TIER 3\n"));
+  ASSERT_TRUE(shader.reload());
+
+  const auto gated = shader.optional_uniform_handle("u_tier_only");
+  ASSERT_NE(gated, Render::GL::Shader::InvalidUniform)
+      << "the gated sampler stayed cached as not-found across the reload";
+
+  shader.use();
+  shader.set_uniform(gated, 12);
+  GLint program = 0;
+  fn.glGetIntegerv(GL_CURRENT_PROGRAM, &program);
+  const GLint gated_location = fn.glGetUniformLocation(program, "u_tier_only");
+  ASSERT_GE(gated_location, 0);
+  GLint unit = -1;
+  fn.glGetUniformiv(program, gated_location, &unit);
+  EXPECT_EQ(unit, 12) << "the gated sampler kept the default unit 0";
+  EXPECT_EQ(fn.glGetError(), static_cast<GLenum>(GL_NO_ERROR));
+  shader.release();
+
+  Render::GL::Shader::set_global_defines(QString());
+}
 
 TEST(ShaderReload, HandlesAndUniformStateSurviveATierChange) {
   OffscreenGl gl;

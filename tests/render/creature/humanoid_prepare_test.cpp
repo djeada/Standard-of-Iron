@@ -75,6 +75,7 @@
 #include "render/gl/humanoid/humanoid_types.h"
 #include "render/humanoid/asset/humanoid_manifest.h"
 #include "render/humanoid/asset/humanoid_spec.h"
+#include "render/humanoid/runtime/combat_root_smoothing.h"
 #include "render/humanoid/runtime/frame_control.h"
 #include "render/humanoid/runtime/humanoid_renderer.h"
 #include "render/humanoid/runtime/instance_state.h"
@@ -3528,20 +3529,35 @@ TEST(AnimationCoreAmbientPoseManifest, JumpScalesWithAirborneState) {
   EXPECT_GT(airborne.hand_r_y_delta, grounded.hand_r_y_delta);
 }
 
-TEST(AnimationCoreAmbientPoseManifest, PlantFlagOwnsPlantDrive) {
-  auto const sample = Animation::resolve_humanoid_ambient_pose({
-      .type = Animation::HumanoidAmbientIdle::PlantFlag,
-      .phase = 0.50F,
-  });
+TEST(AnimationCoreAmbientPoseManifest, PlantFlagRaisesAndPointsTheSword) {
 
-  EXPECT_LT(sample.pelvis_y_delta, -0.16F);
-  EXPECT_GT(sample.pelvis_z_delta, 0.03F);
-  EXPECT_GT(sample.shoulder_r_z_delta, sample.shoulder_l_z_delta);
-  EXPECT_GT(sample.knee_r_z_delta, sample.knee_l_z_delta);
-  EXPECT_LT(sample.hand_r_y_delta, -0.30F);
-  EXPECT_GT(sample.hand_r_z_delta, 0.15F);
-  EXPECT_LT(sample.hand_l_x_delta, 0.0F);
-  EXPECT_LT(sample.elbow_l_y_delta, 0.0F);
+  auto const raised = Animation::resolve_humanoid_ambient_pose({
+      .type = Animation::HumanoidAmbientIdle::PlantFlag,
+      .phase = 0.48F,
+  });
+  EXPECT_GT(raised.hand_r_y_delta, 0.45F) << "sword arm should be driven high";
+  EXPECT_GT(raised.elbow_r_y_delta, 0.20F);
+  EXPECT_GT(raised.shoulder_r_y_delta, 0.0F);
+
+  auto const pointing = Animation::resolve_humanoid_ambient_pose({
+      .type = Animation::HumanoidAmbientIdle::PlantFlag,
+      .phase = 0.82F,
+  });
+  EXPECT_GT(pointing.hand_r_z_delta, 0.30F) << "the point should reach forward";
+  EXPECT_GT(pointing.hand_r_z_delta, raised.hand_r_z_delta);
+  EXPECT_GT(pointing.head_z_delta, raised.head_z_delta)
+      << "head follows the sword so the point reads as an order";
+  EXPECT_GT(pointing.foot_r_z_delta, 0.0F) << "weight steps into the point";
+
+  EXPECT_LT(pointing.hand_l_z_delta, 0.0F);
+  EXPECT_LT(pointing.hand_l_x_delta, 0.0F);
+
+  auto const planted = Animation::resolve_humanoid_ambient_pose({
+      .type = Animation::HumanoidAmbientIdle::PlantFlag,
+      .phase = 0.91F,
+  });
+  EXPECT_LT(planted.hand_r_y_delta, pointing.hand_r_y_delta);
+  EXPECT_LT(planted.pelvis_y_delta, 0.0F);
 }
 
 TEST(AnimationCoreMountedPoseManifest, IdleRestOwnsMountedHandTargets) {
@@ -10468,3 +10484,55 @@ TEST(HumanoidPrepare, SoldierUsesCentralFrustumGuardBandAtScreenEdge) {
 }
 
 } // namespace
+
+TEST(CombatRootSmoothing, ADroppedLungeEasesOutInsteadOfPopping) {
+  using Render::Humanoid::CombatRootSmoothingState;
+  using Render::Humanoid::CombatRootSmoothingTarget;
+  using Render::Humanoid::k_combat_root_translation_speed;
+  using Render::Humanoid::smooth_combat_root;
+
+  CombatRootSmoothingState state{};
+  constexpr float k_dt = 1.0F / 60.0F;
+
+  CombatRootSmoothingTarget lunge{};
+  lunge.time = 1.0F;
+  lunge.offset_x = 0.27F;
+  lunge.pitch_degrees = 8.0F;
+  auto applied = smooth_combat_root(state, lunge);
+  EXPECT_FLOAT_EQ(applied.offset_x, 0.27F);
+  EXPECT_FLOAT_EQ(applied.pitch_degrees, 8.0F);
+
+  CombatRootSmoothingTarget rest{};
+  rest.time = lunge.time + k_dt;
+  applied = smooth_combat_root(state, rest);
+  float const max_step = k_combat_root_translation_speed * k_dt;
+  EXPECT_NEAR(applied.offset_x, 0.27F - max_step, 1.0e-4F);
+  EXPECT_LT(applied.pitch_degrees, 8.0F);
+  EXPECT_GT(applied.pitch_degrees, 0.0F);
+
+  for (int frame = 2; frame <= 12; ++frame) {
+    rest.time = lunge.time + static_cast<float>(frame) * k_dt;
+    applied = smooth_combat_root(state, rest);
+  }
+  EXPECT_FLOAT_EQ(applied.offset_x, 0.0F);
+  EXPECT_FLOAT_EQ(applied.pitch_degrees, 0.0F);
+}
+
+TEST(CombatRootSmoothing, AnAuthoredReactionPassesThroughUnchanged) {
+  using Render::Humanoid::CombatRootSmoothingState;
+  using Render::Humanoid::CombatRootSmoothingTarget;
+  using Render::Humanoid::smooth_combat_root;
+
+  CombatRootSmoothingState state{};
+  constexpr float k_dt = 1.0F / 60.0F;
+  CombatRootSmoothingTarget target{};
+  target.time = 0.0F;
+  (void)smooth_combat_root(state, target);
+
+  for (int frame = 1; frame <= 5; ++frame) {
+    target.time = static_cast<float>(frame) * k_dt;
+    target.offset_z = -0.30F * static_cast<float>(frame) / 5.0F;
+    auto const applied = smooth_combat_root(state, target);
+    EXPECT_NEAR(applied.offset_z, target.offset_z, 1.0e-5F) << "frame " << frame;
+  }
+}

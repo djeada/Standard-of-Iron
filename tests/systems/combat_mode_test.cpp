@@ -705,13 +705,63 @@ TEST_F(CombatModeTest, SurroundedElephantKeepsStableMeleeFacing) {
 
   auto const query_context =
       Game::Systems::Combat::build_combat_query_context(world.get());
-  Game::Systems::Combat::process_attacks(world.get(), query_context, 0.016F);
+
+  for (int tick = 0; tick < 70; ++tick) {
+    Game::Systems::Combat::process_attacks(world.get(), query_context, 0.016F);
+  }
 
   EXPECT_FLOAT_EQ(elephant_transform->position.x, initial_x);
   EXPECT_FLOAT_EQ(elephant_transform->position.z, initial_z);
 
   EXPECT_FALSE(elephant_transform->has_desired_yaw);
-  EXPECT_FLOAT_EQ(elephant_transform->desired_yaw, -90.0F);
+  EXPECT_NEAR(elephant_transform->desired_yaw, -90.0F, 0.5F)
+      << "the elephant squares up to the attacker it is locked on, not the "
+         "one on its flank";
+}
+
+TEST_F(CombatModeTest, ALockedBodyTurnsOntoItsOpponentAtABoundedRate) {
+  auto* attacker = world->create_entity();
+  auto* attacker_transform =
+      attacker->add_component<TransformComponent>(0.0F, 0.0F, 0.0F);
+  auto* attacker_unit = attacker->add_component<UnitComponent>(100, 100, 1.0F, 12.0F);
+  attacker_unit->owner_id = 1;
+  attacker_unit->render_individuals_per_unit_override = 1;
+  attacker->add_component<MovementComponent>();
+  auto* attacker_attack = attacker->add_component<AttackComponent>();
+  attacker_attack->can_melee = true;
+  attacker_attack->can_ranged = false;
+  attacker_attack->in_melee_lock = true;
+
+  auto* enemy = world->create_entity();
+  auto* enemy_transform = enemy->add_component<TransformComponent>(-1.0F, 0.0F, 0.0F);
+  auto* enemy_unit = enemy->add_component<UnitComponent>(100, 100, 1.0F, 12.0F);
+  enemy_unit->owner_id = 2;
+  enemy_unit->render_individuals_per_unit_override = 1;
+  enemy->add_component<MovementComponent>();
+  auto* enemy_attack = enemy->add_component<AttackComponent>();
+  enemy_attack->can_melee = true;
+  enemy_attack->can_ranged = false;
+  enemy_attack->in_melee_lock = true;
+
+  attacker_attack->melee_lock_target_id = enemy->get_id();
+  enemy_attack->melee_lock_target_id = attacker->get_id();
+
+  auto const query_context =
+      Game::Systems::Combat::build_combat_query_context(world.get());
+  constexpr float k_dt = 0.016F;
+  Game::Systems::Combat::process_attacks(world.get(), query_context, k_dt);
+
+  EXPECT_LT(attacker_transform->rotation.y, -0.5F);
+  EXPECT_GT(attacker_transform->rotation.y, -(360.0F * k_dt) - 0.01F);
+  EXPECT_LT(enemy_transform->rotation.y, 90.0F + 0.01F);
+  EXPECT_GT(enemy_transform->rotation.y, 0.5F);
+
+  for (int tick = 0; tick < 40; ++tick) {
+    Game::Systems::Combat::process_attacks(world.get(), query_context, k_dt);
+  }
+  EXPECT_NEAR(attacker_transform->rotation.y, -90.0F, 0.5F);
+  EXPECT_NEAR(enemy_transform->rotation.y, 90.0F, 0.5F);
+  EXPECT_FALSE(attacker_transform->has_desired_yaw);
 }
 
 TEST_F(CombatModeTest, NearestEnemyPrefersClosestValidUnit) {

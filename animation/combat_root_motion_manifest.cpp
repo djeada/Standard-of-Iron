@@ -180,21 +180,22 @@ auto resolve_combat_root_motion(const CombatRootMotionInputs& inputs) noexcept
 
     float stumble = 0.0F;
     switch (inputs.reaction) {
+
     case HitReactionForm::Flinch: {
       float const env = out_and_back(q, 0.30F);
       back = 0.30F * env;
-      pitch = -19.0F * env;
-      squash = 0.06F * env;
-      roll = 5.0F * sign * env;
+      pitch = -8.0F * env;
+      squash = 0.04F * env;
+      roll = 3.0F * sign * env;
       stumble = 0.06F * settle(q, 0.30F);
       break;
     }
     case HitReactionForm::Block: {
       float const env = out_and_back(q, 0.26F);
       back = 0.17F * env;
-      pitch = 8.0F * env;
-      roll = -6.0F * env;
-      squash = 0.04F * env;
+      pitch = 5.0F * env;
+      roll = -4.0F * env;
+      squash = 0.03F * env;
       stumble = 0.05F * settle(q, 0.26F);
       break;
     }
@@ -202,8 +203,8 @@ auto resolve_combat_root_motion(const CombatRootMotionInputs& inputs) noexcept
       float const env = out_and_back(q, 0.36F);
       back = 0.34F * env;
       lateral = 0.30F * sign * env;
-      pitch = -11.0F * env;
-      roll = -8.0F * sign * env;
+      pitch = -6.0F * env;
+      roll = -5.0F * sign * env;
       break;
     }
     case HitReactionForm::Stagger: {
@@ -212,18 +213,18 @@ auto resolve_combat_root_motion(const CombatRootMotionInputs& inputs) noexcept
           std::sin(std::numbers::pi_v<float> * segment(q, 0.62F, 1.0F));
       back = 0.58F * env;
       lateral = 0.16F * sign * env;
-      pitch = -26.0F * env + 8.0F * overshoot;
-      roll = 12.0F * sign * env;
-      squash = 0.10F * env;
+      pitch = -12.0F * env + 4.0F * overshoot;
+      roll = 7.0F * sign * env;
+      squash = 0.06F * env;
       stumble = 0.22F * settle(q, 0.42F);
       break;
     }
     case HitReactionForm::Recoil: {
       float const env = out_and_back(q, 0.30F);
       back = 0.22F * env;
-      pitch = -12.0F * env;
-      squash = 0.035F * env;
-      roll = -3.0F * sign * env;
+      pitch = -6.0F * env;
+      squash = 0.03F * env;
+      roll = -2.0F * sign * env;
       break;
     }
     }

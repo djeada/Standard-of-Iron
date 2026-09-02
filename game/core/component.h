@@ -2487,6 +2487,9 @@ struct FormationSoldierPresentation {
   float relocation_velocity_z{0.0F};
   bool relocation_blocked{false};
   float local_yaw{0.0F};
+  float contact_offset_x{0.0F};
+  float contact_offset_z{0.0F};
+  float target_held_seconds{0.0F};
   bool alive{false};
   FormationSoldierAction action{FormationSoldierAction::FollowUnit};
   FormationSoldierCombatRole combat_role{FormationSoldierCombatRole::None};
