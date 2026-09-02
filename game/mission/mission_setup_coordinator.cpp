@@ -384,14 +384,22 @@ auto MissionSetupCoordinator::apply_mission_setup(
     if (commander_it == map_commanders.end() || commander_it->second.isEmpty()) {
       return;
     }
+
     for (const auto& message : mission.commander_messages) {
-      if (message.speaker.isEmpty() || message.speaker == commander_it->second) {
+      if (message.speaker.isEmpty()) {
+        continue;
+      }
+      const bool speaker_is_on_the_field = std::any_of(
+          map_commanders.begin(), map_commanders.end(), [&message](const auto& entry) {
+            return entry.second == message.speaker;
+          });
+      if (speaker_is_on_the_field) {
         continue;
       }
       qWarning() << "Mission setup: commander message" << message.id << "is spoken by"
-                 << message.speaker << "but the map fields" << commander_it->second
-                 << "for owner" << owner_id
-                 << "- the player will be told orders by someone they do not command";
+                 << message.speaker
+                 << "but no force on this map fields that commander - the speaker has "
+                    "no portrait on the field";
     }
   };
 

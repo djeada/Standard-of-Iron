@@ -21,6 +21,8 @@ struct StageStatus {
   QString title;
   QString description;
   QString hint;
+
+  QString detail;
   QString type;
   int progress = 0;
   int required = 1;

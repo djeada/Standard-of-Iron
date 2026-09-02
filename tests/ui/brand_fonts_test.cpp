@@ -88,8 +88,22 @@ TEST(BrandFontsTest, TheDisplayFaceCoversCapsFiguresAndAccents) {
                      "\u00ca\u00cb\u00cd\u00cc\u00ce\u00cf\u00d1\u00d3\u00d2"
                      "\u00d4\u00d5\u00d6\u00da\u00d9\u00db\u00dc\u00dd"
                      "\u00bf\u00a1\u00d7"
-                     "\u011e\u0130\u015e"));
+                     "\u011e\u0130\u015e"
+                     "\u0104\u0106\u0118\u0141\u0143\u015a\u0179\u017b"));
   EXPECT_EQ(missing, QString()) << "characters missing from the display face";
+}
+
+TEST(BrandFontsTest, TheDisplayFaceCoversTheRussianCapitals) {
+
+  const QString missing =
+      missing_from(Ui::BrandFonts::title_family(),
+                   QStringLiteral("\u0410\u0411\u0412\u0413\u0414\u0415\u0401\u0416"
+                                  "\u0417\u0418\u0419\u041a\u041b\u041c\u041d\u041e"
+                                  "\u041f\u0420\u0421\u0422\u0423\u0424\u0425\u0426"
+                                  "\u0427\u0428\u0429\u042a\u042b\u042c\u042d\u042e"
+                                  "\u042f"));
+  EXPECT_EQ(missing, QString())
+      << "a Russian title would be set in whatever face the host offers";
 }
 
 TEST(BrandFontsTest, QtAppliesTheDisplayFacesKerning) {

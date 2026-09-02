@@ -961,10 +961,15 @@ Rectangle {
                     }
 
                     Text {
+                        width: parent.width
                         anchors.horizontalCenter: parent.horizontalCenter
                         text: qsTr("Build siege weapons, structures, and gather wood, stone, iron, and food")
                         color: "#8D7146"
                         font.pixelSize: Design.Typography.caption
+                        horizontalAlignment: Text.AlignHCenter
+                        wrapMode: Text.WordWrap
+                        maximumLineCount: 2
+                        elide: Text.ElideRight
                     }
 
                     Rectangle {
@@ -1021,7 +1026,12 @@ Rectangle {
                     }
 
                     Text {
+                        width: parent.width
                         anchors.horizontalCenter: parent.horizontalCenter
+                        horizontalAlignment: Text.AlignHCenter
+                        wrapMode: Text.WordWrap
+                        maximumLineCount: 2
+                        elide: Text.ElideRight
                         text: {
                             if (!builderProductionContent.builder_prod.in_progress)
                                 return qsTr("Select a structure to build");
@@ -1125,9 +1135,14 @@ Rectangle {
                             }
 
                             Text {
-                                anchors.horizontalCenter: parent.horizontalCenter
-                                anchors.bottom: parent.bottom
-                                anchors.bottomMargin: 24
+                                anchors.bottom: structureCostFlow0.top
+                                anchors.bottomMargin: 2
+                                anchors.left: parent.left
+                                anchors.right: parent.right
+                                anchors.leftMargin: 4
+                                anchors.rightMargin: 4
+                                horizontalAlignment: Text.AlignHCenter
+                                elide: Text.ElideRight
                                 text: qsTr("Catapult")
                                 color: parent.is_enabled ? "#D4B57C" : "#6B5231"
                                 font.pixelSize: Design.Typography.caption
@@ -1135,6 +1150,8 @@ Rectangle {
                             }
 
                             Flow {
+                                id: structureCostFlow0
+
                                 anchors.left: parent.left
                                 anchors.right: parent.right
                                 anchors.bottom: parent.bottom
@@ -1288,9 +1305,14 @@ Rectangle {
                             }
 
                             Text {
-                                anchors.horizontalCenter: parent.horizontalCenter
-                                anchors.bottom: parent.bottom
-                                anchors.bottomMargin: 24
+                                anchors.bottom: structureCostFlow1.top
+                                anchors.bottomMargin: 2
+                                anchors.left: parent.left
+                                anchors.right: parent.right
+                                anchors.leftMargin: 4
+                                anchors.rightMargin: 4
+                                horizontalAlignment: Text.AlignHCenter
+                                elide: Text.ElideRight
                                 text: qsTr("Ballista")
                                 color: parent.is_enabled ? "#D4B57C" : "#6B5231"
                                 font.pixelSize: Design.Typography.caption
@@ -1298,6 +1320,8 @@ Rectangle {
                             }
 
                             Flow {
+                                id: structureCostFlow1
+
                                 anchors.left: parent.left
                                 anchors.right: parent.right
                                 anchors.bottom: parent.bottom
@@ -1451,9 +1475,14 @@ Rectangle {
                             }
 
                             Text {
-                                anchors.horizontalCenter: parent.horizontalCenter
-                                anchors.bottom: parent.bottom
-                                anchors.bottomMargin: 24
+                                anchors.bottom: structureCostFlow2.top
+                                anchors.bottomMargin: 2
+                                anchors.left: parent.left
+                                anchors.right: parent.right
+                                anchors.leftMargin: 4
+                                anchors.rightMargin: 4
+                                horizontalAlignment: Text.AlignHCenter
+                                elide: Text.ElideRight
                                 text: qsTr("Defense Tower")
                                 color: parent.is_enabled ? "#D4B57C" : "#6B5231"
                                 font.pixelSize: Design.Typography.caption
@@ -1461,6 +1490,8 @@ Rectangle {
                             }
 
                             Flow {
+                                id: structureCostFlow2
+
                                 anchors.left: parent.left
                                 anchors.right: parent.right
                                 anchors.bottom: parent.bottom
@@ -1614,9 +1645,14 @@ Rectangle {
                             }
 
                             Text {
-                                anchors.horizontalCenter: parent.horizontalCenter
-                                anchors.bottom: parent.bottom
-                                anchors.bottomMargin: 24
+                                anchors.bottom: structureCostFlow3.top
+                                anchors.bottomMargin: 2
+                                anchors.left: parent.left
+                                anchors.right: parent.right
+                                anchors.leftMargin: 4
+                                anchors.rightMargin: 4
+                                horizontalAlignment: Text.AlignHCenter
+                                elide: Text.ElideRight
                                 text: qsTr("Home")
                                 color: parent.is_enabled ? "#D4B57C" : "#6B5231"
                                 font.pixelSize: Design.Typography.caption
@@ -1624,6 +1660,8 @@ Rectangle {
                             }
 
                             Flow {
+                                id: structureCostFlow3
+
                                 anchors.left: parent.left
                                 anchors.right: parent.right
                                 anchors.bottom: parent.bottom
@@ -1777,9 +1815,14 @@ Rectangle {
                             }
 
                             Text {
-                                anchors.horizontalCenter: parent.horizontalCenter
-                                anchors.bottom: parent.bottom
-                                anchors.bottomMargin: 24
+                                anchors.bottom: structureCostFlow4.top
+                                anchors.bottomMargin: 2
+                                anchors.left: parent.left
+                                anchors.right: parent.right
+                                anchors.leftMargin: 4
+                                anchors.rightMargin: 4
+                                horizontalAlignment: Text.AlignHCenter
+                                elide: Text.ElideRight
                                 text: qsTr("Farm")
                                 color: parent.is_enabled ? "#D4B57C" : "#6B5231"
                                 font.pixelSize: Design.Typography.caption
@@ -1787,6 +1830,8 @@ Rectangle {
                             }
 
                             Flow {
+                                id: structureCostFlow4
+
                                 anchors.left: parent.left
                                 anchors.right: parent.right
                                 anchors.bottom: parent.bottom
@@ -1940,9 +1985,14 @@ Rectangle {
                             }
 
                             Text {
-                                anchors.horizontalCenter: parent.horizontalCenter
-                                anchors.bottom: parent.bottom
-                                anchors.bottomMargin: 24
+                                anchors.bottom: structureCostFlow5.top
+                                anchors.bottomMargin: 2
+                                anchors.left: parent.left
+                                anchors.right: parent.right
+                                anchors.leftMargin: 4
+                                anchors.rightMargin: 4
+                                horizontalAlignment: Text.AlignHCenter
+                                elide: Text.ElideRight
                                 text: qsTr("Wall Segment")
                                 color: parent.is_enabled ? "#D4B57C" : "#6B5231"
                                 font.pixelSize: Design.Typography.caption
@@ -1950,6 +2000,8 @@ Rectangle {
                             }
 
                             Flow {
+                                id: structureCostFlow5
+
                                 anchors.left: parent.left
                                 anchors.right: parent.right
                                 anchors.bottom: parent.bottom
@@ -2103,9 +2155,14 @@ Rectangle {
                             }
 
                             Text {
-                                anchors.horizontalCenter: parent.horizontalCenter
-                                anchors.bottom: parent.bottom
-                                anchors.bottomMargin: 24
+                                anchors.bottom: structureCostFlow6.top
+                                anchors.bottomMargin: 2
+                                anchors.left: parent.left
+                                anchors.right: parent.right
+                                anchors.leftMargin: 4
+                                anchors.rightMargin: 4
+                                horizontalAlignment: Text.AlignHCenter
+                                elide: Text.ElideRight
                                 text: qsTr("Wall Gate")
                                 color: parent.is_enabled ? "#D4B57C" : "#6B5231"
                                 font.pixelSize: Design.Typography.caption
@@ -2113,6 +2170,8 @@ Rectangle {
                             }
 
                             Flow {
+                                id: structureCostFlow6
+
                                 anchors.left: parent.left
                                 anchors.right: parent.right
                                 anchors.bottom: parent.bottom
@@ -2266,9 +2325,14 @@ Rectangle {
                             }
 
                             Text {
-                                anchors.horizontalCenter: parent.horizontalCenter
-                                anchors.bottom: parent.bottom
-                                anchors.bottomMargin: 24
+                                anchors.bottom: structureCostFlow7.top
+                                anchors.bottomMargin: 2
+                                anchors.left: parent.left
+                                anchors.right: parent.right
+                                anchors.leftMargin: 4
+                                anchors.rightMargin: 4
+                                horizontalAlignment: Text.AlignHCenter
+                                elide: Text.ElideRight
                                 text: qsTr("Marketplace")
                                 color: parent.is_enabled ? "#D4B57C" : "#6B5231"
                                 font.pixelSize: Design.Typography.caption
@@ -2276,6 +2340,8 @@ Rectangle {
                             }
 
                             Flow {
+                                id: structureCostFlow7
+
                                 anchors.left: parent.left
                                 anchors.right: parent.right
                                 anchors.bottom: parent.bottom
@@ -2429,9 +2495,14 @@ Rectangle {
                             }
 
                             Text {
-                                anchors.horizontalCenter: parent.horizontalCenter
-                                anchors.bottom: parent.bottom
-                                anchors.bottomMargin: 24
+                                anchors.bottom: structureCostFlow8.top
+                                anchors.bottomMargin: 2
+                                anchors.left: parent.left
+                                anchors.right: parent.right
+                                anchors.leftMargin: 4
+                                anchors.rightMargin: 4
+                                horizontalAlignment: Text.AlignHCenter
+                                elide: Text.ElideRight
                                 text: qsTr("Temple")
                                 color: parent.is_enabled ? "#D4B57C" : "#6B5231"
                                 font.pixelSize: Design.Typography.caption
@@ -2439,6 +2510,8 @@ Rectangle {
                             }
 
                             Flow {
+                                id: structureCostFlow8
+
                                 anchors.left: parent.left
                                 anchors.right: parent.right
                                 anchors.bottom: parent.bottom

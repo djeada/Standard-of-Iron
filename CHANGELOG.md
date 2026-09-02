@@ -122,6 +122,21 @@ tools/font/build_standard_iron.py`, then `tools/font/proof.py` to look at it).
   case, which no macOS or Windows checkout can hold at once; the audio one is
   now [docs/AUDIO_TODO.md](docs/AUDIO_TODO.md).
 
+- **Polish and Russian.** `translations/app_pl.ts` and `translations/app_ru.ts`
+  ship all 2,343 strings translated — the UI, the field manual, every mission
+  briefing, loading tip and commander dispatch — and `pl` and `ru` join the
+  language list, the `.qm` build and the translator CSVs. Both needed the brand
+  face first, for the reason Turkish did: `Ą Ć Ę Ł Ń Ś Ź Ż` and the whole
+  Cyrillic range are outside Latin-1, so an uppercased title would have dropped
+  into a fallback font — a Polish one mid-word, a Russian one entirely.
+  `tools/font/glyph_composites.py` gained an ogonek and the Ł stroke, and the
+  new `tools/font/glyph_cyrillic.py` draws the twenty Russian capitals that have
+  no Latin ancestor out of the same wedge, bite and thick/thin logic as A–Z;
+  the eleven that do — `А В Е К М Н О Р С Т Х` — are aliased to the Latin
+  outline rather than redrawn, so `О` cannot drift from `O`. Russian plurals
+  carry all three numerus forms. `BrandFontsTest` and the QML glyph-coverage
+  suite assert both alphabets.
+
 - **Turkish.** `translations/app_tr.ts` ships all 2,335 strings translated — the
   UI, the field manual, every mission briefing and commander dispatch — and
   `tr` joins the language list, the `.qm` build and the translator CSVs. The

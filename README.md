@@ -43,17 +43,17 @@ developer tools.
 
 ## At a glance
 
-|              | Current scope                                                                                        |
-| ------------ | ---------------------------------------------------------------------------------------------------- |
-| Campaign     | **The Barcid Road**, eight missions from the Rhône crossing to Zama                                  |
-| Tutorial     | **Field Training**, a guided first battle that teaches orders, economy, building, armies and defence |
-| Battlefields | 13 campaign and skirmish maps with rivers, mountains, forests, settlements, walls, and siege lanes   |
-| Factions     | Rome and Carthage are playable; the Iron Sepulcher appears as a campaign enemy                       |
-| Command      | Top-down RTS control and direct commander combat in the same battle                                  |
-| Forces       | Infantry, archers, cavalry, healers, builders, commanders, siege engines, and war elephants          |
-| Formations   | Three nation doctrines and 29 authored unit layouts, including shield walls and cavalry wedges       |
-| Languages    | English, German, Spanish, Brazilian Portuguese, Turkish, and Arabic with right-to-left layout        |
-| Platforms    | Linux, macOS, and Windows                                                                            |
+|              | Current scope                                                                                                  |
+| ------------ | -------------------------------------------------------------------------------------------------------------- |
+| Campaign     | **The Barcid Road**, eight missions from the Rhône crossing to Zama                                            |
+| Tutorial     | **Field Training**, a guided first battle that teaches orders, economy, building, armies and defence           |
+| Battlefields | 13 campaign and skirmish maps with rivers, mountains, forests, settlements, walls, and siege lanes             |
+| Factions     | Rome and Carthage are playable; the Iron Sepulcher appears as a campaign enemy                                 |
+| Command      | Top-down RTS control and direct commander combat in the same battle                                            |
+| Forces       | Infantry, archers, cavalry, healers, builders, commanders, siege engines, and war elephants                    |
+| Formations   | Three nation doctrines and 29 authored unit layouts, including shield walls and cavalry wedges                 |
+| Languages    | English, German, Spanish, Brazilian Portuguese, Turkish, Polish, Russian, and Arabic with right-to-left layout |
+| Platforms    | Linux, macOS, and Windows                                                                                      |
 
 ## Gameplay
 

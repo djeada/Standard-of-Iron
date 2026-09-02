@@ -257,6 +257,10 @@
         <source>Scroll for more</source>
         <translation>Scroll for more</translation>
     </message>
+    <message>
+        <source>Manpower this barracks still holds. Every recruit spends some; civilians raised at a Home deliver more.</source>
+        <translation>Manpower this barracks still holds. Every recruit spends some; civilians raised at a Home deliver more.</translation>
+    </message>
 </context>
 <context>
     <name>BattleReportLayout</name>
@@ -5615,6 +5619,10 @@ to see preview</translation>
         <source>AI Wave %1</source>
         <translation>AI Wave %1</translation>
     </message>
+    <message>
+        <source>The assault is broken. Nothing else is coming.</source>
+        <translation>The assault is broken. Nothing else is coming.</translation>
+    </message>
 </context>
 <context>
     <name>Missions</name>
@@ -7925,6 +7933,33 @@ Builders reap it for the food that recruits civilians</translation>
     <message>
         <source>Show unit details</source>
         <translation>Show unit details</translation>
+    </message>
+</context>
+<context>
+    <name>Resources</name>
+    <message>
+        <source>Gold</source>
+        <translation>Gold</translation>
+    </message>
+    <message>
+        <source>Food</source>
+        <translation>Food</translation>
+    </message>
+    <message>
+        <source>Timber</source>
+        <translation>Timber</translation>
+    </message>
+    <message>
+        <source>Stone</source>
+        <translation>Stone</translation>
+    </message>
+    <message>
+        <source>Iron</source>
+        <translation>Iron</translation>
+    </message>
+    <message>
+        <source>%1 %2/%3</source>
+        <translation>%1 %2/%3</translation>
     </message>
 </context>
 <context>

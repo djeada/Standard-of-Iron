@@ -17,6 +17,14 @@ Item {
     readonly property int left_stack_bottom: waveTracker.visible ? waveTracker.y + waveTracker.height : topPanel.height
 
     readonly property int right_stack_bottom: topPanel.height + Design.Metrics.space8 + (Design.Metrics.space24 * 8) + Design.Metrics.space8 + hudTop.minimapLegendHeight
+
+    property bool overlay_active: false
+
+    function right_stack_margin(card_height) {
+        var preferred = hud.right_stack_bottom - topPanel.height;
+        var latest = hud.height - topPanel.height - hud.bottom_panel_height - Design.Metrics.space8 - card_height;
+        return Math.max(Design.Metrics.space8, Math.min(preferred, latest));
+    }
     property int selection_tick: 0
     property bool has_movable_units: false
     property bool commander_rpg_mode: typeof game !== 'undefined' && game.commander.mode_state === "active"
@@ -41,6 +49,31 @@ Item {
     signal campaign_requested
     signal hud_became_visible
     signal help_requested
+
+    function item_covers_pointer(item, x, y) {
+        if (!item || !item.visible || item.width <= 0 || item.height <= 0)
+            return false;
+        var local = hud.mapToItem(item, x, y);
+        return local.x >= 0 && local.y >= 0 && local.x < item.width && local.y < item.height;
+    }
+
+    function blocks_world_pointer(x, y) {
+        if (!hud.visible)
+            return false;
+        if (y < hud.top_panel_height)
+            return true;
+        if (y > (hud.height - hud.bottom_panel_height))
+            return true;
+        var minimapZone = hudTop.minimapZone;
+        if (minimapZone.width > 0 && x >= minimapZone.x && y >= minimapZone.y && x < minimapZone.x + minimapZone.width && y < minimapZone.y + minimapZone.height)
+            return true;
+        var floating = [cameraLegend, commanderMessage, waveTracker, economyCoach];
+        for (var i = 0; i < floating.length; ++i) {
+            if (hud.item_covers_pointer(floating[i], x, y))
+                return true;
+        }
+        return false;
+    }
 
     function refresh_command_mode() {
         var actual_mode = "normal";
@@ -263,9 +296,9 @@ Item {
         anchors.right: parent.right
         anchors.rightMargin: Design.Metrics.hudZoneMargin
         anchors.top: topPanel.bottom
-        anchors.topMargin: hud.right_stack_bottom - topPanel.height
+        anchors.topMargin: hud.right_stack_margin(cameraLegend.height)
 
-        gate: !hud.commander_rpg_mode && !commanderMessage.showing
+        gate: !hud.commander_rpg_mode && !commanderMessage.showing && !hud.overlay_active && !(typeof game !== 'undefined' && game.tutorial && game.tutorial.active)
         onOpen_settings_requested: {
             cameraLegend.dismiss();
             hud.camera_settings_requested();
@@ -377,7 +410,7 @@ Item {
         anchors.right: parent.right
         anchors.rightMargin: Design.Metrics.hudZoneMargin
         anchors.top: topPanel.bottom
-        anchors.topMargin: hud.right_stack_bottom - topPanel.height
+        anchors.topMargin: hud.right_stack_margin(commanderMessage.height)
 
         z: 200
     }

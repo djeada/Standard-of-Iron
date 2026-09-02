@@ -38,6 +38,7 @@ QtObject {
     readonly property string reset: "↺"
     readonly property string follow: "☉"
     readonly property string spectator: "◉"
+    readonly property string cameraHelp: "\u25A3"
 
     readonly property string ambient: "\u25CB"
     readonly property string map: "\u25A3"

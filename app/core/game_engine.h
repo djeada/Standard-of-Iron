@@ -438,6 +438,7 @@ private:
   void configure_mission_stages();
   void configure_commander_messages();
   void update_commander_messages(float delta_time);
+  void release_pending_mission_start_cue();
   void publish_commander_message();
   void publish_mission_stages();
   void publish_victory_objectives();
@@ -597,6 +598,7 @@ private:
   QTimer m_autosave_timer;
   Game::Mission::MissionStageTracker m_mission_stage_tracker;
   Game::Mission::CommanderMessageDirector m_commander_message_director;
+  bool m_mission_start_cue_pending = false;
   float m_mission_stage_poll_accumulator = 0.0F;
   float m_minimap_landmark_poll_accumulator = 0.0F;
   App::Mission::MissionWaveRuntime m_mission_waves;

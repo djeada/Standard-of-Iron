@@ -257,6 +257,10 @@
         <source>Scroll for more</source>
         <translation>Weiterscrollen</translation>
     </message>
+    <message>
+        <source>Manpower this barracks still holds. Every recruit spends some; civilians raised at a Home deliver more.</source>
+        <translation>Manneskraft, die diese Kaserne noch hält. Jede Rekrutierung verbraucht davon; in einem Heim ausgehobene Zivilisten liefern Nachschub.</translation>
+    </message>
 </context>
 <context>
     <name>BattleReportLayout</name>
@@ -5615,6 +5619,10 @@ um die Vorschau zu sehen</translation>
         <source>AI Wave %1</source>
         <translation>KI-Welle %1</translation>
     </message>
+    <message>
+        <source>The assault is broken. Nothing else is coming.</source>
+        <translation>Der Angriff ist gebrochen. Es kommt nichts mehr.</translation>
+    </message>
 </context>
 <context>
     <name>Missions</name>
@@ -7925,6 +7933,33 @@ Baumeister ernten es als Nahrung, die Zivilisten rekrutiert</translation>
     <message>
         <source>Show unit details</source>
         <translation>Einheitendetails anzeigen</translation>
+    </message>
+</context>
+<context>
+    <name>Resources</name>
+    <message>
+        <source>Gold</source>
+        <translation>Gold</translation>
+    </message>
+    <message>
+        <source>Food</source>
+        <translation>Nahrung</translation>
+    </message>
+    <message>
+        <source>Timber</source>
+        <translation>Holz</translation>
+    </message>
+    <message>
+        <source>Stone</source>
+        <translation>Stein</translation>
+    </message>
+    <message>
+        <source>Iron</source>
+        <translation>Eisen</translation>
+    </message>
+    <message>
+        <source>%1 %2/%3</source>
+        <translation>%1 %2/%3</translation>
     </message>
 </context>
 <context>

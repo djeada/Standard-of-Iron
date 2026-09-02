@@ -84,12 +84,26 @@ Item {
                     }
 
                     Text {
+                        id: reserveReadout
+
                         width: parent.width
                         text: qsTr("Reserve %1 / %2").arg(root.prod.manpower_available || 0).arg(root.prod.max_units || 0)
                         color: (root.prod.manpower_available || 0) > 0 ? Design.Theme.textPrimary : Design.Theme.danger
                         font.family: Design.Typography.family
                         font.pixelSize: Design.Typography.caption
                         elide: Text.ElideRight
+
+                        ToolTip.visible: reserveMouse.containsMouse
+                        ToolTip.delay: Design.Metrics.tooltipDelay
+                        ToolTip.text: qsTr("Manpower this barracks still holds. Every recruit spends some; civilians raised at a Home deliver more.")
+
+                        MouseArea {
+                            id: reserveMouse
+
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            acceptedButtons: Qt.NoButton
+                        }
                     }
                 }
 

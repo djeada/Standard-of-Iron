@@ -118,7 +118,9 @@ Item {
                             var parts = [];
                             if (modelData.description && modelData.description !== modelData.title)
                                 parts.push(modelData.description);
-                            if (stageRequired > 1)
+                            if (modelData.detail)
+                                parts.push(modelData.detail);
+                            else if (stageRequired > 1)
                                 parts.push(qsTr("%1 of %2").arg(stageProgress).arg(stageRequired));
                             return parts.join(" · ");
                         }
