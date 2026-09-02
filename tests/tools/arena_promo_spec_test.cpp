@@ -1,3 +1,7 @@
+#include <QDir>
+#include <QFile>
+#include <QTemporaryDir>
+
 #include <algorithm>
 #include <cmath>
 #include <gtest/gtest.h>
@@ -170,4 +174,69 @@ TEST(ArenaPromoSpecTest, OverlappingWindowsSplitIntoSeparatePasses) {
   ASSERT_EQ(passes.size(), 2U);
   EXPECT_EQ(passes[0].shots, (std::vector<std::size_t>{0, 2}));
   EXPECT_EQ(passes[1].shots, (std::vector<std::size_t>{1}));
+}
+
+namespace {
+
+auto write_spec(const QTemporaryDir& dir, const char* body) -> QString {
+  const QString path = QDir(dir.path()).filePath(QStringLiteral("spec.json"));
+  QFile file(path);
+  EXPECT_TRUE(file.open(QIODevice::WriteOnly | QIODevice::Truncate));
+  file.write(body);
+  file.close();
+  return path;
+}
+
+} // namespace
+
+TEST(ArenaPromoSpecTest, AnAuthoredReelKeepsTheGameplayUiOffUnlessItAsks) {
+  QTemporaryDir dir;
+  ASSERT_TRUE(dir.isValid());
+
+  const QString path = write_spec(dir, R"({
+    "id": "probe",
+    "shots": [
+      { "name": "played", "scenario": "arena", "duration": 2.0,
+        "focus": { "mode": "all" },
+        "camera": [ { "time": 0.0 }, { "time": 2.0 } ] }
+    ]
+  })");
+
+  QString error;
+  const auto spec = Arena::Promo::load(path, &error);
+  ASSERT_TRUE(spec.has_value()) << error.toStdString();
+  ASSERT_EQ(spec->shots.size(), 1U);
+  EXPECT_FALSE(spec->shots[0].gameplay_ui)
+      << "an authored reel is a cinematic: its scenario suppresses the overlays, "
+         "and a default of on put crossed swords and damage pills over every "
+         "shot of them";
+}
+
+TEST(ArenaPromoSpecTest, AReelCanTurnTheGameplayUiOnWholeOrPerShot) {
+  QTemporaryDir dir;
+  ASSERT_TRUE(dir.isValid());
+
+  const QString path = write_spec(dir, R"({
+    "id": "probe",
+    "gameplay_ui": true,
+    "shots": [
+      { "name": "clean", "scenario": "arena", "duration": 2.0,
+        "focus": { "mode": "all" },
+        "camera": [ { "time": 0.0 }, { "time": 2.0 } ] },
+      { "name": "played", "scenario": "arena", "start": 4.0, "duration": 2.0,
+        "gameplay_ui": false,
+        "focus": { "mode": "all" },
+        "camera": [ { "time": 0.0 }, { "time": 2.0 } ] }
+    ]
+  })");
+
+  QString error;
+  const auto spec = Arena::Promo::load(path, &error);
+  ASSERT_TRUE(spec.has_value()) << error.toStdString();
+  ASSERT_EQ(spec->shots.size(), 2U);
+  EXPECT_TRUE(spec->gameplay_ui);
+  EXPECT_TRUE(spec->shots[0].gameplay_ui)
+      << "the spec-level setting is the default for every shot";
+  EXPECT_FALSE(spec->shots[1].gameplay_ui)
+      << "a shot may still opt out of the gameplay UI";
 }

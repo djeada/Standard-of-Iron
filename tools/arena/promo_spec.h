@@ -18,6 +18,12 @@ enum class FocusMode : std::uint8_t {
   Army,
 };
 
+enum class ReportCardStyle : std::uint8_t {
+  Reel,
+
+  Matchup,
+};
+
 enum class Ease : std::uint8_t {
   Linear,
   Smooth,
@@ -68,6 +74,10 @@ struct Shot {
 
   bool rpg_hud{false};
 
+  bool gameplay_ui{false};
+
+  bool gameplay_ui_all_owners{false};
+
   float report_card_seconds{0.0F};
   Focus focus;
   std::vector<CameraKey> keys;
@@ -92,6 +102,16 @@ struct Spec {
   int fps{60};
   int supersample{1};
   bool audio{false};
+
+  QString music_track;
+  float music_volume{0.18F};
+
+  QString report_sound_decided;
+  QString report_sound_undecided;
+  float report_sound_volume{0.45F};
+  bool gameplay_ui{false};
+  bool gameplay_ui_all_owners{false};
+  ReportCardStyle report_card_style{ReportCardStyle::Reel};
   std::vector<Shot> shots;
 };
 

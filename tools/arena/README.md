@@ -63,6 +63,11 @@ alone. A scenario whose subject _is_ an overlay opts back in with
 `capture_ui_overlays = true`, which is why this one's `frame_*.png` include the
 badges.
 
+A promo recording carries the badges and the floating numbers too; see
+[the gameplay UI in a clip](../../docs/PROMO_CAPTURE.md) for the two separate
+mechanisms behind them and the `gameplay_ui` switch that turns them off for a
+reel that wants the world alone.
+
 ## Projectile range indicators
 
 ```bash

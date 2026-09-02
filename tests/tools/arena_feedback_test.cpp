@@ -1,3 +1,4 @@
+#include <QImage>
 #include <QPainter>
 #include <QPixmap>
 #include <QPointF>
@@ -84,6 +85,46 @@ TEST_F(ArenaFeedbackTest, AHarvestDeliveryBecomesAnEconomyNumber) {
   feedback.advance(0.6F);
   EXPECT_EQ(feedback.live_count(), 1)
       << "economy feedback reaches the arena overlay too";
+}
+
+TEST_F(ArenaFeedbackTest, TheNumbersScaleWithTheFrameTheyAreRecordedInto) {
+  ArenaFeedback feedback;
+  feedback.set_world(&m_world);
+
+  const auto target = spawn(0.0F, 0.0F);
+  Engine::Core::EventManager::instance().publish(Engine::Core::CombatHitEvent(
+      0, target, 12, Game::Units::SpawnType::Knight, false, 3, 2));
+  feedback.advance(0.2F);
+  ASSERT_EQ(feedback.live_count(), 1);
+
+  const auto painted_pixels = [&feedback](float ui_scale) {
+    QImage canvas(320, 320, QImage::Format_ARGB32);
+    canvas.fill(Qt::black);
+    {
+      QPainter painter(&canvas);
+      feedback.draw(
+          painter,
+          [](float, float, float, QPointF& out) {
+            out = QPointF(160.0, 260.0);
+            return true;
+          },
+          ui_scale);
+    }
+    int painted = 0;
+    for (int y = 0; y < canvas.height(); ++y) {
+      for (int x = 0; x < canvas.width(); ++x) {
+        painted += canvas.pixelColor(x, y) != QColor(Qt::black) ? 1 : 0;
+      }
+    }
+    return painted;
+  };
+
+  const int small = painted_pixels(1.0F);
+  const int large = painted_pixels(2.0F);
+  EXPECT_GT(small, 0);
+  EXPECT_GT(large, small * 2)
+      << "a pill tuned for a 1080p window has to grow with the recorded frame, "
+         "or it is unreadable in the clip";
 }
 
 TEST_F(ArenaFeedbackTest, AnEventWithoutAWorldIsIgnored) {

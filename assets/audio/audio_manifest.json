@@ -1014,7 +1014,6 @@
       "max_instances": 6,
       "load_policy": "mission",
       "tags": {
-        "state": "tense",
         "source": "field"
       },
       "provenance": {
@@ -1034,28 +1033,6 @@
       "priority": 3,
       "cooldown_ms": 250,
       "max_instances": 2,
-      "load_policy": "mission",
-      "tags": {
-        "state": "combat",
-        "source": "field"
-      },
-      "provenance": {
-        "origin": "tools/audio_field",
-        "licence": "See THIRD_PARTY_LICENSES.md",
-        "notes": "cut from a catalogued recording by tools/audio_field"
-      }
-    },
-    {
-      "id": "sfx.combat.battlefield_distant_mass_02",
-      "aliases": [
-        "combat_hit_generic"
-      ],
-      "path": "sfx/combat/battlefield_distant_mass_02.ogg",
-      "category": "sfx",
-      "volume": 0.8,
-      "priority": 2,
-      "cooldown_ms": 140,
-      "max_instances": 4,
       "load_policy": "mission",
       "tags": {
         "state": "combat",
@@ -2034,22 +2011,6 @@
       }
     },
     {
-      "id": "sfx.combat.siege_impact",
-      "path": "sfx/combat/siege_impact.ogg",
-      "category": "sfx",
-      "priority": 5,
-      "cooldown_ms": 300,
-      "load_policy": "startup",
-      "tags": {
-        "source": "field"
-      },
-      "provenance": {
-        "origin": "tools/audio_field",
-        "licence": "See THIRD_PARTY_LICENSES.md",
-        "notes": "cut from a catalogued recording by tools/audio_field"
-      }
-    },
-    {
       "id": "sfx.combat.heal",
       "path": "sfx/combat/heal_magic_shimmer.ogg",
       "category": "sfx",
@@ -2477,22 +2438,6 @@
       }
     },
     {
-      "id": "sfx.combat.dodge_v2",
-      "path": "sfx/combat/dodge_roll_v2.ogg",
-      "category": "sfx",
-      "priority": 5,
-      "cooldown_ms": 200,
-      "load_policy": "startup",
-      "tags": {
-        "source": "field"
-      },
-      "provenance": {
-        "origin": "tools/audio_field",
-        "licence": "See THIRD_PARTY_LICENSES.md",
-        "notes": "cut from a catalogued recording by tools/audio_field"
-      }
-    },
-    {
       "id": "sfx.combat.land_v2",
       "path": "sfx/combat/land_thud_v2.ogg",
       "category": "sfx",
@@ -2768,44 +2713,6 @@
     {
       "id": "sfx.combat.stone_impact_01",
       "path": "sfx/combat/stone_impact_01.ogg",
-      "category": "sfx",
-      "volume": 0.85,
-      "priority": 4,
-      "cooldown_ms": 200,
-      "max_instances": 3,
-      "load_policy": "startup",
-      "tags": {
-        "attack_family": "siege",
-        "source": "field"
-      },
-      "provenance": {
-        "origin": "tools/audio_field",
-        "licence": "See THIRD_PARTY_LICENSES.md",
-        "notes": "cut from a catalogued recording by tools/audio_field"
-      }
-    },
-    {
-      "id": "sfx.combat.stone_impact_02",
-      "path": "sfx/combat/stone_impact_02.ogg",
-      "category": "sfx",
-      "volume": 0.85,
-      "priority": 4,
-      "cooldown_ms": 200,
-      "max_instances": 3,
-      "load_policy": "startup",
-      "tags": {
-        "attack_family": "siege",
-        "source": "field"
-      },
-      "provenance": {
-        "origin": "tools/audio_field",
-        "licence": "See THIRD_PARTY_LICENSES.md",
-        "notes": "cut from a catalogued recording by tools/audio_field"
-      }
-    },
-    {
-      "id": "sfx.combat.stone_impact_03",
-      "path": "sfx/combat/stone_impact_03.ogg",
       "category": "sfx",
       "volume": 0.85,
       "priority": 4,

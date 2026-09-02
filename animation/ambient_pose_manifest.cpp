@@ -356,45 +356,50 @@ auto resolve_humanoid_ambient_pose(const HumanoidAmbientPoseInputs& inputs) noex
     break;
   }
   case HumanoidAmbientIdle::PlantFlag: {
-    float const prepare = plateau01(phase, 0.08F, 0.26F);
-    float const plant = plateau01(phase, 0.30F, 0.72F);
-    float const recover =
-        (phase > 0.72F)
-            ? std::sin(((phase - 0.72F) / 0.28F) * std::numbers::pi_v<float>)
-            : 0.0F;
-    float const lean = plant * 0.11F + recover * 0.03F;
-    float const crouch = prepare * 0.05F + plant * 0.16F;
-    float const right_drive = prepare * 0.16F + plant * 0.22F - recover * 0.07F;
-    float const left_brace = prepare * 0.08F + plant * 0.14F - recover * 0.04F;
+
+    auto const window = [](float p, float from, float to) noexcept -> float {
+      return smooth01((p - from) / (to - from));
+    };
+    float const coil =
+        window(phase, 0.0F, 0.12F) * (1.0F - window(phase, 0.18F, 0.34F));
+    float const raise = window(phase, 0.14F, 0.40F);
+    float const point = window(phase, 0.44F, 0.70F);
+    float const plant = window(phase, 0.84F, 1.0F);
+    float const lift = raise * 0.64F + point * 0.10F - plant * 0.30F;
+    float const reach = point * 0.46F - plant * 0.12F;
+    float const lean = point * 0.16F + plant * 0.09F - coil * 0.04F;
+    float const crouch = coil * 0.07F + plant * 0.13F;
+
     sample.pelvis_y_delta -= crouch;
-    sample.pelvis_z_delta += lean * 0.35F;
-    sample.shoulder_l_y_delta -= crouch * 0.42F;
-    sample.shoulder_r_y_delta -= crouch * 0.32F;
-    sample.shoulder_l_z_delta += lean * 0.55F;
-    sample.shoulder_r_z_delta += lean * 0.72F;
-    sample.neck_z_delta += lean * 0.72F;
-    sample.head_z_delta += lean * 0.86F;
-    sample.head_y_delta -= crouch * 0.22F;
-    sample.knee_l_y_delta -= crouch * 0.18F;
-    sample.knee_r_y_delta -= crouch * 0.40F;
-    sample.knee_l_z_delta += plant * 0.05F;
-    sample.knee_r_z_delta += plant * 0.15F;
-    sample.foot_l_x_delta -= plant * 0.03F;
-    sample.foot_l_z_delta -= plant * 0.04F;
-    sample.foot_r_x_delta += plant * 0.02F;
-    sample.foot_r_z_delta += plant * 0.12F;
-    sample.hand_r_y_delta -= right_drive;
-    sample.hand_r_z_delta += plant * 0.16F + prepare * 0.04F;
-    sample.hand_r_x_delta += prepare * 0.03F;
-    sample.elbow_r_y_delta -= right_drive * 0.50F;
-    sample.elbow_r_z_delta += plant * 0.11F;
-    sample.elbow_r_x_delta += prepare * 0.02F;
-    sample.hand_l_y_delta += -left_brace * 0.75F + recover * 0.02F;
-    sample.hand_l_z_delta += plant * 0.10F;
-    sample.hand_l_x_delta -= plant * 0.04F;
-    sample.elbow_l_y_delta -= left_brace * 0.35F;
-    sample.elbow_l_z_delta += plant * 0.07F;
-    sample.elbow_l_x_delta -= plant * 0.03F;
+    sample.pelvis_z_delta += lean * 0.40F;
+
+    sample.hand_r_y_delta += lift;
+    sample.hand_r_z_delta += reach + coil * 0.05F;
+    sample.hand_r_x_delta += raise * 0.10F + point * 0.14F;
+    sample.elbow_r_y_delta += lift * 0.58F;
+    sample.elbow_r_z_delta += reach * 0.52F;
+    sample.elbow_r_x_delta += point * 0.08F;
+    sample.shoulder_r_y_delta += lift * 0.26F - crouch * 0.30F;
+    sample.shoulder_r_z_delta += lean * 0.70F + reach * 0.18F;
+
+    sample.hand_l_y_delta -= raise * 0.14F + plant * 0.06F;
+    sample.hand_l_z_delta -= point * 0.16F;
+    sample.hand_l_x_delta -= point * 0.10F;
+    sample.elbow_l_y_delta -= raise * 0.10F;
+    sample.elbow_l_z_delta -= point * 0.11F;
+    sample.shoulder_l_y_delta -= crouch * 0.40F;
+    sample.shoulder_l_z_delta -= reach * 0.12F;
+
+    sample.neck_z_delta += lean * 0.80F + reach * 0.10F;
+    sample.head_z_delta += lean * 0.95F + reach * 0.16F;
+    sample.head_y_delta += raise * 0.06F - crouch * 0.25F;
+
+    sample.knee_l_y_delta -= crouch * 0.22F;
+    sample.knee_r_y_delta -= crouch * 0.45F;
+    sample.knee_r_z_delta += point * 0.18F;
+    sample.foot_r_z_delta += point * 0.22F;
+    sample.foot_r_x_delta += point * 0.05F;
+    sample.foot_l_z_delta -= point * 0.06F;
     break;
   }
   case HumanoidAmbientIdle::None:

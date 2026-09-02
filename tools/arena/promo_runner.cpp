@@ -28,6 +28,7 @@
 #include "arena_typography.h"
 #include "arena_viewport.h"
 #include "game/session/session_context.h"
+#include "game/visuals/team_colors.h"
 #include "render/humanoid/runtime/runtime_stats.h"
 #include "video_encoder.h"
 
@@ -39,6 +40,8 @@ constexpr int k_pass_watchdog_ms = 1'800'000;
 constexpr float k_pass_watchdog_scale = 10.0F;
 constexpr float k_fast_forward_margin_seconds = 3.0F;
 constexpr int k_pass_warmup_frames = 3;
+
+constexpr double k_card_dissolve_seconds = 0.55;
 constexpr int k_first_frame_min_peak = 8;
 constexpr int k_max_black_frames_skipped = 45;
 
@@ -233,6 +236,160 @@ auto card_font(double ui, double pixels) -> QFont {
   QFont font = Arena::Typography::small_label(1.0);
   font.setPixelSize(static_cast<int>(std::lround(pixels * ui)));
   return font;
+}
+
+auto paint_matchup_card(const Spec& spec,
+                        const Arena::ArenaScenarioReport* report) -> QImage {
+  QImage card(spec.width, spec.height, QImage::Format_RGB32);
+  card.fill(QColor(11, 10, 8));
+
+  const double width = card.width();
+  const double height = card.height();
+  const double ui = std::clamp(width / 1080.0, 0.4, 2.4);
+
+  const QColor parchment(238, 232, 218);
+  const QColor faded(168, 158, 138);
+  const QColor gold(214, 186, 116);
+  const QColor blood(206, 74, 56);
+
+  QPainter painter(&card);
+  painter.setRenderHint(QPainter::Antialiasing, true);
+  painter.setRenderHint(QPainter::TextAntialiasing, true);
+
+  constexpr int k_text_flags = Qt::AlignHCenter | Qt::AlignVCenter;
+  const auto text =
+      [&](double y, double pixels, const QColor& color, const QString& value) {
+        const QRectF box(width * 0.06, y, width * 0.88, pixels * ui * 1.6);
+        QFont font = card_font(ui, pixels);
+        for (int attempt = 0; attempt < 8; ++attempt) {
+          painter.setFont(font);
+          const double drawn = painter.boundingRect(box, k_text_flags, value).width();
+          if (drawn <= box.width() || drawn <= 0.0) {
+            break;
+          }
+          const int shrunk = std::max(
+              8,
+              static_cast<int>(std::floor(font.pixelSize() * (box.width() / drawn))));
+          if (shrunk >= font.pixelSize()) {
+            break;
+          }
+          font.setPixelSize(shrunk);
+        }
+        painter.setFont(font);
+        painter.setPen(color);
+        painter.drawText(box, k_text_flags, value);
+        return y + (pixels * ui * 1.6);
+      };
+
+  const bool tracked_sides =
+      report != nullptr && report->battle.tracked && report->battle.sides.size() >= 2U;
+
+  constexpr double k_heading_block = 41.6 + 10.0 + 89.6 + 20.0;
+  constexpr double k_verdict_block = 99.2 + 6.0 + 38.4 + 46.0;
+  constexpr double k_side_block = 54.4 + 6.0 + 44.8 + 2.0 + 30.4 + 10.0 + 18.0 + 52.0;
+  const double content =
+      (k_heading_block + k_verdict_block + (tracked_sides ? 2.0 * k_side_block : 0.0)) *
+      ui;
+
+  double y = std::max(height * 0.10, (height - content) * 0.5);
+  y = text(y, 26.0, faded, spec.title);
+  y += 10.0 * ui;
+  y = text(y, 56.0, parchment, QStringLiteral("BATTLE REPORT"));
+  y += 20.0 * ui;
+
+  const bool tracked = tracked_sides;
+
+  QString verdict = QStringLiteral("NO CONTEST");
+  QColor verdict_color = faded;
+  QString clock_line;
+  if (tracked) {
+    const auto& battle = report->battle;
+    if (battle.decided && !battle.victor_label.isEmpty()) {
+      verdict = QStringLiteral("%1 WIN").arg(side_display_name(battle.victor_label));
+      verdict_color = gold;
+      clock_line =
+          QStringLiteral("DECIDED AT %1").arg(format_clock(battle.decided_at_seconds));
+    } else if (battle.decided) {
+      verdict = QStringLiteral("BOTH SIDES FELL");
+      verdict_color = blood;
+      clock_line =
+          QStringLiteral("DECIDED AT %1").arg(format_clock(battle.decided_at_seconds));
+    } else {
+      const auto& first = battle.sides[0];
+      const auto& second = battle.sides[1];
+      const auto& ahead = first.living_units >= second.living_units ? first : second;
+      verdict = first.living_units == second.living_units
+                    ? QStringLiteral("STILL LEVEL")
+                    : QStringLiteral("%1 AHEAD").arg(side_display_name(ahead.label));
+      clock_line = QStringLiteral("NO DECISION AFTER %1")
+                       .arg(format_clock(report->elapsed_seconds));
+    }
+  }
+  y = text(y, 62.0, verdict_color, verdict);
+  if (!clock_line.isEmpty()) {
+    y += 6.0 * ui;
+    y = text(y, 24.0, faded, clock_line);
+  }
+  y += 46.0 * ui;
+
+  if (!tracked) {
+    return card;
+  }
+
+  for (std::size_t index = 0;
+       index < std::min<std::size_t>(2U, report->battle.sides.size());
+       ++index) {
+    const auto& side = report->battle.sides[index];
+    const int started = std::max(side.peak_units, side.living_units);
+    const QVector3D team = Game::Visuals::team_colorForOwner(side.owner_id);
+    const QColor team_color(static_cast<int>(std::lround(team.x() * 255.0F)),
+                            static_cast<int>(std::lround(team.y() * 255.0F)),
+                            static_cast<int>(std::lround(team.z() * 255.0F)));
+
+    const int men_started = std::max(side.peak_soldiers, side.living_soldiers);
+    const bool have_men = men_started > 0;
+
+    y = text(y, 34.0, parchment, side_display_name(side.label));
+    y += 6.0 * ui;
+    y = text(y,
+             28.0,
+             side.living_units > 0 ? gold : blood,
+             side.living_units <= 0 ? QStringLiteral("WIPED OUT")
+             : have_men             ? QStringLiteral("%1 OF %2 MEN LEFT STANDING")
+                              .arg(side.living_soldiers)
+                              .arg(men_started)
+                        : QStringLiteral("%1 OF %2 LEFT STANDING")
+                              .arg(side.living_units)
+                              .arg(started));
+    if (have_men) {
+      y += 2.0 * ui;
+      y = text(y,
+               19.0,
+               faded,
+               QStringLiteral("%1 OF %2 UNITS").arg(side.living_units).arg(started));
+    }
+
+    const double bar_height = 18.0 * ui;
+    const QRectF track(width * 0.14, y + (10.0 * ui), width * 0.72, bar_height);
+    const double share = have_men ? static_cast<double>(side.living_soldiers) /
+                                        static_cast<double>(men_started)
+                         : started > 0 ? static_cast<double>(side.living_units) /
+                                             static_cast<double>(started)
+                                       : 0.0;
+    painter.setPen(Qt::NoPen);
+    painter.setBrush(QColor(46, 42, 36));
+    painter.drawRect(track);
+    painter.setBrush(team_color);
+    painter.drawRect(
+        QRectF(track.left(), track.top(), track.width() * share, track.height()));
+    painter.setBrush(Qt::NoBrush);
+    painter.setPen(QPen(QColor(0, 0, 0, 150), std::max(1.0, 2.0 * ui)));
+    painter.drawRect(track);
+
+    y = track.bottom() + (52.0 * ui);
+  }
+
+  return card;
 }
 
 auto paint_report_card(const Spec& spec,
@@ -502,6 +659,8 @@ private:
                                     "Promo pass over '%1' runs without audio")
                                     .arg(pass.scenario);
         m_audio.reset();
+      } else {
+        m_audio->play_music_bed(m_spec.music_track, m_spec.music_volume);
       }
     }
 
@@ -577,6 +736,8 @@ private:
     m_last_frame.reset();
     m_viewport.set_batch_fixed_step(idle_step());
     m_viewport.set_flame_card(shot.flame_card, shot.flame_speed, shot.flame_intensity);
+    m_viewport.set_capture_gameplay_ui(shot.gameplay_ui && !shot.flame_card,
+                                       shot.gameplay_ui_all_owners);
 
     qInfo().noquote() << QStringLiteral("  shot %1: %2 (%3 frames at %4x%5, from "
                                         "%6 s)")
@@ -711,6 +872,7 @@ private:
     }
     m_card_active = true;
     m_card_frames_written = 0;
+    m_card_dissolve_from = m_last_frame;
     m_card_frames_target =
         std::max(1,
                  static_cast<int>(std::lround(current_shot().report_card_seconds *
@@ -730,11 +892,46 @@ private:
       return;
     }
     if (!m_card_image.has_value()) {
-      m_card_image = paint_report_card(m_spec, m_viewport.active_scenario_report());
+      m_card_image =
+          m_spec.report_card_style == ReportCardStyle::Matchup
+              ? paint_matchup_card(m_spec, m_viewport.active_scenario_report())
+              : paint_report_card(m_spec, m_viewport.active_scenario_report());
       m_last_frame = m_card_image;
+
+      if (m_audio != nullptr) {
+        const auto* report = m_viewport.active_scenario_report();
+        const bool decided = report != nullptr && report->battle.tracked &&
+                             report->battle.decided &&
+                             !report->battle.victor_label.isEmpty();
+        const QString& sound =
+            decided ? m_spec.report_sound_decided : m_spec.report_sound_undecided;
+        m_audio->play_one_shot(sound, m_spec.report_sound_volume);
+      }
     }
+
+    const QImage& card = *m_card_image;
+    QImage composed = card;
+    const int dissolve_frames =
+        std::max(1,
+                 static_cast<int>(std::lround(static_cast<double>(m_spec.fps) *
+                                              k_card_dissolve_seconds)));
+    if (m_card_dissolve_from.has_value() && m_card_frames_written < dissolve_frames &&
+        m_card_dissolve_from->size() == card.size()) {
+      const double linear = static_cast<double>(m_card_frames_written + 1) /
+                            static_cast<double>(dissolve_frames);
+      const double eased = linear * linear * (3.0 - 2.0 * linear);
+      composed = *m_card_dissolve_from;
+      if (composed.format() != QImage::Format_RGB32 &&
+          composed.format() != QImage::Format_ARGB32) {
+        composed = composed.convertToFormat(QImage::Format_RGB32);
+      }
+      QPainter painter(&composed);
+      painter.setOpacity(eased);
+      painter.drawImage(0, 0, card);
+    }
+
     QString error;
-    if (!m_encoder->write_frame(*m_card_image, &error)) {
+    if (!m_encoder->write_frame(composed, &error)) {
       qCritical().noquote() << QStringLiteral("Promo encode failed: %1").arg(error);
       m_failed = true;
       m_card_active = false;
@@ -787,6 +984,14 @@ private:
         qInfo().noquote() << QStringLiteral("  skipped %1 black lead-in frame(s)")
                                  .arg(m_black_frames_skipped);
       }
+    }
+
+    if (current_shot().gameplay_ui && !current_shot().flame_card) {
+      if (output.format() != QImage::Format_ARGB32 &&
+          output.format() != QImage::Format_RGB32) {
+        output = output.convertToFormat(QImage::Format_ARGB32);
+      }
+      m_viewport.paint_capture_gameplay_ui(output);
     }
 
     QString error;
@@ -985,6 +1190,7 @@ private:
   std::vector<ShotResult> m_results;
   std::optional<QImage> m_last_frame;
   std::optional<QImage> m_card_image;
+  std::optional<QImage> m_card_dissolve_from;
   int m_card_frames_written{0};
   int m_card_frames_target{0};
   bool m_card_active{false};

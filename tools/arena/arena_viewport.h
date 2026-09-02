@@ -207,6 +207,8 @@ public slots:
 
 public:
   void set_promo_mode(bool enabled);
+  void set_capture_gameplay_ui(bool enabled, bool all_owners = false);
+  void paint_capture_gameplay_ui(QImage& frame) const;
   void set_capture_resolution(int width, int height);
   void set_capture_sink(std::function<void(const QImage&)> sink);
   void set_capture_active(bool active);
@@ -492,6 +494,8 @@ private:
   float m_scenario_distance_scale = 1.0F;
   bool m_clean_capture = false;
   bool m_promo_mode = false;
+  bool m_capture_gameplay_ui = false;
+  bool m_capture_gameplay_ui_all_owners = false;
   std::unique_ptr<QOpenGLFramebufferObject> m_capture_target;
   std::function<void(const QImage&)> m_capture_sink;
   std::function<void(float)> m_frame_hook;

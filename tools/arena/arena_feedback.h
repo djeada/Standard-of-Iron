@@ -23,7 +23,7 @@ public:
 
   void advance(float dt);
 
-  void draw(QPainter& painter, const Projector& project) const;
+  void draw(QPainter& painter, const Projector& project, float ui_scale = 1.0F) const;
 
   void clear();
 

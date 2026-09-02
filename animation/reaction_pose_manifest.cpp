@@ -87,8 +87,8 @@ auto resolve_humanoid_reaction_pose(const HumanoidReactionPoseInputs& inputs) no
     sample.envelope = env;
     sample.flinch = 1.0F * env;
     sample.crouch = 0.05F * env;
-    sample.torso_forward = -0.07F * env;
-    sample.head_back = 0.04F * env;
+    sample.torso_forward = -0.045F * env;
+    sample.head_back = 0.03F * env;
     sample.hand_r_delta = scaled({0.04F, -0.06F, -0.10F}, env);
     sample.hand_l_delta = scaled({0.02F, 0.04F, -0.05F}, env);
     break;
@@ -128,7 +128,7 @@ auto resolve_humanoid_reaction_pose(const HumanoidReactionPoseInputs& inputs) no
     sample.envelope = env;
     sample.flinch = 1.0F * env;
     sample.crouch = 0.16F * env + 0.03F * overshoot;
-    sample.torso_forward = -0.11F * env + 0.03F * overshoot;
+    sample.torso_forward = -0.07F * env + 0.02F * overshoot;
     sample.torso_side = 0.05F * env;
     sample.head_back = 0.06F * env;
     sample.hand_r_delta = scaled({0.18F, 0.12F, -0.12F}, env);

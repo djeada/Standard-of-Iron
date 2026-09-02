@@ -15,6 +15,7 @@
 #include <limits>
 #include <numbers>
 #include <optional>
+#include <unordered_map>
 #include <utility>
 
 #include "game/command/command.h"
@@ -144,6 +145,8 @@ auto command_name(ScenarioCommandKind kind) -> QString {
     return QStringLiteral("SetFullCreatureLod");
   case ScenarioCommandKind::TriggerCommanderAura:
     return QStringLiteral("TriggerCommanderAura");
+  case ScenarioCommandKind::TriggerFlagRally:
+    return QStringLiteral("TriggerFlagRally");
   case ScenarioCommandKind::RpgPrimaryAttack:
     return QStringLiteral("RpgPrimaryAttack");
   case ScenarioCommandKind::RpgHeavyAttack:
@@ -809,9 +812,12 @@ struct ArenaScenarioRunner::Impl {
     bool has_axis{false};
     float separation{0.0F};
     int living_units{0};
+    int living_soldiers{0};
     int living_buildings{0};
     int peak_units{0};
+    int peak_soldiers{0};
     int initial_units{0};
+    int initial_soldiers{0};
     float peak_advance{0.0F};
     float final_advance{0.0F};
     bool has_advance{false};
@@ -1270,17 +1276,59 @@ struct ArenaScenarioRunner::Impl {
           QStringLiteral("%1 cannot attack empty group %2").arg(group, target_group));
       return;
     }
-    std::size_t target_index = 0;
+    std::vector<Engine::Core::EntityID> living;
+    living.reserve(targets.size());
+    for (auto target : targets) {
+      if (entity_alive(target)) {
+        living.push_back(target);
+      }
+    }
+    if (living.empty()) {
+      add_issue(
+          QStringLiteral("command_target_missing"),
+          QStringLiteral("%1 cannot attack empty group %2").arg(group, target_group));
+      return;
+    }
+
+    const std::size_t share = (attackers.size() + living.size() - 1U) / living.size();
+    std::unordered_map<Engine::Core::EntityID, std::size_t> assigned;
+
+    const auto position_of =
+        [&](Engine::Core::EntityID entity_id) -> std::optional<QVector3D> {
+      auto const* transform =
+          world.try_get<Engine::Core::TransformComponent>(entity_id);
+      if (transform == nullptr) {
+        return std::nullopt;
+      }
+      return vector_from_transform(*transform);
+    };
+
     for (auto attacker : attackers) {
-      while (target_index < targets.size() && !entity_alive(targets[target_index])) {
-        ++target_index;
+      auto const from = position_of(attacker);
+      Engine::Core::EntityID chosen = living.front();
+      float best = std::numeric_limits<float>::max();
+      bool found = false;
+      for (bool honour_share : {true, false}) {
+        for (auto target : living) {
+          if (honour_share && assigned[target] >= share) {
+            continue;
+          }
+          auto const to = position_of(target);
+          float const distance = (from.has_value() && to.has_value())
+                                     ? horizontal_distance(*from, *to)
+                                     : 0.0F;
+          if (!found || distance < best) {
+            best = distance;
+            chosen = target;
+            found = true;
+          }
+        }
+        if (found) {
+          break;
+        }
       }
-      if (target_index >= targets.size()) {
-        target_index = 0;
-      }
-      auto const target = targets[target_index % targets.size()];
-      Game::Systems::CommandService::attack_target(world, {attacker}, target, chase);
-      target_index = (target_index + 1) % targets.size();
+      Game::Systems::CommandService::attack_target(world, {attacker}, chosen, chase);
+      ++assigned[chosen];
     }
   }
 
@@ -1757,6 +1805,38 @@ struct ArenaScenarioRunner::Impl {
         commander->request_aura_ability();
       }
       break;
+    case ScenarioCommandKind::TriggerFlagRally:
+      for (auto entity_id : ids(step.group)) {
+        auto* entity = world.get_entity(entity_id);
+        auto* commander =
+            entity != nullptr
+                ? entity->get_component<Engine::Core::CommanderComponent>()
+                : nullptr;
+        if (commander == nullptr) {
+          add_issue(QStringLiteral("flag_rally_commander_missing"),
+                    QStringLiteral("%1 contains no commander for a flag rally")
+                        .arg(step.group),
+                    entity_id);
+          continue;
+        }
+        auto const* transform =
+            entity->get_component<Engine::Core::TransformComponent>();
+        if (transform == nullptr) {
+          add_issue(QStringLiteral("flag_rally_transform_missing"),
+                    QStringLiteral("%1 has no transform to plant a standard on")
+                        .arg(step.group),
+                    entity_id);
+          continue;
+        }
+
+        if (step.value < 0) {
+          commander->cancel_flag_rally();
+          continue;
+        }
+
+        commander->begin_flag_rally(transform->position.x, transform->position.z, true);
+      }
+      break;
     case ScenarioCommandKind::RpgPrimaryAttack:
       for (auto entity_id : ids(step.group)) {
         if (!host.rpg_primary_attack || !host.rpg_primary_attack(entity_id)) {
@@ -2048,6 +2128,7 @@ struct ArenaScenarioRunner::Impl {
     observe_battle();
     for (auto& state : battle_sides) {
       state.initial_units = state.living_units;
+      state.initial_soldiers = state.living_soldiers;
       state.initial_buildings = state.seen_buildings;
     }
   }
@@ -2059,6 +2140,8 @@ struct ArenaScenarioRunner::Impl {
 
     struct Accumulator {
       int units{0};
+
+      int soldiers{0};
       int buildings{0};
       QVector3D army_sum;
       int army_count{0};
@@ -2098,6 +2181,9 @@ struct ArenaScenarioRunner::Impl {
       }
 
       ++accumulator.units;
+      accumulator.soldiers += Game::Systems::FormationCombat::living_slot_count(
+          *entity,
+          Game::Systems::FormationCombat::resolve_definition(*unit).total_count);
       side.seen_units.insert(entity->get_id());
       if (unit->spawn_type == Game::Units::SpawnType::Builder ||
           entity->has_component<Engine::Core::CommanderComponent>()) {
@@ -2140,8 +2226,10 @@ struct ArenaScenarioRunner::Impl {
         }
       }
       side.living_units = accumulator.units;
+      side.living_soldiers = accumulator.soldiers;
       side.living_buildings = accumulator.buildings;
       side.peak_units = std::max(side.peak_units, accumulator.units);
+      side.peak_soldiers = std::max(side.peak_soldiers, accumulator.soldiers);
       side.peak_buildings = std::max(side.peak_buildings, accumulator.buildings);
       side.peak_home_units = std::max(side.peak_home_units, accumulator.home_units);
       side.peak_forward_units =
@@ -2217,8 +2305,10 @@ struct ArenaScenarioRunner::Impl {
       result.owner_id = side.owner_id;
       result.label = side.label;
       result.living_units = side.living_units;
+      result.living_soldiers = side.living_soldiers;
       result.living_buildings = side.living_buildings;
       result.peak_units = side.peak_units;
+      result.peak_soldiers = std::max(side.peak_soldiers, side.initial_soldiers);
       result.units_produced =
           std::max(0, static_cast<int>(side.seen_units.size()) - side.initial_units);
       result.peak_advance = side.peak_advance;

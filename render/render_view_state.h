@@ -26,12 +26,19 @@ public:
     return m_order_marker_spectator_mode;
   }
 
+  void set_order_marker_all_owners(bool enabled) noexcept {
+    m_order_marker_all_owners = enabled;
+  }
+  [[nodiscard]] auto order_marker_all_owners() const noexcept -> bool {
+    return m_order_marker_all_owners;
+  }
+
   [[nodiscard]] auto
   order_markers_visible_for_owner(int owner_id) const noexcept -> bool {
-    if (m_cinematic_mode) {
+    if (m_cinematic_mode || m_order_marker_spectator_mode) {
       return false;
     }
-    return !m_order_marker_spectator_mode && owner_id == m_local_owner_id;
+    return m_order_marker_all_owners || owner_id == m_local_owner_id;
   }
 
   void set_cinematic_mode(bool enabled) noexcept { m_cinematic_mode = enabled; }
@@ -66,6 +73,7 @@ private:
   WorldRenderMode m_world_render_mode = WorldRenderMode::Rts;
   int m_local_owner_id = 1;
   bool m_order_marker_spectator_mode = false;
+  bool m_order_marker_all_owners = false;
   bool m_force_full_creature_lod = false;
   bool m_cinematic_mode = false;
 };

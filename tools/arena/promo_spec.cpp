@@ -266,6 +266,27 @@ auto load(const QString& path, QString* error) -> std::optional<Spec> {
   spec.fps = root.value(QStringLiteral("fps")).toInt(spec.fps);
   spec.supersample = root.value(QStringLiteral("supersample")).toInt(spec.supersample);
   spec.audio = root.value(QStringLiteral("audio")).toBool(spec.audio);
+  spec.music_track =
+      root.value(QStringLiteral("music_track")).toString(spec.music_track).trimmed();
+  spec.report_sound_decided = root.value(QStringLiteral("report_sound_decided"))
+                                  .toString(spec.report_sound_decided)
+                                  .trimmed();
+  spec.report_sound_undecided = root.value(QStringLiteral("report_sound_undecided"))
+                                    .toString(spec.report_sound_undecided)
+                                    .trimmed();
+  spec.report_sound_volume =
+      std::clamp(static_cast<float>(root.value(QStringLiteral("report_sound_volume"))
+                                        .toDouble(spec.report_sound_volume)),
+                 0.0F,
+                 1.0F);
+  spec.music_volume = std::clamp(
+      static_cast<float>(
+          root.value(QStringLiteral("music_volume")).toDouble(spec.music_volume)),
+      0.0F,
+      1.0F);
+  spec.gameplay_ui = root.value(QStringLiteral("gameplay_ui")).toBool(spec.gameplay_ui);
+  spec.gameplay_ui_all_owners = root.value(QStringLiteral("gameplay_ui_all_owners"))
+                                    .toBool(spec.gameplay_ui_all_owners);
 
   if (spec.id.trimmed().isEmpty()) {
     if (error != nullptr) {
@@ -307,6 +328,8 @@ auto load(const QString& path, QString* error) -> std::optional<Spec> {
   for (const QJsonValue shot_value : shots) {
     const QJsonObject shot_object = shot_value.toObject();
     Shot shot;
+    shot.gameplay_ui = spec.gameplay_ui;
+    shot.gameplay_ui_all_owners = spec.gameplay_ui_all_owners;
     shot.name = shot_object.value(QStringLiteral("name")).toString();
     shot.scenario = shot_object.value(QStringLiteral("scenario")).toString().trimmed();
     shot.seed = shot_object.value(QStringLiteral("seed")).toInt(shot.seed);
@@ -328,6 +351,11 @@ auto load(const QString& path, QString* error) -> std::optional<Spec> {
         static_cast<float>(shot_object.value(QStringLiteral("flame_intensity"))
                                .toDouble(shot.flame_intensity));
     shot.rpg_hud = shot_object.value(QStringLiteral("rpg_hud")).toBool(shot.rpg_hud);
+    shot.gameplay_ui =
+        shot_object.value(QStringLiteral("gameplay_ui")).toBool(shot.gameplay_ui);
+    shot.gameplay_ui_all_owners =
+        shot_object.value(QStringLiteral("gameplay_ui_all_owners"))
+            .toBool(shot.gameplay_ui_all_owners);
     shot.report_card_seconds =
         std::clamp(static_cast<float>(shot_object.value(QStringLiteral("report_card"))
                                           .toDouble(shot.report_card_seconds)),

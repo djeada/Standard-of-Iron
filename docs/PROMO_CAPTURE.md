@@ -38,6 +38,96 @@ Camera `yaw` blends along the shorter arc between keys: `8` followed by `352` is
 sixteen degrees back, not a full orbit the other way. Author a middle key when
 you really want the long way round.
 
+## Matchup shorts
+
+One flag records a whole vertical short from a sentence:
+
+```sh
+build/bin/arena_app --matchup "20 swordsman vs 20 archer" --promo-out artifacts/promo
+```
+
+A side may name its nation, either before or after the unit, and "units" is
+allowed as noise:
+
+```sh
+build/bin/arena_app --matchup "2 carthage swordsman vs 5 iron sepulcher swordsman"
+build/bin/arena_app --matchup "swordman carthage 2 units vs swordsman rome 5 units"
+```
+
+It builds a scenario and a promo spec in memory rather than reading either off
+disk: two lines on opposite sides of the lens, a locked camera close enough to
+read a soldier, the gameplay UI on, and a closing battle report that names the
+winner. The output is 1080x1920 at 30 fps, which is what YouTube Shorts wants.
+
+Five things about it are worth knowing:
+
+- **A unit is a unit.** Groups carry no `individuals_per_unit` override, so each
+  one fields the headcount and the formation layout its troop profile defines --
+  the same one the game puts on a map -- and carries one mode indicator, because
+  the indicator belongs to the unit. "2 units" is two formations, not two men.
+- **Nation, not just troop.** A Carthaginian swordsman and an Iron Sepulcher
+  swordsman are different soldiers; the nation reaches the group, the spec id and
+  the report card. Two sides that both leave it unsaid get opposing powers, so
+  they cannot read as one army in two colours.
+- **The armies close across the frame.** The lens sits on the Z axis (`yaw 0`),
+  which puts the separation between the armies across the narrow side of a 9:16
+  clip -- left to right and right to left -- and runs each line into the depth of
+  the frame, where the tall side has room for it. Distance is computed from those
+  two extents and the shot's field of view, so a bigger side is framed from
+  further back without anyone touching a keyframe.
+- **The lens is locked.** Focus is a fixed point, not the melee centre: the
+  centre jumps every time a unit on one flank dies, and a camera chasing it reads
+  as handheld shake. Only the distance moves, creeping in as the lines meet and
+  the separation stops needing to be in frame.
+- **It carries the game's own audio.** `spec.audio` is on, so `AudioRecorder`
+  runs the real mixer offline against the same world -- steel, shouts, the
+  ambience that follows the fight in and out of combat -- writes it as a wav and
+  muxes it into the clip. It needs `ffmpeg`, the same as the picture does.
+- **The short ends on the kill, not on the clock.** The generated scenario
+  carries a `BattleReachesDecision` expectation, which is what lets the runner
+  stop two seconds after one side is wiped out and cut to the report card.
+  `--matchup-seconds` is the ceiling on the fight, not its length.
+
+- **Both armies carry their markers.** Order markers are normally drawn for the
+  local owner alone, which in a spectator matchup left every icon over one army
+  and none over the other. `gameplay_ui_all_owners` -- set by the matchup builder,
+  and available to any spec -- lifts that to every owner.
+
+`--matchup-report-seconds` holds the closing card longer or shorter, `--seed`
+changes the run, and `--promo-out` picks the directory. The clip lands under
+`<promo-out>/matchup_<a>_<unit>_vs_<b>_<unit>/`.
+
+The closing card is its own layout (`ReportCardStyle::Matchup`), not the reel's:
+the reel card puts its two sides in columns, which a 1080-wide frame cuts in
+half, and it reports an economy a matchup does not have. The matchup card stacks
+the two sides down the frame with a survivor bar each, and reads
+"ARCHERS WIN / 13 OF 20 LEFT STANDING".
+
+## The gameplay UI in a clip
+
+A recorded frame carries the presentation a player sees over the battle: the
+floating damage, healing and economy numbers, and the mode indicators over units
+that are building, gathering, carrying or stalled. `gameplay_ui` turns that off
+for a reel that wants the world alone -- `false` on the spec is the default for
+every shot in it, and a shot may set its own either way.
+
+Two different mechanisms carry it, which is why it used to be missing from a
+recording even though it was on screen in the arena window:
+
+- **The mode indicators are drawn by the renderer**, and `set_cinematic_mode`
+  hides every order marker -- indicators, rally flags, patrol flags. Promo mode
+  used to set it unconditionally, so no recording could ever contain one.
+- **The floating numbers are painted with `QPainter`**, and a widget painter
+  paints into the widget's own framebuffer, never into the capture FBO the
+  encoder reads. Painting them in `paintGL` would therefore have shown them in
+  the preview window and in nothing else. `ArenaViewport::paint_capture_gameplay_ui`
+  paints them onto the captured `QImage` instead, after the supersample
+  downscale, so their size is measured against the frame that ships rather than
+  against the window the arena happens to be running in.
+
+A flame card records neither: it is a full-frame effect pass with no world
+behind it.
+
 ## Transitions
 
 `promo-edit.py` joins the clips. Each shot's `transition` describes the cut

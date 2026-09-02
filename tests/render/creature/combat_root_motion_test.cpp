@@ -97,7 +97,10 @@ TEST(CombatRootMotion, ReactionsRecoilAlongTheBlowAndNeverTopple) {
     }
     EXPECT_GT(peak_back, 0.03F);
 
-    EXPECT_LT(peak_tilt, 30.0F) << "a reaction is a recoil, not a fall";
+    EXPECT_LT(peak_tilt, 14.0F)
+        << "a reaction is a recoil, not a fall: the root pitch turns the whole "
+           "body about the feet, and past this a hit reads as a man going over "
+           "backwards rather than taking one";
 
     CombatRootMotionInputs done{};
     done.hit_reacting = true;

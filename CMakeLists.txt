@@ -1066,6 +1066,13 @@ add_custom_command(
 )
 add_custom_target(stage_runtime_assets DEPENDS "${CMAKE_BINARY_DIR}/bin/assets/.stamp")
 add_dependencies(standard_of_iron stage_runtime_assets)
+if(TARGET arena_app)
+    # The arena reads the staged copy too -- it is the same runtime -- so
+    # without this an asset edited since the last full build is invisible to
+    # every arena review and every recorded promo, silently: the tool runs, the
+    # capture succeeds, and the frames show the previous version of the file.
+    add_dependencies(arena_app stage_runtime_assets)
+endif()
 if(TARGET bake_creature_assets)
     # The baker resolves creature packages against the staged copies under
     # bin/assets before it falls back to the repo tree; staging must run

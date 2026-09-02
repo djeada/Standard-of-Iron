@@ -36,6 +36,10 @@ public:
 
   void advance(float seconds, bool record);
 
+  void play_music_bed(const QString& track_id, float volume);
+
+  void play_one_shot(const QString& track_id, float volume);
+
   void begin_clip();
   [[nodiscard]] auto write_clip(const QString& wav_path) -> bool;
   [[nodiscard]] auto clip_seconds() const -> float;

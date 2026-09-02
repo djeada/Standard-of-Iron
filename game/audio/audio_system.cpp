@@ -477,6 +477,13 @@ void AudioSystem::process_event(const AudioEvent& event) {
                        resource_id,
                        Game::Audio::CueOutcome::Accepted,
                        event.cue_source);
+      if (event.cue_id.empty() && Game::Audio::CueTrace::logging_enabled()) {
+
+        qInfo().noquote() << QStringLiteral("audio play %1 (%2)")
+                                 .arg(QString::fromStdString(resource_id),
+                                      event.loop ? QStringLiteral("loop")
+                                                 : QStringLiteral("one-shot"));
+      }
 
       {
         std::lock_guard<std::mutex> const active_lock(active_sounds_mutex);

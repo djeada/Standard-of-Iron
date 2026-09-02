@@ -10592,25 +10592,27 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
     s.environment.fog_density_override = 0.018F;
     s.environment.exposure_override = 1.22F;
 
+    s.elevation_patches.push_back({{0.0F, 0.0F, -17.5F}, 11.0F, 6.0F, 3.5F});
+
     auto consul = group(QStringLiteral("roman_consul"),
                         Troop::RomanVeteranConsul,
                         1,
                         1,
-                        {2.0F, 0.0F, -19.0F},
+                        {0.0F, 0.0F, -16.0F},
                         1);
     consul.health_override = consul.max_health_override = 12000;
 
     auto roman_line = group(QStringLiteral("roman_line"),
                             Troop::Swordsman,
                             1,
-                            7,
+                            11,
                             {-11.9F, 0.0F, -6.0F},
                             12,
                             {3.4F, 0.0F, 0.0F});
     auto roman_spears = group(QStringLiteral("roman_spears"),
                               Troop::Spearman,
                               1,
-                              5,
+                              8,
                               {-8.5F, 0.0F, -10.5F},
                               12,
                               {3.4F, 0.0F, 0.0F});
@@ -10623,8 +10625,8 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
     auto roman_horse = group(QStringLiteral("roman_horse"),
                              Troop::MountedKnight,
                              1,
-                             5,
-                             {24.0F, 0.0F, -10.0F},
+                             14,
+                             {30.0F, 0.0F, -16.0F},
                              6,
                              {3.6F, 0.0F, 0.0F});
     roman_horse.max_health_override = roman_horse.health_override = 2400;
@@ -10632,21 +10634,21 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
     auto punic_horde = group(QStringLiteral("punic_horde"),
                              Troop::Swordsman,
                              2,
-                             9,
+                             14,
                              {-15.3F, 0.0F, 7.0F},
                              16,
                              {3.4F, 0.0F, 0.0F});
     auto punic_spears = group(QStringLiteral("punic_spears"),
                               Troop::Spearman,
                               2,
-                              6,
+                              10,
                               {-10.2F, 0.0F, 11.5F},
                               16,
                               {3.4F, 0.0F, 0.0F});
     auto punic_horse = group(QStringLiteral("punic_horse"),
                              Troop::MountedKnight,
                              2,
-                             4,
+                             7,
                              {-26.0F, 0.0F, 12.0F},
                              6,
                              {3.6F, 0.0F, 0.0F});
@@ -10674,12 +10676,13 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
          1.0F},
     };
 
-    auto consul_walk = at(8.0F, Command::Move, QStringLiteral("roman_consul"));
-    consul_walk.destination = {2.0F, 0.0F, -9.0F};
+    auto consul_hold = at(0.2F, Command::Hold, QStringLiteral("roman_consul"));
 
     auto rally =
         at(17.4F, Command::TriggerCommanderAura, QStringLiteral("roman_consul"));
     rally.value = 18;
+
+    auto signal = at(16.6F, Command::TriggerFlagRally, QStringLiteral("roman_consul"));
 
     auto first_blood = at(6.0F, Command::ApplyDamage, QStringLiteral("roman_line"));
     first_blood.value = 110;
@@ -10700,31 +10703,31 @@ auto build_definitions() -> std::vector<ArenaScenarioDefinition> {
            Command::AttackMove,
            QStringLiteral("punic_spears"),
            QStringLiteral("roman_spears")),
+        consul_hold,
+        at(0.2F, Command::Hold, QStringLiteral("roman_horse")),
         first_blood,
         at(6.5F,
            Command::Charge,
            QStringLiteral("punic_horse"),
            QStringLiteral("roman_spears")),
         second_blood,
-        consul_walk,
         third_blood,
+        at(16.5F, Command::Stop, QStringLiteral("roman_consul")),
+        signal,
         rally,
-        at(17.8F,
-           Command::AttackMove,
-           QStringLiteral("roman_line"),
-           QStringLiteral("punic_horde")),
-        at(18.0F,
-           Command::AttackMove,
-           QStringLiteral("roman_spears"),
-           QStringLiteral("punic_spears")),
-        at(18.2F,
-           Command::Charge,
-           QStringLiteral("roman_consul"),
-           QStringLiteral("punic_horde")),
-        at(18.6F,
+
+        at(19.7F,
            Command::Charge,
            QStringLiteral("roman_horse"),
            QStringLiteral("punic_horde")),
+        at(19.9F,
+           Command::AttackMove,
+           QStringLiteral("roman_line"),
+           QStringLiteral("punic_horde")),
+        at(20.0F,
+           Command::AttackMove,
+           QStringLiteral("roman_spears"),
+           QStringLiteral("punic_spears")),
     };
 
     s.expectations = {
@@ -11218,7 +11221,42 @@ auto definitions() -> const std::vector<ArenaScenarioDefinition>& {
   return catalog;
 }
 
+namespace {
+
+auto runtime_definitions() -> std::vector<ArenaScenarioDefinition>& {
+  static std::vector<ArenaScenarioDefinition> generated;
+  return generated;
+}
+
+} // namespace
+
+void register_runtime_definition(ArenaScenarioDefinition definition) {
+  auto& generated = runtime_definitions();
+  auto const existing =
+      std::find_if(generated.begin(), generated.end(), [&](auto const& scenario) {
+        return scenario.id == definition.id;
+      });
+  if (existing == generated.end()) {
+    generated.push_back(std::move(definition));
+    return;
+  }
+  *existing = std::move(definition);
+}
+
+void clear_runtime_definitions() {
+  runtime_definitions().clear();
+}
+
 auto find_definition(const QString& scenario_id) -> const ArenaScenarioDefinition* {
+  auto const& generated = runtime_definitions();
+  auto const runtime =
+      std::find_if(generated.begin(), generated.end(), [&](auto const& scenario) {
+        return scenario.id == scenario_id;
+      });
+  if (runtime != generated.end()) {
+    return &*runtime;
+  }
+
   auto const found =
       std::find_if(definitions().begin(),
                    definitions().end(),

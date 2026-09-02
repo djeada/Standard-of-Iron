@@ -972,11 +972,14 @@ auto authored_drive(float s) -> float {
 
 constexpr float k_rts_commander_root_motion_max_speed = 5.5F;
 
+constexpr float k_rts_commander_assist_turn_degrees_per_second = 360.0F;
+
 void apply_rts_commander_root_motion(
     Engine::Core::World& world,
     Engine::Core::Entity& entity,
     const Engine::Core::RpgCommanderActionComponent& action,
-    const Game::Systems::CombatActions::CombatActionDefinition& definition) {
+    const Game::Systems::CombatActions::CombatActionDefinition& definition,
+    float delta_time) {
   auto const& profile = definition.movement;
   if (!action.action_running || profile.distance <= 0.0F ||
       profile.end_normalized <= profile.start_normalized) {
@@ -1038,11 +1041,19 @@ void apply_rts_commander_root_motion(
       float const cone = std::cos(definition.target_assist.cone_degrees * 0.5F *
                                   std::numbers::pi_v<float> / 180.0F);
       if (facing >= cone) {
-        forward_x = to_x;
-        forward_z = to_z;
-        transform->rotation.y =
+
+        float const target_yaw =
             std::atan2(to_x, to_z) * 180.0F / std::numbers::pi_v<float>;
+        float const diff =
+            std::fmod(target_yaw - transform->rotation.y + 540.0F, 360.0F) - 180.0F;
+        float const max_step =
+            k_rts_commander_assist_turn_degrees_per_second * std::max(0.0F, delta_time);
+        transform->rotation.y += std::clamp(diff, -max_step, max_step);
         transform->desired_yaw = transform->rotation.y;
+        float const yaw_rad =
+            transform->rotation.y * std::numbers::pi_v<float> / 180.0F;
+        forward_x = std::sin(yaw_rad);
+        forward_z = std::cos(yaw_rad);
       }
       float const contact_gap =
           nearest_distance - (nearest->body_radius + own_radius + 0.16F);
@@ -1344,7 +1355,7 @@ void process_authored_combat_action(
 
   auto const events = Game::Systems::CombatActions::advance_combat_action_events(
       *action, action_delta, *definition);
-  apply_rts_commander_root_motion(*world, entity, *action, *definition);
+  apply_rts_commander_root_motion(*world, entity, *action, *definition, delta_time);
   handle_action_events(*world, entity, *action, *definition, events);
 
   auto const* commander = entity.get_component<Engine::Core::CommanderComponent>();
