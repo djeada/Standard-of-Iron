@@ -18,6 +18,8 @@ Item {
     readonly property string tutorialFocusRegion: (topRoot.tutorial && topRoot.tutorial.active) ? topRoot.tutorial.focus_region : ""
     readonly property var tutorialFocusPoints: (topRoot.tutorial && topRoot.tutorial.active) ? topRoot.tutorial.focus_points : []
 
+    readonly property rect minimapZone: minimap.visible ? Qt.rect(minimap.x, minimap.y, minimap.width, minimap.height + topRoot.minimapLegendHeight) : Qt.rect(0, 0, 0, 0)
+
     readonly property real minimapLegendHeight: fogLegend.visible ? Design.Metrics.space4 + fogLegend.implicitHeight + Design.Metrics.space8 : 0
 
     property bool camera_legend_visible: false
@@ -51,16 +53,22 @@ Item {
         if (game.mission.active_index < 0)
             return qsTr("All objectives complete");
         var staged = game.mission.active_title;
+        if (game.mission.active_detail !== "")
+            return staged;
         if (game.mission.active_required > 1)
             staged += qsTr(" (%1/%2)").arg(game.mission.active_progress).arg(game.mission.active_required);
         return staged;
     }
 
+    readonly property string objectiveDetailText: (topRoot.missionStaged && game.mission.active_detail) ? game.mission.active_detail : ""
+
     function objective_tooltip(canFocusTarget) {
         var lines = [];
         if (topRoot.primaryObjectiveText !== "")
             lines.push(topRoot.primaryObjectiveText);
-        if (topRoot.missionStaged && game.mission.active_hint !== "")
+        if (topRoot.objectiveDetailText !== "")
+            lines.push(topRoot.objectiveDetailText);
+        if (topRoot.missionStaged && game.mission.active_hint !== "" && lines.indexOf(game.mission.active_hint) < 0)
             lines.push(game.mission.active_hint);
         if (canFocusTarget)
             lines.push(qsTr("Click to look at the objective."));
@@ -262,7 +270,7 @@ Item {
                         }
 
                         Design.IronIconButton {
-                            iconText: Design.Icons.objective
+                            iconText: Design.Icons.cameraHelp
                             tooltip: topRoot.camera_legend_visible ? qsTr("Hide the camera controls") : qsTr("Show how to move the camera")
                             accessibleName: qsTr("Camera controls")
                             checkable: true
@@ -296,7 +304,7 @@ Item {
 
                     anchors.centerIn: parent
                     spacing: Design.Metrics.space8
-                    width: Math.min(objectiveGlyph.implicitWidth + spacing + objectiveText.implicitWidth, objectiveZone.width)
+                    width: Math.min(objectiveGlyph.implicitWidth + spacing + objectiveText.implicitWidth + (objectiveDetail.visible ? spacing + objectiveDetail.implicitWidth : 0), objectiveZone.width)
                     visible: topRoot.primaryObjectiveText !== "" && !(topRoot.game_ready() && game.is_spectator_mode)
 
                     Text {
@@ -310,10 +318,22 @@ Item {
                     }
 
                     Text {
+                        id: objectiveDetail
+
+                        anchors.verticalCenter: parent.verticalCenter
+                        visible: topRoot.objectiveDetailText !== ""
+                        text: topRoot.objectiveDetailText
+                        color: Design.Theme.accent
+                        font.family: Design.Typography.family
+                        font.pixelSize: Design.Typography.label
+                    }
+
+                    Text {
                         id: objectiveText
 
                         anchors.verticalCenter: parent.verticalCenter
-                        width: Math.min(implicitWidth, Math.max(0, objectiveRow.parent.width - objectiveGlyph.width - objectiveRow.spacing))
+                        width: Math.min(implicitWidth, Math.max(0, objectiveRow.parent.width - objectiveGlyph.width - objectiveRow.spacing - (objectiveDetail.visible ? objectiveDetail.width + objectiveRow.spacing : 0)))
+                        visible: width > 0
                         text: topRoot.primaryObjectiveText
                         color: Design.Theme.textSecondary
                         font.family: Design.Typography.family

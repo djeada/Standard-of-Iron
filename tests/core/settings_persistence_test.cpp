@@ -90,6 +90,18 @@ TEST_F(SettingsPersistenceTest, CompiledCatalogueIsEmbeddedAndTranslates) {
   EXPECT_EQ(QCoreApplication::translate("Units", "War Elephant"),
             QString::fromUtf8("Savaş Fili"));
 
+  language_manager.set_language(QStringLiteral("pl"));
+  ASSERT_EQ(language_manager.current_language(), QStringLiteral("pl"));
+
+  EXPECT_EQ(QCoreApplication::translate("Units", "War Elephant"),
+            QString::fromUtf8("Słoń bojowy"));
+
+  language_manager.set_language(QStringLiteral("ru"));
+  ASSERT_EQ(language_manager.current_language(), QStringLiteral("ru"));
+
+  EXPECT_EQ(QCoreApplication::translate("Units", "War Elephant"),
+            QString::fromUtf8("Боевой слон"));
+
   language_manager.set_language(QStringLiteral("en"));
   EXPECT_EQ(QCoreApplication::translate("Units", "War Elephant"),
             QStringLiteral("War Elephant"));
@@ -106,6 +118,27 @@ TEST_F(SettingsPersistenceTest, TurkishIsOfferedAndLaidOutLeftToRight) {
   language_manager.set_language(QStringLiteral("tr"));
   EXPECT_EQ(QGuiApplication::layoutDirection(), Qt::LeftToRight)
       << "Turkish is not a right-to-left script";
+
+  language_manager.set_language(QStringLiteral("en"));
+}
+
+TEST_F(SettingsPersistenceTest, PolishAndRussianAreOfferedAndLaidOutLeftToRight) {
+  LanguageManager language_manager;
+
+  for (const auto* code : {"pl", "ru"}) {
+    EXPECT_TRUE(
+        language_manager.available_languages().contains(QString::fromLatin1(code)))
+        << code << " ships a catalogue but cannot be chosen";
+  }
+  EXPECT_EQ(LanguageManager::language_display_name(QStringLiteral("pl")),
+            QString::fromUtf8("Polski (Polish)"));
+  EXPECT_EQ(LanguageManager::language_display_name(QStringLiteral("ru")),
+            QString::fromUtf8("Русский (Russian)"));
+
+  language_manager.set_language(QStringLiteral("pl"));
+  EXPECT_EQ(QGuiApplication::layoutDirection(), Qt::LeftToRight);
+  language_manager.set_language(QStringLiteral("ru"));
+  EXPECT_EQ(QGuiApplication::layoutDirection(), Qt::LeftToRight);
 
   language_manager.set_language(QStringLiteral("en"));
 }

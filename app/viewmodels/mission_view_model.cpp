@@ -102,6 +102,10 @@ auto MissionViewModel::active_hint() const -> QString {
   return hint.isEmpty() ? stage.value("description").toString() : hint;
 }
 
+auto MissionViewModel::active_detail() const -> QString {
+  return active_stage().value("detail").toString();
+}
+
 auto MissionViewModel::active_progress() const -> int {
   return active_stage().value("progress").toInt();
 }

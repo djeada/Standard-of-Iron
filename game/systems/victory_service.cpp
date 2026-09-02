@@ -675,6 +675,13 @@ auto VictoryService::objectives() const -> std::vector<ObjectiveStatus> {
                      status.progress = count_matching_structures(
                          m_last_world_summary.local_captured_structure_counts,
                          rule.target.structure_types);
+                   },
+                   [this, &status](const AccumulateResourcesVictoryRule& rule) {
+                     const auto tally = resource_tally(
+                         m_economy.get_harvested_all(m_local_owner_id), rule.required);
+                     status.detail = tally.text;
+                     status.required = std::max(1, tally.kinds);
+                     status.progress = tally.met;
                    }},
         objective.rule);
 

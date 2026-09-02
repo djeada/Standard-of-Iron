@@ -41,6 +41,10 @@ Design.IronPanel {
 
     readonly property bool canShowProfile: !!root.focusProfile
 
+    readonly property string focusTypeName: root.inspecting ? (root.inspected.name || "") : root.groups.length > 0 ? (root.groups[0].name || "") : ""
+
+    readonly property bool profileCoversWholeSelection: root.inspecting || root.groups.length <= 1
+
     readonly property int soldierCount: {
         var total = 0;
         for (var i = 0; i < root.groups.length; ++i)
@@ -276,6 +280,18 @@ Design.IronPanel {
                 width: parent.width
                 spacing: Design.Metrics.space12
                 visible: root.canShowProfile && (!root.empty || root.inspecting)
+
+                Text {
+                    anchors.verticalCenter: parent.verticalCenter
+                    visible: !root.profileCoversWholeSelection && root.focusTypeName !== ""
+                    text: root.focusTypeName
+                    color: Design.Theme.accent
+                    elide: Text.ElideRight
+                    width: Math.min(implicitWidth, statStrip.width / 2)
+                    font.family: Design.Typography.family
+                    font.pixelSize: Design.Typography.caption
+                    font.weight: Design.Typography.medium
+                }
 
                 Repeater {
                     model: root.canShowProfile ? [{

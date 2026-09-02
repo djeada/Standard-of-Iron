@@ -1,14 +1,19 @@
 """Diacritical marks, and the accented capitals built from them.
 
-The game ships German, Spanish, Brazilian Portuguese and Turkish alongside
-English, and a title face that drops out from under an accented capital is
-worse than one that was never used: Qt falls back per glyph, so a single
-missing Ó turns CAMPAÑA into two typefaces in one word.
+The game ships German, Spanish, Brazilian Portuguese, Turkish, Polish and
+Russian alongside English, and a title face that drops out from under an
+accented capital is worse than one that was never used: Qt falls back per
+glyph, so a single missing Ó turns CAMPAÑA into two typefaces in one word --
+and a single missing Ś does the same to ŚLĄSK.
 
 The accented forms are composite glyphs -- a reference to the base capital and
 a reference to the mark -- rather than redrawn outlines. Correcting O then
 corrects Ó, Ò, Ô, Õ and Ö at the same time, which is the only way a face this
 size stays consistent under edits.
+
+The two Cyrillic entries in `ACCENTED` follow the same rule: Ё hangs off the
+Latin E, which is the outline `glyph_cyrillic.ALIASES` already points Е at, and
+Й hangs off the drawn И.
 
 Arabic is not covered here and is not meant to be. It falls to the bundled
 text face; a Roman inscriptional display alphabet has nothing to say about it.
@@ -16,7 +21,7 @@ text face; a Roman inscriptional display alphabet has nothing to say about it.
 
 from __future__ import annotations
 
-from glyph_geometry import CAP, THIN, cw, ellipse
+from glyph_geometry import CAP, THIN, cw, diagonal, ellipse
 from glyph_shapes import BOWL_THIN, Glyph
 
 MARK_Y = CAP + 40
@@ -181,6 +186,41 @@ def cedilla() -> Glyph:
     )
 
 
+def ogonek() -> Glyph:
+    """The Polish tail, hung under A and E. The cedilla read backwards: the
+    same stub and foot, hooking right instead of left, because the two marks
+    are the same tool leaving the stone from opposite sides and drawing them
+    in different languages is what makes ĄĘ look imported into ÇŞ.
+    """
+    stub_w = MARK_WEIGHT * 1.15
+    return Glyph(
+        contours=[
+            cw([(0, 60), (0, -90), (stub_w, -90), (stub_w, 60)]),
+            cw(
+                [
+                    (0, -90),
+                    (0, -178),
+                    (stub_w * 1.9, -178),
+                    (stub_w * 1.9, -90),
+                ]
+            ),
+        ]
+    )
+
+
+def lstroke() -> Glyph:
+    """The bar through Polish Ł. Slanted, and heavy enough to survive the
+    border: a thin horizontal tick reads as a scratch on the stem at caption
+    size, which is the one size that matters.
+    """
+    span = 262.0
+    return Glyph(
+        contours=[
+            diagonal(span, CAP * 0.64, 0.0, CAP * 0.36, THIN * 0.92),
+        ]
+    )
+
+
 MARKS = {
     "acute": acute,
     "grave": grave,
@@ -191,6 +231,8 @@ MARKS = {
     "cedilla": cedilla,
     "breve": breve,
     "dotaccent": dotaccent,
+    "ogonek": ogonek,
+    "lstroke": lstroke,
 }
 
 
@@ -224,4 +266,14 @@ ACCENTED = {
     "Ğ": ("G", "breve", 0.50, 0.0),
     "İ": ("I", "dotaccent", 0.50, 0.0),
     "Ş": ("S", "cedilla", 0.46, 0.0),
+    "Ą": ("A", "ogonek", 0.72, 0.0),
+    "Ć": ("C", "acute", 0.50, 0.0),
+    "Ę": ("E", "ogonek", 0.54, 0.0),
+    "Ł": ("L", "lstroke", 0.195, 0.0),
+    "Ń": ("N", "acute", 0.50, 0.0),
+    "Ś": ("S", "acute", 0.50, 0.0),
+    "Ź": ("Z", "acute", 0.50, 0.0),
+    "Ż": ("Z", "dotaccent", 0.50, 0.0),
+    "Ё": ("E", "dieresis", 0.46, 0.0),
+    "Й": ("И", "breve", 0.50, 0.0),
 }

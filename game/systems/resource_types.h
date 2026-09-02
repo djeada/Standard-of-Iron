@@ -127,4 +127,15 @@ struct OwnerResourceState {
   ResourceAmounts amounts;
 };
 
+[[nodiscard]] auto resource_display_name(ResourceType type) -> QString;
+
+struct ResourceTally {
+  QString text;
+  int kinds = 0;
+  int met = 0;
+};
+
+[[nodiscard]] auto resource_tally(const ResourceAmounts& carried,
+                                  const ResourceAmounts& needed) -> ResourceTally;
+
 } // namespace Game::Systems

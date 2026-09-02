@@ -257,6 +257,10 @@
         <source>Scroll for more</source>
         <translation>مرّر لعرض المزيد</translation>
     </message>
+    <message>
+        <source>Manpower this barracks still holds. Every recruit spends some; civilians raised at a Home deliver more.</source>
+        <translation>القوى البشرية التي ما زالت هذه الثكنة تحتفظ بها. كل تجنيد ينفق منها؛ والمدنيون الذين يُنشأون في المسكن يجلبون المزيد.</translation>
+    </message>
 </context>
 <context>
     <name>BattleReportLayout</name>
@@ -5627,6 +5631,10 @@ to see preview</source>
         <source>AI Wave %1</source>
         <translation>موجة الذكاء الاصطناعي %1</translation>
     </message>
+    <message>
+        <source>The assault is broken. Nothing else is coming.</source>
+        <translation>انكسر الهجوم. لن يأتي شيء آخر.</translation>
+    </message>
 </context>
 <context>
     <name>Missions</name>
@@ -7937,6 +7945,33 @@ Builders reap it for the food that recruits civilians</source>
     <message>
         <source>Show unit details</source>
         <translation>عرض تفاصيل الوحدة</translation>
+    </message>
+</context>
+<context>
+    <name>Resources</name>
+    <message>
+        <source>Gold</source>
+        <translation>ذهب</translation>
+    </message>
+    <message>
+        <source>Food</source>
+        <translation>طعام</translation>
+    </message>
+    <message>
+        <source>Timber</source>
+        <translation>خشب</translation>
+    </message>
+    <message>
+        <source>Stone</source>
+        <translation>حجر</translation>
+    </message>
+    <message>
+        <source>Iron</source>
+        <translation>حديد</translation>
+    </message>
+    <message>
+        <source>%1 %2/%3</source>
+        <translation>%1 %2/%3</translation>
     </message>
 </context>
 <context>

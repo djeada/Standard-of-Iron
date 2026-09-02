@@ -134,11 +134,14 @@ reach Qt, because a shaper that ignored them would cost nothing visible except
 a hole in the middle of SURVIVE.
 
 Coverage is A–Z, 0–9, punctuation, the Latin-1 accented capitals German,
-Spanish and Brazilian Portuguese need, and `Ğ İ Ş` for Turkish — which are
-outside Latin-1, so the breve and the dot above are drawn here rather than
-borrowed. Accented forms are composites (base + mark), so correcting `O`
-corrects `Ó Ò Ô Õ Ö` at once. Arabic is not covered and is not meant to be; it
-falls to the bundled text face.
+Spanish and Brazilian Portuguese need, `Ğ İ Ş` for Turkish, `Ą Ć Ę Ł Ń Ś Ź Ż`
+for Polish and the Russian capitals `А–Я` — all outside Latin-1, so the breve,
+the dot above, the ogonek and the Ł stroke are drawn here rather than borrowed.
+Accented forms are composites (base + mark), so correcting `O` corrects
+`Ó Ò Ô Õ Ö` at once. Eleven Cyrillic capitals — `А В Е К М Н О Р С Т Х` — are
+not drawn at all: `ALIASES` in `tools/font/glyph_cyrillic.py` points their code
+points at the Latin outline, so `О` and `O` cannot drift apart. Arabic is not
+covered and is not meant to be; it falls to the bundled text face.
 
 ## Licensing
 

@@ -249,6 +249,7 @@ auto MissionStageTracker::update(Game::Session::SessionContext& session,
 
     int progress = status.progress;
     int required = status.required;
+    QString detail = status.detail;
     const QString& type = status.type;
 
     if (type == QStringLiteral("capture_structures")) {
@@ -280,22 +281,11 @@ auto MissionStageTracker::update(Game::Session::SessionContext& session,
 
       const auto harvested = session.economy().get_harvested_all(m_local_owner_id);
       const auto& wanted = rule.authored.resources;
-      int kinds = 0;
-      int met = 0;
-      if (wanted.has_value()) {
-        for (const auto resource_type : Game::Systems::k_all_resource_types) {
-          const int needed = wanted->get(resource_type);
-          if (needed <= 0) {
-            continue;
-          }
-          ++kinds;
-          if (harvested.get(resource_type) >= needed) {
-            ++met;
-          }
-        }
-      }
-      required = std::max(1, kinds);
-      progress = met;
+      const auto resource_progress = Game::Systems::resource_tally(
+          harvested, wanted.value_or(Game::Systems::ResourceAmounts{}));
+      detail = resource_progress.text;
+      required = std::max(1, resource_progress.kinds);
+      progress = resource_progress.met;
     } else if (type == QStringLiteral("survive_waves")) {
       required = std::max(1, rule.authored.wave_count.value_or(1));
       progress = facts.cleared_wave_count;
@@ -309,10 +299,11 @@ auto MissionStageTracker::update(Game::Session::SessionContext& session,
     }
 
     if (progress != status.progress || complete != status.complete ||
-        required != status.required) {
+        required != status.required || detail != status.detail) {
       status.progress = progress;
       status.required = required;
       status.complete = complete;
+      status.detail = detail;
       changed = true;
     }
 

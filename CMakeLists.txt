@@ -537,6 +537,8 @@ set(SOI_TS_FILES
     "${CMAKE_CURRENT_SOURCE_DIR}/translations/app_pt_br.ts"
     "${CMAKE_CURRENT_SOURCE_DIR}/translations/app_ar.ts"
     "${CMAKE_CURRENT_SOURCE_DIR}/translations/app_tr.ts"
+    "${CMAKE_CURRENT_SOURCE_DIR}/translations/app_pl.ts"
+    "${CMAKE_CURRENT_SOURCE_DIR}/translations/app_ru.ts"
 )
 
 # Some distributions ship the lrelease binary without the LinguistTools CMake

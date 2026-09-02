@@ -18,7 +18,7 @@ Item {
     readonly property int command_width: root.compact ? width - side_margin * 2 : Math.min(600, Math.max(460, width * 0.40))
     readonly property var hs: StyleGuide.historical
     readonly property int command_row_spacing: commandList.height < menuModel.count * 70 ? 4 : 9
-    readonly property int command_row_height: Math.max(60, Math.min(root.narrow ? 62 : 70, Math.floor((commandList.height - command_row_spacing * (menuModel.count - 1)) / Math.max(1, menuModel.count))))
+    readonly property int command_row_height: Math.max(46, Math.min(root.narrow ? 62 : 70, Math.floor((commandList.height - command_row_spacing * (menuModel.count - 1)) / Math.max(1, menuModel.count))))
     readonly property bool tutorial_pending: !Core.UiPreferences.tutorialCompleted
     readonly property color ink: "#0B0806"
     readonly property color bronze: hs.bronze
@@ -569,6 +569,9 @@ Item {
                 clip: true
                 boundsBehavior: Flickable.StopAtBounds
                 interactive: contentHeight > height
+                highlightFollowsCurrentItem: true
+                highlightMoveDuration: 0
+                onCurrentIndexChanged: commandList.positionViewAtIndex(commandList.currentIndex, ListView.Contain)
 
                 delegate: Item {
                     id: commandItem

@@ -1,5 +1,6 @@
 import QtQuick 2.15
 import QtQuick.Controls 2.15
+import QtQuick.Window 2.15
 import ".." as Design
 
 AbstractButton {
@@ -84,6 +85,8 @@ AbstractButton {
 
     readonly property alias tooltip: commandTooltip
 
+    readonly property bool attachedToWindow: control.Window.window !== null
+
     readonly property bool hasTooltipBody: control.hint !== "" || control.statusText !== "" || (!control.interactive && control.disabledReason !== "") || (control.details && control.details.length > 0)
 
     readonly property string coverageText: (eligibleCount > 0 && activeCount > 0 && activeCount < eligibleCount) ? qsTr("%1 of %2").arg(activeCount).arg(eligibleCount) : ""
@@ -112,7 +115,7 @@ AbstractButton {
         id: commandTooltip
 
         parent: control
-        visible: (control.hovered || control.showFocusRing) && control.hasTooltipBody
+        visible: control.attachedToWindow && (control.hovered || control.showFocusRing) && control.hasTooltipBody
         title: control.label
         hotkey: control.hotkey
         summary: control.hint
