@@ -1689,33 +1689,56 @@
             "z": 248
         },
         {
-            "authored": true,
             "facing": "south",
             "id": "campania_volturnus_camp",
             "max_population": 160,
             "nation": "roman_republic",
+            "plan": "stepped",
+            "plan_options": {
+                "chamfer": 8,
+                "size": [
+                    24,
+                    20
+                ]
+            },
             "player_id": 2,
             "tier": "fortified_camp",
             "x": 108,
             "z": 62
         },
         {
-            "authored": true,
             "facing": "west",
             "id": "campania_northeast_camp",
             "max_population": 160,
             "nation": "roman_republic",
+            "plan": "stepped",
+            "plan_options": {
+                "chamfer": 8,
+                "size": [
+                    24,
+                    20
+                ]
+            },
             "player_id": 2,
             "tier": "fortified_camp",
             "x": 474,
             "z": 138
         },
         {
-            "authored": true,
             "facing": "east",
             "id": "campania_coast_camp",
             "max_population": 160,
             "nation": "roman_republic",
+            "plan": "star",
+            "plan_options": {
+                "bastion": 8,
+                "flank": 5,
+                "points": 4,
+                "size": [
+                    16,
+                    13
+                ]
+            },
             "player_id": 3,
             "tier": "fortified_camp",
             "x": 86,
@@ -1733,11 +1756,47 @@
             "z": 528
         },
         {
-            "authored": true,
             "facing": "west",
             "id": "campania_siege_camp",
             "max_population": 50,
             "nation": "roman_republic",
+            "plan": "curtain",
+            "plan_options": {
+                "depth": 26,
+                "gates": [
+                    [
+                        513,
+                        291
+                    ],
+                    [
+                        532,
+                        356
+                    ]
+                ],
+                "path": [
+                    [
+                        534,
+                        236
+                    ],
+                    [
+                        518,
+                        266
+                    ],
+                    [
+                        512,
+                        300
+                    ],
+                    [
+                        518,
+                        334
+                    ],
+                    [
+                        534,
+                        364
+                    ]
+                ],
+                "towers": 5
+            },
             "player_id": 4,
             "tier": "fortified_camp",
             "x": 566,
@@ -2238,6 +2297,835 @@
     },
     "structures": [
         {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 2,
+            "rotation": 90.0,
+            "settlement": "campania_volturnus_camp",
+            "type": "wall_gate",
+            "x": 132.0,
+            "z": 56.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 2,
+            "rotation": 0.0,
+            "settlement": "campania_volturnus_camp",
+            "type": "wall_gate",
+            "x": 108.0,
+            "z": 82.0
+        },
+        {
+            "authored": true,
+            "max_population": 160,
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "campania_volturnus_camp",
+            "type": "barracks",
+            "x": 105.88,
+            "z": 53.88
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "campania_volturnus_camp",
+            "type": "marketplace",
+            "x": 108.0,
+            "z": 68.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "campania_volturnus_camp",
+            "type": "home",
+            "x": 114.0,
+            "z": 50.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "campania_volturnus_camp",
+            "type": "home",
+            "x": 96.0,
+            "z": 56.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "campania_volturnus_camp",
+            "type": "home",
+            "x": 96.0,
+            "z": 68.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "campania_volturnus_camp",
+            "type": "home",
+            "x": 120.0,
+            "z": 68.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "campania_volturnus_camp",
+            "type": "home",
+            "x": 102.0,
+            "z": 74.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "campania_volturnus_camp",
+            "type": "home",
+            "x": 114.0,
+            "z": 74.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "campania_volturnus_camp",
+            "type": "home",
+            "x": 96.0,
+            "z": 50.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "campania_volturnus_camp",
+            "type": "home",
+            "x": 96.0,
+            "z": 74.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "campania_volturnus_camp",
+            "type": "home",
+            "x": 120.0,
+            "z": 74.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "campania_volturnus_camp",
+            "type": "defense_tower",
+            "x": 90.12,
+            "z": 48.12
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "campania_volturnus_camp",
+            "type": "defense_tower",
+            "x": 122.0,
+            "z": 46.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "campania_volturnus_camp",
+            "type": "defense_tower",
+            "x": 125.88,
+            "z": 75.88
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "campania_volturnus_camp",
+            "type": "defense_tower",
+            "x": 90.12,
+            "z": 75.88
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 2,
+            "rotation": 90.0,
+            "settlement": "campania_northeast_camp",
+            "type": "wall_gate",
+            "x": 498.0,
+            "z": 140.0
+        },
+        {
+            "authored": true,
+            "max_population": 160,
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "campania_northeast_camp",
+            "type": "barracks",
+            "x": 471.88,
+            "z": 129.88
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "campania_northeast_camp",
+            "type": "marketplace",
+            "x": 474.0,
+            "z": 144.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "campania_northeast_camp",
+            "type": "home",
+            "x": 480.0,
+            "z": 126.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "campania_northeast_camp",
+            "type": "home",
+            "x": 462.0,
+            "z": 132.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "campania_northeast_camp",
+            "type": "home",
+            "x": 486.0,
+            "z": 132.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "campania_northeast_camp",
+            "type": "home",
+            "x": 486.0,
+            "z": 144.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "campania_northeast_camp",
+            "type": "home",
+            "x": 468.0,
+            "z": 150.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "campania_northeast_camp",
+            "type": "home",
+            "x": 462.0,
+            "z": 126.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "campania_northeast_camp",
+            "type": "home",
+            "x": 486.0,
+            "z": 126.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "campania_northeast_camp",
+            "type": "home",
+            "x": 462.0,
+            "z": 150.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "campania_northeast_camp",
+            "type": "defense_tower",
+            "x": 456.12,
+            "z": 124.12
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "campania_northeast_camp",
+            "type": "defense_tower",
+            "x": 491.88,
+            "z": 124.12
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "campania_northeast_camp",
+            "type": "defense_tower",
+            "x": 491.88,
+            "z": 151.88
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "campania_northeast_camp",
+            "type": "defense_tower",
+            "x": 454.0,
+            "z": 145.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "rotation": 90.0,
+            "settlement": "campania_coast_camp",
+            "type": "wall_gate",
+            "x": 70.0,
+            "z": 468.0
+        },
+        {
+            "authored": true,
+            "max_population": 160,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "campania_coast_camp",
+            "type": "barracks",
+            "x": 88.12,
+            "z": 470.12
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "campania_coast_camp",
+            "type": "marketplace",
+            "x": 86.0,
+            "z": 480.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "campania_coast_camp",
+            "type": "home",
+            "x": 74.0,
+            "z": 480.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "campania_coast_camp",
+            "type": "defense_tower",
+            "x": 95.22,
+            "z": 482.34
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "campania_coast_camp",
+            "type": "defense_tower",
+            "x": 79.78,
+            "z": 482.34
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "campania_coast_camp",
+            "type": "defense_tower",
+            "x": 76.78,
+            "z": 465.66
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "campania_coast_camp",
+            "type": "defense_tower",
+            "x": 96.1,
+            "z": 467.78
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 4,
+            "rotation": 90.0,
+            "settlement": "campania_siege_camp",
+            "type": "wall_gate",
+            "x": 518.0,
+            "z": 290.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 4,
+            "rotation": 90.0,
+            "settlement": "campania_siege_camp",
+            "type": "wall_gate",
+            "x": 518.0,
+            "z": 340.0
+        },
+        {
+            "authored": true,
+            "max_population": 50,
+            "nation": "roman_republic",
+            "player_id": 4,
+            "settlement": "campania_siege_camp",
+            "type": "barracks",
+            "x": 570.5,
+            "z": 307.79
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 4,
+            "settlement": "campania_siege_camp",
+            "type": "marketplace",
+            "x": 570.24,
+            "z": 314.24
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 4,
+            "settlement": "campania_siege_camp",
+            "type": "home",
+            "x": 560.0,
+            "z": 288.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 4,
+            "settlement": "campania_siege_camp",
+            "type": "home",
+            "x": 572.0,
+            "z": 288.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 4,
+            "settlement": "campania_siege_camp",
+            "type": "home",
+            "x": 578.0,
+            "z": 294.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 4,
+            "settlement": "campania_siege_camp",
+            "type": "home",
+            "x": 554.0,
+            "z": 306.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 4,
+            "settlement": "campania_siege_camp",
+            "type": "home",
+            "x": 560.0,
+            "z": 312.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 4,
+            "settlement": "campania_siege_camp",
+            "type": "home",
+            "x": 554.0,
+            "z": 288.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 4,
+            "settlement": "campania_siege_camp",
+            "type": "home",
+            "x": 578.0,
+            "z": 288.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 4,
+            "settlement": "campania_siege_camp",
+            "type": "home",
+            "x": 584.0,
+            "z": 294.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 4,
+            "settlement": "campania_siege_camp",
+            "type": "home",
+            "x": 548.0,
+            "z": 306.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 4,
+            "settlement": "campania_siege_camp",
+            "type": "home",
+            "x": 584.0,
+            "z": 306.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 4,
+            "settlement": "campania_siege_camp",
+            "type": "home",
+            "x": 554.0,
+            "z": 312.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 4,
+            "settlement": "campania_siege_camp",
+            "type": "home",
+            "x": 548.0,
+            "z": 288.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 4,
+            "settlement": "campania_siege_camp",
+            "type": "home",
+            "x": 584.0,
+            "z": 288.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 4,
+            "settlement": "campania_siege_camp",
+            "type": "home",
+            "x": 548.0,
+            "z": 312.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 4,
+            "settlement": "campania_siege_camp",
+            "type": "home",
+            "x": 584.0,
+            "z": 312.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 4,
+            "settlement": "campania_siege_camp",
+            "type": "home",
+            "x": 536.0,
+            "z": 306.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 4,
+            "settlement": "campania_siege_camp",
+            "type": "home",
+            "x": 536.0,
+            "z": 288.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 4,
+            "settlement": "campania_siege_camp",
+            "type": "home",
+            "x": 530.0,
+            "z": 306.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 4,
+            "settlement": "campania_siege_camp",
+            "type": "home",
+            "x": 536.0,
+            "z": 312.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 4,
+            "settlement": "campania_siege_camp",
+            "type": "home",
+            "x": 536.0,
+            "z": 282.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 4,
+            "settlement": "campania_siege_camp",
+            "type": "home",
+            "x": 530.0,
+            "z": 288.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 4,
+            "settlement": "campania_siege_camp",
+            "type": "home",
+            "x": 524.0,
+            "z": 306.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 4,
+            "settlement": "campania_siege_camp",
+            "type": "home",
+            "x": 530.0,
+            "z": 312.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 4,
+            "settlement": "campania_siege_camp",
+            "type": "home",
+            "x": 536.0,
+            "z": 318.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 4,
+            "settlement": "campania_siege_camp",
+            "type": "home",
+            "x": 530.0,
+            "z": 282.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 4,
+            "settlement": "campania_siege_camp",
+            "type": "home",
+            "x": 524.0,
+            "z": 312.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 4,
+            "settlement": "campania_siege_camp",
+            "type": "home",
+            "x": 530.0,
+            "z": 318.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 4,
+            "settlement": "campania_siege_camp",
+            "type": "home",
+            "x": 536.0,
+            "z": 270.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 4,
+            "settlement": "campania_siege_camp",
+            "type": "home",
+            "x": 524.0,
+            "z": 282.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 4,
+            "settlement": "campania_siege_camp",
+            "type": "home",
+            "x": 524.0,
+            "z": 318.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 4,
+            "settlement": "campania_siege_camp",
+            "type": "home",
+            "x": 536.0,
+            "z": 330.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 4,
+            "settlement": "campania_siege_camp",
+            "type": "home",
+            "x": 536.0,
+            "z": 264.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 4,
+            "settlement": "campania_siege_camp",
+            "type": "home",
+            "x": 530.0,
+            "z": 270.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 4,
+            "settlement": "campania_siege_camp",
+            "type": "home",
+            "x": 530.0,
+            "z": 330.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 4,
+            "settlement": "campania_siege_camp",
+            "type": "home",
+            "x": 536.0,
+            "z": 336.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 4,
+            "settlement": "campania_siege_camp",
+            "type": "home",
+            "x": 536.0,
+            "z": 258.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 4,
+            "settlement": "campania_siege_camp",
+            "type": "home",
+            "x": 530.0,
+            "z": 264.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 4,
+            "settlement": "campania_siege_camp",
+            "type": "home",
+            "x": 524.0,
+            "z": 270.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 4,
+            "settlement": "campania_siege_camp",
+            "type": "home",
+            "x": 524.0,
+            "z": 330.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 4,
+            "settlement": "campania_siege_camp",
+            "type": "home",
+            "x": 530.0,
+            "z": 336.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 4,
+            "settlement": "campania_siege_camp",
+            "type": "home",
+            "x": 536.0,
+            "z": 342.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 4,
+            "settlement": "campania_siege_camp",
+            "type": "home",
+            "x": 530.0,
+            "z": 246.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 4,
+            "settlement": "campania_siege_camp",
+            "type": "defense_tower",
+            "x": 526.93,
+            "z": 251.31
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 4,
+            "settlement": "campania_siege_camp",
+            "type": "defense_tower",
+            "x": 516.03,
+            "z": 279.17
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 4,
+            "settlement": "campania_siege_camp",
+            "type": "defense_tower",
+            "x": 516.0,
+            "z": 300.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 4,
+            "settlement": "campania_siege_camp",
+            "type": "defense_tower",
+            "x": 518.15,
+            "z": 327.19
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 4,
+            "settlement": "campania_siege_camp",
+            "type": "defense_tower",
+            "x": 532.26,
+            "z": 357.39
+        },
+        {
             "landmark": "campania_north_sanctuary",
             "nation": "roman_republic",
             "player_id": 2,
@@ -2421,256 +3309,6 @@
         {
             "authored": true,
             "nation": "roman_republic",
-            "player_id": 2,
-            "rotation": 90,
-            "type": "wall_gate",
-            "x": 134,
-            "z": 48
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 2,
-            "rotation": 0,
-            "type": "wall_gate",
-            "x": 108,
-            "z": 40
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 2,
-            "type": "defense_tower",
-            "x": 82,
-            "z": 40
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 2,
-            "type": "defense_tower",
-            "x": 125.34,
-            "z": 45
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 2,
-            "type": "defense_tower",
-            "x": 124,
-            "z": 66.68
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 2,
-            "type": "defense_tower",
-            "x": 82,
-            "z": 84
-        },
-        {
-            "authored": true,
-            "max_population": 60,
-            "nation": "roman_republic",
-            "player_id": 2,
-            "type": "barracks",
-            "x": 108,
-            "z": 70.8
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 2,
-            "type": "marketplace",
-            "x": 121,
-            "z": 64.2
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 2,
-            "type": "home",
-            "x": 92.4,
-            "z": 71.9
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 2,
-            "rotation": 90,
-            "type": "wall_gate",
-            "x": 498,
-            "z": 140
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 2,
-            "rotation": 0,
-            "type": "wall_gate",
-            "x": 486,
-            "z": 158
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 2,
-            "rotation": 90,
-            "type": "wall_gate",
-            "x": 450,
-            "z": 150
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 2,
-            "type": "defense_tower",
-            "x": 450,
-            "z": 118
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 2,
-            "type": "defense_tower",
-            "x": 498,
-            "z": 118
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 2,
-            "type": "defense_tower",
-            "x": 498,
-            "z": 158
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 2,
-            "type": "defense_tower",
-            "x": 462.16,
-            "z": 150.0
-        },
-        {
-            "authored": true,
-            "max_population": 60,
-            "nation": "roman_republic",
-            "player_id": 2,
-            "type": "barracks",
-            "x": 472.27,
-            "z": 147
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 2,
-            "type": "marketplace",
-            "x": 486,
-            "z": 144
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 2,
-            "type": "home",
-            "x": 464.8,
-            "z": 150
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 3,
-            "rotation": 0,
-            "type": "wall_gate",
-            "x": 82,
-            "z": 454
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 3,
-            "rotation": 90,
-            "type": "wall_gate",
-            "x": 62,
-            "z": 482
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 3,
-            "type": "defense_tower",
-            "x": 62,
-            "z": 454
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 3,
-            "type": "defense_tower",
-            "x": 110,
-            "z": 454
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 3,
-            "type": "defense_tower",
-            "x": 110,
-            "z": 494
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 3,
-            "type": "defense_tower",
-            "x": 62,
-            "z": 494
-        },
-        {
-            "authored": true,
-            "max_population": 60,
-            "nation": "roman_republic",
-            "player_id": 3,
-            "type": "barracks",
-            "x": 86,
-            "z": 466
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 3,
-            "type": "marketplace",
-            "x": 72.8,
-            "z": 472
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 3,
-            "type": "home",
-            "x": 79.2,
-            "z": 462.6
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 3,
-            "type": "home",
-            "x": 86,
-            "z": 459.6
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 3,
-            "type": "home",
-            "x": 98,
-            "z": 459.6
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
             "player_id": 3,
             "rotation": 0,
             "type": "wall_gate",
@@ -2761,87 +3399,1315 @@
         },
         {
             "authored": true,
+            "end": [
+                124.0,
+                42.0
+            ],
             "nation": "roman_republic",
-            "player_id": 4,
-            "rotation": 0,
-            "type": "wall_gate",
-            "x": 550,
-            "z": 276
+            "player_id": 2,
+            "settlement": "campania_volturnus_camp",
+            "start": [
+                92.0,
+                42.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
         },
         {
             "authored": true,
+            "end": [
+                92.0,
+                44.0
+            ],
             "nation": "roman_republic",
-            "player_id": 4,
-            "rotation": 90,
-            "type": "wall_gate",
-            "x": 596,
-            "z": 300
+            "player_id": 2,
+            "settlement": "campania_volturnus_camp",
+            "start": [
+                90.0,
+                44.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
         },
         {
             "authored": true,
+            "end": [
+                126.0,
+                44.0
+            ],
             "nation": "roman_republic",
-            "player_id": 4,
-            "rotation": 90,
-            "type": "wall_gate",
-            "x": 536,
-            "z": 294
+            "player_id": 2,
+            "settlement": "campania_volturnus_camp",
+            "start": [
+                124.0,
+                44.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
         },
         {
             "authored": true,
+            "end": [
+                90.0,
+                46.0
+            ],
             "nation": "roman_republic",
-            "player_id": 4,
-            "type": "defense_tower",
-            "x": 536,
-            "z": 276
+            "player_id": 2,
+            "settlement": "campania_volturnus_camp",
+            "start": [
+                88.0,
+                46.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
         },
         {
             "authored": true,
+            "end": [
+                128.0,
+                46.0
+            ],
             "nation": "roman_republic",
-            "player_id": 4,
-            "type": "defense_tower",
-            "x": 596,
-            "z": 276
+            "player_id": 2,
+            "settlement": "campania_volturnus_camp",
+            "start": [
+                126.0,
+                46.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
         },
         {
             "authored": true,
+            "end": [
+                88.0,
+                48.0
+            ],
             "nation": "roman_republic",
-            "player_id": 4,
-            "type": "defense_tower",
-            "x": 596,
-            "z": 324
+            "player_id": 2,
+            "settlement": "campania_volturnus_camp",
+            "start": [
+                86.0,
+                48.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
         },
         {
             "authored": true,
+            "end": [
+                130.0,
+                48.0
+            ],
             "nation": "roman_republic",
-            "player_id": 4,
-            "type": "defense_tower",
-            "x": 536,
-            "z": 324
+            "player_id": 2,
+            "settlement": "campania_volturnus_camp",
+            "start": [
+                128.0,
+                48.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
         },
         {
             "authored": true,
-            "max_population": 60,
+            "end": [
+                84.0,
+                74.0
+            ],
             "nation": "roman_republic",
-            "player_id": 4,
-            "type": "barracks",
-            "x": 566,
-            "z": 309.6
+            "player_id": 2,
+            "settlement": "campania_volturnus_camp",
+            "start": [
+                84.0,
+                50.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
         },
         {
             "authored": true,
+            "end": [
+                86.0,
+                50.0
+            ],
             "nation": "roman_republic",
-            "player_id": 4,
-            "type": "marketplace",
-            "x": 583,
-            "z": 305.86
+            "player_id": 2,
+            "settlement": "campania_volturnus_camp",
+            "start": [
+                86.0,
+                50.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
         },
         {
             "authored": true,
+            "end": [
+                132.0,
+                50.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "campania_volturnus_camp",
+            "start": [
+                130.0,
+                50.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                86.0,
+                76.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "campania_volturnus_camp",
+            "start": [
+                86.0,
+                74.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                130.0,
+                76.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "campania_volturnus_camp",
+            "start": [
+                130.0,
+                74.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                88.0,
+                78.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "campania_volturnus_camp",
+            "start": [
+                88.0,
+                76.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                128.0,
+                78.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "campania_volturnus_camp",
+            "start": [
+                128.0,
+                76.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                90.0,
+                80.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "campania_volturnus_camp",
+            "start": [
+                90.0,
+                78.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                126.0,
+                80.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "campania_volturnus_camp",
+            "start": [
+                126.0,
+                78.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                92.0,
+                82.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "campania_volturnus_camp",
+            "start": [
+                92.0,
+                80.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                124.0,
+                82.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "campania_volturnus_camp",
+            "start": [
+                124.0,
+                80.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                132.0,
+                52.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "campania_volturnus_camp",
+            "start": [
+                132.0,
+                52.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                132.0,
+                74.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "campania_volturnus_camp",
+            "start": [
+                132.0,
+                60.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                104.0,
+                82.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "campania_volturnus_camp",
+            "start": [
+                94.0,
+                82.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                122.0,
+                82.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "campania_volturnus_camp",
+            "start": [
+                112.0,
+                82.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                490.0,
+                118.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "campania_northeast_camp",
+            "start": [
+                458.0,
+                118.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                458.0,
+                120.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "campania_northeast_camp",
+            "start": [
+                456.0,
+                120.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                492.0,
+                120.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "campania_northeast_camp",
+            "start": [
+                490.0,
+                120.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                456.0,
+                122.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "campania_northeast_camp",
+            "start": [
+                454.0,
+                122.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                494.0,
+                122.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "campania_northeast_camp",
+            "start": [
+                492.0,
+                122.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                454.0,
+                124.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "campania_northeast_camp",
+            "start": [
+                452.0,
+                124.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                496.0,
+                124.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "campania_northeast_camp",
+            "start": [
+                494.0,
+                124.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                450.0,
+                150.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "campania_northeast_camp",
+            "start": [
+                450.0,
+                126.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                452.0,
+                126.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "campania_northeast_camp",
+            "start": [
+                452.0,
+                126.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                498.0,
+                126.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "campania_northeast_camp",
+            "start": [
+                496.0,
+                126.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                452.0,
+                152.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "campania_northeast_camp",
+            "start": [
+                452.0,
+                150.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                496.0,
+                152.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "campania_northeast_camp",
+            "start": [
+                496.0,
+                150.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                454.0,
+                154.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "campania_northeast_camp",
+            "start": [
+                454.0,
+                152.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                494.0,
+                154.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "campania_northeast_camp",
+            "start": [
+                494.0,
+                152.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                456.0,
+                156.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "campania_northeast_camp",
+            "start": [
+                456.0,
+                154.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                492.0,
+                156.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "campania_northeast_camp",
+            "start": [
+                492.0,
+                154.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                458.0,
+                158.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "campania_northeast_camp",
+            "start": [
+                458.0,
+                156.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                490.0,
+                158.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "campania_northeast_camp",
+            "start": [
+                490.0,
+                156.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                488.0,
+                158.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "campania_northeast_camp",
+            "start": [
+                460.0,
+                158.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                498.0,
+                136.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "campania_northeast_camp",
+            "start": [
+                498.0,
+                128.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                498.0,
+                150.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "campania_northeast_camp",
+            "start": [
+                498.0,
+                144.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                68.0,
+                458.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "campania_coast_camp",
+            "start": [
+                66.0,
+                458.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                104.0,
+                462.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "campania_coast_camp",
+            "start": [
+                104.0,
+                458.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                106.0,
+                458.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "campania_coast_camp",
+            "start": [
+                106.0,
+                458.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                72.0,
+                460.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "campania_coast_camp",
+            "start": [
+                68.0,
+                460.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                100.0,
+                488.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "campania_coast_camp",
+            "start": [
+                100.0,
+                460.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                102.0,
+                464.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "campania_coast_camp",
+            "start": [
+                102.0,
+                460.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                98.0,
+                462.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "campania_coast_camp",
+            "start": [
+                68.0,
+                462.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                102.0,
+                488.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "campania_coast_camp",
+            "start": [
+                102.0,
+                484.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                68.0,
+                490.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "campania_coast_camp",
+            "start": [
+                68.0,
+                486.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                98.0,
+                486.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "campania_coast_camp",
+            "start": [
+                72.0,
+                486.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                104.0,
+                490.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "campania_coast_camp",
+            "start": [
+                104.0,
+                486.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                72.0,
+                488.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "campania_coast_camp",
+            "start": [
+                72.0,
+                488.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                66.0,
+                490.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "campania_coast_camp",
+            "start": [
+                66.0,
+                490.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                106.0,
+                490.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "campania_coast_camp",
+            "start": [
+                106.0,
+                490.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                70.0,
+                464.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "campania_coast_camp",
+            "start": [
+                70.0,
+                464.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                70.0,
+                488.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "campania_coast_camp",
+            "start": [
+                70.0,
+                472.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                534.0,
+                250.0
+            ],
             "nation": "roman_republic",
             "player_id": 4,
-            "type": "home",
-            "x": 548,
-            "z": 310.8
+            "settlement": "campania_siege_camp",
+            "start": [
+                534.0,
+                236.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                532.0,
+                252.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 4,
+            "settlement": "campania_siege_camp",
+            "start": [
+                532.0,
+                250.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                530.0,
+                254.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 4,
+            "settlement": "campania_siege_camp",
+            "start": [
+                530.0,
+                252.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                528.0,
+                256.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 4,
+            "settlement": "campania_siege_camp",
+            "start": [
+                528.0,
+                254.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                526.0,
+                258.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 4,
+            "settlement": "campania_siege_camp",
+            "start": [
+                526.0,
+                256.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                524.0,
+                260.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 4,
+            "settlement": "campania_siege_camp",
+            "start": [
+                524.0,
+                258.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                522.0,
+                262.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 4,
+            "settlement": "campania_siege_camp",
+            "start": [
+                522.0,
+                260.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                520.0,
+                264.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 4,
+            "settlement": "campania_siege_camp",
+            "start": [
+                520.0,
+                262.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                516.0,
+                296.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 4,
+            "settlement": "campania_siege_camp",
+            "start": [
+                516.0,
+                294.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                514.0,
+                298.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 4,
+            "settlement": "campania_siege_camp",
+            "start": [
+                514.0,
+                296.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                512.0,
+                328.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 4,
+            "settlement": "campania_siege_camp",
+            "start": [
+                512.0,
+                298.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                514.0,
+                330.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 4,
+            "settlement": "campania_siege_camp",
+            "start": [
+                514.0,
+                328.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                516.0,
+                332.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 4,
+            "settlement": "campania_siege_camp",
+            "start": [
+                516.0,
+                330.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                526.0,
+                354.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 4,
+            "settlement": "campania_siege_camp",
+            "start": [
+                524.0,
+                354.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                528.0,
+                356.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 4,
+            "settlement": "campania_siege_camp",
+            "start": [
+                526.0,
+                356.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                530.0,
+                358.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 4,
+            "settlement": "campania_siege_camp",
+            "start": [
+                528.0,
+                358.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                532.0,
+                360.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 4,
+            "settlement": "campania_siege_camp",
+            "start": [
+                530.0,
+                360.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                534.0,
+                362.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 4,
+            "settlement": "campania_siege_camp",
+            "start": [
+                532.0,
+                362.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                534.0,
+                364.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 4,
+            "settlement": "campania_siege_camp",
+            "start": [
+                534.0,
+                364.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                518.0,
+                286.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 4,
+            "settlement": "campania_siege_camp",
+            "start": [
+                518.0,
+                264.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                518.0,
+                294.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 4,
+            "settlement": "campania_siege_camp",
+            "start": [
+                518.0,
+                294.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                518.0,
+                336.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 4,
+            "settlement": "campania_siege_camp",
+            "start": [
+                518.0,
+                332.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                518.0,
+                344.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 4,
+            "settlement": "campania_siege_camp",
+            "start": [
+                518.0,
+                344.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
         },
         {
             "authored": true,
@@ -2966,291 +4832,6 @@
         {
             "authored": true,
             "end": [
-                104,
-                40
-            ],
-            "nation": "roman_republic",
-            "player_id": 2,
-            "start": [
-                82,
-                40
-            ],
-            "type": "wall_segment",
-            "width": 2
-        },
-        {
-            "authored": true,
-            "end": [
-                134,
-                40
-            ],
-            "nation": "roman_republic",
-            "player_id": 2,
-            "start": [
-                112,
-                40
-            ],
-            "type": "wall_segment",
-            "width": 2
-        },
-        {
-            "authored": true,
-            "end": [
-                134,
-                44
-            ],
-            "nation": "roman_republic",
-            "player_id": 2,
-            "start": [
-                134,
-                40
-            ],
-            "type": "wall_segment",
-            "width": 2
-        },
-        {
-            "authored": true,
-            "end": [
-                134,
-                84
-            ],
-            "nation": "roman_republic",
-            "player_id": 2,
-            "start": [
-                134,
-                52
-            ],
-            "type": "wall_segment",
-            "width": 2
-        },
-        {
-            "authored": true,
-            "end": [
-                134,
-                84
-            ],
-            "nation": "roman_republic",
-            "player_id": 2,
-            "start": [
-                82,
-                84
-            ],
-            "type": "wall_segment",
-            "width": 2
-        },
-        {
-            "authored": true,
-            "end": [
-                82,
-                84
-            ],
-            "nation": "roman_republic",
-            "player_id": 2,
-            "start": [
-                82,
-                40
-            ],
-            "type": "wall_segment",
-            "width": 2
-        },
-        {
-            "authored": true,
-            "end": [
-                498,
-                118
-            ],
-            "nation": "roman_republic",
-            "player_id": 2,
-            "start": [
-                450,
-                118
-            ],
-            "type": "wall_segment",
-            "width": 2
-        },
-        {
-            "authored": true,
-            "end": [
-                498,
-                136
-            ],
-            "nation": "roman_republic",
-            "player_id": 2,
-            "start": [
-                498,
-                118
-            ],
-            "type": "wall_segment",
-            "width": 2
-        },
-        {
-            "authored": true,
-            "end": [
-                498,
-                158
-            ],
-            "nation": "roman_republic",
-            "player_id": 2,
-            "start": [
-                498,
-                144
-            ],
-            "type": "wall_segment",
-            "width": 2
-        },
-        {
-            "authored": true,
-            "end": [
-                482,
-                158
-            ],
-            "nation": "roman_republic",
-            "player_id": 2,
-            "start": [
-                450,
-                158
-            ],
-            "type": "wall_segment",
-            "width": 2
-        },
-        {
-            "authored": true,
-            "end": [
-                498,
-                158
-            ],
-            "nation": "roman_republic",
-            "player_id": 2,
-            "start": [
-                490,
-                158
-            ],
-            "type": "wall_segment",
-            "width": 2
-        },
-        {
-            "authored": true,
-            "end": [
-                450,
-                146
-            ],
-            "nation": "roman_republic",
-            "player_id": 2,
-            "start": [
-                450,
-                118
-            ],
-            "type": "wall_segment",
-            "width": 2
-        },
-        {
-            "authored": true,
-            "end": [
-                450,
-                158
-            ],
-            "nation": "roman_republic",
-            "player_id": 2,
-            "start": [
-                450,
-                154
-            ],
-            "type": "wall_segment",
-            "width": 2
-        },
-        {
-            "authored": true,
-            "end": [
-                78,
-                454
-            ],
-            "nation": "roman_republic",
-            "player_id": 3,
-            "start": [
-                62,
-                454
-            ],
-            "type": "wall_segment",
-            "width": 2
-        },
-        {
-            "authored": true,
-            "end": [
-                110,
-                454
-            ],
-            "nation": "roman_republic",
-            "player_id": 3,
-            "start": [
-                86,
-                454
-            ],
-            "type": "wall_segment",
-            "width": 2
-        },
-        {
-            "authored": true,
-            "end": [
-                110,
-                494
-            ],
-            "nation": "roman_republic",
-            "player_id": 3,
-            "start": [
-                110,
-                454
-            ],
-            "type": "wall_segment",
-            "width": 2
-        },
-        {
-            "authored": true,
-            "end": [
-                110,
-                494
-            ],
-            "nation": "roman_republic",
-            "player_id": 3,
-            "start": [
-                62,
-                494
-            ],
-            "type": "wall_segment",
-            "width": 2
-        },
-        {
-            "authored": true,
-            "end": [
-                62,
-                478
-            ],
-            "nation": "roman_republic",
-            "player_id": 3,
-            "start": [
-                62,
-                454
-            ],
-            "type": "wall_segment",
-            "width": 2
-        },
-        {
-            "authored": true,
-            "end": [
-                62,
-                494
-            ],
-            "nation": "roman_republic",
-            "player_id": 3,
-            "start": [
-                62,
-                486
-            ],
-            "type": "wall_segment",
-            "width": 2
-        },
-        {
-            "authored": true,
-            "end": [
                 382,
                 508
             ],
@@ -3334,111 +4915,6 @@
             "start": [
                 366,
                 508
-            ],
-            "type": "wall_segment",
-            "width": 2
-        },
-        {
-            "authored": true,
-            "end": [
-                546,
-                276
-            ],
-            "nation": "roman_republic",
-            "player_id": 4,
-            "start": [
-                536,
-                276
-            ],
-            "type": "wall_segment",
-            "width": 2
-        },
-        {
-            "authored": true,
-            "end": [
-                596,
-                276
-            ],
-            "nation": "roman_republic",
-            "player_id": 4,
-            "start": [
-                554,
-                276
-            ],
-            "type": "wall_segment",
-            "width": 2
-        },
-        {
-            "authored": true,
-            "end": [
-                596,
-                296
-            ],
-            "nation": "roman_republic",
-            "player_id": 4,
-            "start": [
-                596,
-                276
-            ],
-            "type": "wall_segment",
-            "width": 2
-        },
-        {
-            "authored": true,
-            "end": [
-                596,
-                324
-            ],
-            "nation": "roman_republic",
-            "player_id": 4,
-            "start": [
-                596,
-                304
-            ],
-            "type": "wall_segment",
-            "width": 2
-        },
-        {
-            "authored": true,
-            "end": [
-                596,
-                324
-            ],
-            "nation": "roman_republic",
-            "player_id": 4,
-            "start": [
-                536,
-                324
-            ],
-            "type": "wall_segment",
-            "width": 2
-        },
-        {
-            "authored": true,
-            "end": [
-                536,
-                290
-            ],
-            "nation": "roman_republic",
-            "player_id": 4,
-            "start": [
-                536,
-                276
-            ],
-            "type": "wall_segment",
-            "width": 2
-        },
-        {
-            "authored": true,
-            "end": [
-                536,
-                324
-            ],
-            "nation": "roman_republic",
-            "player_id": 4,
-            "start": [
-                536,
-                298
             ],
             "type": "wall_segment",
             "width": 2
@@ -3682,22 +5158,6 @@
             "z": 106
         },
         {
-            "depth": 55.78,
-            "entrances": [
-                {
-                    "radius": 9.53,
-                    "x": 24.45,
-                    "z": 454.25
-                }
-            ],
-            "height": 3.6,
-            "rotation": 103.57000000000001,
-            "type": "hill",
-            "width": 65.97,
-            "x": 24,
-            "z": 486
-        },
-        {
             "depth": 67.9,
             "entrances": [
                 {
@@ -3727,6 +5187,22 @@
             "width": 101,
             "x": 397.5,
             "z": 586
+        },
+        {
+            "depth": 55.78,
+            "entrances": [
+                {
+                    "radius": 9.53,
+                    "x": 24.45,
+                    "z": 454.25
+                }
+            ],
+            "height": 3.6,
+            "rotation": 103.57000000000001,
+            "type": "hill",
+            "width": 65.97,
+            "x": 24,
+            "z": 486
         }
     ],
     "undead_zones": [
@@ -4443,8 +5919,8 @@
             "rotation": 319.8,
             "scale": 0.98,
             "type": "tent",
-            "x": 525.51,
-            "z": 266.77
+            "x": 526.09,
+            "z": 266.34
         },
         {
             "rotation": 98.5,
@@ -4489,8 +5965,8 @@
             "rotation": 352.1,
             "scale": 1.03,
             "type": "tent",
-            "x": 510.76,
-            "z": 300.2
+            "x": 508.24,
+            "z": 299.58
         },
         {
             "rotation": 131.7,
@@ -4537,8 +6013,8 @@
             "rotation": 304.5,
             "scale": 1.1300000000000001,
             "type": "tent",
-            "x": 509.37,
-            "z": 328.72
+            "x": 508.63,
+            "z": 328.9
         },
         {
             "rotation": 9.6,
@@ -4778,8 +6254,8 @@
             "rotation": 233.1,
             "scale": 1.17,
             "type": "ruins",
-            "x": 121.76,
-            "z": 228.11
+            "x": 122,
+            "z": 228.28
         },
         {
             "rotation": 341.6,
@@ -5475,21 +6951,21 @@
             "authored_camp": true,
             "scale": 1,
             "type": "weapon_rack",
-            "x": 113.2,
+            "x": 112.05,
             "z": 49.9
         },
         {
             "authored_camp": true,
             "scale": 1,
             "type": "supply_cart",
-            "x": 96.3,
+            "x": 98.5,
             "z": 56.5
         },
         {
             "authored_camp": true,
             "scale": 1,
             "type": "supply_cart",
-            "x": 110.17,
+            "x": 111.53,
             "z": 53.77
         },
         {
@@ -5520,14 +6996,14 @@
             "authored_camp": true,
             "scale": 1,
             "type": "weapon_rack",
-            "x": 478.8,
+            "x": 478.05,
             "z": 127
         },
         {
             "authored_camp": true,
             "scale": 1,
             "type": "supply_cart",
-            "x": 463.2,
+            "x": 464.5,
             "z": 133
         },
         {
@@ -5551,7 +7027,7 @@
             "authored_camp": true,
             "scale": 1,
             "type": "tent",
-            "x": 98,
+            "x": 96.76,
             "z": 478
         },
         {
@@ -5575,7 +7051,7 @@
             "authored_camp": true,
             "scale": 1,
             "type": "supply_cart",
-            "x": 81.2,
+            "x": 82.4,
             "z": 483
         },
         {
@@ -5624,21 +7100,21 @@
             "scale": 1,
             "type": "weapon_rack",
             "x": 548,
-            "z": 286.8
+            "z": 286.12
         },
         {
             "authored_camp": true,
             "scale": 1,
             "type": "weapon_rack",
             "x": 560,
-            "z": 286.8
+            "z": 286.12
         },
         {
             "authored_camp": true,
             "scale": 1,
             "type": "weapon_rack",
             "x": 572,
-            "z": 286.8
+            "z": 286.12
         },
         {
             "authored_camp": true,
@@ -5665,32 +7141,32 @@
             "z": 314.88
         },
         {
+            "rotation": 4.5,
+            "scale": 1.0,
             "type": "cursed_gold_vein",
             "x": 552,
-            "z": 462,
-            "scale": 1.0,
-            "rotation": 4.5
+            "z": 462
         },
         {
+            "rotation": 0.4,
+            "scale": 1.0,
             "type": "cursed_gold_vein",
             "x": 252,
-            "z": 592,
-            "scale": 1.0,
-            "rotation": 0.4
+            "z": 592
         },
         {
+            "rotation": 4.04,
+            "scale": 1.0,
             "type": "cursed_gold_vein",
             "x": 462,
-            "z": 362,
-            "scale": 1.0,
-            "rotation": 4.04
+            "z": 362
         },
         {
+            "rotation": 1.16,
+            "scale": 1.0,
             "type": "cursed_gold_vein",
             "x": 62,
-            "z": 362,
-            "scale": 1.0,
-            "rotation": 1.16
+            "z": 362
         }
     ]
 }

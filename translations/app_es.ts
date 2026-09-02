@@ -4590,8 +4590,8 @@ Esta acción no se puede deshacer.</translation>
         <translation>EN PAUSA</translation>
     </message>
     <message>
-        <source>Press Space to resume</source>
-        <translation>Pulsa Espacio para reanudar</translation>
+        <source>Press %1 to resume</source>
+        <translation>Pulsa %1 para reanudar</translation>
     </message>
     <message>
         <source>Error</source>

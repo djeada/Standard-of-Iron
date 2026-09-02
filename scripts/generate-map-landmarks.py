@@ -314,10 +314,10 @@ class Site:
             self.buildable = self.base_buildable
             return
         self.walkable = SETTLEMENTS.TerrainMask(
-            self.definition, 0.0, exclude_hill=hill, influence=1.0
+            self.definition, 0.0, exclude_hills=[hill], influence=1.0
         )
         self.buildable = SETTLEMENTS.TerrainMask(
-            self.definition, 3.0, exclude_hill=hill
+            self.definition, 3.0, exclude_hills=[hill]
         )
 
     def free(self, x: float, z: float, blocking: bool, spacing: float) -> bool:
@@ -365,7 +365,11 @@ def hill_crown_at(
         return None
     half_x, half_z = SETTLEMENTS.hill_extents(hill)
     crown_x, crown_z = SETTLEMENTS.usable_crown_extent(
-        half_x * 2.0, half_z * 2.0, float(hill.get("height", 2.0)), 0.8
+        half_x * 2.0,
+        half_z * 2.0,
+        float(hill.get("height", 2.0)),
+        0.8,
+        float(hill.get("crown", 0.0)),
     )
     return hill, crown_x, crown_z
 

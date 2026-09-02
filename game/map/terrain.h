@@ -660,6 +660,7 @@ struct TerrainFeature {
   float width{};
   float depth{};
   float height{};
+  float crown = 0.0F;
 
   std::vector<QVector3D> entrances;
 

@@ -72,6 +72,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from map_hill_shapes import hill_half_extents, hill_shape_strokes
 from map_surface_field import ProbeUnavailable, SurfaceField, find_probe, load_surface
+from map_water_geometry import river_points
 
 WORLD_PROP_RENDER_SCALE = {
     "firecamp": 1.0,
@@ -727,8 +728,7 @@ class Segment:
 def polyline_segments(entries, default_width: float) -> list[Segment]:
     segments: list[Segment] = []
     for entry in entries or []:
-        points = entry.get("waypoints") or [entry.get("start"), entry.get("end")]
-        points = [point for point in points if point]
+        points = river_points(entry)
         half_width = float(entry.get("width", default_width)) * 0.5
         for first, second in zip(points, points[1:], strict=False):
             segments.append(

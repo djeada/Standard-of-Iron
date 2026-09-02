@@ -4590,8 +4590,8 @@ Diese Aktion kann nicht rückgängig gemacht werden.</translation>
         <translation>PAUSIERT</translation>
     </message>
     <message>
-        <source>Press Space to resume</source>
-        <translation>Leertaste drücken, um fortzufahren</translation>
+        <source>Press %1 to resume</source>
+        <translation>%1 drücken, um fortzufahren</translation>
     </message>
     <message>
         <source>Error</source>

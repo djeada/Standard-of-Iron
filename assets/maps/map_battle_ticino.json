@@ -2115,12 +2115,19 @@
             "z": 300
         },
         {
-            "authored": true,
             "facing": "west",
             "id": "ticino_reserve_camp",
             "max_population": 50,
             "nation": "roman_republic",
             "on_hill": false,
+            "plan": "stepped",
+            "plan_options": {
+                "chamfer": 9,
+                "size": [
+                    30,
+                    25
+                ]
+            },
             "player_id": 3,
             "tier": "fortified_camp",
             "x": 600,
@@ -2562,6 +2569,270 @@
     },
     "structures": [
         {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "rotation": 0.0,
+            "settlement": "ticino_reserve_camp",
+            "type": "wall_gate",
+            "x": 618.0,
+            "z": 144.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "rotation": 0.0,
+            "settlement": "ticino_reserve_camp",
+            "type": "wall_gate",
+            "x": 610.0,
+            "z": 192.0
+        },
+        {
+            "authored": true,
+            "max_population": 50,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "ticino_reserve_camp",
+            "type": "barracks",
+            "x": 597.7,
+            "z": 156.46
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "ticino_reserve_camp",
+            "type": "marketplace",
+            "x": 597.88,
+            "z": 176.12
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "ticino_reserve_camp",
+            "type": "home",
+            "x": 612.0,
+            "z": 162.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "ticino_reserve_camp",
+            "type": "home",
+            "x": 588.0,
+            "z": 174.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "ticino_reserve_camp",
+            "type": "home",
+            "x": 612.0,
+            "z": 174.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "ticino_reserve_camp",
+            "type": "home",
+            "x": 594.0,
+            "z": 150.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "ticino_reserve_camp",
+            "type": "home",
+            "x": 606.0,
+            "z": 150.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "ticino_reserve_camp",
+            "type": "home",
+            "x": 582.0,
+            "z": 162.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "ticino_reserve_camp",
+            "type": "home",
+            "x": 618.0,
+            "z": 162.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "ticino_reserve_camp",
+            "type": "home",
+            "x": 582.0,
+            "z": 174.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "ticino_reserve_camp",
+            "type": "home",
+            "x": 618.0,
+            "z": 174.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "ticino_reserve_camp",
+            "type": "home",
+            "x": 588.0,
+            "z": 180.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "ticino_reserve_camp",
+            "type": "home",
+            "x": 612.0,
+            "z": 180.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "ticino_reserve_camp",
+            "type": "home",
+            "x": 594.0,
+            "z": 186.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "ticino_reserve_camp",
+            "type": "home",
+            "x": 588.0,
+            "z": 150.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "ticino_reserve_camp",
+            "type": "home",
+            "x": 618.0,
+            "z": 156.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "ticino_reserve_camp",
+            "type": "home",
+            "x": 582.0,
+            "z": 180.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "ticino_reserve_camp",
+            "type": "home",
+            "x": 618.0,
+            "z": 180.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "ticino_reserve_camp",
+            "type": "home",
+            "x": 588.0,
+            "z": 186.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "ticino_reserve_camp",
+            "type": "home",
+            "x": 612.0,
+            "z": 186.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "ticino_reserve_camp",
+            "type": "home",
+            "x": 582.0,
+            "z": 150.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "ticino_reserve_camp",
+            "type": "home",
+            "x": 582.0,
+            "z": 186.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "ticino_reserve_camp",
+            "type": "home",
+            "x": 618.0,
+            "z": 186.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "ticino_reserve_camp",
+            "type": "defense_tower",
+            "x": 576.83,
+            "z": 156.19
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "ticino_reserve_camp",
+            "type": "defense_tower",
+            "x": 625.5,
+            "z": 153.5
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "ticino_reserve_camp",
+            "type": "defense_tower",
+            "x": 623.2,
+            "z": 182.96
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "ticino_reserve_camp",
+            "type": "defense_tower",
+            "x": 574.5,
+            "z": 182.5
+        },
+        {
             "landmark": "ticino_north_sanctuary",
             "nation": "carthage",
             "type": "temple",
@@ -2735,101 +3006,355 @@
         },
         {
             "authored": true,
+            "end": [
+                578.0,
+                146.0
+            ],
             "nation": "roman_republic",
             "player_id": 3,
-            "rotation": 0,
-            "type": "wall_gate",
-            "x": 624,
-            "z": 142
+            "settlement": "ticino_reserve_camp",
+            "start": [
+                576.0,
+                146.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
         },
         {
             "authored": true,
+            "end": [
+                624.0,
+                146.0
+            ],
             "nation": "roman_republic",
             "player_id": 3,
-            "rotation": 0,
-            "type": "wall_gate",
-            "x": 610,
-            "z": 194
+            "settlement": "ticino_reserve_camp",
+            "start": [
+                622.0,
+                146.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
         },
         {
             "authored": true,
+            "end": [
+                576.0,
+                148.0
+            ],
             "nation": "roman_republic",
             "player_id": 3,
-            "rotation": 90,
-            "type": "wall_gate",
-            "x": 568,
-            "z": 152
+            "settlement": "ticino_reserve_camp",
+            "start": [
+                574.0,
+                148.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
         },
         {
             "authored": true,
+            "end": [
+                626.0,
+                148.0
+            ],
             "nation": "roman_republic",
             "player_id": 3,
-            "type": "defense_tower",
-            "x": 568,
-            "z": 142
+            "settlement": "ticino_reserve_camp",
+            "start": [
+                624.0,
+                148.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
         },
         {
             "authored": true,
+            "end": [
+                574.0,
+                150.0
+            ],
             "nation": "roman_republic",
             "player_id": 3,
-            "type": "defense_tower",
-            "x": 629,
-            "z": 147.20000000000002
+            "settlement": "ticino_reserve_camp",
+            "start": [
+                572.0,
+                150.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
         },
         {
             "authored": true,
+            "end": [
+                628.0,
+                150.0
+            ],
             "nation": "roman_republic",
             "player_id": 3,
-            "type": "defense_tower",
-            "x": 632,
-            "z": 194
+            "settlement": "ticino_reserve_camp",
+            "start": [
+                626.0,
+                150.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
         },
         {
             "authored": true,
+            "end": [
+                570.0,
+                184.0
+            ],
             "nation": "roman_republic",
             "player_id": 3,
-            "type": "defense_tower",
-            "x": 576,
-            "z": 180.14000000000001
+            "settlement": "ticino_reserve_camp",
+            "start": [
+                570.0,
+                152.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
         },
         {
             "authored": true,
-            "max_population": 60,
+            "end": [
+                572.0,
+                152.0
+            ],
             "nation": "roman_republic",
             "player_id": 3,
-            "type": "barracks",
-            "x": 587.97,
-            "z": 151.19
+            "settlement": "ticino_reserve_camp",
+            "start": [
+                572.0,
+                152.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
         },
         {
             "authored": true,
+            "end": [
+                630.0,
+                152.0
+            ],
             "nation": "roman_republic",
             "player_id": 3,
-            "type": "marketplace",
-            "x": 608,
-            "z": 168
+            "settlement": "ticino_reserve_camp",
+            "start": [
+                628.0,
+                152.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
         },
         {
             "authored": true,
+            "end": [
+                630.0,
+                184.0
+            ],
             "nation": "roman_republic",
             "player_id": 3,
-            "type": "home",
-            "x": 607.74,
-            "z": 153
+            "settlement": "ticino_reserve_camp",
+            "start": [
+                630.0,
+                154.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
         },
         {
             "authored": true,
+            "end": [
+                572.0,
+                186.0
+            ],
             "nation": "roman_republic",
             "player_id": 3,
-            "type": "home",
-            "x": 620.8000000000001,
-            "z": 155
+            "settlement": "ticino_reserve_camp",
+            "start": [
+                572.0,
+                184.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
         },
         {
-            "max_population": 50,
-            "type": "barracks",
-            "x": 280,
-            "z": 598
+            "authored": true,
+            "end": [
+                628.0,
+                186.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "ticino_reserve_camp",
+            "start": [
+                628.0,
+                184.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                574.0,
+                188.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "ticino_reserve_camp",
+            "start": [
+                574.0,
+                186.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                626.0,
+                188.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "ticino_reserve_camp",
+            "start": [
+                626.0,
+                186.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                576.0,
+                190.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "ticino_reserve_camp",
+            "start": [
+                576.0,
+                188.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                624.0,
+                190.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "ticino_reserve_camp",
+            "start": [
+                624.0,
+                188.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                578.0,
+                192.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "ticino_reserve_camp",
+            "start": [
+                578.0,
+                190.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                622.0,
+                192.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "ticino_reserve_camp",
+            "start": [
+                622.0,
+                190.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                614.0,
+                144.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "ticino_reserve_camp",
+            "start": [
+                578.0,
+                144.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                622.0,
+                144.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "ticino_reserve_camp",
+            "start": [
+                622.0,
+                144.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                606.0,
+                192.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "ticino_reserve_camp",
+            "start": [
+                580.0,
+                192.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                620.0,
+                192.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "ticino_reserve_camp",
+            "start": [
+                614.0,
+                192.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
         },
         {
             "authored": true,
@@ -2932,111 +3457,6 @@
             "start": [
                 400,
                 302
-            ],
-            "type": "wall_segment",
-            "width": 2
-        },
-        {
-            "authored": true,
-            "end": [
-                620,
-                142
-            ],
-            "nation": "roman_republic",
-            "player_id": 3,
-            "start": [
-                568,
-                142
-            ],
-            "type": "wall_segment",
-            "width": 2
-        },
-        {
-            "authored": true,
-            "end": [
-                632,
-                142
-            ],
-            "nation": "roman_republic",
-            "player_id": 3,
-            "start": [
-                628,
-                142
-            ],
-            "type": "wall_segment",
-            "width": 2
-        },
-        {
-            "authored": true,
-            "end": [
-                632,
-                194
-            ],
-            "nation": "roman_republic",
-            "player_id": 3,
-            "start": [
-                632,
-                142
-            ],
-            "type": "wall_segment",
-            "width": 2
-        },
-        {
-            "authored": true,
-            "end": [
-                606,
-                194
-            ],
-            "nation": "roman_republic",
-            "player_id": 3,
-            "start": [
-                568,
-                194
-            ],
-            "type": "wall_segment",
-            "width": 2
-        },
-        {
-            "authored": true,
-            "end": [
-                632,
-                194
-            ],
-            "nation": "roman_republic",
-            "player_id": 3,
-            "start": [
-                614,
-                194
-            ],
-            "type": "wall_segment",
-            "width": 2
-        },
-        {
-            "authored": true,
-            "end": [
-                568,
-                148
-            ],
-            "nation": "roman_republic",
-            "player_id": 3,
-            "start": [
-                568,
-                142
-            ],
-            "type": "wall_segment",
-            "width": 2
-        },
-        {
-            "authored": true,
-            "end": [
-                568,
-                194
-            ],
-            "nation": "roman_republic",
-            "player_id": 3,
-            "start": [
-                568,
-                156
             ],
             "type": "wall_segment",
             "width": 2
@@ -5047,7 +5467,7 @@
             "authored_camp": true,
             "scale": 1,
             "type": "supply_cart",
-            "x": 584,
+            "x": 584.5,
             "z": 182.3
         },
         {
@@ -5061,7 +5481,7 @@
             "authored_camp": true,
             "scale": 1,
             "type": "supply_cart",
-            "x": 616,
+            "x": 615.5,
             "z": 182.3
         },
         {
@@ -5089,32 +5509,32 @@
             "z": 152.4
         },
         {
+            "rotation": 0.34,
+            "scale": 1.0,
             "type": "cursed_gold_vein",
             "x": 242,
-            "z": 452,
-            "scale": 1.0,
-            "rotation": 0.34
+            "z": 452
         },
         {
+            "rotation": 5.96,
+            "scale": 1.0,
             "type": "cursed_gold_vein",
             "x": 242,
-            "z": 302,
-            "scale": 1.0,
-            "rotation": 5.96
+            "z": 302
         },
         {
+            "rotation": 0.56,
+            "scale": 1.0,
             "type": "cursed_gold_vein",
             "x": 162,
-            "z": 62,
-            "scale": 1.0,
-            "rotation": 0.56
+            "z": 62
         },
         {
+            "rotation": 3.34,
+            "scale": 1.0,
             "type": "cursed_gold_vein",
             "x": 582,
-            "z": 292,
-            "scale": 1.0,
-            "rotation": 3.34
+            "z": 292
         }
     ]
 }

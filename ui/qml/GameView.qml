@@ -358,6 +358,11 @@ Item {
     Keys.onPressed: function (event) {
         if (typeof game === 'undefined')
             return;
+        if (typeof mainWindow !== 'undefined' && mainWindow.game_paused && !event.isAutoRepeat && InputBindings.actions_for_key(event.key, event.modifiers, "rts").indexOf("rts.pause") !== -1) {
+            mainWindow.game_paused = false;
+            event.accepted = true;
+            return;
+        }
         if (game.placement.is_placing_formation && event.key >= Qt.Key_1 && event.key <= Qt.Key_9) {
             game_view.select_formation_intent_slot(event.key - Qt.Key_1);
             event.accepted = true;

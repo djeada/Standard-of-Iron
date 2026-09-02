@@ -9,6 +9,15 @@
 
 namespace App::Mission {
 
+auto MissionWaveRuntime::owner_has_unspawned_waves(int owner_id) const -> bool {
+  for (const auto& wave : m_waves) {
+    if (wave.owner_id == owner_id && !wave.spawned) {
+      return true;
+    }
+  }
+  return false;
+}
+
 void MissionWaveRuntime::reset() {
   m_elapsed = 0.0F;
   m_waves.clear();

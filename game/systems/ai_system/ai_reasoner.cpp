@@ -351,6 +351,12 @@ auto compute_macro_targets(const Game::Systems::AI::AISnapshot& snapshot,
   }
 
   targets.builder_count = ctx.strategy_config.target_builder_count;
+  if (const auto* doctrine = ctx.strategy_config.doctrine;
+      doctrine != nullptr && doctrine->town_plan != nullptr) {
+    constexpr int k_links_per_extra_builder = 24;
+    targets.builder_count +=
+        doctrine->town_plan->wall_step_count() / k_links_per_extra_builder;
+  }
 
   if (ctx.population_cap > 0) {
     const int builder_population =

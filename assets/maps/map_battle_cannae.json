@@ -1368,11 +1368,22 @@
             "z": 88
         },
         {
-            "authored": true,
             "facing": "north",
             "id": "cannae_allied_camp",
             "max_population": 160,
             "nation": "roman_republic",
+            "plan": "twin",
+            "plan_options": {
+                "neck": 7,
+                "offset": [
+                    46,
+                    0
+                ],
+                "size": [
+                    17,
+                    15
+                ]
+            },
             "player_id": 4,
             "tier": "fortified_camp",
             "x": 432,
@@ -1871,6 +1882,126 @@
     },
     "structures": [
         {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 4,
+            "rotation": 0.0,
+            "settlement": "cannae_allied_camp",
+            "type": "wall_gate",
+            "x": 442.0,
+            "z": 456.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 4,
+            "rotation": 90.0,
+            "settlement": "cannae_allied_camp",
+            "type": "wall_gate",
+            "x": 392.0,
+            "z": 462.0
+        },
+        {
+            "authored": true,
+            "max_population": 160,
+            "nation": "roman_republic",
+            "player_id": 4,
+            "settlement": "cannae_allied_camp",
+            "type": "barracks",
+            "x": 406.88,
+            "z": 472.12
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 4,
+            "settlement": "cannae_allied_camp",
+            "type": "marketplace",
+            "x": 458.0,
+            "z": 470.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 4,
+            "settlement": "cannae_allied_camp",
+            "type": "home",
+            "x": 462.0,
+            "z": 464.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 4,
+            "settlement": "cannae_allied_camp",
+            "type": "home",
+            "x": 462.0,
+            "z": 476.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 4,
+            "settlement": "cannae_allied_camp",
+            "type": "home",
+            "x": 468.0,
+            "z": 464.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 4,
+            "settlement": "cannae_allied_camp",
+            "type": "home",
+            "x": 396.0,
+            "z": 476.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 4,
+            "settlement": "cannae_allied_camp",
+            "type": "home",
+            "x": 468.0,
+            "z": 476.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 4,
+            "settlement": "cannae_allied_camp",
+            "type": "defense_tower",
+            "x": 398.33,
+            "z": 467.69
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 4,
+            "settlement": "cannae_allied_camp",
+            "type": "defense_tower",
+            "x": 396.0,
+            "z": 481.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 4,
+            "settlement": "cannae_allied_camp",
+            "type": "defense_tower",
+            "x": 468.0,
+            "z": 459.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 4,
+            "settlement": "cannae_allied_camp",
+            "type": "defense_tower",
+            "x": 468.0,
+            "z": 481.0
+        },
+        {
             "landmark": "cannae_south_sanctuary",
             "nation": "carthage",
             "type": "temple",
@@ -2153,101 +2284,227 @@
         },
         {
             "authored": true,
+            "end": [
+                426.0,
+                456.0
+            ],
             "nation": "roman_republic",
             "player_id": 4,
-            "rotation": 0,
-            "type": "wall_gate",
-            "x": 446,
-            "z": 446
+            "settlement": "cannae_allied_camp",
+            "start": [
+                392.0,
+                456.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
         },
         {
             "authored": true,
+            "end": [
+                426.0,
+                464.0
+            ],
             "nation": "roman_republic",
             "player_id": 4,
-            "rotation": 0,
-            "type": "wall_gate",
-            "x": 434,
-            "z": 494
+            "settlement": "cannae_allied_camp",
+            "start": [
+                426.0,
+                458.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
         },
         {
             "authored": true,
+            "end": [
+                438.0,
+                464.0
+            ],
             "nation": "roman_republic",
             "player_id": 4,
-            "rotation": 90,
-            "type": "wall_gate",
-            "x": 402,
-            "z": 462
+            "settlement": "cannae_allied_camp",
+            "start": [
+                438.0,
+                458.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
         },
         {
             "authored": true,
+            "end": [
+                472.0,
+                484.0
+            ],
             "nation": "roman_republic",
             "player_id": 4,
-            "type": "defense_tower",
-            "x": 402,
-            "z": 446
+            "settlement": "cannae_allied_camp",
+            "start": [
+                472.0,
+                458.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
         },
         {
             "authored": true,
+            "end": [
+                436.0,
+                464.0
+            ],
             "nation": "roman_republic",
             "player_id": 4,
-            "type": "defense_tower",
-            "x": 462,
-            "z": 446
+            "settlement": "cannae_allied_camp",
+            "start": [
+                428.0,
+                464.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
         },
         {
             "authored": true,
+            "end": [
+                438.0,
+                476.0
+            ],
             "nation": "roman_republic",
             "player_id": 4,
-            "type": "defense_tower",
-            "x": 462,
-            "z": 494
+            "settlement": "cannae_allied_camp",
+            "start": [
+                426.0,
+                476.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
         },
         {
             "authored": true,
+            "end": [
+                426.0,
+                484.0
+            ],
             "nation": "roman_republic",
             "player_id": 4,
-            "type": "defense_tower",
-            "x": 402,
-            "z": 494
+            "settlement": "cannae_allied_camp",
+            "start": [
+                426.0,
+                478.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
         },
         {
             "authored": true,
-            "max_population": 60,
+            "end": [
+                438.0,
+                484.0
+            ],
             "nation": "roman_republic",
             "player_id": 4,
-            "type": "barracks",
-            "x": 418.5,
-            "z": 459.2
+            "settlement": "cannae_allied_camp",
+            "start": [
+                438.0,
+                478.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
         },
         {
             "authored": true,
+            "end": [
+                424.0,
+                484.0
+            ],
             "nation": "roman_republic",
             "player_id": 4,
-            "type": "marketplace",
-            "x": 438,
-            "z": 470
+            "settlement": "cannae_allied_camp",
+            "start": [
+                394.0,
+                484.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
         },
         {
             "authored": true,
+            "end": [
+                470.0,
+                484.0
+            ],
             "nation": "roman_republic",
             "player_id": 4,
-            "type": "home",
-            "x": 444.23,
-            "z": 459
+            "settlement": "cannae_allied_camp",
+            "start": [
+                440.0,
+                484.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
         },
         {
             "authored": true,
+            "end": [
+                438.0,
+                456.0
+            ],
             "nation": "roman_republic",
             "player_id": 4,
-            "type": "home",
-            "x": 451.5,
-            "z": 458
+            "settlement": "cannae_allied_camp",
+            "start": [
+                438.0,
+                456.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
         },
         {
-            "max_population": 50,
-            "type": "barracks",
-            "x": 519,
-            "z": 587
+            "authored": true,
+            "end": [
+                472.0,
+                456.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 4,
+            "settlement": "cannae_allied_camp",
+            "start": [
+                446.0,
+                456.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                392.0,
+                458.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 4,
+            "settlement": "cannae_allied_camp",
+            "start": [
+                392.0,
+                458.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                392.0,
+                484.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 4,
+            "settlement": "cannae_allied_camp",
+            "start": [
+                392.0,
+                466.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
         },
         {
             "authored": true,
@@ -2470,111 +2727,6 @@
             "start": [
                 366,
                 78
-            ],
-            "type": "wall_segment",
-            "width": 2
-        },
-        {
-            "authored": true,
-            "end": [
-                442,
-                446
-            ],
-            "nation": "roman_republic",
-            "player_id": 4,
-            "start": [
-                402,
-                446
-            ],
-            "type": "wall_segment",
-            "width": 2
-        },
-        {
-            "authored": true,
-            "end": [
-                462,
-                446
-            ],
-            "nation": "roman_republic",
-            "player_id": 4,
-            "start": [
-                450,
-                446
-            ],
-            "type": "wall_segment",
-            "width": 2
-        },
-        {
-            "authored": true,
-            "end": [
-                462,
-                494
-            ],
-            "nation": "roman_republic",
-            "player_id": 4,
-            "start": [
-                462,
-                446
-            ],
-            "type": "wall_segment",
-            "width": 2
-        },
-        {
-            "authored": true,
-            "end": [
-                430,
-                494
-            ],
-            "nation": "roman_republic",
-            "player_id": 4,
-            "start": [
-                402,
-                494
-            ],
-            "type": "wall_segment",
-            "width": 2
-        },
-        {
-            "authored": true,
-            "end": [
-                462,
-                494
-            ],
-            "nation": "roman_republic",
-            "player_id": 4,
-            "start": [
-                438,
-                494
-            ],
-            "type": "wall_segment",
-            "width": 2
-        },
-        {
-            "authored": true,
-            "end": [
-                402,
-                458
-            ],
-            "nation": "roman_republic",
-            "player_id": 4,
-            "start": [
-                402,
-                446
-            ],
-            "type": "wall_segment",
-            "width": 2
-        },
-        {
-            "authored": true,
-            "end": [
-                402,
-                494
-            ],
-            "nation": "roman_republic",
-            "player_id": 4,
-            "start": [
-                402,
-                466
             ],
             "type": "wall_segment",
             "width": 2
@@ -4529,7 +4681,7 @@
             "scale": 1,
             "type": "supply_cart",
             "x": 417,
-            "z": 483.2
+            "z": 481.01
         },
         {
             "authored_camp": true,
@@ -4543,7 +4695,7 @@
             "scale": 1,
             "type": "supply_cart",
             "x": 447,
-            "z": 483.2
+            "z": 481.01
         },
         {
             "authored_camp": true,
@@ -4570,32 +4722,32 @@
             "z": 455.6
         },
         {
+            "rotation": 3.26,
+            "scale": 1.0,
             "type": "cursed_gold_vein",
             "x": 262,
-            "z": 512,
-            "scale": 1.0,
-            "rotation": 3.26
+            "z": 512
         },
         {
+            "rotation": 0.76,
+            "scale": 1.0,
             "type": "cursed_gold_vein",
             "x": 582,
-            "z": 562,
-            "scale": 1.0,
-            "rotation": 0.76
+            "z": 562
         },
         {
+            "rotation": 0.58,
+            "scale": 1.0,
             "type": "cursed_gold_vein",
             "x": 252,
-            "z": 62,
-            "scale": 1.0,
-            "rotation": 0.58
+            "z": 62
         },
         {
+            "rotation": 5.02,
+            "scale": 1.0,
             "type": "cursed_gold_vein",
             "x": 52,
-            "z": 542,
-            "scale": 1.0,
-            "rotation": 5.02
+            "z": 542
         }
     ]
 }

@@ -4602,8 +4602,8 @@ This action cannot be undone.</source>
         <translation>متوقفة مؤقتاً</translation>
     </message>
     <message>
-        <source>Press Space to resume</source>
-        <translation>اضغط المسافة للاستئناف</translation>
+        <source>Press %1 to resume</source>
+        <translation>اضغط %1 للاستئناف</translation>
     </message>
     <message>
         <source>Error</source>

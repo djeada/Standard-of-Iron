@@ -244,7 +244,7 @@ RowLayout {
                     }
 
                     Text {
-                        text: bottomRoot.status_value("nation", "") !== "" ? bottomRoot.status_value("nation", "") : qsTr("Frontline command")
+                        text: bottomRoot.status_value("nation", "") !== "" ? Design.FactionTheme.nameFor(bottomRoot.status_value("nation", "")) : qsTr("Frontline command")
                         color: Theme.textSubLite
                         font.pixelSize: Design.Typography.caption
                         elide: Text.ElideRight

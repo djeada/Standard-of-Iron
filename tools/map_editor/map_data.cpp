@@ -8,6 +8,7 @@
 #include <cmath>
 #include <utility>
 
+#include "game/map/river_geometry.h"
 #include "game/units/spawn_type.h"
 #include "game/units/troop_type.h"
 #include "map_json_keys.h"
@@ -91,6 +92,12 @@ auto readLinearPoint(const QJsonArray& point, QVector2D& out) -> bool {
   out = QVector2D(static_cast<float>(point[0].toDouble()),
                   static_cast<float>(point[1].toDouble()));
   return true;
+}
+
+auto is_ring_river(const QJsonObject& obj) -> bool {
+  return obj.value(QStringLiteral("shape"))
+             .toString()
+             .compare(QStringLiteral("ring"), Qt::CaseInsensitive) == 0;
 }
 
 auto applyLinearEndpoints(const QJsonObject& obj, LinearElement& elem) -> void {
@@ -881,9 +888,37 @@ void MapData::parse_rivers_array(const QJsonArray& arr) {
     QJsonObject obj = val.toObject();
     LinearElement elem;
     elem.type = "river";
+    elem.width = static_cast<float>(obj[MapJsonKeys::width].toDouble(3.0));
+
+    if (is_ring_river(obj)) {
+      const float radius =
+          static_cast<float>(obj[QStringLiteral("radius")].toDouble(0.0));
+      const Game::Map::RingRiver ring{
+          .center_x = static_cast<float>(obj[MapJsonKeys::x].toDouble(0.0)),
+          .center_z = static_cast<float>(obj[MapJsonKeys::z].toDouble(0.0)),
+          .radius_x = radius,
+          .radius_z =
+              static_cast<float>(obj[QStringLiteral("radius_z")].toDouble(radius)),
+          .segments = obj[QStringLiteral("segments")].toInt(
+              Game::Map::k_ring_river_default_segments),
+      };
+      for (const auto& [px, pz] : Game::Map::ring_river_points(ring)) {
+        elem.waypoints.append(QPointF(px, pz));
+      }
+      if (!elem.waypoints.isEmpty()) {
+        elem.start = QVector2D(elem.waypoints.first());
+        elem.end = QVector2D(elem.waypoints.last());
+      }
+      const QStringList known_keys = {MapJsonKeys::start,
+                                      MapJsonKeys::end,
+                                      MapJsonKeys::width,
+                                      MapJsonKeys::waypoints};
+      elem.extra_fields = copyExtraFields(obj, known_keys);
+      m_linear_elements.append(elem);
+      continue;
+    }
 
     applyLinearEndpoints(obj, elem);
-    elem.width = static_cast<float>(obj[MapJsonKeys::width].toDouble(3.0));
     elem.waypoints = waypoints_from_json(obj[MapJsonKeys::waypoints].toArray());
 
     const QStringList known_keys = {MapJsonKeys::start,
@@ -1091,6 +1126,12 @@ QJsonArray MapData::rivers_to_json() const {
   QJsonArray arr;
   for (const auto& elem : m_linear_elements) {
     if (elem.type != "river") {
+      continue;
+    }
+    if (is_ring_river(elem.extra_fields)) {
+      QJsonObject ring = elem.extra_fields;
+      ring[MapJsonKeys::width] = static_cast<double>(elem.width);
+      arr.append(ring);
       continue;
     }
     QJsonObject obj;

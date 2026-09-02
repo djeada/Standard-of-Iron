@@ -216,10 +216,14 @@ struct HillCrownProfile {
   float maximum_slope_fraction = 0.0F;
 };
 
-[[nodiscard]] inline auto hill_crown_profile(const FootprintCells& footprint,
-                                             float authored_height,
-                                             float tile_size,
-                                             bool campaign_scale) -> HillCrownProfile {
+inline constexpr float k_hill_max_authored_crown = 0.9F;
+
+[[nodiscard]] inline auto
+hill_crown_profile(const FootprintCells& footprint,
+                   float authored_height,
+                   float tile_size,
+                   bool campaign_scale,
+                   float authored_crown = 0.0F) -> HillCrownProfile {
   const float tile = std::max(tile_size, 0.0001F);
   const float scaled_height =
       authored_height * (campaign_scale ? k_campaign_hill_height_scale : 1.0F);
@@ -242,6 +246,11 @@ struct HillCrownProfile {
       campaign_scale ? k_campaign_min_crown_fraction : k_min_crown_fraction;
   profile.maximum_slope_fraction =
       campaign_scale ? k_campaign_max_slope_fraction : k_max_slope_fraction;
+  if (authored_crown > 0.0F) {
+    const float crown = std::min(authored_crown, k_hill_max_authored_crown);
+    profile.minimum_crown_fraction = crown;
+    profile.maximum_slope_fraction = 1.0F - crown;
+  }
   return profile;
 }
 
@@ -254,12 +263,14 @@ struct HillCrownProfile {
            std::min(slope_extent * profile.maximum_slope_fraction, profile.slope_run)});
 }
 
-[[nodiscard]] inline auto hill_crown_cells(const FootprintCells& footprint,
-                                           float authored_height,
-                                           float tile_size,
-                                           bool campaign_scale) -> HillCrownCells {
-  const HillCrownProfile profile =
-      hill_crown_profile(footprint, authored_height, tile_size, campaign_scale);
+[[nodiscard]] inline auto
+hill_crown_cells(const FootprintCells& footprint,
+                 float authored_height,
+                 float tile_size,
+                 bool campaign_scale,
+                 float authored_crown = 0.0F) -> HillCrownCells {
+  const HillCrownProfile profile = hill_crown_profile(
+      footprint, authored_height, tile_size, campaign_scale, authored_crown);
 
   HillCrownCells crown;
   crown.height = profile.height;
