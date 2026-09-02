@@ -89,6 +89,27 @@ TEST_F(PlayerDefeatWatcherTest, NamesTheCommanderOfTheSideThatIsWipedOut) {
          "remembered before the side is gone";
 }
 
+TEST_F(PlayerDefeatWatcherTest, ASideWithWavesStillToComeIsNotDefeated) {
+  Engine::Core::World world;
+  (void)spawn(world, k_local_owner);
+  const auto enemy_troop = spawn(world, k_enemy_owner);
+  bool waves_pending = true;
+  const auto still_expected = [&waves_pending](int owner_id) {
+    return owner_id == k_enemy_owner && waves_pending;
+  };
+
+  watcher.update(world, k_local_owner, k_past_the_poll, sink(), still_expected);
+  kill(world, enemy_troop);
+  watcher.update(world, k_local_owner, k_past_the_poll, sink(), still_expected);
+  EXPECT_TRUE(announced.empty())
+      << "a force whose next wave has not marched yet has not been beaten";
+
+  waves_pending = false;
+  watcher.update(world, k_local_owner, k_past_the_poll, sink(), still_expected);
+  ASSERT_EQ(announced.size(), 1U);
+  EXPECT_EQ(announced.front().owner_id, k_enemy_owner);
+}
+
 TEST_F(PlayerDefeatWatcherTest, AnAllyIsAnnouncedAsAnAlly) {
   Engine::Core::World world;
   const auto ally = spawn(world, k_ally_owner, "Masinissa");

@@ -12,6 +12,10 @@ Tiers
   fortified_camp  single wall ring, two housing rows, corner towers
   marching_camp   closed rampart with two gates, no marketplace
 
+Plans (``plan``, with ``plan_options``) set the shape of the ring independently
+of its tier: rect, stepped, circle, star, twin, terraced, curtain. See
+scripts/RTS_MAP_DESIGN.md and settlement_geometry.py for what each one is.
+
 A town raises a temple in its citadel. Any settlement may override that with a
 ``temple`` boolean when a map wants a sanctuary at a camp, or a town without one.
 
@@ -40,6 +44,8 @@ The command is dry-run by default. Pass --write to replace only the top-level
 ``structures`` array; all other content in the document is retained. Structures
 carrying a ``landmark`` key belong to generate-map-landmarks.py and are carried
 across untouched, so the two tools can be run in either order.
+Generated structures carry a ``settlement`` key naming their settlement, which is
+how a rerun replaces exactly its own output and nothing else.
 """
 
 from __future__ import annotations
@@ -55,6 +61,25 @@ from typing import Sequence
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from map_hill_shapes import canonical_hill_shape, hill_half_thickness
+from map_water_geometry import river_points
+from settlement_geometry import (
+    WALL_SEGMENT_SPACING,
+    Circuit,
+    Region,
+    bastion_apexes,
+    bastioned_polygon,
+    chamfered_rectangle_polygon,
+    cut_gate,
+    ellipse_polygon,
+    lattice_range,
+    partition_runs,
+    path_cells,
+    polygon_contains,
+    polyline_distance,
+    rectangle_polygon,
+    region_cells,
+    snap_wall_coordinate,
+)
 
 CAMPAIGN_MAPS = (
     "assets/maps/map_crossing_rhone.json",
@@ -98,18 +123,51 @@ engine's own axis-aligned expansion.
 GATE_SPAN = 6.0
 
 
-WALL_SEGMENT_SPACING = 2
-
-
 BUILDING_CLEARANCE = 2.0
 
 
 BUILDING_GRID_PADDING = 1.0
 
 
+ROAD_VERGE = 0.5
+"""How far a building keeps back from the kerb of a road through the ring.
+
+Gates go where roads cross the wall, so the road continues inside; a house
+placed on the street grid without looking at it stands in the roadway, which
+fix-map-prop-overlaps.py reports and the road generator cannot route around.
+"""
+
+
 TERRAIN_INFLUENCE_MARGIN = 1.22
 
+WALL_WATER_CLEARANCE = 1.5
+
+RAISED_FLAT_MIN_HEIGHT = 0.5
+RAISED_FLAT_EDGE_INNER = 0.74
+RAISED_FLAT_EDGE_OUTER = 1.08
+
+TERRACE_RAMP_HALF_WIDTH = 6.0
+TERRACE_RAMP_REACH = 2.0
+
 TIERS = ("town", "fortified_camp", "marching_camp")
+
+PLAN_KINDS = (
+    "rect",
+    "stepped",
+    "circle",
+    "star",
+    "twin",
+    "terraced",
+    "curtain",
+)
+"""The shape of a settlement's wall circuit, independent of its tier.
+
+Tier says how much a place is - how big its ring, whether it has a market, a
+citadel, streets. Plan says what shape that ring is, which is the difference
+between a legion's playing-card camp, a native contour fort, a bastioned trace
+and a siege line. They are separate axes on purpose: a marching camp can be a
+circle and a town can be a star.
+"""
 
 FACINGS = {
     "north": (0.0, -1.0),
@@ -132,6 +190,7 @@ class Building:
     nation: str | None = None
     max_population: int | None = None
     rotation: float | None = None
+    settlement: str | None = None
 
     def to_json(self) -> dict:
         entry: dict = {
@@ -140,6 +199,9 @@ class Building:
             "z": round(self.z, 2),
             "player_id": self.player_id,
         }
+        if self.settlement:
+            entry["authored"] = True
+            entry["settlement"] = self.settlement
         if self.rotation is not None:
             entry["rotation"] = round(self.rotation, 2)
         if self.max_population is not None:
@@ -156,6 +218,7 @@ class WallRun:
     player_id: int
     nation: str | None = None
     width: float = 2.0
+    settlement: str | None = None
 
     def entity_count(self) -> int:
         span = max(abs(self.end[0] - self.start[0]), abs(self.end[1] - self.start[1]))
@@ -169,6 +232,9 @@ class WallRun:
             "player_id": self.player_id,
             "width": self.width,
         }
+        if self.settlement:
+            entry["authored"] = True
+            entry["settlement"] = self.settlement
         if self.nation:
             entry["nation"] = self.nation
         return entry
@@ -188,17 +254,24 @@ class Settlement:
     max_population: int | None = None
     walls_only: bool = False
     palisade: bool = True
+    citadel: bool = True
     outer_towers: int | None = None
     minimum_homes: int = 0
     scale: float = 1.0
     temple: bool | None = None
     grow_hill: bool = True
     gateways: dict[str, float] | None = None
+    plan: str = "rect"
+    plan_options: dict = field(default_factory=dict)
 
     buildings: list[Building] = field(default_factory=list)
     walls: list[WallRun] = field(default_factory=list)
     hill: dict | None = None
+    terraces: list[dict] = field(default_factory=list)
     seal: "TerrainMask | None" = None
+    approaches: list[tuple[float, list[tuple[float, float]]]] = field(
+        default_factory=list
+    )
 
     @staticmethod
     def from_json(entry: dict) -> "Settlement":
@@ -213,6 +286,9 @@ class Settlement:
         facing = str(entry.get("facing", "south")).lower()
         if facing not in FACINGS:
             raise SettlementError(f"unknown facing: {facing}")
+        plan = str(entry.get("plan", "rect")).lower()
+        if plan not in PLAN_KINDS:
+            raise SettlementError(f"unknown settlement plan: {plan}")
         return Settlement(
             id=str(entry["id"]),
             player_id=int(entry["player_id"]),
@@ -226,6 +302,7 @@ class Settlement:
             max_population=entry.get("max_population"),
             walls_only=bool(entry.get("walls_only", False)),
             palisade=bool(entry.get("palisade", True)),
+            citadel=bool(entry.get("citadel", True)),
             outer_towers=(
                 None if "outer_towers" not in entry else int(entry["outer_towers"])
             ),
@@ -233,6 +310,8 @@ class Settlement:
             scale=float(entry.get("scale", 1.0)),
             temple=(None if "temple" not in entry else bool(entry["temple"])),
             grow_hill=bool(entry.get("grow_hill", True)),
+            plan=plan,
+            plan_options=dict(entry.get("plan_options") or {}),
         )
 
 
@@ -266,22 +345,68 @@ class TerrainMask:
         self,
         definition: dict,
         clearance: float,
-        exclude_hill: dict | None = None,
+        exclude_hills: Sequence[dict] = (),
         influence: float = TERRAIN_INFLUENCE_MARGIN,
+        water_clearance: float = 0.0,
     ):
         roads = _load_road_generator()
         working = json.loads(json.dumps(definition))
-        if exclude_hill is not None:
+        if water_clearance > 0.0:
+            for river in working.get("rivers") or []:
+                river["width"] = float(river.get("width", 3.0)) + 2.0 * water_clearance
+            lakes = list(working.get("lakes") or [])
+            lakes.extend(
+                feature
+                for feature in working.get("terrain") or []
+                if str(feature.get("type", "")).lower() == "lake"
+            )
+            for lake in lakes:
+                for key in ("radius", "width", "depth"):
+                    if key in lake:
+                        lake[key] = float(lake[key]) + (
+                            water_clearance
+                            if key == "radius"
+                            else 2.0 * water_clearance
+                        )
+        self._flat_edges: list[tuple[float, float, float, float, float]] = []
+        for feature in working.get("terrain") or []:
+            if str(feature.get("type", "")).lower() != "flat":
+                continue
+            if abs(float(feature.get("height", 0.0))) < RAISED_FLAT_MIN_HEIGHT:
+                continue
+            half_width, half_depth = hill_extents(feature)
+            if half_width <= 0.0 or half_depth <= 0.0:
+                continue
+            self._flat_edges.append(
+                (
+                    float(feature.get("x", 0.0)),
+                    float(feature.get("z", 0.0)),
+                    half_width,
+                    half_depth,
+                    math.radians(
+                        float(feature.get("rotation", feature.get("rotation_deg", 0.0)))
+                    ),
+                )
+            )
+        if exclude_hills:
+
+            def excluded(feature: dict) -> bool:
+                if str(feature.get("type", "")).lower() != "hill":
+                    return False
+                return any(
+                    abs(float(feature.get("x", 0.0)) - float(hill["x"])) < 0.01
+                    and abs(float(feature.get("z", 0.0)) - float(hill["z"])) < 0.01
+                    and abs(
+                        float(feature.get("width", 0.0)) - float(hill.get("width", 0.0))
+                    )
+                    < 0.01
+                    for hill in exclude_hills
+                )
+
             working["terrain"] = [
                 feature
                 for feature in working.get("terrain") or []
-                if not (
-                    str(feature.get("type", "")).lower() == "hill"
-                    and abs(float(feature.get("x", 0.0)) - float(exclude_hill["x"]))
-                    < 0.01
-                    and abs(float(feature.get("z", 0.0)) - float(exclude_hill["z"]))
-                    < 0.01
-                )
+                if not excluded(feature)
             ]
 
         for feature in working.get("terrain") or []:
@@ -295,6 +420,9 @@ class TerrainMask:
 
                 feature["thickness"] = hill_half_thickness(feature) * 2.0 * influence
                 continue
+            if kind == "mountain" and "width" not in feature:
+                feature["radius"] = float(feature.get("radius", 5.0)) * influence
+                continue
             feature.pop("radius", None)
             feature["width"] = half_width * 2.0 * influence
             feature["depth"] = half_depth * 2.0 * influence
@@ -302,11 +430,31 @@ class TerrainMask:
         working["roads"] = []
         self._field = roads.RoutingField(working, clearance)
 
+    def on_raised_flat_edge(self, x: float, z: float) -> bool:
+        """Whether the cell lies on the feathered rim of a raised (or sunken) flat.
+
+        The engine blends a flat's height in over the outer fifth of its ellipse,
+        so a body there straddles a step of the flat's full height.
+        """
+        for center_x, center_z, half_width, half_depth, angle in self._flat_edges:
+            local_x = x - center_x
+            local_z = z - center_z
+            cos_a = math.cos(angle)
+            sin_a = math.sin(angle)
+            rotated_x = local_x * cos_a + local_z * sin_a
+            rotated_z = -local_x * sin_a + local_z * cos_a
+            normalized = math.hypot(rotated_x / half_width, rotated_z / half_depth)
+            if RAISED_FLAT_EDGE_INNER <= normalized <= RAISED_FLAT_EDGE_OUTER:
+                return True
+        return False
+
     def walkable(self, x: float, z: float) -> bool:
         """Whether a unit could stand on this cell, ignoring buildings."""
         grid_x = int(round(x))
         grid_z = int(round(z))
         if not self._field.passable(grid_x, grid_z):
+            return False
+        if self.on_raised_flat_edge(float(grid_x), float(grid_z)):
             return False
         return not self._field.water[self._field.index(grid_x, grid_z)]
 
@@ -321,22 +469,9 @@ class TerrainMask:
                     return False
                 if self._field.water[self._field.index(grid_x, grid_z)]:
                     return False
+                if self.on_raised_flat_edge(float(grid_x), float(grid_z)):
+                    return False
         return True
-
-
-def snap_wall_coordinate(value: float) -> int:
-    """The lattice cell a wall authored at ``value`` actually spawns on.
-
-    MapTransformer rounds a wall's position to the grid and then to the 2-unit
-    wall lattice, so an off-lattice coordinate in the file is a fiction: it
-    describes a wall somewhere the game will never put one. Authoring on the
-    lattice is what makes a ring's gaps countable.
-    """
-    return int(math.floor(value / WALL_SEGMENT_SPACING + 0.5)) * WALL_SEGMENT_SPACING
-
-
-def lattice_range(low: int, high: int) -> list[int]:
-    return list(range(low, high + 1, WALL_SEGMENT_SPACING))
 
 
 def hill_height(width: float, depth: float, authored_height: float) -> float:
@@ -346,33 +481,45 @@ def hill_height(width: float, depth: float, authored_height: float) -> float:
 
 
 def hill_crown_extent(
-    width: float, depth: float, authored_height: float
+    width: float, depth: float, authored_height: float, crown: float = 0.0
 ) -> tuple[float, float]:
     """Half-extents of a hill's flat crown, in grid cells.
 
     Mirrors the plateau computation in terrain.cpp. The crown is the only
-    walkable part of a hill, so a settlement has to fit inside it.
+    walkable part of a hill, so a settlement has to fit inside it. An authored
+    ``crown`` fraction (0-0.9) sets the plateau's share of the footprint
+    directly; without it the engine's campaign rule leaves about 38%, which is
+    a redoubt on a mound, not a fort on a hill.
     """
     slope_width = max(2.0, width * 0.5)
     slope_depth = max(2.0, depth * 0.5)
     elevation_cells = max(hill_height(width, depth, authored_height), 0.25)
     slope_run = max(7.0, elevation_cells * 4.2)
+    min_crown = 0.42
+    max_slope = 0.62
+    if crown > 0.0:
+        min_crown = min(crown, 0.9)
+        max_slope = 1.0 - min_crown
 
     plateau_width = max(
         1.5,
-        slope_width * 0.42,
-        slope_width - min(slope_width * 0.62, slope_run),
+        slope_width * min_crown,
+        slope_width - min(slope_width * max_slope, slope_run),
     )
     plateau_depth = max(
         1.5,
-        slope_depth * 0.42,
-        slope_depth - min(slope_depth * 0.62, slope_run),
+        slope_depth * min_crown,
+        slope_depth - min(slope_depth * max_slope, slope_run),
     )
     return plateau_width, plateau_depth
 
 
 def usable_crown_extent(
-    width: float, depth: float, authored_height: float, safety: float
+    width: float,
+    depth: float,
+    authored_height: float,
+    safety: float,
+    crown: float = 0.0,
 ) -> tuple[float, float]:
     """Crown extent reduced for the noise warping applied to the real crown.
 
@@ -381,7 +528,7 @@ def usable_crown_extent(
     safety factor keeps placement well inside it; the authoritative check is the
     CampaignStructuresStandOnWalkableGround test, which uses the real terrain.
     """
-    crown_x, crown_z = hill_crown_extent(width, depth, authored_height)
+    crown_x, crown_z = hill_crown_extent(width, depth, authored_height, crown)
     return crown_x * safety, crown_z * safety
 
 
@@ -392,10 +539,19 @@ def crown_fits(
     half_x: float,
     half_z: float,
     safety: float,
+    round_footprint: bool = False,
+    crown: float = 0.0,
 ) -> bool:
-    """Whether a rectangular footprint sits inside the hill's elliptical crown."""
-    crown_x, crown_z = usable_crown_extent(width, depth, authored_height, safety)
+    """Whether a footprint sits inside the hill's elliptical crown.
 
+    A rectangle has corners, so it only fits when its corner is inside the
+    crown ellipse. A round ring has none: its half-extents are its reach on the
+    axes, and it fits whenever those stay inside the crown's - which is why a
+    circular fort on a hill is bigger than a square one on the same hill.
+    """
+    crown_x, crown_z = usable_crown_extent(width, depth, authored_height, safety, crown)
+    if round_footprint:
+        return half_x <= crown_x and half_z <= crown_z
     return math.hypot(half_x / max(crown_x, 0.001), half_z / max(crown_z, 0.001)) <= 1.0
 
 
@@ -406,6 +562,7 @@ def fit_hill_to_footprint(
     safety: float,
     max_width: float,
     max_depth: float,
+    round_footprint: bool = False,
 ) -> bool:
     """Widen a hill until its usable crown contains the settlement footprint.
 
@@ -414,16 +571,28 @@ def fit_hill_to_footprint(
     this returns False.
     """
     authored_height = float(feature.get("height", 2.0))
+    authored_crown = float(feature.get("crown", 0.0))
     changed = False
     for _ in range(96):
         width = float(feature.get("width", 0.0))
         depth = float(feature.get("depth", 0.0))
-        if crown_fits(width, depth, authored_height, half_x, half_z, safety):
+        if crown_fits(
+            width,
+            depth,
+            authored_height,
+            half_x,
+            half_z,
+            safety,
+            round_footprint,
+            authored_crown,
+        ):
             return changed
         if width >= max_width and depth >= max_depth:
             return changed
 
-        crown_x, crown_z = usable_crown_extent(width, depth, authored_height, safety)
+        crown_x, crown_z = usable_crown_extent(
+            width, depth, authored_height, safety, authored_crown
+        )
         want_x = half_x / max(crown_x, 0.001)
         want_z = half_z / max(crown_z, 0.001)
         grew = False
@@ -479,6 +648,12 @@ def hill_extents(feature: dict) -> tuple[float, float]:
 
     Campaign maps use `width`/`depth` in some places and a single `radius` in
     others; both reach the same terrain code, so both have to be understood here.
+    A radius-only mountain is not a circle, though: the terrain code stretches it
+    to 2.68 x 1.60 of its radius, and the road generator's raster knows that.
+    ``TerrainMask`` therefore leaves such a mountain's radius alone rather than
+    rewriting it as a width and depth, which turned it into a circle that
+    blocked ground the engine leaves open - and a wall cell dropped for ground
+    that is actually open is a hole in the ring.
     """
     radius = float(feature.get("radius") or 0.0)
     width = float(feature.get("width") or radius * 2.0)
@@ -486,8 +661,14 @@ def hill_extents(feature: dict) -> tuple[float, float]:
     return width * 0.5, depth * 0.5
 
 
-def hill_containing(terrain: Sequence[dict], x: float, z: float) -> dict | None:
-    """The hill a point already stands on, if any."""
+def hills_containing(terrain: Sequence[dict], x: float, z: float) -> list[dict]:
+    """Every hill a point stands on, largest first.
+
+    Hills stack: a knoll authored on a hill's crown is a second, taller hill at
+    the same place. The largest is the ground a settlement is fitted to; the
+    ones on top of it are terraces inside the ring, not terrain that blocks it.
+    """
+    found: list[dict] = []
     for feature in terrain:
         if str(feature.get("type", "")).lower() != "hill":
             continue
@@ -497,8 +678,15 @@ def hill_containing(terrain: Sequence[dict], x: float, z: float) -> dict | None:
         offset_x = (x - float(feature.get("x", 0.0))) / half_width
         offset_z = (z - float(feature.get("z", 0.0))) / half_depth
         if math.hypot(offset_x, offset_z) <= 1.0:
-            return feature
-    return None
+            found.append(feature)
+    found.sort(key=lambda feature: -hill_extents(feature)[0] * hill_extents(feature)[1])
+    return found
+
+
+def hill_containing(terrain: Sequence[dict], x: float, z: float) -> dict | None:
+    """The hill a point already stands on, if any."""
+    found = hills_containing(terrain, x, z)
+    return found[0] if found else None
 
 
 def normalise_hill_dimensions(feature: dict) -> None:
@@ -558,8 +746,7 @@ def distance_to_water(definition: dict, x: float, z: float) -> float:
     best = float("inf")
 
     for river in definition.get("rivers") or []:
-        points = river.get("waypoints") or [river.get("start"), river.get("end")]
-        points = [point for point in points if point]
+        points = river_points(river)
         half_width = float(river.get("width", 3.0)) * 0.5
         for start, end in zip(points, points[1:], strict=False):
             delta_x = float(end[0]) - float(start[0])
@@ -617,6 +804,31 @@ def clamp_hill_entrances(feature: dict, definition: dict, margin: float = 3.0) -
         entrance["z"] = round(
             min(max(float(entrance["z"]), margin), height - margin), 2
         )
+
+
+def ensure_terrace_ramp(terrace: dict, settlement: "Settlement") -> None:
+    """Give a keep raised on the crown its one ramp, on the settlement's facing.
+
+    A hill without authored entrances gets the engine's default ramp on its
+    west side, straight through whatever the lower ring put there. The keep's
+    gate is cut on the facing side, so that is where the ramp belongs, and the
+    terraced plan keeps that corridor free of buildings.
+    """
+    if terrace.get("entrances"):
+        return
+    half_x, half_z = hill_extents(terrace)
+    facing_x, facing_z = FACINGS[settlement.facing]
+    terrace["entrances"] = [
+        {
+            "x": round(
+                float(terrace["x"]) + facing_x * (half_x + TERRACE_RAMP_REACH), 2
+            ),
+            "z": round(
+                float(terrace["z"]) + facing_z * (half_z + TERRACE_RAMP_REACH), 2
+            ),
+            "radius": 2.0,
+        }
+    ]
 
 
 def ensure_hill_approaches(feature: dict, minimum: int = 4) -> None:
@@ -872,6 +1084,426 @@ def build_ring(
     return walls, gates
 
 
+@dataclass
+class Plan:
+    """A settlement's wall circuits and the ground they enclose."""
+
+    circuits: list[Circuit]
+    region: Region
+    half_x: float
+    half_z: float
+    towers: list[tuple[float, float]] = field(default_factory=list)
+    cells: set[tuple[int, int]] = field(default_factory=set)
+    keep_clear: list[list[tuple[float, float]]] = field(default_factory=list)
+    anchors: dict[str, tuple[float, float]] = field(default_factory=dict)
+
+    def wall_distance(self, x: float, z: float) -> float:
+        if not self.cells:
+            return float("inf")
+        return min(math.hypot(x - cell[0], z - cell[1]) for cell in self.cells)
+
+
+def plan_extent(settlement: Settlement, spec: TierSpec) -> tuple[float, float]:
+    """The half-extents a settlement's circuit reaches, plan included.
+
+    Roads, ramps and the occupancy checks all need to know how far a settlement
+    reaches before its walls exist, and a plan is free to be bigger or smaller
+    than its tier's template - a bastioned trace throws its points well past the
+    curtain, a twin camp is two lobes wide.
+    """
+    size = settlement.plan_options.get("size")
+    if size:
+        half_x = float(size[0]) * settlement.scale
+        half_z = float(size[1]) * settlement.scale
+    else:
+        half_x = spec.outer_half_x * settlement.scale
+        half_z = spec.outer_half_z * settlement.scale
+    if settlement.plan == "star":
+        reach = float(settlement.plan_options.get("bastion", 11.0))
+        half_x += reach * 0.7
+        half_z += reach * 0.7
+    elif settlement.plan == "twin":
+        offset = settlement.plan_options.get("offset") or [half_x * 1.7, 0.0]
+        half_x += abs(float(offset[0]))
+        half_z += abs(float(offset[1]))
+    elif settlement.plan == "curtain":
+        path = settlement.plan_options.get("path") or []
+        if path:
+            half_x = max(abs(float(point[0]) - settlement.x) for point in path) + 6.0
+            half_z = max(abs(float(point[1]) - settlement.z) for point in path) + 6.0
+    return (half_x, half_z)
+
+
+def build_plan(settlement: Settlement, spec: TierSpec) -> Plan:
+    """Turn a settlement's plan into circuits, an enclosed region and towers."""
+    cx, cz = settlement.x, settlement.z
+    options = settlement.plan_options
+    size = options.get("size")
+    if size:
+        half_x = float(size[0]) * settlement.scale
+        half_z = float(size[1]) * settlement.scale
+    else:
+        half_x = spec.outer_half_x * settlement.scale
+        half_z = spec.outer_half_z * settlement.scale
+
+    extent_x, extent_z = plan_extent(settlement, spec)
+
+    if settlement.plan == "stepped":
+        chamfer = float(options.get("chamfer", min(half_x, half_z) * 0.34))
+        outline = chamfered_rectangle_polygon(cx, cz, half_x, half_z, chamfer)
+        region = Region([outline])
+        towers = [
+            (cx + sx * (half_x - chamfer * 0.5), cz + sz * (half_z - chamfer * 0.5))
+            for sx, sz in ((-1, -1), (1, -1), (1, 1), (-1, 1))
+        ]
+        return Plan([Circuit(region=region)], region, extent_x, extent_z, towers)
+
+    if settlement.plan == "circle":
+        outline = ellipse_polygon(cx, cz, half_x, half_z)
+        region = Region([outline])
+        count = max(1, int(options.get("towers", 4)))
+        towers = []
+        for index in range(count):
+            angle = math.pi * 0.25 + 2.0 * math.pi * index / count
+            towers.append(
+                (
+                    cx + math.cos(angle) * (half_x - 5.0),
+                    cz + math.sin(angle) * (half_z - 5.0),
+                )
+            )
+        return Plan([Circuit(region=region)], region, extent_x, extent_z, towers)
+
+    if settlement.plan == "star":
+        sides = int(options.get("points", 4))
+        bastion = float(options.get("bastion", 11.0))
+        flank = float(options.get("flank", min(half_x, half_z) * 0.32))
+        stretch = 1.0 / math.cos(math.pi / sides)
+        outline = bastioned_polygon(
+            cx, cz, half_x * stretch, half_z * stretch, sides, bastion, flank
+        )
+        region = Region([outline])
+        towers = bastion_apexes(cx, cz, half_x * stretch, half_z * stretch, sides, -6.0)
+        return Plan([Circuit(region=region)], region, extent_x, extent_z, towers)
+
+    if settlement.plan == "twin":
+        offset = options.get("offset") or [half_x * 1.7, 0.0]
+        shift_x, shift_z = float(offset[0]), float(offset[1])
+        lobe = str(options.get("lobe", "rect"))
+        neck = float(options.get("neck", 7.0))
+        polygons = []
+        for sign in (-1.0, 1.0):
+            lobe_x = cx + sign * shift_x * 0.5
+            lobe_z = cz + sign * shift_z * 0.5
+            if lobe == "circle":
+                polygons.append(ellipse_polygon(lobe_x, lobe_z, half_x, half_z))
+            else:
+                polygons.append(rectangle_polygon(lobe_x, lobe_z, half_x, half_z))
+        if abs(shift_x) >= abs(shift_z):
+            polygons.append(rectangle_polygon(cx, cz, abs(shift_x) * 0.5 + 1.0, neck))
+        else:
+            polygons.append(rectangle_polygon(cx, cz, neck, abs(shift_z) * 0.5 + 1.0))
+        region = Region(polygons)
+        keep_clear = [
+            rectangle_polygon(
+                cx,
+                cz,
+                abs(shift_x) * 0.5 + 2.0 if abs(shift_x) >= abs(shift_z) else neck,
+                neck if abs(shift_x) >= abs(shift_z) else abs(shift_z) * 0.5 + 2.0,
+            )
+        ]
+        towers = []
+        for sign in (-1.0, 1.0):
+            lobe_x = cx + sign * shift_x * 0.5
+            lobe_z = cz + sign * shift_z * 0.5
+            towers.extend(
+                [
+                    (lobe_x + sign * (half_x - 4.0), lobe_z - (half_z - 4.0)),
+                    (lobe_x + sign * (half_x - 4.0), lobe_z + (half_z - 4.0)),
+                ]
+            )
+        lobe_a = (cx - shift_x * 0.5, cz - shift_z * 0.5)
+        lobe_b = (cx + shift_x * 0.5, cz + shift_z * 0.5)
+        return Plan(
+            [Circuit(region=region)],
+            region,
+            extent_x,
+            extent_z,
+            towers,
+            keep_clear=keep_clear,
+            anchors={
+                "barracks": lobe_a,
+                "market": lobe_b,
+                "temple": (lobe_b[0], lobe_b[1] - half_z * 0.4),
+            },
+        )
+
+    if settlement.plan == "terraced":
+        inner = options.get("inner") or [half_x * 0.42, half_z * 0.42]
+        inner_x, inner_z = float(inner[0]), float(inner[1])
+        outer_outline = ellipse_polygon(cx, cz, half_x, half_z)
+        inner_outline = ellipse_polygon(cx, cz, inner_x, inner_z)
+        outer_region = Region([outer_outline])
+        inner_region = Region([inner_outline])
+        towers = [
+            (
+                cx + math.cos(math.pi * 0.25 + math.pi * 0.5 * index) * (half_x - 5.0),
+                cz + math.sin(math.pi * 0.25 + math.pi * 0.5 * index) * (half_z - 5.0),
+            )
+            for index in range(4)
+        ]
+        upper_gate = FACINGS[settlement.facing]
+        facing_x, facing_z = upper_gate
+        side_x, side_z = (facing_z, facing_x)
+        if abs(facing_x) > 0.0:
+            inner_along, inner_across = inner_x, inner_z
+            outer_along = half_x
+        else:
+            inner_along, inner_across = inner_z, inner_x
+            outer_along = half_z
+        towers.extend(
+            [
+                (
+                    cx + side_x * (inner_across - 3.0),
+                    cz + side_z * (inner_across - 3.0),
+                ),
+                (
+                    cx - side_x * (inner_across - 3.0),
+                    cz - side_z * (inner_across - 3.0),
+                ),
+            ]
+        )
+        corridor_mid = (inner_along + outer_along) * 0.5
+        corridor_half = (outer_along - inner_along) * 0.5
+        keep_clear = [
+            rectangle_polygon(
+                cx + facing_x * corridor_mid,
+                cz + facing_z * corridor_mid,
+                corridor_half if abs(facing_x) > 0.0 else TERRACE_RAMP_HALF_WIDTH,
+                TERRACE_RAMP_HALF_WIDTH if abs(facing_x) > 0.0 else corridor_half,
+            )
+        ]
+        circuits = [
+            Circuit(region=outer_region),
+            Circuit(
+                region=inner_region,
+                gate_targets=[
+                    (cx + upper_gate[0] * inner_x, cz + upper_gate[1] * inner_z)
+                ],
+            ),
+        ]
+        market = (
+            cx + side_x * (inner_across + 9.0) + facing_x * inner_along * 0.6,
+            cz + side_z * (inner_across + 9.0) + facing_z * inner_along * 0.6,
+        )
+        temple = (
+            cx - side_x * (inner_across + 9.0) - facing_x * inner_along * 0.6,
+            cz - side_z * (inner_across + 9.0) - facing_z * inner_along * 0.6,
+        )
+        return Plan(
+            circuits,
+            outer_region,
+            extent_x,
+            extent_z,
+            towers,
+            keep_clear=keep_clear,
+            anchors={
+                "barracks": (cx, cz),
+                "market": market,
+                "temple": temple,
+            },
+        )
+
+    if settlement.plan == "curtain":
+        raw_path = options.get("path")
+        if not raw_path:
+            raise SettlementError(
+                f"{settlement.id}: a curtain plan needs a plan_options.path"
+            )
+        path = [(float(point[0]), float(point[1])) for point in raw_path]
+        depth = float(options.get("depth", 24.0))
+        inward = []
+        for point in path:
+            toward = _towards(point, (cx, cz))
+            inward.append((point[0] + toward[0] * depth, point[1] + toward[1] * depth))
+        camp = options.get("camp") or [half_x * 0.55, half_z * 0.55]
+        region = Region(
+            [
+                path + list(reversed(inward)),
+                rectangle_polygon(cx, cz, float(camp[0]), float(camp[1])),
+            ]
+        )
+        towers = []
+        count = max(1, int(options.get("towers", 4)))
+        total = sum(
+            math.hypot(b[0] - a[0], b[1] - a[1])
+            for a, b in zip(path, path[1:], strict=False)
+        )
+        for index in range(count):
+            along = total * (index + 0.5) / count
+            for a, b in zip(path, path[1:], strict=False):
+                leg = math.hypot(b[0] - a[0], b[1] - a[1])
+                if along > leg and leg > 0.0:
+                    along -= leg
+                    continue
+                fraction = along / leg if leg > 0.0 else 0.0
+                point = (
+                    a[0] + (b[0] - a[0]) * fraction,
+                    a[1] + (b[1] - a[1]) * fraction,
+                )
+                toward = _towards(point, (cx, cz))
+                towers.append((point[0] + toward[0] * 4.0, point[1] + toward[1] * 4.0))
+                break
+        return Plan(
+            [Circuit(path=path)],
+            region,
+            extent_x,
+            extent_z,
+            towers,
+            anchors={"barracks": (cx, cz), "market": (cx, cz + 10.0)},
+        )
+
+    outline = rectangle_polygon(cx, cz, half_x, half_z)
+    region = Region([outline])
+    return Plan([Circuit(region=region)], region, extent_x, extent_z, [])
+
+
+def _towards(
+    point: tuple[float, float], target: tuple[float, float]
+) -> tuple[float, float]:
+    delta_x = target[0] - point[0]
+    delta_z = target[1] - point[1]
+    length = math.hypot(delta_x, delta_z)
+    if length <= 1e-9:
+        return (0.0, 0.0)
+    return (delta_x / length, delta_z / length)
+
+
+def gateway_targets(
+    settlement: Settlement, half_x: float, half_z: float
+) -> list[tuple[float, float]]:
+    """Where the ring's gates want to be, in world coordinates.
+
+    ``road_gateways`` answers in sides and offsets because a rectangle has
+    sides. A circuit that is not a rectangle has no sides, so the same answer is
+    read as a point on the bounding box and the gate goes to the straight run of
+    wall nearest it.
+    """
+    gateways = settlement.gateways or {}
+    targets: list[tuple[float, float]] = []
+    for side, along in gateways.items():
+        if side == "north":
+            targets.append((along, settlement.z - half_z))
+        elif side == "south":
+            targets.append((along, settlement.z + half_z))
+        elif side == "west":
+            targets.append((settlement.x - half_x, along))
+        else:
+            targets.append((settlement.x + half_x, along))
+    return targets
+
+
+def approach_targets(
+    plan: Plan, settlement: Settlement, wanted: int = 2
+) -> list[tuple[float, float]]:
+    """Where roads actually cross this circuit, widest first, at most two.
+
+    The rectangular ring reads its gates off its own sides. A circle or a star
+    has no sides, and a gate aimed at where a road crosses the bounding box can
+    land a wall's length from where that road meets the curve. So the crossing
+    is taken against the enclosed region itself: the last waypoint outside and
+    the first inside bracket the wall, and the gate goes between them.
+    """
+    if plan.circuits[0].region is None:
+        return []
+    region = plan.circuits[0].region
+    crossings: list[tuple[float, tuple[float, float]]] = []
+    for width, points in settlement.approaches:
+        for a, b in zip(points, points[1:], strict=False):
+            if region.contains(*a) == region.contains(*b):
+                continue
+            outside, inside = (a, b) if region.contains(*b) else (b, a)
+            for _ in range(12):
+                mid = ((outside[0] + inside[0]) * 0.5, (outside[1] + inside[1]) * 0.5)
+                if region.contains(*mid):
+                    inside = mid
+                else:
+                    outside = mid
+            crossings.append((width, inside))
+    crossings.sort(key=lambda item: -item[0])
+    chosen: list[tuple[float, float]] = []
+    for _width, point in crossings:
+        if any(math.hypot(point[0] - c[0], point[1] - c[1]) < 24.0 for c in chosen):
+            continue
+        chosen.append(point)
+        if len(chosen) == wanted:
+            break
+    return chosen
+
+
+def emit_plan_walls(
+    plan: Plan,
+    settlement: Settlement,
+    seal: "TerrainMask | None",
+) -> tuple[list[WallRun], list[Building]]:
+    """Rasterise every circuit, cut its gates, and group the rest into runs."""
+    walls: list[WallRun] = []
+    gates: list[Building] = []
+    walkable = None if seal is None else (lambda x, z: seal.walkable(x, z))
+    authored_gates = settlement.plan_options.get("gates")
+    if authored_gates:
+        default_targets = [
+            (float(point[0]), float(point[1])) for point in authored_gates
+        ]
+    else:
+        wanted = int(settlement.plan_options.get("gate_count", 2))
+        default_targets = approach_targets(plan, settlement, wanted)
+        for target in gateway_targets(settlement, plan.half_x, plan.half_z):
+            if len(default_targets) >= wanted:
+                break
+            if all(
+                math.hypot(target[0] - c[0], target[1] - c[1]) >= 24.0
+                for c in default_targets
+            ):
+                default_targets.append(target)
+
+    for index, circuit in enumerate(plan.circuits):
+        if circuit.path is not None:
+            cells = path_cells(circuit.path, walkable)
+        elif circuit.region is not None:
+            cells = region_cells(circuit.region, walkable)
+        else:
+            continue
+        plan.cells |= cells
+        runs = partition_runs(cells)
+        targets = circuit.gate_targets or (default_targets if index == 0 else [])
+        for target in targets:
+            runs, gate_cell, horizontal = cut_gate(runs, target, GATE_CELLS)
+            if gate_cell is None:
+                continue
+            gates.append(
+                Building(
+                    "wall_gate",
+                    float(gate_cell[0]),
+                    float(gate_cell[1]),
+                    settlement.player_id,
+                    settlement.nation,
+                    rotation=0.0 if horizontal else 90.0,
+                )
+            )
+            plan.cells.discard(gate_cell)
+        for run in runs:
+            ordered = sorted(run, key=lambda cell: (cell[1], cell[0]))
+            walls.append(
+                WallRun(
+                    (float(ordered[0][0]), float(ordered[0][1])),
+                    (float(ordered[-1][0]), float(ordered[-1][1])),
+                    settlement.player_id,
+                    settlement.nation,
+                )
+            )
+    return walls, gates
+
+
 def nearest_road_point(
     definition: dict, x: float, z: float
 ) -> tuple[float, float] | None:
@@ -1009,8 +1641,9 @@ def ring_box(
     settlement: Settlement, spec: TierSpec
 ) -> tuple[float, float, float, float]:
     """The outer wall ring as a rectangle, with a margin for the wall itself."""
-    half_x = spec.outer_half_x * settlement.scale + WALL_SEGMENT_SPACING
-    half_z = spec.outer_half_z * settlement.scale + WALL_SEGMENT_SPACING
+    extent_x, extent_z = plan_extent(settlement, spec)
+    half_x = extent_x + WALL_SEGMENT_SPACING
+    half_z = extent_z + WALL_SEGMENT_SPACING
     return (
         settlement.x - half_x,
         settlement.z - half_z,
@@ -1027,8 +1660,15 @@ def inside_any_ring(
     )
 
 
+def terrace_features(settlements: Sequence["Settlement"]) -> list[dict]:
+    """Hills raised on a settlement's own crown: their ramps stay inside its ring."""
+    return [terrace for settlement in settlements for terrace in settlement.terraces]
+
+
 def move_entrances_out_of_rings(
-    terrain: Sequence[dict], boxes: Sequence[tuple[float, float, float, float]]
+    terrain: Sequence[dict],
+    boxes: Sequence[tuple[float, float, float, float]],
+    terraces: Sequence[dict] = (),
 ) -> list[str]:
     """Keep hill ramps from opening inside somebody's walls.
 
@@ -1044,6 +1684,8 @@ def move_entrances_out_of_rings(
         return moved
     for feature in terrain:
         if str(feature.get("type", "")).lower() != "hill":
+            continue
+        if any(feature is terrace for terrace in terraces):
             continue
         entrances = feature.get("entrances") or []
         if not entrances:
@@ -1091,25 +1733,76 @@ def layout_settlement(
     """Fill in buildings and walls for one settlement."""
     cx, cz = settlement.x, settlement.z
     scale = settlement.scale
-    half_x = spec.outer_half_x * scale
-    half_z = spec.outer_half_z * scale
     nation = settlement.nation
     owner = settlement.player_id
+
+    plan: Plan | None = None
+    if settlement.plan != "rect":
+        plan = build_plan(settlement, spec)
+        half_x, half_z = plan.half_x, plan.half_z
+    else:
+        half_x, half_z = plan_extent(settlement, spec)
 
     buildings: list[Building] = []
     walls: list[WallRun] = []
 
+    if plan is not None and settlement.palisade:
+        plan_walls, plan_gates = emit_plan_walls(plan, settlement, seal)
+        walls.extend(plan_walls)
+        buildings.extend(plan_gates)
+
     def ground_is_clear(x: float, z: float, building_type: str) -> bool:
+        size = BUILDING_SIZES.get(building_type, (3.0, 3.0))
         if crown is not None:
 
-            size = BUILDING_SIZES.get(building_type, (3.0, 3.0))
             reach_x = (abs(x - cx) + size[0] * 0.5) / max(crown[0], 0.001)
             reach_z = (abs(z - cz) + size[1] * 0.5) / max(crown[1], 0.001)
             if math.hypot(reach_x, reach_z) > 1.0:
                 return False
+        reach = max(size) * 0.5 + ROAD_VERGE
+        for road_width, points in settlement.approaches:
+            if len(points) < 2:
+                continue
+            if polyline_distance(points, x, z) < road_width * 0.5 + reach:
+                return False
+        for terrace in settlement.terraces:
+            terrace_x, terrace_z = hill_extents(terrace)
+            offset_x = (x - float(terrace["x"])) / max(terrace_x, 0.001)
+            offset_z = (z - float(terrace["z"])) / max(terrace_z, 0.001)
+            if math.hypot(offset_x, offset_z) > 1.05:
+                continue
+            crown_x, crown_z = usable_crown_extent(
+                terrace_x * 2.0,
+                terrace_z * 2.0,
+                float(terrace.get("height", 2.0)),
+                0.8,
+                float(terrace.get("crown", 0.0)),
+            )
+            reach_x = (abs(x - float(terrace["x"])) + size[0] * 0.5) / max(
+                crown_x, 0.001
+            )
+            reach_z = (abs(z - float(terrace["z"])) + size[1] * 0.5) / max(
+                crown_z, 0.001
+            )
+            if math.hypot(reach_x, reach_z) > 1.0:
+                return False
+        if plan is None:
+            if (
+                abs(x - cx) + size[0] * 0.5 > half_x
+                or abs(z - cz) + size[1] * 0.5 > half_z
+            ):
+                return False
+        else:
+            if not plan.region.contains(x, z):
+                return False
+            if any(polygon_contains(polygon, x, z) for polygon in plan.keep_clear):
+                return False
+            wall_gap = 0.5 if building_type == "defense_tower" else BUILDING_CLEARANCE
+            if plan.wall_distance(x, z) < max(size) * 0.5 + wall_gap:
+                return False
         if mask is None:
             return True
-        return mask.clear_for(x, z, BUILDING_SIZES.get(building_type, (3.0, 3.0)))
+        return mask.clear_for(x, z, size)
 
     def site_is_free(x: float, z: float, building_type: str) -> bool:
         if not ground_is_clear(x, z, building_type):
@@ -1146,12 +1839,24 @@ def layout_settlement(
     }
 
     if settlement.walls_only:
-        settlement.walls, settlement.buildings = build_ring(
-            cx, cz, half_x, half_z, owner, nation, gateways, seal
-        )
+        if plan is None:
+            walls, buildings = build_ring(
+                cx, cz, half_x, half_z, owner, nation, gateways, seal
+            )
+        for wall in walls:
+            wall.settlement = settlement.id
+        for building in buildings:
+            building.settlement = settlement.id
+        settlement.walls, settlement.buildings = walls, buildings
         return
 
-    barracks_site = nearest_clear(cx, cz - 6.0, "barracks")
+    anchors = dict(plan.anchors) if plan is not None else {}
+    for name in ("barracks", "market", "temple"):
+        authored = settlement.plan_options.get(name)
+        if authored:
+            anchors[name] = (float(authored[0]), float(authored[1]))
+    barracks_anchor = anchors.get("barracks", (cx, cz - 6.0))
+    barracks_site = nearest_clear(barracks_anchor[0], barracks_anchor[1], "barracks")
     if barracks_site is None:
         raise SettlementError(
             f"{settlement.id}: no clear ground for a barracks near "
@@ -1168,7 +1873,8 @@ def layout_settlement(
         )
     )
     if spec.marketplace:
-        market_site = nearest_clear(cx, cz + 6.0, "marketplace")
+        market_anchor = anchors.get("market", (cx, cz + 6.0))
+        market_site = nearest_clear(market_anchor[0], market_anchor[1], "marketplace")
         if market_site is not None:
             buildings.append(
                 Building("marketplace", market_site[0], market_site[1], owner, nation)
@@ -1177,13 +1883,14 @@ def layout_settlement(
     wants_temple = spec.temple if settlement.temple is None else settlement.temple
     if wants_temple:
 
-        temple_site = nearest_clear(cx - 9.0, cz, "temple")
+        temple_anchor = anchors.get("temple", (cx - 9.0, cz))
+        temple_site = nearest_clear(temple_anchor[0], temple_anchor[1], "temple")
         if temple_site is not None:
             buildings.append(
                 Building("temple", temple_site[0], temple_site[1], owner, nation)
             )
 
-    if spec.inner_half_x is not None:
+    if spec.inner_half_x is not None and plan is None and settlement.citadel:
         inner_half_x = spec.inner_half_x * scale
         inner_half_z = (spec.inner_half_x - 2.0) * scale
 
@@ -1221,7 +1928,7 @@ def layout_settlement(
     ring_inset = spec.wall_inset * scale
     citadel_clear = (
         (spec.inner_half_x + spec.citadel_clearance) * scale
-        if spec.inner_half_x
+        if spec.inner_half_x and plan is None and settlement.citadel
         else 0.0
     )
     core_clear = spec.core_clearance * scale
@@ -1253,13 +1960,17 @@ def layout_settlement(
             if not citadel_clear and max(abs(offset_x), abs(offset_z)) < core_clear:
                 continue
 
-            if (
-                settlement.facing in ("north", "south")
-                and abs(offset_x) < gate_corridor
-            ):
-                continue
-            if settlement.facing in ("east", "west") and abs(offset_z) < gate_corridor:
-                continue
+            if plan is None:
+                if (
+                    settlement.facing in ("north", "south")
+                    and abs(offset_x) < gate_corridor
+                ):
+                    continue
+                if (
+                    settlement.facing in ("east", "west")
+                    and abs(offset_z) < gate_corridor
+                ):
+                    continue
             plot_x = cx + offset_x
             plot_z = cz + offset_z
 
@@ -1298,8 +2009,13 @@ def layout_settlement(
             f"{settlement.id}: placed {placed_homes} homes, "
             f"below required minimum {settlement.minimum_homes}"
         )
+    if settlement.homes is not None and placed_homes < settlement.homes:
+        print(
+            f"  short: {settlement.id} has room for {placed_homes} of the "
+            f"{settlement.homes} homes it asked for"
+        )
 
-    if settlement.palisade:
+    if settlement.palisade and plan is None:
         outer_walls, outer_gates = build_ring(
             cx, cz, half_x, half_z, owner, nation, gateways, seal
         )
@@ -1307,14 +2023,18 @@ def layout_settlement(
         buildings.extend(outer_gates)
 
     corner_inset = 3.0
-    corners = [
-        (cx - half_x + corner_inset, cz - half_z + corner_inset),
-        (cx + half_x - corner_inset, cz - half_z + corner_inset),
-        (cx - half_x + corner_inset, cz + half_z - corner_inset),
-        (cx + half_x - corner_inset, cz + half_z - corner_inset),
-    ]
+    corners = (
+        plan.towers
+        if plan is not None
+        else [
+            (cx - half_x + corner_inset, cz - half_z + corner_inset),
+            (cx + half_x - corner_inset, cz - half_z + corner_inset),
+            (cx - half_x + corner_inset, cz + half_z - corner_inset),
+            (cx + half_x - corner_inset, cz + half_z - corner_inset),
+        ]
+    )
     outer_tower_count = (
-        spec.outer_towers
+        (spec.outer_towers if plan is None else len(corners))
         if settlement.outer_towers is None
         else max(0, settlement.outer_towers)
     )
@@ -1326,6 +2046,10 @@ def layout_settlement(
             Building("defense_tower", corner_site[0], corner_site[1], owner, nation)
         )
 
+    for wall in walls:
+        wall.settlement = settlement.id
+    for building in buildings:
+        building.settlement = settlement.id
     settlement.walls = walls
     settlement.buildings = buildings
 
@@ -1425,8 +2149,9 @@ def enclosure_breach(
 
     centre_x = int(round(settlement.x))
     centre_z = int(round(settlement.z))
-    reach_x = int(spec.outer_half_x * settlement.scale) + 6
-    reach_z = int(spec.outer_half_z * settlement.scale) + 6
+    extent_x, extent_z = plan_extent(settlement, spec)
+    reach_x = int(extent_x) + 6
+    reach_z = int(extent_z) + 6
 
     start: tuple[int, int] | None = None
     for radius in range(0, 10):
@@ -1544,6 +2269,8 @@ def validate(
         for settlement in settlements:
             if not settlement.palisade or settlement.seal is None:
                 continue
+            if settlement.plan == "curtain":
+                continue
             breach = enclosure_breach(
                 settlement, TIER_SPECS[settlement.tier], occupancy, settlement.seal
             )
@@ -1556,10 +2283,13 @@ def validate(
         boxes = [
             ring_box(settlement, TIER_SPECS[settlement.tier])
             for settlement in settlements
-            if settlement.palisade
+            if settlement.palisade and settlement.plan != "curtain"
         ]
+        terraces = terrace_features(settlements)
         for feature in definition.get("terrain") or []:
             if str(feature.get("type", "")).lower() != "hill":
+                continue
+            if any(feature is terrace for terrace in terraces):
                 continue
             for entrance in feature.get("entrances") or []:
                 x = float(entrance.get("x", 0.0))
@@ -1644,7 +2374,9 @@ def process_map(
 
     for settlement in settlements:
 
-        if settlement.tier == "town" or settlement.on_hill is False:
+        if settlement.on_hill is not True and (
+            settlement.tier == "town" or settlement.on_hill is False
+        ):
             standing_on = hill_containing(terrain, settlement.x, settlement.z)
             if standing_on is not None:
                 push_settlement_off_hill(settlement, standing_on)
@@ -1658,12 +2390,18 @@ def process_map(
                 continue
             settlement.on_hill = True
         spec = TIER_SPECS[settlement.tier]
-        hill = find_hill_at(terrain, settlement.x, settlement.z)
+        stacked = hills_containing(terrain, settlement.x, settlement.z)
+        hill = (
+            stacked[0] if stacked else find_hill_at(terrain, settlement.x, settlement.z)
+        )
         if hill is None:
             raise SettlementError(
                 f"{settlement.id} is marked on_hill but no hill is near it"
             )
         normalise_hill_dimensions(hill)
+        settlement.terraces = [feature for feature in stacked if feature is not hill]
+        for terrace in settlement.terraces:
+            ensure_terrace_ramp(terrace, settlement)
 
         growth = max_hill_growth if settlement.grow_hill else 1.0
         growth_width = min(max_hill_width, float(hill["width"]) * growth)
@@ -1678,11 +2416,18 @@ def process_map(
         settlement.z = float(hill["z"])
 
         authored_height = float(hill.get("height", 2.0))
+        round_footprint = settlement.plan in ("circle", "terraced")
         for _ in range(24):
             layout_settlement(settlement, spec)
             half_x, half_z = settlement_footprint(settlement)
             fit_hill_to_footprint(
-                hill, half_x, half_z, crown_safety, growth_width, growth_depth
+                hill,
+                half_x,
+                half_z,
+                crown_safety,
+                growth_width,
+                growth_depth,
+                round_footprint,
             )
             if crown_fits(
                 float(hill["width"]),
@@ -1691,6 +2436,8 @@ def process_map(
                 half_x,
                 half_z,
                 crown_safety,
+                round_footprint,
+                float(hill.get("crown", 0.0)),
             ):
                 break
             settlement.scale *= 0.92
@@ -1702,27 +2449,39 @@ def process_map(
         ensure_hill_approaches(hill)
         clamp_hill_entrances(hill, definition)
         settlement.hill = hill
+        if settlement.scale < 0.999:
+            print(
+                f"  fitted: {settlement.id} shrunk to {settlement.scale:.2f} of its "
+                f"authored size to stay on the crown of its {hill['width']:.0f}x"
+                f"{hill['depth']:.0f} hill"
+            )
 
     base_mask = TerrainMask(definition, terrain_clearance)
-    base_seal = TerrainMask(definition, 0.0, influence=1.0)
+    base_seal = TerrainMask(
+        definition, 0.0, influence=1.0, water_clearance=WALL_WATER_CLEARANCE
+    )
     for settlement in settlements:
         spec = TIER_SPECS[settlement.tier]
         mask = base_mask
         settlement.seal = base_seal
         crown: tuple[float, float] | None = None
         if settlement.on_hill:
-            mask = TerrainMask(
-                definition, terrain_clearance, exclude_hill=settlement.hill
-            )
+            excluded = [settlement.hill, *settlement.terraces]
+            mask = TerrainMask(definition, terrain_clearance, exclude_hills=excluded)
 
             settlement.seal = TerrainMask(
-                definition, 0.0, exclude_hill=settlement.hill, influence=1.0
+                definition,
+                0.0,
+                exclude_hills=excluded,
+                influence=1.0,
+                water_clearance=WALL_WATER_CLEARANCE,
             )
             crown = usable_crown_extent(
                 float(settlement.hill["width"]),
                 float(settlement.hill["depth"]),
                 float(settlement.hill.get("height", 2.0)),
                 crown_safety,
+                float(settlement.hill.get("crown", 0.0)),
             )
         elif not settlement.walls_only and not mask.clear_for(
             settlement.x, settlement.z, BUILDING_SIZES["barracks"]
@@ -1737,20 +2496,33 @@ def process_map(
                     f"{settlement.x:.0f},{settlement.z:.0f} for a settlement"
                 )
             settlement.x, settlement.z = moved
+        gate_half_x, gate_half_z = plan_extent(settlement, spec)
         settlement.gateways = road_gateways(
-            definition,
-            settlement,
-            spec.outer_half_x * settlement.scale,
-            spec.outer_half_z * settlement.scale,
+            definition, settlement, gate_half_x, gate_half_z
         )
+        settlement.approaches = [
+            (
+                float(road.get("width", 3.0)),
+                [
+                    (float(point[0]), float(point[1]))
+                    for point in (
+                        road.get("waypoints") or [road.get("start"), road.get("end")]
+                    )
+                    if point
+                ],
+            )
+            for road in definition.get("roads") or []
+        ]
         layout_settlement(settlement, spec, mask, crown, settlement.seal)
 
     ring_boxes = [
         ring_box(settlement, TIER_SPECS[settlement.tier])
         for settlement in settlements
-        if settlement.palisade
+        if settlement.palisade and settlement.plan != "curtain"
     ]
-    moved_ramps = move_entrances_out_of_rings(terrain, ring_boxes)
+    moved_ramps = move_entrances_out_of_rings(
+        terrain, ring_boxes, terrace_features(settlements)
+    )
 
     result = validate(
         definition, settlements, max_player_homes, wall_budget, check_enclosure=True
@@ -1773,12 +2545,14 @@ def process_map(
         return False
 
     if write and not validate_only:
+        owned = {settlement.id for settlement in settlements}
         definition["structures"] = build_structures(
             settlements,
             [
                 entry
                 for entry in definition.get("structures") or []
-                if entry.get("landmark") is not None or entry.get("authored")
+                if entry.get("landmark") is not None
+                or (entry.get("authored") and entry.get("settlement") not in owned)
             ],
         )
         path.write_text(serialise_like(path, definition))

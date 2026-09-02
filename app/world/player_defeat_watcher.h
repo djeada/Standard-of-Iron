@@ -20,13 +20,15 @@ public:
   };
 
   using Announce = std::function<void(const Defeat&)>;
+  using StillExpected = std::function<bool(int owner_id)>;
 
   void reset();
 
   void update(Engine::Core::World& world,
               int local_owner_id,
               float dt_seconds,
-              const Announce& announce);
+              const Announce& announce,
+              const StillExpected& still_expected = {});
 
 private:
   struct OwnerState {

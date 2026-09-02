@@ -42,6 +42,40 @@ TEST(MapLoaderTest, ExpandsRiverWaypointsIntoAContinuousRuntimeChain) {
   EXPECT_FLOAT_EQ(map.rivers[0].width, 4.0F);
 }
 
+TEST(MapLoaderTest, ExpandsARingRiverIntoAClosedChainAroundItsCentre) {
+  QTemporaryFile temp_file;
+  ASSERT_TRUE(temp_file.open());
+
+  const QJsonObject moat{{"shape", "ring"},
+                         {"x", 40},
+                         {"z", 40},
+                         {"radius", 12.0},
+                         {"width", 5.0},
+                         {"segments", 24}};
+  const QJsonObject root{
+      {"name", "Moat Test"},
+      {"grid", QJsonObject{{"width", 81}, {"height", 81}, {"tile_size", 1.0}}},
+      {"rivers", QJsonArray{moat}}};
+  temp_file.write(QJsonDocument(root).toJson(QJsonDocument::Compact));
+  temp_file.flush();
+
+  Game::Map::MapDefinition map;
+  QString error;
+  ASSERT_TRUE(
+      Game::Map::MapLoader::load_from_json_file(temp_file.fileName(), map, &error))
+      << error.toStdString();
+  ASSERT_EQ(map.rivers.size(), 24U) << "one segment per authored step";
+  EXPECT_EQ(map.rivers.front().start, map.rivers.back().end) << "the ring closes";
+  for (std::size_t index = 1; index < map.rivers.size(); ++index) {
+    EXPECT_EQ(map.rivers[index - 1].end, map.rivers[index].start);
+  }
+  for (const auto& segment : map.rivers) {
+    EXPECT_FLOAT_EQ(segment.width, 5.0F);
+    EXPECT_NEAR(std::hypot(segment.start.x(), segment.start.z()), 12.0F, 0.01F)
+        << "every point stands on the authored radius about the map centre";
+  }
+}
+
 TEST(MapLoaderTest, ParsesUndeadZonesAndWaveSpawns) {
   QTemporaryFile temp_file;
   ASSERT_TRUE(temp_file.open());

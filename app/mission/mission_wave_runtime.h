@@ -49,6 +49,7 @@ public:
   }
   [[nodiscard]] auto status() const -> QVariantMap { return m_director.status(); }
   [[nodiscard]] auto has_waves() const -> bool { return !m_waves.empty(); }
+  [[nodiscard]] auto owner_has_unspawned_waves(int owner_id) const -> bool;
 
   void reset();
 

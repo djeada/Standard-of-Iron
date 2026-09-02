@@ -567,6 +567,17 @@ void Renderer::prewarm_unit_templates(
     }
   }
 
+  if (world_view().nations() != nullptr) {
+    for (const auto& [player_id, nation_id] :
+         world_view().nations()->player_nation_assignments()) {
+      if (world_view().nations()->get_nation(nation_id) == nullptr) {
+        continue;
+      }
+      add_owner(player_id);
+      active_nation_ids.insert(nation_id);
+    }
+  }
+
   if (owner_ids.empty() && world_view().owners() != nullptr) {
     const auto& owners = world_view().owners()->get_all_owners();
     for (const auto& owner : owners) {

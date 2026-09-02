@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include <map>
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
@@ -57,8 +58,7 @@ private:
   const char* m_gather_priority = nullptr;
   float m_gather_priority_time = -1000.0F;
 
-  int m_last_plan_slot = -1;
-  int m_last_plan_slot_repeats = 0;
+  std::map<int, int> m_plan_slot_orders;
   std::vector<int> m_blocked_plan_slots;
 
   struct WorkerWatch {

@@ -23,6 +23,7 @@
 #include "json_keys.h"
 #include "map/map_definition.h"
 #include "map/terrain.h"
+#include "river_geometry.h"
 #include "systems/resource_json.h"
 #include "systems/resource_types.h"
 #include "units/spawn_type.h"
@@ -825,6 +826,7 @@ void read_terrain(const QJsonArray& arr,
     feature.rotation_deg = float(terrain_obj.value("rotation").toDouble(0.0));
 
     if (feature.type == TerrainType::Hill) {
+      feature.crown = float(terrain_obj.value("crown").toDouble(0.0));
       const QString shape_str = terrain_obj.value("shape").toString();
       if (!shape_str.isEmpty() &&
           !parse_hill_shape(shape_str.toStdString(), feature.shape)) {
@@ -1023,13 +1025,32 @@ void read_rivers(const QJsonArray& arr,
       points.push_back(*point);
     };
 
-    append_point(point_to_world(river_obj.value("start")));
-    if (river_obj.value(ROAD_WAYPOINTS).isArray()) {
-      for (const auto waypoint : river_obj.value(ROAD_WAYPOINTS).toArray()) {
-        append_point(point_to_world(waypoint));
+    if (river_obj.value("shape").toString().compare(QStringLiteral("ring"),
+                                                    Qt::CaseInsensitive) == 0) {
+      const float radius = float(river_obj.value("radius").toDouble(0.0));
+      const RingRiver ring{
+          .center_x = float(river_obj.value(X).toDouble(0.0)),
+          .center_z = float(river_obj.value(Z).toDouble(0.0)),
+          .radius_x = radius,
+          .radius_z = float(river_obj.value("radius_z").toDouble(radius)),
+          .segments = river_obj.value("segments").toInt(k_ring_river_default_segments),
+      };
+      if (ring.radius_x <= 0.0F || ring.radius_z <= 0.0F) {
+        qWarning() << "MapLoader: ring river needs a positive radius - skipping";
+        continue;
       }
+      for (const auto& [px, pz] : ring_river_points(ring)) {
+        append_point(point_to_world(QJsonArray{px, pz}));
+      }
+    } else {
+      append_point(point_to_world(river_obj.value("start")));
+      if (river_obj.value(ROAD_WAYPOINTS).isArray()) {
+        for (const auto waypoint : river_obj.value(ROAD_WAYPOINTS).toArray()) {
+          append_point(point_to_world(waypoint));
+        }
+      }
+      append_point(point_to_world(river_obj.value("end")));
     }
-    append_point(point_to_world(river_obj.value("end")));
 
     if (points.size() < 2U) {
       qWarning() << "MapLoader: river needs at least two distinct points - skipping";

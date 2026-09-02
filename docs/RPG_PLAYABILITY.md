@@ -1131,6 +1131,59 @@ stashing the change and re-running.
   interpolation may not feed authoritative combat or navigation queries.
 - Run ASan/UBSan and the full normal suite before closing a milestone.
 
+## Play-through findings, 2 Sep 2026
+
+A scripted play session (Xephyr + XTEST, `hold_the_sallow_ford`) entered direct
+control from a live match and walked the menus around it. Xephyr renders through
+llvmpipe at under one frame per second, so every claim below was confirmed from a
+log trace or an offscreen QML render, not from a single screenshot. What it found,
+and what changed:
+
+- **Main menu keyboard died after any sub-screen.** Closing Campaign, Missions,
+  Skirmish, Save, Load, Settings, Objectives or Help with the mouse set
+  `menu_visible = true` while it already was, so `MainMenu.onVisibleChanged` never
+  fired and nothing held focus: Enter, Esc and the arrows were dead until the player
+  clicked. `Main.qml` now routes every return through `return_to_main_menu()`, which
+  forces focus back onto the menu.
+- **RTS cursor hints leaked into direct control.** The crosshair sat on the barracks
+  and the HUD read "No ground under the cursor". `OrdersViewModel::refresh_context_intent`
+  clears the intent while the commander is active.
+- **The commander bar clipped its own orders.** `Metrics.commanderBottomBarMinHeight`
+  was 96 px; the compact panel needs about 140 px, so "Place Rally" and "Command Aura"
+  were cut off at every resolution. The bar is now 148-176 px (still under the RTS
+  bar, which `tst_design_tokens` pins). Measured with a throwaway
+  `design_system_qml_tests` TestCase that renders `HUDBottomCommander` against a fake
+  `game` object; that is the fast loop for HUD layout.
+- **Paused in direct control, Space could not resume.** Space is dodge in the commander
+  context, `rts.pause` is RTS-only, and the overlay still said "Press Space to resume".
+  `GameView.Keys.onPressed` now lets the pause binding resume from any context while
+  the game is paused, and the overlay names the bound key.
+- **Enemy waves arrived without warmed creature assets.** The template prewarm only
+  warmed nations that already had a unit on the field, so a headless wave force
+  (Carthage in the Roman ford mission) hit 565 `creature_submit_miss` criticals and
+  drew nothing until something else loaded it. The runner now also warms every nation
+  in `NationRegistry::player_nation_assignments()`. Zero criticals after the fix.
+- **"Carthaginian Empire has been defeated" between waves.** `PlayerDefeatWatcher`
+  announced any side with no living unit; wave forces have none between waves.
+  `GameEngine` now passes `MissionWaveRuntime::owner_has_unspawned_waves` as a
+  `still_expected` predicate, with a regression in `player_defeat_watcher_test`.
+- **The defeat toast printed `qrc:/assets/visuals/icons/defeated.png`.**
+  `IronNotification.icon` is a glyph string drawn in a `Text`; `Main.qml` handed it an
+  image path. It now passes a glyph.
+- **Raw nation id in the commander panel.** "roman_republic" under the commander's
+  name; the panel now uses `Design.FactionTheme.nameFor`.
+- **Mission orders spoken by a stranger.** `hold_the_sallow_ford` and
+  `the_timber_levy` voiced their messages as `roman_legion_organizer` while the map
+  fields `roman_field_commander`; the setup coordinator warned about it every launch.
+  Both missions now speak through the commander the player controls.
+
+Still open from the same session: the autosave progress card (with a Cancel button)
+pops over the battlefield mid-fight; moving the pointer to a top-bar button swings the
+commander camera because mouse-look keeps tracking; and the empty production panel's
+"No Barracks" headline reads as "you have none" when it means "none selected". `C`
+(camera mode) and `X` (weapon stance) both work, but only the stance shows feedback
+("BOW · X" / "BLADE · X" over the ability tiles); the camera toggle is silent.
+
 ## Related
 
 - `docs/CAMERA_CONTROLS.md` -- the RTS camera this mode borrows from.

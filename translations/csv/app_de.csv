@@ -1101,7 +1101,7 @@
 "Workers are valuable strategic assets. Do not leave them exposed near the front.","Arbeiter sind wertvolle strategische Mittel. Lass sie nicht ungeschützt nahe der Front."
 "A new standard in the valley, and nobody under it who has held a spear more than twice.","Ein neues Feldzeichen im Tal, und niemand darunter, der schon mehr als zweimal einen Speer gehalten hat."
 "PAUSED","PAUSIERT"
-"Press Space to resume","Leertaste drücken, um fortzufahren"
+"Press %1 to resume","%1 drücken, um fortzufahren"
 "Error","Fehler"
 "Standard of Iron - RTS game","Standard of Iron - Echtzeitstrategie"
 "STANDARD OF IRON","STANDARD OF IRON"

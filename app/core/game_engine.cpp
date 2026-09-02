@@ -878,7 +878,10 @@ void GameEngine::announce_player_defeats(float dt) {
   }
 
   m_player_defeat_watcher.update(
-      *m_world, m_runtime.local_owner_id, dt, [this](const auto& defeat) {
+      *m_world,
+      m_runtime.local_owner_id,
+      dt,
+      [this](const auto& defeat) {
         QString text;
         if (defeat.commander_name.isEmpty()) {
           text = defeat.ally
@@ -892,6 +895,9 @@ void GameEngine::announce_player_defeats(float dt) {
                      .arg(defeat.owner_name, defeat.commander_name);
         }
         emit player_defeated(text, defeat.ally, defeat.owner_id);
+      },
+      [this](int owner_id) {
+        return m_mission_waves.owner_has_unspawned_waves(owner_id);
       });
 }
 

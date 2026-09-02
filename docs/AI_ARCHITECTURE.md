@@ -639,8 +639,57 @@ stalling on step one. Offsets are metres in the settlement's own frame with
 what keeps a wall line between the homes and the threat rather than behind them.
 
 Buildings must be named as the construction catalog names them (`home`,
-`barracks`, `defense_tower`, `wall_segment`, `marketplace`, `catapult`); an
-unknown name is skipped with a warning.
+`barracks`, `defense_tower`, `wall_segment`, `wall_gate`, `marketplace`,
+`catapult`, `ballista`); an unknown name is skipped with a warning.
+
+The file is generated: `scripts/generate-town-plans.py --write` lays out six
+blueprints, one per commander, in the way Stronghold gives each lord a castle
+of his own, and rasterises their walls onto the 2 m lattice with the gates cut
+and the front wall ordered first:
+
+| Plan                 | Commander                | Shape                                                                             |
+| -------------------- | ------------------------ | --------------------------------------------------------------------------------- |
+| `fabian_bulwark`     | roman_veteran_consul     | 22x18 outer rectangle round a 12x10 keep, five towers, three gates, two ballistae |
+| `consular_star`      | roman_legion_organizer   | bastioned trace, curtain 15x13, four towers, two gates, two catapults             |
+| `vanguard_chevron`   | roman_field_commander    | an open V of wall toward the enemy, three barracks behind it, no ring             |
+| `punic_ring_town`    | carthage_bow_commander   | 19x17 oval, six towers on the ring, two gates, a ballista                         |
+| `barcid_raider_camp` | carthage_sword_commander | no walls: three barracks and three towers, a camp that fights in the field        |
+| `hannibalic_hexagon` | carthage_spear_commander | hexagon with a flat side to the enemy, six towers, two gates, barracks outside it |
+
+`Blueprint.add` nudges a building off the 9 m anchor circle, off other
+buildings and off the wall lines (a gate reaches 4.5 m either side), so a plan
+never asks for a slot the builder cannot fill. Plans are capped at 128 wall
+links, 12 towers, 12 homes and 4 gates, the builder's own ceilings.
+
+How the builder walks a plan (`behaviors/builder_behavior.cpp`), and why:
+
+- **Four roofs before the castle.** `raise_homes_first` outranks the plan until
+  four homes stand; before that a walled commander spent its whole opening on
+  palisade and never grew the population to man it.
+- **Saving for the expensive step.** When the next unbuilt plan step is a gate
+  or a tower and cannot be afforded, cheaper wall links behind it in the plan
+  are not bought either - otherwise 2-wood links starved the gate forever and
+  the ring closed without a way out. Homes and economy keep going.
+- **Planned wood.** The wood the remaining wall links will cost (capped at 700)
+  is added to the wood stockpile target, and the reasoner asks for one more
+  builder per 24 wall steps, so a castle plan changes what the economy gathers,
+  not only what it builds.
+- **A slot gives up.** Each plan slot is ordered at most four times per
+  building count; a slot the world refuses (terrain, a unit standing on it) is
+  skipped until something else gets built, instead of the builder cycling on it
+  while the rest of the town waits.
+- **Slot clearance.** A wall link's slot counts as filled by a wall within
+  1.45 m (the lattice pitch is 2 m; 1.0 m let two links stack on one cell) and a
+  gate's by anything within its 4.5 m half span.
+- The gate exists at all since 2 Sep 2026: `production_system.cpp` spawned the
+  `wall_gate` product as a plain wall segment before, so no AI town ever had a
+  way out of its own ring.
+
+`tests/headless/ai_town_plan_test.cpp` raises every commander's town from an
+empty field and, in `AWalledCommanderClosesItsCircuitGivenTime`, gives Fabius,
+Scipio and Hannibal fifty minutes and expects at least 15% of the plan's links,
+three towers and a gate. `SOI_TOWN_MAP=1` makes that test print an ASCII map of
+what stood; `SOI_BUILD_TRACE=1` traces each build order and its verdict.
 
 ### Attack waves
 

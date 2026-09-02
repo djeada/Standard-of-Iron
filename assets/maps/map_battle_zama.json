@@ -765,8 +765,8 @@
         },
         {
             "end": [
-                436,
-                172
+                636,
+                332
             ],
             "start": [
                 180,
@@ -779,244 +779,186 @@
                     372
                 ],
                 [
-                    193.47,
-                    361.47
+                    196.6957,
+                    367.0435
                 ],
                 [
-                    206.95000000000002,
-                    350.95
+                    213.3913,
+                    362.087
                 ],
                 [
-                    220.42000000000002,
-                    340.42
+                    230.087,
+                    357.1304
                 ],
                 [
-                    233.89000000000001,
-                    329.89
+                    246.7826,
+                    352.1739
                 ],
                 [
-                    247.37,
-                    319.37
+                    263.4783,
+                    347.2174
                 ],
                 [
-                    260.84000000000003,
-                    308.84000000000003
+                    280.1739,
+                    342.2609
                 ],
                 [
-                    274.32,
-                    298.32
+                    296.8696,
+                    337.3043
                 ],
                 [
-                    287.79,
-                    287.79
+                    313.5652,
+                    332.3478
                 ],
                 [
-                    301.26,
-                    277.26
+                    330.2609,
+                    327.3913
                 ],
                 [
-                    314.74,
-                    266.74
+                    346.9565,
+                    322.4348
                 ],
                 [
-                    328.21,
-                    256.21
+                    363.6522,
+                    317.4783
                 ],
                 [
-                    341.68,
-                    245.68
+                    380.3478,
+                    312.5217
                 ],
                 [
-                    355.16,
-                    235.16
+                    397.0435,
+                    307.5652
                 ],
                 [
-                    368.63,
-                    224.63
+                    413.7391,
+                    302.6087
                 ],
                 [
-                    382.11,
-                    214.11
+                    430.4348,
+                    297.6522
                 ],
                 [
-                    395.58,
-                    203.58
+                    447.1304,
+                    292.6957
                 ],
                 [
-                    409.05,
-                    193.05
+                    463.8261,
+                    287.7391
                 ],
                 [
-                    422.53000000000003,
-                    182.53
+                    480.5217,
+                    282.7826
                 ],
                 [
-                    436,
-                    172
+                    497.2174,
+                    277.8261
+                ],
+                [
+                    513.913,
+                    272.8696
+                ],
+                [
+                    530.6087,
+                    267.913
+                ],
+                [
+                    547.3043,
+                    262.9565
+                ],
+                [
+                    564,
+                    258
+                ],
+                [
+                    575.2,
+                    258
+                ],
+                [
+                    586.4,
+                    258
+                ],
+                [
+                    592.4931,
+                    260.597
+                ],
+                [
+                    602,
+                    270.5
+                ],
+                [
+                    611.5069,
+                    280.403
+                ],
+                [
+                    615.4745,
+                    286.2842
+                ],
+                [
+                    622.3164,
+                    301.5228
+                ],
+                [
+                    629.1582,
+                    316.7614
+                ],
+                [
+                    636,
+                    332
                 ]
             ],
             "width": 4.8
         },
         {
             "end": [
-                636,
-                396
-            ],
-            "start": [
-                436,
-                172
-            ],
-            "style": "default",
-            "waypoints": [
-                [
-                    436,
-                    172
-                ],
-                [
-                    444.28000000000003,
-                    186.96
-                ],
-                [
-                    452.57,
-                    201.93
-                ],
-                [
-                    460.85,
-                    216.89000000000001
-                ],
-                [
-                    469.13,
-                    231.85
-                ],
-                [
-                    477.41,
-                    246.81
-                ],
-                [
-                    485.7,
-                    261.78000000000003
-                ],
-                [
-                    493.98,
-                    276.74
-                ],
-                [
-                    502.26,
-                    291.7
-                ],
-                [
-                    510.55,
-                    306.66
-                ],
-                [
-                    518.83,
-                    321.63
-                ],
-                [
-                    527.11,
-                    336.59000000000003
-                ],
-                [
-                    531.95,
-                    342.55
-                ],
-                [
-                    540,
-                    349.5
-                ],
-                [
-                    548.0500000000001,
-                    356.45
-                ],
-                [
-                    554.58,
-                    360.56
-                ],
-                [
-                    570.86,
-                    367.65000000000003
-                ],
-                [
-                    587.15,
-                    374.73
-                ],
-                [
-                    603.4300000000001,
-                    381.82
-                ],
-                [
-                    619.72,
-                    388.91
-                ],
-                [
-                    636,
-                    396
-                ]
-            ],
-            "width": 5.2
-        },
-        {
-            "end": [
-                712,
-                196
+                706,
+                218
             ],
             "start": [
                 636,
-                396
+                332
             ],
             "style": "default",
             "waypoints": [
                 [
                     636,
-                    396
+                    332
                 ],
                 [
-                    642.33,
-                    379.33
+                    644.4444,
+                    316.8889
                 ],
                 [
-                    648.67,
-                    362.67
+                    652.8889,
+                    301.7778
                 ],
                 [
-                    655,
-                    346
+                    661.3333,
+                    286.6667
                 ],
                 [
-                    661.33,
-                    329.33
+                    669.7778,
+                    271.5556
                 ],
                 [
-                    667.67,
-                    312.67
+                    678.2222,
+                    256.4444
                 ],
                 [
-                    674,
-                    296
+                    686.6667,
+                    241.3333
                 ],
                 [
-                    680.33,
-                    279.33
+                    695.1111,
+                    226.2222
                 ],
                 [
-                    686.67,
-                    262.67
+                    703.5556,
+                    211.1111
                 ],
                 [
-                    693,
-                    246
-                ],
-                [
-                    699.33,
-                    229.33
-                ],
-                [
-                    705.67,
-                    212.67000000000002
-                ],
-                [
-                    712,
-                    196
+                    706,
+                    218
                 ]
             ],
             "width": 4.4
@@ -1027,34 +969,34 @@
                 168
             ],
             "start": [
-                712,
-                196
+                706,
+                218
             ],
             "style": "default",
             "waypoints": [
                 [
-                    712,
-                    196
+                    706,
+                    218
                 ],
                 [
-                    726.33,
-                    191.33
+                    721.3333,
+                    209.6667
                 ],
                 [
-                    740.67,
-                    186.67000000000002
+                    736.6667,
+                    201.3333
                 ],
                 [
-                    755,
-                    182
+                    752,
+                    193
                 ],
                 [
-                    769.33,
-                    177.33
+                    767.3333,
+                    184.6667
                 ],
                 [
-                    783.6700000000001,
-                    172.67000000000002
+                    782.6667,
+                    176.3333
                 ],
                 [
                     798,
@@ -1070,49 +1012,57 @@
             ],
             "start": [
                 636,
-                396
+                332
             ],
             "style": "default",
             "waypoints": [
                 [
                     636,
-                    396
+                    332
                 ],
                 [
-                    652.2,
-                    398.40000000000003
+                    652.3506,
+                    332.4542
                 ],
                 [
-                    668.4,
-                    400.8
+                    668.7013,
+                    332.9084
                 ],
                 [
-                    684.6,
-                    403.2
+                    674.7156,
+                    334.875
                 ],
                 [
-                    700.8000000000001,
-                    405.6
+                    688.4138,
+                    344.3334
                 ],
                 [
-                    717,
-                    408
+                    702.1121,
+                    353.7917
                 ],
                 [
-                    733.2,
-                    410.40000000000003
+                    715.8104,
+                    363.25
                 ],
                 [
-                    749.4,
-                    412.8
+                    729.5086,
+                    372.7083
                 ],
                 [
-                    765.6,
-                    415.2
+                    743.2069,
+                    382.1667
                 ],
                 [
-                    781.8000000000001,
-                    417.6
+                    756.9052,
+                    391.625
+                ],
+                [
+                    770.6035,
+                    401.0833
+                ],
+                [
+                    784.3017,
+                    410.5417
                 ],
                 [
                     798,
@@ -1255,82 +1205,54 @@
         },
         {
             "end": [
-                712,
-                196
+                706,
+                218
             ],
             "start": [
-                436,
-                172
+                636,
+                332
             ],
             "style": "default",
             "waypoints": [
                 [
-                    436,
-                    172
+                    636,
+                    332
                 ],
                 [
-                    453.25,
-                    173.5
+                    644.4444,
+                    316.8889
                 ],
                 [
-                    470.5,
-                    175
+                    652.8889,
+                    301.7778
                 ],
                 [
-                    487.75,
-                    176.5
+                    661.3333,
+                    286.6667
                 ],
                 [
-                    505,
-                    178
+                    669.7778,
+                    271.5556
                 ],
                 [
-                    522.25,
-                    179.5
+                    678.2222,
+                    256.4444
                 ],
                 [
-                    539.5,
-                    181
+                    686.6667,
+                    241.3333
                 ],
                 [
-                    556.75,
-                    182.5
+                    695.1111,
+                    226.2222
                 ],
                 [
-                    574,
-                    184
+                    703.5556,
+                    211.1111
                 ],
                 [
-                    591.25,
-                    185.5
-                ],
-                [
-                    608.5,
-                    187
-                ],
-                [
-                    625.75,
-                    188.5
-                ],
-                [
-                    643,
-                    190
-                ],
-                [
-                    660.25,
-                    191.5
-                ],
-                [
-                    677.5,
-                    193
-                ],
-                [
-                    694.75,
-                    194.5
-                ],
-                [
-                    712,
-                    196
+                    706,
+                    218
                 ]
             ],
             "width": 3.6
@@ -1591,42 +1513,6 @@
         },
         {
             "end": [
-                621,
-                413
-            ],
-            "start": [
-                617,
-                424
-            ],
-            "style": "default",
-            "width": 3
-        },
-        {
-            "end": [
-                635,
-                397
-            ],
-            "start": [
-                622,
-                412
-            ],
-            "style": "default",
-            "width": 3
-        },
-        {
-            "end": [
-                605,
-                452
-            ],
-            "start": [
-                618,
-                425
-            ],
-            "style": "default",
-            "width": 3
-        },
-        {
-            "end": [
                 594,
                 463
             ],
@@ -1667,22 +1553,46 @@
             "z": 374
         },
         {
-            "authored": true,
             "facing": "west",
+            "grow_hill": false,
             "id": "zama_scipio_town",
             "max_population": 75,
             "nation": "roman_republic",
+            "on_hill": true,
+            "plan": "star",
+            "plan_options": {
+                "bastion": 8,
+                "flank": 5,
+                "points": 4,
+                "size": [
+                    16,
+                    13
+                ]
+            },
             "player_id": 2,
             "tier": "town",
             "x": 636,
             "z": 396
         },
         {
-            "authored": true,
             "facing": "south",
             "id": "zama_numidian_camp",
             "max_population": 170,
             "nation": "roman_republic",
+            "plan": "circle",
+            "plan_options": {
+                "gates": [
+                    [
+                        706,
+                        213
+                    ]
+                ],
+                "size": [
+                    26,
+                    24
+                ],
+                "towers": 6
+            },
             "player_id": 3,
             "tier": "fortified_camp",
             "x": 712,
@@ -1700,11 +1610,23 @@
             "z": 636
         },
         {
-            "authored": true,
             "facing": "south",
+            "grow_hill": false,
             "id": "zama_north_camp",
             "max_population": 170,
             "nation": "roman_republic",
+            "on_hill": true,
+            "plan": "terraced",
+            "plan_options": {
+                "inner": [
+                    13,
+                    11
+                ],
+                "size": [
+                    40,
+                    34
+                ]
+            },
             "player_id": 5,
             "tier": "fortified_camp",
             "x": 436,
@@ -1975,43 +1897,43 @@
             "max_population": -1,
             "player_id": 2,
             "type": "swordsman",
-            "x": 593.99,
-            "z": 342.39
+            "x": 587.52,
+            "z": 334.14
         },
         {
             "max_population": -1,
             "player_id": 2,
             "type": "swordsman",
-            "x": 599,
-            "z": 378.87
+            "x": 559.51,
+            "z": 360.59
         },
         {
             "max_population": -1,
             "player_id": 2,
             "type": "swordsman",
-            "x": 599,
-            "z": 415.36
+            "x": 561.79,
+            "z": 434.83
         },
         {
             "max_population": -1,
             "player_id": 2,
             "type": "swordsman",
-            "x": 593.99,
-            "z": 451.84000000000003
+            "x": 588.88,
+            "z": 458.63
         },
         {
             "max_population": -1,
             "player_id": 2,
             "type": "spearman",
-            "x": 614.03,
-            "z": 364.28000000000003
+            "x": 591.62,
+            "z": 331.92
         },
         {
             "max_population": -1,
             "player_id": 2,
             "type": "spearman",
-            "x": 614.03,
-            "z": 429.95
+            "x": 593.83,
+            "z": 461.17
         },
         {
             "max_population": -1,
@@ -2024,8 +1946,8 @@
             "max_population": -1,
             "player_id": 2,
             "type": "horse_swordsman",
-            "x": 498.81,
-            "z": 211.05
+            "x": 511.69,
+            "z": 219.06
         },
         {
             "max_population": -1,
@@ -2080,21 +2002,21 @@
             "max_population": -1,
             "player_id": 2,
             "type": "spearman",
-            "x": 634.0600000000001,
-            "z": 364.28000000000003
+            "x": 631.45,
+            "z": 321.58
         },
         {
             "max_population": -1,
             "player_id": 2,
             "type": "spearman",
-            "x": 634.0600000000001,
-            "z": 429.95
+            "x": 631.75,
+            "z": 470.43
         },
         {
             "max_population": -1,
             "player_id": 2,
             "type": "archer",
-            "x": 651.6,
+            "x": 644.5,
             "z": 393.47
         },
         {
@@ -2210,6 +2132,436 @@
     },
     "structures": [
         {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 2,
+            "rotation": 0.0,
+            "settlement": "zama_scipio_town",
+            "type": "wall_gate",
+            "x": 636.0,
+            "z": 384.0
+        },
+        {
+            "authored": true,
+            "max_population": 75,
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "zama_scipio_town",
+            "type": "barracks",
+            "x": 638.12,
+            "z": 392.12
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "zama_scipio_town",
+            "type": "marketplace",
+            "x": 636.0,
+            "z": 402.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "zama_scipio_town",
+            "type": "temple",
+            "x": 627.0,
+            "z": 396.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "zama_scipio_town",
+            "type": "home",
+            "x": 630.0,
+            "z": 390.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "zama_scipio_town",
+            "type": "home",
+            "x": 630.0,
+            "z": 402.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "zama_scipio_town",
+            "type": "home",
+            "x": 642.0,
+            "z": 402.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "zama_scipio_town",
+            "type": "home",
+            "x": 624.0,
+            "z": 390.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "zama_scipio_town",
+            "type": "home",
+            "x": 624.0,
+            "z": 402.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "zama_scipio_town",
+            "type": "defense_tower",
+            "x": 646.1,
+            "z": 389.78
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "rotation": 0.0,
+            "settlement": "zama_numidian_camp",
+            "type": "wall_gate",
+            "x": 706.0,
+            "z": 218.0
+        },
+        {
+            "authored": true,
+            "max_population": 170,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "zama_numidian_camp",
+            "type": "barracks",
+            "x": 712.0,
+            "z": 190.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "zama_numidian_camp",
+            "type": "marketplace",
+            "x": 712.0,
+            "z": 202.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "zama_numidian_camp",
+            "type": "home",
+            "x": 706.0,
+            "z": 184.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "zama_numidian_camp",
+            "type": "home",
+            "x": 718.0,
+            "z": 184.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "zama_numidian_camp",
+            "type": "home",
+            "x": 700.0,
+            "z": 190.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "zama_numidian_camp",
+            "type": "home",
+            "x": 724.0,
+            "z": 190.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "zama_numidian_camp",
+            "type": "home",
+            "x": 700.0,
+            "z": 202.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "zama_numidian_camp",
+            "type": "home",
+            "x": 724.0,
+            "z": 202.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "zama_numidian_camp",
+            "type": "home",
+            "x": 700.0,
+            "z": 184.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "zama_numidian_camp",
+            "type": "home",
+            "x": 724.0,
+            "z": 184.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "zama_numidian_camp",
+            "type": "home",
+            "x": 694.0,
+            "z": 190.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "zama_numidian_camp",
+            "type": "home",
+            "x": 730.0,
+            "z": 190.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "zama_numidian_camp",
+            "type": "home",
+            "x": 694.0,
+            "z": 202.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "zama_numidian_camp",
+            "type": "home",
+            "x": 700.0,
+            "z": 208.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "zama_numidian_camp",
+            "type": "defense_tower",
+            "x": 722.61,
+            "z": 213.68
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "zama_numidian_camp",
+            "type": "defense_tower",
+            "x": 708.86,
+            "z": 208.81
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "zama_numidian_camp",
+            "type": "defense_tower",
+            "x": 694.01,
+            "z": 195.37
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "zama_numidian_camp",
+            "type": "defense_tower",
+            "x": 701.39,
+            "z": 178.32
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "zama_numidian_camp",
+            "type": "defense_tower",
+            "x": 717.44,
+            "z": 177.65
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "zama_numidian_camp",
+            "type": "defense_tower",
+            "x": 732.28,
+            "z": 197.08
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 5,
+            "rotation": 0.0,
+            "settlement": "zama_north_camp",
+            "type": "wall_gate",
+            "x": 444.0,
+            "z": 204.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 5,
+            "rotation": 0.0,
+            "settlement": "zama_north_camp",
+            "type": "wall_gate",
+            "x": 436.0,
+            "z": 182.0
+        },
+        {
+            "authored": true,
+            "max_population": 170,
+            "nation": "roman_republic",
+            "player_id": 5,
+            "settlement": "zama_north_camp",
+            "type": "barracks",
+            "x": 436.0,
+            "z": 172.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 5,
+            "settlement": "zama_north_camp",
+            "type": "marketplace",
+            "x": 463.54,
+            "z": 180.9
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 5,
+            "settlement": "zama_north_camp",
+            "type": "home",
+            "x": 406.0,
+            "z": 166.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 5,
+            "settlement": "zama_north_camp",
+            "type": "home",
+            "x": 466.0,
+            "z": 166.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 5,
+            "settlement": "zama_north_camp",
+            "type": "home",
+            "x": 406.0,
+            "z": 178.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 5,
+            "settlement": "zama_north_camp",
+            "type": "home",
+            "x": 406.0,
+            "z": 160.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 5,
+            "settlement": "zama_north_camp",
+            "type": "home",
+            "x": 466.0,
+            "z": 160.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 5,
+            "settlement": "zama_north_camp",
+            "type": "home",
+            "x": 406.0,
+            "z": 184.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 5,
+            "settlement": "zama_north_camp",
+            "type": "defense_tower",
+            "x": 460.75,
+            "z": 192.51
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 5,
+            "settlement": "zama_north_camp",
+            "type": "defense_tower",
+            "x": 411.25,
+            "z": 192.51
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 5,
+            "settlement": "zama_north_camp",
+            "type": "defense_tower",
+            "x": 411.25,
+            "z": 151.49
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 5,
+            "settlement": "zama_north_camp",
+            "type": "defense_tower",
+            "x": 460.75,
+            "z": 151.49
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 5,
+            "settlement": "zama_north_camp",
+            "type": "defense_tower",
+            "x": 446.0,
+            "z": 172.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 5,
+            "settlement": "zama_north_camp",
+            "type": "defense_tower",
+            "x": 426.0,
+            "z": 172.0
+        },
+        {
             "landmark": "zama_west_sanctuary",
             "nation": "carthage",
             "type": "temple",
@@ -2239,351 +2591,6 @@
             "type": "home",
             "x": 194.1,
             "z": 383.6
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 2,
-            "rotation": 0,
-            "type": "wall_gate",
-            "x": 646,
-            "z": 368
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 2,
-            "rotation": 90,
-            "type": "wall_gate",
-            "x": 670,
-            "z": 402
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 2,
-            "rotation": 0,
-            "type": "wall_gate",
-            "x": 616,
-            "z": 424
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 2,
-            "rotation": 90,
-            "type": "wall_gate",
-            "x": 602,
-            "z": 382
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 2,
-            "type": "defense_tower",
-            "x": 602,
-            "z": 368
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 2,
-            "type": "defense_tower",
-            "x": 670,
-            "z": 368
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 2,
-            "type": "defense_tower",
-            "x": 670,
-            "z": 424
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 2,
-            "type": "defense_tower",
-            "x": 602,
-            "z": 424
-        },
-        {
-            "authored": true,
-            "max_population": 75,
-            "nation": "roman_republic",
-            "player_id": 2,
-            "type": "barracks",
-            "x": 634.38,
-            "z": 379.98
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 2,
-            "type": "marketplace",
-            "x": 626.8000000000001,
-            "z": 397.73
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 2,
-            "type": "temple",
-            "x": 646.2,
-            "z": 392
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 2,
-            "type": "home",
-            "x": 615.6,
-            "z": 405.8
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 2,
-            "type": "home",
-            "x": 624.04,
-            "z": 403.8
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 2,
-            "type": "home",
-            "x": 644.5,
-            "z": 405.8
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 2,
-            "type": "home",
-            "x": 656.4,
-            "z": 405.8
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 2,
-            "type": "home",
-            "x": 615.6,
-            "z": 413.36
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 2,
-            "type": "home",
-            "x": 629.23,
-            "z": 414.36
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 2,
-            "type": "home",
-            "x": 644.5,
-            "z": 413.36
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 2,
-            "type": "home",
-            "x": 656.4,
-            "z": 413.36
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 3,
-            "rotation": 90,
-            "type": "wall_gate",
-            "x": 738,
-            "z": 190
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 3,
-            "rotation": 0,
-            "type": "wall_gate",
-            "x": 704,
-            "z": 220
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 3,
-            "rotation": 90,
-            "type": "wall_gate",
-            "x": 686,
-            "z": 194
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 3,
-            "type": "defense_tower",
-            "x": 696,
-            "z": 172
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 3,
-            "type": "defense_tower",
-            "x": 728,
-            "z": 172
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 3,
-            "type": "defense_tower",
-            "x": 728,
-            "z": 182
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 3,
-            "type": "defense_tower",
-            "x": 738,
-            "z": 182
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 3,
-            "type": "defense_tower",
-            "x": 738,
-            "z": 210
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 3,
-            "type": "defense_tower",
-            "x": 728,
-            "z": 210
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 3,
-            "type": "defense_tower",
-            "x": 728,
-            "z": 220
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 3,
-            "type": "defense_tower",
-            "x": 696,
-            "z": 220
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 3,
-            "type": "defense_tower",
-            "x": 696,
-            "z": 210
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 3,
-            "type": "defense_tower",
-            "x": 686,
-            "z": 210
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 3,
-            "type": "defense_tower",
-            "x": 686,
-            "z": 182
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 3,
-            "type": "defense_tower",
-            "x": 696,
-            "z": 182
-        },
-        {
-            "authored": true,
-            "max_population": 60,
-            "nation": "roman_republic",
-            "player_id": 3,
-            "type": "barracks",
-            "x": 712,
-            "z": 190
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 3,
-            "type": "home",
-            "x": 726.37,
-            "z": 201.61
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 3,
-            "type": "home",
-            "x": 716.21,
-            "z": 209.87
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 3,
-            "type": "home",
-            "x": 701.15,
-            "z": 208.68
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 3,
-            "type": "home",
-            "x": 698.42,
-            "z": 200.16
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 3,
-            "type": "home",
-            "x": 701.69,
-            "z": 185.19
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 3,
-            "type": "home",
-            "x": 714.73,
-            "z": 181.82
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 3,
-            "type": "home",
-            "x": 722.25,
-            "z": 187.13
         },
         {
             "authored": true,
@@ -2679,423 +2686,1683 @@
         },
         {
             "authored": true,
-            "nation": "roman_republic",
-            "player_id": 5,
-            "rotation": 90,
-            "type": "wall_gate",
-            "x": 460,
-            "z": 174
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 5,
-            "rotation": 0,
-            "type": "wall_gate",
-            "x": 446,
-            "z": 190
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 5,
-            "type": "defense_tower",
-            "x": 412,
-            "z": 154
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 5,
-            "type": "defense_tower",
-            "x": 460,
-            "z": 154
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 5,
-            "type": "defense_tower",
-            "x": 460,
-            "z": 190
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 5,
-            "type": "defense_tower",
-            "x": 417.08,
-            "z": 180.88
-        },
-        {
-            "authored": true,
-            "max_population": 60,
-            "nation": "roman_republic",
-            "player_id": 5,
-            "type": "barracks",
-            "x": 432.83,
-            "z": 183.26
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 5,
-            "type": "marketplace",
-            "x": 451,
-            "z": 179
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 5,
-            "type": "home",
-            "x": 418.14,
-            "z": 178.1
-        },
-        {
-            "authored": true,
             "end": [
-                642,
-                368
+                618.0,
+                380.0
             ],
             "nation": "roman_republic",
             "player_id": 2,
+            "settlement": "zama_scipio_town",
             "start": [
-                602,
-                368
+                616.0,
+                380.0
             ],
             "type": "wall_segment",
-            "width": 2
+            "width": 2.0
         },
         {
             "authored": true,
             "end": [
-                670,
-                368
+                654.0,
+                384.0
             ],
             "nation": "roman_republic",
             "player_id": 2,
+            "settlement": "zama_scipio_town",
             "start": [
-                650,
-                368
+                654.0,
+                380.0
             ],
             "type": "wall_segment",
-            "width": 2
+            "width": 2.0
         },
         {
             "authored": true,
             "end": [
-                670,
-                398
+                656.0,
+                380.0
             ],
             "nation": "roman_republic",
             "player_id": 2,
+            "settlement": "zama_scipio_town",
             "start": [
-                670,
-                368
+                656.0,
+                380.0
             ],
             "type": "wall_segment",
-            "width": 2
+            "width": 2.0
         },
         {
             "authored": true,
             "end": [
-                670,
-                424
+                622.0,
+                382.0
             ],
             "nation": "roman_republic",
             "player_id": 2,
+            "settlement": "zama_scipio_town",
             "start": [
-                670,
-                406
+                618.0,
+                382.0
             ],
             "type": "wall_segment",
-            "width": 2
+            "width": 2.0
         },
         {
             "authored": true,
             "end": [
-                612,
-                424
+                650.0,
+                410.0
             ],
             "nation": "roman_republic",
             "player_id": 2,
+            "settlement": "zama_scipio_town",
             "start": [
-                602,
-                424
+                650.0,
+                382.0
             ],
             "type": "wall_segment",
-            "width": 2
+            "width": 2.0
         },
         {
             "authored": true,
             "end": [
-                670,
-                424
+                652.0,
+                386.0
             ],
             "nation": "roman_republic",
             "player_id": 2,
+            "settlement": "zama_scipio_town",
             "start": [
-                620,
-                424
+                652.0,
+                382.0
             ],
             "type": "wall_segment",
-            "width": 2
+            "width": 2.0
         },
         {
             "authored": true,
             "end": [
-                602,
-                378
+                620.0,
+                410.0
             ],
             "nation": "roman_republic",
             "player_id": 2,
+            "settlement": "zama_scipio_town",
             "start": [
-                602,
-                368
+                620.0,
+                386.0
             ],
             "type": "wall_segment",
-            "width": 2
+            "width": 2.0
         },
         {
             "authored": true,
             "end": [
-                602,
-                424
+                652.0,
+                410.0
             ],
             "nation": "roman_republic",
             "player_id": 2,
+            "settlement": "zama_scipio_town",
             "start": [
-                602,
-                386
+                652.0,
+                406.0
             ],
             "type": "wall_segment",
-            "width": 2
+            "width": 2.0
         },
         {
             "authored": true,
             "end": [
-                728,
-                172
+                618.0,
+                412.0
             ],
             "nation": "roman_republic",
-            "player_id": 3,
+            "player_id": 2,
+            "settlement": "zama_scipio_town",
             "start": [
-                696,
-                172
+                618.0,
+                408.0
             ],
             "type": "wall_segment",
-            "width": 2
+            "width": 2.0
         },
         {
             "authored": true,
             "end": [
-                728,
-                182
+                648.0,
+                408.0
             ],
             "nation": "roman_republic",
-            "player_id": 3,
+            "player_id": 2,
+            "settlement": "zama_scipio_town",
             "start": [
-                728,
-                172
+                622.0,
+                408.0
             ],
             "type": "wall_segment",
-            "width": 2
+            "width": 2.0
         },
         {
             "authored": true,
             "end": [
-                738,
-                182
+                654.0,
+                412.0
             ],
             "nation": "roman_republic",
-            "player_id": 3,
+            "player_id": 2,
+            "settlement": "zama_scipio_town",
             "start": [
-                728,
-                182
+                654.0,
+                408.0
             ],
             "type": "wall_segment",
-            "width": 2
+            "width": 2.0
         },
         {
             "authored": true,
             "end": [
-                738,
-                186
+                622.0,
+                410.0
             ],
             "nation": "roman_republic",
-            "player_id": 3,
+            "player_id": 2,
+            "settlement": "zama_scipio_town",
             "start": [
-                738,
-                182
+                622.0,
+                410.0
             ],
             "type": "wall_segment",
-            "width": 2
+            "width": 2.0
         },
         {
             "authored": true,
             "end": [
-                738,
-                210
+                616.0,
+                412.0
             ],
             "nation": "roman_republic",
-            "player_id": 3,
+            "player_id": 2,
+            "settlement": "zama_scipio_town",
             "start": [
-                738,
-                194
+                616.0,
+                412.0
             ],
             "type": "wall_segment",
-            "width": 2
+            "width": 2.0
         },
         {
             "authored": true,
             "end": [
-                738,
-                210
+                656.0,
+                412.0
             ],
             "nation": "roman_republic",
-            "player_id": 3,
+            "player_id": 2,
+            "settlement": "zama_scipio_town",
             "start": [
-                728,
-                210
+                656.0,
+                412.0
             ],
             "type": "wall_segment",
-            "width": 2
+            "width": 2.0
         },
         {
             "authored": true,
             "end": [
-                728,
-                220
+                632.0,
+                384.0
             ],
             "nation": "roman_republic",
-            "player_id": 3,
+            "player_id": 2,
+            "settlement": "zama_scipio_town",
             "start": [
-                728,
-                210
+                618.0,
+                384.0
             ],
             "type": "wall_segment",
-            "width": 2
+            "width": 2.0
         },
         {
             "authored": true,
             "end": [
-                700,
-                220
+                648.0,
+                384.0
             ],
             "nation": "roman_republic",
-            "player_id": 3,
+            "player_id": 2,
+            "settlement": "zama_scipio_town",
             "start": [
-                696,
-                220
+                640.0,
+                384.0
             ],
             "type": "wall_segment",
-            "width": 2
+            "width": 2.0
         },
         {
             "authored": true,
             "end": [
-                728,
-                220
+                722.0,
+                174.0
             ],
             "nation": "roman_republic",
             "player_id": 3,
+            "settlement": "zama_numidian_camp",
             "start": [
-                708,
-                220
+                702.0,
+                174.0
             ],
             "type": "wall_segment",
-            "width": 2
+            "width": 2.0
         },
         {
             "authored": true,
             "end": [
-                696,
-                220
+                702.0,
+                176.0
             ],
             "nation": "roman_republic",
             "player_id": 3,
+            "settlement": "zama_numidian_camp",
             "start": [
-                696,
-                210
+                698.0,
+                176.0
             ],
             "type": "wall_segment",
-            "width": 2
+            "width": 2.0
         },
         {
             "authored": true,
             "end": [
-                696,
-                210
+                726.0,
+                176.0
             ],
             "nation": "roman_republic",
             "player_id": 3,
+            "settlement": "zama_numidian_camp",
             "start": [
-                686,
-                210
+                722.0,
+                176.0
             ],
             "type": "wall_segment",
-            "width": 2
+            "width": 2.0
         },
         {
             "authored": true,
             "end": [
-                686,
-                190
+                698.0,
+                178.0
             ],
             "nation": "roman_republic",
             "player_id": 3,
+            "settlement": "zama_numidian_camp",
             "start": [
-                686,
-                182
+                696.0,
+                178.0
             ],
             "type": "wall_segment",
-            "width": 2
+            "width": 2.0
         },
         {
             "authored": true,
             "end": [
-                686,
-                210
+                728.0,
+                178.0
             ],
             "nation": "roman_republic",
             "player_id": 3,
+            "settlement": "zama_numidian_camp",
             "start": [
-                686,
-                198
+                726.0,
+                178.0
             ],
             "type": "wall_segment",
-            "width": 2
+            "width": 2.0
         },
         {
             "authored": true,
             "end": [
-                696,
-                182
+                696.0,
+                180.0
             ],
             "nation": "roman_republic",
             "player_id": 3,
+            "settlement": "zama_numidian_camp",
             "start": [
-                686,
-                182
+                694.0,
+                180.0
             ],
             "type": "wall_segment",
-            "width": 2
+            "width": 2.0
         },
         {
             "authored": true,
             "end": [
-                696,
-                182
+                730.0,
+                180.0
             ],
             "nation": "roman_republic",
             "player_id": 3,
+            "settlement": "zama_numidian_camp",
             "start": [
-                696,
-                172
+                728.0,
+                180.0
             ],
             "type": "wall_segment",
-            "width": 2
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                694.0,
+                182.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "zama_numidian_camp",
+            "start": [
+                692.0,
+                182.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                732.0,
+                182.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "zama_numidian_camp",
+            "start": [
+                730.0,
+                182.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                690.0,
+                188.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "zama_numidian_camp",
+            "start": [
+                690.0,
+                184.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                692.0,
+                184.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "zama_numidian_camp",
+            "start": [
+                692.0,
+                184.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                734.0,
+                184.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "zama_numidian_camp",
+            "start": [
+                732.0,
+                184.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                734.0,
+                188.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "zama_numidian_camp",
+            "start": [
+                734.0,
+                186.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                688.0,
+                204.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "zama_numidian_camp",
+            "start": [
+                688.0,
+                188.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                736.0,
+                204.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "zama_numidian_camp",
+            "start": [
+                736.0,
+                188.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                686.0,
+                196.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "zama_numidian_camp",
+            "start": [
+                686.0,
+                196.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                690.0,
+                208.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "zama_numidian_camp",
+            "start": [
+                690.0,
+                204.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                734.0,
+                208.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "zama_numidian_camp",
+            "start": [
+                734.0,
+                204.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                692.0,
+                210.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "zama_numidian_camp",
+            "start": [
+                692.0,
+                208.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                732.0,
+                210.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "zama_numidian_camp",
+            "start": [
+                732.0,
+                208.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                694.0,
+                212.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "zama_numidian_camp",
+            "start": [
+                694.0,
+                210.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                730.0,
+                212.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "zama_numidian_camp",
+            "start": [
+                730.0,
+                210.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                696.0,
+                214.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "zama_numidian_camp",
+            "start": [
+                696.0,
+                212.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                728.0,
+                214.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "zama_numidian_camp",
+            "start": [
+                728.0,
+                212.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                698.0,
+                216.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "zama_numidian_camp",
+            "start": [
+                698.0,
+                214.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                726.0,
+                216.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "zama_numidian_camp",
+            "start": [
+                726.0,
+                214.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                702.0,
+                216.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "zama_numidian_camp",
+            "start": [
+                700.0,
+                216.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                724.0,
+                216.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "zama_numidian_camp",
+            "start": [
+                722.0,
+                216.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                702.0,
+                218.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "zama_numidian_camp",
+            "start": [
+                702.0,
+                218.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                722.0,
+                218.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "zama_numidian_camp",
+            "start": [
+                710.0,
+                218.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                448.0,
+                140.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 5,
+            "settlement": "zama_north_camp",
+            "start": [
+                424.0,
+                140.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                424.0,
+                142.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 5,
+            "settlement": "zama_north_camp",
+            "start": [
+                418.0,
+                142.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                454.0,
+                142.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 5,
+            "settlement": "zama_north_camp",
+            "start": [
+                448.0,
+                142.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                418.0,
+                144.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 5,
+            "settlement": "zama_north_camp",
+            "start": [
+                414.0,
+                144.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                458.0,
+                144.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 5,
+            "settlement": "zama_north_camp",
+            "start": [
+                454.0,
+                144.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                414.0,
+                146.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 5,
+            "settlement": "zama_north_camp",
+            "start": [
+                412.0,
+                146.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                460.0,
+                146.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 5,
+            "settlement": "zama_north_camp",
+            "start": [
+                458.0,
+                146.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                412.0,
+                148.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 5,
+            "settlement": "zama_north_camp",
+            "start": [
+                408.0,
+                148.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                464.0,
+                148.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 5,
+            "settlement": "zama_north_camp",
+            "start": [
+                460.0,
+                148.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                408.0,
+                150.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 5,
+            "settlement": "zama_north_camp",
+            "start": [
+                406.0,
+                150.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                466.0,
+                150.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 5,
+            "settlement": "zama_north_camp",
+            "start": [
+                464.0,
+                150.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                404.0,
+                156.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 5,
+            "settlement": "zama_north_camp",
+            "start": [
+                404.0,
+                152.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                406.0,
+                152.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 5,
+            "settlement": "zama_north_camp",
+            "start": [
+                406.0,
+                152.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                468.0,
+                152.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 5,
+            "settlement": "zama_north_camp",
+            "start": [
+                466.0,
+                152.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                468.0,
+                156.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 5,
+            "settlement": "zama_north_camp",
+            "start": [
+                468.0,
+                154.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                402.0,
+                158.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 5,
+            "settlement": "zama_north_camp",
+            "start": [
+                402.0,
+                156.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                470.0,
+                158.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 5,
+            "settlement": "zama_north_camp",
+            "start": [
+                470.0,
+                156.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                400.0,
+                162.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 5,
+            "settlement": "zama_north_camp",
+            "start": [
+                400.0,
+                158.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                472.0,
+                162.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 5,
+            "settlement": "zama_north_camp",
+            "start": [
+                472.0,
+                158.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                398.0,
+                182.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 5,
+            "settlement": "zama_north_camp",
+            "start": [
+                398.0,
+                162.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                474.0,
+                182.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 5,
+            "settlement": "zama_north_camp",
+            "start": [
+                474.0,
+                162.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                396.0,
+                172.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 5,
+            "settlement": "zama_north_camp",
+            "start": [
+                396.0,
+                172.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                400.0,
+                186.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 5,
+            "settlement": "zama_north_camp",
+            "start": [
+                400.0,
+                182.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                472.0,
+                186.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 5,
+            "settlement": "zama_north_camp",
+            "start": [
+                472.0,
+                182.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                402.0,
+                188.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 5,
+            "settlement": "zama_north_camp",
+            "start": [
+                402.0,
+                186.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                470.0,
+                188.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 5,
+            "settlement": "zama_north_camp",
+            "start": [
+                470.0,
+                186.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                404.0,
+                192.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 5,
+            "settlement": "zama_north_camp",
+            "start": [
+                404.0,
+                188.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                468.0,
+                192.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 5,
+            "settlement": "zama_north_camp",
+            "start": [
+                468.0,
+                188.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                406.0,
+                194.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 5,
+            "settlement": "zama_north_camp",
+            "start": [
+                406.0,
+                192.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                466.0,
+                194.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 5,
+            "settlement": "zama_north_camp",
+            "start": [
+                466.0,
+                192.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                408.0,
+                196.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 5,
+            "settlement": "zama_north_camp",
+            "start": [
+                408.0,
+                194.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                464.0,
+                196.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 5,
+            "settlement": "zama_north_camp",
+            "start": [
+                464.0,
+                194.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                412.0,
+                196.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 5,
+            "settlement": "zama_north_camp",
+            "start": [
+                410.0,
+                196.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                462.0,
+                196.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 5,
+            "settlement": "zama_north_camp",
+            "start": [
+                460.0,
+                196.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                414.0,
+                198.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 5,
+            "settlement": "zama_north_camp",
+            "start": [
+                412.0,
+                198.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                460.0,
+                198.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 5,
+            "settlement": "zama_north_camp",
+            "start": [
+                458.0,
+                198.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                418.0,
+                200.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 5,
+            "settlement": "zama_north_camp",
+            "start": [
+                414.0,
+                200.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                458.0,
+                200.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 5,
+            "settlement": "zama_north_camp",
+            "start": [
+                454.0,
+                200.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                424.0,
+                202.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 5,
+            "settlement": "zama_north_camp",
+            "start": [
+                418.0,
+                202.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                454.0,
+                202.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 5,
+            "settlement": "zama_north_camp",
+            "start": [
+                448.0,
+                202.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                440.0,
+                204.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 5,
+            "settlement": "zama_north_camp",
+            "start": [
+                424.0,
+                204.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                448.0,
+                204.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 5,
+            "settlement": "zama_north_camp",
+            "start": [
+                448.0,
+                204.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                440.0,
+                162.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 5,
+            "settlement": "zama_north_camp",
+            "start": [
+                432.0,
+                162.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                432.0,
+                164.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 5,
+            "settlement": "zama_north_camp",
+            "start": [
+                428.0,
+                164.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                444.0,
+                164.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 5,
+            "settlement": "zama_north_camp",
+            "start": [
+                440.0,
+                164.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                428.0,
+                166.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 5,
+            "settlement": "zama_north_camp",
+            "start": [
+                426.0,
+                166.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                446.0,
+                166.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 5,
+            "settlement": "zama_north_camp",
+            "start": [
+                444.0,
+                166.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                424.0,
+                176.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 5,
+            "settlement": "zama_north_camp",
+            "start": [
+                424.0,
+                168.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                426.0,
+                168.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 5,
+            "settlement": "zama_north_camp",
+            "start": [
+                426.0,
+                168.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                448.0,
+                168.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 5,
+            "settlement": "zama_north_camp",
+            "start": [
+                446.0,
+                168.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                448.0,
+                176.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 5,
+            "settlement": "zama_north_camp",
+            "start": [
+                448.0,
+                170.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                426.0,
+                178.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 5,
+            "settlement": "zama_north_camp",
+            "start": [
+                426.0,
+                176.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                446.0,
+                178.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 5,
+            "settlement": "zama_north_camp",
+            "start": [
+                446.0,
+                176.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                428.0,
+                180.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 5,
+            "settlement": "zama_north_camp",
+            "start": [
+                428.0,
+                178.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                444.0,
+                180.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 5,
+            "settlement": "zama_north_camp",
+            "start": [
+                444.0,
+                178.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                432.0,
+                180.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 5,
+            "settlement": "zama_north_camp",
+            "start": [
+                430.0,
+                180.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                442.0,
+                180.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 5,
+            "settlement": "zama_north_camp",
+            "start": [
+                440.0,
+                180.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                432.0,
+                182.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 5,
+            "settlement": "zama_north_camp",
+            "start": [
+                432.0,
+                182.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                440.0,
+                182.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 5,
+            "settlement": "zama_north_camp",
+            "start": [
+                440.0,
+                182.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
         },
         {
             "authored": true,
@@ -3201,96 +4468,6 @@
             ],
             "type": "wall_segment",
             "width": 2
-        },
-        {
-            "authored": true,
-            "end": [
-                460,
-                154
-            ],
-            "nation": "roman_republic",
-            "player_id": 5,
-            "start": [
-                412,
-                154
-            ],
-            "type": "wall_segment",
-            "width": 2
-        },
-        {
-            "authored": true,
-            "end": [
-                460,
-                170
-            ],
-            "nation": "roman_republic",
-            "player_id": 5,
-            "start": [
-                460,
-                154
-            ],
-            "type": "wall_segment",
-            "width": 2
-        },
-        {
-            "authored": true,
-            "end": [
-                460,
-                190
-            ],
-            "nation": "roman_republic",
-            "player_id": 5,
-            "start": [
-                460,
-                178
-            ],
-            "type": "wall_segment",
-            "width": 2
-        },
-        {
-            "authored": true,
-            "end": [
-                442,
-                190
-            ],
-            "nation": "roman_republic",
-            "player_id": 5,
-            "start": [
-                412,
-                190
-            ],
-            "type": "wall_segment",
-            "width": 2
-        },
-        {
-            "authored": true,
-            "end": [
-                460,
-                190
-            ],
-            "nation": "roman_republic",
-            "player_id": 5,
-            "start": [
-                450,
-                190
-            ],
-            "type": "wall_segment",
-            "width": 2
-        },
-        {
-            "authored": true,
-            "end": [
-                412,
-                190
-            ],
-            "nation": "roman_republic",
-            "player_id": 5,
-            "start": [
-                412,
-                154
-            ],
-            "type": "wall_segment",
-            "width": 2
         }
     ],
     "terrain": [
@@ -3361,27 +4538,6 @@
             "width": 91.19,
             "x": 250,
             "z": 486
-        },
-        {
-            "depth": 43.57,
-            "entrances": [
-                {
-                    "radius": 5.26,
-                    "x": 418.29,
-                    "z": 114.5
-                },
-                {
-                    "radius": 5.19,
-                    "x": 503.46000000000004,
-                    "z": 131.84
-                }
-            ],
-            "height": 1.9000000000000001,
-            "rotation": 8,
-            "type": "hill",
-            "width": 89.37,
-            "x": 460.98,
-            "z": 124.14
         },
         {
             "depth": 49.980000000000004,
@@ -3472,7 +4628,7 @@
             "z": 444
         },
         {
-            "depth": 50,
+            "depth": 40,
             "entrances": [
                 {
                     "radius": 7.04,
@@ -3490,6 +4646,84 @@
             "width": 94,
             "x": 666,
             "z": 475
+        },
+        {
+            "crown": 0.6,
+            "depth": 120.0,
+            "entrances": [
+                {
+                    "radius": 2.0,
+                    "x": 566.0,
+                    "z": 396.0
+                },
+                {
+                    "radius": 2.0,
+                    "x": 706.0,
+                    "z": 396.0
+                },
+                {
+                    "radius": 2.0,
+                    "x": 636.0,
+                    "z": 336.0
+                },
+                {
+                    "radius": 2.0,
+                    "x": 636.0,
+                    "z": 456.0
+                }
+            ],
+            "height": 2.6,
+            "type": "hill",
+            "width": 140.0,
+            "x": 636,
+            "z": 396
+        },
+        {
+            "crown": 0.85,
+            "depth": 130.0,
+            "entrances": [
+                {
+                    "radius": 2.0,
+                    "x": 361.0,
+                    "z": 172.0
+                },
+                {
+                    "radius": 2.0,
+                    "x": 511.0,
+                    "z": 172.0
+                },
+                {
+                    "radius": 2.0,
+                    "x": 436.0,
+                    "z": 107.0
+                },
+                {
+                    "radius": 2.0,
+                    "x": 436.0,
+                    "z": 237.0
+                }
+            ],
+            "height": 2.6,
+            "type": "hill",
+            "width": 150.0,
+            "x": 436,
+            "z": 172
+        },
+        {
+            "crown": 0.6,
+            "depth": 48,
+            "entrances": [
+                {
+                    "radius": 2.0,
+                    "x": 436.0,
+                    "z": 198.0
+                }
+            ],
+            "height": 10.5,
+            "type": "hill",
+            "width": 56,
+            "x": 436,
+            "z": 172
         }
     ],
     "undead_zones": [
@@ -3702,20 +4936,6 @@
             "z": 423.21000000000004
         },
         {
-            "rotation": 0.8,
-            "scale": 0.9,
-            "type": "dead_tree",
-            "x": 378.21,
-            "z": 171.47
-        },
-        {
-            "rotation": 4.2,
-            "scale": 1,
-            "type": "dead_tree",
-            "x": 398.25,
-            "z": 156.88
-        },
-        {
             "rotation": 1.8,
             "scale": 0.9,
             "type": "dead_tree",
@@ -3733,8 +4953,8 @@
             "rotation": 1,
             "scale": 1,
             "type": "tent",
-            "x": 544.14,
-            "z": 265.32
+            "x": 542.21,
+            "z": 258.82
         },
         {
             "rotation": 3.2,
@@ -3782,8 +5002,8 @@
             "rotation": 2.6,
             "scale": 1,
             "type": "supply_cart",
-            "x": 706.33,
-            "z": 182.42000000000002
+            "x": 707.92,
+            "z": 181.46
         },
         {
             "rotation": 5,
@@ -3968,13 +5188,6 @@
             "z": 670.37
         },
         {
-            "rotation": 91.8,
-            "scale": 1.1500000000000001,
-            "type": "tent",
-            "x": 381.94,
-            "z": 178.73
-        },
-        {
             "rotation": 16.8,
             "scale": 1.11,
             "type": "supply_cart",
@@ -4007,15 +5220,6 @@
             "z": 704.67
         },
         {
-            "intensity": 1.04,
-            "persistent": true,
-            "radius": 3,
-            "scale": 1,
-            "type": "firecamp",
-            "x": 449.74,
-            "z": 242.43
-        },
-        {
             "rotation": 99.7,
             "scale": 0.96,
             "type": "tent",
@@ -4044,13 +5248,6 @@
             "z": 691.27
         },
         {
-            "rotation": 87.7,
-            "scale": 0.98,
-            "type": "tent",
-            "x": 403.23,
-            "z": 232.17000000000002
-        },
-        {
             "rotation": 52.9,
             "scale": 1.06,
             "type": "weapon_rack",
@@ -4063,8 +5260,8 @@
             "radius": 3.2,
             "scale": 1,
             "type": "firecamp",
-            "x": 715.2,
-            "z": 387.98
+            "x": 718.35,
+            "z": 381.29
         },
         {
             "rotation": 304.1,
@@ -4084,8 +5281,8 @@
             "rotation": 3.4,
             "scale": 0.98,
             "type": "tent",
-            "x": 422.32,
-            "z": 98.25
+            "x": 418.36,
+            "z": 97.35
         },
         {
             "rotation": 288.5,
@@ -4140,8 +5337,8 @@
             "rotation": 222.6,
             "scale": 0.88,
             "type": "tent",
-            "x": 784.82,
-            "z": 178.34
+            "x": 785.62,
+            "z": 179.81
         },
         {
             "rotation": 312.1,
@@ -4149,13 +5346,6 @@
             "type": "tent",
             "x": 587.16,
             "z": 592.66
-        },
-        {
-            "rotation": 279.1,
-            "scale": 1.02,
-            "type": "supply_cart",
-            "x": 449.76,
-            "z": 222.48000000000002
         },
         {
             "rotation": 207.9,
@@ -4188,13 +5378,6 @@
             "z": 588.49
         },
         {
-            "rotation": 309,
-            "scale": 0.88,
-            "type": "tent",
-            "x": 403.40000000000003,
-            "z": 218.5
-        },
-        {
             "intensity": 1.19,
             "persistent": true,
             "radius": 2.9,
@@ -4225,13 +5408,6 @@
             "type": "supply_cart",
             "x": 553,
             "z": 699.51
-        },
-        {
-            "rotation": 34.800000000000004,
-            "scale": 1.06,
-            "type": "tent",
-            "x": 463.7,
-            "z": 120.4
         },
         {
             "rotation": 7.2,
@@ -4268,15 +5444,6 @@
             "z": 636.33
         },
         {
-            "intensity": 0.92,
-            "persistent": true,
-            "radius": 3.4,
-            "scale": 1,
-            "type": "firecamp",
-            "x": 362.67,
-            "z": 181.05
-        },
-        {
             "intensity": 1.17,
             "persistent": true,
             "radius": 2.9,
@@ -4291,8 +5458,8 @@
             "radius": 2.8000000000000003,
             "scale": 1,
             "type": "firecamp",
-            "x": 731.58,
-            "z": 373.75
+            "x": 733.86,
+            "z": 370.45
         },
         {
             "rotation": 114.9,
@@ -4307,13 +5474,6 @@
             "type": "tent",
             "x": 504.01,
             "z": 621.57
-        },
-        {
-            "rotation": 205.1,
-            "scale": 1.11,
-            "type": "weapon_rack",
-            "x": 453.49,
-            "z": 115.72
         },
         {
             "rotation": 90,
@@ -4344,13 +5504,6 @@
             "z": 598.33
         },
         {
-            "rotation": 52.2,
-            "scale": 0.88,
-            "type": "tent",
-            "x": 443.89,
-            "z": 236.11
-        },
-        {
             "rotation": 104.7,
             "scale": 1.03,
             "type": "weapon_rack",
@@ -4361,8 +5514,8 @@
             "rotation": 322.1,
             "scale": 0.92,
             "type": "tent",
-            "x": 540.42,
-            "z": 390.11
+            "x": 539.45,
+            "z": 389.76
         },
         {
             "intensity": 1.1,
@@ -4370,8 +5523,8 @@
             "radius": 3.4,
             "scale": 1,
             "type": "firecamp",
-            "x": 686.22,
-            "z": 248.5
+            "x": 686.68,
+            "z": 248.76
         },
         {
             "intensity": 1.21,
@@ -4381,13 +5534,6 @@
             "type": "firecamp",
             "x": 495.33,
             "z": 616.44
-        },
-        {
-            "rotation": 231.3,
-            "scale": 0.98,
-            "type": "weapon_rack",
-            "x": 389.61,
-            "z": 130.55
         },
         {
             "rotation": 118.8,
@@ -4420,15 +5566,6 @@
             "z": 577.32
         },
         {
-            "intensity": 0.9,
-            "persistent": true,
-            "radius": 2.7,
-            "scale": 1,
-            "type": "firecamp",
-            "x": 390.41,
-            "z": 225.76
-        },
-        {
             "rotation": 263.3,
             "scale": 1.17,
             "type": "tent",
@@ -4442,7 +5579,7 @@
             "scale": 1,
             "type": "firecamp",
             "x": 727.11,
-            "z": 404.94
+            "z": 408.84
         },
         {
             "rotation": 312.1,
@@ -4459,13 +5596,6 @@
             "type": "firecamp",
             "x": 603.28,
             "z": 599.37
-        },
-        {
-            "rotation": 339.8,
-            "scale": 0.89,
-            "type": "tent",
-            "x": 377.86,
-            "z": 196.1
         },
         {
             "rotation": 76.9,
@@ -4567,13 +5697,6 @@
             "type": "firecamp",
             "x": 583.22,
             "z": 467.02
-        },
-        {
-            "rotation": 130.1,
-            "scale": 1.16,
-            "type": "supply_cart",
-            "x": 370.03000000000003,
-            "z": 209.96
         },
         {
             "intensity": 0.97,
@@ -4834,41 +5957,6 @@
             "z": 228.09
         },
         {
-            "rotation": 235.8,
-            "scale": 1.06,
-            "type": "statue",
-            "x": 658.03,
-            "z": 411.44
-        },
-        {
-            "rotation": 264.2,
-            "scale": 0.9400000000000001,
-            "type": "statue",
-            "x": 614.79,
-            "z": 379.57
-        },
-        {
-            "rotation": 6.3,
-            "scale": 0.91,
-            "type": "statue",
-            "x": 697.5500000000001,
-            "z": 429.99
-        },
-        {
-            "rotation": 78,
-            "scale": 0.93,
-            "type": "statue",
-            "x": 702.82,
-            "z": 417.89
-        },
-        {
-            "rotation": 36.4,
-            "scale": 1.1,
-            "type": "statue",
-            "x": 627.5600000000001,
-            "z": 383.72
-        },
-        {
             "rotation": 124.5,
             "scale": 1.12,
             "type": "statue",
@@ -4895,13 +5983,6 @@
             "type": "abandoned_home",
             "x": 376.77,
             "z": 263.38
-        },
-        {
-            "rotation": 210.4,
-            "scale": 0.96,
-            "type": "abandoned_home",
-            "x": 369.46,
-            "z": 199.02
         },
         {
             "rotation": 110.2,
@@ -5434,8 +6515,8 @@
             "authored_camp": true,
             "scale": 1,
             "type": "tent",
-            "x": 201.59,
-            "z": 362.75
+            "x": 200.47,
+            "z": 358.99
         },
         {
             "authored_camp": true,
@@ -5462,8 +6543,8 @@
             "authored_camp": true,
             "scale": 1,
             "type": "tent",
-            "x": 196.92,
-            "z": 366.41
+            "x": 195.2,
+            "z": 360.63
         },
         {
             "authored_camp": true,
@@ -5482,8 +6563,8 @@
             "radius": 3.6,
             "scale": 1,
             "type": "firecamp",
-            "x": 191.68,
-            "z": 370.40000000000003
+            "x": 192.23,
+            "z": 372.26
         },
         {
             "authored_camp": true,
@@ -5518,27 +6599,7 @@
             "scale": 1,
             "type": "statue",
             "x": 636,
-            "z": 400.2
-        },
-        {
-            "authored_camp": true,
-            "intensity": 1.1,
-            "persistent": true,
-            "radius": 3.4,
-            "scale": 1,
-            "type": "firecamp",
-            "x": 613.27,
-            "z": 391.39
-        },
-        {
-            "authored_camp": true,
-            "intensity": 1.1,
-            "persistent": true,
-            "radius": 3.4,
-            "scale": 1,
-            "type": "firecamp",
-            "x": 657.08,
-            "z": 387.6
+            "z": 399.34
         },
         {
             "authored_camp": true,
@@ -5613,20 +6674,6 @@
             "authored_camp": true,
             "scale": 1,
             "type": "weapon_rack",
-            "x": 421.6,
-            "z": 162.1
-        },
-        {
-            "authored_camp": true,
-            "scale": 1,
-            "type": "weapon_rack",
-            "x": 431.2,
-            "z": 162.1
-        },
-        {
-            "authored_camp": true,
-            "scale": 1,
-            "type": "weapon_rack",
             "x": 440.8,
             "z": 162.1
         },
@@ -5634,60 +6681,43 @@
             "authored_camp": true,
             "scale": 1,
             "type": "supply_cart",
-            "x": 425.2,
-            "z": 167.5
+            "x": 441.87,
+            "z": 169.15
         },
         {
-            "authored_camp": true,
-            "scale": 1,
-            "type": "supply_cart",
-            "x": 439.6,
-            "z": 167.5
-        },
-        {
-            "authored_camp": true,
-            "intensity": 1.1,
-            "persistent": true,
-            "radius": 3.4,
-            "scale": 1,
-            "type": "firecamp",
-            "x": 433.02,
-            "z": 186.43
-        },
-        {
+            "rotation": 0.24,
+            "scale": 1.0,
             "type": "cursed_gold_vein",
             "x": 168,
-            "z": 636,
-            "scale": 1.0,
-            "rotation": 0.24
+            "z": 636
         },
         {
+            "rotation": 5.01,
+            "scale": 1.0,
             "type": "cursed_gold_vein",
             "x": 77,
-            "z": 142,
-            "scale": 1.0,
-            "rotation": 5.01
+            "z": 142
         },
         {
+            "rotation": 0.9,
+            "scale": 1.0,
             "type": "cursed_gold_vein",
             "x": 350,
-            "z": 688,
-            "scale": 1.0,
-            "rotation": 0.9
+            "z": 688
         },
         {
+            "rotation": 5.97,
+            "scale": 1.0,
             "type": "cursed_gold_vein",
             "x": 688,
-            "z": 545,
-            "scale": 1.0,
-            "rotation": 5.97
+            "z": 545
         },
         {
+            "rotation": 0.01,
+            "scale": 1.0,
             "type": "cursed_gold_vein",
             "x": 337,
-            "z": 350,
-            "scale": 1.0,
-            "rotation": 0.01
+            "z": 350
         }
     ]
 }

@@ -4,6 +4,10 @@
 The tool treats authored water as level-design intent, preserves confluences,
 extends loose river ends to a map edge or lake, reroutes around hills and
 mountains, and adds deterministic broad meanders. It is dry-run by default.
+
+A river authored as a ring (``"shape": "ring"``: a moat, an oxbow) is not
+rerouted - a ring has no source and no mouth - and is carried through as it
+was authored.
 """
 
 from __future__ import annotations
@@ -21,6 +25,7 @@ from typing import Sequence
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from map_hill_shapes import hill_shape_strokes
+from map_water_geometry import is_ring_river, river_points
 
 Point = tuple[float, float]
 
@@ -139,8 +144,7 @@ def deduplicate(points: Sequence[Point], epsilon: float = 0.01) -> list[Point]:
 
 
 def feature_points(feature: dict) -> list[Point]:
-    raw = feature.get("waypoints") or [feature.get("start"), feature.get("end")]
-    result = [tuple(map(float, point[:2])) for point in raw if point is not None]
+    result = [tuple(point) for point in river_points(feature)]
     if len(result) < 2:
         raise WaterGenerationError("river needs at least two points")
     return deduplicate(result)
@@ -1116,7 +1120,10 @@ def process(
     if validate_only:
         result = validate(definition, field, rivers, lakes)
     else:
-        rivers = generate_rivers(definition, field, lakes)
+        rings = [river for river in rivers if is_ring_river(river)]
+        definition["rivers"] = [river for river in rivers if not is_ring_river(river)]
+        rivers = generate_rivers(definition, field, lakes) + rings
+        definition["rivers"] = rivers
         if strategic_lakes:
             add_strategic_lake(path, definition, field, rivers, lakes)
         result = validate(definition, field, rivers, lakes)

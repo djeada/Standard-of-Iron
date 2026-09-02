@@ -82,6 +82,11 @@ ApplicationWindow {
             mainWindow.menu_visible = false;
     }
 
+    function return_to_main_menu() {
+        mainWindow.menu_visible = true;
+        mainMenu.forceActiveFocus();
+    }
+
     function request_menu_toggle() {
         if (typeof game !== 'undefined' && game.placement) {
             if (game.placement.is_placing_construction && game.placement.on_construction_cancel) {
@@ -104,7 +109,7 @@ ApplicationWindow {
         }
         if (mainWindow.overlay_active)
             return false;
-        mainWindow.menu_visible = true;
+        mainWindow.return_to_main_menu();
         return true;
     }
 
@@ -205,7 +210,7 @@ ApplicationWindow {
             gameViewItem.forceActiveFocus();
         }
         onReturn_to_main_menu_requested: {
-            mainWindow.menu_visible = true;
+            mainWindow.return_to_main_menu();
         }
         onCampaign_requested: {
             mainWindow.menu_visible = false;
@@ -290,7 +295,7 @@ ApplicationWindow {
                 }
 
                 Text {
-                    text: qsTr("Press Space to resume")
+                    text: qsTr("Press %1 to resume").arg(InputBindings.display_shortcut_for("rts.pause"))
                     color: Theme.textSubLite
                     font.pixelSize: Design.Typography.label
                     anchors.horizontalCenter: parent.horizontalCenter
@@ -422,7 +427,7 @@ ApplicationWindow {
         onCancelled: function () {
             Design.UiSound.back();
             mapSelect.visible = false;
-            mainWindow.menu_visible = true;
+            mainWindow.return_to_main_menu();
         }
     }
 
@@ -455,7 +460,7 @@ ApplicationWindow {
         onCancelled: function () {
             Design.UiSound.back();
             campaign_screen.visible = false;
-            mainWindow.menu_visible = true;
+            mainWindow.return_to_main_menu();
         }
     }
 
@@ -487,7 +492,7 @@ ApplicationWindow {
         onCancelled: function () {
             Design.UiSound.back();
             missions_screen.visible = false;
-            mainWindow.menu_visible = true;
+            mainWindow.return_to_main_menu();
         }
     }
 
@@ -511,12 +516,12 @@ ApplicationWindow {
             if (typeof game !== 'undefined' && game.saves.save_to_slot)
                 game.saves.save_to_slot(slot_name);
             save_game_panel.visible = false;
-            mainWindow.menu_visible = true;
+            mainWindow.return_to_main_menu();
         }
         onCancelled: function () {
             Design.UiSound.back();
             save_game_panel.visible = false;
-            mainWindow.menu_visible = true;
+            mainWindow.return_to_main_menu();
         }
     }
 
@@ -549,7 +554,7 @@ ApplicationWindow {
         onCancelled: function () {
             Design.UiSound.back();
             load_game_panel.visible = false;
-            mainWindow.menu_visible = true;
+            mainWindow.return_to_main_menu();
         }
     }
 
@@ -570,7 +575,7 @@ ApplicationWindow {
         }
         onCancelled: function () {
             Design.UiSound.back();
-            mainWindow.menu_visible = true;
+            mainWindow.return_to_main_menu();
             settingsPanel.visible = false;
         }
     }
@@ -597,7 +602,7 @@ ApplicationWindow {
                 mainWindow.game_paused = false;
                 gameViewItem.forceActiveFocus();
             } else {
-                mainWindow.menu_visible = true;
+                mainWindow.return_to_main_menu();
             }
         }
     }
@@ -622,7 +627,7 @@ ApplicationWindow {
             Design.UiSound.back();
             help_panel.visible = false;
             if (help_panel.from_menu || !mainWindow.game_started) {
-                mainWindow.menu_visible = true;
+                mainWindow.return_to_main_menu();
                 return;
             }
             gameViewItem.forceActiveFocus();
@@ -855,7 +860,7 @@ ApplicationWindow {
                 return;
             Design.Notifications.push(ally ? "urgent" : "info", text, {
                     "channel": "player-defeated-" + owner_id,
-                    "icon": Design.Icons.status("defeated")
+                    "icon": ally ? Design.Icons.warning : Design.Icons.attack
                 });
         }
 

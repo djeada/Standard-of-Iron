@@ -30,6 +30,7 @@ namespace {
 constexpr const char* BUILDING_TYPE_HOME = "home";
 constexpr const char* BUILDING_TYPE_DEFENSE_TOWER = "defense_tower";
 constexpr const char* BUILDING_TYPE_WALL_SEGMENT = "wall_segment";
+constexpr const char* BUILDING_TYPE_WALL_GATE = "wall_gate";
 constexpr const char* BUILDING_TYPE_BARRACKS = "barracks";
 constexpr const char* BUILDING_TYPE_MARKETPLACE = "marketplace";
 
@@ -43,8 +44,12 @@ constexpr const char* HARVEST_IRON = "collect_iron_ore";
 constexpr const char* HARVEST_GRAIN = "harvest_grain";
 
 constexpr int MAX_HOMES = 20;
-constexpr int MAX_DEFENSE_TOWERS = 10;
-constexpr int MAX_WALL_SEGMENTS = 40;
+constexpr int MAX_DEFENSE_TOWERS = 12;
+constexpr int MAX_WALL_SEGMENTS = 128;
+constexpr int MAX_WALL_GATES = 4;
+
+constexpr float k_wall_slot_clearance = 1.45F;
+constexpr float k_gate_half_span = 4.5F;
 constexpr int MAX_BARRACKS = 6;
 constexpr int MAX_FARMS = 8;
 constexpr int MAX_MARKETPLACES = 2;
@@ -292,6 +297,9 @@ auto building_type_name(const std::string& name) -> const char* {
   if (name == BUILDING_TYPE_WALL_SEGMENT) {
     return BUILDING_TYPE_WALL_SEGMENT;
   }
+  if (name == BUILDING_TYPE_WALL_GATE) {
+    return BUILDING_TYPE_WALL_GATE;
+  }
   if (name == BUILDING_TYPE_BARRACKS) {
     return BUILDING_TYPE_BARRACKS;
   }
@@ -397,12 +405,16 @@ auto locked_settlement_facing(const AIContext& context,
 
 auto slot_clearance(const char* building_type,
                     Game::Units::SpawnType standing) -> float {
-  if (building_type == BUILDING_TYPE_WALL_SEGMENT &&
+  if ((building_type == BUILDING_TYPE_WALL_SEGMENT ||
+       building_type == BUILDING_TYPE_WALL_GATE) &&
       Game::Units::is_wall_network_spawn(standing)) {
 
-    return 0.5F * k_wall_link_spacing;
+    return k_wall_slot_clearance;
   }
   const auto half_extent = [](const std::string& type) {
+    if (type == BUILDING_TYPE_WALL_GATE) {
+      return k_gate_half_span;
+    }
     const auto size = BuildingCollisionRegistry::get_building_size(type);
     return 0.5F * std::max(size.width, size.depth);
   };
@@ -416,6 +428,7 @@ struct SettlementCensus {
   int barracks = 0;
   int towers = 0;
   int walls = 0;
+  int gates = 0;
   int markets = 0;
   int farms = 0;
 };
@@ -436,6 +449,9 @@ using SettlementTargets = SettlementCensus;
   }
   if (building == BUILDING_TYPE_WALL_SEGMENT) {
     return standing.walls >= targets.walls;
+  }
+  if (building == BUILDING_TYPE_WALL_GATE) {
+    return standing.gates >= targets.gates;
   }
   if (building == BUILDING_TYPE_MARKETPLACE) {
     return standing.markets >= targets.markets;
@@ -506,7 +522,9 @@ auto authored_plan_step(const AIContext& context,
 
       continue;
     }
-    if (resolved == BUILDING_TYPE_WALL_SEGMENT && fields_come_before_walls) {
+    if ((resolved == BUILDING_TYPE_WALL_SEGMENT ||
+         resolved == BUILDING_TYPE_WALL_GATE) &&
+        fields_come_before_walls) {
 
       continue;
     }
@@ -890,7 +908,24 @@ auto affordability_of(const AISnapshot& snapshot,
   return verdict;
 }
 
-auto neediest_stockpile(const AISnapshot& snapshot, int building_count) -> const char* {
+auto planned_wall_wood(const AIContext& context) -> int {
+  const auto* doctrine = context.strategy_config.doctrine;
+  if (doctrine == nullptr || doctrine->town_plan == nullptr) {
+    return 0;
+  }
+  const int pending =
+      std::max(0,
+               std::min(doctrine->town_plan->wall_step_count(), MAX_WALL_SEGMENTS) -
+                   context.wall_segment_count);
+  const auto wall_cost =
+      construction_cost_info(BUILDING_TYPE_WALL_SEGMENT).resource_costs;
+  constexpr int k_planned_wood_cap = 700;
+  return std::min(k_planned_wood_cap, pending * wall_cost.get(ResourceType::Wood));
+}
+
+auto neediest_stockpile(const AISnapshot& snapshot,
+                        int building_count,
+                        int planned_wood) -> const char* {
   if (!snapshot.has_resource_snapshot) {
     return nullptr;
   }
@@ -908,7 +943,8 @@ auto neediest_stockpile(const AISnapshot& snapshot, int building_count) -> const
   float worst_ratio = 1.0F;
   for (const auto type :
        {ResourceType::Wood, ResourceType::Stone, ResourceType::Iron}) {
-    const int target = stockpile_target(type, building_count);
+    const int target = stockpile_target(type, building_count) +
+                       (type == ResourceType::Wood ? planned_wood : 0);
 
     if (target <= 0 || !any_node_left(snapshot, type)) {
       continue;
@@ -961,19 +997,18 @@ void BuilderBehavior::note_construction_order(const char* building_type,
                                               int plan_slot) {
   constexpr int k_orders_before_giving_up = 8;
   constexpr int k_slot_orders_before_giving_up = 4;
+
   constexpr float k_defer_seconds = 90.0F;
 
-  if (plan_slot >= 0 && plan_slot == m_last_plan_slot &&
-      building_total == m_last_building_total) {
-    ++m_last_plan_slot_repeats;
-    if (m_last_plan_slot_repeats >= k_slot_orders_before_giving_up) {
-
+  if (building_total != m_last_building_total) {
+    m_plan_slot_orders.clear();
+  }
+  if (plan_slot >= 0) {
+    const int orders = ++m_plan_slot_orders[plan_slot];
+    if (orders >= k_slot_orders_before_giving_up) {
       m_blocked_plan_slots.push_back(plan_slot);
-      m_last_plan_slot_repeats = 0;
+      m_plan_slot_orders.erase(plan_slot);
     }
-  } else {
-    m_last_plan_slot = plan_slot;
-    m_last_plan_slot_repeats = 1;
   }
 
   if (building_type == m_last_order_type && building_total == m_last_building_total) {
@@ -1100,8 +1135,8 @@ void BuilderBehavior::manage_gather_crew(
   const int construction_crew = std::clamp(2 + (builder_total / 6), 2, 5);
   const int desired_gatherers =
       std::max(0, builder_total - construction_crew - (reclaim_one ? 1 : 0));
-  const char* priority =
-      neediest_stockpile(snapshot, static_cast<int>(context.buildings.size()));
+  const char* priority = neediest_stockpile(
+      snapshot, static_cast<int>(context.buildings.size()), planned_wall_wood(context));
 
   if (static_cast<int>(gatherers.size()) > desired_gatherers) {
     AICommand release;
@@ -1258,6 +1293,13 @@ void BuilderBehavior::execute(const AISnapshot& snapshot,
     return count;
   };
 
+  int standing_gates = 0;
+  for (const auto& entity : snapshot.friendly_units) {
+    if (entity.is_building && entity.health > 0 &&
+        entity.spawn_type == Game::Units::SpawnType::WallGate) {
+      ++standing_gates;
+    }
+  }
   const SettlementCensus standing{
       .homes = context.home_count + raising(Game::Units::SpawnType::Home),
       .barracks = context.barracks_count + raising(Game::Units::SpawnType::Barracks),
@@ -1265,6 +1307,7 @@ void BuilderBehavior::execute(const AISnapshot& snapshot,
           context.defense_tower_count + raising(Game::Units::SpawnType::DefenseTower),
       .walls =
           context.wall_segment_count + raising(Game::Units::SpawnType::WallSegment),
+      .gates = standing_gates + raising(Game::Units::SpawnType::WallGate),
       .markets =
           context.marketplace_count + raising(Game::Units::SpawnType::Marketplace),
       .farms = context.farm_count + raising(Game::Units::SpawnType::Farm)};
@@ -1277,9 +1320,14 @@ void BuilderBehavior::execute(const AISnapshot& snapshot,
   const auto* town_plan = context.strategy_config.doctrine != nullptr
                               ? context.strategy_config.doctrine->town_plan
                               : nullptr;
-  const int planned_walls = town_plan != nullptr ? town_plan->wall_step_count() : 0;
+  const int planned_walls =
+      town_plan != nullptr ? town_plan->step_count(BUILDING_TYPE_WALL_SEGMENT) : 0;
   const int target_walls = std::clamp(
       std::max(targets.wall_segment_count, planned_walls), 0, MAX_WALL_SEGMENTS);
+  const int target_gates = std::clamp(
+      town_plan != nullptr ? town_plan->step_count(BUILDING_TYPE_WALL_GATE) : 0,
+      0,
+      MAX_WALL_GATES);
   const int target_catapults = std::clamp(targets.catapult_count, 0, MAX_CATAPULTS);
   const int target_farms = std::clamp(targets.farm_count, 0, MAX_FARMS);
   const int target_markets = std::clamp(targets.marketplace_count, 0, MAX_MARKETPLACES);
@@ -1344,6 +1392,7 @@ void BuilderBehavior::execute(const AISnapshot& snapshot,
                                      .barracks = target_barracks,
                                      .towers = target_towers,
                                      .walls = target_walls,
+                                     .gates = target_gates,
                                      .markets = target_markets,
                                      .farms = target_farms};
   const bool has_plan_step =
@@ -1382,7 +1431,9 @@ void BuilderBehavior::execute(const AISnapshot& snapshot,
       snapshot.resources.get(ResourceType::Gold) >= k_treasury_worth_a_market) {
     wish(BUILDING_TYPE_MARKETPLACE);
   }
-  if (targets.raise_homes_first && standing.homes < MAX_HOMES) {
+  constexpr int k_roofs_before_the_castle = 4;
+  if (targets.raise_homes_first && standing.homes < MAX_HOMES &&
+      !(has_plan_step && standing.homes >= k_roofs_before_the_castle)) {
 
     wish(BUILDING_TYPE_HOME);
   }
@@ -1408,6 +1459,7 @@ void BuilderBehavior::execute(const AISnapshot& snapshot,
            {BUILDING_TYPE_DEFENSE_TOWER, standing.towers, target_towers},
            {BUILDING_TYPE_MARKETPLACE, standing.markets, target_markets},
            {BUILDING_TYPE_WALL_SEGMENT, standing.walls, target_walls},
+           {BUILDING_TYPE_WALL_GATE, standing.gates, target_gates},
            {BUILDING_TYPE_HOME, standing.homes, target_homes},
            {siege_engine, siege_count, target_catapults},
        })) {
@@ -1416,8 +1468,13 @@ void BuilderBehavior::execute(const AISnapshot& snapshot,
 
   const ConstructionIntent* chosen = nullptr;
   ResourceType missing_resource = ResourceType::Count;
+  ResourceType saving_for = ResourceType::Count;
   for (const auto& intent : intents) {
     if (is_deferred(intent.type, snapshot.game_time)) {
+      continue;
+    }
+    if (saving_for != ResourceType::Count && snapshot.has_resource_snapshot &&
+        construction_cost_info(intent.type).resource_costs.get(saving_for) > 0) {
       continue;
     }
     const auto verdict = affordability_of(snapshot, intent.type);
@@ -1428,6 +1485,11 @@ void BuilderBehavior::execute(const AISnapshot& snapshot,
 
       if (missing_resource == ResourceType::Count) {
         missing_resource = verdict.missing;
+      }
+      if (intent.plan_slot >= 0 && saving_for == ResourceType::Count &&
+          (intent.type == BUILDING_TYPE_WALL_GATE ||
+           intent.type == BUILDING_TYPE_DEFENSE_TOWER)) {
+        saving_for = verdict.missing;
       }
       continue;
     }

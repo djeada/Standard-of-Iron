@@ -4590,8 +4590,8 @@ This action cannot be undone.</translation>
         <translation>PAUSED</translation>
     </message>
     <message>
-        <source>Press Space to resume</source>
-        <translation>Press Space to resume</translation>
+        <source>Press %1 to resume</source>
+        <translation>Press %1 to resume</translation>
     </message>
     <message>
         <source>Error</source>

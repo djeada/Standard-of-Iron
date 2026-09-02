@@ -4590,8 +4590,8 @@ Esta ação não pode ser desfeita.</translation>
         <translation>PAUSADO</translation>
     </message>
     <message>
-        <source>Press Space to resume</source>
-        <translation>Pressione Espaço para continuar</translation>
+        <source>Press %1 to resume</source>
+        <translation>Pressione %1 para continuar</translation>
     </message>
     <message>
         <source>Error</source>

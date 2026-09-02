@@ -2138,23 +2138,39 @@
             "z": 516
         },
         {
-            "authored": true,
             "facing": "south",
             "id": "trebia_winter_camp",
             "max_population": 60,
             "nation": "roman_republic",
             "on_hill": false,
+            "plan": "star",
+            "plan_options": {
+                "bastion": 10,
+                "flank": 7,
+                "points": 4,
+                "size": [
+                    17,
+                    14
+                ]
+            },
             "player_id": 2,
             "tier": "fortified_camp",
             "x": 150,
             "z": 40
         },
         {
-            "authored": true,
             "facing": "west",
             "id": "trebia_placentia_town",
             "max_population": 190,
             "nation": "roman_republic",
+            "plan": "circle",
+            "plan_options": {
+                "size": [
+                    30,
+                    28
+                ],
+                "towers": 4
+            },
             "player_id": 3,
             "tier": "town",
             "x": 566,
@@ -2571,6 +2587,318 @@
     },
     "structures": [
         {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 2,
+            "rotation": 90.0,
+            "settlement": "trebia_winter_camp",
+            "type": "wall_gate",
+            "x": 132.0,
+            "z": 54.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 2,
+            "rotation": 90.0,
+            "settlement": "trebia_winter_camp",
+            "type": "wall_gate",
+            "x": 166.0,
+            "z": 46.0
+        },
+        {
+            "authored": true,
+            "max_population": 60,
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "trebia_winter_camp",
+            "type": "barracks",
+            "x": 158.69,
+            "z": 36.33
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "trebia_winter_camp",
+            "type": "marketplace",
+            "x": 144.46,
+            "z": 43.7
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "trebia_winter_camp",
+            "type": "home",
+            "x": 138.0,
+            "z": 34.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "trebia_winter_camp",
+            "type": "home",
+            "x": 138.0,
+            "z": 46.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "trebia_winter_camp",
+            "type": "defense_tower",
+            "x": 136.81,
+            "z": 40.37
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "trebia_winter_camp",
+            "type": "defense_tower",
+            "x": 145.51,
+            "z": 32.96
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "trebia_winter_camp",
+            "type": "defense_tower",
+            "x": 163.19,
+            "z": 30.63
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "rotation": 0.0,
+            "settlement": "trebia_placentia_town",
+            "type": "wall_gate",
+            "x": 560.0,
+            "z": 144.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "rotation": 90.0,
+            "settlement": "trebia_placentia_town",
+            "type": "wall_gate",
+            "x": 538.0,
+            "z": 114.0
+        },
+        {
+            "authored": true,
+            "max_population": 190,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "trebia_placentia_town",
+            "type": "barracks",
+            "x": 566.0,
+            "z": 109.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "trebia_placentia_town",
+            "type": "marketplace",
+            "x": 569.0,
+            "z": 124.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "trebia_placentia_town",
+            "type": "temple",
+            "x": 557.0,
+            "z": 121.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "trebia_placentia_town",
+            "type": "home",
+            "x": 578.0,
+            "z": 124.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "trebia_placentia_town",
+            "type": "home",
+            "x": 572.0,
+            "z": 130.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "trebia_placentia_town",
+            "type": "home",
+            "x": 560.0,
+            "z": 100.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "trebia_placentia_town",
+            "type": "home",
+            "x": 572.0,
+            "z": 100.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "trebia_placentia_town",
+            "type": "home",
+            "x": 554.0,
+            "z": 106.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "trebia_placentia_town",
+            "type": "home",
+            "x": 578.0,
+            "z": 106.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "trebia_placentia_town",
+            "type": "home",
+            "x": 548.0,
+            "z": 124.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "trebia_placentia_town",
+            "type": "home",
+            "x": 584.0,
+            "z": 124.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "trebia_placentia_town",
+            "type": "home",
+            "x": 578.0,
+            "z": 130.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "trebia_placentia_town",
+            "type": "home",
+            "x": 560.0,
+            "z": 136.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "trebia_placentia_town",
+            "type": "home",
+            "x": 572.0,
+            "z": 136.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "trebia_placentia_town",
+            "type": "home",
+            "x": 554.0,
+            "z": 100.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "trebia_placentia_town",
+            "type": "home",
+            "x": 578.0,
+            "z": 100.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "trebia_placentia_town",
+            "type": "home",
+            "x": 548.0,
+            "z": 106.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "trebia_placentia_town",
+            "type": "home",
+            "x": 584.0,
+            "z": 106.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "trebia_placentia_town",
+            "type": "home",
+            "x": 548.0,
+            "z": 130.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "trebia_placentia_town",
+            "type": "home",
+            "x": 584.0,
+            "z": 130.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "trebia_placentia_town",
+            "type": "home",
+            "x": 578.0,
+            "z": 136.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "trebia_placentia_town",
+            "type": "defense_tower",
+            "x": 590.34,
+            "z": 124.29
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "trebia_placentia_town",
+            "type": "defense_tower",
+            "x": 541.66,
+            "z": 124.29
+        },
+        {
             "landmark": "trebia_south_sanctuary",
             "nation": "carthage",
             "type": "temple",
@@ -2662,289 +2990,979 @@
         },
         {
             "authored": true,
+            "end": [
+                128.0,
+                22.0
+            ],
             "nation": "roman_republic",
             "player_id": 2,
-            "rotation": 0,
-            "type": "wall_gate",
-            "x": 148,
-            "z": 22
+            "settlement": "trebia_winter_camp",
+            "start": [
+                128.0,
+                20.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
         },
         {
             "authored": true,
+            "end": [
+                172.0,
+                22.0
+            ],
             "nation": "roman_republic",
             "player_id": 2,
-            "rotation": 90,
-            "type": "wall_gate",
-            "x": 172,
-            "z": 46
+            "settlement": "trebia_winter_camp",
+            "start": [
+                172.0,
+                20.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
         },
         {
             "authored": true,
+            "end": [
+                130.0,
+                26.0
+            ],
             "nation": "roman_republic",
             "player_id": 2,
-            "rotation": 0,
-            "type": "wall_gate",
-            "x": 136,
-            "z": 58
+            "settlement": "trebia_winter_camp",
+            "start": [
+                130.0,
+                22.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
         },
         {
             "authored": true,
+            "end": [
+                132.0,
+                30.0
+            ],
             "nation": "roman_republic",
             "player_id": 2,
-            "type": "defense_tower",
-            "x": 128,
-            "z": 22
+            "settlement": "trebia_winter_camp",
+            "start": [
+                132.0,
+                22.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
         },
         {
             "authored": true,
+            "end": [
+                168.0,
+                30.0
+            ],
             "nation": "roman_republic",
             "player_id": 2,
-            "type": "defense_tower",
-            "x": 172,
-            "z": 22
+            "settlement": "trebia_winter_camp",
+            "start": [
+                168.0,
+                22.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
         },
         {
             "authored": true,
+            "end": [
+                170.0,
+                26.0
+            ],
             "nation": "roman_republic",
             "player_id": 2,
-            "type": "defense_tower",
-            "x": 172,
-            "z": 58
+            "settlement": "trebia_winter_camp",
+            "start": [
+                170.0,
+                22.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
         },
         {
             "authored": true,
+            "end": [
+                136.0,
+                24.0
+            ],
             "nation": "roman_republic",
             "player_id": 2,
-            "type": "defense_tower",
-            "x": 133,
-            "z": 49.34
+            "settlement": "trebia_winter_camp",
+            "start": [
+                134.0,
+                24.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
         },
         {
             "authored": true,
-            "max_population": 60,
+            "end": [
+                166.0,
+                24.0
+            ],
             "nation": "roman_republic",
             "player_id": 2,
-            "type": "barracks",
-            "x": 156,
-            "z": 31
+            "settlement": "trebia_winter_camp",
+            "start": [
+                164.0,
+                24.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
         },
         {
             "authored": true,
+            "end": [
+                138.0,
+                26.0
+            ],
             "nation": "roman_republic",
             "player_id": 2,
-            "type": "home",
-            "x": 136.36,
-            "z": 40
+            "settlement": "trebia_winter_camp",
+            "start": [
+                136.0,
+                26.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
         },
         {
             "authored": true,
+            "end": [
+                164.0,
+                26.0
+            ],
             "nation": "roman_republic",
             "player_id": 2,
-            "type": "home",
-            "x": 144.38,
-            "z": 41.52
+            "settlement": "trebia_winter_camp",
+            "start": [
+                160.0,
+                26.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
         },
         {
             "authored": true,
+            "end": [
+                160.0,
+                28.0
+            ],
             "nation": "roman_republic",
             "player_id": 2,
-            "type": "home",
-            "x": 156.62,
-            "z": 40
+            "settlement": "trebia_winter_camp",
+            "start": [
+                138.0,
+                28.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
         },
         {
             "authored": true,
+            "end": [
+                134.0,
+                50.0
+            ],
             "nation": "roman_republic",
             "player_id": 2,
-            "type": "home",
-            "x": 163.64000000000001,
-            "z": 40
+            "settlement": "trebia_winter_camp",
+            "start": [
+                134.0,
+                30.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
         },
         {
             "authored": true,
+            "end": [
+                168.0,
+                58.0
+            ],
             "nation": "roman_republic",
             "player_id": 2,
-            "type": "home",
-            "x": 136.36,
-            "z": 47.56
+            "settlement": "trebia_winter_camp",
+            "start": [
+                168.0,
+                50.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
         },
         {
             "authored": true,
+            "end": [
+                160.0,
+                52.0
+            ],
             "nation": "roman_republic",
             "player_id": 2,
-            "type": "home",
-            "x": 143.38,
-            "z": 44.1
+            "settlement": "trebia_winter_camp",
+            "start": [
+                138.0,
+                52.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
         },
         {
             "authored": true,
+            "end": [
+                130.0,
+                58.0
+            ],
             "nation": "roman_republic",
             "player_id": 2,
-            "type": "home",
-            "x": 156.62,
-            "z": 51.02
+            "settlement": "trebia_winter_camp",
+            "start": [
+                130.0,
+                54.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
         },
         {
             "authored": true,
+            "end": [
+                138.0,
+                54.0
+            ],
             "nation": "roman_republic",
             "player_id": 2,
-            "type": "home",
-            "x": 165.64000000000001,
-            "z": 51.02
+            "settlement": "trebia_winter_camp",
+            "start": [
+                136.0,
+                54.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
         },
         {
             "authored": true,
+            "end": [
+                164.0,
+                54.0
+            ],
             "nation": "roman_republic",
-            "player_id": 3,
-            "rotation": 90,
-            "type": "wall_gate",
-            "x": 598,
-            "z": 110
+            "player_id": 2,
+            "settlement": "trebia_winter_camp",
+            "start": [
+                160.0,
+                54.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
         },
         {
             "authored": true,
+            "end": [
+                170.0,
+                58.0
+            ],
             "nation": "roman_republic",
-            "player_id": 3,
-            "rotation": 0,
-            "type": "wall_gate",
-            "x": 546,
-            "z": 144
+            "player_id": 2,
+            "settlement": "trebia_winter_camp",
+            "start": [
+                170.0,
+                54.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
         },
         {
             "authored": true,
+            "end": [
+                136.0,
+                56.0
+            ],
             "nation": "roman_republic",
-            "player_id": 3,
-            "rotation": 90,
-            "type": "wall_gate",
-            "x": 534,
-            "z": 108
+            "player_id": 2,
+            "settlement": "trebia_winter_camp",
+            "start": [
+                134.0,
+                56.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
         },
         {
             "authored": true,
+            "end": [
+                166.0,
+                56.0
+            ],
             "nation": "roman_republic",
-            "player_id": 3,
-            "type": "defense_tower",
-            "x": 534,
-            "z": 92
+            "player_id": 2,
+            "settlement": "trebia_winter_camp",
+            "start": [
+                164.0,
+                56.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
         },
         {
             "authored": true,
+            "end": [
+                128.0,
+                60.0
+            ],
             "nation": "roman_republic",
-            "player_id": 3,
-            "type": "defense_tower",
-            "x": 598,
-            "z": 92
+            "player_id": 2,
+            "settlement": "trebia_winter_camp",
+            "start": [
+                128.0,
+                58.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
         },
         {
             "authored": true,
+            "end": [
+                172.0,
+                60.0
+            ],
             "nation": "roman_republic",
-            "player_id": 3,
-            "type": "defense_tower",
-            "x": 598,
-            "z": 144
+            "player_id": 2,
+            "settlement": "trebia_winter_camp",
+            "start": [
+                172.0,
+                58.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
         },
         {
             "authored": true,
+            "end": [
+                132.0,
+                50.0
+            ],
             "nation": "roman_republic",
-            "player_id": 3,
-            "type": "defense_tower",
-            "x": 534,
-            "z": 144
+            "player_id": 2,
+            "settlement": "trebia_winter_camp",
+            "start": [
+                132.0,
+                50.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
         },
         {
             "authored": true,
-            "max_population": 75,
+            "end": [
+                132.0,
+                58.0
+            ],
             "nation": "roman_republic",
-            "player_id": 3,
-            "type": "barracks",
-            "x": 566,
-            "z": 103.7
+            "player_id": 2,
+            "settlement": "trebia_winter_camp",
+            "start": [
+                132.0,
+                58.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
         },
         {
             "authored": true,
+            "end": [
+                166.0,
+                42.0
+            ],
             "nation": "roman_republic",
-            "player_id": 3,
-            "type": "marketplace",
-            "x": 556.4,
-            "z": 120
+            "player_id": 2,
+            "settlement": "trebia_winter_camp",
+            "start": [
+                166.0,
+                30.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
         },
         {
             "authored": true,
+            "end": [
+                166.0,
+                50.0
+            ],
             "nation": "roman_republic",
-            "player_id": 3,
-            "type": "temple",
-            "x": 579.0600000000001,
-            "z": 120
+            "player_id": 2,
+            "settlement": "trebia_winter_camp",
+            "start": [
+                166.0,
+                50.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
         },
         {
             "authored": true,
+            "end": [
+                576.0,
+                92.0
+            ],
             "nation": "roman_republic",
             "player_id": 3,
-            "type": "home",
-            "x": 546.8000000000001,
-            "z": 127.10000000000001
+            "settlement": "trebia_placentia_town",
+            "start": [
+                556.0,
+                92.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
         },
         {
             "authored": true,
+            "end": [
+                556.0,
+                94.0
+            ],
             "nation": "roman_republic",
             "player_id": 3,
-            "type": "home",
-            "x": 563.2,
-            "z": 130.1
+            "settlement": "trebia_placentia_town",
+            "start": [
+                552.0,
+                94.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
         },
         {
             "authored": true,
+            "end": [
+                580.0,
+                94.0
+            ],
             "nation": "roman_republic",
             "player_id": 3,
-            "type": "home",
-            "x": 574,
-            "z": 127.10000000000001
+            "settlement": "trebia_placentia_town",
+            "start": [
+                576.0,
+                94.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
         },
         {
             "authored": true,
+            "end": [
+                552.0,
+                96.0
+            ],
             "nation": "roman_republic",
             "player_id": 3,
-            "type": "home",
-            "x": 585.2,
-            "z": 127.10000000000001
+            "settlement": "trebia_placentia_town",
+            "start": [
+                548.0,
+                96.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
         },
         {
             "authored": true,
+            "end": [
+                584.0,
+                96.0
+            ],
             "nation": "roman_republic",
             "player_id": 3,
-            "type": "home",
-            "x": 545.07,
-            "z": 135.12
+            "settlement": "trebia_placentia_town",
+            "start": [
+                580.0,
+                96.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
         },
         {
             "authored": true,
+            "end": [
+                548.0,
+                98.0
+            ],
             "nation": "roman_republic",
             "player_id": 3,
-            "type": "home",
-            "x": 560,
-            "z": 134.12
+            "settlement": "trebia_placentia_town",
+            "start": [
+                546.0,
+                98.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
         },
         {
             "authored": true,
+            "end": [
+                586.0,
+                98.0
+            ],
             "nation": "roman_republic",
             "player_id": 3,
-            "type": "home",
-            "x": 574,
-            "z": 134.12
+            "settlement": "trebia_placentia_town",
+            "start": [
+                584.0,
+                98.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
         },
         {
             "authored": true,
+            "end": [
+                546.0,
+                100.0
+            ],
             "nation": "roman_republic",
             "player_id": 3,
-            "type": "home",
-            "x": 585.2,
-            "z": 134.12
+            "settlement": "trebia_placentia_town",
+            "start": [
+                544.0,
+                100.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
         },
         {
-            "max_population": 50,
-            "type": "barracks",
-            "x": 557,
-            "z": 559
+            "authored": true,
+            "end": [
+                588.0,
+                100.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "trebia_placentia_town",
+            "start": [
+                586.0,
+                100.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                542.0,
+                106.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "trebia_placentia_town",
+            "start": [
+                542.0,
+                102.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                544.0,
+                102.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "trebia_placentia_town",
+            "start": [
+                544.0,
+                102.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                590.0,
+                102.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "trebia_placentia_town",
+            "start": [
+                588.0,
+                102.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                590.0,
+                106.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "trebia_placentia_town",
+            "start": [
+                590.0,
+                104.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                540.0,
+                110.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "trebia_placentia_town",
+            "start": [
+                540.0,
+                106.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                592.0,
+                110.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "trebia_placentia_town",
+            "start": [
+                592.0,
+                106.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                594.0,
+                126.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "trebia_placentia_town",
+            "start": [
+                594.0,
+                110.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                536.0,
+                118.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "trebia_placentia_town",
+            "start": [
+                536.0,
+                118.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                540.0,
+                130.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "trebia_placentia_town",
+            "start": [
+                540.0,
+                126.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                592.0,
+                130.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "trebia_placentia_town",
+            "start": [
+                592.0,
+                126.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                542.0,
+                134.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "trebia_placentia_town",
+            "start": [
+                542.0,
+                130.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                590.0,
+                134.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "trebia_placentia_town",
+            "start": [
+                590.0,
+                130.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                544.0,
+                136.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "trebia_placentia_town",
+            "start": [
+                544.0,
+                134.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                588.0,
+                136.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "trebia_placentia_town",
+            "start": [
+                588.0,
+                134.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                546.0,
+                138.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "trebia_placentia_town",
+            "start": [
+                546.0,
+                136.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                586.0,
+                138.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "trebia_placentia_town",
+            "start": [
+                586.0,
+                136.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                548.0,
+                140.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "trebia_placentia_town",
+            "start": [
+                548.0,
+                138.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                584.0,
+                140.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "trebia_placentia_town",
+            "start": [
+                584.0,
+                138.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                552.0,
+                140.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "trebia_placentia_town",
+            "start": [
+                550.0,
+                140.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                582.0,
+                140.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "trebia_placentia_town",
+            "start": [
+                580.0,
+                140.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                556.0,
+                142.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "trebia_placentia_town",
+            "start": [
+                552.0,
+                142.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                580.0,
+                142.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "trebia_placentia_town",
+            "start": [
+                576.0,
+                142.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                556.0,
+                144.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "trebia_placentia_town",
+            "start": [
+                556.0,
+                144.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                576.0,
+                144.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "trebia_placentia_town",
+            "start": [
+                564.0,
+                144.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                538.0,
+                110.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "trebia_placentia_town",
+            "start": [
+                538.0,
+                110.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                538.0,
+                126.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "trebia_placentia_town",
+            "start": [
+                538.0,
+                118.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
         },
         {
             "authored": true,
@@ -3032,216 +4050,6 @@
             "start": [
                 298,
                 524
-            ],
-            "type": "wall_segment",
-            "width": 2
-        },
-        {
-            "authored": true,
-            "end": [
-                144,
-                22
-            ],
-            "nation": "roman_republic",
-            "player_id": 2,
-            "start": [
-                128,
-                22
-            ],
-            "type": "wall_segment",
-            "width": 2
-        },
-        {
-            "authored": true,
-            "end": [
-                172,
-                22
-            ],
-            "nation": "roman_republic",
-            "player_id": 2,
-            "start": [
-                152,
-                22
-            ],
-            "type": "wall_segment",
-            "width": 2
-        },
-        {
-            "authored": true,
-            "end": [
-                172,
-                42
-            ],
-            "nation": "roman_republic",
-            "player_id": 2,
-            "start": [
-                172,
-                22
-            ],
-            "type": "wall_segment",
-            "width": 2
-        },
-        {
-            "authored": true,
-            "end": [
-                172,
-                58
-            ],
-            "nation": "roman_republic",
-            "player_id": 2,
-            "start": [
-                172,
-                50
-            ],
-            "type": "wall_segment",
-            "width": 2
-        },
-        {
-            "authored": true,
-            "end": [
-                132,
-                58
-            ],
-            "nation": "roman_republic",
-            "player_id": 2,
-            "start": [
-                128,
-                58
-            ],
-            "type": "wall_segment",
-            "width": 2
-        },
-        {
-            "authored": true,
-            "end": [
-                172,
-                58
-            ],
-            "nation": "roman_republic",
-            "player_id": 2,
-            "start": [
-                140,
-                58
-            ],
-            "type": "wall_segment",
-            "width": 2
-        },
-        {
-            "authored": true,
-            "end": [
-                128,
-                58
-            ],
-            "nation": "roman_republic",
-            "player_id": 2,
-            "start": [
-                128,
-                22
-            ],
-            "type": "wall_segment",
-            "width": 2
-        },
-        {
-            "authored": true,
-            "end": [
-                598,
-                92
-            ],
-            "nation": "roman_republic",
-            "player_id": 3,
-            "start": [
-                534,
-                92
-            ],
-            "type": "wall_segment",
-            "width": 2
-        },
-        {
-            "authored": true,
-            "end": [
-                598,
-                106
-            ],
-            "nation": "roman_republic",
-            "player_id": 3,
-            "start": [
-                598,
-                92
-            ],
-            "type": "wall_segment",
-            "width": 2
-        },
-        {
-            "authored": true,
-            "end": [
-                598,
-                144
-            ],
-            "nation": "roman_republic",
-            "player_id": 3,
-            "start": [
-                598,
-                114
-            ],
-            "type": "wall_segment",
-            "width": 2
-        },
-        {
-            "authored": true,
-            "end": [
-                542,
-                144
-            ],
-            "nation": "roman_republic",
-            "player_id": 3,
-            "start": [
-                534,
-                144
-            ],
-            "type": "wall_segment",
-            "width": 2
-        },
-        {
-            "authored": true,
-            "end": [
-                598,
-                144
-            ],
-            "nation": "roman_republic",
-            "player_id": 3,
-            "start": [
-                550,
-                144
-            ],
-            "type": "wall_segment",
-            "width": 2
-        },
-        {
-            "authored": true,
-            "end": [
-                534,
-                104
-            ],
-            "nation": "roman_republic",
-            "player_id": 3,
-            "start": [
-                534,
-                92
-            ],
-            "type": "wall_segment",
-            "width": 2
-        },
-        {
-            "authored": true,
-            "end": [
-                534,
-                144
-            ],
-            "nation": "roman_republic",
-            "player_id": 3,
-            "start": [
-                534,
-                112
             ],
             "type": "wall_segment",
             "width": 2
@@ -3678,8 +4486,8 @@
             "rotation": 1,
             "scale": 0.9,
             "type": "tent",
-            "x": 560.61,
-            "z": 96.05
+            "x": 558.74,
+            "z": 96.21
         },
         {
             "rotation": 4.2,
@@ -3692,8 +4500,8 @@
             "rotation": 2.6,
             "scale": 1,
             "type": "supply_cart",
-            "x": 581.54,
-            "z": 130.42000000000002
+            "x": 581.46,
+            "z": 131.57
         },
         {
             "rotation": 0.5,
@@ -4491,14 +5299,14 @@
             "rotation": 147,
             "scale": 1,
             "type": "statue",
-            "x": 588.35,
+            "x": 588.02,
             "z": 132.62
         },
         {
             "rotation": 25,
             "scale": 0.96,
             "type": "statue",
-            "x": 592.52,
+            "x": 592.21,
             "z": 121.15
         },
         {
@@ -5016,7 +5824,7 @@
             "scale": 1,
             "type": "firecamp",
             "x": 150,
-            "z": 52.96
+            "z": 54.07
         },
         {
             "authored_camp": true,
@@ -5025,15 +5833,15 @@
             "radius": 4,
             "scale": 1,
             "type": "firecamp",
-            "x": 159.24,
-            "z": 52.96
+            "x": 158.93,
+            "z": 54.07
         },
         {
             "authored_camp": true,
             "scale": 1,
             "type": "supply_cart",
-            "x": 134.16,
-            "z": 31.900000000000002
+            "x": 136.52,
+            "z": 30.18
         },
         {
             "authored_camp": true,
@@ -5049,8 +5857,8 @@
             "radius": 3.4,
             "scale": 1,
             "type": "firecamp",
-            "x": 546.96,
-            "z": 107.4
+            "x": 547.66,
+            "z": 108.36
         },
         {
             "authored_camp": true,
@@ -5063,32 +5871,32 @@
             "z": 109.5
         },
         {
+            "rotation": 1.9,
+            "scale": 1.0,
             "type": "cursed_gold_vein",
             "x": 552,
-            "z": 442,
-            "scale": 1.0,
-            "rotation": 1.9
+            "z": 442
         },
         {
+            "rotation": 6.16,
+            "scale": 1.0,
             "type": "cursed_gold_vein",
             "x": 152,
-            "z": 352,
-            "scale": 1.0,
-            "rotation": 6.16
+            "z": 352
         },
         {
+            "rotation": 0.02,
+            "scale": 1.0,
             "type": "cursed_gold_vein",
             "x": 442,
-            "z": 52,
-            "scale": 1.0,
-            "rotation": 0.02
+            "z": 52
         },
         {
+            "rotation": 2.62,
+            "scale": 1.0,
             "type": "cursed_gold_vein",
             "x": 352,
-            "z": 362,
-            "scale": 1.0,
-            "rotation": 2.62
+            "z": 362
         }
     ]
 }

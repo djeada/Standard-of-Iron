@@ -999,6 +999,8 @@ void ProductionSystem::update(Engine::Core::World* world, float delta_time) {
               sp.spawn_type = Game::Units::SpawnType::Barracks;
             } else if (builder_prod->product_type == "defense_tower") {
               sp.spawn_type = Game::Units::SpawnType::DefenseTower;
+            } else if (builder_prod->product_type == "wall_gate") {
+              sp.spawn_type = Game::Units::SpawnType::WallGate;
             } else if (is_wall_network_product(builder_prod->product_type)) {
               sp.spawn_type = Game::Units::SpawnType::WallSegment;
             } else if (builder_prod->product_type == "home") {

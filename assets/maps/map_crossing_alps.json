@@ -1210,34 +1210,86 @@
             "z": 104
         },
         {
-            "authored": true,
             "facing": "north",
             "id": "alps_first_pass_camp",
             "max_population": 50,
             "nation": "roman_republic",
+            "plan": "circle",
+            "plan_options": {
+                "gate_count": 3,
+                "size": [
+                    16,
+                    14
+                ],
+                "towers": 3
+            },
             "player_id": 2,
             "tier": "marching_camp",
             "x": 116,
             "z": 168
         },
         {
-            "authored": true,
             "facing": "north",
+            "homes": 8,
             "id": "alps_high_pass_fort",
             "max_population": 50,
             "nation": "roman_republic",
             "on_hill": false,
+            "plan": "curtain",
+            "plan_options": {
+                "camp": [
+                    18,
+                    14
+                ],
+                "depth": 26,
+                "gates": [
+                    [
+                        168,
+                        302
+                    ]
+                ],
+                "path": [
+                    [
+                        150,
+                        302
+                    ],
+                    [
+                        200,
+                        302
+                    ],
+                    [
+                        232,
+                        296
+                    ],
+                    [
+                        252,
+                        293
+                    ]
+                ],
+                "towers": 3
+            },
             "player_id": 3,
             "tier": "fortified_camp",
             "x": 196,
             "z": 356
         },
         {
-            "authored": true,
             "facing": "west",
             "id": "alps_descent_town",
             "max_population": 60,
             "nation": "roman_republic",
+            "plan": "twin",
+            "plan_options": {
+                "neck": 6,
+                "offset": [
+                    30,
+                    26
+                ],
+                "size": [
+                    17,
+                    12
+                ]
+            },
             "player_id": 4,
             "tier": "town",
             "x": 576,
@@ -1256,7 +1308,7 @@
             "max_population": -1,
             "player_id": 1,
             "type": "spearman",
-            "x": 44.76,
+            "x": 44.54,
             "z": 73.8
         },
         {
@@ -1589,6 +1641,311 @@
     },
     "structures": [
         {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 2,
+            "rotation": 0.0,
+            "settlement": "alps_first_pass_camp",
+            "type": "wall_gate",
+            "x": 110.0,
+            "z": 176.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 2,
+            "rotation": 90.0,
+            "settlement": "alps_first_pass_camp",
+            "type": "wall_gate",
+            "x": 126.0,
+            "z": 166.0
+        },
+        {
+            "authored": true,
+            "max_population": 50,
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "alps_first_pass_camp",
+            "type": "barracks",
+            "x": 113.88,
+            "z": 159.88
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "alps_first_pass_camp",
+            "type": "defense_tower",
+            "x": 121.87,
+            "z": 161.43
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "alps_first_pass_camp",
+            "type": "defense_tower",
+            "x": 101.13,
+            "z": 163.09
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "alps_first_pass_camp",
+            "type": "defense_tower",
+            "x": 105.91,
+            "z": 157.4
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "rotation": 0.0,
+            "settlement": "alps_high_pass_fort",
+            "type": "wall_gate",
+            "x": 170.0,
+            "z": 302.0
+        },
+        {
+            "authored": true,
+            "max_population": 50,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "alps_high_pass_fort",
+            "type": "barracks",
+            "x": 198.33,
+            "z": 364.69
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "alps_high_pass_fort",
+            "type": "marketplace",
+            "x": 190.46,
+            "z": 368.3
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "alps_high_pass_fort",
+            "type": "home",
+            "x": 202.0,
+            "z": 344.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "alps_high_pass_fort",
+            "type": "home",
+            "x": 184.0,
+            "z": 350.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "alps_high_pass_fort",
+            "type": "home",
+            "x": 208.0,
+            "z": 350.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "alps_high_pass_fort",
+            "type": "home",
+            "x": 184.0,
+            "z": 362.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "alps_high_pass_fort",
+            "type": "home",
+            "x": 184.0,
+            "z": 344.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "alps_high_pass_fort",
+            "type": "home",
+            "x": 208.0,
+            "z": 344.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "alps_high_pass_fort",
+            "type": "home",
+            "x": 178.0,
+            "z": 350.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "alps_high_pass_fort",
+            "type": "home",
+            "x": 214.0,
+            "z": 350.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "alps_high_pass_fort",
+            "type": "defense_tower",
+            "x": 178.02,
+            "z": 305.53
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "alps_high_pass_fort",
+            "type": "defense_tower",
+            "x": 200.97,
+            "z": 305.72
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 4,
+            "rotation": 90.0,
+            "settlement": "alps_descent_town",
+            "type": "wall_gate",
+            "x": 578.0,
+            "z": 546.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 4,
+            "rotation": 90.0,
+            "settlement": "alps_descent_town",
+            "type": "wall_gate",
+            "x": 544.0,
+            "z": 548.0
+        },
+        {
+            "authored": true,
+            "max_population": 60,
+            "nation": "roman_republic",
+            "player_id": 4,
+            "settlement": "alps_descent_town",
+            "type": "barracks",
+            "x": 563.12,
+            "z": 553.12
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 4,
+            "settlement": "alps_descent_town",
+            "type": "marketplace",
+            "x": 591.0,
+            "z": 577.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 4,
+            "settlement": "alps_descent_town",
+            "type": "temple",
+            "x": 588.88,
+            "z": 570.08
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 4,
+            "settlement": "alps_descent_town",
+            "type": "home",
+            "x": 582.0,
+            "z": 576.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 4,
+            "settlement": "alps_descent_town",
+            "type": "home",
+            "x": 594.0,
+            "z": 570.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 4,
+            "settlement": "alps_descent_town",
+            "type": "home",
+            "x": 582.0,
+            "z": 582.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 4,
+            "settlement": "alps_descent_town",
+            "type": "home",
+            "x": 588.0,
+            "z": 582.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 4,
+            "settlement": "alps_descent_town",
+            "type": "home",
+            "x": 594.0,
+            "z": 582.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 4,
+            "settlement": "alps_descent_town",
+            "type": "defense_tower",
+            "x": 554.67,
+            "z": 552.98
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 4,
+            "settlement": "alps_descent_town",
+            "type": "defense_tower",
+            "x": 548.0,
+            "z": 559.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 4,
+            "settlement": "alps_descent_town",
+            "type": "defense_tower",
+            "x": 604.0,
+            "z": 569.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 4,
+            "settlement": "alps_descent_town",
+            "type": "defense_tower",
+            "x": 604.0,
+            "z": 585.0
+        },
+        {
             "landmark": "alps_ascent_sanctuary",
             "nation": "carthage",
             "type": "temple",
@@ -1776,308 +2133,659 @@
         },
         {
             "authored": true,
+            "end": [
+                114.0,
+                150.0
+            ],
             "nation": "roman_republic",
             "player_id": 2,
-            "rotation": 90,
-            "type": "wall_gate",
-            "x": 128,
-            "z": 170
+            "settlement": "alps_first_pass_camp",
+            "start": [
+                110.0,
+                150.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
         },
         {
             "authored": true,
+            "end": [
+                110.0,
+                152.0
+            ],
             "nation": "roman_republic",
             "player_id": 2,
-            "rotation": 0,
-            "type": "wall_gate",
-            "x": 112,
-            "z": 180
+            "settlement": "alps_first_pass_camp",
+            "start": [
+                104.0,
+                152.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
         },
         {
             "authored": true,
+            "end": [
+                120.0,
+                152.0
+            ],
             "nation": "roman_republic",
             "player_id": 2,
-            "rotation": 90,
-            "type": "wall_gate",
-            "x": 104,
-            "z": 166
+            "settlement": "alps_first_pass_camp",
+            "start": [
+                114.0,
+                152.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
         },
         {
             "authored": true,
+            "end": [
+                104.0,
+                154.0
+            ],
             "nation": "roman_republic",
             "player_id": 2,
-            "type": "defense_tower",
-            "x": 104,
-            "z": 156
+            "settlement": "alps_first_pass_camp",
+            "start": [
+                102.0,
+                154.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
         },
         {
             "authored": true,
+            "end": [
+                122.0,
+                154.0
+            ],
             "nation": "roman_republic",
             "player_id": 2,
-            "type": "defense_tower",
-            "x": 128,
-            "z": 156
+            "settlement": "alps_first_pass_camp",
+            "start": [
+                120.0,
+                154.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
         },
         {
             "authored": true,
+            "end": [
+                102.0,
+                156.0
+            ],
             "nation": "roman_republic",
             "player_id": 2,
-            "type": "defense_tower",
-            "x": 128,
-            "z": 180
+            "settlement": "alps_first_pass_camp",
+            "start": [
+                100.0,
+                156.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
         },
         {
             "authored": true,
+            "end": [
+                124.0,
+                156.0
+            ],
             "nation": "roman_republic",
             "player_id": 2,
-            "type": "defense_tower",
-            "x": 116.0,
-            "z": 156.44
+            "settlement": "alps_first_pass_camp",
+            "start": [
+                122.0,
+                156.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
         },
         {
             "authored": true,
-            "max_population": 40,
+            "end": [
+                98.0,
+                162.0
+            ],
             "nation": "roman_republic",
             "player_id": 2,
-            "type": "barracks",
-            "x": 116,
-            "z": 160
+            "settlement": "alps_first_pass_camp",
+            "start": [
+                98.0,
+                158.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
         },
         {
             "authored": true,
+            "end": [
+                100.0,
+                158.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "alps_first_pass_camp",
+            "start": [
+                100.0,
+                158.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                126.0,
+                158.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "alps_first_pass_camp",
+            "start": [
+                124.0,
+                158.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                96.0,
+                166.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "alps_first_pass_camp",
+            "start": [
+                96.0,
+                162.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                98.0,
+                170.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "alps_first_pass_camp",
+            "start": [
+                98.0,
+                166.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                100.0,
+                172.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "alps_first_pass_camp",
+            "start": [
+                100.0,
+                170.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                124.0,
+                172.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "alps_first_pass_camp",
+            "start": [
+                124.0,
+                170.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                102.0,
+                174.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "alps_first_pass_camp",
+            "start": [
+                102.0,
+                172.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                122.0,
+                174.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "alps_first_pass_camp",
+            "start": [
+                122.0,
+                172.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                106.0,
+                174.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "alps_first_pass_camp",
+            "start": [
+                104.0,
+                174.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                120.0,
+                174.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "alps_first_pass_camp",
+            "start": [
+                118.0,
+                174.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                106.0,
+                176.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "alps_first_pass_camp",
+            "start": [
+                106.0,
+                176.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                118.0,
+                176.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "alps_first_pass_camp",
+            "start": [
+                114.0,
+                176.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                126.0,
+                162.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "alps_first_pass_camp",
+            "start": [
+                126.0,
+                160.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                126.0,
+                170.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "alps_first_pass_camp",
+            "start": [
+                126.0,
+                170.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                238.0,
+                296.0
+            ],
             "nation": "roman_republic",
             "player_id": 3,
-            "rotation": 0,
-            "type": "wall_gate",
-            "x": 188,
-            "z": 340
+            "settlement": "alps_high_pass_fort",
+            "start": [
+                232.0,
+                296.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
         },
         {
             "authored": true,
+            "end": [
+                232.0,
+                298.0
+            ],
             "nation": "roman_republic",
             "player_id": 3,
-            "rotation": 90,
-            "type": "wall_gate",
-            "x": 222,
-            "z": 364
+            "settlement": "alps_high_pass_fort",
+            "start": [
+                230.0,
+                298.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
         },
         {
             "authored": true,
+            "end": [
+                230.0,
+                300.0
+            ],
             "nation": "roman_republic",
             "player_id": 3,
-            "type": "defense_tower",
-            "x": 170,
-            "z": 340
+            "settlement": "alps_high_pass_fort",
+            "start": [
+                228.0,
+                300.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
         },
         {
             "authored": true,
+            "end": [
+                166.0,
+                302.0
+            ],
             "nation": "roman_republic",
             "player_id": 3,
-            "type": "defense_tower",
-            "x": 222,
-            "z": 340
+            "settlement": "alps_high_pass_fort",
+            "start": [
+                166.0,
+                302.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
         },
         {
             "authored": true,
+            "end": [
+                228.0,
+                302.0
+            ],
             "nation": "roman_republic",
             "player_id": 3,
-            "type": "defense_tower",
-            "x": 222,
-            "z": 372
+            "settlement": "alps_high_pass_fort",
+            "start": [
+                174.0,
+                302.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
         },
         {
             "authored": true,
-            "nation": "roman_republic",
-            "player_id": 3,
-            "type": "defense_tower",
-            "x": 170,
-            "z": 372
-        },
-        {
-            "authored": true,
-            "max_population": 70,
-            "nation": "roman_republic",
-            "player_id": 3,
-            "type": "barracks",
-            "x": 196,
-            "z": 362
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 3,
-            "type": "marketplace",
-            "x": 181.70000000000002,
-            "z": 363.2
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 3,
-            "type": "home",
-            "x": 181.70000000000002,
-            "z": 348
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 3,
-            "type": "home",
-            "x": 210.3,
-            "z": 348
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 3,
-            "type": "defense_tower",
-            "x": 170,
-            "z": 350.40000000000003
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 3,
-            "type": "defense_tower",
-            "x": 222,
-            "z": 350.40000000000003
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 3,
-            "type": "defense_tower",
-            "x": 170,
-            "z": 361.6
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 3,
-            "type": "defense_tower",
-            "x": 219,
-            "z": 356.40000000000003
-        },
-        {
-            "authored": true,
+            "end": [
+                578.0,
+                540.0
+            ],
             "nation": "roman_republic",
             "player_id": 4,
-            "rotation": 0,
-            "type": "wall_gate",
-            "x": 564,
-            "z": 540
+            "settlement": "alps_descent_town",
+            "start": [
+                544.0,
+                540.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
         },
         {
             "authored": true,
+            "end": [
+                592.0,
+                558.0
+            ],
             "nation": "roman_republic",
             "player_id": 4,
-            "rotation": 90,
-            "type": "wall_gate",
-            "x": 602,
-            "z": 550
+            "settlement": "alps_descent_town",
+            "start": [
+                580.0,
+                558.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
         },
         {
             "authored": true,
+            "end": [
+                592.0,
+                566.0
+            ],
             "nation": "roman_republic",
             "player_id": 4,
-            "rotation": 90,
-            "type": "wall_gate",
-            "x": 550,
-            "z": 548
+            "settlement": "alps_descent_town",
+            "start": [
+                592.0,
+                560.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
         },
         {
             "authored": true,
+            "end": [
+                560.0,
+                562.0
+            ],
             "nation": "roman_republic",
             "player_id": 4,
-            "type": "defense_tower",
-            "x": 556,
-            "z": 550.39
+            "settlement": "alps_descent_town",
+            "start": [
+                546.0,
+                562.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
         },
         {
             "authored": true,
+            "end": [
+                560.0,
+                570.0
+            ],
             "nation": "roman_republic",
             "player_id": 4,
-            "type": "defense_tower",
-            "x": 602,
-            "z": 540
+            "settlement": "alps_descent_town",
+            "start": [
+                560.0,
+                564.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
         },
         {
             "authored": true,
+            "end": [
+                608.0,
+                566.0
+            ],
             "nation": "roman_republic",
             "player_id": 4,
-            "type": "defense_tower",
-            "x": 602,
-            "z": 588
+            "settlement": "alps_descent_town",
+            "start": [
+                594.0,
+                566.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
         },
         {
             "authored": true,
+            "end": [
+                608.0,
+                588.0
+            ],
             "nation": "roman_republic",
             "player_id": 4,
-            "type": "defense_tower",
-            "x": 550,
-            "z": 588
+            "settlement": "alps_descent_town",
+            "start": [
+                608.0,
+                568.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
         },
         {
             "authored": true,
-            "max_population": 70,
+            "end": [
+                574.0,
+                570.0
+            ],
             "nation": "roman_republic",
             "player_id": 4,
-            "type": "barracks",
-            "x": 576,
-            "z": 570
+            "settlement": "alps_descent_town",
+            "start": [
+                562.0,
+                570.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
         },
         {
             "authored": true,
+            "end": [
+                574.0,
+                588.0
+            ],
             "nation": "roman_republic",
             "player_id": 4,
-            "type": "marketplace",
-            "x": 563,
-            "z": 556.8000000000001
+            "settlement": "alps_descent_town",
+            "start": [
+                574.0,
+                572.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
         },
         {
             "authored": true,
+            "end": [
+                606.0,
+                588.0
+            ],
             "nation": "roman_republic",
             "player_id": 4,
-            "type": "temple",
-            "x": 589,
-            "z": 556.8000000000001
+            "settlement": "alps_descent_town",
+            "start": [
+                576.0,
+                588.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
         },
         {
             "authored": true,
+            "end": [
+                578.0,
+                542.0
+            ],
             "nation": "roman_republic",
             "player_id": 4,
-            "type": "home",
-            "x": 560.4,
-            "z": 579.6
+            "settlement": "alps_descent_town",
+            "start": [
+                578.0,
+                542.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
         },
         {
             "authored": true,
+            "end": [
+                578.0,
+                558.0
+            ],
             "nation": "roman_republic",
             "player_id": 4,
-            "type": "home",
-            "x": 570.8000000000001,
-            "z": 579.6
+            "settlement": "alps_descent_town",
+            "start": [
+                578.0,
+                550.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
         },
         {
             "authored": true,
+            "end": [
+                544.0,
+                544.0
+            ],
             "nation": "roman_republic",
             "player_id": 4,
-            "type": "home",
-            "x": 581.2,
-            "z": 579.6
+            "settlement": "alps_descent_town",
+            "start": [
+                544.0,
+                542.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
         },
         {
             "authored": true,
+            "end": [
+                544.0,
+                562.0
+            ],
             "nation": "roman_republic",
             "player_id": 4,
-            "type": "home",
-            "x": 591.6,
-            "z": 579.6
-        },
-        {
-            "max_population": 50,
-            "type": "barracks",
-            "x": 595,
-            "z": 277
+            "settlement": "alps_descent_town",
+            "start": [
+                544.0,
+                552.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
         },
         {
             "authored": true,
@@ -2285,306 +2993,6 @@
             "start": [
                 84,
                 96
-            ],
-            "type": "wall_segment",
-            "width": 2
-        },
-        {
-            "authored": true,
-            "end": [
-                128,
-                156
-            ],
-            "nation": "roman_republic",
-            "player_id": 2,
-            "start": [
-                104,
-                156
-            ],
-            "type": "wall_segment",
-            "width": 2
-        },
-        {
-            "authored": true,
-            "end": [
-                128,
-                166
-            ],
-            "nation": "roman_republic",
-            "player_id": 2,
-            "start": [
-                128,
-                156
-            ],
-            "type": "wall_segment",
-            "width": 2
-        },
-        {
-            "authored": true,
-            "end": [
-                128,
-                180
-            ],
-            "nation": "roman_republic",
-            "player_id": 2,
-            "start": [
-                128,
-                174
-            ],
-            "type": "wall_segment",
-            "width": 2
-        },
-        {
-            "authored": true,
-            "end": [
-                108,
-                180
-            ],
-            "nation": "roman_republic",
-            "player_id": 2,
-            "start": [
-                104,
-                180
-            ],
-            "type": "wall_segment",
-            "width": 2
-        },
-        {
-            "authored": true,
-            "end": [
-                128,
-                180
-            ],
-            "nation": "roman_republic",
-            "player_id": 2,
-            "start": [
-                116,
-                180
-            ],
-            "type": "wall_segment",
-            "width": 2
-        },
-        {
-            "authored": true,
-            "end": [
-                104,
-                162
-            ],
-            "nation": "roman_republic",
-            "player_id": 2,
-            "start": [
-                104,
-                156
-            ],
-            "type": "wall_segment",
-            "width": 2
-        },
-        {
-            "authored": true,
-            "end": [
-                104,
-                180
-            ],
-            "nation": "roman_republic",
-            "player_id": 2,
-            "start": [
-                104,
-                170
-            ],
-            "type": "wall_segment",
-            "width": 2
-        },
-        {
-            "authored": true,
-            "end": [
-                184,
-                340
-            ],
-            "nation": "roman_republic",
-            "player_id": 3,
-            "start": [
-                170,
-                340
-            ],
-            "type": "wall_segment",
-            "width": 2
-        },
-        {
-            "authored": true,
-            "end": [
-                222,
-                340
-            ],
-            "nation": "roman_republic",
-            "player_id": 3,
-            "start": [
-                192,
-                340
-            ],
-            "type": "wall_segment",
-            "width": 2
-        },
-        {
-            "authored": true,
-            "end": [
-                222,
-                360
-            ],
-            "nation": "roman_republic",
-            "player_id": 3,
-            "start": [
-                222,
-                340
-            ],
-            "type": "wall_segment",
-            "width": 2
-        },
-        {
-            "authored": true,
-            "end": [
-                222,
-                372
-            ],
-            "nation": "roman_republic",
-            "player_id": 3,
-            "start": [
-                222,
-                368
-            ],
-            "type": "wall_segment",
-            "width": 2
-        },
-        {
-            "authored": true,
-            "end": [
-                222,
-                372
-            ],
-            "nation": "roman_republic",
-            "player_id": 3,
-            "start": [
-                170,
-                372
-            ],
-            "type": "wall_segment",
-            "width": 2
-        },
-        {
-            "authored": true,
-            "end": [
-                170,
-                372
-            ],
-            "nation": "roman_republic",
-            "player_id": 3,
-            "start": [
-                170,
-                340
-            ],
-            "type": "wall_segment",
-            "width": 2
-        },
-        {
-            "authored": true,
-            "end": [
-                560,
-                540
-            ],
-            "nation": "roman_republic",
-            "player_id": 4,
-            "start": [
-                550,
-                540
-            ],
-            "type": "wall_segment",
-            "width": 2
-        },
-        {
-            "authored": true,
-            "end": [
-                602,
-                540
-            ],
-            "nation": "roman_republic",
-            "player_id": 4,
-            "start": [
-                568,
-                540
-            ],
-            "type": "wall_segment",
-            "width": 2
-        },
-        {
-            "authored": true,
-            "end": [
-                602,
-                546
-            ],
-            "nation": "roman_republic",
-            "player_id": 4,
-            "start": [
-                602,
-                540
-            ],
-            "type": "wall_segment",
-            "width": 2
-        },
-        {
-            "authored": true,
-            "end": [
-                602,
-                588
-            ],
-            "nation": "roman_republic",
-            "player_id": 4,
-            "start": [
-                602,
-                554
-            ],
-            "type": "wall_segment",
-            "width": 2
-        },
-        {
-            "authored": true,
-            "end": [
-                602,
-                588
-            ],
-            "nation": "roman_republic",
-            "player_id": 4,
-            "start": [
-                550,
-                588
-            ],
-            "type": "wall_segment",
-            "width": 2
-        },
-        {
-            "authored": true,
-            "end": [
-                550,
-                544
-            ],
-            "nation": "roman_republic",
-            "player_id": 4,
-            "start": [
-                550,
-                540
-            ],
-            "type": "wall_segment",
-            "width": 2
-        },
-        {
-            "authored": true,
-            "end": [
-                550,
-                588
-            ],
-            "nation": "roman_republic",
-            "player_id": 4,
-            "start": [
-                550,
-                552
             ],
             "type": "wall_segment",
             "width": 2
@@ -3103,8 +3511,8 @@
             "rotation": 1.58,
             "scale": 1.04,
             "type": "pine_tree",
-            "x": 47.1,
-            "z": 73.08
+            "x": 46.28,
+            "z": 72.71
         },
         {
             "rotation": 4.51,
@@ -3117,8 +3525,8 @@
             "rotation": 3.6,
             "scale": 1.09,
             "type": "pine_tree",
-            "x": 22.88,
-            "z": 77.29
+            "x": 28.13,
+            "z": 76.48
         },
         {
             "rotation": 2.95,
@@ -3620,7 +4028,7 @@
             "scale": 1,
             "type": "firecamp",
             "x": 222.33,
-            "z": 300.77
+            "z": 299.93
         },
         {
             "rotation": 154.20000000000002,
@@ -3885,13 +4293,6 @@
             "type": "statue",
             "x": 512.05,
             "z": 575.04
-        },
-        {
-            "rotation": 151,
-            "scale": 1.05,
-            "type": "statue",
-            "x": 560.71,
-            "z": 569.59
         },
         {
             "rotation": 67.6,
@@ -4378,7 +4779,7 @@
             "scale": 1,
             "type": "firecamp",
             "x": 116,
-            "z": 175.20000000000002
+            "z": 173.93
         },
         {
             "authored_camp": true,
@@ -4391,7 +4792,7 @@
             "authored_camp": true,
             "scale": 1,
             "type": "tent",
-            "x": 122.60000000000001,
+            "x": 129.51,
             "z": 162
         },
         {
@@ -4408,7 +4809,7 @@
             "authored_camp": true,
             "scale": 1,
             "type": "supply_cart",
-            "x": 201.65,
+            "x": 203.98,
             "z": 365.75
         },
         {
@@ -4416,7 +4817,7 @@
             "scale": 1.1,
             "type": "statue",
             "x": 576,
-            "z": 549.6
+            "z": 549.19
         },
         {
             "authored_camp": true,
@@ -4828,32 +5229,32 @@
             "z": 294
         },
         {
+            "rotation": 2.28,
+            "scale": 1.0,
             "type": "cursed_gold_vein",
             "x": 542,
-            "z": 402,
-            "scale": 1.0,
-            "rotation": 2.28
+            "z": 402
         },
         {
+            "rotation": 3.06,
+            "scale": 1.0,
             "type": "cursed_gold_vein",
             "x": 52,
-            "z": 382,
-            "scale": 1.0,
-            "rotation": 3.06
+            "z": 382
         },
         {
+            "rotation": 4.7,
+            "scale": 1.0,
             "type": "cursed_gold_vein",
             "x": 332,
-            "z": 582,
-            "scale": 1.0,
-            "rotation": 4.7
+            "z": 582
         },
         {
+            "rotation": 3.26,
+            "scale": 1.0,
             "type": "cursed_gold_vein",
             "x": 222,
-            "z": 292,
-            "scale": 1.0,
-            "rotation": 3.26
+            "z": 292
         }
     ]
 }

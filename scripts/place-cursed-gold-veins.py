@@ -23,6 +23,10 @@ import math
 import sys
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+
+from map_water_geometry import river_points
+
 REPO = Path(__file__).resolve().parent.parent
 MAPS = REPO / "assets" / "maps"
 SKIPPED = {"map_tutorial.json"}
@@ -37,7 +41,7 @@ def seg_dist(px, pz, ax, az, bx, bz):
 
 
 def polyline_dist(px, pz, feature):
-    pts = [feature["start"]] + list(feature.get("waypoints", [])) + [feature["end"]]
+    pts = river_points(feature)
     return min(
         seg_dist(px, pz, a[0], a[1], b[0], b[1])
         for a, b in zip(pts, pts[1:], strict=False)

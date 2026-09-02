@@ -289,8 +289,11 @@ void TerrainHeightMap::build_from_features(
       const float cos_a = std::cos(angle_rad);
       const float sin_a = std::sin(angle_rad);
 
-      const auto crown_profile = Game::Map::hill_crown_profile(
-          footprint, feature.height, m_tile_size, campaign_landform_scale);
+      const auto crown_profile = Game::Map::hill_crown_profile(footprint,
+                                                               feature.height,
+                                                               m_tile_size,
+                                                               campaign_landform_scale,
+                                                               feature.crown);
       const float hill_height = crown_profile.height;
 
       Game::Map::HillShapeAuthoring authoring;
@@ -433,6 +436,8 @@ void TerrainHeightMap::build_from_features(
               entrance_outside_hill(0.0F, 0.0F, -1.0F, 0.0F, slope_width * 0.98F));
         }
       }
+
+      const std::vector<float> ground_before_hill = m_heights;
 
       for (int z = min_z; z <= max_z; ++z) {
         for (int x = min_x; x <= max_x; ++x) {
@@ -756,7 +761,8 @@ void TerrainHeightMap::build_from_features(
               target_height = std::max(
                   0.0F, target_height - mouth_soften - floor_flatten + shoulder_raise);
 
-              m_heights[ramp_idx] = target_height;
+              m_heights[ramp_idx] =
+                  std::max(target_height, ground_before_hill[ramp_idx]);
             }
           }
         }

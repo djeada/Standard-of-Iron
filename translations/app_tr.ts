@@ -4587,8 +4587,8 @@ Bu işlem geri alınamaz.</translation>
         <translation>DURAKLATILDI</translation>
     </message>
     <message>
-        <source>Press Space to resume</source>
-        <translation>Sürdürmek için Boşluk&apos;a bas</translation>
+        <source>Press %1 to resume</source>
+        <translation>Sürdürmek için %1&apos;a bas</translation>
     </message>
     <message>
         <source>A new standard in the valley, and nobody under it who has held a spear more than twice.</source>

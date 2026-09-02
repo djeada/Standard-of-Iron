@@ -37,7 +37,8 @@ void PlayerDefeatWatcher::reset() {
 void PlayerDefeatWatcher::update(Engine::Core::World& world,
                                  int local_owner_id,
                                  float dt_seconds,
-                                 const Announce& announce) {
+                                 const Announce& announce,
+                                 const StillExpected& still_expected) {
   if (!announce) {
     return;
   }
@@ -70,6 +71,9 @@ void PlayerDefeatWatcher::update(Engine::Core::World& world,
 
   for (auto& [owner_id, state] : m_owners) {
     if (state.announced || !state.seen_alive || alive_now.contains(owner_id)) {
+      continue;
+    }
+    if (still_expected && still_expected(owner_id)) {
       continue;
     }
     if (owners.get_owner_type(owner_id) == Game::Systems::OwnerType::Neutral) {

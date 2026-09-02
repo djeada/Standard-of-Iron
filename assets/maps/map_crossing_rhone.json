@@ -173,6 +173,30 @@
                 242.29
             ],
             "width": 8
+        },
+        {
+            "end": [
+                557.32,
+                509.03
+            ],
+            "height": 0.55,
+            "start": [
+                554.03,
+                495.42
+            ],
+            "width": 6
+        },
+        {
+            "end": [
+                594.85,
+                521.84
+            ],
+            "height": 0.55,
+            "start": [
+                605.77,
+                513.07
+            ],
+            "width": 6
         }
     ],
     "camera": {
@@ -996,6 +1020,14 @@
                 ]
             ],
             "width": 4.48
+        },
+        {
+            "radius": 44.0,
+            "segments": 64,
+            "shape": "ring",
+            "width": 8.0,
+            "x": 566,
+            "z": 545
         }
     ],
     "roads": [
@@ -1305,46 +1337,78 @@
         },
         {
             "end": [
-                328.26,
-                74.54
+                297,
+                44
             ],
             "start": [
-                335.40000000000003,
+                335.4,
                 230.86
             ],
             "style": "default",
             "waypoints": [
                 [
-                    335.40000000000003,
+                    335.4,
                     230.86
                 ],
                 [
-                    334.23,
-                    221.06
+                    334.5744,
+                    223.9444
                 ],
                 [
-                    334.18,
-                    220.41
+                    334.3483,
+                    222.0508
                 ],
                 [
-                    333.6,
-                    213.24
+                    333.2731,
+                    204.8056
                 ],
                 [
-                    333.1,
-                    200.34
+                    332.7008,
+                    189.9172
                 ],
                 [
-                    332.61,
-                    187.45000000000002
+                    332.1286,
+                    175.0287
                 ],
                 [
-                    332.11,
-                    174.55
+                    327.7748,
+                    159.2851
                 ],
                 [
-                    328.26,
-                    74.54
+                    323.421,
+                    143.5414
+                ],
+                [
+                    319.0673,
+                    127.7978
+                ],
+                [
+                    314.7135,
+                    112.0541
+                ],
+                [
+                    310.3598,
+                    96.3105
+                ],
+                [
+                    306.006,
+                    80.5668
+                ],
+                [
+                    301.6523,
+                    64.8231
+                ],
+                [
+                    297.2985,
+                    49.0795
+                ],
+                [
+                    297,
+                    46.88
+                ],
+                [
+                    297,
+                    44
                 ]
             ],
             "width": 3
@@ -1355,82 +1419,94 @@
                 69.16
             ],
             "start": [
-                327.26,
-                75.54
+                297,
+                44
             ],
             "style": "default",
             "waypoints": [
                 [
-                    327.26,
-                    75.54
+                    297,
+                    44
                 ],
                 [
-                    328.26,
-                    75.52
+                    298.6707,
+                    57.3655
                 ],
                 [
-                    341.45,
-                    75.23
+                    300.9169,
+                    61.837
                 ],
                 [
-                    354.64,
-                    74.94
+                    311,
+                    71.5
                 ],
                 [
-                    371.98,
-                    75.92
+                    321.0831,
+                    81.163
                 ],
                 [
-                    389.32,
-                    76.9
+                    325.5902,
+                    83.5828
                 ],
                 [
-                    406.67,
-                    77.89
+                    343,
+                    87.5
                 ],
                 [
-                    424.01,
-                    78.87
+                    360.4098,
+                    91.4172
                 ],
                 [
-                    441.35,
-                    79.85000000000001
+                    365.655,
+                    92
                 ],
                 [
-                    446.65000000000003,
-                    79.88
+                    380.5,
+                    92
                 ],
                 [
-                    463.35,
-                    79.12
+                    395.345,
+                    92
                 ],
                 [
-                    468.31,
-                    77.7
+                    400.598,
+                    91.453
+                ],
+                [
+                    414.9631,
+                    88.4288
+                ],
+                [
+                    429.3281,
+                    85.4046
+                ],
+                [
+                    443.6932,
+                    82.3804
+                ],
+                [
+                    458.0582,
+                    79.3562
+                ],
+                [
+                    472.4232,
+                    76.3319
+                ],
+                [
+                    475.19,
+                    74.9136
                 ],
                 [
                     478.25,
                     72.12
                 ],
                 [
-                    478.61,
-                    72.11
-                ],
-                [
                     479.5,
                     70.91
                 ],
                 [
-                    479.86,
-                    70.43
-                ],
-                [
-                    479.11,
-                    69.44
-                ],
-                [
-                    480.11,
-                    68.68
+                    480,
+                    68
                 ],
                 [
                     480.76,
@@ -1593,8 +1669,8 @@
         },
         {
             "end": [
-                353.32,
-                17.17
+                297,
+                44
             ],
             "start": [
                 481.11,
@@ -1607,44 +1683,100 @@
                     13.74
                 ],
                 [
-                    464.08,
-                    14.200000000000001
+                    480.7592,
+                    29.9419
                 ],
                 [
-                    447.04,
-                    14.66
+                    480.4083,
+                    46.1437
                 ],
                 [
-                    430.01,
-                    15.120000000000001
+                    480.0575,
+                    62.3456
                 ],
                 [
-                    414.67,
-                    15.530000000000001
+                    478.0631,
+                    66.8159
                 ],
                 [
-                    399.33,
-                    15.94
+                    465.9369,
+                    78.1841
                 ],
                 [
-                    383.99,
-                    16.35
+                    461.3744,
+                    80.3938
                 ],
                 [
-                    368.66,
-                    16.76
+                    446.4246,
+                    82.6363
                 ],
                 [
-                    353.32,
-                    17.17
+                    431.4749,
+                    84.8788
+                ],
+                [
+                    416.5251,
+                    87.1212
+                ],
+                [
+                    401.5754,
+                    89.3637
+                ],
+                [
+                    386.6256,
+                    91.6062
+                ],
+                [
+                    381.3464,
+                    91.9144
+                ],
+                [
+                    368.5,
+                    91.5
+                ],
+                [
+                    355.6536,
+                    91.0856
+                ],
+                [
+                    350.4885,
+                    90.1389
+                ],
+                [
+                    335.5,
+                    85
+                ],
+                [
+                    320.5115,
+                    79.8611
+                ],
+                [
+                    316.1668,
+                    77.0795
+                ],
+                [
+                    307.5,
+                    68
+                ],
+                [
+                    298.8332,
+                    58.9205
+                ],
+                [
+                    297,
+                    54.345
+                ],
+                [
+                    297,
+                    44
                 ]
             ],
             "width": 3.54
         },
         {
             "end": [
-                548.78,
-                473.67
+                560,
+                524
             ],
             "start": [
                 353.32,
@@ -1665,64 +1797,64 @@
                     460.14
                 ],
                 [
-                    362.65000000000003,
-                    449.93
+                    362.6506,
+                    449.9253
                 ],
                 [
-                    374.49,
-                    439.71000000000004
+                    374.4911,
+                    439.7106
                 ],
                 [
-                    386.33,
-                    429.5
+                    386.3317,
+                    429.4959
                 ],
                 [
-                    398.17,
-                    419.28000000000003
+                    398.1723,
+                    419.2812
                 ],
                 [
-                    410.01,
-                    409.07
+                    410.0128,
+                    409.0665
                 ],
                 [
-                    421.85,
-                    398.85
+                    421.8534,
+                    398.8518
                 ],
                 [
-                    426.83,
-                    397.13
+                    426.8322,
+                    397.1268
                 ],
                 [
-                    441.67,
-                    397.82
+                    442.1661,
+                    397.8134
                 ],
                 [
-                    456.5,
+                    457.5,
                     398.5
                 ],
                 [
-                    471.33,
-                    399.18
+                    472.8339,
+                    399.1866
                 ],
                 [
-                    486.17,
-                    399.87
+                    488.1678,
+                    399.8732
                 ],
                 [
-                    491.05,
-                    401.96000000000004
+                    493.0078,
+                    402.0015
                 ],
                 [
-                    502.23,
-                    412.62
+                    503.6958,
+                    412.6561
                 ],
                 [
-                    513.41,
-                    423.29
+                    514.3839,
+                    423.3108
                 ],
                 [
-                    524.58,
-                    433.95
+                    525.0719,
+                    433.9654
                 ],
                 [
                     535.76,
@@ -1733,12 +1865,16 @@
                     456.7
                 ],
                 [
-                    547.7,
-                    462.95
+                    548,
+                    466
                 ],
                 [
-                    548.94,
-                    467.43
+                    548.7525,
+                    466.7525
+                ],
+                [
+                    548.9136,
+                    468.3097
                 ],
                 [
                     548.78,
@@ -1749,40 +1885,44 @@
                     467
                 ],
                 [
-                    548,
-                    466
-                ],
-                [
-                    548.72,
-                    467.44
-                ],
-                [
                     548.98,
                     468.63
                 ],
                 [
-                    548.78,
-                    473.67
-                ],
-                [
-                    548,
-                    479
+                    548.8778,
+                    469.7439
                 ],
                 [
                     547,
                     479
                 ],
                 [
-                    548.44,
-                    478.28000000000003
+                    548.079,
+                    478.4604
                 ],
                 [
                     548.97,
                     477.37
                 ],
                 [
-                    548.78,
-                    473.67
+                    553.4868,
+                    493.4089
+                ],
+                [
+                    554.725,
+                    498.3976
+                ],
+                [
+                    556.6522,
+                    506.162
+                ],
+                [
+                    557.8904,
+                    511.1506
+                ],
+                [
+                    560,
+                    524
                 ]
             ],
             "width": 3.7800000000000002
@@ -2059,38 +2199,58 @@
         },
         {
             "end": [
-                354.64,
-                74.94
+                376,
+                92
             ],
             "start": [
-                353.32,
-                17.17
+                297,
+                44
             ],
             "style": "default",
             "waypoints": [
                 [
-                    353.32,
-                    17.17
+                    297,
+                    44
                 ],
                 [
-                    353.62,
-                    30.1
+                    298.7023,
+                    57.6185
                 ],
                 [
-                    353.91,
-                    43.04
+                    300.7328,
+                    61.6606
                 ],
                 [
-                    354.21,
-                    55.97
+                    311,
+                    71.5
                 ],
                 [
-                    354.42,
-                    65.46000000000001
+                    321.2672,
+                    81.3394
                 ],
                 [
-                    354.64,
-                    74.94
+                    325.3415,
+                    83.5268
+                ],
+                [
+                    337.1138,
+                    86.1756
+                ],
+                [
+                    348.8862,
+                    88.8244
+                ],
+                [
+                    360.6585,
+                    91.4732
+                ],
+                [
+                    365.4,
+                    92
+                ],
+                [
+                    376,
+                    92
                 ]
             ],
             "width": 3.2
@@ -2444,84 +2604,6 @@
                 ]
             ],
             "width": 3.2
-        },
-        {
-            "end": [
-                431,
-                33
-            ],
-            "start": [
-                430,
-                15
-            ],
-            "style": "default",
-            "waypoints": [
-                [
-                    430,
-                    15
-                ],
-                [
-                    430.5,
-                    24
-                ],
-                [
-                    431,
-                    33
-                ]
-            ],
-            "width": 3
-        },
-        {
-            "end": [
-                408,
-                32
-            ],
-            "start": [
-                431,
-                33
-            ],
-            "style": "default",
-            "waypoints": [
-                [
-                    431,
-                    33
-                ],
-                [
-                    418,
-                    33
-                ],
-                [
-                    408,
-                    32
-                ]
-            ],
-            "width": 3
-        },
-        {
-            "end": [
-                392,
-                23
-            ],
-            "start": [
-                380,
-                37
-            ],
-            "style": "default",
-            "waypoints": [
-                [
-                    381.12,
-                    36.62
-                ],
-                [
-                    392,
-                    33
-                ],
-                [
-                    392,
-                    23
-                ]
-            ],
-            "width": 3
         },
         {
             "end": [
@@ -3485,8 +3567,8 @@
         },
         {
             "end": [
-                354.21,
-                55.97
+                376,
+                92
             ],
             "start": [
                 259,
@@ -3499,40 +3581,44 @@
                     56
                 ],
                 [
-                    258,
-                    56
+                    275.6165,
+                    61.1128
                 ],
                 [
-                    259,
-                    56
+                    292.233,
+                    66.2255
                 ],
                 [
-                    274.67,
-                    56
+                    308.8495,
+                    71.3383
                 ],
                 [
-                    290.33,
-                    56
+                    312.904,
+                    73.1988
                 ],
                 [
-                    306,
-                    56
+                    324.5,
+                    80.5
                 ],
                 [
-                    321.67,
-                    56
+                    336.096,
+                    87.8012
                 ],
                 [
-                    337.33,
-                    56
+                    340.2426,
+                    89.1818
                 ],
                 [
-                    353,
-                    56
+                    357.6213,
+                    90.5909
                 ],
                 [
-                    354.21,
-                    55.97
+                    375,
+                    92
+                ],
+                [
+                    376,
+                    92
                 ]
             ],
             "width": 3
@@ -3839,28 +3925,6 @@
         },
         {
             "end": [
-                328.26,
-                75.54
-            ],
-            "start": [
-                327.26,
-                75.54
-            ],
-            "style": "default",
-            "waypoints": [
-                [
-                    327.26,
-                    75.54
-                ],
-                [
-                    328.26,
-                    75.54
-                ]
-            ],
-            "width": 3.2
-        },
-        {
-            "end": [
                 481.11,
                 51.14
             ],
@@ -3965,28 +4029,6 @@
                 [
                     332.09000000000003,
                     175.03
-                ]
-            ],
-            "width": 3.2
-        },
-        {
-            "end": [
-                391.82,
-                16.14
-            ],
-            "start": [
-                392,
-                23
-            ],
-            "style": "default",
-            "waypoints": [
-                [
-                    392,
-                    23
-                ],
-                [
-                    391.82,
-                    16.14
                 ]
             ],
             "width": 3.2
@@ -4364,6 +4406,56 @@
             ],
             "style": "default",
             "width": 3
+        },
+        {
+            "end": [
+                590,
+                542
+            ],
+            "start": [
+                637,
+                488
+            ],
+            "style": "default",
+            "waypoints": [
+                [
+                    637,
+                    488
+                ],
+                [
+                    627.2096,
+                    496.0063
+                ],
+                [
+                    617.4192,
+                    504.0125
+                ],
+                [
+                    607.6288,
+                    512.0188
+                ],
+                [
+                    603.5025,
+                    515.0837
+                ],
+                [
+                    597.0803,
+                    519.854
+                ],
+                [
+                    592.954,
+                    522.9188
+                ],
+                [
+                    591.477,
+                    532.4594
+                ],
+                [
+                    590,
+                    542
+                ]
+            ],
+            "width": 3.6
         }
     ],
     "settlements": [
@@ -4381,25 +4473,40 @@
             "z": 174
         },
         {
-            "authored": true,
             "facing": "west",
-            "homes": 8,
+            "grow_hill": false,
+            "homes": 6,
             "id": "rhone_hill_fort",
             "max_population": 60,
             "nation": "roman_republic",
-            "on_hill": false,
+            "on_hill": true,
+            "plan": "stepped",
+            "plan_options": {
+                "chamfer": 6,
+                "size": [
+                    24,
+                    14
+                ]
+            },
             "player_id": 2,
             "tier": "marching_camp",
             "x": 376,
             "z": 44
         },
         {
-            "authored": true,
             "facing": "south",
             "id": "rhone_river_town",
             "max_population": 70,
             "nation": "roman_republic",
-            "on_hill": true,
+            "on_hill": false,
+            "plan": "circle",
+            "plan_options": {
+                "size": [
+                    26,
+                    23
+                ],
+                "towers": 4
+            },
             "player_id": 3,
             "tier": "town",
             "x": 566,
@@ -4479,8 +4586,8 @@
             "max_population": -1,
             "player_id": 2,
             "type": "spearman",
-            "x": 417,
-            "z": 34
+            "x": 462.01,
+            "z": 23.02
         },
         {
             "behavior": "guard",
@@ -4488,8 +4595,8 @@
             "max_population": -1,
             "player_id": 2,
             "type": "swordsman",
-            "x": 400.33,
-            "z": 44
+            "x": 469.15,
+            "z": 44.0
         },
         {
             "behavior": "hold",
@@ -4521,8 +4628,8 @@
             "max_population": -1,
             "player_id": 2,
             "type": "archer",
-            "x": 416,
-            "z": 40
+            "x": 467.83,
+            "z": 34.82
         },
         {
             "behavior": "hold",
@@ -4759,24 +4866,24 @@
             "nation": "roman_republic",
             "player_id": 3,
             "type": "spearman",
-            "x": 545,
-            "z": 558
+            "x": 544.43,
+            "z": 558.36
         },
         {
             "max_population": -1,
             "nation": "roman_republic",
             "player_id": 3,
             "type": "spearman",
-            "x": 532,
-            "z": 572
+            "x": 551.9,
+            "z": 556.19
         },
         {
             "max_population": -1,
             "nation": "roman_republic",
             "player_id": 3,
             "type": "spearman",
-            "x": 532,
-            "z": 516
+            "x": 552.15,
+            "z": 533.28
         },
         {
             "max_population": -1,
@@ -4791,8 +4898,8 @@
             "nation": "roman_republic",
             "player_id": 3,
             "type": "builder",
-            "x": 604,
-            "z": 545
+            "x": 584.0,
+            "z": 545.0
         },
         {
             "max_population": -1,
@@ -4800,7 +4907,7 @@
             "player_id": 3,
             "type": "archer",
             "x": 560,
-            "z": 558
+            "z": 558.88
         },
         {
             "max_population": -1,
@@ -4815,8 +4922,8 @@
             "nation": "roman_republic",
             "player_id": 3,
             "type": "archer",
-            "x": 598,
-            "z": 518
+            "x": 579.85,
+            "z": 533.39
         },
         {
             "behavior": "guard",
@@ -4952,6 +5059,363 @@
     },
     "structures": [
         {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 2,
+            "rotation": 0.0,
+            "settlement": "rhone_hill_fort",
+            "type": "wall_gate",
+            "x": 376.0,
+            "z": 58.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 2,
+            "rotation": 90.0,
+            "settlement": "rhone_hill_fort",
+            "type": "wall_gate",
+            "x": 400.0,
+            "z": 48.0
+        },
+        {
+            "authored": true,
+            "max_population": 60,
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "rhone_hill_fort",
+            "type": "barracks",
+            "x": 376.0,
+            "z": 38.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "rhone_hill_fort",
+            "type": "home",
+            "x": 364.0,
+            "z": 44.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "rhone_hill_fort",
+            "type": "home",
+            "x": 388.0,
+            "z": 44.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "rhone_hill_fort",
+            "type": "home",
+            "x": 364.0,
+            "z": 38.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "rhone_hill_fort",
+            "type": "home",
+            "x": 388.0,
+            "z": 38.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "rhone_hill_fort",
+            "type": "home",
+            "x": 358.0,
+            "z": 44.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "rhone_hill_fort",
+            "type": "home",
+            "x": 364.0,
+            "z": 50.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "rhone_hill_fort",
+            "type": "defense_tower",
+            "x": 361.0,
+            "z": 33.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "rhone_hill_fort",
+            "type": "defense_tower",
+            "x": 397.0,
+            "z": 39.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "rhone_hill_fort",
+            "type": "defense_tower",
+            "x": 391.0,
+            "z": 55.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "rhone_hill_fort",
+            "type": "defense_tower",
+            "x": 361.0,
+            "z": 55.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "rotation": 0.0,
+            "settlement": "rhone_river_town",
+            "type": "wall_gate",
+            "x": 560.0,
+            "z": 524.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "rotation": 90.0,
+            "settlement": "rhone_river_town",
+            "type": "wall_gate",
+            "x": 590.0,
+            "z": 542.0
+        },
+        {
+            "authored": true,
+            "max_population": 70,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "rhone_river_town",
+            "type": "barracks",
+            "x": 566.0,
+            "z": 539.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "rhone_river_town",
+            "type": "marketplace",
+            "x": 566.0,
+            "z": 551.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "rhone_river_town",
+            "type": "temple",
+            "x": 557.0,
+            "z": 545.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "rhone_river_town",
+            "type": "home",
+            "x": 560.0,
+            "z": 551.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "rhone_river_town",
+            "type": "home",
+            "x": 572.0,
+            "z": 551.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "rhone_river_town",
+            "type": "home",
+            "x": 560.0,
+            "z": 533.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "rhone_river_town",
+            "type": "home",
+            "x": 572.0,
+            "z": 533.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "rhone_river_town",
+            "type": "home",
+            "x": 554.0,
+            "z": 539.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "rhone_river_town",
+            "type": "home",
+            "x": 578.0,
+            "z": 539.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "rhone_river_town",
+            "type": "home",
+            "x": 554.0,
+            "z": 551.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "rhone_river_town",
+            "type": "home",
+            "x": 578.0,
+            "z": 551.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "rhone_river_town",
+            "type": "home",
+            "x": 560.0,
+            "z": 557.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "rhone_river_town",
+            "type": "home",
+            "x": 572.0,
+            "z": 557.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "rhone_river_town",
+            "type": "home",
+            "x": 554.0,
+            "z": 533.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "rhone_river_town",
+            "type": "home",
+            "x": 578.0,
+            "z": 533.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "rhone_river_town",
+            "type": "home",
+            "x": 548.0,
+            "z": 539.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "rhone_river_town",
+            "type": "home",
+            "x": 548.0,
+            "z": 551.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "rhone_river_town",
+            "type": "home",
+            "x": 584.0,
+            "z": 551.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "rhone_river_town",
+            "type": "home",
+            "x": 554.0,
+            "z": 557.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "rhone_river_town",
+            "type": "home",
+            "x": 578.0,
+            "z": 557.0
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "rhone_river_town",
+            "type": "defense_tower",
+            "x": 573.06,
+            "z": 562.23
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "rhone_river_town",
+            "type": "defense_tower",
+            "x": 558.94,
+            "z": 562.23
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "rhone_river_town",
+            "type": "defense_tower",
+            "x": 551.15,
+            "z": 544.27
+        },
+        {
+            "authored": true,
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "rhone_river_town",
+            "type": "defense_tower",
+            "x": 585.09,
+            "z": 536.51
+        },
+        {
             "landmark": "rhone_east_sanctuary",
             "nation": "roman_republic",
             "player_id": 2,
@@ -4969,113 +5433,6 @@
         },
         {
             "authored": true,
-            "max_population": 70,
-            "nation": "roman_republic",
-            "player_id": 3,
-            "type": "barracks",
-            "x": 566,
-            "z": 548
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 3,
-            "type": "marketplace",
-            "x": 558,
-            "z": 540
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 3,
-            "type": "temple",
-            "x": 574,
-            "z": 540
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 3,
-            "type": "home",
-            "x": 556,
-            "z": 553
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 3,
-            "type": "home",
-            "x": 564,
-            "z": 554
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 3,
-            "type": "home",
-            "x": 570,
-            "z": 554
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 3,
-            "type": "home",
-            "x": 576,
-            "z": 553
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 3,
-            "rotation": 0,
-            "type": "wall_gate",
-            "x": 566,
-            "z": 532
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 3,
-            "rotation": 0,
-            "type": "wall_gate",
-            "x": 566,
-            "z": 560
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 3,
-            "type": "defense_tower",
-            "x": 550,
-            "z": 532
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 3,
-            "type": "defense_tower",
-            "x": 550,
-            "z": 560
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 3,
-            "type": "defense_tower",
-            "x": 582,
-            "z": 532
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 3,
-            "type": "defense_tower",
-            "x": 582,
-            "z": 560
-        },
-        {
-            "authored": true,
             "nation": "carthage",
             "player_id": 1,
             "rotation": 90,
@@ -5085,268 +5442,771 @@
         },
         {
             "authored": true,
+            "end": [
+                394.0,
+                30.0
+            ],
             "nation": "roman_republic",
             "player_id": 2,
-            "rotation": 0,
-            "type": "wall_gate",
-            "x": 392,
-            "z": 22
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 2,
-            "rotation": 0,
-            "type": "wall_gate",
-            "x": 358,
-            "z": 66
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 2,
-            "rotation": 90,
-            "type": "wall_gate",
-            "x": 350,
-            "z": 56
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 2,
-            "type": "defense_tower",
-            "x": 358.66,
-            "z": 27
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 2,
-            "type": "defense_tower",
-            "x": 402,
-            "z": 22
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 2,
-            "type": "defense_tower",
-            "x": 402,
-            "z": 66
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 2,
-            "type": "defense_tower",
-            "x": 360.39,
-            "z": 60
-        },
-        {
-            "authored": true,
-            "max_population": 60,
-            "nation": "roman_republic",
-            "player_id": 2,
-            "type": "barracks",
-            "x": 375,
-            "z": 35.83
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 2,
-            "type": "home",
-            "x": 361.7,
-            "z": 51.7
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 2,
-            "type": "home",
-            "x": 361.7,
-            "z": 57.33
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 2,
-            "type": "home",
-            "x": 390.3,
-            "z": 51.7
-        },
-        {
-            "authored": true,
-            "nation": "roman_republic",
-            "player_id": 2,
-            "type": "home",
-            "x": 390.3,
-            "z": 58.300000000000004
+            "settlement": "rhone_hill_fort",
+            "start": [
+                358.0,
+                30.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
         },
         {
             "authored": true,
             "end": [
-                562,
-                532
+                358.0,
+                32.0
             ],
             "nation": "roman_republic",
-            "player_id": 3,
+            "player_id": 2,
+            "settlement": "rhone_hill_fort",
             "start": [
-                550,
-                532
+                356.0,
+                32.0
             ],
             "type": "wall_segment",
-            "width": 2
+            "width": 2.0
         },
         {
             "authored": true,
             "end": [
-                582,
-                532
+                396.0,
+                32.0
             ],
             "nation": "roman_republic",
-            "player_id": 3,
+            "player_id": 2,
+            "settlement": "rhone_hill_fort",
             "start": [
-                570,
-                532
+                394.0,
+                32.0
             ],
             "type": "wall_segment",
-            "width": 2
+            "width": 2.0
         },
         {
             "authored": true,
             "end": [
-                562,
-                560
+                356.0,
+                34.0
             ],
             "nation": "roman_republic",
-            "player_id": 3,
+            "player_id": 2,
+            "settlement": "rhone_hill_fort",
             "start": [
-                550,
-                560
+                354.0,
+                34.0
             ],
             "type": "wall_segment",
-            "width": 2
+            "width": 2.0
         },
         {
             "authored": true,
             "end": [
-                582,
-                560
+                398.0,
+                34.0
             ],
             "nation": "roman_republic",
-            "player_id": 3,
+            "player_id": 2,
+            "settlement": "rhone_hill_fort",
             "start": [
-                570,
-                560
+                396.0,
+                34.0
             ],
             "type": "wall_segment",
-            "width": 2
+            "width": 2.0
         },
         {
             "authored": true,
             "end": [
-                550,
-                558
+                352.0,
+                52.0
             ],
             "nation": "roman_republic",
-            "player_id": 3,
+            "player_id": 2,
+            "settlement": "rhone_hill_fort",
             "start": [
-                550,
-                534
+                352.0,
+                36.0
             ],
             "type": "wall_segment",
-            "width": 2
+            "width": 2.0
         },
         {
             "authored": true,
             "end": [
-                582,
-                558
+                354.0,
+                36.0
             ],
             "nation": "roman_republic",
-            "player_id": 3,
+            "player_id": 2,
+            "settlement": "rhone_hill_fort",
             "start": [
-                582,
-                534
+                354.0,
+                36.0
             ],
             "type": "wall_segment",
-            "width": 2
+            "width": 2.0
         },
         {
             "authored": true,
             "end": [
-                591,
-                576
+                400.0,
+                36.0
             ],
             "nation": "roman_republic",
-            "player_id": 3,
+            "player_id": 2,
+            "settlement": "rhone_hill_fort",
             "start": [
-                539,
-                576
+                398.0,
+                36.0
             ],
             "type": "wall_segment",
-            "width": 2
+            "width": 2.0
         },
         {
             "authored": true,
             "end": [
-                539,
-                575
+                354.0,
+                54.0
             ],
             "nation": "roman_republic",
-            "player_id": 3,
+            "player_id": 2,
+            "settlement": "rhone_hill_fort",
             "start": [
-                539,
-                526
+                354.0,
+                52.0
             ],
             "type": "wall_segment",
-            "width": 2
+            "width": 2.0
         },
         {
             "authored": true,
             "end": [
-                589,
-                526
+                398.0,
+                54.0
             ],
             "nation": "roman_republic",
-            "player_id": 3,
+            "player_id": 2,
+            "settlement": "rhone_hill_fort",
             "start": [
-                539,
-                526
+                398.0,
+                52.0
             ],
             "type": "wall_segment",
-            "width": 2
+            "width": 2.0
         },
         {
             "authored": true,
             "end": [
-                590,
-                556
+                356.0,
+                56.0
             ],
             "nation": "roman_republic",
-            "player_id": 3,
+            "player_id": 2,
+            "settlement": "rhone_hill_fort",
             "start": [
-                590,
-                526
+                356.0,
+                54.0
             ],
             "type": "wall_segment",
-            "width": 2
+            "width": 2.0
         },
         {
             "authored": true,
             "end": [
-                591,
-                575
+                396.0,
+                56.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "rhone_hill_fort",
+            "start": [
+                396.0,
+                54.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                358.0,
+                58.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "rhone_hill_fort",
+            "start": [
+                358.0,
+                56.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                394.0,
+                58.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "rhone_hill_fort",
+            "start": [
+                394.0,
+                56.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                372.0,
+                58.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "rhone_hill_fort",
+            "start": [
+                360.0,
+                58.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                392.0,
+                58.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "rhone_hill_fort",
+            "start": [
+                380.0,
+                58.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                400.0,
+                44.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "rhone_hill_fort",
+            "start": [
+                400.0,
+                38.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                400.0,
+                52.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 2,
+            "settlement": "rhone_hill_fort",
+            "start": [
+                400.0,
+                52.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                556.0,
+                526.0
             ],
             "nation": "roman_republic",
             "player_id": 3,
+            "settlement": "rhone_river_town",
             "start": [
-                591,
-                566
+                552.0,
+                526.0
             ],
             "type": "wall_segment",
-            "width": 2
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                580.0,
+                526.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "rhone_river_town",
+            "start": [
+                576.0,
+                526.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                552.0,
+                528.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "rhone_river_town",
+            "start": [
+                550.0,
+                528.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                582.0,
+                528.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "rhone_river_town",
+            "start": [
+                580.0,
+                528.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                550.0,
+                530.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "rhone_river_town",
+            "start": [
+                548.0,
+                530.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                584.0,
+                530.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "rhone_river_town",
+            "start": [
+                582.0,
+                530.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                548.0,
+                532.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "rhone_river_town",
+            "start": [
+                546.0,
+                532.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                586.0,
+                532.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "rhone_river_town",
+            "start": [
+                584.0,
+                532.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                544.0,
+                538.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "rhone_river_town",
+            "start": [
+                544.0,
+                534.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                546.0,
+                534.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "rhone_river_town",
+            "start": [
+                546.0,
+                534.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                588.0,
+                534.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "rhone_river_town",
+            "start": [
+                586.0,
+                534.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                588.0,
+                538.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "rhone_river_town",
+            "start": [
+                588.0,
+                536.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                542.0,
+                552.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "rhone_river_town",
+            "start": [
+                542.0,
+                538.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                544.0,
+                556.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "rhone_river_town",
+            "start": [
+                544.0,
+                552.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                588.0,
+                556.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "rhone_river_town",
+            "start": [
+                588.0,
+                552.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                546.0,
+                558.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "rhone_river_town",
+            "start": [
+                546.0,
+                556.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                586.0,
+                558.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "rhone_river_town",
+            "start": [
+                586.0,
+                556.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                548.0,
+                560.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "rhone_river_town",
+            "start": [
+                548.0,
+                558.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                584.0,
+                560.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "rhone_river_town",
+            "start": [
+                584.0,
+                558.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                550.0,
+                562.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "rhone_river_town",
+            "start": [
+                550.0,
+                560.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                582.0,
+                562.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "rhone_river_town",
+            "start": [
+                582.0,
+                560.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                552.0,
+                564.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "rhone_river_town",
+            "start": [
+                552.0,
+                562.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                580.0,
+                564.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "rhone_river_town",
+            "start": [
+                580.0,
+                562.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                556.0,
+                564.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "rhone_river_town",
+            "start": [
+                554.0,
+                564.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                578.0,
+                564.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "rhone_river_town",
+            "start": [
+                576.0,
+                564.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                576.0,
+                566.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "rhone_river_town",
+            "start": [
+                556.0,
+                566.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                556.0,
+                524.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "rhone_river_town",
+            "start": [
+                556.0,
+                524.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                576.0,
+                524.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "rhone_river_town",
+            "start": [
+                564.0,
+                524.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                590.0,
+                538.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "rhone_river_town",
+            "start": [
+                590.0,
+                538.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
+        },
+        {
+            "authored": true,
+            "end": [
+                590.0,
+                552.0
+            ],
+            "nation": "roman_republic",
+            "player_id": 3,
+            "settlement": "rhone_river_town",
+            "start": [
+                590.0,
+                546.0
+            ],
+            "type": "wall_segment",
+            "width": 2.0
         },
         {
             "authored": true,
@@ -5389,163 +6249,6 @@
             "start": [
                 58,
                 178
-            ],
-            "type": "wall_segment",
-            "width": 2
-        },
-        {
-            "authored": true,
-            "end": [
-                388,
-                22
-            ],
-            "nation": "roman_republic",
-            "player_id": 2,
-            "start": [
-                350,
-                22
-            ],
-            "type": "wall_segment",
-            "width": 2
-        },
-        {
-            "authored": true,
-            "end": [
-                402,
-                22
-            ],
-            "nation": "roman_republic",
-            "player_id": 2,
-            "start": [
-                396,
-                22
-            ],
-            "type": "wall_segment",
-            "width": 2
-        },
-        {
-            "authored": true,
-            "end": [
-                402,
-                66
-            ],
-            "nation": "roman_republic",
-            "player_id": 2,
-            "start": [
-                402,
-                22
-            ],
-            "type": "wall_segment",
-            "width": 2
-        },
-        {
-            "authored": true,
-            "end": [
-                354,
-                66
-            ],
-            "nation": "roman_republic",
-            "player_id": 2,
-            "start": [
-                350,
-                66
-            ],
-            "type": "wall_segment",
-            "width": 2
-        },
-        {
-            "authored": true,
-            "end": [
-                402,
-                66
-            ],
-            "nation": "roman_republic",
-            "player_id": 2,
-            "start": [
-                362,
-                66
-            ],
-            "type": "wall_segment",
-            "width": 2
-        },
-        {
-            "authored": true,
-            "end": [
-                350,
-                52
-            ],
-            "nation": "roman_republic",
-            "player_id": 2,
-            "start": [
-                350,
-                22
-            ],
-            "type": "wall_segment",
-            "width": 2
-        },
-        {
-            "authored": true,
-            "end": [
-                350,
-                66
-            ],
-            "nation": "roman_republic",
-            "player_id": 2,
-            "start": [
-                350,
-                60
-            ],
-            "type": "wall_segment",
-            "width": 2
-        },
-        {
-            "end": [
-                14,
-                152
-            ],
-            "player_id": 1,
-            "start": [
-                14,
-                156
-            ],
-            "type": "wall_segment",
-            "width": 2
-        },
-        {
-            "end": [
-                0,
-                152
-            ],
-            "player_id": 1,
-            "start": [
-                14,
-                152
-            ],
-            "type": "wall_segment",
-            "width": 2
-        },
-        {
-            "end": [
-                58,
-                198
-            ],
-            "player_id": 1,
-            "start": [
-                58,
-                192
-            ],
-            "type": "wall_segment",
-            "width": 2
-        },
-        {
-            "end": [
-                0,
-                198
-            ],
-            "player_id": 1,
-            "start": [
-                58,
-                198
             ],
             "type": "wall_segment",
             "width": 2
@@ -5771,25 +6474,7 @@
             "z": 148
         },
         {
-            "depth": 126,
-            "entrances": [
-                {
-                    "x": 566,
-                    "z": 484
-                },
-                {
-                    "x": 496,
-                    "z": 545
-                }
-            ],
-            "height": 1.2,
-            "type": "hill",
-            "width": 144,
-            "x": 566,
-            "z": 545
-        },
-        {
-            "depth": 58.25,
+            "depth": 50.0,
             "entrances": [
                 {
                     "radius": 5.71,
@@ -5800,7 +6485,7 @@
             "height": 2.4,
             "rotation": -12,
             "type": "hill",
-            "width": 100.02,
+            "width": 84.0,
             "x": 496,
             "z": 478
         },
@@ -5832,6 +6517,37 @@
             "type": "mountain",
             "x": 528,
             "z": 54
+        },
+        {
+            "crown": 0.6,
+            "depth": 88.0,
+            "entrances": [
+                {
+                    "radius": 2.0,
+                    "x": 301.0,
+                    "z": 44.0
+                },
+                {
+                    "radius": 2.0,
+                    "x": 451.0,
+                    "z": 44.0
+                },
+                {
+                    "radius": 2.0,
+                    "x": 376.0,
+                    "z": 3.0
+                },
+                {
+                    "radius": 2.0,
+                    "x": 376.0,
+                    "z": 88.0
+                }
+            ],
+            "height": 2.8,
+            "type": "hill",
+            "width": 150.0,
+            "x": 376,
+            "z": 44
         }
     ],
     "undead_zones": [
@@ -5974,18 +6690,11 @@
             "z": 188.15
         },
         {
-            "rotation": 30,
-            "scale": 0.9500000000000001,
-            "type": "tent",
-            "x": 316,
-            "z": 30
-        },
-        {
             "rotation": -25,
             "scale": 0.9500000000000001,
             "type": "tent",
-            "x": 316,
-            "z": 72
+            "x": 311.04,
+            "z": 79.88
         },
         {
             "rotation": 15,
@@ -5998,24 +6707,8 @@
             "rotation": -12,
             "scale": 0.9500000000000001,
             "type": "tent",
-            "x": 375,
-            "z": 111
-        },
-        {
-            "intensity": 1.1500000000000001,
-            "persistent": true,
-            "radius": 3.2,
-            "scale": 1,
-            "type": "firecamp",
-            "x": 333,
-            "z": 50
-        },
-        {
-            "rotation": 90,
-            "scale": 1,
-            "type": "weapon_rack",
-            "x": 342,
-            "z": 66
+            "x": 376.07,
+            "z": 115.01
         },
         {
             "rotation": 72,
@@ -6258,13 +6951,6 @@
             "type": "weapon_rack",
             "x": 331.82,
             "z": 91.93
-        },
-        {
-            "rotation": 25,
-            "scale": 1,
-            "type": "supply_cart",
-            "x": 382,
-            "z": 88
         },
         {
             "scale": 1,
@@ -6516,26 +7202,8 @@
             "radius": 3,
             "scale": 1,
             "type": "firecamp",
-            "x": 318.24,
-            "z": 120.19
-        },
-        {
-            "intensity": 1,
-            "persistent": true,
-            "radius": 3,
-            "scale": 1,
-            "type": "firecamp",
-            "x": 310.72,
-            "z": 30.900000000000002
-        },
-        {
-            "intensity": 1,
-            "persistent": true,
-            "radius": 3,
-            "scale": 1,
-            "type": "firecamp",
-            "x": 338,
-            "z": 38
+            "x": 319.78,
+            "z": 119.76
         },
         {
             "intensity": 1,
@@ -6549,50 +7217,14 @@
         {
             "scale": 1,
             "type": "tent",
-            "x": 398,
-            "z": 62.13
-        },
-        {
-            "scale": 1,
-            "type": "tent",
-            "x": 392,
-            "z": 70.21
-        },
-        {
-            "scale": 1,
-            "type": "tent",
-            "x": 365.12,
-            "z": 57.61
-        },
-        {
-            "scale": 1,
-            "type": "tent",
             "x": 371.34,
-            "z": 50.2
+            "z": 48.13
         },
         {
             "scale": 1,
             "type": "tent",
-            "x": 362.23,
-            "z": 47.62
-        },
-        {
-            "scale": 1,
-            "type": "tent",
-            "x": 374.53,
-            "z": 27.12
-        },
-        {
-            "scale": 1,
-            "type": "tent",
-            "x": 367.53,
-            "z": 27.12
-        },
-        {
-            "scale": 1,
-            "type": "tent",
-            "x": 359,
-            "z": 11.47
+            "x": 358.71,
+            "z": 49.65
         },
         {
             "intensity": 1,
@@ -6600,17 +7232,8 @@
             "radius": 3,
             "scale": 1,
             "type": "firecamp",
-            "x": 371,
-            "z": 29
-        },
-        {
-            "intensity": 1,
-            "persistent": true,
-            "radius": 3,
-            "scale": 1,
-            "type": "firecamp",
-            "x": 364,
-            "z": 29
+            "x": 369.13,
+            "z": 33.95
         },
         {
             "intensity": 1,
@@ -6627,35 +7250,8 @@
             "radius": 3,
             "scale": 1,
             "type": "firecamp",
-            "x": 363,
-            "z": 43
-        },
-        {
-            "intensity": 1,
-            "persistent": true,
-            "radius": 3,
-            "scale": 1,
-            "type": "firecamp",
-            "x": 392,
+            "x": 392.07,
             "z": 45
-        },
-        {
-            "intensity": 1,
-            "persistent": true,
-            "radius": 3,
-            "scale": 1,
-            "type": "firecamp",
-            "x": 404.07,
-            "z": 29
-        },
-        {
-            "intensity": 1,
-            "persistent": true,
-            "radius": 3,
-            "scale": 1,
-            "type": "firecamp",
-            "x": 407,
-            "z": 38
         },
         {
             "scale": 1,
@@ -6666,20 +7262,8 @@
         {
             "scale": 1,
             "type": "weapon_rack",
-            "x": 407,
-            "z": 47
-        },
-        {
-            "scale": 1,
-            "type": "weapon_rack",
-            "x": 395,
-            "z": 29
-        },
-        {
-            "scale": 1,
-            "type": "weapon_rack",
-            "x": 384,
-            "z": 23.67
+            "x": 397.52,
+            "z": 45.5
         },
         {
             "rotation": -10,
@@ -6735,7 +7319,7 @@
             "scale": 1,
             "type": "weapon_rack",
             "x": 572,
-            "z": 550
+            "z": 549.12
         },
         {
             "scale": 1,
@@ -6752,25 +7336,25 @@
         {
             "scale": 1,
             "type": "tent",
-            "x": 554,
+            "x": 563.1,
             "z": 545
         },
         {
             "scale": 1,
             "type": "tent",
-            "x": 554,
-            "z": 537
+            "x": 557.78,
+            "z": 537.33
         },
         {
             "scale": 1,
             "type": "tent",
-            "x": 543.05,
-            "z": 538.72
+            "x": 540.76,
+            "z": 534.74
         },
         {
             "scale": 1,
             "type": "tent",
-            "x": 542.37,
+            "x": 545.24,
             "z": 545.89
         },
         {
@@ -6782,8 +7366,8 @@
         {
             "scale": 1,
             "type": "tent",
-            "x": 535.76,
-            "z": 573
+            "x": 540.08,
+            "z": 569.08
         },
         {
             "rotation": 72,
@@ -7371,7 +7955,7 @@
             "scale": 1,
             "type": "firecamp",
             "x": 376,
-            "z": 44
+            "z": 46.71
         },
         {
             "authored_camp": true,
@@ -7398,39 +7982,32 @@
             "z": 39.57
         },
         {
-            "authored_camp": true,
-            "scale": 1,
-            "type": "tent",
-            "x": 395.5,
-            "z": 39.6
-        },
-        {
+            "rotation": 3.22,
+            "scale": 1.0,
             "type": "cursed_gold_vein",
             "x": 472,
-            "z": 302,
-            "scale": 1.0,
-            "rotation": 3.22
+            "z": 302
         },
         {
+            "rotation": 1.34,
+            "scale": 1.0,
             "type": "cursed_gold_vein",
             "x": 102,
-            "z": 52,
-            "scale": 1.0,
-            "rotation": 1.34
+            "z": 52
         },
         {
+            "rotation": 1.16,
+            "scale": 1.0,
             "type": "cursed_gold_vein",
             "x": 582,
-            "z": 82,
-            "scale": 1.0,
-            "rotation": 1.16
+            "z": 82
         },
         {
+            "rotation": 2.1,
+            "scale": 1.0,
             "type": "cursed_gold_vein",
             "x": 122,
-            "z": 192,
-            "scale": 1.0,
-            "rotation": 2.1
+            "z": 192
         }
     ]
 }

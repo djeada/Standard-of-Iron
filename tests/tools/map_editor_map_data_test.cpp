@@ -456,6 +456,40 @@ TEST(MapEditorMapDataTest, RealMapRoundTripsSpawnTypeSequenceWithoutDuplicates) 
   }
 }
 
+TEST(MapEditorMapDataTest, RingRiverRoundTripsAsARingAndDrawsAsALoop) {
+  QTemporaryDir const temp_dir;
+  ASSERT_TRUE(temp_dir.isValid());
+  const QString input_path = temp_dir.filePath("moat.json");
+  const QString output_path = temp_dir.filePath("moat_out.json");
+
+  const QJsonObject moat{
+      {"shape", "ring"}, {"x", 30}, {"z", 30}, {"radius", 10.0}, {"width", 6.0}};
+  write_json(input_path,
+             QJsonObject{{MapJsonKeys::grid,
+                          QJsonObject{{MapJsonKeys::width, 64},
+                                      {MapJsonKeys::height, 64},
+                                      {MapJsonKeys::tile_size, 1.0}}},
+                         {MapJsonKeys::rivers, QJsonArray{moat}}});
+
+  MapEditor::MapData data;
+  ASSERT_TRUE(data.load_from_json(input_path));
+  ASSERT_EQ(data.linear_elements().size(), 1);
+  const auto& river = data.linear_elements().first();
+  EXPECT_EQ(river.type, QStringLiteral("river"));
+  EXPECT_GE(river.waypoints.size(), 13) << "the editor draws the ring as a loop";
+  EXPECT_EQ(river.waypoints.first(), river.waypoints.last());
+
+  ASSERT_TRUE(data.save_to_json(output_path));
+  const QJsonArray saved = read_json(output_path).value(MapJsonKeys::rivers).toArray();
+  ASSERT_EQ(saved.size(), 1);
+  const QJsonObject saved_moat = saved[0].toObject();
+  EXPECT_EQ(saved_moat.value("shape").toString(), QStringLiteral("ring"));
+  EXPECT_DOUBLE_EQ(saved_moat.value("radius").toDouble(), 10.0);
+  EXPECT_DOUBLE_EQ(saved_moat.value(MapJsonKeys::width).toDouble(), 6.0);
+  EXPECT_FALSE(saved_moat.contains(MapJsonKeys::waypoints))
+      << "a ring is saved as a ring, not as the loop it was drawn as";
+}
+
 TEST(MapEditorMapDataTest, RejectsRetiredBuildingAndWallCollections) {
   QTemporaryDir const temp_dir;
   ASSERT_TRUE(temp_dir.isValid());

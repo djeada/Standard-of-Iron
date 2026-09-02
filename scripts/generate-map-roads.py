@@ -27,6 +27,7 @@ from typing import Iterable, Sequence
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from map_hill_shapes import hill_shape_strokes
+from map_water_geometry import river_points
 
 Point = tuple[float, float]
 
@@ -501,11 +502,7 @@ class RoutingField:
     def _read_river_segments(self) -> list[tuple[Point, Point, float]]:
         result: list[tuple[Point, Point, float]] = []
         for river in self.definition.get("rivers") or []:
-            raw_points = river.get("waypoints") or [
-                river.get("start"),
-                river.get("end"),
-            ]
-            points = [self.coords.to_grid(point) for point in raw_points if point]
+            points = [self.coords.to_grid(point) for point in river_points(river)]
             width = self.coords.distance_to_grid(float(river.get("width", 3.0)))
             result.extend(
                 (start, end, width)
@@ -721,11 +718,7 @@ class RoutingField:
 
     def _raster_water(self) -> None:
         for river in self.definition.get("rivers") or []:
-            raw_points = river.get("waypoints") or [
-                river.get("start"),
-                river.get("end"),
-            ]
-            points = [self.coords.to_grid(point) for point in raw_points if point]
+            points = [self.coords.to_grid(point) for point in river_points(river)]
             radius = self.coords.distance_to_grid(float(river.get("width", 3.0))) * 0.5
             radius += self.clearance
             for start, end in zip(points, points[1:], strict=False):

@@ -78,7 +78,7 @@
   "commander_messages": [
     {
       "id": "timber_open",
-      "speaker": "roman_legion_organizer",
+      "speaker": "roman_field_commander",
       "pose": "dismissive",
       "trigger": {
         "type": "mission_start",
@@ -91,7 +91,7 @@
     },
     {
       "id": "timber_victory",
-      "speaker": "roman_legion_organizer",
+      "speaker": "roman_field_commander",
       "pose": "cynical",
       "trigger": {
         "type": "mission_victory",
@@ -104,7 +104,7 @@
     },
     {
       "id": "timber_defeat",
-      "speaker": "roman_legion_organizer",
+      "speaker": "roman_field_commander",
       "pose": "dismissive",
       "trigger": {
         "type": "mission_defeat",

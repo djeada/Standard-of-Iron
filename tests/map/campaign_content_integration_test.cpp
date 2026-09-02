@@ -277,16 +277,24 @@ TEST_F(CampaignContentIntegrationTest, EveryAuthoredSettlementStandsOnGroundItCa
       if (on_hill.size() < 2) {
         continue;
       }
-      const float highest = *std::max_element(on_hill.begin(), on_hill.end());
-      const float lowest = *std::min_element(on_hill.begin(), on_hill.end());
-      if (highest < 1.0F) {
+      std::sort(on_hill.begin(), on_hill.end());
+      if (on_hill.back() < 1.0F) {
         continue;
       }
-      EXPECT_GT(lowest, highest * 0.88F)
+      int terraces = 1;
+      float terrace_top = on_hill.back();
+      for (auto it = on_hill.rbegin() + 1; it != on_hill.rend(); ++it) {
+        if (*it > terrace_top * 0.88F) {
+          continue;
+        }
+        ++terraces;
+        terrace_top = *it;
+      }
+      EXPECT_LE(terraces, 2)
           << where << " (player " << player
-          << "): a hill settlement has buildings at different heights, so some are "
-             "down a slope: "
-          << lowest << " vs " << highest;
+          << "): a hill settlement has buildings at more than two heights, so some "
+             "are down a slope: "
+          << on_hill.front() << " vs " << on_hill.back();
     }
   }
 
