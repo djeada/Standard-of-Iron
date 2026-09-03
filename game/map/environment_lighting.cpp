@@ -332,19 +332,20 @@ auto iberian_high_sun_profile() -> const std::array<LightingKeyframe, 8>& {
 
 auto arena_neutral_profile() -> const std::array<LightingKeyframe, 8>& {
   static const std::array<LightingKeyframe, 8> keyframes = graded_profile({
-      .primary_scale = {0.96F, 0.98F, 1.02F},
+      .primary_scale = {1.02F, 0.96F, 0.88F},
       .primary_intensity_scale = 0.96F,
-      .sky_target = {0.46F, 0.59F, 0.73F},
-      .sky_mix = 0.22F,
-      .bounce_target = {0.26F, 0.24F, 0.20F},
-      .bounce_mix = 0.24F,
-      .fog_target = {0.57F, 0.64F, 0.69F},
-      .fog_mix = 0.24F,
-      .fog_density_add = 0.0010F,
-      .shadow_target = {0.27F, 0.34F, 0.44F},
-      .shadow_mix = 0.24F,
-      .shadow_softness_add = 0.04F,
-      .exposure_scale = 0.98F,
+      .sky_target = {0.24F, 0.38F, 0.58F},
+      .sky_mix = 0.50F,
+      .bounce_target = {0.32F, 0.24F, 0.16F},
+      .bounce_mix = 0.36F,
+      .ambient_scale = 0.99F,
+      .fog_target = {0.50F, 0.52F, 0.52F},
+      .fog_mix = 0.30F,
+      .shadow_target = {0.25F, 0.29F, 0.36F},
+      .shadow_mix = 0.30F,
+      .shadow_strength_scale = 0.98F,
+      .shadow_softness_add = 0.02F,
+      .exposure_scale = 0.95F,
   });
   return keyframes;
 }

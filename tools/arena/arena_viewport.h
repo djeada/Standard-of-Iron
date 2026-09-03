@@ -399,8 +399,8 @@ private:
   QTimer m_frame_timer;
   QElapsedTimer m_frame_clock;
   TerrainSettings m_terrain_settings;
-  Game::Map::GroundType m_ground_type = Game::Map::GroundType::GrassDry;
-  Game::Map::GroundType m_ground_type_baseline = Game::Map::GroundType::GrassDry;
+  Game::Map::GroundType m_ground_type = Game::Map::GroundType::SoilRocky;
+  Game::Map::GroundType m_ground_type_baseline = Game::Map::GroundType::SoilRocky;
   int m_terrain_seed_baseline = 1337;
   Game::Map::TimeOfDay m_time_of_day = Game::Map::TimeOfDay::Day;
   float m_environment_hour = 13.0F;

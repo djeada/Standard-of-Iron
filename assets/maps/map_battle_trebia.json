@@ -160,7 +160,7 @@
     "environment": {
         "day_length_seconds": 1800,
         "fog_density": 0.02,
-        "lighting_profile": "mediterranean_summer",
+        "lighting_profile": "river_mist",
         "start_time": 6.5,
         "time_mode": "locked"
     },
@@ -4223,7 +4223,7 @@
                 "food": 120,
                 "gold": 150
             },
-            "id": "frozen_dead",
+            "id": "trebia_frozen_dead",
             "leash_radius": 43,
             "owner_id": 99,
             "radius": 24.19,
@@ -4244,7 +4244,8 @@
                 }
             ],
             "x": 128,
-            "z": 292
+            "z": 292,
+            "fog_density": 0.35
         }
     ],
     "victory": {
@@ -4343,20 +4344,6 @@
     },
     "world_props": [
         {
-            "rotation": 0.5,
-            "scale": 1,
-            "type": "tent",
-            "x": 234.94,
-            "z": 468.89
-        },
-        {
-            "rotation": 2.8000000000000003,
-            "scale": 1,
-            "type": "tent",
-            "x": 281.47,
-            "z": 468.89
-        },
-        {
             "rotation": 1.2,
             "scale": 1,
             "type": "supply_cart",
@@ -4376,13 +4363,6 @@
             "type": "tent",
             "x": 244.8,
             "z": 47.46
-        },
-        {
-            "rotation": 4,
-            "scale": 1,
-            "type": "tent",
-            "x": 282.77,
-            "z": 47.01
         },
         {
             "rotation": 2.2,
@@ -4413,53 +4393,11 @@
             "z": 260.9
         },
         {
-            "rotation": 0.5,
-            "scale": 1.2,
-            "type": "dead_tree",
-            "x": 123.29,
-            "z": 211.16
-        },
-        {
-            "rotation": 2.2,
-            "scale": 1.1,
-            "type": "dead_tree",
-            "x": 148.87,
-            "z": 223.58
-        },
-        {
-            "rotation": 1.2,
-            "scale": 1.2,
-            "type": "dead_tree",
-            "x": 360,
-            "z": 200
-        },
-        {
-            "rotation": 3,
-            "scale": 1,
-            "type": "dead_tree",
-            "x": 386.14,
-            "z": 223.58
-        },
-        {
-            "rotation": 4.7,
-            "scale": 1,
-            "type": "dead_tree",
-            "x": 211.68,
-            "z": 254.63
-        },
-        {
             "rotation": 6.2,
             "scale": 1.1,
             "type": "dead_tree",
             "x": 295.42,
             "z": 254.63
-        },
-        {
-            "rotation": 1.7,
-            "scale": 1,
-            "type": "dead_tree",
-            "x": 97.7,
-            "z": 329.16
         },
         {
             "rotation": 3.9,
@@ -4504,13 +4442,6 @@
             "z": 131.57
         },
         {
-            "rotation": 0.5,
-            "scale": 0.9,
-            "type": "weapon_rack",
-            "x": 567.58,
-            "z": 71.42
-        },
-        {
             "intensity": 1,
             "persistent": true,
             "radius": 3,
@@ -4518,15 +4449,6 @@
             "type": "firecamp",
             "x": 581.54,
             "z": 105.58
-        },
-        {
-            "intensity": 1.25,
-            "persistent": true,
-            "radius": 3.8000000000000003,
-            "scale": 1,
-            "type": "firecamp",
-            "x": 239.59,
-            "z": 456.47
         },
         {
             "intensity": 1.1500000000000001,
@@ -4556,15 +4478,6 @@
             "z": 55.89
         },
         {
-            "intensity": 0.8,
-            "persistent": true,
-            "radius": 2.5,
-            "scale": 1,
-            "type": "firecamp",
-            "x": 293.1,
-            "z": 55.89
-        },
-        {
             "intensity": 0.35000000000000003,
             "persistent": true,
             "radius": 1.8,
@@ -4572,12 +4485,6 @@
             "type": "firecamp",
             "x": 111.66,
             "z": 347.79
-        },
-        {
-            "scale": 1,
-            "type": "ruins",
-            "x": 128,
-            "z": 292
         },
         {
             "rotation": 55.300000000000004,
@@ -4613,15 +4520,6 @@
             "type": "tent",
             "x": 146.09,
             "z": 108.76
-        },
-        {
-            "intensity": 1.28,
-            "persistent": true,
-            "radius": 2.7,
-            "scale": 1,
-            "type": "firecamp",
-            "x": 630.26,
-            "z": 63.940000000000005
         },
         {
             "rotation": 182.6,
@@ -4684,15 +4582,6 @@
             "type": "supply_cart",
             "x": 90.55,
             "z": 72.74
-        },
-        {
-            "intensity": 1.23,
-            "persistent": true,
-            "radius": 2.9,
-            "scale": 1,
-            "type": "firecamp",
-            "x": 486.63,
-            "z": 125.07000000000001
         },
         {
             "rotation": 129.8,
@@ -4803,13 +4692,6 @@
             "z": 63.04
         },
         {
-            "rotation": 34.5,
-            "scale": 1.06,
-            "type": "supply_cart",
-            "x": 539.26,
-            "z": 38.33
-        },
-        {
             "intensity": 1.1400000000000001,
             "persistent": true,
             "radius": 3.3000000000000003,
@@ -4851,32 +4733,11 @@
             "z": 29.73
         },
         {
-            "rotation": 249.6,
-            "scale": 1.04,
-            "type": "tent",
-            "x": 624.26,
-            "z": 44.82
-        },
-        {
             "rotation": 247.70000000000002,
             "scale": 0.88,
             "type": "tent",
             "x": 346.19,
             "z": 477.2
-        },
-        {
-            "rotation": 2.9,
-            "scale": 1.1400000000000001,
-            "type": "tent",
-            "x": 102.5,
-            "z": 17.18
-        },
-        {
-            "rotation": 11.6,
-            "scale": 1.04,
-            "type": "tent",
-            "x": 509.64,
-            "z": 61.83
         },
         {
             "rotation": 127,
@@ -4893,13 +4754,6 @@
             "z": 107.34
         },
         {
-            "rotation": 273,
-            "scale": 1.1,
-            "type": "supply_cart",
-            "x": 580.61,
-            "z": 207.15
-        },
-        {
             "intensity": 1.06,
             "persistent": true,
             "radius": 3.3000000000000003,
@@ -4914,13 +4768,6 @@
             "type": "supply_cart",
             "x": 80.43,
             "z": 66.93
-        },
-        {
-            "rotation": 246.6,
-            "scale": 1.01,
-            "type": "weapon_rack",
-            "x": 607.22,
-            "z": 49.36
         },
         {
             "rotation": 309,
@@ -4981,13 +4828,6 @@
             "type": "weapon_rack",
             "x": 90.82000000000001,
             "z": 54.96
-        },
-        {
-            "rotation": 70.60000000000001,
-            "scale": 1.01,
-            "type": "tent",
-            "x": 582.85,
-            "z": 22.59
         },
         {
             "rotation": 251.5,
@@ -5114,20 +4954,6 @@
             "z": 346.68
         },
         {
-            "rotation": 302.90000000000003,
-            "scale": 1.16,
-            "type": "dead_tree",
-            "x": 585.59,
-            "z": 579.62
-        },
-        {
-            "rotation": 194.9,
-            "scale": 1.08,
-            "type": "dead_tree",
-            "x": 439.73,
-            "z": 356.41
-        },
-        {
             "rotation": 252.8,
             "scale": 1.06,
             "type": "ruins",
@@ -5140,13 +4966,6 @@
             "type": "dead_tree",
             "x": 240.56,
             "z": 126.15
-        },
-        {
-            "rotation": 198.20000000000002,
-            "scale": 0.92,
-            "type": "dead_tree",
-            "x": 557.7,
-            "z": 595.3000000000001
         },
         {
             "rotation": 173.20000000000002,
@@ -5233,13 +5052,6 @@
             "z": 618.11
         },
         {
-            "rotation": 74.5,
-            "scale": 0.9,
-            "type": "dead_tree",
-            "x": 434.64,
-            "z": 530.79
-        },
-        {
             "rotation": 66.9,
             "scale": 0.93,
             "type": "dead_tree",
@@ -5275,25 +5087,11 @@
             "z": 306.39
         },
         {
-            "rotation": 322.2,
-            "scale": 1,
-            "type": "ruins",
-            "x": 38.64,
-            "z": 499.03000000000003
-        },
-        {
             "rotation": 141.5,
             "scale": 0.92,
             "type": "dead_tree",
             "x": 608.12,
             "z": 365.57
-        },
-        {
-            "rotation": 359.7,
-            "scale": 1.08,
-            "type": "ruins",
-            "x": 45.51,
-            "z": 512.85
         },
         {
             "rotation": 147,
@@ -5310,13 +5108,6 @@
             "z": 121.15
         },
         {
-            "rotation": 157.3,
-            "scale": 1.05,
-            "type": "statue",
-            "x": 633.87,
-            "z": 136.19
-        },
-        {
             "rotation": 332.6,
             "scale": 1.05,
             "type": "statue",
@@ -5331,34 +5122,6 @@
             "z": 110.12
         },
         {
-            "rotation": 132.9,
-            "scale": 1.03,
-            "type": "abandoned_home",
-            "x": 164.22,
-            "z": 264.44
-        },
-        {
-            "rotation": 39.800000000000004,
-            "scale": 1.02,
-            "type": "abandoned_home",
-            "x": 145.59,
-            "z": 259.27
-        },
-        {
-            "rotation": 96.3,
-            "scale": 0.91,
-            "type": "abandoned_home",
-            "x": 115.38,
-            "z": 314.36
-        },
-        {
-            "rotation": 203.1,
-            "scale": 1.09,
-            "type": "abandoned_home",
-            "x": 164.39000000000001,
-            "z": 311.95
-        },
-        {
             "rotation": 247.20000000000002,
             "scale": 0.98,
             "type": "abandoned_home",
@@ -5371,20 +5134,6 @@
             "type": "abandoned_home",
             "x": 176.52,
             "z": 196.14000000000001
-        },
-        {
-            "rotation": 254.4,
-            "scale": 1.07,
-            "type": "abandoned_home",
-            "x": 28.310000000000002,
-            "z": 146.83
-        },
-        {
-            "rotation": 150.4,
-            "scale": 1.06,
-            "type": "abandoned_home",
-            "x": 462.86,
-            "z": 628.59
         },
         {
             "rotation": 41.9,
@@ -5547,14 +5296,6 @@
             "type": "ruins",
             "x": 398.3,
             "z": 263.1
-        },
-        {
-            "landmark": "trebia_ridge_sanctuary",
-            "rotation": 180,
-            "scale": 0.9,
-            "type": "ruins",
-            "x": 399.7,
-            "z": 272.2
         },
         {
             "landmark": "trebia_ridge_sanctuary",
@@ -5897,6 +5638,1600 @@
             "type": "cursed_gold_vein",
             "x": 352,
             "z": 362
+        },
+        {
+            "type": "boulder",
+            "x": 342.25,
+            "z": 256.96,
+            "scale": 1.26,
+            "rotation": 1.68,
+            "dressing": "trebia_frozen_ford"
+        },
+        {
+            "type": "boulder",
+            "x": 346.74,
+            "z": 255.12,
+            "scale": 0.89,
+            "rotation": 3.864,
+            "dressing": "trebia_frozen_ford"
+        },
+        {
+            "type": "boulder",
+            "x": 351.63,
+            "z": 252.0,
+            "scale": 0.87,
+            "rotation": 1.571,
+            "dressing": "trebia_frozen_ford"
+        },
+        {
+            "type": "boulder",
+            "x": 355.18,
+            "z": 252.25,
+            "scale": 1.27,
+            "rotation": 4.198,
+            "dressing": "trebia_frozen_ford"
+        },
+        {
+            "type": "dead_tree",
+            "x": 353.56,
+            "z": 256.31,
+            "scale": 1.0,
+            "rotation": 1.126,
+            "dressing": "trebia_frozen_ford"
+        },
+        {
+            "type": "ruins",
+            "x": 340.84,
+            "z": 213.67,
+            "scale": 0.8,
+            "rotation": 2.525,
+            "dressing": "trebia_frozen_ford"
+        },
+        {
+            "type": "dead_tree",
+            "x": 25.93,
+            "z": 228.58,
+            "scale": 0.81,
+            "rotation": 4.472,
+            "dressing": "trebia_frozen_bank"
+        },
+        {
+            "type": "boulder",
+            "x": 17.01,
+            "z": 186.59,
+            "scale": 1.0,
+            "rotation": 0.06,
+            "dressing": "trebia_frozen_bank"
+        },
+        {
+            "type": "dead_tree",
+            "x": 58.67,
+            "z": 177.32,
+            "scale": 1.04,
+            "rotation": 5.643,
+            "dressing": "trebia_frozen_bank"
+        },
+        {
+            "type": "plant",
+            "x": 51.67,
+            "z": 135.8,
+            "scale": 1.2,
+            "rotation": 1.396,
+            "dressing": "trebia_frozen_bank"
+        },
+        {
+            "type": "plant",
+            "x": 50.65,
+            "z": 133.5,
+            "scale": 1.38,
+            "rotation": 1.586,
+            "dressing": "trebia_frozen_bank"
+        },
+        {
+            "type": "boulder",
+            "x": 88.62,
+            "z": 126.3,
+            "scale": 0.96,
+            "rotation": 5.959,
+            "dressing": "trebia_frozen_bank"
+        },
+        {
+            "type": "dead_tree",
+            "x": 82.17,
+            "z": 86.17,
+            "scale": 0.98,
+            "rotation": 5.875,
+            "dressing": "trebia_frozen_bank"
+        },
+        {
+            "type": "boulder",
+            "x": 115.68,
+            "z": 90.59,
+            "scale": 1.25,
+            "rotation": 5.541,
+            "dressing": "trebia_frozen_bank"
+        },
+        {
+            "type": "plant",
+            "x": 150.78,
+            "z": 109.03,
+            "scale": 1.07,
+            "rotation": 2.383,
+            "dressing": "trebia_frozen_bank"
+        },
+        {
+            "type": "plant",
+            "x": 150.24,
+            "z": 113.35,
+            "scale": 1.36,
+            "rotation": 2.205,
+            "dressing": "trebia_frozen_bank"
+        },
+        {
+            "type": "dead_tree",
+            "x": 179.5,
+            "z": 163.43,
+            "scale": 1.06,
+            "rotation": 6.085,
+            "dressing": "trebia_frozen_bank"
+        },
+        {
+            "type": "boulder",
+            "x": 208.94,
+            "z": 183.61,
+            "scale": 1.1,
+            "rotation": 1.115,
+            "dressing": "trebia_frozen_bank"
+        },
+        {
+            "type": "dead_tree",
+            "x": 179.44,
+            "z": 210.84,
+            "scale": 1.04,
+            "rotation": 4.91,
+            "dressing": "trebia_frozen_bank"
+        },
+        {
+            "type": "boulder",
+            "x": 227.2,
+            "z": 254.6,
+            "scale": 1.24,
+            "rotation": 3.508,
+            "dressing": "trebia_frozen_bank"
+        },
+        {
+            "type": "dead_tree",
+            "x": 261.78,
+            "z": 225.39,
+            "scale": 1.0,
+            "rotation": 0.996,
+            "dressing": "trebia_frozen_bank"
+        },
+        {
+            "type": "boulder",
+            "x": 287.12,
+            "z": 256.63,
+            "scale": 0.81,
+            "rotation": 0.868,
+            "dressing": "trebia_frozen_bank"
+        },
+        {
+            "type": "dead_tree",
+            "x": 312.13,
+            "z": 227.08,
+            "scale": 1.16,
+            "rotation": 6.156,
+            "dressing": "trebia_frozen_bank"
+        },
+        {
+            "type": "plant",
+            "x": 350.51,
+            "z": 241.31,
+            "scale": 1.15,
+            "rotation": 5.618,
+            "dressing": "trebia_frozen_bank"
+        },
+        {
+            "type": "plant",
+            "x": 354.68,
+            "z": 240.58,
+            "scale": 1.07,
+            "rotation": 3.763,
+            "dressing": "trebia_frozen_bank"
+        },
+        {
+            "type": "boulder",
+            "x": 365.37,
+            "z": 199.94,
+            "scale": 0.96,
+            "rotation": 3.778,
+            "dressing": "trebia_frozen_bank"
+        },
+        {
+            "type": "dead_tree",
+            "x": 399.23,
+            "z": 217.25,
+            "scale": 1.02,
+            "rotation": 2.05,
+            "dressing": "trebia_frozen_bank"
+        },
+        {
+            "type": "boulder",
+            "x": 439.51,
+            "z": 199.39,
+            "scale": 0.81,
+            "rotation": 5.059,
+            "dressing": "trebia_frozen_bank"
+        },
+        {
+            "type": "dead_tree",
+            "x": 430.32,
+            "z": 239.31,
+            "scale": 1.24,
+            "rotation": 4.248,
+            "dressing": "trebia_frozen_bank"
+        },
+        {
+            "type": "plant",
+            "x": 467.41,
+            "z": 223.77,
+            "scale": 1.11,
+            "rotation": 5.147,
+            "dressing": "trebia_frozen_bank"
+        },
+        {
+            "type": "plant",
+            "x": 469.65,
+            "z": 222.66,
+            "scale": 1.19,
+            "rotation": 0.963,
+            "dressing": "trebia_frozen_bank"
+        },
+        {
+            "type": "boulder",
+            "x": 496.5,
+            "z": 253.29,
+            "scale": 0.81,
+            "rotation": 2.563,
+            "dressing": "trebia_frozen_bank"
+        },
+        {
+            "type": "dead_tree",
+            "x": 526.36,
+            "z": 225.15,
+            "scale": 0.95,
+            "rotation": 0.564,
+            "dressing": "trebia_frozen_bank"
+        },
+        {
+            "type": "boulder",
+            "x": 555.37,
+            "z": 257.59,
+            "scale": 0.83,
+            "rotation": 3.426,
+            "dressing": "trebia_frozen_bank"
+        },
+        {
+            "type": "dead_tree",
+            "x": 586.07,
+            "z": 226.86,
+            "scale": 1.19,
+            "rotation": 3.838,
+            "dressing": "trebia_frozen_bank"
+        },
+        {
+            "type": "plant",
+            "x": 614.75,
+            "z": 255.46,
+            "scale": 0.9,
+            "rotation": 1.82,
+            "dressing": "trebia_frozen_bank"
+        },
+        {
+            "type": "plant",
+            "x": 619.13,
+            "z": 258.07,
+            "scale": 1.08,
+            "rotation": 0.303,
+            "dressing": "trebia_frozen_bank"
+        },
+        {
+            "type": "ruins",
+            "x": 277.79,
+            "z": 91.2,
+            "scale": 1.01,
+            "rotation": 1.509,
+            "dressing": "trebia_oppidum"
+        },
+        {
+            "type": "ruins",
+            "x": 252.44,
+            "z": 96.05,
+            "scale": 0.99,
+            "rotation": 4.228,
+            "dressing": "trebia_oppidum"
+        },
+        {
+            "type": "ruins",
+            "x": 251.43,
+            "z": 87.09,
+            "scale": 1.18,
+            "rotation": 5.06,
+            "dressing": "trebia_oppidum"
+        },
+        {
+            "type": "ruins",
+            "x": 271.47,
+            "z": 83.79,
+            "scale": 0.91,
+            "rotation": 6.978,
+            "dressing": "trebia_oppidum"
+        },
+        {
+            "type": "firecamp",
+            "x": 265.0,
+            "z": 90.0,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "trebia_oppidum",
+            "radius": 3.2,
+            "intensity": 1.15,
+            "persistent": true
+        },
+        {
+            "type": "dead_tree",
+            "x": 271.75,
+            "z": 98.0,
+            "scale": 1.0,
+            "rotation": 2.606,
+            "dressing": "trebia_oppidum"
+        },
+        {
+            "type": "dead_tree",
+            "x": 258.25,
+            "z": 98.0,
+            "scale": 1.0,
+            "rotation": 2.152,
+            "dressing": "trebia_oppidum"
+        },
+        {
+            "type": "dead_tree",
+            "x": 244.93,
+            "z": 96.81,
+            "scale": 1.0,
+            "rotation": 0.703,
+            "dressing": "trebia_oppidum"
+        },
+        {
+            "type": "boulder",
+            "x": 246.75,
+            "z": 83.61,
+            "scale": 0.89,
+            "rotation": 0.141,
+            "dressing": "trebia_oppidum"
+        },
+        {
+            "type": "boulder",
+            "x": 283.81,
+            "z": 15.07,
+            "scale": 1.33,
+            "rotation": 0.179,
+            "dressing": "trebia_oppidum_ramp"
+        },
+        {
+            "type": "boulder",
+            "x": 284.77,
+            "z": 8.81,
+            "scale": 1.04,
+            "rotation": 2.483,
+            "dressing": "trebia_oppidum_ramp"
+        },
+        {
+            "type": "dead_tree",
+            "x": 274.19,
+            "z": 17.97,
+            "scale": 1.0,
+            "rotation": 6.177,
+            "dressing": "trebia_oppidum_ramp"
+        },
+        {
+            "type": "boulder",
+            "x": 314.53,
+            "z": 29.9,
+            "scale": 0.99,
+            "rotation": 3.263,
+            "dressing": "trebia_oppidum_ramp"
+        },
+        {
+            "type": "boulder",
+            "x": 319.48,
+            "z": 26.59,
+            "scale": 1.04,
+            "rotation": 0.225,
+            "dressing": "trebia_oppidum_ramp"
+        },
+        {
+            "type": "statue",
+            "x": 320.41,
+            "z": 22.57,
+            "scale": 1.0,
+            "rotation": 2.044,
+            "dressing": "trebia_oppidum_ramp"
+        },
+        {
+            "type": "boulder",
+            "x": 191.37,
+            "z": 108.64,
+            "scale": 0.96,
+            "rotation": 1.535,
+            "dressing": "trebia_oppidum_ramp_w"
+        },
+        {
+            "type": "dead_tree",
+            "x": 199.76,
+            "z": 111.75,
+            "scale": 1.0,
+            "rotation": 1.738,
+            "dressing": "trebia_oppidum_ramp_w"
+        },
+        {
+            "type": "boulder",
+            "x": 187.53,
+            "z": 84.23,
+            "scale": 1.39,
+            "rotation": 4.181,
+            "dressing": "trebia_oppidum_ramp_w"
+        },
+        {
+            "type": "boulder",
+            "x": 182.47,
+            "z": 82.46,
+            "scale": 0.91,
+            "rotation": 4.852,
+            "dressing": "trebia_oppidum_ramp_w"
+        },
+        {
+            "type": "ruins",
+            "x": 139.66,
+            "z": 291.87,
+            "scale": 1.04,
+            "rotation": 3.261,
+            "dressing": "trebia_frozen_barrows"
+        },
+        {
+            "type": "ruins",
+            "x": 133.2,
+            "z": 303.39,
+            "scale": 0.9,
+            "rotation": 0.67,
+            "dressing": "trebia_frozen_barrows"
+        },
+        {
+            "type": "ruins",
+            "x": 125.91,
+            "z": 302.76,
+            "scale": 0.88,
+            "rotation": 3.225,
+            "dressing": "trebia_frozen_barrows"
+        },
+        {
+            "type": "ruins",
+            "x": 138.45,
+            "z": 283.4,
+            "scale": 1.15,
+            "rotation": 1.979,
+            "dressing": "trebia_frozen_barrows"
+        },
+        {
+            "type": "dead_tree",
+            "x": 137.69,
+            "z": 307.01,
+            "scale": 0.89,
+            "rotation": 4.223,
+            "dressing": "trebia_frozen_barrows"
+        },
+        {
+            "type": "dead_tree",
+            "x": 143.48,
+            "z": 278.0,
+            "scale": 1.14,
+            "rotation": 0.141,
+            "dressing": "trebia_frozen_barrows"
+        },
+        {
+            "type": "dead_tree",
+            "x": 133.77,
+            "z": 309.46,
+            "scale": 0.94,
+            "rotation": 5.169,
+            "dressing": "trebia_frozen_barrows"
+        },
+        {
+            "type": "statue",
+            "x": 135.97,
+            "z": 295.31,
+            "scale": 0.9,
+            "rotation": 4.543,
+            "dressing": "trebia_frozen_barrows"
+        },
+        {
+            "type": "boulder",
+            "x": 128.85,
+            "z": 306.41,
+            "scale": 1.07,
+            "rotation": 0.738,
+            "dressing": "trebia_frozen_barrows"
+        },
+        {
+            "type": "boulder",
+            "x": 132.15,
+            "z": 273.63,
+            "scale": 1.09,
+            "rotation": 1.272,
+            "dressing": "trebia_frozen_barrows"
+        },
+        {
+            "type": "boulder",
+            "x": 121.38,
+            "z": 303.59,
+            "scale": 0.92,
+            "rotation": 1.627,
+            "dressing": "trebia_frozen_barrows"
+        },
+        {
+            "type": "magic_shrine",
+            "x": 128.0,
+            "z": 292.0,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "trebia_frozen_barrows"
+        },
+        {
+            "type": "dead_tree",
+            "x": 98.87,
+            "z": 333.29,
+            "scale": 1.1,
+            "rotation": 0.566,
+            "dressing": "trebia_frozen_bones"
+        },
+        {
+            "type": "dead_tree",
+            "x": 88.59,
+            "z": 323.5,
+            "scale": 0.97,
+            "rotation": 4.508,
+            "dressing": "trebia_frozen_bones"
+        },
+        {
+            "type": "dead_tree",
+            "x": 103.99,
+            "z": 315.1,
+            "scale": 0.88,
+            "rotation": 0.452,
+            "dressing": "trebia_frozen_bones"
+        },
+        {
+            "type": "dead_tree",
+            "x": 98.16,
+            "z": 314.84,
+            "scale": 1.16,
+            "rotation": 0.124,
+            "dressing": "trebia_frozen_bones"
+        },
+        {
+            "type": "dead_tree",
+            "x": 96.84,
+            "z": 326.09,
+            "scale": 1.16,
+            "rotation": 2.487,
+            "dressing": "trebia_frozen_bones"
+        },
+        {
+            "type": "dead_tree",
+            "x": 111.14,
+            "z": 321.21,
+            "scale": 1.02,
+            "rotation": 5.528,
+            "dressing": "trebia_frozen_bones"
+        },
+        {
+            "type": "dead_tree",
+            "x": 102.49,
+            "z": 319.32,
+            "scale": 0.9,
+            "rotation": 3.02,
+            "dressing": "trebia_frozen_bones"
+        },
+        {
+            "type": "boulder",
+            "x": 100.09,
+            "z": 329.78,
+            "scale": 0.69,
+            "rotation": 5.889,
+            "dressing": "trebia_frozen_bones"
+        },
+        {
+            "type": "boulder",
+            "x": 100.59,
+            "z": 326.98,
+            "scale": 0.75,
+            "rotation": 6.17,
+            "dressing": "trebia_frozen_bones"
+        },
+        {
+            "type": "boulder",
+            "x": 102.49,
+            "z": 328.83,
+            "scale": 0.74,
+            "rotation": 4.575,
+            "dressing": "trebia_frozen_bones"
+        },
+        {
+            "type": "boulder",
+            "x": 102.08,
+            "z": 323.47,
+            "scale": 0.7,
+            "rotation": 3.877,
+            "dressing": "trebia_frozen_bones"
+        },
+        {
+            "type": "boulder",
+            "x": 103.09,
+            "z": 325.8,
+            "scale": 1.0,
+            "rotation": 4.665,
+            "dressing": "trebia_frozen_bones"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 487.97,
+            "z": 88.45,
+            "scale": 0.99,
+            "rotation": 2.668,
+            "dressing": "trebia_placentia_avenue"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 484.82,
+            "z": 100.19,
+            "scale": 0.94,
+            "rotation": 3.537,
+            "dressing": "trebia_placentia_avenue"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 497.68,
+            "z": 90.86,
+            "scale": 1.05,
+            "rotation": 0.163,
+            "dressing": "trebia_placentia_avenue"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 494.28,
+            "z": 102.89,
+            "scale": 0.94,
+            "rotation": 3.972,
+            "dressing": "trebia_placentia_avenue"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 506.71,
+            "z": 94.15,
+            "scale": 0.98,
+            "rotation": 1.911,
+            "dressing": "trebia_placentia_avenue"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 503.92,
+            "z": 105.56,
+            "scale": 1.06,
+            "rotation": 1.465,
+            "dressing": "trebia_placentia_avenue"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 515.92,
+            "z": 96.12,
+            "scale": 1.08,
+            "rotation": 5.566,
+            "dressing": "trebia_placentia_avenue"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 512.71,
+            "z": 108.8,
+            "scale": 1.02,
+            "rotation": 1.072,
+            "dressing": "trebia_placentia_avenue"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 525.59,
+            "z": 99.97,
+            "scale": 1.08,
+            "rotation": 4.906,
+            "dressing": "trebia_placentia_avenue"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 522.91,
+            "z": 111.46,
+            "scale": 1.07,
+            "rotation": 2.723,
+            "dressing": "trebia_placentia_avenue"
+        },
+        {
+            "type": "boulder",
+            "x": 265.88,
+            "z": 226.13,
+            "scale": 1.02,
+            "rotation": 2.226,
+            "dressing": "trebia_centre_bridge"
+        },
+        {
+            "type": "boulder",
+            "x": 249.34,
+            "z": 226.4,
+            "scale": 1.16,
+            "rotation": 4.015,
+            "dressing": "trebia_centre_bridge"
+        },
+        {
+            "type": "firecamp",
+            "x": 247.06,
+            "z": 222.33,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "trebia_centre_bridge",
+            "radius": 3.2,
+            "intensity": 1.15,
+            "persistent": true
+        },
+        {
+            "type": "dead_tree",
+            "x": 265.65,
+            "z": 219.91,
+            "scale": 1.0,
+            "rotation": 0.619,
+            "dressing": "trebia_centre_bridge"
+        },
+        {
+            "type": "supply_cart",
+            "x": 245.47,
+            "z": 218.24,
+            "scale": 1.0,
+            "rotation": -1.53,
+            "dressing": "trebia_centre_bridge"
+        },
+        {
+            "type": "boulder",
+            "x": 264.49,
+            "z": 253.7,
+            "scale": 1.11,
+            "rotation": 4.223,
+            "dressing": "trebia_centre_bridge"
+        },
+        {
+            "type": "boulder",
+            "x": 248.45,
+            "z": 253.99,
+            "scale": 0.93,
+            "rotation": 2.508,
+            "dressing": "trebia_centre_bridge"
+        },
+        {
+            "type": "firecamp",
+            "x": 267.34,
+            "z": 256.09,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "trebia_centre_bridge",
+            "radius": 3.2,
+            "intensity": 1.15,
+            "persistent": true
+        },
+        {
+            "type": "dead_tree",
+            "x": 246.36,
+            "z": 260.92,
+            "scale": 1.0,
+            "rotation": 3.518,
+            "dressing": "trebia_centre_bridge"
+        },
+        {
+            "type": "boulder",
+            "x": 488.34,
+            "z": 225.98,
+            "scale": 1.15,
+            "rotation": 1.739,
+            "dressing": "trebia_east_bridge"
+        },
+        {
+            "type": "boulder",
+            "x": 473.89,
+            "z": 225.76,
+            "scale": 0.87,
+            "rotation": 4.767,
+            "dressing": "trebia_east_bridge"
+        },
+        {
+            "type": "firecamp",
+            "x": 471.33,
+            "z": 220.61,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "trebia_east_bridge",
+            "radius": 3.2,
+            "intensity": 1.15,
+            "persistent": true
+        },
+        {
+            "type": "supply_cart",
+            "x": 469.66,
+            "z": 216.53,
+            "scale": 1.0,
+            "rotation": -1.451,
+            "dressing": "trebia_east_bridge"
+        },
+        {
+            "type": "boulder",
+            "x": 488.15,
+            "z": 253.57,
+            "scale": 0.84,
+            "rotation": 5.141,
+            "dressing": "trebia_east_bridge"
+        },
+        {
+            "type": "boulder",
+            "x": 473.5,
+            "z": 253.35,
+            "scale": 1.26,
+            "rotation": 3.953,
+            "dressing": "trebia_east_bridge"
+        },
+        {
+            "type": "firecamp",
+            "x": 490.24,
+            "z": 257.6,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "trebia_east_bridge",
+            "radius": 3.2,
+            "intensity": 1.15,
+            "persistent": true
+        },
+        {
+            "type": "dead_tree",
+            "x": 470.76,
+            "z": 259.57,
+            "scale": 1.0,
+            "rotation": 6.035,
+            "dressing": "trebia_east_bridge"
+        },
+        {
+            "type": "boulder",
+            "x": 123.96,
+            "z": 89.37,
+            "scale": 1.04,
+            "rotation": 1.852,
+            "dressing": "trebia_camp_bridge"
+        },
+        {
+            "type": "firecamp",
+            "x": 140.8,
+            "z": 92.69,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "trebia_camp_bridge",
+            "radius": 3.2,
+            "intensity": 1.15,
+            "persistent": true
+        },
+        {
+            "type": "boulder",
+            "x": 121.17,
+            "z": 61.91,
+            "scale": 1.05,
+            "rotation": 3.421,
+            "dressing": "trebia_camp_bridge"
+        },
+        {
+            "type": "firecamp",
+            "x": 118.16,
+            "z": 58.22,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "trebia_camp_bridge",
+            "radius": 3.2,
+            "intensity": 1.15,
+            "persistent": true
+        },
+        {
+            "type": "boulder",
+            "x": 522.51,
+            "z": 182.48,
+            "scale": 1.12,
+            "rotation": 5.346,
+            "dressing": "trebia_placentia_bridge"
+        },
+        {
+            "type": "boulder",
+            "x": 508.64,
+            "z": 182.48,
+            "scale": 0.99,
+            "rotation": 1.345,
+            "dressing": "trebia_placentia_bridge"
+        },
+        {
+            "type": "firecamp",
+            "x": 506.5,
+            "z": 178.48,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "trebia_placentia_bridge",
+            "radius": 3.2,
+            "intensity": 1.15,
+            "persistent": true
+        },
+        {
+            "type": "dead_tree",
+            "x": 527.25,
+            "z": 175.95,
+            "scale": 1.0,
+            "rotation": 2.845,
+            "dressing": "trebia_placentia_bridge"
+        },
+        {
+            "type": "boulder",
+            "x": 523.14,
+            "z": 196.36,
+            "scale": 0.9,
+            "rotation": 5.401,
+            "dressing": "trebia_placentia_bridge"
+        },
+        {
+            "type": "boulder",
+            "x": 509.32,
+            "z": 196.36,
+            "scale": 1.21,
+            "rotation": 1.706,
+            "dressing": "trebia_placentia_bridge"
+        },
+        {
+            "type": "firecamp",
+            "x": 525.5,
+            "z": 200.36,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "trebia_placentia_bridge",
+            "radius": 3.2,
+            "intensity": 1.15,
+            "persistent": true
+        },
+        {
+            "type": "boulder",
+            "x": 436.63,
+            "z": 292.34,
+            "scale": 0.84,
+            "rotation": 3.399,
+            "dressing": "trebia_ford_bridge"
+        },
+        {
+            "type": "dead_tree",
+            "x": 430.51,
+            "z": 288.19,
+            "scale": 1.0,
+            "rotation": 1.853,
+            "dressing": "trebia_ford_bridge"
+        },
+        {
+            "type": "boulder",
+            "x": 446.93,
+            "z": 295.36,
+            "scale": 1.14,
+            "rotation": 5.416,
+            "dressing": "trebia_ford_bridge"
+        },
+        {
+            "type": "boulder",
+            "x": 444.57,
+            "z": 308.4,
+            "scale": 1.26,
+            "rotation": 1.122,
+            "dressing": "trebia_ford_bridge"
+        },
+        {
+            "type": "dead_tree",
+            "x": 450.73,
+            "z": 312.43,
+            "scale": 1.0,
+            "rotation": 5.532,
+            "dressing": "trebia_ford_bridge"
+        },
+        {
+            "type": "dead_tree",
+            "x": 237.02,
+            "z": 382.7,
+            "scale": 1.0,
+            "rotation": 1.474,
+            "dressing": "trebia_camp_ramp"
+        },
+        {
+            "type": "boulder",
+            "x": 279.32,
+            "z": 366.27,
+            "scale": 1.08,
+            "rotation": 1.139,
+            "dressing": "trebia_camp_ramp"
+        },
+        {
+            "type": "boulder",
+            "x": 280.1,
+            "z": 359.99,
+            "scale": 1.16,
+            "rotation": 0.942,
+            "dressing": "trebia_camp_ramp"
+        },
+        {
+            "type": "statue",
+            "x": 278.32,
+            "z": 356.27,
+            "scale": 1.0,
+            "rotation": 1.371,
+            "dressing": "trebia_camp_ramp"
+        },
+        {
+            "type": "firecamp",
+            "x": 279.49,
+            "z": 351.95,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "trebia_camp_ramp",
+            "radius": 3.2,
+            "intensity": 1.15,
+            "persistent": true
+        },
+        {
+            "type": "boulder",
+            "x": 309.36,
+            "z": 301.62,
+            "scale": 1.09,
+            "rotation": 3.197,
+            "dressing": "trebia_ambush_ramp"
+        },
+        {
+            "type": "boulder",
+            "x": 304.96,
+            "z": 298.97,
+            "scale": 1.32,
+            "rotation": 0.122,
+            "dressing": "trebia_ambush_ramp"
+        },
+        {
+            "type": "boulder",
+            "x": 321.44,
+            "z": 284.54,
+            "scale": 1.33,
+            "rotation": 2.542,
+            "dressing": "trebia_ambush_ramp"
+        },
+        {
+            "type": "firecamp",
+            "x": 296.47,
+            "z": 494.43,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "trebia_camp_junction",
+            "radius": 3.2,
+            "intensity": 1.15,
+            "persistent": true
+        },
+        {
+            "type": "supply_cart",
+            "x": 290.45,
+            "z": 493.23,
+            "scale": 1.0,
+            "rotation": 2.577,
+            "dressing": "trebia_camp_junction"
+        },
+        {
+            "type": "weapon_rack",
+            "x": 298.77,
+            "z": 490.59,
+            "scale": 1.0,
+            "rotation": 2.577,
+            "dressing": "trebia_camp_junction"
+        },
+        {
+            "type": "statue",
+            "x": 442.99,
+            "z": 384.97,
+            "scale": 1.0,
+            "rotation": -2.113,
+            "dressing": "trebia_west_junction"
+        },
+        {
+            "type": "firecamp",
+            "x": 448.31,
+            "z": 384.1,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "trebia_west_junction",
+            "radius": 3.2,
+            "intensity": 1.15,
+            "persistent": true
+        },
+        {
+            "type": "ruins",
+            "x": 439.4,
+            "z": 390.63,
+            "scale": 0.8,
+            "rotation": 2.652,
+            "dressing": "trebia_west_junction"
+        },
+        {
+            "type": "firecamp",
+            "x": 122.06,
+            "z": 58.95,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "trebia_gate_1",
+            "radius": 3.2,
+            "intensity": 1.15,
+            "persistent": true
+        },
+        {
+            "type": "firecamp",
+            "x": 123.0,
+            "z": 48.3,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "trebia_gate_1",
+            "radius": 3.2,
+            "intensity": 1.15,
+            "persistent": true
+        },
+        {
+            "type": "weapon_rack",
+            "x": 119.0,
+            "z": 47.3,
+            "scale": 1.0,
+            "rotation": 3.142,
+            "dressing": "trebia_gate_1"
+        },
+        {
+            "type": "supply_cart",
+            "x": 116.82,
+            "z": 62.39,
+            "scale": 1.0,
+            "rotation": 3.442,
+            "dressing": "trebia_gate_1"
+        },
+        {
+            "type": "firecamp",
+            "x": 175.0,
+            "z": 40.4,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "trebia_gate_2",
+            "radius": 3.2,
+            "intensity": 1.15,
+            "persistent": true
+        },
+        {
+            "type": "firecamp",
+            "x": 175.0,
+            "z": 51.6,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "trebia_gate_2",
+            "radius": 3.2,
+            "intensity": 1.15,
+            "persistent": true
+        },
+        {
+            "type": "weapon_rack",
+            "x": 179.0,
+            "z": 52.6,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "trebia_gate_2"
+        },
+        {
+            "type": "supply_cart",
+            "x": 181.0,
+            "z": 38.9,
+            "scale": 1.0,
+            "rotation": 0.3,
+            "dressing": "trebia_gate_2"
+        },
+        {
+            "type": "firecamp",
+            "x": 565.9,
+            "z": 153.0,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "trebia_gate_3",
+            "radius": 3.2,
+            "intensity": 1.15,
+            "persistent": true
+        },
+        {
+            "type": "firecamp",
+            "x": 554.1,
+            "z": 153.0,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "trebia_gate_3",
+            "radius": 3.2,
+            "intensity": 1.15,
+            "persistent": true
+        },
+        {
+            "type": "weapon_rack",
+            "x": 553.1,
+            "z": 157.0,
+            "scale": 1.0,
+            "rotation": 1.571,
+            "dressing": "trebia_gate_3"
+        },
+        {
+            "type": "supply_cart",
+            "x": 567.4,
+            "z": 159.0,
+            "scale": 1.0,
+            "rotation": 1.871,
+            "dressing": "trebia_gate_3"
+        },
+        {
+            "type": "statue",
+            "x": 566.9,
+            "z": 164.0,
+            "scale": 1.0,
+            "rotation": 3.142,
+            "dressing": "trebia_gate_3"
+        },
+        {
+            "type": "statue",
+            "x": 553.1,
+            "z": 164.0,
+            "scale": 1.0,
+            "rotation": -0.0,
+            "dressing": "trebia_gate_3"
+        },
+        {
+            "type": "firecamp",
+            "x": 529.0,
+            "z": 119.6,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "trebia_gate_4",
+            "radius": 3.2,
+            "intensity": 1.15,
+            "persistent": true
+        },
+        {
+            "type": "firecamp",
+            "x": 529.89,
+            "z": 111.68,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "trebia_gate_4",
+            "radius": 3.2,
+            "intensity": 1.15,
+            "persistent": true
+        },
+        {
+            "type": "supply_cart",
+            "x": 523.0,
+            "z": 121.1,
+            "scale": 1.0,
+            "rotation": 3.442,
+            "dressing": "trebia_gate_4"
+        },
+        {
+            "type": "statue",
+            "x": 518.0,
+            "z": 120.6,
+            "scale": 1.0,
+            "rotation": -1.571,
+            "dressing": "trebia_gate_4"
+        },
+        {
+            "type": "firecamp",
+            "x": 289.0,
+            "z": 525.3,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "trebia_gate_5",
+            "radius": 3.2,
+            "intensity": 1.15,
+            "persistent": true
+        },
+        {
+            "type": "firecamp",
+            "x": 289.0,
+            "z": 514.7,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "trebia_gate_5",
+            "radius": 3.2,
+            "intensity": 1.15,
+            "persistent": true
+        },
+        {
+            "type": "weapon_rack",
+            "x": 285.0,
+            "z": 513.7,
+            "scale": 1.0,
+            "rotation": 3.142,
+            "dressing": "trebia_gate_5"
+        },
+        {
+            "type": "supply_cart",
+            "x": 283.0,
+            "z": 526.8,
+            "scale": 1.0,
+            "rotation": 3.442,
+            "dressing": "trebia_gate_5"
+        },
+        {
+            "type": "tent",
+            "x": 280.43,
+            "z": 532.42,
+            "scale": 1.0,
+            "rotation": -0.0,
+            "dressing": "trebia_gate_5"
+        },
+        {
+            "type": "tent",
+            "x": 283.02,
+            "z": 539.64,
+            "scale": 1.0,
+            "rotation": -0.0,
+            "dressing": "trebia_gate_5"
+        },
+        {
+            "type": "firecamp",
+            "x": 318.1,
+            "z": 495.0,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "trebia_gate_6",
+            "radius": 3.2,
+            "intensity": 1.15,
+            "persistent": true
+        },
+        {
+            "type": "weapon_rack",
+            "x": 321.35,
+            "z": 491.47,
+            "scale": 1.0,
+            "rotation": -1.571,
+            "dressing": "trebia_gate_6"
+        },
+        {
+            "type": "supply_cart",
+            "x": 304.4,
+            "z": 489.0,
+            "scale": 1.0,
+            "rotation": -1.271,
+            "dressing": "trebia_gate_6"
+        },
+        {
+            "type": "tent",
+            "x": 298.96,
+            "z": 485.25,
+            "scale": 1.0,
+            "rotation": 1.571,
+            "dressing": "trebia_gate_6"
+        },
+        {
+            "type": "tent",
+            "x": 291.62,
+            "z": 486.89,
+            "scale": 1.0,
+            "rotation": 1.571,
+            "dressing": "trebia_gate_6"
+        }
+    ],
+    "dressing": [
+        {
+            "id": "trebia_frozen_ford",
+            "kind": "ford_wreck",
+            "x": 340,
+            "z": 242,
+            "boulders": 4,
+            "plants": 2
+        },
+        {
+            "id": "trebia_frozen_bank",
+            "kind": "riverbank",
+            "from": [
+                20,
+                242
+            ],
+            "to": [
+                630,
+                242
+            ],
+            "spacing": 30,
+            "kinds": [
+                "dead_tree",
+                "boulder",
+                "dead_tree",
+                "plant",
+                "boulder"
+            ]
+        },
+        {
+            "id": "trebia_oppidum",
+            "kind": "hilltop_ruin",
+            "x": 265,
+            "z": 92,
+            "facing": "south",
+            "radius": 15,
+            "ruins": 9,
+            "dead_trees": 3
+        },
+        {
+            "id": "trebia_oppidum_ramp",
+            "kind": "ramp_mouth",
+            "x": 283,
+            "z": 53,
+            "statue": true
+        },
+        {
+            "id": "trebia_oppidum_ramp_w",
+            "kind": "ramp_mouth",
+            "x": 192,
+            "z": 96
+        },
+        {
+            "id": "trebia_frozen_barrows",
+            "kind": "barrow_field",
+            "x": 128,
+            "z": 292,
+            "radius": 13,
+            "shrine": true,
+            "ruins": 7,
+            "dead_trees": 7,
+            "boulders": 4
+        },
+        {
+            "id": "trebia_frozen_bones",
+            "kind": "boneyard",
+            "x": 100,
+            "z": 322,
+            "radius": 12,
+            "dead_trees": 8,
+            "ruins": 2,
+            "statues": 0
+        },
+        {
+            "id": "trebia_placentia_avenue",
+            "kind": "tree_avenue",
+            "from": [
+                470,
+                132
+            ],
+            "to": [
+                530,
+                122
+            ],
+            "tree": "cypress_tree",
+            "spacing": 10
+        },
+        {
+            "id": "trebia_centre_bridge",
+            "kind": "bridgehead",
+            "x": 256,
+            "z": 240
+        },
+        {
+            "id": "trebia_east_bridge",
+            "kind": "bridgehead",
+            "x": 481,
+            "z": 240
+        },
+        {
+            "id": "trebia_camp_bridge",
+            "kind": "bridgehead",
+            "x": 130,
+            "z": 75,
+            "cart": false
+        },
+        {
+            "id": "trebia_placentia_bridge",
+            "kind": "bridgehead",
+            "x": 516,
+            "z": 189,
+            "cart": false
+        },
+        {
+            "id": "trebia_ford_bridge",
+            "kind": "bridgehead",
+            "x": 440,
+            "z": 300,
+            "cart": false
+        },
+        {
+            "id": "trebia_camp_ramp",
+            "kind": "ramp_mouth",
+            "x": 258,
+            "z": 397,
+            "statue": true,
+            "fire": true
+        },
+        {
+            "id": "trebia_ambush_ramp",
+            "kind": "ramp_mouth",
+            "x": 333,
+            "z": 320
+        },
+        {
+            "id": "trebia_camp_junction",
+            "kind": "junction",
+            "x": 300,
+            "z": 500,
+            "style": "camp"
+        },
+        {
+            "id": "trebia_winter_junction",
+            "kind": "junction",
+            "x": 300,
+            "z": 28,
+            "style": "milestone",
+            "tree": "pine_tree"
+        },
+        {
+            "id": "trebia_west_junction",
+            "kind": "junction",
+            "x": 440,
+            "z": 380,
+            "style": "shrine"
+        },
+        {
+            "id": "trebia_gate_1",
+            "kind": "gate_approach",
+            "x": 132.0,
+            "z": 54.0
+        },
+        {
+            "id": "trebia_gate_2",
+            "kind": "gate_approach",
+            "x": 166.0,
+            "z": 46.0
+        },
+        {
+            "id": "trebia_gate_3",
+            "kind": "gate_approach",
+            "x": 560.0,
+            "z": 144.0,
+            "statues": true
+        },
+        {
+            "id": "trebia_gate_4",
+            "kind": "gate_approach",
+            "x": 538.0,
+            "z": 114.0,
+            "statues": true
+        },
+        {
+            "id": "trebia_gate_5",
+            "kind": "gate_approach",
+            "x": 298,
+            "z": 520,
+            "tents": 2
+        },
+        {
+            "id": "trebia_gate_6",
+            "kind": "gate_approach",
+            "x": 312,
+            "z": 504,
+            "tents": 2
         }
     ]
 }

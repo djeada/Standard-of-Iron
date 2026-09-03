@@ -107,13 +107,13 @@ TEST_F(GroundTypeTest, ApplyGroundTypeDefaultsSoilRocky) {
   apply_ground_type_defaults(settings, GroundType::SoilRocky);
 
   EXPECT_EQ(settings.ground_type, GroundType::SoilRocky);
-  EXPECT_FLOAT_EQ(settings.soil_color.x(), 0.55F);
-  EXPECT_FLOAT_EQ(settings.soil_color.y(), 0.48F);
-  EXPECT_FLOAT_EQ(settings.soil_color.z(), 0.38F);
-  EXPECT_FLOAT_EQ(settings.terrain_rock_detail_strength, 0.65F);
+  EXPECT_FLOAT_EQ(settings.soil_color.x(), 0.44F);
+  EXPECT_FLOAT_EQ(settings.soil_color.y(), 0.34F);
+  EXPECT_FLOAT_EQ(settings.soil_color.z(), 0.24F);
+  EXPECT_FLOAT_EQ(settings.terrain_rock_detail_strength, 0.68F);
 
-  EXPECT_FLOAT_EQ(settings.rock_exposure, 0.75F);
-  EXPECT_FLOAT_EQ(settings.soil_roughness, 0.85F);
+  EXPECT_FLOAT_EQ(settings.rock_exposure, 0.82F);
+  EXPECT_FLOAT_EQ(settings.soil_roughness, 0.88F);
 }
 
 TEST_F(GroundTypeTest, ApplyGroundTypeDefaultsAlpineMix) {

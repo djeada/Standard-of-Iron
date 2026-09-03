@@ -2889,18 +2889,18 @@
     ],
     "undead_zones": [
         {
-            "anchor_type": "magic_shrine",
+            "anchor_type": "ruins",
             "awaken_on": [
                 "unit_enters_radius"
             ],
             "clear_reward": {
-                "iron": 100,
-                "stone": 140
+                "gold": 140,
+                "wood": 90
             },
-            "id": "pass_shrine",
-            "leash_radius": 29.42,
+            "id": "cannae_ossuary",
+            "leash_radius": 36.0,
             "owner_id": 99,
-            "radius": 16.81,
+            "radius": 20.0,
             "team_id": 99,
             "waves": [
                 {
@@ -2911,8 +2911,9 @@
                     }
                 }
             ],
-            "x": 432,
-            "z": 33
+            "x": 62,
+            "z": 548,
+            "fog_density": 0.32
         },
         {
             "anchor_type": "ruins",
@@ -2920,39 +2921,13 @@
                 "unit_enters_radius"
             ],
             "clear_reward": {
-                "gold": 130,
-                "wood": 90
-            },
-            "id": "ford_shades",
-            "leash_radius": 38.22,
-            "owner_id": 99,
-            "radius": 21.84,
-            "team_id": 99,
-            "waves": [
-                {
-                    "trigger": "initial",
-                    "units": {
-                        "grave_priest": 1,
-                        "skeleton_swordsman": 2
-                    }
-                }
-            ],
-            "x": 168,
-            "z": 473
-        },
-        {
-            "anchor_type": "magic_shrine",
-            "awaken_on": [
-                "unit_enters_radius"
-            ],
-            "clear_reward": {
-                "gold": 110,
+                "gold": 120,
                 "iron": 70
             },
-            "id": "bridge_watch",
-            "leash_radius": 35.49,
+            "id": "cannae_river_dead",
+            "leash_radius": 32.0,
             "owner_id": 99,
-            "radius": 19.11,
+            "radius": 17.0,
             "team_id": 99,
             "waves": [
                 {
@@ -2962,8 +2937,9 @@
                     }
                 }
             ],
-            "x": 395,
-            "z": 505
+            "x": 612,
+            "z": 34,
+            "fog_density": 0.28
         },
         {
             "anchor_type": "ruins",
@@ -2974,7 +2950,7 @@
                 "food": 140,
                 "gold": 180
             },
-            "id": "old_grave",
+            "id": "cannae_old_grave",
             "leash_radius": 47.89,
             "owner_id": 99,
             "radius": 26.61,
@@ -2996,7 +2972,8 @@
                 }
             ],
             "x": 96,
-            "z": 292
+            "z": 292,
+            "fog_density": 0.3
         }
     ],
     "victory": {
@@ -3113,20 +3090,6 @@
             "z": 434.97
         },
         {
-            "rotation": 0.3,
-            "scale": 1.2,
-            "type": "ruins",
-            "x": 52.09,
-            "z": 404.40000000000003
-        },
-        {
-            "rotation": 2.2,
-            "scale": 1,
-            "type": "ruins",
-            "x": 62.95,
-            "z": 417.45
-        },
-        {
             "rotation": 4.1,
             "scale": 0.9,
             "type": "ruins",
@@ -3134,32 +3097,11 @@
             "z": 392.19
         },
         {
-            "rotation": 0.8,
-            "scale": 1.1,
-            "type": "dead_tree",
-            "x": 93.33,
-            "z": 153.28
-        },
-        {
-            "rotation": 2.5,
-            "scale": 1,
-            "type": "dead_tree",
-            "x": 110.7,
-            "z": 140.24
-        },
-        {
             "rotation": 4.7,
             "scale": 0.9,
             "type": "dead_tree",
             "x": 99.85000000000001,
             "z": 179.37
-        },
-        {
-            "rotation": 1.1,
-            "scale": 1.1,
-            "type": "dead_tree",
-            "x": 97.61,
-            "z": 384.72
         },
         {
             "rotation": 3.5,
@@ -3174,48 +3116,6 @@
             "type": "weapon_rack",
             "x": 180.16,
             "z": 176.11
-        },
-        {
-            "rotation": 5,
-            "scale": 1,
-            "type": "weapon_rack",
-            "x": 182.33,
-            "z": 345.7
-        },
-        {
-            "rotation": 1.3,
-            "scale": 0.8,
-            "type": "dead_tree",
-            "x": 251.79,
-            "z": 215.25
-        },
-        {
-            "rotation": 4.2,
-            "scale": 0.9,
-            "type": "dead_tree",
-            "x": 258.3,
-            "z": 306.56
-        },
-        {
-            "rotation": 0.6,
-            "scale": 0.8,
-            "type": "ruins",
-            "x": 264.81,
-            "z": 260.9
-        },
-        {
-            "rotation": 0.9,
-            "scale": 1,
-            "type": "tent",
-            "x": 436.28000000000003,
-            "z": 238.08
-        },
-        {
-            "rotation": 2.8000000000000003,
-            "scale": 1,
-            "type": "tent",
-            "x": 466.67,
-            "z": 286.99
         },
         {
             "rotation": 1.6,
@@ -3253,13 +3153,6 @@
             "z": 404.40000000000003
         },
         {
-            "rotation": 1.2,
-            "scale": 0.9,
-            "type": "ruins",
-            "x": 457.99,
-            "z": 114.15
-        },
-        {
             "rotation": 3.2,
             "scale": 1,
             "type": "dead_tree",
@@ -3286,20 +3179,6 @@
             "type": "tent",
             "x": 612.1,
             "z": 146.76
-        },
-        {
-            "rotation": 2.6,
-            "scale": 1,
-            "type": "supply_cart",
-            "x": 594.74,
-            "z": 182.63
-        },
-        {
-            "rotation": 5,
-            "scale": 0.9,
-            "type": "weapon_rack",
-            "x": 621,
-            "z": 112
         },
         {
             "intensity": 1.1,
@@ -3356,15 +3235,6 @@
             "z": 381.57
         },
         {
-            "intensity": 0.85,
-            "persistent": true,
-            "radius": 2.6,
-            "scale": 1,
-            "type": "firecamp",
-            "x": 62.95,
-            "z": 410.92
-        },
-        {
             "intensity": 0.8,
             "persistent": true,
             "radius": 2.4,
@@ -3372,12 +3242,6 @@
             "type": "firecamp",
             "x": 372.7,
             "z": 343.97
-        },
-        {
-            "scale": 1,
-            "type": "ruins",
-            "x": 96,
-            "z": 292
         },
         {
             "rotation": 138.70000000000002,
@@ -3445,15 +3309,6 @@
             "z": 366.63
         },
         {
-            "intensity": 0.92,
-            "persistent": true,
-            "radius": 3.1,
-            "scale": 1,
-            "type": "firecamp",
-            "x": 433,
-            "z": 28.82
-        },
-        {
             "rotation": 149.3,
             "scale": 0.99,
             "type": "supply_cart",
@@ -3466,20 +3321,6 @@
             "type": "weapon_rack",
             "x": 133.46,
             "z": 422.68
-        },
-        {
-            "rotation": 138.5,
-            "scale": 1.17,
-            "type": "weapon_rack",
-            "x": 459.34000000000003,
-            "z": 362.86
-        },
-        {
-            "rotation": 239.3,
-            "scale": 1.03,
-            "type": "weapon_rack",
-            "x": 337.54,
-            "z": 107.11
         },
         {
             "rotation": 343.2,
@@ -3514,27 +3355,11 @@
             "z": 23.54
         },
         {
-            "intensity": 1.03,
-            "persistent": true,
-            "radius": 2.8000000000000003,
-            "scale": 1,
-            "type": "firecamp",
-            "x": 390.29,
-            "z": 516.75
-        },
-        {
             "rotation": 323.7,
             "scale": 1.1,
             "type": "tent",
             "x": 96.97,
             "z": 452.45
-        },
-        {
-            "rotation": 232.1,
-            "scale": 1.1300000000000001,
-            "type": "tent",
-            "x": 553,
-            "z": 380
         },
         {
             "rotation": 62.2,
@@ -3556,15 +3381,6 @@
             "type": "tent",
             "x": 104.77,
             "z": 433.45
-        },
-        {
-            "intensity": 1.1,
-            "persistent": true,
-            "radius": 2.9,
-            "scale": 1,
-            "type": "firecamp",
-            "x": 604.96,
-            "z": 295.56
         },
         {
             "rotation": 177.70000000000002,
@@ -3604,13 +3420,6 @@
             "type": "firecamp",
             "x": 441.71000000000004,
             "z": 59.370000000000005
-        },
-        {
-            "rotation": 195.3,
-            "scale": 1,
-            "type": "supply_cart",
-            "x": 477.44,
-            "z": 513.39
         },
         {
             "rotation": 301,
@@ -3680,13 +3489,6 @@
             "z": 453.02
         },
         {
-            "rotation": 181,
-            "scale": 0.92,
-            "type": "tent",
-            "x": 573.47,
-            "z": 223.24
-        },
-        {
             "rotation": 317.2,
             "scale": 1.16,
             "type": "tent",
@@ -3710,15 +3512,6 @@
             "z": 458.88
         },
         {
-            "intensity": 1.26,
-            "persistent": true,
-            "radius": 3.2,
-            "scale": 1,
-            "type": "firecamp",
-            "x": 542.23,
-            "z": 234.35
-        },
-        {
             "rotation": 100.8,
             "scale": 1.1,
             "type": "tent",
@@ -3731,13 +3524,6 @@
             "type": "tent",
             "x": 426.1,
             "z": 542.05
-        },
-        {
-            "rotation": 169,
-            "scale": 1.06,
-            "type": "tent",
-            "x": 151.35,
-            "z": 455.34000000000003
         },
         {
             "intensity": 0.97,
@@ -3894,13 +3680,6 @@
             "z": 567.49
         },
         {
-            "rotation": 258.1,
-            "scale": 1.1,
-            "type": "dead_tree",
-            "x": 126.05,
-            "z": 61.07
-        },
-        {
             "rotation": 63.6,
             "scale": 1.09,
             "type": "dead_tree",
@@ -3915,25 +3694,11 @@
             "z": 531.97
         },
         {
-            "rotation": 200.20000000000002,
-            "scale": 1.05,
-            "type": "dead_tree",
-            "x": 612.63,
-            "z": 71.36
-        },
-        {
             "rotation": 354.90000000000003,
             "scale": 1.17,
             "type": "ruins",
             "x": 179.36,
             "z": 524.33
-        },
-        {
-            "rotation": 344.6,
-            "scale": 0.91,
-            "type": "dead_tree",
-            "x": 103.54,
-            "z": 630.48
         },
         {
             "rotation": 357.3,
@@ -3962,34 +3727,6 @@
             "type": "ruins",
             "x": 606.12,
             "z": 21.34
-        },
-        {
-            "rotation": 354.3,
-            "scale": 0.99,
-            "type": "dead_tree",
-            "x": 609.1800000000001,
-            "z": 558.83
-        },
-        {
-            "rotation": 278.7,
-            "scale": 0.99,
-            "type": "dead_tree",
-            "x": 95.63,
-            "z": 537.8
-        },
-        {
-            "rotation": 116.9,
-            "scale": 1.17,
-            "type": "dead_tree",
-            "x": 59.910000000000004,
-            "z": 15.56
-        },
-        {
-            "rotation": 79.3,
-            "scale": 1,
-            "type": "dead_tree",
-            "x": 369.24,
-            "z": 189.12
         },
         {
             "rotation": 99.5,
@@ -4048,13 +3785,6 @@
             "z": 331.2
         },
         {
-            "rotation": 109.8,
-            "scale": 1.08,
-            "type": "statue",
-            "x": 564.84,
-            "z": 254.78
-        },
-        {
             "rotation": 122.3,
             "scale": 0.92,
             "type": "statue",
@@ -4069,13 +3799,6 @@
             "z": 304.03000000000003
         },
         {
-            "rotation": 165,
-            "scale": 1.04,
-            "type": "abandoned_home",
-            "x": 84.22,
-            "z": 254.6
-        },
-        {
             "rotation": 268,
             "scale": 0.93,
             "type": "abandoned_home",
@@ -4083,39 +3806,11 @@
             "z": 297.12
         },
         {
-            "rotation": 166.3,
-            "scale": 1.08,
-            "type": "abandoned_home",
-            "x": 99.57000000000001,
-            "z": 266.96
-        },
-        {
             "rotation": 267.2,
             "scale": 1.04,
             "type": "abandoned_home",
             "x": 62.76,
             "z": 302.64
-        },
-        {
-            "rotation": 161.70000000000002,
-            "scale": 1.09,
-            "type": "abandoned_home",
-            "x": 57.38,
-            "z": 43.730000000000004
-        },
-        {
-            "rotation": 295,
-            "scale": 0.92,
-            "type": "abandoned_home",
-            "x": 549.65,
-            "z": 151.09
-        },
-        {
-            "rotation": 135.3,
-            "scale": 0.93,
-            "type": "abandoned_home",
-            "x": 285.69,
-            "z": 213.6
         },
         {
             "rotation": 293.90000000000003,
@@ -4130,13 +3825,6 @@
             "type": "abandoned_home",
             "x": 25.04,
             "z": 119.35000000000001
-        },
-        {
-            "rotation": 344.1,
-            "scale": 0.96,
-            "type": "abandoned_home",
-            "x": 288.06,
-            "z": 531.37
         },
         {
             "landmark": "cannae_south_sanctuary",
@@ -4457,14 +4145,6 @@
         },
         {
             "landmark": "cannae_ridge_watch",
-            "rotation": 270,
-            "scale": 1,
-            "type": "tent",
-            "x": 512.51,
-            "z": 107.71
-        },
-        {
-            "landmark": "cannae_ridge_watch",
             "rotation": 90,
             "scale": 1,
             "type": "tent",
@@ -4748,6 +4428,1951 @@
             "type": "cursed_gold_vein",
             "x": 52,
             "z": 542
+        },
+        {
+            "type": "ruins",
+            "x": 464.03,
+            "z": 261.98,
+            "scale": 1.18,
+            "rotation": 1.569,
+            "dressing": "cannae_citadel"
+        },
+        {
+            "type": "ruins",
+            "x": 459.78,
+            "z": 270.51,
+            "scale": 1.04,
+            "rotation": 2.435,
+            "dressing": "cannae_citadel"
+        },
+        {
+            "type": "ruins",
+            "x": 448.31,
+            "z": 250.93,
+            "scale": 1.23,
+            "rotation": 5.682,
+            "dressing": "cannae_citadel"
+        },
+        {
+            "type": "statue",
+            "x": 467.75,
+            "z": 266.03,
+            "scale": 1.0,
+            "rotation": 1.571,
+            "dressing": "cannae_citadel"
+        },
+        {
+            "type": "statue",
+            "x": 469.53,
+            "z": 259.75,
+            "scale": 1.0,
+            "rotation": 4.712,
+            "dressing": "cannae_citadel"
+        },
+        {
+            "type": "firecamp",
+            "x": 454.0,
+            "z": 262.0,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "cannae_citadel",
+            "radius": 3.2,
+            "intensity": 1.15,
+            "persistent": true
+        },
+        {
+            "type": "dead_tree",
+            "x": 445.68,
+            "z": 266.12,
+            "scale": 1.0,
+            "rotation": 0.623,
+            "dressing": "cannae_citadel"
+        },
+        {
+            "type": "boulder",
+            "x": 465.88,
+            "z": 255.89,
+            "scale": 1.03,
+            "rotation": 1.679,
+            "dressing": "cannae_citadel"
+        },
+        {
+            "type": "boulder",
+            "x": 378.51,
+            "z": 266.95,
+            "scale": 1.14,
+            "rotation": 1.871,
+            "dressing": "cannae_citadel_ramp"
+        },
+        {
+            "type": "boulder",
+            "x": 372.28,
+            "z": 268.03,
+            "scale": 0.91,
+            "rotation": 4.462,
+            "dressing": "cannae_citadel_ramp"
+        },
+        {
+            "type": "dead_tree",
+            "x": 386.72,
+            "z": 275.37,
+            "scale": 1.0,
+            "rotation": 1.136,
+            "dressing": "cannae_citadel_ramp"
+        },
+        {
+            "type": "boulder",
+            "x": 384.62,
+            "z": 226.4,
+            "scale": 0.96,
+            "rotation": 1.244,
+            "dressing": "cannae_citadel_ramp"
+        },
+        {
+            "type": "boulder",
+            "x": 382.27,
+            "z": 224.4,
+            "scale": 1.39,
+            "rotation": 4.22,
+            "dressing": "cannae_citadel_ramp"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 305.42,
+            "z": 334.12,
+            "scale": 0.9,
+            "rotation": 0.089,
+            "dressing": "cannae_aufidus_avenue"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 306.12,
+            "z": 346.54,
+            "scale": 0.92,
+            "rotation": 3.884,
+            "dressing": "cannae_aufidus_avenue"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 314.97,
+            "z": 334.04,
+            "scale": 1.03,
+            "rotation": 2.716,
+            "dressing": "cannae_aufidus_avenue"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 315.24,
+            "z": 346.13,
+            "scale": 1.02,
+            "rotation": 4.609,
+            "dressing": "cannae_aufidus_avenue"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 324.47,
+            "z": 334.25,
+            "scale": 0.96,
+            "rotation": 0.67,
+            "dressing": "cannae_aufidus_avenue"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 325.17,
+            "z": 345.78,
+            "scale": 1.0,
+            "rotation": 3.66,
+            "dressing": "cannae_aufidus_avenue"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 334.6,
+            "z": 333.87,
+            "scale": 1.08,
+            "rotation": 3.141,
+            "dressing": "cannae_aufidus_avenue"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 334.88,
+            "z": 346.67,
+            "scale": 0.98,
+            "rotation": 5.982,
+            "dressing": "cannae_aufidus_avenue"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 345.13,
+            "z": 333.9,
+            "scale": 1.09,
+            "rotation": 5.177,
+            "dressing": "cannae_aufidus_avenue"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 345.45,
+            "z": 345.75,
+            "scale": 0.92,
+            "rotation": 0.642,
+            "dressing": "cannae_aufidus_avenue"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 355.26,
+            "z": 333.92,
+            "scale": 1.05,
+            "rotation": 3.173,
+            "dressing": "cannae_aufidus_avenue"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 355.69,
+            "z": 345.56,
+            "scale": 1.0,
+            "rotation": 4.575,
+            "dressing": "cannae_aufidus_avenue"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 364.74,
+            "z": 333.66,
+            "scale": 0.93,
+            "rotation": 3.866,
+            "dressing": "cannae_aufidus_avenue"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 365.44,
+            "z": 345.4,
+            "scale": 0.98,
+            "rotation": 3.242,
+            "dressing": "cannae_aufidus_avenue"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 375.84,
+            "z": 334.27,
+            "scale": 0.99,
+            "rotation": 1.642,
+            "dressing": "cannae_aufidus_avenue"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 384.17,
+            "z": 347.79,
+            "scale": 1.04,
+            "rotation": 4.44,
+            "dressing": "cannae_aufidus_avenue"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 413.23,
+            "z": 328.85,
+            "scale": 0.91,
+            "rotation": 4.693,
+            "dressing": "cannae_aufidus_avenue"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 416.17,
+            "z": 341.05,
+            "scale": 0.97,
+            "rotation": 4.003,
+            "dressing": "cannae_aufidus_avenue"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 423.4,
+            "z": 326.87,
+            "scale": 1.02,
+            "rotation": 5.318,
+            "dressing": "cannae_aufidus_avenue"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 425.32,
+            "z": 338.8,
+            "scale": 1.06,
+            "rotation": 2.21,
+            "dressing": "cannae_aufidus_avenue"
+        },
+        {
+            "type": "boulder",
+            "x": 325.02,
+            "z": 146.56,
+            "scale": 1.01,
+            "rotation": 5.298,
+            "dressing": "cannae_aufidus_ford"
+        },
+        {
+            "type": "boulder",
+            "x": 331.0,
+            "z": 145.43,
+            "scale": 1.16,
+            "rotation": 6.209,
+            "dressing": "cannae_aufidus_ford"
+        },
+        {
+            "type": "boulder",
+            "x": 336.53,
+            "z": 147.09,
+            "scale": 1.32,
+            "rotation": 0.2,
+            "dressing": "cannae_aufidus_ford"
+        },
+        {
+            "type": "boulder",
+            "x": 339.51,
+            "z": 147.76,
+            "scale": 0.95,
+            "rotation": 5.153,
+            "dressing": "cannae_aufidus_ford"
+        },
+        {
+            "type": "plant",
+            "x": 327.47,
+            "z": 146.4,
+            "scale": 1.14,
+            "rotation": 6.06,
+            "dressing": "cannae_aufidus_ford"
+        },
+        {
+            "type": "plant",
+            "x": 331.95,
+            "z": 147.96,
+            "scale": 1.22,
+            "rotation": 0.554,
+            "dressing": "cannae_aufidus_ford"
+        },
+        {
+            "type": "boulder",
+            "x": 322.73,
+            "z": 166.13,
+            "scale": 0.85,
+            "rotation": 5.981,
+            "dressing": "cannae_aufidus_ford"
+        },
+        {
+            "type": "boulder",
+            "x": 328.33,
+            "z": 166.05,
+            "scale": 1.17,
+            "rotation": 0.622,
+            "dressing": "cannae_aufidus_ford"
+        },
+        {
+            "type": "boulder",
+            "x": 334.47,
+            "z": 165.31,
+            "scale": 1.3,
+            "rotation": 3.639,
+            "dressing": "cannae_aufidus_ford"
+        },
+        {
+            "type": "boulder",
+            "x": 339.16,
+            "z": 165.53,
+            "scale": 1.31,
+            "rotation": 2.223,
+            "dressing": "cannae_aufidus_ford"
+        },
+        {
+            "type": "plant",
+            "x": 325.91,
+            "z": 165.51,
+            "scale": 1.27,
+            "rotation": 4.587,
+            "dressing": "cannae_aufidus_ford"
+        },
+        {
+            "type": "plant",
+            "x": 331.07,
+            "z": 166.56,
+            "scale": 0.96,
+            "rotation": 4.489,
+            "dressing": "cannae_aufidus_ford"
+        },
+        {
+            "type": "plant",
+            "x": 336.8,
+            "z": 166.86,
+            "scale": 0.96,
+            "rotation": 5.489,
+            "dressing": "cannae_aufidus_ford"
+        },
+        {
+            "type": "dead_tree",
+            "x": 334.48,
+            "z": 169.97,
+            "scale": 1.0,
+            "rotation": 1.119,
+            "dressing": "cannae_aufidus_ford"
+        },
+        {
+            "type": "supply_cart",
+            "x": 326.46,
+            "z": 142.49,
+            "scale": 1.0,
+            "rotation": 2.568,
+            "dressing": "cannae_aufidus_ford"
+        },
+        {
+            "type": "ruins",
+            "x": 343.63,
+            "z": 142.03,
+            "scale": 0.8,
+            "rotation": 1.8,
+            "dressing": "cannae_aufidus_ford"
+        },
+        {
+            "type": "ruins",
+            "x": 73.69,
+            "z": 549.31,
+            "scale": 1.11,
+            "rotation": 4.507,
+            "dressing": "cannae_ossuary_field"
+        },
+        {
+            "type": "ruins",
+            "x": 69.36,
+            "z": 556.01,
+            "scale": 1.06,
+            "rotation": 0.886,
+            "dressing": "cannae_ossuary_field"
+        },
+        {
+            "type": "ruins",
+            "x": 57.7,
+            "z": 557.13,
+            "scale": 1.14,
+            "rotation": 3.823,
+            "dressing": "cannae_ossuary_field"
+        },
+        {
+            "type": "ruins",
+            "x": 51.08,
+            "z": 553.33,
+            "scale": 0.9,
+            "rotation": 2.999,
+            "dressing": "cannae_ossuary_field"
+        },
+        {
+            "type": "ruins",
+            "x": 59.07,
+            "z": 535.91,
+            "scale": 0.87,
+            "rotation": 1.47,
+            "dressing": "cannae_ossuary_field"
+        },
+        {
+            "type": "ruins",
+            "x": 67.94,
+            "z": 538.79,
+            "scale": 1.08,
+            "rotation": 4.044,
+            "dressing": "cannae_ossuary_field"
+        },
+        {
+            "type": "dead_tree",
+            "x": 76.43,
+            "z": 555.49,
+            "scale": 1.07,
+            "rotation": 1.437,
+            "dressing": "cannae_ossuary_field"
+        },
+        {
+            "type": "dead_tree",
+            "x": 47.01,
+            "z": 557.42,
+            "scale": 0.85,
+            "rotation": 5.896,
+            "dressing": "cannae_ossuary_field"
+        },
+        {
+            "type": "dead_tree",
+            "x": 43.14,
+            "z": 541.08,
+            "scale": 1.13,
+            "rotation": 5.223,
+            "dressing": "cannae_ossuary_field"
+        },
+        {
+            "type": "dead_tree",
+            "x": 76.53,
+            "z": 541.24,
+            "scale": 1.06,
+            "rotation": 1.786,
+            "dressing": "cannae_ossuary_field"
+        },
+        {
+            "type": "dead_tree",
+            "x": 71.97,
+            "z": 563.63,
+            "scale": 0.98,
+            "rotation": 5.907,
+            "dressing": "cannae_ossuary_field"
+        },
+        {
+            "type": "statue",
+            "x": 67.9,
+            "z": 550.41,
+            "scale": 0.9,
+            "rotation": 3.208,
+            "dressing": "cannae_ossuary_field"
+        },
+        {
+            "type": "statue",
+            "x": 52.84,
+            "z": 549.04,
+            "scale": 0.9,
+            "rotation": 4.754,
+            "dressing": "cannae_ossuary_field"
+        },
+        {
+            "type": "boulder",
+            "x": 52.62,
+            "z": 534.65,
+            "scale": 1.01,
+            "rotation": 1.956,
+            "dressing": "cannae_ossuary_field"
+        },
+        {
+            "type": "boulder",
+            "x": 78.7,
+            "z": 546.54,
+            "scale": 1.02,
+            "rotation": 4.522,
+            "dressing": "cannae_ossuary_field"
+        },
+        {
+            "type": "boulder",
+            "x": 46.27,
+            "z": 553.68,
+            "scale": 0.98,
+            "rotation": 4.508,
+            "dressing": "cannae_ossuary_field"
+        },
+        {
+            "type": "magic_shrine",
+            "x": 62.0,
+            "z": 548.0,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "cannae_ossuary_field"
+        },
+        {
+            "type": "dead_tree",
+            "x": 89.01,
+            "z": 577.24,
+            "scale": 1.05,
+            "rotation": 1.982,
+            "dressing": "cannae_ossuary_bones"
+        },
+        {
+            "type": "dead_tree",
+            "x": 85.2,
+            "z": 572.86,
+            "scale": 1.02,
+            "rotation": 4.709,
+            "dressing": "cannae_ossuary_bones"
+        },
+        {
+            "type": "dead_tree",
+            "x": 89.59,
+            "z": 570.93,
+            "scale": 0.9,
+            "rotation": 0.118,
+            "dressing": "cannae_ossuary_bones"
+        },
+        {
+            "type": "dead_tree",
+            "x": 98.92,
+            "z": 573.96,
+            "scale": 0.97,
+            "rotation": 0.402,
+            "dressing": "cannae_ossuary_bones"
+        },
+        {
+            "type": "dead_tree",
+            "x": 80.88,
+            "z": 569.65,
+            "scale": 1.18,
+            "rotation": 1.266,
+            "dressing": "cannae_ossuary_bones"
+        },
+        {
+            "type": "dead_tree",
+            "x": 92.41,
+            "z": 565.98,
+            "scale": 0.93,
+            "rotation": 4.443,
+            "dressing": "cannae_ossuary_bones"
+        },
+        {
+            "type": "dead_tree",
+            "x": 100.42,
+            "z": 569.4,
+            "scale": 0.98,
+            "rotation": 2.234,
+            "dressing": "cannae_ossuary_bones"
+        },
+        {
+            "type": "ruins",
+            "x": 98.05,
+            "z": 564.28,
+            "scale": 0.7,
+            "rotation": 1.716,
+            "dressing": "cannae_ossuary_bones"
+        },
+        {
+            "type": "ruins",
+            "x": 87.08,
+            "z": 565.19,
+            "scale": 0.72,
+            "rotation": 3.466,
+            "dressing": "cannae_ossuary_bones"
+        },
+        {
+            "type": "boulder",
+            "x": 84.74,
+            "z": 577.3,
+            "scale": 1.19,
+            "rotation": 0.657,
+            "dressing": "cannae_ossuary_bones"
+        },
+        {
+            "type": "boulder",
+            "x": 92.5,
+            "z": 574.89,
+            "scale": 1.08,
+            "rotation": 4.061,
+            "dressing": "cannae_ossuary_bones"
+        },
+        {
+            "type": "boulder",
+            "x": 83.07,
+            "z": 565.33,
+            "scale": 0.99,
+            "rotation": 4.759,
+            "dressing": "cannae_ossuary_bones"
+        },
+        {
+            "type": "boulder",
+            "x": 95.57,
+            "z": 567.61,
+            "scale": 0.87,
+            "rotation": 1.925,
+            "dressing": "cannae_ossuary_bones"
+        },
+        {
+            "type": "ruins",
+            "x": 618.07,
+            "z": 33.59,
+            "scale": 0.96,
+            "rotation": 4.839,
+            "dressing": "cannae_river_barrows"
+        },
+        {
+            "type": "ruins",
+            "x": 609.63,
+            "z": 45.14,
+            "scale": 0.82,
+            "rotation": 2.065,
+            "dressing": "cannae_river_barrows"
+        },
+        {
+            "type": "ruins",
+            "x": 602.8,
+            "z": 32.49,
+            "scale": 1.05,
+            "rotation": 4.493,
+            "dressing": "cannae_river_barrows"
+        },
+        {
+            "type": "ruins",
+            "x": 613.5,
+            "z": 19.08,
+            "scale": 0.87,
+            "rotation": 0.688,
+            "dressing": "cannae_river_barrows"
+        },
+        {
+            "type": "dead_tree",
+            "x": 629.74,
+            "z": 40.83,
+            "scale": 1.13,
+            "rotation": 1.233,
+            "dressing": "cannae_river_barrows"
+        },
+        {
+            "type": "dead_tree",
+            "x": 601.81,
+            "z": 46.69,
+            "scale": 0.87,
+            "rotation": 4.241,
+            "dressing": "cannae_river_barrows"
+        },
+        {
+            "type": "dead_tree",
+            "x": 599.9,
+            "z": 24.35,
+            "scale": 1.01,
+            "rotation": 1.143,
+            "dressing": "cannae_river_barrows"
+        },
+        {
+            "type": "dead_tree",
+            "x": 618.93,
+            "z": 20.97,
+            "scale": 0.97,
+            "rotation": 3.895,
+            "dressing": "cannae_river_barrows"
+        },
+        {
+            "type": "statue",
+            "x": 619.47,
+            "z": 38.08,
+            "scale": 0.9,
+            "rotation": 5.665,
+            "dressing": "cannae_river_barrows"
+        },
+        {
+            "type": "statue",
+            "x": 607.51,
+            "z": 34.76,
+            "scale": 0.9,
+            "rotation": 6.249,
+            "dressing": "cannae_river_barrows"
+        },
+        {
+            "type": "boulder",
+            "x": 619.25,
+            "z": 42.82,
+            "scale": 0.96,
+            "rotation": 0.321,
+            "dressing": "cannae_river_barrows"
+        },
+        {
+            "type": "boulder",
+            "x": 629.01,
+            "z": 36.58,
+            "scale": 1.25,
+            "rotation": 4.189,
+            "dressing": "cannae_river_barrows"
+        },
+        {
+            "type": "boulder",
+            "x": 605.45,
+            "z": 47.36,
+            "scale": 0.83,
+            "rotation": 3.603,
+            "dressing": "cannae_river_barrows"
+        },
+        {
+            "type": "magic_shrine",
+            "x": 612.0,
+            "z": 34.0,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "cannae_river_barrows"
+        },
+        {
+            "type": "ruins",
+            "x": 106.36,
+            "z": 289.63,
+            "scale": 1.11,
+            "rotation": 3.007,
+            "dressing": "cannae_old_grave_ring"
+        },
+        {
+            "type": "ruins",
+            "x": 103.54,
+            "z": 301.39,
+            "scale": 1.1,
+            "rotation": 0.261,
+            "dressing": "cannae_old_grave_ring"
+        },
+        {
+            "type": "ruins",
+            "x": 89.3,
+            "z": 300.31,
+            "scale": 1.11,
+            "rotation": 2.24,
+            "dressing": "cannae_old_grave_ring"
+        },
+        {
+            "type": "ruins",
+            "x": 83.11,
+            "z": 293.65,
+            "scale": 0.93,
+            "rotation": 2.548,
+            "dressing": "cannae_old_grave_ring"
+        },
+        {
+            "type": "ruins",
+            "x": 90.75,
+            "z": 280.46,
+            "scale": 0.99,
+            "rotation": 2.148,
+            "dressing": "cannae_old_grave_ring"
+        },
+        {
+            "type": "ruins",
+            "x": 102.17,
+            "z": 283.14,
+            "scale": 0.96,
+            "rotation": 6.115,
+            "dressing": "cannae_old_grave_ring"
+        },
+        {
+            "type": "dead_tree",
+            "x": 116.75,
+            "z": 297.33,
+            "scale": 0.92,
+            "rotation": 2.312,
+            "dressing": "cannae_old_grave_ring"
+        },
+        {
+            "type": "dead_tree",
+            "x": 80.91,
+            "z": 301.24,
+            "scale": 1.03,
+            "rotation": 3.31,
+            "dressing": "cannae_old_grave_ring"
+        },
+        {
+            "type": "dead_tree",
+            "x": 79.57,
+            "z": 280.83,
+            "scale": 0.93,
+            "rotation": 5.446,
+            "dressing": "cannae_old_grave_ring"
+        },
+        {
+            "type": "dead_tree",
+            "x": 108.55,
+            "z": 279.28,
+            "scale": 0.99,
+            "rotation": 3.848,
+            "dressing": "cannae_old_grave_ring"
+        },
+        {
+            "type": "dead_tree",
+            "x": 114.76,
+            "z": 304.8,
+            "scale": 1.07,
+            "rotation": 0.775,
+            "dressing": "cannae_old_grave_ring"
+        },
+        {
+            "type": "statue",
+            "x": 105.92,
+            "z": 295.13,
+            "scale": 0.9,
+            "rotation": 1.86,
+            "dressing": "cannae_old_grave_ring"
+        },
+        {
+            "type": "statue",
+            "x": 85.93,
+            "z": 289.41,
+            "scale": 0.9,
+            "rotation": 1.797,
+            "dressing": "cannae_old_grave_ring"
+        },
+        {
+            "type": "boulder",
+            "x": 84.53,
+            "z": 303.56,
+            "scale": 1.27,
+            "rotation": 0.319,
+            "dressing": "cannae_old_grave_ring"
+        },
+        {
+            "type": "boulder",
+            "x": 100.01,
+            "z": 307.93,
+            "scale": 1.01,
+            "rotation": 5.341,
+            "dressing": "cannae_old_grave_ring"
+        },
+        {
+            "type": "boulder",
+            "x": 87.45,
+            "z": 284.26,
+            "scale": 0.88,
+            "rotation": 2.364,
+            "dressing": "cannae_old_grave_ring"
+        },
+        {
+            "type": "boulder",
+            "x": 98.39,
+            "z": 279.1,
+            "scale": 1.28,
+            "rotation": 5.119,
+            "dressing": "cannae_old_grave_ring"
+        },
+        {
+            "type": "magic_shrine",
+            "x": 96.0,
+            "z": 292.0,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "cannae_old_grave_ring"
+        },
+        {
+            "type": "boulder",
+            "x": 220.96,
+            "z": 126.18,
+            "scale": 1.15,
+            "rotation": 5.253,
+            "dressing": "cannae_west_bridge"
+        },
+        {
+            "type": "boulder",
+            "x": 207.2,
+            "z": 123.27,
+            "scale": 1.07,
+            "rotation": 2.201,
+            "dressing": "cannae_west_bridge"
+        },
+        {
+            "type": "firecamp",
+            "x": 205.7,
+            "z": 118.87,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "cannae_west_bridge",
+            "radius": 3.2,
+            "intensity": 1.15,
+            "persistent": true
+        },
+        {
+            "type": "dead_tree",
+            "x": 224.42,
+            "z": 119.76,
+            "scale": 1.0,
+            "rotation": 4.249,
+            "dressing": "cannae_west_bridge"
+        },
+        {
+            "type": "supply_cart",
+            "x": 205.76,
+            "z": 113.77,
+            "scale": 1.0,
+            "rotation": -1.202,
+            "dressing": "cannae_west_bridge"
+        },
+        {
+            "type": "boulder",
+            "x": 217.48,
+            "z": 143.65,
+            "scale": 1.16,
+            "rotation": 4.999,
+            "dressing": "cannae_west_bridge"
+        },
+        {
+            "type": "boulder",
+            "x": 202.83,
+            "z": 140.61,
+            "scale": 0.94,
+            "rotation": 0.861,
+            "dressing": "cannae_west_bridge"
+        },
+        {
+            "type": "firecamp",
+            "x": 218.95,
+            "z": 148.04,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "cannae_west_bridge",
+            "radius": 3.2,
+            "intensity": 1.15,
+            "persistent": true
+        },
+        {
+            "type": "boulder",
+            "x": 447.65,
+            "z": 163.29,
+            "scale": 1.13,
+            "rotation": 5.094,
+            "dressing": "cannae_east_bridge"
+        },
+        {
+            "type": "boulder",
+            "x": 433.31,
+            "z": 162.3,
+            "scale": 0.91,
+            "rotation": 4.327,
+            "dressing": "cannae_east_bridge"
+        },
+        {
+            "type": "firecamp",
+            "x": 430.41,
+            "z": 158.48,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "cannae_east_bridge",
+            "radius": 3.2,
+            "intensity": 1.15,
+            "persistent": true
+        },
+        {
+            "type": "dead_tree",
+            "x": 451.53,
+            "z": 156.95,
+            "scale": 1.0,
+            "rotation": 0.333,
+            "dressing": "cannae_east_bridge"
+        },
+        {
+            "type": "supply_cart",
+            "x": 435.25,
+            "z": 148.56,
+            "scale": 1.0,
+            "rotation": -1.179,
+            "dressing": "cannae_east_bridge"
+        },
+        {
+            "type": "boulder",
+            "x": 444.05,
+            "z": 180.71,
+            "scale": 1.24,
+            "rotation": 0.044,
+            "dressing": "cannae_east_bridge"
+        },
+        {
+            "type": "boulder",
+            "x": 431.05,
+            "z": 177.97,
+            "scale": 1.05,
+            "rotation": 1.121,
+            "dressing": "cannae_east_bridge"
+        },
+        {
+            "type": "firecamp",
+            "x": 446.08,
+            "z": 185.23,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "cannae_east_bridge",
+            "radius": 3.2,
+            "intensity": 1.15,
+            "persistent": true
+        },
+        {
+            "type": "dead_tree",
+            "x": 427.35,
+            "z": 184.35,
+            "scale": 1.0,
+            "rotation": 3.557,
+            "dressing": "cannae_east_bridge"
+        },
+        {
+            "type": "boulder",
+            "x": 10.25,
+            "z": 449.14,
+            "scale": 1.24,
+            "rotation": 0.025,
+            "dressing": "cannae_hill_ramp_w"
+        },
+        {
+            "type": "boulder",
+            "x": 7.23,
+            "z": 448.8,
+            "scale": 1.22,
+            "rotation": 5.447,
+            "dressing": "cannae_hill_ramp_w"
+        },
+        {
+            "type": "dead_tree",
+            "x": 15.57,
+            "z": 454.02,
+            "scale": 1.0,
+            "rotation": 0.919,
+            "dressing": "cannae_hill_ramp_w"
+        },
+        {
+            "type": "boulder",
+            "x": 23.94,
+            "z": 387.73,
+            "scale": 1.15,
+            "rotation": 3.912,
+            "dressing": "cannae_hill_ramp_w"
+        },
+        {
+            "type": "boulder",
+            "x": 19.51,
+            "z": 385.14,
+            "scale": 1.43,
+            "rotation": 1.681,
+            "dressing": "cannae_hill_ramp_w"
+        },
+        {
+            "type": "firecamp",
+            "x": 11.96,
+            "z": 382.3,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "cannae_hill_ramp_w",
+            "radius": 3.2,
+            "intensity": 1.15,
+            "persistent": true
+        },
+        {
+            "type": "boulder",
+            "x": 150.37,
+            "z": 538.85,
+            "scale": 1.28,
+            "rotation": 4.432,
+            "dressing": "cannae_hill_ramp_s"
+        },
+        {
+            "type": "boulder",
+            "x": 152.26,
+            "z": 544.89,
+            "scale": 1.07,
+            "rotation": 5.146,
+            "dressing": "cannae_hill_ramp_s"
+        },
+        {
+            "type": "dead_tree",
+            "x": 154.53,
+            "z": 530.93,
+            "scale": 1.0,
+            "rotation": 0.841,
+            "dressing": "cannae_hill_ramp_s"
+        },
+        {
+            "type": "boulder",
+            "x": 97.82,
+            "z": 538.94,
+            "scale": 1.36,
+            "rotation": 2.384,
+            "dressing": "cannae_hill_ramp_s"
+        },
+        {
+            "type": "boulder",
+            "x": 95.27,
+            "z": 543.78,
+            "scale": 1.31,
+            "rotation": 5.357,
+            "dressing": "cannae_hill_ramp_s"
+        },
+        {
+            "type": "firecamp",
+            "x": 94.11,
+            "z": 551.76,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "cannae_hill_ramp_s",
+            "radius": 3.2,
+            "intensity": 1.15,
+            "persistent": true
+        },
+        {
+            "type": "weapon_rack",
+            "x": 12.81,
+            "z": 451.48,
+            "scale": 1.0,
+            "rotation": -0.011,
+            "dressing": "cannae_west_junction"
+        },
+        {
+            "type": "statue",
+            "x": 210.54,
+            "z": 416.37,
+            "scale": 1.0,
+            "rotation": -1.305,
+            "dressing": "cannae_plain_junction"
+        },
+        {
+            "type": "olive_tree",
+            "x": 208.96,
+            "z": 422.16,
+            "scale": 1.0,
+            "rotation": 4.241,
+            "dressing": "cannae_plain_junction"
+        },
+        {
+            "type": "statue",
+            "x": 638.84,
+            "z": 341.99,
+            "scale": 1.0,
+            "rotation": -1.38,
+            "dressing": "cannae_east_junction"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 637.7,
+            "z": 347.88,
+            "scale": 1.0,
+            "rotation": 0.334,
+            "dressing": "cannae_east_junction"
+        },
+        {
+            "type": "plant",
+            "x": 33.52,
+            "z": 112.66,
+            "scale": 1.23,
+            "rotation": 3.008,
+            "dressing": "cannae_upper_bank"
+        },
+        {
+            "type": "plant",
+            "x": 35.24,
+            "z": 115.11,
+            "scale": 1.14,
+            "rotation": 2.231,
+            "dressing": "cannae_upper_bank"
+        },
+        {
+            "type": "boulder",
+            "x": 64.82,
+            "z": 100.22,
+            "scale": 0.82,
+            "rotation": 0.232,
+            "dressing": "cannae_upper_bank"
+        },
+        {
+            "type": "plant",
+            "x": 91.44,
+            "z": 124.93,
+            "scale": 1.18,
+            "rotation": 2.797,
+            "dressing": "cannae_upper_bank"
+        },
+        {
+            "type": "plant",
+            "x": 93.98,
+            "z": 127.35,
+            "scale": 1.4,
+            "rotation": 2.467,
+            "dressing": "cannae_upper_bank"
+        },
+        {
+            "type": "dead_tree",
+            "x": 125.32,
+            "z": 111.28,
+            "scale": 0.97,
+            "rotation": 1.48,
+            "dressing": "cannae_upper_bank"
+        },
+        {
+            "type": "plant",
+            "x": 150.38,
+            "z": 132.07,
+            "scale": 0.82,
+            "rotation": 2.227,
+            "dressing": "cannae_upper_bank"
+        },
+        {
+            "type": "plant",
+            "x": 154.18,
+            "z": 135.62,
+            "scale": 1.24,
+            "rotation": 1.905,
+            "dressing": "cannae_upper_bank"
+        },
+        {
+            "type": "boulder",
+            "x": 182.41,
+            "z": 117.49,
+            "scale": 0.85,
+            "rotation": 4.73,
+            "dressing": "cannae_upper_bank"
+        },
+        {
+            "type": "plant",
+            "x": 472.89,
+            "z": 188.53,
+            "scale": 1.27,
+            "rotation": 1.735,
+            "dressing": "cannae_lower_bank"
+        },
+        {
+            "type": "plant",
+            "x": 475.22,
+            "z": 191.03,
+            "scale": 1.01,
+            "rotation": 1.646,
+            "dressing": "cannae_lower_bank"
+        },
+        {
+            "type": "boulder",
+            "x": 506.64,
+            "z": 175.4,
+            "scale": 0.99,
+            "rotation": 5.256,
+            "dressing": "cannae_lower_bank"
+        },
+        {
+            "type": "plant",
+            "x": 532.44,
+            "z": 199.35,
+            "scale": 1.16,
+            "rotation": 4.569,
+            "dressing": "cannae_lower_bank"
+        },
+        {
+            "type": "plant",
+            "x": 534.56,
+            "z": 201.47,
+            "scale": 1.35,
+            "rotation": 1.315,
+            "dressing": "cannae_lower_bank"
+        },
+        {
+            "type": "dead_tree",
+            "x": 564.65,
+            "z": 184.04,
+            "scale": 1.19,
+            "rotation": 5.901,
+            "dressing": "cannae_lower_bank"
+        },
+        {
+            "type": "plant",
+            "x": 590.17,
+            "z": 209.41,
+            "scale": 1.23,
+            "rotation": 5.973,
+            "dressing": "cannae_lower_bank"
+        },
+        {
+            "type": "plant",
+            "x": 593.55,
+            "z": 212.41,
+            "scale": 0.92,
+            "rotation": 2.304,
+            "dressing": "cannae_lower_bank"
+        },
+        {
+            "type": "boulder",
+            "x": 624.02,
+            "z": 196.46,
+            "scale": 1.12,
+            "rotation": 5.015,
+            "dressing": "cannae_lower_bank"
+        },
+        {
+            "type": "firecamp",
+            "x": 436.0,
+            "z": 447.0,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "cannae_gate_1",
+            "radius": 3.2,
+            "intensity": 1.15,
+            "persistent": true
+        },
+        {
+            "type": "firecamp",
+            "x": 451.29,
+            "z": 447.87,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "cannae_gate_1",
+            "radius": 3.2,
+            "intensity": 1.15,
+            "persistent": true
+        },
+        {
+            "type": "weapon_rack",
+            "x": 453.28,
+            "z": 444.38,
+            "scale": 1.0,
+            "rotation": -1.571,
+            "dressing": "cannae_gate_1"
+        },
+        {
+            "type": "supply_cart",
+            "x": 434.5,
+            "z": 441.0,
+            "scale": 1.0,
+            "rotation": -1.271,
+            "dressing": "cannae_gate_1"
+        },
+        {
+            "type": "statue",
+            "x": 435.0,
+            "z": 436.0,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "cannae_gate_1"
+        },
+        {
+            "type": "statue",
+            "x": 446.75,
+            "z": 435.53,
+            "scale": 1.0,
+            "rotation": -3.142,
+            "dressing": "cannae_gate_1"
+        },
+        {
+            "type": "firecamp",
+            "x": 383.0,
+            "z": 467.8,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "cannae_gate_2",
+            "radius": 3.2,
+            "intensity": 1.15,
+            "persistent": true
+        },
+        {
+            "type": "weapon_rack",
+            "x": 378.05,
+            "z": 450.8,
+            "scale": 1.0,
+            "rotation": 3.142,
+            "dressing": "cannae_gate_2"
+        },
+        {
+            "type": "supply_cart",
+            "x": 377.0,
+            "z": 469.3,
+            "scale": 1.0,
+            "rotation": 3.442,
+            "dressing": "cannae_gate_2"
+        },
+        {
+            "type": "statue",
+            "x": 372.0,
+            "z": 468.8,
+            "scale": 1.0,
+            "rotation": -1.571,
+            "dressing": "cannae_gate_2"
+        },
+        {
+            "type": "statue",
+            "x": 372.89,
+            "z": 458.48,
+            "scale": 1.0,
+            "rotation": 1.571,
+            "dressing": "cannae_gate_2"
+        },
+        {
+            "type": "firecamp",
+            "x": 517.0,
+            "z": 281.0,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "cannae_gate_3",
+            "radius": 3.2,
+            "intensity": 1.15,
+            "persistent": true
+        },
+        {
+            "type": "weapon_rack",
+            "x": 518.0,
+            "z": 277.0,
+            "scale": 1.0,
+            "rotation": -1.571,
+            "dressing": "cannae_gate_3"
+        },
+        {
+            "type": "supply_cart",
+            "x": 504.75,
+            "z": 275.94,
+            "scale": 1.0,
+            "rotation": -1.271,
+            "dressing": "cannae_gate_3"
+        },
+        {
+            "type": "statue",
+            "x": 505.25,
+            "z": 270.94,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "cannae_gate_3"
+        },
+        {
+            "type": "statue",
+            "x": 518.0,
+            "z": 270.0,
+            "scale": 1.0,
+            "rotation": -3.142,
+            "dressing": "cannae_gate_3"
+        },
+        {
+            "type": "firecamp",
+            "x": 561.0,
+            "z": 312.4,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "cannae_gate_4",
+            "radius": 3.2,
+            "intensity": 1.15,
+            "persistent": true
+        },
+        {
+            "type": "firecamp",
+            "x": 561.43,
+            "z": 324.72,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "cannae_gate_4",
+            "radius": 3.2,
+            "intensity": 1.15,
+            "persistent": true
+        },
+        {
+            "type": "weapon_rack",
+            "x": 565.0,
+            "z": 324.6,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "cannae_gate_4"
+        },
+        {
+            "type": "supply_cart",
+            "x": 567.0,
+            "z": 310.9,
+            "scale": 1.0,
+            "rotation": 0.3,
+            "dressing": "cannae_gate_4"
+        },
+        {
+            "type": "statue",
+            "x": 572.0,
+            "z": 311.4,
+            "scale": 1.0,
+            "rotation": 1.571,
+            "dressing": "cannae_gate_4"
+        },
+        {
+            "type": "statue",
+            "x": 572.43,
+            "z": 325.72,
+            "scale": 1.0,
+            "rotation": -1.571,
+            "dressing": "cannae_gate_4"
+        },
+        {
+            "type": "firecamp",
+            "x": 514.0,
+            "z": 347.0,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "cannae_gate_5",
+            "radius": 3.2,
+            "intensity": 1.15,
+            "persistent": true
+        },
+        {
+            "type": "weapon_rack",
+            "x": 496.72,
+            "z": 349.62,
+            "scale": 1.0,
+            "rotation": 1.571,
+            "dressing": "cannae_gate_5"
+        },
+        {
+            "type": "supply_cart",
+            "x": 515.5,
+            "z": 353.0,
+            "scale": 1.0,
+            "rotation": 1.871,
+            "dressing": "cannae_gate_5"
+        },
+        {
+            "type": "statue",
+            "x": 515.0,
+            "z": 358.0,
+            "scale": 1.0,
+            "rotation": 3.142,
+            "dressing": "cannae_gate_5"
+        },
+        {
+            "type": "statue",
+            "x": 503.18,
+            "z": 357.28,
+            "scale": 1.0,
+            "rotation": -0.0,
+            "dressing": "cannae_gate_5"
+        },
+        {
+            "type": "firecamp",
+            "x": 487.43,
+            "z": 324.72,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "cannae_gate_6",
+            "radius": 3.2,
+            "intensity": 1.15,
+            "persistent": true
+        },
+        {
+            "type": "firecamp",
+            "x": 487.0,
+            "z": 312.4,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "cannae_gate_6",
+            "radius": 3.2,
+            "intensity": 1.15,
+            "persistent": true
+        },
+        {
+            "type": "weapon_rack",
+            "x": 483.0,
+            "z": 311.4,
+            "scale": 1.0,
+            "rotation": 3.142,
+            "dressing": "cannae_gate_6"
+        },
+        {
+            "type": "supply_cart",
+            "x": 482.72,
+            "z": 326.63,
+            "scale": 1.0,
+            "rotation": 3.442,
+            "dressing": "cannae_gate_6"
+        },
+        {
+            "type": "statue",
+            "x": 477.72,
+            "z": 326.13,
+            "scale": 1.0,
+            "rotation": -1.571,
+            "dressing": "cannae_gate_6"
+        },
+        {
+            "type": "statue",
+            "x": 476.0,
+            "z": 311.4,
+            "scale": 1.0,
+            "rotation": 1.571,
+            "dressing": "cannae_gate_6"
+        },
+        {
+            "type": "firecamp",
+            "x": 427.0,
+            "z": 82.7,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "cannae_gate_7",
+            "radius": 3.2,
+            "intensity": 1.15,
+            "persistent": true
+        },
+        {
+            "type": "firecamp",
+            "x": 427.0,
+            "z": 93.3,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "cannae_gate_7",
+            "radius": 3.2,
+            "intensity": 1.15,
+            "persistent": true
+        },
+        {
+            "type": "weapon_rack",
+            "x": 431.0,
+            "z": 94.3,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "cannae_gate_7"
+        },
+        {
+            "type": "supply_cart",
+            "x": 433.0,
+            "z": 81.2,
+            "scale": 1.0,
+            "rotation": 0.3,
+            "dressing": "cannae_gate_7"
+        },
+        {
+            "type": "firecamp",
+            "x": 403.0,
+            "z": 119.0,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "cannae_gate_8",
+            "radius": 3.2,
+            "intensity": 1.15,
+            "persistent": true
+        },
+        {
+            "type": "weapon_rack",
+            "x": 402.0,
+            "z": 123.0,
+            "scale": 1.0,
+            "rotation": 1.571,
+            "dressing": "cannae_gate_8"
+        },
+        {
+            "type": "firecamp",
+            "x": 357.0,
+            "z": 79.1,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "cannae_gate_9",
+            "radius": 3.2,
+            "intensity": 1.15,
+            "persistent": true
+        },
+        {
+            "type": "firecamp",
+            "x": 357.89,
+            "z": 72.18,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "cannae_gate_9",
+            "radius": 3.2,
+            "intensity": 1.15,
+            "persistent": true
+        },
+        {
+            "type": "weapon_rack",
+            "x": 353.43,
+            "z": 69.02,
+            "scale": 1.0,
+            "rotation": 3.142,
+            "dressing": "cannae_gate_9"
+        },
+        {
+            "type": "supply_cart",
+            "x": 351.0,
+            "z": 80.6,
+            "scale": 1.0,
+            "rotation": 3.442,
+            "dressing": "cannae_gate_9"
+        }
+    ],
+    "dressing": [
+        {
+            "id": "cannae_citadel",
+            "kind": "hilltop_ruin",
+            "x": 452,
+            "z": 262,
+            "facing": "west",
+            "radius": 14,
+            "ruins": 9,
+            "boulders": 4
+        },
+        {
+            "id": "cannae_citadel_ramp",
+            "kind": "ramp_mouth",
+            "x": 406,
+            "z": 254,
+            "statue": true,
+            "fire": true
+        },
+        {
+            "id": "cannae_aufidus_avenue",
+            "kind": "tree_avenue",
+            "from": [
+                300,
+                338
+            ],
+            "to": [
+                430,
+                326
+            ],
+            "tree": "cypress_tree",
+            "spacing": 10
+        },
+        {
+            "id": "cannae_aufidus_ford",
+            "kind": "ford_wreck",
+            "x": 330,
+            "z": 156,
+            "boulders": 4,
+            "plants": 4
+        },
+        {
+            "id": "cannae_ossuary_field",
+            "kind": "barrow_field",
+            "x": 62,
+            "z": 548,
+            "radius": 12,
+            "shrine": true,
+            "ruins": 7,
+            "dead_trees": 5,
+            "boulders": 4
+        },
+        {
+            "id": "cannae_ossuary_bones",
+            "kind": "boneyard",
+            "x": 92,
+            "z": 572,
+            "radius": 12,
+            "statues": 0,
+            "dead_trees": 7
+        },
+        {
+            "id": "cannae_river_barrows",
+            "kind": "barrow_field",
+            "x": 612,
+            "z": 34,
+            "radius": 11,
+            "shrine": true,
+            "ruins": 4,
+            "dead_trees": 4,
+            "boulders": 3
+        },
+        {
+            "id": "cannae_old_grave_ring",
+            "kind": "barrow_field",
+            "x": 96,
+            "z": 292,
+            "radius": 13,
+            "shrine": true,
+            "ruins": 6,
+            "dead_trees": 5,
+            "boulders": 4
+        },
+        {
+            "id": "cannae_west_bridge",
+            "kind": "bridgehead",
+            "x": 212,
+            "z": 133
+        },
+        {
+            "id": "cannae_east_bridge",
+            "kind": "bridgehead",
+            "x": 440,
+            "z": 170
+        },
+        {
+            "id": "cannae_hill_ramp_w",
+            "kind": "ramp_mouth",
+            "x": 54,
+            "z": 427,
+            "fire": true,
+            "reach": 24
+        },
+        {
+            "id": "cannae_hill_ramp_s",
+            "kind": "ramp_mouth",
+            "x": 122,
+            "z": 506,
+            "fire": true,
+            "reach": 18
+        },
+        {
+            "id": "cannae_west_junction",
+            "kind": "junction",
+            "x": 20,
+            "z": 444,
+            "style": "camp",
+            "snap": 6
+        },
+        {
+            "id": "cannae_plain_junction",
+            "kind": "junction",
+            "x": 212,
+            "z": 410,
+            "style": "milestone",
+            "tree": "olive_tree"
+        },
+        {
+            "id": "cannae_east_junction",
+            "kind": "junction",
+            "x": 640,
+            "z": 336,
+            "style": "milestone",
+            "tree": "cypress_tree"
+        },
+        {
+            "id": "cannae_upper_bank",
+            "kind": "riverbank",
+            "from": [
+                20,
+                100
+            ],
+            "to": [
+                200,
+                130
+            ],
+            "spacing": 30,
+            "kinds": [
+                "plant",
+                "boulder",
+                "plant",
+                "dead_tree"
+            ]
+        },
+        {
+            "id": "cannae_lower_bank",
+            "kind": "riverbank",
+            "from": [
+                460,
+                176
+            ],
+            "to": [
+                630,
+                210
+            ],
+            "spacing": 30,
+            "kinds": [
+                "plant",
+                "boulder",
+                "plant",
+                "dead_tree"
+            ]
+        },
+        {
+            "id": "cannae_gate_1",
+            "kind": "gate_approach",
+            "x": 442.0,
+            "z": 456.0,
+            "statues": true
+        },
+        {
+            "id": "cannae_gate_2",
+            "kind": "gate_approach",
+            "x": 392.0,
+            "z": 462.0,
+            "statues": true
+        },
+        {
+            "id": "cannae_gate_3",
+            "kind": "gate_approach",
+            "x": 512,
+            "z": 290,
+            "statues": true
+        },
+        {
+            "id": "cannae_gate_4",
+            "kind": "gate_approach",
+            "x": 552,
+            "z": 318,
+            "statues": true
+        },
+        {
+            "id": "cannae_gate_5",
+            "kind": "gate_approach",
+            "x": 508,
+            "z": 338,
+            "statues": true
+        },
+        {
+            "id": "cannae_gate_6",
+            "kind": "gate_approach",
+            "x": 496,
+            "z": 318,
+            "statues": true
+        },
+        {
+            "id": "cannae_gate_7",
+            "kind": "gate_approach",
+            "x": 418,
+            "z": 88
+        },
+        {
+            "id": "cannae_gate_8",
+            "kind": "gate_approach",
+            "x": 408,
+            "z": 110
+        },
+        {
+            "id": "cannae_gate_9",
+            "kind": "gate_approach",
+            "x": 366,
+            "z": 74
         }
     ]
 }

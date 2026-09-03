@@ -3256,7 +3256,7 @@
                 "food": 120,
                 "gold": 150
             },
-            "id": "frozen_dead",
+            "id": "trasimene_drowned_dead",
             "leash_radius": 43,
             "owner_id": 99,
             "radius": 24.19,
@@ -3277,7 +3277,8 @@
                 }
             ],
             "x": 64,
-            "z": 322
+            "z": 322,
+            "fog_density": 0.3
         },
         {
             "anchor_type": "magic_shrine",
@@ -3288,7 +3289,7 @@
                 "gold": 160,
                 "iron": 60
             },
-            "id": "lake_altar",
+            "id": "trasimene_lake_altar",
             "leash_radius": 22,
             "owner_id": 99,
             "radius": 10,
@@ -3303,7 +3304,8 @@
                 }
             ],
             "x": 625,
-            "z": 321
+            "z": 321,
+            "fog_density": 0.25
         }
     ],
     "victory": {
@@ -3454,27 +3456,6 @@
             "z": 232
         },
         {
-            "rotation": 2.9,
-            "scale": 1,
-            "type": "dead_tree",
-            "x": 145,
-            "z": 407
-        },
-        {
-            "rotation": 4.8,
-            "scale": 1.1,
-            "type": "dead_tree",
-            "x": 300.08,
-            "z": 224.72
-        },
-        {
-            "rotation": 0.7000000000000001,
-            "scale": 1,
-            "type": "dead_tree",
-            "x": 343.38,
-            "z": 431.03
-        },
-        {
             "rotation": 5.1000000000000005,
             "scale": 0.9,
             "type": "dead_tree",
@@ -3487,13 +3468,6 @@
             "type": "dead_tree",
             "x": 535,
             "z": 415
-        },
-        {
-            "rotation": 0.8,
-            "scale": 1.1,
-            "type": "ruins",
-            "x": 615,
-            "z": 350
         },
         {
             "rotation": 2.4,
@@ -3587,15 +3561,6 @@
             "z": 553.4
         },
         {
-            "intensity": 0.97,
-            "persistent": true,
-            "radius": 3.2,
-            "scale": 1,
-            "type": "firecamp",
-            "x": 102.34,
-            "z": 263.08
-        },
-        {
             "rotation": 332.1,
             "scale": 0.98,
             "type": "supply_cart",
@@ -3619,25 +3584,11 @@
             "z": 110.26
         },
         {
-            "rotation": 33.2,
-            "scale": 0.96,
-            "type": "weapon_rack",
-            "x": 632.45,
-            "z": 180.23
-        },
-        {
             "rotation": 178.5,
             "scale": 1.12,
             "type": "supply_cart",
             "x": 232.94,
             "z": 540.94
-        },
-        {
-            "rotation": 82.10000000000001,
-            "scale": 1.06,
-            "type": "weapon_rack",
-            "x": 87.33,
-            "z": 96.18
         },
         {
             "rotation": 77.7,
@@ -3665,27 +3616,11 @@
             "z": 121.14
         },
         {
-            "rotation": 7.1000000000000005,
-            "scale": 0.89,
-            "type": "tent",
-            "x": 531.04,
-            "z": 113.87
-        },
-        {
             "rotation": 263.4,
             "scale": 0.96,
             "type": "weapon_rack",
             "x": 288.72,
             "z": 499.08
-        },
-        {
-            "intensity": 1.07,
-            "persistent": true,
-            "radius": 3.6,
-            "scale": 1,
-            "type": "firecamp",
-            "x": 143,
-            "z": 236.07
         },
         {
             "intensity": 0.9,
@@ -3704,13 +3639,6 @@
             "z": 517.21
         },
         {
-            "rotation": 92.7,
-            "scale": 0.92,
-            "type": "tent",
-            "x": 159.07,
-            "z": 211.9
-        },
-        {
             "intensity": 1.19,
             "persistent": true,
             "radius": 3.1,
@@ -3725,20 +3653,6 @@
             "type": "weapon_rack",
             "x": 248.02,
             "z": 567.79
-        },
-        {
-            "rotation": 127.5,
-            "scale": 0.89,
-            "type": "tent",
-            "x": 26.07,
-            "z": 110.79
-        },
-        {
-            "rotation": 74,
-            "scale": 1.16,
-            "type": "tent",
-            "x": 599.09,
-            "z": 205.04
         },
         {
             "intensity": 1.07,
@@ -3815,13 +3729,6 @@
             "z": 535.71
         },
         {
-            "rotation": 54.5,
-            "scale": 1.1400000000000001,
-            "type": "supply_cart",
-            "x": 35.49,
-            "z": 90.86
-        },
-        {
             "intensity": 1.34,
             "persistent": true,
             "radius": 2.8000000000000003,
@@ -3886,13 +3793,6 @@
             "z": 551.89
         },
         {
-            "rotation": 355.1,
-            "scale": 0.86,
-            "type": "tent",
-            "x": 77.56,
-            "z": 271.45
-        },
-        {
             "rotation": 343.1,
             "scale": 1.08,
             "type": "tent",
@@ -3928,13 +3828,6 @@
             "type": "firecamp",
             "x": 228.34,
             "z": 566.23
-        },
-        {
-            "rotation": 154,
-            "scale": 1.11,
-            "type": "tent",
-            "x": 55.01,
-            "z": 270.63
         },
         {
             "rotation": 343.40000000000003,
@@ -3974,13 +3867,6 @@
             "type": "firecamp",
             "x": 301.79,
             "z": 602.16
-        },
-        {
-            "rotation": 293.8,
-            "scale": 1.03,
-            "type": "tent",
-            "x": 30.150000000000002,
-            "z": 259.63
         },
         {
             "rotation": 313.2,
@@ -4050,15 +3936,6 @@
             "z": 463.64
         },
         {
-            "intensity": 1.2,
-            "persistent": true,
-            "radius": 3.5,
-            "scale": 1,
-            "type": "firecamp",
-            "x": 172.26,
-            "z": 268.48
-        },
-        {
             "intensity": 1.29,
             "persistent": true,
             "radius": 3,
@@ -4105,20 +3982,6 @@
             "type": "supply_cart",
             "x": 213.32,
             "z": 147.75
-        },
-        {
-            "rotation": 50.4,
-            "scale": 0.96,
-            "type": "supply_cart",
-            "x": 168.82,
-            "z": 322.22
-        },
-        {
-            "rotation": 297,
-            "scale": 0.97,
-            "type": "dead_tree",
-            "x": 407.56,
-            "z": 205.03
         },
         {
             "rotation": 12.9,
@@ -4191,39 +4054,11 @@
             "z": 303.79
         },
         {
-            "rotation": 274.40000000000003,
-            "scale": 0.92,
-            "type": "dead_tree",
-            "x": 388,
-            "z": 303
-        },
-        {
             "rotation": 12.4,
             "scale": 0.97,
             "type": "ruins",
             "x": 116.94,
             "z": 312.35
-        },
-        {
-            "rotation": 255.4,
-            "scale": 0.9500000000000001,
-            "type": "dead_tree",
-            "x": 581.74,
-            "z": 423.17
-        },
-        {
-            "rotation": 142.5,
-            "scale": 1.06,
-            "type": "dead_tree",
-            "x": 27.1,
-            "z": 561.57
-        },
-        {
-            "rotation": 225.20000000000002,
-            "scale": 1.03,
-            "type": "dead_tree",
-            "x": 461.3,
-            "z": 343.72
         },
         {
             "rotation": 275.6,
@@ -4240,53 +4075,11 @@
             "z": 280.59000000000003
         },
         {
-            "rotation": 268,
-            "scale": 0.9500000000000001,
-            "type": "ruins",
-            "x": 586.99,
-            "z": 268.8
-        },
-        {
-            "rotation": 164.9,
-            "scale": 1.06,
-            "type": "dead_tree",
-            "x": 546.97,
-            "z": 578.46
-        },
-        {
-            "rotation": 118.3,
-            "scale": 0.92,
-            "type": "dead_tree",
-            "x": 458.01,
-            "z": 113.57000000000001
-        },
-        {
             "rotation": 142.20000000000002,
             "scale": 0.91,
             "type": "dead_tree",
             "x": 268.53000000000003,
             "z": 123.29
-        },
-        {
-            "rotation": 206.9,
-            "scale": 1.12,
-            "type": "dead_tree",
-            "x": 603.72,
-            "z": 556.58
-        },
-        {
-            "rotation": 60.9,
-            "scale": 1.05,
-            "type": "ruins",
-            "x": 587.25,
-            "z": 287.89
-        },
-        {
-            "rotation": 21.7,
-            "scale": 0.87,
-            "type": "dead_tree",
-            "x": 585.28,
-            "z": 260.15
         },
         {
             "rotation": 99.5,
@@ -4301,13 +4094,6 @@
             "type": "ruins",
             "x": 212.87,
             "z": 470.72
-        },
-        {
-            "rotation": 107.7,
-            "scale": 1.1,
-            "type": "dead_tree",
-            "x": 366.35,
-            "z": 120.18
         },
         {
             "rotation": 248.20000000000002,
@@ -4394,39 +4180,11 @@
             "z": 312.22
         },
         {
-            "rotation": 101.2,
-            "scale": 1,
-            "type": "abandoned_home",
-            "x": 416.13,
-            "z": 269.7
-        },
-        {
-            "rotation": 91.10000000000001,
-            "scale": 0.96,
-            "type": "abandoned_home",
-            "x": 432.68,
-            "z": 264.47
-        },
-        {
-            "rotation": 135.4,
-            "scale": 0.98,
-            "type": "abandoned_home",
-            "x": 487.1,
-            "z": 633.57
-        },
-        {
             "rotation": 47.300000000000004,
             "scale": 1,
             "type": "abandoned_home",
             "x": 633.98,
             "z": 353.97
-        },
-        {
-            "rotation": 333,
-            "scale": 1.06,
-            "type": "abandoned_home",
-            "x": 565.62,
-            "z": 433.98
         },
         {
             "rotation": 169.3,
@@ -4929,6 +4687,1989 @@
             "type": "cursed_gold_vein",
             "x": 442,
             "z": 592
+        },
+        {
+            "type": "abandoned_home",
+            "x": 333.5,
+            "z": 130.26,
+            "scale": 1.02,
+            "rotation": -1.66,
+            "dressing": "trasimene_fishing_village"
+        },
+        {
+            "type": "abandoned_home",
+            "x": 344.5,
+            "z": 133.64,
+            "scale": 1.05,
+            "rotation": -1.436,
+            "dressing": "trasimene_fishing_village"
+        },
+        {
+            "type": "abandoned_home",
+            "x": 355.5,
+            "z": 132.74,
+            "scale": 0.9,
+            "rotation": -1.752,
+            "dressing": "trasimene_fishing_village"
+        },
+        {
+            "type": "abandoned_home",
+            "x": 366.5,
+            "z": 132.3,
+            "scale": 0.9,
+            "rotation": -1.473,
+            "dressing": "trasimene_fishing_village"
+        },
+        {
+            "type": "supply_cart",
+            "x": 345.14,
+            "z": 124.36,
+            "scale": 1.0,
+            "rotation": 0.228,
+            "dressing": "trasimene_fishing_village"
+        },
+        {
+            "type": "supply_cart",
+            "x": 354.77,
+            "z": 124.81,
+            "scale": 1.0,
+            "rotation": 0.038,
+            "dressing": "trasimene_fishing_village"
+        },
+        {
+            "type": "supply_cart",
+            "x": 364.0,
+            "z": 123.71,
+            "scale": 1.0,
+            "rotation": 0.355,
+            "dressing": "trasimene_fishing_village"
+        },
+        {
+            "type": "ruins",
+            "x": 375.0,
+            "z": 125.0,
+            "scale": 0.85,
+            "rotation": 0.529,
+            "dressing": "trasimene_fishing_village"
+        },
+        {
+            "type": "dead_tree",
+            "x": 328.0,
+            "z": 139.0,
+            "scale": 1.0,
+            "rotation": 3.397,
+            "dressing": "trasimene_fishing_village"
+        },
+        {
+            "type": "firecamp",
+            "x": 350.0,
+            "z": 127.0,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "trasimene_fishing_village",
+            "radius": 3.2,
+            "intensity": 1.15,
+            "persistent": true
+        },
+        {
+            "type": "plant",
+            "x": 362.35,
+            "z": 117.49,
+            "scale": 1.32,
+            "rotation": 2.042,
+            "dressing": "trasimene_fishing_village"
+        },
+        {
+            "type": "plant",
+            "x": 354.56,
+            "z": 118.49,
+            "scale": 1.27,
+            "rotation": 5.721,
+            "dressing": "trasimene_fishing_village"
+        },
+        {
+            "type": "plant",
+            "x": 342.3,
+            "z": 117.98,
+            "scale": 0.92,
+            "rotation": 2.29,
+            "dressing": "trasimene_fishing_village"
+        },
+        {
+            "type": "plant",
+            "x": 328.09,
+            "z": 118.76,
+            "scale": 1.15,
+            "rotation": 1.322,
+            "dressing": "trasimene_fishing_village"
+        },
+        {
+            "type": "plant",
+            "x": 329.95,
+            "z": 117.94,
+            "scale": 1.35,
+            "rotation": 5.405,
+            "dressing": "trasimene_fishing_village"
+        },
+        {
+            "type": "plant",
+            "x": 335.01,
+            "z": 117.75,
+            "scale": 1.31,
+            "rotation": 2.682,
+            "dressing": "trasimene_fishing_village"
+        },
+        {
+            "type": "plant",
+            "x": 351.0,
+            "z": 119.1,
+            "scale": 1.2,
+            "rotation": 2.48,
+            "dressing": "trasimene_fishing_village"
+        },
+        {
+            "type": "boulder",
+            "x": 369.63,
+            "z": 118.93,
+            "scale": 0.64,
+            "rotation": 6.039,
+            "dressing": "trasimene_fishing_village"
+        },
+        {
+            "type": "boulder",
+            "x": 348.23,
+            "z": 120.41,
+            "scale": 0.66,
+            "rotation": 3.427,
+            "dressing": "trasimene_fishing_village"
+        },
+        {
+            "type": "boulder",
+            "x": 364.37,
+            "z": 117.59,
+            "scale": 0.7,
+            "rotation": 4.893,
+            "dressing": "trasimene_fishing_village"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 235.74,
+            "z": 163.14,
+            "scale": 1.08,
+            "rotation": 5.307,
+            "dressing": "trasimene_shore_avenue"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 244.77,
+            "z": 162.75,
+            "scale": 1.1,
+            "rotation": 0.656,
+            "dressing": "trasimene_shore_avenue"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 255.3,
+            "z": 161.66,
+            "scale": 1.04,
+            "rotation": 2.296,
+            "dressing": "trasimene_shore_avenue"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 265.42,
+            "z": 160.53,
+            "scale": 1.04,
+            "rotation": 5.909,
+            "dressing": "trasimene_shore_avenue"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 275.41,
+            "z": 158.92,
+            "scale": 0.94,
+            "rotation": 0.101,
+            "dressing": "trasimene_shore_avenue"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 284.64,
+            "z": 158.92,
+            "scale": 1.06,
+            "rotation": 2.27,
+            "dressing": "trasimene_shore_avenue"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 314.53,
+            "z": 156.26,
+            "scale": 1.07,
+            "rotation": 0.375,
+            "dressing": "trasimene_shore_avenue"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 325.14,
+            "z": 154.55,
+            "scale": 1.04,
+            "rotation": 5.029,
+            "dressing": "trasimene_shore_avenue"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 335.37,
+            "z": 153.67,
+            "scale": 1.03,
+            "rotation": 1.368,
+            "dressing": "trasimene_shore_avenue"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 345.08,
+            "z": 152.63,
+            "scale": 1.05,
+            "rotation": 3.272,
+            "dressing": "trasimene_shore_avenue"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 355.26,
+            "z": 152.16,
+            "scale": 0.94,
+            "rotation": 4.222,
+            "dressing": "trasimene_shore_avenue"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 365.3,
+            "z": 151.55,
+            "scale": 1.1,
+            "rotation": 5.373,
+            "dressing": "trasimene_shore_avenue"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 374.51,
+            "z": 150.39,
+            "scale": 0.97,
+            "rotation": 0.754,
+            "dressing": "trasimene_shore_avenue"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 384.41,
+            "z": 149.57,
+            "scale": 0.96,
+            "rotation": 2.973,
+            "dressing": "trasimene_shore_avenue"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 404.29,
+            "z": 147.84,
+            "scale": 1.09,
+            "rotation": 6.21,
+            "dressing": "trasimene_shore_avenue"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 412.94,
+            "z": 144.78,
+            "scale": 1.01,
+            "rotation": 0.558,
+            "dressing": "trasimene_shore_avenue"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 424.06,
+            "z": 145.76,
+            "scale": 0.91,
+            "rotation": 5.923,
+            "dressing": "trasimene_shore_avenue"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 434.29,
+            "z": 142.66,
+            "scale": 0.99,
+            "rotation": 3.538,
+            "dressing": "trasimene_shore_avenue"
+        },
+        {
+            "type": "statue",
+            "x": 258.87,
+            "z": 156.71,
+            "scale": 1.15,
+            "rotation": 1.571,
+            "dressing": "trasimene_malpasso"
+        },
+        {
+            "type": "boulder",
+            "x": 251.16,
+            "z": 157.54,
+            "scale": 0.91,
+            "rotation": 2.376,
+            "dressing": "trasimene_malpasso"
+        },
+        {
+            "type": "boulder",
+            "x": 256.81,
+            "z": 155.14,
+            "scale": 0.71,
+            "rotation": 0.822,
+            "dressing": "trasimene_malpasso"
+        },
+        {
+            "type": "boulder",
+            "x": 260.1,
+            "z": 154.57,
+            "scale": 0.75,
+            "rotation": 3.411,
+            "dressing": "trasimene_malpasso"
+        },
+        {
+            "type": "ruins",
+            "x": 632.44,
+            "z": 320.99,
+            "scale": 0.89,
+            "rotation": 1.35,
+            "dressing": "trasimene_altar_ring"
+        },
+        {
+            "type": "ruins",
+            "x": 628.37,
+            "z": 328.36,
+            "scale": 1.14,
+            "rotation": 4.823,
+            "dressing": "trasimene_altar_ring"
+        },
+        {
+            "type": "ruins",
+            "x": 617.75,
+            "z": 324.3,
+            "scale": 0.84,
+            "rotation": 3.564,
+            "dressing": "trasimene_altar_ring"
+        },
+        {
+            "type": "ruins",
+            "x": 619.27,
+            "z": 316.63,
+            "scale": 1.12,
+            "rotation": 6.126,
+            "dressing": "trasimene_altar_ring"
+        },
+        {
+            "type": "ruins",
+            "x": 627.27,
+            "z": 314.58,
+            "scale": 0.85,
+            "rotation": 0.78,
+            "dressing": "trasimene_altar_ring"
+        },
+        {
+            "type": "dead_tree",
+            "x": 634.95,
+            "z": 329.69,
+            "scale": 1.02,
+            "rotation": 3.655,
+            "dressing": "trasimene_altar_ring"
+        },
+        {
+            "type": "dead_tree",
+            "x": 617.47,
+            "z": 329.68,
+            "scale": 0.86,
+            "rotation": 4.409,
+            "dressing": "trasimene_altar_ring"
+        },
+        {
+            "type": "statue",
+            "x": 633.27,
+            "z": 325.51,
+            "scale": 0.9,
+            "rotation": 0.044,
+            "dressing": "trasimene_altar_ring"
+        },
+        {
+            "type": "statue",
+            "x": 614.66,
+            "z": 320.45,
+            "scale": 0.9,
+            "rotation": 1.407,
+            "dressing": "trasimene_altar_ring"
+        },
+        {
+            "type": "boulder",
+            "x": 621.15,
+            "z": 328.28,
+            "scale": 1.25,
+            "rotation": 5.623,
+            "dressing": "trasimene_altar_ring"
+        },
+        {
+            "type": "boulder",
+            "x": 626.61,
+            "z": 309.79,
+            "scale": 1.2,
+            "rotation": 5.907,
+            "dressing": "trasimene_altar_ring"
+        },
+        {
+            "type": "boulder",
+            "x": 629.61,
+            "z": 308.05,
+            "scale": 1.24,
+            "rotation": 1.542,
+            "dressing": "trasimene_altar_ring"
+        },
+        {
+            "type": "ruins",
+            "x": 77.35,
+            "z": 324.53,
+            "scale": 0.85,
+            "rotation": 5.585,
+            "dressing": "trasimene_drowned_barrows"
+        },
+        {
+            "type": "ruins",
+            "x": 69.69,
+            "z": 331.77,
+            "scale": 1.07,
+            "rotation": 3.932,
+            "dressing": "trasimene_drowned_barrows"
+        },
+        {
+            "type": "ruins",
+            "x": 63.0,
+            "z": 336.36,
+            "scale": 1.11,
+            "rotation": 2.076,
+            "dressing": "trasimene_drowned_barrows"
+        },
+        {
+            "type": "ruins",
+            "x": 52.19,
+            "z": 328.16,
+            "scale": 1.06,
+            "rotation": 4.247,
+            "dressing": "trasimene_drowned_barrows"
+        },
+        {
+            "type": "ruins",
+            "x": 53.9,
+            "z": 317.75,
+            "scale": 1.19,
+            "rotation": 0.211,
+            "dressing": "trasimene_drowned_barrows"
+        },
+        {
+            "type": "ruins",
+            "x": 60.66,
+            "z": 311.82,
+            "scale": 0.84,
+            "rotation": 0.937,
+            "dressing": "trasimene_drowned_barrows"
+        },
+        {
+            "type": "ruins",
+            "x": 70.79,
+            "z": 311.63,
+            "scale": 1.03,
+            "rotation": 4.92,
+            "dressing": "trasimene_drowned_barrows"
+        },
+        {
+            "type": "dead_tree",
+            "x": 78.89,
+            "z": 334.89,
+            "scale": 0.92,
+            "rotation": 4.844,
+            "dressing": "trasimene_drowned_barrows"
+        },
+        {
+            "type": "dead_tree",
+            "x": 54.52,
+            "z": 337.47,
+            "scale": 1.01,
+            "rotation": 0.966,
+            "dressing": "trasimene_drowned_barrows"
+        },
+        {
+            "type": "dead_tree",
+            "x": 44.96,
+            "z": 313.88,
+            "scale": 0.85,
+            "rotation": 5.092,
+            "dressing": "trasimene_drowned_barrows"
+        },
+        {
+            "type": "dead_tree",
+            "x": 77.48,
+            "z": 313.17,
+            "scale": 1.1,
+            "rotation": 3.184,
+            "dressing": "trasimene_drowned_barrows"
+        },
+        {
+            "type": "dead_tree",
+            "x": 81.61,
+            "z": 338.67,
+            "scale": 0.91,
+            "rotation": 0.252,
+            "dressing": "trasimene_drowned_barrows"
+        },
+        {
+            "type": "dead_tree",
+            "x": 58.29,
+            "z": 341.34,
+            "scale": 1.06,
+            "rotation": 3.037,
+            "dressing": "trasimene_drowned_barrows"
+        },
+        {
+            "type": "statue",
+            "x": 73.48,
+            "z": 327.02,
+            "scale": 0.9,
+            "rotation": 1.214,
+            "dressing": "trasimene_drowned_barrows"
+        },
+        {
+            "type": "statue",
+            "x": 56.89,
+            "z": 322.96,
+            "scale": 0.9,
+            "rotation": 3.746,
+            "dressing": "trasimene_drowned_barrows"
+        },
+        {
+            "type": "boulder",
+            "x": 57.84,
+            "z": 334.41,
+            "scale": 1.1,
+            "rotation": 2.673,
+            "dressing": "trasimene_drowned_barrows"
+        },
+        {
+            "type": "boulder",
+            "x": 68.92,
+            "z": 337.66,
+            "scale": 1.25,
+            "rotation": 2.485,
+            "dressing": "trasimene_drowned_barrows"
+        },
+        {
+            "type": "boulder",
+            "x": 74.84,
+            "z": 333.47,
+            "scale": 0.97,
+            "rotation": 1.234,
+            "dressing": "trasimene_drowned_barrows"
+        },
+        {
+            "type": "boulder",
+            "x": 63.41,
+            "z": 330.29,
+            "scale": 0.93,
+            "rotation": 3.969,
+            "dressing": "trasimene_drowned_barrows"
+        },
+        {
+            "type": "magic_shrine",
+            "x": 64.0,
+            "z": 322.0,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "trasimene_drowned_barrows"
+        },
+        {
+            "type": "statue",
+            "x": 502.4,
+            "z": 397.59,
+            "scale": 1.1,
+            "rotation": 0.0,
+            "dressing": "trasimene_olive_grove"
+        },
+        {
+            "type": "firecamp",
+            "x": 504.75,
+            "z": 402.06,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "trasimene_olive_grove",
+            "radius": 3.2,
+            "intensity": 1.15,
+            "persistent": true
+        },
+        {
+            "type": "olive_tree",
+            "x": 513.57,
+            "z": 400.6,
+            "scale": 1.03,
+            "rotation": 4.265,
+            "dressing": "trasimene_olive_grove"
+        },
+        {
+            "type": "olive_tree",
+            "x": 510.25,
+            "z": 409.55,
+            "scale": 0.97,
+            "rotation": 5.411,
+            "dressing": "trasimene_olive_grove"
+        },
+        {
+            "type": "olive_tree",
+            "x": 493.88,
+            "z": 412.37,
+            "scale": 0.99,
+            "rotation": 4.283,
+            "dressing": "trasimene_olive_grove"
+        },
+        {
+            "type": "olive_tree",
+            "x": 489.34,
+            "z": 406.4,
+            "scale": 0.97,
+            "rotation": 2.451,
+            "dressing": "trasimene_olive_grove"
+        },
+        {
+            "type": "olive_tree",
+            "x": 486.14,
+            "z": 401.53,
+            "scale": 1.05,
+            "rotation": 1.285,
+            "dressing": "trasimene_olive_grove"
+        },
+        {
+            "type": "olive_tree",
+            "x": 488.13,
+            "z": 394.27,
+            "scale": 1.01,
+            "rotation": 3.679,
+            "dressing": "trasimene_olive_grove"
+        },
+        {
+            "type": "olive_tree",
+            "x": 497.35,
+            "z": 384.88,
+            "scale": 0.99,
+            "rotation": 0.535,
+            "dressing": "trasimene_olive_grove"
+        },
+        {
+            "type": "olive_tree",
+            "x": 502.86,
+            "z": 387.58,
+            "scale": 1.08,
+            "rotation": 0.006,
+            "dressing": "trasimene_olive_grove"
+        },
+        {
+            "type": "olive_tree",
+            "x": 509.01,
+            "z": 391.41,
+            "scale": 0.91,
+            "rotation": 0.854,
+            "dressing": "trasimene_olive_grove"
+        },
+        {
+            "type": "boulder",
+            "x": 506.14,
+            "z": 404.65,
+            "scale": 0.92,
+            "rotation": 4.168,
+            "dressing": "trasimene_olive_grove"
+        },
+        {
+            "type": "boulder",
+            "x": 507.51,
+            "z": 402.12,
+            "scale": 0.8,
+            "rotation": 4.834,
+            "dressing": "trasimene_olive_grove"
+        },
+        {
+            "type": "boulder",
+            "x": 196.46,
+            "z": 169.14,
+            "scale": 1.04,
+            "rotation": 5.375,
+            "dressing": "trasimene_west_bridge"
+        },
+        {
+            "type": "boulder",
+            "x": 199.46,
+            "z": 182.81,
+            "scale": 1.03,
+            "rotation": 6.245,
+            "dressing": "trasimene_west_bridge"
+        },
+        {
+            "type": "firecamp",
+            "x": 195.98,
+            "z": 185.63,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "trasimene_west_bridge",
+            "radius": 3.2,
+            "intensity": 1.15,
+            "persistent": true
+        },
+        {
+            "type": "dead_tree",
+            "x": 189.09,
+            "z": 168.21,
+            "scale": 1.0,
+            "rotation": 4.066,
+            "dressing": "trasimene_west_bridge"
+        },
+        {
+            "type": "supply_cart",
+            "x": 191.31,
+            "z": 187.68,
+            "scale": 1.0,
+            "rotation": 2.912,
+            "dressing": "trasimene_west_bridge"
+        },
+        {
+            "type": "boulder",
+            "x": 210.95,
+            "z": 165.2,
+            "scale": 0.95,
+            "rotation": 3.495,
+            "dressing": "trasimene_west_bridge"
+        },
+        {
+            "type": "boulder",
+            "x": 214.03,
+            "z": 179.21,
+            "scale": 1.28,
+            "rotation": 2.787,
+            "dressing": "trasimene_west_bridge"
+        },
+        {
+            "type": "firecamp",
+            "x": 214.38,
+            "z": 162.15,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "trasimene_west_bridge",
+            "radius": 3.2,
+            "intensity": 1.15,
+            "persistent": true
+        },
+        {
+            "type": "dead_tree",
+            "x": 221.27,
+            "z": 179.57,
+            "scale": 1.0,
+            "rotation": 3.822,
+            "dressing": "trasimene_west_bridge"
+        },
+        {
+            "type": "boulder",
+            "x": 458.9,
+            "z": 142.81,
+            "scale": 1.06,
+            "rotation": 0.479,
+            "dressing": "trasimene_east_bridge"
+        },
+        {
+            "type": "boulder",
+            "x": 457.66,
+            "z": 156.08,
+            "scale": 1.21,
+            "rotation": 1.007,
+            "dressing": "trasimene_east_bridge"
+        },
+        {
+            "type": "firecamp",
+            "x": 453.41,
+            "z": 158.6,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "trasimene_east_bridge",
+            "radius": 3.2,
+            "intensity": 1.15,
+            "persistent": true
+        },
+        {
+            "type": "dead_tree",
+            "x": 452.14,
+            "z": 139.9,
+            "scale": 1.0,
+            "rotation": 4.557,
+            "dressing": "trasimene_east_bridge"
+        },
+        {
+            "type": "supply_cart",
+            "x": 448.34,
+            "z": 159.13,
+            "scale": 1.0,
+            "rotation": -2.98,
+            "dressing": "trasimene_east_bridge"
+        },
+        {
+            "type": "boulder",
+            "x": 473.82,
+            "z": 144.37,
+            "scale": 1.25,
+            "rotation": 0.594,
+            "dressing": "trasimene_east_bridge"
+        },
+        {
+            "type": "firecamp",
+            "x": 478.08,
+            "z": 141.81,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "trasimene_east_bridge",
+            "radius": 3.2,
+            "intensity": 1.15,
+            "persistent": true
+        },
+        {
+            "type": "dead_tree",
+            "x": 479.35,
+            "z": 160.51,
+            "scale": 1.0,
+            "rotation": 1.267,
+            "dressing": "trasimene_east_bridge"
+        },
+        {
+            "type": "boulder",
+            "x": 195.05,
+            "z": 394.55,
+            "scale": 0.91,
+            "rotation": 5.05,
+            "dressing": "trasimene_south_bridge"
+        },
+        {
+            "type": "firecamp",
+            "x": 183.89,
+            "z": 410.68,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "trasimene_south_bridge",
+            "radius": 3.2,
+            "intensity": 1.15,
+            "persistent": true
+        },
+        {
+            "type": "dead_tree",
+            "x": 189.06,
+            "z": 390.58,
+            "scale": 1.0,
+            "rotation": 5.352,
+            "dressing": "trasimene_south_bridge"
+        },
+        {
+            "type": "boulder",
+            "x": 209.08,
+            "z": 399.85,
+            "scale": 0.84,
+            "rotation": 5.675,
+            "dressing": "trasimene_south_bridge"
+        },
+        {
+            "type": "boulder",
+            "x": 203.93,
+            "z": 413.71,
+            "scale": 0.85,
+            "rotation": 5.237,
+            "dressing": "trasimene_south_bridge"
+        },
+        {
+            "type": "firecamp",
+            "x": 213.6,
+            "z": 399.17,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "trasimene_south_bridge",
+            "radius": 3.2,
+            "intensity": 1.15,
+            "persistent": true
+        },
+        {
+            "type": "boulder",
+            "x": 505.03,
+            "z": 279.39,
+            "scale": 0.95,
+            "rotation": 2.649,
+            "dressing": "trasimene_ridge_bridge"
+        },
+        {
+            "type": "boulder",
+            "x": 499.81,
+            "z": 266.05,
+            "scale": 1.28,
+            "rotation": 4.675,
+            "dressing": "trasimene_ridge_bridge"
+        },
+        {
+            "type": "firecamp",
+            "x": 502.04,
+            "z": 263.62,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "trasimene_ridge_bridge",
+            "radius": 3.2,
+            "intensity": 1.15,
+            "persistent": true
+        },
+        {
+            "type": "dead_tree",
+            "x": 509.93,
+            "z": 281.24,
+            "scale": 1.0,
+            "rotation": 4.497,
+            "dressing": "trasimene_ridge_bridge"
+        },
+        {
+            "type": "boulder",
+            "x": 490.96,
+            "z": 284.61,
+            "scale": 1.27,
+            "rotation": 5.827,
+            "dressing": "trasimene_ridge_bridge"
+        },
+        {
+            "type": "boulder",
+            "x": 485.97,
+            "z": 271.84,
+            "scale": 1.2,
+            "rotation": 1.229,
+            "dressing": "trasimene_ridge_bridge"
+        },
+        {
+            "type": "firecamp",
+            "x": 488.29,
+            "z": 288.76,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "trasimene_ridge_bridge",
+            "radius": 3.2,
+            "intensity": 1.15,
+            "persistent": true
+        },
+        {
+            "type": "dead_tree",
+            "x": 478.76,
+            "z": 272.62,
+            "scale": 1.0,
+            "rotation": 2.926,
+            "dressing": "trasimene_ridge_bridge"
+        },
+        {
+            "type": "boulder",
+            "x": 331.05,
+            "z": 255.79,
+            "scale": 1.37,
+            "rotation": 2.39,
+            "dressing": "trasimene_north_ramp"
+        },
+        {
+            "type": "boulder",
+            "x": 335.07,
+            "z": 260.68,
+            "scale": 1.47,
+            "rotation": 2.226,
+            "dressing": "trasimene_north_ramp"
+        },
+        {
+            "type": "dead_tree",
+            "x": 331.93,
+            "z": 246.89,
+            "scale": 1.0,
+            "rotation": 1.074,
+            "dressing": "trasimene_north_ramp"
+        },
+        {
+            "type": "boulder",
+            "x": 307.7,
+            "z": 264.72,
+            "scale": 1.38,
+            "rotation": 2.09,
+            "dressing": "trasimene_north_ramp"
+        },
+        {
+            "type": "boulder",
+            "x": 307.98,
+            "z": 271.04,
+            "scale": 1.27,
+            "rotation": 3.158,
+            "dressing": "trasimene_north_ramp"
+        },
+        {
+            "type": "statue",
+            "x": 310.34,
+            "z": 274.41,
+            "scale": 1.0,
+            "rotation": -1.936,
+            "dressing": "trasimene_north_ramp"
+        },
+        {
+            "type": "boulder",
+            "x": 376.6,
+            "z": 484.83,
+            "scale": 0.9,
+            "rotation": 3.009,
+            "dressing": "trasimene_ambush_ramp"
+        },
+        {
+            "type": "boulder",
+            "x": 379.96,
+            "z": 490.19,
+            "scale": 1.41,
+            "rotation": 6.176,
+            "dressing": "trasimene_ambush_ramp"
+        },
+        {
+            "type": "dead_tree",
+            "x": 378.59,
+            "z": 476.11,
+            "scale": 1.0,
+            "rotation": 2.831,
+            "dressing": "trasimene_ambush_ramp"
+        },
+        {
+            "type": "boulder",
+            "x": 346.48,
+            "z": 492.17,
+            "scale": 1.5,
+            "rotation": 4.066,
+            "dressing": "trasimene_ambush_ramp"
+        },
+        {
+            "type": "boulder",
+            "x": 345.96,
+            "z": 498.48,
+            "scale": 1.19,
+            "rotation": 4.747,
+            "dressing": "trasimene_ambush_ramp"
+        },
+        {
+            "type": "firecamp",
+            "x": 346.88,
+            "z": 506.49,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "trasimene_ambush_ramp",
+            "radius": 3.2,
+            "intensity": 1.15,
+            "persistent": true
+        },
+        {
+            "type": "boulder",
+            "x": 185.86,
+            "z": 278.41,
+            "scale": 1.4,
+            "rotation": 3.036,
+            "dressing": "trasimene_column_ramp"
+        },
+        {
+            "type": "boulder",
+            "x": 192.16,
+            "z": 278.97,
+            "scale": 1.3,
+            "rotation": 4.709,
+            "dressing": "trasimene_column_ramp"
+        },
+        {
+            "type": "dead_tree",
+            "x": 180.13,
+            "z": 271.54,
+            "scale": 1.0,
+            "rotation": 2.01,
+            "dressing": "trasimene_column_ramp"
+        },
+        {
+            "type": "boulder",
+            "x": 175.07,
+            "z": 303.16,
+            "scale": 0.99,
+            "rotation": 0.893,
+            "dressing": "trasimene_column_ramp"
+        },
+        {
+            "type": "boulder",
+            "x": 179.76,
+            "z": 307.39,
+            "scale": 1.34,
+            "rotation": 3.41,
+            "dressing": "trasimene_column_ramp"
+        },
+        {
+            "type": "statue",
+            "x": 293.25,
+            "z": 169.57,
+            "scale": 1.0,
+            "rotation": 0.656,
+            "dressing": "trasimene_via_junction"
+        },
+        {
+            "type": "firecamp",
+            "x": 294.04,
+            "z": 470.65,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "trasimene_camp_junction",
+            "radius": 3.2,
+            "intensity": 1.15,
+            "persistent": true
+        },
+        {
+            "type": "supply_cart",
+            "x": 292.59,
+            "z": 475.83,
+            "scale": 1.0,
+            "rotation": 1.463,
+            "dressing": "trasimene_camp_junction"
+        },
+        {
+            "type": "weapon_rack",
+            "x": 291.62,
+            "z": 466.89,
+            "scale": 1.0,
+            "rotation": 1.463,
+            "dressing": "trasimene_camp_junction"
+        },
+        {
+            "type": "statue",
+            "x": 405.1,
+            "z": 160.86,
+            "scale": 1.0,
+            "rotation": -1.664,
+            "dressing": "trasimene_shore_junction"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 405.65,
+            "z": 166.83,
+            "scale": 1.0,
+            "rotation": 2.081,
+            "dressing": "trasimene_shore_junction"
+        },
+        {
+            "type": "plant",
+            "x": 184.2,
+            "z": 624.72,
+            "scale": 1.17,
+            "rotation": 4.942,
+            "dressing": "trasimene_west_bank"
+        },
+        {
+            "type": "plant",
+            "x": 186.71,
+            "z": 622.39,
+            "scale": 0.98,
+            "rotation": 1.418,
+            "dressing": "trasimene_west_bank"
+        },
+        {
+            "type": "boulder",
+            "x": 176.77,
+            "z": 584.57,
+            "scale": 0.99,
+            "rotation": 1.893,
+            "dressing": "trasimene_west_bank"
+        },
+        {
+            "type": "dead_tree",
+            "x": 198.53,
+            "z": 549.88,
+            "scale": 1.03,
+            "rotation": 2.382,
+            "dressing": "trasimene_west_bank"
+        },
+        {
+            "type": "plant",
+            "x": 174.17,
+            "z": 519.87,
+            "scale": 0.94,
+            "rotation": 6.235,
+            "dressing": "trasimene_west_bank"
+        },
+        {
+            "type": "plant",
+            "x": 171.27,
+            "z": 517.02,
+            "scale": 1.36,
+            "rotation": 4.627,
+            "dressing": "trasimene_west_bank"
+        },
+        {
+            "type": "plant",
+            "x": 179.92,
+            "z": 483.43,
+            "scale": 1.25,
+            "rotation": 4.179,
+            "dressing": "trasimene_west_bank"
+        },
+        {
+            "type": "dead_tree",
+            "x": 202.12,
+            "z": 417.56,
+            "scale": 0.96,
+            "rotation": 5.923,
+            "dressing": "trasimene_west_bank"
+        },
+        {
+            "type": "plant",
+            "x": 200.01,
+            "z": 378.24,
+            "scale": 0.89,
+            "rotation": 5.846,
+            "dressing": "trasimene_west_bank"
+        },
+        {
+            "type": "plant",
+            "x": 198.03,
+            "z": 374.96,
+            "scale": 0.98,
+            "rotation": 2.277,
+            "dressing": "trasimene_west_bank"
+        },
+        {
+            "type": "plant",
+            "x": 224.6,
+            "z": 348.31,
+            "scale": 1.07,
+            "rotation": 3.982,
+            "dressing": "trasimene_west_bank"
+        },
+        {
+            "type": "plant",
+            "x": 228.09,
+            "z": 346.89,
+            "scale": 1.08,
+            "rotation": 6.089,
+            "dressing": "trasimene_west_bank"
+        },
+        {
+            "type": "boulder",
+            "x": 222.54,
+            "z": 309.99,
+            "scale": 1.21,
+            "rotation": 2.173,
+            "dressing": "trasimene_west_bank"
+        },
+        {
+            "type": "dead_tree",
+            "x": 233.86,
+            "z": 277.15,
+            "scale": 0.81,
+            "rotation": 3.11,
+            "dressing": "trasimene_west_bank"
+        },
+        {
+            "type": "plant",
+            "x": 210.99,
+            "z": 244.94,
+            "scale": 1.11,
+            "rotation": 0.462,
+            "dressing": "trasimene_west_bank"
+        },
+        {
+            "type": "plant",
+            "x": 209.33,
+            "z": 241.24,
+            "scale": 1.39,
+            "rotation": 2.412,
+            "dressing": "trasimene_west_bank"
+        },
+        {
+            "type": "plant",
+            "x": 218.86,
+            "z": 205.48,
+            "scale": 0.94,
+            "rotation": 2.406,
+            "dressing": "trasimene_west_bank"
+        },
+        {
+            "type": "plant",
+            "x": 220.69,
+            "z": 202.12,
+            "scale": 0.99,
+            "rotation": 1.296,
+            "dressing": "trasimene_west_bank"
+        },
+        {
+            "type": "dead_tree",
+            "x": 204.88,
+            "z": 136.23,
+            "scale": 1.2,
+            "rotation": 2.427,
+            "dressing": "trasimene_west_bank"
+        },
+        {
+            "type": "plant",
+            "x": 540.99,
+            "z": 620.39,
+            "scale": 1.29,
+            "rotation": 2.547,
+            "dressing": "trasimene_east_bank"
+        },
+        {
+            "type": "plant",
+            "x": 541.22,
+            "z": 617.04,
+            "scale": 0.99,
+            "rotation": 4.183,
+            "dressing": "trasimene_east_bank"
+        },
+        {
+            "type": "boulder",
+            "x": 511.65,
+            "z": 590.91,
+            "scale": 1.02,
+            "rotation": 5.292,
+            "dressing": "trasimene_east_bank"
+        },
+        {
+            "type": "plant",
+            "x": 519.23,
+            "z": 555.94,
+            "scale": 0.89,
+            "rotation": 1.359,
+            "dressing": "trasimene_east_bank"
+        },
+        {
+            "type": "plant",
+            "x": 523.09,
+            "z": 552.84,
+            "scale": 1.22,
+            "rotation": 2.303,
+            "dressing": "trasimene_east_bank"
+        },
+        {
+            "type": "dead_tree",
+            "x": 509.83,
+            "z": 517.45,
+            "scale": 1.15,
+            "rotation": 2.356,
+            "dressing": "trasimene_east_bank"
+        },
+        {
+            "type": "plant",
+            "x": 532.88,
+            "z": 485.67,
+            "scale": 1.05,
+            "rotation": 4.137,
+            "dressing": "trasimene_east_bank"
+        },
+        {
+            "type": "plant",
+            "x": 536.14,
+            "z": 483.08,
+            "scale": 1.01,
+            "rotation": 4.955,
+            "dressing": "trasimene_east_bank"
+        },
+        {
+            "type": "boulder",
+            "x": 513.66,
+            "z": 451.78,
+            "scale": 0.81,
+            "rotation": 1.855,
+            "dressing": "trasimene_east_bank"
+        },
+        {
+            "type": "plant",
+            "x": 512.86,
+            "z": 415.03,
+            "scale": 0.85,
+            "rotation": 0.665,
+            "dressing": "trasimene_east_bank"
+        },
+        {
+            "type": "dead_tree",
+            "x": 483.45,
+            "z": 387.1,
+            "scale": 1.05,
+            "rotation": 5.654,
+            "dressing": "trasimene_east_bank"
+        },
+        {
+            "type": "plant",
+            "x": 496.64,
+            "z": 351.01,
+            "scale": 0.92,
+            "rotation": 3.038,
+            "dressing": "trasimene_east_bank"
+        },
+        {
+            "type": "plant",
+            "x": 498.44,
+            "z": 347.06,
+            "scale": 1.35,
+            "rotation": 5.118,
+            "dressing": "trasimene_east_bank"
+        },
+        {
+            "type": "boulder",
+            "x": 483.46,
+            "z": 311.89,
+            "scale": 1.29,
+            "rotation": 3.981,
+            "dressing": "trasimene_east_bank"
+        },
+        {
+            "type": "plant",
+            "x": 504.82,
+            "z": 273.37,
+            "scale": 1.25,
+            "rotation": 1.979,
+            "dressing": "trasimene_east_bank"
+        },
+        {
+            "type": "plant",
+            "x": 505.09,
+            "z": 271.15,
+            "scale": 1.18,
+            "rotation": 3.403,
+            "dressing": "trasimene_east_bank"
+        },
+        {
+            "type": "dead_tree",
+            "x": 475.69,
+            "z": 245.52,
+            "scale": 1.27,
+            "rotation": 0.077,
+            "dressing": "trasimene_east_bank"
+        },
+        {
+            "type": "plant",
+            "x": 475.53,
+            "z": 208.4,
+            "scale": 0.96,
+            "rotation": 5.995,
+            "dressing": "trasimene_east_bank"
+        },
+        {
+            "type": "plant",
+            "x": 477.24,
+            "z": 204.73,
+            "scale": 1.28,
+            "rotation": 3.616,
+            "dressing": "trasimene_east_bank"
+        },
+        {
+            "type": "boulder",
+            "x": 454.42,
+            "z": 175.62,
+            "scale": 1.01,
+            "rotation": 0.147,
+            "dressing": "trasimene_east_bank"
+        },
+        {
+            "type": "plant",
+            "x": 474.26,
+            "z": 141.72,
+            "scale": 0.88,
+            "rotation": 0.52,
+            "dressing": "trasimene_east_bank"
+        },
+        {
+            "type": "plant",
+            "x": 477.32,
+            "z": 138.48,
+            "scale": 0.94,
+            "rotation": 4.899,
+            "dressing": "trasimene_east_bank"
+        },
+        {
+            "type": "firecamp",
+            "x": 563.0,
+            "z": 148.25,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "trasimene_gate_1",
+            "radius": 3.2,
+            "intensity": 1.15,
+            "persistent": true
+        },
+        {
+            "type": "firecamp",
+            "x": 563.0,
+            "z": 135.75,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "trasimene_gate_1",
+            "radius": 3.2,
+            "intensity": 1.15,
+            "persistent": true
+        },
+        {
+            "type": "weapon_rack",
+            "x": 559.0,
+            "z": 134.75,
+            "scale": 1.0,
+            "rotation": 3.142,
+            "dressing": "trasimene_gate_1"
+        },
+        {
+            "type": "supply_cart",
+            "x": 560.02,
+            "z": 153.09,
+            "scale": 1.0,
+            "rotation": 3.442,
+            "dressing": "trasimene_gate_1"
+        },
+        {
+            "type": "statue",
+            "x": 551.25,
+            "z": 150.19,
+            "scale": 1.0,
+            "rotation": -1.571,
+            "dressing": "trasimene_gate_1"
+        },
+        {
+            "type": "statue",
+            "x": 552.0,
+            "z": 134.75,
+            "scale": 1.0,
+            "rotation": 1.571,
+            "dressing": "trasimene_gate_1"
+        },
+        {
+            "type": "firecamp",
+            "x": 637.0,
+            "z": 128.7,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "trasimene_gate_2",
+            "radius": 3.2,
+            "intensity": 1.15,
+            "persistent": true
+        },
+        {
+            "type": "firecamp",
+            "x": 637.0,
+            "z": 139.3,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "trasimene_gate_2",
+            "radius": 3.2,
+            "intensity": 1.15,
+            "persistent": true
+        },
+        {
+            "type": "weapon_rack",
+            "x": 641.0,
+            "z": 140.3,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "trasimene_gate_2"
+        },
+        {
+            "type": "supply_cart",
+            "x": 643.43,
+            "z": 128.32,
+            "scale": 1.0,
+            "rotation": 0.3,
+            "dressing": "trasimene_gate_2"
+        },
+        {
+            "type": "statue",
+            "x": 644.71,
+            "z": 139.43,
+            "scale": 1.0,
+            "rotation": -1.571,
+            "dressing": "trasimene_gate_2"
+        },
+        {
+            "type": "firecamp",
+            "x": 278.5,
+            "z": 525.0,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "trasimene_gate_3",
+            "radius": 3.2,
+            "intensity": 1.15,
+            "persistent": true
+        },
+        {
+            "type": "firecamp",
+            "x": 289.5,
+            "z": 525.0,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "trasimene_gate_3",
+            "radius": 3.2,
+            "intensity": 1.15,
+            "persistent": true
+        },
+        {
+            "type": "weapon_rack",
+            "x": 290.5,
+            "z": 521.0,
+            "scale": 1.0,
+            "rotation": -1.571,
+            "dressing": "trasimene_gate_3"
+        },
+        {
+            "type": "supply_cart",
+            "x": 276.82,
+            "z": 520.19,
+            "scale": 1.0,
+            "rotation": -1.271,
+            "dressing": "trasimene_gate_3"
+        },
+        {
+            "type": "tent",
+            "x": 269.21,
+            "z": 515.13,
+            "scale": 1.0,
+            "rotation": 1.571,
+            "dressing": "trasimene_gate_3"
+        },
+        {
+            "type": "firecamp",
+            "x": 317.28,
+            "z": 537.17,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "trasimene_gate_4",
+            "radius": 3.2,
+            "intensity": 1.15,
+            "persistent": true
+        },
+        {
+            "type": "weapon_rack",
+            "x": 324.12,
+            "z": 549.87,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "trasimene_gate_4"
+        },
+        {
+            "type": "supply_cart",
+            "x": 324.11,
+            "z": 533.92,
+            "scale": 1.0,
+            "rotation": 0.3,
+            "dressing": "trasimene_gate_4"
+        },
+        {
+            "type": "tent",
+            "x": 328.87,
+            "z": 529.41,
+            "scale": 1.0,
+            "rotation": -3.142,
+            "dressing": "trasimene_gate_4"
+        },
+        {
+            "type": "firecamp",
+            "x": 301.48,
+            "z": 578.28,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "trasimene_gate_5",
+            "radius": 3.2,
+            "intensity": 1.15,
+            "persistent": true
+        },
+        {
+            "type": "firecamp",
+            "x": 289.13,
+            "z": 580.12,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "trasimene_gate_5",
+            "radius": 3.2,
+            "intensity": 1.15,
+            "persistent": true
+        },
+        {
+            "type": "weapon_rack",
+            "x": 289.95,
+            "z": 583.47,
+            "scale": 1.0,
+            "rotation": 1.571,
+            "dressing": "trasimene_gate_5"
+        },
+        {
+            "type": "supply_cart",
+            "x": 304.14,
+            "z": 581.98,
+            "scale": 1.0,
+            "rotation": 1.871,
+            "dressing": "trasimene_gate_5"
+        },
+        {
+            "type": "tent",
+            "x": 308.59,
+            "z": 588.87,
+            "scale": 1.0,
+            "rotation": -1.571,
+            "dressing": "trasimene_gate_5"
+        },
+        {
+            "type": "firecamp",
+            "x": 253.0,
+            "z": 547.3,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "trasimene_gate_6",
+            "radius": 3.2,
+            "intensity": 1.15,
+            "persistent": true
+        },
+        {
+            "type": "firecamp",
+            "x": 252.13,
+            "z": 539.99,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "trasimene_gate_6",
+            "radius": 3.2,
+            "intensity": 1.15,
+            "persistent": true
+        },
+        {
+            "type": "weapon_rack",
+            "x": 247.47,
+            "z": 537.42,
+            "scale": 1.0,
+            "rotation": 3.142,
+            "dressing": "trasimene_gate_6"
+        },
+        {
+            "type": "supply_cart",
+            "x": 247.0,
+            "z": 548.8,
+            "scale": 1.0,
+            "rotation": 3.442,
+            "dressing": "trasimene_gate_6"
+        },
+        {
+            "type": "tent",
+            "x": 244.89,
+            "z": 556.58,
+            "scale": 1.0,
+            "rotation": -0.0,
+            "dressing": "trasimene_gate_6"
+        }
+    ],
+    "dressing": [
+        {
+            "id": "trasimene_fishing_village",
+            "kind": "shore_hamlet",
+            "x": 350,
+            "z": 132,
+            "facing": "north",
+            "homes": 4,
+            "carts": 3,
+            "plants": 7
+        },
+        {
+            "id": "trasimene_shore_avenue",
+            "kind": "tree_avenue",
+            "from": [
+                230,
+                160
+            ],
+            "to": [
+                440,
+                150
+            ],
+            "tree": "cypress_tree",
+            "spacing": 10,
+            "sides": "left"
+        },
+        {
+            "id": "trasimene_malpasso",
+            "kind": "cairn",
+            "x": 258,
+            "z": 160,
+            "facing": "south",
+            "boulders": 7,
+            "radius": 5,
+            "fire": true
+        },
+        {
+            "id": "trasimene_altar_ring",
+            "kind": "barrow_field",
+            "x": 625,
+            "z": 321,
+            "radius": 9,
+            "ruins": 5,
+            "dead_trees": 3,
+            "statues": 2,
+            "boulders": 3
+        },
+        {
+            "id": "trasimene_drowned_barrows",
+            "kind": "barrow_field",
+            "x": 64,
+            "z": 322,
+            "radius": 13,
+            "shrine": true,
+            "ruins": 7,
+            "dead_trees": 6,
+            "boulders": 4
+        },
+        {
+            "id": "trasimene_olive_grove",
+            "kind": "sacred_grove",
+            "x": 500,
+            "z": 400,
+            "tree": "olive_tree",
+            "count": 10,
+            "radius": 13,
+            "centre": "statue"
+        },
+        {
+            "id": "trasimene_west_bridge",
+            "kind": "bridgehead",
+            "x": 205,
+            "z": 174
+        },
+        {
+            "id": "trasimene_east_bridge",
+            "kind": "bridgehead",
+            "x": 466,
+            "z": 150
+        },
+        {
+            "id": "trasimene_south_bridge",
+            "kind": "bridgehead",
+            "x": 200,
+            "z": 404,
+            "cart": false
+        },
+        {
+            "id": "trasimene_ridge_bridge",
+            "kind": "bridgehead",
+            "x": 495,
+            "z": 276,
+            "cart": false
+        },
+        {
+            "id": "trasimene_north_ramp",
+            "kind": "ramp_mouth",
+            "x": 308,
+            "z": 243,
+            "statue": true
+        },
+        {
+            "id": "trasimene_ambush_ramp",
+            "kind": "ramp_mouth",
+            "x": 351,
+            "z": 466,
+            "fire": true
+        },
+        {
+            "id": "trasimene_column_ramp",
+            "kind": "ramp_mouth",
+            "x": 159,
+            "z": 283
+        },
+        {
+            "id": "trasimene_via_junction",
+            "kind": "junction",
+            "x": 300,
+            "z": 168,
+            "style": "shrine"
+        },
+        {
+            "id": "trasimene_camp_junction",
+            "kind": "junction",
+            "x": 300,
+            "z": 470,
+            "style": "camp",
+            "snap": 6
+        },
+        {
+            "id": "trasimene_shore_junction",
+            "kind": "junction",
+            "x": 420,
+            "z": 150,
+            "style": "milestone",
+            "tree": "cypress_tree"
+        },
+        {
+            "id": "trasimene_west_bank",
+            "kind": "riverbank",
+            "from": [
+                186,
+                120
+            ],
+            "to": [
+                172,
+                640
+            ],
+            "spacing": 36,
+            "kinds": [
+                "plant",
+                "boulder",
+                "dead_tree",
+                "plant"
+            ]
+        },
+        {
+            "id": "trasimene_east_bank",
+            "kind": "riverbank",
+            "from": [
+                472,
+                120
+            ],
+            "to": [
+                538,
+                640
+            ],
+            "spacing": 36,
+            "kinds": [
+                "plant",
+                "boulder",
+                "plant",
+                "dead_tree"
+            ]
+        },
+        {
+            "id": "trasimene_gate_1",
+            "kind": "gate_approach",
+            "x": 572.0,
+            "z": 142.0,
+            "statues": true
+        },
+        {
+            "id": "trasimene_gate_2",
+            "kind": "gate_approach",
+            "x": 628.0,
+            "z": 134.0,
+            "statues": true
+        },
+        {
+            "id": "trasimene_gate_3",
+            "kind": "gate_approach",
+            "x": 284,
+            "z": 534,
+            "tents": 2
+        },
+        {
+            "id": "trasimene_gate_4",
+            "kind": "gate_approach",
+            "x": 310,
+            "z": 544,
+            "tents": 2
+        },
+        {
+            "id": "trasimene_gate_5",
+            "kind": "gate_approach",
+            "x": 294,
+            "z": 570,
+            "tents": 2
+        },
+        {
+            "id": "trasimene_gate_6",
+            "kind": "gate_approach",
+            "x": 262,
+            "z": 542,
+            "tents": 2
         }
     ]
 }

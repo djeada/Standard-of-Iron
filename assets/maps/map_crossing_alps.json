@@ -91,7 +91,7 @@
     "environment": {
         "day_length_seconds": 2400,
         "fog_density": 0.01,
-        "lighting_profile": "mediterranean_summer",
+        "lighting_profile": "alpine_clear",
         "start_time": 8,
         "time_mode": "locked"
     },
@@ -3189,18 +3189,19 @@
     ],
     "undead_zones": [
         {
-            "anchor_type": "magic_shrine",
+            "anchor_type": "ruins",
             "awaken_on": [
                 "unit_enters_radius"
             ],
             "clear_reward": {
-                "iron": 100,
-                "stone": 140
+                "iron": 110,
+                "stone": 140,
+                "food": 60
             },
-            "id": "pass_shrine",
-            "leash_radius": 29.42,
+            "id": "alps_frozen_dead",
+            "leash_radius": 30.0,
             "owner_id": 99,
-            "radius": 16.81,
+            "radius": 17.0,
             "team_id": 99,
             "waves": [
                 {
@@ -3211,8 +3212,9 @@
                     }
                 }
             ],
-            "x": 466,
-            "z": 83
+            "x": 252,
+            "z": 548,
+            "fog_density": 0.32
         }
     ],
     "victory": {
@@ -3310,20 +3312,6 @@
             "z": 64.85
         },
         {
-            "rotation": 2.5,
-            "scale": 1,
-            "type": "tent",
-            "x": 56.97,
-            "z": 39.07
-        },
-        {
-            "rotation": 1.2,
-            "scale": 1,
-            "type": "supply_cart",
-            "x": 67.14,
-            "z": 75.97
-        },
-        {
             "rotation": 4,
             "scale": 1,
             "type": "weapon_rack",
@@ -3352,13 +3340,6 @@
             "z": 151.27
         },
         {
-            "rotation": 1,
-            "scale": 1,
-            "type": "ruins",
-            "x": 158.69,
-            "z": 306.05
-        },
-        {
             "rotation": 3.4,
             "scale": 0.9,
             "type": "ruins",
@@ -3385,20 +3366,6 @@
             "type": "dead_tree",
             "x": 258.38,
             "z": 360.31
-        },
-        {
-            "rotation": 1.3,
-            "scale": 1.2,
-            "type": "dead_tree",
-            "x": 305.17,
-            "z": 297.37
-        },
-        {
-            "rotation": 3.2,
-            "scale": 1,
-            "type": "dead_tree",
-            "x": 325.52,
-            "z": 327.76
         },
         {
             "rotation": 5.4,
@@ -3441,13 +3408,6 @@
             "type": "tent",
             "x": 547.4,
             "z": 529.5
-        },
-        {
-            "rotation": 4.1,
-            "scale": 0.9,
-            "type": "tent",
-            "x": 581.86,
-            "z": 535.91
         },
         {
             "rotation": 2.5,
@@ -3506,13 +3466,6 @@
             "type": "pine_tree",
             "x": 55.09,
             "z": 62.120000000000005
-        },
-        {
-            "rotation": 1.58,
-            "scale": 1.04,
-            "type": "pine_tree",
-            "x": 46.28,
-            "z": 72.71
         },
         {
             "rotation": 4.51,
@@ -3967,13 +3920,6 @@
             "z": 377.32
         },
         {
-            "rotation": 93.2,
-            "scale": 1.17,
-            "type": "tent",
-            "x": 501.53000000000003,
-            "z": 627.3000000000001
-        },
-        {
             "intensity": 0.88,
             "persistent": true,
             "radius": 3.2,
@@ -3990,20 +3936,6 @@
             "type": "firecamp",
             "x": 102.66,
             "z": 99.59
-        },
-        {
-            "rotation": 200.6,
-            "scale": 1.08,
-            "type": "tent",
-            "x": 148.23,
-            "z": 397.02
-        },
-        {
-            "rotation": 243.1,
-            "scale": 1.11,
-            "type": "supply_cart",
-            "x": 594.59,
-            "z": 431.69
         },
         {
             "intensity": 0.97,
@@ -4093,20 +4025,6 @@
             "z": 282.36
         },
         {
-            "rotation": 76.10000000000001,
-            "scale": 1.16,
-            "type": "weapon_rack",
-            "x": 488.34000000000003,
-            "z": 607.23
-        },
-        {
-            "rotation": 64,
-            "scale": 1.08,
-            "type": "tent",
-            "x": 26.34,
-            "z": 125.47
-        },
-        {
             "rotation": 11,
             "scale": 1.1,
             "type": "tent",
@@ -4119,13 +4037,6 @@
             "type": "tent",
             "x": 140.34,
             "z": 375.31
-        },
-        {
-            "rotation": 241.5,
-            "scale": 1.03,
-            "type": "tent",
-            "x": 534.66,
-            "z": 440.07
         },
         {
             "rotation": 118.60000000000001,
@@ -4183,39 +4094,11 @@
             "z": 42.94
         },
         {
-            "rotation": 219.4,
-            "scale": 0.99,
-            "type": "dead_tree",
-            "x": 439.74,
-            "z": 257
-        },
-        {
             "rotation": 307.6,
             "scale": 1.03,
             "type": "ruins",
             "x": 199.41,
             "z": 536.22
-        },
-        {
-            "rotation": 158.1,
-            "scale": 1.16,
-            "type": "dead_tree",
-            "x": 67.59,
-            "z": 432.25
-        },
-        {
-            "rotation": 88.3,
-            "scale": 1.1400000000000001,
-            "type": "dead_tree",
-            "x": 259.28000000000003,
-            "z": 51.17
-        },
-        {
-            "rotation": 281.8,
-            "scale": 0.9,
-            "type": "dead_tree",
-            "x": 390.78000000000003,
-            "z": 18.3
         },
         {
             "rotation": 164.5,
@@ -4251,13 +4134,6 @@
             "type": "ruins",
             "x": 291.98,
             "z": 53.980000000000004
-        },
-        {
-            "rotation": 330.1,
-            "scale": 1.12,
-            "type": "dead_tree",
-            "x": 200.92000000000002,
-            "z": 47.43
         },
         {
             "rotation": 74,
@@ -4344,13 +4220,6 @@
             "z": 99.5
         },
         {
-            "rotation": 279.6,
-            "scale": 1.08,
-            "type": "abandoned_home",
-            "x": 439.1,
-            "z": 81.7
-        },
-        {
             "rotation": 183.6,
             "scale": 1.1,
             "type": "abandoned_home",
@@ -4363,13 +4232,6 @@
             "type": "abandoned_home",
             "x": 505.84000000000003,
             "z": 71.02
-        },
-        {
-            "rotation": 177.8,
-            "scale": 0.96,
-            "type": "abandoned_home",
-            "x": 290.36,
-            "z": 551.0600000000001
         },
         {
             "landmark": "alps_ascent_sanctuary",
@@ -5255,6 +5117,1453 @@
             "type": "cursed_gold_vein",
             "x": 222,
             "z": 292
+        },
+        {
+            "type": "boulder",
+            "x": 95.57,
+            "z": 255.15,
+            "scale": 1.48,
+            "rotation": 5.757,
+            "dressing": "alps_avalanche"
+        },
+        {
+            "type": "boulder",
+            "x": 87.24,
+            "z": 256.44,
+            "scale": 1.09,
+            "rotation": 4.272,
+            "dressing": "alps_avalanche"
+        },
+        {
+            "type": "boulder",
+            "x": 90.51,
+            "z": 252.19,
+            "scale": 0.93,
+            "rotation": 2.278,
+            "dressing": "alps_avalanche"
+        },
+        {
+            "type": "boulder",
+            "x": 86.73,
+            "z": 253.12,
+            "scale": 1.27,
+            "rotation": 3.333,
+            "dressing": "alps_avalanche"
+        },
+        {
+            "type": "boulder",
+            "x": 98.73,
+            "z": 256.16,
+            "scale": 0.83,
+            "rotation": 2.398,
+            "dressing": "alps_avalanche"
+        },
+        {
+            "type": "supply_cart",
+            "x": 87.55,
+            "z": 261.34,
+            "scale": 1.0,
+            "rotation": 1.884,
+            "dressing": "alps_avalanche"
+        },
+        {
+            "type": "statue",
+            "x": 262.0,
+            "z": 396.0,
+            "scale": 1.15,
+            "rotation": 1.571,
+            "dressing": "alps_summit_cairn"
+        },
+        {
+            "type": "boulder",
+            "x": 266.96,
+            "z": 396.63,
+            "scale": 1.09,
+            "rotation": 2.963,
+            "dressing": "alps_summit_cairn"
+        },
+        {
+            "type": "boulder",
+            "x": 265.77,
+            "z": 399.28,
+            "scale": 1.0,
+            "rotation": 5.753,
+            "dressing": "alps_summit_cairn"
+        },
+        {
+            "type": "boulder",
+            "x": 261.28,
+            "z": 400.95,
+            "scale": 1.03,
+            "rotation": 3.145,
+            "dressing": "alps_summit_cairn"
+        },
+        {
+            "type": "boulder",
+            "x": 258.18,
+            "z": 400.88,
+            "scale": 0.99,
+            "rotation": 6.238,
+            "dressing": "alps_summit_cairn"
+        },
+        {
+            "type": "boulder",
+            "x": 257.0,
+            "z": 396.16,
+            "scale": 0.73,
+            "rotation": 2.007,
+            "dressing": "alps_summit_cairn"
+        },
+        {
+            "type": "boulder",
+            "x": 258.29,
+            "z": 392.64,
+            "scale": 0.89,
+            "rotation": 2.665,
+            "dressing": "alps_summit_cairn"
+        },
+        {
+            "type": "boulder",
+            "x": 261.03,
+            "z": 391.1,
+            "scale": 0.91,
+            "rotation": 1.146,
+            "dressing": "alps_summit_cairn"
+        },
+        {
+            "type": "boulder",
+            "x": 265.49,
+            "z": 392.42,
+            "scale": 0.94,
+            "rotation": 4.939,
+            "dressing": "alps_summit_cairn"
+        },
+        {
+            "type": "firecamp",
+            "x": 271.0,
+            "z": 397.0,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "alps_summit_cairn",
+            "radius": 3.2,
+            "intensity": 1.15,
+            "persistent": true
+        },
+        {
+            "type": "boulder",
+            "x": 230.32,
+            "z": 374.61,
+            "scale": 0.98,
+            "rotation": 0.574,
+            "dressing": "alps_summit_scree"
+        },
+        {
+            "type": "boulder",
+            "x": 232.3,
+            "z": 377.66,
+            "scale": 1.23,
+            "rotation": 0.189,
+            "dressing": "alps_summit_scree"
+        },
+        {
+            "type": "boulder",
+            "x": 234.93,
+            "z": 376.93,
+            "scale": 0.82,
+            "rotation": 2.937,
+            "dressing": "alps_summit_scree"
+        },
+        {
+            "type": "boulder",
+            "x": 227.94,
+            "z": 375.77,
+            "scale": 0.89,
+            "rotation": 5.946,
+            "dressing": "alps_summit_scree"
+        },
+        {
+            "type": "boulder",
+            "x": 246.27,
+            "z": 384.74,
+            "scale": 1.09,
+            "rotation": 2.0,
+            "dressing": "alps_summit_scree"
+        },
+        {
+            "type": "boulder",
+            "x": 237.59,
+            "z": 382.29,
+            "scale": 1.48,
+            "rotation": 0.594,
+            "dressing": "alps_summit_scree"
+        },
+        {
+            "type": "boulder",
+            "x": 240.84,
+            "z": 380.65,
+            "scale": 1.14,
+            "rotation": 0.82,
+            "dressing": "alps_summit_scree"
+        },
+        {
+            "type": "boulder",
+            "x": 238.03,
+            "z": 378.73,
+            "scale": 1.16,
+            "rotation": 0.84,
+            "dressing": "alps_summit_scree"
+        },
+        {
+            "type": "dead_tree",
+            "x": 250.03,
+            "z": 379.55,
+            "scale": 0.8,
+            "rotation": 6.031,
+            "dressing": "alps_summit_scree"
+        },
+        {
+            "type": "ruins",
+            "x": 263.71,
+            "z": 549.37,
+            "scale": 0.93,
+            "rotation": 6.242,
+            "dressing": "alps_frozen_dead_field"
+        },
+        {
+            "type": "ruins",
+            "x": 257.94,
+            "z": 557.63,
+            "scale": 0.95,
+            "rotation": 3.684,
+            "dressing": "alps_frozen_dead_field"
+        },
+        {
+            "type": "ruins",
+            "x": 245.51,
+            "z": 557.71,
+            "scale": 1.14,
+            "rotation": 0.034,
+            "dressing": "alps_frozen_dead_field"
+        },
+        {
+            "type": "ruins",
+            "x": 241.58,
+            "z": 550.01,
+            "scale": 0.96,
+            "rotation": 2.011,
+            "dressing": "alps_frozen_dead_field"
+        },
+        {
+            "type": "ruins",
+            "x": 245.86,
+            "z": 540.06,
+            "scale": 0.88,
+            "rotation": 5.431,
+            "dressing": "alps_frozen_dead_field"
+        },
+        {
+            "type": "ruins",
+            "x": 256.98,
+            "z": 539.66,
+            "scale": 1.13,
+            "rotation": 0.024,
+            "dressing": "alps_frozen_dead_field"
+        },
+        {
+            "type": "dead_tree",
+            "x": 263.22,
+            "z": 560.62,
+            "scale": 0.99,
+            "rotation": 5.188,
+            "dressing": "alps_frozen_dead_field"
+        },
+        {
+            "type": "dead_tree",
+            "x": 235.06,
+            "z": 555.23,
+            "scale": 0.9,
+            "rotation": 2.84,
+            "dressing": "alps_frozen_dead_field"
+        },
+        {
+            "type": "dead_tree",
+            "x": 237.9,
+            "z": 539.12,
+            "scale": 0.98,
+            "rotation": 3.226,
+            "dressing": "alps_frozen_dead_field"
+        },
+        {
+            "type": "dead_tree",
+            "x": 262.66,
+            "z": 535.48,
+            "scale": 0.86,
+            "rotation": 2.104,
+            "dressing": "alps_frozen_dead_field"
+        },
+        {
+            "type": "dead_tree",
+            "x": 265.9,
+            "z": 555.34,
+            "scale": 1.13,
+            "rotation": 3.748,
+            "dressing": "alps_frozen_dead_field"
+        },
+        {
+            "type": "dead_tree",
+            "x": 239.68,
+            "z": 561.34,
+            "scale": 0.98,
+            "rotation": 2.249,
+            "dressing": "alps_frozen_dead_field"
+        },
+        {
+            "type": "statue",
+            "x": 260.74,
+            "z": 544.03,
+            "scale": 0.9,
+            "rotation": 3.236,
+            "dressing": "alps_frozen_dead_field"
+        },
+        {
+            "type": "statue",
+            "x": 240.74,
+            "z": 545.42,
+            "scale": 0.9,
+            "rotation": 1.893,
+            "dressing": "alps_frozen_dead_field"
+        },
+        {
+            "type": "boulder",
+            "x": 255.75,
+            "z": 562.51,
+            "scale": 1.24,
+            "rotation": 2.919,
+            "dressing": "alps_frozen_dead_field"
+        },
+        {
+            "type": "boulder",
+            "x": 249.18,
+            "z": 562.41,
+            "scale": 1.04,
+            "rotation": 6.261,
+            "dressing": "alps_frozen_dead_field"
+        },
+        {
+            "type": "boulder",
+            "x": 249.87,
+            "z": 534.17,
+            "scale": 1.1,
+            "rotation": 4.188,
+            "dressing": "alps_frozen_dead_field"
+        },
+        {
+            "type": "boulder",
+            "x": 259.4,
+            "z": 552.54,
+            "scale": 1.03,
+            "rotation": 4.801,
+            "dressing": "alps_frozen_dead_field"
+        },
+        {
+            "type": "boulder",
+            "x": 239.11,
+            "z": 557.27,
+            "scale": 1.19,
+            "rotation": 2.355,
+            "dressing": "alps_frozen_dead_field"
+        },
+        {
+            "type": "boulder",
+            "x": 241.64,
+            "z": 537.85,
+            "scale": 1.17,
+            "rotation": 2.02,
+            "dressing": "alps_frozen_dead_field"
+        },
+        {
+            "type": "magic_shrine",
+            "x": 252.0,
+            "z": 548.0,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "alps_frozen_dead_field"
+        },
+        {
+            "type": "dead_tree",
+            "x": 233.33,
+            "z": 563.64,
+            "scale": 0.95,
+            "rotation": 2.736,
+            "dressing": "alps_frozen_dead_bones"
+        },
+        {
+            "type": "dead_tree",
+            "x": 220.96,
+            "z": 569.71,
+            "scale": 0.86,
+            "rotation": 0.92,
+            "dressing": "alps_frozen_dead_bones"
+        },
+        {
+            "type": "dead_tree",
+            "x": 224.46,
+            "z": 572.48,
+            "scale": 0.92,
+            "rotation": 2.809,
+            "dressing": "alps_frozen_dead_bones"
+        },
+        {
+            "type": "dead_tree",
+            "x": 223.14,
+            "z": 556.75,
+            "scale": 0.87,
+            "rotation": 3.191,
+            "dressing": "alps_frozen_dead_bones"
+        },
+        {
+            "type": "dead_tree",
+            "x": 229.5,
+            "z": 574.64,
+            "scale": 1.04,
+            "rotation": 4.519,
+            "dressing": "alps_frozen_dead_bones"
+        },
+        {
+            "type": "dead_tree",
+            "x": 236.78,
+            "z": 567.07,
+            "scale": 1.02,
+            "rotation": 2.17,
+            "dressing": "alps_frozen_dead_bones"
+        },
+        {
+            "type": "ruins",
+            "x": 228.8,
+            "z": 568.02,
+            "scale": 0.99,
+            "rotation": 0.253,
+            "dressing": "alps_frozen_dead_bones"
+        },
+        {
+            "type": "boulder",
+            "x": 223.93,
+            "z": 560.91,
+            "scale": 1.04,
+            "rotation": 0.8,
+            "dressing": "alps_frozen_dead_bones"
+        },
+        {
+            "type": "boulder",
+            "x": 235.1,
+            "z": 559.21,
+            "scale": 0.62,
+            "rotation": 1.83,
+            "dressing": "alps_frozen_dead_bones"
+        },
+        {
+            "type": "boulder",
+            "x": 233.8,
+            "z": 570.04,
+            "scale": 0.89,
+            "rotation": 0.713,
+            "dressing": "alps_frozen_dead_bones"
+        },
+        {
+            "type": "boulder",
+            "x": 226.35,
+            "z": 563.54,
+            "scale": 0.79,
+            "rotation": 5.76,
+            "dressing": "alps_frozen_dead_bones"
+        },
+        {
+            "type": "boulder",
+            "x": 229.9,
+            "z": 559.57,
+            "scale": 0.73,
+            "rotation": 3.577,
+            "dressing": "alps_frozen_dead_bones"
+        },
+        {
+            "type": "pine_tree",
+            "x": 531.98,
+            "z": 554.07,
+            "scale": 1.08,
+            "rotation": 0.391,
+            "dressing": "alps_descent_avenue"
+        },
+        {
+            "type": "pine_tree",
+            "x": 521.73,
+            "z": 556.25,
+            "scale": 1.01,
+            "rotation": 2.758,
+            "dressing": "alps_descent_avenue"
+        },
+        {
+            "type": "pine_tree",
+            "x": 521.03,
+            "z": 544.35,
+            "scale": 1.0,
+            "rotation": 3.262,
+            "dressing": "alps_descent_avenue"
+        },
+        {
+            "type": "statue",
+            "x": 42.0,
+            "z": 262.0,
+            "scale": 1.1,
+            "rotation": 0.0,
+            "dressing": "alps_ascent_grove"
+        },
+        {
+            "type": "firecamp",
+            "x": 46.0,
+            "z": 265.0,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "alps_ascent_grove",
+            "radius": 3.2,
+            "intensity": 1.15,
+            "persistent": true
+        },
+        {
+            "type": "pine_tree",
+            "x": 52.76,
+            "z": 261.57,
+            "scale": 0.91,
+            "rotation": 4.282,
+            "dressing": "alps_ascent_grove"
+        },
+        {
+            "type": "pine_tree",
+            "x": 50.7,
+            "z": 270.05,
+            "scale": 1.01,
+            "rotation": 0.247,
+            "dressing": "alps_ascent_grove"
+        },
+        {
+            "type": "pine_tree",
+            "x": 40.38,
+            "z": 271.85,
+            "scale": 0.94,
+            "rotation": 2.53,
+            "dressing": "alps_ascent_grove"
+        },
+        {
+            "type": "pine_tree",
+            "x": 33.42,
+            "z": 266.82,
+            "scale": 1.05,
+            "rotation": 0.288,
+            "dressing": "alps_ascent_grove"
+        },
+        {
+            "type": "pine_tree",
+            "x": 32.85,
+            "z": 257.2,
+            "scale": 1.08,
+            "rotation": 6.046,
+            "dressing": "alps_ascent_grove"
+        },
+        {
+            "type": "pine_tree",
+            "x": 40.58,
+            "z": 252.28,
+            "scale": 0.98,
+            "rotation": 2.026,
+            "dressing": "alps_ascent_grove"
+        },
+        {
+            "type": "pine_tree",
+            "x": 49.28,
+            "z": 255.0,
+            "scale": 1.0,
+            "rotation": 4.591,
+            "dressing": "alps_ascent_grove"
+        },
+        {
+            "type": "boulder",
+            "x": 43.16,
+            "z": 266.15,
+            "scale": 0.79,
+            "rotation": 5.251,
+            "dressing": "alps_ascent_grove"
+        },
+        {
+            "type": "boulder",
+            "x": 41.26,
+            "z": 264.22,
+            "scale": 0.85,
+            "rotation": 3.171,
+            "dressing": "alps_ascent_grove"
+        },
+        {
+            "type": "boulder",
+            "x": 322.22,
+            "z": 99.43,
+            "scale": 0.81,
+            "rotation": 1.654,
+            "dressing": "alps_north_bridge"
+        },
+        {
+            "type": "boulder",
+            "x": 310.46,
+            "z": 92.05,
+            "scale": 1.12,
+            "rotation": 0.752,
+            "dressing": "alps_north_bridge"
+        },
+        {
+            "type": "firecamp",
+            "x": 310.13,
+            "z": 87.12,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "alps_north_bridge",
+            "radius": 3.2,
+            "intensity": 1.15,
+            "persistent": true
+        },
+        {
+            "type": "dead_tree",
+            "x": 327.39,
+            "z": 94.42,
+            "scale": 1.0,
+            "rotation": 3.227,
+            "dressing": "alps_north_bridge"
+        },
+        {
+            "type": "supply_cart",
+            "x": 310.82,
+            "z": 82.79,
+            "scale": 1.0,
+            "rotation": -0.983,
+            "dressing": "alps_north_bridge"
+        },
+        {
+            "type": "boulder",
+            "x": 315.36,
+            "z": 110.2,
+            "scale": 1.04,
+            "rotation": 1.731,
+            "dressing": "alps_north_bridge"
+        },
+        {
+            "type": "boulder",
+            "x": 303.48,
+            "z": 102.74,
+            "scale": 1.23,
+            "rotation": 0.217,
+            "dressing": "alps_north_bridge"
+        },
+        {
+            "type": "firecamp",
+            "x": 315.18,
+            "z": 114.81,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "alps_north_bridge",
+            "radius": 3.2,
+            "intensity": 1.15,
+            "persistent": true
+        },
+        {
+            "type": "boulder",
+            "x": 622.01,
+            "z": 542.87,
+            "scale": 0.91,
+            "rotation": 5.847,
+            "dressing": "alps_descent_bridge"
+        },
+        {
+            "type": "boulder",
+            "x": 617.53,
+            "z": 557.45,
+            "scale": 0.94,
+            "rotation": 5.409,
+            "dressing": "alps_descent_bridge"
+        },
+        {
+            "type": "firecamp",
+            "x": 609.25,
+            "z": 556.29,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "alps_descent_bridge",
+            "radius": 3.2,
+            "intensity": 1.15,
+            "persistent": true
+        },
+        {
+            "type": "dead_tree",
+            "x": 616.06,
+            "z": 538.75,
+            "scale": 1.0,
+            "rotation": 3.404,
+            "dressing": "alps_descent_bridge"
+        },
+        {
+            "type": "boulder",
+            "x": 633.88,
+            "z": 547.54,
+            "scale": 0.8,
+            "rotation": 1.116,
+            "dressing": "alps_descent_bridge"
+        },
+        {
+            "type": "firecamp",
+            "x": 638.55,
+            "z": 546.42,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "alps_descent_bridge",
+            "radius": 3.2,
+            "intensity": 1.15,
+            "persistent": true
+        },
+        {
+            "type": "dead_tree",
+            "x": 635.03,
+            "z": 564.82,
+            "scale": 1.0,
+            "rotation": 2.209,
+            "dressing": "alps_descent_bridge"
+        },
+        {
+            "type": "firecamp",
+            "x": 297.89,
+            "z": 521.25,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "alps_switchback_junction",
+            "radius": 3.2,
+            "intensity": 1.15,
+            "persistent": true
+        },
+        {
+            "type": "supply_cart",
+            "x": 300.12,
+            "z": 532.13,
+            "scale": 1.0,
+            "rotation": 0.888,
+            "dressing": "alps_switchback_junction"
+        },
+        {
+            "type": "statue",
+            "x": 411.88,
+            "z": 546.57,
+            "scale": 1.0,
+            "rotation": 1.731,
+            "dressing": "alps_descent_junction"
+        },
+        {
+            "type": "firecamp",
+            "x": 407.26,
+            "z": 543.8,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "alps_descent_junction",
+            "radius": 3.2,
+            "intensity": 1.15,
+            "persistent": true
+        },
+        {
+            "type": "ruins",
+            "x": 418.28,
+            "z": 544.56,
+            "scale": 0.8,
+            "rotation": 1.254,
+            "dressing": "alps_descent_junction"
+        },
+        {
+            "type": "statue",
+            "x": 115.98,
+            "z": 137.63,
+            "scale": 1.0,
+            "rotation": -1.435,
+            "dressing": "alps_first_pass_junction"
+        },
+        {
+            "type": "pine_tree",
+            "x": 113.58,
+            "z": 144.68,
+            "scale": 1.0,
+            "rotation": 4.548,
+            "dressing": "alps_first_pass_junction"
+        },
+        {
+            "type": "boulder",
+            "x": 156.63,
+            "z": 140.81,
+            "scale": 0.98,
+            "rotation": 3.942,
+            "dressing": "alps_first_pass_ramp"
+        },
+        {
+            "type": "boulder",
+            "x": 166.11,
+            "z": 142.97,
+            "scale": 1.23,
+            "rotation": 0.925,
+            "dressing": "alps_first_pass_ramp"
+        },
+        {
+            "type": "dead_tree",
+            "x": 155.01,
+            "z": 134.2,
+            "scale": 1.0,
+            "rotation": 5.886,
+            "dressing": "alps_first_pass_ramp"
+        },
+        {
+            "type": "boulder",
+            "x": 151.37,
+            "z": 156.38,
+            "scale": 0.93,
+            "rotation": 2.812,
+            "dressing": "alps_first_pass_ramp"
+        },
+        {
+            "type": "boulder",
+            "x": 155.55,
+            "z": 161.12,
+            "scale": 1.27,
+            "rotation": 0.089,
+            "dressing": "alps_first_pass_ramp"
+        },
+        {
+            "type": "boulder",
+            "x": 403.19,
+            "z": 411.12,
+            "scale": 0.99,
+            "rotation": 2.06,
+            "dressing": "alps_saddle_ramp"
+        },
+        {
+            "type": "boulder",
+            "x": 409.16,
+            "z": 413.21,
+            "scale": 0.93,
+            "rotation": 2.594,
+            "dressing": "alps_saddle_ramp"
+        },
+        {
+            "type": "dead_tree",
+            "x": 401.56,
+            "z": 403.53,
+            "scale": 1.0,
+            "rotation": 2.969,
+            "dressing": "alps_saddle_ramp"
+        },
+        {
+            "type": "boulder",
+            "x": 394.01,
+            "z": 422.98,
+            "scale": 0.92,
+            "rotation": 0.396,
+            "dressing": "alps_saddle_ramp"
+        },
+        {
+            "type": "boulder",
+            "x": 397.54,
+            "z": 428.24,
+            "scale": 1.1,
+            "rotation": 1.221,
+            "dressing": "alps_saddle_ramp"
+        },
+        {
+            "type": "statue",
+            "x": 401.31,
+            "z": 429.89,
+            "scale": 1.0,
+            "rotation": -2.483,
+            "dressing": "alps_saddle_ramp"
+        },
+        {
+            "type": "boulder",
+            "x": 493.17,
+            "z": 565.5,
+            "scale": 1.23,
+            "rotation": 4.711,
+            "dressing": "alps_descent_ramp"
+        },
+        {
+            "type": "boulder",
+            "x": 495.31,
+            "z": 571.45,
+            "scale": 1.24,
+            "rotation": 4.41,
+            "dressing": "alps_descent_ramp"
+        },
+        {
+            "type": "dead_tree",
+            "x": 496.79,
+            "z": 558.59,
+            "scale": 1.0,
+            "rotation": 5.575,
+            "dressing": "alps_descent_ramp"
+        },
+        {
+            "type": "boulder",
+            "x": 456.18,
+            "z": 566.39,
+            "scale": 1.5,
+            "rotation": 4.839,
+            "dressing": "alps_descent_ramp"
+        },
+        {
+            "type": "boulder",
+            "x": 454.33,
+            "z": 572.44,
+            "scale": 1.21,
+            "rotation": 2.775,
+            "dressing": "alps_descent_ramp"
+        },
+        {
+            "type": "firecamp",
+            "x": 453.52,
+            "z": 580.46,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "alps_descent_ramp",
+            "radius": 3.2,
+            "intensity": 1.15,
+            "persistent": true
+        },
+        {
+            "type": "boulder",
+            "x": 192.0,
+            "z": 32.76,
+            "scale": 0.87,
+            "rotation": 2.307,
+            "dressing": "alps_river_bank"
+        },
+        {
+            "type": "dead_tree",
+            "x": 225.76,
+            "z": 39.96,
+            "scale": 1.02,
+            "rotation": 1.841,
+            "dressing": "alps_river_bank"
+        },
+        {
+            "type": "boulder",
+            "x": 249.1,
+            "z": 68.7,
+            "scale": 0.95,
+            "rotation": 0.317,
+            "dressing": "alps_river_bank"
+        },
+        {
+            "type": "plant",
+            "x": 284.8,
+            "z": 75.08,
+            "scale": 1.29,
+            "rotation": 2.338,
+            "dressing": "alps_river_bank"
+        },
+        {
+            "type": "plant",
+            "x": 288.92,
+            "z": 75.71,
+            "scale": 1.28,
+            "rotation": 0.124,
+            "dressing": "alps_river_bank"
+        },
+        {
+            "type": "boulder",
+            "x": 304.63,
+            "z": 105.71,
+            "scale": 1.09,
+            "rotation": 5.079,
+            "dressing": "alps_river_bank"
+        },
+        {
+            "type": "dead_tree",
+            "x": 343.42,
+            "z": 112.15,
+            "scale": 1.29,
+            "rotation": 5.687,
+            "dressing": "alps_river_bank"
+        },
+        {
+            "type": "boulder",
+            "x": 365.42,
+            "z": 141.43,
+            "scale": 1.26,
+            "rotation": 5.387,
+            "dressing": "alps_river_bank"
+        },
+        {
+            "type": "plant",
+            "x": 398.98,
+            "z": 149.96,
+            "scale": 1.15,
+            "rotation": 5.431,
+            "dressing": "alps_river_bank"
+        },
+        {
+            "type": "plant",
+            "x": 403.49,
+            "z": 149.25,
+            "scale": 1.39,
+            "rotation": 3.653,
+            "dressing": "alps_river_bank"
+        },
+        {
+            "type": "boulder",
+            "x": 421.82,
+            "z": 178.16,
+            "scale": 1.25,
+            "rotation": 2.09,
+            "dressing": "alps_river_bank"
+        },
+        {
+            "type": "firecamp",
+            "x": 116.12,
+            "z": 184.57,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "alps_gate_1",
+            "radius": 3.2,
+            "intensity": 1.15,
+            "persistent": true
+        },
+        {
+            "type": "firecamp",
+            "x": 105.0,
+            "z": 185.0,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "alps_gate_1",
+            "radius": 3.2,
+            "intensity": 1.15,
+            "persistent": true
+        },
+        {
+            "type": "weapon_rack",
+            "x": 102.28,
+            "z": 187.47,
+            "scale": 1.0,
+            "rotation": 1.571,
+            "dressing": "alps_gate_1"
+        },
+        {
+            "type": "supply_cart",
+            "x": 116.5,
+            "z": 191.0,
+            "scale": 1.0,
+            "rotation": 1.871,
+            "dressing": "alps_gate_1"
+        },
+        {
+            "type": "firecamp",
+            "x": 134.28,
+            "z": 158.82,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "alps_gate_2",
+            "radius": 3.2,
+            "intensity": 1.15,
+            "persistent": true
+        },
+        {
+            "type": "firecamp",
+            "x": 135.0,
+            "z": 171.0,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "alps_gate_2",
+            "radius": 3.2,
+            "intensity": 1.15,
+            "persistent": true
+        },
+        {
+            "type": "weapon_rack",
+            "x": 139.0,
+            "z": 172.0,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "alps_gate_2"
+        },
+        {
+            "type": "firecamp",
+            "x": 177.7,
+            "z": 290.59,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "alps_gate_3",
+            "radius": 3.2,
+            "intensity": 1.15,
+            "persistent": true
+        },
+        {
+            "type": "weapon_rack",
+            "x": 175.87,
+            "z": 287.88,
+            "scale": 1.0,
+            "rotation": -1.571,
+            "dressing": "alps_gate_3"
+        },
+        {
+            "type": "supply_cart",
+            "x": 163.67,
+            "z": 284.75,
+            "scale": 1.0,
+            "rotation": -1.271,
+            "dressing": "alps_gate_3"
+        },
+        {
+            "type": "firecamp",
+            "x": 571.28,
+            "z": 535.47,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "alps_gate_4",
+            "radius": 3.2,
+            "intensity": 1.15,
+            "persistent": true
+        },
+        {
+            "type": "firecamp",
+            "x": 583.0,
+            "z": 537.0,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "alps_gate_4",
+            "radius": 3.2,
+            "intensity": 1.15,
+            "persistent": true
+        },
+        {
+            "type": "weapon_rack",
+            "x": 584.0,
+            "z": 533.0,
+            "scale": 1.0,
+            "rotation": -1.571,
+            "dressing": "alps_gate_4"
+        },
+        {
+            "type": "supply_cart",
+            "x": 571.5,
+            "z": 531.0,
+            "scale": 1.0,
+            "rotation": -1.271,
+            "dressing": "alps_gate_4"
+        },
+        {
+            "type": "statue",
+            "x": 572.0,
+            "z": 526.0,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "alps_gate_4"
+        },
+        {
+            "type": "statue",
+            "x": 584.0,
+            "z": 526.0,
+            "scale": 1.0,
+            "rotation": -3.142,
+            "dressing": "alps_gate_4"
+        },
+        {
+            "type": "firecamp",
+            "x": 535.0,
+            "z": 543.0,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "alps_gate_5",
+            "radius": 3.2,
+            "intensity": 1.15,
+            "persistent": true
+        },
+        {
+            "type": "weapon_rack",
+            "x": 529.81,
+            "z": 541.82,
+            "scale": 1.0,
+            "rotation": 3.142,
+            "dressing": "alps_gate_5"
+        },
+        {
+            "type": "statue",
+            "x": 526.4,
+            "z": 539.59,
+            "scale": 1.0,
+            "rotation": 1.571,
+            "dressing": "alps_gate_5"
+        },
+        {
+            "type": "firecamp",
+            "x": 86.85,
+            "z": 87.0,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "alps_gate_6",
+            "radius": 3.2,
+            "intensity": 1.15,
+            "persistent": true
+        },
+        {
+            "type": "firecamp",
+            "x": 97.62,
+            "z": 84.75,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "alps_gate_6",
+            "radius": 3.2,
+            "intensity": 1.15,
+            "persistent": true
+        },
+        {
+            "type": "weapon_rack",
+            "x": 97.72,
+            "z": 81.88,
+            "scale": 1.0,
+            "rotation": -1.571,
+            "dressing": "alps_gate_6"
+        },
+        {
+            "type": "supply_cart",
+            "x": 85.35,
+            "z": 81.0,
+            "scale": 1.0,
+            "rotation": -1.271,
+            "dressing": "alps_gate_6"
+        },
+        {
+            "type": "firecamp",
+            "x": 95.58,
+            "z": 119.47,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "alps_gate_7",
+            "radius": 3.2,
+            "intensity": 1.15,
+            "persistent": true
+        },
+        {
+            "type": "firecamp",
+            "x": 87.13,
+            "z": 122.12,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "alps_gate_7",
+            "radius": 3.2,
+            "intensity": 1.15,
+            "persistent": true
+        },
+        {
+            "type": "weapon_rack",
+            "x": 85.7,
+            "z": 125.0,
+            "scale": 1.0,
+            "rotation": 1.571,
+            "dressing": "alps_gate_7"
+        }
+    ],
+    "dressing": [
+        {
+            "id": "alps_avalanche",
+            "kind": "scree",
+            "x": 96,
+            "z": 262,
+            "rotation": 45,
+            "width": 34,
+            "depth": 16,
+            "boulders": 18,
+            "dead_trees": 4
+        },
+        {
+            "id": "alps_summit_cairn",
+            "kind": "cairn",
+            "x": 262,
+            "z": 396,
+            "facing": "south",
+            "boulders": 8,
+            "radius": 5
+        },
+        {
+            "id": "alps_summit_scree",
+            "kind": "scree",
+            "x": 236,
+            "z": 380,
+            "rotation": 20,
+            "width": 24,
+            "depth": 10,
+            "boulders": 10,
+            "dead_trees": 1,
+            "cart": false
+        },
+        {
+            "id": "alps_frozen_dead_field",
+            "kind": "barrow_field",
+            "x": 252,
+            "z": 548,
+            "radius": 12,
+            "shrine": true,
+            "ruins": 6,
+            "dead_trees": 6,
+            "boulders": 6
+        },
+        {
+            "id": "alps_frozen_dead_bones",
+            "kind": "boneyard",
+            "x": 226,
+            "z": 566,
+            "radius": 11,
+            "statues": 0,
+            "dead_trees": 6
+        },
+        {
+            "id": "alps_descent_avenue",
+            "kind": "tree_avenue",
+            "from": [
+                500,
+                556
+            ],
+            "to": [
+                548,
+                562
+            ],
+            "tree": "pine_tree",
+            "spacing": 10
+        },
+        {
+            "id": "alps_ascent_grove",
+            "kind": "sacred_grove",
+            "x": 42,
+            "z": 262,
+            "tree": "pine_tree",
+            "count": 7,
+            "radius": 10,
+            "centre": "statue"
+        },
+        {
+            "id": "alps_north_bridge",
+            "kind": "bridgehead",
+            "x": 312,
+            "z": 101,
+            "dead_trees": true
+        },
+        {
+            "id": "alps_descent_bridge",
+            "kind": "bridgehead",
+            "x": 625,
+            "z": 551,
+            "cart": false
+        },
+        {
+            "id": "alps_switchback_junction",
+            "kind": "junction",
+            "x": 300,
+            "z": 520,
+            "style": "camp"
+        },
+        {
+            "id": "alps_descent_junction",
+            "kind": "junction",
+            "x": 400,
+            "z": 560,
+            "style": "shrine"
+        },
+        {
+            "id": "alps_first_pass_junction",
+            "kind": "junction",
+            "x": 116,
+            "z": 130,
+            "style": "milestone",
+            "tree": "pine_tree"
+        },
+        {
+            "id": "alps_first_pass_ramp",
+            "kind": "ramp_mouth",
+            "x": 147,
+            "z": 144,
+            "dead_tree": true
+        },
+        {
+            "id": "alps_saddle_ramp",
+            "kind": "ramp_mouth",
+            "x": 388,
+            "z": 410,
+            "statue": true
+        },
+        {
+            "id": "alps_descent_ramp",
+            "kind": "ramp_mouth",
+            "x": 472,
+            "z": 538,
+            "fire": true
+        },
+        {
+            "id": "alps_river_bank",
+            "kind": "riverbank",
+            "from": [
+                180,
+                20
+            ],
+            "to": [
+                450,
+                190
+            ],
+            "spacing": 34,
+            "kinds": [
+                "boulder",
+                "dead_tree",
+                "boulder",
+                "plant"
+            ]
+        },
+        {
+            "id": "alps_gate_1",
+            "kind": "gate_approach",
+            "x": 110.0,
+            "z": 176.0
+        },
+        {
+            "id": "alps_gate_2",
+            "kind": "gate_approach",
+            "x": 126.0,
+            "z": 166.0
+        },
+        {
+            "id": "alps_gate_3",
+            "kind": "gate_approach",
+            "x": 170.0,
+            "z": 302.0
+        },
+        {
+            "id": "alps_gate_4",
+            "kind": "gate_approach",
+            "x": 578.0,
+            "z": 546.0,
+            "statues": true
+        },
+        {
+            "id": "alps_gate_5",
+            "kind": "gate_approach",
+            "x": 544.0,
+            "z": 548.0,
+            "statues": true
+        },
+        {
+            "id": "alps_gate_6",
+            "kind": "gate_approach",
+            "x": 92,
+            "z": 96,
+            "tents": 2
+        },
+        {
+            "id": "alps_gate_7",
+            "kind": "gate_approach",
+            "x": 92,
+            "z": 112,
+            "tents": 2
         }
     ]
 }

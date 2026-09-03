@@ -3707,32 +3707,6 @@
     ],
     "undead_zones": [
         {
-            "anchor_type": "magic_shrine",
-            "awaken_on": [
-                "unit_enters_radius"
-            ],
-            "clear_reward": {
-                "iron": 100,
-                "stone": 140
-            },
-            "id": "pass_shrine",
-            "leash_radius": 29.42,
-            "owner_id": 99,
-            "radius": 16.81,
-            "team_id": 99,
-            "waves": [
-                {
-                    "trigger": "initial",
-                    "units": {
-                        "grave_priest": 1,
-                        "skeleton_swordsman": 2
-                    }
-                }
-            ],
-            "x": 432,
-            "z": 33
-        },
-        {
             "anchor_type": "ruins",
             "awaken_on": [
                 "unit_enters_radius"
@@ -3741,7 +3715,7 @@
                 "gold": 130,
                 "wood": 90
             },
-            "id": "ford_shades",
+            "id": "ticino_marsh_dead",
             "leash_radius": 38.22,
             "owner_id": 99,
             "radius": 21.84,
@@ -3756,7 +3730,8 @@
                 }
             ],
             "x": 168,
-            "z": 473
+            "z": 473,
+            "fog_density": 0.3
         },
         {
             "anchor_type": "magic_shrine",
@@ -3767,7 +3742,7 @@
                 "gold": 110,
                 "iron": 70
             },
-            "id": "bridge_watch",
+            "id": "ticino_bridge_shades",
             "leash_radius": 35.49,
             "owner_id": 99,
             "radius": 19.11,
@@ -3781,7 +3756,8 @@
                 }
             ],
             "x": 395,
-            "z": 505
+            "z": 505,
+            "fog_density": 0.25
         }
     ],
     "victory": {
@@ -3901,48 +3877,6 @@
             "z": 302.18
         },
         {
-            "rotation": 0.6,
-            "scale": 1.2,
-            "type": "dead_tree",
-            "x": 49.92,
-            "z": 106.45
-        },
-        {
-            "rotation": 2.3000000000000003,
-            "scale": 1,
-            "type": "dead_tree",
-            "x": 73,
-            "z": 99
-        },
-        {
-            "rotation": 4.1,
-            "scale": 1.1,
-            "type": "dead_tree",
-            "x": 41.24,
-            "z": 130.49
-        },
-        {
-            "rotation": 1.4000000000000001,
-            "scale": 0.9,
-            "type": "supply_cart",
-            "x": 156.28,
-            "z": 109.88
-        },
-        {
-            "rotation": 2.1,
-            "scale": 1,
-            "type": "dead_tree",
-            "x": 183.5,
-            "z": 110.81
-        },
-        {
-            "rotation": 4.5,
-            "scale": 0.9,
-            "type": "dead_tree",
-            "x": 204.03,
-            "z": 127.05
-        },
-        {
             "rotation": 0.2,
             "scale": 0.75,
             "type": "supply_cart",
@@ -3950,25 +3884,11 @@
             "z": 98.24000000000001
         },
         {
-            "rotation": 2.7,
-            "scale": 1,
-            "type": "dead_tree",
-            "x": 377.88,
-            "z": 103.96
-        },
-        {
             "rotation": 5.2,
             "scale": 0.8,
             "type": "dead_tree",
             "x": 394.06,
             "z": 118.82
-        },
-        {
-            "rotation": 1.2,
-            "scale": 1.1,
-            "type": "ruins",
-            "x": 234.53,
-            "z": 231.83
         },
         {
             "rotation": 3,
@@ -4006,13 +3926,6 @@
             "z": 302.18
         },
         {
-            "rotation": 3.6,
-            "scale": 0.9,
-            "type": "dead_tree",
-            "x": 197.52,
-            "z": 322.78000000000003
-        },
-        {
             "rotation": 4.1,
             "scale": 0.9,
             "type": "weapon_rack",
@@ -4032,20 +3945,6 @@
             "type": "supply_cart",
             "x": 382.37,
             "z": 240.69
-        },
-        {
-            "rotation": 1.6,
-            "scale": 0.9,
-            "type": "supply_cart",
-            "x": 185.01,
-            "z": 350.81
-        },
-        {
-            "rotation": 0.8,
-            "scale": 0.9,
-            "type": "supply_cart",
-            "x": 238.19,
-            "z": 358.13
         },
         {
             "rotation": 2.5,
@@ -4090,13 +3989,6 @@
             "z": 141.59
         },
         {
-            "rotation": 1,
-            "scale": 0.9,
-            "type": "supply_cart",
-            "x": 468.84000000000003,
-            "z": 147.66
-        },
-        {
             "rotation": 3.9,
             "scale": 0.8,
             "type": "weapon_rack",
@@ -4109,13 +4001,6 @@
             "type": "tent",
             "x": 452,
             "z": 191
-        },
-        {
-            "rotation": 2.6,
-            "scale": 1,
-            "type": "tent",
-            "x": 470,
-            "z": 243
         },
         {
             "rotation": 4,
@@ -4209,34 +4094,11 @@
             "z": 365
         },
         {
-            "rotation": 4,
-            "scale": 0.9,
-            "type": "tent",
-            "x": 581.71,
-            "z": 360.56
-        },
-        {
-            "rotation": 2.3000000000000003,
-            "scale": 1,
-            "type": "supply_cart",
-            "x": 564.35,
-            "z": 398.33
-        },
-        {
             "rotation": 5.1000000000000005,
             "scale": 0.9,
             "type": "weapon_rack",
             "x": 540.47,
             "z": 381.16
-        },
-        {
-            "intensity": 1,
-            "persistent": true,
-            "radius": 3,
-            "scale": 0.9,
-            "type": "firecamp",
-            "x": 564.35,
-            "z": 374.29
         },
         {
             "intensity": 1.1500000000000001,
@@ -4413,13 +4275,6 @@
             "z": 260.88
         },
         {
-            "rotation": 304.5,
-            "scale": 1.11,
-            "type": "tent",
-            "x": 584.25,
-            "z": 109.33
-        },
-        {
             "intensity": 1.32,
             "persistent": true,
             "radius": 2.8000000000000003,
@@ -4526,13 +4381,6 @@
             "z": 247.69
         },
         {
-            "rotation": 145.4,
-            "scale": 1.09,
-            "type": "tent",
-            "x": 597.96,
-            "z": 115.9
-        },
-        {
             "rotation": 149.3,
             "scale": 1,
             "type": "supply_cart",
@@ -4547,13 +4395,6 @@
             "type": "firecamp",
             "x": 422.09000000000003,
             "z": 381.39
-        },
-        {
-            "rotation": 156.8,
-            "scale": 0.98,
-            "type": "tent",
-            "x": 558.4300000000001,
-            "z": 106.95
         },
         {
             "rotation": 144.3,
@@ -4607,15 +4448,6 @@
             "type": "supply_cart",
             "x": 98.31,
             "z": 309.84000000000003
-        },
-        {
-            "intensity": 0.87,
-            "persistent": true,
-            "radius": 3,
-            "scale": 1,
-            "type": "firecamp",
-            "x": 337.34000000000003,
-            "z": 329.35
         },
         {
             "rotation": 21.8,
@@ -4703,13 +4535,6 @@
             "z": 457.05
         },
         {
-            "rotation": 355,
-            "scale": 0.87,
-            "type": "dead_tree",
-            "x": 588.28,
-            "z": 484.06
-        },
-        {
             "rotation": 304.5,
             "scale": 0.97,
             "type": "ruins",
@@ -4717,39 +4542,11 @@
             "z": 469.3
         },
         {
-            "rotation": 327.90000000000003,
-            "scale": 0.93,
-            "type": "dead_tree",
-            "x": 31.310000000000002,
-            "z": 538.05
-        },
-        {
             "rotation": 358.40000000000003,
             "scale": 1.1,
             "type": "ruins",
             "x": 451.25,
             "z": 476.5
-        },
-        {
-            "rotation": 26,
-            "scale": 1.11,
-            "type": "dead_tree",
-            "x": 358.09000000000003,
-            "z": 511.36
-        },
-        {
-            "rotation": 198.5,
-            "scale": 1.07,
-            "type": "dead_tree",
-            "x": 52.370000000000005,
-            "z": 519.5
-        },
-        {
-            "rotation": 342.6,
-            "scale": 1.06,
-            "type": "dead_tree",
-            "x": 224.91,
-            "z": 314.84000000000003
         },
         {
             "rotation": 16,
@@ -4857,13 +4654,6 @@
             "z": 304.22
         },
         {
-            "rotation": 319.6,
-            "scale": 1.12,
-            "type": "abandoned_home",
-            "x": 216.99,
-            "z": 404.88
-        },
-        {
             "rotation": 213.20000000000002,
             "scale": 1.08,
             "type": "abandoned_home",
@@ -4899,13 +4689,6 @@
             "z": 272.07
         },
         {
-            "rotation": 61.9,
-            "scale": 1.11,
-            "type": "abandoned_home",
-            "x": 545.49,
-            "z": 282.99
-        },
-        {
             "rotation": 188.1,
             "scale": 1,
             "type": "abandoned_home",
@@ -4932,20 +4715,6 @@
             "type": "abandoned_home",
             "x": 521.21,
             "z": 380.08
-        },
-        {
-            "rotation": 215.6,
-            "scale": 0.97,
-            "type": "abandoned_home",
-            "x": 278.40000000000003,
-            "z": 238.45000000000002
-        },
-        {
-            "rotation": 311,
-            "scale": 1.1,
-            "type": "abandoned_home",
-            "x": 56.85,
-            "z": 187.64000000000001
         },
         {
             "rotation": 318.5,
@@ -5535,6 +5304,1687 @@
             "type": "cursed_gold_vein",
             "x": 582,
             "z": 292
+        },
+        {
+            "type": "boulder",
+            "x": 486.71,
+            "z": 338.06,
+            "scale": 1.25,
+            "rotation": 3.187,
+            "dressing": "ticino_ford"
+        },
+        {
+            "type": "boulder",
+            "x": 485.47,
+            "z": 345.33,
+            "scale": 0.86,
+            "rotation": 1.525,
+            "dressing": "ticino_ford"
+        },
+        {
+            "type": "boulder",
+            "x": 471.08,
+            "z": 320.73,
+            "scale": 0.93,
+            "rotation": 5.748,
+            "dressing": "ticino_ford"
+        },
+        {
+            "type": "boulder",
+            "x": 470.96,
+            "z": 325.67,
+            "scale": 0.91,
+            "rotation": 3.465,
+            "dressing": "ticino_ford"
+        },
+        {
+            "type": "boulder",
+            "x": 467.95,
+            "z": 329.39,
+            "scale": 1.07,
+            "rotation": 3.264,
+            "dressing": "ticino_ford"
+        },
+        {
+            "type": "plant",
+            "x": 469.21,
+            "z": 327.29,
+            "scale": 1.04,
+            "rotation": 1.961,
+            "dressing": "ticino_ford"
+        },
+        {
+            "type": "dead_tree",
+            "x": 467.74,
+            "z": 323.13,
+            "scale": 1.0,
+            "rotation": 3.603,
+            "dressing": "ticino_ford"
+        },
+        {
+            "type": "ruins",
+            "x": 485.02,
+            "z": 353.52,
+            "scale": 0.8,
+            "rotation": 4.886,
+            "dressing": "ticino_ford"
+        },
+        {
+            "type": "plant",
+            "x": 522.57,
+            "z": 226.51,
+            "scale": 1.01,
+            "rotation": 2.969,
+            "dressing": "ticino_ford_bank"
+        },
+        {
+            "type": "boulder",
+            "x": 554.08,
+            "z": 236.98,
+            "scale": 1.02,
+            "rotation": 1.527,
+            "dressing": "ticino_ford_bank"
+        },
+        {
+            "type": "plant",
+            "x": 544.15,
+            "z": 265.59,
+            "scale": 1.14,
+            "rotation": 0.868,
+            "dressing": "ticino_ford_bank"
+        },
+        {
+            "type": "plant",
+            "x": 542.82,
+            "z": 270.38,
+            "scale": 1.01,
+            "rotation": 5.748,
+            "dressing": "ticino_ford_bank"
+        },
+        {
+            "type": "dead_tree",
+            "x": 576.18,
+            "z": 277.87,
+            "scale": 1.03,
+            "rotation": 1.713,
+            "dressing": "ticino_ford_bank"
+        },
+        {
+            "type": "plant",
+            "x": 560.69,
+            "z": 305.11,
+            "scale": 0.81,
+            "rotation": 5.463,
+            "dressing": "ticino_ford_bank"
+        },
+        {
+            "type": "plant",
+            "x": 558.59,
+            "z": 309.45,
+            "scale": 1.02,
+            "rotation": 5.52,
+            "dressing": "ticino_ford_bank"
+        },
+        {
+            "type": "boulder",
+            "x": 578.49,
+            "z": 335.04,
+            "scale": 1.27,
+            "rotation": 6.082,
+            "dressing": "ticino_ford_bank"
+        },
+        {
+            "type": "plant",
+            "x": 542.96,
+            "z": 333.84,
+            "scale": 0.85,
+            "rotation": 5.74,
+            "dressing": "ticino_ford_bank"
+        },
+        {
+            "type": "plant",
+            "x": 540.86,
+            "z": 336.07,
+            "scale": 1.19,
+            "rotation": 5.055,
+            "dressing": "ticino_ford_bank"
+        },
+        {
+            "type": "dead_tree",
+            "x": 544.24,
+            "z": 363.31,
+            "scale": 0.86,
+            "rotation": 1.035,
+            "dressing": "ticino_ford_bank"
+        },
+        {
+            "type": "plant",
+            "x": 513.04,
+            "z": 354.47,
+            "scale": 1.12,
+            "rotation": 0.088,
+            "dressing": "ticino_ford_bank"
+        },
+        {
+            "type": "plant",
+            "x": 510.73,
+            "z": 354.41,
+            "scale": 1.28,
+            "rotation": 3.741,
+            "dressing": "ticino_ford_bank"
+        },
+        {
+            "type": "boulder",
+            "x": 515.75,
+            "z": 387.89,
+            "scale": 0.97,
+            "rotation": 3.939,
+            "dressing": "ticino_ford_bank"
+        },
+        {
+            "type": "plant",
+            "x": 485.77,
+            "z": 376.15,
+            "scale": 0.86,
+            "rotation": 5.76,
+            "dressing": "ticino_ford_bank"
+        },
+        {
+            "type": "plant",
+            "x": 483.36,
+            "z": 375.97,
+            "scale": 0.98,
+            "rotation": 4.081,
+            "dressing": "ticino_ford_bank"
+        },
+        {
+            "type": "firecamp",
+            "x": 358.81,
+            "z": 223.82,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "ticino_insubres_fort",
+            "radius": 3.2,
+            "intensity": 1.15,
+            "persistent": true
+        },
+        {
+            "type": "dead_tree",
+            "x": 363.87,
+            "z": 232.52,
+            "scale": 1.0,
+            "rotation": 2.953,
+            "dressing": "ticino_insubres_fort"
+        },
+        {
+            "type": "dead_tree",
+            "x": 356.78,
+            "z": 230.08,
+            "scale": 1.0,
+            "rotation": 2.596,
+            "dressing": "ticino_insubres_fort"
+        },
+        {
+            "type": "boulder",
+            "x": 320.27,
+            "z": 237.13,
+            "scale": 1.36,
+            "rotation": 3.14,
+            "dressing": "ticino_insubres_ramp_w"
+        },
+        {
+            "type": "boulder",
+            "x": 314.27,
+            "z": 239.13,
+            "scale": 1.25,
+            "rotation": 5.086,
+            "dressing": "ticino_insubres_ramp_w"
+        },
+        {
+            "type": "dead_tree",
+            "x": 328.27,
+            "z": 241.13,
+            "scale": 1.0,
+            "rotation": 1.816,
+            "dressing": "ticino_insubres_ramp_w"
+        },
+        {
+            "type": "boulder",
+            "x": 320.27,
+            "z": 216.13,
+            "scale": 1.5,
+            "rotation": 6.22,
+            "dressing": "ticino_insubres_ramp_w"
+        },
+        {
+            "type": "boulder",
+            "x": 314.27,
+            "z": 214.13,
+            "scale": 1.3,
+            "rotation": 3.267,
+            "dressing": "ticino_insubres_ramp_w"
+        },
+        {
+            "type": "statue",
+            "x": 310.27,
+            "z": 215.13,
+            "scale": 1.0,
+            "rotation": -0.0,
+            "dressing": "ticino_insubres_ramp_w"
+        },
+        {
+            "type": "boulder",
+            "x": 398.87,
+            "z": 210.96,
+            "scale": 1.37,
+            "rotation": 2.97,
+            "dressing": "ticino_insubres_ramp_e"
+        },
+        {
+            "type": "boulder",
+            "x": 404.56,
+            "z": 208.2,
+            "scale": 1.3,
+            "rotation": 0.221,
+            "dressing": "ticino_insubres_ramp_e"
+        },
+        {
+            "type": "dead_tree",
+            "x": 390.42,
+            "z": 208.04,
+            "scale": 1.0,
+            "rotation": 4.01,
+            "dressing": "ticino_insubres_ramp_e"
+        },
+        {
+            "type": "boulder",
+            "x": 401.61,
+            "z": 231.78,
+            "scale": 1.29,
+            "rotation": 4.465,
+            "dressing": "ticino_insubres_ramp_e"
+        },
+        {
+            "type": "boulder",
+            "x": 407.82,
+            "z": 232.98,
+            "scale": 1.31,
+            "rotation": 0.173,
+            "dressing": "ticino_insubres_ramp_e"
+        },
+        {
+            "type": "ruins",
+            "x": 179.68,
+            "z": 470.11,
+            "scale": 0.82,
+            "rotation": 5.896,
+            "dressing": "ticino_marsh_barrows"
+        },
+        {
+            "type": "ruins",
+            "x": 174.07,
+            "z": 483.41,
+            "scale": 1.14,
+            "rotation": 4.215,
+            "dressing": "ticino_marsh_barrows"
+        },
+        {
+            "type": "ruins",
+            "x": 164.22,
+            "z": 482.4,
+            "scale": 1.15,
+            "rotation": 0.893,
+            "dressing": "ticino_marsh_barrows"
+        },
+        {
+            "type": "ruins",
+            "x": 156.59,
+            "z": 475.7,
+            "scale": 0.84,
+            "rotation": 1.115,
+            "dressing": "ticino_marsh_barrows"
+        },
+        {
+            "type": "ruins",
+            "x": 154.53,
+            "z": 469.09,
+            "scale": 0.84,
+            "rotation": 3.9,
+            "dressing": "ticino_marsh_barrows"
+        },
+        {
+            "type": "ruins",
+            "x": 166.16,
+            "z": 461.41,
+            "scale": 0.96,
+            "rotation": 5.417,
+            "dressing": "ticino_marsh_barrows"
+        },
+        {
+            "type": "ruins",
+            "x": 174.29,
+            "z": 465.62,
+            "scale": 0.98,
+            "rotation": 0.956,
+            "dressing": "ticino_marsh_barrows"
+        },
+        {
+            "type": "dead_tree",
+            "x": 177.26,
+            "z": 489.27,
+            "scale": 0.98,
+            "rotation": 1.417,
+            "dressing": "ticino_marsh_barrows"
+        },
+        {
+            "type": "dead_tree",
+            "x": 155.04,
+            "z": 484.36,
+            "scale": 1.01,
+            "rotation": 2.532,
+            "dressing": "ticino_marsh_barrows"
+        },
+        {
+            "type": "dead_tree",
+            "x": 157.47,
+            "z": 460.6,
+            "scale": 0.9,
+            "rotation": 4.652,
+            "dressing": "ticino_marsh_barrows"
+        },
+        {
+            "type": "dead_tree",
+            "x": 177.12,
+            "z": 456.74,
+            "scale": 0.99,
+            "rotation": 3.062,
+            "dressing": "ticino_marsh_barrows"
+        },
+        {
+            "type": "dead_tree",
+            "x": 181.3,
+            "z": 485.87,
+            "scale": 1.03,
+            "rotation": 4.267,
+            "dressing": "ticino_marsh_barrows"
+        },
+        {
+            "type": "dead_tree",
+            "x": 161.53,
+            "z": 488.81,
+            "scale": 1.13,
+            "rotation": 2.851,
+            "dressing": "ticino_marsh_barrows"
+        },
+        {
+            "type": "statue",
+            "x": 175.81,
+            "z": 472.52,
+            "scale": 0.9,
+            "rotation": 5.422,
+            "dressing": "ticino_marsh_barrows"
+        },
+        {
+            "type": "statue",
+            "x": 159.24,
+            "z": 469.08,
+            "scale": 0.9,
+            "rotation": 1.775,
+            "dressing": "ticino_marsh_barrows"
+        },
+        {
+            "type": "boulder",
+            "x": 161.43,
+            "z": 462.22,
+            "scale": 0.9,
+            "rotation": 0.596,
+            "dressing": "ticino_marsh_barrows"
+        },
+        {
+            "type": "boulder",
+            "x": 168.27,
+            "z": 487.84,
+            "scale": 1.28,
+            "rotation": 0.169,
+            "dressing": "ticino_marsh_barrows"
+        },
+        {
+            "type": "boulder",
+            "x": 182.64,
+            "z": 473.49,
+            "scale": 1.0,
+            "rotation": 4.789,
+            "dressing": "ticino_marsh_barrows"
+        },
+        {
+            "type": "magic_shrine",
+            "x": 168.0,
+            "z": 473.0,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "ticino_marsh_barrows"
+        },
+        {
+            "type": "dead_tree",
+            "x": 142.35,
+            "z": 504.46,
+            "scale": 0.91,
+            "rotation": 5.633,
+            "dressing": "ticino_marsh_bones"
+        },
+        {
+            "type": "dead_tree",
+            "x": 145.31,
+            "z": 495.8,
+            "scale": 1.09,
+            "rotation": 1.984,
+            "dressing": "ticino_marsh_bones"
+        },
+        {
+            "type": "dead_tree",
+            "x": 147.32,
+            "z": 507.88,
+            "scale": 0.87,
+            "rotation": 0.747,
+            "dressing": "ticino_marsh_bones"
+        },
+        {
+            "type": "dead_tree",
+            "x": 145.51,
+            "z": 490.5,
+            "scale": 0.85,
+            "rotation": 3.908,
+            "dressing": "ticino_marsh_bones"
+        },
+        {
+            "type": "dead_tree",
+            "x": 132.37,
+            "z": 493.08,
+            "scale": 0.9,
+            "rotation": 2.926,
+            "dressing": "ticino_marsh_bones"
+        },
+        {
+            "type": "dead_tree",
+            "x": 148.58,
+            "z": 499.53,
+            "scale": 0.94,
+            "rotation": 4.652,
+            "dressing": "ticino_marsh_bones"
+        },
+        {
+            "type": "dead_tree",
+            "x": 134.79,
+            "z": 497.33,
+            "scale": 1.02,
+            "rotation": 3.947,
+            "dressing": "ticino_marsh_bones"
+        },
+        {
+            "type": "dead_tree",
+            "x": 130.04,
+            "z": 500.41,
+            "scale": 0.92,
+            "rotation": 3.248,
+            "dressing": "ticino_marsh_bones"
+        },
+        {
+            "type": "ruins",
+            "x": 137.83,
+            "z": 491.31,
+            "scale": 0.82,
+            "rotation": 2.677,
+            "dressing": "ticino_marsh_bones"
+        },
+        {
+            "type": "boulder",
+            "x": 128.84,
+            "z": 492.08,
+            "scale": 0.84,
+            "rotation": 5.818,
+            "dressing": "ticino_marsh_bones"
+        },
+        {
+            "type": "boulder",
+            "x": 149.78,
+            "z": 510.5,
+            "scale": 1.03,
+            "rotation": 1.878,
+            "dressing": "ticino_marsh_bones"
+        },
+        {
+            "type": "boulder",
+            "x": 127.73,
+            "z": 494.57,
+            "scale": 1.09,
+            "rotation": 1.353,
+            "dressing": "ticino_marsh_bones"
+        },
+        {
+            "type": "boulder",
+            "x": 132.72,
+            "z": 502.59,
+            "scale": 0.84,
+            "rotation": 4.189,
+            "dressing": "ticino_marsh_bones"
+        },
+        {
+            "type": "boulder",
+            "x": 145.17,
+            "z": 510.84,
+            "scale": 0.74,
+            "rotation": 6.15,
+            "dressing": "ticino_marsh_bones"
+        },
+        {
+            "type": "ruins",
+            "x": 402.84,
+            "z": 506.78,
+            "scale": 1.12,
+            "rotation": 4.239,
+            "dressing": "ticino_bridge_barrows"
+        },
+        {
+            "type": "ruins",
+            "x": 398.54,
+            "z": 513.47,
+            "scale": 1.03,
+            "rotation": 3.718,
+            "dressing": "ticino_bridge_barrows"
+        },
+        {
+            "type": "ruins",
+            "x": 387.62,
+            "z": 508.3,
+            "scale": 1.17,
+            "rotation": 1.714,
+            "dressing": "ticino_bridge_barrows"
+        },
+        {
+            "type": "ruins",
+            "x": 388.17,
+            "z": 498.56,
+            "scale": 0.86,
+            "rotation": 4.882,
+            "dressing": "ticino_bridge_barrows"
+        },
+        {
+            "type": "ruins",
+            "x": 396.9,
+            "z": 494.97,
+            "scale": 1.2,
+            "rotation": 5.455,
+            "dressing": "ticino_bridge_barrows"
+        },
+        {
+            "type": "dead_tree",
+            "x": 404.51,
+            "z": 517.46,
+            "scale": 1.13,
+            "rotation": 5.526,
+            "dressing": "ticino_bridge_barrows"
+        },
+        {
+            "type": "dead_tree",
+            "x": 382.02,
+            "z": 512.27,
+            "scale": 0.91,
+            "rotation": 1.04,
+            "dressing": "ticino_bridge_barrows"
+        },
+        {
+            "type": "dead_tree",
+            "x": 387.59,
+            "z": 491.15,
+            "scale": 0.94,
+            "rotation": 4.226,
+            "dressing": "ticino_bridge_barrows"
+        },
+        {
+            "type": "dead_tree",
+            "x": 409.26,
+            "z": 498.35,
+            "scale": 1.13,
+            "rotation": 2.913,
+            "dressing": "ticino_bridge_barrows"
+        },
+        {
+            "type": "statue",
+            "x": 401.54,
+            "z": 501.39,
+            "scale": 0.9,
+            "rotation": 1.403,
+            "dressing": "ticino_bridge_barrows"
+        },
+        {
+            "type": "boulder",
+            "x": 391.02,
+            "z": 493.26,
+            "scale": 0.99,
+            "rotation": 2.625,
+            "dressing": "ticino_bridge_barrows"
+        },
+        {
+            "type": "boulder",
+            "x": 408.27,
+            "z": 505.14,
+            "scale": 1.22,
+            "rotation": 3.512,
+            "dressing": "ticino_bridge_barrows"
+        },
+        {
+            "type": "magic_shrine",
+            "x": 395.0,
+            "z": 505.0,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "ticino_bridge_barrows"
+        },
+        {
+            "type": "olive_tree",
+            "x": 305.53,
+            "z": 282.74,
+            "scale": 1.04,
+            "rotation": 1.621,
+            "dressing": "ticino_via_avenue"
+        },
+        {
+            "type": "olive_tree",
+            "x": 304.51,
+            "z": 296.15,
+            "scale": 0.97,
+            "rotation": 5.458,
+            "dressing": "ticino_via_avenue"
+        },
+        {
+            "type": "olive_tree",
+            "x": 316.47,
+            "z": 283.79,
+            "scale": 0.99,
+            "rotation": 4.262,
+            "dressing": "ticino_via_avenue"
+        },
+        {
+            "type": "olive_tree",
+            "x": 315.07,
+            "z": 297.33,
+            "scale": 1.01,
+            "rotation": 5.067,
+            "dressing": "ticino_via_avenue"
+        },
+        {
+            "type": "olive_tree",
+            "x": 327.91,
+            "z": 284.99,
+            "scale": 1.07,
+            "rotation": 3.255,
+            "dressing": "ticino_via_avenue"
+        },
+        {
+            "type": "olive_tree",
+            "x": 326.62,
+            "z": 298.65,
+            "scale": 1.03,
+            "rotation": 4.735,
+            "dressing": "ticino_via_avenue"
+        },
+        {
+            "type": "olive_tree",
+            "x": 339.16,
+            "z": 285.49,
+            "scale": 1.05,
+            "rotation": 0.486,
+            "dressing": "ticino_via_avenue"
+        },
+        {
+            "type": "olive_tree",
+            "x": 337.34,
+            "z": 298.6,
+            "scale": 0.93,
+            "rotation": 5.588,
+            "dressing": "ticino_via_avenue"
+        },
+        {
+            "type": "olive_tree",
+            "x": 349.13,
+            "z": 286.78,
+            "scale": 1.09,
+            "rotation": 2.682,
+            "dressing": "ticino_via_avenue"
+        },
+        {
+            "type": "olive_tree",
+            "x": 348.02,
+            "z": 299.35,
+            "scale": 0.97,
+            "rotation": 4.583,
+            "dressing": "ticino_via_avenue"
+        },
+        {
+            "type": "olive_tree",
+            "x": 371.76,
+            "z": 289.08,
+            "scale": 1.07,
+            "rotation": 5.096,
+            "dressing": "ticino_via_avenue"
+        },
+        {
+            "type": "olive_tree",
+            "x": 370.87,
+            "z": 301.31,
+            "scale": 1.01,
+            "rotation": 5.22,
+            "dressing": "ticino_via_avenue"
+        },
+        {
+            "type": "olive_tree",
+            "x": 382.78,
+            "z": 289.94,
+            "scale": 0.91,
+            "rotation": 4.546,
+            "dressing": "ticino_via_avenue"
+        },
+        {
+            "type": "olive_tree",
+            "x": 380.99,
+            "z": 302.17,
+            "scale": 1.09,
+            "rotation": 1.956,
+            "dressing": "ticino_via_avenue"
+        },
+        {
+            "type": "olive_tree",
+            "x": 393.99,
+            "z": 289.81,
+            "scale": 0.94,
+            "rotation": 6.1,
+            "dressing": "ticino_via_avenue"
+        },
+        {
+            "type": "olive_tree",
+            "x": 392.89,
+            "z": 304.09,
+            "scale": 0.98,
+            "rotation": 5.262,
+            "dressing": "ticino_via_avenue"
+        },
+        {
+            "type": "boulder",
+            "x": 520.59,
+            "z": 222.09,
+            "scale": 1.08,
+            "rotation": 4.168,
+            "dressing": "ticino_north_bridge"
+        },
+        {
+            "type": "boulder",
+            "x": 530.15,
+            "z": 234.43,
+            "scale": 1.23,
+            "rotation": 5.261,
+            "dressing": "ticino_north_bridge"
+        },
+        {
+            "type": "firecamp",
+            "x": 528.01,
+            "z": 237.56,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "ticino_north_bridge",
+            "radius": 3.2,
+            "intensity": 1.15,
+            "persistent": true
+        },
+        {
+            "type": "dead_tree",
+            "x": 513.94,
+            "z": 225.01,
+            "scale": 1.0,
+            "rotation": 0.226,
+            "dressing": "ticino_north_bridge"
+        },
+        {
+            "type": "supply_cart",
+            "x": 524.77,
+            "z": 241.49,
+            "scale": 1.0,
+            "rotation": 2.515,
+            "dressing": "ticino_north_bridge"
+        },
+        {
+            "type": "boulder",
+            "x": 537.57,
+            "z": 208.11,
+            "scale": 1.0,
+            "rotation": 0.509,
+            "dressing": "ticino_north_bridge"
+        },
+        {
+            "type": "boulder",
+            "x": 546.82,
+            "z": 219.48,
+            "scale": 0.85,
+            "rotation": 3.934,
+            "dressing": "ticino_north_bridge"
+        },
+        {
+            "type": "firecamp",
+            "x": 539.23,
+            "z": 203.81,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "ticino_north_bridge",
+            "radius": 3.2,
+            "intensity": 1.15,
+            "persistent": true
+        },
+        {
+            "type": "dead_tree",
+            "x": 552.11,
+            "z": 216.18,
+            "scale": 1.0,
+            "rotation": 3.32,
+            "dressing": "ticino_north_bridge"
+        },
+        {
+            "type": "boulder",
+            "x": 415.95,
+            "z": 77.84,
+            "scale": 1.14,
+            "rotation": 5.333,
+            "dressing": "ticino_road_bridge"
+        },
+        {
+            "type": "boulder",
+            "x": 402.06,
+            "z": 78.02,
+            "scale": 1.14,
+            "rotation": 0.356,
+            "dressing": "ticino_road_bridge"
+        },
+        {
+            "type": "firecamp",
+            "x": 399.37,
+            "z": 74.05,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "ticino_road_bridge",
+            "radius": 3.2,
+            "intensity": 1.15,
+            "persistent": true
+        },
+        {
+            "type": "dead_tree",
+            "x": 417.83,
+            "z": 70.82,
+            "scale": 1.0,
+            "rotation": 1.943,
+            "dressing": "ticino_road_bridge"
+        },
+        {
+            "type": "supply_cart",
+            "x": 398.31,
+            "z": 69.06,
+            "scale": 1.0,
+            "rotation": -1.652,
+            "dressing": "ticino_road_bridge"
+        },
+        {
+            "type": "boulder",
+            "x": 402.22,
+            "z": 90.78,
+            "scale": 0.87,
+            "rotation": 2.384,
+            "dressing": "ticino_road_bridge"
+        },
+        {
+            "type": "firecamp",
+            "x": 417.76,
+            "z": 97.86,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "ticino_road_bridge",
+            "radius": 3.2,
+            "intensity": 1.15,
+            "persistent": true
+        },
+        {
+            "type": "dead_tree",
+            "x": 398.45,
+            "z": 96.27,
+            "scale": 1.0,
+            "rotation": 1.337,
+            "dressing": "ticino_road_bridge"
+        },
+        {
+            "type": "firecamp",
+            "x": 345.53,
+            "z": 414.82,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "ticino_south_bridge",
+            "radius": 3.2,
+            "intensity": 1.15,
+            "persistent": true
+        },
+        {
+            "type": "dead_tree",
+            "x": 362.59,
+            "z": 416.02,
+            "scale": 1.0,
+            "rotation": 1.735,
+            "dressing": "ticino_south_bridge"
+        },
+        {
+            "type": "boulder",
+            "x": 360.04,
+            "z": 434.39,
+            "scale": 1.24,
+            "rotation": 0.285,
+            "dressing": "ticino_south_bridge"
+        },
+        {
+            "type": "boulder",
+            "x": 345.93,
+            "z": 432.77,
+            "scale": 1.29,
+            "rotation": 2.311,
+            "dressing": "ticino_south_bridge"
+        },
+        {
+            "type": "firecamp",
+            "x": 361.7,
+            "z": 438.61,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "ticino_south_bridge",
+            "radius": 3.2,
+            "intensity": 1.15,
+            "persistent": true
+        },
+        {
+            "type": "dead_tree",
+            "x": 342.05,
+            "z": 438.73,
+            "scale": 1.0,
+            "rotation": 2.684,
+            "dressing": "ticino_south_bridge"
+        },
+        {
+            "type": "boulder",
+            "x": 220.57,
+            "z": 92.86,
+            "scale": 1.2,
+            "rotation": 5.592,
+            "dressing": "ticino_west_bridge"
+        },
+        {
+            "type": "firecamp",
+            "x": 237.65,
+            "z": 97.77,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "ticino_west_bridge",
+            "radius": 3.2,
+            "intensity": 1.15,
+            "persistent": true
+        },
+        {
+            "type": "dead_tree",
+            "x": 218.76,
+            "z": 99.88,
+            "scale": 1.0,
+            "rotation": 0.756,
+            "dressing": "ticino_west_bridge"
+        },
+        {
+            "type": "boulder",
+            "x": 220.21,
+            "z": 80.1,
+            "scale": 1.22,
+            "rotation": 1.809,
+            "dressing": "ticino_west_bridge"
+        },
+        {
+            "type": "boulder",
+            "x": 234.7,
+            "z": 79.92,
+            "scale": 0.98,
+            "rotation": 3.963,
+            "dressing": "ticino_west_bridge"
+        },
+        {
+            "type": "firecamp",
+            "x": 217.96,
+            "z": 76.13,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "ticino_west_bridge",
+            "radius": 3.2,
+            "intensity": 1.15,
+            "persistent": true
+        },
+        {
+            "type": "dead_tree",
+            "x": 236.42,
+            "z": 72.9,
+            "scale": 1.0,
+            "rotation": 0.24,
+            "dressing": "ticino_west_bridge"
+        },
+        {
+            "type": "firecamp",
+            "x": 138.99,
+            "z": 281.55,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "ticino_camp_junction",
+            "radius": 3.2,
+            "intensity": 1.15,
+            "persistent": true
+        },
+        {
+            "type": "supply_cart",
+            "x": 145.06,
+            "z": 283.12,
+            "scale": 1.0,
+            "rotation": -0.494,
+            "dressing": "ticino_camp_junction"
+        },
+        {
+            "type": "weapon_rack",
+            "x": 135.48,
+            "z": 284.45,
+            "scale": 1.0,
+            "rotation": -0.494,
+            "dressing": "ticino_camp_junction"
+        },
+        {
+            "type": "statue",
+            "x": 592.0,
+            "z": 237.5,
+            "scale": 1.0,
+            "rotation": -1.571,
+            "dressing": "ticino_reserve_junction"
+        },
+        {
+            "type": "cypress_tree",
+            "x": 592.0,
+            "z": 243.5,
+            "scale": 1.0,
+            "rotation": 3.413,
+            "dressing": "ticino_reserve_junction"
+        },
+        {
+            "type": "statue",
+            "x": 253.09,
+            "z": 20.86,
+            "scale": 1.0,
+            "rotation": 1.736,
+            "dressing": "ticino_north_junction"
+        },
+        {
+            "type": "firecamp",
+            "x": 244.12,
+            "z": 19.5,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "ticino_north_junction",
+            "radius": 3.2,
+            "intensity": 1.15,
+            "persistent": true
+        },
+        {
+            "type": "ruins",
+            "x": 257.32,
+            "z": 19.6,
+            "scale": 0.8,
+            "rotation": 0.458,
+            "dressing": "ticino_north_junction"
+        },
+        {
+            "type": "boulder",
+            "x": 472.14,
+            "z": 36.19,
+            "scale": 0.93,
+            "rotation": 2.31,
+            "dressing": "ticino_river_bank"
+        },
+        {
+            "type": "plant",
+            "x": 486.47,
+            "z": 66.12,
+            "scale": 0.95,
+            "rotation": 1.358,
+            "dressing": "ticino_river_bank"
+        },
+        {
+            "type": "plant",
+            "x": 488.81,
+            "z": 66.79,
+            "scale": 1.11,
+            "rotation": 4.262,
+            "dressing": "ticino_river_bank"
+        },
+        {
+            "type": "dead_tree",
+            "x": 471.02,
+            "z": 104.77,
+            "scale": 1.2,
+            "rotation": 4.409,
+            "dressing": "ticino_river_bank"
+        },
+        {
+            "type": "plant",
+            "x": 508.97,
+            "z": 126.0,
+            "scale": 1.06,
+            "rotation": 5.578,
+            "dressing": "ticino_river_bank"
+        },
+        {
+            "type": "plant",
+            "x": 511.2,
+            "z": 127.58,
+            "scale": 1.23,
+            "rotation": 4.735,
+            "dressing": "ticino_river_bank"
+        },
+        {
+            "type": "boulder",
+            "x": 491.5,
+            "z": 165.77,
+            "scale": 0.84,
+            "rotation": 1.999,
+            "dressing": "ticino_river_bank"
+        },
+        {
+            "type": "boulder",
+            "x": 521.49,
+            "z": 190.2,
+            "scale": 0.85,
+            "rotation": 2.983,
+            "dressing": "ticino_river_bank"
+        },
+        {
+            "type": "boulder",
+            "x": 473.39,
+            "z": 434.97,
+            "scale": 1.19,
+            "rotation": 5.72,
+            "dressing": "ticino_river_bank_s"
+        },
+        {
+            "type": "plant",
+            "x": 495.17,
+            "z": 470.79,
+            "scale": 1.25,
+            "rotation": 3.403,
+            "dressing": "ticino_river_bank_s"
+        },
+        {
+            "type": "plant",
+            "x": 495.73,
+            "z": 474.32,
+            "scale": 1.39,
+            "rotation": 1.729,
+            "dressing": "ticino_river_bank_s"
+        },
+        {
+            "type": "dead_tree",
+            "x": 468.24,
+            "z": 504.83,
+            "scale": 1.12,
+            "rotation": 5.467,
+            "dressing": "ticino_river_bank_s"
+        },
+        {
+            "type": "plant",
+            "x": 496.06,
+            "z": 536.02,
+            "scale": 0.96,
+            "rotation": 1.581,
+            "dressing": "ticino_river_bank_s"
+        },
+        {
+            "type": "plant",
+            "x": 497.54,
+            "z": 538.09,
+            "scale": 1.17,
+            "rotation": 5.98,
+            "dressing": "ticino_river_bank_s"
+        },
+        {
+            "type": "boulder",
+            "x": 479.35,
+            "z": 573.69,
+            "scale": 1.08,
+            "rotation": 3.484,
+            "dressing": "ticino_river_bank_s"
+        },
+        {
+            "type": "boulder",
+            "x": 501.64,
+            "z": 607.6,
+            "scale": 0.87,
+            "rotation": 5.122,
+            "dressing": "ticino_river_bank_s"
+        },
+        {
+            "type": "plant",
+            "x": 473.9,
+            "z": 636.82,
+            "scale": 1.02,
+            "rotation": 1.033,
+            "dressing": "ticino_river_bank_s"
+        },
+        {
+            "type": "plant",
+            "x": 473.04,
+            "z": 641.39,
+            "scale": 1.31,
+            "rotation": 1.88,
+            "dressing": "ticino_river_bank_s"
+        },
+        {
+            "type": "firecamp",
+            "x": 612.7,
+            "z": 135.0,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "ticino_gate_1",
+            "radius": 3.2,
+            "intensity": 1.15,
+            "persistent": true
+        },
+        {
+            "type": "firecamp",
+            "x": 623.3,
+            "z": 135.0,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "ticino_gate_1",
+            "radius": 3.2,
+            "intensity": 1.15,
+            "persistent": true
+        },
+        {
+            "type": "weapon_rack",
+            "x": 624.3,
+            "z": 131.0,
+            "scale": 1.0,
+            "rotation": -1.571,
+            "dressing": "ticino_gate_1"
+        },
+        {
+            "type": "supply_cart",
+            "x": 611.2,
+            "z": 129.0,
+            "scale": 1.0,
+            "rotation": -1.271,
+            "dressing": "ticino_gate_1"
+        },
+        {
+            "type": "statue",
+            "x": 611.7,
+            "z": 124.0,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "ticino_gate_1"
+        },
+        {
+            "type": "statue",
+            "x": 624.3,
+            "z": 124.0,
+            "scale": 1.0,
+            "rotation": -3.142,
+            "dressing": "ticino_gate_1"
+        },
+        {
+            "type": "firecamp",
+            "x": 616.83,
+            "z": 199.28,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "ticino_gate_2",
+            "radius": 3.2,
+            "intensity": 1.15,
+            "persistent": true
+        },
+        {
+            "type": "firecamp",
+            "x": 603.98,
+            "z": 198.82,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "ticino_gate_2",
+            "radius": 3.2,
+            "intensity": 1.15,
+            "persistent": true
+        },
+        {
+            "type": "weapon_rack",
+            "x": 602.17,
+            "z": 206.72,
+            "scale": 1.0,
+            "rotation": 1.571,
+            "dressing": "ticino_gate_2"
+        },
+        {
+            "type": "supply_cart",
+            "x": 620.08,
+            "z": 206.11,
+            "scale": 1.0,
+            "rotation": 1.871,
+            "dressing": "ticino_gate_2"
+        },
+        {
+            "type": "statue",
+            "x": 603.7,
+            "z": 212.0,
+            "scale": 1.0,
+            "rotation": -0.0,
+            "dressing": "ticino_gate_2"
+        },
+        {
+            "type": "weapon_rack",
+            "x": 476.28,
+            "z": 287.11,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "ticino_gate_3"
+        },
+        {
+            "type": "statue",
+            "x": 480.43,
+            "z": 289.12,
+            "scale": 1.0,
+            "rotation": -1.571,
+            "dressing": "ticino_gate_3"
+        },
+        {
+            "type": "firecamp",
+            "x": 421.0,
+            "z": 335.0,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "ticino_gate_4",
+            "radius": 3.2,
+            "intensity": 1.15,
+            "persistent": true
+        },
+        {
+            "type": "firecamp",
+            "x": 411.0,
+            "z": 335.0,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "ticino_gate_4",
+            "radius": 3.2,
+            "intensity": 1.15,
+            "persistent": true
+        },
+        {
+            "type": "weapon_rack",
+            "x": 410.0,
+            "z": 339.0,
+            "scale": 1.0,
+            "rotation": 1.571,
+            "dressing": "ticino_gate_4"
+        },
+        {
+            "type": "supply_cart",
+            "x": 422.5,
+            "z": 341.0,
+            "scale": 1.0,
+            "rotation": 1.871,
+            "dressing": "ticino_gate_4"
+        },
+        {
+            "type": "statue",
+            "x": 422.0,
+            "z": 346.0,
+            "scale": 1.0,
+            "rotation": 3.142,
+            "dressing": "ticino_gate_4"
+        },
+        {
+            "type": "statue",
+            "x": 410.0,
+            "z": 346.0,
+            "scale": 1.0,
+            "rotation": -0.0,
+            "dressing": "ticino_gate_4"
+        },
+        {
+            "type": "weapon_rack",
+            "x": 388.19,
+            "z": 291.08,
+            "scale": 1.0,
+            "rotation": 3.142,
+            "dressing": "ticino_gate_5"
+        },
+        {
+            "type": "supply_cart",
+            "x": 385.89,
+            "z": 308.88,
+            "scale": 1.0,
+            "rotation": 3.442,
+            "dressing": "ticino_gate_5"
+        },
+        {
+            "type": "statue",
+            "x": 380.89,
+            "z": 308.38,
+            "scale": 1.0,
+            "rotation": -1.571,
+            "dressing": "ticino_gate_5"
+        }
+    ],
+    "dressing": [
+        {
+            "id": "ticino_ford",
+            "kind": "ford_wreck",
+            "x": 484,
+            "z": 330,
+            "boulders": 4,
+            "plants": 4
+        },
+        {
+            "id": "ticino_ford_bank",
+            "kind": "riverbank",
+            "from": [
+                483,
+                250
+            ],
+            "to": [
+                486,
+                400
+            ],
+            "spacing": 22,
+            "kinds": [
+                "plant",
+                "boulder",
+                "plant",
+                "dead_tree"
+            ]
+        },
+        {
+            "id": "ticino_insubres_fort",
+            "kind": "hilltop_ruin",
+            "x": 360,
+            "z": 226,
+            "facing": "south",
+            "radius": 12,
+            "ruins": 7
+        },
+        {
+            "id": "ticino_insubres_ramp_w",
+            "kind": "ramp_mouth",
+            "x": 334,
+            "z": 227,
+            "statue": true
+        },
+        {
+            "id": "ticino_insubres_ramp_e",
+            "kind": "ramp_mouth",
+            "x": 386,
+            "z": 223
+        },
+        {
+            "id": "ticino_marsh_barrows",
+            "kind": "barrow_field",
+            "x": 168,
+            "z": 473,
+            "radius": 12,
+            "shrine": true,
+            "ruins": 7,
+            "dead_trees": 6,
+            "boulders": 3
+        },
+        {
+            "id": "ticino_marsh_bones",
+            "kind": "boneyard",
+            "x": 140,
+            "z": 500,
+            "radius": 12,
+            "statues": 0,
+            "dead_trees": 8,
+            "ruins": 2
+        },
+        {
+            "id": "ticino_bridge_barrows",
+            "kind": "barrow_field",
+            "x": 395,
+            "z": 505,
+            "radius": 10,
+            "shrine": true,
+            "ruins": 5,
+            "dead_trees": 4,
+            "statues": 1
+        },
+        {
+            "id": "ticino_via_avenue",
+            "kind": "tree_avenue",
+            "from": [
+                300,
+                286
+            ],
+            "to": [
+                400,
+                297
+            ],
+            "tree": "olive_tree",
+            "spacing": 11
+        },
+        {
+            "id": "ticino_north_bridge",
+            "kind": "bridgehead",
+            "x": 533,
+            "z": 220
+        },
+        {
+            "id": "ticino_road_bridge",
+            "kind": "bridgehead",
+            "x": 409,
+            "z": 84
+        },
+        {
+            "id": "ticino_south_bridge",
+            "kind": "bridgehead",
+            "x": 353,
+            "z": 428,
+            "cart": false
+        },
+        {
+            "id": "ticino_west_bridge",
+            "kind": "bridgehead",
+            "x": 227,
+            "z": 86,
+            "cart": false
+        },
+        {
+            "id": "ticino_camp_junction",
+            "kind": "junction",
+            "x": 136,
+            "z": 276,
+            "style": "camp"
+        },
+        {
+            "id": "ticino_reserve_junction",
+            "kind": "junction",
+            "x": 592,
+            "z": 232,
+            "style": "milestone",
+            "tree": "cypress_tree"
+        },
+        {
+            "id": "ticino_north_junction",
+            "kind": "junction",
+            "x": 262,
+            "z": 12,
+            "style": "shrine"
+        },
+        {
+            "id": "ticino_river_bank",
+            "kind": "riverbank",
+            "from": [
+                483,
+                20
+            ],
+            "to": [
+                483,
+                230
+            ],
+            "spacing": 34
+        },
+        {
+            "id": "ticino_river_bank_s",
+            "kind": "riverbank",
+            "from": [
+                486,
+                420
+            ],
+            "to": [
+                486,
+                640
+            ],
+            "spacing": 34
+        },
+        {
+            "id": "ticino_gate_1",
+            "kind": "gate_approach",
+            "x": 618.0,
+            "z": 144.0,
+            "statues": true
+        },
+        {
+            "id": "ticino_gate_2",
+            "kind": "gate_approach",
+            "x": 610.0,
+            "z": 192.0,
+            "statues": true
+        },
+        {
+            "id": "ticino_gate_3",
+            "kind": "gate_approach",
+            "x": 460,
+            "z": 282,
+            "statues": true
+        },
+        {
+            "id": "ticino_gate_4",
+            "kind": "gate_approach",
+            "x": 416,
+            "z": 326,
+            "statues": true
+        },
+        {
+            "id": "ticino_gate_5",
+            "kind": "gate_approach",
+            "x": 400,
+            "z": 298,
+            "statues": true
         }
     ]
 }

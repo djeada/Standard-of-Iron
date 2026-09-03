@@ -4736,7 +4736,7 @@
                 "gold": 220,
                 "iron": 120
             },
-            "id": "desert_shrine",
+            "id": "zama_desert_shrine",
             "leash_radius": 42.32,
             "owner_id": 99,
             "radius": 24.18,
@@ -4751,7 +4751,8 @@
                 }
             ],
             "x": 108,
-            "z": 173
+            "z": 173,
+            "fog_density": 0.3
         },
         {
             "anchor_type": "ruins",
@@ -4787,7 +4788,8 @@
                 }
             ],
             "x": 119,
-            "z": 609
+            "z": 609,
+            "fog_density": 0.35
         }
     ],
     "victory": {
@@ -4866,20 +4868,6 @@
     },
     "world_props": [
         {
-            "rotation": 0.5,
-            "scale": 1,
-            "type": "tent",
-            "x": 67.63,
-            "z": 277.28000000000003
-        },
-        {
-            "rotation": 2.8000000000000003,
-            "scale": 1,
-            "type": "tent",
-            "x": 67.63,
-            "z": 350.25
-        },
-        {
             "rotation": 1.2,
             "scale": 1,
             "type": "supply_cart",
@@ -4936,13 +4924,6 @@
             "z": 423.21000000000004
         },
         {
-            "rotation": 1.8,
-            "scale": 0.9,
-            "type": "dead_tree",
-            "x": 378.21,
-            "z": 452.40000000000003
-        },
-        {
             "rotation": 5,
             "scale": 1,
             "type": "dead_tree",
@@ -4957,20 +4938,6 @@
             "z": 258.82
         },
         {
-            "rotation": 3.2,
-            "scale": 1,
-            "type": "tent",
-            "x": 550.67,
-            "z": 347.44
-        },
-        {
-            "rotation": 2.1,
-            "scale": 1,
-            "type": "supply_cart",
-            "x": 576.09,
-            "z": 293.24
-        },
-        {
             "rotation": 4.4,
             "scale": 1,
             "type": "weapon_rack",
@@ -4978,25 +4945,11 @@
             "z": 340.33
         },
         {
-            "rotation": 0.4,
-            "scale": 1.1,
-            "type": "ruins",
-            "x": 588.61,
-            "z": 138.64000000000001
-        },
-        {
             "rotation": 2.1,
             "scale": 1,
             "type": "ruins",
             "x": 606.14,
             "z": 164.18
-        },
-        {
-            "rotation": 1.2,
-            "scale": 0.9,
-            "type": "tent",
-            "x": 686.29,
-            "z": 138.64000000000001
         },
         {
             "rotation": 2.6,
@@ -5011,38 +4964,6 @@
             "type": "weapon_rack",
             "x": 731.37,
             "z": 134.99
-        },
-        {
-            "intensity": 1.1,
-            "persistent": true,
-            "radius": 3,
-            "scale": 0.9,
-            "type": "firecamp",
-            "x": 706.33,
-            "z": 149.58
-        },
-        {
-            "rotation": 1,
-            "scale": 0.9,
-            "type": "tent",
-            "x": 693.8000000000001,
-            "z": 580.1
-        },
-        {
-            "rotation": 2.7,
-            "scale": 1,
-            "type": "supply_cart",
-            "x": 716.34,
-            "z": 627.53
-        },
-        {
-            "intensity": 1,
-            "persistent": true,
-            "radius": 3,
-            "scale": 0.9,
-            "type": "firecamp",
-            "x": 716.34,
-            "z": 591.04
         },
         {
             "rotation": 0.4,
@@ -5110,13 +5031,6 @@
             "z": 231
         },
         {
-            "rotation": 98.5,
-            "scale": 0.98,
-            "type": "dead_tree",
-            "x": 360.3,
-            "z": 246.01000000000002
-        },
-        {
             "rotation": 256.3,
             "scale": 0.87,
             "type": "dead_tree",
@@ -5174,20 +5088,6 @@
             "z": 423.82
         },
         {
-            "rotation": 67.4,
-            "scale": 1.08,
-            "type": "tent",
-            "x": 649.88,
-            "z": 177.95000000000002
-        },
-        {
-            "rotation": 186.3,
-            "scale": 1.1300000000000001,
-            "type": "tent",
-            "x": 615.27,
-            "z": 670.37
-        },
-        {
             "rotation": 16.8,
             "scale": 1.11,
             "type": "supply_cart",
@@ -5200,15 +5100,6 @@
             "type": "weapon_rack",
             "x": 540.85,
             "z": 367.74
-        },
-        {
-            "intensity": 1.26,
-            "persistent": true,
-            "radius": 2.7,
-            "scale": 1,
-            "type": "firecamp",
-            "x": 768.34,
-            "z": 226.72
         },
         {
             "intensity": 0.87,
@@ -5234,20 +5125,6 @@
             "z": 335.22
         },
         {
-            "rotation": 12.5,
-            "scale": 1.16,
-            "type": "supply_cart",
-            "x": 661.5500000000001,
-            "z": 145.84
-        },
-        {
-            "rotation": 335.8,
-            "scale": 1.1500000000000001,
-            "type": "tent",
-            "x": 527.19,
-            "z": 691.27
-        },
-        {
             "rotation": 52.9,
             "scale": 1.06,
             "type": "weapon_rack",
@@ -5269,13 +5146,6 @@
             "type": "weapon_rack",
             "x": 676.86,
             "z": 250.87
-        },
-        {
-            "rotation": 52.1,
-            "scale": 1.05,
-            "type": "tent",
-            "x": 503.43,
-            "z": 641.24
         },
         {
             "rotation": 3.4,
@@ -5306,25 +5176,11 @@
             "z": 236.03
         },
         {
-            "rotation": 251.70000000000002,
-            "scale": 0.99,
-            "type": "tent",
-            "x": 629.0600000000001,
-            "z": 639.7
-        },
-        {
             "rotation": 256.3,
             "scale": 0.98,
             "type": "supply_cart",
             "x": 410.89,
             "z": 100.3
-        },
-        {
-            "rotation": 63.5,
-            "scale": 1.1300000000000001,
-            "type": "tent",
-            "x": 170.67000000000002,
-            "z": 328.59000000000003
         },
         {
             "rotation": 209.8,
@@ -5353,22 +5209,6 @@
             "type": "supply_cart",
             "x": 207.61,
             "z": 411.63
-        },
-        {
-            "rotation": 356.7,
-            "scale": 1.1,
-            "type": "weapon_rack",
-            "x": 646.69,
-            "z": 495.82
-        },
-        {
-            "intensity": 1.08,
-            "persistent": true,
-            "radius": 3.1,
-            "scale": 1,
-            "type": "firecamp",
-            "x": 727.44,
-            "z": 250.59
         },
         {
             "rotation": 116.5,
@@ -5426,24 +5266,6 @@
             "z": 318.5
         },
         {
-            "intensity": 1.22,
-            "persistent": true,
-            "radius": 3.4,
-            "scale": 1,
-            "type": "firecamp",
-            "x": 656.83,
-            "z": 198.77
-        },
-        {
-            "intensity": 1.35,
-            "persistent": true,
-            "radius": 3.3000000000000003,
-            "scale": 1,
-            "type": "firecamp",
-            "x": 611.76,
-            "z": 636.33
-        },
-        {
             "intensity": 1.17,
             "persistent": true,
             "radius": 2.9,
@@ -5481,13 +5303,6 @@
             "type": "tent",
             "x": 145.81,
             "z": 360.39
-        },
-        {
-            "rotation": 214.3,
-            "scale": 1.11,
-            "type": "tent",
-            "x": 703.35,
-            "z": 455.74
         },
         {
             "rotation": 79.4,
@@ -5543,22 +5358,6 @@
             "z": 411.83
         },
         {
-            "intensity": 0.87,
-            "persistent": true,
-            "radius": 3.1,
-            "scale": 1,
-            "type": "firecamp",
-            "x": 556.86,
-            "z": 370.39
-        },
-        {
-            "rotation": 319.7,
-            "scale": 0.9500000000000001,
-            "type": "supply_cart",
-            "x": 750.99,
-            "z": 152.04
-        },
-        {
             "rotation": 212.5,
             "scale": 1,
             "type": "tent",
@@ -5610,15 +5409,6 @@
             "type": "supply_cart",
             "x": 69.61,
             "z": 561.46
-        },
-        {
-            "intensity": 1.12,
-            "persistent": true,
-            "radius": 3.4,
-            "scale": 1,
-            "type": "firecamp",
-            "x": 397.31,
-            "z": 518.88
         },
         {
             "rotation": 345.90000000000003,
@@ -5699,33 +5489,6 @@
             "z": 467.02
         },
         {
-            "intensity": 0.97,
-            "persistent": true,
-            "radius": 3.1,
-            "scale": 1,
-            "type": "firecamp",
-            "x": 639.35,
-            "z": 200.11
-        },
-        {
-            "intensity": 1.19,
-            "persistent": true,
-            "radius": 3,
-            "scale": 1,
-            "type": "firecamp",
-            "x": 257.88,
-            "z": 318.87
-        },
-        {
-            "intensity": 1.02,
-            "persistent": true,
-            "radius": 2.6,
-            "scale": 1,
-            "type": "firecamp",
-            "x": 269.04,
-            "z": 394.93
-        },
-        {
             "rotation": 170.8,
             "scale": 0.93,
             "type": "ruins",
@@ -5768,13 +5531,6 @@
             "z": 779.8000000000001
         },
         {
-            "rotation": 111.60000000000001,
-            "scale": 0.9,
-            "type": "dead_tree",
-            "x": 129.65,
-            "z": 227.01
-        },
-        {
             "rotation": 179.3,
             "scale": 0.92,
             "type": "ruins",
@@ -5787,20 +5543,6 @@
             "type": "ruins",
             "x": 546.14,
             "z": 60.550000000000004
-        },
-        {
-            "rotation": 203.5,
-            "scale": 1.05,
-            "type": "dead_tree",
-            "x": 170.24,
-            "z": 233.93
-        },
-        {
-            "rotation": 208.6,
-            "scale": 1.04,
-            "type": "dead_tree",
-            "x": 730.7,
-            "z": 84.62
         },
         {
             "rotation": 335.1,
@@ -5824,13 +5566,6 @@
             "z": 44.46
         },
         {
-            "rotation": 279.7,
-            "scale": 1,
-            "type": "dead_tree",
-            "x": 768.0500000000001,
-            "z": 554.44
-        },
-        {
             "rotation": 213.20000000000002,
             "scale": 1.17,
             "type": "dead_tree",
@@ -5852,25 +5587,11 @@
             "z": 308.02
         },
         {
-            "rotation": 324,
-            "scale": 0.92,
-            "type": "dead_tree",
-            "x": 134.91,
-            "z": 198.02
-        },
-        {
             "rotation": 305.6,
             "scale": 1.05,
             "type": "ruins",
             "x": 325.1,
             "z": 278.90000000000003
-        },
-        {
-            "rotation": 22.3,
-            "scale": 0.98,
-            "type": "dead_tree",
-            "x": 531.42,
-            "z": 772.86
         },
         {
             "rotation": 189.4,
@@ -5887,41 +5608,6 @@
             "z": 274.75
         },
         {
-            "rotation": 357.3,
-            "scale": 1.03,
-            "type": "dead_tree",
-            "x": 380.15000000000003,
-            "z": 344.83
-        },
-        {
-            "rotation": 237.9,
-            "scale": 1.06,
-            "type": "ruins",
-            "x": 128.74,
-            "z": 708.49
-        },
-        {
-            "rotation": 253.4,
-            "scale": 1,
-            "type": "dead_tree",
-            "x": 361.11,
-            "z": 643.2
-        },
-        {
-            "rotation": 112.60000000000001,
-            "scale": 1.18,
-            "type": "dead_tree",
-            "x": 149.5,
-            "z": 113.22
-        },
-        {
-            "rotation": 99.7,
-            "scale": 1.1300000000000001,
-            "type": "dead_tree",
-            "x": 22.32,
-            "z": 267.43
-        },
-        {
             "rotation": 41.7,
             "scale": 1.1,
             "type": "dead_tree",
@@ -5934,13 +5620,6 @@
             "type": "ruins",
             "x": 115.4,
             "z": 700.85
-        },
-        {
-            "rotation": 21.3,
-            "scale": 1.05,
-            "type": "dead_tree",
-            "x": 587.47,
-            "z": 107.63
         },
         {
             "rotation": 161.20000000000002,
@@ -5964,34 +5643,6 @@
             "z": 400.83
         },
         {
-            "rotation": 313.7,
-            "scale": 0.97,
-            "type": "abandoned_home",
-            "x": 315.14,
-            "z": 224.02
-        },
-        {
-            "rotation": 22.7,
-            "scale": 0.9,
-            "type": "abandoned_home",
-            "x": 398.02,
-            "z": 252.43
-        },
-        {
-            "rotation": 238.20000000000002,
-            "scale": 0.96,
-            "type": "abandoned_home",
-            "x": 376.77,
-            "z": 263.38
-        },
-        {
-            "rotation": 110.2,
-            "scale": 0.9,
-            "type": "abandoned_home",
-            "x": 102.62,
-            "z": 582.1
-        },
-        {
             "rotation": 0.1,
             "scale": 0.98,
             "type": "abandoned_home",
@@ -6004,13 +5655,6 @@
             "type": "abandoned_home",
             "x": 65.41,
             "z": 619.45
-        },
-        {
-            "rotation": 107,
-            "scale": 1,
-            "type": "abandoned_home",
-            "x": 25.46,
-            "z": 563.7
         },
         {
             "rotation": 35.5,
@@ -6027,32 +5671,11 @@
             "z": 468.69
         },
         {
-            "rotation": 25.6,
-            "scale": 1.03,
-            "type": "abandoned_home",
-            "x": 112.29,
-            "z": 433.18
-        },
-        {
-            "rotation": 60.5,
-            "scale": 0.99,
-            "type": "abandoned_home",
-            "x": 569.87,
-            "z": 31.17
-        },
-        {
             "rotation": 117.7,
             "scale": 1.12,
             "type": "abandoned_home",
             "x": 217.76,
             "z": 232.69
-        },
-        {
-            "rotation": 126.8,
-            "scale": 1.12,
-            "type": "abandoned_home",
-            "x": 316.41,
-            "z": 240.25
         },
         {
             "landmark": "zama_west_sanctuary",
@@ -6718,6 +6341,1900 @@
             "type": "cursed_gold_vein",
             "x": 337,
             "z": 350
+        },
+        {
+            "type": "ruins",
+            "x": 300.0,
+            "z": 498.0,
+            "scale": 0.8,
+            "rotation": 0.0,
+            "dressing": "zama_oasis"
+        },
+        {
+            "type": "palm_tree",
+            "x": 312.06,
+            "z": 500.55,
+            "scale": 0.85,
+            "rotation": 0.685,
+            "dressing": "zama_oasis"
+        },
+        {
+            "type": "palm_tree",
+            "x": 307.51,
+            "z": 504.01,
+            "scale": 1.04,
+            "rotation": 0.241,
+            "dressing": "zama_oasis"
+        },
+        {
+            "type": "palm_tree",
+            "x": 299.74,
+            "z": 508.44,
+            "scale": 0.98,
+            "rotation": 3.44,
+            "dressing": "zama_oasis"
+        },
+        {
+            "type": "palm_tree",
+            "x": 295.75,
+            "z": 508.63,
+            "scale": 1.01,
+            "rotation": 5.081,
+            "dressing": "zama_oasis"
+        },
+        {
+            "type": "palm_tree",
+            "x": 289.26,
+            "z": 505.06,
+            "scale": 0.86,
+            "rotation": 2.42,
+            "dressing": "zama_oasis"
+        },
+        {
+            "type": "palm_tree",
+            "x": 292.25,
+            "z": 490.64,
+            "scale": 1.04,
+            "rotation": 3.856,
+            "dressing": "zama_oasis"
+        },
+        {
+            "type": "palm_tree",
+            "x": 295.8,
+            "z": 489.8,
+            "scale": 1.06,
+            "rotation": 3.294,
+            "dressing": "zama_oasis"
+        },
+        {
+            "type": "palm_tree",
+            "x": 304.3,
+            "z": 488.9,
+            "scale": 1.04,
+            "rotation": 4.455,
+            "dressing": "zama_oasis"
+        },
+        {
+            "type": "palm_tree",
+            "x": 310.54,
+            "z": 491.44,
+            "scale": 0.98,
+            "rotation": 1.809,
+            "dressing": "zama_oasis"
+        },
+        {
+            "type": "palm_tree",
+            "x": 308.88,
+            "z": 495.65,
+            "scale": 1.0,
+            "rotation": 1.731,
+            "dressing": "zama_oasis"
+        },
+        {
+            "type": "palm_tree",
+            "x": 308.88,
+            "z": 500.09,
+            "scale": 1.08,
+            "rotation": 3.984,
+            "dressing": "zama_oasis"
+        },
+        {
+            "type": "supply_cart",
+            "x": 297.0,
+            "z": 481.0,
+            "scale": 1.0,
+            "rotation": -1.45,
+            "dressing": "zama_oasis"
+        },
+        {
+            "type": "boulder",
+            "x": 295.42,
+            "z": 502.61,
+            "scale": 0.74,
+            "rotation": 4.488,
+            "dressing": "zama_oasis"
+        },
+        {
+            "type": "palm_tree",
+            "x": 197.55,
+            "z": 537.67,
+            "scale": 0.95,
+            "rotation": 3.65,
+            "dressing": "zama_oasis_bank"
+        },
+        {
+            "type": "plant",
+            "x": 225.99,
+            "z": 533.83,
+            "scale": 1.02,
+            "rotation": 2.91,
+            "dressing": "zama_oasis_bank"
+        },
+        {
+            "type": "plant",
+            "x": 230.94,
+            "z": 532.26,
+            "scale": 1.01,
+            "rotation": 3.418,
+            "dressing": "zama_oasis_bank"
+        },
+        {
+            "type": "boulder",
+            "x": 244.2,
+            "z": 557.41,
+            "scale": 0.85,
+            "rotation": 0.813,
+            "dressing": "zama_oasis_bank"
+        },
+        {
+            "type": "plant",
+            "x": 272.05,
+            "z": 557.22,
+            "scale": 0.94,
+            "rotation": 2.82,
+            "dressing": "zama_oasis_bank"
+        },
+        {
+            "type": "plant",
+            "x": 276.99,
+            "z": 558.07,
+            "scale": 1.25,
+            "rotation": 0.716,
+            "dressing": "zama_oasis_bank"
+        },
+        {
+            "type": "palm_tree",
+            "x": 291.01,
+            "z": 579.7,
+            "scale": 0.86,
+            "rotation": 1.435,
+            "dressing": "zama_oasis_bank"
+        },
+        {
+            "type": "plant",
+            "x": 316.93,
+            "z": 577.57,
+            "scale": 1.2,
+            "rotation": 0.195,
+            "dressing": "zama_oasis_bank"
+        },
+        {
+            "type": "plant",
+            "x": 319.75,
+            "z": 574.56,
+            "scale": 1.22,
+            "rotation": 4.064,
+            "dressing": "zama_oasis_bank"
+        },
+        {
+            "type": "boulder",
+            "x": 343.3,
+            "z": 586.01,
+            "scale": 1.29,
+            "rotation": 5.688,
+            "dressing": "zama_oasis_bank"
+        },
+        {
+            "type": "plant",
+            "x": 367.86,
+            "z": 568.06,
+            "scale": 0.82,
+            "rotation": 3.221,
+            "dressing": "zama_oasis_bank"
+        },
+        {
+            "type": "plant",
+            "x": 371.62,
+            "z": 566.83,
+            "scale": 1.02,
+            "rotation": 3.679,
+            "dressing": "zama_oasis_bank"
+        },
+        {
+            "type": "palm_tree",
+            "x": 397.44,
+            "z": 579.77,
+            "scale": 0.94,
+            "rotation": 0.916,
+            "dressing": "zama_oasis_bank"
+        },
+        {
+            "type": "plant",
+            "x": 421.3,
+            "z": 563.31,
+            "scale": 1.07,
+            "rotation": 6.212,
+            "dressing": "zama_oasis_bank"
+        },
+        {
+            "type": "plant",
+            "x": 423.21,
+            "z": 562.58,
+            "scale": 1.16,
+            "rotation": 3.84,
+            "dressing": "zama_oasis_bank"
+        },
+        {
+            "type": "dead_tree",
+            "x": 119.06,
+            "z": 624.89,
+            "scale": 1.11,
+            "rotation": 5.369,
+            "dressing": "zama_field_of_the_dead"
+        },
+        {
+            "type": "dead_tree",
+            "x": 115.36,
+            "z": 602.07,
+            "scale": 1.03,
+            "rotation": 6.091,
+            "dressing": "zama_field_of_the_dead"
+        },
+        {
+            "type": "dead_tree",
+            "x": 107.93,
+            "z": 604.1,
+            "scale": 1.06,
+            "rotation": 3.256,
+            "dressing": "zama_field_of_the_dead"
+        },
+        {
+            "type": "dead_tree",
+            "x": 109.55,
+            "z": 618.23,
+            "scale": 0.98,
+            "rotation": 1.853,
+            "dressing": "zama_field_of_the_dead"
+        },
+        {
+            "type": "dead_tree",
+            "x": 99.4,
+            "z": 602.28,
+            "scale": 0.99,
+            "rotation": 0.425,
+            "dressing": "zama_field_of_the_dead"
+        },
+        {
+            "type": "dead_tree",
+            "x": 98.23,
+            "z": 608.8,
+            "scale": 1.14,
+            "rotation": 5.847,
+            "dressing": "zama_field_of_the_dead"
+        },
+        {
+            "type": "dead_tree",
+            "x": 126.28,
+            "z": 608.56,
+            "scale": 1.16,
+            "rotation": 3.802,
+            "dressing": "zama_field_of_the_dead"
+        },
+        {
+            "type": "dead_tree",
+            "x": 108.57,
+            "z": 623.13,
+            "scale": 1.0,
+            "rotation": 1.858,
+            "dressing": "zama_field_of_the_dead"
+        },
+        {
+            "type": "dead_tree",
+            "x": 133.37,
+            "z": 623.95,
+            "scale": 1.05,
+            "rotation": 1.903,
+            "dressing": "zama_field_of_the_dead"
+        },
+        {
+            "type": "dead_tree",
+            "x": 140.56,
+            "z": 612.34,
+            "scale": 1.15,
+            "rotation": 3.686,
+            "dressing": "zama_field_of_the_dead"
+        },
+        {
+            "type": "dead_tree",
+            "x": 115.31,
+            "z": 596.68,
+            "scale": 1.07,
+            "rotation": 0.4,
+            "dressing": "zama_field_of_the_dead"
+        },
+        {
+            "type": "dead_tree",
+            "x": 108.08,
+            "z": 599.05,
+            "scale": 1.0,
+            "rotation": 3.776,
+            "dressing": "zama_field_of_the_dead"
+        },
+        {
+            "type": "ruins",
+            "x": 107.42,
+            "z": 610.77,
+            "scale": 0.97,
+            "rotation": 0.049,
+            "dressing": "zama_field_of_the_dead"
+        },
+        {
+            "type": "ruins",
+            "x": 125.08,
+            "z": 598.93,
+            "scale": 0.98,
+            "rotation": 3.804,
+            "dressing": "zama_field_of_the_dead"
+        },
+        {
+            "type": "ruins",
+            "x": 116.09,
+            "z": 590.94,
+            "scale": 0.81,
+            "rotation": 4.939,
+            "dressing": "zama_field_of_the_dead"
+        },
+        {
+            "type": "ruins",
+            "x": 104.06,
+            "z": 618.04,
+            "scale": 0.8,
+            "rotation": 0.171,
+            "dressing": "zama_field_of_the_dead"
+        },
+        {
+            "type": "boulder",
+            "x": 139.85,
+            "z": 608.16,
+            "scale": 0.76,
+            "rotation": 4.832,
+            "dressing": "zama_field_of_the_dead"
+        },
+        {
+            "type": "boulder",
+            "x": 124.12,
+            "z": 604.5,
+            "scale": 1.01,
+            "rotation": 0.869,
+            "dressing": "zama_field_of_the_dead"
+        },
+        {
+            "type": "boulder",
+            "x": 118.25,
+            "z": 605.84,
+            "scale": 0.85,
+            "rotation": 5.836,
+            "dressing": "zama_field_of_the_dead"
+        },
+        {
+            "type": "boulder",
+            "x": 127.12,
+            "z": 603.83,
+            "scale": 1.05,
+            "rotation": 4.51,
+            "dressing": "zama_field_of_the_dead"
+        },
+        {
+            "type": "boulder",
+            "x": 103.43,
+            "z": 606.94,
+            "scale": 1.05,
+            "rotation": 2.521,
+            "dressing": "zama_field_of_the_dead"
+        },
+        {
+            "type": "boulder",
+            "x": 110.25,
+            "z": 587.95,
+            "scale": 0.97,
+            "rotation": 1.7,
+            "dressing": "zama_field_of_the_dead"
+        },
+        {
+            "type": "boulder",
+            "x": 104.64,
+            "z": 596.86,
+            "scale": 1.14,
+            "rotation": 4.927,
+            "dressing": "zama_field_of_the_dead"
+        },
+        {
+            "type": "boulder",
+            "x": 96.36,
+            "z": 599.99,
+            "scale": 0.68,
+            "rotation": 0.125,
+            "dressing": "zama_field_of_the_dead"
+        },
+        {
+            "type": "statue",
+            "x": 117.65,
+            "z": 609.41,
+            "scale": 0.9,
+            "rotation": 1.75,
+            "dressing": "zama_field_of_the_dead"
+        },
+        {
+            "type": "statue",
+            "x": 116.22,
+            "z": 607.03,
+            "scale": 0.9,
+            "rotation": 1.418,
+            "dressing": "zama_field_of_the_dead"
+        },
+        {
+            "type": "ruins",
+            "x": 133.11,
+            "z": 606.07,
+            "scale": 1.19,
+            "rotation": 0.891,
+            "dressing": "zama_vanguard_ring"
+        },
+        {
+            "type": "ruins",
+            "x": 124.65,
+            "z": 621.63,
+            "scale": 0.91,
+            "rotation": 3.851,
+            "dressing": "zama_vanguard_ring"
+        },
+        {
+            "type": "ruins",
+            "x": 116.35,
+            "z": 617.43,
+            "scale": 1.11,
+            "rotation": 5.154,
+            "dressing": "zama_vanguard_ring"
+        },
+        {
+            "type": "ruins",
+            "x": 119.76,
+            "z": 172.11,
+            "scale": 1.02,
+            "rotation": 5.085,
+            "dressing": "zama_desert_barrows"
+        },
+        {
+            "type": "ruins",
+            "x": 111.58,
+            "z": 182.88,
+            "scale": 0.98,
+            "rotation": 1.994,
+            "dressing": "zama_desert_barrows"
+        },
+        {
+            "type": "ruins",
+            "x": 101.87,
+            "z": 184.3,
+            "scale": 1.17,
+            "rotation": 1.177,
+            "dressing": "zama_desert_barrows"
+        },
+        {
+            "type": "ruins",
+            "x": 94.82,
+            "z": 175.77,
+            "scale": 0.97,
+            "rotation": 3.685,
+            "dressing": "zama_desert_barrows"
+        },
+        {
+            "type": "ruins",
+            "x": 100.15,
+            "z": 163.22,
+            "scale": 1.04,
+            "rotation": 0.632,
+            "dressing": "zama_desert_barrows"
+        },
+        {
+            "type": "ruins",
+            "x": 115.85,
+            "z": 164.54,
+            "scale": 0.9,
+            "rotation": 2.305,
+            "dressing": "zama_desert_barrows"
+        },
+        {
+            "type": "dead_tree",
+            "x": 117.26,
+            "z": 190.73,
+            "scale": 1.09,
+            "rotation": 0.957,
+            "dressing": "zama_desert_barrows"
+        },
+        {
+            "type": "dead_tree",
+            "x": 91.37,
+            "z": 181.64,
+            "scale": 0.98,
+            "rotation": 2.858,
+            "dressing": "zama_desert_barrows"
+        },
+        {
+            "type": "dead_tree",
+            "x": 99.82,
+            "z": 155.24,
+            "scale": 1.01,
+            "rotation": 1.555,
+            "dressing": "zama_desert_barrows"
+        },
+        {
+            "type": "dead_tree",
+            "x": 122.99,
+            "z": 161.81,
+            "scale": 0.97,
+            "rotation": 0.782,
+            "dressing": "zama_desert_barrows"
+        },
+        {
+            "type": "dead_tree",
+            "x": 122.12,
+            "z": 187.11,
+            "scale": 1.07,
+            "rotation": 4.588,
+            "dressing": "zama_desert_barrows"
+        },
+        {
+            "type": "statue",
+            "x": 119.26,
+            "z": 177.13,
+            "scale": 0.9,
+            "rotation": 3.22,
+            "dressing": "zama_desert_barrows"
+        },
+        {
+            "type": "statue",
+            "x": 99.43,
+            "z": 173.77,
+            "scale": 0.9,
+            "rotation": 3.277,
+            "dressing": "zama_desert_barrows"
+        },
+        {
+            "type": "boulder",
+            "x": 111.41,
+            "z": 161.86,
+            "scale": 1.03,
+            "rotation": 2.582,
+            "dressing": "zama_desert_barrows"
+        },
+        {
+            "type": "boulder",
+            "x": 109.32,
+            "z": 157.96,
+            "scale": 1.07,
+            "rotation": 3.865,
+            "dressing": "zama_desert_barrows"
+        },
+        {
+            "type": "boulder",
+            "x": 121.64,
+            "z": 167.15,
+            "scale": 0.92,
+            "rotation": 0.509,
+            "dressing": "zama_desert_barrows"
+        },
+        {
+            "type": "magic_shrine",
+            "x": 108.0,
+            "z": 173.0,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "zama_desert_barrows"
+        },
+        {
+            "type": "palm_tree",
+            "x": 519.09,
+            "z": 264.57,
+            "scale": 0.95,
+            "rotation": 4.404,
+            "dressing": "zama_scipio_avenue"
+        },
+        {
+            "type": "palm_tree",
+            "x": 521.68,
+            "z": 278.24,
+            "scale": 1.06,
+            "rotation": 0.21,
+            "dressing": "zama_scipio_avenue"
+        },
+        {
+            "type": "palm_tree",
+            "x": 528.89,
+            "z": 262.06,
+            "scale": 1.0,
+            "rotation": 2.177,
+            "dressing": "zama_scipio_avenue"
+        },
+        {
+            "type": "palm_tree",
+            "x": 541.76,
+            "z": 270.7,
+            "scale": 1.08,
+            "rotation": 0.327,
+            "dressing": "zama_scipio_avenue"
+        },
+        {
+            "type": "palm_tree",
+            "x": 550.78,
+            "z": 255.49,
+            "scale": 0.93,
+            "rotation": 3.0,
+            "dressing": "zama_scipio_avenue"
+        },
+        {
+            "type": "palm_tree",
+            "x": 560.8,
+            "z": 252.04,
+            "scale": 0.93,
+            "rotation": 2.928,
+            "dressing": "zama_scipio_avenue"
+        },
+        {
+            "type": "palm_tree",
+            "x": 573.17,
+            "z": 252.1,
+            "scale": 0.95,
+            "rotation": 0.658,
+            "dressing": "zama_scipio_avenue"
+        },
+        {
+            "type": "palm_tree",
+            "x": 584.48,
+            "z": 251.6,
+            "scale": 0.96,
+            "rotation": 2.243,
+            "dressing": "zama_scipio_avenue"
+        },
+        {
+            "type": "palm_tree",
+            "x": 585.18,
+            "z": 264.91,
+            "scale": 0.97,
+            "rotation": 0.785,
+            "dressing": "zama_scipio_avenue"
+        },
+        {
+            "type": "palm_tree",
+            "x": 598.78,
+            "z": 258.43,
+            "scale": 0.99,
+            "rotation": 3.901,
+            "dressing": "zama_scipio_avenue"
+        },
+        {
+            "type": "palm_tree",
+            "x": 590.29,
+            "z": 266.99,
+            "scale": 1.03,
+            "rotation": 3.742,
+            "dressing": "zama_scipio_avenue"
+        },
+        {
+            "type": "palm_tree",
+            "x": 606.87,
+            "z": 265.72,
+            "scale": 1.0,
+            "rotation": 0.055,
+            "dressing": "zama_scipio_avenue"
+        },
+        {
+            "type": "palm_tree",
+            "x": 597.59,
+            "z": 275.0,
+            "scale": 1.02,
+            "rotation": 2.454,
+            "dressing": "zama_scipio_avenue"
+        },
+        {
+            "type": "palm_tree",
+            "x": 613.94,
+            "z": 274.06,
+            "scale": 0.9,
+            "rotation": 6.239,
+            "dressing": "zama_scipio_avenue"
+        },
+        {
+            "type": "palm_tree",
+            "x": 604.46,
+            "z": 282.9,
+            "scale": 0.97,
+            "rotation": 3.759,
+            "dressing": "zama_scipio_avenue"
+        },
+        {
+            "type": "palm_tree",
+            "x": 622.2,
+            "z": 284.89,
+            "scale": 1.1,
+            "rotation": 0.785,
+            "dressing": "zama_scipio_avenue"
+        },
+        {
+            "type": "palm_tree",
+            "x": 609.69,
+            "z": 289.52,
+            "scale": 0.96,
+            "rotation": 5.656,
+            "dressing": "zama_scipio_avenue"
+        },
+        {
+            "type": "palm_tree",
+            "x": 625.72,
+            "z": 294.21,
+            "scale": 0.98,
+            "rotation": 5.625,
+            "dressing": "zama_scipio_avenue"
+        },
+        {
+            "type": "palm_tree",
+            "x": 614.66,
+            "z": 299.74,
+            "scale": 1.03,
+            "rotation": 5.634,
+            "dressing": "zama_scipio_avenue"
+        },
+        {
+            "type": "palm_tree",
+            "x": 631.38,
+            "z": 305.04,
+            "scale": 1.09,
+            "rotation": 4.704,
+            "dressing": "zama_scipio_avenue"
+        },
+        {
+            "type": "palm_tree",
+            "x": 67.21,
+            "z": 393.85,
+            "scale": 0.9,
+            "rotation": 3.421,
+            "dressing": "zama_camp_avenue"
+        },
+        {
+            "type": "palm_tree",
+            "x": 78.9,
+            "z": 392.3,
+            "scale": 0.92,
+            "rotation": 0.693,
+            "dressing": "zama_camp_avenue"
+        },
+        {
+            "type": "palm_tree",
+            "x": 90.53,
+            "z": 390.96,
+            "scale": 1.02,
+            "rotation": 6.135,
+            "dressing": "zama_camp_avenue"
+        },
+        {
+            "type": "palm_tree",
+            "x": 102.62,
+            "z": 389.49,
+            "scale": 1.02,
+            "rotation": 5.278,
+            "dressing": "zama_camp_avenue"
+        },
+        {
+            "type": "palm_tree",
+            "x": 114.54,
+            "z": 387.82,
+            "scale": 1.02,
+            "rotation": 0.514,
+            "dressing": "zama_camp_avenue"
+        },
+        {
+            "type": "palm_tree",
+            "x": 126.56,
+            "z": 385.41,
+            "scale": 0.95,
+            "rotation": 5.291,
+            "dressing": "zama_camp_avenue"
+        },
+        {
+            "type": "palm_tree",
+            "x": 150.53,
+            "z": 382.95,
+            "scale": 1.06,
+            "rotation": 4.331,
+            "dressing": "zama_camp_avenue"
+        },
+        {
+            "type": "abandoned_home",
+            "x": 322.0,
+            "z": 104.0,
+            "scale": 1.0,
+            "rotation": 1.571,
+            "dressing": "zama_kraal_fold"
+        },
+        {
+            "type": "boulder",
+            "x": 314.03,
+            "z": 104.64,
+            "scale": 0.91,
+            "rotation": 4.183,
+            "dressing": "zama_kraal_fold"
+        },
+        {
+            "type": "boulder",
+            "x": 315.09,
+            "z": 99.97,
+            "scale": 0.73,
+            "rotation": 4.17,
+            "dressing": "zama_kraal_fold"
+        },
+        {
+            "type": "boulder",
+            "x": 319.33,
+            "z": 96.46,
+            "scale": 0.8,
+            "rotation": 0.052,
+            "dressing": "zama_kraal_fold"
+        },
+        {
+            "type": "boulder",
+            "x": 324.53,
+            "z": 96.41,
+            "scale": 0.79,
+            "rotation": 5.522,
+            "dressing": "zama_kraal_fold"
+        },
+        {
+            "type": "boulder",
+            "x": 328.07,
+            "z": 98.79,
+            "scale": 0.91,
+            "rotation": 1.741,
+            "dressing": "zama_kraal_fold"
+        },
+        {
+            "type": "boulder",
+            "x": 330.0,
+            "z": 103.81,
+            "scale": 0.74,
+            "rotation": 1.359,
+            "dressing": "zama_kraal_fold"
+        },
+        {
+            "type": "dead_tree",
+            "x": 315.28,
+            "z": 96.47,
+            "scale": 1.0,
+            "rotation": 2.0,
+            "dressing": "zama_kraal_fold"
+        },
+        {
+            "type": "supply_cart",
+            "x": 326.0,
+            "z": 109.0,
+            "scale": 1.0,
+            "rotation": 1.971,
+            "dressing": "zama_kraal_fold"
+        },
+        {
+            "type": "boulder",
+            "x": 455.85,
+            "z": 554.05,
+            "scale": 0.9,
+            "rotation": 3.68,
+            "dressing": "zama_south_bridge"
+        },
+        {
+            "type": "firecamp",
+            "x": 438.16,
+            "z": 553.95,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "zama_south_bridge",
+            "radius": 3.2,
+            "intensity": 1.15,
+            "persistent": true
+        },
+        {
+            "type": "dead_tree",
+            "x": 455.45,
+            "z": 546.86,
+            "scale": 1.0,
+            "rotation": 2.127,
+            "dressing": "zama_south_bridge"
+        },
+        {
+            "type": "supply_cart",
+            "x": 435.08,
+            "z": 551.0,
+            "scale": 1.0,
+            "rotation": -1.875,
+            "dressing": "zama_south_bridge"
+        },
+        {
+            "type": "boulder",
+            "x": 459.22,
+            "z": 565.78,
+            "scale": 1.21,
+            "rotation": 3.686,
+            "dressing": "zama_south_bridge"
+        },
+        {
+            "type": "boulder",
+            "x": 445.3,
+            "z": 569.97,
+            "scale": 0.85,
+            "rotation": 0.743,
+            "dressing": "zama_south_bridge"
+        },
+        {
+            "type": "firecamp",
+            "x": 462.61,
+            "z": 568.93,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "zama_south_bridge",
+            "radius": 3.2,
+            "intensity": 1.15,
+            "persistent": true
+        },
+        {
+            "type": "dead_tree",
+            "x": 445.76,
+            "z": 577.14,
+            "scale": 1.0,
+            "rotation": 3.005,
+            "dressing": "zama_south_bridge"
+        },
+        {
+            "type": "boulder",
+            "x": 584.25,
+            "z": 537.77,
+            "scale": 0.87,
+            "rotation": 5.296,
+            "dressing": "zama_rearguard_bridge"
+        },
+        {
+            "type": "boulder",
+            "x": 598.41,
+            "z": 536.21,
+            "scale": 1.21,
+            "rotation": 3.843,
+            "dressing": "zama_rearguard_bridge"
+        },
+        {
+            "type": "firecamp",
+            "x": 601.59,
+            "z": 539.88,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "zama_rearguard_bridge",
+            "radius": 3.2,
+            "intensity": 1.15,
+            "persistent": true
+        },
+        {
+            "type": "dead_tree",
+            "x": 583.53,
+            "z": 544.89,
+            "scale": 1.0,
+            "rotation": 1.635,
+            "dressing": "zama_rearguard_bridge"
+        },
+        {
+            "type": "supply_cart",
+            "x": 603.13,
+            "z": 544.74,
+            "scale": 1.0,
+            "rotation": 1.429,
+            "dressing": "zama_rearguard_bridge"
+        },
+        {
+            "type": "boulder",
+            "x": 583.28,
+            "z": 525.61,
+            "scale": 0.91,
+            "rotation": 4.228,
+            "dressing": "zama_rearguard_bridge"
+        },
+        {
+            "type": "boulder",
+            "x": 597.47,
+            "z": 524.04,
+            "scale": 1.12,
+            "rotation": 2.096,
+            "dressing": "zama_rearguard_bridge"
+        },
+        {
+            "type": "firecamp",
+            "x": 580.49,
+            "z": 521.89,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "zama_rearguard_bridge",
+            "radius": 3.2,
+            "intensity": 1.15,
+            "persistent": true
+        },
+        {
+            "type": "dead_tree",
+            "x": 598.55,
+            "z": 516.88,
+            "scale": 1.0,
+            "rotation": 1.191,
+            "dressing": "zama_rearguard_bridge"
+        },
+        {
+            "type": "boulder",
+            "x": 55.67,
+            "z": 468.76,
+            "scale": 0.84,
+            "rotation": 0.466,
+            "dressing": "zama_west_bridge"
+        },
+        {
+            "type": "boulder",
+            "x": 43.04,
+            "z": 463.71,
+            "scale": 0.96,
+            "rotation": 3.41,
+            "dressing": "zama_west_bridge"
+        },
+        {
+            "type": "firecamp",
+            "x": 42.15,
+            "z": 459.04,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "zama_west_bridge",
+            "radius": 3.2,
+            "intensity": 1.15,
+            "persistent": true
+        },
+        {
+            "type": "boulder",
+            "x": 50.96,
+            "z": 481.29,
+            "scale": 1.13,
+            "rotation": 3.838,
+            "dressing": "zama_west_bridge"
+        },
+        {
+            "type": "firecamp",
+            "x": 51.85,
+            "z": 485.96,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "zama_west_bridge",
+            "radius": 3.2,
+            "intensity": 1.15,
+            "persistent": true
+        },
+        {
+            "type": "dead_tree",
+            "x": 33.99,
+            "z": 482.99,
+            "scale": 1.0,
+            "rotation": 1.626,
+            "dressing": "zama_west_bridge"
+        },
+        {
+            "type": "boulder",
+            "x": 546.0,
+            "z": 412.5,
+            "scale": 0.96,
+            "rotation": 5.786,
+            "dressing": "zama_scipio_ramp"
+        },
+        {
+            "type": "boulder",
+            "x": 540.0,
+            "z": 414.5,
+            "scale": 1.39,
+            "rotation": 4.855,
+            "dressing": "zama_scipio_ramp"
+        },
+        {
+            "type": "dead_tree",
+            "x": 554.0,
+            "z": 416.5,
+            "scale": 1.0,
+            "rotation": 3.403,
+            "dressing": "zama_scipio_ramp"
+        },
+        {
+            "type": "boulder",
+            "x": 545.53,
+            "z": 381.75,
+            "scale": 0.94,
+            "rotation": 0.583,
+            "dressing": "zama_scipio_ramp"
+        },
+        {
+            "type": "boulder",
+            "x": 538.88,
+            "z": 377.93,
+            "scale": 1.36,
+            "rotation": 2.372,
+            "dressing": "zama_scipio_ramp"
+        },
+        {
+            "type": "statue",
+            "x": 536.0,
+            "z": 378.5,
+            "scale": 1.0,
+            "rotation": -0.0,
+            "dressing": "zama_scipio_ramp"
+        },
+        {
+            "type": "firecamp",
+            "x": 532.0,
+            "z": 376.5,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "zama_scipio_ramp",
+            "radius": 3.2,
+            "intensity": 1.15,
+            "persistent": true
+        },
+        {
+            "type": "boulder",
+            "x": 452.5,
+            "z": 251.0,
+            "scale": 1.45,
+            "rotation": 4.027,
+            "dressing": "zama_north_ramp"
+        },
+        {
+            "type": "boulder",
+            "x": 454.5,
+            "z": 257.0,
+            "scale": 0.98,
+            "rotation": 2.615,
+            "dressing": "zama_north_ramp"
+        },
+        {
+            "type": "dead_tree",
+            "x": 456.5,
+            "z": 243.0,
+            "scale": 1.0,
+            "rotation": 1.625,
+            "dressing": "zama_north_ramp"
+        },
+        {
+            "type": "boulder",
+            "x": 419.5,
+            "z": 251.0,
+            "scale": 1.43,
+            "rotation": 2.533,
+            "dressing": "zama_north_ramp"
+        },
+        {
+            "type": "boulder",
+            "x": 417.5,
+            "z": 257.0,
+            "scale": 0.9,
+            "rotation": 0.275,
+            "dressing": "zama_north_ramp"
+        },
+        {
+            "type": "statue",
+            "x": 418.5,
+            "z": 261.0,
+            "scale": 1.0,
+            "rotation": -1.571,
+            "dressing": "zama_north_ramp"
+        },
+        {
+            "type": "weapon_rack",
+            "x": 174.99,
+            "z": 381.68,
+            "scale": 1.0,
+            "rotation": -0.134,
+            "dressing": "zama_camp_junction"
+        },
+        {
+            "type": "statue",
+            "x": 521.82,
+            "z": 350.14,
+            "scale": 1.0,
+            "rotation": -1.859,
+            "dressing": "zama_scipio_junction"
+        },
+        {
+            "type": "palm_tree",
+            "x": 523.96,
+            "z": 357.01,
+            "scale": 1.0,
+            "rotation": 3.613,
+            "dressing": "zama_scipio_junction"
+        },
+        {
+            "type": "statue",
+            "x": 5.12,
+            "z": 402.91,
+            "scale": 1.0,
+            "rotation": -1.705,
+            "dressing": "zama_west_junction"
+        },
+        {
+            "type": "firecamp",
+            "x": 7.91,
+            "z": 404.94,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "zama_west_junction",
+            "radius": 3.2,
+            "intensity": 1.15,
+            "persistent": true
+        },
+        {
+            "type": "palm_tree",
+            "x": 55.39,
+            "z": 149.24,
+            "scale": 0.94,
+            "rotation": 3.188,
+            "dressing": "zama_north_bank"
+        },
+        {
+            "type": "boulder",
+            "x": 87.05,
+            "z": 122.29,
+            "scale": 0.8,
+            "rotation": 3.521,
+            "dressing": "zama_north_bank"
+        },
+        {
+            "type": "plant",
+            "x": 127.5,
+            "z": 117.09,
+            "scale": 1.05,
+            "rotation": 3.461,
+            "dressing": "zama_north_bank"
+        },
+        {
+            "type": "plant",
+            "x": 130.3,
+            "z": 119.02,
+            "scale": 1.39,
+            "rotation": 0.414,
+            "dressing": "zama_north_bank"
+        },
+        {
+            "type": "boulder",
+            "x": 159.86,
+            "z": 95.43,
+            "scale": 1.03,
+            "rotation": 0.473,
+            "dressing": "zama_north_bank"
+        },
+        {
+            "type": "palm_tree",
+            "x": 203.09,
+            "z": 93.24,
+            "scale": 1.1,
+            "rotation": 0.776,
+            "dressing": "zama_north_bank"
+        },
+        {
+            "type": "boulder",
+            "x": 234.2,
+            "z": 70.1,
+            "scale": 1.29,
+            "rotation": 1.142,
+            "dressing": "zama_north_bank"
+        },
+        {
+            "type": "plant",
+            "x": 274.7,
+            "z": 61.22,
+            "scale": 1.13,
+            "rotation": 4.114,
+            "dressing": "zama_north_bank"
+        },
+        {
+            "type": "plant",
+            "x": 277.99,
+            "z": 60.44,
+            "scale": 1.34,
+            "rotation": 0.955,
+            "dressing": "zama_north_bank"
+        },
+        {
+            "type": "boulder",
+            "x": 310.72,
+            "z": 35.08,
+            "scale": 0.91,
+            "rotation": 2.59,
+            "dressing": "zama_north_bank"
+        },
+        {
+            "type": "palm_tree",
+            "x": 351.91,
+            "z": 48.97,
+            "scale": 1.12,
+            "rotation": 2.339,
+            "dressing": "zama_north_bank"
+        },
+        {
+            "type": "boulder",
+            "x": 392.35,
+            "z": 40.59,
+            "scale": 1.12,
+            "rotation": 0.958,
+            "dressing": "zama_north_bank"
+        },
+        {
+            "type": "plant",
+            "x": 426.08,
+            "z": 62.25,
+            "scale": 1.19,
+            "rotation": 4.38,
+            "dressing": "zama_north_bank"
+        },
+        {
+            "type": "plant",
+            "x": 428.88,
+            "z": 65.32,
+            "scale": 0.92,
+            "rotation": 5.585,
+            "dressing": "zama_north_bank"
+        },
+        {
+            "type": "boulder",
+            "x": 467.87,
+            "z": 61.37,
+            "scale": 1.21,
+            "rotation": 1.339,
+            "dressing": "zama_north_bank"
+        },
+        {
+            "type": "palm_tree",
+            "x": 503.91,
+            "z": 82.96,
+            "scale": 0.86,
+            "rotation": 0.129,
+            "dressing": "zama_north_bank"
+        },
+        {
+            "type": "boulder",
+            "x": 545.79,
+            "z": 74.11,
+            "scale": 1.12,
+            "rotation": 1.587,
+            "dressing": "zama_north_bank"
+        },
+        {
+            "type": "plant",
+            "x": 583.74,
+            "z": 90.57,
+            "scale": 1.13,
+            "rotation": 5.066,
+            "dressing": "zama_north_bank"
+        },
+        {
+            "type": "plant",
+            "x": 587.03,
+            "z": 94.18,
+            "scale": 1.17,
+            "rotation": 3.27,
+            "dressing": "zama_north_bank"
+        },
+        {
+            "type": "boulder",
+            "x": 626.22,
+            "z": 84.64,
+            "scale": 1.3,
+            "rotation": 0.495,
+            "dressing": "zama_north_bank"
+        },
+        {
+            "type": "palm_tree",
+            "x": 663.04,
+            "z": 103.75,
+            "scale": 1.06,
+            "rotation": 4.626,
+            "dressing": "zama_north_bank"
+        },
+        {
+            "type": "boulder",
+            "x": 703.31,
+            "z": 102.41,
+            "scale": 0.96,
+            "rotation": 0.125,
+            "dressing": "zama_north_bank"
+        },
+        {
+            "type": "plant",
+            "x": 738.34,
+            "z": 126.6,
+            "scale": 0.99,
+            "rotation": 5.823,
+            "dressing": "zama_north_bank"
+        },
+        {
+            "type": "plant",
+            "x": 741.96,
+            "z": 129.98,
+            "scale": 1.39,
+            "rotation": 4.33,
+            "dressing": "zama_north_bank"
+        },
+        {
+            "type": "firecamp",
+            "x": 630.3,
+            "z": 375.0,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "zama_gate_1",
+            "radius": 3.2,
+            "intensity": 1.15,
+            "persistent": true
+        },
+        {
+            "type": "firecamp",
+            "x": 641.7,
+            "z": 375.0,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "zama_gate_1",
+            "radius": 3.2,
+            "intensity": 1.15,
+            "persistent": true
+        },
+        {
+            "type": "weapon_rack",
+            "x": 642.7,
+            "z": 371.0,
+            "scale": 1.0,
+            "rotation": -1.571,
+            "dressing": "zama_gate_1"
+        },
+        {
+            "type": "supply_cart",
+            "x": 628.8,
+            "z": 369.0,
+            "scale": 1.0,
+            "rotation": -1.271,
+            "dressing": "zama_gate_1"
+        },
+        {
+            "type": "statue",
+            "x": 629.73,
+            "z": 365.12,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "zama_gate_1"
+        },
+        {
+            "type": "statue",
+            "x": 643.13,
+            "z": 365.12,
+            "scale": 1.0,
+            "rotation": -3.142,
+            "dressing": "zama_gate_1"
+        },
+        {
+            "type": "firecamp",
+            "x": 711.7,
+            "z": 227.0,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "zama_gate_2",
+            "radius": 3.2,
+            "intensity": 1.15,
+            "persistent": true
+        },
+        {
+            "type": "firecamp",
+            "x": 700.3,
+            "z": 227.0,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "zama_gate_2",
+            "radius": 3.2,
+            "intensity": 1.15,
+            "persistent": true
+        },
+        {
+            "type": "weapon_rack",
+            "x": 699.3,
+            "z": 231.0,
+            "scale": 1.0,
+            "rotation": 1.571,
+            "dressing": "zama_gate_2"
+        },
+        {
+            "type": "supply_cart",
+            "x": 713.2,
+            "z": 233.0,
+            "scale": 1.0,
+            "rotation": 1.871,
+            "dressing": "zama_gate_2"
+        },
+        {
+            "type": "firecamp",
+            "x": 449.47,
+            "z": 211.88,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "zama_gate_3",
+            "radius": 3.2,
+            "intensity": 1.15,
+            "persistent": true
+        },
+        {
+            "type": "weapon_rack",
+            "x": 436.67,
+            "z": 215.88,
+            "scale": 1.0,
+            "rotation": 1.571,
+            "dressing": "zama_gate_3"
+        },
+        {
+            "type": "weapon_rack",
+            "x": 425.81,
+            "z": 194.13,
+            "scale": 1.0,
+            "rotation": 1.571,
+            "dressing": "zama_gate_4"
+        },
+        {
+            "type": "supply_cart",
+            "x": 447.8,
+            "z": 196.05,
+            "scale": 1.0,
+            "rotation": 1.871,
+            "dressing": "zama_gate_4"
+        },
+        {
+            "type": "firecamp",
+            "x": 559.0,
+            "z": 605.0,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "zama_gate_5",
+            "radius": 3.2,
+            "intensity": 1.15,
+            "persistent": true
+        },
+        {
+            "type": "firecamp",
+            "x": 569.43,
+            "z": 606.12,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "zama_gate_5",
+            "radius": 3.2,
+            "intensity": 1.15,
+            "persistent": true
+        },
+        {
+            "type": "weapon_rack",
+            "x": 570.0,
+            "z": 601.0,
+            "scale": 1.0,
+            "rotation": -1.571,
+            "dressing": "zama_gate_5"
+        },
+        {
+            "type": "supply_cart",
+            "x": 557.5,
+            "z": 599.0,
+            "scale": 1.0,
+            "rotation": -1.271,
+            "dressing": "zama_gate_5"
+        },
+        {
+            "type": "firecamp",
+            "x": 561.3,
+            "z": 667.0,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "zama_gate_6",
+            "radius": 3.2,
+            "intensity": 1.15,
+            "persistent": true
+        },
+        {
+            "type": "firecamp",
+            "x": 550.7,
+            "z": 667.0,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "zama_gate_6",
+            "radius": 3.2,
+            "intensity": 1.15,
+            "persistent": true
+        },
+        {
+            "type": "weapon_rack",
+            "x": 549.7,
+            "z": 671.0,
+            "scale": 1.0,
+            "rotation": 1.571,
+            "dressing": "zama_gate_6"
+        },
+        {
+            "type": "supply_cart",
+            "x": 562.8,
+            "z": 673.0,
+            "scale": 1.0,
+            "rotation": 1.871,
+            "dressing": "zama_gate_6"
+        },
+        {
+            "type": "firecamp",
+            "x": 519.0,
+            "z": 627.0,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "zama_gate_7",
+            "radius": 3.2,
+            "intensity": 1.15,
+            "persistent": true
+        },
+        {
+            "type": "firecamp",
+            "x": 518.28,
+            "z": 614.82,
+            "scale": 1.0,
+            "rotation": 0.0,
+            "dressing": "zama_gate_7",
+            "radius": 3.2,
+            "intensity": 1.15,
+            "persistent": true
+        },
+        {
+            "type": "weapon_rack",
+            "x": 515.47,
+            "z": 613.75,
+            "scale": 1.0,
+            "rotation": 3.142,
+            "dressing": "zama_gate_7"
+        },
+        {
+            "type": "supply_cart",
+            "x": 513.0,
+            "z": 628.5,
+            "scale": 1.0,
+            "rotation": 3.442,
+            "dressing": "zama_gate_7"
+        }
+    ],
+    "dressing": [
+        {
+            "id": "zama_oasis",
+            "kind": "oasis",
+            "x": 300,
+            "z": 498,
+            "facing": "north",
+            "palms": 11,
+            "radius": 13,
+            "tents": 2
+        },
+        {
+            "id": "zama_oasis_bank",
+            "kind": "riverbank",
+            "from": [
+                200,
+                462
+            ],
+            "to": [
+                420,
+                478
+            ],
+            "spacing": 26,
+            "kinds": [
+                "palm_tree",
+                "plant",
+                "boulder",
+                "plant"
+            ]
+        },
+        {
+            "id": "zama_field_of_the_dead",
+            "kind": "boneyard",
+            "x": 119,
+            "z": 609,
+            "radius": 22,
+            "dead_trees": 12,
+            "ruins": 5,
+            "boulders": 8,
+            "statues": 2
+        },
+        {
+            "id": "zama_vanguard_ring",
+            "kind": "barrow_field",
+            "x": 119,
+            "z": 609,
+            "radius": 15,
+            "ruins": 6,
+            "dead_trees": 0,
+            "statues": 0,
+            "boulders": 0
+        },
+        {
+            "id": "zama_desert_barrows",
+            "kind": "barrow_field",
+            "x": 108,
+            "z": 173,
+            "radius": 13,
+            "shrine": true,
+            "ruins": 6,
+            "dead_trees": 5,
+            "boulders": 5
+        },
+        {
+            "id": "zama_scipio_avenue",
+            "kind": "tree_avenue",
+            "from": [
+                536,
+                342
+            ],
+            "to": [
+                596,
+                334
+            ],
+            "tree": "palm_tree",
+            "spacing": 11
+        },
+        {
+            "id": "zama_camp_avenue",
+            "kind": "tree_avenue",
+            "from": [
+                60,
+                388
+            ],
+            "to": [
+                160,
+                376
+            ],
+            "tree": "palm_tree",
+            "spacing": 12,
+            "sides": "right"
+        },
+        {
+            "id": "zama_kraal_fold",
+            "kind": "sheepfold",
+            "x": 322,
+            "z": 104,
+            "facing": "south"
+        },
+        {
+            "id": "zama_south_bridge",
+            "kind": "bridgehead",
+            "x": 450,
+            "z": 562
+        },
+        {
+            "id": "zama_rearguard_bridge",
+            "kind": "bridgehead",
+            "x": 591,
+            "z": 530
+        },
+        {
+            "id": "zama_west_bridge",
+            "kind": "bridgehead",
+            "x": 47,
+            "z": 472,
+            "cart": false
+        },
+        {
+            "id": "zama_scipio_ramp",
+            "kind": "ramp_mouth",
+            "x": 566,
+            "z": 396,
+            "statue": true,
+            "fire": true
+        },
+        {
+            "id": "zama_north_ramp",
+            "kind": "ramp_mouth",
+            "x": 436,
+            "z": 237,
+            "statue": true
+        },
+        {
+            "id": "zama_camp_junction",
+            "kind": "junction",
+            "x": 180,
+            "z": 372,
+            "style": "camp"
+        },
+        {
+            "id": "zama_scipio_junction",
+            "kind": "junction",
+            "x": 520,
+            "z": 344,
+            "style": "milestone",
+            "tree": "palm_tree",
+            "snap": 6
+        },
+        {
+            "id": "zama_west_junction",
+            "kind": "junction",
+            "x": 8,
+            "z": 396,
+            "style": "shrine"
+        },
+        {
+            "id": "zama_north_bank",
+            "kind": "riverbank",
+            "from": [
+                40,
+                166
+            ],
+            "to": [
+                760,
+                133
+            ],
+            "spacing": 40,
+            "kinds": [
+                "palm_tree",
+                "boulder",
+                "plant",
+                "boulder"
+            ]
+        },
+        {
+            "id": "zama_gate_1",
+            "kind": "gate_approach",
+            "x": 636.0,
+            "z": 384.0,
+            "statues": true
+        },
+        {
+            "id": "zama_gate_2",
+            "kind": "gate_approach",
+            "x": 706.0,
+            "z": 218.0
+        },
+        {
+            "id": "zama_gate_3",
+            "kind": "gate_approach",
+            "x": 444.0,
+            "z": 204.0,
+            "statues": true
+        },
+        {
+            "id": "zama_gate_4",
+            "kind": "gate_approach",
+            "x": 436.0,
+            "z": 182.0,
+            "statues": true
+        },
+        {
+            "id": "zama_gate_5",
+            "kind": "gate_approach",
+            "x": 564,
+            "z": 614
+        },
+        {
+            "id": "zama_gate_6",
+            "kind": "gate_approach",
+            "x": 556,
+            "z": 658
+        },
+        {
+            "id": "zama_gate_7",
+            "kind": "gate_approach",
+            "x": 528,
+            "z": 622
         }
     ]
 }
