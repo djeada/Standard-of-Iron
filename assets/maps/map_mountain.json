@@ -15,7 +15,7 @@
       0,
       120.0
     ],
-    "distance": 76.8,
+    "distance": 264.0,
     "tilt_deg": 48.0,
     "yaw": 225.0,
     "fov_y": 45.0,
@@ -27,39 +27,39 @@
     "start_time": 9.0,
     "time_mode": "continuous",
     "day_length_seconds": 2400.0,
-    "lighting_profile": "mediterranean_summer"
+    "lighting_profile": "alpine_clear"
   },
   "biome": {
     "ground_type": "alpine_mix",
     "seed": 77310,
-    "patch_density": 2.4,
+    "patch_density": 2.8,
     "patch_jitter": 0.8,
     "plant_density": 0.24,
-    "snow_coverage": 0.62,
+    "snow_coverage": 0.82,
     "snow_color": [
       0.93,
       0.95,
       0.99
     ],
     "grass_primary": [
-      0.29,
-      0.4,
-      0.29
+      0.18,
+      0.25,
+      0.21
     ],
     "grass_secondary": [
-      0.35,
-      0.47,
-      0.34
+      0.24,
+      0.33,
+      0.27
     ],
     "rock_low": [
-      0.56,
-      0.59,
-      0.64
+      0.4,
+      0.44,
+      0.52
     ],
     "rock_high": [
-      0.88,
-      0.9,
-      0.95
+      0.7,
+      0.76,
+      0.86
     ],
     "height_noise": [
       0.26,
@@ -68,7 +68,9 @@
     "ground_irregularity_enabled": true,
     "irregularity_scale": 0.17,
     "irregularity_amplitude": 0.09,
-    "moisture_level": 0.35
+    "moisture_level": 0.42,
+    "grass_saturation": 0.78,
+    "rock_exposure": 0.74
   },
   "rain": {
     "enabled": true,

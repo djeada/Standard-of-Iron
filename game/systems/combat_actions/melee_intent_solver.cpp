@@ -94,8 +94,13 @@ auto resolve_melee_intent(const MeleeIntentInputs& inputs) noexcept
       std::clamp(inputs.held_duration / k_melee_full_charge_seconds, 0.0F, 1.0F);
 
   constexpr float k_rate_gain = 0.55F;
+  constexpr float k_authored_swing_speed = 1.0F;
+  constexpr float k_min_swing_speed = 0.85F;
+  constexpr float k_max_swing_speed = 1.35F;
   intent.swing_speed =
-      std::clamp(0.80F + (inputs.aim_rate * k_rate_gain), 0.45F, 2.10F);
+      std::clamp(k_authored_swing_speed + (inputs.aim_rate * k_rate_gain),
+                 k_min_swing_speed,
+                 k_max_swing_speed);
 
   intent.follow_through =
       std::clamp(0.32F + (0.46F * sweep) + (0.22F * intent.charge), 0.0F, 1.0F);

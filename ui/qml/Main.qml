@@ -57,7 +57,9 @@ ApplicationWindow {
             mainWindow.game_paused = false;
             if (typeof game !== 'undefined' && game.commander.mode_state !== "active" && game.commander.toggle_mode)
                 game.commander.toggle_mode();
-            mainWindow.capture_view_ready = typeof game !== 'undefined' && game.commander.mode_state === "active";
+            mainWindow.capture_view_ready = typeof game !== 'undefined' && !game.is_loading && game.commander.mode_state === "active";
+        } else if (name === "hud") {
+            mainWindow.capture_view_ready = typeof game !== 'undefined' && !game.is_loading;
         } else {
             mainWindow.capture_view_ready = true;
         }
