@@ -277,13 +277,24 @@ Item {
         visible: has_waves && !hud.commander_rpg_mode && !(typeof game !== 'undefined' && game.tutorial && game.tutorial.holds_mission_clock)
     }
 
+    MissionDeadline {
+        id: missionDeadline
+
+        anchors.top: topPanel.bottom
+        anchors.left: parent.left
+        anchors.leftMargin: Design.Metrics.hudZoneMargin
+        anchors.topMargin: Design.Metrics.space8 + (waveTracker.visible ? waveTracker.height + Design.Metrics.space8 : 0)
+
+        visible: has_deadline && !hud.commander_rpg_mode
+    }
+
     EconomyCoach {
         id: economyCoach
 
         anchors.top: topPanel.bottom
         anchors.left: parent.left
         anchors.leftMargin: Design.Metrics.hudZoneMargin
-        anchors.topMargin: Design.Metrics.space8 + (waveTracker.visible ? waveTracker.height + Design.Metrics.space8 : 0)
+        anchors.topMargin: Design.Metrics.space8 + (waveTracker.visible ? waveTracker.height + Design.Metrics.space8 : 0) + (missionDeadline.visible ? missionDeadline.height + Design.Metrics.space8 : 0)
 
         economy: hud.economy
         gate: !hud.commander_rpg_mode && !!hud.economy && hud.economy.coach_visible

@@ -33,6 +33,7 @@ QtObject {
     readonly property string gate: "\u25A2"
     readonly property string population: "☷"
     readonly property string defeated: "☠"
+    readonly property string deadline: "\u29D7"
     readonly property string pause: "⏸"
     readonly property string play: "▶"
     readonly property string reset: "↺"

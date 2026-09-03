@@ -2,6 +2,7 @@
 
 #include <QString>
 
+#include <algorithm>
 #include <optional>
 #include <vector>
 
@@ -160,6 +161,21 @@ struct CommanderMessageCondition {
 };
 
 inline constexpr float k_default_commander_message_seconds = 9.0F;
+
+inline constexpr float k_commander_message_type_seconds_per_char = 0.022F;
+
+inline constexpr float k_commander_message_read_seconds_per_char = 0.055F;
+
+inline constexpr float k_commander_message_max_seconds = 20.0F;
+
+[[nodiscard]] inline auto
+legible_commander_message_seconds(int character_count,
+                                  float authored_seconds) -> float {
+  const float needed = static_cast<float>(std::max(0, character_count)) *
+                       (k_commander_message_type_seconds_per_char +
+                        k_commander_message_read_seconds_per_char);
+  return std::max(authored_seconds, std::min(needed, k_commander_message_max_seconds));
+}
 
 struct CommanderMessage {
   QString id;

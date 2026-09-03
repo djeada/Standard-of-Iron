@@ -2,7 +2,7 @@
   "id": "the_timber_levy",
   "menu_order": 10,
   "title": "The Timber Levy",
-  "summary": "Fill the levy out of the Pinewater cut: four hundred of timber and two hundred and ten of stone, cut and carried home before the column comes back through.",
+  "summary": "Fill the levy out of the Pinewater cut: eight hundred of timber and two hundred and ten of stone, cut and carried home before the column comes back through at dusk.",
   "map_path": ":/assets/maps/map_pinewater_cut.json",
   "player_setup": {
     "nation": "roman_republic",
@@ -48,23 +48,28 @@
     {
       "type": "accumulate_resources",
       "resources": {
-        "wood": 400,
+        "wood": 800,
         "stone": 210
       },
-      "description": "Cut and carry home four hundred of timber and two hundred and ten of stone. The near stand will not cover it; the deep pines will."
+      "description": "Cut and carry home eight hundred of timber and two hundred and ten of stone. The near stand was stripped bare; the deep pines and the east screen are the only timber left standing."
     }
   ],
   "optional_objectives": [
     {
       "type": "accumulate_resources",
       "resources": {
-        "wood": 640,
+        "wood": 1280,
         "stone": 315
       },
       "description": "Overcut the levy. A surplus is the only thing a quartermaster has ever thanked anyone for."
     }
   ],
   "defeat_conditions": [
+    {
+      "type": "time_limit",
+      "duration": 900.0,
+      "description": "The column came back through and the carts were still empty. A levy that misses the road is a levy nobody signed for."
+    },
     {
       "type": "lose_commander",
       "description": "The officer of the detail falls. Nobody else here can sign for the levy."
@@ -84,10 +89,23 @@
         "type": "mission_start",
         "delay": 2.0
       },
-      "text": "Four hundred of timber and two hundred of stone, and the near stand was stripped by the last detail. That means the deep pines, which means the long road, which means whatever is living in the deep pines gets a look at us. Split the crew. Escort the far one.",
+      "text": "Eight hundred of timber and two hundred of stone, and the near stand was stripped by the last detail. That means the deep pines, which means the long road, which means whatever is living in the deep pines gets a look at us. The column comes back through at dusk and it does not wait. Split the crew. Escort the far one.",
       "voice_cue": "alert.commander_message",
       "duration": 9.0,
       "priority": 100
+    },
+    {
+      "id": "timber_dusk_warning",
+      "speaker": "roman_field_commander",
+      "pose": "cynical",
+      "trigger": {
+        "type": "mission_start",
+        "delay": 600.0
+      },
+      "text": "Light is going. Five minutes of road left in the day, and whatever is on the carts when the column reaches us is what we levied. Bring them home.",
+      "voice_cue": "alert.commander_message",
+      "duration": 9.0,
+      "priority": 110
     },
     {
       "id": "timber_victory",
@@ -110,7 +128,7 @@
         "type": "mission_defeat",
         "delay": 1.0
       },
-      "text": "Leave the axes. Leave the carts. A detail that cannot walk out of its own cut does not get to carry anything.",
+      "text": "Leave the axes. Leave the carts. A detail that cannot fill its own levy before the column comes through does not get to carry anything.",
       "voice_cue": "alert.commander_message",
       "duration": 9.0,
       "priority": 120
