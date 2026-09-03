@@ -48,11 +48,6 @@ constexpr float k_duel_base_separation_min = 0.85F;
 constexpr float k_duel_base_separation_max = 1.70F;
 constexpr float desired_yaw_turn_speed_degrees = 720.0F;
 
-constexpr float k_turn_speed_elephant_degrees = 110.0F;
-constexpr float k_turn_speed_siege_degrees = 100.0F;
-constexpr float k_turn_speed_cavalry_degrees = 300.0F;
-constexpr float k_turn_speed_sheep_degrees = 210.0F;
-constexpr float k_turn_speed_wolf_degrees = 340.0F;
 constexpr float k_formation_heading_min_speed = 0.4F;
 constexpr float k_formation_heading_speed_fraction = 0.25F;
 constexpr float k_formation_intent_min_distance = 1.0F;
@@ -63,26 +58,6 @@ constexpr float k_motor_substep_cells = 0.45F;
 constexpr int k_max_motor_substeps = 8;
 
 constexpr float k_turning_translation_threshold = 0.35F;
-
-auto body_turn_speed_degrees(Game::Units::SpawnType type) -> float {
-  switch (type) {
-  case Game::Units::SpawnType::Elephant:
-    return k_turn_speed_elephant_degrees;
-  case Game::Units::SpawnType::Catapult:
-  case Game::Units::SpawnType::Ballista:
-    return k_turn_speed_siege_degrees;
-  case Game::Units::SpawnType::MountedKnight:
-  case Game::Units::SpawnType::HorseArcher:
-  case Game::Units::SpawnType::HorseSpearman:
-    return k_turn_speed_cavalry_degrees;
-  case Game::Units::SpawnType::Sheep:
-    return k_turn_speed_sheep_degrees;
-  case Game::Units::SpawnType::Wolf:
-    return k_turn_speed_wolf_degrees;
-  default:
-    return desired_yaw_turn_speed_degrees;
-  }
-}
 
 auto formation_turn_speed_degrees(const Engine::Core::Entity& entity,
                                   const Engine::Core::UnitComponent& unit,
@@ -195,8 +170,9 @@ auto face_locked_structure(Engine::Core::World* world,
   transform.has_desired_yaw = true;
   apply_desired_yaw(&transform,
                     delta_time,
-                    unit != nullptr ? body_turn_speed_degrees(unit->spawn_type)
-                                    : desired_yaw_turn_speed_degrees);
+                    unit != nullptr
+                        ? Game::Units::body_turn_speed_degrees(unit->spawn_type)
+                        : desired_yaw_turn_speed_degrees);
   return true;
 }
 
@@ -244,9 +220,9 @@ void finalize_orientation(Engine::Core::Entity* entity,
   }
 
   auto const* unit = entity->get_component<Engine::Core::UnitComponent>();
-  float const body_turn_speed = unit != nullptr
-                                    ? body_turn_speed_degrees(unit->spawn_type)
-                                    : desired_yaw_turn_speed_degrees;
+  float const body_turn_speed =
+      unit != nullptr ? Game::Units::body_turn_speed_degrees(unit->spawn_type)
+                      : desired_yaw_turn_speed_degrees;
   float const turn_speed =
       (unit != nullptr ? formation_turn_speed_degrees(*entity, *unit, body_turn_speed)
                        : body_turn_speed) *
@@ -460,6 +436,10 @@ namespace {
 [[nodiscard]] auto duel_footwork_body(const Engine::Core::Entity& entity) -> bool {
   if (entity.has_component<Engine::Core::BuildingComponent>() ||
       entity.has_component<Engine::Core::ElephantComponent>()) {
+    return false;
+  }
+
+  if (entity.has_component<Engine::Core::WildlifeComponent>()) {
     return false;
   }
   auto const* unit = entity.get_component<Engine::Core::UnitComponent>();
@@ -843,10 +823,15 @@ auto MovementSystem::apply_duel_footwork(Engine::Core::Entity* entity,
       std::atan2(face_x, face_z) * 180.0F / std::numbers::pi_v<float>;
   float const current = transform.rotation.y;
   float const diff = std::fmod((target_yaw - current + 540.0F), 360.0F) - 180.0F;
-  transform.rotation.y =
-      current + std::clamp(diff,
-                           -k_duel_footwork_turn_degrees_per_second * delta_time,
-                           k_duel_footwork_turn_degrees_per_second * delta_time);
+  auto const* footwork_unit = entity->get_component<Engine::Core::UnitComponent>();
+  float const footwork_turn_speed =
+      footwork_unit != nullptr
+          ? std::min(k_duel_footwork_turn_degrees_per_second,
+                     Game::Units::body_turn_speed_degrees(footwork_unit->spawn_type))
+          : k_duel_footwork_turn_degrees_per_second;
+  transform.rotation.y = current + std::clamp(diff,
+                                              -footwork_turn_speed * delta_time,
+                                              footwork_turn_speed * delta_time);
   transform.desired_yaw = transform.rotation.y;
   transform.has_desired_yaw = false;
   return true;
@@ -932,13 +917,14 @@ void MovementSystem::move_unit(Engine::Core::Entity* entity,
     if (in_hold_mode) {
       facts->progress.state = Engine::Core::MovementOrderState::Idle;
       if (!entity->has_component<Engine::Core::BuildingComponent>()) {
-        apply_desired_yaw(transform,
-                          delta_time,
-                          formation_turn_speed_degrees(
-                              *entity,
-                              *unit,
-                              std::min(hold_mode_turn_speed_degrees,
-                                       body_turn_speed_degrees(unit->spawn_type))));
+        apply_desired_yaw(
+            transform,
+            delta_time,
+            formation_turn_speed_degrees(
+                *entity,
+                *unit,
+                std::min(hold_mode_turn_speed_degrees,
+                         Game::Units::body_turn_speed_degrees(unit->spawn_type))));
       }
     }
     return;
@@ -1003,7 +989,7 @@ void MovementSystem::move_unit(Engine::Core::Entity* entity,
           std::atan2(movement->vx, movement->vz) * 180.0F / std::numbers::pi_v<float>;
       float const current = transform->rotation.y;
       float const diff = std::fmod((target_yaw - current + 540.0F), 360.0F) - 180.0F;
-      float const turn_speed = body_turn_speed_degrees(unit->spawn_type);
+      float const turn_speed = Game::Units::body_turn_speed_degrees(unit->spawn_type);
       float const step =
           std::clamp(diff, -turn_speed * delta_time, turn_speed * delta_time);
       transform->rotation.y = current + step;

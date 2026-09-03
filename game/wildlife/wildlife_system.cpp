@@ -565,6 +565,11 @@ auto WildlifeSystem::begin_bite(Engine::Core::Entity& entity,
   bite.at(prey.x, 0.0F, prey.z);
   Engine::Core::EventManager::instance().publish(bite);
 
+  if (auto* movement = entity.get_component<Engine::Core::MovementComponent>();
+      movement != nullptr) {
+    movement->stop();
+  }
+
   auto* transform = entity.get_component<Engine::Core::TransformComponent>();
   if (transform != nullptr) {
     float const dx = prey.x - transform->position.x;

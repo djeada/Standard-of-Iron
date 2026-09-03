@@ -82,40 +82,58 @@ auto state_for_gait(const DrawState& state, Render::Wildlife::WolfGait gait)
              : Render::Creature::AnimationStateId::Idle;
 }
 
+} // namespace
+
+auto resolve_wolf_clip(const DrawState& state,
+                       GaitTier tier) -> Render::Creature::AnimationStateId {
+  if (state.dead) {
+    return Render::Creature::AnimationStateId::Dead;
+  }
+  if (state.death_progress >= 0.0F) {
+    return Render::Creature::AnimationStateId::Die;
+  }
+
+  if (state.bite_progress >= 0.0F && tier == GaitTier::Stand) {
+    return Render::Creature::AnimationStateId::AttackMelee;
+  }
+  return state_for_gait(state, resolve_gait(state, tier));
+}
+
+namespace {
+
 void draw_wolf(const DrawContext& ctx, ISubmitter& out) {
   const DrawState state = resolve_draw_state(ctx, k_top_speed);
 
   float const speed = gait_speed(state);
   float const gait_ratio = std::clamp(speed / k_top_speed, 0.0F, 1.0F);
-  const Render::Wildlife::WolfGait gait = resolve_gait(
-      state, resolve_gait_tier(state, gait_ratio, k_walk_threshold, k_run_threshold));
+  const GaitTier tier =
+      resolve_gait_tier(state, gait_ratio, k_walk_threshold, k_run_threshold);
+  const Render::Wildlife::WolfGait gait = resolve_gait(state, tier);
 
   Render::Wildlife::WildlifeRenderInputs inputs;
   inputs.kind = Render::Creature::Pipeline::CreatureKind::Wolf;
   inputs.variant = resolve_variant(state);
+  inputs.state = resolve_wolf_clip(state, tier);
 
-  if (state.dead) {
-    inputs.state = Render::Creature::AnimationStateId::Dead;
+  switch (inputs.state) {
+  case Render::Creature::AnimationStateId::Dead:
     inputs.phase = 1.0F;
-  } else if (state.death_progress >= 0.0F) {
-    inputs.state = Render::Creature::AnimationStateId::Die;
+    break;
+  case Render::Creature::AnimationStateId::Die:
     inputs.phase = action_phase(state, state.death_progress);
-  } else if (state.bite_progress >= 0.0F) {
-    inputs.state = Render::Creature::AnimationStateId::AttackMelee;
+    break;
+  case Render::Creature::AnimationStateId::AttackMelee:
     inputs.phase = action_phase(state, state.bite_progress);
-  } else {
-    inputs.state = state_for_gait(state, gait);
-    switch (inputs.state) {
-    case Render::Creature::AnimationStateId::Idle:
-      inputs.phase = ambient_phase(state, k_idle_period_seconds);
-      break;
-    case Render::Creature::AnimationStateId::WildlifeTense:
-      inputs.phase = ambient_phase(state, k_crouch_period_seconds);
-      break;
-    default:
-      inputs.phase = gait_phase(state, Render::Wildlife::wolf_gait_advance(gait));
-      break;
-    }
+    break;
+  case Render::Creature::AnimationStateId::Idle:
+    inputs.phase = ambient_phase(state, k_idle_period_seconds);
+    break;
+  case Render::Creature::AnimationStateId::WildlifeTense:
+    inputs.phase = ambient_phase(state, k_crouch_period_seconds);
+    break;
+  default:
+    inputs.phase = gait_phase(state, Render::Wildlife::wolf_gait_advance(gait));
+    break;
   }
 
   const ClipTransition transition =
