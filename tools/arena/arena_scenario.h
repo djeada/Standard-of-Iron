@@ -419,7 +419,12 @@ struct ArenaScenarioDefinition {
   QString rpg_commander_group;
   std::vector<ArenaPresentationHitch> presentation_hitches;
   Render::GraphicsQuality graphics_quality{Render::GraphicsQuality::High};
-  Game::Map::EnvironmentDefinition environment{};
+  Game::Map::EnvironmentDefinition environment{
+      .start_time = 13.0F,
+      .time_mode = Game::Map::TimeMode::Locked,
+      .day_length_seconds = 1800.0F,
+      .lighting_profile = QStringLiteral("arena_neutral"),
+  };
   Game::Map::WeatherLightingInput weather{};
   Game::Map::RainSettings precipitation{};
   Game::Wildlife::WildlifeSettings wildlife{};

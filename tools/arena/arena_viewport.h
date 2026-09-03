@@ -399,15 +399,20 @@ private:
   QTimer m_frame_timer;
   QElapsedTimer m_frame_clock;
   TerrainSettings m_terrain_settings;
-  Game::Map::GroundType m_ground_type = Game::Map::GroundType::ForestMud;
-  Game::Map::GroundType m_ground_type_baseline = Game::Map::GroundType::ForestMud;
+  Game::Map::GroundType m_ground_type = Game::Map::GroundType::GrassDry;
+  Game::Map::GroundType m_ground_type_baseline = Game::Map::GroundType::GrassDry;
   int m_terrain_seed_baseline = 1337;
   Game::Map::TimeOfDay m_time_of_day = Game::Map::TimeOfDay::Day;
   float m_environment_hour = 13.0F;
   std::optional<float> m_environment_hour_override;
   std::optional<Render::GraphicsQuality> m_graphics_quality_override;
-  QString m_lighting_profile = QStringLiteral("mediterranean_summer");
-  Game::Map::EnvironmentDefinition m_environment_definition;
+  QString m_lighting_profile = QStringLiteral("arena_neutral");
+  Game::Map::EnvironmentDefinition m_environment_definition{
+      .start_time = 13.0F,
+      .time_mode = Game::Map::TimeMode::Locked,
+      .day_length_seconds = 1800.0F,
+      .lighting_profile = QStringLiteral("arena_neutral"),
+  };
   Game::Map::EnvironmentClock m_environment_clock;
   bool m_rain_enabled = false;
   float m_rain_intensity = 0.5F;

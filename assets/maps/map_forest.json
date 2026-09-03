@@ -15,7 +15,7 @@
       0,
       88.0
     ],
-    "distance": 63.36,
+    "distance": 194.0,
     "tilt_deg": 48.0,
     "yaw": 225.0,
     "fov_y": 45.0,
@@ -27,33 +27,33 @@
     "start_time": 16.0,
     "time_mode": "continuous",
     "day_length_seconds": 2400.0,
-    "lighting_profile": "mediterranean_summer"
+    "lighting_profile": "pine_overcast"
   },
   "biome": {
     "ground_type": "forest_mud",
     "seed": 51844,
-    "patch_density": 3.5,
+    "patch_density": 5.4,
     "patch_jitter": 0.9,
-    "plant_density": 0.82,
+    "plant_density": 1.18,
     "grass_primary": [
-      0.21,
-      0.46,
-      0.25
+      0.12,
+      0.29,
+      0.17
     ],
     "grass_secondary": [
-      0.32,
-      0.56,
-      0.28
+      0.19,
+      0.38,
+      0.22
     ],
     "grass_dry": [
-      0.46,
-      0.42,
-      0.3
+      0.33,
+      0.3,
+      0.22
     ],
     "soil_color": [
-      0.2,
-      0.17,
-      0.13
+      0.11,
+      0.09,
+      0.07
     ],
     "height_noise": [
       0.24,
@@ -62,7 +62,9 @@
     "ground_irregularity_enabled": true,
     "irregularity_scale": 0.13,
     "irregularity_amplitude": 0.075,
-    "moisture_level": 0.85
+    "moisture_level": 0.92,
+    "grass_saturation": 0.86,
+    "soil_roughness": 0.72
   },
   "rain": {
     "enabled": true,

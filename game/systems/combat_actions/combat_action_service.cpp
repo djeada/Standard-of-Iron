@@ -16,7 +16,7 @@ namespace Game::Systems::CombatActions {
 namespace {
 
 constexpr float k_heavy_minimum_charge = 0.60F;
-constexpr float k_heavy_maximum_swing_speed = 0.72F;
+constexpr float k_heavy_maximum_swing_speed = 1.0F;
 constexpr float k_heavy_follow_through = 0.78F;
 
 [[nodiscard]] auto should_request_ranged_action(
