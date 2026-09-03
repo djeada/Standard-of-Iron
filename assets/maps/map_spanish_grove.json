@@ -15,7 +15,7 @@
       0,
       120.0
     ],
-    "distance": 76.8,
+    "distance": 264.0,
     "tilt_deg": 48.0,
     "yaw": 225.0,
     "fov_y": 45.0,
@@ -27,46 +27,46 @@
     "start_time": 12.5,
     "time_mode": "continuous",
     "day_length_seconds": 2400.0,
-    "lighting_profile": "mediterranean_summer"
+    "lighting_profile": "iberian_high_sun"
   },
   "biome": {
     "ground_type": "grass_dry",
     "seed": 63052,
     "patch_density": 2.8,
     "patch_jitter": 0.86,
-    "plant_density": 0.34,
-    "crack_intensity": 0.6,
-    "moisture_level": 0.16,
-    "grass_saturation": 0.78,
+    "plant_density": 0.42,
+    "crack_intensity": 0.82,
+    "moisture_level": 0.08,
+    "grass_saturation": 0.66,
     "grass_primary": [
-      0.29,
-      0.44,
-      0.21
+      0.31,
+      0.34,
+      0.16
     ],
     "grass_secondary": [
       0.4,
-      0.53,
-      0.25
+      0.42,
+      0.2
     ],
     "grass_dry": [
-      0.55,
-      0.51,
-      0.28
+      0.62,
+      0.49,
+      0.23
     ],
     "soil_color": [
-      0.53,
-      0.45,
-      0.33
+      0.5,
+      0.32,
+      0.18
     ],
     "rock_low": [
-      0.63,
-      0.59,
-      0.53
+      0.56,
+      0.44,
+      0.32
     ],
     "rock_high": [
-      0.79,
       0.76,
-      0.71
+      0.64,
+      0.48
     ],
     "height_noise": [
       0.18,

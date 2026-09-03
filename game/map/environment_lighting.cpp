@@ -15,6 +15,26 @@ struct LightingKeyframe {
   EnvironmentLightingState lighting;
 };
 
+struct ProfileGrade {
+  QVector3D primary_scale{1.0F, 1.0F, 1.0F};
+  float primary_intensity_scale = 1.0F;
+  QVector3D sky_target{0.5F, 0.62F, 0.78F};
+  float sky_mix = 0.0F;
+  QVector3D bounce_target{0.24F, 0.20F, 0.15F};
+  float bounce_mix = 0.0F;
+  float ambient_scale = 1.0F;
+  QVector3D fog_target{0.58F, 0.65F, 0.72F};
+  float fog_mix = 0.0F;
+  float fog_density_add = 0.0F;
+  QVector3D shadow_target{0.30F, 0.34F, 0.44F};
+  float shadow_mix = 0.0F;
+  float shadow_strength_scale = 1.0F;
+  float shadow_softness_add = 0.0F;
+  float exposure_scale = 1.0F;
+  float cloud_floor = 0.0F;
+  float wetness_floor = 0.0F;
+};
+
 auto make_keyframe(float hour,
                    QVector3D direction,
                    QVector3D primary,
@@ -154,6 +174,181 @@ auto mediterranean_summer_profile() -> const std::array<LightingKeyframe, 8>& {
   return keyframes;
 }
 
+auto graded_profile(const ProfileGrade& grade) -> std::array<LightingKeyframe, 8> {
+  auto result = mediterranean_summer_profile();
+  for (auto& keyframe : result) {
+    auto& lighting = keyframe.lighting;
+    lighting.primary_color *= grade.primary_scale;
+    lighting.primary_intensity *= grade.primary_intensity_scale;
+    lighting.sky_color += (grade.sky_target - lighting.sky_color) * grade.sky_mix;
+    lighting.ground_bounce_color +=
+        (grade.bounce_target - lighting.ground_bounce_color) * grade.bounce_mix;
+    lighting.ambient_intensity *= grade.ambient_scale;
+    lighting.fog_color += (grade.fog_target - lighting.fog_color) * grade.fog_mix;
+    lighting.fog_density += grade.fog_density_add;
+    lighting.shadow_tint +=
+        (grade.shadow_target - lighting.shadow_tint) * grade.shadow_mix;
+    lighting.shadow_strength *= grade.shadow_strength_scale;
+    lighting.shadow_softness += grade.shadow_softness_add;
+    lighting.exposure *= grade.exposure_scale;
+    lighting.cloud_cover = std::max(lighting.cloud_cover, grade.cloud_floor);
+    lighting.wetness = std::max(lighting.wetness, grade.wetness_floor);
+    lighting = lighting.sanitized();
+  }
+  return result;
+}
+
+auto delta_haze_profile() -> const std::array<LightingKeyframe, 8>& {
+  static const std::array<LightingKeyframe, 8> keyframes = graded_profile({
+      .primary_scale = {1.02F, 0.96F, 0.86F},
+      .primary_intensity_scale = 0.96F,
+      .sky_target = {0.38F, 0.58F, 0.64F},
+      .sky_mix = 0.34F,
+      .bounce_target = {0.18F, 0.29F, 0.20F},
+      .bounce_mix = 0.42F,
+      .ambient_scale = 1.03F,
+      .fog_target = {0.49F, 0.62F, 0.57F},
+      .fog_mix = 0.48F,
+      .fog_density_add = 0.0035F,
+      .shadow_target = {0.18F, 0.29F, 0.29F},
+      .shadow_mix = 0.44F,
+      .shadow_strength_scale = 0.88F,
+      .shadow_softness_add = 0.12F,
+      .exposure_scale = 0.96F,
+      .cloud_floor = 0.12F,
+      .wetness_floor = 0.16F,
+  });
+  return keyframes;
+}
+
+auto canyon_dry_profile() -> const std::array<LightingKeyframe, 8>& {
+  static const std::array<LightingKeyframe, 8> keyframes = graded_profile({
+      .primary_scale = {1.08F, 0.90F, 0.73F},
+      .primary_intensity_scale = 1.04F,
+      .sky_target = {0.42F, 0.59F, 0.78F},
+      .sky_mix = 0.24F,
+      .bounce_target = {0.46F, 0.27F, 0.14F},
+      .bounce_mix = 0.42F,
+      .ambient_scale = 0.94F,
+      .fog_target = {0.67F, 0.48F, 0.31F},
+      .fog_mix = 0.40F,
+      .fog_density_add = 0.0012F,
+      .shadow_target = {0.29F, 0.23F, 0.34F},
+      .shadow_mix = 0.34F,
+      .shadow_strength_scale = 1.10F,
+      .shadow_softness_add = -0.05F,
+      .exposure_scale = 0.97F,
+  });
+  return keyframes;
+}
+
+auto pine_overcast_profile() -> const std::array<LightingKeyframe, 8>& {
+  static const std::array<LightingKeyframe, 8> keyframes = graded_profile({
+      .primary_scale = {0.82F, 0.90F, 0.92F},
+      .primary_intensity_scale = 0.78F,
+      .sky_target = {0.30F, 0.42F, 0.47F},
+      .sky_mix = 0.48F,
+      .bounce_target = {0.15F, 0.23F, 0.18F},
+      .bounce_mix = 0.48F,
+      .ambient_scale = 1.08F,
+      .fog_target = {0.29F, 0.39F, 0.39F},
+      .fog_mix = 0.58F,
+      .fog_density_add = 0.0055F,
+      .shadow_target = {0.14F, 0.23F, 0.24F},
+      .shadow_mix = 0.55F,
+      .shadow_strength_scale = 0.78F,
+      .shadow_softness_add = 0.22F,
+      .exposure_scale = 0.93F,
+      .cloud_floor = 0.48F,
+      .wetness_floor = 0.22F,
+  });
+  return keyframes;
+}
+
+auto alpine_clear_profile() -> const std::array<LightingKeyframe, 8>& {
+  static const std::array<LightingKeyframe, 8> keyframes = graded_profile({
+      .primary_scale = {0.92F, 0.98F, 1.08F},
+      .primary_intensity_scale = 1.06F,
+      .sky_target = {0.37F, 0.56F, 0.82F},
+      .sky_mix = 0.44F,
+      .bounce_target = {0.43F, 0.50F, 0.61F},
+      .bounce_mix = 0.48F,
+      .ambient_scale = 1.08F,
+      .fog_target = {0.66F, 0.76F, 0.86F},
+      .fog_mix = 0.46F,
+      .fog_density_add = 0.0018F,
+      .shadow_target = {0.30F, 0.43F, 0.63F},
+      .shadow_mix = 0.52F,
+      .shadow_strength_scale = 0.88F,
+      .shadow_softness_add = 0.06F,
+      .exposure_scale = 1.04F,
+  });
+  return keyframes;
+}
+
+auto river_mist_profile() -> const std::array<LightingKeyframe, 8>& {
+  static const std::array<LightingKeyframe, 8> keyframes = graded_profile({
+      .primary_scale = {0.91F, 0.96F, 0.98F},
+      .primary_intensity_scale = 0.91F,
+      .sky_target = {0.39F, 0.57F, 0.67F},
+      .sky_mix = 0.42F,
+      .bounce_target = {0.17F, 0.29F, 0.22F},
+      .bounce_mix = 0.46F,
+      .ambient_scale = 1.04F,
+      .fog_target = {0.48F, 0.62F, 0.64F},
+      .fog_mix = 0.58F,
+      .fog_density_add = 0.0048F,
+      .shadow_target = {0.19F, 0.31F, 0.36F},
+      .shadow_mix = 0.48F,
+      .shadow_strength_scale = 0.82F,
+      .shadow_softness_add = 0.17F,
+      .exposure_scale = 0.96F,
+      .cloud_floor = 0.20F,
+      .wetness_floor = 0.18F,
+  });
+  return keyframes;
+}
+
+auto iberian_high_sun_profile() -> const std::array<LightingKeyframe, 8>& {
+  static const std::array<LightingKeyframe, 8> keyframes = graded_profile({
+      .primary_scale = {1.06F, 0.93F, 0.77F},
+      .primary_intensity_scale = 1.08F,
+      .sky_target = {0.36F, 0.57F, 0.80F},
+      .sky_mix = 0.28F,
+      .bounce_target = {0.45F, 0.31F, 0.15F},
+      .bounce_mix = 0.40F,
+      .ambient_scale = 0.92F,
+      .fog_target = {0.75F, 0.61F, 0.41F},
+      .fog_mix = 0.30F,
+      .fog_density_add = 0.0008F,
+      .shadow_target = {0.34F, 0.28F, 0.35F},
+      .shadow_mix = 0.32F,
+      .shadow_strength_scale = 1.10F,
+      .shadow_softness_add = -0.05F,
+      .exposure_scale = 0.98F,
+  });
+  return keyframes;
+}
+
+auto arena_neutral_profile() -> const std::array<LightingKeyframe, 8>& {
+  static const std::array<LightingKeyframe, 8> keyframes = graded_profile({
+      .primary_scale = {0.96F, 0.98F, 1.02F},
+      .primary_intensity_scale = 0.96F,
+      .sky_target = {0.46F, 0.59F, 0.73F},
+      .sky_mix = 0.22F,
+      .bounce_target = {0.26F, 0.24F, 0.20F},
+      .bounce_mix = 0.24F,
+      .fog_target = {0.57F, 0.64F, 0.69F},
+      .fog_mix = 0.24F,
+      .fog_density_add = 0.0010F,
+      .shadow_target = {0.27F, 0.34F, 0.44F},
+      .shadow_mix = 0.24F,
+      .shadow_softness_add = 0.04F,
+      .exposure_scale = 0.98F,
+  });
+  return keyframes;
+}
+
 auto iron_sepulcher_profile() -> const std::array<LightingKeyframe, 8>& {
   static const std::array<LightingKeyframe, 8> keyframes = [] {
     auto result = mediterranean_summer_profile();
@@ -175,8 +370,29 @@ auto iron_sepulcher_profile() -> const std::array<LightingKeyframe, 8>& {
 }
 
 auto profile_for_name(const QString& name) -> const std::array<LightingKeyframe, 8>& {
-  if (name.trimmed().compare(QStringLiteral("iron_sepulcher"), Qt::CaseInsensitive) ==
-      0) {
+  const QString normalized = name.trimmed().toLower();
+  if (normalized == QStringLiteral("delta_haze")) {
+    return delta_haze_profile();
+  }
+  if (normalized == QStringLiteral("canyon_dry")) {
+    return canyon_dry_profile();
+  }
+  if (normalized == QStringLiteral("pine_overcast")) {
+    return pine_overcast_profile();
+  }
+  if (normalized == QStringLiteral("alpine_clear")) {
+    return alpine_clear_profile();
+  }
+  if (normalized == QStringLiteral("river_mist")) {
+    return river_mist_profile();
+  }
+  if (normalized == QStringLiteral("iberian_high_sun")) {
+    return iberian_high_sun_profile();
+  }
+  if (normalized == QStringLiteral("arena_neutral")) {
+    return arena_neutral_profile();
+  }
+  if (normalized == QStringLiteral("iron_sepulcher")) {
     return iron_sepulcher_profile();
   }
   return mediterranean_summer_profile();
@@ -204,8 +420,8 @@ auto apply_weather(EnvironmentLightingState state,
   const float storm = std::clamp(weather.storm, 0.0F, 1.0F);
   const float cloud = std::clamp((rain * 0.72F) + (storm * 0.95F), 0.0F, 1.0F);
 
-  state.cloud_cover = cloud;
-  state.wetness = rain;
+  state.cloud_cover = std::max(state.cloud_cover, cloud);
+  state.wetness = std::max(state.wetness, rain);
   state.primary_intensity *= 1.0F - (cloud * 0.48F);
   state.shadow_strength *= 1.0F - (cloud * 0.58F);
   state.shadow_softness =

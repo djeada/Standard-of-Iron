@@ -340,7 +340,7 @@ auto main(int argc, char** argv) -> int {
       QStringList{QStringLiteral("lighting-profile")},
       QStringLiteral("Environment lighting profile."),
       QStringLiteral("profile"),
-      QStringLiteral("mediterranean_summer"));
+      QStringLiteral("arena_neutral"));
   QCommandLineOption const artifact_option(
       QStringList{QStringLiteral("artifact-dir")},
       QStringLiteral("Directory for reports, JSONL traces, and frame captures."),

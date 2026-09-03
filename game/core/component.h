@@ -1288,6 +1288,7 @@ public:
   float fpv_motion_vx{0.0F};
   float fpv_motion_vz{0.0F};
   bool fpv_motion_requested{false};
+  static constexpr float k_direct_control_gait_floor_speed = 0.60F;
   float posture{0.0F};
   float posture_max{100.0F};
   float punish_window_remaining{0.0F};

@@ -1,5 +1,6 @@
 #include <QVector3D>
 
+#include <array>
 #include <gtest/gtest.h>
 
 #include "map/map_definition.h"
@@ -19,6 +20,8 @@ auto ambient_radiance(const EnvironmentLightingState& settings) -> float {
 auto ambient_radiance_at(TimeOfDay time_of_day) -> float {
   return ambient_radiance(lighting_for_time_of_day(time_of_day));
 }
+
+[[nodiscard]] auto lit_floor(const EnvironmentLightingState& lighting) -> float;
 
 TEST(TimeOfDayTest, LightingForDayReturnsHighSun) {
   const auto settings = lighting_for_time_of_day(TimeOfDay::Day);
@@ -131,6 +134,52 @@ TEST(TimeOfDayTest, RainSoftensShadowsAndDrivesWetnessAndFog) {
   EXPECT_GT(rain.fog_density, clear.fog_density);
   EXPECT_FLOAT_EQ(rain.cloud_cover, 0.72F);
   EXPECT_FLOAT_EQ(rain.wetness, 1.0F);
+}
+
+TEST(TimeOfDayTest, BattlefieldProfilesHaveDistinctAtmosphericSignatures) {
+  const auto mediterranean = lighting_for_hour(13.0F);
+  const auto delta = lighting_for_hour(13.0F, QStringLiteral("delta_haze"));
+  const auto canyon = lighting_for_hour(13.0F, QStringLiteral("canyon_dry"));
+  const auto forest = lighting_for_hour(13.0F, QStringLiteral("pine_overcast"));
+  const auto alpine = lighting_for_hour(13.0F, QStringLiteral("alpine_clear"));
+  const auto river = lighting_for_hour(13.0F, QStringLiteral("river_mist"));
+  const auto iberian = lighting_for_hour(13.0F, QStringLiteral("iberian_high_sun"));
+
+  EXPECT_GT(delta.fog_density, mediterranean.fog_density);
+  EXPECT_GT(delta.wetness, 0.0F);
+  EXPECT_GT(canyon.ground_bounce_color.x(), canyon.ground_bounce_color.z());
+  EXPECT_GT(forest.cloud_cover, mediterranean.cloud_cover);
+  EXPECT_LT(forest.primary_intensity, mediterranean.primary_intensity);
+  EXPECT_GT(alpine.shadow_tint.z(), alpine.shadow_tint.x());
+  EXPECT_GT(river.fog_density, mediterranean.fog_density);
+  EXPECT_GT(iberian.primary_color.x(), iberian.primary_color.z());
+
+  EXPECT_NE(delta.fog_color, canyon.fog_color);
+  EXPECT_NE(forest.sky_color, alpine.sky_color);
+  EXPECT_NE(river.shadow_tint, iberian.shadow_tint);
+}
+
+TEST(TimeOfDayTest, EveryBattlefieldProfileStaysReadableAcrossTheClock) {
+  constexpr std::array<const char*, 7> profiles{
+      "delta_haze",
+      "canyon_dry",
+      "pine_overcast",
+      "alpine_clear",
+      "river_mist",
+      "iberian_high_sun",
+      "arena_neutral",
+  };
+
+  for (const char* profile : profiles) {
+    for (int hour = 0; hour < 24; ++hour) {
+      const auto lighting =
+          lighting_for_hour(static_cast<float>(hour), QString::fromLatin1(profile));
+      EXPECT_GT(lighting.primary_direction.length(), 0.99F) << profile;
+      EXPECT_GT(lighting.ambient_intensity, 0.0F) << profile;
+      EXPECT_GT(lighting.exposure, 0.0F) << profile;
+      EXPECT_GE(lit_floor(lighting), 0.34F) << profile << " at hour " << hour;
+    }
+  }
 }
 
 TEST(TimeOfDayTest, ClockUsesDeterministicSimulationTimeAndPauses) {

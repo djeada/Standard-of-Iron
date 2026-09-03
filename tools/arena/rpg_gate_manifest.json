@@ -83,10 +83,9 @@
     },
     {
       "id": "rpg_escort_crowd",
-      "status": "expected_red",
+      "status": "required_green",
       "gate": "3",
-      "notes": "Regressed at HEAD (35d87259), before the Gate 5 work and independent of it: three enemy_line soldiers jump 1.4-1.6 m of render root in one frame at 0.23 s and one is submitted with a 0.70 body up-vector while alive at 2.18 s. Bisected by running the scenario on a pristine checkout of 35d87259, where it fails identically; the last green run is artifacts/rpg-gates/run-20260824-231504, taken from the dirty worktree that became that commit. Owned by Gate 3 (pose agreement), pinned here so the Gate 5 slice is not masked by it.",
-      "issue_codes": ["render_root_teleport", "unexpected_fall_pose"]
+      "notes": "Green since 2 Sep 2026, in the same run that added nation-wide creature prewarm (render/template_prewarm_runner.cpp warms every assigned player nation, not only nations with a unit already on the field). The 1.4-1.6 m render-root jump at 0.23 s was consistent with soldiers whose rigged assets were still loading; pinned green rather than left red on a guess, so a regression is caught immediately."
     },
     {
       "id": "rpg_locomotion",
@@ -151,10 +150,9 @@
     },
     {
       "id": "rpg_motor_start_stop",
-      "status": "expected_red",
+      "status": "required_green",
       "gate": "3",
-      "issue_codes": ["planted_foot_slide"],
-      "notes": "New with the Gate 2 motor work; reproduces on every run at 2.05 s. The motor half passes. The cause is not the motor and not the gait blend: render/humanoid/runtime/poser.cpp guards the whole locomotion pose behind if (is_moving), so when the state flips the feet are assigned the idle stance in one frame and every bit of locomotion_blend smoothing is bypassed. The reported 0.091 m is the frame before the real 0.23 m snap. Three cheaper fixes were tried and measured worse or inert -- see docs/RPG_PLAYABILITY.md. Owned by Gate 3 phase continuity, and it touches every humanoid.",
+      "notes": "Green since 2 Sep 2026. The halt foot-slide was the presented state staying Walk until the motor speed reached exactly zero; direct control now drops to Idle below a 0.60 m/s gait floor (k_direct_control_gait_floor_speed in game/core/world.cpp) so the cycle fades with the body. Three repeats, see docs/RPG_PLAYABILITY.md \"The walk cycle outlived the stop\".",
       "repeats": 3,
       "reproduction": "deterministic",
       "intermittent": false

@@ -2273,7 +2273,9 @@ auto CommanderControlController::update_impl(Engine::Core::World& world,
     cmd_comp->fpv_motion_vx = (movement != nullptr) ? movement->get_vx() : 0.0F;
     cmd_comp->fpv_motion_vz = (movement != nullptr) ? movement->get_vz() : 0.0F;
     cmd_comp->fpv_motion_requested =
-        motor_requested_speed > 0.0F || m_planar_speed_smooth > 0.05F;
+        motor_requested_speed > 0.0F ||
+        m_planar_speed_smooth >
+            Engine::Core::CommanderComponent::k_direct_control_gait_floor_speed;
   }
 
   if (movement != nullptr && actual_speed_for_bob > 0.05F) {

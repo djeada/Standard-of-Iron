@@ -1131,6 +1131,79 @@ stashing the change and re-running.
   interpolation may not feed authoritative combat or navigation queries.
 - Run ASan/UBSan and the full normal suite before closing a milestone.
 
+## The swing ran slower than it was authored, 2 Sep 2026
+
+Reading `commander.combat` in `trace.jsonl` for `rpg_one_press_one_attack`: a light
+slash authored at `duration_seconds = 0.72` ran for 0.90 s, and the normalized time
+advanced 0.0185 per frame instead of 0.0231. The reason sits in
+`resolve_melee_intent`: `swing_speed = 0.80 + aim_rate * 0.55`, and
+`CombatActionService` divides the authored duration by it. A keyboard or controller
+player produces no aim rate during a press, so every light ran at 80% of its authored
+pace, and `k_heavy_maximum_swing_speed = 0.72` put heavies at 72% on top of timelines
+that are already the longest in the table (overhead 0.88 s became 1.22 s, the finisher
+1.15 s became 1.60 s). "A swing takes about 0.9 s" earlier in this document was a
+measurement of that scaling, not of the design.
+
+The definitions are the design. The solver now starts at 1.0 and clamps to
+[0.85, 1.35], so a plain press plays the authored timeline and a swipe can still
+quicken it; the heavy cap is 1.0 so heavy weight comes from the authored durations and
+stagger, not from a second multiplier. The tired-swing penalty is unchanged.
+
+Measured after the change, same scenario: slash 0.70-0.72 s, held-combo links still
+0.02 s apart, press-to-swing latency still 0-17 ms, and every accepted press still
+accounted for. Two scripts were authored against the slow cadence and are retuned in
+the same change: `rpg_one_press_one_attack` allows five links in the 1.6 s hold (the
+authored cadence fits five), and `rpg_attack_buffer_window` presses at 1.02 s and
+3.75 s so the late press still lands inside the 0.15 s buffer before recovery start and
+the early press still expires.
+
+Two things the same reading found that are not defects: the render's "Attack" visual
+outlives `action_running` by `exit_blend_duration` (0.10 s) -- that is the blend into
+idle, not a freeze -- and the 3000 deg/s view yaw in `rpg_commander_sword_grammar`
+during the dive is the harness (`track_rpg_aim` re-aims at the enemy centroid every
+frame while the dive carries the camera past it), not the camera.
+
+## The walk cycle outlived the stop
+
+`rpg_motor_start_stop` at the walk halt: the motor's smoothed speed decays with a
+0.06 s time constant, but the presented state stayed `Walk` until the speed was
+exactly zero, 0.23 s after the release, because `has_component_velocity` compared the
+motor's published velocity against a 0.01 m/s epsilon. The gait cycled at full stride
+under a body doing 0.3 m/s -- the foot slide every stop ended with.
+
+Direct control now has a gait floor, `CommanderComponent::k_direct_control_gait_floor_speed`
+(0.60 m/s). Three inputs to the presented state had to honour it, and the first two
+alone changed nothing, which is worth knowing before anyone repeats it: the published
+motor velocity (`has_component_velocity`), the per-tick displacement test
+(`displaced`), and the controller's `fpv_motion_requested`, which counted a smoothed
+speed above 0.05 m/s as a request and so kept "moving" true through the whole
+coast-down. With all three gated, the walk halt presents `Idle` at 1.90 s (0.08 s after
+the release, speed 0.54 m/s) instead of 2.05 s, and `locomotion_presence` fades from
+there while the motor finishes braking. Starts are unchanged because a held input
+counts as moving regardless of speed. Other units keep the epsilon.
+
+## Strafing slides the feet, and the fix is a clip, not code
+
+Projecting each foot's world velocity onto the travel direction in
+`rpg_motor_diagonal` (the commander always faces the view, so the axes are body-
+relative): walking forward the trailing foot moves at 0.64 m/s against a 2.69 m/s
+root and the leading foot at 4.54 -- a foot is planted. Backpedalling plants one at
+-0.03 m/s through the reverse gait. Both pure strafes read 2.28 / 2.34 m/s on both
+feet against a 2.31 m/s root: the walk cycle pumps forward and back while the body
+translates sideways, so the feet slide the whole way. Diagonals land in between
+(1.15 / 4.67).
+
+`NoPlantedFootSliding` cannot see it, because it only compares feet while the root
+is planted; slip during locomotion is unmeasured by the gate. Rotating the stride
+toward the travel direction in `resolve_locomotion_foot` was tried and is inert at
+runtime: humanoid bone palettes come from baked `.bpat` clips and the stride math
+only runs in `bpat_baker`. The fix is authored strafe (and ideally 8-way) locomotion
+clips selected by `travel_alignment` / `turn_amount`, which is Gate 3 content work
+and was not started here. Until then, lock-on circling is the move that looks worst.
+
+`rpg_motor_start_stop`, `rpg_locomotion`, `rpg_motor_figure_eight`,
+`rpg_motor_diagonal`, `rpg_locomotion_hitch` and `rpg_close_quarters` pass with it.
+
 ## Play-through findings, 2 Sep 2026
 
 A scripted play session (Xephyr + XTEST, `hold_the_sallow_ford`) entered direct

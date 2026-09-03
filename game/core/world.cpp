@@ -319,8 +319,14 @@ void finalize_motion_presentation_frame(World& world, float delta_time) {
         float const motion_vx = motor_published ? facts->motor.accepted_vx : 0.0F;
         float const motion_vz = motor_published ? facts->motor.accepted_vz : 0.0F;
         float const movement_speed_sq = motion_vx * motion_vx + motion_vz * motion_vz;
+        bool const direct_control_commander =
+            commander != nullptr && commander->fpv_controlled;
         bool const has_component_velocity =
-            movement_speed_sq > k_motion_velocity_epsilon_sq;
+            direct_control_commander
+                ? movement_speed_sq >=
+                      CommanderComponent::k_direct_control_gait_floor_speed *
+                          CommanderComponent::k_direct_control_gait_floor_speed
+                : movement_speed_sq > k_motion_velocity_epsilon_sq;
 
         bool const has_active_navigation_segment =
             movement != nullptr &&
@@ -330,7 +336,11 @@ void finalize_motion_presentation_frame(World& world, float delta_time) {
                                     !has_active_navigation_segment &&
                                     !has_component_velocity;
 
-        float const gait_displacement_floor = k_motion_stall_speed * safe_dt;
+        float const gait_displacement_floor =
+            (direct_control_commander
+                 ? CommanderComponent::k_direct_control_gait_floor_speed
+                 : k_motion_stall_speed) *
+            safe_dt;
         bool const displaced =
             displacement_sq > (gait_displacement_floor * gait_displacement_floor) &&
             !melee_footwork;
@@ -344,9 +354,13 @@ void finalize_motion_presentation_frame(World& world, float delta_time) {
                 : 0.0F;
         bool const direct_control_velocity =
             direct_control_speed_sq > k_motion_velocity_epsilon_sq;
+        bool const direct_control_gait =
+            direct_control_speed_sq >=
+            CommanderComponent::k_direct_control_gait_floor_speed *
+                CommanderComponent::k_direct_control_gait_floor_speed;
         bool const direct_control_moving =
             commander != nullptr && commander->fpv_controlled &&
-            (direct_control_velocity || has_component_velocity ||
+            (direct_control_gait || has_component_velocity ||
              commander->fpv_motion_requested);
         bool const builder_bypass =
             builder_prod != nullptr && builder_prod->bypass_movement_active;
@@ -373,7 +387,8 @@ void finalize_motion_presentation_frame(World& world, float delta_time) {
         sample.displaced = displaced;
         sample.has_component_velocity = has_component_velocity;
 
-        sample.direct_control_velocity = direct_control_velocity;
+        sample.direct_control_velocity =
+            direct_control_moving && direct_control_velocity;
         sample.wants_locomotion = wants_locomotion;
         sample.is_running = stamina != nullptr && stamina->is_running;
         sample.forced_displacement = displaced && !motor_published;

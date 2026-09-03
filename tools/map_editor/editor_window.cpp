@@ -192,7 +192,15 @@ auto createEnvironmentPanel(MapEditor::MapData* map_data, QWidget* parent) -> QW
 
   auto* profile = new QComboBox(form_group);
   profile->setEditable(true);
-  profile->addItems({"mediterranean_summer", "iron_sepulcher"});
+  profile->addItems({"mediterranean_summer",
+                     "delta_haze",
+                     "canyon_dry",
+                     "pine_overcast",
+                     "alpine_clear",
+                     "river_mist",
+                     "iberian_high_sun",
+                     "arena_neutral",
+                     "iron_sepulcher"});
   form->addRow("Lighting profile", profile);
 
   auto* fog = new QDoubleSpinBox(form_group);

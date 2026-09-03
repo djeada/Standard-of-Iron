@@ -28,8 +28,8 @@ void main() {
   color = soi_material_variation(color, v_world_pos, normal, soi_material);
   color = soi_apply_damage_soot(color, v_world_pos, soi_damage_tier);
 
-  float avg_color = (u_color.r + u_color.g + u_color.b) / 3.0;
-  float wrap_amount = avg_color > 0.65 ? 0.52 : (avg_color > 0.40 ? 0.20 : 0.05);
+  float avg_color = (color.r + color.g + color.b) / 3.0;
+  float wrap_amount = avg_color > 0.65 ? 0.38 : (avg_color > 0.40 ? 0.16 : 0.04);
   vec3 albedo = color;
   color *= environment_lighting(normal, wrap_amount);
   color = apply_directional_shadow(color, v_world_pos, normal);

@@ -169,6 +169,13 @@ TerrainPanel::TerrainPanel(QWidget* parent)
   lighting_form->addRow("Day length", day_length_spin);
   auto* profile_box = new QComboBox(lighting_section);
   profile_box->addItem("Mediterranean Summer", "mediterranean_summer");
+  profile_box->addItem("Delta Haze", "delta_haze");
+  profile_box->addItem("Dry Canyon", "canyon_dry");
+  profile_box->addItem("Pine Overcast", "pine_overcast");
+  profile_box->addItem("Alpine Clear", "alpine_clear");
+  profile_box->addItem("River Mist", "river_mist");
+  profile_box->addItem("Iberian High Sun", "iberian_high_sun");
+  profile_box->addItem("Arena Neutral", "arena_neutral");
   profile_box->addItem("Iron Sepulcher", "iron_sepulcher");
   lighting_form->addRow("Profile", profile_box);
   auto* shadow_quality_box = new QComboBox(lighting_section);
